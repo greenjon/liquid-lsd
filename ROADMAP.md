@@ -147,6 +147,21 @@ Enhancing the built-in Mandala procedural visual generator for live stage recall
 
 ---
 
+### Milestone 4: FX Metaknob Multi-Parameter Linking
+> **Reference**: Mixxx-style parameter link modes (Full/1st Half/2nd Half/Triangle/Bipolar/Invert), proposed 2026-09-22 alongside the macro link modes feature that ships this same transfer-function math for `MacroBinding`.
+> **Status**: Idea / Not Scoped
+
+Extend each ISF FX slot's single Metaknob (`ISFFilter.metaBinding`, `rendering/isf/FxMetaBinding.kt`) from driving exactly one uniform to driving **multiple** shader parameters simultaneously, each with its own link mode/curve/range — e.g. one Metaknob opening Cutoff on the first half and peaking Resonance in a triangle around center. This is a materially bigger lift than the macro-side version because today's Metaknob binding is auto-resolved by `ISFAutoBindEngine` (163 lines) to exactly one target (with dry/wet as the last-resort safety net), and that single-binding assumption threads through `FxChain` DTO serialization, `FXChainMacroStrip` UI, and `ParametersTabs` context menus.
+
+**Open questions to resolve before scoping this for real:**
+- **Auto-bind semantics with N targets**: `ISFAutoBindEngine.resolveBinding()` currently picks the *one* best macro-worthy uniform per filter. With multiple simultaneous bindings, does auto-bind pick a curated set automatically (and by what heuristic), or does it stay single-target-automatic with additional targets always manual/opt-in?
+- **Is this redundant with macro link modes?** Once `MacroBinding` supports link modes and multi-target bindings per knob (see Milestone 1's Macro system), a performer can already choreograph multiple FX parameters from one macro knob by binding each parameter separately with its own link mode. Does a *second*, FX-slot-local multi-binding system pull its weight, or should Metaknob multi-binding be dropped in favor of steering users toward macro bindings for this use case?
+- **UI surface cost**: per-parameter-row link-mode badges/cycling buttons in `FXChainMacroStrip`'s focused mode, plus a new context submenu in `ParametersTabs` — is the added visual density worth it in the already-dense FX rack UI?
+- **Preset/DTO compatibility**: needs a `metaBindings: List<FxMetaBindingDto>?` alongside the existing single `metaBinding: FxMetaBindingDto?` on `FXSlotDto`/`FxChain`, with a defined fallback order for loading old presets — straightforward but adds a second code path to maintain indefinitely.
+- **Zero-allocation constraint**: multi-binding evaluation runs in the render loop; needs to stay pure primitive arithmetic like the macro-side version, not surprising but worth stating as a hard constraint before implementation.
+
+---
+
 ## Completed Milestones Archive
 
 ### Phase 1: Core Engine & Dual Deck Architecture

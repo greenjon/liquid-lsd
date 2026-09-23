@@ -8,6 +8,22 @@ package llm.slop.liquidlsd.macro
  */
 object MacroCurve {
     /**
+     * Windows a normalized knob value [0,1] according to [linkMode], carving out which zone of
+     * the knob's travel this binding responds to before curve shaping. Always returns a value
+     * in [0,1]. See [MacroLinkMode] for the transfer function each mode implements.
+     */
+    fun window(macroVal: Float, linkMode: MacroLinkMode): Float {
+        val v = macroVal.coerceIn(0f, 1f)
+        return when (linkMode) {
+            MacroLinkMode.FULL -> v
+            MacroLinkMode.FIRST_HALF -> if (v <= 0.5f) v * 2f else 1f
+            MacroLinkMode.SECOND_HALF -> if (v < 0.5f) 0f else (v - 0.5f) * 2f
+            MacroLinkMode.TRIANGLE -> if (v <= 0.5f) v * 2f else (1f - v) * 2f
+            MacroLinkMode.BIPOLAR -> kotlin.math.abs(v - 0.5f) * 2f
+        }
+    }
+
+    /**
      * Shapes a normalized macro value [0,1] according to [curve]. [stepCount] is only used by
      * [MacroCurveType.STEP]. Always returns a value in [0,1].
      */
@@ -30,14 +46,16 @@ object MacroCurve {
     }
 
     /**
-     * Shapes [macroVal] via [MacroBinding.curve]/[MacroBinding.stepCount], applies
-     * [MacroBinding.inverted], then maps into [MacroBinding.minVal]..[MacroBinding.maxVal].
-     * `minVal > maxVal` is a valid, intentional "inverted range" and is handled naturally by the
-     * linear interpolation below — it is a distinct concept from the [MacroBinding.inverted] flag,
-     * which flips the *shaped curve position* rather than the endpoints.
+     * Windows [macroVal] via [MacroBinding.linkMode], shapes the result via
+     * [MacroBinding.curve]/[MacroBinding.stepCount], applies [MacroBinding.inverted], then maps
+     * into [MacroBinding.minVal]..[MacroBinding.maxVal]. `minVal > maxVal` is a valid, intentional
+     * "inverted range" and is handled naturally by the linear interpolation below — it is a
+     * distinct concept from the [MacroBinding.inverted] flag, which flips the *shaped curve
+     * position* rather than the endpoints.
      */
     fun mapToRange(macroVal: Float, binding: MacroBinding): Float {
-        val shaped = shape(macroVal, binding.curve, binding.stepCount)
+        val windowed = window(macroVal, binding.linkMode)
+        val shaped = shape(windowed, binding.curve, binding.stepCount)
         val t = if (binding.inverted) 1f - shaped else shaped
         return binding.minVal + t * (binding.maxVal - binding.minVal)
     }

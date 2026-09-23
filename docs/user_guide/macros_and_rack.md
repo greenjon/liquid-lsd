@@ -41,6 +41,20 @@ set:
 - **Curve** — Linear, Exponential, Logarithmic, S-Curve, or Step (quantized into a fixed number
   of positions).
 - **Invert** — turning the knob up moves this target down.
+- **Link** — which zone of the knob's travel this binding responds to (Mixxx-style parameter
+  linking). Since one knob can hold up to 4 bindings, Link lets each one claim a different part
+  of the turn instead of all of them tracking the full 0–100% sweep together:
+  - **Full (0-100%)** — the default; tracks the whole knob travel.
+  - **1st Half (0-50%)** — sweeps 0→1 across the first half of the turn, then holds at 1.0 for
+    the rest of the travel.
+  - **2nd Half (50-100%)** — holds at 0.0 for the first half, then sweeps 0→1 across the second.
+  - **Triangle (Peak)** — sweeps 0→1 up to center, then back down to 0 — useful for a target that
+    should peak mid-turn and fall off at either extreme.
+  - **Bipolar (Center-0)** — 0.0 at center, rising to 1.0 at either end — useful for a target that
+    should stay neutral at rest and react to turning the knob in *either* direction.
+
+  A common pattern: bind two targets to the same knob, one on **1st Half** and one on **2nd
+  Half**, to crossfade or choreograph between them from a single knob turn.
 - **Enabled** — toggling a binding off immediately hands the target field back to normal
   manual/mouse editing; toggling it back on resumes macro control.
 
@@ -258,7 +272,7 @@ FX1/FX2/MFX selection or re-syncs the Super Knob/Metaknob mapping.
 
 ### Setting up knob labels and bindings
 
-The full Binding Inspector (rename, target list, Min/Max/Curve/Invert/Enabled) lives only in
+The full Binding Inspector (rename, target list, Min/Max/Curve/Invert/Link/Enabled) lives only in
 Classic mode's **`[ MACROS ]`** tab (Column 3) — it's no longer duplicated inside the Performance
 Mode rack, so binding a knob doesn't mean scrolling past a Deep Edit panel to reach it.
 

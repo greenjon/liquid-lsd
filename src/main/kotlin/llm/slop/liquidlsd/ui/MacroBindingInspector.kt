@@ -209,6 +209,28 @@ object MacroBindingInspector {
                     itemTooltip("Number of quantized steps across the travel range.")
                 }
 
+                // Link mode row: which zone of the knob's travel this binding responds to.
+                ImGui.setNextItemWidth(140f)
+                val linkModes = arrayOf("Full (0-100%)", "1st Half (0-50%)", "2nd Half (50-100%)", "Triangle (Peak)", "Bipolar (Center-0)")
+                val currentLinkIdx = when (binding.linkMode) {
+                    MacroLinkMode.FULL -> 0
+                    MacroLinkMode.FIRST_HALF -> 1
+                    MacroLinkMode.SECOND_HALF -> 2
+                    MacroLinkMode.TRIANGLE -> 3
+                    MacroLinkMode.BIPOLAR -> 4
+                }
+                val linkImIdx = ImInt(currentLinkIdx)
+                if (ImGui.combo("Link", linkImIdx, linkModes)) {
+                    binding.linkMode = when (linkImIdx.get()) {
+                        0 -> MacroLinkMode.FULL
+                        1 -> MacroLinkMode.FIRST_HALF
+                        2 -> MacroLinkMode.SECOND_HALF
+                        3 -> MacroLinkMode.TRIANGLE
+                        else -> MacroLinkMode.BIPOLAR
+                    }
+                }
+                itemTooltip("Which zone of the knob's travel this binding responds to. Lets one knob choreograph multiple targets in split zones.")
+
                 ImGui.unindent(18f)
                 ImGui.spacing()
                 ImGui.popID()

@@ -113,6 +113,97 @@ class MacroCurveTest {
         assertEquals(5.05f, MacroCurve.mapToRange(0.5f, binding), absoluteTolerance = 1e-5f)
     }
 
+    @Test
+    fun testWindowFullIsIdentity() {
+        for (v in listOf(0f, 0.25f, 0.5f, 0.75f, 1f)) {
+            assertEquals(v, MacroCurve.window(v, MacroLinkMode.FULL))
+        }
+    }
+
+    @Test
+    fun testWindowFirstHalfSweepsThenHolds() {
+        assertEquals(0f, MacroCurve.window(0f, MacroLinkMode.FIRST_HALF))
+        assertEquals(0.5f, MacroCurve.window(0.25f, MacroLinkMode.FIRST_HALF), absoluteTolerance = 1e-6f)
+        assertEquals(1f, MacroCurve.window(0.5f, MacroLinkMode.FIRST_HALF), absoluteTolerance = 1e-6f)
+        assertEquals(1f, MacroCurve.window(0.75f, MacroLinkMode.FIRST_HALF))
+        assertEquals(1f, MacroCurve.window(1f, MacroLinkMode.FIRST_HALF))
+    }
+
+    @Test
+    fun testWindowSecondHalfHoldsThenSweeps() {
+        assertEquals(0f, MacroCurve.window(0f, MacroLinkMode.SECOND_HALF))
+        assertEquals(0f, MacroCurve.window(0.25f, MacroLinkMode.SECOND_HALF))
+        assertEquals(0f, MacroCurve.window(0.5f, MacroLinkMode.SECOND_HALF), absoluteTolerance = 1e-6f)
+        assertEquals(0.5f, MacroCurve.window(0.75f, MacroLinkMode.SECOND_HALF), absoluteTolerance = 1e-6f)
+        assertEquals(1f, MacroCurve.window(1f, MacroLinkMode.SECOND_HALF), absoluteTolerance = 1e-6f)
+    }
+
+    @Test
+    fun testWindowTriangleReachesPeakAtCenter() {
+        assertEquals(0f, MacroCurve.window(0f, MacroLinkMode.TRIANGLE))
+        assertEquals(1f, MacroCurve.window(0.5f, MacroLinkMode.TRIANGLE), absoluteTolerance = 1e-6f)
+        assertEquals(0f, MacroCurve.window(1f, MacroLinkMode.TRIANGLE), absoluteTolerance = 1e-6f)
+        assertEquals(0.5f, MacroCurve.window(0.25f, MacroLinkMode.TRIANGLE), absoluteTolerance = 1e-6f)
+        assertEquals(0.5f, MacroCurve.window(0.75f, MacroLinkMode.TRIANGLE), absoluteTolerance = 1e-6f)
+    }
+
+    @Test
+    fun testWindowBipolarIsNeutralAtCenter() {
+        assertEquals(1f, MacroCurve.window(0f, MacroLinkMode.BIPOLAR), absoluteTolerance = 1e-6f)
+        assertEquals(0f, MacroCurve.window(0.5f, MacroLinkMode.BIPOLAR), absoluteTolerance = 1e-6f)
+        assertEquals(1f, MacroCurve.window(1f, MacroLinkMode.BIPOLAR), absoluteTolerance = 1e-6f)
+    }
+
+    @Test
+    fun testMapToRangeComposesWindowWithCurveAndInvert() {
+        val firstHalf = MacroBinding(
+            parameterId = "test",
+            targetType = MacroTargetType.PARAM_BASE_VALUE,
+            minVal = 0f,
+            maxVal = 1f,
+            curve = MacroCurveType.LINEAR,
+            linkMode = MacroLinkMode.FIRST_HALF
+        )
+        assertEquals(1f, MacroCurve.mapToRange(0.5f, firstHalf), absoluteTolerance = 1e-6f)
+        assertEquals(1f, MacroCurve.mapToRange(1f, firstHalf), absoluteTolerance = 1e-6f)
+
+        val secondHalfInverted = firstHalf.copy(linkMode = MacroLinkMode.SECOND_HALF, inverted = true)
+        assertEquals(1f, MacroCurve.mapToRange(0.25f, secondHalfInverted), absoluteTolerance = 1e-6f)
+        assertEquals(0f, MacroCurve.mapToRange(1f, secondHalfInverted), absoluteTolerance = 1e-6f)
+
+        val triangleExp = firstHalf.copy(linkMode = MacroLinkMode.TRIANGLE, curve = MacroCurveType.EXPONENTIAL)
+        assertEquals(1f, MacroCurve.mapToRange(0.5f, triangleExp), absoluteTolerance = 1e-6f)
+        assertEquals(0f, MacroCurve.mapToRange(0f, triangleExp), absoluteTolerance = 1e-6f)
+        assertEquals(0f, MacroCurve.mapToRange(1f, triangleExp), absoluteTolerance = 1e-6f)
+    }
+
+    @Test
+    fun testTwoBindingsOnOneKnobSplitZonesIndependently() {
+        // Mirrors the FX/macro choreography use case: one knob driving two targets in split zones.
+        val firstTarget = MacroBinding(
+            parameterId = "targetA",
+            targetType = MacroTargetType.PARAM_BASE_VALUE,
+            minVal = 0f,
+            maxVal = 1f,
+            linkMode = MacroLinkMode.FIRST_HALF
+        )
+        val secondTarget = MacroBinding(
+            parameterId = "targetB",
+            targetType = MacroTargetType.PARAM_BASE_VALUE,
+            minVal = 0f,
+            maxVal = 1f,
+            linkMode = MacroLinkMode.SECOND_HALF
+        )
+
+        // At knob=0.25: target A is mid-sweep, target B is still idle at 0.
+        assertEquals(0.5f, MacroCurve.mapToRange(0.25f, firstTarget), absoluteTolerance = 1e-6f)
+        assertEquals(0f, MacroCurve.mapToRange(0.25f, secondTarget), absoluteTolerance = 1e-6f)
+
+        // At knob=0.75: target A has clamped at 1.0, target B is mid-sweep.
+        assertEquals(1f, MacroCurve.mapToRange(0.75f, firstTarget), absoluteTolerance = 1e-6f)
+        assertEquals(0.5f, MacroCurve.mapToRange(0.75f, secondTarget), absoluteTolerance = 1e-6f)
+    }
+
     private fun assertEquals(expected: Float, actual: Float, absoluteTolerance: Float, message: String? = null) {
         assertTrue(kotlin.math.abs(expected - actual) <= absoluteTolerance, message ?: "Expected $expected but was $actual (tolerance $absoluteTolerance)")
     }

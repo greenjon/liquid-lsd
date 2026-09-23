@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#macro-link-modes-mixxx-style-knob-travel-windowing-macromodelskt-macrocurvekt-macrobindinginspectorkt-macrocurvetestkt-docsuser_guidemacros_and_rackmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro Link Modes: Mixxx-Style Knob-Travel Windowing (MacroModels.kt, MacroCurve.kt, MacroBindingInspector.kt, MacroCurveTest.kt, docs/user_guide/macros_and_rack.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-matrix-row-reshuffle-mastertransitions-split-deck-bg-on-live-console-deck-pv-on-master-fx-performancematrixpanelkt-decisionsmd-docsuser_guidemacros_and_rackmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3766,6 +3777,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#macro-link-modes-mixxx-style-knob-travel-windowing-macromodelskt-macrocurvekt-macrobindinginspectorkt-macrocurvetestkt-docsuser_guidemacros_and_rackmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro Link Modes: Mixxx-Style Knob-Travel Windowing (MacroModels.kt, MacroCurve.kt, MacroBindingInspector.kt, MacroCurveTest.kt, docs/user_guide/macros_and_rack.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-matrix-row-reshuffle-mastertransitions-split-deck-bg-on-live-console-deck-pv-on-master-fx-performancematrixpanelkt-decisionsmd-docsuser_guidemacros_and_rackmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6299,6 +6321,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="macro-link-modes-mixxx-style-knob-travel-windowing-macromodelskt-macrocurvekt-macrobindinginspectorkt-macrocurvetestkt-docsuser_guidemacros_and_rackmd">Macro Link Modes: Mixxx-Style Knob-Travel Windowing (<code>MacroModels.kt</code>, <code>MacroCurve.kt</code>, <code>MacroBindingInspector.kt</code>, <code>MacroCurveTest.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>)</h3>
+<ul>
+<li><strong>New <code>Link</code> field per binding</strong>: Each of a knob's up to 4 bindings now independently chooses which zone of the knob's travel it responds to — <code>Full (0-100%)</code> (default, unchanged behavior), <code>1st Half (0-50%)</code>, <code>2nd Half (50-100%)</code>, <code>Triangle (Peak)</code>, or <code>Bipolar (Center-0)</code> — via <code>MacroBinding.linkMode</code> and the new <code>MacroCurve.window()</code> transfer function, applied before curve shaping and invert.</li>
+<li><strong>Split-zone choreography from one knob</strong>: Lets a single macro knob drive multiple targets in sequence or crossfade between them — e.g. bind Target A to <code>1st Half</code> and Target B to <code>2nd Half</code> so the first half of the turn ramps up A while B stays idle, then the second half ramps up B.</li>
+<li><strong>Backwards compatible</strong>: <code>linkMode</code> defaults to <code>FULL</code> (bit-identical to pre-existing behavior), so all existing <code>.lsd</code>, <code>.lsdplay</code>, and <code>.knobpreset.json</code> presets load unchanged.</li>
+<li><strong>UI</strong>: New <code>Link</code> combo in the Binding Inspector, alongside Min/Max/Curve/Invert.</li>
+</ul>
 <h3 id="performance-matrix-row-reshuffle-mastertransitions-split-deck-bg-on-live-console-deck-pv-on-master-fx-performancematrixpanelkt-decisionsmd-docsuser_guidemacros_and_rackmd">Performance Matrix Row Reshuffle: Master/Transitions Split, Deck BG on Live Console, Deck PV on Master &amp; FX (<code>PerformanceMatrixPanel.kt</code>, <code>DECISIONS.md</code>, <code>docs/user_guide/macros_and_rack.md</code>)</h3>
 <ul>
 <li><strong><code>MASTER &amp; FX</code> reordered to Master, Transitions, FX Sends, Deck PV</strong>: The crossfader and crossfader-time (Fade Speed) controls now live on the <strong>Master</strong> row alongside the composite alpha/master-level knobs; the transition picker and queue prev/next controls now live on the <strong>Transitions</strong> row, which is no longer 4 dead unbound knobs. Both were previously stuck together on <code>LIVE CONSOLE</code>'s single combined "Master / Transitions" row.</li>

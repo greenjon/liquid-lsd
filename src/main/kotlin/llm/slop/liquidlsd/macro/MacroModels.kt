@@ -32,6 +32,25 @@ enum class MacroCurveType {
 }
 
 /**
+ * Mixxx-style knob-travel windowing applied to a macro's normalized [0,1] value, before
+ * [MacroCurveType] shaping, so multiple bindings on one [MacroControl] can each claim a
+ * different zone of the knob's travel. See [MacroCurve.window] for the transfer functions.
+ */
+@Serializable
+enum class MacroLinkMode {
+    /** Parameter sweeps 0..1 across the full 0.0..1.0 knob travel. */
+    FULL,
+    /** Parameter sweeps 0..1 across knob 0.0..0.5, then holds at 1.0 across 0.5..1.0. */
+    FIRST_HALF,
+    /** Parameter holds at 0.0 across knob 0.0..0.5, then sweeps 0..1 across 0.5..1.0. */
+    SECOND_HALF,
+    /** Parameter sweeps 0..1 across knob 0.0..0.5, then reverses 1..0 across 0.5..1.0. */
+    TRIANGLE,
+    /** Parameter is 0.0 at knob center (0.5) and sweeps outward to 1.0 at either end. */
+    BIPOLAR
+}
+
+/**
  * A single binding from a [MacroControl]'s normalized value to one target field.
  * Up to [MacroControl.MAX_BINDINGS_PER_CONTROL] of these may exist per control.
  */
@@ -52,7 +71,9 @@ data class MacroBinding(
     // Only meaningful when curve == STEP; number of discrete quantized positions.
     var stepCount: Int = 8,
     var inverted: Boolean = false,
-    var enabled: Boolean = true
+    var enabled: Boolean = true,
+    // Which zone of the knob's travel this binding responds to. See [MacroLinkMode].
+    var linkMode: MacroLinkMode = MacroLinkMode.FULL
 )
 
 /** One Macro Knob, read passively via [value]. */

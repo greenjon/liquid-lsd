@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Macro Link Modes: Mixxx-Style Knob-Travel Windowing (`MacroModels.kt`, `MacroCurve.kt`, `MacroBindingInspector.kt`, `MacroCurveTest.kt`, `docs/user_guide/macros_and_rack.md`)
+- **New `Link` field per binding**: Each of a knob's up to 4 bindings now independently chooses which zone of the knob's travel it responds to — `Full (0-100%)` (default, unchanged behavior), `1st Half (0-50%)`, `2nd Half (50-100%)`, `Triangle (Peak)`, or `Bipolar (Center-0)` — via `MacroBinding.linkMode` and the new `MacroCurve.window()` transfer function, applied before curve shaping and invert.
+- **Split-zone choreography from one knob**: Lets a single macro knob drive multiple targets in sequence or crossfade between them — e.g. bind Target A to `1st Half` and Target B to `2nd Half` so the first half of the turn ramps up A while B stays idle, then the second half ramps up B.
+- **Backwards compatible**: `linkMode` defaults to `FULL` (bit-identical to pre-existing behavior), so all existing `.lsd`, `.lsdplay`, and `.knobpreset.json` presets load unchanged.
+- **UI**: New `Link` combo in the Binding Inspector, alongside Min/Max/Curve/Invert.
+
 ### Performance Matrix Row Reshuffle: Master/Transitions Split, Deck BG on Live Console, Deck PV on Master & FX (`PerformanceMatrixPanel.kt`, `DECISIONS.md`, `docs/user_guide/macros_and_rack.md`)
 - **`MASTER & FX` reordered to Master, Transitions, FX Sends, Deck PV**: The crossfader and crossfader-time (Fade Speed) controls now live on the **Master** row alongside the composite alpha/master-level knobs; the transition picker and queue prev/next controls now live on the **Transitions** row, which is no longer 4 dead unbound knobs. Both were previously stuck together on `LIVE CONSOLE`'s single combined "Master / Transitions" row.
 - **Removed the dedicated `MASTER FX` row**: it drove the exact same `masterFxBank` that `LIVE CONSOLE`'s FX row already reaches via its `[MFX]` bank selector — a straight duplicate, not a distinct signal path. Master FX is now reached from `LIVE CONSOLE` only.

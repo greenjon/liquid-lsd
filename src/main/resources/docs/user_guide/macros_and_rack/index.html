@@ -1743,9 +1743,22 @@ set:</p>
 <li><strong>Curve</strong> — Linear, Exponential, Logarithmic, S-Curve, or Step (quantized into a fixed number
   of positions).</li>
 <li><strong>Invert</strong> — turning the knob up moves this target down.</li>
-<li><strong>Enabled</strong> — toggling a binding off immediately hands the target field back to normal
-  manual/mouse editing; toggling it back on resumes macro control.</li>
+<li><strong>Link</strong> — which zone of the knob's travel this binding responds to (Mixxx-style parameter
+  linking). Since one knob can hold up to 4 bindings, Link lets each one claim a different part
+  of the turn instead of all of them tracking the full 0–100% sweep together:</li>
+<li><strong>Full (0-100%)</strong> — the default; tracks the whole knob travel.</li>
+<li><strong>1st Half (0-50%)</strong> — sweeps 0→1 across the first half of the turn, then holds at 1.0 for
+    the rest of the travel.</li>
+<li><strong>2nd Half (50-100%)</strong> — holds at 0.0 for the first half, then sweeps 0→1 across the second.</li>
+<li><strong>Triangle (Peak)</strong> — sweeps 0→1 up to center, then back down to 0 — useful for a target that
+    should peak mid-turn and fall off at either extreme.</li>
+<li><strong>Bipolar (Center-0)</strong> — 0.0 at center, rising to 1.0 at either end — useful for a target that
+    should stay neutral at rest and react to turning the knob in <em>either</em> direction.</li>
 </ul>
+<p>A common pattern: bind two targets to the same knob, one on <strong>1st Half</strong> and one on <strong>2nd
+  Half</strong>, to crossfade or choreograph between them from a single knob turn.
+- <strong>Enabled</strong> — toggling a binding off immediately hands the target field back to normal
+  manual/mouse editing; toggling it back on resumes macro control.</p>
 <p>The <strong>binding target name</strong> (e.g. <code>Deck A/Mandala/L1</code>) is a clickable link. Clicking it switches
 Column 1 to the corresponding deck and sub-tab, so you can immediately reach the parameter being
 controlled without hunting for it manually.</p>
@@ -1960,7 +1973,7 @@ The same Solo/Collapse-All controls are also in <strong>View</strong> menu.</p>
 <p>Expanding or collapsing a row is purely a display change — it never refocuses the FX row's
 FX1/FX2/MFX selection or re-syncs the Super Knob/Metaknob mapping.</p>
 <h3 id="setting-up-knob-labels-and-bindings">Setting up knob labels and bindings</h3>
-<p>The full Binding Inspector (rename, target list, Min/Max/Curve/Invert/Enabled) lives only in
+<p>The full Binding Inspector (rename, target list, Min/Max/Curve/Invert/Link/Enabled) lives only in
 Classic mode's <strong><code>[ MACROS ]</code></strong> tab (Column 3) — it's no longer duplicated inside the Performance
 Mode rack, so binding a knob doesn't mean scrolling past a Deep Edit panel to reach it.</p>
 <ul>
