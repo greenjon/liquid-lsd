@@ -14,6 +14,24 @@ enum class MetaCurve {
 }
 
 /**
+ * Mixxx-style knob-travel windowing applied to an ISF filter's 0..1 Metaknob position,
+ * before [MetaCurve] shaping, allowing an effect slot's Metaknob to choreograph multiple
+ * parameters across distinct zones of knob rotation.
+ */
+enum class MetaLinkMode {
+    /** Parameter sweeps 0..1 across the full 0.0..1.0 knob travel. */
+    FULL,
+    /** Parameter sweeps 0..1 across knob 0.0..0.5, then holds at 1.0 across 0.5..1.0. */
+    FIRST_HALF,
+    /** Parameter holds at 0.0 across knob 0.0..0.5, then sweeps 0..1 across 0.5..1.0. */
+    SECOND_HALF,
+    /** Parameter sweeps 0..1 across knob 0.0..0.5, then reverses 1..0 across 0.5..1.0. */
+    TRIANGLE,
+    /** Parameter is 0.0 at knob center (0.5) and sweeps outward to 1.0 at either end. */
+    BIPOLAR
+}
+
+/**
  * Resolved binding between an [ISFFilter]'s 0..1 Metaknob and one of its underlying
  * uniform parameters (or, when [targetParamName] is null, the filter's own [ISFFilter.dryWet]
  * as a last-resort "safety net" macro).
@@ -23,14 +41,23 @@ data class FxMetaBinding(
     val minVal: Float,
     val maxVal: Float,
     val curve: MetaCurve = MetaCurve.LINEAR,
-    val invert: Boolean = false
+    val invert: Boolean = false,
+    val linkMode: MetaLinkMode = MetaLinkMode.FULL,
+    val enabled: Boolean = true
 ) {
-    /** Maps a 0..1 Metaknob position onto this binding's target range, applying curve and direction. */
+    /** Maps a 0..1 Metaknob position onto this binding's target range, applying link windowing, curve, and direction. */
     fun mapKnobToTarget(knob01: Float): Float {
-        val k = knob01.coerceIn(0f, 1f)
+        val k = if (knob01.isNaN()) 0f else knob01.coerceIn(0f, 1f)
+        val w = when (linkMode) {
+            MetaLinkMode.FULL -> k
+            MetaLinkMode.FIRST_HALF -> if (k <= 0.5f) k * 2f else 1f
+            MetaLinkMode.SECOND_HALF -> if (k < 0.5f) 0f else (k - 0.5f) * 2f
+            MetaLinkMode.TRIANGLE -> if (k <= 0.5f) k * 2f else (1f - k) * 2f
+            MetaLinkMode.BIPOLAR -> kotlin.math.abs(k - 0.5f) * 2f
+        }
         val shaped = when (curve) {
-            MetaCurve.LINEAR -> k
-            MetaCurve.EXPONENTIAL -> k * k
+            MetaCurve.LINEAR -> w
+            MetaCurve.EXPONENTIAL -> w * w
         }
         val (lo, hi) = if (invert) maxVal to minVal else minVal to maxVal
         return lo + (hi - lo) * shaped
@@ -45,9 +72,16 @@ data class FxMetaBinding(
         val (lo, hi) = if (invert) maxVal to minVal else minVal to maxVal
         if (hi == lo) return 0f
         val t = ((targetValue - lo) / (hi - lo)).coerceIn(0f, 1f)
-        return when (curve) {
+        val shaped = when (curve) {
             MetaCurve.LINEAR -> t
             MetaCurve.EXPONENTIAL -> kotlin.math.sqrt(t)
+        }
+        return when (linkMode) {
+            MetaLinkMode.FULL -> shaped
+            MetaLinkMode.FIRST_HALF -> shaped * 0.5f
+            MetaLinkMode.SECOND_HALF -> 0.5f + shaped * 0.5f
+            MetaLinkMode.TRIANGLE -> shaped * 0.5f
+            MetaLinkMode.BIPOLAR -> 0.5f + shaped * 0.5f
         }
     }
 
@@ -64,7 +98,9 @@ data class FxMetaBindingDto(
     val minVal: Float = 0f,
     val maxVal: Float = 1f,
     val curve: String = MetaCurve.LINEAR.name,
-    val invert: Boolean = false
+    val invert: Boolean = false,
+    val linkMode: String = MetaLinkMode.FULL.name,
+    val enabled: Boolean = true
 )
 
 fun FxMetaBinding.toDto(): FxMetaBindingDto = FxMetaBindingDto(
@@ -72,7 +108,9 @@ fun FxMetaBinding.toDto(): FxMetaBindingDto = FxMetaBindingDto(
     minVal = minVal,
     maxVal = maxVal,
     curve = curve.name,
-    invert = invert
+    invert = invert,
+    linkMode = linkMode.name,
+    enabled = enabled
 )
 
 fun FxMetaBindingDto.toBinding(): FxMetaBinding = FxMetaBinding(
@@ -80,5 +118,7 @@ fun FxMetaBindingDto.toBinding(): FxMetaBinding = FxMetaBinding(
     minVal = minVal,
     maxVal = maxVal,
     curve = runCatching { MetaCurve.valueOf(curve) }.getOrDefault(MetaCurve.LINEAR),
-    invert = invert
+    invert = invert,
+    linkMode = runCatching { MetaLinkMode.valueOf(linkMode) }.getOrDefault(MetaLinkMode.FULL),
+    enabled = enabled
 )

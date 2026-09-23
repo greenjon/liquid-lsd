@@ -1,3 +1,77 @@
+## Fix Performance Matrix ImGui ID Conflict on Deck FX Mode (`PerformanceMatrixPanel.kt`, `RELEASE_NOTES.md`, `docs/release_notes.md`)
+
+- **Context**: 2026-09-23. Dear ImGui triggered an ID conflict overlay error (`Programmer error: 2 visible items with conflicting ID!`) in the Performance Matrix under `LIVE CONSOLE`. When Deck A was flipped to `FX` mode via `[ SRC | FX ]`, its `bankId` was set to `DECK_A_FX`. Because `isFxChainRow` matched any bank ending in `_fx` and was evaluated ahead of `isDeckRow`, Deck A's row took the FX chain drop-target branch instead of the Deck drop-target branch, creating an invisible button with ID `##perf_fx_drop_deck_a_fx`. Simultaneously, Row 4 (`FX: Deck A`), which was focused on target `A`, had the identical bank ID `DECK_A_FX` and created an identical invisible button `##perf_fx_drop_deck_a_fx`.
+- **Decision**:
+  - **Disambiguate Deck Rows from FX Rows**: Explicitly defined `isFxChainRow = !isDeckRow && (isConsoleFxRow || isAllFxTab || ...)` and prioritized `if (isDeckRow)` for header drop targets so Deck rows always retain their deck-preset and FX-chain drop target (`##perf_deck_drop...`).
+  - **Row Index Scoping**: Qualified all drop-target invisible button IDs with the row group start row (`##perf_deck_drop_${group.startRow}_$dropTag` and `##perf_fx_drop_${group.startRow}_${descriptor.bankId}`).
+  - **Slot Link Button Scoping**: Qualified FX slot link buttons with `rowIdx` (`##perf_fx_link_${row.bankId}_${rowIdx}_$slotIdx`) to ensure total uniqueness even if multiple rows ever map to the same bank ID simultaneously.
+- **Rationale**: Completely eliminates ID collisions across all tabs and multi-row configurations while ensuring drop targets function correctly according to the row's primary identity.
+
+---
+
+## Default to Performance Mode & Persist Workspace View Mode (`AppPreferences.kt`, `AppPreferencesStore.kt`, `Main.kt`, `PreferencesDefaultsTest.kt`, `docs/developer/ui.md`, `docs/user_guide/macros_and_rack.md`)
+
+- **Context**: 2026-09-23. Previously, while `MenuBar.kt` and `UIManager.kt` toggled `session.uiTheme.workspaceMode` and called `AppPreferencesStore.savePreferences()`, `AppPreferencesStore` had no serialization or deserialization logic for `workspaceMode` (or `performanceMatrixTab`), causing the app to always revert to the hardcoded default `UITheme.WorkspaceMode.CLASSIC` upon restart. Furthermore, new users were dropped directly into Classic 3-column deck view instead of the modern 4×4 Performance Mode console.
+- **Decision**:
+  - **Performance Mode Default**: Changed `AppPreferences.workspaceMode` default from `UITheme.WorkspaceMode.CLASSIC` to `UITheme.WorkspaceMode.RACK`. New users launch straight into the 4×4 Performance Matrix.
+  - **Persistence in AppPreferencesStore**: Added `workspaceMode` and `performanceMatrixTab` properties to `AppPreferencesStore.loadPreferences()` and `savePreferences()`, supporting fallback migration and value validation.
+  - **Shutdown Persistence Guarantee**: Added `AppPreferencesStore.savePreferences()` to `Main.kt` shutdown cleanup to guarantee that runtime state is cleanly persisted to `lsd-preferences.properties` on window close or application exit.
+- **Rationale**: Ensures the user's choice between Classic Deck View and Performance View sticks across app launches, while placing Performance Mode upfront as the flagship first-run experience for new visual performers.
+
+---
+
+## Mixxx-Style Visual Link Buttons & Multi-Parameter FX Metaknob Linking (`LinkModeButton.kt`, `MacroBindingInspector.kt`, `FxMetaBinding.kt`, `ISFFilter.kt`, `FXChainMacroStrip.kt`, `ParametersTabs.kt`, `PresetModels.kt`, `FxChain.kt`, `FxMetaBindingTest.kt`, `DECISIONS.md`, `RELEASE_NOTES.md`, `docs/user_guide/macros_and_rack.md`)
+
+- **Context**: 2026-09-23. Previously, Macro link modes were presented as a text dropdown (`ImGui.combo("Link")`), which required reading text labels and concealed the active response curve at a glance. Furthermore, ISF effect slots were limited to a single 1-to-1 Metaknob binding (`FxMetaBinding`), meaning a slot's Metaknob could not choreograph multiple parameters within the effect simultaneously (unlike Mixxx, where an effect's Metaknob can drive filter cutoff on the first half, resonance on triangle peak, and wet/delay on the second half).
+- **Decision**:
+  - **Visual Transfer Curve Widget (`LinkModeButton.kt`)**: Replaced text dropdowns with an intuitive vector glyph button rendered using `ImDrawList`. Displays the exact response curve on the button face: `[  /  ]` (Full), `[ / ‾ ]` (First Half), `[ _ / ]` (Second Half), `[ /\ ]` (Triangle Peak), `[ \/ ]` (Bipolar Center-0), and `[  —  ]` (Unlinked). An adjacent `[±]` button toggles inversion, dynamically mirroring the vector glyph geometry. Left-click cycles modes, right-click opens a context menu to choose directly.
+  - **Multi-Parameter FX Metaknob Linking**: Extended `ISFFilter` to hold `metaBindings: MutableList<FxMetaBinding>` with backwards-compatible `metaBinding` delegate. Each parameter can be assigned independent link modes (`FULL`, `FIRST_HALF`, `SECOND_HALF`, `TRIANGLE`, `BIPOLAR`) and inversions.
+  - **Focus Mode & Parameter Tabs Integration**: In `FXChainMacroStrip.kt` (Focus Mode), each parameter slider displays the visual `LinkModeButton` for instant one-click linking. In `ParametersTabs.kt`, expanded slot rows provide right-click Metaknob Link context menus with tooltips reflecting active link modes.
+  - **Backwards Compatibility**: `FXSlotDto` adds optional `metaBindings: List<FxMetaBindingDto>? = null` while preserving `metaBinding`, ensuring older presets load seamlessly and newer presets roundtrip accurately.
+- **Rationale**: Elevates the user experience to match and exceed Mixxx's tactile effects controls. Performers can see the exact choreography of every macro knob and FX slot at a single glance without deciphering menus.
+
+---
+
+## Live Binding Value Knob in Binding Inspector (`MacroBindingInspector.kt`, `ParametersRenderer.kt`, `docs/user_guide/macros_and_rack.md`, `DECISIONS.md`, `RELEASE_NOTES.md`)
+
+- **Context**: 2026-09-23. In `MacroBindingInspector`, users could configure Min, Max, Curve, and Link Mode (e.g. Triangle peak, First Half, Second Half) for each target binding on a Macro Knob. However, unless users navigated away or looked at the target parameter row in Column 1, there was no direct visual feedback showing the resulting output value in relation to the macro knob position. For non-linear or segmented transfer functions (like Triangle sweeping 0 → 1 → 0), it was difficult to verify how the binding responds without testing it blindly.
+- **Decision**:
+  - Embedded a live rotary meter knob (`ParametersRenderer.drawKnobMeter`) on the second row of each binding entry, positioned to the left of the Min/Max, Link Mode, and Curve controls.
+  - The knob automatically resolves the target parameter's `meterType` (Monopolar vs Bipolar) and evaluates `MacroCurve.mapToRange(control.value, binding)`.
+  - When the user sweeps the macro knob, the binding meter knob turns in real-time, showing exactly where along its Min..Max range the binding is outputting.
+  - Hovering over the knob displays rich tooltip telemetry: live evaluated value, macro input value, and min/max bounds.
+- **Rationale**: Provides immediate, intuitive tactile and visual confirmation of transfer curves and link modes without having to switch panels.
+
+---
+
+## Clean Up Legacy FX Routing & Direct Deck Insert FX Controls (`Deck.kt`, `Mixer.kt`, `PerformanceMatrixPanel.kt`, `ParametersTabs.kt`, `BrowserActionToolbar.kt`, `FXBrowserPanel.kt`, `ARCHITECTURE.md`, `RELEASE_NOTES.md`)
+
+- **Context**: 2026-09-23. With the migration to dedicated per-deck insert FX (`deck.fxChain`), the legacy routing architecture (`fxBank1`, `fxBank2`, `fxRouting`) became obsolete. In the Performance Matrix, the right-wing controls on Deck rows still showed dormant `[FX1]` and `[FX2]` routing buttons in `SRC` mode with dead context menus. Additionally, `Deck.kt` retained unused routing parameters, and `ParametersTabs.kt` rendered an unused "FX Route" parameter row.
+- **Decision**:
+  - **Direct Deck Row Controls**: Replaced `[FX1]` and `[FX2]` in `PerformanceMatrixPanel` deck rows with direct `[BYPASS / FX ON]` and `[Resync]` buttons operating on `deck.fxChain`. These are visible and usable directly on the deck row at all times.
+  - **Removed Dormant Context Menus**: Deleted `drawFxRoutingContextMenu` and removed `FxRouting` MIDI/OSC learn targets.
+  - **Cleaned Up `Deck.kt` & `Mixer.kt`**: Removed `fxBank1`, `fxBank2`, `fxRouting`, `fxRoutingDefault`, and `assignedFxBank` from `Deck.kt`. Removed legacy deck routing initialization from `Mixer.kt`.
+  - **Parameters Tabs Cleaned**: Removed the "FX Route" and conditional "FX Send Level" rows from `drawDeckViewSubgroup` in `ParametersTabs.kt`.
+  - **FX Browser Direct Targeting**: Updated `BrowserActionToolbar.kt` and `FXBrowserPanel.kt` to target `deck.fxSlots`, `deck.applyFxSlot`, and `deck.applyFxChain` directly, eliminating intermediate bank references.
+- **Rationale**: Eliminates dead code paths, cleans up confusing UI controls that had no audio/visual effect, and ensures that the UI cleanly reflects the true insert FX topology.
+
+---
+
+## Per-Deck Insert FX & Flexible Performance Matrix FX Routing (`Deck.kt`, `Renderer.kt`, `Mixer.kt`, `MacroEngine.kt`, `FxMacroSync.kt`, `SessionSerializer.kt`, `ParametersTabs.kt`, `PerformanceMatrixPanel.kt`, `DECISIONS.md`, `RELEASE_NOTES.md`, `docs/user_guide/macros_and_rack.md`)
+
+- **Context**: 2026-09-23. Previously, the system shared two global deck FX banks (`fxBank1`, `fxBank2`) each with 3 alternative chains but only 1 active chain running at a time. This meant that across Deck A, Deck B, and Deck BG, only at most 2 effects could run simultaneously across all decks. Furthermore, decks fought over shared FX banks, and controlling FX live in Performance Matrix was limited to focusing either FX1 or FX2 in Row 4.
+- **Decision**:
+  - **Per-Deck Insert FX Architecture**: Every deck (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) now owns its own dedicated 3-slot `FxChain` (`deck.fxChain`), rendered post-generator and pre-crossfader with zero-allocation ping-pong FBO ping/ponging and zero-overhead bypass when dry/wet is $\le 0$ or inactive.
+  - **Option A (LIVE CONSOLE Row 4 Target Switcher)**: Row 4 of LIVE CONSOLE features instant target switcher buttons `[ A ] [ B ] [ BG ] [ PV ] [ MST ]` mapping the 4 macro knobs to that target's Super Knob + 3 Metaknobs, with dynamic accent colors and a dedicated `.lsdfxchain` preset picker popup.
+  - **Option B (In-Row [ SRC | FX ] Mode Toggles)**: Every Deck row header in LIVE CONSOLE, LIVE QUAD, and other views includes an in-row `[ SRC | FX ]` toggle button. Clicking `FX` instantly flips that specific deck's 4 knobs between visual generator controls and its own dedicated FX chain macros (with `[ BYPASS / FX ON ]` and `[ Resync ]` buttons in the right wing).
+  - **Option C (Dedicated ALL FX Performance Matrix Tab)**: Added an `ALL FX` tab featuring 4 rows (Deck A FX, Deck B FX, Deck BG FX, and Master FX = 16 simultaneous FX knobs) with independent target badges, preset pickers, bypass/resync toggles, and slot link buttons across all 4 rows.
+  - **Option D (Deck Parameters [FX] Subtab)**: Added an `FX` subtab alongside `SRC` and `TRANS` under each Deck in the full Parameters panel (`ParametersTabs.kt`), exposing the 3 insert FX slots, filter pickers, wet/dry, bypass, Super Knob, and Metaknob modulations.
+  - **Preset & Session Persistence**: `DeckPresetDto` now persists `fxChain: FXChainDto?`. `SessionSerializer` includes backwards-compatible migration for legacy sessions that stored FX solely in `fxBank1`/`fxBank2`.
+  - **Drag-and-Drop**: Dropping `.lsdfxchain` onto Deck rows or FX rows in Performance Matrix instantly loads and hot-syncs that FX chain.
+- **Rationale**: Completely decouples deck processing and unlocks infinite combinations of per-deck processing without destroying the existing global FX send architecture. Combining Options A, B, and C gives live visual performers maximum tactical flexibility depending on whether they prefer consolidated 4×4 live consoles, per-deck quick toggling, or an all-hands-on-deck 16-knob FX surface.
+
+---
+
 ## Macro Link Modes: Mixxx-Style Knob-Travel Windowing (`MacroModels.kt`, `MacroCurve.kt`, `MacroBindingInspector.kt`, `MacroCurveTest.kt`, `DECISIONS.md`, `RELEASE_NOTES.md`, `docs/user_guide/macros_and_rack.md`)
 
 - **Context**: 2026-09-22. A single macro knob can already hold up to 4 bindings (`MacroControl.MAX_BINDINGS_PER_CONTROL`), but every binding always tracked the knob's full 0–100% travel identically — there was no way for two bindings on the same knob to respond to different parts of the turn (e.g. crossfade between two targets, or have a second target only kick in past the halfway point) short of manually authoring a matching Min/Max + curve per binding, which doesn't actually zone the travel, just rescales the output range. Mixxx solves this in its Effect Metaknob system with named "link modes" (Full, First Half, Second Half, Triangle, Superknob/Bipolar) that window the knob's normalized position *before* curve shaping. An implementation plan proposing this (plus a parallel multi-binding extension to the ISF FX Metaknob system) was reviewed; the FX-Metaknob half was scoped out to `ROADMAP.md` (v1.1 Backlog, Milestone 4) pending open questions — notably whether it's redundant with this macro-side feature — while the macro-side half was implemented directly since `MacroBinding` already supports multi-binding-per-knob and needed only an additive field.

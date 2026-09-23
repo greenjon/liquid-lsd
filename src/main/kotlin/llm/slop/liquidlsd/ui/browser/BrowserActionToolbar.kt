@@ -43,28 +43,23 @@ object BrowserActionToolbar {
      *  paths apply FX items the same way regardless of Library view mode. */
     fun handleDeckLoad(session: SessionContext, mixer: Mixer, deckIndex: Int, deck: Deck, deckLabel: String, selectedFile: File) {
         val ext = selectedFile.extension.lowercase()
-        val bank = deck.assignedFxBank
         when (ext) {
             "lsdfxchain" -> {
-                if (bank != null) {
-                    session.presetRepository.loadFxChainAsync(selectedFile).thenAccept { chainDto ->
-                        bank.applyFxChain(chainDto)
-                    }
+                session.presetRepository.loadFxChainAsync(selectedFile).thenAccept { chainDto ->
+                    deck.applyFxChain(chainDto)
                 }
             }
             "lsdfx" -> {
-                if (bank != null) {
-                    val vacantIndex = (0 until FxBank.SLOT_COUNT).firstOrNull { bank.slots[it] == null }
-                    if (vacantIndex != null) {
-                        session.presetRepository.loadFxPresetAsync(selectedFile).thenAccept { presetDto ->
-                            bank.applyFxSlot(vacantIndex, presetDto.slot)
-                        }
-                    } else {
-                        pendingOverwriteDeck = deck
-                        pendingOverwriteDeckLabel = deckLabel
-                        pendingFxFile = selectedFile
-                        ImGui.openPopup("OverwriteSlotPopup")
+                val vacantIndex = (0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT).firstOrNull { deck.fxSlots[it] == null }
+                if (vacantIndex != null) {
+                    session.presetRepository.loadFxPresetAsync(selectedFile).thenAccept { presetDto ->
+                        deck.applyFxSlot(vacantIndex, presetDto.slot)
                     }
+                } else {
+                    pendingOverwriteDeck = deck
+                    pendingOverwriteDeckLabel = deckLabel
+                    pendingFxFile = selectedFile
+                    ImGui.openPopup("OverwriteSlotPopup")
                 }
             }
             else -> {
@@ -228,16 +223,13 @@ object BrowserActionToolbar {
                 ImGui.textDisabled("${pendingOverwriteDeckLabel} FX slots are full. Select slot to overwrite:")
                 ImGui.separator()
                 if (deck != null && file != null && file.exists()) {
-                    val bank = deck.assignedFxBank
-                    if (bank != null) {
-                        for (s in 0 until FxBank.SLOT_COUNT) {
-                            val slotNum = s + 1
-                            val fx = bank.slots[s]
-                            val label = if (fx != null) "Slot $slotNum: ${fx.displayName}" else "Slot $slotNum: Empty"
-                            if (ImGui.menuItem(label)) {
-                                session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
-                                    bank.applyFxSlot(s, presetDto.slot)
-                                }
+                    for (s in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
+                        val slotNum = s + 1
+                        val fx = deck.fxSlots[s]
+                        val label = if (fx != null) "Slot $slotNum: ${fx.displayName}" else "Slot $slotNum: Empty"
+                        if (ImGui.menuItem(label)) {
+                            session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
+                                deck.applyFxSlot(s, presetDto.slot)
                             }
                         }
                     }

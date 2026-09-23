@@ -34,27 +34,10 @@ class Deck(
     // FBO for rendering the clean visual source output
     var cleanFBO = FBO(width, height)
 
-    // Live references to both shared FxBanks this deck can route into (see FxBank -- a bank's 3
-    // filter chains and their dry/wet are shared with any other deck routed to it; only this
-    // deck's own send level, fxRouting, and its render-target FBOs below are deck-owned). Both
-    // refs are set once by Mixer.init; which one is actually in use is resolved live below from
-    // [fxRouting], so it can be modulated/switched per-frame.
-    var fxBank1: FxBank? = null
-    var fxBank2: FxBank? = null
-    val fxSendLevel = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
-    val fxRouting = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 2.0f) // 0 = Off, 1 = FX1, 2 = FX2
-    // This deck's own default FxRouting value, restored by reset() -- ModulatableParameter.reset()
-    // reverts to the value baked in at construction, not whatever baseValue was set to afterward,
-    // so Mixer.init's per-deck defaults (BG/PV default to FX2) need to be reapplied here too.
-    var fxRoutingDefault: Float = 1.0f
+    // Per-deck dedicated FX chain (3 serial slots, Super Knob, dry/wet, bypass)
+    val fxChain = FxChain("Deck FX")
 
-    /** The bank this deck is actually routed to right now, resolved live from [fxRouting]. */
-    val assignedFxBank: FxBank?
-        get() = when (fxRouting.value.roundToInt().coerceIn(0, 2)) {
-            1 -> fxBank1
-            2 -> fxBank2
-            else -> null
-        }
+    val fxSendLevel: ModulatableParameter get() = fxChain.dryWet
 
     // Inner scratch pair for slot-to-slot progression within the active chain:
     var fxPingFBO = FBO(width, height)
@@ -64,19 +47,29 @@ class Deck(
 
     var activeOutputTexture: Int = cleanFBO.texture
 
-    /** Read-only view of the assigned bank's filter slots, or 3 empty slots if unassigned. */
+    /** Read-only view of the deck's FX filter slots. */
     val fxSlots: Array<llm.slop.liquidlsd.rendering.isf.ISFFilter?>
-        get() = assignedFxBank?.slots ?: arrayOfNulls(FxBank.SLOT_COUNT)
+        get() = fxChain.slots
 
-    /** This deck's send level combined with its bank's shared master wet/dry, or 0 if unassigned/bypassed. */
-    fun getEffectiveWet(bank: FxBank?): Float {
-        val b = bank ?: return 0.0f
-        if (!b.enabled) return 0.0f
-        return fxSendLevel.value * b.masterWetDry.value
+    fun toFxSlotDto(slotIndex: Int): FXSlotDto? = fxChain.toFxSlotDto(slotIndex)
+
+    fun applyFxSlot(slotIndex: Int, dto: FXSlotDto) = fxChain.applyFxSlot(slotIndex, dto)
+
+    fun clearFxSlot(slotIndex: Int) = fxChain.clearFxSlot(slotIndex)
+
+    fun applyFxChain(dto: FXChainDto) = fxChain.applyFxChain(dto)
+
+    fun toFxChainDto(name: String = "", tags: List<String> = emptyList()): FXChainDto =
+        fxChain.toFxChainDto(name, tags)
+
+    /** This deck's effective wet level combining chain enabled state and dry/wet. */
+    fun getEffectiveWet(bank: FxBank? = null): Float {
+        if (!fxChain.enabled) return 0.0f
+        return fxChain.dryWet.value
     }
 
     val fxEffectiveWet: Float
-        get() = getEffectiveWet(assignedFxBank)
+        get() = if (fxChain.enabled) fxChain.dryWet.value else 0.0f
 
     fun resize(newWidth: Int, newHeight: Int) {
         if (width == newWidth && height == newHeight) return
@@ -153,11 +146,8 @@ class Deck(
 
     fun reset() {
         isEmpty = true
+        fxChain.reset()
         fxSendLevel.reset()
-        fxRouting.reset()
-        fxRouting.baseValue = fxRoutingDefault
-        fxRouting.baseMin = fxRoutingDefault
-        fxRouting.baseMax = fxRoutingDefault
         availableSources.forEach { src ->
             src.parameters.values.forEach { it.reset() }
             src.globalAlpha.reset()
@@ -203,7 +193,6 @@ class Deck(
         allParams.add(this.source.globalAlpha)
         
         allParams.add(fxSendLevel)
-        allParams.add(fxRouting)
 
         allParams.add(this.view3DMode)
         allParams.add(this.viewZoom)
@@ -239,7 +228,7 @@ class Deck(
      */
     fun update() {
         source.update()
-        fxRouting.evaluate()
+        fxChain.update()
         view3DMode.evaluate()
         viewZoom.evaluate()
         viewRotateX.evaluate()
@@ -277,8 +266,7 @@ class Deck(
         fxPingFBO.dispose()
         fxPongFBO.dispose()
         fxBankOutFBO.dispose()
-        // Note: bank-owned filters are NOT disposed here -- they're
-        // shared with any other deck routed to the same bank and outlive any one deck.
+        fxChain.dispose()
         // Note: `source` is always one of the entries in `availableSources`, so the
         // forEach below already disposes it. Do NOT call source.dispose() here — that
         // would double-free the active source's GPU objects.
@@ -291,11 +279,11 @@ class Deck(
         // Add all source parameters first (Mandala or DynamicVisualSource)
         list.addAll(source.getParameterPaths(prefix))
 
-        // This deck's own send level into its assigned FxBank
+        // This deck's dedicated FX chain parameters
+        list.addAll(fxChain.getParameterPaths("$prefix/FX"))
         list.add("$prefix/FXChain/DryWet" to fxSendLevel)
 
         // Add Deck's View parameters
-        list.add("$prefix/View/FxRouting" to fxRouting)
         list.add("$prefix/View/3DMode" to view3DMode)
         list.add("$prefix/View/Zoom" to viewZoom)
         list.add("$prefix/View/RotateX" to viewRotateX)

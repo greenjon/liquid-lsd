@@ -675,7 +675,7 @@ object ParametersRenderer {
         }
     }
 
-    private fun drawKnobMeter(
+    internal fun drawKnobMeter(
         session: llm.slop.liquidlsd.SessionContext,
         dl: ImDrawList,
         x: Float, y: Float, r: Float,

@@ -642,6 +642,7 @@ fun main(args: Array<String>) {
 
     // Cleanup
     logger.info { "Shutting down..." }
+    AppPreferencesStore.savePreferences()
     llm.slop.liquidlsd.broadcast.BroadcastEngine.shutdown()
     llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
     llm.slop.liquidlsd.rendering.TextureStreamerManager.shutdown()

@@ -7,6 +7,7 @@ import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.isf.FxMetaBinding
 import llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine
 import llm.slop.liquidlsd.rendering.isf.MetaCurve
+import llm.slop.liquidlsd.rendering.isf.MetaLinkMode
 
 /**
  * Traktor/Mixxx-style performance strip for one [FxChain]: a Chain Super Knob that drives the
@@ -224,6 +225,36 @@ object FXChainMacroStrip {
         }
         for ((idx, input) in topInputs.withIndex()) {
             val param = fx.parameters[input.NAME] ?: continue
+            val existingBinding = fx.getBindingForParam(input.NAME)
+
+            LinkModeButton.drawMetaLink(
+                id = "fx_focus_link_${chainPrefix}_${slotIndex}_$idx",
+                mode = existingBinding?.linkMode,
+                inverted = existingBinding?.invert ?: false,
+                onCycleMode = {
+                    val nextMode = when (existingBinding?.linkMode) {
+                        null -> MetaLinkMode.FULL
+                        MetaLinkMode.FULL -> MetaLinkMode.FIRST_HALF
+                        MetaLinkMode.FIRST_HALF -> MetaLinkMode.SECOND_HALF
+                        MetaLinkMode.SECOND_HALF -> MetaLinkMode.TRIANGLE
+                        MetaLinkMode.TRIANGLE -> MetaLinkMode.BIPOLAR
+                        MetaLinkMode.BIPOLAR -> null
+                    }
+                    fx.setParamLink(input.NAME, nextMode, existingBinding?.invert ?: false)
+                    onPushUndo()
+                },
+                onSelectMode = { newMode ->
+                    fx.setParamLink(input.NAME, newMode, existingBinding?.invert ?: false)
+                    onPushUndo()
+                },
+                onToggleInvert = {
+                    val currMode = existingBinding?.linkMode ?: MetaLinkMode.FULL
+                    val currInv = existingBinding?.invert ?: false
+                    fx.setParamLink(input.NAME, currMode, !currInv)
+                    onPushUndo()
+                }
+            )
+            ImGui.sameLine(0f, 6f)
             ImGui.beginGroup()
             CustomRangeSlider.drawCompactSlider(
                 session = session,

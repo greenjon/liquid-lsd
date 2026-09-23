@@ -124,7 +124,8 @@ class FxChain(val label: String) {
             dryWet = fx.dryWet.toDto(),
             parameters = fx.parameters.mapValues { p -> p.value.toDto() },
             metaKnob = fx.metaKnob.toDto(),
-            metaBinding = fx.metaBinding.toDto()
+            metaBinding = fx.metaBinding.toDto(),
+            metaBindings = fx.metaBindings.map { it.toDto() }
         )
     }
 
@@ -143,7 +144,11 @@ class FxChain(val label: String) {
                 }
                 // Baked snapshot semantics: a saved slot's Metaknob binding/position is restored
                 // exactly as saved, not re-resolved from the (possibly since-changed) auto-bind engine.
-                dto.metaBinding?.let { filter.applyMetaBindingFromPreset(it.toBinding()) }
+                if (!dto.metaBindings.isNullOrEmpty()) {
+                    filter.applyMetaBindingsFromPreset(dto.metaBindings.map { it.toBinding() })
+                } else {
+                    dto.metaBinding?.let { filter.applyMetaBindingFromPreset(it.toBinding()) }
+                }
                 dto.metaKnob?.let { filter.metaKnob.applyDto(it) }
                 slots[slotIndex] = filter
             }

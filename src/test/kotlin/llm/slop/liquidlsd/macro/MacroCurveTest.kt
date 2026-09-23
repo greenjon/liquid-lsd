@@ -204,6 +204,19 @@ class MacroCurveTest {
         assertEquals(0.5f, MacroCurve.mapToRange(0.75f, secondTarget), absoluteTolerance = 1e-6f)
     }
 
+    @Test
+    fun testNaNHandlingSanitizesToZero() {
+        assertEquals(0f, MacroCurve.window(Float.NaN, MacroLinkMode.FULL), absoluteTolerance = 1e-6f)
+        assertEquals(0f, MacroCurve.shape(Float.NaN, MacroCurveType.LINEAR, 8), absoluteTolerance = 1e-6f)
+        val binding = MacroBinding(
+            parameterId = "test",
+            targetType = MacroTargetType.PARAM_BASE_VALUE,
+            minVal = 0f,
+            maxVal = 10f
+        )
+        assertEquals(0f, MacroCurve.mapToRange(Float.NaN, binding), absoluteTolerance = 1e-6f)
+    }
+
     private fun assertEquals(expected: Float, actual: Float, absoluteTolerance: Float, message: String? = null) {
         assertTrue(kotlin.math.abs(expected - actual) <= absoluteTolerance, message ?: "Expected $expected but was $actual (tolerance $absoluteTolerance)")
     }

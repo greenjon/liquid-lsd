@@ -29,6 +29,10 @@ object MacroEngine {
     const val DECK_B = "deckB"
     const val DECK_BG = "deckBG"
     const val DECK_PV = "deckPV"
+    const val DECK_A_FX = "deckA_fx"
+    const val DECK_B_FX = "deckB_fx"
+    const val DECK_BG_FX = "deckBG_fx"
+    const val DECK_PV_FX = "deckPV_fx"
     const val TRANS = "masterTransition"
     const val MASTER = "master"
     const val FX_BANK_1 = "fxBank1"
@@ -44,7 +48,11 @@ object MacroEngine {
     const val MASTER_FX = "masterFx"
 
     /** The always-resident per-deck/mixer/FX-bank bank ids, in display order. */
-    val CANONICAL_BANK_IDS = listOf(DECK_A, DECK_B, DECK_BG, DECK_PV, TRANS, MASTER, FX_BANK_1, FX_BANK_2, FX_SENDS, MASTER_FX)
+    val CANONICAL_BANK_IDS = listOf(
+        DECK_A, DECK_B, DECK_BG, DECK_PV,
+        DECK_A_FX, DECK_B_FX, DECK_BG_FX, DECK_PV_FX,
+        TRANS, MASTER, FX_BANK_1, FX_BANK_2, FX_SENDS, MASTER_FX
+    )
 
     /**
      * Knob count for a freshly auto-vivified bank. All canonical banks
@@ -205,6 +213,10 @@ object MacroEngine {
         "Deck B" -> DECK_B
         "Deck BG" -> DECK_BG
         "Deck PV" -> DECK_PV
+        "Deck A FX", "Deck A/FX", DECK_A_FX -> DECK_A_FX
+        "Deck B FX", "Deck B/FX", DECK_B_FX -> DECK_B_FX
+        "Deck BG FX", "Deck BG/FX", DECK_BG_FX -> DECK_BG_FX
+        "Deck PV FX", "Deck PV/FX", DECK_PV_FX -> DECK_PV_FX
         "Master", "MST" -> MASTER
         "TRANS", "Transition" -> TRANS
         "Bank 1", "FX1" -> FX_BANK_1
@@ -327,9 +339,24 @@ object MacroEngine {
         }
 
         // Keep linked FX slot macro knobs visually in sync with their slot's Metaknob / Super Knob
+        syncLinkedFxChainKnobValues(DECK_A_FX, mixer.deckA.fxChain)
+        syncLinkedFxChainKnobValues(DECK_B_FX, mixer.deckB.fxChain)
+        syncLinkedFxChainKnobValues(DECK_BG_FX, mixer.deckBG.fxChain)
+        syncLinkedFxChainKnobValues(DECK_PV_FX, mixer.deckPV.fxChain)
         syncLinkedFxKnobValues(FX_BANK_1, mixer.fxBank1)
         syncLinkedFxKnobValues(FX_BANK_2, mixer.fxBank2)
         syncLinkedFxKnobValues(MASTER_FX, mixer.masterFxBank)
+    }
+
+    private fun syncLinkedFxChainKnobValues(bankId: String, chain: FxChain) {
+        val macroBank = synchronized(lock) { banks[bankId] } ?: return
+        for (i in 0 until FxChain.SLOT_COUNT) {
+            if (chain.slotSuperKnobLink.getOrNull(i) == true) {
+                val knob = macroBank.knobs.getOrNull(i + 1) ?: continue
+                val slot = chain.slots.getOrNull(i)
+                knob.value = slot?.metaKnob?.baseValue ?: chain.superKnob.baseValue
+            }
+        }
     }
 
     private fun syncLinkedFxKnobValues(bankId: String, fxBank: FxBank) {

@@ -13,7 +13,7 @@ object MacroCurve {
      * in [0,1]. See [MacroLinkMode] for the transfer function each mode implements.
      */
     fun window(macroVal: Float, linkMode: MacroLinkMode): Float {
-        val v = macroVal.coerceIn(0f, 1f)
+        val v = if (macroVal.isNaN()) 0f else macroVal.coerceIn(0f, 1f)
         return when (linkMode) {
             MacroLinkMode.FULL -> v
             MacroLinkMode.FIRST_HALF -> if (v <= 0.5f) v * 2f else 1f
@@ -28,7 +28,7 @@ object MacroCurve {
      * [MacroCurveType.STEP]. Always returns a value in [0,1].
      */
     fun shape(macroVal: Float, curve: MacroCurveType, stepCount: Int): Float {
-        val v = macroVal.coerceIn(0f, 1f)
+        val v = if (macroVal.isNaN()) 0f else macroVal.coerceIn(0f, 1f)
         return when (curve) {
             MacroCurveType.LINEAR -> v
             MacroCurveType.EXPONENTIAL -> v * v

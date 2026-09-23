@@ -33,6 +33,7 @@ import llm.slop.liquidlsd.rendering.Mixer
 class MacroPanel(
     private val parametersState: ParametersState
 ) {
+    private val linkBufs = Array(llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) { imgui.type.ImBoolean(true) }
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         drawDeckTabs()
         ImGui.spacing()
@@ -41,13 +42,16 @@ class MacroPanel(
 
         val topTab = parametersState.activeTopTab
         val bank = MacroEngine.getBank(activeBankId()) ?: MacroEngine.bankForParamPath(parametersState.activeTopTab)
-        if (topTab == "FX1" || topTab == "FX2" || topTab == "MFX") {
-            val fxBank = when (topTab) {
-                "FX1" -> mixer.fxBank1
-                "FX2" -> mixer.fxBank2
-                else -> mixer.masterFxBank
+        val isFxTab = topTab in setOf("A FX", "B FX", "BG FX", "PV FX", "MST FX")
+        if (isFxTab) {
+            val fxChain = when (topTab) {
+                "A FX"   -> mixer.deckA.fxChain
+                "B FX"   -> mixer.deckB.fxChain
+                "BG FX"  -> mixer.deckBG.fxChain
+                "PV FX"  -> mixer.deckPV.fxChain
+                else     -> mixer.masterFxBank.activeChain
             }
-            drawFxRackView(session, topTab, fxBank, bank)
+            drawFxRackView(session, topTab, fxChain, bank)
         } else {
             drawMacroGrid(session, bank)
         }
@@ -71,9 +75,11 @@ class MacroPanel(
         "Deck B" -> MacroEngine.DECK_B
         "Deck BG" -> MacroEngine.DECK_BG
         "Deck PV" -> MacroEngine.DECK_PV
-        "FX1" -> MacroEngine.FX_BANK_1
-        "FX2" -> MacroEngine.FX_BANK_2
-        "MFX" -> MacroEngine.MASTER_FX
+        "A FX" -> MacroEngine.DECK_A_FX
+        "B FX" -> MacroEngine.DECK_B_FX
+        "BG FX" -> MacroEngine.DECK_BG_FX
+        "PV FX" -> MacroEngine.DECK_PV_FX
+        "MST FX" -> MacroEngine.MASTER_FX
         "Master", "MST" -> MacroEngine.MASTER
         "TRANS", "Transition" -> MacroEngine.TRANS
         "Mixer" -> if (parametersState.activeMixerSubTab == "CTRL") MacroEngine.MASTER else MacroEngine.TRANS
@@ -87,9 +93,11 @@ class MacroPanel(
         "Deck PV" to "PV",
         "TRANS" to "TRANS",
         "MST" to "MST",
-        "FX1" to "FX1",
-        "FX2" to "FX2",
-        "MFX" to "MFX"
+        "A FX" to "A FX",
+        "B FX" to "B FX",
+        "BG FX" to "BG FX",
+        "PV FX" to "PV FX",
+        "MST FX" to "MST FX"
     )
 
     private fun drawDeckTabs() {
@@ -159,52 +167,52 @@ class MacroPanel(
         }
     }
 
-    // -- Dedicated FX Rack View (Traktor/Mixxx-style Chain Super Knob + 3 Metaknobs) -----------------
-    // Replaces the generic knob grid for FX1/FX2/MFX: these banks' actual macro surface is each
-    // chain's Super Knob/Metaknobs (see FxChain/ISFFilter), not arbitrary Learn-Mode bindings.
+    // -- Dedicated FX Rack View (Traktor/Mixxx-style Super Knob + 3 Metaknobs) --------------------
+    // Replaces the generic knob grid for the five independent FX tabs (A FX / B FX / BG FX /
+    // PV FX / MST FX): each deck owns its own FxChain and there is no chain-picker here. The
+    // Super Link checkboxes mirror the link toggles in the main parameters panel and in
+    // PerformanceMatrixPanel, writing through to the same FxChain object.
 
     private fun drawFxRackView(
         session: llm.slop.liquidlsd.SessionContext,
-        bankLabel: String,
-        fxBank: llm.slop.liquidlsd.rendering.FxBank,
+        tabId: String,
+        chain: llm.slop.liquidlsd.rendering.FxChain,
         bank: MacroBank
     ) {
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("FX RACK: $bankLabel") }
-        ImGui.spacing()
-
-        val activeChainIndex = parametersState.getActiveChainIndex(fxBank)
-        val availW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)
-        val gap = 4f
-        val segW = ((availW - gap * 2) / 3f).coerceAtLeast(1f)
-
-        for (i in 0 until 3) {
-            if (i > 0) ImGui.sameLine(0f, gap)
-            val isActive = activeChainIndex == i
-            ImGui.pushStyleColor(
-                imgui.flag.ImGuiCol.Button,
-                if (isActive) ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
-            )
-            if (ImGui.button("Chain ${i + 1}##macro_fx_chain_tab_${bankLabel}_$i", segW, 24f)) {
-                parametersState.setActiveChainIndex(fxBank, i)
-            }
-            ImGui.popStyleColor()
+        val displayLabel = when (tabId) {
+            "A FX"   -> "DECK A FX"
+            "B FX"   -> "DECK B FX"
+            "BG FX"  -> "DECK BG FX"
+            "PV FX"  -> "DECK PV FX"
+            "MST FX" -> "MASTER FX"
+            else     -> tabId
         }
-
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("FX RACK: $displayLabel") }
         ImGui.spacing()
 
-        val chain = fxBank.chains[activeChainIndex]
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             ImGui.textDisabled("SUPER LINK:")
             for (slotIdx in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
                 ImGui.sameLine(0f, 8f)
                 val linked = chain.slotSuperKnobLink.getOrNull(slotIdx) ?: false
-                val buf = imgui.type.ImBoolean(linked)
+                val buf = linkBufs[slotIdx]
+                buf.set(linked)
                 val slot = chain.slots.getOrNull(slotIdx)
                 val slotName = slot?.displayName?.takeIf { it.isNotBlank() } ?: "S${slotIdx + 1}"
-                if (ImGui.checkbox("$slotName##macro_fx_link_${bankLabel}_$slotIdx", buf)) {
+                if (ImGui.checkbox("$slotName##macro_fx_link_${tabId}_$slotIdx", buf)) {
                     chain.setSlotLinked(slotIdx, buf.get())
                     val bankId = activeBankId()
-                    llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, bankLabel, chain, activeChainIndex)
+                    if (tabId == "MST FX") {
+                        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, "MFX", chain, 0)
+                    } else {
+                        val deckLabel = when (tabId) {
+                            "A FX"  -> "Deck A"
+                            "B FX"  -> "Deck B"
+                            "BG FX" -> "Deck BG"
+                            else    -> "Deck PV"
+                        }
+                        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(bankId, deckLabel, chain)
+                    }
                 }
             }
         }
@@ -282,6 +290,11 @@ class MacroPanel(
             parametersState.activeTopTab == "Mixer" && parametersState.activeMixerSubTab == "TRANS" -> "PREVIEW: TRANSITION"
             parametersState.activeTopTab == "Master" || parametersState.activeTopTab == "MST" -> "PREVIEW: MASTER"
             parametersState.activeTopTab == "TRANS" || parametersState.activeTopTab == "Transition" -> "PREVIEW: TRANSITION"
+            parametersState.activeTopTab == "A FX"   -> "PREVIEW: DECK A (FX)"
+            parametersState.activeTopTab == "B FX"   -> "PREVIEW: DECK B (FX)"
+            parametersState.activeTopTab == "BG FX"  -> "PREVIEW: DECK BG (FX)"
+            parametersState.activeTopTab == "PV FX"  -> "PREVIEW: DECK PV (FX)"
+            parametersState.activeTopTab == "MST FX" -> "PREVIEW: MASTER (FX)"
             else -> "PREVIEW: ${parametersState.activeTopTab.uppercase()}"
         }
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
@@ -323,14 +336,14 @@ class MacroPanel(
      */
     private fun resolvePreviewTexture(mixer: Mixer): Int {
         return when (parametersState.activeTopTab) {
-            "Deck A" -> mixer.deckA.getOutputTexture()
-            "Deck B" -> mixer.deckB.getOutputTexture()
-            "Deck BG" -> mixer.deckBG.getOutputTexture()
-            "Deck PV" -> mixer.deckPV.getOutputTexture()
-            "Mixer" -> if (parametersState.activeMixerSubTab == "TRANS") mixer.blendFBO.texture else mixer.masterFBO.texture
+            "Deck A", "A FX"    -> mixer.deckA.getOutputTexture()
+            "Deck B", "B FX"    -> mixer.deckB.getOutputTexture()
+            "Deck BG", "BG FX"  -> mixer.deckBG.getOutputTexture()
+            "Deck PV", "PV FX"  -> mixer.deckPV.getOutputTexture()
+            "Mixer"             -> if (parametersState.activeMixerSubTab == "TRANS") mixer.blendFBO.texture else mixer.masterFBO.texture
             "TRANS", "Transition" -> mixer.blendFBO.texture
-            "Master", "MST" -> mixer.masterFBO.texture
-            else -> mixer.masterFBO.texture
+            "Master", "MST", "MST FX" -> mixer.masterFBO.texture
+            else                -> mixer.masterFBO.texture
         }
     }
 }

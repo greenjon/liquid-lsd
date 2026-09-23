@@ -236,7 +236,8 @@ data class DeckPresetDto(
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
     val paramNotes: Map<String, String> = emptyMap(), // Per-parameter notes keyed by paramKey
-    val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null
+    val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null,
+    val fxChain: FXChainDto? = null
 )
 
 @Serializable
@@ -249,7 +250,8 @@ data class FXSlotDto(
     // engine on load -- if the shader's binding is later customized, already-saved slots keep the
     // binding they were saved with until explicitly re-saved.
     val metaKnob: ParameterDto? = null,
-    val metaBinding: llm.slop.liquidlsd.rendering.isf.FxMetaBindingDto? = null
+    val metaBinding: llm.slop.liquidlsd.rendering.isf.FxMetaBindingDto? = null,
+    val metaBindings: List<llm.slop.liquidlsd.rendering.isf.FxMetaBindingDto>? = null
 )
 
 @Serializable
@@ -499,7 +501,8 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         feedbackParameters = feedbackParamsMap,
         viewParameters = viewParamsMap,
         globalAlpha = source.globalAlpha.toDto(),
-        isEmpty = isEmpty
+        isEmpty = isEmpty,
+        fxChain = fxChain.toFxChainDto(name)
     )
 }
 
@@ -586,5 +589,8 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     // Apply global parameters
     source.globalAlpha.reset()
     dto.globalAlpha?.let { source.globalAlpha.applyDto(it) }
+
+    // Apply FX Chain (if present in preset)
+    dto.fxChain?.let { fxChain.applyFxChain(it) }
 }
 

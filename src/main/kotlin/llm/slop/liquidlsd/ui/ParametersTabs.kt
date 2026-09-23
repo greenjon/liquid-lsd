@@ -9,6 +9,7 @@ import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.VisualSource
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import llm.slop.liquidlsd.rendering.isf.MetaLinkMode
 import kotlin.math.roundToInt
 
 object ParametersTabs {
@@ -161,6 +162,7 @@ object ParametersTabs {
         }
         val tabs = mutableListOf<String>()
         tabs.add("SRC")
+        tabs.add("FX")
         tabs.add("View")
         return tabs.distinct()
     }
@@ -590,6 +592,15 @@ object ParametersTabs {
                 ParametersRenderer.drawParamRow(session, "Gain", "$deckLabel/${activeSource.displayName}/Gain", activeSource.globalAlpha, state, labelColW, mixer, gridStartX, otherParams.size, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
 
+            drawSubGroupContent(session, deckLabel, "FX", state) {
+                ImGui.indent(PARAM_INDENT)
+                drawFxChainContent(
+                    session, deck.fxChain, "$deckLabel/FX", "$deckLabel FX", state,
+                    labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo
+                )
+                ImGui.unindent(PARAM_INDENT)
+            }
+
             drawSubGroupContent(session, deckLabel, "View", state) {
                 drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo, transformParams)
             }
@@ -598,10 +609,28 @@ object ParametersTabs {
                 ParametersRenderer.drawParamRow(session, "Gain", "$deckLabel/External Video/Gain", activeSource.globalAlpha, state, labelColW, mixer, gridStartX, 0, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
 
+            drawSubGroupContent(session, deckLabel, "FX", state) {
+                ImGui.indent(PARAM_INDENT)
+                drawFxChainContent(
+                    session, deck.fxChain, "$deckLabel/FX", "$deckLabel FX", state,
+                    labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo
+                )
+                ImGui.unindent(PARAM_INDENT)
+            }
+
             drawSubGroupContent(session, deckLabel, "View", state) {
                 drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
         } else {
+            drawSubGroupContent(session, deckLabel, "FX", state) {
+                ImGui.indent(PARAM_INDENT)
+                drawFxChainContent(
+                    session, deck.fxChain, "$deckLabel/FX", "$deckLabel FX", state,
+                    labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo
+                )
+                ImGui.unindent(PARAM_INDENT)
+            }
+
             drawSubGroupContent(session, deckLabel, "View", state) {
                 drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
@@ -623,12 +652,6 @@ object ParametersTabs {
         transformParams: List<Map.Entry<String, ModulatableParameter>> = emptyList()
     ) {
         var row = 0
-        ParametersRenderer.drawParamRow(session, "FX Route", "$deckLabel/View/FxRouting", deck.fxRouting, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        // This deck's send into its routed FxBank (see FX1/FX2 tabs for the bank's own 3-slot
-        // chain + wet/dry) -- unassigned decks still show it, it's just a no-op until routed.
-        if (deck.assignedFxBank != null) {
-            ParametersRenderer.drawParamRow(session, "FX Send Level", "$deckLabel/FXChain/DryWet", deck.fxSendLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        }
         if (!deck.source.is3D) {
             ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
@@ -781,27 +804,62 @@ object ParametersTabs {
         val chainNum = activeChainIndex + 1
         val chain = bank.chains[activeChainIndex]
         val chainPrefix = "$bankLabel/C$chainNum"
+        drawFxChainContent(
+            session = session,
+            chain = chain,
+            chainPrefix = chainPrefix,
+            chainDisplayName = "$bankLabel Chain $chainNum",
+            state = state,
+            labelColW = labelColW,
+            mixer = mixer,
+            gridStartX = gridStartX,
+            getCvColumns = getCvColumns,
+            getColumnOffset = getColumnOffset,
+            getCvColor = getCvColor,
+            onPushUndo = onPushUndo,
+            startRow = row
+        )
+        ImGui.unindent(PARAM_INDENT)
+    }
 
-        // No separate "Chain Enabled" control: Chain Wet/Dry at ~0 is the bypass signal.
-        ImGui.textDisabled("CHAIN $chainNum ${if (chain.name.isNotEmpty()) "(${chain.name})" else ""}")
+    fun drawFxChainContent(
+        session: llm.slop.liquidlsd.SessionContext,
+        chain: FxChain,
+        chainPrefix: String,
+        chainDisplayName: String,
+        state: ParametersState,
+        labelColW: Float,
+        mixer: Mixer,
+        gridStartX: Float,
+        getCvColumns: () -> List<String>,
+        getColumnOffset: (String) -> Float,
+        getCvColor: (String, Float) -> Int,
+        onPushUndo: () -> Unit,
+        startRow: Int = 0
+    ): Int {
+        var row = startRow
+        val rowStartX = ImGui.getCursorPosX()
+
+        ImGui.textDisabled(chainDisplayName.uppercase() + if (chain.name.isNotEmpty()) " (${chain.name})" else "")
         ImGui.sameLine(labelColW - 24f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.MORE_VERTICAL}##fx_chain_kebab_${bankLabel}_$activeChainIndex", 22f, 20f)) {
-                ImGui.openPopup("FXChainKebabPopup_${bankLabel}_$activeChainIndex")
+            if (ImGui.button("${Icons.MORE_VERTICAL}##fx_chain_kebab_$chainPrefix", 22f, 20f)) {
+                ImGui.openPopup("FXChainKebabPopup_$chainPrefix")
             }
         }
-        itemTooltip("Chain $chainNum Options (Save Chain, Copy, Paste, Clear)")
+        itemTooltip("$chainDisplayName Options (Save Chain, Copy, Paste, Clear)")
 
         ImGui.setCursorPosX(rowStartX)
         ParametersRenderer.drawParamRow(session, "Chain Wet/Dry", "$chainPrefix/DryWet", chain.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
-        if (ImGui.beginPopup("FXChainKebabPopup_${bankLabel}_$activeChainIndex")) {
+        if (ImGui.beginPopup("FXChainKebabPopup_$chainPrefix")) {
             if (ImGui.menuItem("Save Chain As...")) {
-                val chainDto = chain.toFxChainDto(chain.name.ifEmpty { "chain_$chainNum" })
+                val defaultChainName = chain.name.ifEmpty { chainPrefix.replace('/', '_').lowercase() }
+                val chainDto = chain.toFxChainDto(defaultChainName)
                 SavePresetModal.request(
                     title = "Save FX Chain As",
                     confirmLabel = "Save",
-                    defaultName = "chain_$chainNum",
+                    defaultName = defaultChainName,
                     targetDir = FileSystemManager.getFxChainsRoot(),
                     extension = "lsdfxchain"
                 ) { name, tags ->
@@ -810,7 +868,7 @@ object ParametersTabs {
                 }
             }
             if (ImGui.menuItem("Copy Chain")) {
-                llm.slop.liquidlsd.models.ClipboardManager.copyFxChain(chain.toFxChainDto(chain.name.ifEmpty { "chain_$chainNum" }))
+                llm.slop.liquidlsd.models.ClipboardManager.copyFxChain(chain.toFxChainDto(chain.name.ifEmpty { chainPrefix }))
             }
             val canPasteChain = llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard != null
             if (ImGui.menuItem("Paste Chain", "", false, canPasteChain)) {
@@ -833,13 +891,10 @@ object ParametersTabs {
             val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
             if (payload != null) {
                 val file = java.io.File(payload)
-                if (file.exists()) {
-                    val ext = file.extension.lowercase()
-                    if (ext == "lsdfxchain") {
-                        session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
-                            chain.applyFxChain(chainDto)
-                            onPushUndo()
-                        }
+                if (file.exists() && file.extension.lowercase() == "lsdfxchain") {
+                    session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
+                        chain.applyFxChain(chainDto)
+                        onPushUndo()
                     }
                 }
             }
@@ -859,7 +914,7 @@ object ParametersTabs {
         ImGui.separator()
         ImGui.spacing()
 
-        // --- Per-Slot Controls for Active Chain ---
+        // --- Per-Slot Controls for Chain ---
         for (i in chain.slots.indices) {
             val slotNum = i + 1
             val fx = chain.slots[i]
@@ -868,7 +923,7 @@ object ParametersTabs {
             val isCollapsed = state.fxSlotCollapsed[collapseKey] == true
 
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.smallButton("${if (isCollapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##fx${slotNum}_collapse_${bankLabel}_$activeChainIndex")) {
+                if (ImGui.smallButton("${if (isCollapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##fx${slotNum}_collapse_$chainPrefix")) {
                     state.fxSlotCollapsed[collapseKey] = !isCollapsed
                 }
             }
@@ -879,8 +934,8 @@ object ParametersTabs {
             ImGui.sameLine()
             ImGui.setNextItemWidth((labelColW - 85f).coerceAtLeast(30f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_${bankLabel}_$activeChainIndex", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
-                    ShaderPickerPopup.show("Select FX Slot $slotNum for $bankLabel Chain $chainNum", fxSlotPickerTypes[i]) { newFilterId ->
+                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$chainPrefix", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
+                    ShaderPickerPopup.show("Select FX Slot $slotNum for $chainDisplayName", fxSlotPickerTypes[i]) { newFilterId ->
                         if (newFilterId == null) {
                             chain.clearFxSlot(i)
                             onPushUndo()
@@ -898,18 +953,17 @@ object ParametersTabs {
                 fx?.header?.DESCRIPTION?.takeIf { it.isNotBlank() }?.let { itemTooltip(it) }
             }
 
-            // No separate slot bypass control: this slot's Dry/Wet row at ~0 is the bypass signal.
             ImGui.sameLine()
 
             // Per-Slot Kebab Menu
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.MORE_VERTICAL}##fx_slot_kebab_${slotNum}_${bankLabel}_$activeChainIndex", 22f, 20f)) {
-                    ImGui.openPopup("FXSlotKebabPopup_${slotNum}_${bankLabel}_$activeChainIndex")
+                if (ImGui.button("${Icons.MORE_VERTICAL}##fx_slot_kebab_${slotNum}_$chainPrefix", 22f, 20f)) {
+                    ImGui.openPopup("FXSlotKebabPopup_${slotNum}_$chainPrefix")
                 }
             }
             itemTooltip("Slot $slotNum Options (Save, Copy, Paste, Reset)")
 
-            if (ImGui.beginPopup("FXSlotKebabPopup_${slotNum}_${bankLabel}_$activeChainIndex")) {
+            if (ImGui.beginPopup("FXSlotKebabPopup_${slotNum}_$chainPrefix")) {
                 val hasFx = chain.slots[i] != null
                 if (ImGui.menuItem("Save Slot Preset As...", "", false, hasFx)) {
                     chain.toFxSlotDto(i)?.let { slotDto ->
@@ -946,7 +1000,53 @@ object ParametersTabs {
                 ParametersRenderer.drawParamRow(session, "Dry/Wet", "$chainPrefix/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
                 fx.parameters.forEach { (name, param) ->
-                    ParametersRenderer.drawParamRow(session, name, "$chainPrefix/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    val existingBinding = fx.getBindingForParam(name)
+                    val inputLabel = fx.header.INPUTS.find { it.NAME == name }?.LABEL
+                    val descWithLink = if (existingBinding != null) {
+                        val invStr = if (existingBinding.invert) " (Inverted)" else ""
+                        val linkStr = "Metaknob: ${existingBinding.linkMode.name}$invStr"
+                        if (inputLabel != null) "$inputLabel\n[$linkStr]" else "[$linkStr]"
+                    } else inputLabel
+
+                    ParametersRenderer.drawParamRow(
+                        session, name, "$chainPrefix/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++,
+                        getCvColumns, getColumnOffset, getCvColor, onPushUndo,
+                        extraMenuItems = {
+                            ImGui.separator()
+                            ImGui.textDisabled("Metaknob Link")
+                            if (ImGui.menuItem("Unlinked", "", existingBinding == null)) {
+                                fx.setParamLink(name, null)
+                                onPushUndo()
+                            }
+                            if (ImGui.menuItem("Full Range (0%–100%)", "", existingBinding?.linkMode == MetaLinkMode.FULL)) {
+                                fx.setParamLink(name, MetaLinkMode.FULL, existingBinding?.invert ?: false)
+                                onPushUndo()
+                            }
+                            if (ImGui.menuItem("First Half (0%–50%)", "", existingBinding?.linkMode == MetaLinkMode.FIRST_HALF)) {
+                                fx.setParamLink(name, MetaLinkMode.FIRST_HALF, existingBinding?.invert ?: false)
+                                onPushUndo()
+                            }
+                            if (ImGui.menuItem("Second Half (50%–100%)", "", existingBinding?.linkMode == MetaLinkMode.SECOND_HALF)) {
+                                fx.setParamLink(name, MetaLinkMode.SECOND_HALF, existingBinding?.invert ?: false)
+                                onPushUndo()
+                            }
+                            if (ImGui.menuItem("Triangle Peak (0%–100%–0%)", "", existingBinding?.linkMode == MetaLinkMode.TRIANGLE)) {
+                                fx.setParamLink(name, MetaLinkMode.TRIANGLE, existingBinding?.invert ?: false)
+                                onPushUndo()
+                            }
+                            if (ImGui.menuItem("Bipolar (Center-0)", "", existingBinding?.linkMode == MetaLinkMode.BIPOLAR)) {
+                                fx.setParamLink(name, MetaLinkMode.BIPOLAR, existingBinding?.invert ?: false)
+                                onPushUndo()
+                            }
+                            ImGui.separator()
+                            if (ImGui.menuItem("Invert Direction", "", existingBinding?.invert == true)) {
+                                val currMode = existingBinding?.linkMode ?: MetaLinkMode.FULL
+                                fx.setParamLink(name, currMode, !(existingBinding?.invert ?: false))
+                                onPushUndo()
+                            }
+                        },
+                        descriptionOverride = descWithLink
+                    )
                 }
             }
 
@@ -977,7 +1077,7 @@ object ParametersTabs {
                 ImGui.separator()
             }
         }
-        ImGui.unindent(PARAM_INDENT)
+        return row
     }
 }
 

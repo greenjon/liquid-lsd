@@ -136,18 +136,6 @@ class Mixer(
  
     init {
         setTransition("linear_crossfade")
-        for (deck in listOf(deckA, deckB, deckBG, deckPV)) {
-            deck.fxBank1 = fxBank1
-            deck.fxBank2 = fxBank2
-        }
-        deckA.fxRouting.baseValue = 1.0f
-        deckB.fxRouting.baseValue = 1.0f
-        deckBG.fxRouting.baseValue = 2.0f
-        deckPV.fxRouting.baseValue = 2.0f
-        deckA.fxRoutingDefault = 1.0f
-        deckB.fxRoutingDefault = 1.0f
-        deckBG.fxRoutingDefault = 2.0f
-        deckPV.fxRoutingDefault = 2.0f
         loadDefaultFxBanks()
     }
 
@@ -184,6 +172,18 @@ class Mixer(
         loadBank("psychedelic_warp_and_flow.lsdfxbank")?.let { fxBank1.applyFxBank(it) }
         loadBank("liquid_chrome_and_prisms.lsdfxbank")?.let { fxBank2.applyFxBank(it) }
         loadBank("club_master_finishers.lsdfxbank")?.let { masterFxBank.applyFxBank(it) }
+
+        // Initialize distinct starter FX chains for each deck
+        fxBank1.chains.getOrNull(0)?.toFxChainDto("Warp & Flow")?.let { deckA.fxChain.applyFxChain(it) }
+        fxBank2.chains.getOrNull(0)?.toFxChainDto("Liquid Chrome")?.let { deckB.fxChain.applyFxChain(it) }
+        fxBank1.chains.getOrNull(1)?.toFxChainDto("Prisms")?.let { deckBG.fxChain.applyFxChain(it) }
+        fxBank2.chains.getOrNull(1)?.toFxChainDto("Color Shifter")?.let { deckPV.fxChain.applyFxChain(it) }
+
+        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_A_FX, "Deck A", deckA.fxChain)
+        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_B_FX, "Deck B", deckB.fxChain)
+        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_BG_FX, "Deck BG", deckBG.fxChain)
+        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_PV_FX, "Deck PV", deckPV.fxChain)
+        llm.slop.liquidlsd.macro.FxMacroSync.sync(llm.slop.liquidlsd.macro.MacroEngine.MASTER_FX, masterFxBank)
     }
 
     // Channel level multiplier faders (0.0 to 1.0) -- modulatable so they're macro/CV-bindable

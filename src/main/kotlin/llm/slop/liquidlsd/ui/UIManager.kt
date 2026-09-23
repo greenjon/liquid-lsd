@@ -4,8 +4,6 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiConfigFlags
 import imgui.flag.ImGuiWindowFlags
-import imgui.type.ImInt
-import imgui.type.ImString
 import java.io.File
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mandala
@@ -360,8 +358,11 @@ class UIManager(
             }
         }
 
-        val isCtrlF = ImGui.getIO().keyCtrl && ImGui.isKeyPressed(imgui.flag.ImGuiKey.F, false)
-        val isSlash = ImGui.isKeyPressed(imgui.flag.ImGuiKey.Slash, false)
+        // Guarded so Ctrl+F / "/" don't hijack the library while a text field (e.g. a macro
+        // knob's name, or a "/" typed into a preset name) has keyboard focus.
+        val wantTextInput = ImGui.getIO().wantTextInput
+        val isCtrlF = !wantTextInput && ImGui.getIO().keyCtrl && ImGui.isKeyPressed(imgui.flag.ImGuiKey.F, false)
+        val isSlash = !wantTextInput && ImGui.isKeyPressed(imgui.flag.ImGuiKey.Slash, false)
         if (isCtrlF || isSlash) {
             if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) {
                 session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
@@ -371,25 +372,27 @@ class UIManager(
             llm.slop.liquidlsd.ui.browser.PresetListPanel.shouldFocusSearch = true
         }
 
-        if (session.uiTheme.queueKeyTrigger != UITheme.QueueKeyTrigger.SPACE_BACKSPACE) {
-            if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Space)) {
-                LibraryPanel.cycleMode(session)
+        if (!wantTextInput) {
+            if (session.uiTheme.queueKeyTrigger != UITheme.QueueKeyTrigger.SPACE_BACKSPACE) {
+                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Space)) {
+                    LibraryPanel.cycleMode(session)
+                }
             }
-        }
-        when (session.uiTheme.queueKeyTrigger) {
-            UITheme.QueueKeyTrigger.ARROWS -> {
-                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.LeftArrow)) keyDelta -= 1
-                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.RightArrow)) keyDelta += 1
+            when (session.uiTheme.queueKeyTrigger) {
+                UITheme.QueueKeyTrigger.ARROWS -> {
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.LeftArrow)) keyDelta -= 1
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.RightArrow)) keyDelta += 1
+                }
+                UITheme.QueueKeyTrigger.PAGE_UP_DOWN -> {
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.PageUp)) keyDelta -= 1
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.PageDown)) keyDelta += 1
+                }
+                UITheme.QueueKeyTrigger.SPACE_BACKSPACE -> {
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Backspace)) keyDelta -= 1
+                    if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Space)) keyDelta += 1
+                }
+                else -> {}
             }
-            UITheme.QueueKeyTrigger.PAGE_UP_DOWN -> {
-                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.PageUp)) keyDelta -= 1
-                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.PageDown)) keyDelta += 1
-            }
-            UITheme.QueueKeyTrigger.SPACE_BACKSPACE -> {
-                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Backspace)) keyDelta -= 1
-                if (ImGui.isKeyPressed(imgui.flag.ImGuiKey.Space)) keyDelta += 1
-            }
-            else -> {}
         }
         return keyDelta
     }

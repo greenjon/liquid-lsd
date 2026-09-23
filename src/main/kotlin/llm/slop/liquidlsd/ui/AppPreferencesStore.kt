@@ -201,6 +201,15 @@ object AppPreferencesStore {
                     UITheme.column3Mode = try { UITheme.Column3Mode.valueOf(savedColumn3Mode) } catch (e: Exception) { UITheme.Column3Mode.MIXER }
                     logger.info { "Loaded column3Mode from settings file: ${UITheme.column3Mode}" }
                 }
+                val savedWorkspaceMode = props.getProperty("workspaceMode")
+                if (savedWorkspaceMode != null) {
+                    UITheme.workspaceMode = try { UITheme.WorkspaceMode.valueOf(savedWorkspaceMode) } catch (e: Exception) { UITheme.WorkspaceMode.RACK }
+                    logger.info { "Loaded workspaceMode from settings file: ${UITheme.workspaceMode}" }
+                }
+                props.getProperty("performanceMatrixTab")?.toIntOrNull()?.let {
+                    UITheme.performanceMatrixTab = it
+                    logger.info { "Loaded performanceMatrixTab from settings file: ${UITheme.performanceMatrixTab}" }
+                }
                 val savedAutoVj = props.getProperty("autoVjDirtyBehavior")
                 if (savedAutoVj != null) {
                     UITheme.autoVjDirtyBehavior = try { UITheme.AutoVjDirtyBehavior.valueOf(savedAutoVj) } catch (e: Exception) { UITheme.AutoVjDirtyBehavior.AUTO_DISCARD }
@@ -318,6 +327,8 @@ object AppPreferencesStore {
             props.setProperty("maxFps", UITheme.maxFps.toString())
             props.setProperty("libraryMode", UITheme.libraryMode.name)
             props.setProperty("column3Mode", UITheme.column3Mode.name)
+            props.setProperty("workspaceMode", UITheme.workspaceMode.name)
+            props.setProperty("performanceMatrixTab", UITheme.performanceMatrixTab.toString())
             props.setProperty("autoVjDirtyBehavior", UITheme.autoVjDirtyBehavior.name)
             props.setProperty("activeMidiProfile", UITheme.activeMidiProfile)
             props.setProperty("queueKeyTrigger", UITheme.queueKeyTrigger.name)

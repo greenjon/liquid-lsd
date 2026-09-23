@@ -17,7 +17,10 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
                  │                  │                  │
               cleanFBO           cleanFBO           cleanFBO
                  │                  │                  │
-          [FX Routing: None/FX1/FX2 via 3 Serial Chains x 3 Filter Slots]
+          [Deck BG FxChain]   [Deck A FxChain]   [Deck B FxChain]
+          (3 Filter Slots)   (3 Filter Slots)   (3 Filter Slots)
+                 │                  │                  │
+          [Legacy FX Routing: None/FX1/FX2 Send Banks] │
                  │                  └────────┬─────────┘
                  │                           │
                  │                ISF Transition Filter
@@ -34,7 +37,7 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
                                     │
                                masterFBO ──► screen
 
-Deck PV  (preview only — same pipeline as A/B/BG, excluded from Mixer output)
+Deck PV  (preview only — same pipeline as A/B/BG including its own FxChain, excluded from Mixer output)
    └── used to build/audition presets while A, B, and BG are performing live
 ```
 
@@ -117,9 +120,10 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── ParameterResolver.kt    — Parameter lookup
 │   └── WaveformMath.kt         — Math utils
 ├── macro/                      — Macro Controls & Parameter Linking engine; see docs/user_guide/macros_and_rack.md
-│   ├── MacroModels.kt          — Data model: `MacroBinding`, `MacroControl` (knob/switch value + TOGGLE/MOMENTARY/TRIGGER state machine), `MacroBank` (up to 8 knobs / 4 switches)
-│   ├── MacroCurve.kt           — Pure curve-shaping math (LINEAR/EXPONENTIAL/LOGARITHMIC/S_CURVE/STEP) and min/max/invert range mapping
-│   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; one `MacroBank` per canonical bank id (`DECK_A`/`DECK_B`/`DECK_BG`/`DECK_PV`/`TRANS`/`MASTER`), read/written by both Classic Column 3 and the Performance Mode 4×4 Matrix
+│   ├── MacroModels.kt          — Data model: `MacroBinding`, `MacroControl` (rotary knob value), `MacroBank` (up to 4 knobs)
+│   ├── MacroCurve.kt           — Pure curve-shaping math (LINEAR/EXPONENTIAL/LOGARITHMIC/S_CURVE/STEP), knob-travel windowing, and min/max/invert range mapping
+│   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; 14 canonical bank ids (`DECK_A`..`DECK_PV`, `DECK_A_FX`..`DECK_PV_FX`, `TRANS`, `MASTER`, `FX_BANK_1`, `FX_BANK_2`, `FX_SENDS`, `MASTER_FX`), read/written by both Classic Column 3 and the Performance Mode 4×4 Matrix
+│   ├── FxMacroSync.kt          — Bidirectional synchronization between FX chains/banks and canonical macro knobs (Super Knob + Metaknobs)
 │   ├── MacroLearnState.kt      — Interactive click-to-bind Learn Mode session state machine and UI status banner
 │   ├── MacroBankSerializer.kt  — Deck-scoped bank filtering/remapping for `.lsd`/`.lsdplay` DTOs, plus standalone `.knobpreset.json` export/import
 │   └── MacroOscBridge.kt       — `/macro/knob/N` & `/macro/switch/N` inbound OSC address routing and outbound feedback broadcast
@@ -135,11 +139,11 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── FxQueueEngine.kt        — `QueueEngine` + deck-targeting & dirty-deck guard, backing the FX A/B and FX BG queues
 │   ├── FXQueueManager.kt       — `FxQueueEngine` for Deck A/B, targets the crossfader-active deck
 │   ├── FXBgQueueManager.kt     — `FxQueueEngine` for Deck BG
-│   ├── FXItemApplier.kt        — Applies a queued `.lsdfx`/`.lsdfxchain` file to a deck's 4 FX slots deterministically
+│   ├── FXItemApplier.kt        — Applies a queued `.lsdfx`/`.lsdfxchain` file to a deck's 3 FX slots deterministically
 │   ├── TransitionQueueManager.kt — `QueueEngine` + transition apply/auto-fade-hook/session-restore, for the Transition Queue (`.lsdtrans`/`.lsdtransplay`); keeps unresolved playlist items as literal stock-shader-ID tokens instead of dropping them
 │   ├── PlaylistParser.kt       — Parses playlist files
 │   ├── SessionState.kt         — Session state management
-│   ├── SessionSerializer.kt    — Persists/restores the active session, incl. the five canonical per-deck/mixer macro banks
+│   ├── SessionSerializer.kt    — Persists/restores the active session, incl. the 14 canonical macro banks
 │   └── PresetIOStatus.kt       — IO status for UI feedback
 ├── cli/                        — Startup CLI argument parsing & validation
 │   └── CliArgs.kt              — Command line options (--screenshot-ui, --window, --no-audio, --ui-lab)
@@ -159,7 +163,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── AudioTexture.kt         — Universal 512x2 floating-point audio FFT spectrum and live waveform OpenGL texture stream
 │   ├── FxChain.kt              — Individual FX chain hosting 3 ISF filter slots with chain-level wet/dry and bypass, plus a Super Knob that drives linked slots' Metaknobs via soft-takeover
 │   ├── FxBank.kt               — FX Bank (FX1, FX2, MFX) managing 3 serial FxChain instances with master wet/dry and bypass
-│   ├── Deck.kt                 — VisualSource + cleanFBO + 4-buffer ping-pong architecture (scratch fxPingFBO/fxPongFBO + alternating fxChainOutFBO/fxBankOutFBO) + View & FxRouting params
+│   ├── Deck.kt                 — VisualSource + cleanFBO + dedicated 3-slot FxChain with FBO ping-pong architecture (scratch fxPingFBO/fxPongFBO + fxBankOutFBO) + 3D View params
 │   ├── Mixer.kt                — Blends Deck A+B via 100% ISF transition over BG -> masterFBO with masterFxBank (MFX) & 4-buffer ping-pong architecture
 │   ├── Renderer.kt             — Per-frame: universal uniform bridge -> polymorphic source renderTopology() -> 2D view transform -> serial 3-chain FX bank pass -> ISF transition pass (A/B) -> Deck BG composite -> master FX pass -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource, 2D/3D classification via is3D)
@@ -187,6 +191,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── UIThemeStyler.kt        — ImGui dynamic styling, theme palettes, and font scaling
 │   ├── SplitterManager.kt      — Multi-column layout dragging and divider render manager
 │   ├── ParametersPanel.kt      — Parameter matrix with tabs, source dropdown, and modulator columns
+│   ├── ParametersTabs.kt       — Tabbed parameter container rendering per-deck generator controls and insert FX racks
 │   ├── PropertiesPanel.kt      — Edits parameter values and modulators with oscilloscope
 │   ├── PanelTitleBar.kt        — Synchronized 1.5x title bar renderer and optical text centering for Parameters & Properties
 │   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)
@@ -200,10 +205,11 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MixerPanel.kt           — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader
 │   ├── PlaylistManager.kt      — Manages saved setlists
 │   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
-│   ├── MacroPanel.kt           — Column 3 MACROS editing surface: 8 knobs + 4 switches, binding inspector, Learn Mode; renders the dedicated FX Rack view (below) instead of the generic grid for the FX1/FX2/MFX tabs
+│   ├── MacroPanel.kt           — Column 3 MACROS editing surface: 4 knobs, binding inspector, Learn Mode; renders the dedicated FX Rack view (below) instead of the generic grid for the FX1/FX2/MFX tabs
+│   ├── MacroBindingInspector.kt — Drawer for inspecting and editing target parameter bindings, response curves, travel windows, and invert toggles
 │   ├── MacroKnobWidget.kt      — Rotary macro knob widget: drag/wheel interaction, accent-colored arc fill, optional deck tint
 │   ├── FXChainMacroStrip.kt    — Traktor/Mixxx-style FX Rack strip: Chain Super Knob + 3 slot Metaknobs (soft-takeover link toggles), Single FX Focus Mode, right-click Metaknob rebind menu. Drawn in both ParametersTabs.kt (per-chain, Parameters panel) and MacroPanel.kt (FX1/FX2/MFX tabs, Column 3)
-│   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs, deck-colored rows, plus the Modular Rack accordion (see `rack/` below) — a chevron on each row group cycles Faceplate → Bay → Deep Edit, with a scrollable Bay/Deep-Edit region drawn below the (always fixed-height) grid
+│   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs (LIVE QUAD, MASTER & FX, LIVE CONSOLE, ALL FX), deck-colored rows, plus the Modular Rack accordion (see `rack/` below) — a chevron on each row group toggles Faceplate ↔ Deep Edit, expanding the selected module while collapsing other rows
 │   ├── rack/
 │   │   └── RackUnit.kt          — Shared chevron/disclosure-tier drawing helper for the Modular Rack accordion, and the persistent "Learning: …" indicator; stateless, operates only on `ParametersState` (never `Mixer`/`FxBank`, enforcing that disclosure changes can't trigger FX bank refocus or `FxMacroSync` re-runs)
 │   ├── UiLabPanel.kt           — Isolated UI component gallery sandbox (swatches, icons, custom widgets)

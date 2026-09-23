@@ -23,11 +23,53 @@ import llm.slop.liquidlsd.rendering.FxChain
  */
 object FxMacroSync {
 
-    private val OWNED_PATH_PATTERN = Regex("""^([^/]+)/C\d+/(Super|FX\d+/Meta)$""")
+    private val OWNED_PATH_PATTERN = Regex("""^([^/]+)/(?:C\d+|FX)/(Super|FX\d+/Meta)$""")
 
     /** Re-syncs [bankId]'s [MacroBank] knobs 0-3 to [bank]'s active chain's Super Knob + Metaknobs. */
     fun sync(bankId: String, bank: FxBank, forceResync: Boolean = false) {
         syncChain(bankId, bank.label, bank.activeChain, bank.activeChainIndex, forceResync)
+    }
+
+    /**
+     * Re-syncs [bankId]'s [MacroBank] knobs 0-3 to a deck's dedicated [FxChain].
+     * Knob 0 becomes the chain's Super Knob, Knobs 1-3 become each slot's Metaknob.
+     */
+    fun syncDeckFx(bankId: String, deckLabel: String, chain: FxChain, forceResync: Boolean = false) {
+        val macroBank = MacroEngine.getBank(bankId) ?: MacroEngine.newBankFor(bankId).also {
+            MacroEngine.registerBank(bankId, it)
+        }
+
+        syncKnob(
+            macroBank = macroBank,
+            knobIndex = 0,
+            bankLabel = deckLabel,
+            defaultLabel = "SUPER",
+            targetPath = "$deckLabel/FX/Super",
+            initialValue = chain.superKnob.baseValue,
+            forceResync = forceResync
+        )
+
+        for (slotIdx in 0 until FxChain.SLOT_COUNT) {
+            val knobIndex = slotIdx + 1
+            val slot = chain.slots.getOrNull(slotIdx)
+            val label = slot?.displayName?.takeIf { it.isNotBlank() } ?: "FX$knobIndex"
+            if (chain.slotSuperKnobLink.getOrNull(slotIdx) == true) {
+                clearOwnedBinding(macroBank, knobIndex, deckLabel)
+                macroBank.knobs.getOrNull(knobIndex)?.let { if (isOwnedOrEmpty(it, deckLabel)) it.label = label }
+                continue
+            }
+            syncKnob(
+                macroBank = macroBank,
+                knobIndex = knobIndex,
+                bankLabel = deckLabel,
+                defaultLabel = label,
+                targetPath = "$deckLabel/FX/FX$knobIndex/Meta",
+                initialValue = slot?.metaKnob?.baseValue ?: 0f,
+                forceResync = forceResync
+            )
+        }
+
+        MacroEngine.invalidate()
     }
 
     /**

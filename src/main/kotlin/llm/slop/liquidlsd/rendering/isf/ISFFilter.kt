@@ -88,8 +88,39 @@ class ISFFilter(
 
     /** The effect's single macro control — see [ISFAutoBindEngine] for how [metaBinding] gets resolved. */
     val metaKnob = ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f)
-    var metaBinding: FxMetaBinding = FxMetaBinding.DRY_WET_SAFETY_NET
-        private set
+    val metaBindings = mutableListOf<FxMetaBinding>()
+
+    /** Backwards-compatible accessor for the primary Metaknob binding. */
+    var metaBinding: FxMetaBinding
+        get() = metaBindings.firstOrNull() ?: FxMetaBinding.DRY_WET_SAFETY_NET
+        set(value) {
+            metaBindings.clear()
+            metaBindings.add(value)
+        }
+
+    /** Finds the binding targeting [paramName] (or null if targeting dryWet or unlinked). */
+    fun getBindingForParam(paramName: String?): FxMetaBinding? =
+        metaBindings.find { it.targetParamName == paramName }
+
+    /** Sets, updates, or clears the Metaknob link for [paramName]. If [linkMode] is null, unlinks it. */
+    fun setParamLink(paramName: String?, linkMode: MetaLinkMode?, invert: Boolean = false) {
+        val idx = metaBindings.indexOfFirst { it.targetParamName == paramName }
+        if (linkMode == null) {
+            if (idx >= 0) metaBindings.removeAt(idx)
+        } else {
+            val param = paramName?.let { parameters[it] }
+            val minV = param?.minClamp ?: 0f
+            val maxV = param?.maxClamp ?: 1f
+            val existing = if (idx >= 0) metaBindings[idx] else null
+            val newBinding = existing?.copy(linkMode = linkMode, invert = invert)
+                ?: FxMetaBinding(targetParamName = paramName, minVal = minV, maxVal = maxV, linkMode = linkMode, invert = invert)
+            if (idx >= 0) {
+                metaBindings[idx] = newBinding
+            } else {
+                metaBindings.add(newBinding)
+            }
+        }
+    }
 
     /** Rebinds this effect's Metaknob, optionally persisting it as a user override for this shader (by content hash). */
     fun rebindMetaKnob(binding: FxMetaBinding, persistOverride: Boolean = true) {
@@ -102,6 +133,16 @@ class ISFFilter(
     /** Restores a specific binding without touching the persisted override (e.g. loading a baked preset). */
     fun applyMetaBindingFromPreset(binding: FxMetaBinding) {
         metaBinding = binding
+    }
+
+    /** Restores multiple bindings without touching the persisted override. */
+    fun applyMetaBindingsFromPreset(bindings: List<FxMetaBinding>) {
+        metaBindings.clear()
+        if (bindings.isNotEmpty()) {
+            metaBindings.addAll(bindings)
+        } else {
+            metaBindings.add(FxMetaBinding.DRY_WET_SAFETY_NET)
+        }
     }
 
     private val inputImageName: String?
@@ -268,15 +309,19 @@ class ISFFilter(
         }
     }
 
-    /** Drives [metaBinding]'s target uniform (or [dryWet] as the safety net) from the current [metaKnob] value. */
+    /** Drives all [metaBindings]' target uniforms (or [dryWet] as safety net) from the current [metaKnob] value. */
     private fun applyMetaKnobBinding() {
-        val binding = metaBinding
-        val target = binding.targetParamName?.let { parameters[it] }
-        val mapped = binding.mapKnobToTarget(metaKnob.value)
-        if (target != null) {
-            target.baseValue = mapped
-        } else {
-            dryWet.baseValue = mapped
+        val k = metaKnob.value
+        for (i in 0 until metaBindings.size) {
+            val binding = metaBindings[i]
+            if (!binding.enabled) continue
+            val target = binding.targetParamName?.let { parameters[it] }
+            val mapped = binding.mapKnobToTarget(k)
+            if (target != null) {
+                target.baseValue = mapped
+            } else {
+                dryWet.baseValue = mapped
+            }
         }
     }
 
@@ -542,9 +587,10 @@ class ISFFilter(
         this.parameters.forEach { (name, param) ->
             copy.parameters[name]?.baseValue = param.baseValue
         }
-        // Preserve this instance's Metaknob binding/position rather than the freshly re-resolved one
+        // Preserve this instance's Metaknob bindings/position rather than the freshly re-resolved one
         // the constructor just computed from (already-copied) parameter defaults.
-        copy.metaBinding = this.metaBinding
+        copy.metaBindings.clear()
+        copy.metaBindings.addAll(this.metaBindings.map { it.copy() })
         copy.metaKnob.baseValue = this.metaKnob.baseValue
         return copy
     }

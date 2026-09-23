@@ -40,21 +40,23 @@ set:
 - **Min / Max** — the travel range the binding maps onto, independent of the target's own range.
 - **Curve** — Linear, Exponential, Logarithmic, S-Curve, or Step (quantized into a fixed number
   of positions).
-- **Invert** — turning the knob up moves this target down.
 - **Link** — which zone of the knob's travel this binding responds to (Mixxx-style parameter
-  linking). Since one knob can hold up to 4 bindings, Link lets each one claim a different part
-  of the turn instead of all of them tracking the full 0–100% sweep together:
-  - **Full (0-100%)** — the default; tracks the whole knob travel.
-  - **1st Half (0-50%)** — sweeps 0→1 across the first half of the turn, then holds at 1.0 for
+  linking). Instead of a plain dropdown, this is controlled via an intuitive **vector transfer curve
+  button** displaying the exact response curve on the button face, with an adjacent **`[±]`** invert toggle:
+  - **Full (0-100%)** `[  /  ]` — tracks the entire knob travel.
+  - **1st Half (0-50%)** `[ / ‾ ]` — sweeps 0→1 across the first half of the turn, then holds at 1.0 for
     the rest of the travel.
-  - **2nd Half (50-100%)** — holds at 0.0 for the first half, then sweeps 0→1 across the second.
-  - **Triangle (Peak)** — sweeps 0→1 up to center, then back down to 0 — useful for a target that
+  - **2nd Half (50-100%)** `[ _ / ]` — holds at 0.0 for the first half, then sweeps 0→1 across the second.
+  - **Triangle (Peak)** `[ /\ ]` — sweeps 0→1 up to center, then back down to 0 — useful for a target that
     should peak mid-turn and fall off at either extreme.
-  - **Bipolar (Center-0)** — 0.0 at center, rising to 1.0 at either end — useful for a target that
+  - **Bipolar (Center-0)** `[ \/ ]` — 0.0 at center, rising to 1.0 at either end — useful for a target that
     should stay neutral at rest and react to turning the knob in *either* direction.
+  - **Invert Toggle `[±]`** — dynamically flips the direction and mirrors the vector glyph geometry.
 
+  Left-click the link button to cycle through the modes; right-click to open a context menu and select directly.
   A common pattern: bind two targets to the same knob, one on **1st Half** and one on **2nd
   Half**, to crossfade or choreograph between them from a single knob turn.
+- **Live Value Meter Knob** — on the second row of each binding (to the left of Min/Max, Link Mode, and Curve), a rotary meter knob (the same crisp knob widget used in the Parameters panel) displays the live evaluated output value in relation to the macro knob position. If you use a Triangle ramp (peak) curve or a half-turn zone, moving the macro knob from 0 to 1 lets you see the binding sweep (e.g. 0 → 1 → 0) in real time. Hovering over the knob displays exact numerical readouts.
 - **Enabled** — toggling a binding off immediately hands the target field back to normal
   manual/mouse editing; toggling it back on resumes macro control.
 
@@ -107,11 +109,13 @@ Macro Knobs sit at the top of the MIDI/OSC input hierarchy:
 
 ---
 
-## FX Rack (FX1 / FX2 / MFX tabs)
+## FX Rack (per-deck FX tabs)
 
-Selecting **FX1**, **FX2**, or **MFX** in Column 3's tab strip swaps the generic 8-knob grid for a
-dedicated **FX Rack** view — a Traktor/Mixxx-style performance strip for that bank's currently
-active chain (use the `[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]` subtabs to switch chains).
+Each deck and Master now has its own **independent FX chain**. Selecting **A FX**, **B FX**,
+**BG FX**, **PV FX**, or **MST FX** in Column 3's tab strip swaps the generic macro-knob grid for a
+dedicated **FX Rack** view — a Traktor/Mixxx-style Super Knob + Metaknob strip for that deck's
+own FX chain. Unlike the old shared FX1/FX2 banks, each deck's FX chain is always available
+regardless of what the other decks are doing.
 
 ### Chain Super Knob & effect Metaknobs
 
@@ -156,7 +160,7 @@ Mixer column (Column 3) and Library dock remain fully visible.
 - Or use **View → Performance Mode** / **View → Classic Deck View** in the menu bar, or click
   the **`[ CLASSIC | PERF ]`** pill in the toolbar.
 
-Your active tab is remembered between sessions.
+Performance Mode is the default view mode for new users. Your selected workspace view mode (Classic vs Performance) and active tab are remembered between sessions in application preferences.
 
 ### The layout tabs
 
@@ -166,37 +170,38 @@ Each tab shows 16 knobs across 4 rows, mapped to different banks:
 |:---|:---|:---|:---|:---|
 | **LIVE QUAD** | Deck A (1–4) | Deck B (1–4) | Deck BG (1–4) | Deck PV (1–4) |
 | **MASTER & FX** | Master (1–4) | Transitions (1–4) | FX Sends (1–4) | Deck PV (1–4) |
-| **LIVE CONSOLE** | Deck A (1–4) | Deck B (1–4) | Deck BG (1–4) | FX Bank (Super + 3 Metaknobs) |
+| **LIVE CONSOLE** | Deck A (1–4) | Deck B (1–4) | Deck BG (1–4) | Focused FX Target (Super + 3 Metaknobs) |
+| **ALL FX** | Deck A FX (1–4) | Deck B FX (1–4) | Deck BG FX (1–4) | Master FX (1–4) |
 
-The Master row carries the crossfader and crossfader-time (Fade Speed) controls; the Transitions
-row carries the transition picker and queue prev/next controls -- previously both lived together
-on a single combined "Master / Transitions" row in `LIVE CONSOLE`. There's no dedicated "Master
-FX" row anymore: `Master FX` (`masterFxBank`) is reached via `LIVE CONSOLE`'s FX row by selecting
-`[MFX]` in its bank switcher, which drives the exact same live bank -- it was a straight duplicate
-of a row already reachable elsewhere.
+- **Per-Deck Insert FX & Flexible Routing**: Every deck (A, B, BG, PV) now owns its own dedicated 3-slot `FxChain` running post-generator and pre-crossfader, completely decoupled from other decks.
+- **In-Row `[ SRC | FX ]` Mode Toggle (Deck Rows)**: In the header of each Deck row, click **`[ SRC | FX ]`** to toggle that individual row between visual generator macros (`SRC`) and that deck's insert FX macros (`FX`). In `FX` mode, the knobs immediately become Super Knob + 3 Metaknobs for that deck, and the right-wing controls offer instant `[ BYPASS / FX ON ]` and `[ Resync ]` buttons.
+- **Target Switcher `[ A | B | BG | PV | MST ]` (Row 4 in Live Console)**: Row 4 provides a focused 4-knob surface for FX. Quickly switch the row's focus between Deck A, B, BG, PV, or Master FX using the target switcher buttons. The row dynamically adopts the accent color and label of the focused target. A dedicated **`[ Preset ▾ ]`** popup button lets you load saved 3-slot FX chains (`.lsdfxchain`) or clear the active chain.
+- **ALL FX Tab**: Provides a comprehensive 16-knob surface controlling Deck A FX, Deck B FX, Deck BG FX, and Master FX simultaneously with dedicated `[ Preset ▾ ]`, `[ BYPASS / FX ON ]`, `[ Resync ]`, and slot link buttons across all 4 rows.
+- The Master row carries the crossfader and crossfader-time (Fade Speed) controls; the Transitions row carries the transition picker and queue prev/next controls.
 
-Each row is color-coded to its deck (blue for Deck A, orange for Deck B, amber for Deck BG,
-mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) with a colored bar on the left
-edge and a faint row label.
+Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) with a colored bar on the left edge and a clear row label.
 
 ### Performance Controls & Side-Wing Layout
 
 To maximize vertical space in the matrix and keep the knobs comfortably clustered together:
-- **Right-Aligned Row Titles & Elevated Knobs**: Row group titles (e.g. `DECK A`, `FX: FX Bank 1`, `TRANSITIONS`) are aligned to the right side above the right-wing UI elements, preceding the faceplate `[Collapse]` and disclosure chevron buttons. This frees the entire central column, allowing the 4-knob cluster to start higher up and provide generous vertical clearance for the knob circle, label, `Val: 0.00` readout, and inline `[Learn]` button without vertical cramping.
+- **Right-Aligned Row Titles & Elevated Knobs**: Row group titles (e.g. `DECK A`, `FX: Deck A`, `TRANSITIONS`) are aligned to the right side above the right-wing UI elements, preceding the faceplate `[Collapse]` and disclosure chevron buttons. This frees the entire central column, allowing the 4-knob cluster to start higher up and provide generous vertical clearance for the knob circle, label, `Val: 0.00` readout, and inline `[Learn]` button without vertical cramping.
 - **Deck Rows (Deck A, B, BG, PV)**:
   - **Left Wing (Info & Deck Controls)**:
     - **Generator Badge**: Displays active visual source (`deck.source.displayName`).
+    - **`[ SRC | FX ]` Toggle**: Instantly toggles between visual source macros and dedicated deck FX chain macros.
     - **Preset Dropdown Combo**: Searchable preset selector with auto-focus Quick-Search filter bar (`presetSearch*`) and dirty marker (`*`).
     - **Eject Button (`⏏`)**: Resets the deck to defaults with dirty-state safety guard.
     - **Randomize Die Button (`🎲`)**: Instantly randomizes that deck's modulators & base values with undo support (when randomization is enabled).
     - **Queue Navigation**: Deck A and Deck B connect to `PlayQueueManager` (`< N/Total >`), Deck BG connects to `BgQueueManager` (`< N/Total >`), and Deck PV features a quick Preview focus button.
-  - **Center Cluster**: The 4 macro knobs are grouped close together, centered neatly between the control wings with uniform column alignment across rows.
-  - **Right Wing (FX Send Routing)**: Color-coded `[FX1]` and `[FX2]` send toggles with right-click MIDI/OSC learn, positioned directly beneath the right-aligned row title.
+  - **Center Cluster**: The 4 macro knobs are grouped close together, centered neatly between the control wings with uniform column alignment across rows. When in `FX` mode, slot link buttons (`Icons.LINK`/`Icons.UNLINK`) appear on columns 2–4 to link/unlink Metaknobs to the Super Knob.
+  - **Right Wing**: Displays dedicated insert FX controls for that deck: `[ BYPASS / FX ON ]` and `[ Resync ]` buttons, directly accessible on the deck row at all times.
+  - **Drag-and-Drop**: Dropping a deck preset (`.patch`, `.lsd`, `.json`) loads the visual preset; dropping a `.lsdfxchain` loads that FX chain onto the deck.
 - **FX Row (Row 4 in Live Console)**:
-  - **Left Wing (Bank & Chain Switchers)**: Quick bank buttons (`[FX1]`, `[FX2]`, `[MFX]`) and chain selection buttons (`[C1]`, `[C2]`, `[C3]`). Selecting `[MFX]` here focuses the same `masterFxBank` the Master row's crossfader sits above, post-crossfade -- it's the only place to reach Master FX now that `MASTER & FX` no longer has a dedicated Master FX row.
+  - **Left Wing (Target Switcher & Chain Presets)**: Quick target switcher (`[ A ]`, `[ B ]`, `[ BG ]`, `[ PV ]`, `[ MST ]`) and preset selector popup (`[ Preset ▾ ]`).
   - **Center Cluster**: The 4 macro knobs (Super Knob + 3 slot Metaknobs) with slot link/unlink buttons (`Icons.LINK`/`Icons.UNLINK`) beside each slot knob.
-  - **Right Wing (Bypass & Utility)**: Bank bypass toggle (`[BYPASS]`) and explicit `[Resync]` button beneath the bank title.
-  - Chain files (`.lsdfxchain`) can be dragged and dropped onto the title bar.
+  - **Right Wing (Bypass & Utility)**: Chain bypass toggle (`[ BYPASS / FX ON ]`) and explicit `[ Resync ]` button beneath the title.
+  - **Drag-and-Drop**: Chain files (`.lsdfxchain`) can be dragged and dropped onto the title bar.
+- **ALL FX Tab Rows**: Each of the 4 rows has its own target badge, `[ Preset ▾ ]` loader popup, `[ BYPASS / FX ON ]` toggle, `[ Resync ]` button, and slot link toggles.
 - **Whole-Rig Randomize (`[ ALL 🎲 ]`)**: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking `mixer.randomizeAll()` across all decks simultaneously.
 - **Master (Row 1 in Master & FX)**: Features Deck A and Deck B quick-snap buttons (`[ A ]` and `[ B ]`), an interactive zero-centered crossfader track with mouse drag, mouse wheel, middle-click center reset, and live amber modulation/auto-fade indicator dot, a smooth `[ AUTO ]` crossfade trigger, and an interactive **Fade Speed Duration Badge** (crossfader time -- scrubbable with mouse drag/wheel and right-click context menu for duration presets `0.5s`–`8.0s` and MIDI/OSC learn). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) dropped onto the crossfader track apply directly.
 - **Transitions (Row 2 in Master & FX)**: Features a Transition Picker popup button displaying the active transition with modified indicator (`*`), and Transition Queue stepping controls (`<`, `N/Total`, `>`). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the title header.
@@ -212,7 +217,6 @@ Interactive header controls in the Performance Matrix also support right-click M
 - **Auto-Fade Button `[ AUTO ]` & Fade Speed Badge**: Right-click to Learn MIDI (`Global/autoFade`, `Mixer/xfadeSpeed`) or Learn OSC (`Mixer/xfadeSpeed`).
 - **PlayQueue & BG Queue `<` and `>`**: Right-click to Learn MIDI (`Global/queuePrev`, `Global/queueNext`, `Global/bgQueuePrev`, `Global/bgQueueNext`).
 - **Transition Queue `<` and `>`**: Right-click to Learn MIDI (`Global/transQueuePrev`, `Global/transQueueNext`) or Learn OSC (`Mixer/transQueuePrev`, `Mixer/transQueueNext`).
-- **FX Routing Toggles**: Right-click to Learn MIDI/OSC for `$deckLabel/View/FxRouting`.
 Controls actively armed for MIDI learn display a pulsing cyan highlight border. Active MIDI assignments are shown in tooltips.
 
 ### Interacting with knobs
@@ -238,8 +242,8 @@ between two disclosure tiers, without leaving Performance Mode:
 2. **Deep Edit** — click the chevron to add, side-by-side like Classic mode's Parameters/Properties
    columns, the full **VAL / MIDI / LFO / SEQ / AUD** parameter grid on the left and the
    per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD) on the right,
-   for **Deck rows** (SRC/View), the **FX row** (chain switcher, per-slot ISF uniforms -- also
-   covers Master FX, since selecting `[MFX]` in the FX row focuses `masterFxBank`), and the
+   for **Deck rows** (SRC/View), the **FX row** (per-slot ISF uniforms — each deck has its own
+   FX chain reachable via its `[A FX]` / `[B FX]` / `[BG FX]` / `[PV FX]` / `[MST FX]` tab), and the
    **Master and Transitions rows** (CTRL/TRANS subtabs — transition shader, dry/wet, crossfade,
    master level, queue navigation; both rows' chevrons open the same Mixer Deep Edit content).
    Deep Edit isn't wired up yet for the FX Sends row
@@ -267,8 +271,7 @@ be accidentally folded away mid-Learn; a **"Learning: ‹name› — Esc to canc
 visible in the toolbar the whole time a Learn is armed, even if you've expanded a different row.
 The same Solo/Collapse-All controls are also in **View** menu.
 
-Expanding or collapsing a row is purely a display change — it never refocuses the FX row's
-FX1/FX2/MFX selection or re-syncs the Super Knob/Metaknob mapping.
+Expanding or collapsing a row is purely a display change — it never re-syncs the Super Knob/Metaknob mapping.
 
 ### Setting up knob labels and bindings
 
@@ -291,19 +294,26 @@ read from and write to the same underlying `MacroEngine` banks.
 
 ## Macro Banks
 
-There are six always-present macro banks, one per deck/scope:
+There are 14 always-resident canonical macro banks (4 knobs each, conforming to the 4-column performance grid):
 
-| Bank | Knobs available | Canonical ID |
-|:---|:---|:---|
-| Deck A | 8 | `deckA` |
-| Deck B | 8 | `deckB` |
-| Deck BG | 8 | `deckBG` |
-| Deck PV | 8 | `deckPV` |
-| Transitions | 8 | `masterTransition` |
-| Master | 8 | `master` |
+| Scope | Bank | Knobs | Canonical ID | Smart Defaults |
+|:---|:---|:---|:---|:---|
+| **Deck Generators** | Deck A | 4 | `deckA` | Blank |
+| | Deck B | 4 | `deckB` | Blank |
+| | Deck BG | 4 | `deckBG` | Blank |
+| | Deck PV | 4 | `deckPV` | Blank |
+| **Per-Deck Insert FX** | Deck A FX | 4 | `deckAFx` | Super Knob + 3 Metaknobs |
+| | Deck B FX | 4 | `deckBFx` | Super Knob + 3 Metaknobs |
+| | Deck BG FX | 4 | `deckBgFx` | Super Knob + 3 Metaknobs |
+| | Deck PV FX | 4 | `deckPvFx` | Super Knob + 3 Metaknobs |
+| **Mixer & Transitions**| Transitions | 4 | `trans` | Crossfade, Type, Speed, Next |
+| | Master | 4 | `master` | Alpha A, Alpha B, Master Level, Crossfader |
+| **Shared & Master FX** | FX Bank 1 | 4 | `fxBank1` | Super Knob + 3 Metaknobs |
+| | FX Bank 2 | 4 | `fxBank2` | Super Knob + 3 Metaknobs |
+| | FX Sends | 4 | `fxSends` | Deck A, B, BG, PV Send Levels |
+| | Master FX | 4 | `masterFx` | Super Knob + 3 Metaknobs |
 
-All banks start blank — no default bindings. Label your knobs and bind them to whatever matters
-for your performance in the Classic MACROS editor.
+Deck generator banks start blank by default for custom binding in the Classic MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. All 14 canonical banks are preserved in `last_session.json` and session files.
 
 Banks are saved in `last_session.json` and bundled into preset files automatically.
 

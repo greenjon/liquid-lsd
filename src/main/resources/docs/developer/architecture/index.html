@@ -1524,7 +1524,7 @@
 <p>Liquid LSD runs across two core thread contexts: <strong>Thread 0 (OS Main / Render Thread)</strong> and the <strong>Audio Capture Thread</strong>.</p>
 <h3 id="1-thread-0-os-main-rendering-thread">1. Thread 0 (OS Main &amp; Rendering Thread)</h3>
 <ul>
-<li><strong>Responsibilities</strong>: GLFW event polling, OpenGL context management, framebuffer allocation, GLSL shader compilation/binding, frame rendering (Decks A/B/C, Mixer), and ImGui UI rendering.</li>
+<li><strong>Responsibilities</strong>: GLFW event polling, OpenGL context management, framebuffer allocation, GLSL shader compilation/binding, frame rendering (Decks A/B/BG/PV, Mixer), and ImGui UI rendering.</li>
 <li><strong>Strict Constraint</strong>: All LWJGL 3 GLFW window and OpenGL context manipulations must execute strictly on Thread 0.</li>
 </ul>
 <h3 id="2-audio-thread-jack-callback-java-sound-daemon-loop">2. Audio Thread (JACK Callback / Java Sound Daemon Loop)</h3>

@@ -197,6 +197,7 @@ class Renderer {
             targetFBO.unbind()
             glActiveTexture(GL_TEXTURE0)
         }
+        glActiveTexture(GL_TEXTURE0)
     }
 
     private fun renderExternalVideoSource(source: ExternalVideoSource, targetFBO: FBO, zoom: Float = 1.0f, rotZ: Float = 0.0f) {
@@ -238,21 +239,20 @@ class Renderer {
         val rotZ = if (deck.source.is3D) 0.0f else deck.viewRotateZ.value
         render(deck.source, deck.cleanFBO, zoom, rotZ)
 
-        // 2. Render FX Bank's active chain (3 slots) if routed and wet > 0.
-        // deck.assignedFxBank already resolves live from deck.fxRouting (None/FX1/FX2).
-        val bank = deck.assignedFxBank
-        val deckWetAmount = deck.getEffectiveWet(bank)
+        // 2. Render Deck's dedicated FX chain (3 slots) if enabled and wet > 0.
+        val chain = deck.fxChain
+        val deckWetAmount = chain.dryWet.value
+        val hasActiveSlots = chain.slots.any { it != null && it.enabled && it.dryWet.value > 0.0f }
 
-        val finalTex = if (bank != null && deckWetAmount > 0.0f) {
-            renderFxBankPass(
+        val finalTex = if (chain.enabled && deckWetAmount > 0.0f && hasActiveSlots) {
+            renderFxChainPass(
                 cleanTex = deck.cleanFBO.texture,
-                bank = bank,
-                masterWetAmount = deckWetAmount,
+                chain = chain,
                 width = deck.width,
                 height = deck.height,
                 pingFBO = deck.fxPingFBO,
                 pongFBO = deck.fxPongFBO,
-                bankOutFBO = deck.fxBankOutFBO
+                outFBO = deck.fxBankOutFBO
             )
         } else {
             deck.cleanFBO.texture
@@ -361,6 +361,93 @@ class Renderer {
         blitShader.unbind()
         mixer.masterFBO.unbind()
         glActiveTexture(GL_TEXTURE0)
+    }
+
+    /**
+     * Renders a dedicated [FxChain] (3 serial slots).
+     * [pingFBO]/[pongFBO] ping-pong slot-to-slot passes within the chain; [outFBO] holds the
+     * final dry/wet blend against [cleanTex].
+     */
+    fun renderFxChainPass(
+        cleanTex: Int,
+        chain: FxChain,
+        width: Int,
+        height: Int,
+        pingFBO: FBO,
+        pongFBO: FBO,
+        outFBO: FBO
+    ): Int {
+        if (!chain.enabled || chain.dryWet.value <= 0.0f ||
+            chain.slots.all { it == null || !it.enabled || it.dryWet.value <= 0.0f }) {
+            return cleanTex
+        }
+
+        var slotInputTex = cleanTex
+        var writeFBO = pingFBO
+        var readFBO = pongFBO
+
+        for (slot in chain.slots) {
+            if (slot == null || !slot.enabled || slot.dryWet.value <= 0.0f) continue
+
+            writeFBO.bind()
+            glViewport(0, 0, width, height)
+            glClearColor(0f, 0f, 0f, 0f)
+            glClear(GL_COLOR_BUFFER_BIT)
+            glDisable(GL_BLEND)
+
+            slot.render(slotInputTex, width, height)
+
+            val dryWet = slot.dryWet.value
+            if (dryWet < 1.0f) {
+                glEnable(GL_BLEND)
+                glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
+                glBlendColor(0f, 0f, 0f, 1.0f - dryWet)
+
+                blitShader.bind()
+                glActiveTexture(GL_TEXTURE0)
+                glBindTexture(GL_TEXTURE_2D, slotInputTex)
+                blitShader.setUniform("uTexture", 0)
+                Geometry.drawFullscreenQuad()
+                blitShader.unbind()
+                glDisable(GL_BLEND)
+            }
+
+            writeFBO.unbind()
+            slotInputTex = writeFBO.texture
+
+            // Swap scratch buffers for the next slot
+            val temp = writeFBO
+            writeFBO = readFBO
+            readFBO = temp
+        }
+
+        // Chain wet output is in slotInputTex. Blend with cleanTex using chain.dryWet into outFBO.
+        val chainWet = chain.dryWet.value
+        outFBO.bind()
+        glViewport(0, 0, width, height)
+        glClearColor(0f, 0f, 0f, 0f)
+        glClear(GL_COLOR_BUFFER_BIT)
+        glDisable(GL_BLEND)
+
+        blitShader.bind()
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, slotInputTex)
+        blitShader.setUniform("uTexture", 0)
+        Geometry.drawFullscreenQuad()
+
+        if (chainWet < 1.0f) {
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
+            glBlendColor(0f, 0f, 0f, 1.0f - chainWet)
+
+            glBindTexture(GL_TEXTURE_2D, cleanTex)
+            Geometry.drawFullscreenQuad()
+            glDisable(GL_BLEND)
+        }
+        blitShader.unbind()
+        outFBO.unbind()
+
+        return outFBO.texture
     }
 
     /**

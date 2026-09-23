@@ -155,6 +155,20 @@ object SessionSerializer {
 
             val pvDto = session.deckPV ?: PresetManager.emptyDeckDto(mixer.deckPV, mixer)
             mixer.deckPV.applyDto(pvDto)
+
+            // Legacy session migration: if decks did not have their own fxChain saved, populate from fxBank1 / fxBank2
+            if (session.deckA.fxChain == null) {
+                mDto.fxBank1?.chains?.getOrNull(0)?.let { mixer.deckA.applyFxChain(it) }
+            }
+            if (session.deckB.fxChain == null) {
+                mDto.fxBank1?.chains?.getOrNull(1)?.let { mixer.deckB.applyFxChain(it) }
+            }
+            if (session.deckBG?.fxChain == null) {
+                mDto.fxBank2?.chains?.getOrNull(0)?.let { mixer.deckBG.applyFxChain(it) }
+            }
+            if (session.deckPV?.fxChain == null) {
+                mDto.fxBank2?.chains?.getOrNull(1)?.let { mixer.deckPV.applyFxChain(it) }
+            }
             
             mDto.xfadeSpeed?.let { mixer.xfadeSpeed.applyDto(it) }
             mDto.queueNext?.let { mixer.queueNext.applyDto(it) }
@@ -365,6 +379,10 @@ object SessionSerializer {
         // canonical MacroBank registration above -- registering later would silently discard
         // these bindings. Only for fresh/empty sessions, not session restore: a returning user's
         // already-tuned Performance Console bindings should never be touched here.
+        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_A_FX, "Deck A", mixer.deckA.fxChain)
+        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_B_FX, "Deck B", mixer.deckB.fxChain)
+        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_BG_FX, "Deck BG", mixer.deckBG.fxChain)
+        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_PV_FX, "Deck PV", mixer.deckPV.fxChain)
         llm.slop.liquidlsd.macro.FxMacroSync.sync(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_1, mixer.fxBank1)
         llm.slop.liquidlsd.macro.FxMacroSync.sync(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_2, mixer.fxBank2)
         llm.slop.liquidlsd.macro.FxMacroSync.sync(llm.slop.liquidlsd.macro.MacroEngine.MASTER_FX, mixer.masterFxBank)

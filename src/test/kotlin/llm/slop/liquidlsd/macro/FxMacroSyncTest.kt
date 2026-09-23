@@ -150,4 +150,47 @@ class FxMacroSyncTest {
         val macroBank = MacroEngine.getBank(MacroEngine.FX_BANK_2)!!
         assertEquals("FX2/C3/Super", macroBank.knobs[0].bindings.single().parameterId)
     }
+
+    @Test
+    fun testSyncDeckFxBindsSuperKnobAndMetaknobs() {
+        val chain = llm.slop.liquidlsd.rendering.FxChain("Deck A FX")
+        for (i in 0 until 3) chain.setSlotLinked(i, false)
+
+        FxMacroSync.syncDeckFx(MacroEngine.DECK_A_FX, "Deck A", chain)
+
+        val macroBank = MacroEngine.getBank(MacroEngine.DECK_A_FX)!!
+        val superBinding = macroBank.knobs[0].bindings.single()
+        assertEquals("Deck A/FX/Super", superBinding.parameterId)
+        assertEquals(MacroTargetType.PARAM_BASE_VALUE, superBinding.targetType)
+        assertEquals(0f, superBinding.minVal)
+        assertEquals(1f, superBinding.maxVal)
+
+        val metaBinding1 = macroBank.knobs[1].bindings.single()
+        assertEquals("Deck A/FX/FX1/Meta", metaBinding1.parameterId)
+        val metaBinding3 = macroBank.knobs[3].bindings.single()
+        assertEquals("Deck A/FX/FX3/Meta", metaBinding3.parameterId)
+    }
+
+    @Test
+    fun testSyncDeckFxLinkedSlotBehavior() {
+        val chain = llm.slop.liquidlsd.rendering.FxChain("Deck B FX")
+        // Default: slots are linked
+        assertTrue(chain.slotSuperKnobLink[0])
+        assertTrue(chain.slotSuperKnobLink[1])
+        assertTrue(chain.slotSuperKnobLink[2])
+
+        FxMacroSync.syncDeckFx(MacroEngine.DECK_B_FX, "Deck B", chain)
+
+        val macroBank = MacroEngine.getBank(MacroEngine.DECK_B_FX)!!
+        assertEquals("Deck B/FX/Super", macroBank.knobs[0].bindings.single().parameterId)
+        // Linked slots have no macro bindings (avoid racing soft-takeover)
+        assertTrue(macroBank.knobs[1].bindings.isEmpty())
+        assertTrue(macroBank.knobs[2].bindings.isEmpty())
+        assertTrue(macroBank.knobs[3].bindings.isEmpty())
+
+        // Unlink slot 0
+        chain.setSlotLinked(0, false)
+        FxMacroSync.syncDeckFx(MacroEngine.DECK_B_FX, "Deck B", chain)
+        assertEquals("Deck B/FX/FX1/Meta", macroBank.knobs[1].bindings.single().parameterId)
+    }
 }
