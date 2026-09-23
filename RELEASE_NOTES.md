@@ -1,5 +1,24 @@
 ## [Unreleased]
 
+### Rename FX Sends to FX WET/DRY & Remove Disclosure Chevron (`PerformanceMatrixPanel.kt`, `docs/user_guide/macros_and_rack.md`, `DECISIONS.md`)
+- **Renamed to FX WET/DRY**: In the Performance Matrix (`MASTER & FX` tab, Row 3), renamed the row from `FX SENDS` to `FX WET/DRY`, accurately reflecting that these knobs control each deck's insert FX wet/dry ratio rather than auxiliary bus sends.
+- **Omitted Disclosure Chevron**: Added `canExpand` to row descriptors and disabled it for `FX WET/DRY`, removing the chevron and preventing expansion into a dead "Deep Edit isn't available" bay.
+
+### Performance Deep Edit 5-Channel Side Rail & Centered FX Subtabs (`ParametersTabs.kt`, `PerformanceMatrixPanel.kt`, `ParametersState.kt`, `RackDisclosureTest.kt`, `DECISIONS.md`, `docs/user_guide/macros_and_rack.md`, `ARCHITECTURE.md`)
+- **5-Channel Vertical Side Rail in Deep Edit**: Added a dedicated vertical side rail (`[MIX]`, `[A]`, `[B]`, `[BG]`, `[PV]`) on the left of Performance Mode's Deep Edit bay. Performers can instantly jump between any channel in the app with a single click without collapsing Deep Edit or hunting across matrix tabs.
+- **Symmetrical 3-Subtab Hierarchy with Centered FX**: Standardized all 5 channels to a uniform 3-tab layout with `FX` in the center position for intuitive muscle memory:
+  - **`MIX`**: `[ CTRL ]  [ FX ]  [ TRANS ]` (Master levels/crossfader, Master FX 4 ISF slots, and Transitions).
+  - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]  [ View ]` (Visual generator, insert FX chain, and 3D View/Transform).
+- **Macro Row & Parameter Grid Full Sync**: Switching sections via the side rail or toggling between `SRC`/`CTRL` and `FX` immediately updates both the bottom parameter grid and the top 4-knob macro row (`DECK A` ↔ `DECK A (FX)`, `MASTER` ↔ `MASTER FX` ↔ `TRANSITIONS`).
+- **Option B Layout Preservation**: The top macro row remains full-width across the panel, protecting knob spacing and wing controls from being squeezed horizontally, while the side rail sits comfortably alongside the parameter and properties editors in the bay below.
+
+### Performance Matrix Row Layout, Minimum Row Height & Knob Highlight (`PerformanceMatrixPanel.kt`, `MacroKnobWidget.kt`, `docs/user_guide/macros_and_rack.md`, `docs/developer/ui.md`)
+- **No more title/control overlap on short rows**: Side-wing controls on deck and FX rows are now bottom-aligned with the knobs (and never placed above the row title), so they no longer collide with `DECK A`/`FX: …` titles when the Library dock is at half height.
+- **Uniform control height**: The deck preset dropdown now matches the 24px height of every other wing button and badge (new `CTRL_H` constant).
+- **Minimum row height + vertical scroll**: Matrix rows stop shrinking at `MIN_ROW_H` (96px); beyond that the matrix scrolls vertically instead of squeezing knobs too small to use. The mouse wheel still adjusts a knob when hovering it and scrolls the matrix elsewhere.
+- **Click-drag to scroll**: Click-dragging up/down on empty row space (anywhere outside the knobs and controls, including the row title band) scrolls the matrix, touch-style.
+- **Clearer knob hover/drag highlight**: Macro knob bodies tint toward their accent color on hover and more strongly while dragging, instead of relying only on the ring, which shares the arc's color.
+
 ### Sync Macro Knob Editor FX Tabs with Performance View (`MacroPanel.kt`, `docs/user_guide/macros_and_rack.md`)
 - **Removed stale FX1 / FX2 / MFX tabs from Classic MACROS editor**: The Macro Knob Editor (Column 3 `[ MACROS ]` tab) was still showing three old shared-bank tabs (`FX1`, `FX2`, `MFX`) that no longer match the independent per-deck FX architecture. These have been replaced with the five independent tabs that mirror the Performance Matrix exactly.
 - **Added A FX / B FX / BG FX / PV FX / MST FX tabs**: Each maps directly to its `MacroEngine` constant (`DECK_A_FX`, `DECK_B_FX`, `DECK_BG_FX`, `DECK_PV_FX`, `MASTER_FX`) and resolves the correct `FxChain` from the Mixer (`deck.fxChain` for decks, `masterFxBank.activeChain` for Master).

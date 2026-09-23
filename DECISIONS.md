@@ -1,3 +1,30 @@
+## Rename FX Sends Row to FX WET/DRY & Remove Disclosure Chevron (`PerformanceMatrixPanel.kt`, `macros_and_rack.md`, `DECISIONS.md`, `RELEASE_NOTES.md`)
+
+- **Context**: 2026-09-23. In Performance View (`MASTER & FX` tab), Row 3 was labeled `FX SENDS` with knobs `SEND A`, `SEND B`, `SEND BG`, and `SEND PV`. Following the migration to dedicated per-deck insert FX chains (`deck.fxChain`), the global auxiliary FX send buses were retired, and `fxSendLevel` became an alias for `fxChain.dryWet`. Thus, the row controls insert FX wet/dry ratios rather than send levels. Additionally, the row displayed a Modular Rack disclosure chevron that opened a dead placeholder ("Deep Edit isn't available for this module yet").
+- **Decision**:
+  - **Renamed Row**: Updated the Row 3 display label from `FX SENDS` to `FX WET/DRY` in `PerformanceMatrixPanel.kt` (and updated the `MASTER & FX` tab tooltip description).
+  - **Omitted Disclosure Chevron**: Added `canExpand: Boolean = true` to `RowDescriptor`, set it to `false` for `FX WET/DRY`, and guarded the collapse/chevron drawing so non-expandable macro rows do not display a chevron or expand into an empty bay.
+  - **Excluded from Rack Bay Resolution**: Explicitly filtered out `MacroEngine.FX_SENDS` from `visibleRowsForTab` and `drawRackBay` expanded module lists to prevent stale preferences from opening an empty Deep Edit bay.
+- **Rationale**: Eliminates misleading legacy terminology in the live performance matrix and prevents performers from clicking an expansion chevron that has no Deep Edit panel.
+
+---
+
+## Performance Deep Edit 5-Channel Side Rail & Centered FX Subtabs (`ParametersTabs.kt`, `PerformanceMatrixPanel.kt`, `ParametersState.kt`, `RackDisclosureTest.kt`, `DECISIONS.md`, `RELEASE_NOTES.md`, `docs/user_guide/macros_and_rack.md`, `ARCHITECTURE.md`)
+
+- **Context**: 2026-09-23. As the app consolidates functionality from the Classic parameters and properties panels into the Performance console, expanding a row into Deep Edit previously locked the view to a single module. Navigating to a different section (e.g. from Deck A to Deck B or Mixer) required collapsing the current module, finding the new module, and expanding it again. Furthermore, with per-deck insert FX and Master FX, there was a need for a uniform navigation model that wouldn't clutter the interface.
+- **Decision**:
+  - **Option B 3-Column Deep Edit Bay Layout (`PerformanceMatrixPanel.kt`)**: Added a 5-channel vertical side rail (`MIX`, `A`, `B`, `BG`, `PV`) on the left of the Deep Edit bay. Kept the top macro row full-width across the panel so knobs and wing controls are never squeezed horizontally.
+  - **Symmetrical 3-Subtab Hierarchy with Centered FX (`ParametersTabs.kt`)**: Unified all 5 sections so that `FX` is permanently in the center position across all channels for instant muscle memory:
+    - `MIX`: `[ CTRL ]  [ FX ]  [ TRANS ]` (Master controls, Master FX 4 ISF slots, and Transitions)
+    - `A`, `B`, `BG`, `PV`: `[ SRC ]  [ FX ]  [ View ]` (Visual generator, insert FX chain, and 3D View/Transform)
+  - **Two-Way Macro Row & Parameter Grid Synchronization**:
+    - When any module is in Deep Edit, `visibleRowsForTab` dynamically resolves and renders the macro row matching the active channel and subtab (e.g. `DECK A (FX)` when on `FX`, `MASTER FX` when on `Mixer/FX`), decoupling the row from the active matrix tab.
+    - Synchronized the deck row wing `[SRC | FX]` toggles with `parametersState.activeDeck<X>SubTab` and vice versa.
+  - **Single-Click Section Navigation**: Clicking any side rail tab immediately transitions Deep Edit to that channel in Solo mode, updating both the top macro row and the bottom parameter matrix.
+- **Rationale**: Recombines the rapid navigation speed of the Classic side rail with the macro power of Performance Mode, establishing an elegant, symmetrical mental model across the whole app.
+
+---
+
 ## Fix Performance Matrix ImGui ID Conflict on Deck FX Mode (`PerformanceMatrixPanel.kt`, `RELEASE_NOTES.md`, `docs/release_notes.md`)
 
 - **Context**: 2026-09-23. Dear ImGui triggered an ID conflict overlay error (`Programmer error: 2 visible items with conflicting ID!`) in the Performance Matrix under `LIVE CONSOLE`. When Deck A was flipped to `FX` mode via `[ SRC | FX ]`, its `bankId` was set to `DECK_A_FX`. Because `isFxChainRow` matched any bank ending in `_fx` and was evaluated ahead of `isDeckRow`, Deck A's row took the FX chain drop-target branch instead of the Deck drop-target branch, creating an invisible button with ID `##perf_fx_drop_deck_a_fx`. Simultaneously, Row 4 (`FX: Deck A`), which was focused on target `A`, had the identical bank ID `DECK_A_FX` and created an identical invisible button `##perf_fx_drop_deck_a_fx`.

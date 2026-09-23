@@ -156,6 +156,87 @@ object ParametersTabs {
         ImGui.popStyleVar()
     }
 
+    /**
+     * Renders the 5-channel vertical side rail for Performance Mode's Deep Edit:
+     * [MIX], [A], [B], [BG], [PV].
+     */
+    fun drawPerformanceDeepEditSideTabs(
+        session: llm.slop.liquidlsd.SessionContext,
+        state: ParametersState,
+        mixer: Mixer? = null,
+        topOffset: Float = 0f,
+        onSelectSection: (String) -> Unit
+    ) {
+        if (topOffset > 0f) {
+            ImGui.dummy(0f, topOffset)
+        }
+        val deckAEmpty = mixer?.deckA?.isEmpty == true
+        val deckBEmpty = mixer?.deckB?.isEmpty == true
+        val deckBGEmpty = mixer?.deckBG?.isEmpty == true
+        val deckPVEmpty = mixer?.deckPV?.isEmpty == true
+
+        val tabs = listOf(
+            Triple("MIX", "Mixer",   "Mixer controls (CTRL), Master FX (FX), and Crossfader/Transitions (TRANS)."),
+            Triple("A",   "Deck A",  if (deckAEmpty) "Deck A [EMPTY] — Click to assign a source or preset." else "Deck A: Visual source (SRC), insert FX (FX), and 3D view (View)."),
+            Triple("B",   "Deck B",  if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B: Visual source (SRC), insert FX (FX), and 3D view (View)."),
+            Triple("BG",  "Deck BG", if (deckBGEmpty) "Deck BG [EMPTY] — Click to assign a source or preset." else "Deck BG: Visual source (SRC), insert FX (FX), and 3D view (View)."),
+            Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV: Visual source (SRC), insert FX (FX), and 3D view (View).")
+        )
+        val buttonWidth = calculateLeftTabsWidth(session)
+        val buttonHeight = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 14f }.coerceAtLeast(30f)
+
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 0f, 4f)
+        tabs.forEach { (shortLabel, fullTab, tooltipText) ->
+            val isActive = state.activeTopTab == fullTab
+            val activeCol = getDeckColor(fullTab, 1f)
+            val bgCol = if (isActive) activeCol else ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f)
+            val hoverCol = if (isActive) activeCol else ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.22f, 1f)
+            val activeClickCol = if (isActive) activeCol else ImGui.colorConvertFloat4ToU32(0.32f, 0.32f, 0.32f, 1f)
+
+            val pMinX = ImGui.getCursorScreenPosX()
+            val pMinY = ImGui.getCursorScreenPosY()
+            val pMaxX = pMinX + buttonWidth
+            val pMaxY = pMinY + buttonHeight
+
+            if (ImGui.invisibleButton("##perf_deep_side_$shortLabel", buttonWidth.coerceAtLeast(1f), buttonHeight.coerceAtLeast(1f))) {
+                onSelectSection(fullTab)
+            }
+            val isHovered = ImGui.isItemHovered()
+            val isItemActive = ImGui.isItemActive()
+
+            val drawCol = when {
+                isItemActive -> activeClickCol
+                isHovered    -> hoverCol
+                else         -> bgCol
+            }
+
+            val dl = ImGui.getWindowDrawList()
+            // Draw button background with left corners rounded (4f) and right corners sharp (0f)
+            dl.addRectFilled(pMinX, pMinY, pMaxX, pMaxY, drawCol, 4f)
+            dl.addRectFilled(pMaxX - 6f, pMinY, pMaxX, pMaxY, drawCol, 0f)
+
+            // Draw centered text label
+            var tw = 0f
+            var th = 0f
+            session.uiTheme.withFont(UITheme.FontLevel.H3) {
+                val sz = ImGui.calcTextSize(shortLabel)
+                tw = sz.x
+                th = sz.y
+            }
+            val textX = pMinX + (buttonWidth - tw) * 0.5f
+            val textY = pMinY + (buttonHeight - th) * 0.5f
+            val textCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, if (isActive) 1f else 0.8f)
+            session.uiTheme.withFont(UITheme.FontLevel.H3) {
+                dl.addText(textX, textY, textCol, shortLabel)
+            }
+
+            if (isHovered) {
+                showTooltip(tooltipText, (pMinX.toInt() shl 16) xor (pMinY.toInt() and 0xFFFF))
+            }
+        }
+        ImGui.popStyleVar()
+    }
+
     private fun getDeckSubTabs(deck: Deck): List<String> {
         if (deck.isEmpty) {
             return listOf("Empty")
@@ -193,7 +274,7 @@ object ParametersTabs {
 
     fun calculateSectionTabsWidth(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer): Float {
         val tabs = if (state.activeTopTab == "Mixer") {
-            listOf("CTRL", "TRANS")
+            listOf("CTRL", "FX", "TRANS")
         } else {
             val deck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
@@ -313,7 +394,7 @@ object ParametersTabs {
      */
     fun drawSectionTabs(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer, btnH: Float? = null) {
         val tabs = if (state.activeTopTab == "Mixer") {
-            listOf("CTRL", "TRANS")
+            listOf("CTRL", "FX", "TRANS")
         } else {
             val deck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
@@ -432,6 +513,10 @@ object ParametersTabs {
     ) {
         drawSubGroupContent(session, "Mixer", "CTRL", state) {
             drawMixerCtrlTab(session, mixer, state, labelColW, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        }
+
+        drawSubGroupContent(session, "Mixer", "FX", state) {
+            drawMixerFxTab(session, mixer, state, labelColW, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         }
 
         drawSubGroupContent(session, "Mixer", "TRANS", state) {

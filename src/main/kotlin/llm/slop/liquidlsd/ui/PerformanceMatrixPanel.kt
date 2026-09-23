@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiKey
+import imgui.flag.ImGuiMouseCursor
 import imgui.flag.ImGuiStyleVar
 import imgui.type.ImString
 import llm.slop.liquidlsd.macro.MacroBank
@@ -48,7 +49,7 @@ class PerformanceMatrixPanel {
     // without hardcoding a count that silently drifts when a tab is added/removed.
     internal enum class Tab(val label: String, val tooltip: String) {
         LIVE_QUAD("LIVE QUAD", "One row per deck (Deck A / Deck B / Deck BG / Deck PV), knobs 1-4 each."),
-        MASTER_AND_FX("MASTER & FX", "Master (composite alphas + crossfader), Transitions (picker + queue), FX sends, and Deck PV."),
+        MASTER_AND_FX("MASTER & FX", "Master (composite alphas + crossfader), Transitions (picker + queue), FX wet/dry, and Deck PV."),
         LIVE_CONSOLE("LIVE CONSOLE", "Deck A / Deck B / Deck BG / focused FX -- a single 4x4 surface for live shows."),
         ALL_FX("ALL FX", "4 rows of FX macros: Deck A, Deck B, Deck BG, and Master FX (16 knobs total).")
     }
@@ -66,7 +67,9 @@ class PerformanceMatrixPanel {
         val groupLabel: String,
         val subLabel: String? = null,
         /** True only for LIVE_CONSOLE's FX row: reserves header space for the bank/chain/bypass switcher buttons. */
-        val hasExtraHeader: Boolean = false
+        val hasExtraHeader: Boolean = false,
+        /** When false, the modular rack disclosure chevron and collapse controls are omitted. */
+        val canExpand: Boolean = true
     )
 
     // Canonical deck colors matching BrowserDeckButtons.
@@ -81,6 +84,16 @@ class PerformanceMatrixPanel {
 
         private const val EXTRA_HEADER_H = 28f
 
+        /** Uniform height of every row-side control (buttons, badges, preset combo) left/right of the knobs. */
+        private const val CTRL_H = 24f
+
+        /**
+         * Floor on grid row height. Below this the knobs get too small to use, so instead of
+         * shrinking further the grid keeps this height and its child region scrolls vertically.
+         * Meant to match the row height with the Library dock at half height (~56px knobs).
+         */
+        private const val MIN_ROW_H = 96f
+
         private val TAB_ROWS: Array<List<RowDescriptor>> = arrayOf(
             // LIVE QUAD: one row per deck (knobs 0–3 each: Deck A, Deck B, Deck BG, Deck PV)
             listOf(
@@ -90,12 +103,12 @@ class PerformanceMatrixPanel {
                 RowDescriptor(MacroEngine.DECK_PV, 0, COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
             ),
             // MASTER & FX: Master (composite alphas + crossfader/crossfader-time), Transitions
-            // (transition picker + queue nav), FX Sends, Deck PV (1 row of 4 knobs each, except
+            // (transition picker + queue nav), FX Wet/Dry, Deck PV (1 row of 4 knobs each, except
             // Master/Transitions which also reserve header space -- see drawMatrix).
             listOf(
                 RowDescriptor(MacroEngine.MASTER,    0, COLOR_MASTER, "MASTER", hasExtraHeader = true),
                 RowDescriptor(MacroEngine.TRANS,     0, COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.FX_SENDS,  0, COLOR_FX,     "FX SENDS"),
+                RowDescriptor(MacroEngine.FX_SENDS,  0, COLOR_FX,     "FX WET/DRY", canExpand = false),
                 RowDescriptor(MacroEngine.DECK_PV,   0, COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
             ),
             // LIVE CONSOLE: Deck A, Deck B, Deck BG, focused FX target (A, B, BG, PV, MST)
@@ -208,8 +221,69 @@ class PerformanceMatrixPanel {
         }
     }
 
+    /** Maps sub-modules (DECK_A_FX, MASTER_FX, TRANS, etc.) to their canonical primary module id (DECK_A, MASTER, etc.). */
+    private fun canonicalModuleId(moduleId: String): String = when (moduleId) {
+        MacroEngine.DECK_A, MacroEngine.DECK_A_FX -> MacroEngine.DECK_A
+        MacroEngine.DECK_B, MacroEngine.DECK_B_FX -> MacroEngine.DECK_B
+        MacroEngine.DECK_BG, MacroEngine.DECK_BG_FX -> MacroEngine.DECK_BG
+        MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX -> MacroEngine.DECK_PV
+        MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.MASTER_FX, "Mixer" -> MacroEngine.MASTER
+        else -> moduleId
+    }
+
+    /** Resolves the active 4-knob row descriptor for a specific module id based on the current subtab/mode. */
+    private fun rowDescriptorForModule(moduleId: String, parametersState: ParametersState): RowDescriptor {
+        return when (moduleId) {
+            MacroEngine.DECK_A, MacroEngine.DECK_A_FX -> {
+                val isFx = deckRowMode["A"] == "FX" || parametersState.activeDeckASubTab == "FX"
+                if (isFx) {
+                    RowDescriptor(MacroEngine.DECK_A_FX, 0, COLOR_DECK_A, "DECK A (FX)", hasExtraHeader = true)
+                } else {
+                    RowDescriptor(MacroEngine.DECK_A, 0, COLOR_DECK_A, "DECK A", hasExtraHeader = true)
+                }
+            }
+            MacroEngine.DECK_B, MacroEngine.DECK_B_FX -> {
+                val isFx = deckRowMode["B"] == "FX" || parametersState.activeDeckBSubTab == "FX"
+                if (isFx) {
+                    RowDescriptor(MacroEngine.DECK_B_FX, 0, COLOR_DECK_B, "DECK B (FX)", hasExtraHeader = true)
+                } else {
+                    RowDescriptor(MacroEngine.DECK_B, 0, COLOR_DECK_B, "DECK B", hasExtraHeader = true)
+                }
+            }
+            MacroEngine.DECK_BG, MacroEngine.DECK_BG_FX -> {
+                val isFx = deckRowMode["BG"] == "FX" || parametersState.activeDeckBGSubTab == "FX"
+                if (isFx) {
+                    RowDescriptor(MacroEngine.DECK_BG_FX, 0, COLOR_DECK_BG, "DECK BG (FX)", hasExtraHeader = true)
+                } else {
+                    RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG, "DECK BG", hasExtraHeader = true)
+                }
+            }
+            MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX -> {
+                val isFx = deckRowMode["PV"] == "FX" || parametersState.activeDeckPVSubTab == "FX"
+                if (isFx) {
+                    RowDescriptor(MacroEngine.DECK_PV_FX, 0, COLOR_DECK_PV, "DECK PV (FX)", hasExtraHeader = true)
+                } else {
+                    RowDescriptor(MacroEngine.DECK_PV, 0, COLOR_DECK_PV, "DECK PV", hasExtraHeader = true)
+                }
+            }
+            MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.MASTER_FX, "Mixer" -> {
+                when (parametersState.activeMixerSubTab) {
+                    "FX" -> RowDescriptor(MacroEngine.MASTER_FX, 0, COLOR_MASTER, "MASTER FX", hasExtraHeader = true)
+                    "TRANS" -> RowDescriptor(MacroEngine.TRANS, 0, COLOR_TRANS, "TRANSITIONS", hasExtraHeader = true)
+                    else -> RowDescriptor(MacroEngine.MASTER, 0, COLOR_MASTER, "MASTER", hasExtraHeader = true)
+                }
+            }
+            "FX" -> {
+                val targetBankId = targetBankIdFor(focusedFxTarget)
+                val targetAccent = targetAccentFor(focusedFxTarget)
+                RowDescriptor(targetBankId, 0, targetAccent, "FX: ${targetDisplayName(focusedFxTarget)}", hasExtraHeader = true)
+            }
+            else -> RowDescriptor(moduleId, 0, COLOR_MASTER, rackModuleDisplayLabel(moduleId), hasExtraHeader = true)
+        }
+    }
+
     /** This tab's rows with the LIVE_CONSOLE FX row's bankId substituted for whichever target is currently focused, plus per-deck [SRC|FX] toggles. */
-    private fun substitutedRowsForTab(tabIdx: Int): List<RowDescriptor> {
+    private fun substitutedRowsForTab(tabIdx: Int, parametersState: ParametersState? = null): List<RowDescriptor> {
         val templateRows = TAB_ROWS[tabIdx]
         return templateRows.map { row ->
             when {
@@ -218,16 +292,16 @@ class PerformanceMatrixPanel {
                     val targetAccent = targetAccentFor(focusedFxTarget)
                     row.copy(bankId = targetBankId, accent = targetAccent, groupLabel = "FX: ${targetDisplayName(focusedFxTarget)}")
                 }
-                row.bankId == MacroEngine.DECK_A && deckRowMode["A"] == "FX" -> {
+                row.bankId == MacroEngine.DECK_A && (deckRowMode["A"] == "FX" || parametersState?.activeDeckASubTab == "FX") -> {
                     row.copy(bankId = MacroEngine.DECK_A_FX, groupLabel = "DECK A (FX)")
                 }
-                row.bankId == MacroEngine.DECK_B && deckRowMode["B"] == "FX" -> {
+                row.bankId == MacroEngine.DECK_B && (deckRowMode["B"] == "FX" || parametersState?.activeDeckBSubTab == "FX") -> {
                     row.copy(bankId = MacroEngine.DECK_B_FX, groupLabel = "DECK B (FX)")
                 }
-                row.bankId == MacroEngine.DECK_BG && deckRowMode["BG"] == "FX" -> {
+                row.bankId == MacroEngine.DECK_BG && (deckRowMode["BG"] == "FX" || parametersState?.activeDeckBGSubTab == "FX") -> {
                     row.copy(bankId = MacroEngine.DECK_BG_FX, groupLabel = "DECK BG (FX)")
                 }
-                row.bankId == MacroEngine.DECK_PV && deckRowMode["PV"] == "FX" -> {
+                row.bankId == MacroEngine.DECK_PV && (deckRowMode["PV"] == "FX" || parametersState?.activeDeckPVSubTab == "FX") -> {
                     row.copy(bankId = MacroEngine.DECK_PV_FX, groupLabel = "DECK PV (FX)")
                 }
                 else -> row
@@ -245,17 +319,19 @@ class PerformanceMatrixPanel {
     }
 
     /**
-     * This tab's rows, filtered down to only the ones whose module is above Tier 1, so the grid
-     * hides every still-collapsed row while any module is expanded. Falls back to every row on
-     * this tab if none of the currently expanded modules have a row here (e.g. expanded on a
-     * different tab) -- an empty grid would otherwise be a dead end.
+     * When any module is in Deep Edit, returns the macro row(s) corresponding to the expanded module(s)
+     * (reflecting active subtab e.g. SRC vs FX), decoupling the row from the matrix tab.
+     * When all modules are collapsed, returns the current tab's 4 rows.
      */
     private fun visibleRowsForTab(tabIdx: Int, parametersState: ParametersState): List<RowDescriptor> {
-        val allRows = substitutedRowsForTab(tabIdx)
-        val expandedModuleIds = parametersState.rackModuleDisclosure.filterValues { it != ParametersState.DisclosureLevel.COLLAPSED }.keys
-        if (expandedModuleIds.isEmpty()) return allRows
-        val filtered = allRows.filter { rowModuleId(it) in expandedModuleIds }
-        return filtered.ifEmpty { allRows }
+        val expandedModuleIds = parametersState.rackModuleDisclosure
+            .filterValues { it != ParametersState.DisclosureLevel.COLLAPSED }
+            .keys
+            .filter { it != MacroEngine.FX_SENDS }
+        if (expandedModuleIds.isEmpty()) return substitutedRowsForTab(tabIdx, parametersState)
+
+        // Show the active macro row for each expanded module
+        return expandedModuleIds.map { rowDescriptorForModule(it, parametersState) }
     }
 
     // -- Tab strip ----------------------------------------------------------------
@@ -372,11 +448,22 @@ class PerformanceMatrixPanel {
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
 
         val gridW = availW
-        val rowH = (availH / rows.size.toFloat()).coerceAtLeast(1f)
+        // Rows share the available height down to MIN_ROW_H; past that the grid overflows and the
+        // ##rack_grid_area child scrolls (see the cursor advance at the end of this function).
+        val rowH = (availH / rows.size.toFloat()).coerceAtLeast(MIN_ROW_H)
+        val gridTotalH = rowH * rows.size
 
         val gridStartX = ImGui.getCursorScreenPosX()
         val gridStartY = ImGui.getCursorScreenPosY()
         val dl = ImGui.getWindowDrawList()
+
+        // Grid-wide background hit area, submitted first with overlap allowed so every knob/button
+        // drawn later takes priority -- a click-drag on empty row space lands here and scrolls the
+        // grid (see applyDragScroll), and it also keeps the drag from moving the host window.
+        ImGui.setNextItemAllowOverlap()
+        ImGui.invisibleButton("##perf_grid_drag_scroll", gridW, gridTotalH)
+        applyDragScroll()
+        ImGui.setCursorScreenPos(gridStartX, gridStartY)
 
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
         val groupLabelH = session.uiTheme.withFont(UITheme.FontLevel.H1) { ImGui.getTextLineHeight() }
@@ -480,8 +567,12 @@ class PerformanceMatrixPanel {
             val isMasterRow = descriptor.bankId == MacroEngine.MASTER
             val displayLabel = descriptor.groupLabel
 
-            val moduleId = rowModuleId(descriptor)
-            val isModuleExpanded = parametersState.disclosureFor(moduleId) != ParametersState.DisclosureLevel.COLLAPSED
+            val rawModuleId = rowModuleId(descriptor)
+            val canonicalId = canonicalModuleId(rawModuleId)
+            val isModuleExpanded = parametersState.disclosureFor(canonicalId) != ParametersState.DisclosureLevel.COLLAPSED ||
+                                   parametersState.disclosureFor(rawModuleId) != ParametersState.DisclosureLevel.COLLAPSED
+            val activeModuleId = if (parametersState.disclosureFor(canonicalId) != ParametersState.DisclosureLevel.COLLAPSED) canonicalId else rawModuleId
+            val moduleId = activeModuleId
             val chevronSize = groupLabelH.coerceIn(16f, 22f)
 
             // The Master and Transitions rows each reserve a header-controls bar at the top of the
@@ -528,6 +619,7 @@ class PerformanceMatrixPanel {
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
                     ImGui.invisibleButton("##perf_deck_drop_${group.startRow}_$dropTag", boxX2 - boxX1, dropAreaH.coerceAtLeast(1f))
+                    applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                         if (payload != null) {
@@ -563,6 +655,7 @@ class PerformanceMatrixPanel {
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
                     ImGui.invisibleButton("##perf_fx_drop_${group.startRow}_${descriptor.bankId}", boxX2 - boxX1, dropAreaH.coerceAtLeast(1f))
+                    applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                         if (payload != null) {
@@ -589,6 +682,7 @@ class PerformanceMatrixPanel {
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
                     ImGui.invisibleButton("##perf_trans_drop", boxX2 - boxX1, dropAreaH.coerceAtLeast(1f))
+                    applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                         if (payload != null) {
@@ -613,19 +707,22 @@ class PerformanceMatrixPanel {
 
             // Modular Rack disclosure chevron & Collapse button -- drawn after the drop-target invisible buttons
             // above (which span the whole title band) so it isn't swallowed by their hit-testing.
-            if (isModuleExpanded) {
-                ImGui.setCursorScreenPos(boxX2 - chevronSize - 80f, titleTopY)
-                session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                    if (ImGui.smallButton("${Icons.CHEVRON_UP} Collapse##row_collapse_${tabIdx}_${group.startRow}")) {
-                        parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.COLLAPSED)
+            if (descriptor.canExpand) {
+                if (isModuleExpanded) {
+                    ImGui.setCursorScreenPos(boxX2 - chevronSize - 80f, titleTopY)
+                    session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                        if (ImGui.smallButton("${Icons.CHEVRON_UP} Collapse##row_collapse_${tabIdx}_${group.startRow}")) {
+                            parametersState.setDisclosure(activeModuleId, ParametersState.DisclosureLevel.COLLAPSED)
+                            parametersState.setDisclosure(rawModuleId, ParametersState.DisclosureLevel.COLLAPSED)
+                        }
                     }
+                    itemTooltip("Collapse module back to standard row view.")
                 }
-                itemTooltip("Collapse module back to standard row view.")
+                ImGui.setCursorScreenPos(boxX2 - chevronSize - 4f, titleTopY)
+                llm.slop.liquidlsd.ui.rack.RackUnit.drawChevron(
+                    parametersState, activeModuleId, chevronSize, "${tabIdx}_${group.startRow}"
+                )
             }
-            ImGui.setCursorScreenPos(boxX2 - chevronSize - 4f, titleTopY)
-            llm.slop.liquidlsd.ui.rack.RackUnit.drawChevron(
-                parametersState, moduleId, chevronSize, "${tabIdx}_${group.startRow}"
-            )
 
             val contentTopY = if (descriptor.hasExtraHeader && isMasterRow) {
                 drawMasterHeaderControls(session, mixer, parametersState, boxX1, boxX2, afterTitleY, EXTRA_HEADER_H)
@@ -664,8 +761,14 @@ class PerformanceMatrixPanel {
                 // without pushing the Val/Learn content below it past the box.
                 val knobTopY = (knobAreaTopY + knobTopYCentered) / 2f
                 val knobCenterY = knobTopY + diameter / 2f
-                val ctrlH = 24f
-                val ctrlY = knobCenterY - ctrlH / 2f
+                val ctrlH = CTRL_H
+                // Bottom-aligned with the knob face, so short rows push the controls down into the
+                // space beside the knob caption rather than up into the row title; never above the
+                // title (first sub-row only -- that's where the title sits) or below the box.
+                val ctrlMinY = if (k == 0 && !isSpecialHeaderRow) titleY + groupLabelH + 2f else subTopY
+                val ctrlY = (knobTopY + diameter - ctrlH)
+                    .coerceAtMost(subBottomY - ctrlH)
+                    .coerceAtLeast(ctrlMinY)
 
                 if (descriptor.hasExtraHeader) {
                     when {
@@ -841,8 +944,21 @@ class PerformanceMatrixPanel {
         }
 
         // Advance the ImGui cursor past the grid so the window scrollbar is correct.
-        ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), gridStartY + availH)
+        ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), gridStartY + gridTotalH)
         ImGui.dummy(0f, 0f)
+    }
+
+    /**
+     * Click-drag-to-scroll for the last submitted item: while it's held and dragged vertically,
+     * scrolls the current window (the ##rack_grid_area child) by the mouse delta. Called after the
+     * grid background hit area and the title-band drop zones, i.e. the row space outside the
+     * knobs and controls. No-op when the grid fits without scrolling.
+     */
+    private fun applyDragScroll() {
+        if (!ImGui.isItemActive() || ImGui.getScrollMaxY() <= 0f) return
+        ImGui.setMouseCursor(ImGuiMouseCursor.ResizeNS)
+        val dy = ImGui.getIO().mouseDelta.y
+        if (dy != 0f) ImGui.setScrollY(ImGui.getScrollY() - dy)
     }
 
     /**
@@ -903,7 +1019,7 @@ class PerformanceMatrixPanel {
         MacroEngine.DECK_PV_FX -> "DECK PV FX"
         MacroEngine.TRANS -> "TRANSITIONS"
         MacroEngine.MASTER -> "MASTER"
-        MacroEngine.FX_SENDS -> "FX SENDS"
+        MacroEngine.FX_SENDS -> "FX WET/DRY"
         MacroEngine.MASTER_FX -> "MASTER FX"
         "FX" -> "FX: ${targetDisplayName(focusedFxTarget)}"
         else -> moduleId
@@ -916,7 +1032,7 @@ class PerformanceMatrixPanel {
      */
     private fun drawRackBay(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState, bayH: Float) {
         val expandedModules = parametersState.rackModuleDisclosure.entries
-            .filter { it.value != ParametersState.DisclosureLevel.COLLAPSED }
+            .filter { it.value != ParametersState.DisclosureLevel.COLLAPSED && it.key != MacroEngine.FX_SENDS }
             .map { it.key }
         if (expandedModules.isEmpty()) return
 
@@ -1028,9 +1144,9 @@ class PerformanceMatrixPanel {
             parametersState.setDeckSubTab(deckLabel, "FX")
         }
         // Transitions and Master both live under the Parameters panel's "Mixer" top tab
-        // (CTRL: crossfade/master level/queue nav/tap tempo; TRANS: transition shader + dry/wet +
-        // its own parameters) -- reuse that pair of subtabs verbatim rather than reimplementing.
-        val isMixerModule = moduleId == MacroEngine.TRANS || moduleId == MacroEngine.MASTER
+        // (CTRL: crossfade/master level/queue nav/tap tempo; FX: master FX; TRANS: transition shader + dry/wet +
+        // its own parameters) -- reuse that set of subtabs verbatim rather than reimplementing.
+        val isMixerModule = moduleId == MacroEngine.TRANS || moduleId == MacroEngine.MASTER || moduleId == MacroEngine.MASTER_FX || moduleId == "Mixer"
 
         if (deckLabel == null && fxBank == null && !isMixerModule) {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
@@ -1055,18 +1171,13 @@ class PerformanceMatrixPanel {
             ParameterResolver.findParameterByPath(mixer, cell.paramKey)
         }
         parametersState.activeTopTab = deckLabel ?: if (isMixerModule) "Mixer" else parametersState.activeTopTab
+        var nextTopTab = parametersState.activeTopTab
 
-        // Side-by-side like Classic mode's Columns 1 & 2, since Deep Edit only ever draws for a
-        // single expanded module now (collapsed siblings are hidden from the grid entirely), there
-        // is comfortably enough width for both.
-        //
-        // The params child is sized to the grid's *actual* required width (label column + VAL/MIDI/
-        // LFO/SEQ/AUD cells + kebab), not a guessed percentage of the available width -- a percentage
-        // split can end up narrower than what drawColumnHeaders/drawParamRow actually position
-        // content at (labelColW there was previously clamped up to a 140f floor even when the real
-        // available width was smaller), and ImGui asserts when SetCursorScreenPos lands outside the
-        // child's tracked bounds. Sizing the child to match keeps every position inside its own bounds
-        // by construction; Properties gets whatever width is left over, with its own floor.
+        // 3-Column Layout:
+        // Left Column: 5-channel side rail (MIX, A, B, BG, PV)
+        // Middle Column: Parameter grid with column headers & section subtabs
+        // Right Column: Properties CV detail editor
+        val sideTabWidth = ParametersTabs.calculateLeftTabsWidth(session)
         val metrics = GridMetrics.compute(session)
         val cvColumnsFn = { rackCvColumns(session) }
         val columnOffsetFn = { colId: String -> rackColumnOffset(session, colId, metrics) }
@@ -1078,16 +1189,32 @@ class PerformanceMatrixPanel {
         val paramsW = labelColW + maxGridW + 24f
 
         val totalAvailW = ImGui.getContentRegionAvailX()
-        val gap = 10f
-        val propsW = (totalAvailW - paramsW - gap).coerceAtLeast(320f)
+        val gap = 8f
+        val propsW = (totalAvailW - sideTabWidth - gap - paramsW - gap).coerceAtLeast(280f)
+        val headerH = ParametersPanel.calculateHeaderHeight(session)
 
+        // 1. Left column: 5-channel side tabs (MIX, A, B, BG, PV)
+        if (ImGui.beginChild("##rack_deep_side_tabs_$moduleId", sideTabWidth, 0f, false)) {
+            ParametersTabs.drawPerformanceDeepEditSideTabs(session, parametersState, mixer, topOffset = headerH) { targetSection ->
+                nextTopTab = targetSection
+                parametersState.activeTopTab = targetSection
+                when (targetSection) {
+                    "Mixer" -> parametersState.setDisclosure(MacroEngine.MASTER, ParametersState.DisclosureLevel.DEEP_EDIT)
+                    "Deck A" -> parametersState.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
+                    "Deck B" -> parametersState.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
+                    "Deck BG" -> parametersState.setDisclosure(MacroEngine.DECK_BG, ParametersState.DisclosureLevel.DEEP_EDIT)
+                    "Deck PV" -> parametersState.setDisclosure(MacroEngine.DECK_PV, ParametersState.DisclosureLevel.DEEP_EDIT)
+                }
+            }
+        }
+        ImGui.endChild()
+
+        ImGui.sameLine(0f, gap)
+
+        // 2. Middle column: Parameter grid
         if (ImGui.beginChild("##rack_deep_params_$moduleId", paramsW, 0f, false)) {
             val gridStartX = ImGui.getCursorScreenPosX()
-            val headerH = ParametersPanel.calculateHeaderHeight(session)
 
-            // Draws VAL/MIDI/LFO/SEQ/AUD column headers (with the column-visibility kebab menu)
-            // plus the SRC/View/CTRL/TRANS Section Tabs above them, verbatim -- same call Classic
-            // mode's Column 1 uses.
             ParametersPanel.drawColumnHeaders(session, labelColW, parametersState, mixer, metrics, headerH)
 
             if (deck != null) {
@@ -1098,17 +1225,13 @@ class PerformanceMatrixPanel {
                 ParametersTabs.drawMixerGroupContent(session, mixer, parametersState, labelColW, gridStartX, cvColumnsFn, columnOffsetFn, colorFn, onPushUndo)
             }
 
-            // The last drawn param row leaves a bare SetCursorPos() with no item after it (see
-            // ParametersRenderer.drawParamRow's trailing setCursorPos) -- ImGui asserts if that's
-            // the last thing before EndChild ("extend window/parent boundaries" with no item
-            // submitted to justify it). Classic mode's Column 1 (ParametersPanel.kt) guards its
-            // own child the same way; match it here.
             ImGui.dummy(0f, 0f)
         }
         ImGui.endChild()
 
         ImGui.sameLine(0f, gap)
 
+        // 3. Right column: Properties detail
         if (ImGui.beginChild("##rack_deep_props_$moduleId", propsW, 0f, true)) {
             PropertiesPanel.draw(session, parametersState, mixer)
         }
@@ -1117,7 +1240,7 @@ class PerformanceMatrixPanel {
         parametersState.rackSelectedCell[moduleId] = parametersState.selectedCell
         parametersState.selectedCell = savedCell
         parametersState.selectedParam = savedParam
-        parametersState.activeTopTab = savedTopTab
+        parametersState.activeTopTab = nextTopTab
     }
 
     // -- LIVE_CONSOLE FX row header: bank switcher, chain switcher, bypass, resync -------------
@@ -1424,12 +1547,14 @@ class PerformanceMatrixPanel {
         ImGui.sameLine(0f, gap)
 
         // 1b. [SRC | FX] mode toggle
-        val currentMode = deckRowMode.getOrDefault(tag, "SRC")
+        val activeSubTab = parametersState.getActiveDeckSubTabByTag(tag)
+        val currentMode = if (activeSubTab == "FX") "FX" else deckRowMode.getOrDefault(tag, "SRC")
         val modeBtnW = 28f
         val isSrc = currentMode == "SRC"
         ImGui.pushStyleColor(ImGuiCol.Button, if (isSrc) ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
         if (ImGui.button("SRC##perf_mode_src_$tag", modeBtnW, ctrlH)) {
             deckRowMode[tag] = "SRC"
+            parametersState.setDeckSubTab(deckLabel, "SRC")
         }
         ImGui.popStyleColor()
         itemTooltip("Switch $deckLabel 4-knob row to Visual Generator controls.")
@@ -1440,6 +1565,7 @@ class PerformanceMatrixPanel {
         ImGui.pushStyleColor(ImGuiCol.Button, if (isFx) ImGui.colorConvertFloat4ToU32(0.80f, 0.40f, 0.15f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
         if (ImGui.button("FX##perf_mode_fx_$tag", modeBtnW, ctrlH)) {
             deckRowMode[tag] = "FX"
+            parametersState.setDeckSubTab(deckLabel, "FX")
             val chainLabel = "$deckLabel FX"
             val bankId = targetBankIdFor(tag)
             llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(bankId, chainLabel, deck.fxChain)
@@ -1473,7 +1599,11 @@ class PerformanceMatrixPanel {
             isDeckBG -> comboWasOpenBG
             else -> comboWasOpenPV
         }
+        // Combos size their height from font + frame padding rather than taking one explicitly, so
+        // pad them out to ctrlH to match the buttons beside them. Popped before the popup body.
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), ((ctrlH - ImGui.getFontSize()) / 2f).coerceAtLeast(0f))
         val isComboOpen = ImGui.beginCombo("##perf_preset_combo_$tag", presetDisplay)
+        ImGui.popStyleVar()
         if (isComboOpen) {
             if (!wasOpen) {
                 ImGui.setKeyboardFocusHere()

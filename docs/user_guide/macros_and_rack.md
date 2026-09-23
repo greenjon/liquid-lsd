@@ -169,7 +169,7 @@ Each tab shows 16 knobs across 4 rows, mapped to different banks:
 | Tab | Row 1 | Row 2 | Row 3 | Row 4 |
 |:---|:---|:---|:---|:---|
 | **LIVE QUAD** | Deck A (1–4) | Deck B (1–4) | Deck BG (1–4) | Deck PV (1–4) |
-| **MASTER & FX** | Master (1–4) | Transitions (1–4) | FX Sends (1–4) | Deck PV (1–4) |
+| **MASTER & FX** | Master (1–4) | Transitions (1–4) | FX Wet/Dry (1–4) | Deck PV (1–4) |
 | **LIVE CONSOLE** | Deck A (1–4) | Deck B (1–4) | Deck BG (1–4) | Focused FX Target (Super + 3 Metaknobs) |
 | **ALL FX** | Deck A FX (1–4) | Deck B FX (1–4) | Deck BG FX (1–4) | Master FX (1–4) |
 
@@ -184,7 +184,8 @@ Each row is color-coded to its deck or target (blue for Deck A, orange for Deck 
 ### Performance Controls & Side-Wing Layout
 
 To maximize vertical space in the matrix and keep the knobs comfortably clustered together:
-- **Right-Aligned Row Titles & Elevated Knobs**: Row group titles (e.g. `DECK A`, `FX: Deck A`, `TRANSITIONS`) are aligned to the right side above the right-wing UI elements, preceding the faceplate `[Collapse]` and disclosure chevron buttons. This frees the entire central column, allowing the 4-knob cluster to start higher up and provide generous vertical clearance for the knob circle, label, `Val: 0.00` readout, and inline `[Learn]` button without vertical cramping.
+- **Row Titles & Side-Wing Controls**: Row group titles (e.g. `DECK A`, `FX: Deck A`) sit at the top-left of the row, level with the top of the knobs. The left- and right-wing controls sit below the title, with their bottom edge lined up with the bottom of the knobs, so short rows never push the controls up into the title. Every wing control (buttons, badges, preset dropdown) is the same height.
+- **Row Height & Scrolling**: Rows share the panel's height, so they shrink as you drag the Library dock taller. Once rows reach a minimum height (about where the Library is at half height), they stop shrinking and the matrix scrolls vertically instead. Two usable rows plus a scrollbar beat four knobs too small to grab. Scroll with the scrollbar, with the mouse wheel over the gaps between knobs (over a knob the wheel still adjusts that knob), or by click-dragging up/down on any empty part of a row, including its title band.
 - **Deck Rows (Deck A, B, BG, PV)**:
   - **Left Wing (Info & Deck Controls)**:
     - **Generator Badge**: Displays active visual source (`deck.source.displayName`).
@@ -223,6 +224,8 @@ Controls actively armed for MIDI learn display a pulsing cyan highlight border. 
 
 - **Drag** (up/down) to adjust the knob value — same feel as the classic macro knobs.
 - **Mouse wheel** to fine-adjust (Shift for finer, Ctrl+Shift for coarser).
+- **Hover/drag highlight**: the knob body tints toward the row's accent color on hover, and more
+  strongly while you're dragging it, so the knob under your pointer is easy to spot.
 - **Right-click** arms hardware MIDI Learn for that knob — the knob pulses cyan while armed, and
   the next CC message from your controller binds to it. Right-click again to cancel.
 
@@ -231,31 +234,32 @@ Knobs in Performance Mode and Classic MACROS read from and write to the **same u
 
 ### The Modular Rack: Deep Edit
 
-Every row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Master, Transitions, FX Sends)
-has a small **chevron button** in its top-right corner. Clicking it toggles that row
+Every deep-editable row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Master, Transitions)
+has a small **chevron button** in its top-right corner (FX Wet/Dry is a dedicated 4-knob macro row with no chevron). Clicking it toggles that row
 between two disclosure tiers, without leaving Performance Mode:
 
 1. **Faceplate** (collapsed, the default) — just the 4 knobs, exactly like the plain 4×4 matrix
    above. Clicking a knob selects it (electric cyan focus card, glowing rim, cyan label), shows
    its current value (`Val: 0.00`) beneath the label, and reveals a compact `[Learn]` / `[Cancel]`
    button for arming parameter-bind Learn on the spot.
-2. **Deep Edit** — click the chevron to add, side-by-side like Classic mode's Parameters/Properties
-   columns, the full **VAL / MIDI / LFO / SEQ / AUD** parameter grid on the left and the
-   per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD) on the right,
-   for **Deck rows** (SRC/View), the **FX row** (per-slot ISF uniforms — each deck has its own
-   FX chain reachable via its `[A FX]` / `[B FX]` / `[BG FX]` / `[PV FX]` / `[MST FX]` tab), and the
-   **Master and Transitions rows** (CTRL/TRANS subtabs — transition shader, dry/wet, crossfade,
-   master level, queue navigation; both rows' chevrons open the same Mixer Deep Edit content).
-   Deep Edit isn't wired up yet for the FX Sends row
-   (its 4 per-deck send levels are already reachable in each deck's own Deep Edit instead) — use
-   Classic mode (`F4`) for that one in the meantime.
+2. **Deep Edit** — click the chevron to open the comprehensive Deep Edit bay below the top macro row.
+   The bay is arranged into a 3-column layout:
+   - **5-Channel Side Rail** on the left: color-coded buttons (`[MIX]`, `[A]`, `[B]`, `[BG]`, `[PV]`)
+     allowing instant 1-click navigation between all major sections of the app without closing Deep Edit.
+     Selecting a side tab switches both the parameter editor below and the top macro row above.
+   - **Parameter Grid** in the center: displays the full **VAL / MIDI / LFO / SEQ / AUD** parameter grid
+     with section subtabs across the top. All 5 sections feature a uniform 3-tab layout with **`FX` in the center**:
+     - **`MIX`**: `[ CTRL ]  [ FX ]  [ TRANS ]` (Master controls, Master FX 4 ISF slots, and Transitions)
+     - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]  [ View ]` (Visual generator, insert FX chain, and 3D View/Transform)
+     Switching between `SRC`/`CTRL` and `FX` automatically switches the top macro row between visual source controls and insert/master FX macros (`Super Knob + 3 Metaknobs`).
+   - **Properties Editor** on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.
 
-**While a row is expanded**, every other still-collapsed row is hidden from the grid entirely —
-not just left the same size — so the expanded row and its Deep Edit panel get the freed screen
-space. Collapsing back to Faceplate (or expanding a different row in `SOLO` mode) brings the rest
+**While in Deep Edit**, the top macro row renders the macro controls corresponding to the active channel and subtab,
+reserving the freed vertical space for the side rail and parameter bay.
+Collapsing back to Faceplate (or expanding a different row in `SOLO` mode) brings the rest
 of the 4×4 grid back.
 
-Click the chevron again (or the **Collapse** button inside the Deep Edit panel) to fold back to
+Click the chevron again (or the **Collapse** button inside the Deep Edit panel or on the row) to fold back to
 the Faceplate.
 
 **Accordion behavior**: by default the rack is in **`SOLO`** mode — opening one row's Deep Edit
@@ -310,7 +314,7 @@ There are 14 always-resident canonical macro banks (4 knobs each, conforming to 
 | | Master | 4 | `master` | Alpha A, Alpha B, Master Level, Crossfader |
 | **Shared & Master FX** | FX Bank 1 | 4 | `fxBank1` | Super Knob + 3 Metaknobs |
 | | FX Bank 2 | 4 | `fxBank2` | Super Knob + 3 Metaknobs |
-| | FX Sends | 4 | `fxSends` | Deck A, B, BG, PV Send Levels |
+| | FX Wet/Dry | 4 | `fxSends` | Deck A, B, BG, PV Insert FX Wet/Dry Levels |
 | | Master FX | 4 | `masterFx` | Super Knob + 3 Metaknobs |
 
 Deck generator banks start blank by default for custom binding in the Classic MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. All 14 canonical banks are preserved in `last_session.json` and session files.

@@ -174,4 +174,57 @@ class RackDisclosureTest {
 
         assertFalse(UITheme.rackExpandedModules.containsKey(MacroEngine.DECK_A))
     }
+
+    @Test
+    fun mixerSubTabsSupportCenteredFx() {
+        val state = ParametersState()
+        state.activeTopTab = "Mixer"
+        assertEquals("CTRL", state.activeMixerSubTab)
+
+        state.setDeckSubTab("Mixer", "FX")
+        assertEquals("FX", state.activeMixerSubTab)
+        assertEquals("FX", state.getActiveSubTab("Mixer"))
+
+        state.setDeckSubTab("Mixer", "TRANS")
+        assertEquals("TRANS", state.activeMixerSubTab)
+        assertEquals("TRANS", state.getActiveSubTab("Mixer"))
+    }
+
+    @Test
+    fun deckSubTabsSupportCenteredFx() {
+        val state = ParametersState()
+        state.activeTopTab = "Deck A"
+        assertEquals("SRC", state.activeDeckASubTab)
+
+        state.setDeckSubTab("Deck A", "FX")
+        assertEquals("FX", state.activeDeckASubTab)
+        assertEquals("FX", state.getActiveDeckSubTabByTag("A"))
+
+        state.setDeckSubTab("Deck A", "View")
+        assertEquals("View", state.activeDeckASubTab)
+        assertEquals("View", state.getActiveDeckSubTabByTag("A"))
+    }
+
+    @Test
+    fun deepEditSideRailNavigationSwitchesSectionInSoloMode() {
+        val state = ParametersState()
+        state.rackSoloMode = true
+
+        // User expands Deck A
+        state.activeTopTab = "Deck A"
+        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_A))
+
+        // Clicking MIX on side rail collapses Deck A and expands Mixer
+        state.activeTopTab = "Mixer"
+        state.setDisclosure(MacroEngine.MASTER, ParametersState.DisclosureLevel.DEEP_EDIT)
+        assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_A))
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.MASTER))
+
+        // Clicking Deck B collapses Mixer and expands Deck B
+        state.activeTopTab = "Deck B"
+        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
+        assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.MASTER))
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
+    }
 }

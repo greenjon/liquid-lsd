@@ -1208,6 +1208,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#rename-fx-sends-to-fx-wetdry-remove-disclosure-chevron-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rename FX Sends to FX WET/DRY &amp; Remove Disclosure Chevron (PerformanceMatrixPanel.kt, docs/user_guide/macros_and_rack.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-deep-edit-5-channel-side-rail-centered-fx-subtabs-parameterstabskt-performancematrixpanelkt-parametersstatekt-rackdisclosuretestkt-decisionsmd-docsuser_guidemacros_and_rackmd-architecturemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Deep Edit 5-Channel Side Rail &amp; Centered FX Subtabs (ParametersTabs.kt, PerformanceMatrixPanel.kt, ParametersState.kt, RackDisclosureTest.kt, DECISIONS.md, docs/user_guide/macros_and_rack.md, ARCHITECTURE.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-matrix-row-layout-minimum-row-height-knob-highlight-performancematrixpanelkt-macroknobwidgetkt-docsuser_guidemacros_and_rackmd-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix Row Layout, Minimum Row Height &amp; Knob Highlight (PerformanceMatrixPanel.kt, MacroKnobWidget.kt, docs/user_guide/macros_and_rack.md, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fix-performance-matrix-imgui-id-conflict-on-deck-fx-mode-performancematrixpanelkt-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3832,6 +3865,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#rename-fx-sends-to-fx-wetdry-remove-disclosure-chevron-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rename FX Sends to FX WET/DRY &amp; Remove Disclosure Chevron (PerformanceMatrixPanel.kt, docs/user_guide/macros_and_rack.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-deep-edit-5-channel-side-rail-centered-fx-subtabs-parameterstabskt-performancematrixpanelkt-parametersstatekt-rackdisclosuretestkt-decisionsmd-docsuser_guidemacros_and_rackmd-architecturemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Deep Edit 5-Channel Side Rail &amp; Centered FX Subtabs (ParametersTabs.kt, PerformanceMatrixPanel.kt, ParametersState.kt, RackDisclosureTest.kt, DECISIONS.md, docs/user_guide/macros_and_rack.md, ARCHITECTURE.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-matrix-row-layout-minimum-row-height-knob-highlight-performancematrixpanelkt-macroknobwidgetkt-docsuser_guidemacros_and_rackmd-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix Row Layout, Minimum Row Height &amp; Knob Highlight (PerformanceMatrixPanel.kt, MacroKnobWidget.kt, docs/user_guide/macros_and_rack.md, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fix-performance-matrix-imgui-id-conflict-on-deck-fx-mode-performancematrixpanelkt-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6431,6 +6497,28 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="rename-fx-sends-to-fx-wetdry-remove-disclosure-chevron-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd">Rename FX Sends to FX WET/DRY &amp; Remove Disclosure Chevron (<code>PerformanceMatrixPanel.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>Renamed to FX WET/DRY</strong>: In the Performance Matrix (<code>MASTER &amp; FX</code> tab, Row 3), renamed the row from <code>FX SENDS</code> to <code>FX WET/DRY</code>, accurately reflecting that these knobs control each deck's insert FX wet/dry ratio rather than auxiliary bus sends.</li>
+<li><strong>Omitted Disclosure Chevron</strong>: Added <code>canExpand</code> to row descriptors and disabled it for <code>FX WET/DRY</code>, removing the chevron and preventing expansion into a dead "Deep Edit isn't available" bay.</li>
+</ul>
+<h3 id="performance-deep-edit-5-channel-side-rail-centered-fx-subtabs-parameterstabskt-performancematrixpanelkt-parametersstatekt-rackdisclosuretestkt-decisionsmd-docsuser_guidemacros_and_rackmd-architecturemd">Performance Deep Edit 5-Channel Side Rail &amp; Centered FX Subtabs (<code>ParametersTabs.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>ParametersState.kt</code>, <code>RackDisclosureTest.kt</code>, <code>DECISIONS.md</code>, <code>docs/user_guide/macros_and_rack.md</code>, <code>ARCHITECTURE.md</code>)</h3>
+<ul>
+<li><strong>5-Channel Vertical Side Rail in Deep Edit</strong>: Added a dedicated vertical side rail (<code>[MIX]</code>, <code>[A]</code>, <code>[B]</code>, <code>[BG]</code>, <code>[PV]</code>) on the left of Performance Mode's Deep Edit bay. Performers can instantly jump between any channel in the app with a single click without collapsing Deep Edit or hunting across matrix tabs.</li>
+<li><strong>Symmetrical 3-Subtab Hierarchy with Centered FX</strong>: Standardized all 5 channels to a uniform 3-tab layout with <code>FX</code> in the center position for intuitive muscle memory:</li>
+<li><strong><code>MIX</code></strong>: <code>[ CTRL ]  [ FX ]  [ TRANS ]</code> (Master levels/crossfader, Master FX 4 ISF slots, and Transitions).</li>
+<li><strong><code>A</code></strong>, <strong><code>B</code></strong>, <strong><code>BG</code></strong>, <strong><code>PV</code></strong>: <code>[ SRC ]  [ FX ]  [ View ]</code> (Visual generator, insert FX chain, and 3D View/Transform).</li>
+<li><strong>Macro Row &amp; Parameter Grid Full Sync</strong>: Switching sections via the side rail or toggling between <code>SRC</code>/<code>CTRL</code> and <code>FX</code> immediately updates both the bottom parameter grid and the top 4-knob macro row (<code>DECK A</code> ↔ <code>DECK A (FX)</code>, <code>MASTER</code> ↔ <code>MASTER FX</code> ↔ <code>TRANSITIONS</code>).</li>
+<li><strong>Option B Layout Preservation</strong>: The top macro row remains full-width across the panel, protecting knob spacing and wing controls from being squeezed horizontally, while the side rail sits comfortably alongside the parameter and properties editors in the bay below.</li>
+</ul>
+<h3 id="performance-matrix-row-layout-minimum-row-height-knob-highlight-performancematrixpanelkt-macroknobwidgetkt-docsuser_guidemacros_and_rackmd-docsdeveloperuimd">Performance Matrix Row Layout, Minimum Row Height &amp; Knob Highlight (<code>PerformanceMatrixPanel.kt</code>, <code>MacroKnobWidget.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>, <code>docs/developer/ui.md</code>)</h3>
+<ul>
+<li><strong>No more title/control overlap on short rows</strong>: Side-wing controls on deck and FX rows are now bottom-aligned with the knobs (and never placed above the row title), so they no longer collide with <code>DECK A</code>/<code>FX: …</code> titles when the Library dock is at half height.</li>
+<li><strong>Uniform control height</strong>: The deck preset dropdown now matches the 24px height of every other wing button and badge (new <code>CTRL_H</code> constant).</li>
+<li><strong>Minimum row height + vertical scroll</strong>: Matrix rows stop shrinking at <code>MIN_ROW_H</code> (96px); beyond that the matrix scrolls vertically instead of squeezing knobs too small to use. The mouse wheel still adjusts a knob when hovering it and scrolls the matrix elsewhere.</li>
+<li><strong>Click-drag to scroll</strong>: Click-dragging up/down on empty row space (anywhere outside the knobs and controls, including the row title band) scrolls the matrix, touch-style.</li>
+<li><strong>Clearer knob hover/drag highlight</strong>: Macro knob bodies tint toward their accent color on hover and more strongly while dragging, instead of relying only on the ring, which shares the arc's color.</li>
+</ul>
 <h3 id="fix-performance-matrix-imgui-id-conflict-on-deck-fx-mode-performancematrixpanelkt-decisionsmd">Fix Performance Matrix ImGui ID Conflict on Deck FX Mode (<code>PerformanceMatrixPanel.kt</code>, <code>DECISIONS.md</code>)</h3>
 <ul>
 <li><strong>Resolved Conflicting Widget IDs in Deck FX Mode</strong>: When a deck row was toggled to <code>FX</code> mode via <code>[ SRC | FX ]</code> (assigning its <code>bankId</code> to <code>DECK_A_FX</code>), its header drop area collided with the dedicated FX row's drop area on <code>LIVE CONSOLE</code> (which was also focused on Deck A FX), triggering Dear ImGui's ID conflict overlay (<code>2 visible items with conflicting ID: ##perf_fx_drop_deck_a_fx</code>).</li>

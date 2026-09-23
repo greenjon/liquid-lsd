@@ -140,12 +140,24 @@ object MacroKnobWidget {
 
         // -- Drawing --
         val dl = ImGui.getWindowDrawList()
-        val faceCol = ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f)
 
         // Accent-aware colors: use deck tint if provided, fall back to amber gold.
         val ar = accentColor?.getOrElse(0) { 1.0f } ?: 1.0f
         val ag = accentColor?.getOrElse(1) { 0.75f } ?: 0.75f
         val ab = accentColor?.getOrElse(2) { 0.15f } ?: 0.15f
+        // The hover/active ring shares the arc's accent color, so on its own it reads too subtly --
+        // the knob body also blends toward the accent (stronger while dragging).
+        val faceTint = when {
+            isActive  -> 0.38f
+            isHovered -> 0.22f
+            else -> 0f
+        }
+        val faceCol = ImGui.colorConvertFloat4ToU32(
+            0.12f + (ar - 0.12f) * faceTint,
+            0.12f + (ag - 0.12f) * faceTint,
+            0.12f + (ab - 0.12f) * faceTint,
+            1f
+        )
         val fillCol   = ImGui.colorConvertFloat4ToU32(ar, ag, ab, 1f)
         val trackCol  = ImGui.colorConvertFloat4ToU32(ar * 0.35f, ag * 0.35f, ab * 0.35f, 1f)
 

@@ -192,6 +192,23 @@ class ParametersState {
         }
     }
 
+    fun getActiveSubTab(deckLabel: String): String = when (deckLabel) {
+        "Deck A" -> activeDeckASubTab
+        "Deck B" -> activeDeckBSubTab
+        "Deck BG" -> activeDeckBGSubTab
+        "Deck PV" -> activeDeckPVSubTab
+        "Mixer" -> activeMixerSubTab
+        else -> "SRC"
+    }
+
+    fun getActiveDeckSubTabByTag(tag: String): String = when (tag) {
+        "A" -> activeDeckASubTab
+        "B" -> activeDeckBSubTab
+        "BG" -> activeDeckBGSubTab
+        "PV" -> activeDeckPVSubTab
+        else -> "SRC"
+    }
+
     /**
      * The active chain is now a real, single live fact owned by [llm.slop.liquidlsd.rendering.FxBank]
      * (see [llm.slop.liquidlsd.rendering.FxBank.activeChainIndex]) rather than independent per-view
