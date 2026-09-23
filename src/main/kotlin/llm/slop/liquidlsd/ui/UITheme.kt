@@ -178,6 +178,16 @@ object UITheme {
         get() = settings.performanceMatrixTab
         set(value) { settings = settings.copy(performanceMatrixTab = value.coerceIn(0, PerformanceMatrixPanel.Tab.entries.size - 1)) }
 
+    /** Modular Rack: whether opening one module's Bay/Deep Edit auto-collapses the others (see [llm.slop.liquidlsd.ui.rack.UnifiedRackPanel]). */
+    var rackSoloMode: Boolean
+        get() = settings.rackSoloMode
+        set(value) { settings = settings.copy(rackSoloMode = value) }
+
+    /** Modular Rack: persisted moduleId -> [ParametersState.DisclosureLevel] name (BAY/DEEP_EDIT only). */
+    var rackExpandedModules: Map<String, String>
+        get() = settings.rackExpandedModules
+        set(value) { settings = settings.copy(rackExpandedModules = value) }
+
     var showMidiCol: Boolean
         get() = settings.midiEnabled
         set(value) { settings = settings.copy(midiEnabled = value, showMidiCol = value) }

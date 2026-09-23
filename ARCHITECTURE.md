@@ -203,7 +203,9 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MacroPanel.kt           — Column 3 MACROS editing surface: 8 knobs + 4 switches, binding inspector, Learn Mode; renders the dedicated FX Rack view (below) instead of the generic grid for the FX1/FX2/MFX tabs
 │   ├── MacroKnobWidget.kt      — Rotary macro knob widget: drag/wheel interaction, accent-colored arc fill, optional deck tint
 │   ├── FXChainMacroStrip.kt    — Traktor/Mixxx-style FX Rack strip: Chain Super Knob + 3 slot Metaknobs (soft-takeover link toggles), Single FX Focus Mode, right-click Metaknob rebind menu. Drawn in both ParametersTabs.kt (per-chain, Parameters panel) and MacroPanel.kt (FX1/FX2/MFX tabs, Column 3)
-│   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs, deck-colored rows, read-only (no Learn Mode)
+│   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs, deck-colored rows, plus the Modular Rack accordion (see `rack/` below) — a chevron on each row group cycles Faceplate → Bay → Deep Edit, with a scrollable Bay/Deep-Edit region drawn below the (always fixed-height) grid
+│   ├── rack/
+│   │   └── RackUnit.kt          — Shared chevron/disclosure-tier drawing helper for the Modular Rack accordion, and the persistent "Learning: …" indicator; stateless, operates only on `ParametersState` (never `Mixer`/`FxBank`, enforcing that disclosure changes can't trigger FX bank refocus or `FxMacroSync` re-runs)
 │   ├── UiLabPanel.kt           — Isolated UI component gallery sandbox (swatches, icons, custom widgets)
 │   ├── browser/                — LibraryPanel sub-panels: preset/FX/transition list, playlist editor & queue actions
 │   │   ├── PresetListPanel.kt          — Preset list/grid tier of the library browser
@@ -222,7 +224,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   │   ├── BrowserActionToolbar.kt     — Shared top toolbar (view toggles, search, sort) across list tiers
 │   │   ├── BrowserDeckButtons.kt       — Shared deck-target button styling for PresetListPanel/PlaylistEditorPanel
 │   │   └── BrowserRowMoreButton.kt     — Shared right-aligned kebab (⋮) row context-menu button
-│   └── ParametersState.kt      — Selection state & 30-level Undo Stack
+│   └── ParametersState.kt      — Selection state & 30-level Undo Stack; also owns Modular Rack accordion state (`rackModuleDisclosure`/`DisclosureLevel`, `rackSoloMode`, `selectedRackMacroId`, `rackSelectedCell` — the last two are per-moduleId so two simultaneously open Deep Edits in Multi mode don't fight over one shared selection)
 ├── tools/
 │   └── SiteGenerator.kt        — Static site, documentation HTML, and offline ZIP builder for greenjon.com
 └── utils/

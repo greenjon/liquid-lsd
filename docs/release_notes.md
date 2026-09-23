@@ -1,5 +1,37 @@
 ## [Unreleased]
 
+### Performance Matrix Right-Aligned Row Titles & Elevated Knobs (`PerformanceMatrixPanel.kt`, `docs/user_guide/macros_and_rack.md`, `DECISIONS.md`)
+- **Right-Aligned Group Titles**: Moved row group titles (e.g. `DECK A`, `FX: FX Bank 1`, `TRANSITIONS`) from being centered across the row box to the right side above the right-wing UI elements (`[FX1][FX2]`, `[BYPASS][Resync]`), right before the `[Collapse]` and chevron buttons.
+- **Elevated Knob Cluster**: Removing the row title from the center column allows the 4-knob cluster to start higher up inside the row box (`boxTopY + boxPad`), freeing ~24px of vertical clearance.
+- **Generous Vertical Headroom**: With the title shifted to the right wing, the rotary knobs, labels, `Val: 0.00` readouts, and inline `[Learn]` buttons fit comfortably without vertical cramping.
+
+### Performance Matrix Bay View Direct Knob Selection & Inline Learn (`PerformanceMatrixPanel.kt`, `MacroKnobWidget.kt`, `MacroBindingInspector.kt`, `docs/user_guide/macros_and_rack.md`)
+- **Direct UI Knob Selection**: In Modular Rack Bay view, clicking any knob directly in the 4-knob UI selects it for binding inspection. The selected knob is framed with an electric cyan focus card (`#1AB0EB` border and subtle fill), glowing rim, and cyan label.
+- **Value Readout (`Val: 0.00`)**: Displays the active numerical value directly below the knob label in the 4-knob UI when the module's bay is open.
+- **Inline Parameter Learn Button**: When a module is expanded, the selected knob renders a compact `[Learn]` / `[Cancel]` button directly below its value readout. Performers can arm parameter binding right from the knob face without searching through sub-panels.
+- **Deduplicated Bay Inspector**: Removed the redundant 4-knob selectable text list, `KNOB` badge, and duplicate value readout from the Bay inspector, focusing the inspector on the target bindings list and renaming.
+- **Faceplate Collapse Button**: Added a direct `[Collapse]` button next to the chevron in the row header so performers can fold the bay back up directly from the row.
+
+### Performance Matrix Vertical Space Optimization & Side-Wing Layout (`PerformanceMatrixPanel.kt`, `docs/user_guide/macros_and_rack.md`)
+- **Vertical Space Reclaim**: Removed the separate top header bar from Deck rows (Deck A, Deck B, Deck BG, Deck PV) and the FX row, reclaiming ~31px of vertical height per row and allowing larger, comfortably proportioned rotary knobs without screen crowding.
+- **Side-Wing Layout for Deck Rows**: Items from each deck row's top bar have been relocated into flanking side wings around the knobs:
+  - **Left Wing**: Generator badge, searchable preset dropdown combo, eject button (`Icons.EJECT`), randomize dice button (`Icons.DICES`), and queue navigation (`< N/Total >` for A/B/BG, or `PREVIEW` focus badge for PV).
+  - **Right Wing**: Send routing buttons `[FX1]` and `[FX2]` with full MIDI/OSC Learn support and context menus.
+- **Side-Wing Layout for FX Row**: Relocated bank switcher (`[FX1][FX2][MFX]`) and chain switcher (`[C1][C2][C3]`) into the left wing, and bypass (`[BYPASS]`/`[FX ON]`) and `[Resync]` buttons into the right wing.
+- **Clustered Knob Spacing & Column Alignment**: Rotary macro knobs are now placed closer together in a focused center cluster rather than spanning wide across the full screen width, with uniform column alignment preserved across all 4 rows in the matrix.
+- **Compact Accordion Height**: Reduced `compactRowH` to 175f to give expanded modular rack bays significantly more vertical room.
+
+### Unified Modular Rack: 3-Tier Accordion for the Performance Matrix (`PerformanceMatrixPanel.kt`, `rack/RackUnit.kt`, `ParametersState.kt`, `UIManager.kt`, `MenuBar.kt`, `DECISIONS.md`, `docs/user_guide/macros_and_rack.md`)
+- **Chevron disclosure on every row**: Each row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Transitions, Master, FX Sends, Master FX) now has a chevron button cycling **Faceplate → Bay → Deep Edit → Faceplate**, without leaving Performance Mode. While any row is expanded, every other still-collapsed row is hidden from the grid entirely (not just left the same size), so the expanded row and its Bay/Deep Edit panel get the freed screen space; collapsing back (or expanding a different row in Solo mode) restores the full 4×4 grid.
+- **Deep Edit column headers & side-by-side layout**: Deep Edit's parameter grid now shows the same VAL/MIDI/LFO/SEQ/AUD column headers (and column-visibility kebab menu) Classic mode's Column 1 has, via `ParametersPanel.drawColumnHeaders` reused verbatim, and lays the parameter grid and the per-parameter Properties detail editor out side-by-side — like Classic mode's Columns 1 & 2 — instead of stacked vertically.
+- **Bay (Tier 2)**: Opens a scrollable panel below the grid with that row's 4 knobs as a list and the same `MacroBindingInspector` Classic mode's Column 3 MACROS tab uses — rename, arm parameter-bind Learn, and edit Min/Max/Curve/Invert/Enabled, all without switching modes.
+- **Deep Edit (Tier 3)**: For Deck rows, the FX row / Master FX, and Transitions/Master, adds the full parameter grid (`ParametersTabs.drawSectionTabs`/`drawDeckGroupContent`/`drawFxBankGroupContent`/`drawMixerGroupContent`) plus the per-parameter CV detail editor (`PropertiesPanel.draw`) below the Bay — the same LFO period/phase/morph/hold/slew, MIDI, SEQ, and AUD controls Classic mode's Parameters/Properties columns show, reused verbatim. Binding a macro knob to an LFO's period now works entirely from Performance Mode. (FX Sends doesn't have Deep Edit content of its own — its per-deck send levels are already reachable via each deck's own Deep Edit.)
+- **Disclosure state persists across restarts**: which rows are in Bay/Deep Edit is saved (`UITheme.rackExpandedModules`) alongside the Solo/Multi setting, so your rack layout is exactly as you left it next launch.
+- **Solo / Multi accordion**: A `[ SOLO | MULTI ]` toolbar toggle (persisted) controls whether expanding one module auto-collapses the others; a `Collapse All` button and matching View-menu items are also available.
+- **Learn-mode pinning**: A module with one of its own knobs armed for Macro Learn is exempt from auto-collapse, and a persistent "Learning: ‹name› — Esc to cancel" indicator stays visible in the toolbar regardless of which module's Bay is open.
+- **Esc priority stack**: cancels an armed Macro Learn first; otherwise collapses every expanded Rack module back to Faceplate; guarded so it never fires while a text field has focus.
+- Expand/collapse never refocuses the FX row's FX1/FX2/MFX selection or re-runs the Super Knob/Metaknob sync — it's strictly a display change.
+
 ### Performance Matrix Deck Controls Parity, Randomize Dice (A, B, BG, PV, ALL) & Fade Speed Control (`PerformanceMatrixPanel.kt`, `DECISIONS.md`)
 - **Randomization Dice for All Decks**: Added `[ ALL 🎲 ]` button at the right edge of the performance matrix tab strip for instant whole-rig randomization with undo snapshot, plus dedicated dice buttons (`🎲`) in each deck row header (Deck A, Deck B, Deck BG, Deck PV) for individual deck randomization.
 - **Header Controls Parity for Decks BG and PV**: Enabled full header controls for all 4 decks in `LIVE QUAD` (and `LIVE CONSOLE`), including generator source badge, searchable preset dropdown combo (`presetSearchBG`, `presetSearchPV`), eject button (`⏏`) routing through `UIManager.triggerDeckEject(deck)`, and FX routing toggles (`[FX1][FX2]`) with MIDI/OSC learn.

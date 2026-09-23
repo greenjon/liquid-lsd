@@ -1,5 +1,7 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.macro.MacroEngine
+import llm.slop.liquidlsd.macro.MacroLearnState
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 
@@ -33,6 +35,101 @@ class ParametersState {
 
     /** Tracks which FX slot accordion sections are collapsed, keyed by "$deckLabel/FX$slotNum". */
     val fxSlotCollapsed = mutableMapOf<String, Boolean>()
+
+    // -- Modular Rack disclosure state (docs/user_guide/macros_and_rack.md) --------------------
+
+    /** The three disclosure tiers a [llm.slop.liquidlsd.ui.rack.RackUnit] can be in. */
+    enum class DisclosureLevel { COLLAPSED, BAY, DEEP_EDIT }
+
+    /** Per rack-module ("DECK_A", "DECK_B", "FX", "MASTER", etc.) disclosure tier. Absent = COLLAPSED. */
+    val rackModuleDisclosure = mutableMapOf<String, DisclosureLevel>()
+
+    init {
+        // UITheme's init block loads preferences the first time it's touched, which SessionContext
+        // guarantees happens before ParametersState is constructed (uiTheme is declared first) --
+        // so UITheme.rackExpandedModules is already hydrated here. Only BAY/DEEP_EDIT are ever
+        // persisted (see persistRackExpandedModules), and no Learn session survives a restart, so
+        // this can never resurrect a mid-Learn-pinned state.
+        for ((moduleId, levelName) in UITheme.rackExpandedModules) {
+            val level = runCatching { DisclosureLevel.valueOf(levelName) }.getOrNull()
+            if (level != null && level != DisclosureLevel.COLLAPSED) {
+                rackModuleDisclosure[moduleId] = level
+            }
+        }
+    }
+
+    /** Persists the current Bay/Deep-Edit disclosure state so it survives an app restart. */
+    private fun persistRackExpandedModules() {
+        UITheme.rackExpandedModules = rackModuleDisclosure
+            .filterValues { it != DisclosureLevel.COLLAPSED }
+            .mapValues { it.value.name }
+        AppPreferencesStore.savePreferences()
+    }
+
+    /** When true, opening one module's Bay/Deep Edit auto-collapses every other module (except a Learn-pinned one). Persisted via [UITheme.rackSoloMode]. */
+    var rackSoloMode: Boolean
+        get() = UITheme.rackSoloMode
+        set(value) { UITheme.rackSoloMode = value }
+
+    /** Per rack-module: which macro knob's Binding Inspector is showing in that module's Bay. */
+    val selectedRackMacroId = mutableMapOf<String, String?>()
+
+    /** Per rack-module: that module's own Tier-3 Deep Edit selected cell (analogue of [selectedCell]). */
+    val rackSelectedCell = mutableMapOf<String, ParameterCellId?>()
+
+    fun disclosureFor(moduleId: String): DisclosureLevel = rackModuleDisclosure[moduleId] ?: DisclosureLevel.COLLAPSED
+
+    /**
+     * Maps a Rack Unit's moduleId to the [MacroEngine] bank id(s) it owns. Every plain fixed
+     * module (Deck A/B/BG/PV, Transitions, Master, FX Sends, Master FX) uses its own bank id as
+     * its moduleId 1:1, so this table only needs an entry for "FX": LIVE_CONSOLE's focus-swappable
+     * FX row keeps one stable moduleId ("FX") decoupled from whichever bank (FX1/FX2/MFX) is
+     * currently focused, per the focus-swap decoupling rule -- accordion state must not reset or
+     * duplicate itself when the user refocuses the row to a different bank.
+     */
+    private val rackModuleBankIds: Map<String, List<String>> = mapOf(
+        "FX" to listOf(MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2, MacroEngine.MASTER_FX)
+    )
+
+    /**
+     * True if [moduleId] owns the macro knob currently armed for [MacroLearnState] Learn --
+     * such a module is exempt from auto-solo collapse (see Learn-mode pinning in the rack plan).
+     */
+    fun isLearnPinned(moduleId: String): Boolean {
+        val controlId = MacroLearnState.activeSession?.controlId ?: return false
+        val (bankId, _) = MacroEngine.findBankForControl(controlId) ?: return false
+        val ownedBankIds = rackModuleBankIds[moduleId] ?: listOf(moduleId)
+        return bankId in ownedBankIds
+    }
+
+    /**
+     * Sets [moduleId]'s disclosure tier. When [rackSoloMode] is on and [level] is not COLLAPSED,
+     * every other module is collapsed too -- except one currently pinned open by an active Learn.
+     */
+    fun setDisclosure(moduleId: String, level: DisclosureLevel) {
+        rackModuleDisclosure[moduleId] = level
+        if (rackSoloMode && level != DisclosureLevel.COLLAPSED) {
+            for (key in rackModuleDisclosure.keys.toList()) {
+                if (key != moduleId && !isLearnPinned(key)) {
+                    rackModuleDisclosure[key] = DisclosureLevel.COLLAPSED
+                }
+            }
+        }
+        persistRackExpandedModules()
+    }
+
+    /** Collapses every rack module to Tier 1, except one currently pinned open by an active Learn. */
+    fun collapseAllRackModules() {
+        for (key in rackModuleDisclosure.keys.toList()) {
+            if (!isLearnPinned(key)) {
+                rackModuleDisclosure[key] = DisclosureLevel.COLLAPSED
+            }
+        }
+        persistRackExpandedModules()
+    }
+
+    /** True if any rack module is currently above Tier 1 (used by the Esc priority stack). */
+    fun anyRackModuleExpanded(): Boolean = rackModuleDisclosure.values.any { it != DisclosureLevel.COLLAPSED }
 
     /** History stack for undo support. */
     private val undoStack = mutableListOf<ParametersUndoSnapshot>()

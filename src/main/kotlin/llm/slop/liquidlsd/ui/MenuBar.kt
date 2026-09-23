@@ -91,6 +91,15 @@ class MenuBar(
                             AppPreferencesStore.savePreferences()
                         }
                         ImGui.separator()
+                        if (ImGui.menuItem("Solo Accordion Mode", "", session.parametersState.rackSoloMode)) {
+                            session.parametersState.rackSoloMode = !session.parametersState.rackSoloMode
+                            AppPreferencesStore.savePreferences()
+                        }
+                        itemTooltip("When on, expanding one Modular Rack module's Bay/Deep Edit auto-collapses the others.")
+                        if (ImGui.menuItem("Collapse All Rack Units", "Esc", false, session.parametersState.anyRackModuleExpanded())) {
+                            session.parametersState.collapseAllRackModules()
+                        }
+                        ImGui.separator()
                         if (ImGui.beginMenu("Library Drawer")) {
                             if (ImGui.menuItem("Full", "", session.uiTheme.libraryMode == UITheme.LibraryMode.FULL)) {
                                 session.uiTheme.libraryMode = UITheme.LibraryMode.FULL

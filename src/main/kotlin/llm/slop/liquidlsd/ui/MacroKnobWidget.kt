@@ -83,6 +83,7 @@ object MacroKnobWidget {
         isLearning: Boolean = false,
         accentColor: FloatArray? = null,
         bindings: List<llm.slop.liquidlsd.macro.MacroBinding> = emptyList(),
+        showValue: Boolean = false,
         onSelect: () -> Unit = {},
         onToggleLearn: () -> Unit = {},
         onChanged: (Float) -> Unit
@@ -203,12 +204,29 @@ object MacroKnobWidget {
             dl.addText(labelX, labelY, labelCol, label)
         }
 
+        val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
+        if (showValue) {
+            val valStr = "Val: ${"%.2f".format(newValue)}"
+            var valW = 0f
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { valW = ImGui.calcTextSize(valStr).x }
+            val valX = cx - valW / 2f
+            val valY = labelY + captionH + 1f
+            val valCol = if (isSelected) {
+                ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 0.95f)
+            } else {
+                ImGui.colorConvertFloat4ToU32(0.6f, 0.65f, 0.75f, 0.85f)
+            }
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                dl.addText(valX, valY, valCol, valStr)
+            }
+        }
+
         val learnTip = if (isLearning) " [LEARNING... Click target to bind]" else ""
         val bindingLine = formatBindingSummary(bindings)
         itemTooltip("$label: ${"%.2f".format(newValue)}$learnTip\n$bindingLine\nDrag to adjust. Left-click to inspect. Right-click for Learn.")
 
-        val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
-        ImGui.setCursorScreenPos(startX, startY + diameter + 3f + captionH + 4f)
+        val totalTextH = if (showValue) captionH * 2f + 2f else captionH
+        ImGui.setCursorScreenPos(startX, startY + diameter + 3f + totalTextH + 4f)
         ImGui.dummy(0f, 0f)
     }
 

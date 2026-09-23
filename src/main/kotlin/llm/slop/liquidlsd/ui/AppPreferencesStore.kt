@@ -253,6 +253,16 @@ object AppPreferencesStore {
                 props.getProperty("checkUpdatesOnStartup")?.let { UITheme.checkUpdatesOnStartup = it.toBoolean() }
                 props.getProperty("ignoredUpdateVersion")?.let { UITheme.ignoredUpdateVersion = it }
 
+                props.getBoolean("rackSoloMode")?.let { UITheme.rackSoloMode = it }
+                props.getProperty("rackExpandedModules")?.let { encoded ->
+                    UITheme.rackExpandedModules = encoded.split(';')
+                        .filter { it.isNotBlank() }
+                        .mapNotNull { entry ->
+                            val idx = entry.indexOf('=')
+                            if (idx <= 0) null else entry.substring(0, idx) to entry.substring(idx + 1)
+                        }.toMap()
+                }
+
                 props.getProperty("videoOutputConfigs")?.let { json ->
                     try {
                         UITheme.videoOutputConfigs = Json.decodeFromString<Map<VideoOutputEndpoint, VideoOutputConfig>>(json)
@@ -337,6 +347,9 @@ object AppPreferencesStore {
             props.setProperty("trackpadConsoleEnabled", UITheme.trackpadConsoleEnabled.toString())
             props.setProperty("checkUpdatesOnStartup", UITheme.checkUpdatesOnStartup.toString())
             props.setProperty("ignoredUpdateVersion", UITheme.ignoredUpdateVersion)
+
+            props.setProperty("rackSoloMode", UITheme.rackSoloMode.toString())
+            props.setProperty("rackExpandedModules", UITheme.rackExpandedModules.entries.joinToString(";") { "${it.key}=${it.value}" })
 
             try {
                 props.setProperty("videoOutputConfigs", Json.encodeToString(UITheme.videoOutputConfigs))

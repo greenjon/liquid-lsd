@@ -319,7 +319,10 @@ object ParametersPanel {
         dl.addLine(rightColX, boxTopY, rightColX, boxBottomY, lineCol, 1f)
     }
 
-    private fun drawColumnHeaders(
+    /** Visible to the rest of the module (not just this file) so the Modular Rack's Deep Edit tier
+     *  (see [PerformanceMatrixPanel.drawRackDeepEdit]) can reuse the VAL/MIDI/LFO/SEQ/AUD column
+     *  headers -- and the Section Tabs (SRC/View/CTRL/TRANS) drawn inside them -- verbatim. */
+    internal fun drawColumnHeaders(
         session: llm.slop.liquidlsd.SessionContext,
         labelColW: Float,
         state: ParametersState,

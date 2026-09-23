@@ -345,6 +345,21 @@ class UIManager(
             AppPreferencesStore.savePreferences()
         }
 
+        // Modular Rack Esc priority stack (docs/user_guide/macros_and_rack.md):
+        //   1. A [MacroLearnState] arm survives independently of any widget's visibility, so it
+        //      takes priority -- a flat "Esc always collapses" would let a user reflexively
+        //      dismiss the accordion while a Learn arm silently keeps running underneath.
+        //   2. Otherwise, if any Rack Unit is above Tier 1, collapse them all back to Tier 1.
+        //   3. Otherwise, no-op.
+        // Guarded so it never fires while a text/search input has keyboard focus.
+        if (!ImGui.getIO().wantTextInput && ImGui.isKeyPressed(imgui.flag.ImGuiKey.Escape, false)) {
+            if (llm.slop.liquidlsd.macro.MacroLearnState.isLearning()) {
+                llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
+            } else if (parametersState.anyRackModuleExpanded()) {
+                parametersState.collapseAllRackModules()
+            }
+        }
+
         val isCtrlF = ImGui.getIO().keyCtrl && ImGui.isKeyPressed(imgui.flag.ImGuiKey.F, false)
         val isSlash = ImGui.isKeyPressed(imgui.flag.ImGuiKey.Slash, false)
         if (isCtrlF || isSlash) {
