@@ -304,7 +304,7 @@ class PerformanceMatrixPanel {
         val boxMarginY = 3f   // gap between a group's box and the next group's / grid's edge
         val boxLabelGap = 3f  // gap above and below the group title, inside the box
         val subLabelGap = 2f  // gap between a sub-label and the knobs below it
-        val boxPad = 6f       // inner padding between the box border and the knobs it contains
+        val boxPad = 3f       // inner padding between the box border and the knobs it contains
         val pad = 6f
 
         val hasDeckRows = rows.any { it.bankId in listOf(MacroEngine.DECK_A, MacroEngine.DECK_B, MacroEngine.DECK_BG, MacroEngine.DECK_PV) }
@@ -389,14 +389,25 @@ class PerformanceMatrixPanel {
             val isModuleExpanded = parametersState.disclosureFor(moduleId) != ParametersState.DisclosureLevel.COLLAPSED
             val chevronSize = groupLabelH.coerceIn(16f, 22f)
 
-            // Draw group title on the right, above the right-wing UI elements and to the left of [Collapse] & Chevron
-            val collapseBtnW = if (isModuleExpanded) 80f else 0f
-            val headerRightButtonsW = chevronSize + 4f + collapseBtnW + 8f
-            val maxTitleRightX = boxX2 - headerRightButtonsW
+            // The Master/Transitions row reserves a header-controls bar at the top of the box, so its
+            // title stays there too; every other row's title sits to the left of its knobs, top-aligned
+            // with them, so its Y is derived from the same knob-top geometry the row loop computes below.
+            val isSpecialHeaderRow = descriptor.hasExtraHeader && isTransRow
+            val titleY = if (isSpecialHeaderRow) {
+                titleTopY
+            } else {
+                val firstRow = rows[group.startRow]
+                val contentTopYForTitle = boxTopY + boxPad
+                val subRowHForTitle = (boxBottomY - boxPad - contentTopYForTitle) / group.rowCount
+                val knobAreaTopYForTitle = if (firstRow.subLabel != null) contentTopYForTitle + subLabelH + subLabelGap else contentTopYForTitle
+                val knobAreaCenterYForTitle = knobAreaTopYForTitle + (subRowHForTitle - (knobAreaTopYForTitle - contentTopYForTitle)) / 2f
+                val knobTopYForTitleCentered = knobAreaCenterYForTitle - diameter / 2f - textBelowH / 2f
+                (knobAreaTopYForTitle + knobTopYForTitleCentered) / 2f
+            }
+
+            // Group title, left-aligned to the box, top-aligned with the knob row it labels.
             if (h1Pushable) ImGui.pushFont(h1Font, UITheme.FONT_H1)
-            val textW = ImGui.calcTextSize(displayLabel).x
-            val titleX = maxTitleRightX - textW
-            dl.addText(titleX, titleTopY, borderCol, displayLabel)
+            dl.addText(boxX1 + pad, titleY, borderCol, displayLabel)
             if (h1Pushable) ImGui.popFont()
 
             val afterTitleY = titleTopY + groupLabelH + boxLabelGap
@@ -527,7 +538,11 @@ class PerformanceMatrixPanel {
                 }
 
                 val knobAreaCenterY = knobAreaTopY + (subBottomY - knobAreaTopY) / 2f
-                val knobTopY = knobAreaCenterY - diameter / 2f - captionH / 2f
+                val knobTopYCentered = knobAreaCenterY - diameter / 2f - textBelowH / 2f
+                // Halfway between top-anchored and fully centered -- halves the dead space above the
+                // knob (most visible when a module is expanded and its row fills the whole panel height)
+                // without pushing the Val/Learn content below it past the box.
+                val knobTopY = (knobAreaTopY + knobTopYCentered) / 2f
                 val knobCenterY = knobTopY + diameter / 2f
                 val ctrlH = 24f
                 val ctrlY = knobCenterY - ctrlH / 2f
