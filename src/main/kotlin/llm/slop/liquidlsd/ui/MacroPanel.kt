@@ -12,8 +12,8 @@ import llm.slop.liquidlsd.rendering.Mixer
  * Shows one of the canonical per-deck/mixer/FX-bank banks at a time ([MacroEngine.CANONICAL_BANK_IDS])
  * -- the same resident banks the Rack's per-deck faceplates read and write directly, so editing a
  * knob here and seeing it on the Rack (or vice versa) is the same object, not a copy. Which bank is
- * showing follows [ParametersState.activeTopTab] -- the same "which deck is focused" state Columns
- * 1/2 already use -- so clicking a deck tab in Parameters or a confidence monitor elsewhere
+ * showing follows [ParametersState.activeTopTab] -- the same "which deck is focused" state Deep
+ * Edit uses -- so switching channel in Deep Edit or clicking a confidence monitor elsewhere
  * automatically flips this panel to that deck's knobs too, and the tab strip drawn here writes
  * back into [ParametersState.activeTopTab] so the reverse holds as well.
  *
@@ -326,23 +326,16 @@ class MacroPanel(
 
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.invisibleButton("##macro_preview_monitor", previewW, previewH)
-        val macroTooltipAction = if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
-            "Click to open Deep Edit."
-        } else {
-            "Click to focus Parameters."
-        }
-        itemTooltip("Preview monitor ($previewTitle). $macroTooltipAction")
+        itemTooltip("Preview monitor ($previewTitle). Click to open Deep Edit.")
         if (ImGui.isItemClicked(0)) {
-            if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
-                val moduleId = when (parametersState.activeTopTab) {
-                    "Deck A", "A FX" -> MacroEngine.DECK_A
-                    "Deck B", "B FX" -> MacroEngine.DECK_B
-                    "Deck BG", "BG FX" -> MacroEngine.DECK_BG
-                    "Deck PV", "PV FX" -> MacroEngine.DECK_PV
-                    else -> MacroEngine.MASTER
-                }
-                parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)
+            val moduleId = when (parametersState.activeTopTab) {
+                "Deck A", "A FX" -> MacroEngine.DECK_A
+                "Deck B", "B FX" -> MacroEngine.DECK_B
+                "Deck BG", "BG FX" -> MacroEngine.DECK_BG
+                "Deck PV", "PV FX" -> MacroEngine.DECK_PV
+                else -> MacroEngine.MASTER
             }
+            parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)
         }
 
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), startY + previewH)
@@ -350,7 +343,7 @@ class MacroPanel(
     }
 
     /**
-     * Resolves the deck currently focused by Columns 1/2 ([ParametersState.activeTopTab]) to its
+     * Resolves the deck currently focused in Deep Edit / by the monitors ([ParametersState.activeTopTab]) to its
      * output texture. The Macros preview intentionally follows this same "which deck" selection
      * rather than introducing a second, independent picker. Falls back to the master output
      * texture for the "Mixer" tab (or transition FBO when on TRANS).

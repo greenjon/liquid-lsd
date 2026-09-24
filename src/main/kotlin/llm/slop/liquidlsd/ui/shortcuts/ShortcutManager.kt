@@ -31,11 +31,10 @@ object ShortcutManager {
         register(ShortcutAction("global.preset_size_inc", ShortcutCategory.GLOBAL, "Increase Preset Name Size", "Increases Library browser preset name font size by 10% (80%–120%).", KeyCombination(GLFW_KEY_EQUAL, GLFW_MOD_CONTROL)))
         register(ShortcutAction("global.record_output", ShortcutCategory.GLOBAL, "Start / Stop Recording", "Toggles live master output recording to MP4 video.", KeyCombination(GLFW_KEY_R, GLFW_MOD_CONTROL)))
         register(ShortcutAction("global.preferences", ShortcutCategory.GLOBAL, "Open Preferences", "Opens the application preferences dialog.", KeyCombination(GLFW_KEY_P, GLFW_MOD_CONTROL)))
-        register(ShortcutAction("global.toggle_rack", ShortcutCategory.GLOBAL, "Toggle Performance Mode", "Switches between Classic Deck View and the 4×4 Performance Mode macro matrix.", KeyCombination(GLFW_KEY_F4)))
 
-        // 2. Parameters & Modulation Matrix
-        register(ShortcutAction("parameters.save_deck", ShortcutCategory.PARAMETERS, "Save Active Deck Preset", "Saves active deck preset in Parameters or Deep Edit (opens Save As if untitled).", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL)))
-        register(ShortcutAction("parameters.save_deck_as", ShortcutCategory.PARAMETERS, "Save Active Deck Preset As...", "Opens Save As modal for active deck in Parameters or Deep Edit.", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL or GLFW_MOD_SHIFT)))
+        // 2. Deep Edit & Modulation Matrix
+        register(ShortcutAction("parameters.save_deck", ShortcutCategory.PARAMETERS, "Save Active Deck Preset", "Saves the preset of the deck open in Deep Edit (opens Save As if untitled).", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL)))
+        register(ShortcutAction("parameters.save_deck_as", ShortcutCategory.PARAMETERS, "Save Active Deck Preset As...", "Opens Save As modal for the deck open in Deep Edit.", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL or GLFW_MOD_SHIFT)))
         register(ShortcutAction("parameters.undo", ShortcutCategory.PARAMETERS, "Undo Parameter Action", "Reverts last parameter tweak, randomize, paste, or reset.", KeyCombination(GLFW_KEY_Z, GLFW_MOD_CONTROL)))
         register(ShortcutAction("parameters.copy", ShortcutCategory.PARAMETERS, "Copy Cell or Row", "Copies modulation routing (or row settings if Base/Final cell is selected).", KeyCombination(GLFW_KEY_C, GLFW_MOD_CONTROL)))
         register(ShortcutAction("parameters.paste", ShortcutCategory.PARAMETERS, "Paste Cell or Row", "Applies copied modulators or parameter settings with an undo point.", KeyCombination(GLFW_KEY_V, GLFW_MOD_CONTROL)))

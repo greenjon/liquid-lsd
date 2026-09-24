@@ -17,7 +17,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  *
  * Holds one [MacroBank] per scope, keyed by a canonical bank id. The six canonical deck/mixer ids
  * ([DECK_A]/[DECK_B]/[DECK_BG]/[DECK_PV]/[TRANS]/[MASTER]) are always-resident banks that
- * Classic's Column 3 MACROS tab and the Performance Mode 4×4 Matrix both read and write directly —
+ * Column 3's MACROS tab and the Performance Mode 4×4 Matrix both read and write directly —
  * there is no separate "global" bank. Registration and persistence is handled entirely by
  * [llm.slop.liquidlsd.presets.SessionSerializer]. Other keys are still supported generically for
  * anything that registers its own bank.

@@ -55,17 +55,10 @@ class MixerPanel(
 
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
         ImGui.invisibleButton("##main_output_monitor", monitorBtnW, masterH.coerceAtLeast(1f))
-        val tooltipAction = if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
-            "Click to open Deep Edit (Master)."
-        } else {
-            "Click to focus Parameters Mix tab."
-        }
-        itemTooltip("Main output monitor. $tooltipAction")
+        itemTooltip("Main output monitor. Click to open Deep Edit (Master).")
         if (ImGui.isItemClicked(0)) {
             parametersState.activeTopTab = "Mixer"
-            if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
-                parametersState.setDisclosure(MacroEngine.MASTER, ParametersState.DisclosureLevel.DEEP_EDIT)
-            }
+            parametersState.setDisclosure(MacroEngine.MASTER, ParametersState.DisclosureLevel.DEEP_EDIT)
         }
 
         // Live recording tally badge overlay

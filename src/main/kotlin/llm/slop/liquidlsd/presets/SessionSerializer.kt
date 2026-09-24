@@ -92,8 +92,8 @@ object SessionSerializer {
 
     /**
      * Restores the active session, including registering all canonical per-deck/mixer/FX-bank macro
-     * banks with [llm.slop.liquidlsd.macro.MacroEngine] -- independent of whether the Rack
-     * workspace or Classic's MACROS tabs are ever opened this run, since both read/write these
+     * banks with [llm.slop.liquidlsd.macro.MacroEngine] -- independent of whether the Performance
+     * panel or Column 3's MACROS tab is ever opened this run, since both read/write these
      * same resident banks directly (see [llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS]).
      */
     fun loadSession(mixer: Mixer) {

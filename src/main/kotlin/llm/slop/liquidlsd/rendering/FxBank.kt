@@ -70,7 +70,7 @@ class FxBank(val label: String) {
     fun toFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto =
         activeChain.toFxChainDto(name, tags)
 
-    /** Indexed slot/chain accessors targeting a specific chain, for the Parameters panel's per-chain subtabs. */
+    /** Indexed slot/chain accessors targeting a specific chain, for Deep Edit's per-chain subtabs. */
     fun toFxSlotDto(chainIndex: Int, slotIndex: Int): FXSlotDto? =
         chains.getOrNull(chainIndex)?.toFxSlotDto(slotIndex)
 

@@ -8,8 +8,8 @@ Liquid LSD has a lot going on, but it's organized around a handful of core ideas
 
 The Library panel spans the left and middle columns of the app and has three height modes. Press **`Space`** (when the cursor isn't in a text field) to cycle between them:
 
-- **Full Height** — The Parameters and Properties panels are hidden. The Library takes up all the space. Use this when you're focused on building or editing playlists and play queues.
-- **Half Height** — The Library sits in the lower half, with the Parameters and Properties panels still visible above it. Good for tweaking modulation while keeping an eye on your setlist.
+- **Full Height** — The Performance panel is hidden. The Library takes up all the space. Use this when you're focused on building or editing playlists and play queues.
+- **Half Height** — The Library sits in the lower half, with the Performance panel still visible above it. Good for tweaking knobs and modulation while keeping an eye on your setlist.
 - **Docked** — The Library collapses to a slim toolbar at the bottom of the screen. Use this when you don't need to manage playlists or queues and want the full workspace visible.
 
 You can drag the Library's title bar up or down to resize it freely in Half Height mode — the height you set is remembered. Double-click the title bar to snap back to exactly 50/50. The standard window buttons on the right of the title bar also let you jump between heights.
@@ -45,17 +45,24 @@ Here's how audio becomes visuals:
 
 ---
 
-## The Parameters Panel (Left Panel)
+## The Performance Panel (Left & Middle)
 
-This is where you connect things. Every row is a visual parameter (like "Lobes", "Zoom", or "Hue"), and each column is a modulation source (audio, LFO, sequencer, MIDI, or manual value). Click the intersection of a row and a column to configure that connection.
+The top of the left and middle columns is the **Performance panel**: a 4×4 grid of macro knobs,
+one row per deck or section, with tabs across the top (LIVE QUAD, MASTER & FX, LIVE CONSOLE,
+ALL FX). Click a deck row's generator badge to change its visual source.
 
-See [Modulation](modulation.md) for the full guide.
+For full control, open a row's **Deep Edit** (the chevron on the row, or click a deck monitor in
+the Mixer). Deep Edit has three columns:
 
----
+- **Side rail** — `[MIX] [A] [B] [BG] [PV]` to jump between channels.
+- **Parameter grid** — every row is a visual parameter (like "Lobes", "Zoom", or "Hue") and each
+  column is a modulation source (manual value, MIDI, LFO, sequencer, audio). Click a cell to
+  configure that connection. See [Modulation](modulation.md) for the full guide.
+- **Properties** — the details of the selected cell: waveform controls for LFOs, band selectors
+  for audio, step patterns for the sequencer, etc., with a live oscilloscope of the signal going
+  to the parameter.
 
-## The Properties Panel (Middle)
-
-When you click a cell in the Parameters panel, the Properties panel opens to show you the details — waveform controls for LFOs, band selectors for audio, step patterns for the sequencer, etc. It also shows a live oscilloscope so you can see exactly what signal is going to the parameter.
+See [Macro Controls & Performance Mode](macros_and_rack.md) for the knobs and Deep Edit in detail.
 
 ---
 
@@ -68,9 +75,9 @@ The right panel shows:
 - Master output monitor
 - Blend mode selector
 
-Clicking the master monitor preview jumps directly to the **MIX** tab.
+Clicking a deck monitor opens that deck in Deep Edit; clicking the master monitor opens the Master (**MIX**) Deep Edit.
 
-A **`[ MIXER | MACROS ]`** toggle at the top of this panel switches it to the Macro Controls view — 8 knobs you can bind to any parameter or modulator for fast, tactile live control. See [Macro Controls & Performance Mode](macros_and_rack.md).
+A **`[ MIXER | MACROS ]`** toggle at the top of this panel switches it to the Macro Controls view, where you bind the Performance panel's knobs to any parameter or modulator. See [Macro Controls & Performance Mode](macros_and_rack.md).
 
 ---
 
@@ -91,8 +98,7 @@ A few keyboard shortcuts work anywhere in the app:
 | `Esc` | Exit fullscreen |
 | `B` | Toggle background video rendering behind the UI |
 | `Ctrl+Z` | Undo the last parameter/modulator change (30-step history) |
-| `Ctrl+S` | Save the active deck's preset (in Performance Mode: the deck open in Deep Edit) |
+| `Ctrl+S` | Save the preset of the deck open in Deep Edit |
 | `Ctrl+R` | Start / stop recording |
 | `Ctrl+P` | Open Preferences |
 | `Ctrl+F` or `/` | Jump to preset search |
-| `F4` | Toggle between Classic Deck View and Performance Mode |

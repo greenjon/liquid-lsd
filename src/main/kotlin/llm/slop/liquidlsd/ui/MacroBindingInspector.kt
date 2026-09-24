@@ -111,7 +111,7 @@ object MacroBindingInspector {
                 if (ImGui.button("${Icons.REFRESH} Learn##start_learn")) {
                     MacroLearnState.startLearn(control.id)
                 }
-                itemTooltip("Arm Learn Mode. Then click any parameter slider or modulator property in Deep Edit (or the Parameters panel).")
+                itemTooltip("Arm Learn Mode. Then click any parameter slider or modulator property in Deep Edit.")
             } else {
                 ImGui.textDisabled("[Max 4 targets]")
             }
@@ -124,7 +124,7 @@ object MacroBindingInspector {
         // Bindings list
         if (control.bindings.isEmpty()) {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                ImGui.textDisabled("No parameters bound. Click [Learn] then click any parameter or modulator property in Deep Edit (or the Parameters panel).")
+                ImGui.textDisabled("No parameters bound. Click [Learn] then click any parameter or modulator property in Deep Edit.")
             }
         } else {
             val toRemove = mutableListOf<Int>()
@@ -175,9 +175,7 @@ object MacroBindingInspector {
                         // Deep Edit keeps its own per-module selection (see PerformanceMatrixPanel.drawRackDeepEdit).
                         parametersState.rackSelectedCell[nav.moduleId] = cell
                     }
-                    if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
-                        parametersState.setDisclosure(nav.moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)
-                    }
+                    parametersState.setDisclosure(nav.moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)
                 }
 
                 val btnSize = 20f

@@ -91,7 +91,7 @@ Source Notes are global and persist no matter which preset you load — good for
 ### Adding and editing notes
 
 **Parameter notes:**
-Hover over any parameter row in the Parameters panel and click **⋮** (or right-click the parameter name), then choose **Add/Edit Parameter Note...**
+Hover over any parameter row in Deep Edit's parameter grid and click **⋮** (or right-click the parameter name), then choose **Add/Edit Parameter Note...**
 
 **Preset notes:**
 Right-click the preset name label below the deck monitor preview and choose **Add/Edit Preset Note...**
@@ -112,7 +112,7 @@ If no preset is loaded yet (the deck is in an unsaved state), the label shows `U
 ## FX Bank, Chain & Slot Management
 
 Each deck has its own FX chain of 3 ISF filter slots (the deck's **`FX`** sub-tab). **Master FX**
-(the Mixer's **`FX`** sub-tab, shown as `MFX` in Classic mode) is a bank of 3 serial **chains**
+(the Mixer's **`FX`** sub-tab in Deep Edit) is a bank of 3 serial **chains**
 (`[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]` subtabs) of 3 slots each, applied to the final output.
 The shared FX1/FX2 banks from earlier versions have been removed. Each chain also has a **Chain Super Knob** and each slot its own
 **Metaknob** — see [Macro Controls & Performance Mode](macros_and_rack.md) for the FX Rack view

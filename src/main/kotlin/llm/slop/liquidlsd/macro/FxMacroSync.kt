@@ -6,7 +6,7 @@ import llm.slop.liquidlsd.rendering.FxChain
 /**
  * Smart-default bridge from an [FxBank]'s active chain to its [MacroBank]: Knob 1 becomes the
  * chain's Super Knob, Knobs 2-4 become each slot's Metaknob. Runs whenever the focused bank or
- * its active chain changes, so the Performance Console's generic 4-knob row (and Classic Mode's
+ * its active chain changes, so the Performance Console's generic 4-knob row (and Column 3's
  * MACROS view, which reads the same bank) show a sensible default without the user hand-wiring
  * bindings.
  *

@@ -41,8 +41,8 @@ If Auto-VJ switches presets while a deck has unsaved changes, you can control wh
 
 The Library panel spans the left and middle columns and has three height modes. Press **`Space`** (when the cursor isn't in a text field) to cycle between them:
 
-- **Full Height** — The Parameters and Properties panels are hidden. Use this when you're fully focused on building or editing playlists and queues.
-- **Half Height** — The Library sits in the lower half of the workspace, with Parameters and Properties still visible above it. Good for tweaking modulation while keeping your setlist in view.
+- **Full Height** — The Performance panel is hidden. Use this when you're fully focused on building or editing playlists and queues.
+- **Half Height** — The Library sits in the lower half of the workspace, with the Performance panel still visible above it. Good for tweaking knobs and modulation while keeping your setlist in view.
 - **Docked** — The Library collapses to a slim toolbar. Use this during a performance when you don't need to manage playlists or queues.
 
 In Half Height mode, drag the Library's title bar to resize it freely — the height is remembered. Double-click the title bar to snap back to a 50/50 split. The window buttons on the right of the title bar also let you jump between heights directly.
@@ -79,7 +79,7 @@ Column 1 of `[ FX ]` mode lists three kinds of row side by side, each marked wit
 
 Use the **`[⋮]`** filter menu above the list to show/hide each tier (**All / Stock / Singles / Chains**). Use **`[+]`** to save the current FX state of any deck slot (or all 3 slots as a chain) into a new preset.
 
-- **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–3 in the Parameters panel `FX` subtab, onto the FX Playlist editor (Column 2), or onto a Live FX Queue (Columns 3/4).
+- **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–3 in a deck's Deep Edit `FX` subtab, onto the FX Playlist editor (Column 2), or onto a Live FX Queue (Columns 3/4).
 - **Double-click**: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains).
 - **Right-click menu**: `Load to > Deck [A|B|BG|PV] > Slot [1|2|3]` (singles) or `Load to Deck [A|B|BG|PV] > Chain [1|2|3]` (chains), plus **Add to Live FX Queue (A/B)**, **Add to BG FX Queue**, **Add to '<playlist>' Playlist**, Rename, Clone, Delete, and Reveal in File Manager.
 
@@ -252,7 +252,7 @@ Liquid LSD features a curated suite of 8 club-grade ISF transition shaders desig
 
 ## MIDI Mapping
 
-> MIDI is disabled by default. Enable it in **Preferences → MIDI Controls** ("Enable MIDI Subsystem") or via the **⋮** kebab menu next to the Parameters panel's column headers ("MIDI Column").
+> MIDI is disabled by default. Enable it in **Preferences → MIDI Controls** ("Enable MIDI Subsystem") or via the **⋮** kebab menu next to Deep Edit's column headers ("MIDI Column").
 
 Liquid LSD keeps hardware controller maps separate from visual presets, so you can swap physical controllers without touching your preset files.
 

@@ -166,13 +166,6 @@ object UITheme {
         get() = settings.column3Mode
         set(value) { settings = settings.copy(column3Mode = value) }
 
-    /** Primary workspace view layout mode: Classic 3-column Suite C vs Performance Mode (RACK name kept for save-file compatibility). */
-    enum class WorkspaceMode { CLASSIC, RACK }
-
-    var workspaceMode: WorkspaceMode
-        get() = settings.workspaceMode
-        set(value) { settings = settings.copy(workspaceMode = value) }
-
     /** Index of the active tab in the Performance Mode 4×4 Matrix (see [PerformanceMatrixPanel.Tab]). */
     var performanceMatrixTab: Int
         get() = settings.performanceMatrixTab

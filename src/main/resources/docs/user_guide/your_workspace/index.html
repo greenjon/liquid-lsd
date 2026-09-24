@@ -440,21 +440,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-parameters-panel-left-panel" class="md-nav__link">
+  <a href="#the-performance-panel-left-middle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Parameters Panel (Left Panel)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-properties-panel-middle" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Properties Panel (Middle)
+        The Performance Panel (Left &amp; Middle)
       
     </span>
   </a>
@@ -1357,21 +1346,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#the-parameters-panel-left-panel" class="md-nav__link">
+  <a href="#the-performance-panel-left-middle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The Parameters Panel (Left Panel)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#the-properties-panel-middle" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        The Properties Panel (Middle)
+        The Performance Panel (Left &amp; Middle)
       
     </span>
   </a>
@@ -1434,8 +1412,8 @@
 <h2 id="the-library-what-it-controls">The Library &amp; What It Controls</h2>
 <p>The Library panel spans the left and middle columns of the app and has three height modes. Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) to cycle between them:</p>
 <ul>
-<li><strong>Full Height</strong> — The Parameters and Properties panels are hidden. The Library takes up all the space. Use this when you're focused on building or editing playlists and play queues.</li>
-<li><strong>Half Height</strong> — The Library sits in the lower half, with the Parameters and Properties panels still visible above it. Good for tweaking modulation while keeping an eye on your setlist.</li>
+<li><strong>Full Height</strong> — The Performance panel is hidden. The Library takes up all the space. Use this when you're focused on building or editing playlists and play queues.</li>
+<li><strong>Half Height</strong> — The Library sits in the lower half, with the Performance panel still visible above it. Good for tweaking knobs and modulation while keeping an eye on your setlist.</li>
 <li><strong>Docked</strong> — The Library collapses to a slim toolbar at the bottom of the screen. Use this when you don't need to manage playlists or queues and want the full workspace visible.</li>
 </ul>
 <p>You can drag the Library's title bar up or down to resize it freely in Half Height mode — the height you set is remembered. Double-click the title bar to snap back to exactly 50/50. The standard window buttons on the right of the title bar also let you jump between heights.</p>
@@ -1467,12 +1445,22 @@
 <li><strong>Output</strong> → The master output goes to your screen, projector, or other apps.</li>
 </ol>
 <hr />
-<h2 id="the-parameters-panel-left-panel">The Parameters Panel (Left Panel)</h2>
-<p>This is where you connect things. Every row is a visual parameter (like "Lobes", "Zoom", or "Hue"), and each column is a modulation source (audio, LFO, sequencer, MIDI, or manual value). Click the intersection of a row and a column to configure that connection.</p>
-<p>See <a href="../modulation/">Modulation</a> for the full guide.</p>
-<hr />
-<h2 id="the-properties-panel-middle">The Properties Panel (Middle)</h2>
-<p>When you click a cell in the Parameters panel, the Properties panel opens to show you the details — waveform controls for LFOs, band selectors for audio, step patterns for the sequencer, etc. It also shows a live oscilloscope so you can see exactly what signal is going to the parameter.</p>
+<h2 id="the-performance-panel-left-middle">The Performance Panel (Left &amp; Middle)</h2>
+<p>The top of the left and middle columns is the <strong>Performance panel</strong>: a 4×4 grid of macro knobs,
+one row per deck or section, with tabs across the top (LIVE QUAD, MASTER &amp; FX, LIVE CONSOLE,
+ALL FX). Click a deck row's generator badge to change its visual source.</p>
+<p>For full control, open a row's <strong>Deep Edit</strong> (the chevron on the row, or click a deck monitor in
+the Mixer). Deep Edit has three columns:</p>
+<ul>
+<li><strong>Side rail</strong> — <code>[MIX] [A] [B] [BG] [PV]</code> to jump between channels.</li>
+<li><strong>Parameter grid</strong> — every row is a visual parameter (like "Lobes", "Zoom", or "Hue") and each
+  column is a modulation source (manual value, MIDI, LFO, sequencer, audio). Click a cell to
+  configure that connection. See <a href="../modulation/">Modulation</a> for the full guide.</li>
+<li><strong>Properties</strong> — the details of the selected cell: waveform controls for LFOs, band selectors
+  for audio, step patterns for the sequencer, etc., with a live oscilloscope of the signal going
+  to the parameter.</li>
+</ul>
+<p>See <a href="../macros_and_rack/">Macro Controls &amp; Performance Mode</a> for the knobs and Deep Edit in detail.</p>
 <hr />
 <h2 id="the-mixer-right-panel">The Mixer (Right Panel)</h2>
 <p>The right panel shows:
@@ -1481,8 +1469,8 @@
 - Level controls for each deck
 - Master output monitor
 - Blend mode selector</p>
-<p>Clicking the master monitor preview jumps directly to the <strong>MIX</strong> tab.</p>
-<p>A <strong><code>[ MIXER | MACROS ]</code></strong> toggle at the top of this panel switches it to the Macro Controls view — 8 knobs you can bind to any parameter or modulator for fast, tactile live control. See <a href="../macros_and_rack/">Macro Controls &amp; Performance Mode</a>.</p>
+<p>Clicking a deck monitor opens that deck in Deep Edit; clicking the master monitor opens the Master (<strong>MIX</strong>) Deep Edit.</p>
+<p>A <strong><code>[ MIXER | MACROS ]</code></strong> toggle at the top of this panel switches it to the Macro Controls view, where you bind the Performance panel's knobs to any parameter or modulator. See <a href="../macros_and_rack/">Macro Controls &amp; Performance Mode</a>.</p>
 <hr />
 <h2 id="the-library">The Library</h2>
 <p>The Library spans the lower portion of the left and middle columns and holds your Presets, Playlists, and Play Queues. See <a href="../presets_and_library/">Presets &amp; Library</a> for the full guide.</p>
@@ -1519,7 +1507,7 @@
 </tr>
 <tr>
 <td><code>Ctrl+S</code></td>
-<td>Save the active deck's preset (in Performance Mode: the deck open in Deep Edit)</td>
+<td>Save the preset of the deck open in Deep Edit</td>
 </tr>
 <tr>
 <td><code>Ctrl+R</code></td>
@@ -1532,10 +1520,6 @@
 <tr>
 <td><code>Ctrl+F</code> or <code>/</code></td>
 <td>Jump to preset search</td>
-</tr>
-<tr>
-<td><code>F4</code></td>
-<td>Toggle between Classic Deck View and Performance Mode</td>
 </tr>
 </tbody>
 </table>

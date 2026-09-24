@@ -8,9 +8,8 @@ import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import java.io.File
 
 /**
- * Deck visual-source selection shared by the Parameters title bar ([ParametersTabs.drawSourceTab]),
- * the Performance deck row's generator badge, and the empty-deck launchpad (Parameters panel and
- * Deep Edit) -- one code path so every entry point swaps sources identically.
+ * Deck visual-source selection shared by the Performance deck row's generator badge and the
+ * empty-deck launchpad in Deep Edit -- one code path so both swap sources identically.
  */
 object DeckSourcePicker {
 

@@ -121,7 +121,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── macro/                      — Macro Controls & Parameter Linking engine; see docs/user_guide/macros_and_rack.md
 │   ├── MacroModels.kt          — Data model: `MacroBinding`, `MacroControl` (rotary knob value), `MacroBank` (up to 4 knobs)
 │   ├── MacroCurve.kt           — Pure curve-shaping math (LINEAR/EXPONENTIAL/LOGARITHMIC/S_CURVE/STEP), knob-travel windowing, and min/max/invert range mapping
-│   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; 12 canonical bank ids (`DECK_A`..`DECK_PV`, `DECK_A_FX`..`DECK_PV_FX`, `TRANS`, `MASTER`, `FX_SENDS`, `MASTER_FX`), read/written by both Classic Column 3 and the Performance Mode 4×4 Matrix
+│   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; 12 canonical bank ids (`DECK_A`..`DECK_PV`, `DECK_A_FX`..`DECK_PV_FX`, `TRANS`, `MASTER`, `FX_SENDS`, `MASTER_FX`), read/written by both Column 3 MACROS and the Performance Mode 4×4 Matrix
 │   ├── FxMacroSync.kt          — Bidirectional synchronization between FX chains/banks and canonical macro knobs (Super Knob + Metaknobs)
 │   ├── MacroLearnState.kt      — Interactive click-to-bind Learn Mode session state machine and UI status banner
 │   ├── MacroBankSerializer.kt  — Deck-scoped bank filtering/remapping for `.lsd`/`.lsdplay` DTOs, plus standalone `.knobpreset.json` export/import
@@ -189,11 +189,10 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── DeckPresetController.kt — Deck preset file lifecycle and dialog controller
 │   ├── UIThemeStyler.kt        — ImGui dynamic styling, theme palettes, and font scaling
 │   ├── SplitterManager.kt      — Multi-column layout dragging and divider render manager
-│   ├── ParametersPanel.kt      — Parameter matrix with tabs, source dropdown, and modulator columns
+│   ├── ParameterGridHeaders.kt — Deep Edit parameter-grid column layout and VAL/MIDI/LFO/SEQ/AUD headers (with section tabs)
 │   ├── ParametersTabs.kt       — Tabbed parameter container rendering per-deck generator controls and insert FX racks
-│   ├── DeckSourcePicker.kt     — Shared deck visual-source picker + empty-deck launchpad (Parameters title bar, Performance deck-row badge, Deep Edit)
+│   ├── DeckSourcePicker.kt     — Shared deck visual-source picker + empty-deck launchpad (Performance deck-row badge, Deep Edit)
 │   ├── PropertiesPanel.kt      — Edits parameter values and modulators with oscilloscope
-│   ├── PanelTitleBar.kt        — Synchronized 1.5x title bar renderer and optical text centering for Parameters & Properties
 │   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)
 │   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
 │   ├── PreferencesPanel.kt     — App configuration & tabbed preferences modal
@@ -208,7 +207,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MacroPanel.kt           — Column 3 MACROS editing surface: 4 knobs, binding inspector, Learn Mode; renders the dedicated FX Rack view (below) instead of the generic grid for the FX tabs
 │   ├── MacroBindingInspector.kt — Drawer for inspecting and editing target parameter bindings, response curves, travel windows, and invert toggles
 │   ├── MacroKnobWidget.kt      — Rotary macro knob widget: drag/wheel interaction, accent-colored arc fill, optional deck tint
-│   ├── FXChainMacroStrip.kt    — Traktor/Mixxx-style FX Rack strip: Chain Super Knob + 3 slot Metaknobs (soft-takeover link toggles), Single FX Focus Mode, right-click Metaknob rebind menu. Drawn in both ParametersTabs.kt (per-chain, Parameters panel) and MacroPanel.kt (FX1/FX2/MFX tabs, Column 3)
+│   ├── FXChainMacroStrip.kt    — Traktor/Mixxx-style FX Rack strip: Chain Super Knob + 3 slot Metaknobs (soft-takeover link toggles), Single FX Focus Mode, right-click Metaknob rebind menu. Drawn in both ParametersTabs.kt (per-chain, Deep Edit) and MacroPanel.kt (FX tabs, Column 3)
 │   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs (LIVE QUAD, MASTER & FX, LIVE CONSOLE, ALL FX), deck-colored rows, plus the Modular Rack accordion (see `rack/` below) — a chevron on each row group toggles Faceplate ↔ Deep Edit, expanding the selected module while collapsing other rows; Deep Edit features a 5-channel side rail ([MIX], [A], [B], [BG], [PV]), uniform centered [FX] subtabs, and two-way top macro row synchronization
 │   ├── rack/
 │   │   └── RackUnit.kt          — Shared chevron/disclosure-tier drawing helper for the Modular Rack accordion, and the persistent "Learning: …" indicator; stateless, operates only on `ParametersState` (never `Mixer`/`FxBank`, enforcing that disclosure changes can't trigger FX bank refocus or `FxMacroSync` re-runs)

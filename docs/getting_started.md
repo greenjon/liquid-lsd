@@ -57,20 +57,22 @@ Liquid LSD needs to hear your music. How you connect it depends on your platform
 
 ## 3. Your First 60 Seconds
 
-When the app opens, you'll see three main panels side by side:
+When the app opens, you'll see the Performance panel on the left with the Mixer on the right, and the Library docked below:
 
 ```
-+---------------------+-----------------------+---------------------+
-|     PARAMETERS      |      PROPERTIES       |        MIXER        |
-| (CV Mod Matrix)     | (Parameters & LFOs)   | (Decks & Output)    |
-+---------------------+-----------------------+---------------------+
++---------------------------------------------+---------------------+
+|              PERFORMANCE                    |        MIXER        |
+| (4×4 macro knobs, Deep Edit below)          | (Decks & Output)    |
++---------------------------------------------+                     |
+|              LIBRARY                        |                     |
++---------------------------------------------+---------------------+
 ```
 
 Here's what to try first:
 
 1. **Check the audio feed.** Open **Preferences → Audio Hardware** (`Ctrl+P`) — you should see the `AMP`, `BASS`, `MID`, and `HIGH` meters pulsing with your music. If nothing moves, check your audio routing (Step 2).
 
-2. **Click anything.** Click any cell in the Parameters panel to select it. The **Properties** panel in the middle will show you the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
+2. **Click anything.** Click a deck monitor in the Mixer to open that deck's **Deep Edit**, then click any cell in its parameter grid — the **Properties** column on the right shows the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
 
 3. **Open the Library.** Press **`Space`** (when not in a text field) to raise the Library panel into view. This is where you browse presets, build playlists, and manage your play queues. Cycle through Full Height, Half Height, and Docked to find the layout that suits what you're doing.
 

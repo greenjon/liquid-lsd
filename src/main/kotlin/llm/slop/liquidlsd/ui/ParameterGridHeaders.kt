@@ -1,34 +1,20 @@
 package llm.slop.liquidlsd.ui
 
-import imgui.ImDrawList
 import imgui.ImGui
-import imgui.flag.ImGuiTreeNodeFlags
-import imgui.flag.ImGuiKey
-import llm.slop.liquidlsd.cv.CVRegistry
-import llm.slop.liquidlsd.parameters.ParameterResolver
-import llm.slop.liquidlsd.parameters.ModulatableParameter
-import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.rendering.Deck
-import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.models.ClipboardManager
-import llm.slop.liquidlsd.models.CellClipboardData
-import llm.slop.liquidlsd.models.RowClipboardData
-import llm.slop.liquidlsd.models.toDto
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.math.roundToInt
-
 import llm.slop.liquidlsd.presets.analyzeDependencies
 
 /**
- * Draws the Parameters panel. Rows = grouped ModulatableParameters.
- * Columns = CV sources. Each intersection is a clickable cell.
+ * Column layout and header row for the parameter grid in Performance Mode's Deep Edit
+ * ([PerformanceMatrixPanel.drawRackDeepEdit]): which CV columns are visible, their x offsets,
+ * and the VAL/MIDI/LFO/SEQ/AUD headers with the section tabs.
  */
-object ParametersPanel {
+object ParameterGridHeaders {
 
-    private fun getCvColumns(session: llm.slop.liquidlsd.SessionContext): List<String> {
+    private const val SECTION_TABS_INSET_X = ParametersTabs.PARAM_INDENT
+
+    fun getCvColumns(session: llm.slop.liquidlsd.SessionContext): List<String> {
         val cols = mutableListOf<String>()
         if (session.uiTheme.showLfoCol) cols.add("lfo")
         if (session.uiTheme.sequencerEnabled) cols.add("seq")
@@ -44,14 +30,14 @@ object ParametersPanel {
         return labels
     }
 
-    private fun getVisibleColumns(session: llm.slop.liquidlsd.SessionContext): List<String> {
+    fun getVisibleColumns(session: llm.slop.liquidlsd.SessionContext): List<String> {
         val visibleCols = mutableListOf("value")
         if (session.uiTheme.midiEnabled) visibleCols.add("midi")
         visibleCols.addAll(getCvColumns(session))
         return visibleCols
     }
 
-    private fun getColumnOffset(session: llm.slop.liquidlsd.SessionContext, colId: String): Float {
+    fun getColumnOffset(session: llm.slop.liquidlsd.SessionContext, colId: String): Float {
         val metrics = GridMetrics.compute(session)
         val visibleCols = getVisibleColumns(session)
         
@@ -66,207 +52,10 @@ object ParametersPanel {
         return CvTheme.getThemeColor(colId, alpha)
     }
 
-    private const val SECTION_TABS_INSET_X = ParametersTabs.PARAM_INDENT
-    private const val TITLE_BAR_SPACING = 24f
-    private const val BOX_PADDING_X = 6f
-
     fun getKebabWidth(session: llm.slop.liquidlsd.SessionContext): Float {
         val scrollbarW = ImGui.getStyle().scrollbarSize
         return maxOf(18f, scrollbarW)
     }
-
-    fun calculateRequiredWidth(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, state: ParametersState): Float {
-        val metrics = GridMetrics.compute(session)
-        val sideTabWidth = ParametersTabs.calculateLeftTabsWidth(session)
-        val activeDeck = when (state.activeTopTab) {
-            "Deck A" -> mixer.deckA
-            "Deck B" -> mixer.deckB
-            "Deck BG" -> mixer.deckBG
-            "Deck PV" -> mixer.deckPV
-            else -> null
-        }
-        val sourceTabW = if (activeDeck != null && !activeDeck.isEmpty) {
-            ParametersTabs.calculateSourceTabWidth(session, state, activeDeck)
-        } else 0f
-        val sectionTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
-            ParametersTabs.calculateSectionTabsWidth(session, state, activeDeck)
-        } else 0f
-
-        val baseLabelW = 152f
-        val labelColW = maxOf(baseLabelW, if (sectionTabsW > 0f) SECTION_TABS_INSET_X + sectionTabsW + 8f else 0f)
-
-        val isMidiVisible = session.uiTheme.midiEnabled && session.uiTheme.showMidiCol
-        val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (isMidiVisible) "midi" else "value"
-        val kebabW = getKebabWidth(session)
-        val maxGridW = getColumnOffset(session, lastVisibleCol) + metrics.cell + metrics.cellPad * 0.5f + kebabW
-
-        val windowPaddingX = try { ImGui.getStyle().windowPaddingX } catch (e: Throwable) { 8f }
-        val gridTotalW = sideTabWidth + BOX_PADDING_X + labelColW + maxGridW + (windowPaddingX * 2f)
-        var titleTextW = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.H3) { titleTextW = ImGui.calcTextSize("Parameters").x }
-        val titleTotalW = titleTextW + TITLE_BAR_SPACING + sourceTabW + (windowPaddingX * 2f)
-
-        return maxOf(gridTotalW, titleTotalW)
-    }
-
-    private var gridStartX = 0f
-    private var rowIndex = 0
-
-    fun draw(
-        session: llm.slop.liquidlsd.SessionContext,
-        mixer: Mixer,
-        state: ParametersState,
-        deckPresetController: DeckPresetController? = null
-    ) {
-        rowIndex = 0
-
-        ParametersKeyboard.handleKeyboardShortcuts(state, mixer, deckPresetController, { s, m -> ParametersUndo.pushUndoState(s, m) }, { s, m -> ParametersUndo.performUndo(s, m) })
-
-        val activeDeck = when (state.activeTopTab) {
-            "Deck A" -> mixer.deckA
-            "Deck B" -> mixer.deckB
-            "Deck BG" -> mixer.deckBG
-            "Deck PV" -> mixer.deckPV
-            else -> null
-        }
-        val isDeckEmpty = activeDeck?.isEmpty == true
-
-        // ── Title Bar: "Parameters" title with Video Source tab beside it in Window MenuBar ──
-        val drawSourceTabLambda: ((Float, Float, Float) -> Unit)? = if (activeDeck != null && !activeDeck.isEmpty) {
-            { _, btnH, _ ->
-                ParametersTabs.drawSourceTab(session, state, mixer, btnH = btnH, deckPresetController = deckPresetController)
-            }
-        } else null
-        PanelTitleBar.draw(session, "Parameters", TITLE_BAR_SPACING, drawSourceTabLambda)
-
-        // ── Main Parameters Table (Left Side Tabs + Right Grid Area) ─────────────────
-        val sideTabWidth = ParametersTabs.calculateLeftTabsWidth(session)
-        val metrics = GridMetrics.compute(session)
-        val CELL = metrics.cell
-        val CELL_PAD = metrics.cellPad
-
-        val sectionTabsW = if (activeDeck != null && !activeDeck.isEmpty) {
-            ParametersTabs.calculateSectionTabsWidth(session, state, activeDeck)
-        } else 0f
-
-        val avail = ImGui.getContentRegionAvailX()
-        val baseLabelW = 152f
-        val idealLabelColW = maxOf(baseLabelW, if (sectionTabsW > 0f) SECTION_TABS_INSET_X + sectionTabsW + 8f else 0f)
-        val isMidiVisible = session.uiTheme.midiEnabled && session.uiTheme.showMidiCol
-        val lastVisibleCol = getCvColumns(session).lastOrNull() ?: if (isMidiVisible) "midi" else "value"
-        val kebabW = getKebabWidth(session)
-        val maxGridW = getColumnOffset(session, lastVisibleCol) + CELL + CELL_PAD * 0.5f + kebabW
-        val maxAllowedLabelColW = (avail - sideTabWidth - BOX_PADDING_X - maxGridW).coerceAtLeast(120f)
-        val labelColW = minOf(idealLabelColW, maxAllowedLabelColW)
-
-        val headerH = if (!isDeckEmpty) calculateHeaderHeight(session) else 0f
-        var containerTopY = 0f
-
-        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.CellPadding, 0f, 0f)
-        val tableOpened = ImGui.beginTable("##parameters_layout_table", 2, imgui.flag.ImGuiTableColumnFlags.None)
-        ImGui.popStyleVar()
-        if (tableOpened) {
-            ImGui.tableSetupColumn("##side_tabs", imgui.flag.ImGuiTableColumnFlags.WidthFixed, sideTabWidth)
-            ImGui.tableSetupColumn("##main_grid", imgui.flag.ImGuiTableColumnFlags.WidthStretch)
-            ImGui.tableNextRow()
-
-            // Left column: Side tabs (MIX, A, B, BG, PV)
-            ImGui.tableSetColumnIndex(0)
-            val leftTabsTopOffset = if (!isDeckEmpty) headerH + CELL else 0f
-            ParametersTabs.drawLeftTabs(session, state, mixer, topOffset = leftTabsTopOffset)
-
-            // Right column: Main Parameters content
-            ImGui.tableSetColumnIndex(1)
-            containerTopY = ImGui.getCursorScreenPosY()
-            ImGui.setCursorPosX(ImGui.getCursorPosX() + BOX_PADDING_X)
-            gridStartX = ImGui.getCursorScreenPosX()
-            val gridContentWidth = labelColW + maxGridW
-            val boxMaxX = gridStartX + gridContentWidth
-
-            // Column Headers (VAL, MIDI, LFO, SEQ, AUD)
-            if (!isDeckEmpty) {
-                drawColumnHeaders(session, labelColW, state, mixer, metrics, headerH)
-            } else {
-                ImGui.spacing()
-            }
-
-            if (ImGui.beginChild("##parameters_scroll", gridContentWidth, 0f, false)) {
-                ImGui.setScrollX(0f)
-                if (state.activeTopTab == "Mixer") {
-                    ParametersTabs.drawMixerGroupContent(session, mixer, state, labelColW, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                } else if (state.activeTopTab == "Deck A") {
-                    if (mixer.deckA.isEmpty) {
-                        DeckSourcePicker.drawLaunchpad(session, "Deck A", mixer.deckA, state, mixer, deckPresetController)
-                    } else {
-                        ParametersTabs.drawDeckGroupContent(session, "Deck A", mixer.deckA, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                    }
-                } else if (state.activeTopTab == "Deck B") {
-                    if (mixer.deckB.isEmpty) {
-                        DeckSourcePicker.drawLaunchpad(session, "Deck B", mixer.deckB, state, mixer, deckPresetController)
-                    } else {
-                        ParametersTabs.drawDeckGroupContent(session, "Deck B", mixer.deckB, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                    }
-                } else if (state.activeTopTab == "Deck BG") {
-                    if (mixer.deckBG.isEmpty) {
-                        DeckSourcePicker.drawLaunchpad(session, "Deck BG", mixer.deckBG, state, mixer, deckPresetController)
-                    } else {
-                        ParametersTabs.drawDeckGroupContent(session, "Deck BG", mixer.deckBG, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                    }
-                } else if (state.activeTopTab == "Deck PV") {
-                    if (mixer.deckPV.isEmpty) {
-                        DeckSourcePicker.drawLaunchpad(session, "Deck PV", mixer.deckPV, state, mixer, deckPresetController)
-                    } else {
-                        ParametersTabs.drawDeckGroupContent(session, "Deck PV", mixer.deckPV, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                    }
-                } else if (state.activeTopTab == "MFX") {
-                    ParametersTabs.drawMixerFxTab(session, mixer, state, labelColW, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                }
-            }
-            val childMaxY = ImGui.getCursorScreenPosY()
-            ImGui.dummy(0f, 0f)
-            ImGui.endChild()
-
-            ImGui.endTable()
-
-            // Draw Connected Folder Frame around parameters & column headers
-            val dl = ImGui.getWindowDrawList()
-            val accentColor = ParametersTabs.getDeckColor(state.activeTopTab, 0.7f)
-            val accentFill  = ParametersTabs.getDeckColor(state.activeTopTab, 0.04f)
-            val btnColor    = ParametersTabs.getDeckColor(state.activeTopTab, 1.0f)
-
-            val boxMinX = gridStartX - BOX_PADDING_X
-            val boxTopY = containerTopY
-            val boxBottomY = childMaxY.coerceAtLeast(boxTopY + 100f)
-
-            // 1. Card background fill and outline
-            if (!isDeckEmpty) {
-                val strokeW = 1.5f
-                dl.addRectFilled(boxMinX, boxTopY, boxMaxX, boxBottomY, accentFill, 4f)
-                dl.addRect(boxMinX, boxTopY, boxMaxX, boxBottomY, accentColor, 4f, 0, strokeW)
-                drawGridSeparators(dl, session, gridStartX, labelColW, boxTopY, boxBottomY, metrics)
-            } else {
-                dl.addRectFilled(boxMinX, boxTopY, boxMaxX, boxBottomY, accentFill, 6f)
-                dl.addRect(boxMinX, boxTopY, boxMaxX, boxBottomY, accentColor, 6f, 0, 1.5f)
-            }
-
-            // 2. Seamless folder tab bridge connecting active side tab button to the container
-            if (ParametersTabs.activeBtnMaxX > 0f) {
-                val btnTop = ParametersTabs.activeBtnMinY
-                val btnBot = ParametersTabs.activeBtnMaxY
-                val btnRight = ParametersTabs.activeBtnMaxX
-
-                // Overwrite the left border segment alongside the button with button color to form seamless tab connection
-                dl.addLine(boxMinX, btnTop + 1f, boxMinX, btnBot - 1f, btnColor, 3.5f)
-
-                // Fill any micro gap between the button right edge and the container left edge
-                if (boxMinX > btnRight) {
-                    dl.addRectFilled(btnRight - 1f, btnTop, boxMinX + 1f, btnBot, btnColor, 0f)
-                }
-            }
-        }
-    }
-
-    // -- Helpers --------------------------------------------------------------
 
     fun calculateHeaderHeight(session: llm.slop.liquidlsd.SessionContext): Float {
         val subTabH = (session.uiTheme.withFont(UITheme.FontLevel.H3) {
@@ -275,47 +64,8 @@ object ParametersPanel {
         return subTabH + 4f
     }
 
-    private fun drawGridSeparators(
-        dl: ImDrawList,
-        session: llm.slop.liquidlsd.SessionContext,
-        gridStartX: Float,
-        labelColW: Float,
-        boxTopY: Float,
-        boxBottomY: Float,
-        metrics: GridMetrics
-    ) {
-        val CELL = metrics.cell
-        val CELL_PAD = metrics.cellPad
-        val lineCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.05f) // VERY subtle extended grid line
-        val cvCols = getCvColumns(session)
-
-        // VALUE column separator line
-        val valueColX = gridStartX + labelColW + getColumnOffset(session, "value")
-        dl.addLine(valueColX - CELL_PAD * 0.5f, boxTopY, valueColX - CELL_PAD * 0.5f, boxBottomY, lineCol, 1f)
-
-        // MIDI column separator line
-        val isMidiVisible = session.uiTheme.midiEnabled && session.uiTheme.showMidiCol
-        if (isMidiVisible) {
-            val midiColX = gridStartX + labelColW + getColumnOffset(session, "midi")
-            dl.addLine(midiColX - CELL_PAD * 0.5f, boxTopY, midiColX - CELL_PAD * 0.5f, boxBottomY, lineCol, 1f)
-        }
-
-        // CV column separator lines
-        for (cvId in cvCols) {
-            val colX = gridStartX + labelColW + getColumnOffset(session, cvId)
-            dl.addLine(colX - CELL_PAD * 0.5f, boxTopY, colX - CELL_PAD * 0.5f, boxBottomY, lineCol, 1f)
-        }
-
-        // Rightmost separator line
-        val lastColId = if (cvCols.isNotEmpty()) cvCols.last() else if (isMidiVisible) "midi" else "value"
-        val rightColX = gridStartX + labelColW + getColumnOffset(session, lastColId) + CELL + CELL_PAD * 0.5f
-        dl.addLine(rightColX, boxTopY, rightColX, boxBottomY, lineCol, 1f)
-    }
-
-    /** Visible to the rest of the module (not just this file) so the Modular Rack's Deep Edit tier
-     *  (see [PerformanceMatrixPanel.drawRackDeepEdit]) can reuse the VAL/MIDI/LFO/SEQ/AUD column
-     *  headers -- and the Section Tabs (SRC/View/CTRL/TRANS) drawn inside them -- verbatim. */
-    internal fun drawColumnHeaders(
+    /** VAL/MIDI/LFO/SEQ/AUD column headers above Deep Edit's parameter grid, with the section tabs (SRC/FX, CTRL/FX/TRANS) drawn inside them. */
+    fun drawColumnHeaders(
         session: llm.slop.liquidlsd.SessionContext,
         labelColW: Float,
         state: ParametersState,

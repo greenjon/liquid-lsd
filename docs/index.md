@@ -22,7 +22,7 @@ It's in active beta — the core workflow is solid and usable, and the docs here
 - **[Presets & Library](user_guide/presets_and_library.md)** — Saving and loading presets, building setlists, the Auto-VJ queue, and MIDI mapping.
 - **[Output & Recording](user_guide/output_and_recording.md)** — Sending video to projectors and other apps, recording your set, and exporting high-quality renders.
 - **[Performance Controls](user_guide/performance_controls.md)** — MIDI and OSC/TouchOSC hardware control mapping, the trackpad performance surface, custom notes, and tooltips.
-- **[Macro Controls & Performance Mode](user_guide/macros_and_rack.md)** — Binding macro knobs with Learn Mode, and performing with the `F4` 4×4 macro knob matrix.
+- **[Macro Controls & Performance Mode](user_guide/macros_and_rack.md)** — Binding macro knobs with Learn Mode, and performing with the 4×4 macro knob matrix and Deep Edit.
 - **[Web Broadcast](user_guide/web_broadcast.md)** — Live-streaming visual parameters to a browser-based visualizer. *(Experimental — requires a relay server.)*
 
 ---

@@ -67,7 +67,6 @@ class PreferencesDefaultsTest {
         assertFalse(defaultPreferences.randomizationEnabled, "Randomization should be disabled by default")
         assertFalse(defaultPreferences.midiEnabled, "MIDI should be disabled by default")
         assertTrue(defaultPreferences.checkUpdatesOnStartup, "Update check on startup should be enabled by default")
-        assertEquals(UITheme.WorkspaceMode.RACK, defaultPreferences.workspaceMode, "Workspace mode should be Performance (RACK) by default for new users")
     }
 
     @Test
@@ -76,7 +75,6 @@ class PreferencesDefaultsTest {
         UITheme.sequencerEnabled = true
         UITheme.randomizationEnabled = true
         UITheme.midiEnabled = true
-        UITheme.workspaceMode = UITheme.WorkspaceMode.CLASSIC
 
         AppPreferencesStore.savePreferences()
         assertTrue(preferencesFile.exists(), "Preferences file should be written")
@@ -85,13 +83,11 @@ class PreferencesDefaultsTest {
         assertTrue(savedProps.contains("sequencerEnabled=true"))
         assertTrue(savedProps.contains("randomizationEnabled=true"))
         assertTrue(savedProps.contains("midiEnabled=true"))
-        assertTrue(savedProps.contains("workspaceMode=CLASSIC"))
 
         // Reset in memory
         UITheme.sequencerEnabled = false
         UITheme.randomizationEnabled = false
         UITheme.midiEnabled = false
-        UITheme.workspaceMode = UITheme.WorkspaceMode.RACK
 
         // Reload from file
         AppPreferencesStore.loadPreferences()
@@ -100,20 +96,30 @@ class PreferencesDefaultsTest {
         assertTrue(UITheme.sequencerEnabled)
         assertTrue(UITheme.randomizationEnabled)
         assertTrue(UITheme.midiEnabled)
-        assertEquals(UITheme.WorkspaceMode.CLASSIC, UITheme.workspaceMode)
 
         // Now save as alternate
         UITheme.sequencerEnabled = false
         UITheme.randomizationEnabled = false
         UITheme.midiEnabled = false
-        UITheme.workspaceMode = UITheme.WorkspaceMode.RACK
         AppPreferencesStore.savePreferences()
 
         AppPreferencesStore.loadPreferences()
         assertFalse(UITheme.sequencerEnabled)
         assertFalse(UITheme.randomizationEnabled)
         assertFalse(UITheme.midiEnabled)
-        assertEquals(UITheme.WorkspaceMode.RACK, UITheme.workspaceMode)
+    }
+
+    @Test
+    fun testStaleWorkspaceModeKeyIsIgnoredAndDroppedOnSave() {
+        // Classic view was removed; preference files written before that still carry workspaceMode.
+        preferencesFile.writeText("sequencerEnabled=true\nworkspaceMode=CLASSIC\n")
+        UITheme.sequencerEnabled = false
+
+        AppPreferencesStore.loadPreferences()
+        assertTrue(UITheme.sequencerEnabled, "Other keys still load alongside the stale one")
+
+        AppPreferencesStore.savePreferences()
+        assertFalse(preferencesFile.readText().contains("workspaceMode"), "Stale workspaceMode key should be dropped on save")
     }
 
     @Test
@@ -125,21 +131,18 @@ class PreferencesDefaultsTest {
             sequencerEnabled=true
             randomizationEnabled=true
             midiEnabled=true
-            workspaceMode=CLASSIC
             """.trimIndent()
         )
 
         UITheme.sequencerEnabled = false
         UITheme.randomizationEnabled = false
         UITheme.midiEnabled = false
-        UITheme.workspaceMode = UITheme.WorkspaceMode.RACK
 
         AppPreferencesStore.loadPreferences()
 
         assertTrue(UITheme.sequencerEnabled, "Should load sequencerEnabled from legacy settings")
         assertTrue(UITheme.randomizationEnabled, "Should load randomizationEnabled from legacy settings")
         assertTrue(UITheme.midiEnabled, "Should load midiEnabled from legacy settings")
-        assertEquals(UITheme.WorkspaceMode.CLASSIC, UITheme.workspaceMode, "Should load workspaceMode from legacy settings")
     }
 
     @Test

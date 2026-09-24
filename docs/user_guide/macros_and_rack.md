@@ -1,9 +1,9 @@
 # Macro Controls & Performance Mode
 
 Macro Controls give you a small number of physical-style knobs that each drive several
-parameters at once — the fast, tactile layer you reach for live instead of hunting through the
-Parameters panel. Performance Mode builds on the same macro system to give you a full-screen 4×4
-knob matrix purpose-built for live performance.
+parameters at once — the fast, tactile layer you reach for live instead of hunting through
+parameter grids. Performance Mode builds on the same macro system to give you a 4×4 knob matrix
+purpose-built for live performance, with Deep Edit underneath for everything else.
 
 ---
 
@@ -21,9 +21,9 @@ Column 3 (the right-hand panel, where the Mixer normally lives) has a mode toggl
 1. Click **`LEARN`** on any Macro Knob. It starts pulsing to show it's armed, and a banner
    appears: *"LEARN MODE: Click any parameter slider or modulator to bind."*
 2. Click the target:
-   - A parameter slider in the **Parameters** panel (Column 1) binds to that parameter's base
+   - A parameter slider in a Deep Edit **parameter grid** binds to that parameter's base
      value.
-   - A modulator control in the **Properties** panel (Column 2) — e.g. an LFO's Subdivision or
+   - A modulator control in Deep Edit's **Properties** column — e.g. an LFO's Subdivision or
      Morph slider, or an envelope's Attack/Decay — binds to that modulator property directly.
      This lets a macro knob speed up an LFO or shorten an envelope's decay, not just move a value.
 3. A toast confirms the binding (e.g. *"Bound Knob 3 → Zoom [LFO 1 Morph]"*) and Learn Mode
@@ -56,20 +56,20 @@ set:
   Left-click the link button to cycle through the modes; right-click to open a context menu and select directly.
   A common pattern: bind two targets to the same knob, one on **1st Half** and one on **2nd
   Half**, to crossfade or choreograph between them from a single knob turn.
-- **Live Value Meter Knob** — on the second row of each binding (to the left of Min/Max, Link Mode, and Curve), a rotary meter knob (the same crisp knob widget used in the Parameters panel) displays the live evaluated output value in relation to the macro knob position. If you use a Triangle ramp (peak) curve or a half-turn zone, moving the macro knob from 0 to 1 lets you see the binding sweep (e.g. 0 → 1 → 0) in real time. Hovering over the knob displays exact numerical readouts.
+- **Live Value Meter Knob** — on the second row of each binding (to the left of Min/Max, Link Mode, and Curve), a rotary meter knob (the same crisp knob widget used in the parameter grid) displays the live evaluated output value in relation to the macro knob position. If you use a Triangle ramp (peak) curve or a half-turn zone, moving the macro knob from 0 to 1 lets you see the binding sweep (e.g. 0 → 1 → 0) in real time. Hovering over the knob displays exact numerical readouts.
 - **Enabled** — toggling a binding off immediately hands the target field back to normal
   manual/mouse editing; toggling it back on resumes macro control.
 
-The **binding target name** (e.g. `Deck A/Mandala/L1`) is a clickable link. Clicking it switches
-Column 1 to the corresponding deck and sub-tab, so you can immediately reach the parameter being
-controlled without hunting for it manually.
+The **binding target name** (e.g. `Deck A/Mandala/L1`) is a clickable link. Clicking it opens the
+corresponding deck's (or the Mixer's) Deep Edit on the right sub-tab with the parameter selected,
+so you can immediately reach the parameter being controlled without hunting for it manually.
 
 ### Locked fields & Visual Indicators
 
 Any parameter base value or modulator property that is actively bound to an enabled macro control
-receives distinct visual cues across Columns 1 and 2:
+receives distinct visual cues in Deep Edit:
 
-- **Parameters List (Column 1)**:
+- **Parameter grid**:
   - The row displays an **Electric Cyan left-accent border** and a subtle cyan background tint.
   - An inline badge such as **`[K1]`** appears beside the parameter name, and the name is
     tinted Electric Cyan.
@@ -79,7 +79,7 @@ receives distinct visual cues across Columns 1 and 2:
   - **Clicking the row label, badge, or VAL cell** directly navigates Column 3 to the **MACROS**
     view and selects that specific macro control.
 
-- **Properties & Sliders (Column 2)**:
+- **Properties & Sliders**:
   - An Electric Cyan **bounding box and background highlight** frames the entire slider row.
   - The variable label displays the **`[K1]`** badge in cyan.
   - The slider track and dynamic indicator dot glow Electric Cyan instead of their default color.
@@ -102,7 +102,7 @@ Macro Knobs sit at the top of the MIDI/OSC input hierarchy:
 
 - Right-click any knob in the **Performance Mode 4×4 matrix** (see below) to arm hardware MIDI
   Learn for it — the next CC your controller sends binds to that knob. Hardware MIDI Learn is
-  Performance-Mode-only; the Classic MACROS editor's `LEARN` button is for parameter binding, not
+  Performance-Mode-only; the Column 3 MACROS editor's `LEARN` button is for parameter binding, not
   MIDI mapping.
 - Turn on the OSC server in **Preferences → OSC Controls**, and `/macro/knob/1`–`/macro/knob/8`
   send and receive live updates.
@@ -149,18 +149,12 @@ build. If this turns out to matter in practice for your hardware workflow, it's 
 
 ## Performance Mode (4×4 Matrix)
 
-Performance Mode replaces Columns 1 & 2 with a full **4×4 Macro Knob Matrix** — 16 knobs
-arranged in 4 rows across 4 columns, color-coded by deck — purpose-built for live use. The
-Mixer column (Column 3) and Library dock remain fully visible.
+Performance Mode is the app's main view: a **4×4 Macro Knob Matrix** — 16 knobs arranged in 4
+rows across 4 columns, color-coded by deck — on the left, with the Mixer column (Column 3) and
+Library dock alongside. (Earlier versions also had a "Classic" Parameters/Properties view,
+toggled with `F4`; everything it did now lives in Deep Edit, below.)
 
-### Switching to Performance Mode
-
-- Press **`F4`** to toggle between Classic Deck View and Performance Mode (pressing it again
-  switches back).
-- Or use **View → Performance Mode** / **View → Classic Deck View** in the menu bar, or click
-  the **`[ CLASSIC | PERF ]`** pill in the toolbar.
-
-Performance Mode is the default view mode for new users. Your selected workspace view mode (Classic vs Performance) and active tab are remembered between sessions in application preferences.
+The active tab is remembered between sessions in application preferences.
 
 ### The layout tabs
 
@@ -229,8 +223,8 @@ Controls actively armed for MIDI learn display a pulsing cyan highlight border. 
 - **Right-click** arms hardware MIDI Learn for that knob — the knob pulses cyan while armed, and
   the next CC message from your controller binds to it. Right-click again to cancel.
 
-Knobs in Performance Mode and Classic MACROS read from and write to the **same underlying
-`MacroEngine` banks** — changes in one mode are immediately visible in the other.
+Knobs in the 4×4 matrix and in Column 3's MACROS view read from and write to the **same
+underlying `MacroEngine` banks** — changes in one are immediately visible in the other.
 
 ### The Modular Rack: Deep Edit
 
@@ -296,21 +290,21 @@ Expanding or collapsing a row is purely a display change — it never re-syncs t
 ### Setting up knob labels and bindings
 
 The full Binding Inspector (rename, target list, Min/Max/Curve/Invert/Link/Enabled) lives only in
-the **`[ MACROS ]`** tab of Column 3 (in both modes) — it's not duplicated inside the Performance
-Mode rack, so binding a knob doesn't mean scrolling past a Deep Edit panel to reach it. Clicking a
-bound target's name in the inspector jumps to it: in Performance Mode it opens that deck's (or the
-Mixer's) Deep Edit on the right sub-tab with the parameter selected.
+the **`[ MACROS ]`** tab of Column 3 — it's not duplicated inside the Performance Mode rack, so
+binding a knob doesn't mean scrolling past a Deep Edit panel to reach it. Clicking a bound
+target's name in the inspector opens that deck's (or the Mixer's) Deep Edit on the right sub-tab
+with the parameter selected.
 
-- **In Performance Mode**: click a knob to select it, then click its inline **`[Learn]`** button.
+- **From the 4×4 matrix**: click a knob to select it, then click its inline **`[Learn]`** button.
   This arms parameter-bind Learn, opens that row's **Deep Edit** (if it isn't already open), and
   switches Column 3 to **`[ MACROS ]`** on the matching bank/tab with the Binding Inspector already
   open on that knob — click a target parameter in Deep Edit and set Min/Max/Curve as desired. The
   target doesn't have to be on the same deck: use Deep Edit's side rail to reach any channel.
-- **In Classic mode**: press **`F4`**, open **`[ MACROS ]`** in Column 3, select the knob, click
-  **LEARN**, and click a target parameter.
+- **From Column 3**: open **`[ MACROS ]`**, select the knob, click **LEARN**, and click a target
+  parameter in Deep Edit.
 
-Either way the change is live immediately in both views — Performance Mode and Classic MACROS
-read from and write to the same underlying `MacroEngine` banks.
+Either way the change is live immediately in both places, since they share the same
+`MacroEngine` banks.
 
 ---
 
@@ -333,7 +327,7 @@ There are 12 always-resident canonical macro banks (4 knobs each, conforming to 
 | **Master FX** | FX Wet/Dry | 4 | `fxSends` | Deck A, B, BG, PV Insert FX Wet/Dry Levels |
 | | Master FX | 4 | `masterFx` | Super Knob + 3 Metaknobs |
 
-Deck generator banks start blank by default for custom binding in the Classic MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. All 12 canonical banks are preserved in `last_session.json` and session files.
+Deck generator banks start blank by default for custom binding in the MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. All 12 canonical banks are preserved in `last_session.json` and session files.
 
 Banks are saved in `last_session.json` and bundled into preset files automatically.
 
@@ -343,5 +337,4 @@ Banks are saved in `last_session.json` and bundled into preset files automatical
 
 | Key | What it does |
 |-----|-------------|
-| `F4` | Toggle between Classic Deck View and Performance Mode |
 | `Esc` | Cancel an armed Macro Learn, or (if none is armed) collapse every expanded Rack row back to Faceplate |

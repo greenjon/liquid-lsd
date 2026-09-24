@@ -6,7 +6,7 @@ import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 
 /**
- * Identifies a single cell in the Parameters panel matrix.
+ * Identifies a single cell in the Deep Edit parameter grid.
  * @param paramKey   Fully-qualified parameter key, e.g. "Mixer/crossfade" or "Deck A/Geometry/L1"
  * @param cvSourceId The CV source column, e.g. "beatPhase", "amp", "lfo"
  */
@@ -212,7 +212,7 @@ class ParametersState {
     /**
      * The active chain is now a real, single live fact owned by [llm.slop.liquidlsd.rendering.FxBank]
      * (see [llm.slop.liquidlsd.rendering.FxBank.activeChainIndex]) rather than independent per-view
-     * UI state -- these just read/write the bank directly so every view (Classic Mode, Performance
+     * UI state -- these just read/write the bank directly so every view (Deep Edit, the Performance
      * Console) shows and drives the same live chain.
      */
     fun getActiveChainIndex(bank: llm.slop.liquidlsd.rendering.FxBank): Int = bank.activeChainIndex

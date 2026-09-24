@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Classic View Removed — Performance Mode Is the Only View (`UIManager.kt`, `MenuBar.kt`, `UITheme.kt`, `AppPreferences.kt`, `AppPreferencesStore.kt`, `ParameterGridHeaders.kt`, `ParametersTabs.kt`, `PerformanceMatrixPanel.kt`, `PropertiesPanel.kt`, `DeckControlPanel.kt`, `MixerPanel.kt`, `MacroPanel.kt`, `MacroBindingInspector.kt`, `DeckSourcePicker.kt`, `ShortcutManager.kt`, `ShortcutAction.kt`, `PreferencesDefaultsTest.kt`, `WindowLayoutSafetyTest.kt`, `docs/getting_started.md`, `docs/index.md`, `your_workspace.md`, `macros_and_rack.md`, `modulation.md`, `performance_controls.md`, `presets_and_library.md`, `docs/developer/ui.md`, `docs/developer/preset_management.md`, `ARCHITECTURE.md`, `README.md`, `DECISIONS.md`)
+- **One view**: The Classic Parameters / Properties panels are gone. Everything they did is in Performance Mode's Deep Edit. `F4`, **View → Classic Deck View / Performance Mode** and the `[ CLASSIC | PERF ]` toolbar pill have been removed.
+- **Existing settings**: A saved `workspaceMode=CLASSIC` preference is ignored and removed on the next save. The app always opens in Performance Mode. A custom key bound to the old "Toggle Performance Mode" shortcut is ignored.
+- **Clicks that used to focus Parameters now open Deep Edit**: the deck badges under each Mixer monitor and the `PREVIEW` badge on the Deck PV row.
+- **Shortcuts preferences**: The "Parameters & Modulation Matrix" group is now "Deep Edit & Modulation Matrix".
+- **Docs**: The Getting Started layout diagram, Your Workspace, Modulation and Macro Controls pages now describe the Performance panel and Deep Edit instead of the Parameters and Properties panels.
+
 ### Removed the Shared FX1/FX2 Banks (`Mixer.kt`, `SessionSerializer.kt`, `MacroEngine.kt`, `MidiMappingManager.kt`, `PerformanceMatrixPanel.kt`, `ParametersTabs.kt`, `ParametersPanel.kt`, `ParametersState.kt`, `FXBrowserPanel.kt`, `StarterFxAndLegacyBanksTest.kt`, `FxMacroSyncTest.kt`, `FxBankTest.kt`, `MacroEngineTest.kt`, `RackDisclosureTest.kt`, `performance_controls.md`, `presets_and_library.md`, `macros_and_rack.md`, `docs/developer/preset_management.md`, `ARCHITECTURE.md`, `DECISIONS.md`)
 - **FX1 / FX2 are gone**: Each deck has its own FX chain and Master FX has its own bank, so the two leftover shared banks (and Classic mode's `FX1` / `FX2` side tabs) have been removed. They no longer update every frame.
 - **Starter deck FX unchanged**: A fresh install still gives each deck the same starter FX chain as before, now read straight from the bundled bank files.

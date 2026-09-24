@@ -100,7 +100,7 @@ class PerformanceMatrixPanel {
 
         /**
          * Properties-column width reserved by [calculateMinWidth]. Deep Edit itself will shrink
-         * Properties to 280px; 450px matches the Properties allowance Classic mode reserved.
+         * Properties to 280px; 450px keeps the Mixer column from squeezing it that far on most screens.
          */
         private const val DEEP_EDIT_RESERVED_PROPS_W = 450f
 
@@ -995,7 +995,7 @@ class PerformanceMatrixPanel {
      * Points [ParametersState.activeTopTab] (and Mixer sub-tab) at whichever tab [MacroPanel]
      * reads to display [bankId], mirroring [MacroPanel.activeBankId]'s reverse mapping -- so
      * arming Learn on a Performance-panel knob and having [UITheme.Column3Mode.MACROS] pop open
-     * lands on the *same* bank's knobs rather than whatever tab Columns 1/2 last had focused.
+     * lands on the *same* bank's knobs rather than whatever tab Deep Edit last had focused.
      * FX_SENDS has no dedicated Macros-tab destination, so it's left as a no-op (Macros still
      * opens, just without a matching tab switch).
      */
@@ -1112,8 +1112,7 @@ class PerformanceMatrixPanel {
     /**
      * The Deep Edit tier: the full parameter/CV editor, reusing
      * [ParametersTabs.drawDeckGroupContent]/[ParametersTabs.drawFxBankGroupContent] and
-     * [PropertiesPanel.draw] verbatim (see [drawRackDeepEdit]) -- same reachable bindings as
-     * Classic mode, no regressions. Macro target binding (arm Learn, inspect/edit bindings) lives
+     * [PropertiesPanel.draw] (see [drawRackDeepEdit]). Macro target binding (arm Learn, inspect/edit bindings) lives
      * on the Mixer panel's MACROS tab ([MacroPanel]), not here -- pressing Learn on a Tier-1 knob
      * jumps there automatically (see [navigateMacroPanelTo]).
      */
@@ -1156,14 +1155,14 @@ class PerformanceMatrixPanel {
 
     private fun deepEditParamsWidth(session: llm.slop.liquidlsd.SessionContext, metrics: GridMetrics): Float {
         val lastCol = rackVisibleColumns(session).last()
-        val maxGridW = rackColumnOffset(session, lastCol, metrics) + metrics.cell + metrics.cellPad * 0.5f + ParametersPanel.getKebabWidth(session)
+        val maxGridW = rackColumnOffset(session, lastCol, metrics) + metrics.cell + metrics.cellPad * 0.5f + ParameterGridHeaders.getKebabWidth(session)
         return DEEP_EDIT_LABEL_COL_W + maxGridW + 24f
     }
 
     /**
      * Width the Performance window needs for Deep Edit's side rail + parameter grid + a
      * [DEEP_EDIT_RESERVED_PROPS_W] Properties column. UIManager uses it to cap the Mixer column,
-     * so the layout no longer depends on the Classic Parameters panel's width.
+     * so it never squeezes Deep Edit.
      */
     fun calculateMinWidth(session: llm.slop.liquidlsd.SessionContext): Float {
         val metrics = GridMetrics.compute(session)
@@ -1174,22 +1173,9 @@ class PerformanceMatrixPanel {
             DEEP_EDIT_GAP + DEEP_EDIT_RESERVED_PROPS_W + padding
     }
 
-    /** CV columns visible in the rack Deep Edit grid -- mirrors ParametersPanel's own (private) getCvColumns. */
-    private fun rackCvColumns(session: llm.slop.liquidlsd.SessionContext): List<String> {
-        val cols = mutableListOf<String>()
-        if (session.uiTheme.showLfoCol) cols.add("lfo")
-        if (session.uiTheme.sequencerEnabled) cols.add("seq")
-        if (session.uiTheme.audioEngineEnabled) cols.add("audio")
-        return cols
-    }
+    private fun rackCvColumns(session: llm.slop.liquidlsd.SessionContext): List<String> = ParameterGridHeaders.getCvColumns(session)
 
-    /** VAL (+ optional MIDI) + CV columns, in display order -- mirrors ParametersPanel's own (private) getVisibleColumns. */
-    private fun rackVisibleColumns(session: llm.slop.liquidlsd.SessionContext): List<String> {
-        val cols = mutableListOf("value")
-        if (session.uiTheme.midiEnabled) cols.add("midi")
-        cols.addAll(rackCvColumns(session))
-        return cols
-    }
+    private fun rackVisibleColumns(session: llm.slop.liquidlsd.SessionContext): List<String> = ParameterGridHeaders.getVisibleColumns(session)
 
     private fun rackColumnOffset(session: llm.slop.liquidlsd.SessionContext, colId: String, metrics: GridMetrics): Float {
         val visible = rackVisibleColumns(session)
@@ -1200,19 +1186,17 @@ class PerformanceMatrixPanel {
     }
 
     /**
-     * Tier 3 (Deep Edit): the full parameter/CV editor, laid out side-by-side like Classic mode's
-     * Columns 1 & 2 -- reusing [ParametersPanel.drawColumnHeaders] (VAL/MIDI/LFO/SEQ/AUD headers,
-     * which also draws the SRC/View/CTRL/TRANS Section Tabs) + [ParametersTabs.drawDeckGroupContent]
-     * (decks), [ParametersTabs.drawFxBankGroupContent] (FX banks), or [ParametersTabs.drawMixerGroupContent]
-     * (Transitions/Master) for the left-hand row grid, and [PropertiesPanel.draw] verbatim on the
-     * right for the per-parameter CV detail (LFO/MIDI/SEQ/AUD) of whichever cell is selected --
-     * identical reachable bindings to Classic mode, per the rack plan's Tier 3 requirement.
+     * Tier 3 (Deep Edit): the full parameter/CV editor -- side rail, then
+     * [ParameterGridHeaders.drawColumnHeaders] (VAL/MIDI/LFO/SEQ/AUD headers, which also draw the
+     * SRC/FX, CTRL/FX/TRANS section tabs) over [ParametersTabs.drawDeckGroupContent] (decks),
+     * [ParametersTabs.drawFxBankGroupContent] (Master FX) or [ParametersTabs.drawMixerGroupContent]
+     * (Transitions/Master), and [PropertiesPanel.draw] on the right for the per-parameter CV
+     * detail (LFO/MIDI/SEQ/AUD) of whichever cell is selected.
      *
      * [ParametersState.activeTopTab] and [ParametersState.selectedCell]/[ParametersState.selectedParam]
-     * are shared globals (Classic mode uses them too), so they're saved, temporarily pointed at this
+     * are shared globals read by the drawers above, so they're saved, temporarily pointed at this
      * module's own state ([ParametersState.rackSelectedCell]), and restored afterward -- this keeps
-     * two simultaneously open Deep Edits (Multi mode) from fighting over one shared selection, and
-     * keeps Classic mode's own selection undisturbed by Rack mode edits.
+     * two simultaneously open Deep Edits (Multi mode) from fighting over one shared selection.
      */
     private fun drawRackDeepEdit(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
         val deckLabel = deckLabelForModuleId(moduleId)
@@ -1224,7 +1208,7 @@ class PerformanceMatrixPanel {
         if (deckLabel != null && (moduleId.endsWith("_fx") || moduleId == "FX")) {
             parametersState.setDeckSubTab(deckLabel, "FX")
         }
-        // Transitions and Master both live under the Parameters panel's "Mixer" top tab
+        // Transitions and Master both live under the "Mixer" top tab
         // (CTRL: crossfade/master level/queue nav/tap tempo; FX: master FX; TRANS: transition shader + dry/wet +
         // its own parameters) -- reuse that set of subtabs verbatim rather than reimplementing.
         val isMixerModule = moduleId == MacroEngine.TRANS || moduleId == MacroEngine.MASTER || moduleId == MacroEngine.MASTER_FX || moduleId == "Mixer"
@@ -1233,7 +1217,7 @@ class PerformanceMatrixPanel {
         if (deckLabel == null && fxBank == null && !isMixerModule) {
             if (ownsKeyboard) handleDeepEditKeys(parametersState, mixer, fullSet = false)
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                ImGui.textDisabled("Deep Edit isn't available for this module yet -- use Classic mode (F4) for full control.")
+                ImGui.textDisabled("Deep Edit isn't available for this module.")
             }
             return
         }
@@ -1272,7 +1256,7 @@ class PerformanceMatrixPanel {
         val totalAvailW = ImGui.getContentRegionAvailX()
         val gap = DEEP_EDIT_GAP
         val propsW = (totalAvailW - sideTabWidth - gap - paramsW - gap).coerceAtLeast(280f)
-        val headerH = ParametersPanel.calculateHeaderHeight(session)
+        val headerH = ParameterGridHeaders.calculateHeaderHeight(session)
 
         // 1. Left column: 5-channel side tabs (MIX, A, B, BG, PV)
         if (ImGui.beginChild("##rack_deep_side_tabs_$moduleId", sideTabWidth, 0f, false)) {
@@ -1296,7 +1280,7 @@ class PerformanceMatrixPanel {
         if (ImGui.beginChild("##rack_deep_params_$moduleId", paramsW, 0f, false)) {
             val gridStartX = ImGui.getCursorScreenPosX()
 
-            ParametersPanel.drawColumnHeaders(session, labelColW, parametersState, mixer, metrics, headerH)
+            ParameterGridHeaders.drawColumnHeaders(session, labelColW, parametersState, mixer, metrics, headerH)
 
             if (deck != null) {
                 ParametersTabs.drawDeckGroupContent(session, deckLabel, deck, parametersState, labelColW, mixer, gridStartX, cvColumnsFn, columnOffsetFn, colorFn, onPushUndo)
@@ -2109,10 +2093,11 @@ class PerformanceMatrixPanel {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 if (ImGui.button("PREVIEW##perf_pv_badge", pvBadgeW, ctrlH)) {
                     parametersState.activeTopTab = "Deck PV"
+                    parametersState.setDisclosure(MacroEngine.DECK_PV, ParametersState.DisclosureLevel.DEEP_EDIT)
                 }
             }
             ImGui.popStyleColor(2)
-            itemTooltip("Deck PV (Preview Deck)\nClick to focus in Parameters panel.")
+            itemTooltip("Deck PV (Preview Deck)\nClick to open Deck PV in Deep Edit.")
         }
 
         ImGui.endGroup()

@@ -6,14 +6,14 @@ Modulation is how you make your visuals react to music, touch, MIDI, oscillators
 
 ## The CV Grid
 
-The **Parameters** panel is the left panel, visible whenever the Library is in Half Height or Docked mode. It's a matrix:
+The CV grid is the middle column of **Deep Edit** (open a row's chevron in the Performance panel, or click a deck monitor in the Mixer). It's a matrix:
 
 - **Rows** = visual parameters (Lobes, Zoom, Hue, Feedback Decay, etc.)
 - **Columns** = modulation sources (manual value, MIDI, LFO, Sequencer, Audio)
 
 Click any cell at the intersection of a parameter and a source type to configure that connection. Active cells show an animated readout knob so you can see the live signal at a glance.
 
-The tabs at the top switch between decks (A, B, BG, PV) and the master mixer.
+The side rail on the left (`[MIX] [A] [B] [BG] [PV]`) switches between the master mixer and the decks; the section tabs above the grid switch between a deck's source (`SRC`) and its `FX` chain, or the Mixer's `CTRL` / `FX` / `TRANS`. The selected cell's details appear in the Properties column on the right.
 
 ### Columns
 
@@ -115,7 +115,7 @@ LFO 2 modulates LFO 1 to add movement and complexity:
 
 The sequencer outputs a stepped voltage pattern that advances with each beat or at a set interval — good for geometric shifts, colour steps, and rhythmic stutter effects.
 
-> **Note:** The sequencer is disabled by default. Enable it in **Preferences → General** (under Features, "Enable Step Sequencer"), or toggle it directly from the **⋮** kebab menu next to the Parameters panel's column headers.
+> **Note:** The sequencer is disabled by default. Enable it in **Preferences → General** (under Features, "Enable Step Sequencer"), or toggle it directly from the **⋮** kebab menu next to Deep Edit's column headers.
 
 ### The step grid
 
@@ -166,10 +166,10 @@ Hover over any slider or number and scroll the mouse wheel:
 
 Middle-click any slider to reset to factory default.
 
-### Parameters panel and Deep Edit shortcuts
+### Deep Edit shortcuts
 
-These work in Classic mode's Parameters panel and in Performance Mode's Deep Edit (see
-[Macros & the Rack](macros_and_rack.md) for which Deep Edit receives them when several are open).
+These act on the selected cell in Deep Edit (see [Macros & the Rack](macros_and_rack.md) for which
+Deep Edit receives them when several are open).
 
 | Action                      | Shortcut                                |
 | --------------------------- | --------------------------------------- |

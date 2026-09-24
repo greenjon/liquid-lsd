@@ -79,18 +79,6 @@ class MenuBar(
 
                     // ── View Menu ─────────────────────────────────────────────────────────
                     if (ImGui.beginMenu("View")) {
-                        val isClassic = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.CLASSIC
-                        val isPerf = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK
-
-                        if (ImGui.menuItem("Classic Deck View", "", isClassic)) {
-                            session.uiTheme.workspaceMode = UITheme.WorkspaceMode.CLASSIC
-                            AppPreferencesStore.savePreferences()
-                        }
-                        if (ImGui.menuItem("Performance Mode", "F4", isPerf)) {
-                            session.uiTheme.workspaceMode = UITheme.WorkspaceMode.RACK
-                            AppPreferencesStore.savePreferences()
-                        }
-                        ImGui.separator()
                         if (ImGui.menuItem("Solo Accordion Mode", "", session.parametersState.rackSoloMode)) {
                             session.parametersState.rackSoloMode = !session.parametersState.rackSoloMode
                             AppPreferencesStore.savePreferences()
@@ -242,29 +230,10 @@ class MenuBar(
                         itemTooltip("Scanning ISF Shaders ($progress% complete)\n${if (currentPath.isNotEmpty()) currentPath else "Indexing library..."}")
                     }
 
-                    // (MIDI Map is handled in-context inside Properties / CellConfigPanel)
-
                     if (ImGui.menuItem("Color", "", ColorTunerPanel.isOpen)) {
                         ColorTunerPanel.toggle()
                     }
                     itemTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
-
-                    // ── Workspace Mode Pill: [ CLASSIC | PERF ] ──
-                    val isPerf = session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK
-                    val perfPillLabel = if (isPerf) "[ PERF ]" else "[ CLASSIC ]"
-                    if (isPerf) {
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f)
-                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.70f, 0.85f, 1.0f)
-                    } else {
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.18f, 0.20f, 0.24f, 1.0f)
-                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.26f, 0.28f, 0.34f, 1.0f)
-                    }
-                    if (ImGui.button(perfPillLabel)) {
-                        session.uiTheme.workspaceMode = if (isPerf) UITheme.WorkspaceMode.CLASSIC else UITheme.WorkspaceMode.RACK
-                        AppPreferencesStore.savePreferences()
-                    }
-                    ImGui.popStyleColor(2)
-                    itemTooltip("Toggle Workspace Mode (Shortcut: F4)\nCurrent: ${if (isPerf) "Performance Mode" else "Classic 3-Column Suite C"}")
 
                     // ── Clock Source & Ableton Link Status Pill ─────────────────────
                     val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine

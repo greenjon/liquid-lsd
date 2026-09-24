@@ -1,3 +1,16 @@
+## Remove the Classic View (Parameters + Properties Panels) (`UIManager.kt`, `MenuBar.kt`, `UITheme.kt`, `AppPreferences.kt`, `AppPreferencesStore.kt`, `ParameterGridHeaders.kt`, `ParametersTabs.kt`, `PerformanceMatrixPanel.kt`, `PropertiesPanel.kt`, `DeckControlPanel.kt`, `MixerPanel.kt`, `MacroPanel.kt`, `MacroBindingInspector.kt`, `DeckSourcePicker.kt`, `ShortcutManager.kt`, `ShortcutAction.kt`, `PreferencesDefaultsTest.kt`, `WindowLayoutSafetyTest.kt`, `DECISIONS.md`, `RELEASE_NOTES.md`, `docs/release_notes.md`)
+
+- **Context**: 2026-09-24. Deep Edit already drew Classic's content with the same drawers. The two earlier entries below closed the remaining gaps and removed the unused FX1/FX2 banks. Keeping two views meant two layouts, `WorkspaceMode` branches in every monitor click handler, and dead clicks: several controls only changed `activeTopTab`, which only the hidden Parameters panel displayed.
+- **Decision**:
+  - Delete `ParametersPanel.kt` and `PanelTitleBar.kt`. Move the column headers and the column helpers (`drawColumnHeaders`, `calculateHeaderHeight`, `getKebabWidth`, `getCvColumns`, `getVisibleColumns`, `getColumnOffset`) to `ParameterGridHeaders.kt`. Remove `ParametersTabs.drawLeftTabs` / `drawSourceTab` and their width helpers.
+  - Delete `UITheme.WorkspaceMode` and `AppPreferences.workspaceMode`. `AppPreferencesStore` no longer reads the key and removes it on save. Delete the `F4` handler, the `global.toggle_rack` shortcut (saved rebinds for unknown ids are already ignored), the View-menu mode items and the toolbar pill.
+  - `UIManager` always draws `PerformanceMatrixPanel`. The Mixer width cap uses only `PerformanceMatrixPanel.calculateMinWidth`.
+  - Every former Classic-only click target now opens Deep Edit: deck monitors, deck badges, the master monitor, the MACROS preview, the Deck PV `PREVIEW` badge and the inspector's go-to-target.
+  - Keep Deep Edit's save/restore of the global selection around each module's draw. It is still what lets several Deep Edits have independent selections in Multi mode.
+- **Rationale**: One editing surface to maintain and document. Nothing is lost, because every Classic feature was reachable from Deep Edit before the view was deleted.
+
+---
+
 ## Remove the Orphaned FX1/FX2 Banks (`Mixer.kt`, `SessionSerializer.kt`, `MacroEngine.kt`, `MidiMappingManager.kt`, `PerformanceMatrixPanel.kt`, `ParametersTabs.kt`, `ParametersPanel.kt`, `ParametersState.kt`, `FXBrowserPanel.kt`, `StarterFxAndLegacyBanksTest.kt`, `FxMacroSyncTest.kt`, `FxBankTest.kt`, `MacroEngineTest.kt`, `RackDisclosureTest.kt`, `DECISIONS.md`, `RELEASE_NOTES.md`, `docs/release_notes.md`)
 
 - **Context**: 2026-09-24. Decks now own their FX chains and Master FX has its own bank. `Mixer.fxBank1` / `fxBank2` were left over from the shared-send-bank design: no deck routed into them and `Renderer` never read them. They were still updated every frame, saved into every session, registered as macro banks, and exposed as Classic-mode tabs. Removing them was part of preparing to remove the Classic view (see the entry below).

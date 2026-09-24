@@ -24,6 +24,19 @@ class DeckControlPanel(
 ) {
     private var pendingRightDragFrom: String? = null
 
+    /** Focuses [deckLabel] and opens its Deep Edit (monitor and badge clicks). */
+    private fun openDeepEdit(deckLabel: String) {
+        parametersState.activeTopTab = deckLabel
+        val moduleId = when (deckLabel) {
+            "Deck A" -> MacroEngine.DECK_A
+            "Deck B" -> MacroEngine.DECK_B
+            "Deck BG" -> MacroEngine.DECK_BG
+            "Deck PV" -> MacroEngine.DECK_PV
+            else -> return
+        }
+        parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)
+    }
+
     fun drawDeckControls(
         session: llm.slop.liquidlsd.SessionContext,
         mixer: Mixer,
@@ -85,26 +98,9 @@ class DeckControlPanel(
 
         ImGui.setCursorScreenPos(dragBtnX, imgY)
         ImGui.invisibleButton("##drag_source_$label", dragBtnW, imgAvailH.coerceAtLeast(1f))
-        val tooltipAction = if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
-            "Click to open Deep Edit"
-        } else {
-            "Click to focus Parameters"
-        }
-        itemTooltip("Interactive monitor for $label. $tooltipAction, drag to route to another deck, or drop presets to load.")
+        itemTooltip("Interactive monitor for $label. Click to open Deep Edit, drag to route to another deck, or drop presets to load.")
         if (ImGui.isItemClicked(0)) {
-            parametersState.activeTopTab = label
-            if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
-                val moduleId = when (label) {
-                    "Deck A" -> MacroEngine.DECK_A
-                    "Deck B" -> MacroEngine.DECK_B
-                    "Deck BG" -> MacroEngine.DECK_BG
-                    "Deck PV" -> MacroEngine.DECK_PV
-                    else -> null
-                }
-                if (moduleId != null) {
-                    parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)
-                }
-            }
+            openDeepEdit(label)
         }
         
         val deckPayloadName = when (label) {
@@ -240,9 +236,9 @@ class DeckControlPanel(
 
         ImGui.setCursorScreenPos(badgeMinX, badgeMinY)
         if (ImGui.invisibleButton("##badge_btn_$label", badgeW, badgeH) || ImGui.isItemClicked(0)) {
-            parametersState.activeTopTab = label
+            openDeepEdit(label)
         }
-        itemTooltip("Focus $label tab in Parameters.")
+        itemTooltip("Open $label in Deep Edit.")
 
         // 2. Die Button (placed directly to the right of the badge in the lower-left row)
         if (session.uiTheme.randomizationEnabled) {

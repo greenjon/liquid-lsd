@@ -686,10 +686,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#parameters-panel-and-deep-edit-shortcuts" class="md-nav__link">
+  <a href="#deep-edit-shortcuts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parameters panel and Deep Edit shortcuts
+        Deep Edit shortcuts
       
     </span>
   </a>
@@ -1698,10 +1698,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#parameters-panel-and-deep-edit-shortcuts" class="md-nav__link">
+  <a href="#deep-edit-shortcuts" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Parameters panel and Deep Edit shortcuts
+        Deep Edit shortcuts
       
     </span>
   </a>
@@ -1734,13 +1734,13 @@
 <p>Modulation is how you make your visuals react to music, touch, MIDI, oscillators, or a sequencer. Instead of just setting parameters to fixed values, you connect them to live signals — audio energy, LFOs, step patterns, or MIDI knobs — and let those signals drive what's happening on screen.</p>
 <hr />
 <h2 id="the-cv-grid">The CV Grid</h2>
-<p>The <strong>Parameters</strong> panel is the left panel, visible whenever the Library is in Half Height or Docked mode. It's a matrix:</p>
+<p>The CV grid is the middle column of <strong>Deep Edit</strong> (open a row's chevron in the Performance panel, or click a deck monitor in the Mixer). It's a matrix:</p>
 <ul>
 <li><strong>Rows</strong> = visual parameters (Lobes, Zoom, Hue, Feedback Decay, etc.)</li>
 <li><strong>Columns</strong> = modulation sources (manual value, MIDI, LFO, Sequencer, Audio)</li>
 </ul>
 <p>Click any cell at the intersection of a parameter and a source type to configure that connection. Active cells show an animated readout knob so you can see the live signal at a glance.</p>
-<p>The tabs at the top switch between decks (A, B, BG, PV) and the master mixer.</p>
+<p>The side rail on the left (<code>[MIX] [A] [B] [BG] [PV]</code>) switches between the master mixer and the decks; the section tabs above the grid switch between a deck's source (<code>SRC</code>) and its <code>FX</code> chain, or the Mixer's <code>CTRL</code> / <code>FX</code> / <code>TRANS</code>. The selected cell's details appear in the Properties column on the right.</p>
 <h3 id="columns">Columns</h3>
 <p>Each column is colour-coded:</p>
 <ul>
@@ -1866,7 +1866,7 @@
 <h2 id="step-sequencer">Step Sequencer</h2>
 <p>The sequencer outputs a stepped voltage pattern that advances with each beat or at a set interval — good for geometric shifts, colour steps, and rhythmic stutter effects.</p>
 <blockquote>
-<p><strong>Note:</strong> The sequencer is disabled by default. Enable it in <strong>Preferences → General</strong> (under Features, "Enable Step Sequencer"), or toggle it directly from the <strong>⋮</strong> kebab menu next to the Parameters panel's column headers.</p>
+<p><strong>Note:</strong> The sequencer is disabled by default. Enable it in <strong>Preferences → General</strong> (under Features, "Enable Step Sequencer"), or toggle it directly from the <strong>⋮</strong> kebab menu next to Deep Edit's column headers.</p>
 </blockquote>
 <h3 id="the-step-grid">The step grid</h3>
 <p>Steps are laid out in rows of 8: 8 steps in one row, 16 in two, 32 in four. Click any cell to type a value (0.0 to 1.0), or hover and scroll to adjust. The active step is highlighted in bright green.</p>
@@ -1908,9 +1908,9 @@
 <li><code>Ctrl+Shift</code> + scroll — coarse step</li>
 </ul>
 <p>Middle-click any slider to reset to factory default.</p>
-<h3 id="parameters-panel-and-deep-edit-shortcuts">Parameters panel and Deep Edit shortcuts</h3>
-<p>These work in Classic mode's Parameters panel and in Performance Mode's Deep Edit (see
-<a href="../macros_and_rack/">Macros &amp; the Rack</a> for which Deep Edit receives them when several are open).</p>
+<h3 id="deep-edit-shortcuts">Deep Edit shortcuts</h3>
+<p>These act on the selected cell in Deep Edit (see <a href="../macros_and_rack/">Macros &amp; the Rack</a> for which
+Deep Edit receives them when several are open).</p>
 <table>
 <thead>
 <tr>

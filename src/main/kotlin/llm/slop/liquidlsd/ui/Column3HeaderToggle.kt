@@ -44,7 +44,7 @@ object Column3HeaderToggle {
             dl.addRectFilled(pMinX, startY, pMaxX, startY + btnH, bgCol, 4f)
             dl.addRectFilled(pMaxX - 6f, startY, pMaxX, startY + btnH, bgCol, 0f)
             drawSegmentLabel(session, "MIXER", pMinX, startY, segW, btnH, isSelected)
-            itemTooltip("Classic 4-deck crossfader mixer view.")
+            itemTooltip("4-deck crossfader mixer view.")
         }
 
         // -- MACROS segment (right, rounded on the outer/right edge) --
