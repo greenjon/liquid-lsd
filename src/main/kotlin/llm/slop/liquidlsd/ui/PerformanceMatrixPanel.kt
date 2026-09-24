@@ -108,7 +108,7 @@ class PerformanceMatrixPanel {
             listOf(
                 RowDescriptor(MacroEngine.MASTER,    0, COLOR_MASTER, "MASTER", hasExtraHeader = true),
                 RowDescriptor(MacroEngine.TRANS,     0, COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.FX_SENDS,  0, COLOR_FX,     "FX WET/DRY", canExpand = false),
+                RowDescriptor(MacroEngine.FX_SENDS,  0, COLOR_FX,     "FX WET/DRY", hasExtraHeader = true, canExpand = false),
                 RowDescriptor(MacroEngine.DECK_PV,   0, COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
             ),
             // LIVE CONSOLE: Deck A, Deck B, Deck BG, focused FX target (A, B, BG, PV, MST)
@@ -118,11 +118,12 @@ class PerformanceMatrixPanel {
                 RowDescriptor(MacroEngine.DECK_BG,   0, COLOR_DECK_BG, "DECK BG", hasExtraHeader = true),
                 RowDescriptor(MacroEngine.DECK_A_FX, 0, COLOR_FX,      "FX",      hasExtraHeader = true),
             ),
-            // ALL FX: Deck A FX, Deck B FX, Deck BG FX, Master FX (1 row each, knobs 0–3)
+            // ALL FX: Deck A FX, Deck B FX, Deck BG FX, Deck PV FX, Master FX (1 row each, knobs 0–3)
             listOf(
                 RowDescriptor(MacroEngine.DECK_A_FX,  0, COLOR_DECK_A,  "DECK A FX",  hasExtraHeader = true),
                 RowDescriptor(MacroEngine.DECK_B_FX,  0, COLOR_DECK_B,  "DECK B FX",  hasExtraHeader = true),
                 RowDescriptor(MacroEngine.DECK_BG_FX, 0, COLOR_DECK_BG, "DECK BG FX", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_PV_FX, 0, COLOR_DECK_PV, "DECK PV FX", hasExtraHeader = true),
                 RowDescriptor(MacroEngine.MASTER_FX,  0, COLOR_MASTER,  "MASTER FX",  hasExtraHeader = true),
             ),
         )
@@ -788,6 +789,10 @@ class PerformanceMatrixPanel {
                             drawDeckRowLeftControls(session, mixer, parametersState, "Deck PV", mixer.deckPV, boxX1 + pad, ctrlY, ctrlH, deckComboW)
                             drawDeckRowRightControls(session, "Deck PV", mixer.deckPV, boxX2 - pad - deckRightW, ctrlY, ctrlH)
                         }
+                        descriptor.bankId == MacroEngine.FX_SENDS -> {
+                            drawFxSendsLeftControls(session, boxX1 + pad, ctrlY, ctrlH)
+                            drawFxSendsRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH)
+                        }
                         isConsoleFxRow -> {
                             drawFxRowLeftControls(session, mixer, parametersState, boxX1 + pad, ctrlY, ctrlH)
                             drawFxRowRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH, targetBankId = descriptor.bankId)
@@ -806,8 +811,12 @@ class PerformanceMatrixPanel {
 
                     val cellCenterX = knobClusterStartX + col * knobColW + knobColW / 2f
 
-                    // Clickable link icon for FX slots (any FX row, cols 1..3)
-                    if (descriptor.hasExtraHeader && isFxChainRow && col in 1..3) {
+                    val isFxBankId = row.bankId in listOf(
+                        MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX,
+                        MacroEngine.MASTER_FX, MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2
+                    )
+                    // Clickable link icon for FX slots (any FX row or Deck row in FX mode, cols 1..3)
+                    if (descriptor.hasExtraHeader && (isFxChainRow || isFxBankId) && col in 1..3) {
                         val slotIdx = col - 1
                         val chain = resolveFxChain(mixer, row.bankId)
                         val isLinked = chain.slotSuperKnobLink.getOrNull(slotIdx) == true
@@ -1353,6 +1362,61 @@ class PerformanceMatrixPanel {
         ImGui.endGroup()
     }
 
+    private fun drawFxSendsLeftControls(
+        session: llm.slop.liquidlsd.SessionContext,
+        startX: Float,
+        startY: Float,
+        ctrlH: Float
+    ) {
+        val badgeW = 76f
+        val accent = COLOR_FX
+        val bgCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.20f)
+        val borderCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.85f)
+        val textCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.95f)
+
+        ImGui.setCursorScreenPos(startX, startY)
+        ImGui.beginGroup()
+
+        val dl = ImGui.getWindowDrawList()
+        dl.addRectFilled(startX, startY, startX + badgeW, startY + ctrlH, bgCol, 4f)
+        dl.addRect(startX, startY, startX + badgeW, startY + ctrlH, borderCol, 4f, 0, 1.5f)
+
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            val label = "FX SENDS"
+            val textSz = ImGui.calcTextSize(label)
+            val tx = startX + (badgeW - textSz.x) * 0.5f
+            val ty = startY + (ctrlH - textSz.y) * 0.5f
+            dl.addText(tx.coerceAtLeast(startX + 2f), ty, textCol, label)
+        }
+        ImGui.invisibleButton("##perf_fxsends_badge", badgeW, ctrlH)
+        itemTooltip("Master FX Wet/Dry Send Levels")
+
+        ImGui.endGroup()
+    }
+
+    private fun drawFxSendsRightControls(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        startX: Float,
+        startY: Float,
+        ctrlH: Float
+    ) {
+        val resyncW = 58f
+
+        ImGui.setCursorScreenPos(startX, startY)
+        ImGui.beginGroup()
+
+        if (ImGui.button("Resync##perf_fxsends_resync", resyncW, ctrlH)) {
+            val bank = MacroEngine.getBank(MacroEngine.FX_SENDS)
+            bank?.knobs?.forEach { knob ->
+                knob.value = 1.0f
+            }
+        }
+        itemTooltip("Reset all FX Wet/Dry Send knobs to 100%.")
+
+        ImGui.endGroup()
+    }
+
     private fun drawFxRowLeftControls(
         session: llm.slop.liquidlsd.SessionContext,
         mixer: Mixer,
@@ -1575,91 +1639,127 @@ class PerformanceMatrixPanel {
 
         ImGui.sameLine(0f, gap)
 
-        // 2. Preset dropdown combo with quick-search
-        val activePreset = when {
-            isDeckA -> session.presetManager.activePresetA
-            isDeckB -> session.presetManager.activePresetB
-            isDeckBG -> session.presetManager.activePresetBG
-            else -> session.presetManager.activePresetPV
-        }
-        val isDirty = session.presetManager.isDeckDirty(deck, mixer)
-        val dirtyMarker = if (isDirty) " *" else ""
-        val presetDisplay = (activePreset ?: "Default") + dirtyMarker
-
-        ImGui.setNextItemWidth(comboW)
-        val searchBuf = when {
-            isDeckA -> presetSearchA
-            isDeckB -> presetSearchB
-            isDeckBG -> presetSearchBG
-            else -> presetSearchPV
-        }
-        val wasOpen = when {
-            isDeckA -> comboWasOpenA
-            isDeckB -> comboWasOpenB
-            isDeckBG -> comboWasOpenBG
-            else -> comboWasOpenPV
-        }
-        // Combos size their height from font + frame padding rather than taking one explicitly, so
-        // pad them out to ctrlH to match the buttons beside them. Popped before the popup body.
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), ((ctrlH - ImGui.getFontSize()) / 2f).coerceAtLeast(0f))
-        val isComboOpen = ImGui.beginCombo("##perf_preset_combo_$tag", presetDisplay)
-        ImGui.popStyleVar()
-        if (isComboOpen) {
-            if (!wasOpen) {
-                ImGui.setKeyboardFocusHere()
-                when {
-                    isDeckA -> comboWasOpenA = true
-                    isDeckB -> comboWasOpenB = true
-                    isDeckBG -> comboWasOpenBG = true
-                    else -> comboWasOpenPV = true
-                }
+        // 2. Preset dropdown combo
+        if (isFx) {
+            val chainBtnW = comboW
+            val deckBankId = targetBankIdFor(tag)
+            val deckChain = deck.fxChain
+            val deckChainLabel = "$deckLabel FX"
+            if (ImGui.button("Preset ${Icons.CHEVRON_DOWN}##perf_deck_fx_preset_$tag", chainBtnW, ctrlH)) {
+                ImGui.openPopup("perf_deck_fx_chain_popup_$tag")
             }
-            ImGui.setNextItemWidth(-1f)
-            ImGui.inputTextWithHint("##preset_search_$tag", "Search presets... (Esc to clear)", searchBuf)
-            if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
-                searchBuf.set("")
-            }
-            ImGui.separator()
+            itemTooltip("Load a saved 3-slot FX chain (.lsdfxchain) for $deckChainLabel.")
 
-            val query = searchBuf.get().trim()
-            val allPresets = FileSystemManager.scanAllPresets()
-            val filtered = if (query.isEmpty()) allPresets else allPresets.filter { it.name.contains(query, ignoreCase = true) }
-
-            if (filtered.isEmpty()) {
-                ImGui.textDisabled(if (query.isEmpty()) "No presets found" else "No matching presets")
-            } else {
-                for (preset in filtered) {
-                    val isSelected = preset.name == activePreset
-                    if (ImGui.selectable("${preset.name}##perf_pselect_${tag}_${preset.path.hashCode()}", isSelected)) {
-                        session.presetRepository.loadDeckPresetAsync(
-                            File(preset.path),
-                            isDeckA = isDeckA,
-                            isDeckBG = isDeckBG,
-                            isDeckPV = isDeckPV
-                        )
-                        searchBuf.set("")
-                    }
-                    if (isSelected) {
-                        ImGui.setItemDefaultFocus()
+            if (ImGui.beginPopup("perf_deck_fx_chain_popup_$tag")) {
+                ImGui.textDisabled("$deckChainLabel Chains")
+                ImGui.separator()
+                val chains = FileSystemManager.scanAllFxChains()
+                if (chains.isEmpty()) {
+                    ImGui.textDisabled("No saved FX chains found")
+                } else {
+                    for (asset in chains) {
+                        if (ImGui.selectable("${asset.name}##perf_deck_fx_item_${tag}_${asset.path.hashCode()}")) {
+                            val file = File(asset.path)
+                            session.presetRepository.loadFxChainAsync(file).thenAccept { dto ->
+                                deckChain.applyFxChain(dto)
+                                llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(deckBankId, deckChainLabel, deckChain)
+                            }
+                        }
                     }
                 }
+                ImGui.separator()
+                if (ImGui.menuItem("${Icons.TRASH} Clear Chain")) {
+                    (0 until FxChain.SLOT_COUNT).forEach { deckChain.clearFxSlot(it) }
+                    llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(deckBankId, deckChainLabel, deckChain)
+                }
+                ImGui.endPopup()
             }
-            ImGui.endCombo()
         } else {
-            if (wasOpen) {
-                searchBuf.set("")
-                when {
-                    isDeckA -> comboWasOpenA = false
-                    isDeckB -> comboWasOpenB = false
-                    isDeckBG -> comboWasOpenBG = false
-                    else -> comboWasOpenPV = false
+            val activePreset = when {
+                isDeckA -> session.presetManager.activePresetA
+                isDeckB -> session.presetManager.activePresetB
+                isDeckBG -> session.presetManager.activePresetBG
+                else -> session.presetManager.activePresetPV
+            }
+            val isDirty = session.presetManager.isDeckDirty(deck, mixer)
+            val dirtyMarker = if (isDirty) " *" else ""
+            val presetDisplay = (activePreset ?: "Default") + dirtyMarker
+
+            ImGui.setNextItemWidth(comboW)
+            val searchBuf = when {
+                isDeckA -> presetSearchA
+                isDeckB -> presetSearchB
+                isDeckBG -> presetSearchBG
+                else -> presetSearchPV
+            }
+            val wasOpen = when {
+                isDeckA -> comboWasOpenA
+                isDeckB -> comboWasOpenB
+                isDeckBG -> comboWasOpenBG
+                else -> comboWasOpenPV
+            }
+            // Combos size their height from font + frame padding rather than taking one explicitly, so
+            // pad them out to ctrlH to match the buttons beside them. Popped before the popup body.
+            ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), ((ctrlH - ImGui.getFontSize()) / 2f).coerceAtLeast(0f))
+            val isComboOpen = ImGui.beginCombo("##perf_preset_combo_$tag", presetDisplay)
+            ImGui.popStyleVar()
+            if (isComboOpen) {
+                if (!wasOpen) {
+                    ImGui.setKeyboardFocusHere()
+                    when {
+                        isDeckA -> comboWasOpenA = true
+                        isDeckB -> comboWasOpenB = true
+                        isDeckBG -> comboWasOpenBG = true
+                        else -> comboWasOpenPV = true
+                    }
+                }
+                ImGui.setNextItemWidth(-1f)
+                ImGui.inputTextWithHint("##preset_search_$tag", "Search presets... (Esc to clear)", searchBuf)
+                if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
+                    searchBuf.set("")
+                }
+                ImGui.separator()
+
+                val query = searchBuf.get().trim()
+                val allPresets = FileSystemManager.scanAllPresets()
+                val filtered = if (query.isEmpty()) allPresets else allPresets.filter { it.name.contains(query, ignoreCase = true) }
+
+                if (filtered.isEmpty()) {
+                    ImGui.textDisabled(if (query.isEmpty()) "No presets found" else "No matching presets")
+                } else {
+                    for (preset in filtered) {
+                        val isSelected = preset.name == activePreset
+                        if (ImGui.selectable("${preset.name}##perf_pselect_${tag}_${preset.path.hashCode()}", isSelected)) {
+                            session.presetRepository.loadDeckPresetAsync(
+                                File(preset.path),
+                                isDeckA = isDeckA,
+                                isDeckBG = isDeckBG,
+                                isDeckPV = isDeckPV
+                            )
+                            searchBuf.set("")
+                        }
+                        if (isSelected) {
+                            ImGui.setItemDefaultFocus()
+                        }
+                    }
+                }
+                ImGui.endCombo()
+            } else {
+                if (wasOpen) {
+                    searchBuf.set("")
+                    when {
+                        isDeckA -> comboWasOpenA = false
+                        isDeckB -> comboWasOpenB = false
+                        isDeckBG -> comboWasOpenBG = false
+                        else -> comboWasOpenPV = false
+                    }
                 }
             }
+            itemTooltip(
+                if (activePreset != null) "Active preset: $activePreset$dirtyMarker\nClick to search and select presets."
+                else "Select a preset for $deckLabel."
+            )
         }
-        itemTooltip(
-            if (activePreset != null) "Active preset: $activePreset$dirtyMarker\nClick to search and select presets."
-            else "Select a preset for $deckLabel."
-        )
 
         ImGui.sameLine(0f, gap)
 
@@ -2684,6 +2784,27 @@ class PerformanceMatrixPanel {
             ImGui.endPopup()
         }
         itemTooltip("Advance to next transition in Transition Queue.$transQNextMidiText\nRight-click for MIDI/OSC Learn.")
+
+        // 3. Randomize Die Button [ DICES ]
+        if (session.uiTheme.randomizationEnabled) {
+            ImGui.sameLine(0f, gap)
+            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.20f, 0.16f, 0.24f, 0.90f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.35f, 0.22f, 0.42f, 1f))
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.DICES}##perf_trans_rand", navBtnW, headerH)) {
+                    ParametersUndo.pushUndoState(session.parametersState, mixer)
+                    mixer.transitionFilter?.let { filter ->
+                        filter.parameters.values.forEach { param ->
+                            val min = param.minClamp
+                            val max = param.maxClamp
+                            param.baseValue = (min + Math.random().toFloat() * (max - min)).coerceIn(min, max)
+                        }
+                    }
+                }
+            }
+            ImGui.popStyleColor(2)
+            itemTooltip("Randomize transition parameters.\nClick to randomize with undo support.")
+        }
 
         ImGui.endGroup()
     }

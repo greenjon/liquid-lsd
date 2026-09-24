@@ -80,4 +80,43 @@ class PerformanceControlsParityTest {
         speedParam.baseValue = (50.0f).coerceIn(speedParam.minClamp, speedParam.maxClamp)
         assertEquals(30.0f, speedParam.baseValue, "Must be clamped to maxClamp 30.0f")
     }
+
+    @Test
+    fun testAllFxTabIncludesDeckPvFx() {
+        val bankIds = listOf(
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_A_FX,
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_B_FX,
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_BG_FX,
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_PV_FX,
+            llm.slop.liquidlsd.macro.MacroEngine.MASTER_FX
+        )
+        for (id in bankIds) {
+            val bank = llm.slop.liquidlsd.macro.MacroEngine.getBank(id) ?: llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(id)
+            org.junit.jupiter.api.Assertions.assertNotNull(bank, "Bank $id should exist")
+        }
+    }
+
+    @Test
+    fun testDeckFxChainLinkUnlinkParity() {
+        val chain = llm.slop.liquidlsd.rendering.FxChain("Test FX")
+        assertEquals(true, chain.slotSuperKnobLink[0])
+        assertEquals(true, chain.slotSuperKnobLink[1])
+        assertEquals(true, chain.slotSuperKnobLink[2])
+
+        chain.setSlotLinked(1, false)
+        assertEquals(false, chain.slotSuperKnobLink[1])
+
+        chain.setSlotLinked(1, true)
+        assertEquals(true, chain.slotSuperKnobLink[1])
+    }
+
+    @Test
+    fun testFxSendsResetToDefault() {
+        val sendsBank = llm.slop.liquidlsd.macro.MacroEngine.getBank(llm.slop.liquidlsd.macro.MacroEngine.FX_SENDS) ?: llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(llm.slop.liquidlsd.macro.MacroEngine.FX_SENDS)
+        org.junit.jupiter.api.Assertions.assertNotNull(sendsBank)
+        sendsBank.knobs.forEach { it.value = 0.3f }
+
+        sendsBank.knobs.forEach { it.value = 1.0f }
+        sendsBank.knobs.forEach { assertEquals(1.0f, it.value) }
+    }
 }

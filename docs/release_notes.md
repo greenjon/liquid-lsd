@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Performance View Feature Parity & Consistency (`PerformanceMatrixPanel.kt`, `PerformanceControlsParityTest.kt`, `docs/user_guide/performance_controls.md`)
+- **SuperKnob Link/Unlink Icons in Deck FX Mode**: When switching a deck row (Deck A, B, BG, PV) to `[FX]` mode, slot knobs 1–3 now display clickable SuperKnob link/unlink icons (`Icons.LINK` / `Icons.UNLINK`), allowing direct control over whether each slot's Metaknob follows the SuperKnob.
+- **FX Chain Preset Selector on Deck Rows**: Switching a deck row to `[FX]` mode replaces the deck preset combo with an `[ FX Preset v ]` dropdown button, enabling instant loading of `.lsdfxchain` presets or clearing the chain directly from the deck row.
+- **Added DECK PV FX to ALL FX Tab**: The `ALL FX` tab now includes `DECK PV FX` (5 rows total: Deck A FX, Deck B FX, Deck BG FX, Deck PV FX, Master FX) with full vertical auto-scrolling support.
+- **FX WET/DRY Row Header Badge & Resync Button**: Added an `[ FX SENDS ]` header badge and a `[Resync]` button to the `FX WET/DRY` row in the `MASTER & FX` tab to quickly reset send levels to 100% defaults.
+- **Transitions Row Randomize Button**: Added a `[DICES]` die button to the Transitions row header in the `MASTER & FX` tab to randomize transition parameters with full undo support.
+
 ### Confidence Monitor Click Opens Deep Edit in Performance Mode (`DeckControlPanel.kt`, `MixerPanel.kt`, `MacroPanel.kt`, `macros_and_rack.md`, `DECISIONS.md`)
 - **Direct Deep Edit Navigation from Confidence Monitors**: In Performance View (`WorkspaceMode.RACK`), clicking on any confidence monitor in Column 3 (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) now immediately expands that deck's **Deep Edit** bay in the Modular Rack.
 - **Master & Preview Support**: Clicking the Main Output monitor (or the MACROS tab single-deck confidence preview) expands the `Master` / `Mixer` Deep Edit bay (master crossfader, master FX slots, and transitions).

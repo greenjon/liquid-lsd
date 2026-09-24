@@ -136,6 +136,11 @@ that exposes these.
 - **Library Browser**: The `[ FX ]` Library view's Column 1 browser also lists saved banks
   (filterable via the kebab menu's **Saved FX Banks** checkbox) alongside stock filters, saved
   singles, and saved chains — right-click one to **Load to FX1 / FX2 / MFX**.
+- **Performance Matrix FX Parity**:
+  - Toggling any Deck row (A, B, BG, PV) to `[FX]` mode displays the `[ Preset v ]` chain preset selector to load `.lsdfxchain` presets directly, and shows SuperKnob link/unlink icons on slot knobs 1–3.
+  - The **ALL FX** tab includes rows for `Deck A FX`, `Deck B FX`, `Deck BG FX`, `Deck PV FX`, and `Master FX`.
+  - The **FX WET/DRY** row in the **MASTER & FX** tab features an `[ FX SENDS ]` badge and `[Resync]` button to reset send levels.
+  - The **Transitions** row includes a `[DICES]` die button to randomize transition parameters with undo support.
 
 ---
 
