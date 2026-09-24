@@ -47,9 +47,17 @@ Most panel `draw(...)` methods (like `ParametersPanel`) receive `session: Sessio
 
 Deck preview monitors (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) in `MixerPanel` and `DeckControlPanel` use a unified interactive preset bar (`drawDeckMonitorToolbar`) positioned directly **above** each monitor image. The preset bar orders elements left-to-right as `[Save Button] [Eject Button] [Preset Bar]`. Buttons and the Preset Bar are aligned along their bottom baselines, and the row height dynamically expands as text font scaling increases.
 
-`MixerPanel` features the master output monitor and a dedicated `MasterControls` child container consisting of the redesigned master `crossfade` slider flanked by interactive `[ A ]` and `[ B ]` boxed badges (with faint vertical tick marks at ends, midway points, and center, styled identically to `CustomRangeSlider`), and a row of momentary randomization buttons (`Rand A`, `Rand B`, `Rand BG`, `Rand PV`, `Rand All`) when randomization is enabled. Momentary triggers act as discrete pulses without initiating manual takeover or muting modulators. Clicking the `[ A ]` or `[ B ]` boxes immediately snaps the crossfader to Deck A (-1.0) or Deck B (+1.0) with manual takeover.
-
-Left-clicking the main output monitor immediately focuses Parameters to the `MIX` tab (`activeTopTab = "Mixer"`). Left-clicking any deck preview monitor (`Deck A`, `Deck B`, `Deck BG`, or `Deck PV`) immediately focuses Parameters to that deck (`activeTopTab`). Dragging from a deck monitor initiates deck copy, move, or swap routing, and dropping preset files directly onto a monitor loads the preset into the corresponding deck.
+Each deck preview monitor features a standardized, symmetric dual-column overlay across all four decks:
+- **Left Column**:
+  - Vertical Fader: Channel Level / Alpha fader (`mixer.levelA`, `levelB`, `levelBG`, `levelPV`) starting at the top margin and running downward. Supports drag, scroll wheel, and middle-click reset (100%).
+  - Lower-Left Corner: Deck Badge (`[A]`, `[B]`, `[BG]`, `[PV]`) anchored directly below the Alpha fader. Clicking focuses that deck's tab in Parameters.
+  - Die Button (`[🎲]`): Positioned in the bottom row directly to the right of the deck badge for modulators and base values randomization with undo support.
+- **Right Column**:
+  - Vertical Fader: FX Wet/Dry fader controlling `deck.fxChain.dryWet`, perfectly aligned with the Alpha fader from the top margin downward. Supports drag, scroll wheel, and middle-click reset (100%). Dims automatically when FX is bypassed/killed.
+  - Lower-Right Corner: Square `[FX]` Kill button positioned directly below the FX fader. Clicking toggles `deck.fxChain.enabled` (active vs. bypassed/killed). Renders in deck theme color when active and high-visibility alert red when bypassed.
+- **Corner Symmetry & Center Interaction**:
+  - Both faders share identical vertical extent, stretching from the top margin down to 4px above the bottom corner buttons (`badgeMinY - 4px`).
+  - Left-clicking the preview between the left and right overlay columns focuses Parameters to that deck (`activeTopTab`). Dragging from the center initiates deck copy, move, or swap routing, and dropping preset files directly onto the monitor loads the preset into the corresponding deck.
 
 `MixerLayoutCalculator` calculates exact aspect preview sizes against available pane height and comprehensive vertical chrome (master controls, preset bars, separator bands, and safety margins). It utilizes the full pane width without reserving unconditional scrollbars, automatically scaling monitor previews to fit vertically without scrolling on standard screens, and displaying scrollbars only on extremely small display heights. It also calculates the exact maximum allowed window width (`calculateMaxAllowedWindowWidth`) to lock the Mixer panel to its ideal aspect-ratio width, preventing wasted letterbox blank space and ensuring the flexible center column (`PropertiesPanel` / `LibraryPanel`) absorbs all remaining display space.
 

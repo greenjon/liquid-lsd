@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#monitor-dual-overlays-fx-wetdry-fader-fx-kill-button-symmetric-layout-deckcontrolpanelkt-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitor Dual Overlays: FX Wet/Dry Fader, FX Kill Button &amp; Symmetric Layout (DeckControlPanel.kt, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rename-fx-sends-to-fx-wetdry-remove-disclosure-chevron-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3865,6 +3876,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#monitor-dual-overlays-fx-wetdry-fader-fx-kill-button-symmetric-layout-deckcontrolpanelkt-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Monitor Dual Overlays: FX Wet/Dry Fader, FX Kill Button &amp; Symmetric Layout (DeckControlPanel.kt, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rename-fx-sends-to-fx-wetdry-remove-disclosure-chevron-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6497,6 +6519,16 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="monitor-dual-overlays-fx-wetdry-fader-fx-kill-button-symmetric-layout-deckcontrolpanelkt-docsdeveloperuimd">Monitor Dual Overlays: FX Wet/Dry Fader, FX Kill Button &amp; Symmetric Layout (<code>DeckControlPanel.kt</code>, <code>docs/developer/ui.md</code>)</h3>
+<ul>
+<li><strong>Monitor Dual Overlay Layout</strong>: Added dedicated controls on both sides of each preview monitor (<code>Deck A</code>, <code>Deck B</code>, <code>Deck BG</code>, <code>Deck PV</code>):</li>
+<li><strong>Left Column</strong>: Vertical Channel Level / Alpha fader (<code>mixer.levelA</code>, <code>levelB</code>, <code>levelBG</code>, <code>levelPV</code>) running from the top margin down to the lower-left corner; Deck Badge (<code>[A]</code>, <code>[B]</code>, <code>[BG]</code>, <code>[PV]</code>) anchored in the lower-left corner directly below the fader; and Die button (<code>[🎲]</code>) positioned beside the badge.</li>
+<li><strong>Right Column</strong>: Vertical FX Wet/Dry fader controlling <code>deck.fxChain.dryWet</code> running from the top margin down to the lower-right corner, and a square <code>[FX]</code> Kill button anchored in the lower-right corner directly below the fader.</li>
+<li><strong>Symmetric Corner Anchoring &amp; Consistent Orientation</strong>: Standardized all 4 deck monitors to a balanced layout with Deck Name badge in the lower-left corner and <code>[FX]</code> Kill button in the lower-right corner, with both vertical faders starting at the top margin and sharing identical vertical height.</li>
+<li><strong>Square FX Kill Button</strong>: Placed at the lower-right corner directly below the FX fader. Toggles FX chain bypass on click, rendering in the deck's theme color when active and high-visibility alert red (<code>#992626</code>) when bypassed.</li>
+<li><strong>FX Wet/Dry Vertical Fader</strong>: Supports drag, scroll wheel (with Shift fine-step delta), and middle-click to reset (100%). When the deck's FX chain is bypassed/killed, the level bar fill dims automatically to reflect inactive processing.</li>
+<li><strong>Central Drag/Drop Hitbox Protection</strong>: Adjusted preview interaction bounds (<code>dragBtnX</code> and <code>dragBtnW</code>) between the left and right overlay strips so dragging to route decks, dropping presets, and clicking to focus tabs remain completely unobstructed.</li>
+</ul>
 <h3 id="rename-fx-sends-to-fx-wetdry-remove-disclosure-chevron-performancematrixpanelkt-docsuser_guidemacros_and_rackmd-decisionsmd">Rename FX Sends to FX WET/DRY &amp; Remove Disclosure Chevron (<code>PerformanceMatrixPanel.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>, <code>DECISIONS.md</code>)</h3>
 <ul>
 <li><strong>Renamed to FX WET/DRY</strong>: In the Performance Matrix (<code>MASTER &amp; FX</code> tab, Row 3), renamed the row from <code>FX SENDS</code> to <code>FX WET/DRY</code>, accurately reflecting that these knobs control each deck's insert FX wet/dry ratio rather than auxiliary bus sends.</li>

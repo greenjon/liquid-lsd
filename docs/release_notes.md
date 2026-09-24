@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Monitor Dual Overlays: FX Wet/Dry Fader, FX Kill Button & Symmetric Layout (`DeckControlPanel.kt`, `docs/developer/ui.md`)
+- **Monitor Dual Overlay Layout**: Added dedicated controls on both sides of each preview monitor (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`):
+  - **Left Column**: Vertical Channel Level / Alpha fader (`mixer.levelA`, `levelB`, `levelBG`, `levelPV`) running from the top margin down to the lower-left corner; Deck Badge (`[A]`, `[B]`, `[BG]`, `[PV]`) anchored in the lower-left corner directly below the fader; and Die button (`[🎲]`) positioned beside the badge.
+  - **Right Column**: Vertical FX Wet/Dry fader controlling `deck.fxChain.dryWet` running from the top margin down to the lower-right corner, and a square `[FX]` Kill button anchored in the lower-right corner directly below the fader.
+- **Symmetric Corner Anchoring & Consistent Orientation**: Standardized all 4 deck monitors to a balanced layout with Deck Name badge in the lower-left corner and `[FX]` Kill button in the lower-right corner, with both vertical faders starting at the top margin and sharing identical vertical height.
+- **Square FX Kill Button**: Placed at the lower-right corner directly below the FX fader. Toggles FX chain bypass on click, rendering in the deck's theme color when active and high-visibility alert red (`#992626`) when bypassed.
+- **FX Wet/Dry Vertical Fader**: Supports drag, scroll wheel (with Shift fine-step delta), and middle-click to reset (100%). When the deck's FX chain is bypassed/killed, the level bar fill dims automatically to reflect inactive processing.
+- **Central Drag/Drop Hitbox Protection**: Adjusted preview interaction bounds (`dragBtnX` and `dragBtnW`) between the left and right overlay strips so dragging to route decks, dropping presets, and clicking to focus tabs remain completely unobstructed.
+
 ### Rename FX Sends to FX WET/DRY & Remove Disclosure Chevron (`PerformanceMatrixPanel.kt`, `docs/user_guide/macros_and_rack.md`, `DECISIONS.md`)
 - **Renamed to FX WET/DRY**: In the Performance Matrix (`MASTER & FX` tab, Row 3), renamed the row from `FX SENDS` to `FX WET/DRY`, accurately reflecting that these knobs control each deck's insert FX wet/dry ratio rather than auxiliary bus sends.
 - **Omitted Disclosure Chevron**: Added `canExpand` to row descriptors and disabled it for `FX WET/DRY`, removing the chevron and preventing expansion into a dead "Deep Edit isn't available" bay.
