@@ -192,6 +192,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── SplitterManager.kt      — Multi-column layout dragging and divider render manager
 │   ├── ParametersPanel.kt      — Parameter matrix with tabs, source dropdown, and modulator columns
 │   ├── ParametersTabs.kt       — Tabbed parameter container rendering per-deck generator controls and insert FX racks
+│   ├── DeckSourcePicker.kt     — Shared deck visual-source picker + empty-deck launchpad (Parameters title bar, Performance deck-row badge, Deep Edit)
 │   ├── PropertiesPanel.kt      — Edits parameter values and modulators with oscilloscope
 │   ├── PanelTitleBar.kt        — Synchronized 1.5x title bar renderer and optical text centering for Parameters & Properties
 │   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)

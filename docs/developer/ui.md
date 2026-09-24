@@ -84,7 +84,7 @@ Each deck preview monitor features a standardized, symmetric dual-column overlay
 ### 3. `DeckPresetController.kt` & `ParametersKeyboard.kt`
 - **`DeckPresetController.kt` Role**: Dedicated orchestrator for deck preset lifecycle, modal save/load/eject workflows, and file dialogs.
 - **Deck Actions**: Coordinates move/copy/swap deck utilities with dirty-state checks, quick save vs "Save As" flow (`SavePresetModal`), duplicate copy naming (`_copy`), and ejecting with Auto-VJ dirty behavior resolution.
-- **`ParametersKeyboard.kt` Keyboard Shortcuts**: Intercepts keyboard navigation and editing commands within Parameters:
+- **`ParametersKeyboard.kt` Keyboard Shortcuts**: Intercepts keyboard navigation and editing commands within Parameters and Performance Mode's Deep Edit. `allowUndo` / `allowSave` / `allowCellEdits` let `PerformanceMatrixPanel` split them: undo runs every frame; save and cell edits run only inside the Deep Edit that owns the keyboard (`keyboardOwnerModuleId`: last clicked, else first open), while that Deep Edit's `rackSelectedCell` is swapped into `ParametersState`, and cell edits additionally require the Performance window to be focused:
   - `Ctrl+S` / `Cmd+S`: Saves the active deck preset directly if named, or opens the Save As modal if untitled. Ignored when focused on the Mixer or an empty deck.
   - `Shift+Ctrl+S` / `Shift+Cmd+S`: Opens the Save Preset As dialog for the active deck with auto-populated tags and duplicate name recommendation (`_copy`). Ignored when focused on the Mixer or an empty deck.
   - `Ctrl+Z` / `Cmd+Z`: Parameter and modulator undo.

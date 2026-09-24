@@ -250,9 +250,22 @@ between two disclosure tiers, without leaving Performance Mode:
    - **Parameter Grid** in the center: displays the full **VAL / MIDI / LFO / SEQ / AUD** parameter grid
      with section subtabs across the top. All 5 sections feature a uniform 3-tab layout with **`FX` in the center**:
      - **`MIX`**: `[ CTRL ]  [ FX ]  [ TRANS ]` (Master controls, Master FX 4 ISF slots, and Transitions)
-     - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]  [ View ]` (Visual generator, insert FX chain, and 3D View/Transform)
+     - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]` (visual generator with Gain/Zoom/Rotate Z, and the insert FX chain)
      Switching between `SRC`/`CTRL` and `FX` automatically switches the top macro row between visual source controls and insert/master FX macros (`Super Knob + 3 Metaknobs`).
    - **Properties Editor** on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.
+
+   If the deck is **empty**, Deep Edit shows the empty-deck card instead: **Add Source** (opens the
+   source picker, including external video), **Load Preset**, and **Open Library Panel**.
+
+**Changing a deck's visual source**: click the generator badge at the left of any deck row (it shows
+the current source, e.g. `Mandala`, or `+ Source` on an empty deck) to open the source picker.
+
+**Keyboard shortcuts in Deep Edit**: `Ctrl+C` / `Ctrl+V` (copy/paste a cell or row), `Delete` /
+`Backspace` (clear the cell's modulators, or reset the parameter), and `Ctrl+S` / `Shift+Ctrl+S`
+(save / save-as the deck being edited) act on the Deep Edit you last clicked in — in `MULTI` mode
+with several open, click inside the one you want first. Copy/paste/clear only fire while the
+Performance panel has focus, so `Delete` in the Library doesn't also reset a parameter. `Ctrl+Z`
+(undo) works anywhere in Performance Mode, with or without Deep Edit open.
 
 **While in Deep Edit**, the top macro row renders the macro controls corresponding to the active channel and subtab,
 reserving the freed vertical space for the side rail and parameter bay.
@@ -283,14 +296,16 @@ Expanding or collapsing a row is purely a display change — it never re-syncs t
 ### Setting up knob labels and bindings
 
 The full Binding Inspector (rename, target list, Min/Max/Curve/Invert/Link/Enabled) lives only in
-Classic mode's **`[ MACROS ]`** tab (Column 3) — it's no longer duplicated inside the Performance
-Mode rack, so binding a knob doesn't mean scrolling past a Deep Edit panel to reach it.
+the **`[ MACROS ]`** tab of Column 3 (in both modes) — it's not duplicated inside the Performance
+Mode rack, so binding a knob doesn't mean scrolling past a Deep Edit panel to reach it. Clicking a
+bound target's name in the inspector jumps to it: in Performance Mode it opens that deck's (or the
+Mixer's) Deep Edit on the right sub-tab with the parameter selected.
 
 - **In Performance Mode**: click a knob to select it, then click its inline **`[Learn]`** button.
-  This arms parameter-bind Learn *and* automatically switches Column 3 to **`[ MACROS ]`** on the
-  matching bank/tab, with the Binding Inspector already open on that knob — click a target
-  parameter (open that row's **Deep Edit** first if the parameter you want isn't visible anywhere
-  else) and set Min/Max/Curve as desired.
+  This arms parameter-bind Learn, opens that row's **Deep Edit** (if it isn't already open), and
+  switches Column 3 to **`[ MACROS ]`** on the matching bank/tab with the Binding Inspector already
+  open on that knob — click a target parameter in Deep Edit and set Min/Max/Curve as desired. The
+  target doesn't have to be on the same deck: use Deep Edit's side rail to reach any channel.
 - **In Classic mode**: press **`F4`**, open **`[ MACROS ]`** in Column 3, select the knob, click
   **LEARN**, and click a target parameter.
 

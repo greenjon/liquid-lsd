@@ -6,8 +6,6 @@ import llm.slop.liquidlsd.rendering.FxBank
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.DynamicVisualSource
-import llm.slop.liquidlsd.rendering.VisualSource
-import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.rendering.isf.MetaLinkMode
 import kotlin.math.roundToInt
@@ -353,27 +351,7 @@ object ParametersTabs {
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
             if (ImGui.button(displayLabel, btnW, subTabH)) {
                 val deckLabel = state.activeTopTab
-                ShaderPickerPopup.show("Select Source for $deckLabel", ShaderPickerPopup.PickerType.SOURCE) { newSourceId ->
-                    if (newSourceId == null) return@show
-                    val newSource = if (newSourceId.startsWith("ext_video:")) {
-                        val serverName = newSourceId.removePrefix("ext_video:")
-                        llm.slop.liquidlsd.rendering.ExternalVideoSource(serverName = serverName)
-                    } else {
-                        VisualSourceRegistry.availableSources.find { it.id == newSourceId }
-                    }
-                    if (newSource != null) {
-                        if (deckPresetController != null) {
-                            deckPresetController.changeVisualSourceSafely(mixer, deck, deckLabel, newSource, state)
-                        } else {
-                            deck.source = newSource.clone()
-                            deck.isEmpty = false
-                            session.deckLifecycleManager.clearDeckActivePreset(deck, mixer)
-                            state.clearSelection()
-                            state.setDeckSubTab(deckLabel, "SRC")
-                            ParametersUndo.pushUndoState(state, mixer)
-                        }
-                    }
-                }
+                DeckSourcePicker.open(session, state, mixer, deck, deckLabel, deckPresetController)
             }
         }
         itemTooltip("Click to change Visual Source for ${state.activeTopTab}.")

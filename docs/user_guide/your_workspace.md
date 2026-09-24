@@ -90,8 +90,8 @@ A few keyboard shortcuts work anywhere in the app:
 | `F` | Fullscreen — hides the UI, pure video output |
 | `Esc` | Exit fullscreen |
 | `B` | Toggle background video rendering behind the UI |
-| `Ctrl+Z` / `Ctrl+Y` | Undo / Redo (30-step history) |
-| `Ctrl+S` | Save the active deck's preset |
+| `Ctrl+Z` | Undo the last parameter/modulator change (30-step history) |
+| `Ctrl+S` | Save the active deck's preset (in Performance Mode: the deck open in Deep Edit) |
 | `Ctrl+R` | Start / stop recording |
 | `Ctrl+P` | Open Preferences |
 | `Ctrl+F` or `/` | Jump to preset search |

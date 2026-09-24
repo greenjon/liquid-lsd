@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-mode-source-picker-empty-deck-launchpad-shortcuts-macro-navigation-decksourcepickerkt-performancematrixpanelkt-parameterskeyboardkt-macrobindinginspectorkt-uimanagerkt-parameterskeyboardtestkt-macrobindingnavtestkt-docsuser_guidemacros_and_rackmd-docsuser_guidemodulationmd-docsuser_guideyour_workspacemd-docsdeveloperuimd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Mode: Source Picker, Empty-Deck Launchpad, Shortcuts &amp; Macro Navigation (DeckSourcePicker.kt, PerformanceMatrixPanel.kt, ParametersKeyboard.kt, MacroBindingInspector.kt, UIManager.kt, ParametersKeyboardTest.kt, MacroBindingNavTest.kt, docs/user_guide/macros_and_rack.md, docs/user_guide/modulation.md, docs/user_guide/your_workspace.md, docs/developer/ui.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-view-feature-parity-consistency-performancematrixpanelkt-performancecontrolsparitytestkt-docsuser_guideperformance_controlsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3909,6 +3920,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-mode-source-picker-empty-deck-launchpad-shortcuts-macro-navigation-decksourcepickerkt-performancematrixpanelkt-parameterskeyboardkt-macrobindinginspectorkt-uimanagerkt-parameterskeyboardtestkt-macrobindingnavtestkt-docsuser_guidemacros_and_rackmd-docsuser_guidemodulationmd-docsuser_guideyour_workspacemd-docsdeveloperuimd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Mode: Source Picker, Empty-Deck Launchpad, Shortcuts &amp; Macro Navigation (DeckSourcePicker.kt, PerformanceMatrixPanel.kt, ParametersKeyboard.kt, MacroBindingInspector.kt, UIManager.kt, ParametersKeyboardTest.kt, MacroBindingNavTest.kt, docs/user_guide/macros_and_rack.md, docs/user_guide/modulation.md, docs/user_guide/your_workspace.md, docs/developer/ui.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-view-feature-parity-consistency-performancematrixpanelkt-performancecontrolsparitytestkt-docsuser_guideperformance_controlsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6585,6 +6607,17 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="performance-mode-source-picker-empty-deck-launchpad-shortcuts-macro-navigation-decksourcepickerkt-performancematrixpanelkt-parameterskeyboardkt-macrobindinginspectorkt-uimanagerkt-parameterskeyboardtestkt-macrobindingnavtestkt-docsuser_guidemacros_and_rackmd-docsuser_guidemodulationmd-docsuser_guideyour_workspacemd-docsdeveloperuimd-decisionsmd">Performance Mode: Source Picker, Empty-Deck Launchpad, Shortcuts &amp; Macro Navigation (<code>DeckSourcePicker.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>ParametersKeyboard.kt</code>, <code>MacroBindingInspector.kt</code>, <code>UIManager.kt</code>, <code>ParametersKeyboardTest.kt</code>, <code>MacroBindingNavTest.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>, <code>docs/user_guide/modulation.md</code>, <code>docs/user_guide/your_workspace.md</code>, <code>docs/developer/ui.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>Change a deck's source from Performance Mode</strong>: Click the generator badge at the left of any deck row to open the source picker (including external video). Empty decks show <code>+ Source</code>.</li>
+<li><strong>Empty-deck launchpad in Deep Edit</strong>: Opening Deep Edit on an empty deck now shows Add Source / Load Preset / Open Library instead of a text message. Add Source uses the full source picker in both modes.</li>
+<li><strong>Keyboard shortcuts in Deep Edit</strong>: <code>Ctrl+C</code> / <code>Ctrl+V</code>, <code>Delete</code> / <code>Backspace</code>, and <code>Ctrl+S</code> / <code>Shift+Ctrl+S</code> now work on the Deep Edit you last clicked in. <code>Ctrl+Z</code> undo works anywhere in Performance Mode.</li>
+<li><strong>Macro "go to target" opens Deep Edit</strong>: Clicking a bound parameter in the Binding Inspector opens that deck's or the Mixer's Deep Edit on the right sub-tab with the parameter selected. Deck FX, Transition and Master FX targets now land on their own sub-tabs instead of SRC/CTRL.</li>
+<li><strong>Learn opens Deep Edit</strong>: Pressing <code>[Learn]</code> on a Performance knob opens that row's Deep Edit so there's a parameter to click.</li>
+<li><strong>Fix: mouse-wheel scrolling in Deep Edit's Properties</strong> stopped working after hovering any slider; it now recovers when the pointer leaves the slider.</li>
+<li><strong>Mixer column width</strong> in Performance Mode no longer depends on the hidden Classic Parameters panel, so it stops shifting when you switch Deep Edit channels.</li>
+<li><strong>Docs</strong>: Removed the <code>Ctrl+Y</code> redo shortcut from the user guide; the app has never had redo.</li>
+</ul>
 <h3 id="performance-view-feature-parity-consistency-performancematrixpanelkt-performancecontrolsparitytestkt-docsuser_guideperformance_controlsmd">Performance View Feature Parity &amp; Consistency (<code>PerformanceMatrixPanel.kt</code>, <code>PerformanceControlsParityTest.kt</code>, <code>docs/user_guide/performance_controls.md</code>)</h3>
 <ul>
 <li><strong>SuperKnob Link/Unlink Icons in Deck FX Mode</strong>: When switching a deck row (Deck A, B, BG, PV) to <code>[FX]</code> mode, slot knobs 1–3 now display clickable SuperKnob link/unlink icons (<code>Icons.LINK</code> / <code>Icons.UNLINK</code>), allowing direct control over whether each slot's Metaknob follows the SuperKnob.</li>

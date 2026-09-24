@@ -166,13 +166,16 @@ Hover over any slider or number and scroll the mouse wheel:
 
 Middle-click any slider to reset to factory default.
 
-### Parameters panel shortcuts
+### Parameters panel and Deep Edit shortcuts
+
+These work in Classic mode's Parameters panel and in Performance Mode's Deep Edit (see
+[Macros & the Rack](macros_and_rack.md) for which Deep Edit receives them when several are open).
 
 | Action                      | Shortcut                                |
 | --------------------------- | --------------------------------------- |
 | Save active preset          | `Ctrl+S`                                |
 | Save preset as...           | `Shift+Ctrl+S`                          |
-| Undo / Redo                 | `Ctrl+Z` / `Ctrl+Y`                     |
+| Undo                        | `Ctrl+Z`                                |
 | Copy cell                   | `Ctrl+C` (with a CV cell selected)      |
 | Paste cell                  | `Ctrl+V` (onto another cell)            |
 | Copy full parameter row     | `Ctrl+C` (with the VALUE cell selected) |

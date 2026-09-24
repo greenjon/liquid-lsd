@@ -501,7 +501,12 @@ class UIManager(
             itemSpacingY = style.getItemSpacingY(),
             aspectRatio = theme.renderAspectRatio
         )
-        val maxAllowedRightW = (displayWidth - col1W - 450f).coerceAtLeast(100f)
+        val reservedLeftW = if (theme.workspaceMode == UITheme.WorkspaceMode.RACK) {
+            performanceMatrixPanel.calculateMinWidth(session)
+        } else {
+            col1W + 450f
+        }
+        val maxAllowedRightW = (displayWidth - reservedLeftW).coerceAtLeast(100f)
         val rightW = maxRightW.coerceIn(100f, maxAllowedRightW)
 
         // Rack mode has no separate Mixer preview column (the Alpha unit's own faceplate preview
@@ -522,6 +527,11 @@ class UIManager(
         if (theme.libraryMode != UITheme.LibraryMode.FULL) {
             val topH = (contentH - libraryH).coerceAtLeast(1f)
 
+            // Sliders set this while hovered to suppress mouse-wheel scrolling of the panel under
+            // them; clear it every frame in both modes (Deep Edit's Properties reads it too).
+            val sliderWasHovered = CustomRangeSlider.isAnySliderHovered
+            CustomRangeSlider.isAnySliderHovered = false
+
             if (theme.workspaceMode == UITheme.WorkspaceMode.RACK) {
                 // Performance Mode: PerformanceMatrixPanel replaces Columns 1 & 2.
                 ImGui.setNextWindowPos(0f, menuBarH)
@@ -529,14 +539,11 @@ class UIManager(
                 val perfFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
                 if (ImGui.begin("PerformanceMatrix", perfFlags)) {
                     UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                    currentMixer?.let { performanceMatrixPanel.draw(session, it, parametersState) }
+                    currentMixer?.let { performanceMatrixPanel.draw(session, it, parametersState, deckPresetController) }
                 }
                 ImGui.end()
             } else {
                 // Classic Mode: Parameters (Col 1) + Properties (Col 2).
-                val sliderWasHovered = CustomRangeSlider.isAnySliderHovered
-                CustomRangeSlider.isAnySliderHovered = false
-
                 val col2W = (libraryW - col1W).coerceAtLeast(450f)
 
                 // Column 1: Parameters

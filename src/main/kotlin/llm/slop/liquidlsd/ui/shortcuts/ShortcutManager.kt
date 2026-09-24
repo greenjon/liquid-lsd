@@ -34,8 +34,8 @@ object ShortcutManager {
         register(ShortcutAction("global.toggle_rack", ShortcutCategory.GLOBAL, "Toggle Performance Mode", "Switches between Classic Deck View and the 4×4 Performance Mode macro matrix.", KeyCombination(GLFW_KEY_F4)))
 
         // 2. Parameters & Modulation Matrix
-        register(ShortcutAction("parameters.save_deck", ShortcutCategory.PARAMETERS, "Save Active Deck Preset", "Saves active deck preset in Parameters (opens Save As if untitled).", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL)))
-        register(ShortcutAction("parameters.save_deck_as", ShortcutCategory.PARAMETERS, "Save Active Deck Preset As...", "Opens Save As modal for active deck in Parameters.", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL or GLFW_MOD_SHIFT)))
+        register(ShortcutAction("parameters.save_deck", ShortcutCategory.PARAMETERS, "Save Active Deck Preset", "Saves active deck preset in Parameters or Deep Edit (opens Save As if untitled).", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL)))
+        register(ShortcutAction("parameters.save_deck_as", ShortcutCategory.PARAMETERS, "Save Active Deck Preset As...", "Opens Save As modal for active deck in Parameters or Deep Edit.", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL or GLFW_MOD_SHIFT)))
         register(ShortcutAction("parameters.undo", ShortcutCategory.PARAMETERS, "Undo Parameter Action", "Reverts last parameter tweak, randomize, paste, or reset.", KeyCombination(GLFW_KEY_Z, GLFW_MOD_CONTROL)))
         register(ShortcutAction("parameters.copy", ShortcutCategory.PARAMETERS, "Copy Cell or Row", "Copies modulation routing (or row settings if Base/Final cell is selected).", KeyCombination(GLFW_KEY_C, GLFW_MOD_CONTROL)))
         register(ShortcutAction("parameters.paste", ShortcutCategory.PARAMETERS, "Paste Cell or Row", "Applies copied modulators or parameter settings with an undo point.", KeyCombination(GLFW_KEY_V, GLFW_MOD_CONTROL)))

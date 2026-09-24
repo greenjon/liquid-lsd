@@ -22,12 +22,21 @@ object ParametersKeyboard {
         }
     }
 
+    /**
+     * Save / undo / copy / paste / clear shortcuts for the selected parameter cell.
+     * [allowUndo], [allowSave] and [allowCellEdits] let Performance mode split these up: undo is
+     * global, while save and the cell edits run only inside the Deep Edit that owns the keyboard
+     * (see PerformanceMatrixPanel.keyboardOwnerModuleId), with that Deep Edit's selection swapped in.
+     */
     fun handleKeyboardShortcuts(
         state: ParametersState,
         mixer: Mixer,
         deckPresetController: DeckPresetController? = null,
         onPushUndo: (ParametersState, Mixer) -> Unit,
-        onPerformUndo: (ParametersState, Mixer) -> Unit
+        onPerformUndo: (ParametersState, Mixer) -> Unit,
+        allowUndo: Boolean = true,
+        allowSave: Boolean = true,
+        allowCellEdits: Boolean = true
     ) {
         val io = ImGui.getIO()
         if (io.wantTextInput) return
@@ -41,7 +50,7 @@ object ParametersKeyboard {
         val isSave = !isSaveAs && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.isTriggered("parameters.save_deck")
 
         // Save: Ctrl+S / Cmd+S, Save As: Shift+Ctrl+S / Shift+Cmd+S
-        if (isSave || isSaveAs) {
+        if (allowSave && (isSave || isSaveAs)) {
             val activeDeck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
                 "Deck B" -> mixer.deckB
@@ -56,7 +65,7 @@ object ParametersKeyboard {
         }
         
         // Undo: Ctrl+Z / Cmd+Z
-        if (modActive && ImGui.isKeyPressed(ImGuiKey.Z, false)) {
+        if (allowUndo && modActive && ImGui.isKeyPressed(ImGuiKey.Z, false)) {
             if (isShift) {
                 // Currently no redo queue is tracked by ParametersUndo.kt but we swallow the key
             } else {
@@ -64,6 +73,8 @@ object ParametersKeyboard {
             }
         }
         
+        if (!allowCellEdits) return
+
         // Copy: Ctrl+C / Cmd+C
         if (modActive && ImGui.isKeyPressed(ImGuiKey.C, false)) {
             val cell = state.selectedCell

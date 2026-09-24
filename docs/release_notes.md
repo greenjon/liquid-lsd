@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+### Performance Mode: Source Picker, Empty-Deck Launchpad, Shortcuts & Macro Navigation (`DeckSourcePicker.kt`, `PerformanceMatrixPanel.kt`, `ParametersKeyboard.kt`, `MacroBindingInspector.kt`, `UIManager.kt`, `ParametersKeyboardTest.kt`, `MacroBindingNavTest.kt`, `docs/user_guide/macros_and_rack.md`, `docs/user_guide/modulation.md`, `docs/user_guide/your_workspace.md`, `docs/developer/ui.md`, `DECISIONS.md`)
+- **Change a deck's source from Performance Mode**: Click the generator badge at the left of any deck row to open the source picker (including external video). Empty decks show `+ Source`.
+- **Empty-deck launchpad in Deep Edit**: Opening Deep Edit on an empty deck now shows Add Source / Load Preset / Open Library instead of a text message. Add Source uses the full source picker in both modes.
+- **Keyboard shortcuts in Deep Edit**: `Ctrl+C` / `Ctrl+V`, `Delete` / `Backspace`, and `Ctrl+S` / `Shift+Ctrl+S` now work on the Deep Edit you last clicked in. `Ctrl+Z` undo works anywhere in Performance Mode.
+- **Macro "go to target" opens Deep Edit**: Clicking a bound parameter in the Binding Inspector opens that deck's or the Mixer's Deep Edit on the right sub-tab with the parameter selected. Deck FX, Transition and Master FX targets now land on their own sub-tabs instead of SRC/CTRL.
+- **Learn opens Deep Edit**: Pressing `[Learn]` on a Performance knob opens that row's Deep Edit so there's a parameter to click.
+- **Fix: mouse-wheel scrolling in Deep Edit's Properties** stopped working after hovering any slider; it now recovers when the pointer leaves the slider.
+- **Mixer column width** in Performance Mode no longer depends on the hidden Classic Parameters panel, so it stops shifting when you switch Deep Edit channels.
+- **Docs**: Removed the `Ctrl+Y` redo shortcut from the user guide; the app has never had redo.
+
 ### Performance View Feature Parity & Consistency (`PerformanceMatrixPanel.kt`, `PerformanceControlsParityTest.kt`, `docs/user_guide/performance_controls.md`)
 - **SuperKnob Link/Unlink Icons in Deck FX Mode**: When switching a deck row (Deck A, B, BG, PV) to `[FX]` mode, slot knobs 1–3 now display clickable SuperKnob link/unlink icons (`Icons.LINK` / `Icons.UNLINK`), allowing direct control over whether each slot's Metaknob follows the SuperKnob.
 - **FX Chain Preset Selector on Deck Rows**: Switching a deck row to `[FX]` mode replaces the deck preset combo with an `[ FX Preset v ]` dropdown button, enabling instant loading of `.lsdfxchain` presets or clearing the chain directly from the deck row.

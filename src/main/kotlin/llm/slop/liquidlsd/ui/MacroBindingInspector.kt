@@ -34,6 +34,31 @@ object MacroBindingInspector {
     private val curves = arrayOf("Linear", "Exponential", "Logarithmic", "S-Curve", "Step")
     private val linkModes = arrayOf("Full (0-100%)", "1st Half (0-50%)", "2nd Half (50-100%)", "Triangle (Peak)", "Bipolar (Center-0)")
 
+    /** Where a bound parameter is edited: the rack module that opens it in Deep Edit, plus the top tab and sub-tab. */
+    internal data class NavTarget(val moduleId: String, val topTab: String, val subTab: String)
+
+    /**
+     * Maps a parameter path ("Deck A/fbZoom", "Deck A/FX/...", "Mixer/Transition/DryWet", "MFX/...",
+     * "Mixer/crossfade") to where it's shown. Null for paths with no editor tab.
+     */
+    internal fun navTargetFor(parameterId: String): NavTarget? {
+        val top = parameterId.substringBefore('/', missingDelimiterValue = "")
+        val rest = parameterId.substringAfter('/', missingDelimiterValue = "")
+        val deckModule = when (top) {
+            "Deck A" -> MacroEngine.DECK_A
+            "Deck B" -> MacroEngine.DECK_B
+            "Deck BG" -> MacroEngine.DECK_BG
+            "Deck PV" -> MacroEngine.DECK_PV
+            else -> null
+        }
+        return when {
+            deckModule != null -> NavTarget(deckModule, top, if (rest.startsWith("FX/")) "FX" else "SRC")
+            top == "MFX" -> NavTarget(MacroEngine.MASTER, "Mixer", "FX")
+            top == "Mixer" -> NavTarget(MacroEngine.MASTER, "Mixer", if (rest.startsWith("Transition/")) "TRANS" else "CTRL")
+            else -> null
+        }
+    }
+
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
         control: MacroControl?,
@@ -86,7 +111,7 @@ object MacroBindingInspector {
                 if (ImGui.button("${Icons.REFRESH} Learn##start_learn")) {
                     MacroLearnState.startLearn(control.id)
                 }
-                itemTooltip("Arm Learn Mode. Then click any parameter slider or modulator property in Column 1 or 2.")
+                itemTooltip("Arm Learn Mode. Then click any parameter slider or modulator property in Deep Edit (or the Parameters panel).")
             } else {
                 ImGui.textDisabled("[Max 4 targets]")
             }
@@ -99,7 +124,7 @@ object MacroBindingInspector {
         // Bindings list
         if (control.bindings.isEmpty()) {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                ImGui.textDisabled("No parameters bound. Click [Learn] then click any parameter in Column 1 or 2.")
+                ImGui.textDisabled("No parameters bound. Click [Learn] then click any parameter or modulator property in Deep Edit (or the Parameters panel).")
             }
         } else {
             val toRemove = mutableListOf<Int>()
@@ -121,14 +146,7 @@ object MacroBindingInspector {
                     "${binding.parameterId} [${binding.propertyName}]"
                 }
 
-                // Parse the deck/section from the parameterId for navigation.
-                // Paths are "Deck A/fbZoom", "Deck A/Mandala/L1", "Mixer/crossfade", etc.
-                val slashIdx = binding.parameterId.indexOf('/')
-                val navDeck = if (slashIdx > 0) binding.parameterId.substring(0, slashIdx) else null
-                val navSubTab = when (navDeck) {
-                    "Mixer" -> "CTRL"
-                    else    -> "SRC"
-                }
+                val nav = navTargetFor(binding.parameterId)
 
                 // Render as a tinted text label. textColored + isItemClicked is the standard
                 // ImGui clickable-text pattern and reliably receives clicks inside child windows,
@@ -140,11 +158,11 @@ object MacroBindingInspector {
 
                 if (ImGui.isItemHovered()) {
                     ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
-                    if (navDeck != null) itemTooltip("\u2192 Go to $navDeck \u2192 $navSubTab")
+                    if (nav != null) itemTooltip("\u2192 Go to ${nav.topTab} \u2192 ${nav.subTab}")
                 }
-                if (ImGui.isItemClicked(0) && navDeck != null) {
-                    parametersState.activeTopTab = navDeck
-                    parametersState.setDeckSubTab(navDeck, navSubTab)
+                if (ImGui.isItemClicked(0) && nav != null) {
+                    parametersState.activeTopTab = nav.topTab
+                    parametersState.setDeckSubTab(nav.topTab, nav.subTab)
                     val targetParam = ParameterResolver.findParameterByPath(mixer, binding.parameterId)
                     if (targetParam != null) {
                         val cvId = if (binding.targetType == MacroTargetType.MODULATOR_PROPERTY) {
@@ -152,7 +170,13 @@ object MacroBindingInspector {
                         } else {
                             "value"
                         }
-                        parametersState.select(ParameterCellId(binding.parameterId, cvId), targetParam)
+                        val cell = ParameterCellId(binding.parameterId, cvId)
+                        parametersState.select(cell, targetParam)
+                        // Deep Edit keeps its own per-module selection (see PerformanceMatrixPanel.drawRackDeepEdit).
+                        parametersState.rackSelectedCell[nav.moduleId] = cell
+                    }
+                    if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
+                        parametersState.setDisclosure(nav.moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)
                     }
                 }
 

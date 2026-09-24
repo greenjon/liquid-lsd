@@ -1671,7 +1671,7 @@
 <ul>
 <li><strong><code>DeckPresetController.kt</code> Role</strong>: Dedicated orchestrator for deck preset lifecycle, modal save/load/eject workflows, and file dialogs.</li>
 <li><strong>Deck Actions</strong>: Coordinates move/copy/swap deck utilities with dirty-state checks, quick save vs "Save As" flow (<code>SavePresetModal</code>), duplicate copy naming (<code>_copy</code>), and ejecting with Auto-VJ dirty behavior resolution.</li>
-<li><strong><code>ParametersKeyboard.kt</code> Keyboard Shortcuts</strong>: Intercepts keyboard navigation and editing commands within Parameters:</li>
+<li><strong><code>ParametersKeyboard.kt</code> Keyboard Shortcuts</strong>: Intercepts keyboard navigation and editing commands within Parameters and Performance Mode's Deep Edit. <code>allowUndo</code> / <code>allowSave</code> / <code>allowCellEdits</code> let <code>PerformanceMatrixPanel</code> split them: undo runs every frame; save and cell edits run only inside the Deep Edit that owns the keyboard (<code>keyboardOwnerModuleId</code>: last clicked, else first open), while that Deep Edit's <code>rackSelectedCell</code> is swapped into <code>ParametersState</code>, and cell edits additionally require the Performance window to be focused:</li>
 <li><code>Ctrl+S</code> / <code>Cmd+S</code>: Saves the active deck preset directly if named, or opens the Save As modal if untitled. Ignored when focused on the Mixer or an empty deck.</li>
 <li><code>Shift+Ctrl+S</code> / <code>Shift+Cmd+S</code>: Opens the Save Preset As dialog for the active deck with auto-populated tags and duplicate name recommendation (<code>_copy</code>). Ignored when focused on the Mixer or an empty deck.</li>
 <li><code>Ctrl+Z</code> / <code>Cmd+Z</code>: Parameter and modulator undo.</li>

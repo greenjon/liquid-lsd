@@ -1965,12 +1965,22 @@ between two disclosure tiers, without leaving Performance Mode:</p>
 <li><strong>Parameter Grid</strong> in the center: displays the full <strong>VAL / MIDI / LFO / SEQ / AUD</strong> parameter grid
      with section subtabs across the top. All 5 sections feature a uniform 3-tab layout with <strong><code>FX</code> in the center</strong>:<ul>
 <li><strong><code>MIX</code></strong>: <code>[ CTRL ]  [ FX ]  [ TRANS ]</code> (Master controls, Master FX 4 ISF slots, and Transitions)</li>
-<li><strong><code>A</code></strong>, <strong><code>B</code></strong>, <strong><code>BG</code></strong>, <strong><code>PV</code></strong>: <code>[ SRC ]  [ FX ]  [ View ]</code> (Visual generator, insert FX chain, and 3D View/Transform)
+<li><strong><code>A</code></strong>, <strong><code>B</code></strong>, <strong><code>BG</code></strong>, <strong><code>PV</code></strong>: <code>[ SRC ]  [ FX ]</code> (visual generator with Gain/Zoom/Rotate Z, and the insert FX chain)
  Switching between <code>SRC</code>/<code>CTRL</code> and <code>FX</code> automatically switches the top macro row between visual source controls and insert/master FX macros (<code>Super Knob + 3 Metaknobs</code>).</li>
 </ul>
 </li>
 <li><strong>Properties Editor</strong> on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.</li>
 </ol>
+<p>If the deck is <strong>empty</strong>, Deep Edit shows the empty-deck card instead: <strong>Add Source</strong> (opens the
+   source picker, including external video), <strong>Load Preset</strong>, and <strong>Open Library Panel</strong>.</p>
+<p><strong>Changing a deck's visual source</strong>: click the generator badge at the left of any deck row (it shows
+the current source, e.g. <code>Mandala</code>, or <code>+ Source</code> on an empty deck) to open the source picker.</p>
+<p><strong>Keyboard shortcuts in Deep Edit</strong>: <code>Ctrl+C</code> / <code>Ctrl+V</code> (copy/paste a cell or row), <code>Delete</code> /
+<code>Backspace</code> (clear the cell's modulators, or reset the parameter), and <code>Ctrl+S</code> / <code>Shift+Ctrl+S</code>
+(save / save-as the deck being edited) act on the Deep Edit you last clicked in — in <code>MULTI</code> mode
+with several open, click inside the one you want first. Copy/paste/clear only fire while the
+Performance panel has focus, so <code>Delete</code> in the Library doesn't also reset a parameter. <code>Ctrl+Z</code>
+(undo) works anywhere in Performance Mode, with or without Deep Edit open.</p>
 <p><strong>While in Deep Edit</strong>, the top macro row renders the macro controls corresponding to the active channel and subtab,
 reserving the freed vertical space for the side rail and parameter bay.
 Collapsing back to Faceplate (or expanding a different row in <code>SOLO</code> mode) brings the rest
@@ -1993,14 +2003,16 @@ The same Solo/Collapse-All controls are also in <strong>View</strong> menu.</p>
 <p>Expanding or collapsing a row is purely a display change — it never re-syncs the Super Knob/Metaknob mapping.</p>
 <h3 id="setting-up-knob-labels-and-bindings">Setting up knob labels and bindings</h3>
 <p>The full Binding Inspector (rename, target list, Min/Max/Curve/Invert/Link/Enabled) lives only in
-Classic mode's <strong><code>[ MACROS ]</code></strong> tab (Column 3) — it's no longer duplicated inside the Performance
-Mode rack, so binding a knob doesn't mean scrolling past a Deep Edit panel to reach it.</p>
+the <strong><code>[ MACROS ]</code></strong> tab of Column 3 (in both modes) — it's not duplicated inside the Performance
+Mode rack, so binding a knob doesn't mean scrolling past a Deep Edit panel to reach it. Clicking a
+bound target's name in the inspector jumps to it: in Performance Mode it opens that deck's (or the
+Mixer's) Deep Edit on the right sub-tab with the parameter selected.</p>
 <ul>
 <li><strong>In Performance Mode</strong>: click a knob to select it, then click its inline <strong><code>[Learn]</code></strong> button.
-  This arms parameter-bind Learn <em>and</em> automatically switches Column 3 to <strong><code>[ MACROS ]</code></strong> on the
-  matching bank/tab, with the Binding Inspector already open on that knob — click a target
-  parameter (open that row's <strong>Deep Edit</strong> first if the parameter you want isn't visible anywhere
-  else) and set Min/Max/Curve as desired.</li>
+  This arms parameter-bind Learn, opens that row's <strong>Deep Edit</strong> (if it isn't already open), and
+  switches Column 3 to <strong><code>[ MACROS ]</code></strong> on the matching bank/tab with the Binding Inspector already
+  open on that knob — click a target parameter in Deep Edit and set Min/Max/Curve as desired. The
+  target doesn't have to be on the same deck: use Deep Edit's side rail to reach any channel.</li>
 <li><strong>In Classic mode</strong>: press <strong><code>F4</code></strong>, open <strong><code>[ MACROS ]</code></strong> in Column 3, select the knob, click
   <strong>LEARN</strong>, and click a target parameter.</li>
 </ul>

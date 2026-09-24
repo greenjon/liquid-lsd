@@ -94,6 +94,16 @@ class PerformanceMatrixPanel {
          */
         private const val MIN_ROW_H = 96f
 
+        /** Deep Edit parameter-grid label column width and the gap between its three columns. */
+        private const val DEEP_EDIT_LABEL_COL_W = 160f
+        private const val DEEP_EDIT_GAP = 8f
+
+        /**
+         * Properties-column width reserved by [calculateMinWidth]. Deep Edit itself will shrink
+         * Properties to 280px; 450px matches the Properties allowance Classic mode reserved.
+         */
+        private const val DEEP_EDIT_RESERVED_PROPS_W = 450f
+
         private val TAB_ROWS: Array<List<RowDescriptor>> = arrayOf(
             // LIVE QUAD: one row per deck (knobs 0–3 each: Deck A, Deck B, Deck BG, Deck PV)
             listOf(
@@ -193,8 +203,16 @@ class PerformanceMatrixPanel {
 
     // -- Draw ---------------------------------------------------------------------
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState) {
+    /** Set each frame by [draw]; null in tests, where source swaps fall back to the unguarded path. */
+    private var deckPresetController: DeckPresetController? = null
+
+    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState, deckPresetController: DeckPresetController? = null) {
+        this.deckPresetController = deckPresetController
         val theme = session.uiTheme
+
+        val expandedIds = expandedDeepEditModuleIds(parametersState)
+        if (keyboardOwnerModuleId !in expandedIds) keyboardOwnerModuleId = expandedIds.firstOrNull()
+        if (keyboardOwnerModuleId == null) handleDeepEditKeys(parametersState, mixer, fullSet = false)
         drawTabStrip(session, theme, mixer, parametersState)
         ImGui.spacing()
 
@@ -221,6 +239,9 @@ class PerformanceMatrixPanel {
             drawRackBay(session, mixer, parametersState, bayH)
         }
     }
+
+    /** Canonical module ids that have a Deep Edit editor. */
+    private val deepEditModuleIds = setOf(MacroEngine.DECK_A, MacroEngine.DECK_B, MacroEngine.DECK_BG, MacroEngine.DECK_PV, MacroEngine.MASTER)
 
     /** Maps sub-modules (DECK_A_FX, MASTER_FX, TRANS, etc.) to their canonical primary module id (DECK_A, MASTER, etc.). */
     private fun canonicalModuleId(moduleId: String): String = when (moduleId) {
@@ -939,9 +960,14 @@ class PerformanceMatrixPanel {
                                         MacroLearnState.selectedControlId = control.id
                                         navigateMacroPanelTo(parametersState, row.bankId)
                                         session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
+                                        // Learn needs a parameter to click: open this row's Deep Edit if it's closed.
+                                        val learnModuleId = canonicalModuleId(row.bankId)
+                                        if (learnModuleId in deepEditModuleIds && parametersState.disclosureFor(learnModuleId) == ParametersState.DisclosureLevel.COLLAPSED) {
+                                            parametersState.setDisclosure(learnModuleId, ParametersState.DisclosureLevel.DEEP_EDIT)
+                                        }
                                     }
                                     ImGui.popStyleColor()
-                                    itemTooltip("Arm Learn Mode and open the Mixer panel's Macros tab. Then click any parameter slider or modulator property in Column 1 or 2.")
+                                    itemTooltip("Arm Learn Mode, open this row's Deep Edit and the Mixer panel's Macros tab. Then click any parameter slider or modulator property in Deep Edit.")
                                 } else {
                                     ImGui.textDisabled("Max 4")
                                 }
@@ -1034,15 +1060,43 @@ class PerformanceMatrixPanel {
         else -> moduleId
     }
 
+    private fun expandedDeepEditModuleIds(parametersState: ParametersState): List<String> =
+        parametersState.rackModuleDisclosure.entries
+            .filter { it.value != ParametersState.DisclosureLevel.COLLAPSED && it.key != MacroEngine.FX_SENDS }
+            .map { it.key }
+
+    /**
+     * The open Deep Edit that receives Ctrl+S/C/V and Delete -- the one last clicked, else the first
+     * open. Null when no Deep Edit is open, in which case only Ctrl+Z (undo) is handled.
+     */
+    private var keyboardOwnerModuleId: String? = null
+
+    /**
+     * Runs [ParametersKeyboard] shortcuts. [fullSet] = false handles only undo. Cell edits also
+     * require the Performance window to be focused, so Delete in the Library doesn't also reset
+     * the Deep Edit selection.
+     */
+    private fun handleDeepEditKeys(parametersState: ParametersState, mixer: Mixer, fullSet: Boolean) {
+        val onPushUndo = { s: ParametersState, m: Mixer -> ParametersUndo.pushUndoState(s, m) }
+        val onPerformUndo = { s: ParametersState, m: Mixer -> ParametersUndo.performUndo(s, m) }
+        ParametersKeyboard.handleKeyboardShortcuts(
+            state = parametersState,
+            mixer = mixer,
+            deckPresetController = deckPresetController,
+            onPushUndo = onPushUndo,
+            onPerformUndo = onPerformUndo,
+            allowSave = fullSet,
+            allowCellEdits = fullSet && ImGui.isWindowFocused(imgui.flag.ImGuiFocusedFlags.RootAndChildWindows)
+        )
+    }
+
     /**
      * Scrollable region beneath the Tier-1 grid showing every module currently above COLLAPSED
      * (in Solo mode this is at most one). Never touches [focusedFxBankId] or re-runs
      * [llm.slop.liquidlsd.macro.FxMacroSync] -- expand/collapse is strictly a display detail.
      */
     private fun drawRackBay(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState, bayH: Float) {
-        val expandedModules = parametersState.rackModuleDisclosure.entries
-            .filter { it.value != ParametersState.DisclosureLevel.COLLAPSED && it.key != MacroEngine.FX_SENDS }
-            .map { it.key }
+        val expandedModules = expandedDeepEditModuleIds(parametersState)
         if (expandedModules.isEmpty()) return
 
         if (ImGui.beginChild("##rack_bay_area", 0f, bayH, true)) {
@@ -1050,7 +1104,13 @@ class PerformanceMatrixPanel {
                 if (idx > 0) {
                     ImGui.spacing(); ImGui.separator(); ImGui.spacing()
                 }
+                ImGui.beginGroup()
                 drawRackBayModule(session, mixer, parametersState, moduleId)
+                ImGui.endGroup()
+                val clicked = ImGui.isMouseClicked(0) || ImGui.isMouseClicked(1)
+                if (clicked && ImGui.isMouseHoveringRect(ImGui.getItemRectMinX(), ImGui.getItemRectMinY(), ImGui.getItemRectMaxX(), ImGui.getItemRectMaxY())) {
+                    keyboardOwnerModuleId = moduleId
+                }
             }
         }
         ImGui.endChild()
@@ -1099,6 +1159,26 @@ class PerformanceMatrixPanel {
         "Deck B" -> mixer.deckB
         "Deck BG" -> mixer.deckBG
         else -> mixer.deckPV
+    }
+
+    private fun deepEditParamsWidth(session: llm.slop.liquidlsd.SessionContext, metrics: GridMetrics): Float {
+        val lastCol = rackVisibleColumns(session).last()
+        val maxGridW = rackColumnOffset(session, lastCol, metrics) + metrics.cell + metrics.cellPad * 0.5f + ParametersPanel.getKebabWidth(session)
+        return DEEP_EDIT_LABEL_COL_W + maxGridW + 24f
+    }
+
+    /**
+     * Width the Performance window needs for Deep Edit's side rail + parameter grid + a
+     * [DEEP_EDIT_RESERVED_PROPS_W] Properties column. UIManager uses it to cap the Mixer column,
+     * so the layout no longer depends on the Classic Parameters panel's width.
+     */
+    fun calculateMinWidth(session: llm.slop.liquidlsd.SessionContext): Float {
+        val metrics = GridMetrics.compute(session)
+        val style = ImGui.getStyle()
+        // Outer window + the bordered bay child each add padding on both sides.
+        val padding = (style.windowPaddingX + style.windowBorderSize) * 4f
+        return ParametersTabs.calculateLeftTabsWidth(session) + DEEP_EDIT_GAP + deepEditParamsWidth(session, metrics) +
+            DEEP_EDIT_GAP + DEEP_EDIT_RESERVED_PROPS_W + padding
     }
 
     /** CV columns visible in the rack Deep Edit grid -- mirrors ParametersPanel's own (private) getCvColumns. */
@@ -1157,7 +1237,9 @@ class PerformanceMatrixPanel {
         // its own parameters) -- reuse that set of subtabs verbatim rather than reimplementing.
         val isMixerModule = moduleId == MacroEngine.TRANS || moduleId == MacroEngine.MASTER || moduleId == MacroEngine.MASTER_FX || moduleId == "Mixer"
 
+        val ownsKeyboard = moduleId == keyboardOwnerModuleId
         if (deckLabel == null && fxBank == null && !isMixerModule) {
+            if (ownsKeyboard) handleDeepEditKeys(parametersState, mixer, fullSet = false)
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 ImGui.textDisabled("Deep Edit isn't available for this module yet -- use Classic mode (F4) for full control.")
             }
@@ -1166,9 +1248,8 @@ class PerformanceMatrixPanel {
 
         val deck = deckLabel?.let { deckForLabel(mixer, it) }
         if (deck != null && deck.isEmpty) {
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                ImGui.textDisabled("$deckLabel is empty -- load a preset or source above to edit its parameters.")
-            }
+            if (ownsKeyboard) handleDeepEditKeys(parametersState, mixer, fullSet = false)
+            DeckSourcePicker.drawLaunchpad(session, deckLabel, deck, parametersState, mixer, deckPresetController)
             return
         }
 
@@ -1181,6 +1262,7 @@ class PerformanceMatrixPanel {
         }
         parametersState.activeTopTab = deckLabel ?: if (isMixerModule) "Mixer" else parametersState.activeTopTab
         var nextTopTab = parametersState.activeTopTab
+        if (ownsKeyboard) handleDeepEditKeys(parametersState, mixer, fullSet = true)
 
         // 3-Column Layout:
         // Left Column: 5-channel side rail (MIX, A, B, BG, PV)
@@ -1192,13 +1274,11 @@ class PerformanceMatrixPanel {
         val columnOffsetFn = { colId: String -> rackColumnOffset(session, colId, metrics) }
         val colorFn = { colId: String, alpha: Float -> CvTheme.getThemeColor(colId, alpha) }
         val onPushUndo = { ParametersUndo.pushUndoState(parametersState, mixer) }
-        val labelColW = 160f
-        val lastCol = rackVisibleColumns(session).last()
-        val maxGridW = rackColumnOffset(session, lastCol, metrics) + metrics.cell + metrics.cellPad * 0.5f + ParametersPanel.getKebabWidth(session)
-        val paramsW = labelColW + maxGridW + 24f
+        val labelColW = DEEP_EDIT_LABEL_COL_W
+        val paramsW = deepEditParamsWidth(session, metrics)
 
         val totalAvailW = ImGui.getContentRegionAvailX()
-        val gap = 8f
+        val gap = DEEP_EDIT_GAP
         val propsW = (totalAvailW - sideTabWidth - gap - paramsW - gap).coerceAtLeast(280f)
         val headerH = ParametersPanel.calculateHeaderHeight(session)
 
@@ -1587,9 +1667,9 @@ class PerformanceMatrixPanel {
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.beginGroup()
 
-        // 1. Generator badge
+        // 1. Generator badge -- click to change the deck's visual source
         val genBadgeW = 74f
-        val genName = deck.source.displayName
+        val genName = if (deck.isEmpty) "${Icons.PLUS} Source" else deck.source.displayName
         val genBorderCol = ImGui.colorConvertFloat4ToU32(0.35f, 0.40f, 0.50f, 0.70f)
         val genBgCol = ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
         val genTextCol = ImGui.colorConvertFloat4ToU32(0.80f, 0.85f, 0.95f, 1f)
@@ -1605,8 +1685,14 @@ class PerformanceMatrixPanel {
             val ty = curY + (ctrlH - textSz.y) * 0.5f
             dl.addText(tx.coerceAtLeast(curX + 4f), ty, genTextCol, genName)
         }
-        ImGui.invisibleButton("##perf_gen_badge_$tag", genBadgeW, ctrlH)
-        itemTooltip("Generator: $genName ($deckLabel)")
+        if (ImGui.invisibleButton("##perf_gen_badge_$tag", genBadgeW, ctrlH)) {
+            DeckSourcePicker.open(session, parametersState, mixer, deck, deckLabel, deckPresetController)
+        }
+        if (ImGui.isItemHovered()) {
+            ImGui.setMouseCursor(ImGuiMouseCursor.Hand)
+            dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, ImGui.colorConvertFloat4ToU32(0.60f, 0.70f, 0.90f, 1f), 4f, 0, 1.5f)
+        }
+        itemTooltip(if (deck.isEmpty) "$deckLabel is empty. Click to choose a visual source." else "Generator: $genName ($deckLabel). Click to change the visual source.")
 
         ImGui.sameLine(0f, gap)
 

@@ -144,4 +144,76 @@ class ParametersKeyboardTest {
             deckPresetController.handleSaveDeck(any(), any(), any(), any())
         }
     }
+
+    // -- Performance-mode gating (allowUndo / allowSave / allowCellEdits) --
+
+    @Test
+    fun testCtrlSIgnoredWhenSaveDisallowed() {
+        val state = ParametersState()
+        state.activeTopTab = "Deck A"
+
+        simulateFrameWithKeys(ImGuiKey.S, ctrl = true, shift = false) {
+            ParametersKeyboard.handleKeyboardShortcuts(
+                state = state,
+                mixer = mixer,
+                deckPresetController = deckPresetController,
+                onPushUndo = { _, _ -> },
+                onPerformUndo = { _, _ -> },
+                allowSave = false
+            )
+        }
+
+        verify(exactly = 0) {
+            deckPresetController.handleSaveDeck(any(), any(), any(), any())
+        }
+    }
+
+    @Test
+    fun testCtrlZStillUndoesWhenOnlyUndoAllowed() {
+        val state = ParametersState()
+        var undoCount = 0
+
+        simulateFrameWithKeys(ImGuiKey.Z, ctrl = true, shift = false) {
+            ParametersKeyboard.handleKeyboardShortcuts(
+                state = state,
+                mixer = mixer,
+                deckPresetController = deckPresetController,
+                onPushUndo = { _, _ -> },
+                onPerformUndo = { _, _ -> undoCount++ },
+                allowSave = false,
+                allowCellEdits = false
+            )
+        }
+
+        kotlin.test.assertEquals(1, undoCount)
+    }
+
+    private fun pressDeleteWithSelectedParam(allowCellEdits: Boolean): llm.slop.liquidlsd.parameters.ModulatableParameter {
+        val param = mockk<llm.slop.liquidlsd.parameters.ModulatableParameter>(relaxed = true)
+        val state = ParametersState()
+        state.selectedParam = param
+        simulateFrameWithKeys(ImGuiKey.Delete, ctrl = false, shift = false) {
+            ParametersKeyboard.handleKeyboardShortcuts(
+                state = state,
+                mixer = mixer,
+                deckPresetController = deckPresetController,
+                onPushUndo = { _, _ -> },
+                onPerformUndo = { _, _ -> },
+                allowCellEdits = allowCellEdits
+            )
+        }
+        return param
+    }
+
+    @Test
+    fun testDeleteResetsSelectedParamWhenCellEditsAllowed() {
+        val param = pressDeleteWithSelectedParam(allowCellEdits = true)
+        verify(exactly = 1) { param.reset() }
+    }
+
+    @Test
+    fun testDeleteIgnoredWhenCellEditsDisallowed() {
+        val param = pressDeleteWithSelectedParam(allowCellEdits = false)
+        verify(exactly = 0) { param.reset() }
+    }
 }
