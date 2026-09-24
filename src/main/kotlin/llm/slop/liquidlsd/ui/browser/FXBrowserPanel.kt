@@ -253,7 +253,7 @@ object FXBrowserPanel {
             when (asset.type) {
                 AssetType.FX_STOCK -> "Stock ISF filter — load only, not saveable to a playlist or queue."
                 AssetType.FX_CHAIN -> "Saved 3-slot FX chain (.lsdfxchain) — replaces all 3 slots of the target chain."
-                AssetType.FX_BANK -> "Saved 3-chain FX bank (.lsdfxbank) — replaces all 3 chains of the target bank (FX1/FX2/MFX)."
+                AssetType.FX_BANK -> "Saved 3-chain FX bank (.lsdfxbank) — replaces all 3 chains of Master FX."
                 else -> "Saved single FX preset (.lsdfx) — loads into one FX slot."
             }
         )
@@ -433,12 +433,9 @@ object FXBrowserPanel {
                 }
             }
             AssetType.FX_BANK -> {
-                val targetBanks = listOf("FX1" to mixer.fxBank1, "FX2" to mixer.fxBank2, "MFX" to mixer.masterFxBank)
-                for ((bankLabel, targetBank) in targetBanks) {
-                    if (ImGui.menuItem("Load to $bankLabel")) {
-                        session.presetRepository.loadFxBankAsync(file).thenAccept { bankDto ->
-                            targetBank.applyFxBank(bankDto)
-                        }
+                if (ImGui.menuItem("Load to Master FX")) {
+                    session.presetRepository.loadFxBankAsync(file).thenAccept { bankDto ->
+                        mixer.masterFxBank.applyFxBank(bankDto)
                     }
                 }
                 ImGui.separator()

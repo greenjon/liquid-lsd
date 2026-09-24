@@ -175,8 +175,6 @@ class PerformanceMatrixPanel {
         MacroEngine.DECK_BG_FX -> mixer.deckBG.fxChain
         MacroEngine.DECK_PV_FX -> mixer.deckPV.fxChain
         MacroEngine.MASTER_FX -> mixer.masterFxBank.activeChain
-        MacroEngine.FX_BANK_1 -> mixer.fxBank1.activeChain
-        MacroEngine.FX_BANK_2 -> mixer.fxBank2.activeChain
         else -> mixer.deckA.fxChain
     }
 
@@ -186,12 +184,9 @@ class PerformanceMatrixPanel {
         MacroEngine.DECK_BG_FX -> "Deck BG"
         MacroEngine.DECK_PV_FX -> "Deck PV"
         MacroEngine.MASTER_FX -> "Master"
-        MacroEngine.FX_BANK_1 -> "FX1"
-        MacroEngine.FX_BANK_2 -> "FX2"
         else -> "Deck A"
     }
 
-    private var focusedFxBankId: String = MacroEngine.FX_BANK_1
     private val presetSearchA = ImString(64)
     private val presetSearchB = ImString(64)
     private val presetSearchBG = ImString(64)
@@ -309,7 +304,7 @@ class PerformanceMatrixPanel {
         val templateRows = TAB_ROWS[tabIdx]
         return templateRows.map { row ->
             when {
-                tabIdx == Tab.LIVE_CONSOLE.ordinal && row.hasExtraHeader && (row.groupLabel.startsWith("FX") || row.bankId == MacroEngine.FX_BANK_1 || row.bankId == MacroEngine.DECK_A_FX) -> {
+                tabIdx == Tab.LIVE_CONSOLE.ordinal && row.hasExtraHeader && (row.groupLabel.startsWith("FX") || row.bankId == MacroEngine.DECK_A_FX) -> {
                     val targetBankId = targetBankIdFor(focusedFxTarget)
                     val targetAccent = targetAccentFor(focusedFxTarget)
                     row.copy(bankId = targetBankId, accent = targetAccent, groupLabel = "FX: ${targetDisplayName(focusedFxTarget)}")
@@ -334,7 +329,7 @@ class PerformanceMatrixPanel {
     /** Same moduleId a row's chevron uses (see the chevron-drawing block in [drawMatrix]). */
     private fun rowModuleId(row: RowDescriptor): String {
         val isFxRow = row.bankId in listOf(
-            MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2, MacroEngine.MASTER_FX,
+            MacroEngine.MASTER_FX,
             MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX
         )
         return if (isFxRow && row.hasExtraHeader && row.groupLabel.startsWith("FX")) "FX" else row.bankId
@@ -501,7 +496,7 @@ class PerformanceMatrixPanel {
             it.groupLabel.startsWith("DECK")
         }
         val hasFxRow = rows.any {
-            it.bankId in listOf(MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2, MacroEngine.MASTER_FX, MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX) ||
+            it.bankId in listOf(MacroEngine.MASTER_FX, MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX) ||
             it.groupLabel.startsWith("FX") ||
             tabIdx == Tab.ALL_FX.ordinal
         }
@@ -535,7 +530,7 @@ class PerformanceMatrixPanel {
             val groupH = group.rowCount * rowH
             val hasSubLabel = rows[group.startRow].subLabel != null
             val isDeck = rows[group.startRow].bankId in listOf(MacroEngine.DECK_A, MacroEngine.DECK_B, MacroEngine.DECK_BG, MacroEngine.DECK_PV) || rows[group.startRow].groupLabel.startsWith("DECK")
-            val isFx = rows[group.startRow].bankId in listOf(MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2, MacroEngine.MASTER_FX, MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX) || rows[group.startRow].groupLabel.startsWith("FX") || tabIdx == Tab.ALL_FX.ordinal
+            val isFx = rows[group.startRow].bankId in listOf(MacroEngine.MASTER_FX, MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX) || rows[group.startRow].groupLabel.startsWith("FX") || tabIdx == Tab.ALL_FX.ordinal
             val hasTopBar = rows[group.startRow].hasExtraHeader && !isDeck && !isFx
             val extraHeaderH = if (hasTopBar) EXTRA_HEADER_H + boxLabelGap else 0f
             // Title is placed to the right above UI elements, not above the central knob column.
@@ -583,7 +578,7 @@ class PerformanceMatrixPanel {
             val isDeckBG = (descriptor.bankId == MacroEngine.DECK_BG || descriptor.bankId == MacroEngine.DECK_BG_FX) && !isConsoleFxRow && !isAllFxTab
             val isDeckPV = (descriptor.bankId == MacroEngine.DECK_PV || descriptor.bankId == MacroEngine.DECK_PV_FX) && !isConsoleFxRow && !isAllFxTab
             val isDeckRow = isDeckA || isDeckB || isDeckBG || isDeckPV
-            val isFxChainRow = !isDeckRow && (isConsoleFxRow || isAllFxTab || descriptor.bankId == MacroEngine.MASTER_FX || descriptor.bankId in listOf(MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2))
+            val isFxChainRow = !isDeckRow && (isConsoleFxRow || isAllFxTab || descriptor.bankId == MacroEngine.MASTER_FX)
 
             val isTransRow = descriptor.bankId == MacroEngine.TRANS
             val isMasterRow = descriptor.bankId == MacroEngine.MASTER
@@ -834,7 +829,7 @@ class PerformanceMatrixPanel {
 
                     val isFxBankId = row.bankId in listOf(
                         MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX,
-                        MacroEngine.MASTER_FX, MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2
+                        MacroEngine.MASTER_FX
                     )
                     // Clickable link icon for FX slots (any FX row or Deck row in FX mode, cols 1..3)
                     if (descriptor.hasExtraHeader && (isFxChainRow || isFxBankId) && col in 1..3) {
@@ -1026,8 +1021,6 @@ class PerformanceMatrixPanel {
                 parametersState.activeTopTab = "Deck PV"
                 parametersState.setDeckSubTab("Deck PV", "FX")
             }
-            MacroEngine.FX_BANK_1 -> parametersState.activeTopTab = "FX1"
-            MacroEngine.FX_BANK_2 -> parametersState.activeTopTab = "FX2"
             MacroEngine.MASTER_FX -> parametersState.activeTopTab = "MFX"
             MacroEngine.MASTER -> {
                 parametersState.activeTopTab = "Mixer"
@@ -1092,7 +1085,7 @@ class PerformanceMatrixPanel {
 
     /**
      * Scrollable region beneath the Tier-1 grid showing every module currently above COLLAPSED
-     * (in Solo mode this is at most one). Never touches [focusedFxBankId] or re-runs
+     * (in Solo mode this is at most one). Never touches [focusedFxTarget] or re-runs
      * [llm.slop.liquidlsd.macro.FxMacroSync] -- expand/collapse is strictly a display detail.
      */
     private fun drawRackBay(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState, bayH: Float) {
@@ -1226,7 +1219,6 @@ class PerformanceMatrixPanel {
         val fxBank = when {
             moduleId == "FX" && focusedFxTarget == "MST" -> mixer.masterFxBank
             moduleId == MacroEngine.MASTER_FX -> mixer.masterFxBank
-            moduleId in listOf(MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2) -> resolveFxBank(mixer, moduleId)
             else -> null
         }
         if (deckLabel != null && (moduleId.endsWith("_fx") || moduleId == "FX")) {
@@ -1333,20 +1325,6 @@ class PerformanceMatrixPanel {
     }
 
     // -- LIVE_CONSOLE FX row header: bank switcher, chain switcher, bypass, resync -------------
-
-    private fun resolveFxBank(mixer: Mixer, bankId: String): llm.slop.liquidlsd.rendering.FxBank = when (bankId) {
-        MacroEngine.FX_BANK_1 -> mixer.fxBank1
-        MacroEngine.FX_BANK_2 -> mixer.fxBank2
-        MacroEngine.MASTER_FX -> mixer.masterFxBank
-        else -> mixer.fxBank1
-    }
-
-    private fun fxBankDisplayName(bankId: String): String = when (bankId) {
-        MacroEngine.FX_BANK_1 -> "FX1"
-        MacroEngine.FX_BANK_2 -> "FX2"
-        MacroEngine.MASTER_FX -> "MFX"
-        else -> bankId
-    }
 
     private fun drawAllFxRowLeftControls(
         session: llm.slop.liquidlsd.SessionContext,
@@ -2141,7 +2119,7 @@ class PerformanceMatrixPanel {
     }
 
     /**
-     * FX routing buttons [FX1][FX2] placed to the right of the knobs for Deck rows.
+     * Deck FX chain bypass + Resync buttons placed to the right of the knobs for Deck rows.
      */
     private fun drawDeckRowRightControls(
         session: llm.slop.liquidlsd.SessionContext,

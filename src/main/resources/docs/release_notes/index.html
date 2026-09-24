@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#removed-the-shared-fx1fx2-banks-mixerkt-sessionserializerkt-macroenginekt-midimappingmanagerkt-performancematrixpanelkt-parameterstabskt-parameterspanelkt-parametersstatekt-fxbrowserpanelkt-starterfxandlegacybankstestkt-fxmacrosynctestkt-fxbanktestkt-macroenginetestkt-rackdisclosuretestkt-performance_controlsmd-presets_and_librarymd-macros_and_rackmd-docsdeveloperpreset_managementmd-architecturemd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed the Shared FX1/FX2 Banks (Mixer.kt, SessionSerializer.kt, MacroEngine.kt, MidiMappingManager.kt, PerformanceMatrixPanel.kt, ParametersTabs.kt, ParametersPanel.kt, ParametersState.kt, FXBrowserPanel.kt, StarterFxAndLegacyBanksTest.kt, FxMacroSyncTest.kt, FxBankTest.kt, MacroEngineTest.kt, RackDisclosureTest.kt, performance_controls.md, presets_and_library.md, macros_and_rack.md, docs/developer/preset_management.md, ARCHITECTURE.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-mode-source-picker-empty-deck-launchpad-shortcuts-macro-navigation-decksourcepickerkt-performancematrixpanelkt-parameterskeyboardkt-macrobindinginspectorkt-uimanagerkt-parameterskeyboardtestkt-macrobindingnavtestkt-docsuser_guidemacros_and_rackmd-docsuser_guidemodulationmd-docsuser_guideyour_workspacemd-docsdeveloperuimd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3920,6 +3931,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#removed-the-shared-fx1fx2-banks-mixerkt-sessionserializerkt-macroenginekt-midimappingmanagerkt-performancematrixpanelkt-parameterstabskt-parameterspanelkt-parametersstatekt-fxbrowserpanelkt-starterfxandlegacybankstestkt-fxmacrosynctestkt-fxbanktestkt-macroenginetestkt-rackdisclosuretestkt-performance_controlsmd-presets_and_librarymd-macros_and_rackmd-docsdeveloperpreset_managementmd-architecturemd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed the Shared FX1/FX2 Banks (Mixer.kt, SessionSerializer.kt, MacroEngine.kt, MidiMappingManager.kt, PerformanceMatrixPanel.kt, ParametersTabs.kt, ParametersPanel.kt, ParametersState.kt, FXBrowserPanel.kt, StarterFxAndLegacyBanksTest.kt, FxMacroSyncTest.kt, FxBankTest.kt, MacroEngineTest.kt, RackDisclosureTest.kt, performance_controls.md, presets_and_library.md, macros_and_rack.md, docs/developer/preset_management.md, ARCHITECTURE.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-mode-source-picker-empty-deck-launchpad-shortcuts-macro-navigation-decksourcepickerkt-performancematrixpanelkt-parameterskeyboardkt-macrobindinginspectorkt-uimanagerkt-parameterskeyboardtestkt-macrobindingnavtestkt-docsuser_guidemacros_and_rackmd-docsuser_guidemodulationmd-docsuser_guideyour_workspacemd-docsdeveloperuimd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6607,6 +6629,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="removed-the-shared-fx1fx2-banks-mixerkt-sessionserializerkt-macroenginekt-midimappingmanagerkt-performancematrixpanelkt-parameterstabskt-parameterspanelkt-parametersstatekt-fxbrowserpanelkt-starterfxandlegacybankstestkt-fxmacrosynctestkt-fxbanktestkt-macroenginetestkt-rackdisclosuretestkt-performance_controlsmd-presets_and_librarymd-macros_and_rackmd-docsdeveloperpreset_managementmd-architecturemd-decisionsmd">Removed the Shared FX1/FX2 Banks (<code>Mixer.kt</code>, <code>SessionSerializer.kt</code>, <code>MacroEngine.kt</code>, <code>MidiMappingManager.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>ParametersTabs.kt</code>, <code>ParametersPanel.kt</code>, <code>ParametersState.kt</code>, <code>FXBrowserPanel.kt</code>, <code>StarterFxAndLegacyBanksTest.kt</code>, <code>FxMacroSyncTest.kt</code>, <code>FxBankTest.kt</code>, <code>MacroEngineTest.kt</code>, <code>RackDisclosureTest.kt</code>, <code>performance_controls.md</code>, <code>presets_and_library.md</code>, <code>macros_and_rack.md</code>, <code>docs/developer/preset_management.md</code>, <code>ARCHITECTURE.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>FX1 / FX2 are gone</strong>: Each deck has its own FX chain and Master FX has its own bank, so the two leftover shared banks (and Classic mode's <code>FX1</code> / <code>FX2</code> side tabs) have been removed. They no longer update every frame.</li>
+<li><strong>Starter deck FX unchanged</strong>: A fresh install still gives each deck the same starter FX chain as before, now read straight from the bundled bank files.</li>
+<li><strong>Old sessions still load</strong>: Sessions saved before per-deck FX chains still migrate their FX1/FX2 chains into the decks. New sessions no longer save FX1/FX2. Macro knobs, MIDI and bindings that pointed at FX1/FX2 parameters are ignored.</li>
+<li><strong>FX bank files load into Master FX</strong>: In the FX browser, right-clicking a saved <code>.lsdfxbank</code> now offers <strong>Load to Master FX</strong> only.</li>
+</ul>
 <h3 id="performance-mode-source-picker-empty-deck-launchpad-shortcuts-macro-navigation-decksourcepickerkt-performancematrixpanelkt-parameterskeyboardkt-macrobindinginspectorkt-uimanagerkt-parameterskeyboardtestkt-macrobindingnavtestkt-docsuser_guidemacros_and_rackmd-docsuser_guidemodulationmd-docsuser_guideyour_workspacemd-docsdeveloperuimd-decisionsmd">Performance Mode: Source Picker, Empty-Deck Launchpad, Shortcuts &amp; Macro Navigation (<code>DeckSourcePicker.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>ParametersKeyboard.kt</code>, <code>MacroBindingInspector.kt</code>, <code>UIManager.kt</code>, <code>ParametersKeyboardTest.kt</code>, <code>MacroBindingNavTest.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>, <code>docs/user_guide/modulation.md</code>, <code>docs/user_guide/your_workspace.md</code>, <code>docs/developer/ui.md</code>, <code>DECISIONS.md</code>)</h3>
 <ul>
 <li><strong>Change a deck's source from Performance Mode</strong>: Click the generator badge at the left of any deck row to open the source picker (including external video). Empty decks show <code>+ Source</code>.</li>

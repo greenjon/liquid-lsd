@@ -83,12 +83,12 @@ class ParametersState {
      * Maps a Rack Unit's moduleId to the [MacroEngine] bank id(s) it owns. Every plain fixed
      * module (Deck A/B/BG/PV, Transitions, Master, FX Sends, Master FX) uses its own bank id as
      * its moduleId 1:1, so this table only needs an entry for "FX": LIVE_CONSOLE's focus-swappable
-     * FX row keeps one stable moduleId ("FX") decoupled from whichever bank (FX1/FX2/MFX) is
+     * FX row keeps one stable moduleId ("FX") decoupled from whichever target (A/B/BG/PV/MST) is
      * currently focused, per the focus-swap decoupling rule -- accordion state must not reset or
      * duplicate itself when the user refocuses the row to a different bank.
      */
     private val rackModuleBankIds: Map<String, List<String>> = mapOf(
-        "FX" to listOf(MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2, MacroEngine.MASTER_FX)
+        "FX" to listOf(MacroEngine.MASTER_FX)
     )
 
     /**

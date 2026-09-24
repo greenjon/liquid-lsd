@@ -111,15 +111,16 @@ If no preset is loaded yet (the deck is in an unsaved state), the label shows `U
 
 ## FX Bank, Chain & Slot Management
 
-In the **Parameters** panel under the **`FX1`**, **`FX2`**, and **`MFX`** tabs, each bank provides
-3 serial **chains** (`[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]` subtabs), each hosting 3 ISF filter
-slots (9 effects per bank). Each chain also has a **Chain Super Knob** and each slot its own
+Each deck has its own FX chain of 3 ISF filter slots (the deck's **`FX`** sub-tab). **Master FX**
+(the Mixer's **`FX`** sub-tab, shown as `MFX` in Classic mode) is a bank of 3 serial **chains**
+(`[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]` subtabs) of 3 slots each, applied to the final output.
+The shared FX1/FX2 banks from earlier versions have been removed. Each chain also has a **Chain Super Knob** and each slot its own
 **Metaknob** — see [Macro Controls & Performance Mode](macros_and_rack.md) for the FX Rack view
 that exposes these.
 
 - **Bank Header Kebab (`⋮`)**:
-  - **Save Bank Preset As...**: Saves all 3 chains into an `.lsdfxbank` file in `library/fx_banks/`.
-  - **Copy Bank / Paste Bank**: Copies or pastes the whole bank (all 3 chains) across FX1/FX2/MFX.
+  - **Save Bank Preset As...**: Saves all 3 Master FX chains into an `.lsdfxbank` file in `library/fx_banks/`.
+  - **Copy Bank / Paste Bank**: Copies or pastes all 3 Master FX chains.
   - **Clear All Chains**: Disposes and empties every chain in the bank.
 - **Chain Header Kebab (`⋮`)**:
   - **Save Chain As...**: Saves that chain's 3 slots (and its Super Knob state) into an
@@ -135,7 +136,7 @@ that exposes these.
   or a chain header, or `.lsdfx` onto a slot, to instantly load/swap effects.
 - **Library Browser**: The `[ FX ]` Library view's Column 1 browser also lists saved banks
   (filterable via the kebab menu's **Saved FX Banks** checkbox) alongside stock filters, saved
-  singles, and saved chains — right-click one to **Load to FX1 / FX2 / MFX**.
+  singles, and saved chains — right-click one to **Load to Master FX**.
 - **Performance Matrix FX Parity**:
   - Toggling any Deck row (A, B, BG, PV) to `[FX]` mode displays the `[ Preset v ]` chain preset selector to load `.lsdfxchain` presets directly, and shows SuperKnob link/unlink icons on slot knobs 1–3.
   - The **ALL FX** tab includes rows for `Deck A FX`, `Deck B FX`, `Deck BG FX`, `Deck PV FX`, and `Master FX`.

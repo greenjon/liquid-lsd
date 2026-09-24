@@ -49,12 +49,6 @@ class Mixer(
     var masterFxPongFBO = FBO(width, height)
     var masterFxBankOutFBO = FBO(width, height)
 
-    // The two shared FX banks decks route into (see FxBank). Default assignment mirrors the
-    // previous FXQueueManager/FXBgQueueManager split (A/B share one queue, BG has its own) --
-    // there's no user-facing bank-assignment toggle yet, so this is fixed for now.
-    val fxBank1 = FxBank("FX1")
-    val fxBank2 = FxBank("FX2")
-
     // Active ISF transition filter for crossfading
     var transitionFilter: ISFFilter? = null
     private var lastMode: Int = 4
@@ -142,10 +136,8 @@ class Mixer(
     private val bankJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
 
     /**
-     * Loads the default starter FX banks for live performance:
-     * - FX Bank 1: Psychedelic Warp and Flow
-     * - FX Bank 2: Liquid Chrome and Prisms
-     * - Master FX Bank: Club Master Finishers
+     * Loads the starter FX: Master FX gets the "Club Master Finishers" bank, and each deck gets one
+     * chain taken from the "Psychedelic Warp and Flow" / "Liquid Chrome and Prisms" bank files.
      */
     fun loadDefaultFxBanks() {
         fun loadBank(fileName: String): FXBankDto? {
@@ -169,15 +161,15 @@ class Mixer(
             return null
         }
 
-        loadBank("psychedelic_warp_and_flow.lsdfxbank")?.let { fxBank1.applyFxBank(it) }
-        loadBank("liquid_chrome_and_prisms.lsdfxbank")?.let { fxBank2.applyFxBank(it) }
         loadBank("club_master_finishers.lsdfxbank")?.let { masterFxBank.applyFxBank(it) }
 
-        // Initialize distinct starter FX chains for each deck
-        fxBank1.chains.getOrNull(0)?.toFxChainDto("Warp & Flow")?.let { deckA.fxChain.applyFxChain(it) }
-        fxBank2.chains.getOrNull(0)?.toFxChainDto("Liquid Chrome")?.let { deckB.fxChain.applyFxChain(it) }
-        fxBank1.chains.getOrNull(1)?.toFxChainDto("Prisms")?.let { deckBG.fxChain.applyFxChain(it) }
-        fxBank2.chains.getOrNull(1)?.toFxChainDto("Color Shifter")?.let { deckPV.fxChain.applyFxChain(it) }
+        // Distinct starter FX chain for each deck
+        val warpAndFlow = loadBank("psychedelic_warp_and_flow.lsdfxbank")
+        val liquidChrome = loadBank("liquid_chrome_and_prisms.lsdfxbank")
+        warpAndFlow?.chains?.getOrNull(0)?.copy(name = "Warp & Flow")?.let { deckA.fxChain.applyFxChain(it) }
+        liquidChrome?.chains?.getOrNull(0)?.copy(name = "Liquid Chrome")?.let { deckB.fxChain.applyFxChain(it) }
+        warpAndFlow?.chains?.getOrNull(1)?.copy(name = "Prisms")?.let { deckBG.fxChain.applyFxChain(it) }
+        liquidChrome?.chains?.getOrNull(1)?.copy(name = "Color Shifter")?.let { deckPV.fxChain.applyFxChain(it) }
 
         llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_A_FX, "Deck A", deckA.fxChain)
         llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_B_FX, "Deck B", deckB.fxChain)
@@ -356,9 +348,6 @@ class Mixer(
         // macro bank), not $prefix -- unlike everything else here, which is genuinely Mixer-owned.
         list.addAll(masterFxBank.getParameterPaths("MFX"))
 
-        list.addAll(fxBank1.getParameterPaths(fxBank1.label))
-        list.addAll(fxBank2.getParameterPaths(fxBank2.label))
-
         list.addAll(deckA.getParameterPaths("Deck A"))
         list.addAll(deckB.getParameterPaths("Deck B"))
         list.addAll(deckBG.getParameterPaths("Deck BG"))
@@ -451,8 +440,6 @@ class Mixer(
 
         transitionFilter?.update()
         masterFxBank.update()
-        fxBank1.update()
-        fxBank2.update()
 
         // Continuous random morphing evaluation — zero-allocation check
         val isModA = randDeckA.hasActiveModulator() || randDeckA.value > 0.0001f
@@ -596,8 +583,6 @@ class Mixer(
         masterFxPongFBO.dispose()
         masterFxBankOutFBO.dispose()
         masterFxBank.dispose()
-        fxBank1.dispose()
-        fxBank2.dispose()
         transitionFilter?.dispose()
     }
 }

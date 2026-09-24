@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Removed the Shared FX1/FX2 Banks (`Mixer.kt`, `SessionSerializer.kt`, `MacroEngine.kt`, `MidiMappingManager.kt`, `PerformanceMatrixPanel.kt`, `ParametersTabs.kt`, `ParametersPanel.kt`, `ParametersState.kt`, `FXBrowserPanel.kt`, `StarterFxAndLegacyBanksTest.kt`, `FxMacroSyncTest.kt`, `FxBankTest.kt`, `MacroEngineTest.kt`, `RackDisclosureTest.kt`, `performance_controls.md`, `presets_and_library.md`, `macros_and_rack.md`, `docs/developer/preset_management.md`, `ARCHITECTURE.md`, `DECISIONS.md`)
+- **FX1 / FX2 are gone**: Each deck has its own FX chain and Master FX has its own bank, so the two leftover shared banks (and Classic mode's `FX1` / `FX2` side tabs) have been removed. They no longer update every frame.
+- **Starter deck FX unchanged**: A fresh install still gives each deck the same starter FX chain as before, now read straight from the bundled bank files.
+- **Old sessions still load**: Sessions saved before per-deck FX chains still migrate their FX1/FX2 chains into the decks. New sessions no longer save FX1/FX2. Macro knobs, MIDI and bindings that pointed at FX1/FX2 parameters are ignored.
+- **FX bank files load into Master FX**: In the FX browser, right-clicking a saved `.lsdfxbank` now offers **Load to Master FX** only.
+
 ### Performance Mode: Source Picker, Empty-Deck Launchpad, Shortcuts & Macro Navigation (`DeckSourcePicker.kt`, `PerformanceMatrixPanel.kt`, `ParametersKeyboard.kt`, `MacroBindingInspector.kt`, `UIManager.kt`, `ParametersKeyboardTest.kt`, `MacroBindingNavTest.kt`, `docs/user_guide/macros_and_rack.md`, `docs/user_guide/modulation.md`, `docs/user_guide/your_workspace.md`, `docs/developer/ui.md`, `DECISIONS.md`)
 - **Change a deck's source from Performance Mode**: Click the generator badge at the left of any deck row to open the source picker (including external video). Empty decks show `+ Source`.
 - **Empty-deck launchpad in Deep Edit**: Opening Deep Edit on an empty deck now shows Add Source / Load Preset / Open Library instead of a text message. Add Source uses the full source picker in both modes.

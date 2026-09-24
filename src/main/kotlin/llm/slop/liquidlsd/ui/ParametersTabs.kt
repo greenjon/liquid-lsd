@@ -31,8 +31,6 @@ object ParametersTabs {
             "Deck B", "B" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorB()
             "Deck BG", "BG" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorBG()
             "Deck PV", "PV" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorPV()
-            "FX1" -> floatArrayOf(0.55f, 0.35f, 0.85f)
-            "FX2" -> floatArrayOf(0.85f, 0.35f, 0.65f)
             "MFX" -> floatArrayOf(0.9f, 0.25f, 0.35f)
             else -> floatArrayOf(0.4f, 0.4f, 0.4f) // Mixer / MIX
         }
@@ -67,8 +65,6 @@ object ParametersTabs {
             Triple("B",   "Deck B", if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B visual source, geometry, color, and feedback parameters."),
             Triple("BG",  "Deck BG", if (deckBGEmpty) "Deck BG [EMPTY] — Click to assign a source or preset." else "Deck BG (Background) visual source, geometry, color, and feedback parameters."),
             Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV (Preview) visual source, geometry, color, and feedback parameters."),
-            Triple("FX1", "FX1", "FX Bank 1: 3 shared filter slots + wet/dry, routable from any deck."),
-            Triple("FX2", "FX2", "FX Bank 2: 3 shared filter slots + wet/dry, routable from any deck."),
             Triple("MFX", "MFX", "Master FX: 3 serial ISF effect slots + wet/dry on the final composited output.")
         )
         val buttonWidth = calculateLeftTabsWidth(session)
@@ -657,9 +653,8 @@ object ParametersTabs {
     }
 
     /**
-     * Renders an [FxBank]'s own tab (FX1/FX2): the 3 shared filter slots + master wet/dry that
-     * any deck routed to this bank shares (see FxBank). Unlike the old per-deck FX section this
-     * replaces, there's no deck indirection here -- the bank is addressed directly.
+     * Renders an [FxBank] (only Master FX now): bank wet/dry, the 3 chain subtabs, and the active
+     * chain's slots. Decks own their FX chains directly (see [drawFxChainContent]).
      */
     fun drawFxBankGroupContent(
         session: llm.slop.liquidlsd.SessionContext,

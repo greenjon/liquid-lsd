@@ -165,17 +165,17 @@ To ensure users never start with a blank screen on clean git clones or new relea
 
 The 19" Modular Video Rack chassis UI (`rack/`, `rack/ui/` — faceplates, rear patch-cable view, per-unit dynamic macro banks) documented in earlier revisions of this file has been **removed entirely** and replaced by **Performance Mode** (`PerformanceMatrixPanel.kt`, a 4×4 knob matrix toggled with `F4`; see `docs/user_guide/macros_and_rack.md`). Historical rack design notes are kept for reference in `docs/developer/modular_video_rack_proposal.md`, marked retired/superseded.
 
-### 14 Always-Resident Canonical Banks
-`MacroEngine` registers 14 canonical, always-resident banks by id (`MacroEngine.CANONICAL_BANK_IDS`): `DECK_A`, `DECK_B`, `DECK_BG`, `DECK_PV`, `DECK_A_FX`, `DECK_B_FX`, `DECK_BG_FX`, `DECK_PV_FX`, `TRANS`, `MASTER`, `FX_BANK_1`, `FX_BANK_2`, `FX_SENDS`, and `MASTER_FX`. `MacroEngine.canonicalIdForDeckLabel(deckLabel)` maps a deck label ("Deck A", "Deck B", "Deck BG", "Deck PV", "Master") to its generator bank id, falling through to `TRANS` for anything else, while `targetBankIdFor()` maps per-deck insert FX banks. Both the Classic `[ MACROS ]` Column 3 view and the Performance Matrix's 4 tabs read and write these same underlying banks — Performance Mode is a live control *view* onto them (dragging a knob live-updates `MacroControl.value`; editing bindings jumps to or happens in Classic mode).
+### 12 Always-Resident Canonical Banks
+`MacroEngine` registers 12 canonical, always-resident banks by id (`MacroEngine.CANONICAL_BANK_IDS`): `DECK_A`, `DECK_B`, `DECK_BG`, `DECK_PV`, `DECK_A_FX`, `DECK_B_FX`, `DECK_BG_FX`, `DECK_PV_FX`, `TRANS`, `MASTER`, `FX_SENDS`, and `MASTER_FX`. `MacroEngine.canonicalIdForDeckLabel(deckLabel)` maps a deck label ("Deck A", "Deck B", "Deck BG", "Deck PV", "Master") to its generator bank id, falling through to `TRANS` for anything else, while `targetBankIdFor()` maps per-deck insert FX banks. Both the Classic `[ MACROS ]` Column 3 view and the Performance Matrix's 4 tabs read and write these same underlying banks — Performance Mode is a live control *view* onto them (dragging a knob live-updates `MacroControl.value`; editing bindings jumps to or happens in Classic mode).
 
 ### `SessionSerializer` Is the Sole Bank Registrar
-[`SessionSerializer.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/SessionSerializer.kt) is the only site that calls `MacroEngine.registerBank()`: both `loadSession()` (restoring `session.deckMacroBanks[canonicalId]` per canonical id) and `startEmpty()` register all 14 canonical banks on startup. There is no per-unit/dynamic bank registration anymore.
+[`SessionSerializer.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/SessionSerializer.kt) is the only site that calls `MacroEngine.registerBank()`: both `loadSession()` (restoring `session.deckMacroBanks[canonicalId]` per canonical id) and `startEmpty()` register all 12 canonical banks on startup. There is no per-unit/dynamic bank registration anymore.
 
 ### Per-Deck Persistence (`MacroBankSerializer`, `PresetRepository`)
 Each deck's own canonical bank snapshot travels with its preset file, not just the session:
 - **Save**: `PresetRepository.saveDeckPresetAsync()` resolves the deck's canonical bank via `MacroEngine.canonicalIdForDeckLabel(deckLabel)` + `MacroEngine.getBank(canonicalBankId)`, deep-copies it immutably with `MacroBankSerializer.snapshotForPreset()`, and bundles it into `DeckPresetDto.macroBank`.
 - **Load**: `MacroBankSerializer.install(deckBank, targetBank)` performs a full **swap**, not a merge — loading a preset is meant to load exactly the knob layout it was saved with. A null/empty `deckBank` (older presets, or an empty deck slot) clears the target bank to blank rather than leaving stale bindings behind.
-- **Session-level**: `SessionSerializer` separately bundles all 14 canonical banks into `SessionStateDto.deckMacroBanks` so the full macro state round-trips even without touching individual preset files.
+- **Session-level**: `SessionSerializer` separately bundles all 12 canonical banks into `SessionStateDto.deckMacroBanks` so the full macro state round-trips even without touching individual preset files.
 
 ---
 

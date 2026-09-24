@@ -132,13 +132,13 @@ Liquid LSD includes 9 pre-calibrated 3-slot FX chains in `library/fx_chains/` de
 
 #### Bundled Multi-Chain FX Banks (`.lsdfxbank`)
 
-Liquid LSD bundles 5 fully configured 3-chain rack presets in `library/fx_banks/` (and version-controlled in `defaults/fx_banks/`) designed to instantly load across **FX1**, **FX2**, or **MFX (Master FX)**:
+Liquid LSD bundles 5 fully configured 3-chain rack presets in `library/fx_banks/` (and version-controlled in `defaults/fx_banks/`) that load into **Master FX** (right-click in the FX browser → **Load to Master FX**, or drop onto the Master FX bank header). Two of them also supply the decks' starter FX chains on a fresh install (Deck A and BG from *Psychedelic Warp & Flow*, Deck B and PV from *Liquid Chrome & Prisms*):
 
-1. **Club Master Finishers** (`club_master_finishers.lsdfxbank` — Optimized for `MFX`):
+1. **Club Master Finishers** (`club_master_finishers.lsdfxbank` — the default Master FX):
    - *Chain 1 (Subtle Optical Warmth)*: `color_levels` → `retro_crt` → `bloom` (Gentle tape/phosphor warming with contrast roll-off).
    - *Chain 2 (Stage Laser Glare)*: `anamorphic_streak` → `bloom` → `color_levels` (Concert lighting highlight streaks).
    - *Chain 3 (Drop Weapon Strobe)*: `directional_blur` → `video_strobe` → `rgb_split` (High-impact beat flash drop impact).
-2. **Psychedelic Warp & Flow** (`psychedelic_warp_and_flow.lsdfxbank` — Optimized for `FX1`):
+2. **Psychedelic Warp & Flow** (`psychedelic_warp_and_flow.lsdfxbank`):
    - *Chain 1 (Liquid Mercury)*: `wave_displace` → `fluid_smear` → `luma_displace` (Viscous organic fluid deformation).
    - *Chain 2 (Hyperspace Trip)*: `kaleidoscope` → `radial_blur` → `color_levels` (Symmetric fractal zoom tunnel).
    - *Chain 3 (2D to 3D Elevation)*: `3d_elevation` → `feedback` → `color_levels` (Iconic topological mesh feedback).
@@ -146,7 +146,7 @@ Liquid LSD bundles 5 fully configured 3-chain rack presets in `library/fx_banks/
    - *Chain 1 (Grindhouse VHS Bootleg)*: `vhs_glitch` → `retro_crt` → `color_levels` (Helical scan tracking error & head switching).
    - *Chain 2 (Pop-Art Comic Print)*: `neon_edge` → `halftone` → `gradient_map` (CMYK lithographic dot rosettes & paper tint).
    - *Chain 3 (Cyberpunk 1984)*: `pixelate` → `retro_crt` → `gradient_map` (Honeycomb crystal mosaic & green terminal phosphor).
-4. **Glitch, Strobe & Tactical Recon** (`glitch_strobe_and_tactical_recon.lsdfxbank` — Optimized for `FX2`):
+4. **Glitch, Strobe & Tactical Recon** (`glitch_strobe_and_tactical_recon.lsdfxbank`):
    - *Chain 1 (The Drop Weapon)*: `directional_blur` → `video_strobe` → `rgb_split` (Transient beat flash gate).
    - *Chain 2 (FLIR Predator Vision)*: `thermal_scanner` → `directional_blur` → `pixelate` (Ironbow heat bloom & tactical sensor grain).
    - *Chain 3 (Digital Bitcrush Mosaic)*: `pixelate` → `rgb_split` → `video_strobe` (Lattice quantization & spectral glitch).

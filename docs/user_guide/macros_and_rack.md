@@ -316,7 +316,7 @@ read from and write to the same underlying `MacroEngine` banks.
 
 ## Macro Banks
 
-There are 14 always-resident canonical macro banks (4 knobs each, conforming to the 4-column performance grid):
+There are 12 always-resident canonical macro banks (4 knobs each, conforming to the 4-column performance grid):
 
 | Scope | Bank | Knobs | Canonical ID | Smart Defaults |
 |:---|:---|:---|:---|:---|
@@ -330,12 +330,10 @@ There are 14 always-resident canonical macro banks (4 knobs each, conforming to 
 | | Deck PV FX | 4 | `deckPvFx` | Super Knob + 3 Metaknobs |
 | **Mixer & Transitions**| Transitions | 4 | `trans` | Crossfade, Type, Speed, Next |
 | | Master | 4 | `master` | Alpha A, Alpha B, Master Level, Crossfader |
-| **Shared & Master FX** | FX Bank 1 | 4 | `fxBank1` | Super Knob + 3 Metaknobs |
-| | FX Bank 2 | 4 | `fxBank2` | Super Knob + 3 Metaknobs |
-| | FX Wet/Dry | 4 | `fxSends` | Deck A, B, BG, PV Insert FX Wet/Dry Levels |
+| **Master FX** | FX Wet/Dry | 4 | `fxSends` | Deck A, B, BG, PV Insert FX Wet/Dry Levels |
 | | Master FX | 4 | `masterFx` | Super Knob + 3 Metaknobs |
 
-Deck generator banks start blank by default for custom binding in the Classic MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. All 14 canonical banks are preserved in `last_session.json` and session files.
+Deck generator banks start blank by default for custom binding in the Classic MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. All 12 canonical banks are preserved in `last_session.json` and session files.
 
 Banks are saved in `last_session.json` and bundled into preset files automatically.
 

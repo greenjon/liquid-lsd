@@ -20,7 +20,6 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
           [Deck BG FxChain]   [Deck A FxChain]   [Deck B FxChain]
           (3 Filter Slots)   (3 Filter Slots)   (3 Filter Slots)
                  │                  │                  │
-          [Legacy FX Routing: None/FX1/FX2 Send Banks] │
                  │                  └────────┬─────────┘
                  │                           │
                  │                ISF Transition Filter
@@ -122,7 +121,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── macro/                      — Macro Controls & Parameter Linking engine; see docs/user_guide/macros_and_rack.md
 │   ├── MacroModels.kt          — Data model: `MacroBinding`, `MacroControl` (rotary knob value), `MacroBank` (up to 4 knobs)
 │   ├── MacroCurve.kt           — Pure curve-shaping math (LINEAR/EXPONENTIAL/LOGARITHMIC/S_CURVE/STEP), knob-travel windowing, and min/max/invert range mapping
-│   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; 14 canonical bank ids (`DECK_A`..`DECK_PV`, `DECK_A_FX`..`DECK_PV_FX`, `TRANS`, `MASTER`, `FX_BANK_1`, `FX_BANK_2`, `FX_SENDS`, `MASTER_FX`), read/written by both Classic Column 3 and the Performance Mode 4×4 Matrix
+│   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; 12 canonical bank ids (`DECK_A`..`DECK_PV`, `DECK_A_FX`..`DECK_PV_FX`, `TRANS`, `MASTER`, `FX_SENDS`, `MASTER_FX`), read/written by both Classic Column 3 and the Performance Mode 4×4 Matrix
 │   ├── FxMacroSync.kt          — Bidirectional synchronization between FX chains/banks and canonical macro knobs (Super Knob + Metaknobs)
 │   ├── MacroLearnState.kt      — Interactive click-to-bind Learn Mode session state machine and UI status banner
 │   ├── MacroBankSerializer.kt  — Deck-scoped bank filtering/remapping for `.lsd`/`.lsdplay` DTOs, plus standalone `.knobpreset.json` export/import
@@ -143,7 +142,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── TransitionQueueManager.kt — `QueueEngine` + transition apply/auto-fade-hook/session-restore, for the Transition Queue (`.lsdtrans`/`.lsdtransplay`); keeps unresolved playlist items as literal stock-shader-ID tokens instead of dropping them
 │   ├── PlaylistParser.kt       — Parses playlist files
 │   ├── SessionState.kt         — Session state management
-│   ├── SessionSerializer.kt    — Persists/restores the active session, incl. the 14 canonical macro banks
+│   ├── SessionSerializer.kt    — Persists/restores the active session, incl. the 12 canonical macro banks
 │   └── PresetIOStatus.kt       — IO status for UI feedback
 ├── cli/                        — Startup CLI argument parsing & validation
 │   └── CliArgs.kt              — Command line options (--screenshot-ui, --window, --no-audio, --ui-lab)
@@ -162,7 +161,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── isf/                    — Universal shader preprocessor, ISF/Shadertoy/GLSLSandbox format parser, models, ISFFilter (incl. per-effect Metaknob), ISFAutoBindEngine & FxMetaBinding (3-tier Metaknob auto-bind: user override cache/curated/heuristic), multi-pass ISFVisualSource, ISFTransitionRegistry, ISFDirectoryManager, ISFScanner, ISFLibraryRegistry & ISFFileWatcher
 │   ├── AudioTexture.kt         — Universal 512x2 floating-point audio FFT spectrum and live waveform OpenGL texture stream
 │   ├── FxChain.kt              — Individual FX chain hosting 3 ISF filter slots with chain-level wet/dry and bypass, plus a Super Knob that drives linked slots' Metaknobs via soft-takeover
-│   ├── FxBank.kt               — FX Bank (FX1, FX2, MFX) managing 3 serial FxChain instances with master wet/dry and bypass
+│   ├── FxBank.kt               — FX Bank (Master FX only; decks own a single FxChain) managing 3 serial FxChain instances with master wet/dry and bypass
 │   ├── Deck.kt                 — VisualSource + cleanFBO + dedicated 3-slot FxChain with FBO ping-pong architecture (scratch fxPingFBO/fxPongFBO + fxBankOutFBO) + 3D View params
 │   ├── Mixer.kt                — Blends Deck A+B via 100% ISF transition over BG -> masterFBO with masterFxBank (MFX) & 4-buffer ping-pong architecture
 │   ├── Renderer.kt             — Per-frame: universal uniform bridge -> polymorphic source renderTopology() -> 2D view transform -> serial 3-chain FX bank pass -> ISF transition pass (A/B) -> Deck BG composite -> master FX pass -> blit
@@ -206,7 +205,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MixerPanel.kt           — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader
 │   ├── PlaylistManager.kt      — Manages saved setlists
 │   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
-│   ├── MacroPanel.kt           — Column 3 MACROS editing surface: 4 knobs, binding inspector, Learn Mode; renders the dedicated FX Rack view (below) instead of the generic grid for the FX1/FX2/MFX tabs
+│   ├── MacroPanel.kt           — Column 3 MACROS editing surface: 4 knobs, binding inspector, Learn Mode; renders the dedicated FX Rack view (below) instead of the generic grid for the FX tabs
 │   ├── MacroBindingInspector.kt — Drawer for inspecting and editing target parameter bindings, response curves, travel windows, and invert toggles
 │   ├── MacroKnobWidget.kt      — Rotary macro knob widget: drag/wheel interaction, accent-colored arc fill, optional deck tint
 │   ├── FXChainMacroStrip.kt    — Traktor/Mixxx-style FX Rack strip: Chain Super Knob + 3 slot Metaknobs (soft-takeover link toggles), Single FX Focus Mode, right-click Metaknob rebind menu. Drawn in both ParametersTabs.kt (per-chain, Parameters panel) and MacroPanel.kt (FX1/FX2/MFX tabs, Column 3)

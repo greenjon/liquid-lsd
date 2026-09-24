@@ -35,8 +35,6 @@ object MacroEngine {
     const val DECK_PV_FX = "deckPV_fx"
     const val TRANS = "masterTransition"
     const val MASTER = "master"
-    const val FX_BANK_1 = "fxBank1"
-    const val FX_BANK_2 = "fxBank2"
     // Blank 4-knob banks for the FX Performance page's remaining two rows: FX_SENDS holds one
     // knob per deck's fxSendLevel (A/B/BG/PV), MASTER_FX holds Mixer.masterFxSlots' 3 chain
     // knobs + wet/dry. Neither has a natural path prefix to auto-route quick-bind into (a send
@@ -51,7 +49,7 @@ object MacroEngine {
     val CANONICAL_BANK_IDS = listOf(
         DECK_A, DECK_B, DECK_BG, DECK_PV,
         DECK_A_FX, DECK_B_FX, DECK_BG_FX, DECK_PV_FX,
-        TRANS, MASTER, FX_BANK_1, FX_BANK_2, FX_SENDS, MASTER_FX
+        TRANS, MASTER, FX_SENDS, MASTER_FX
     )
 
     /**
@@ -219,8 +217,6 @@ object MacroEngine {
         "Deck PV FX", "Deck PV/FX", DECK_PV_FX -> DECK_PV_FX
         "Master", "MST" -> MASTER
         "TRANS", "Transition" -> TRANS
-        "Bank 1", "FX1" -> FX_BANK_1
-        "Bank 2", "FX2" -> FX_BANK_2
         "MFX" -> MASTER_FX
         else -> TRANS
     }
@@ -343,8 +339,6 @@ object MacroEngine {
         syncLinkedFxChainKnobValues(DECK_B_FX, mixer.deckB.fxChain)
         syncLinkedFxChainKnobValues(DECK_BG_FX, mixer.deckBG.fxChain)
         syncLinkedFxChainKnobValues(DECK_PV_FX, mixer.deckPV.fxChain)
-        syncLinkedFxKnobValues(FX_BANK_1, mixer.fxBank1)
-        syncLinkedFxKnobValues(FX_BANK_2, mixer.fxBank2)
         syncLinkedFxKnobValues(MASTER_FX, mixer.masterFxBank)
     }
 

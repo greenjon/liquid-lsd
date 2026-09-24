@@ -18,14 +18,14 @@ class FxMacroSyncTest {
 
     @BeforeTest
     fun setUp() {
-        for (id in listOf(MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2, MacroEngine.MASTER_FX)) {
+        for (id in listOf(MacroEngine.MASTER_FX)) {
             MacroEngine.unregisterBank(id)
         }
     }
 
     @AfterTest
     fun tearDown() {
-        for (id in listOf(MacroEngine.FX_BANK_1, MacroEngine.FX_BANK_2, MacroEngine.MASTER_FX)) {
+        for (id in listOf(MacroEngine.MASTER_FX)) {
             MacroEngine.unregisterBank(id)
         }
     }
@@ -41,7 +41,7 @@ class FxMacroSyncTest {
 
     @Test
     fun testSyncBindsSuperKnobAndMetaknobsWithIdentityCurve() {
-        for (bankLabel in listOf("FX1", "FX2", "MFX")) {
+        for (bankLabel in listOf("MFX")) {
             val bankId = MacroEngine.canonicalIdForDeckLabel(bankLabel)
             val bank = FxBank(bankLabel)
             bank.activeChain.slots[0] = testFilter("fx_a")
@@ -69,24 +69,24 @@ class FxMacroSyncTest {
 
     @Test
     fun testSyncUsesActiveChainNumberInPaths() {
-        val bank = FxBank("FX1")
+        val bank = FxBank("MFX")
         bank.activeChainIndex = 1
         for (i in 0 until 3) bank.activeChain.setSlotLinked(i, false)
 
-        FxMacroSync.sync(MacroEngine.FX_BANK_1, bank)
+        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
 
-        val macroBank = MacroEngine.getBank(MacroEngine.FX_BANK_1)!!
-        assertEquals("FX1/C2/Super", macroBank.knobs[0].bindings.single().parameterId)
-        assertEquals("FX1/C2/FX2/Meta", macroBank.knobs[2].bindings.single().parameterId)
+        val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
+        assertEquals("MFX/C2/Super", macroBank.knobs[0].bindings.single().parameterId)
+        assertEquals("MFX/C2/FX2/Meta", macroBank.knobs[2].bindings.single().parameterId)
     }
 
     @Test
     fun testOwnershipRuleLeavesManuallyRetargetedKnobAlone() {
-        val bank = FxBank("FX1")
+        val bank = FxBank("MFX")
         for (i in 0 until 3) bank.activeChain.setSlotLinked(i, false)
-        FxMacroSync.sync(MacroEngine.FX_BANK_1, bank)
+        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
 
-        val macroBank = MacroEngine.getBank(MacroEngine.FX_BANK_1)!!
+        val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
         // User manually retargets Knob 2 away from the FxMacroSync pattern.
         macroBank.knobs[1].bindings.clear()
         macroBank.knobs[1].bindings.add(
@@ -96,59 +96,59 @@ class FxMacroSyncTest {
 
         // Switch chains -- a real focus-change trigger -- and resync.
         bank.activeChainIndex = 2
-        FxMacroSync.sync(MacroEngine.FX_BANK_1, bank)
+        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
 
         assertEquals("Deck A/fbZoom", macroBank.knobs[1].bindings.single().parameterId, "Manually retargeted knob must not be reclaimed")
         assertEquals("MY WARP", macroBank.knobs[1].label)
         // Untouched knobs still follow the new chain.
-        assertEquals("FX1/C3/Super", macroBank.knobs[0].bindings.single().parameterId)
+        assertEquals("MFX/C3/Super", macroBank.knobs[0].bindings.single().parameterId)
     }
 
     @Test
     fun testForceResyncOverridesManualRetarget() {
-        val bank = FxBank("FX1")
+        val bank = FxBank("MFX")
         for (i in 0 until 3) bank.activeChain.setSlotLinked(i, false)
-        FxMacroSync.sync(MacroEngine.FX_BANK_1, bank)
+        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
 
-        val macroBank = MacroEngine.getBank(MacroEngine.FX_BANK_1)!!
+        val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
         macroBank.knobs[1].bindings.clear()
         macroBank.knobs[1].bindings.add(MacroBinding(parameterId = "Deck A/fbZoom", targetType = MacroTargetType.PARAM_BASE_VALUE))
 
-        FxMacroSync.sync(MacroEngine.FX_BANK_1, bank, forceResync = true)
+        FxMacroSync.sync(MacroEngine.MASTER_FX, bank, forceResync = true)
 
-        assertEquals("FX1/C1/FX1/Meta", macroBank.knobs[1].bindings.single().parameterId)
+        assertEquals("MFX/C1/FX1/Meta", macroBank.knobs[1].bindings.single().parameterId)
     }
 
     @Test
     fun testLinkedSlotIsSkippedAndUnlinkingRestoresBinding() {
-        val bank = FxBank("FX1")
+        val bank = FxBank("MFX")
         // Default slotSuperKnobLink is all-true; leave slot 1 linked, unlink the others so we can
         // isolate its behavior.
         bank.activeChain.setSlotLinked(0, false)
         bank.activeChain.setSlotLinked(2, false)
         assertTrue(bank.activeChain.slotSuperKnobLink[1])
 
-        FxMacroSync.sync(MacroEngine.FX_BANK_1, bank)
+        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
 
-        val macroBank = MacroEngine.getBank(MacroEngine.FX_BANK_1)!!
+        val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
         assertTrue(macroBank.knobs[2].bindings.isEmpty(), "A linked slot's knob must not get a MacroBinding (would race FxChain's soft-takeover propagation)")
 
         // Unlinking restores the smart-default binding.
         bank.activeChain.setSlotLinked(1, false)
-        FxMacroSync.sync(MacroEngine.FX_BANK_1, bank)
-        assertEquals("FX1/C1/FX2/Meta", macroBank.knobs[2].bindings.single().parameterId)
+        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
+        assertEquals("MFX/C1/FX2/Meta", macroBank.knobs[2].bindings.single().parameterId)
     }
 
     @Test
     fun testSyncChainMatchesSyncForTheActiveChain() {
-        val bank = FxBank("FX2")
+        val bank = FxBank("MFX")
         bank.activeChainIndex = 2
         for (i in 0 until 3) bank.activeChain.setSlotLinked(i, false)
 
-        FxMacroSync.syncChain(MacroEngine.FX_BANK_2, bank.label, bank.activeChain, bank.activeChainIndex)
+        FxMacroSync.syncChain(MacroEngine.MASTER_FX, bank.label, bank.activeChain, bank.activeChainIndex)
 
-        val macroBank = MacroEngine.getBank(MacroEngine.FX_BANK_2)!!
-        assertEquals("FX2/C3/Super", macroBank.knobs[0].bindings.single().parameterId)
+        val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
+        assertEquals("MFX/C3/Super", macroBank.knobs[0].bindings.single().parameterId)
     }
 
     @Test

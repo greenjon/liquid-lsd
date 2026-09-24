@@ -74,10 +74,9 @@ class FxBankTest {
 
     @Test
     fun testMacroEngineCanonicalIdForFxBanks() {
-        assertEquals(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_1, llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel("FX1"))
-        assertEquals(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_2, llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel("FX2"))
-        assertEquals(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_1, llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel("Bank 1"))
-        assertEquals(llm.slop.liquidlsd.macro.MacroEngine.FX_BANK_2, llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel("Bank 2"))
+        assertEquals(llm.slop.liquidlsd.macro.MacroEngine.MASTER_FX, llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel("MFX"))
+        // FX1/FX2 banks were removed; their labels no longer map to a dedicated macro bank.
+        assertTrue(llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS.none { it == "fxBank1" || it == "fxBank2" })
     }
 
     @Test

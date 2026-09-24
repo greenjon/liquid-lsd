@@ -218,10 +218,6 @@ object ParametersPanel {
                     } else {
                         ParametersTabs.drawDeckGroupContent(session, "Deck PV", mixer.deckPV, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
                     }
-                } else if (state.activeTopTab == "FX1") {
-                    ParametersTabs.drawFxBankGroupContent(session, mixer.fxBank1.label, mixer.fxBank1, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
-                } else if (state.activeTopTab == "FX2") {
-                    ParametersTabs.drawFxBankGroupContent(session, mixer.fxBank2.label, mixer.fxBank2, state, labelColW, mixer, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
                 } else if (state.activeTopTab == "MFX") {
                     ParametersTabs.drawMixerFxTab(session, mixer, state, labelColW, gridStartX, { getCvColumns(session) }, { col -> getColumnOffset(session, col) }, ::getCvColor) { ParametersUndo.pushUndoState(state, mixer) }
                 }

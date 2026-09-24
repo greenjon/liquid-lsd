@@ -36,8 +36,7 @@ class RackDisclosureTest {
         MacroLearnState.clearStatus()
         MacroEngine.registerBank(MacroEngine.DECK_A, MacroBank())
         MacroEngine.registerBank(MacroEngine.DECK_B, MacroBank())
-        MacroEngine.registerBank(MacroEngine.FX_BANK_1, MacroBank())
-        MacroEngine.registerBank(MacroEngine.FX_BANK_2, MacroBank())
+        MacroEngine.registerBank(MacroEngine.MASTER_FX, MacroBank())
         // UITheme is a singleton, so its in-memory rackExpandedModules survives across tests in
         // the same JVM -- reset it so each test's ParametersState() starts from a clean slate.
         UITheme.rackExpandedModules = emptyMap()
@@ -49,8 +48,7 @@ class RackDisclosureTest {
         MacroLearnState.clearStatus()
         MacroEngine.registerBank(MacroEngine.DECK_A, MacroBank())
         MacroEngine.registerBank(MacroEngine.DECK_B, MacroBank())
-        MacroEngine.registerBank(MacroEngine.FX_BANK_1, MacroBank())
-        MacroEngine.registerBank(MacroEngine.FX_BANK_2, MacroBank())
+        MacroEngine.registerBank(MacroEngine.MASTER_FX, MacroBank())
         if (hadBackup) {
             backupFile.copyTo(preferencesFile, overwrite = true)
             backupFile.delete()
@@ -129,24 +127,15 @@ class RackDisclosureTest {
     }
 
     @Test
-    fun fxCompositeModuleIsLearnPinnedWhenArmedKnobBelongsToAnyOfItsBanks() {
-        val state = ParametersState()
-        val fx2Knob = MacroEngine.getBank(MacroEngine.FX_BANK_2)!!.knobs[0]
-        MacroLearnState.startLearn(fx2Knob.id)
-
-        assertTrue(state.isLearnPinned("FX"))
-    }
-
-    @Test
     fun fxCompositeModuleStaysPinnedAcrossBankRefocus() {
-        // The "FX" moduleId is a stable identity decoupled from whichever bank (FX1/FX2/MFX) is
-        // currently focused -- Learn armed against FX1 still pins the "FX" module even though the
-        // caller's own "focused bank" concept (owned by PerformanceMatrixPanel, not this state)
-        // might display FX2 at the moment.
+        // The "FX" moduleId is a stable identity decoupled from whichever target the row is
+        // currently focused on -- Learn armed against Master FX still pins the "FX" module even
+        // though the row (focus owned by PerformanceMatrixPanel, not this state) might display a
+        // deck's FX at the moment.
         val state = ParametersState()
         state.rackSoloMode = true
-        val fx1Knob = MacroEngine.getBank(MacroEngine.FX_BANK_1)!!.knobs[0]
-        MacroLearnState.startLearn(fx1Knob.id)
+        val mfxKnob = MacroEngine.getBank(MacroEngine.MASTER_FX)!!.knobs[0]
+        MacroLearnState.startLearn(mfxKnob.id)
 
         state.setDisclosure("FX", ParametersState.DisclosureLevel.DEEP_EDIT)
         state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)

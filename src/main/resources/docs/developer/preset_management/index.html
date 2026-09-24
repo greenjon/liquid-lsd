@@ -1273,10 +1273,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#14-always-resident-canonical-banks" class="md-nav__link">
+  <a href="#12-always-resident-canonical-banks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        14 Always-Resident Canonical Banks
+        12 Always-Resident Canonical Banks
       
     </span>
   </a>
@@ -1948,10 +1948,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#14-always-resident-canonical-banks" class="md-nav__link">
+  <a href="#12-always-resident-canonical-banks" class="md-nav__link">
     <span class="md-ellipsis">
       
-        14 Always-Resident Canonical Banks
+        12 Always-Resident Canonical Banks
       
     </span>
   </a>
@@ -2216,15 +2216,15 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <hr />
 <h2 id="8-canonical-per-deck-macro-banks-macroengine-macrobankserializer-sessionserializer">8. Canonical Per-Deck Macro Banks (<code>MacroEngine</code>, <code>MacroBankSerializer</code>, <code>SessionSerializer</code>)</h2>
 <p>The 19" Modular Video Rack chassis UI (<code>rack/</code>, <code>rack/ui/</code> — faceplates, rear patch-cable view, per-unit dynamic macro banks) documented in earlier revisions of this file has been <strong>removed entirely</strong> and replaced by <strong>Performance Mode</strong> (<code>PerformanceMatrixPanel.kt</code>, a 4×4 knob matrix toggled with <code>F4</code>; see <code>docs/user_guide/macros_and_rack.md</code>). Historical rack design notes are kept for reference in <code>docs/developer/modular_video_rack_proposal.md</code>, marked retired/superseded.</p>
-<h3 id="14-always-resident-canonical-banks">14 Always-Resident Canonical Banks</h3>
-<p><code>MacroEngine</code> registers 14 canonical, always-resident banks by id (<code>MacroEngine.CANONICAL_BANK_IDS</code>): <code>DECK_A</code>, <code>DECK_B</code>, <code>DECK_BG</code>, <code>DECK_PV</code>, <code>DECK_A_FX</code>, <code>DECK_B_FX</code>, <code>DECK_BG_FX</code>, <code>DECK_PV_FX</code>, <code>TRANS</code>, <code>MASTER</code>, <code>FX_BANK_1</code>, <code>FX_BANK_2</code>, <code>FX_SENDS</code>, and <code>MASTER_FX</code>. <code>MacroEngine.canonicalIdForDeckLabel(deckLabel)</code> maps a deck label ("Deck A", "Deck B", "Deck BG", "Deck PV", "Master") to its generator bank id, falling through to <code>TRANS</code> for anything else, while <code>targetBankIdFor()</code> maps per-deck insert FX banks. Both the Classic <code>[ MACROS ]</code> Column 3 view and the Performance Matrix's 4 tabs read and write these same underlying banks — Performance Mode is a live control <em>view</em> onto them (dragging a knob live-updates <code>MacroControl.value</code>; editing bindings jumps to or happens in Classic mode).</p>
+<h3 id="12-always-resident-canonical-banks">12 Always-Resident Canonical Banks</h3>
+<p><code>MacroEngine</code> registers 12 canonical, always-resident banks by id (<code>MacroEngine.CANONICAL_BANK_IDS</code>): <code>DECK_A</code>, <code>DECK_B</code>, <code>DECK_BG</code>, <code>DECK_PV</code>, <code>DECK_A_FX</code>, <code>DECK_B_FX</code>, <code>DECK_BG_FX</code>, <code>DECK_PV_FX</code>, <code>TRANS</code>, <code>MASTER</code>, <code>FX_SENDS</code>, and <code>MASTER_FX</code>. <code>MacroEngine.canonicalIdForDeckLabel(deckLabel)</code> maps a deck label ("Deck A", "Deck B", "Deck BG", "Deck PV", "Master") to its generator bank id, falling through to <code>TRANS</code> for anything else, while <code>targetBankIdFor()</code> maps per-deck insert FX banks. Both the Classic <code>[ MACROS ]</code> Column 3 view and the Performance Matrix's 4 tabs read and write these same underlying banks — Performance Mode is a live control <em>view</em> onto them (dragging a knob live-updates <code>MacroControl.value</code>; editing bindings jumps to or happens in Classic mode).</p>
 <h3 id="sessionserializer-is-the-sole-bank-registrar"><code>SessionSerializer</code> Is the Sole Bank Registrar</h3>
-<p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/SessionSerializer.kt"><code>SessionSerializer.kt</code></a> is the only site that calls <code>MacroEngine.registerBank()</code>: both <code>loadSession()</code> (restoring <code>session.deckMacroBanks[canonicalId]</code> per canonical id) and <code>startEmpty()</code> register all 14 canonical banks on startup. There is no per-unit/dynamic bank registration anymore.</p>
+<p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/SessionSerializer.kt"><code>SessionSerializer.kt</code></a> is the only site that calls <code>MacroEngine.registerBank()</code>: both <code>loadSession()</code> (restoring <code>session.deckMacroBanks[canonicalId]</code> per canonical id) and <code>startEmpty()</code> register all 12 canonical banks on startup. There is no per-unit/dynamic bank registration anymore.</p>
 <h3 id="per-deck-persistence-macrobankserializer-presetrepository">Per-Deck Persistence (<code>MacroBankSerializer</code>, <code>PresetRepository</code>)</h3>
 <p>Each deck's own canonical bank snapshot travels with its preset file, not just the session:
 - <strong>Save</strong>: <code>PresetRepository.saveDeckPresetAsync()</code> resolves the deck's canonical bank via <code>MacroEngine.canonicalIdForDeckLabel(deckLabel)</code> + <code>MacroEngine.getBank(canonicalBankId)</code>, deep-copies it immutably with <code>MacroBankSerializer.snapshotForPreset()</code>, and bundles it into <code>DeckPresetDto.macroBank</code>.
 - <strong>Load</strong>: <code>MacroBankSerializer.install(deckBank, targetBank)</code> performs a full <strong>swap</strong>, not a merge — loading a preset is meant to load exactly the knob layout it was saved with. A null/empty <code>deckBank</code> (older presets, or an empty deck slot) clears the target bank to blank rather than leaving stale bindings behind.
-- <strong>Session-level</strong>: <code>SessionSerializer</code> separately bundles all 14 canonical banks into <code>SessionStateDto.deckMacroBanks</code> so the full macro state round-trips even without touching individual preset files.</p>
+- <strong>Session-level</strong>: <code>SessionSerializer</code> separately bundles all 12 canonical banks into <code>SessionStateDto.deckMacroBanks</code> so the full macro state round-trips even without touching individual preset files.</p>
 <hr />
 <h2 id="9-fx-presets-playlists-live-queues">9. FX Presets, Playlists &amp; Live Queues</h2>
 <p>The <code>[ FX ]</code> Library view mode (see <code>docs/developer/ui.md</code> §8 and <code>docs/user_guide/presets_and_library.md</code>) is backed by its own preset/queue manager family, parallel to but independent from the <code>.lsd</code> preset managers documented above.</p>

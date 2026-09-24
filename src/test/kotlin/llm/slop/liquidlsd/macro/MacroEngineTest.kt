@@ -393,16 +393,16 @@ class MacroEngineTest {
 
     @Test
     fun testLinkedFxKnobsSyncVisuallyToSuperKnobOnTick() {
-        val fxBank = FxBank("FX1")
+        val fxBank = FxBank("MFX")
         fxBank.activeChain.superKnob.set(0.85f)
         fxBank.activeChain.update()
 
         val mixer = mockk<Mixer>(relaxed = true)
-        every { mixer.fxBank1 } returns fxBank
+        every { mixer.masterFxBank } returns fxBank
 
-        val macroBank = MacroEngine.newBankFor(MacroEngine.FX_BANK_1)
+        val macroBank = MacroEngine.newBankFor(MacroEngine.MASTER_FX)
         macroBank.knobs[0].value = 0.85f
-        MacroEngine.registerBank(MacroEngine.FX_BANK_1, macroBank)
+        MacroEngine.registerBank(MacroEngine.MASTER_FX, macroBank)
 
         // Slot 0 linked, Slot 1 unlinked
         fxBank.activeChain.setSlotLinked(0, true)

@@ -1,3 +1,16 @@
+## Remove the Orphaned FX1/FX2 Banks (`Mixer.kt`, `SessionSerializer.kt`, `MacroEngine.kt`, `MidiMappingManager.kt`, `PerformanceMatrixPanel.kt`, `ParametersTabs.kt`, `ParametersPanel.kt`, `ParametersState.kt`, `FXBrowserPanel.kt`, `StarterFxAndLegacyBanksTest.kt`, `FxMacroSyncTest.kt`, `FxBankTest.kt`, `MacroEngineTest.kt`, `RackDisclosureTest.kt`, `DECISIONS.md`, `RELEASE_NOTES.md`, `docs/release_notes.md`)
+
+- **Context**: 2026-09-24. Decks now own their FX chains and Master FX has its own bank. `Mixer.fxBank1` / `fxBank2` were left over from the shared-send-bank design: no deck routed into them and `Renderer` never read them. They were still updated every frame, saved into every session, registered as macro banks, and exposed as Classic-mode tabs. Removing them was part of preparing to remove the Classic view (see the entry below).
+- **Decision**:
+  - Delete the two `FxBank` instances, the `FX_BANK_1` / `FX_BANK_2` macro bank ids (12 canonical banks remain), their Classic tabs, their Performance-panel branches (all dead since the LIVE CONSOLE FX row retargets per-deck/Master chains) and the FX browser's "Load to FX1/FX2".
+  - Keep the `FxBank` class and the `.lsdfxbank` format: Master FX still uses them.
+  - Fresh-install starter chains are read from the same bundled bank files' chains 0/1 as `FXChainDto`s instead of via throwaway `FxBank`s, so the defaults are unchanged.
+  - `MixerDto.fxBank1` / `fxBank2` stay as read-only legacy fields for the existing pre-per-deck-FX session migration and are no longer written.
+  - Session restore only registers `CANONICAL_BANK_IDS`, so saved `fxBank1` / `fxBank2` macro banks are dropped on load. Bindings elsewhere whose `FX1/...` target path no longer resolves are skipped by `MacroEngine.resolveControls`, as with any other missing parameter.
+- **Rationale**: Removes per-frame work and a confusing, non-functional editor surface, and shrinks the Classic-only feature list before the view itself is deleted.
+
+---
+
 ## Performance Mode Parity Gaps Closed Ahead of Classic View Removal (`DeckSourcePicker.kt`, `PerformanceMatrixPanel.kt`, `ParametersKeyboard.kt`, `MacroBindingInspector.kt`, `UIManager.kt`, `ParametersPanel.kt`, `ParametersTabs.kt`, `ParametersKeyboardTest.kt`, `MacroBindingNavTest.kt`, `macros_and_rack.md`, `modulation.md`, `your_workspace.md`, `docs/developer/ui.md`, `ARCHITECTURE.md`, `RELEASE_NOTES.md`, `docs/release_notes.md`)
 
 - **Context**: 2026-09-24. Classic View (Parameters + Properties panels) is to be removed; Performance Mode's Deep Edit already reuses Classic's drawers, but a live set showed the performer still switching to Classic for a few things only Classic could do. This is phase 1: close those gaps while Classic still exists. Phase 2 deletes the Classic shell (F4, menu items, `WorkspaceMode`) and moves the shared drawers out of `ParametersPanel.kt`. The orphaned FX1/FX2 banks are removed separately.
