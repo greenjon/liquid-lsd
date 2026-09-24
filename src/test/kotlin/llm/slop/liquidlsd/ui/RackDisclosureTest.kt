@@ -199,10 +199,13 @@ class RackDisclosureTest {
         state.setDeckSubTab("Deck A", "FX")
         assertEquals("FX", state.activeDeckASubTab)
         assertEquals("FX", state.getActiveDeckSubTabByTag("A"))
+    }
 
-        state.setDeckSubTab("Deck A", "View")
-        assertEquals("View", state.activeDeckASubTab)
-        assertEquals("View", state.getActiveDeckSubTabByTag("A"))
+    @Test
+    fun deckSubTabsMergeViewIntoSrc() {
+        val tabs = ParametersTabs.getDeckSubTabs(isEmpty = false)
+        assertEquals(listOf("SRC", "FX"), tabs)
+        assertFalse(tabs.contains("View"))
     }
 
     @Test
@@ -226,5 +229,28 @@ class RackDisclosureTest {
         state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
         assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.MASTER))
         assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
+    }
+
+    @Test
+    fun confidenceMonitorClickOpensDeepEditInSoloMode() {
+        val state = ParametersState()
+        state.rackSoloMode = true
+
+        // User clicks Deck A monitor in Column 3
+        state.activeTopTab = "Deck A"
+        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_A))
+
+        // User clicks Deck B monitor: in Solo mode, Deck A collapses and Deck B expands
+        state.activeTopTab = "Deck B"
+        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
+        assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_A))
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
+
+        // User clicks Main Output monitor: Deck B collapses and Master expands
+        state.activeTopTab = "Mixer"
+        state.setDisclosure(MacroEngine.MASTER, ParametersState.DisclosureLevel.DEEP_EDIT)
+        assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_B))
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.MASTER))
     }
 }

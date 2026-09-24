@@ -551,10 +551,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#deck-transform-camera-view-tab" class="md-nav__link">
+  <a href="#deck-transform-source-parameters-src-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deck Transform &amp; Camera (View Tab)
+        Deck Transform &amp; Source Parameters (SRC Tab)
       
     </span>
   </a>
@@ -1573,10 +1573,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#deck-transform-camera-view-tab" class="md-nav__link">
+  <a href="#deck-transform-source-parameters-src-tab" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Deck Transform &amp; Camera (View Tab)
+        Deck Transform &amp; Source Parameters (SRC Tab)
       
     </span>
   </a>
@@ -1779,13 +1779,15 @@
 <li><strong>Palette Modes</strong>: Obsidian &amp; Gold Sand, Electric Cymatic Blue, Prismatic Spectrum, and Bioluminescent Emerald.</li>
 </ul>
 <hr />
-<h2 id="deck-transform-camera-view-tab">Deck Transform &amp; Camera (View Tab)</h2>
-<p>Every deck has a <strong>View</strong> tab that applies to whatever source is loaded. You can use it to position, scale, and frame visuals before they enter the FX chain and feedback loop:</p>
+<h2 id="deck-transform-source-parameters-src-tab">Deck Transform &amp; Source Parameters (SRC Tab)</h2>
+<p>Every deck has an <strong>SRC</strong> tab that combines universal canvas framing with the active generator's native parameters:</p>
 <ul>
-<li><strong>Zoom</strong> — Scales from 0.1× to 5.0×. At 1.0, the source fills the vertical frame height exactly.</li>
-<li><strong>Rotate Z</strong> — Roll the image clockwise or counter-clockwise.</li>
+<li><strong>Gain</strong> — Global source opacity / intensity level (positioned at row 0).</li>
+<li><strong>Zoom</strong> — Scales from 0.1× to 5.0× (for 2D sources). At 1.0, the source fills the vertical frame height exactly.</li>
+<li><strong>Rotate Z</strong> — Roll the image clockwise or counter-clockwise (for 2D sources).</li>
+<li><strong>Generator Parameters</strong> — All ISF generator inputs (lobes, frequencies, noise scale, color palette) follow immediately after the transform controls.</li>
 </ul>
-<p>For <strong>native 3D sources</strong> (e.g. Gyroid, Hyper-Mesh, Icosahedron), the View tab automatically exposes the generator's internal camera rotation (<code>Rotate X</code>, <code>Rotate Y</code>, <code>Rotate Z</code>) and zoom controls.</p>
+<p>For <strong>native 3D sources</strong> (e.g. Gyroid, Hyper-Mesh, Icosahedron), the shader handles camera transforms internally, so the deck-level 2D Zoom/Rotate Z sliders are automatically omitted in favor of the generator's internal camera rotation (<code>Rotate X</code>, <code>Rotate Y</code>, <code>Rotate Z</code>) and zoom controls.</p>
 <p>To elevate any flat 2D source into 3D geometry (Tri-Axial, Cube Cage, Hex-Planar, or Tetrahedral Kaleidoscope), select the <strong>3D Elevation</strong> filter in any FX slot under the <strong>FX</strong> tab.</p>
 <hr />
 <h2 id="effect-slots-fx1fx4">Effect Slots (FX1–FX4)</h2>

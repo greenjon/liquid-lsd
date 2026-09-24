@@ -101,14 +101,16 @@ A physical 2D acoustic plate resonance simulation computing standing wave nodal 
 
 ---
 
-## Deck Transform & Camera (View Tab)
+## Deck Transform & Source Parameters (SRC Tab)
 
-Every deck has a **View** tab that applies to whatever source is loaded. You can use it to position, scale, and frame visuals before they enter the FX chain and feedback loop:
+Every deck has an **SRC** tab that combines universal canvas framing with the active generator's native parameters:
 
-- **Zoom** — Scales from 0.1× to 5.0×. At 1.0, the source fills the vertical frame height exactly.
-- **Rotate Z** — Roll the image clockwise or counter-clockwise.
+- **Gain** — Global source opacity / intensity level (positioned at row 0).
+- **Zoom** — Scales from 0.1× to 5.0× (for 2D sources). At 1.0, the source fills the vertical frame height exactly.
+- **Rotate Z** — Roll the image clockwise or counter-clockwise (for 2D sources).
+- **Generator Parameters** — All ISF generator inputs (lobes, frequencies, noise scale, color palette) follow immediately after the transform controls.
 
-For **native 3D sources** (e.g. Gyroid, Hyper-Mesh, Icosahedron), the View tab automatically exposes the generator's internal camera rotation (`Rotate X`, `Rotate Y`, `Rotate Z`) and zoom controls.
+For **native 3D sources** (e.g. Gyroid, Hyper-Mesh, Icosahedron), the shader handles camera transforms internally, so the deck-level 2D Zoom/Rotate Z sliders are automatically omitted in favor of the generator's internal camera rotation (`Rotate X`, `Rotate Y`, `Rotate Z`) and zoom controls.
 
 To elevate any flat 2D source into 3D geometry (Tri-Axial, Cube Cage, Hex-Planar, or Tetrahedral Kaleidoscope), select the **3D Elevation** filter in any FX slot under the **FX** tab.
 

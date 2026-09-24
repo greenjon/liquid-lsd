@@ -1,3 +1,27 @@
+## Confidence Monitor Click Opens Deep Edit in Performance Mode (`DeckControlPanel.kt`, `MixerPanel.kt`, `MacroPanel.kt`, `macros_and_rack.md`, `DECISIONS.md`, `release_notes.md`)
+
+- **Context**: 2026-09-23. In Classic View, clicking any deck confidence monitor (Deck A, Deck B, Deck BG, Deck PV) or the Main Output monitor in Column 3 switches the Parameters panel to that source's section. In Performance View (`WorkspaceMode.RACK`), Columns 1 & 2 are replaced by `PerformanceMatrixPanel`. Clicking a preview monitor changed `parametersState.activeTopTab` in the background, but gave zero visual feedback because the Classic Parameters panel was hidden.
+- **Decision**:
+  - **Open Deep Edit on Monitor Click**: In Performance View, clicking any deck monitor (Deck A, Deck B, Deck BG, Deck PV) calls `parametersState.setDisclosure(moduleId, DisclosureLevel.DEEP_EDIT)` for the corresponding module.
+  - **Master Output & Macro Preview**: Clicking the Main Output monitor (or the MACROS tab confidence preview) calls `setDisclosure(MacroEngine.MASTER, DisclosureLevel.DEEP_EDIT)` to open the Master/Mixer deep controls.
+  - **Solo Mode Accordion Synergy**: In default Solo mode, clicking a monitor collapses any previously open module and immediately focuses the clicked deck's Deep Edit, functioning identically to tab switching in Classic Mode.
+  - **Dynamic Tooltips**: Updated tooltips on the monitors to dynamically display `"Click to open Deep Edit"` in Performance Mode vs `"Click to focus Parameters"` in Classic Mode.
+- **Rationale**: Eliminates dead clicks in Column 3 during live performance, unifies the interaction model between Classic and Performance modes, and provides an instant one-click jump from a visual preview into full parameter controls.
+
+---
+
+## Merge View and SRC Tabs in Parameters Panel (`ParametersTabs.kt`, `RackDisclosureTest.kt`, `visual_sources.md`, `DECISIONS.md`, `RELEASE_NOTES.md`)
+
+- **Context**: 2026-09-23. Previously, deck parameters were divided into three subtabs: `[SRC]`, `[FX]`, and `[View]`. The `[View]` subtab contained only two parameters for flat 2D visual sources (`Zoom` and `Rotate Z`), requiring unnecessary tab switching back and forth between generator properties and canvas framing.
+- **Decision**:
+  - **Merged Subtabs**: Consolidated the Deck parameter subtabs into two: `[SRC]` and `[FX]`, removing the standalone `[View]` subtab.
+  - **Universal Transform & Gain Positioning**: In the `[SRC]` subtab, `Gain` (`globalAlpha`) is positioned at the very top (row 0). For 2D sources (`!is3D`), `Zoom` (`deck.viewZoom`) and `Rotate Z` (`deck.viewRotateZ`) follow at rows 1 and 2, followed sequentially by all ISF generator parameters.
+  - **Native 3D Handling**: For native 3D sources (`is3D == true`), deck-level 2D `viewZoom`/`viewRotateZ` sliders are omitted to prevent non-functional duplicate controls (since 3D raymarching shaders handle camera projection internally), displaying `Gain` followed by the 3D source's native ISF controls.
+  - **Compatibility Preservation**: Parameter IDs (`$deckLabel/View/Zoom`, `$deckLabel/View/RotateZ`) are preserved verbatim to guarantee full backward compatibility with saved presets, modulation assignments, and MIDI bindings. Stale saved `"View"` subtabs automatically fall back to `"SRC"`.
+- **Rationale**: Eliminates unnecessary tab switching, streamlines the parameter panel interface, and aligns canvas framing directly with generator parameter adjustment.
+
+---
+
 ## Rename FX Sends Row to FX WET/DRY & Remove Disclosure Chevron (`PerformanceMatrixPanel.kt`, `macros_and_rack.md`, `DECISIONS.md`, `RELEASE_NOTES.md`)
 
 - **Context**: 2026-09-23. In Performance View (`MASTER & FX` tab), Row 3 was labeled `FX SENDS` with knobs `SEND A`, `SEND B`, `SEND BG`, and `SEND PV`. Following the migration to dedicated per-deck insert FX chains (`deck.fxChain`), the global auxiliary FX send buses were retired, and `fxSendLevel` became an alias for `fxChain.dryWet`. Thus, the row controls insert FX wet/dry ratios rather than send levels. Additionally, the row displayed a Modular Rack disclosure chevron that opened a dead placeholder ("Deep Edit isn't available for this module yet").

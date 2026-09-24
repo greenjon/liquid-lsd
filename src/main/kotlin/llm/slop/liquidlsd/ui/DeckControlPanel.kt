@@ -3,7 +3,7 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
-import imgui.flag.ImGuiWindowFlags
+import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.notes.NotesManager
 import llm.slop.liquidlsd.presets.PresetManager
 import llm.slop.liquidlsd.presets.PresetIOState
@@ -85,9 +85,26 @@ class DeckControlPanel(
 
         ImGui.setCursorScreenPos(dragBtnX, imgY)
         ImGui.invisibleButton("##drag_source_$label", dragBtnW, imgAvailH.coerceAtLeast(1f))
-        itemTooltip("Interactive monitor for $label. Click to focus Parameters, drag to route to another deck, or drop presets to load.")
+        val tooltipAction = if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
+            "Click to open Deep Edit"
+        } else {
+            "Click to focus Parameters"
+        }
+        itemTooltip("Interactive monitor for $label. $tooltipAction, drag to route to another deck, or drop presets to load.")
         if (ImGui.isItemClicked(0)) {
             parametersState.activeTopTab = label
+            if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
+                val moduleId = when (label) {
+                    "Deck A" -> MacroEngine.DECK_A
+                    "Deck B" -> MacroEngine.DECK_B
+                    "Deck BG" -> MacroEngine.DECK_BG
+                    "Deck PV" -> MacroEngine.DECK_PV
+                    else -> null
+                }
+                if (moduleId != null) {
+                    parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)
+                }
+            }
         }
         
         val deckPayloadName = when (label) {

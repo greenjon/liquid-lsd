@@ -13,15 +13,6 @@ import llm.slop.liquidlsd.rendering.isf.MetaLinkMode
 import kotlin.math.roundToInt
 
 object ParametersTabs {
-    private val TRANSFORM_PARAM_NAMES = setOf(
-        "Zoom", "Rotate X", "Rotate Y", "Rotate Z",
-        "Cam Rotate X", "Cam Rotate Y", "Cam Rotate Z"
-    )
-
-    private val PREFERRED_TRANSFORM_ORDER = listOf(
-        "Zoom", "Rotate X", "Rotate Y", "Rotate Z",
-        "Cam Rotate X", "Cam Rotate Y", "Cam Rotate Z"
-    )
 
     var activeBtnMinX: Float = 0f
     var activeBtnMinY: Float = 0f
@@ -177,10 +168,10 @@ object ParametersTabs {
 
         val tabs = listOf(
             Triple("MIX", "Mixer",   "Mixer controls (CTRL), Master FX (FX), and Crossfader/Transitions (TRANS)."),
-            Triple("A",   "Deck A",  if (deckAEmpty) "Deck A [EMPTY] — Click to assign a source or preset." else "Deck A: Visual source (SRC), insert FX (FX), and 3D view (View)."),
-            Triple("B",   "Deck B",  if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B: Visual source (SRC), insert FX (FX), and 3D view (View)."),
-            Triple("BG",  "Deck BG", if (deckBGEmpty) "Deck BG [EMPTY] — Click to assign a source or preset." else "Deck BG: Visual source (SRC), insert FX (FX), and 3D view (View)."),
-            Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV: Visual source (SRC), insert FX (FX), and 3D view (View).")
+            Triple("A",   "Deck A",  if (deckAEmpty) "Deck A [EMPTY] — Click to assign a source or preset." else "Deck A: Visual source (SRC) and insert FX (FX)."),
+            Triple("B",   "Deck B",  if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B: Visual source (SRC) and insert FX (FX)."),
+            Triple("BG",  "Deck BG", if (deckBGEmpty) "Deck BG [EMPTY] — Click to assign a source or preset." else "Deck BG: Visual source (SRC) and insert FX (FX)."),
+            Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV: Visual source (SRC) and insert FX (FX).")
         )
         val buttonWidth = calculateLeftTabsWidth(session)
         val buttonHeight = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 14f }.coerceAtLeast(30f)
@@ -237,16 +228,17 @@ object ParametersTabs {
         ImGui.popStyleVar()
     }
 
-    private fun getDeckSubTabs(deck: Deck): List<String> {
-        if (deck.isEmpty) {
+    internal fun getDeckSubTabs(isEmpty: Boolean): List<String> {
+        if (isEmpty) {
             return listOf("Empty")
         }
         val tabs = mutableListOf<String>()
         tabs.add("SRC")
         tabs.add("FX")
-        tabs.add("View")
         return tabs.distinct()
     }
+
+    internal fun getDeckSubTabs(deck: Deck): List<String> = getDeckSubTabs(deck.isEmpty)
 
     fun calculateSourceTabWidth(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, deck: Deck): Float {
         if (deck.isEmpty) return 0f
@@ -443,9 +435,8 @@ object ParametersTabs {
                     }
                 }
                 val tooltip = when (tab) {
-                    "SRC" -> "Source: Parameters for active visual generator."
+                    "SRC" -> "Source: Parameters for active visual generator, zoom, and rotation."
                     "FX" -> if (state.activeTopTab == "Mixer") "Master FX: 4 serial ISF effect slots on master output." else "FX: Color, shading, and feedback loop parameters."
-                    "View" -> "View: 3D perspective, zoom, and rotation parameters."
                     "CTRL" -> "Control: Master controls, channel levels, queue & clock triggers, and morph triggers."
                     "TRANS" -> "Transition: Transition shader selection, bypass, dry/wet, and dynamic parameters."
                     else -> "$tab parameters"
@@ -475,13 +466,14 @@ object ParametersTabs {
         val isVisible = if (parentLabel == "Mixer") {
             state.activeTopTab == "Mixer" && state.activeMixerSubTab == label
         } else {
-            val activeSubTab = when (parentLabel) {
+            val rawSubTab = when (parentLabel) {
                 "Deck A" -> state.activeDeckASubTab
                 "Deck B" -> state.activeDeckBSubTab
                 "Deck BG" -> state.activeDeckBGSubTab
                 "Deck PV" -> state.activeDeckPVSubTab
                 else -> ""
             }
+            val activeSubTab = if (rawSubTab in listOf("SRC", "FX")) rawSubTab else "SRC"
             activeSubTab == label
         }
 
@@ -656,103 +648,33 @@ object ParametersTabs {
     ) {
         val activeSource = deck.source
 
-        if (activeSource is DynamicVisualSource) {
-            val transformParams = mutableListOf<Map.Entry<String, ModulatableParameter>>()
-            val otherParams     = mutableListOf<Map.Entry<String, ModulatableParameter>>()
-
-            activeSource.parameters.forEach { entry ->
-                if (TRANSFORM_PARAM_NAMES.contains(entry.key)) transformParams.add(entry)
-                else otherParams.add(entry)
+        drawSubGroupContent(session, deckLabel, "SRC", state) {
+            var row = 0
+            val gainPath = if (activeSource is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
+                "$deckLabel/External Video/Gain"
+            } else {
+                "$deckLabel/${activeSource.displayName}/Gain"
             }
+            ParametersRenderer.drawParamRow(session, "Gain", gainPath, activeSource.globalAlpha, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
-            transformParams.sortBy { (key, _) ->
-                val idx = PREFERRED_TRANSFORM_ORDER.indexOf(key)
-                if (idx >= 0) idx else 999
+            if (!activeSource.is3D) {
+                ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
-
-            drawSubGroupContent(session, deckLabel, "SRC", state) {
-                otherParams.forEachIndexed { i, (name, param) ->
-                    ParametersRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, i, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            if (activeSource is DynamicVisualSource) {
+                activeSource.parameters.forEach { (name, param) ->
+                    ParametersRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 }
-                ParametersRenderer.drawParamRow(session, "Gain", "$deckLabel/${activeSource.displayName}/Gain", activeSource.globalAlpha, state, labelColW, mixer, gridStartX, otherParams.size, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            }
-
-            drawSubGroupContent(session, deckLabel, "FX", state) {
-                ImGui.indent(PARAM_INDENT)
-                drawFxChainContent(
-                    session, deck.fxChain, "$deckLabel/FX", "$deckLabel FX", state,
-                    labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo
-                )
-                ImGui.unindent(PARAM_INDENT)
-            }
-
-            drawSubGroupContent(session, deckLabel, "View", state) {
-                drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo, transformParams)
-            }
-        } else if (activeSource is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
-            drawSubGroupContent(session, deckLabel, "SRC", state) {
-                ParametersRenderer.drawParamRow(session, "Gain", "$deckLabel/External Video/Gain", activeSource.globalAlpha, state, labelColW, mixer, gridStartX, 0, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            }
-
-            drawSubGroupContent(session, deckLabel, "FX", state) {
-                ImGui.indent(PARAM_INDENT)
-                drawFxChainContent(
-                    session, deck.fxChain, "$deckLabel/FX", "$deckLabel FX", state,
-                    labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo
-                )
-                ImGui.unindent(PARAM_INDENT)
-            }
-
-            drawSubGroupContent(session, deckLabel, "View", state) {
-                drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            }
-        } else {
-            drawSubGroupContent(session, deckLabel, "FX", state) {
-                ImGui.indent(PARAM_INDENT)
-                drawFxChainContent(
-                    session, deck.fxChain, "$deckLabel/FX", "$deckLabel FX", state,
-                    labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo
-                )
-                ImGui.unindent(PARAM_INDENT)
-            }
-
-            drawSubGroupContent(session, deckLabel, "View", state) {
-                drawDeckViewSubgroup(session, deckLabel, deck, state, labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
         }
-    }
 
-    private fun drawDeckViewSubgroup(
-        session: llm.slop.liquidlsd.SessionContext,
-        deckLabel: String,
-        deck: Deck,
-        state: ParametersState,
-        labelColW: Float,
-        mixer: Mixer,
-        gridStartX: Float,
-        getCvColumns: () -> List<String>,
-        getColumnOffset: (String) -> Float,
-        getCvColor: (String, Float) -> Int,
-        onPushUndo: () -> Unit,
-        transformParams: List<Map.Entry<String, ModulatableParameter>> = emptyList()
-    ) {
-        var row = 0
-        if (!deck.source.is3D) {
-            ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
-            transformParams.forEach { (name, param) ->
-                ParametersRenderer.drawParamRow(session, name, "$deckLabel/${deck.source.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            }
-        } else {
-            if (transformParams.isEmpty()) {
-                imgui.ImGui.spacing()
-                imgui.ImGui.textDisabled("3D source handles projection internally.")
-            } else {
-                transformParams.forEach { (name, param) ->
-                    ParametersRenderer.drawParamRow(session, name, "$deckLabel/${deck.source.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                }
-            }
+        drawSubGroupContent(session, deckLabel, "FX", state) {
+            ImGui.indent(PARAM_INDENT)
+            drawFxChainContent(
+                session, deck.fxChain, "$deckLabel/FX", "$deckLabel FX", state,
+                labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo
+            )
+            ImGui.unindent(PARAM_INDENT)
         }
     }
 

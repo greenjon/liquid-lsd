@@ -1,5 +1,17 @@
 ## [Unreleased]
 
+### Confidence Monitor Click Opens Deep Edit in Performance Mode (`DeckControlPanel.kt`, `MixerPanel.kt`, `MacroPanel.kt`, `macros_and_rack.md`, `DECISIONS.md`)
+- **Direct Deep Edit Navigation from Confidence Monitors**: In Performance View (`WorkspaceMode.RACK`), clicking on any confidence monitor in Column 3 (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) now immediately expands that deck's **Deep Edit** bay in the Modular Rack.
+- **Master & Preview Support**: Clicking the Main Output monitor (or the MACROS tab single-deck confidence preview) expands the `Master` / `Mixer` Deep Edit bay (master crossfader, master FX slots, and transitions).
+- **Solo Mode Accordion Integration**: In default Solo mode, clicking a monitor smoothly collapses any previously open module and swaps the Deep Edit bay to the clicked source, mirroring the 1-click tab switching speed of Classic Mode.
+- **Dynamic Tooltips**: Updated monitor tooltips across all preview screens to dynamically show `"Click to open Deep Edit"` in Performance Mode versus `"Click to focus Parameters"` in Classic Mode.
+
+### Merge View and SRC Tabs in Parameters Panel (`ParametersTabs.kt`, `RackDisclosureTest.kt`, `visual_sources.md`, `DECISIONS.md`)
+- **Unified SRC Tab**: Consolidated the separate `[View]` and `[SRC]` subtabs into a single, cohesive `[SRC]` tab for all decks, reducing deck subtabs to `[SRC]` and `[FX]`.
+- **Top-Aligned Gain & 2D Transform Sliders**: Source `Gain` is positioned at row 0 of the `[SRC]` tab. For 2D sources (`!is3D`), universal canvas framing controls (`Zoom` and `Rotate Z`) follow at rows 1 and 2, immediately followed by the active generator's native ISF parameters.
+- **Contextual 3D Projection**: Native 3D sources omit non-functional deck-level 2D zoom/rotation sliders and expose the generator's internal camera rotation and zoom directly, preventing duplicate controls.
+- **Backward Compatibility**: Parameter paths (`$deckLabel/View/Zoom`, `$deckLabel/View/RotateZ`) are preserved intact so existing presets, MIDI mappings, and modulation connections continue functioning without modification.
+
 ### Rename FX Sends to FX WET/DRY & Remove Disclosure Chevron (`PerformanceMatrixPanel.kt`, `docs/user_guide/macros_and_rack.md`, `DECISIONS.md`)
 - **Renamed to FX WET/DRY**: In the Performance Matrix (`MASTER & FX` tab, Row 3), renamed the row from `FX SENDS` to `FX WET/DRY`, accurately reflecting that these knobs control each deck's insert FX wet/dry ratio rather than auxiliary bus sends.
 - **Omitted Disclosure Chevron**: Added `canExpand` to row descriptors and disabled it for `FX WET/DRY`, removing the chevron and preventing expansion into a dead "Deep Edit isn't available" bay.

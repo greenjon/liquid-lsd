@@ -324,6 +324,27 @@ class MacroPanel(
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.image(textureId.toLong(), previewW, previewH, 0f, 1f, 1f, 0f)
 
+        ImGui.setCursorScreenPos(startX, startY)
+        ImGui.invisibleButton("##macro_preview_monitor", previewW, previewH)
+        val macroTooltipAction = if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
+            "Click to open Deep Edit."
+        } else {
+            "Click to focus Parameters."
+        }
+        itemTooltip("Preview monitor ($previewTitle). $macroTooltipAction")
+        if (ImGui.isItemClicked(0)) {
+            if (session.uiTheme.workspaceMode == UITheme.WorkspaceMode.RACK) {
+                val moduleId = when (parametersState.activeTopTab) {
+                    "Deck A", "A FX" -> MacroEngine.DECK_A
+                    "Deck B", "B FX" -> MacroEngine.DECK_B
+                    "Deck BG", "BG FX" -> MacroEngine.DECK_BG
+                    "Deck PV", "PV FX" -> MacroEngine.DECK_PV
+                    else -> MacroEngine.MASTER
+                }
+                parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)
+            }
+        }
+
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), startY + previewH)
         ImGui.dummy(0f, 0f)
     }

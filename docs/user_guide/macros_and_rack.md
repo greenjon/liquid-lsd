@@ -262,6 +262,9 @@ of the 4×4 grid back.
 Click the chevron again (or the **Collapse** button inside the Deep Edit panel or on the row) to fold back to
 the Faceplate.
 
+**Opening Deep Edit from Confidence Monitors**:
+In addition to the row chevrons, clicking any preview monitor in Column 3 (Deck A, Deck B, Deck BG, Deck PV, Main Output Master, or the MACROS tab preview) will immediately open Deep Edit focused directly on that module. In `SOLO` mode (the default), this smoothly swaps the Deep Edit bay from your current deck to the clicked deck without needing to scroll or find the row chevron.
+
 **Accordion behavior**: by default the rack is in **`SOLO`** mode — opening one row's Deep Edit
 automatically collapses any other expanded row, so you're never scrolling past several open
 panels at once. The toolbar above the grid has a **`[ SOLO | MULTI ]`** toggle (persisted across

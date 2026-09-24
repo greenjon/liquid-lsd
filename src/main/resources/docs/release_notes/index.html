@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#confidence-monitor-click-opens-deep-edit-in-performance-mode-deckcontrolpanelkt-mixerpanelkt-macropanelkt-macros_and_rackmd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence Monitor Click Opens Deep Edit in Performance Mode (DeckControlPanel.kt, MixerPanel.kt, MacroPanel.kt, macros_and_rack.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge-view-and-src-tabs-in-parameters-panel-parameterstabskt-rackdisclosuretestkt-visual_sourcesmd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merge View and SRC Tabs in Parameters Panel (ParametersTabs.kt, RackDisclosureTest.kt, visual_sources.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#monitor-dual-overlays-fx-wetdry-fader-fx-kill-button-symmetric-layout-deckcontrolpanelkt-docsdeveloperuimd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3876,6 +3898,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#confidence-monitor-click-opens-deep-edit-in-performance-mode-deckcontrolpanelkt-mixerpanelkt-macropanelkt-macros_and_rackmd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence Monitor Click Opens Deep Edit in Performance Mode (DeckControlPanel.kt, MixerPanel.kt, MacroPanel.kt, macros_and_rack.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#merge-view-and-src-tabs-in-parameters-panel-parameterstabskt-rackdisclosuretestkt-visual_sourcesmd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Merge View and SRC Tabs in Parameters Panel (ParametersTabs.kt, RackDisclosureTest.kt, visual_sources.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#monitor-dual-overlays-fx-wetdry-fader-fx-kill-button-symmetric-layout-deckcontrolpanelkt-docsdeveloperuimd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6519,6 +6563,20 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="confidence-monitor-click-opens-deep-edit-in-performance-mode-deckcontrolpanelkt-mixerpanelkt-macropanelkt-macros_and_rackmd-decisionsmd">Confidence Monitor Click Opens Deep Edit in Performance Mode (<code>DeckControlPanel.kt</code>, <code>MixerPanel.kt</code>, <code>MacroPanel.kt</code>, <code>macros_and_rack.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>Direct Deep Edit Navigation from Confidence Monitors</strong>: In Performance View (<code>WorkspaceMode.RACK</code>), clicking on any confidence monitor in Column 3 (<code>Deck A</code>, <code>Deck B</code>, <code>Deck BG</code>, <code>Deck PV</code>) now immediately expands that deck's <strong>Deep Edit</strong> bay in the Modular Rack.</li>
+<li><strong>Master &amp; Preview Support</strong>: Clicking the Main Output monitor (or the MACROS tab single-deck confidence preview) expands the <code>Master</code> / <code>Mixer</code> Deep Edit bay (master crossfader, master FX slots, and transitions).</li>
+<li><strong>Solo Mode Accordion Integration</strong>: In default Solo mode, clicking a monitor smoothly collapses any previously open module and swaps the Deep Edit bay to the clicked source, mirroring the 1-click tab switching speed of Classic Mode.</li>
+<li><strong>Dynamic Tooltips</strong>: Updated monitor tooltips across all preview screens to dynamically show <code>"Click to open Deep Edit"</code> in Performance Mode versus <code>"Click to focus Parameters"</code> in Classic Mode.</li>
+</ul>
+<h3 id="merge-view-and-src-tabs-in-parameters-panel-parameterstabskt-rackdisclosuretestkt-visual_sourcesmd-decisionsmd">Merge View and SRC Tabs in Parameters Panel (<code>ParametersTabs.kt</code>, <code>RackDisclosureTest.kt</code>, <code>visual_sources.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>Unified SRC Tab</strong>: Consolidated the separate <code>[View]</code> and <code>[SRC]</code> subtabs into a single, cohesive <code>[SRC]</code> tab for all decks, reducing deck subtabs to <code>[SRC]</code> and <code>[FX]</code>.</li>
+<li><strong>Top-Aligned Gain &amp; 2D Transform Sliders</strong>: Source <code>Gain</code> is positioned at row 0 of the <code>[SRC]</code> tab. For 2D sources (<code>!is3D</code>), universal canvas framing controls (<code>Zoom</code> and <code>Rotate Z</code>) follow at rows 1 and 2, immediately followed by the active generator's native ISF parameters.</li>
+<li><strong>Contextual 3D Projection</strong>: Native 3D sources omit non-functional deck-level 2D zoom/rotation sliders and expose the generator's internal camera rotation and zoom directly, preventing duplicate controls.</li>
+<li><strong>Backward Compatibility</strong>: Parameter paths (<code>$deckLabel/View/Zoom</code>, <code>$deckLabel/View/RotateZ</code>) are preserved intact so existing presets, MIDI mappings, and modulation connections continue functioning without modification.</li>
+</ul>
 <h3 id="monitor-dual-overlays-fx-wetdry-fader-fx-kill-button-symmetric-layout-deckcontrolpanelkt-docsdeveloperuimd">Monitor Dual Overlays: FX Wet/Dry Fader, FX Kill Button &amp; Symmetric Layout (<code>DeckControlPanel.kt</code>, <code>docs/developer/ui.md</code>)</h3>
 <ul>
 <li><strong>Monitor Dual Overlay Layout</strong>: Added dedicated controls on both sides of each preview monitor (<code>Deck A</code>, <code>Deck B</code>, <code>Deck BG</code>, <code>Deck PV</code>):</li>
