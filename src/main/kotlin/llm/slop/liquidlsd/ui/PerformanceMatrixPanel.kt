@@ -72,20 +72,9 @@ class PerformanceMatrixPanel {
         val canExpand: Boolean = true
     )
 
-    // Canonical deck colors matching BrowserDeckButtons.
+    // Canonical deck colors matching BrowserDeckButtons are in PerformanceColors.
     companion object {
-        private val COLOR_DECK_A   = floatArrayOf(0.2f,  0.4f,  0.8f)
-        private val COLOR_DECK_B   = floatArrayOf(0.8f,  0.4f,  0.2f)
-        private val COLOR_DECK_BG  = floatArrayOf(0.85f, 0.65f, 0.2f)
-        private val COLOR_DECK_PV  = floatArrayOf(0.2f,  0.7f,  0.5f)
-        private val COLOR_TRANS    = floatArrayOf(0.7f,  0.4f,  0.9f)
-        private val COLOR_MASTER   = floatArrayOf(0.9f,  0.25f, 0.35f)
-        private val COLOR_FX       = floatArrayOf(0.15f, 0.75f, 0.65f)
-
         private const val EXTRA_HEADER_H = 28f
-
-        /** Uniform height of every row-side control (buttons, badges, preset combo) left/right of the knobs. */
-        private const val CTRL_H = 24f
 
         /**
          * Floor on grid row height. Below this the knobs get too small to use, so instead of
@@ -107,70 +96,39 @@ class PerformanceMatrixPanel {
         private val TAB_ROWS: Array<List<RowDescriptor>> = arrayOf(
             // LIVE QUAD: one row per deck (knobs 0–3 each: Deck A, Deck B, Deck BG, Deck PV)
             listOf(
-                RowDescriptor(MacroEngine.DECK_A,  0, COLOR_DECK_A,  "DECK A",  hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_B,  0, COLOR_DECK_B,  "DECK B",  hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG, "DECK BG", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_PV, 0, COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_A,  0, PerformanceColors.COLOR_DECK_A,  "DECK A",  hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_B,  0, PerformanceColors.COLOR_DECK_B,  "DECK B",  hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_BG, 0, PerformanceColors.COLOR_DECK_BG, "DECK BG", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_PV, 0, PerformanceColors.COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
             ),
             // MASTER & FX: Master (composite alphas + crossfader/crossfader-time), Transitions
             // (transition picker + queue nav), FX Wet/Dry, Deck PV (1 row of 4 knobs each, except
             // Master/Transitions which also reserve header space -- see drawMatrix).
             listOf(
-                RowDescriptor(MacroEngine.MASTER,    0, COLOR_MASTER, "MASTER", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.TRANS,     0, COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.FX_SENDS,  0, COLOR_FX,     "FX WET/DRY", hasExtraHeader = true, canExpand = false),
-                RowDescriptor(MacroEngine.DECK_PV,   0, COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.MASTER,    0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.TRANS,     0, PerformanceColors.COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.FX_SENDS,  0, PerformanceColors.COLOR_FX,     "FX WET/DRY", hasExtraHeader = true, canExpand = false),
+                RowDescriptor(MacroEngine.DECK_PV,   0, PerformanceColors.COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
             ),
             // LIVE CONSOLE: Deck A, Deck B, Deck BG, focused FX target (A, B, BG, PV, MST)
             listOf(
-                RowDescriptor(MacroEngine.DECK_A,    0, COLOR_DECK_A,  "DECK A",  hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_B,    0, COLOR_DECK_B,  "DECK B",  hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_BG,   0, COLOR_DECK_BG, "DECK BG", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_A_FX, 0, COLOR_FX,      "FX",      hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_A,    0, PerformanceColors.COLOR_DECK_A,  "DECK A",  hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_B,    0, PerformanceColors.COLOR_DECK_B,  "DECK B",  hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_BG,   0, PerformanceColors.COLOR_DECK_BG, "DECK BG", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_A_FX, 0, PerformanceColors.COLOR_FX,      "FX",      hasExtraHeader = true),
             ),
             // ALL FX: Deck A FX, Deck B FX, Deck BG FX, Deck PV FX, Master FX (1 row each, knobs 0–3)
             listOf(
-                RowDescriptor(MacroEngine.DECK_A_FX,  0, COLOR_DECK_A,  "DECK A FX",  hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_B_FX,  0, COLOR_DECK_B,  "DECK B FX",  hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_BG_FX, 0, COLOR_DECK_BG, "DECK BG FX", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_PV_FX, 0, COLOR_DECK_PV, "DECK PV FX", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.MASTER_FX,  0, COLOR_MASTER,  "MASTER FX",  hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_A_FX,  0, PerformanceColors.COLOR_DECK_A,  "DECK A FX",  hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_B_FX,  0, PerformanceColors.COLOR_DECK_B,  "DECK B FX",  hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_BG_FX, 0, PerformanceColors.COLOR_DECK_BG, "DECK BG FX", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.DECK_PV_FX, 0, PerformanceColors.COLOR_DECK_PV, "DECK PV FX", hasExtraHeader = true),
+                RowDescriptor(MacroEngine.MASTER_FX,  0, PerformanceColors.COLOR_MASTER,  "MASTER FX",  hasExtraHeader = true),
             ),
         )
     }
 
-    /** LIVE_CONSOLE: which target ("A", "B", "BG", "PV", "MST") Row 3 is currently focused on. */
-    private var focusedFxTarget: String = "A"
-
-    /** Per-deck row mode: "SRC" (visual source generator macros) or "FX" (deck FX chain macros). */
-    private val deckRowMode = mutableMapOf<String, String>()
-
-    private fun targetBankIdFor(target: String): String = when (target) {
-        "A" -> MacroEngine.DECK_A_FX
-        "B" -> MacroEngine.DECK_B_FX
-        "BG" -> MacroEngine.DECK_BG_FX
-        "PV" -> MacroEngine.DECK_PV_FX
-        else -> MacroEngine.MASTER_FX
-    }
-
-    private fun targetAccentFor(target: String): FloatArray = when (target) {
-        "A" -> COLOR_DECK_A
-        "B" -> COLOR_DECK_B
-        "BG" -> COLOR_DECK_BG
-        "PV" -> COLOR_DECK_PV
-        else -> COLOR_MASTER
-    }
-
-    private fun targetDisplayName(target: String): String = when (target) {
-        "A" -> "Deck A"
-        "B" -> "Deck B"
-        "BG" -> "Deck BG"
-        "PV" -> "Deck PV"
-        else -> "Master"
-    }
-
-    private fun resolveFxChain(mixer: Mixer, bankId: String): llm.slop.liquidlsd.rendering.FxChain =
-        llm.slop.liquidlsd.macro.FxMacroSync.chainFor(bankId, mixer) ?: mixer.deckA.fxChain
+    internal val ctx = PerformanceUiContext()
 
     private val presetSearchA = ImString(64)
     private val presetSearchB = ImString(64)
@@ -183,11 +141,8 @@ class PerformanceMatrixPanel {
 
     // -- Draw ---------------------------------------------------------------------
 
-    /** Set each frame by [draw]; null in tests, where source swaps fall back to the unguarded path. */
-    private var deckPresetController: DeckPresetController? = null
-
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState, deckPresetController: DeckPresetController? = null) {
-        this.deckPresetController = deckPresetController
+        ctx.deckPresetController = deckPresetController
         val theme = session.uiTheme
 
         val expandedIds = expandedDeepEditModuleIds(parametersState)
@@ -223,64 +178,54 @@ class PerformanceMatrixPanel {
     /** Canonical module ids that have a Deep Edit editor. */
     private val deepEditModuleIds = setOf(MacroEngine.DECK_A, MacroEngine.DECK_B, MacroEngine.DECK_BG, MacroEngine.DECK_PV, MacroEngine.MASTER)
 
-    /** Maps sub-modules (DECK_A_FX, MASTER_FX, TRANS, etc.) to their canonical primary module id (DECK_A, MASTER, etc.). */
-    private fun canonicalModuleId(moduleId: String): String = when (moduleId) {
-        MacroEngine.DECK_A, MacroEngine.DECK_A_FX -> MacroEngine.DECK_A
-        MacroEngine.DECK_B, MacroEngine.DECK_B_FX -> MacroEngine.DECK_B
-        MacroEngine.DECK_BG, MacroEngine.DECK_BG_FX -> MacroEngine.DECK_BG
-        MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX -> MacroEngine.DECK_PV
-        MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.MASTER_FX, "Mixer" -> MacroEngine.MASTER
-        else -> moduleId
-    }
-
     /** Resolves the active 4-knob row descriptor for a specific module id based on the current subtab/mode. */
     private fun rowDescriptorForModule(moduleId: String, parametersState: ParametersState): RowDescriptor {
         return when (moduleId) {
             MacroEngine.DECK_A, MacroEngine.DECK_A_FX -> {
-                val isFx = deckRowMode["A"] == "FX" || parametersState.activeDeckASubTab == "FX"
+                val isFx = ctx.deckRowMode["A"] == "FX" || parametersState.activeDeckASubTab == "FX"
                 if (isFx) {
-                    RowDescriptor(MacroEngine.DECK_A_FX, 0, COLOR_DECK_A, "DECK A (FX)", hasExtraHeader = true)
+                    RowDescriptor(MacroEngine.DECK_A_FX, 0, PerformanceColors.COLOR_DECK_A, "DECK A (FX)", hasExtraHeader = true)
                 } else {
-                    RowDescriptor(MacroEngine.DECK_A, 0, COLOR_DECK_A, "DECK A", hasExtraHeader = true)
+                    RowDescriptor(MacroEngine.DECK_A, 0, PerformanceColors.COLOR_DECK_A, "DECK A", hasExtraHeader = true)
                 }
             }
             MacroEngine.DECK_B, MacroEngine.DECK_B_FX -> {
-                val isFx = deckRowMode["B"] == "FX" || parametersState.activeDeckBSubTab == "FX"
+                val isFx = ctx.deckRowMode["B"] == "FX" || parametersState.activeDeckBSubTab == "FX"
                 if (isFx) {
-                    RowDescriptor(MacroEngine.DECK_B_FX, 0, COLOR_DECK_B, "DECK B (FX)", hasExtraHeader = true)
+                    RowDescriptor(MacroEngine.DECK_B_FX, 0, PerformanceColors.COLOR_DECK_B, "DECK B (FX)", hasExtraHeader = true)
                 } else {
-                    RowDescriptor(MacroEngine.DECK_B, 0, COLOR_DECK_B, "DECK B", hasExtraHeader = true)
+                    RowDescriptor(MacroEngine.DECK_B, 0, PerformanceColors.COLOR_DECK_B, "DECK B", hasExtraHeader = true)
                 }
             }
             MacroEngine.DECK_BG, MacroEngine.DECK_BG_FX -> {
-                val isFx = deckRowMode["BG"] == "FX" || parametersState.activeDeckBGSubTab == "FX"
+                val isFx = ctx.deckRowMode["BG"] == "FX" || parametersState.activeDeckBGSubTab == "FX"
                 if (isFx) {
-                    RowDescriptor(MacroEngine.DECK_BG_FX, 0, COLOR_DECK_BG, "DECK BG (FX)", hasExtraHeader = true)
+                    RowDescriptor(MacroEngine.DECK_BG_FX, 0, PerformanceColors.COLOR_DECK_BG, "DECK BG (FX)", hasExtraHeader = true)
                 } else {
-                    RowDescriptor(MacroEngine.DECK_BG, 0, COLOR_DECK_BG, "DECK BG", hasExtraHeader = true)
+                    RowDescriptor(MacroEngine.DECK_BG, 0, PerformanceColors.COLOR_DECK_BG, "DECK BG", hasExtraHeader = true)
                 }
             }
             MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX -> {
-                val isFx = deckRowMode["PV"] == "FX" || parametersState.activeDeckPVSubTab == "FX"
+                val isFx = ctx.deckRowMode["PV"] == "FX" || parametersState.activeDeckPVSubTab == "FX"
                 if (isFx) {
-                    RowDescriptor(MacroEngine.DECK_PV_FX, 0, COLOR_DECK_PV, "DECK PV (FX)", hasExtraHeader = true)
+                    RowDescriptor(MacroEngine.DECK_PV_FX, 0, PerformanceColors.COLOR_DECK_PV, "DECK PV (FX)", hasExtraHeader = true)
                 } else {
-                    RowDescriptor(MacroEngine.DECK_PV, 0, COLOR_DECK_PV, "DECK PV", hasExtraHeader = true)
+                    RowDescriptor(MacroEngine.DECK_PV, 0, PerformanceColors.COLOR_DECK_PV, "DECK PV", hasExtraHeader = true)
                 }
             }
             MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.MASTER_FX, "Mixer" -> {
                 when (parametersState.activeMixerSubTab) {
-                    "FX" -> RowDescriptor(MacroEngine.MASTER_FX, 0, COLOR_MASTER, "MASTER FX", hasExtraHeader = true)
-                    "TRANS" -> RowDescriptor(MacroEngine.TRANS, 0, COLOR_TRANS, "TRANSITIONS", hasExtraHeader = true)
-                    else -> RowDescriptor(MacroEngine.MASTER, 0, COLOR_MASTER, "MASTER", hasExtraHeader = true)
+                    "FX" -> RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER FX", hasExtraHeader = true)
+                    "TRANS" -> RowDescriptor(MacroEngine.TRANS, 0, PerformanceColors.COLOR_TRANS, "TRANSITIONS", hasExtraHeader = true)
+                    else -> RowDescriptor(MacroEngine.MASTER, 0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true)
                 }
             }
             "FX" -> {
-                val targetBankId = targetBankIdFor(focusedFxTarget)
-                val targetAccent = targetAccentFor(focusedFxTarget)
-                RowDescriptor(targetBankId, 0, targetAccent, "FX: ${targetDisplayName(focusedFxTarget)}", hasExtraHeader = true)
+                val targetBankId = ctx.targetBankIdFor(ctx.focusedFxTarget)
+                val targetAccent = ctx.targetAccentFor(ctx.focusedFxTarget)
+                RowDescriptor(targetBankId, 0, targetAccent, "FX: ${ctx.targetDisplayName(ctx.focusedFxTarget)}", hasExtraHeader = true)
             }
-            else -> RowDescriptor(moduleId, 0, COLOR_MASTER, rackModuleDisplayLabel(moduleId), hasExtraHeader = true)
+            else -> RowDescriptor(moduleId, 0, PerformanceColors.COLOR_MASTER, rackModuleDisplayLabel(moduleId), hasExtraHeader = true)
         }
     }
 
@@ -290,20 +235,20 @@ class PerformanceMatrixPanel {
         return templateRows.map { row ->
             when {
                 tabIdx == Tab.LIVE_CONSOLE.ordinal && row.hasExtraHeader && (row.groupLabel.startsWith("FX") || row.bankId == MacroEngine.DECK_A_FX) -> {
-                    val targetBankId = targetBankIdFor(focusedFxTarget)
-                    val targetAccent = targetAccentFor(focusedFxTarget)
-                    row.copy(bankId = targetBankId, accent = targetAccent, groupLabel = "FX: ${targetDisplayName(focusedFxTarget)}")
+                    val targetBankId = ctx.targetBankIdFor(ctx.focusedFxTarget)
+                    val targetAccent = ctx.targetAccentFor(ctx.focusedFxTarget)
+                    row.copy(bankId = targetBankId, accent = targetAccent, groupLabel = "FX: ${ctx.targetDisplayName(ctx.focusedFxTarget)}")
                 }
-                row.bankId == MacroEngine.DECK_A && (deckRowMode["A"] == "FX" || parametersState?.activeDeckASubTab == "FX") -> {
+                row.bankId == MacroEngine.DECK_A && (ctx.deckRowMode["A"] == "FX" || parametersState?.activeDeckASubTab == "FX") -> {
                     row.copy(bankId = MacroEngine.DECK_A_FX, groupLabel = "DECK A (FX)")
                 }
-                row.bankId == MacroEngine.DECK_B && (deckRowMode["B"] == "FX" || parametersState?.activeDeckBSubTab == "FX") -> {
+                row.bankId == MacroEngine.DECK_B && (ctx.deckRowMode["B"] == "FX" || parametersState?.activeDeckBSubTab == "FX") -> {
                     row.copy(bankId = MacroEngine.DECK_B_FX, groupLabel = "DECK B (FX)")
                 }
-                row.bankId == MacroEngine.DECK_BG && (deckRowMode["BG"] == "FX" || parametersState?.activeDeckBGSubTab == "FX") -> {
+                row.bankId == MacroEngine.DECK_BG && (ctx.deckRowMode["BG"] == "FX" || parametersState?.activeDeckBGSubTab == "FX") -> {
                     row.copy(bankId = MacroEngine.DECK_BG_FX, groupLabel = "DECK BG (FX)")
                 }
-                row.bankId == MacroEngine.DECK_PV && (deckRowMode["PV"] == "FX" || parametersState?.activeDeckPVSubTab == "FX") -> {
+                row.bankId == MacroEngine.DECK_PV && (ctx.deckRowMode["PV"] == "FX" || parametersState?.activeDeckPVSubTab == "FX") -> {
                     row.copy(bankId = MacroEngine.DECK_PV_FX, groupLabel = "DECK PV (FX)")
                 }
                 else -> row
@@ -571,7 +516,7 @@ class PerformanceMatrixPanel {
             val displayLabel = descriptor.groupLabel
 
             val rawModuleId = rowModuleId(descriptor)
-            val canonicalId = canonicalModuleId(rawModuleId)
+            val canonicalId = ctx.canonicalModuleId(rawModuleId)
             val isModuleExpanded = parametersState.disclosureFor(canonicalId) != ParametersState.DisclosureLevel.COLLAPSED ||
                                    parametersState.disclosureFor(rawModuleId) != ParametersState.DisclosureLevel.COLLAPSED
             val activeModuleId = if (parametersState.disclosureFor(canonicalId) != ParametersState.DisclosureLevel.COLLAPSED) canonicalId else rawModuleId
@@ -655,7 +600,7 @@ class PerformanceMatrixPanel {
                         if (payload != null) {
                             val file = java.io.File(payload)
                             if (file.exists() && file.extension.lowercase() == "lsdfxchain") {
-                                val chain = resolveFxChain(mixer, descriptor.bankId)
+                                val chain = ctx.resolveFxChain(mixer, descriptor.bankId)
                                 llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, chain)
                             }
                         }
@@ -747,7 +692,7 @@ class PerformanceMatrixPanel {
                 // without pushing the Val/Learn content below it past the box.
                 val knobTopY = (knobAreaTopY + knobTopYCentered) / 2f
                 val knobCenterY = knobTopY + diameter / 2f
-                val ctrlH = CTRL_H
+                val ctrlH = PerformanceColors.CTRL_H
                 // Bottom-aligned with the knob face, so short rows push the controls down into the
                 // space beside the knob caption rather than up into the row title; never above the
                 // title (first sub-row only -- that's where the title sits) or below the box.
@@ -797,10 +742,10 @@ class PerformanceMatrixPanel {
                     val cellCenterX = knobClusterStartX + col * knobColW + knobColW / 2f
 
                     // Clickable link icon for FX slots (any FX row or Deck row in FX mode, cols 1..3)
-                    val rowChain = if (isFxChainRow || isFxBankId) resolveFxChain(mixer, row.bankId) else null
+                    val rowChain = if (isFxChainRow || isFxBankId) ctx.resolveFxChain(mixer, row.bankId) else null
                     if (descriptor.hasExtraHeader && (isFxChainRow || isFxBankId) && col in 1..3 && rowChain?.isFocused() != true) {
                         val slotIdx = col - 1
-                        val chain = rowChain ?: resolveFxChain(mixer, row.bankId)
+                        val chain = rowChain ?: ctx.resolveFxChain(mixer, row.bankId)
                         val isLinked = chain.slotSuperKnobLink.getOrNull(slotIdx) == true
                         val btnSize = 18f
                         val btnX = (cellCenterX - diameter / 2f - btnSize - 2f).coerceAtLeast(gridStartX + 2f)
@@ -911,10 +856,10 @@ class PerformanceMatrixPanel {
                                     if (ImGui.button("${Icons.REFRESH} Learn##inline_learn_${control.id}", btnW, btnH)) {
                                         MacroLearnState.startLearn(control.id)
                                         MacroLearnState.selectedControlId = control.id
-                                        navigateMacroPanelTo(parametersState, row.bankId)
+                                        ctx.navigateMacroPanelTo(parametersState, row.bankId)
                                         session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
                                         // Learn needs a parameter to click: open this row's Deep Edit if it's closed.
-                                        val learnModuleId = canonicalModuleId(row.bankId)
+                                        val learnModuleId = ctx.canonicalModuleId(row.bankId)
                                         if (learnModuleId in deepEditModuleIds && parametersState.disclosureFor(learnModuleId) == ParametersState.DisclosureLevel.COLLAPSED) {
                                             parametersState.setDisclosure(learnModuleId, ParametersState.DisclosureLevel.DEEP_EDIT)
                                         }
@@ -930,7 +875,7 @@ class PerformanceMatrixPanel {
 
                     // Dedicated slot/parameter control cell under knobs on FX rows
                     if (descriptor.hasExtraHeader && (isFxChainRow || isFxBankId)) {
-                        val chain = resolveFxChain(mixer, row.bankId)
+                        val chain = ctx.resolveFxChain(mixer, row.bankId)
                         val chainLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(row.bankId) ?: "FX"
                         val cellW = (knobColW - 6f).coerceAtLeast(40f)
                         val cellX = cellCenterX - cellW / 2f
@@ -951,9 +896,9 @@ class PerformanceMatrixPanel {
                                     w = cellW,
                                     accent = row.accent,
                                     onEditInDeepEdit = {
-                                        val modId = canonicalModuleId(row.bankId)
+                                        val modId = ctx.canonicalModuleId(row.bankId)
                                         parametersState.setDisclosure(modId, ParametersState.DisclosureLevel.DEEP_EDIT)
-                                        navigateMacroPanelTo(parametersState, row.bankId)
+                                        ctx.navigateMacroPanelTo(parametersState, row.bankId)
                                     }
                                 )
                             } else if (col in 1..3) {
@@ -988,9 +933,9 @@ class PerformanceMatrixPanel {
                                 w = cellW,
                                 accent = row.accent,
                                 onEditInDeepEdit = {
-                                    val modId = canonicalModuleId(row.bankId)
+                                    val modId = ctx.canonicalModuleId(row.bankId)
                                     parametersState.setDisclosure(modId, ParametersState.DisclosureLevel.DEEP_EDIT)
-                                    navigateMacroPanelTo(parametersState, row.bankId)
+                                    ctx.navigateMacroPanelTo(parametersState, row.bankId)
                                 }
                             )
                         }
@@ -1017,51 +962,6 @@ class PerformanceMatrixPanel {
         if (dy != 0f) ImGui.setScrollY(ImGui.getScrollY() - dy)
     }
 
-    /**
-     * Points [ParametersState.activeTopTab] (and Mixer sub-tab) at whichever tab [MacroPanel]
-     * reads to display [bankId], mirroring [MacroPanel.activeBankId]'s reverse mapping -- so
-     * arming Learn on a Performance-panel knob and having [UITheme.Column3Mode.MACROS] pop open
-     * lands on the *same* bank's knobs rather than whatever tab Deep Edit last had focused.
-     * FX_SENDS has no dedicated Macros-tab destination, so it's left as a no-op (Macros still
-     * opens, just without a matching tab switch).
-     */
-    private fun navigateMacroPanelTo(parametersState: ParametersState, bankId: String) {
-        when (bankId) {
-            MacroEngine.DECK_A -> parametersState.activeTopTab = "Deck A"
-            MacroEngine.DECK_B -> parametersState.activeTopTab = "Deck B"
-            MacroEngine.DECK_BG -> parametersState.activeTopTab = "Deck BG"
-            MacroEngine.DECK_PV -> parametersState.activeTopTab = "Deck PV"
-            MacroEngine.DECK_A_FX -> {
-                parametersState.activeTopTab = "Deck A"
-                parametersState.setDeckSubTab("Deck A", "FX")
-            }
-            MacroEngine.DECK_B_FX -> {
-                parametersState.activeTopTab = "Deck B"
-                parametersState.setDeckSubTab("Deck B", "FX")
-            }
-            MacroEngine.DECK_BG_FX -> {
-                parametersState.activeTopTab = "Deck BG"
-                parametersState.setDeckSubTab("Deck BG", "FX")
-            }
-            MacroEngine.DECK_PV_FX -> {
-                parametersState.activeTopTab = "Deck PV"
-                parametersState.setDeckSubTab("Deck PV", "FX")
-            }
-            MacroEngine.MASTER_FX -> {
-                parametersState.activeTopTab = "Mixer"
-                parametersState.activeMixerSubTab = "FX"
-            }
-            MacroEngine.MASTER -> {
-                parametersState.activeTopTab = "Mixer"
-                parametersState.activeMixerSubTab = "CTRL"
-            }
-            MacroEngine.TRANS -> {
-                parametersState.activeTopTab = "Mixer"
-                parametersState.activeMixerSubTab = "TRANS"
-            }
-        }
-    }
-
     // -- Modular Rack Deep Edit (Tier 2) -------------------------------------------------------
 
     /** Friendly title for a rack module id shown in the Deep-Edit region's header line. */
@@ -1078,7 +978,7 @@ class PerformanceMatrixPanel {
         MacroEngine.MASTER -> "MASTER"
         MacroEngine.FX_SENDS -> "FX WET/DRY"
         MacroEngine.MASTER_FX -> "MASTER FX"
-        "FX" -> "FX: ${targetDisplayName(focusedFxTarget)}"
+        "FX" -> "FX: ${ctx.targetDisplayName(ctx.focusedFxTarget)}"
         else -> moduleId
     }
 
@@ -1104,7 +1004,7 @@ class PerformanceMatrixPanel {
         ParametersKeyboard.handleKeyboardShortcuts(
             state = parametersState,
             mixer = mixer,
-            deckPresetController = deckPresetController,
+            deckPresetController = ctx.deckPresetController,
             onPushUndo = onPushUndo,
             onPerformUndo = onPerformUndo,
             allowSave = fullSet,
@@ -1160,28 +1060,6 @@ class PerformanceMatrixPanel {
         drawRackDeepEdit(session, mixer, parametersState, moduleId)
     }
 
-    private fun deckLabelForModuleId(moduleId: String): String? = when (moduleId) {
-        MacroEngine.DECK_A, MacroEngine.DECK_A_FX -> "Deck A"
-        MacroEngine.DECK_B, MacroEngine.DECK_B_FX -> "Deck B"
-        MacroEngine.DECK_BG, MacroEngine.DECK_BG_FX -> "Deck BG"
-        MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX -> "Deck PV"
-        "FX" -> when (focusedFxTarget) {
-            "A" -> "Deck A"
-            "B" -> "Deck B"
-            "BG" -> "Deck BG"
-            "PV" -> "Deck PV"
-            else -> null
-        }
-        else -> null
-    }
-
-    private fun deckForLabel(mixer: Mixer, deckLabel: String): Deck = when (deckLabel) {
-        "Deck A" -> mixer.deckA
-        "Deck B" -> mixer.deckB
-        "Deck BG" -> mixer.deckBG
-        else -> mixer.deckPV
-    }
-
     private fun deepEditParamsWidth(session: llm.slop.liquidlsd.SessionContext, metrics: GridMetrics): Float {
         val lastCol = rackVisibleColumns(session).last()
         val maxGridW = rackColumnOffset(session, lastCol, metrics) + metrics.cell + metrics.cellPad * 0.5f + ParameterGridHeaders.getKebabWidth(session)
@@ -1228,8 +1106,8 @@ class PerformanceMatrixPanel {
      * two simultaneously open Deep Edits (Multi mode) from fighting over one shared selection.
      */
     private fun drawRackDeepEdit(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
-        val deckLabel = deckLabelForModuleId(moduleId)
-        val isMasterFx = (moduleId == "FX" && focusedFxTarget == "MST") || moduleId == MacroEngine.MASTER_FX
+        val deckLabel = ctx.deckLabelForModuleId(moduleId)
+        val isMasterFx = (moduleId == "FX" && ctx.focusedFxTarget == "MST") || moduleId == MacroEngine.MASTER_FX
         if (deckLabel != null && (moduleId.endsWith("_fx") || moduleId == "FX")) {
             parametersState.setDeckSubTab(deckLabel, "FX")
         }
@@ -1247,10 +1125,10 @@ class PerformanceMatrixPanel {
             return
         }
 
-        val deck = deckLabel?.let { deckForLabel(mixer, it) }
+        val deck = deckLabel?.let { ctx.deckForLabel(mixer, it) }
         if (deck != null && deck.isEmpty) {
             if (ownsKeyboard) handleDeepEditKeys(parametersState, mixer, fullSet = false)
-            DeckSourcePicker.drawLaunchpad(session, deckLabel, deck, parametersState, mixer, deckPresetController)
+            DeckSourcePicker.drawLaunchpad(session, deckLabel, deck, parametersState, mixer, ctx.deckPresetController)
             return
         }
 
@@ -1344,7 +1222,7 @@ class PerformanceMatrixPanel {
         ctrlH: Float
     ) {
         val gap = 4f
-        val chain = resolveFxChain(mixer, bankId)
+        val chain = ctx.resolveFxChain(mixer, bankId)
         val chainLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(bankId) ?: "Deck A"
 
         ImGui.setCursorScreenPos(startX, startY)
@@ -1352,7 +1230,7 @@ class PerformanceMatrixPanel {
 
         // 1. Badge with target name
         val badgeW = 76f
-        val accent = targetAccentFor(when (bankId) {
+        val accent = ctx.targetAccentFor(when (bankId) {
             MacroEngine.DECK_A_FX -> "A"
             MacroEngine.DECK_B_FX -> "B"
             MacroEngine.DECK_BG_FX -> "BG"
@@ -1393,7 +1271,7 @@ class PerformanceMatrixPanel {
         ctrlH: Float
     ) {
         val badgeW = 76f
-        val accent = COLOR_FX
+        val accent = PerformanceColors.COLOR_FX
         val bgCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.20f)
         val borderCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.85f)
         val textCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.95f)
@@ -1459,14 +1337,14 @@ class PerformanceMatrixPanel {
         val targetBtnW = 28f
         for ((i, target) in targets.withIndex()) {
             if (i > 0) ImGui.sameLine(0f, gap)
-            val isActive = target == focusedFxTarget
-            val accent = targetAccentFor(target)
+            val isActive = target == ctx.focusedFxTarget
+            val accent = ctx.targetAccentFor(target)
             val activeCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.90f)
             val inactiveCol = ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
             ImGui.pushStyleColor(ImGuiCol.Button, if (isActive) activeCol else inactiveCol)
             if (ImGui.button("$target##perf_fx_target_$target", targetBtnW, ctrlH)) {
-                focusedFxTarget = target
-                llm.slop.liquidlsd.macro.FxMacroSync.syncFor(targetBankIdFor(target), mixer)
+                ctx.focusedFxTarget = target
+                llm.slop.liquidlsd.macro.FxMacroSync.syncFor(ctx.targetBankIdFor(target), mixer)
             }
             ImGui.popStyleColor()
         }
@@ -1475,8 +1353,8 @@ class PerformanceMatrixPanel {
         ImGui.sameLine(0f, 6f)
 
         // Chain header controls: [◀] Name • [▶] [Save] [⋮]
-        val currentBankId = targetBankIdFor(focusedFxTarget)
-        val currentChain = resolveFxChain(mixer, currentBankId)
+        val currentBankId = ctx.targetBankIdFor(ctx.focusedFxTarget)
+        val currentChain = ctx.resolveFxChain(mixer, currentBankId)
         val currentLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(currentBankId) ?: "Deck A"
         FxChainHeader.drawControls(session, mixer, currentChain, currentBankId, currentLabel, ctrlH)
 
@@ -1489,9 +1367,9 @@ class PerformanceMatrixPanel {
         startX: Float,
         startY: Float,
         ctrlH: Float,
-        targetBankId: String = targetBankIdFor(focusedFxTarget)
+        targetBankId: String = ctx.targetBankIdFor(ctx.focusedFxTarget)
     ) {
-        val chain = resolveFxChain(mixer, targetBankId)
+        val chain = ctx.resolveFxChain(mixer, targetBankId)
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.beginGroup()
         FxChainHeader.drawBypassButton(chain, targetBankId, ctrlH)
@@ -1548,7 +1426,7 @@ class PerformanceMatrixPanel {
             dl.addText(tx.coerceAtLeast(curX + 4f), ty, genTextCol, genName)
         }
         if (ImGui.invisibleButton("##perf_gen_badge_$tag", genBadgeW, ctrlH)) {
-            DeckSourcePicker.open(session, parametersState, mixer, deck, deckLabel, deckPresetController)
+            DeckSourcePicker.open(session, parametersState, mixer, deck, deckLabel, ctx.deckPresetController)
         }
         if (ImGui.isItemHovered()) {
             ImGui.setMouseCursor(ImGuiMouseCursor.Hand)
@@ -1560,12 +1438,12 @@ class PerformanceMatrixPanel {
 
         // 1b. [SRC | FX] mode toggle
         val activeSubTab = parametersState.getActiveDeckSubTabByTag(tag)
-        val currentMode = if (activeSubTab == "FX") "FX" else deckRowMode.getOrDefault(tag, "SRC")
+        val currentMode = if (activeSubTab == "FX") "FX" else ctx.deckRowMode.getOrDefault(tag, "SRC")
         val modeBtnW = 28f
         val isSrc = currentMode == "SRC"
         ImGui.pushStyleColor(ImGuiCol.Button, if (isSrc) ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
         if (ImGui.button("SRC##perf_mode_src_$tag", modeBtnW, ctrlH)) {
-            deckRowMode[tag] = "SRC"
+            ctx.deckRowMode[tag] = "SRC"
             parametersState.setDeckSubTab(deckLabel, "SRC")
         }
         ImGui.popStyleColor()
@@ -1576,9 +1454,9 @@ class PerformanceMatrixPanel {
         val isFx = currentMode == "FX"
         ImGui.pushStyleColor(ImGuiCol.Button, if (isFx) ImGui.colorConvertFloat4ToU32(0.80f, 0.40f, 0.15f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
         if (ImGui.button("FX##perf_mode_fx_$tag", modeBtnW, ctrlH)) {
-            deckRowMode[tag] = "FX"
+            ctx.deckRowMode[tag] = "FX"
             parametersState.setDeckSubTab(deckLabel, "FX")
-            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(targetBankIdFor(tag), mixer)
+            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(ctx.targetBankIdFor(tag), mixer)
         }
         ImGui.popStyleColor()
         itemTooltip("Switch $deckLabel 4-knob row to dedicated Deck FX controls (Super Knob + 3 Metaknobs).")
@@ -1588,7 +1466,7 @@ class PerformanceMatrixPanel {
         // 2. Preset dropdown combo
         if (isFx) {
             val deckChain = deck.fxChain
-            val targetBank = targetBankIdFor(tag)
+            val targetBank = ctx.targetBankIdFor(tag)
             FxChainHeader.drawControls(session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH, maxW = comboW + 28f + (if (session.uiTheme.randomizationEnabled) 28f else 0f) + 4f + 82f)
         } else {
             val activePreset = when {
