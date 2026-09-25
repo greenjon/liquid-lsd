@@ -214,7 +214,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   │   ├── PerformanceTransitionsControls.kt — Transitions row extra header controls, shader picker, and queue stepping
 │   │   ├── PerformanceFxControls.kt     — Left and right wing controls for FX rows and FX Sends wet/dry
 │   │   ├── PerformanceMasterControls.kt — Master row header controls, deck snap badges, crossfader track & speed badge
-│   │   ├── PerformanceDeckControls.kt   — Deck rows left/right wing controls (source picker, mode toggle, preset combo, eject, randomize, queue navigation)
+│   │   ├── PerformanceDeckControls.kt   — Deck rows left/right wing controls (stacked two-row left wing: Row 1 SRC controls, Row 2 FX chain controls; right wing FX bypass)
 │   │   └── PerformanceDeepEditBay.kt    — Modular Rack Deep Edit accordion bay, 3-column layout, and keyboard focus management
 │   ├── rack/
 │   │   └── RackUnit.kt          — Shared chevron/disclosure-tier drawing helper for the Modular Rack accordion, and the persistent "Learning: …" indicator; stateless, operates only on `ParametersState` (never `Mixer`/`FxChain`, enforcing that disclosure changes can't trigger FX refocus or `FxMacroSync` re-runs)

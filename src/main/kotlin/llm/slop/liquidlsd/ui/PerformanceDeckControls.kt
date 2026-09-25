@@ -30,9 +30,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
     private var comboWasOpenPV = false
 
     /**
-     * Controls to the left of the knobs for Deck rows (Deck A, B, BG, PV).
-     * Provides quick generator badge, preset selector combo, eject button, randomize die button,
-     * and play queue / bg queue navigation.
+     * Controls to the left of the knobs for Deck rows (Deck A, B, BG, PV) in two stacked rows:
+     * - Row 1 (SRC): [SRC] knob-assign pill, generator badge, preset selector combo, eject button,
+     *   randomize die button, and play queue / bg queue navigation.
+     * - Row 2 (FX): [FX] knob-assign pill and dedicated FX chain controls.
      */
     fun drawDeckRowLeftControls(
         session: SessionContext,
@@ -41,9 +42,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         deckLabel: String,
         deck: Deck,
         startX: Float,
-        startY: Float,
+        row1Y: Float,
+        row2Y: Float,
         ctrlH: Float,
-        comboW: Float
+        comboW: Float,
+        rowW: Float
     ) {
         val gap = 4f
         val isDeckA = deck === mixer.deckA
@@ -56,11 +59,29 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             isDeckBG -> "BG"
             else -> "PV"
         }
+        val dl = ImGui.getWindowDrawList()
+        val activeSubTab = parametersState.getActiveDeckSubTabByTag(tag)
+        val currentMode = if (activeSubTab == "FX") "FX" else ctx.deckRowMode.getOrDefault(tag, "SRC")
+        val isSrc = currentMode == "SRC"
+        val isFx = currentMode == "FX"
+        val modeBtnW = 28f
 
-        ImGui.setCursorScreenPos(startX, startY)
+        // --- ROW 1 (SRC) -------------------------------------------------------------
+        ImGui.setCursorScreenPos(startX, row1Y)
         ImGui.beginGroup()
 
-        // 1. Generator badge -- click to change the deck's visual source
+        // 1. [SRC] mode pill
+        ImGui.pushStyleColor(ImGuiCol.Button, if (isSrc) ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
+        if (ImGui.button("SRC##perf_mode_src_$tag", modeBtnW, ctrlH)) {
+            ctx.deckRowMode[tag] = "SRC"
+            parametersState.setDeckSubTab(deckLabel, "SRC")
+        }
+        ImGui.popStyleColor()
+        itemTooltip("Assign $deckLabel's on-screen knobs to Visual Generator macros. Source controls stay available either way.")
+
+        ImGui.sameLine(0f, gap)
+
+        // 2. Generator badge -- click to change the deck's visual source
         val genBadgeW = 74f
         val genName = if (deck.isEmpty) "${Icons.PLUS} Source" else deck.source.displayName
         val genBorderCol = ImGui.colorConvertFloat4ToU32(0.35f, 0.40f, 0.50f, 0.70f)
@@ -68,7 +89,6 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val genTextCol = ImGui.colorConvertFloat4ToU32(0.80f, 0.85f, 0.95f, 1f)
         val curX = ImGui.getCursorScreenPosX()
         val curY = ImGui.getCursorScreenPosY()
-        val dl = ImGui.getWindowDrawList()
         dl.addRectFilled(curX, curY, curX + genBadgeW, curY + ctrlH, genBgCol, 4f)
         dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, genBorderCol, 4f, 0, 1f)
 
@@ -89,124 +109,91 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
         ImGui.sameLine(0f, gap)
 
-        // 1b. [SRC | FX] mode toggle
-        val activeSubTab = parametersState.getActiveDeckSubTabByTag(tag)
-        val currentMode = if (activeSubTab == "FX") "FX" else ctx.deckRowMode.getOrDefault(tag, "SRC")
-        val modeBtnW = 28f
-        val isSrc = currentMode == "SRC"
-        ImGui.pushStyleColor(ImGuiCol.Button, if (isSrc) ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
-        if (ImGui.button("SRC##perf_mode_src_$tag", modeBtnW, ctrlH)) {
-            ctx.deckRowMode[tag] = "SRC"
-            parametersState.setDeckSubTab(deckLabel, "SRC")
+        // 3. Preset dropdown combo
+        val activePreset = when {
+            isDeckA -> session.presetManager.activePresetA
+            isDeckB -> session.presetManager.activePresetB
+            isDeckBG -> session.presetManager.activePresetBG
+            else -> session.presetManager.activePresetPV
         }
-        ImGui.popStyleColor()
-        itemTooltip("Switch $deckLabel 4-knob row to Visual Generator controls.")
+        val isDirty = session.presetManager.isDeckDirty(deck, mixer)
+        val dirtyMarker = if (isDirty) " *" else ""
+        val presetDisplay = (activePreset ?: "Default") + dirtyMarker
 
-        ImGui.sameLine(0f, 1f)
-
-        val isFx = currentMode == "FX"
-        ImGui.pushStyleColor(ImGuiCol.Button, if (isFx) ImGui.colorConvertFloat4ToU32(0.80f, 0.40f, 0.15f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
-        if (ImGui.button("FX##perf_mode_fx_$tag", modeBtnW, ctrlH)) {
-            ctx.deckRowMode[tag] = "FX"
-            parametersState.setDeckSubTab(deckLabel, "FX")
-            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(ctx.targetBankIdFor(tag), mixer)
+        ImGui.setNextItemWidth(comboW)
+        val searchBuf = when {
+            isDeckA -> presetSearchA
+            isDeckB -> presetSearchB
+            isDeckBG -> presetSearchBG
+            else -> presetSearchPV
         }
-        ImGui.popStyleColor()
-        itemTooltip("Switch $deckLabel 4-knob row to dedicated Deck FX controls (Super Knob + 3 Metaknobs).")
-
-        ImGui.sameLine(0f, gap)
-
-        // 2. Preset dropdown combo
-        if (isFx) {
-            val deckChain = deck.fxChain
-            val targetBank = ctx.targetBankIdFor(tag)
-            FxChainHeader.drawControls(session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH, maxW = comboW + 28f + (if (session.uiTheme.randomizationEnabled) 28f else 0f) + 4f + 82f)
-        } else {
-            val activePreset = when {
-                isDeckA -> session.presetManager.activePresetA
-                isDeckB -> session.presetManager.activePresetB
-                isDeckBG -> session.presetManager.activePresetBG
-                else -> session.presetManager.activePresetPV
-            }
-            val isDirty = session.presetManager.isDeckDirty(deck, mixer)
-            val dirtyMarker = if (isDirty) " *" else ""
-            val presetDisplay = (activePreset ?: "Default") + dirtyMarker
-
-            ImGui.setNextItemWidth(comboW)
-            val searchBuf = when {
-                isDeckA -> presetSearchA
-                isDeckB -> presetSearchB
-                isDeckBG -> presetSearchBG
-                else -> presetSearchPV
-            }
-            val wasOpen = when {
-                isDeckA -> comboWasOpenA
-                isDeckB -> comboWasOpenB
-                isDeckBG -> comboWasOpenBG
-                else -> comboWasOpenPV
-            }
-            // Combos size their height from font + frame padding rather than taking one explicitly, so
-            // pad them out to ctrlH to match the buttons beside them. Popped before the popup body.
-            ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), ((ctrlH - ImGui.getFontSize()) / 2f).coerceAtLeast(0f))
-            val isComboOpen = ImGui.beginCombo("##perf_preset_combo_$tag", presetDisplay)
-            ImGui.popStyleVar()
-            if (isComboOpen) {
-                if (!wasOpen) {
-                    ImGui.setKeyboardFocusHere()
-                    when {
-                        isDeckA -> comboWasOpenA = true
-                        isDeckB -> comboWasOpenB = true
-                        isDeckBG -> comboWasOpenBG = true
-                        else -> comboWasOpenPV = true
-                    }
+        val wasOpen = when {
+            isDeckA -> comboWasOpenA
+            isDeckB -> comboWasOpenB
+            isDeckBG -> comboWasOpenBG
+            else -> comboWasOpenPV
+        }
+        // Combos size their height from font + frame padding rather than taking one explicitly, so
+        // pad them out to ctrlH to match the buttons beside them. Popped before the popup body.
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), ((ctrlH - ImGui.getFontSize()) / 2f).coerceAtLeast(0f))
+        val isComboOpen = ImGui.beginCombo("##perf_preset_combo_$tag", presetDisplay)
+        ImGui.popStyleVar()
+        if (isComboOpen) {
+            if (!wasOpen) {
+                ImGui.setKeyboardFocusHere()
+                when {
+                    isDeckA -> comboWasOpenA = true
+                    isDeckB -> comboWasOpenB = true
+                    isDeckBG -> comboWasOpenBG = true
+                    else -> comboWasOpenPV = true
                 }
-                ImGui.setNextItemWidth(-1f)
-                ImGui.inputTextWithHint("##preset_search_$tag", "Search presets... (Esc to clear)", searchBuf)
-                if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
-                    searchBuf.set("")
-                }
-                ImGui.separator()
+            }
+            ImGui.setNextItemWidth(-1f)
+            ImGui.inputTextWithHint("##preset_search_$tag", "Search presets... (Esc to clear)", searchBuf)
+            if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
+                searchBuf.set("")
+            }
+            ImGui.separator()
 
-                val query = searchBuf.get().trim()
-                val allPresets = FileSystemManager.scanAllPresets()
-                val filtered = if (query.isEmpty()) allPresets else allPresets.filter { it.name.contains(query, ignoreCase = true) }
+            val query = searchBuf.get().trim()
+            val allPresets = FileSystemManager.scanAllPresets()
+            val filtered = if (query.isEmpty()) allPresets else allPresets.filter { it.name.contains(query, ignoreCase = true) }
 
-                if (filtered.isEmpty()) {
-                    ImGui.textDisabled(if (query.isEmpty()) "No presets found" else "No matching presets")
-                } else {
-                    for (preset in filtered) {
-                        val isSelected = preset.name == activePreset
-                        if (ImGui.selectable("${preset.name}##perf_pselect_${tag}_${preset.path.hashCode()}", isSelected)) {
-                            session.presetRepository.loadDeckPresetAsync(
-                                File(preset.path),
-                                isDeckA = isDeckA,
-                                isDeckBG = isDeckBG,
-                                isDeckPV = isDeckPV
-                            )
-                            searchBuf.set("")
-                        }
-                        if (isSelected) {
-                            ImGui.setItemDefaultFocus()
-                        }
-                    }
-                }
-                ImGui.endCombo()
+            if (filtered.isEmpty()) {
+                ImGui.textDisabled(if (query.isEmpty()) "No presets found" else "No matching presets")
             } else {
-                if (wasOpen) {
-                    searchBuf.set("")
-                    when {
-                        isDeckA -> comboWasOpenA = false
-                        isDeckB -> comboWasOpenB = false
-                        isDeckBG -> comboWasOpenBG = false
-                        else -> comboWasOpenPV = false
+                for (preset in filtered) {
+                    val isSelected = preset.name == activePreset
+                    if (ImGui.selectable("${preset.name}##perf_pselect_${tag}_${preset.path.hashCode()}", isSelected)) {
+                        session.presetRepository.loadDeckPresetAsync(
+                            File(preset.path),
+                            isDeckA = isDeckA,
+                            isDeckBG = isDeckBG,
+                            isDeckPV = isDeckPV
+                        )
+                        searchBuf.set("")
+                    }
+                    if (isSelected) {
+                        ImGui.setItemDefaultFocus()
                     }
                 }
             }
-            itemTooltip(
-                if (activePreset != null) "Active preset: $activePreset$dirtyMarker\nClick to search and select presets."
-                else "Select a preset for $deckLabel."
-            )
+            ImGui.endCombo()
+        } else {
+            if (wasOpen) {
+                searchBuf.set("")
+                when {
+                    isDeckA -> comboWasOpenA = false
+                    isDeckB -> comboWasOpenB = false
+                    isDeckBG -> comboWasOpenBG = false
+                    else -> comboWasOpenPV = false
+                }
+            }
         }
+        itemTooltip(
+            if (activePreset != null) "Active preset: $activePreset$dirtyMarker\nClick to search and select presets."
+            else "Select a preset for $deckLabel."
+        )
 
         ImGui.sameLine(0f, gap)
 
@@ -498,6 +485,29 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.popStyleColor(2)
             itemTooltip("Deck PV (Preview Deck)\nClick to open Deck PV in Deep Edit.")
         }
+
+        ImGui.endGroup()
+
+        // --- ROW 2 (FX) --------------------------------------------------------------
+        ImGui.setCursorScreenPos(startX, row2Y)
+        ImGui.beginGroup()
+
+        // 1. [FX] mode pill
+        ImGui.pushStyleColor(ImGuiCol.Button, if (isFx) ImGui.colorConvertFloat4ToU32(0.80f, 0.40f, 0.15f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
+        if (ImGui.button("FX##perf_mode_fx_$tag", modeBtnW, ctrlH)) {
+            ctx.deckRowMode[tag] = "FX"
+            parametersState.setDeckSubTab(deckLabel, "FX")
+            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(ctx.targetBankIdFor(tag), mixer)
+        }
+        ImGui.popStyleColor()
+        itemTooltip("Assign $deckLabel's on-screen knobs to its insert FX chain (Super Knob + 3 Metaknobs). FX chain controls stay available either way.")
+
+        ImGui.sameLine(0f, gap)
+
+        // 2. Dedicated FX chain controls
+        val deckChain = deck.fxChain
+        val targetBank = ctx.targetBankIdFor(tag)
+        FxChainHeader.drawControls(session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH, maxW = rowW - modeBtnW - gap)
 
         ImGui.endGroup()
     }

@@ -1,3 +1,18 @@
+## Stacked Deck Rows in Performance Matrix Panel (`PerformanceMatrixPanel.kt`, `PerformanceDeckControls.kt`, docs)
+
+- **Context**: 2026-09-25. In `PerformanceMatrixPanel`, Deck rows (A / B / BG / PV) previously used a single left control strip where the `[SRC | FX]` mode toggle swapped the visual generator controls (preset combo, Eject, Randomize, queue navigation) and the insert FX chain controls (`FxChainHeader`). Performers frequently need to switch FX chains, adjust presets, navigate queues, or monitor dirty states without losing access to visual source controls or having to toggle back and forth.
+- **Decision**: Stack the left control wing into two concurrent rows:
+  - **Row 1 (SRC)**: `[SRC]` knob-assign pill + Generator badge + Deck preset dropdown combo + Eject `[⏏]` + Randomize `[🎲]` (when enabled) + Queue navigation (`< 1/4 >` for Deck A/B, BG queue for BG, Preview indicator button for PV).
+  - **Row 2 (FX)**: `[FX]` knob-assign pill + `FxChainHeader.drawControls` (`◀ Chain Name • ▶ Save ⋮`).
+  - **Knob Assignment Pills**: The `[SRC]` and `[FX]` pills now exclusively choose which bank the row's 4 on-screen macro knobs control (`DECK_X` vs `DECK_X_FX`). They no longer hide or swap UI controls.
+  - **Rejected Alternatives**:
+    - *Sub-labels on Deck rows*: A sub-label reduces `knobAreaH` by `captionH + subLabelGap`. Because knob diameter is the minimum across all row groups to maintain visual consistency, adding a sub-label to Deck rows would have shrunk all knobs across the entire tab.
+    - *Extra `[SRC MACROS]` / `[INSERT FX]` title badge*: The row title already dynamically switches to `"DECK X (FX)"` via `substitutedRowsForTab`.
+  - **Geometry & Alignment**: Row 2 is bottom-aligned with the knob face (`knobTopY + diameter - ctrlH`), Row 1 is stacked directly above clamped below the row title, and the right-wing FX Bypass button is aligned level with Row 2. `deckLeftW` is computed from Row 1's width and passed to Row 2, keeping grid column boundaries clean and uniform.
+- **Rationale**: Eliminates modal friction in live performance, keeping both visual source controls and insert FX controls accessible at all times with zero layout shifts or knob diameter degradation.
+
+---
+
 ## Modularization of PerformanceMatrixPanel (`PerformanceMatrixPanel.kt`, `PerformanceUiContext.kt`, `PerformanceTransitionsControls.kt`, `PerformanceFxControls.kt`, `PerformanceMasterControls.kt`, `PerformanceDeckControls.kt`, `PerformanceDeepEditBay.kt`, docs)
 
 - **Context**: 2026-09-25. `PerformanceMatrixPanel.kt` had grown past 2,700 lines, bundling tab strip, 4x4 matrix knob layout, deck row left/right controls, Transitions extra header, Master crossfader header, FX and FX Sends wing controls, Modular Rack accordion bay, 3-column Deep Edit (side rail, parameter grid, properties panel), and keyboard focus management into a single file.

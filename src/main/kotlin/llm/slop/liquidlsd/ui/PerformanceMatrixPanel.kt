@@ -411,7 +411,8 @@ class PerformanceMatrixPanel {
         }
 
         val deckComboW = (gridW * 0.13f).coerceIn(100f, 150f)
-        val deckLeftW = 74f + 4f + 28f + 1f + 28f + 4f + deckComboW + 4f + 24f + (if (session.uiTheme.randomizationEnabled) 28f else 0f) + 4f + 82f
+        val deckRow1W = 28f + 4f + 74f + 4f + deckComboW + 4f + 24f + (if (session.uiTheme.randomizationEnabled) 4f + 24f else 0f) + 4f + 82f
+        val deckLeftW = deckRow1W
         val deckRightW = 60f
         val fxLeftW = 268f
         val fxRightW = 72f
@@ -681,34 +682,46 @@ class PerformanceMatrixPanel {
                     .coerceAtLeast(ctrlMinY)
 
                 if (descriptor.hasExtraHeader) {
-                    when {
-                        isDeckA -> {
-                            deckControls.drawDeckRowLeftControls(session, mixer, parametersState, "Deck A", mixer.deckA, boxX1 + pad, ctrlY, ctrlH, deckComboW)
-                            deckControls.drawDeckRowRightControls(session, mixer, "Deck A", mixer.deckA, boxX2 - pad - deckRightW, ctrlY, ctrlH)
+                    if (isDeckRow) {
+                        val stackGap = 3f
+                        val row2Y = (knobTopY + diameter - ctrlH)
+                            .coerceAtMost(subBottomY - ctrlH)
+                        val row1Y = (row2Y - ctrlH - stackGap)
+                            .coerceAtLeast(ctrlMinY)
+                        val row2YFinal = maxOf(row2Y, row1Y + ctrlH + stackGap)
+
+                        when {
+                            isDeckA -> {
+                                deckControls.drawDeckRowLeftControls(session, mixer, parametersState, "Deck A", mixer.deckA, boxX1 + pad, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W)
+                                deckControls.drawDeckRowRightControls(session, mixer, "Deck A", mixer.deckA, boxX2 - pad - deckRightW, row2YFinal, ctrlH)
+                            }
+                            isDeckB -> {
+                                deckControls.drawDeckRowLeftControls(session, mixer, parametersState, "Deck B", mixer.deckB, boxX1 + pad, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W)
+                                deckControls.drawDeckRowRightControls(session, mixer, "Deck B", mixer.deckB, boxX2 - pad - deckRightW, row2YFinal, ctrlH)
+                            }
+                            isDeckBG -> {
+                                deckControls.drawDeckRowLeftControls(session, mixer, parametersState, "Deck BG", mixer.deckBG, boxX1 + pad, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W)
+                                deckControls.drawDeckRowRightControls(session, mixer, "Deck BG", mixer.deckBG, boxX2 - pad - deckRightW, row2YFinal, ctrlH)
+                            }
+                            isDeckPV -> {
+                                deckControls.drawDeckRowLeftControls(session, mixer, parametersState, "Deck PV", mixer.deckPV, boxX1 + pad, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W)
+                                deckControls.drawDeckRowRightControls(session, mixer, "Deck PV", mixer.deckPV, boxX2 - pad - deckRightW, row2YFinal, ctrlH)
+                            }
                         }
-                        isDeckB -> {
-                            deckControls.drawDeckRowLeftControls(session, mixer, parametersState, "Deck B", mixer.deckB, boxX1 + pad, ctrlY, ctrlH, deckComboW)
-                            deckControls.drawDeckRowRightControls(session, mixer, "Deck B", mixer.deckB, boxX2 - pad - deckRightW, ctrlY, ctrlH)
-                        }
-                        isDeckBG -> {
-                            deckControls.drawDeckRowLeftControls(session, mixer, parametersState, "Deck BG", mixer.deckBG, boxX1 + pad, ctrlY, ctrlH, deckComboW)
-                            deckControls.drawDeckRowRightControls(session, mixer, "Deck BG", mixer.deckBG, boxX2 - pad - deckRightW, ctrlY, ctrlH)
-                        }
-                        isDeckPV -> {
-                            deckControls.drawDeckRowLeftControls(session, mixer, parametersState, "Deck PV", mixer.deckPV, boxX1 + pad, ctrlY, ctrlH, deckComboW)
-                            deckControls.drawDeckRowRightControls(session, mixer, "Deck PV", mixer.deckPV, boxX2 - pad - deckRightW, ctrlY, ctrlH)
-                        }
-                        descriptor.bankId == MacroEngine.FX_SENDS -> {
-                            fxControls.drawFxSendsLeftControls(session, boxX1 + pad, ctrlY, ctrlH)
-                            fxControls.drawFxSendsRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH)
-                        }
-                        isConsoleFxRow -> {
-                            fxControls.drawFxRowLeftControls(session, mixer, parametersState, boxX1 + pad, ctrlY, ctrlH)
-                            fxControls.drawFxRowRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH, targetBankId = descriptor.bankId)
-                        }
-                        isAllFxTab -> {
-                            fxControls.drawAllFxRowLeftControls(session, mixer, descriptor.bankId, boxX1 + pad, ctrlY, ctrlH)
-                            fxControls.drawFxRowRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH, targetBankId = descriptor.bankId)
+                    } else {
+                        when {
+                            descriptor.bankId == MacroEngine.FX_SENDS -> {
+                                fxControls.drawFxSendsLeftControls(session, boxX1 + pad, ctrlY, ctrlH)
+                                fxControls.drawFxSendsRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH)
+                            }
+                            isConsoleFxRow -> {
+                                fxControls.drawFxRowLeftControls(session, mixer, parametersState, boxX1 + pad, ctrlY, ctrlH)
+                                fxControls.drawFxRowRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH, targetBankId = descriptor.bankId)
+                            }
+                            isAllFxTab -> {
+                                fxControls.drawAllFxRowLeftControls(session, mixer, descriptor.bankId, boxX1 + pad, ctrlY, ctrlH)
+                                fxControls.drawFxRowRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH, targetBankId = descriptor.bankId)
+                            }
                         }
                     }
                 }

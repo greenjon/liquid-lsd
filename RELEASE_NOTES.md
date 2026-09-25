@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Stacked Deck Rows in Performance Matrix Panel (`PerformanceMatrixPanel.kt`, `PerformanceDeckControls.kt`, `macros_and_rack.md`, `ui.md`, `DECISIONS.md`)
+- **Stacked Left Wing Controls for Deck Rows**: In `PerformanceMatrixPanel`, Deck rows (A, B, BG, PV) now feature stacked, concurrent rows for visual generator and insert FX controls:
+  - **Row 1 (SRC)**: `[SRC]` knob-assign pill, generator source badge (click to choose source), searchable preset dropdown combo, preset eject button (`⏏`), randomize die button (`🎲`, when enabled), and queue navigation (`< 1/4 >` for Deck A/B, BG queue for BG, Preview indicator button for PV).
+  - **Row 2 (FX)**: `[FX]` knob-assign pill and full `FxChainHeader` controls (chain stepping `◀` / `▶`, active chain name with dirty dot `•`, `[Save]` button, and kebab menu `[⋮]`).
+  - **On-Screen Knob Bank Assignment**: The `[SRC]` and `[FX]` pills now cleanly assign the row's 4 on-screen macro knobs to either the visual generator or the insert FX chain (Super Knob + 3 Metaknobs) without hiding or swapping either set of controls.
+  - **Vertical Alignment**: Row 2 is bottom-aligned with the knob face, Row 1 is stacked directly above clamped below the row title, and the right-wing FX bypass button aligns level with Row 2.
+
 ### Modularization of PerformanceMatrixPanel (`PerformanceMatrixPanel.kt`, `PerformanceUiContext.kt`, `PerformanceTransitionsControls.kt`, `PerformanceFxControls.kt`, `PerformanceMasterControls.kt`, `PerformanceDeckControls.kt`, `PerformanceDeepEditBay.kt`, `ui.md`, `ARCHITECTURE.md`, `DECISIONS.md`)
 - **Decomposed Performance Matrix Architecture**: Decomposed the monolithic 2,714-line `PerformanceMatrixPanel.kt` into dedicated, single-responsibility UI controllers without modifying any layout geometries, labels, tooltips, or ImGui widget IDs:
   - **`PerformanceUiContext.kt`**: Encapsulates shared performance colors (`COLOR_DECK_A/B/BG/PV`, `COLOR_MASTER`, `COLOR_TRANS`, `COLOR_FX`), `deckRowMode` state (`SRC`/`FX`), frame-scoped `deckPresetController`, and deck label/module ID resolvers.

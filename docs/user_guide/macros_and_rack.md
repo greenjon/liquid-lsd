@@ -171,8 +171,7 @@ Each tab shows 16 knobs across 4 rows, mapped to different banks:
 | **LIVE CONSOLE** | Deck A (1–4) | Deck B (1–4) | Deck BG (1–4) | Focused FX Target (Super + 3 Metaknobs) |
 | **ALL FX** | Deck A FX (1–4) | Deck B FX (1–4) | Deck BG FX (1–4) | Master FX (1–4) |
 
-- **Per-Deck Insert FX & Flexible Routing**: Every deck (A, B, BG, PV) now owns its own dedicated 3-slot `FxChain` running post-generator and pre-crossfader, completely decoupled from other decks.
-- **In-Row `[ SRC | FX ]` Mode Toggle (Deck Rows)**: In the header of each Deck row, click **`[ SRC | FX ]`** to toggle that individual row between visual generator macros (`SRC`) and that deck's insert FX macros (`FX`). In `FX` mode, the knobs immediately become Super Knob + 3 Metaknobs for that deck, and the right-wing controls offer instant `[ BYPASS / FX ON ]` and `[ Resync ]` buttons.
+- **In-Row `[ SRC | FX ]` Knob Assignment & Stacked Controls (Deck Rows)**: In each Deck row, both visual generator and insert FX chain controls coexist in two stacked rows on the left wing. Click the **`[ SRC ]`** or **`[ FX ]`** knob-assign pill to choose which bank the row's 4 on-screen knobs control (`SRC` for visual generator macros, `FX` for that deck's insert FX Super Knob + 3 Metaknobs). Switching between `SRC` and `FX` retargets on-screen knobs without hiding or toggling away either row's controls. The right wing provides an instant `[ BYPASS / FX ON ]` button for that deck's FX chain.
 - **Target Switcher `[ A | B | BG | PV | MST ]` (Row 4 in Live Console)**: Row 4 provides a focused 4-knob surface for FX. Quickly switch the row's focus between Deck A, B, BG, PV, or Master FX using the target switcher buttons. The row dynamically adopts the accent color and label of the focused target. A dedicated **`[ Preset ▾ ]`** popup button lets you load saved 3-slot FX chains (`.lsdfxchain`) or clear the active chain.
 - **ALL FX Tab**: Provides a comprehensive 16-knob surface controlling Deck A FX, Deck B FX, Deck BG FX, and Master FX simultaneously with dedicated `[ Preset ▾ ]`, `[ BYPASS / FX ON ]`, `[ Resync ]`, and slot link buttons across all 4 rows.
 - The Master row carries the crossfader and crossfader-time (Fade Speed) controls; the Transitions row carries the transition picker and queue prev/next controls.
@@ -186,14 +185,18 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
 - **Row Height & Scrolling**: Rows share the panel's height, so they shrink as you drag the Library dock taller. Once rows reach a minimum height (about where the Library is at half height), they stop shrinking and the matrix scrolls vertically instead. Two usable rows plus a scrollbar beat four knobs too small to grab. Scroll with the scrollbar, with the mouse wheel over the gaps between knobs (over a knob the wheel still adjusts that knob), or by click-dragging up/down on any empty part of a row, including its title band.
 - **Deck Rows (Deck A, B, BG, PV)**:
   - **Left Wing (Info & Deck Controls)**:
-    - **Generator Badge**: Displays active visual source (`deck.source.displayName`).
-    - **`[ SRC | FX ]` Toggle**: Instantly toggles between visual source macros and dedicated deck FX chain macros.
-    - **Preset Dropdown Combo**: Searchable preset selector with auto-focus Quick-Search filter bar (`presetSearch*`) and dirty marker (`*`).
-    - **Eject Button (`⏏`)**: Resets the deck to defaults with dirty-state safety guard.
-    - **Randomize Die Button (`🎲`)**: Instantly randomizes that deck's modulators & base values with undo support (when randomization is enabled).
-    - **Queue Navigation**: Deck A and Deck B connect to `PlayQueueManager` (`< N/Total >`), Deck BG connects to `BgQueueManager` (`< N/Total >`), and Deck PV features a quick Preview focus button.
-  - **Center Cluster**: The 4 macro knobs are grouped close together, centered neatly between the control wings with uniform column alignment across rows. When in `FX` mode, slot link buttons (`Icons.LINK`/`Icons.UNLINK`) appear on columns 2–4 to link/unlink Metaknobs to the Super Knob.
-  - **Right Wing**: Displays dedicated insert FX controls for that deck: `[ BYPASS / FX ON ]` and `[ Resync ]` buttons, directly accessible on the deck row at all times.
+    - **Row 1 (SRC)**:
+      - **`[ SRC ]` Knob Pill**: Assigns the row's 4 on-screen macro knobs to the deck's Visual Generator.
+      - **Generator Badge**: Displays active visual source (`deck.source.displayName`), click to change source.
+      - **Preset Dropdown Combo**: Searchable preset selector with auto-focus Quick-Search filter bar (`presetSearch*`) and dirty marker (`*`).
+      - **Eject Button (`⏏`)**: Resets the deck to defaults with dirty-state safety guard.
+      - **Randomize Die Button (`🎲`)**: Instantly randomizes that deck's modulators & base values with undo support (when randomization is enabled).
+      - **Queue Navigation**: Deck A and Deck B connect to `PlayQueueManager` (`< N/Total >`), Deck BG connects to `BgQueueManager` (`< N/Total >`), and Deck PV features a quick Preview focus button.
+    - **Row 2 (FX)**:
+      - **`[ FX ]` Knob Pill**: Assigns the row's 4 on-screen macro knobs to the deck's insert FX chain (Super Knob + 3 Metaknobs).
+      - **Dedicated Chain Controls**: Step through chains (`◀` / `▶`), active chain name with dirty dot (`•`), `[Save]` button, and kebab menu (`[⋮]`) for Save As, Revert, Copy/Paste, and Resync.
+  - **Center Cluster**: The 4 macro knobs are grouped close together, centered neatly between the control wings with uniform column alignment across rows. When assigned to `FX`, slot link buttons (`Icons.LINK`/`Icons.UNLINK`) appear on columns 2–4 to link/unlink Metaknobs to the Super Knob, and interactive FX slot cells appear beneath knobs 2–4.
+  - **Right Wing**: Displays dedicated insert FX controls for that deck: `[ BYPASS / FX ON ]` kill switch, aligned level with the FX row.
   - **Drag-and-Drop**: Dropping a deck preset (`.patch`, `.lsd`, `.json`) loads the visual preset; dropping a `.lsdfxchain` loads that FX chain onto the deck.
 - **FX Row (Row 4 in Live Console)**:
   - **Header (Target Switcher & Shared Chain Header)**: Quick target switcher (`[ A ]`, `[ B ]`, `[ BG ]`, `[ PV ]`, `[ MST ]`), stepping controls (`◀` / `▶`), active chain name with dirty indicator (`•`), `[Save]` button, kebab menu (`[⋮]`), and chain `[BYPASS]` toggle.
@@ -248,7 +251,7 @@ between two disclosure tiers, without leaving Performance Mode:
      with section subtabs across the top. All 5 sections feature a uniform 3-tab layout with **`FX` in the center**:
      - **`MIX`**: `[ CTRL ]  [ FX ]  [ TRANS ]` (Master controls, the Master FX chain's 3 ISF slots, and Transitions)
      - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]` (visual generator with Gain/Zoom/Rotate Z, and the insert FX chain)
-     Switching between `SRC`/`CTRL` and `FX` automatically switches the top macro row between visual source controls and insert/master FX macros (`Super Knob + 3 Metaknobs`).
+     Switching between `SRC`/`CTRL` and `FX` in Deep Edit automatically switches the on-screen macro knobs (and corresponding `[SRC]` / `[FX]` pill highlight) between visual source controls and insert/master FX macros (`Super Knob + 3 Metaknobs`). Source and FX chain controls on the deck's performance row remain available simultaneously.
    - **Properties Editor** on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.
 
    If the deck is **empty**, Deep Edit shows the empty-deck card instead: **Add Source** (opens the
