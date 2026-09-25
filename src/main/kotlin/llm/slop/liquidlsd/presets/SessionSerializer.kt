@@ -34,8 +34,6 @@ object SessionSerializer {
                 )
             }
 
-            val masterFxSlotDtos = (0 until mixer.masterFxSlots.size).map { mixer.toMasterFxSlotDto(it) }
-
             val mixerDto = MixerDto(
                 crossfade = mixer.crossfade.toDto(),
                 xfadeSpeed = mixer.xfadeSpeed.toDto(),
@@ -52,8 +50,11 @@ object SessionSerializer {
                 levelPV = mixer.levelPV.toDto(),
                 masterLevel = mixer.masterLevel.toDto(),
                 transitionSlot = transSlot,
-                masterFxSlots = masterFxSlotDtos,
-                masterFxBank = mixer.masterFxBank.toFxBankDto("MFX")
+                masterFxChain = mixer.masterFxChain.toFxChainDto(),
+                deckAFxChain = mixer.deckA.fxChain.toFxChainDto(),
+                deckBFxChain = mixer.deckB.fxChain.toFxChainDto(),
+                deckBGFxChain = mixer.deckBG.fxChain.toFxChainDto(),
+                deckPVFxChain = mixer.deckPV.fxChain.toFxChainDto()
             )
 
             val session = SessionStateDto(
@@ -133,16 +134,6 @@ object SessionSerializer {
                 }
             }
 
-            for (i in 0 until mixer.masterFxSlots.size) {
-                mixer.clearMasterFxSlot(i)
-                val slotDto = mDto.masterFxSlots.getOrNull(i)
-                if (slotDto != null && slotDto.filterId.isNotBlank()) {
-                    mixer.applyMasterFxSlot(i, slotDto)
-                }
-            }
-
-            mDto.masterFxBank?.let { mixer.masterFxBank.applyFxBank(it) }
-            
             mixer.deckA.applyDto(session.deckA)
             mixer.deckB.applyDto(session.deckB)
             
@@ -152,21 +143,12 @@ object SessionSerializer {
             val pvDto = session.deckPV ?: PresetManager.emptyDeckDto(mixer.deckPV, mixer)
             mixer.deckPV.applyDto(pvDto)
 
-            // Legacy session migration: sessions from before per-deck FX chains only have the (now
-            // removed) FX1/FX2 banks -- seed each deck's chain from them. Nothing else reads them.
-            if (session.deckA.fxChain == null) {
-                mDto.fxBank1?.chains?.getOrNull(0)?.let { mixer.deckA.applyFxChain(it) }
-            }
-            if (session.deckB.fxChain == null) {
-                mDto.fxBank1?.chains?.getOrNull(1)?.let { mixer.deckB.applyFxChain(it) }
-            }
-            if (session.deckBG?.fxChain == null) {
-                mDto.fxBank2?.chains?.getOrNull(0)?.let { mixer.deckBG.applyFxChain(it) }
-            }
-            if (session.deckPV?.fxChain == null) {
-                mDto.fxBank2?.chains?.getOrNull(1)?.let { mixer.deckPV.applyFxChain(it) }
-            }
-            
+            mDto.masterFxChain?.let { mixer.masterFxChain.applyFxChain(it) }
+            mDto.deckAFxChain?.let { mixer.deckA.fxChain.applyFxChain(it) }
+            mDto.deckBFxChain?.let { mixer.deckB.fxChain.applyFxChain(it) }
+            mDto.deckBGFxChain?.let { mixer.deckBG.fxChain.applyFxChain(it) }
+            mDto.deckPVFxChain?.let { mixer.deckPV.fxChain.applyFxChain(it) }
+
             mDto.xfadeSpeed?.let { mixer.xfadeSpeed.applyDto(it) }
             mDto.queueNext?.let { mixer.queueNext.applyDto(it) }
             mDto.queuePrev?.let { mixer.queuePrev.applyDto(it) }
@@ -215,9 +197,15 @@ object SessionSerializer {
                     allUnresolved.add("Transition filter not found: ${transDto.filterId}")
                 }
             }
-            mDto.masterFxSlots.forEachIndexed { i, fxDto ->
-                if (fxDto != null && fxDto.filterId.isNotBlank() && llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.none { it.id == fxDto.filterId }) {
-                    allUnresolved.add("Master FX${i + 1} filter not found: ${fxDto.filterId}")
+            val fxChainDtos = listOf(
+                "Master FX" to mDto.masterFxChain, "Deck A FX" to mDto.deckAFxChain, "Deck B FX" to mDto.deckBFxChain,
+                "Deck BG FX" to mDto.deckBGFxChain, "Deck PV FX" to mDto.deckPVFxChain
+            )
+            for ((chainLabel, chainDto) in fxChainDtos) {
+                chainDto?.slots?.forEachIndexed { i, fxDto ->
+                    if (fxDto != null && fxDto.filterId.isNotBlank() && llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.availableFilters.none { it.id == fxDto.filterId }) {
+                        allUnresolved.add("$chainLabel${i + 1} filter not found: ${fxDto.filterId}")
+                    }
                 }
             }
 
@@ -279,6 +267,9 @@ object SessionSerializer {
                 }
                 llm.slop.liquidlsd.macro.MacroEngine.registerBank(canonicalId, bank)
             }
+            // Refresh FX row knob labels/bindings against the chains actually restored above. Not
+            // forced: FxMacroSync's ownership rule leaves any knob the user retargeted untouched.
+            llm.slop.liquidlsd.macro.FxMacroSync.syncAll(mixer)
 
             PresetManager.sessionState = PresetManager.sessionState.copy(unresolvedItems = allUnresolved.distinct())
             llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
@@ -370,17 +361,11 @@ object SessionSerializer {
         PresetManager.sessionState = SessionState()
         llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
         llm.slop.liquidlsd.parameters.ParameterResolver.clearCache()
-        mixer.loadDefaultFxBanks()
-        // Pre-populate Performance Console's FX row (Super Knob + 3 Metaknobs) so a fresh install
-        // is ready to play without the user hand-wiring bindings first. Must run after the
-        // canonical MacroBank registration above -- registering later would silently discard
-        // these bindings. Only for fresh/empty sessions, not session restore: a returning user's
-        // already-tuned Performance Console bindings should never be touched here.
-        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_A_FX, "Deck A", mixer.deckA.fxChain)
-        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_B_FX, "Deck B", mixer.deckB.fxChain)
-        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_BG_FX, "Deck BG", mixer.deckBG.fxChain)
-        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_PV_FX, "Deck PV", mixer.deckPV.fxChain)
-        llm.slop.liquidlsd.macro.FxMacroSync.sync(llm.slop.liquidlsd.macro.MacroEngine.MASTER_FX, mixer.masterFxBank)
+        // loadDefaultFxChains() also pre-populates every FX row's knobs (Super Knob + 3 Metaknobs)
+        // via FxMacroSync, so a fresh install is ready to play. Must run after the canonical
+        // MacroBank registration above -- registering later would silently discard those bindings.
+        // Only for fresh/empty sessions: a restored session's tuned bindings are never touched here.
+        mixer.loadDefaultFxChains()
     }
 
     private fun loadInitialPreset(mixer: Mixer) {

@@ -3,7 +3,6 @@ package llm.slop.liquidlsd.macro
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ParameterResolver
-import llm.slop.liquidlsd.rendering.FxBank
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 
@@ -35,13 +34,10 @@ object MacroEngine {
     const val DECK_PV_FX = "deckPV_fx"
     const val TRANS = "masterTransition"
     const val MASTER = "master"
-    // Blank 4-knob banks for the FX Performance page's remaining two rows: FX_SENDS holds one
-    // knob per deck's fxSendLevel (A/B/BG/PV), MASTER_FX holds Mixer.masterFxSlots' 3 chain
-    // knobs + wet/dry. Neither has a natural path prefix to auto-route quick-bind into (a send
-    // knob's target deck varies per knob, and master FX already has its own "$prefix/FX..."
-    // paths under "Master" -- see Mixer.getParameterPaths), so both stay reachable only via the
-    // knob-first Learn flow (arm the knob, then click the target parameter row), same as any
-    // other macro knob.
+    // FX_SENDS holds one knob per deck's fxSendLevel (A/B/BG/PV); it has no natural path prefix to
+    // auto-route quick-bind into (each knob targets a different deck), so it's reachable only via
+    // the knob-first Learn flow. MASTER_FX is the Master FX chain's row, auto-bound by FxMacroSync
+    // to "Master/FX/..." exactly like the deck FX banks.
     const val FX_SENDS = "fxSends"
     const val MASTER_FX = "masterFx"
 
@@ -217,7 +213,7 @@ object MacroEngine {
         "Deck PV FX", "Deck PV/FX", DECK_PV_FX -> DECK_PV_FX
         "Master", "MST" -> MASTER
         "TRANS", "Transition" -> TRANS
-        "MFX" -> MASTER_FX
+        "Master FX", "Master/FX", MASTER_FX -> MASTER_FX
         else -> TRANS
     }
 
@@ -339,23 +335,11 @@ object MacroEngine {
         syncLinkedFxChainKnobValues(DECK_B_FX, mixer.deckB.fxChain)
         syncLinkedFxChainKnobValues(DECK_BG_FX, mixer.deckBG.fxChain)
         syncLinkedFxChainKnobValues(DECK_PV_FX, mixer.deckPV.fxChain)
-        syncLinkedFxKnobValues(MASTER_FX, mixer.masterFxBank)
+        syncLinkedFxChainKnobValues(MASTER_FX, mixer.masterFxChain)
     }
 
     private fun syncLinkedFxChainKnobValues(bankId: String, chain: FxChain) {
         val macroBank = synchronized(lock) { banks[bankId] } ?: return
-        for (i in 0 until FxChain.SLOT_COUNT) {
-            if (chain.slotSuperKnobLink.getOrNull(i) == true) {
-                val knob = macroBank.knobs.getOrNull(i + 1) ?: continue
-                val slot = chain.slots.getOrNull(i)
-                knob.value = slot?.metaKnob?.baseValue ?: chain.superKnob.baseValue
-            }
-        }
-    }
-
-    private fun syncLinkedFxKnobValues(bankId: String, fxBank: FxBank) {
-        val macroBank = synchronized(lock) { banks[bankId] } ?: return
-        val chain = fxBank.activeChain
         for (i in 0 until FxChain.SLOT_COUNT) {
             if (chain.slotSuperKnobLink.getOrNull(i) == true) {
                 val knob = macroBank.knobs.getOrNull(i + 1) ?: continue

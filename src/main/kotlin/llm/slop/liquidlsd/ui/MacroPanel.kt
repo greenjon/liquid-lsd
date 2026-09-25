@@ -49,9 +49,9 @@ class MacroPanel(
                 "B FX"   -> mixer.deckB.fxChain
                 "BG FX"  -> mixer.deckBG.fxChain
                 "PV FX"  -> mixer.deckPV.fxChain
-                else     -> mixer.masterFxBank.activeChain
+                else     -> mixer.masterFxChain
             }
-            drawFxRackView(session, topTab, fxChain, bank)
+            drawFxRackView(session, topTab, fxChain, bank, mixer)
         } else {
             drawMacroGrid(session, bank)
         }
@@ -177,7 +177,8 @@ class MacroPanel(
         session: llm.slop.liquidlsd.SessionContext,
         tabId: String,
         chain: llm.slop.liquidlsd.rendering.FxChain,
-        bank: MacroBank
+        bank: MacroBank,
+        mixer: Mixer
     ) {
         val displayLabel = when (tabId) {
             "A FX"   -> "DECK A FX"
@@ -201,18 +202,7 @@ class MacroPanel(
                 val slotName = slot?.displayName?.takeIf { it.isNotBlank() } ?: "S${slotIdx + 1}"
                 if (ImGui.checkbox("$slotName##macro_fx_link_${tabId}_$slotIdx", buf)) {
                     chain.setSlotLinked(slotIdx, buf.get())
-                    val bankId = activeBankId()
-                    if (tabId == "MST FX") {
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, "MFX", chain, 0)
-                    } else {
-                        val deckLabel = when (tabId) {
-                            "A FX"  -> "Deck A"
-                            "B FX"  -> "Deck B"
-                            "BG FX" -> "Deck BG"
-                            else    -> "Deck PV"
-                        }
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(bankId, deckLabel, chain)
-                    }
+                    llm.slop.liquidlsd.macro.FxMacroSync.syncFor(activeBankId(), mixer)
                 }
             }
         }

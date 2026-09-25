@@ -72,7 +72,7 @@ abstract class FxQueueEngine(queueLabel: String, private val savePrefix: String)
         activeIndex = index
         val file = queue[activeIndex]
         logger.info { "Jumping to $queueLabel item at index $activeIndex: ${file.name}" }
-        FXItemApplier.apply(session, file, targetDeck)
+        FxOps.applyItem(session, file, targetDeck.fxChain)
     }
 
     fun advanceNext(session: SessionContext, mixer: Mixer) {
@@ -83,7 +83,7 @@ abstract class FxQueueEngine(queueLabel: String, private val savePrefix: String)
         activeIndex = nextIndex
         val file = queue[activeIndex]
         logger.info { "Advancing $queueLabel to index $activeIndex: ${file.name}" }
-        FXItemApplier.apply(session, file, targetDeck)
+        FxOps.applyItem(session, file, targetDeck.fxChain)
     }
 
     fun advancePrevious(session: SessionContext, mixer: Mixer) {
@@ -94,6 +94,6 @@ abstract class FxQueueEngine(queueLabel: String, private val savePrefix: String)
         activeIndex = prevIndex
         val file = queue[activeIndex]
         logger.info { "Stepping back $queueLabel to index $activeIndex: ${file.name}" }
-        FXItemApplier.apply(session, file, targetDeck)
+        FxOps.applyItem(session, file, targetDeck.fxChain)
     }
 }

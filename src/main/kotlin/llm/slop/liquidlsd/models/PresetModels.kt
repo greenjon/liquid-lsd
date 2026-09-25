@@ -236,8 +236,7 @@ data class DeckPresetDto(
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
     val paramNotes: Map<String, String> = emptyMap(), // Per-parameter notes keyed by paramKey
-    val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null,
-    val fxChain: FXChainDto? = null
+    val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null
 )
 
 @Serializable
@@ -274,10 +273,12 @@ data class MixerDto(
     val levelPV: ParameterDto? = null,
     val masterLevel: ParameterDto? = null,
     val transitionSlot: FXSlotDto? = null,
-    val masterFxSlots: List<FXSlotDto?> = emptyList(),
-    val fxBank1: FXBankDto? = null,
-    val fxBank2: FXBankDto? = null,
-    val masterFxBank: FXBankDto? = null
+    // FX chains are session state, never part of a deck preset (.lsd) -- see DECISIONS.md.
+    val masterFxChain: FXChainDto? = null,
+    val deckAFxChain: FXChainDto? = null,
+    val deckBFxChain: FXChainDto? = null,
+    val deckBGFxChain: FXChainDto? = null,
+    val deckPVFxChain: FXChainDto? = null
 )
 
 @Serializable
@@ -501,8 +502,7 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         feedbackParameters = feedbackParamsMap,
         viewParameters = viewParamsMap,
         globalAlpha = source.globalAlpha.toDto(),
-        isEmpty = isEmpty,
-        fxChain = fxChain.toFxChainDto(name)
+        isEmpty = isEmpty
     )
 }
 
@@ -589,8 +589,5 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     // Apply global parameters
     source.globalAlpha.reset()
     dto.globalAlpha?.let { source.globalAlpha.applyDto(it) }
-
-    // Apply FX Chain (if present in preset)
-    dto.fxChain?.let { fxChain.applyFxChain(it) }
 }
 

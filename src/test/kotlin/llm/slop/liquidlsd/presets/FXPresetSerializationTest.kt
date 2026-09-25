@@ -2,7 +2,6 @@ package llm.slop.liquidlsd.presets
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import llm.slop.liquidlsd.models.FXBankDto
 import llm.slop.liquidlsd.models.FXChainDto
 import llm.slop.liquidlsd.models.FXPresetDto
 import llm.slop.liquidlsd.models.FXSlotDto
@@ -675,6 +674,30 @@ class FXPresetSerializationTest {
                         )
                     )
                 )
+            ),
+            FXChainDto(
+                name = "Subtle Optical Warmth",
+                tags = listOf("warmth", "filmic", "master"),
+                dryWet = p(0.75f),
+                superKnob = p(0.5f),
+                slotSuperKnobLink = listOf(true, true, true),
+                slots = listOf(
+                    FXSlotDto(filterId = "color_levels", dryWet = p(1.0f), parameters = mapOf("contrast" to p(1.15f, 0f, 3f), "saturation" to p(1.05f, 0f, 3f))),
+                    FXSlotDto(filterId = "retro_crt", dryWet = p(0.35f), parameters = mapOf("scanlineIntensity" to p(0.25f, 0f, 1f), "curvature" to p(0.05f, 0f, 1f))),
+                    FXSlotDto(filterId = "bloom", dryWet = p(0.5f), parameters = mapOf("bloomIntensity" to p(0.6f, 0f, 3f), "threshold" to p(0.6f, 0f, 1f)))
+                )
+            ),
+            FXChainDto(
+                name = "Digital Bitcrush Mosaic",
+                tags = listOf("bitcrush", "mosaic", "digital"),
+                dryWet = p(1.0f),
+                superKnob = p(0.5f),
+                slotSuperKnobLink = listOf(true, true, true),
+                slots = listOf(
+                    FXSlotDto(filterId = "pixelate", dryWet = p(1.0f), parameters = mapOf("pixelSize" to p(16f, 1f, 64f), "lattice" to p(1f, 0f, 2f))),
+                    FXSlotDto(filterId = "rgb_split", dryWet = p(0.9f), parameters = mapOf("amount" to p(0.04f, 0f, 0.1f), "mode" to p(0f, 0f, 1f))),
+                    FXSlotDto(filterId = "video_strobe", dryWet = p(0.8f), parameters = mapOf("rate" to p(8f, 0f, 20f), "strobeMode" to p(2f, 0f, 3f)))
+                )
             )
         )
 
@@ -688,108 +711,6 @@ class FXPresetSerializationTest {
             val readBack = json.decodeFromString<FXChainDto>(file.readText())
             assertEquals(chain.name, readBack.name)
             assertEquals(3, readBack.slots.size)
-        }
-    }
-
-    @Test
-    fun generateAndValidateDefaultBundledFxBanks() {
-        generateAndValidateDefaultBundledFxChains()
-        val banksDir = java.io.File("library/fx_banks")
-        banksDir.mkdirs()
-
-        // Helper to find a generated chain by name
-        val chainsDir = java.io.File("library/fx_chains")
-        fun loadChain(fileName: String): FXChainDto {
-            val file = java.io.File(chainsDir, fileName)
-            assertTrue(file.exists(), "Required FX chain $fileName must exist")
-            return json.decodeFromString<FXChainDto>(file.readText())
-        }
-
-        val banks = listOf(
-            FXBankDto(
-                name = "Club Master Finishers",
-                tags = listOf("master", "finisher", "mfx", "club"),
-                masterWetDry = p(1.0f),
-                chains = listOf(
-                    FXChainDto(
-                        name = "Subtle Optical Warmth",
-                        tags = listOf("warmth", "filmic", "master"),
-                        dryWet = p(0.75f),
-                        superKnob = p(0.5f),
-                        slotSuperKnobLink = listOf(true, true, true),
-                        slots = listOf(
-                            FXSlotDto(filterId = "color_levels", dryWet = p(1.0f), parameters = mapOf("contrast" to p(1.15f, 0f, 3f), "saturation" to p(1.05f, 0f, 3f))),
-                            FXSlotDto(filterId = "retro_crt", dryWet = p(0.35f), parameters = mapOf("scanlineIntensity" to p(0.25f, 0f, 1f), "curvature" to p(0.05f, 0f, 1f))),
-                            FXSlotDto(filterId = "bloom", dryWet = p(0.5f), parameters = mapOf("bloomIntensity" to p(0.6f, 0f, 3f), "threshold" to p(0.6f, 0f, 1f)))
-                        )
-                    ),
-                    loadChain("laser_concert_anamorphic.lsdfxchain"),
-                    loadChain("the_drop_weapon.lsdfxchain")
-                )
-            ),
-            FXBankDto(
-                name = "Psychedelic Warp and Flow",
-                tags = listOf("psychedelic", "fluid", "warp", "fx1"),
-                masterWetDry = p(1.0f),
-                chains = listOf(
-                    loadChain("liquid_mercury.lsdfxchain"),
-                    loadChain("hyperspace_trip.lsdfxchain"),
-                    loadChain("2d_to_3d_elevation_with_feedback.lsdfxchain")
-                )
-            ),
-            FXBankDto(
-                name = "Analog Tape and Retro Terminal",
-                tags = listOf("retro", "vhs", "crt", "terminal"),
-                masterWetDry = p(1.0f),
-                chains = listOf(
-                    loadChain("grindhouse_vhs_bootleg.lsdfxchain"),
-                    loadChain("pop_art_comic_print.lsdfxchain"),
-                    loadChain("cyberpunk_1984.lsdfxchain")
-                )
-            ),
-            FXBankDto(
-                name = "Glitch Strobe and Tactical Recon",
-                tags = listOf("glitch", "strobe", "tactical", "fx2"),
-                masterWetDry = p(1.0f),
-                chains = listOf(
-                    loadChain("the_drop_weapon.lsdfxchain"),
-                    loadChain("flir_predator_vision.lsdfxchain"),
-                    FXChainDto(
-                        name = "Digital Bitcrush Mosaic",
-                        tags = listOf("bitcrush", "mosaic", "digital"),
-                        dryWet = p(1.0f),
-                        superKnob = p(0.5f),
-                        slotSuperKnobLink = listOf(true, true, true),
-                        slots = listOf(
-                            FXSlotDto(filterId = "pixelate", dryWet = p(1.0f), parameters = mapOf("pixelSize" to p(16f, 1f, 64f), "lattice" to p(1f, 0f, 2f))),
-                            FXSlotDto(filterId = "rgb_split", dryWet = p(0.9f), parameters = mapOf("amount" to p(0.04f, 0f, 0.1f), "mode" to p(0f, 0f, 1f))),
-                            FXSlotDto(filterId = "video_strobe", dryWet = p(0.8f), parameters = mapOf("rate" to p(8f, 0f, 20f), "strobeMode" to p(2f, 0f, 3f)))
-                        )
-                    )
-                )
-            ),
-            FXBankDto(
-                name = "Liquid Chrome and Prisms",
-                tags = listOf("chrome", "liquid", "prism", "dimension"),
-                masterWetDry = p(1.0f),
-                chains = listOf(
-                    loadChain("liquid_chrome_dimension.lsdfxchain"),
-                    loadChain("prismatic_crystal_kaleidoscope.lsdfxchain"),
-                    loadChain("cosmic_black_hole_vortex.lsdfxchain")
-                )
-            )
-        )
-
-        for (bank in banks) {
-            val fileName = bank.name.lowercase().replace(" ", "_") + ".lsdfxbank"
-            val file = java.io.File(banksDir, fileName)
-            val jsonText = json.encodeToString(bank)
-            file.writeText(jsonText)
-
-            // Validate that it reads back cleanly
-            val readBack = json.decodeFromString<FXBankDto>(file.readText())
-            assertEquals(bank.name, readBack.name)
-            assertEquals(3, readBack.chains.size)
         }
     }
 }

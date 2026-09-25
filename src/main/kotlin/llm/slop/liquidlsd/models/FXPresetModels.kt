@@ -28,19 +28,6 @@ data class FXChainDto(
 )
 
 /**
- * Data Transfer Object for a 3-chain FX bank preset (.lsdfxbank).
- */
-@Serializable
-data class FXBankDto(
-    val version: Int = 1,
-    val name: String,
-    val tags: List<String> = emptyList(),
-    val masterWetDry: ParameterDto? = null,
-    val chains: List<FXChainDto?> = emptyList(), // Size 3; null = empty chain
-    val activeChainIndex: Int = 0
-)
-
-/**
  * Data Transfer Object for an individual Transition Preset (.lsdtrans).
  */
 @Serializable

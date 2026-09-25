@@ -169,23 +169,8 @@ class PerformanceMatrixPanel {
         else -> "Master"
     }
 
-    private fun resolveFxChain(mixer: Mixer, bankId: String): llm.slop.liquidlsd.rendering.FxChain = when (bankId) {
-        MacroEngine.DECK_A_FX -> mixer.deckA.fxChain
-        MacroEngine.DECK_B_FX -> mixer.deckB.fxChain
-        MacroEngine.DECK_BG_FX -> mixer.deckBG.fxChain
-        MacroEngine.DECK_PV_FX -> mixer.deckPV.fxChain
-        MacroEngine.MASTER_FX -> mixer.masterFxBank.activeChain
-        else -> mixer.deckA.fxChain
-    }
-
-    private fun resolveFxChainLabel(bankId: String): String = when (bankId) {
-        MacroEngine.DECK_A_FX -> "Deck A"
-        MacroEngine.DECK_B_FX -> "Deck B"
-        MacroEngine.DECK_BG_FX -> "Deck BG"
-        MacroEngine.DECK_PV_FX -> "Deck PV"
-        MacroEngine.MASTER_FX -> "Master"
-        else -> "Deck A"
-    }
+    private fun resolveFxChain(mixer: Mixer, bankId: String): llm.slop.liquidlsd.rendering.FxChain =
+        llm.slop.liquidlsd.macro.FxMacroSync.chainFor(bankId, mixer) ?: mixer.deckA.fxChain
 
     private val presetSearchA = ImString(64)
     private val presetSearchB = ImString(64)
@@ -642,16 +627,7 @@ class PerformanceMatrixPanel {
                         if (payload != null) {
                             val file = File(payload)
                             if (file.exists() && file.extension.lowercase() == "lsdfxchain") {
-                                session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
-                                    targetDeck.fxChain.applyFxChain(chainDto)
-                                    val bankId = when {
-                                        isDeckA -> MacroEngine.DECK_A_FX
-                                        isDeckB -> MacroEngine.DECK_B_FX
-                                        isDeckBG -> MacroEngine.DECK_BG_FX
-                                        else -> MacroEngine.DECK_PV_FX
-                                    }
-                                    llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(bankId, "Deck $dropTag FX", targetDeck.fxChain)
-                                }
+                                llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, targetDeck.fxChain)
                             } else if (file.exists() && file.extension.lowercase() in listOf("patch", "lsd", "json")) {
                                 val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
                                 if (!isDirty) {
@@ -679,18 +655,7 @@ class PerformanceMatrixPanel {
                             val file = java.io.File(payload)
                             if (file.exists() && file.extension.lowercase() == "lsdfxchain") {
                                 val chain = resolveFxChain(mixer, descriptor.bankId)
-                                session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
-                                    chain.applyFxChain(chainDto)
-                                    val chainLabel = resolveFxChainLabel(descriptor.bankId)
-                                    when (descriptor.bankId) {
-                                        MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX ->
-                                            llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(descriptor.bankId, chainLabel, chain)
-                                        MacroEngine.MASTER_FX ->
-                                            llm.slop.liquidlsd.macro.FxMacroSync.syncChain(descriptor.bankId, chainLabel, chain, mixer.masterFxBank.activeChainIndex)
-                                        else ->
-                                            llm.slop.liquidlsd.macro.FxMacroSync.syncChain(descriptor.bankId, chainLabel, chain, 0)
-                                    }
-                                }
+                                llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, chain)
                             }
                         }
                         ImGui.endDragDropTarget()
@@ -791,19 +756,19 @@ class PerformanceMatrixPanel {
                     when {
                         isDeckA -> {
                             drawDeckRowLeftControls(session, mixer, parametersState, "Deck A", mixer.deckA, boxX1 + pad, ctrlY, ctrlH, deckComboW)
-                            drawDeckRowRightControls(session, "Deck A", mixer.deckA, boxX2 - pad - deckRightW, ctrlY, ctrlH)
+                            drawDeckRowRightControls(session, mixer, "Deck A", mixer.deckA, boxX2 - pad - deckRightW, ctrlY, ctrlH)
                         }
                         isDeckB -> {
                             drawDeckRowLeftControls(session, mixer, parametersState, "Deck B", mixer.deckB, boxX1 + pad, ctrlY, ctrlH, deckComboW)
-                            drawDeckRowRightControls(session, "Deck B", mixer.deckB, boxX2 - pad - deckRightW, ctrlY, ctrlH)
+                            drawDeckRowRightControls(session, mixer, "Deck B", mixer.deckB, boxX2 - pad - deckRightW, ctrlY, ctrlH)
                         }
                         isDeckBG -> {
                             drawDeckRowLeftControls(session, mixer, parametersState, "Deck BG", mixer.deckBG, boxX1 + pad, ctrlY, ctrlH, deckComboW)
-                            drawDeckRowRightControls(session, "Deck BG", mixer.deckBG, boxX2 - pad - deckRightW, ctrlY, ctrlH)
+                            drawDeckRowRightControls(session, mixer, "Deck BG", mixer.deckBG, boxX2 - pad - deckRightW, ctrlY, ctrlH)
                         }
                         isDeckPV -> {
                             drawDeckRowLeftControls(session, mixer, parametersState, "Deck PV", mixer.deckPV, boxX1 + pad, ctrlY, ctrlH, deckComboW)
-                            drawDeckRowRightControls(session, "Deck PV", mixer.deckPV, boxX2 - pad - deckRightW, ctrlY, ctrlH)
+                            drawDeckRowRightControls(session, mixer, "Deck PV", mixer.deckPV, boxX2 - pad - deckRightW, ctrlY, ctrlH)
                         }
                         descriptor.bankId == MacroEngine.FX_SENDS -> {
                             drawFxSendsLeftControls(session, boxX1 + pad, ctrlY, ctrlH)
@@ -827,10 +792,7 @@ class PerformanceMatrixPanel {
 
                     val cellCenterX = knobClusterStartX + col * knobColW + knobColW / 2f
 
-                    val isFxBankId = row.bankId in listOf(
-                        MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX,
-                        MacroEngine.MASTER_FX
-                    )
+                    val isFxBankId = row.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS
                     // Clickable link icon for FX slots (any FX row or Deck row in FX mode, cols 1..3)
                     if (descriptor.hasExtraHeader && (isFxChainRow || isFxBankId) && col in 1..3) {
                         val slotIdx = col - 1
@@ -856,15 +818,7 @@ class PerformanceMatrixPanel {
                             if (ImGui.button("$icon##perf_fx_link_${row.bankId}_${rowIdx}_$slotIdx", btnSize, btnSize)) {
                                 val newLinked = !isLinked
                                 chain.setSlotLinked(slotIdx, newLinked)
-                                val chainLabel = resolveFxChainLabel(row.bankId)
-                                when (row.bankId) {
-                                    MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX ->
-                                        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(row.bankId, chainLabel, chain)
-                                    MacroEngine.MASTER_FX ->
-                                        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(row.bankId, chainLabel, chain, mixer.masterFxBank.activeChainIndex)
-                                    else ->
-                                        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(row.bankId, chainLabel, chain, 0)
-                                }
+                                llm.slop.liquidlsd.macro.FxMacroSync.syncFor(row.bankId, mixer)
                             }
                         }
                         ImGui.popStyleVar()
@@ -1021,7 +975,10 @@ class PerformanceMatrixPanel {
                 parametersState.activeTopTab = "Deck PV"
                 parametersState.setDeckSubTab("Deck PV", "FX")
             }
-            MacroEngine.MASTER_FX -> parametersState.activeTopTab = "MFX"
+            MacroEngine.MASTER_FX -> {
+                parametersState.activeTopTab = "Mixer"
+                parametersState.activeMixerSubTab = "FX"
+            }
             MacroEngine.MASTER -> {
                 parametersState.activeTopTab = "Mixer"
                 parametersState.activeMixerSubTab = "CTRL"
@@ -1111,7 +1068,7 @@ class PerformanceMatrixPanel {
 
     /**
      * The Deep Edit tier: the full parameter/CV editor, reusing
-     * [ParametersTabs.drawDeckGroupContent]/[ParametersTabs.drawFxBankGroupContent] and
+     * [ParametersTabs.drawDeckGroupContent]/[ParametersTabs.drawMasterFxContent] and
      * [PropertiesPanel.draw] (see [drawRackDeepEdit]). Macro target binding (arm Learn, inspect/edit bindings) lives
      * on the Mixer panel's MACROS tab ([MacroPanel]), not here -- pressing Learn on a Tier-1 knob
      * jumps there automatically (see [navigateMacroPanelTo]).
@@ -1189,7 +1146,7 @@ class PerformanceMatrixPanel {
      * Tier 3 (Deep Edit): the full parameter/CV editor -- side rail, then
      * [ParameterGridHeaders.drawColumnHeaders] (VAL/MIDI/LFO/SEQ/AUD headers, which also draw the
      * SRC/FX, CTRL/FX/TRANS section tabs) over [ParametersTabs.drawDeckGroupContent] (decks),
-     * [ParametersTabs.drawFxBankGroupContent] (Master FX) or [ParametersTabs.drawMixerGroupContent]
+     * [ParametersTabs.drawMasterFxContent] (Master FX) or [ParametersTabs.drawMixerGroupContent]
      * (Transitions/Master), and [PropertiesPanel.draw] on the right for the per-parameter CV
      * detail (LFO/MIDI/SEQ/AUD) of whichever cell is selected.
      *
@@ -1200,11 +1157,7 @@ class PerformanceMatrixPanel {
      */
     private fun drawRackDeepEdit(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
         val deckLabel = deckLabelForModuleId(moduleId)
-        val fxBank = when {
-            moduleId == "FX" && focusedFxTarget == "MST" -> mixer.masterFxBank
-            moduleId == MacroEngine.MASTER_FX -> mixer.masterFxBank
-            else -> null
-        }
+        val isMasterFx = (moduleId == "FX" && focusedFxTarget == "MST") || moduleId == MacroEngine.MASTER_FX
         if (deckLabel != null && (moduleId.endsWith("_fx") || moduleId == "FX")) {
             parametersState.setDeckSubTab(deckLabel, "FX")
         }
@@ -1214,7 +1167,7 @@ class PerformanceMatrixPanel {
         val isMixerModule = moduleId == MacroEngine.TRANS || moduleId == MacroEngine.MASTER || moduleId == MacroEngine.MASTER_FX || moduleId == "Mixer"
 
         val ownsKeyboard = moduleId == keyboardOwnerModuleId
-        if (deckLabel == null && fxBank == null && !isMixerModule) {
+        if (deckLabel == null && !isMasterFx && !isMixerModule) {
             if (ownsKeyboard) handleDeepEditKeys(parametersState, mixer, fullSet = false)
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 ImGui.textDisabled("Deep Edit isn't available for this module.")
@@ -1284,8 +1237,8 @@ class PerformanceMatrixPanel {
 
             if (deck != null) {
                 ParametersTabs.drawDeckGroupContent(session, deckLabel, deck, parametersState, labelColW, mixer, gridStartX, cvColumnsFn, columnOffsetFn, colorFn, onPushUndo)
-            } else if (fxBank != null) {
-                ParametersTabs.drawFxBankGroupContent(session, fxBank.label, fxBank, parametersState, labelColW, mixer, gridStartX, cvColumnsFn, columnOffsetFn, colorFn, onPushUndo)
+            } else if (isMasterFx) {
+                ParametersTabs.drawMasterFxContent(session, mixer, parametersState, labelColW, gridStartX, cvColumnsFn, columnOffsetFn, colorFn, onPushUndo)
             } else if (isMixerModule) {
                 ParametersTabs.drawMixerGroupContent(session, mixer, parametersState, labelColW, gridStartX, cvColumnsFn, columnOffsetFn, colorFn, onPushUndo)
             }
@@ -1320,7 +1273,7 @@ class PerformanceMatrixPanel {
     ) {
         val gap = 4f
         val chain = resolveFxChain(mixer, bankId)
-        val chainLabel = resolveFxChainLabel(bankId)
+        val chainLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(bankId) ?: "Deck A"
 
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.beginGroup()
@@ -1372,31 +1325,13 @@ class PerformanceMatrixPanel {
                 for (asset in chains) {
                     if (ImGui.selectable("${asset.name}##perf_allfx_item_${bankId}_${asset.path.hashCode()}")) {
                         val file = File(asset.path)
-                        session.presetRepository.loadFxChainAsync(file).thenAccept { dto ->
-                            chain.applyFxChain(dto)
-                            when (bankId) {
-                                MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX ->
-                                    llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(bankId, chainLabel, chain)
-                                MacroEngine.MASTER_FX ->
-                                    llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, chainLabel, chain, mixer.masterFxBank.activeChainIndex)
-                                else ->
-                                    llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, chainLabel, chain, 0)
-                            }
-                        }
+                        llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, chain)
                     }
                 }
             }
             ImGui.separator()
             if (ImGui.menuItem("${Icons.TRASH} Clear Chain")) {
-                (0 until FxChain.SLOT_COUNT).forEach { chain.clearFxSlot(it) }
-                when (bankId) {
-                    MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX ->
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(bankId, chainLabel, chain)
-                    MacroEngine.MASTER_FX ->
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, chainLabel, chain, mixer.masterFxBank.activeChainIndex)
-                    else ->
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, chainLabel, chain, 0)
-                }
+                llm.slop.liquidlsd.presets.FxOps.clearChain(chain)
             }
             ImGui.endPopup()
         }
@@ -1484,17 +1419,7 @@ class PerformanceMatrixPanel {
             ImGui.pushStyleColor(ImGuiCol.Button, if (isActive) activeCol else inactiveCol)
             if (ImGui.button("$target##perf_fx_target_$target", targetBtnW, ctrlH)) {
                 focusedFxTarget = target
-                val bankId = targetBankIdFor(target)
-                val chain = resolveFxChain(mixer, bankId)
-                val chainLabel = resolveFxChainLabel(bankId)
-                when (bankId) {
-                    MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX ->
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(bankId, chainLabel, chain)
-                    MacroEngine.MASTER_FX ->
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, chainLabel, chain, mixer.masterFxBank.activeChainIndex)
-                    else ->
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, chainLabel, chain, 0)
-                }
+                llm.slop.liquidlsd.macro.FxMacroSync.syncFor(targetBankIdFor(target), mixer)
             }
             ImGui.popStyleColor()
         }
@@ -1506,7 +1431,7 @@ class PerformanceMatrixPanel {
         val chainBtnW = 100f
         val currentBankId = targetBankIdFor(focusedFxTarget)
         val currentChain = resolveFxChain(mixer, currentBankId)
-        val currentLabel = resolveFxChainLabel(currentBankId)
+        val currentLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(currentBankId) ?: "Deck A"
         if (ImGui.button("Preset ${Icons.CHEVRON_DOWN}##perf_fx_chain_preset", chainBtnW, ctrlH)) {
             ImGui.openPopup("perf_fx_chain_popup")
         }
@@ -1522,31 +1447,13 @@ class PerformanceMatrixPanel {
                 for (asset in chains) {
                     if (ImGui.selectable("${asset.name}##perf_fx_item_${asset.path.hashCode()}")) {
                         val file = File(asset.path)
-                        session.presetRepository.loadFxChainAsync(file).thenAccept { dto ->
-                            currentChain.applyFxChain(dto)
-                            when (currentBankId) {
-                                MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX ->
-                                    llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(currentBankId, currentLabel, currentChain)
-                                MacroEngine.MASTER_FX ->
-                                    llm.slop.liquidlsd.macro.FxMacroSync.syncChain(currentBankId, currentLabel, currentChain, mixer.masterFxBank.activeChainIndex)
-                                else ->
-                                    llm.slop.liquidlsd.macro.FxMacroSync.syncChain(currentBankId, currentLabel, currentChain, 0)
-                            }
-                        }
+                        llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, currentChain)
                     }
                 }
             }
             ImGui.separator()
             if (ImGui.menuItem("${Icons.TRASH} Clear Chain")) {
-                (0 until FxChain.SLOT_COUNT).forEach { currentChain.clearFxSlot(it) }
-                when (currentBankId) {
-                    MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX ->
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(currentBankId, currentLabel, currentChain)
-                    MacroEngine.MASTER_FX ->
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(currentBankId, currentLabel, currentChain, mixer.masterFxBank.activeChainIndex)
-                    else ->
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(currentBankId, currentLabel, currentChain, 0)
-                }
+                llm.slop.liquidlsd.presets.FxOps.clearChain(currentChain)
             }
             ImGui.endPopup()
         }
@@ -1563,6 +1470,7 @@ class PerformanceMatrixPanel {
         targetBankId: String = targetBankIdFor(focusedFxTarget)
     ) {
         val chain = resolveFxChain(mixer, targetBankId)
+        val targetLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(targetBankId) ?: "Deck A"
         val gap = 4f
         val bypassW = 68f
         val resyncW = 58f
@@ -1573,7 +1481,6 @@ class PerformanceMatrixPanel {
         // Chain-level bypass
         val isBypassed = !chain.enabled
         ImGui.pushStyleColor(ImGuiCol.Button, if (isBypassed) ImGui.colorConvertFloat4ToU32(0.6f, 0.15f, 0.15f, 1f) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
-        val targetLabel = resolveFxChainLabel(targetBankId)
         if (ImGui.button((if (isBypassed) "BYPASS" else "FX ON") + "##perf_fx_bypass_$targetBankId", bypassW, ctrlH)) {
             chain.enabled = !chain.enabled
         }
@@ -1584,14 +1491,7 @@ class PerformanceMatrixPanel {
 
         // Resync button
         if (ImGui.button("Resync##perf_fx_resync_$targetBankId", resyncW, ctrlH)) {
-            when (targetBankId) {
-                MacroEngine.DECK_A_FX, MacroEngine.DECK_B_FX, MacroEngine.DECK_BG_FX, MacroEngine.DECK_PV_FX ->
-                    llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(targetBankId, targetLabel, chain, forceResync = true)
-                MacroEngine.MASTER_FX ->
-                    llm.slop.liquidlsd.macro.FxMacroSync.syncChain(targetBankId, targetLabel, chain, mixer.masterFxBank.activeChainIndex, forceResync = true)
-                else ->
-                    llm.slop.liquidlsd.macro.FxMacroSync.syncChain(targetBankId, targetLabel, chain, 0, forceResync = true)
-            }
+            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(targetBankId, mixer, forceResync = true)
         }
         itemTooltip("Reset these 4 knobs to the Super Knob + 3 Metaknobs smart default.")
 
@@ -1678,9 +1578,7 @@ class PerformanceMatrixPanel {
         if (ImGui.button("FX##perf_mode_fx_$tag", modeBtnW, ctrlH)) {
             deckRowMode[tag] = "FX"
             parametersState.setDeckSubTab(deckLabel, "FX")
-            val chainLabel = "$deckLabel FX"
-            val bankId = targetBankIdFor(tag)
-            llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(bankId, chainLabel, deck.fxChain)
+            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(targetBankIdFor(tag), mixer)
         }
         ImGui.popStyleColor()
         itemTooltip("Switch $deckLabel 4-knob row to dedicated Deck FX controls (Super Knob + 3 Metaknobs).")
@@ -1690,7 +1588,6 @@ class PerformanceMatrixPanel {
         // 2. Preset dropdown combo
         if (isFx) {
             val chainBtnW = comboW
-            val deckBankId = targetBankIdFor(tag)
             val deckChain = deck.fxChain
             val deckChainLabel = "$deckLabel FX"
             if (ImGui.button("Preset ${Icons.CHEVRON_DOWN}##perf_deck_fx_preset_$tag", chainBtnW, ctrlH)) {
@@ -1708,17 +1605,13 @@ class PerformanceMatrixPanel {
                     for (asset in chains) {
                         if (ImGui.selectable("${asset.name}##perf_deck_fx_item_${tag}_${asset.path.hashCode()}")) {
                             val file = File(asset.path)
-                            session.presetRepository.loadFxChainAsync(file).thenAccept { dto ->
-                                deckChain.applyFxChain(dto)
-                                llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(deckBankId, deckChainLabel, deckChain)
-                            }
+                            llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, deckChain)
                         }
                     }
                 }
                 ImGui.separator()
                 if (ImGui.menuItem("${Icons.TRASH} Clear Chain")) {
-                    (0 until FxChain.SLOT_COUNT).forEach { deckChain.clearFxSlot(it) }
-                    llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(deckBankId, deckChainLabel, deckChain)
+                    llm.slop.liquidlsd.presets.FxOps.clearChain(deckChain)
                 }
                 ImGui.endPopup()
             }
@@ -2108,6 +2001,7 @@ class PerformanceMatrixPanel {
      */
     private fun drawDeckRowRightControls(
         session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
         deckLabel: String,
         deck: Deck,
         startX: Float,
@@ -2139,8 +2033,7 @@ class PerformanceMatrixPanel {
         ImGui.sameLine(0f, gap)
 
         if (ImGui.button("Resync##perf_deck_fx_resync_$tag", 48f, ctrlH)) {
-            val bankId = targetBankIdFor(tag)
-            llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(bankId, "$deckLabel FX", deck.fxChain, forceResync = true)
+            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(targetBankIdFor(tag), mixer, forceResync = true)
         }
         itemTooltip("Reset $deckLabel FX knobs to Super Knob + 3 Metaknobs smart default.")
 

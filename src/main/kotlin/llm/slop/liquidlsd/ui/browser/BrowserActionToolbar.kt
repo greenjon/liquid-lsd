@@ -4,7 +4,6 @@ import imgui.ImGui
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.presets.BgQueueManager
 import llm.slop.liquidlsd.rendering.Deck
-import llm.slop.liquidlsd.rendering.FxBank
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
@@ -37,7 +36,7 @@ object BrowserActionToolbar {
     private var pendingOverwriteDeckLabel: String = ""
     private var pendingFxFile: File? = null
 
-    /** Extension-aware deck load: FX singles/chains resolve via [Deck.applyFxSlot]/[Deck.applyFxChain]
+    /** Extension-aware deck load: FX singles/chains resolve via [llm.slop.liquidlsd.presets.FxOps]
      *  (first vacant slot, or an overwrite prompt when full); everything else loads as a full preset.
      *  Shared by the toolbar `[A][B][BG][PV]` buttons and LibraryPanel's numeric-key shortcuts so both
      *  paths apply FX items the same way regardless of Library view mode. */
@@ -45,16 +44,12 @@ object BrowserActionToolbar {
         val ext = selectedFile.extension.lowercase()
         when (ext) {
             "lsdfxchain" -> {
-                session.presetRepository.loadFxChainAsync(selectedFile).thenAccept { chainDto ->
-                    deck.applyFxChain(chainDto)
-                }
+                llm.slop.liquidlsd.presets.FxOps.loadChain(session, selectedFile, deck.fxChain)
             }
             "lsdfx" -> {
                 val vacantIndex = (0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT).firstOrNull { deck.fxSlots[it] == null }
                 if (vacantIndex != null) {
-                    session.presetRepository.loadFxPresetAsync(selectedFile).thenAccept { presetDto ->
-                        deck.applyFxSlot(vacantIndex, presetDto.slot)
-                    }
+                    llm.slop.liquidlsd.presets.FxOps.loadSlot(session, selectedFile, deck.fxChain, vacantIndex)
                 } else {
                     pendingOverwriteDeck = deck
                     pendingOverwriteDeckLabel = deckLabel
@@ -228,9 +223,7 @@ object BrowserActionToolbar {
                         val fx = deck.fxSlots[s]
                         val label = if (fx != null) "Slot $slotNum: ${fx.displayName}" else "Slot $slotNum: Empty"
                         if (ImGui.menuItem(label)) {
-                            session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
-                                deck.applyFxSlot(s, presetDto.slot)
-                            }
+                            llm.slop.liquidlsd.presets.FxOps.loadSlot(session, file, deck.fxChain, s)
                         }
                     }
                 }

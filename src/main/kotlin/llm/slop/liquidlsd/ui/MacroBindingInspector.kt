@@ -38,7 +38,7 @@ object MacroBindingInspector {
     internal data class NavTarget(val moduleId: String, val topTab: String, val subTab: String)
 
     /**
-     * Maps a parameter path ("Deck A/fbZoom", "Deck A/FX/...", "Mixer/Transition/DryWet", "MFX/...",
+     * Maps a parameter path ("Deck A/fbZoom", "Deck A/FX/...", "Mixer/Transition/DryWet", "Master/FX/...",
      * "Mixer/crossfade") to where it's shown. Null for paths with no editor tab.
      */
     internal fun navTargetFor(parameterId: String): NavTarget? {
@@ -53,7 +53,7 @@ object MacroBindingInspector {
         }
         return when {
             deckModule != null -> NavTarget(deckModule, top, if (rest.startsWith("FX/")) "FX" else "SRC")
-            top == "MFX" -> NavTarget(MacroEngine.MASTER, "Mixer", "FX")
+            top == "Master" && rest.startsWith("FX/") -> NavTarget(MacroEngine.MASTER, "Mixer", "FX")
             top == "Mixer" -> NavTarget(MacroEngine.MASTER, "Mixer", if (rest.startsWith("Transition/")) "TRANS" else "CTRL")
             else -> null
         }

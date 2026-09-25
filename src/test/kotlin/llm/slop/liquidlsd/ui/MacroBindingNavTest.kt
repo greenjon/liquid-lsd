@@ -25,12 +25,13 @@ class MacroBindingNavTest {
     fun mixerParamsOpenMasterOnMatchingSubTab() {
         assertEquals(MacroBindingInspector.NavTarget(MacroEngine.MASTER, "Mixer", "CTRL"), nav("Mixer/crossfade"))
         assertEquals(MacroBindingInspector.NavTarget(MacroEngine.MASTER, "Mixer", "TRANS"), nav("Mixer/Transition/DryWet"))
-        assertEquals(MacroBindingInspector.NavTarget(MacroEngine.MASTER, "Mixer", "FX"), nav("MFX/DryWet"))
+        assertEquals(MacroBindingInspector.NavTarget(MacroEngine.MASTER, "Mixer", "FX"), nav("Master/FX/DryWet"))
     }
 
     @Test
     fun unknownPathsHaveNoTarget() {
         assertNull(nav("crossfade"))
         assertNull(nav("FX1/DryWet"))
+        assertNull(nav("MFX/DryWet"))
     }
 }

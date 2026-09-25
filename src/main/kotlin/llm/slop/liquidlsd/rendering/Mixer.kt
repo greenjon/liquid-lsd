@@ -1,6 +1,5 @@
 package llm.slop.liquidlsd.rendering
 
-import llm.slop.liquidlsd.models.FXBankDto
 import llm.slop.liquidlsd.models.FXChainDto
 import llm.slop.liquidlsd.models.FXSlotDto
 import llm.slop.liquidlsd.models.TransitionPresetDto
@@ -35,19 +34,16 @@ class Mixer(
     // Intermediate FBO for pre-FX composite output (Deck A + Deck B composited over Deck BG)
     var masterCompositeFBO = FBO(width, height)
 
-    // Master FX bank (3 serial chains x 3 slots)
-    val masterFxBank = FxBank("MFX")
-
-    val masterFxWetDry: ModulatableParameter
-        get() = masterFxBank.masterWetDry
+    // Master FX: one post-crossfader chain of 3 serial slots, same model as each deck's fxChain
+    val masterFxChain = FxChain("Master FX")
 
     val masterFxSlots: Array<ISFFilter?>
-        get() = masterFxBank.activeChain.slots
+        get() = masterFxChain.slots
 
-    // Ping-pong pair for Master FX's active chain, plus its dry/wet-blended output:
+    // Ping-pong pair for the Master FX chain's slots, plus its dry/wet-blended output:
     var masterFxPingFBO = FBO(width, height)
     var masterFxPongFBO = FBO(width, height)
-    var masterFxBankOutFBO = FBO(width, height)
+    var masterFxOutFBO = FBO(width, height)
 
     // Active ISF transition filter for crossfading
     var transitionFilter: ISFFilter? = null
@@ -97,15 +93,15 @@ class Mixer(
 
         masterFxPingFBO.dispose()
         masterFxPongFBO.dispose()
-        masterFxBankOutFBO.dispose()
+        masterFxOutFBO.dispose()
 
         masterFxPingFBO = FBO(width, height)
         masterFxPongFBO = FBO(width, height)
-        masterFxBankOutFBO = FBO(width, height)
+        masterFxOutFBO = FBO(width, height)
 
         masterFxPingFBO.clear(0f, 0f, 0f, 0f)
         masterFxPongFBO.clear(0f, 0f, 0f, 0f)
-        masterFxBankOutFBO.clear(0f, 0f, 0f, 0f)
+        masterFxOutFBO.clear(0f, 0f, 0f, 0f)
 
         deckA.resize(newWidth, newHeight)
         deckB.resize(newWidth, newHeight)
@@ -113,16 +109,16 @@ class Mixer(
         deckPV.resize(newWidth, newHeight)
     }
 
-    fun toMasterFxSlotDto(slotIndex: Int): FXSlotDto? = masterFxBank.activeChain.toFxSlotDto(slotIndex)
+    fun toMasterFxSlotDto(slotIndex: Int): FXSlotDto? = masterFxChain.toFxSlotDto(slotIndex)
 
-    fun applyMasterFxSlot(slotIndex: Int, dto: FXSlotDto) = masterFxBank.activeChain.applyFxSlot(slotIndex, dto)
+    fun applyMasterFxSlot(slotIndex: Int, dto: FXSlotDto) = masterFxChain.applyFxSlot(slotIndex, dto)
 
-    fun clearMasterFxSlot(slotIndex: Int) = masterFxBank.activeChain.clearFxSlot(slotIndex)
+    fun clearMasterFxSlot(slotIndex: Int) = masterFxChain.clearFxSlot(slotIndex)
 
-    fun applyMasterFxChain(dto: FXChainDto) = masterFxBank.activeChain.applyFxChain(dto)
+    fun applyMasterFxChain(dto: FXChainDto) = masterFxChain.applyFxChain(dto)
 
     fun toMasterFxChainDto(name: String, tags: List<String> = emptyList()): FXChainDto =
-        masterFxBank.activeChain.toFxChainDto(name, tags)
+        masterFxChain.toFxChainDto(name, tags)
 
     // Blend parameters
     val crossfade = ModulatableParameter(-1.0f, minClamp = -1.0f, maxClamp = 1.0f, meterType = MeterType.BIPOLAR) // -1.0 = Deck A, 1.0 = Deck B
@@ -130,30 +126,30 @@ class Mixer(
  
     init {
         setTransition("linear_crossfade")
-        loadDefaultFxBanks()
+        loadDefaultFxChains()
     }
 
-    private val bankJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+    private val chainJson = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
 
     /**
-     * Loads the starter FX: Master FX gets the "Club Master Finishers" bank, and each deck gets one
-     * chain taken from the "Psychedelic Warp and Flow" / "Liquid Chrome and Prisms" bank files.
+     * Loads the starter FX chains: "Subtle Optical Warmth" on Master FX, and a distinct bundled
+     * chain on each deck. Reads from the user's library first, falling back to the bundled copy.
      */
-    fun loadDefaultFxBanks() {
-        fun loadBank(fileName: String): FXBankDto? {
-            val file = java.io.File(llm.slop.liquidlsd.ui.FileSystemManager.getFxBanksRoot(), fileName)
+    fun loadDefaultFxChains() {
+        fun loadChain(fileName: String): FXChainDto? {
+            val file = java.io.File(llm.slop.liquidlsd.ui.FileSystemManager.getFxChainsRoot(), fileName)
             if (file.exists()) {
                 return try {
-                    bankJson.decodeFromString<FXBankDto>(file.readText())
+                    chainJson.decodeFromString<FXChainDto>(file.readText())
                 } catch (e: Exception) {
                     null
                 }
             }
-            val stream = Mixer::class.java.classLoader.getResourceAsStream("default_fx_banks/$fileName")
+            val stream = Mixer::class.java.classLoader.getResourceAsStream("default_fx_chains/$fileName")
             if (stream != null) {
                 return try {
                     val text = stream.bufferedReader().use { it.readText() }
-                    bankJson.decodeFromString<FXBankDto>(text)
+                    chainJson.decodeFromString<FXChainDto>(text)
                 } catch (e: Exception) {
                     null
                 }
@@ -161,21 +157,13 @@ class Mixer(
             return null
         }
 
-        loadBank("club_master_finishers.lsdfxbank")?.let { masterFxBank.applyFxBank(it) }
+        loadChain("subtle_optical_warmth.lsdfxchain")?.let { masterFxChain.applyFxChain(it) }
+        loadChain("liquid_mercury.lsdfxchain")?.let { deckA.fxChain.applyFxChain(it) }
+        loadChain("liquid_chrome_dimension.lsdfxchain")?.let { deckB.fxChain.applyFxChain(it) }
+        loadChain("hyperspace_trip.lsdfxchain")?.let { deckBG.fxChain.applyFxChain(it) }
+        loadChain("prismatic_crystal_kaleidoscope.lsdfxchain")?.let { deckPV.fxChain.applyFxChain(it) }
 
-        // Distinct starter FX chain for each deck
-        val warpAndFlow = loadBank("psychedelic_warp_and_flow.lsdfxbank")
-        val liquidChrome = loadBank("liquid_chrome_and_prisms.lsdfxbank")
-        warpAndFlow?.chains?.getOrNull(0)?.copy(name = "Warp & Flow")?.let { deckA.fxChain.applyFxChain(it) }
-        liquidChrome?.chains?.getOrNull(0)?.copy(name = "Liquid Chrome")?.let { deckB.fxChain.applyFxChain(it) }
-        warpAndFlow?.chains?.getOrNull(1)?.copy(name = "Prisms")?.let { deckBG.fxChain.applyFxChain(it) }
-        liquidChrome?.chains?.getOrNull(1)?.copy(name = "Color Shifter")?.let { deckPV.fxChain.applyFxChain(it) }
-
-        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_A_FX, "Deck A", deckA.fxChain)
-        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_B_FX, "Deck B", deckB.fxChain)
-        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_BG_FX, "Deck BG", deckBG.fxChain)
-        llm.slop.liquidlsd.macro.FxMacroSync.syncDeckFx(llm.slop.liquidlsd.macro.MacroEngine.DECK_PV_FX, "Deck PV", deckPV.fxChain)
-        llm.slop.liquidlsd.macro.FxMacroSync.sync(llm.slop.liquidlsd.macro.MacroEngine.MASTER_FX, masterFxBank)
+        llm.slop.liquidlsd.macro.FxMacroSync.syncAll(this)
     }
 
     // Channel level multiplier faders (0.0 to 1.0) -- modulatable so they're macro/CV-bindable
@@ -270,7 +258,8 @@ class Mixer(
     val randAll = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true)
 
     companion object {
-        const val MASTER_FX_SLOT_COUNT = 3
+        /** Parameter-path prefix for [masterFxChain], the Master counterpart of "Deck A/FX". */
+        const val MASTER_FX_PREFIX = "Master/FX"
         const val FORBIDDEN_RANDOMIZE_TOOLTIP = "It is forbidden to randomize the randomizer. Chaos would ensue."
         val RANDOMIZER_PARAM_KEYS = setOf(
             "Mixer/randDeckA",
@@ -298,18 +287,15 @@ class Mixer(
         list.addAll(deckB.getAllRandomizableParameters())
         list.addAll(deckBG.getAllRandomizableParameters())
         list.addAll(deckPV.getAllRandomizableParameters())
-        masterFxBank.chains.forEach { chain ->
-            if (chain.enabled) {
-                list.add(chain.dryWet)
-                chain.slots.forEach { fx ->
-                    if (fx != null && fx.enabled) {
-                        list.add(fx.dryWet)
-                        list.addAll(fx.parameters.values)
-                    }
+        if (masterFxChain.enabled) {
+            list.add(masterFxChain.dryWet)
+            masterFxChain.slots.forEach { fx ->
+                if (fx != null && fx.enabled) {
+                    list.add(fx.dryWet)
+                    list.addAll(fx.parameters.values)
                 }
             }
         }
-        list.add(masterFxWetDry)
         list.add(crossfade)
         list.add(masterLevel)
         return list
@@ -344,9 +330,9 @@ class Mixer(
             list.addAll(filter.getParameterPaths("$prefix/Transition"))
         }
 
-        // Master FX paths use the literal "MFX" prefix (its own top-level Parameters tab and
-        // macro bank), not $prefix -- unlike everything else here, which is genuinely Mixer-owned.
-        list.addAll(masterFxBank.getParameterPaths("MFX"))
+        // Master FX paths use the literal "Master/FX" prefix, mirroring each deck's "Deck X/FX" --
+        // not $prefix, unlike everything else here, which is genuinely Mixer-owned.
+        list.addAll(masterFxChain.getParameterPaths(MASTER_FX_PREFIX))
 
         list.addAll(deckA.getParameterPaths("Deck A"))
         list.addAll(deckB.getParameterPaths("Deck B"))
@@ -439,7 +425,7 @@ class Mixer(
         randAll.evaluate()
 
         transitionFilter?.update()
-        masterFxBank.update()
+        masterFxChain.update()
 
         // Continuous random morphing evaluation — zero-allocation check
         val isModA = randDeckA.hasActiveModulator() || randDeckA.value > 0.0001f
@@ -581,8 +567,8 @@ class Mixer(
         masterCompositeFBO.dispose()
         masterFxPingFBO.dispose()
         masterFxPongFBO.dispose()
-        masterFxBankOutFBO.dispose()
-        masterFxBank.dispose()
+        masterFxOutFBO.dispose()
+        masterFxChain.dispose()
         transitionFilter?.dispose()
     }
 }

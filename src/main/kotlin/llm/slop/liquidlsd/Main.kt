@@ -460,6 +460,7 @@ fun main(args: Array<String>) {
 
             // Apply loaded presets from queues atomically on the main thread
             PresetManager.applyPendingPresets(mixer)
+            llm.slop.liquidlsd.presets.FxOps.drainOnGlThread(mixer)
 
             // Process any deferred OpenGL compilation tasks (e.g. background scanned visual sources) on Thread 0
             llm.slop.liquidlsd.rendering.VisualSourceRegistry.processPendingGlTasks()

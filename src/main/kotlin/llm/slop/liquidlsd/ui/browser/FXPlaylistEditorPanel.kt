@@ -9,7 +9,6 @@ import kotlinx.serialization.json.Json
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.models.FXPlaylistDto
 import llm.slop.liquidlsd.presets.FXBgQueueManager
-import llm.slop.liquidlsd.presets.FXItemApplier
 import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.AssetItem
@@ -278,7 +277,7 @@ object FXPlaylistEditorPanel {
             // Double click: apply to crossfader-active deck (A or B)
             if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
                 val targetDeck = if (mixer.crossfade.value <= 0.0f) mixer.deckA else mixer.deckB
-                FXItemApplier.apply(session, resolvedFile, targetDeck)
+                llm.slop.liquidlsd.presets.FxOps.applyItem(session, resolvedFile, targetDeck.fxChain)
             }
 
             // Drag source for reordering
@@ -325,10 +324,10 @@ object FXPlaylistEditorPanel {
             if (ImGui.beginPopup(popupId)) {
                 if (ImGui.menuItem("Apply to Active Deck (A/B)")) {
                     val targetDeck = if (mixer.crossfade.value <= 0.0f) mixer.deckA else mixer.deckB
-                    FXItemApplier.apply(session, resolvedFile, targetDeck)
+                    llm.slop.liquidlsd.presets.FxOps.applyItem(session, resolvedFile, targetDeck.fxChain)
                 }
                 if (ImGui.menuItem("Apply to Deck BG")) {
-                    FXItemApplier.apply(session, resolvedFile, mixer.deckBG)
+                    llm.slop.liquidlsd.presets.FxOps.applyItem(session, resolvedFile, mixer.deckBG.fxChain)
                 }
                 ImGui.separator()
                 if (ImGui.menuItem("Add to Live FX Queue (A/B)")) {

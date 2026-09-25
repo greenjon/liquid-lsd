@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#master-fx-works-like-the-decks-fx-loads-are-thread-safe-mixerkt-rendererkt-fxopskt-fxmacrosynckt-sessionserializerkt-presetmodelskt-performancematrixpanelkt-parameterstabskt-fxbrowserpanelkt-macropanelkt-performance_controlsmd-presets_and_librarymd-macros_and_rackmd-docsdeveloperpreset_managementmd-architecturemd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Master FX Works Like the Decks; FX Loads Are Thread-Safe (Mixer.kt, Renderer.kt, FxOps.kt, FxMacroSync.kt, SessionSerializer.kt, PresetModels.kt, PerformanceMatrixPanel.kt, ParametersTabs.kt, FXBrowserPanel.kt, MacroPanel.kt, performance_controls.md, presets_and_library.md, macros_and_rack.md, docs/developer/preset_management.md, ARCHITECTURE.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#classic-view-removed-performance-mode-is-the-only-view-uimanagerkt-menubarkt-uithemekt-apppreferenceskt-apppreferencesstorekt-parametergridheaderskt-parameterstabskt-performancematrixpanelkt-propertiespanelkt-deckcontrolpanelkt-mixerpanelkt-macropanelkt-macrobindinginspectorkt-decksourcepickerkt-shortcutmanagerkt-shortcutactionkt-preferencesdefaultstestkt-windowlayoutsafetytestkt-docsgetting_startedmd-docsindexmd-your_workspacemd-macros_and_rackmd-modulationmd-performance_controlsmd-presets_and_librarymd-docsdeveloperuimd-docsdeveloperpreset_managementmd-architecturemd-readmemd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3942,6 +3953,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#master-fx-works-like-the-decks-fx-loads-are-thread-safe-mixerkt-rendererkt-fxopskt-fxmacrosynckt-sessionserializerkt-presetmodelskt-performancematrixpanelkt-parameterstabskt-fxbrowserpanelkt-macropanelkt-performance_controlsmd-presets_and_librarymd-macros_and_rackmd-docsdeveloperpreset_managementmd-architecturemd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Master FX Works Like the Decks; FX Loads Are Thread-Safe (Mixer.kt, Renderer.kt, FxOps.kt, FxMacroSync.kt, SessionSerializer.kt, PresetModels.kt, PerformanceMatrixPanel.kt, ParametersTabs.kt, FXBrowserPanel.kt, MacroPanel.kt, performance_controls.md, presets_and_library.md, macros_and_rack.md, docs/developer/preset_management.md, ARCHITECTURE.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#classic-view-removed-performance-mode-is-the-only-view-uimanagerkt-menubarkt-uithemekt-apppreferenceskt-apppreferencesstorekt-parametergridheaderskt-parameterstabskt-performancematrixpanelkt-propertiespanelkt-deckcontrolpanelkt-mixerpanelkt-macropanelkt-macrobindinginspectorkt-decksourcepickerkt-shortcutmanagerkt-shortcutactionkt-preferencesdefaultstestkt-windowlayoutsafetytestkt-docsgetting_startedmd-docsindexmd-your_workspacemd-macros_and_rackmd-modulationmd-performance_controlsmd-presets_and_librarymd-docsdeveloperuimd-docsdeveloperpreset_managementmd-architecturemd-readmemd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6651,6 +6673,16 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="master-fx-works-like-the-decks-fx-loads-are-thread-safe-mixerkt-rendererkt-fxopskt-fxmacrosynckt-sessionserializerkt-presetmodelskt-performancematrixpanelkt-parameterstabskt-fxbrowserpanelkt-macropanelkt-performance_controlsmd-presets_and_librarymd-macros_and_rackmd-docsdeveloperpreset_managementmd-architecturemd-decisionsmd">Master FX Works Like the Decks; FX Loads Are Thread-Safe (<code>Mixer.kt</code>, <code>Renderer.kt</code>, <code>FxOps.kt</code>, <code>FxMacroSync.kt</code>, <code>SessionSerializer.kt</code>, <code>PresetModels.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>ParametersTabs.kt</code>, <code>FXBrowserPanel.kt</code>, <code>MacroPanel.kt</code>, <code>performance_controls.md</code>, <code>presets_and_library.md</code>, <code>macros_and_rack.md</code>, <code>docs/developer/preset_management.md</code>, <code>ARCHITECTURE.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>Master FX is one chain of 3 slots</strong>, the same as each deck's FX. The Chain 1/2/3 tabs, the separate bank wet/dry and the <code>.lsdfxbank</code> format are gone; use saved <code>.lsdfxchain</code> files instead. The two chains that only existed inside banks, <em>Subtle Optical Warmth</em> (the default Master FX) and <em>Digital Bitcrush Mosaic</em>, are now ordinary bundled chains.</li>
+<li><strong>Load and save Master FX from the FX browser</strong>: right-click menus offer <strong>Load to Master FX</strong> for stock filters, singles and chains, and <strong><code>[+]</code></strong> can save a slot or chain from Master FX.</li>
+<li><strong>Fix: FX knobs after Resync / chain loads</strong>: <strong>Resync</strong> on the Master FX row and on deck rows in <code>[FX]</code> mode no longer leaves the knobs bound to nothing, and knob labels now update whenever a chain or slot changes, from any panel. They also match the restored chains after relaunching.</li>
+<li><strong>Fix: FX changes are applied on the render thread</strong>: loading a chain or slot from any panel no longer frees GPU resources from a background thread or swaps effects mid-frame.</li>
+<li><strong>FX is separate from deck presets again</strong>: loading a deck preset no longer replaces that deck's FX chain, and tweaking FX no longer marks the preset as unsaved. FX chains are saved with your session instead.</li>
+<li><strong>MIDI learn on any FX row</strong> now defaults to soft takeover, as it already did on Master FX.</li>
+<li><strong>Existing sessions</strong>: Master FX and deck FX from sessions saved before this change reset to the starter chains once. Knobs bound to old <code>MFX/...</code> parameters no longer resolve; press <strong>Resync</strong> on that FX row.</li>
+</ul>
 <h3 id="classic-view-removed-performance-mode-is-the-only-view-uimanagerkt-menubarkt-uithemekt-apppreferenceskt-apppreferencesstorekt-parametergridheaderskt-parameterstabskt-performancematrixpanelkt-propertiespanelkt-deckcontrolpanelkt-mixerpanelkt-macropanelkt-macrobindinginspectorkt-decksourcepickerkt-shortcutmanagerkt-shortcutactionkt-preferencesdefaultstestkt-windowlayoutsafetytestkt-docsgetting_startedmd-docsindexmd-your_workspacemd-macros_and_rackmd-modulationmd-performance_controlsmd-presets_and_librarymd-docsdeveloperuimd-docsdeveloperpreset_managementmd-architecturemd-readmemd-decisionsmd">Classic View Removed — Performance Mode Is the Only View (<code>UIManager.kt</code>, <code>MenuBar.kt</code>, <code>UITheme.kt</code>, <code>AppPreferences.kt</code>, <code>AppPreferencesStore.kt</code>, <code>ParameterGridHeaders.kt</code>, <code>ParametersTabs.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>PropertiesPanel.kt</code>, <code>DeckControlPanel.kt</code>, <code>MixerPanel.kt</code>, <code>MacroPanel.kt</code>, <code>MacroBindingInspector.kt</code>, <code>DeckSourcePicker.kt</code>, <code>ShortcutManager.kt</code>, <code>ShortcutAction.kt</code>, <code>PreferencesDefaultsTest.kt</code>, <code>WindowLayoutSafetyTest.kt</code>, <code>docs/getting_started.md</code>, <code>docs/index.md</code>, <code>your_workspace.md</code>, <code>macros_and_rack.md</code>, <code>modulation.md</code>, <code>performance_controls.md</code>, <code>presets_and_library.md</code>, <code>docs/developer/ui.md</code>, <code>docs/developer/preset_management.md</code>, <code>ARCHITECTURE.md</code>, <code>README.md</code>, <code>DECISIONS.md</code>)</h3>
 <ul>
 <li><strong>One view</strong>: The Classic Parameters / Properties panels are gone. Everything they did is in Performance Mode's Deep Edit. <code>F4</code>, <strong>View → Classic Deck View / Performance Mode</strong> and the <code>[ CLASSIC | PERF ]</code> toolbar pill have been removed.</li>
@@ -6661,10 +6693,9 @@
 </ul>
 <h3 id="removed-the-shared-fx1fx2-banks-mixerkt-sessionserializerkt-macroenginekt-midimappingmanagerkt-performancematrixpanelkt-parameterstabskt-parameterspanelkt-parametersstatekt-fxbrowserpanelkt-starterfxandlegacybankstestkt-fxmacrosynctestkt-fxbanktestkt-macroenginetestkt-rackdisclosuretestkt-performance_controlsmd-presets_and_librarymd-macros_and_rackmd-docsdeveloperpreset_managementmd-architecturemd-decisionsmd">Removed the Shared FX1/FX2 Banks (<code>Mixer.kt</code>, <code>SessionSerializer.kt</code>, <code>MacroEngine.kt</code>, <code>MidiMappingManager.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>ParametersTabs.kt</code>, <code>ParametersPanel.kt</code>, <code>ParametersState.kt</code>, <code>FXBrowserPanel.kt</code>, <code>StarterFxAndLegacyBanksTest.kt</code>, <code>FxMacroSyncTest.kt</code>, <code>FxBankTest.kt</code>, <code>MacroEngineTest.kt</code>, <code>RackDisclosureTest.kt</code>, <code>performance_controls.md</code>, <code>presets_and_library.md</code>, <code>macros_and_rack.md</code>, <code>docs/developer/preset_management.md</code>, <code>ARCHITECTURE.md</code>, <code>DECISIONS.md</code>)</h3>
 <ul>
-<li><strong>FX1 / FX2 are gone</strong>: Each deck has its own FX chain and Master FX has its own bank, so the two leftover shared banks (and Classic mode's <code>FX1</code> / <code>FX2</code> side tabs) have been removed. They no longer update every frame.</li>
-<li><strong>Starter deck FX unchanged</strong>: A fresh install still gives each deck the same starter FX chain as before, now read straight from the bundled bank files.</li>
-<li><strong>Old sessions still load</strong>: Sessions saved before per-deck FX chains still migrate their FX1/FX2 chains into the decks. New sessions no longer save FX1/FX2. Macro knobs, MIDI and bindings that pointed at FX1/FX2 parameters are ignored.</li>
-<li><strong>FX bank files load into Master FX</strong>: In the FX browser, right-clicking a saved <code>.lsdfxbank</code> now offers <strong>Load to Master FX</strong> only.</li>
+<li><strong>FX1 / FX2 are gone</strong>: Each deck and Master FX have their own FX chain, so the two leftover shared banks (and Classic mode's <code>FX1</code> / <code>FX2</code> side tabs) have been removed. They no longer update every frame.</li>
+<li><strong>Starter deck FX unchanged</strong>: A fresh install still gives each deck the same starter FX chain as before.</li>
+<li><strong>Old sessions</strong>: New sessions no longer save FX1/FX2. Macro knobs, MIDI and bindings that pointed at FX1/FX2 parameters are ignored.</li>
 </ul>
 <h3 id="performance-mode-source-picker-empty-deck-launchpad-shortcuts-macro-navigation-decksourcepickerkt-performancematrixpanelkt-parameterskeyboardkt-macrobindinginspectorkt-uimanagerkt-parameterskeyboardtestkt-macrobindingnavtestkt-docsuser_guidemacros_and_rackmd-docsuser_guidemodulationmd-docsuser_guideyour_workspacemd-docsdeveloperuimd-decisionsmd">Performance Mode: Source Picker, Empty-Deck Launchpad, Shortcuts &amp; Macro Navigation (<code>DeckSourcePicker.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>ParametersKeyboard.kt</code>, <code>MacroBindingInspector.kt</code>, <code>UIManager.kt</code>, <code>ParametersKeyboardTest.kt</code>, <code>MacroBindingNavTest.kt</code>, <code>docs/user_guide/macros_and_rack.md</code>, <code>docs/user_guide/modulation.md</code>, <code>docs/user_guide/your_workspace.md</code>, <code>docs/developer/ui.md</code>, <code>DECISIONS.md</code>)</h3>
 <ul>

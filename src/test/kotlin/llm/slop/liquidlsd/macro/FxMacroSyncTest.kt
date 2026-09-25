@@ -1,8 +1,10 @@
 package llm.slop.liquidlsd.macro
 
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.serialization.json.JsonPrimitive
-import llm.slop.liquidlsd.rendering.FxBank
+import llm.slop.liquidlsd.rendering.FxChain
+import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Shader
 import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import llm.slop.liquidlsd.rendering.isf.ISFHeader
@@ -12,22 +14,20 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 class FxMacroSyncTest {
 
     @BeforeTest
     fun setUp() {
-        for (id in listOf(MacroEngine.MASTER_FX)) {
-            MacroEngine.unregisterBank(id)
-        }
+        for (id in FxMacroSync.FX_BANK_IDS) MacroEngine.unregisterBank(id)
     }
 
     @AfterTest
     fun tearDown() {
-        for (id in listOf(MacroEngine.MASTER_FX)) {
-            MacroEngine.unregisterBank(id)
-        }
+        for (id in FxMacroSync.FX_BANK_IDS) MacroEngine.unregisterBank(id)
     }
 
     private fun testFilter(id: String): ISFFilter {
@@ -39,52 +39,89 @@ class FxMacroSyncTest {
         return ISFFilter(id, id, header, shader)
     }
 
+    private fun unlinkedChain(label: String) = FxChain(label).also { c ->
+        for (i in 0 until FxChain.SLOT_COUNT) c.setSlotLinked(i, false)
+    }
+
+    private class Chains {
+        val a = FxChain("Deck A FX")
+        val b = FxChain("Deck B FX")
+        val bg = FxChain("Deck BG FX")
+        val pv = FxChain("Deck PV FX")
+        val master = FxChain("Master FX")
+    }
+
+    private fun mixerWith(chains: Chains): Mixer {
+        val mixer = mockk<Mixer>(relaxed = true)
+        every { mixer.deckA.fxChain } returns chains.a
+        every { mixer.deckB.fxChain } returns chains.b
+        every { mixer.deckBG.fxChain } returns chains.bg
+        every { mixer.deckPV.fxChain } returns chains.pv
+        every { mixer.masterFxChain } returns chains.master
+        return mixer
+    }
+
     @Test
-    fun testSyncBindsSuperKnobAndMetaknobsWithIdentityCurve() {
-        for (bankLabel in listOf("MFX")) {
-            val bankId = MacroEngine.canonicalIdForDeckLabel(bankLabel)
-            val bank = FxBank(bankLabel)
-            bank.activeChain.slots[0] = testFilter("fx_a")
-            bank.activeChain.setSlotLinked(0, false)
-            bank.activeChain.setSlotLinked(1, false)
-            bank.activeChain.setSlotLinked(2, false)
+    fun testSyncChainBindsSuperKnobAndMetaknobsWithIdentityCurve() {
+        val chain = unlinkedChain("Master FX")
+        chain.slots[0] = testFilter("fx_a")
 
-            FxMacroSync.sync(bankId, bank)
+        FxMacroSync.syncChain(MacroEngine.MASTER_FX, "Master", chain)
 
+        val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
+        val superBinding = macroBank.knobs[0].bindings.single()
+        assertEquals("Master/FX/Super", superBinding.parameterId)
+        assertEquals(MacroTargetType.PARAM_BASE_VALUE, superBinding.targetType)
+        assertEquals(0f, superBinding.minVal)
+        assertEquals(1f, superBinding.maxVal)
+        assertEquals(MacroCurveType.LINEAR, superBinding.curve)
+        assertFalse(superBinding.inverted)
+
+        assertEquals("Master/FX/FX1/Meta", macroBank.knobs[1].bindings.single().parameterId)
+        assertEquals("fx_a", macroBank.knobs[1].label)
+        assertEquals("Master/FX/FX3/Meta", macroBank.knobs[3].bindings.single().parameterId)
+    }
+
+    @Test
+    fun testSyncForUsesTheRegisteredPathLabelForEveryFxBank() {
+        // Regression: Performance rows used to pass "Deck A FX" / "Master", producing paths
+        // ("Deck A FX/FX/Super", "Master/C1/Super") that no parameter is registered under.
+        val chains = Chains()
+        listOf(chains.a, chains.b, chains.bg, chains.pv, chains.master).forEach { c ->
+            for (i in 0 until FxChain.SLOT_COUNT) c.setSlotLinked(i, false)
+        }
+        val mixer = mixerWith(chains)
+
+        FxMacroSync.syncAll(mixer)
+
+        val expected = mapOf(
+            MacroEngine.DECK_A_FX to "Deck A", MacroEngine.DECK_B_FX to "Deck B", MacroEngine.DECK_BG_FX to "Deck BG",
+            MacroEngine.DECK_PV_FX to "Deck PV", MacroEngine.MASTER_FX to "Master"
+        )
+        for ((bankId, label) in expected) {
             val macroBank = MacroEngine.getBank(bankId)!!
-            val superBinding = macroBank.knobs[0].bindings.single()
-            assertEquals("$bankLabel/C1/Super", superBinding.parameterId)
-            assertEquals(MacroTargetType.PARAM_BASE_VALUE, superBinding.targetType)
-            assertEquals(0f, superBinding.minVal)
-            assertEquals(1f, superBinding.maxVal)
-            assertEquals(MacroCurveType.LINEAR, superBinding.curve)
-            assertFalse(superBinding.inverted)
-
-            val metaBinding1 = macroBank.knobs[1].bindings.single()
-            assertEquals("$bankLabel/C1/FX1/Meta", metaBinding1.parameterId)
-            val metaBinding3 = macroBank.knobs[3].bindings.single()
-            assertEquals("$bankLabel/C1/FX3/Meta", metaBinding3.parameterId)
+            assertEquals("$label/FX/Super", macroBank.knobs[0].bindings.single().parameterId, bankId)
+            assertEquals("$label/FX/FX2/Meta", macroBank.knobs[2].bindings.single().parameterId, bankId)
         }
     }
 
     @Test
-    fun testSyncUsesActiveChainNumberInPaths() {
-        val bank = FxBank("MFX")
-        bank.activeChainIndex = 1
-        for (i in 0 until 3) bank.activeChain.setSlotLinked(i, false)
-
-        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
-
-        val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
-        assertEquals("MFX/C2/Super", macroBank.knobs[0].bindings.single().parameterId)
-        assertEquals("MFX/C2/FX2/Meta", macroBank.knobs[2].bindings.single().parameterId)
+    fun testChainAndBankIdLookupsAreInverse() {
+        val chains = Chains()
+        val mixer = mixerWith(chains)
+        for (bankId in FxMacroSync.FX_BANK_IDS) {
+            val chain = FxMacroSync.chainFor(bankId, mixer)!!
+            assertEquals(bankId, FxMacroSync.bankIdFor(chain, mixer))
+        }
+        assertSame(chains.master, FxMacroSync.chainFor(MacroEngine.MASTER_FX, mixer))
+        assertNull(FxMacroSync.chainFor(MacroEngine.DECK_A, mixer))
+        assertNull(FxMacroSync.bankIdFor(FxChain("orphan"), mixer))
     }
 
     @Test
     fun testOwnershipRuleLeavesManuallyRetargetedKnobAlone() {
-        val bank = FxBank("MFX")
-        for (i in 0 until 3) bank.activeChain.setSlotLinked(i, false)
-        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
+        val chain = unlinkedChain("Master FX")
+        FxMacroSync.syncChain(MacroEngine.MASTER_FX, "Master", chain)
 
         val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
         // User manually retargets Knob 2 away from the FxMacroSync pattern.
@@ -94,103 +131,61 @@ class FxMacroSyncTest {
         )
         macroBank.knobs[1].label = "MY WARP"
 
-        // Switch chains -- a real focus-change trigger -- and resync.
-        bank.activeChainIndex = 2
-        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
+        // A new effect lands in the chain -- a real resync trigger.
+        chain.slots[1] = testFilter("fx_b")
+        FxMacroSync.syncChain(MacroEngine.MASTER_FX, "Master", chain)
 
         assertEquals("Deck A/fbZoom", macroBank.knobs[1].bindings.single().parameterId, "Manually retargeted knob must not be reclaimed")
         assertEquals("MY WARP", macroBank.knobs[1].label)
-        // Untouched knobs still follow the new chain.
-        assertEquals("MFX/C3/Super", macroBank.knobs[0].bindings.single().parameterId)
+        // Untouched knobs still follow the chain.
+        assertEquals("fx_b", macroBank.knobs[2].label)
     }
 
     @Test
     fun testForceResyncOverridesManualRetarget() {
-        val bank = FxBank("MFX")
-        for (i in 0 until 3) bank.activeChain.setSlotLinked(i, false)
-        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
+        val chain = unlinkedChain("Master FX")
+        FxMacroSync.syncChain(MacroEngine.MASTER_FX, "Master", chain)
 
         val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
         macroBank.knobs[1].bindings.clear()
         macroBank.knobs[1].bindings.add(MacroBinding(parameterId = "Deck A/fbZoom", targetType = MacroTargetType.PARAM_BASE_VALUE))
 
-        FxMacroSync.sync(MacroEngine.MASTER_FX, bank, forceResync = true)
+        FxMacroSync.syncChain(MacroEngine.MASTER_FX, "Master", chain, forceResync = true)
 
-        assertEquals("MFX/C1/FX1/Meta", macroBank.knobs[1].bindings.single().parameterId)
+        assertEquals("Master/FX/FX1/Meta", macroBank.knobs[1].bindings.single().parameterId)
+    }
+
+    @Test
+    fun testKnobOwnedByAnotherChainIsNotReclaimed() {
+        val chain = unlinkedChain("Deck A FX")
+        FxMacroSync.syncChain(MacroEngine.DECK_A_FX, "Deck A", chain)
+        val macroBank = MacroEngine.getBank(MacroEngine.DECK_A_FX)!!
+        // User points Deck A's knob 1 at Deck B's Super Knob on purpose.
+        macroBank.knobs[0].bindings.clear()
+        macroBank.knobs[0].bindings.add(MacroBinding(parameterId = "Deck B/FX/Super", targetType = MacroTargetType.PARAM_BASE_VALUE))
+
+        FxMacroSync.syncChain(MacroEngine.DECK_A_FX, "Deck A", chain)
+
+        assertEquals("Deck B/FX/Super", macroBank.knobs[0].bindings.single().parameterId)
     }
 
     @Test
     fun testLinkedSlotIsSkippedAndUnlinkingRestoresBinding() {
-        val bank = FxBank("MFX")
-        // Default slotSuperKnobLink is all-true; leave slot 1 linked, unlink the others so we can
-        // isolate its behavior.
-        bank.activeChain.setSlotLinked(0, false)
-        bank.activeChain.setSlotLinked(2, false)
-        assertTrue(bank.activeChain.slotSuperKnobLink[1])
-
-        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
-
-        val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
-        assertTrue(macroBank.knobs[2].bindings.isEmpty(), "A linked slot's knob must not get a MacroBinding (would race FxChain's soft-takeover propagation)")
-
-        // Unlinking restores the smart-default binding.
-        bank.activeChain.setSlotLinked(1, false)
-        FxMacroSync.sync(MacroEngine.MASTER_FX, bank)
-        assertEquals("MFX/C1/FX2/Meta", macroBank.knobs[2].bindings.single().parameterId)
-    }
-
-    @Test
-    fun testSyncChainMatchesSyncForTheActiveChain() {
-        val bank = FxBank("MFX")
-        bank.activeChainIndex = 2
-        for (i in 0 until 3) bank.activeChain.setSlotLinked(i, false)
-
-        FxMacroSync.syncChain(MacroEngine.MASTER_FX, bank.label, bank.activeChain, bank.activeChainIndex)
-
-        val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
-        assertEquals("MFX/C3/Super", macroBank.knobs[0].bindings.single().parameterId)
-    }
-
-    @Test
-    fun testSyncDeckFxBindsSuperKnobAndMetaknobs() {
-        val chain = llm.slop.liquidlsd.rendering.FxChain("Deck A FX")
-        for (i in 0 until 3) chain.setSlotLinked(i, false)
-
-        FxMacroSync.syncDeckFx(MacroEngine.DECK_A_FX, "Deck A", chain)
-
-        val macroBank = MacroEngine.getBank(MacroEngine.DECK_A_FX)!!
-        val superBinding = macroBank.knobs[0].bindings.single()
-        assertEquals("Deck A/FX/Super", superBinding.parameterId)
-        assertEquals(MacroTargetType.PARAM_BASE_VALUE, superBinding.targetType)
-        assertEquals(0f, superBinding.minVal)
-        assertEquals(1f, superBinding.maxVal)
-
-        val metaBinding1 = macroBank.knobs[1].bindings.single()
-        assertEquals("Deck A/FX/FX1/Meta", metaBinding1.parameterId)
-        val metaBinding3 = macroBank.knobs[3].bindings.single()
-        assertEquals("Deck A/FX/FX3/Meta", metaBinding3.parameterId)
-    }
-
-    @Test
-    fun testSyncDeckFxLinkedSlotBehavior() {
-        val chain = llm.slop.liquidlsd.rendering.FxChain("Deck B FX")
+        val chain = FxChain("Deck B FX")
         // Default: slots are linked
-        assertTrue(chain.slotSuperKnobLink[0])
-        assertTrue(chain.slotSuperKnobLink[1])
-        assertTrue(chain.slotSuperKnobLink[2])
+        assertTrue(chain.slotSuperKnobLink.all { it })
 
-        FxMacroSync.syncDeckFx(MacroEngine.DECK_B_FX, "Deck B", chain)
+        FxMacroSync.syncChain(MacroEngine.DECK_B_FX, "Deck B", chain)
 
         val macroBank = MacroEngine.getBank(MacroEngine.DECK_B_FX)!!
         assertEquals("Deck B/FX/Super", macroBank.knobs[0].bindings.single().parameterId)
-        // Linked slots have no macro bindings (avoid racing soft-takeover)
+        // Linked slots have no macro bindings (would race FxChain's soft-takeover propagation)
         assertTrue(macroBank.knobs[1].bindings.isEmpty())
         assertTrue(macroBank.knobs[2].bindings.isEmpty())
         assertTrue(macroBank.knobs[3].bindings.isEmpty())
 
-        // Unlink slot 0
         chain.setSlotLinked(0, false)
-        FxMacroSync.syncDeckFx(MacroEngine.DECK_B_FX, "Deck B", chain)
+        FxMacroSync.syncChain(MacroEngine.DECK_B_FX, "Deck B", chain)
         assertEquals("Deck B/FX/FX1/Meta", macroBank.knobs[1].bindings.single().parameterId)
     }
 }

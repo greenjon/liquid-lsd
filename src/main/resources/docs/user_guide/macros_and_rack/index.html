@@ -1936,7 +1936,7 @@ between two disclosure tiers, without leaving Performance Mode:</p>
      Selecting a side tab switches both the parameter editor below and the top macro row above.</li>
 <li><strong>Parameter Grid</strong> in the center: displays the full <strong>VAL / MIDI / LFO / SEQ / AUD</strong> parameter grid
      with section subtabs across the top. All 5 sections feature a uniform 3-tab layout with <strong><code>FX</code> in the center</strong>:<ul>
-<li><strong><code>MIX</code></strong>: <code>[ CTRL ]  [ FX ]  [ TRANS ]</code> (Master controls, Master FX 4 ISF slots, and Transitions)</li>
+<li><strong><code>MIX</code></strong>: <code>[ CTRL ]  [ FX ]  [ TRANS ]</code> (Master controls, the Master FX chain's 3 ISF slots, and Transitions)</li>
 <li><strong><code>A</code></strong>, <strong><code>B</code></strong>, <strong><code>BG</code></strong>, <strong><code>PV</code></strong>: <code>[ SRC ]  [ FX ]</code> (visual generator with Gain/Zoom/Rotate Z, and the insert FX chain)
  Switching between <code>SRC</code>/<code>CTRL</code> and <code>FX</code> automatically switches the top macro row between visual source controls and insert/master FX macros (<code>Super Knob + 3 Metaknobs</code>).</li>
 </ul>
@@ -2036,28 +2036,28 @@ with the parameter selected.</p>
 <td style="text-align: left;"><strong>Per-Deck Insert FX</strong></td>
 <td style="text-align: left;">Deck A FX</td>
 <td style="text-align: left;">4</td>
-<td style="text-align: left;"><code>deckAFx</code></td>
+<td style="text-align: left;"><code>deckA_fx</code></td>
 <td style="text-align: left;">Super Knob + 3 Metaknobs</td>
 </tr>
 <tr>
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Deck B FX</td>
 <td style="text-align: left;">4</td>
-<td style="text-align: left;"><code>deckBFx</code></td>
+<td style="text-align: left;"><code>deckB_fx</code></td>
 <td style="text-align: left;">Super Knob + 3 Metaknobs</td>
 </tr>
 <tr>
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Deck BG FX</td>
 <td style="text-align: left;">4</td>
-<td style="text-align: left;"><code>deckBgFx</code></td>
+<td style="text-align: left;"><code>deckBG_fx</code></td>
 <td style="text-align: left;">Super Knob + 3 Metaknobs</td>
 </tr>
 <tr>
 <td style="text-align: left;"></td>
 <td style="text-align: left;">Deck PV FX</td>
 <td style="text-align: left;">4</td>
-<td style="text-align: left;"><code>deckPvFx</code></td>
+<td style="text-align: left;"><code>deckPV_fx</code></td>
 <td style="text-align: left;">Super Knob + 3 Metaknobs</td>
 </tr>
 <tr>
@@ -2090,7 +2090,7 @@ with the parameter selected.</p>
 </tr>
 </tbody>
 </table>
-<p>Deck generator banks start blank by default for custom binding in the MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. All 12 canonical banks are preserved in <code>last_session.json</code> and session files.</p>
+<p>Deck generator banks start blank by default for custom binding in the MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. The five FX banks bind to their chain's <code>Deck A/FX/...</code> … <code>Master/FX/...</code> parameters and re-sync automatically whenever that chain's contents change (loading a chain, swapping a slot, restoring a session) — any knob you've retargeted by hand is left alone; <strong>Resync</strong> forces the defaults back. All 12 canonical banks are preserved in <code>last_session.json</code> and session files.</p>
 <p>Banks are saved in <code>last_session.json</code> and bundled into preset files automatically.</p>
 <hr />
 <h2 id="shortcuts">Shortcuts</h2>

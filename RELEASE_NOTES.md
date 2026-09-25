@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Master FX Works Like the Decks; FX Loads Are Thread-Safe (`Mixer.kt`, `Renderer.kt`, `FxOps.kt`, `FxMacroSync.kt`, `SessionSerializer.kt`, `PresetModels.kt`, `PerformanceMatrixPanel.kt`, `ParametersTabs.kt`, `FXBrowserPanel.kt`, `MacroPanel.kt`, `performance_controls.md`, `presets_and_library.md`, `macros_and_rack.md`, `docs/developer/preset_management.md`, `ARCHITECTURE.md`, `DECISIONS.md`)
+- **Master FX is one chain of 3 slots**, the same as each deck's FX. The Chain 1/2/3 tabs, the separate bank wet/dry and the `.lsdfxbank` format are gone; use saved `.lsdfxchain` files instead. The two chains that only existed inside banks, *Subtle Optical Warmth* (the default Master FX) and *Digital Bitcrush Mosaic*, are now ordinary bundled chains.
+- **Load and save Master FX from the FX browser**: right-click menus offer **Load to Master FX** for stock filters, singles and chains, and **`[+]`** can save a slot or chain from Master FX.
+- **Fix: FX knobs after Resync / chain loads**: **Resync** on the Master FX row and on deck rows in `[FX]` mode no longer leaves the knobs bound to nothing, and knob labels now update whenever a chain or slot changes, from any panel. They also match the restored chains after relaunching.
+- **Fix: FX changes are applied on the render thread**: loading a chain or slot from any panel no longer frees GPU resources from a background thread or swaps effects mid-frame.
+- **FX is separate from deck presets again**: loading a deck preset no longer replaces that deck's FX chain, and tweaking FX no longer marks the preset as unsaved. FX chains are saved with your session instead.
+- **MIDI learn on any FX row** now defaults to soft takeover, as it already did on Master FX.
+- **Existing sessions**: Master FX and deck FX from sessions saved before this change reset to the starter chains once. Knobs bound to old `MFX/...` parameters no longer resolve; press **Resync** on that FX row.
+
 ### Classic View Removed — Performance Mode Is the Only View (`UIManager.kt`, `MenuBar.kt`, `UITheme.kt`, `AppPreferences.kt`, `AppPreferencesStore.kt`, `ParameterGridHeaders.kt`, `ParametersTabs.kt`, `PerformanceMatrixPanel.kt`, `PropertiesPanel.kt`, `DeckControlPanel.kt`, `MixerPanel.kt`, `MacroPanel.kt`, `MacroBindingInspector.kt`, `DeckSourcePicker.kt`, `ShortcutManager.kt`, `ShortcutAction.kt`, `PreferencesDefaultsTest.kt`, `WindowLayoutSafetyTest.kt`, `docs/getting_started.md`, `docs/index.md`, `your_workspace.md`, `macros_and_rack.md`, `modulation.md`, `performance_controls.md`, `presets_and_library.md`, `docs/developer/ui.md`, `docs/developer/preset_management.md`, `ARCHITECTURE.md`, `README.md`, `DECISIONS.md`)
 - **One view**: The Classic Parameters / Properties panels are gone. Everything they did is in Performance Mode's Deep Edit. `F4`, **View → Classic Deck View / Performance Mode** and the `[ CLASSIC | PERF ]` toolbar pill have been removed.
 - **Existing settings**: A saved `workspaceMode=CLASSIC` preference is ignored and removed on the next save. The app always opens in Performance Mode. A custom key bound to the old "Toggle Performance Mode" shortcut is ignored.
@@ -8,10 +17,9 @@
 - **Docs**: The Getting Started layout diagram, Your Workspace, Modulation and Macro Controls pages now describe the Performance panel and Deep Edit instead of the Parameters and Properties panels.
 
 ### Removed the Shared FX1/FX2 Banks (`Mixer.kt`, `SessionSerializer.kt`, `MacroEngine.kt`, `MidiMappingManager.kt`, `PerformanceMatrixPanel.kt`, `ParametersTabs.kt`, `ParametersPanel.kt`, `ParametersState.kt`, `FXBrowserPanel.kt`, `StarterFxAndLegacyBanksTest.kt`, `FxMacroSyncTest.kt`, `FxBankTest.kt`, `MacroEngineTest.kt`, `RackDisclosureTest.kt`, `performance_controls.md`, `presets_and_library.md`, `macros_and_rack.md`, `docs/developer/preset_management.md`, `ARCHITECTURE.md`, `DECISIONS.md`)
-- **FX1 / FX2 are gone**: Each deck has its own FX chain and Master FX has its own bank, so the two leftover shared banks (and Classic mode's `FX1` / `FX2` side tabs) have been removed. They no longer update every frame.
-- **Starter deck FX unchanged**: A fresh install still gives each deck the same starter FX chain as before, now read straight from the bundled bank files.
-- **Old sessions still load**: Sessions saved before per-deck FX chains still migrate their FX1/FX2 chains into the decks. New sessions no longer save FX1/FX2. Macro knobs, MIDI and bindings that pointed at FX1/FX2 parameters are ignored.
-- **FX bank files load into Master FX**: In the FX browser, right-clicking a saved `.lsdfxbank` now offers **Load to Master FX** only.
+- **FX1 / FX2 are gone**: Each deck and Master FX have their own FX chain, so the two leftover shared banks (and Classic mode's `FX1` / `FX2` side tabs) have been removed. They no longer update every frame.
+- **Starter deck FX unchanged**: A fresh install still gives each deck the same starter FX chain as before.
+- **Old sessions**: New sessions no longer save FX1/FX2. Macro knobs, MIDI and bindings that pointed at FX1/FX2 parameters are ignored.
 
 ### Performance Mode: Source Picker, Empty-Deck Launchpad, Shortcuts & Macro Navigation (`DeckSourcePicker.kt`, `PerformanceMatrixPanel.kt`, `ParametersKeyboard.kt`, `MacroBindingInspector.kt`, `UIManager.kt`, `ParametersKeyboardTest.kt`, `MacroBindingNavTest.kt`, `docs/user_guide/macros_and_rack.md`, `docs/user_guide/modulation.md`, `docs/user_guide/your_workspace.md`, `docs/developer/ui.md`, `DECISIONS.md`)
 - **Change a deck's source from Performance Mode**: Click the generator badge at the left of any deck row to open the source picker (including external video). Empty decks show `+ Source`.

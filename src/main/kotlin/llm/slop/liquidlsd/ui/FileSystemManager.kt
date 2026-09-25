@@ -30,7 +30,6 @@ object FileSystemManager {
     private const val PLAYLISTS_ROOT = "library/playlists"
     private const val FX_ROOT = "library/fx"
     private const val FX_CHAINS_ROOT = "library/fx_chains"
-    private const val FX_BANKS_ROOT = "library/fx_banks"
     private const val FX_PLAYLISTS_ROOT = "library/fx_playlists"
     private const val TRANSITIONS_ROOT = "library/transitions"
     private const val TRANSITION_PLAYLISTS_ROOT = "library/transition_playlists"
@@ -103,7 +102,7 @@ object FileSystemManager {
     private fun managedRootPaths(): List<Path> {
         return listOf(
             getPresetsRoot(), getPlaylistsRoot(),
-            getFxPresetsRoot(), getFxChainsRoot(), getFxBanksRoot(), getFxPlaylistsRoot(),
+            getFxPresetsRoot(), getFxChainsRoot(), getFxPlaylistsRoot(),
             getTransitionsRoot(), getTransitionPlaylistsRoot()
         ).map { it.canonicalFile.toPath() }
     }
@@ -259,47 +258,6 @@ object FileSystemManager {
                     path = file.absolutePath,
                     name = file.nameWithoutExtension,
                     type = AssetType.FX_CHAIN,
-                    isValid = validatePresetFile(file),
-                    tags = tags
-                )
-            }
-            .sortedBy { it.name.lowercase() }
-            .toList()
-
-        scanCache[cacheKey] = ScanCacheEntry(signature, now, items)
-        return items
-    }
-
-    internal fun getFxBankTags(file: File): List<String> {
-        if (!file.exists() || !file.isFile) return emptyList()
-        return try {
-            val dto = json.decodeFromString<llm.slop.liquidlsd.models.FXBankDto>(file.readText())
-            dto.tags
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-
-    fun scanAllFxBanks(): List<AssetItem> {
-        val root = getFxBanksRoot()
-        if (!root.exists() || !root.isDirectory) return emptyList()
-
-        val cacheKey = "ALL_FX_BANKS_ROOT_${root.canonicalPath}"
-        val signature = getRecursiveDirectorySignature(root)
-        val now = System.currentTimeMillis()
-        val cached = scanCache[cacheKey]
-        if (cached != null && cached.signature == signature) {
-            return cached.items
-        }
-
-        val items = root.walkTopDown()
-            .filter { it.isFile && it.extension.lowercase() == "lsdfxbank" }
-            .map { file ->
-                val tags = getFxBankTags(file)
-                AssetItem(
-                    path = file.absolutePath,
-                    name = file.nameWithoutExtension,
-                    type = AssetType.FX_BANK,
                     isValid = validatePresetFile(file),
                     tags = tags
                 )
@@ -877,17 +835,6 @@ object FileSystemManager {
     }
 
     /**
-     * Gets the root directory for FX bank presets (.lsdfxbank).
-     */
-    fun getFxBanksRoot(): File {
-        val root = File(FX_BANKS_ROOT)
-        if (!root.exists()) {
-            root.mkdirs()
-        }
-        return root
-    }
-
-    /**
      * Gets the root directory for FX playlists (.lsdfxplay).
      */
     fun getFxPlaylistsRoot(): File {
@@ -924,7 +871,6 @@ object FileSystemManager {
         val presetsExtracted: Int,
         val playlistsExtracted: Int,
         val fxChainsExtracted: Int = 0,
-        val fxBanksExtracted: Int = 0,
         val transitionsExtracted: Int = 0,
         val transitionPlaylistsExtracted: Int = 0,
         val wasAlreadyInstalled: Boolean
@@ -933,25 +879,23 @@ object FileSystemManager {
     private const val DEFAULTS_MARKER_FILE = "library/.defaults_installed"
 
     /**
-     * Seeds default presets, playlists, FX chains, FX banks, transitions, and transition playlists into library/ if not already initialized.
+     * Seeds default presets, playlists, FX chains, transitions, and transition playlists into library/ if not already initialized.
      * If [forceRestore] is true, missing factory files will be re-extracted without overwriting existing files.
      */
     fun ensureDefaultLibrary(forceRestore: Boolean = false): LibrarySeedResult {
         val markerFile = File(DEFAULTS_MARKER_FILE)
         if (markerFile.exists() && !forceRestore) {
-            return LibrarySeedResult(0, 0, 0, 0, 0, 0, wasAlreadyInstalled = true)
+            return LibrarySeedResult(0, 0, 0, 0, 0, wasAlreadyInstalled = true)
         }
 
         val presetsRoot = getPresetsRoot()
         val playlistsRoot = getPlaylistsRoot()
         val fxChainsRoot = getFxChainsRoot()
-        val fxBanksRoot = getFxBanksRoot()
         val transitionsRoot = getTransitionsRoot()
         val transitionPlaylistsRoot = getTransitionPlaylistsRoot()
         var presetsCount = 0
         var playlistsCount = 0
         var fxChainsCount = 0
-        var fxBanksCount = 0
         var transitionsCount = 0
         var transPlaylistsCount = 0
 
@@ -964,9 +908,6 @@ object FileSystemManager {
         // Extract bundled FX chains
         fxChainsCount += extractBundledAssets("default_fx_chains", fxChainsRoot)
 
-        // Extract bundled FX banks
-        fxBanksCount += extractBundledAssets("default_fx_banks", fxBanksRoot)
-
         // Extract bundled transition presets
         transitionsCount += extractBundledAssets("default_transitions", transitionsRoot)
 
@@ -976,17 +917,17 @@ object FileSystemManager {
         try {
             val parent = markerFile.parentFile
             if (parent != null && !parent.exists()) parent.mkdirs()
-            markerFile.writeText("installed_at=${System.currentTimeMillis()}\npresets=$presetsCount\nplaylists=$playlistsCount\nfxChains=$fxChainsCount\nfxBanks=$fxBanksCount\ntransitions=$transitionsCount\ntransitionPlaylists=$transPlaylistsCount\n")
+            markerFile.writeText("installed_at=${System.currentTimeMillis()}\npresets=$presetsCount\nplaylists=$playlistsCount\nfxChains=$fxChainsCount\ntransitions=$transitionsCount\ntransitionPlaylists=$transPlaylistsCount\n")
         } catch (e: Exception) {
             logger.warn(e) { "Failed to write defaults marker file" }
         }
 
-        if (presetsCount > 0 || playlistsCount > 0 || fxChainsCount > 0 || fxBanksCount > 0 || transitionsCount > 0 || transPlaylistsCount > 0) {
+        if (presetsCount > 0 || playlistsCount > 0 || fxChainsCount > 0 || transitionsCount > 0 || transPlaylistsCount > 0) {
             clearScanCache()
-            logger.info { "Seeded library defaults: $presetsCount preset(s), $playlistsCount playlist(s), $fxChainsCount fx chain(s), $fxBanksCount fx bank(s), $transitionsCount transition(s), $transPlaylistsCount transition playlist(s)" }
+            logger.info { "Seeded library defaults: $presetsCount preset(s), $playlistsCount playlist(s), $fxChainsCount fx chain(s), $transitionsCount transition(s), $transPlaylistsCount transition playlist(s)" }
         }
 
-        return LibrarySeedResult(presetsCount, playlistsCount, fxChainsCount, fxBanksCount, transitionsCount, transPlaylistsCount, wasAlreadyInstalled = false)
+        return LibrarySeedResult(presetsCount, playlistsCount, fxChainsCount, transitionsCount, transPlaylistsCount, wasAlreadyInstalled = false)
     }
 
     private fun extractBundledAssets(resourceFolder: String, targetDir: File): Int {

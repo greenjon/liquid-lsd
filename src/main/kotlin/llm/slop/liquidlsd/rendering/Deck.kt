@@ -43,7 +43,7 @@ class Deck(
     var fxPingFBO = FBO(width, height)
     var fxPongFBO = FBO(width, height)
     // Holds the active chain's dry/wet-blended output:
-    var fxBankOutFBO = FBO(width, height)
+    var fxOutFBO = FBO(width, height)
 
     var activeOutputTexture: Int = cleanFBO.texture
 
@@ -62,12 +62,6 @@ class Deck(
     fun toFxChainDto(name: String = "", tags: List<String> = emptyList()): FXChainDto =
         fxChain.toFxChainDto(name, tags)
 
-    /** This deck's effective wet level combining chain enabled state and dry/wet. */
-    fun getEffectiveWet(bank: FxBank? = null): Float {
-        if (!fxChain.enabled) return 0.0f
-        return fxChain.dryWet.value
-    }
-
     val fxEffectiveWet: Float
         get() = if (fxChain.enabled) fxChain.dryWet.value else 0.0f
 
@@ -78,17 +72,17 @@ class Deck(
         cleanFBO.dispose()
         fxPingFBO.dispose()
         fxPongFBO.dispose()
-        fxBankOutFBO.dispose()
+        fxOutFBO.dispose()
 
         cleanFBO = FBO(width, height)
         fxPingFBO = FBO(width, height)
         fxPongFBO = FBO(width, height)
-        fxBankOutFBO = FBO(width, height)
+        fxOutFBO = FBO(width, height)
 
         cleanFBO.clear(0f, 0f, 0f, 0f)
         fxPingFBO.clear(0f, 0f, 0f, 0f)
         fxPongFBO.clear(0f, 0f, 0f, 0f)
-        fxBankOutFBO.clear(0f, 0f, 0f, 0f)
+        fxOutFBO.clear(0f, 0f, 0f, 0f)
         activeOutputTexture = cleanFBO.texture
         availableSources.forEach { src ->
             if (src is DynamicVisualSource) {
@@ -132,7 +126,7 @@ class Deck(
         cleanFBO.clear(0f, 0f, 0f, 0f)
         fxPingFBO.clear(0f, 0f, 0f, 0f)
         fxPongFBO.clear(0f, 0f, 0f, 0f)
-        fxBankOutFBO.clear(0f, 0f, 0f, 0f)
+        fxOutFBO.clear(0f, 0f, 0f, 0f)
 
         val initialId = (initialSource as? DynamicVisualSource)?.id
         val registrySources = VisualSourceRegistry.availableSources
@@ -179,7 +173,7 @@ class Deck(
         cleanFBO.clear(0f, 0f, 0f, 0f)
         fxPingFBO.clear(0f, 0f, 0f, 0f)
         fxPongFBO.clear(0f, 0f, 0f, 0f)
-        fxBankOutFBO.clear(0f, 0f, 0f, 0f)
+        fxOutFBO.clear(0f, 0f, 0f, 0f)
         activeOutputTexture = cleanFBO.texture
         morphController.initFromCurrentState()
     }
@@ -265,7 +259,7 @@ class Deck(
         cleanFBO.dispose()
         fxPingFBO.dispose()
         fxPongFBO.dispose()
-        fxBankOutFBO.dispose()
+        fxOutFBO.dispose()
         fxChain.dispose()
         // Note: `source` is always one of the entries in `availableSources`, so the
         // forEach below already disposes it. Do NOT call source.dispose() here — that

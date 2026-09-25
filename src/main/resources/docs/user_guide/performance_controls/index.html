@@ -658,10 +658,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fx-bank-chain-slot-management" class="md-nav__link">
+  <a href="#fx-chain-slot-management" class="md-nav__link">
     <span class="md-ellipsis">
       
-        FX Bank, Chain &amp; Slot Management
+        FX Chain &amp; Slot Management
       
     </span>
   </a>
@@ -1624,10 +1624,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fx-bank-chain-slot-management" class="md-nav__link">
+  <a href="#fx-chain-slot-management" class="md-nav__link">
     <span class="md-ellipsis">
       
-        FX Bank, Chain &amp; Slot Management
+        FX Chain &amp; Slot Management
       
     </span>
   </a>
@@ -1899,33 +1899,29 @@ Open the Deck Menu popup and choose <strong>Add/Edit Source Note...</strong></p>
 <p>Below each deck's monitor preview you'll see the name of the currently loaded preset. Hovering it shows the full file path, the last save time, and the preset note if one exists. A <code>*</code> next to the name means there are unsaved changes.</p>
 <p>If no preset is loaded yet (the deck is in an unsaved state), the label shows <code>Untitled</code> in grey. You can't attach a preset note until the preset has been saved at least once.</p>
 <hr />
-<h2 id="fx-bank-chain-slot-management">FX Bank, Chain &amp; Slot Management</h2>
-<p>Each deck has its own FX chain of 3 ISF filter slots (the deck's <strong><code>FX</code></strong> sub-tab). <strong>Master FX</strong>
-(the Mixer's <strong><code>FX</code></strong> sub-tab in Deep Edit) is a bank of 3 serial <strong>chains</strong>
-(<code>[ Chain 1 ] [ Chain 2 ] [ Chain 3 ]</code> subtabs) of 3 slots each, applied to the final output.
-The shared FX1/FX2 banks from earlier versions have been removed. Each chain also has a <strong>Chain Super Knob</strong> and each slot its own
-<strong>Metaknob</strong> — see <a href="../macros_and_rack/">Macro Controls &amp; Performance Mode</a> for the FX Rack view
-that exposes these.</p>
+<h2 id="fx-chain-slot-management">FX Chain &amp; Slot Management</h2>
+<p>Every deck and the master bus each own one FX chain of 3 serial ISF filter slots: a deck's chain is
+its <strong><code>FX</code></strong> sub-tab, and <strong>Master FX</strong> (the Mixer's <strong><code>FX</code></strong> sub-tab in Deep Edit) is applied to the
+final output after the crossfader. All five chains work the same way. Each chain has a <strong>Chain Super
+Knob</strong> and each slot its own <strong>Metaknob</strong> — see <a href="../macros_and_rack/">Macro Controls &amp; Performance Mode</a>
+for the FX Rack view that exposes these.</p>
 <ul>
-<li><strong>Bank Header Kebab (<code>⋮</code>)</strong>:</li>
-<li><strong>Save Bank Preset As...</strong>: Saves all 3 Master FX chains into an <code>.lsdfxbank</code> file in <code>library/fx_banks/</code>.</li>
-<li><strong>Copy Bank / Paste Bank</strong>: Copies or pastes all 3 Master FX chains.</li>
-<li><strong>Clear All Chains</strong>: Disposes and empties every chain in the bank.</li>
 <li><strong>Chain Header Kebab (<code>⋮</code>)</strong>:</li>
 <li><strong>Save Chain As...</strong>: Saves that chain's 3 slots (and its Super Knob state) into an
     <code>.lsdfxchain</code> file in <code>library/fx_chains/</code>.</li>
-<li><strong>Copy Chain / Paste Chain</strong>: Copies or pastes one chain's 3 slots across chains or decks.</li>
+<li><strong>Copy Chain / Paste Chain</strong>: Copies or pastes one chain's 3 slots between any decks and Master FX.</li>
 <li><strong>Clear Chain Slots</strong>: Disposes and empties that chain's 3 slots.</li>
 <li><strong>Per-Slot Kebab (<code>⋮</code>)</strong>:</li>
 <li><strong>Save Slot Preset As...</strong>: Saves the slot's filter ID, dry/wet, Metaknob position/binding,
     and parameters into an <code>.lsdfx</code> file in <code>library/fx/</code>.</li>
-<li><strong>Copy Slot / Paste Slot</strong>: Copies or pastes individual slot configurations across slots or decks.</li>
+<li><strong>Copy Slot / Paste Slot</strong>: Copies or pastes individual slot configurations across slots or chains.</li>
 <li><strong>Reset Slot</strong>: Clears the slot filter and resets parameters.</li>
-<li><strong>Drag-and-Drop Targets</strong>: Drag <code>.lsdfxbank</code> onto the bank header, <code>.lsdfxchain</code> onto a bank
-  or a chain header, or <code>.lsdfx</code> onto a slot, to instantly load/swap effects.</li>
-<li><strong>Library Browser</strong>: The <code>[ FX ]</code> Library view's Column 1 browser also lists saved banks
-  (filterable via the kebab menu's <strong>Saved FX Banks</strong> checkbox) alongside stock filters, saved
-  singles, and saved chains — right-click one to <strong>Load to Master FX</strong>.</li>
+<li><strong>Drag-and-Drop Targets</strong>: Drag <code>.lsdfxchain</code> onto a chain header, or <code>.lsdfx</code> onto a slot, to
+  instantly load/swap effects.</li>
+<li><strong>Library Browser</strong>: The <code>[ FX ]</code> Library view's right-click menus can load stock filters, saved
+  singles, and saved chains into any deck or <strong>Master FX</strong>.</li>
+<li><strong>FX is separate from presets</strong>: Loading or saving a deck preset (<code>.lsd</code>) never touches that
+  deck's FX chain. FX chains are saved with your session and restored on the next launch.</li>
 <li><strong>Performance Matrix FX Parity</strong>:</li>
 <li>Toggling any Deck row (A, B, BG, PV) to <code>[FX]</code> mode displays the <code>[ Preset v ]</code> chain preset selector to load <code>.lsdfxchain</code> presets directly, and shows SuperKnob link/unlink icons on slot knobs 1–3.</li>
 <li>The <strong>ALL FX</strong> tab includes rows for <code>Deck A FX</code>, <code>Deck B FX</code>, <code>Deck BG FX</code>, <code>Deck PV FX</code>, and <code>Master FX</code>.</li>

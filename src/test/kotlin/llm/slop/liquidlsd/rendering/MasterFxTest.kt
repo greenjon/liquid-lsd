@@ -11,6 +11,7 @@ import llm.slop.liquidlsd.models.SessionStateDto
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MasterFxTest {
@@ -55,7 +56,8 @@ class MasterFxTest {
             levelPV = dummyParam(0.4f),
             masterLevel = dummyParam(0.9f),
             transitionSlot = FXSlotDto("linear_crossfade", true, dummy),
-            masterFxSlots = listOf(fxSlot, null, null, null)
+            masterFxChain = FXChainDto(name = "Master Chain", slots = listOf(fxSlot, null, null)),
+            deckBFxChain = FXChainDto(name = "Deck B Chain", slots = listOf(null, fxSlot, null))
         )
 
         val jsonStr = json.encodeToString(mixerDto)
@@ -66,11 +68,14 @@ class MasterFxTest {
         assertEquals(0.6f, decoded.levelBG?.baseValue)
         assertEquals(0.4f, decoded.levelPV?.baseValue)
         assertEquals(0.9f, decoded.masterLevel?.baseValue)
-        assertEquals(4, decoded.masterFxSlots.size)
-        assertNotNull(decoded.masterFxSlots[0])
-        assertEquals("invert", decoded.masterFxSlots[0]?.filterId)
-        assertTrue(decoded.masterFxSlots[0]!!.enabled)
-        assertEquals(0.8f, decoded.masterFxSlots[0]!!.dryWet.baseValue)
+        val masterSlots = decoded.masterFxChain!!.slots
+        assertEquals(3, masterSlots.size)
+        assertNotNull(masterSlots[0])
+        assertEquals("invert", masterSlots[0]?.filterId)
+        assertTrue(masterSlots[0]!!.enabled)
+        assertEquals(0.8f, masterSlots[0]!!.dryWet.baseValue)
+        assertEquals("invert", decoded.deckBFxChain?.slots?.get(1)?.filterId)
+        assertNull(decoded.deckAFxChain)
     }
 
     @Test
@@ -101,7 +106,7 @@ class MasterFxTest {
             levelBG = dummyParam(0.8f),
             levelPV = dummyParam(0.7f),
             masterLevel = dummyParam(1.0f),
-            masterFxSlots = listOf(FXSlotDto("crt_glitch", true, dummy))
+            masterFxChain = FXChainDto(name = "Master", slots = listOf(FXSlotDto("crt_glitch", true, dummy), null, null))
         )
 
         val session = SessionStateDto(
@@ -121,8 +126,7 @@ class MasterFxTest {
 
         assertEquals(6, decoded.version)
         assertEquals(0.9f, decoded.mixer.levelB?.baseValue)
-        assertEquals(1, decoded.mixer.masterFxSlots.size)
-        assertEquals("crt_glitch", decoded.mixer.masterFxSlots[0]?.filterId)
+        assertEquals("crt_glitch", decoded.mixer.masterFxChain?.slots?.get(0)?.filterId)
     }
 
     @Test

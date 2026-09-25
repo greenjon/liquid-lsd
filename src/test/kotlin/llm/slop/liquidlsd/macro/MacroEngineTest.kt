@@ -5,7 +5,7 @@ import io.mockk.mockk
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ParameterResolver
-import llm.slop.liquidlsd.rendering.FxBank
+import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -393,20 +393,20 @@ class MacroEngineTest {
 
     @Test
     fun testLinkedFxKnobsSyncVisuallyToSuperKnobOnTick() {
-        val fxBank = FxBank("MFX")
-        fxBank.activeChain.superKnob.set(0.85f)
-        fxBank.activeChain.update()
+        val chain = FxChain("Master FX")
+        chain.superKnob.set(0.85f)
+        chain.update()
 
         val mixer = mockk<Mixer>(relaxed = true)
-        every { mixer.masterFxBank } returns fxBank
+        every { mixer.masterFxChain } returns chain
 
         val macroBank = MacroEngine.newBankFor(MacroEngine.MASTER_FX)
         macroBank.knobs[0].value = 0.85f
         MacroEngine.registerBank(MacroEngine.MASTER_FX, macroBank)
 
         // Slot 0 linked, Slot 1 unlinked
-        fxBank.activeChain.setSlotLinked(0, true)
-        fxBank.activeChain.setSlotLinked(1, false)
+        chain.setSlotLinked(0, true)
+        chain.setSlotLinked(1, false)
 
         MacroEngine.tick(mixer)
 

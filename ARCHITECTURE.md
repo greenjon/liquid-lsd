@@ -32,7 +32,7 @@ JACK / Java Sound ──► AudioEngine ──► CVRegistry
                                 mixer.frag
                    (Composite: Transition Output over BG)
                                     │
-                    [MFX: 3 Serial Chains x 3 Filter Slots]
+                  [Master FX: FxChain, 3 Serial Filter Slots]
                                     │
                                masterFBO ──► screen
 
@@ -138,7 +138,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── FxQueueEngine.kt        — `QueueEngine` + deck-targeting & dirty-deck guard, backing the FX A/B and FX BG queues
 │   ├── FXQueueManager.kt       — `FxQueueEngine` for Deck A/B, targets the crossfader-active deck
 │   ├── FXBgQueueManager.kt     — `FxQueueEngine` for Deck BG
-│   ├── FXItemApplier.kt        — Applies a queued `.lsdfx`/`.lsdfxchain` file to a deck's 3 FX slots deterministically
+│   ├── FxOps.kt                — Single entry point for FX chain changes (deck or Master): queues every load/swap/clear and applies it on the GL thread, then re-syncs that chain's FX row knobs
 │   ├── TransitionQueueManager.kt — `QueueEngine` + transition apply/auto-fade-hook/session-restore, for the Transition Queue (`.lsdtrans`/`.lsdtransplay`); keeps unresolved playlist items as literal stock-shader-ID tokens instead of dropping them
 │   ├── PlaylistParser.kt       — Parses playlist files
 │   ├── SessionState.kt         — Session state management
@@ -161,10 +161,9 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── isf/                    — Universal shader preprocessor, ISF/Shadertoy/GLSLSandbox format parser, models, ISFFilter (incl. per-effect Metaknob), ISFAutoBindEngine & FxMetaBinding (3-tier Metaknob auto-bind: user override cache/curated/heuristic), multi-pass ISFVisualSource, ISFTransitionRegistry, ISFDirectoryManager, ISFScanner, ISFLibraryRegistry & ISFFileWatcher
 │   ├── AudioTexture.kt         — Universal 512x2 floating-point audio FFT spectrum and live waveform OpenGL texture stream
 │   ├── FxChain.kt              — Individual FX chain hosting 3 ISF filter slots with chain-level wet/dry and bypass, plus a Super Knob that drives linked slots' Metaknobs via soft-takeover
-│   ├── FxBank.kt               — FX Bank (Master FX only; decks own a single FxChain) managing 3 serial FxChain instances with master wet/dry and bypass
-│   ├── Deck.kt                 — VisualSource + cleanFBO + dedicated 3-slot FxChain with FBO ping-pong architecture (scratch fxPingFBO/fxPongFBO + fxBankOutFBO) + 3D View params
-│   ├── Mixer.kt                — Blends Deck A+B via 100% ISF transition over BG -> masterFBO with masterFxBank (MFX) & 4-buffer ping-pong architecture
-│   ├── Renderer.kt             — Per-frame: universal uniform bridge -> polymorphic source renderTopology() -> 2D view transform -> serial 3-chain FX bank pass -> ISF transition pass (A/B) -> Deck BG composite -> master FX pass -> blit
+│   ├── Deck.kt                 — VisualSource + cleanFBO + dedicated 3-slot FxChain with FBO ping-pong architecture (scratch fxPingFBO/fxPongFBO + fxOutFBO) + 3D View params
+│   ├── Mixer.kt                — Blends Deck A+B via 100% ISF transition over BG -> masterFBO with masterFxChain (Master FX, same FxChain model as the decks) & its own ping-pong/out buffers
+│   ├── Renderer.kt             — Per-frame: universal uniform bridge -> polymorphic source renderTopology() -> 2D view transform -> deck FxChain pass -> ISF transition pass (A/B) -> Deck BG composite -> master FX pass -> blit
 │   ├── VisualSource.kt         — Interface (Mandala, DynamicVisualSource, 2D/3D classification via is3D)
 │   ├── VisualSourceRegistry.kt — Pluggable dynamic visual sources with automatic 3D and foreign shader format detection
 │   ├── DynamicVisualSource.kt  — Wraps loaded GLSL shaders, handles 2D/3D source tagging, uniform binding, and multi-pass topology rendering
@@ -210,14 +209,14 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── FXChainMacroStrip.kt    — Traktor/Mixxx-style FX Rack strip: Chain Super Knob + 3 slot Metaknobs (soft-takeover link toggles), Single FX Focus Mode, right-click Metaknob rebind menu. Drawn in both ParametersTabs.kt (per-chain, Deep Edit) and MacroPanel.kt (FX tabs, Column 3)
 │   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs (LIVE QUAD, MASTER & FX, LIVE CONSOLE, ALL FX), deck-colored rows, plus the Modular Rack accordion (see `rack/` below) — a chevron on each row group toggles Faceplate ↔ Deep Edit, expanding the selected module while collapsing other rows; Deep Edit features a 5-channel side rail ([MIX], [A], [B], [BG], [PV]), uniform centered [FX] subtabs, and two-way top macro row synchronization
 │   ├── rack/
-│   │   └── RackUnit.kt          — Shared chevron/disclosure-tier drawing helper for the Modular Rack accordion, and the persistent "Learning: …" indicator; stateless, operates only on `ParametersState` (never `Mixer`/`FxBank`, enforcing that disclosure changes can't trigger FX bank refocus or `FxMacroSync` re-runs)
+│   │   └── RackUnit.kt          — Shared chevron/disclosure-tier drawing helper for the Modular Rack accordion, and the persistent "Learning: …" indicator; stateless, operates only on `ParametersState` (never `Mixer`/`FxChain`, enforcing that disclosure changes can't trigger FX refocus or `FxMacroSync` re-runs)
 │   ├── UiLabPanel.kt           — Isolated UI component gallery sandbox (swatches, icons, custom widgets)
 │   ├── browser/                — LibraryPanel sub-panels: preset/FX/transition list, playlist editor & queue actions
 │   │   ├── PresetListPanel.kt          — Preset list/grid tier of the library browser
 │   │   ├── PlaylistEditorPanel.kt      — `.lsdplay` playlist editor tier
 │   │   ├── QueueActionsPanel.kt        — Play Queue (A/B) actions: reorder, shuffle/repeat, jump/advance
 │   │   ├── BgQueueActionsPanel.kt      — Background Queue actions (mirrors QueueActionsPanel for Deck BG)
-│   │   ├── FXBrowserPanel.kt           — Unified FX browser: stock ISF filters, saved `.lsdfx`, saved `.lsdfxchain`, saved `.lsdfxbank` in one list
+│   │   ├── FXBrowserPanel.kt           — Unified FX browser: stock ISF filters, saved `.lsdfx`, saved `.lsdfxchain` in one list
 │   │   ├── FXPlaylistEditorPanel.kt    — `.lsdfxplay` FX playlist editor tier
 │   │   ├── FXQueueActionsPanel.kt      — FX Queue (A/B) actions, mirrors QueueActionsPanel for FX items
 │   │   ├── FXBgQueueActionsPanel.kt    — FX Queue (BG) actions, mirrors QueueActionsPanel for Deck BG FX items
@@ -304,7 +303,7 @@ The project includes an official application icon featuring an audio-reactive ps
 - **VisualSource abstraction** — Deck is source-agnostic; `Mandala`, `DynamicVisualSource`, `DynamicSpiral` all satisfy the interface
 - **VisualSourceRegistry** — pluggable dynamic visual sources (GLSL shaders loaded from `library/sources/`)
 - **Per-Slot FX Presets & FX Chains** — Modular `.lsdfx` (stored in `library/fx/`) and `.lsdfxchain` (stored in `library/fx_chains/`) serialized DTOs for saving and recalling single slot effects or 4-slot FX chains.
-- **FX Queues & Playlists** — `.lsdfxplay` FX playlists (stored in `library/fx_playlists/`) and the live volatile FX Queue (A/B and BG, `FxQueueEngine` + `FXQueueManager`/`FXBgQueueManager`) apply queued `.lsdfx`/`.lsdfxchain` items deterministically to all 4 slots via `FXItemApplier` — never a per-slot merge. Mirrors the `PlayQueueManager`/`BgQueueManager` shuffle/repeat/history/dirty-deck-guard pattern already used for presets.
+- **FX Queues & Playlists** — `.lsdfxplay` FX playlists (stored in `library/fx_playlists/`) and the live volatile FX Queue (A/B and BG, `FxQueueEngine` + `FXQueueManager`/`FXBgQueueManager`) apply queued `.lsdfx`/`.lsdfxchain` items deterministically to all 3 slots via `FxOps.applyItem` — never a per-slot merge. Mirrors the `PlayQueueManager`/`BgQueueManager` shuffle/repeat/history/dirty-deck-guard pattern already used for presets.
 - **Thread safety & OpenGL Thread 0 Discipline** — `@Volatile` primitive fields (`anchorBeats`, `anchorBpm`, `anchorTimeNs`) for zero-allocation audio thread beat clock sync, `CopyOnWriteArrayList` for modulators, `ConcurrentLinkedQueue` for MIDI CC events, and strict Main OS Thread (Thread 0) execution for all GLFW window polling, OpenGL context operations, and ISFFilter creation/disposal.
 - **Blank startup state** — Decks default to empty (`isEmpty = true`); on initial application launch without a prior session file, all four decks start with clean blank screens and Launchpad controls rather than pre-populated visual sources
 - **Serializable presets** — `CvModulator` is `@Serializable`; clean, direct serialization without legacy aliases

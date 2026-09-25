@@ -17,12 +17,10 @@ import java.util.concurrent.ConcurrentHashMap
 private val safeProfileCharacter = Regex("[^A-Za-z0-9._-]")
 private val repeatedUnderscores = Regex("_+")
 
-private val fxMacroSyncBankIds = setOf(
-    llm.slop.liquidlsd.macro.MacroEngine.MASTER_FX
-)
+private val fxMacroSyncBankIds = llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS.toSet()
 private val macroKnobPathPattern = Regex("""^Macro/([^/]+)/knob_([1-4])$""")
 
-/** True for "Macro/<bankId>/knob_N" paths on MFX's 4-knob row -- see [MidiLearnTarget.MacroTarget]. */
+/** True for "Macro/<bankId>/knob_N" paths on any FX row (deck or master) -- see [MidiLearnTarget.MacroTarget]. */
 internal fun isFxMacroSyncOwnedKnobPath(macroPath: String): Boolean {
     val match = macroKnobPathPattern.matchEntire(macroPath) ?: return false
     return match.groupValues[1] in fxMacroSyncBankIds

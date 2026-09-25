@@ -209,21 +209,6 @@ class ParametersState {
         else -> "SRC"
     }
 
-    /**
-     * The active chain is now a real, single live fact owned by [llm.slop.liquidlsd.rendering.FxBank]
-     * (see [llm.slop.liquidlsd.rendering.FxBank.activeChainIndex]) rather than independent per-view
-     * UI state -- these just read/write the bank directly so every view (Deep Edit, the Performance
-     * Console) shows and drives the same live chain.
-     */
-    fun getActiveChainIndex(bank: llm.slop.liquidlsd.rendering.FxBank): Int = bank.activeChainIndex
-
-    fun setActiveChainIndex(bank: llm.slop.liquidlsd.rendering.FxBank, index: Int) {
-        bank.activeChainIndex = index
-        focusedFxSlot = null
-        val bankId = llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel(bank.label)
-        llm.slop.liquidlsd.macro.FxMacroSync.sync(bankId, bank)
-    }
-
     /** The (chainPrefix, slotIndex) currently drilled into by [FXChainMacroStrip]'s "Single FX Focus Mode", or null in group mode. */
     var focusedFxSlot: Pair<String, Int>? = null
 

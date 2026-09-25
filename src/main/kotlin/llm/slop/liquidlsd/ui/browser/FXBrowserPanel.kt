@@ -10,7 +10,7 @@ import llm.slop.liquidlsd.models.FXPlaylistDto
 import llm.slop.liquidlsd.presets.FXBgQueueManager
 import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.rendering.Deck
-import llm.slop.liquidlsd.rendering.FxBank
+import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
 import llm.slop.liquidlsd.ui.AssetItem
@@ -45,15 +45,13 @@ object FXBrowserPanel {
     var showStock = true
     var showSingle = true
     var showChain = true
-    var showBank = true
 
     private val showStockRef = ImBoolean(true)
     private val showSingleRef = ImBoolean(true)
     private val showChainRef = ImBoolean(true)
-    private val showBankRef = ImBoolean(true)
 
     private var lastQuery: String = ""
-    private var lastFilterState: List<Boolean> = listOf(true, true, true, true)
+    private var lastFilterState: List<Boolean> = listOf(true, true, true)
     private var cachedRows: List<AssetItem> = emptyList()
 
     fun draw(session: SessionContext, mixer: Mixer) {
@@ -95,8 +93,6 @@ object FXBrowserPanel {
             if (ImGui.checkbox("Saved Single FX", showSingleRef)) showSingle = showSingleRef.get()
             showChainRef.set(showChain)
             if (ImGui.checkbox("Saved FX Chains", showChainRef)) showChain = showChainRef.get()
-            showBankRef.set(showBank)
-            if (ImGui.checkbox("Saved FX Banks", showBankRef)) showBank = showBankRef.get()
             ImGui.endPopup()
         }
 
@@ -121,7 +117,7 @@ object FXBrowserPanel {
 
         if (ImGui.beginChild("##fx_browser_scroll", 0f, 0f, false)) {
             val query = searchBuffer.get().trim().lowercase()
-            val filterState = listOf(showStock, showSingle, showChain, showBank)
+            val filterState = listOf(showStock, showSingle, showChain)
             val rows = if (query == lastQuery && filterState == lastFilterState) {
                 cachedRows
             } else {
@@ -141,11 +137,6 @@ object FXBrowserPanel {
                 }
                 if (showChain) {
                     FileSystemManager.scanAllFxChains()
-                        .filter { query.isEmpty() || it.name.lowercase().contains(query) || it.tags.any { t -> t.lowercase().contains(query) } }
-                        .forEach { result.add(it) }
-                }
-                if (showBank) {
-                    FileSystemManager.scanAllFxBanks()
                         .filter { query.isEmpty() || it.name.lowercase().contains(query) || it.tags.any { t -> t.lowercase().contains(query) } }
                         .forEach { result.add(it) }
                 }
@@ -170,19 +161,22 @@ object FXBrowserPanel {
 
     private fun drawCreatePopup(session: SessionContext, mixer: Mixer) {
         if (ImGui.beginPopup("create_new_fx_popup")) {
-            val decks = listOf("Deck A" to mixer.deckA, "Deck B" to mixer.deckB, "Deck BG" to mixer.deckBG, "Deck PV" to mixer.deckPV)
+            val chains = listOf(
+                "Deck A" to mixer.deckA.fxChain, "Deck B" to mixer.deckB.fxChain, "Deck BG" to mixer.deckBG.fxChain,
+                "Deck PV" to mixer.deckPV.fxChain, "Master FX" to mixer.masterFxChain
+            )
 
             ImGui.textDisabled("Save single FX slot from:")
             ImGui.separator()
-            for ((deckLabel, deck) in decks) {
-                if (ImGui.beginMenu(deckLabel)) {
+            for ((chainLabel, chain) in chains) {
+                if (ImGui.beginMenu(chainLabel)) {
                     for (i in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
                         val slotNum = i + 1
-                        val fx = deck.fxSlots[i]
+                        val fx = chain.slots[i]
                         val hasFx = fx != null && fx.id.isNotEmpty()
                         val label = if (fx != null && fx.id.isNotEmpty()) "Slot $slotNum: ${fx.displayName}" else "Slot $slotNum: Empty"
                         if (ImGui.menuItem(label, "", false, hasFx) && fx != null) {
-                            deck.toFxSlotDto(i)?.let { slotDto ->
+                            chain.toFxSlotDto(i)?.let { slotDto ->
                                 SavePresetModal.request(
                                     title = "Save FX Slot Preset As",
                                     confirmLabel = "Save",
@@ -202,9 +196,9 @@ object FXBrowserPanel {
             ImGui.separator()
             ImGui.textDisabled("Save 3-slot chain from:")
             ImGui.separator()
-            for ((deckLabel, deck) in decks) {
-                if (ImGui.menuItem(deckLabel)) {
-                    val chainDto = deck.toFxChainDto("fx_chain")
+            for ((chainLabel, chain) in chains) {
+                if (ImGui.menuItem(chainLabel)) {
+                    val chainDto = chain.toFxChainDto("fx_chain")
                     SavePresetModal.request(
                         title = "Save FX Chain As",
                         confirmLabel = "Save",
@@ -225,7 +219,6 @@ object FXBrowserPanel {
         val icon = when (asset.type) {
             AssetType.FX_STOCK -> Icons.SQUARE
             AssetType.FX_CHAIN -> Icons.ACTIVITY
-            AssetType.FX_BANK -> Icons.LAYOUT_FULL
             else -> Icons.ZAP
         }
         val isSelected = selectedAsset?.path == asset.path
@@ -253,7 +246,6 @@ object FXBrowserPanel {
             when (asset.type) {
                 AssetType.FX_STOCK -> "Stock ISF filter — load only, not saveable to a playlist or queue."
                 AssetType.FX_CHAIN -> "Saved 3-slot FX chain (.lsdfxchain) — replaces all 3 slots of the target chain."
-                AssetType.FX_BANK -> "Saved 3-chain FX bank (.lsdfxbank) — replaces all 3 chains of Master FX."
                 else -> "Saved single FX preset (.lsdfx) — loads into one FX slot."
             }
         )
@@ -263,7 +255,7 @@ object FXBrowserPanel {
             selectedAsset = asset
         }
 
-        if (isRowHovered && ImGui.isMouseDoubleClicked(0) && asset.type != AssetType.FX_BANK) {
+        if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
             // crossfade: -1.0 = Deck A, 1.0 = Deck B (see Mixer.crossfade) — target the
             // deck that's actually dominant, matching FXQueueManager/FXPlaylistEditorPanel.
             val targetDeck = if (mixer.crossfade.value <= 0.0f) mixer.deckA else mixer.deckB
@@ -302,46 +294,30 @@ object FXBrowserPanel {
         when (asset.type) {
             AssetType.FX_STOCK -> {
                 val id = asset.path.removePrefix(STOCK_PATH_PREFIX)
-                val slotIdx = firstVacantSlot(deck)
-                deck.clearFxSlot(slotIdx)
-                val filter = ISFFilterRegistry.createFilter(id)
-                if (filter != null) {
-                    deck.fxChain.slots[slotIdx] = filter
-                    deck.fxChain.armSlotTakeover(slotIdx)
-                }
+                FxOps.setSlotFilter(deck.fxChain, firstVacantSlot(deck), id)
             }
-            AssetType.FX_PRESET -> {
-                val slotIdx = firstVacantSlot(deck)
-                session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
-                    deck.applyFxSlot(slotIdx, presetDto.slot)
-                }
-            }
-            AssetType.FX_CHAIN -> {
-                session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
-                    deck.applyFxChain(chainDto)
-                }
-            }
+            AssetType.FX_PRESET -> FxOps.loadSlot(session, file, deck.fxChain, firstVacantSlot(deck))
+            AssetType.FX_CHAIN -> FxOps.loadChain(session, file, deck.fxChain)
             else -> {}
         }
     }
 
     private fun drawContextMenu(session: SessionContext, mixer: Mixer, asset: AssetItem) {
-        val decks = listOf("Deck A" to mixer.deckA, "Deck B" to mixer.deckB, "Deck BG" to mixer.deckBG, "Deck PV" to mixer.deckPV)
+        val chains = listOf(
+            "Deck A" to mixer.deckA.fxChain, "Deck B" to mixer.deckB.fxChain, "Deck BG" to mixer.deckBG.fxChain,
+            "Deck PV" to mixer.deckPV.fxChain, "Master FX" to mixer.masterFxChain
+        )
         val file = File(asset.path)
 
         when (asset.type) {
             AssetType.FX_STOCK -> {
                 val id = asset.path.removePrefix(STOCK_PATH_PREFIX)
-                for ((deckLabel, deck) in decks) {
-                    if (ImGui.beginMenu("Load to $deckLabel")) {
+                for ((chainLabel, chain) in chains) {
+                    if (ImGui.beginMenu("Load to $chainLabel")) {
                         for (s in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
                             val slotNum = s + 1
                             if (ImGui.menuItem("Slot $slotNum")) {
-                                deck.clearFxSlot(s)
-                                ISFFilterRegistry.createFilter(id)?.let {
-                                    deck.fxChain.slots[s] = it
-                                    deck.fxChain.armSlotTakeover(s)
-                                }
+                                FxOps.setSlotFilter(chain, s, id)
                             }
                         }
                         ImGui.endMenu()
@@ -349,14 +325,12 @@ object FXBrowserPanel {
                 }
             }
             AssetType.FX_PRESET -> {
-                for ((deckLabel, deck) in decks) {
-                    if (ImGui.beginMenu("Load to $deckLabel")) {
+                for ((chainLabel, chain) in chains) {
+                    if (ImGui.beginMenu("Load to $chainLabel")) {
                         for (s in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
                             val slotNum = s + 1
                             if (ImGui.menuItem("Slot $slotNum")) {
-                                session.presetRepository.loadFxPresetAsync(file).thenAccept { presetDto ->
-                                    deck.applyFxSlot(s, presetDto.slot)
-                                }
+                                FxOps.loadSlot(session, file, chain, s)
                             }
                         }
                         ImGui.endMenu()
@@ -394,11 +368,9 @@ object FXBrowserPanel {
                 }
             }
             AssetType.FX_CHAIN -> {
-                for ((deckLabel, deck) in decks) {
-                    if (ImGui.menuItem("Load to $deckLabel")) {
-                        session.presetRepository.loadFxChainAsync(file).thenAccept { chainDto ->
-                            deck.applyFxChain(chainDto)
-                        }
+                for ((chainLabel, chain) in chains) {
+                    if (ImGui.menuItem("Load to $chainLabel")) {
+                        FxOps.loadChain(session, file, chain)
                     }
                 }
                 ImGui.separator()
@@ -412,30 +384,6 @@ object FXBrowserPanel {
                 if (activePlFileChain != null) {
                     if (ImGui.menuItem("Add to '${activePlFileChain.nameWithoutExtension}' Playlist")) {
                         appendToActiveFxPlaylist(activePlFileChain, asset.path)
-                    }
-                }
-                ImGui.separator()
-                if (ImGui.menuItem("Rename...")) {
-                    BrowserPopupHandler.renameTarget = asset
-                    BrowserPopupHandler.renameBuffer.set(asset.name)
-                    BrowserPopupHandler.pendingOpenRenamePopup = true
-                }
-                if (ImGui.menuItem("Clone")) {
-                    FileSystemManager.cloneFile(asset.path)
-                }
-                if (ImGui.menuItem("Delete...")) {
-                    BrowserPopupHandler.deleteTarget = asset
-                    BrowserPopupHandler.pendingOpenDeletePopup = true
-                }
-                ImGui.separator()
-                if (ImGui.menuItem("Reveal in File Manager")) {
-                    revealInFileManager(file)
-                }
-            }
-            AssetType.FX_BANK -> {
-                if (ImGui.menuItem("Load to Master FX")) {
-                    session.presetRepository.loadFxBankAsync(file).thenAccept { bankDto ->
-                        mixer.masterFxBank.applyFxBank(bankDto)
                     }
                 }
                 ImGui.separator()

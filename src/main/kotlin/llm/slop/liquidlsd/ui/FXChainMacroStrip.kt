@@ -13,7 +13,7 @@ import llm.slop.liquidlsd.rendering.isf.MetaLinkMode
  * Traktor/Mixxx-style performance strip for one [FxChain]: a Chain Super Knob that drives the
  * 3 slots' own Metaknobs when linked, plus a "Single FX Focus Mode" that swaps the 3 knobs to
  * the focused slot's own top parameters instead. Drawn above the detailed per-slot accordion in
- * [ParametersTabs.drawFxBankGroupContent].
+ * [ParametersTabs.drawFxChainContent].
  *
  * Hardware note: each control here exposes the same "$chainPrefix/..." path already registered
  * by [FxChain.getParameterPaths]/[llm.slop.liquidlsd.rendering.isf.ISFFilter.getParameterPaths],
@@ -33,13 +33,12 @@ object FXChainMacroStrip {
      * Re-runs [llm.slop.liquidlsd.macro.FxMacroSync] after a Link checkbox toggle: linking a slot
      * must clear that slot's Performance Console Metaknob binding (both would otherwise write
      * [llm.slop.liquidlsd.rendering.isf.ISFFilter.metaKnob]'s base value every frame), and
-     * unlinking must restore it. [chainPrefix] is "$bankLabel/C$chainNum" (e.g. "FX1/C1").
+     * unlinking must restore it. [chainPrefix] is "$chainLabel/FX" (e.g. "Deck A/FX", "Master/FX").
      */
     private fun resyncMacroKnobs(chainPrefix: String, chain: FxChain) {
-        val bankLabel = chainPrefix.substringBefore("/C")
-        val chainIndex = chainPrefix.substringAfterLast("/C").toIntOrNull()?.minus(1) ?: 0
-        val bankId = llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel(bankLabel)
-        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, bankLabel, chain, chainIndex)
+        val chainLabel = chainPrefix.removeSuffix("/FX")
+        val bankId = llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel(chainPrefix)
+        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, chainLabel, chain)
     }
 
     /**

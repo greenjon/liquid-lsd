@@ -243,7 +243,7 @@ between two disclosure tiers, without leaving Performance Mode:
      Selecting a side tab switches both the parameter editor below and the top macro row above.
    - **Parameter Grid** in the center: displays the full **VAL / MIDI / LFO / SEQ / AUD** parameter grid
      with section subtabs across the top. All 5 sections feature a uniform 3-tab layout with **`FX` in the center**:
-     - **`MIX`**: `[ CTRL ]  [ FX ]  [ TRANS ]` (Master controls, Master FX 4 ISF slots, and Transitions)
+     - **`MIX`**: `[ CTRL ]  [ FX ]  [ TRANS ]` (Master controls, the Master FX chain's 3 ISF slots, and Transitions)
      - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]` (visual generator with Gain/Zoom/Rotate Z, and the insert FX chain)
      Switching between `SRC`/`CTRL` and `FX` automatically switches the top macro row between visual source controls and insert/master FX macros (`Super Knob + 3 Metaknobs`).
    - **Properties Editor** on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.
@@ -318,16 +318,16 @@ There are 12 always-resident canonical macro banks (4 knobs each, conforming to 
 | | Deck B | 4 | `deckB` | Blank |
 | | Deck BG | 4 | `deckBG` | Blank |
 | | Deck PV | 4 | `deckPV` | Blank |
-| **Per-Deck Insert FX** | Deck A FX | 4 | `deckAFx` | Super Knob + 3 Metaknobs |
-| | Deck B FX | 4 | `deckBFx` | Super Knob + 3 Metaknobs |
-| | Deck BG FX | 4 | `deckBgFx` | Super Knob + 3 Metaknobs |
-| | Deck PV FX | 4 | `deckPvFx` | Super Knob + 3 Metaknobs |
+| **Per-Deck Insert FX** | Deck A FX | 4 | `deckA_fx` | Super Knob + 3 Metaknobs |
+| | Deck B FX | 4 | `deckB_fx` | Super Knob + 3 Metaknobs |
+| | Deck BG FX | 4 | `deckBG_fx` | Super Knob + 3 Metaknobs |
+| | Deck PV FX | 4 | `deckPV_fx` | Super Knob + 3 Metaknobs |
 | **Mixer & Transitions**| Transitions | 4 | `trans` | Crossfade, Type, Speed, Next |
 | | Master | 4 | `master` | Alpha A, Alpha B, Master Level, Crossfader |
 | **Master FX** | FX Wet/Dry | 4 | `fxSends` | Deck A, B, BG, PV Insert FX Wet/Dry Levels |
 | | Master FX | 4 | `masterFx` | Super Knob + 3 Metaknobs |
 
-Deck generator banks start blank by default for custom binding in the MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. All 12 canonical banks are preserved in `last_session.json` and session files.
+Deck generator banks start blank by default for custom binding in the MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. The five FX banks bind to their chain's `Deck A/FX/...` … `Master/FX/...` parameters and re-sync automatically whenever that chain's contents change (loading a chain, swapping a slot, restoring a session) — any knob you've retargeted by hand is left alone; **Resync** forces the defaults back. All 12 canonical banks are preserved in `last_session.json` and session files.
 
 Banks are saved in `last_session.json` and bundled into preset files automatically.
 

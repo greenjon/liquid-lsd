@@ -619,17 +619,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#bundled-multi-chain-fx-banks-lsdfxbank" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Bundled Multi-Chain FX Banks (.lsdfxbank)
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -1647,17 +1636,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#bundled-multi-chain-fx-banks-lsdfxbank" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Bundled Multi-Chain FX Banks (.lsdfxbank)
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -1879,43 +1857,43 @@
 <ul>
 <li><strong>Stock ISF Filters</strong> — Built-in filters with no saved parameters. They can only be loaded directly to a deck (first vacant FX slot); they can't be added to a playlist or live queue since there's no reproducible state to save.</li>
 <li><strong>Saved Single FX Presets (<code>.lsdfx</code>)</strong> — One FX slot's full parameter state, captured from a deck.</li>
-<li><strong>Saved FX Chains (<code>.lsdfxchain</code>)</strong> — A complete 3-slot FX pipeline, captured from an FX bank chain. Loading a chain replaces all 3 slots on the target chain.</li>
+<li><strong>Saved FX Chains (<code>.lsdfxchain</code>)</strong> — A complete 3-slot FX pipeline, captured from a deck's or Master's FX chain. Loading a chain replaces all 3 slots on the target chain.</li>
 </ul>
-<p>Use the <strong><code>[⋮]</code></strong> filter menu above the list to show/hide each tier (<strong>All / Stock / Singles / Chains</strong>). Use <strong><code>[+]</code></strong> to save the current FX state of any deck slot (or all 3 slots as a chain) into a new preset.</p>
+<p>Use the <strong><code>[⋮]</code></strong> filter menu above the list to show/hide each tier (<strong>All / Stock / Singles / Chains</strong>). Use <strong><code>[+]</code></strong> to save the current FX state of any deck or Master FX slot (or all 3 slots as a chain) into a new preset.</p>
 <ul>
 <li><strong>Drag-and-Drop</strong>: Drag a saved single or chain onto Slot 1–3 in a deck's Deep Edit <code>FX</code> subtab, onto the FX Playlist editor (Column 2), or onto a Live FX Queue (Columns 3/4).</li>
 <li><strong>Double-click</strong>: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains).</li>
-<li><strong>Right-click menu</strong>: <code>Load to &gt; Deck [A|B|BG|PV] &gt; Slot [1|2|3]</code> (singles) or <code>Load to Deck [A|B|BG|PV] &gt; Chain [1|2|3]</code> (chains), plus <strong>Add to Live FX Queue (A/B)</strong>, <strong>Add to BG FX Queue</strong>, <strong>Add to '<playlist>' Playlist</strong>, Rename, Clone, Delete, and Reveal in File Manager.</li>
+<li><strong>Right-click menu</strong>: <code>Load to &gt; Deck [A|B|BG|PV] / Master FX &gt; Slot [1|2|3]</code> (stock filters and singles) or <code>Load to Deck [A|B|BG|PV] / Master FX</code> (chains), plus <strong>Add to Live FX Queue (A/B)</strong>, <strong>Add to BG FX Queue</strong>, <strong>Add to '<playlist>' Playlist</strong>, Rename, Clone, Delete, and Reveal in File Manager.</li>
 </ul>
 <h4 id="bundled-stock-fx-chains">Bundled Stock FX Chains</h4>
-<p>Liquid LSD includes 9 pre-calibrated 3-slot FX chains in <code>library/fx_chains/</code> designed for live club and festival VJ performance:</p>
+<p>Liquid LSD includes 16 pre-calibrated 3-slot FX chains in <code>library/fx_chains/</code> designed for live club and festival VJ performance:</p>
 <ol>
 <li><strong>Hyperspace Trip</strong> (<code>hyperspace_trip.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>kaleidoscope</code> → <code>radial_blur</code> → <code>color_levels</code></li>
+<li><em>Slots</em>: <code>kaleidoscope</code> → <code>feedback</code> → <code>gradient_map</code></li>
 <li><em>Vibe</em>: Classic psychedelic trance / festival tunnel breakdown with multi-axis kaleidoscopic folding, dithered zoom burst, and filmic Oklab contrast roll-off.</li>
 <li><strong>The Drop Weapon</strong> (<code>the_drop_weapon.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>directional_blur</code> → <code>video_strobe</code> → <code>rgb_split</code></li>
+<li><em>Slots</em>: <code>radial_blur</code> → <code>video_strobe</code> → <code>rgb_split</code></li>
 <li><em>Vibe</em>: High-intensity EDM/bass music drop impact with directional motion streaks, rhythmic beat flash gating, and chromatic aberration impact.</li>
 <li><strong>Cyberpunk 1984</strong> (<code>cyberpunk_1984.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>pixelate</code> → <code>retro_crt</code> → <code>gradient_map</code></li>
+<li><em>Slots</em>: <code>pixelate</code> → <code>retro_crt</code> → <code>rgb_split</code></li>
 <li><em>Vibe</em>: Retro-futuristic dystopian terminal aesthetic with honeycomb pixel lattice, curved CRT phosphor scanlines, and duotone cyberpunk neon grading.</li>
 <li><strong>Liquid Mercury</strong> (<code>liquid_mercury.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>wave_displace</code> → <code>fluid_smear</code> → <code>luma_displace</code></li>
+<li><em>Slots</em>: <code>luma_displace</code> → <code>fluid_smear</code> → <code>bloom</code></li>
 <li><em>Vibe</em>: Viscous organic fluid and metallic chrome distortion with concentric liquid ripples, curl advection smearing, and surface normal refraction.</li>
 <li><strong>Neon Wireframe</strong> (<code>neon_wireframe.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>neon_edge</code> → <code>pinch_bulge</code> → <code>bloom</code></li>
+<li><em>Slots</em>: <code>neon_edge</code> → <code>directional_blur</code> → <code>feedback</code></li>
 <li><em>Vibe</em>: Glowing electric neon vector graphics with orientation-to-hue Sobel edge glow, spherical optical lens bulging, and soft high-pass bloom.</li>
 <li><strong>Wormhole Flight</strong> (<code>wormhole_flight.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>polar_tunnel</code> → <code>radial_blur</code> → <code>feedback</code></li>
+<li><em>Slots</em>: <code>polar_tunnel</code> → <code>pinch_bulge</code> → <code>bloom</code></li>
 <li><em>Vibe</em>: Deep space infinite warp portal with aspect-preserving log-polar vortex, zoom burst trails, and recursive feedback rotation.</li>
 <li><strong>FLIR Predator Vision</strong> (<code>flir_predator_vision.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>thermal_scanner</code> → <code>directional_blur</code> → <code>pixelate</code></li>
+<li><em>Slots</em>: <code>thermal_scanner</code> → <code>retro_crt</code> → <code>video_strobe</code></li>
 <li><em>Vibe</em>: Military reconnaissance and sci-fi tactical optics with FLIR Ironbow heat mapping, sensor noise grain, horizontal smear, and quantized block mosaic.</li>
 <li><strong>Liquid Chrome Dimension</strong> (<code>liquid_chrome_dimension.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>mirror_sphere</code> → <code>wave_displace</code> → <code>color_levels</code></li>
+<li><em>Slots</em>: <code>wave_displace</code> → <code>mirror_sphere</code> → <code>color_levels</code></li>
 <li><em>Vibe</em>: 3D raytraced floating chrome orb reflecting the scene with liquid surface turbulence and punchy high-contrast color grading.</li>
 <li><strong>2D to 3D Elevation with Feedback</strong> (<code>2d_to_3d_elevation_with_feedback.lsdfxchain</code>):</li>
-<li><em>Slots</em>: <code>3d_elevation</code> → <code>feedback</code> → <code>color_levels</code></li>
+<li><em>Slots</em>: <code>3d_elevation</code> → <code>feedback</code> → <code>bloom</code></li>
 <li><em>Vibe</em>: The iconic Liquid LSD topological displacement chain featuring heightmap mesh rendering, recursive rotation feedback, and ACES filmic grading.</li>
 <li><strong>Laser Concert Anamorphic</strong> (<code>laser_concert_anamorphic.lsdfxchain</code>):<ul>
 <li><em>Slots</em>: <code>anamorphic_streak</code> → <code>bloom</code> → <code>color_levels</code></li>
@@ -1942,31 +1920,18 @@
 <li><em>Vibe</em>: Gravitational accretion singularity with logarithmic space swirl, surface normal marbling, and infinite log-polar warp.</li>
 </ul>
 </li>
+<li><strong>Subtle Optical Warmth</strong> (<code>subtle_optical_warmth.lsdfxchain</code> — the default Master FX):<ul>
+<li><em>Slots</em>: <code>color_levels</code> → <code>retro_crt</code> → <code>bloom</code></li>
+<li><em>Vibe</em>: Gentle tape/phosphor warming with contrast roll-off, subtle enough to leave on the master all night.</li>
+</ul>
+</li>
+<li><strong>Digital Bitcrush Mosaic</strong> (<code>digital_bitcrush_mosaic.lsdfxchain</code>):<ul>
+<li><em>Slots</em>: <code>pixelate</code> → <code>rgb_split</code> → <code>video_strobe</code></li>
+<li><em>Vibe</em>: Lattice quantization and spectral glitch.</li>
+</ul>
+</li>
 </ol>
-<h4 id="bundled-multi-chain-fx-banks-lsdfxbank">Bundled Multi-Chain FX Banks (<code>.lsdfxbank</code>)</h4>
-<p>Liquid LSD bundles 5 fully configured 3-chain rack presets in <code>library/fx_banks/</code> (and version-controlled in <code>defaults/fx_banks/</code>) that load into <strong>Master FX</strong> (right-click in the FX browser → <strong>Load to Master FX</strong>, or drop onto the Master FX bank header). Two of them also supply the decks' starter FX chains on a fresh install (Deck A and BG from <em>Psychedelic Warp &amp; Flow</em>, Deck B and PV from <em>Liquid Chrome &amp; Prisms</em>):</p>
-<ol>
-<li><strong>Club Master Finishers</strong> (<code>club_master_finishers.lsdfxbank</code> — the default Master FX):</li>
-<li><em>Chain 1 (Subtle Optical Warmth)</em>: <code>color_levels</code> → <code>retro_crt</code> → <code>bloom</code> (Gentle tape/phosphor warming with contrast roll-off).</li>
-<li><em>Chain 2 (Stage Laser Glare)</em>: <code>anamorphic_streak</code> → <code>bloom</code> → <code>color_levels</code> (Concert lighting highlight streaks).</li>
-<li><em>Chain 3 (Drop Weapon Strobe)</em>: <code>directional_blur</code> → <code>video_strobe</code> → <code>rgb_split</code> (High-impact beat flash drop impact).</li>
-<li><strong>Psychedelic Warp &amp; Flow</strong> (<code>psychedelic_warp_and_flow.lsdfxbank</code>):</li>
-<li><em>Chain 1 (Liquid Mercury)</em>: <code>wave_displace</code> → <code>fluid_smear</code> → <code>luma_displace</code> (Viscous organic fluid deformation).</li>
-<li><em>Chain 2 (Hyperspace Trip)</em>: <code>kaleidoscope</code> → <code>radial_blur</code> → <code>color_levels</code> (Symmetric fractal zoom tunnel).</li>
-<li><em>Chain 3 (2D to 3D Elevation)</em>: <code>3d_elevation</code> → <code>feedback</code> → <code>color_levels</code> (Iconic topological mesh feedback).</li>
-<li><strong>Analog Tape &amp; Retro Terminal</strong> (<code>analog_tape_and_retro_terminal.lsdfxbank</code>):</li>
-<li><em>Chain 1 (Grindhouse VHS Bootleg)</em>: <code>vhs_glitch</code> → <code>retro_crt</code> → <code>color_levels</code> (Helical scan tracking error &amp; head switching).</li>
-<li><em>Chain 2 (Pop-Art Comic Print)</em>: <code>neon_edge</code> → <code>halftone</code> → <code>gradient_map</code> (CMYK lithographic dot rosettes &amp; paper tint).</li>
-<li><em>Chain 3 (Cyberpunk 1984)</em>: <code>pixelate</code> → <code>retro_crt</code> → <code>gradient_map</code> (Honeycomb crystal mosaic &amp; green terminal phosphor).</li>
-<li><strong>Glitch, Strobe &amp; Tactical Recon</strong> (<code>glitch_strobe_and_tactical_recon.lsdfxbank</code>):</li>
-<li><em>Chain 1 (The Drop Weapon)</em>: <code>directional_blur</code> → <code>video_strobe</code> → <code>rgb_split</code> (Transient beat flash gate).</li>
-<li><em>Chain 2 (FLIR Predator Vision)</em>: <code>thermal_scanner</code> → <code>directional_blur</code> → <code>pixelate</code> (Ironbow heat bloom &amp; tactical sensor grain).</li>
-<li><em>Chain 3 (Digital Bitcrush Mosaic)</em>: <code>pixelate</code> → <code>rgb_split</code> → <code>video_strobe</code> (Lattice quantization &amp; spectral glitch).</li>
-<li><strong>Liquid Chrome &amp; Dimensional Prisms</strong> (<code>liquid_chrome_and_prisms.lsdfxbank</code>):</li>
-<li><em>Chain 1 (Liquid Chrome Dimension)</em>: <code>mirror_sphere</code> → <code>wave_displace</code> → <code>color_levels</code> (3D raytraced floating chrome orb).</li>
-<li><em>Chain 2 (Prismatic Crystal Kaleidoscope)</em>: <code>faceted_glass</code> → <code>kaleidoscope</code> → <code>rgb_split</code> (Cellular Voronoi gem facet refractions).</li>
-<li><em>Chain 3 (Cosmic Black Hole Vortex)</em>: <code>vortex_swirl</code> → <code>luma_displace</code> → <code>polar_tunnel</code> (Accretion disk swirl &amp; infinite warp).</li>
-</ol>
+<p>On a fresh install, Master FX starts with <em>Subtle Optical Warmth</em>, Deck A with <em>Liquid Mercury</em>, Deck B with <em>Liquid Chrome Dimension</em>, Deck BG with <em>Hyperspace Trip</em>, and Deck PV with <em>Prismatic Crystal Kaleidoscope</em>.</p>
 <h3 id="fx-playlists-lsdfxplay">FX Playlists (<code>.lsdfxplay</code>)</h3>
 <p>Column 2 of <code>[ FX ]</code> mode is a dedicated FX playlist editor, working like the preset Playlists column: switch between playlists with the dropdown, drag singles/chains in from the FX Browser to insert or reorder them, and double-click an entry to apply it. Missing files show the same red <code>[!] (missing)</code> indicator as preset playlists.</p>
 <h3 id="live-fx-queues-ab-and-bg">Live FX Queues (A/B and BG)</h3>

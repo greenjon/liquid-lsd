@@ -10,7 +10,6 @@ enum class AssetType {
     FX_STOCK,
     FX_PRESET,
     FX_CHAIN,
-    FX_BANK,
     FX_PLAYLIST,
     TRANSITION_PRESET,
     TRANSITION_PLAYLIST

@@ -201,15 +201,6 @@ abstract class SyncDefaultsTask : DefaultTask() {
                 println("Synced fx chain to defaults: ${f.name}")
             }
         }
-        val fxBanksSrc = File(lib, "fx_banks")
-        val fxBanksDest = File(def, "fx_banks")
-        if (fxBanksSrc.exists()) {
-            fxBanksDest.mkdirs()
-            fxBanksSrc.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdfxbank" }?.forEach { f ->
-                f.copyTo(File(fxBanksDest, f.name), overwrite = true)
-                println("Synced fx bank to defaults: ${f.name}")
-            }
-        }
         val transitionsSrc = File(lib, "transitions")
         val transitionsDest = File(def, "transitions")
         if (transitionsSrc.exists()) {
@@ -247,11 +238,9 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
         val presetsOut = File(outBase, "default_presets")
         val playlistsOut = File(outBase, "default_playlists")
         val fxChainsOut = File(outBase, "default_fx_chains")
-        val fxBanksOut = File(outBase, "default_fx_banks")
         presetsOut.mkdirs()
         playlistsOut.mkdirs()
         fxChainsOut.mkdirs()
-        fxBanksOut.mkdirs()
 
         // Write version.txt
         File(outBase, "version.txt").writeText(appVersion.get().trim() + "\n")
@@ -295,19 +284,6 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
             fxChainLines.add(f.name)
         }
         fxChainManifest.writeText(fxChainLines.joinToString("\n"))
-
-        val fxBanksIn = File(inBase, "fx_banks")
-        val fxBankFiles = if (fxBanksIn.exists()) {
-            fxBanksIn.listFiles { f -> f.isFile && f.extension.lowercase() == "lsdfxbank" }?.sortedBy { it.name } ?: emptyList<File>()
-        } else emptyList<File>()
-
-        val fxBankManifest = File(fxBanksOut, "manifest.txt")
-        val fxBankLines = mutableListOf<String>()
-        fxBankFiles.forEach { f ->
-            f.copyTo(File(fxBanksOut, f.name), overwrite = true)
-            fxBankLines.add(f.name)
-        }
-        fxBankManifest.writeText(fxBankLines.joinToString("\n"))
 
         val transitionsOut = File(outBase, "default_transitions")
         transitionsOut.mkdirs()

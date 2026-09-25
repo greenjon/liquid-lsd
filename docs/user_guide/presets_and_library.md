@@ -75,44 +75,44 @@ Column 1 of `[ FX ]` mode lists three kinds of row side by side, each marked wit
 
 - **Stock ISF Filters** — Built-in filters with no saved parameters. They can only be loaded directly to a deck (first vacant FX slot); they can't be added to a playlist or live queue since there's no reproducible state to save.
 - **Saved Single FX Presets (`.lsdfx`)** — One FX slot's full parameter state, captured from a deck.
-- **Saved FX Chains (`.lsdfxchain`)** — A complete 3-slot FX pipeline, captured from an FX bank chain. Loading a chain replaces all 3 slots on the target chain.
+- **Saved FX Chains (`.lsdfxchain`)** — A complete 3-slot FX pipeline, captured from a deck's or Master's FX chain. Loading a chain replaces all 3 slots on the target chain.
 
-Use the **`[⋮]`** filter menu above the list to show/hide each tier (**All / Stock / Singles / Chains**). Use **`[+]`** to save the current FX state of any deck slot (or all 3 slots as a chain) into a new preset.
+Use the **`[⋮]`** filter menu above the list to show/hide each tier (**All / Stock / Singles / Chains**). Use **`[+]`** to save the current FX state of any deck or Master FX slot (or all 3 slots as a chain) into a new preset.
 
 - **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–3 in a deck's Deep Edit `FX` subtab, onto the FX Playlist editor (Column 2), or onto a Live FX Queue (Columns 3/4).
 - **Double-click**: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains).
-- **Right-click menu**: `Load to > Deck [A|B|BG|PV] > Slot [1|2|3]` (singles) or `Load to Deck [A|B|BG|PV] > Chain [1|2|3]` (chains), plus **Add to Live FX Queue (A/B)**, **Add to BG FX Queue**, **Add to '<playlist>' Playlist**, Rename, Clone, Delete, and Reveal in File Manager.
+- **Right-click menu**: `Load to > Deck [A|B|BG|PV] / Master FX > Slot [1|2|3]` (stock filters and singles) or `Load to Deck [A|B|BG|PV] / Master FX` (chains), plus **Add to Live FX Queue (A/B)**, **Add to BG FX Queue**, **Add to '<playlist>' Playlist**, Rename, Clone, Delete, and Reveal in File Manager.
 
 #### Bundled Stock FX Chains
 
-Liquid LSD includes 9 pre-calibrated 3-slot FX chains in `library/fx_chains/` designed for live club and festival VJ performance:
+Liquid LSD includes 16 pre-calibrated 3-slot FX chains in `library/fx_chains/` designed for live club and festival VJ performance:
 
 1. **Hyperspace Trip** (`hyperspace_trip.lsdfxchain`):
-   - *Slots*: `kaleidoscope` → `radial_blur` → `color_levels`
+   - *Slots*: `kaleidoscope` → `feedback` → `gradient_map`
    - *Vibe*: Classic psychedelic trance / festival tunnel breakdown with multi-axis kaleidoscopic folding, dithered zoom burst, and filmic Oklab contrast roll-off.
 2. **The Drop Weapon** (`the_drop_weapon.lsdfxchain`):
-   - *Slots*: `directional_blur` → `video_strobe` → `rgb_split`
+   - *Slots*: `radial_blur` → `video_strobe` → `rgb_split`
    - *Vibe*: High-intensity EDM/bass music drop impact with directional motion streaks, rhythmic beat flash gating, and chromatic aberration impact.
 3. **Cyberpunk 1984** (`cyberpunk_1984.lsdfxchain`):
-   - *Slots*: `pixelate` → `retro_crt` → `gradient_map`
+   - *Slots*: `pixelate` → `retro_crt` → `rgb_split`
    - *Vibe*: Retro-futuristic dystopian terminal aesthetic with honeycomb pixel lattice, curved CRT phosphor scanlines, and duotone cyberpunk neon grading.
 4. **Liquid Mercury** (`liquid_mercury.lsdfxchain`):
-   - *Slots*: `wave_displace` → `fluid_smear` → `luma_displace`
+   - *Slots*: `luma_displace` → `fluid_smear` → `bloom`
    - *Vibe*: Viscous organic fluid and metallic chrome distortion with concentric liquid ripples, curl advection smearing, and surface normal refraction.
 5. **Neon Wireframe** (`neon_wireframe.lsdfxchain`):
-   - *Slots*: `neon_edge` → `pinch_bulge` → `bloom`
+   - *Slots*: `neon_edge` → `directional_blur` → `feedback`
    - *Vibe*: Glowing electric neon vector graphics with orientation-to-hue Sobel edge glow, spherical optical lens bulging, and soft high-pass bloom.
 6. **Wormhole Flight** (`wormhole_flight.lsdfxchain`):
-   - *Slots*: `polar_tunnel` → `radial_blur` → `feedback`
+   - *Slots*: `polar_tunnel` → `pinch_bulge` → `bloom`
    - *Vibe*: Deep space infinite warp portal with aspect-preserving log-polar vortex, zoom burst trails, and recursive feedback rotation.
 7. **FLIR Predator Vision** (`flir_predator_vision.lsdfxchain`):
-   - *Slots*: `thermal_scanner` → `directional_blur` → `pixelate`
+   - *Slots*: `thermal_scanner` → `retro_crt` → `video_strobe`
    - *Vibe*: Military reconnaissance and sci-fi tactical optics with FLIR Ironbow heat mapping, sensor noise grain, horizontal smear, and quantized block mosaic.
 8. **Liquid Chrome Dimension** (`liquid_chrome_dimension.lsdfxchain`):
-   - *Slots*: `mirror_sphere` → `wave_displace` → `color_levels`
+   - *Slots*: `wave_displace` → `mirror_sphere` → `color_levels`
    - *Vibe*: 3D raytraced floating chrome orb reflecting the scene with liquid surface turbulence and punchy high-contrast color grading.
 9. **2D to 3D Elevation with Feedback** (`2d_to_3d_elevation_with_feedback.lsdfxchain`):
-   - *Slots*: `3d_elevation` → `feedback` → `color_levels`
+   - *Slots*: `3d_elevation` → `feedback` → `bloom`
    - *Vibe*: The iconic Liquid LSD topological displacement chain featuring heightmap mesh rendering, recursive rotation feedback, and ACES filmic grading.
 10. **Laser Concert Anamorphic** (`laser_concert_anamorphic.lsdfxchain`):
     - *Slots*: `anamorphic_streak` → `bloom` → `color_levels`
@@ -129,31 +129,15 @@ Liquid LSD includes 9 pre-calibrated 3-slot FX chains in `library/fx_chains/` de
 14. **Cosmic Black Hole Vortex** (`cosmic_black_hole_vortex.lsdfxchain`):
     - *Slots*: `vortex_swirl` → `luma_displace` → `polar_tunnel`
     - *Vibe*: Gravitational accretion singularity with logarithmic space swirl, surface normal marbling, and infinite log-polar warp.
+15. **Subtle Optical Warmth** (`subtle_optical_warmth.lsdfxchain` — the default Master FX):
+    - *Slots*: `color_levels` → `retro_crt` → `bloom`
+    - *Vibe*: Gentle tape/phosphor warming with contrast roll-off, subtle enough to leave on the master all night.
+16. **Digital Bitcrush Mosaic** (`digital_bitcrush_mosaic.lsdfxchain`):
+    - *Slots*: `pixelate` → `rgb_split` → `video_strobe`
+    - *Vibe*: Lattice quantization and spectral glitch.
 
-#### Bundled Multi-Chain FX Banks (`.lsdfxbank`)
+On a fresh install, Master FX starts with *Subtle Optical Warmth*, Deck A with *Liquid Mercury*, Deck B with *Liquid Chrome Dimension*, Deck BG with *Hyperspace Trip*, and Deck PV with *Prismatic Crystal Kaleidoscope*.
 
-Liquid LSD bundles 5 fully configured 3-chain rack presets in `library/fx_banks/` (and version-controlled in `defaults/fx_banks/`) that load into **Master FX** (right-click in the FX browser → **Load to Master FX**, or drop onto the Master FX bank header). Two of them also supply the decks' starter FX chains on a fresh install (Deck A and BG from *Psychedelic Warp & Flow*, Deck B and PV from *Liquid Chrome & Prisms*):
-
-1. **Club Master Finishers** (`club_master_finishers.lsdfxbank` — the default Master FX):
-   - *Chain 1 (Subtle Optical Warmth)*: `color_levels` → `retro_crt` → `bloom` (Gentle tape/phosphor warming with contrast roll-off).
-   - *Chain 2 (Stage Laser Glare)*: `anamorphic_streak` → `bloom` → `color_levels` (Concert lighting highlight streaks).
-   - *Chain 3 (Drop Weapon Strobe)*: `directional_blur` → `video_strobe` → `rgb_split` (High-impact beat flash drop impact).
-2. **Psychedelic Warp & Flow** (`psychedelic_warp_and_flow.lsdfxbank`):
-   - *Chain 1 (Liquid Mercury)*: `wave_displace` → `fluid_smear` → `luma_displace` (Viscous organic fluid deformation).
-   - *Chain 2 (Hyperspace Trip)*: `kaleidoscope` → `radial_blur` → `color_levels` (Symmetric fractal zoom tunnel).
-   - *Chain 3 (2D to 3D Elevation)*: `3d_elevation` → `feedback` → `color_levels` (Iconic topological mesh feedback).
-3. **Analog Tape & Retro Terminal** (`analog_tape_and_retro_terminal.lsdfxbank`):
-   - *Chain 1 (Grindhouse VHS Bootleg)*: `vhs_glitch` → `retro_crt` → `color_levels` (Helical scan tracking error & head switching).
-   - *Chain 2 (Pop-Art Comic Print)*: `neon_edge` → `halftone` → `gradient_map` (CMYK lithographic dot rosettes & paper tint).
-   - *Chain 3 (Cyberpunk 1984)*: `pixelate` → `retro_crt` → `gradient_map` (Honeycomb crystal mosaic & green terminal phosphor).
-4. **Glitch, Strobe & Tactical Recon** (`glitch_strobe_and_tactical_recon.lsdfxbank`):
-   - *Chain 1 (The Drop Weapon)*: `directional_blur` → `video_strobe` → `rgb_split` (Transient beat flash gate).
-   - *Chain 2 (FLIR Predator Vision)*: `thermal_scanner` → `directional_blur` → `pixelate` (Ironbow heat bloom & tactical sensor grain).
-   - *Chain 3 (Digital Bitcrush Mosaic)*: `pixelate` → `rgb_split` → `video_strobe` (Lattice quantization & spectral glitch).
-5. **Liquid Chrome & Dimensional Prisms** (`liquid_chrome_and_prisms.lsdfxbank`):
-   - *Chain 1 (Liquid Chrome Dimension)*: `mirror_sphere` → `wave_displace` → `color_levels` (3D raytraced floating chrome orb).
-   - *Chain 2 (Prismatic Crystal Kaleidoscope)*: `faceted_glass` → `kaleidoscope` → `rgb_split` (Cellular Voronoi gem facet refractions).
-   - *Chain 3 (Cosmic Black Hole Vortex)*: `vortex_swirl` → `luma_displace` → `polar_tunnel` (Accretion disk swirl & infinite warp).
 
 ### FX Playlists (`.lsdfxplay`)
 
