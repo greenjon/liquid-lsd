@@ -129,6 +129,7 @@ class PerformanceMatrixPanel {
     }
 
     internal val ctx = PerformanceUiContext()
+    private val fxControls = PerformanceFxControls(ctx)
 
     private val presetSearchA = ImString(64)
     private val presetSearchB = ImString(64)
@@ -720,16 +721,16 @@ class PerformanceMatrixPanel {
                             drawDeckRowRightControls(session, mixer, "Deck PV", mixer.deckPV, boxX2 - pad - deckRightW, ctrlY, ctrlH)
                         }
                         descriptor.bankId == MacroEngine.FX_SENDS -> {
-                            drawFxSendsLeftControls(session, boxX1 + pad, ctrlY, ctrlH)
-                            drawFxSendsRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH)
+                            fxControls.drawFxSendsLeftControls(session, boxX1 + pad, ctrlY, ctrlH)
+                            fxControls.drawFxSendsRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH)
                         }
                         isConsoleFxRow -> {
-                            drawFxRowLeftControls(session, mixer, parametersState, boxX1 + pad, ctrlY, ctrlH)
-                            drawFxRowRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH, targetBankId = descriptor.bankId)
+                            fxControls.drawFxRowLeftControls(session, mixer, parametersState, boxX1 + pad, ctrlY, ctrlH)
+                            fxControls.drawFxRowRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH, targetBankId = descriptor.bankId)
                         }
                         isAllFxTab -> {
-                            drawAllFxRowLeftControls(session, mixer, descriptor.bankId, boxX1 + pad, ctrlY, ctrlH)
-                            drawFxRowRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH, targetBankId = descriptor.bankId)
+                            fxControls.drawAllFxRowLeftControls(session, mixer, descriptor.bankId, boxX1 + pad, ctrlY, ctrlH)
+                            fxControls.drawFxRowRightControls(session, mixer, boxX2 - pad - fxRightW, ctrlY, ctrlH, targetBankId = descriptor.bankId)
                         }
                     }
                 }
@@ -1209,171 +1210,6 @@ class PerformanceMatrixPanel {
         parametersState.selectedCell = savedCell
         parametersState.selectedParam = savedParam
         parametersState.activeTopTab = nextTopTab
-    }
-
-    // -- LIVE_CONSOLE FX row header: bank switcher, chain switcher, bypass, resync -------------
-
-    private fun drawAllFxRowLeftControls(
-        session: llm.slop.liquidlsd.SessionContext,
-        mixer: Mixer,
-        bankId: String,
-        startX: Float,
-        startY: Float,
-        ctrlH: Float
-    ) {
-        val gap = 4f
-        val chain = ctx.resolveFxChain(mixer, bankId)
-        val chainLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(bankId) ?: "Deck A"
-
-        ImGui.setCursorScreenPos(startX, startY)
-        ImGui.beginGroup()
-
-        // 1. Badge with target name
-        val badgeW = 76f
-        val accent = ctx.targetAccentFor(when (bankId) {
-            MacroEngine.DECK_A_FX -> "A"
-            MacroEngine.DECK_B_FX -> "B"
-            MacroEngine.DECK_BG_FX -> "BG"
-            MacroEngine.DECK_PV_FX -> "PV"
-            else -> "MST"
-        })
-        val bgCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.20f)
-        val borderCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.85f)
-        val textCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.95f)
-
-        val curX = ImGui.getCursorScreenPosX()
-        val curY = ImGui.getCursorScreenPosY()
-        val dl = ImGui.getWindowDrawList()
-        dl.addRectFilled(curX, curY, curX + badgeW, curY + ctrlH, bgCol, 4f)
-        dl.addRect(curX, curY, curX + badgeW, curY + ctrlH, borderCol, 4f, 0, 1.5f)
-
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            val textSz = ImGui.calcTextSize(chainLabel)
-            val tx = curX + (badgeW - textSz.x) * 0.5f
-            val ty = curY + (ctrlH - textSz.y) * 0.5f
-            dl.addText(tx.coerceAtLeast(curX + 2f), ty, textCol, chainLabel)
-        }
-        ImGui.invisibleButton("##perf_allfx_badge_$bankId", badgeW, ctrlH)
-        itemTooltip("Target: $chainLabel FX Chain")
-
-        ImGui.sameLine(0f, gap)
-
-        // 2. Chain header controls: [◀] Name • [▶] [Save] [⋮]
-        FxChainHeader.drawControls(session, mixer, chain, bankId, chainLabel, ctrlH)
-
-        ImGui.endGroup()
-    }
-
-    private fun drawFxSendsLeftControls(
-        session: llm.slop.liquidlsd.SessionContext,
-        startX: Float,
-        startY: Float,
-        ctrlH: Float
-    ) {
-        val badgeW = 76f
-        val accent = PerformanceColors.COLOR_FX
-        val bgCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.20f)
-        val borderCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.85f)
-        val textCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.95f)
-
-        ImGui.setCursorScreenPos(startX, startY)
-        ImGui.beginGroup()
-
-        val dl = ImGui.getWindowDrawList()
-        dl.addRectFilled(startX, startY, startX + badgeW, startY + ctrlH, bgCol, 4f)
-        dl.addRect(startX, startY, startX + badgeW, startY + ctrlH, borderCol, 4f, 0, 1.5f)
-
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            val label = "FX SENDS"
-            val textSz = ImGui.calcTextSize(label)
-            val tx = startX + (badgeW - textSz.x) * 0.5f
-            val ty = startY + (ctrlH - textSz.y) * 0.5f
-            dl.addText(tx.coerceAtLeast(startX + 2f), ty, textCol, label)
-        }
-        ImGui.invisibleButton("##perf_fxsends_badge", badgeW, ctrlH)
-        itemTooltip("Master FX Wet/Dry Send Levels")
-
-        ImGui.endGroup()
-    }
-
-    private fun drawFxSendsRightControls(
-        session: llm.slop.liquidlsd.SessionContext,
-        mixer: Mixer,
-        startX: Float,
-        startY: Float,
-        ctrlH: Float
-    ) {
-        val resyncW = 58f
-
-        ImGui.setCursorScreenPos(startX, startY)
-        ImGui.beginGroup()
-
-        if (ImGui.button("Resync##perf_fxsends_resync", resyncW, ctrlH)) {
-            val bank = MacroEngine.getBank(MacroEngine.FX_SENDS)
-            bank?.knobs?.forEach { knob ->
-                knob.value = 1.0f
-            }
-        }
-        itemTooltip("Reset all FX Wet/Dry Send knobs to 100%.")
-
-        ImGui.endGroup()
-    }
-
-    private fun drawFxRowLeftControls(
-        session: llm.slop.liquidlsd.SessionContext,
-        mixer: Mixer,
-        parametersState: ParametersState,
-        startX: Float,
-        startY: Float,
-        ctrlH: Float
-    ) {
-        val gap = 3f
-
-        ImGui.setCursorScreenPos(startX, startY)
-        ImGui.beginGroup()
-
-        // Target switcher [ A ] [ B ] [ BG ] [ PV ] [ MST ]
-        val targets = listOf("A", "B", "BG", "PV", "MST")
-        val targetBtnW = 28f
-        for ((i, target) in targets.withIndex()) {
-            if (i > 0) ImGui.sameLine(0f, gap)
-            val isActive = target == ctx.focusedFxTarget
-            val accent = ctx.targetAccentFor(target)
-            val activeCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.90f)
-            val inactiveCol = ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
-            ImGui.pushStyleColor(ImGuiCol.Button, if (isActive) activeCol else inactiveCol)
-            if (ImGui.button("$target##perf_fx_target_$target", targetBtnW, ctrlH)) {
-                ctx.focusedFxTarget = target
-                llm.slop.liquidlsd.macro.FxMacroSync.syncFor(ctx.targetBankIdFor(target), mixer)
-            }
-            ImGui.popStyleColor()
-        }
-        itemTooltip("Focus Row 3 FX knobs on Deck A, B, BG, PV, or Master FX.")
-
-        ImGui.sameLine(0f, 6f)
-
-        // Chain header controls: [◀] Name • [▶] [Save] [⋮]
-        val currentBankId = ctx.targetBankIdFor(ctx.focusedFxTarget)
-        val currentChain = ctx.resolveFxChain(mixer, currentBankId)
-        val currentLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(currentBankId) ?: "Deck A"
-        FxChainHeader.drawControls(session, mixer, currentChain, currentBankId, currentLabel, ctrlH)
-
-        ImGui.endGroup()
-    }
-
-    private fun drawFxRowRightControls(
-        session: llm.slop.liquidlsd.SessionContext,
-        mixer: Mixer,
-        startX: Float,
-        startY: Float,
-        ctrlH: Float,
-        targetBankId: String = ctx.targetBankIdFor(ctx.focusedFxTarget)
-    ) {
-        val chain = ctx.resolveFxChain(mixer, targetBankId)
-        ImGui.setCursorScreenPos(startX, startY)
-        ImGui.beginGroup()
-        FxChainHeader.drawBypassButton(chain, targetBankId, ctrlH)
-        ImGui.endGroup()
     }
 
     /**
