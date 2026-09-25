@@ -15,7 +15,8 @@ import java.io.File
 
 /**
  * Deck row controls (Deck A, B, BG, PV):
- * - Left controls: Generator badge, SRC/FX toggle, preset combo, eject, randomize, queue navigation.
+ * - Left controls, two stacked rows: Row 1 (SRC) knob-assign pill, generator badge, preset combo,
+ *   eject, randomize, queue navigation; Row 2 (FX) knob-assign pill and FX chain header.
  * - Right controls: FX bypass button.
  */
 internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {

@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#stacked-deck-rows-in-performance-matrix-panel-performancematrixpanelkt-performancedeckcontrolskt-macros_and_rackmd-uimd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stacked Deck Rows in Performance Matrix Panel (PerformanceMatrixPanel.kt, PerformanceDeckControls.kt, macros_and_rack.md, ui.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modularization-of-performancematrixpanel-performancematrixpanelkt-performanceuicontextkt-performancetransitionscontrolskt-performancefxcontrolskt-performancemastercontrolskt-performancedeckcontrolskt-performancedeepeditbaykt-uimd-architecturemd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modularization of PerformanceMatrixPanel (PerformanceMatrixPanel.kt, PerformanceUiContext.kt, PerformanceTransitionsControls.kt, PerformanceFxControls.kt, PerformanceMasterControls.kt, PerformanceDeckControls.kt, PerformanceDeepEditBay.kt, ui.md, ARCHITECTURE.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fix-popstylevar-assertion-crash-when-opening-deck-fx-controls-fxchainheaderkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3986,6 +4008,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#stacked-deck-rows-in-performance-matrix-panel-performancematrixpanelkt-performancedeckcontrolskt-macros_and_rackmd-uimd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stacked Deck Rows in Performance Matrix Panel (PerformanceMatrixPanel.kt, PerformanceDeckControls.kt, macros_and_rack.md, ui.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#modularization-of-performancematrixpanel-performancematrixpanelkt-performanceuicontextkt-performancetransitionscontrolskt-performancefxcontrolskt-performancemastercontrolskt-performancedeckcontrolskt-performancedeepeditbaykt-uimd-architecturemd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Modularization of PerformanceMatrixPanel (PerformanceMatrixPanel.kt, PerformanceUiContext.kt, PerformanceTransitionsControls.kt, PerformanceFxControls.kt, PerformanceMasterControls.kt, PerformanceDeckControls.kt, PerformanceDeepEditBay.kt, ui.md, ARCHITECTURE.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fix-popstylevar-assertion-crash-when-opening-deck-fx-controls-fxchainheaderkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6739,6 +6783,25 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="stacked-deck-rows-in-performance-matrix-panel-performancematrixpanelkt-performancedeckcontrolskt-macros_and_rackmd-uimd-decisionsmd">Stacked Deck Rows in Performance Matrix Panel (<code>PerformanceMatrixPanel.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>macros_and_rack.md</code>, <code>ui.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>Stacked Left Wing Controls for Deck Rows</strong>: In <code>PerformanceMatrixPanel</code>, Deck rows (A, B, BG, PV) now feature stacked, concurrent rows for visual generator and insert FX controls:</li>
+<li><strong>Row 1 (SRC)</strong>: <code>[SRC]</code> knob-assign pill, generator source badge (click to choose source), searchable preset dropdown combo, preset eject button (<code>⏏</code>), randomize die button (<code>🎲</code>, when enabled), and queue navigation (<code>&lt; 1/4 &gt;</code> for Deck A/B, BG queue for BG, Preview indicator button for PV).</li>
+<li><strong>Row 2 (FX)</strong>: <code>[FX]</code> knob-assign pill and full <code>FxChainHeader</code> controls (chain stepping <code>◀</code> / <code>▶</code>, active chain name with dirty dot <code>•</code>, <code>[Save]</code> button, and kebab menu <code>[⋮]</code>).</li>
+<li><strong>On-Screen Knob Bank Assignment</strong>: The <code>[SRC]</code> and <code>[FX]</code> pills now cleanly assign the row's 4 on-screen macro knobs to either the visual generator or the insert FX chain (Super Knob + 3 Metaknobs) without hiding or swapping either set of controls.</li>
+<li><strong>Vertical Alignment</strong>: Row 2 is bottom-aligned with the knob face, Row 1 is stacked directly above clamped below the row title, and the right-wing FX bypass button aligns level with Row 2.</li>
+</ul>
+<h3 id="modularization-of-performancematrixpanel-performancematrixpanelkt-performanceuicontextkt-performancetransitionscontrolskt-performancefxcontrolskt-performancemastercontrolskt-performancedeckcontrolskt-performancedeepeditbaykt-uimd-architecturemd-decisionsmd">Modularization of PerformanceMatrixPanel (<code>PerformanceMatrixPanel.kt</code>, <code>PerformanceUiContext.kt</code>, <code>PerformanceTransitionsControls.kt</code>, <code>PerformanceFxControls.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>PerformanceDeepEditBay.kt</code>, <code>ui.md</code>, <code>ARCHITECTURE.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>Decomposed Performance Matrix Architecture</strong>: Decomposed the monolithic 2,714-line <code>PerformanceMatrixPanel.kt</code> into dedicated, single-responsibility UI controllers without modifying any layout geometries, labels, tooltips, or ImGui widget IDs:</li>
+<li><strong><code>PerformanceUiContext.kt</code></strong>: Encapsulates shared performance colors (<code>COLOR_DECK_A/B/BG/PV</code>, <code>COLOR_MASTER</code>, <code>COLOR_TRANS</code>, <code>COLOR_FX</code>), <code>deckRowMode</code> state (<code>SRC</code>/<code>FX</code>), frame-scoped <code>deckPresetController</code>, and deck label/module ID resolvers.</li>
+<li><strong><code>PerformanceTransitionsControls.kt</code></strong>: Modular drawer for the Transitions extra header, transition preset/shader loader, and PlayQueue navigation.</li>
+<li><strong><code>PerformanceFxControls.kt</code></strong>: Modular drawer for FX rows left/right wing controls and FX Sends wet/dry controls.</li>
+<li><strong><code>PerformanceMasterControls.kt</code></strong>: Modular drawer for Master row controls, Deck A/B snap badges, interactive crossfader slider track, AUTO/FADING button, and fade speed widget.</li>
+<li><strong><code>PerformanceDeckControls.kt</code></strong>: Modular drawer for Deck A/B/BG/PV left-wing controls (source picker, mode toggle, preset dropdown combo with instant search, eject, randomize, queue navigation) and right-wing controls (FX bypass button).</li>
+<li><strong><code>PerformanceDeepEditBay.kt</code></strong>: Modular drawer for the Modular Rack accordion bay and 3-column Deep Edit (5-channel side tabs, parameter grid with column headers, properties CV detail editor), managing keyboard focus (<code>keyboardOwnerModuleId</code>) and panel minimum width calculation.</li>
+<li><strong><code>PerformanceMatrixPanel.kt</code></strong>: Streamlined from 2,714 to 948 lines, focusing cleanly on 4x4 matrix knob layout, tab strip, and sub-component orchestration.</li>
+</ul>
 <h3 id="fix-popstylevar-assertion-crash-when-opening-deck-fx-controls-fxchainheaderkt">Fix: PopStyleVar assertion crash when opening Deck FX controls (<code>FxChainHeader.kt</code>)</h3>
 <ul>
 <li><strong>Fix <code>PopStyleVar</code> underflow</strong>: Removed a redundant <code>ImGui.popStyleVar()</code> call in <code>FxChainHeader.drawMoreButton</code> that caused an assertion failure (<code>Calling PopStyleVar() too many times!</code>) when rendering FX chain headers in Performance mode deck rows.</li>
