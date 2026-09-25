@@ -140,6 +140,12 @@ MACROS and Deep Edit always point at the same deck and section:
 The same applies to the other decks and Master (**MST**, **TRANS** and **MST FX** match Deep Edit's
 Mixer **CTRL**, **TRANS** and **FX** tabs).
 
+**GLB** shows the 4 **Global** knobs from the Performance MASTER tab's Clock row. Unlike every
+other bank, Global knobs aren't tied to one deck or section: one Global knob can drive, say,
+Deck A's zoom, Deck B's zoom and the Master FX Super Knob together. Picking **GLB** doesn't move
+Deep Edit. Click **Learn**, open any Deep Edit, and click the parameters to bind. Global knobs
+are saved with your session, not with deck presets.
+
 ### Chain Super Knob & effect Metaknobs
 
 - **Super Knob** — one knob that sweeps every **linked** slot's own Metaknob together.
@@ -185,27 +191,27 @@ The active tab is remembered between sessions in application preferences.
 
 ### The layout tabs
 
-Each tab shows 16 knobs across 4 rows, mapped to different banks:
+Each tab shows up to 4 rows of 4 knobs, mapped to different banks:
 
 | Tab | Row 1 | Row 2 | Row 3 | Row 4 |
 |:---|:---|:---|:---|:---|
-| **LIVE QUAD** | Deck A (1–4) | Deck B (1–4) | Deck BG (1–4) | Deck PV (1–4) |
-| **MASTER & FX** | Master (1–4) | Transitions (1–4) | FX Wet/Dry (1–4) | Deck PV (1–4) |
-| **LIVE CONSOLE** | Deck A (1–4) | Deck B (1–4) | Deck BG (1–4) | Focused FX Target (Super + 3 Metaknobs) |
-| **ALL FX** | Deck A FX (1–4) | Deck B FX (1–4) | Deck BG FX (1–4) | Master FX (1–4) |
+| **DECKS** | Deck A `[SRC\|FX]` | Deck B `[SRC\|FX]` | Deck BG `[SRC\|FX]` | Deck PV `[SRC\|FX]` |
+| **MASTER** | Master `[MIX\|FX]` | Transitions | FX Wet/Dry | Clock & Global |
+
+Every FX chain is reached from its own row: a deck's FX from that deck's row, Master FX from the
+Master row. There are no separate FX-only rows.
 
 - **Per-Deck Insert FX & Flexible Routing**: Every deck (A, B, BG, PV) now owns its own dedicated 3-slot `FxChain` running post-generator and pre-crossfader, completely decoupled from other decks.
 - **In-Row `[ SRC | FX ]` Knob Assignment & Stacked Controls (Deck Rows)**: In each Deck row, both visual generator and insert FX chain controls coexist in two stacked rows on the left wing. Click the **`[ SRC ]`** or **`[ FX ]`** knob-assign pill to choose which bank the row's 4 on-screen knobs control (`SRC` for visual generator macros, `FX` for that deck's insert FX Super Knob + 3 Metaknobs). Switching between `SRC` and `FX` retargets on-screen knobs without hiding or toggling away either row's controls. The right wing provides an instant `[ BYPASS / FX ON ]` button for that deck's FX chain.
-- **Target Switcher `[ A | B | BG | PV | MST ]` (Row 4 in Live Console)**: Row 4 provides a focused 4-knob surface for FX. Quickly switch the row's focus between Deck A, B, BG, PV, or Master FX using the target switcher buttons. The row dynamically adopts the accent color and label of the focused target. The shared chain header beside it (`[◀] Name • [▶] [Save] [⋮]`) steps through, saves, and clears the focused target's 3-slot FX chain (`.lsdfxchain`).
-- **ALL FX Tab**: Provides a comprehensive 16-knob surface controlling Deck A FX, Deck B FX, Deck BG FX, and Master FX simultaneously, each row with its own chain header (`[◀] Name • [▶] [Save] [⋮]`, Resync is in the `⋮` menu), `[ BYPASS / FX ON ]`, and slot link buttons.
-- The Master row carries the crossfader and crossfader-time (Fade Speed) controls; the Transitions row carries the transition picker and queue prev/next controls.
+- **In-Row `[ MIX | FX ]` Knob Assignment (Master Row)**: The Master row works like a deck row. Its left wing stacks a **`[ MIX ]`** pill over an **`[ FX ]`** pill and the Master FX chain header (`[◀] Name • [▶] [Save] [⋮]`). `MIX` puts the knobs on the composite alphas and master level; `FX` puts them on the Master FX Super Knob + 3 Metaknobs, and the row title reads `MASTER (FX)`. The right wing has the Master FX `[ BYPASS / FX ON ]` button. The crossfader and crossfader-time (Fade Speed) bar stays across the top of the row in both modes.
+- The Transitions row carries the transition picker and queue prev/next controls.
 
 Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) with a colored bar on the left edge and a clear row label.
 
 ### Performance Controls & Side-Wing Layout
 
 To maximize vertical space in the matrix and keep the knobs comfortably clustered together:
-- **Row Titles & Side-Wing Controls**: Row group titles (e.g. `DECK A`, `FX: Deck A`) sit at the top-left of the row, level with the top of the knobs. The left- and right-wing controls sit below the title, with their bottom edge lined up with the bottom of the knobs, so short rows never push the controls up into the title. Every wing control (buttons, badges, preset dropdown) is the same height.
+- **Row Titles & Side-Wing Controls**: Row group titles (e.g. `DECK A`, `DECK A (FX)`) sit at the top-left of the row, level with the top of the knobs. The left- and right-wing controls sit below the title, with their bottom edge lined up with the bottom of the knobs, so short rows never push the controls up into the title. Every wing control (buttons, badges, preset dropdown) is the same height.
 - **Row Height & Scrolling**: Rows share the panel's height, so they shrink as you drag the Library dock taller. Once rows reach a minimum height (about where the Library is at half height), they stop shrinking and the matrix scrolls vertically instead. Two usable rows plus a scrollbar beat four knobs too small to grab. Scroll with the scrollbar, with the mouse wheel over the gaps between knobs (over a knob the wheel still adjusts that knob), or by click-dragging up/down on any empty part of a row, including its title band.
 - **Deck Rows (Deck A, B, BG, PV)**:
   - **Left Wing (Info & Deck Controls)**:
@@ -222,14 +228,20 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
   - **Center Cluster**: The 4 macro knobs are grouped close together, centered neatly between the control wings with uniform column alignment across rows. When assigned to `FX`, slot link buttons (`Icons.LINK`/`Icons.UNLINK`) appear on columns 2–4 to link/unlink Metaknobs to the Super Knob, and interactive FX slot cells appear beneath knobs 2–4.
   - **Right Wing**: Displays dedicated insert FX controls for that deck: `[ BYPASS / FX ON ]` kill switch, aligned level with the FX row.
   - **Drag-and-Drop**: Dropping a deck preset (`.patch`, `.lsd`, `.json`) loads the visual preset; dropping a `.lsdfxchain` loads that FX chain onto the deck.
-- **FX Row (Row 4 in Live Console)**:
-  - **Header (Target Switcher & Shared Chain Header)**: Quick target switcher (`[ A ]`, `[ B ]`, `[ BG ]`, `[ PV ]`, `[ MST ]`), stepping controls (`◀` / `▶`), active chain name with dirty indicator (`•`), `[Save]` button, kebab menu (`[⋮]`), and chain `[BYPASS]` toggle.
-  - **Center Cluster**: The 4 macro knobs (Knob 1 `SUPER`, Knobs 2–4 `META`) with slot link/unlink buttons (`Icons.LINK`/`Icons.UNLINK`) beside each slot knob. Directly beneath knobs 2–4, interactive **FX Slot Cells** display per-slot mute pills (`●`), quick shortlist stepping arrows (`◀` / `▶`), truncated effect names, right-click menus, and drag-and-drop support.
-  - **Drag-and-Drop**: Chain files (`.lsdfxchain`) can be dragged and dropped onto the chain name button.
-- **ALL FX Tab Rows**: Each of the 5 rows (Deck A FX, Deck B FX, Deck BG FX, Deck PV FX, Master FX) has its own target badge, shared chain header controls (`[◀] Name • [▶] [Save] [⋮] ... [BYPASS]`), slot link toggles, and slot cells underneath knobs 2–4.
 - **Whole-Rig Randomize (`[ ALL 🎲 ]`)**: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking `mixer.randomizeAll()` across all decks simultaneously.
-- **Master (Row 1 in Master & FX)**: Features Deck A and Deck B quick-snap buttons (`[ A ]` and `[ B ]`), an interactive zero-centered crossfader track with mouse drag, mouse wheel, middle-click center reset, and live amber modulation/auto-fade indicator dot, a smooth `[ AUTO ]` crossfade trigger, and an interactive **Fade Speed Duration Badge** (crossfader time -- scrubbable with mouse drag/wheel and right-click context menu for duration presets `0.5s`–`8.0s` and MIDI/OSC learn). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) dropped onto the crossfader track apply directly.
-- **Transitions (Row 2 in Master & FX)**: Features a Transition Picker popup button displaying the active transition with modified indicator (`*`), and Transition Queue stepping controls (`<`, `N/Total`, `>`). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the title header.
+- **Master (Row 1 in MASTER)**: Left wing: `[ MIX ]` over `[ FX ]` + Master FX chain header, as described above; right wing: Master FX `[ BYPASS / FX ON ]`. Dropping a `.lsdfxchain` onto the row title loads it into Master FX. The header bar across the top features Deck A and Deck B quick-snap buttons (`[ A ]` and `[ B ]`), an interactive zero-centered crossfader track with mouse drag, mouse wheel, middle-click center reset, and live amber modulation/auto-fade indicator dot, a smooth `[ AUTO ]` crossfade trigger, and an interactive **Fade Speed Duration Badge** (crossfader time -- scrubbable with mouse drag/wheel and right-click context menu for duration presets `0.5s`–`8.0s` and MIDI/OSC learn). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) dropped onto the crossfader track apply directly.
+- **Transitions (Row 2 in MASTER)**: Features a Transition Picker popup button displaying the active transition with modified indicator (`*`), and Transition Queue stepping controls (`<`, `N/Total`, `>`). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the title header.
+- **Clock & Global (Row 4 in MASTER)**: The header bar has the tempo controls from Preferences > Tempo & Sync, placed here for use mid-set:
+  - **`[ MAN ]` / `[ AUDIO ]`**: clock source (manual tempo or the audio beat tracker).
+  - **`[ LINK n ]`**: shown while Ableton Link is on, with the peer count. Click it to open Tempo & Sync preferences.
+  - **BPM readout**: click it to open Tempo & Sync preferences.
+  - **4 beat dots**: bar phase; the downbeat is cyan.
+  - **`[ TAP ]`**: tap tempo. Right-click for MIDI Learn. In Audio mode it nudges the detected tempo and phase.
+  - **`[ RESYNC ]`**: snaps the beat phase to the downbeat.
+  - **`[ /2 ]` `[ x2 ]`**: halve or double the tempo.
+  - **`[ - ]` `[ + ]`**: nudge the tempo by 0.5 BPM.
+
+  The BPM is deliberately not a knob, since one bump would shift the whole show. The row's 4 knobs are the **Global** macros (see the **GLB** tab above), which can bind to any parameter.
 
 ### MIDI Learn in the Performance Matrix
 

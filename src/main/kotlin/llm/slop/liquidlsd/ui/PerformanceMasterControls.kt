@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.SessionContext
+import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.osc.OscLearnState
 import llm.slop.liquidlsd.osc.OscMappingManager
 import llm.slop.liquidlsd.rendering.Mixer
@@ -10,10 +11,69 @@ import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
 import java.io.File
 
 /**
- * Master row header controls: Deck A/B snap badges, crossfader track, AUTO/FADING
- * button, and the crossfader-time (Fade Speed) badge.
+ * Master row controls:
+ * - Header bar: Deck A/B snap badges, crossfader track, AUTO/FADING button, and the
+ *   crossfader-time (Fade Speed) badge.
+ * - Left of the knobs, two stacked rows mirroring the deck rows: [MIX] knob-assign pill over
+ *   [FX] knob-assign pill + Master FX chain header.
+ * - Right of the knobs: Master FX bypass.
  */
 internal object PerformanceMasterControls {
+
+    /**
+     * [MIX] / [FX] knob-assign pills (see [PerformanceUiContext.isMasterRowFx]) stacked like a
+     * deck row's [SRC] / [FX], with the Master FX chain header beside [FX].
+     */
+    fun drawModeControls(
+        session: SessionContext,
+        mixer: Mixer,
+        parametersState: ParametersState,
+        ctx: PerformanceUiContext,
+        startX: Float,
+        row1Y: Float,
+        row2Y: Float,
+        ctrlH: Float,
+        rowW: Float
+    ) {
+        val gap = 4f
+        val modeBtnW = 28f
+        val isFx = ctx.isMasterRowFx(parametersState)
+        val inactiveCol = ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f)
+
+        ImGui.setCursorScreenPos(startX, row1Y)
+        ImGui.pushStyleColor(ImGuiCol.Button, if (!isFx) ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f) else inactiveCol)
+        if (ImGui.button("MIX##perf_mode_mix_mst", modeBtnW, ctrlH)) {
+            llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "CTRL")
+            ctx.masterRowMode = "MIX"
+            if (parametersState.activeMixerSubTab == "FX") parametersState.activeMixerSubTab = "CTRL"
+        }
+        ImGui.popStyleColor()
+        itemTooltip("Assign the Master row's knobs to the mix: Deck A / Deck B / Deck BG alphas and master level.")
+
+        ImGui.setCursorScreenPos(startX, row2Y)
+        ImGui.beginGroup()
+        ImGui.pushStyleColor(ImGuiCol.Button, if (isFx) ImGui.colorConvertFloat4ToU32(0.80f, 0.40f, 0.15f, 1f) else inactiveCol)
+        if (ImGui.button("FX##perf_mode_fx_mst", modeBtnW, ctrlH)) {
+            llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "FX")
+            ctx.masterRowMode = "FX"
+            parametersState.activeMixerSubTab = "FX"
+            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(MacroEngine.MASTER_FX, mixer)
+        }
+        ImGui.popStyleColor()
+        itemTooltip("Assign the Master row's knobs to the Master FX chain (Super Knob + 3 Metaknobs). FX chain controls stay available either way.")
+
+        ImGui.sameLine(0f, gap)
+        FxChainHeader.drawControls(session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH, maxW = rowW - modeBtnW - gap)
+        ImGui.endGroup()
+    }
+
+    /** Master FX chain bypass, placed to the right of the knobs like a deck row's. */
+    fun drawBypassControls(mixer: Mixer, startX: Float, startY: Float, ctrlH: Float, width: Float) {
+        ImGui.setCursorScreenPos(startX, startY)
+        ImGui.beginGroup()
+        FxChainHeader.drawBypassButton(mixer.masterFxChain, "MST", ctrlH, width - 4f)
+        ImGui.endGroup()
+    }
 
     fun draw(
         session: SessionContext,

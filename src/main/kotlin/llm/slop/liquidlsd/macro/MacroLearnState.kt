@@ -63,7 +63,7 @@ object MacroLearnState {
     /**
      * The Deep Edit (top tab, section) holding the only parameters [bankId]'s knobs may bind to:
      * Deck A SRC knobs -> Deck A SRC, Deck A FX knobs -> Deck A FX, Master FX knobs -> Master FX.
-     * Null for banks that aren't section-scoped (Master, Transitions, FX Sends).
+     * Null for banks that aren't section-scoped (Master, Transitions, FX Sends, Global).
      */
     fun sectionFor(bankId: String?): Pair<String, String>? = when (bankId) {
         MacroEngine.DECK_A -> "Deck A" to "SRC"

@@ -13,17 +13,22 @@ internal object PerformanceColors {
     val COLOR_TRANS    = floatArrayOf(0.7f,  0.4f,  0.9f)
     val COLOR_MASTER   = floatArrayOf(0.9f,  0.25f, 0.35f)
     val COLOR_FX       = floatArrayOf(0.15f, 0.75f, 0.65f)
+    val COLOR_GLOBAL   = floatArrayOf(0.70f, 0.74f, 0.82f)
 
     /** Uniform height of every row-side control (buttons, badges, preset combo) left/right of the knobs. */
     const val CTRL_H = 24f
 }
 
 internal class PerformanceUiContext {
-    /** LIVE_CONSOLE: which target ("A", "B", "BG", "PV", "MST") Row 3 is currently focused on. */
-    var focusedFxTarget: String = "A"
-
     /** Per-deck row mode: "SRC" (visual source generator macros) or "FX" (deck FX chain macros). */
     val deckRowMode = mutableMapOf<String, String>()
+
+    /** Master row mode: "MIX" (composite alphas + master level) or "FX" (Master FX chain macros). */
+    var masterRowMode: String = "MIX"
+
+    /** True when the Master row's knobs drive Master FX -- via its [FX] pill or Deep Edit's Mixer FX section, mirroring the deck rows. */
+    fun isMasterRowFx(parametersState: ParametersState): Boolean =
+        masterRowMode == "FX" || parametersState.activeMixerSubTab == "FX"
 
     /** Set each frame by [PerformanceMatrixPanel.draw]; null in tests, where source swaps fall back to the unguarded path. */
     var deckPresetController: DeckPresetController? = null
@@ -34,22 +39,6 @@ internal class PerformanceUiContext {
         "BG" -> MacroEngine.DECK_BG_FX
         "PV" -> MacroEngine.DECK_PV_FX
         else -> MacroEngine.MASTER_FX
-    }
-
-    fun targetAccentFor(target: String): FloatArray = when (target) {
-        "A" -> PerformanceColors.COLOR_DECK_A
-        "B" -> PerformanceColors.COLOR_DECK_B
-        "BG" -> PerformanceColors.COLOR_DECK_BG
-        "PV" -> PerformanceColors.COLOR_DECK_PV
-        else -> PerformanceColors.COLOR_MASTER
-    }
-
-    fun targetDisplayName(target: String): String = when (target) {
-        "A" -> "Deck A"
-        "B" -> "Deck B"
-        "BG" -> "Deck BG"
-        "PV" -> "Deck PV"
-        else -> "Master"
     }
 
     fun resolveFxChain(mixer: Mixer, bankId: String): FxChain =
@@ -74,6 +63,7 @@ internal class PerformanceUiContext {
      * opens, just without a matching tab switch).
      */
     fun navigateMacroPanelTo(parametersState: ParametersState, bankId: String) {
+        if (bankId != MacroEngine.GLOBAL) parametersState.hideGlobalMacros()
         when (bankId) {
             MacroEngine.DECK_A -> parametersState.activeTopTab = "Deck A"
             MacroEngine.DECK_B -> parametersState.activeTopTab = "Deck B"
@@ -107,6 +97,7 @@ internal class PerformanceUiContext {
                 parametersState.activeTopTab = "Mixer"
                 parametersState.activeMixerSubTab = "TRANS"
             }
+            MacroEngine.GLOBAL -> parametersState.showGlobalMacros()
         }
     }
 
@@ -115,13 +106,6 @@ internal class PerformanceUiContext {
         MacroEngine.DECK_B, MacroEngine.DECK_B_FX -> "Deck B"
         MacroEngine.DECK_BG, MacroEngine.DECK_BG_FX -> "Deck BG"
         MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX -> "Deck PV"
-        "FX" -> when (focusedFxTarget) {
-            "A" -> "Deck A"
-            "B" -> "Deck B"
-            "BG" -> "Deck BG"
-            "PV" -> "Deck PV"
-            else -> null
-        }
         else -> null
     }
 

@@ -141,7 +141,7 @@ for the FX Rack view that exposes these.
     - **`[⋮]` Menu**: Save As..., New Chain, Revert to Saved (undoes tweaks back to clean loaded state), Clear All Slots, Copy/Paste Chain, and Resync Knobs.
     - **`[BYPASS]`**: Top-level kill switch to immediately bypass or re-enable the entire FX chain.
   - **FX Slot Cells (`[●] [◀] Effect Name [▶]`)**:
-    - Drawn under each of knobs 2–4 on all FX rows (ALL FX, LIVE CONSOLE, and Deck rows in FX mode).
+    - Drawn under each of knobs 2–4 on Deck rows in `[FX]` mode and the Master row in `[FX]` mode.
     - **`●` (Pill)**: Dedicated per-slot mute/bypass button.
     - **`◀` / `▶` (or Mouse Wheel)**: Steps to previous/next effect in the **FX Shortlist** (favorited ★ effects, or the current effect's category alphabetically).
     - **Effect Name**: Truncated caption showing loaded filter. Click opens the FX Shader Picker (Stock filters, ★ Favorites, and Saved `.lsdfx` presets).
@@ -171,8 +171,8 @@ for the FX Rack view that exposes these.
       - Physical MIDI controllers mapped to the row's standard macro paths (`Macro/<bankId>/knob_1..4`) immediately control the focused slot's Dry/Wet and parameters without requiring any MIDI remapping or controller mode switching.
       - Exiting Focus Mode restores Knob 1 to `SUPER` and Knobs 2–4 to `META`.
   - **Performance Matrix Tabs**:
-    - The **ALL FX** tab includes dedicated rows for `Deck A FX`, `Deck B FX`, `Deck BG FX`, `Deck PV FX`, and `Master FX`.
-    - The **FX WET/DRY** row in the **MASTER & FX** tab features an `[ FX SENDS ]` badge.
+    - Deck FX chains are on each deck row (`[SRC|FX]`); Master FX is on the Master row (`[MIX|FX]`) on the **MASTER** tab.
+    - The **FX WET/DRY** row in the **MASTER** tab features an `[ FX SENDS ]` badge.
     - The **Transitions** row includes a `[DICES]` die button to randomize transition parameters with undo support.
 
 ---

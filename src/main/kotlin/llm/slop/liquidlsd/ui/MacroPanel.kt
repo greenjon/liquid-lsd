@@ -79,6 +79,7 @@ class MacroPanel(
     private fun macroTab(): String {
         val top = parametersState.activeTopTab
         return when {
+            parametersState.isGlobalMacrosShown() -> "GLB"
             top in fxDeckTabs && parametersState.getActiveSubTab(top) == "FX" -> fxDeckTabs.getValue(top)
             top == "Mixer" && parametersState.activeMixerSubTab == "FX" -> "MST FX"
             else -> top
@@ -98,6 +99,7 @@ class MacroPanel(
         "BG FX" -> MacroEngine.DECK_BG_FX
         "PV FX" -> MacroEngine.DECK_PV_FX
         "MST FX" -> MacroEngine.MASTER_FX
+        "GLB" -> MacroEngine.GLOBAL
         "Master", "MST" -> MacroEngine.MASTER
         "TRANS", "Transition" -> MacroEngine.TRANS
         "Mixer" -> if (parametersState.activeMixerSubTab == "CTRL") MacroEngine.MASTER else MacroEngine.TRANS
@@ -115,7 +117,8 @@ class MacroPanel(
         "B FX" to "B FX",
         "BG FX" to "BG FX",
         "PV FX" to "PV FX",
-        "MST FX" to "MST FX"
+        "MST FX" to "MST FX",
+        "GLB" to "GLB"
     )
 
     private fun drawDeckTabs() {
@@ -139,6 +142,14 @@ class MacroPanel(
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
             }
             if (ImGui.button("$shortLabel##macro_deck_tab_$tabId", segW, btnH)) {
+                if (tabId == "GLB") {
+                    // Not a Deep Edit section: leaves Deep Edit and Learn untouched.
+                    parametersState.showGlobalMacros()
+                    ImGui.popStyleColor()
+                    itemTooltip("Show the 4 Global macro knobs (Clock row). They can bind to any parameter.")
+                    continue
+                }
+                parametersState.hideGlobalMacros()
                 val (navTop, navSub) = when (tabId) {
                     "TRANS" -> "Mixer" to "TRANS"
                     "MST" -> "Mixer" to "CTRL"
@@ -160,6 +171,7 @@ class MacroPanel(
             val tip = when (tabId) {
                 "TRANS" -> "Show Transition macro knobs."
                 "MST" -> "Show Master composite macro knobs."
+                "GLB" -> "Show the 4 Global macro knobs (Clock row). They can bind to any parameter."
                 else -> "Show $tabId's macro knobs."
             }
             itemTooltip("$tip If Deep Edit is open, it switches there too.")
@@ -308,6 +320,7 @@ class MacroPanel(
             tab == "BG FX"  -> "PREVIEW: DECK BG (FX)"
             tab == "PV FX"  -> "PREVIEW: DECK PV (FX)"
             tab == "MST FX" -> "PREVIEW: MASTER (FX)"
+            tab == "GLB" -> "PREVIEW: MASTER"
             else -> "PREVIEW: ${tab.uppercase()}"
         }
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {

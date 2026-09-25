@@ -15,10 +15,10 @@ import llm.slop.liquidlsd.rendering.Mixer
  * [ModulatableParameter]/[CvModulator] instances only when dirty, and the hot per-frame loop
  * walks a plain `Array` with an indexed for-loop to stay allocation-free.
  *
- * Holds one [MacroBank] per scope, keyed by a canonical bank id. The six canonical deck/mixer ids
- * ([DECK_A]/[DECK_B]/[DECK_BG]/[DECK_PV]/[TRANS]/[MASTER]) are always-resident banks that
- * Column 3's MACROS tab and the Performance Mode 4×4 Matrix both read and write directly —
- * there is no separate "global" bank. Registration and persistence is handled entirely by
+ * Holds one [MacroBank] per scope, keyed by a canonical bank id. The canonical ids
+ * ([CANONICAL_BANK_IDS]) are always-resident banks that Column 3's MACROS tab and the Performance
+ * Mode 4×4 Matrix both read and write directly. [GLOBAL] is the one bank not scoped to a deck or
+ * section: its knobs may bind to any parameter. Registration and persistence is handled entirely by
  * [llm.slop.liquidlsd.presets.SessionSerializer]. Other keys are still supported generically for
  * anything that registers its own bank.
  */
@@ -41,12 +41,16 @@ object MacroEngine {
     // to "Master/FX/..." exactly like the deck FX banks.
     const val FX_SENDS = "fxSends"
     const val MASTER_FX = "masterFx"
+    // GLOBAL: 4 free knobs on the Performance MASTER tab's Clock row, not section-scoped (see
+    // MacroLearnState.sectionFor) -- one knob can drive parameters on several decks at once.
+    // Saved with the session like every canonical bank; never bundled into deck presets.
+    const val GLOBAL = "global"
 
     /** The always-resident per-deck/mixer/FX-bank bank ids, in display order. */
     val CANONICAL_BANK_IDS = listOf(
         DECK_A, DECK_B, DECK_BG, DECK_PV,
         DECK_A_FX, DECK_B_FX, DECK_BG_FX, DECK_PV_FX,
-        TRANS, MASTER, FX_SENDS, MASTER_FX
+        TRANS, MASTER, FX_SENDS, MASTER_FX, GLOBAL
     )
 
     /** The canonical bank id for [deck] on [mixer], or null if not recognized. */
@@ -170,6 +174,7 @@ object MacroEngine {
                 )
             )
         )
+        GLOBAL -> MacroBank(knobs = List(defaultKnobCountFor(bankId)) { MacroControl(label = "GLOBAL ${it + 1}") })
         else -> MacroBank(knobs = List(defaultKnobCountFor(bankId)) { MacroControl(label = "KNOB ${it + 1}") })
     }
 
@@ -224,6 +229,7 @@ object MacroEngine {
         "Master", "MST" -> MASTER
         "TRANS", "Transition" -> TRANS
         "Master FX", "Master/FX", MASTER_FX -> MASTER_FX
+        "Global", "GLB", GLOBAL -> GLOBAL
         else -> TRANS
     }
 

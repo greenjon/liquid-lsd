@@ -12,7 +12,7 @@ import llm.slop.liquidlsd.rendering.Mixer
 import java.io.File
 
 /**
- * Shared chain-level controls for every Performance FX row variant (ALL FX, LIVE CONSOLE, deck row in FX mode):
+ * Shared chain-level controls for every Performance FX chain row (deck rows and the Master row):
  *
  *   `[◀]  Chain Name •  [▶]  [Save] [⋮]`   ...   `[BYPASS]`
  *

@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-matrix-two-tabs-master-mixfx-clock-row-and-global-knobs-performancematrixpanelkt-performancemastercontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt-performanceuicontextkt-parametersstatekt-macroenginekt-macropanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix: two tabs, Master [MIX|FX], Clock row and Global knobs (PerformanceMatrixPanel.kt, PerformanceMasterControls.kt, PerformanceClockControls.kt, PerformanceFxSendsControls.kt, PerformanceUiContext.kt, ParametersState.kt, MacroEngine.kt, MacroPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#customizable-default-configurations-macro-bindings-for-generators-and-fx-generatordefaultskt-generatordefaultmodelskt-isfautobindenginekt-isffilterkt-macrocurvekt-decksourcepickerkt-performancedeckcontrolskt-deckcontrolpanelkt-fxchainmacrostripkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4052,6 +4063,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-matrix-two-tabs-master-mixfx-clock-row-and-global-knobs-performancematrixpanelkt-performancemastercontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt-performanceuicontextkt-parametersstatekt-macroenginekt-macropanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix: two tabs, Master [MIX|FX], Clock row and Global knobs (PerformanceMatrixPanel.kt, PerformanceMasterControls.kt, PerformanceClockControls.kt, PerformanceFxSendsControls.kt, PerformanceUiContext.kt, ParametersState.kt, MacroEngine.kt, MacroPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#customizable-default-configurations-macro-bindings-for-generators-and-fx-generatordefaultskt-generatordefaultmodelskt-isfautobindenginekt-isffilterkt-macrocurvekt-decksourcepickerkt-performancedeckcontrolskt-deckcontrolpanelkt-fxchainmacrostripkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6871,6 +6893,22 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="performance-matrix-two-tabs-master-mixfx-clock-row-and-global-knobs-performancematrixpanelkt-performancemastercontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt-performanceuicontextkt-parametersstatekt-macroenginekt-macropanelkt">Performance Matrix: two tabs, Master [MIX|FX], Clock row and Global knobs (<code>PerformanceMatrixPanel.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>PerformanceClockControls.kt</code>, <code>PerformanceFxSendsControls.kt</code>, <code>PerformanceUiContext.kt</code>, <code>ParametersState.kt</code>, <code>MacroEngine.kt</code>, <code>MacroPanel.kt</code>)</h3>
+<ul>
+<li><strong>Two tabs: DECKS and MASTER</strong>: LIVE QUAD is now <strong>DECKS</strong> (Deck A, B, BG, PV). MASTER &amp; FX is now <strong>MASTER</strong> (Master, Transitions, FX Wet/Dry, Clock &amp; Global). LIVE CONSOLE and ALL FX are gone. Each deck's FX is on its own row, Master FX is on the Master row, and there are no FX-only rows. If a removed tab was your saved tab, DECKS opens instead.</li>
+<li><strong>Master row gets <code>[MIX|FX]</code></strong>: The Master row now works like a deck row. <code>[MIX]</code> puts its knobs on the deck alphas and master level; <code>[FX]</code> puts them on the Master FX chain (Super Knob + 3 Metaknobs, with slot cells and link buttons). The Master FX chain header (<code>◀ Name ▶ Save ⋮</code>) sits beside <code>[FX]</code>, and the FX bypass button is on the right. The crossfader bar stays on top in both modes. Drop an <code>.lsdfxchain</code> on the row title to load it into Master FX.</li>
+<li><strong>Clock row</strong>: Tempo controls are now on the Performance panel instead of only in Preferences:</li>
+<li>clock source <code>[MAN]</code> / <code>[AUDIO]</code></li>
+<li>Ableton Link status</li>
+<li>BPM readout</li>
+<li>4 beat dots</li>
+<li><code>[TAP]</code> (right-click for MIDI Learn)</li>
+<li><code>[RESYNC]</code></li>
+<li><code>/2</code>, <code>x2</code>, and <code>-</code>/<code>+</code> 0.5 BPM nudge</li>
+<li><strong>Global macro knobs</strong>: The Clock row's 4 knobs are a new <strong>Global</strong> bank that can bind to any parameter on any deck, Master FX or the mixer. One knob can move several decks at once. Edit them in Column 3's new <strong>GLB</strong> MACROS tab. They're saved with your session, not with deck presets, and work with MIDI (<code>Macro/global/knob_N</code>) and OSC (<code>/macro/global/knob/N</code>).</li>
+<li><strong>FX Wet/Dry</strong> stays on the MASTER tab. The Deck PV row moved off it (PV is on DECKS).</li>
+<li><strong>Fix</strong>: In SOLO mode, arming Learn on a deck's or Master's FX knob no longer lets opening another Deep Edit collapse that row's Deep Edit.</li>
+</ul>
 <h3 id="customizable-default-configurations-macro-bindings-for-generators-and-fx-generatordefaultskt-generatordefaultmodelskt-isfautobindenginekt-isffilterkt-macrocurvekt-decksourcepickerkt-performancedeckcontrolskt-deckcontrolpanelkt-fxchainmacrostripkt">Customizable Default Configurations &amp; Macro Bindings for Generators and FX (<code>GeneratorDefaults.kt</code>, <code>GeneratorDefaultModels.kt</code>, <code>ISFAutoBindEngine.kt</code>, <code>ISFFilter.kt</code>, <code>MacroCurve.kt</code>, <code>DeckSourcePicker.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>DeckControlPanel.kt</code>, <code>FXChainMacroStrip.kt</code>)</h3>
 <ul>
 <li><strong>Visual Generator Defaults</strong>: Any visual generator can now have its parameter baselines, <code>globalAlpha</code>, and 4-knob macro layout saved as a permanent default ("Save as Default"). When swapping generators on any deck, the generator's default layout is resolved automatically across 3 tiers (user defaults in <code>library/generator_defaults/&lt;sourceId&gt;.json</code>, curated defaults for bundled stock generators, and automated heuristic fallback for third-party shaders).</li>

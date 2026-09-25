@@ -48,8 +48,8 @@ Here's how audio becomes visuals:
 ## The Performance Panel (Left & Middle)
 
 The top of the left and middle columns is the **Performance panel**: a 4×4 grid of macro knobs,
-one row per deck or section, with tabs across the top (LIVE QUAD, MASTER & FX, LIVE CONSOLE,
-ALL FX). Click a deck row's generator badge to change its visual source.
+one row per deck or section, with tabs across the top (DECKS and
+MASTER). Click a deck row's generator badge to change its visual source.
 
 For full control, open a row's **Deep Edit** (the chevron on the row, or click a deck monitor in
 the Mixer). Deep Edit has three columns:

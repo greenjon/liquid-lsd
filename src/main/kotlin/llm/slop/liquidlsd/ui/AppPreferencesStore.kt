@@ -207,7 +207,8 @@ object AppPreferencesStore {
                 }
                 // "workspaceMode" (Classic vs Performance) is no longer read: Classic view was removed.
                 props.getProperty("performanceMatrixTab")?.toIntOrNull()?.let {
-                    UITheme.performanceMatrixTab = it
+                    // Out-of-range = a removed tab (LIVE CONSOLE / ALL FX, both deck-centric) -> DECKS.
+                    UITheme.performanceMatrixTab = if (it in PerformanceMatrixPanel.Tab.entries.indices) it else PerformanceMatrixPanel.Tab.DECKS.ordinal
                     logger.info { "Loaded performanceMatrixTab from settings file: ${UITheme.performanceMatrixTab}" }
                 }
                 val savedAutoVj = props.getProperty("autoVjDirtyBehavior")

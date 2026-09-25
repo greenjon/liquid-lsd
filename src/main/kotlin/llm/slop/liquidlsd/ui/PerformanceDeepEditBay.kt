@@ -58,7 +58,6 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         MacroEngine.MASTER -> "MASTER"
         MacroEngine.FX_SENDS -> "FX WET/DRY"
         MacroEngine.MASTER_FX -> "MASTER FX"
-        "FX" -> "FX: ${ctx.targetDisplayName(ctx.focusedFxTarget)}"
         else -> moduleId
     }
 
@@ -88,7 +87,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
 
     /**
      * Scrollable region beneath the Tier-1 grid showing every module currently above COLLAPSED
-     * (in Solo mode this is at most one). Never touches [focusedFxTarget] or re-runs
+     * (in Solo mode this is at most one). Never re-runs
      * [llm.slop.liquidlsd.macro.FxMacroSync] -- expand/collapse is strictly a display detail.
      */
     fun drawRackBay(session: SessionContext, mixer: Mixer, parametersState: ParametersState, bayH: Float) {
@@ -181,8 +180,8 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
      */
     fun drawRackDeepEdit(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
         val deckLabel = ctx.deckLabelForModuleId(moduleId)
-        val isMasterFx = (moduleId == "FX" && ctx.focusedFxTarget == "MST") || moduleId == MacroEngine.MASTER_FX
-        if (deckLabel != null && (moduleId.endsWith("_fx") || moduleId == "FX")) {
+        val isMasterFx = moduleId == MacroEngine.MASTER_FX
+        if (deckLabel != null && moduleId.endsWith("_fx")) {
             parametersState.setDeckSubTab(deckLabel, "FX")
         }
         // Transitions and Master both live under the "Mixer" top tab

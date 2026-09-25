@@ -40,7 +40,7 @@ data class AppPreferences(
     val startupBehavior: UITheme.StartupBehavior = UITheme.StartupBehavior.PREVIOUS_SESSION,
     val libraryMode: UITheme.LibraryMode = UITheme.LibraryMode.HALF,
     val column3Mode: UITheme.Column3Mode = UITheme.Column3Mode.MIXER,
-    val performanceMatrixTab: Int = PerformanceMatrixPanel.Tab.entries.indexOf(PerformanceMatrixPanel.Tab.LIVE_CONSOLE),
+    val performanceMatrixTab: Int = PerformanceMatrixPanel.Tab.entries.indexOf(PerformanceMatrixPanel.Tab.DECKS),
     /** Modular Rack: whether opening one module's Bay/Deep Edit auto-collapses the others. */
     val rackSoloMode: Boolean = true,
     /** Modular Rack: moduleId -> [ParametersState.DisclosureLevel] name, persisted only for BAY/DEEP_EDIT (never a mid-Learn-pinned state). */

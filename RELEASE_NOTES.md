@@ -1,5 +1,20 @@
 ## [Unreleased]
 
+### Performance Matrix: two tabs, Master [MIX|FX], Clock row and Global knobs (`PerformanceMatrixPanel.kt`, `PerformanceMasterControls.kt`, `PerformanceClockControls.kt`, `PerformanceFxSendsControls.kt`, `PerformanceUiContext.kt`, `ParametersState.kt`, `MacroEngine.kt`, `MacroPanel.kt`)
+- **Two tabs: DECKS and MASTER**: LIVE QUAD is now **DECKS** (Deck A, B, BG, PV). MASTER & FX is now **MASTER** (Master, Transitions, FX Wet/Dry, Clock & Global). LIVE CONSOLE and ALL FX are gone. Each deck's FX is on its own row, Master FX is on the Master row, and there are no FX-only rows. If a removed tab was your saved tab, DECKS opens instead.
+- **Master row gets `[MIX|FX]`**: The Master row now works like a deck row. `[MIX]` puts its knobs on the deck alphas and master level; `[FX]` puts them on the Master FX chain (Super Knob + 3 Metaknobs, with slot cells and link buttons). The Master FX chain header (`◀ Name ▶ Save ⋮`) sits beside `[FX]`, and the FX bypass button is on the right. The crossfader bar stays on top in both modes. Drop an `.lsdfxchain` on the row title to load it into Master FX.
+- **Clock row**: Tempo controls are now on the Performance panel instead of only in Preferences:
+  - clock source `[MAN]` / `[AUDIO]`
+  - Ableton Link status
+  - BPM readout
+  - 4 beat dots
+  - `[TAP]` (right-click for MIDI Learn)
+  - `[RESYNC]`
+  - `/2`, `x2`, and `-`/`+` 0.5 BPM nudge
+- **Global macro knobs**: The Clock row's 4 knobs are a new **Global** bank that can bind to any parameter on any deck, Master FX or the mixer. One knob can move several decks at once. Edit them in Column 3's new **GLB** MACROS tab. They're saved with your session, not with deck presets, and work with MIDI (`Macro/global/knob_N`) and OSC (`/macro/global/knob/N`).
+- **FX Wet/Dry** stays on the MASTER tab. The Deck PV row moved off it (PV is on DECKS).
+- **Fix**: In SOLO mode, arming Learn on a deck's or Master's FX knob no longer lets opening another Deep Edit collapse that row's Deep Edit.
+
 ### Customizable Default Configurations & Macro Bindings for Generators and FX (`GeneratorDefaults.kt`, `GeneratorDefaultModels.kt`, `ISFAutoBindEngine.kt`, `ISFFilter.kt`, `MacroCurve.kt`, `DeckSourcePicker.kt`, `PerformanceDeckControls.kt`, `DeckControlPanel.kt`, `FXChainMacroStrip.kt`)
 - **Visual Generator Defaults**: Any visual generator can now have its parameter baselines, `globalAlpha`, and 4-knob macro layout saved as a permanent default ("Save as Default"). When swapping generators on any deck, the generator's default layout is resolved automatically across 3 tiers (user defaults in `library/generator_defaults/<sourceId>.json`, curated defaults for bundled stock generators, and automated heuristic fallback for third-party shaders).
 - **Whole-Bank Replacement & Inverse Curve Mapping**: Applying a generator default replaces the deck's 4-knob bank wholesale (identical to preset loading) with deck-agnostic path remapping. Knob values are automatically calculated from target parameter values using `MacroCurve.inverse`, preventing parameter jumps on load.

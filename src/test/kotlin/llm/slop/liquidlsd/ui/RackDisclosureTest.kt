@@ -127,20 +127,32 @@ class RackDisclosureTest {
     }
 
     @Test
-    fun fxCompositeModuleStaysPinnedAcrossBankRefocus() {
-        // The "FX" moduleId is a stable identity decoupled from whichever target the row is
-        // currently focused on -- Learn armed against Master FX still pins the "FX" module even
-        // though the row (focus owned by PerformanceMatrixPanel, not this state) might display a
-        // deck's FX at the moment.
+    fun masterModuleStaysPinnedWhileMasterFxKnobIsLearning() {
+        // The Master row switches its knobs between MASTER and MASTER_FX ([MIX|FX]) under one
+        // MASTER moduleId, so Learn armed on a Master FX knob pins the MASTER module.
         val state = ParametersState()
         state.rackSoloMode = true
         val mfxKnob = MacroEngine.getBank(MacroEngine.MASTER_FX)!!.knobs[0]
         MacroLearnState.startLearn(mfxKnob.id)
 
-        state.setDisclosure("FX", ParametersState.DisclosureLevel.DEEP_EDIT)
+        state.setDisclosure(MacroEngine.MASTER, ParametersState.DisclosureLevel.DEEP_EDIT)
         state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
 
-        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor("FX"))
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.MASTER))
+    }
+
+    @Test
+    fun deckModuleStaysPinnedWhileDeckFxKnobIsLearning() {
+        val state = ParametersState()
+        state.rackSoloMode = true
+        MacroEngine.registerBank(MacroEngine.DECK_B_FX, MacroBank())
+        val fxKnob = MacroEngine.getBank(MacroEngine.DECK_B_FX)!!.knobs[0]
+        MacroLearnState.startLearn(fxKnob.id)
+
+        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
+        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
+
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
     }
 
     @Test

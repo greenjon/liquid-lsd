@@ -41,7 +41,7 @@ class ParametersState {
     /** The two disclosure tiers a [llm.slop.liquidlsd.ui.rack.RackUnit] can be in. */
     enum class DisclosureLevel { COLLAPSED, DEEP_EDIT }
 
-    /** Per rack-module ("DECK_A", "DECK_B", "FX", "MASTER", etc.) disclosure tier. Absent = COLLAPSED. */
+    /** Per rack-module ("DECK_A", "DECK_B", "MASTER", etc.) disclosure tier. Absent = COLLAPSED. */
     val rackModuleDisclosure = mutableMapOf<String, DisclosureLevel>()
 
     init {
@@ -51,6 +51,8 @@ class ParametersState {
         // persisted (see persistRackExpandedModules), and no Learn session survives a restart, so
         // this can never resurrect a mid-Learn-pinned state.
         for ((moduleId, levelName) in UITheme.rackExpandedModules) {
+            // "FX" was the removed LIVE CONSOLE focused-FX row's module id.
+            if (moduleId == "FX") continue
             val level = runCatching { DisclosureLevel.valueOf(levelName) }.getOrNull()
             if (level != null && level != DisclosureLevel.COLLAPSED) {
                 rackModuleDisclosure[moduleId] = level
@@ -80,15 +82,16 @@ class ParametersState {
     fun disclosureFor(moduleId: String): DisclosureLevel = rackModuleDisclosure[moduleId] ?: DisclosureLevel.COLLAPSED
 
     /**
-     * Maps a Rack Unit's moduleId to the [MacroEngine] bank id(s) it owns. Every plain fixed
-     * module (Deck A/B/BG/PV, Transitions, Master, FX Sends, Master FX) uses its own bank id as
-     * its moduleId 1:1, so this table only needs an entry for "FX": LIVE_CONSOLE's focus-swappable
-     * FX row keeps one stable moduleId ("FX") decoupled from whichever target (A/B/BG/PV/MST) is
-     * currently focused, per the focus-swap decoupling rule -- accordion state must not reset or
-     * duplicate itself when the user refocuses the row to a different bank.
+     * Maps a Rack Unit's moduleId to the [MacroEngine] bank id(s) it owns. Deck and Master rows
+     * switch their knobs between banks ([SRC|FX] / [MIX|FX]) under one canonical moduleId, so those
+     * own every bank they can show; any other module's moduleId is its own bank id.
      */
     private val rackModuleBankIds: Map<String, List<String>> = mapOf(
-        "FX" to listOf(MacroEngine.MASTER_FX)
+        MacroEngine.DECK_A to listOf(MacroEngine.DECK_A, MacroEngine.DECK_A_FX),
+        MacroEngine.DECK_B to listOf(MacroEngine.DECK_B, MacroEngine.DECK_B_FX),
+        MacroEngine.DECK_BG to listOf(MacroEngine.DECK_BG, MacroEngine.DECK_BG_FX),
+        MacroEngine.DECK_PV to listOf(MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX),
+        MacroEngine.MASTER to listOf(MacroEngine.MASTER, MacroEngine.MASTER_FX, MacroEngine.TRANS)
     )
 
     /**
@@ -199,6 +202,27 @@ class ParametersState {
     }
 
     var activeTopTab: String = "Deck A"
+
+    /**
+     * Column 3 MACROS panel's GLB tab. The Global bank has no Deep Edit section, so rather than a
+     * fake [activeTopTab] (which Deep Edit reads) this pins GLB to the tab/sub-tab that was active
+     * when GLB was picked; any later navigation (Deep Edit, side rail, another MACROS tab) changes
+     * that key and so drops back to the normal tab. See [isGlobalMacrosShown].
+     */
+    private var globalMacrosAnchor: String? = null
+
+    private fun macroNavKey(): String = "$activeTopTab/${getActiveSubTab(activeTopTab)}"
+
+    fun showGlobalMacros() { globalMacrosAnchor = macroNavKey() }
+
+    fun hideGlobalMacros() { globalMacrosAnchor = null }
+
+    fun isGlobalMacrosShown(): Boolean {
+        val anchor = globalMacrosAnchor ?: return false
+        if (anchor == macroNavKey()) return true
+        globalMacrosAnchor = null
+        return false
+    }
     var activeDeckASubTab: String = "SRC"
     var activeDeckBSubTab: String = "SRC"
     var activeDeckBGSubTab: String = "SRC"

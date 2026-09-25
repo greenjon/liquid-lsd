@@ -16,7 +16,7 @@ Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ per
 - **Hardware & MIDI Control**: Multi-type MIDI engine (Notes, CC, Pitch Bend, Soft Takeover, Relative Rotary Encoders), centralized `ShortcutManager` for keyboard shortcuts, preset tagging & search, and 3-tier hierarchical set notes (`NotesManager`).
 - **Stage Interoperability & Recording**: Zero-copy GPU video streaming (Spout2 on Windows, Syphon on macOS, PipeWire DMA-BUF on Linux), video device/OBS ingest, high-performance asynchronous GPU PBO video export/recording pipeline (`PboReadbackPipeline`), and WebGL2 live web broadcast relay.
 - **FX Playlists & Live FX Queues**: Unified FX browser (ISF stock filters, saved `.lsdfx` singles, saved `.lsdfxchain` 4-slot chains) with deterministic apply, curated FX playlists (`.lsdfxplay`), and volatile live FX queues for A/B and BG with shuffle, repeat, and history back-stepping.
-- **Performance Mode & Macro Controls**: The main view is a 4×4 macro knob matrix spanning per-deck banks (Deck A/B/BG/PV, their FX, Transitions, Master) with color-coded rows and four tabs (Live Quad, Master & FX, Live Console, All FX), plus Deep Edit for every parameter and modulator. Knob bindings and response curves are edited in Column 3's MACROS view.
+- **Performance Mode & Macro Controls**: The main view is a 4×4 macro knob matrix spanning per-deck banks (Deck A/B/BG/PV, their FX, Transitions, Master, and free Global knobs) with color-coded rows and two tabs (Decks, Master — with a tap-tempo/resync Clock row), plus Deep Edit for every parameter and modulator. Knob bindings and response curves are edited in Column 3's MACROS view.
 
 ---
 

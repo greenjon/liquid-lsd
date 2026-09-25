@@ -13,7 +13,7 @@ import java.io.File
 
 /**
  * One FX slot's "major switches", drawn as the caption line under that slot's knob on every
- * Performance FX row (deck rows in FX mode, LIVE CONSOLE, ALL FX):
+ * Performance FX row (deck rows and the Master row in FX mode):
  *
  *   `[●] [◀]  Effect Name  [▶]`
  *
