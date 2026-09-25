@@ -206,6 +206,9 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MacroPanel.kt           — Column 3 MACROS editing surface: 4 knobs, binding inspector, Learn Mode; renders the dedicated FX Rack view (below) instead of the generic grid for the FX tabs
 │   ├── MacroBindingInspector.kt — Drawer for inspecting and editing target parameter bindings, response curves, travel windows, and invert toggles
 │   ├── MacroKnobWidget.kt      — Rotary macro knob widget: drag/wheel interaction, accent-colored arc fill, optional deck tint
+│   ├── FxChainHeader.kt        — Shared Performance FX row header: chain browsing, dirty indicator, Save/Save As, kebab menu, slot focus selector pills ([1][2][3]), parameter page stepper ([◀ P1/N ▶]), and top-level [BYPASS]
+│   ├── FxSlotCell.kt           — Interactive slot drawer under knobs 2-4 (or knob 1 in Focus Mode): on/off mute pill, shortlist stepping, name truncation/picker, drag-and-drop swap/reorder, and double-click focus toggle
+│   ├── FxParamCell.kt          — Compact parameter drawer under knobs 2-4 in Focus Mode: [⟲] reset to default, formatted value readout, and CV modulation indicator dot
 │   ├── FXChainMacroStrip.kt    — Traktor/Mixxx-style FX Rack strip: Chain Super Knob + 3 slot Metaknobs (soft-takeover link toggles), Single FX Focus Mode, right-click Metaknob rebind menu. Drawn in both ParametersTabs.kt (per-chain, Deep Edit) and MacroPanel.kt (FX tabs, Column 3)
 │   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs (LIVE QUAD, MASTER & FX, LIVE CONSOLE, ALL FX), deck-colored rows, plus the Modular Rack accordion (see `rack/` below) — a chevron on each row group toggles Faceplate ↔ Deep Edit, expanding the selected module while collapsing other rows; Deep Edit features a 5-channel side rail ([MIX], [A], [B], [BG], [PV]), uniform centered [FX] subtabs, and two-way top macro row synchronization
 │   ├── rack/

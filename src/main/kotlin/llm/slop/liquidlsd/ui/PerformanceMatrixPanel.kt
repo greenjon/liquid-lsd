@@ -797,9 +797,10 @@ class PerformanceMatrixPanel {
                     val cellCenterX = knobClusterStartX + col * knobColW + knobColW / 2f
 
                     // Clickable link icon for FX slots (any FX row or Deck row in FX mode, cols 1..3)
-                    if (descriptor.hasExtraHeader && (isFxChainRow || isFxBankId) && col in 1..3) {
+                    val rowChain = if (isFxChainRow || isFxBankId) resolveFxChain(mixer, row.bankId) else null
+                    if (descriptor.hasExtraHeader && (isFxChainRow || isFxBankId) && col in 1..3 && rowChain?.isFocused() != true) {
                         val slotIdx = col - 1
-                        val chain = resolveFxChain(mixer, row.bankId)
+                        val chain = rowChain ?: resolveFxChain(mixer, row.bankId)
                         val isLinked = chain.slotSuperKnobLink.getOrNull(slotIdx) == true
                         val btnSize = 18f
                         val btnX = (cellCenterX - diameter / 2f - btnSize - 2f).coerceAtLeast(gridStartX + 2f)
@@ -927,29 +928,72 @@ class PerformanceMatrixPanel {
                         }
                     }
 
-                    // Dedicated slot control cell under knobs 2-4 on FX rows
-                    if (descriptor.hasExtraHeader && (isFxChainRow || isFxBankId) && col in 1..3) {
-                        val slotIdx = col - 1
+                    // Dedicated slot/parameter control cell under knobs on FX rows
+                    if (descriptor.hasExtraHeader && (isFxChainRow || isFxBankId)) {
+                        val chain = resolveFxChain(mixer, row.bankId)
                         val chainLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(row.bankId) ?: "FX"
                         val cellW = (knobColW - 6f).coerceAtLeast(40f)
                         val cellX = cellCenterX - cellW / 2f
                         val cellY = knobTopY + diameter + 3f + (if (isModuleExpanded) captionH * 2f + 24f else captionH) + 4f
-                        FxSlotCell.draw(
-                            session = session,
-                            mixer = mixer,
-                            bankId = row.bankId,
-                            chainLabel = chainLabel,
-                            slotIndex = slotIdx,
-                            x = cellX,
-                            y = cellY,
-                            w = cellW,
-                            accent = row.accent,
-                            onEditInDeepEdit = {
-                                val modId = canonicalModuleId(row.bankId)
-                                parametersState.setDisclosure(modId, ParametersState.DisclosureLevel.DEEP_EDIT)
-                                navigateMacroPanelTo(parametersState, row.bankId)
+
+                        if (chain.isFocused()) {
+                            val focusedSlot = chain.focusedSlot!!
+                            if (col == 0) {
+                                // Knob 1 (Col 0) = Focused slot's individual Dry/Wet knob -> draw focused slot cell
+                                FxSlotCell.draw(
+                                    session = session,
+                                    mixer = mixer,
+                                    bankId = row.bankId,
+                                    chainLabel = chainLabel,
+                                    slotIndex = focusedSlot,
+                                    x = cellX,
+                                    y = cellY,
+                                    w = cellW,
+                                    accent = row.accent,
+                                    onEditInDeepEdit = {
+                                        val modId = canonicalModuleId(row.bankId)
+                                        parametersState.setDisclosure(modId, ParametersState.DisclosureLevel.DEEP_EDIT)
+                                        navigateMacroPanelTo(parametersState, row.bankId)
+                                    }
+                                )
+                            } else if (col in 1..3) {
+                                // Knobs 2-4 (Cols 1-3) = Focused slot's parameters -> draw FxParamCell
+                                val slot = chain.slots.getOrNull(focusedSlot)
+                                val paramEntries = slot?.parameters?.entries?.toList() ?: emptyList()
+                                val paramIdx = chain.focusParamPage * 3 + (col - 1)
+                                val entry = paramEntries.getOrNull(paramIdx)
+                                FxParamCell.draw(
+                                    session = session,
+                                    bankId = row.bankId,
+                                    knobIndex = col + 1,
+                                    paramName = entry?.key,
+                                    param = entry?.value,
+                                    x = cellX,
+                                    y = cellY,
+                                    w = cellW,
+                                    accent = row.accent
+                                )
                             }
-                        )
+                        } else if (col in 1..3) {
+                            // Standard Group Mode: draw slot cells for slots 1-3
+                            val slotIdx = col - 1
+                            FxSlotCell.draw(
+                                session = session,
+                                mixer = mixer,
+                                bankId = row.bankId,
+                                chainLabel = chainLabel,
+                                slotIndex = slotIdx,
+                                x = cellX,
+                                y = cellY,
+                                w = cellW,
+                                accent = row.accent,
+                                onEditInDeepEdit = {
+                                    val modId = canonicalModuleId(row.bankId)
+                                    parametersState.setDisclosure(modId, ParametersState.DisclosureLevel.DEEP_EDIT)
+                                    navigateMacroPanelTo(parametersState, row.bankId)
+                                }
+                            )
+                        }
                     }
                 }
             }

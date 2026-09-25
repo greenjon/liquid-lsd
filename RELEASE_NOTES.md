@@ -1,5 +1,16 @@
 ## [Unreleased]
 
+### FX Performance Editing: Focus Mode for FX Rows (`FxChain.kt`, `FxMacroSync.kt`, `MacroEngine.kt`, `FxParamCell.kt`, `FxChainHeader.kt`, `FxSlotCell.kt`, `PerformanceMatrixPanel.kt`, `performance_controls.md`, `macros_and_rack.md`, `ARCHITECTURE.md`, `DECISIONS.md`)
+- **Single FX Focus Mode (Mixxx / Traktor Style)**: Directly focus on any individual FX slot across all Performance Matrix FX rows (ALL FX, LIVE CONSOLE, and Deck rows in `[FX]` mode) to tweak its parameters hands-on without opening Deep Edit:
+  - **1-Click Slot Selector Pills (`[1] [2] [3]`)**: Click any slot pill in the row header to focus that slot; click again or click `[◀ CHAIN]` to exit back to 3-slot Group Mode.
+  - **Double-Click & Context Menu**: Double-click any slot cell's effect name or right-click and choose **Focus Mode (Edit Parameters)** to toggle focus.
+  - **Knob 1 Retargets to Slot Dry/Wet**: Knob 1 shifts from `SUPER` to individual slot `DRY/WET`. The focused slot's `FxSlotCell` is displayed underneath so mute (`●`), shortlist stepping (`◀ ▶`), and picker access remain directly below the Dry/Wet knob.
+  - **Knobs 2–4 Retarget to Top Parameters**: Dynamically re-bound to the focused effect's top shader parameters (e.g. `SPEED`, `INTENSITY`, `COLOR`), with authored min/max clamps and base value normalization.
+  - **Parameter Pagination (`[◀ P1/N ▶]`)**: Appears automatically in the header whenever the focused effect has more than 3 parameters to step through 3-knob parameter pages.
+  - **Parameter Cells (`FxParamCell`)**: Drawn under Knobs 2–4 with matching 20px height for zero matrix geometry shifts, featuring a `[⟲]` reset-to-default button, formatted value readout, and CV modulation indicator dot.
+  - **Hardware Controller Compatibility**: Physical controllers mapped to standard `Macro/<bankId>/knob_1..4` paths immediately drive the focused effect's Dry/Wet and parameters without requiring any MIDI CC remapping.
+  - **Engine Link Bypass**: MacroEngine soft-takeover link propagation automatically bypasses focused rows so parameter knob sweeps are never clobbered.
+
 ### FX Performance Editing: Slot Cells, Shortlist Stepping, Swap Dip, and Shared Chain Header (`FxSlotCell.kt`, `FxShortlist.kt`, `FxChainHeader.kt`, `FxChain.kt`, `FxOps.kt`, `FxMacroSync.kt`, `ShaderPickerPopup.kt`, `PerformanceMatrixPanel.kt`, `AppPreferences.kt`, `PreferencesPanel.kt`, `SessionSerializer.kt`, `PresetModels.kt`, `performance_controls.md`, `macros_and_rack.md`, `DECISIONS.md`)
 - **FX Slot Cells Under Performance Knobs**: Each slot knob (columns 2–4) across all FX rows (ALL FX tab, LIVE CONSOLE FX row, and Deck rows in `[FX]` mode) now displays an interactive slot cell drawer directly underneath:
   - **Mute Pill (`●`)**: Per-slot bypass toggle with muted visual state.

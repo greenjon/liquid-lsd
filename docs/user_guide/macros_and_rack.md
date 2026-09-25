@@ -129,8 +129,12 @@ regardless of what the other decks are doing.
   back on doesn't snap the Metaknob to wherever the Super Knob currently sits — it waits until you
   move the Super Knob far enough for it to reach the Metaknob's current position first (soft
   pickup), the same behavior used for hardware MIDI/OSC takeover elsewhere in the app.
-- **Focus** (per slot) — swaps the 3 knobs to that effect's own top parameters instead of the
-  group Metaknobs, for fine-grained single-effect tweaking. Click **Group Mode** to return.
+- **Focus Mode** (per slot) — focuses on an individual effect slot across the Performance Matrix FX rows and Column 3.
+  - **Knob 1**: Controls the focused slot's individual Dry/Wet blend.
+  - **Knobs 2–4**: Retargeted to the focused effect's top parameters on the active page, with parameter paging (`[◀ P1/N ▶]`) when more than 3 parameters exist.
+  - **Parameter Cells (`FxParamCell`)**: Display parameter values with a `[⟲]` reset-to-default button.
+  - **Hardware MIDI**: Physical controllers mapped to `Macro/<bankId>/knob_1..4` retarget dynamically to the focused slot's Dry/Wet and parameters without requiring any MIDI remapping.
+  - Click `[◀ CHAIN]` in the header, or the active slot pill, to return to standard Group Mode.
 - **Right-click a Metaknob** to rebind it to a different parameter, to the Dry/Wet safety net, or
   to reset it back to the auto-bind default.
 

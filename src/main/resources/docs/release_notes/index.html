@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fix-popstylevar-assertion-crash-when-opening-deck-fx-controls-fxchainheaderkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: PopStyleVar assertion crash when opening Deck FX controls (FxChainHeader.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-performance-editing-focus-mode-for-fx-rows-fxchainkt-fxmacrosynckt-macroenginekt-fxparamcellkt-fxchainheaderkt-fxslotcellkt-performancematrixpanelkt-performance_controlsmd-macros_and_rackmd-architecturemd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Performance Editing: Focus Mode for FX Rows (FxChain.kt, FxMacroSync.kt, MacroEngine.kt, FxParamCell.kt, FxChainHeader.kt, FxSlotCell.kt, PerformanceMatrixPanel.kt, performance_controls.md, macros_and_rack.md, ARCHITECTURE.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fx-performance-editing-slot-cells-shortlist-stepping-swap-dip-and-shared-chain-header-fxslotcellkt-fxshortlistkt-fxchainheaderkt-fxchainkt-fxopskt-fxmacrosynckt-shaderpickerpopupkt-performancematrixpanelkt-apppreferenceskt-preferencespanelkt-sessionserializerkt-presetmodelskt-performance_controlsmd-macros_and_rackmd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3964,6 +3986,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fix-popstylevar-assertion-crash-when-opening-deck-fx-controls-fxchainheaderkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: PopStyleVar assertion crash when opening Deck FX controls (FxChainHeader.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-performance-editing-focus-mode-for-fx-rows-fxchainkt-fxmacrosynckt-macroenginekt-fxparamcellkt-fxchainheaderkt-fxslotcellkt-performancematrixpanelkt-performance_controlsmd-macros_and_rackmd-architecturemd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Performance Editing: Focus Mode for FX Rows (FxChain.kt, FxMacroSync.kt, MacroEngine.kt, FxParamCell.kt, FxChainHeader.kt, FxSlotCell.kt, PerformanceMatrixPanel.kt, performance_controls.md, macros_and_rack.md, ARCHITECTURE.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fx-performance-editing-slot-cells-shortlist-stepping-swap-dip-and-shared-chain-header-fxslotcellkt-fxshortlistkt-fxchainheaderkt-fxchainkt-fxopskt-fxmacrosynckt-shaderpickerpopupkt-performancematrixpanelkt-apppreferenceskt-preferencespanelkt-sessionserializerkt-presetmodelskt-performance_controlsmd-macros_and_rackmd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6695,6 +6739,22 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fix-popstylevar-assertion-crash-when-opening-deck-fx-controls-fxchainheaderkt">Fix: PopStyleVar assertion crash when opening Deck FX controls (<code>FxChainHeader.kt</code>)</h3>
+<ul>
+<li><strong>Fix <code>PopStyleVar</code> underflow</strong>: Removed a redundant <code>ImGui.popStyleVar()</code> call in <code>FxChainHeader.drawMoreButton</code> that caused an assertion failure (<code>Calling PopStyleVar() too many times!</code>) when rendering FX chain headers in Performance mode deck rows.</li>
+</ul>
+<h3 id="fx-performance-editing-focus-mode-for-fx-rows-fxchainkt-fxmacrosynckt-macroenginekt-fxparamcellkt-fxchainheaderkt-fxslotcellkt-performancematrixpanelkt-performance_controlsmd-macros_and_rackmd-architecturemd-decisionsmd">FX Performance Editing: Focus Mode for FX Rows (<code>FxChain.kt</code>, <code>FxMacroSync.kt</code>, <code>MacroEngine.kt</code>, <code>FxParamCell.kt</code>, <code>FxChainHeader.kt</code>, <code>FxSlotCell.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>performance_controls.md</code>, <code>macros_and_rack.md</code>, <code>ARCHITECTURE.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>Single FX Focus Mode (Mixxx / Traktor Style)</strong>: Directly focus on any individual FX slot across all Performance Matrix FX rows (ALL FX, LIVE CONSOLE, and Deck rows in <code>[FX]</code> mode) to tweak its parameters hands-on without opening Deep Edit:</li>
+<li><strong>1-Click Slot Selector Pills (<code>[1] [2] [3]</code>)</strong>: Click any slot pill in the row header to focus that slot; click again or click <code>[◀ CHAIN]</code> to exit back to 3-slot Group Mode.</li>
+<li><strong>Double-Click &amp; Context Menu</strong>: Double-click any slot cell's effect name or right-click and choose <strong>Focus Mode (Edit Parameters)</strong> to toggle focus.</li>
+<li><strong>Knob 1 Retargets to Slot Dry/Wet</strong>: Knob 1 shifts from <code>SUPER</code> to individual slot <code>DRY/WET</code>. The focused slot's <code>FxSlotCell</code> is displayed underneath so mute (<code>●</code>), shortlist stepping (<code>◀ ▶</code>), and picker access remain directly below the Dry/Wet knob.</li>
+<li><strong>Knobs 2–4 Retarget to Top Parameters</strong>: Dynamically re-bound to the focused effect's top shader parameters (e.g. <code>SPEED</code>, <code>INTENSITY</code>, <code>COLOR</code>), with authored min/max clamps and base value normalization.</li>
+<li><strong>Parameter Pagination (<code>[◀ P1/N ▶]</code>)</strong>: Appears automatically in the header whenever the focused effect has more than 3 parameters to step through 3-knob parameter pages.</li>
+<li><strong>Parameter Cells (<code>FxParamCell</code>)</strong>: Drawn under Knobs 2–4 with matching 20px height for zero matrix geometry shifts, featuring a <code>[⟲]</code> reset-to-default button, formatted value readout, and CV modulation indicator dot.</li>
+<li><strong>Hardware Controller Compatibility</strong>: Physical controllers mapped to standard <code>Macro/&lt;bankId&gt;/knob_1..4</code> paths immediately drive the focused effect's Dry/Wet and parameters without requiring any MIDI CC remapping.</li>
+<li><strong>Engine Link Bypass</strong>: MacroEngine soft-takeover link propagation automatically bypasses focused rows so parameter knob sweeps are never clobbered.</li>
+</ul>
 <h3 id="fx-performance-editing-slot-cells-shortlist-stepping-swap-dip-and-shared-chain-header-fxslotcellkt-fxshortlistkt-fxchainheaderkt-fxchainkt-fxopskt-fxmacrosynckt-shaderpickerpopupkt-performancematrixpanelkt-apppreferenceskt-preferencespanelkt-sessionserializerkt-presetmodelskt-performance_controlsmd-macros_and_rackmd-decisionsmd">FX Performance Editing: Slot Cells, Shortlist Stepping, Swap Dip, and Shared Chain Header (<code>FxSlotCell.kt</code>, <code>FxShortlist.kt</code>, <code>FxChainHeader.kt</code>, <code>FxChain.kt</code>, <code>FxOps.kt</code>, <code>FxMacroSync.kt</code>, <code>ShaderPickerPopup.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>AppPreferences.kt</code>, <code>PreferencesPanel.kt</code>, <code>SessionSerializer.kt</code>, <code>PresetModels.kt</code>, <code>performance_controls.md</code>, <code>macros_and_rack.md</code>, <code>DECISIONS.md</code>)</h3>
 <ul>
 <li><strong>FX Slot Cells Under Performance Knobs</strong>: Each slot knob (columns 2–4) across all FX rows (ALL FX tab, LIVE CONSOLE FX row, and Deck rows in <code>[FX]</code> mode) now displays an interactive slot cell drawer directly underneath:</li>

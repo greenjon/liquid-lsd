@@ -339,6 +339,7 @@ object MacroEngine {
     }
 
     private fun syncLinkedFxChainKnobValues(bankId: String, chain: FxChain) {
+        if (chain.focusedSlot != null) return
         val macroBank = synchronized(lock) { banks[bankId] } ?: return
         for (i in 0 until FxChain.SLOT_COUNT) {
             if (chain.slotSuperKnobLink.getOrNull(i) == true) {

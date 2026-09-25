@@ -26,7 +26,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  */
 object FxMacroSync {
 
-    private val OWNED_PATH_PATTERN = Regex("""^([^/]+)/FX/(Super|FX\d+/Meta)$""")
+    private val OWNED_PATH_PATTERN = Regex("""^([^/]+)/FX/(Super|DryWet|FX\d+(/.*)?)$""")
 
     /** The FX bank ids, one per FX chain, in display order. */
     val FX_BANK_IDS = listOf(
@@ -63,20 +63,51 @@ object FxMacroSync {
         syncChain(bankId, label, chain, forceResync)
     }
 
+    /** Focuses slot [slotIndex] (or null to return to Group mode) for [bankId] and re-syncs. */
+    fun focusSlot(bankId: String, mixer: Mixer, slotIndex: Int?) {
+        val chain = chainFor(bankId, mixer) ?: return
+        chain.focusSlot(slotIndex)
+        syncFor(bankId, mixer, forceResync = true)
+    }
+
+    /** Steps parameter page by [dir] (-1 or +1) for [bankId] and re-syncs. */
+    fun stepParamPage(bankId: String, mixer: Mixer, dir: Int) {
+        val chain = chainFor(bankId, mixer) ?: return
+        chain.stepParamPage(dir)
+        syncFor(bankId, mixer, forceResync = true)
+    }
+
     /** Re-syncs every FX bank. */
     fun syncAll(mixer: Mixer, forceResync: Boolean = false) {
         for (bankId in FX_BANK_IDS) syncFor(bankId, mixer, forceResync)
     }
 
     /**
-     * Re-syncs [bankId]'s [MacroBank] knobs 0-3 to [chain], whose parameters live under
-     * "[chainLabel]/FX/...". Knob 0 becomes the chain's Super Knob, Knobs 1-3 each slot's Metaknob.
+     * Re-syncs [bankId]'s [MacroBank] knobs 0-3 to [chain].
+     * In Group Mode: Knob 0 becomes Super Knob, Knobs 1-3 each slot's Metaknob.
+     * In Focus Mode: Knob 0 becomes focused slot's Dry/Wet, Knobs 1-3 its top parameters (paged).
      */
     fun syncChain(bankId: String, chainLabel: String, chain: FxChain, forceResync: Boolean = false) {
         val macroBank = MacroEngine.getBank(bankId) ?: MacroEngine.newBankFor(bankId).also {
             MacroEngine.registerBank(bankId, it)
         }
 
+        val focused = chain.focusedSlot
+        if (focused != null && focused in 0 until FxChain.SLOT_COUNT) {
+            syncFocusMode(macroBank, chainLabel, chain, focused, forceResync)
+        } else {
+            syncGroupMode(macroBank, chainLabel, chain, forceResync)
+        }
+
+        MacroEngine.invalidate()
+    }
+
+    private fun syncGroupMode(
+        macroBank: MacroBank,
+        chainLabel: String,
+        chain: FxChain,
+        forceResync: Boolean
+    ) {
         syncKnob(
             macroBank = macroBank,
             knobIndex = 0,
@@ -110,8 +141,63 @@ object FxMacroSync {
                 forceResync = forceResync
             )
         }
+    }
 
-        MacroEngine.invalidate()
+    private fun syncFocusMode(
+        macroBank: MacroBank,
+        chainLabel: String,
+        chain: FxChain,
+        slotIdx: Int,
+        forceResync: Boolean
+    ) {
+        val slotNum = slotIdx + 1
+        val slot = chain.slots.getOrNull(slotIdx)
+
+        // Knob 0: Focused slot's individual Dry/Wet
+        syncKnob(
+            macroBank = macroBank,
+            knobIndex = 0,
+            bankLabel = chainLabel,
+            defaultLabel = "DRY/WET",
+            targetPath = "$chainLabel/FX/FX$slotNum/DryWet",
+            minVal = 0f,
+            maxVal = 1f,
+            initialValue = slot?.dryWet?.baseValue ?: 1f,
+            forceResync = forceResync
+        )
+
+        // Knobs 1..3: Focused slot's parameters for active page
+        val paramEntries = slot?.parameters?.entries?.toList() ?: emptyList()
+        val page = chain.focusParamPage
+        val startIndex = page * 3
+
+        for (k in 0 until 3) {
+            val knobIndex = k + 1
+            val paramIdx = startIndex + k
+            if (paramIdx < paramEntries.size) {
+                val entry = paramEntries[paramIdx]
+                val paramName = entry.key
+                val param = entry.value
+                val label = paramName.uppercase().take(10)
+                val minVal = param.minClamp
+                val maxVal = param.maxClamp
+                val range = maxVal - minVal
+                val normVal = if (range > 0f) ((param.baseValue - minVal) / range).coerceIn(0f, 1f) else 0f
+                syncKnob(
+                    macroBank = macroBank,
+                    knobIndex = knobIndex,
+                    bankLabel = chainLabel,
+                    defaultLabel = label,
+                    targetPath = "$chainLabel/FX/FX$slotNum/$paramName",
+                    minVal = minVal,
+                    maxVal = maxVal,
+                    initialValue = normVal,
+                    forceResync = forceResync
+                )
+            } else {
+                clearKnob(macroBank, knobIndex, chainLabel, forceResync)
+            }
+        }
     }
 
     private fun isOwnedOrEmpty(control: MacroControl, bankLabel: String): Boolean {
@@ -127,12 +213,22 @@ object FxMacroSync {
         }
     }
 
+    private fun clearKnob(macroBank: MacroBank, knobIndex: Int, bankLabel: String, forceResync: Boolean) {
+        val control = macroBank.knobs.getOrNull(knobIndex) ?: return
+        if (!forceResync && !isOwnedOrEmpty(control, bankLabel)) return
+        control.label = "—"
+        control.bindings.clear()
+        control.value = 0f
+    }
+
     private fun syncKnob(
         macroBank: MacroBank,
         knobIndex: Int,
         bankLabel: String,
         defaultLabel: String,
         targetPath: String,
+        minVal: Float = 0f,
+        maxVal: Float = 1f,
         initialValue: Float,
         forceResync: Boolean
     ) {
@@ -145,8 +241,8 @@ object FxMacroSync {
             MacroBinding(
                 parameterId = targetPath,
                 targetType = MacroTargetType.PARAM_BASE_VALUE,
-                minVal = 0f,
-                maxVal = 1f,
+                minVal = minVal,
+                maxVal = maxVal,
                 curve = MacroCurveType.LINEAR,
                 inverted = false
             )

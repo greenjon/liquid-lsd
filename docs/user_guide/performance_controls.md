@@ -153,6 +153,23 @@ for the FX Rack view that exposes these.
   - **Knob Labeling**:
     - Knob 1 controls the chain's `SUPER` knob.
     - Knobs 2–4 display `META` (or the bound parameter name when custom-routed), while the effect name itself is clearly displayed in the slot cell below.
+  - **Focus Mode (Traktor / Mixxx style)**:
+    - **Entering Focus Mode**:
+      - Click any slot pill (`[1]`, `[2]`, or `[3]`) in the FX row header.
+      - Or double-click any slot cell's effect name.
+      - Or right-click a slot cell and select **Focus Mode (Edit Parameters)**.
+    - **Header Controls in Focus Mode**:
+      - `[◀ CHAIN]`: Returns immediately to standard 3-slot Group/Chain mode.
+      - `[1] [2] [3]`: The active slot pill is accented with a dot (e.g. `●2`); click another slot to switch focus directly, or click the active pill to exit Focus Mode.
+      - `[◀ P1/N ▶]`: Parameter page stepper; appears automatically whenever the focused shader exposes more than 3 parameters.
+      - `[Save]` & `[⋮]`: Chain saving, presets, and actions remain fully accessible.
+    - **4 Knobs in Focus Mode**:
+      - **Knob 1 (`DRY/WET`)**: Controls the focused slot's individual wet/dry blend (`$chainLabel/FX/FX<slot>/DryWet`). The focused slot's `FxSlotCell` is drawn underneath so slot mute (`●`), shortlist stepping (`◀ ▶`), and picker access remain accessible directly below its Dry/Wet knob.
+      - **Knobs 2–4 (`Top Parameters`)**: Dynamically retargeted to the focused shader's top parameters on the active page (e.g. `SPEED`, `INTENSITY`, `COLOR`).
+      - **Parameter Cells (`FxParamCell`)**: Drawn under Knobs 2–4 with a `[⟲]` reset button (restores parameter to authored default), exact formatted value readout, and a modulation indicator dot.
+    - **Seamless Hardware MIDI Retargeting**:
+      - Physical MIDI controllers mapped to the row's standard macro paths (`Macro/<bankId>/knob_1..4`) immediately control the focused slot's Dry/Wet and parameters without requiring any MIDI remapping or controller mode switching.
+      - Exiting Focus Mode restores Knob 1 to `SUPER` and Knobs 2–4 to `META`.
   - **Performance Matrix Tabs**:
     - The **ALL FX** tab includes dedicated rows for `Deck A FX`, `Deck B FX`, `Deck BG FX`, `Deck PV FX`, and `Master FX`.
     - The **FX WET/DRY** row in the **MASTER & FX** tab features an `[ FX SENDS ]` badge.

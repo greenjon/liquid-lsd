@@ -64,21 +64,159 @@ object FxChainHeader {
     ) {
         val gap = 3f
         val isDirty = chain.isDirty()
+        val isFocused = chain.isFocused()
         val popupId = "##fx_chain_picker_$bankId"
         val menuId = "##fx_chain_more_$bankId"
 
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, gap, 0f)
 
-        // 1. [◀] Prev chain
-        if (ImGui.button("◀##prev_chain_$bankId", ARROW_W, ctrlH)) {
-            stepChain(session, chain, -1)
+        if (isFocused) {
+            // -- FOCUS MODE HEADER ----------------------------------------------------------------
+            val focusedSlot = chain.focusedSlot!!
+            val totalPages = chain.totalParamPages(focusedSlot)
+
+            // 1. [◀ CHAIN] Exit Focus Mode button
+            val backCol = ImGui.colorConvertFloat4ToU32(0.85f, 0.45f, 0.15f, 0.90f)
+            ImGui.pushStyleColor(ImGuiCol.Button, backCol)
+            if (ImGui.button("◀ CHAIN##exit_focus_$bankId", 58f, ctrlH)) {
+                FxMacroSync.focusSlot(bankId, mixer, null)
+            }
+            ImGui.popStyleColor()
+            itemTooltip("Exit Focus Mode and return to 3-slot chain view.")
+
+            ImGui.sameLine()
+
+            // 2. Slot pills [1] [2] [3]
+            drawSlotPills(session, mixer, chain, bankId, ctrlH, focusedSlot)
+
+            // 3. Parameter page stepper [◀ P1/2 ▶] (if totalPages > 1)
+            if (totalPages > 1) {
+                ImGui.sameLine()
+                if (ImGui.button("◀##focus_prev_page_$bankId", ARROW_W, ctrlH)) {
+                    FxMacroSync.stepParamPage(bankId, mixer, -1)
+                }
+                itemTooltip("Previous parameter page.")
+
+                ImGui.sameLine()
+                session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                    val pageText = "P${chain.focusParamPage + 1}/$totalPages"
+                    val ptw = ImGui.calcTextSize(pageText).x
+                    val curX = ImGui.getCursorScreenPosX()
+                    val curY = ImGui.getCursorScreenPosY()
+                    ImGui.dummy(ptw + 4f, ctrlH)
+                    val textY = curY + (ctrlH - ImGui.getTextLineHeight()) * 0.5f
+                    ImGui.getWindowDrawList().addText(curX + 2f, textY, ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.95f, 1f), pageText)
+                }
+                itemTooltip("Parameter page ${chain.focusParamPage + 1} of $totalPages.")
+
+                ImGui.sameLine()
+                if (ImGui.button("▶##focus_next_page_$bankId", ARROW_W, ctrlH)) {
+                    FxMacroSync.stepParamPage(bankId, mixer, 1)
+                }
+                itemTooltip("Next parameter page.")
+            }
+
+            ImGui.sameLine()
+
+            // 4. [Save] button
+            drawSaveButton(session, chain, bankId, ctrlH, isDirty)
+
+            ImGui.sameLine()
+
+            // 5. [⋮] More actions menu
+            drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, menuId)
+        } else {
+            // -- GROUP MODE HEADER ----------------------------------------------------------------
+            // 1. [◀] Prev chain
+            if (ImGui.button("◀##prev_chain_$bankId", ARROW_W, ctrlH)) {
+                stepChain(session, chain, -1)
+            }
+            itemTooltip("Previous FX chain in folder.")
+
+            ImGui.sameLine()
+
+            // 2. Chain name button
+            val slotPillsW = 20f * FxChain.SLOT_COUNT + gap * (FxChain.SLOT_COUNT - 1)
+            val nameW = (maxW - (ARROW_W * 2f + SAVE_BTN_W + MORE_BTN_W + slotPillsW + gap * 6f)).coerceAtLeast(48f)
+            drawChainNameButton(session, chain, bankId, chainLabel, ctrlH, nameW, isDirty, popupId)
+
+            ImGui.sameLine()
+
+            // 3. [▶] Next chain
+            if (ImGui.button("▶##next_chain_$bankId", ARROW_W, ctrlH)) {
+                stepChain(session, chain, 1)
+            }
+            itemTooltip("Next FX chain in folder.")
+
+            ImGui.sameLine()
+
+            // 4. Slot focus pills [1] [2] [3]
+            drawSlotPills(session, mixer, chain, bankId, ctrlH, null)
+
+            ImGui.sameLine()
+
+            // 5. [Save] button
+            drawSaveButton(session, chain, bankId, ctrlH, isDirty)
+
+            ImGui.sameLine()
+
+            // 6. [⋮] More actions menu
+            drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, menuId)
         }
-        itemTooltip("Previous FX chain in folder.")
 
-        ImGui.sameLine()
+        ImGui.popStyleVar()
+    }
 
-        // 2. Chain name button (click to open picker popup, drop .lsdfxchain here)
-        val nameW = (maxW - (ARROW_W * 2f + SAVE_BTN_W + MORE_BTN_W + gap * 5f)).coerceAtLeast(60f)
+    private fun drawSlotPills(
+        session: SessionContext,
+        mixer: Mixer,
+        chain: FxChain,
+        bankId: String,
+        ctrlH: Float,
+        focusedSlot: Int?
+    ) {
+        val pillW = 20f
+        for (i in 0 until FxChain.SLOT_COUNT) {
+            if (i > 0) ImGui.sameLine()
+            val isFocused = focusedSlot == i
+            val slot = chain.slots.getOrNull(i)
+            val slotNum = i + 1
+
+            val btnLabel = if (isFocused) "●$slotNum" else "$slotNum"
+            val activeCol = ImGui.colorConvertFloat4ToU32(0.85f, 0.45f, 0.15f, 0.95f)
+            val inactiveCol = if (slot != null) ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.26f, 0.9f)
+                              else ImGui.colorConvertFloat4ToU32(0.14f, 0.15f, 0.18f, 0.6f)
+
+            ImGui.pushStyleColor(ImGuiCol.Button, if (isFocused) activeCol else inactiveCol)
+            if (ImGui.button("$btnLabel##slot_focus_${bankId}_$i", pillW, ctrlH)) {
+                if (isFocused) {
+                    FxMacroSync.focusSlot(bankId, mixer, null)
+                } else {
+                    FxMacroSync.focusSlot(bankId, mixer, i)
+                }
+            }
+            ImGui.popStyleColor()
+
+            itemTooltip(
+                when {
+                    isFocused -> "Slot $slotNum (${slot?.displayName ?: "empty"}) is focused.\nClick to exit Focus Mode."
+                    slot != null -> "Focus Slot $slotNum (${slot.displayName}).\nKnob 1 = Dry/Wet, Knobs 2-4 = top parameters."
+                    else -> "Focus Slot $slotNum (empty).\nClick to focus and edit."
+                }
+            )
+        }
+    }
+
+    private fun drawChainNameButton(
+        session: SessionContext,
+        chain: FxChain,
+        bankId: String,
+        chainLabel: String,
+        ctrlH: Float,
+        nameW: Float,
+        isDirty: Boolean,
+        popupId: String
+    ) {
         val displayName = if (chain.name.isBlank()) "Untitled" else chain.name
         val dirtyMarker = if (isDirty) " •" else ""
         val fullLabel = "$displayName$dirtyMarker ${Icons.CHEVRON_DOWN}"
@@ -140,18 +278,9 @@ object FxChainHeader {
             }
             ImGui.endPopup()
         }
+    }
 
-        ImGui.sameLine()
-
-        // 3. [▶] Next chain
-        if (ImGui.button("▶##next_chain_$bankId", ARROW_W, ctrlH)) {
-            stepChain(session, chain, 1)
-        }
-        itemTooltip("Next FX chain in folder.")
-
-        ImGui.sameLine()
-
-        // 4. [Save] button
+    private fun drawSaveButton(session: SessionContext, chain: FxChain, bankId: String, ctrlH: Float, isDirty: Boolean) {
         val canOverwrite = chain.sourceFile != null
         val saveCol = if (isDirty) ImGui.colorConvertFloat4ToU32(0.25f, 0.65f, 0.45f, 1f) else ImGui.colorConvertFloat4ToU32(0.18f, 0.20f, 0.24f, 0.8f)
         ImGui.pushStyleColor(ImGuiCol.Button, saveCol)
@@ -167,17 +296,42 @@ object FxChainHeader {
         }
         ImGui.popStyleColor()
         itemTooltip(if (canOverwrite) "Save changes to ${chain.sourceFile?.name}." else "Save as new FX chain (.lsdfxchain).")
+    }
 
-        ImGui.sameLine()
-
-        // 5. [⋮] More actions menu
+    private fun drawMoreButton(
+        session: SessionContext,
+        mixer: Mixer,
+        chain: FxChain,
+        bankId: String,
+        chainLabel: String,
+        ctrlH: Float,
+        menuId: String
+    ) {
         if (ImGui.button("⋮##more_btn_$bankId", MORE_BTN_W, ctrlH)) {
             ImGui.openPopup(menuId)
         }
-        itemTooltip("Chain operations (Save As, New, Revert, Clear, Copy/Paste, Resync).")
+        itemTooltip("Chain operations (Save As, New, Revert, Clear, Copy/Paste, Focus, Resync).")
 
         if (ImGui.beginPopup(menuId)) {
             ImGui.textDisabled("$chainLabel FX Chain")
+            ImGui.separator()
+
+            if (chain.isFocused()) {
+                if (ImGui.menuItem("Exit Focus Mode")) {
+                    FxMacroSync.focusSlot(bankId, mixer, null)
+                }
+            } else {
+                if (ImGui.beginMenu("Focus Slot…")) {
+                    for (i in 0 until FxChain.SLOT_COUNT) {
+                        val slot = chain.slots.getOrNull(i)
+                        val label = "Slot ${i + 1}" + (slot?.displayName?.let { " ($it)" } ?: " (empty)")
+                        if (ImGui.menuItem(label)) {
+                            FxMacroSync.focusSlot(bankId, mixer, i)
+                        }
+                    }
+                    ImGui.endMenu()
+                }
+            }
             ImGui.separator()
 
             if (ImGui.menuItem("Save As…")) {
@@ -188,7 +342,7 @@ object FxChainHeader {
             if (ImGui.menuItem("New Chain")) {
                 FxOps.newChain(chain)
             }
-            val canRevert = isDirty && chain.baselineDto != null
+            val canRevert = chain.isDirty() && chain.baselineDto != null
             if (ImGui.menuItem("Revert to Saved", "", false, canRevert)) {
                 FxOps.revertChain(chain)
             }
@@ -211,8 +365,6 @@ object FxChainHeader {
             }
             ImGui.endPopup()
         }
-
-        ImGui.popStyleVar()
     }
 
     private fun openSaveAsModal(session: SessionContext, chain: FxChain) {

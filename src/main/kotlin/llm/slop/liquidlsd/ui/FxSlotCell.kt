@@ -119,7 +119,10 @@ object FxSlotCell {
         ImGui.setCursorScreenPos(nameX, y)
         ImGui.invisibleButton("##name_$idBase", nameW, h)
         val nameHovered = ImGui.isItemHovered()
-        if (ImGui.isItemClicked(ImGuiMouseButton.Left)) {
+        if (nameHovered && ImGui.isMouseDoubleClicked(ImGuiMouseButton.Left)) {
+            val targetFocus = if (chain.focusedSlot == slotIndex) null else slotIndex
+            FxMacroSync.focusSlot(bankId, mixer, targetFocus)
+        } else if (ImGui.isItemClicked(ImGuiMouseButton.Left)) {
             openPicker(session, chain, slotIndex, "Select FX Slot $slotNum for $chainLabel FX")
         }
         if (ImGui.isItemClicked(ImGuiMouseButton.Right)) {
@@ -134,9 +137,14 @@ object FxSlotCell {
                 while (wheelAccum <= -1f) { FxOps.stepSlot(chain, slotIndex, 1); wheelAccum += 1f }
             }
         }
+        val isThisSlotFocused = chain.focusedSlot == slotIndex
         itemTooltip(
-            if (fx == null) "Slot $slotNum is empty.\nClick to pick an effect, scroll to step through the FX shortlist, or drop an effect here. Right-click for more."
-            else "${fx.displayName}${fx.categories.firstOrNull()?.let { "  ($it)" } ?: ""}\nClick to pick another effect, scroll to step through the FX shortlist.\nDrag onto another slot to swap (Ctrl: copy). Right-click for more."
+            if (fx == null) "Slot $slotNum is empty.\nClick to pick an effect, double-click to focus, scroll to step through shortlist, or drop an effect here. Right-click for more."
+            else "${fx.displayName}${fx.categories.firstOrNull()?.let { "  ($it)" } ?: ""}\n" +
+                 (if (isThisSlotFocused) "● FOCUSED: Knob 1 = Dry/Wet, Knobs 2-4 = Parameters.\n" else "") +
+                 "Double-click to ${if (isThisSlotFocused) "exit Focus Mode" else "focus on this effect"}.\n" +
+                 "Click to pick another effect, scroll to step through shortlist.\n" +
+                 "Drag onto another slot to swap (Ctrl: copy). Right-click for more."
         )
         drawDragAndDrop(session, mixer, bankId, chain, slotIndex, fx?.displayName)
 
@@ -148,6 +156,7 @@ object FxSlotCell {
             val textCol = when {
                 fx == null -> ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.55f, 0.8f)
                 !fx.enabled -> ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.6f, 0.75f)
+                isThisSlotFocused -> ImGui.colorConvertFloat4ToU32(1f, 0.85f, 0.45f, 1f)
                 nameHovered -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
                 else -> ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.88f, 0.95f)
             }
@@ -158,7 +167,7 @@ object FxSlotCell {
         drawArrow(session, "##next_$idBase", ARROW_RIGHT, nameX + nameW, y, h) { FxOps.stepSlot(chain, slotIndex, 1) }
         itemTooltip("Next effect in the FX shortlist (★ favorites, or this effect's category).")
 
-        drawContextMenu(session, chain, chainLabel, slotIndex, "##menu_$idBase", onEditInDeepEdit)
+        drawContextMenu(session, mixer, bankId, chain, chainLabel, slotIndex, "##menu_$idBase", onEditInDeepEdit)
     }
 
     private fun drawArrow(session: SessionContext, id: String, glyph: String, ax: Float, ay: Float, h: Float, onClick: () -> Unit) {
@@ -210,6 +219,8 @@ object FxSlotCell {
 
     private fun drawContextMenu(
         session: SessionContext,
+        mixer: Mixer,
+        bankId: String,
         chain: FxChain,
         chainLabel: String,
         slotIndex: Int,
@@ -219,7 +230,12 @@ object FxSlotCell {
         if (!ImGui.beginPopup(popupId)) return
         val fx = chain.slots[slotIndex]
         val slotNum = slotIndex + 1
-        ImGui.textDisabled("$chainLabel FX — Slot $slotNum")
+        val isFocused = chain.focusedSlot == slotIndex
+        ImGui.textDisabled("$chainLabel FX — Slot $slotNum" + (if (isFocused) " (Focused)" else ""))
+        ImGui.separator()
+        if (ImGui.menuItem(if (isFocused) "Exit Focus Mode" else "Focus Mode (Edit Parameters)")) {
+            FxMacroSync.focusSlot(bankId, mixer, if (isFocused) null else slotIndex)
+        }
         ImGui.separator()
         if (ImGui.menuItem("Replace…")) {
             openPicker(session, chain, slotIndex, "Select FX Slot $slotNum for $chainLabel FX")

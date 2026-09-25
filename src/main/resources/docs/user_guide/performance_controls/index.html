@@ -1950,6 +1950,25 @@ for the FX Rack view that exposes these.</p>
 <li>Knobs 2–4 display <code>META</code> (or the bound parameter name when custom-routed), while the effect name itself is clearly displayed in the slot cell below.</li>
 </ul>
 </li>
+<li><strong>Focus Mode (Traktor / Mixxx style)</strong>:<ul>
+<li><strong>Entering Focus Mode</strong>:</li>
+<li>Click any slot pill (<code>[1]</code>, <code>[2]</code>, or <code>[3]</code>) in the FX row header.</li>
+<li>Or double-click any slot cell's effect name.</li>
+<li>Or right-click a slot cell and select <strong>Focus Mode (Edit Parameters)</strong>.</li>
+<li><strong>Header Controls in Focus Mode</strong>:</li>
+<li><code>[◀ CHAIN]</code>: Returns immediately to standard 3-slot Group/Chain mode.</li>
+<li><code>[1] [2] [3]</code>: The active slot pill is accented with a dot (e.g. <code>●2</code>); click another slot to switch focus directly, or click the active pill to exit Focus Mode.</li>
+<li><code>[◀ P1/N ▶]</code>: Parameter page stepper; appears automatically whenever the focused shader exposes more than 3 parameters.</li>
+<li><code>[Save]</code> &amp; <code>[⋮]</code>: Chain saving, presets, and actions remain fully accessible.</li>
+<li><strong>4 Knobs in Focus Mode</strong>:</li>
+<li><strong>Knob 1 (<code>DRY/WET</code>)</strong>: Controls the focused slot's individual wet/dry blend (<code>$chainLabel/FX/FX&lt;slot&gt;/DryWet</code>). The focused slot's <code>FxSlotCell</code> is drawn underneath so slot mute (<code>●</code>), shortlist stepping (<code>◀ ▶</code>), and picker access remain accessible directly below its Dry/Wet knob.</li>
+<li><strong>Knobs 2–4 (<code>Top Parameters</code>)</strong>: Dynamically retargeted to the focused shader's top parameters on the active page (e.g. <code>SPEED</code>, <code>INTENSITY</code>, <code>COLOR</code>).</li>
+<li><strong>Parameter Cells (<code>FxParamCell</code>)</strong>: Drawn under Knobs 2–4 with a <code>[⟲]</code> reset button (restores parameter to authored default), exact formatted value readout, and a modulation indicator dot.</li>
+<li><strong>Seamless Hardware MIDI Retargeting</strong>:</li>
+<li>Physical MIDI controllers mapped to the row's standard macro paths (<code>Macro/&lt;bankId&gt;/knob_1..4</code>) immediately control the focused slot's Dry/Wet and parameters without requiring any MIDI remapping or controller mode switching.</li>
+<li>Exiting Focus Mode restores Knob 1 to <code>SUPER</code> and Knobs 2–4 to <code>META</code>.</li>
+</ul>
+</li>
 <li><strong>Performance Matrix Tabs</strong>:<ul>
 <li>The <strong>ALL FX</strong> tab includes dedicated rows for <code>Deck A FX</code>, <code>Deck B FX</code>, <code>Deck BG FX</code>, <code>Deck PV FX</code>, and <code>Master FX</code>.</li>
 <li>The <strong>FX WET/DRY</strong> row in the <strong>MASTER &amp; FX</strong> tab features an <code>[ FX SENDS ]</code> badge.</li>

@@ -32,6 +32,36 @@ class FxChain(val label: String) {
     val superKnob = ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f)
     val slotSuperKnobLink: BooleanArray = booleanArrayOf(true, true, true)
 
+    // -- Focus Mode (Traktor / Mixxx style) ---------------------------------------------------
+    /**
+     * Focused slot index (0 until [SLOT_COUNT]), or null if the chain is in standard Group/Chain mode.
+     * In Focus Mode, Knob 1 maps to this slot's individual Dry/Wet, and Knobs 2-4 map to its top parameters.
+     */
+    var focusedSlot: Int? = null
+
+    /**
+     * Active parameter page (0-indexed) when in Focus Mode. Each page exposes up to 3 parameters.
+     */
+    var focusParamPage: Int = 0
+
+    fun isFocused(): Boolean = focusedSlot != null
+
+    fun focusSlot(slotIndex: Int?) {
+        focusedSlot = if (slotIndex != null && slotIndex in 0 until SLOT_COUNT) slotIndex else null
+        focusParamPage = 0
+    }
+
+    fun totalParamPages(slotIndex: Int = focusedSlot ?: 0): Int {
+        val count = slots.getOrNull(slotIndex)?.parameters?.size ?: 0
+        return if (count == 0) 1 else kotlin.math.ceil(count / 3.0).toInt().coerceAtLeast(1)
+    }
+
+    fun stepParamPage(dir: Int) {
+        val total = totalParamPages()
+        if (total <= 1) return
+        focusParamPage = Math.floorMod(focusParamPage + dir, total)
+    }
+
     // Armed (false) until the Super Knob's movement converges with a linked slot's current
     // Metaknob value -- see propagateSuperKnob(). Starts false for every slot: a freshly
     // constructed chain has nothing to "already be in sync" with.
@@ -209,6 +239,13 @@ class FxChain(val label: String) {
         val link = slotSuperKnobLink[a]
         slotSuperKnobLink[a] = other.slotSuperKnobLink[b]
         other.slotSuperKnobLink[b] = link
+        if (other === this) {
+            if (focusedSlot == a) focusedSlot = b
+            else if (focusedSlot == b) focusedSlot = a
+        } else {
+            if (focusedSlot == a) focusedSlot = null
+            if (other.focusedSlot == b) other.focusedSlot = null
+        }
         armSlotTakeover(a)
         other.armSlotTakeover(b)
     }
@@ -254,6 +291,8 @@ class FxChain(val label: String) {
             slotSuperKnobLink[i] = true
             hasTakenOver[i] = false
         }
+        focusedSlot = null
+        focusParamPage = 0
         name = ""
         for (i in 0 until SLOT_COUNT) { slotPending[i] = null; resetSlotFade(i) }
         chainPending = null
@@ -360,6 +399,8 @@ class FxChain(val label: String) {
         baselineDto = if (isBaseline) dto else null
         cachedIsDirty = false
         lastDirtyCheckTimeMs = 0L
+        focusedSlot = null
+        focusParamPage = 0
         dto.dryWet?.let { dryWet.applyDto(it) }
         dto.superKnob?.let { superKnob.applyDto(it) }
         val linkFlags = dto.slotSuperKnobLink

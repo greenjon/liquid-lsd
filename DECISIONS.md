@@ -1,3 +1,27 @@
+## FX Performance Editing: Focus Mode for FX Rows (`FxChain.kt`, `FxMacroSync.kt`, `MacroEngine.kt`, `FxParamCell.kt`, `FxChainHeader.kt`, `FxSlotCell.kt`, `PerformanceMatrixPanel.kt`, tests, docs)
+
+- **Context**: 2026-09-24. Step 4 of `.planning/fx-performance-editing-plan.md`. With Steps 1–3 having unified Master FX as a plain `FxChain`, routed mutations through GL-thread `FxOps`, added interactive `FxSlotCell` drawers with shortlist stepping and swap dip, and unified row headers in `FxChainHeader`, Step 4 implements Focus Mode for FX rows ala Mixxx and Traktor. In live DJ performance, performers frequently need to dive into a single effect to tweak its top shader parameters using 4 physical hardware knobs without opening Deep Edit or remapping MIDI.
+- **Decision**:
+  - **State on `FxChain`**: Each chain maintains `focusedSlot: Int?` (`null` = Group/Chain mode, `0..2` = focused slot index) and `focusParamPage: Int` (0-indexed parameter page, 3 parameters per page). Loading a new chain or resetting clears focus back to Group mode. Swapping slots moves focus with the effect.
+  - **Dynamic Knob Retargeting (`FxMacroSync.kt`)**:
+    - Hardware MIDI controller paths remain identical (`Macro/<bankId>/knob_1..4`).
+    - In Focus Mode:
+      - **Knob 1** (`DRY/WET`) targets `$chainLabel/FX/FX<slot>/DryWet` with range [0f, 1f] and initial value `slot.dryWet.baseValue`.
+      - **Knobs 2–4** target the focused shader's top parameters on `chain.focusParamPage` (e.g. `SPEED`, `INTENSITY`, `COLOR`), mapping parameter clamp ranges and normalizing base values. Knobs without parameters on the active page are set to `"—"` and cleared.
+    - Exiting Focus Mode immediately restores Knob 1 to `SUPER` and Knobs 2–4 to `META`. Custom non-FX user bindings (e.g. `Deck A/Geometry/Zoom`) are preserved across focus transitions.
+  - **MacroEngine Link Propagation Bypass**: In `MacroEngine.tick(mixer)`, `syncLinkedFxChainKnobValues` skips chains in Focus Mode so user parameter adjustments on Knobs 2–4 are never overwritten by Super Knob soft-takeover link propagation.
+  - **FX Chain Header Focus Controls (`FxChainHeader.kt`)**:
+    - Added 1-click slot selector pills `[1] [2] [3]` to the header in Group mode.
+    - In Focus Mode, the header renders `[◀ CHAIN]` (1-click return to Group mode), highlighted slot pills `[1] [● 2] [3]` (click another slot to switch focus directly, or click the active slot to exit focus), and a parameter page stepper `[◀ P1/N ▶]` whenever the focused effect has > 3 parameters.
+  - **Under-Knob Drawers & Visual Stability (`FxParamCell.kt`, `PerformanceMatrixPanel.kt`)**:
+    - In Focus Mode, Knob 1 (Col 0) renders the focused slot's `FxSlotCell` directly beneath its Dry/Wet knob, keeping mute (`●`), shortlist stepping (`◀ ▶`), and picker access instantly accessible.
+    - Knobs 2–4 render `FxParamCell` (20px high, exactly matching `FxSlotCell.HEIGHT` for zero matrix geometry shifts), featuring a `[⟲]` reset-to-default button, formatted parameter value readout, and a modulation indicator dot.
+    - Super Knob link icons above Knobs 2–4 are hidden while in Focus Mode.
+  - **Slot Cell & Context Menu Integration (`FxSlotCell.kt`)**: Double-clicking the effect name toggles Focus Mode for that slot. The right-click menu provides "Focus Mode (Edit Parameters)" / "Exit Focus Mode".
+- **Rationale**: Gives live visual performers Traktor/Mixxx-style single-effect deep tweaking directly on the 4-knob performance matrix using existing hardware controller bindings, with zero visual layout shifts or audio interruptions.
+
+---
+
 ## FX Performance Editing: Slot Cells, Shortlist Stepping, Swap Dip, and Shared Chain Header (`FxSlotCell.kt`, `FxShortlist.kt`, `FxChainHeader.kt`, `FxChain.kt`, `PerformanceMatrixPanel.kt`, `FxOps.kt`, `FxMacroSync.kt`, `ShaderPickerPopup.kt`, `PreferencesPanel.kt`, `UITheme.kt`, `AppPreferences.kt`, `AppPreferencesStore.kt`, `SessionSerializer.kt`, `PresetModels.kt`, tests, docs)
 
 - **Context**: 2026-09-24. Steps 2 and 3 of `.planning/fx-performance-editing-plan.md`. With Step 1 having unified Master FX as a plain `FxChain` and routed all mutations through GL-thread `FxOps`, the goal was to make all major FX interactions (swapping effects, reordering slots, muting slots, stepping through favorites, and loading/saving/reverting chains) accessible directly on the Performance Mode FX rows without diving into Deep Edit.
