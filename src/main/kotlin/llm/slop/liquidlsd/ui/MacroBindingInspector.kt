@@ -172,7 +172,7 @@ object MacroBindingInspector {
                         }
                         val cell = ParameterCellId(binding.parameterId, cvId)
                         parametersState.select(cell, targetParam)
-                        // Deep Edit keeps its own per-module selection (see PerformanceMatrixPanel.drawRackDeepEdit).
+                        // Deep Edit keeps its own per-module selection (see PerformanceDeepEditBay.drawRackDeepEdit).
                         parametersState.rackSelectedCell[nav.moduleId] = cell
                     }
                     parametersState.setDisclosure(nav.moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)

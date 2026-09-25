@@ -7,7 +7,7 @@ import llm.slop.liquidlsd.presets.analyzeDependencies
 
 /**
  * Column layout and header row for the parameter grid in Performance Mode's Deep Edit
- * ([PerformanceMatrixPanel.drawRackDeepEdit]): which CV columns are visible, their x offsets,
+ * ([PerformanceDeepEditBay.drawRackDeepEdit]): which CV columns are visible, their x offsets,
  * and the VAL/MIDI/LFO/SEQ/AUD headers with the section tabs.
  */
 object ParameterGridHeaders {

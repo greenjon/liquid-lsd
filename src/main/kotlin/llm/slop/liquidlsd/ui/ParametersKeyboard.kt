@@ -26,7 +26,7 @@ object ParametersKeyboard {
      * Save / undo / copy / paste / clear shortcuts for the selected parameter cell.
      * [allowUndo], [allowSave] and [allowCellEdits] let Performance mode split these up: undo is
      * global, while save and the cell edits run only inside the Deep Edit that owns the keyboard
-     * (see PerformanceMatrixPanel.keyboardOwnerModuleId), with that Deep Edit's selection swapped in.
+     * (see PerformanceDeepEditBay.keyboardOwnerModuleId), with that Deep Edit's selection swapped in.
      */
     fun handleKeyboardShortcuts(
         state: ParametersState,
