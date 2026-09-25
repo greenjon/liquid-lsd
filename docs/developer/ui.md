@@ -29,12 +29,20 @@ graph TD
     UIManager --> MenuBar[MenuBar.kt]
     UIManager --> MixerPanel[MixerPanel.kt]
     UIManager --> LibraryPanel[LibraryPanel.kt & PlaylistEditorPanel.kt]
-    UIManager --> PerformanceMatrixPanel[PerformanceMatrixPanel.kt - Performance Mode 4x4 macro matrix + Deep Edit]
+    UIManager --> PerformanceMatrixPanel[PerformanceMatrixPanel.kt - Performance Mode 4x4 macro matrix orchestration]
 
-    PerformanceMatrixPanel --> ParameterGridHeaders[ParameterGridHeaders.kt - Deep Edit column headers]
-    PerformanceMatrixPanel --> ParametersTabs[ParametersTabs.kt - Deep Edit side rail & parameter rows]
-    PerformanceMatrixPanel --> PropertiesPanel[PropertiesPanel.kt - Deep Edit Properties column]
-    PerformanceMatrixPanel --> DeckSourcePicker[DeckSourcePicker.kt - source picker & empty-deck launchpad]
+    PerformanceMatrixPanel --> PerformanceUiContext[PerformanceUiContext.kt - Shared UI context & styling]
+    PerformanceMatrixPanel --> PerformanceTransitionsControls[PerformanceTransitionsControls.kt - Transitions header]
+    PerformanceMatrixPanel --> PerformanceFxControls[PerformanceFxControls.kt - FX row & sends controls]
+    PerformanceMatrixPanel --> PerformanceMasterControls[PerformanceMasterControls.kt - Master row & crossfader controls]
+    PerformanceMatrixPanel --> PerformanceDeckControls[PerformanceDeckControls.kt - Deck rows left/right controls]
+    PerformanceMatrixPanel --> PerformanceDeepEditBay[PerformanceDeepEditBay.kt - Deep Edit bay accordion & 3-column layout]
+
+    PerformanceDeepEditBay --> ParameterGridHeaders[ParameterGridHeaders.kt - Deep Edit column headers]
+    PerformanceDeepEditBay --> ParametersTabs[ParametersTabs.kt - Deep Edit side rail & parameter rows]
+    PerformanceDeepEditBay --> PropertiesPanel[PropertiesPanel.kt - Deep Edit Properties column]
+    PerformanceDeepEditBay --> DeckSourcePicker[DeckSourcePicker.kt - source picker & empty-deck launchpad]
+    PerformanceDeckControls --> DeckSourcePicker
 
     PropertiesPanel --> AudioModulatorSection[AudioModulatorSection.kt - Audio Followers & Controls]
     PropertiesPanel --> MidiModulatorSection[MidiModulatorSection.kt - MIDI CC Modulator Controls]
@@ -76,8 +84,14 @@ Each deck preview monitor features a standardized, symmetric dual-column overlay
 - **Deferred Font Atlas Rebuilding**: Adjusting preset name scale sets `pendingFontRebuild`. Rebuilding the font atlas and OpenGL textures occurs at the **top of the next frame** (before `ImGui.newFrame()`) to prevent mid-frame atlas corruption.
 - **Deferred Popup Triggering**: Modal popups set a `pendingOpen*` flag and execute `ImGui.openPopup(id)` at the root ID stack level outside child windows.
 - **Modal Rendering Pipeline**: Invokes `NoteEditorModal.draw()`, `SavePresetModal.draw()`, and `PopupManager`'s specific draw methods (e.g. `drawExitPopup()`, `drawDeckConfirmPopups()`, `drawSourceChangeConfirmPopup()`, `drawMidiWarningPopup()`) at root scope.
-- **Single workspace (Performance Mode)**: `PerformanceMatrixPanel.kt` (4×4 macro knob matrix + Deep Edit — see `docs/user_guide/macros_and_rack.md`) is the only editing view. The former Classic view (`ParametersPanel` / standalone `PropertiesPanel` windows, `UITheme.WorkspaceMode`, `F4`, the `[ CLASSIC | PERF ]` pill) was removed on 2026-09-24; `AppPreferencesStore` ignores a stale `workspaceMode` key and drops it on the next save. Deep Edit draws `ParameterGridHeaders`, `ParametersTabs` and `PropertiesPanel` directly. The earlier 19" Modular Video Rack chassis UI (faceplates, rear patch-cable view, `Tab` flip) has been deleted entirely; see `docs/developer/modular_video_rack_proposal.md` for its retired history.
-- **Performance Matrix row sizing (`PerformanceMatrixPanel.drawMatrix`)**: row height is `availH / rows.size`, floored at `MIN_ROW_H` (96px). Past the floor the grid's total height (`rowH * rows.size`) exceeds the `##rack_grid_area` child and the child scrolls vertically; the end-of-grid cursor advance uses that total height so ImGui sizes the scrollbar correctly. Wing controls all use `CTRL_H` (24px); the deck preset combo, which can't take an explicit height, gets a pushed `FramePadding.y` of `(CTRL_H - fontSize) / 2` around `beginCombo` only (popped before the popup body). Wing-control Y is bottom-aligned with the knob face, clamped to at least 2px below the row title (first sub-row) and at most the sub-row bottom. `MacroKnobWidget` consumes the mouse wheel while hovered, so wheel-scrolling the grid works only between knobs; this is deliberate. Click-drag scrolling comes from a grid-wide `##perf_grid_drag_scroll` invisible button submitted first with `setNextItemAllowOverlap()` (so every later knob/control wins hover), plus the title-band drop-zone buttons; each calls `applyDragScroll()`, which scrolls the child by `io.mouseDelta.y` while that item is active. The background button also stops an empty-space drag from moving the host window. The knob body blends toward its accent color on hover (22%) and while dragging (38%), because the hover/active ring shares the arc's color and reads too subtly on its own.
+- **Single workspace (Performance Mode)**: `PerformanceMatrixPanel.kt` (4×4 macro knob matrix + Deep Edit — see `docs/user_guide/macros_and_rack.md`) is the primary live editing view, orchestrating dedicated sub-controllers for clean separation of concerns:
+  - `PerformanceUiContext.kt`: Shared styling colors (`PerformanceColors`), cached deck row mode states (`deckRowMode`), and label/module resolution helpers.
+  - `PerformanceTransitionsControls.kt`: Transition header controls, shader pickers, and play queue navigation.
+  - `PerformanceFxControls.kt`: Left/right wing controls for FX rows and FX Sends wet/dry rows.
+  - `PerformanceMasterControls.kt`: Master row header controls, deck snap badges, crossfader track, and auto-fade duration badge.
+  - `PerformanceDeckControls.kt`: Deck rows left/right wing controls (generator badges, mode toggles, preset combos, eject, randomize, queue navigation).
+  - `PerformanceDeepEditBay.kt`: Deep Edit bay accordion, 3-column layout (side tabs, parameter grid, properties panel), and keyboard focus management (`keyboardOwnerModuleId`).
+- **Performance Matrix row sizing (`PerformanceMatrixPanel.drawMatrix`)**: row height is `availH / rows.size`, floored at `MIN_ROW_H` (112px). Past the floor the grid's total height (`rowH * rows.size`) exceeds the `##rack_grid_area` child and the child scrolls vertically; the end-of-grid cursor advance uses that total height so ImGui sizes the scrollbar correctly. Wing controls all use `CTRL_H` (24px); the deck preset combo, which can't take an explicit height, gets a pushed `FramePadding.y` of `(CTRL_H - fontSize) / 2` around `beginCombo` only (popped before the popup body). Wing-control Y is bottom-aligned with the knob face, clamped to at least 2px below the row title (first sub-row) and at most the sub-row bottom. `MacroKnobWidget` consumes the mouse wheel while hovered, so wheel-scrolling the grid works only between knobs; this is deliberate. Click-drag scrolling comes from a grid-wide `##perf_grid_drag_scroll` invisible button submitted first with `setNextItemAllowOverlap()` (so every later knob/control wins hover), plus the title-band drop-zone buttons; each calls `applyDragScroll()`, which scrolls the child by `io.mouseDelta.y` while that item is active. The background button also stops an empty-space drag from moving the host window. The knob body blends toward its accent color on hover (22%) and while dragging (38%), because the hover/active ring shares the arc's color and reads too subtly on its own.
 
 ### 2. `UIThemeStyler.kt`, `ColorTunerPanel.kt` & `SplitterManager.kt`
 - **`UIThemeStyler.kt`**: Applies ImGui color palettes across all themes (`BORING`, `DARK_SOLARIZED`, `LIGHT_SOLARIZED`, `DARK_LUNARIZED`, `LIGHT_LUNARIZED`, `NEON`), manages window transparency/alpha blending when background video is enabled, renders multi-color Neon gradient backgrounds, and handles proportional `ImGuiStyle` styling.

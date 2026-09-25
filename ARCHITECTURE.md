@@ -209,8 +209,13 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── FxChainHeader.kt        — Shared Performance FX row header: chain browsing, dirty indicator, Save/Save As, kebab menu, slot focus selector pills ([1][2][3]), parameter page stepper ([◀ P1/N ▶]), and top-level [BYPASS]
 │   ├── FxSlotCell.kt           — Interactive slot drawer under knobs 2-4 (or knob 1 in Focus Mode): on/off mute pill, shortlist stepping, name truncation/picker, drag-and-drop swap/reorder, and double-click focus toggle
 │   ├── FxParamCell.kt          — Compact parameter drawer under knobs 2-4 in Focus Mode: [⟲] reset to default, formatted value readout, and CV modulation indicator dot
-│   ├── FXChainMacroStrip.kt    — Traktor/Mixxx-style FX Rack strip: Chain Super Knob + 3 slot Metaknobs (soft-takeover link toggles), Single FX Focus Mode, right-click Metaknob rebind menu. Drawn in both ParametersTabs.kt (per-chain, Deep Edit) and MacroPanel.kt (FX tabs, Column 3)
-│   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs (LIVE QUAD, MASTER & FX, LIVE CONSOLE, ALL FX), deck-colored rows, plus the Modular Rack accordion (see `rack/` below) — a chevron on each row group toggles Faceplate ↔ Deep Edit, expanding the selected module while collapsing other rows; Deep Edit features a 5-channel side rail ([MIX], [A], [B], [BG], [PV]), uniform centered [FX] subtabs, and two-way top macro row synchronization
+│   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 4 tabs (LIVE QUAD, MASTER & FX, LIVE CONSOLE, ALL FX), deck-colored rows, plus the Modular Rack accordion (see `rack/` below) — a chevron on each row group toggles Faceplate ↔ Deep Edit, expanding the selected module while collapsing other rows; orchestrates dedicated modular sub-controllers:
+│   │   ├── PerformanceUiContext.kt      — Shared state container, colors, deck row mode registry, and module id / label resolvers
+│   │   ├── PerformanceTransitionsControls.kt — Transitions row extra header controls, shader picker, and queue stepping
+│   │   ├── PerformanceFxControls.kt     — Left and right wing controls for FX rows and FX Sends wet/dry
+│   │   ├── PerformanceMasterControls.kt — Master row header controls, deck snap badges, crossfader track & speed badge
+│   │   ├── PerformanceDeckControls.kt   — Deck rows left/right wing controls (source picker, mode toggle, preset combo, eject, randomize, queue navigation)
+│   │   └── PerformanceDeepEditBay.kt    — Modular Rack Deep Edit accordion bay, 3-column layout, and keyboard focus management
 │   ├── rack/
 │   │   └── RackUnit.kt          — Shared chevron/disclosure-tier drawing helper for the Modular Rack accordion, and the persistent "Learning: …" indicator; stateless, operates only on `ParametersState` (never `Mixer`/`FxChain`, enforcing that disclosure changes can't trigger FX refocus or `FxMacroSync` re-runs)
 │   ├── UiLabPanel.kt           — Isolated UI component gallery sandbox (swatches, icons, custom widgets)

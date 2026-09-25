@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+### Modularization of PerformanceMatrixPanel (`PerformanceMatrixPanel.kt`, `PerformanceUiContext.kt`, `PerformanceTransitionsControls.kt`, `PerformanceFxControls.kt`, `PerformanceMasterControls.kt`, `PerformanceDeckControls.kt`, `PerformanceDeepEditBay.kt`, `ui.md`, `ARCHITECTURE.md`, `DECISIONS.md`)
+- **Decomposed Performance Matrix Architecture**: Decomposed the monolithic 2,714-line `PerformanceMatrixPanel.kt` into dedicated, single-responsibility UI controllers without modifying any layout geometries, labels, tooltips, or ImGui widget IDs:
+  - **`PerformanceUiContext.kt`**: Encapsulates shared performance colors (`COLOR_DECK_A/B/BG/PV`, `COLOR_MASTER`, `COLOR_TRANS`, `COLOR_FX`), `deckRowMode` state (`SRC`/`FX`), frame-scoped `deckPresetController`, and deck label/module ID resolvers.
+  - **`PerformanceTransitionsControls.kt`**: Modular drawer for the Transitions extra header, transition preset/shader loader, and PlayQueue navigation.
+  - **`PerformanceFxControls.kt`**: Modular drawer for FX rows left/right wing controls and FX Sends wet/dry controls.
+  - **`PerformanceMasterControls.kt`**: Modular drawer for Master row controls, Deck A/B snap badges, interactive crossfader slider track, AUTO/FADING button, and fade speed widget.
+  - **`PerformanceDeckControls.kt`**: Modular drawer for Deck A/B/BG/PV left-wing controls (source picker, mode toggle, preset dropdown combo with instant search, eject, randomize, queue navigation) and right-wing controls (FX bypass button).
+  - **`PerformanceDeepEditBay.kt`**: Modular drawer for the Modular Rack accordion bay and 3-column Deep Edit (5-channel side tabs, parameter grid with column headers, properties CV detail editor), managing keyboard focus (`keyboardOwnerModuleId`) and panel minimum width calculation.
+  - **`PerformanceMatrixPanel.kt`**: Streamlined from 2,714 to 948 lines, focusing cleanly on 4x4 matrix knob layout, tab strip, and sub-component orchestration.
+
 ### FX Performance Editing: Focus Mode for FX Rows (`FxChain.kt`, `FxMacroSync.kt`, `MacroEngine.kt`, `FxParamCell.kt`, `FxChainHeader.kt`, `FxSlotCell.kt`, `PerformanceMatrixPanel.kt`, `performance_controls.md`, `macros_and_rack.md`, `ARCHITECTURE.md`, `DECISIONS.md`)
 - **Single FX Focus Mode (Mixxx / Traktor Style)**: Directly focus on any individual FX slot across all Performance Matrix FX rows (ALL FX, LIVE CONSOLE, and Deck rows in `[FX]` mode) to tweak its parameters hands-on without opening Deep Edit:
   - **1-Click Slot Selector Pills (`[1] [2] [3]`)**: Click any slot pill in the row header to focus that slot; click again or click `[◀ CHAIN]` to exit back to 3-slot Group Mode.

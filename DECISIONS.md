@@ -1,3 +1,18 @@
+## Modularization of PerformanceMatrixPanel (`PerformanceMatrixPanel.kt`, `PerformanceUiContext.kt`, `PerformanceTransitionsControls.kt`, `PerformanceFxControls.kt`, `PerformanceMasterControls.kt`, `PerformanceDeckControls.kt`, `PerformanceDeepEditBay.kt`, docs)
+
+- **Context**: 2026-09-25. `PerformanceMatrixPanel.kt` had grown past 2,700 lines, bundling tab strip, 4x4 matrix knob layout, deck row left/right controls, Transitions extra header, Master crossfader header, FX and FX Sends wing controls, Modular Rack accordion bay, 3-column Deep Edit (side rail, parameter grid, properties panel), and keyboard focus management into a single file.
+- **Decision**: Split `PerformanceMatrixPanel.kt` into single-responsibility, cohesive UI components with verbatim code moves and zero layout/label/ID changes:
+  - `PerformanceUiContext.kt`: Internal context container holding shared styling colors (`PerformanceColors`), `deckRowMode` state, `deckPresetController` frame reference, and module ID / deck label resolver utilities.
+  - `PerformanceTransitionsControls.kt`: Draws the Transitions row extra header (transition picker, play queue prev/next navigation, queue position readout).
+  - `PerformanceFxControls.kt`: Draws the left/right wing controls for FX rows and FX Sends wet/dry rows.
+  - `PerformanceMasterControls.kt`: Draws Master row extra header (Deck A/B snap badges, crossfader slider track, AUTO/FADING button, fade speed widget).
+  - `PerformanceDeckControls.kt`: Draws Deck A, B, BG, and PV left-wing controls (generator source picker badge, SRC/FX toggle, preset dropdown combo with search, eject button, randomize die button, queue navigation) and right-wing controls (deck FX bypass button).
+  - `PerformanceDeepEditBay.kt`: Draws the Modular Rack accordion bay and 3-column layout (5-channel side tabs, parameter grid with column headers, and properties CV detail panel), managing `keyboardOwnerModuleId` and min width calculation.
+  - `PerformanceMatrixPanel.kt`: Reduced to ~950 lines, focusing purely on 4x4 knob matrix layout, tab strip, and sub-component orchestration.
+- **Rationale**: Eliminates the monolithic panel file while strictly preserving zero-allocation frame rendering, existing ImGui widget IDs, keyboard shortcut ownership, and layout geometry.
+
+---
+
 ## FX Performance Editing: Focus Mode for FX Rows (`FxChain.kt`, `FxMacroSync.kt`, `MacroEngine.kt`, `FxParamCell.kt`, `FxChainHeader.kt`, `FxSlotCell.kt`, `PerformanceMatrixPanel.kt`, tests, docs)
 
 - **Context**: 2026-09-24. Step 4 of `.planning/fx-performance-editing-plan.md`. With Steps 1–3 having unified Master FX as a plain `FxChain`, routed mutations through GL-thread `FxOps`, added interactive `FxSlotCell` drawers with shortlist stepping and swap dip, and unified row headers in `FxChainHeader`, Step 4 implements Focus Mode for FX rows ala Mixxx and Traktor. In live DJ performance, performers frequently need to dive into a single effect to tweak its top shader parameters using 4 physical hardware knobs without opening Deep Edit or remapping MIDI.

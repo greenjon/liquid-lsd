@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+### Modularization of PerformanceMatrixPanel (`PerformanceMatrixPanel.kt`, `PerformanceUiContext.kt`, `PerformanceTransitionsControls.kt`, `PerformanceFxControls.kt`, `PerformanceMasterControls.kt`, `PerformanceDeckControls.kt`, `PerformanceDeepEditBay.kt`, `ui.md`, `ARCHITECTURE.md`, `DECISIONS.md`)
+- **Decomposed Performance Matrix Architecture**: Decomposed the monolithic 2,714-line `PerformanceMatrixPanel.kt` into dedicated, single-responsibility UI controllers without modifying any layout geometries, labels, tooltips, or ImGui widget IDs:
+  - **`PerformanceUiContext.kt`**: Encapsulates shared performance colors (`COLOR_DECK_A/B/BG/PV`, `COLOR_MASTER`, `COLOR_TRANS`, `COLOR_FX`), `deckRowMode` state (`SRC`/`FX`), frame-scoped `deckPresetController`, and deck label/module ID resolvers.
+  - **`PerformanceTransitionsControls.kt`**: Modular drawer for the Transitions extra header, transition preset/shader loader, and PlayQueue navigation.
+  - **`PerformanceFxControls.kt`**: Modular drawer for FX rows left/right wing controls and FX Sends wet/dry controls.
+  - **`PerformanceMasterControls.kt`**: Modular drawer for Master row controls, Deck A/B snap badges, interactive crossfader slider track, AUTO/FADING button, and fade speed widget.
+  - **`PerformanceDeckControls.kt`**: Modular drawer for Deck A/B/BG/PV left-wing controls (source picker, mode toggle, preset dropdown combo with instant search, eject, randomize, queue navigation) and right-wing controls (FX bypass button).
+  - **`PerformanceDeepEditBay.kt`**: Modular drawer for the Modular Rack accordion bay and 3-column Deep Edit (5-channel side tabs, parameter grid with column headers, properties CV detail editor), managing keyboard focus (`keyboardOwnerModuleId`) and panel minimum width calculation.
+  - **`PerformanceMatrixPanel.kt`**: Streamlined from 2,714 to 948 lines, focusing cleanly on 4x4 matrix knob layout, tab strip, and sub-component orchestration.
+
 ### Fix: PopStyleVar assertion crash when opening Deck FX controls (`FxChainHeader.kt`)
 - **Fix `PopStyleVar` underflow**: Removed a redundant `ImGui.popStyleVar()` call in `FxChainHeader.drawMoreButton` that caused an assertion failure (`Calling PopStyleVar() too many times!`) when rendering FX chain headers in Performance mode deck rows.
 
