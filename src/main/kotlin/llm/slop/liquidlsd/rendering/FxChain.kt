@@ -61,7 +61,164 @@ class FxChain(val label: String) {
         }
     }
 
+    // -- Fade on swap -------------------------------------------------------------------------
+    // Replacing an effect mid-show is a hard visual cut (and feedback/trail effects restart from
+    // an empty buffer), so FxOps routes replacements through a short "dip": ramp the slot's (or
+    // the whole chain's) output gain to 0, apply the change at 0, ramp back to 1. The gains are
+    // multiplied into the slot/chain wet in Renderer.renderFxChainPass, so the user's own dryWet
+    // values and their modulation are never touched.
+
+    /** Per-slot output gain, 0..1, animated by the dip. See [effectiveSlotWet]. */
+    val slotGain = FloatArray(SLOT_COUNT) { 1f }
+
+    /** Whole-chain output gain, 0..1, animated by the dip. See [effectiveChainWet]. */
+    var chainGain = 1f
+        private set
+
+    private val slotPhase = IntArray(SLOT_COUNT) { FADE_IDLE }
+    private val slotHalfSec = FloatArray(SLOT_COUNT)
+    private val slotPending = arrayOfNulls<() -> Unit>(SLOT_COUNT)
+    private var chainPhase = FADE_IDLE
+    private var chainHalfSec = 0f
+    private var chainPending: (() -> Unit)? = null
+    private var lastFadeNanos = 0L
+
+    /** Slot [slotIndex]'s wet amount as rendered: 0 if empty/disabled, else its dryWet times the dip gain. */
+    fun effectiveSlotWet(slotIndex: Int): Float {
+        val slot = slots[slotIndex] ?: return 0f
+        if (!slot.enabled) return 0f
+        return slot.dryWet.value * slotGain[slotIndex]
+    }
+
+    /** The chain's wet amount as rendered: 0 if bypassed, else its dryWet times the dip gain. */
+    fun effectiveChainWet(): Float = if (enabled) dryWet.value * chainGain else 0f
+
+    /** True while any dip is in progress (or waiting to apply its change). */
+    val isFading: Boolean
+        get() = chainPhase != FADE_IDLE || slotPhase.any { it != FADE_IDLE }
+
+    /**
+     * Applies [change] to slot [slotIndex] behind a dip lasting [fadeSec] in total (half out, half
+     * in). If the slot is currently invisible (empty/disabled) or [fadeSec] <= 0 the change applies
+     * immediately, fading the new effect in when there is a fade. Changes requested while a dip is
+     * still fading out are chained and applied together at the bottom of the dip, so rapid
+     * stepping never skips a request.
+     */
+    fun scheduleSlotChange(slotIndex: Int, fadeSec: Float, change: () -> Unit) {
+        if (slotIndex !in 0 until SLOT_COUNT) return
+        if (chainPhase == FADE_OUT) {
+            // A whole-chain dip is already heading to 0: ride along with it.
+            chainPending = chainPending.then(change)
+            return
+        }
+        val visible = slots[slotIndex]?.enabled == true
+        if (fadeSec <= 0f || (!visible && slotPhase[slotIndex] == FADE_IDLE)) {
+            runSlotPending(slotIndex)
+            change()
+            if (fadeSec > 0f && slots[slotIndex] != null) startFadeIn(slotIndex, fadeSec / 2f) else resetSlotFade(slotIndex)
+            return
+        }
+        slotPending[slotIndex] = slotPending[slotIndex].then(change)
+        slotHalfSec[slotIndex] = fadeSec / 2f
+        slotPhase[slotIndex] = FADE_OUT
+    }
+
+    /** Like [scheduleSlotChange], but dips the whole chain -- for loads/clears/reorders that touch every slot. */
+    fun scheduleChainChange(fadeSec: Float, change: () -> Unit) {
+        // Slot dips still waiting to apply go first, so requests stay in order.
+        for (i in 0 until SLOT_COUNT) runSlotPending(i)
+        if (fadeSec <= 0f || !enabled || (chainPhase == FADE_IDLE && (0 until SLOT_COUNT).none { effectiveSlotWet(it) > 0f })) {
+            chainPending?.let { chainPending = null; it() }
+            change()
+            chainPhase = FADE_IDLE
+            chainGain = 1f
+            return
+        }
+        chainPending = chainPending.then(change)
+        chainHalfSec = fadeSec / 2f
+        chainPhase = FADE_OUT
+    }
+
+    /** Fades slot [slotIndex] in from silence over [sec] (used after an instant change, e.g. a cross-chain swap). */
+    fun startFadeIn(slotIndex: Int, sec: Float) {
+        if (sec <= 0f) { resetSlotFade(slotIndex); return }
+        slotGain[slotIndex] = 0f
+        slotHalfSec[slotIndex] = sec
+        slotPhase[slotIndex] = FADE_IN
+    }
+
+    /** Advances every dip by [dtSec], applying pending changes at the bottom of each dip. GL thread only. */
+    fun advanceFade(dtSec: Float) {
+        if (chainPhase != FADE_IDLE) {
+            val step = if (chainHalfSec > 0f) dtSec / chainHalfSec else 1f
+            if (chainPhase == FADE_OUT) {
+                chainGain = (chainGain - step).coerceAtLeast(0f)
+                if (chainGain <= 0f) {
+                    chainPending?.let { chainPending = null; it() }
+                    chainPhase = FADE_IN
+                }
+            } else {
+                chainGain = (chainGain + step).coerceAtMost(1f)
+                if (chainGain >= 1f) chainPhase = FADE_IDLE
+            }
+        }
+        for (i in 0 until SLOT_COUNT) {
+            val phase = slotPhase[i]
+            if (phase == FADE_IDLE) continue
+            val step = if (slotHalfSec[i] > 0f) dtSec / slotHalfSec[i] else 1f
+            if (phase == FADE_OUT) {
+                slotGain[i] = (slotGain[i] - step).coerceAtLeast(0f)
+                if (slotGain[i] <= 0f) {
+                    runSlotPending(i)
+                    if (slots[i] != null) slotPhase[i] = FADE_IN else resetSlotFade(i)
+                }
+            } else {
+                slotGain[i] = (slotGain[i] + step).coerceAtMost(1f)
+                if (slotGain[i] >= 1f) slotPhase[i] = FADE_IDLE
+            }
+        }
+    }
+
+    private fun runSlotPending(slotIndex: Int) {
+        val pending = slotPending[slotIndex] ?: return
+        slotPending[slotIndex] = null
+        pending()
+    }
+
+    private fun resetSlotFade(slotIndex: Int) {
+        slotPhase[slotIndex] = FADE_IDLE
+        slotGain[slotIndex] = 1f
+    }
+
+    private fun (() -> Unit)?.then(next: () -> Unit): () -> Unit {
+        val first = this ?: return next
+        return { first(); next() }
+    }
+
+    /**
+     * Swaps slot [a] of this chain with slot [b] of [other] (which may be this chain): the effect
+     * instances move together with their Super Knob link flags, so modulation on their parameters
+     * travels with them. Both slots re-arm soft takeover.
+     */
+    fun swapSlotWith(a: Int, other: FxChain, b: Int) {
+        if (a !in 0 until SLOT_COUNT || b !in 0 until SLOT_COUNT) return
+        if (other === this && a == b) return
+        val filter = slots[a]
+        slots[a] = other.slots[b]
+        other.slots[b] = filter
+        val link = slotSuperKnobLink[a]
+        slotSuperKnobLink[a] = other.slotSuperKnobLink[b]
+        other.slotSuperKnobLink[b] = link
+        armSlotTakeover(a)
+        other.armSlotTakeover(b)
+    }
+
     fun update() {
+        val now = System.nanoTime()
+        if (lastFadeNanos != 0L && isFading) {
+            advanceFade(((now - lastFadeNanos) / 1_000_000_000.0).toFloat().coerceIn(0f, 0.25f))
+        }
+        lastFadeNanos = now
         superKnob.evaluate()
         propagateSuperKnob()
         slots.forEach { it?.update() }
@@ -98,6 +255,10 @@ class FxChain(val label: String) {
             hasTakenOver[i] = false
         }
         name = ""
+        for (i in 0 until SLOT_COUNT) { slotPending[i] = null; resetSlotFade(i) }
+        chainPending = null
+        chainPhase = FADE_IDLE
+        chainGain = 1f
     }
 
     fun dispose() {
@@ -165,8 +326,40 @@ class FxChain(val label: String) {
         }
     }
 
-    fun applyFxChain(dto: FXChainDto) {
+    var sourceFile: java.io.File? = null
+    var baselineDto: FXChainDto? = null
+
+    private var lastDirtyCheckTimeMs = 0L
+    private var cachedIsDirty = false
+
+    fun isDirty(): Boolean {
+        val now = System.currentTimeMillis()
+        if (now - lastDirtyCheckTimeMs >= 250) {
+            lastDirtyCheckTimeMs = now
+            cachedIsDirty = computeIsDirty()
+        }
+        return cachedIsDirty
+    }
+
+    fun computeIsDirty(): Boolean {
+        val base = baselineDto ?: return slots.any { it != null }
+        val current = toFxChainDto(base.name, base.tags)
+        return current != base
+    }
+
+    fun markClean(file: java.io.File? = sourceFile) {
+        sourceFile = file
+        baselineDto = toFxChainDto(name)
+        cachedIsDirty = false
+        lastDirtyCheckTimeMs = System.currentTimeMillis()
+    }
+
+    fun applyFxChain(dto: FXChainDto, source: java.io.File? = null, isBaseline: Boolean = false) {
         name = dto.name
+        sourceFile = source
+        baselineDto = if (isBaseline) dto else null
+        cachedIsDirty = false
+        lastDirtyCheckTimeMs = 0L
         dto.dryWet?.let { dryWet.applyDto(it) }
         dto.superKnob?.let { superKnob.applyDto(it) }
         val linkFlags = dto.slotSuperKnobLink
@@ -198,5 +391,8 @@ class FxChain(val label: String) {
     companion object {
         const val SLOT_COUNT = 3
         private const val TAKEOVER_TOLERANCE = 0.04f
+        private const val FADE_IDLE = 0
+        private const val FADE_OUT = 1
+        private const val FADE_IN = 2
     }
 }

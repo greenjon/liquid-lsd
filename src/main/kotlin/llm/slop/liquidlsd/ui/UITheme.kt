@@ -74,6 +74,7 @@ object UITheme {
     const val FONT_H3      = 15f
     const val FONT_H2      = 18f
     const val FONT_H1      = 22f
+    const val FX_SWAP_FADE_MAX_MS = 1000
 
     const val BASE_FONT_PX = 14f
     const val BASE_SIZE    = 14.25f
@@ -116,6 +117,11 @@ object UITheme {
     var randomizationEnabled: Boolean
         get() = settings.randomizationEnabled
         set(value) { settings = settings.copy(randomizationEnabled = value) }
+
+    /** Length of the fade-out/fade-in dip around FX effect swaps, in ms (0 = hard cut). See FxOps. */
+    var fxSwapFadeMs: Int
+        get() = settings.fxSwapFadeMs
+        set(value) { settings = settings.copy(fxSwapFadeMs = value.coerceIn(0, FX_SWAP_FADE_MAX_MS)) }
 
     var sequencerEnabled: Boolean
         get() = settings.sequencerEnabled
@@ -371,6 +377,7 @@ object UITheme {
         0x2190.toShort(), 0x21FF.toShort(), // Arrows (←, ↑, →, ↓)
         0x2200.toShort(), 0x22FF.toShort(), // Mathematical Operators (±, −, ×, etc.)
         0x25A0.toShort(), 0x25FF.toShort(), // Geometric Shapes (▶, ▼, ●, ○, ◻, ❐)
+        0x2605.toShort(), 0x2606.toShort(), // ★ ☆ (FX shortlist favorite stars)
         0x2700.toShort(), 0x27BF.toShort(), // Dingbats (✕, ✔, etc.)
         0
     )

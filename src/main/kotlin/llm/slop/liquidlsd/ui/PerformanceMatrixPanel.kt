@@ -92,7 +92,7 @@ class PerformanceMatrixPanel {
          * shrinking further the grid keeps this height and its child region scrolls vertically.
          * Meant to match the row height with the Library dock at half height (~56px knobs).
          */
-        private const val MIN_ROW_H = 96f
+        private const val MIN_ROW_H = 112f
 
         /** Deep Edit parameter-grid label column width and the gap between its three columns. */
         private const val DEEP_EDIT_LABEL_COL_W = 160f
@@ -488,9 +488,9 @@ class PerformanceMatrixPanel {
 
         val deckComboW = (gridW * 0.13f).coerceIn(100f, 150f)
         val deckLeftW = 74f + 4f + 28f + 1f + 28f + 4f + deckComboW + 4f + 24f + (if (session.uiTheme.randomizationEnabled) 28f else 0f) + 4f + 82f
-        val deckRightW = 108f
+        val deckRightW = 60f
         val fxLeftW = 268f
-        val fxRightW = 130f
+        val fxRightW = 72f
 
         val maxLeftW = if (hasDeckRows && hasFxRow) maxOf(deckLeftW, fxLeftW)
                        else if (hasDeckRows) deckLeftW
@@ -523,11 +523,12 @@ class PerformanceMatrixPanel {
             val contentH = groupH - boxMarginY * 2f - boxPad * 2f - extraHeaderH
             val subRowH = contentH / group.rowCount
             val knobAreaH = if (hasSubLabel) subRowH - subLabelH - subLabelGap else subRowH
-            diamByHeight = minOf(diamByHeight, (knobAreaH - textBelowH).coerceAtLeast(8f))
+            val rowTextBelowH = if (isFx) textBelowH + FxSlotCell.HEIGHT + 4f else textBelowH
+            diamByHeight = minOf(diamByHeight, (knobAreaH - rowTextBelowH).coerceAtLeast(8f))
         }
         val diameter = minOf(diamByWidth, diamByHeight).coerceIn(8f, 100f)
 
-        val targetColW = if (maxLeftW > 0f) (diameter + 24f).coerceIn(72f, 96f) else (diameter + 28f).coerceIn(80f, 130f)
+        val targetColW = if (hasFxRow) maxColW else if (maxLeftW > 0f) (diameter + 24f).coerceIn(72f, 96f) else (diameter + 28f).coerceIn(80f, 130f)
         val knobColW = minOf(targetColW, maxColW)
         val knobsTotalW = 4 * knobColW
         val knobClusterStartX = leftBoundary + (middleW - knobsTotalW) / 2f
@@ -736,8 +737,11 @@ class PerformanceMatrixPanel {
                     subTopY
                 }
 
+                val isFxBankId = row.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS
+                val isFxRow = isFxChainRow || isFxBankId
+                val effectiveTextBelowH = if (isFxRow) textBelowH + FxSlotCell.HEIGHT + 4f else textBelowH
                 val knobAreaCenterY = knobAreaTopY + (subBottomY - knobAreaTopY) / 2f
-                val knobTopYCentered = knobAreaCenterY - diameter / 2f - textBelowH / 2f
+                val knobTopYCentered = knobAreaCenterY - diameter / 2f - effectiveTextBelowH / 2f
                 // Halfway between top-anchored and fully centered -- halves the dead space above the
                 // knob (most visible when a module is expanded and its row fills the whole panel height)
                 // without pushing the Val/Learn content below it past the box.
@@ -792,7 +796,6 @@ class PerformanceMatrixPanel {
 
                     val cellCenterX = knobClusterStartX + col * knobColW + knobColW / 2f
 
-                    val isFxBankId = row.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS
                     // Clickable link icon for FX slots (any FX row or Deck row in FX mode, cols 1..3)
                     if (descriptor.hasExtraHeader && (isFxChainRow || isFxBankId) && col in 1..3) {
                         val slotIdx = col - 1
@@ -922,6 +925,31 @@ class PerformanceMatrixPanel {
                                 }
                             }
                         }
+                    }
+
+                    // Dedicated slot control cell under knobs 2-4 on FX rows
+                    if (descriptor.hasExtraHeader && (isFxChainRow || isFxBankId) && col in 1..3) {
+                        val slotIdx = col - 1
+                        val chainLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(row.bankId) ?: "FX"
+                        val cellW = (knobColW - 6f).coerceAtLeast(40f)
+                        val cellX = cellCenterX - cellW / 2f
+                        val cellY = knobTopY + diameter + 3f + (if (isModuleExpanded) captionH * 2f + 24f else captionH) + 4f
+                        FxSlotCell.draw(
+                            session = session,
+                            mixer = mixer,
+                            bankId = row.bankId,
+                            chainLabel = chainLabel,
+                            slotIndex = slotIdx,
+                            x = cellX,
+                            y = cellY,
+                            w = cellW,
+                            accent = row.accent,
+                            onEditInDeepEdit = {
+                                val modId = canonicalModuleId(row.bankId)
+                                parametersState.setDisclosure(modId, ParametersState.DisclosureLevel.DEEP_EDIT)
+                                navigateMacroPanelTo(parametersState, row.bankId)
+                            }
+                        )
                     }
                 }
             }
@@ -1308,33 +1336,8 @@ class PerformanceMatrixPanel {
 
         ImGui.sameLine(0f, gap)
 
-        // 2. Preset dropdown button [ Chain Preset v ]
-        val chainBtnW = 100f
-        if (ImGui.button("Preset ${Icons.CHEVRON_DOWN}##perf_allfx_preset_$bankId", chainBtnW, ctrlH)) {
-            ImGui.openPopup("perf_allfx_chain_popup_$bankId")
-        }
-        itemTooltip("Load a saved 3-slot FX chain (.lsdfxchain) for $chainLabel.")
-
-        if (ImGui.beginPopup("perf_allfx_chain_popup_$bankId")) {
-            ImGui.textDisabled("$chainLabel FX Chains")
-            ImGui.separator()
-            val chains = FileSystemManager.scanAllFxChains()
-            if (chains.isEmpty()) {
-                ImGui.textDisabled("No saved FX chains found")
-            } else {
-                for (asset in chains) {
-                    if (ImGui.selectable("${asset.name}##perf_allfx_item_${bankId}_${asset.path.hashCode()}")) {
-                        val file = File(asset.path)
-                        llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, chain)
-                    }
-                }
-            }
-            ImGui.separator()
-            if (ImGui.menuItem("${Icons.TRASH} Clear Chain")) {
-                llm.slop.liquidlsd.presets.FxOps.clearChain(chain)
-            }
-            ImGui.endPopup()
-        }
+        // 2. Chain header controls: [◀] Name • [▶] [Save] [⋮]
+        FxChainHeader.drawControls(session, mixer, chain, bankId, chainLabel, ctrlH)
 
         ImGui.endGroup()
     }
@@ -1427,36 +1430,11 @@ class PerformanceMatrixPanel {
 
         ImGui.sameLine(0f, 6f)
 
-        // Preset dropdown button [ Chain Preset v ]
-        val chainBtnW = 100f
+        // Chain header controls: [◀] Name • [▶] [Save] [⋮]
         val currentBankId = targetBankIdFor(focusedFxTarget)
         val currentChain = resolveFxChain(mixer, currentBankId)
         val currentLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(currentBankId) ?: "Deck A"
-        if (ImGui.button("Preset ${Icons.CHEVRON_DOWN}##perf_fx_chain_preset", chainBtnW, ctrlH)) {
-            ImGui.openPopup("perf_fx_chain_popup")
-        }
-        itemTooltip("Load a saved 3-slot FX chain (.lsdfxchain) for $currentLabel.")
-
-        if (ImGui.beginPopup("perf_fx_chain_popup")) {
-            ImGui.textDisabled("$currentLabel FX Chains")
-            ImGui.separator()
-            val chains = FileSystemManager.scanAllFxChains()
-            if (chains.isEmpty()) {
-                ImGui.textDisabled("No saved FX chains found")
-            } else {
-                for (asset in chains) {
-                    if (ImGui.selectable("${asset.name}##perf_fx_item_${asset.path.hashCode()}")) {
-                        val file = File(asset.path)
-                        llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, currentChain)
-                    }
-                }
-            }
-            ImGui.separator()
-            if (ImGui.menuItem("${Icons.TRASH} Clear Chain")) {
-                llm.slop.liquidlsd.presets.FxOps.clearChain(currentChain)
-            }
-            ImGui.endPopup()
-        }
+        FxChainHeader.drawControls(session, mixer, currentChain, currentBankId, currentLabel, ctrlH)
 
         ImGui.endGroup()
     }
@@ -1470,31 +1448,9 @@ class PerformanceMatrixPanel {
         targetBankId: String = targetBankIdFor(focusedFxTarget)
     ) {
         val chain = resolveFxChain(mixer, targetBankId)
-        val targetLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(targetBankId) ?: "Deck A"
-        val gap = 4f
-        val bypassW = 68f
-        val resyncW = 58f
-
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.beginGroup()
-
-        // Chain-level bypass
-        val isBypassed = !chain.enabled
-        ImGui.pushStyleColor(ImGuiCol.Button, if (isBypassed) ImGui.colorConvertFloat4ToU32(0.6f, 0.15f, 0.15f, 1f) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
-        if (ImGui.button((if (isBypassed) "BYPASS" else "FX ON") + "##perf_fx_bypass_$targetBankId", bypassW, ctrlH)) {
-            chain.enabled = !chain.enabled
-        }
-        ImGui.popStyleColor()
-        itemTooltip("Hard-bypasses the entire $targetLabel FX chain.")
-
-        ImGui.sameLine(0f, gap)
-
-        // Resync button
-        if (ImGui.button("Resync##perf_fx_resync_$targetBankId", resyncW, ctrlH)) {
-            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(targetBankId, mixer, forceResync = true)
-        }
-        itemTooltip("Reset these 4 knobs to the Super Knob + 3 Metaknobs smart default.")
-
+        FxChainHeader.drawBypassButton(chain, targetBankId, ctrlH)
         ImGui.endGroup()
     }
 
@@ -1587,34 +1543,9 @@ class PerformanceMatrixPanel {
 
         // 2. Preset dropdown combo
         if (isFx) {
-            val chainBtnW = comboW
             val deckChain = deck.fxChain
-            val deckChainLabel = "$deckLabel FX"
-            if (ImGui.button("Preset ${Icons.CHEVRON_DOWN}##perf_deck_fx_preset_$tag", chainBtnW, ctrlH)) {
-                ImGui.openPopup("perf_deck_fx_chain_popup_$tag")
-            }
-            itemTooltip("Load a saved 3-slot FX chain (.lsdfxchain) for $deckChainLabel.")
-
-            if (ImGui.beginPopup("perf_deck_fx_chain_popup_$tag")) {
-                ImGui.textDisabled("$deckChainLabel Chains")
-                ImGui.separator()
-                val chains = FileSystemManager.scanAllFxChains()
-                if (chains.isEmpty()) {
-                    ImGui.textDisabled("No saved FX chains found")
-                } else {
-                    for (asset in chains) {
-                        if (ImGui.selectable("${asset.name}##perf_deck_fx_item_${tag}_${asset.path.hashCode()}")) {
-                            val file = File(asset.path)
-                            llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, deckChain)
-                        }
-                    }
-                }
-                ImGui.separator()
-                if (ImGui.menuItem("${Icons.TRASH} Clear Chain")) {
-                    llm.slop.liquidlsd.presets.FxOps.clearChain(deckChain)
-                }
-                ImGui.endPopup()
-            }
+            val targetBank = targetBankIdFor(tag)
+            FxChainHeader.drawControls(session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH, maxW = comboW + 28f + (if (session.uiTheme.randomizationEnabled) 28f else 0f) + 4f + 82f)
         } else {
             val activePreset = when {
                 isDeckA -> session.presetManager.activePresetA
@@ -2021,22 +1952,7 @@ class PerformanceMatrixPanel {
 
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.beginGroup()
-
-        val isBypassed = !deck.fxChain.enabled
-        ImGui.pushStyleColor(ImGuiCol.Button, if (isBypassed) ImGui.colorConvertFloat4ToU32(0.6f, 0.15f, 0.15f, 1f) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
-        if (ImGui.button((if (isBypassed) "BYPASS" else "FX ON") + "##perf_deck_fx_bypass_$tag", 56f, ctrlH)) {
-            deck.fxChain.enabled = !deck.fxChain.enabled
-        }
-        ImGui.popStyleColor()
-        itemTooltip("Bypass/enable $deckLabel FX chain.")
-
-        ImGui.sameLine(0f, gap)
-
-        if (ImGui.button("Resync##perf_deck_fx_resync_$tag", 48f, ctrlH)) {
-            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(targetBankIdFor(tag), mixer, forceResync = true)
-        }
-        itemTooltip("Reset $deckLabel FX knobs to Super Knob + 3 Metaknobs smart default.")
-
+        FxChainHeader.drawBypassButton(deck.fxChain, tag, ctrlH, 56f)
         ImGui.endGroup()
     }
 

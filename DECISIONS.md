@@ -1,3 +1,26 @@
+## FX Performance Editing: Slot Cells, Shortlist Stepping, Swap Dip, and Shared Chain Header (`FxSlotCell.kt`, `FxShortlist.kt`, `FxChainHeader.kt`, `FxChain.kt`, `PerformanceMatrixPanel.kt`, `FxOps.kt`, `FxMacroSync.kt`, `ShaderPickerPopup.kt`, `PreferencesPanel.kt`, `UITheme.kt`, `AppPreferences.kt`, `AppPreferencesStore.kt`, `SessionSerializer.kt`, `PresetModels.kt`, tests, docs)
+
+- **Context**: 2026-09-24. Steps 2 and 3 of `.planning/fx-performance-editing-plan.md`. With Step 1 having unified Master FX as a plain `FxChain` and routed all mutations through GL-thread `FxOps`, the goal was to make all major FX interactions (swapping effects, reordering slots, muting slots, stepping through favorites, and loading/saving/reverting chains) accessible directly on the Performance Mode FX rows without diving into Deep Edit.
+- **Decision**:
+  - **FX Slot Cells (`FxSlotCell.kt`)**: Added under knobs 2–4 on all FX row variants (ALL FX, LIVE CONSOLE, and Deck rows in FX mode). Each cell features a `[●] [◀] Effect Name [▶]` layout.
+    - `●` pill instantly toggles slot mute/bypass (`FxOps.setSlotEnabled`).
+    - `◀` / `▶` and mouse wheel step through the user's **FX Shortlist** (`FxShortlist.kt`), falling back to the current effect's category alphabetically when favorites are empty.
+    - Clicking the effect name opens the FX Shader Picker with Stock, Saved, and ★ Favorite tabs.
+    - Drag-and-drop support: drag cell-to-cell to swap/reorder (or copy with `Ctrl`), or drop stock filters (`ISF_FILTER`) and `.lsdfx` presets from the Library.
+    - Right-click menu exposes Replace, Save as FX Preset, Copy/Paste slot, Reset parameters, Clear slot, Shortlist favorite toggle (★), and Edit in Deep Edit.
+  - **Knob Labeling**: FX knobs 2–4 now display `META` (or the bound parameter name when custom-mapped) instead of the effect name, eliminating redundant labels while the effect name is clearly displayed in the slot cell below. Knob 1 remains `SUPER`.
+  - **Swap Gain Dip**: All slot replacements, stepping, and chain loads go through an audio/visual dip (fade out -> swap -> fade in) to eliminate harsh pops and frame hitching. Length is user-configurable in Preferences (`fxSwapFadeMs`, 0–1000 ms, default 150 ms; 0 = hard cut).
+  - **Shared Chain Header (`FxChainHeader.kt`)**: Replaced duplicate Preset popup combos and separate Bypass/Resync buttons across all three FX row variants with a unified header: `[◀] Chain Name • [▶] [Save] [⋮] ... [BYPASS]`.
+    - `◀` / `▶` steps alphabetically through `.lsdfxchain` files in the current folder.
+    - `•` dirty dot indicator shows whether the chain has unsaved modifications compared to its loaded baseline.
+    - `Save` button overwrites the loaded source file or invokes Save As when untitled.
+    - `⋮` menu contains Save As, New Chain, Revert to Saved (undoes tweaks back to clean baseline), Clear All Slots, Copy/Paste Chain, and Resync Knobs.
+    - Top-level `[BYPASS]` button remains prominently accessible on the row.
+  - **Session Persistence**: `MixerDto` persists the source file path for each deck and master FX chain alongside the chain DTO, ensuring chain names and Save targets survive app restarts.
+- **Rationale**: Keeps performers in the live flow by bringing hands-on FX management to the performance matrix, reserving Deep Edit strictly for fine-grained shader parameter tweaking and modulation wiring.
+
+---
+
 ## Master FX Becomes a Plain FX Chain; All FX Changes Go Through `FxOps` (`Mixer.kt`, `Renderer.kt`, `Deck.kt`, `FxChain.kt`, `FxOps.kt`, `FxMacroSync.kt`, `MacroEngine.kt`, `MidiMappingManager.kt`, `SessionSerializer.kt`, `PresetModels.kt`, `FXPresetModels.kt`, `ClipboardManager.kt`, `PresetRepository.kt`, `FileSystemManager.kt`, `AssetType.kt`, `FXBrowserPanel.kt`, `BrowserActionToolbar.kt`, `BrowserPopupHandler.kt`, `FXPlaylistEditorPanel.kt`, `FxQueueEngine.kt`, `ParametersTabs.kt`, `ParametersState.kt`, `PerformanceMatrixPanel.kt`, `MacroPanel.kt`, `MacroBindingInspector.kt`, `FXChainMacroStrip.kt`, `Main.kt`, `build.gradle.kts`, tests, docs)
 
 - **Context**: 2026-09-24. First step of making every major FX change (swap an effect, reorder, bypass a slot, load/save/new chain) possible from the Performance rows, with Deep Edit only for fine tuning (plan: `.planning/fx-performance-editing-plan.md`). Master FX was still an `FxBank` of 3 alternative chains, a leftover of the FX1/FX2/MFX bank era, reachable only through its own code paths and path prefix (`MFX/C{n}/...`). Grounding the plan turned up three live bugs:

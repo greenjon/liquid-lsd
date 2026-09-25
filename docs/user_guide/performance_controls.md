@@ -133,11 +133,30 @@ for the FX Rack view that exposes these.
   singles, and saved chains into any deck or **Master FX**.
 - **FX is separate from presets**: Loading or saving a deck preset (`.lsd`) never touches that
   deck's FX chain. FX chains are saved with your session and restored on the next launch.
-- **Performance Matrix FX Parity**:
-  - Toggling any Deck row (A, B, BG, PV) to `[FX]` mode displays the `[ Preset v ]` chain preset selector to load `.lsdfxchain` presets directly, and shows SuperKnob link/unlink icons on slot knobs 1–3.
-  - The **ALL FX** tab includes rows for `Deck A FX`, `Deck B FX`, `Deck BG FX`, `Deck PV FX`, and `Master FX`.
-  - The **FX WET/DRY** row in the **MASTER & FX** tab features an `[ FX SENDS ]` badge and `[Resync]` button to reset send levels.
-  - The **Transitions** row includes a `[DICES]` die button to randomize transition parameters with undo support.
+- **Performance Matrix FX Controls**:
+  - **Shared Chain Header (`[◀] Name • [▶] [Save] [⋮] ... [BYPASS]`)**:
+    - **`◀` / `▶`**: Steps alphabetically through `.lsdfxchain` presets in the current chain folder.
+    - **Chain Name Button**: Displays current chain name with `•` dirty indicator when modified from baseline. Clicking opens the chain browser popup with live text search. Accepts `.lsdfxchain` drag-and-drop.
+    - **`[Save]`**: Overwrites the loaded chain file with current state, or triggers Save As if untitled.
+    - **`[⋮]` Menu**: Save As..., New Chain, Revert to Saved (undoes tweaks back to clean loaded state), Clear All Slots, Copy/Paste Chain, and Resync Knobs.
+    - **`[BYPASS]`**: Top-level kill switch to immediately bypass or re-enable the entire FX chain.
+  - **FX Slot Cells (`[●] [◀] Effect Name [▶]`)**:
+    - Drawn under each of knobs 2–4 on all FX rows (ALL FX, LIVE CONSOLE, and Deck rows in FX mode).
+    - **`●` (Pill)**: Dedicated per-slot mute/bypass button.
+    - **`◀` / `▶` (or Mouse Wheel)**: Steps to previous/next effect in the **FX Shortlist** (favorited ★ effects, or the current effect's category alphabetically).
+    - **Effect Name**: Truncated caption showing loaded filter. Click opens the FX Shader Picker (Stock filters, ★ Favorites, and Saved `.lsdfx` presets).
+    - **Drag & Drop**: Drag a cell to another slot to swap/reorder (hold `Ctrl` while dropping to duplicate). Accepts stock ISF filters and `.lsdfx` single presets from Library.
+    - **Right-Click Context Menu**: Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Deep Edit.
+  - **Swap Gain Dip**:
+    - Replacing an effect or loading a chain applies a smooth audio/visual gain dip (fade out -> swap -> fade in) instead of a hard cut.
+    - Duration is customizable in Preferences (`FX Swap Fade (ms)`, 0–1000 ms, default 150 ms; 0 = immediate hard cut).
+  - **Knob Labeling**:
+    - Knob 1 controls the chain's `SUPER` knob.
+    - Knobs 2–4 display `META` (or the bound parameter name when custom-routed), while the effect name itself is clearly displayed in the slot cell below.
+  - **Performance Matrix Tabs**:
+    - The **ALL FX** tab includes dedicated rows for `Deck A FX`, `Deck B FX`, `Deck BG FX`, `Deck PV FX`, and `Master FX`.
+    - The **FX WET/DRY** row in the **MASTER & FX** tab features an `[ FX SENDS ]` badge.
+    - The **Transitions** row includes a `[DICES]` die button to randomize transition parameters with undo support.
 
 ---
 

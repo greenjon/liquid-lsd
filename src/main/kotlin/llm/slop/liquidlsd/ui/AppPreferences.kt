@@ -29,6 +29,7 @@ data class AppPreferences(
     val backgroundVideoEnabled: Boolean = false,
     val cleanModeEnabled: Boolean = false,
     val randomizationEnabled: Boolean = false,
+    val fxSwapFadeMs: Int = 150,
     val sequencerEnabled: Boolean = false,
     val midiEnabled: Boolean = false,
     val autoVjDirtyBehavior: UITheme.AutoVjDirtyBehavior = UITheme.AutoVjDirtyBehavior.AUTO_DISCARD,

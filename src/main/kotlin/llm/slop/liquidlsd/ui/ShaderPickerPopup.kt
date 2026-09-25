@@ -23,7 +23,21 @@ import llm.slop.liquidlsd.SessionContext
 object ShaderPickerPopup {
     private const val POPUP_ID = "Shader Picker###shader_picker_popup"
     
-    enum class PickerType { SOURCE, FX_SLOT_1, FX_SLOT_2, FX_SLOT_3, FX_SLOT_4, MIXER_TRANSITION }
+    enum class PickerType { SOURCE, FX_SLOT_1, FX_SLOT_2, FX_SLOT_3, MIXER_TRANSITION }
+
+    /** What the user picked for an FX slot: a stock ISF filter, a saved single-FX file, or nothing. */
+    sealed class FxPick {
+        data class Stock(val filterId: String) : FxPick()
+        data class Saved(val file: java.io.File) : FxPick()
+        object None : FxPick()
+    }
+
+    const val CATEGORY_FAVORITES = "\u2605 Favorites"
+    const val CATEGORY_SAVED = "Saved FX"
+    private const val SAVED_PREFIX = "saved:"
+
+    private val isFxPicker: Boolean
+        get() = pickerType == PickerType.FX_SLOT_1 || pickerType == PickerType.FX_SLOT_2 || pickerType == PickerType.FX_SLOT_3
     
     private var pendingOpen = false
     private var pickerType = PickerType.SOURCE
@@ -69,11 +83,35 @@ object ShaderPickerPopup {
             PickerType.FX_SLOT_1 -> "Color Adjustment"
             PickerType.FX_SLOT_2 -> "Distortion"
             PickerType.FX_SLOT_3 -> "All"
-            PickerType.FX_SLOT_4 -> "All"
             PickerType.MIXER_TRANSITION -> "Transitions"
             else -> "All"
         }
         updateItems()
+    }
+
+    /**
+     * Opens the picker for FX slot [slotIndex] (0-based). Opens on the user's favorites when there
+     * are any; the extra "Saved FX" category lists saved single-FX files (.lsdfx).
+     */
+    fun showFx(title: String, slotIndex: Int, callback: (FxPick) -> Unit) {
+        val type = when (slotIndex) {
+            0 -> PickerType.FX_SLOT_1
+            1 -> PickerType.FX_SLOT_2
+            else -> PickerType.FX_SLOT_3
+        }
+        show(title, type) { id ->
+            callback(
+                when {
+                    id == null -> FxPick.None
+                    id.startsWith(SAVED_PREFIX) -> FxPick.Saved(java.io.File(id.removePrefix(SAVED_PREFIX)))
+                    else -> FxPick.Stock(id)
+                }
+            )
+        }
+        if (llm.slop.liquidlsd.presets.FxShortlist.favorites().isNotEmpty()) {
+            selectedCategory = CATEGORY_FAVORITES
+            updateItems()
+        }
     }
 
     /**
@@ -183,7 +221,27 @@ object ShaderPickerPopup {
                     )
                 }
             }
+        } else if (selectedCategory == CATEGORY_SAVED) {
+            ISFFilterRegistry.availableFilters.forEach { filter ->
+                filter.categories.forEach { tempCats.add(it) }
+                if (filter.folderPath.isNotBlank()) tempCats.add(filter.folderPath)
+            }
+            FileSystemManager.scanAllFxPresets().forEach { asset ->
+                val matchesSearch = asset.name.lowercase().contains(searchText) ||
+                    asset.tags.any { it.lowercase().contains(searchText) }
+                if (matchesSearch) {
+                    filteredItems.add(
+                        ShaderItem(
+                            id = SAVED_PREFIX + asset.path,
+                            displayName = asset.name,
+                            categories = asset.tags,
+                            type = "Saved FX"
+                        )
+                    )
+                }
+            }
         } else {
+            val favoritesOnly = selectedCategory == CATEGORY_FAVORITES
             ISFFilterRegistry.availableFilters.forEach { filter ->
                 filter.categories.forEach { tempCats.add(it) }
                 if (filter.folderPath.isNotBlank()) {
@@ -194,6 +252,7 @@ object ShaderPickerPopup {
                     filter.id.lowercase().contains(searchText) ||
                     filter.folderPath.lowercase().contains(searchText)
                 val matchesCategory = selectedCategory == "All" ||
+                    (favoritesOnly && llm.slop.liquidlsd.presets.FxShortlist.isFavorite(filter.id)) ||
                     filter.categories.contains(selectedCategory) ||
                     filter.folderPath == selectedCategory
 
@@ -223,6 +282,10 @@ object ShaderPickerPopup {
         if (extIdx > 1) {
             categories.removeAt(extIdx)
             categories.add(1, "External Sources")
+        }
+        if (isFxPicker) {
+            categories.add(1, CATEGORY_FAVORITES)
+            categories.add(2, CATEGORY_SAVED)
         }
         
         filteredItems.sortBy { it.displayName.lowercase() }
@@ -267,8 +330,19 @@ object ShaderPickerPopup {
             }
         }
 
-        // Col 2: Action Button
+        // Col 2: Action Button (plus the favorite star for stock FX filters)
         ImGui.tableSetColumnIndex(2)
+        if (isFxPicker && item.type == "Filter") {
+            val starred = llm.slop.liquidlsd.presets.FxShortlist.isFavorite(item.id)
+            if (starred) ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.8f, 0.2f, 1.0f)
+            if (ImGui.button("${if (starred) "\u2605" else "\u2606"}##star_${item.id}", 24f, 0f)) {
+                llm.slop.liquidlsd.presets.FxShortlist.toggle(item.id)
+                if (selectedCategory == CATEGORY_FAVORITES) updateItems()
+            }
+            if (starred) ImGui.popStyleColor()
+            itemTooltip(if (starred) "Remove from the FX shortlist (the effects a slot's \u25c0 \u25b6 steps through)." else "Add to the FX shortlist (the effects a slot's \u25c0 \u25b6 steps through).")
+            ImGui.sameLine(0f, 4f)
+        }
         if (ImGui.button("Select##${item.id}", -1f, 0f)) {
             onSelect?.invoke(item.id)
             ImGui.closeCurrentPopup()
@@ -356,7 +430,7 @@ object ShaderPickerPopup {
                 if (ImGui.beginTable("##shader_results", 3, tableFlags)) {
                     ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.6f)
                     ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, 0.3f)
-                    ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, 80f)
+                    ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, if (isFxPicker) 110f else 80f)
                     ImGui.tableHeadersRow()
 
                     for (i in 0 until filteredItems.size) {
@@ -379,7 +453,7 @@ object ShaderPickerPopup {
                             if (ImGui.beginTable("##tbl_$folder", 3, ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
                                 ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.6f)
                                 ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, 0.3f)
-                                ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, 80f)
+                                ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, if (isFxPicker) 110f else 80f)
                                 ImGui.tableHeadersRow()
 
                                 for (i in 0 until items.size) {
@@ -401,7 +475,7 @@ object ShaderPickerPopup {
                                 if (ImGui.beginTable("##tbl_root", 3, ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
                                     ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.6f)
                                     ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, 0.3f)
-                                    ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, 80f)
+                                    ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, if (isFxPicker) 110f else 80f)
                                     ImGui.tableHeadersRow()
 
                                     for (i in 0 until rootItems.size) {
@@ -415,7 +489,7 @@ object ShaderPickerPopup {
                             if (ImGui.beginTable("##tbl_root_direct", 3, tableFlags)) {
                                 ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.6f)
                                 ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, 0.3f)
-                                ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, 80f)
+                                ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, if (isFxPicker) 110f else 80f)
                                 ImGui.tableHeadersRow()
 
                                 for (i in 0 until rootItems.size) {

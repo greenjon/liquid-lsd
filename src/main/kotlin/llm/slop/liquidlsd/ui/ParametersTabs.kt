@@ -12,12 +12,6 @@ import kotlin.math.roundToInt
 object ParametersTabs {
 
     private val fxEnabledBuf = imgui.type.ImBoolean()
-    private val fxSlotPickerTypes = listOf(
-        ShaderPickerPopup.PickerType.FX_SLOT_1,
-        ShaderPickerPopup.PickerType.FX_SLOT_2,
-        ShaderPickerPopup.PickerType.FX_SLOT_3,
-        ShaderPickerPopup.PickerType.FX_SLOT_4
-    )
 
     fun getDeckColor(tab: String, alpha: Float = 1f): Int {
         val rgb = when (tab) {
@@ -583,10 +577,8 @@ object ParametersTabs {
             ImGui.setNextItemWidth((labelColW - 85f).coerceAtLeast(30f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$chainPrefix", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
-                    ShaderPickerPopup.show("Select FX Slot $slotNum for $chainDisplayName", fxSlotPickerTypes[i]) { newFilterId ->
-                        llm.slop.liquidlsd.presets.FxOps.setSlotFilter(chain, i, newFilterId)
-                        onPushUndo()
-                    }
+                    FxSlotCell.openPicker(session, chain, i, "Select FX Slot $slotNum for $chainDisplayName")
+                    onPushUndo()
                 }
                 fx?.header?.DESCRIPTION?.takeIf { it.isNotBlank() }?.let { itemTooltip(it) }
             }

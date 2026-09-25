@@ -51,10 +51,15 @@ object SessionSerializer {
                 masterLevel = mixer.masterLevel.toDto(),
                 transitionSlot = transSlot,
                 masterFxChain = mixer.masterFxChain.toFxChainDto(),
+                masterFxChainSource = mixer.masterFxChain.sourceFile?.let { serializeSessionPath(it) },
                 deckAFxChain = mixer.deckA.fxChain.toFxChainDto(),
+                deckAFxChainSource = mixer.deckA.fxChain.sourceFile?.let { serializeSessionPath(it) },
                 deckBFxChain = mixer.deckB.fxChain.toFxChainDto(),
+                deckBFxChainSource = mixer.deckB.fxChain.sourceFile?.let { serializeSessionPath(it) },
                 deckBGFxChain = mixer.deckBG.fxChain.toFxChainDto(),
-                deckPVFxChain = mixer.deckPV.fxChain.toFxChainDto()
+                deckBGFxChainSource = mixer.deckBG.fxChain.sourceFile?.let { serializeSessionPath(it) },
+                deckPVFxChain = mixer.deckPV.fxChain.toFxChainDto(),
+                deckPVFxChainSource = mixer.deckPV.fxChain.sourceFile?.let { serializeSessionPath(it) }
             )
 
             val session = SessionStateDto(
@@ -143,11 +148,11 @@ object SessionSerializer {
             val pvDto = session.deckPV ?: PresetManager.emptyDeckDto(mixer.deckPV, mixer)
             mixer.deckPV.applyDto(pvDto)
 
-            mDto.masterFxChain?.let { mixer.masterFxChain.applyFxChain(it) }
-            mDto.deckAFxChain?.let { mixer.deckA.fxChain.applyFxChain(it) }
-            mDto.deckBFxChain?.let { mixer.deckB.fxChain.applyFxChain(it) }
-            mDto.deckBGFxChain?.let { mixer.deckBG.fxChain.applyFxChain(it) }
-            mDto.deckPVFxChain?.let { mixer.deckPV.fxChain.applyFxChain(it) }
+            mDto.masterFxChain?.let { mixer.masterFxChain.applyFxChain(it, mDto.masterFxChainSource?.let { p -> resolveSessionPath(p) }, isBaseline = false) }
+            mDto.deckAFxChain?.let { mixer.deckA.fxChain.applyFxChain(it, mDto.deckAFxChainSource?.let { p -> resolveSessionPath(p) }, isBaseline = false) }
+            mDto.deckBFxChain?.let { mixer.deckB.fxChain.applyFxChain(it, mDto.deckBFxChainSource?.let { p -> resolveSessionPath(p) }, isBaseline = false) }
+            mDto.deckBGFxChain?.let { mixer.deckBG.fxChain.applyFxChain(it, mDto.deckBGFxChainSource?.let { p -> resolveSessionPath(p) }, isBaseline = false) }
+            mDto.deckPVFxChain?.let { mixer.deckPV.fxChain.applyFxChain(it, mDto.deckPVFxChainSource?.let { p -> resolveSessionPath(p) }, isBaseline = false) }
 
             mDto.xfadeSpeed?.let { mixer.xfadeSpeed.applyDto(it) }
             mDto.queueNext?.let { mixer.queueNext.applyDto(it) }

@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-performance-editing-slot-cells-shortlist-stepping-swap-dip-and-shared-chain-header-fxslotcellkt-fxshortlistkt-fxchainheaderkt-fxchainkt-fxopskt-fxmacrosynckt-shaderpickerpopupkt-performancematrixpanelkt-apppreferenceskt-preferencespanelkt-sessionserializerkt-presetmodelskt-performance_controlsmd-macros_and_rackmd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Performance Editing: Slot Cells, Shortlist Stepping, Swap Dip, and Shared Chain Header (FxSlotCell.kt, FxShortlist.kt, FxChainHeader.kt, FxChain.kt, FxOps.kt, FxMacroSync.kt, ShaderPickerPopup.kt, PerformanceMatrixPanel.kt, AppPreferences.kt, PreferencesPanel.kt, SessionSerializer.kt, PresetModels.kt, performance_controls.md, macros_and_rack.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#master-fx-works-like-the-decks-fx-loads-are-thread-safe-mixerkt-rendererkt-fxopskt-fxmacrosynckt-sessionserializerkt-presetmodelskt-performancematrixpanelkt-parameterstabskt-fxbrowserpanelkt-macropanelkt-performance_controlsmd-presets_and_librarymd-macros_and_rackmd-docsdeveloperpreset_managementmd-architecturemd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3953,6 +3964,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-performance-editing-slot-cells-shortlist-stepping-swap-dip-and-shared-chain-header-fxslotcellkt-fxshortlistkt-fxchainheaderkt-fxchainkt-fxopskt-fxmacrosynckt-shaderpickerpopupkt-performancematrixpanelkt-apppreferenceskt-preferencespanelkt-sessionserializerkt-presetmodelskt-performance_controlsmd-macros_and_rackmd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Performance Editing: Slot Cells, Shortlist Stepping, Swap Dip, and Shared Chain Header (FxSlotCell.kt, FxShortlist.kt, FxChainHeader.kt, FxChain.kt, FxOps.kt, FxMacroSync.kt, ShaderPickerPopup.kt, PerformanceMatrixPanel.kt, AppPreferences.kt, PreferencesPanel.kt, SessionSerializer.kt, PresetModels.kt, performance_controls.md, macros_and_rack.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#master-fx-works-like-the-decks-fx-loads-are-thread-safe-mixerkt-rendererkt-fxopskt-fxmacrosynckt-sessionserializerkt-presetmodelskt-performancematrixpanelkt-parameterstabskt-fxbrowserpanelkt-macropanelkt-performance_controlsmd-presets_and_librarymd-macros_and_rackmd-docsdeveloperpreset_managementmd-architecturemd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6673,6 +6695,24 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fx-performance-editing-slot-cells-shortlist-stepping-swap-dip-and-shared-chain-header-fxslotcellkt-fxshortlistkt-fxchainheaderkt-fxchainkt-fxopskt-fxmacrosynckt-shaderpickerpopupkt-performancematrixpanelkt-apppreferenceskt-preferencespanelkt-sessionserializerkt-presetmodelskt-performance_controlsmd-macros_and_rackmd-decisionsmd">FX Performance Editing: Slot Cells, Shortlist Stepping, Swap Dip, and Shared Chain Header (<code>FxSlotCell.kt</code>, <code>FxShortlist.kt</code>, <code>FxChainHeader.kt</code>, <code>FxChain.kt</code>, <code>FxOps.kt</code>, <code>FxMacroSync.kt</code>, <code>ShaderPickerPopup.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>AppPreferences.kt</code>, <code>PreferencesPanel.kt</code>, <code>SessionSerializer.kt</code>, <code>PresetModels.kt</code>, <code>performance_controls.md</code>, <code>macros_and_rack.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>FX Slot Cells Under Performance Knobs</strong>: Each slot knob (columns 2–4) across all FX rows (ALL FX tab, LIVE CONSOLE FX row, and Deck rows in <code>[FX]</code> mode) now displays an interactive slot cell drawer directly underneath:</li>
+<li><strong>Mute Pill (<code>●</code>)</strong>: Per-slot bypass toggle with muted visual state.</li>
+<li><strong><code>◀</code> / <code>▶</code> Step Buttons</strong>: Stepping through effects via click or mouse wheel over the cell without opening Deep Edit. Steps through favorited ★ effects in the FX Shortlist, or cycles alphabetically through the current effect's category when not favorited.</li>
+<li><strong>Effect Name &amp; Shader Picker</strong>: Truncated effect name. Clicking opens the FX Shader Picker popup with Stock, Saved singles (<code>.lsdfx</code>), and ★ Favorites tabs, plus a star toggle to favorite/unfavorite directly.</li>
+<li><strong>Drag and Drop</strong>: Drag a cell to reorder or swap with another slot (hold <code>Ctrl</code> to duplicate). Accepts stock shaders and <code>.lsdfx</code> presets dropped from the Library.</li>
+<li><strong>Right-Click Context Menu</strong>: Instant access to Replace, Save Preset, Copy/Paste Slot, Reset Parameters, Clear Slot, Star/Unstar, and jump to Deep Edit.</li>
+<li><strong>Shared FX Chain Header (<code>[◀] Name • [▶] [Save] [⋮] ... [BYPASS]</code>)</strong>: Standardized across all Performance Matrix FX rows:</li>
+<li><strong>Chain Stepping (<code>◀</code> / <code>▶</code>)</strong>: Cycles alphabetically through <code>.lsdfxchain</code> presets in the active folder.</li>
+<li><strong>Chain Name Button</strong>: Displays active chain with <code>•</code> dirty indicator when modified from baseline. Clicking opens the chain browser popup. Accepts <code>.lsdfxchain</code> drag-and-drop.</li>
+<li><strong><code>[Save]</code> Button</strong>: Quick overwrite to source file (or Save As dialog if untitled).</li>
+<li><strong>Header Kebab (<code>[⋮]</code>)</strong>: Quick access to Save As, New Chain, Revert to Saved (undoes slot/parameter changes back to the saved file state), Clear All Slots, Copy/Paste Chain, and Resync Knobs.</li>
+<li><strong><code>[BYPASS]</code> Toggle</strong>: Top-level chain kill switch with alert state.</li>
+<li><strong>FX Swap Gain Dip</strong>: Swapping an effect or chain applies a smooth audio/visual gain dip (fade out -&gt; swap -&gt; fade in) to eliminate harsh audio popping or visual glitching. Configurable in <strong>Preferences → General → FX Swap Fade (ms)</strong> (0–1000 ms, default 150 ms; 0 ms for immediate cuts).</li>
+<li><strong>Slot Knob Labeling</strong>: Slot knobs 2–4 now default to <code>META</code> (or the bound parameter name when custom-routed), while knob 1 remains <code>SUPER</code>.</li>
+<li><strong>Session Persistence</strong>: Decks and Master FX preserve their loaded <code>.lsdfxchain</code> source file references across session save and restore.</li>
+</ul>
 <h3 id="master-fx-works-like-the-decks-fx-loads-are-thread-safe-mixerkt-rendererkt-fxopskt-fxmacrosynckt-sessionserializerkt-presetmodelskt-performancematrixpanelkt-parameterstabskt-fxbrowserpanelkt-macropanelkt-performance_controlsmd-presets_and_librarymd-macros_and_rackmd-docsdeveloperpreset_managementmd-architecturemd-decisionsmd">Master FX Works Like the Decks; FX Loads Are Thread-Safe (<code>Mixer.kt</code>, <code>Renderer.kt</code>, <code>FxOps.kt</code>, <code>FxMacroSync.kt</code>, <code>SessionSerializer.kt</code>, <code>PresetModels.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>ParametersTabs.kt</code>, <code>FXBrowserPanel.kt</code>, <code>MacroPanel.kt</code>, <code>performance_controls.md</code>, <code>presets_and_library.md</code>, <code>macros_and_rack.md</code>, <code>docs/developer/preset_management.md</code>, <code>ARCHITECTURE.md</code>, <code>DECISIONS.md</code>)</h3>
 <ul>
 <li><strong>Master FX is one chain of 3 slots</strong>, the same as each deck's FX. The Chain 1/2/3 tabs, the separate bank wet/dry and the <code>.lsdfxbank</code> format are gone; use saved <code>.lsdfxchain</code> files instead. The two chains that only existed inside banks, <em>Subtle Optical Warmth</em> (the default Master FX) and <em>Digital Bitcrush Mosaic</em>, are now ordinary bundled chains.</li>

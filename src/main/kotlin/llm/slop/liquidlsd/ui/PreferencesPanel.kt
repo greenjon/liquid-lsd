@@ -200,6 +200,14 @@ object PreferencesPanel {
         }
         itemTooltip("Toggle parameter and modulator randomization controls.")
 
+        val fadeMs = intArrayOf(session.uiTheme.fxSwapFadeMs)
+        ImGui.setNextItemWidth(200f)
+        if (ImGui.sliderInt("FX Swap Fade (ms)", fadeMs, 0, UITheme.FX_SWAP_FADE_MAX_MS)) {
+            session.uiTheme.fxSwapFadeMs = fadeMs[0]
+        }
+        if (ImGui.isItemDeactivatedAfterEdit()) AppPreferencesStore.savePreferences()
+        itemTooltip("When an FX slot's effect is swapped (◀ ▶, picker, drop) or a chain is loaded, the slot or chain briefly fades out and back in instead of cutting hard. 0 = hard cut.")
+
         val seqEnabled = ImBoolean(session.uiTheme.sequencerEnabled)
         if (ImGui.checkbox("Enable Step Sequencer", seqEnabled)) {
             val nextVal = seqEnabled.get()

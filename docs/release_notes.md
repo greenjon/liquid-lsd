@@ -1,5 +1,22 @@
 ## [Unreleased]
 
+### FX Performance Editing: Slot Cells, Shortlist Stepping, Swap Dip, and Shared Chain Header (`FxSlotCell.kt`, `FxShortlist.kt`, `FxChainHeader.kt`, `FxChain.kt`, `FxOps.kt`, `FxMacroSync.kt`, `ShaderPickerPopup.kt`, `PerformanceMatrixPanel.kt`, `AppPreferences.kt`, `PreferencesPanel.kt`, `SessionSerializer.kt`, `PresetModels.kt`, `performance_controls.md`, `macros_and_rack.md`, `DECISIONS.md`)
+- **FX Slot Cells Under Performance Knobs**: Each slot knob (columns 2–4) across all FX rows (ALL FX tab, LIVE CONSOLE FX row, and Deck rows in `[FX]` mode) now displays an interactive slot cell drawer directly underneath:
+  - **Mute Pill (`●`)**: Per-slot bypass toggle with muted visual state.
+  - **`◀` / `▶` Step Buttons**: Stepping through effects via click or mouse wheel over the cell without opening Deep Edit. Steps through favorited ★ effects in the FX Shortlist, or cycles alphabetically through the current effect's category when not favorited.
+  - **Effect Name & Shader Picker**: Truncated effect name. Clicking opens the FX Shader Picker popup with Stock, Saved singles (`.lsdfx`), and ★ Favorites tabs, plus a star toggle to favorite/unfavorite directly.
+  - **Drag and Drop**: Drag a cell to reorder or swap with another slot (hold `Ctrl` to duplicate). Accepts stock shaders and `.lsdfx` presets dropped from the Library.
+  - **Right-Click Context Menu**: Instant access to Replace, Save Preset, Copy/Paste Slot, Reset Parameters, Clear Slot, Star/Unstar, and jump to Deep Edit.
+- **Shared FX Chain Header (`[◀] Name • [▶] [Save] [⋮] ... [BYPASS]`)**: Standardized across all Performance Matrix FX rows:
+  - **Chain Stepping (`◀` / `▶`)**: Cycles alphabetically through `.lsdfxchain` presets in the active folder.
+  - **Chain Name Button**: Displays active chain with `•` dirty indicator when modified from baseline. Clicking opens the chain browser popup. Accepts `.lsdfxchain` drag-and-drop.
+  - **`[Save]` Button**: Quick overwrite to source file (or Save As dialog if untitled).
+  - **Header Kebab (`[⋮]`)**: Quick access to Save As, New Chain, Revert to Saved (undoes slot/parameter changes back to the saved file state), Clear All Slots, Copy/Paste Chain, and Resync Knobs.
+  - **`[BYPASS]` Toggle**: Top-level chain kill switch with alert state.
+- **FX Swap Gain Dip**: Swapping an effect or chain applies a smooth audio/visual gain dip (fade out -> swap -> fade in) to eliminate harsh audio popping or visual glitching. Configurable in **Preferences → General → FX Swap Fade (ms)** (0–1000 ms, default 150 ms; 0 ms for immediate cuts).
+- **Slot Knob Labeling**: Slot knobs 2–4 now default to `META` (or the bound parameter name when custom-routed), while knob 1 remains `SUPER`.
+- **Session Persistence**: Decks and Master FX preserve their loaded `.lsdfxchain` source file references across session save and restore.
+
 ### Master FX Works Like the Decks; FX Loads Are Thread-Safe (`Mixer.kt`, `Renderer.kt`, `FxOps.kt`, `FxMacroSync.kt`, `SessionSerializer.kt`, `PresetModels.kt`, `PerformanceMatrixPanel.kt`, `ParametersTabs.kt`, `FXBrowserPanel.kt`, `MacroPanel.kt`, `performance_controls.md`, `presets_and_library.md`, `macros_and_rack.md`, `docs/developer/preset_management.md`, `ARCHITECTURE.md`, `DECISIONS.md`)
 - **Master FX is one chain of 3 slots**, the same as each deck's FX. The Chain 1/2/3 tabs, the separate bank wet/dry and the `.lsdfxbank` format are gone; use saved `.lsdfxchain` files instead. The two chains that only existed inside banks, *Subtle Optical Warmth* (the default Master FX) and *Digital Bitcrush Mosaic*, are now ordinary bundled chains.
 - **Load and save Master FX from the FX browser**: right-click menus offer **Load to Master FX** for stock filters, singles and chains, and **`[+]`** can save a slot or chain from Master FX.

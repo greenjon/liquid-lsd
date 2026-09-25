@@ -273,12 +273,16 @@ data class MixerDto(
     val levelPV: ParameterDto? = null,
     val masterLevel: ParameterDto? = null,
     val transitionSlot: FXSlotDto? = null,
-    // FX chains are session state, never part of a deck preset (.lsd) -- see DECISIONS.md.
     val masterFxChain: FXChainDto? = null,
+    val masterFxChainSource: String? = null,
     val deckAFxChain: FXChainDto? = null,
+    val deckAFxChainSource: String? = null,
     val deckBFxChain: FXChainDto? = null,
+    val deckBFxChainSource: String? = null,
     val deckBGFxChain: FXChainDto? = null,
-    val deckPVFxChain: FXChainDto? = null
+    val deckBGFxChainSource: String? = null,
+    val deckPVFxChain: FXChainDto? = null,
+    val deckPVFxChainSource: String? = null
 )
 
 @Serializable

@@ -162,6 +162,10 @@ object AppPreferencesStore {
                     logger.info { "Loaded randomizationEnabled from settings file: ${UITheme.randomizationEnabled}" }
                 }
 
+                props.getProperty("fxSwapFadeMs")?.toIntOrNull()?.let {
+                    UITheme.fxSwapFadeMs = it
+                }
+
                 val savedSequencer = props.getBoolean("sequencerEnabled")
                 if (savedSequencer != null) {
                     UITheme.sequencerEnabled = savedSequencer
@@ -319,6 +323,7 @@ object AppPreferencesStore {
             props.setProperty("cleanModeEnabled", UITheme.cleanModeEnabled.toString())
             props.setProperty("randomizationEnabled", UITheme.randomizationEnabled.toString())
             props.setProperty("sequencerEnabled", UITheme.sequencerEnabled.toString())
+            props.setProperty("fxSwapFadeMs", UITheme.fxSwapFadeMs.toString())
             props.setProperty("midiEnabled", UITheme.midiEnabled.toString())
             props.setProperty("tooltipsEnabled", UITheme.tooltipsEnabled.toString())
             props.setProperty("maxFps", UITheme.maxFps.toString())

@@ -241,10 +241,7 @@ class Renderer {
 
         // 2. Render Deck's dedicated FX chain (3 slots) if enabled and wet > 0.
         val chain = deck.fxChain
-        val deckWetAmount = chain.dryWet.value
-        val hasActiveSlots = chain.slots.any { it != null && it.enabled && it.dryWet.value > 0.0f }
-
-        val finalTex = if (chain.enabled && deckWetAmount > 0.0f && hasActiveSlots) {
+        val finalTex = if (chain.effectiveChainWet() > 0.0f) {
             renderFxChainPass(
                 cleanTex = deck.cleanFBO.texture,
                 chain = chain,
@@ -371,8 +368,9 @@ class Renderer {
         pongFBO: FBO,
         outFBO: FBO
     ): Int {
-        if (!chain.enabled || chain.dryWet.value <= 0.0f ||
-            chain.slots.all { it == null || !it.enabled || it.dryWet.value <= 0.0f }) {
+        val chainWet = chain.effectiveChainWet()
+        if (chainWet <= 0.0f ||
+            (chain.effectiveSlotWet(0) <= 0.0f && chain.effectiveSlotWet(1) <= 0.0f && chain.effectiveSlotWet(2) <= 0.0f)) {
             return cleanTex
         }
 
@@ -380,8 +378,10 @@ class Renderer {
         var writeFBO = pingFBO
         var readFBO = pongFBO
 
-        for (slot in chain.slots) {
-            if (slot == null || !slot.enabled || slot.dryWet.value <= 0.0f) continue
+        for (slotIndex in 0 until FxChain.SLOT_COUNT) {
+            val dryWet = chain.effectiveSlotWet(slotIndex)
+            if (dryWet <= 0.0f) continue
+            val slot = chain.slots[slotIndex] ?: continue
 
             writeFBO.bind()
             glViewport(0, 0, width, height)
@@ -391,7 +391,6 @@ class Renderer {
 
             slot.render(slotInputTex, width, height)
 
-            val dryWet = slot.dryWet.value
             if (dryWet < 1.0f) {
                 glEnable(GL_BLEND)
                 glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA)
@@ -415,8 +414,7 @@ class Renderer {
             readFBO = temp
         }
 
-        // Chain wet output is in slotInputTex. Blend with cleanTex using chain.dryWet into outFBO.
-        val chainWet = chain.dryWet.value
+        // Chain wet output is in slotInputTex. Blend with cleanTex using the chain wet into outFBO.
         outFBO.bind()
         glViewport(0, 0, width, height)
         glClearColor(0f, 0f, 0f, 0f)

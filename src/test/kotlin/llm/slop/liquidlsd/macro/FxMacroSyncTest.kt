@@ -78,7 +78,7 @@ class FxMacroSyncTest {
         assertFalse(superBinding.inverted)
 
         assertEquals("Master/FX/FX1/Meta", macroBank.knobs[1].bindings.single().parameterId)
-        assertEquals("fx_a", macroBank.knobs[1].label)
+        assertEquals("META", macroBank.knobs[1].label)
         assertEquals("Master/FX/FX3/Meta", macroBank.knobs[3].bindings.single().parameterId)
     }
 
@@ -138,7 +138,7 @@ class FxMacroSyncTest {
         assertEquals("Deck A/fbZoom", macroBank.knobs[1].bindings.single().parameterId, "Manually retargeted knob must not be reclaimed")
         assertEquals("MY WARP", macroBank.knobs[1].label)
         // Untouched knobs still follow the chain.
-        assertEquals("fx_b", macroBank.knobs[2].label)
+        assertEquals("META", macroBank.knobs[2].label)
     }
 
     @Test

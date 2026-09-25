@@ -1922,11 +1922,40 @@ for the FX Rack view that exposes these.</p>
   singles, and saved chains into any deck or <strong>Master FX</strong>.</li>
 <li><strong>FX is separate from presets</strong>: Loading or saving a deck preset (<code>.lsd</code>) never touches that
   deck's FX chain. FX chains are saved with your session and restored on the next launch.</li>
-<li><strong>Performance Matrix FX Parity</strong>:</li>
-<li>Toggling any Deck row (A, B, BG, PV) to <code>[FX]</code> mode displays the <code>[ Preset v ]</code> chain preset selector to load <code>.lsdfxchain</code> presets directly, and shows SuperKnob link/unlink icons on slot knobs 1–3.</li>
-<li>The <strong>ALL FX</strong> tab includes rows for <code>Deck A FX</code>, <code>Deck B FX</code>, <code>Deck BG FX</code>, <code>Deck PV FX</code>, and <code>Master FX</code>.</li>
-<li>The <strong>FX WET/DRY</strong> row in the <strong>MASTER &amp; FX</strong> tab features an <code>[ FX SENDS ]</code> badge and <code>[Resync]</code> button to reset send levels.</li>
+<li><strong>Performance Matrix FX Controls</strong>:</li>
+<li><strong>Shared Chain Header (<code>[◀] Name • [▶] [Save] [⋮] ... [BYPASS]</code>)</strong>:<ul>
+<li><strong><code>◀</code> / <code>▶</code></strong>: Steps alphabetically through <code>.lsdfxchain</code> presets in the current chain folder.</li>
+<li><strong>Chain Name Button</strong>: Displays current chain name with <code>•</code> dirty indicator when modified from baseline. Clicking opens the chain browser popup with live text search. Accepts <code>.lsdfxchain</code> drag-and-drop.</li>
+<li><strong><code>[Save]</code></strong>: Overwrites the loaded chain file with current state, or triggers Save As if untitled.</li>
+<li><strong><code>[⋮]</code> Menu</strong>: Save As..., New Chain, Revert to Saved (undoes tweaks back to clean loaded state), Clear All Slots, Copy/Paste Chain, and Resync Knobs.</li>
+<li><strong><code>[BYPASS]</code></strong>: Top-level kill switch to immediately bypass or re-enable the entire FX chain.</li>
+</ul>
+</li>
+<li><strong>FX Slot Cells (<code>[●] [◀] Effect Name [▶]</code>)</strong>:<ul>
+<li>Drawn under each of knobs 2–4 on all FX rows (ALL FX, LIVE CONSOLE, and Deck rows in FX mode).</li>
+<li><strong><code>●</code> (Pill)</strong>: Dedicated per-slot mute/bypass button.</li>
+<li><strong><code>◀</code> / <code>▶</code> (or Mouse Wheel)</strong>: Steps to previous/next effect in the <strong>FX Shortlist</strong> (favorited ★ effects, or the current effect's category alphabetically).</li>
+<li><strong>Effect Name</strong>: Truncated caption showing loaded filter. Click opens the FX Shader Picker (Stock filters, ★ Favorites, and Saved <code>.lsdfx</code> presets).</li>
+<li><strong>Drag &amp; Drop</strong>: Drag a cell to another slot to swap/reorder (hold <code>Ctrl</code> while dropping to duplicate). Accepts stock ISF filters and <code>.lsdfx</code> single presets from Library.</li>
+<li><strong>Right-Click Context Menu</strong>: Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Deep Edit.</li>
+</ul>
+</li>
+<li><strong>Swap Gain Dip</strong>:<ul>
+<li>Replacing an effect or loading a chain applies a smooth audio/visual gain dip (fade out -&gt; swap -&gt; fade in) instead of a hard cut.</li>
+<li>Duration is customizable in Preferences (<code>FX Swap Fade (ms)</code>, 0–1000 ms, default 150 ms; 0 = immediate hard cut).</li>
+</ul>
+</li>
+<li><strong>Knob Labeling</strong>:<ul>
+<li>Knob 1 controls the chain's <code>SUPER</code> knob.</li>
+<li>Knobs 2–4 display <code>META</code> (or the bound parameter name when custom-routed), while the effect name itself is clearly displayed in the slot cell below.</li>
+</ul>
+</li>
+<li><strong>Performance Matrix Tabs</strong>:<ul>
+<li>The <strong>ALL FX</strong> tab includes dedicated rows for <code>Deck A FX</code>, <code>Deck B FX</code>, <code>Deck BG FX</code>, <code>Deck PV FX</code>, and <code>Master FX</code>.</li>
+<li>The <strong>FX WET/DRY</strong> row in the <strong>MASTER &amp; FX</strong> tab features an <code>[ FX SENDS ]</code> badge.</li>
 <li>The <strong>Transitions</strong> row includes a <code>[DICES]</code> die button to randomize transition parameters with undo support.</li>
+</ul>
+</li>
 </ul>
 <hr />
 <h2 id="midi-hardware-control-mappings">MIDI Hardware &amp; Control Mappings</h2>

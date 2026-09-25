@@ -262,14 +262,17 @@ object FXBrowserPanel {
             applyToDeck(session, asset, targetDeck)
         }
 
-        // Drag source (only saved singles/chains are draggable — stock filters have no
-        // persisted state, so they can't be dropped into a playlist or queue)
-        if (asset.type != AssetType.FX_STOCK) {
-            if (ImGui.beginDragDropSource()) {
+        // Drag source. Saved singles/chains carry their file path (ASSET_ITEM) so they can also go
+        // into playlists and queues; stock filters have no persisted state, so they use their own
+        // payload that only FX slots accept (see FxSlotCell).
+        if (ImGui.beginDragDropSource()) {
+            if (asset.type == AssetType.FX_STOCK) {
+                ImGui.setDragDropPayload(llm.slop.liquidlsd.ui.FxSlotCell.PAYLOAD_STOCK_FILTER, asset.path.removePrefix(STOCK_PATH_PREFIX) as Any)
+            } else {
                 ImGui.setDragDropPayload("ASSET_ITEM", asset.path as Any)
-                ImGui.textUnformatted(asset.name)
-                ImGui.endDragDropSource()
             }
+            ImGui.textUnformatted(asset.name)
+            ImGui.endDragDropSource()
         }
 
         ImGui.sameLine(0f, 0f)
