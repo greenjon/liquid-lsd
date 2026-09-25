@@ -358,9 +358,40 @@ There are 12 always-resident canonical macro banks (4 knobs each, conforming to 
 | **Master FX** | FX Wet/Dry | 4 | `fxSends` | Deck A, B, BG, PV Insert FX Wet/Dry Levels |
 | | Master FX | 4 | `masterFx` | Super Knob + 3 Metaknobs |
 
-Deck generator banks start blank by default for custom binding in the MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. The five FX banks bind to their chain's `Deck A/FX/...` … `Master/FX/...` parameters and re-sync automatically whenever that chain's contents change (loading a chain, swapping a slot, restoring a session) — any knob you've retargeted by hand is left alone; **Resync** forces the defaults back. All 12 canonical banks are preserved in `last_session.json` and session files.
+Deck generator banks initialize from their generator's default preset. Master, Transitions, and FX banks initialize with pre-mapped smart defaults. The five FX banks bind to their chain's `Deck A/FX/...` … `Master/FX/...` parameters and re-sync automatically whenever that chain's contents change (loading a chain, swapping a slot, restoring a session) — any knob you've retargeted by hand is left alone; **Resync** forces the defaults back. All 12 canonical banks are preserved in `last_session.json` and session files.
 
 Banks are saved in `last_session.json` and bundled into preset files automatically.
+
+---
+
+## Generator & FX Defaults ("Save as Default")
+
+Similar to Ableton's default presets, you can configure your favorite parameter starting points and 4-knob macro layouts for any visual generator or ISF FX filter, and save them as that device's permanent default.
+
+### Visual Generator Defaults
+
+When swapping visual sources on any deck (via the generator badge or launchpad), the incoming generator's default configuration is resolved across three tiers:
+1. **User Default**: Custom parameter baselines, `globalAlpha`, and 4-knob macro layout saved in `library/generator_defaults/<sourceId>.json`.
+2. **Curated Stock Default**: Hand-curated 4-knob macro bindings for bundled generators (`mandala`, `dynamic_spiral`, `icosa_h3`, `domain_warp_fluid`, `gyroid_hyperspace`, `celestial_engine`, `hyper_slice`, `chladni_cymatics`).
+3. **Automated Heuristic Fallback**: For third-party ISF shaders, continuous floats (e.g. speed, rate, zoom, scale, morph, depth, detail) are prioritized, discrete stepped selectors are filtered out, and speed/frequency parameters are shaped with exponential response curves.
+
+**Bank Replacement Behavior**: Applying a default replaces the resident 4-knob deck bank wholesale, identical to preset loading. Stored `Deck/*` bindings are dynamically remapped to the target deck slot (e.g., `Deck A`, `Deck B`). Knobs are positioned via inverse-curve mapping so parameter values do not jump on load. Hardware MIDI mappings are stripped on save to avoid duplicate hardware CC collisions across decks.
+
+**How to Save or Reset Generator Defaults**:
+- **Right-click the generator badge** on any deck row in Performance Mode to open the context menu:
+  - `Save as Default for <Generator>`: Saves current parameters, alpha, and 4-knob macro layout as the generator default.
+  - `Apply Default Now`: Reapplies the default layout and parameters to the current deck.
+  - `Reset to Factory Default`: Deletes the user default file and restores curated/heuristic factory defaults.
+- Alternatively, open the **Save menu** in Deep Edit's monitor toolbar and select `Save as Default for <Generator>`.
+
+### Explicit ISF FX Defaults
+
+In the FX Chain Macro Strip (and Deep Edit FX views), slot Metaknobs and parameters can be customized and explicitly saved:
+- Tweaking parameters or re-targeting Metaknobs during performance is purely temporary and does **not** silently overwrite defaults on disk.
+- **Right-click any Metaknob** in the FX strip:
+  - Select any parameter from the list (or `Bind to Dry/Wet (safety net)`) to rebind the Metaknob.
+  - Choose `Save as Default for <Filter>` to persist the current Metaknob bindings and parameter baseline into `library/isf_overrides/<contentHash>.json`.
+  - When a user default is present, choose `Reset to Factory Default` to revert to stock curated/heuristic bindings.
 
 ---
 

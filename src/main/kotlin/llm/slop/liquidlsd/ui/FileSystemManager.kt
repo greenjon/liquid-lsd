@@ -33,6 +33,8 @@ object FileSystemManager {
     private const val FX_PLAYLISTS_ROOT = "library/fx_playlists"
     private const val TRANSITIONS_ROOT = "library/transitions"
     private const val TRANSITION_PLAYLISTS_ROOT = "library/transition_playlists"
+    private const val GENERATOR_DEFAULTS_ROOT = "library/generator_defaults"
+    private const val ISF_OVERRIDES_ROOT = "library/isf_overrides"
     private const val SCAN_CACHE_TTL_MS = 1_000L
 
     private data class ScanCacheEntry(
@@ -861,6 +863,28 @@ object FileSystemManager {
      */
     fun getTransitionPlaylistsRoot(): File {
         val root = File(TRANSITION_PLAYLISTS_ROOT)
+        if (!root.exists()) {
+            root.mkdirs()
+        }
+        return root
+    }
+
+    /**
+     * Gets the root directory for visual generator defaults.
+     */
+    fun getGeneratorDefaultsRoot(): File {
+        val root = File(GENERATOR_DEFAULTS_ROOT)
+        if (!root.exists()) {
+            root.mkdirs()
+        }
+        return root
+    }
+
+    /**
+     * Gets the root directory for ISF Metaknob/parameter overrides.
+     */
+    fun getIsfOverridesRoot(): File {
+        val root = File(ISF_OVERRIDES_ROOT)
         if (!root.exists()) {
             root.mkdirs()
         }

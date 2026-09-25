@@ -123,7 +123,7 @@ class ISFFilter(
     }
 
     /** Rebinds this effect's Metaknob, optionally persisting it as a user override for this shader (by content hash). */
-    fun rebindMetaKnob(binding: FxMetaBinding, persistOverride: Boolean = true) {
+    fun rebindMetaKnob(binding: FxMetaBinding, persistOverride: Boolean = false) {
         metaBinding = binding
         if (persistOverride) {
             contentHash?.let { ISFAutoBindEngine.saveOverride(it, binding) }
@@ -290,7 +290,11 @@ class ISFFilter(
 
         cachedParams = parameters.values.toTypedArray()
 
-        metaBinding = ISFAutoBindEngine.resolveBinding(this)
+        val defaultDto = ISFAutoBindEngine.resolveDefault(this)
+        defaultDto.parameters.forEach { (name, value) ->
+            parameters[name]?.baseValue = value
+        }
+        applyMetaBindingsFromPreset(defaultDto.metaBindings.map { it.toBinding() })
         // Start the Metaknob at the position that reproduces the target's own authored default,
         // so loading a filter never silently overwrites its default via knob=0 on the first update().
         metaKnob.set(metaBinding.knobForTarget(currentMetaTargetValue()))

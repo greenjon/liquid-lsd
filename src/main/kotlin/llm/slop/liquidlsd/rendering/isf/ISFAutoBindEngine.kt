@@ -1,12 +1,24 @@
 package llm.slop.liquidlsd.rendering.isf
 
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import llm.slop.liquidlsd.ui.FileSystemManager
 import mu.KotlinLogging
 import java.io.File
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
+
+/**
+ * Serializable DTO representing default Metaknob bindings and parameter values for an ISF filter.
+ */
+@Serializable
+data class FxDefaultDto(
+    val version: Int = 2,
+    val metaBindings: List<FxMetaBindingDto>,
+    val parameters: Map<String, Float> = emptyMap()
+)
 
 /**
  * Resolves a sensible default Metaknob binding for any ISF filter so that loading one of the
@@ -20,8 +32,8 @@ private val logger = KotlinLogging.logger {}
  */
 object ISFAutoBindEngine {
     private val json = Json { ignoreUnknownKeys = true; prettyPrint = true }
-    private val overridesDir = File("library/isf_overrides")
-    private val overrideCache = ConcurrentHashMap<String, FxMetaBinding>()
+    var overridesDir: File = FileSystemManager.getIsfOverridesRoot()
+    private val overrideCache = ConcurrentHashMap<String, FxDefaultDto>()
 
     // Semantic name candidates in priority order — first match on a float input wins.
     private val SEMANTIC_CANDIDATES = listOf(
@@ -65,12 +77,23 @@ object ISFAutoBindEngine {
         "faceted_glass" to FxMetaBinding("refraction", 0f, 1f)
     )
 
-    /** Resolves the Metaknob binding for [filter]: user override, then curated, then heuristic. */
-    fun resolveBinding(filter: ISFFilter): FxMetaBinding {
+    /** Resolves the default bindings and parameters for [filter]: user override, then curated, then heuristic. */
+    fun resolveDefault(filter: ISFFilter): FxDefaultDto {
         filter.contentHash?.let { hash -> loadOverride(hash)?.let { return it } }
-        CURATED[filter.id]?.let { return it }
-        return resolveHeuristic(filter)
+        CURATED[filter.id]?.let {
+            return FxDefaultDto(version = 2, metaBindings = listOf(it.toDto()), parameters = emptyMap())
+        }
+        val heuristic = resolveHeuristic(filter)
+        return FxDefaultDto(version = 2, metaBindings = listOf(heuristic.toDto()), parameters = emptyMap())
     }
+
+    /** Resolves all Metaknob bindings for [filter]. */
+    fun resolveBindings(filter: ISFFilter): List<FxMetaBinding> =
+        resolveDefault(filter).metaBindings.map { it.toBinding() }
+
+    /** Resolves the primary Metaknob binding for [filter]: user override, then curated, then heuristic. */
+    fun resolveBinding(filter: ISFFilter): FxMetaBinding =
+        resolveBindings(filter).firstOrNull() ?: FxMetaBinding.DRY_WET_SAFETY_NET
 
     private fun resolveHeuristic(filter: ISFFilter): FxMetaBinding {
         val floatInputs = filter.header.INPUTS.filter { it.TYPE.equals("float", ignoreCase = true) }
@@ -129,26 +152,64 @@ object ISFAutoBindEngine {
         return digest.joinToString("") { "%02x".format(it) }.take(16)
     }
 
-    private fun loadOverride(hash: String): FxMetaBinding? {
+    private fun loadOverride(hash: String): FxDefaultDto? {
         overrideCache[hash]?.let { return it }
         val file = File(overridesDir, "$hash.json")
         if (!file.exists()) return null
         return try {
-            val binding = json.decodeFromString(FxMetaBindingDto.serializer(), file.readText()).toBinding()
-            overrideCache[hash] = binding
-            binding
+            val text = file.readText()
+            val dto = try {
+                json.decodeFromString(FxDefaultDto.serializer(), text)
+            } catch (_: Exception) {
+                // Backwards compatibility: gracefully read legacy single FxMetaBindingDto files
+                val legacy = json.decodeFromString(FxMetaBindingDto.serializer(), text)
+                FxDefaultDto(version = 1, metaBindings = listOf(legacy), parameters = emptyMap())
+            }
+            overrideCache[hash] = dto
+            dto
         } catch (e: Exception) {
             logger.warn(e) { "Failed to read ISF Metaknob override: ${file.path}" }
             null
         }
     }
 
-    /** Persists a user-customized binding keyed by shader content hash, so it applies wherever that shader loads next. */
-    fun saveOverride(contentHash: String, binding: FxMetaBinding) {
+    /** Persists a filter's current bindings and parameter baselines as its user default. */
+    fun saveFilterDefault(filter: ISFFilter) {
+        val hash = filter.contentHash ?: return
+        val dto = FxDefaultDto(
+            version = 2,
+            metaBindings = filter.metaBindings.map { it.toDto() },
+            parameters = filter.parameters.mapValues { it.value.baseValue }
+        )
         try {
             if (!overridesDir.exists()) overridesDir.mkdirs()
-            File(overridesDir, "$contentHash.json").writeText(json.encodeToString(FxMetaBindingDto.serializer(), binding.toDto()))
-            overrideCache[contentHash] = binding
+            File(overridesDir, "$hash.json").writeText(json.encodeToString(FxDefaultDto.serializer(), dto))
+            overrideCache[hash] = dto
+            logger.info { "Saved ISF filter default for ${filter.displayName} (hash: $hash)" }
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to save ISF filter default for hash $hash" }
+        }
+    }
+
+    /** Removes a filter's user default, reverting it to curated/heuristic defaults. */
+    fun deleteFilterDefault(filter: ISFFilter) {
+        val hash = filter.contentHash ?: return
+        deleteOverride(hash)
+    }
+
+    /** Returns whether a user default exists for [filter]. */
+    fun hasFilterDefault(filter: ISFFilter): Boolean {
+        val hash = filter.contentHash ?: return false
+        return overrideCache.containsKey(hash) || File(overridesDir, "$hash.json").exists()
+    }
+
+    /** Persists a user-customized binding keyed by shader content hash, so it applies wherever that shader loads next. */
+    fun saveOverride(contentHash: String, binding: FxMetaBinding) {
+        val dto = FxDefaultDto(version = 2, metaBindings = listOf(binding.toDto()), parameters = emptyMap())
+        try {
+            if (!overridesDir.exists()) overridesDir.mkdirs()
+            File(overridesDir, "$contentHash.json").writeText(json.encodeToString(FxDefaultDto.serializer(), dto))
+            overrideCache[contentHash] = dto
         } catch (e: Exception) {
             logger.warn(e) { "Failed to save ISF Metaknob override for hash $contentHash" }
         }

@@ -221,12 +221,7 @@ class DeckPresetController(
         val isDirty = session.presetManager.isDeckDirty(deck, mixer)
 
         val doSwitch = {
-            deck.source = newSource.clone()
-            deck.isEmpty = false
-            session.deckLifecycleManager.clearDeckActivePreset(deck, mixer)
-            state.clearSelection()
-            state.setDeckSubTab(deckLabel, "SRC")
-            ParametersUndo.pushUndoState(state, mixer)
+            DeckSourcePicker.swapSource(session, state, mixer, deck, deckLabel, newSource)
         }
 
         if (!activeName.isNullOrBlank() || isDirty) {

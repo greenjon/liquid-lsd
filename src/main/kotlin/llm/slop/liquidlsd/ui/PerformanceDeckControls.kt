@@ -9,7 +9,9 @@ import imgui.type.ImString
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.osc.OscLearnState
+import llm.slop.liquidlsd.presets.GeneratorDefaults
 import llm.slop.liquidlsd.rendering.Deck
+import llm.slop.liquidlsd.rendering.ExternalVideoSource
 import llm.slop.liquidlsd.rendering.Mixer
 import java.io.File
 
@@ -103,11 +105,39 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         if (ImGui.invisibleButton("##perf_gen_badge_$tag", genBadgeW, ctrlH)) {
             DeckSourcePicker.open(session, parametersState, mixer, deck, deckLabel, ctx.deckPresetController)
         }
+        val canonicalBankId = MacroEngine.deckBankIdFor(deck, mixer) ?: MacroEngine.DECK_A
+        val isExternalVideo = deck.source is ExternalVideoSource
+        val sourceId = GeneratorDefaults.sourceIdFor(deck.source)
+        val hasUserDef = GeneratorDefaults.hasUserDefault(sourceId)
+
+        if (ImGui.beginPopupContextItem("##perf_gen_badge_ctx_$tag")) {
+            if (ImGui.menuItem("Change Source...")) {
+                DeckSourcePicker.open(session, parametersState, mixer, deck, deckLabel, ctx.deckPresetController)
+            }
+            if (!deck.isEmpty && !isExternalVideo) {
+                ImGui.separator()
+                if (ImGui.menuItem("Save as Default for $genName")) {
+                    GeneratorDefaults.saveDefault(deck, canonicalBankId)
+                }
+                if (ImGui.menuItem("Apply Default Now")) {
+                    GeneratorDefaults.applyToDeck(deck, deckLabel, canonicalBankId)
+                }
+                if (hasUserDef && ImGui.menuItem("Reset to Factory Default")) {
+                    GeneratorDefaults.deleteDefault(sourceId)
+                    GeneratorDefaults.applyToDeck(deck, deckLabel, canonicalBankId)
+                }
+            }
+            ImGui.endPopup()
+        }
         if (ImGui.isItemHovered()) {
             ImGui.setMouseCursor(ImGuiMouseCursor.Hand)
             dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, ImGui.colorConvertFloat4ToU32(0.60f, 0.70f, 0.90f, 1f), 4f, 0, 1.5f)
         }
-        itemTooltip(if (deck.isEmpty) "$deckLabel is empty. Click to choose a visual source." else "Generator: $genName ($deckLabel). Click to change the visual source.")
+        itemTooltip(
+            if (deck.isEmpty) "$deckLabel is empty. Click to choose a visual source."
+            else if (isExternalVideo) "Generator: $genName ($deckLabel). Click to change the visual source."
+            else "Generator: $genName ($deckLabel). Click to change source, right-click for defaults."
+        )
 
         ImGui.sameLine(0f, gap)
 

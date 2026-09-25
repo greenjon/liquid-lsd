@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.macro
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ParameterResolver
+import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 
@@ -47,6 +48,15 @@ object MacroEngine {
         DECK_A_FX, DECK_B_FX, DECK_BG_FX, DECK_PV_FX,
         TRANS, MASTER, FX_SENDS, MASTER_FX
     )
+
+    /** The canonical bank id for [deck] on [mixer], or null if not recognized. */
+    fun deckBankIdFor(deck: Deck, mixer: Mixer): String? = when {
+        deck === mixer.deckA -> DECK_A
+        deck === mixer.deckB -> DECK_B
+        deck === mixer.deckBG -> DECK_BG
+        deck === mixer.deckPV -> DECK_PV
+        else -> null
+    }
 
     /**
      * Knob count for a freshly auto-vivified bank. All canonical banks

@@ -107,6 +107,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── models/
 │   ├── PresetModels.kt         — Data models + DTOs for preset serialization
 │   ├── FXPresetModels.kt       — Data models for per-slot (.lsdfx) and FX chain (.lsdfxchain) serialization
+│   ├── GeneratorDefaultModels.kt — Data models for generator starting configurations & macro defaults (`GeneratorDefaultDto`)
 │   └── ClipboardManager.kt     — Copy/paste for preset, slot, and chain elements
 ├── notes/
 │   └── NotesManager.kt         — 3-tier notes persistence manager (global source notes, preset notes, param notes)
@@ -120,7 +121,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   └── WaveformMath.kt         — Math utils
 ├── macro/                      — Macro Controls & Parameter Linking engine; see docs/user_guide/macros_and_rack.md
 │   ├── MacroModels.kt          — Data model: `MacroBinding`, `MacroControl` (rotary knob value), `MacroBank` (up to 4 knobs)
-│   ├── MacroCurve.kt           — Pure curve-shaping math (LINEAR/EXPONENTIAL/LOGARITHMIC/S_CURVE/STEP), knob-travel windowing, and min/max/invert range mapping
+│   ├── MacroCurve.kt           — Pure curve-shaping math (LINEAR/EXPONENTIAL/LOGARITHMIC/S_CURVE/STEP), inverse curve mapping (`inverse`), knob-travel windowing, and min/max/invert range mapping
 │   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; 12 canonical bank ids (`DECK_A`..`DECK_PV`, `DECK_A_FX`..`DECK_PV_FX`, `TRANS`, `MASTER`, `FX_SENDS`, `MASTER_FX`), read/written by both Column 3 MACROS and the Performance Mode 4×4 Matrix
 │   ├── FxMacroSync.kt          — Bidirectional synchronization between FX chains/banks and canonical macro knobs (Super Knob + Metaknobs)
 │   ├── MacroLearnState.kt      — Interactive click-to-bind Learn Mode session state machine and UI status banner
@@ -129,6 +130,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── presets/
 │   ├── PresetManager.kt        — Save/load presets, state management, per-deck dirty-state cache (`isDeckDirty`)
 │   ├── PresetRepository.kt     — Async load/save for deck presets, FX presets/chains/playlists, and transition presets/playlists (`CompletableFuture` + bounded executor)
+│   ├── GeneratorDefaults.kt    — 3-tier defaults resolution engine (user defaults in `library/generator_defaults/<sourceId>.json`, curated stock defaults, heuristic fallback) with whole-bank swap and zero-jump inverse curve mapping
 │   ├── PresetDependencyAnalyzer.kt — Dependency analysis, disabled/offline feature inspection, zero-alloc memoization
 │   ├── PresetMigrator.kt       — Sanitizes a loaded `DeckPresetDto` against the active visual source/feedback schema, filling defaults & stripping obsolete keys
 │   ├── DeckLifecycleManager.kt — Deck clear/copy/move/swap operations and associated active-preset bookkeeping

@@ -155,4 +155,93 @@ class ISFAutoBindEngineTest {
 
         ISFAutoBindEngine.deleteOverride(hash)
     }
+
+    @Test
+    fun `rebindMetaKnob does not implicitly write to disk`() {
+        val hash = "test_no_implicit_${System.nanoTime()}"
+        val header = ISFHeader(INPUTS = listOf(
+            ISFInput(NAME = "inputImage", TYPE = "image"),
+            ISFInput(NAME = "alpha", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(1.0f)),
+            ISFInput(NAME = "beta", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(1.0f))
+        ))
+        val shader = mockk<Shader>(relaxed = true)
+        val filter1 = ISFFilter("unbound_no_implicit", "Unbound", header, shader, contentHash = hash)
+
+        // Default persistOverride is false
+        filter1.rebindMetaKnob(FxMetaBinding("beta", 0f, 1f))
+        assertEquals("beta", filter1.metaBinding.targetParamName)
+
+        assertFalse(ISFAutoBindEngine.hasFilterDefault(filter1))
+
+        // Fresh filter should NOT see the override
+        val filter2 = ISFFilter("unbound_no_implicit", "Unbound", header, shader, contentHash = hash)
+        assertEquals("alpha", filter2.metaBinding.targetParamName)
+    }
+
+    @Test
+    fun `v2 multi-binding and parameter baselines round-trip`() {
+        val hash = "test_v2_${System.nanoTime()}"
+        val header = ISFHeader(INPUTS = listOf(
+            ISFInput(NAME = "inputImage", TYPE = "image"),
+            ISFInput(NAME = "gain", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(2.0f), DEFAULT = JsonPrimitive(1.0f)),
+            ISFInput(NAME = "cutoff", TYPE = "float", MIN = JsonPrimitive(20.0f), MAX = JsonPrimitive(20000.0f), DEFAULT = JsonPrimitive(1000.0f))
+        ))
+        val shader = mockk<Shader>(relaxed = true)
+        val filter1 = ISFFilter("unbound_v2", "Unbound", header, shader, contentHash = hash)
+
+        filter1.parameters["gain"]?.baseValue = 1.8f
+        filter1.parameters["cutoff"]?.baseValue = 5000f
+        filter1.applyMetaBindingsFromPreset(listOf(
+            FxMetaBinding("gain", 0f, 2f),
+            FxMetaBinding("cutoff", 20f, 20000f, curve = MetaCurve.EXPONENTIAL)
+        ))
+
+        ISFAutoBindEngine.saveFilterDefault(filter1)
+        assertTrue(ISFAutoBindEngine.hasFilterDefault(filter1))
+
+        // Fresh instance should restore both bindings and parameter baselines
+        val filter2 = ISFFilter("unbound_v2", "Unbound", header, shader, contentHash = hash)
+        assertEquals(1.8f, filter2.parameters["gain"]?.baseValue)
+        assertEquals(5000f, filter2.parameters["cutoff"]?.baseValue)
+        assertEquals(2, filter2.metaBindings.size)
+        assertEquals("gain", filter2.metaBindings[0].targetParamName)
+        assertEquals("cutoff", filter2.metaBindings[1].targetParamName)
+        assertEquals(MetaCurve.EXPONENTIAL, filter2.metaBindings[1].curve)
+
+        ISFAutoBindEngine.deleteFilterDefault(filter1)
+        assertFalse(ISFAutoBindEngine.hasFilterDefault(filter1))
+    }
+
+    @Test
+    fun `legacy single-binding json loads successfully`() {
+        val hash = "test_legacy_${System.nanoTime()}"
+        val header = ISFHeader(INPUTS = listOf(
+            ISFInput(NAME = "inputImage", TYPE = "image"),
+            ISFInput(NAME = "alpha", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(1.0f)),
+            ISFInput(NAME = "legacyParam", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(5.0f))
+        ))
+        val shader = mockk<Shader>(relaxed = true)
+
+        // Write a legacy single FxMetaBindingDto JSON directly to disk
+        val legacyJson = """
+            {
+              "targetParamName": "legacyParam",
+              "minVal": 0.0,
+              "maxVal": 5.0,
+              "curve": "LINEAR",
+              "invert": false,
+              "linkMode": "FULL",
+              "enabled": true
+            }
+        """.trimIndent()
+        val file = java.io.File(ISFAutoBindEngine.overridesDir, "$hash.json")
+        file.parentFile?.mkdirs()
+        file.writeText(legacyJson)
+
+        val filter = ISFFilter("unbound_legacy", "Unbound", header, shader, contentHash = hash)
+        assertEquals("legacyParam", filter.metaBinding.targetParamName)
+        assertEquals(5.0f, filter.metaBinding.maxVal)
+
+        ISFAutoBindEngine.deleteOverride(hash)
+    }
 }

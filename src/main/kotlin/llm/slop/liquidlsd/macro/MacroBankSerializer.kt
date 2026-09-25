@@ -59,6 +59,7 @@ object MacroBankSerializer {
             val destKnob = targetBank.knobs[i]
             val srcKnob = deckBank?.knobs?.getOrNull(i)
             destKnob.label = srcKnob?.label ?: ""
+            destKnob.value = srcKnob?.value ?: 0f
             destKnob.bindings.clear()
             srcKnob?.bindings?.forEach { destKnob.bindings.add(it.copy(parameterId = remapParamId(it.parameterId))) }
         }

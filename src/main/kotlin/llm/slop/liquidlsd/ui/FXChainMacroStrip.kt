@@ -190,7 +190,7 @@ object FXChainMacroStrip {
                     onValueChanged = { fx.metaKnob.set(it); onPushUndo() }
                 )
                 ImGui.endGroup()
-                itemTooltip("${fx.displayName}'s macro control (auto-bound to ${fx.metaBinding.targetParamName ?: "Dry/Wet"}). Right-click to rebind or bind hardware MIDI/OSC.")
+                itemTooltip("${fx.displayName}'s macro control (bound to ${fx.metaBinding.targetParamName ?: "Dry/Wet"}). Right-click to rebind or save defaults, or bind hardware MIDI/OSC.")
                 drawRebindContextMenu(fx, chainPrefix, i)
             }
         }
@@ -275,17 +275,29 @@ object FXChainMacroStrip {
         val floatInputs = fx.header.INPUTS.filter { it.TYPE.equals("float", ignoreCase = true) }
         for (input in floatInputs) {
             val param = fx.parameters[input.NAME] ?: continue
-            if (ImGui.menuItem(input.LABEL ?: input.NAME)) {
-                fx.rebindMetaKnob(FxMetaBinding(input.NAME, param.minClamp, param.maxClamp, MetaCurve.LINEAR))
+            val isCurrent = fx.metaBinding.targetParamName == input.NAME
+            if (ImGui.menuItem(input.LABEL ?: input.NAME, "", isCurrent)) {
+                fx.rebindMetaKnob(FxMetaBinding(input.NAME, param.minClamp, param.maxClamp, MetaCurve.LINEAR), persistOverride = false)
             }
         }
         ImGui.separator()
-        if (ImGui.menuItem("Bind to Dry/Wet (safety net)")) {
-            fx.rebindMetaKnob(FxMetaBinding.DRY_WET_SAFETY_NET)
+        val isDryWet = fx.metaBinding.targetParamName == null
+        if (ImGui.menuItem("Bind to Dry/Wet (safety net)", "", isDryWet)) {
+            fx.rebindMetaKnob(FxMetaBinding.DRY_WET_SAFETY_NET, persistOverride = false)
         }
-        if (fx.contentHash != null && ImGui.menuItem("Reset to Auto-Bind Default")) {
-            ISFAutoBindEngine.deleteOverride(fx.contentHash)
-            fx.applyMetaBindingFromPreset(ISFAutoBindEngine.resolveBinding(fx))
+        if (fx.contentHash != null) {
+            ImGui.separator()
+            if (ImGui.menuItem("Save as Default for ${fx.displayName}")) {
+                ISFAutoBindEngine.saveFilterDefault(fx)
+            }
+            if (ISFAutoBindEngine.hasFilterDefault(fx) && ImGui.menuItem("Reset to Factory Default")) {
+                ISFAutoBindEngine.deleteFilterDefault(fx)
+                val defaultDto = ISFAutoBindEngine.resolveDefault(fx)
+                fx.applyMetaBindingsFromPreset(ISFAutoBindEngine.resolveBindings(fx))
+                defaultDto.parameters.forEach { (name, value) ->
+                    fx.parameters[name]?.baseValue = value
+                }
+            }
         }
     }
 

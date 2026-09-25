@@ -780,6 +780,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#generator-fx-defaults-save-as-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generator &amp; FX Defaults ("Save as Default")
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Generator &amp; FX Defaults (&#34;Save as Default&#34;)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#visual-generator-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Generator Defaults
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#explicit-isf-fx-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explicit ISF FX Defaults
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#shortcuts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1657,6 +1696,45 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#generator-fx-defaults-save-as-default" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Generator &amp; FX Defaults ("Save as Default")
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Generator &amp; FX Defaults (&#34;Save as Default&#34;)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#visual-generator-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Visual Generator Defaults
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#explicit-isf-fx-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Explicit ISF FX Defaults
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#shortcuts" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2119,8 +2197,30 @@ with the parameter selected.</p>
 </tr>
 </tbody>
 </table>
-<p>Deck generator banks start blank by default for custom binding in the MACROS editor, while Master, Transitions, and FX banks initialize with pre-mapped smart defaults. The five FX banks bind to their chain's <code>Deck A/FX/...</code> … <code>Master/FX/...</code> parameters and re-sync automatically whenever that chain's contents change (loading a chain, swapping a slot, restoring a session) — any knob you've retargeted by hand is left alone; <strong>Resync</strong> forces the defaults back. All 12 canonical banks are preserved in <code>last_session.json</code> and session files.</p>
+<p>Deck generator banks initialize from their generator's default preset. Master, Transitions, and FX banks initialize with pre-mapped smart defaults. The five FX banks bind to their chain's <code>Deck A/FX/...</code> … <code>Master/FX/...</code> parameters and re-sync automatically whenever that chain's contents change (loading a chain, swapping a slot, restoring a session) — any knob you've retargeted by hand is left alone; <strong>Resync</strong> forces the defaults back. All 12 canonical banks are preserved in <code>last_session.json</code> and session files.</p>
 <p>Banks are saved in <code>last_session.json</code> and bundled into preset files automatically.</p>
+<hr />
+<h2 id="generator-fx-defaults-save-as-default">Generator &amp; FX Defaults ("Save as Default")</h2>
+<p>Similar to Ableton's default presets, you can configure your favorite parameter starting points and 4-knob macro layouts for any visual generator or ISF FX filter, and save them as that device's permanent default.</p>
+<h3 id="visual-generator-defaults">Visual Generator Defaults</h3>
+<p>When swapping visual sources on any deck (via the generator badge or launchpad), the incoming generator's default configuration is resolved across three tiers:
+1. <strong>User Default</strong>: Custom parameter baselines, <code>globalAlpha</code>, and 4-knob macro layout saved in <code>library/generator_defaults/&lt;sourceId&gt;.json</code>.
+2. <strong>Curated Stock Default</strong>: Hand-curated 4-knob macro bindings for bundled generators (<code>mandala</code>, <code>dynamic_spiral</code>, <code>icosa_h3</code>, <code>domain_warp_fluid</code>, <code>gyroid_hyperspace</code>, <code>celestial_engine</code>, <code>hyper_slice</code>, <code>chladni_cymatics</code>).
+3. <strong>Automated Heuristic Fallback</strong>: For third-party ISF shaders, continuous floats (e.g. speed, rate, zoom, scale, morph, depth, detail) are prioritized, discrete stepped selectors are filtered out, and speed/frequency parameters are shaped with exponential response curves.</p>
+<p><strong>Bank Replacement Behavior</strong>: Applying a default replaces the resident 4-knob deck bank wholesale, identical to preset loading. Stored <code>Deck/*</code> bindings are dynamically remapped to the target deck slot (e.g., <code>Deck A</code>, <code>Deck B</code>). Knobs are positioned via inverse-curve mapping so parameter values do not jump on load. Hardware MIDI mappings are stripped on save to avoid duplicate hardware CC collisions across decks.</p>
+<p><strong>How to Save or Reset Generator Defaults</strong>:
+- <strong>Right-click the generator badge</strong> on any deck row in Performance Mode to open the context menu:
+  - <code>Save as Default for &lt;Generator&gt;</code>: Saves current parameters, alpha, and 4-knob macro layout as the generator default.
+  - <code>Apply Default Now</code>: Reapplies the default layout and parameters to the current deck.
+  - <code>Reset to Factory Default</code>: Deletes the user default file and restores curated/heuristic factory defaults.
+- Alternatively, open the <strong>Save menu</strong> in Deep Edit's monitor toolbar and select <code>Save as Default for &lt;Generator&gt;</code>.</p>
+<h3 id="explicit-isf-fx-defaults">Explicit ISF FX Defaults</h3>
+<p>In the FX Chain Macro Strip (and Deep Edit FX views), slot Metaknobs and parameters can be customized and explicitly saved:
+- Tweaking parameters or re-targeting Metaknobs during performance is purely temporary and does <strong>not</strong> silently overwrite defaults on disk.
+- <strong>Right-click any Metaknob</strong> in the FX strip:
+  - Select any parameter from the list (or <code>Bind to Dry/Wet (safety net)</code>) to rebind the Metaknob.
+  - Choose <code>Save as Default for &lt;Filter&gt;</code> to persist the current Metaknob bindings and parameter baseline into <code>library/isf_overrides/&lt;contentHash&gt;.json</code>.
+  - When a user default is present, choose <code>Reset to Factory Default</code> to revert to stock curated/heuristic bindings.</p>
 <hr />
 <h2 id="shortcuts">Shortcuts</h2>
 <table>

@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#customizable-default-configurations-macro-bindings-for-generators-and-fx-generatordefaultskt-generatordefaultmodelskt-isfautobindenginekt-isffilterkt-macrocurvekt-decksourcepickerkt-performancedeckcontrolskt-deckcontrolpanelkt-fxchainmacrostripkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Customizable Default Configurations &amp; Macro Bindings for Generators and FX (GeneratorDefaults.kt, GeneratorDefaultModels.kt, ISFAutoBindEngine.kt, ISFFilter.kt, MacroCurve.kt, DeckSourcePicker.kt, PerformanceDeckControls.kt, DeckControlPanel.kt, FXChainMacroStrip.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#macros-and-deep-edit-share-one-focus-macropanelkt-macrobindinginspectorkt-parametersstatekt-performancedeepeditbaykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4041,6 +4052,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#customizable-default-configurations-macro-bindings-for-generators-and-fx-generatordefaultskt-generatordefaultmodelskt-isfautobindenginekt-isffilterkt-macrocurvekt-decksourcepickerkt-performancedeckcontrolskt-deckcontrolpanelkt-fxchainmacrostripkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Customizable Default Configurations &amp; Macro Bindings for Generators and FX (GeneratorDefaults.kt, GeneratorDefaultModels.kt, ISFAutoBindEngine.kt, ISFFilter.kt, MacroCurve.kt, DeckSourcePicker.kt, PerformanceDeckControls.kt, DeckControlPanel.kt, FXChainMacroStrip.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#macros-and-deep-edit-share-one-focus-macropanelkt-macrobindinginspectorkt-parametersstatekt-performancedeepeditbaykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6849,6 +6871,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="customizable-default-configurations-macro-bindings-for-generators-and-fx-generatordefaultskt-generatordefaultmodelskt-isfautobindenginekt-isffilterkt-macrocurvekt-decksourcepickerkt-performancedeckcontrolskt-deckcontrolpanelkt-fxchainmacrostripkt">Customizable Default Configurations &amp; Macro Bindings for Generators and FX (<code>GeneratorDefaults.kt</code>, <code>GeneratorDefaultModels.kt</code>, <code>ISFAutoBindEngine.kt</code>, <code>ISFFilter.kt</code>, <code>MacroCurve.kt</code>, <code>DeckSourcePicker.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>DeckControlPanel.kt</code>, <code>FXChainMacroStrip.kt</code>)</h3>
+<ul>
+<li><strong>Visual Generator Defaults</strong>: Any visual generator can now have its parameter baselines, <code>globalAlpha</code>, and 4-knob macro layout saved as a permanent default ("Save as Default"). When swapping generators on any deck, the generator's default layout is resolved automatically across 3 tiers (user defaults in <code>library/generator_defaults/&lt;sourceId&gt;.json</code>, curated defaults for bundled stock generators, and automated heuristic fallback for third-party shaders).</li>
+<li><strong>Whole-Bank Replacement &amp; Inverse Curve Mapping</strong>: Applying a generator default replaces the deck's 4-knob bank wholesale (identical to preset loading) with deck-agnostic path remapping. Knob values are automatically calculated from target parameter values using <code>MacroCurve.inverse</code>, preventing parameter jumps on load.</li>
+<li><strong>Save and Reset Context Menus</strong>: Right-click any generator badge in Performance Mode to access <strong>Save as Default for <Generator></strong>, <strong>Apply Default Now</strong>, or <strong>Reset to Factory Default</strong>. The monitor toolbar in Deep Edit also provides <strong>Save as Default</strong>.</li>
+<li><strong>Explicit ISF FX Defaults</strong>: Removed implicit saving from <code>ISFFilter.rebindMetaKnob</code>. Rebinding Metaknobs or tweaking parameters during a live set is now temporary by default. Right-click any Metaknob in the FX strip to explicitly choose <strong>Save as Default for <Filter></strong> (persisted into <code>library/isf_overrides/&lt;contentHash&gt;.json</code> via v2 <code>FxDefaultDto</code>) or <strong>Reset to Factory Default</strong>.</li>
+<li><strong>Hardware MIDI Safety</strong>: Hardware MIDI assignments (<code>mappedMidiId</code>) are automatically stripped when saving defaults to prevent duplicate CC mappings across different deck slots.</li>
+</ul>
 <h3 id="macros-and-deep-edit-share-one-focus-macropanelkt-macrobindinginspectorkt-parametersstatekt-performancedeepeditbaykt">MACROS and Deep Edit share one focus (<code>MacroPanel.kt</code>, <code>MacroBindingInspector.kt</code>, <code>ParametersState.kt</code>, <code>PerformanceDeepEditBay.kt</code>)</h3>
 <ul>
 <li><strong>MACROS tabs switch Deep Edit</strong>: If Deep Edit is open, picking a tab in Column 3's MACROS panel (e.g. <strong>B FX</strong>) now switches Deep Edit to that deck and section. <code>SOLO</code> swaps the bay; <code>MULTI</code> opens it next to the others. Before, Deep Edit immediately switched MACROS back, so the tabs seemed to do nothing.</li>

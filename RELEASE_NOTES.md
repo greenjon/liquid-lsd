@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Customizable Default Configurations & Macro Bindings for Generators and FX (`GeneratorDefaults.kt`, `GeneratorDefaultModels.kt`, `ISFAutoBindEngine.kt`, `ISFFilter.kt`, `MacroCurve.kt`, `DeckSourcePicker.kt`, `PerformanceDeckControls.kt`, `DeckControlPanel.kt`, `FXChainMacroStrip.kt`)
+- **Visual Generator Defaults**: Any visual generator can now have its parameter baselines, `globalAlpha`, and 4-knob macro layout saved as a permanent default ("Save as Default"). When swapping generators on any deck, the generator's default layout is resolved automatically across 3 tiers (user defaults in `library/generator_defaults/<sourceId>.json`, curated defaults for bundled stock generators, and automated heuristic fallback for third-party shaders).
+- **Whole-Bank Replacement & Inverse Curve Mapping**: Applying a generator default replaces the deck's 4-knob bank wholesale (identical to preset loading) with deck-agnostic path remapping. Knob values are automatically calculated from target parameter values using `MacroCurve.inverse`, preventing parameter jumps on load.
+- **Save and Reset Context Menus**: Right-click any generator badge in Performance Mode to access **Save as Default for <Generator>**, **Apply Default Now**, or **Reset to Factory Default**. The monitor toolbar in Deep Edit also provides **Save as Default**.
+- **Explicit ISF FX Defaults**: Removed implicit saving from `ISFFilter.rebindMetaKnob`. Rebinding Metaknobs or tweaking parameters during a live set is now temporary by default. Right-click any Metaknob in the FX strip to explicitly choose **Save as Default for <Filter>** (persisted into `library/isf_overrides/<contentHash>.json` via v2 `FxDefaultDto`) or **Reset to Factory Default**.
+- **Hardware MIDI Safety**: Hardware MIDI assignments (`mappedMidiId`) are automatically stripped when saving defaults to prevent duplicate CC mappings across different deck slots.
+
 ### MACROS and Deep Edit share one focus (`MacroPanel.kt`, `MacroBindingInspector.kt`, `ParametersState.kt`, `PerformanceDeepEditBay.kt`)
 - **MACROS tabs switch Deep Edit**: If Deep Edit is open, picking a tab in Column 3's MACROS panel (e.g. **B FX**) now switches Deep Edit to that deck and section. `SOLO` swaps the bay; `MULTI` opens it next to the others. Before, Deep Edit immediately switched MACROS back, so the tabs seemed to do nothing.
 - **MACROS Learn opens Deep Edit**: The **LEARN** button in the MACROS Binding Inspector now opens that deck's Deep Edit if it's closed, the same as a knob's inline `[Learn]` in the Performance Matrix.

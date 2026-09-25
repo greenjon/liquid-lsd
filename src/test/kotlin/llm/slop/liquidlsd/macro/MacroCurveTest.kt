@@ -217,6 +217,51 @@ class MacroCurveTest {
         assertEquals(0f, MacroCurve.mapToRange(Float.NaN, binding), absoluteTolerance = 1e-6f)
     }
 
+    @Test
+    fun testInverseRoundTripForLinearExponentialAndLogarithmic() {
+        val curves = listOf(MacroCurveType.LINEAR, MacroCurveType.EXPONENTIAL, MacroCurveType.LOGARITHMIC)
+        val invertedFlags = listOf(false, true)
+        val testValues = listOf(0.0f, 0.1f, 0.25f, 0.5f, 0.73f, 0.9f, 1.0f)
+
+        for (curve in curves) {
+            for (inverted in invertedFlags) {
+                val binding = MacroBinding(
+                    parameterId = "test",
+                    targetType = MacroTargetType.PARAM_BASE_VALUE,
+                    minVal = 2.0f,
+                    maxVal = 10.0f,
+                    curve = curve,
+                    inverted = inverted,
+                    linkMode = MacroLinkMode.FULL
+                )
+                for (v in testValues) {
+                    val target = MacroCurve.mapToRange(v, binding)
+                    val invertedV = MacroCurve.inverse(target, binding)
+                    assertEquals(v, invertedV, absoluteTolerance = 1e-4f,
+                        message = "Failed inverse round-trip for curve=$curve, inverted=$inverted, v=$v (target=$target, invertedV=$invertedV)")
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testInverseWithInvertedRangeEndpoints() {
+        val binding = MacroBinding(
+            parameterId = "test",
+            targetType = MacroTargetType.PARAM_BASE_VALUE,
+            minVal = 100f,
+            maxVal = 0f,
+            curve = MacroCurveType.EXPONENTIAL,
+            inverted = false,
+            linkMode = MacroLinkMode.FULL
+        )
+        for (v in listOf(0f, 0.2f, 0.5f, 0.8f, 1f)) {
+            val target = MacroCurve.mapToRange(v, binding)
+            val invertedV = MacroCurve.inverse(target, binding)
+            assertEquals(v, invertedV, absoluteTolerance = 1e-4f)
+        }
+    }
+
     private fun assertEquals(expected: Float, actual: Float, absoluteTolerance: Float, message: String? = null) {
         assertTrue(kotlin.math.abs(expected - actual) <= absoluteTolerance, message ?: "Expected $expected but was $actual (tolerance $absoluteTolerance)")
     }

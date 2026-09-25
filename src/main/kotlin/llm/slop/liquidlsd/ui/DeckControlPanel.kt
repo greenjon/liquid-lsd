@@ -529,6 +529,14 @@ fun drawDeckMonitorToolbar(
         if (ImGui.menuItem("Save As...")) {
             onSaveDeck(deck, isDeckA, true)
         }
+        if (!deck.isEmpty && deck.source !is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
+            ImGui.separator()
+            val genName = deck.source.displayName
+            if (ImGui.menuItem("Save as Default for $genName")) {
+                val bankId = llm.slop.liquidlsd.macro.MacroEngine.deckBankIdFor(deck, mixer) ?: llm.slop.liquidlsd.macro.MacroEngine.DECK_A
+                llm.slop.liquidlsd.presets.GeneratorDefaults.saveDefault(deck, bankId)
+            }
+        }
         ImGui.endPopup()
     }
 

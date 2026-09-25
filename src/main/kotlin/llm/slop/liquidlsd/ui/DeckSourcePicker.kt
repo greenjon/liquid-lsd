@@ -36,6 +36,30 @@ object DeckSourcePicker {
         }
     }
 
+    fun swapSource(
+        session: llm.slop.liquidlsd.SessionContext,
+        state: ParametersState,
+        mixer: Mixer,
+        deck: Deck,
+        deckLabel: String,
+        newSource: VisualSource
+    ) {
+        deck.source = newSource.clone()
+        deck.isEmpty = false
+        val canonicalBankId = llm.slop.liquidlsd.macro.MacroEngine.deckBankIdFor(deck, mixer)
+            ?: when (deckLabel) {
+                "Deck B" -> llm.slop.liquidlsd.macro.MacroEngine.DECK_B
+                "Deck BG" -> llm.slop.liquidlsd.macro.MacroEngine.DECK_BG
+                "Deck PV" -> llm.slop.liquidlsd.macro.MacroEngine.DECK_PV
+                else -> llm.slop.liquidlsd.macro.MacroEngine.DECK_A
+            }
+        llm.slop.liquidlsd.presets.GeneratorDefaults.applyToDeck(deck, deckLabel, canonicalBankId)
+        session.deckLifecycleManager.clearDeckActivePreset(deck, mixer)
+        state.clearSelection()
+        state.setDeckSubTab(deckLabel, "SRC")
+        ParametersUndo.pushUndoState(state, mixer)
+    }
+
     fun changeSource(
         session: llm.slop.liquidlsd.SessionContext,
         state: ParametersState,
@@ -48,12 +72,7 @@ object DeckSourcePicker {
         if (deckPresetController != null) {
             deckPresetController.changeVisualSourceSafely(mixer, deck, deckLabel, newSource, state)
         } else {
-            deck.source = newSource.clone()
-            deck.isEmpty = false
-            session.deckLifecycleManager.clearDeckActivePreset(deck, mixer)
-            state.clearSelection()
-            state.setDeckSubTab(deckLabel, "SRC")
-            ParametersUndo.pushUndoState(state, mixer)
+            swapSource(session, state, mixer, deck, deckLabel, newSource)
         }
     }
 

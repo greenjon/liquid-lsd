@@ -59,4 +59,47 @@ object MacroCurve {
         val t = if (binding.inverted) 1f - shaped else shaped
         return binding.minVal + t * (binding.maxVal - binding.minVal)
     }
+
+    /**
+     * Inverts [mapToRange] to calculate the normalized knob value [0,1] needed to reproduce [target].
+     * Exactly inverts LINEAR, EXPONENTIAL, and LOGARITHMIC curves with FULL link mode, and provides
+     * best-effort clamped fallbacks for piecewise link modes and stepped/S-curves.
+     */
+    fun inverse(target: Float, binding: MacroBinding): Float {
+        val range = binding.maxVal - binding.minVal
+        if (kotlin.math.abs(range) < 1e-6f) return 0f
+
+        val tRaw = (target - binding.minVal) / range
+        val t = if (tRaw.isNaN()) 0f else tRaw.coerceIn(0f, 1f)
+        val shaped = if (binding.inverted) 1f - t else t
+
+        val windowed = when (binding.curve) {
+            MacroCurveType.LINEAR -> shaped
+            MacroCurveType.EXPONENTIAL -> kotlin.math.sqrt(shaped)
+            MacroCurveType.LOGARITHMIC -> 1f - kotlin.math.sqrt((1f - shaped).coerceAtLeast(0f))
+            MacroCurveType.S_CURVE -> {
+                var low = 0f
+                var high = 1f
+                var mid = shaped
+                for (i in 0 until 12) {
+                    mid = (low + high) * 0.5f
+                    val sm = mid * mid * (3f - 2f * mid)
+                    if (sm < shaped) low = mid else high = mid
+                }
+                mid
+            }
+            MacroCurveType.STEP -> shaped
+        }
+
+        val macroVal = when (binding.linkMode) {
+            MacroLinkMode.FULL -> windowed
+            MacroLinkMode.FIRST_HALF -> windowed * 0.5f
+            MacroLinkMode.SECOND_HALF -> 0.5f + windowed * 0.5f
+            MacroLinkMode.TRIANGLE -> windowed * 0.5f
+            MacroLinkMode.BIPOLAR -> 0.5f + windowed * 0.5f
+        }
+
+        return if (macroVal.isNaN()) 0f else macroVal.coerceIn(0f, 1f)
+    }
 }
+

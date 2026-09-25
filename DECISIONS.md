@@ -1,3 +1,19 @@
+## Customizable Default Configurations & Bindings for Visual Generators and FX (`GeneratorDefaults.kt`, `GeneratorDefaultModels.kt`, `ISFAutoBindEngine.kt`, `ISFFilter.kt`, `MacroCurve.kt`, `MacroEngine.kt`, `DeckSourcePicker.kt`, `PerformanceDeckControls.kt`, `DeckControlPanel.kt`, `FXChainMacroStrip.kt`, docs, tests)
+
+- **Context**: 2026-09-25. When switching visual generators or adding ISF FX filters, devices previously had no persistent starting configurations or macro knob bindings; users had to manually re-bind deck macro knobs on every source change. Additionally, `ISFFilter.rebindMetaKnob` silently persisted overrides on every edit without explicit user intent.
+- **Decision**:
+  - Implement a 3-tier defaults resolution engine (`GeneratorDefaults.kt`) for visual sources:
+    1. User defaults stored explicitly in `library/generator_defaults/<sourceId>.json`.
+    2. Hand-curated 4-knob macro bindings for bundled stock generators (`mandala`, `dynamic_spiral`, `icosa_h3`, `domain_warp_fluid`, `gyroid_hyperspace`, `celestial_engine`, `hyper_slice`, `chladni_cymatics`).
+    3. Heuristic fallback for third-party ISF shaders: filtering out discrete selector floats, prioritizing continuous parameters (speed, zoom, morph, detail, etc.), and assigning exponential curves to time/frequency inputs.
+  - **Bank Replacement on Source Swap**: Swapping a source replaces the resident 4-knob deck bank wholesale, identically to preset loading (`installBankForDeck`), dynamically remapping `Deck/` targets to the resident deck slot (`Deck A`, `Deck B`, etc.).
+  - **Zero Parameter Jump via Inverse Curve Mapping**: `MacroCurve.inverse()` maps parameter values back to normalized knob values on default installation, preventing visual jumps.
+  - **Explicit FX Defaults**: Remove implicit persistence from `rebindMetaKnob(persistOverride = false)`. Metaknob customizations and parameter baselines are saved intentionally via right-click context menu ("Save as Default for <Filter>" / "Reset to Factory Default") into v2 `FxDefaultDto` in `library/isf_overrides/<contentHash>.json` while retaining backwards compatibility with legacy single-binding overrides.
+  - **Hardware MIDI Safety**: Strip `mappedMidiId` / `midiMapMin/Max` when saving generator defaults to prevent duplicate CC assignments across decks.
+- **Rationale**: Gives performers immediate, playable macro layouts whenever loading generators or FX, establishes predictable "what you save is what you get" behavior during live sets, and prevents accidental persistence during performance.
+
+---
+
 ## MACROS and Deep Edit share one focus (`MacroPanel.kt`, `MacroBindingInspector.kt`, `ParametersState.kt`, `PerformanceDeepEditBay.kt`)
 
 - **Context**: 2026-09-25. `drawRackDeepEdit` reset `ParametersState.activeTopTab` to its own deck on every frame. With Deep Edit open, the MACROS tab strip looked dead because its clicks were overwritten a frame later. Without Deep Edit, the MACROS **LEARN** button armed Learn but left the user with nothing to click.
