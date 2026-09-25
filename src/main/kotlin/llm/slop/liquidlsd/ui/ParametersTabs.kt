@@ -196,6 +196,7 @@ object ParametersTabs {
                 val subTabH = btnH ?: (ImGui.getTextLineHeight() + 8f).coerceAtLeast(26f)
 
                 if (ImGui.button(tab, btnW, subTabH)) {
+                    llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(state.activeTopTab, tab)
                     when (state.activeTopTab) {
                         "Deck A" -> state.activeDeckASubTab = tab
                         "Deck B" -> state.activeDeckBSubTab = tab

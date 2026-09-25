@@ -242,4 +242,20 @@ class RackDisclosureTest {
         assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_B))
         assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.MASTER))
     }
+
+    @Test
+    fun openingDeepEditFocusesItsTopTab() {
+        val state = ParametersState()
+        state.rackSoloMode = false
+
+        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
+        assertEquals("Deck B", state.activeTopTab)
+
+        state.setDisclosure(MacroEngine.MASTER, ParametersState.DisclosureLevel.DEEP_EDIT)
+        assertEquals("Mixer", state.activeTopTab)
+
+        // Collapsing doesn't move the focus.
+        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.COLLAPSED)
+        assertEquals("Mixer", state.activeTopTab)
+    }
 }

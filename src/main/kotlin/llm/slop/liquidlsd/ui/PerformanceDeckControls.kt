@@ -74,6 +74,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         // 1. [SRC] mode pill
         ImGui.pushStyleColor(ImGuiCol.Button, if (isSrc) ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
         if (ImGui.button("SRC##perf_mode_src_$tag", modeBtnW, ctrlH)) {
+            llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "SRC")
             ctx.deckRowMode[tag] = "SRC"
             parametersState.setDeckSubTab(deckLabel, "SRC")
         }
@@ -496,6 +497,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         // 1. [FX] mode pill
         ImGui.pushStyleColor(ImGuiCol.Button, if (isFx) ImGui.colorConvertFloat4ToU32(0.80f, 0.40f, 0.15f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
         if (ImGui.button("FX##perf_mode_fx_$tag", modeBtnW, ctrlH)) {
+            llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "FX")
             ctx.deckRowMode[tag] = "FX"
             parametersState.setDeckSubTab(deckLabel, "FX")
             llm.slop.liquidlsd.macro.FxMacroSync.syncFor(ctx.targetBankIdFor(tag), mixer)

@@ -110,8 +110,15 @@ object MacroBindingInspector {
             if (canLearn) {
                 if (ImGui.button("${Icons.REFRESH} Learn##start_learn")) {
                     MacroLearnState.startLearn(control.id)
+                    // Learn needs a parameter to click: open the Deep Edit for the deck/section this
+                    // panel is showing (the same focus that selected this knob's bank).
+                    parametersState.deepEditModuleForTopTab(parametersState.activeTopTab)?.let { module ->
+                        if (parametersState.disclosureFor(module) == ParametersState.DisclosureLevel.COLLAPSED) {
+                            parametersState.setDisclosure(module, ParametersState.DisclosureLevel.DEEP_EDIT)
+                        }
+                    }
                 }
-                itemTooltip("Arm Learn Mode. Then click any parameter slider or modulator property in Deep Edit.")
+                itemTooltip("Arm Learn Mode and open Deep Edit. Then click a parameter slider or modulator property in this knob's own deck and section (SRC or FX).")
             } else {
                 ImGui.textDisabled("[Max 4 targets]")
             }

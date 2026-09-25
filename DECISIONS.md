@@ -1,3 +1,30 @@
+## MACROS and Deep Edit share one focus (`MacroPanel.kt`, `MacroBindingInspector.kt`, `ParametersState.kt`, `PerformanceDeepEditBay.kt`)
+
+- **Context**: 2026-09-25. `drawRackDeepEdit` reset `ParametersState.activeTopTab` to its own deck on every frame. With Deep Edit open, the MACROS tab strip looked dead because its clicks were overwritten a frame later. Without Deep Edit, the MACROS **LEARN** button armed Learn but left the user with nothing to click.
+- **Decision**: `activeTopTab` plus the deck/Mixer sub-tab is a single "what I'm editing" focus, and MACROS and Deep Edit are two views of it.
+  - `ParametersState.setDisclosure(…, DEEP_EDIT)` focuses the opened module (`topTabForDeepEditModule`), so whatever opens a Deep Edit also moves MACROS.
+  - `drawRackDeepEdit` only claims the focus when it doesn't already point at an open Deep Edit. That keeps `MULTI` mode on the deck the user last picked instead of the last one drawn.
+  - When any rack module is expanded, a MACROS tab click also calls `setDisclosure` for that tab's module. `SOLO` swaps the bay and `MULTI` adds it. When nothing is expanded, the click only changes MACROS.
+  - The MACROS **LEARN** button opens the focused module's Deep Edit if it's collapsed, matching the Performance Matrix inline `[Learn]`.
+- **Rejected alternatives**:
+  - *A separate MACROS selection that Deep Edit never overwrites*: this lets the two panels show different decks.
+  - *Removing the MACROS tab strip*: this makes browsing other banks' bindings harder.
+
+---
+
+## Macro Learn scoped to the knob's own deck and section (`MacroLearnState.kt`, Deep Edit / MACROS / Deck row navigation)
+
+- **Context**: 2026-09-25. `MacroLearnState.bindTarget` bound the armed knob to any parameter that was clicked. Keeping the row knobs, MACROS and Deep Edit in sync only changed what the user saw, not which knob was armed. So a user moving fast could arm a Deck B SRC knob, switch to FX, and bind an FX parameter to it, or bind it to another deck's parameter.
+- **Decision**: Use a simple model: Deck X SRC → Deck X SRC, Deck X FX → Deck X FX (`Deck X/FX/…`), and Master FX → `Master/FX/…`. `MacroLearnState.sectionFor`/`acceptsTarget` define the scope.
+  - `bindTarget` rejects an out-of-scope click with a status banner and keeps Learn armed.
+  - `onNavigateSection` disarms Learn when the user moves to a different section via Deep Edit's section tabs, the side rail, the MACROS tab strip, or the Deck row `[SRC]`/`[FX]` pills.
+  - Master, Transitions and FX Sends stay unscoped. FX Sends targets every deck by design.
+- **Rejected / deferred**:
+  - *Cross-deck bindings* (e.g. Deck A knob → Deck B param) are deferred. Someone may want them, but they complicate the model while the basic flow is still settling.
+  - *Greying out out-of-section tabs while Learn is armed*: this would need matching disabled states in the side rail, section tabs, MACROS tabs and row pills. Disarming is simpler, and the bind check already guarantees correctness.
+
+---
+
 ## Stacked Deck Rows in Performance Matrix Panel (`PerformanceMatrixPanel.kt`, `PerformanceDeckControls.kt`, docs)
 
 - **Context**: 2026-09-25. In `PerformanceMatrixPanel`, Deck rows (A / B / BG / PV) previously used a single left control strip where the `[SRC | FX]` mode toggle swapped the visual generator controls (preset combo, Eject, Randomize, queue navigation) and the insert FX chain controls (`FxChainHeader`). Performers frequently need to switch FX chains, adjust presets, navigate queues, or monitor dirty states without losing access to visual source controls or having to toggle back and forth.

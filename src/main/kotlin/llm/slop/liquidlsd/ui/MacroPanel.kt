@@ -40,7 +40,7 @@ class MacroPanel(
 
         drawLearnBanner()
 
-        val topTab = parametersState.activeTopTab
+        val topTab = macroTab()
         val bank = MacroEngine.getBank(activeBankId()) ?: MacroEngine.bankForParamPath(parametersState.activeTopTab)
         val isFxTab = topTab in setOf("A FX", "B FX", "BG FX", "PV FX", "MST FX")
         if (isFxTab) {
@@ -69,8 +69,26 @@ class MacroPanel(
         drawPreviewMonitor(session, mixer)
     }
 
-    /** Maps [ParametersState.activeTopTab] to its canonical bank id ("Mixer" -> TRANS or MASTER depending on subtab). */
-    private fun activeBankId(): String = when (parametersState.activeTopTab) {
+    /**
+     * This panel's tab id, derived from [ParametersState.activeTopTab] plus the deck/Mixer SRC|FX
+     * sub-tab ("Deck B" + FX -> "B FX", "Mixer" + FX -> "MST FX"). FX is tracked via the sub-tab --
+     * the same state Deep Edit and the Performance Deck rows' [SRC]/[FX] pills use -- rather than a
+     * separate "B FX" top tab, so opening a deck in Deep Edit (which pins activeTopTab to "Deck B")
+     * doesn't knock this panel off the FX bank.
+     */
+    private fun macroTab(): String {
+        val top = parametersState.activeTopTab
+        return when {
+            top in fxDeckTabs && parametersState.getActiveSubTab(top) == "FX" -> fxDeckTabs.getValue(top)
+            top == "Mixer" && parametersState.activeMixerSubTab == "FX" -> "MST FX"
+            else -> top
+        }
+    }
+
+    private val fxDeckTabs = mapOf("Deck A" to "A FX", "Deck B" to "B FX", "Deck BG" to "BG FX", "Deck PV" to "PV FX")
+
+    /** Maps [macroTab] to its canonical bank id ("Mixer" -> TRANS or MASTER depending on subtab). */
+    private fun activeBankId(): String = when (macroTab()) {
         "Deck A" -> MacroEngine.DECK_A
         "Deck B" -> MacroEngine.DECK_B
         "Deck BG" -> MacroEngine.DECK_BG
@@ -109,10 +127,11 @@ class MacroPanel(
         for ((i, tab) in deckTabs.withIndex()) {
             val (tabId, shortLabel) = tab
             if (i > 0) ImGui.sameLine(0f, gap)
+            val current = macroTab()
             val isActive = when (tabId) {
-                "TRANS" -> parametersState.activeTopTab == "TRANS" || (parametersState.activeTopTab == "Mixer" && parametersState.activeMixerSubTab == "TRANS")
-                "MST" -> parametersState.activeTopTab == "Master" || parametersState.activeTopTab == "MST" || (parametersState.activeTopTab == "Mixer" && parametersState.activeMixerSubTab == "CTRL")
-                else -> parametersState.activeTopTab == tabId
+                "TRANS" -> current == "TRANS" || (current == "Mixer" && parametersState.activeMixerSubTab == "TRANS")
+                "MST" -> current == "Master" || current == "MST" || (current == "Mixer" && parametersState.activeMixerSubTab == "CTRL")
+                else -> current == tabId
             }
             if (isActive) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f))
@@ -120,18 +139,21 @@ class MacroPanel(
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
             }
             if (ImGui.button("$shortLabel##macro_deck_tab_$tabId", segW, btnH)) {
-                when (tabId) {
-                    "TRANS" -> {
-                        parametersState.activeTopTab = "Mixer"
-                        parametersState.activeMixerSubTab = "TRANS"
-                    }
-                    "MST" -> {
-                        parametersState.activeTopTab = "Mixer"
-                        parametersState.activeMixerSubTab = "CTRL"
-                    }
-                    else -> {
-                        parametersState.activeTopTab = tabId
-                    }
+                val (navTop, navSub) = when (tabId) {
+                    "TRANS" -> "Mixer" to "TRANS"
+                    "MST" -> "Mixer" to "CTRL"
+                    "MST FX" -> "Mixer" to "FX"
+                    in fxDeckTabs.keys -> tabId to "SRC"
+                    else -> fxDeckTabs.entries.first { it.value == tabId }.key to "FX"
+                }
+                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(navTop, navSub)
+                parametersState.activeTopTab = navTop
+                parametersState.setDeckSubTab(navTop, navSub)
+                // One shared focus: with Deep Edit open, the tab also switches Deep Edit to that
+                // deck/section (Solo swaps the bay, Multi opens it alongside).
+                val module = parametersState.deepEditModuleForTopTab(navTop)
+                if (module != null && parametersState.anyRackModuleExpanded()) {
+                    parametersState.setDisclosure(module, ParametersState.DisclosureLevel.DEEP_EDIT)
                 }
             }
             ImGui.popStyleColor()
@@ -140,7 +162,7 @@ class MacroPanel(
                 "MST" -> "Show Master composite macro knobs."
                 else -> "Show $tabId's macro knobs."
             }
-            itemTooltip(tip)
+            itemTooltip("$tip If Deep Edit is open, it switches there too.")
         }
     }
 
@@ -275,17 +297,18 @@ class MacroPanel(
     // -- Single-deck preview monitor (bottom) ------------------------------------------------------
 
     private fun drawPreviewMonitor(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
+        val tab = macroTab()
         val previewTitle = when {
-            parametersState.activeTopTab == "Mixer" && parametersState.activeMixerSubTab == "CTRL" -> "PREVIEW: MASTER"
-            parametersState.activeTopTab == "Mixer" && parametersState.activeMixerSubTab == "TRANS" -> "PREVIEW: TRANSITION"
-            parametersState.activeTopTab == "Master" || parametersState.activeTopTab == "MST" -> "PREVIEW: MASTER"
-            parametersState.activeTopTab == "TRANS" || parametersState.activeTopTab == "Transition" -> "PREVIEW: TRANSITION"
-            parametersState.activeTopTab == "A FX"   -> "PREVIEW: DECK A (FX)"
-            parametersState.activeTopTab == "B FX"   -> "PREVIEW: DECK B (FX)"
-            parametersState.activeTopTab == "BG FX"  -> "PREVIEW: DECK BG (FX)"
-            parametersState.activeTopTab == "PV FX"  -> "PREVIEW: DECK PV (FX)"
-            parametersState.activeTopTab == "MST FX" -> "PREVIEW: MASTER (FX)"
-            else -> "PREVIEW: ${parametersState.activeTopTab.uppercase()}"
+            tab == "Mixer" && parametersState.activeMixerSubTab == "CTRL" -> "PREVIEW: MASTER"
+            tab == "Mixer" && parametersState.activeMixerSubTab == "TRANS" -> "PREVIEW: TRANSITION"
+            tab == "Master" || tab == "MST" -> "PREVIEW: MASTER"
+            tab == "TRANS" || tab == "Transition" -> "PREVIEW: TRANSITION"
+            tab == "A FX"   -> "PREVIEW: DECK A (FX)"
+            tab == "B FX"   -> "PREVIEW: DECK B (FX)"
+            tab == "BG FX"  -> "PREVIEW: DECK BG (FX)"
+            tab == "PV FX"  -> "PREVIEW: DECK PV (FX)"
+            tab == "MST FX" -> "PREVIEW: MASTER (FX)"
+            else -> "PREVIEW: ${tab.uppercase()}"
         }
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             ImGui.textDisabled(previewTitle)
@@ -318,7 +341,7 @@ class MacroPanel(
         ImGui.invisibleButton("##macro_preview_monitor", previewW, previewH)
         itemTooltip("Preview monitor ($previewTitle). Click to open Deep Edit.")
         if (ImGui.isItemClicked(0)) {
-            val moduleId = when (parametersState.activeTopTab) {
+            val moduleId = when (tab) {
                 "Deck A", "A FX" -> MacroEngine.DECK_A
                 "Deck B", "B FX" -> MacroEngine.DECK_B
                 "Deck BG", "BG FX" -> MacroEngine.DECK_BG
@@ -339,7 +362,7 @@ class MacroPanel(
      * texture for the "Mixer" tab (or transition FBO when on TRANS).
      */
     private fun resolvePreviewTexture(mixer: Mixer): Int {
-        return when (parametersState.activeTopTab) {
+        return when (macroTab()) {
             "Deck A", "A FX"    -> mixer.deckA.getOutputTexture()
             "Deck B", "B FX"    -> mixer.deckB.getOutputTexture()
             "Deck BG", "BG FX"  -> mixer.deckBG.getOutputTexture()

@@ -857,7 +857,7 @@ class PerformanceMatrixPanel {
                                         }
                                     }
                                     ImGui.popStyleColor()
-                                    itemTooltip("Arm Learn Mode, open this row's Deep Edit and the Mixer panel's Macros tab. Then click any parameter slider or modulator property in Deep Edit.")
+                                    itemTooltip("Arm Learn Mode, open this row's Deep Edit and the Mixer panel's Macros tab. Then click a parameter slider or modulator property in this row's deck and section.")
                                 } else {
                                     ImGui.textDisabled("Max 4")
                                 }

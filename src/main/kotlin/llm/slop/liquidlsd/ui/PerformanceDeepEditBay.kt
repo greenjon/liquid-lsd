@@ -214,7 +214,8 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
             ParameterResolver.findParameterByPath(mixer, cell.paramKey)
         }
         parametersState.activeTopTab = deckLabel ?: if (isMixerModule) "Mixer" else parametersState.activeTopTab
-        var nextTopTab = parametersState.activeTopTab
+        val moduleTopTab = parametersState.activeTopTab
+        var nextTopTab = moduleTopTab
         if (ownsKeyboard) handleDeepEditKeys(parametersState, mixer, fullSet = true)
 
         // 3-Column Layout:
@@ -238,6 +239,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         // 1. Left column: 5-channel side tabs (MIX, A, B, BG, PV)
         if (ImGui.beginChild("##rack_deep_side_tabs_$moduleId", sideTabWidth, 0f, false)) {
             ParametersTabs.drawPerformanceDeepEditSideTabs(session, parametersState, mixer, topOffset = headerH) { targetSection ->
+                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(targetSection, parametersState.getActiveSubTab(targetSection))
                 nextTopTab = targetSection
                 parametersState.activeTopTab = targetSection
                 when (targetSection) {
@@ -282,6 +284,10 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         parametersState.rackSelectedCell[moduleId] = parametersState.selectedCell
         parametersState.selectedCell = savedCell
         parametersState.selectedParam = savedParam
-        parametersState.activeTopTab = nextTopTab
+        // Keep the focus on whichever open Deep Edit the user last picked (Multi mode can show several);
+        // only claim it for this module if the focus doesn't point at any open Deep Edit.
+        val savedModule = parametersState.deepEditModuleForTopTab(savedTopTab)
+        val savedIsOpen = savedModule != null && parametersState.disclosureFor(savedModule) != ParametersState.DisclosureLevel.COLLAPSED
+        parametersState.activeTopTab = if (nextTopTab == moduleTopTab && savedIsOpen) savedTopTab else nextTopTab
     }
 }

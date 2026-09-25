@@ -1208,6 +1208,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#macros-and-deep-edit-share-one-focus-macropanelkt-macrobindinginspectorkt-parametersstatekt-performancedeepeditbaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MACROS and Deep Edit share one focus (MacroPanel.kt, MacroBindingInspector.kt, ParametersState.kt, PerformanceDeepEditBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macro-learn-binds-only-within-the-knobs-own-deck-and-section-macrolearnstatekt-parameterstabskt-performancedeepeditbaykt-performancedeckcontrolskt-macropanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro Learn binds only within the knob's own deck and section (MacroLearnState.kt, ParametersTabs.kt, PerformanceDeepEditBay.kt, PerformanceDeckControls.kt, MacroPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-macros-jumps-from-deck-fx-back-to-the-deck-tab-when-deep-edit-opens-macropanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: MACROS jumps from Deck FX back to the Deck tab when Deep Edit opens (MacroPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stacked-deck-rows-in-performance-matrix-panel-performancematrixpanelkt-performancedeckcontrolskt-macros_and_rackmd-uimd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4008,6 +4041,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#macros-and-deep-edit-share-one-focus-macropanelkt-macrobindinginspectorkt-parametersstatekt-performancedeepeditbaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MACROS and Deep Edit share one focus (MacroPanel.kt, MacroBindingInspector.kt, ParametersState.kt, PerformanceDeepEditBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macro-learn-binds-only-within-the-knobs-own-deck-and-section-macrolearnstatekt-parameterstabskt-performancedeepeditbaykt-performancedeckcontrolskt-macropanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro Learn binds only within the knob's own deck and section (MacroLearnState.kt, ParametersTabs.kt, PerformanceDeepEditBay.kt, PerformanceDeckControls.kt, MacroPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-macros-jumps-from-deck-fx-back-to-the-deck-tab-when-deep-edit-opens-macropanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: MACROS jumps from Deck FX back to the Deck tab when Deep Edit opens (MacroPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stacked-deck-rows-in-performance-matrix-panel-performancematrixpanelkt-performancedeckcontrolskt-macros_and_rackmd-uimd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6783,6 +6849,21 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="macros-and-deep-edit-share-one-focus-macropanelkt-macrobindinginspectorkt-parametersstatekt-performancedeepeditbaykt">MACROS and Deep Edit share one focus (<code>MacroPanel.kt</code>, <code>MacroBindingInspector.kt</code>, <code>ParametersState.kt</code>, <code>PerformanceDeepEditBay.kt</code>)</h3>
+<ul>
+<li><strong>MACROS tabs switch Deep Edit</strong>: If Deep Edit is open, picking a tab in Column 3's MACROS panel (e.g. <strong>B FX</strong>) now switches Deep Edit to that deck and section. <code>SOLO</code> swaps the bay; <code>MULTI</code> opens it next to the others. Before, Deep Edit immediately switched MACROS back, so the tabs seemed to do nothing.</li>
+<li><strong>MACROS Learn opens Deep Edit</strong>: The <strong>LEARN</strong> button in the MACROS Binding Inspector now opens that deck's Deep Edit if it's closed, the same as a knob's inline <code>[Learn]</code> in the Performance Matrix.</li>
+<li><strong>Opening a Deep Edit focuses it</strong>: Opening any deck's (or the Mixer's) Deep Edit now switches MACROS to it. In <code>MULTI</code> mode, Deep Edit no longer grabs the focus back from the deck you last picked.</li>
+</ul>
+<h3 id="macro-learn-binds-only-within-the-knobs-own-deck-and-section-macrolearnstatekt-parameterstabskt-performancedeepeditbaykt-performancedeckcontrolskt-macropanelkt">Macro Learn binds only within the knob's own deck and section (<code>MacroLearnState.kt</code>, <code>ParametersTabs.kt</code>, <code>PerformanceDeepEditBay.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>MacroPanel.kt</code>)</h3>
+<ul>
+<li><strong>Section-scoped bindings</strong>: Deck SRC knobs can only bind to their own deck's SRC parameters. Deck FX knobs can only bind to their own deck's FX chain, and Master FX knobs only to the Master FX chain. If you click a parameter outside that section, the banner shows <em>"Cannot bind…"</em> and Learn stays armed. Master, Transitions and FX Sends knobs aren't limited this way.</li>
+<li><strong>Leaving the section cancels Learn</strong>: If Learn is armed and you switch to a different section, Learn is cancelled. This covers Deep Edit's SRC/FX tabs, the Deep Edit side rail, the MACROS tab strip, and a Deck row's <code>[SRC]</code>/<code>[FX]</code> pills.</li>
+</ul>
+<h3 id="fix-macros-jumps-from-deck-fx-back-to-the-deck-tab-when-deep-edit-opens-macropanelkt">Fix: MACROS jumps from Deck FX back to the Deck tab when Deep Edit opens (<code>MacroPanel.kt</code>)</h3>
+<ul>
+<li><strong>FX tab follows the SRC/FX sub-tab</strong>: Column 3's MACROS panel now works out its <strong>A/B/BG/PV/MST FX</strong> tab from the deck's (or Mixer's) SRC|FX sub-tab. That sub-tab is the same state used by Deep Edit and the Performance Deck rows' <code>[SRC]</code>/<code>[FX]</code> pills. Before, MACROS stored FX as a separate <code>"B FX"</code> top tab, and Deep Edit reset that tab to <code>"Deck B"</code> on every frame, so you couldn't see or rebind a deck's FX knobs while that deck was open in Deep Edit. Clicking Learn on a Master FX knob now also lands on <strong>MST FX</strong> instead of TRANS.</li>
+</ul>
 <h3 id="stacked-deck-rows-in-performance-matrix-panel-performancematrixpanelkt-performancedeckcontrolskt-macros_and_rackmd-uimd-decisionsmd">Stacked Deck Rows in Performance Matrix Panel (<code>PerformanceMatrixPanel.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>macros_and_rack.md</code>, <code>ui.md</code>, <code>DECISIONS.md</code>)</h3>
 <ul>
 <li><strong>Stacked Left Wing Controls for Deck Rows</strong>: In <code>PerformanceMatrixPanel</code>, Deck rows (A, B, BG, PV) now feature stacked, concurrent rows for visual generator and insert FX controls:</li>

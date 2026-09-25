@@ -60,6 +60,55 @@ object MacroLearnState {
         }
     }
 
+    /**
+     * The Deep Edit (top tab, section) holding the only parameters [bankId]'s knobs may bind to:
+     * Deck A SRC knobs -> Deck A SRC, Deck A FX knobs -> Deck A FX, Master FX knobs -> Master FX.
+     * Null for banks that aren't section-scoped (Master, Transitions, FX Sends).
+     */
+    fun sectionFor(bankId: String?): Pair<String, String>? = when (bankId) {
+        MacroEngine.DECK_A -> "Deck A" to "SRC"
+        MacroEngine.DECK_B -> "Deck B" to "SRC"
+        MacroEngine.DECK_BG -> "Deck BG" to "SRC"
+        MacroEngine.DECK_PV -> "Deck PV" to "SRC"
+        MacroEngine.DECK_A_FX -> "Deck A" to "FX"
+        MacroEngine.DECK_B_FX -> "Deck B" to "FX"
+        MacroEngine.DECK_BG_FX -> "Deck BG" to "FX"
+        MacroEngine.DECK_PV_FX -> "Deck PV" to "FX"
+        MacroEngine.MASTER_FX -> "Mixer" to "FX"
+        else -> null
+    }
+
+    /** True if a knob in [bankId] may bind to [parameterId] (see [sectionFor]). */
+    fun acceptsTarget(bankId: String?, parameterId: String): Boolean {
+        val (top, section) = sectionFor(bankId) ?: return true
+        return when {
+            top == "Mixer" -> parameterId.startsWith("Master/FX/")
+            section == "FX" -> parameterId.startsWith("$top/FX/")
+            else -> parameterId.startsWith("$top/") && !parameterId.startsWith("$top/FX/")
+        }
+    }
+
+    /** Human-readable name for [bankId]'s section, e.g. "Deck B FX", for status messages. */
+    private fun sectionLabel(bankId: String?): String {
+        val (top, section) = sectionFor(bankId) ?: return "this bank"
+        return if (top == "Mixer") "Master FX" else "$top $section"
+    }
+
+    /**
+     * Call when the user navigates Deep Edit / MACROS / a Deck row's [SRC]/[FX] pill to ([topTab],
+     * [subTab]). Leaving the armed knob's section disarms Learn, since the knob can't bind to
+     * anything there anyway (see [acceptsTarget]).
+     */
+    fun onNavigateSection(topTab: String, subTab: String) {
+        val session = activeSession ?: return
+        val bankId = MacroEngine.findBankForControl(session.controlId)?.first
+        val section = sectionFor(bankId) ?: return
+        if (section != (topTab to subTab)) {
+            activeSession = null
+            setStatus("Learn cancelled: left ${sectionLabel(bankId)}.", 3000L)
+        }
+    }
+
     /** Returns true if Learn Mode is currently active, checking timeout. */
     fun isLearning(): Boolean {
         val session = activeSession ?: return false
@@ -119,6 +168,15 @@ object MacroLearnState {
         val control = findControl(session.controlId, targetBank)
         if (control == null) {
             cancelLearn()
+            return false
+        }
+
+        // Deck A SRC knobs bind only Deck A SRC parameters, Deck A FX knobs only Deck A FX, etc.
+        // Learn stays armed so the user can just click a parameter in the right section.
+        val controlBankId = controlPair?.first
+        if (!acceptsTarget(controlBankId, parameterId)) {
+            val ctrlName = control.label.ifEmpty { "This knob" }
+            setStatus("Cannot bind: $ctrlName is a ${sectionLabel(controlBankId)} knob -- click a ${sectionLabel(controlBankId)} parameter.")
             return false
         }
 

@@ -9,6 +9,7 @@ class MacroLearnStateTest {
         MacroLearnState.cancelLearn()
         MacroLearnState.clearStatus()
         MacroEngine.registerBank(MacroEngine.DECK_A, MacroBank())
+        MacroEngine.registerBank(MacroEngine.DECK_A_FX, MacroBank())
     }
 
     @AfterTest
@@ -16,6 +17,7 @@ class MacroLearnStateTest {
         MacroLearnState.cancelLearn()
         MacroLearnState.clearStatus()
         MacroEngine.registerBank(MacroEngine.DECK_A, MacroBank())
+        MacroEngine.registerBank(MacroEngine.DECK_A_FX, MacroBank())
     }
 
     @Test
@@ -129,5 +131,50 @@ class MacroLearnStateTest {
 
         assertFalse(duplicateSuccess)
         assertEquals(1, knob.bindings.size)
+    }
+
+    @Test
+    fun testAcceptsTargetScopesDeckSrcAndFx() {
+        assertTrue(MacroLearnState.acceptsTarget(MacroEngine.DECK_A, "Deck A/fbZoom"))
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.DECK_A, "Deck A/FX/slot1/mix"))
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.DECK_A, "Deck B/fbZoom"))
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.DECK_B, "Deck BG/fbZoom"))
+
+        assertTrue(MacroLearnState.acceptsTarget(MacroEngine.DECK_A_FX, "Deck A/FX/slot1/mix"))
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.DECK_A_FX, "Deck A/fbZoom"))
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.DECK_A_FX, "Deck B/FX/slot1/mix"))
+
+        assertTrue(MacroLearnState.acceptsTarget(MacroEngine.MASTER_FX, "Master/FX/slot1/mix"))
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.MASTER_FX, "Deck A/FX/slot1/mix"))
+
+        // Master, Transitions and FX Sends aren't section-scoped.
+        assertTrue(MacroLearnState.acceptsTarget(MacroEngine.MASTER, "Mixer/levelA"))
+        assertTrue(MacroLearnState.acceptsTarget(MacroEngine.FX_SENDS, "Deck B/fxSendLevel"))
+    }
+
+    @Test
+    fun testOutOfSectionBindRejectedAndLearnStaysArmed() {
+        val bank = MacroEngine.getBank(MacroEngine.DECK_A)!!
+        val knob = bank.knobs[0]
+        MacroLearnState.startLearn(knob.id)
+
+        assertFalse(MacroLearnState.bindTarget(bank, MacroTargetType.PARAM_BASE_VALUE, "Deck A/FX/slot1/mix"))
+        assertTrue(knob.bindings.isEmpty())
+        assertTrue(MacroLearnState.isControlLearning(knob.id))
+
+        assertTrue(MacroLearnState.bindTarget(bank, MacroTargetType.PARAM_BASE_VALUE, "Deck A/fbZoom"))
+        assertEquals(1, knob.bindings.size)
+    }
+
+    @Test
+    fun testNavigatingAwayFromArmedSectionDisarms() {
+        val fxKnob = MacroEngine.getBank(MacroEngine.DECK_A_FX)!!.knobs[0]
+        MacroLearnState.startLearn(fxKnob.id)
+
+        MacroLearnState.onNavigateSection("Deck A", "FX")
+        assertTrue(MacroLearnState.isLearning(), "Staying in Deck A FX keeps Learn armed")
+
+        MacroLearnState.onNavigateSection("Deck A", "SRC")
+        assertFalse(MacroLearnState.isLearning(), "Leaving Deck A FX disarms Learn")
     }
 }

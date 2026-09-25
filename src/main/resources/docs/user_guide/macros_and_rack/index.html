@@ -1711,6 +1711,16 @@ purpose-built for live performance, with Deep Edit underneath for everything els
 <li>A toast confirms the binding (e.g. <em>"Bound Knob 3 → Zoom [LFO 1 Morph]"</em>) and Learn Mode
    turns itself off.</li>
 </ol>
+<p>A knob can only bind to parameters in <strong>its own deck and section</strong>:</p>
+<ul>
+<li>Deck A <strong>SRC</strong> knobs bind to Deck A's SRC parameters only.</li>
+<li>Deck A <strong>FX</strong> knobs bind to Deck A's FX chain only.</li>
+<li><strong>Master FX</strong> knobs bind to the Master FX chain only.</li>
+</ul>
+<p>If you click a parameter outside that section, the banner says <em>"Cannot bind…"</em> and Learn stays
+armed, so you can click the right one. If you move to another section while Learn is armed, Learn
+is cancelled. That includes Deep Edit's SRC/FX tabs, the side rail, the MACROS tabs, and a Deck
+row's <code>[SRC]</code>/<code>[FX]</code> pills. Master, Transitions and FX Sends knobs aren't limited this way.</p>
 <p>Each knob can hold up to <strong>4 bindings</strong>, so one knob can drive several parameters (or modulator
 properties) simultaneously — with independent settings per binding.</p>
 <h3 id="the-binding-inspector">The Binding Inspector</h3>
@@ -1791,6 +1801,17 @@ inspector to save/load a standalone <code>.knobpreset.json</code>.</p>
 dedicated <strong>FX Rack</strong> view — a Traktor/Mixxx-style Super Knob + Metaknob strip for that deck's
 own FX chain. Unlike the old shared FX1/FX2 banks, each deck's FX chain is always available
 regardless of what the other decks are doing.</p>
+<p>MACROS and Deep Edit always point at the same deck and section:</p>
+<ul>
+<li>Picking a tab in MACROS (e.g. <strong>B FX</strong>) switches an open Deep Edit to that deck and section. In
+  <code>SOLO</code> mode the bay swaps to it; in <code>MULTI</code> mode it's opened next to the others. If Deep Edit is
+  closed, the tab only changes what MACROS shows.</li>
+<li>Picking a deck on Deep Edit's side rail, its <strong>SRC / FX</strong> tabs, or opening a deck's Deep Edit
+  anywhere else switches MACROS to match.</li>
+<li>A Performance row's <code>[SRC]</code> / <code>[FX]</code> pill also switches that deck's section.</li>
+</ul>
+<p>The same applies to the other decks and Master (<strong>MST</strong>, <strong>TRANS</strong> and <strong>MST FX</strong> match Deep Edit's
+Mixer <strong>CTRL</strong>, <strong>TRANS</strong> and <strong>FX</strong> tabs).</p>
 <h3 id="chain-super-knob-effect-metaknobs">Chain Super Knob &amp; effect Metaknobs</h3>
 <ul>
 <li><strong>Super Knob</strong> — one knob that sweeps every <strong>linked</strong> slot's own Metaknob together.</li>
@@ -1991,9 +2012,10 @@ with the parameter selected.</p>
   This arms parameter-bind Learn, opens that row's <strong>Deep Edit</strong> (if it isn't already open), and
   switches Column 3 to <strong><code>[ MACROS ]</code></strong> on the matching bank/tab with the Binding Inspector already
   open on that knob — click a target parameter in Deep Edit and set Min/Max/Curve as desired. The
-  target doesn't have to be on the same deck: use Deep Edit's side rail to reach any channel.</li>
-<li><strong>From Column 3</strong>: open <strong><code>[ MACROS ]</code></strong>, select the knob, click <strong>LEARN</strong>, and click a target
-  parameter in Deep Edit.</li>
+  target must be in the knob's own deck and section (see <em>Binding a knob</em> above).</li>
+<li><strong>From Column 3</strong>: open <strong><code>[ MACROS ]</code></strong>, select the knob, and click <strong>LEARN</strong>. This arms Learn
+  and opens that deck's <strong>Deep Edit</strong> if it isn't already open. Then click a target parameter in
+  Deep Edit.</li>
 </ul>
 <p>Either way the change is live immediately in both places, since they share the same
 <code>MacroEngine</code> banks.</p>

@@ -1,5 +1,17 @@
 ## [Unreleased]
 
+### MACROS and Deep Edit share one focus (`MacroPanel.kt`, `MacroBindingInspector.kt`, `ParametersState.kt`, `PerformanceDeepEditBay.kt`)
+- **MACROS tabs switch Deep Edit**: If Deep Edit is open, picking a tab in Column 3's MACROS panel (e.g. **B FX**) now switches Deep Edit to that deck and section. `SOLO` swaps the bay; `MULTI` opens it next to the others. Before, Deep Edit immediately switched MACROS back, so the tabs seemed to do nothing.
+- **MACROS Learn opens Deep Edit**: The **LEARN** button in the MACROS Binding Inspector now opens that deck's Deep Edit if it's closed, the same as a knob's inline `[Learn]` in the Performance Matrix.
+- **Opening a Deep Edit focuses it**: Opening any deck's (or the Mixer's) Deep Edit now switches MACROS to it. In `MULTI` mode, Deep Edit no longer grabs the focus back from the deck you last picked.
+
+### Macro Learn binds only within the knob's own deck and section (`MacroLearnState.kt`, `ParametersTabs.kt`, `PerformanceDeepEditBay.kt`, `PerformanceDeckControls.kt`, `MacroPanel.kt`)
+- **Section-scoped bindings**: Deck SRC knobs can only bind to their own deck's SRC parameters. Deck FX knobs can only bind to their own deck's FX chain, and Master FX knobs only to the Master FX chain. If you click a parameter outside that section, the banner shows *"Cannot bind…"* and Learn stays armed. Master, Transitions and FX Sends knobs aren't limited this way.
+- **Leaving the section cancels Learn**: If Learn is armed and you switch to a different section, Learn is cancelled. This covers Deep Edit's SRC/FX tabs, the Deep Edit side rail, the MACROS tab strip, and a Deck row's `[SRC]`/`[FX]` pills.
+
+### Fix: MACROS jumps from Deck FX back to the Deck tab when Deep Edit opens (`MacroPanel.kt`)
+- **FX tab follows the SRC/FX sub-tab**: Column 3's MACROS panel now works out its **A/B/BG/PV/MST FX** tab from the deck's (or Mixer's) SRC|FX sub-tab. That sub-tab is the same state used by Deep Edit and the Performance Deck rows' `[SRC]`/`[FX]` pills. Before, MACROS stored FX as a separate `"B FX"` top tab, and Deep Edit reset that tab to `"Deck B"` on every frame, so you couldn't see or rebind a deck's FX knobs while that deck was open in Deep Edit. Clicking Learn on a Master FX knob now also lands on **MST FX** instead of TRANS.
+
 ### Stacked Deck Rows in Performance Matrix Panel (`PerformanceMatrixPanel.kt`, `PerformanceDeckControls.kt`, `macros_and_rack.md`, `ui.md`, `DECISIONS.md`)
 - **Stacked Left Wing Controls for Deck Rows**: In `PerformanceMatrixPanel`, Deck rows (A, B, BG, PV) now feature stacked, concurrent rows for visual generator and insert FX controls:
   - **Row 1 (SRC)**: `[SRC]` knob-assign pill, generator source badge (click to choose source), searchable preset dropdown combo, preset eject button (`⏏`), randomize die button (`🎲`, when enabled), and queue navigation (`< 1/4 >` for Deck A/B, BG queue for BG, Preview indicator button for PV).

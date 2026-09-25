@@ -102,12 +102,35 @@ class ParametersState {
         return bankId in ownedBankIds
     }
 
+    /** The [activeTopTab] a Deep Edit rack module shows ("Deck A" for deckA, "Mixer" for master), or null. */
+    fun topTabForDeepEditModule(moduleId: String): String? = when (moduleId) {
+        MacroEngine.DECK_A -> "Deck A"
+        MacroEngine.DECK_B -> "Deck B"
+        MacroEngine.DECK_BG -> "Deck BG"
+        MacroEngine.DECK_PV -> "Deck PV"
+        MacroEngine.MASTER -> "Mixer"
+        else -> null
+    }
+
+    /** Inverse of [topTabForDeepEditModule]. */
+    fun deepEditModuleForTopTab(topTab: String): String? = when (topTab) {
+        "Deck A" -> MacroEngine.DECK_A
+        "Deck B" -> MacroEngine.DECK_B
+        "Deck BG" -> MacroEngine.DECK_BG
+        "Deck PV" -> MacroEngine.DECK_PV
+        "Mixer" -> MacroEngine.MASTER
+        else -> null
+    }
+
     /**
      * Sets [moduleId]'s disclosure tier. When [rackSoloMode] is on and [level] is not COLLAPSED,
      * every other module is collapsed too -- except one currently pinned open by an active Learn.
+     * Opening a Deep Edit also focuses it ([activeTopTab]), so the MACROS panel follows the most
+     * recently opened Deep Edit.
      */
     fun setDisclosure(moduleId: String, level: DisclosureLevel) {
         rackModuleDisclosure[moduleId] = level
+        if (level == DisclosureLevel.DEEP_EDIT) topTabForDeepEditModule(moduleId)?.let { activeTopTab = it }
         if (rackSoloMode && level != DisclosureLevel.COLLAPSED) {
             for (key in rackModuleDisclosure.keys.toList()) {
                 if (key != moduleId && !isLearnPinned(key)) {
