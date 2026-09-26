@@ -32,7 +32,8 @@ object ParametersRenderer {
         getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit,
         extraMenuItems: (() -> Unit)? = null,
-        descriptionOverride: String? = null
+        descriptionOverride: String? = null,
+        rowStartX: Float? = null
     ) {
         val metrics = GridMetrics.compute(session)
         val CELL = metrics.cell
@@ -276,7 +277,7 @@ object ParametersRenderer {
         }
 
         ImGui.popID()
-        ImGui.setCursorPos(rowX, rowY + CELL)
+        ImGui.setCursorPos(rowStartX ?: rowX, rowY + CELL)
     }
 
     // ── Cell helpers ──────────────────────────────────────────────────────────

@@ -1,5 +1,27 @@
 ## [Unreleased]
 
+### Clean Two-Row Macro Panel Bank Selector Tabs (`MacroPanel.kt`)
+- Column 3's MACROS panel bank selector buttons previously crammed all 12 tabs (`A`, `B`, `BG`, `PV`, `TRANS`, `MST`, `A FX`, `B FX`, `BG FX`, `PV FX`, `MST FX`, `GLB`) into a single row, causing severe button squishing and text truncation. The tabs are now arranged into two cleanly aligned rows using a 7-column layout:
+  - **Row 1**: `A`, `B`, `BG`, `PV`, `MSTR`, `TRAN`, `GLBL`
+  - **Row 2**: `A FX`, `B FX`, `BG FX`, `PV FX`, `MSTR FX`
+  Each insert FX button is positioned directly and precisely underneath its corresponding visual generator deck or composite channel. Text renders crisply using the Caption font with compact horizontal padding, eliminating clipping.
+
+### Macro Knob Multi-Axis Drag Support: Vertical and Horizontal (`MacroKnobWidget.kt`, `MacroKnobWidgetTest.kt`)
+- In `MacroKnobWidget`, knob value adjustment now supports both vertical and horizontal dragging (dragging up or right increases value, dragging down or left decreases value). This allows knobs positioned near the top of the screen or display edges to be easily adjusted without running out of screen travel.
+
+### Fix: Cascading Indentation of FX Chain Macro Rows in Parameter Editor (`FXChainMacroStrip.kt`, `ParametersRenderer.kt`)
+- In the Parameter Editor under **Chain Macro**, the second effect was previously indented to the right of the first effect, and the third effect was indented even further. Because the slot Link checkbox prefix widget moved the ImGui cursor horizontally before `ParametersRenderer.drawParamRow()`, the row's terminal cursor reset inherited the post-checkbox horizontal offset across successive iterations. `FXChainMacroStrip` and `ParametersRenderer` now track and restore `rowStartX` across all effect rows, ensuring all effects render directly underneath each other with consistent alignment.
+
+### Fix: Preferences & Video Export Modals Not Opening from Menus (`PreferencesPanel.kt`, `VideoExportModal.kt`, `UIManager.kt`)
+- **Root ID-Stack Popup Deferral**: Fixed an issue where selecting **Clock → Configure Tempo & Link...** (as well as clicking the Ableton Link status pill, beat phase dots, BPM right-click menu, or File → Export Video) failed to open the modal popup. In Dear ImGui, `openPopup()` called from inside menu or child window hierarchies registers the popup under that specific window's ID stack rather than the root window where `beginPopupModal()` evaluates. `PreferencesPanel` and `VideoExportModal` now buffer opening requests via an internal `pendingOpen` latch that invokes `ImGui.openPopup()` directly within `draw()` at the root window level.
+
+### FX Wet/Dry row knobs relabeled to Deck A, Deck B, Deck BG, Deck PV (`MacroEngine.kt`, `SessionSerializer.kt`)
+- In the Performance Matrix (`MASTER` tab), the 4 knobs on the `WET/DRY` row are now labeled **Deck A**, **Deck B**, **Deck BG**, and **Deck PV**, replacing legacy names (`SEND A`, `SEND B`, `SEND BG`, `SEND PV`) to clearly indicate the insert FX chain each knob controls. Existing sessions with legacy labels are automatically migrated on restore.
+
+### Clearer Deep Edit controls: `[Edit]` / `[Collapse]` replace the chevron; toolbar `[Close Edit]` removed (`PerformanceMatrixPanel.kt`, `RackUnit.kt`)
+- **`[Edit]` / `[Collapse]`**: each row's top-right toggle is now a labeled button reading `Edit` when collapsed and `Collapse` when in Deep Edit, replacing the small `v`/`^` chevron glyph and the separate `▲ Collapse` button that used to sit beside it. One clear control instead of two overlapping ones.
+- **Removed the header bar's `[Close Edit]` button**: closing Deep Edit is still available via the row's own `Collapse` button, **Esc**, or **View → Close Deep Edit**.
+
 ### Fix: Mandala listed twice in the source picker (`VisualSourceRegistry.kt`)
 - The generator picker showed Mandala under General / Root and again as "Shader" in a separate Mandala folder. The second entry was a broken copy: the ISF folder scan picked up Mandala's own `shader.frag` file. The scan now skips shader files inside a source folder that has a `meta.json`, so Mandala appears once.
 

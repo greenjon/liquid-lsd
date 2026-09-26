@@ -35,7 +35,7 @@ class MacroPanel(
 ) {
     private val linkBufs = Array(llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) { imgui.type.ImBoolean(true) }
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
-        drawDeckTabs()
+        drawDeckTabs(session)
         ImGui.spacing()
 
         drawLearnBanner()
@@ -106,49 +106,66 @@ class MacroPanel(
         else -> MacroEngine.TRANS
     }
 
-    private val deckTabs = listOf(
-        "Deck A" to "A",
-        "Deck B" to "B",
-        "Deck BG" to "BG",
-        "Deck PV" to "PV",
-        "TRANS" to "TRANS",
-        "MST" to "MST",
-        "A FX" to "A FX",
-        "B FX" to "B FX",
-        "BG FX" to "BG FX",
-        "PV FX" to "PV FX",
-        "MST FX" to "MST FX",
-        "GLB" to "GLB"
+    private data class MacroDeckTab(val tabId: String, val shortLabel: String)
+
+    private val topRowTabs = listOf(
+        MacroDeckTab("Deck A", "A"),
+        MacroDeckTab("Deck B", "B"),
+        MacroDeckTab("Deck BG", "BG"),
+        MacroDeckTab("Deck PV", "PV"),
+        MacroDeckTab("MST", "MSTR"),
+        MacroDeckTab("TRANS", "TRAN"),
+        MacroDeckTab("GLB", "GLBL")
     )
 
-    private fun drawDeckTabs() {
+    private val bottomRowTabs = listOf(
+        MacroDeckTab("A FX", "A FX"),
+        MacroDeckTab("B FX", "B FX"),
+        MacroDeckTab("BG FX", "BG FX"),
+        MacroDeckTab("PV FX", "PV FX"),
+        MacroDeckTab("MST FX", "MSTR FX")
+    )
+
+    private fun drawDeckTabs(session: llm.slop.liquidlsd.SessionContext) {
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)
         val gap = 4f
-        val segW = ((availW - gap * (deckTabs.size - 1)) / deckTabs.size).coerceAtLeast(1f)
+        val numCols = topRowTabs.size
+        val segW = ((availW - gap * (numCols - 1)) / numCols).coerceAtLeast(1f)
         val btnH = 24f
 
-        for ((i, tab) in deckTabs.withIndex()) {
-            val (tabId, shortLabel) = tab
-            if (i > 0) ImGui.sameLine(0f, gap)
-            val current = macroTab()
-            val isActive = when (tabId) {
-                "TRANS" -> current == "TRANS" || (current == "Mixer" && parametersState.activeMixerSubTab == "TRANS")
-                "MST" -> current == "Master" || current == "MST" || (current == "Mixer" && parametersState.activeMixerSubTab == "CTRL")
-                else -> current == tabId
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, 2f, 3f)
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, gap, gap)
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            for ((i, tab) in topRowTabs.withIndex()) {
+                if (i > 0) ImGui.sameLine(0f, gap)
+                drawTabButton(tab, segW, btnH)
             }
-            if (isActive) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f))
+            for ((i, tab) in bottomRowTabs.withIndex()) {
+                if (i > 0) ImGui.sameLine(0f, gap)
+                drawTabButton(tab, segW, btnH)
+            }
+        }
+        ImGui.popStyleVar(2)
+    }
+
+    private fun drawTabButton(tab: MacroDeckTab, segW: Float, btnH: Float) {
+        val (tabId, shortLabel) = tab
+        val current = macroTab()
+        val isActive = when (tabId) {
+            "TRANS" -> current == "TRANS" || (current == "Mixer" && parametersState.activeMixerSubTab == "TRANS")
+            "MST" -> current == "Master" || current == "MST" || (current == "Mixer" && parametersState.activeMixerSubTab == "CTRL")
+            else -> current == tabId
+        }
+        if (isActive) {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f))
+        } else {
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
+        }
+        if (ImGui.button("$shortLabel##macro_deck_tab_$tabId", segW, btnH)) {
+            if (tabId == "GLB") {
+                // Not a Deep Edit section: leaves Deep Edit and Learn untouched.
+                parametersState.showGlobalMacros()
             } else {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
-            }
-            if (ImGui.button("$shortLabel##macro_deck_tab_$tabId", segW, btnH)) {
-                if (tabId == "GLB") {
-                    // Not a Deep Edit section: leaves Deep Edit and Learn untouched.
-                    parametersState.showGlobalMacros()
-                    ImGui.popStyleColor()
-                    itemTooltip("Show the 4 Global macro knobs (Clock row). They can bind to any parameter.")
-                    continue
-                }
                 parametersState.hideGlobalMacros()
                 val (navTop, navSub) = when (tabId) {
                     "TRANS" -> "Mixer" to "TRANS"
@@ -167,15 +184,16 @@ class MacroPanel(
                     parametersState.setDisclosure(module, ParametersState.DisclosureLevel.DEEP_EDIT)
                 }
             }
-            ImGui.popStyleColor()
-            val tip = when (tabId) {
-                "TRANS" -> "Show Transition macro knobs."
-                "MST" -> "Show Master composite macro knobs."
-                "GLB" -> "Show the 4 Global macro knobs (Clock row). They can bind to any parameter."
-                else -> "Show $tabId's macro knobs."
-            }
-            itemTooltip("$tip If Deep Edit is open, it switches there too.")
         }
+        ImGui.popStyleColor()
+        val tip = when (tabId) {
+            "TRANS" -> "Show Transition macro knobs. If Deep Edit is open, it switches there too."
+            "MST" -> "Show Master composite macro knobs. If Deep Edit is open, it switches there too."
+            "MST FX" -> "Show Master FX macro knobs. If Deep Edit is open, it switches there too."
+            "GLB" -> "Show the 4 Global macro knobs (Clock row). They can bind to any parameter."
+            else -> "Show $tabId's macro knobs. If Deep Edit is open, it switches there too."
+        }
+        itemTooltip(tip)
     }
 
     private fun drawLearnBanner() {

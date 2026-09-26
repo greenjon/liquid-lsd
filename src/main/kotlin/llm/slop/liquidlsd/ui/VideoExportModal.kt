@@ -21,6 +21,7 @@ object VideoExportModal {
     private const val POPUP_ID = "Export Video##modal"
 
     private var isOpen = false
+    private var pendingOpen = false
 
     private val audioPath = ImString("", 512)
     private val outputPath = ImString("", 512)
@@ -57,11 +58,16 @@ object VideoExportModal {
             val exportDir = File(UITheme.getDefaultVideosDirectory(), "renders").apply { mkdirs() }
             outputPath.set(File(exportDir, "liquid_lsd_export_$dateStr.mp4").absolutePath)
         }
-        ImGui.openPopup(POPUP_ID)
+        pendingOpen = true
     }
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, renderer: Renderer, displayW: Float, displayH: Float) {
-        if (!isOpen) return
+        if (!isOpen && !pendingOpen) return
+
+        if (pendingOpen) {
+            ImGui.openPopup(POPUP_ID)
+            pendingOpen = false
+        }
 
         val modalW = (660f * (session.uiTheme.baseSize / 15f)).coerceIn(600f, displayW * 0.95f)
         ImGui.setNextWindowPos(displayW * 0.5f, displayH * 0.5f, ImGuiCond.Always, 0.5f, 0.5f)

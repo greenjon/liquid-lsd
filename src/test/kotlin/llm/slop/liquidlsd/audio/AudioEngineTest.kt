@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.audio
 
+import kotlin.test.BeforeTest
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -9,8 +10,17 @@ import java.nio.FloatBuffer
 
 class AudioEngineTest {
 
+    @BeforeTest
+    fun setUp() {
+        resetState()
+    }
+
     @AfterTest
     fun tearDown() {
+        resetState()
+    }
+
+    private fun resetState() {
         AudioEngine.stop()
         AudioEngine.clockSource = ClockSource.MANUAL
         AudioEngine.backendMode = AudioEngine.AudioBackendMode.AUTO
@@ -20,6 +30,7 @@ class AudioEngineTest {
         AudioEngine.isBpmLocked = true
         AudioEngine.manualBpm = 120.0f
         AudioEngine.setBpmDirectly(120.0f)
+        llm.slop.liquidlsd.link.AbletonLinkEngine.setEnabled(false)
     }
 
     // --- Audio Processing & Buffer Safety ---

@@ -29,6 +29,11 @@ class BeatTrackToLinkDampingTest {
         filter.reset(120.0)
     }
 
+    @AfterTest
+    fun tearDown() {
+        AbletonLinkEngine.setEnabled(false)
+    }
+
     @Test
     fun testSanityBoundsFiltering() {
         // Out-of-bounds BPM samples should be silently discarded

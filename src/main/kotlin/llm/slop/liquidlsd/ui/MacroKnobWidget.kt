@@ -29,17 +29,32 @@ object MacroKnobWidget {
     // -- Pure math (unit-testable without ImGui) --------------------------------------------
 
     /**
-     * Maps a vertical drag delta (in screen pixels, positive = downward, matching raw ImGui mouse
-     * coordinates) to a new normalized [0,1] value. Dragging up (negative [dragDeltaYPixels])
-     * increases the value; dragging down decreases it -- the standard DAW/synth convention.
-     * [pixelsForFullSweep] pixels of drag sweeps the entire [0,1] range; further drag saturates
+     * Maps horizontal and vertical drag deltas (in screen pixels, positive X = rightward, positive Y = downward,
+     * matching raw ImGui mouse coordinates) to a new normalized [0,1] value. Dragging up (negative [dragDeltaYPixels])
+     * or right (positive [dragDeltaXPixels]) increases the value; dragging down or left decreases it -- the standard
+     * DAW/synth convention. This ensures knobs near the top of the screen can be comfortably adjusted by dragging
+     * horizontally. [pixelsForFullSweep] pixels of drag sweeps the entire [0,1] range; further drag saturates
      * rather than wrapping.
      */
-    fun applyDragDelta(currentValue: Float, dragDeltaYPixels: Float, pixelsForFullSweep: Float = 200f): Float {
+    fun applyDragDelta(
+        currentValue: Float,
+        dragDeltaXPixels: Float,
+        dragDeltaYPixels: Float,
+        pixelsForFullSweep: Float = 200f
+    ): Float {
         val safeSweep = if (pixelsForFullSweep > 0f) pixelsForFullSweep else 200f
-        val delta = -dragDeltaYPixels / safeSweep
+        val delta = (dragDeltaXPixels - dragDeltaYPixels) / safeSweep
         return (currentValue + delta).coerceIn(0f, 1f)
     }
+
+    /**
+     * Vertical-only overload for backwards compatibility.
+     */
+    fun applyDragDelta(
+        currentValue: Float,
+        dragDeltaYPixels: Float,
+        pixelsForFullSweep: Float = 200f
+    ): Float = applyDragDelta(currentValue, 0f, dragDeltaYPixels, pixelsForFullSweep)
 
     /**
      * Maps a normalized [0,1] value to the angle (radians) of the knob's indicator, sweeping from
@@ -58,6 +73,7 @@ object MacroKnobWidget {
     // -- Drag/interaction state (single active knob at a time, mirrors CustomRangeSlider) ----
 
     private var activeKnobId: String? = null
+    private var dragStartX = 0f
     private var dragStartY = 0f
     private var dragStartValue = 0f
 
@@ -112,14 +128,16 @@ object MacroKnobWidget {
 
         if (isActivated) {
             activeKnobId = id
+            dragStartX = io.mousePos.x
             dragStartY = io.mousePos.y
             dragStartValue = value
         }
 
         var newValue = value
         if (isActive && activeKnobId == id) {
+            val deltaX = io.mousePos.x - dragStartX
             val deltaY = io.mousePos.y - dragStartY
-            newValue = applyDragDelta(dragStartValue, deltaY, pixelsForFullSweep)
+            newValue = applyDragDelta(dragStartValue, deltaX, deltaY, pixelsForFullSweep)
         } else if (!isActive && activeKnobId == id) {
             activeKnobId = null
         }

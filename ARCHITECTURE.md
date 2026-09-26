@@ -205,7 +205,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── MixerPanel.kt           — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader
 │   ├── PlaylistManager.kt      — Manages saved setlists
 │   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
-│   ├── MacroPanel.kt           — Column 3 MACROS editing surface: 4 knobs, binding inspector, Learn Mode; renders the dedicated FX Rack view (below) instead of the generic grid for the FX tabs
+│   ├── MacroPanel.kt           — Column 3 MACROS editing surface: two-row bank selector tabs (row 1 generators/composites, row 2 insert FX aligned below decks), 4 knobs, binding inspector, Learn Mode; renders the dedicated FX Rack view instead of the generic grid for FX tabs
 │   ├── MacroBindingInspector.kt — Drawer for inspecting and editing target parameter bindings, response curves, travel windows, and invert toggles
 │   ├── MacroKnobWidget.kt      — Rotary macro knob widget: drag/wheel interaction, accent-colored arc fill, optional deck tint
 │   ├── FxChainHeader.kt        — Shared Performance FX row header: chain browsing, dirty indicator, Save/Save As, kebab menu, slot focus selector pills ([1][2][3]), parameter page stepper ([◀ P1/N ▶]), and top-level [BYPASS]

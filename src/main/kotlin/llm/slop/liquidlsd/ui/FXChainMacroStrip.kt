@@ -67,17 +67,21 @@ object FXChainMacroStrip {
         startRow: Int = 0,
         onPushUndo: () -> Unit
     ): Int {
+        val rowStartX = ImGui.getCursorPosX()
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("CHAIN MACRO") }
         ImGui.spacing()
 
         var row = startRow
         if (grid != null) {
+            ImGui.setCursorPosX(rowStartX)
             ParametersRenderer.drawParamRow(
                 session, "Super Knob", "$chainPrefix/Super", chain.superKnob, state,
                 grid.labelColW, grid.mixer, grid.gridStartX, row++,
-                grid.getCvColumns, grid.getColumnOffset, grid.getCvColor, onPushUndo
+                grid.getCvColumns, grid.getColumnOffset, grid.getCvColor, onPushUndo,
+                rowStartX = rowStartX
             )
         } else {
+            ImGui.setCursorPosX(rowStartX)
             ImGui.beginGroup()
             CustomRangeSlider.drawCompactSlider(
                 session = session,
@@ -103,6 +107,7 @@ object FXChainMacroStrip {
             row = drawGroupMode(session, chain, chainPrefix, state, grid, row, onPushUndo)
         }
         ImGui.spacing()
+        ImGui.setCursorPosX(rowStartX)
         return row
     }
 
@@ -116,7 +121,9 @@ object FXChainMacroStrip {
         onPushUndo: () -> Unit
     ): Int {
         var row = startRow
+        val rowStartX = ImGui.getCursorPosX()
         for (i in 0 until FxChain.SLOT_COUNT) {
+            ImGui.setCursorPosX(rowStartX)
             val fx = chain.slots[i]
 
             if (fx == null) {
@@ -158,7 +165,8 @@ object FXChainMacroStrip {
                         ImGui.textDisabled("Rebind Metaknob To…")
                         drawRebindMenuItems(fx)
                     },
-                    descriptionOverride = fx.header.DESCRIPTION?.takeIf { it.isNotBlank() }
+                    descriptionOverride = fx.header.DESCRIPTION?.takeIf { it.isNotBlank() },
+                    rowStartX = rowStartX
                 )
             } else {
                 session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled(truncateLabel(fx.displayName)) }
@@ -194,6 +202,7 @@ object FXChainMacroStrip {
                 drawRebindContextMenu(fx, chainPrefix, i)
             }
         }
+        ImGui.setCursorPosX(rowStartX)
         return row
     }
 
@@ -209,6 +218,7 @@ object FXChainMacroStrip {
         state: ParametersState,
         onPushUndo: () -> Unit
     ) {
+        val rowStartX = ImGui.getCursorPosX()
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             ImGui.textDisabled("FOCUSED: ${fx.displayName} (Slot ${slotIndex + 1})")
         }
@@ -225,6 +235,7 @@ object FXChainMacroStrip {
         for ((idx, input) in topInputs.withIndex()) {
             val param = fx.parameters[input.NAME] ?: continue
             val existingBinding = fx.getBindingForParam(input.NAME)
+            ImGui.setCursorPosX(rowStartX)
 
             LinkModeButton.drawMetaLink(
                 id = "fx_focus_link_${chainPrefix}_${slotIndex}_$idx",
@@ -268,6 +279,7 @@ object FXChainMacroStrip {
             ImGui.endGroup()
             itemTooltip("${fx.displayName}'s own ${input.LABEL ?: input.NAME} parameter (Focus Mode). Right-click to bind hardware MIDI/OSC.")
         }
+        ImGui.setCursorPosX(rowStartX)
     }
 
     /** Menu items to rebind a slot's Metaknob to a different parameter (or the safety-net Dry/Wet); shared by both the compact-mode right-click popup and the grid-mode row menu. */

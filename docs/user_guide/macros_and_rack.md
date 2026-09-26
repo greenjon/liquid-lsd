@@ -13,8 +13,10 @@ Column 3 (the right-hand panel, where the Mixer normally lives) has a mode toggl
 **`[ MIXER | MACROS ]`**.
 
 - **MIXER** — The classic 4-deck crossfader layout (Deck A, B, BG, Master).
-- **MACROS** — 8 Macro Knobs (2×4 grid), a binding inspector, and a single-deck preview. This is
-  the **editing** surface for your macro layout.
+- **MACROS** — Macro knobs for the active bank, a binding inspector, and a single-deck preview. This is
+  the **editing** surface for your macro layout. At the top of the panel, a two-row tab bar lets you switch between canonical banks:
+  - **Row 1 (Generators & Composites)**: `[ A ] [ B ] [ BG ] [ PV ] [ MSTR ] [ TRAN ] [ GLBL ]`
+  - **Row 2 (Insert FX)**: `[ A FX ] [ B FX ] [ BG FX ] [ PV FX ] [ MSTR FX ]`, aligned directly underneath each corresponding deck/master channel.
 
 ### Binding a knob (Learn Mode)
 
@@ -259,7 +261,7 @@ Controls actively armed for MIDI learn display a pulsing cyan highlight border. 
 
 ### Interacting with knobs
 
-- **Drag** (up/down) to adjust the knob value — same feel as the classic macro knobs.
+- **Drag** (up/down or left/right) to adjust the knob value. Dragging up or right increases the value; dragging down or left decreases it — the standard DAW/synth convention. Horizontal dragging makes it easy to adjust knobs located near the top edge of the screen or display boundary.
 - **Mouse wheel** to fine-adjust (Shift for finer, Ctrl+Shift for coarser).
 - **Hover/drag highlight**: the knob body tints toward the row's accent color on hover, and more
   strongly while you're dragging it, so the knob under your pointer is easy to spot.
@@ -272,14 +274,15 @@ underlying `MacroEngine` banks** — changes in one are immediately visible in t
 ### The Modular Rack: Deep Edit
 
 Every deep-editable row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Master, Transitions)
-has a small **chevron button** in its top-right corner (FX Wet/Dry is a dedicated 4-knob macro row with no chevron). Clicking it toggles that row
+has a small **`[Edit]` button** in its top-right corner (FX Wet/Dry is a dedicated 4-knob macro row with no button). Clicking it toggles that row
 between two disclosure tiers, without leaving Performance Mode:
 
 1. **Faceplate** (collapsed, the default) — just the 4 knobs, exactly like the plain 4×4 matrix
    above. Clicking a knob selects it (electric cyan focus card, glowing rim, cyan label), shows
    its current value (`Val: 0.00`) beneath the label, and reveals a compact `[Learn]` / `[Cancel]`
    button for arming parameter-bind Learn on the spot.
-2. **Deep Edit** — click the chevron to open the comprehensive Deep Edit bay below the top macro row.
+2. **Deep Edit** — click `[Edit]` to open the comprehensive Deep Edit bay below the top macro row.
+   The button now reads `[Collapse]`.
    The bay is arranged into a 3-column layout:
    - **5-Channel Side Rail** on the left: color-coded buttons (`[MIX]`, `[A]`, `[B]`, `[BG]`, `[PV]`)
      allowing instant 1-click navigation between all major sections of the app without closing Deep Edit.
@@ -312,22 +315,21 @@ Collapsing back to Faceplate brings the rest of the 4×4 grid, and the Library, 
 Deep Edit is open the Library is hidden completely (the **Edit** view — see
 [Your Workspace](your_workspace.md)).
 
-Click the chevron again (or the row's **Collapse** button, **Close Edit**, or Esc) to fold back to
-the Faceplate.
+Click **`[Collapse]`** again (or press Esc) to fold back to the Faceplate.
 
 **Opening Deep Edit from Confidence Monitors**:
-In addition to the row chevrons, clicking any preview monitor in Column 3 (Deck A, Deck B, Deck BG, Deck PV, Main Output Master, or the MACROS tab preview) will immediately open Deep Edit focused directly on that module. This swaps the Deep Edit bay from your current deck to the clicked deck without needing to scroll or find the row chevron.
+In addition to the row's `[Edit]` button, clicking any preview monitor in Column 3 (Deck A, Deck B, Deck BG, Deck PV, Main Output Master, or the MACROS tab preview) will immediately open Deep Edit focused directly on that module. This swaps the Deep Edit bay from your current deck to the clicked deck without needing to scroll or find the row's button.
 
 **One Deep Edit at a time**: opening a row's Deep Edit collapses any other open one. To move
 between decks, use the Deep Edit side rail (**MIX / A / B / BG / PV**) rather than opening
-rows side by side. The toolbar above the grid has a **`Close Edit`** button.
+rows side by side.
 
 **Esc** collapses every expanded row back to the Faceplate — unless a Macro Learn is currently
 armed, in which case Esc cancels the Learn instead (a second Esc then collapses the rack). A
 row whose own knob has an armed Learn is also exempt from the auto-collapse, so it can't
 be accidentally folded away mid-Learn; a **"Learning: ‹name› — Esc to cancel"** indicator stays
 visible in the toolbar the whole time a Learn is armed, even if you've expanded a different row.
-**View → Close Deep Edit** does the same as `Close Edit`.
+**View → Close Deep Edit** does the same as the row's `[Collapse]` button.
 
 Expanding or collapsing a row is purely a display change — it never re-syncs the Super Knob/Metaknob mapping.
 

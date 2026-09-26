@@ -45,6 +45,7 @@ object PreferencesPanel {
         private set
 
     private var pendingPresetScale: Int? = null
+    private var pendingOpen = false
 
     fun open(category: Category? = null) {
         isOpen = true
@@ -52,13 +53,18 @@ object PreferencesPanel {
         if (category != null) {
             activeCategory = category
         }
-        ImGui.openPopup(POPUP_ID)
+        pendingOpen = true
     }
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, currentSize: Float = session.uiTheme.baseSize, displayW: Float, displayH: Float,
              mixer: llm.slop.liquidlsd.rendering.Mixer? = null,
              onPresetScaleChanged: (Int) -> Unit,
              parametersState: ParametersState? = null) {
+
+        if (pendingOpen) {
+            ImGui.openPopup(POPUP_ID)
+            pendingOpen = false
+        }
 
         val minW = 1000f.coerceAtMost(displayW * 0.98f)
         val minH = 320f.coerceAtMost(displayH * 0.98f)

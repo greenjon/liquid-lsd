@@ -60,6 +60,36 @@ class MacroKnobWidgetTest {
         assertEquals(0.37f, result, 1e-6f)
     }
 
+    @Test
+    fun testDraggingRightIncreasesValue() {
+        val result = MacroKnobWidget.applyDragDelta(currentValue = 0.5f, dragDeltaXPixels = 50f, dragDeltaYPixels = 0f, pixelsForFullSweep = 200f)
+        assertTrue(result > 0.5f, "Dragging right (positive X delta) should increase the value, got $result")
+        assertEquals(0.75f, result, 1e-5f)
+    }
+
+    @Test
+    fun testDraggingLeftDecreasesValue() {
+        val result = MacroKnobWidget.applyDragDelta(currentValue = 0.5f, dragDeltaXPixels = -50f, dragDeltaYPixels = 0f, pixelsForFullSweep = 200f)
+        assertTrue(result < 0.5f, "Dragging left (negative X delta) should decrease the value, got $result")
+        assertEquals(0.25f, result, 1e-5f)
+    }
+
+    @Test
+    fun testCombinedDiagonalDrag() {
+        // Dragging right (+25px) and up (-25px) yields a net +50px change
+        val result = MacroKnobWidget.applyDragDelta(currentValue = 0.5f, dragDeltaXPixels = 25f, dragDeltaYPixels = -25f, pixelsForFullSweep = 200f)
+        assertEquals(0.75f, result, 1e-5f)
+    }
+
+    @Test
+    fun testHorizontalDragResultClampsAtZeroAndOne() {
+        val clampedZero = MacroKnobWidget.applyDragDelta(currentValue = 0.2f, dragDeltaXPixels = -500f, dragDeltaYPixels = 0f, pixelsForFullSweep = 200f)
+        assertEquals(0f, clampedZero, 1e-6f)
+
+        val clampedOne = MacroKnobWidget.applyDragDelta(currentValue = 0.8f, dragDeltaXPixels = 500f, dragDeltaYPixels = 0f, pixelsForFullSweep = 200f)
+        assertEquals(1f, clampedOne, 1e-6f)
+    }
+
     // -- valueToAngleRadians ---------------------------------------------------------------
 
     @Test

@@ -1773,8 +1773,10 @@ purpose-built for live performance, with Deep Edit underneath for everything els
 <strong><code>[ MIXER | MACROS ]</code></strong>.</p>
 <ul>
 <li><strong>MIXER</strong> — The classic 4-deck crossfader layout (Deck A, B, BG, Master).</li>
-<li><strong>MACROS</strong> — 8 Macro Knobs (2×4 grid), a binding inspector, and a single-deck preview. This is
-  the <strong>editing</strong> surface for your macro layout.</li>
+<li><strong>MACROS</strong> — Macro knobs for the active bank, a binding inspector, and a single-deck preview. This is
+  the <strong>editing</strong> surface for your macro layout. At the top of the panel, a two-row tab bar lets you switch between canonical banks:</li>
+<li><strong>Row 1 (Generators &amp; Composites)</strong>: <code>[ A ] [ B ] [ BG ] [ PV ] [ MSTR ] [ TRAN ] [ GLBL ]</code></li>
+<li><strong>Row 2 (Insert FX)</strong>: <code>[ A FX ] [ B FX ] [ BG FX ] [ PV FX ] [ MSTR FX ]</code>, aligned directly underneath each corresponding deck/master channel.</li>
 </ul>
 <h3 id="binding-a-knob-learn-mode">Binding a knob (Learn Mode)</h3>
 <ol>
@@ -2015,7 +2017,7 @@ it immediately. Right-click again while armed to cancel.</p>
 Controls actively armed for MIDI learn display a pulsing cyan highlight border. Active MIDI assignments are shown in tooltips.</p>
 <h3 id="interacting-with-knobs">Interacting with knobs</h3>
 <ul>
-<li><strong>Drag</strong> (up/down) to adjust the knob value — same feel as the classic macro knobs.</li>
+<li><strong>Drag</strong> (up/down or left/right) to adjust the knob value. Dragging up or right increases the value; dragging down or left decreases it — the standard DAW/synth convention. Horizontal dragging makes it easy to adjust knobs located near the top edge of the screen or display boundary.</li>
 <li><strong>Mouse wheel</strong> to fine-adjust (Shift for finer, Ctrl+Shift for coarser).</li>
 <li><strong>Hover/drag highlight</strong>: the knob body tints toward the row's accent color on hover, and more
   strongly while you're dragging it, so the knob under your pointer is easy to spot.</li>
@@ -2026,14 +2028,15 @@ Controls actively armed for MIDI learn display a pulsing cyan highlight border. 
 underlying <code>MacroEngine</code> banks</strong> — changes in one are immediately visible in the other.</p>
 <h3 id="the-modular-rack-deep-edit">The Modular Rack: Deep Edit</h3>
 <p>Every deep-editable row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Master, Transitions)
-has a small <strong>chevron button</strong> in its top-right corner (FX Wet/Dry is a dedicated 4-knob macro row with no chevron). Clicking it toggles that row
+has a small <strong><code>[Edit]</code> button</strong> in its top-right corner (FX Wet/Dry is a dedicated 4-knob macro row with no button). Clicking it toggles that row
 between two disclosure tiers, without leaving Performance Mode:</p>
 <ol>
 <li><strong>Faceplate</strong> (collapsed, the default) — just the 4 knobs, exactly like the plain 4×4 matrix
    above. Clicking a knob selects it (electric cyan focus card, glowing rim, cyan label), shows
    its current value (<code>Val: 0.00</code>) beneath the label, and reveals a compact <code>[Learn]</code> / <code>[Cancel]</code>
    button for arming parameter-bind Learn on the spot.</li>
-<li><strong>Deep Edit</strong> — click the chevron to open the comprehensive Deep Edit bay below the top macro row.
+<li><strong>Deep Edit</strong> — click <code>[Edit]</code> to open the comprehensive Deep Edit bay below the top macro row.
+   The button now reads <code>[Collapse]</code>.
    The bay is arranged into a 3-column layout:</li>
 <li><strong>5-Channel Side Rail</strong> on the left: color-coded buttons (<code>[MIX]</code>, <code>[A]</code>, <code>[B]</code>, <code>[BG]</code>, <code>[PV]</code>)
      allowing instant 1-click navigation between all major sections of the app without closing Deep Edit.
@@ -2064,19 +2067,18 @@ deck and section you're editing.
 Collapsing back to Faceplate brings the rest of the 4×4 grid, and the Library, back. While
 Deep Edit is open the Library is hidden completely (the <strong>Edit</strong> view — see
 <a href="../your_workspace/">Your Workspace</a>).</p>
-<p>Click the chevron again (or the row's <strong>Collapse</strong> button, <strong>Close Edit</strong>, or Esc) to fold back to
-the Faceplate.</p>
+<p>Click <strong><code>[Collapse]</code></strong> again (or press Esc) to fold back to the Faceplate.</p>
 <p><strong>Opening Deep Edit from Confidence Monitors</strong>:
-In addition to the row chevrons, clicking any preview monitor in Column 3 (Deck A, Deck B, Deck BG, Deck PV, Main Output Master, or the MACROS tab preview) will immediately open Deep Edit focused directly on that module. This swaps the Deep Edit bay from your current deck to the clicked deck without needing to scroll or find the row chevron.</p>
+In addition to the row's <code>[Edit]</code> button, clicking any preview monitor in Column 3 (Deck A, Deck B, Deck BG, Deck PV, Main Output Master, or the MACROS tab preview) will immediately open Deep Edit focused directly on that module. This swaps the Deep Edit bay from your current deck to the clicked deck without needing to scroll or find the row's button.</p>
 <p><strong>One Deep Edit at a time</strong>: opening a row's Deep Edit collapses any other open one. To move
 between decks, use the Deep Edit side rail (<strong>MIX / A / B / BG / PV</strong>) rather than opening
-rows side by side. The toolbar above the grid has a <strong><code>Close Edit</code></strong> button.</p>
+rows side by side.</p>
 <p><strong>Esc</strong> collapses every expanded row back to the Faceplate — unless a Macro Learn is currently
 armed, in which case Esc cancels the Learn instead (a second Esc then collapses the rack). A
 row whose own knob has an armed Learn is also exempt from the auto-collapse, so it can't
 be accidentally folded away mid-Learn; a <strong>"Learning: ‹name› — Esc to cancel"</strong> indicator stays
 visible in the toolbar the whole time a Learn is armed, even if you've expanded a different row.
-<strong>View → Close Deep Edit</strong> does the same as <code>Close Edit</code>.</p>
+<strong>View → Close Deep Edit</strong> does the same as the row's <code>[Collapse]</code> button.</p>
 <p>Expanding or collapsing a row is purely a display change — it never re-syncs the Super Knob/Metaknob mapping.</p>
 <h3 id="setting-up-knob-labels-and-bindings">Setting up knob labels and bindings</h3>
 <p>The full Binding Inspector (rename, target list, Min/Max/Curve/Invert/Link/Enabled) lives only in

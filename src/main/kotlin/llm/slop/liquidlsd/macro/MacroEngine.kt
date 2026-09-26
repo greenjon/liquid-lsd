@@ -125,7 +125,7 @@ object MacroEngine {
         FX_SENDS -> MacroBank(
             knobs = listOf(
                 MacroControl(
-                    label = "SEND A",
+                    label = "Deck A",
                     value = 1.0f,
                     bindings = mutableListOf(
                         MacroBinding(
@@ -137,7 +137,7 @@ object MacroEngine {
                     )
                 ),
                 MacroControl(
-                    label = "SEND B",
+                    label = "Deck B",
                     value = 1.0f,
                     bindings = mutableListOf(
                         MacroBinding(
@@ -149,7 +149,7 @@ object MacroEngine {
                     )
                 ),
                 MacroControl(
-                    label = "SEND BG",
+                    label = "Deck BG",
                     value = 1.0f,
                     bindings = mutableListOf(
                         MacroBinding(
@@ -161,7 +161,7 @@ object MacroEngine {
                     )
                 ),
                 MacroControl(
-                    label = "SEND PV",
+                    label = "Deck PV",
                     value = 1.0f,
                     bindings = mutableListOf(
                         MacroBinding(

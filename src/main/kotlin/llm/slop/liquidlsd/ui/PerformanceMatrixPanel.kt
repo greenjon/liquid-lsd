@@ -285,18 +285,7 @@ class PerformanceMatrixPanel {
             ImGui.popStyleColor(2)
         }
 
-        // Modular Rack toolbar: Collapse All, Learn indicator
-        ImGui.sameLine(0f, 10f)
-        val anyExpanded = parametersState.anyRackModuleExpanded()
-        ImGui.beginDisabled(!anyExpanded)
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            if (ImGui.button("Close Edit##rack_collapse_all", 92f, tabH)) {
-                parametersState.collapseAllRackModules()
-            }
-        }
-        ImGui.endDisabled()
-        itemTooltip("Close Deep Edit and return to the rows + Library (Esc does the same).")
-
+        // Modular Rack toolbar: Learn indicator
         ImGui.sameLine(0f, 10f)
         llm.slop.liquidlsd.ui.rack.RackUnit.drawLearnIndicator()
 
@@ -498,7 +487,6 @@ class PerformanceMatrixPanel {
                                    parametersState.disclosureFor(rawModuleId) != ParametersState.DisclosureLevel.COLLAPSED
             val activeModuleId = if (parametersState.disclosureFor(canonicalId) != ParametersState.DisclosureLevel.COLLAPSED) canonicalId else rawModuleId
             val moduleId = activeModuleId
-            val chevronSize = 18f
 
             val isSpecialHeaderRow = descriptor.hasExtraHeader && (isTransRow || isMasterRow || isClockRow)
 
@@ -568,23 +556,15 @@ class PerformanceMatrixPanel {
                 }
             }
 
-            // Modular Rack disclosure chevron & Collapse button in top-right of box
+            // Modular Rack disclosure toggle in top-right of box: [Edit] / [Collapse]
             if (descriptor.canExpand) {
                 val chevronY = boxTopY + 3f
-                if (isModuleExpanded) {
-                    ImGui.setCursorScreenPos(boxX2 - chevronSize - 80f, chevronY)
-                    session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                        if (ImGui.smallButton("${Icons.CHEVRON_UP} Collapse##row_collapse_${tabIdx}_${group.startRow}")) {
-                            parametersState.setDisclosure(activeModuleId, ParametersState.DisclosureLevel.COLLAPSED)
-                            parametersState.setDisclosure(rawModuleId, ParametersState.DisclosureLevel.COLLAPSED)
-                        }
-                    }
-                    itemTooltip("Collapse module back to standard row view.")
+                ImGui.setCursorScreenPos(boxX2 - 84f, chevronY)
+                session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                    llm.slop.liquidlsd.ui.rack.RackUnit.drawChevron(
+                        parametersState, activeModuleId, "${tabIdx}_${group.startRow}"
+                    )
                 }
-                ImGui.setCursorScreenPos(boxX2 - chevronSize - 4f, chevronY)
-                llm.slop.liquidlsd.ui.rack.RackUnit.drawChevron(
-                    parametersState, activeModuleId, chevronSize, "${tabIdx}_${group.startRow}"
-                )
             }
 
             val contentTopY = boxTopY + boxPad

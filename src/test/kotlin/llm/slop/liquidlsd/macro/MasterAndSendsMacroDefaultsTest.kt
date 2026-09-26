@@ -57,10 +57,10 @@ class MasterAndSendsMacroDefaultsTest {
         assertEquals(4, bank.knobs.size, "FX Sends bank should have 4 knobs")
 
         val expected = listOf(
-            Triple("SEND A", 1.0f, "Deck A/FXChain/DryWet"),
-            Triple("SEND B", 1.0f, "Deck B/FXChain/DryWet"),
-            Triple("SEND BG", 1.0f, "Deck BG/FXChain/DryWet"),
-            Triple("SEND PV", 1.0f, "Deck PV/FXChain/DryWet")
+            Triple("Deck A", 1.0f, "Deck A/FXChain/DryWet"),
+            Triple("Deck B", 1.0f, "Deck B/FXChain/DryWet"),
+            Triple("Deck BG", 1.0f, "Deck BG/FXChain/DryWet"),
+            Triple("Deck PV", 1.0f, "Deck PV/FXChain/DryWet")
         )
 
         for (i in expected.indices) {

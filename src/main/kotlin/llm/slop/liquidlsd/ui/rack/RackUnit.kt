@@ -25,17 +25,14 @@ object RackUnit {
     }
 
     /**
-     * Draws a small chevron button at the current ImGui cursor that cycles [moduleId]'s
-     * disclosure tier. Caller is responsible for positioning the cursor first (e.g.
+     * Draws an "Edit" / "Collapse" toggle button at the current ImGui cursor that cycles
+     * [moduleId]'s disclosure tier. Caller is responsible for positioning the cursor first (e.g.
      * `ImGui.setCursorScreenPos(...)`).
      */
-    fun drawChevron(parametersState: ParametersState, moduleId: String, size: Float, idSuffix: String) {
+    fun drawChevron(parametersState: ParametersState, moduleId: String, idSuffix: String) {
         val level = parametersState.disclosureFor(moduleId)
-        val icon = when (level) {
-            ParametersState.DisclosureLevel.COLLAPSED -> "v"
-            ParametersState.DisclosureLevel.DEEP_EDIT -> "^"
-        }
         val isExpanded = level != ParametersState.DisclosureLevel.COLLAPSED
+        val label = if (isExpanded) "Collapse" else "Edit"
         if (isExpanded) {
             ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f))
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.15f, 0.62f, 0.82f, 1f))
@@ -43,15 +40,12 @@ object RackUnit {
             ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 0.85f))
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.24f, 0.27f, 0.32f, 1f))
         }
-        if (ImGui.button("$icon##rack_chevron_$idSuffix", size, size)) {
+        if (ImGui.smallButton("$label##rack_chevron_$idSuffix")) {
             parametersState.setDisclosure(moduleId, nextLevel(level))
         }
         ImGui.popStyleColor(2)
         itemTooltip(
-            when (level) {
-                ParametersState.DisclosureLevel.COLLAPSED -> "Expand Deep Edit (full parameter editor)."
-                ParametersState.DisclosureLevel.DEEP_EDIT -> "Collapse."
-            }
+            if (isExpanded) "Collapse module back to standard row view." else "Expand Deep Edit (full parameter editor)."
         )
     }
 

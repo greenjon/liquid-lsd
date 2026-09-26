@@ -1,3 +1,39 @@
+## Macro Panel Bank Tabs: Two-Row Layout with FX Aligned Below Decks (`MacroPanel.kt`, docs)
+
+- **Context**: 2026-09-26. All 12 bank selector tabs (`A`, `B`, `BG`, `PV`, `TRANS`, `MST`, `A FX`, `B FX`, `BG FX`, `PV FX`, `MST FX`, `GLB`) were previously packed horizontally into a single 12-button row across Column 3. In typical panel widths (300–400px), each button was squished into ~25–30px width, causing severe text truncation and a cluttered, confusing layout.
+- **Decision**:
+  - Reorganized the bank selector tabs into two distinct rows sharing a unified 7-column grid:
+    - **Row 1 (Generators & Composites)**: `A`, `B`, `BG`, `PV`, `MSTR`, `TRAN`, `GLBL` (7 columns)
+    - **Row 2 (Insert FX)**: `A FX`, `B FX`, `BG FX`, `PV FX`, `MSTR FX` (columns 0–4), leaving columns 5 and 6 empty.
+  - Used identical column width calculation (`((availW - gap * 6) / 7)`) and horizontal button spacing across both rows, ensuring every insert FX tab sits directly and precisely underneath its corresponding visual generator deck or composite channel.
+  - Applied `UITheme.FontLevel.CAPTION` (12px) with compact frame padding (2px horizontal) so button text renders clearly without clipping even on narrower panel widths.
+- **Consequences**: Buttons are nearly twice as wide (~45–55px), cleanly legible, and visually organized with clear vertical alignment between generator decks and their corresponding FX chains.
+
+## FX Chain Macro Row Alignment in Parameter Editor (`FXChainMacroStrip.kt`, `ParametersRenderer.kt`, docs)
+
+- **Context**: 2026-09-26. In the Parameter Editor under the **Chain Macro** section, each effect row displays a Link checkbox followed on the same line by `ParametersRenderer.drawParamRow()`. Because the prefix checkbox shifted the cursor X position prior to `drawParamRow()`, the terminal cursor restoration in `drawParamRow` (`ImGui.setCursorPos(rowX, rowY + CELL)`) set the cursor X for the subsequent row to the post-checkbox offset. Over successive slots, this produced cascading indentation where Slot 2 was indented from Slot 1 and Slot 3 was indented further still.
+- **Decision**:
+  - Added an optional `rowStartX: Float? = null` parameter to `ParametersRenderer.drawParamRow()` that, when provided, is used for the terminal `setCursorPos(rowStartX ?: rowX, rowY + CELL)`.
+  - In `FXChainMacroStrip.kt`, recorded `rowStartX` prior to drawing rows and explicitly set `ImGui.setCursorPosX(rowStartX)` at each slot iteration and at method exit, passing `rowStartX` to `drawParamRow()`.
+- **Consequences**: Slot Link checkboxes and effect parameter rows in the Parameter Editor's Chain Macro section align vertically directly underneath each other without cascading indentation.
+
+## Macro Knob Multi-Axis (Vertical & Horizontal) Drag Support (`MacroKnobWidget.kt`, `MacroKnobWidgetTest.kt`, docs)
+
+- **Context**: 2026-09-26. Rotary macro knobs in `MacroKnobWidget` previously only responded to vertical mouse dragging (dragging up to increase, dragging down to decrease). When a knob is near the top edge of the display, dragging up is constrained by the screen/window boundary.
+- **Decision**:
+  - Added horizontal drag delta (`dragDeltaXPixels`) tracking alongside vertical drag (`dragDeltaYPixels`), mapping `(dragDeltaXPixels - dragDeltaYPixels) / pixelsForFullSweep` to the normalized value change.
+  - Dragging right or up increases the knob value; dragging left or down decreases the knob value, matching standard DAW/synth conventions (e.g. JUCE `RotaryHorizontalVertical`).
+  - Preserved the existing single-axis `applyDragDelta` overload for backwards compatibility.
+- **Consequences**: Users can smoothly adjust knobs near screen edges by dragging horizontally, vertically, or diagonally without running out of screen travel.
+
+## FX Wet/Dry Row Knob Labels: Deck A, Deck B, Deck BG, Deck PV (`MacroEngine.kt`, `SessionSerializer.kt`, docs, tests)
+
+- **Context**: 2026-09-25. In the Performance Matrix (`MASTER` tab), the FX WET/DRY row controls each deck's insert FX wet/dry mix level (`$deck/FXChain/DryWet`). Previously, its 4 knobs were labeled with legacy send names: `SEND A`, `SEND B`, `SEND BG`, and `SEND PV`.
+- **Decision**:
+  - Relabeled the 4 default knobs of canonical bank `MacroEngine.FX_SENDS` to `Deck A`, `Deck B`, `Deck BG`, and `Deck PV`.
+  - Added transparent legacy label migration on session restore in `SessionSerializer.kt` so existing sessions with `SEND A`..`SEND PV` are smoothly updated to `Deck A`..`Deck PV`.
+- **Consequences**: The knobs clearly indicate which deck's FX wet/dry ratio they govern, consistent with the rest of the 4-deck interface.
+
 ## FX slot cells: bypass beside the knob, hover-only shortlist arrows (`FxSlotCell.kt`, `PerformanceMatrixPanel.kt`, docs)
 
 - **Context**: 2026-09-25. Slot cells were `[●] [◀] Name [▶]`; the dot and arrows took ~48px, leaving room for ~8–10 characters of the effect name at 1280px. The arrows duplicated the mouse wheel over the name, and the dot was a small target for a live on/off switch.

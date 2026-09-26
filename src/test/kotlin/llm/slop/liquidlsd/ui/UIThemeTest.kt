@@ -340,6 +340,16 @@ class UIThemeTest {
     }
 
     @Test
+    fun testPreferencesPanelOpenCategory() {
+        PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
+        assertTrue(PreferencesPanel.isOpen, "PreferencesPanel should be open after open()")
+        assertEquals(PreferencesPanel.Category.TEMPO_SYNC, PreferencesPanel.activeCategory)
+
+        PreferencesPanel.open(PreferencesPanel.Category.AUDIO_ENGINE)
+        assertEquals(PreferencesPanel.Category.AUDIO_ENGINE, PreferencesPanel.activeCategory)
+    }
+
+    @Test
     fun testImGuiKeys() {
         val fields = imgui.flag.ImGuiKey::class.java.fields
         assertTrue(fields.isNotEmpty(), "ImGuiKey fields should not be empty")

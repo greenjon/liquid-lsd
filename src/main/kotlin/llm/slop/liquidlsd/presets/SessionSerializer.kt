@@ -270,6 +270,18 @@ object SessionSerializer {
                 } else {
                     llm.slop.liquidlsd.macro.MacroEngine.newBankFor(canonicalId)
                 }
+                // Migrate legacy FX_SENDS knob labels ("SEND A" -> "Deck A", etc.)
+                if (canonicalId == llm.slop.liquidlsd.macro.MacroEngine.FX_SENDS) {
+                    val legacyNames = mapOf(
+                        "SEND A" to "Deck A",
+                        "SEND B" to "Deck B",
+                        "SEND BG" to "Deck BG",
+                        "SEND PV" to "Deck PV"
+                    )
+                    for (knob in bank.knobs) {
+                        legacyNames[knob.label]?.let { knob.label = it }
+                    }
+                }
                 llm.slop.liquidlsd.macro.MacroEngine.registerBank(canonicalId, bank)
             }
             // Refresh FX row knob labels/bindings against the chains actually restored above. Not

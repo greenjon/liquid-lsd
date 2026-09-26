@@ -52,14 +52,8 @@ class UIManager(
     // Store rebuild request flag here; it is consumed at the top of the next render().
     private var pendingFontRebuild = false
 
-    // Set to true for one frame when the Preferences menu item is clicked; consumed
-    // immediately after endMainMenuBar so openPopup runs at root ID-stack level.
-    private var pendingOpenPreferences = false
-    private var pendingOpenPreferencesCategory: PreferencesPanel.Category? = null
-
     fun openPreferences(category: PreferencesPanel.Category? = null) {
-        pendingOpenPreferences = true
-        pendingOpenPreferencesCategory = category
+        PreferencesPanel.open(category)
     }
 
     private val splitterManager = SplitterManager()
@@ -273,11 +267,6 @@ class UIManager(
 
         if (!session.uiTheme.cleanModeEnabled) {
             menuBar.draw(session, mixer)
-            if (pendingOpenPreferences) {
-                PreferencesPanel.open(pendingOpenPreferencesCategory)
-                pendingOpenPreferences = false
-                pendingOpenPreferencesCategory = null
-            }
 
             if (popupManager.pendingOpenExitPopup) {
                 ImGui.openPopup("Exit Liquid LSD?##confirm")
@@ -395,8 +384,7 @@ class UIManager(
             session.uiTheme.presetNameScalePercent = clamped
             pendingFontRebuild = true
             if (PreferencesPanel.isOpen) {
-                pendingOpenPreferences = true
-                pendingOpenPreferencesCategory = PreferencesPanel.activeCategory
+                PreferencesPanel.open(PreferencesPanel.activeCategory)
             }
             AppPreferencesStore.savePreferences()
             logger.info { "User preset name scale changed to: $clamped%, scheduling font rebuild" }
