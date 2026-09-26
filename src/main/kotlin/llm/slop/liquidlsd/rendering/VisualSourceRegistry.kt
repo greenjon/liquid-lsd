@@ -148,11 +148,7 @@ object VisualSourceRegistry {
             }
 
             // 2. Recursively scan all ISF shader files in this directory
-            val files = dir.walkTopDown()
-                .filter { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") }
-                .toList()
-
-            for (file in files) {
+            for (file in standaloneShaderFiles(dir)) {
                 val sourceId = file.nameWithoutExtension
                 if (availableSources.none { it.id == sourceId }) {
                     try {
@@ -169,6 +165,17 @@ object VisualSourceRegistry {
             }
         }
     }
+
+    /**
+     * Shader files under [dir] to load as standalone ISF sources. Files inside a meta.json source
+     * folder (e.g. mandala/shader.frag) belong to that folder source and are skipped -- otherwise
+     * they register a second, broken source named after the file ("Shader").
+     */
+    internal fun standaloneShaderFiles(dir: File): List<File> =
+        dir.walkTopDown()
+            .onEnter { it == dir || !File(it, "meta.json").exists() }
+            .filter { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") }
+            .toList()
 
     private val pendingGlTasks = java.util.concurrent.ConcurrentLinkedQueue<Runnable>()
 

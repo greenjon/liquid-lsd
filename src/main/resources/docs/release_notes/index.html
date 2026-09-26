@@ -1208,6 +1208,61 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fix-mandala-listed-twice-in-the-source-picker-visualsourceregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Mandala listed twice in the source picker (VisualSourceRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-fx-slot-name-double-click-and-drag-fxslotcellkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: FX slot name double-click and drag (FxSlotCell.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-slot-bypass-moves-beside-the-knob-longer-fx-names-fxslotcellkt-performancematrixpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX slot bypass moves beside the knob; longer FX names (FxSlotCell.kt, PerformanceMatrixPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-uniform-deck-macro-knob-spacing-between-src-and-fx-performancematrixpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Uniform Deck Macro Knob Spacing between SRC and FX (PerformanceMatrixPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-library-fx-list-empty-on-first-open-fxbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Library FX list empty on first open (FXBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#row-title-badges-crossfader-moves-onto-the-master-rows-mix-line-performancematrixpanelkt-performancemastercontrolskt-performancetransitionscontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4107,6 +4162,61 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fix-mandala-listed-twice-in-the-source-picker-visualsourceregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Mandala listed twice in the source picker (VisualSourceRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-fx-slot-name-double-click-and-drag-fxslotcellkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: FX slot name double-click and drag (FxSlotCell.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-slot-bypass-moves-beside-the-knob-longer-fx-names-fxslotcellkt-performancematrixpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX slot bypass moves beside the knob; longer FX names (FxSlotCell.kt, PerformanceMatrixPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-uniform-deck-macro-knob-spacing-between-src-and-fx-performancematrixpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Uniform Deck Macro Knob Spacing between SRC and FX (PerformanceMatrixPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fix-library-fx-list-empty-on-first-open-fxbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Library FX list empty on first open (FXBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#row-title-badges-crossfader-moves-onto-the-master-rows-mix-line-performancematrixpanelkt-performancemastercontrolskt-performancetransitionscontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6981,6 +7091,28 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fix-mandala-listed-twice-in-the-source-picker-visualsourceregistrykt">Fix: Mandala listed twice in the source picker (<code>VisualSourceRegistry.kt</code>)</h3>
+<ul>
+<li>The generator picker showed Mandala under General / Root and again as "Shader" in a separate Mandala folder. The second entry was a broken copy: the ISF folder scan picked up Mandala's own <code>shader.frag</code> file. The scan now skips shader files inside a source folder that has a <code>meta.json</code>, so Mandala appears once.</li>
+</ul>
+<h3 id="fix-fx-slot-name-double-click-and-drag-fxslotcellkt">Fix: FX slot name double-click and drag (<code>FxSlotCell.kt</code>)</h3>
+<ul>
+<li>Double-clicking an FX slot's name now enters or exits Focus Mode, and dragging the name onto another slot's name now swaps them. Before, the first click opened the FX picker right away, which blocked both. The picker now opens a moment after a single click, once it's clear the click isn't a double-click or a drag.</li>
+<li>The slot name's tooltip now says what to double-click and drag: the name itself.</li>
+</ul>
+<h3 id="fx-slot-bypass-moves-beside-the-knob-longer-fx-names-fxslotcellkt-performancematrixpanelkt">FX slot bypass moves beside the knob; longer FX names (<code>FxSlotCell.kt</code>, <code>PerformanceMatrixPanel.kt</code>)</h3>
+<ul>
+<li><strong>Bypass beside the knob</strong>: each FX slot's on/off switch is now a power button stacked under the Link button, to the left of the slot's knob. It's row-coloured when on and red when bypassed, and is bigger and easier to hit than the old dot. In Focus Mode the focused slot's bypass sits beside knob 1.</li>
+<li><strong>Longer effect names</strong>: the slot cell under each knob is now just the effect name. The <code>◀</code> / <code>▶</code> arrows appear only while you hover the cell, so names get about 48px more room. The mouse wheel over the name still steps through the FX Shortlist, and the right-click menu has new <strong>Previous / Next in Shortlist</strong> items.</li>
+</ul>
+<h3 id="fix-uniform-deck-macro-knob-spacing-between-src-and-fx-performancematrixpanelkt">Fix: Uniform Deck Macro Knob Spacing between SRC and FX (<code>PerformanceMatrixPanel.kt</code>)</h3>
+<ul>
+<li>Toggling a Deck row between <code>[SRC]</code> (Visual Generator macros) and <code>[FX]</code> (insert FX chain macros) previously caused the macro knobs to jump between a tight center cluster (72–96px) in SRC and full column pitch (<code>maxColW</code>) in FX. SRC mode now uses the same column pitch spacing as FX mode, keeping knob positions and column alignments identical across all rows when switching modes.</li>
+</ul>
+<h3 id="fix-library-fx-list-empty-on-first-open-fxbrowserpanelkt">Fix: Library FX list empty on first open (<code>FXBrowserPanel.kt</code>)</h3>
+<ul>
+<li>The Library's FX column showed nothing until you typed in its search box. It now lists every FX as soon as you open it. FX you save and ISF filters that finish loading later also show up right away, without editing the search.</li>
+</ul>
 <h3 id="row-title-badges-crossfader-moves-onto-the-master-rows-mix-line-performancematrixpanelkt-performancemastercontrolskt-performancetransitionscontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt">Row title badges; crossfader moves onto the Master row's [MIX] line (<code>PerformanceMatrixPanel.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>PerformanceTransitionsControls.kt</code>, <code>PerformanceClockControls.kt</code>, <code>PerformanceFxSendsControls.kt</code>)</h3>
 <ul>
 <li><strong>Same layout for every row</strong>: every Performance row now starts with a title badge spanning both control lines. Deck rows show a large <strong>A</strong>, <strong>B</strong>, <strong>BG</strong> or <strong>PV</strong>, replacing "DECK / A" and "A FX" (the <code>[SRC]</code>/<code>[FX]</code> pills already show the mode). MASTER-tab rows show <strong>MASTER</strong>, <strong>TRANS</strong>, <strong>WET/DRY</strong> and <strong>CLOCK</strong>. These MASTER-tab titles are a first pass.</li>

@@ -388,7 +388,6 @@ class PerformanceMatrixPanel {
             it.bankId in listOf(MacroEngine.DECK_A, MacroEngine.DECK_B, MacroEngine.DECK_BG, MacroEngine.DECK_PV) ||
             it.groupLabel.startsWith("DECK")
         }
-        val hasFxRow = layoutRows.any { it.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS }
 
         val isCompactRow = rowH < 95f
         val ctrlH = if (isCompactRow) 21f else PerformanceColors.CTRL_H
@@ -450,7 +449,9 @@ class PerformanceMatrixPanel {
         }
         val diameter = minOf(diamByWidth, diamByHeight).coerceIn(20f, 100f)
 
-        val targetColW = if (hasFxRow) maxColW else if (maxLeftW > 0f) (diameter + 24f).coerceIn(72f, 96f) else (diameter + 28f).coerceIn(80f, 130f)
+        // Deck rows in SRC mode use the same uniform column pitch as FX (maxColW) so knob spacing
+        // does not jump when toggling between SRC and FX.
+        val targetColW = maxColW
         val knobColW = minOf(targetColW, maxColW)
         val knobsTotalW = 4 * knobColW
         val knobClusterStartX = leftBoundary + (middleW - knobsTotalW) / 2f
@@ -669,16 +670,31 @@ class PerformanceMatrixPanel {
 
                     val cellCenterX = knobClusterStartX + col * knobColW + knobColW / 2f
 
-                    // Clickable link icon for FX slots (any FX row or Deck row in FX mode, cols 1..3)
+                    // FX slot side buttons, stacked left of the knob: Super Knob link over slot bypass.
+                    // Group mode: slot knobs (cols 1..3) get both. Focus mode: knob 1 (the focused
+                    // slot's dry/wet) gets just the bypass.
                     val rowChain = if (isFxBankId) ctx.resolveFxChain(mixer, row.bankId) else null
-                    if (descriptor.hasExtraHeader && isFxBankId && col in 1..3 && rowChain?.isFocused() != true) {
-                        val slotIdx = col - 1
-                        val chain = rowChain ?: ctx.resolveFxChain(mixer, row.bankId)
+                    val isFocusMode = rowChain?.isFocused() == true
+                    val sideSlotIdx = when {
+                        !descriptor.hasExtraHeader || rowChain == null -> null
+                        isFocusMode -> if (col == 0) rowChain.focusedSlot else null
+                        col in 1..3 -> col - 1
+                        else -> null
+                    }
+                    val sideBtnSize = 18f
+                    val sideBtnGap = 2f
+                    val sideBtnX = (cellCenterX - diameter / 2f - sideBtnSize - 2f).coerceAtLeast(gridStartX + 2f)
+                    val sideStackTopY = knobTopY + diameter / 2f - (if (isFocusMode) sideBtnSize / 2f else sideBtnSize + sideBtnGap / 2f)
+                    if (sideSlotIdx != null) {
+                        val bypassY = if (isFocusMode) sideStackTopY else sideStackTopY + sideBtnSize + sideBtnGap
+                        FxSlotCell.drawBypassButton(session, mixer, row.bankId, sideSlotIdx, sideBtnX, bypassY, sideBtnSize, row.accent)
+                    }
+                    if (sideSlotIdx != null && !isFocusMode) {
+                        val slotIdx = sideSlotIdx
+                        val chain = rowChain!!
                         val isLinked = chain.slotSuperKnobLink.getOrNull(slotIdx) == true
-                        val btnSize = 18f
-                        val btnX = (cellCenterX - diameter / 2f - btnSize - 2f).coerceAtLeast(gridStartX + 2f)
-                        val btnY = knobTopY + (diameter - btnSize) / 2f
-                        ImGui.setCursorScreenPos(btnX, btnY)
+                        val btnSize = sideBtnSize
+                        ImGui.setCursorScreenPos(sideBtnX, sideStackTopY)
 
                         val icon = if (isLinked) Icons.LINK else Icons.UNLINK
                         if (isLinked) {
@@ -708,7 +724,7 @@ class PerformanceMatrixPanel {
 
                     val isSelectedKnob = isModuleExpanded && (control.id == parametersState.selectedRackMacroId[moduleId])
                     // Group-mode FX slot knobs drop their "META" caption -- the slot cell below names the effect.
-                    val showKnobLabel = !(descriptor.hasExtraHeader && isFxBankId && col in 1..3 && rowChain?.isFocused() != true)
+                    val showKnobLabel = !(descriptor.hasExtraHeader && isFxBankId && col in 1..3 && !isFocusMode)
                     val captionBlockH = captionH * ((if (showKnobLabel) 1 else 0) + (if (isModuleExpanded) 1 else 0))
                     val learnBtnSpaceH = if (isModuleExpanded) 24f else 0f
                     val cardPadX = 6f

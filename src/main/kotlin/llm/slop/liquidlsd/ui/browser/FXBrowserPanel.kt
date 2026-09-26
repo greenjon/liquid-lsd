@@ -12,6 +12,7 @@ import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
@@ -51,7 +52,10 @@ object FXBrowserPanel {
     private val showChainRef = ImBoolean(true)
 
     private var lastQuery: String = ""
-    private var lastFilterState: List<Boolean> = listOf(true, true, true)
+    private var lastFilterState: List<Boolean> = emptyList()
+    private var lastStock: List<ISFFilter>? = null
+    private var lastSingles: List<AssetItem>? = null
+    private var lastChains: List<AssetItem>? = null
     private var cachedRows: List<AssetItem> = emptyList()
 
     fun draw(session: SessionContext, mixer: Mixer) {
@@ -116,27 +120,36 @@ object FXBrowserPanel {
         ImGui.spacing()
 
         if (ImGui.beginChild("##fx_browser_scroll", 0f, 0f, false)) {
+            // Source lists are cached upstream and keep their identity until they change,
+            // so new saves / late-loaded filters invalidate the row cache.
+            val stock = ISFFilterRegistry.availableFilters
+            val singles = FileSystemManager.scanAllFxPresets()
+            val chains = FileSystemManager.scanAllFxChains()
             val query = searchBuffer.get().trim().lowercase()
             val filterState = listOf(showStock, showSingle, showChain)
-            val rows = if (query == lastQuery && filterState == lastFilterState) {
+            val rows = if (stock === lastStock && singles === lastSingles && chains === lastChains &&
+                query == lastQuery && filterState == lastFilterState) {
                 cachedRows
             } else {
+                lastStock = stock
+                lastSingles = singles
+                lastChains = chains
                 lastQuery = query
                 lastFilterState = filterState
                 val result = mutableListOf<AssetItem>()
                 if (showStock) {
-                    ISFFilterRegistry.availableFilters
+                    stock
                         .filter { query.isEmpty() || it.displayName.lowercase().contains(query) }
                         .sortedBy { it.displayName.lowercase() }
                         .forEach { result.add(AssetItem(path = STOCK_PATH_PREFIX + it.id, name = it.displayName, type = AssetType.FX_STOCK)) }
                 }
                 if (showSingle) {
-                    FileSystemManager.scanAllFxPresets()
+                    singles
                         .filter { query.isEmpty() || it.name.lowercase().contains(query) || it.tags.any { t -> t.lowercase().contains(query) } }
                         .forEach { result.add(it) }
                 }
                 if (showChain) {
-                    FileSystemManager.scanAllFxChains()
+                    chains
                         .filter { query.isEmpty() || it.name.lowercase().contains(query) || it.tags.any { t -> t.lowercase().contains(query) } }
                         .forEach { result.add(it) }
                 }

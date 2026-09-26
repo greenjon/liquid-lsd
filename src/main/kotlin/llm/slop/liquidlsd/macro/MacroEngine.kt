@@ -218,16 +218,17 @@ object MacroEngine {
 
     /** Maps a deck label (e.g. "Deck A", or a full path's leading segment) to its canonical bank id. */
     fun canonicalIdForDeckLabel(deckLabel: String): String = when (deckLabel) {
-        "Deck A" -> DECK_A
-        "Deck B" -> DECK_B
-        "Deck BG" -> DECK_BG
-        "Deck PV" -> DECK_PV
+        "Deck A", DECK_A -> DECK_A
+        "Deck B", DECK_B -> DECK_B
+        "Deck BG", DECK_BG -> DECK_BG
+        "Deck PV", DECK_PV -> DECK_PV
         "Deck A FX", "Deck A/FX", DECK_A_FX -> DECK_A_FX
         "Deck B FX", "Deck B/FX", DECK_B_FX -> DECK_B_FX
         "Deck BG FX", "Deck BG/FX", DECK_BG_FX -> DECK_BG_FX
         "Deck PV FX", "Deck PV/FX", DECK_PV_FX -> DECK_PV_FX
-        "Master", "MST" -> MASTER
-        "TRANS", "Transition" -> TRANS
+        "Master", "MST", MASTER -> MASTER
+        "TRANS", "Transition", TRANS -> TRANS
+        "FX Sends", "FX_SENDS", FX_SENDS -> FX_SENDS
         "Master FX", "Master/FX", MASTER_FX -> MASTER_FX
         "Global", "GLB", GLOBAL -> GLOBAL
         else -> TRANS

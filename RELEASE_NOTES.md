@@ -1,5 +1,22 @@
 ## [Unreleased]
 
+### Fix: Mandala listed twice in the source picker (`VisualSourceRegistry.kt`)
+- The generator picker showed Mandala under General / Root and again as "Shader" in a separate Mandala folder. The second entry was a broken copy: the ISF folder scan picked up Mandala's own `shader.frag` file. The scan now skips shader files inside a source folder that has a `meta.json`, so Mandala appears once.
+
+### Fix: FX slot name double-click and drag (`FxSlotCell.kt`)
+- Double-clicking an FX slot's name now enters or exits Focus Mode, and dragging the name onto another slot's name now swaps them. Before, the first click opened the FX picker right away, which blocked both. The picker now opens a moment after a single click, once it's clear the click isn't a double-click or a drag.
+- The slot name's tooltip now says what to double-click and drag: the name itself.
+
+### FX slot bypass moves beside the knob; longer FX names (`FxSlotCell.kt`, `PerformanceMatrixPanel.kt`)
+- **Bypass beside the knob**: each FX slot's on/off switch is now a power button stacked under the Link button, to the left of the slot's knob. It's row-coloured when on and red when bypassed, and is bigger and easier to hit than the old dot. In Focus Mode the focused slot's bypass sits beside knob 1.
+- **Longer effect names**: the slot cell under each knob is now just the effect name. The `◀` / `▶` arrows appear only while you hover the cell, so names get about 48px more room. The mouse wheel over the name still steps through the FX Shortlist, and the right-click menu has new **Previous / Next in Shortlist** items.
+
+### Fix: Uniform Deck Macro Knob Spacing between SRC and FX (`PerformanceMatrixPanel.kt`)
+- Toggling a Deck row between `[SRC]` (Visual Generator macros) and `[FX]` (insert FX chain macros) previously caused the macro knobs to jump between a tight center cluster (72–96px) in SRC and full column pitch (`maxColW`) in FX. SRC mode now uses the same column pitch spacing as FX mode, keeping knob positions and column alignments identical across all rows when switching modes.
+
+### Fix: Library FX list empty on first open (`FXBrowserPanel.kt`)
+- The Library's FX column showed nothing until you typed in its search box. It now lists every FX as soon as you open it. FX you save and ISF filters that finish loading later also show up right away, without editing the search.
+
 ### Row title badges; crossfader moves onto the Master row's [MIX] line (`PerformanceMatrixPanel.kt`, `PerformanceMasterControls.kt`, `PerformanceTransitionsControls.kt`, `PerformanceClockControls.kt`, `PerformanceFxSendsControls.kt`)
 - **Same layout for every row**: every Performance row now starts with a title badge spanning both control lines. Deck rows show a large **A**, **B**, **BG** or **PV**, replacing "DECK / A" and "A FX" (the `[SRC]`/`[FX]` pills already show the mode). MASTER-tab rows show **MASTER**, **TRANS**, **WET/DRY** and **CLOCK**. These MASTER-tab titles are a first pass.
 - **No more header bars on the MASTER tab**: the Master, Transitions and Clock rows no longer have a full-width bar above their knobs, so MASTER-tab knobs are now the same size as deck knobs. At 1280×720 that's about 44px, up from 20px.

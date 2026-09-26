@@ -1,3 +1,19 @@
+## FX slot cells: bypass beside the knob, hover-only shortlist arrows (`FxSlotCell.kt`, `PerformanceMatrixPanel.kt`, docs)
+
+- **Context**: 2026-09-25. Slot cells were `[●] [◀] Name [▶]`; the dot and arrows took ~48px, leaving room for ~8–10 characters of the effect name at 1280px. The arrows duplicated the mouse wheel over the name, and the dot was a small target for a live on/off switch.
+- **Decision**:
+  - Per-slot bypass moves to `FxSlotCell.drawBypassButton`: an 18px power button stacked under the Super Knob Link button, left of each slot knob (both centred on the knob). In Focus Mode (Link hidden) only the focused slot's bypass is drawn, beside knob 1.
+  - The `◀` / `▶` arrows are drawn only while the cell is hovered; otherwise the name spans the whole cell. Previous/Next in Shortlist added to the right-click menu.
+- **Consequences**: FX names get the full cell width. Slot toggles live together beside the knob they belong to. Stepping the shortlist needs a hover (or wheel/menu), which is fine since the mouse is already on the cell.
+
+## Performance Matrix: Uniform Knob Spacing between SRC and FX Modes (`PerformanceMatrixPanel.kt`, docs)
+
+- **Context**: 2026-09-25. When switching a Deck row between `[SRC]` (Visual Generator macros) and `[FX]` (insert FX chain macros), the horizontal spacing of the 4 macro knobs previously jumped between a tightly clustered width (`targetColW = (diameter + 24f).coerceIn(72f, 96f)`) in SRC mode and the full column pitch (`maxColW = middleW / 4f`) in FX mode. This produced a jarring visual jump and misalignment between rows whenever any deck was toggled into FX.
+- **Decision**:
+  - **Unified Column Pitch (`maxColW`)**: Set `targetColW = maxColW` for all rows, aligning `SRC` rows to use the exact same column pitch and horizontal spacing as `FX` rows.
+  - **Zero Layout Jump on Mode Toggle**: Toggling any Deck row (or Master row) between `[SRC]` and `[FX]` now leaves the 4 knob centers in identical horizontal positions without shifting neighboring knobs or rows.
+- **Consequences**: Macro knobs remain uniformly column-aligned across all rows on both DECKS and MASTER tabs regardless of each individual row's active sub-mode.
+
 ## Performance Matrix: remove standalone FX rows, Master row gets [MIX|FX], Clock row + Global macros (`PerformanceMatrixPanel.kt`, `PerformanceMasterControls.kt`, `PerformanceClockControls.kt`, `PerformanceFxSendsControls.kt`, `MacroEngine.kt`, `MacroPanel.kt`, `PerformanceUiContext.kt`, `PerformanceDeepEditBay.kt`, `ParametersState.kt`, docs, tests)
 
 - **Context**: 2026-09-25. Once deck rows carried full FX controls (stacked `[SRC]` / `[FX]` + chain header + bypass), the dedicated FX rows became duplicates: the **ALL FX** tab (Deck A/B/BG/PV FX + Master FX), LIVE CONSOLE's focused-FX Row 4 with its `[A|B|BG|PV|MST]` target switcher, and the Deck PV row on MASTER & FX (already on LIVE QUAD). Master FX was the only chain without a home row.

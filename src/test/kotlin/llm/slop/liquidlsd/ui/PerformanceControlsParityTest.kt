@@ -21,6 +21,12 @@ class PerformanceControlsParityTest {
     fun setUp() {
         mixer = mockk(relaxed = true)
         session = SessionContext()
+        for (canonicalId in llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS) {
+            llm.slop.liquidlsd.macro.MacroEngine.registerBank(
+                canonicalId,
+                llm.slop.liquidlsd.macro.MacroEngine.newBankFor(canonicalId)
+            )
+        }
     }
 
     @Test
@@ -119,4 +125,31 @@ class PerformanceControlsParityTest {
         sendsBank.knobs.forEach { it.value = 1.0f }
         sendsBank.knobs.forEach { assertEquals(1.0f, it.value) }
     }
+
+    @Test
+    fun testDeckRowModeKnobBankParity() {
+        val deckTags = listOf("A", "B", "BG", "PV")
+        val srcBankIds = listOf(
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_A,
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_B,
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_BG,
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_PV
+        )
+        val fxBankIds = listOf(
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_A_FX,
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_B_FX,
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_BG_FX,
+            llm.slop.liquidlsd.macro.MacroEngine.DECK_PV_FX
+        )
+
+        for (i in deckTags.indices) {
+            val srcBank = llm.slop.liquidlsd.macro.MacroEngine.getBank(srcBankIds[i])
+            val fxBank = llm.slop.liquidlsd.macro.MacroEngine.getBank(fxBankIds[i])
+            org.junit.jupiter.api.Assertions.assertNotNull(srcBank, "SRC bank ${srcBankIds[i]} must exist")
+            org.junit.jupiter.api.Assertions.assertNotNull(fxBank, "FX bank ${fxBankIds[i]} must exist")
+            assertEquals(4, srcBank!!.knobs.size, "SRC bank ${srcBankIds[i]} must have 4 knobs")
+            assertEquals(4, fxBank!!.knobs.size, "FX bank ${fxBankIds[i]} must have 4 knobs")
+        }
+    }
 }
+

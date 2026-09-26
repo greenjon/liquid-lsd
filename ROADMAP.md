@@ -19,71 +19,32 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 
 | Milestone / Workstream | Target Area | Target | Status | Key Deliverables |
 | :--- | :--- | :---: | :---: | :--- |
-| **Performance Mode & Macros** | `ui/*`, `macro/*`, `presets/*` | **v1.0** | **OPERATIONAL** | 4×4 macro knob matrix (`PerformanceMatrixPanel`, `F4`) across 6 canonical banks, `MacroEngine`/`MacroBank` binding, curves. Supersedes the retired 19" Modular Video Rack (see Milestone 1). Macro-learn/randomization coverage for remaining control types still in progress. |
-| **Live Performance Console & FX Macro Integration** | `ui/PerformanceMatrixPanel.kt`, `macro/FxMacroSync.kt`, `rendering/FxChain.kt`, `rendering/Renderer.kt` | **v1.1** | **PLANNING** | New `LIVE CONSOLE` tab unifying Deck A/B + active FX bank/chain (FX1/FX2/MFX-switchable) + Master/Transitions into one 4×4 surface with smart-default knob binding. Requires `FxBank` to first be simplified from "3 chains in series" to "3 alternative chains, one active at a time" (see Milestone 1 deferred notes). |
-| **Automated Screen Capture & UI Lab** | `export/*`, `ui/*`, `Main.kt` | **v1.0** | **IN PROGRESS** | Headless CLI screenshot automation (`--screenshot-ui`) for CI/docs & isolated UI Lab gallery (`--ui-lab`). |
+| **Performance Mode & Macros** | `ui/*`, `macro/*`, `presets/*` | **v1.0** | **OPERATIONAL** | Performance matrix (DECKS + MASTER tabs, `F4`) with Deep Edit, `MacroEngine`/`MacroBank` binding, curves, FX slot cells and focus mode on the deck/Master rows. Remaining macro-learn coverage bumped to v1.1 (Milestone 5). |
+| **UI & UX Polish** | `ui/*` | **v1.0** | **ACTIVE** | Perform / Edit / Library views polished and verified at 1280×720. |
+| **Stability Testing** | all | **v1.0** | **ACTIVE** | Long sessions, load/swap under load, session restore, device hot-plug, 5 release platforms. |
+| **ISF Binding Audit** | `rendering/isf/*`, bundled shaders | **v1.0** | **ACTIVE** | Sensible Metaknob/auto-bind and default bindings verified for every bundled ISF. |
+| **Two Polished Themes** | `ui/UITheme.kt` | **v1.0** | **ACTIVE** | Two `UITheme.Theme` palettes dialed in as the supported v1.0 themes (TBD which). |
 | **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **v1.1** | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
 | **Session Scratchpad** | `notes/*`, `ui/*` | **v1.1** | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
 | **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **v1.1** | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
+| **FX Metaknob Multi-Parameter Linking** | `rendering/isf/*`, `rendering/FxChain.kt` | **v1.1** | **IDEA** | One Metaknob driving several shader parameters with per-target link modes. |
+| **Macro-Learn Coverage Completion** | `ui/*`, `macro/*` | **v1.1** | **PENDING** | Click-to-learn for randomization bound rows, per-step grid, and dropdowns (shared combo wrapper). Bumped from v1.0. |
+| **Automated Screen Capture & UI Lab** | `export/*`, `ui/*`, `Main.kt` | **v1.1** | **PARTIAL** | GPU PBO readback done; headless `--screenshot-ui` runner and `--ui-lab` gallery pending. Bumped from v1.0. |
+| **Localization** | `ui/*` | **v1.1** | **PENDING** | All user-facing text moved to string tables; translation support with locale selection. |
+| **Expanded FX Chain View** | `ui/PerformanceMatrixPanel.kt`, `ui/FxSlotCell.kt`, `macro/FxMacroSync.kt` | **v1.1** | **SHELVED** | Mixxx-style 3-sub-row chain editing on the Performance matrix (all 3 slots' dry/wet + top params visible). Notes: `.planning/fx-chain-expanded-view-notes.md`. |
 
 ---
 
 ## v1.0 Active Milestones
 
-### Milestone 1: Modular Video Rack & Macro Performance System
-> **RETIRED (rack half only)**: Phases 5-9 below (the rack chassis UI itself — bay, faceplates, confidence micro-monitors, `Tab`-flip rear patching) shipped as described, then were **deleted from the codebase** and replaced by **Performance Mode** (`PerformanceMatrixPanel.kt`, 4×4 macro knob matrix, `F4`). The Macro engine (Phases 1-4) is unaffected and still shipping — it's now consumed by Performance Mode instead of the rack. This section is kept as historical implementation record; see the Summary Matrix above for current status.
->
-> **Reference & Design Specs**:
-> - [`docs/user_guide/macros_and_rack.md`](docs/user_guide/macros_and_rack.md) (Macro Controls & Performance Mode User Guide)
-> - [`docs/developer/modular_video_rack_proposal.md`](docs/developer/modular_video_rack_proposal.md) (Modular Video Rack Architecture — retired design doc)
-> **Status**: Core Complete (Phases 1-9 shipped) — all 6 rack-doc Open Questions decided and implemented 2026-09-16; rack chassis (Phases 5, 7, 8, 9) later retired and removed
-> **Inspiration**: Hardware 19" studio racks, Propellerhead Reason, Eurorack, Ableton Device Racks
+### v1.0 Release Focus (decided 2026-09-25)
 
-Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style video rack designed for tactile live performance:
+The feature set is frozen for v1.0. What remains is finishing and hardening, not new features — this may be all that happens before the release. Everything else is in the [v1.1 Backlog](#v11-backlog).
 
-- **Concept & Architecture**:
-  - **Preset-as-Module**: Each deck (generator + all its FX, flattened into one unit — see rack doc §2.7) or transition is housed within an interchangeable rack unit with a standardized 19" bay width and quantized modular height ($1\text{U}, 2\text{U}, 3\text{U}, \dots$).
-  - **Curated Performance Faceplates (80/20 Rule)**: Performers curate custom front panels exposing *only* high-impact live controls (knobs, sliders, toggles, and macros). Underlying automation, LFOs, audio-reactive envelopes, and fine math run silently in the background without cluttering the performance surface.
-  - **Integrated Confidence Monitoring**: Every rack unit features an embedded real-time preview monitor rendering an offscreen FBO preview of that unit's output before downstream routing.
-  - **Macro Controls**: Assignable multi-target macro knobs modulating multiple internal parameters simultaneously with customizable travel limits, inverted directions, and nonlinear response curves (linear, exponential, S-curve).
-  - **Dual-Faced Architecture (Reason-Style `Tab` Flip)**:
-    - *Front Face*: Clean tactile controls, meters, and micro-monitors.
-    - *Rear Chassis*: Pressing `Tab` flips the entire rack around 180° to expose patch jacks (`Video In`, `Video Out`, `Mask / Sidechain In`, `CV Modulation In`).
-  - **Normalled Signal Flow with Cable Overrides**:
-    - By default, dropping units into a vertical stack normalizes connections top-to-bottom automatically without requiring manual patching.
-    - Dragging virtual patch cables overrides the default flow for complex split-routing, parallel processing, external video I/O routing (Spout/Syphon/PipeWire), or intentional optical feedback loops.
-
-- **Implementation Milestones** (single unified roadmap across both reference docs — the Macro system is a shared engine, not a rack-specific one; full detail in each doc's own Phase list):
-  - [x] **Phase 1: Data Model & MacroEngine** *(macro doc §7)*: Core `MacroBinding`/`MacroControl`/`MacroBank`, instance-scoped bindings, zero-allocation frame evaluation.
-  - [x] **Phase 2: Column 3 Macro UI Panel** *(macro doc §7)*: `[ MIXER | MACROS ]` toggle, 2x4 Knob grid + 4 Switches, single-deck preview.
-  - [x] **Phase 3: Interactive Learn Mode & Inspector** *(macro doc §7)*: Global click-to-bind UX, pulsing highlights, field-ownership locking, and binding inspector drawer.
-  - [x] **Phase 4: Serialization & MIDI/OSC Integration** *(macro doc §7)*: Bundled `.lsd`/`.lsdplay` DTOs, standalone `.knobpreset.json` export/import, `MidiMappingManager`/`MacroOscBridge` linkage.
-  - [x] **Phase 5: Rack Chassis & Slot Layout System** *(rack doc §4)*: Standardized rack bay container, grid-based faceplate layout, unit header rails (power, bypass, solo, drag handle).
-  - [x] **Phase 6: Per-Unit Macro Curation** *(rack doc §4)*: Each unit gets its own `MacroBank` (0-8 knobs/0-4 switches) scoped via `unitInstanceId`; curation UI picks which unit parameters occupy which slot. No freeform faceplate designer yet.
-  - [x] **Phase 7: Embedded Confidence Micro-Monitors** *(rack doc §4)*: Lightweight texture blits rendering offscreen FBO passes directly onto unit faceplates.
-  - [x] **Phase 8: Rear Panel & Virtual Patch Cables (`Tab` Flip)** *(rack doc §4)*: Dual-faced 180° flipped rear chassis view with physics-curved virtual patch cables, 1/4" hex phone jacks, LED status indicators, drag-to-patch interactive routing, and normalled override engine.
-  - [x] **Phase 9: Unit Consolidation & Rack Layout Finalization** *(rack doc §4, implements all 6 decided Open Questions in rack doc §3)*: Merged `DeckGeneratorUnit` + up to 4 `ISFProcessorUnit`s into one new `DeckRackUnit` per deck with a flattened generator+FX parameter namespace (rack doc §2.7); deleted `FeedbackProcessorUnit`, `DeckGeneratorUnit`, and `ISFProcessorUnit` entirely (zero remaining construction sites); added a Deck BG column (`mixer.deckBG`, no new Deck plumbing needed); built the 3U `QueueStagingRackUnit` (Play Queue / BG Queue / Transition Staging) as a condensed-transport view onto the existing `PlayQueueManager`/`BgQueueManager`/`TransitionQueueManager` singletons; kept `MixerTransitionUnit` as its own Master unit; implemented confidence-monitor downscaling (240x135 preview `FBO` per unit via the existing `Renderer.rescale()`) and an FBO-count/GPU-memory telemetry readout in the menu bar. Off-screen GL culling was evaluated and deliberately not built (near-zero payoff given today's units are all cheap texture-ID reads, not real draw calls). Implemented 2026-09-16 — see rack doc §4 for full detail, including a double-update bug found and fixed along the way (Rack-mode `update()` was double-ticking `Deck`/`Mixer` state, since `Main.kt`'s main loop already ticks them unconditionally every frame regardless of workspace mode).
-  - **Deferred, not scheduled**: true patchable transitions/splitters (rack doc Q2 Models B/C) and a freeform Faceplate Designer both depend on restructuring `Deck`/`Mixer` to accept externally patched textures — the same underlying capability as the patch-cable known issue below. Bundle these together into a future dedicated milestone once that foundational work is deliberately undertaken.
-  - **Deferred to before v1.0 ships**: extend the generalized macro-learn "click to bind" affordance (landing on number boxes via `CustomRangeSlider`/`BeatDivisionSlider`) to dropdown/select controls (`ImGui.combo()`). Dropdowns have no shared wrapper component anywhere in the codebase today — every call site (`Lfo1Section`, `Lfo2Section`, `ValueParamSection`, `RackUnitMacroCuration`, etc.) owns its own inline `ImGui.combo` — so this needs a small shared combo wrapper built first. Do this once the number-box version has shipped and proven the interaction pattern.
-  - **Known issues** (surfaced by a 2026-09-15 post-implementation correctness review of Phases 5-8; full rationale in `DECISIONS.md`):
-    - ~~`FeedbackProcessorUnit`'s curated macro knobs (GAIN/DECAY/ZOOM/HUE) are bound to `Deck.fbGain`/`fbDecay`/etc. — legacy fields left over from before the ISF feedback migration that no shader reads anymore~~ — resolved by Phase 9: the unit type was deleted entirely rather than rewired; feedback already appears correctly as a normal FX-slot parameter in the merged `DeckRackUnit`'s flattened namespace.
-    - Virtual patch-cable overrides only reroute pixels for genuinely custom/utility rack units. For the built-in Generator/Processor/Transition units that wrap the existing fixed `Deck`/`Mixer` pipeline, cables render and jacks light up but don't change actual signal routing — making that real requires restructuring `Deck`'s fixed FX-slot chain and `Mixer`'s hardcoded Deck A/B inputs to accept externally patched textures, which touches the master output path every workspace mode relies on. Tracked as the same deferred work as rack doc Q2 Models B/C above — not addressed by Phase 9.
-    - ~~`MacroOscBridge` (Phase 4) has no OSC transport to connect to yet~~ — resolved: `OscMappingManager` now forwards `/macro/knob/N` and `/macro/switch/N` straight to `MacroOscBridge.handleOscMessage()`, and registers a `MacroFeedbackListener` that broadcasts value changes back out through `OscEngine`.
-    - Minor hardening left undone: `MacroBank` shape isn't validated/normalized on deserialization (a hand-edited `.knobpreset.json` with the wrong knob/switch count won't crash today, but isn't guarded either), and `MidiMappingManager`'s `Macro/knob_N`/`Macro/switch_N` CC dispatch still scans the full mapping table per incoming MIDI event instead of using the pre-resolved flat-array pattern the rest of that file uses (bounded by MIDI event rate, not frame rate, so not urgent). Both remain low-priority fix-opportunistically items.
-    - The Phase 9 monitor-downscaling change (a GL viewport-changing blit inside the per-unit faceplate draw call) was not visually verified on screen — confirmed via live app launches that the render loop runs cleanly with no new errors, but the actual rack monitors weren't screenshotted (Wayland session, no reachable screenshot tooling in that pass). Worth a manual look next time the app is run interactively.
-  - **Open design question (2026-09-20, raised during Live Performance Console planning)**: once the FX Bank simplification lands (see the Live Performance Console & FX Macro Integration row above — `FxBank.activeChainIndex` becomes a single shared "which chain is live" fact across Performance Mode and Classic Mode), should the *bank* focus (FX1 vs FX2 vs MFX) that the Performance Console's FX row is currently pointed at also become shared/global state, rather than console-local UI state? There's no equivalent "current bank" concept elsewhere today (Classic Mode shows FX1/FX2/MFX as three simultaneous subtabs, not a single focus), so for now it stays console-local. Revisit once `LIVE CONSOLE` has shipped and real usage patterns (e.g. multiple performance controllers, or a desire for OSC/MIDI-driven bank switching from outside the console) make the tradeoff concrete.
-
----
-
-### Milestone 2: Automated Screen Capture & UI Lab
-> **Reference**: [`docs/developer/screen_capture_and_ui_iteration_proposal.md`](docs/developer/screen_capture_and_ui_iteration_proposal.md)
-> **Status**: Active / In Progress (Core GPU PBO readback complete; CLI screenshot automation pending)
-
-Automating crisp, deterministic UI screenshot capture for documentation assets and providing an isolated sandbox for UI layout regression testing:
-
-- [x] **Asynchronous GPU Readback**: High-performance PBO framebuffer readback pipeline (`PboReadbackPipeline.kt`) and Video Export dialog.
-- [ ] **Headless CLI Screenshot Runner**: Parsing `--screenshot-ui=<file>`, `--window=<1920x1080>`, and `--screenshot-after-frames=<N>` arguments in `Main.kt` for automated CI/documentation image generation.
-- [ ] **Isolated UI Lab Gallery Sandbox**: A lightweight `--ui-lab` startup mode providing an isolated sandbox environment to preview themes, custom icons, sliders, meters, and modal popups without requiring active audio hardware or heavyweight GLSL shader compilation.
+- [ ] **UI & UX Polish**: layout, spacing, labels, tooltips and interaction flow across Perform / Edit / Library views, verified at the 1280×720 minimum screen size.
+- [ ] **Stability Testing**: long-running sessions, preset/chain/queue load and swap under load, session restore, device hot-plug (audio, MIDI, video ingest), across the 5 release platforms.
+- [ ] **ISF Binding Audit**: check the Metaknob/auto-bind result (`ISFAutoBindEngine`, curated overrides) and default parameter bindings for **every** bundled ISF generator, filter and transition, so each one does something sensible out of the box.
+- [ ] **Two Polished Themes**: dial in two of the `UITheme.Theme` palettes as the supported v1.0 themes (which two is TBD).
 
 ---
 
@@ -162,6 +123,52 @@ Extend each ISF FX slot's single Metaknob (`ISFFilter.metaBinding`, `rendering/i
 
 ---
 
+### Milestone 5: Macro-Learn Coverage Completion
+> **Status**: Bumped from v1.0 (2026-09-25)
+
+Click-to-learn already works for number boxes, Seq, LFO and Audio controls. Remaining:
+
+- [ ] Randomization bound rows.
+- [ ] Per-step sequencer grid.
+- [ ] Dropdown/select controls (`ImGui.combo()`) — needs a shared combo wrapper first (see Phase 7 notes in the archive).
+
+---
+
+### Milestone 6: Automated Screen Capture & UI Lab
+> **Reference**: [`docs/developer/screen_capture_and_ui_iteration_proposal.md`](docs/developer/screen_capture_and_ui_iteration_proposal.md)
+> **Status**: Bumped from v1.0 (2026-09-25) / Partially complete (Core GPU PBO readback complete; CLI screenshot automation pending)
+
+Automating crisp, deterministic UI screenshot capture for documentation assets and providing an isolated sandbox for UI layout regression testing:
+
+- [x] **Asynchronous GPU Readback**: High-performance PBO framebuffer readback pipeline (`PboReadbackPipeline.kt`) and Video Export dialog.
+- [ ] **Headless CLI Screenshot Runner**: Parsing `--screenshot-ui=<file>`, `--window=<1920x1080>`, and `--screenshot-after-frames=<N>` arguments in `Main.kt` for automated CI/documentation image generation.
+- [ ] **Isolated UI Lab Gallery Sandbox**: A lightweight `--ui-lab` startup mode providing an isolated sandbox environment to preview themes, custom icons, sliders, meters, and modal popups without requiring active audio hardware or heavyweight GLSL shader compilation.
+
+---
+
+### Milestone 7: Localization & Translatable UI Text
+> **Status**: Pending (added 2026-09-25)
+
+- [ ] **Extract user-facing strings**: move every hard-coded UI string (labels, buttons, menus, tooltips, dialogs, error messages) into a string resource table keyed by id.
+- [ ] **Translation support**: locale selection in Preferences, loading of translated string tables with fallback to English, and a documented format for contributed translations.
+- [ ] **Layout robustness**: check fixed-width widgets (badges, pills, slot cells) against longer translated strings, and make sure the bundled fonts cover the glyphs the target languages need.
+
+---
+
+### Milestone 8: Expanded FX Chain View (Mixxx-style)
+> **Reference**: [`.planning/fx-chain-expanded-view-notes.md`](.planning/fx-chain-expanded-view-notes.md)
+> **Status**: Idea / Shelved 2026-09-25
+
+When editing an FX chain on the Performance matrix, show 3 sub-rows (one per slot, each with dry/wet + top 3 params, per-slot paging) instead of the single row + focus mode, so the whole chain is visible and ~12 parameters are reachable by mouse. Hardware keeps today's focus semantics: the focused sub-row is the `Macro/<bank>/knob_N` target, the others bind directly to their params.
+
+- [ ] **Verify first**: whether focusing any FX row shrinks every knob in the grid to ~20px (shared `diameter` in `drawMatrix`) — fix with per-group knob sizing regardless of this feature.
+- [ ] **Prototype Option A** (chain takes over the grid; reuses Edit-view row hiding + `groupRows` sub-labels) behind a toggle and evaluate in a real session.
+- [ ] **If it earns its keep, Option B**: expand in place with the other rows collapsed to 22px strips (needs FxParamCell dropped to keep ~44px knobs at 1280×720, crossfader relocated when expanding Master FX).
+
+**Deciding question:** big win for mouse-driven play; mostly a larger display of focus mode for 4-knob-controller play.
+
+---
+
 ## Completed Milestones Archive
 
 ### Phase 1: Core Engine & Dual Deck Architecture
@@ -212,10 +219,56 @@ Extend each ISF FX slot's single Metaknob (`ISFFilter.metaBinding`, `rendering/i
 
 ---
 
+### Phase 7: Modular Video Rack & Macro Performance System (rack retired)
+> **RETIRED (rack half only)**: Phases 5-9 below (the rack chassis UI itself — bay, faceplates, confidence micro-monitors, `Tab`-flip rear patching) shipped as described, then were **deleted from the codebase** and replaced by **Performance Mode** (`PerformanceMatrixPanel.kt`, 4×4 macro knob matrix, `F4`). The Macro engine (Phases 1-4) is unaffected and still shipping — it's now consumed by Performance Mode instead of the rack. This section is kept as historical implementation record; see the Summary Matrix above for current status.
+>
+> **Reference & Design Specs**:
+> - [`docs/user_guide/macros_and_rack.md`](docs/user_guide/macros_and_rack.md) (Macro Controls & Performance Mode User Guide)
+> - [`docs/developer/modular_video_rack_proposal.md`](docs/developer/modular_video_rack_proposal.md) (Modular Video Rack Architecture — retired design doc)
+> **Status**: Core Complete (Phases 1-9 shipped) — all 6 rack-doc Open Questions decided and implemented 2026-09-16; rack chassis (Phases 5, 7, 8, 9) later retired and removed
+> **Inspiration**: Hardware 19" studio racks, Propellerhead Reason, Eurorack, Ableton Device Racks
+
+Evolving Liquid LSD from a fixed 2-deck mixer into a modular hardware-style video rack designed for tactile live performance:
+
+- **Concept & Architecture**:
+  - **Preset-as-Module**: Each deck (generator + all its FX, flattened into one unit — see rack doc §2.7) or transition is housed within an interchangeable rack unit with a standardized 19" bay width and quantized modular height ($1\text{U}, 2\text{U}, 3\text{U}, \dots$).
+  - **Curated Performance Faceplates (80/20 Rule)**: Performers curate custom front panels exposing *only* high-impact live controls (knobs, sliders, toggles, and macros). Underlying automation, LFOs, audio-reactive envelopes, and fine math run silently in the background without cluttering the performance surface.
+  - **Integrated Confidence Monitoring**: Every rack unit features an embedded real-time preview monitor rendering an offscreen FBO preview of that unit's output before downstream routing.
+  - **Macro Controls**: Assignable multi-target macro knobs modulating multiple internal parameters simultaneously with customizable travel limits, inverted directions, and nonlinear response curves (linear, exponential, S-curve).
+  - **Dual-Faced Architecture (Reason-Style `Tab` Flip)**:
+    - *Front Face*: Clean tactile controls, meters, and micro-monitors.
+    - *Rear Chassis*: Pressing `Tab` flips the entire rack around 180° to expose patch jacks (`Video In`, `Video Out`, `Mask / Sidechain In`, `CV Modulation In`).
+  - **Normalled Signal Flow with Cable Overrides**:
+    - By default, dropping units into a vertical stack normalizes connections top-to-bottom automatically without requiring manual patching.
+    - Dragging virtual patch cables overrides the default flow for complex split-routing, parallel processing, external video I/O routing (Spout/Syphon/PipeWire), or intentional optical feedback loops.
+
+- **Implementation Milestones** (single unified roadmap across both reference docs — the Macro system is a shared engine, not a rack-specific one; full detail in each doc's own Phase list):
+  - [x] **Phase 1: Data Model & MacroEngine** *(macro doc §7)*: Core `MacroBinding`/`MacroControl`/`MacroBank`, instance-scoped bindings, zero-allocation frame evaluation.
+  - [x] **Phase 2: Column 3 Macro UI Panel** *(macro doc §7)*: `[ MIXER | MACROS ]` toggle, 2x4 Knob grid + 4 Switches, single-deck preview.
+  - [x] **Phase 3: Interactive Learn Mode & Inspector** *(macro doc §7)*: Global click-to-bind UX, pulsing highlights, field-ownership locking, and binding inspector drawer.
+  - [x] **Phase 4: Serialization & MIDI/OSC Integration** *(macro doc §7)*: Bundled `.lsd`/`.lsdplay` DTOs, standalone `.knobpreset.json` export/import, `MidiMappingManager`/`MacroOscBridge` linkage.
+  - [x] **Phase 5: Rack Chassis & Slot Layout System** *(rack doc §4)*: Standardized rack bay container, grid-based faceplate layout, unit header rails (power, bypass, solo, drag handle).
+  - [x] **Phase 6: Per-Unit Macro Curation** *(rack doc §4)*: Each unit gets its own `MacroBank` (0-8 knobs/0-4 switches) scoped via `unitInstanceId`; curation UI picks which unit parameters occupy which slot. No freeform faceplate designer yet.
+  - [x] **Phase 7: Embedded Confidence Micro-Monitors** *(rack doc §4)*: Lightweight texture blits rendering offscreen FBO passes directly onto unit faceplates.
+  - [x] **Phase 8: Rear Panel & Virtual Patch Cables (`Tab` Flip)** *(rack doc §4)*: Dual-faced 180° flipped rear chassis view with physics-curved virtual patch cables, 1/4" hex phone jacks, LED status indicators, drag-to-patch interactive routing, and normalled override engine.
+  - [x] **Phase 9: Unit Consolidation & Rack Layout Finalization** *(rack doc §4, implements all 6 decided Open Questions in rack doc §3)*: Merged `DeckGeneratorUnit` + up to 4 `ISFProcessorUnit`s into one new `DeckRackUnit` per deck with a flattened generator+FX parameter namespace (rack doc §2.7); deleted `FeedbackProcessorUnit`, `DeckGeneratorUnit`, and `ISFProcessorUnit` entirely (zero remaining construction sites); added a Deck BG column (`mixer.deckBG`, no new Deck plumbing needed); built the 3U `QueueStagingRackUnit` (Play Queue / BG Queue / Transition Staging) as a condensed-transport view onto the existing `PlayQueueManager`/`BgQueueManager`/`TransitionQueueManager` singletons; kept `MixerTransitionUnit` as its own Master unit; implemented confidence-monitor downscaling (240x135 preview `FBO` per unit via the existing `Renderer.rescale()`) and an FBO-count/GPU-memory telemetry readout in the menu bar. Off-screen GL culling was evaluated and deliberately not built (near-zero payoff given today's units are all cheap texture-ID reads, not real draw calls). Implemented 2026-09-16 — see rack doc §4 for full detail, including a double-update bug found and fixed along the way (Rack-mode `update()` was double-ticking `Deck`/`Mixer` state, since `Main.kt`'s main loop already ticks them unconditionally every frame regardless of workspace mode).
+  - **Deferred, not scheduled**: true patchable transitions/splitters (rack doc Q2 Models B/C) and a freeform Faceplate Designer both depend on restructuring `Deck`/`Mixer` to accept externally patched textures — the same underlying capability as the patch-cable known issue below. Bundle these together into a future dedicated milestone once that foundational work is deliberately undertaken.
+  - **Bumped to v1.1 (2026-09-25, see v1.1 Milestone 5)**: extend the generalized macro-learn "click to bind" affordance (landing on number boxes via `CustomRangeSlider`/`BeatDivisionSlider`) to dropdown/select controls (`ImGui.combo()`). Dropdowns have no shared wrapper component anywhere in the codebase today — every call site (`Lfo1Section`, `Lfo2Section`, `ValueParamSection`, `RackUnitMacroCuration`, etc.) owns its own inline `ImGui.combo` — so this needs a small shared combo wrapper built first. Do this once the number-box version has shipped and proven the interaction pattern.
+  - **Known issues** (surfaced by a 2026-09-15 post-implementation correctness review of Phases 5-8; full rationale in `DECISIONS.md`):
+    - ~~`FeedbackProcessorUnit`'s curated macro knobs (GAIN/DECAY/ZOOM/HUE) are bound to `Deck.fbGain`/`fbDecay`/etc. — legacy fields left over from before the ISF feedback migration that no shader reads anymore~~ — resolved by Phase 9: the unit type was deleted entirely rather than rewired; feedback already appears correctly as a normal FX-slot parameter in the merged `DeckRackUnit`'s flattened namespace.
+    - Virtual patch-cable overrides only reroute pixels for genuinely custom/utility rack units. For the built-in Generator/Processor/Transition units that wrap the existing fixed `Deck`/`Mixer` pipeline, cables render and jacks light up but don't change actual signal routing — making that real requires restructuring `Deck`'s fixed FX-slot chain and `Mixer`'s hardcoded Deck A/B inputs to accept externally patched textures, which touches the master output path every workspace mode relies on. Tracked as the same deferred work as rack doc Q2 Models B/C above — not addressed by Phase 9.
+    - ~~`MacroOscBridge` (Phase 4) has no OSC transport to connect to yet~~ — resolved: `OscMappingManager` now forwards `/macro/knob/N` and `/macro/switch/N` straight to `MacroOscBridge.handleOscMessage()`, and registers a `MacroFeedbackListener` that broadcasts value changes back out through `OscEngine`.
+    - Minor hardening left undone: `MacroBank` shape isn't validated/normalized on deserialization (a hand-edited `.knobpreset.json` with the wrong knob/switch count won't crash today, but isn't guarded either), and `MidiMappingManager`'s `Macro/knob_N`/`Macro/switch_N` CC dispatch still scans the full mapping table per incoming MIDI event instead of using the pre-resolved flat-array pattern the rest of that file uses (bounded by MIDI event rate, not frame rate, so not urgent). Both remain low-priority fix-opportunistically items.
+    - The Phase 9 monitor-downscaling change (a GL viewport-changing blit inside the per-unit faceplate draw call) was not visually verified on screen — confirmed via live app launches that the render loop runs cleanly with no new errors, but the actual rack monitors weren't screenshotted (Wayland session, no reachable screenshot tooling in that pass). Worth a manual look next time the app is run interactively.
+  - **Obsolete (2026-09-25)** — `FxBank`, FX1/FX2/MFX and the `LIVE CONSOLE` tab were all deleted (deck and Master FX are plain `FxChain`s on their own Performance rows), so this question no longer applies. Original text: **Open design question (2026-09-20, raised during Live Performance Console planning)**: once the FX Bank simplification lands (see the Live Performance Console & FX Macro Integration row above — `FxBank.activeChainIndex` becomes a single shared "which chain is live" fact across Performance Mode and Classic Mode), should the *bank* focus (FX1 vs FX2 vs MFX) that the Performance Console's FX row is currently pointed at also become shared/global state, rather than console-local UI state? There's no equivalent "current bank" concept elsewhere today (Classic Mode shows FX1/FX2/MFX as three simultaneous subtabs, not a single focus), so for now it stays console-local. Revisit once `LIVE CONSOLE` has shipped and real usage patterns (e.g. multiple performance controllers, or a desire for OSC/MIDI-driven bank switching from outside the console) make the tradeoff concrete.
+
+---
+
 ## Retired / Resolved Workstream Items
 
 | Item | Original Source | Resolution Details |
 | :--- | :--- | :--- |
 | **OpenGL Error Profiling** | Historical `TODO.md` (`glGetDebugMessageLog`) | Implemented via `GLDebug.setupDebugCallback()` leveraging native `glDebugMessageCallback` on modern contexts; verified on OpenGL 3.3/4.3+. |
 | **Frame Budget & Latency Metrics** | Historical `CONCERNS.md` | Implemented via `PerformanceStats` and rendered continuously in `MenuBar.kt` (DSP latency, FPS, frame time, CPU usage). |
+| **Live Performance Console** | ROADMAP v1.1 row (2026-09-20) | Superseded 2026-09-25: `LIVE CONSOLE` tab and `FxBank` (FX1/FX2/MFX) deleted; the Performance matrix is now DECKS + MASTER tabs, with deck and Master FX as plain `FxChain`s edited on their own rows. |
 | **Screen Capture Automation RFC** | `screen_capture_and_ui_iteration_proposal.md` | Core GPU readback completed via `PboReadbackPipeline`; headless CLI screenshot automation deferred to build infrastructure as needed. |

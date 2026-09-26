@@ -1,7 +1,9 @@
 package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
+import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiMouseButton
+import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.FxMacroSync
 import llm.slop.liquidlsd.models.ClipboardManager
@@ -15,15 +17,18 @@ import java.io.File
  * One FX slot's "major switches", drawn as the caption line under that slot's knob on every
  * Performance FX row (deck rows and the Master row in FX mode):
  *
- *   `[●] [◀]  Effect Name  [▶]`
+ *   `Effect Name`  (hovered: `[◀] Effect Name [▶]`)
  *
- * - **●** turns the slot on/off (instantly).
- * - **◀ / ▶**, or the mouse wheel over the name, step through the [FxShortlist].
+ * - **◀ / ▶** (shown only while hovered), the mouse wheel over the name, or the right-click
+ *   menu step through the [FxShortlist].
  * - **Name** click opens the shader picker (stock filters, ★ favorites, saved single FX).
  * - **Drag** a cell onto another cell to swap them (reorder within a chain, or trade between
  *   chains); hold Ctrl while dropping to copy instead. Library items drop onto a cell too:
  *   stock filters and saved `.lsdfx` replace the slot, a `.lsdfxchain` replaces the chain.
  * - **Right-click** for Replace, Save as FX Preset, Copy/Paste, Reset, Clear, favorite, Deep Edit.
+ *
+ * The slot's on/off switch is [drawBypassButton], stacked under the Super Knob link button
+ * to the left of the slot's knob.
  *
  * Every change goes through [FxOps], so it lands on the GL thread behind the swap fade and
  * re-syncs the row's knobs.
@@ -41,10 +46,19 @@ object FxSlotCell {
     private const val ARROW_RIGHT = "▶"
     private const val ELLIPSIS = "…"
 
-    private const val PILL_W = 16f
     private const val ARROW_W = 16f
 
     private var wheelAccum = 0f
+
+    /** Cell whose name was single-clicked; its picker opens once the double-click window passes. */
+    private var pendingPickId: String? = null
+    private var pendingPickTime = 0.0
+
+    /** Cell that was just double-clicked, so the release of that second click doesn't open the picker. */
+    private var suppressReleaseId: String? = null
+
+    /** Cell whose name is being dragged, so dropping it back on itself doesn't open the picker. */
+    private var draggedId: String? = null
 
     /** Opens the FX shader picker for slot [slotIndex] of [chain], applying whatever is picked. */
     fun openPicker(session: SessionContext, chain: FxChain, slotIndex: Int, title: String) {
@@ -76,7 +90,6 @@ object FxSlotCell {
     ) {
         val chain = FxMacroSync.chainFor(bankId, mixer) ?: return
         val fx = chain.slots[slotIndex]
-        val isOn = fx != null && fx.enabled
         val slotNum = slotIndex + 1
         val idBase = "fxcell_${bankId}_$slotIndex"
         val dl = ImGui.getWindowDrawList()
@@ -85,44 +98,41 @@ object FxSlotCell {
         val bgAlpha = if (fx == null) 0.25f else 0.45f
         dl.addRectFilled(x, y, x + w, y + h, ImGui.colorConvertFloat4ToU32(0.08f, 0.09f, 0.11f, bgAlpha), 4f)
 
-        // -- ● on/off -------------------------------------------------------------------------
-        ImGui.setCursorScreenPos(x, y)
-        if (ImGui.invisibleButton("##pill_$idBase", PILL_W, h) && fx != null) {
-            FxOps.setSlotEnabled(chain, slotIndex, !fx.enabled)
+        // -- ◀ (hover only) -----------------------------------------------------------------
+        // The arrows only appear while the mouse is over the cell, so the name gets the full width.
+        val showArrows = ImGui.isMouseHoveringRect(x, y, x + w, y + h) && w > ARROW_W * 2f + 24f
+        if (showArrows) {
+            drawArrow(session, "##prev_$idBase", ARROW_LEFT, x, y, h) { FxOps.stepSlot(chain, slotIndex, -1) }
+            itemTooltip("Previous effect in the FX shortlist (★ favorites, or this effect's category).")
         }
-        val pillHovered = ImGui.isItemHovered()
-        itemTooltip(
-            when {
-                fx == null -> "Slot $slotNum is empty."
-                isOn -> "Slot $slotNum (${fx.displayName}) is on. Click to bypass just this effect."
-                else -> "Slot $slotNum (${fx.displayName}) is bypassed. Click to turn it back on."
-            }
-        )
-        val pcx = x + PILL_W / 2f + 1f
-        val pcy = y + h / 2f
-        val pillR = 4.5f
-        val accentCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], if (pillHovered) 1f else 0.9f)
-        when {
-            fx == null -> dl.addCircle(pcx, pcy, pillR, ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.45f, 0.5f), 12, 1f)
-            isOn -> dl.addCircleFilled(pcx, pcy, pillR, accentCol, 12)
-            else -> dl.addCircle(pcx, pcy, pillR, ImGui.colorConvertFloat4ToU32(0.85f, 0.3f, 0.3f, 0.95f), 12, 1.5f)
-        }
-
-        // -- ◀ -----------------------------------------------------------------------------
-        val prevX = x + PILL_W
-        drawArrow(session, "##prev_$idBase", ARROW_LEFT, prevX, y, h) { FxOps.stepSlot(chain, slotIndex, -1) }
-        itemTooltip("Previous effect in the FX shortlist (★ favorites, or this effect's category).")
 
         // -- name ---------------------------------------------------------------------------
-        val nameX = prevX + ARROW_W
-        val nameW = (w - (nameX - x) - ARROW_W).coerceAtLeast(8f)
+        val arrowW = if (showArrows) ARROW_W else 0f
+        val nameX = x + arrowW
+        val nameW = (w - arrowW * 2f).coerceAtLeast(8f)
         ImGui.setCursorScreenPos(nameX, y)
-        ImGui.invisibleButton("##name_$idBase", nameW, h)
+        val released = ImGui.invisibleButton("##name_$idBase", nameW, h)
         val nameHovered = ImGui.isItemHovered()
+        // The picker is a modal, so opening it on press would swallow the second click of a
+        // double-click and cancel any drag. Instead it opens on a drag-free release, deferred
+        // until the double-click window has passed.
         if (nameHovered && ImGui.isMouseDoubleClicked(ImGuiMouseButton.Left)) {
+            pendingPickId = null
+            suppressReleaseId = idBase
             val targetFocus = if (chain.focusedSlot == slotIndex) null else slotIndex
             FxMacroSync.focusSlot(bankId, mixer, targetFocus)
-        } else if (ImGui.isItemClicked(ImGuiMouseButton.Left)) {
+        }
+        if (released) {
+            if (suppressReleaseId == idBase || draggedId == idBase) {
+                suppressReleaseId = null
+                draggedId = null
+            } else {
+                pendingPickId = idBase
+                pendingPickTime = ImGui.getTime()
+            }
+        }
+        if (pendingPickId == idBase && ImGui.getTime() - pendingPickTime > ImGui.getIO().mouseDoubleClickTime) {
+            pendingPickId = null
             openPicker(session, chain, slotIndex, "Select FX Slot $slotNum for $chainLabel FX")
         }
         if (ImGui.isItemClicked(ImGuiMouseButton.Right)) {
@@ -139,12 +149,12 @@ object FxSlotCell {
         }
         val isThisSlotFocused = chain.focusedSlot == slotIndex
         itemTooltip(
-            if (fx == null) "Slot $slotNum is empty.\nClick to pick an effect, double-click to focus, scroll to step through shortlist, or drop an effect here. Right-click for more."
+            if (fx == null) "Slot $slotNum is empty.\nClick this name to pick an effect, scroll it to step through the shortlist, or drop an effect here. Right-click for more."
             else "${fx.displayName}${fx.categories.firstOrNull()?.let { "  ($it)" } ?: ""}\n" +
                  (if (isThisSlotFocused) "● FOCUSED: Knob 1 = Dry/Wet, Knobs 2-4 = Parameters.\n" else "") +
-                 "Double-click to ${if (isThisSlotFocused) "exit Focus Mode" else "focus on this effect"}.\n" +
-                 "Click to pick another effect, scroll to step through shortlist.\n" +
-                 "Drag onto another slot to swap (Ctrl: copy). Right-click for more."
+                 "Double-click this name to ${if (isThisSlotFocused) "exit Focus Mode" else "focus on this effect"}.\n" +
+                 "Click it to pick another effect, scroll it to step through the shortlist.\n" +
+                 "Drag it onto another slot's name to swap (Ctrl: copy). Right-click for more."
         )
         drawDragAndDrop(session, mixer, bankId, chain, slotIndex, fx?.displayName)
 
@@ -163,11 +173,61 @@ object FxSlotCell {
             dl.addText(nameX + (nameW - tw) / 2f, y + (h - th) / 2f, textCol, shown)
         }
 
-        // -- ▶ -----------------------------------------------------------------------------
-        drawArrow(session, "##next_$idBase", ARROW_RIGHT, nameX + nameW, y, h) { FxOps.stepSlot(chain, slotIndex, 1) }
-        itemTooltip("Next effect in the FX shortlist (★ favorites, or this effect's category).")
+        // -- ▶ (hover only) -----------------------------------------------------------------
+        if (showArrows) {
+            drawArrow(session, "##next_$idBase", ARROW_RIGHT, nameX + nameW, y, h) { FxOps.stepSlot(chain, slotIndex, 1) }
+            itemTooltip("Next effect in the FX shortlist (★ favorites, or this effect's category).")
+        }
 
         drawContextMenu(session, mixer, bankId, chain, chainLabel, slotIndex, "##menu_$idBase", onEditInDeepEdit)
+    }
+
+    /**
+     * Square on/off button for slot [slotIndex] of the chain behind [bankId], drawn at ([x], [y]).
+     * Accent-coloured power icon when on, red when bypassed, dim outline when the slot is empty.
+     */
+    fun drawBypassButton(session: SessionContext, mixer: Mixer, bankId: String, slotIndex: Int, x: Float, y: Float, size: Float, accent: FloatArray) {
+        val chain = FxMacroSync.chainFor(bankId, mixer) ?: return
+        val fx = chain.slots[slotIndex]
+        val slotNum = slotIndex + 1
+        ImGui.setCursorScreenPos(x, y)
+        val (bg, bgHover, text) = when {
+            fx == null -> Triple(
+                ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.35f),
+                ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.35f),
+                ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.45f, 0.5f)
+            )
+            fx.enabled -> Triple(
+                ImGui.colorConvertFloat4ToU32(accent[0] * 0.35f, accent[1] * 0.35f, accent[2] * 0.35f, 0.75f),
+                ImGui.colorConvertFloat4ToU32(accent[0] * 0.5f, accent[1] * 0.5f, accent[2] * 0.5f, 0.9f),
+                ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 1f)
+            )
+            else -> Triple(
+                ImGui.colorConvertFloat4ToU32(0.55f, 0.14f, 0.14f, 0.85f),
+                ImGui.colorConvertFloat4ToU32(0.70f, 0.18f, 0.18f, 0.95f),
+                ImGui.colorConvertFloat4ToU32(1f, 0.75f, 0.75f, 1f)
+            )
+        }
+        ImGui.pushStyleColor(ImGuiCol.Button, bg)
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, bgHover)
+        ImGui.pushStyleColor(ImGuiCol.ButtonActive, bgHover)
+        ImGui.pushStyleColor(ImGuiCol.Text, text)
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 1f, 1f)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            val icon = if (fx != null && !fx.enabled) Icons.POWER_OFF else Icons.POWER
+            if (ImGui.button("$icon##fxbypass_${bankId}_$slotIndex", size, size) && fx != null) {
+                FxOps.setSlotEnabled(chain, slotIndex, !fx.enabled)
+            }
+        }
+        ImGui.popStyleVar()
+        ImGui.popStyleColor(4)
+        itemTooltip(
+            when {
+                fx == null -> "Slot $slotNum is empty."
+                fx.enabled -> "Slot $slotNum (${fx.displayName}) is on. Click to bypass just this effect."
+                else -> "Slot $slotNum (${fx.displayName}) is bypassed. Click to turn it back on."
+            }
+        )
     }
 
     private fun drawArrow(session: SessionContext, id: String, glyph: String, ax: Float, ay: Float, h: Float, onClick: () -> Unit) {
@@ -191,6 +251,7 @@ object FxSlotCell {
 
     private fun drawDragAndDrop(session: SessionContext, mixer: Mixer, bankId: String, chain: FxChain, slotIndex: Int, fxName: String?) {
         if (fxName != null && ImGui.beginDragDropSource()) {
+            draggedId = "fxcell_${bankId}_$slotIndex"
             ImGui.setDragDropPayload(PAYLOAD_SLOT, "$bankId|$slotIndex" as Any)
             ImGui.textUnformatted("$fxName  (Ctrl: copy)")
             ImGui.endDragDropSource()
@@ -237,6 +298,8 @@ object FxSlotCell {
             FxMacroSync.focusSlot(bankId, mixer, if (isFocused) null else slotIndex)
         }
         ImGui.separator()
+        if (ImGui.menuItem("Previous in Shortlist")) FxOps.stepSlot(chain, slotIndex, -1)
+        if (ImGui.menuItem("Next in Shortlist")) FxOps.stepSlot(chain, slotIndex, 1)
         if (ImGui.menuItem("Replace…")) {
             openPicker(session, chain, slotIndex, "Select FX Slot $slotNum for $chainLabel FX")
         }

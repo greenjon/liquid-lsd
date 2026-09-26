@@ -140,13 +140,15 @@ for the FX Rack view that exposes these.
     - **`[Save]`**: Overwrites the loaded chain file with current state, or triggers Save As if untitled.
     - **`[⋮]` Menu**: Save As..., New Chain, Revert to Saved (undoes tweaks back to clean loaded state), Clear All Slots, Copy/Paste Chain, and Resync Knobs.
     - **`[BYPASS]`**: Top-level kill switch to immediately bypass or re-enable the entire FX chain.
-  - **FX Slot Cells (`[●] [◀] Effect Name [▶]`)**:
-    - Drawn under each of knobs 2–4 on Deck rows in `[FX]` mode and the Master row in `[FX]` mode.
-    - **`●` (Pill)**: Dedicated per-slot mute/bypass button.
-    - **`◀` / `▶` (or Mouse Wheel)**: Steps to previous/next effect in the **FX Shortlist** (favorited ★ effects, or the current effect's category alphabetically).
-    - **Effect Name**: Truncated caption showing loaded filter. Click opens the FX Shader Picker (Stock filters, ★ Favorites, and Saved `.lsdfx` presets).
-    - **Drag & Drop**: Drag a cell to another slot to swap/reorder (hold `Ctrl` while dropping to duplicate). Accepts stock ISF filters and `.lsdfx` single presets from Library.
-    - **Right-Click Context Menu**: Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Deep Edit.
+  - **FX Slot Cells (`Effect Name`)**:
+    - Drawn under each of knobs 2–4 on Deck rows in `[FX]` mode and the Master row in `[FX]` mode. The cell is just the effect name, so names get the full cell width.
+    - **`◀` / `▶` (on hover), Mouse Wheel, or Right-Click → Previous/Next in Shortlist**: Steps to previous/next effect in the **FX Shortlist** (favorited ★ effects, or the current effect's category alphabetically). The arrows only appear at the cell's edges while the mouse is over it.
+  - **Slot Side Buttons (left of each slot knob)**: two stacked buttons.
+    - **Link (top)**: links/unlinks that slot's Metaknob to the Super Knob.
+    - **Bypass (bottom, power icon)**: turns just that effect on or off. Row-coloured when on, red when bypassed, dim when the slot is empty. In Focus Mode, only the focused slot's bypass is shown, next to knob 1.
+    - **Effect Name**: Truncated caption showing loaded filter. Click opens the FX Shader Picker (Stock filters, ★ Favorites, and Saved `.lsdfx` presets). The picker opens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't open it.
+    - **Drag & Drop**: Drag an effect name onto another slot's name to swap/reorder (hold `Ctrl` while dropping to duplicate). Accepts stock ISF filters and `.lsdfx` single presets from Library.
+    - **Right-Click Context Menu**: Focus Mode, Previous/Next in Shortlist, Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Deep Edit.
   - **Swap Gain Dip**:
     - Replacing an effect or loading a chain applies a smooth audio/visual gain dip (fade out -> swap -> fade in) instead of a hard cut.
     - Duration is customizable in Preferences (`FX Swap Fade (ms)`, 0–1000 ms, default 150 ms; 0 = immediate hard cut).
@@ -164,7 +166,7 @@ for the FX Rack view that exposes these.
       - `[◀ P1/N ▶]`: Parameter page stepper; appears automatically whenever the focused shader exposes more than 3 parameters.
       - `[Save]` & `[⋮]`: Chain saving, presets, and actions remain fully accessible.
     - **4 Knobs in Focus Mode**:
-      - **Knob 1 (`DRY/WET`)**: Controls the focused slot's individual wet/dry blend (`$chainLabel/FX/FX<slot>/DryWet`). The focused slot's `FxSlotCell` is drawn underneath so slot mute (`●`), shortlist stepping (`◀ ▶`), and picker access remain accessible directly below its Dry/Wet knob.
+      - **Knob 1 (`DRY/WET`)**: Controls the focused slot's individual wet/dry blend (`$chainLabel/FX/FX<slot>/DryWet`). The focused slot's `FxSlotCell` is drawn underneath so shortlist stepping (hover `◀ ▶` or mouse wheel) and picker access remain directly below its Dry/Wet knob, with the slot's bypass button to the left of the knob.
       - **Knobs 2–4 (`Top Parameters`)**: Dynamically retargeted to the focused shader's top parameters on the active page (e.g. `SPEED`, `INTENSITY`, `COLOR`).
       - **Parameter Cells (`FxParamCell`)**: Drawn under Knobs 2–4 with a `[⟲]` reset button (restores parameter to authored default), exact formatted value readout, and a modulation indicator dot.
     - **Seamless Hardware MIDI Retargeting**:
