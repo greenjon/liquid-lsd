@@ -41,8 +41,6 @@ data class AppPreferences(
     val libraryMode: UITheme.LibraryMode = UITheme.LibraryMode.HALF,
     val column3Mode: UITheme.Column3Mode = UITheme.Column3Mode.MIXER,
     val performanceMatrixTab: Int = PerformanceMatrixPanel.Tab.entries.indexOf(PerformanceMatrixPanel.Tab.DECKS),
-    /** Modular Rack: whether opening one module's Bay/Deep Edit auto-collapses the others. */
-    val rackSoloMode: Boolean = true,
     /** Modular Rack: moduleId -> [ParametersState.DisclosureLevel] name, persisted only for BAY/DEEP_EDIT (never a mid-Learn-pinned state). */
     val rackExpandedModules: Map<String, String> = emptyMap(),
     val theme: UITheme.Theme = UITheme.Theme.BORING,
@@ -53,7 +51,6 @@ data class AppPreferences(
     val col1Ratio: Float = 0.30f,
     val col2Ratio: Float = 0.40f,
     val libraryRatio: Float = 0.50f,
-    val lastCustomLibraryRatio: Float = 0.50f,
     val renderResolutionPreset: UITheme.ResolutionPreset = UITheme.ResolutionPreset.RES_1080P,
     val customRenderWidth: Int = 1920,
     val customRenderHeight: Int = 1080,

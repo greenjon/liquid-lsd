@@ -79,6 +79,7 @@ internal object PerformanceMasterControls {
         session: SessionContext,
         mixer: Mixer,
         parametersState: ParametersState,
+        ctx: PerformanceUiContext,
         boxX1: Float,
         boxX2: Float,
         headerY: Float,
@@ -90,13 +91,26 @@ internal object PerformanceMasterControls {
         val dl = ImGui.getWindowDrawList()
         val centerY = headerY + headerH * 0.5f
 
-        ImGui.setCursorScreenPos(boxX1 + pad, headerY)
+        // Inline Title Badge [ MASTER ]
+        val titleText = if (ctx.isMasterRowFx(parametersState)) "MASTER (FX)" else "MASTER"
+        val titleW = 80f
+        val colorMaster = PerformanceColors.COLOR_MASTER
+        val titleCol = ImGui.colorConvertFloat4ToU32(colorMaster[0], colorMaster[1], colorMaster[2], 0.90f)
+        val titleBgCol = ImGui.colorConvertFloat4ToU32(colorMaster[0], colorMaster[1], colorMaster[2], 0.12f)
+        dl.addRectFilled(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleBgCol, 4f)
+        dl.addRect(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleCol, 4f, 0, 1.5f)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            val textSz = ImGui.calcTextSize(titleText)
+            dl.addText(boxX1 + pad + (titleW - textSz.x) * 0.5f, headerY + (headerH - textSz.y) * 0.5f, titleCol, titleText)
+        }
+
+        val badgeAX = boxX1 + pad + titleW + gap
+        val badgeAY = headerY
+        ImGui.setCursorScreenPos(badgeAX, headerY)
         ImGui.beginGroup()
 
         // 1. Deck A Snap Badge [ A ]
         val badgeW = (headerH * 1.05f).coerceIn(24f, 32f)
-        val badgeAX = boxX1 + pad
-        val badgeAY = headerY
         val rgbA = BrowserDeckButtons.colorA()
         val colorA = ImGui.colorConvertFloat4ToU32(rgbA[0], rgbA[1], rgbA[2], 1f)
         val snapAKey = "Global/snapDeckA"
@@ -161,7 +175,7 @@ internal object PerformanceMasterControls {
 
         // Crossfader slider takes whatever remaining width is available between Deck A and Deck B
         val fixedRightW = gap + badgeBW + gap * 2f + autoBtnW + gap + speedBtnW
-        val crossfaderW = (availW - badgeW - fixedRightW).coerceAtLeast(50f)
+        val crossfaderW = (availW - titleW - gap - badgeW - fixedRightW).coerceAtLeast(50f)
 
         // 2. Crossfader Slider Track
         val lineStartX = badgeAX + badgeW + gap

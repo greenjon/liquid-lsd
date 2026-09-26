@@ -159,7 +159,12 @@ object UITheme {
         get() = settings.startupBehavior
         set(value) { settings = settings.copy(startupBehavior = value) }
 
-    enum class LibraryMode { FULL, HALF, HIDE }
+    /**
+     * Library dock height. There is no hidden state: the Library is simply not drawn while a Rack
+     * module is in Deep Edit (Edit view), unless it is FULL (Library view). A saved legacy "HIDE"
+     * value loads as HALF.
+     */
+    enum class LibraryMode { FULL, HALF }
 
     var libraryMode: LibraryMode
         get() = settings.libraryMode
@@ -176,11 +181,6 @@ object UITheme {
     var performanceMatrixTab: Int
         get() = settings.performanceMatrixTab
         set(value) { settings = settings.copy(performanceMatrixTab = value.coerceIn(0, PerformanceMatrixPanel.Tab.entries.size - 1)) }
-
-    /** Modular Rack: whether opening one module's Bay/Deep Edit auto-collapses the others (see [llm.slop.liquidlsd.ui.rack.UnifiedRackPanel]). */
-    var rackSoloMode: Boolean
-        get() = settings.rackSoloMode
-        set(value) { settings = settings.copy(rackSoloMode = value) }
 
     /** Modular Rack: persisted moduleId -> [ParametersState.DisclosureLevel] name (BAY/DEEP_EDIT only). */
     var rackExpandedModules: Map<String, String>
@@ -214,10 +214,6 @@ object UITheme {
     var libraryRatio: Float
         get() = settings.libraryRatio
         set(value) { settings = settings.copy(libraryRatio = value) }
-
-    var lastCustomLibraryRatio: Float
-        get() = settings.lastCustomLibraryRatio
-        set(value) { settings = settings.copy(lastCustomLibraryRatio = value) }
 
     var renderResolutionPreset: ResolutionPreset
         get() = settings.renderResolutionPreset

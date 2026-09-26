@@ -49,13 +49,15 @@ class ParametersState {
         // guarantees happens before ParametersState is constructed (uiTheme is declared first) --
         // so UITheme.rackExpandedModules is already hydrated here. Only DEEP_EDIT is ever
         // persisted (see persistRackExpandedModules), and no Learn session survives a restart, so
-        // this can never resurrect a mid-Learn-pinned state.
+        // this can never resurrect a mid-Learn-pinned state. Deep Edit is solo-only, so at most one
+        // module is restored (older preference files could hold several from the removed MULTI mode).
         for ((moduleId, levelName) in UITheme.rackExpandedModules) {
             // "FX" was the removed LIVE CONSOLE focused-FX row's module id.
             if (moduleId == "FX") continue
             val level = runCatching { DisclosureLevel.valueOf(levelName) }.getOrNull()
             if (level != null && level != DisclosureLevel.COLLAPSED) {
                 rackModuleDisclosure[moduleId] = level
+                break
             }
         }
     }
@@ -67,11 +69,6 @@ class ParametersState {
             .mapValues { it.value.name }
         AppPreferencesStore.savePreferences()
     }
-
-    /** When true, opening one module's Deep Edit auto-collapses every other module (except a Learn-pinned one). Persisted via [UITheme.rackSoloMode]. */
-    var rackSoloMode: Boolean
-        get() = UITheme.rackSoloMode
-        set(value) { UITheme.rackSoloMode = value }
 
     /** Per rack-module: which macro knob is selected -- drives the Tier-1 grid highlight and inline Learn button. */
     val selectedRackMacroId = mutableMapOf<String, String?>()
@@ -126,20 +123,21 @@ class ParametersState {
     }
 
     /**
-     * Sets [moduleId]'s disclosure tier. When [rackSoloMode] is on and [level] is not COLLAPSED,
-     * every other module is collapsed too -- except one currently pinned open by an active Learn.
-     * Opening a Deep Edit also focuses it ([activeTopTab]), so the MACROS panel follows the most
-     * recently opened Deep Edit.
+     * Sets [moduleId]'s disclosure tier. Deep Edit is solo: when [level] is not COLLAPSED, every
+     * other module is collapsed -- except one currently pinned open by an active Learn. Opening a
+     * Deep Edit also focuses it ([activeTopTab]), so the MACROS panel follows it, and drops a FULL
+     * Library back to HALF so the Edit view (which hides the Library) is actually on screen.
      */
     fun setDisclosure(moduleId: String, level: DisclosureLevel) {
         rackModuleDisclosure[moduleId] = level
-        if (level == DisclosureLevel.DEEP_EDIT) topTabForDeepEditModule(moduleId)?.let { activeTopTab = it }
-        if (rackSoloMode && level != DisclosureLevel.COLLAPSED) {
+        if (level != DisclosureLevel.COLLAPSED) {
+            topTabForDeepEditModule(moduleId)?.let { activeTopTab = it }
             for (key in rackModuleDisclosure.keys.toList()) {
                 if (key != moduleId && !isLearnPinned(key)) {
                     rackModuleDisclosure[key] = DisclosureLevel.COLLAPSED
                 }
             }
+            if (UITheme.libraryMode == UITheme.LibraryMode.FULL) UITheme.libraryMode = UITheme.LibraryMode.HALF
         }
         persistRackExpandedModules()
     }

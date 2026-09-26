@@ -79,26 +79,20 @@ class MenuBar(
 
                     // ── View Menu ─────────────────────────────────────────────────────────
                     if (ImGui.beginMenu("View")) {
-                        if (ImGui.menuItem("Solo Accordion Mode", "", session.parametersState.rackSoloMode)) {
-                            session.parametersState.rackSoloMode = !session.parametersState.rackSoloMode
-                            AppPreferencesStore.savePreferences()
-                        }
-                        itemTooltip("When on, expanding one Modular Rack module's Bay/Deep Edit auto-collapses the others.")
-                        if (ImGui.menuItem("Collapse All Rack Units", "Esc", false, session.parametersState.anyRackModuleExpanded())) {
+                        if (ImGui.menuItem("Close Deep Edit", "Esc", false, session.parametersState.anyRackModuleExpanded())) {
                             session.parametersState.collapseAllRackModules()
                         }
                         ImGui.separator()
                         if (ImGui.beginMenu("Library Drawer")) {
+                            // Picking a size always lands on the Library: leave Edit view first (it hides the Library).
                             if (ImGui.menuItem("Full", "", session.uiTheme.libraryMode == UITheme.LibraryMode.FULL)) {
+                                LibraryPanel.show(session)
                                 session.uiTheme.libraryMode = UITheme.LibraryMode.FULL
                                 AppPreferencesStore.savePreferences()
                             }
-                            if (ImGui.menuItem("Half", "", session.uiTheme.libraryMode == UITheme.LibraryMode.HALF)) {
+                            if (ImGui.menuItem("Half", "", session.uiTheme.libraryMode == UITheme.LibraryMode.HALF && !LibraryPanel.isEditView(session))) {
+                                LibraryPanel.show(session)
                                 session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
-                                AppPreferencesStore.savePreferences()
-                            }
-                            if (ImGui.menuItem("Hide", "", session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE)) {
-                                session.uiTheme.libraryMode = UITheme.LibraryMode.HIDE
                                 AppPreferencesStore.savePreferences()
                             }
                             ImGui.endMenu()

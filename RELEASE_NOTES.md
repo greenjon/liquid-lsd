@@ -1,5 +1,19 @@
 ## [Unreleased]
 
+### Three workspace views: Perform, Edit, Library (`UIManager.kt`, `LibraryPanel.kt`, `ParametersState.kt`, `PerformanceMatrixPanel.kt`, `MenuBar.kt`, `UITheme.kt`)
+- **Perform**: the Performance rows on top, the Library in the lower half. The split can still be dragged, and double-clicking the Library title bar resets it to 50/50.
+- **Edit**: opening a row's Deep Edit now hides the Library completely, title bar included, so the row and its parameters get the whole column. Swap sources and FX from the row's own controls. Esc, **Close Edit**, or collapsing the row brings the Library back.
+- **Library**: the Library fills the column, the same as before.
+- **Removed: Docked Library.** The minimize button, **View → Library Drawer → Hide**, and dragging the Library down to a bar are gone. Full-height rows weren't easier to use, and the docked bar's buttons did nothing without the list. If Docked was your saved setting, the Library opens at Half.
+- **Shortcuts**: `Space` switches the Library between Half and Full. In Edit view, `Space`, `Ctrl+F` and `/` close Deep Edit and cancel any armed Learn, then bring the Library back.
+- **Removed: `MULTI` Deep Edit.** Only one row can be in Deep Edit at a time; use the Deep Edit side rail to switch decks. The `[SOLO|MULTI]` toolbar button and **View → Solo Accordion Mode** are gone. `[Collapse All]` is now `[Close Edit]`, and the View menu item is now **Close Deep Edit**. A row pinned open by an armed Learn still stays open.
+
+### Performance Matrix: 4-Row Visibility in Half Library View (`PerformanceMatrixPanel.kt`, `PerformanceMasterControls.kt`, `PerformanceTransitionsControls.kt`, `PerformanceClockControls.kt`)
+- **Full 4-Row View in Half Dock**: All four macro rows on both DECKS and MASTER tabs are now fully visible simultaneously when the Library is opened to its default half-height view, eliminating the vertical scrolling that previously concealed 1 ¼ rows.
+- **Consolidated Header Bar**: Merged the tab strip (`[DECKS]` / `[MASTER]`), the `[Close Edit]` button, persistent Learn indicator, and `[ALL]` dice into a single compact 26px line, reclaiming ~28px of vertical screen real-estate.
+- **Inline Row Titles & Deck Badges**: Moved row titles horizontally inline to the left of their toolbars and header bars. Deck rows feature a Eurorack faceplate style `[DECK / A]` badge beside the two stacked toolbar rows (Row 1 SRC and Row 2 FX), while Master, Transitions, and Clock rows inline their titles on the left of their header bars.
+- **Dynamic Knob Scaling & Lower Minimum Row Height**: Lowered `MIN_ROW_H` floor from 112px to 75px and enabled dynamic knob scaling down to ~38px-44px at compact heights with proportional label spacing and 21px compact wing controls.
+
 ### Performance Matrix: two tabs, Master [MIX|FX], Clock row and Global knobs (`PerformanceMatrixPanel.kt`, `PerformanceMasterControls.kt`, `PerformanceClockControls.kt`, `PerformanceFxSendsControls.kt`, `PerformanceUiContext.kt`, `ParametersState.kt`, `MacroEngine.kt`, `MacroPanel.kt`)
 - **Two tabs: DECKS and MASTER**: LIVE QUAD is now **DECKS** (Deck A, B, BG, PV). MASTER & FX is now **MASTER** (Master, Transitions, FX Wet/Dry, Clock & Global). LIVE CONSOLE and ALL FX are gone. Each deck's FX is on its own row, Master FX is on the Master row, and there are no FX-only rows. If a removed tab was your saved tab, DECKS opens instead.
 - **Master row gets `[MIX|FX]`**: The Master row now works like a deck row. `[MIX]` puts its knobs on the deck alphas and master level; `[FX]` puts them on the Master FX chain (Super Knob + 3 Metaknobs, with slot cells and link buttons). The Master FX chain header (`◀ Name ▶ Save ⋮`) sits beside `[FX]`, and the FX bypass button is on the right. The crossfader bar stays on top in both modes. Drop an `.lsdfxchain` on the row title to load it into Master FX.
@@ -13,7 +27,7 @@
   - `/2`, `x2`, and `-`/`+` 0.5 BPM nudge
 - **Global macro knobs**: The Clock row's 4 knobs are a new **Global** bank that can bind to any parameter on any deck, Master FX or the mixer. One knob can move several decks at once. Edit them in Column 3's new **GLB** MACROS tab. They're saved with your session, not with deck presets, and work with MIDI (`Macro/global/knob_N`) and OSC (`/macro/global/knob/N`).
 - **FX Wet/Dry** stays on the MASTER tab. The Deck PV row moved off it (PV is on DECKS).
-- **Fix**: In SOLO mode, arming Learn on a deck's or Master's FX knob no longer lets opening another Deep Edit collapse that row's Deep Edit.
+- **Fix**: Arming Learn on a deck's or Master's FX knob no longer lets opening another Deep Edit collapse that row's Deep Edit.
 
 ### Customizable Default Configurations & Macro Bindings for Generators and FX (`GeneratorDefaults.kt`, `GeneratorDefaultModels.kt`, `ISFAutoBindEngine.kt`, `ISFFilter.kt`, `MacroCurve.kt`, `DeckSourcePicker.kt`, `PerformanceDeckControls.kt`, `DeckControlPanel.kt`, `FXChainMacroStrip.kt`)
 - **Visual Generator Defaults**: Any visual generator can now have its parameter baselines, `globalAlpha`, and 4-knob macro layout saved as a permanent default ("Save as Default"). When swapping generators on any deck, the generator's default layout is resolved automatically across 3 tiers (user defaults in `library/generator_defaults/<sourceId>.json`, curated defaults for bundled stock generators, and automated heuristic fallback for third-party shaders).

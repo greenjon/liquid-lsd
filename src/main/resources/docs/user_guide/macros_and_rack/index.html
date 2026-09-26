@@ -1881,8 +1881,7 @@ own FX chain. Unlike the old shared FX1/FX2 banks, each deck's FX chain is alway
 regardless of what the other decks are doing.</p>
 <p>MACROS and Deep Edit always point at the same deck and section:</p>
 <ul>
-<li>Picking a tab in MACROS (e.g. <strong>B FX</strong>) switches an open Deep Edit to that deck and section. In
-  <code>SOLO</code> mode the bay swaps to it; in <code>MULTI</code> mode it's opened next to the others. If Deep Edit is
+<li>Picking a tab in MACROS (e.g. <strong>B FX</strong>) switches an open Deep Edit to that deck and section. If Deep Edit is
   closed, the tab only changes what MACROS shows.</li>
 <li>Picking a deck on Deep Edit's side rail, its <strong>SRC / FX</strong> tabs, or opening a deck's Deep Edit
   anywhere else switches MACROS to match.</li>
@@ -2052,29 +2051,27 @@ between two disclosure tiers, without leaving Performance Mode:</p>
 the current source, e.g. <code>Mandala</code>, or <code>+ Source</code> on an empty deck) to open the source picker.</p>
 <p><strong>Keyboard shortcuts in Deep Edit</strong>: <code>Ctrl+C</code> / <code>Ctrl+V</code> (copy/paste a cell or row), <code>Delete</code> /
 <code>Backspace</code> (clear the cell's modulators, or reset the parameter), and <code>Ctrl+S</code> / <code>Shift+Ctrl+S</code>
-(save / save-as the deck being edited) act on the Deep Edit you last clicked in — in <code>MULTI</code> mode
-with several open, click inside the one you want first. Copy/paste/clear only fire while the
+(save / save-as the deck being edited) act on the open Deep Edit. Copy/paste/clear only fire while the
 Performance panel has focus, so <code>Delete</code> in the Library doesn't also reset a parameter. <code>Ctrl+Z</code>
 (undo) works anywhere in Performance Mode, with or without Deep Edit open.</p>
 <p><strong>While in Deep Edit</strong>, the top macro row renders the macro controls corresponding to the active channel and subtab,
 reserving the freed vertical space for the side rail and parameter bay.
-Collapsing back to Faceplate (or expanding a different row in <code>SOLO</code> mode) brings the rest
-of the 4×4 grid back.</p>
+Collapsing back to Faceplate brings the rest of the 4×4 grid, and the Library, back. While
+Deep Edit is open the Library is hidden completely (the <strong>Edit</strong> view — see
+<a href="../your_workspace/">Your Workspace</a>).</p>
 <p>Click the chevron again (or the <strong>Collapse</strong> button inside the Deep Edit panel or on the row) to fold back to
 the Faceplate.</p>
 <p><strong>Opening Deep Edit from Confidence Monitors</strong>:
-In addition to the row chevrons, clicking any preview monitor in Column 3 (Deck A, Deck B, Deck BG, Deck PV, Main Output Master, or the MACROS tab preview) will immediately open Deep Edit focused directly on that module. In <code>SOLO</code> mode (the default), this smoothly swaps the Deep Edit bay from your current deck to the clicked deck without needing to scroll or find the row chevron.</p>
-<p><strong>Accordion behavior</strong>: by default the rack is in <strong><code>SOLO</code></strong> mode — opening one row's Deep Edit
-automatically collapses any other expanded row, so you're never scrolling past several open
-panels at once. The toolbar above the grid has a <strong><code>[ SOLO | MULTI ]</code></strong> toggle (persisted across
-restarts) to switch to <code>MULTI</code>, where several rows can stay open side by side, and a
-<strong><code>Collapse All</code></strong> button.</p>
+In addition to the row chevrons, clicking any preview monitor in Column 3 (Deck A, Deck B, Deck BG, Deck PV, Main Output Master, or the MACROS tab preview) will immediately open Deep Edit focused directly on that module. This swaps the Deep Edit bay from your current deck to the clicked deck without needing to scroll or find the row chevron.</p>
+<p><strong>One Deep Edit at a time</strong>: opening a row's Deep Edit collapses any other open one. To move
+between decks, use the Deep Edit side rail (<strong>MIX / A / B / BG / PV</strong>) rather than opening
+rows side by side. The toolbar above the grid has a <strong><code>Close Edit</code></strong> button.</p>
 <p><strong>Esc</strong> collapses every expanded row back to the Faceplate — unless a Macro Learn is currently
 armed, in which case Esc cancels the Learn instead (a second Esc then collapses the rack). A
-row whose own knob has an armed Learn is also exempt from <code>SOLO</code> mode's auto-collapse, so it can't
+row whose own knob has an armed Learn is also exempt from the auto-collapse, so it can't
 be accidentally folded away mid-Learn; a <strong>"Learning: ‹name› — Esc to cancel"</strong> indicator stays
 visible in the toolbar the whole time a Learn is armed, even if you've expanded a different row.
-The same Solo/Collapse-All controls are also in <strong>View</strong> menu.</p>
+<strong>View → Close Deep Edit</strong> does the same as <code>Close Edit</code>.</p>
 <p>Expanding or collapsing a row is purely a display change — it never re-syncs the Super Knob/Metaknob mapping.</p>
 <h3 id="setting-up-knob-labels-and-bindings">Setting up knob labels and bindings</h3>
 <p>The full Binding Inspector (rename, target list, Min/Max/Curve/Invert/Link/Enabled) lives only in

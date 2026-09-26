@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import llm.slop.liquidlsd.rendering.ViewportHelper
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class WindowLayoutSafetyTest {
@@ -92,29 +93,29 @@ class WindowLayoutSafetyTest {
     }
 
     @Test
-    fun testLibraryModeCycleSequence() {
+    fun testLibraryShortcutTogglesHalfFullAndLeavesEditView() {
         val session = llm.slop.liquidlsd.SessionContext()
-        session.uiTheme.libraryMode = UITheme.LibraryMode.HIDE
-        LibraryPanel.isLibraryExpanding = true
+        val savedMode = session.uiTheme.libraryMode
+        try {
+            session.parametersState.collapseAllRackModules()
+            session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
+            assertFalse(LibraryPanel.isEditView(session))
 
-        // Step 1: HIDE -> HALF (expanding)
-        LibraryPanel.cycleMode(session)
-        assertEquals(UITheme.LibraryMode.HALF, session.uiTheme.libraryMode)
-        assertTrue(LibraryPanel.isLibraryExpanding)
+            // Perform view: the shortcut toggles HALF <-> FULL.
+            LibraryPanel.cycleMode(session)
+            assertEquals(UITheme.LibraryMode.FULL, session.uiTheme.libraryMode)
+            LibraryPanel.cycleMode(session)
+            assertEquals(UITheme.LibraryMode.HALF, session.uiTheme.libraryMode)
 
-        // Step 2: HALF -> FULL
-        LibraryPanel.cycleMode(session)
-        assertEquals(UITheme.LibraryMode.FULL, session.uiTheme.libraryMode)
-        assertTrue(!LibraryPanel.isLibraryExpanding)
-
-        // Step 3: FULL -> HALF (collapsing)
-        LibraryPanel.cycleMode(session)
-        assertEquals(UITheme.LibraryMode.HALF, session.uiTheme.libraryMode)
-        assertTrue(!LibraryPanel.isLibraryExpanding)
-
-        // Step 4: HALF -> HIDE
-        LibraryPanel.cycleMode(session)
-        assertEquals(UITheme.LibraryMode.HIDE, session.uiTheme.libraryMode)
-        assertTrue(LibraryPanel.isLibraryExpanding)
+            // Edit view (a module in Deep Edit hides the Library): the shortcut brings the Library back.
+            session.parametersState.setDisclosure(llm.slop.liquidlsd.macro.MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
+            assertTrue(LibraryPanel.isEditView(session))
+            LibraryPanel.cycleMode(session)
+            assertFalse(LibraryPanel.isEditView(session))
+            assertEquals(UITheme.LibraryMode.HALF, session.uiTheme.libraryMode)
+        } finally {
+            session.parametersState.collapseAllRackModules()
+            session.uiTheme.libraryMode = savedMode
+        }
     }
 }

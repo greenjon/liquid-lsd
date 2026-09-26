@@ -39,13 +39,15 @@ If Auto-VJ switches presets while a deck has unsaved changes, you can control wh
 
 ## The Library Panel
 
-The Library panel spans the left and middle columns and has three height modes. Press **`Space`** (when the cursor isn't in a text field) to cycle between them:
+The Library panel spans the left and middle columns. That column has three views:
 
-- **Full Height** — The Performance panel is hidden. Use this when you're fully focused on building or editing playlists and queues.
-- **Half Height** — The Library sits in the lower half of the workspace, with the Performance panel still visible above it. Good for tweaking knobs and modulation while keeping your setlist in view.
-- **Docked** — The Library collapses to a slim toolbar. Use this during a performance when you don't need to manage playlists or queues.
+- **Perform** — The Performance rows sit above the Library, which fills the lower half. This is the everyday view for playing a set.
+- **Edit** — Open a row's **Deep Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Swap a deck's source or FX from the controls on the row itself. Press **Esc**, click **Close Edit**, or collapse the row to get back to Perform.
+- **Library** — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.
 
-In Half Height mode, drag the Library's title bar to resize it freely — the height is remembered. Double-click the title bar to snap back to a 50/50 split. The window buttons on the right of the title bar also let you jump between heights directly.
+Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Deep Edit (cancelling any armed Learn) and brings the Library back.
+
+In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.
 
 ### Library View Mode (`[ Presets ]` / `[ FX ]`)
 

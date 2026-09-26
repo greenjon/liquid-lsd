@@ -1410,13 +1410,14 @@
 <p>Liquid LSD has a lot going on, but it's organized around a handful of core ideas. Once those click, everything else makes sense.</p>
 <hr />
 <h2 id="the-library-what-it-controls">The Library &amp; What It Controls</h2>
-<p>The Library panel spans the left and middle columns of the app and has three height modes. Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) to cycle between them:</p>
+<p>The Library panel spans the left and middle columns of the app. That column has three views:</p>
 <ul>
-<li><strong>Full Height</strong> — The Performance panel is hidden. The Library takes up all the space. Use this when you're focused on building or editing playlists and play queues.</li>
-<li><strong>Half Height</strong> — The Library sits in the lower half, with the Performance panel still visible above it. Good for tweaking knobs and modulation while keeping an eye on your setlist.</li>
-<li><strong>Docked</strong> — The Library collapses to a slim toolbar at the bottom of the screen. Use this when you don't need to manage playlists or queues and want the full workspace visible.</li>
+<li><strong>Perform</strong> — The Performance rows sit above the Library, which fills the lower half. This is the everyday view for playing a set.</li>
+<li><strong>Edit</strong> — Open a row's <strong>Deep Edit</strong> and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Swap a deck's source or FX from the controls on the row itself. Press <strong>Esc</strong>, click <strong>Close Edit</strong>, or collapse the row to get back to Perform.</li>
+<li><strong>Library</strong> — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.</li>
 </ul>
-<p>You can drag the Library's title bar up or down to resize it freely in Half Height mode — the height you set is remembered. Double-click the title bar to snap back to exactly 50/50. The standard window buttons on the right of the title bar also let you jump between heights.</p>
+<p>Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, <code>Space</code>, <code>Ctrl+F</code> or <code>/</code> closes Deep Edit (cancelling any armed Learn) and brings the Library back.</p>
+<p>In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.</p>
 <p>The Library contains your <strong>Presets</strong>, <strong>Playlists</strong>, and <strong>Play Queues</strong> — not shaders (those are managed separately under <strong>Preferences → Shader Locations</strong>).</p>
 <hr />
 <h2 id="the-four-decks">The Four Decks</h2>
@@ -1487,7 +1488,7 @@ the Mixer). Deep Edit has three columns:</p>
 <tbody>
 <tr>
 <td><code>Space</code></td>
-<td>Cycle Library height: Full → Half → Docked (when cursor isn't in a text field)</td>
+<td>Switch the Library between Half (Perform) and Full; from Deep Edit, close it and bring the Library back (when cursor isn't in a text field)</td>
 </tr>
 <tr>
 <td><code>F</code></td>

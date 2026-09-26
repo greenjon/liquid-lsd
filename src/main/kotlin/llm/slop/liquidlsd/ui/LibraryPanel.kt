@@ -57,30 +57,28 @@ object LibraryPanel {
 
     var shouldReclaimFocus: Boolean = false
     var shouldScrollToSelection: Boolean = false
-    var isLibraryExpanding: Boolean = true
+    /**
+     * Edit view: a Rack module is in Deep Edit and the Library isn't FULL, so the Deep Edit bay
+     * takes the whole left column and the Library isn't drawn at all. The other two views are
+     * Perform (rows + HALF Library) and Library (FULL).
+     */
+    fun isEditView(session: SessionContext): Boolean =
+        session.parametersState.anyRackModuleExpanded() && session.uiTheme.libraryMode != UITheme.LibraryMode.FULL
 
+    /** Leaves Edit view so the Library is on screen: cancels any armed Learn (it pins its module open) and collapses Deep Edit. */
+    fun show(session: SessionContext) {
+        if (!isEditView(session)) return
+        if (llm.slop.liquidlsd.macro.MacroLearnState.isLearning()) llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
+        session.parametersState.collapseAllRackModules()
+    }
+
+    /** Library shortcut: from Edit view, brings the Library back (Perform view); otherwise toggles HALF <-> FULL. */
     fun cycleMode(session: SessionContext) {
-        val current = session.uiTheme.libraryMode
-        val next = when (current) {
-            UITheme.LibraryMode.HIDE -> {
-                isLibraryExpanding = true
-                UITheme.LibraryMode.HALF
-            }
-            UITheme.LibraryMode.HALF -> {
-                if (isLibraryExpanding) {
-                    isLibraryExpanding = false
-                    UITheme.LibraryMode.FULL
-                } else {
-                    isLibraryExpanding = true
-                    UITheme.LibraryMode.HIDE
-                }
-            }
-            UITheme.LibraryMode.FULL -> {
-                isLibraryExpanding = false
-                UITheme.LibraryMode.HALF
-            }
+        if (isEditView(session)) {
+            show(session)
+            return
         }
-        session.uiTheme.libraryMode = next
+        session.uiTheme.libraryMode = if (session.uiTheme.libraryMode == UITheme.LibraryMode.FULL) UITheme.LibraryMode.HALF else UITheme.LibraryMode.FULL
         AppPreferencesStore.savePreferences()
     }
 
@@ -291,7 +289,7 @@ object LibraryPanel {
             // Centered Action Toolbar
             val totalToolbarW = llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.calculateToolbarWidth(btnH)
             val windowBtnW = (btnH * 1.15f).coerceIn(20f, 32f)
-            val windowBtnsW = (windowBtnW * 2f) + 4f
+            val windowBtnsW = windowBtnW
             val targetCenterX = ((safeW - totalToolbarW) * 0.5f).coerceIn(120f, (safeW - totalToolbarW - windowBtnsW - 8f).coerceAtLeast(120f))
 
             ImGui.setCursorPosX(targetCenterX)
@@ -307,53 +305,24 @@ object LibraryPanel {
                 btnHeight = btnH
             )
 
-            // Right-aligned Window Control Buttons (Minimize, Maximize / Restore)
+            // Right-aligned Maximize / Restore button
             val rightX = (safeW - windowBtnsW - 8f).coerceAtLeast(ImGui.getCursorPosX() + 8f)
             ImGui.sameLine(0f, 0f)
             ImGui.setCursorPosX(rightX)
             ImGui.setCursorPosY(yOffset)
 
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                // Minimize [-]
-                val isHidden = session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE
-                if (ImGui.button("${Icons.MINUS}##lib_min", windowBtnW, btnH)) {
-                    if (isHidden) {
-                        session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
-                        isLibraryExpanding = true
-                        session.uiTheme.libraryRatio = session.uiTheme.lastCustomLibraryRatio.coerceIn(0.15f, 0.85f)
-                    } else {
-                        session.uiTheme.lastCustomLibraryRatio = session.uiTheme.libraryRatio
-                        session.uiTheme.libraryMode = UITheme.LibraryMode.HIDE
-                        isLibraryExpanding = true
-                    }
-                    AppPreferencesStore.savePreferences()
-                }
-                itemTooltip(if (isHidden) "Restore Library" else "Minimize Library to bottom bar")
-
-                ImGui.sameLine(0f, 2f)
-
                 // Maximize / Restore [□] / [❐]
                 val isFull = session.uiTheme.libraryMode == UITheme.LibraryMode.FULL
                 val maxIcon = if (isFull) Icons.COPY else Icons.SQUARE
                 if (ImGui.button("$maxIcon##lib_max", windowBtnW, btnH)) {
-                    if (isFull) {
-                        session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
-                        isLibraryExpanding = false
-                        session.uiTheme.libraryRatio = session.uiTheme.lastCustomLibraryRatio.coerceIn(0.15f, 0.85f)
-                    } else {
-                        session.uiTheme.lastCustomLibraryRatio = session.uiTheme.libraryRatio
-                        session.uiTheme.libraryMode = UITheme.LibraryMode.FULL
-                        isLibraryExpanding = false
-                    }
-                    AppPreferencesStore.savePreferences()
+                    cycleMode(session)
                 }
                 itemTooltip(if (isFull) "Restore Library (Half size)" else "Maximize Library (Full size)")
             }
 
             ImGui.endMenuBar()
         }
-
-        if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) return
 
         val contentH = (ImGui.getContentRegionAvailY() - 4f).coerceAtLeast(1f)
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(80f)

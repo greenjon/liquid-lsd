@@ -355,11 +355,7 @@ class UIManager(
         val isCtrlF = !wantTextInput && ImGui.getIO().keyCtrl && ImGui.isKeyPressed(imgui.flag.ImGuiKey.F, false)
         val isSlash = !wantTextInput && ImGui.isKeyPressed(imgui.flag.ImGuiKey.Slash, false)
         if (isCtrlF || isSlash) {
-            if (session.uiTheme.libraryMode == UITheme.LibraryMode.HIDE) {
-                session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
-                LibraryPanel.isLibraryExpanding = true
-                AppPreferencesStore.savePreferences()
-            }
+            LibraryPanel.show(session)
             llm.slop.liquidlsd.ui.browser.PresetListPanel.shouldFocusSearch = true
         }
 
@@ -495,10 +491,12 @@ class UIManager(
             (ImGui.getTextLineHeight() + 12f + (style.getWindowBorderSize() * 2f)).coerceAtLeast(32f)
         }
 
-        val libraryH = when (theme.libraryMode) {
-            UITheme.LibraryMode.FULL -> contentH
-            UITheme.LibraryMode.HIDE -> libTitleBarH.coerceAtMost(contentH)
-            UITheme.LibraryMode.HALF -> (contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)).coerceIn(libTitleBarH.coerceAtMost(contentH), contentH)
+        // Three views: Library (FULL), Edit (a module in Deep Edit -- no Library at all), Perform (HALF).
+        val isEditView = LibraryPanel.isEditView(session)
+        val libraryH = when {
+            theme.libraryMode == UITheme.LibraryMode.FULL -> contentH
+            isEditView -> 0f
+            else -> (contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)).coerceIn(libTitleBarH.coerceAtMost(contentH), contentH)
         }
 
         if (theme.libraryMode != UITheme.LibraryMode.FULL) {
@@ -519,7 +517,9 @@ class UIManager(
             ImGui.end()
         }
 
-        drawLibraryDock(displayWidth, displayHeight, menuBarH, contentH, noDecorate, minRatio, libraryW, libraryH, libTitleBarH)
+        if (!isEditView) {
+            drawLibraryDock(displayWidth, displayHeight, menuBarH, contentH, noDecorate, minRatio, libraryW, libraryH, libTitleBarH)
+        }
 
         // Column 3: Mixer.
         ImGui.setNextWindowPos(libraryW, menuBarH)
@@ -537,8 +537,9 @@ class UIManager(
     }
 
     /**
-     * Bottom-docked Library window: half/full toggle, drag-to-resize splitter, and spacebar
-     * shortcut (handled globally in [processQueueKeyboardShortcuts], .
+     * Bottom-docked Library window (Perform and Library views; not drawn in Edit view): half/full
+     * toggle, drag-to-resize splitter, and spacebar shortcut (handled globally in
+     * [processQueueKeyboardShortcuts]).
      */
     private fun drawLibraryDock(
         displayWidth: Float,
@@ -573,34 +574,12 @@ class UIManager(
                     displayHeight = displayHeight,
                     drawList = ImGui.getWindowDrawList(),
                     onDrag = { deltaY ->
-                        if (theme.libraryMode == UITheme.LibraryMode.HIDE) {
-                            if (deltaY < 0f) { // Dragging upward
-                                theme.libraryMode = UITheme.LibraryMode.HALF
-                                LibraryPanel.isLibraryExpanding = true
-                                theme.libraryRatio = theme.lastCustomLibraryRatio.coerceIn(minRatio, 0.85f)
-                                AppPreferencesStore.savePreferences()
-                            }
-                        } else {
-                            val deltaR = if (contentH > 0f) -deltaY / contentH else 0f
-                            val targetRatio = theme.libraryRatio + deltaR
-                            val targetPixelH = contentH * targetRatio
-                            if (targetPixelH < (libTitleBarH * 1.3f) || targetRatio < 0.10f) {
-                                theme.lastCustomLibraryRatio = theme.libraryRatio
-                                theme.libraryMode = UITheme.LibraryMode.HIDE
-                                LibraryPanel.isLibraryExpanding = true
-                            } else {
-                                val newR = targetRatio.coerceIn(minRatio, 0.85f)
-                                theme.libraryRatio = newR
-                                theme.lastCustomLibraryRatio = newR
-                            }
-                            AppPreferencesStore.savePreferences()
-                        }
+                        val deltaR = if (contentH > 0f) -deltaY / contentH else 0f
+                        theme.libraryRatio = (theme.libraryRatio + deltaR).coerceIn(minRatio, 0.85f)
+                        AppPreferencesStore.savePreferences()
                     },
                     onDoubleClick = {
-                        theme.libraryMode = UITheme.LibraryMode.HALF
-                        LibraryPanel.isLibraryExpanding = true
                         theme.libraryRatio = 0.50f
-                        theme.lastCustomLibraryRatio = 0.50f
                         AppPreferencesStore.savePreferences()
                     }
                 )

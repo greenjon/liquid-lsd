@@ -27,7 +27,20 @@ internal object PerformanceClockControls {
         val currentClock = audioEngine.clockSource
         val dl = ImGui.getWindowDrawList()
 
-        ImGui.setCursorScreenPos(boxX1 + pad, headerY)
+        // Inline Title Badge [ CLOCK ]
+        val titleText = "CLOCK"
+        val titleW = 75f
+        val colorGlobal = PerformanceColors.COLOR_GLOBAL
+        val titleCol = ImGui.colorConvertFloat4ToU32(colorGlobal[0], colorGlobal[1], colorGlobal[2], 0.90f)
+        val titleBgCol = ImGui.colorConvertFloat4ToU32(colorGlobal[0], colorGlobal[1], colorGlobal[2], 0.12f)
+        dl.addRectFilled(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleBgCol, 4f)
+        dl.addRect(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleCol, 4f, 0, 1.5f)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            val textSz = ImGui.calcTextSize(titleText)
+            dl.addText(boxX1 + pad + (titleW - textSz.x) * 0.5f, headerY + (headerH - textSz.y) * 0.5f, titleCol, titleText)
+        }
+
+        ImGui.setCursorScreenPos(boxX1 + pad + titleW + gap, headerY)
         ImGui.beginGroup()
 
         // 1. Clock source pills [MAN] [AUDIO]

@@ -238,8 +238,7 @@ object MacroKnobWidget {
         itemTooltip("$label: ${"%.2f".format(newValue)}$learnTip\n$bindingLine\nDrag to adjust. Left-click to inspect. Right-click for Learn.")
 
         val totalTextH = if (showValue) captionH * 2f + 2f else captionH
-        ImGui.setCursorScreenPos(startX, startY + diameter + 3f + totalTextH + 4f)
-        ImGui.dummy(0f, 0f)
+        ImGui.setCursorScreenPos(startX, startY + diameter + 3f + totalTextH)
     }
 
     /**

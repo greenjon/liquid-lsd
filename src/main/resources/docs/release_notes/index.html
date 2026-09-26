@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#three-workspace-views-perform-edit-library-uimanagerkt-librarypanelkt-parametersstatekt-performancematrixpanelkt-menubarkt-uithemekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Three workspace views: Perform, Edit, Library (UIManager.kt, LibraryPanel.kt, ParametersState.kt, PerformanceMatrixPanel.kt, MenuBar.kt, UITheme.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-matrix-4-row-visibility-in-half-library-view-performancematrixpanelkt-performancemastercontrolskt-performancetransitionscontrolskt-performanceclockcontrolskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix: 4-Row Visibility in Half Library View (PerformanceMatrixPanel.kt, PerformanceMasterControls.kt, PerformanceTransitionsControls.kt, PerformanceClockControls.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-matrix-two-tabs-master-mixfx-clock-row-and-global-knobs-performancematrixpanelkt-performancemastercontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt-performanceuicontextkt-parametersstatekt-macroenginekt-macropanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4063,6 +4085,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#three-workspace-views-perform-edit-library-uimanagerkt-librarypanelkt-parametersstatekt-performancematrixpanelkt-menubarkt-uithemekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Three workspace views: Perform, Edit, Library (UIManager.kt, LibraryPanel.kt, ParametersState.kt, PerformanceMatrixPanel.kt, MenuBar.kt, UITheme.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#performance-matrix-4-row-visibility-in-half-library-view-performancematrixpanelkt-performancemastercontrolskt-performancetransitionscontrolskt-performanceclockcontrolskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix: 4-Row Visibility in Half Library View (PerformanceMatrixPanel.kt, PerformanceMasterControls.kt, PerformanceTransitionsControls.kt, PerformanceClockControls.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-matrix-two-tabs-master-mixfx-clock-row-and-global-knobs-performancematrixpanelkt-performancemastercontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt-performanceuicontextkt-parametersstatekt-macroenginekt-macropanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6893,6 +6937,22 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="three-workspace-views-perform-edit-library-uimanagerkt-librarypanelkt-parametersstatekt-performancematrixpanelkt-menubarkt-uithemekt">Three workspace views: Perform, Edit, Library (<code>UIManager.kt</code>, <code>LibraryPanel.kt</code>, <code>ParametersState.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>MenuBar.kt</code>, <code>UITheme.kt</code>)</h3>
+<ul>
+<li><strong>Perform</strong>: the Performance rows on top, the Library in the lower half. The split can still be dragged, and double-clicking the Library title bar resets it to 50/50.</li>
+<li><strong>Edit</strong>: opening a row's Deep Edit now hides the Library completely, title bar included, so the row and its parameters get the whole column. Swap sources and FX from the row's own controls. Esc, <strong>Close Edit</strong>, or collapsing the row brings the Library back.</li>
+<li><strong>Library</strong>: the Library fills the column, the same as before.</li>
+<li><strong>Removed: Docked Library.</strong> The minimize button, <strong>View → Library Drawer → Hide</strong>, and dragging the Library down to a bar are gone. Full-height rows weren't easier to use, and the docked bar's buttons did nothing without the list. If Docked was your saved setting, the Library opens at Half.</li>
+<li><strong>Shortcuts</strong>: <code>Space</code> switches the Library between Half and Full. In Edit view, <code>Space</code>, <code>Ctrl+F</code> and <code>/</code> close Deep Edit and cancel any armed Learn, then bring the Library back.</li>
+<li><strong>Removed: <code>MULTI</code> Deep Edit.</strong> Only one row can be in Deep Edit at a time; use the Deep Edit side rail to switch decks. The <code>[SOLO|MULTI]</code> toolbar button and <strong>View → Solo Accordion Mode</strong> are gone. <code>[Collapse All]</code> is now <code>[Close Edit]</code>, and the View menu item is now <strong>Close Deep Edit</strong>. A row pinned open by an armed Learn still stays open.</li>
+</ul>
+<h3 id="performance-matrix-4-row-visibility-in-half-library-view-performancematrixpanelkt-performancemastercontrolskt-performancetransitionscontrolskt-performanceclockcontrolskt">Performance Matrix: 4-Row Visibility in Half Library View (<code>PerformanceMatrixPanel.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>PerformanceTransitionsControls.kt</code>, <code>PerformanceClockControls.kt</code>)</h3>
+<ul>
+<li><strong>Full 4-Row View in Half Dock</strong>: All four macro rows on both DECKS and MASTER tabs are now fully visible simultaneously when the Library is opened to its default half-height view, eliminating the vertical scrolling that previously concealed 1 ¼ rows.</li>
+<li><strong>Consolidated Header Bar</strong>: Merged the tab strip (<code>[DECKS]</code> / <code>[MASTER]</code>), the <code>[Close Edit]</code> button, persistent Learn indicator, and <code>[ALL]</code> dice into a single compact 26px line, reclaiming ~28px of vertical screen real-estate.</li>
+<li><strong>Inline Row Titles &amp; Deck Badges</strong>: Moved row titles horizontally inline to the left of their toolbars and header bars. Deck rows feature a Eurorack faceplate style <code>[DECK / A]</code> badge beside the two stacked toolbar rows (Row 1 SRC and Row 2 FX), while Master, Transitions, and Clock rows inline their titles on the left of their header bars.</li>
+<li><strong>Dynamic Knob Scaling &amp; Lower Minimum Row Height</strong>: Lowered <code>MIN_ROW_H</code> floor from 112px to 75px and enabled dynamic knob scaling down to ~38px-44px at compact heights with proportional label spacing and 21px compact wing controls.</li>
+</ul>
 <h3 id="performance-matrix-two-tabs-master-mixfx-clock-row-and-global-knobs-performancematrixpanelkt-performancemastercontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt-performanceuicontextkt-parametersstatekt-macroenginekt-macropanelkt">Performance Matrix: two tabs, Master [MIX|FX], Clock row and Global knobs (<code>PerformanceMatrixPanel.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>PerformanceClockControls.kt</code>, <code>PerformanceFxSendsControls.kt</code>, <code>PerformanceUiContext.kt</code>, <code>ParametersState.kt</code>, <code>MacroEngine.kt</code>, <code>MacroPanel.kt</code>)</h3>
 <ul>
 <li><strong>Two tabs: DECKS and MASTER</strong>: LIVE QUAD is now <strong>DECKS</strong> (Deck A, B, BG, PV). MASTER &amp; FX is now <strong>MASTER</strong> (Master, Transitions, FX Wet/Dry, Clock &amp; Global). LIVE CONSOLE and ALL FX are gone. Each deck's FX is on its own row, Master FX is on the Master row, and there are no FX-only rows. If a removed tab was your saved tab, DECKS opens instead.</li>
@@ -6907,7 +6967,7 @@
 <li><code>/2</code>, <code>x2</code>, and <code>-</code>/<code>+</code> 0.5 BPM nudge</li>
 <li><strong>Global macro knobs</strong>: The Clock row's 4 knobs are a new <strong>Global</strong> bank that can bind to any parameter on any deck, Master FX or the mixer. One knob can move several decks at once. Edit them in Column 3's new <strong>GLB</strong> MACROS tab. They're saved with your session, not with deck presets, and work with MIDI (<code>Macro/global/knob_N</code>) and OSC (<code>/macro/global/knob/N</code>).</li>
 <li><strong>FX Wet/Dry</strong> stays on the MASTER tab. The Deck PV row moved off it (PV is on DECKS).</li>
-<li><strong>Fix</strong>: In SOLO mode, arming Learn on a deck's or Master's FX knob no longer lets opening another Deep Edit collapse that row's Deep Edit.</li>
+<li><strong>Fix</strong>: Arming Learn on a deck's or Master's FX knob no longer lets opening another Deep Edit collapse that row's Deep Edit.</li>
 </ul>
 <h3 id="customizable-default-configurations-macro-bindings-for-generators-and-fx-generatordefaultskt-generatordefaultmodelskt-isfautobindenginekt-isffilterkt-macrocurvekt-decksourcepickerkt-performancedeckcontrolskt-deckcontrolpanelkt-fxchainmacrostripkt">Customizable Default Configurations &amp; Macro Bindings for Generators and FX (<code>GeneratorDefaults.kt</code>, <code>GeneratorDefaultModels.kt</code>, <code>ISFAutoBindEngine.kt</code>, <code>ISFFilter.kt</code>, <code>MacroCurve.kt</code>, <code>DeckSourcePicker.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>DeckControlPanel.kt</code>, <code>FXChainMacroStrip.kt</code>)</h3>
 <ul>

@@ -28,15 +28,29 @@ internal object PerformanceTransitionsControls {
         val availW = (boxX2 - boxX1 - pad * 2f).coerceAtLeast(1f)
         val dl = ImGui.getWindowDrawList()
 
-        ImGui.setCursorScreenPos(boxX1 + pad, headerY)
+        // Inline Title Badge [ TRANSITIONS ]
+        val titleText = "TRANSITIONS"
+        val titleW = 95f
+        val colorTrans = PerformanceColors.COLOR_TRANS
+        val titleCol = ImGui.colorConvertFloat4ToU32(colorTrans[0], colorTrans[1], colorTrans[2], 0.90f)
+        val titleBgCol = ImGui.colorConvertFloat4ToU32(colorTrans[0], colorTrans[1], colorTrans[2], 0.12f)
+        dl.addRectFilled(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleBgCol, 4f)
+        dl.addRect(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleCol, 4f, 0, 1.5f)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            val textSz = ImGui.calcTextSize(titleText)
+            dl.addText(boxX1 + pad + (titleW - textSz.x) * 0.5f, headerY + (headerH - textSz.y) * 0.5f, titleCol, titleText)
+        }
+
+        ImGui.setCursorScreenPos(boxX1 + pad + titleW + gap, headerY)
         ImGui.beginGroup()
 
+        val transAvailW = (availW - titleW - gap).coerceAtLeast(1f)
         // Transition Queue nav: Prev (24px) + Count (~45px) + Next (24px) + gaps
         val navBtnW = (headerH * 0.9f).coerceIn(22f, 28f)
         val qTextW = 46f
 
         // Transition Picker button
-        val transBtnW = (availW * 0.35f).coerceIn(140f, 320f)
+        val transBtnW = (transAvailW * 0.35f).coerceIn(130f, 300f)
 
         // 1. Transition Picker Button [ Settings Icon + Name * ]
         val transName = mixer.transitionFilter?.displayName ?: "Default Blend"

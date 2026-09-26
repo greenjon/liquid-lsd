@@ -191,6 +191,7 @@ object AppPreferencesStore {
                 }
                 val savedMode = props.getProperty("libraryMode") ?: props.getProperty("assetBrowserMode")
                 if (savedMode != null) {
+                    // Unknown values -- including the removed "HIDE" mode -- fall back to HALF.
                     UITheme.libraryMode = try { UITheme.LibraryMode.valueOf(savedMode) } catch (e: Exception) { UITheme.LibraryMode.HALF }
                     logger.info { "Loaded libraryMode from settings file: ${UITheme.libraryMode}" }
                 } else {
@@ -241,7 +242,6 @@ object AppPreferencesStore {
                 props.getProperty("col1Ratio")?.toFloatOrNull()?.let { UITheme.col1Ratio = it.coerceIn(0.10f, 0.70f) }
                 props.getProperty("col2Ratio")?.toFloatOrNull()?.let { UITheme.col2Ratio = it.coerceIn(0.10f, 0.70f) }
                 (props.getProperty("libraryRatio") ?: props.getProperty("assetBrowserRatio"))?.toFloatOrNull()?.let { UITheme.libraryRatio = it.coerceIn(0.10f, 0.90f) }
-                (props.getProperty("lastCustomLibraryRatio") ?: props.getProperty("lastCustomAssetBrowserRatio"))?.toFloatOrNull()?.let { UITheme.lastCustomLibraryRatio = it.coerceIn(0.10f, 0.90f) }
                 props.getProperty("renderResolutionPreset")?.let { saved ->
                     UITheme.renderResolutionPreset = try { UITheme.ResolutionPreset.valueOf(saved) } catch (e: Exception) { UITheme.ResolutionPreset.RES_1080P }
                 }
@@ -263,7 +263,6 @@ object AppPreferencesStore {
                 props.getProperty("checkUpdatesOnStartup")?.let { UITheme.checkUpdatesOnStartup = it.toBoolean() }
                 props.getProperty("ignoredUpdateVersion")?.let { UITheme.ignoredUpdateVersion = it }
 
-                props.getBoolean("rackSoloMode")?.let { UITheme.rackSoloMode = it }
                 props.getProperty("rackExpandedModules")?.let { encoded ->
                     UITheme.rackExpandedModules = encoded.split(';')
                         .filter { it.isNotBlank() }
@@ -343,7 +342,6 @@ object AppPreferencesStore {
             props.setProperty("col1Ratio", UITheme.col1Ratio.toString())
             props.setProperty("col2Ratio", UITheme.col2Ratio.toString())
             props.setProperty("libraryRatio", UITheme.libraryRatio.toString())
-            props.setProperty("lastCustomLibraryRatio", UITheme.lastCustomLibraryRatio.toString())
             props.setProperty("renderResolutionPreset", UITheme.renderResolutionPreset.name)
             props.setProperty("customRenderWidth", UITheme.customRenderWidth.toString())
             props.setProperty("customRenderHeight", UITheme.customRenderHeight.toString())
@@ -361,7 +359,6 @@ object AppPreferencesStore {
             props.setProperty("checkUpdatesOnStartup", UITheme.checkUpdatesOnStartup.toString())
             props.setProperty("ignoredUpdateVersion", UITheme.ignoredUpdateVersion)
 
-            props.setProperty("rackSoloMode", UITheme.rackSoloMode.toString())
             props.setProperty("rackExpandedModules", UITheme.rackExpandedModules.entries.joinToString(";") { "${it.key}=${it.value}" })
 
             try {
