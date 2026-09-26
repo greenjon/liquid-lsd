@@ -373,11 +373,6 @@ class PerformanceMatrixPanel {
         val boxPad = 2.5f     // inner padding between the box border and the knobs it contains
         val pad = 6f
 
-        val hasDeckRows = layoutRows.any {
-            it.bankId in listOf(MacroEngine.DECK_A, MacroEngine.DECK_B, MacroEngine.DECK_BG, MacroEngine.DECK_PV) ||
-            it.groupLabel.startsWith("DECK")
-        }
-
         val isCompactRow = rowH < 95f
         val ctrlH = if (isCompactRow) 21f else PerformanceColors.CTRL_H
         val stackGap = if (isCompactRow) 2f else 3f
@@ -395,21 +390,15 @@ class PerformanceMatrixPanel {
         val masterRowW = maxOf(deckRow1W, (gridW * 0.38f).coerceAtMost(420f))
         val masterTabLeftW = masterTabBadgeW + 6f + masterRowW
         val masterRightW = 56f
-        val isMasterTabLayout = layoutRows.any {
-            it.bankId in listOf(MacroEngine.MASTER, MacroEngine.MASTER_FX, MacroEngine.TRANS, MacroEngine.FX_SENDS, MacroEngine.GLOBAL)
-        }
 
-        val maxLeftW = maxOf(
-            if (hasDeckRows) deckLeftW else 0f,
-            if (isMasterTabLayout) masterTabLeftW else 0f
-        )
-        val maxRightW = maxOf(
-            if (hasDeckRows) deckRightW else 0f,
-            if (isMasterTabLayout) masterRightW else 0f
-        )
+        // Reserved unconditionally (not just on the tab that currently needs it) so the knob
+        // cluster's left/right boundaries -- and therefore diameter and column pitch -- never
+        // shift when switching between DECKS and MASTER.
+        val maxLeftW = maxOf(deckLeftW, masterTabLeftW)
+        val maxRightW = maxOf(deckRightW, masterRightW)
 
-        val leftBoundary = gridStartX + pad + (if (maxLeftW > 0f) maxLeftW + 12f else 0f)
-        val rightBoundary = gridStartX + gridW - pad - (if (maxRightW > 0f) maxRightW + 12f else 0f)
+        val leftBoundary = gridStartX + pad + maxLeftW + 12f
+        val rightBoundary = gridStartX + gridW - pad - maxRightW - 12f
         val middleW = (rightBoundary - leftBoundary).coerceAtLeast(100f)
 
         val maxColW = middleW / 4f
@@ -419,12 +408,12 @@ class PerformanceMatrixPanel {
         // Knob label: 3f gap above caption + captionH + 4f margin below. An expanded row's second
         // line and Learn button sit in the extra [extraH] below, so they don't shrink the knob.
         val baseTextBelowH = captionH + 7f
-        // FX rows: in group mode the slot knobs have no caption (the slot cell under them names
-        // the effect), so only SUPER's caption and the slot cells share the line; in focus mode
-        // every knob keeps its caption (parameter name) with the value cell below it.
-        fun fxTextBelowH(bankId: String): Float =
-            if (ctx.resolveFxChain(mixer, bankId).isFocused()) baseTextBelowH + FxSlotCell.HEIGHT + 4f
-            else 7f + maxOf(captionH, FxSlotCell.HEIGHT)
+        // FX rows (group mode or focus mode) drop the per-knob caption in favor of a same-height
+        // cell below that names the slot's effect or the focused parameter -- group mode's slot
+        // cells and focus mode's slot/param cells are both [FxSlotCell.HEIGHT]/[FxParamCell.HEIGHT]
+        // (equal), so every FX knob column shares this one footprint regardless of mode, and
+        // focusing/unfocusing a slot never resizes any knob.
+        val fxTextBelowH = 7f + maxOf(captionH, FxSlotCell.HEIGHT)
         for (group in groupRows(layoutRows)) {
             val groupH = group.rowCount * rowH
             val hasSubLabel = layoutRows[group.startRow].subLabel != null
@@ -433,7 +422,7 @@ class PerformanceMatrixPanel {
             val contentH = groupH - boxMarginY * 2f - boxPad * 2f
             val subRowH = contentH / group.rowCount
             val knobAreaH = if (hasSubLabel) subRowH - subLabelH - subLabelGap else subRowH
-            val rowTextBelowH = if (isFx) fxTextBelowH(groupBankId) else baseTextBelowH
+            val rowTextBelowH = if (isFx) fxTextBelowH else baseTextBelowH
             diamByHeight = minOf(diamByHeight, (knobAreaH - rowTextBelowH).coerceAtLeast(8f))
         }
         val diameter = minOf(diamByWidth, diamByHeight).coerceIn(20f, 100f)
@@ -590,7 +579,7 @@ class PerformanceMatrixPanel {
                 }
 
                 val isFxBankId = row.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS
-                val effectiveTextBelowH = if (isFxBankId) fxTextBelowH(row.bankId) else baseTextBelowH
+                val effectiveTextBelowH = if (isFxBankId) fxTextBelowH else baseTextBelowH
                 val totalWidgetH = diameter + effectiveTextBelowH
                 val availKnobH = subBottomY - knobAreaTopY
                 val knobTopY = (knobAreaTopY + (availKnobH - totalWidgetH) * 0.5f)
@@ -652,9 +641,16 @@ class PerformanceMatrixPanel {
 
                     // FX slot side buttons, stacked left of the knob: Super Knob link over slot bypass.
                     // Group mode: slot knobs (cols 1..3) get both. Focus mode: knob 1 (the focused
-                    // slot's dry/wet) gets just the bypass.
+                    // slot's dry/wet) gets the bypass; knobs 2-4 (the focused slot's parameters)
+                    // get that parameter's reset-to-default button.
                     val rowChain = if (isFxBankId) ctx.resolveFxChain(mixer, row.bankId) else null
                     val isFocusMode = rowChain?.isFocused() == true
+                    val focusedParamEntry = if (isFocusMode && col in 1..3 && descriptor.hasExtraHeader) {
+                        val slot = rowChain!!.slots.getOrNull(rowChain.focusedSlot ?: -1)
+                        val paramEntries = slot?.parameters?.entries?.toList() ?: emptyList()
+                        val paramIdx = rowChain.focusParamPage * 3 + (col - 1)
+                        paramEntries.getOrNull(paramIdx)
+                    } else null
                     val sideSlotIdx = when {
                         !descriptor.hasExtraHeader || rowChain == null -> null
                         isFocusMode -> if (col == 0) rowChain.focusedSlot else null
@@ -668,6 +664,9 @@ class PerformanceMatrixPanel {
                     if (sideSlotIdx != null) {
                         val bypassY = if (isFocusMode) sideStackTopY else sideStackTopY + sideBtnSize + sideBtnGap
                         FxSlotCell.drawBypassButton(session, mixer, row.bankId, sideSlotIdx, sideBtnX, bypassY, sideBtnSize, row.accent)
+                    }
+                    if (isFocusMode && col in 1..3 && focusedParamEntry != null) {
+                        FxParamCell.drawResetButton(row.bankId, col + 1, focusedParamEntry.key, focusedParamEntry.value, sideBtnX, sideStackTopY, sideBtnSize)
                     }
                     if (sideSlotIdx != null && !isFocusMode) {
                         val slotIdx = sideSlotIdx
@@ -703,8 +702,9 @@ class PerformanceMatrixPanel {
                     }
 
                     val isSelectedKnob = isModuleExpanded && (control.id == parametersState.selectedRackMacroId[moduleId])
-                    // Group-mode FX slot knobs drop their "META" caption -- the slot cell below names the effect.
-                    val showKnobLabel = !(descriptor.hasExtraHeader && isFxBankId && col in 1..3 && !isFocusMode)
+                    // Every FX knob that has a cell below it (group-mode slots 1-3, or every knob
+                    // in focus mode) drops its caption -- the cell already names the effect/parameter.
+                    val showKnobLabel = !(descriptor.hasExtraHeader && isFxBankId && (isFocusMode || col in 1..3))
                     val captionBlockH = captionH * ((if (showKnobLabel) 1 else 0) + (if (isModuleExpanded) 1 else 0))
                     val learnBtnSpaceH = if (isModuleExpanded) 24f else 0f
                     val cardPadX = 6f
@@ -727,6 +727,14 @@ class PerformanceMatrixPanel {
                     val isMidiLearning = midiPath != null &&
                         parametersState.midiLearnTarget.let { it is MidiLearnTarget.MacroTarget && it.macroPath == midiPath }
 
+                    // Focus mode's parameter knobs show their value inside the knob face -- the
+                    // cell below shows the parameter's name instead (see FxParamCell).
+                    val fxValueOverlay = focusedParamEntry?.value?.let { param ->
+                        val v = param.baseValue
+                        if (v == v.toInt().toFloat() && kotlin.math.abs(v) < 1000f) v.toInt().toString()
+                        else String.format(java.util.Locale.ROOT, "%.2f", v)
+                    }
+
                     MacroKnobWidget.draw(
                         session = session,
                         id = "perf_${tabIdx}_r${rowIdx}_c${col}",
@@ -741,6 +749,7 @@ class PerformanceMatrixPanel {
                         bindings = control.bindings,
                         showValue = isModuleExpanded,
                         showLabel = showKnobLabel,
+                        valueOverlay = fxValueOverlay,
                         onSelect = {
                             if (isModuleExpanded) {
                                 parametersState.selectedRackMacroId[moduleId] = control.id
@@ -835,16 +844,12 @@ class PerformanceMatrixPanel {
                                 )
                             } else if (col in 1..3) {
                                 // Knobs 2-4 (Cols 1-3) = Focused slot's parameters -> draw FxParamCell
-                                val slot = chain.slots.getOrNull(focusedSlot)
-                                val paramEntries = slot?.parameters?.entries?.toList() ?: emptyList()
-                                val paramIdx = chain.focusParamPage * 3 + (col - 1)
-                                val entry = paramEntries.getOrNull(paramIdx)
                                 FxParamCell.draw(
                                     session = session,
                                     bankId = row.bankId,
                                     knobIndex = col + 1,
-                                    paramName = entry?.key,
-                                    param = entry?.value,
+                                    paramName = focusedParamEntry?.key,
+                                    param = focusedParamEntry?.value,
                                     x = cellX,
                                     y = cellY,
                                     w = cellW,

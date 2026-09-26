@@ -1086,6 +1086,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#proposals-rfcs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposals &amp; RFCs
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1577,6 +1588,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#proposals-rfcs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposals &amp; RFCs
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1760,6 +1782,7 @@
 <li><code>Output</code>: <code>Secondary Output Window</code>, <code>Record Master Output (REC)</code>, <code>Web Broadcast</code>, and <code>Export Video (Offline Studio)...</code>.</li>
 <li><code>Help</code>: <code>Documentation</code> and <code>Show Tooltips</code> toggle.</li>
 <li>Contextual HUD status badges for recording (<code>REC mm:ss</code>, dropped frames counter) and Web Broadcast (<code>LIVE</code>, <code>CONNECTING</code>, <code>LIVE ERR</code>) appear dynamically on the title bar only when active.</li>
+<li><strong>CSD &amp; Telemetry HUD Layout</strong>: In frameless mode, Client-Side Decorations (Minimize, Maximize/Restore, Close) are anchored directly to the title bar's right boundary (<code>contentRightX</code>), ensuring the Close button is flush with the right boundary across all display resolutions. Monospace telemetry stats (CPU%, 4-beat phase meter, BPM, DSP execution latency, FPS, Frame Time, and FBO live count/estimated VRAM) render in a unified right-side block positioned cleanly to the left of the window controls.</li>
 </ul>
 <h3 id="8-librarypanelkt-browseractiontoolbarkt">8. <code>LibraryPanel.kt</code> &amp; <code>BrowserActionToolbar.kt</code></h3>
 <ul>
@@ -1850,6 +1873,11 @@
 <hr />
 <h2 id="imgui-versioning-future-modernization">ImGui Versioning &amp; Future Modernization</h2>
 <p>Liquid LSD is on <code>io.github.spair:imgui-java:1.92.7.1</code> (Dear ImGui 1.92, universal macOS arm64/x64 native support). For the migration history from 1.86.12 and the ARM64 native build story, refer to <a href="../imgui_upgrade_guide/">ImGui Upgrade &amp; Modernization Guide</a>.</p>
+<hr />
+<h2 id="proposals-rfcs">Proposals &amp; RFCs</h2>
+<ul>
+<li><a href="../knob_drag_cursor_locking_rfc/">Relative Knob Dragging &amp; Cursor Locking / Restoration RFC</a>: Architectural analysis, platform pitfalls (Wayland pointer constraints vs X11/macOS), and edge cases for cursor locking during knob adjustments.</li>
+</ul>
 
 
 

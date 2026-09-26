@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Fix: Custom Title Bar Window Controls Right Alignment & Missing FBO Telemetry (`MenuBar.kt`, `WindowLayoutSafetyTest.kt`)
+- In frameless mode, the custom window control decorations (Minimize, Maximize/Restore, Close) previously sat with a ~146px gap before the right edge of the screen. This gap occurred because `FBO: N (XMB)` GPU memory telemetry text was included in the right-side total width reservation (`fullLabel`), but its rendering call was inadvertently omitted, and the window control buttons width calculation had an additional 8px discrepancy.
+- Custom window control buttons are now pinned directly to `contentRightX`, guaranteeing that the Close button is flush with the right boundary of the title bar across all resolutions.
+- Rendered the missing `FBO: %d (%.0fMB)` GPU framebuffer allocation and VRAM estimate in the menu bar telemetry HUD with contextual hover tooltips, and added unit test `testTitleBarDecorationsRightAlignment` in `WindowLayoutSafetyTest.kt`.
+
 ### Clean Two-Row Macro Panel Bank Selector Tabs (`MacroPanel.kt`)
 - Column 3's MACROS panel bank selector buttons previously crammed all 12 tabs (`A`, `B`, `BG`, `PV`, `TRANS`, `MST`, `A FX`, `B FX`, `BG FX`, `PV FX`, `MST FX`, `GLB`) into a single row, causing severe button squishing and text truncation. The tabs are now arranged into two cleanly aligned rows using a 7-column layout:
   - **Row 1**: `A`, `B`, `BG`, `PV`, `MSTR`, `TRAN`, `GLBL`

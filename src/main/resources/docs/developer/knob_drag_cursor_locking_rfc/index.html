@@ -1,0 +1,1587 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>RFC: Relative Knob Dragging & Cursor Locking / Restoration - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#rfc-relative-knob-dragging-cursor-locking-restoration" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              RFC: Relative Knob Dragging &amp; Cursor Locking / Restoration
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & Performance Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modular_video_rack_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-problem-statement-motivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Problem Statement &amp; Motivation
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1. Problem Statement &amp; Motivation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#current-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Current Behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#proposed-improvement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposed Improvement
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-architectural-approaches" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Architectural Approaches
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-comprehensive-pitfalls-edge-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Comprehensive Pitfalls &amp; Edge Cases
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Comprehensive Pitfalls &amp; Edge Cases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#a-linux-wayland-security-restrictions-glfw_platform_wayland" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A. Linux Wayland Security Restrictions (GLFW_PLATFORM_WAYLAND)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#b-the-screen-edge-deadzone-monitor-boundary-clipping" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B. The Screen Edge Deadzone (Monitor Boundary Clipping)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#c-click-vs-drag-disambiguation-micro-movement-jitter" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C. Click vs. Drag Disambiguation (Micro-Movement Jitter)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#d-imgui-event-pipeline-1-frame-teleport-hover-bleed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        D. ImGui Event Pipeline &amp; 1-Frame Teleport / Hover Bleed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#e-absolute-pointing-hardware-touchscreens-stylus-digitizers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E. Absolute Pointing Hardware (Touchscreens, Stylus / Digitizers)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#f-window-focus-loss-emergency-recovery-invariants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F. Window Focus Loss &amp; Emergency Recovery Invariants
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#g-high-dpi-and-content-scaling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        G. High-DPI and Content Scaling
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-user-preference-ergonomics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. User Preference &amp; Ergonomics
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-recommended-implementation-plan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. Recommended Implementation Plan
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="rfc-relative-knob-dragging-cursor-locking-restoration">RFC: Relative Knob Dragging &amp; Cursor Locking / Restoration</h1>
+<ul>
+<li><strong>Status</strong>: Proposed / Under Review</li>
+<li><strong>Author</strong>: Antigravity Pair Programming</li>
+<li><strong>Target Subsystem</strong>: <code>ui/MacroKnobWidget.kt</code>, <code>ui/UIManager.kt</code>, <code>Main.kt</code>, <code>ui/PreferencesPanel.kt</code></li>
+<li><strong>Related Docs</strong>: <a href="../ui/">UI Architecture</a>, <a href="../../ARCHITECTURE.md">ARCHITECTURE.md</a>, <a href="../../DECISIONS.md">DECISIONS.md</a></li>
+</ul>
+<hr />
+<h2 id="1-problem-statement-motivation">1. Problem Statement &amp; Motivation</h2>
+<p>In Liquid LSD, real-time performance often involves serial adjustments across banks of rotary controls—such as tweaking an FX Chain's Super Knob, adjusting individual slot Dry/Wet and parameters in Focus Mode, or sweeping Macro Bank controls.</p>
+<h3 id="current-behavior">Current Behavior</h3>
+<p>Currently, <a href="../../src/main/kotlin/llm/slop/liquidlsd/ui/MacroKnobWidget.kt"><code>MacroKnobWidget</code></a> uses standard Dear ImGui coordinate tracking (<code>io.mousePos.x - dragStartX</code>, <code>io.mousePos.y - dragStartY</code>). As the performer drags:
+1. The mouse cursor visually traverses across the screen (often 100–200 pixels vertically or diagonally).
+2. When the performer releases the mouse button, the cursor remains at the displaced screen position—often inches away from the knob that was just manipulated.
+3. To adjust the next knob in the row or rack, the performer must physically locate and reposition the cursor back across the screen.</p>
+<h3 id="proposed-improvement">Proposed Improvement</h3>
+<p>When click-dragging a knob:
+1. Hide the cursor on drag initiation.
+2. Keep the cursor confined or anchored at its initial press position while accumulating relative motion deltas.
+3. On mouse release, show the cursor at the exact coordinates where the click originated.</p>
+<p>This behavior mimics industry-standard DAW and pro-audio tools (Ableton Live, Bitwig Studio, Native Instruments, Serum, FabFilter, Blender) and drastically streamlines live manipulation by preserving hand-eye alignment and spatial muscle memory.</p>
+<hr />
+<h2 id="2-architectural-approaches">2. Architectural Approaches</h2>
+<p>Three technical patterns exist for implementing this behavior in a GLFW + Dear ImGui application:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Approach</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: left;">Advantages</th>
+<th style="text-align: left;">Drawbacks &amp; Platform Risks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>1. Naive Hide + Warp on Release</strong></td>
+<td style="text-align: left;">Hide cursor via <code>ImGui.setMouseCursor(None)</code> or <code>glfwSetInputMode(GLFW_CURSOR_HIDDEN)</code>. Let the OS cursor wander invisibly. On mouse up, call <code>glfwSetCursorPos(window, startX, startY)</code>.</td>
+<td style="text-align: left;">Minimal code changes; retains existing absolute <code>io.mousePos</code> math.</td>
+<td style="text-align: left;"><strong>Fails completely on Linux Wayland</strong>; cursor freezes at screen edges; can wander onto other monitors.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>2. Pointer Lock / Relative Mode (<code>GLFW_CURSOR_DISABLED</code>)</strong></td>
+<td style="text-align: left;">On drag start, switch GLFW window cursor mode to <code>GLFW_CURSOR_DISABLED</code>. The OS locks the cursor, hides it, and emits raw relative motion deltas. On mouse release, revert to <code>GLFW_CURSOR_NORMAL</code>.</td>
+<td style="text-align: left;"><strong>Fully supported on Wayland</strong> via <code>zwp_pointer_constraints_v1</code>; infinite sweep (never hits monitor edge); standard across games and 3D tools.</td>
+<td style="text-align: left;">Requires reading raw deltas (<code>io.mouseDelta</code> or GLFW cursor callback) rather than absolute positions; requires decoupling ImGui cursor state during grab.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>3. Continuous Per-Frame Warping</strong></td>
+<td style="text-align: left;">Hide cursor and warp pointer back to <code>(startX, startY)</code> every frame during drag, accumulating frame-by-frame deltas.</td>
+<td style="text-align: left;">Infinite sweep on X11 and Windows.</td>
+<td style="text-align: left;"><strong>Fails on Wayland</strong>; causes mouse acceleration jitter and high event overhead on macOS.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="3-comprehensive-pitfalls-edge-cases">3. Comprehensive Pitfalls &amp; Edge Cases</h2>
+<h3 id="a-linux-wayland-security-restrictions-glfw_platform_wayland">A. Linux Wayland Security Restrictions (<code>GLFW_PLATFORM_WAYLAND</code>)</h3>
+<ul>
+<li><strong>The Constraint</strong>: Liquid LSD runs natively on Linux under Wayland (see Wayland guards in <code>Main.kt</code> and <code>WindowFrameController.kt</code>). Under the Wayland security model, <strong>compositors strictly prohibit client applications from warping the global pointer</strong> in normal mode. Calling <code>glfwSetCursorPos()</code> in <code>GLFW_CURSOR_NORMAL</code> or <code>GLFW_CURSOR_HIDDEN</code> generates <code>GLFW_FEATURE_UNAVAILABLE</code> or is silently dropped.</li>
+<li><strong>Impact</strong>: If Approach 1 or 3 is used on Wayland, the cursor will disappear during drag, but upon mouse release it will <strong>fail to jump back</strong>, reappearing inches away or on another display.</li>
+<li><strong>Resolution</strong>: Wayland compositors (GNOME Mutter, KDE KWin, Sway, Hyprland) only support pointer confinement/locking via the <code>zwp_pointer_constraints_v1</code> and <code>wp_relative_pointer_manager_v1</code> protocols. GLFW binds these protocols <strong>strictly through <code>GLFW_CURSOR_DISABLED</code></strong>. Therefore, relative mode (Approach 2) is the only robust cross-platform path that functions correctly on Wayland.</li>
+</ul>
+<h3 id="b-the-screen-edge-deadzone-monitor-boundary-clipping">B. The Screen Edge Deadzone (Monitor Boundary Clipping)</h3>
+<ul>
+<li><strong>The Constraint</strong>: If the cursor is merely hidden but allowed to travel across the desktop (Approach 1):</li>
+<li>Upper racks, FX rows, and menu-adjacent knobs are positioned near the top of the window.</li>
+<li>Dragging upward to increase a knob value causes the invisible OS pointer to hit the top of the physical monitor (<code>Y = 0</code>) after 20–40 pixels.</li>
+<li>Once the OS cursor hits the display edge, the operating system stops generating delta events.</li>
+<li><strong>Failure mode</strong>: The performer continues moving their physical mouse, but the knob freezes partway through its sweep.</li>
+<li><strong>Multi-Monitor Bleed</strong>: An unconfined invisible cursor can travel onto an external display (e.g. Liquid LSD's secondary projection window <code>secondaryWindow</code>) or click into an OS dock or taskbar.</li>
+</ul>
+<h3 id="c-click-vs-drag-disambiguation-micro-movement-jitter">C. Click vs. Drag Disambiguation (Micro-Movement Jitter)</h3>
+<ul>
+<li><strong>The Constraint</strong>: <code>MacroKnobWidget</code> multiplexes multiple mouse interactions:</li>
+<li><strong>Left Click</strong>: Select knob / inspect bindings (<code>onSelect()</code>).</li>
+<li><strong>Right Click</strong>: Toggle MIDI / modulation learn (<code>onToggleLearn()</code>).</li>
+<li><strong>Middle Click</strong>: Reset knob to default value (<code>0.5</code>).</li>
+<li><strong>Scroll Wheel</strong>: Fine increment adjustment.</li>
+<li><strong>Edge Case</strong>: Physical human fingers rarely execute a pure 0-pixel click. On mouse-down, 1–2 pixels of micro-motion almost always register. If the cursor is hidden immediately on <code>isActivated</code>, an ordinary click to select or inspect will cause the cursor to vanish for 40–80 ms and reappear—producing an annoying visual blink.</li>
+<li><strong>Resolution</strong>: Implement a <strong>drag deadzone</strong> (e.g. 3–4 pixels of Euclidean travel, matching <code>ImGui.isMouseDragging(0, 3.0f)</code>). The cursor remains visible as an arrow during mouse-down, and only switches to hidden/relative mode once intentional drag displacement is established.</li>
+</ul>
+<h3 id="d-imgui-event-pipeline-1-frame-teleport-hover-bleed">D. ImGui Event Pipeline &amp; 1-Frame Teleport / Hover Bleed</h3>
+<ul>
+<li><strong>The Constraint</strong>: Dear ImGui processes window and cursor inputs during <code>glfwPollEvents()</code> at the start of each frame.</li>
+<li><strong>Hover Bleed</strong>: If the cursor travels invisibly across the UI, any UI elements underneath its path must not trigger hover styling, cursor changes, or tooltips. (ImGui's active widget system suppresses most click routing, but complex custom hitboxes or child windows may still test mouse coordinates).</li>
+<li><strong>Release Timing</strong>: When the cursor is restored to origin on mouse release, the position change is applied to GLFW. ImGui updates <code>io.mousePos</code> on the subsequent event poll. Any logic must ensure the mouse release is registered at the origin or after the position has stabilized, preventing a 1-frame "teleport" artifact where an unrelated widget briefly evaluates hover.</li>
+</ul>
+<h3 id="e-absolute-pointing-hardware-touchscreens-stylus-digitizers">E. Absolute Pointing Hardware (Touchscreens, Stylus / Digitizers)</h3>
+<ul>
+<li><strong>The Constraint</strong>: Liquid LSD supports touch hardware (see <code>TouchConsoleController.kt</code>). Performance rigs frequently use Microsoft Surface devices, touch monitors, or Wacom pens.</li>
+<li><strong>Failure Mode</strong>: Absolute digitizers enforce hardware-level coordinates on every touch contact. Attempting to lock or warp cursor coordinates on a touchscreen causes severe stuttering, driver fighting, or wild coordinate jumps.</li>
+<li><strong>Resolution</strong>: Relative cursor locking must be bypassable when touch events are detected, and must have a clear preference toggle in user settings.</li>
+</ul>
+<h3 id="f-window-focus-loss-emergency-recovery-invariants">F. Window Focus Loss &amp; Emergency Recovery Invariants</h3>
+<ul>
+<li><strong>The Constraint</strong>: If the performer is dragging a knob and:</li>
+<li>An OS notification steals focus,</li>
+<li>The user presses <code>Alt+Tab</code> or the <code>Super</code> key,</li>
+<li>A modal prompt opens (e.g. unsaved preset dialog),</li>
+<li>The application is minimized or secondary window interacts...</li>
+<li><strong>Critical Safety Invariant</strong>: The application must <strong>never leave the user with a trapped or invisible cursor</strong> on their desktop.</li>
+<li>In <code>Main.kt</code> (<code>glfwSetWindowFocusCallback</code>), if the window loses focus while a knob drag is active, <code>GLFW_CURSOR_NORMAL</code> and <code>ImGuiMouseCursor.Arrow</code> must be forcefully restored immediately.</li>
+<li><code>MacroKnobWidget</code> must cleanly abort any relative drag state if <code>!io.mouseDown[0]</code> or if focus is lost.</li>
+<li><strong>Widget-side state is global, not per-instance</strong>: <code>MacroKnobWidget</code> is a singleton <code>object</code>, and its drag-tracking fields (<code>activeKnobId</code>, <code>dragStartX</code>, <code>dragStartY</code>, <code>dragStartValue</code>) are module-level, not per-widget. This is safe today because only one knob can be dragged at a time, but it means the focus-loss recovery hook must explicitly reset <code>activeKnobId = null</code> (and the lock-related fields added below) in addition to restoring GLFW cursor mode — resetting only the OS cursor state and leaving a stale <code>activeKnobId</code> behind would let the next frame's <code>isActive &amp;&amp; activeKnobId == id</code> check misfire.</li>
+</ul>
+<h3 id="g-high-dpi-and-content-scaling">G. High-DPI and Content Scaling</h3>
+<ul>
+<li><strong>The Constraint</strong>: GLFW cursor coordinates (<code>glfwGetCursorPos</code>, <code>glfwSetCursorPos</code>) operate in virtual screen coordinates (window points), whereas framebuffer dimensions and physical display pixels may be scaled (e.g. 2x on macOS Retina, 1.25x/1.5x on Wayland fractional scaling).</li>
+<li>Any stored coordinates must strictly remain in window points matching <code>ImGui.getIO().mousePos</code>.</li>
+</ul>
+<hr />
+<h2 id="4-user-preference-ergonomics">4. User Preference &amp; Ergonomics</h2>
+<ul>
+<li><strong>Visual Feedback</strong>: When the cursor is hidden, the knob must clearly convey that it is being manipulated. <code>MacroKnobWidget</code> already rotates the indicator needle and illuminates an active border ring (Electric Cyan / accent tint).</li>
+<li><strong>Configurable Setting</strong>: In <code>PreferencesPanel</code> (under <code>Category.GENERAL</code>):
+  <code>[x] Lock cursor to knob while dragging (default: true)</code>
+  This provides an immediate escape hatch for users with touch devices, specialized trackballs, or personal preferences for standard cursor movement.</li>
+</ul>
+<hr />
+<h2 id="5-recommended-implementation-plan">5. Recommended Implementation Plan</h2>
+<p>This plan follows the codebase's existing patterns rather than introducing new ones: preferences persist through <code>UITheme.settings</code> + <code>AppPreferencesStore</code>, and actual GLFW calls are issued only from the code that already owns the window handle (<code>UIManager</code>/<code>Main.kt</code>), not from the stateless <code>MacroKnobWidget</code> object.</p>
+<ol>
+<li><strong>Preference Configuration</strong> (follows the existing <code>autoVjDirtyBehavior</code>/<code>theme</code> precedent, not a new config class):</li>
+<li>Add <code>lockCursorOnKnobDrag: Boolean = true</code> as a field on the <code>UITheme.settings</code> data class (<code>UITheme.kt</code>), with a <code>var</code> get/set wrapper on <code>UITheme</code> that goes through <code>settings.copy(...)</code>, mirroring <code>UITheme.autoVjDirtyBehavior</code> (<code>UITheme.kt:134-136</code>).</li>
+<li>Load/save it as a <code>Properties</code> entry in <code>AppPreferencesStore.kt</code>, mirroring the existing <code>autoVjDirtyBehavior</code>/<code>theme</code> read (<code>AppPreferencesStore.kt:215-235</code>) and write (<code>AppPreferencesStore.kt:333</code>) blocks.</li>
+<li>
+<p>Add a checkbox in <code>PreferencesPanel.kt</code>'s <code>drawGeneralPreferences</code> (<code>PreferencesPanel.kt:194</code>).</p>
+</li>
+<li>
+<p><strong>Lock-request state in <code>MacroKnobWidget</code></strong> (widget signals intent; it does not touch GLFW itself):</p>
+</li>
+<li>Add module-level fields alongside the existing <code>dragStartX</code>/<code>dragStartY</code>/<code>dragStartValue</code> (<code>MacroKnobWidget.kt:76-78</code>): <code>isDragLocked: Boolean</code>, <code>lockOriginX: Float</code>, <code>lockOriginY: Float</code>.</li>
+<li>On <code>isActivated</code> (mouse press): record <code>dragStartX</code>/<code>dragStartY</code>/<code>dragStartValue</code> as today (<code>MacroKnobWidget.kt:131-135</code>); do <strong>not</strong> engage the lock yet.</li>
+<li>Each frame while <code>isActive</code>: compute Euclidean travel from <code>(dragStartX, dragStartY)</code>. Once it exceeds a ~3px deadzone (matching <code>ImGui.isMouseDragging(0, 3.0f)</code>) and <code>UITheme.lockCursorOnKnobDrag</code> is enabled, set <code>isDragLocked = true</code> and latch <code>lockOriginX/Y</code> to the current <code>io.mousePos</code>. This satisfies the click-vs-drag disambiguation in Section 3.C without any GLFW call happening inside the widget.</li>
+<li>
+<p>Expose the request as a tiny public surface <code>MacroKnobWidget</code> already needs: e.g. <code>val wantsCursorLock: Boolean</code> (true only on the frame lock should engage) and <code>val wantsCursorRelease: Boolean</code> (true on the frame the drag ends while <code>isDragLocked</code>), plus <code>lockOriginX</code>/<code>lockOriginY</code> getters. Continue driving <code>applyDragDelta</code> off <code>io.mousePos - dragStartX/Y</code> exactly as today — under <code>GLFW_CURSOR_DISABLED</code> these deltas keep accumulating correctly since GLFW/ImGui still updates a virtual <code>mousePos</code>.</p>
+</li>
+<li>
+<p><strong>Pointer grab execution in <code>UIManager</code></strong> (this is the piece the original plan omitted — only <code>UIManager</code>/<code>Main.kt</code> hold <code>windowHandle</code>):</p>
+</li>
+<li>After the frame's widget drawing (where <code>UIManager.render</code> already calls into <code>PerformanceMatrixPanel</code> → <code>MacroKnobWidget.draw</code>), check <code>MacroKnobWidget.wantsCursorLock</code> / <code>wantsCursorRelease</code> and act on <code>windowHandle</code> (<code>UIManager.kt:32</code>):<ul>
+<li>On <code>wantsCursorLock</code>: <code>glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED)</code>.</li>
+<li>On <code>wantsCursorRelease</code>, <strong>in this exact order</strong> (see Section 3.A — reversing this order breaks the Wayland restore):</li>
+<li>While still <code>GLFW_CURSOR_DISABLED</code>, call <code>glfwSetCursorPos(windowHandle, lockOriginX, lockOriginY)</code>. This sets GLFW's virtual position / the Wayland pointer-constraint position hint while the constraint is still active.</li>
+<li>Only then call <code>glfwSetInputMode(windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL)</code> to release the lock. Calling <code>glfwSetCursorPos</code> <em>after</em> switching to <code>GLFW_CURSOR_NORMAL</code> is silently dropped on Wayland (Section 3.A) and must not be relied on.</li>
+</ul>
+</li>
+<li>
+<p>Bypass the whole lock path when a touch/stylus contact is active (Section 3.E) — gate on the same touch-detection signal <code>TouchConsoleController</code> uses, if applicable to the pointer driving this drag.</p>
+</li>
+<li>
+<p><strong>Global Focus &amp; Interruption Safety</strong>:</p>
+</li>
+<li>
+<p>Hook into the existing <code>glfwSetWindowFocusCallback</code> in <code>Main.kt</code> (<code>Main.kt:308</code>) to force <code>GLFW_CURSOR_NORMAL</code> immediately if focus leaves the application while locked, and additionally call a new <code>MacroKnobWidget.abortDrag()</code> to clear <code>activeKnobId</code>/<code>isDragLocked</code> (see Section 3.F note above) — resetting cursor mode alone is not sufficient.</p>
+</li>
+<li>
+<p><strong>Docs</strong>:</p>
+</li>
+<li>Per this project's release convention, land <code>docs/developer/ui.md</code>, <code>docs/release_notes.md</code>/<code>RELEASE_NOTES.md</code>, and the relevant <code>PreferencesPanel</code> tooltip alongside the code change, plus a <code>DECISIONS.md</code> entry — not deferred to a follow-up.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -177,6 +177,7 @@ val depthCbs = cvModulatorSlider(
   - `Output`: `Secondary Output Window`, `Record Master Output (REC)`, `Web Broadcast`, and `Export Video (Offline Studio)...`.
   - `Help`: `Documentation` and `Show Tooltips` toggle.
   - Contextual HUD status badges for recording (`REC mm:ss`, dropped frames counter) and Web Broadcast (`LIVE`, `CONNECTING`, `LIVE ERR`) appear dynamically on the title bar only when active.
+  - **CSD & Telemetry HUD Layout**: In frameless mode, Client-Side Decorations (Minimize, Maximize/Restore, Close) are anchored directly to the title bar's right boundary (`contentRightX`), ensuring the Close button is flush with the right boundary across all display resolutions. Monospace telemetry stats (CPU%, 4-beat phase meter, BPM, DSP execution latency, FPS, Frame Time, and FBO live count/estimated VRAM) render in a unified right-side block positioned cleanly to the left of the window controls.
 
 ### 8. `LibraryPanel.kt` & `BrowserActionToolbar.kt`
 - **2x2 Grouped Container Layout**: The 4 Library columns are logically grouped into two side-by-side rounded container boxes (`LibraryGroup1` and `LibraryGroup2`) with 6 px rounding (`ChildRounding`), subtle dark background tinting (`ChildBg`), and border frames (`Border`).
@@ -244,3 +245,10 @@ Because ImGui uses JNI wrappers around native C++ pointers, strict memory rules 
 ## ImGui Versioning & Future Modernization
 
 Liquid LSD is on `io.github.spair:imgui-java:1.92.7.1` (Dear ImGui 1.92, universal macOS arm64/x64 native support). For the migration history from 1.86.12 and the ARM64 native build story, refer to [ImGui Upgrade & Modernization Guide](imgui_upgrade_guide.md).
+
+---
+
+## Proposals & RFCs
+
+- [Relative Knob Dragging & Cursor Locking / Restoration RFC](knob_drag_cursor_locking_rfc.md): Architectural analysis, platform pitfalls (Wayland pointer constraints vs X11/macOS), and edge cases for cursor locking during knob adjustments.
+

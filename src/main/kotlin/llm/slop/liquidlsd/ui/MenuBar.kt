@@ -346,24 +346,28 @@ class MenuBar(
         val dspText = if (showAudio) "DSP: %.2fms  ".format(audioLatency) else if (isAudioDisabled) "DSP: OFF  " else "DSP: --  "
         val fpsText = "%3.0f fps  ".format(fps)
         val ftText  = "%3.0f ms  ".format(ftMs)
-        val fboText = "FBO: %d (%.0fMB)  ".format(PerformanceStats.fboCount, PerformanceStats.fboMemoryMB)
+        val fboText = "FBO: %d (%.0fMB)".format(PerformanceStats.fboCount, PerformanceStats.fboMemoryMB)
         val fullLabel = cpuText + bpmText + dspText + fpsText + ftText + fboText
 
         val isFrameless = session.uiTheme.framelessWindow && windowFrameController != null
         val btnW = 24f
         val btnH = ImGui.getFrameHeight()
-        val windowBtnsW = if (isFrameless) (btnW * 3f) + (4f * 2f) + 12f else 0f
+        val btnGap = 2f
+        val statsToBtnsGap = if (isFrameless) 10f else 0f
+        val windowBtnsW = if (isFrameless) (btnW * 3f) + (btnGap * 2f) else 0f
 
         session.uiTheme.withFont(UITheme.FontLevel.CODE) {
             val textH = ImGui.getTextLineHeight()
-            val barWidth  = ImGui.getContentRegionAvailX()
+            val contentRightX = ImGui.getCursorPosX() + ImGui.getContentRegionAvailX()
             val textWidth = ImGui.calcTextSize(fullLabel).x
-            val totalRightW = textWidth + dotsTotalW + windowBtnsW
-            val startX    = ImGui.getCursorPosX() + barWidth - totalRightW
+            val statsTotalW = textWidth + dotsTotalW
+            val btnsStartX = contentRightX - windowBtnsW
+            val statsEndX = if (isFrameless) btnsStartX - statsToBtnsGap else contentRightX
+            val statsStartX = (statsEndX - statsTotalW).coerceAtLeast(ImGui.getCursorPosX())
 
             // ── Top Bar Center Drag Region ───────────────────────────────────────────
             val currentX = ImGui.getCursorPosX()
-            val dragWidth = (startX - currentX - 8f).coerceAtLeast(0f)
+            val dragWidth = (statsStartX - currentX - 8f).coerceAtLeast(0f)
             if (dragWidth > 5f) {
                 ImGui.invisibleButton("##header_drag_region", dragWidth, btnH)
                 val isHovered = ImGui.isItemHovered()
@@ -372,8 +376,8 @@ class MenuBar(
                 ImGui.sameLine(0f, 8f)
             }
 
-            if (startX > ImGui.getCursorPosX()) {
-                ImGui.setCursorPosX(startX)
+            if (statsStartX > ImGui.getCursorPosX()) {
+                ImGui.setCursorPosX(statsStartX)
             }
 
             // ── CPU % ──────────────────────────────────────────────────────────────
@@ -535,10 +539,21 @@ class MenuBar(
             }
             ImGui.textUnformatted(ftText)
             ImGui.popStyleColor()
+            ImGui.sameLine(0f, 0f)
+
+            // ── FBO & GPU Memory ──────────────────────────────────────────────────
+            ImGui.pushStyleColor(ImGuiCol.Text, 0.70f, 0.75f, 0.80f, 1.0f)
+            ImGui.textUnformatted(fboText)
+            ImGui.popStyleColor()
+            if (ImGui.isItemHovered()) {
+                val fboTip = "GPU Framebuffers (FBO)\nLive FBO count: ${PerformanceStats.fboCount}\nEstimated VRAM: %.1f MB".format(PerformanceStats.fboMemoryMB)
+                showTooltip(fboTip, "fbo_badge_tooltip".hashCode())
+            }
 
             // ── Custom Window Controls (Frameless CSD Mode) ──────────────────────────
             if (windowFrameController != null && session.uiTheme.framelessWindow) {
-                ImGui.sameLine(0f, 8f)
+                ImGui.sameLine(0f, 0f)
+                ImGui.setCursorPosX(btnsStartX)
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                     // Minimize
                     if (ImGui.button("${Icons.MINUS}##win_min", btnW, btnH)) {
@@ -546,7 +561,7 @@ class MenuBar(
                     }
                     itemTooltip("Minimize")
 
-                    ImGui.sameLine(0f, 2f)
+                    ImGui.sameLine(0f, btnGap)
 
                     // Maximize / Restore
                     val isMax = windowFrameController.isMaximized()
@@ -556,7 +571,7 @@ class MenuBar(
                     }
                     itemTooltip(if (isMax) "Restore" else "Maximize")
 
-                    ImGui.sameLine(0f, 2f)
+                    ImGui.sameLine(0f, btnGap)
 
                     // Close
                     ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.85f, 0.15f, 0.15f, 1.0f)

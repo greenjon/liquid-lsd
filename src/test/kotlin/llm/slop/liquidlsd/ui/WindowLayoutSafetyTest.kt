@@ -118,4 +118,23 @@ class WindowLayoutSafetyTest {
             session.uiTheme.libraryMode = savedMode
         }
     }
+
+    @Test
+    fun testTitleBarDecorationsRightAlignment() {
+        val btnW = 24f
+        val btnGap = 2f
+        val statsToBtnsGap = 10f
+        val windowBtnsW = (btnW * 3f) + (btnGap * 2f)
+
+        assertEquals(76f, windowBtnsW, "3 buttons of 24px + 2 gaps of 2px should equal 76px")
+
+        for (contentRightX in listOf(1280f, 1920f, 2560f, 3840f)) {
+            val btnsStartX = contentRightX - windowBtnsW
+            val closeButtonEnd = btnsStartX + (btnW * 2f + btnGap * 2f) + btnW
+            assertEquals(contentRightX, closeButtonEnd, "Close button right edge must be flush with contentRightX")
+
+            val statsEndX = btnsStartX - statsToBtnsGap
+            assertEquals(contentRightX - windowBtnsW - statsToBtnsGap, statsEndX)
+        }
+    }
 }

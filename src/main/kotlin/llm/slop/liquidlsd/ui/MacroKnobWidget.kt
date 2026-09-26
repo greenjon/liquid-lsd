@@ -102,6 +102,8 @@ object MacroKnobWidget {
         showValue: Boolean = false,
         /** False omits the caption under the knob (e.g. an FX row's slot knobs, whose slot cell below names them); the value line then takes its place. */
         showLabel: Boolean = true,
+        /** When set, drawn as a small readout inside the knob face (e.g. an FX parameter's current value) instead of a line below -- keeps the below-knob cell free for the parameter's name. */
+        valueOverlay: String? = null,
         onSelect: () -> Unit = {},
         onToggleLearn: () -> Unit = {},
         onChanged: (Float) -> Unit
@@ -219,6 +221,14 @@ object MacroKnobWidget {
         if (borderCol != null) {
             val thickness = if (isLearning || isSelected) 2.5f else 2f
             dl.addCircle(cx, cy, radius + 1.5f, borderCol, 32, thickness)
+        }
+
+        if (valueOverlay != null) {
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                val sz = ImGui.calcTextSize(valueOverlay)
+                val ovCol = ImGui.colorConvertFloat4ToU32(0.92f, 0.94f, 0.97f, 0.95f)
+                dl.addText(cx - sz.x / 2f, cy + radius * 0.42f - sz.y / 2f, ovCol, valueOverlay)
+            }
         }
 
         // Label centered below the knob face.

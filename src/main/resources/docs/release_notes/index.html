@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fix-custom-title-bar-window-controls-right-alignment-missing-fbo-telemetry-menubarkt-windowlayoutsafetytestkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Custom Title Bar Window Controls Right Alignment &amp; Missing FBO Telemetry (MenuBar.kt, WindowLayoutSafetyTest.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#clean-two-row-macro-panel-bank-selector-tabs-macropanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4228,6 +4239,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fix-custom-title-bar-window-controls-right-alignment-missing-fbo-telemetry-menubarkt-windowlayoutsafetytestkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fix: Custom Title Bar Window Controls Right Alignment &amp; Missing FBO Telemetry (MenuBar.kt, WindowLayoutSafetyTest.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#clean-two-row-macro-panel-bank-selector-tabs-macropanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7223,6 +7245,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fix-custom-title-bar-window-controls-right-alignment-missing-fbo-telemetry-menubarkt-windowlayoutsafetytestkt">Fix: Custom Title Bar Window Controls Right Alignment &amp; Missing FBO Telemetry (<code>MenuBar.kt</code>, <code>WindowLayoutSafetyTest.kt</code>)</h3>
+<ul>
+<li>In frameless mode, the custom window control decorations (Minimize, Maximize/Restore, Close) previously sat with a ~146px gap before the right edge of the screen. This gap occurred because <code>FBO: N (XMB)</code> GPU memory telemetry text was included in the right-side total width reservation (<code>fullLabel</code>), but its rendering call was inadvertently omitted, and the window control buttons width calculation had an additional 8px discrepancy.</li>
+<li>Custom window control buttons are now pinned directly to <code>contentRightX</code>, guaranteeing that the Close button is flush with the right boundary of the title bar across all resolutions.</li>
+<li>Rendered the missing <code>FBO: %d (%.0fMB)</code> GPU framebuffer allocation and VRAM estimate in the menu bar telemetry HUD with contextual hover tooltips, and added unit test <code>testTitleBarDecorationsRightAlignment</code> in <code>WindowLayoutSafetyTest.kt</code>.</li>
+</ul>
 <h3 id="clean-two-row-macro-panel-bank-selector-tabs-macropanelkt">Clean Two-Row Macro Panel Bank Selector Tabs (<code>MacroPanel.kt</code>)</h3>
 <ul>
 <li>Column 3's MACROS panel bank selector buttons previously crammed all 12 tabs (<code>A</code>, <code>B</code>, <code>BG</code>, <code>PV</code>, <code>TRANS</code>, <code>MST</code>, <code>A FX</code>, <code>B FX</code>, <code>BG FX</code>, <code>PV FX</code>, <code>MST FX</code>, <code>GLB</code>) into a single row, causing severe button squishing and text truncation. The tabs are now arranged into two cleanly aligned rows using a 7-column layout:</li>
