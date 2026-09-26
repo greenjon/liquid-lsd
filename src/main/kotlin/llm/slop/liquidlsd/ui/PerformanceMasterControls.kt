@@ -11,11 +11,11 @@ import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
 import java.io.File
 
 /**
- * Master row controls:
- * - Header bar: Deck A/B snap badges, crossfader track, AUTO/FADING button, and the
- *   crossfader-time (Fade Speed) badge.
- * - Left of the knobs, two stacked rows mirroring the deck rows: [MIX] knob-assign pill over
- *   [FX] knob-assign pill + Master FX chain header.
+ * Master row controls, laid out like a deck row (the MASTER title badge is drawn by
+ * [PerformanceMatrixPanel]):
+ * - Left of the knobs, two stacked lines: [MIX] knob-assign pill + the crossfader line (Deck A/B
+ *   snap badges, crossfader track, AUTO/FADING button, fade-time badge), over the [FX]
+ *   knob-assign pill + Master FX chain header.
  * - Right of the knobs: Master FX bypass.
  */
 internal object PerformanceMasterControls {
@@ -50,6 +50,8 @@ internal object PerformanceMasterControls {
         ImGui.popStyleColor()
         itemTooltip("Assign the Master row's knobs to the mix: Deck A / Deck B / Deck BG alphas and master level.")
 
+        drawCrossfader(session, mixer, parametersState, startX + modeBtnW + gap, row1Y, ctrlH, rowW - modeBtnW - gap)
+
         ImGui.setCursorScreenPos(startX, row2Y)
         ImGui.beginGroup()
         ImGui.pushStyleColor(ImGuiCol.Button, if (isFx) ImGui.colorConvertFloat4ToU32(0.80f, 0.40f, 0.15f, 1f) else inactiveCol)
@@ -75,36 +77,24 @@ internal object PerformanceMasterControls {
         ImGui.endGroup()
     }
 
-    fun draw(
+    /**
+     * The crossfader line, fitted into [width] starting at [startX]: [A] snap badge, crossfader
+     * track, [B] snap badge, AUTO/FADING, fade-time badge. The track takes whatever width is left.
+     */
+    private fun drawCrossfader(
         session: SessionContext,
         mixer: Mixer,
         parametersState: ParametersState,
-        ctx: PerformanceUiContext,
-        boxX1: Float,
-        boxX2: Float,
+        startX: Float,
         headerY: Float,
-        headerH: Float
+        headerH: Float,
+        width: Float
     ) {
-        val pad = 6f
         val gap = 4f
-        val availW = (boxX2 - boxX1 - pad * 2f).coerceAtLeast(1f)
         val dl = ImGui.getWindowDrawList()
         val centerY = headerY + headerH * 0.5f
 
-        // Inline Title Badge [ MASTER ]
-        val titleText = if (ctx.isMasterRowFx(parametersState)) "MASTER (FX)" else "MASTER"
-        val titleW = 80f
-        val colorMaster = PerformanceColors.COLOR_MASTER
-        val titleCol = ImGui.colorConvertFloat4ToU32(colorMaster[0], colorMaster[1], colorMaster[2], 0.90f)
-        val titleBgCol = ImGui.colorConvertFloat4ToU32(colorMaster[0], colorMaster[1], colorMaster[2], 0.12f)
-        dl.addRectFilled(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleBgCol, 4f)
-        dl.addRect(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleCol, 4f, 0, 1.5f)
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            val textSz = ImGui.calcTextSize(titleText)
-            dl.addText(boxX1 + pad + (titleW - textSz.x) * 0.5f, headerY + (headerH - textSz.y) * 0.5f, titleCol, titleText)
-        }
-
-        val badgeAX = boxX1 + pad + titleW + gap
+        val badgeAX = startX
         val badgeAY = headerY
         ImGui.setCursorScreenPos(badgeAX, headerY)
         ImGui.beginGroup()
@@ -163,19 +153,14 @@ internal object PerformanceMasterControls {
 
         ImGui.sameLine(0f, gap)
 
-        // Calculate layout allocations for right-side elements first:
-        // Auto-Fade button
-        val autoBtnW = (availW * 0.10f).coerceIn(48f, 75f)
-
-        // Fade Speed widget (drag/badge)
-        val speedBtnW = (availW * 0.08f).coerceIn(44f, 65f)
-
-        // Deck B badge width
+        // Fixed-width elements right of the track: [B] badge, AUTO, fade-time badge.
+        val autoBtnW = 52f
+        val speedBtnW = 44f
         val badgeBW = badgeW
 
-        // Crossfader slider takes whatever remaining width is available between Deck A and Deck B
+        // Crossfader track takes whatever width is left between the [A] and [B] badges.
         val fixedRightW = gap + badgeBW + gap * 2f + autoBtnW + gap + speedBtnW
-        val crossfaderW = (availW - titleW - gap - badgeW - fixedRightW).coerceAtLeast(50f)
+        val crossfaderW = (width - badgeW - gap - fixedRightW).coerceAtLeast(40f)
 
         // 2. Crossfader Slider Track
         val lineStartX = badgeAX + badgeW + gap

@@ -172,7 +172,7 @@ for the FX Rack view that exposes these.
       - Exiting Focus Mode restores Knob 1 to `SUPER` and Knobs 2–4 to `META`.
   - **Performance Matrix Tabs**:
     - Deck FX chains are on each deck row (`[SRC|FX]`); Master FX is on the Master row (`[MIX|FX]`) on the **MASTER** tab.
-    - The **FX WET/DRY** row in the **MASTER** tab features an `[ FX SENDS ]` badge.
+    - The **FX WET/DRY** row in the **MASTER** tab has a `WET/DRY` title badge and a **Resync** button.
     - The **Transitions** row includes a `[DICES]` die button to randomize transition parameters with undo support.
 
 ---

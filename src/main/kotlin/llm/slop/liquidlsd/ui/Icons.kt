@@ -30,6 +30,7 @@ object Icons {
     const val CHEVRON_DOWN  = "\u25bc" // black down-pointing triangle
     const val SEARCH      = "\ue151" // search
     const val REFRESH     = "\ue145" // refresh-cw
+    const val ROTATE_CCW  = "\ue148" // rotate-ccw (reset to default)
     const val PLUS        = "\ue13d" // plus
     const val MINUS       = "\ue11c" // minus
     const val PLAY        = "\ue13c" // play

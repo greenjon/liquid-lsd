@@ -9,48 +9,33 @@ import llm.slop.liquidlsd.rendering.Mixer
 import java.io.File
 
 /**
- * Drawn in place of the plain group title for the Transitions row (MASTER & FX). Provides a
- * transition picker popup button displaying the active transition with modified indicator
- * (`*`), and TransitionQueue prev/status/next navigation.
+ * Transitions row (MASTER tab) line left of the knobs, beside the TRANS title badge drawn by
+ * [PerformanceMatrixPanel]: a transition picker button showing the active transition with a
+ * modified indicator (`*`), TransitionQueue prev/status/next navigation, and the randomize die.
  */
 internal object PerformanceTransitionsControls {
 
     fun draw(
         session: SessionContext,
         mixer: Mixer,
-        boxX1: Float,
-        boxX2: Float,
+        startX: Float,
         headerY: Float,
-        headerH: Float
+        headerH: Float,
+        width: Float
     ) {
-        val pad = 6f
         val gap = 4f
-        val availW = (boxX2 - boxX1 - pad * 2f).coerceAtLeast(1f)
         val dl = ImGui.getWindowDrawList()
 
-        // Inline Title Badge [ TRANSITIONS ]
-        val titleText = "TRANSITIONS"
-        val titleW = 95f
-        val colorTrans = PerformanceColors.COLOR_TRANS
-        val titleCol = ImGui.colorConvertFloat4ToU32(colorTrans[0], colorTrans[1], colorTrans[2], 0.90f)
-        val titleBgCol = ImGui.colorConvertFloat4ToU32(colorTrans[0], colorTrans[1], colorTrans[2], 0.12f)
-        dl.addRectFilled(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleBgCol, 4f)
-        dl.addRect(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleCol, 4f, 0, 1.5f)
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            val textSz = ImGui.calcTextSize(titleText)
-            dl.addText(boxX1 + pad + (titleW - textSz.x) * 0.5f, headerY + (headerH - textSz.y) * 0.5f, titleCol, titleText)
-        }
-
-        ImGui.setCursorScreenPos(boxX1 + pad + titleW + gap, headerY)
+        ImGui.setCursorScreenPos(startX, headerY)
         ImGui.beginGroup()
 
-        val transAvailW = (availW - titleW - gap).coerceAtLeast(1f)
-        // Transition Queue nav: Prev (24px) + Count (~45px) + Next (24px) + gaps
+        // Transition Queue nav: Prev + Count + Next, plus the die when randomization is on.
         val navBtnW = (headerH * 0.9f).coerceIn(22f, 28f)
         val qTextW = 46f
+        val diceW = if (session.uiTheme.randomizationEnabled) gap + navBtnW else 0f
 
-        // Transition Picker button
-        val transBtnW = (transAvailW * 0.35f).coerceIn(130f, 300f)
+        // Transition Picker button takes the rest of the line.
+        val transBtnW = (width - gap - navBtnW - 2f - qTextW - 2f - navBtnW - diceW).coerceAtLeast(60f)
 
         // 1. Transition Picker Button [ Settings Icon + Name * ]
         val transName = mixer.transitionFilter?.displayName ?: "Default Blend"

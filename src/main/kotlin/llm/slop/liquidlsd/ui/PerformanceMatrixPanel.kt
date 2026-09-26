@@ -65,7 +65,7 @@ class PerformanceMatrixPanel {
         val accent: FloatArray,
         val groupLabel: String,
         val subLabel: String? = null,
-        /** True for rows that draw side controls (deck/Master mode pills, chain header, bypass) or a Master/Transitions header bar. */
+        /** True for rows that draw a title badge and side controls (deck/Master mode pills, chain header, bypass, Transitions/Clock lines). */
         val hasExtraHeader: Boolean = false,
         /** When false, the modular rack disclosure chevron and collapse controls are omitted. */
         val canExpand: Boolean = true
@@ -73,13 +73,11 @@ class PerformanceMatrixPanel {
 
     // Canonical deck colors matching BrowserDeckButtons are in PerformanceColors.
     companion object {
-        private const val EXTRA_HEADER_H = 24f
-
         /**
-         * Floor on grid row height. Set to 75px so all four rows are visible simultaneously
-         * even when the Library dock is at half height (~38-44px knobs).
+         * Floor on grid row height: low enough that all four rows fit above a HALF Library in a
+         * 1280x720 display's ~688px window (~74px per row; knobs ~40-45px). Below this the grid scrolls.
          */
-        private const val MIN_ROW_H = 75f
+        private const val MIN_ROW_H = 68f
 
         private val TAB_ROWS: Array<List<RowDescriptor>> = arrayOf(
             // DECKS: one row per deck (knobs 0–3 each: Deck A, Deck B, Deck BG, Deck PV)
@@ -89,10 +87,10 @@ class PerformanceMatrixPanel {
                 RowDescriptor(MacroEngine.DECK_BG, 0, PerformanceColors.COLOR_DECK_BG, "DECK BG", hasExtraHeader = true),
                 RowDescriptor(MacroEngine.DECK_PV, 0, PerformanceColors.COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
             ),
-            // MASTER: Master (crossfader header bar + [MIX|FX] knob-assign: composite alphas or
-            // Master FX chain), Transitions (transition picker + queue nav), FX Wet/Dry (per-deck
-            // FX sends), Clock (tempo header bar + Global macro knobs) -- 1 row of 4 knobs each;
-            // Master/Transitions/Clock also reserve header space (see drawMatrix).
+            // MASTER: Master ([MIX] + crossfader over [FX] + chain header; knobs on composite
+            // alphas or the Master FX chain), Transitions (transition picker + queue nav), FX
+            // Wet/Dry (per-deck FX sends), Clock (tempo controls + Global macro knobs) -- 1 row of
+            // 4 knobs each, laid out like deck rows (title badge + two control lines, see drawMatrix).
             listOf(
                 RowDescriptor(MacroEngine.MASTER,    0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true),
                 RowDescriptor(MacroEngine.TRANS,     0, PerformanceColors.COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true),
@@ -108,31 +106,41 @@ class PerformanceMatrixPanel {
 
     // -- Draw ---------------------------------------------------------------------
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState, deckPresetController: DeckPresetController? = null) {
+    /**
+     * @param hiddenLibraryH height the HALF Library would take if it were on screen -- non-zero only
+     *   in Edit view, where the Library is hidden. Rows are sized from the Perform-view height
+     *   (window height minus this), so a row keeps the same knob size and control positions when it
+     *   opens in Deep Edit.
+     */
+    fun draw(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        parametersState: ParametersState,
+        deckPresetController: DeckPresetController? = null,
+        hiddenLibraryH: Float = 0f
+    ) {
         ctx.deckPresetController = deckPresetController
         val theme = session.uiTheme
 
         deepEditBay.beginFrame(parametersState, mixer)
         drawTabStrip(session, theme, mixer, parametersState)
-        ImGui.spacing()
+        ImGui.dummy(0f, 2f)
 
-        // Modular Rack: when any module is above Tier 1, every *other* (still-collapsed) row is
-        // hidden from the grid entirely -- rather than reserving a fixed-height band for all 16
-        // knobs regardless of disclosure state -- so the expanded row(s) and the Deep-Edit
-        // region below get the screen space instead. If a Learn-pinned/expanded module doesn't
-        // have a row on the *current* tab (e.g. it was expanded on a different tab), the grid falls
-        // back to showing every row on this tab rather than rendering nothing.
+        // Modular Rack: when a module is in Deep Edit, every other row is hidden from the grid and
+        // the Deep-Edit bay below gets the rest of the height. The open row is exactly as tall as
+        // in Perform view plus [expandedExtraH] for the value readout and Learn button under its knobs.
         val tabIdx = theme.performanceMatrixTab.coerceIn(0, Tab.entries.size - 1)
-        val visibleRowCount = visibleRowsForTab(tabIdx, parametersState).size
+        val visibleRows = visibleRowsForTab(tabIdx, parametersState)
         val anyExpanded = parametersState.anyRackModuleExpanded()
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
-        val compactRowH = 175f
-        val gridH = if (!anyExpanded) availH else (compactRowH * visibleRowCount).coerceIn(160f, (availH - 160f).coerceAtLeast(160f))
+        val layoutRows = substitutedRowsForTab(layoutTabIdx(tabIdx, visibleRows, anyExpanded), parametersState)
+        val baseRowH = ((availH - hiddenLibraryH).coerceAtLeast(4f) / layoutRows.size).coerceAtLeast(MIN_ROW_H)
+        val gridH = if (!anyExpanded) availH else (visibleRows.size * (baseRowH + expandedExtraH(session))).coerceAtMost((availH - 160f).coerceAtLeast(160f))
         val bayH = (availH - gridH - (if (anyExpanded) ImGui.getStyle().getItemSpacingY() else 0f)).coerceAtLeast(0f)
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)
         if (ImGui.beginChild("##rack_grid_area", 0f, gridH, false)) {
-            drawMatrix(session, theme, mixer, parametersState)
+            drawMatrix(session, theme, mixer, parametersState, visibleRows, layoutRows, baseRowH)
         }
         ImGui.endChild()
         ImGui.popStyleVar()
@@ -140,6 +148,18 @@ class PerformanceMatrixPanel {
         if (anyExpanded) {
             deepEditBay.drawRackBay(session, mixer, parametersState, bayH)
         }
+    }
+
+    /** Extra row height while a row is in Deep Edit: the second caption line (value readout) plus the Learn button. */
+    private fun expandedExtraH(session: llm.slop.liquidlsd.SessionContext): Float =
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() } + 24f
+
+    /** The tab whose Perform-view rows size the grid: the current tab, or in Edit view the tab that holds the open row. */
+    private fun layoutTabIdx(tabIdx: Int, visibleRows: List<RowDescriptor>, anyExpanded: Boolean): Int {
+        if (!anyExpanded) return tabIdx
+        val moduleId = visibleRows.firstOrNull()?.let { ctx.canonicalModuleId(it.bankId) } ?: return tabIdx
+        val idx = TAB_ROWS.indexOfFirst { rows -> rows.any { ctx.canonicalModuleId(it.bankId) == moduleId } }
+        return if (idx >= 0) idx else tabIdx
     }
 
     /** Resolves the active 4-knob row descriptor for a specific module id based on the current subtab/mode. */
@@ -302,13 +322,7 @@ class PerformanceMatrixPanel {
     /** A run of consecutive [RowDescriptor]s sharing one bank/group label, enclosed in one box. */
     private data class RowGroup(val startRow: Int, val rowCount: Int, val descriptor: RowDescriptor)
 
-    private fun drawMatrix(session: llm.slop.liquidlsd.SessionContext, theme: UITheme, mixer: Mixer, parametersState: ParametersState) {
-        val tabIdx = theme.performanceMatrixTab.coerceIn(0, Tab.entries.size - 1)
-        // Deck/Master rows' bankIds follow their [SRC|FX] / [MIX|FX] toggles, substituted in
-        // visibleRowsForTab rather than baked into the static table. Also hides every
-        // still-collapsed row while some module is expanded -- see the comment on visibleRowsForTab.
-        val rows = visibleRowsForTab(tabIdx, parametersState)
-
+    private fun groupRows(rows: List<RowDescriptor>): List<RowGroup> {
         val groups = mutableListOf<RowGroup>()
         var gi = 0
         while (gi < rows.size) {
@@ -317,17 +331,39 @@ class PerformanceMatrixPanel {
             groups.add(RowGroup(gi, gj - gi, rows[gi]))
             gi = gj
         }
+        return groups
+    }
+
+    /**
+     * Draws [rows] (the visible rows -- see [visibleRowsForTab]). Knob size and control positions
+     * come from [layoutRows] at [rowH] -- the Perform-view layout of the tab -- so a row opened in
+     * Deep Edit looks identical except for [expandedExtraH] added below its knobs.
+     */
+    private fun drawMatrix(
+        session: llm.slop.liquidlsd.SessionContext,
+        theme: UITheme,
+        mixer: Mixer,
+        parametersState: ParametersState,
+        rows: List<RowDescriptor>,
+        layoutRows: List<RowDescriptor>,
+        rowH: Float
+    ) {
+        val tabIdx = theme.performanceMatrixTab.coerceIn(0, Tab.entries.size - 1)
+        val groups = groupRows(rows)
 
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(4f)
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
 
         val gridW = availW
-        val anyExpanded = parametersState.anyRackModuleExpanded()
-        // Rows share the available height down to MIN_ROW_H; past that the grid overflows and the
-        // ##rack_grid_area child scrolls (see the cursor advance at the end of this function).
-        val fitsWithoutOverflow = !anyExpanded && (availH / rows.size.toFloat()) >= MIN_ROW_H
-        val rowH = if (fitsWithoutOverflow) (availH / rows.size.toFloat()) else (availH / rows.size.toFloat()).coerceAtLeast(MIN_ROW_H)
-        val gridTotalH = if (fitsWithoutOverflow) availH else (rowH * rows.size)
+        val extraH = expandedExtraH(session)
+        fun isRowExpanded(row: RowDescriptor): Boolean =
+            parametersState.disclosureFor(ctx.canonicalModuleId(row.bankId)) != ParametersState.DisclosureLevel.COLLAPSED ||
+                parametersState.disclosureFor(row.bankId) != ParametersState.DisclosureLevel.COLLAPSED
+        // Rows past MIN_ROW_H overflow and the ##rack_grid_area child scrolls (see the cursor
+        // advance at the end of this function).
+        val rowTopOffsets = FloatArray(rows.size + 1)
+        for (i in rows.indices) rowTopOffsets[i + 1] = rowTopOffsets[i] + rowH + (if (isRowExpanded(rows[i])) extraH else 0f)
+        val gridTotalH = rowTopOffsets[rows.size]
 
         val gridStartX = ImGui.getCursorScreenPosX()
         val gridStartY = ImGui.getCursorScreenPosY()
@@ -342,45 +378,46 @@ class PerformanceMatrixPanel {
         ImGui.setCursorScreenPos(gridStartX, gridStartY)
 
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
-        val groupLabelH = session.uiTheme.withFont(UITheme.FontLevel.H1) { ImGui.getTextLineHeight() }
         val subLabelH = captionH
         val boxMarginY = 2f   // gap between a group's box and the next group's / grid's edge
-        val boxLabelGap = 2f  // gap above and below the group title, inside the box
         val subLabelGap = 2f  // gap between a sub-label and the knobs below it
         val boxPad = 2.5f     // inner padding between the box border and the knobs it contains
         val pad = 6f
 
-        val hasDeckRows = rows.any {
+        val hasDeckRows = layoutRows.any {
             it.bankId in listOf(MacroEngine.DECK_A, MacroEngine.DECK_B, MacroEngine.DECK_BG, MacroEngine.DECK_PV) ||
             it.groupLabel.startsWith("DECK")
         }
-        val hasFxRow = rows.any { it.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS }
-        val hasMasterRow = rows.any { it.bankId == MacroEngine.MASTER || it.bankId == MacroEngine.MASTER_FX }
+        val hasFxRow = layoutRows.any { it.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS }
 
         val isCompactRow = rowH < 95f
         val ctrlH = if (isCompactRow) 21f else PerformanceColors.CTRL_H
         val stackGap = if (isCompactRow) 2f else 3f
 
+        // Every row: a title badge spanning both control lines, then two stacked control lines,
+        // then the knobs. Deck badges are a large A/B/BG/PV; MASTER-tab badges are wider for words.
         val deckBadgeW = 54f
         val deckComboW = (gridW * 0.11f).coerceIn(85f, 140f)
         val deckRow1W = 28f + 4f + 70f + 4f + deckComboW + 4f + 22f + (if (session.uiTheme.randomizationEnabled) 4f + 22f else 0f) + 4f + 78f
         val deckLeftW = deckBadgeW + 6f + deckRow1W
         val deckRightW = 56f
-        // Master row: [MIX] pill over [FX] pill + chain header; FX Wet/Dry: badge + Resync.
-        val masterLeftW = deckRow1W
+        // MASTER tab: Master ([MIX] + crossfader over [FX] + chain header), Transitions (picker +
+        // queue nav), FX Wet/Dry (badge only), Clock (source/BPM/beat over tempo actions).
+        val masterTabBadgeW = 90f
+        val masterRowW = maxOf(deckRow1W, (gridW * 0.38f).coerceAtMost(420f))
+        val masterTabLeftW = masterTabBadgeW + 6f + masterRowW
         val masterRightW = 56f
-        val fxSendsW = 86f
-        val hasFxSendsRow = rows.any { it.bankId == MacroEngine.FX_SENDS }
+        val isMasterTabLayout = layoutRows.any {
+            it.bankId in listOf(MacroEngine.MASTER, MacroEngine.MASTER_FX, MacroEngine.TRANS, MacroEngine.FX_SENDS, MacroEngine.GLOBAL)
+        }
 
         val maxLeftW = maxOf(
             if (hasDeckRows) deckLeftW else 0f,
-            if (hasMasterRow) masterLeftW else 0f,
-            if (hasFxSendsRow) fxSendsW else 0f
+            if (isMasterTabLayout) masterTabLeftW else 0f
         )
         val maxRightW = maxOf(
             if (hasDeckRows) deckRightW else 0f,
-            if (hasMasterRow) masterRightW else 0f,
-            if (hasFxSendsRow) masterRightW else 0f
+            if (isMasterTabLayout) masterRightW else 0f
         )
 
         val leftBoundary = gridStartX + pad + (if (maxLeftW > 0f) maxLeftW + 12f else 0f)
@@ -391,20 +428,24 @@ class PerformanceMatrixPanel {
         val diamByWidth = (maxColW - 12f).coerceAtLeast(8f)
 
         var diamByHeight = Float.MAX_VALUE
-        // Knob label: 3f gap above caption + captionH + 4f margin below. If expanded, 2 lines + 24f button + 4f margin.
-        val baseTextBelowH = if (anyExpanded) captionH * 2f + 24f + 7f else captionH + 7f
-        for (group in groups) {
+        // Knob label: 3f gap above caption + captionH + 4f margin below. An expanded row's second
+        // line and Learn button sit in the extra [extraH] below, so they don't shrink the knob.
+        val baseTextBelowH = captionH + 7f
+        // FX rows: in group mode the slot knobs have no caption (the slot cell under them names
+        // the effect), so only SUPER's caption and the slot cells share the line; in focus mode
+        // every knob keeps its caption (parameter name) with the value cell below it.
+        fun fxTextBelowH(bankId: String): Float =
+            if (ctx.resolveFxChain(mixer, bankId).isFocused()) baseTextBelowH + FxSlotCell.HEIGHT + 4f
+            else 7f + maxOf(captionH, FxSlotCell.HEIGHT)
+        for (group in groupRows(layoutRows)) {
             val groupH = group.rowCount * rowH
-            val hasSubLabel = rows[group.startRow].subLabel != null
-            val groupBankId = rows[group.startRow].bankId
+            val hasSubLabel = layoutRows[group.startRow].subLabel != null
+            val groupBankId = layoutRows[group.startRow].bankId
             val isFx = groupBankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS
-            val hasTopBar = rows[group.startRow].hasExtraHeader &&
-                groupBankId in listOf(MacroEngine.MASTER, MacroEngine.MASTER_FX, MacroEngine.TRANS, MacroEngine.GLOBAL)
-            val extraHeaderH = if (hasTopBar) EXTRA_HEADER_H + boxLabelGap else 0f
-            val contentH = groupH - boxMarginY * 2f - boxPad * 2f - extraHeaderH
+            val contentH = groupH - boxMarginY * 2f - boxPad * 2f
             val subRowH = contentH / group.rowCount
             val knobAreaH = if (hasSubLabel) subRowH - subLabelH - subLabelGap else subRowH
-            val rowTextBelowH = if (isFx) baseTextBelowH + FxSlotCell.HEIGHT + 4f else baseTextBelowH
+            val rowTextBelowH = if (isFx) fxTextBelowH(groupBankId) else baseTextBelowH
             diamByHeight = minOf(diamByHeight, (knobAreaH - rowTextBelowH).coerceAtLeast(8f))
         }
         val diameter = minOf(diamByWidth, diamByHeight).coerceIn(20f, 100f)
@@ -422,8 +463,11 @@ class PerformanceMatrixPanel {
 
         for (group in groups) {
             val descriptor = group.descriptor
-            val groupTopY = gridStartY + group.startRow * rowH
-            val groupBottomY = gridStartY + (group.startRow + group.rowCount) * rowH
+            val groupTopY = gridStartY + rowTopOffsets[group.startRow]
+            val groupBottomY = gridStartY + rowTopOffsets[group.startRow + group.rowCount]
+            // Controls and knobs are laid out in the Perform-view band; an expanded row's extra
+            // height only extends the box downward.
+            val layoutBottomY = groupTopY + group.rowCount * rowH
 
             val boxTopY = groupTopY + boxMarginY
             val boxBottomY = groupBottomY - boxMarginY
@@ -506,9 +550,9 @@ class PerformanceMatrixPanel {
                         ImGui.endDragDropTarget()
                     }
                 } else if (isMasterRow) {
-                    ImGui.setCursorScreenPos(boxX1 + pad, boxTopY + boxPad)
+                    ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
-                    ImGui.invisibleButton("##perf_master_drop_${group.startRow}", 80f, EXTRA_HEADER_H)
+                    ImGui.invisibleButton("##perf_master_drop_${group.startRow}", (pad + masterTabBadgeW + 4f).coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
                     applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
@@ -542,19 +586,8 @@ class PerformanceMatrixPanel {
                 )
             }
 
-            val contentTopY = if (descriptor.hasExtraHeader && isMasterRow) {
-                PerformanceMasterControls.draw(session, mixer, parametersState, ctx, boxX1, boxX2, boxTopY + boxPad, EXTRA_HEADER_H)
-                boxTopY + boxPad + EXTRA_HEADER_H + boxLabelGap
-            } else if (descriptor.hasExtraHeader && isTransRow) {
-                PerformanceTransitionsControls.draw(session, mixer, boxX1, boxX2, boxTopY + boxPad, EXTRA_HEADER_H)
-                boxTopY + boxPad + EXTRA_HEADER_H + boxLabelGap
-            } else if (descriptor.hasExtraHeader && isClockRow) {
-                PerformanceClockControls.draw(session, boxX1, boxX2, boxTopY + boxPad, EXTRA_HEADER_H)
-                boxTopY + boxPad + EXTRA_HEADER_H + boxLabelGap
-            } else {
-                boxTopY + boxPad
-            }
-            val contentBottomY = boxBottomY - boxPad
+            val contentTopY = boxTopY + boxPad
+            val contentBottomY = layoutBottomY - boxMarginY - boxPad
             val subRowH = (contentBottomY - contentTopY) / group.rowCount
 
             for (k in 0 until group.rowCount) {
@@ -576,7 +609,7 @@ class PerformanceMatrixPanel {
                 }
 
                 val isFxBankId = row.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS
-                val effectiveTextBelowH = if (isFxBankId) baseTextBelowH + FxSlotCell.HEIGHT + 4f else baseTextBelowH
+                val effectiveTextBelowH = if (isFxBankId) fxTextBelowH(row.bankId) else baseTextBelowH
                 val totalWidgetH = diameter + effectiveTextBelowH
                 val availKnobH = subBottomY - knobAreaTopY
                 val knobTopY = (knobAreaTopY + (availKnobH - totalWidgetH) * 0.5f)
@@ -589,9 +622,22 @@ class PerformanceMatrixPanel {
                 val ctrlY = (subTopY + subBottomY - ctrlH) * 0.5f
 
                 if (descriptor.hasExtraHeader) {
+                    val badgeX = boxX1 + pad
+                    val masterTabStartX = badgeX + masterTabBadgeW + 6f
                     if (isMasterRow) {
-                        PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, boxX1 + pad, row1Y, row2YFinal, ctrlH, maxLeftW)
+                        drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "MASTER", UITheme.FontLevel.H2)
+                        PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW)
                         PerformanceMasterControls.drawBypassControls(mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
+                    } else if (isTransRow) {
+                        drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "TRANS", UITheme.FontLevel.H2)
+                        PerformanceTransitionsControls.draw(session, mixer, masterTabStartX, ctrlY, ctrlH, masterRowW)
+                    } else if (isClockRow) {
+                        drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "CLOCK", UITheme.FontLevel.H2)
+                        PerformanceClockControls.draw(session, masterTabStartX, row1Y, row2YFinal, ctrlH)
+                    } else if (descriptor.bankId == MacroEngine.FX_SENDS) {
+                        drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "WET/DRY", UITheme.FontLevel.H2,
+                            tooltip = "Per-deck FX send levels (each deck's FX chain wet/dry).")
+                        PerformanceFxSendsControls.drawRightControls(boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                     } else if (isDeckRow) {
                         val deckTag = when {
                             isDeckA -> "A"
@@ -607,47 +653,12 @@ class PerformanceMatrixPanel {
                         }
                         val deckLabel = "Deck $deckTag"
 
-                        // Deck Title Badge [ DECK / A ]
-                        val badgeX = boxX1 + pad
-                        val badgeY = row1Y
-                        val badgeW = deckBadgeW
-                        val badgeH = totalCtrlH
-                        val badgeBg = ImGui.colorConvertFloat4ToU32(descriptor.accent[0], descriptor.accent[1], descriptor.accent[2], 0.12f)
-                        val badgeBorder = ImGui.colorConvertFloat4ToU32(descriptor.accent[0], descriptor.accent[1], descriptor.accent[2], 0.85f)
-                        dl.addRectFilled(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, badgeBg, 4f)
-                        dl.addRect(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, badgeBorder, 4f, 0, 1.5f)
+                        // Deck title badge: just the deck letter(s) -- the [SRC]/[FX] pills beside it show the mode.
+                        drawTitleBadge(session, badgeX, row1Y, deckBadgeW, totalCtrlH, descriptor.accent, deckTag, UITheme.FontLevel.H1)
 
-                        val isDeckFx = ctx.deckRowMode[deckTag] == "FX" || parametersState.getActiveDeckSubTabByTag(deckTag) == "FX"
-                        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                            val topText = "DECK"
-                            val sz1 = ImGui.calcTextSize(topText)
-                            dl.addText(badgeX + (badgeW - sz1.x) * 0.5f, badgeY + 2f, badgeBorder, topText)
-                        }
-                        session.uiTheme.withFont(UITheme.FontLevel.H3) {
-                            val botText = if (isDeckFx) "$deckTag FX" else deckTag
-                            val sz2 = ImGui.calcTextSize(botText)
-                            dl.addText(badgeX + (badgeW - sz2.x) * 0.5f, badgeY + badgeH - sz2.y - 2f, badgeBorder, botText)
-                        }
-
-                        val leftStartX = badgeX + badgeW + 6f
+                        val leftStartX = badgeX + deckBadgeW + 6f
                         deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W)
                         deckControls.drawDeckRowRightControls(session, mixer, deckLabel, targetDeck, boxX2 - pad - deckRightW, row2YFinal, ctrlH)
-                    } else if (descriptor.bankId == MacroEngine.FX_SENDS) {
-                        val badgeW = 76f
-                        val badgeH = ctrlH
-                        val badgeY = (subTopY + subBottomY - badgeH) * 0.5f
-                        val badgeX = boxX1 + pad
-                        val badgeBg = ImGui.colorConvertFloat4ToU32(descriptor.accent[0], descriptor.accent[1], descriptor.accent[2], 0.12f)
-                        val badgeBorder = ImGui.colorConvertFloat4ToU32(descriptor.accent[0], descriptor.accent[1], descriptor.accent[2], 0.85f)
-                        dl.addRectFilled(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, badgeBg, 4f)
-                        dl.addRect(badgeX, badgeY, badgeX + badgeW, badgeY + badgeH, badgeBorder, 4f, 0, 1.5f)
-                        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                            val text = "FX WET/DRY"
-                            val sz = ImGui.calcTextSize(text)
-                            dl.addText(badgeX + (badgeW - sz.x) * 0.5f, badgeY + (badgeH - sz.y) * 0.5f, badgeBorder, text)
-                        }
-                        PerformanceFxSendsControls.drawLeftControls(session, badgeX + badgeW + 6f, badgeY, ctrlH)
-                        PerformanceFxSendsControls.drawRightControls(boxX2 - pad - masterRightW, badgeY, ctrlH, masterRightW)
                     }
                 }
 
@@ -696,12 +707,16 @@ class PerformanceMatrixPanel {
                     }
 
                     val isSelectedKnob = isModuleExpanded && (control.id == parametersState.selectedRackMacroId[moduleId])
+                    // Group-mode FX slot knobs drop their "META" caption -- the slot cell below names the effect.
+                    val showKnobLabel = !(descriptor.hasExtraHeader && isFxBankId && col in 1..3 && rowChain?.isFocused() != true)
+                    val captionBlockH = captionH * ((if (showKnobLabel) 1 else 0) + (if (isModuleExpanded) 1 else 0))
+                    val learnBtnSpaceH = if (isModuleExpanded) 24f else 0f
                     val cardPadX = 6f
                     val cardPadY = 4f
                     val cardX1 = cellCenterX - knobColW / 2f + cardPadX
                     val cardX2 = cellCenterX + knobColW / 2f - cardPadX
                     val cardY1 = knobTopY - cardPadY
-                    val cardY2 = knobTopY + diameter + (if (isModuleExpanded) captionH * 2f + 24f else captionH) + cardPadY
+                    val cardY2 = knobTopY + diameter + captionBlockH + learnBtnSpaceH + cardPadY
 
                     if (isSelectedKnob) {
                         val selFill = ImGui.colorConvertFloat4ToU32(0.10f, 0.65f, 0.92f, 0.14f)
@@ -729,6 +744,7 @@ class PerformanceMatrixPanel {
                         accentColor = row.accent,
                         bindings = control.bindings,
                         showValue = isModuleExpanded,
+                        showLabel = showKnobLabel,
                         onSelect = {
                             if (isModuleExpanded) {
                                 parametersState.selectedRackMacroId[moduleId] = control.id
@@ -755,7 +771,7 @@ class PerformanceMatrixPanel {
                         val btnW = 54f
                         val btnH = 18f
                         val btnX = cellCenterX - btnW / 2f
-                        val btnY = knobTopY + diameter + 3f + captionH * 2f + 3f
+                        val btnY = knobTopY + diameter + 3f + captionBlockH + 3f
                         val isParamLearning = MacroLearnState.isControlLearning(control.id)
                         ImGui.setCursorScreenPos(btnX, btnY)
                         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
@@ -799,7 +815,7 @@ class PerformanceMatrixPanel {
                         val chainLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(row.bankId) ?: "FX"
                         val cellW = (knobColW - 6f).coerceAtLeast(40f)
                         val cellX = cellCenterX - cellW / 2f
-                        val cellY = knobTopY + diameter + 3f + (if (isModuleExpanded) captionH * 2f + 24f else captionH) + 4f
+                        val cellY = knobTopY + diameter + 3f + captionBlockH + learnBtnSpaceH + 4f
 
                         if (chain.isFocused()) {
                             val focusedSlot = chain.focusedSlot!!
@@ -868,6 +884,42 @@ class PerformanceMatrixPanel {
         if (gridTotalH > availH + 0.5f) {
             ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), gridStartY + gridTotalH)
             ImGui.dummy(0f, 0f)
+        }
+    }
+
+    /**
+     * Row title badge: accent-tinted box spanning both control lines, with [text] centered in
+     * [level]'s font. The font is pushed at its explicit size -- on this draw-list addText path
+     * UITheme.withFont passes 0f ("native baked size"), which renders H1/H2 no bigger than H3.
+     */
+    private fun drawTitleBadge(
+        session: llm.slop.liquidlsd.SessionContext,
+        x: Float,
+        y: Float,
+        w: Float,
+        h: Float,
+        accent: FloatArray,
+        text: String,
+        level: UITheme.FontLevel,
+        /** Only for rows without a drop target over the badge (it would otherwise cover that button). */
+        tooltip: String? = null
+    ) {
+        val dl = ImGui.getWindowDrawList()
+        val bg = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.12f)
+        val border = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.85f)
+        dl.addRectFilled(x, y, x + w, y + h, bg, 4f)
+        dl.addRect(x, y, x + w, y + h, border, 4f, 0, 1.5f)
+        val font = session.uiTheme.fontFor(level)
+        val size = if (level == UITheme.FontLevel.H1) UITheme.FONT_H1 else UITheme.FONT_H2
+        val pushable = font != null && font.ptr != 0L
+        if (pushable) ImGui.pushFont(font, size)
+        val sz = ImGui.calcTextSize(text)
+        dl.addText(x + (w - sz.x) * 0.5f, y + (h - sz.y) * 0.5f, border, text)
+        if (pushable) ImGui.popFont()
+        if (tooltip != null) {
+            ImGui.setCursorScreenPos(x, y)
+            ImGui.invisibleButton("##title_badge_$text", w.coerceAtLeast(1f), h.coerceAtLeast(1f))
+            itemTooltip(tooltip)
         }
     }
 

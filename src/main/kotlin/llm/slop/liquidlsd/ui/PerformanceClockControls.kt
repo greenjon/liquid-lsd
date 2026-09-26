@@ -7,8 +7,9 @@ import llm.slop.liquidlsd.audio.ClockSource
 import llm.slop.liquidlsd.link.AbletonLinkEngine
 
 /**
- * Clock row header bar (Performance MASTER tab): clock-source pills [MAN | AUDIO], Ableton Link
- * status, BPM readout, 4-beat bar dots, and the tempo actions [TAP] [RESYNC] [/2] [x2] [-] [+].
+ * Clock row (Performance MASTER tab) controls left of the knobs, beside the CLOCK title badge
+ * drawn by [PerformanceMatrixPanel]. Line 1: clock-source pills [MAN | AUDIO], Ableton Link
+ * status, BPM readout, 4-beat bar dots. Line 2: tempo actions [TAP] [RESYNC] [/2] [x2] [-] [+].
  * Same actions as Preferences > Tempo & Sync ([TempoSyncPanel]) -- surfaced here because they're
  * pressed mid-set. The BPM itself is deliberately not a knob (one bump drifts the whole show).
  */
@@ -16,31 +17,17 @@ internal object PerformanceClockControls {
 
     fun draw(
         session: SessionContext,
-        boxX1: Float,
-        boxX2: Float,
+        startX: Float,
         headerY: Float,
+        row2Y: Float,
         headerH: Float
     ) {
-        val pad = 6f
         val gap = 4f
         val audioEngine = session.audioEngine
         val currentClock = audioEngine.clockSource
         val dl = ImGui.getWindowDrawList()
 
-        // Inline Title Badge [ CLOCK ]
-        val titleText = "CLOCK"
-        val titleW = 75f
-        val colorGlobal = PerformanceColors.COLOR_GLOBAL
-        val titleCol = ImGui.colorConvertFloat4ToU32(colorGlobal[0], colorGlobal[1], colorGlobal[2], 0.90f)
-        val titleBgCol = ImGui.colorConvertFloat4ToU32(colorGlobal[0], colorGlobal[1], colorGlobal[2], 0.12f)
-        dl.addRectFilled(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleBgCol, 4f)
-        dl.addRect(boxX1 + pad, headerY, boxX1 + pad + titleW, headerY + headerH, titleCol, 4f, 0, 1.5f)
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            val textSz = ImGui.calcTextSize(titleText)
-            dl.addText(boxX1 + pad + (titleW - textSz.x) * 0.5f, headerY + (headerH - textSz.y) * 0.5f, titleCol, titleText)
-        }
-
-        ImGui.setCursorScreenPos(boxX1 + pad + titleW + gap, headerY)
+        ImGui.setCursorScreenPos(startX, headerY)
         ImGui.beginGroup()
 
         // 1. Clock source pills [MAN] [AUDIO]
@@ -108,8 +95,11 @@ internal object PerformanceClockControls {
         ImGui.dummy(dotR * 2f * 4f + dotGap * 3f, headerH)
         itemTooltip("4/4 bar phase. Downbeat is cyan.")
 
-        // 5. Tempo actions
-        ImGui.sameLine(0f, gap * 2f)
+        ImGui.endGroup()
+
+        // 5. Tempo actions (second line)
+        ImGui.setCursorScreenPos(startX, row2Y)
+        ImGui.beginGroup()
         drawTapButton(session, headerH)
 
         ImGui.sameLine(0f, gap)

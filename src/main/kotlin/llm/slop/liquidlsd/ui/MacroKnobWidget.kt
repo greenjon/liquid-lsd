@@ -84,6 +84,8 @@ object MacroKnobWidget {
         accentColor: FloatArray? = null,
         bindings: List<llm.slop.liquidlsd.macro.MacroBinding> = emptyList(),
         showValue: Boolean = false,
+        /** False omits the caption under the knob (e.g. an FX row's slot knobs, whose slot cell below names them); the value line then takes its place. */
+        showLabel: Boolean = true,
         onSelect: () -> Unit = {},
         onToggleLearn: () -> Unit = {},
         onChanged: (Float) -> Unit
@@ -212,8 +214,10 @@ object MacroKnobWidget {
         } else {
             ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 0.9f)
         }
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            dl.addText(labelX, labelY, labelCol, label)
+        if (showLabel) {
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                dl.addText(labelX, labelY, labelCol, label)
+            }
         }
 
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
@@ -222,7 +226,7 @@ object MacroKnobWidget {
             var valW = 0f
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { valW = ImGui.calcTextSize(valStr).x }
             val valX = cx - valW / 2f
-            val valY = labelY + captionH + 1f
+            val valY = if (showLabel) labelY + captionH + 1f else labelY
             val valCol = if (isSelected) {
                 ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 0.95f)
             } else {
@@ -237,7 +241,8 @@ object MacroKnobWidget {
         val bindingLine = formatBindingSummary(bindings)
         itemTooltip("$label: ${"%.2f".format(newValue)}$learnTip\n$bindingLine\nDrag to adjust. Left-click to inspect. Right-click for Learn.")
 
-        val totalTextH = if (showValue) captionH * 2f + 2f else captionH
+        val textLines = (if (showLabel) 1 else 0) + (if (showValue) 1 else 0)
+        val totalTextH = if (textLines == 2) captionH * 2f + 2f else captionH * textLines
         ImGui.setCursorScreenPos(startX, startY + diameter + 3f + totalTextH)
     }
 

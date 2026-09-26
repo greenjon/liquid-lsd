@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#row-title-badges-crossfader-moves-onto-the-master-rows-mix-line-performancematrixpanelkt-performancemastercontrolskt-performancetransitionscontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Row title badges; crossfader moves onto the Master row's [MIX] line (PerformanceMatrixPanel.kt, PerformanceMasterControls.kt, PerformanceTransitionsControls.kt, PerformanceClockControls.kt, PerformanceFxSendsControls.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-rows-and-icon-fixes-performancematrixpanelkt-macroknobwidgetkt-fxparamcellkt-fxchainheaderkt-savepresetmodalkt-iconskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX rows and icon fixes (PerformanceMatrixPanel.kt, MacroKnobWidget.kt, FxParamCell.kt, FxChainHeader.kt, SavePresetModal.kt, Icons.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#three-workspace-views-perform-edit-library-uimanagerkt-librarypanelkt-parametersstatekt-performancematrixpanelkt-menubarkt-uithemekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4085,6 +4107,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#row-title-badges-crossfader-moves-onto-the-master-rows-mix-line-performancematrixpanelkt-performancemastercontrolskt-performancetransitionscontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Row title badges; crossfader moves onto the Master row's [MIX] line (PerformanceMatrixPanel.kt, PerformanceMasterControls.kt, PerformanceTransitionsControls.kt, PerformanceClockControls.kt, PerformanceFxSendsControls.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-rows-and-icon-fixes-performancematrixpanelkt-macroknobwidgetkt-fxparamcellkt-fxchainheaderkt-savepresetmodalkt-iconskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX rows and icon fixes (PerformanceMatrixPanel.kt, MacroKnobWidget.kt, FxParamCell.kt, FxChainHeader.kt, SavePresetModal.kt, Icons.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#three-workspace-views-perform-edit-library-uimanagerkt-librarypanelkt-parametersstatekt-performancematrixpanelkt-menubarkt-uithemekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6937,6 +6981,22 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="row-title-badges-crossfader-moves-onto-the-master-rows-mix-line-performancematrixpanelkt-performancemastercontrolskt-performancetransitionscontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt">Row title badges; crossfader moves onto the Master row's [MIX] line (<code>PerformanceMatrixPanel.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>PerformanceTransitionsControls.kt</code>, <code>PerformanceClockControls.kt</code>, <code>PerformanceFxSendsControls.kt</code>)</h3>
+<ul>
+<li><strong>Same layout for every row</strong>: every Performance row now starts with a title badge spanning both control lines. Deck rows show a large <strong>A</strong>, <strong>B</strong>, <strong>BG</strong> or <strong>PV</strong>, replacing "DECK / A" and "A FX" (the <code>[SRC]</code>/<code>[FX]</code> pills already show the mode). MASTER-tab rows show <strong>MASTER</strong>, <strong>TRANS</strong>, <strong>WET/DRY</strong> and <strong>CLOCK</strong>. These MASTER-tab titles are a first pass.</li>
+<li><strong>No more header bars on the MASTER tab</strong>: the Master, Transitions and Clock rows no longer have a full-width bar above their knobs, so MASTER-tab knobs are now the same size as deck knobs. At 1280×720 that's about 44px, up from 20px.</li>
+<li><strong>Master row</strong>: the crossfader (A/B snaps, track, AUTO, fade time) is now on the <code>[MIX]</code> line, left of the knobs, with <code>[FX]</code> + the Master FX chain below. The track is shorter, about 150px at 1280 wide. Drop a <code>.lsdfxchain</code> on the <code>MASTER</code> badge to load Master FX.</li>
+<li><strong>Transitions row</strong>: the picker and queue navigation sit beside the <code>TRANS</code> badge. Drop transition presets or shaders on the picker button.</li>
+<li><strong>Clock row</strong>: MAN/AUDIO, Link, BPM and beat dots are on the first line; TAP, RESYNC, /2, x2 and −/+ on the second.</li>
+<li><strong>FX Wet/Dry row</strong>: the separate <code>FX SENDS</code> badge is gone, and its tooltip moved to the <code>WET/DRY</code> badge. Resync now lines up with the deck rows' FX ON button.</li>
+<li><strong>Fix</strong>: the Master row's chevron no longer overlaps the fade-time badge.</li>
+</ul>
+<h3 id="fx-rows-and-icon-fixes-performancematrixpanelkt-macroknobwidgetkt-fxparamcellkt-fxchainheaderkt-savepresetmodalkt-iconskt">FX rows and icon fixes (<code>PerformanceMatrixPanel.kt</code>, <code>MacroKnobWidget.kt</code>, <code>FxParamCell.kt</code>, <code>FxChainHeader.kt</code>, <code>SavePresetModal.kt</code>, <code>Icons.kt</code>)</h3>
+<ul>
+<li><strong>No more <code>META</code> under FX knobs</strong>: on a deck or Master row in FX mode, the three slot knobs no longer show a <code>META</code> caption. The slot cell right under each knob already names the effect, so the cell moves up into the caption's place. Rows in FX mode need about 17px less height, so knobs can be larger. Focus mode keeps its captions, which are parameter names.</li>
+<li><strong>Fix: <code>?</code> buttons</strong>: the FX focus-mode reset button and the chain operations (<code>⋮</code>) button showed <code>?</code>, because their symbols weren't in the app's fonts. They now use Lucide icons (rotate-ccw and ellipsis-vertical). The Save Preset overwrite warning's <code>⚠</code> had the same problem and now uses the alert icon.</li>
+<li><strong>Glyph check</strong>: a new test fails the build if any UI text uses a character the fonts can't draw.</li>
+</ul>
 <h3 id="three-workspace-views-perform-edit-library-uimanagerkt-librarypanelkt-parametersstatekt-performancematrixpanelkt-menubarkt-uithemekt">Three workspace views: Perform, Edit, Library (<code>UIManager.kt</code>, <code>LibraryPanel.kt</code>, <code>ParametersState.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>MenuBar.kt</code>, <code>UITheme.kt</code>)</h3>
 <ul>
 <li><strong>Perform</strong>: the Performance rows on top, the Library in the lower half. The split can still be dragged, and double-clicking the Library title bar resets it to 50/50.</li>
@@ -6944,6 +7004,8 @@
 <li><strong>Library</strong>: the Library fills the column, the same as before.</li>
 <li><strong>Removed: Docked Library.</strong> The minimize button, <strong>View → Library Drawer → Hide</strong>, and dragging the Library down to a bar are gone. Full-height rows weren't easier to use, and the docked bar's buttons did nothing without the list. If Docked was your saved setting, the Library opens at Half.</li>
 <li><strong>Shortcuts</strong>: <code>Space</code> switches the Library between Half and Full. In Edit view, <code>Space</code>, <code>Ctrl+F</code> and <code>/</code> close Deep Edit and cancel any armed Learn, then bring the Library back.</li>
+<li><strong>Edit row matches the four-row view</strong>: in Deep Edit the open row keeps the same knob size and control positions as in Perform. It's one line taller for the value readout and Learn button under the knobs, not the old fixed 175px with larger knobs. The "‹DECK› — DEEP EDIT  Collapse" title above the parameters is gone; collapse with the row's button, <strong>Close Edit</strong> or Esc.</li>
+<li><strong>Four rows fit at 1280×720</strong>: the Performance panel's vertical padding and the gap under the tab strip are tighter, and the minimum row height is now 68px. With the Library at Half, all four rows fit in the ~688px window a 720p display leaves, without scrolling.</li>
 <li><strong>Removed: <code>MULTI</code> Deep Edit.</strong> Only one row can be in Deep Edit at a time; use the Deep Edit side rail to switch decks. The <code>[SOLO|MULTI]</code> toolbar button and <strong>View → Solo Accordion Mode</strong> are gone. <code>[Collapse All]</code> is now <code>[Close Edit]</code>, and the View menu item is now <strong>Close Deep Edit</strong>. A row pinned open by an armed Learn still stays open.</li>
 </ul>
 <h3 id="performance-matrix-4-row-visibility-in-half-library-view-performancematrixpanelkt-performancemastercontrolskt-performancetransitionscontrolskt-performanceclockcontrolskt">Performance Matrix: 4-Row Visibility in Half Library View (<code>PerformanceMatrixPanel.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>PerformanceTransitionsControls.kt</code>, <code>PerformanceClockControls.kt</code>)</h3>
@@ -6951,7 +7013,7 @@
 <li><strong>Full 4-Row View in Half Dock</strong>: All four macro rows on both DECKS and MASTER tabs are now fully visible simultaneously when the Library is opened to its default half-height view, eliminating the vertical scrolling that previously concealed 1 ¼ rows.</li>
 <li><strong>Consolidated Header Bar</strong>: Merged the tab strip (<code>[DECKS]</code> / <code>[MASTER]</code>), the <code>[Close Edit]</code> button, persistent Learn indicator, and <code>[ALL]</code> dice into a single compact 26px line, reclaiming ~28px of vertical screen real-estate.</li>
 <li><strong>Inline Row Titles &amp; Deck Badges</strong>: Moved row titles horizontally inline to the left of their toolbars and header bars. Deck rows feature a Eurorack faceplate style <code>[DECK / A]</code> badge beside the two stacked toolbar rows (Row 1 SRC and Row 2 FX), while Master, Transitions, and Clock rows inline their titles on the left of their header bars.</li>
-<li><strong>Dynamic Knob Scaling &amp; Lower Minimum Row Height</strong>: Lowered <code>MIN_ROW_H</code> floor from 112px to 75px and enabled dynamic knob scaling down to ~38px-44px at compact heights with proportional label spacing and 21px compact wing controls.</li>
+<li><strong>Dynamic Knob Scaling &amp; Lower Minimum Row Height</strong>: Lowered <code>MIN_ROW_H</code> floor from 112px to 68px and enabled dynamic knob scaling down to ~38px-44px at compact heights with proportional label spacing and 21px compact wing controls.</li>
 </ul>
 <h3 id="performance-matrix-two-tabs-master-mixfx-clock-row-and-global-knobs-performancematrixpanelkt-performancemastercontrolskt-performanceclockcontrolskt-performancefxsendscontrolskt-performanceuicontextkt-parametersstatekt-macroenginekt-macropanelkt">Performance Matrix: two tabs, Master [MIX|FX], Clock row and Global knobs (<code>PerformanceMatrixPanel.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>PerformanceClockControls.kt</code>, <code>PerformanceFxSendsControls.kt</code>, <code>PerformanceUiContext.kt</code>, <code>ParametersState.kt</code>, <code>MacroEngine.kt</code>, <code>MacroPanel.kt</code>)</h3>
 <ul>

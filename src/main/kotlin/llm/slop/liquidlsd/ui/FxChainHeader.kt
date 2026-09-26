@@ -307,7 +307,7 @@ object FxChainHeader {
         ctrlH: Float,
         menuId: String
     ) {
-        if (ImGui.button("⋮##more_btn_$bankId", MORE_BTN_W, ctrlH)) {
+        if (ImGui.button("${Icons.MORE_VERTICAL}##more_btn_$bankId", MORE_BTN_W, ctrlH)) {
             ImGui.openPopup(menuId)
         }
         itemTooltip("Chain operations (Save As, New, Revert, Clear, Copy/Paste, Focus, Resync).")

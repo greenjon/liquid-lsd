@@ -112,7 +112,7 @@ object SavePresetModal {
         if (showOverwriteWarning) {
             ImGui.spacing()
             ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.25f, 1.0f) // Warning Amber
-            ImGui.textWrapped("\u26A0 File '$currentName.$fileExtension' already exists. Overwrite?")
+            ImGui.textWrapped("${Icons.ALERT} File '$currentName.$fileExtension' already exists. Overwrite?")
             ImGui.popStyleColor()
         }
 

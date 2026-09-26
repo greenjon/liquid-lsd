@@ -366,7 +366,7 @@ object UITheme {
     }
 
     // Glyph ranges for main TTF fonts: Basic Latin, Extended Latin, General Punctuation, Arrows, Math, Geometric Shapes
-    private val MAIN_RANGES = shortArrayOf(
+    internal val MAIN_RANGES = shortArrayOf(
         0x0020.toShort(), 0x00FF.toShort(), // Basic Latin + Latin-1 Supplement
         0x0100.toShort(), 0x017F.toShort(), // Latin Extended-A
         0x2000.toShort(), 0x206F.toShort(), // General Punctuation (dashes, quotes, bullets, ellipses)

@@ -1,18 +1,34 @@
 ## [Unreleased]
 
+### Row title badges; crossfader moves onto the Master row's [MIX] line (`PerformanceMatrixPanel.kt`, `PerformanceMasterControls.kt`, `PerformanceTransitionsControls.kt`, `PerformanceClockControls.kt`, `PerformanceFxSendsControls.kt`)
+- **Same layout for every row**: every Performance row now starts with a title badge spanning both control lines. Deck rows show a large **A**, **B**, **BG** or **PV**, replacing "DECK / A" and "A FX" (the `[SRC]`/`[FX]` pills already show the mode). MASTER-tab rows show **MASTER**, **TRANS**, **WET/DRY** and **CLOCK**. These MASTER-tab titles are a first pass.
+- **No more header bars on the MASTER tab**: the Master, Transitions and Clock rows no longer have a full-width bar above their knobs, so MASTER-tab knobs are now the same size as deck knobs. At 1280×720 that's about 44px, up from 20px.
+- **Master row**: the crossfader (A/B snaps, track, AUTO, fade time) is now on the `[MIX]` line, left of the knobs, with `[FX]` + the Master FX chain below. The track is shorter, about 150px at 1280 wide. Drop a `.lsdfxchain` on the `MASTER` badge to load Master FX.
+- **Transitions row**: the picker and queue navigation sit beside the `TRANS` badge. Drop transition presets or shaders on the picker button.
+- **Clock row**: MAN/AUDIO, Link, BPM and beat dots are on the first line; TAP, RESYNC, /2, x2 and −/+ on the second.
+- **FX Wet/Dry row**: the separate `FX SENDS` badge is gone, and its tooltip moved to the `WET/DRY` badge. Resync now lines up with the deck rows' FX ON button.
+- **Fix**: the Master row's chevron no longer overlaps the fade-time badge.
+
+### FX rows and icon fixes (`PerformanceMatrixPanel.kt`, `MacroKnobWidget.kt`, `FxParamCell.kt`, `FxChainHeader.kt`, `SavePresetModal.kt`, `Icons.kt`)
+- **No more `META` under FX knobs**: on a deck or Master row in FX mode, the three slot knobs no longer show a `META` caption. The slot cell right under each knob already names the effect, so the cell moves up into the caption's place. Rows in FX mode need about 17px less height, so knobs can be larger. Focus mode keeps its captions, which are parameter names.
+- **Fix: `?` buttons**: the FX focus-mode reset button and the chain operations (`⋮`) button showed `?`, because their symbols weren't in the app's fonts. They now use Lucide icons (rotate-ccw and ellipsis-vertical). The Save Preset overwrite warning's `⚠` had the same problem and now uses the alert icon.
+- **Glyph check**: a new test fails the build if any UI text uses a character the fonts can't draw.
+
 ### Three workspace views: Perform, Edit, Library (`UIManager.kt`, `LibraryPanel.kt`, `ParametersState.kt`, `PerformanceMatrixPanel.kt`, `MenuBar.kt`, `UITheme.kt`)
 - **Perform**: the Performance rows on top, the Library in the lower half. The split can still be dragged, and double-clicking the Library title bar resets it to 50/50.
 - **Edit**: opening a row's Deep Edit now hides the Library completely, title bar included, so the row and its parameters get the whole column. Swap sources and FX from the row's own controls. Esc, **Close Edit**, or collapsing the row brings the Library back.
 - **Library**: the Library fills the column, the same as before.
 - **Removed: Docked Library.** The minimize button, **View → Library Drawer → Hide**, and dragging the Library down to a bar are gone. Full-height rows weren't easier to use, and the docked bar's buttons did nothing without the list. If Docked was your saved setting, the Library opens at Half.
 - **Shortcuts**: `Space` switches the Library between Half and Full. In Edit view, `Space`, `Ctrl+F` and `/` close Deep Edit and cancel any armed Learn, then bring the Library back.
+- **Edit row matches the four-row view**: in Deep Edit the open row keeps the same knob size and control positions as in Perform. It's one line taller for the value readout and Learn button under the knobs, not the old fixed 175px with larger knobs. The "‹DECK› — DEEP EDIT  Collapse" title above the parameters is gone; collapse with the row's button, **Close Edit** or Esc.
+- **Four rows fit at 1280×720**: the Performance panel's vertical padding and the gap under the tab strip are tighter, and the minimum row height is now 68px. With the Library at Half, all four rows fit in the ~688px window a 720p display leaves, without scrolling.
 - **Removed: `MULTI` Deep Edit.** Only one row can be in Deep Edit at a time; use the Deep Edit side rail to switch decks. The `[SOLO|MULTI]` toolbar button and **View → Solo Accordion Mode** are gone. `[Collapse All]` is now `[Close Edit]`, and the View menu item is now **Close Deep Edit**. A row pinned open by an armed Learn still stays open.
 
 ### Performance Matrix: 4-Row Visibility in Half Library View (`PerformanceMatrixPanel.kt`, `PerformanceMasterControls.kt`, `PerformanceTransitionsControls.kt`, `PerformanceClockControls.kt`)
 - **Full 4-Row View in Half Dock**: All four macro rows on both DECKS and MASTER tabs are now fully visible simultaneously when the Library is opened to its default half-height view, eliminating the vertical scrolling that previously concealed 1 ¼ rows.
 - **Consolidated Header Bar**: Merged the tab strip (`[DECKS]` / `[MASTER]`), the `[Close Edit]` button, persistent Learn indicator, and `[ALL]` dice into a single compact 26px line, reclaiming ~28px of vertical screen real-estate.
 - **Inline Row Titles & Deck Badges**: Moved row titles horizontally inline to the left of their toolbars and header bars. Deck rows feature a Eurorack faceplate style `[DECK / A]` badge beside the two stacked toolbar rows (Row 1 SRC and Row 2 FX), while Master, Transitions, and Clock rows inline their titles on the left of their header bars.
-- **Dynamic Knob Scaling & Lower Minimum Row Height**: Lowered `MIN_ROW_H` floor from 112px to 75px and enabled dynamic knob scaling down to ~38px-44px at compact heights with proportional label spacing and 21px compact wing controls.
+- **Dynamic Knob Scaling & Lower Minimum Row Height**: Lowered `MIN_ROW_H` floor from 112px to 68px and enabled dynamic knob scaling down to ~38px-44px at compact heights with proportional label spacing and 21px compact wing controls.
 
 ### Performance Matrix: two tabs, Master [MIX|FX], Clock row and Global knobs (`PerformanceMatrixPanel.kt`, `PerformanceMasterControls.kt`, `PerformanceClockControls.kt`, `PerformanceFxSendsControls.kt`, `PerformanceUiContext.kt`, `ParametersState.kt`, `MacroEngine.kt`, `MacroPanel.kt`)
 - **Two tabs: DECKS and MASTER**: LIVE QUAD is now **DECKS** (Deck A, B, BG, PV). MASTER & FX is now **MASTER** (Master, Transitions, FX Wet/Dry, Clock & Global). LIVE CONSOLE and ALL FX are gone. Each deck's FX is on its own row, Master FX is on the Master row, and there are no FX-only rows. If a removed tab was your saved tab, DECKS opens instead.

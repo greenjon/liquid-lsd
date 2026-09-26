@@ -87,7 +87,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
 
     /**
      * Scrollable region beneath the Tier-1 grid showing every module currently above COLLAPSED
-     * (in Solo mode this is at most one). Never re-runs
+     * (normally one; a Learn-pinned module can keep a second open). Never re-runs
      * [llm.slop.liquidlsd.macro.FxMacroSync] -- expand/collapse is strictly a display detail.
      */
     fun drawRackBay(session: SessionContext, mixer: Mixer, parametersState: ParametersState, bayH: Float) {
@@ -116,20 +116,10 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
      * [ParametersTabs.drawDeckGroupContent]/[ParametersTabs.drawMasterFxContent] and
      * [PropertiesPanel.draw] (see [drawRackDeepEdit]). Macro target binding (arm Learn, inspect/edit bindings) lives
      * on the Mixer panel's MACROS tab ([MacroPanel]), not here -- pressing Learn on a Tier-1 knob
-     * jumps there automatically (see [navigateMacroPanelTo]).
+     * jumps there automatically (see [navigateMacroPanelTo]). No title or Collapse button here: the
+     * row above already says which deck/section this is, and it has its own Collapse (as does Esc).
      */
     fun drawRackBayModule(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
-        val label = rackModuleDisplayLabel(moduleId)
-
-        session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.textColored(0.75f, 0.85f, 1f, 1f, "$label — DEEP EDIT")
-        }
-        ImGui.sameLine()
-        if (ImGui.smallButton("Collapse##rack_bay_collapse_$moduleId")) {
-            parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.COLLAPSED)
-        }
-        ImGui.spacing()
-
         drawRackDeepEdit(session, mixer, parametersState, moduleId)
     }
 

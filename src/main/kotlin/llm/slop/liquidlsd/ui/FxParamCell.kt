@@ -12,7 +12,7 @@ import java.util.Locale
  *
  *   `[⟲]  0.75  ●`
  *
- * - **⟲**: resets this parameter's baseValue to its authored default.
+ * - **[Icons.ROTATE_CCW]**: resets this parameter's baseValue to its authored default.
  * - **Value**: formatted base value readout.
  * - **●**: accent dot shown if this parameter has active modulators.
  * - Tooltip displays parameter name, value, default, min/max clamp, and modulator status.
@@ -21,7 +21,7 @@ object FxParamCell {
 
     const val HEIGHT = 20f
     private const val RESET_BTN_W = 16f
-    private const val RESET_GLYPH = "⟲"
+    private const val RESET_GLYPH = Icons.ROTATE_CCW
 
     /**
      * Draws the parameter cell at ([x], [y]) with width [w].

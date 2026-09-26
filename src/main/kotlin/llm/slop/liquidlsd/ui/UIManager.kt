@@ -493,10 +493,11 @@ class UIManager(
 
         // Three views: Library (FULL), Edit (a module in Deep Edit -- no Library at all), Perform (HALF).
         val isEditView = LibraryPanel.isEditView(session)
+        val halfLibraryH = (contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)).coerceIn(libTitleBarH.coerceAtMost(contentH), contentH)
         val libraryH = when {
             theme.libraryMode == UITheme.LibraryMode.FULL -> contentH
             isEditView -> 0f
-            else -> (contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)).coerceIn(libTitleBarH.coerceAtMost(contentH), contentH)
+            else -> halfLibraryH
         }
 
         if (theme.libraryMode != UITheme.LibraryMode.FULL) {
@@ -510,9 +511,15 @@ class UIManager(
             ImGui.setNextWindowPos(0f, menuBarH)
             ImGui.setNextWindowSize(libraryW.coerceAtLeast(1f), topH)
             val perfFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
-            if (ImGui.begin("PerformanceMatrix", perfFlags)) {
+            // Tighter vertical padding than the default so four rows fit above a HALF Library at 1280x720.
+            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, style.getWindowPaddingX(), 4f)
+            val perfOpen = ImGui.begin("PerformanceMatrix", perfFlags)
+            ImGui.popStyleVar()
+            if (perfOpen) {
                 UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                currentMixer?.let { performanceMatrixPanel.draw(session, it, parametersState, deckPresetController) }
+                currentMixer?.let {
+                    performanceMatrixPanel.draw(session, it, parametersState, deckPresetController, hiddenLibraryH = if (isEditView) halfLibraryH else 0f)
+                }
             }
             ImGui.end()
         }
