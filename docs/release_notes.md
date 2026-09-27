@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Optimized Mixer Monitor Layout & Padding Reduction (`MixerLayout.kt`, `MixerPanel.kt`)
+- Reduced side window padding and inter-deck column padding (from 16px to 8px) across the mixer panel.
+- All 5 monitors (main master output and 4 deck previews) are now significantly wider and taller, fully utilizing previously unused vertical space at the bottom of the mixer panel while preserving 16:9 aspect ratios.
+
 ### Deck Toolbar Split Into Button Row + Preset-Name Row (`DeckControlPanel.kt`, `MixerLayout.kt`)
 - Each deck's monitor toolbar previously crammed the Save/Eject buttons and the active preset name into a single shared row. Split into two stacked rows directly above the monitor image: a button row (`drawDeckButtonRow`, with room for more buttons later) and a full-width preset-name row (`drawDeckPresetRow`), using previously-unused vertical space in the mixer strip.
 - `MixerLayoutCalculator` now budgets height for both rows per deck, so decks still resize and clamp to the minimum height the same way as before.

@@ -63,13 +63,15 @@ class DeckControlPanel(
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 0f, 0f)
         
         val safePanelW = panelW.coerceAtLeast(1f)
-        val inset = 3f
+        val inset = DeckTileMetrics.IMAGE_INSET
         val imgAvailW = (safePanelW - (inset * 2f)).coerceAtLeast(1f)
         val aspect = session.uiTheme.renderAspectRatio
-        val toolbarRowH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { maxOf(ImGui.getFrameHeight(), ImGui.getTextLineHeight() + 6f) }
         val itemSpacingY = ImGui.getStyle().getItemSpacingY()
-        val bottomBarH = (toolbarRowH * 2f) + itemSpacingY + 6f
-        val childH = maxOf(previewH.coerceAtLeast(1f), (imgAvailW * aspect) + bottomBarH + 6f)
+        val bottomBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            DeckTileMetrics.bottomBarHeight(ImGui.getFrameHeight(), ImGui.getTextLineHeight(), itemSpacingY)
+        }
+        val naturalH = (imgAvailW * aspect) + bottomBarH + 6f
+        val childH = maxOf(previewH.coerceAtLeast(1f), naturalH)
         val imgAvailH = (childH - bottomBarH - 6f).coerceAtMost(imgAvailW * aspect).coerceAtLeast(1f)
 
         // Explicitly set the Child window width and height

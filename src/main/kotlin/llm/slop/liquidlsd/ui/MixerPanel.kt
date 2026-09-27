@@ -28,7 +28,7 @@ class MixerPanel(
         val layout = MixerLayoutCalculator.calculate(
             windowWidth = ImGui.getWindowWidth(),
             availableHeight = ImGui.getContentRegionAvailY(),
-            windowPaddingX = style.getWindowPaddingX(),
+            windowPaddingX = (style.getWindowPaddingX() * 0.5f).coerceAtLeast(2f),
             scrollbarWidth = style.getScrollbarSize(),
             textLineHeightWithSpacing = ImGui.getTextLineHeightWithSpacing(),
             frameHeightWithSpacing = ImGui.getFrameHeightWithSpacing(),
@@ -219,7 +219,7 @@ class MixerPanel(
         ImGui.spacing()
 
         // --- Deck Monitors (2x2 Grid) ---
-        val padding = 16f
+        val padding = 8f
         val halfW = ((availW - padding) * 0.5f).coerceAtLeast(1f)
         
         val startX = baseScreenX + offsetX

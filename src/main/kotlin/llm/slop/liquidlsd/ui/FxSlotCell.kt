@@ -159,10 +159,9 @@ object FxSlotCell {
         drawDragAndDrop(session, mixer, bankId, chain, slotIndex, fx?.displayName)
 
         val nameText = fx?.displayName ?: "— empty —"
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             val shown = truncate(nameText, nameW - 4f)
             val tw = ImGui.calcTextSize(shown).x
-            val th = ImGui.getTextLineHeight()
             val textCol = when {
                 fx == null -> ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.55f, 0.8f)
                 !fx.enabled -> ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.6f, 0.75f)
@@ -170,7 +169,7 @@ object FxSlotCell {
                 nameHovered -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
                 else -> ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.88f, 0.95f)
             }
-            dl.addText(nameX + (nameW - tw) / 2f, y + (h - th) / 2f, textCol, shown)
+            dl.addText(nameX + (nameW - tw) / 2f, y + 2f, textCol, shown)
         }
 
         // -- ▶ (hover only) -----------------------------------------------------------------

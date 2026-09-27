@@ -820,7 +820,7 @@ class PerformanceMatrixPanel {
                         val chainLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(row.bankId) ?: "FX"
                         val cellW = (knobColW - 6f).coerceAtLeast(40f)
                         val cellX = cellCenterX - cellW / 2f
-                        val cellY = knobTopY + diameter + 3f + captionBlockH + learnBtnSpaceH + 4f
+                        val cellY = knobTopY + diameter + 3f + captionBlockH + learnBtnSpaceH
 
                         if (chain.isFocused()) {
                             val focusedSlot = chain.focusedSlot!!

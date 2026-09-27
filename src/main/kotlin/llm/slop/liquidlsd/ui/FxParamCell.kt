@@ -59,9 +59,8 @@ object FxParamCell {
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 val placeholder = "—"
                 val tw = ImGui.calcTextSize(placeholder).x
-                val th = ImGui.getTextLineHeight()
                 val col = ImGui.colorConvertFloat4ToU32(0.40f, 0.42f, 0.48f, 0.6f)
-                dl.addText(x + (w - tw) * 0.5f, y + (h - th) * 0.5f, col, placeholder)
+                dl.addText(x + (w - tw) * 0.5f, y + 2f, col, placeholder)
             }
             return
         }
@@ -73,9 +72,8 @@ object FxParamCell {
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             val shown = truncateName(paramName, nameW - 4f)
             val tw = ImGui.calcTextSize(shown).x
-            val th = ImGui.getTextLineHeight()
             val textCol = ImGui.colorConvertFloat4ToU32(0.85f, 0.88f, 0.92f, 0.95f)
-            dl.addText(x + (nameW - tw) * 0.5f, y + (h - th) * 0.5f, textCol, shown)
+            dl.addText(x + (nameW - tw) * 0.5f, y + 2f, textCol, shown)
         }
 
         // Invisible button over the whole cell for the tooltip
