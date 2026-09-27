@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Deck Toolbar Split Into Button Row + Preset-Name Row (`DeckControlPanel.kt`, `MixerLayout.kt`)
+- Each deck's monitor toolbar previously crammed the Save/Eject buttons and the active preset name into a single shared row. Split into two stacked rows directly above the monitor image: a button row (`drawDeckButtonRow`, with room for more buttons later) and a full-width preset-name row (`drawDeckPresetRow`), using previously-unused vertical space in the mixer strip.
+- `MixerLayoutCalculator` now budgets height for both rows per deck, so decks still resize and clamp to the minimum height the same way as before.
+
 ### Unified Transition Browser Replaces Stock/Preset Split Columns (`TransitionBrowserPanel.kt`, `LibraryPanel.kt`, `AssetType.kt`, `BrowserPopupHandler.kt`)
 - `[ Trans ]` mode's Library Column 1 previously split stock ISF transition shaders and saved `.lsdtrans` presets into two separate side-by-side panels (`StockTransitionListPanel`, `TransitionPresetListPanel`) — the same split `[ FX ]` mode used before its own stock/single/chain unification on 2026-09-18, but never revisited when `[ Trans ]` mode was built four days earlier. The two panels carried independent selection state and duplicated most of their row/search/context-menu logic.
 - Merged both into a single filterable `TransitionBrowserPanel` with a kebab (`[⋮]`) tier filter (**Stock Shaders / Saved Presets**), mirroring the FX Browser's pattern. Unlike stock FX filters (load-only), stock transitions retain full parity with saved presets — Apply to Mixer, Add to Live Queue, and Add to Playlist all work on both, since a stock transition has no per-slot state to lose; only Rename/Clone/Delete (file lifecycle) are preset-only.

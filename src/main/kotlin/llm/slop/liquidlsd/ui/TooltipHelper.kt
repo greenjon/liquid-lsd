@@ -36,6 +36,13 @@ object TooltipHelper {
     const val TOOLTIP_WINDOW_PADDING_X = 8f
     const val TOOLTIP_WINDOW_PADDING_Y = 12f
     const val DEFAULT_HOVER_DELAY_MS = 250L
+    /** Plain-text tooltips wrap once their content would exceed this fraction of the viewport width. */
+    const val MAX_TEXT_WIDTH_FRACTION = 0.25f
+
+    /** Max width (px) available for a single line of tooltip text before it wraps. */
+    fun maxTextWrapWidth(): Float =
+        (ImGui.getIO().displaySizeX * MAX_TEXT_WIDTH_FRACTION - TOOLTIP_WINDOW_PADDING_X * 2f)
+            .coerceAtLeast(100f)
 
     /**
      * Number of distinct custom-tooltip sizes remembered simultaneously.
@@ -287,14 +294,17 @@ fun itemTooltip(text: String, delayMs: Long = TooltipHelper.DEFAULT_HOVER_DELAY_
     pushTooltipStyles()
     val padX = TooltipHelper.TOOLTIP_WINDOW_PADDING_X
     val padY = TooltipHelper.TOOLTIP_WINDOW_PADDING_Y
-    val textSize = ImGui.calcTextSize(text)
+    val wrapWidth = TooltipHelper.maxTextWrapWidth()
+    val textSize = ImGui.calcTextSize(text, false, wrapWidth)
     val width = textSize.x + padX * 2f
     val height = textSize.y + padY * 2f
 
     TooltipHelper.prepareTooltipPos(width, height)
     ImGui.setNextWindowBgAlpha(1.0f)
     ImGui.beginTooltip()
+    ImGui.pushTextWrapPos(ImGui.getCursorPosX() + wrapWidth)
     ImGui.textUnformatted(text)
+    ImGui.popTextWrapPos()
     ImGui.endTooltip()
     popTooltipStyles()
 }
@@ -345,14 +355,17 @@ fun showTooltip(text: String, key: Int = text.hashCode(), delayMs: Long = Toolti
     pushTooltipStyles()
     val padX = TooltipHelper.TOOLTIP_WINDOW_PADDING_X
     val padY = TooltipHelper.TOOLTIP_WINDOW_PADDING_Y
-    val textSize = ImGui.calcTextSize(text)
+    val wrapWidth = TooltipHelper.maxTextWrapWidth()
+    val textSize = ImGui.calcTextSize(text, false, wrapWidth)
     val width = textSize.x + padX * 2f
     val height = textSize.y + padY * 2f
 
     TooltipHelper.prepareTooltipPos(width, height)
     ImGui.setNextWindowBgAlpha(1.0f)
     ImGui.beginTooltip()
+    ImGui.pushTextWrapPos(ImGui.getCursorPosX() + wrapWidth)
     ImGui.textUnformatted(text)
+    ImGui.popTextWrapPos()
     ImGui.endTooltip()
     popTooltipStyles()
 }

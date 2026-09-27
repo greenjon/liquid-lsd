@@ -1686,11 +1686,12 @@
     PropertiesPanel --&gt; Lfo2Section[Lfo2Section.kt - LFO 2 Secondary Modulator]
 
     MixerPanel --&gt; DeckControlPanel[DeckControlPanel.kt]
-    DeckControlPanel --&gt; drawDeckMonitorToolbar[drawDeckMonitorToolbar Helper]
+    DeckControlPanel --&gt; drawDeckButtonRow[drawDeckButtonRow Helper]
+    DeckControlPanel --&gt; drawDeckPresetRow[drawDeckPresetRow Helper]
     UIManager --&gt; SavePresetModal[SavePresetModal.kt]
 </code></pre>
 <p>Most panel <code>draw(...)</code> methods (like <code>PerformanceMatrixPanel</code>) receive <code>session: SessionContext</code>, the current <code>Mixer</code> reference, and <code>parametersState: ParametersState</code> at frame render time. Other panels like <code>MixerPanel</code> and <code>DeckControlPanel</code> receive state via dependency injection in their constructors. Panels access subsystems (<code>AudioEngine</code>, <code>CVRegistry</code>, <code>PresetManager</code>, <code>PlayQueueManager</code>, <code>NotesManager</code>) via <code>session</code> rather than direct global singletons.</p>
-<p>Deck preview monitors (<code>Deck A</code>, <code>Deck B</code>, <code>Deck BG</code>, <code>Deck PV</code>) in <code>MixerPanel</code> and <code>DeckControlPanel</code> use a unified interactive preset bar (<code>drawDeckMonitorToolbar</code>) positioned directly <strong>above</strong> each monitor image. The preset bar orders elements left-to-right as <code>[Save Button] [Eject Button] [Preset Bar]</code>. Buttons and the Preset Bar are aligned along their bottom baselines, and the row height dynamically expands as text font scaling increases.</p>
+<p>Deck preview monitors (<code>Deck A</code>, <code>Deck B</code>, <code>Deck BG</code>, <code>Deck PV</code>) in <code>MixerPanel</code> and <code>DeckControlPanel</code> stack two toolbar rows directly <strong>above</strong> each monitor image: a button row (<code>drawDeckButtonRow</code> — Save, Eject, with room for more buttons later) and, below it, a full-width preset-name row (<code>drawDeckPresetRow</code> — active preset name, dirty marker, issue flag). Each row's height dynamically expands as text font scaling increases; <code>MixerLayoutCalculator</code> budgets space for both rows per deck.</p>
 <p>Each deck preview monitor features a standardized, symmetric dual-column overlay across all four decks:
 - <strong>Left Column</strong>:
   - Vertical Fader: Channel Level / Alpha fader (<code>mixer.levelA</code>, <code>levelB</code>, <code>levelBG</code>, <code>levelPV</code>) starting at the top margin and running downward. Supports drag, scroll wheel, and middle-click reset (100%).

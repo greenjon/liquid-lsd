@@ -271,6 +271,7 @@ object SessionSerializer {
                     llm.slop.liquidlsd.macro.MacroEngine.newBankFor(canonicalId)
                 }
                 // Migrate legacy FX_SENDS knob labels ("SEND A" -> "Deck A", etc.)
+                var resolvedBank = bank
                 if (canonicalId == llm.slop.liquidlsd.macro.MacroEngine.FX_SENDS) {
                     val legacyNames = mapOf(
                         "SEND A" to "Deck A",
@@ -278,11 +279,18 @@ object SessionSerializer {
                         "SEND BG" to "Deck BG",
                         "SEND PV" to "Deck PV"
                     )
-                    for (knob in bank.knobs) {
+                    for (knob in resolvedBank.knobs) {
                         legacyNames[knob.label]?.let { knob.label = it }
                     }
+                    // Sessions saved before the FX_SENDS default bindings were introduced persisted a
+                    // fully generic, unbound bank ("KNOB 1".."KNOB 4"). Since such a bank isn't
+                    // "missing" from the session, the newBankFor() fallback above never applies to it.
+                    // Re-seed it here so pre-existing sessions pick up the deck dry/wet defaults too.
+                    if (resolvedBank.knobs.all { it.bindings.isEmpty() }) {
+                        resolvedBank = llm.slop.liquidlsd.macro.MacroEngine.newBankFor(canonicalId)
+                    }
                 }
-                llm.slop.liquidlsd.macro.MacroEngine.registerBank(canonicalId, bank)
+                llm.slop.liquidlsd.macro.MacroEngine.registerBank(canonicalId, resolvedBank)
             }
             // Refresh FX row knob labels/bindings against the chains actually restored above. Not
             // forced: FxMacroSync's ownership rule leaves any knob the user retargeted untouched.

@@ -56,7 +56,7 @@ object FxParamCell {
 
         if (param == null || paramName == null) {
             // Blank / unused knob on this page
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 val placeholder = "—"
                 val tw = ImGui.calcTextSize(placeholder).x
                 val th = ImGui.getTextLineHeight()
@@ -70,7 +70,7 @@ object FxParamCell {
         val modDotW = if (hasModulation) 10f else 0f
         val nameW = (w - modDotW).coerceAtLeast(10f)
 
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             val shown = truncateName(paramName, nameW - 4f)
             val tw = ImGui.calcTextSize(shown).x
             val th = ImGui.getTextLineHeight()

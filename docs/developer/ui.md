@@ -51,13 +51,14 @@ graph TD
     PropertiesPanel --> Lfo2Section[Lfo2Section.kt - LFO 2 Secondary Modulator]
     
     MixerPanel --> DeckControlPanel[DeckControlPanel.kt]
-    DeckControlPanel --> drawDeckMonitorToolbar[drawDeckMonitorToolbar Helper]
+    DeckControlPanel --> drawDeckButtonRow[drawDeckButtonRow Helper]
+    DeckControlPanel --> drawDeckPresetRow[drawDeckPresetRow Helper]
     UIManager --> SavePresetModal[SavePresetModal.kt]
 ```
 
 Most panel `draw(...)` methods (like `PerformanceMatrixPanel`) receive `session: SessionContext`, the current `Mixer` reference, and `parametersState: ParametersState` at frame render time. Other panels like `MixerPanel` and `DeckControlPanel` receive state via dependency injection in their constructors. Panels access subsystems (`AudioEngine`, `CVRegistry`, `PresetManager`, `PlayQueueManager`, `NotesManager`) via `session` rather than direct global singletons.
 
-Deck preview monitors (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) in `MixerPanel` and `DeckControlPanel` use a unified interactive preset bar (`drawDeckMonitorToolbar`) positioned directly **above** each monitor image. The preset bar orders elements left-to-right as `[Save Button] [Eject Button] [Preset Bar]`. Buttons and the Preset Bar are aligned along their bottom baselines, and the row height dynamically expands as text font scaling increases.
+Deck preview monitors (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) in `MixerPanel` and `DeckControlPanel` stack two toolbar rows directly **above** each monitor image: a button row (`drawDeckButtonRow` — Save, Eject, with room for more buttons later) and, below it, a full-width preset-name row (`drawDeckPresetRow` — active preset name, dirty marker, issue flag). Each row's height dynamically expands as text font scaling increases; `MixerLayoutCalculator` budgets space for both rows per deck.
 
 Each deck preview monitor features a standardized, symmetric dual-column overlay across all four decks:
 - **Left Column**:

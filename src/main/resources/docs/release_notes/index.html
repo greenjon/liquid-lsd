@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#deck-toolbar-split-into-button-row-preset-name-row-deckcontrolpanelkt-mixerlayoutkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck Toolbar Split Into Button Row + Preset-Name Row (DeckControlPanel.kt, MixerLayout.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unified-transition-browser-replaces-stockpreset-split-columns-transitionbrowserpanelkt-librarypanelkt-assettypekt-browserpopuphandlerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4294,6 +4305,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#deck-toolbar-split-into-button-row-preset-name-row-deckcontrolpanelkt-mixerlayoutkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck Toolbar Split Into Button Row + Preset-Name Row (DeckControlPanel.kt, MixerLayout.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unified-transition-browser-replaces-stockpreset-split-columns-transitionbrowserpanelkt-librarypanelkt-assettypekt-browserpopuphandlerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7355,6 +7377,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="deck-toolbar-split-into-button-row-preset-name-row-deckcontrolpanelkt-mixerlayoutkt">Deck Toolbar Split Into Button Row + Preset-Name Row (<code>DeckControlPanel.kt</code>, <code>MixerLayout.kt</code>)</h3>
+<ul>
+<li>Each deck's monitor toolbar previously crammed the Save/Eject buttons and the active preset name into a single shared row. Split into two stacked rows directly above the monitor image: a button row (<code>drawDeckButtonRow</code>, with room for more buttons later) and a full-width preset-name row (<code>drawDeckPresetRow</code>), using previously-unused vertical space in the mixer strip.</li>
+<li><code>MixerLayoutCalculator</code> now budgets height for both rows per deck, so decks still resize and clamp to the minimum height the same way as before.</li>
+</ul>
 <h3 id="unified-transition-browser-replaces-stockpreset-split-columns-transitionbrowserpanelkt-librarypanelkt-assettypekt-browserpopuphandlerkt">Unified Transition Browser Replaces Stock/Preset Split Columns (<code>TransitionBrowserPanel.kt</code>, <code>LibraryPanel.kt</code>, <code>AssetType.kt</code>, <code>BrowserPopupHandler.kt</code>)</h3>
 <ul>
 <li><code>[ Trans ]</code> mode's Library Column 1 previously split stock ISF transition shaders and saved <code>.lsdtrans</code> presets into two separate side-by-side panels (<code>StockTransitionListPanel</code>, <code>TransitionPresetListPanel</code>) — the same split <code>[ FX ]</code> mode used before its own stock/single/chain unification on 2026-09-18, but never revisited when <code>[ Trans ]</code> mode was built four days earlier. The two panels carried independent selection state and duplicated most of their row/search/context-menu logic.</li>

@@ -66,7 +66,9 @@ class DeckControlPanel(
         val inset = 3f
         val imgAvailW = (safePanelW - (inset * 2f)).coerceAtLeast(1f)
         val aspect = session.uiTheme.renderAspectRatio
-        val bottomBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { maxOf(ImGui.getFrameHeight(), ImGui.getTextLineHeight() + 6f) } + 6f
+        val toolbarRowH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { maxOf(ImGui.getFrameHeight(), ImGui.getTextLineHeight() + 6f) }
+        val itemSpacingY = ImGui.getStyle().getItemSpacingY()
+        val bottomBarH = (toolbarRowH * 2f) + itemSpacingY + 6f
         val childH = maxOf(previewH.coerceAtLeast(1f), (imgAvailW * aspect) + bottomBarH + 6f)
         val imgAvailH = (childH - bottomBarH - 6f).coerceAtMost(imgAvailW * aspect).coerceAtLeast(1f)
 
@@ -75,10 +77,15 @@ class DeckControlPanel(
 
         ImGui.spacing()
 
-        // Interactive top preset bar: Save button, Eject button, Preset bar
+        // Row 1: Save button, Eject button (room for more buttons later)
         ImGui.setCursorPosX(inset)
         val isPV = label == "Deck PV"
-        drawDeckMonitorToolbar(session, label, deck, isDeckA = isDeckA, isDeckPV = isPV, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck, targetW = imgAvailW)
+        drawDeckButtonRow(session, label, deck, isDeckA = isDeckA, isDeckPV = isPV, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck)
+        ImGui.spacing()
+
+        // Row 2: active preset name
+        ImGui.setCursorPosX(inset)
+        drawDeckPresetRow(session, label, deck, mixer = mixer, targetW = imgAvailW)
         ImGui.spacing()
 
         ImGui.setCursorPosX(inset)
@@ -466,14 +473,19 @@ class DeckControlPanel(
     }
 }
 
+/** Shared row height for the deck button row and preset-name row. */
+private fun deckToolbarRowHeight(session: llm.slop.liquidlsd.SessionContext): Float {
+    var textH = 0f
+    session.uiTheme.withFont(UITheme.FontLevel.BODY) { textH = ImGui.getTextLineHeight() }
+    val frameH = ImGui.getFrameHeight()
+    return maxOf(frameH, textH + 6f)
+}
+
 /**
- * Draws the interactive toolbar for a deck preview monitor.
- *
- * Order: [Save Button] [Eject Button] [Preset Bar]
- * Buttons and Preset Bar stay aligned along their bottom baselines,
- * and the bar height grows dynamically as text size/scale increases.
+ * Draws the deck's Save/Eject button row.
+ * Left-aligned; leaves the rest of the row's width free for future buttons.
  */
-fun drawDeckMonitorToolbar(
+fun drawDeckButtonRow(
     session: llm.slop.liquidlsd.SessionContext,
     deckLabel: String,
     deck: Deck,
@@ -481,40 +493,11 @@ fun drawDeckMonitorToolbar(
     isDeckPV: Boolean,
     mixer: Mixer,
     onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
-    onEjectDeck: (Deck, Boolean, Boolean) -> Unit,
-    targetW: Float = 0f
+    onEjectDeck: (Deck, Boolean, Boolean) -> Unit
 ) {
-    ImGui.pushID("monitor_toolbar_$deckLabel")
+    ImGui.pushID("button_row_$deckLabel")
 
-    val (activePreset, mtime, dtoVersion) = when (deckLabel) {
-        "Deck A" -> Triple(
-            session.presetManager.activePresetA,
-            session.presetManager.activePresetMtimeA,
-            session.presetManager.cachedDtoA?.version ?: 1
-        )
-        "Deck BG" -> Triple(
-            session.presetManager.activePresetBG,
-            session.presetManager.activePresetMtimeBG,
-            session.presetManager.cachedDtoBG?.version ?: 1
-        )
-        "Deck PV" -> Triple(
-            session.presetManager.activePresetPV,
-            session.presetManager.activePresetMtimePV,
-            session.presetManager.cachedDtoPV?.version ?: 1
-        )
-        else -> Triple(
-            session.presetManager.activePresetB,
-            session.presetManager.activePresetMtimeB,
-            session.presetManager.cachedDtoB?.version ?: 1
-        )
-    }
-    val isDirty = session.presetManager.isDeckDirty(deck, mixer)
-
-    var textH = 0f
-    session.uiTheme.withFont(UITheme.FontLevel.BODY) { textH = ImGui.getTextLineHeight() }
-    val frameH = ImGui.getFrameHeight()
-    val rowH = maxOf(frameH, textH + 6f)
-
+    val rowH = deckToolbarRowHeight(session)
     val startX = ImGui.getCursorScreenPosX()
     val startY = ImGui.getCursorScreenPosY()
     val bottomY = startY + rowH
@@ -556,11 +539,58 @@ fun drawDeckMonitorToolbar(
         onEjectDeck(deck, isDeckA, isDeckPV)
     }
 
-    // 3. Preset Bar
-    ImGui.sameLine()
-    val barX = ImGui.getCursorScreenPosX()
+    ImGui.setCursorScreenPos(startX, bottomY + 2f)
+
+    ImGui.popID()
+}
+
+/** Draws the deck's active-preset-name bar, full width, on its own row. */
+fun drawDeckPresetRow(
+    session: llm.slop.liquidlsd.SessionContext,
+    deckLabel: String,
+    deck: Deck,
+    mixer: Mixer,
+    targetW: Float = 0f
+) {
+    ImGui.pushID("preset_row_$deckLabel")
+
+    val (activePreset, mtime, dtoVersion) = when (deckLabel) {
+        "Deck A" -> Triple(
+            session.presetManager.activePresetA,
+            session.presetManager.activePresetMtimeA,
+            session.presetManager.cachedDtoA?.version ?: 1
+        )
+        "Deck BG" -> Triple(
+            session.presetManager.activePresetBG,
+            session.presetManager.activePresetMtimeBG,
+            session.presetManager.cachedDtoBG?.version ?: 1
+        )
+        "Deck PV" -> Triple(
+            session.presetManager.activePresetPV,
+            session.presetManager.activePresetMtimePV,
+            session.presetManager.cachedDtoPV?.version ?: 1
+        )
+        else -> Triple(
+            session.presetManager.activePresetB,
+            session.presetManager.activePresetMtimeB,
+            session.presetManager.cachedDtoB?.version ?: 1
+        )
+    }
+    val isDirty = session.presetManager.isDeckDirty(deck, mixer)
+
+    var textH = 0f
+    session.uiTheme.withFont(UITheme.FontLevel.BODY) { textH = ImGui.getTextLineHeight() }
+    val rowH = deckToolbarRowHeight(session)
+
+    val startX = ImGui.getCursorScreenPosX()
+    val startY = ImGui.getCursorScreenPosY()
+    val bottomY = startY + rowH
+
+    val tag = deckLabel.replace(" ", "")
+
+    val barX = startX
     val totalW = if (targetW > 0f) targetW else ImGui.getContentRegionAvailX()
-    val barW = (startX + totalW - barX).coerceAtLeast(10f)
+    val barW = totalW.coerceAtLeast(10f)
 
     val dl = ImGui.getWindowDrawList()
     val bgCol = ImGui.colorConvertFloat4ToU32(0.12f, 0.14f, 0.18f, 0.7f)

@@ -283,10 +283,10 @@ object MacroKnobWidget {
             }
         }
 
-        // Label centered below the knob face.
+        // Label centered below the knob face -- BODY size so it reads at a glance next to the knob.
         val labelY = startY + diameter + 3f
         var labelW = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { labelW = ImGui.calcTextSize(label).x }
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) { labelW = ImGui.calcTextSize(label).x }
         val labelX = cx - labelW / 2f
         ImGui.setCursorScreenPos(labelX, labelY)
         val labelCol = if (isSelected) {
@@ -295,18 +295,19 @@ object MacroKnobWidget {
             ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 0.9f)
         }
         if (showLabel) {
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 dl.addText(labelX, labelY, labelCol, label)
             }
         }
 
+        val labelH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
         val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
         if (showValue) {
             val valStr = "Val: ${"%.2f".format(newValue)}"
             var valW = 0f
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { valW = ImGui.calcTextSize(valStr).x }
             val valX = cx - valW / 2f
-            val valY = if (showLabel) labelY + captionH + 1f else labelY
+            val valY = if (showLabel) labelY + labelH + 1f else labelY
             val valCol = if (isSelected) {
                 ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 0.95f)
             } else {
@@ -321,8 +322,12 @@ object MacroKnobWidget {
         val bindingLine = formatBindingSummary(bindings)
         itemTooltip("$label: ${"%.2f".format(newValue)}$learnTip\n$bindingLine\nDrag to adjust. Left-click to inspect. Right-click for Learn.")
 
-        val textLines = (if (showLabel) 1 else 0) + (if (showValue) 1 else 0)
-        val totalTextH = if (textLines == 2) captionH * 2f + 2f else captionH * textLines
+        val totalTextH = when {
+            showLabel && showValue -> labelH + captionH + 2f
+            showLabel -> labelH
+            showValue -> captionH
+            else -> 0f
+        }
         ImGui.setCursorScreenPos(startX, startY + diameter + 3f + totalTextH)
     }
 

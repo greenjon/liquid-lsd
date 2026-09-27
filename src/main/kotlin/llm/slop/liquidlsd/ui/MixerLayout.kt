@@ -25,7 +25,8 @@ object MixerLayoutCalculator {
     ): Float {
         val aspect = aspectRatio.coerceIn(0.2f, 5.0f)
         val masterControlsH = (frameHeightWithSpacing + 12f).coerceAtLeast(34f)
-        val presetNameExtraHeight = maxOf(frameHeightWithSpacing, textLineHeightWithSpacing + 6f) + 8f
+        // Each deck now stacks two toolbar rows (buttons, then preset name) above its monitor.
+        val presetNameExtraHeight = (maxOf(frameHeightWithSpacing, textLineHeightWithSpacing + 6f) + 8f) * 2f
 
         val verticalChrome = estimateVerticalChrome(
             masterControlsH = masterControlsH,
@@ -60,7 +61,8 @@ object MixerLayoutCalculator {
         val contentWidth = (windowWidth - (windowPaddingX * 2f)).coerceAtLeast(1f)
 
         val masterControlsH = (frameHeightWithSpacing + 12f).coerceAtLeast(34f)
-        val presetNameExtraHeight = maxOf(frameHeightWithSpacing, textLineHeightWithSpacing + 6f) + 8f
+        // Each deck now stacks two toolbar rows (buttons, then preset name) above its monitor.
+        val presetNameExtraHeight = (maxOf(frameHeightWithSpacing, textLineHeightWithSpacing + 6f) + 8f) * 2f
 
         val verticalChrome = estimateVerticalChrome(
             masterControlsH = masterControlsH,
