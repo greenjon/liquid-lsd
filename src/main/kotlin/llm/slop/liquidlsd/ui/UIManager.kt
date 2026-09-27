@@ -16,6 +16,7 @@ import llm.slop.liquidlsd.rendering.MandalaRatio
 
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Renderer
+import llm.slop.liquidlsd.rendering.VisualSource
 import llm.slop.liquidlsd.presets.PresetManager
 import kotlin.math.roundToInt
 import mu.KotlinLogging
@@ -430,6 +431,11 @@ class UIManager(
         fun newPresetSafely(mixer: Mixer, deck: Deck) {
             val ui = instance ?: return
             ui.deckPresetController.newPresetSafely(mixer, deck)
+        }
+
+        fun changeVisualSourceSafely(mixer: Mixer, deck: Deck, deckLabel: String, newSource: VisualSource, state: ParametersState) {
+            val ui = instance ?: return
+            ui.deckPresetController.changeVisualSourceSafely(mixer, deck, deckLabel, newSource, state)
         }
     }
 

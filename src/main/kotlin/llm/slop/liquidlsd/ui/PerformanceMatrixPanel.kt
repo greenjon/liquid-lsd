@@ -13,11 +13,13 @@ import llm.slop.liquidlsd.macro.MacroLearnState
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.osc.OscLearnState
 import llm.slop.liquidlsd.osc.OscMappingManager
 import llm.slop.liquidlsd.parameters.ParameterResolver
 import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
+import llm.slop.liquidlsd.ui.browser.PresetListPanel
 import java.io.File
 
 /**
@@ -448,6 +450,18 @@ class PerformanceMatrixPanel {
                                 } else {
                                     UIManager.triggerDeckDragDrop(file, targetDeck, isDeckA, mixer)
                                 }
+                            }
+                        }
+                        val stockSourcePayload = ImGui.acceptDragDropPayload<String>(PresetListPanel.PAYLOAD_STOCK_SOURCE)
+                        if (stockSourcePayload != null) {
+                            VisualSourceRegistry.availableSources.find { it.id == stockSourcePayload }?.let { source ->
+                                val deckLabel = when {
+                                    isDeckA -> "Deck A"
+                                    isDeckB -> "Deck B"
+                                    isDeckBG -> "Deck BG"
+                                    else -> "Deck PV"
+                                }
+                                UIManager.changeVisualSourceSafely(mixer, targetDeck, deckLabel, source, parametersState)
                             }
                         }
                         ImGui.endDragDropTarget()

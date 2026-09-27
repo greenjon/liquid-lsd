@@ -4,10 +4,12 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiFocusedFlags
 import imgui.flag.ImGuiKey
+import imgui.type.ImBoolean
 import imgui.type.ImString
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.presets.getIssues
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.FileSystemManager
@@ -29,25 +31,40 @@ import java.io.File
 
 object PresetListPanel {
     private val logger = KotlinLogging.logger {}
+
+    /** Stock generators carry no persisted parameters, so they only support "Load to
+     *  Deck" -- never "Add to Playlist"/"Add to Live Queue" (those are reserved for
+     *  saved presets, which have reproducible state). */
+    const val STOCK_PATH_PREFIX = "stock-source://"
+    const val PAYLOAD_STOCK_SOURCE = "ASSET_ITEM_STOCK_SOURCE"
+
     val searchBuffer = ImString(256)
     var selectedAsset: AssetItem? = null
     var shouldFocusSearch: Boolean = false
     var filteredPresets: List<AssetItem> = emptyList()
 
+    var showStock = true
+    var showSaved = true
+    private val showStockRef = ImBoolean(true)
+    private val showSavedRef = ImBoolean(true)
+
     private var lastQuery: String = ""
     private var lastAllPresets: List<AssetItem>? = null
+    private var lastStock: List<llm.slop.liquidlsd.rendering.VisualSource>? = null
+    private var lastFilterState: List<Boolean> = emptyList()
     private var cachedFiltered: List<AssetItem> = emptyList()
 
     fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
         val btnSize = ImGui.getFrameHeight()
 
-        // Title Bar: "Presets" on the left, [+] button on the right
+        // Title Bar: "Generators" on the left, [+] and [...] buttons on the right
         ImGui.alignTextToFramePadding()
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("Presets")
+            ImGui.text("Generators")
         }
         ImGui.sameLine()
-        val rightX = ImGui.getWindowContentRegionMaxX() - btnSize
+        val totalButtonsWidth = btnSize * 2f + ImGui.getStyle().getItemSpacingX()
+        val rightX = ImGui.getWindowContentRegionMaxX() - totalButtonsWidth
         if (rightX > ImGui.getCursorPosX()) {
             ImGui.setCursorPosX(rightX)
         }
@@ -90,6 +107,27 @@ object PresetListPanel {
         }
         popOpenDropdownPadding()
 
+        ImGui.sameLine()
+
+        // [...] tier filter kebab
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.MORE_VERTICAL}##preset_browser_filter", btnSize, btnSize)) {
+                ImGui.openPopup("preset_browser_tier_filter")
+            }
+        }
+        itemTooltip("Filter Generators list by type.")
+        pushOpenDropdownPadding()
+        if (ImGui.beginPopup("preset_browser_tier_filter")) {
+            pushOpenDropdownFont()
+            showStockRef.set(showStock)
+            if (ImGui.checkbox("Stock Generators", showStockRef)) showStock = showStockRef.get()
+            showSavedRef.set(showSaved)
+            if (ImGui.checkbox("Saved Presets", showSavedRef)) showSaved = showSavedRef.get()
+            popOpenDropdownFont()
+            ImGui.endPopup()
+        }
+        popOpenDropdownPadding()
+
         ImGui.separator()
         ImGui.spacing()
 
@@ -100,7 +138,7 @@ object PresetListPanel {
             ImGui.setKeyboardFocusHere()
             shouldFocusSearch = false
         }
-        ImGui.inputTextWithHint("##presetSearch", "Search presets & tags... (Ctrl+F)", searchBuffer)
+        ImGui.inputTextWithHint("##presetSearch", "Search generators, presets & tags... (Ctrl+F)", searchBuffer)
         if (ImGui.isItemActive()) {
             if (ImGui.isKeyPressed(ImGuiKey.Escape)) {
                 searchBuffer.set("")
@@ -113,22 +151,32 @@ object PresetListPanel {
         ImGui.spacing()
 
         if (ImGui.beginChild("##presets_scroll", 0f, 0f, false)) {
-            // Flat list of all presets with zero-alloc caching on hot render path
+            // Stock generators (VisualSourceRegistry) and saved presets (FileSystemManager) are
+            // merged into one filterable list, mirroring FXBrowserPanel/TransitionBrowserPanel.
+            val stock = VisualSourceRegistry.availableSources
             val allPresets = FileSystemManager.scanAllPresets()
             val query = searchBuffer.get().trim().lowercase()
+            val filterState = listOf(showStock, showSaved)
 
-            val filtered = if (allPresets === lastAllPresets && query == lastQuery) {
+            val filtered = if (stock === lastStock && allPresets === lastAllPresets &&
+                query == lastQuery && filterState == lastFilterState) {
                 cachedFiltered
             } else {
-                lastQuery = query
+                lastStock = stock
                 lastAllPresets = allPresets
-                val res = if (query.isEmpty()) {
+                lastQuery = query
+                lastFilterState = filterState
+                val res = mutableListOf<AssetItem>()
+                if (showStock) {
+                    stock
+                        .filter { query.isEmpty() || it.displayName.lowercase().contains(query) || it.categories.any { c -> c.lowercase().contains(query) } }
+                        .sortedBy { it.displayName.lowercase() }
+                        .forEach { res.add(AssetItem(path = STOCK_PATH_PREFIX + it.id, name = it.displayName, type = AssetType.SOURCE_STOCK, tags = it.categories)) }
+                }
+                if (showSaved) {
                     allPresets
-                } else {
-                    allPresets.filter { asset ->
-                        asset.name.lowercase().contains(query) ||
-                            asset.tags.any { it.lowercase().contains(query) }
-                    }
+                        .filter { query.isEmpty() || it.name.lowercase().contains(query) || it.tags.any { t -> t.lowercase().contains(query) } }
+                        .forEach { res.add(it) }
                 }
                 cachedFiltered = res
                 res
@@ -148,11 +196,13 @@ object PresetListPanel {
                 filtered.forEachIndexed { index, asset ->
             ImGui.pushID(index)
 
-            val deps = asset.dependencies ?: FileSystemManager.getPresetDependencies(File(asset.path))
-            val issues = deps.getIssues(session)
+            val isStock = asset.type == AssetType.SOURCE_STOCK
+            val deps = if (isStock) null else (asset.dependencies ?: FileSystemManager.getPresetDependencies(File(asset.path)))
+            val issues = deps?.getIssues(session) ?: emptyList()
             val hasIssues = issues.isNotEmpty()
 
-            val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else asset.displayName
+            val icon = if (isStock) Icons.SQUARE else Icons.DISC
+            val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else "$icon ${asset.displayName}"
             val isSelected = selectedAsset?.path == asset.path
 
             val popupId = "preset_context_menu_$index"
@@ -218,17 +268,32 @@ object PresetListPanel {
                 }
             }
 
-            // Double-click: Load the preset to the inactive deck (>0% crossfader).
+            // Double-click: Load to the inactive deck (>0% crossfader).
             if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
                 val targetIsA = mixer.crossfade.value > 0.0f
                 val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
-                logger.info { "Loading preset ${asset.name} to inactive deck ${if (targetIsA) "A" else "B"}" }
-                UIManager.loadDeckPresetSafely(mixer, targetDeck, File(asset.path))
+                val targetLabel = if (targetIsA) "Deck A" else "Deck B"
+                if (isStock) {
+                    val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(STOCK_PATH_PREFIX) }
+                    if (source != null) {
+                        logger.info { "Loading stock generator ${asset.name} to inactive deck $targetLabel" }
+                        UIManager.changeVisualSourceSafely(mixer, targetDeck, targetLabel, source, parametersState)
+                    }
+                } else {
+                    logger.info { "Loading preset ${asset.name} to inactive deck $targetLabel" }
+                    UIManager.loadDeckPresetSafely(mixer, targetDeck, File(asset.path))
+                }
             }
 
-            // Drag source: drag a preset
+            // Drag source: saved presets carry their file path (ASSET_ITEM) so they can also go
+            // into playlists and queues; stock generators have no persisted state, so they use
+            // their own payload that only deck drop targets accept.
             if (ImGui.beginDragDropSource()) {
-                ImGui.setDragDropPayload("ASSET_ITEM", asset.path as Any)
+                if (isStock) {
+                    ImGui.setDragDropPayload(PAYLOAD_STOCK_SOURCE, asset.path.removePrefix(STOCK_PATH_PREFIX) as Any)
+                } else {
+                    ImGui.setDragDropPayload("ASSET_ITEM", asset.path as Any)
+                }
                 ImGui.textUnformatted(asset.name)
                 ImGui.endDragDropSource()
             }
@@ -240,54 +305,72 @@ object PresetListPanel {
             pushOpenDropdownPadding()
             if (ImGui.beginPopup(popupId)) {
                 pushOpenDropdownFont()
-                if (ImGui.menuItem("Load to Deck A")) {
-                    session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = true)
-                }
-                if (ImGui.menuItem("Load to Deck B")) {
-                    session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckBG = false, isDeckPV = false)
-                }
-                if (ImGui.menuItem("Load to Deck BG")) {
-                    session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckBG = true)
-                }
-                if (ImGui.menuItem("Preview on Deck PV")) {
-                    session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckPV = true)
-                }
-                ImGui.separator()
-                if (ImGui.menuItem("Add to A/B Queue")) {
-                    session.playQueueManager.appendToQueue(File(asset.path))
-                }
-                if (ImGui.menuItem("Add to Background Queue")) {
-                    llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(File(asset.path))
-                }
-                val activePl = LibraryPanel.activePlaylistData
-                if (activePl != null) {
-                    if (ImGui.menuItem("Add to '${activePl.name}'")) {
-                        PlaylistManager.insertPreset(activePl, asset.path, activePl.presets.size)
-                    }
-                }
-                ImGui.separator()
-                if (asset.type == AssetType.PRESET) {
-                    if (ImGui.menuItem("Rename / Edit Tags...")) {
-                        BrowserPopupHandler.openRenamePresetModal(asset)
-                    }
-                    if (ImGui.menuItem("Duplicate Preset...")) {
-                        BrowserPopupHandler.openDuplicatePresetModal(asset)
-                    }
-                } else {
-                    if (ImGui.menuItem("Rename")) {
-                        BrowserPopupHandler.renameTarget = asset
-                        BrowserPopupHandler.renameBuffer.set(asset.name)
-                        BrowserPopupHandler.pendingOpenRenamePopup = true
-                    }
-                    if (ImGui.menuItem("Clone")) {
-                        FileSystemManager.cloneFile(asset.path).onSuccess {
-                            LibraryPanel.refreshAssets()
+                if (isStock) {
+                    val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(STOCK_PATH_PREFIX) }
+                    if (source != null) {
+                        if (ImGui.menuItem("Load to Deck A")) {
+                            UIManager.changeVisualSourceSafely(mixer, mixer.deckA, "Deck A", source, parametersState)
+                        }
+                        if (ImGui.menuItem("Load to Deck B")) {
+                            UIManager.changeVisualSourceSafely(mixer, mixer.deckB, "Deck B", source, parametersState)
+                        }
+                        if (ImGui.menuItem("Load to Deck BG")) {
+                            UIManager.changeVisualSourceSafely(mixer, mixer.deckBG, "Deck BG", source, parametersState)
+                        }
+                        if (ImGui.menuItem("Preview on Deck PV")) {
+                            UIManager.changeVisualSourceSafely(mixer, mixer.deckPV, "Deck PV", source, parametersState)
                         }
                     }
-                }
-                if (ImGui.menuItem("Delete")) {
-                    BrowserPopupHandler.deleteTarget = asset
-                    BrowserPopupHandler.pendingOpenDeletePopup = true
+                } else {
+                    if (ImGui.menuItem("Load to Deck A")) {
+                        session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = true)
+                    }
+                    if (ImGui.menuItem("Load to Deck B")) {
+                        session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckBG = false, isDeckPV = false)
+                    }
+                    if (ImGui.menuItem("Load to Deck BG")) {
+                        session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckBG = true)
+                    }
+                    if (ImGui.menuItem("Preview on Deck PV")) {
+                        session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckPV = true)
+                    }
+                    ImGui.separator()
+                    if (ImGui.menuItem("Add to A/B Queue")) {
+                        session.playQueueManager.appendToQueue(File(asset.path))
+                    }
+                    if (ImGui.menuItem("Add to Background Queue")) {
+                        llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(File(asset.path))
+                    }
+                    val activePl = LibraryPanel.activePlaylistData
+                    if (activePl != null) {
+                        if (ImGui.menuItem("Add to '${activePl.name}'")) {
+                            PlaylistManager.insertPreset(activePl, asset.path, activePl.presets.size)
+                        }
+                    }
+                    ImGui.separator()
+                    if (asset.type == AssetType.PRESET) {
+                        if (ImGui.menuItem("Rename / Edit Tags...")) {
+                            BrowserPopupHandler.openRenamePresetModal(asset)
+                        }
+                        if (ImGui.menuItem("Duplicate Preset...")) {
+                            BrowserPopupHandler.openDuplicatePresetModal(asset)
+                        }
+                    } else {
+                        if (ImGui.menuItem("Rename")) {
+                            BrowserPopupHandler.renameTarget = asset
+                            BrowserPopupHandler.renameBuffer.set(asset.name)
+                            BrowserPopupHandler.pendingOpenRenamePopup = true
+                        }
+                        if (ImGui.menuItem("Clone")) {
+                            FileSystemManager.cloneFile(asset.path).onSuccess {
+                                LibraryPanel.refreshAssets()
+                            }
+                        }
+                    }
+                    if (ImGui.menuItem("Delete")) {
+                        BrowserPopupHandler.deleteTarget = asset
+                        BrowserPopupHandler.pendingOpenDeletePopup = true
+                    }
                 }
                 popOpenDropdownFont()
                 ImGui.endPopup()
@@ -303,7 +386,7 @@ object PresetListPanel {
         // Keyboard shortcuts (Delete / Backspace deletes selected asset with confirmation)
         val io = ImGui.getIO()
         val selected = selectedAsset
-        if (selected != null && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+        if (selected != null && selected.type != AssetType.SOURCE_STOCK && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
             if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
                 ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
                 BrowserPopupHandler.deleteTarget = selected

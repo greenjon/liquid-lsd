@@ -14,6 +14,7 @@ import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.SourceDocRegistry
+import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -147,6 +148,12 @@ class DeckControlPanel(
                     } else {
                         UIManager.triggerDeckDragDrop(file, deck, isDeckA, mixer)
                     }
+                }
+            }
+            val stockSourcePayload = ImGui.acceptDragDropPayload<String>(llm.slop.liquidlsd.ui.browser.PresetListPanel.PAYLOAD_STOCK_SOURCE)
+            if (stockSourcePayload != null) {
+                VisualSourceRegistry.availableSources.find { it.id == stockSourcePayload }?.let { source ->
+                    UIManager.changeVisualSourceSafely(mixer, deck, label, source, parametersState)
                 }
             }
             val payloadMonitor = ImGui.acceptDragDropPayload<String>("MONITOR_DRAG")

@@ -575,10 +575,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#library-view-mode-presets-fx-trans" class="md-nav__link">
+  <a href="#library-view-mode-generators-fx-trans" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Library View Mode ([ Presets ] / [ FX ] / [ Trans ])
+        Library View Mode ([ Generators ] / [ FX ] / [ Trans ])
       
     </span>
   </a>
@@ -586,10 +586,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#preset-browser-all-presets" class="md-nav__link">
+  <a href="#the-unified-generators-browser" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Preset Browser (All Presets)
+        The Unified Generators Browser
       
     </span>
   </a>
@@ -1603,10 +1603,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#library-view-mode-presets-fx-trans" class="md-nav__link">
+  <a href="#library-view-mode-generators-fx-trans" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Library View Mode ([ Presets ] / [ FX ] / [ Trans ])
+        Library View Mode ([ Generators ] / [ FX ] / [ Trans ])
       
     </span>
   </a>
@@ -1614,10 +1614,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#preset-browser-all-presets" class="md-nav__link">
+  <a href="#the-unified-generators-browser" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Preset Browser (All Presets)
+        The Unified Generators Browser
       
     </span>
   </a>
@@ -1855,11 +1855,11 @@
 </ul>
 <p>Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, <code>Space</code>, <code>Ctrl+F</code> or <code>/</code> closes Deep Edit (cancelling any armed Learn) and brings the Library back.</p>
 <p>In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.</p>
-<h3 id="library-view-mode-presets-fx-trans">Library View Mode (<code>[ Presets ]</code> / <code>[ FX ]</code> / <code>[ Trans ]</code>)</h3>
-<p>Toggle between full visual presets and FX presets using the segmented mode button in the top-left of the Library menu bar:</p>
+<h3 id="library-view-mode-generators-fx-trans">Library View Mode (<code>[ Generators ]</code> / <code>[ FX ]</code> / <code>[ Trans ]</code>)</h3>
+<p>Toggle between generators, FX, and transitions using the segmented mode button in the top-left of the Library menu bar:</p>
 <ul>
-<li><strong><code>[ Presets ]</code> Mode</strong>:</li>
-<li><strong>Column 1 (Presets Pool)</strong>: Shows all full visual deck presets (<code>.lsd</code>) in <code>library/presets/</code>.</li>
+<li><strong><code>[ Generators ]</code> Mode</strong>:</li>
+<li><strong>Column 1 (Generators Browser)</strong>: A unified, filterable list combining the bundled stock visual sources (Mandala, Dynamic Spiral, Icosa H3, and the rest — see below) with saved full deck presets (<code>.lsd</code>) in <code>library/presets/</code>.</li>
 <li><strong>Column 2 (Playlists Editor)</strong>: Setlists (<code>.lsdplay</code>) in <code>library/playlists/</code>.</li>
 <li><strong><code>[ FX ]</code> Mode</strong>:</li>
 <li><strong>Column 1 (FX Browser)</strong>: A unified, filterable list combining stock ISF filters, saved single-slot FX presets (<code>.lsdfx</code>) in <code>library/fx/</code>, and saved 4-slot FX chains (<code>.lsdfxchain</code>) in <code>library/fx_chains/</code>.</li>
@@ -1871,19 +1871,26 @@
 <li><strong>Column 3 (Live Transition Queue)</strong>: The volatile, RAM-only transition queue the crossfader advances through automatically.</li>
 <li>Column 4 is reserved — Transitions don't need a second queue the way <code>[ FX ]</code> mode needs separate A/B and BG queues.</li>
 </ul>
-<h3 id="preset-browser-all-presets">Preset Browser (All Presets)</h3>
-<p>The left column shows every preset saved in <code>library/presets/</code>. </p>
+<h3 id="the-unified-generators-browser">The Unified Generators Browser</h3>
+<p>Column 1 of <code>[ Generators ]</code> mode lists two kinds of row side by side, each marked with its own icon:</p>
 <ul>
-<li><strong>Search</strong> — Type to filter by name or tag. <code>Ctrl+F</code> or <code>/</code> jumps focus to the search box from anywhere in the app.</li>
-<li><strong>Double-click</strong> — Loads the preset into whichever deck is currently inactive on the crossfader.</li>
-<li><strong>Number keys 1–4</strong> — Route the selected preset to Deck A, B, BG, or PV respectively.</li>
-<li><strong>Right-click or ⋮</strong> — Rename, retag, duplicate, add to a queue, or delete.</li>
-<li><strong><code>[!]</code> badge</strong> — Appears when a preset uses a subsystem that's currently offline (e.g. MIDI or audio). The preset still loads fine; hover the badge to see what's missing.</li>
+<li><strong>Stock Generators</strong> — The 8 bundled built-in visual sources: Mandala, Dynamic Spiral, Icosa H3, Domain Warp Fluid, Gyroid Hyperspace, Celestial Engine, Hyper Slice, and Chladni Cymatics (plus any custom sources dropped into your configured shader directories). They load straight to a deck's generator stage with their shader's default parameters; they can't be added to a playlist or queue.</li>
+<li><strong>Saved Presets (<code>.lsd</code>)</strong> — A full deck preset: the generator plus every parameter value, modulation connection, and note.</li>
+</ul>
+<p>Use the <strong><code>[⋮]</code></strong> filter menu above the list to show/hide each tier (<strong>Stock Generators / Saved Presets</strong>). Use <strong><code>[+]</code></strong> to eject a deck to blank so you can build a new preset on it (see <a href="#saving-a-preset">Saving a preset</a> below).</p>
+<ul>
+<li><strong>Search</strong> — Type to filter by name, tag, or (for stock generators) category. <code>Ctrl+F</code> or <code>/</code> jumps focus to the search box from anywhere in the app.</li>
+<li><strong>Double-click</strong> — Loads the item into whichever deck is currently inactive on the crossfader. For a stock generator this replaces only the deck's generator (source), leaving its FX chain untouched; for a saved preset it loads the full deck state.</li>
+<li><strong>Number keys 1–4</strong> — Route the selected saved preset to Deck A, B, BG, or PV respectively (stock generators aren't reachable via these shortcuts or the shared toolbar's deck buttons — use double-click or the row's right-click menu).</li>
+<li><strong>Right-click or ⋮ (saved presets)</strong> — Rename, retag, duplicate, load to a specific deck, add to a queue or playlist, or delete.</li>
+<li><strong>Right-click or ⋮ (stock generators)</strong> — <strong>Load to Deck A/B/BG/PV</strong> only. Stock generators have no persisted parameter state, and their bundled defaults and Metaknob auto-bindings haven't all been individually audited yet, so they're intentionally left out of playlists and the live/background queues — an unattended queue firing an unverified default has no performer there to catch it. Loading straight to a deck is fine, since you're present to dial it in.</li>
+<li><strong>Drag-and-drop</strong> — Drag any row onto a deck's monitor in the Mixer panel or onto its row in the Performance Matrix to load it (generator-only for stock rows, full preset for saved rows). Saved presets can also be dragged into the Playlists Editor (Column 2) or a queue; stock generators can't, for the same reason the context menu omits those options.</li>
+<li><strong><code>[!]</code> badge</strong> — Appears when a saved preset uses a subsystem that's currently offline (e.g. MIDI or audio). The preset still loads fine; hover the badge to see what's missing.</li>
 </ul>
 <h3 id="the-unified-fx-browser">The Unified FX Browser</h3>
 <p>Column 1 of <code>[ FX ]</code> mode lists three kinds of row side by side, each marked with its own icon:</p>
 <ul>
-<li><strong>Stock ISF Filters</strong> — Built-in filters with no saved parameters. They can only be loaded directly to a deck (first vacant FX slot); they can't be added to a playlist or live queue since there's no reproducible state to save.</li>
+<li><strong>Stock ISF Filters</strong> — Built-in filters with no saved parameters. A deck or Master has several FX chain slots, so a bare stock filter is ambiguous without knowing which slot it targets — double-click and drag-and-drop resolve this by loading into the first vacant slot, and the right-click menu lets you pick a specific slot explicitly (<strong>Load to Deck/Master &gt; Slot 1–3</strong>). That same ambiguity is why stock filters can't be added to a playlist or live queue: there's no interactive slot-picker available when a queued item gets applied automatically later.</li>
 <li><strong>Saved Single FX Presets (<code>.lsdfx</code>)</strong> — One FX slot's full parameter state, captured from a deck.</li>
 <li><strong>Saved FX Chains (<code>.lsdfxchain</code>)</strong> — A complete 3-slot FX pipeline, captured from a deck's or Master's FX chain. Loading a chain replaces all 3 slots on the target chain.</li>
 </ul>
@@ -2017,7 +2024,7 @@
 <h3 id="the-unified-transition-browser">The Unified Transition Browser</h3>
 <p>Column 1 of <code>[ Trans ]</code> mode lists two kinds of row side by side, each marked with its own icon:</p>
 <ul>
-<li><strong>Stock ISF Transition Shaders</strong> — The curated suite above, plus any custom <code>.fs</code> transitions found in your configured shader directories. Unlike stock FX filters, stock transitions carry no per-slot state to lose, so they can be applied, queued, or added to a playlist just like saved presets.</li>
+<li><strong>Stock ISF Transition Shaders</strong> — The curated suite above, plus any custom <code>.fs</code> transitions found in your configured shader directories. Unlike FX, there's only ever one active transition — no chain of slots to disambiguate — so a bare stock transition id is a complete, unambiguous instruction. Combined with sane bundled defaults, that makes them safe to apply, queue, or add to a playlist just like saved presets.</li>
 <li><strong>Saved Transition Presets (<code>.lsdtrans</code>)</strong> — A dialed-in transition configuration (parameters, dry/wet, modulation bindings) captured from the mixer.</li>
 </ul>
 <p>Use the <strong><code>[⋮]</code></strong> filter menu above the list to show/hide each tier (<strong>Stock Shaders / Saved Presets</strong>). Use <strong><code>[+]</code></strong> to save the mixer's current transition as a new preset.</p>
@@ -2043,12 +2050,12 @@
 </thead>
 <tbody>
 <tr>
-<td>Preset Browser</td>
+<td>Generators Browser (saved preset)</td>
 <td>Playlist (between items)</td>
 <td>Inserts at that position</td>
 </tr>
 <tr>
-<td>Preset Browser</td>
+<td>Generators Browser (saved preset)</td>
 <td>Empty space at playlist bottom</td>
 <td>Appends to the end</td>
 </tr>
@@ -2058,9 +2065,14 @@
 <td>Reorders</td>
 </tr>
 <tr>
-<td>Preset Browser or Playlist</td>
+<td>Generators Browser (saved preset) or Playlist</td>
 <td>Queue</td>
 <td>Adds to the live queue</td>
+</tr>
+<tr>
+<td>Generators Browser row (stock or saved)</td>
+<td>Deck monitor (Mixer) or deck row (Performance Matrix)</td>
+<td>Loads generator (stock) or full preset (saved) to that deck</td>
 </tr>
 <tr>
 <td>FX Preset (<code>.lsdfx</code>)</td>

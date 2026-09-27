@@ -88,7 +88,9 @@ object LibraryPanel {
                 when (viewMode) {
                     LibraryViewMode.FX -> FXBrowserPanel.selectedAsset?.let { File(it.path) }
                     LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset?.let { TransitionBrowserPanel.fileFor(it) }
-                    LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset?.let { File(it.path) }
+                    LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset
+                        ?.takeIf { it.type != AssetType.SOURCE_STOCK }
+                        ?.let { File(it.path) }
                 }
             }
             SelectionSource.PLAYLIST -> {
@@ -131,7 +133,9 @@ object LibraryPanel {
             PlaylistEditorPanel.selectedPresetIndex = -1
             QueueActionsPanel.selectedIndex = -1
             llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
-            auditionIfLocked(File(asset.path), session, mixer)
+            if (asset.type != AssetType.SOURCE_STOCK) {
+                auditionIfLocked(File(asset.path), session, mixer)
+            }
         }
     }
 
@@ -239,17 +243,18 @@ object LibraryPanel {
             val bottomSpacing = 2.5f
             val yOffset = (menuBarH - btnH - bottomSpacing).coerceAtLeast(0f)
 
-            // Left Mode Toggle: [ Presets ] / [ FX ] / [ Trans ]
+            // Left Mode Toggle: [ Generators ] / [ FX ] / [ Trans ]
             ImGui.setCursorPosX(8f)
             ImGui.setCursorPosY(yOffset)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 val btnWMode = 54f
+                val btnWModeWide = 74f
                 val activeCol = ImGui.colorConvertFloat4ToU32(0.25f, 0.45f, 0.75f, 0.8f)
                 val inactiveCol = ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 0.8f)
 
                 val isPresets = viewMode == LibraryViewMode.PRESETS
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isPresets) activeCol else inactiveCol)
-                if (ImGui.button("Presets##mode_presets", btnWMode, btnH)) {
+                if (ImGui.button("Generators##mode_presets", btnWModeWide, btnH)) {
                     viewMode = LibraryViewMode.PRESETS
                 }
                 ImGui.popStyleColor()

@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#presets-column-renamed-to-generators-with-stock-generator-support-presetlistpanelkt-assettypekt-librarypanelkt-deckcontrolpanelkt-performancematrixpanelkt-uimanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presets Column Renamed to Generators, with Stock Generator Support (PresetListPanel.kt, AssetType.kt, LibraryPanel.kt, DeckControlPanel.kt, PerformanceMatrixPanel.kt, UIManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#preferences-transition-to-docked-23-workspace-panel-preferencespanelkt-uimanagerkt-menubarkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4338,6 +4349,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#presets-column-renamed-to-generators-with-stock-generator-support-presetlistpanelkt-assettypekt-librarypanelkt-deckcontrolpanelkt-performancematrixpanelkt-uimanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presets Column Renamed to Generators, with Stock Generator Support (PresetListPanel.kt, AssetType.kt, LibraryPanel.kt, DeckControlPanel.kt, PerformanceMatrixPanel.kt, UIManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#preferences-transition-to-docked-23-workspace-panel-preferencespanelkt-uimanagerkt-menubarkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7443,6 +7465,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="presets-column-renamed-to-generators-with-stock-generator-support-presetlistpanelkt-assettypekt-librarypanelkt-deckcontrolpanelkt-performancematrixpanelkt-uimanagerkt">Presets Column Renamed to Generators, with Stock Generator Support (<code>PresetListPanel.kt</code>, <code>AssetType.kt</code>, <code>LibraryPanel.kt</code>, <code>DeckControlPanel.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>UIManager.kt</code>)</h3>
+<ul>
+<li>Library's <code>[ Presets ]</code> mode is now <code>[ Generators ]</code>. Column 1 merges the 8 bundled stock visual sources (Mandala, Dynamic Spiral, Icosa H3, Domain Warp Fluid, Gyroid Hyperspace, Celestial Engine, Hyper Slice, Chladni Cymatics) alongside saved <code>.lsd</code> presets in one filterable list, with a kebab (<code>[⋮]</code>) tier filter (<strong>Stock Generators / Saved Presets</strong>) — the same pattern FX and Transitions already use.</li>
+<li>Stock generators load straight to any deck: double-click loads to the inactive deck, right-click offers <strong>Load to Deck A/B/BG/PV</strong>, and dragging onto a deck monitor or the Performance Matrix deck row works too (new <code>AssetType.SOURCE_STOCK</code>, a dedicated <code>PAYLOAD_STOCK_SOURCE</code> drag payload, routed through <code>DeckPresetController.changeVisualSourceSafely</code> so dirty-deck confirmation still applies).</li>
+<li>Unlike stock transitions, stock generators are <strong>not</strong> addable to playlists or the live/background queues — their default parameter values and Metaknob auto-bindings haven't been individually audited yet, so a queued raw generator could silently apply an untested default with no one watching. Loading straight to a deck is fine because the performer is present and can dial it in immediately. The queue restriction lifts once the existing <strong>ISF Binding Audit</strong> roadmap item (<code>ROADMAP.md</code>) verifies sensible defaults/bindings for every bundled generator.</li>
+</ul>
 <h3 id="preferences-transition-to-docked-23-workspace-panel-preferencespanelkt-uimanagerkt-menubarkt">Preferences Transition to Docked 2/3 Workspace Panel (<code>PreferencesPanel.kt</code>, <code>UIManager.kt</code>, <code>MenuBar.kt</code>)</h3>
 <ul>
 <li><strong>Docked Workspace Panel</strong>: Preferences has been transitioned from a floating modal overlay dialog into a docked workspace panel occupying the left ~2/3 of the interface, leaving the Mixer column (Decks A/B, preview monitor, crossfader, and master audio meters) fully visible and interactive on the right.</li>
