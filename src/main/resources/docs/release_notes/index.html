@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#inline-browse-replaces-modal-shaderfx-chaintransition-pickers-performancebrowsebaykt-shaderpickerpopupkt-performancedeepeditbaykt-fxchainheaderkt-fxslotcellkt-decksourcepickerkt-parametersstatekt-performancedeckcontrolskt-performancemastercontrolskt-performancematrixpanelkt-performancetransitionscontrolskt-parameterstabskt-mixerpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inline Browse Replaces Modal Shader/FX Chain/Transition Pickers (PerformanceBrowseBay.kt, ShaderPickerPopup.kt, PerformanceDeepEditBay.kt, FxChainHeader.kt, FxSlotCell.kt, DeckSourcePicker.kt, ParametersState.kt, PerformanceDeckControls.kt, PerformanceMasterControls.kt, PerformanceMatrixPanel.kt, PerformanceTransitionsControls.kt, ParametersTabs.kt, MixerPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#presets-column-renamed-to-generators-with-stock-generator-support-presetlistpanelkt-assettypekt-librarypanelkt-deckcontrolpanelkt-performancematrixpanelkt-uimanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4349,6 +4360,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#inline-browse-replaces-modal-shaderfx-chaintransition-pickers-performancebrowsebaykt-shaderpickerpopupkt-performancedeepeditbaykt-fxchainheaderkt-fxslotcellkt-decksourcepickerkt-parametersstatekt-performancedeckcontrolskt-performancemastercontrolskt-performancematrixpanelkt-performancetransitionscontrolskt-parameterstabskt-mixerpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Inline Browse Replaces Modal Shader/FX Chain/Transition Pickers (PerformanceBrowseBay.kt, ShaderPickerPopup.kt, PerformanceDeepEditBay.kt, FxChainHeader.kt, FxSlotCell.kt, DeckSourcePicker.kt, ParametersState.kt, PerformanceDeckControls.kt, PerformanceMasterControls.kt, PerformanceMatrixPanel.kt, PerformanceTransitionsControls.kt, ParametersTabs.kt, MixerPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#presets-column-renamed-to-generators-with-stock-generator-support-presetlistpanelkt-assettypekt-librarypanelkt-deckcontrolpanelkt-performancematrixpanelkt-uimanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7465,6 +7487,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="inline-browse-replaces-modal-shaderfx-chaintransition-pickers-performancebrowsebaykt-shaderpickerpopupkt-performancedeepeditbaykt-fxchainheaderkt-fxslotcellkt-decksourcepickerkt-parametersstatekt-performancedeckcontrolskt-performancemastercontrolskt-performancematrixpanelkt-performancetransitionscontrolskt-parameterstabskt-mixerpanelkt">Inline Browse Replaces Modal Shader/FX Chain/Transition Pickers (<code>PerformanceBrowseBay.kt</code>, <code>ShaderPickerPopup.kt</code>, <code>PerformanceDeepEditBay.kt</code>, <code>FxChainHeader.kt</code>, <code>FxSlotCell.kt</code>, <code>DeckSourcePicker.kt</code>, <code>ParametersState.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>PerformanceTransitionsControls.kt</code>, <code>ParametersTabs.kt</code>, <code>MixerPanel.kt</code>)</h3>
+<ul>
+<li>Clicking a deck's generator badge, an FX chain's name, an FX slot's name, or the active transition's name no longer pops a full-screen modal over the mixer. Each now opens <strong>Browse</strong> content inline in that row's Edit bay — the same place Deep Edit's parameter grid shows, collapsing the other rows exactly like Deep Edit already does, so the mixer and monitors stay visible and interactive the whole time.</li>
+<li>Picking something applies it <strong>immediately and leaves the list open</strong>, so trying several generators, effects, or chains back-to-back doesn't mean reopening a picker each time; Ctrl+Z undoes any one of them individually. Deck source swaps still go through the existing dirty-preset confirmation when applicable.</li>
+<li>A new <strong>Browse ↔ Params</strong> toggle at the top of the bay flips between the picker and that row's normal parameter editor without closing anything — pick a generator, then immediately check its parameters, without leaving the row.</li>
+<li>FX Chain Browse adds <strong>Chain / FX1 / FX2 / FX3</strong> sub-tabs: Chain lists and loads saved whole <code>.lsdfxchain</code> files (the same search-and-load list that used to live in a small popup under the chain name), and FX1–FX3 are the per-slot effect pickers, each defaulting to its slot's usual category (e.g. FX1 opens on Color Adjustment).</li>
+<li><code>ShaderPickerPopup</code> is no longer a modal popup; it now draws its search/category-pill/results content inline wherever it's told to (<code>PerformanceBrowseBay</code>), reusable across all four Browse targets (deck source, 3 FX slots, transitions).</li>
+</ul>
 <h3 id="presets-column-renamed-to-generators-with-stock-generator-support-presetlistpanelkt-assettypekt-librarypanelkt-deckcontrolpanelkt-performancematrixpanelkt-uimanagerkt">Presets Column Renamed to Generators, with Stock Generator Support (<code>PresetListPanel.kt</code>, <code>AssetType.kt</code>, <code>LibraryPanel.kt</code>, <code>DeckControlPanel.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>UIManager.kt</code>)</h3>
 <ul>
 <li>Library's <code>[ Presets ]</code> mode is now <code>[ Generators ]</code>. Column 1 merges the 8 bundled stock visual sources (Mandala, Dynamic Spiral, Icosa H3, Domain Warp Fluid, Gyroid Hyperspace, Celestial Engine, Hyper Slice, Chladni Cymatics) alongside saved <code>.lsd</code> presets in one filterable list, with a kebab (<code>[⋮]</code>) tier filter (<strong>Stock Generators / Saved Presets</strong>) — the same pattern FX and Transitions already use.</li>

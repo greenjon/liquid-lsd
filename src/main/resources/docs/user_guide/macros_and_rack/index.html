@@ -753,6 +753,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#browse-picking-a-generator-fx-or-transition-without-leaving-the-row" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Browse: picking a generator, FX or transition without leaving the row
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#setting-up-knob-labels-and-bindings" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1669,6 +1680,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#browse-picking-a-generator-fx-or-transition-without-leaving-the-row" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Browse: picking a generator, FX or transition without leaving the row
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#setting-up-knob-labels-and-bindings" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1970,7 +1992,7 @@ Master row. There are no separate FX-only rows.</p>
 <li><strong>Per-Deck Insert FX &amp; Flexible Routing</strong>: Every deck (A, B, BG, PV) now owns its own dedicated 3-slot <code>FxChain</code> running post-generator and pre-crossfader, completely decoupled from other decks.</li>
 <li><strong>In-Row <code>[ SRC | FX ]</code> Knob Assignment &amp; Stacked Controls (Deck Rows)</strong>: In each Deck row, both visual generator and insert FX chain controls coexist in two stacked rows on the left wing. Click the <strong><code>[ SRC ]</code></strong> or <strong><code>[ FX ]</code></strong> knob-assign pill to choose which bank the row's 4 on-screen knobs control (<code>SRC</code> for visual generator macros, <code>FX</code> for that deck's insert FX Super Knob + 3 Metaknobs). Switching between <code>SRC</code> and <code>FX</code> retargets on-screen knobs without hiding or toggling away either row's controls. The right wing provides an instant <code>[ BYPASS / FX ON ]</code> button for that deck's FX chain.</li>
 <li><strong>In-Row <code>[ MIX | FX ]</code> Knob Assignment (Master Row)</strong>: The Master row works like a deck row. Its left wing stacks a <strong><code>[ MIX ]</code></strong> pill over an <strong><code>[ FX ]</code></strong> pill and the Master FX chain header (<code>[◀] Name • [▶] [Save] [⋮]</code>). <code>MIX</code> puts the knobs on the composite alphas and master level; <code>FX</code> puts them on the Master FX Super Knob + 3 Metaknobs. The right wing has the Master FX <code>[ BYPASS / FX ON ]</code> button. The crossfader sits on the <code>[ MIX ]</code> line in both modes.</li>
-<li>The Transitions row carries the transition picker and queue prev/next controls.</li>
+<li>The Transitions row carries the transition picker (opens inline Browse — see below) and queue prev/next controls.</li>
 </ul>
 <p>Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) and starts with a title badge spanning both control lines: a large <strong>A</strong>, <strong>B</strong>, <strong>BG</strong> or <strong>PV</strong> on deck rows (the <code>[SRC]</code>/<code>[FX]</code> pills beside it show which the knobs control), and <strong>MASTER</strong>, <strong>TRANS</strong>, <strong>WET/DRY</strong> and <strong>CLOCK</strong> on the MASTER tab. No row has a header bar over its knobs, so MASTER-tab knobs are the same size as deck knobs.</p>
 <h3 id="performance-controls-side-wing-layout">Performance Controls &amp; Side-Wing Layout</h3>
@@ -1981,20 +2003,20 @@ Master row. There are no separate FX-only rows.</p>
   - <strong>Left Wing (Info &amp; Deck Controls)</strong>:
     - <strong>Row 1 (SRC)</strong>:
       - <strong><code>[ SRC ]</code> Knob Pill</strong>: Assigns the row's 4 on-screen macro knobs to the deck's Visual Generator.
-      - <strong>Generator Badge</strong>: Displays active visual source (<code>deck.source.displayName</code>), click to change source.
+      - <strong>Generator Badge</strong>: Displays active visual source (<code>deck.source.displayName</code>), click to open inline Browse and change source.
       - <strong>Preset Dropdown Combo</strong>: Searchable preset selector with auto-focus Quick-Search filter bar (<code>presetSearch*</code>) and dirty marker (<code>*</code>).
       - <strong>Eject Button (<code>⏏</code>)</strong>: Resets the deck to defaults with dirty-state safety guard.
       - <strong>Randomize Die Button (<code>🎲</code>)</strong>: Instantly randomizes that deck's modulators &amp; base values with undo support (when randomization is enabled).
       - <strong>Queue Navigation</strong>: Deck A and Deck B connect to <code>PlayQueueManager</code> (<code>&lt; N/Total &gt;</code>), Deck BG connects to <code>BgQueueManager</code> (<code>&lt; N/Total &gt;</code>), and Deck PV features a quick Preview focus button.
     - <strong>Row 2 (FX)</strong>:
       - <strong><code>[ FX ]</code> Knob Pill</strong>: Assigns the row's 4 on-screen macro knobs to the deck's insert FX chain (Super Knob + 3 Metaknobs).
-      - <strong>Dedicated Chain Controls</strong>: Step through chains (<code>◀</code> / <code>▶</code>), active chain name with dirty dot (<code>•</code>), <code>[Save]</code> button, and kebab menu (<code>[⋮]</code>) for Save As, Revert, Copy/Paste, and Resync.
+      - <strong>Dedicated Chain Controls</strong>: Step through chains (<code>◀</code> / <code>▶</code>), active chain name with dirty dot (<code>•</code>) — click it to open inline Browse on the whole-chain list — <code>[Save]</code> button, and kebab menu (<code>[⋮]</code>) for Save As, Revert, Copy/Paste, and Resync.
   - <strong>Knob Columns</strong>: The 4 macro knobs are uniformly spaced across the center area between the control wings, sharing the exact same column pitch and horizontal alignment whether assigned to <code>SRC</code> or <code>FX</code>. When assigned to <code>FX</code>, each of knobs 2–4 gets two stacked buttons on its left: a link button (<code>Icons.LINK</code>/<code>Icons.UNLINK</code>) that links/unlinks its Metaknob to the Super Knob, and a power button that bypasses just that effect. Interactive FX slot cells showing the effect name appear beneath knobs 2–4; hover a cell to show its <code>◀</code> / <code>▶</code> shortlist arrows.
   - <strong>Right Wing</strong>: Displays dedicated insert FX controls for that deck: <code>[ BYPASS / FX ON ]</code> kill switch, aligned level with the FX row.
   - <strong>Drag-and-Drop</strong>: Dropping a deck preset (<code>.patch</code>, <code>.lsd</code>, <code>.json</code>) loads the visual preset; dropping a <code>.lsdfxchain</code> loads that FX chain onto the deck.
 - <strong>Whole-Rig Randomize (<code>[ ALL 🎲 ]</code>)</strong>: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking <code>mixer.randomizeAll()</code> across all decks simultaneously.
 - <strong>Master (Row 1 in MASTER)</strong>: Left wing: <code>[ MIX ]</code> over <code>[ FX ]</code> + Master FX chain header, as described above; right wing: Master FX <code>[ BYPASS / FX ON ]</code>. Dropping a <code>.lsdfxchain</code> onto the <code>MASTER</code> badge loads it into Master FX. The <code>[ MIX ]</code> line holds the crossfader: Deck A and Deck B quick-snap buttons (<code>[ A ]</code> and <code>[ B ]</code>), an interactive zero-centered crossfader track with mouse drag, mouse wheel, middle-click center reset, and live amber modulation/auto-fade indicator dot, a smooth <code>[ AUTO ]</code> crossfade trigger, and an interactive <strong>Fade Speed Duration Badge</strong> (crossfader time -- scrubbable with mouse drag/wheel and right-click context menu for duration presets <code>0.5s</code>–<code>8.0s</code> and MIDI/OSC learn). Transition presets (<code>.lsdtrans</code>) and shaders (<code>.fs</code>/<code>.isf</code>) dropped onto the crossfader track apply directly.
-- <strong>Transitions (Row 2 in MASTER)</strong>: Features a Transition Picker popup button displaying the active transition with modified indicator (<code>*</code>), and Transition Queue stepping controls (<code>&lt;</code>, <code>N/Total</code>, <code>&gt;</code>). Transition presets (<code>.lsdtrans</code>) and shaders (<code>.fs</code>/<code>.isf</code>) can be dropped directly onto the picker button.
+- <strong>Transitions (Row 2 in MASTER)</strong>: Features a Transition Picker button displaying the active transition with modified indicator (<code>*</code>) — click it to open inline Browse on the transition list — and Transition Queue stepping controls (<code>&lt;</code>, <code>N/Total</code>, <code>&gt;</code>). Transition presets (<code>.lsdtrans</code>) and shaders (<code>.fs</code>/<code>.isf</code>) can be dropped directly onto the picker button.
 - <strong>Clock &amp; Global (Row 4 in MASTER)</strong>: The two lines beside the <code>CLOCK</code> badge have the tempo controls from Preferences &gt; Tempo &amp; Sync, placed here for use mid-set:
   - <strong><code>[ MAN ]</code> / <code>[ AUDIO ]</code></strong>: clock source (manual tempo or the audio beat tracker).
   - <strong><code>[ LINK n ]</code></strong>: shown while Ableton Link is on, with the peer count. Click it to open Tempo &amp; Sync preferences.
@@ -2050,10 +2072,28 @@ between two disclosure tiers, without leaving Performance Mode:</p>
 </li>
 <li><strong>Properties Editor</strong> on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.</li>
 </ol>
-<p>If the deck is <strong>empty</strong>, Deep Edit shows the empty-deck card instead: <strong>Add Source</strong> (opens the
-   source picker, including external video), <strong>Load Preset</strong>, and <strong>Open Library Panel</strong>.</p>
-<p><strong>Changing a deck's visual source</strong>: click the generator badge at the left of any deck row (it shows
-the current source, e.g. <code>Mandala</code>, or <code>+ Source</code> on an empty deck) to open the source picker.</p>
+<p>If the deck is <strong>empty</strong>, Deep Edit shows the empty-deck card instead: <strong>Add Source</strong> (opens
+   Browse, see below, including external video), <strong>Load Preset</strong>, and <strong>Open Library Panel</strong>.</p>
+<h3 id="browse-picking-a-generator-fx-or-transition-without-leaving-the-row">Browse: picking a generator, FX or transition without leaving the row</h3>
+<p>Clicking a generator badge, an FX chain's name, an FX slot's name, or the active transition's name
+opens <strong>Browse</strong> in that row's bay — the same place Deep Edit's parameter grid shows, with the other
+rows collapsed the same way. Nothing covers the mixer or the deck/master monitors; you keep watching
+the show while you pick.</p>
+<ul>
+<li><strong>Instant apply, list stays open</strong>: clicking an item in the list applies it immediately and the
+  list doesn't close, so you can try several generators, effects, or chains back-to-back. <code>Ctrl+Z</code>
+  undoes any one pick. Changing a deck's source while a named/dirty preset is loaded still prompts
+  the usual confirmation before discarding it.</li>
+<li><strong>Browse ↔ Params toggle</strong>: a small button at the top of the bay (<code>Browse...</code> / <code>View Params</code>)
+  switches that row between Browse and Deep Edit's parameter grid without closing either — pick a
+  generator, then flip straight to its parameters.</li>
+<li><strong>FX Chain Browse</strong> has <strong>Chain / FX1 / FX2 / FX3</strong> sub-tabs: <strong>Chain</strong> searches and loads a whole
+  saved <code>.lsdfxchain</code>; <strong>FX1</strong>–<strong>FX3</strong> are that chain's per-slot effect pickers (search, category
+  pills, ★ favorites, saved single-FX presets), each opening on its slot's usual category.</li>
+<li><strong>Search &amp; filter</strong>: every Browse list has a search box, category pills (multi-select, OR-combined
+  — click <code>All</code> to clear them), and a <strong>Folders</strong>/<strong>Flat</strong> view toggle. <strong>Detach / None</strong> clears the
+  current pick.</li>
+</ul>
 <p><strong>Keyboard shortcuts in Deep Edit</strong>: <code>Ctrl+C</code> / <code>Ctrl+V</code> (copy/paste a cell or row), <code>Delete</code> /
 <code>Backspace</code> (clear the cell's modulators, or reset the parameter), and <code>Ctrl+S</code> / <code>Shift+Ctrl+S</code>
 (save / save-as the deck being edited) act on the open Deep Edit. Copy/paste/clear only fire while the

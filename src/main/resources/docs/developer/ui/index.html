@@ -1038,6 +1038,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#6d-inline-browse-content-performancebrowsebaykt-shaderpickerpopupkt-modal-pickers-replaced" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6d. Inline Browse Content (PerformanceBrowseBay.kt, ShaderPickerPopup.kt) — Modal Pickers Replaced
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#7-preferencespanelkt-shortcutmanagerkt-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1562,6 +1573,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#6d-inline-browse-content-performancebrowsebaykt-shaderpickerpopupkt-modal-pickers-replaced" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6d. Inline Browse Content (PerformanceBrowseBay.kt, ShaderPickerPopup.kt) — Modal Pickers Replaced
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#7-preferencespanelkt-shortcutmanagerkt-architecture" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1827,6 +1849,12 @@
 - <strong>Side control widths (<code>DeckRowMetrics</code>)</strong> are the single source for both the deck row's left controls and the width the matrix reserves for them (<code>row1Width</code>, taken at the full <code>CTRL_H</code> and the wider of queue nav vs. PV's badge). Change a button there, not in two places.
 - <strong>Deck mode predicate</strong>: <code>PerformanceUiContext.isDeckRowFx(tag, parametersState)</code> is the only SRC/FX check for deck rows.
 - <code>PerfRowLayoutTest</code> guards all of the above: the strip fits labels and cells, knob + strip fit inside the row at 1000-1920 px widths and 68-220 px rows, side buttons stay inside their column and clear the left controls, <code>row1Width</code> matches the drawn controls, and each resolver mode produces the right content.</p>
+<h3 id="6d-inline-browse-content-performancebrowsebaykt-shaderpickerpopupkt-modal-pickers-replaced">6d. Inline Browse Content (<code>PerformanceBrowseBay.kt</code>, <code>ShaderPickerPopup.kt</code>) — Modal Pickers Replaced</h3>
+<p>A row's Edit bay (see the Modular Rack in §9/macros_and_rack.md) shows one of two content modes, tracked per canonical module in <code>ParametersState.rackSectionMode</code>: <code>PARAMS</code> (Deep Edit's parameter grid, <code>PerformanceDeepEditBay.drawRackDeepEdit</code>) or <code>BROWSE</code> (<code>PerformanceBrowseBay.draw</code>). Opening either goes through <code>ParametersState.setDisclosure</code> first, so Browse gets the same solo row-collapse as Deep Edit for free — there's no separate disclosure level.
+- <strong>Triggers</strong>: <code>ParametersState.openGenBrowse</code>/<code>openFxChainBrowse</code>/<code>openTransitionBrowse</code> set the target <code>BrowseTarget</code> (<code>Gen</code> / <code>FxChain(slotIndex)</code> / <code>Transition</code>), the right subtab (<code>setDeckSubTab</code>/<code>activeMixerSubTab</code>), and open Deep Edit in <code>BROWSE</code> mode. Every former <code>ShaderPickerPopup</code>-opening click site calls one of these instead — deck generator badge, FX chain name (<code>FxChainHeader</code>), FX slot name (<code>FxSlotCell</code>, via an <code>onOpenBrowse: (Int) -&gt; Unit</code> callback), and the transition name (both its own row button and the Deep-Edit CTRL/TRANS selector).
+- <strong>Content dispatch</strong> (<code>PerformanceBrowseBay.draw</code>): a deck module branches on <code>getActiveSubTab(deckLabel)</code> (SRC → Gen picker, FX → chain browse); the Master module branches on <code>activeMixerSubTab</code> (TRANS → transition picker, FX → chain browse, else falls back to Params — there's nothing to browse in MIX/CTRL). FX chain browse itself has <code>Chain</code>/<code>FX1</code>/<code>FX2</code>/<code>FX3</code> sub-tabs tracked in <code>rackBrowseTarget[moduleId]</code>'s <code>slotIndex</code> (<code>null</code> = Chain).
+- <strong><code>ShaderPickerPopup</code></strong> is a stateful singleton like before, but no longer a <code>beginPopupModal</code>. <code>ensureInline(contextKey, ...)</code>/<code>ensureInlineFx(contextKey, ...)</code> (re)configure it — cheap to call every frame, since search text/category filters only reset when <code>contextKey</code> changes (a different Browse target) — and <code>drawInline(session)</code> renders the search bar/category pills/results table with no popup chrome. Selecting a row applies via the caller's callback and does not close or reset anything, so rapid-fire re-picking works without reopening.
+- <strong>Browse ↔ Params toggle</strong>: <code>PerformanceDeepEditBay.drawModeToggle</code> draws a small button above whichever content is showing, for every module in <code>deepEditModuleIds</code>. No transactional Cancel/Apply — Browse applies on click same as Deep Edit's own param editing; Ctrl+Z (<code>ParametersUndo</code>) is the only safety net.</p>
 <h3 id="7-preferencespanelkt-shortcutmanagerkt-architecture">7. <code>PreferencesPanel.kt</code> &amp; <code>ShortcutManager.kt</code> Architecture</h3>
 <ul>
 <li><strong>Docked 2/3 Workspace Panel</strong>: <code>PreferencesPanel</code> renders as a dedicated docked panel occupying the left ~2/3 of the screen (<code>libraryW = displayWidth - rightW</code>), leaving the Mixer column (Decks A/B, preview, crossfader, master meters) active and fully interactive on the right. It features a top header bar with breadcrumb navigation (<code>${Icons.SETTINGS} Preferences › Category</code>) and an explicit <code>[✕ Close]</code> button (<code>Esc</code>).</li>

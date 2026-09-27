@@ -136,7 +136,7 @@ for the FX Rack view that exposes these.
 - **Performance Matrix FX Controls**:
   - **Shared Chain Header (`[◀] Name • [▶] [Save] [⋮] ... [BYPASS]`)**:
     - **`◀` / `▶`**: Steps alphabetically through `.lsdfxchain` presets in the current chain folder.
-    - **Chain Name Button**: Displays current chain name with `•` dirty indicator when modified from baseline. Clicking opens the chain browser popup with live text search. Accepts `.lsdfxchain` drag-and-drop.
+    - **Chain Name Button**: Displays current chain name with `•` dirty indicator when modified from baseline. Clicking opens inline Browse on the **Chain** sub-tab, with live text search over saved `.lsdfxchain` files. Accepts `.lsdfxchain` drag-and-drop.
     - **`[Save]`**: Overwrites the loaded chain file with current state, or triggers Save As if untitled.
     - **`[⋮]` Menu**: Save As..., New Chain, Revert to Saved (undoes tweaks back to clean loaded state), Clear All Slots, Copy/Paste Chain, and Resync Knobs.
     - **`[BYPASS]`**: Top-level kill switch to immediately bypass or re-enable the entire FX chain.
@@ -146,7 +146,7 @@ for the FX Rack view that exposes these.
   - **Slot Side Buttons (left of each slot knob)**: two stacked buttons.
     - **Link (top)**: links/unlinks that slot's Metaknob to the Super Knob.
     - **Bypass (bottom, power icon)**: turns just that effect on or off. Row-coloured when on, red when bypassed, dim when the slot is empty. In Focus Mode, only the focused slot's bypass is shown, next to knob 1.
-    - **Effect Name**: Truncated caption showing loaded filter. Click opens the FX Shader Picker (Stock filters, ★ Favorites, and Saved `.lsdfx` presets). The picker opens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't open it.
+    - **Effect Name**: Truncated caption showing loaded filter. Click opens inline Browse on that slot's `FX1`/`FX2`/`FX3` sub-tab (Stock filters, ★ Favorites, and Saved `.lsdfx` presets). Browse opens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't open it.
     - **Drag & Drop**: Drag an effect name onto another slot's name to swap/reorder (hold `Ctrl` while dropping to duplicate). Accepts stock ISF filters and `.lsdfx` single presets from Library.
     - **Right-Click Context Menu**: Focus Mode, Previous/Next in Shortlist, Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Deep Edit.
   - **Swap Gain Dip**:

@@ -6,7 +6,7 @@ Each deck runs one visual source at a time. Sources range from the built-in proc
 
 ## Picking a Source
 
-Click the source selector in the **SRC** tab of any deck to open the shader picker. You can search by name, tag, or author. The picker automatically filters to show only sources appropriate for what you're assigning — generators for the main source slot, effects for the FX slots, and transitions for the mixer.
+Click the source selector in the **SRC** tab of any deck to open Browse inline (see [Your Workspace](your_workspace.md) / [Macros & the Modular Rack](macros_and_rack.md)). You can search by name, tag, or author. Browse automatically filters to show only sources appropriate for what you're assigning — generators for the main source slot, effects for the FX slots, and transitions for the mixer. Picks apply immediately and the list stays open, so you can try several in a row.
 
 To remove the current source, click **Detach** or **None**.
 
@@ -182,7 +182,7 @@ If you're writing or tweaking shaders while the app is running, just save your f
 
 ## External Video Input
 
-You can also use a live video feed from another app as a deck source. External video streams appear directly inside the **Shader Picker** alongside procedural generators:
+You can also use a live video feed from another app as a deck source. External video streams appear directly inside Browse alongside procedural generators:
 
 - **macOS:** Syphon servers
 - **Windows:** Spout2 senders
