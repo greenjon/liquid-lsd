@@ -18,9 +18,8 @@ import llm.slop.liquidlsd.ui.browser.FXQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.PlaylistEditorPanel
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
 import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
-import llm.slop.liquidlsd.ui.browser.StockTransitionListPanel
+import llm.slop.liquidlsd.ui.browser.TransitionBrowserPanel
 import llm.slop.liquidlsd.ui.browser.TransitionPlaylistEditorPanel
-import llm.slop.liquidlsd.ui.browser.TransitionPresetListPanel
 import llm.slop.liquidlsd.ui.browser.TransitionQueuePanel
 import mu.KotlinLogging
 import java.io.File
@@ -39,8 +38,6 @@ object LibraryPanel {
         PLAYLIST,
         QUEUE_AB,
         QUEUE_BG,
-        STOCK_TRANSITIONS,
-        TRANSITION_PRESETS,
         TRANSITION_PLAYLIST,
         TRANSITION_QUEUE,
         FX_PLAYLIST,
@@ -88,10 +85,10 @@ object LibraryPanel {
     fun getActiveSelectedFile(session: SessionContext): File? {
         return when (activeSelectionSource) {
             SelectionSource.PRESETS -> {
-                if (viewMode == LibraryViewMode.FX) {
-                    FXBrowserPanel.selectedAsset?.let { File(it.path) }
-                } else {
-                    PresetListPanel.selectedAsset?.let { File(it.path) }
+                when (viewMode) {
+                    LibraryViewMode.FX -> FXBrowserPanel.selectedAsset?.let { File(it.path) }
+                    LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset?.let { TransitionBrowserPanel.fileFor(it) }
+                    LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset?.let { File(it.path) }
                 }
             }
             SelectionSource.PLAYLIST -> {
@@ -104,15 +101,6 @@ object LibraryPanel {
             SelectionSource.QUEUE_BG -> {
                 val idx = llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex
                 if (idx in llm.slop.liquidlsd.presets.BgQueueManager.queue.indices) llm.slop.liquidlsd.presets.BgQueueManager.queue[idx] else null
-            }
-            SelectionSource.STOCK_TRANSITIONS -> {
-                StockTransitionListPanel.selectedTransitionId?.let { id ->
-                    val trans = llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.availableTransitions.find { it.id == id }
-                    trans?.baseDir?.let { File(it, "$id.fs") } ?: File(id)
-                }
-            }
-            SelectionSource.TRANSITION_PRESETS -> {
-                TransitionPresetListPanel.selectedAsset?.let { File(it.path) }
             }
             SelectionSource.TRANSITION_PLAYLIST -> {
                 TransitionPlaylistEditorPanel.getSelectedPresetFile()
@@ -187,8 +175,7 @@ object LibraryPanel {
         activeSelectionSource = null
         PresetListPanel.selectedAsset = null
         FXBrowserPanel.selectedAsset = null
-        StockTransitionListPanel.selectedTransitionId = null
-        TransitionPresetListPanel.selectedAsset = null
+        TransitionBrowserPanel.selectedAsset = null
         TransitionPlaylistEditorPanel.selectedItemIndex = -1
         TransitionQueuePanel.selectedIndex = -1
         PlaylistEditorPanel.selectedPresetIndex = -1
@@ -377,18 +364,18 @@ object LibraryPanel {
                 ImGui.endChild()
             }
             LibraryViewMode.TRANS -> {
-                // Column 1: Stock Transitions List
-                ImGui.beginChild("LibraryStockTransitionsList", c1W, g1AvailH, false, outerFlags)
+                // Column 1: unified transition browser (stock shaders, saved presets)
+                ImGui.beginChild("LibraryTransitionBrowser", c1W, g1AvailH, false, outerFlags)
                 ImGui.setScrollX(0f)
-                StockTransitionListPanel.draw(session, mixer)
+                TransitionBrowserPanel.draw(session, mixer)
                 ImGui.endChild()
 
                 ImGui.sameLine(0f, colGap)
 
-                // Column 2: Transition Presets List
-                ImGui.beginChild("LibraryTransitionPresetsList", c2W, g1AvailH, false, outerFlags)
+                // Column 2: Transition Playlists Editor
+                ImGui.beginChild("LibraryTransitionPlaylists", c2W, g1AvailH, false, outerFlags)
                 ImGui.setScrollX(0f)
-                TransitionPresetListPanel.draw(session, mixer, parametersState)
+                TransitionPlaylistEditorPanel.draw(session, mixer)
                 ImGui.endChild()
             }
         }
@@ -404,18 +391,16 @@ object LibraryPanel {
         val c4W = (g2AvailW - c3W - colGap).coerceAtLeast(10f)
 
         if (viewMode == LibraryViewMode.TRANS) {
-            // Column 3: Transition Playlists Editor
-            ImGui.beginChild("LibraryTransitionPlaylists", c3W, g2AvailH, false, outerFlags)
+            // Column 3: Live Transition Queue
+            ImGui.beginChild("LibraryTransitionQueue", c3W, g2AvailH, false, outerFlags)
             ImGui.setScrollX(0f)
-            TransitionPlaylistEditorPanel.draw(session, mixer)
+            TransitionQueuePanel.draw(session, mixer)
             ImGui.endChild()
 
             ImGui.sameLine(0f, colGap)
 
-            // Column 4: Live Transition Queue
-            ImGui.beginChild("LibraryTransitionQueue", c4W, g2AvailH, false, outerFlags)
-            ImGui.setScrollX(0f)
-            TransitionQueuePanel.draw(session, mixer)
+            // Column 4: reserved — Transitions has no second queue/list to pair here
+            ImGui.beginChild("LibraryTransitionReserved", c4W, g2AvailH, false, outerFlags)
             ImGui.endChild()
         } else if (viewMode == LibraryViewMode.FX) {
             // Column 3: Background FX Queue (BG)
@@ -579,6 +564,21 @@ object LibraryPanel {
                             shouldReclaimFocus = true
                         }
                     }
+                } else if (viewMode == LibraryViewMode.TRANS) {
+                    val list = TransitionBrowserPanel.filteredRows
+                    if (list.isNotEmpty()) {
+                        val currentIdx = list.indexOfFirst { it.path == TransitionBrowserPanel.selectedAsset?.path }
+                        val targetIdx = if (currentIdx < 0) {
+                            if (delta > 0) 0 else list.lastIndex
+                        } else {
+                            (currentIdx + delta).coerceIn(0, list.lastIndex)
+                        }
+                        if (targetIdx != currentIdx) {
+                            TransitionBrowserPanel.selectedAsset = list[targetIdx]
+                            shouldScrollToSelection = true
+                            shouldReclaimFocus = true
+                        }
+                    }
                 } else {
                     val list = PresetListPanel.filteredPresets
                     if (list.isNotEmpty()) {
@@ -644,38 +644,6 @@ object LibraryPanel {
                     }
                 }
             }
-            SelectionSource.STOCK_TRANSITIONS -> {
-                val list = StockTransitionListPanel.filteredTransitions
-                if (list.isNotEmpty()) {
-                    val currentIdx = list.indexOfFirst { it.id == StockTransitionListPanel.selectedTransitionId }
-                    val targetIdx = if (currentIdx < 0) {
-                        if (delta > 0) 0 else list.lastIndex
-                    } else {
-                        (currentIdx + delta).coerceIn(0, list.lastIndex)
-                    }
-                    if (targetIdx != currentIdx) {
-                        StockTransitionListPanel.selectedTransitionId = list[targetIdx].id
-                        shouldScrollToSelection = true
-                        shouldReclaimFocus = true
-                    }
-                }
-            }
-            SelectionSource.TRANSITION_PRESETS -> {
-                val list = TransitionPresetListPanel.filteredPresets
-                if (list.isNotEmpty()) {
-                    val currentIdx = list.indexOfFirst { it.path == TransitionPresetListPanel.selectedAsset?.path }
-                    val targetIdx = if (currentIdx < 0) {
-                        if (delta > 0) 0 else list.lastIndex
-                    } else {
-                        (currentIdx + delta).coerceIn(0, list.lastIndex)
-                    }
-                    if (targetIdx != currentIdx) {
-                        TransitionPresetListPanel.selectedAsset = list[targetIdx]
-                        shouldScrollToSelection = true
-                        shouldReclaimFocus = true
-                    }
-                }
-            }
             SelectionSource.TRANSITION_PLAYLIST -> {
                 val list = TransitionPlaylistEditorPanel.getSelectedPresetFile()
                 // Navigation handled inside panel
@@ -733,10 +701,10 @@ object LibraryPanel {
             }
             null -> {
                 if (viewMode == LibraryViewMode.TRANS) {
-                    val list = StockTransitionListPanel.filteredTransitions
+                    val list = TransitionBrowserPanel.filteredRows
                     if (list.isNotEmpty()) {
-                        StockTransitionListPanel.selectedTransitionId = list.first().id
-                        activeSelectionSource = SelectionSource.STOCK_TRANSITIONS
+                        TransitionBrowserPanel.selectedAsset = list.first()
+                        activeSelectionSource = SelectionSource.PRESETS
                         shouldScrollToSelection = true
                         shouldReclaimFocus = true
                     }
@@ -763,7 +731,7 @@ object LibraryPanel {
     fun getSelectedAsset(): AssetItem? {
         return when (viewMode) {
             LibraryViewMode.FX -> FXBrowserPanel.selectedAsset
-            LibraryViewMode.TRANS -> TransitionPresetListPanel.selectedAsset
+            LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset
             LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset
         }
     }

@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Unified Transition Browser Replaces Stock/Preset Split Columns (`TransitionBrowserPanel.kt`, `LibraryPanel.kt`, `AssetType.kt`, `BrowserPopupHandler.kt`)
+- `[ Trans ]` mode's Library Column 1 previously split stock ISF transition shaders and saved `.lsdtrans` presets into two separate side-by-side panels (`StockTransitionListPanel`, `TransitionPresetListPanel`) — the same split `[ FX ]` mode used before its own stock/single/chain unification on 2026-09-18, but never revisited when `[ Trans ]` mode was built four days earlier. The two panels carried independent selection state and duplicated most of their row/search/context-menu logic.
+- Merged both into a single filterable `TransitionBrowserPanel` with a kebab (`[⋮]`) tier filter (**Stock Shaders / Saved Presets**), mirroring the FX Browser's pattern. Unlike stock FX filters (load-only), stock transitions retain full parity with saved presets — Apply to Mixer, Add to Live Queue, and Add to Playlist all work on both, since a stock transition has no per-slot state to lose; only Rename/Clone/Delete (file lifecycle) are preset-only.
+- **Column layout now matches Presets/FX modes for consistency**: Column 1 is the unified browser, Column 2 is the Transition Playlists Editor (moved from Column 3), Column 3 is the Live Transition Queue (moved from Column 4). Column 4 is left reserved/blank, since Transitions — unlike FX's separate A/B and BG queues — only need one live queue.
+- Added `AssetType.TRANSITION_STOCK` and removed the now-redundant `LibraryPanel.SelectionSource.STOCK_TRANSITIONS` / `TRANSITION_PRESETS` (both collapse into the shared `PRESETS` source, same as FX).
+
 ### Multi-Select Category Pills in the Shader/FX Picker (`ShaderPickerPopup.kt`)
 - The category pill row in the Source, FX slot, and Transition picker popups now supports selecting multiple pills at once (OR-combined) instead of only one at a time. Clicking `All` clears the rest; clicking any other pill toggles it on/off, and deselecting the last active pill falls back to `All`.
 - The `★ Favorites` and `Saved FX` pills now compose with tag pills in FX pickers — e.g. `Distortion` + `Saved FX` shows stock Distortion filters alongside every saved single-FX preset.

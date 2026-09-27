@@ -575,10 +575,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#library-view-mode-presets-fx" class="md-nav__link">
+  <a href="#library-view-mode-presets-fx-trans" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Library View Mode ([ Presets ] / [ FX ])
+        Library View Mode ([ Presets ] / [ FX ] / [ Trans ])
       
     </span>
   </a>
@@ -706,6 +706,17 @@
   
     <nav class="md-nav" aria-label="Curated Transitions Suite &amp; Transition Presets">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-unified-transition-browser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Unified Transition Browser
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#transition-presets-lsdtrans-playlists-lsdtransplay" class="md-nav__link">
@@ -1592,10 +1603,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#library-view-mode-presets-fx" class="md-nav__link">
+  <a href="#library-view-mode-presets-fx-trans" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Library View Mode ([ Presets ] / [ FX ])
+        Library View Mode ([ Presets ] / [ FX ] / [ Trans ])
       
     </span>
   </a>
@@ -1725,6 +1736,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#the-unified-transition-browser" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Unified Transition Browser
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#transition-presets-lsdtrans-playlists-lsdtransplay" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1833,7 +1855,7 @@
 </ul>
 <p>Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, <code>Space</code>, <code>Ctrl+F</code> or <code>/</code> closes Deep Edit (cancelling any armed Learn) and brings the Library back.</p>
 <p>In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.</p>
-<h3 id="library-view-mode-presets-fx">Library View Mode (<code>[ Presets ]</code> / <code>[ FX ]</code>)</h3>
+<h3 id="library-view-mode-presets-fx-trans">Library View Mode (<code>[ Presets ]</code> / <code>[ FX ]</code> / <code>[ Trans ]</code>)</h3>
 <p>Toggle between full visual presets and FX presets using the segmented mode button in the top-left of the Library menu bar:</p>
 <ul>
 <li><strong><code>[ Presets ]</code> Mode</strong>:</li>
@@ -1843,6 +1865,11 @@
 <li><strong>Column 1 (FX Browser)</strong>: A unified, filterable list combining stock ISF filters, saved single-slot FX presets (<code>.lsdfx</code>) in <code>library/fx/</code>, and saved 4-slot FX chains (<code>.lsdfxchain</code>) in <code>library/fx_chains/</code>.</li>
 <li><strong>Column 2 (FX Playlists Editor)</strong>: Curated FX playlist sequences (<code>.lsdfxplay</code>) in <code>library/fx_playlists/</code>.</li>
 <li>Columns 3 and 4 (the Background Queue and Play Queue columns) swap to the <strong>Live FX Queues</strong> described below.</li>
+<li><strong><code>[ Trans ]</code> Mode</strong>:</li>
+<li><strong>Column 1 (Transition Browser)</strong>: A unified, filterable list combining stock ISF transition shaders and saved transition presets (<code>.lsdtrans</code>) in <code>library/transitions/</code>.</li>
+<li><strong>Column 2 (Transition Playlists Editor)</strong>: Setlists (<code>.lsdtransplay</code>) in <code>library/transition_playlists/</code>.</li>
+<li><strong>Column 3 (Live Transition Queue)</strong>: The volatile, RAM-only transition queue the crossfader advances through automatically.</li>
+<li>Column 4 is reserved — Transitions don't need a second queue the way <code>[ FX ]</code> mode needs separate A/B and BG queues.</li>
 </ul>
 <h3 id="preset-browser-all-presets">Preset Browser (All Presets)</h3>
 <p>The left column shows every preset saved in <code>library/presets/</code>. </p>
@@ -1987,9 +2014,20 @@
 <li><strong>Vortex Swirl (<code>vortex_swirl.fs</code>)</strong> — Gravitational singularity twisting Deck A into a spiraling vortex at the frame center, peaking at midpoint, and unwinding into Deck B with chromatic flare.</li>
 <li><strong>Cyber Datamosh (<code>cyber_datamosh.fs</code>)</strong> — Digital video compression breakdown emulating I-frame/P-frame corruption, macroblock displacement, horizontal sync tear, and chromatic shear.</li>
 </ol>
+<h3 id="the-unified-transition-browser">The Unified Transition Browser</h3>
+<p>Column 1 of <code>[ Trans ]</code> mode lists two kinds of row side by side, each marked with its own icon:</p>
+<ul>
+<li><strong>Stock ISF Transition Shaders</strong> — The curated suite above, plus any custom <code>.fs</code> transitions found in your configured shader directories. Unlike stock FX filters, stock transitions carry no per-slot state to lose, so they can be applied, queued, or added to a playlist just like saved presets.</li>
+<li><strong>Saved Transition Presets (<code>.lsdtrans</code>)</strong> — A dialed-in transition configuration (parameters, dry/wet, modulation bindings) captured from the mixer.</li>
+</ul>
+<p>Use the <strong><code>[⋮]</code></strong> filter menu above the list to show/hide each tier (<strong>Stock Shaders / Saved Presets</strong>). Use <strong><code>[+]</code></strong> to save the mixer's current transition as a new preset.</p>
+<ul>
+<li><strong>Double-click</strong>: Applies the transition to the mixer immediately.</li>
+<li><strong>Right-click menu</strong>: <strong>Apply to Mixer</strong>, <strong>Add to Live Queue</strong>, <strong>Add to '<playlist>' Playlist</strong>, plus Rename/Clone/Delete for saved presets (stock shaders have no file to rename or delete).</li>
+</ul>
 <h3 id="transition-presets-lsdtrans-playlists-lsdtransplay">Transition Presets (<code>.lsdtrans</code>) &amp; Playlists (<code>.lsdtransplay</code>)</h3>
 <ul>
-<li><strong>Transition Presets (<code>.lsdtrans</code>)</strong>: Stored in <code>library/transitions/</code>. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) using the <strong>[+]</strong> button in the Transition Presets browser or right-clicking in the Mixer panel.</li>
+<li><strong>Transition Presets (<code>.lsdtrans</code>)</strong>: Stored in <code>library/transitions/</code>. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) using the <strong>[+]</strong> button in the Transition Browser or right-clicking in the Mixer panel.</li>
 <li><strong>Transition Playlists (<code>.lsdtransplay</code>)</strong>: Stored in <code>library/transition_playlists/</code>. Group transitions into ordered setlists for the Transition Queue. A factory playlist, <code>festival_elite.lsdtransplay</code>, is bundled out of the box.</li>
 <li><strong>AutoVJ Integration</strong>: The Transition Queue automatically advances to the next staged transition preset or stock transition shader each time the crossfader cycles between decks.</li>
 </ul>
@@ -2048,6 +2086,16 @@
 <td>Live FX Queue item</td>
 <td>Up / down in the same queue</td>
 <td>Reorders</td>
+</tr>
+<tr>
+<td>Transition Browser row</td>
+<td>Transition Playlist (Column 2)</td>
+<td>Inserts/appends to playlist</td>
+</tr>
+<tr>
+<td>Transition Browser row</td>
+<td>Live Transition Queue (Column 3)</td>
+<td>Appends/inserts into the queue</td>
 </tr>
 </tbody>
 </table>

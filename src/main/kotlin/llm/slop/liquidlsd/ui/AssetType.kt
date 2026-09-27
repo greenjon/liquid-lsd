@@ -11,6 +11,7 @@ enum class AssetType {
     FX_PRESET,
     FX_CHAIN,
     FX_PLAYLIST,
+    TRANSITION_STOCK,
     TRANSITION_PRESET,
     TRANSITION_PLAYLIST
 }

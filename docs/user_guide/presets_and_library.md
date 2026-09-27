@@ -49,7 +49,7 @@ Press **`Space`** (when the cursor isn't in a text field) or the button at the r
 
 In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.
 
-### Library View Mode (`[ Presets ]` / `[ FX ]`)
+### Library View Mode (`[ Presets ]` / `[ FX ]` / `[ Trans ]`)
 
 Toggle between full visual presets and FX presets using the segmented mode button in the top-left of the Library menu bar:
 
@@ -60,6 +60,11 @@ Toggle between full visual presets and FX presets using the segmented mode butto
   - **Column 1 (FX Browser)**: A unified, filterable list combining stock ISF filters, saved single-slot FX presets (`.lsdfx`) in `library/fx/`, and saved 4-slot FX chains (`.lsdfxchain`) in `library/fx_chains/`.
   - **Column 2 (FX Playlists Editor)**: Curated FX playlist sequences (`.lsdfxplay`) in `library/fx_playlists/`.
   - Columns 3 and 4 (the Background Queue and Play Queue columns) swap to the **Live FX Queues** described below.
+- **`[ Trans ]` Mode**:
+  - **Column 1 (Transition Browser)**: A unified, filterable list combining stock ISF transition shaders and saved transition presets (`.lsdtrans`) in `library/transitions/`.
+  - **Column 2 (Transition Playlists Editor)**: Setlists (`.lsdtransplay`) in `library/transition_playlists/`.
+  - **Column 3 (Live Transition Queue)**: The volatile, RAM-only transition queue the crossfader advances through automatically.
+  - Column 4 is reserved — Transitions don't need a second queue the way `[ FX ]` mode needs separate A/B and BG queues.
 
 ### Preset Browser (All Presets)
 
@@ -212,9 +217,21 @@ Liquid LSD features a curated suite of 8 club-grade ISF transition shaders desig
 7. **Vortex Swirl (`vortex_swirl.fs`)** — Gravitational singularity twisting Deck A into a spiraling vortex at the frame center, peaking at midpoint, and unwinding into Deck B with chromatic flare.
 8. **Cyber Datamosh (`cyber_datamosh.fs`)** — Digital video compression breakdown emulating I-frame/P-frame corruption, macroblock displacement, horizontal sync tear, and chromatic shear.
 
+### The Unified Transition Browser
+
+Column 1 of `[ Trans ]` mode lists two kinds of row side by side, each marked with its own icon:
+
+- **Stock ISF Transition Shaders** — The curated suite above, plus any custom `.fs` transitions found in your configured shader directories. Unlike stock FX filters, stock transitions carry no per-slot state to lose, so they can be applied, queued, or added to a playlist just like saved presets.
+- **Saved Transition Presets (`.lsdtrans`)** — A dialed-in transition configuration (parameters, dry/wet, modulation bindings) captured from the mixer.
+
+Use the **`[⋮]`** filter menu above the list to show/hide each tier (**Stock Shaders / Saved Presets**). Use **`[+]`** to save the mixer's current transition as a new preset.
+
+- **Double-click**: Applies the transition to the mixer immediately.
+- **Right-click menu**: **Apply to Mixer**, **Add to Live Queue**, **Add to '<playlist>' Playlist**, plus Rename/Clone/Delete for saved presets (stock shaders have no file to rename or delete).
+
 ### Transition Presets (`.lsdtrans`) & Playlists (`.lsdtransplay`)
 
-- **Transition Presets (`.lsdtrans`)**: Stored in `library/transitions/`. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) using the **[+]** button in the Transition Presets browser or right-clicking in the Mixer panel.
+- **Transition Presets (`.lsdtrans`)**: Stored in `library/transitions/`. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) using the **[+]** button in the Transition Browser or right-clicking in the Mixer panel.
 - **Transition Playlists (`.lsdtransplay`)**: Stored in `library/transition_playlists/`. Group transitions into ordered setlists for the Transition Queue. A factory playlist, `festival_elite.lsdtransplay`, is bundled out of the box.
 - **AutoVJ Integration**: The Transition Queue automatically advances to the next staged transition preset or stock transition shader each time the crossfader cycles between decks.
 
@@ -233,6 +250,8 @@ Liquid LSD features a curated suite of 8 club-grade ISF transition shaders desig
 | FX Browser row              | FX Playlist (Column 2)         | Inserts/appends to playlist |
 | FX Browser row              | Live FX Queue (A/B or BG)      | Appends/inserts into that queue |
 | Live FX Queue item          | Up / down in the same queue    | Reorders                 |
+| Transition Browser row      | Transition Playlist (Column 2) | Inserts/appends to playlist |
+| Transition Browser row      | Live Transition Queue (Column 3) | Appends/inserts into the queue |
 
 ---
 

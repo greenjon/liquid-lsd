@@ -231,8 +231,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   │   ├── FXPlaylistEditorPanel.kt    — `.lsdfxplay` FX playlist editor tier
 │   │   ├── FXQueueActionsPanel.kt      — FX Queue (A/B) actions, mirrors QueueActionsPanel for FX items
 │   │   ├── FXBgQueueActionsPanel.kt    — FX Queue (BG) actions, mirrors QueueActionsPanel for Deck BG FX items
-│   │   ├── StockTransitionListPanel.kt — Built-in ISF transition list tier
-│   │   ├── TransitionPresetListPanel.kt — Saved `.lsdtrans` transition preset list tier
+│   │   ├── TransitionBrowserPanel.kt   — Unified transition browser: stock ISF transition shaders, saved `.lsdtrans` in one list
 │   │   ├── TransitionPlaylistEditorPanel.kt — `.lsdtransplay` transition playlist editor tier
 │   │   ├── TransitionQueuePanel.kt     — Live Transition Queue actions
 │   │   ├── BrowserPopupHandler.kt      — Rename/delete/new-playlist/export-queue modal popups shared across all list tiers

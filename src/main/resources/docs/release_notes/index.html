@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#unified-transition-browser-replaces-stockpreset-split-columns-transitionbrowserpanelkt-librarypanelkt-assettypekt-browserpopuphandlerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified Transition Browser Replaces Stock/Preset Split Columns (TransitionBrowserPanel.kt, LibraryPanel.kt, AssetType.kt, BrowserPopupHandler.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#multi-select-category-pills-in-the-shaderfx-picker-shaderpickerpopupkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4283,6 +4294,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#unified-transition-browser-replaces-stockpreset-split-columns-transitionbrowserpanelkt-librarypanelkt-assettypekt-browserpopuphandlerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified Transition Browser Replaces Stock/Preset Split Columns (TransitionBrowserPanel.kt, LibraryPanel.kt, AssetType.kt, BrowserPopupHandler.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#multi-select-category-pills-in-the-shaderfx-picker-shaderpickerpopupkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7333,6 +7355,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="unified-transition-browser-replaces-stockpreset-split-columns-transitionbrowserpanelkt-librarypanelkt-assettypekt-browserpopuphandlerkt">Unified Transition Browser Replaces Stock/Preset Split Columns (<code>TransitionBrowserPanel.kt</code>, <code>LibraryPanel.kt</code>, <code>AssetType.kt</code>, <code>BrowserPopupHandler.kt</code>)</h3>
+<ul>
+<li><code>[ Trans ]</code> mode's Library Column 1 previously split stock ISF transition shaders and saved <code>.lsdtrans</code> presets into two separate side-by-side panels (<code>StockTransitionListPanel</code>, <code>TransitionPresetListPanel</code>) — the same split <code>[ FX ]</code> mode used before its own stock/single/chain unification on 2026-09-18, but never revisited when <code>[ Trans ]</code> mode was built four days earlier. The two panels carried independent selection state and duplicated most of their row/search/context-menu logic.</li>
+<li>Merged both into a single filterable <code>TransitionBrowserPanel</code> with a kebab (<code>[⋮]</code>) tier filter (<strong>Stock Shaders / Saved Presets</strong>), mirroring the FX Browser's pattern. Unlike stock FX filters (load-only), stock transitions retain full parity with saved presets — Apply to Mixer, Add to Live Queue, and Add to Playlist all work on both, since a stock transition has no per-slot state to lose; only Rename/Clone/Delete (file lifecycle) are preset-only.</li>
+<li><strong>Column layout now matches Presets/FX modes for consistency</strong>: Column 1 is the unified browser, Column 2 is the Transition Playlists Editor (moved from Column 3), Column 3 is the Live Transition Queue (moved from Column 4). Column 4 is left reserved/blank, since Transitions — unlike FX's separate A/B and BG queues — only need one live queue.</li>
+<li>Added <code>AssetType.TRANSITION_STOCK</code> and removed the now-redundant <code>LibraryPanel.SelectionSource.STOCK_TRANSITIONS</code> / <code>TRANSITION_PRESETS</code> (both collapse into the shared <code>PRESETS</code> source, same as FX).</li>
+</ul>
 <h3 id="multi-select-category-pills-in-the-shaderfx-picker-shaderpickerpopupkt">Multi-Select Category Pills in the Shader/FX Picker (<code>ShaderPickerPopup.kt</code>)</h3>
 <ul>
 <li>The category pill row in the Source, FX slot, and Transition picker popups now supports selecting multiple pills at once (OR-combined) instead of only one at a time. Clicking <code>All</code> clears the rest; clicking any other pill toggles it on/off, and deselecting the last active pill falls back to <code>All</code>.</li>

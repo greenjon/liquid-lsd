@@ -145,6 +145,7 @@ object BrowserPopupHandler {
                 AssetType.FX_PRESET -> "FX Preset"
                 AssetType.FX_CHAIN -> "FX Chain"
                 AssetType.FX_PLAYLIST -> "FX Playlist"
+                AssetType.TRANSITION_STOCK -> "Stock Transition"
                 AssetType.TRANSITION_PRESET -> "Transition Preset"
                 AssetType.TRANSITION_PLAYLIST -> "Transition Playlist"
             }
@@ -210,6 +211,7 @@ object BrowserPopupHandler {
                 AssetType.FX_PRESET -> "FX Preset"
                 AssetType.FX_CHAIN -> "FX Chain"
                 AssetType.FX_PLAYLIST -> "FX Playlist"
+                AssetType.TRANSITION_STOCK -> "Stock Transition"
                 AssetType.TRANSITION_PRESET -> "Transition Preset"
                 AssetType.TRANSITION_PLAYLIST -> "Transition Playlist"
             }
