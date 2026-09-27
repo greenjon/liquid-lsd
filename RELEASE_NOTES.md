@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Performance Row Knobs Keep Their Size and Position in Every Mode (`PerfRowGeometry.kt`, `PerfKnobSpec.kt`, `PerformanceMatrixPanel.kt`, `PerformanceDeckControls.kt`)
+- Switching any Deck row between `[SRC]`, `[FX]` and FX Focus Mode (or the Master row between `[MIX]` and `[FX]`) no longer resizes the knobs on every row of the tab or shifts the switched row's knobs up or down. The layout used to reserve different amounts of space under a knob per mode, and knob size was the minimum across rows in their *current* modes.
+- Knob positions now come from one mode-independent `PerfRowGeometry`. Every knob has the same fixed line underneath it, which holds its caption or its FX slot/parameter cell. Captions are drawn at 14px like the FX cells, so text sits at the same height in every mode. Long names end in `…`, with the full name in the tooltip. What each knob shows is resolved separately by `PerfKnobResolver`.
+- The deck row's left controls were drawn about 13px wider than the space reserved for them and crowded the first knob. Both now read their widths from `DeckRowMetrics`.
+- At 1280×720, knobs settle between the old sizes: a few px smaller than the old all-`[SRC]` size and a few px larger than the old `[FX]` size. They no longer flip between the two.
+- New `PerfRowLayoutTest` guards the layout contract. See docs/developer/ui.md §6c.
+
 ### Optimized Mixer Monitor Layout & Padding Reduction (`MixerLayout.kt`, `MixerPanel.kt`)
 - Reduced side window padding and inter-deck column padding (from 16px to 8px) across the mixer panel.
 - All 5 monitors (main master output and 4 deck previews) are now significantly wider and taller, fully utilizing previously unused vertical space at the bottom of the mixer panel while preserving 16:9 aspect ratios.

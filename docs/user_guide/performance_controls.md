@@ -168,7 +168,8 @@ for the FX Rack view that exposes these.
     - **4 Knobs in Focus Mode**:
       - **Knob 1 (`DRY/WET`)**: Controls the focused slot's individual wet/dry blend (`$chainLabel/FX/FX<slot>/DryWet`). The focused slot's `FxSlotCell` is drawn underneath so shortlist stepping (hover `◀ ▶` or mouse wheel) and picker access remain directly below its Dry/Wet knob, with the slot's bypass button to the left of the knob.
       - **Knobs 2–4 (`Top Parameters`)**: Dynamically retargeted to the focused shader's top parameters on the active page (e.g. `SPEED`, `INTENSITY`, `COLOR`).
-      - **Parameter Cells (`FxParamCell`)**: Drawn under Knobs 2–4 with a `[⟲]` reset button (restores parameter to authored default), exact formatted value readout, and a modulation indicator dot.
+      - **Parameter Cells (`FxParamCell`)**: Drawn under Knobs 2–4 with the parameter's name and a modulation indicator dot. The current value is shown inside the knob face, and a `[⟲]` reset button (restores the authored default) sits to the left of the knob.
+  - **Stable Layout**: Knobs stay the same size and in the same place whichever mode a row is in (`[SRC]`, `[FX]` group, or Focus Mode), and switching one row never resizes the others. Knob names and effect/parameter names share the same line under each knob. Names too long for it end in `…`; hover the knob for the full name.
     - **Seamless Hardware MIDI Retargeting**:
       - Physical MIDI controllers mapped to the row's standard macro paths (`Macro/<bankId>/knob_1..4`) immediately control the focused slot's Dry/Wet and parameters without requiring any MIDI remapping or controller mode switching.
       - Exiting Focus Mode restores Knob 1 to `SUPER` and Knobs 2–4 to `META`.

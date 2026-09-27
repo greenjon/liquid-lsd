@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-row-knobs-keep-their-size-and-position-in-every-mode-perfrowgeometrykt-perfknobspeckt-performancematrixpanelkt-performancedeckcontrolskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Row Knobs Keep Their Size and Position in Every Mode (PerfRowGeometry.kt, PerfKnobSpec.kt, PerformanceMatrixPanel.kt, PerformanceDeckControls.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-mixer-monitor-layout-padding-reduction-mixerlayoutkt-mixerpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimized Mixer Monitor Layout &amp; Padding Reduction (MixerLayout.kt, MixerPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#deck-toolbar-split-into-button-row-preset-name-row-deckcontrolpanelkt-mixerlayoutkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4305,6 +4327,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-row-knobs-keep-their-size-and-position-in-every-mode-perfrowgeometrykt-perfknobspeckt-performancematrixpanelkt-performancedeckcontrolskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Row Knobs Keep Their Size and Position in Every Mode (PerfRowGeometry.kt, PerfKnobSpec.kt, PerformanceMatrixPanel.kt, PerformanceDeckControls.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimized-mixer-monitor-layout-padding-reduction-mixerlayoutkt-mixerpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optimized Mixer Monitor Layout &amp; Padding Reduction (MixerLayout.kt, MixerPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#deck-toolbar-split-into-button-row-preset-name-row-deckcontrolpanelkt-mixerlayoutkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7377,6 +7421,19 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="performance-row-knobs-keep-their-size-and-position-in-every-mode-perfrowgeometrykt-perfknobspeckt-performancematrixpanelkt-performancedeckcontrolskt">Performance Row Knobs Keep Their Size and Position in Every Mode (<code>PerfRowGeometry.kt</code>, <code>PerfKnobSpec.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>PerformanceDeckControls.kt</code>)</h3>
+<ul>
+<li>Switching any Deck row between <code>[SRC]</code>, <code>[FX]</code> and FX Focus Mode (or the Master row between <code>[MIX]</code> and <code>[FX]</code>) no longer resizes the knobs on every row of the tab or shifts the switched row's knobs up or down. The layout used to reserve different amounts of space under a knob per mode, and knob size was the minimum across rows in their <em>current</em> modes.</li>
+<li>Knob positions now come from one mode-independent <code>PerfRowGeometry</code>. Every knob has the same fixed line underneath it, which holds its caption or its FX slot/parameter cell. Captions are drawn at 14px like the FX cells, so text sits at the same height in every mode. Long names end in <code>…</code>, with the full name in the tooltip. What each knob shows is resolved separately by <code>PerfKnobResolver</code>.</li>
+<li>The deck row's left controls were drawn about 13px wider than the space reserved for them and crowded the first knob. Both now read their widths from <code>DeckRowMetrics</code>.</li>
+<li>At 1280×720, knobs settle between the old sizes: a few px smaller than the old all-<code>[SRC]</code> size and a few px larger than the old <code>[FX]</code> size. They no longer flip between the two.</li>
+<li>New <code>PerfRowLayoutTest</code> guards the layout contract. See docs/developer/ui.md §6c.</li>
+</ul>
+<h3 id="optimized-mixer-monitor-layout-padding-reduction-mixerlayoutkt-mixerpanelkt">Optimized Mixer Monitor Layout &amp; Padding Reduction (<code>MixerLayout.kt</code>, <code>MixerPanel.kt</code>)</h3>
+<ul>
+<li>Reduced side window padding and inter-deck column padding (from 16px to 8px) across the mixer panel.</li>
+<li>All 5 monitors (main master output and 4 deck previews) are now significantly wider and taller, fully utilizing previously unused vertical space at the bottom of the mixer panel while preserving 16:9 aspect ratios.</li>
+</ul>
 <h3 id="deck-toolbar-split-into-button-row-preset-name-row-deckcontrolpanelkt-mixerlayoutkt">Deck Toolbar Split Into Button Row + Preset-Name Row (<code>DeckControlPanel.kt</code>, <code>MixerLayout.kt</code>)</h3>
 <ul>
 <li>Each deck's monitor toolbar previously crammed the Save/Eject buttons and the active preset name into a single shared row. Split into two stacked rows directly above the monitor image: a button row (<code>drawDeckButtonRow</code>, with room for more buttons later) and a full-width preset-name row (<code>drawDeckPresetRow</code>), using previously-unused vertical space in the mixer strip.</li>

@@ -44,7 +44,6 @@ object FxSlotCell {
 
     private const val ARROW_LEFT = "◀"
     private const val ARROW_RIGHT = "▶"
-    private const val ELLIPSIS = "…"
 
     private const val ARROW_W = 16f
 
@@ -160,7 +159,7 @@ object FxSlotCell {
 
         val nameText = fx?.displayName ?: "— empty —"
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            val shown = truncate(nameText, nameW - 4f)
+            val shown = TextFit.ellipsize(nameText, nameW - 4f)
             val tw = ImGui.calcTextSize(shown).x
             val textCol = when {
                 fx == null -> ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.55f, 0.8f)
@@ -169,7 +168,7 @@ object FxSlotCell {
                 nameHovered -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
                 else -> ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.88f, 0.95f)
             }
-            dl.addText(nameX + (nameW - tw) / 2f, y + 2f, textCol, shown)
+            dl.addText(nameX + (nameW - tw) / 2f, TextFit.centeredY(y, h, ImGui.getTextLineHeight()), textCol, shown)
         }
 
         // -- ▶ (hover only) -----------------------------------------------------------------
@@ -229,6 +228,39 @@ object FxSlotCell {
         )
     }
 
+    /**
+     * Square Super Knob link toggle for slot [slotIndex] of the chain behind [bankId], drawn at
+     * ([x], [y]) above the slot's [drawBypassButton]. [slotLabel] names the slot in the tooltip.
+     */
+    fun drawLinkButton(session: SessionContext, mixer: Mixer, bankId: String, slotIndex: Int, slotLabel: String, x: Float, y: Float, size: Float) {
+        val chain = FxMacroSync.chainFor(bankId, mixer) ?: return
+        val isLinked = chain.slotSuperKnobLink.getOrNull(slotIndex) == true
+        ImGui.setCursorScreenPos(x, y)
+        if (isLinked) {
+            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.10f, 0.45f, 0.40f, 0.75f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.14f, 0.55f, 0.48f, 0.90f))
+            ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.35f, 0.95f, 0.85f, 1f))
+        } else {
+            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.50f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.22f, 0.25f, 0.32f, 0.80f))
+            ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.55f, 0.58f, 0.65f, 0.80f))
+        }
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 1f, 1f)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            val icon = if (isLinked) Icons.LINK else Icons.UNLINK
+            if (ImGui.button("$icon##fxlink_${bankId}_$slotIndex", size, size)) {
+                chain.setSlotLinked(slotIndex, !isLinked)
+                FxMacroSync.syncFor(bankId, mixer)
+            }
+        }
+        ImGui.popStyleVar()
+        ImGui.popStyleColor(3)
+        itemTooltip(
+            if (isLinked) "Slot ${slotIndex + 1} ($slotLabel) is linked to Super Knob.\nClick to unlink."
+            else "Slot ${slotIndex + 1} ($slotLabel) is unlinked.\nClick to link to Super Knob."
+        )
+    }
+
     private fun drawArrow(session: SessionContext, id: String, glyph: String, ax: Float, ay: Float, h: Float, onClick: () -> Unit) {
         ImGui.setCursorScreenPos(ax, ay)
         if (ImGui.invisibleButton(id, ARROW_W, h)) onClick()
@@ -238,14 +270,6 @@ object FxSlotCell {
             val sz = ImGui.calcTextSize(glyph)
             ImGui.getWindowDrawList().addText(ax + (ARROW_W - sz.x) / 2f, ay + (h - sz.y) / 2f, col, glyph)
         }
-    }
-
-    /** Shortens [text] with an ellipsis until it fits [maxW] in the current font. */
-    private fun truncate(text: String, maxW: Float): String {
-        if (ImGui.calcTextSize(text).x <= maxW) return text
-        var end = text.length
-        while (end > 1 && ImGui.calcTextSize(text.substring(0, end) + ELLIPSIS).x > maxW) end--
-        return text.substring(0, end) + ELLIPSIS
     }
 
     private fun drawDragAndDrop(session: SessionContext, mixer: Mixer, bankId: String, chain: FxChain, slotIndex: Int, fxName: String?) {

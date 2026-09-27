@@ -60,7 +60,7 @@ object FxParamCell {
                 val placeholder = "—"
                 val tw = ImGui.calcTextSize(placeholder).x
                 val col = ImGui.colorConvertFloat4ToU32(0.40f, 0.42f, 0.48f, 0.6f)
-                dl.addText(x + (w - tw) * 0.5f, y + 2f, col, placeholder)
+                dl.addText(x + (w - tw) * 0.5f, TextFit.centeredY(y, h, ImGui.getTextLineHeight()), col, placeholder)
             }
             return
         }
@@ -70,10 +70,10 @@ object FxParamCell {
         val nameW = (w - modDotW).coerceAtLeast(10f)
 
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            val shown = truncateName(paramName, nameW - 4f)
+            val shown = TextFit.ellipsize(paramName, nameW - 4f)
             val tw = ImGui.calcTextSize(shown).x
             val textCol = ImGui.colorConvertFloat4ToU32(0.85f, 0.88f, 0.92f, 0.95f)
-            dl.addText(x + (nameW - tw) * 0.5f, y + 2f, textCol, shown)
+            dl.addText(x + (nameW - tw) * 0.5f, TextFit.centeredY(y, h, ImGui.getTextLineHeight()), textCol, shown)
         }
 
         // Invisible button over the whole cell for the tooltip
@@ -142,13 +142,5 @@ object FxParamCell {
         } else {
             String.format(Locale.ROOT, "%.2f", v)
         }
-    }
-
-    /** Shortens [text] with an ellipsis until it fits [maxW] in the current font. */
-    private fun truncateName(text: String, maxW: Float): String {
-        if (ImGui.calcTextSize(text).x <= maxW) return text
-        var end = text.length
-        while (end > 1 && ImGui.calcTextSize(text.substring(0, end) + "…").x > maxW) end--
-        return text.substring(0, end) + "…"
     }
 }

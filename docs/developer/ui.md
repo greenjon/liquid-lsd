@@ -36,7 +36,9 @@ graph TD
     PerformanceMatrixPanel --> PerformanceClockControls[PerformanceClockControls.kt - Clock row tempo bar]
     PerformanceMatrixPanel --> PerformanceFxSendsControls[PerformanceFxSendsControls.kt - FX Wet/Dry row controls]
     PerformanceMatrixPanel --> PerformanceMasterControls[PerformanceMasterControls.kt - Master row: crossfader, MIX/FX pills, Master FX chain]
-    PerformanceMatrixPanel --> PerformanceDeckControls[PerformanceDeckControls.kt - Deck rows left/right controls]
+    PerformanceMatrixPanel --> PerformanceDeckControls[PerformanceDeckControls.kt - Deck rows left/right controls + DeckRowMetrics]
+    PerformanceMatrixPanel --> PerfRowGeometry[PerfRowGeometry.kt - mode-independent row/knob positions]
+    PerformanceMatrixPanel --> PerfKnobSpec[PerfKnobSpec.kt - per-knob content resolver]
     PerformanceMatrixPanel --> PerformanceDeepEditBay[PerformanceDeepEditBay.kt - Deep Edit bay accordion & 3-column layout]
 
     PerformanceDeepEditBay --> ParameterGridHeaders[ParameterGridHeaders.kt - Deep Edit column headers]
@@ -165,6 +167,15 @@ val depthCbs = cvModulatorSlider(
 - **Wayland-Safe Coordinate Restoration**: Upon mouse release, `UIManager` calls `glfwSetCursorPos(windowHandle, originX, originY)` while still in `GLFW_CURSOR_DISABLED` before restoring `GLFW_CURSOR_NORMAL`. Calling position hints prior to releasing pointer confinement satisfies Linux Wayland compositors (`zwp_pointer_constraints_v1`) where global pointer warping in normal mode is prohibited.
 - **Safety Interruption Handling**: If the window loses focus (`glfwSetWindowFocusCallback` in `Main.kt`) or mouse button release is detected outside widget drawing, `MacroKnobWidget.abortDrag()` immediately resets internal lock state and releases the cursor lock.
 - **Hardware & User Preference Override**: Cursor locking is automatically bypassed when the performance touch console is active (`touchConsoleController.isActive`), or when toggled off via `UITheme.lockCursorOnKnobDrag` in **Preferences > General**.
+
+### 6c. Performance Row Layout Contract (`PerfRowGeometry.kt`, `PerfKnobSpec.kt`, `DeckRowMetrics`)
+A row's knobs can drive very different things over time -- source macros, the Master mix, an FX chain's Super Knob + slots (group mode), or a focused slot's dry/wet + parameters (focus mode). The rule is: **a mode changes what a knob shows, never where anything is drawn.**
+- **Geometry (`PerfRowGeometry`)** is computed once per frame from the grid width, the row height, the BODY line height and the widest left/right control blocks. It takes no mode and no bank id. Every knob gets the same face plus a fixed **strip** underneath it, `max(BODY line, FxSlotCell.HEIGHT, FxParamCell.HEIGHT)` tall. The strip holds either the knob's caption or an FX cell. The side-button stack (link / bypass / reset) has space reserved on *both* sides of every knob, so the knob stays centered in its column. Row height depends only on the Perform-view tab's row *count*, never on its rows' modes.
+- **Content (`PerfKnobResolver.resolve`)** turns a bank + optional `FxRowState` into up to four `KnobSpec`s. Each spec says what goes in the strip (`UnderKnob.Label` / `SlotCell` / `ParamCell`), which side buttons to draw (`SideButtons.None` / `LinkAndBypass` / `Bypass` / `Reset`), and any value overlay on the knob face. It is pure, so every mode is unit-tested.
+- **Drawing (`PerformanceMatrixPanel.drawMatrix`)** reads positions only from the geometry and content only from the specs. `MacroKnobWidget` is drawn face-only (`showLabel = false`). Captions go through `drawStripLabel` (BODY, ellipsized via `TextFit`, vertically centered like the FX cells). Deep Edit's value readout and Learn button sit below the strip, inside `expandedExtraH`.
+- **Side control widths (`DeckRowMetrics`)** are the single source for both the deck row's left controls and the width the matrix reserves for them (`row1Width`, taken at the full `CTRL_H` and the wider of queue nav vs. PV's badge). Change a button there, not in two places.
+- **Deck mode predicate**: `PerformanceUiContext.isDeckRowFx(tag, parametersState)` is the only SRC/FX check for deck rows.
+- `PerfRowLayoutTest` guards all of the above: the strip fits labels and cells, knob + strip fit inside the row at 1000-1920 px widths and 68-220 px rows, side buttons stay inside their column and clear the left controls, `row1Width` matches the drawn controls, and each resolver mode produces the right content.
 
 ### 7. `PreferencesPanel.kt` & `ShortcutManager.kt` Architecture
 - **Preferences Category Routing**: `PreferencesPanel` organizes application preferences into 9 clean categories (`GENERAL`, `SHADER_LOCATIONS`, `VIDEO_DISPLAY`, `AUDIO_ENGINE`, `TEMPO_SYNC`, `MIDI_CONTROLLER`, `OSC_CONTROLLER`, `SHORTCUTS`, `BROADCAST`) and supports targeted opening via `PreferencesPanel.open(category)`. Opening requests are deferred via an internal `pendingOpen` latch consumed in `PreferencesPanel.draw()` at the root ID-stack level, ensuring modal invocation succeeds when triggered from menus, submenus, or nested child widgets.

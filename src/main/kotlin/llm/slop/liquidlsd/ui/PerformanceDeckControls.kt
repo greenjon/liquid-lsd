@@ -17,6 +17,35 @@ import llm.slop.liquidlsd.rendering.Mixer
 import java.io.File
 
 /**
+ * Widths of the Deck row's left control lines -- the single source for both the drawing in
+ * [PerformanceDeckControls] and the space [PerformanceMatrixPanel] reserves for it, so the two
+ * can't drift apart and push controls into the knob cluster.
+ */
+internal object DeckRowMetrics {
+    const val GAP = 4f
+    const val MODE_PILL_W = 28f
+    const val GEN_BADGE_W = 74f
+    const val QUEUE_IDX_W = 38f
+    const val QUEUE_INNER_GAP = 2f
+    const val PV_BADGE_W = 60f
+
+    fun iconBtnW(ctrlH: Float): Float = ctrlH
+    fun navBtnW(ctrlH: Float): Float = (ctrlH * 0.85f).coerceAtLeast(20f)
+
+    /** `< n/m >` queue navigation (Decks A, B, BG). */
+    fun queueNavW(ctrlH: Float): Float = navBtnW(ctrlH) * 2f + QUEUE_IDX_W + QUEUE_INNER_GAP * 2f
+
+    /**
+     * Line 1 (SRC) width: pill, generator badge, preset combo, eject, [dice], then the queue nav
+     * or PV's PREVIEW badge -- whichever is wider, so every deck reserves the same width.
+     */
+    fun row1Width(ctrlH: Float, comboW: Float, randomization: Boolean): Float =
+        MODE_PILL_W + GAP + GEN_BADGE_W + GAP + comboW + GAP + iconBtnW(ctrlH) +
+            (if (randomization) GAP + iconBtnW(ctrlH) else 0f) +
+            GAP + maxOf(queueNavW(ctrlH), PV_BADGE_W)
+}
+
+/**
  * Deck row controls (Deck A, B, BG, PV):
  * - Left controls, two stacked rows: Row 1 (SRC) knob-assign pill, generator badge, preset combo,
  *   eject, randomize, queue navigation; Row 2 (FX) knob-assign pill and FX chain header.
@@ -52,7 +81,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         comboW: Float,
         rowW: Float
     ) {
-        val gap = 4f
+        val gap = DeckRowMetrics.GAP
         val isDeckA = deck === mixer.deckA
         val isDeckB = deck === mixer.deckB
         val isDeckBG = deck === mixer.deckBG
@@ -64,11 +93,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             else -> "PV"
         }
         val dl = ImGui.getWindowDrawList()
-        val activeSubTab = parametersState.getActiveDeckSubTabByTag(tag)
-        val currentMode = if (activeSubTab == "FX") "FX" else ctx.deckRowMode.getOrDefault(tag, "SRC")
-        val isSrc = currentMode == "SRC"
-        val isFx = currentMode == "FX"
-        val modeBtnW = 28f
+        val isFx = ctx.isDeckRowFx(tag, parametersState)
+        val isSrc = !isFx
+        val modeBtnW = DeckRowMetrics.MODE_PILL_W
 
         // --- ROW 1 (SRC) -------------------------------------------------------------
         ImGui.setCursorScreenPos(startX, row1Y)
@@ -87,7 +114,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         ImGui.sameLine(0f, gap)
 
         // 2. Generator badge -- click to change the deck's visual source
-        val genBadgeW = 74f
+        val genBadgeW = DeckRowMetrics.GEN_BADGE_W
         val genName = if (deck.isEmpty) "${Icons.PLUS} Source" else deck.source.displayName
         val genBorderCol = ImGui.colorConvertFloat4ToU32(0.35f, 0.40f, 0.50f, 0.70f)
         val genBgCol = ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
@@ -240,7 +267,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         ImGui.sameLine(0f, gap)
 
         // 3. Eject Button [ EJECT ]
-        val iconBtnW = ctrlH
+        val iconBtnW = DeckRowMetrics.iconBtnW(ctrlH)
         ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.45f, 0.20f, 0.20f, 1f))
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -274,7 +301,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         ImGui.sameLine(0f, gap)
 
         // 5. PlayQueue / BG Queue navigation (or preview indicator for PV)
-        val navBtnW = (ctrlH * 0.85f).coerceAtLeast(20f)
+        val navBtnW = DeckRowMetrics.navBtnW(ctrlH)
         if (isDeckA || isDeckB) {
             val q = session.playQueueManager.queue
             val qIdx = session.playQueueManager.activeIndex
@@ -334,9 +361,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             popOpenDropdownPadding()
             itemTooltip("Advance to previous item in PlayQueue.$qPrevMidiText\nRight-click for MIDI/OSC Learn.")
 
-            ImGui.sameLine(0f, 2f)
+            ImGui.sameLine(0f, DeckRowMetrics.QUEUE_INNER_GAP)
 
-            val qTextW = 38f
+            val qTextW = DeckRowMetrics.QUEUE_IDX_W
             val qCurX = ImGui.getCursorScreenPosX()
             val qCurY = ImGui.getCursorScreenPosY()
             dl.addRectFilled(qCurX, qCurY, qCurX + qTextW, qCurY + ctrlH, genBgCol, 3f)
@@ -347,7 +374,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.invisibleButton("##perf_q_idx_$tag", qTextW, ctrlH)
             itemTooltip("PlayQueue status: $qCountStr")
 
-            ImGui.sameLine(0f, 2f)
+            ImGui.sameLine(0f, DeckRowMetrics.QUEUE_INNER_GAP)
 
             val qNextKey = "Global/queueNext"
             val qNextOscKey = "Mixer/queueNext"
@@ -461,9 +488,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             popOpenDropdownPadding()
             itemTooltip("Advance to previous item in BG Queue.$bgPrevMidiText\nRight-click for MIDI/OSC Learn.")
 
-            ImGui.sameLine(0f, 2f)
+            ImGui.sameLine(0f, DeckRowMetrics.QUEUE_INNER_GAP)
 
-            val bgQTextW = 38f
+            val bgQTextW = DeckRowMetrics.QUEUE_IDX_W
             val bgCurX = ImGui.getCursorScreenPosX()
             val bgCurY = ImGui.getCursorScreenPosY()
             dl.addRectFilled(bgCurX, bgCurY, bgCurX + bgQTextW, bgCurY + ctrlH, genBgCol, 3f)
@@ -474,7 +501,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.invisibleButton("##perf_bg_idx", bgQTextW, ctrlH)
             itemTooltip("BG Queue status: $bgQCountStr")
 
-            ImGui.sameLine(0f, 2f)
+            ImGui.sameLine(0f, DeckRowMetrics.QUEUE_INNER_GAP)
 
             val bgNextKey = "Global/bgQueueNext"
             val bgNextOscKey = "Mixer/bgQueueNext"
@@ -531,7 +558,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             itemTooltip("Advance to next item in BG Queue.$bgNextMidiText\nRight-click for MIDI/OSC Learn.")
         } else {
             // Deck PV indicator / focus button
-            val pvBadgeW = 60f
+            val pvBadgeW = DeckRowMetrics.PV_BADGE_W
             ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.12f, 0.22f, 0.18f, 0.85f))
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.18f, 0.32f, 0.25f, 1f))
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
