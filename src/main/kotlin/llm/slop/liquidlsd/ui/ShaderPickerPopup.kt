@@ -288,7 +288,20 @@ object ShaderPickerPopup {
             categories.add(2, CATEGORY_SAVED)
         }
         
-        filteredItems.sortBy { it.displayName.lowercase() }
+        // Integrated camera(s) first, then other live external feeds (Spout/Syphon/PipeWire),
+        // then everything else -- alphabetical within each group.
+        filteredItems.sortWith(
+            compareBy(
+                { item ->
+                    when {
+                        item.displayName.contains("camera", ignoreCase = true) -> 0
+                        item.isExternal -> 1
+                        else -> 2
+                    }
+                },
+                { it.displayName.lowercase() }
+            )
+        )
 
         // Rebuild folder groups cache
         filteredItems.forEach { item ->
@@ -296,10 +309,30 @@ object ShaderPickerPopup {
         }
     }
 
+    /** Result table has 2 columns normally (Name, Categories); FX pickers get a 3rd for the \u2605 favorite toggle. */
+    private fun resultColumnCount() = if (isFxPicker) 3 else 2
+
+    private fun setupResultColumns() {
+        ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.3f)
+        ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, if (isFxPicker) 0.6f else 0.7f)
+        if (isFxPicker) {
+            ImGui.tableSetupColumn("\u2605", ImGuiTableColumnFlags.WidthFixed, 34f)
+        }
+    }
+
+    /** Dims and shrinks the table header row so it reads as a label, not another data row. */
+    private fun drawDimmedHeadersRow(session: SessionContext) {
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 0.55f, 0.58f, 1.0f)
+            ImGui.tableHeadersRow()
+            ImGui.popStyleColor()
+        }
+    }
+
     private fun renderTableRow(item: ShaderItem, session: SessionContext) {
         ImGui.tableNextRow()
-        
-        // Col 0: Name
+
+        // Col 0: Name -- the whole row is the click target (single or double click selects it).
         ImGui.tableSetColumnIndex(0)
         val itemLabel = if (item.isExternal) "${Icons.ACTIVITY}  ${item.displayName}" else item.displayName
         if (item.isExternal) {
@@ -319,33 +352,30 @@ object ShaderPickerPopup {
              onSelect?.invoke(item.id)
              ImGui.closeCurrentPopup()
         }
-        
-        // Col 1: Categories (pre-joined at updateItems() time, zero allocation here)
+
+        // Col 1: Categories (pre-joined at updateItems() time, zero allocation here).
+        // Drawn in whatever font is already active (the popup-wide TOOLTIP font pushed in
+        // draw()), so it reads at the same size as the Display Name column.
         ImGui.tableSetColumnIndex(1)
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            if (item.isExternal) {
-                ImGui.textColored(0.2f, 0.85f, 0.45f, 0.9f, item.categoriesLabel)
-            } else {
-                ImGui.textColored(0.7f, 0.7f, 0.7f, 1.0f, item.categoriesLabel)
-            }
+        if (item.isExternal) {
+            ImGui.textColored(0.2f, 0.85f, 0.45f, 0.9f, item.categoriesLabel)
+        } else {
+            ImGui.textColored(0.7f, 0.7f, 0.7f, 1.0f, item.categoriesLabel)
         }
 
-        // Col 2: Action Button (plus the favorite star for stock FX filters)
-        ImGui.tableSetColumnIndex(2)
-        if (isFxPicker && item.type == "Filter") {
-            val starred = llm.slop.liquidlsd.presets.FxShortlist.isFavorite(item.id)
-            if (starred) ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.8f, 0.2f, 1.0f)
-            if (ImGui.button("${if (starred) "\u2605" else "\u2606"}##star_${item.id}", 24f, 0f)) {
-                llm.slop.liquidlsd.presets.FxShortlist.toggle(item.id)
-                if (selectedCategory == CATEGORY_FAVORITES) updateItems()
+        // Col 2: \u2605 favorite toggle -- FX pickers only
+        if (isFxPicker) {
+            ImGui.tableSetColumnIndex(2)
+            if (item.type == "Filter") {
+                val starred = llm.slop.liquidlsd.presets.FxShortlist.isFavorite(item.id)
+                if (starred) ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.8f, 0.2f, 1.0f)
+                if (ImGui.button("${if (starred) "\u2605" else "\u2606"}##star_${item.id}", -1f, 0f)) {
+                    llm.slop.liquidlsd.presets.FxShortlist.toggle(item.id)
+                    if (selectedCategory == CATEGORY_FAVORITES) updateItems()
+                }
+                if (starred) ImGui.popStyleColor()
+                itemTooltip(if (starred) "Remove from the FX shortlist (the effects a slot's \u25c0 \u25b6 steps through)." else "Add to the FX shortlist (the effects a slot's \u25c0 \u25b6 steps through).")
             }
-            if (starred) ImGui.popStyleColor()
-            itemTooltip(if (starred) "Remove from the FX shortlist (the effects a slot's \u25c0 \u25b6 steps through)." else "Add to the FX shortlist (the effects a slot's \u25c0 \u25b6 steps through).")
-            ImGui.sameLine(0f, 4f)
-        }
-        if (ImGui.button("Select##${item.id}", -1f, 0f)) {
-            onSelect?.invoke(item.id)
-            ImGui.closeCurrentPopup()
         }
     }
 
@@ -357,9 +387,11 @@ object ShaderPickerPopup {
         }
 
         ImGui.setNextWindowSize(720f, 620f, ImGuiCond.Appearing)
-        val flags = ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoCollapse
-        
+        val flags = ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoTitleBar
+
         if (ImGui.beginPopupModal(POPUP_ID, flags)) {
+            pushOpenDropdownStyleVars()
+            pushOpenDropdownFont()
             session.uiTheme.withFont(UITheme.FontLevel.H3) {
                 ImGui.text("${Icons.SEARCH} $title")
             }
@@ -394,7 +426,7 @@ object ShaderPickerPopup {
             ImGui.spacing()
 
             // ── Category Pills Row ──
-            ImGui.beginChild("##categories_pills", 0f, 40f, false, ImGuiWindowFlags.HorizontalScrollbar)
+            ImGui.beginChild("##categories_pills", 0f, 48f, false, ImGuiWindowFlags.HorizontalScrollbar)
             for (i in 0 until categories.size) {
                 val cat = categories[i]
                 val isSelected = cat == selectedCategory
@@ -427,11 +459,9 @@ object ShaderPickerPopup {
 
             if (viewMode == ViewMode.FLAT) {
                 // ── Flat List View ──
-                if (ImGui.beginTable("##shader_results", 3, tableFlags)) {
-                    ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.6f)
-                    ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, 0.3f)
-                    ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, if (isFxPicker) 110f else 80f)
-                    ImGui.tableHeadersRow()
+                if (ImGui.beginTable("##shader_results", resultColumnCount(), tableFlags)) {
+                    setupResultColumns()
+                    drawDimmedHeadersRow(session)
 
                     for (i in 0 until filteredItems.size) {
                         renderTableRow(filteredItems[i], session)
@@ -450,11 +480,9 @@ object ShaderPickerPopup {
                         if (folder.isBlank()) continue
                         val headerLabel = "${Icons.FOLDER}  $folder (${items.size})###tree_$folder"
                         if (ImGui.treeNodeEx(headerLabel, treeNodeFlags)) {
-                            if (ImGui.beginTable("##tbl_$folder", 3, ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
-                                ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.6f)
-                                ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, 0.3f)
-                                ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, if (isFxPicker) 110f else 80f)
-                                ImGui.tableHeadersRow()
+                            if (ImGui.beginTable("##tbl_$folder", resultColumnCount(), ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
+                                setupResultColumns()
+                                drawDimmedHeadersRow(session)
 
                                 for (i in 0 until items.size) {
                                     renderTableRow(items[i], session)
@@ -472,11 +500,9 @@ object ShaderPickerPopup {
                         if (hasOtherFolders) {
                             val headerLabel = "${Icons.FILE}  General / Root (${rootItems.size})###tree_root"
                             if (ImGui.treeNodeEx(headerLabel, treeNodeFlags)) {
-                                if (ImGui.beginTable("##tbl_root", 3, ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
-                                    ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.6f)
-                                    ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, 0.3f)
-                                    ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, if (isFxPicker) 110f else 80f)
-                                    ImGui.tableHeadersRow()
+                                if (ImGui.beginTable("##tbl_root", resultColumnCount(), ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
+                                    setupResultColumns()
+                                    drawDimmedHeadersRow(session)
 
                                     for (i in 0 until rootItems.size) {
                                         renderTableRow(rootItems[i], session)
@@ -486,11 +512,9 @@ object ShaderPickerPopup {
                                 ImGui.treePop()
                             }
                         } else {
-                            if (ImGui.beginTable("##tbl_root_direct", 3, tableFlags)) {
-                                ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.6f)
-                                ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, 0.3f)
-                                ImGui.tableSetupColumn("Action", ImGuiTableColumnFlags.WidthFixed, if (isFxPicker) 110f else 80f)
-                                ImGui.tableHeadersRow()
+                            if (ImGui.beginTable("##tbl_root_direct", resultColumnCount(), tableFlags)) {
+                                setupResultColumns()
+                                drawDimmedHeadersRow(session)
 
                                 for (i in 0 until rootItems.size) {
                                     renderTableRow(rootItems[i], session)
@@ -503,6 +527,8 @@ object ShaderPickerPopup {
                 ImGui.endChild()
             }
 
+            popOpenDropdownFont()
+            popOpenDropdownPadding()
             ImGui.endPopup()
         }
     }

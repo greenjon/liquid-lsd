@@ -20,10 +20,16 @@ import imgui.flag.ImGuiStyleVar
  */
 private var dropdownFontPushed = false
 
-fun pushOpenDropdownPadding() {
+/** Just the 3 roomy style vars, with no repositioning -- for windows that already manage their
+ *  own position/size (e.g. a sized `beginPopupModal`), as opposed to freely-positioned popups. */
+fun pushOpenDropdownStyleVars() {
     ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 12f, 8f)
     ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, 8f, 5f)
     ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 10f, 5f)
+}
+
+fun pushOpenDropdownPadding() {
+    pushOpenDropdownStyleVars()
     // Freely-positioned dropdowns/menus (beginPopup-style) open with their vertical center at the
     // cursor's Y, instead of the default top-edge-at-cursor placement, so a tall list grows both
     // up and down from the click point rather than running off the bottom of the screen. Only
