@@ -6,7 +6,9 @@ import imgui.type.ImInt
 import imgui.type.ImString
 import llm.slop.liquidlsd.macro.*
 import llm.slop.liquidlsd.parameters.ParameterResolver
+import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.rendering.isf.FxMetaBinding
 import llm.slop.liquidlsd.cv.isAudioSource
 
 /**
@@ -57,6 +59,24 @@ object MacroBindingInspector {
             top == "Mixer" -> NavTarget(MacroEngine.MASTER, "Mixer", if (rest.startsWith("Transition/")) "TRANS" else "CTRL")
             else -> null
         }
+    }
+
+    /**
+     * For a Meta knob currently linked to its FX chain's Super Knob, the ISF-level bindings actually
+     * driving it -- [FxMacroSync] intentionally keeps [control]'s own [MacroBinding] list empty for
+     * linked slots (see its `syncGroupMode`) since the value instead flows through
+     * [FxChain]'s soft-takeover propagation straight into the effect's [FxMetaBinding]s. Null if
+     * [control] isn't a linked FX slot's Meta knob.
+     */
+    private fun linkedSuperKnobBindingsFor(control: MacroControl, mixer: Mixer): List<FxMetaBinding>? {
+        val (bankId, bank) = MacroEngine.findBankForControl(control.id) ?: return null
+        if (bankId == null || bankId !in FxMacroSync.FX_BANK_IDS) return null
+        val slotIdx = bank.knobs.indexOf(control) - 1
+        if (slotIdx !in 0 until FxChain.SLOT_COUNT) return null
+        val chain = FxMacroSync.chainFor(bankId, mixer) ?: return null
+        if (chain.slotSuperKnobLink.getOrNull(slotIdx) != true) return null
+        val slot = chain.slots.getOrNull(slotIdx) ?: return null
+        return slot.metaBindings.takeIf { it.isNotEmpty() }
     }
 
     fun draw(
@@ -130,8 +150,19 @@ object MacroBindingInspector {
 
         // Bindings list
         if (control.bindings.isEmpty()) {
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                ImGui.textDisabled("No parameters bound. Click [Learn] then click any parameter or modulator property in Deep Edit.")
+            val linkedBindings = linkedSuperKnobBindingsFor(control, mixer)
+            if (linkedBindings != null) {
+                session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                    ImGui.textDisabled("Linked to Super Knob -- driven directly, not via Learn:")
+                    for (binding in linkedBindings) {
+                        ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, "  -> ${binding.targetParamName ?: "Dry/Wet"}")
+                    }
+                    ImGui.textDisabled("Unlink from Super Knob (FX chain) to bind parameters here instead.")
+                }
+            } else {
+                session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                    ImGui.textDisabled("No parameters bound. Click [Learn] then click any parameter or modulator property in Deep Edit.")
+                }
             }
         } else {
             val toRemove = mutableListOf<Int>()
