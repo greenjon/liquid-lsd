@@ -580,7 +580,7 @@ class PerformanceMatrixPanel {
                 val knobLabel = control.label.ifEmpty { "K${knobIdx + 1}" }
 
                 ImGui.setCursorScreenPos(gridStartX + geo.knobX(col), knobTopY)
-                // Face only -- the caption and value readout are drawn into the fixed strip/extras below.
+                // The widget draws the face only -- the caption and value readout go into the fixed strip/extras below.
                 MacroKnobWidget.draw(
                     session = session,
                     id = "perf_${tabIdx}_r${rowIdx}_c${col}",
@@ -593,8 +593,6 @@ class PerformanceMatrixPanel {
                     isLearning = isMidiLearning,
                     accentColor = row.accent,
                     bindings = control.bindings,
-                    showValue = false,
-                    showLabel = false,
                     valueOverlay = spec.valueOverlay,
                     onSelect = {
                         if (isModuleExpanded) {

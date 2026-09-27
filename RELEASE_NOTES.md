@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Preferences Transition to Docked 2/3 Workspace Panel (`PreferencesPanel.kt`, `UIManager.kt`, `MenuBar.kt`)
+- **Docked Workspace Panel**: Preferences has been transitioned from a floating modal overlay dialog into a docked workspace panel occupying the left ~2/3 of the interface, leaving the Mixer column (Decks A/B, preview monitor, crossfader, and master audio meters) fully visible and interactive on the right.
+- **Header Navigation & Shortcuts**: Added a top header bar with breadcrumb navigation (`Preferences › Category`) and an explicit `[✕ Close (Esc)]` button. Integrated into the global `Esc` key hierarchy and `Ctrl+P` toggle.
+- **Live Performance Safety**: Performers can configure hardware, audio buffers, tempo sync, and MIDI/OSC mappings while keeping continuous visual feedback of their live show and full manual control over the Mixer.
+
 ### Performance Row Knobs Keep Their Size and Position in Every Mode (`PerfRowGeometry.kt`, `PerfKnobSpec.kt`, `PerformanceMatrixPanel.kt`, `PerformanceDeckControls.kt`)
 - Switching any Deck row between `[SRC]`, `[FX]` and FX Focus Mode (or the Master row between `[MIX]` and `[FX]`) no longer resizes the knobs on every row of the tab or shifts the switched row's knobs up or down. The layout used to reserve different amounts of space under a knob per mode, and knob size was the minimum across rows in their *current* modes.
 - Knob positions now come from one mode-independent `PerfRowGeometry`. Every knob has the same fixed line underneath it, which holds its caption or its FX slot/parameter cell. Captions are drawn at 14px like the FX cells, so text sits at the same height in every mode. Long names end in `…`, with the full name in the tooltip. What each knob shows is resolved separately by `PerfKnobResolver`.

@@ -347,6 +347,16 @@ class UIThemeTest {
 
         PreferencesPanel.open(PreferencesPanel.Category.AUDIO_ENGINE)
         assertEquals(PreferencesPanel.Category.AUDIO_ENGINE, PreferencesPanel.activeCategory)
+
+        PreferencesPanel.close()
+        assertFalse(PreferencesPanel.isOpen, "PreferencesPanel should be closed after close()")
+
+        PreferencesPanel.toggle(PreferencesPanel.Category.GENERAL)
+        assertTrue(PreferencesPanel.isOpen, "PreferencesPanel should be open after toggle from closed")
+        assertEquals(PreferencesPanel.Category.GENERAL, PreferencesPanel.activeCategory)
+
+        PreferencesPanel.toggle(PreferencesPanel.Category.GENERAL)
+        assertFalse(PreferencesPanel.isOpen, "PreferencesPanel should be closed after toggle with same category")
     }
 
     @Test

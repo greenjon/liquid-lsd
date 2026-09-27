@@ -1,3 +1,16 @@
+## Preferences Panel Transition: From Modal Overlay to Docked 2/3 Workspace Panel (`PreferencesPanel.kt`, `UIManager.kt`, `MenuBar.kt`, `UIThemeTest.kt`, docs)
+
+- **Context**: 2026-09-27. Application Preferences previously opened as a modal overlay dialog (`ImGui.beginPopupModal`) centered on screen (`1000px × 520px`). In a live performance VJ environment, modal dialogs block background interaction, dim the screen, and prevent the performer from monitoring the live Master output preview, Deck previews, or audio meters while configuring settings.
+- **Decision**:
+  - Re-architected `PreferencesPanel` from an ImGui popup modal into a docked workspace panel occupying the left ~2/3 of the workspace (`0` to `libraryW`, left of the Mixer column).
+  - The right column (`rightW`, the Mixer with Decks A/B, preview monitor, crossfader, and master audio meters) remains fully active, visible, and interactive while Preferences is open.
+  - Added a dedicated header bar with breadcrumb title (`Icons.SETTINGS Preferences › Category`) and an explicit `[✕ Close (Esc)]` button.
+  - Added `PreferencesPanel.close()` and `PreferencesPanel.toggle()` helper methods.
+  - Integrated `PreferencesPanel.isOpen` into the global `Esc` key handling priority stack in `UIManager.processQueueKeyboardShortcuts()` (canceling Macro Learn > closing Preferences > collapsing Deep Edit rack modules).
+  - Toggling `Ctrl+P` (or clicking **File > Preferences...**) cleanly alternates between open and closed. Added a **View > Close Preferences** menu item when open.
+  - Exiting Preferences cleanly restores whatever view was previously active (Performance Matrix + Library dock, or Deep Edit module) without state loss.
+- **Consequences**: Performers can configure hardware, audio buffers, tempo sync, and MIDI/OSC mappings while keeping continuous visual feedback of their live show and full manual control over the Mixer. Modal trapping and popup stack issues are eliminated.
+
 ## Unify Transitions Library Browser to Match FX's Stock/Saved Merge (`TransitionBrowserPanel.kt`, `LibraryPanel.kt`, `AssetType.kt`, `BrowserPopupHandler.kt`, docs)
 
 - **Context**: 2026-09-26. `[ Trans ]` mode's Library Column 1/2 split stock ISF transition shaders and saved `.lsdtrans` presets into two independent panels (`StockTransitionListPanel`, `TransitionPresetListPanel`), each with its own selection state, search box, and near-duplicate row/context-menu logic. This was the same split `[ FX ]` mode had (`FXPresetListPanel`/`FXChainListPanel`) before commit `da12464` unified it into one filterable `FXBrowserPanel` on 2026-09-18 — four days *after* the Transitions panels were built (`3db033c`, 2026-09-14), so Transitions simply never got the same treatment. There was no design intent behind keeping two columns; it was pre-unification code that was never revisited.

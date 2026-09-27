@@ -196,7 +196,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── PropertiesPanel.kt      — Edits parameter values and modulators with oscilloscope
 │   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)
 │   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
-│   ├── PreferencesPanel.kt     — App configuration & tabbed preferences modal
+│   ├── PreferencesPanel.kt     — App configuration & docked 2/3 workspace preferences panel
 │   ├── AudioEnginePanel.kt     — Audio input, beat detection, and real-time oscilloscopes (Preferences tab drawer)
 │   ├── MidiPreferencesPanel.kt — MIDI port configuration, channel filters & mapping table UI
 │   ├── OscPreferencesPanel.kt  — TouchOSC / OSC server config, live packet sniffer & Learn UI

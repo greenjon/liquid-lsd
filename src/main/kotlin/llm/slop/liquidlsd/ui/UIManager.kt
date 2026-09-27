@@ -53,7 +53,11 @@ class UIManager(
     private var pendingFontRebuild = false
 
     fun openPreferences(category: PreferencesPanel.Category? = null) {
-        PreferencesPanel.open(category)
+        if (category == null && PreferencesPanel.isOpen) {
+            PreferencesPanel.close()
+        } else {
+            PreferencesPanel.open(category)
+        }
     }
 
     private val splitterManager = SplitterManager()
@@ -280,16 +284,6 @@ class UIManager(
 
             drawLayout(mixer, renderer, displayWidth, displayHeight)
 
-            PreferencesPanel.draw(
-                session = session,
-                currentSize = session.uiTheme.baseSize,
-                displayW = displayWidth,
-                displayH = displayHeight,
-                mixer = mixer,
-                onPresetScaleChanged = { newPct -> applyPresetNameScale(newPct) },
-                parametersState = parametersState
-            )
-
             VideoExportModal.draw(session, mixer, renderer, displayWidth, displayHeight)
 
             popupManager.drawExitPopup(mixer, displayWidth, displayHeight)
@@ -335,6 +329,8 @@ class UIManager(
         if (!ImGui.getIO().wantTextInput && ImGui.isKeyPressed(imgui.flag.ImGuiKey.Escape, false)) {
             if (llm.slop.liquidlsd.macro.MacroLearnState.isLearning()) {
                 llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
+            } else if (PreferencesPanel.isOpen) {
+                PreferencesPanel.close()
             } else if (parametersState.anyRackModuleExpanded()) {
                 parametersState.collapseAllRackModules()
             }
@@ -490,32 +486,46 @@ class UIManager(
             else -> halfLibraryH
         }
 
-        if (theme.libraryMode != UITheme.LibraryMode.FULL) {
-            val topH = (contentH - libraryH).coerceAtLeast(1f)
+        if (PreferencesPanel.isOpen) {
+            PreferencesPanel.draw(
+                session = session,
+                posX = 0f,
+                posY = menuBarH,
+                width = libraryW,
+                height = contentH,
+                currentSize = session.uiTheme.baseSize,
+                mixer = currentMixer,
+                onPresetScaleChanged = { newPct -> applyPresetNameScale(newPct) },
+                parametersState = parametersState
+            )
+        } else {
+            if (theme.libraryMode != UITheme.LibraryMode.FULL) {
+                val topH = (contentH - libraryH).coerceAtLeast(1f)
 
-            // Sliders set this while hovered to suppress mouse-wheel scrolling of the panel under
-            // them (Deep Edit's Properties reads it); clear it every frame before redrawing.
-            CustomRangeSlider.isAnySliderHovered = false
+                // Sliders set this while hovered to suppress mouse-wheel scrolling of the panel under
+                // them (Deep Edit's Properties reads it); clear it every frame before redrawing.
+                CustomRangeSlider.isAnySliderHovered = false
 
-            // PerformanceMatrixPanel fills the space left of the Mixer column, above the Library dock.
-            ImGui.setNextWindowPos(0f, menuBarH)
-            ImGui.setNextWindowSize(libraryW.coerceAtLeast(1f), topH)
-            val perfFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
-            // Tighter vertical padding than the default so four rows fit above a HALF Library at 1280x720.
-            ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, style.getWindowPaddingX(), 4f)
-            val perfOpen = ImGui.begin("PerformanceMatrix", perfFlags)
-            ImGui.popStyleVar()
-            if (perfOpen) {
-                UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
-                currentMixer?.let {
-                    performanceMatrixPanel.draw(session, it, parametersState, deckPresetController, hiddenLibraryH = if (isEditView) halfLibraryH else 0f)
+                // PerformanceMatrixPanel fills the space left of the Mixer column, above the Library dock.
+                ImGui.setNextWindowPos(0f, menuBarH)
+                ImGui.setNextWindowSize(libraryW.coerceAtLeast(1f), topH)
+                val perfFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
+                // Tighter vertical padding than the default so four rows fit above a HALF Library at 1280x720.
+                ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, style.getWindowPaddingX(), 4f)
+                val perfOpen = ImGui.begin("PerformanceMatrix", perfFlags)
+                ImGui.popStyleVar()
+                if (perfOpen) {
+                    UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
+                    currentMixer?.let {
+                        performanceMatrixPanel.draw(session, it, parametersState, deckPresetController, hiddenLibraryH = if (isEditView) halfLibraryH else 0f)
+                    }
                 }
+                ImGui.end()
             }
-            ImGui.end()
-        }
 
-        if (!isEditView) {
-            drawLibraryDock(displayWidth, displayHeight, menuBarH, contentH, noDecorate, minRatio, libraryW, libraryH, libTitleBarH)
+            if (!isEditView) {
+                drawLibraryDock(displayWidth, displayHeight, menuBarH, contentH, noDecorate, minRatio, libraryW, libraryH, libTitleBarH)
+            }
         }
 
         // Column 3: Mixer.

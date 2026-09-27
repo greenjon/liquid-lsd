@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#preferences-transition-to-docked-23-workspace-panel-preferencespanelkt-uimanagerkt-menubarkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preferences Transition to Docked 2/3 Workspace Panel (PreferencesPanel.kt, UIManager.kt, MenuBar.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-row-knobs-keep-their-size-and-position-in-every-mode-perfrowgeometrykt-perfknobspeckt-performancematrixpanelkt-performancedeckcontrolskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4327,6 +4338,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#preferences-transition-to-docked-23-workspace-panel-preferencespanelkt-uimanagerkt-menubarkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Preferences Transition to Docked 2/3 Workspace Panel (PreferencesPanel.kt, UIManager.kt, MenuBar.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-row-knobs-keep-their-size-and-position-in-every-mode-perfrowgeometrykt-perfknobspeckt-performancematrixpanelkt-performancedeckcontrolskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7421,6 +7443,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="preferences-transition-to-docked-23-workspace-panel-preferencespanelkt-uimanagerkt-menubarkt">Preferences Transition to Docked 2/3 Workspace Panel (<code>PreferencesPanel.kt</code>, <code>UIManager.kt</code>, <code>MenuBar.kt</code>)</h3>
+<ul>
+<li><strong>Docked Workspace Panel</strong>: Preferences has been transitioned from a floating modal overlay dialog into a docked workspace panel occupying the left ~2/3 of the interface, leaving the Mixer column (Decks A/B, preview monitor, crossfader, and master audio meters) fully visible and interactive on the right.</li>
+<li><strong>Header Navigation &amp; Shortcuts</strong>: Added a top header bar with breadcrumb navigation (<code>Preferences › Category</code>) and an explicit <code>[✕ Close (Esc)]</code> button. Integrated into the global <code>Esc</code> key hierarchy and <code>Ctrl+P</code> toggle.</li>
+<li><strong>Live Performance Safety</strong>: Performers can configure hardware, audio buffers, tempo sync, and MIDI/OSC mappings while keeping continuous visual feedback of their live show and full manual control over the Mixer.</li>
+</ul>
 <h3 id="performance-row-knobs-keep-their-size-and-position-in-every-mode-perfrowgeometrykt-perfknobspeckt-performancematrixpanelkt-performancedeckcontrolskt">Performance Row Knobs Keep Their Size and Position in Every Mode (<code>PerfRowGeometry.kt</code>, <code>PerfKnobSpec.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>PerformanceDeckControls.kt</code>)</h3>
 <ul>
 <li>Switching any Deck row between <code>[SRC]</code>, <code>[FX]</code> and FX Focus Mode (or the Master row between <code>[MIX]</code> and <code>[FX]</code>) no longer resizes the knobs on every row of the tab or shifts the switched row's knobs up or down. The layout used to reserve different amounts of space under a knob per mode, and knob size was the minimum across rows in their <em>current</em> modes.</li>

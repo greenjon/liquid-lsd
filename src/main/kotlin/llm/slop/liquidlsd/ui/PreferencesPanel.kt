@@ -12,14 +12,12 @@ import imgui.flag.ImGuiTableColumnFlags
 import llm.slop.liquidlsd.input.TouchBackendState
 
 /**
- * Modal preferences overlay with a left vertical navigation bar.
- * Call [open] when the menu item is clicked.
- * Call [draw] once per frame inside the active ImGui frame.
+ * Docked preferences panel occupying the workspace area left of the mixer column.
+ * Call [open] or [toggle] when the menu item or shortcut is triggered.
+ * Call [close] to return to the performance / deep edit views.
+ * Call [draw] once per frame inside the workspace layout.
  */
 object PreferencesPanel {
-
-    private const val POPUP_ID  = "Preferences##modal"
-    private const val MODAL_W   = 1000f
 
     // Library preset name scale model: Range 80%–120% in 10% steps.
     private const val MIN_PRESET_SCALE_PCT = 80
@@ -45,7 +43,6 @@ object PreferencesPanel {
         private set
 
     private var pendingPresetScale: Int? = null
-    private var pendingOpen = false
 
     fun open(category: Category? = null) {
         isOpen = true
@@ -53,71 +50,98 @@ object PreferencesPanel {
         if (category != null) {
             activeCategory = category
         }
-        pendingOpen = true
     }
 
-    fun draw(session: llm.slop.liquidlsd.SessionContext, currentSize: Float = session.uiTheme.baseSize, displayW: Float, displayH: Float,
-             mixer: llm.slop.liquidlsd.rendering.Mixer? = null,
-             onPresetScaleChanged: (Int) -> Unit,
-             parametersState: ParametersState? = null) {
+    fun close() {
+        isOpen = false
+    }
 
-        if (pendingOpen) {
-            ImGui.openPopup(POPUP_ID)
-            pendingOpen = false
+    fun toggle(category: Category? = null) {
+        if (isOpen && (category == null || category == activeCategory)) {
+            close()
+        } else {
+            open(category)
         }
+    }
 
-        val minW = 1000f.coerceAtMost(displayW * 0.98f)
-        val minH = 320f.coerceAtMost(displayH * 0.98f)
+    fun draw(
+        session: llm.slop.liquidlsd.SessionContext,
+        posX: Float,
+        posY: Float,
+        width: Float,
+        height: Float,
+        currentSize: Float = session.uiTheme.baseSize,
+        mixer: llm.slop.liquidlsd.rendering.Mixer? = null,
+        onPresetScaleChanged: (Int) -> Unit,
+        parametersState: ParametersState? = null
+    ) {
+        if (!isOpen) return
 
-        val defaultW = MODAL_W.coerceIn(minW, displayW * 0.98f)
-        val defaultH = 520f.coerceIn(minH, displayH * 0.90f)
+        ImGui.setNextWindowPos(posX, posY)
+        ImGui.setNextWindowSize(width.coerceAtLeast(1f), height.coerceAtLeast(1f))
 
-        val targetW = if (session.uiTheme.preferencesWidth > 100f) session.uiTheme.preferencesWidth.coerceIn(minW, displayW * 0.98f) else defaultW
-        val targetH = if (session.uiTheme.preferencesHeight > 100f) session.uiTheme.preferencesHeight.coerceIn(minH, displayH * 0.98f) else defaultH
+        val flags = ImGuiWindowFlags.NoResize or
+                    ImGuiWindowFlags.NoMove or
+                    ImGuiWindowFlags.NoCollapse or
+                    ImGuiWindowFlags.NoTitleBar or
+                    ImGuiWindowFlags.NoScrollbar or
+                    ImGuiWindowFlags.NoBringToFrontOnFocus
 
-        ImGui.setNextWindowPos(
-            displayW * 0.5f, displayH * 0.5f,
-            ImGuiCond.Appearing, 0.5f, 0.5f
-        )
-        ImGui.setNextWindowSize(targetW, targetH, ImGuiCond.Appearing)
-        ImGui.setNextWindowSizeConstraints(minW, minH, displayW * 0.98f, displayH * 0.98f)
+        ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 12f, 10f)
+        val panelOpen = ImGui.begin("PreferencesPanel", flags)
+        ImGui.popStyleVar()
 
-        val flags = ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoScrollbar
-
-        if (!ImGui.beginPopupModal(POPUP_ID, flags)) {
-            isOpen = false
+        if (!panelOpen) {
+            ImGui.end()
             return
         }
-        isOpen = true
 
-        val currentWinW = ImGui.getWindowWidth()
-        val currentWinH = ImGui.getWindowHeight()
-        if (kotlin.math.abs(currentWinW - session.uiTheme.preferencesWidth) > 1f ||
-            kotlin.math.abs(currentWinH - session.uiTheme.preferencesHeight) > 1f) {
-            session.uiTheme.preferencesWidth = currentWinW
-            session.uiTheme.preferencesHeight = currentWinH
-            AppPreferencesStore.savePreferences()
+        UIThemeStyler.drawNeonBackgroundIfNeeded(session, posX, posY, width, height, width)
+
+        // ── Top Header Bar ───────────────────────────────────────────────
+        session.uiTheme.withFont(UITheme.FontLevel.H2) {
+            ImGui.textColored(0.3f, 0.75f, 1.0f, 1.0f, "${Icons.SETTINGS} Preferences")
+        }
+        ImGui.sameLine(0f, 10f)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            ImGui.alignTextToFramePadding()
+            ImGui.textDisabled("›")
+            ImGui.sameLine(0f, 10f)
+            ImGui.textColored(0.85f, 0.85f, 0.85f, 1.0f, activeCategory.label)
         }
 
+        // Close button on the far right of the header bar
+        val closeBtnText = "${Icons.X} Close (Esc)"
+        val closeBtnW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            ImGui.calcTextSize(closeBtnText).x + 24f
+        }.coerceAtLeast(110f)
+
+        val windowContentMaxX = ImGui.getWindowContentRegionMaxX()
+        ImGui.sameLine(windowContentMaxX - closeBtnW)
+        if (ImGui.button(closeBtnText, closeBtnW, 0f)) {
+            close()
+        }
+        itemTooltip("Close Preferences and return to workspace (Esc)")
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
+        // ── Main Body (Sidebar + Content) ────────────────────────────────
         val sidebarW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             Category.values().maxOf { ImGui.calcTextSize(it.label).x } + 36f
-        }.coerceAtLeast(140f)
+        }.coerceAtLeast(150f)
 
         val btnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             ImGui.getFrameHeight() + 6f
         }.coerceAtLeast(30f)
 
-        val footerH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            ImGui.getFrameHeightWithSpacing() + ImGui.getStyle().itemSpacing.y * 2f + 14f
-        }
-
         val availW = ImGui.getContentRegionAvailX()
-        val availH = ImGui.getContentRegionAvailY()
-        val contentH = (availH - footerH).coerceAtLeast(180f)
+        val availH = ImGui.getContentRegionAvailY().coerceAtLeast(100f)
         val rightContentW = (availW - sidebarW - ImGui.getStyle().itemSpacing.x).coerceAtLeast(50f)
 
         // Left Sidebar Child
-        if (ImGui.beginChild("##preferences_sidebar", sidebarW, contentH, true)) {
+        if (ImGui.beginChild("##preferences_sidebar", sidebarW, availH, true)) {
             Category.values().forEach { cat ->
                 val selected = activeCategory == cat
                 if (selected) {
@@ -143,7 +167,7 @@ object PreferencesPanel {
         ImGui.sameLine()
 
         // Right Content Child
-        if (ImGui.beginChild("##preferences_content", rightContentW, contentH, true)) {
+        if (ImGui.beginChild("##preferences_content", rightContentW, availH, true)) {
             when (activeCategory) {
                 Category.GENERAL          -> drawGeneralPreferences(session, currentSize, onPresetScaleChanged)
                 Category.SHADER_LOCATIONS -> drawShaderLocationsPreferences(session)
@@ -158,21 +182,7 @@ object PreferencesPanel {
         }
         ImGui.endChild()
 
-        ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
-
-        // Centred Close button
-        val closeW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            ImGui.calcTextSize("  Close  ").x + 40f
-        }.coerceAtLeast(110f)
-        ImGui.setCursorPosX(ImGui.getWindowContentRegionMinX() + (availW - closeW) * 0.5f)
-        if (ImGui.button("Close", closeW, 0f)) {
-            isOpen = false
-            ImGui.closeCurrentPopup()
-        }
-
-        ImGui.endPopup()
+        ImGui.end()
     }
 
 

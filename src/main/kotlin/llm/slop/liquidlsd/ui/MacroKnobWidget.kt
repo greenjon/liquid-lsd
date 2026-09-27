@@ -6,8 +6,12 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Reusable rotary "Macro Knob" control, used by [MacroPanel] (Macro Controls system -- see
- * docs/user_guide/macros_and_rack.md).
+ * Rotary "Macro Knob" control for the Performance rows ([PerformanceMatrixPanel]; Macro Controls
+ * system -- see docs/user_guide/macros_and_rack.md).
+ *
+ * Draws the knob face only (plus an optional in-face [draw] `valueOverlay`). Captions and value
+ * readouts belong to the caller, which places them in the fixed strip under each knob from
+ * [PerfRowGeometry] -- see docs/developer/ui.md §6c.
  *
  * Follows the same hand-rolled-ImGui-widget idiom as [CustomRangeSlider]: an
  * [ImGui.invisibleButton] hit-region, [ImGui.isItemActivated]/[ImGui.isItemActive] for drag-state
@@ -119,7 +123,8 @@ object MacroKnobWidget {
      *
      * @param accentColor Optional RGB float array `[r, g, b]` (values 0–1). When supplied the arc
      *   fill, indicator line, and hover/active border ring use this tint instead of the default
-     *   amber gold. Pass `null` to keep the existing amber style (used by [MacroPanel]).
+     *   amber gold. Pass `null` for the default amber style.
+     * @param label Names the knob in its tooltip (the caller draws any visible caption).
      */
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
@@ -133,10 +138,7 @@ object MacroKnobWidget {
         isLearning: Boolean = false,
         accentColor: FloatArray? = null,
         bindings: List<llm.slop.liquidlsd.macro.MacroBinding> = emptyList(),
-        showValue: Boolean = false,
-        /** False omits the caption under the knob (e.g. an FX row's slot knobs, whose slot cell below names them); the value line then takes its place. */
-        showLabel: Boolean = true,
-        /** When set, drawn as a small readout inside the knob face (e.g. an FX parameter's current value) instead of a line below -- keeps the below-knob cell free for the parameter's name. */
+        /** When set, drawn as a small readout inside the knob face (e.g. an FX parameter's current value). */
         valueOverlay: String? = null,
         onSelect: () -> Unit = {},
         onToggleLearn: () -> Unit = {},
@@ -283,52 +285,11 @@ object MacroKnobWidget {
             }
         }
 
-        // Label centered below the knob face -- BODY size so it reads at a glance next to the knob.
-        val labelY = startY + diameter + 3f
-        var labelW = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) { labelW = ImGui.calcTextSize(label).x }
-        val labelX = cx - labelW / 2f
-        ImGui.setCursorScreenPos(labelX, labelY)
-        val labelCol = if (isSelected) {
-            ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f)
-        } else {
-            ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 0.9f)
-        }
-        if (showLabel) {
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                dl.addText(labelX, labelY, labelCol, label)
-            }
-        }
-
-        val labelH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
-        val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
-        if (showValue) {
-            val valStr = "Val: ${"%.2f".format(newValue)}"
-            var valW = 0f
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { valW = ImGui.calcTextSize(valStr).x }
-            val valX = cx - valW / 2f
-            val valY = if (showLabel) labelY + labelH + 1f else labelY
-            val valCol = if (isSelected) {
-                ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 0.95f)
-            } else {
-                ImGui.colorConvertFloat4ToU32(0.6f, 0.65f, 0.75f, 0.85f)
-            }
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                dl.addText(valX, valY, valCol, valStr)
-            }
-        }
-
         val learnTip = if (isLearning) " [LEARNING... Click target to bind]" else ""
         val bindingLine = formatBindingSummary(bindings)
         itemTooltip("$label: ${"%.2f".format(newValue)}$learnTip\n$bindingLine\nDrag to adjust. Left-click to inspect. Right-click for Learn.")
 
-        val totalTextH = when {
-            showLabel && showValue -> labelH + captionH + 2f
-            showLabel -> labelH
-            showValue -> captionH
-            else -> 0f
-        }
-        ImGui.setCursorScreenPos(startX, startY + diameter + 3f + totalTextH)
+        ImGui.setCursorScreenPos(startX, startY + diameter)
     }
 
     /**

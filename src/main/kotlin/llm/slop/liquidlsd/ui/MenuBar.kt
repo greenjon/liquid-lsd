@@ -65,7 +65,7 @@ class MenuBar(
                         }
                         itemTooltip("Restore missing factory presets and playlists from the app bundle.\nExisting custom presets will not be overwritten.")
                         ImGui.separator()
-                        if (ImGui.menuItem("Preferences...", "Ctrl+P")) {
+                        if (ImGui.menuItem("Preferences...", "Ctrl+P", PreferencesPanel.isOpen)) {
                             onOpenPreferences()
                         }
                         itemTooltip("Configure interface scaling, JACK preferences, startup behavior, and MIDI profiles.")
@@ -79,6 +79,9 @@ class MenuBar(
 
                     // ── View Menu ─────────────────────────────────────────────────────────
                     if (ImGui.beginMenu("View")) {
+                        if (ImGui.menuItem("Close Preferences", "Esc", false, PreferencesPanel.isOpen)) {
+                            PreferencesPanel.close()
+                        }
                         if (ImGui.menuItem("Close Deep Edit", "Esc", false, session.parametersState.anyRackModuleExpanded())) {
                             session.parametersState.collapseAllRackModules()
                         }
