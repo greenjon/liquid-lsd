@@ -499,7 +499,7 @@ object ColorTunerPanel {
                                         val itemMinX = ImGui.getCursorScreenPosX()
                                         val itemMinY = ImGui.getCursorScreenPosY()
 
-                                        if (ImGui.selectable(itemText, isSelected)) {
+                                        if (selectableRow(itemText, isSelected)) {
                                             currentAssignments[elem.colId] = swatch.id
                                             applySingleElementToImGui(session, elem.colId, swatch, currentRespectAlpha[elem.colId] ?: false)
                                         }

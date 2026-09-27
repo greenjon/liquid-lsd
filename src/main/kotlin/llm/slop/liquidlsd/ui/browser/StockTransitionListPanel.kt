@@ -17,6 +17,7 @@ import llm.slop.liquidlsd.ui.pushOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
 import llm.slop.liquidlsd.ui.popOpenDropdownPadding
+import llm.slop.liquidlsd.ui.selectableRow
 import mu.KotlinLogging
 import java.io.File
 
@@ -63,7 +64,7 @@ object StockTransitionListPanel {
             pushOpenDropdownFont()
             availableCategories.forEach { cat ->
                 val isSelected = selectedCategory == cat
-                if (ImGui.selectable(cat, isSelected)) {
+                if (selectableRow(cat, isSelected)) {
                     selectedCategory = cat
                 }
                 if (isSelected) {
@@ -129,27 +130,17 @@ object StockTransitionListPanel {
                     val isSelected = selectedTransitionId == trans.id
                     val popupId = "stock_trans_context_$index"
 
-                    val rowHeight = (session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() } + 6f).coerceAtLeast(20f)
                     val itemW = (ImGui.getContentRegionAvailX() - btnW - 4f).coerceAtLeast(10f)
 
                     if (isSelected && LibraryPanel.shouldScrollToSelection) {
                         ImGui.setScrollHereY(0.5f)
                     }
 
-                    if (isSelected) {
-                        val highlightCol = ImGui.colorConvertFloat4ToU32(0.25f, 0.45f, 0.75f, 0.4f)
-                        val pMinX = ImGui.getCursorScreenPosX()
-                        val pMinY = ImGui.getCursorScreenPosY()
-                        val pMaxX = pMinX + ImGui.getContentRegionAvailX()
-                        val pMaxY = pMinY + rowHeight
-                        ImGui.getWindowDrawList().addRectFilled(pMinX, pMinY, pMaxX, pMaxY, highlightCol)
-                    }
-
                     val folderLabel = if (trans.folderPath.isNotBlank()) " [${trans.folderPath}]" else ""
                     val label = "${Icons.ACTIVITY} ${trans.displayName}$folderLabel##stock_trans_$index"
 
                     session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
-                        ImGui.selectable(label, isSelected, 0, itemW, rowHeight)
+                        selectableRow(label, isSelected, itemW)
                     }
                     val isRowHovered = ImGui.isItemHovered()
 

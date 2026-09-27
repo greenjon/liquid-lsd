@@ -64,11 +64,13 @@ object UIThemeStyler {
                 style.setColor(ImGuiCol.SliderGrab, 0.25f, 0.65f, 0.85f, 1.00f)
                 style.setColor(ImGuiCol.SliderGrabActive, 0.35f, 0.80f, 1.00f, 1.00f)
 
-                style.setColor(ImGuiCol.Header, 0.14f, 0.14f, 0.18f, 1.00f)
-                style.setColor(ImGuiCol.HeaderHovered, 0.22f, 0.22f, 0.28f, 1.00f)
-                style.setColor(ImGuiCol.HeaderActive, 0.30f, 0.30f, 0.38f, 1.00f)
+                // Mixxx-inspired slate-teal accent for list/dropdown row highlights.
+                style.setColor(ImGuiCol.Header, 0.13f, 0.23f, 0.27f, 1.00f)
+                style.setColor(ImGuiCol.HeaderHovered, 0.18f, 0.30f, 0.34f, 1.00f)
+                style.setColor(ImGuiCol.HeaderActive, 0.11f, 0.20f, 0.23f, 1.00f)
 
-                style.setColor(ImGuiCol.Text, 0.90f, 0.90f, 0.92f, 1.00f)
+                // Soft silver-gray base text so selectable rows in pure white (pushed per-row) pop.
+                style.setColor(ImGuiCol.Text, 0.65f, 0.67f, 0.70f, 1.00f)
                 style.setColor(ImGuiCol.TextDisabled, 0.48f, 0.48f, 0.52f, 1.00f)
             }
             UITheme.Theme.DARK_SOLARIZED -> {
@@ -212,7 +214,7 @@ object UIThemeStyler {
         // (e.g. BrowserDeckButtons pushes both Text and Border to deck accent colours).
         // Values mirror the colours set in the when(theme) block above.
         TooltipHelper.baseTextColor = when (theme) {
-            UITheme.Theme.BORING          -> ImGui.colorConvertFloat4ToU32(0.90f, 0.90f, 0.92f, 1.00f)
+            UITheme.Theme.BORING          -> ImGui.colorConvertFloat4ToU32(0.65f, 0.67f, 0.70f, 1.00f)
             UITheme.Theme.DARK_SOLARIZED  -> ImGui.colorConvertFloat4ToU32(0.51f, 0.58f, 0.59f, 1.00f)
             UITheme.Theme.LIGHT_SOLARIZED -> ImGui.colorConvertFloat4ToU32(0.40f, 0.48f, 0.51f, 1.00f)
             UITheme.Theme.DARK_LUNARIZED  -> ImGui.colorConvertFloat4ToU32(0.97f, 0.91f, 0.88f, 1.00f)

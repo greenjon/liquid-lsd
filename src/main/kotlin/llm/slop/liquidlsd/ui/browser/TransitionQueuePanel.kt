@@ -15,6 +15,7 @@ import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
 import llm.slop.liquidlsd.ui.popOpenDropdownPadding
 import llm.slop.liquidlsd.ui.pushOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
+import llm.slop.liquidlsd.ui.selectableRow
 import mu.KotlinLogging
 import java.io.File
 
@@ -154,7 +155,7 @@ object TransitionQueuePanel {
 
                 var itemClicked = false
                 session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
-                    if (ImGui.selectable("$label##trans_q_$index", isSelected, 0, itemW, 0f)) {
+                    if (selectableRow("$label##trans_q_$index", isSelected, itemW)) {
                         itemClicked = true
                     }
                 }

@@ -170,10 +170,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             isDeckBG -> comboWasOpenBG
             else -> comboWasOpenPV
         }
-        // Combos size their height from font + frame padding rather than taking one explicitly, so
-        // pad them out to ctrlH to match the buttons beside them. Popped before the popup body.
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), ((ctrlH - ImGui.getFontSize()) / 2f).coerceAtLeast(0f))
+        // pushOpenDropdownPadding() pushes its own roomy FramePadding for the popup body's rows;
+        // push the ctrlH-based override on top of that (not before it) so popping 1 style var right
+        // after beginCombo restores the dropdown's row FramePadding rather than eating it.
         pushOpenDropdownPadding()
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), ((ctrlH - ImGui.getFontSize()) / 2f).coerceAtLeast(0f))
         val isComboOpen = ImGui.beginCombo("##perf_preset_combo_$tag", presetDisplay, ImGuiComboFlags.HeightLargest)
         ImGui.popStyleVar()
         if (isComboOpen) {
@@ -203,7 +204,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             } else {
                 for (preset in filtered) {
                     val isSelected = preset.name == activePreset
-                    if (ImGui.selectable("${preset.name}##perf_pselect_${tag}_${preset.path.hashCode()}", isSelected)) {
+                    if (selectableRow("${preset.name}##perf_pselect_${tag}_${preset.path.hashCode()}", isSelected)) {
                         session.presetRepository.loadDeckPresetAsync(
                             File(preset.path),
                             isDeckA = isDeckA,

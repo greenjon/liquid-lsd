@@ -181,7 +181,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
         // ".." entry to go up
         val parent = currentDir.parentFile
         if (parent != null) {
-            if (ImGui.selectable("${Icons.CHEVRON_UP}  ..", false)) {
+            if (selectableRow("${Icons.CHEVRON_UP}  ..", false)) {
                 navigateTo(parent)
             }
         }
@@ -191,7 +191,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
             val label = if (isDir) "${Icons.FOLDER}  ${entry.name}" else "${Icons.FILE}  ${entry.name}"
             val isSelected = selectedFile == entry
 
-            if (ImGui.selectable(label, isSelected)) {
+            if (selectableRow(label, isSelected)) {
                 if (isDir) {
                     navigateTo(entry)
                 } else {

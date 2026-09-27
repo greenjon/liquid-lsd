@@ -21,6 +21,7 @@ import llm.slop.liquidlsd.ui.pushOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
 import llm.slop.liquidlsd.ui.popOpenDropdownPadding
+import llm.slop.liquidlsd.ui.selectableRow
 import mu.KotlinLogging
 import java.io.File
 
@@ -169,7 +170,7 @@ object PlaylistEditorPanel {
             pushOpenDropdownFont()
             allPlaylists.forEach { item ->
                 val isSelected = selectedFile?.absolutePath == item.path
-                if (ImGui.selectable(item.name, isSelected)) {
+                if (selectableRow(item.name, isSelected)) {
                     LibraryPanel.selectedPlaylistFile = File(item.path)
                     LibraryPanel.activePlaylistData = null
                     selectedPresetIndex = -1
@@ -247,7 +248,7 @@ object PlaylistEditorPanel {
 
             var itemClicked = false
             session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
-                if (ImGui.selectable(label, isSelected, 0, itemW, 0f)) {
+                if (selectableRow(label, isSelected, itemW)) {
                     itemClicked = true
                 }
             }

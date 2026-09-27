@@ -305,7 +305,7 @@ object ShaderPickerPopup {
         if (item.isExternal) {
             ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.85f, 0.45f, 1.0f)
         }
-        if (ImGui.selectable(itemLabel, false, ImGuiSelectableFlags.SpanAllColumns or ImGuiSelectableFlags.AllowDoubleClick)) {
+        if (selectableRow(itemLabel, false, flags = ImGuiSelectableFlags.AllowDoubleClick)) {
             onSelect?.invoke(item.id)
             ImGui.closeCurrentPopup()
         }

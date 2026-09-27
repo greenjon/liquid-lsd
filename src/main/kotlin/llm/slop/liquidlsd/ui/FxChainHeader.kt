@@ -268,7 +268,7 @@ object FxChainHeader {
             } else {
                 for (asset in filtered) {
                     val isCurrent = chain.sourceFile?.absolutePath == asset.path
-                    if (ImGui.selectable("${asset.name}##item_${asset.path.hashCode()}", isCurrent)) {
+                    if (selectableRow("${asset.name}##item_${asset.path.hashCode()}", isCurrent)) {
                         val file = File(asset.path)
                         FxOps.loadChain(session, file, chain)
                     }

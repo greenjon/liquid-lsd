@@ -294,7 +294,7 @@ object TempoSyncPanel {
                 pushOpenDropdownFont()
                 for (target in audioTargets) {
                     val isSelected = detectorSettings.target == target
-                    if (ImGui.selectable(target.name, isSelected)) {
+                    if (selectableRow(target.name, isSelected)) {
                         detectorSettings.target = target
                         AppPreferencesStore.savePreferences()
                     }

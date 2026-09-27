@@ -26,6 +26,7 @@ import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
 import llm.slop.liquidlsd.ui.popOpenDropdownPadding
 import llm.slop.liquidlsd.ui.pushOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
+import llm.slop.liquidlsd.ui.selectableRow
 import mu.KotlinLogging
 import java.io.File
 
@@ -249,23 +250,13 @@ object FXBrowserPanel {
         val isSelected = selectedAsset?.path == asset.path
         val popupId = "fx_browser_context_$index"
 
-        val rowHeight = (session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() } + 6f).coerceAtLeast(20f)
         val itemW = (ImGui.getContentRegionAvailX() - btnW - 4f).coerceAtLeast(10f)
 
         if (isSelected && LibraryPanel.shouldScrollToSelection) {
             ImGui.setScrollHereY(0.5f)
         }
 
-        if (isSelected) {
-            val highlightCol = ImGui.colorConvertFloat4ToU32(0.25f, 0.45f, 0.75f, 0.4f)
-            val pMinX = ImGui.getCursorScreenPosX()
-            val pMinY = ImGui.getCursorScreenPosY()
-            val pMaxX = pMinX + ImGui.getContentRegionAvailX()
-            val pMaxY = pMinY + rowHeight
-            ImGui.getWindowDrawList().addRectFilled(pMinX, pMinY, pMaxX, pMaxY, highlightCol)
-        }
-
-        ImGui.selectable("$icon ${asset.displayName}##fx_browser_$index", isSelected, 0, itemW, rowHeight)
+        selectableRow("$icon ${asset.displayName}##fx_browser_$index", isSelected, itemW)
         val isRowHovered = ImGui.isItemHovered()
         itemTooltip(
             when (asset.type) {

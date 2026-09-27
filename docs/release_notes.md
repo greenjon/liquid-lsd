@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Mixxx-Inspired List & Dropdown Readability Redesign (BORING theme) (`UIThemeStyler.kt`, `DropdownStyleHelper.kt`)
+- Combo dropdowns, the FX chain browser popup, and every preset/playlist/queue list panel (FX, BG, Transitions, decks) now use a Mixxx-style slate-teal highlight instead of dull dark gray, a taller 26px row height with roomier padding, and crisp white text on the selected row against a softer silver-gray for unselected rows. This is scoped to the BORING theme for now; other themes are unchanged.
+
 ### Relative Knob Dragging & Cursor Locking / Restoration (`MacroKnobWidget.kt`, `UIManager.kt`, `Main.kt`, `PreferencesPanel.kt`)
 - **Relative Pointer Locking (`GLFW_CURSOR_DISABLED`)**: Dragging a rotary knob now hides the cursor and locks relative mouse motion once motion exceeds a 3px deadzone. Performers can sweep knobs continuously without hitting display boundaries or wandering onto external monitors.
 - **Wayland-Safe Origin Restoration**: On mouse release, the cursor is restored to its exact starting click position. Restoration uses position hints while still in relative mode prior to releasing confinement, guaranteeing compatibility with Linux Wayland compositors (`zwp_pointer_constraints_v1`) as well as X11, macOS, and Windows.
