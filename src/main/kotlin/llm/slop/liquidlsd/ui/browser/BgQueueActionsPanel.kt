@@ -12,6 +12,10 @@ import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
+import llm.slop.liquidlsd.ui.popOpenDropdownPadding
+import llm.slop.liquidlsd.ui.pushOpenDropdownFont
+import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import mu.KotlinLogging
 import java.io.File
 
@@ -222,7 +226,9 @@ object BgQueueActionsPanel {
             BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "bg_queue_$index", btnW)
 
             // Context menu (triggered by right-click or more button)
+            pushOpenDropdownPadding()
             if (ImGui.beginPopup(popupId)) {
+                pushOpenDropdownFont()
                 if (ImGui.menuItem("Play (Dip to Black)")) {
                     BgQueueManager.playIndex(index, mixer, withDipToBlack = true)
                 }
@@ -254,8 +260,10 @@ object BgQueueActionsPanel {
                     )
                     BrowserPopupHandler.pendingOpenDeletePopup = true
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
         }
 
         // Keyboard shortcuts (Delete / Backspace removes selected item from queue)

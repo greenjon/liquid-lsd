@@ -162,7 +162,9 @@ class DeckControlPanel(
             ImGui.endDragDropTarget()
         }
 
+        pushOpenDropdownPadding()
         if (ImGui.beginPopup("monitor_drag_menu_$label")) {
+            pushOpenDropdownFont()
             val fromName = pendingRightDragFrom
             if (fromName != null) {
                 val fromDeck = when (fromName) {
@@ -181,9 +183,11 @@ class DeckControlPanel(
                     onUtilityAction(2, fromDeck, deck)
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
-        
+        popOpenDropdownPadding()
+
         val deckLevel = when (label) {
             "Deck A" -> mixer.levelA.value
             "Deck B" -> mixer.levelB.value
@@ -522,7 +526,9 @@ fun drawDeckMonitorToolbar(
     if (drawIconButton(session, "##btn_Save_$tag", Icons.SAVE, rowH, "Save or save as a new preset for $deckLabel.")) {
         ImGui.openPopup("save_menu_$tag")
     }
+    pushOpenDropdownPadding()
     if (ImGui.beginPopup("save_menu_$tag")) {
+        pushOpenDropdownFont()
         if (ImGui.menuItem("Save")) {
             onSaveDeck(deck, isDeckA, false)
         }
@@ -537,8 +543,10 @@ fun drawDeckMonitorToolbar(
                 llm.slop.liquidlsd.presets.GeneratorDefaults.saveDefault(deck, bankId)
             }
         }
+        popOpenDropdownFont()
         ImGui.endPopup()
     }
+    popOpenDropdownPadding()
 
     // 2. Eject Button
     ImGui.sameLine()
@@ -619,14 +627,18 @@ fun drawDeckMonitorToolbar(
         }
     }
 
+    pushOpenDropdownPadding()
     if (ImGui.beginPopupContextItem("preset_name_menu_$tag")) {
+        pushOpenDropdownFont()
         val presetNote = NotesManager.getPresetNote(deckLabel)
         val noteLabel = if (presetNote.isNotEmpty()) "Edit Preset Note..." else "Add Preset Note..."
         if (ImGui.menuItem(noteLabel)) {
             NoteEditorModal.request(NoteContext.Preset(deckLabel, activePreset ?: "Untitled"))
         }
+        popOpenDropdownFont()
         ImGui.endPopup()
     }
+    popOpenDropdownPadding()
 
     ImGui.setCursorScreenPos(startX, bottomY + 2f)
 

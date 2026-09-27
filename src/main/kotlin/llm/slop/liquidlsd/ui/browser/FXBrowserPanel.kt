@@ -22,6 +22,10 @@ import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.SavePresetModal
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
+import llm.slop.liquidlsd.ui.popOpenDropdownPadding
+import llm.slop.liquidlsd.ui.pushOpenDropdownFont
+import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import mu.KotlinLogging
 import java.io.File
 
@@ -90,15 +94,19 @@ object FXBrowserPanel {
             }
         }
         itemTooltip("Filter FX list by type.")
+        pushOpenDropdownPadding()
         if (ImGui.beginPopup("fx_browser_tier_filter")) {
+            pushOpenDropdownFont()
             showStockRef.set(showStock)
             if (ImGui.checkbox("Stock Filters", showStockRef)) showStock = showStockRef.get()
             showSingleRef.set(showSingle)
             if (ImGui.checkbox("Saved Single FX", showSingleRef)) showSingle = showSingleRef.get()
             showChainRef.set(showChain)
             if (ImGui.checkbox("Saved FX Chains", showChainRef)) showChain = showChainRef.get()
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
 
         ImGui.separator()
         ImGui.spacing()
@@ -173,7 +181,9 @@ object FXBrowserPanel {
     }
 
     private fun drawCreatePopup(session: SessionContext, mixer: Mixer) {
+        pushOpenDropdownPadding()
         if (ImGui.beginPopup("create_new_fx_popup")) {
+            pushOpenDropdownFont()
             val chains = listOf(
                 "Deck A" to mixer.deckA.fxChain, "Deck B" to mixer.deckB.fxChain, "Deck BG" to mixer.deckBG.fxChain,
                 "Deck PV" to mixer.deckPV.fxChain, "Master FX" to mixer.masterFxChain
@@ -224,8 +234,10 @@ object FXBrowserPanel {
                     }
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
     }
 
     private fun drawRow(session: SessionContext, mixer: Mixer, asset: AssetItem, index: Int, btnW: Float) {
@@ -291,10 +303,14 @@ object FXBrowserPanel {
         ImGui.sameLine(0f, 0f)
         BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "fx_browser_$index", btnW)
 
+        pushOpenDropdownPadding()
         if (ImGui.beginPopup(popupId)) {
+            pushOpenDropdownFont()
             drawContextMenu(session, mixer, asset)
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
     }
 
     /** Finds the first empty slotIndex in [deck], or 0 if full. */

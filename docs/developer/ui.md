@@ -158,7 +158,11 @@ val depthCbs = cvModulatorSlider(
 
 **Files using this helper:** `Lfo1Section`, `Lfo2Section`, `AudioModulatorSection`, `MidiModulatorSection`.
 
-
+### 6b. Rotary Macro Knobs (`MacroKnobWidget.kt`) — Relative Motion & Cursor Locking
+- **Relative Pointer Locking (`GLFW_CURSOR_DISABLED`)**: Dragging a rotary knob enters relative mode once motion exceeds a 3px deadzone (`DRAG_LOCK_DEADZONE_PX`). The OS mouse pointer is hidden and confined, receiving unbounded relative motion deltas regardless of screen boundaries.
+- **Wayland-Safe Coordinate Restoration**: Upon mouse release, `UIManager` calls `glfwSetCursorPos(windowHandle, originX, originY)` while still in `GLFW_CURSOR_DISABLED` before restoring `GLFW_CURSOR_NORMAL`. Calling position hints prior to releasing pointer confinement satisfies Linux Wayland compositors (`zwp_pointer_constraints_v1`) where global pointer warping in normal mode is prohibited.
+- **Safety Interruption Handling**: If the window loses focus (`glfwSetWindowFocusCallback` in `Main.kt`) or mouse button release is detected outside widget drawing, `MacroKnobWidget.abortDrag()` immediately resets internal lock state and releases the cursor lock.
+- **Hardware & User Preference Override**: Cursor locking is automatically bypassed when the performance touch console is active (`touchConsoleController.isActive`), or when toggled off via `UITheme.lockCursorOnKnobDrag` in **Preferences > General**.
 
 ### 7. `PreferencesPanel.kt` & `ShortcutManager.kt` Architecture
 - **Preferences Category Routing**: `PreferencesPanel` organizes application preferences into 9 clean categories (`GENERAL`, `SHADER_LOCATIONS`, `VIDEO_DISPLAY`, `AUDIO_ENGINE`, `TEMPO_SYNC`, `MIDI_CONTROLLER`, `OSC_CONTROLLER`, `SHORTCUTS`, `BROADCAST`) and supports targeted opening via `PreferencesPanel.open(category)`. Opening requests are deferred via an internal `pendingOpen` latch consumed in `PreferencesPanel.draw()` at the root ID-stack level, ensuring modal invocation succeeds when triggered from menus, submenus, or nested child widgets.

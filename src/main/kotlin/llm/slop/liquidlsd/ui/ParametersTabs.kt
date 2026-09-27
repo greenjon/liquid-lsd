@@ -370,13 +370,17 @@ object ParametersTabs {
             }
             itemTooltip("Transition Options (Reset to Default)")
 
+            pushOpenDropdownPadding()
             if (ImGui.beginPopup("MixerTransKebabPopup")) {
+                pushOpenDropdownFont()
                 if (ImGui.menuItem("Reset Transition")) {
                     mixer.setTransition("linear_crossfade")
                     onPushUndo()
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
 
             ParametersRenderer.drawParamRow(session, "Dry/Wet", "Mixer/Transition/DryWet", trans.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
@@ -499,7 +503,9 @@ object ParametersTabs {
         ImGui.setCursorPosX(rowStartX)
         ParametersRenderer.drawParamRow(session, "Chain Wet/Dry", "$chainPrefix/DryWet", chain.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
+        pushOpenDropdownPadding()
         if (ImGui.beginPopup("FXChainKebabPopup_$chainPrefix")) {
+            pushOpenDropdownFont()
             if (ImGui.menuItem("Save Chain As...")) {
                 val defaultChainName = chain.name.ifEmpty { chainPrefix.replace('/', '_').lowercase() }
                 val chainDto = chain.toFxChainDto(defaultChainName)
@@ -528,8 +534,10 @@ object ParametersTabs {
                 llm.slop.liquidlsd.presets.FxOps.clearChain(chain)
                 onPushUndo()
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
 
         // Drag and Drop Target for Chain
         if (ImGui.beginDragDropTarget()) {
@@ -594,7 +602,9 @@ object ParametersTabs {
             }
             itemTooltip("Slot $slotNum Options (Save, Copy, Paste, Reset)")
 
+            pushOpenDropdownPadding()
             if (ImGui.beginPopup("FXSlotKebabPopup_${slotNum}_$chainPrefix")) {
+                pushOpenDropdownFont()
                 val hasFx = chain.slots[i] != null
                 if (ImGui.menuItem("Save Slot Preset As...", "", false, hasFx)) {
                     chain.toFxSlotDto(i)?.let { slotDto ->
@@ -624,8 +634,10 @@ object ParametersTabs {
                     llm.slop.liquidlsd.presets.FxOps.clearSlot(chain, i)
                     onPushUndo()
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
 
             if (fx != null && !isCollapsed) {
                 ParametersRenderer.drawParamRow(session, "Dry/Wet", "$chainPrefix/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)

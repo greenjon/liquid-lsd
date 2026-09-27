@@ -288,7 +288,12 @@ object FxSlotCell {
         popupId: String,
         onEditInDeepEdit: () -> Unit
     ) {
-        if (!ImGui.beginPopup(popupId)) return
+        pushOpenDropdownPadding()
+        if (!ImGui.beginPopup(popupId)) {
+            popOpenDropdownPadding()
+            return
+        }
+        pushOpenDropdownFont()
         val fx = chain.slots[slotIndex]
         val slotNum = slotIndex + 1
         val isFocused = chain.focusedSlot == slotIndex
@@ -339,6 +344,8 @@ object FxSlotCell {
         }
         ImGui.separator()
         if (ImGui.menuItem("Edit in Deep Edit")) onEditInDeepEdit()
+        popOpenDropdownFont()
         ImGui.endPopup()
+        popOpenDropdownPadding()
     }
 }

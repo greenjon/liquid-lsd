@@ -17,6 +17,10 @@ import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.pushOpenDropdownFont
+import llm.slop.liquidlsd.ui.popOpenDropdownFont
+import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
+import llm.slop.liquidlsd.ui.popOpenDropdownPadding
 import mu.KotlinLogging
 import java.io.File
 
@@ -174,7 +178,9 @@ object TransitionPlaylistEditorPanel {
         val comboWidth = ImGui.getContentRegionAvailX()
         val comboPreview = currentPlaylist?.name ?: if (allPlaylists.isEmpty()) "No transition playlists" else "Select playlist..."
         ImGui.setNextItemWidth(comboWidth)
-        if (ImGui.beginCombo("##transPlaylistSelectCombo", comboPreview, ImGuiComboFlags.None)) {
+        pushOpenDropdownPadding()
+        if (ImGui.beginCombo("##transPlaylistSelectCombo", comboPreview, ImGuiComboFlags.HeightLargest)) {
+            pushOpenDropdownFont()
             allPlaylists.forEach { item ->
                 val isSelected = selectedFile?.absolutePath == item.path
                 if (ImGui.selectable(item.name, isSelected)) {
@@ -185,8 +191,10 @@ object TransitionPlaylistEditorPanel {
                     ImGui.setItemDefaultFocus()
                 }
             }
+            popOpenDropdownFont()
             ImGui.endCombo()
         }
+        popOpenDropdownPadding()
         itemTooltip("Select active transition playlist.")
     }
 
@@ -320,7 +328,9 @@ object TransitionPlaylistEditorPanel {
             BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "trans_pl_item_$index", btnW)
 
             // Context menu
+            pushOpenDropdownPadding()
             if (ImGui.beginPopup(popupId)) {
+                pushOpenDropdownFont()
                 if (ImGui.menuItem("Apply to Mixer")) {
                     TransitionQueueManager.applyTransitionItem(resolvedFile, mixer)
                 }
@@ -331,8 +341,10 @@ object TransitionPlaylistEditorPanel {
                 if (ImGui.menuItem("Remove from playlist")) {
                     removeItemIndex = index
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
 
             ImGui.popID()
         }

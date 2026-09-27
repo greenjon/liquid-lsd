@@ -17,6 +17,10 @@ import llm.slop.liquidlsd.ui.ParametersState
 import llm.slop.liquidlsd.ui.SavePresetModal
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
+import llm.slop.liquidlsd.ui.popOpenDropdownPadding
+import llm.slop.liquidlsd.ui.pushOpenDropdownFont
+import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import mu.KotlinLogging
 import java.io.File
 
@@ -174,7 +178,9 @@ object TransitionPresetListPanel {
                     BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "trans_preset_$index", btnW)
 
                     // Context menu
+                    pushOpenDropdownPadding()
                     if (ImGui.beginPopup(popupId)) {
+                        pushOpenDropdownFont()
                         val file = File(asset.path)
                         if (ImGui.menuItem("Apply to Mixer")) {
                             session.presetRepository.loadTransitionPresetAsync(file).thenAccept { dto ->
@@ -205,8 +211,10 @@ object TransitionPresetListPanel {
                             BrowserPopupHandler.deleteTarget = asset
                             BrowserPopupHandler.pendingOpenDeletePopup = true
                         }
+                        popOpenDropdownFont()
                         ImGui.endPopup()
                     }
+                    popOpenDropdownPadding()
                 }
 
                 if (LibraryPanel.shouldReclaimFocus && isPanelFocused) {

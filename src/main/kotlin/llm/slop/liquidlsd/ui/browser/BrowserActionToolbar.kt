@@ -9,6 +9,10 @@ import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.ParametersState
 import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
+import llm.slop.liquidlsd.ui.popOpenDropdownPadding
+import llm.slop.liquidlsd.ui.pushOpenDropdownFont
+import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import java.io.File
 
 enum class DeckAuditionTarget(val label: String, val deckIndex: Int) {
@@ -212,7 +216,9 @@ object BrowserActionToolbar {
             BrowserDeckButtons.pop()
 
             // Overwrite Slot Selection Popup
+            pushOpenDropdownPadding()
             if (ImGui.beginPopup("OverwriteSlotPopup")) {
+                pushOpenDropdownFont()
                 val deck = pendingOverwriteDeck
                 val file = pendingFxFile
                 ImGui.textDisabled("${pendingOverwriteDeckLabel} FX slots are full. Select slot to overwrite:")
@@ -227,8 +233,10 @@ object BrowserActionToolbar {
                         }
                     }
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
         }
     }
 }

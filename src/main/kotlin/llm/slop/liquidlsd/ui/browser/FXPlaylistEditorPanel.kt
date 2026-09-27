@@ -18,6 +18,10 @@ import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.pushOpenDropdownFont
+import llm.slop.liquidlsd.ui.popOpenDropdownFont
+import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
+import llm.slop.liquidlsd.ui.popOpenDropdownPadding
 import mu.KotlinLogging
 import java.io.File
 
@@ -175,7 +179,9 @@ object FXPlaylistEditorPanel {
         val comboWidth = ImGui.getContentRegionAvailX()
         val comboPreview = currentPlaylist?.name ?: if (allPlaylists.isEmpty()) "No FX playlists" else "Select playlist..."
         ImGui.setNextItemWidth(comboWidth)
-        if (ImGui.beginCombo("##fxPlaylistSelectCombo", comboPreview, ImGuiComboFlags.None)) {
+        pushOpenDropdownPadding()
+        if (ImGui.beginCombo("##fxPlaylistSelectCombo", comboPreview, ImGuiComboFlags.HeightLargest)) {
+            pushOpenDropdownFont()
             allPlaylists.forEach { item ->
                 val isSelected = selectedFile?.absolutePath == item.path
                 if (ImGui.selectable(item.name, isSelected)) {
@@ -186,8 +192,10 @@ object FXPlaylistEditorPanel {
                     ImGui.setItemDefaultFocus()
                 }
             }
+            popOpenDropdownFont()
             ImGui.endCombo()
         }
+        popOpenDropdownPadding()
         itemTooltip("Select active FX playlist.")
     }
 
@@ -321,7 +329,9 @@ object FXPlaylistEditorPanel {
             BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "fx_pl_item_$index", btnW)
 
             // Context menu
+            pushOpenDropdownPadding()
             if (ImGui.beginPopup(popupId)) {
+                pushOpenDropdownFont()
                 if (ImGui.menuItem("Apply to Active Deck (A/B)")) {
                     val targetDeck = if (mixer.crossfade.value <= 0.0f) mixer.deckA else mixer.deckB
                     llm.slop.liquidlsd.presets.FxOps.applyItem(session, resolvedFile, targetDeck.fxChain)
@@ -340,8 +350,10 @@ object FXPlaylistEditorPanel {
                 if (ImGui.menuItem("Remove from playlist")) {
                     removeItemIndex = index
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
 
             ImGui.popID()
         }

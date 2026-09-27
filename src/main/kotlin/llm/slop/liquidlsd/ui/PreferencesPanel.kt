@@ -274,6 +274,16 @@ object PreferencesPanel {
             }
         }
 
+        val lockCursorEnabled = ImBoolean(session.uiTheme.lockCursorOnKnobDrag)
+        if (ImGui.checkbox("Lock cursor to knob while dragging", lockCursorEnabled)) {
+            val nextVal = lockCursorEnabled.get()
+            if (nextVal != session.uiTheme.lockCursorOnKnobDrag) {
+                session.uiTheme.lockCursorOnKnobDrag = nextVal
+                AppPreferencesStore.savePreferences()
+            }
+        }
+        itemTooltip("Hides the cursor and locks relative mouse motion to the knob during adjustment, restoring the cursor to its initial position on release.\nDisable if using absolute touch or pen digitizers.")
+
         ImGui.spacing()
         val updatesOnStartup = ImBoolean(session.uiTheme.checkUpdatesOnStartup)
         if (ImGui.checkbox("Automatically check for updates on launch", updatesOnStartup)) {

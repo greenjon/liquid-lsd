@@ -13,6 +13,10 @@ import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.pushOpenDropdownFont
+import llm.slop.liquidlsd.ui.popOpenDropdownFont
+import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
+import llm.slop.liquidlsd.ui.popOpenDropdownPadding
 import mu.KotlinLogging
 import java.io.File
 
@@ -54,7 +58,9 @@ object StockTransitionListPanel {
 
         val comboWidth = ImGui.getContentRegionAvailX()
         ImGui.setNextItemWidth(comboWidth)
-        if (ImGui.beginCombo("##stockTransCategory", "Category: $selectedCategory", ImGuiComboFlags.None)) {
+        pushOpenDropdownPadding()
+        if (ImGui.beginCombo("##stockTransCategory", "Category: $selectedCategory", ImGuiComboFlags.HeightLargest)) {
+            pushOpenDropdownFont()
             availableCategories.forEach { cat ->
                 val isSelected = selectedCategory == cat
                 if (ImGui.selectable(cat, isSelected)) {
@@ -64,8 +70,10 @@ object StockTransitionListPanel {
                     ImGui.setItemDefaultFocus()
                 }
             }
+            popOpenDropdownFont()
             ImGui.endCombo()
         }
+        popOpenDropdownPadding()
         itemTooltip("Filter stock shaders by category.")
 
         ImGui.spacing()
@@ -173,7 +181,9 @@ object StockTransitionListPanel {
                     BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "stock_trans_$index", btnW)
 
                     // Context menu
+                    pushOpenDropdownPadding()
                     if (ImGui.beginPopup(popupId)) {
+                        pushOpenDropdownFont()
                         if (ImGui.menuItem("Apply to Mixer")) {
                             mixer.setTransition(trans.id)
                         }
@@ -187,8 +197,10 @@ object StockTransitionListPanel {
                                 appendToActiveTransitionPlaylist(activePlFile, trans.id)
                             }
                         }
+                        popOpenDropdownFont()
                         ImGui.endPopup()
                     }
+                    popOpenDropdownPadding()
                 }
 
                 if (LibraryPanel.shouldReclaimFocus && isPanelFocused) {

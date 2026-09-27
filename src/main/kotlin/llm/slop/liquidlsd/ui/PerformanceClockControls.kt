@@ -166,7 +166,9 @@ internal object PerformanceClockControls {
         if (isMidiLearnTap) {
             ImGui.getWindowDrawList().addRect(tapX - 1f, tapY - 1f, tapX + tapW + 1f, tapY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
         }
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_clock_tap_ctx")) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("Tap Tempo")
             ImGui.separator()
             if (isMidiLearnTap) {
@@ -184,8 +186,10 @@ internal object PerformanceClockControls {
                     session.midiMappingManager.saveActiveProfile()
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
         itemTooltip("Tap tempo (hotkey: T).$tapMidiText In Audio Tracker mode, nudges the detected tempo and phase.\nRight-click for MIDI Learn.")
     }
 }

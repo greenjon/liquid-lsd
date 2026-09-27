@@ -66,6 +66,7 @@ class PreferencesDefaultsTest {
         assertFalse(defaultPreferences.sequencerEnabled, "Sequencer should be disabled by default")
         assertFalse(defaultPreferences.randomizationEnabled, "Randomization should be disabled by default")
         assertFalse(defaultPreferences.midiEnabled, "MIDI should be disabled by default")
+        assertTrue(defaultPreferences.lockCursorOnKnobDrag, "Lock cursor on knob drag should be enabled by default")
         assertTrue(defaultPreferences.checkUpdatesOnStartup, "Update check on startup should be enabled by default")
     }
 
@@ -75,6 +76,7 @@ class PreferencesDefaultsTest {
         UITheme.sequencerEnabled = true
         UITheme.randomizationEnabled = true
         UITheme.midiEnabled = true
+        UITheme.lockCursorOnKnobDrag = false
 
         AppPreferencesStore.savePreferences()
         assertTrue(preferencesFile.exists(), "Preferences file should be written")
@@ -83,11 +85,13 @@ class PreferencesDefaultsTest {
         assertTrue(savedProps.contains("sequencerEnabled=true"))
         assertTrue(savedProps.contains("randomizationEnabled=true"))
         assertTrue(savedProps.contains("midiEnabled=true"))
+        assertTrue(savedProps.contains("lockCursorOnKnobDrag=false"))
 
         // Reset in memory
         UITheme.sequencerEnabled = false
         UITheme.randomizationEnabled = false
         UITheme.midiEnabled = false
+        UITheme.lockCursorOnKnobDrag = true
 
         // Reload from file
         AppPreferencesStore.loadPreferences()
@@ -96,17 +100,20 @@ class PreferencesDefaultsTest {
         assertTrue(UITheme.sequencerEnabled)
         assertTrue(UITheme.randomizationEnabled)
         assertTrue(UITheme.midiEnabled)
+        assertFalse(UITheme.lockCursorOnKnobDrag)
 
         // Now save as alternate
         UITheme.sequencerEnabled = false
         UITheme.randomizationEnabled = false
         UITheme.midiEnabled = false
+        UITheme.lockCursorOnKnobDrag = true
         AppPreferencesStore.savePreferences()
 
         AppPreferencesStore.loadPreferences()
         assertFalse(UITheme.sequencerEnabled)
         assertFalse(UITheme.randomizationEnabled)
         assertFalse(UITheme.midiEnabled)
+        assertTrue(UITheme.lockCursorOnKnobDrag)
     }
 
     @Test

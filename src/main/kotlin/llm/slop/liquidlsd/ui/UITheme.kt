@@ -273,6 +273,10 @@ object UITheme {
         get() = settings.trackpadConsoleEnabled
         set(value) { settings = settings.copy(trackpadConsoleEnabled = value) }
 
+    var lockCursorOnKnobDrag: Boolean
+        get() = settings.lockCursorOnKnobDrag
+        set(value) { settings = settings.copy(lockCursorOnKnobDrag = value) }
+
     var checkUpdatesOnStartup: Boolean
         get() = settings.checkUpdatesOnStartup
         set(value) { settings = settings.copy(checkUpdatesOnStartup = value) }

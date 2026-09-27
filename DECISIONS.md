@@ -1,3 +1,13 @@
+## Relative Knob Dragging & Cursor Locking / Restoration (`MacroKnobWidget.kt`, `UIManager.kt`, `Main.kt`, `PreferencesPanel.kt`, docs, tests)
+
+- **Context**: 2026-09-26. Adjusting rotary macro knobs across banks previously moved the mouse cursor across the screen, leaving it displaced when released. Near screen edges, the cursor hit monitor boundaries and stopped accumulating motion. On Linux Wayland, client-side global pointer warping in normal mode is strictly prohibited by compositors.
+- **Decision**:
+  - Implemented relative pointer locking using GLFW's `GLFW_CURSOR_DISABLED` mode once drag motion exceeds a 3px deadzone (`DRAG_LOCK_DEADZONE_PX`).
+  - Implemented Wayland-safe cursor restoration in `UIManager`: calling `glfwSetCursorPos(windowHandle, originX, originY)` while still in `GLFW_CURSOR_DISABLED` before restoring `GLFW_CURSOR_NORMAL`. This satisfies the `zwp_pointer_constraints_v1` protocol and restores the cursor to its initial click coordinates across all platforms.
+  - Added safety recovery in `Main.kt` (`glfwSetWindowFocusCallback`) and `UIManager.dispose()` to abort active knob dragging and restore normal cursor mode if focus is lost or the window closes.
+  - Added user toggle `lockCursorOnKnobDrag` (default: `true`) in `AppPreferences` and `PreferencesPanel` (under **General > Features**), with automatic bypass when the performance touch console is active.
+- **Consequences**: Performers enjoy unbounded knob sweep range and muscle memory preservation without cursor drift, fully compatible with Wayland, X11, macOS, and Windows.
+
 ## Macro Panel Bank Tabs: Two-Row Layout with FX Aligned Below Decks (`MacroPanel.kt`, docs)
 
 - **Context**: 2026-09-26. All 12 bank selector tabs (`A`, `B`, `BG`, `PV`, `TRANS`, `MST`, `A FX`, `B FX`, `BG FX`, `PV FX`, `MST FX`, `GLB`) were previously packed horizontally into a single 12-button row across Column 3. In typical panel widths (300–400px), each button was squished into ~25–30px width, causing severe text truncation and a cluttered, confusing layout.

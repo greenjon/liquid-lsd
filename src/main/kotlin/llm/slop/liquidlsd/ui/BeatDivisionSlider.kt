@@ -213,7 +213,9 @@ object BeatDivisionSlider {
         val isOscLearningThis = targetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(targetPath)
         val isMidiLearningThis = targetPath != null && session.parametersState.isMidiTargetLearning(targetPath)
 
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("bd_ctx_${idPrefix}_$label")) {
+            pushOpenDropdownFont()
             if (targetPath != null) {
                 val propLabel = llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(modulatorIndex ?: 0, propertyName!!)
                 if (isOscLearningThis) {
@@ -248,8 +250,10 @@ object BeatDivisionSlider {
                     }
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
 
         if (isLabelHovered) {
             if (isMacroBound) {
@@ -334,7 +338,7 @@ object BeatDivisionSlider {
             val minIdx = ImInt(currentMin.toInt().coerceIn(0, subdivisionLabels.size - 1))
             ImGui.setCursorScreenPos(textBoxesStartX, row2Y)
             ImGui.pushItemWidth(comboWidth)
-            if (ImGui.combo("##bd_min_$label", minIdx, subdivisionLabels)) {
+            if (ImGui.combo("##bd_min_$label", minIdx, subdivisionLabels, subdivisionLabels.size)) {
                 val nextMin = minIdx.get().toFloat()
                 onRangeChanged(nextMin, maxOf(nextMin, currentMax))
             }
@@ -345,7 +349,7 @@ object BeatDivisionSlider {
             val maxIdx = ImInt(currentMax.toInt().coerceIn(0, subdivisionLabels.size - 1))
             ImGui.setCursorScreenPos(textBoxesStartX + comboWidth + comboSpacing, row2Y)
             ImGui.pushItemWidth(comboWidth)
-            if (ImGui.combo("##bd_max_$label", maxIdx, subdivisionLabels)) {
+            if (ImGui.combo("##bd_max_$label", maxIdx, subdivisionLabels, subdivisionLabels.size)) {
                 val nextMax = maxIdx.get().toFloat()
                 onRangeChanged(minOf(nextMax, currentMin), nextMax)
             }
@@ -355,7 +359,7 @@ object BeatDivisionSlider {
             val valIdx = ImInt(currentValue.toInt().coerceIn(0, subdivisionLabels.size - 1))
             ImGui.setCursorScreenPos(textBoxesStartX, row2Y)
             ImGui.pushItemWidth(comboWidth)
-            if (ImGui.combo("##bd_val_$label", valIdx, subdivisionLabels)) {
+            if (ImGui.combo("##bd_val_$label", valIdx, subdivisionLabels, subdivisionLabels.size)) {
                 onValueChanged(valIdx.get().toFloat())
             }
             itemTooltip("Base speed subdivision dropdown")

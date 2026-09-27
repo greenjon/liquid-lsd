@@ -308,6 +308,11 @@ fun main(args: Array<String>) {
     glfwSetWindowFocusCallback(window) { _, focused ->
         if (!focused) {
             session.touchConsoleController.onFocusLost()
+            if (llm.slop.liquidlsd.ui.MacroKnobWidget.isDragLocked) {
+                glfwSetCursorPos(window, llm.slop.liquidlsd.ui.MacroKnobWidget.lockOriginX.toDouble(), llm.slop.liquidlsd.ui.MacroKnobWidget.lockOriginY.toDouble())
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL)
+            }
+            llm.slop.liquidlsd.ui.MacroKnobWidget.abortDrag()
         }
     }
     GLDebug.checkErrors("Mixer and Decks initialization")

@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiComboFlags
 import imgui.type.ImBoolean
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.audio.AudioTarget
@@ -288,7 +289,9 @@ object TempoSyncPanel {
             theme.body("Target Band:")
             ImGui.sameLine()
             ImGui.setNextItemWidth(150f)
-            if (ImGui.beginCombo("##BeatDetectionTargetCombo", detectorSettings.target.name)) {
+            pushOpenDropdownPadding()
+            if (ImGui.beginCombo("##BeatDetectionTargetCombo", detectorSettings.target.name, ImGuiComboFlags.HeightLargest)) {
+                pushOpenDropdownFont()
                 for (target in audioTargets) {
                     val isSelected = detectorSettings.target == target
                     if (ImGui.selectable(target.name, isSelected)) {
@@ -297,8 +300,10 @@ object TempoSyncPanel {
                     }
                     if (isSelected) ImGui.setItemDefaultFocus()
                 }
+                popOpenDropdownFont()
                 ImGui.endCombo()
             }
+            popOpenDropdownPadding()
             itemTooltip("Select frequency band for primary onset detection (LOW/Kick, MID/Snare, HIGH/Hi-hat, or UNFILTERED).")
 
             ImGui.sameLine(0f, 20f)

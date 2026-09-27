@@ -311,6 +311,8 @@ class UIManager(
             deckPresetController.drawFileBrowsers()
         }
 
+        handleKnobCursorLocking()
+
         ImGui.render()
         imguiGl3.renderDrawData(ImGui.getDrawData())
     }
@@ -593,7 +595,33 @@ class UIManager(
         }
     }
 
+    private fun handleKnobCursorLocking() {
+        if (MacroKnobWidget.isDragLocked && !ImGui.getIO().mouseDown[0]) {
+            MacroKnobWidget.abortDrag()
+        }
+
+        if (MacroKnobWidget.wantsCursorRelease) {
+            val originX = MacroKnobWidget.lockOriginX.toDouble()
+            val originY = MacroKnobWidget.lockOriginY.toDouble()
+            // Critical for Linux Wayland: set cursor position hint while locked, then return to normal.
+            // Calling glfwSetCursorPos after GLFW_CURSOR_NORMAL is dropped on Wayland compositors.
+            org.lwjgl.glfw.GLFW.glfwSetCursorPos(windowHandle, originX, originY)
+            org.lwjgl.glfw.GLFW.glfwSetInputMode(windowHandle, org.lwjgl.glfw.GLFW.GLFW_CURSOR, org.lwjgl.glfw.GLFW.GLFW_CURSOR_NORMAL)
+            MacroKnobWidget.clearCursorReleaseRequest()
+        } else if (MacroKnobWidget.wantsCursorLock) {
+            if (!session.touchConsoleController.isActive) {
+                org.lwjgl.glfw.GLFW.glfwSetInputMode(windowHandle, org.lwjgl.glfw.GLFW.GLFW_CURSOR, org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED)
+            }
+            MacroKnobWidget.clearCursorLockRequest()
+        }
+    }
+
     fun dispose() {
+        if (MacroKnobWidget.isDragLocked) {
+            org.lwjgl.glfw.GLFW.glfwSetCursorPos(windowHandle, MacroKnobWidget.lockOriginX.toDouble(), MacroKnobWidget.lockOriginY.toDouble())
+            org.lwjgl.glfw.GLFW.glfwSetInputMode(windowHandle, org.lwjgl.glfw.GLFW.GLFW_CURSOR, org.lwjgl.glfw.GLFW.GLFW_CURSOR_NORMAL)
+            MacroKnobWidget.abortDrag()
+        }
         prevMouseButtonCallback?.free()
         windowFrameController.destroy()
         defaultStyle.destroy()

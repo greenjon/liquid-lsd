@@ -275,12 +275,16 @@ object LinkModeButton {
 
         // Right-click context popup
         val popupId = "link_ctx_$id"
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem(popupId)) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("Link Mode")
             ImGui.separator()
             drawContextMenu()
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
 
         // Mixxx-style rich tooltip
         val invText = if (inverted && isLinked) " [Inverted]" else ""

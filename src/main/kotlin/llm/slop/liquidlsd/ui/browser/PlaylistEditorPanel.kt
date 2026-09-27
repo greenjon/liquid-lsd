@@ -17,6 +17,10 @@ import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.UIManager
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.pushOpenDropdownFont
+import llm.slop.liquidlsd.ui.popOpenDropdownFont
+import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
+import llm.slop.liquidlsd.ui.popOpenDropdownPadding
 import mu.KotlinLogging
 import java.io.File
 
@@ -160,7 +164,9 @@ object PlaylistEditorPanel {
         val comboWidth = ImGui.getContentRegionAvailX()
         val comboPreview = currentPlaylist?.name ?: if (allPlaylists.isEmpty()) "No playlists" else "Select playlist..."
         ImGui.setNextItemWidth(comboWidth)
-        if (ImGui.beginCombo("##playlistSelectCombo", comboPreview, ImGuiComboFlags.None)) {
+        pushOpenDropdownPadding()
+        if (ImGui.beginCombo("##playlistSelectCombo", comboPreview, ImGuiComboFlags.HeightLargest)) {
+            pushOpenDropdownFont()
             allPlaylists.forEach { item ->
                 val isSelected = selectedFile?.absolutePath == item.path
                 if (ImGui.selectable(item.name, isSelected)) {
@@ -172,8 +178,10 @@ object PlaylistEditorPanel {
                     ImGui.setItemDefaultFocus()
                 }
             }
+            popOpenDropdownFont()
             ImGui.endCombo()
         }
+        popOpenDropdownPadding()
         itemTooltip("Select active playlist.")
     }
 
@@ -315,7 +323,9 @@ object PlaylistEditorPanel {
             BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "pl_item_$index", btnW)
 
             // Context menu (triggered by right-click or more button)
+            pushOpenDropdownPadding()
             if (ImGui.beginPopup(popupId)) {
+                pushOpenDropdownFont()
                 if (exists) {
                     if (ImGui.menuItem("Load to Deck A")) {
                         session.presetRepository.loadDeckPresetAsync(resolvedFile, isDeckA = true)
@@ -349,8 +359,10 @@ object PlaylistEditorPanel {
                     )
                     BrowserPopupHandler.pendingOpenDeletePopup = true
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
 
             ImGui.popID()
         }

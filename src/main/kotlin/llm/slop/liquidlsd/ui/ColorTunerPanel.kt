@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import imgui.ImColor
 import imgui.ImGui
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiComboFlags
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiTableColumnFlags
 import imgui.flag.ImGuiTableFlags
@@ -485,7 +486,9 @@ object ColorTunerPanel {
                                 ImGui.tableNextColumn()
                                 ImGui.pushItemWidth(-1f)
                                 val previewLabel = "${currentSwatch.name}  (${currentSwatch.hex})"
-                                if (ImGui.beginCombo("##combo_${elem.colId}", previewLabel)) {
+                                pushOpenDropdownPadding()
+                                if (ImGui.beginCombo("##combo_${elem.colId}", previewLabel, ImGuiComboFlags.HeightLargest)) {
+                                    pushOpenDropdownFont()
                                     val comboDl = ImGui.getWindowDrawList()
                                     val comboChipSize = 13f
 
@@ -511,8 +514,10 @@ object ColorTunerPanel {
                                             ImGui.setItemDefaultFocus()
                                         }
                                     }
+                                    popOpenDropdownFont()
                                     ImGui.endCombo()
                                 }
+                                popOpenDropdownPadding()
                                 ImGui.popItemWidth()
 
                                 ImGui.tableNextColumn()

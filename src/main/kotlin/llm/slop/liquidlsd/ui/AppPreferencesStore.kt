@@ -260,6 +260,7 @@ object AppPreferencesStore {
                 savedHeight?.toFloatOrNull()?.let { UITheme.preferencesHeight = it.coerceIn(300f, 2160f) }
                 props.getBoolean("framelessWindow")?.let { UITheme.framelessWindow = it }
                 props.getBoolean("trackpadConsoleEnabled")?.let { UITheme.trackpadConsoleEnabled = it }
+                props.getBoolean("lockCursorOnKnobDrag")?.let { UITheme.lockCursorOnKnobDrag = it }
                 props.getProperty("checkUpdatesOnStartup")?.let { UITheme.checkUpdatesOnStartup = it.toBoolean() }
                 props.getProperty("ignoredUpdateVersion")?.let { UITheme.ignoredUpdateVersion = it }
 
@@ -356,6 +357,7 @@ object AppPreferencesStore {
             props.setProperty("settingsHeight", UITheme.preferencesHeight.toString())
             props.setProperty("framelessWindow", UITheme.framelessWindow.toString())
             props.setProperty("trackpadConsoleEnabled", UITheme.trackpadConsoleEnabled.toString())
+            props.setProperty("lockCursorOnKnobDrag", UITheme.lockCursorOnKnobDrag.toString())
             props.setProperty("checkUpdatesOnStartup", UITheme.checkUpdatesOnStartup.toString())
             props.setProperty("ignoredUpdateVersion", UITheme.ignoredUpdateVersion)
 

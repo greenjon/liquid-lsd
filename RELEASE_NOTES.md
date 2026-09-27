@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Relative Knob Dragging & Cursor Locking / Restoration (`MacroKnobWidget.kt`, `UIManager.kt`, `Main.kt`, `PreferencesPanel.kt`)
+- **Relative Pointer Locking (`GLFW_CURSOR_DISABLED`)**: Dragging a rotary knob now hides the cursor and locks relative mouse motion once motion exceeds a 3px deadzone. Performers can sweep knobs continuously without hitting display boundaries or wandering onto external monitors.
+- **Wayland-Safe Origin Restoration**: On mouse release, the cursor is restored to its exact starting click position. Restoration uses position hints while still in relative mode prior to releasing confinement, guaranteeing compatibility with Linux Wayland compositors (`zwp_pointer_constraints_v1`) as well as X11, macOS, and Windows.
+- **Fail-Safe & Interruption Recovery**: If window focus is lost or mouse release occurs outside widget rendering, dragging cleanly aborts and normal cursor mode is forcefully restored.
+- **Configurable Preference**: Added a toggle under **Preferences > General > Features** (`Lock cursor to knob while dragging`, enabled by default) with automatic bypass when the performance touch console is active.
+
 ### Dedicated Tooltip Font Level & Balanced Font Pushing (`UITheme.kt`, `TooltipHelper.kt`)
 - Added `FontLevel.TOOLTIP` (`FONT_BODY + 4f`) to `UITheme` and updated `TooltipHelper` to automatically push the tooltip font (with explicit legacy font size) and style properties before rendering item and general tooltips. Tooltip text now renders crisply at an enhanced scale that stands out clearly from surrounding body text, and pops fonts/styles cleanly.
 

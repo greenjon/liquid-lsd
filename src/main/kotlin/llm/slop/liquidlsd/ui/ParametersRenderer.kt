@@ -190,7 +190,9 @@ object ParametersRenderer {
                 }
             }
         }
+        pushOpenDropdownPadding()
         if (ImGui.beginPopup(popupId)) {
+            pushOpenDropdownFont()
             if (session.uiTheme.randomizationEnabled) {
                 if (param.isRandomizeDisabled) {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
@@ -254,8 +256,10 @@ object ParametersRenderer {
                 ImGui.separator()
                 extraMenuItems()
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
         ImGui.setCursorPosY(rowY)
         val r = CELL * 0.5f
 
@@ -458,7 +462,9 @@ object ParametersRenderer {
                 param.modulators.addAll(updated)
             }
         }
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("midi_cell_menu_$paramKey")) {
+            pushOpenDropdownFont()
             if (midiMods.isNotEmpty()) {
                 if (ImGui.menuItem("Clear MIDI Modulator")) {
                     onPushUndo()
@@ -473,8 +479,10 @@ object ParametersRenderer {
                     param.modulators.addAll(updated)
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
 
         val bgCol = when {
             isMidiTarget   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.4f, 0.5f, 1f)
@@ -603,7 +611,9 @@ object ParametersRenderer {
                 if (paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
             }
         }
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("cell_menu_$paramKey-$cvId")) {
+            pushOpenDropdownFont()
             if (ImGui.menuItem("Copy Cell Modulators")) {
                 ClipboardManager.cellClipboard = CellClipboardData(paramKey, cvId, activeMods.map { it.toDto() })
             }
@@ -629,8 +639,10 @@ object ParametersRenderer {
                     if (!nextBypassed && paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
 
         val bgCol = when {
             isTarget     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.4f, 0.5f, 1f)

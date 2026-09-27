@@ -97,7 +97,9 @@ internal object PerformanceTransitionsControls {
         if (isMidiLearnTransQPrev) {
             dl.addRect(transPrevX - 1f, transPrevY - 1f, transPrevX + navBtnW + 1f, transPrevY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
         }
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_trans_q_prev_ctx")) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("Transition Queue Prev (<)")
             ImGui.separator()
             if (ImGui.menuItem("Trigger Previous")) {
@@ -128,8 +130,10 @@ internal object PerformanceTransitionsControls {
                     OscLearnState.startLearn(transQPrevOscKey, 0f, 1f, "Trans Queue Prev")
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
         itemTooltip("Advance to previous transition in Transition Queue.$transQPrevMidiText\nRight-click for MIDI/OSC Learn.")
 
         ImGui.sameLine(0f, 2f)
@@ -163,7 +167,9 @@ internal object PerformanceTransitionsControls {
         if (isMidiLearnTransQNext) {
             dl.addRect(transNextX - 1f, transNextY - 1f, transNextX + navBtnW + 1f, transNextY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
         }
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_trans_q_next_ctx")) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("Transition Queue Next (>)")
             ImGui.separator()
             if (ImGui.menuItem("Trigger Next")) {
@@ -194,8 +200,10 @@ internal object PerformanceTransitionsControls {
                     OscLearnState.startLearn(transQNextOscKey, 0f, 1f, "Trans Queue Next")
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
         itemTooltip("Advance to next transition in Transition Queue.$transQNextMidiText\nRight-click for MIDI/OSC Learn.")
 
         // 3. Randomize Die Button [ DICES ]

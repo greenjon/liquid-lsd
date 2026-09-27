@@ -263,7 +263,9 @@ object ParameterGridHeaders {
         }
 
         // Kebab popup menu
+        pushOpenDropdownPadding()
         if (ImGui.beginPopup(popupId)) {
+            pushOpenDropdownFont()
             session.uiTheme.h3("Parameter Modulators")
             ImGui.separator()
             ImGui.spacing()
@@ -367,9 +369,11 @@ object ParameterGridHeaders {
                 }
             }
 
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
-        
+        popOpenDropdownPadding()
+
         // Restore cursor
         ImGui.setCursorScreenPos(startX, afterHeadersY)
         ImGui.dummy(0f, 0f)

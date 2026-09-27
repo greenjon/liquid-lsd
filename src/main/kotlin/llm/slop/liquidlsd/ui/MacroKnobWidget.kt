@@ -72,10 +72,44 @@ object MacroKnobWidget {
 
     // -- Drag/interaction state (single active knob at a time, mirrors CustomRangeSlider) ----
 
-    private var activeKnobId: String? = null
-    private var dragStartX = 0f
-    private var dragStartY = 0f
-    private var dragStartValue = 0f
+    const val DRAG_LOCK_DEADZONE_PX = 3.0f
+
+    var activeKnobId: String? = null
+        internal set
+    var dragStartX: Float = 0f
+        internal set
+    var dragStartY: Float = 0f
+        internal set
+    var dragStartValue: Float = 0f
+        internal set
+    var isDragLocked: Boolean = false
+        internal set
+    var lockOriginX: Float = 0f
+        internal set
+    var lockOriginY: Float = 0f
+        internal set
+
+    var wantsCursorLock: Boolean = false
+        internal set
+    var wantsCursorRelease: Boolean = false
+        internal set
+
+    fun clearCursorLockRequest() {
+        wantsCursorLock = false
+    }
+
+    fun clearCursorReleaseRequest() {
+        wantsCursorRelease = false
+    }
+
+    fun abortDrag() {
+        activeKnobId = null
+        if (isDragLocked) {
+            isDragLocked = false
+            wantsCursorRelease = true
+        }
+        wantsCursorLock = false
+    }
 
     /**
      * Draws one rotary macro knob at the current ImGui cursor position and handles its
@@ -133,14 +167,32 @@ object MacroKnobWidget {
             dragStartX = io.mousePos.x
             dragStartY = io.mousePos.y
             dragStartValue = value
+            isDragLocked = false
+            wantsCursorLock = false
+            wantsCursorRelease = false
         }
 
         var newValue = value
         if (isActive && activeKnobId == id) {
             val deltaX = io.mousePos.x - dragStartX
             val deltaY = io.mousePos.y - dragStartY
+
+            if (!isDragLocked && session.uiTheme.lockCursorOnKnobDrag && !session.touchConsoleController.isActive) {
+                val distSq = deltaX * deltaX + deltaY * deltaY
+                if (distSq >= DRAG_LOCK_DEADZONE_PX * DRAG_LOCK_DEADZONE_PX) {
+                    isDragLocked = true
+                    lockOriginX = dragStartX
+                    lockOriginY = dragStartY
+                    wantsCursorLock = true
+                }
+            }
+
             newValue = applyDragDelta(dragStartValue, deltaX, deltaY, pixelsForFullSweep)
         } else if (!isActive && activeKnobId == id) {
+            if (isDragLocked) {
+                wantsCursorRelease = true
+                isDragLocked = false
+            }
             activeKnobId = null
         }
 

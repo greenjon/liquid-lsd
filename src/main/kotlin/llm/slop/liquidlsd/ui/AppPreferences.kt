@@ -63,6 +63,7 @@ data class AppPreferences(
     val preferencesHeight: Float = 520f,
     val framelessWindow: Boolean = true,
     val trackpadConsoleEnabled: Boolean = true,
+    val lockCursorOnKnobDrag: Boolean = true,
     val checkUpdatesOnStartup: Boolean = true,
     val ignoredUpdateVersion: String = "",
     val videoOutputConfigs: Map<llm.slop.liquidlsd.rendering.VideoOutputEndpoint, llm.slop.liquidlsd.rendering.VideoOutputConfig> = 

@@ -3,6 +3,8 @@ package llm.slop.liquidlsd.ui
 import kotlin.math.PI
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 /**
@@ -122,5 +124,62 @@ class MacroKnobWidgetTest {
     fun testAngleMappingClampsValuesOutsideZeroToOne() {
         assertEquals(MacroKnobWidget.valueToAngleRadians(0f), MacroKnobWidget.valueToAngleRadians(-1f), 1e-5f)
         assertEquals(MacroKnobWidget.valueToAngleRadians(1f), MacroKnobWidget.valueToAngleRadians(2f), 1e-5f)
+    }
+
+    // -- Cursor Locking State & Lifecycle --------------------------------------------------
+
+    @Test
+    fun testDragLockDeadzoneConstantIsThreePixels() {
+        assertEquals(3.0f, MacroKnobWidget.DRAG_LOCK_DEADZONE_PX, 1e-6f)
+    }
+
+    @Test
+    fun testClearRequestsResetFlags() {
+        MacroKnobWidget.wantsCursorLock = true
+        MacroKnobWidget.wantsCursorRelease = true
+
+        MacroKnobWidget.clearCursorLockRequest()
+        assertFalse(MacroKnobWidget.wantsCursorLock)
+        assertTrue(MacroKnobWidget.wantsCursorRelease)
+
+        MacroKnobWidget.clearCursorReleaseRequest()
+        assertFalse(MacroKnobWidget.wantsCursorRelease)
+    }
+
+    @Test
+    fun testAbortDragWhenNotLockedCleansUpActiveKnobIdWithoutRequestingRelease() {
+        MacroKnobWidget.activeKnobId = "test_knob_1"
+        MacroKnobWidget.isDragLocked = false
+        MacroKnobWidget.wantsCursorLock = true
+        MacroKnobWidget.wantsCursorRelease = false
+
+        MacroKnobWidget.abortDrag()
+
+        kotlin.test.assertNull(MacroKnobWidget.activeKnobId)
+        assertFalse(MacroKnobWidget.isDragLocked)
+        assertFalse(MacroKnobWidget.wantsCursorLock)
+        assertFalse(MacroKnobWidget.wantsCursorRelease)
+    }
+
+    @Test
+    fun testAbortDragWhenLockedTriggersReleaseRequestAndClearsState() {
+        MacroKnobWidget.activeKnobId = "test_knob_2"
+        MacroKnobWidget.isDragLocked = true
+        MacroKnobWidget.lockOriginX = 120f
+        MacroKnobWidget.lockOriginY = 340f
+        MacroKnobWidget.wantsCursorLock = false
+        MacroKnobWidget.wantsCursorRelease = false
+
+        MacroKnobWidget.abortDrag()
+
+        kotlin.test.assertNull(MacroKnobWidget.activeKnobId)
+        assertFalse(MacroKnobWidget.isDragLocked)
+        assertFalse(MacroKnobWidget.wantsCursorLock)
+        assertTrue(MacroKnobWidget.wantsCursorRelease)
+        assertEquals(120f, MacroKnobWidget.lockOriginX)
+        assertEquals(340f, MacroKnobWidget.lockOriginY)
+
+        MacroKnobWidget.clearCursorReleaseRequest()
+        assertFalse(MacroKnobWidget.wantsCursorRelease)
     }
 }

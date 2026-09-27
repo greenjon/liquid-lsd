@@ -251,7 +251,9 @@ object FxChainHeader {
         }
 
         // Chain Browser Popup
+        pushOpenDropdownPadding()
         if (ImGui.beginPopup(popupId)) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("$chainLabel FX Chains")
             ImGui.separator()
             ImGui.setNextItemWidth(180f)
@@ -276,8 +278,10 @@ object FxChainHeader {
             if (ImGui.menuItem("${Icons.TRASH} Clear Chain")) {
                 FxOps.clearChain(chain)
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
     }
 
     private fun drawSaveButton(session: SessionContext, chain: FxChain, bankId: String, ctrlH: Float, isDirty: Boolean) {
@@ -312,7 +316,9 @@ object FxChainHeader {
         }
         itemTooltip("Chain operations (Save As, New, Revert, Clear, Copy/Paste, Focus, Resync).")
 
+        pushOpenDropdownPadding()
         if (ImGui.beginPopup(menuId)) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("$chainLabel FX Chain")
             ImGui.separator()
 
@@ -363,8 +369,10 @@ object FxChainHeader {
             if (ImGui.menuItem("Resync Knobs")) {
                 FxMacroSync.syncFor(bankId, mixer, forceResync = true)
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
     }
 
     private fun openSaveAsModal(session: SessionContext, chain: FxChain) {

@@ -330,7 +330,9 @@ object CustomRangeSlider {
         val isOscLearningThis = targetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(targetPath)
         val isMidiLearningThis = targetPath != null && session.parametersState.isMidiTargetLearning(targetPath)
 
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("bnd_ctx_$text")) {
+            pushOpenDropdownFont()
             if (targetPath != null) {
                 if (isOscLearningThis) {
                     if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
@@ -364,8 +366,10 @@ object CustomRangeSlider {
                     }
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
 
         val col = if (isMacroLearning && isHovered) floatArrayOf(0.0f, 0.85f, 1.0f, 1.0f) else floatArrayOf(0.6f, 0.6f, 0.6f, 0.7f)
         ImGui.setCursorScreenPos(x, y)
@@ -770,7 +774,9 @@ object CustomRangeSlider {
             val isOscLearningThis = targetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(targetPath)
             val isMidiLearningThis = targetPath != null && session.parametersState.isMidiTargetLearning(targetPath)
 
+            pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("crs_ctx_${idPrefix}_$label")) {
+                pushOpenDropdownFont()
                 if (targetPath != null) {
                     val propLabel = if (propertyName != null) {
                         llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(modulatorIndex ?: 0, propertyName)
@@ -815,8 +821,10 @@ object CustomRangeSlider {
                         }
                     }
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
 
             if (isLabelHovered) {
                 if (isMacroBound) {

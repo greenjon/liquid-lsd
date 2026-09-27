@@ -124,7 +124,9 @@ internal object PerformanceMasterControls {
             mixer.onCrossfadeManualTakeover()
             mixer.crossfade.set(-1.0f)
         }
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_snap_a_ctx")) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("Snap Deck A")
             ImGui.separator()
             if (ImGui.menuItem("Snap Crossfader to Deck A")) {
@@ -147,8 +149,10 @@ internal object PerformanceMasterControls {
                     session.midiMappingManager.saveActiveProfile()
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
         itemTooltip("Deck A (Click to snap crossfader to Deck A)$snapAMidiText\nRight-click for MIDI Learn.")
 
         ImGui.sameLine(0f, gap)
@@ -202,7 +206,9 @@ internal object PerformanceMasterControls {
         val isOscLearnXfader = OscLearnState.isTargetLearning(paramKey)
         val xfaderMidiMapping = session.midiMappingManager.getMappingForParameter(paramKey)
 
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_xfader_ctx")) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("Crossfader (Mixer/crossfade)")
             ImGui.separator()
             if (ImGui.menuItem("Reset to Center (0.0)")) {
@@ -262,8 +268,10 @@ internal object PerformanceMasterControls {
                     OscMappingManager.saveActiveProfile()
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
 
         if (isTrackActive) {
             mixer.onCrossfadeManualTakeover()
@@ -381,7 +389,9 @@ internal object PerformanceMasterControls {
             mixer.onCrossfadeManualTakeover()
             mixer.crossfade.set(1.0f)
         }
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_snap_b_ctx")) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("Snap Deck B")
             ImGui.separator()
             if (ImGui.menuItem("Snap Crossfader to Deck B")) {
@@ -404,8 +414,10 @@ internal object PerformanceMasterControls {
                     session.midiMappingManager.saveActiveProfile()
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
         itemTooltip("Deck B (Click to snap crossfader to Deck B)$snapBMidiText\nRight-click for MIDI Learn.")
 
         ImGui.sameLine(0f, gap * 2f)
@@ -441,7 +453,9 @@ internal object PerformanceMasterControls {
         if (isMidiLearnAutoFade) {
             dl.addRect(autoX - 1f, autoY - 1f, autoX + autoBtnW + 1f, autoY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
         }
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_autofade_ctx")) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("Crossfader Auto-Fade")
             ImGui.separator()
             if (ImGui.menuItem(if (mixer.isAutoFading) "Stop Auto-Fade" else "Start Auto-Fade")) {
@@ -470,8 +484,10 @@ internal object PerformanceMasterControls {
                     session.midiMappingManager.saveActiveProfile()
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
         itemTooltip("Auto-fade between Deck A and Deck B over ${String.format(java.util.Locale.US, "%.1f", mixer.xfadeSpeed.value)}s.$autoFadeMidiText\nClick while fading to stop. Right-click for MIDI Learn.")
 
         ImGui.sameLine(0f, gap)
@@ -512,7 +528,9 @@ internal object PerformanceMasterControls {
         if (isMidiLearnSpeed) {
             dl.addRect(speedX - 1f, speedY - 1f, speedX + speedBtnW + 1f, speedY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
         }
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_speed_ctx")) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("Auto-Fade Duration ($speedStr)")
             ImGui.separator()
             listOf(0.5f, 1.0f, 2.0f, 4.0f, 8.0f).forEach { s ->
@@ -560,8 +578,10 @@ internal object PerformanceMasterControls {
                     OscMappingManager.saveActiveProfile()
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
         itemTooltip("Auto-fade duration: $speedStr$speedMidiText\nDrag or scroll to adjust speed.\nRight-click for quick presets & MIDI/OSC Learn.")
 
         ImGui.endGroup()

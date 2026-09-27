@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiComboFlags
 import imgui.flag.ImGuiKey
 import imgui.flag.ImGuiMouseCursor
 import imgui.flag.ImGuiStyleVar
@@ -110,7 +111,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val sourceId = GeneratorDefaults.sourceIdFor(deck.source)
         val hasUserDef = GeneratorDefaults.hasUserDefault(sourceId)
 
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("##perf_gen_badge_ctx_$tag")) {
+            pushOpenDropdownFont()
             if (ImGui.menuItem("Change Source...")) {
                 DeckSourcePicker.open(session, parametersState, mixer, deck, deckLabel, ctx.deckPresetController)
             }
@@ -127,8 +130,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                     GeneratorDefaults.applyToDeck(deck, deckLabel, canonicalBankId)
                 }
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
         if (ImGui.isItemHovered()) {
             ImGui.setMouseCursor(ImGuiMouseCursor.Hand)
             dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, ImGui.colorConvertFloat4ToU32(0.60f, 0.70f, 0.90f, 1f), 4f, 0, 1.5f)
@@ -168,9 +173,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         // Combos size their height from font + frame padding rather than taking one explicitly, so
         // pad them out to ctrlH to match the buttons beside them. Popped before the popup body.
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), ((ctrlH - ImGui.getFontSize()) / 2f).coerceAtLeast(0f))
-        val isComboOpen = ImGui.beginCombo("##perf_preset_combo_$tag", presetDisplay)
+        pushOpenDropdownPadding()
+        val isComboOpen = ImGui.beginCombo("##perf_preset_combo_$tag", presetDisplay, ImGuiComboFlags.HeightLargest)
         ImGui.popStyleVar()
         if (isComboOpen) {
+            pushOpenDropdownFont()
             if (!wasOpen) {
                 ImGui.setKeyboardFocusHere()
                 when {
@@ -210,6 +217,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                     }
                 }
             }
+            popOpenDropdownFont()
             ImGui.endCombo()
         } else {
             if (wasOpen) {
@@ -222,6 +230,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                 }
             }
         }
+        popOpenDropdownPadding()
         itemTooltip(
             if (activePreset != null) "Active preset: $activePreset$dirtyMarker\nClick to search and select presets."
             else "Select a preset for $deckLabel."
@@ -285,7 +294,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             if (isMidiLearnQPrev) {
                 dl.addRect(qPrevX - 1f, qPrevY - 1f, qPrevX + navBtnW + 1f, qPrevY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
             }
+            pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_q_prev_ctx_$tag")) {
+                pushOpenDropdownFont()
                 ImGui.textDisabled("PlayQueue Prev (<)")
                 ImGui.separator()
                 if (ImGui.menuItem("Trigger Previous")) {
@@ -316,8 +327,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                         OscLearnState.startLearn(qPrevOscKey, 0f, 1f, "PlayQueue Prev")
                     }
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
             itemTooltip("Advance to previous item in PlayQueue.$qPrevMidiText\nRight-click for MIDI/OSC Learn.")
 
             ImGui.sameLine(0f, 2f)
@@ -350,7 +363,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             if (isMidiLearnQNext) {
                 dl.addRect(qNextX - 1f, qNextY - 1f, qNextX + navBtnW + 1f, qNextY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
             }
+            pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_q_next_ctx_$tag")) {
+                pushOpenDropdownFont()
                 ImGui.textDisabled("PlayQueue Next (>)")
                 ImGui.separator()
                 if (ImGui.menuItem("Trigger Next")) {
@@ -381,8 +396,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                         OscLearnState.startLearn(qNextOscKey, 0f, 1f, "PlayQueue Next")
                     }
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
             itemTooltip("Advance to next item in PlayQueue.$qNextMidiText\nRight-click for MIDI/OSC Learn.")
         } else if (isDeckBG) {
             val bgQ = session.bgQueueManager.queue
@@ -404,7 +421,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             if (isMidiLearnBgPrev) {
                 dl.addRect(bgPrevX - 1f, bgPrevY - 1f, bgPrevX + navBtnW + 1f, bgPrevY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
             }
+            pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_bg_prev_ctx")) {
+                pushOpenDropdownFont()
                 ImGui.textDisabled("BG Queue Prev (<)")
                 ImGui.separator()
                 if (ImGui.menuItem("Trigger Previous")) {
@@ -435,8 +454,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                         OscLearnState.startLearn(bgPrevOscKey, 0f, 1f, "BG Queue Prev")
                     }
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
             itemTooltip("Advance to previous item in BG Queue.$bgPrevMidiText\nRight-click for MIDI/OSC Learn.")
 
             ImGui.sameLine(0f, 2f)
@@ -469,7 +490,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             if (isMidiLearnBgNext) {
                 dl.addRect(bgNextX - 1f, bgNextY - 1f, bgNextX + navBtnW + 1f, bgNextY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
             }
+            pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_bg_next_ctx")) {
+                pushOpenDropdownFont()
                 ImGui.textDisabled("BG Queue Next (>)")
                 ImGui.separator()
                 if (ImGui.menuItem("Trigger Next")) {
@@ -500,8 +523,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                         OscLearnState.startLearn(bgNextOscKey, 0f, 1f, "BG Queue Next")
                     }
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
             itemTooltip("Advance to next item in BG Queue.$bgNextMidiText\nRight-click for MIDI/OSC Learn.")
         } else {
             // Deck PV indicator / focus button

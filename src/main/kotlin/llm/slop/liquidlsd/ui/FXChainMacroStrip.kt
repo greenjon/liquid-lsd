@@ -316,11 +316,15 @@ object FXChainMacroStrip {
     /** Right-click on a slot's compact-mode Metaknob to quickly rebind it to a different parameter. */
     private fun drawRebindContextMenu(fx: llm.slop.liquidlsd.rendering.isf.ISFFilter, chainPrefix: String, slotIndex: Int) {
         val popupId = "fx_meta_rebind_${chainPrefix}_$slotIndex"
+        pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem(popupId)) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("Rebind Metaknob")
             ImGui.separator()
             drawRebindMenuItems(fx)
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
     }
 }

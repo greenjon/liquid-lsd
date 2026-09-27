@@ -150,7 +150,9 @@ object DeckSourcePicker {
             itemTooltip("Choose a saved preset for $deckLabel")
             ImGui.popStyleColor(3)
 
+            pushOpenDropdownPadding()
             if (ImGui.beginPopup("##launchpad_preset_popup_$deckLabel")) {
+                pushOpenDropdownFont()
                 ImGui.textDisabled("Quick Select Preset:")
                 ImGui.separator()
 
@@ -171,8 +173,10 @@ object DeckSourcePicker {
                     LibraryPanel.show(session)
                     session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
 
             ImGui.popStyleVar()
         }

@@ -11,6 +11,10 @@ import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
+import llm.slop.liquidlsd.ui.popOpenDropdownPadding
+import llm.slop.liquidlsd.ui.pushOpenDropdownFont
+import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import mu.KotlinLogging
 import java.io.File
 
@@ -201,7 +205,9 @@ object FXBgQueueActionsPanel {
                 BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "fx_bg_q_$index", btnW)
 
                 // Context menu
+                pushOpenDropdownPadding()
                 if (ImGui.beginPopup(popupId)) {
+                    pushOpenDropdownFont()
                     if (ImGui.menuItem("Apply to Deck BG")) {
                         FXBgQueueManager.jumpToIndex(index, session, mixer)
                     }
@@ -209,8 +215,10 @@ object FXBgQueueActionsPanel {
                     if (ImGui.menuItem("Remove from queue")) {
                         removeFromQueueIndex = index
                     }
+                    popOpenDropdownFont()
                     ImGui.endPopup()
                 }
+                popOpenDropdownPadding()
             }
 
             // Keyboard shortcuts

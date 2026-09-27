@@ -19,6 +19,10 @@ import llm.slop.liquidlsd.ui.UIManager
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
 import llm.slop.liquidlsd.ui.showCustomTooltip
+import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
+import llm.slop.liquidlsd.ui.popOpenDropdownPadding
+import llm.slop.liquidlsd.ui.pushOpenDropdownFont
+import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import mu.KotlinLogging
 import java.io.File
 
@@ -55,7 +59,9 @@ object PresetListPanel {
         }
         itemTooltip("Create new preset on a deck...")
 
+        pushOpenDropdownPadding()
         if (ImGui.beginPopup("create_new_preset_popup")) {
+            pushOpenDropdownFont()
             ImGui.textDisabled("Create new preset on:")
             ImGui.separator()
             if (ImGui.menuItem("Deck A")) {
@@ -78,8 +84,10 @@ object PresetListPanel {
             if (ImGui.menuItem("Restore Factory Presets")) {
                 FileSystemManager.restoreFactoryPresets()
             }
+            popOpenDropdownFont()
             ImGui.endPopup()
         }
+        popOpenDropdownPadding()
 
         ImGui.separator()
         ImGui.spacing()
@@ -228,7 +236,9 @@ object PresetListPanel {
             BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "preset_$index", btnW)
 
             // Context menu (triggered by right-click or more button)
+            pushOpenDropdownPadding()
             if (ImGui.beginPopup(popupId)) {
+                pushOpenDropdownFont()
                 if (ImGui.menuItem("Load to Deck A")) {
                     session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = true)
                 }
@@ -278,8 +288,10 @@ object PresetListPanel {
                     BrowserPopupHandler.deleteTarget = asset
                     BrowserPopupHandler.pendingOpenDeletePopup = true
                 }
+                popOpenDropdownFont()
                 ImGui.endPopup()
             }
+            popOpenDropdownPadding()
 
             ImGui.popID()
                 }
