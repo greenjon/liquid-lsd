@@ -45,7 +45,8 @@ object ShaderPickerPopup {
     private var title = "Select Shader"
     
     private val searchBuf = ImString(64)
-    private var selectedCategory = "All"
+    /** Active category pill filters, OR-combined. "All" is exclusive with every other entry. */
+    private var selectedCategories: MutableSet<String> = mutableSetOf("All")
     
     enum class ViewMode { FOLDERS, FLAT }
     private var viewMode = ViewMode.FOLDERS
@@ -79,13 +80,15 @@ object ShaderPickerPopup {
         this.onSelect = callback
         this.pendingOpen = true
         this.searchBuf.set("")
-        this.selectedCategory = when(type) {
-            PickerType.FX_SLOT_1 -> "Color Adjustment"
-            PickerType.FX_SLOT_2 -> "Distortion"
-            PickerType.FX_SLOT_3 -> "All"
-            PickerType.MIXER_TRANSITION -> "Transitions"
-            else -> "All"
-        }
+        this.selectedCategories = mutableSetOf(
+            when (type) {
+                PickerType.FX_SLOT_1 -> "Color Adjustment"
+                PickerType.FX_SLOT_2 -> "Distortion"
+                PickerType.FX_SLOT_3 -> "All"
+                PickerType.MIXER_TRANSITION -> "Transitions"
+                else -> "All"
+            }
+        )
         updateItems()
     }
 
@@ -109,13 +112,24 @@ object ShaderPickerPopup {
             )
         }
         if (llm.slop.liquidlsd.presets.FxShortlist.favorites().isNotEmpty()) {
-            selectedCategory = CATEGORY_FAVORITES
+            selectedCategories = mutableSetOf(CATEGORY_FAVORITES)
             updateItems()
         }
     }
 
     /**
-     * Re-calculates the filtered list based on search buffer and selected category.
+     * Whether an item belongs to at least one active category pill (OR match). "All" or an empty
+     * selection means no filtering. [isFavorite] only applies to FX filters.
+     */
+    private fun matchesSelectedCategories(itemCategories: List<String>, folderPath: String, isFavorite: Boolean = false): Boolean {
+        if (selectedCategories.isEmpty() || selectedCategories.contains("All")) return true
+        return selectedCategories.any { cat ->
+            (cat == CATEGORY_FAVORITES && isFavorite) || itemCategories.contains(cat) || folderPath == cat
+        }
+    }
+
+    /**
+     * Re-calculates the filtered list based on search buffer and selected categories.
      */
     private fun updateItems() {
         filteredItems.clear()
@@ -132,7 +146,7 @@ object ShaderPickerPopup {
             if (externalServers.isNotEmpty()) {
                 externalServers.forEach { srv ->
                     val matchesSearch = srv.lowercase().contains(searchText) || "external".contains(searchText) || "video".contains(searchText)
-                    val matchesCategory = selectedCategory == "All" || selectedCategory == "External Sources"
+                    val matchesCategory = matchesSelectedCategories(listOf("External Sources"), "")
                     if (matchesSearch && matchesCategory) {
                         filteredItems.add(
                             ShaderItem(
@@ -148,7 +162,7 @@ object ShaderPickerPopup {
             } else {
                 val fallbackName = "External Video (No streams active)"
                 val matchesSearch = fallbackName.lowercase().contains(searchText) || "external".contains(searchText)
-                val matchesCategory = selectedCategory == "All" || selectedCategory == "External Sources"
+                val matchesCategory = matchesSelectedCategories(listOf("External Sources"), "")
                 if (matchesSearch && matchesCategory) {
                     filteredItems.add(
                         ShaderItem(
@@ -177,10 +191,8 @@ object ShaderPickerPopup {
                 val matchesSearch = source.displayName.lowercase().contains(searchText) ||
                     source.id.lowercase().contains(searchText) ||
                     source.folderPath.lowercase().contains(searchText)
-                val matchesCategory = selectedCategory == "All" ||
-                    source.categories.contains(selectedCategory) ||
-                    source.folderPath == selectedCategory
-                
+                val matchesCategory = matchesSelectedCategories(source.categories, source.folderPath)
+
                 if (matchesSearch && matchesCategory) {
                     filteredItems.add(
                         ShaderItem(
@@ -204,9 +216,7 @@ object ShaderPickerPopup {
                 val matchesSearch = transition.displayName.lowercase().contains(searchText) ||
                     transition.id.lowercase().contains(searchText) ||
                     transition.folderPath.lowercase().contains(searchText)
-                val matchesCategory = selectedCategory == "All" ||
-                    transition.categories.contains(selectedCategory) ||
-                    transition.folderPath == selectedCategory
+                val matchesCategory = matchesSelectedCategories(transition.categories, transition.folderPath)
 
                 if (matchesSearch && matchesCategory) {
                     filteredItems.add(
@@ -221,27 +231,8 @@ object ShaderPickerPopup {
                     )
                 }
             }
-        } else if (selectedCategory == CATEGORY_SAVED) {
-            ISFFilterRegistry.availableFilters.forEach { filter ->
-                filter.categories.forEach { tempCats.add(it) }
-                if (filter.folderPath.isNotBlank()) tempCats.add(filter.folderPath)
-            }
-            FileSystemManager.scanAllFxPresets().forEach { asset ->
-                val matchesSearch = asset.name.lowercase().contains(searchText) ||
-                    asset.tags.any { it.lowercase().contains(searchText) }
-                if (matchesSearch) {
-                    filteredItems.add(
-                        ShaderItem(
-                            id = SAVED_PREFIX + asset.path,
-                            displayName = asset.name,
-                            categories = asset.tags,
-                            type = "Saved FX"
-                        )
-                    )
-                }
-            }
         } else {
-            val favoritesOnly = selectedCategory == CATEGORY_FAVORITES
+            // Stock ISF filters, tag/favorite-filtered.
             ISFFilterRegistry.availableFilters.forEach { filter ->
                 filter.categories.forEach { tempCats.add(it) }
                 if (filter.folderPath.isNotBlank()) {
@@ -251,10 +242,8 @@ object ShaderPickerPopup {
                 val matchesSearch = filter.displayName.lowercase().contains(searchText) ||
                     filter.id.lowercase().contains(searchText) ||
                     filter.folderPath.lowercase().contains(searchText)
-                val matchesCategory = selectedCategory == "All" ||
-                    (favoritesOnly && llm.slop.liquidlsd.presets.FxShortlist.isFavorite(filter.id)) ||
-                    filter.categories.contains(selectedCategory) ||
-                    filter.folderPath == selectedCategory
+                val isFavorite = llm.slop.liquidlsd.presets.FxShortlist.isFavorite(filter.id)
+                val matchesCategory = matchesSelectedCategories(filter.categories, filter.folderPath, isFavorite)
 
                 if (matchesSearch && matchesCategory) {
                     filteredItems.add(
@@ -267,6 +256,25 @@ object ShaderPickerPopup {
                             description = filter.header.DESCRIPTION ?: ""
                         )
                     )
+                }
+            }
+
+            // Saved single-FX presets -- included only when that pill is explicitly active,
+            // additive with whatever stock tag filters are also selected.
+            if (selectedCategories.contains(CATEGORY_SAVED)) {
+                FileSystemManager.scanAllFxPresets().forEach { asset ->
+                    val matchesSearch = asset.name.lowercase().contains(searchText) ||
+                        asset.tags.any { it.lowercase().contains(searchText) }
+                    if (matchesSearch) {
+                        filteredItems.add(
+                            ShaderItem(
+                                id = SAVED_PREFIX + asset.path,
+                                displayName = asset.name,
+                                categories = asset.tags,
+                                type = "Saved FX"
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -371,7 +379,7 @@ object ShaderPickerPopup {
                 if (starred) ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.8f, 0.2f, 1.0f)
                 if (ImGui.button("${if (starred) "\u2605" else "\u2606"}##star_${item.id}", -1f, 0f)) {
                     llm.slop.liquidlsd.presets.FxShortlist.toggle(item.id)
-                    if (selectedCategory == CATEGORY_FAVORITES) updateItems()
+                    if (selectedCategories.contains(CATEGORY_FAVORITES)) updateItems()
                 }
                 if (starred) ImGui.popStyleColor()
                 itemTooltip(if (starred) "Remove from the FX shortlist (the effects a slot's \u25c0 \u25b6 steps through)." else "Add to the FX shortlist (the effects a slot's \u25c0 \u25b6 steps through).")
@@ -425,22 +433,33 @@ object ShaderPickerPopup {
 
             ImGui.spacing()
 
-            // ── Category Pills Row ──
+            // ── Category Pills Row (multi-select, OR-combined; "All" is exclusive) ──
             ImGui.beginChild("##categories_pills", 0f, 48f, false, ImGuiWindowFlags.HorizontalScrollbar)
             for (i in 0 until categories.size) {
                 val cat = categories[i]
-                val isSelected = cat == selectedCategory
+                val isSelected = selectedCategories.contains(cat)
                 if (isSelected) {
                     ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.5f, 0.8f, 1.0f)
                     ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.55f, 0.85f, 1.0f)
                     ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.15f, 0.45f, 0.75f, 1.0f)
                 }
-                
+
                 if (ImGui.button(cat)) {
-                    selectedCategory = cat
+                    if (cat == "All") {
+                        selectedCategories.clear()
+                        selectedCategories.add("All")
+                    } else {
+                        selectedCategories.remove("All")
+                        if (isSelected) {
+                            selectedCategories.remove(cat)
+                            if (selectedCategories.isEmpty()) selectedCategories.add("All")
+                        } else {
+                            selectedCategories.add(cat)
+                        }
+                    }
                     updateItems()
                 }
-                
+
                 if (isSelected) {
                     ImGui.popStyleColor(3)
                 }

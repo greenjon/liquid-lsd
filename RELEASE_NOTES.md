@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Multi-Select Category Pills in the Shader/FX Picker (`ShaderPickerPopup.kt`)
+- The category pill row in the Source, FX slot, and Transition picker popups now supports selecting multiple pills at once (OR-combined) instead of only one at a time. Clicking `All` clears the rest; clicking any other pill toggles it on/off, and deselecting the last active pill falls back to `All`.
+- The `★ Favorites` and `Saved FX` pills now compose with tag pills in FX pickers — e.g. `Distortion` + `Saved FX` shows stock Distortion filters alongside every saved single-FX preset.
+
 ### Mixxx-Inspired List & Dropdown Readability Redesign (BORING theme) (`UIThemeStyler.kt`, `DropdownStyleHelper.kt`)
 - Combo dropdowns, the FX chain browser popup, and every preset/playlist/queue list panel (FX, BG, Transitions, decks) now use a Mixxx-style slate-teal highlight instead of dull dark gray, a taller 26px row height with roomier padding, and crisp white text on the selected row against a softer silver-gray for unselected rows. This is scoped to the BORING theme for now; other themes are unchanged.
 

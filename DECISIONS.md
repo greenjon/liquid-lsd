@@ -2109,4 +2109,13 @@
   - Resolves the issue where in-plane rotation (`View > Rotate Z`) produced spinning rectangle corners and black edge cutoffs.
   - Allows outward-radiating feedback and downstream FX to expand and fill the entire screen seamlessly, even when the initial source is zoomed out or rotated.
 
+## Multi-Select Category Pills in the Shader/FX Picker (`ShaderPickerPopup.kt`)
+
+- **Decision**: Replace the single-select `selectedCategory: String` radio-style pill filter with a multi-select `selectedCategories: MutableSet<String>`, OR-combined across pills, with `All` kept exclusive (selecting it clears other pills; selecting any other pill clears `All`; deselecting the last active pill reverts to `All`).
+  - Added `matchesSelectedCategories()` to replace the four duplicated single-value equality checks (external sources, static visual sources, transitions, ISF filters).
+  - Folded the previously exclusive `CATEGORY_SAVED` branch (which showed *only* saved `.lsdfx` presets, hiding all stock filters) into the main FX filter loop: saved presets are now appended additively whenever the `Saved FX` pill is active, alongside whatever stock tag/favorite pills are also selected.
+- **Rationale**:
+  - `ShaderItem.categories` was already `List<String>` — items can genuinely belong to multiple tags — but the old picker only let users filter by one tag at a time, undercutting the multi-valued data model.
+  - Matches the multi-select filter pattern already used elsewhere in the library UI (e.g. the FX browser's tier checkboxes), instead of a bespoke single-select pill row.
+
 

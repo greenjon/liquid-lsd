@@ -473,7 +473,7 @@ object UITheme {
         fontCode       = addFont(codeBytes!!,    FONT_CODE,    cfg(), withIcons = false)
         fontTooltip    = addFont(regularBytes!!, FONT_TOOLTIP, cfg(), withIcons = true)
 
-        val presetFontSize = (FONT_BODY * (presetNameScalePercent / 100f)).coerceIn(10f, 22f)
+        val presetFontSize = (FONT_TOOLTIP * (presetNameScalePercent / 100f)).coerceIn(10f, 22f)
         fontPresetName = addFont(regularBytes!!, presetFontSize, cfg(), withIcons = true)
 
         val built = atlas.build()

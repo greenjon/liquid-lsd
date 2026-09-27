@@ -256,7 +256,9 @@ object FXBrowserPanel {
             ImGui.setScrollHereY(0.5f)
         }
 
-        selectableRow("$icon ${asset.displayName}##fx_browser_$index", isSelected, itemW)
+        session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
+            selectableRow("$icon ${asset.displayName}##fx_browser_$index", isSelected, itemW)
+        }
         val isRowHovered = ImGui.isItemHovered()
         itemTooltip(
             when (asset.type) {
