@@ -17,7 +17,7 @@ import java.io.File
  *   `[◀]  Chain Name •  [▶]  [Save] [⋮]`   ...   `[BYPASS]`
  *
  * - **◀ / ▶**: steps through .lsdfxchain files in the current chain's folder alphabetically.
- * - **Name**: click opens chain picker popup (with search filter). Drops of .lsdfxchain load here.
+ * - **Name**: click opens that row's Browse content on the whole-chain list (search filter). Drops of .lsdfxchain load here.
  * - **• (dirty dot)**: shows amber when the chain differs from its loaded baseline or has unsaved edits.
  * - **Save**: overwrites source file (or acts as Save As if untitled).
  * - **⋮ menu**: Save As, New, Revert, Clear, Copy / Paste chain, Resync knobs.
@@ -28,10 +28,6 @@ object FxChainHeader {
     private const val ARROW_W = 16f
     private const val MORE_BTN_W = 20f
     private const val SAVE_BTN_W = 42f
-
-    private var cachedChains: List<AssetItem>? = null
-    private var activePopupBankId: String? = null
-    private val searchBuf = imgui.type.ImString(64)
 
     /** Steps [chain] to the previous (-1) or next (+1) chain file in its folder. */
     fun stepChain(session: SessionContext, chain: FxChain, dir: Int) {
@@ -52,6 +48,9 @@ object FxChainHeader {
     /**
      * Draws the chain selection and management controls:
      * `[◀]  Chain Name •  [▶]  [Save] [⋮]`
+     *
+     * [onOpenChainBrowse] opens that row's Browse content on the whole-chain list (clicking the
+     * chain name), replacing what used to be a small popup here.
      */
     fun drawControls(
         session: SessionContext,
@@ -60,12 +59,12 @@ object FxChainHeader {
         bankId: String,
         chainLabel: String,
         ctrlH: Float,
-        maxW: Float = 220f
+        maxW: Float = 220f,
+        onOpenChainBrowse: () -> Unit
     ) {
         val gap = 3f
         val isDirty = chain.isDirty()
         val isFocused = chain.isFocused()
-        val popupId = "##fx_chain_picker_$bankId"
         val menuId = "##fx_chain_more_$bankId"
 
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, gap, 0f)
@@ -138,7 +137,7 @@ object FxChainHeader {
             // 2. Chain name button
             val slotPillsW = 20f * FxChain.SLOT_COUNT + gap * (FxChain.SLOT_COUNT - 1)
             val nameW = (maxW - (ARROW_W * 2f + SAVE_BTN_W + MORE_BTN_W + slotPillsW + gap * 6f)).coerceAtLeast(48f)
-            drawChainNameButton(session, chain, bankId, chainLabel, ctrlH, nameW, isDirty, popupId)
+            drawChainNameButton(session, chain, bankId, ctrlH, nameW, isDirty, onOpenChainBrowse)
 
             ImGui.sameLine()
 
@@ -211,11 +210,10 @@ object FxChainHeader {
         session: SessionContext,
         chain: FxChain,
         bankId: String,
-        chainLabel: String,
         ctrlH: Float,
         nameW: Float,
         isDirty: Boolean,
-        popupId: String
+        onOpenChainBrowse: () -> Unit
     ) {
         val displayName = if (chain.name.isBlank()) "Untitled" else chain.name
         val dirtyMarker = if (isDirty) " •" else ""
@@ -224,11 +222,8 @@ object FxChainHeader {
         if (isDirty) {
             ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.25f, 1f))
         }
-        if (ImGui.button("$fullLabel$popupId", nameW, ctrlH)) {
-            cachedChains = FileSystemManager.scanAllFxChains()
-            activePopupBankId = bankId
-            searchBuf.set("")
-            ImGui.openPopup(popupId)
+        if (ImGui.button("$fullLabel##fx_chain_name_$bankId", nameW, ctrlH)) {
+            onOpenChainBrowse()
         }
         if (isDirty) {
             ImGui.popStyleColor()
@@ -249,39 +244,6 @@ object FxChainHeader {
             }
             ImGui.endDragDropTarget()
         }
-
-        // Chain Browser Popup
-        pushOpenDropdownPadding()
-        if (ImGui.beginPopup(popupId)) {
-            pushOpenDropdownFont()
-            ImGui.textDisabled("$chainLabel FX Chains")
-            ImGui.separator()
-            ImGui.setNextItemWidth(180f)
-            ImGui.inputTextWithHint("##chain_search_$bankId", "Search chains...", searchBuf)
-            val query = searchBuf.get().trim().lowercase()
-
-            val chains = cachedChains ?: FileSystemManager.scanAllFxChains().also { cachedChains = it }
-            val filtered = if (query.isBlank()) chains else chains.filter { it.name.lowercase().contains(query) }
-
-            if (filtered.isEmpty()) {
-                ImGui.textDisabled("No matching chains")
-            } else {
-                for (asset in filtered) {
-                    val isCurrent = chain.sourceFile?.absolutePath == asset.path
-                    if (selectableRow("${asset.name}##item_${asset.path.hashCode()}", isCurrent)) {
-                        val file = File(asset.path)
-                        FxOps.loadChain(session, file, chain)
-                    }
-                }
-            }
-            ImGui.separator()
-            if (ImGui.menuItem("${Icons.TRASH} Clear Chain")) {
-                FxOps.clearChain(chain)
-            }
-            popOpenDropdownFont()
-            ImGui.endPopup()
-        }
-        popOpenDropdownPadding()
     }
 
     private fun drawSaveButton(session: SessionContext, chain: FxChain, bankId: String, ctrlH: Float, isDirty: Boolean) {

@@ -340,14 +340,7 @@ object ParametersTabs {
         ImGui.setNextItemWidth((labelColW - 130f).coerceAtLeast(30f))
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ImGui.button("$transName  ${Icons.CHEVRON_DOWN}##mixer_trans_selector", (labelColW - 130f).coerceAtLeast(30f), 0f)) {
-                ShaderPickerPopup.show("Select Transition Shader", ShaderPickerPopup.PickerType.MIXER_TRANSITION) { newTransId ->
-                    if (newTransId == null) {
-                        mixer.setTransition(null)
-                    } else {
-                        mixer.setTransition(newTransId)
-                    }
-                    onPushUndo()
-                }
+                state.openTransitionBrowse()
             }
         }
         itemTooltip("Select active ISF Transition Shader for Deck A/B crossfader.")
@@ -447,7 +440,8 @@ object ParametersTabs {
             ImGui.indent(PARAM_INDENT)
             drawFxChainContent(
                 session, deck.fxChain, "$deckLabel/FX", "$deckLabel FX", state,
-                labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo
+                labelColW, mixer, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo,
+                deckLabel = deckLabel
             )
             ImGui.unindent(PARAM_INDENT)
         }
@@ -486,10 +480,12 @@ object ParametersTabs {
         getColumnOffset: (String) -> Float,
         getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit,
-        startRow: Int = 0
+        startRow: Int = 0,
+        deckLabel: String? = null
     ): Int {
         var row = startRow
         val rowStartX = ImGui.getCursorPosX()
+        val canonicalModuleId = state.deepEditModuleForTopTab(deckLabel ?: "Mixer") ?: llm.slop.liquidlsd.macro.MacroEngine.MASTER
 
         ImGui.textDisabled(chainDisplayName.uppercase() + if (chain.name.isNotEmpty()) " (${chain.name})" else "")
         ImGui.sameLine(labelColW - 24f)
@@ -586,8 +582,7 @@ object ParametersTabs {
             ImGui.setNextItemWidth((labelColW - 85f).coerceAtLeast(30f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$chainPrefix", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
-                    FxSlotCell.openPicker(session, chain, i, "Select FX Slot $slotNum for $chainDisplayName")
-                    onPushUndo()
+                    state.openFxChainBrowse(canonicalModuleId, deckLabel, i)
                 }
                 fx?.header?.DESCRIPTION?.takeIf { it.isNotBlank() }?.let { itemTooltip(it) }
             }

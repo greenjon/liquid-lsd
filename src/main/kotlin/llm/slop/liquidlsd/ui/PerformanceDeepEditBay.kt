@@ -13,6 +13,8 @@ import llm.slop.liquidlsd.rendering.Mixer
  */
 internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
 
+    private val browseBay = PerformanceBrowseBay(ctx)
+
     /**
      * The open Deep Edit that receives Ctrl+S/C/V and Delete -- the one last clicked, else the first
      * open. Null when no Deep Edit is open, in which case only Ctrl+Z (undo) is handled.
@@ -118,9 +120,54 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
      * on the Mixer panel's MACROS tab ([MacroPanel]), not here -- pressing Learn on a Tier-1 knob
      * jumps there automatically (see [navigateMacroPanelTo]). No title or Collapse button here: the
      * row above already says which deck/section this is, and it has its own Collapse (as does Esc).
+     *
+     * A module that has any Browse target (every [deepEditModuleIds] member does) gets a
+     * Browse <-> Params toggle above its content; clicking a row's generator badge/FX slot/FX
+     * chain name/transition name jumps straight into Browse (see [ParametersState.openBrowse]),
+     * bypassing this toggle, but it's how you get back to Params, or into Browse without one of
+     * those triggers at hand.
      */
     fun drawRackBayModule(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
-        drawRackDeepEdit(session, mixer, parametersState, moduleId)
+        if (moduleId in deepEditModuleIds) {
+            drawModeToggle(session, parametersState, moduleId, ctx.deckLabelForModuleId(moduleId))
+        }
+        when (parametersState.sectionModeFor(moduleId)) {
+            ParametersState.SectionMode.BROWSE -> browseBay.draw(session, mixer, parametersState, moduleId)
+            ParametersState.SectionMode.PARAMS -> drawRackDeepEdit(session, mixer, parametersState, moduleId)
+        }
+    }
+
+    private fun drawModeToggle(session: SessionContext, parametersState: ParametersState, moduleId: String, deckLabel: String?) {
+        val mode = parametersState.sectionModeFor(moduleId)
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            if (mode == ParametersState.SectionMode.BROWSE) {
+                if (ImGui.button("${Icons.SETTINGS} View Params##bay_mode_toggle_$moduleId")) {
+                    parametersState.openParams(moduleId)
+                }
+            } else {
+                if (ImGui.button("${Icons.SEARCH} Browse...##bay_mode_toggle_$moduleId")) {
+                    openBrowseForCurrentContext(parametersState, moduleId, deckLabel)
+                }
+            }
+        }
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+    }
+
+    /** What "Browse..." should show given whatever sub-tab/mode the module is currently in. */
+    private fun openBrowseForCurrentContext(parametersState: ParametersState, moduleId: String, deckLabel: String?) {
+        if (deckLabel != null) {
+            if (parametersState.getActiveSubTab(deckLabel) == "FX") {
+                parametersState.openFxChainBrowse(moduleId, deckLabel, null)
+            } else {
+                parametersState.openGenBrowse(moduleId, deckLabel)
+            }
+        } else if (parametersState.activeMixerSubTab == "TRANS") {
+            parametersState.openTransitionBrowse()
+        } else {
+            parametersState.openFxChainBrowse(moduleId, null, null)
+        }
     }
 
     fun deepEditParamsWidth(session: SessionContext, metrics: GridMetrics): Float {

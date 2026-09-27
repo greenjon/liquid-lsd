@@ -130,10 +130,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             val ty = curY + (ctrlH - textSz.y) * 0.5f
             dl.addText(tx.coerceAtLeast(curX + 4f), ty, genTextCol, genName)
         }
-        if (ImGui.invisibleButton("##perf_gen_badge_$tag", genBadgeW, ctrlH)) {
-            DeckSourcePicker.open(session, parametersState, mixer, deck, deckLabel, ctx.deckPresetController)
-        }
         val canonicalBankId = MacroEngine.deckBankIdFor(deck, mixer) ?: MacroEngine.DECK_A
+        if (ImGui.invisibleButton("##perf_gen_badge_$tag", genBadgeW, ctrlH)) {
+            parametersState.openGenBrowse(canonicalBankId, deckLabel)
+        }
         val isExternalVideo = deck.source is ExternalVideoSource
         val sourceId = GeneratorDefaults.sourceIdFor(deck.source)
         val hasUserDef = GeneratorDefaults.hasUserDefault(sourceId)
@@ -142,7 +142,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         if (ImGui.beginPopupContextItem("##perf_gen_badge_ctx_$tag")) {
             pushOpenDropdownFont()
             if (ImGui.menuItem("Change Source...")) {
-                DeckSourcePicker.open(session, parametersState, mixer, deck, deckLabel, ctx.deckPresetController)
+                parametersState.openGenBrowse(canonicalBankId, deckLabel)
             }
             if (!deck.isEmpty && !isExternalVideo) {
                 ImGui.separator()
@@ -593,7 +593,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         // 2. Dedicated FX chain controls
         val deckChain = deck.fxChain
         val targetBank = ctx.targetBankIdFor(tag)
-        FxChainHeader.drawControls(session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH, maxW = rowW - modeBtnW - gap)
+        val fxCanonicalBankId = MacroEngine.deckBankIdFor(deck, mixer) ?: MacroEngine.DECK_A
+        FxChainHeader.drawControls(session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH, maxW = rowW - modeBtnW - gap) {
+            parametersState.openFxChainBrowse(fxCanonicalBankId, deckLabel, slotIndex = null)
+        }
 
         ImGui.endGroup()
     }

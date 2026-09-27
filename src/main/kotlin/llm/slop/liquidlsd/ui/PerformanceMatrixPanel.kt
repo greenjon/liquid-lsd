@@ -511,7 +511,7 @@ class PerformanceMatrixPanel {
                     PerformanceMasterControls.drawBypassControls(mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                 } else if (isTransRow) {
                     drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "TRANS", UITheme.FontLevel.H2)
-                    PerformanceTransitionsControls.draw(session, mixer, masterTabStartX, ctrlY, ctrlH, masterRowW)
+                    PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, ctrlY, ctrlH, masterRowW)
                 } else if (isClockRow) {
                     drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "CLOCK", UITheme.FontLevel.H2)
                     PerformanceClockControls.draw(session, masterTabStartX, row1Y, row2YFinal, ctrlH)
@@ -643,7 +643,10 @@ class PerformanceMatrixPanel {
                         y = stripY,
                         w = geo.stripW,
                         accent = row.accent,
-                        onEditInDeepEdit = openDeepEdit
+                        onEditInDeepEdit = openDeepEdit,
+                        onOpenBrowse = { slotIndex ->
+                            parametersState.openFxChainBrowse(ctx.canonicalModuleId(row.bankId), ctx.deckLabelForModuleId(row.bankId), slotIndex)
+                        }
                     )
                     is UnderKnob.ParamCell -> FxParamCell.draw(
                         session = session,

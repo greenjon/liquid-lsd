@@ -1,7 +1,6 @@
 package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
-import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiWindowFlags
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiSelectableFlags
@@ -15,14 +14,20 @@ import llm.slop.liquidlsd.rendering.isf.ISFVisualSource
 import llm.slop.liquidlsd.SessionContext
 
 /**
- * High-performance, keyboard-searchable modal popup for selecting Visual Sources and ISF Filters.
+ * High-performance, keyboard-searchable content for selecting Visual Sources, ISF Filters,
+ * saved single-FX files, and Mixer Transitions.
  *
  * Designed to handle 300+ items with zero-allocation per-frame filtering.
  * Supports category pill filtering and instant fuzzy search.
+ *
+ * Drawn inline in the Performance row bay's Browse content (see [PerformanceBrowseBay]), not as a
+ * modal popup -- selecting a row applies it immediately and leaves the list open, so rapidly trying
+ * several generators/effects in a row (Ctrl+Z undoes any of them) doesn't require reopening
+ * anything. [ensureInline]/[ensureInlineFx] (re)configure which items are shown; call them every
+ * frame with a stable `contextKey` -- state (search text, category filters) only resets when that
+ * key changes, so redrawing each frame doesn't clobber what the user typed.
  */
 object ShaderPickerPopup {
-    private const val POPUP_ID = "Shader Picker###shader_picker_popup"
-    
     enum class PickerType { SOURCE, FX_SLOT_1, FX_SLOT_2, FX_SLOT_3, MIXER_TRANSITION }
 
     /** What the user picked for an FX slot: a stock ISF filter, a saved single-FX file, or nothing. */
@@ -38,20 +43,21 @@ object ShaderPickerPopup {
 
     private val isFxPicker: Boolean
         get() = pickerType == PickerType.FX_SLOT_1 || pickerType == PickerType.FX_SLOT_2 || pickerType == PickerType.FX_SLOT_3
-    
-    private var pendingOpen = false
+
+    /** Identifies which Browse target is currently configured, so [ensureInline] knows when to reset. */
+    private var activeContextKey: String? = null
     private var pickerType = PickerType.SOURCE
     private var onSelect: ((String?) -> Unit)? = null
     private var title = "Select Shader"
-    
+
     private val searchBuf = ImString(64)
     /** Active category pill filters, OR-combined. "All" is exclusive with every other entry. */
     private var selectedCategories: MutableSet<String> = mutableSetOf("All")
-    
+
     enum class ViewMode { FOLDERS, FLAT }
     private var viewMode = ViewMode.FOLDERS
 
-    // Internal cache to avoid allocations in draw()
+    // Internal cache to avoid allocations in drawInline()
     private val filteredItems = mutableListOf<ShaderItem>()
     private val folderGroups = mutableMapOf<String, MutableList<ShaderItem>>()
     private val categories = mutableListOf<String>()
@@ -71,16 +77,11 @@ object ShaderPickerPopup {
         val categoriesLabel: String = (if (folderPath.isNotBlank() && !categories.contains(folderPath)) listOf(folderPath) + categories else categories).joinToString(", ")
     }
 
-    /**
-     * Request the picker to open.
-     */
-    fun show(title: String, type: PickerType, callback: (String?) -> Unit) {
-        this.title = title
-        this.pickerType = type
-        this.onSelect = callback
-        this.pendingOpen = true
-        this.searchBuf.set("")
-        this.selectedCategories = mutableSetOf(
+    /** Resets search/category/results state for a freshly-selected [type]. */
+    private fun resetForType(type: PickerType) {
+        pickerType = type
+        searchBuf.set("")
+        selectedCategories = mutableSetOf(
             when (type) {
                 PickerType.FX_SLOT_1 -> "Color Adjustment"
                 PickerType.FX_SLOT_2 -> "Distortion"
@@ -93,16 +94,31 @@ object ShaderPickerPopup {
     }
 
     /**
-     * Opens the picker for FX slot [slotIndex] (0-based). Opens on the user's favorites when there
-     * are any; the extra "Saved FX" category lists saved single-FX files (.lsdfx).
+     * Configures the picker to show [type]'s items with [title]/[callback], for [drawInline] to
+     * render this frame. Cheap to call every frame: search text and category filters only reset
+     * when [contextKey] differs from the last call (a new Browse target), not on every redraw.
      */
-    fun showFx(title: String, slotIndex: Int, callback: (FxPick) -> Unit) {
+    fun ensureInline(contextKey: String, title: String, type: PickerType, callback: (String?) -> Unit) {
+        this.title = title
+        this.onSelect = callback
+        if (activeContextKey == contextKey) return
+        activeContextKey = contextKey
+        resetForType(type)
+    }
+
+    /**
+     * [ensureInline] for an FX slot: [slotIndex] (0-based) picks the FX_SLOT_N category defaults,
+     * and opens on the user's favorites when there are any (the extra "Saved FX" category lists
+     * saved single-FX files, .lsdfx).
+     */
+    fun ensureInlineFx(contextKey: String, title: String, slotIndex: Int, callback: (FxPick) -> Unit) {
         val type = when (slotIndex) {
             0 -> PickerType.FX_SLOT_1
             1 -> PickerType.FX_SLOT_2
             else -> PickerType.FX_SLOT_3
         }
-        show(title, type) { id ->
+        this.title = title
+        this.onSelect = { id ->
             callback(
                 when {
                     id == null -> FxPick.None
@@ -111,6 +127,9 @@ object ShaderPickerPopup {
                 }
             )
         }
+        if (activeContextKey == contextKey) return
+        activeContextKey = contextKey
+        resetForType(type)
         if (llm.slop.liquidlsd.presets.FxShortlist.favorites().isNotEmpty()) {
             selectedCategories = mutableSetOf(CATEGORY_FAVORITES)
             updateItems()
@@ -346,19 +365,16 @@ object ShaderPickerPopup {
         if (item.isExternal) {
             ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.85f, 0.45f, 1.0f)
         }
+        // Applies immediately and leaves the list open -- there's no popup to close, and trying
+        // several picks in a row (each undoable with Ctrl+Z) is the point.
         if (selectableRow(itemLabel, false, flags = ImGuiSelectableFlags.AllowDoubleClick)) {
             onSelect?.invoke(item.id)
-            ImGui.closeCurrentPopup()
         }
         if (item.isExternal) {
             ImGui.popStyleColor(1)
         }
         if (item.description.isNotBlank()) {
             itemTooltip(item.description)
-        }
-        if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0)) {
-             onSelect?.invoke(item.id)
-             ImGui.closeCurrentPopup()
         }
 
         // Col 1: Categories (pre-joined at updateItems() time, zero allocation here).
@@ -387,151 +403,123 @@ object ShaderPickerPopup {
         }
     }
 
-    fun draw(session: SessionContext) {
-        if (pendingOpen) {
-            ImGui.openPopup(POPUP_ID)
-            pendingOpen = false
-            updateItems()
+    /**
+     * Draws the currently-configured picker (see [ensureInline]/[ensureInlineFx]) inline into
+     * whatever region the caller has open -- no popup, no title bar, no Cancel. Leaving Browse
+     * (or switching to a different target) is the caller's job, not this widget's.
+     */
+    fun drawInline(session: SessionContext) {
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            ImGui.textDisabled("${Icons.SEARCH} $title")
         }
 
-        ImGui.setNextWindowSize(720f, 620f, ImGuiCond.Appearing)
-        val flags = ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.NoTitleBar
+        // ── Search Bar & View Mode Toggle ──
+        ImGui.setNextItemWidth((ImGui.getContentRegionAvailX() - 300f).coerceAtLeast(120f))
+        if (ImGui.inputTextWithHint("##search", "Search by name, ID or folder...", searchBuf)) {
+            updateItems()
+        }
+        ImGui.sameLine()
+        val viewBtnLabel = if (viewMode == ViewMode.FOLDERS) "${Icons.FOLDER} Folders" else "${Icons.LAYOUT_FULL} Flat"
+        if (ImGui.button(viewBtnLabel, 90f, 0f)) {
+            viewMode = if (viewMode == ViewMode.FOLDERS) ViewMode.FLAT else ViewMode.FOLDERS
+        }
+        itemTooltip(if (viewMode == ViewMode.FOLDERS) "Switch to flat list view" else "Switch to folder hierarchy view")
 
-        if (ImGui.beginPopupModal(POPUP_ID, flags)) {
-            pushOpenDropdownStyleVars()
-            pushOpenDropdownFont()
-            session.uiTheme.withFont(UITheme.FontLevel.H3) {
-                ImGui.text("${Icons.SEARCH} $title")
-            }
-            ImGui.sameLine(ImGui.getWindowWidth() - 120f)
-            if (ImGui.button("${Icons.X} Cancel", 100f, 0f)) {
-                ImGui.closeCurrentPopup()
-            }
-            
-            ImGui.spacing()
-            ImGui.separator()
-            ImGui.spacing()
+        ImGui.sameLine()
+        if (ImGui.button("${Icons.TRASH} Detach / None", 170f, 0f)) {
+            onSelect?.invoke(null)
+        }
+        itemTooltip("Detach the current shader from this slot.")
 
-            // ── Search Bar & View Mode Toggle ──
-            ImGui.setNextItemWidth(ImGui.getWindowWidth() - 320f)
-            if (ImGui.inputTextWithHint("##search", "Search by name, ID or folder...", searchBuf)) {
+        ImGui.spacing()
+
+        // ── Category Pills Row (multi-select, OR-combined; "All" is exclusive) ──
+        ImGui.beginChild("##categories_pills", 0f, 48f, false, ImGuiWindowFlags.HorizontalScrollbar)
+        for (i in 0 until categories.size) {
+            val cat = categories[i]
+            val isSelected = selectedCategories.contains(cat)
+            if (isSelected) {
+                ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.5f, 0.8f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.55f, 0.85f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.15f, 0.45f, 0.75f, 1.0f)
+            }
+
+            if (ImGui.button(cat)) {
+                if (cat == "All") {
+                    selectedCategories.clear()
+                    selectedCategories.add("All")
+                } else {
+                    selectedCategories.remove("All")
+                    if (isSelected) {
+                        selectedCategories.remove(cat)
+                        if (selectedCategories.isEmpty()) selectedCategories.add("All")
+                    } else {
+                        selectedCategories.add(cat)
+                    }
+                }
                 updateItems()
             }
-            ImGui.sameLine()
-            val viewBtnLabel = if (viewMode == ViewMode.FOLDERS) "${Icons.FOLDER} Folders" else "${Icons.LAYOUT_FULL} Flat"
-            if (ImGui.button(viewBtnLabel, 90f, 0f)) {
-                viewMode = if (viewMode == ViewMode.FOLDERS) ViewMode.FLAT else ViewMode.FOLDERS
+
+            if (isSelected) {
+                ImGui.popStyleColor(3)
             }
-            itemTooltip(if (viewMode == ViewMode.FOLDERS) "Switch to flat list view" else "Switch to folder hierarchy view")
-
             ImGui.sameLine()
-            if (ImGui.button("${Icons.TRASH} Detach / None", 170f, 0f)) {
-                onSelect?.invoke(null)
-                ImGui.closeCurrentPopup()
-            }
-            itemTooltip("Detach the current shader from this slot.")
+        }
+        ImGui.endChild()
 
-            ImGui.spacing()
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
 
-            // ── Category Pills Row (multi-select, OR-combined; "All" is exclusive) ──
-            ImGui.beginChild("##categories_pills", 0f, 48f, false, ImGuiWindowFlags.HorizontalScrollbar)
-            for (i in 0 until categories.size) {
-                val cat = categories[i]
-                val isSelected = selectedCategories.contains(cat)
-                if (isSelected) {
-                    ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.5f, 0.8f, 1.0f)
-                    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.55f, 0.85f, 1.0f)
-                    ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.15f, 0.45f, 0.75f, 1.0f)
+        val tableFlags = ImGuiTableFlags.ScrollY         or
+                         ImGuiTableFlags.BordersInnerV   or
+                         ImGuiTableFlags.RowBg          or
+                         ImGuiTableFlags.Resizable
+
+        if (viewMode == ViewMode.FLAT) {
+            // ── Flat List View ──
+            if (ImGui.beginTable("##shader_results", resultColumnCount(), tableFlags)) {
+                setupResultColumns()
+                drawDimmedHeadersRow(session)
+
+                for (i in 0 until filteredItems.size) {
+                    renderTableRow(filteredItems[i], session)
                 }
+                ImGui.endTable()
+            }
+        } else {
+            // ── Collapsible Folder Tree View ──
+            val isSearching = searchBuf.get().isNotBlank()
+            val treeNodeFlags = if (isSearching) imgui.flag.ImGuiTreeNodeFlags.DefaultOpen else 0
+            val availY = ImGui.getContentRegionAvailY().coerceAtLeast(100f)
 
-                if (ImGui.button(cat)) {
-                    if (cat == "All") {
-                        selectedCategories.clear()
-                        selectedCategories.add("All")
-                    } else {
-                        selectedCategories.remove("All")
-                        if (isSelected) {
-                            selectedCategories.remove(cat)
-                            if (selectedCategories.isEmpty()) selectedCategories.add("All")
-                        } else {
-                            selectedCategories.add(cat)
+            if (ImGui.beginChild("##shader_folders_child", 0f, availY, false)) {
+                // 1. Folders with subpaths
+                for ((folder, items) in folderGroups) {
+                    if (folder.isBlank()) continue
+                    val headerLabel = "${Icons.FOLDER}  $folder (${items.size})###tree_$folder"
+                    if (ImGui.treeNodeEx(headerLabel, treeNodeFlags)) {
+                        if (ImGui.beginTable("##tbl_$folder", resultColumnCount(), ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
+                            setupResultColumns()
+                            drawDimmedHeadersRow(session)
+
+                            for (i in 0 until items.size) {
+                                renderTableRow(items[i], session)
+                            }
+                            ImGui.endTable()
                         }
+                        ImGui.treePop()
                     }
-                    updateItems()
                 }
 
-                if (isSelected) {
-                    ImGui.popStyleColor(3)
-                }
-                ImGui.sameLine()
-            }
-            ImGui.endChild()
-
-            ImGui.spacing()
-            ImGui.separator()
-            ImGui.spacing()
-
-            val tableFlags = ImGuiTableFlags.ScrollY         or 
-                             ImGuiTableFlags.BordersInnerV   or 
-                             ImGuiTableFlags.RowBg          or 
-                             ImGuiTableFlags.Resizable
-
-            if (viewMode == ViewMode.FLAT) {
-                // ── Flat List View ──
-                if (ImGui.beginTable("##shader_results", resultColumnCount(), tableFlags)) {
-                    setupResultColumns()
-                    drawDimmedHeadersRow(session)
-
-                    for (i in 0 until filteredItems.size) {
-                        renderTableRow(filteredItems[i], session)
-                    }
-                    ImGui.endTable()
-                }
-            } else {
-                // ── Collapsible Folder Tree View ──
-                val isSearching = searchBuf.get().isNotBlank()
-                val treeNodeFlags = if (isSearching) imgui.flag.ImGuiTreeNodeFlags.DefaultOpen else 0
-                val availY = ImGui.getContentRegionAvailY().coerceAtLeast(100f)
-
-                if (ImGui.beginChild("##shader_folders_child", 0f, availY, false)) {
-                    // 1. Folders with subpaths
-                    for ((folder, items) in folderGroups) {
-                        if (folder.isBlank()) continue
-                        val headerLabel = "${Icons.FOLDER}  $folder (${items.size})###tree_$folder"
+                // 2. Root items (without a folder or top-level)
+                val rootItems = folderGroups[""] ?: emptyList()
+                if (rootItems.isNotEmpty()) {
+                    val hasOtherFolders = folderGroups.keys.any { it.isNotBlank() }
+                    if (hasOtherFolders) {
+                        val headerLabel = "${Icons.FILE}  General / Root (${rootItems.size})###tree_root"
                         if (ImGui.treeNodeEx(headerLabel, treeNodeFlags)) {
-                            if (ImGui.beginTable("##tbl_$folder", resultColumnCount(), ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
-                                setupResultColumns()
-                                drawDimmedHeadersRow(session)
-
-                                for (i in 0 until items.size) {
-                                    renderTableRow(items[i], session)
-                                }
-                                ImGui.endTable()
-                            }
-                            ImGui.treePop()
-                        }
-                    }
-
-                    // 2. Root items (without a folder or top-level)
-                    val rootItems = folderGroups[""] ?: emptyList()
-                    if (rootItems.isNotEmpty()) {
-                        val hasOtherFolders = folderGroups.keys.any { it.isNotBlank() }
-                        if (hasOtherFolders) {
-                            val headerLabel = "${Icons.FILE}  General / Root (${rootItems.size})###tree_root"
-                            if (ImGui.treeNodeEx(headerLabel, treeNodeFlags)) {
-                                if (ImGui.beginTable("##tbl_root", resultColumnCount(), ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
-                                    setupResultColumns()
-                                    drawDimmedHeadersRow(session)
-
-                                    for (i in 0 until rootItems.size) {
-                                        renderTableRow(rootItems[i], session)
-                                    }
-                                    ImGui.endTable()
-                                }
-                                ImGui.treePop()
-                            }
-                        } else {
-                            if (ImGui.beginTable("##tbl_root_direct", resultColumnCount(), tableFlags)) {
+                            if (ImGui.beginTable("##tbl_root", resultColumnCount(), ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
                                 setupResultColumns()
                                 drawDimmedHeadersRow(session)
 
@@ -540,15 +528,22 @@ object ShaderPickerPopup {
                                 }
                                 ImGui.endTable()
                             }
+                            ImGui.treePop()
+                        }
+                    } else {
+                        if (ImGui.beginTable("##tbl_root_direct", resultColumnCount(), tableFlags)) {
+                            setupResultColumns()
+                            drawDimmedHeadersRow(session)
+
+                            for (i in 0 until rootItems.size) {
+                                renderTableRow(rootItems[i], session)
+                            }
+                            ImGui.endTable()
                         }
                     }
                 }
-                ImGui.endChild()
             }
-
-            popOpenDropdownFont()
-            popOpenDropdownPadding()
-            ImGui.endPopup()
+            ImGui.endChild()
         }
     }
 }

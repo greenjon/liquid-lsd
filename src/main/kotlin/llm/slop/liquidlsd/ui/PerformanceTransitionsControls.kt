@@ -18,6 +18,7 @@ internal object PerformanceTransitionsControls {
     fun draw(
         session: SessionContext,
         mixer: Mixer,
+        parametersState: ParametersState,
         startX: Float,
         headerY: Float,
         headerH: Float,
@@ -49,9 +50,7 @@ internal object PerformanceTransitionsControls {
         val modBadge = if (isTransModified) " *" else ""
 
         if (ImGui.button("${Icons.SETTINGS} $transName$modBadge##perf_trans_picker_btn", transBtnW, headerH)) {
-            ShaderPickerPopup.show("Select Mixer Transition", ShaderPickerPopup.PickerType.MIXER_TRANSITION) { id ->
-                mixer.setTransition(id)
-            }
+            parametersState.openTransitionBrowse()
         }
         itemTooltip("Select ISF transition shader or blend mode.\nActive: $transName$modBadge")
 

@@ -297,7 +297,6 @@ class UIManager(
             SavePresetModal.draw(session)
             UpdatePromptModal.draw(session)
             AboutModal.draw(session)
-            ShaderPickerPopup.draw(session)
 
             missingItemsPanel.draw(session)
 

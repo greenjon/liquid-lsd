@@ -21,7 +21,7 @@ import java.io.File
  *
  * - **◀ / ▶** (shown only while hovered), the mouse wheel over the name, or the right-click
  *   menu step through the [FxShortlist].
- * - **Name** click opens the shader picker (stock filters, ★ favorites, saved single FX).
+ * - **Name** click opens that row's Browse content on this slot (stock filters, ★ favorites, saved single FX).
  * - **Drag** a cell onto another cell to swap them (reorder within a chain, or trade between
  *   chains); hold Ctrl while dropping to copy instead. Library items drop onto a cell too:
  *   stock filters and saved `.lsdfx` replace the slot, a `.lsdfxchain` replaces the chain.
@@ -59,21 +59,11 @@ object FxSlotCell {
     /** Cell whose name is being dragged, so dropping it back on itself doesn't open the picker. */
     private var draggedId: String? = null
 
-    /** Opens the FX shader picker for slot [slotIndex] of [chain], applying whatever is picked. */
-    fun openPicker(session: SessionContext, chain: FxChain, slotIndex: Int, title: String) {
-        ShaderPickerPopup.showFx(title, slotIndex) { pick ->
-            when (pick) {
-                is ShaderPickerPopup.FxPick.Stock -> FxOps.setSlotFilter(chain, slotIndex, pick.filterId)
-                is ShaderPickerPopup.FxPick.Saved -> FxOps.loadSlot(session, pick.file, chain, slotIndex)
-                ShaderPickerPopup.FxPick.None -> FxOps.clearSlot(chain, slotIndex)
-            }
-        }
-    }
-
     /**
      * Draws the cell for slot [slotIndex] of the chain behind FX bank [bankId] at ([x], [y]),
      * [w] wide. [chainLabel] is the chain's display name ("Deck A", "Master") for titles/tooltips;
-     * [onEditInDeepEdit] opens that row's Deep Edit.
+     * [onEditInDeepEdit] opens that row's Deep Edit; [onOpenBrowse] opens that row's Browse content
+     * focused on this slot (replaces what used to be a modal shader picker).
      */
     fun draw(
         session: SessionContext,
@@ -85,7 +75,8 @@ object FxSlotCell {
         y: Float,
         w: Float,
         accent: FloatArray,
-        onEditInDeepEdit: () -> Unit
+        onEditInDeepEdit: () -> Unit,
+        onOpenBrowse: (Int) -> Unit
     ) {
         val chain = FxMacroSync.chainFor(bankId, mixer) ?: return
         val fx = chain.slots[slotIndex]
@@ -112,9 +103,9 @@ object FxSlotCell {
         ImGui.setCursorScreenPos(nameX, y)
         val released = ImGui.invisibleButton("##name_$idBase", nameW, h)
         val nameHovered = ImGui.isItemHovered()
-        // The picker is a modal, so opening it on press would swallow the second click of a
-        // double-click and cancel any drag. Instead it opens on a drag-free release, deferred
-        // until the double-click window has passed.
+        // Opening Browse on press would cancel any drag and swallow the second click of a
+        // double-click (which instead toggles Focus Mode), so it opens on a drag-free release,
+        // deferred until the double-click window has passed.
         if (nameHovered && ImGui.isMouseDoubleClicked(ImGuiMouseButton.Left)) {
             pendingPickId = null
             suppressReleaseId = idBase
@@ -132,7 +123,7 @@ object FxSlotCell {
         }
         if (pendingPickId == idBase && ImGui.getTime() - pendingPickTime > ImGui.getIO().mouseDoubleClickTime) {
             pendingPickId = null
-            openPicker(session, chain, slotIndex, "Select FX Slot $slotNum for $chainLabel FX")
+            onOpenBrowse(slotIndex)
         }
         if (ImGui.isItemClicked(ImGuiMouseButton.Right)) {
             ImGui.openPopup("##menu_$idBase")
@@ -177,7 +168,7 @@ object FxSlotCell {
             itemTooltip("Next effect in the FX shortlist (★ favorites, or this effect's category).")
         }
 
-        drawContextMenu(session, mixer, bankId, chain, chainLabel, slotIndex, "##menu_$idBase", onEditInDeepEdit)
+        drawContextMenu(session, mixer, bankId, chain, chainLabel, slotIndex, "##menu_$idBase", onEditInDeepEdit, onOpenBrowse)
     }
 
     /**
@@ -309,7 +300,8 @@ object FxSlotCell {
         chainLabel: String,
         slotIndex: Int,
         popupId: String,
-        onEditInDeepEdit: () -> Unit
+        onEditInDeepEdit: () -> Unit,
+        onOpenBrowse: (Int) -> Unit
     ) {
         pushOpenDropdownPadding()
         if (!ImGui.beginPopup(popupId)) {
@@ -329,7 +321,7 @@ object FxSlotCell {
         if (ImGui.menuItem("Previous in Shortlist")) FxOps.stepSlot(chain, slotIndex, -1)
         if (ImGui.menuItem("Next in Shortlist")) FxOps.stepSlot(chain, slotIndex, 1)
         if (ImGui.menuItem("Replace…")) {
-            openPicker(session, chain, slotIndex, "Select FX Slot $slotNum for $chainLabel FX")
+            onOpenBrowse(slotIndex)
         }
         if (ImGui.menuItem("Save as FX Preset…", "", false, fx != null)) {
             chain.toFxSlotDto(slotIndex)?.let { slotDto ->

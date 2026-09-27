@@ -346,9 +346,7 @@ class MixerPanel(
         val modBadge = if (isTransModified) " *" else ""
 
         if (ImGui.button("${Icons.SETTINGS} $transName$modBadge##trans_picker_btn", transBtnW, badgeH)) {
-            ShaderPickerPopup.show("Select Mixer Transition", ShaderPickerPopup.PickerType.MIXER_TRANSITION) { id ->
-                mixer.setTransition(id)
-            }
+            parametersState.openTransitionBrowse()
         }
         itemTooltip("Select ISF transition shader (wipes, glitches, dissolves) or default non-ISF blend modes.")
 

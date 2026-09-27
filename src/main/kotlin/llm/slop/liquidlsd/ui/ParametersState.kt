@@ -155,6 +155,62 @@ class ParametersState {
     /** True if any rack module is currently above Tier 1 (used by the Esc priority stack). */
     fun anyRackModuleExpanded(): Boolean = rackModuleDisclosure.values.any { it != DisclosureLevel.COLLAPSED }
 
+    // -- Browse content (replaces the old modal ShaderPickerPopup) -----------------------------
+
+    /** Whether an open rack module's bay shows its Params (Deep Edit) or Browse content. */
+    enum class SectionMode { PARAMS, BROWSE }
+
+    /** What a module's Browse content is showing. [FxChain.slotIndex] null means the whole-chain list. */
+    sealed class BrowseTarget {
+        object Gen : BrowseTarget()
+        data class FxChain(val slotIndex: Int? = null) : BrowseTarget()
+        object Transition : BrowseTarget()
+    }
+
+    /** Per rack-module Browse/Params choice. Absent = PARAMS (Deep Edit's original default). */
+    val rackSectionMode = mutableMapOf<String, SectionMode>()
+
+    /** Per rack-module Browse target, remembered across a Browse<->Params toggle. */
+    val rackBrowseTarget = mutableMapOf<String, BrowseTarget>()
+
+    fun sectionModeFor(moduleId: String): SectionMode = rackSectionMode[moduleId] ?: SectionMode.PARAMS
+
+    fun browseTargetFor(moduleId: String): BrowseTarget = rackBrowseTarget[moduleId] ?: BrowseTarget.Gen
+
+    /** Opens [moduleId]'s Deep Edit (solo, same as [setDisclosure]) showing Browse content for [target]. */
+    fun openBrowse(moduleId: String, target: BrowseTarget) {
+        setDisclosure(moduleId, DisclosureLevel.DEEP_EDIT)
+        rackSectionMode[moduleId] = SectionMode.BROWSE
+        rackBrowseTarget[moduleId] = target
+    }
+
+    /** Flips an already-open module back to its Params (Deep Edit) content. */
+    fun openParams(moduleId: String) {
+        setDisclosure(moduleId, DisclosureLevel.DEEP_EDIT)
+        rackSectionMode[moduleId] = SectionMode.PARAMS
+    }
+
+    /** Opens [deckLabel]'s generator Browse -- the deck row's generator badge, or its empty-deck launchpad. */
+    fun openGenBrowse(canonicalModuleId: String, deckLabel: String) {
+        setDeckSubTab(deckLabel, "SRC")
+        openBrowse(canonicalModuleId, BrowseTarget.Gen)
+    }
+
+    /**
+     * Opens an FX chain's Browse -- [deckLabel] null means the Master FX chain. [slotIndex] null
+     * opens the whole-chain (load a saved `.lsdfxchain`) view; otherwise that slot's effect picker.
+     */
+    fun openFxChainBrowse(canonicalModuleId: String, deckLabel: String?, slotIndex: Int?) {
+        if (deckLabel != null) setDeckSubTab(deckLabel, "FX") else activeMixerSubTab = "FX"
+        openBrowse(canonicalModuleId, BrowseTarget.FxChain(slotIndex))
+    }
+
+    /** Opens the Master row's active-transition Browse. */
+    fun openTransitionBrowse() {
+        activeMixerSubTab = "TRANS"
+        openBrowse(MacroEngine.MASTER, BrowseTarget.Transition)
+    }
+
     /** History stack for undo support. */
     private val undoStack = mutableListOf<ParametersUndoSnapshot>()
     private val maxUndoDepth = 30

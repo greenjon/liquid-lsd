@@ -13,26 +13,29 @@ import java.io.File
  */
 object DeckSourcePicker {
 
-    /** Opens the shared shader picker (including external video servers) for [deck]. */
-    fun open(
+    /**
+     * Resolves a picked source id (a stock [VisualSourceRegistry] id, or an `ext_video:<server>`
+     * external-video id) from the Browse Gen tab and applies it to [deck], or does nothing for a
+     * null/unresolvable id (e.g. the "no streams active" placeholder, or Detach/None).
+     */
+    fun applyPickedSourceId(
         session: llm.slop.liquidlsd.SessionContext,
         state: ParametersState,
         mixer: Mixer,
         deck: Deck,
         deckLabel: String,
+        sourceId: String?,
         deckPresetController: DeckPresetController?
     ) {
-        ShaderPickerPopup.show("Select Source for $deckLabel", ShaderPickerPopup.PickerType.SOURCE) { newSourceId ->
-            if (newSourceId == null) return@show
-            val newSource = if (newSourceId.startsWith("ext_video:")) {
-                val serverName = newSourceId.removePrefix("ext_video:")
-                llm.slop.liquidlsd.rendering.ExternalVideoSource(serverName = serverName)
-            } else {
-                VisualSourceRegistry.availableSources.find { it.id == newSourceId }
-            }
-            if (newSource != null) {
-                changeSource(session, state, mixer, deck, deckLabel, newSource, deckPresetController)
-            }
+        if (sourceId == null) return
+        val newSource = if (sourceId.startsWith("ext_video:")) {
+            val serverName = sourceId.removePrefix("ext_video:")
+            llm.slop.liquidlsd.rendering.ExternalVideoSource(serverName = serverName)
+        } else {
+            VisualSourceRegistry.availableSources.find { it.id == sourceId }
+        }
+        if (newSource != null) {
+            changeSource(session, state, mixer, deck, deckLabel, newSource, deckPresetController)
         }
     }
 
@@ -130,7 +133,8 @@ object DeckSourcePicker {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.38f, 0.44f, 0.58f, 1f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 if (ImGui.button("${Icons.PLUS}  Add Source##launchpad_add_$deckLabel", buttonWidth, buttonHeight)) {
-                    open(session, state, mixer, deck, deckLabel, deckPresetController)
+                    val canonicalBankId = llm.slop.liquidlsd.macro.MacroEngine.deckBankIdFor(deck, mixer) ?: llm.slop.liquidlsd.macro.MacroEngine.DECK_A
+                    state.openGenBrowse(canonicalBankId, deckLabel)
                 }
             }
             itemTooltip("Select a visual generator source (Mandala, Gyroid, Dynamic Spiral, external video, etc.)")

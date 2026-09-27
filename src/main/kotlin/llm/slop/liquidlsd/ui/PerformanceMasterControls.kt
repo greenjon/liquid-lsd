@@ -65,7 +65,9 @@ internal object PerformanceMasterControls {
         itemTooltip("Assign the Master row's knobs to the Master FX chain (Super Knob + 3 Metaknobs). FX chain controls stay available either way.")
 
         ImGui.sameLine(0f, gap)
-        FxChainHeader.drawControls(session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH, maxW = rowW - modeBtnW - gap)
+        FxChainHeader.drawControls(session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH, maxW = rowW - modeBtnW - gap) {
+            parametersState.openFxChainBrowse(MacroEngine.MASTER, deckLabel = null, slotIndex = null)
+        }
         ImGui.endGroup()
     }
 
