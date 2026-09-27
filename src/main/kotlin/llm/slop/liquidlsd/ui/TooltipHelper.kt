@@ -34,7 +34,7 @@ object TooltipHelper {
     const val PADDING = 8f
     /** Inner padding between tooltip text/content and the window border. */
     const val TOOLTIP_WINDOW_PADDING_X = 8f
-    const val TOOLTIP_WINDOW_PADDING_Y = 6f
+    const val TOOLTIP_WINDOW_PADDING_Y = 12f
     const val DEFAULT_HOVER_DELAY_MS = 250L
 
     /**
@@ -235,8 +235,12 @@ object TooltipHelper {
 
 // ── Published helpers for public inline functions ───────────────────────────
 
+/** Tracks whether [pushTooltipStyles] pushed [UITheme.FontLevel.TOOLTIP], for balanced popping. */
+private var tooltipFontPushed = false
+
 /**
  * Pushes mandatory style overrides for every tooltip:
+ * - Font = UITheme's TOOLTIP level (one size bigger than body text)
  * - Alpha = 1.0f (full opacity, immune to parent widget alpha)
  * - WindowPadding = (8, 6) px (consistent inner padding)
  * - Text colour = TooltipHelper.baseTextColor (immune to widget Text colour pushes)
@@ -246,17 +250,23 @@ object TooltipHelper {
  */
 @PublishedApi
 internal fun pushTooltipStyles() {
+    val font = UITheme.fontFor(UITheme.FontLevel.TOOLTIP)
+    tooltipFontPushed = font != null && font.ptr != 0L
+    // Dear ImGui's PushFont(font, size) treats size=0 as "no override", not "this font's
+    // own baked size" -- an explicit size is required or the push is a no-op for rendering.
+    if (tooltipFontPushed) ImGui.pushFont(font, UITheme.FONT_TOOLTIP)
     ImGui.pushStyleVar(ImGuiStyleVar.Alpha, 1.0f)
     ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, TooltipHelper.TOOLTIP_WINDOW_PADDING_X, TooltipHelper.TOOLTIP_WINDOW_PADDING_Y)
     ImGui.pushStyleColor(ImGuiCol.Text,   TooltipHelper.baseTextColor)
     ImGui.pushStyleColor(ImGuiCol.Border, TooltipHelper.baseBorderColor)
 }
 
-/** Pops the two style vars and two colours pushed by [pushTooltipStyles]. */
+/** Pops the two style vars, two colours, and (if pushed) the font from [pushTooltipStyles]. */
 @PublishedApi
 internal fun popTooltipStyles() {
     ImGui.popStyleColor(2)
     ImGui.popStyleVar(2)
+    if (tooltipFontPushed) ImGui.popFont()
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
@@ -274,13 +284,13 @@ fun itemTooltip(text: String, delayMs: Long = TooltipHelper.DEFAULT_HOVER_DELAY_
 
     if (!TooltipHelper.shouldShowTooltip(key, delayMs, ImGui.getFrameCount(), System.currentTimeMillis())) return
 
+    pushTooltipStyles()
     val padX = TooltipHelper.TOOLTIP_WINDOW_PADDING_X
     val padY = TooltipHelper.TOOLTIP_WINDOW_PADDING_Y
     val textSize = ImGui.calcTextSize(text)
     val width = textSize.x + padX * 2f
     val height = textSize.y + padY * 2f
 
-    pushTooltipStyles()
     TooltipHelper.prepareTooltipPos(width, height)
     ImGui.setNextWindowBgAlpha(1.0f)
     ImGui.beginTooltip()
@@ -332,13 +342,13 @@ fun showTooltip(text: String, key: Int = text.hashCode(), delayMs: Long = Toolti
     if (!UITheme.tooltipsEnabled) return
     if (!TooltipHelper.shouldShowTooltip(key, delayMs, ImGui.getFrameCount(), System.currentTimeMillis())) return
 
+    pushTooltipStyles()
     val padX = TooltipHelper.TOOLTIP_WINDOW_PADDING_X
     val padY = TooltipHelper.TOOLTIP_WINDOW_PADDING_Y
     val textSize = ImGui.calcTextSize(text)
     val width = textSize.x + padX * 2f
     val height = textSize.y + padY * 2f
 
-    pushTooltipStyles()
     TooltipHelper.prepareTooltipPos(width, height)
     ImGui.setNextWindowBgAlpha(1.0f)
     ImGui.beginTooltip()

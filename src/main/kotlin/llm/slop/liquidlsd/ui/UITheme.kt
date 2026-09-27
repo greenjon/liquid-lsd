@@ -32,7 +32,7 @@ object UITheme {
 
     // -- Semantic Levels -------------------------------------------------------
 
-    enum class FontLevel { H1, H2, H3, BODY, CAPTION, CODE, PRESET_NAME }
+    enum class FontLevel { H1, H2, H3, BODY, CAPTION, CODE, PRESET_NAME, TOOLTIP }
 
     enum class AutoVjDirtyBehavior { SKIP, AUTO_DISCARD, AUTO_SAVE }
 
@@ -74,6 +74,8 @@ object UITheme {
     const val FONT_H3      = 15f
     const val FONT_H2      = 18f
     const val FONT_H1      = 22f
+    /** Clearly bigger than [FONT_BODY] so tooltip text stands out from the body copy behind it. */
+    const val FONT_TOOLTIP = FONT_BODY + 4f
     const val FX_SWAP_FADE_MAX_MS = 1000
 
     const val BASE_FONT_PX = 14f
@@ -333,6 +335,7 @@ object UITheme {
     private lateinit var fontCaption:    ImFont
     private lateinit var fontCode:       ImFont
     private lateinit var fontPresetName: ImFont
+    private lateinit var fontTooltip:    ImFont
 
     // Keep raw bytes of loaded fonts and ranges permanently alive to prevent GC/JNI unpinning segfaults
     private var regularBytes: ByteArray? = null
@@ -464,6 +467,7 @@ object UITheme {
         fontH2         = addFont(boldBytes!!,    FONT_H2,      cfg(), withIcons = true)
         fontH1         = addFont(boldBytes!!,    FONT_H1,      cfg(), withIcons = true)
         fontCode       = addFont(codeBytes!!,    FONT_CODE,    cfg(), withIcons = false)
+        fontTooltip    = addFont(regularBytes!!, FONT_TOOLTIP, cfg(), withIcons = true)
 
         val presetFontSize = (FONT_BODY * (presetNameScalePercent / 100f)).coerceIn(10f, 22f)
         fontPresetName = addFont(regularBytes!!, presetFontSize, cfg(), withIcons = true)
@@ -475,7 +479,7 @@ object UITheme {
 
         isLoaded = true
         logger.info {
-            "UITheme fonts loaded -- H1=${FONT_H1}px  H2=${FONT_H2}px  H3=${FONT_H3}px  Body=${FONT_BODY}px  Caption=${FONT_CAPTION}px  Code=${FONT_CODE}px  PresetName=${presetFontSize}px ($presetNameScalePercent%)"
+            "UITheme fonts loaded -- H1=${FONT_H1}px  H2=${FONT_H2}px  H3=${FONT_H3}px  Body=${FONT_BODY}px  Caption=${FONT_CAPTION}px  Code=${FONT_CODE}px  Tooltip=${FONT_TOOLTIP}px  PresetName=${presetFontSize}px ($presetNameScalePercent%)"
         }
     }
 
@@ -509,6 +513,7 @@ object UITheme {
         FontLevel.CAPTION     -> fontCaption
         FontLevel.CODE        -> fontCode
         FontLevel.PRESET_NAME -> fontPresetName
+        FontLevel.TOOLTIP     -> fontTooltip
     }
 
     /**
@@ -518,7 +523,9 @@ object UITheme {
     inline fun <T> withFont(level: FontLevel, block: () -> T): T {
         val font = fontFor(level)
         val pushed = font != null && font.ptr != 0L
-        if (pushed) ImGui.pushFont(font, 0f)
+        // Dear ImGui's PushFont(font, size) treats size=0 as "no override", not "this font's
+        // own baked size" -- an explicit size is required or the push is a no-op for rendering.
+        if (pushed) ImGui.pushFont(font, font!!.legacySize)
         try {
             return block()
         } finally {

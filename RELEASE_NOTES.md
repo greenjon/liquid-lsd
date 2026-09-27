@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Dedicated Tooltip Font Level & Balanced Font Pushing (`UITheme.kt`, `TooltipHelper.kt`)
+- Added `FontLevel.TOOLTIP` (`FONT_BODY + 4f`) to `UITheme` and updated `TooltipHelper` to automatically push the tooltip font (with explicit legacy font size) and style properties before rendering item and general tooltips. Tooltip text now renders crisply at an enhanced scale that stands out clearly from surrounding body text, and pops fonts/styles cleanly.
+
 ### Fix: Custom Title Bar Window Controls Right Alignment & Missing FBO Telemetry (`MenuBar.kt`, `WindowLayoutSafetyTest.kt`)
 - In frameless mode, the custom window control decorations (Minimize, Maximize/Restore, Close) previously sat with a ~146px gap before the right edge of the screen. This gap occurred because `FBO: N (XMB)` GPU memory telemetry text was included in the right-side total width reservation (`fullLabel`), but its rendering call was inadvertently omitted, and the window control buttons width calculation had an additional 8px discrepancy.
 - Custom window control buttons are now pinned directly to `contentRightX`, guaranteeing that the Close button is flush with the right boundary of the title bar across all resolutions.

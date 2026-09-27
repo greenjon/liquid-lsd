@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#dedicated-tooltip-font-level-balanced-font-pushing-uithemekt-tooltiphelperkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dedicated Tooltip Font Level &amp; Balanced Font Pushing (UITheme.kt, TooltipHelper.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fix-custom-title-bar-window-controls-right-alignment-missing-fbo-telemetry-menubarkt-windowlayoutsafetytestkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4239,6 +4250,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#dedicated-tooltip-font-level-balanced-font-pushing-uithemekt-tooltiphelperkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dedicated Tooltip Font Level &amp; Balanced Font Pushing (UITheme.kt, TooltipHelper.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fix-custom-title-bar-window-controls-right-alignment-missing-fbo-telemetry-menubarkt-windowlayoutsafetytestkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7245,6 +7267,10 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="dedicated-tooltip-font-level-balanced-font-pushing-uithemekt-tooltiphelperkt">Dedicated Tooltip Font Level &amp; Balanced Font Pushing (<code>UITheme.kt</code>, <code>TooltipHelper.kt</code>)</h3>
+<ul>
+<li>Added <code>FontLevel.TOOLTIP</code> (<code>FONT_BODY + 4f</code>) to <code>UITheme</code> and updated <code>TooltipHelper</code> to automatically push the tooltip font (with explicit legacy font size) and style properties before rendering item and general tooltips. Tooltip text now renders crisply at an enhanced scale that stands out clearly from surrounding body text, and pops fonts/styles cleanly.</li>
+</ul>
 <h3 id="fix-custom-title-bar-window-controls-right-alignment-missing-fbo-telemetry-menubarkt-windowlayoutsafetytestkt">Fix: Custom Title Bar Window Controls Right Alignment &amp; Missing FBO Telemetry (<code>MenuBar.kt</code>, <code>WindowLayoutSafetyTest.kt</code>)</h3>
 <ul>
 <li>In frameless mode, the custom window control decorations (Minimize, Maximize/Restore, Close) previously sat with a ~146px gap before the right edge of the screen. This gap occurred because <code>FBO: N (XMB)</code> GPU memory telemetry text was included in the right-side total width reservation (<code>fullLabel</code>), but its rendering call was inadvertently omitted, and the window control buttons width calculation had an additional 8px discrepancy.</li>
