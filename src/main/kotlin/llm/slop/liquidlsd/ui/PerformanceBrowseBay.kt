@@ -138,9 +138,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             }
             ImGui.endGroup()
         }
-        ImGui.spacing()
         ImGui.separator()
-        ImGui.spacing()
 
         if (activeSlot == null) {
             drawChainList(session, chain)

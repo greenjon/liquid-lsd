@@ -525,30 +525,37 @@ object ShaderPickerPopup {
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             ImGui.textDisabled("${Icons.SEARCH} $title")
         }
+        ImGui.sameLine()
 
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            // ── Search Bar & View Mode Toggle ──
-            ImGui.setNextItemWidth((ImGui.getContentRegionAvailX() - 310f).coerceAtLeast(120f))
+            // ── Search Bar & Overflow Menu (view mode toggle, detach) ──
+            ImGui.setNextItemWidth((ImGui.getContentRegionAvailX() - 40f).coerceAtLeast(120f))
             if (ImGui.inputTextWithHint("##search", "Search by name, ID or folder...", searchBuf)) {
                 updateItems()
             }
             ImGui.sameLine()
-            val viewBtnLabel = if (viewMode == ViewMode.FOLDERS) "${Icons.FOLDER} Folders" else "${Icons.LAYOUT_FULL} Flat"
-            if (ImGui.button(viewBtnLabel, 100f, 0f)) {
-                viewMode = if (viewMode == ViewMode.FOLDERS) ViewMode.FLAT else ViewMode.FOLDERS
+            if (ImGui.button("${Icons.MORE_VERTICAL}##picker_more", 0f, 0f)) {
+                ImGui.openPopup("picker_more_menu")
             }
-            itemTooltip(if (viewMode == ViewMode.FOLDERS) "Switch to flat list view" else "Switch to folder hierarchy view")
-
-            ImGui.sameLine()
-            if (ImGui.button("${Icons.TRASH} Detach / None", 170f, 0f)) {
-                onSelect?.invoke(null)
+            itemTooltip("View options and detach")
+            pushOpenDropdownPadding()
+            if (ImGui.beginPopup("picker_more_menu")) {
+                pushOpenDropdownFont()
+                val viewMenuLabel = if (viewMode == ViewMode.FOLDERS) "${Icons.LAYOUT_FULL} Flat list view" else "${Icons.FOLDER} Folder hierarchy view"
+                if (ImGui.menuItem(viewMenuLabel)) {
+                    viewMode = if (viewMode == ViewMode.FOLDERS) ViewMode.FLAT else ViewMode.FOLDERS
+                }
+                ImGui.separator()
+                if (ImGui.menuItem("${Icons.TRASH} Detach / None")) {
+                    onSelect?.invoke(null)
+                }
+                popOpenDropdownFont()
+                ImGui.endPopup()
             }
-            itemTooltip("Detach the current shader from this slot.")
-
-            ImGui.spacing()
+            popOpenDropdownPadding()
 
             // ── Category Pills Row (multi-select, OR-combined; "All" is exclusive) ──
-            ImGui.beginChild("##categories_pills", 0f, 48f, false, ImGuiWindowFlags.HorizontalScrollbar)
+            ImGui.beginChild("##categories_pills", 0f, 32f, false, ImGuiWindowFlags.HorizontalScrollbar)
             for (i in 0 until categories.size) {
                 val cat = categories[i]
                 val isSelected = selectedCategories.contains(cat)
@@ -580,10 +587,7 @@ object ShaderPickerPopup {
                 ImGui.sameLine()
             }
             ImGui.endChild()
-
-            ImGui.spacing()
             ImGui.separator()
-            ImGui.spacing()
 
             val tableFlags = ImGuiTableFlags.ScrollY         or
                              ImGuiTableFlags.BordersInnerV   or
