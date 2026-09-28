@@ -132,7 +132,9 @@ object TransitionBrowserPanel {
             ImGui.setKeyboardFocusHere()
             shouldFocusSearch = false
         }
-        ImGui.inputTextWithHint("##transBrowserSearch", "Search transitions, categories & tags...", searchBuffer)
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
+            ImGui.inputTextWithHint("##transBrowserSearch", "Search transitions, categories & tags...", searchBuffer)
+        }
         if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
             searchBuffer.set("")
             LibraryPanel.shouldReclaimFocus = true

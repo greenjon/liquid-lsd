@@ -402,12 +402,12 @@ object ShaderPickerPopup {
     private fun resultColumnCount() = if (hasManageColumn) 3 else 2
 
     private fun setupResultColumns() {
-        ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.3f)
-        ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, if (hasManageColumn) 0.6f else 0.7f)
+        ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.35f)
+        ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, if (hasManageColumn) 0.55f else 0.65f)
         if (isFxPicker) {
-            ImGui.tableSetupColumn("\u2605", ImGuiTableColumnFlags.WidthFixed, 34f)
+            ImGui.tableSetupColumn("\u2605", ImGuiTableColumnFlags.WidthFixed, 36f)
         } else if (pickerType == PickerType.SOURCE) {
-            ImGui.tableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 28f)
+            ImGui.tableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 32f)
         }
     }
 
@@ -526,113 +526,126 @@ object ShaderPickerPopup {
             ImGui.textDisabled("${Icons.SEARCH} $title")
         }
 
-        // ── Search Bar & View Mode Toggle ──
-        ImGui.setNextItemWidth((ImGui.getContentRegionAvailX() - 300f).coerceAtLeast(120f))
-        if (ImGui.inputTextWithHint("##search", "Search by name, ID or folder...", searchBuf)) {
-            updateItems()
-        }
-        ImGui.sameLine()
-        val viewBtnLabel = if (viewMode == ViewMode.FOLDERS) "${Icons.FOLDER} Folders" else "${Icons.LAYOUT_FULL} Flat"
-        if (ImGui.button(viewBtnLabel, 90f, 0f)) {
-            viewMode = if (viewMode == ViewMode.FOLDERS) ViewMode.FLAT else ViewMode.FOLDERS
-        }
-        itemTooltip(if (viewMode == ViewMode.FOLDERS) "Switch to flat list view" else "Switch to folder hierarchy view")
-
-        ImGui.sameLine()
-        if (ImGui.button("${Icons.TRASH} Detach / None", 170f, 0f)) {
-            onSelect?.invoke(null)
-        }
-        itemTooltip("Detach the current shader from this slot.")
-
-        ImGui.spacing()
-
-        // ── Category Pills Row (multi-select, OR-combined; "All" is exclusive) ──
-        ImGui.beginChild("##categories_pills", 0f, 48f, false, ImGuiWindowFlags.HorizontalScrollbar)
-        for (i in 0 until categories.size) {
-            val cat = categories[i]
-            val isSelected = selectedCategories.contains(cat)
-            if (isSelected) {
-                ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.5f, 0.8f, 1.0f)
-                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.55f, 0.85f, 1.0f)
-                ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.15f, 0.45f, 0.75f, 1.0f)
-            }
-
-            if (ImGui.button(cat)) {
-                if (cat == "All") {
-                    selectedCategories.clear()
-                    selectedCategories.add("All")
-                } else {
-                    selectedCategories.remove("All")
-                    if (isSelected) {
-                        selectedCategories.remove(cat)
-                        if (selectedCategories.isEmpty()) selectedCategories.add("All")
-                    } else {
-                        selectedCategories.add(cat)
-                    }
-                }
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
+            // ── Search Bar & View Mode Toggle ──
+            ImGui.setNextItemWidth((ImGui.getContentRegionAvailX() - 310f).coerceAtLeast(120f))
+            if (ImGui.inputTextWithHint("##search", "Search by name, ID or folder...", searchBuf)) {
                 updateItems()
             }
-
-            if (isSelected) {
-                ImGui.popStyleColor(3)
-            }
             ImGui.sameLine()
-        }
-        ImGui.endChild()
-
-        ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
-
-        val tableFlags = ImGuiTableFlags.ScrollY         or
-                         ImGuiTableFlags.BordersInnerV   or
-                         ImGuiTableFlags.RowBg          or
-                         ImGuiTableFlags.Resizable
-
-        if (viewMode == ViewMode.FLAT) {
-            // ── Flat List View ──
-            if (ImGui.beginTable("##shader_results", resultColumnCount(), tableFlags)) {
-                setupResultColumns()
-                drawDimmedHeadersRow(session)
-
-                for (i in 0 until filteredItems.size) {
-                    renderTableRow(filteredItems[i], session)
-                }
-                ImGui.endTable()
+            val viewBtnLabel = if (viewMode == ViewMode.FOLDERS) "${Icons.FOLDER} Folders" else "${Icons.LAYOUT_FULL} Flat"
+            if (ImGui.button(viewBtnLabel, 100f, 0f)) {
+                viewMode = if (viewMode == ViewMode.FOLDERS) ViewMode.FLAT else ViewMode.FOLDERS
             }
-        } else {
-            // ── Collapsible Folder Tree View ──
-            val isSearching = searchBuf.get().isNotBlank()
-            val treeNodeFlags = if (isSearching) imgui.flag.ImGuiTreeNodeFlags.DefaultOpen else 0
-            val availY = ImGui.getContentRegionAvailY().coerceAtLeast(100f)
+            itemTooltip(if (viewMode == ViewMode.FOLDERS) "Switch to flat list view" else "Switch to folder hierarchy view")
 
-            if (ImGui.beginChild("##shader_folders_child", 0f, availY, false)) {
-                // 1. Folders with subpaths
-                for ((folder, items) in folderGroups) {
-                    if (folder.isBlank()) continue
-                    val headerLabel = "${Icons.FOLDER}  $folder (${items.size})###tree_$folder"
-                    if (ImGui.treeNodeEx(headerLabel, treeNodeFlags)) {
-                        if (ImGui.beginTable("##tbl_$folder", resultColumnCount(), ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
-                            setupResultColumns()
-                            drawDimmedHeadersRow(session)
+            ImGui.sameLine()
+            if (ImGui.button("${Icons.TRASH} Detach / None", 170f, 0f)) {
+                onSelect?.invoke(null)
+            }
+            itemTooltip("Detach the current shader from this slot.")
 
-                            for (i in 0 until items.size) {
-                                renderTableRow(items[i], session)
-                            }
-                            ImGui.endTable()
-                        }
-                        ImGui.treePop()
-                    }
+            ImGui.spacing()
+
+            // ── Category Pills Row (multi-select, OR-combined; "All" is exclusive) ──
+            ImGui.beginChild("##categories_pills", 0f, 48f, false, ImGuiWindowFlags.HorizontalScrollbar)
+            for (i in 0 until categories.size) {
+                val cat = categories[i]
+                val isSelected = selectedCategories.contains(cat)
+                if (isSelected) {
+                    ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.5f, 0.8f, 1.0f)
+                    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.55f, 0.85f, 1.0f)
+                    ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.15f, 0.45f, 0.75f, 1.0f)
                 }
 
-                // 2. Root items (without a folder or top-level)
-                val rootItems = folderGroups[""] ?: emptyList()
-                if (rootItems.isNotEmpty()) {
-                    val hasOtherFolders = folderGroups.keys.any { it.isNotBlank() }
-                    if (hasOtherFolders) {
-                        val headerLabel = "${Icons.FILE}  General / Root (${rootItems.size})###tree_root"
+                if (ImGui.button(cat)) {
+                    if (cat == "All") {
+                        selectedCategories.clear()
+                        selectedCategories.add("All")
+                    } else {
+                        selectedCategories.remove("All")
+                        if (isSelected) {
+                            selectedCategories.remove(cat)
+                            if (selectedCategories.isEmpty()) selectedCategories.add("All")
+                        } else {
+                            selectedCategories.add(cat)
+                        }
+                    }
+                    updateItems()
+                }
+
+                if (isSelected) {
+                    ImGui.popStyleColor(3)
+                }
+                ImGui.sameLine()
+            }
+            ImGui.endChild()
+
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+
+            val tableFlags = ImGuiTableFlags.ScrollY         or
+                             ImGuiTableFlags.BordersInnerV   or
+                             ImGuiTableFlags.RowBg          or
+                             ImGuiTableFlags.Resizable
+
+            if (viewMode == ViewMode.FLAT) {
+                // ── Flat List View ──
+                if (ImGui.beginTable("##shader_results", resultColumnCount(), tableFlags)) {
+                    setupResultColumns()
+                    drawDimmedHeadersRow(session)
+
+                    for (i in 0 until filteredItems.size) {
+                        renderTableRow(filteredItems[i], session)
+                    }
+                    ImGui.endTable()
+                }
+            } else {
+                // ── Collapsible Folder Tree View ──
+                val isSearching = searchBuf.get().isNotBlank()
+                val treeNodeFlags = if (isSearching) imgui.flag.ImGuiTreeNodeFlags.DefaultOpen else 0
+                val availY = ImGui.getContentRegionAvailY().coerceAtLeast(100f)
+
+                if (ImGui.beginChild("##shader_folders_child", 0f, availY, false)) {
+                    // 1. Folders with subpaths
+                    for ((folder, items) in folderGroups) {
+                        if (folder.isBlank()) continue
+                        val headerLabel = "${Icons.FOLDER}  $folder (${items.size})###tree_$folder"
                         if (ImGui.treeNodeEx(headerLabel, treeNodeFlags)) {
-                            if (ImGui.beginTable("##tbl_root", resultColumnCount(), ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
+                            if (ImGui.beginTable("##tbl_$folder", resultColumnCount(), ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
+                                setupResultColumns()
+                                drawDimmedHeadersRow(session)
+
+                                for (i in 0 until items.size) {
+                                    renderTableRow(items[i], session)
+                                }
+                                ImGui.endTable()
+                            }
+                            ImGui.treePop()
+                        }
+                    }
+
+                    // 2. Root items (without a folder or top-level)
+                    val rootItems = folderGroups[""] ?: emptyList()
+                    if (rootItems.isNotEmpty()) {
+                        val hasOtherFolders = folderGroups.keys.any { it.isNotBlank() }
+                        if (hasOtherFolders) {
+                            val headerLabel = "${Icons.FILE}  General / Root (${rootItems.size})###tree_root"
+                            if (ImGui.treeNodeEx(headerLabel, treeNodeFlags)) {
+                                if (ImGui.beginTable("##tbl_root", resultColumnCount(), ImGuiTableFlags.RowBg or ImGuiTableFlags.BordersInnerV)) {
+                                    setupResultColumns()
+                                    drawDimmedHeadersRow(session)
+
+                                    for (i in 0 until rootItems.size) {
+                                        renderTableRow(rootItems[i], session)
+                                    }
+                                    ImGui.endTable()
+                                }
+                                ImGui.treePop()
+                            }
+                        } else {
+                            if (ImGui.beginTable("##tbl_root_direct", resultColumnCount(), tableFlags)) {
                                 setupResultColumns()
                                 drawDimmedHeadersRow(session)
 
@@ -641,22 +654,11 @@ object ShaderPickerPopup {
                                 }
                                 ImGui.endTable()
                             }
-                            ImGui.treePop()
-                        }
-                    } else {
-                        if (ImGui.beginTable("##tbl_root_direct", resultColumnCount(), tableFlags)) {
-                            setupResultColumns()
-                            drawDimmedHeadersRow(session)
-
-                            for (i in 0 until rootItems.size) {
-                                renderTableRow(rootItems[i], session)
-                            }
-                            ImGui.endTable()
                         }
                     }
                 }
+                ImGui.endChild()
             }
-            ImGui.endChild()
         }
     }
 }

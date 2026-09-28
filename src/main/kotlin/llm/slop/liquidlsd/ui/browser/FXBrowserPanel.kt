@@ -118,7 +118,9 @@ object FXBrowserPanel {
             ImGui.setKeyboardFocusHere()
             shouldFocusSearch = false
         }
-        ImGui.inputTextWithHint("##fxBrowserSearch", "Search FX & tags...", searchBuffer)
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
+            ImGui.inputTextWithHint("##fxBrowserSearch", "Search FX & tags...", searchBuffer)
+        }
         if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
             searchBuffer.set("")
             LibraryPanel.shouldReclaimFocus = true

@@ -79,7 +79,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
         if (isExternal) {
             ImGui.beginDisabled(true)
         }
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
             if (ImGui.button("${Icons.SAVE}##browse_gen_save_$deckLabel", rowH, rowH)) {
                 if (!isExternal) {
                     ImGui.openPopup("browse_gen_save_menu_$deckLabel")
@@ -120,22 +120,24 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
         val target = parametersState.browseTargetFor(moduleId) as? ParametersState.BrowseTarget.FxChain
         val activeSlot = target?.slotIndex
 
-        ImGui.beginGroup()
-        for (i in -1 until FxChain.SLOT_COUNT) {
-            if (i > -1) ImGui.sameLine()
-            val isActive = activeSlot == (if (i == -1) null else i)
-            val label = if (i == -1) "Chain" else "FX${i + 1}"
-            if (isActive) {
-                ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f))
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
+            ImGui.beginGroup()
+            for (i in -1 until FxChain.SLOT_COUNT) {
+                if (i > -1) ImGui.sameLine()
+                val isActive = activeSlot == (if (i == -1) null else i)
+                val label = if (i == -1) "Chain" else "FX${i + 1}"
+                if (isActive) {
+                    ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f))
+                }
+                if (ImGui.button("$label##browse_fxtab_${moduleId}_$i")) {
+                    parametersState.rackBrowseTarget[moduleId] = ParametersState.BrowseTarget.FxChain(if (i == -1) null else i)
+                }
+                if (isActive) {
+                    ImGui.popStyleColor()
+                }
             }
-            if (ImGui.button("$label##browse_fxtab_${moduleId}_$i")) {
-                parametersState.rackBrowseTarget[moduleId] = ParametersState.BrowseTarget.FxChain(if (i == -1) null else i)
-            }
-            if (isActive) {
-                ImGui.popStyleColor()
-            }
+            ImGui.endGroup()
         }
-        ImGui.endGroup()
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
@@ -166,38 +168,40 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             cachedChains = FileSystemManager.scanAllFxChains()
             chainSearchBuf.set("")
         }
-        ImGui.setNextItemWidth(240f)
-        ImGui.inputTextWithHint("##browse_chain_search", "Search chains...", chainSearchBuf)
-        ImGui.sameLine()
-        if (ImGui.button("${Icons.REFRESH}##browse_chain_refresh")) {
-            cachedChains = FileSystemManager.scanAllFxChains()
-        }
-        itemTooltip("Refresh the saved chains list.")
-        ImGui.sameLine()
-        if (ImGui.button("${Icons.TRASH} Clear Chain##browse_chain_clear")) {
-            FxOps.clearChain(chain)
-        }
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
+            ImGui.setNextItemWidth(260f)
+            ImGui.inputTextWithHint("##browse_chain_search", "Search chains...", chainSearchBuf)
+            ImGui.sameLine()
+            if (ImGui.button("${Icons.REFRESH}##browse_chain_refresh")) {
+                cachedChains = FileSystemManager.scanAllFxChains()
+            }
+            itemTooltip("Refresh the saved chains list.")
+            ImGui.sameLine()
+            if (ImGui.button("${Icons.TRASH} Clear Chain##browse_chain_clear")) {
+                FxOps.clearChain(chain)
+            }
 
-        val query = chainSearchBuf.get().trim().lowercase()
-        val chains = cachedChains ?: emptyList()
-        val filtered = if (query.isBlank()) chains else chains.filter { it.name.lowercase().contains(query) }
+            val query = chainSearchBuf.get().trim().lowercase()
+            val chains = cachedChains ?: emptyList()
+            val filtered = if (query.isBlank()) chains else chains.filter { it.name.lowercase().contains(query) }
 
-        ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
 
-        if (ImGui.beginChild("##browse_chain_list", 0f, 0f, false)) {
-            if (filtered.isEmpty()) {
-                ImGui.textDisabled("No matching chains")
-            } else {
-                for (asset in filtered) {
-                    val isCurrent = chain.sourceFile?.absolutePath == asset.path
-                    if (selectableRow("${asset.name}##browse_chain_item_${asset.path.hashCode()}", isCurrent)) {
-                        FxOps.loadChain(session, File(asset.path), chain)
+            if (ImGui.beginChild("##browse_chain_list", 0f, 0f, false)) {
+                if (filtered.isEmpty()) {
+                    ImGui.textDisabled("No matching chains")
+                } else {
+                    for (asset in filtered) {
+                        val isCurrent = chain.sourceFile?.absolutePath == asset.path
+                        if (selectableRow("${asset.name}##browse_chain_item_${asset.path.hashCode()}", isCurrent)) {
+                            FxOps.loadChain(session, File(asset.path), chain)
+                        }
                     }
                 }
             }
+            ImGui.endChild()
         }
-        ImGui.endChild()
     }
 }

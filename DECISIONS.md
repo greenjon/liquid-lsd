@@ -1,3 +1,12 @@
+## Harmonize Parameter Panel & Browse Panels Font Size to Match Tooltips (18px) (`UITheme.kt`, `ParametersRenderer.kt`, `PerformanceDeepEditBay.kt`, `ParametersTabs.kt`, `ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`, `PresetListPanel.kt`, `FXBrowserPanel.kt`, `TransitionBrowserPanel.kt`, docs, tests)
+
+- **Context**: 2026-09-28. In live performance environments, high readability of active parameter names and asset browser rows is essential. While tooltips and open dropdown popups were scaled to 18px (`FONT_TOOLTIP`), the Parameter Panel (Deep Edit parameter rows) rendered labels at 15px (`H3`), and the inline Browse Panel (`ShaderPickerPopup`, `PerformanceBrowseBay`) defaulted to 14px (`BODY`).
+- **Decision**:
+  - **Typography Harmonization (`UITheme.FontLevel.TOOLTIP`)**: Added `tooltip(text: String)` and `tooltipColored(...)` semantic text helpers to `UITheme.kt` for 18px typography.
+  - **Parameter Panel**: Updated `ParametersRenderer.drawParamRow` and `drawRandomizeRow` to render parameter labels using `UITheme.FontLevel.TOOLTIP` (18px). Widened `PerformanceDeepEditBay.DEEP_EDIT_LABEL_COL_W` from 160px to 185px to ensure longer parameter labels comfortably clear row kebab menus and modulator cells. Updated transition and FX slot selector buttons in `ParametersTabs.kt` to `FontLevel.TOOLTIP`.
+  - **Browse Panels**: Wrapped `ShaderPickerPopup.drawInline` and `PerformanceBrowseBay.drawChainList` / `drawFxChainBrowse` controls in `FontLevel.TOOLTIP` (18px) so search bars, category pills, tree headers, and result rows read at 18px. Updated search inputs in `PresetListPanel`, `FXBrowserPanel`, and `TransitionBrowserPanel` to `FontLevel.TOOLTIP` to match list rows.
+- **Consequences**: Parameter names and browse items now render in uniform 18px typography across the entire workspace, matching tooltip legibility without clipping or layout collisions.
+
 ## Multi-Selection Support in Library Panels (`MultiSelectionModel.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `BrowserActionToolbar.kt`, `LibraryPanel.kt`, `BrowserPopupHandler.kt`, docs, tests)
 
 - **Context**: 2026-09-28. Selecting presets and setlist items in the Library was previously strictly single-selection. As library sizes grew, organizing setlists, enqueuing batches of presets into the live queues, or deleting groups of stale presets required one-by-one repetitive operations.

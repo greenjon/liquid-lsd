@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Parameter Panel & Browse Panels Font Size Harmonization (`UITheme.kt`, `ParametersRenderer.kt`, `PerformanceDeepEditBay.kt`, `ParametersTabs.kt`, `ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`, `PresetListPanel.kt`, `FXBrowserPanel.kt`, `TransitionBrowserPanel.kt`)
+- **Consistent 18px Typography**: Scaled parameter labels in the Parameter Panel (Deep Edit parameter grid) and item rows/controls in the Browse Panels (inline source/FX/transition pickers and Library browser search inputs) to match the **18px** font size used by tooltips and dropdown menus (`UITheme.FONT_TOOLTIP` / `UITheme.FontLevel.TOOLTIP`).
+- **Semantic Text Helpers**: Added `session.uiTheme.tooltip(text)` and `tooltipColored(r, g, b, a, text)` to `UITheme.kt` for clean 18px typography rendering.
+- **Label Column Widening**: Expanded `PerformanceDeepEditBay.DEEP_EDIT_LABEL_COL_W` from 160px to 185px, ensuring parameter names have comfortable clearance beside row kebab menu buttons and modulator cells without truncation.
+- **Browse Panel Scaling**: Wrapped `ShaderPickerPopup.drawInline`, `PerformanceBrowseBay` chain lists and FX tabs, and Library search inputs in `UITheme.FontLevel.TOOLTIP`, providing high legibility and visual continuity between browsing, parameter adjustment, and tooltip inspection.
+
 ### Library Toolbar's Deck-Load Buttons Removed (`BrowserActionToolbar.kt`, `LibraryPanel.kt`, `ShortcutManager.kt`)
 - Removed the `[A]`/`[B]`/`[BG]`/`[PV]` deck-load buttons and their `1`/`2`/`3`/`4` shortcuts from the Library's menu-bar action toolbar — the inline **Browse** panel on each Performance row now covers picking a generator, FX single, or FX chain straight onto a deck, making the toolbar's duplicate path redundant. The `[Q]`/`[BGQ]` queue buttons and their `Q`/`Shift+Q` shortcuts stay, since queuing to the AutoVJ Play/Background queues has no equivalent in Browse.
 - **Quick Audition Latch simplified**: The padlock button no longer lets you cycle its target across Deck A/B/BG via the removed buttons — it always previews to Deck PV, which was already its default target.

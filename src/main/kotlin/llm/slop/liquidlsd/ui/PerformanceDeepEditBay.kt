@@ -24,7 +24,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
 
     companion object {
         /** Deep Edit parameter-grid label column width and the gap between its three columns. */
-        const val DEEP_EDIT_LABEL_COL_W = 160f
+        const val DEEP_EDIT_LABEL_COL_W = 185f
         const val DEEP_EDIT_GAP = 8f
 
         /**
@@ -139,7 +139,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
 
     private fun drawModeToggle(session: SessionContext, parametersState: ParametersState, moduleId: String, deckLabel: String?) {
         val mode = parametersState.sectionModeFor(moduleId)
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
             if (mode == ParametersState.SectionMode.BROWSE) {
                 if (ImGui.button("${Icons.SETTINGS} View Params##bay_mode_toggle_$moduleId")) {
                     parametersState.openParams(moduleId)

@@ -305,6 +305,7 @@ class UIThemeTest {
         assertEquals(15f, UITheme.FONT_H3)
         assertEquals(18f, UITheme.FONT_H2)
         assertEquals(22f, UITheme.FONT_H1)
+        assertEquals(18f, UITheme.FONT_TOOLTIP)
         assertEquals(14.25f, UITheme.BASE_SIZE)
         assertEquals(14.25f, UITheme.baseSize)
 

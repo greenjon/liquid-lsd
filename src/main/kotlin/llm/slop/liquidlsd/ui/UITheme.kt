@@ -593,4 +593,13 @@ object UITheme {
             ImGui.textUnformatted(text)
             ImGui.popStyleColor()
         }
+
+    fun tooltip(text: String) = withFont(FontLevel.TOOLTIP) { ImGui.textUnformatted(text) }
+
+    fun tooltipColored(r: Float, g: Float, b: Float, a: Float, text: String) =
+        withFont(FontLevel.TOOLTIP) {
+            ImGui.pushStyleColor(ImGuiCol.Text, r, g, b, a)
+            ImGui.textUnformatted(text)
+            ImGui.popStyleColor()
+        }
 }

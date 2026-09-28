@@ -68,7 +68,7 @@ object ParametersRenderer {
         val rowY = ImGui.getCursorPosY()
         
         var textH = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
             textH = ImGui.getTextLineHeight()
         }
         val cursorStartX = ImGui.getCursorPosX()
@@ -123,11 +123,9 @@ object ParametersRenderer {
                 ImGui.textColored(0.0f, 0.85f, 1.0f, 1.0f, badge)
             }
             ImGui.sameLine(0f, 4f)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f))
-            session.uiTheme.h3(label)
-            ImGui.popStyleColor()
+            session.uiTheme.tooltipColored(0.2f, 0.85f, 1.0f, 1.0f, label)
         } else {
-            session.uiTheme.h3(label)
+            session.uiTheme.tooltip(label)
         }
 
         if (isLabelHovered && session.uiTheme.tooltipsEnabled) {
@@ -895,12 +893,12 @@ object ParametersRenderer {
             ImGui.sameLine(0f, 6f)
         }
         var textH = 0f
-        session.uiTheme.withFont(UITheme.FontLevel.H3) {
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
             textH = ImGui.getTextLineHeight()
         }
         val textY = y + (btnHeight - textH) * 0.5f
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), textY)
-        session.uiTheme.h3(label)
+        session.uiTheme.tooltip(label)
         // Advance the ImGui layout cursor past this row so the next drawParamRow
         // picks up the correct rowScreenY.  setCursorScreenPos alone does not
         // update the window-local cursor, so we convert to window-local coords.

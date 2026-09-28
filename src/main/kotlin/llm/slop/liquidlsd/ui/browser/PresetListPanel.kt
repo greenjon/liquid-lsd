@@ -143,7 +143,9 @@ object PresetListPanel {
             ImGui.setKeyboardFocusHere()
             shouldFocusSearch = false
         }
-        ImGui.inputTextWithHint("##presetSearch", "Search sources, presets & tags... (Ctrl+F)", searchBuffer)
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
+            ImGui.inputTextWithHint("##presetSearch", "Search sources, presets & tags... (Ctrl+F)", searchBuffer)
+        }
         if (ImGui.isItemActive()) {
             if (ImGui.isKeyPressed(ImGuiKey.Escape)) {
                 searchBuffer.set("")

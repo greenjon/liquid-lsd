@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Parameter Panel & Browse Panels Font Size Harmonization (`UITheme.kt`, `ParametersRenderer.kt`, `PerformanceDeepEditBay.kt`, `ParametersTabs.kt`, `ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`, `PresetListPanel.kt`, `FXBrowserPanel.kt`, `TransitionBrowserPanel.kt`)
+- **Consistent 18px Typography**: Scaled parameter labels in the Parameter Panel (Deep Edit parameter grid) and item rows/controls in the Browse Panels (inline source/FX/transition pickers and Library browser search inputs) to match the **18px** font size used by tooltips and dropdown menus (`UITheme.FONT_TOOLTIP` / `UITheme.FontLevel.TOOLTIP`).
+- **Semantic Text Helpers**: Added `session.uiTheme.tooltip(text)` and `tooltipColored(r, g, b, a, text)` to `UITheme.kt` for clean 18px typography rendering.
+- **Label Column Widening**: Expanded `PerformanceDeepEditBay.DEEP_EDIT_LABEL_COL_W` from 160px to 185px, ensuring parameter names have comfortable clearance beside row kebab menu buttons and modulator cells without truncation.
+- **Browse Panel Scaling**: Wrapped `ShaderPickerPopup.drawInline`, `PerformanceBrowseBay` chain lists and FX tabs, and Library search inputs in `UITheme.FontLevel.TOOLTIP`, providing high legibility and visual continuity between browsing, parameter adjustment, and tooltip inspection.
+
 ### Library Multi-Selection Support (`MultiSelectionModel.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `BrowserActionToolbar.kt`, `LibraryPanel.kt`, `BrowserPopupHandler.kt`)
 - Added complete multi-selection support across the Library browser and playlist/queue panels:
   - **Click Modes**: Standard single-click (selects single item, resets multi-selection), **Ctrl+Click** / **Cmd+Click** (toggles individual item selection), and **Shift+Click** (continuous range selection relative to the lead/anchor item across visible list order).

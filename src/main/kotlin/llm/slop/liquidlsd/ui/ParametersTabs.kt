@@ -338,7 +338,7 @@ object ParametersTabs {
         ImGui.textDisabled("TRANSITION SHADER")
         ImGui.sameLine()
         ImGui.setNextItemWidth((labelColW - 130f).coerceAtLeast(30f))
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
             if (ImGui.button("$transName  ${Icons.CHEVRON_DOWN}##mixer_trans_selector", (labelColW - 130f).coerceAtLeast(30f), 0f)) {
                 state.openTransitionBrowse()
             }
@@ -580,7 +580,7 @@ object ParametersTabs {
             ImGui.textDisabled("Slot $slotNum")
             ImGui.sameLine()
             ImGui.setNextItemWidth((labelColW - 85f).coerceAtLeast(30f))
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
                 if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$chainPrefix", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
                     state.openFxChainBrowse(canonicalModuleId, deckLabel, i)
                 }
