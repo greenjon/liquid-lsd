@@ -65,7 +65,7 @@ object TempoSyncPanel {
         ImGui.dummy(indicatorSize, indicatorSize)
         itemTooltip("Real-time beat phase. Flashes on downbeat.")
         val dl = ImGui.getWindowDrawList()
-        val indicatorCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.65f, 0.1f, 0.2f + 0.8f * flashIntensity)
+        val indicatorCol = TangoPalette.u32(TangoPalette.ALERT.normal, 0.2f + 0.8f * flashIntensity)
         val borderCol = ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 0.6f)
         dl.addCircleFilled(curX + indicatorSize / 2f, curY + indicatorSize / 2f, indicatorSize / 2f, indicatorCol)
         dl.addCircle(curX + indicatorSize / 2f, curY + indicatorSize / 2f, indicatorSize / 2f, borderCol, 16, 1.2f)
@@ -86,9 +86,11 @@ object TempoSyncPanel {
             if (i == currentBeat) {
                 val intensity = (1.0f - beatFract * 0.35f).coerceIn(0.65f, 1.0f)
                 val col = if (i == 0) {
-                    ImGui.colorConvertFloat4ToU32(0.2f * intensity, 0.95f * intensity, 1.0f * intensity, 1.0f)
+                    val c = TangoPalette.SYNC.bright
+                    ImGui.colorConvertFloat4ToU32(c[0] * intensity, c[1] * intensity, c[2] * intensity, 1.0f)
                 } else {
-                    ImGui.colorConvertFloat4ToU32(0.9f * intensity, 0.95f * intensity, 0.4f * intensity, 1.0f)
+                    val c = TangoPalette.ALERT.light
+                    ImGui.colorConvertFloat4ToU32(c[0] * intensity, c[1] * intensity, c[2] * intensity, 1.0f)
                 }
                 dl.addCircleFilled(cx, cy, dotR, col)
             } else {
@@ -111,21 +113,24 @@ object TempoSyncPanel {
             else -> "TAP TEMPO"
         }
 
-        // Tap Button styling: flash bright amber/gold on tap cadence
+        // Tap Button styling: flash bright Alert (Butter) on tap cadence
         if (tapFlash > 0.05f) {
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.95f, 0.75f, 0.15f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1.0f, 0.85f, 0.25f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1.0f, 0.90f, 0.35f, 1.0f)
+            val c = TangoPalette.ALERT
+            ImGui.pushStyleColor(ImGuiCol.Button, c.normal[0], c.normal[1], c.normal[2], 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.light[0], c.light[1], c.light[2], 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonActive, c.light[0], c.light[1], c.light[2], 1.0f)
             ImGui.pushStyleColor(ImGuiCol.Text, 0.05f, 0.05f, 0.05f, 1.0f)
         } else if (tapCount > 0) {
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.75f, 0.50f, 0.10f, 0.9f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.85f, 0.60f, 0.15f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.95f, 0.70f, 0.20f, 1.0f)
+            val c = TangoPalette.ALERT
+            ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 0.9f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonActive, c.light[0], c.light[1], c.light[2], 1.0f)
             ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 1.0f, 1.0f, 1.0f)
         } else {
-            ImGui.pushStyleColor(ImGuiCol.Button, 0.20f, 0.45f, 0.70f, 0.9f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.55f, 0.85f, 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.30f, 0.65f, 0.95f, 1.0f)
+            val c = TangoPalette.NEUTRAL_DARK
+            ImGui.pushStyleColor(ImGuiCol.Button, c.normal[0], c.normal[1], c.normal[2], 0.9f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.light[0], c.light[1], c.light[2], 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.ButtonActive, TangoPalette.SYNC.normal[0], TangoPalette.SYNC.normal[1], TangoPalette.SYNC.normal[2], 1.0f)
             ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 1.0f, 1.0f, 1.0f)
         }
 
@@ -183,9 +188,9 @@ object TempoSyncPanel {
         // Full Interactive BPM Slider
         val sliderBoxW = 42f
         val sliderThemeColor = if (currentClock == ClockSource.MANUAL) {
-            ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f)
+            TangoPalette.u32(TangoPalette.ALERT.normal, 0.9f)
         } else {
-            ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f)
+            TangoPalette.u32(TangoPalette.SYNC.normal, 0.9f)
         }
 
         CustomRangeSlider.drawCompactSlider(
@@ -256,29 +261,31 @@ object TempoSyncPanel {
             val isAudioActive = audioEngine.isActive()
 
             if (!isAudioActive) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.4f, 0.4f, 1.0f)
+                val c = TangoPalette.DANGER.light
+                ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], 1.0f)
                 ImGui.textWrapped("${Icons.ALERT} Audio Engine is inactive. Beat tracker is coasting on flywheel momentum. Configure input devices in Audio Hardware settings.")
                 ImGui.popStyleColor()
                 ImGui.spacing()
             } else if (!audioEngine.beatDetector.isTargetLevelSufficient) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.65f, 0.1f, 1.0f)
+                val c = TangoPalette.ALERT.normal
+                ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], 1.0f)
                 ImGui.textWrapped("${Icons.ALERT} Low Signal: Insufficient energy in target band (${detectorSettings.target.name}). Coasting on flywheel.")
                 ImGui.popStyleColor()
                 ImGui.spacing()
             }
 
-            // Beat Tracker Confidence Meter
+            // Beat Tracker Confidence Meter (VU-style: Active green above 70%, Alert amber 40-70%, Danger red below)
             val confidence = LinkSyncManager.confidence
             val confPercent = LinkSyncManager.confidencePercent
             ImGui.alignTextToFramePadding()
             theme.body("Tracker Confidence: ")
             ImGui.sameLine()
-            val (cr, cg, cb) = when {
-                confidence >= 0.70f -> Triple(0.2f, 0.9f, 0.4f)
-                confidence >= 0.40f -> Triple(0.9f, 0.8f, 0.2f)
-                else -> Triple(0.9f, 0.3f, 0.3f)
+            val c = when {
+                confidence >= 0.70f -> TangoPalette.ACTIVE.normal
+                confidence >= 0.40f -> TangoPalette.ALERT.normal
+                else -> TangoPalette.DANGER.normal
             }
-            theme.bodyColored(cr, cg, cb, 1.0f, "$confPercent%")
+            theme.bodyColored(c[0], c[1], c[2], 1.0f, "$confPercent%")
             ImGui.sameLine(0f, 12f)
             ImGui.progressBar(confidence, 150f, 16f, "")
             itemTooltip("Rhythmic tracking stability metric calculated from FFT spectral flux onsets.")
@@ -334,7 +341,7 @@ object TempoSyncPanel {
             ImGui.spacing()
 
             // BPM Search Range Dual-Headed Slider
-            val beatThemeCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f)
+            val beatThemeCol = TangoPalette.u32(TangoPalette.SYNC.normal, 0.9f)
             CustomRangeSlider.drawCustomRangeSlider(
                 session = session,
                 label = "BPM Search Range",
@@ -386,15 +393,18 @@ object TempoSyncPanel {
 
             ImGui.sameLine(0f, 20f)
             if (peers > 0) {
-                theme.bodyColored(0.2f, 0.9f, 0.4f, 1.0f, "${Icons.ACTIVITY} $peers peer(s) connected")
+                val c = TangoPalette.ACTIVE.normal
+                theme.bodyColored(c[0], c[1], c[2], 1.0f, "${Icons.ACTIVITY} $peers peer(s) connected")
             } else {
-                theme.bodyColored(0.9f, 0.7f, 0.2f, 1.0f, "${Icons.REFRESH} 0 peers (searching network...)")
+                val c = TangoPalette.ALERT.normal
+                theme.bodyColored(c[0], c[1], c[2], 1.0f, "${Icons.REFRESH} 0 peers (searching network...)")
             }
 
             ImGui.sameLine(0f, 20f)
             theme.caption("Driver: ")
             ImGui.sameLine()
-            theme.captionColored(0.6f, 0.8f, 1.0f, 1.0f, backendName)
+            val syncLight = TangoPalette.SYNC.bright
+            theme.captionColored(syncLight[0], syncLight[1], syncLight[2], 1.0f, backendName)
 
             ImGui.spacing()
 

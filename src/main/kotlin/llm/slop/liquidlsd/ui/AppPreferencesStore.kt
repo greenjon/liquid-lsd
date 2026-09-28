@@ -232,7 +232,7 @@ object AppPreferencesStore {
                 }
                 val savedTheme = props.getProperty("theme")
                 if (savedTheme != null) {
-                    UITheme.theme = try { UITheme.Theme.valueOf(savedTheme) } catch (e: Exception) { UITheme.Theme.BORING }
+                    UITheme.theme = try { UITheme.Theme.valueOf(savedTheme) } catch (e: Exception) { UITheme.Theme.GREY_ACID }
                     logger.info { "Loaded theme from settings file: ${UITheme.theme}" }
                 }
                 props.getBoolean("showMidiCol")?.let { if (savedMidi == null) UITheme.midiEnabled = it }

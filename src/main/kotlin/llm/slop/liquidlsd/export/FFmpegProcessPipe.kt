@@ -69,6 +69,11 @@ class FFmpegProcessPipe(
             }
         }
 
+        private val candidateHwEncoders = setOf(
+            "h264_nvenc", "h264_qsv", "h264_amf", "h264_videotoolbox",
+            "hevc_nvenc", "hevc_qsv", "hevc_amf", "hevc_videotoolbox"
+        )
+
         private val workingEncoders: Set<String> by lazy {
             val available = detectedEncoders
             val tested = mutableSetOf<String>()
@@ -78,8 +83,8 @@ class FFmpegProcessPipe(
                     tested.add(enc)
                     continue
                 }
-                // For hardware encoders (nvenc, qsv, amf), verify device availability
-                if (isEncoderFunctional(enc)) {
+                // For hardware encoders, only probe candidates actually supported and used
+                if (enc in candidateHwEncoders && isEncoderFunctional(enc)) {
                     tested.add(enc)
                 }
             }

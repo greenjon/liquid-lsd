@@ -285,8 +285,6 @@ class UIManager(
 
             missingItemsPanel.draw(session)
 
-            ColorTunerPanel.draw(session, displayWidth, displayHeight)
-
             deckPresetController.drawFileBrowsers()
         }
 
@@ -505,7 +503,6 @@ class UIManager(
                 val perfOpen = ImGui.begin("PerformanceMatrix", perfFlags)
                 ImGui.popStyleVar()
                 if (perfOpen) {
-                    UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
                     currentMixer?.let {
                         performanceMatrixPanel.draw(session, it, parametersState, deckPresetController, hiddenLibraryH = if (isEditView) halfLibraryH else 0f)
                     }
@@ -514,7 +511,7 @@ class UIManager(
             }
 
             if (!isEditView) {
-                drawLibraryDock(displayWidth, displayHeight, menuBarH, contentH, noDecorate, minRatio, libraryW, libraryH, libTitleBarH)
+                drawLibraryDock(displayHeight, menuBarH, contentH, noDecorate, minRatio, libraryW, libraryH, libTitleBarH)
             }
         }
 
@@ -523,7 +520,6 @@ class UIManager(
         ImGui.setNextWindowSize(rightW.coerceAtLeast(1f), contentH.coerceAtLeast(1f))
         val noTitleDecorate = noDecorate or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.NoScrollbar
         if (ImGui.begin("Mixer", noTitleDecorate)) {
-            UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
             drawMixer(currentMixer!!)
 
             // Static divider line between Center Column/Library and Mixer
@@ -539,7 +535,6 @@ class UIManager(
      * [processQueueKeyboardShortcuts]).
      */
     private fun drawLibraryDock(
-        displayWidth: Float,
         displayHeight: Float,
         menuBarH: Float,
         contentH: Float,
@@ -557,7 +552,6 @@ class UIManager(
         val flags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 6.0f)
         if (ImGui.begin("Library", flags)) {
-            UIThemeStyler.drawNeonBackgroundIfNeeded(session, ImGui.getWindowPosX(), ImGui.getWindowPosY(), ImGui.getWindowWidth(), ImGui.getWindowHeight(), displayWidth)
             LibraryPanel.draw(session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, parametersState)
 
             if (theme.libraryMode != UITheme.LibraryMode.FULL) {

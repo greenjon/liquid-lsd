@@ -5,29 +5,33 @@ import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.TangoPalette
 import llm.slop.liquidlsd.ui.UIManager
 import java.io.File
 
 /**
  * Shared deck-button styling helpers used by [PresetListPanel] and [PlaylistEditorPanel].
  *
- * Each deck has a canonical RGBA accent colour.  The Q (queue) button uses violet.
- * Call [push] before the button and [pop] after.
+ * Each deck has a canonical RGBA accent colour, sourced from [TangoPalette] so no two decks (or
+ * deck vs. status role) ever share a hue. Call [push] before the button and [pop] after.
  *
  * Both helpers manage 2 style-vars (FrameBorderSize, FrameRounding) and 5 style-colours
  * (Text, Border, Button, ButtonHovered, ButtonActive).
  */
 internal object BrowserDeckButtons {
 
-    // ── Deck accent colours ────────────────────────────────────────────────
-    private val DECK_A   = floatArrayOf(0.2f, 0.4f, 0.8f) // blue
-    private val DECK_B   = floatArrayOf(0.8f, 0.4f, 0.2f) // orange
-    private val DECK_BG  = floatArrayOf(0.85f, 0.65f, 0.2f) // amber / gold
-    private val DECK_PV  = floatArrayOf(0.2f, 0.7f, 0.5f) // mint green
-    private val DECK_Q   = floatArrayOf(0.7f, 0.4f, 0.9f) // violet
-    private val DECK_BGQ = floatArrayOf(0.9f, 0.35f, 0.65f) // magenta / rose
+    // ── Deck accent colours (Tango Desktop Project hues; see TangoPalette) ──
+    private val DECK_A   = TangoPalette.DECK_A.normal  // #F57900 orange
+    private val DECK_B   = TangoPalette.DECK_B.normal  // #3465A4 sky blue
+    private val DECK_BG  = TangoPalette.DECK_BG.normal // #C17D11 chocolate
+    private val DECK_PV  = TangoPalette.DECK_PV.normal // #75507B plum
+    // Q / BGQ are toolbar queue actions, not deck identities (Q feeds either A or B; BGQ feeds BG
+    // specifically but sits beside Q and must read as the same "queue" family) -- neutral
+    // Aluminium shades keep them visually distinct from every deck/status accent above.
+    private val DECK_Q   = TangoPalette.NEUTRAL_LIGHT.normal // #D3D7CF
+    private val DECK_BGQ = TangoPalette.NEUTRAL_LIGHT.dark   // #BABDB6
 
-    private val LOCK_COLOR = floatArrayOf(0.2f, 0.8f, 1.0f) // cyan / electric blue
+    private val LOCK_COLOR = TangoPalette.SYNC.normal // #06AFDF sync/link cyan
 
     fun colorA() = DECK_A
     fun colorB() = DECK_B

@@ -43,7 +43,7 @@ data class AppPreferences(
     val performanceMatrixTab: Int = PerformanceMatrixPanel.Tab.entries.indexOf(PerformanceMatrixPanel.Tab.DECKS),
     /** Modular Rack: moduleId -> [ParametersState.DisclosureLevel] name, persisted only for BAY/DEEP_EDIT (never a mid-Learn-pinned state). */
     val rackExpandedModules: Map<String, String> = emptyMap(),
-    val theme: UITheme.Theme = UITheme.Theme.BORING,
+    val theme: UITheme.Theme = UITheme.Theme.GREY_ACID,
     val showMidiCol: Boolean = true,
     val showLfoCol: Boolean = true,
     val showSeqCol: Boolean = true,

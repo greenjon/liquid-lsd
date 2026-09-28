@@ -96,8 +96,6 @@ object PreferencesPanel {
             return
         }
 
-        UIThemeStyler.drawNeonBackgroundIfNeeded(session, posX, posY, width, height, width)
-
         // ── Top Header Bar ───────────────────────────────────────────────
         session.uiTheme.withFont(UITheme.FontLevel.H2) {
             ImGui.textColored(0.3f, 0.75f, 1.0f, 1.0f, "${Icons.SETTINGS} Preferences")

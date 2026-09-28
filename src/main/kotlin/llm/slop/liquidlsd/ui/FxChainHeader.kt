@@ -75,7 +75,7 @@ object FxChainHeader {
             val totalPages = chain.totalParamPages(focusedSlot)
 
             // 1. [◀ CHAIN] Exit Focus Mode button
-            val backCol = ImGui.colorConvertFloat4ToU32(0.85f, 0.45f, 0.15f, 0.90f)
+            val backCol = TangoPalette.u32(TangoPalette.SYNC.normal, 0.90f)
             ImGui.pushStyleColor(ImGuiCol.Button, backCol)
             if (ImGui.button("◀ CHAIN##exit_focus_$bankId", 58f, ctrlH)) {
                 FxMacroSync.focusSlot(bankId, mixer, null)
@@ -182,7 +182,7 @@ object FxChainHeader {
             val slotNum = i + 1
 
             val btnLabel = if (isFocused) "●$slotNum" else "$slotNum"
-            val activeCol = ImGui.colorConvertFloat4ToU32(0.85f, 0.45f, 0.15f, 0.95f)
+            val activeCol = TangoPalette.u32(TangoPalette.SYNC.normal, 0.95f)
             val inactiveCol = if (slot != null) ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.26f, 0.9f)
                               else ImGui.colorConvertFloat4ToU32(0.14f, 0.15f, 0.18f, 0.6f)
 
@@ -220,7 +220,7 @@ object FxChainHeader {
         val fullLabel = "$displayName$dirtyMarker ${Icons.CHEVRON_DOWN}"
 
         if (isDirty) {
-            ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.25f, 1f))
+            ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.u32(TangoPalette.ALERT.light))
         }
         if (ImGui.button("$fullLabel##fx_chain_name_$bankId", nameW, ctrlH)) {
             onOpenChainBrowse()
@@ -248,7 +248,7 @@ object FxChainHeader {
 
     private fun drawSaveButton(session: SessionContext, chain: FxChain, bankId: String, ctrlH: Float, isDirty: Boolean) {
         val canOverwrite = chain.sourceFile != null
-        val saveCol = if (isDirty) ImGui.colorConvertFloat4ToU32(0.25f, 0.65f, 0.45f, 1f) else ImGui.colorConvertFloat4ToU32(0.18f, 0.20f, 0.24f, 0.8f)
+        val saveCol = if (isDirty) TangoPalette.u32(TangoPalette.ALERT.dark) else ImGui.colorConvertFloat4ToU32(0.18f, 0.20f, 0.24f, 0.8f)
         ImGui.pushStyleColor(ImGuiCol.Button, saveCol)
         if (ImGui.button("Save##save_$bankId", SAVE_BTN_W, ctrlH)) {
             if (canOverwrite) {

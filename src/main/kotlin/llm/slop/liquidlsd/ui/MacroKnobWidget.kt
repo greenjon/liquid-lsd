@@ -217,10 +217,11 @@ object MacroKnobWidget {
         // -- Drawing --
         val dl = ImGui.getWindowDrawList()
 
-        // Accent-aware colors: use deck tint if provided, fall back to amber gold.
-        val ar = accentColor?.getOrElse(0) { 1.0f } ?: 1.0f
-        val ag = accentColor?.getOrElse(1) { 0.75f } ?: 0.75f
-        val ab = accentColor?.getOrElse(2) { 0.15f } ?: 0.15f
+        // Accent-aware colors: use deck tint if provided, fall back to Tango's Alert (Butter).
+        val default = TangoPalette.ALERT.normal
+        val ar = accentColor?.getOrElse(0) { default[0] } ?: default[0]
+        val ag = accentColor?.getOrElse(1) { default[1] } ?: default[1]
+        val ab = accentColor?.getOrElse(2) { default[2] } ?: default[2]
         // The hover/active ring shares the arc's accent color, so on its own it reads too subtly --
         // the knob body also blends toward the accent (stronger while dragging).
         val faceTint = when {
@@ -266,9 +267,9 @@ object MacroKnobWidget {
         } else 1.0f
 
         val borderCol = when {
-            isLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
+            isLearning -> TangoPalette.u32(TangoPalette.SYNC.bright, pulseAlpha)
             isActive   -> ImGui.colorConvertFloat4ToU32(ar, ag, ab, 1.0f)
-            isSelected -> ImGui.colorConvertFloat4ToU32(0.10f, 0.65f, 0.92f, 1.0f)
+            isSelected -> TangoPalette.u32(TangoPalette.SYNC.normal)
             isHovered  -> ImGui.colorConvertFloat4ToU32(ar, ag, ab, 0.9f)
             else -> null
         }

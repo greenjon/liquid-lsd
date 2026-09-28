@@ -10,27 +10,33 @@ import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 
 internal object PerformanceColors {
-    val COLOR_DECK_A   = floatArrayOf(0.2f,  0.4f,  0.8f)
-    val COLOR_DECK_B   = floatArrayOf(0.8f,  0.4f,  0.2f)
-    val COLOR_DECK_BG  = floatArrayOf(0.85f, 0.65f, 0.2f)
-    val COLOR_DECK_PV  = floatArrayOf(0.2f,  0.7f,  0.5f)
-    val COLOR_TRANS    = floatArrayOf(0.7f,  0.4f,  0.9f)
-    val COLOR_MASTER   = floatArrayOf(0.9f,  0.25f, 0.35f)
-    val COLOR_FX       = floatArrayOf(0.15f, 0.75f, 0.65f)
-    val COLOR_GLOBAL   = floatArrayOf(0.70f, 0.74f, 0.82f)
+    // Canonical deck colors matching BrowserDeckButtons, sourced from TangoPalette so no two
+    // decks (or a deck vs. a status role) ever share a hue.
+    val COLOR_DECK_A   = TangoPalette.DECK_A.normal  // #F57900 orange
+    val COLOR_DECK_B   = TangoPalette.DECK_B.normal  // #3465A4 sky blue
+    val COLOR_DECK_BG  = TangoPalette.DECK_BG.normal // #C17D11 chocolate
+    val COLOR_DECK_PV  = TangoPalette.DECK_PV.normal // #75507B plum
+    // These 4 badge the MASTER tab's rows, shown stacked together, so they need to read apart from
+    // each other as much as from the DECKS tab's deck hues -- neither Master nor Global is deck-
+    // specific, so neutral Aluminium tones; Transitions/FX use the Sync cyan family (dark/bright)
+    // since both are "signal routing" concepts distinct from any single deck or status role.
+    val COLOR_TRANS    = TangoPalette.SYNC.normal          // #06AFDF
+    val COLOR_MASTER   = TangoPalette.NEUTRAL_LIGHT.normal // #D3D7CF
+    val COLOR_FX       = TangoPalette.SYNC.bright          // #34E2E2
+    val COLOR_GLOBAL   = TangoPalette.NEUTRAL_DARK.normal  // #555753
 
     /** Uniform height of every row-side control (buttons, badges, preset combo) left/right of the knobs. */
     const val CTRL_H = 24f
 
-    val TOGGLE_ACTIVE_BG = ImGui.colorConvertFloat4ToU32(0.20f, 0.75f, 0.35f, 1f)
-    val TOGGLE_ACTIVE_HOVER = ImGui.colorConvertFloat4ToU32(0.26f, 0.82f, 0.42f, 1f)
-    val TOGGLE_ACTIVE_PRESSED = ImGui.colorConvertFloat4ToU32(0.16f, 0.68f, 0.30f, 1f)
+    val TOGGLE_ACTIVE_BG = TangoPalette.u32(TangoPalette.ACTIVE.dark)
+    val TOGGLE_ACTIVE_HOVER = TangoPalette.u32(TangoPalette.ACTIVE.normal)
+    val TOGGLE_ACTIVE_PRESSED = TangoPalette.u32(TangoPalette.ACTIVE.dark, 0.85f)
     val TOGGLE_ACTIVE_TEXT = ImGui.colorConvertFloat4ToU32(0.05f, 0.05f, 0.05f, 1f)
 
-    val TOGGLE_INACTIVE_BG = ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
-    val TOGGLE_INACTIVE_HOVER = ImGui.colorConvertFloat4ToU32(0.20f, 0.23f, 0.28f, 1f)
-    val TOGGLE_INACTIVE_PRESSED = ImGui.colorConvertFloat4ToU32(0.12f, 0.14f, 0.17f, 1f)
-    val TOGGLE_INACTIVE_TEXT = ImGui.colorConvertFloat4ToU32(0.88f, 0.88f, 0.90f, 1f)
+    val TOGGLE_INACTIVE_BG = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 0.85f)
+    val TOGGLE_INACTIVE_HOVER = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.normal)
+    val TOGGLE_INACTIVE_PRESSED = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark)
+    val TOGGLE_INACTIVE_TEXT = TangoPalette.u32(TangoPalette.NEUTRAL_LIGHT.light)
 
     fun pushActiveToggleStyle(active: Boolean) {
         if (active) {

@@ -1,6 +1,5 @@
 package llm.slop.liquidlsd.ui
 
-import imgui.ImColor
 import imgui.ImGui
 import imgui.ImGuiStyle
 import imgui.flag.ImGuiCol
@@ -26,13 +25,7 @@ object UIThemeStyler {
 
     fun setupThemeColors(theme: UITheme.Theme, bgVideoEnabled: Boolean) {
         val style = ImGui.getStyle()
-        val isLight = theme == UITheme.Theme.LIGHT_SOLARIZED || theme == UITheme.Theme.LIGHT_LUNARIZED
-
-        if (isLight) {
-            ImGui.styleColorsLight()
-        } else {
-            ImGui.styleColorsDark()
-        }
+        ImGui.styleColorsDark()
 
         val alpha = if (bgVideoEnabled) 0.75f else 1.00f
 
@@ -41,169 +34,41 @@ object UIThemeStyler {
         style.setPopupBorderSize(1.0f)
         style.setPopupRounding(4.0f)
 
+        val aluminium1 = TangoPalette.NEUTRAL_LIGHT
+        val aluminium2 = TangoPalette.NEUTRAL_DARK
+        val cyan = TangoPalette.SYNC
+
         when (theme) {
-            UITheme.Theme.BORING -> {
-                style.setColor(ImGuiCol.WindowBg, 0.06f, 0.06f, 0.06f, alpha)
-                style.setColor(ImGuiCol.PopupBg, 0.08f, 0.08f, 0.08f, 1.00f)
-                style.setColor(ImGuiCol.TitleBg, 0.04f, 0.04f, 0.04f, alpha)
-                style.setColor(ImGuiCol.TitleBgActive, 0.16f, 0.16f, 0.16f, alpha)
-                style.setColor(ImGuiCol.MenuBarBg, 0.14f, 0.14f, 0.14f, alpha)
+            UITheme.Theme.GREY_ACID -> {
+                // Mixxx Tango-theme neutrals (Aluminium 1/2 charcoal/panel grays) with the Tango
+                // sync/link cyan as the sole "acid" accent -- see TangoPalette.
+                style.setColor(ImGuiCol.WindowBg, 0.10f, 0.10f, 0.10f, alpha) // #1A1A1A
+                style.setColor(ImGuiCol.PopupBg, 0.17f, 0.17f, 0.17f, 1.00f) // #2B2B2B
+                style.setColor(ImGuiCol.TitleBg, 0.07f, 0.07f, 0.07f, alpha) // #111111
+                style.setColor(ImGuiCol.TitleBgActive, aluminium2.dark[0], aluminium2.dark[1], aluminium2.dark[2], alpha) // #2E3436
+                style.setColor(ImGuiCol.MenuBarBg, 0.27f, 0.27f, 0.27f, alpha) // #444444
 
-                style.setColor(ImGuiCol.FrameBg, 0.13f, 0.13f, 0.15f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgHovered, 0.20f, 0.20f, 0.24f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgActive, 0.26f, 0.26f, 0.30f, 1.00f)
+                style.setColor(ImGuiCol.FrameBg, 0.24f, 0.24f, 0.23f, 1.00f) // #3E3D3A
+                style.setColor(ImGuiCol.FrameBgHovered, aluminium2.normal[0], aluminium2.normal[1], aluminium2.normal[2], 1.00f) // #555753
+                style.setColor(ImGuiCol.FrameBgActive, cyan.normal[0], cyan.normal[1], cyan.normal[2], 1.00f) // #06AFDF
 
-                style.setColor(ImGuiCol.Border, 0.22f, 0.22f, 0.25f, 0.90f)
+                style.setColor(ImGuiCol.Border, 0.09f, 0.09f, 0.09f, 0.90f) // #181818
                 style.setColor(ImGuiCol.BorderShadow, 0.00f, 0.00f, 0.00f, 0.00f)
 
-                style.setColor(ImGuiCol.Button, 0.14f, 0.14f, 0.16f, 1.00f)
-                style.setColor(ImGuiCol.ButtonHovered, 0.24f, 0.24f, 0.28f, 1.00f)
-                style.setColor(ImGuiCol.ButtonActive, 0.32f, 0.32f, 0.38f, 1.00f)
+                style.setColor(ImGuiCol.Button, 0.24f, 0.24f, 0.23f, 1.00f) // #3E3D3A
+                style.setColor(ImGuiCol.ButtonHovered, aluminium2.normal[0], aluminium2.normal[1], aluminium2.normal[2], 1.00f) // #555753
+                style.setColor(ImGuiCol.ButtonActive, cyan.bright[0], cyan.bright[1], cyan.bright[2], 1.00f) // #34E2E2
 
-                style.setColor(ImGuiCol.CheckMark, 0.25f, 0.70f, 1.00f, 1.00f)
-                style.setColor(ImGuiCol.SliderGrab, 0.25f, 0.65f, 0.85f, 1.00f)
-                style.setColor(ImGuiCol.SliderGrabActive, 0.35f, 0.80f, 1.00f, 1.00f)
+                style.setColor(ImGuiCol.CheckMark, cyan.normal[0], cyan.normal[1], cyan.normal[2], 1.00f) // #06AFDF
+                style.setColor(ImGuiCol.SliderGrab, cyan.normal[0], cyan.normal[1], cyan.normal[2], 1.00f) // #06AFDF
+                style.setColor(ImGuiCol.SliderGrabActive, cyan.bright[0], cyan.bright[1], cyan.bright[2], 1.00f) // #34E2E2
 
-                // Mixxx-inspired slate-teal accent for list/dropdown row highlights.
-                style.setColor(ImGuiCol.Header, 0.13f, 0.23f, 0.27f, 1.00f)
-                style.setColor(ImGuiCol.HeaderHovered, 0.18f, 0.30f, 0.34f, 1.00f)
-                style.setColor(ImGuiCol.HeaderActive, 0.11f, 0.20f, 0.23f, 1.00f)
+                style.setColor(ImGuiCol.Header, 0.24f, 0.23f, 0.22f, 1.00f) // #3C3B37
+                style.setColor(ImGuiCol.HeaderHovered, aluminium2.normal[0], aluminium2.normal[1], aluminium2.normal[2], 1.00f) // #555753
+                style.setColor(ImGuiCol.HeaderActive, cyan.normal[0], cyan.normal[1], cyan.normal[2], 1.00f) // #06AFDF
 
-                // Soft silver-gray base text so selectable rows in pure white (pushed per-row) pop.
-                style.setColor(ImGuiCol.Text, 0.65f, 0.67f, 0.70f, 1.00f)
-                style.setColor(ImGuiCol.TextDisabled, 0.48f, 0.48f, 0.52f, 1.00f)
-            }
-            UITheme.Theme.DARK_SOLARIZED -> {
-                style.setColor(ImGuiCol.WindowBg, 0.00f, 0.17f, 0.21f, alpha)
-                style.setColor(ImGuiCol.PopupBg, 0.03f, 0.21f, 0.26f, 1.00f)
-                style.setColor(ImGuiCol.TitleBg, 0.03f, 0.21f, 0.26f, alpha)
-                style.setColor(ImGuiCol.TitleBgActive, 0.00f, 0.17f, 0.21f, alpha)
-                style.setColor(ImGuiCol.MenuBarBg, 0.03f, 0.21f, 0.26f, alpha)
-
-                style.setColor(ImGuiCol.FrameBg, 0.05f, 0.26f, 0.32f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgHovered, 0.08f, 0.32f, 0.38f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgActive, 0.80f, 0.29f, 0.09f, 1.00f)
-                style.setColor(ImGuiCol.Border, 0.08f, 0.30f, 0.36f, 0.90f)
-
-                style.setColor(ImGuiCol.Button, 0.03f, 0.21f, 0.26f, 1.00f)
-                style.setColor(ImGuiCol.ButtonHovered, 0.35f, 0.43f, 0.46f, 1.00f)
-                style.setColor(ImGuiCol.ButtonActive, 0.52f, 0.60f, 0.00f, 1.00f)
-                style.setColor(ImGuiCol.SliderGrab, 0.80f, 0.29f, 0.09f, 1.00f)
-                style.setColor(ImGuiCol.SliderGrabActive, 0.80f, 0.29f, 0.09f, 1.00f)
-                style.setColor(ImGuiCol.CheckMark, 0.80f, 0.29f, 0.09f, 1.00f)
-                style.setColor(ImGuiCol.Text, 0.51f, 0.58f, 0.59f, 1.00f)
-                style.setColor(ImGuiCol.TextDisabled, 0.35f, 0.43f, 0.46f, 1.00f)
-                style.setColor(ImGuiCol.Header, 0.03f, 0.21f, 0.26f, 1.00f)
-                style.setColor(ImGuiCol.HeaderHovered, 0.35f, 0.43f, 0.46f, 1.00f)
-                style.setColor(ImGuiCol.HeaderActive, 0.80f, 0.29f, 0.09f, 1.00f)
-            }
-            UITheme.Theme.LIGHT_SOLARIZED -> {
-                style.setColor(ImGuiCol.WindowBg, 0.99f, 0.96f, 0.89f, alpha)
-                style.setColor(ImGuiCol.PopupBg, 0.93f, 0.91f, 0.84f, 1.00f)
-                style.setColor(ImGuiCol.TitleBg, 0.93f, 0.91f, 0.84f, alpha)
-                style.setColor(ImGuiCol.TitleBgActive, 0.99f, 0.96f, 0.89f, alpha)
-                style.setColor(ImGuiCol.MenuBarBg, 0.93f, 0.91f, 0.84f, alpha)
-
-                style.setColor(ImGuiCol.FrameBg, 0.88f, 0.85f, 0.77f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgHovered, 0.94f, 0.91f, 0.83f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgActive, 0.17f, 0.63f, 0.60f, 1.00f)
-                style.setColor(ImGuiCol.Border, 0.75f, 0.72f, 0.64f, 0.90f)
-
-                style.setColor(ImGuiCol.Button, 0.93f, 0.91f, 0.84f, 1.00f)
-                style.setColor(ImGuiCol.ButtonHovered, 0.58f, 0.63f, 0.63f, 1.00f)
-                style.setColor(ImGuiCol.ButtonActive, 0.83f, 0.21f, 0.51f, 1.00f)
-
-                style.setColor(ImGuiCol.SliderGrab, 0.17f, 0.63f, 0.60f, 1.00f)
-                style.setColor(ImGuiCol.SliderGrabActive, 0.83f, 0.21f, 0.51f, 1.00f)
-                style.setColor(ImGuiCol.CheckMark, 0.52f, 0.60f, 0.00f, 1.00f)
-
-                style.setColor(ImGuiCol.Text, 0.40f, 0.48f, 0.51f, 1.00f)
-                style.setColor(ImGuiCol.TextDisabled, 0.58f, 0.63f, 0.63f, 1.00f)
-
-                style.setColor(ImGuiCol.Header, 0.93f, 0.91f, 0.84f, 1.00f)
-                style.setColor(ImGuiCol.HeaderHovered, 0.58f, 0.63f, 0.63f, 1.00f)
-                style.setColor(ImGuiCol.HeaderActive, 0.17f, 0.63f, 0.60f, 1.00f)
-            }
-            UITheme.Theme.DARK_LUNARIZED -> {
-                style.setColor(ImGuiCol.WindowBg, 0.21f, 0.04f, 0.00f, alpha)
-                style.setColor(ImGuiCol.PopupBg, 0.28f, 0.07f, 0.00f, 1.00f)
-                style.setColor(ImGuiCol.TitleBg, 0.28f, 0.07f, 0.00f, alpha)
-                style.setColor(ImGuiCol.TitleBgActive, 0.21f, 0.04f, 0.00f, alpha)
-                style.setColor(ImGuiCol.MenuBarBg, 0.28f, 0.07f, 0.00f, alpha)
-
-                style.setColor(ImGuiCol.FrameBg, 0.35f, 0.12f, 0.04f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgHovered, 0.45f, 0.18f, 0.08f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgActive, 0.42f, 0.44f, 0.77f, 1.00f)
-                style.setColor(ImGuiCol.Border, 0.42f, 0.16f, 0.08f, 0.90f)
-
-                style.setColor(ImGuiCol.Button, 0.28f, 0.07f, 0.00f, 1.00f)
-                style.setColor(ImGuiCol.ButtonHovered, 0.37f, 0.16f, 0.08f, 1.00f)
-                style.setColor(ImGuiCol.ButtonActive, 0.42f, 0.44f, 0.77f, 1.00f)
-
-                style.setColor(ImGuiCol.SliderGrab, 0.42f, 0.44f, 0.77f, 1.00f)
-                style.setColor(ImGuiCol.SliderGrabActive, 0.48f, 0.32f, 0.80f, 1.00f)
-                style.setColor(ImGuiCol.CheckMark, 0.42f, 0.44f, 0.77f, 1.00f)
-
-                style.setColor(ImGuiCol.Text, 0.97f, 0.91f, 0.88f, 1.00f)
-                style.setColor(ImGuiCol.TextDisabled, 0.58f, 0.40f, 0.35f, 1.00f)
-
-                style.setColor(ImGuiCol.Header, 0.28f, 0.07f, 0.00f, 1.00f)
-                style.setColor(ImGuiCol.HeaderHovered, 0.37f, 0.16f, 0.08f, 1.00f)
-                style.setColor(ImGuiCol.HeaderActive, 0.42f, 0.44f, 0.77f, 1.00f)
-            }
-            UITheme.Theme.LIGHT_LUNARIZED -> {
-                style.setColor(ImGuiCol.WindowBg, 0.89f, 0.92f, 0.99f, alpha)
-                style.setColor(ImGuiCol.PopupBg, 0.82f, 0.85f, 0.96f, 1.00f)
-                style.setColor(ImGuiCol.TitleBg, 0.82f, 0.85f, 0.96f, alpha)
-                style.setColor(ImGuiCol.TitleBgActive, 0.89f, 0.92f, 0.99f, alpha)
-                style.setColor(ImGuiCol.MenuBarBg, 0.82f, 0.85f, 0.96f, alpha)
-
-                style.setColor(ImGuiCol.FrameBg, 0.75f, 0.79f, 0.92f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgHovered, 0.82f, 0.86f, 0.97f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgActive, 0.11f, 0.37f, 0.89f, 1.00f)
-                style.setColor(ImGuiCol.Border, 0.65f, 0.70f, 0.85f, 0.90f)
-
-                style.setColor(ImGuiCol.Button, 0.82f, 0.85f, 0.96f, 1.00f)
-                style.setColor(ImGuiCol.ButtonHovered, 0.69f, 0.75f, 0.92f, 1.00f)
-                style.setColor(ImGuiCol.ButtonActive, 0.11f, 0.37f, 0.89f, 1.00f)
-
-                style.setColor(ImGuiCol.SliderGrab, 0.11f, 0.37f, 0.89f, 1.00f)
-                style.setColor(ImGuiCol.SliderGrabActive, 0.00f, 0.64f, 0.80f, 1.00f)
-                style.setColor(ImGuiCol.CheckMark, 0.00f, 0.64f, 0.80f, 1.00f)
-
-                style.setColor(ImGuiCol.Text, 0.15f, 0.17f, 0.21f, 1.00f)
-                style.setColor(ImGuiCol.TextDisabled, 0.47f, 0.50f, 0.61f, 1.00f)
-
-                style.setColor(ImGuiCol.Header, 0.82f, 0.85f, 0.96f, 1.00f)
-                style.setColor(ImGuiCol.HeaderHovered, 0.69f, 0.75f, 0.92f, 1.00f)
-                style.setColor(ImGuiCol.HeaderActive, 0.11f, 0.37f, 0.89f, 1.00f)
-            }
-            UITheme.Theme.NEON -> {
-                style.setColor(ImGuiCol.WindowBg, 0.00f, 0.00f, 0.00f, 0.00f)
-                style.setColor(ImGuiCol.PopupBg, 0.05f, 0.01f, 0.08f, 1.00f)
-                style.setColor(ImGuiCol.TitleBg, 0.04f, 0.04f, 0.10f, if (bgVideoEnabled) 0.65f else 0.90f)
-                style.setColor(ImGuiCol.TitleBgActive, 0.08f, 0.00f, 0.14f, if (bgVideoEnabled) 0.65f else 0.90f)
-                style.setColor(ImGuiCol.MenuBarBg, 0.04f, 0.04f, 0.10f, if (bgVideoEnabled) 0.65f else 0.90f)
-
-                style.setColor(ImGuiCol.FrameBg, 0.16f, 0.08f, 0.24f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgHovered, 0.24f, 0.10f, 0.35f, 1.00f)
-                style.setColor(ImGuiCol.FrameBgActive, 1.00f, 0.00f, 0.50f, 1.00f)
-                style.setColor(ImGuiCol.Border, 0.40f, 0.10f, 0.50f, 0.85f)
-
-                style.setColor(ImGuiCol.Button, 0.13f, 0.02f, 0.20f, 1.00f)
-                style.setColor(ImGuiCol.ButtonHovered, 1.00f, 0.00f, 0.50f, 1.00f)
-                style.setColor(ImGuiCol.ButtonActive, 1.00f, 1.00f, 0.00f, 1.00f)
-
-                style.setColor(ImGuiCol.SliderGrab, 1.00f, 0.00f, 0.50f, 1.00f)
-                style.setColor(ImGuiCol.SliderGrabActive, 0.50f, 1.00f, 0.00f, 1.00f)
-                style.setColor(ImGuiCol.CheckMark, 0.50f, 1.00f, 0.00f, 1.00f)
-
-                style.setColor(ImGuiCol.Text, 1.00f, 1.00f, 1.00f, 1.00f)
-                style.setColor(ImGuiCol.TextDisabled, 0.54f, 0.40f, 0.64f, 1.00f)
-
-                style.setColor(ImGuiCol.Header, 0.13f, 0.02f, 0.20f, 1.00f)
-                style.setColor(ImGuiCol.HeaderHovered, 1.00f, 0.00f, 0.50f, 1.00f)
-                style.setColor(ImGuiCol.HeaderActive, 1.00f, 1.00f, 0.00f, 1.00f)
+                style.setColor(ImGuiCol.Text, aluminium1.normal[0], aluminium1.normal[1], aluminium1.normal[2], 1.00f) // #D3D7CF
+                style.setColor(ImGuiCol.TextDisabled, aluminium2.light[0], aluminium2.light[1], aluminium2.light[2], 1.00f) // #888A85
             }
         }
 
@@ -214,48 +79,11 @@ object UIThemeStyler {
         // (e.g. BrowserDeckButtons pushes both Text and Border to deck accent colours).
         // Values mirror the colours set in the when(theme) block above.
         TooltipHelper.baseTextColor = when (theme) {
-            UITheme.Theme.BORING          -> ImGui.colorConvertFloat4ToU32(0.65f, 0.67f, 0.70f, 1.00f)
-            UITheme.Theme.DARK_SOLARIZED  -> ImGui.colorConvertFloat4ToU32(0.51f, 0.58f, 0.59f, 1.00f)
-            UITheme.Theme.LIGHT_SOLARIZED -> ImGui.colorConvertFloat4ToU32(0.40f, 0.48f, 0.51f, 1.00f)
-            UITheme.Theme.DARK_LUNARIZED  -> ImGui.colorConvertFloat4ToU32(0.97f, 0.91f, 0.88f, 1.00f)
-            UITheme.Theme.LIGHT_LUNARIZED -> ImGui.colorConvertFloat4ToU32(0.15f, 0.17f, 0.21f, 1.00f)
-            UITheme.Theme.NEON            -> ImGui.colorConvertFloat4ToU32(1.00f, 1.00f, 1.00f, 1.00f)
+            UITheme.Theme.GREY_ACID -> TangoPalette.u32(aluminium1.normal)
         }
         TooltipHelper.baseBorderColor = when (theme) {
-            UITheme.Theme.BORING          -> ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.25f, 0.90f)
-            UITheme.Theme.DARK_SOLARIZED  -> ImGui.colorConvertFloat4ToU32(0.08f, 0.30f, 0.36f, 0.90f)
-            UITheme.Theme.LIGHT_SOLARIZED -> ImGui.colorConvertFloat4ToU32(0.75f, 0.72f, 0.64f, 0.90f)
-            UITheme.Theme.DARK_LUNARIZED  -> ImGui.colorConvertFloat4ToU32(0.42f, 0.16f, 0.08f, 0.90f)
-            UITheme.Theme.LIGHT_LUNARIZED -> ImGui.colorConvertFloat4ToU32(0.65f, 0.70f, 0.85f, 0.90f)
-            UITheme.Theme.NEON            -> ImGui.colorConvertFloat4ToU32(0.40f, 0.10f, 0.50f, 0.85f)
+            UITheme.Theme.GREY_ACID -> ImGui.colorConvertFloat4ToU32(0.09f, 0.09f, 0.09f, 0.90f)
         }
-    }
-
-    fun drawNeonBackgroundIfNeeded(session: SessionContext, posX: Float, posY: Float, panelW: Float, panelH: Float, displayWidth: Float) {
-        if (session.uiTheme.settings.theme != UITheme.Theme.NEON || displayWidth <= 0f) return
-        val dl = ImGui.getWindowDrawList()
-
-        fun getNeonBgColor(t: Float): Int {
-            val r: Float
-            val g: Float = 0.0f
-            val b: Float
-            if (t < 0.5f) {
-                val fraction = t * 2f
-                r = 0.01f + (0.85f - 0.01f) * fraction
-                b = 0.14f + (0.42f - 0.14f) * fraction
-            } else {
-                val fraction = (t - 0.5f) * 2f
-                r = 0.85f + (0.01f - 0.85f) * fraction
-                b = 0.42f + (0.14f - 0.42f) * fraction
-            }
-            val alpha = if (session.uiTheme.backgroundVideoEnabled) 0.65f else 0.90f
-            return ImColor.rgba(r, g, b, alpha)
-        }
-
-        val leftCol = getNeonBgColor((posX / displayWidth).coerceIn(0f, 1f))
-        val rightCol = getNeonBgColor(((posX + panelW) / displayWidth).coerceIn(0f, 1f))
-
-        dl.addRectFilledMultiColor(posX, posY, posX + panelW, posY + panelH, leftCol, rightCol, rightCol, leftCol)
     }
 
     fun copyStyleSizes(from: ImGuiStyle, to: ImGuiStyle) {

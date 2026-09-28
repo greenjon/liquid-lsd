@@ -155,7 +155,7 @@ object FxSlotCell {
             val textCol = when {
                 fx == null -> ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.55f, 0.8f)
                 !fx.enabled -> ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.6f, 0.75f)
-                isThisSlotFocused -> ImGui.colorConvertFloat4ToU32(1f, 0.85f, 0.45f, 1f)
+                isThisSlotFocused -> TangoPalette.u32(TangoPalette.SYNC.bright)
                 nameHovered -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
                 else -> ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.88f, 0.95f)
             }
@@ -192,9 +192,9 @@ object FxSlotCell {
                 ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 1f)
             )
             else -> Triple(
-                ImGui.colorConvertFloat4ToU32(0.55f, 0.14f, 0.14f, 0.85f),
-                ImGui.colorConvertFloat4ToU32(0.70f, 0.18f, 0.18f, 0.95f),
-                ImGui.colorConvertFloat4ToU32(1f, 0.75f, 0.75f, 1f)
+                TangoPalette.u32(TangoPalette.DANGER.dark, 0.85f),
+                TangoPalette.u32(TangoPalette.DANGER.normal, 0.95f),
+                TangoPalette.u32(TangoPalette.DANGER.light)
             )
         }
         ImGui.pushStyleColor(ImGuiCol.Button, bg)
@@ -228,9 +228,9 @@ object FxSlotCell {
         val isLinked = chain.slotSuperKnobLink.getOrNull(slotIndex) == true
         ImGui.setCursorScreenPos(x, y)
         if (isLinked) {
-            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.10f, 0.45f, 0.40f, 0.75f))
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.14f, 0.55f, 0.48f, 0.90f))
-            ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.35f, 0.95f, 0.85f, 1f))
+            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.SYNC.normal, 0.75f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.u32(TangoPalette.SYNC.normal, 0.90f))
+            ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.u32(TangoPalette.SYNC.bright))
         } else {
             ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.50f))
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.22f, 0.25f, 0.32f, 0.80f))

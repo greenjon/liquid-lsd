@@ -170,89 +170,26 @@ class UIThemeTest {
         }
     }
 
-    // --- Color Tuner & Palettes ---
+    // --- Tango Palette ---
 
     @Test
-    fun testColorTunerPanelOpenToggle() {
-        ColorTunerPanel.isOpen = false
-        ColorTunerPanel.open()
-        assertTrue(ColorTunerPanel.isOpen)
-        ColorTunerPanel.close()
-        assertFalse(ColorTunerPanel.isOpen)
-        ColorTunerPanel.open()
-        assertTrue(ColorTunerPanel.isOpen)
-        ColorTunerPanel.toggle()
-        assertFalse(ColorTunerPanel.isOpen)
-        ColorTunerPanel.toggle()
-        assertTrue(ColorTunerPanel.isOpen)
-    }
-
-    @Test
-    fun testColorTunerSwatchHexCalculation() {
-        val swatch = ColorTunerPanel.Swatch.fromHex("test", "Test", "#FF007F")
-        assertEquals("#ff007f", swatch.hex)
-        assertEquals(1.0f, swatch.r)
-        assertEquals(0.0f, swatch.g)
-    }
-
-    @Test
-    fun testSolarizedPaletteExactHexCodes() {
-        val expected = mapOf(
-            "base03" to "#002b36",
-            "base02" to "#073642",
-            "base01" to "#586e75",
-            "base00" to "#657b83",
-            "base0"  to "#839496",
-            "base1"  to "#93a1a1",
-            "base2"  to "#eee8d5",
-            "base3"  to "#fdf6e3",
-            "red"    to "#dc322f",
-            "orange" to "#cb4b16",
-            "yellow" to "#b58900",
-            "green"  to "#859900",
-            "cyan"   to "#2aa198",
-            "blue"   to "#268bd2",
-            "violet" to "#6c71c4",
-            "magenta" to "#d33682"
-        )
-        val palette = ColorTunerPanel.PALETTES.find { it.theme == UITheme.Theme.DARK_SOLARIZED }
-        assertNotNull(palette)
-        assertEquals(16, palette.swatches.size)
-        expected.forEach { (id, hex) ->
-            val swatch = palette.swatches.find { it.id == id }
-            assertNotNull(swatch, "Swatch $id must exist")
-            assertEquals(hex, swatch.hex)
+    fun testTangoPaletteExactHexCodes() {
+        fun assertHex(rgb: FloatArray, hex: Int) {
+            assertEquals(((hex shr 16) and 0xFF) / 255f, rgb[0])
+            assertEquals(((hex shr 8) and 0xFF) / 255f, rgb[1])
+            assertEquals((hex and 0xFF) / 255f, rgb[2])
         }
-    }
-
-    @Test
-    fun testLunarizedPaletteExactHexCodes() {
-        val expected = mapOf(
-            "base03" to "#360b00",
-            "base02" to "#421307",
-            "base01" to "#755f58",
-            "base00" to "#836d65",
-            "base0"  to "#968583",
-            "base1"  to "#a19393",
-            "base2"  to "#d5dbee",
-            "base3"  to "#e3eafd",
-            "cyan"   to "#23cdd0",
-            "blue"   to "#34b4e9",
-            "indigo" to "#4a76ff",
-            "violet" to "#7a66ff",
-            "red"    to "#d55e67",
-            "orange" to "#d9742d",
-            "yellow" to "#938e3b",
-            "green"  to "#2cc97d"
-        )
-        val palette = ColorTunerPanel.PALETTES.find { it.theme == UITheme.Theme.DARK_LUNARIZED }
-        assertNotNull(palette)
-        assertEquals(16, palette.swatches.size)
-        expected.forEach { (id, hex) ->
-            val swatch = palette.swatches.find { it.id == id }
-            assertNotNull(swatch, "Swatch $id must exist")
-            assertEquals(hex, swatch.hex)
-        }
+        assertHex(TangoPalette.ORANGE.normal, 0xF57900)
+        assertHex(TangoPalette.SKY_BLUE.normal, 0x3465A4)
+        assertHex(TangoPalette.CHOCOLATE.normal, 0xC17D11)
+        assertHex(TangoPalette.PLUM.normal, 0x75507B)
+        assertHex(TangoPalette.CHAMELEON.normal, 0x73D216)
+        assertHex(TangoPalette.BUTTER.normal, 0xEDD400)
+        assertHex(TangoPalette.SCARLET_RED.normal, 0xCC0000)
+        assertHex(TangoPalette.ALUMINIUM_1.normal, 0xD3D7CF)
+        assertHex(TangoPalette.ALUMINIUM_2.normal, 0x555753)
+        assertHex(TangoPalette.SYNC_CYAN.normal, 0x06AFDF)
+        assertHex(TangoPalette.SYNC_CYAN.bright, 0x34E2E2)
     }
 
     // --- UI Layout & Component Elements ---

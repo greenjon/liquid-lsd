@@ -37,12 +37,7 @@ object UITheme {
     enum class AutoVjDirtyBehavior { SKIP, AUTO_DISCARD, AUTO_SAVE }
 
     enum class Theme {
-        BORING,
-        DARK_SOLARIZED,
-        LIGHT_SOLARIZED,
-        DARK_LUNARIZED,
-        LIGHT_LUNARIZED,
-        NEON
+        GREY_ACID
     }
 
     enum class ResolutionPreset(val displayName: String, val width: Int, val height: Int) {

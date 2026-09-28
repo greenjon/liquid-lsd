@@ -80,7 +80,7 @@ class MixerPanel(
         }
 
         // --- Master Output Overlays: [M] Badge, [🎲 ALL], and Vertical Master Level Fader ---
-        val masterThemeCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.82f, 0.65f, 1f) // Mint accent for Master
+        val masterThemeCol = TangoPalette.u32(TangoPalette.NEUTRAL_LIGHT.normal) // Master sums every deck, so neutral rather than deck-hued
         val fontLevel = UITheme.FontLevel.CAPTION
         var textW = 0f
         var textH = 0f
@@ -206,7 +206,7 @@ class MixerPanel(
             ImGui.getFrameHeightWithSpacing() + 12f
         }.coerceAtLeast(34f)
 
-        ImGui.pushStyleColor(ImGuiCol.ChildBg, ImGui.colorConvertFloat4ToU32(0.05f, 0.1f, 0.08f, 0.4f)) // Faint mint background
+        ImGui.pushStyleColor(ImGuiCol.ChildBg, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.4f)) // Faint neutral background
         ImGui.setCursorScreenPos(imgScreenX, ImGui.getCursorScreenPosY())
         ImGui.beginChild("MasterControls", availW, masterControlsH, true, imgui.flag.ImGuiWindowFlags.NoScrollbar)
         
@@ -449,19 +449,19 @@ class MixerPanel(
 
         // Hover / Active / MIDI learn highlight
         if (isTarget) {
-            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, ImGui.colorConvertFloat4ToU32(0f, 0.8f, 1f, 1f), 4f, 0, 1.5f)
+            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, TangoPalette.u32(TangoPalette.SYNC.normal), 4f, 0, 1.5f)
         } else if (isTrackHovered || isTrackActive) {
             val borderCol = if (isTrackActive) {
-                ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f)
+                TangoPalette.u32(TangoPalette.SYNC.normal)
             } else {
-                ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f)
+                TangoPalette.u32(TangoPalette.ALERT.normal, 0.9f)
             }
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
         }
 
         // Touch Console active border & contact dots
         if (session.touchConsoleController.isActive) {
-            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, ImGui.colorConvertFloat4ToU32(0.0f, 0.9f, 1.0f, 0.75f), 4f, 0, 1.5f)
+            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, TangoPalette.u32(TangoPalette.SYNC.normal, 0.75f), 4f, 0, 1.5f)
 
             val xfContacts = session.touchConsoleController.getCrossfaderContacts()
             if (xfContacts.isNotEmpty()) {
@@ -476,11 +476,11 @@ class MixerPanel(
                     }
                     val cx = lineStartX + mappedPct * lineWidth
                     if (c == lastContact) {
-                        dl.addCircleFilled(cx, centerY, 5.0f, ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, 1.0f))
-                        dl.addCircle(cx, centerY, 7.5f, ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, 0.5f), 12, 1.5f)
+                        dl.addCircleFilled(cx, centerY, 5.0f, TangoPalette.u32(TangoPalette.SYNC.bright))
+                        dl.addCircle(cx, centerY, 7.5f, TangoPalette.u32(TangoPalette.SYNC.bright, 0.5f), 12, 1.5f)
                     } else {
-                        dl.addCircleFilled(cx, centerY, 4.0f, ImGui.colorConvertFloat4ToU32(1.0f, 0.70f, 0.15f, 0.85f))
-                        dl.addCircle(cx, centerY, 5.5f, ImGui.colorConvertFloat4ToU32(1.0f, 0.70f, 0.15f, 0.4f), 12, 1.0f)
+                        dl.addCircleFilled(cx, centerY, 4.0f, TangoPalette.u32(TangoPalette.ALERT.normal, 0.85f))
+                        dl.addCircle(cx, centerY, 5.5f, TangoPalette.u32(TangoPalette.ALERT.normal, 0.4f), 12, 1.0f)
                     }
                 }
             }
@@ -492,7 +492,7 @@ class MixerPanel(
             val livePct = ((mixer.crossfade.value - (-1f)) / 2f).coerceIn(0f, 1f)
             val liveX = lineStartX + livePct * lineWidth
             val dotR = 4f
-            val curDotCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 1.0f) // Bright Amber Gold
+            val curDotCol = TangoPalette.u32(TangoPalette.ALERT.normal)
             dl.addCircleFilled(liveX, centerY, dotR, curDotCol)
             dl.addCircle(liveX, centerY, dotR + 0.5f, ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f), 12, 1.0f)
         }

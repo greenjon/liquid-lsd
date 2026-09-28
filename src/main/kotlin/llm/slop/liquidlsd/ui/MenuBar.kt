@@ -162,8 +162,9 @@ class MenuBar(
                         val dropped = llm.slop.liquidlsd.export.RealtimeRecorder.droppedFramesCount
                         val dropPct = llm.slop.liquidlsd.export.RealtimeRecorder.droppedPercentage
 
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.85f, 0.15f, 0.15f, 1.0f)
-                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.95f, 0.25f, 0.25f, 1.0f)
+                        val recCol = TangoPalette.DANGER
+                        ImGui.pushStyleColor(ImGuiCol.Button, recCol.normal[0], recCol.normal[1], recCol.normal[2], 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, recCol.light[0], recCol.light[1], recCol.light[2], 1.0f)
                         if (ImGui.button("REC %02d:%02d (%.1fMB)".format(mins, secs, sizeMb))) {
                             llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
                         }
@@ -172,9 +173,11 @@ class MenuBar(
 
                         ImGui.sameLine(0f, 4f)
                         if (dropped > 0) {
-                            ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.35f, 0.35f, 1.0f)
+                            val c = TangoPalette.DANGER.light
+                            ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], 1.0f)
                         } else {
-                            ImGui.pushStyleColor(ImGuiCol.Text, 0.45f, 0.95f, 0.45f, 1.0f)
+                            val c = TangoPalette.ACTIVE.light
+                            ImGui.pushStyleColor(ImGuiCol.Text, c[0], c[1], c[2], 1.0f)
                         }
                         ImGui.textUnformatted("Drop: %d (%.1f%%)".format(dropped, dropPct))
                         ImGui.popStyleColor()
@@ -184,8 +187,9 @@ class MenuBar(
                     // ── Web Broadcast Status Pill (visible only when active/connecting/error) ─
                     when (broadcastState) {
                         llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED -> {
-                            ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.65f, 0.25f, 1.0f)
-                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.75f, 0.35f, 1.0f)
+                            val c = TangoPalette.ACTIVE
+                            ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
                             if (ImGui.button("${Icons.ACTIVITY} LIVE")) {
                                 llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
                             }
@@ -193,8 +197,9 @@ class MenuBar(
                             itemTooltip("Broadcasting live session state to Web TV client.\nClick to stop.")
                         }
                         llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTING -> {
-                            ImGui.pushStyleColor(ImGuiCol.Button, 0.8f, 0.7f, 0.15f, 1.0f)
-                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.9f, 0.8f, 0.25f, 1.0f)
+                            val c = TangoPalette.ALERT
+                            ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
                             if (ImGui.button("${Icons.REFRESH} CONNECTING")) {
                                 llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
                             }
@@ -202,8 +207,9 @@ class MenuBar(
                             itemTooltip("Connecting to relay server...\nClick to cancel.")
                         }
                         llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.ERROR -> {
-                            ImGui.pushStyleColor(ImGuiCol.Button, 0.8f, 0.2f, 0.2f, 1.0f)
-                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.9f, 0.3f, 0.3f, 1.0f)
+                            val c = TangoPalette.DANGER
+                            ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
                             if (ImGui.button("${Icons.ALERT} LIVE ERR")) {
                                 llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
                             }
@@ -219,17 +225,12 @@ class MenuBar(
                     if (llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.isScanning) {
                         val progress = (llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanProgress * 100f).toInt()
                         val currentPath = llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanCurrentPath
-                        ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.45f, 0.75f, 0.9f)
-                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.55f, 0.85f, 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.SYNC.normal[0], TangoPalette.SYNC.normal[1], TangoPalette.SYNC.normal[2], 0.9f)
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.SYNC.bright[0], TangoPalette.SYNC.bright[1], TangoPalette.SYNC.bright[2], 1.0f)
                         ImGui.button("${Icons.REFRESH} SCANNING ($progress%)")
                         ImGui.popStyleColor(2)
                         itemTooltip("Scanning ISF Shaders ($progress% complete)\n${if (currentPath.isNotEmpty()) currentPath else "Indexing library..."}")
                     }
-
-                    if (ImGui.menuItem("Color", "", ColorTunerPanel.isOpen)) {
-                        ColorTunerPanel.toggle()
-                    }
-                    itemTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
 
                     // ── Ableton Link Status Pill (visible only when enabled) ─────────
                     val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
@@ -241,11 +242,12 @@ class MenuBar(
                         val label = "${Icons.ACTIVITY} LINK [$peerText]"
 
                         if (peers > 0) {
-                            ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f) // cyan for connected
-                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.70f, 0.85f, 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.SYNC.normal[0], TangoPalette.SYNC.normal[1], TangoPalette.SYNC.normal[2], 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.SYNC.bright[0], TangoPalette.SYNC.bright[1], TangoPalette.SYNC.bright[2], 1.0f)
                         } else {
-                            ImGui.pushStyleColor(ImGuiCol.Button, 0.75f, 0.55f, 0.15f, 1.0f) // amber searching
-                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.85f, 0.65f, 0.25f, 1.0f)
+                            val c = TangoPalette.ALERT
+                            ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
                         }
 
                         if (ImGui.button(label)) {
