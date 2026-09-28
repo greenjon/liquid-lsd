@@ -173,7 +173,9 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
     fun deepEditParamsWidth(session: SessionContext, metrics: GridMetrics): Float {
         val lastCol = rackVisibleColumns(session).last()
         val maxGridW = rackColumnOffset(session, lastCol, metrics) + metrics.cell + metrics.cellPad * 0.5f
-        return DEEP_EDIT_LABEL_COL_W + maxGridW + 24f
+        // Reserve just the scrollbar's own width plus a thin sliver of breathing room -- not a full margin.
+        val scrollbarMargin = ImGui.getStyle().scrollbarSize + 3.5f
+        return DEEP_EDIT_LABEL_COL_W + maxGridW + scrollbarMargin
     }
 
     /**
@@ -273,6 +275,9 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         val headerH = ParameterGridHeaders.calculateHeaderHeight(session)
 
         // 1. Left column: 5-channel side tabs (MIX, A, B, BG, PV)
+        val rowTopY = ImGui.getCursorScreenPosY()
+        val sideTabsX0 = ImGui.getCursorScreenPosX()
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)
         if (ImGui.beginChild("##rack_deep_side_tabs_$moduleId", sideTabWidth, 0f, false)) {
             ParametersTabs.drawPerformanceDeepEditSideTabs(session, parametersState, mixer, topOffset = headerH) { targetSection ->
                 llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(targetSection, parametersState.getActiveSubTab(targetSection))
@@ -288,10 +293,14 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
             }
         }
         ImGui.endChild()
+        ImGui.popStyleVar()
 
         ImGui.sameLine(0f, gap)
 
         // 2. Middle column: Parameter grid
+        val paramsX0 = ImGui.getCursorScreenPosX()
+        var contentBottomY = rowTopY
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)
         if (ImGui.beginChild("##rack_deep_params_$moduleId", paramsW, 0f, false)) {
             val gridStartX = ImGui.getCursorScreenPosX()
 
@@ -305,9 +314,27 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
                 ParametersTabs.drawMixerGroupContent(session, mixer, parametersState, labelColW, gridStartX, cvColumnsFn, columnOffsetFn, colorFn, onPushUndo)
             }
 
+            contentBottomY = ImGui.getCursorScreenPosY()
             ImGui.dummy(0f, 0f)
         }
         ImGui.endChild()
+        ImGui.popStyleVar()
+
+        // Deck-colored card behind the header + grid, flush against the side rail (no dead gap
+        // between the vertical tabs and the grid) and flush against the top of the CTRL/FX/TRANS
+        // tab row (no dead gap above the first param row).
+        run {
+            val dl = ImGui.getWindowDrawList()
+            val deckColorTab = deckLabel ?: "Mixer"
+            val accentColor = ParametersTabs.getDeckColor(deckColorTab, 0.7f)
+            val accentFill = ParametersTabs.getDeckColor(deckColorTab, 0.04f)
+            val boxMinX = sideTabsX0 + sideTabWidth
+            val boxMaxX = paramsX0 + paramsW
+            val boxMinY = rowTopY
+            val boxMaxY = contentBottomY.coerceAtLeast(boxMinY + 60f)
+            dl.addRectFilled(boxMinX, boxMinY, boxMaxX, boxMaxY, accentFill, 4f)
+            dl.addRect(boxMinX, boxMinY, boxMaxX, boxMaxY, accentColor, 4f, 0, 1.5f)
+        }
 
         ImGui.sameLine(0f, gap)
 

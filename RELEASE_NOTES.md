@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Performance Deep Edit Card Background & Scrollbar Margin Refinement (`PerformanceDeepEditBay.kt`)
+- **Deck-Colored Card Framing**: Added a deck-colored card background and bounding box behind the Performance Deep Edit Bay header and parameter grid, flushing against the side rail and top tab row to eliminate dead gaps and provide clean visual grouping.
+- **Dynamic Scrollbar Margin Calculation**: Updated `deepEditParamsWidth` to dynamically reserve scrollbar width plus a tight breathing margin (`ImGui.getStyle().scrollbarSize + 3.5f`) instead of a fixed margin, avoiding horizontal clipping or excess whitespace.
+
 ### Multi-Select Category Dropdown in Shader & FX Browser (`ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`)
 - **Multi-Select Category Dropdown**: Replaced the horizontal scrolling category chips row in the Performance row Browse bay (`ShaderPickerPopup.kt`) with a compact `ImGui.beginCombo` multi-select dropdown.
 - **Top Toolbar Integration**: Positioned the category dropdown directly beside the search bar (`[Search Input] [Category Dropdown ▾] [ ⋮ ]`), reclaiming 32px of vertical space for the shader results table in compact rack bays.

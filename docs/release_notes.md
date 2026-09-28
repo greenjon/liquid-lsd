@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Performance Deep Edit Card Background & Scrollbar Margin Refinement (`PerformanceDeepEditBay.kt`)
+- **Deck-Colored Card Framing**: Added a deck-colored card background and bounding box behind the Performance Deep Edit Bay header and parameter grid, flushing against the side rail and top tab row to eliminate dead gaps and provide clean visual grouping.
+- **Dynamic Scrollbar Margin Calculation**: Updated `deepEditParamsWidth` to dynamically reserve scrollbar width plus a tight breathing margin (`ImGui.getStyle().scrollbarSize + 3.5f`) instead of a fixed margin, avoiding horizontal clipping or excess whitespace.
+
 ### Parameter Grid Kebab Repositioned Left of VAL Column (`ParameterGridHeaders.kt`, `ParametersTabs.kt`, `PerformanceDeepEditBay.kt`)
 - **Column Settings Kebab Moved**: The `⋮` kebab menu that toggles the `MIDI`/`LFO`/`SEQ`/`AUD` columns and modulator engines now sits immediately left of the `VAL` column header, pixel-aligned with the row kebabs (`BrowserRowMoreButton`) below it, instead of trailing off the right edge of the grid.
 - **Narrower Deep Edit Bay**: Removing the trailing kebab margin shrinks Deep Edit's minimum required width by ~20px.
