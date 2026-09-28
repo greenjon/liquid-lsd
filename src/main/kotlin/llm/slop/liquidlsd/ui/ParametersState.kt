@@ -190,7 +190,7 @@ class ParametersState {
         rackSectionMode[moduleId] = SectionMode.PARAMS
     }
 
-    /** Opens [deckLabel]'s generator Browse -- the deck row's generator badge, or its empty-deck launchpad. */
+    /** Opens [deckLabel]'s source Browse -- the deck row's source badge, or its empty-deck launchpad. */
     fun openGenBrowse(canonicalModuleId: String, deckLabel: String) {
         setDeckSubTab(deckLabel, "SRC")
         openBrowse(canonicalModuleId, BrowseTarget.Gen)

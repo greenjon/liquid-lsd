@@ -58,7 +58,7 @@ object ParametersKeyboard {
                 "Deck PV" -> mixer.deckPV
                 else -> null
             }
-            if (activeDeck != null && !activeDeck.isEmpty) {
+            if (activeDeck != null && !activeDeck.isEmpty && activeDeck.source !is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
                 val isDeckA = state.activeTopTab == "Deck A"
                 deckPresetController?.handleSaveDeck(mixer, activeDeck, isDeckA, isSaveAs = isSaveAs)
             }

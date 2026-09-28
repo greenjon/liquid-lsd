@@ -1,6 +1,10 @@
 package llm.slop.liquidlsd.rendering
 
+import io.mockk.every
+import io.mockk.mockk
+import java.io.File
 import llm.slop.liquidlsd.models.DeckPresetDto
+import llm.slop.liquidlsd.presets.PresetRepository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -121,5 +125,18 @@ class ExternalVideoSourceTest {
         assertEquals("OBS-Camera", source.serverName)
         assertEquals("OBS-Camera", source.displayName)
         assertEquals("spout_input", source.id)
+    }
+
+    @Test
+    fun testPresetRepositoryRefusesToSaveExternalVideo() {
+        val extSource = ExternalVideoSource(serverName = "OBS-Camera")
+        val deck = mockk<Deck>(relaxed = true)
+        every { deck.source } returns extSource
+
+        val testFile = File("build/tmp/test_external_preset.lsd")
+        if (testFile.exists()) testFile.delete()
+
+        PresetRepository.saveDeckPresetAsync(testFile, deck, "test_external_preset")
+        assertFalse(testFile.exists(), "PresetRepository must refuse to save preset when source is ExternalVideoSource")
     }
 }

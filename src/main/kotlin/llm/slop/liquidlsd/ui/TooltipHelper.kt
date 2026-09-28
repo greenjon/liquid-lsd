@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiCond
+import imgui.flag.ImGuiHoveredFlags
 import imgui.flag.ImGuiStyleVar
 
 /**
@@ -282,8 +283,13 @@ internal fun popTooltipStyles() {
  * Displays a Mixxx-style tooltip for the currently hovered item with standard hover delay.
  * Automatically checks [UITheme.tooltipsEnabled] and [ImGui.isItemHovered].
  */
-fun itemTooltip(text: String, delayMs: Long = TooltipHelper.DEFAULT_HOVER_DELAY_MS) {
-    if (!UITheme.tooltipsEnabled || !ImGui.isItemHovered()) return
+fun itemTooltip(text: String, delayMs: Long = TooltipHelper.DEFAULT_HOVER_DELAY_MS, allowWhenDisabled: Boolean = false) {
+    val hovered = if (allowWhenDisabled) {
+        ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)
+    } else {
+        ImGui.isItemHovered()
+    }
+    if (!UITheme.tooltipsEnabled || !hovered) return
 
     val minX = ImGui.getItemRectMinX().toInt()
     val minY = ImGui.getItemRectMinY().toInt()
@@ -317,9 +323,15 @@ inline fun itemTooltip(
     delayMs: Long = TooltipHelper.DEFAULT_HOVER_DELAY_MS,
     estimatedWidth: Float = 320f,
     estimatedHeight: Float = 80f,
+    allowWhenDisabled: Boolean = false,
     block: () -> Unit
 ) {
-    if (!UITheme.tooltipsEnabled || !ImGui.isItemHovered()) return
+    val hovered = if (allowWhenDisabled) {
+        ImGui.isItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)
+    } else {
+        ImGui.isItemHovered()
+    }
+    if (!UITheme.tooltipsEnabled || !hovered) return
 
     val minX = ImGui.getItemRectMinX().toInt()
     val minY = ImGui.getItemRectMinY().toInt()

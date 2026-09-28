@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#ui-terminology-standardization-to-source-src-librarypanelkt-presetlistpanelkt-performancedeckcontrolskt-decksourcepickerkt-parameterstabskt-parametersstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UI Terminology Standardization to Source / SRC (LibraryPanel.kt, PresetListPanel.kt, PerformanceDeckControls.kt, DeckSourcePicker.kt, ParametersTabs.kt, ParametersState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#deck-rows-generator-badge-and-preset-combo-merged-into-one-control-shaderpickerpopupkt-performancebrowsebaykt-performancedeckcontrolskt-browserpopuphandlerkt-librarypanelkt-uimanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4371,6 +4382,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#ui-terminology-standardization-to-source-src-librarypanelkt-presetlistpanelkt-performancedeckcontrolskt-decksourcepickerkt-parameterstabskt-parametersstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UI Terminology Standardization to Source / SRC (LibraryPanel.kt, PresetListPanel.kt, PerformanceDeckControls.kt, DeckSourcePicker.kt, ParametersTabs.kt, ParametersState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#deck-rows-generator-badge-and-preset-combo-merged-into-one-control-shaderpickerpopupkt-performancebrowsebaykt-performancedeckcontrolskt-browserpopuphandlerkt-librarypanelkt-uimanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7509,6 +7531,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="ui-terminology-standardization-to-source-src-librarypanelkt-presetlistpanelkt-performancedeckcontrolskt-decksourcepickerkt-parameterstabskt-parametersstatekt">UI Terminology Standardization to Source / SRC (<code>LibraryPanel.kt</code>, <code>PresetListPanel.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>DeckSourcePicker.kt</code>, <code>ParametersTabs.kt</code>, <code>ParametersState.kt</code>)</h3>
+<ul>
+<li>Settle on <strong>"Source"</strong> / <strong>"SRC"</strong> as the primary terminology for visual inputs across the application (Library, Performance deck rows, launchpad, subtabs, and documentation), while preserving <strong>"Generators"</strong> and <strong>"External Sources"</strong> as distinct category filters within the Source Picker.</li>
+<li>Library mode toggle changed from <code>[ Generators ]</code> to <code>[ Sources ]</code>, and PresetListPanel column header updated from "Generators" to "Sources".</li>
+<li>Performance deck row pill and subtabs standardized on <code>[SRC]</code>, with tooltips and empty-deck launchpad prompts aligned to refer to visual sources rather than generators.</li>
+<li>Disambiguates visual inputs from audio/CV modulation generators (LFOs, clock generators) and accurately accommodates live external streams (webcams, Spout/Syphon, NDI feeds).</li>
+</ul>
 <h3 id="deck-rows-generator-badge-and-preset-combo-merged-into-one-control-shaderpickerpopupkt-performancebrowsebaykt-performancedeckcontrolskt-browserpopuphandlerkt-librarypanelkt-uimanagerkt">Deck Row's Generator Badge and Preset Combo Merged Into One Control (<code>ShaderPickerPopup.kt</code>, <code>PerformanceBrowseBay.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>BrowserPopupHandler.kt</code>, <code>LibraryPanel.kt</code>, <code>UIManager.kt</code>)</h3>
 <ul>
 <li>A preset is just a generator with its parameter values saved under a name, so a deck row no longer shows two redundant boxes for it. The generator badge and the separate searchable preset dropdown are now a single badge: it shows the active preset's name (or the generator's own name when nothing's been saved), and clicking it opens Gen Browse listing stock generator types <strong>and</strong> saved presets together, always both — the same merge the Library's Generators panel already does.</li>

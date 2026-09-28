@@ -206,7 +206,7 @@ object ParametersTabs {
                     }
                 }
                 val tooltip = when (tab) {
-                    "SRC" -> "Source: Parameters for active visual generator, zoom, and rotation."
+                    "SRC" -> "Source: Parameters for active visual source, zoom, and rotation."
                     "FX" -> if (state.activeTopTab == "Mixer") "Master FX: a chain of 3 serial ISF effect slots on the master output." else "FX: this deck's chain of 3 serial ISF effect slots."
                     "CTRL" -> "Control: Master controls, channel levels, queue & clock triggers, and morph triggers."
                     "TRANS" -> "Transition: Transition shader selection, bypass, dry/wet, and dynamic parameters."

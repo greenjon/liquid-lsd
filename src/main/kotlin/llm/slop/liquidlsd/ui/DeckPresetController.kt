@@ -36,6 +36,7 @@ class DeckPresetController(
     }
 
     fun saveDeckPreset(mixer: Mixer, name: String, deck: Deck, isDeckA: Boolean, tags: List<String>? = null) {
+        if (deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource) return
         val cleanName = name.removeSuffix(".lsd").trim()
         if (cleanName.isBlank()) return
 
@@ -98,24 +99,26 @@ class DeckPresetController(
 
         when (session.uiTheme.autoVjDirtyBehavior) {
             UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
-                val activeName = when {
-                    deck === mixer.deckA -> session.presetManager.activePresetA
-                    deck === mixer.deckB -> session.presetManager.activePresetB
-                    deck === mixer.deckBG -> session.presetManager.activePresetBG
-                    else -> session.presetManager.activePresetPV
+                if (deck.source !is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
+                    val activeName = when {
+                        deck === mixer.deckA -> session.presetManager.activePresetA
+                        deck === mixer.deckB -> session.presetManager.activePresetB
+                        deck === mixer.deckBG -> session.presetManager.activePresetBG
+                        else -> session.presetManager.activePresetPV
+                    }
+                    val deckLabel = when {
+                        deck === mixer.deckA -> "Deck A"
+                        deck === mixer.deckB -> "Deck B"
+                        deck === mixer.deckBG -> "Deck BG"
+                        else -> "Deck PV"
+                    }
+                    val saveName = if (!activeName.isNullOrBlank() && activeName != "None") {
+                        activeName
+                    } else {
+                        "AutoSave_${deckLabel.replace(" ", "")}_${System.currentTimeMillis()}"
+                    }
+                    saveDeckPreset(mixer, saveName, deck, deck === mixer.deckA)
                 }
-                val deckLabel = when {
-                    deck === mixer.deckA -> "Deck A"
-                    deck === mixer.deckB -> "Deck B"
-                    deck === mixer.deckBG -> "Deck BG"
-                    else -> "Deck PV"
-                }
-                val saveName = if (!activeName.isNullOrBlank() && activeName != "None") {
-                    activeName
-                } else {
-                    "AutoSave_${deckLabel.replace(" ", "")}_${System.currentTimeMillis()}"
-                }
-                saveDeckPreset(mixer, saveName, deck, deck === mixer.deckA)
                 onProceed()
             }
             UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {
@@ -144,6 +147,7 @@ class DeckPresetController(
     }
 
     fun handleSaveDeck(mixer: Mixer, deck: Deck, isDeckA: Boolean, isSaveAs: Boolean) {
+        if (deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource) return
         val activeName = when {
             deck === mixer.deckA -> session.presetManager.activePresetA
             deck === mixer.deckB -> session.presetManager.activePresetB

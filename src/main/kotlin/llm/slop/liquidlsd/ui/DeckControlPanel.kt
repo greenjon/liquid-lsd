@@ -514,8 +514,22 @@ fun drawDeckButtonRow(
     val tag = deckLabel.replace(" ", "")
 
     // 1. Save Button
+    val isExternalVideo = deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource
+    val saveTooltip = if (isExternalVideo) {
+        "External video streams (${deck.source.displayName}) cannot be saved as presets."
+    } else {
+        "Save or save as a new preset for $deckLabel."
+    }
     ImGui.setCursorScreenPos(startX, startY)
-    if (drawIconButton(session, "##btn_Save_$tag", Icons.SAVE, rowH, "Save or save as a new preset for $deckLabel.")) {
+    if (drawIconButton(
+        session,
+        "##btn_Save_$tag",
+        Icons.SAVE,
+        rowH,
+        tooltip = saveTooltip,
+        disabled = isExternalVideo,
+        disabledTooltip = saveTooltip
+    )) {
         ImGui.openPopup("save_menu_$tag")
     }
     pushOpenDropdownPadding()
@@ -689,7 +703,9 @@ private fun drawIconButton(
     id: String,
     icon: String,
     rowH: Float,
-    tooltip: String? = null
+    tooltip: String? = null,
+    disabled: Boolean = false,
+    disabledTooltip: String? = null
 ): Boolean {
     var iconW = 0f
     session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -697,11 +713,18 @@ private fun drawIconButton(
     }
     val btnW = (iconW + 20f).coerceAtLeast(28f)
     var isClicked = false
+    if (disabled) {
+        ImGui.beginDisabled(true)
+    }
     session.uiTheme.withFont(UITheme.FontLevel.BODY) {
         isClicked = ImGui.button("$icon$id", btnW, rowH)
     }
-    if (tooltip != null) {
-        itemTooltip(tooltip)
+    if (disabled) {
+        ImGui.endDisabled()
     }
-    return isClicked
+    val activeTip = if (disabled && disabledTooltip != null) disabledTooltip else tooltip
+    if (activeTip != null) {
+        itemTooltip(activeTip, allowWhenDisabled = disabled)
+    }
+    return isClicked && !disabled
 }

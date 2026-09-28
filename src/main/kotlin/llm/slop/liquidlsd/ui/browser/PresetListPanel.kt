@@ -57,10 +57,10 @@ object PresetListPanel {
     fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
         val btnSize = ImGui.getFrameHeight()
 
-        // Title Bar: "Generators" on the left, [+] and [...] buttons on the right
+        // Title Bar: "Sources" on the left, [+] and [...] buttons on the right
         ImGui.alignTextToFramePadding()
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("Generators")
+            ImGui.text("Sources")
         }
         ImGui.sameLine()
         val totalButtonsWidth = btnSize * 2f + ImGui.getStyle().getItemSpacingX()
@@ -115,12 +115,12 @@ object PresetListPanel {
                 ImGui.openPopup("preset_browser_tier_filter")
             }
         }
-        itemTooltip("Filter Generators list by type.")
+        itemTooltip("Filter Sources list by type.")
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("preset_browser_tier_filter")) {
             pushOpenDropdownFont()
             showStockRef.set(showStock)
-            if (ImGui.checkbox("Stock Generators", showStockRef)) showStock = showStockRef.get()
+            if (ImGui.checkbox("Stock Sources", showStockRef)) showStock = showStockRef.get()
             showSavedRef.set(showSaved)
             if (ImGui.checkbox("Saved Presets", showSavedRef)) showSaved = showSavedRef.get()
             popOpenDropdownFont()
@@ -138,7 +138,7 @@ object PresetListPanel {
             ImGui.setKeyboardFocusHere()
             shouldFocusSearch = false
         }
-        ImGui.inputTextWithHint("##presetSearch", "Search generators, presets & tags... (Ctrl+F)", searchBuffer)
+        ImGui.inputTextWithHint("##presetSearch", "Search sources, presets & tags... (Ctrl+F)", searchBuffer)
         if (ImGui.isItemActive()) {
             if (ImGui.isKeyPressed(ImGuiKey.Escape)) {
                 searchBuffer.set("")

@@ -46,6 +46,12 @@ var activePresetMtimePV: Long? = null
 - **Initial App Launch**: Newly instantiated decks default to `isEmpty = true`. When launching without a pre-existing `last_session.json` (or when `StartupBehavior.EMPTY` is active), `PresetManager.startEmpty(mixer)` is invoked.
 - **Empty Deck State**: Resets parameters across all available visual sources and 2D/3D view pipelines, clears FBO framebuffers, and leaves all deck monitors as blank black screens with the Parameters Launchpad activated ("Add Source" / "Load Preset").
 
+### External Video Streams Excluded from Presets (`ExternalVideoSource`)
+- **No Preset Persistence**: Decks whose active visual source is an `ExternalVideoSource` (Spout2 on Windows, Syphon on macOS, PipeWire on Linux) cannot be saved as `.lsd` presets.
+- **Rationale**: External video streams possess 0 procedural generator shader parameters, are ephemeral runtime inter-process handles, and can become dead "ghost" presets if saved. Direct live selection via the Universal Shader Picker ("External Sources" category) guarantees stream presence and connects immediately.
+- **UI & Controller Guards**: The Save icon buttons in `DeckControlPanel` and `PerformanceBrowseBay` (Gen Browse) are visibly disabled (`ImGui.beginDisabled`) with an explanatory hover tooltip (`External video streams (<source name>) cannot be saved as presets.`, powered by `allowWhenDisabled` in `TooltipHelper.kt`). Keyboard shortcuts (`Ctrl+S`/`Cmd+S`), `DeckPresetController.handleSaveDeck`, `DeckPresetController.saveDeckPreset`, and `PresetRepository.saveDeckPresetAsync` early-return immediately without action.
+- **Dirty Checking**: `PresetManager.isDeckDirty` unconditionally returns `false` for `ExternalVideoSource`, avoiding spurious unsaved changes prompts when switching sources or ejecting decks.
+
 ---
 
 ## 2. Notes System Manager (`NotesManager.kt`)

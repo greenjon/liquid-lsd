@@ -103,7 +103,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             parametersState.setDeckSubTab(deckLabel, "SRC")
         }
         ImGui.popStyleColor()
-        itemTooltip("Assign $deckLabel's on-screen knobs to Visual Generator macros. Source controls stay available either way.")
+        itemTooltip("Assign $deckLabel's on-screen knobs to Visual Source macros. Source controls stay available either way.")
 
         ImGui.sameLine(0f, gap)
 
@@ -174,9 +174,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, ImGui.colorConvertFloat4ToU32(0.60f, 0.70f, 0.90f, 1f), 4f, 0, 1.5f)
         }
         itemTooltip(
-            if (deck.isEmpty) "$deckLabel is empty. Click to browse generators and presets."
-            else if (isExternalVideo) "Generator: $genName ($deckLabel). Click to change the visual source."
-            else "$genName ($deckLabel). Click to browse generators/presets, right-click for defaults."
+            if (deck.isEmpty) "$deckLabel is empty. Click to browse sources and presets."
+            else if (isExternalVideo) "External Source: $genName ($deckLabel). Click to change the visual source."
+            else "$genName ($deckLabel). Click to browse sources/presets, right-click for defaults."
         )
 
         ImGui.sameLine(0f, gap)

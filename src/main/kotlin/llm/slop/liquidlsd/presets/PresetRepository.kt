@@ -72,6 +72,10 @@ object PresetRepository {
     }
 
     fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) {
+        if (deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
+            logger.warn { "Refusing to save deck preset: source is an external video stream (${deck.source.displayName})" }
+            return
+        }
         val deckLabel = when (deckIndex) {
             0 -> "Deck A"
             1 -> "Deck B"

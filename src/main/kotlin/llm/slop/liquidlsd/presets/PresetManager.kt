@@ -75,6 +75,8 @@ object PresetManager {
             else -> null
         }
         if (cached == null) return false
+        val isExternal = runCatching { deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource }.getOrDefault(false)
+        if (isExternal) return false
         val current = deck.toDto(cached.name)
         return current != cached
     }

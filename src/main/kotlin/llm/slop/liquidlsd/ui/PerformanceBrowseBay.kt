@@ -74,13 +74,24 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
      *  own Save button and Ctrl+Shift+S already use, just also reachable from this Browse list. */
     private fun drawGenBrowseSaveButton(session: SessionContext, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String) {
         val isDeckA = deckLabel == "Deck A"
+        val isExternal = deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource
         val rowH = ImGui.getFrameHeight()
+        if (isExternal) {
+            ImGui.beginDisabled(true)
+        }
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ImGui.button("${Icons.SAVE}##browse_gen_save_$deckLabel", rowH, rowH)) {
-                ImGui.openPopup("browse_gen_save_menu_$deckLabel")
+                if (!isExternal) {
+                    ImGui.openPopup("browse_gen_save_menu_$deckLabel")
+                }
             }
         }
-        itemTooltip("Save or save as a new preset for $deckLabel.")
+        if (isExternal) {
+            ImGui.endDisabled()
+            itemTooltip("External video streams (${deck.source.displayName}) cannot be saved as presets.", allowWhenDisabled = true)
+        } else {
+            itemTooltip("Save or save as a new preset for $deckLabel.")
+        }
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("browse_gen_save_menu_$deckLabel")) {
             pushOpenDropdownFont()

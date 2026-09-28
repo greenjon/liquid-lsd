@@ -114,7 +114,7 @@ object DeckSourcePicker {
             ImGui.spacing()
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.65f, 0.65f, 0.70f, 1f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                ImGui.textWrapped("No visual generator is currently assigned to this deck. Choose an action below to activate:")
+                ImGui.textWrapped("No visual source is currently assigned to this deck. Choose an action below to activate:")
             }
             ImGui.popStyleColor()
 
@@ -137,7 +137,7 @@ object DeckSourcePicker {
                     state.openGenBrowse(canonicalBankId, deckLabel)
                 }
             }
-            itemTooltip("Select a visual generator source (Mandala, Gyroid, Dynamic Spiral, external video, etc.)")
+            itemTooltip("Select a visual source (Mandala, Gyroid, Dynamic Spiral, external video, etc.)")
             ImGui.popStyleColor(3)
 
             ImGui.spacing()

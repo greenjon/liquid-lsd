@@ -243,7 +243,7 @@ object LibraryPanel {
             val bottomSpacing = 2.5f
             val yOffset = (menuBarH - btnH - bottomSpacing).coerceAtLeast(0f)
 
-            // Left Mode Toggle: [ Generators ] / [ FX ] / [ Trans ]
+            // Left Mode Toggle: [ Sources ] / [ FX ] / [ Trans ]
             ImGui.setCursorPosX(8f)
             ImGui.setCursorPosY(yOffset)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -254,7 +254,7 @@ object LibraryPanel {
 
                 val isPresets = viewMode == LibraryViewMode.PRESETS
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isPresets) activeCol else inactiveCol)
-                if (ImGui.button("Generators##mode_presets", btnWModeWide, btnH)) {
+                if (ImGui.button("Sources##mode_presets", btnWModeWide, btnH)) {
                     viewMode = LibraryViewMode.PRESETS
                 }
                 ImGui.popStyleColor()
