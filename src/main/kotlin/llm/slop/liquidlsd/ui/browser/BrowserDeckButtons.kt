@@ -23,7 +23,7 @@ internal object BrowserDeckButtons {
     // ── Deck accent colours (Tango Desktop Project hues; see TangoPalette) ──
     private val DECK_A   = TangoPalette.DECK_A.normal  // #F57900 orange
     private val DECK_B   = TangoPalette.DECK_B.normal  // #3465A4 sky blue
-    private val DECK_BG  = TangoPalette.DECK_BG.normal // #C17D11 chocolate
+    private val DECK_BG  = TangoPalette.DECK_BG.normal // #73D216 chameleon green (matches Mixxx's own Deck 3)
     private val DECK_PV  = TangoPalette.DECK_PV.normal // #75507B plum
     // Q / BGQ are toolbar queue actions, not deck identities (Q feeds either A or B; BGQ feeds BG
     // specifically but sits beside Q and must read as the same "queue" family) -- neutral

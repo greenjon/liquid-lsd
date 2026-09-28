@@ -14,15 +14,16 @@ internal object PerformanceColors {
     // decks (or a deck vs. a status role) ever share a hue.
     val COLOR_DECK_A   = TangoPalette.DECK_A.normal  // #F57900 orange
     val COLOR_DECK_B   = TangoPalette.DECK_B.normal  // #3465A4 sky blue
-    val COLOR_DECK_BG  = TangoPalette.DECK_BG.normal // #C17D11 chocolate
+    val COLOR_DECK_BG  = TangoPalette.DECK_BG.normal // #73D216 chameleon green (shared with ACTIVE -- see TangoPalette)
     val COLOR_DECK_PV  = TangoPalette.DECK_PV.normal // #75507B plum
     // These 4 badge the MASTER tab's rows, shown stacked together, so they need to read apart from
     // each other as much as from the DECKS tab's deck hues -- neither Master nor Global is deck-
-    // specific, so neutral Aluminium tones; Transitions/FX use the Sync cyan family (dark/bright)
-    // since both are "signal routing" concepts distinct from any single deck or status role.
+    // specific, so neutral Aluminium tones; Transitions keeps the Sync cyan (crossfading decks is
+    // a "sync" concept); FX Wet/Dry uses Chocolate (freed up now that Deck BG is Chameleon) so it
+    // doesn't read as just a lighter/darker copy of the Transitions row.
     val COLOR_TRANS    = TangoPalette.SYNC.normal          // #06AFDF
     val COLOR_MASTER   = TangoPalette.NEUTRAL_LIGHT.normal // #D3D7CF
-    val COLOR_FX       = TangoPalette.SYNC.bright          // #34E2E2
+    val COLOR_FX       = TangoPalette.CHOCOLATE.normal     // #C17D11
     val COLOR_GLOBAL   = TangoPalette.NEUTRAL_DARK.normal  // #555753
 
     /** Uniform height of every row-side control (buttons, badges, preset combo) left/right of the knobs. */

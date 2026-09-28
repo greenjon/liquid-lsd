@@ -40,13 +40,16 @@ object TangoPalette {
     /** Mixxx's own sync/link/learn accent -- not one of the 8 core hues, but its documented Tango-skin extension. */
     val SYNC_CYAN = TwoTone(rgb(0x06AFDF), rgb(0x34E2E2))
 
-    // -- Role assignments: one hue per role, none shared ----------------------------------------
-
-    // Deck accents (see BrowserDeckButtons, PerformanceColors) -- the 4 chromatic hues not used
-    // by a status role below, so a deck's color is never mistaken for a status meaning.
+    // -- Role assignments ------------------------------------------------------------------------
+    // Deck accents (see BrowserDeckButtons, PerformanceColors). DECK_BG intentionally shares its
+    // hue with the ACTIVE status role below (both Chameleon green, matching Mixxx's own Deck 3):
+    // Chocolate reads as near-identical to Orange (same warm/low-saturation family) so it doesn't
+    // actually solve the "decks must look distinct" goal, whereas everyday overlap between "this
+    // is Deck BG" and "this control is on" is judged low-risk since they're rarely ambiguous in
+    // context.
     val DECK_A  = ORANGE
     val DECK_B  = SKY_BLUE
-    val DECK_BG = CHOCOLATE
+    val DECK_BG = CHAMELEON
     val DECK_PV = PLUM
 
     // Status roles, shared by every button/slider/indicator app-wide regardless of which deck it's on.

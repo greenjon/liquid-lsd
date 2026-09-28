@@ -27,7 +27,7 @@ object BeatDivisionSlider {
         formatValue: (Float) -> String,
         onRangeChanged: (Float, Float) -> Unit,
         idPrefix: String = "",
-        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f),
+        themeColor: Int = TangoPalette.u32(TangoPalette.SYNC.normal, 0.6f),
         modulatorIndex: Int? = null,
         propertyName: String? = null,
         paramKey: String? = null,
@@ -73,7 +73,7 @@ object BeatDivisionSlider {
         onRangeChanged: (Float, Float) -> Unit = { _, _ -> },
         onValueChanged: (Float) -> Unit = {},
         idPrefix: String = "",
-        themeColor: Int = ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.8f, 0.6f),
+        themeColor: Int = TangoPalette.u32(TangoPalette.SYNC.normal, 0.6f),
         isRandomizeDisabled: Boolean = false,
         randomizeDisabledTooltip: String? = null,
         modulatorIndex: Int? = null,
@@ -169,8 +169,8 @@ object BeatDivisionSlider {
 
         // Draw bounding box / tint around the beat division slider row when controlled by a Macro
         if (isMacroBound) {
-            val cyanOutline = ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.8f)
-            val cyanBg = ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.05f)
+            val cyanOutline = TangoPalette.u32(TangoPalette.SYNC.normal, 0.8f)
+            val cyanBg = TangoPalette.u32(TangoPalette.SYNC.normal, 0.05f)
             dl.addRectFilled(startX - 4f, startY - 2f, startX + w - 4f, startY + h + 2f, cyanBg, 4f)
             dl.addRect(startX - 4f, startY - 2f, startX + w - 4f, startY + h + 2f, cyanOutline, 4f, 0, 1.5f)
         }
@@ -269,15 +269,15 @@ object BeatDivisionSlider {
         }
         if (isMacroLearning) {
             val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
-            val borderCol = ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
+            val borderCol = TangoPalette.u32(TangoPalette.SYNC.bright, pulseAlpha)
             dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 1.5f)
         } else if (isOscLearningThis) {
             val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
-            val borderCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.7f, 0.1f, pulseAlpha)
+            val borderCol = TangoPalette.u32(TangoPalette.ALERT.normal, pulseAlpha)
             dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 2.0f)
         } else if (isMidiLearningThis) {
             val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
-            val borderCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.8f, 1.0f, pulseAlpha)
+            val borderCol = TangoPalette.u32(TangoPalette.SYNC.normal, pulseAlpha)
             dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 2.0f)
         }
 
@@ -288,10 +288,10 @@ object BeatDivisionSlider {
         if (isMacroBound) {
             val badge = "[${macroInfo!!.badgeLabel}]"
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                ImGui.textColored(0.0f, 0.85f, 1.0f, 1.0f, badge)
+                ImGui.textColored(TangoPalette.SYNC.normal[0], TangoPalette.SYNC.normal[1], TangoPalette.SYNC.normal[2], 1.0f, badge)
             }
             ImGui.sameLine(0f, 4f)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.u32(TangoPalette.SYNC.normal, 1.0f))
             session.uiTheme.body(label)
             ImGui.popStyleColor()
         } else {
@@ -368,7 +368,7 @@ object BeatDivisionSlider {
 
         // --- Dragging & Slider Render ---
         val effectiveThemeColor = if (isMacroBound) {
-            ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.95f)
+            TangoPalette.u32(TangoPalette.SYNC.normal, 0.95f)
         } else {
             themeColor
         }
@@ -440,13 +440,13 @@ object BeatDivisionSlider {
             }
 
             // Track
-            val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f)
+            val lineCol = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f)
             dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
             dl.addLine(minHandleX, centerY, maxHandleX, centerY, effectiveThemeColor, 3f)
 
             val handleW = 6f; val handleH = 16f
-            val handleBgCol = ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 1.0f)
-            val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
+            val handleBgCol = TangoPalette.u32(TangoPalette.NEUTRAL_LIGHT.normal, 1.0f)
+            val handleBorderCol = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f)
             dl.addRectFilled(minHandleX - handleW / 2f, centerY - handleH / 2f, minHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
             dl.addRect(minHandleX - handleW / 2f, centerY - handleH / 2f, minHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
             dl.addRectFilled(maxHandleX - handleW / 2f, centerY - handleH / 2f, maxHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
@@ -455,9 +455,9 @@ object BeatDivisionSlider {
             // Current value dot
             val curPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
             val curX = lineStartX + curPct * lineWidth
-            val curDotCol = if (isMacroBound) ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) else ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 1.0f)
+            val curDotCol = if (isMacroBound) TangoPalette.u32(TangoPalette.SYNC.normal, 1.0f) else TangoPalette.u32(TangoPalette.ALERT.normal, 1.0f)
             dl.addCircleFilled(curX, centerY, 4f, curDotCol)
-            dl.addCircle(curX, centerY, 4.5f, ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f), 12, 1.0f)
+            dl.addCircle(curX, centerY, 4.5f, TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f), 12, 1.0f)
         } else {
             val valPct = if (rangeSpan > 0f) (currentValue - minLimit) / rangeSpan else 0f
             val valHandleX = lineStartX + valPct * lineWidth
@@ -476,13 +476,13 @@ object BeatDivisionSlider {
                 draggingMin = false; draggingMax = false; activeSliderLabel = null
             }
 
-            val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f)
+            val lineCol = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f)
             dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
             dl.addLine(lineStartX, centerY, valHandleX, centerY, effectiveThemeColor, 3f)
 
             val handleW = 6f; val handleH = 16f
-            val handleBgCol = if (isMacroBound) ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) else ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 1.0f)
-            val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
+            val handleBgCol = if (isMacroBound) TangoPalette.u32(TangoPalette.SYNC.normal, 1.0f) else TangoPalette.u32(TangoPalette.NEUTRAL_DARK.light, 1.0f)
+            val handleBorderCol = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f)
             dl.addRectFilled(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
             dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
         }
@@ -492,11 +492,11 @@ object BeatDivisionSlider {
         if (isTrackHovered || isTrackActive) {
             CustomRangeSlider.isAnySliderHovered = true
             val borderCol = if (isMacroBound) {
-                ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.9f)
+                TangoPalette.u32(TangoPalette.SYNC.normal, 0.9f)
             } else if (isTrackActive) {
-                ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) // Electric Cyan while active dragging
+                TangoPalette.u32(TangoPalette.SYNC.normal, 1.0f) // Sync cyan while active dragging
             } else {
-                ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f) // Amber Gold on hover target
+                TangoPalette.u32(TangoPalette.ALERT.normal, 0.9f) // Alert amber on hover target
             }
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
 
