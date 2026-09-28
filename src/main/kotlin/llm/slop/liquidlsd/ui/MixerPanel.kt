@@ -16,12 +16,8 @@ import llm.slop.liquidlsd.macro.MacroEngine
 
 class MixerPanel(
     private val parametersState: ParametersState,
-    private val drawDeckControls: (Mixer, String, Deck, Float, Float, Boolean) -> Unit,
-    private val onUtilityAction: (Int, Deck, Deck) -> Unit, // (mode: 0=Move, 1=Copy, 2=Swap, from, to)
-    private val onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
-    private val onEjectDeck: (Deck, Boolean, Boolean) -> Unit
+    private val drawDeckControls: (Mixer, String, Deck, Float, Float, Boolean) -> Unit
 ) {
-    private var pendingRightDragFrom: String? = null
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val style = ImGui.getStyle()
@@ -303,10 +299,9 @@ class MixerPanel(
             mixer.crossfade.set(-1.0f)
         }
 
-        // 2. Deck B Box & Transition Picker
+        // 2. Deck B Box
         val gap = 10f
-        val transBtnW = 140f
-        val badgeBX = startX + contentW - badgeW - transBtnW - gap - 1f
+        val badgeBX = startX + contentW - badgeW - 1f
         val badgeBY = startY
         val rgbB = BrowserDeckButtons.colorB()
         val colorB = ImGui.colorConvertFloat4ToU32(rgbB[0], rgbB[1], rgbB[2], 1f)
@@ -329,44 +324,6 @@ class MixerPanel(
         if (ImGui.isItemClicked(0)) {
             mixer.onCrossfadeManualTakeover()
             mixer.crossfade.set(1.0f)
-        }
-
-        // Transition Shader Selector Button
-        val transBtnX = badgeBX + badgeW + gap
-        ImGui.setCursorScreenPos(transBtnX, badgeBY)
-        val transName = mixer.transitionFilter?.displayName ?: "Default Blend"
-        val isTransModified = mixer.transitionFilter?.let { filter ->
-            filter.dryWet.baseValue != 1.0f ||
-                filter.parameters.any { (name, param) ->
-                    val defaultVal = filter.header.INPUTS.find { it.NAME == name }?.DEFAULT?.toString()?.toFloatOrNull() ?: 0.0f
-                    kotlin.math.abs(param.baseValue - defaultVal) > 0.001f || param.modulators.any { !it.bypassed }
-                }
-        } ?: false
-        val modBadge = if (isTransModified) " *" else ""
-
-        if (ImGui.button("${Icons.SETTINGS} $transName$modBadge##trans_picker_btn", transBtnW, badgeH)) {
-            parametersState.openTransitionBrowse()
-        }
-        itemTooltip("Select ISF transition shader (wipes, glitches, dissolves) or default non-ISF blend modes.")
-
-        if (ImGui.beginDragDropTarget()) {
-            val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
-            if (payload != null) {
-                val file = java.io.File(payload)
-                if (file.extension.equals("lsdtrans", ignoreCase = true) && file.exists()) {
-                    session.presetRepository.loadTransitionPresetAsync(file).thenAccept { dto ->
-                        mixer.applyTransitionPreset(dto)
-                    }
-                } else {
-                    val id = if (file.extension.equals("fs", ignoreCase = true) || file.extension.equals("isf", ignoreCase = true)) {
-                        file.nameWithoutExtension
-                    } else {
-                        file.nameWithoutExtension.ifBlank { file.name }
-                    }
-                    mixer.setTransition(id)
-                }
-            }
-            ImGui.endDragDropTarget()
         }
 
         // 3. Crossfader Slider (Standard track slider style from CustomRangeSlider)

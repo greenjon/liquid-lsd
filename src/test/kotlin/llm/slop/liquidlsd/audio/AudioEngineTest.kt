@@ -7,6 +7,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import java.nio.FloatBuffer
+import java.util.concurrent.TimeUnit
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Timeout
 
 class AudioEngineTest {
 
@@ -58,6 +61,12 @@ class AudioEngineTest {
         assertFalse(AudioEngine.presetIOInFlight.get())
     }
 
+    // Opens a real JACK client against the live PipeWire graph (JackNoStartServer still connects
+    // to PipeWire's own JACK server on Linux). Excluded from the default `test` task via the
+    // "audio-hardware" tag — a native hang here previously blocked the whole build indefinitely
+    // and silenced unrelated audio apps sharing the graph. See docs/ for the incident writeup.
+    @Tag("audio-hardware")
+    @Timeout(value = 15, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     @Test
     fun testAutomaticReconnectDisabledOnStartupFailure() {
         try {
@@ -255,6 +264,10 @@ class AudioEngineTest {
         assertEquals("JACK System Capture", devices[0].name)
     }
 
+    // Opens a real Java Sound TargetDataLine (device lookup falls back to the system default
+    // capture line). Same live-audio-graph risk as testAutomaticReconnectDisabledOnStartupFailure.
+    @Tag("audio-hardware")
+    @Timeout(value = 15, unit = TimeUnit.SECONDS, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
     @Test
     fun testSelectDeviceNoOpWhenUnchanged() {
         AudioEngine.selectedDeviceName = "TestDevice"

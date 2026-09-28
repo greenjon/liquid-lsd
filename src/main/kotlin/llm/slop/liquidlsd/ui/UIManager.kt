@@ -170,28 +170,11 @@ class UIManager(
         }
     }
 
-    private val monitorSaveDeck = { deck: Deck, isDeckA: Boolean, isSaveAs: Boolean ->
-        val mixer = currentMixer
-        if (mixer != null) {
-            deckPresetController.handleSaveDeck(mixer, deck, isDeckA, isSaveAs)
-        }
-    }
-
-    private val monitorEjectDeck = { deck: Deck, isDeckA: Boolean, isDeckPV: Boolean ->
-        val mixer = currentMixer
-        if (mixer != null) {
-            deckPresetController.handleEjectDeck(mixer, deck, isDeckA, isDeckPV)
-        }
-    }
-
     private val mixerPanel = MixerPanel(
         parametersState = parametersState,
         drawDeckControls = { mixer, label, deck, width, height, isDeckA ->
-            deckControlPanel.drawDeckControls(session, mixer, label, deck, width, height, isDeckA, deckUtilityAction, monitorSaveDeck, monitorEjectDeck)
-        },
-        onUtilityAction = deckUtilityAction,
-        onSaveDeck = monitorSaveDeck,
-        onEjectDeck = monitorEjectDeck
+            deckControlPanel.drawDeckControls(session, mixer, label, deck, width, height, isDeckA, deckUtilityAction)
+        }
     )
 
     private val macroPanel = MacroPanel(parametersState = parametersState)

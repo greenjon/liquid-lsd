@@ -4,21 +4,10 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.macro.MacroEngine
-import llm.slop.liquidlsd.notes.NotesManager
-import llm.slop.liquidlsd.presets.PresetManager
-import llm.slop.liquidlsd.presets.PresetIOState
-import llm.slop.liquidlsd.presets.analyzeDependencies
-import llm.slop.liquidlsd.presets.getIssues
 import llm.slop.liquidlsd.rendering.Deck
-import llm.slop.liquidlsd.rendering.DynamicVisualSource
-import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.rendering.SourceDocRegistry
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import kotlin.math.roundToInt
 
 class DeckControlPanel(
     private val parametersState: ParametersState
@@ -46,8 +35,8 @@ class DeckControlPanel(
         previewH: Float,
         isDeckA: Boolean,
         onUtilityAction: (Int, Deck, Deck) -> Unit,
-        onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
-        onEjectDeck: (Deck, Boolean, Boolean) -> Unit
+        onSaveDeck: ((Deck, Boolean, Boolean) -> Unit)? = null,
+        onEjectDeck: ((Deck, Boolean, Boolean) -> Unit)? = null
     ) {
         ImGui.pushID(label)
 
@@ -66,31 +55,14 @@ class DeckControlPanel(
         val inset = DeckTileMetrics.IMAGE_INSET
         val imgAvailW = (safePanelW - (inset * 2f)).coerceAtLeast(1f)
         val aspect = session.uiTheme.renderAspectRatio
-        val itemSpacingY = ImGui.getStyle().getItemSpacingY()
-        val bottomBarH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            DeckTileMetrics.bottomBarHeight(ImGui.getFrameHeight(), ImGui.getTextLineHeight(), itemSpacingY)
-        }
-        val naturalH = (imgAvailW * aspect) + bottomBarH + 6f
+        val naturalH = (imgAvailW * aspect)
         val childH = maxOf(previewH.coerceAtLeast(1f), naturalH)
-        val imgAvailH = (childH - bottomBarH - 6f).coerceAtMost(imgAvailW * aspect).coerceAtLeast(1f)
+        val imgAvailH = childH.coerceAtMost(imgAvailW * aspect).coerceAtLeast(1f)
 
         // Explicitly set the Child window width and height
         ImGui.beginChild("Child_$label", safePanelW, childH, false, imgui.flag.ImGuiWindowFlags.NoScrollbar)
 
-        ImGui.spacing()
-
-        // Row 1: Save button, Eject button (room for more buttons later)
-        ImGui.setCursorPosX(inset)
-        val isPV = label == "Deck PV"
-        drawDeckButtonRow(session, label, deck, isDeckA = isDeckA, isDeckPV = isPV, mixer = mixer, onSaveDeck = onSaveDeck, onEjectDeck = onEjectDeck)
-        ImGui.spacing()
-
-        // Row 2: active preset name
-        ImGui.setCursorPosX(inset)
-        drawDeckPresetRow(session, label, deck, mixer = mixer, targetW = imgAvailW)
-        ImGui.spacing()
-
-        ImGui.setCursorPosX(inset)
+        ImGui.setCursorPos(inset, (childH - imgAvailH) * 0.5f)
         val imgX = ImGui.getCursorScreenPosX()
         val imgY = ImGui.getCursorScreenPosY()
         
@@ -481,249 +453,3 @@ class DeckControlPanel(
     }
 }
 
-/** Shared row height for the deck button row and preset-name row. */
-private fun deckToolbarRowHeight(session: llm.slop.liquidlsd.SessionContext): Float {
-    var textH = 0f
-    session.uiTheme.withFont(UITheme.FontLevel.BODY) { textH = ImGui.getTextLineHeight() }
-    val frameH = ImGui.getFrameHeight()
-    return maxOf(frameH, textH + 6f)
-}
-
-/**
- * Draws the deck's Save/Eject button row.
- * Left-aligned; leaves the rest of the row's width free for future buttons.
- */
-fun drawDeckButtonRow(
-    session: llm.slop.liquidlsd.SessionContext,
-    deckLabel: String,
-    deck: Deck,
-    isDeckA: Boolean,
-    isDeckPV: Boolean,
-    mixer: Mixer,
-    onSaveDeck: (Deck, Boolean, Boolean) -> Unit,
-    onEjectDeck: (Deck, Boolean, Boolean) -> Unit
-) {
-    ImGui.pushID("button_row_$deckLabel")
-
-    val rowH = deckToolbarRowHeight(session)
-    val startX = ImGui.getCursorScreenPosX()
-    val startY = ImGui.getCursorScreenPosY()
-    val bottomY = startY + rowH
-
-    val tag = deckLabel.replace(" ", "")
-
-    // 1. Save Button
-    val isExternalVideo = deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource
-    val saveTooltip = if (isExternalVideo) {
-        "External video streams (${deck.source.displayName}) cannot be saved as presets."
-    } else {
-        "Save or save as a new preset for $deckLabel."
-    }
-    ImGui.setCursorScreenPos(startX, startY)
-    if (drawIconButton(
-        session,
-        "##btn_Save_$tag",
-        Icons.SAVE,
-        rowH,
-        tooltip = saveTooltip,
-        disabled = isExternalVideo,
-        disabledTooltip = saveTooltip
-    )) {
-        ImGui.openPopup("save_menu_$tag")
-    }
-    pushOpenDropdownPadding()
-    if (ImGui.beginPopup("save_menu_$tag")) {
-        pushOpenDropdownFont()
-        if (ImGui.menuItem("Save")) {
-            onSaveDeck(deck, isDeckA, false)
-        }
-        if (ImGui.menuItem("Save As...")) {
-            onSaveDeck(deck, isDeckA, true)
-        }
-        if (!deck.isEmpty && deck.source !is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
-            ImGui.separator()
-            val genName = deck.source.displayName
-            if (ImGui.menuItem("Save as Default for $genName")) {
-                val bankId = llm.slop.liquidlsd.macro.MacroEngine.deckBankIdFor(deck, mixer) ?: llm.slop.liquidlsd.macro.MacroEngine.DECK_A
-                llm.slop.liquidlsd.presets.GeneratorDefaults.saveDefault(deck, bankId)
-            }
-        }
-        popOpenDropdownFont()
-        ImGui.endPopup()
-    }
-    popOpenDropdownPadding()
-
-    // 2. Eject Button
-    ImGui.sameLine()
-    val ejectX = ImGui.getCursorScreenPosX()
-    ImGui.setCursorScreenPos(ejectX, startY)
-    if (drawIconButton(session, "##btn_Eject_$tag", Icons.EJECT, rowH, "Eject this preset")) {
-        onEjectDeck(deck, isDeckA, isDeckPV)
-    }
-
-    ImGui.setCursorScreenPos(startX, bottomY + 2f)
-
-    ImGui.popID()
-}
-
-/** Draws the deck's active-preset-name bar, full width, on its own row. */
-fun drawDeckPresetRow(
-    session: llm.slop.liquidlsd.SessionContext,
-    deckLabel: String,
-    deck: Deck,
-    mixer: Mixer,
-    targetW: Float = 0f
-) {
-    ImGui.pushID("preset_row_$deckLabel")
-
-    val (activePreset, mtime, dtoVersion) = when (deckLabel) {
-        "Deck A" -> Triple(
-            session.presetManager.activePresetA,
-            session.presetManager.activePresetMtimeA,
-            session.presetManager.cachedDtoA?.version ?: 1
-        )
-        "Deck BG" -> Triple(
-            session.presetManager.activePresetBG,
-            session.presetManager.activePresetMtimeBG,
-            session.presetManager.cachedDtoBG?.version ?: 1
-        )
-        "Deck PV" -> Triple(
-            session.presetManager.activePresetPV,
-            session.presetManager.activePresetMtimePV,
-            session.presetManager.cachedDtoPV?.version ?: 1
-        )
-        else -> Triple(
-            session.presetManager.activePresetB,
-            session.presetManager.activePresetMtimeB,
-            session.presetManager.cachedDtoB?.version ?: 1
-        )
-    }
-    val isDirty = session.presetManager.isDeckDirty(deck, mixer)
-
-    var textH = 0f
-    session.uiTheme.withFont(UITheme.FontLevel.BODY) { textH = ImGui.getTextLineHeight() }
-    val rowH = deckToolbarRowHeight(session)
-
-    val startX = ImGui.getCursorScreenPosX()
-    val startY = ImGui.getCursorScreenPosY()
-    val bottomY = startY + rowH
-
-    val tag = deckLabel.replace(" ", "")
-
-    val barX = startX
-    val totalW = if (targetW > 0f) targetW else ImGui.getContentRegionAvailX()
-    val barW = totalW.coerceAtLeast(10f)
-
-    val dl = ImGui.getWindowDrawList()
-    val bgCol = ImGui.colorConvertFloat4ToU32(0.12f, 0.14f, 0.18f, 0.7f)
-    val borderCol = ImGui.colorConvertFloat4ToU32(0.25f, 0.30f, 0.38f, 0.8f)
-    dl.addRectFilled(barX, startY, barX + barW, bottomY, bgCol, 3f)
-    dl.addRect(barX, startY, barX + barW, bottomY, borderCol, 3f)
-
-    val labelText = if (activePreset == null) {
-        "None"
-    } else {
-        val dirtyMarker = if (isDirty) " *" else ""
-        "$activePreset$dirtyMarker"
-    }
-
-    val deckDeps = deck.analyzeDependencies()
-    val deckIssues = deckDeps.getIssues(session)
-    val hasDeckIssues = deckIssues.isNotEmpty() && !deck.isEmpty
-
-    val textY = startY + (rowH - textH) * 0.5f
-    val textPaddingX = 8f
-    session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-        val textCol = if (activePreset == null) {
-            ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.55f, 1.0f)
-        } else {
-            ImGui.colorConvertFloat4ToU32(0.85f, 0.90f, 1.0f, 1.0f)
-        }
-        dl.addText(barX + textPaddingX, textY, textCol, labelText)
-
-        if (hasDeckIssues) {
-            val alertText = "[!]"
-            val alertCol = ImGui.colorConvertFloat4ToU32(0.95f, 0.35f, 0.35f, 1.0f)
-            val alertW = ImGui.calcTextSize(alertText).x
-            val alertX = (barX + barW - alertW - 8f).coerceAtLeast(barX + textPaddingX + 10f)
-            dl.addText(alertX, textY, alertCol, alertText)
-        }
-    }
-
-    ImGui.setCursorScreenPos(barX, startY)
-    ImGui.invisibleButton("##preset_bar_btn_$tag", barW.coerceAtLeast(1f), rowH.coerceAtLeast(1f))
-
-    itemTooltip {
-        val presetNote = NotesManager.getPresetNote(deckLabel)
-        val mtimeStr = mtime?.let {
-            SimpleDateFormat("yyyy-MM-dd HH:mm").format(Date(it))
-        } ?: "unknown"
-
-        ImGui.textUnformatted(activePreset ?: "None")
-        if (hasDeckIssues) {
-            ImGui.spacing()
-            ImGui.textColored(0.95f, 0.45f, 0.45f, 1f, "[!] Inactive or hidden modulators:")
-            for (issue in deckIssues) {
-                ImGui.bullet()
-                ImGui.text("${issue.title}: ${issue.description}")
-            }
-        }
-        ImGui.separator()
-        ImGui.textDisabled("Last saved: $mtimeStr   v$dtoVersion")
-        if (presetNote.isNotEmpty()) {
-            ImGui.spacing()
-            ImGui.textWrapped(presetNote)
-        } else {
-            ImGui.spacing()
-            ImGui.textDisabled("(no preset note — right-click to add one)")
-        }
-    }
-
-    pushOpenDropdownPadding()
-    if (ImGui.beginPopupContextItem("preset_name_menu_$tag")) {
-        pushOpenDropdownFont()
-        val presetNote = NotesManager.getPresetNote(deckLabel)
-        val noteLabel = if (presetNote.isNotEmpty()) "Edit Preset Note..." else "Add Preset Note..."
-        if (ImGui.menuItem(noteLabel)) {
-            NoteEditorModal.request(NoteContext.Preset(deckLabel, activePreset ?: "Untitled"))
-        }
-        popOpenDropdownFont()
-        ImGui.endPopup()
-    }
-    popOpenDropdownPadding()
-
-    ImGui.setCursorScreenPos(startX, bottomY + 2f)
-
-    ImGui.popID()
-}
-
-private fun drawIconButton(
-    session: llm.slop.liquidlsd.SessionContext,
-    id: String,
-    icon: String,
-    rowH: Float,
-    tooltip: String? = null,
-    disabled: Boolean = false,
-    disabledTooltip: String? = null
-): Boolean {
-    var iconW = 0f
-    session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-        iconW = ImGui.calcTextSize(icon).x
-    }
-    val btnW = (iconW + 20f).coerceAtLeast(28f)
-    var isClicked = false
-    if (disabled) {
-        ImGui.beginDisabled(true)
-    }
-    session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-        isClicked = ImGui.button("$icon$id", btnW, rowH)
-    }
-    if (disabled) {
-        ImGui.endDisabled()
-    }
-    val activeTip = if (disabled && disabledTooltip != null) disabledTooltip else tooltip
-    if (activeTip != null) {
-        itemTooltip(activeTip, allowWhenDisabled = disabled)
-    }
-    return isClicked && !disabled
-}

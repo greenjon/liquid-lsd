@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-deep-edit-card-background-scrollbar-margin-refinement-performancedeepeditbaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Deep Edit Card Background &amp; Scrollbar Margin Refinement (PerformanceDeepEditBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#parameter-grid-kebab-repositioned-left-of-val-column-parametergridheaderskt-parameterstabskt-performancedeepeditbaykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4470,6 +4481,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-deep-edit-card-background-scrollbar-margin-refinement-performancedeepeditbaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Deep Edit Card Background &amp; Scrollbar Margin Refinement (PerformanceDeepEditBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#parameter-grid-kebab-repositioned-left-of-val-column-parametergridheaderskt-parameterstabskt-performancedeepeditbaykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7707,6 +7729,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="performance-deep-edit-card-background-scrollbar-margin-refinement-performancedeepeditbaykt">Performance Deep Edit Card Background &amp; Scrollbar Margin Refinement (<code>PerformanceDeepEditBay.kt</code>)</h3>
+<ul>
+<li><strong>Deck-Colored Card Framing</strong>: Added a deck-colored card background and bounding box behind the Performance Deep Edit Bay header and parameter grid, flushing against the side rail and top tab row to eliminate dead gaps and provide clean visual grouping.</li>
+<li><strong>Dynamic Scrollbar Margin Calculation</strong>: Updated <code>deepEditParamsWidth</code> to dynamically reserve scrollbar width plus a tight breathing margin (<code>ImGui.getStyle().scrollbarSize + 3.5f</code>) instead of a fixed margin, avoiding horizontal clipping or excess whitespace.</li>
+</ul>
 <h3 id="parameter-grid-kebab-repositioned-left-of-val-column-parametergridheaderskt-parameterstabskt-performancedeepeditbaykt">Parameter Grid Kebab Repositioned Left of VAL Column (<code>ParameterGridHeaders.kt</code>, <code>ParametersTabs.kt</code>, <code>PerformanceDeepEditBay.kt</code>)</h3>
 <ul>
 <li><strong>Column Settings Kebab Moved</strong>: The <code>⋮</code> kebab menu that toggles the <code>MIDI</code>/<code>LFO</code>/<code>SEQ</code>/<code>AUD</code> columns and modulator engines now sits immediately left of the <code>VAL</code> column header, pixel-aligned with the row kebabs (<code>BrowserRowMoreButton</code>) below it, instead of trailing off the right edge of the grid.</li>

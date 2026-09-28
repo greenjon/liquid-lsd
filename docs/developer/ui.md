@@ -53,14 +53,12 @@ graph TD
     PropertiesPanel --> Lfo2Section[Lfo2Section.kt - LFO 2 Secondary Modulator]
     
     MixerPanel --> DeckControlPanel[DeckControlPanel.kt]
-    DeckControlPanel --> drawDeckButtonRow[drawDeckButtonRow Helper]
-    DeckControlPanel --> drawDeckPresetRow[drawDeckPresetRow Helper]
     UIManager --> SavePresetModal[SavePresetModal.kt]
 ```
 
 Most panel `draw(...)` methods (like `PerformanceMatrixPanel`) receive `session: SessionContext`, the current `Mixer` reference, and `parametersState: ParametersState` at frame render time. Other panels like `MixerPanel` and `DeckControlPanel` receive state via dependency injection in their constructors. Panels access subsystems (`AudioEngine`, `CVRegistry`, `PresetManager`, `PlayQueueManager`, `NotesManager`) via `session` rather than direct global singletons.
 
-Deck preview monitors (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) in `MixerPanel` and `DeckControlPanel` stack two toolbar rows directly **above** each monitor image: a button row (`drawDeckButtonRow` — Save, Eject, with room for more buttons later) and, below it, a full-width preset-name row (`drawDeckPresetRow` — active preset name, dirty marker, issue flag). Each row's height dynamically expands as text font scaling increases; `MixerLayoutCalculator` budgets space for both rows per deck.
+Deck preview monitors (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`) in `MixerPanel` and `DeckControlPanel` render clean video monitors maximizing active preview area without non-image toolbar clutter. Former toolbar rows above the images (Save, Eject, and preset name box) and the crossfader transition button have been removed from the Mixer strip; saving presets is handled via keyboard shortcuts (`Ctrl+S`/`Cmd+S`) or Gen Browse, deck loading is handled via Browser drag-drop, and transition selection is configured via Deep Edit or Browser drag-drop onto the crossfader slider. `MixerLayoutCalculator` dedicates full vertical space to video monitor rendering.
 
 Each deck preview monitor features a standardized, symmetric dual-column overlay across all four decks:
 - **Left Column**:

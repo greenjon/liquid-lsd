@@ -3,6 +3,7 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
+import java.time.Duration
 
 plugins {
     // Kotlin: version 2.3.0 (supports JDK 25+). Do not update automatically.
@@ -84,7 +85,14 @@ tasks.test {
         if (!project.hasProperty("testISF")) {
             excludeTags("isf-library")
         }
+        // Excluded by default: these open real JACK/PipeWire or Java Sound devices against the
+        // live system audio graph. A native hang here previously blocked the whole test task
+        // forever with no error, and disrupted unrelated apps (e.g. VLC) sharing the graph.
+        excludeTags("audio-hardware")
     }
+    // Backstop so a future hang (native call, live-graph negotiation, etc.) fails the build
+    // instead of blocking it indefinitely.
+    timeout.set(Duration.ofMinutes(10))
 }
 
 val testISFLibrary = tasks.register<Test>("testISFLibrary") {
@@ -95,6 +103,22 @@ val testISFLibrary = tasks.register<Test>("testISFLibrary") {
     useJUnitPlatform {
         includeTags("isf-library")
     }
+    timeout.set(Duration.ofMinutes(10))
+}
+
+val testAudioHardware = tasks.register<Test>("testAudioHardware") {
+    group = "verification"
+    description = "Opt-in only: runs tests that open real JACK/PipeWire or Java Sound audio " +
+        "devices against the live system audio graph. Not run by default or in CI, since it " +
+        "touches the live desktop audio session and can hang or disrupt other running audio apps."
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    useJUnitPlatform {
+        includeTags("audio-hardware")
+    }
+    // Per-task backstop; individual tests also carry a JUnit5 @Timeout(threadMode = SEPARATE_THREAD)
+    // so a native hang fails that one test instead of stalling the whole run.
+    timeout.set(Duration.ofMinutes(2))
 }
 
 kotlin {

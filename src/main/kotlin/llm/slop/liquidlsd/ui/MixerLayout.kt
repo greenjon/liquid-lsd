@@ -8,11 +8,8 @@ package llm.slop.liquidlsd.ui
 object DeckTileMetrics {
     const val IMAGE_INSET = 3f
 
-    /** Height of the two toolbar rows (button row + preset-name row) stacked above a deck preview. */
-    fun bottomBarHeight(frameHeight: Float, textLineHeight: Float, itemSpacingY: Float): Float {
-        val toolbarRowH = maxOf(frameHeight, textLineHeight + 6f)
-        return (toolbarRowH * 2f) + itemSpacingY + 6f
-    }
+    /** Height of any toolbar rows above a deck preview (now 0f since toolbars were removed). */
+    fun bottomBarHeight(frameHeight: Float = 0f, textLineHeight: Float = 0f, itemSpacingY: Float = 0f): Float = 0f
 }
 
 data class MixerLayout(
@@ -118,9 +115,7 @@ object MixerLayoutCalculator {
      * so it's subtracted back out to recover the raw values DeckControlPanel queries directly.
      */
     private fun deckPreviewNonImageHeight(frameHeightWithSpacing: Float, textLineHeightWithSpacing: Float, itemSpacingY: Float): Float {
-        val frameHeight = frameHeightWithSpacing - itemSpacingY
-        val textLineHeight = textLineHeightWithSpacing - itemSpacingY
-        return DeckTileMetrics.bottomBarHeight(frameHeight, textLineHeight, itemSpacingY) + 6f
+        return 0f
     }
 
     /**

@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Streamline Mixer Panel: Transition Button, Deck Save/Eject Buttons, and Preset Boxes Removed (`MixerPanel.kt`, `DeckControlPanel.kt`, `MixerLayout.kt`, `UIManager.kt`)
+- **Transition Selector Button Removed**: Removed the `Icons.SETTINGS [Transition Name]` button beside Deck B on the crossfader row. Deck B's badge is now aligned flush to the right edge, centering and stretching the crossfader slider symmetrically across the strip between `[A]` and `[B]`. Transitions can be selected via Deep Edit, Performance Transitions Controls, or asset drag-and-drop onto the crossfader track.
+- **Deck Save & Eject Buttons Removed**: Removed the top toolbar button row (`drawDeckButtonRow` — Save and Eject) across all four decks (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`). Presets can be saved using `Ctrl+S` / `Cmd+S`, `Ctrl+Shift+S`, or the Gen Browse Save button.
+- **Deck Preset Boxes Removed**: Removed the full-width active preset name bars (`drawDeckPresetRow`) from all four decks. Active preset and generator names remain visible in the Deep Edit header and Gen Browse header.
+- **Maximized Deck Preview Video Monitors**: Set `DeckTileMetrics.bottomBarHeight` and `deckPreviewNonImageHeight` to `0f`, eliminating non-image vertical chrome and allowing `MixerLayoutCalculator` to render the 2x2 deck video monitors at maximum size.
+
 ### Performance Deep Edit Card Background & Scrollbar Margin Refinement (`PerformanceDeepEditBay.kt`)
 - **Deck-Colored Card Framing**: Added a deck-colored card background and bounding box behind the Performance Deep Edit Bay header and parameter grid, flushing against the side rail and top tab row to eliminate dead gaps and provide clean visual grouping.
 - **Dynamic Scrollbar Margin Calculation**: Updated `deepEditParamsWidth` to dynamically reserve scrollbar width plus a tight breathing margin (`ImGui.getStyle().scrollbarSize + 3.5f`) instead of a fixed margin, avoiding horizontal clipping or excess whitespace.
