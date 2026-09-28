@@ -213,10 +213,10 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── FxParamCell.kt          — Compact parameter drawer under knobs 2-4 in Focus Mode: [⟲] reset to default, formatted value readout, and CV modulation indicator dot
 │   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 2 tabs (DECKS, MASTER), deck-colored rows (deck rows toggle [SRC|FX], the Master row toggles [MIX|FX]; no standalone FX rows; MASTER's Clock row = tempo header bar + the section-free GLOBAL macro bank), plus the Modular Rack accordion (see `rack/` below) — a chevron on each row group toggles Faceplate ↔ Deep Edit, expanding the selected module while collapsing other rows; orchestrates dedicated modular sub-controllers:
 │   │   ├── PerformanceUiContext.kt      — Shared state container, colors, deck row mode registry, and module id / label resolvers
-│   │   ├── PerformanceTransitionsControls.kt — Transitions row extra header controls, shader picker, and queue stepping
+│   │   ├── PerformanceTransitionsControls.kt — Transitions row: Line 1 transition picker, queue stepping & dice; Line 2 crossfader (deck snap badges, bipolar slider track, AUTO button, fade speed widget)
 │   │   ├── PerformanceFxSendsControls.kt — FX WET/DRY row wing controls (FX SENDS badge, Resync)
 │   │   ├── PerformanceClockControls.kt  — Clock row header bar: clock source, Link status, BPM, beat dots, TAP/RESYNC/÷2/×2/nudge
-│   │   ├── PerformanceMasterControls.kt — Master row: crossfader header bar (deck snap badges, crossfader track, speed badge), [MIX]/[FX] pills + Master FX chain header, Master FX bypass
+│   │   ├── PerformanceMasterControls.kt — Master row: Line 1 [MIX] pill + Deck Alphas & Master badge + 100% reset button; Line 2 [FX] pill + Master FX chain header; right-wing Master FX bypass
 │   │   ├── PerformanceDeckControls.kt   — Deck rows left/right wing controls (stacked two-row left wing: Row 1 SRC controls, Row 2 FX chain controls; right wing FX bypass)
 │   │   └── PerformanceDeepEditBay.kt    — Modular Rack Deep Edit accordion bay, 3-column layout, and keyboard focus management
 │   ├── rack/

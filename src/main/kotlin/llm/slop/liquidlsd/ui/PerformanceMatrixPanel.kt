@@ -52,7 +52,7 @@ class PerformanceMatrixPanel {
     // without hardcoding a count that silently drifts when a tab is added/removed.
     internal enum class Tab(val label: String, val tooltip: String) {
         DECKS("DECKS", "One row per deck (Deck A / Deck B / Deck BG / Deck PV), knobs 1-4 each.\nEach row's [SRC|FX] pills switch its knobs between the visual source and the deck's FX chain."),
-        MASTER("MASTER", "Master (crossfader + [MIX|FX]: composite alphas or Master FX chain), Transitions (picker + queue),\nper-deck FX wet/dry, and Clock (tap tempo / resync / clock source + 4 Global macro knobs).")
+        MASTER("MASTER", "Master ([MIX|FX]: composite alphas or Master FX chain), Transitions (crossfader + picker + queue),\nper-deck FX wet/dry, and Clock (tap tempo / resync / clock source + 4 Global macro knobs).")
     }
 
     /**
@@ -97,8 +97,8 @@ class PerformanceMatrixPanel {
                 RowDescriptor(MacroEngine.DECK_BG, 0, PerformanceColors.COLOR_DECK_BG, "DECK BG", hasExtraHeader = true),
                 RowDescriptor(MacroEngine.DECK_PV, 0, PerformanceColors.COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
             ),
-            // MASTER: Master ([MIX] + crossfader over [FX] + chain header; knobs on composite
-            // alphas or the Master FX chain), Transitions (transition picker + queue nav), FX
+            // MASTER: Master ([MIX] over [FX] + chain header; knobs on composite alphas or the
+            // Master FX chain), Transitions (transition picker + queue nav over crossfader), FX
             // Wet/Dry (per-deck FX sends), Clock (tempo controls + Global macro knobs) -- 1 row of
             // 4 knobs each, laid out like deck rows (title badge + two control lines, see drawMatrix).
             listOf(
@@ -481,6 +481,30 @@ class PerformanceMatrixPanel {
                         }
                         ImGui.endDragDropTarget()
                     }
+                } else if (isTransRow) {
+                    ImGui.setCursorScreenPos(boxX1, boxTopY)
+                    ImGui.setNextItemAllowOverlap()
+                    ImGui.invisibleButton("##perf_trans_drop_${rowIdx}", (pad + masterTabBadgeW + 4f).coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
+                    applyDragScroll()
+                    if (ImGui.beginDragDropTarget()) {
+                        val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
+                        if (payload != null) {
+                            val file = File(payload)
+                            if (file.extension.equals("lsdtrans", ignoreCase = true) && file.exists()) {
+                                session.presetRepository.loadTransitionPresetAsync(file).thenAccept { dto ->
+                                    mixer.applyTransitionPreset(dto)
+                                }
+                            } else {
+                                val id = if (file.extension.equals("fs", ignoreCase = true) || file.extension.equals("isf", ignoreCase = true)) {
+                                    file.nameWithoutExtension
+                                } else {
+                                    file.nameWithoutExtension.ifBlank { file.name }
+                                }
+                                mixer.setTransition(id)
+                            }
+                        }
+                        ImGui.endDragDropTarget()
+                    }
                 }
             }
 
@@ -511,7 +535,7 @@ class PerformanceMatrixPanel {
                     PerformanceMasterControls.drawBypassControls(mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                 } else if (isTransRow) {
                     drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "TRANS", UITheme.FontLevel.H2)
-                    PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, ctrlY, ctrlH, masterRowW)
+                    PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW)
                 } else if (isClockRow) {
                     drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "CLOCK", UITheme.FontLevel.H2)
                     PerformanceClockControls.draw(session, masterTabStartX, row1Y, row2YFinal, ctrlH)

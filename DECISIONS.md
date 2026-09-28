@@ -1,3 +1,18 @@
+## Move Crossfader from Master to Transitions Row (`PerformanceTransitionsControls.kt`, `PerformanceMasterControls.kt`, `PerformanceMatrixPanel.kt`, docs, tests)
+
+- **Context**: 2026-09-27. In the Performance Matrix (`MASTER` tab), the Master row previously carried the crossfader on its `[MIX]` line above the Master FX chain header, while the Transitions row carried only the transition shader/preset picker and queue navigation across a single centered line. Because the crossfader directly drives the Deck A $\leftrightarrow$ Deck B transition through the active transition shader, hosting it on Master divorced the actuator from the transition filter and queue.
+- **Decision**:
+  - **Relocate Crossfader to Transitions Row**: Moved `drawCrossfader` (Deck A snap badge `[A]`, bipolar slider track, Deck B snap badge `[B]`, Auto-Fade button `[AUTO]`/`[FADING]`, and fade speed widget `[N.Ns]`) into `PerformanceTransitionsControls.kt`.
+  - **2-Line Transitions Row Layout**:
+    - **Line 1 (Asset & Queue)**: Transition picker button (`[ ⚙ <Name> * ]` with modified marker, click opens inline browse, drag-and-drop support), TransitionQueue stepping (`< [N/Total] >` with MIDI/OSC Learn), and randomize die (`[🎲]`). Aligns visually with the Deck rows' Line 1 controls (preset picker, queue, dice).
+    - **Line 2 (Crossfader)**: Bipolar crossfader track with Deck A/B snaps, Auto-Fade toggle, and fade speed widget. Aligns with standard DJ/VJ mixer hardware paradigms where the crossfader sits below the channel/transition selectors.
+  - **Streamline Master Row**:
+    - **Line 1 (Mix / Alphas)**: `[MIX]` mode button beside a dedicated `Deck Alphas & Master` badge (click opens Deep Edit CTRL; right-click context menu for level resets) and a quick `[100%]` reset button resetting `levelA`, `levelB`, `levelBG`, and `masterLevel` to 1.0.
+    - **Line 2 (Master FX)**: `[FX]` mode button beside the Master FX chain header (`FxChainHeader.drawControls`).
+    - **Right Wing**: Master FX bypass button (`drawBypassControls`).
+  - **Asset Drag-and-Drop on TRANS Badge**: Added drag-and-drop support on the `TRANS` row title badge for `.lsdtrans` presets and `.fs`/`.isf` transition shaders, matching deck and master badge drop targets.
+- **Consequences**: Unifies transition selection, queue sequencing, and crossfade actuation on a single row, establishes uniform 2-line layouts across all rows in the Performance Matrix, and provides rapid alpha and master level resets on the Master row.
+
 ## Context-Aware Monitor Clicks & Unified Rack Bay Mode (`ParametersState.kt`, `DeckControlPanel.kt`, `MacroPanel.kt`, `MixerPanel.kt`, `PerformanceDeckControls.kt`, `RackUnit.kt`, `PerformanceDeepEditBay.kt`, docs, tests)
 
 - **Context**: 2026-09-27. When inline Browse was introduced into the Modular Rack bay, `rackSectionMode` (`PARAMS` vs `BROWSE`) was stored in a per-module map. When an artist opened the source browser on Deck A and collapsed it, then opened the FX browser on Deck B and collapsed it, then edited Deck C and collapsed it, subsequently clicking confidence monitors on Decks A, B, and C reopened them respectively into Source Browse, FX Browse, and Deep Edit. Because the lower bay is solo-only (one module expanded at a time), having `rackSectionMode` stick per module produced a fragmented and unpredictable experience where switching decks caused jarring layout and mode changes.

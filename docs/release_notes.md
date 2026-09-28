@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+### Crossfader Relocated to Transitions Row in Performance Matrix (`PerformanceTransitionsControls.kt`, `PerformanceMasterControls.kt`, `PerformanceMatrixPanel.kt`, `ARCHITECTURE.md`, `DECISIONS.md`, `docs/developer/ui.md`)
+- **Semantic Alignment**: The A/B crossfader directly drives transition interpolation between Deck A and Deck B. Relocated the crossfader from the Master row to the Transitions row in the Performance Matrix (`MASTER` tab), grouping transition selection, queuing, and crossfade execution together.
+- **Two-Line Transitions Row Layout**:
+  - **Line 1 (Selection & Stepping)**: Transition picker badge (`[ ⚙ <Name> * ]` opening inline Browse), Transition Queue stepping (`< [N/Total] >`), and randomize transition button (`[🎲]`).
+  - **Line 2 (Crossfader Strip)**: `[A]` snap badge, bipolar slider track with drag-and-drop asset support, center snap reset (`[||]`), live amber modulation dot, `[B]` snap badge, auto-crossfade trigger (`[AUTO]` / `[FADING]`), and fade speed button (`[N.Ns]`).
+- **Streamlined Master Row**:
+  - Freed from the crossfader, the Master row cleanly aligns `[MIX]` and `[FX]` mode pills with Deck rows.
+  - In `[MIX]` mode, Line 1 features the `Deck Alphas & Master` badge (opens deep edit parameters on click, right-click opens reset context menu) and a quick `[100%]` reset button (`levelA`, `levelB`, `levelBG`, and `masterLevel` restored to 1.0).
+  - In `[FX]` mode, Line 2 houses the Master FX chain header and preset loader, with chain bypass on the right wing.
+
 ### Streamline Title Bar & Menu Bar (`MenuBar.kt`, `docs/developer/ui.md`, `docs/developer/beat_sync.md`)
 - **Removed Redundant Clock Menu**: Eliminated the dynamic `Clock: <Source>` dropdown menu from the top menu bar. Timing and clock source selection (`MAN` vs `AUDIO`) are accessible with a single click on the Performance MASTER tab's Clock row, and in depth via `Preferences > Tempo & Sync` (`Ctrl+P`).
 - **Telemetry HUD Streamlining**: Removed the `BPM` readout and 4-beat phase meter dots from the top-bar hardware telemetry section. Hardware metrics now focus strictly on performance telemetry (`CPU`, `DSP`, `FPS`, `ms`, `FBO`), resolving the category mismatch between hardware load and musical state.

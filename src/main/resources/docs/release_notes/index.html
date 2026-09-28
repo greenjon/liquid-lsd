@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#streamline-title-bar-menu-bar-menubarkt-docsdeveloperuimd-docsdeveloperbeat_syncmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streamline Title Bar &amp; Menu Bar (MenuBar.kt, docs/developer/ui.md, docs/developer/beat_sync.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context-aware-monitor-clicks-non-sticky-editbrowse-bay-parametersstatekt-deckcontrolpanelkt-macropanelkt-mixerpanelkt-performancedeckcontrolskt-rackunitkt-performancedeepeditbaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context-Aware Monitor Clicks &amp; Non-Sticky Edit/Browse Bay (ParametersState.kt, DeckControlPanel.kt, MacroPanel.kt, MixerPanel.kt, PerformanceDeckControls.kt, RackUnit.kt, PerformanceDeepEditBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#external-video-streams-excluded-from-presets-with-disabled-save-ui-deckcontrolpanelkt-performancebrowsebaykt-parameterskeyboardkt-deckpresetcontrollerkt-presetmanagerkt-presetrepositorykt-tooltiphelperkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4393,6 +4415,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#streamline-title-bar-menu-bar-menubarkt-docsdeveloperuimd-docsdeveloperbeat_syncmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streamline Title Bar &amp; Menu Bar (MenuBar.kt, docs/developer/ui.md, docs/developer/beat_sync.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#context-aware-monitor-clicks-non-sticky-editbrowse-bay-parametersstatekt-deckcontrolpanelkt-macropanelkt-mixerpanelkt-performancedeckcontrolskt-rackunitkt-performancedeepeditbaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Context-Aware Monitor Clicks &amp; Non-Sticky Edit/Browse Bay (ParametersState.kt, DeckControlPanel.kt, MacroPanel.kt, MixerPanel.kt, PerformanceDeckControls.kt, RackUnit.kt, PerformanceDeepEditBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#external-video-streams-excluded-from-presets-with-disabled-save-ui-deckcontrolpanelkt-performancebrowsebaykt-parameterskeyboardkt-deckpresetcontrollerkt-presetmanagerkt-presetrepositorykt-tooltiphelperkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7553,6 +7597,20 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="streamline-title-bar-menu-bar-menubarkt-docsdeveloperuimd-docsdeveloperbeat_syncmd">Streamline Title Bar &amp; Menu Bar (<code>MenuBar.kt</code>, <code>docs/developer/ui.md</code>, <code>docs/developer/beat_sync.md</code>)</h3>
+<ul>
+<li><strong>Removed Redundant Clock Menu</strong>: Eliminated the dynamic <code>Clock: &lt;Source&gt;</code> dropdown menu from the top menu bar. Timing and clock source selection (<code>MAN</code> vs <code>AUDIO</code>) are accessible with a single click on the Performance MASTER tab's Clock row, and in depth via <code>Preferences &gt; Tempo &amp; Sync</code> (<code>Ctrl+P</code>).</li>
+<li><strong>Telemetry HUD Streamlining</strong>: Removed the <code>BPM</code> readout and 4-beat phase meter dots from the top-bar hardware telemetry section. Hardware metrics now focus strictly on performance telemetry (<code>CPU</code>, <code>DSP</code>, <code>FPS</code>, <code>ms</code>, <code>FBO</code>), resolving the category mismatch between hardware load and musical state.</li>
+<li><strong>Consolidated Timing Controls</strong>: Musical clock state and actions (clock source toggle, Link status, BPM display, 4-beat bar dots, <code>[TAP]</code> with MIDI learn, <code>[RESYNC]</code>, <code>[/2]</code>, <code>[x2]</code>, and <code>[-]</code> / <code>[+]</code> nudges) are unified on the Performance MASTER tab's Clock row, with global keyboard tap tempo (<code>T</code>) remaining active application-wide.</li>
+</ul>
+<h3 id="context-aware-monitor-clicks-non-sticky-editbrowse-bay-parametersstatekt-deckcontrolpanelkt-macropanelkt-mixerpanelkt-performancedeckcontrolskt-rackunitkt-performancedeepeditbaykt">Context-Aware Monitor Clicks &amp; Non-Sticky Edit/Browse Bay (<code>ParametersState.kt</code>, <code>DeckControlPanel.kt</code>, <code>MacroPanel.kt</code>, <code>MixerPanel.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>RackUnit.kt</code>, <code>PerformanceDeepEditBay.kt</code>)</h3>
+<ul>
+<li><strong>De-Stickified Bay Mode</strong>: Replaced the per-deck <code>rackSectionMode</code> map with a unified global bay mode. Opening a source or FX browser on one deck no longer permanently leaves that deck stuck in Browse mode.</li>
+<li><strong>Context-Aware Monitor Clicks (<code>ParametersState.openFromMonitor</code>)</strong>:</li>
+<li>When the rack bay is <strong>collapsed</strong>, clicking any confidence monitor (Deck A, B, BG, PV) or preview monitor always opens the <strong>Editor</strong> (<code>PARAMS</code>).</li>
+<li>When the rack bay is <strong>already open</strong>, clicking another deck's monitor <strong>preserves the active mode</strong>: if currently editing, it stays in <code>PARAMS</code>; if currently browsing, it stays in <code>BROWSE</code> and carries over the active browse target type (<code>Gen</code> vs. <code>FxChain</code>), enabling rapid multi-deck preset and effect auditioning.</li>
+<li><strong>Predictable <code>[Edit]</code> Button</strong>: Expanding a collapsed rack unit via its <code>[Edit]</code> button explicitly opens the parameter editor. Side-tab navigation within Deep Edit stays within Deep Edit.</li>
+</ul>
 <h3 id="external-video-streams-excluded-from-presets-with-disabled-save-ui-deckcontrolpanelkt-performancebrowsebaykt-parameterskeyboardkt-deckpresetcontrollerkt-presetmanagerkt-presetrepositorykt-tooltiphelperkt">External Video Streams Excluded from Presets with Disabled Save UI (<code>DeckControlPanel.kt</code>, <code>PerformanceBrowseBay.kt</code>, <code>ParametersKeyboard.kt</code>, <code>DeckPresetController.kt</code>, <code>PresetManager.kt</code>, <code>PresetRepository.kt</code>, <code>TooltipHelper.kt</code>)</h3>
 <ul>
 <li>Saving <code>.lsd</code> deck presets is now completely disabled when a deck's visual source is an external video stream (<code>ExternalVideoSource</code> via Spout2, Syphon, or PipeWire). Live video streams have 0 procedural shader parameters and saving ephemeral server handles can produce dead "ghost" presets. Direct live selection in the Universal Shader Picker remains the recommended live workflow.</li>
