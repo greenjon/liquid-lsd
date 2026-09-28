@@ -1,3 +1,17 @@
+## Context-Aware Monitor Clicks & Unified Rack Bay Mode (`ParametersState.kt`, `DeckControlPanel.kt`, `MacroPanel.kt`, `MixerPanel.kt`, `PerformanceDeckControls.kt`, `RackUnit.kt`, `PerformanceDeepEditBay.kt`, docs, tests)
+
+- **Context**: 2026-09-27. When inline Browse was introduced into the Modular Rack bay, `rackSectionMode` (`PARAMS` vs `BROWSE`) was stored in a per-module map. When an artist opened the source browser on Deck A and collapsed it, then opened the FX browser on Deck B and collapsed it, then edited Deck C and collapsed it, subsequently clicking confidence monitors on Decks A, B, and C reopened them respectively into Source Browse, FX Browse, and Deep Edit. Because the lower bay is solo-only (one module expanded at a time), having `rackSectionMode` stick per module produced a fragmented and unpredictable experience where switching decks caused jarring layout and mode changes.
+- **Decision**:
+  - **Unified Bay Mode**: Replaced the per-module `rackSectionMode` map with a single, shared `var rackSectionMode: SectionMode = SectionMode.PARAMS`. The bay's mode represents the active workspace mode rather than an isolated state frozen per deck.
+  - **Context-Aware Monitor Clicks (`ParametersState.openFromMonitor`)**:
+    - **When Collapsed**: Clicking any confidence monitor (Decks A, B, BG, PV) or preview monitor always opens the **Editor** (`SectionMode.PARAMS`). Performers opening a deck from a collapsed state get predictable access to the deck's parameter controls.
+    - **When Already Open**: Clicking another deck's monitor **preserves the active mode**:
+      - If in `PARAMS`, switches to the clicked deck in `PARAMS`.
+      - If in `BROWSE`, switches to the clicked deck in `BROWSE` while carrying over the active browse target type (preserving `Gen` vs. `FxChain(slotIndex)`), enabling seamless rapid auditioning of shaders or FX chains across decks.
+  - **Rack Unit `[Edit]` Button**: Clicking the row chevron button labeled `[Edit]` on a collapsed module explicitly calls `openParams(moduleId)` to guarantee opening the parameter editor.
+  - **Deep Edit Side Tabs**: Switching channels via the 5-channel side tabs inside Deep Edit always stays in `PARAMS`.
+- **Consequences**: De-stickifies Edit and Browse bays, providing predictable Editor opening from collapsed states while allowing fluid multi-deck browsing sessions without modal friction. Covered by `ParametersStateMonitorTest`.
+
 ## Disable Saving .lsd Presets for External Video Streams (Spout / Syphon / PipeWire) (`DeckControlPanel.kt`, `PerformanceBrowseBay.kt`, `ParametersKeyboard.kt`, `DeckPresetController.kt`, `PresetManager.kt`, `PresetRepository.kt`, `TooltipHelper.kt`, docs, tests)
 
 - **Context**: 2026-09-27. Decks using live external video streams (`ExternalVideoSource` via Spout2 on Windows, Syphon on macOS, or PipeWire on Linux) previously allowed saving `.lsd` deck presets. However, external video feeds contain 0 procedural generator shader parameters (only unity gain), represent ephemeral inter-process handles, and easily produce "ghost" presets that load into black screens if the external software is closed or the stream renamed. Direct live selection in the Universal Shader Picker under "External Sources" already validates stream presence and connects immediately.

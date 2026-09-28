@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Context-Aware Monitor Clicks & Non-Sticky Edit/Browse Bay (`ParametersState.kt`, `DeckControlPanel.kt`, `MacroPanel.kt`, `MixerPanel.kt`, `PerformanceDeckControls.kt`, `RackUnit.kt`, `PerformanceDeepEditBay.kt`)
+- **De-Stickified Bay Mode**: Replaced the per-deck `rackSectionMode` map with a unified global bay mode. Opening a source or FX browser on one deck no longer permanently leaves that deck stuck in Browse mode.
+- **Context-Aware Monitor Clicks (`ParametersState.openFromMonitor`)**:
+  - When the rack bay is **collapsed**, clicking any confidence monitor (Deck A, B, BG, PV) or preview monitor always opens the **Editor** (`PARAMS`).
+  - When the rack bay is **already open**, clicking another deck's monitor **preserves the active mode**: if currently editing, it stays in `PARAMS`; if currently browsing, it stays in `BROWSE` and carries over the active browse target type (`Gen` vs. `FxChain`), enabling rapid multi-deck preset and effect auditioning.
+- **Predictable `[Edit]` Button**: Expanding a collapsed rack unit via its `[Edit]` button explicitly opens the parameter editor. Side-tab navigation within Deep Edit stays within Deep Edit.
+
 ### External Video Streams Excluded from Presets with Disabled Save UI (`DeckControlPanel.kt`, `PerformanceBrowseBay.kt`, `ParametersKeyboard.kt`, `DeckPresetController.kt`, `PresetManager.kt`, `PresetRepository.kt`, `TooltipHelper.kt`)
 - Saving `.lsd` deck presets is now completely disabled when a deck's visual source is an external video stream (`ExternalVideoSource` via Spout2, Syphon, or PipeWire). Live video streams have 0 procedural shader parameters and saving ephemeral server handles can produce dead "ghost" presets. Direct live selection in the Universal Shader Picker remains the recommended live workflow.
 - **Visual Button State & Tooltips**: The floppy-disk Save button in both the Deck Control Panel and Gen Browse is visibly dimmed and disabled when an external video stream is active. Hovering the disabled button shows a helpful tooltip: `External video streams (<source name>) cannot be saved as presets.` (implemented via new `allowWhenDisabled` support in `TooltipHelper`).

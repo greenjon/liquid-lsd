@@ -41,7 +41,11 @@ object RackUnit {
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.24f, 0.27f, 0.32f, 1f))
         }
         if (ImGui.smallButton("$label##rack_chevron_$idSuffix")) {
-            parametersState.setDisclosure(moduleId, nextLevel(level))
+            if (isExpanded) {
+                parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.COLLAPSED)
+            } else {
+                parametersState.openParams(moduleId)
+            }
         }
         ImGui.popStyleColor(2)
         itemTooltip(

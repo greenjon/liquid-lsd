@@ -1038,6 +1038,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#external-video-streams-excluded-from-presets-externalvideosource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External Video Streams Excluded from Presets (ExternalVideoSource)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1724,6 +1735,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#external-video-streams-excluded-from-presets-externalvideosource" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External Video Streams Excluded from Presets (ExternalVideoSource)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2135,6 +2157,13 @@ var activePresetMtimePV: Long? = null
 <ul>
 <li><strong>Initial App Launch</strong>: Newly instantiated decks default to <code>isEmpty = true</code>. When launching without a pre-existing <code>last_session.json</code> (or when <code>StartupBehavior.EMPTY</code> is active), <code>PresetManager.startEmpty(mixer)</code> is invoked.</li>
 <li><strong>Empty Deck State</strong>: Resets parameters across all available visual sources and 2D/3D view pipelines, clears FBO framebuffers, and leaves all deck monitors as blank black screens with the Parameters Launchpad activated ("Add Source" / "Load Preset").</li>
+</ul>
+<h3 id="external-video-streams-excluded-from-presets-externalvideosource">External Video Streams Excluded from Presets (<code>ExternalVideoSource</code>)</h3>
+<ul>
+<li><strong>No Preset Persistence</strong>: Decks whose active visual source is an <code>ExternalVideoSource</code> (Spout2 on Windows, Syphon on macOS, PipeWire on Linux) cannot be saved as <code>.lsd</code> presets.</li>
+<li><strong>Rationale</strong>: External video streams possess 0 procedural generator shader parameters, are ephemeral runtime inter-process handles, and can become dead "ghost" presets if saved. Direct live selection via the Universal Shader Picker ("External Sources" category) guarantees stream presence and connects immediately.</li>
+<li><strong>UI &amp; Controller Guards</strong>: The Save icon buttons in <code>DeckControlPanel</code> and <code>PerformanceBrowseBay</code> (Gen Browse) are visibly disabled (<code>ImGui.beginDisabled</code>) with an explanatory hover tooltip (<code>External video streams (&lt;source name&gt;) cannot be saved as presets.</code>, powered by <code>allowWhenDisabled</code> in <code>TooltipHelper.kt</code>). Keyboard shortcuts (<code>Ctrl+S</code>/<code>Cmd+S</code>), <code>DeckPresetController.handleSaveDeck</code>, <code>DeckPresetController.saveDeckPreset</code>, and <code>PresetRepository.saveDeckPresetAsync</code> early-return immediately without action.</li>
+<li><strong>Dirty Checking</strong>: <code>PresetManager.isDeckDirty</code> unconditionally returns <code>false</code> for <code>ExternalVideoSource</code>, avoiding spurious unsaved changes prompts when switching sources or ejecting decks.</li>
 </ul>
 <hr />
 <h2 id="2-notes-system-manager-notesmanagerkt">2. Notes System Manager (<code>NotesManager.kt</code>)</h2>

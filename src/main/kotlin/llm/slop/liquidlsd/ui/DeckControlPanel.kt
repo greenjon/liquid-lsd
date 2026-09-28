@@ -25,9 +25,8 @@ class DeckControlPanel(
 ) {
     private var pendingRightDragFrom: String? = null
 
-    /** Focuses [deckLabel] and opens its Deep Edit (monitor and badge clicks). */
+    /** Focuses [deckLabel] and opens its bay via context-aware monitor click (monitor and badge clicks). */
     private fun openDeepEdit(deckLabel: String) {
-        parametersState.activeTopTab = deckLabel
         val moduleId = when (deckLabel) {
             "Deck A" -> MacroEngine.DECK_A
             "Deck B" -> MacroEngine.DECK_B
@@ -35,7 +34,7 @@ class DeckControlPanel(
             "Deck PV" -> MacroEngine.DECK_PV
             else -> return
         }
-        parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)
+        parametersState.openFromMonitor(moduleId, deckLabel)
     }
 
     fun drawDeckControls(

@@ -279,11 +279,11 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
                 nextTopTab = targetSection
                 parametersState.activeTopTab = targetSection
                 when (targetSection) {
-                    "Mixer" -> parametersState.setDisclosure(MacroEngine.MASTER, ParametersState.DisclosureLevel.DEEP_EDIT)
-                    "Deck A" -> parametersState.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
-                    "Deck B" -> parametersState.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
-                    "Deck BG" -> parametersState.setDisclosure(MacroEngine.DECK_BG, ParametersState.DisclosureLevel.DEEP_EDIT)
-                    "Deck PV" -> parametersState.setDisclosure(MacroEngine.DECK_PV, ParametersState.DisclosureLevel.DEEP_EDIT)
+                    "Mixer" -> parametersState.openParams(MacroEngine.MASTER)
+                    "Deck A" -> parametersState.openParams(MacroEngine.DECK_A)
+                    "Deck B" -> parametersState.openParams(MacroEngine.DECK_B)
+                    "Deck BG" -> parametersState.openParams(MacroEngine.DECK_BG)
+                    "Deck PV" -> parametersState.openParams(MacroEngine.DECK_PV)
                 }
             }
         }

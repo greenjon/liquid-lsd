@@ -478,8 +478,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.18f, 0.32f, 0.25f, 1f))
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 if (ImGui.button("PREVIEW##perf_pv_badge", pvBadgeW, ctrlH)) {
-                    parametersState.activeTopTab = "Deck PV"
-                    parametersState.setDisclosure(MacroEngine.DECK_PV, ParametersState.DisclosureLevel.DEEP_EDIT)
+                    parametersState.openFromMonitor(MacroEngine.DECK_PV, "Deck PV")
                 }
             }
             ImGui.popStyleColor(2)

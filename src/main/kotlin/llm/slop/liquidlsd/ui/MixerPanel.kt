@@ -57,8 +57,7 @@ class MixerPanel(
         ImGui.invisibleButton("##main_output_monitor", monitorBtnW, masterH.coerceAtLeast(1f))
         itemTooltip("Main output monitor. Click to open Deep Edit (Master).")
         if (ImGui.isItemClicked(0)) {
-            parametersState.activeTopTab = "Mixer"
-            parametersState.setDisclosure(MacroEngine.MASTER, ParametersState.DisclosureLevel.DEEP_EDIT)
+            parametersState.openFromMonitor(MacroEngine.MASTER, "Mixer")
         }
 
         // Live recording tally badge overlay

@@ -372,14 +372,14 @@ class MacroPanel(
         ImGui.invisibleButton("##macro_preview_monitor", previewW, previewH)
         itemTooltip("Preview monitor ($previewTitle). Click to open Deep Edit.")
         if (ImGui.isItemClicked(0)) {
-            val moduleId = when (tab) {
-                "Deck A", "A FX" -> MacroEngine.DECK_A
-                "Deck B", "B FX" -> MacroEngine.DECK_B
-                "Deck BG", "BG FX" -> MacroEngine.DECK_BG
-                "Deck PV", "PV FX" -> MacroEngine.DECK_PV
-                else -> MacroEngine.MASTER
+            val (moduleId, deckLabel) = when (tab) {
+                "Deck A", "A FX" -> MacroEngine.DECK_A to "Deck A"
+                "Deck B", "B FX" -> MacroEngine.DECK_B to "Deck B"
+                "Deck BG", "BG FX" -> MacroEngine.DECK_BG to "Deck BG"
+                "Deck PV", "PV FX" -> MacroEngine.DECK_PV to "Deck PV"
+                else -> MacroEngine.MASTER to "Mixer"
             }
-            parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.DEEP_EDIT)
+            parametersState.openFromMonitor(moduleId, deckLabel)
         }
 
         ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), startY + previewH)

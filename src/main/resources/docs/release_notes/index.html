@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#external-video-streams-excluded-from-presets-with-disabled-save-ui-deckcontrolpanelkt-performancebrowsebaykt-parameterskeyboardkt-deckpresetcontrollerkt-presetmanagerkt-presetrepositorykt-tooltiphelperkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External Video Streams Excluded from Presets with Disabled Save UI (DeckControlPanel.kt, PerformanceBrowseBay.kt, ParametersKeyboard.kt, DeckPresetController.kt, PresetManager.kt, PresetRepository.kt, TooltipHelper.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ui-terminology-standardization-to-source-src-librarypanelkt-presetlistpanelkt-performancedeckcontrolskt-decksourcepickerkt-parameterstabskt-parametersstatekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4382,6 +4393,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#external-video-streams-excluded-from-presets-with-disabled-save-ui-deckcontrolpanelkt-performancebrowsebaykt-parameterskeyboardkt-deckpresetcontrollerkt-presetmanagerkt-presetrepositorykt-tooltiphelperkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External Video Streams Excluded from Presets with Disabled Save UI (DeckControlPanel.kt, PerformanceBrowseBay.kt, ParametersKeyboard.kt, DeckPresetController.kt, PresetManager.kt, PresetRepository.kt, TooltipHelper.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ui-terminology-standardization-to-source-src-librarypanelkt-presetlistpanelkt-performancedeckcontrolskt-decksourcepickerkt-parameterstabskt-parametersstatekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7531,6 +7553,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="external-video-streams-excluded-from-presets-with-disabled-save-ui-deckcontrolpanelkt-performancebrowsebaykt-parameterskeyboardkt-deckpresetcontrollerkt-presetmanagerkt-presetrepositorykt-tooltiphelperkt">External Video Streams Excluded from Presets with Disabled Save UI (<code>DeckControlPanel.kt</code>, <code>PerformanceBrowseBay.kt</code>, <code>ParametersKeyboard.kt</code>, <code>DeckPresetController.kt</code>, <code>PresetManager.kt</code>, <code>PresetRepository.kt</code>, <code>TooltipHelper.kt</code>)</h3>
+<ul>
+<li>Saving <code>.lsd</code> deck presets is now completely disabled when a deck's visual source is an external video stream (<code>ExternalVideoSource</code> via Spout2, Syphon, or PipeWire). Live video streams have 0 procedural shader parameters and saving ephemeral server handles can produce dead "ghost" presets. Direct live selection in the Universal Shader Picker remains the recommended live workflow.</li>
+<li><strong>Visual Button State &amp; Tooltips</strong>: The floppy-disk Save button in both the Deck Control Panel and Gen Browse is visibly dimmed and disabled when an external video stream is active. Hovering the disabled button shows a helpful tooltip: <code>External video streams (&lt;source name&gt;) cannot be saved as presets.</code> (implemented via new <code>allowWhenDisabled</code> support in <code>TooltipHelper</code>).</li>
+<li><strong>Shortcut &amp; Dirty-Guard Suppression</strong>: Keyboard shortcuts (<code>Ctrl+S</code>, <code>Ctrl+Shift+S</code>, <code>Cmd+S</code>, <code>Cmd+Shift+S</code>) ignore external video decks. <code>PresetManager.isDeckDirty</code> unconditionally returns <code>false</code> for external video streams, preventing spurious "Unsaved Preset Changes" prompt modals when ejecting or switching sources.</li>
+</ul>
 <h3 id="ui-terminology-standardization-to-source-src-librarypanelkt-presetlistpanelkt-performancedeckcontrolskt-decksourcepickerkt-parameterstabskt-parametersstatekt">UI Terminology Standardization to Source / SRC (<code>LibraryPanel.kt</code>, <code>PresetListPanel.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>DeckSourcePicker.kt</code>, <code>ParametersTabs.kt</code>, <code>ParametersState.kt</code>)</h3>
 <ul>
 <li>Settle on <strong>"Source"</strong> / <strong>"SRC"</strong> as the primary terminology for visual inputs across the application (Library, Performance deck rows, launchpad, subtabs, and documentation), while preserving <strong>"Generators"</strong> and <strong>"External Sources"</strong> as distinct category filters within the Source Picker.</li>

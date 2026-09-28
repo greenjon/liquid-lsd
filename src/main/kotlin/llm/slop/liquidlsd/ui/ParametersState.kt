@@ -167,27 +167,71 @@ class ParametersState {
         object Transition : BrowseTarget()
     }
 
-    /** Per rack-module Browse/Params choice. Absent = PARAMS (Deep Edit's original default). */
-    val rackSectionMode = mutableMapOf<String, SectionMode>()
+    /** Active mode for the expanded rack bay (shared across modules, defaulting to PARAMS). */
+    var rackSectionMode: SectionMode = SectionMode.PARAMS
 
     /** Per rack-module Browse target, remembered across a Browse<->Params toggle. */
     val rackBrowseTarget = mutableMapOf<String, BrowseTarget>()
 
-    fun sectionModeFor(moduleId: String): SectionMode = rackSectionMode[moduleId] ?: SectionMode.PARAMS
+    fun sectionModeFor(moduleId: String): SectionMode = rackSectionMode
 
     fun browseTargetFor(moduleId: String): BrowseTarget = rackBrowseTarget[moduleId] ?: BrowseTarget.Gen
 
     /** Opens [moduleId]'s Deep Edit (solo, same as [setDisclosure]) showing Browse content for [target]. */
     fun openBrowse(moduleId: String, target: BrowseTarget) {
         setDisclosure(moduleId, DisclosureLevel.DEEP_EDIT)
-        rackSectionMode[moduleId] = SectionMode.BROWSE
+        rackSectionMode = SectionMode.BROWSE
         rackBrowseTarget[moduleId] = target
     }
 
     /** Flips an already-open module back to its Params (Deep Edit) content. */
     fun openParams(moduleId: String) {
         setDisclosure(moduleId, DisclosureLevel.DEEP_EDIT)
-        rackSectionMode[moduleId] = SectionMode.PARAMS
+        rackSectionMode = SectionMode.PARAMS
+    }
+
+    /**
+     * Focuses [moduleId] (and [deckLabel]) from a confidence monitor or preview monitor click.
+     *
+     * Context-aware behavior:
+     * - If the rack bay is currently collapsed, always opens the parameter Editor ([openParams]).
+     * - If the rack bay is already open, preserves the active mode: stays in [SectionMode.PARAMS]
+     *   if currently editing, or stays in [SectionMode.BROWSE] (carrying over the browse target type)
+     *   if currently browsing.
+     */
+    fun openFromMonitor(moduleId: String, deckLabel: String? = topTabForDeepEditModule(moduleId)) {
+        if (deckLabel != null) {
+            activeTopTab = deckLabel
+        }
+        val currentlyExpanded = rackModuleDisclosure.entries.firstOrNull {
+            it.value != DisclosureLevel.COLLAPSED
+        }?.key
+
+        if (currentlyExpanded == null) {
+            // Bay was collapsed: always open the Editor (Deep Edit params)
+            openParams(moduleId)
+        } else {
+            // Bay was already open: keep the active mode
+            when (sectionModeFor(currentlyExpanded)) {
+                SectionMode.PARAMS -> openParams(moduleId)
+                SectionMode.BROWSE -> {
+                    val currentTarget = browseTargetFor(currentlyExpanded)
+                    if (deckLabel != null) {
+                        when (currentTarget) {
+                            is BrowseTarget.FxChain -> openFxChainBrowse(moduleId, deckLabel, currentTarget.slotIndex)
+                            else -> openGenBrowse(moduleId, deckLabel)
+                        }
+                    } else if (moduleId == MacroEngine.MASTER) {
+                        when (currentTarget) {
+                            is BrowseTarget.FxChain -> openFxChainBrowse(moduleId, null, currentTarget.slotIndex)
+                            else -> openTransitionBrowse()
+                        }
+                    } else {
+                        openBrowse(moduleId, currentTarget)
+                    }
+                }
+            }
+        }
     }
 
     /** Opens [deckLabel]'s source Browse -- the deck row's source badge, or its empty-deck launchpad. */
