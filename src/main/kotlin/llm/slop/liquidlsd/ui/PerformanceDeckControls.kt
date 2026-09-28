@@ -2,11 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
-import imgui.flag.ImGuiComboFlags
-import imgui.flag.ImGuiKey
 import imgui.flag.ImGuiMouseCursor
-import imgui.flag.ImGuiStyleVar
-import imgui.type.ImString
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.osc.OscLearnState
@@ -14,7 +10,6 @@ import llm.slop.liquidlsd.presets.GeneratorDefaults
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.ExternalVideoSource
 import llm.slop.liquidlsd.rendering.Mixer
-import java.io.File
 
 /**
  * Widths of the Deck row's left control lines -- the single source for both the drawing in
@@ -24,7 +19,9 @@ import java.io.File
 internal object DeckRowMetrics {
     const val GAP = 4f
     const val MODE_PILL_W = 28f
-    const val GEN_BADGE_W = 74f
+    /** Base width of the merged generator/preset badge, before adding the space the old
+     *  separate preset combo used to occupy (see [genBadgeW]). */
+    const val GEN_BADGE_BASE_W = 74f
     const val QUEUE_IDX_W = 38f
     const val QUEUE_INNER_GAP = 2f
     const val PV_BADGE_W = 60f
@@ -36,35 +33,32 @@ internal object DeckRowMetrics {
     fun queueNavW(ctrlH: Float): Float = navBtnW(ctrlH) * 2f + QUEUE_IDX_W + QUEUE_INNER_GAP * 2f
 
     /**
-     * Line 1 (SRC) width: pill, generator badge, preset combo, eject, [dice], then the queue nav
+     * Width of the single generator/preset badge -- absorbs the width once used by the
+     * now-removed separate preset combo, so [row1Width] doesn't drift from what's drawn.
+     */
+    fun genBadgeW(comboW: Float): Float = GEN_BADGE_BASE_W + GAP + comboW
+
+    /**
+     * Line 1 (SRC) width: pill, generator/preset badge, eject, [dice], then the queue nav
      * or PV's PREVIEW badge -- whichever is wider, so every deck reserves the same width.
      */
     fun row1Width(ctrlH: Float, comboW: Float, randomization: Boolean): Float =
-        MODE_PILL_W + GAP + GEN_BADGE_W + GAP + comboW + GAP + iconBtnW(ctrlH) +
+        MODE_PILL_W + GAP + genBadgeW(comboW) + GAP + iconBtnW(ctrlH) +
             (if (randomization) GAP + iconBtnW(ctrlH) else 0f) +
             GAP + maxOf(queueNavW(ctrlH), PV_BADGE_W)
 }
 
 /**
  * Deck row controls (Deck A, B, BG, PV):
- * - Left controls, two stacked rows: Row 1 (SRC) knob-assign pill, generator badge, preset combo,
+ * - Left controls, two stacked rows: Row 1 (SRC) knob-assign pill, generator/preset badge,
  *   eject, randomize, queue navigation; Row 2 (FX) knob-assign pill and FX chain header.
  * - Right controls: FX bypass button.
  */
 internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
-    private val presetSearchA = ImString(64)
-    private val presetSearchB = ImString(64)
-    private val presetSearchBG = ImString(64)
-    private val presetSearchPV = ImString(64)
-    private var comboWasOpenA = false
-    private var comboWasOpenB = false
-    private var comboWasOpenBG = false
-    private var comboWasOpenPV = false
-
     /**
      * Controls to the left of the knobs for Deck rows (Deck A, B, BG, PV) in two stacked rows:
-     * - Row 1 (SRC): [SRC] knob-assign pill, generator badge, preset selector combo, eject button,
+     * - Row 1 (SRC): [SRC] knob-assign pill, generator/preset badge, eject button,
      *   randomize die button, and play queue / bg queue navigation.
      * - Row 2 (FX): [FX] knob-assign pill and dedicated FX chain controls.
      */
@@ -113,9 +107,23 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
         ImGui.sameLine(0f, gap)
 
-        // 2. Generator badge -- click to change the deck's visual source
-        val genBadgeW = DeckRowMetrics.GEN_BADGE_W
-        val genName = if (deck.isEmpty) "${Icons.PLUS} Source" else deck.source.displayName
+        // 2. Generator/preset badge -- click to Browse stock generators + saved presets
+        // (a preset is just a generator with its params saved under a name, so there's one
+        // control, not two -- see PerformanceBrowseBay.drawGenBrowse for the merged Browse list).
+        val genBadgeW = DeckRowMetrics.genBadgeW(comboW)
+        val activePreset = when {
+            isDeckA -> session.presetManager.activePresetA
+            isDeckB -> session.presetManager.activePresetB
+            isDeckBG -> session.presetManager.activePresetBG
+            else -> session.presetManager.activePresetPV
+        }
+        val isDirty = session.presetManager.isDeckDirty(deck, mixer)
+        val dirtyMarker = if (isDirty) " *" else ""
+        val genName = when {
+            deck.isEmpty -> "${Icons.PLUS} Source"
+            activePreset != null -> "$activePreset$dirtyMarker"
+            else -> deck.source.displayName
+        }
         val genBorderCol = ImGui.colorConvertFloat4ToU32(0.35f, 0.40f, 0.50f, 0.70f)
         val genBgCol = ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
         val genTextCol = ImGui.colorConvertFloat4ToU32(0.80f, 0.85f, 0.95f, 1f)
@@ -141,12 +149,12 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("##perf_gen_badge_ctx_$tag")) {
             pushOpenDropdownFont()
-            if (ImGui.menuItem("Change Source...")) {
+            if (ImGui.menuItem("Browse...")) {
                 parametersState.openGenBrowse(canonicalBankId, deckLabel)
             }
             if (!deck.isEmpty && !isExternalVideo) {
                 ImGui.separator()
-                if (ImGui.menuItem("Save as Default for $genName")) {
+                if (ImGui.menuItem("Save as Default for ${deck.source.displayName}")) {
                     GeneratorDefaults.saveDefault(deck, canonicalBankId)
                 }
                 if (ImGui.menuItem("Apply Default Now")) {
@@ -166,102 +174,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, ImGui.colorConvertFloat4ToU32(0.60f, 0.70f, 0.90f, 1f), 4f, 0, 1.5f)
         }
         itemTooltip(
-            if (deck.isEmpty) "$deckLabel is empty. Click to choose a visual source."
+            if (deck.isEmpty) "$deckLabel is empty. Click to browse generators and presets."
             else if (isExternalVideo) "Generator: $genName ($deckLabel). Click to change the visual source."
-            else "Generator: $genName ($deckLabel). Click to change source, right-click for defaults."
-        )
-
-        ImGui.sameLine(0f, gap)
-
-        // 3. Preset dropdown combo
-        val activePreset = when {
-            isDeckA -> session.presetManager.activePresetA
-            isDeckB -> session.presetManager.activePresetB
-            isDeckBG -> session.presetManager.activePresetBG
-            else -> session.presetManager.activePresetPV
-        }
-        val isDirty = session.presetManager.isDeckDirty(deck, mixer)
-        val dirtyMarker = if (isDirty) " *" else ""
-        val presetDisplay = (activePreset ?: "Default") + dirtyMarker
-
-        ImGui.setNextItemWidth(comboW)
-        val searchBuf = when {
-            isDeckA -> presetSearchA
-            isDeckB -> presetSearchB
-            isDeckBG -> presetSearchBG
-            else -> presetSearchPV
-        }
-        val wasOpen = when {
-            isDeckA -> comboWasOpenA
-            isDeckB -> comboWasOpenB
-            isDeckBG -> comboWasOpenBG
-            else -> comboWasOpenPV
-        }
-        // pushOpenDropdownPadding() pushes its own roomy FramePadding for the popup body's rows;
-        // push the ctrlH-based override on top of that (not before it) so popping 1 style var right
-        // after beginCombo restores the dropdown's row FramePadding rather than eating it.
-        pushOpenDropdownPadding()
-        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), ((ctrlH - ImGui.getFontSize()) / 2f).coerceAtLeast(0f))
-        val isComboOpen = ImGui.beginCombo("##perf_preset_combo_$tag", presetDisplay, ImGuiComboFlags.HeightLargest)
-        ImGui.popStyleVar()
-        if (isComboOpen) {
-            pushOpenDropdownFont()
-            if (!wasOpen) {
-                ImGui.setKeyboardFocusHere()
-                when {
-                    isDeckA -> comboWasOpenA = true
-                    isDeckB -> comboWasOpenB = true
-                    isDeckBG -> comboWasOpenBG = true
-                    else -> comboWasOpenPV = true
-                }
-            }
-            ImGui.setNextItemWidth(-1f)
-            ImGui.inputTextWithHint("##preset_search_$tag", "Search presets... (Esc to clear)", searchBuf)
-            if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
-                searchBuf.set("")
-            }
-            ImGui.separator()
-
-            val query = searchBuf.get().trim()
-            val allPresets = FileSystemManager.scanAllPresets()
-            val filtered = if (query.isEmpty()) allPresets else allPresets.filter { it.name.contains(query, ignoreCase = true) }
-
-            if (filtered.isEmpty()) {
-                ImGui.textDisabled(if (query.isEmpty()) "No presets found" else "No matching presets")
-            } else {
-                for (preset in filtered) {
-                    val isSelected = preset.name == activePreset
-                    if (selectableRow("${preset.name}##perf_pselect_${tag}_${preset.path.hashCode()}", isSelected)) {
-                        session.presetRepository.loadDeckPresetAsync(
-                            File(preset.path),
-                            isDeckA = isDeckA,
-                            isDeckBG = isDeckBG,
-                            isDeckPV = isDeckPV
-                        )
-                        searchBuf.set("")
-                    }
-                    if (isSelected) {
-                        ImGui.setItemDefaultFocus()
-                    }
-                }
-            }
-            popOpenDropdownFont()
-            ImGui.endCombo()
-        } else {
-            if (wasOpen) {
-                searchBuf.set("")
-                when {
-                    isDeckA -> comboWasOpenA = false
-                    isDeckB -> comboWasOpenB = false
-                    isDeckBG -> comboWasOpenBG = false
-                    else -> comboWasOpenPV = false
-                }
-            }
-        }
-        popOpenDropdownPadding()
-        itemTooltip(
-            if (activePreset != null) "Active preset: $activePreset$dirtyMarker\nClick to search and select presets."
-            else "Select a preset for $deckLabel."
+            else "$genName ($deckLabel). Click to browse generators/presets, right-click for defaults."
         )
 
         ImGui.sameLine(0f, gap)

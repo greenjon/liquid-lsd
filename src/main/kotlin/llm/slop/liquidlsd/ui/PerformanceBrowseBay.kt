@@ -52,10 +52,49 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
     }
 
     private fun drawGenBrowse(session: SessionContext, parametersState: ParametersState, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String) {
-        ShaderPickerPopup.ensureInline("gen/$deckLabel", "Select Source for $deckLabel", ShaderPickerPopup.PickerType.SOURCE) { sourceId ->
-            DeckSourcePicker.applyPickedSourceId(session, parametersState, mixer, deck, deckLabel, sourceId, ctx.deckPresetController)
+        ShaderPickerPopup.ensureInlineSource("gen/$deckLabel", "Select Source for $deckLabel") { pick ->
+            when (pick) {
+                is ShaderPickerPopup.SourcePick.Id ->
+                    DeckSourcePicker.applyPickedSourceId(session, parametersState, mixer, deck, deckLabel, pick.sourceId, ctx.deckPresetController)
+                is ShaderPickerPopup.SourcePick.Saved ->
+                    session.presetRepository.loadDeckPresetAsync(
+                        pick.file,
+                        isDeckA = deckLabel == "Deck A",
+                        isDeckBG = deckLabel == "Deck BG",
+                        isDeckPV = deckLabel == "Deck PV"
+                    )
+                ShaderPickerPopup.SourcePick.None -> {}
+            }
         }
+        drawGenBrowseSaveButton(session, mixer, deck, deckLabel)
         ShaderPickerPopup.drawInline(session)
+    }
+
+    /** Floppy-disk Save/Save As -- same [DeckPresetController.handleSaveDeck] flow the Mixer's
+     *  own Save button and Ctrl+Shift+S already use, just also reachable from this Browse list. */
+    private fun drawGenBrowseSaveButton(session: SessionContext, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String) {
+        val isDeckA = deckLabel == "Deck A"
+        val rowH = ImGui.getFrameHeight()
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.SAVE}##browse_gen_save_$deckLabel", rowH, rowH)) {
+                ImGui.openPopup("browse_gen_save_menu_$deckLabel")
+            }
+        }
+        itemTooltip("Save or save as a new preset for $deckLabel.")
+        pushOpenDropdownPadding()
+        if (ImGui.beginPopup("browse_gen_save_menu_$deckLabel")) {
+            pushOpenDropdownFont()
+            if (ImGui.menuItem("Save")) {
+                ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = false)
+            }
+            if (ImGui.menuItem("Save As...")) {
+                ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = true)
+            }
+            popOpenDropdownFont()
+            ImGui.endPopup()
+        }
+        popOpenDropdownPadding()
+        ImGui.spacing()
     }
 
     private fun drawTransitionBrowse(session: SessionContext, mixer: Mixer) {

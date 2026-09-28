@@ -14,8 +14,9 @@ import llm.slop.liquidlsd.rendering.isf.ISFVisualSource
 import llm.slop.liquidlsd.SessionContext
 
 /**
- * High-performance, keyboard-searchable content for selecting Visual Sources, ISF Filters,
- * saved single-FX files, and Mixer Transitions.
+ * High-performance, keyboard-searchable content for selecting Visual Sources (stock generator
+ * types merged with saved deck presets -- a preset is just a generator with its parameter values
+ * saved under a name), ISF Filters, saved single-FX files, and Mixer Transitions.
  *
  * Designed to handle 300+ items with zero-allocation per-frame filtering.
  * Supports category pill filtering and instant fuzzy search.
@@ -37,9 +38,19 @@ object ShaderPickerPopup {
         object None : FxPick()
     }
 
+    /** What the user picked for a deck's generator: a stock source id (or "ext_video:..."),
+     *  a saved deck preset file, or nothing. A preset is just a generator with its parameter
+     *  values saved under a name, so both live in the same SOURCE picker list. */
+    sealed class SourcePick {
+        data class Id(val sourceId: String) : SourcePick()
+        data class Saved(val file: java.io.File) : SourcePick()
+        object None : SourcePick()
+    }
+
     const val CATEGORY_FAVORITES = "\u2605 Favorites"
     const val CATEGORY_SAVED = "Saved FX"
     private const val SAVED_PREFIX = "saved:"
+    private const val SAVED_SOURCE_PREFIX = "preset:"
 
     private val isFxPicker: Boolean
         get() = pickerType == PickerType.FX_SLOT_1 || pickerType == PickerType.FX_SLOT_2 || pickerType == PickerType.FX_SLOT_3
@@ -56,6 +67,12 @@ object ShaderPickerPopup {
 
     enum class ViewMode { FOLDERS, FLAT }
     private var viewMode = ViewMode.FOLDERS
+
+    /** Last-seen [FileSystemManager.scanAllPresets] result for the SOURCE picker, so [drawInline]
+     *  can cheaply detect a rename/duplicate/delete from [drawPresetManageButton] (reference
+     *  equality, same idiom [llm.slop.liquidlsd.ui.browser.PresetListPanel] uses) and refresh the
+     *  list even though nothing was typed into search or a category pill. */
+    private var lastSourcePresetsScan: List<AssetItem>? = null
 
     // Internal cache to avoid allocations in drawInline()
     private val filteredItems = mutableListOf<ShaderItem>()
@@ -104,6 +121,26 @@ object ShaderPickerPopup {
         if (activeContextKey == contextKey) return
         activeContextKey = contextKey
         resetForType(type)
+    }
+
+    /**
+     * [ensureInline] for a deck's generator: the SOURCE list merges stock [VisualSourceRegistry]
+     * types with saved deck presets (`.lsd` files), so picking a row can mean either.
+     */
+    fun ensureInlineSource(contextKey: String, title: String, callback: (SourcePick) -> Unit) {
+        this.title = title
+        this.onSelect = { id ->
+            callback(
+                when {
+                    id == null -> SourcePick.None
+                    id.startsWith(SAVED_SOURCE_PREFIX) -> SourcePick.Saved(java.io.File(id.removePrefix(SAVED_SOURCE_PREFIX)))
+                    else -> SourcePick.Id(id)
+                }
+            )
+        }
+        if (activeContextKey == contextKey) return
+        activeContextKey = contextKey
+        resetForType(PickerType.SOURCE)
     }
 
     /**
@@ -225,6 +262,27 @@ object ShaderPickerPopup {
                     )
                 }
             }
+
+            // ── Saved deck presets -- a preset is just a generator with its parameter values
+            // saved under a name, so it belongs in the same list as the stock types above,
+            // always shown (unlike FX's opt-in "Saved FX" pill, matching the old preset picker's
+            // always-visible list).
+            FileSystemManager.scanAllPresets().forEach { asset ->
+                asset.tags.forEach { tempCats.add(it) }
+                val matchesSearch = asset.name.lowercase().contains(searchText) ||
+                    asset.tags.any { it.lowercase().contains(searchText) }
+                val matchesCategory = matchesSelectedCategories(asset.tags, "")
+                if (matchesSearch && matchesCategory) {
+                    filteredItems.add(
+                        ShaderItem(
+                            id = SAVED_SOURCE_PREFIX + asset.path,
+                            displayName = asset.name,
+                            categories = asset.tags,
+                            type = "Preset"
+                        )
+                    )
+                }
+            }
         } else if (pickerType == PickerType.MIXER_TRANSITION) {
             ISFTransitionRegistry.availableTransitions.forEach { transition ->
                 transition.categories.forEach { tempCats.add(it) }
@@ -336,14 +394,20 @@ object ShaderPickerPopup {
         }
     }
 
-    /** Result table has 2 columns normally (Name, Categories); FX pickers get a 3rd for the \u2605 favorite toggle. */
-    private fun resultColumnCount() = if (isFxPicker) 3 else 2
+    /** SOURCE picker rows get a 3rd column too, for the saved-preset management ("...") button. */
+    private val hasManageColumn: Boolean
+        get() = isFxPicker || pickerType == PickerType.SOURCE
+
+    /** Result table has 2 columns normally (Name, Categories); FX/SOURCE pickers get a 3rd. */
+    private fun resultColumnCount() = if (hasManageColumn) 3 else 2
 
     private fun setupResultColumns() {
         ImGui.tableSetupColumn("Display Name", ImGuiTableColumnFlags.WidthStretch, 0.3f)
-        ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, if (isFxPicker) 0.6f else 0.7f)
+        ImGui.tableSetupColumn("Categories", ImGuiTableColumnFlags.WidthStretch, if (hasManageColumn) 0.6f else 0.7f)
         if (isFxPicker) {
             ImGui.tableSetupColumn("\u2605", ImGuiTableColumnFlags.WidthFixed, 34f)
+        } else if (pickerType == PickerType.SOURCE) {
+            ImGui.tableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 28f)
         }
     }
 
@@ -361,7 +425,11 @@ object ShaderPickerPopup {
 
         // Col 0: Name -- the whole row is the click target (single or double click selects it).
         ImGui.tableSetColumnIndex(0)
-        val itemLabel = if (item.isExternal) "${Icons.ACTIVITY}  ${item.displayName}" else item.displayName
+        val itemLabel = when {
+            item.isExternal -> "${Icons.ACTIVITY}  ${item.displayName}"
+            item.type == "Preset" -> "${Icons.DISC} ${item.displayName}"
+            else -> item.displayName
+        }
         if (item.isExternal) {
             ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.85f, 0.45f, 1.0f)
         }
@@ -387,7 +455,8 @@ object ShaderPickerPopup {
             ImGui.textColored(0.7f, 0.7f, 0.7f, 1.0f, item.categoriesLabel)
         }
 
-        // Col 2: \u2605 favorite toggle -- FX pickers only
+        // Col 2: \u2605 favorite toggle for FX pickers; "..." preset management for saved
+        // deck presets in the SOURCE picker (stock source rows leave this column blank).
         if (isFxPicker) {
             ImGui.tableSetColumnIndex(2)
             if (item.type == "Filter") {
@@ -400,7 +469,39 @@ object ShaderPickerPopup {
                 if (starred) ImGui.popStyleColor()
                 itemTooltip(if (starred) "Remove from the FX shortlist (the effects a slot's \u25c0 \u25b6 steps through)." else "Add to the FX shortlist (the effects a slot's \u25c0 \u25b6 steps through).")
             }
+        } else if (pickerType == PickerType.SOURCE && item.type == "Preset") {
+            ImGui.tableSetColumnIndex(2)
+            drawPresetManageButton(item)
         }
+    }
+
+    /** Rename/Duplicate/Delete for a saved deck preset row, reusing the same handlers the
+     *  Library's Generators panel uses (see [llm.slop.liquidlsd.ui.browser.PresetListPanel]). */
+    private fun drawPresetManageButton(item: ShaderItem) {
+        val assetPath = item.id.removePrefix(SAVED_SOURCE_PREFIX)
+        val popupId = "gen_preset_more_${item.id.hashCode()}"
+        if (ImGui.smallButton("${Icons.MORE_VERTICAL}##more_${item.id}")) {
+            ImGui.openPopup(popupId)
+        }
+        pushOpenDropdownPadding()
+        if (ImGui.beginPopup(popupId)) {
+            pushOpenDropdownFont()
+            val asset = AssetItem(path = assetPath, name = item.displayName, type = AssetType.PRESET, tags = item.categories)
+            if (ImGui.menuItem("Rename / Edit Tags...")) {
+                llm.slop.liquidlsd.ui.browser.BrowserPopupHandler.openRenamePresetModal(asset)
+            }
+            if (ImGui.menuItem("Duplicate...")) {
+                llm.slop.liquidlsd.ui.browser.BrowserPopupHandler.openDuplicatePresetModal(asset)
+            }
+            ImGui.separator()
+            if (ImGui.menuItem("Delete")) {
+                llm.slop.liquidlsd.ui.browser.BrowserPopupHandler.deleteTarget = asset
+                llm.slop.liquidlsd.ui.browser.BrowserPopupHandler.pendingOpenDeletePopup = true
+            }
+            popOpenDropdownFont()
+            ImGui.endPopup()
+        }
+        popOpenDropdownPadding()
     }
 
     /**
@@ -409,6 +510,14 @@ object ShaderPickerPopup {
      * (or switching to a different target) is the caller's job, not this widget's.
      */
     fun drawInline(session: SessionContext) {
+        if (pickerType == PickerType.SOURCE) {
+            val currentScan = FileSystemManager.scanAllPresets()
+            if (currentScan !== lastSourcePresetsScan) {
+                lastSourcePresetsScan = currentScan
+                updateItems()
+            }
+        }
+
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             ImGui.textDisabled("${Icons.SEARCH} $title")
         }

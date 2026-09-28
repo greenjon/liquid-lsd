@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#deck-rows-generator-badge-and-preset-combo-merged-into-one-control-shaderpickerpopupkt-performancebrowsebaykt-performancedeckcontrolskt-browserpopuphandlerkt-librarypanelkt-uimanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck Row's Generator Badge and Preset Combo Merged Into One Control (ShaderPickerPopup.kt, PerformanceBrowseBay.kt, PerformanceDeckControls.kt, BrowserPopupHandler.kt, LibraryPanel.kt, UIManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#inline-browse-replaces-modal-shaderfx-chaintransition-pickers-performancebrowsebaykt-shaderpickerpopupkt-performancedeepeditbaykt-fxchainheaderkt-fxslotcellkt-decksourcepickerkt-parametersstatekt-performancedeckcontrolskt-performancemastercontrolskt-performancematrixpanelkt-performancetransitionscontrolskt-parameterstabskt-mixerpanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4360,6 +4371,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#deck-rows-generator-badge-and-preset-combo-merged-into-one-control-shaderpickerpopupkt-performancebrowsebaykt-performancedeckcontrolskt-browserpopuphandlerkt-librarypanelkt-uimanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck Row's Generator Badge and Preset Combo Merged Into One Control (ShaderPickerPopup.kt, PerformanceBrowseBay.kt, PerformanceDeckControls.kt, BrowserPopupHandler.kt, LibraryPanel.kt, UIManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#inline-browse-replaces-modal-shaderfx-chaintransition-pickers-performancebrowsebaykt-shaderpickerpopupkt-performancedeepeditbaykt-fxchainheaderkt-fxslotcellkt-decksourcepickerkt-parametersstatekt-performancedeckcontrolskt-performancemastercontrolskt-performancematrixpanelkt-performancetransitionscontrolskt-parameterstabskt-mixerpanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7487,6 +7509,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="deck-rows-generator-badge-and-preset-combo-merged-into-one-control-shaderpickerpopupkt-performancebrowsebaykt-performancedeckcontrolskt-browserpopuphandlerkt-librarypanelkt-uimanagerkt">Deck Row's Generator Badge and Preset Combo Merged Into One Control (<code>ShaderPickerPopup.kt</code>, <code>PerformanceBrowseBay.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>BrowserPopupHandler.kt</code>, <code>LibraryPanel.kt</code>, <code>UIManager.kt</code>)</h3>
+<ul>
+<li>A preset is just a generator with its parameter values saved under a name, so a deck row no longer shows two redundant boxes for it. The generator badge and the separate searchable preset dropdown are now a single badge: it shows the active preset's name (or the generator's own name when nothing's been saved), and clicking it opens Gen Browse listing stock generator types <strong>and</strong> saved presets together, always both — the same merge the Library's Generators panel already does.</li>
+<li>Saved-preset rows in Gen Browse get a "⋮" menu (Rename/Edit Tags, Duplicate, Delete), reusing the same <code>BrowserPopupHandler</code> actions the Library's Generators panel uses — no more dropping into Library just to rename or delete a preset.</li>
+<li>A floppy-disk <strong>Save / Save As</strong> button now sits at the top of Gen Browse, wired to the same <code>DeckPresetController.handleSaveDeck</code> flow already bound to the Mixer's own Save button and Ctrl+Shift+S — saving a preset no longer requires leaving the row.</li>
+<li><code>DeckRowMetrics.genBadgeW</code> absorbs the pixel width the old separate preset combo used to occupy, so the deck row's total reserved width (<code>row1Width</code>) is unchanged — merging the two controls didn't shift anything else in the row.</li>
+<li>Fixed a latent bug this surfaced: preset deletion's confirmation modal used to only be drawn from inside <code>LibraryPanel</code>, which is skipped entirely while any row is in Deep Edit (Edit view) — exactly when Gen Browse's new Delete action needs it. <code>BrowserPopupHandler.drawDeleteAssetConfirmationPopup()</code> now self-triggers and is drawn unconditionally once per frame from <code>UIManager</code>, like <code>SavePresetModal</code> already was.</li>
+</ul>
 <h3 id="inline-browse-replaces-modal-shaderfx-chaintransition-pickers-performancebrowsebaykt-shaderpickerpopupkt-performancedeepeditbaykt-fxchainheaderkt-fxslotcellkt-decksourcepickerkt-parametersstatekt-performancedeckcontrolskt-performancemastercontrolskt-performancematrixpanelkt-performancetransitionscontrolskt-parameterstabskt-mixerpanelkt">Inline Browse Replaces Modal Shader/FX Chain/Transition Pickers (<code>PerformanceBrowseBay.kt</code>, <code>ShaderPickerPopup.kt</code>, <code>PerformanceDeepEditBay.kt</code>, <code>FxChainHeader.kt</code>, <code>FxSlotCell.kt</code>, <code>DeckSourcePicker.kt</code>, <code>ParametersState.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>PerformanceTransitionsControls.kt</code>, <code>ParametersTabs.kt</code>, <code>MixerPanel.kt</code>)</h3>
 <ul>
 <li>Clicking a deck's generator badge, an FX chain's name, an FX slot's name, or the active transition's name no longer pops a full-screen modal over the mixer. Each now opens <strong>Browse</strong> content inline in that row's Edit bay — the same place Deep Edit's parameter grid shows, collapsing the other rows exactly like Deep Edit already does, so the mixer and monitors stay visible and interactive the whole time.</li>

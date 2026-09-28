@@ -195,7 +195,17 @@ object BrowserPopupHandler {
         }
     }
 
+    /**
+     * Called unconditionally once per frame at the top level (like [llm.slop.liquidlsd.ui.SavePresetModal.draw]),
+     * not from inside [llm.slop.liquidlsd.ui.LibraryPanel] -- delete can also be triggered from the
+     * Performance row's Browse content (see [PresetListPanel] and [llm.slop.liquidlsd.ui.ShaderPickerPopup]),
+     * which stays on screen in Edit view while the whole Library panel is skipped.
+     */
     fun drawDeleteAssetConfirmationPopup() {
+        if (pendingOpenDeletePopup) {
+            ImGui.openPopup("ConfirmDeleteAssetPopup")
+            pendingOpenDeletePopup = false
+        }
         if (ImGui.beginPopupModal("ConfirmDeleteAssetPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             val target = deleteTarget
             if (target == null) {

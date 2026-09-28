@@ -25,6 +25,7 @@ import imgui.gl3.ImGuiImplGl3
 import imgui.glfw.ImGuiImplGlfw
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.presets.PlayQueueManager
+import llm.slop.liquidlsd.ui.browser.BrowserPopupHandler
 
 /**
  * Manages the ImGui overlay for desktop control.
@@ -295,6 +296,7 @@ class UIManager(
 
             NoteEditorModal.draw()
             SavePresetModal.draw(session)
+            BrowserPopupHandler.drawDeleteAssetConfirmationPopup()
             UpdatePromptModal.draw(session)
             AboutModal.draw(session)
 

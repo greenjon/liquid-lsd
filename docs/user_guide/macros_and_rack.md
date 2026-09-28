@@ -214,14 +214,13 @@ Each row is color-coded to its deck or target (blue for Deck A, orange for Deck 
 ### Performance Controls & Side-Wing Layout
 
 To maximize vertical space in the matrix and keep the knobs comfortably clustered together:
-- **Row Titles & Side-Wing Controls**: Row group titles (e.g. `DECK A`, `DECK A (FX)`) sit at the top-left of the row, level with the top of the knobs. The left- and right-wing controls sit below the title, with their bottom edge lined up with the bottom of the knobs, so short rows never push the controls up into the title. Every wing control (buttons, badges, preset dropdown) is the same height.
+- **Row Titles & Side-Wing Controls**: Row group titles (e.g. `DECK A`, `DECK A (FX)`) sit at the top-left of the row, level with the top of the knobs. The left- and right-wing controls sit below the title, with their bottom edge lined up with the bottom of the knobs, so short rows never push the controls up into the title. Every wing control (buttons, badges, generator/preset badge) is the same height.
 - **Row Height & Scrolling**: Rows share the panel's height, so they shrink as you drag the Library dock taller. Once rows reach a minimum height (about where the Library is at half height), they stop shrinking and the matrix scrolls vertically instead. Two usable rows plus a scrollbar beat four knobs too small to grab. Scroll with the scrollbar, with the mouse wheel over the gaps between knobs (over a knob the wheel still adjusts that knob), or by click-dragging up/down on any empty part of a row, including its title band.
 - **Deck Rows (Deck A, B, BG, PV)**:
   - **Left Wing (Info & Deck Controls)**:
     - **Row 1 (SRC)**:
       - **`[ SRC ]` Knob Pill**: Assigns the row's 4 on-screen macro knobs to the deck's Visual Generator.
-      - **Generator Badge**: Displays active visual source (`deck.source.displayName`), click to open inline Browse and change source.
-      - **Preset Dropdown Combo**: Searchable preset selector with auto-focus Quick-Search filter bar (`presetSearch*`) and dirty marker (`*`).
+      - **Generator / Preset Badge**: One control, not two -- a preset is just a generator with its parameter values saved under a name. Shows the active preset's name (with a dirty marker `*`) or, if nothing's been saved, the generator's own name. Click to open inline Browse listing stock generator types and saved presets together; right-click for source defaults.
       - **Eject Button (`⏏`)**: Resets the deck to defaults with dirty-state safety guard.
       - **Randomize Die Button (`🎲`)**: Instantly randomizes that deck's modulators & base values with undo support (when randomization is enabled).
       - **Queue Navigation**: Deck A and Deck B connect to `PlayQueueManager` (`< N/Total >`), Deck BG connects to `BgQueueManager` (`< N/Total >`), and Deck PV features a quick Preview focus button.
@@ -299,10 +298,10 @@ between two disclosure tiers, without leaving Performance Mode:
 
 ### Browse: picking a generator, FX or transition without leaving the row
 
-Clicking a generator badge, an FX chain's name, an FX slot's name, or the active transition's name
-opens **Browse** in that row's bay — the same place Deep Edit's parameter grid shows, with the other
-rows collapsed the same way. Nothing covers the mixer or the deck/master monitors; you keep watching
-the show while you pick.
+Clicking a generator/preset badge, an FX chain's name, an FX slot's name, or the active transition's
+name opens **Browse** in that row's bay — the same place Deep Edit's parameter grid shows, with the
+other rows collapsed the same way. Nothing covers the mixer or the deck/master monitors; you keep
+watching the show while you pick.
 
 - **Instant apply, list stays open**: clicking an item in the list applies it immediately and the
   list doesn't close, so you can try several generators, effects, or chains back-to-back. `Ctrl+Z`
@@ -311,6 +310,11 @@ the show while you pick.
 - **Browse ↔ Params toggle**: a small button at the top of the bay (`Browse...` / `View Params`)
   switches that row between Browse and Deep Edit's parameter grid without closing either — pick a
   generator, then flip straight to its parameters.
+- **Gen Browse lists generators and presets together**: stock generator types and saved presets
+  always appear in the same list — a preset is just a generator with its parameter values saved
+  under a name. Saved-preset rows get a "⋮" menu for **Rename / Edit Tags**, **Duplicate**, and
+  **Delete**, and a floppy-disk **Save / Save As** button sits above the list — the same save flow
+  as the Mixer's Save button and `Ctrl+Shift+S` — so managing presets no longer requires the Library.
 - **FX Chain Browse** has **Chain / FX1 / FX2 / FX3** sub-tabs: **Chain** searches and loads a whole
   saved `.lsdfxchain`; **FX1**–**FX3** are that chain's per-slot effect pickers (search, category
   pills, ★ favorites, saved single-FX presets), each opening on its slot's usual category.

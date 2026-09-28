@@ -507,14 +507,12 @@ object LibraryPanel {
             }
         }
 
-        // Popups
+        // Popups. Delete's trigger+draw is handled globally (see BrowserPopupHandler.drawDeleteAssetConfirmationPopup)
+        // since it can now also be triggered from the Performance row's Browse content, which stays
+        // on screen while this whole Library panel is skipped (Edit view).
         if (BrowserPopupHandler.pendingOpenRenamePopup) {
             ImGui.openPopup("RenameAssetPopup")
             BrowserPopupHandler.pendingOpenRenamePopup = false
-        }
-        if (BrowserPopupHandler.pendingOpenDeletePopup) {
-            ImGui.openPopup("ConfirmDeleteAssetPopup")
-            BrowserPopupHandler.pendingOpenDeletePopup = false
         }
         if (BrowserPopupHandler.pendingOpenNewPlaylistPopup) {
             ImGui.openPopup("NewPlaylistPopup")
@@ -538,7 +536,6 @@ object LibraryPanel {
         }
 
         BrowserPopupHandler.drawRenameAssetPopup()
-        BrowserPopupHandler.drawDeleteAssetConfirmationPopup()
         BrowserPopupHandler.drawNewPlaylistPopup()
         BrowserPopupHandler.drawExportQueuePopup(session)
         BrowserPopupHandler.drawExportBgQueuePopup()
