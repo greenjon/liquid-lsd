@@ -533,7 +533,7 @@ class PerformanceMatrixPanel {
             if (descriptor.hasExtraHeader) {
                 val badgeX = boxX1
                 val badgeY = boxTopY
-                val badgeH = (row2YFinal + ctrlH) - boxTopY
+                val badgeH = ((row2YFinal + ctrlH) - boxTopY) * 0.5f
                 val masterTabStartX = badgeX + masterTabBadgeW + 6f
                 if (isMasterRow) {
                     drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "MASTER", UITheme.FontLevel.H2)

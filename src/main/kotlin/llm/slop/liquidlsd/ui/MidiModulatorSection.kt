@@ -43,12 +43,14 @@ object MidiModulatorSection {
             val isThisCellLearning = currentTarget is MidiLearnTarget.GridCell && currentTarget.cellId == cell
 
             if (isThisCellLearning) {
+                val ink = TangoPalette.inkFor(floatArrayOf(0.72f, 0.45f, 1.00f), floatArrayOf(0.80f, 0.55f, 1.00f))
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.72f, 0.45f, 1.00f, 0.6f)
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.80f, 0.55f, 1.00f, 0.8f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                 if (ImGui.button("${Icons.REFRESH} Waiting for MIDI Note/CC... (Click to Cancel)##midi_relearn")) {
                     state.midiLearnTarget = null
                 }
-                ImGui.popStyleColor(2)
+                ImGui.popStyleColor(3)
             } else {
                 if (ImGui.button("Re-Learn MIDI##midi_relearn")) {
                     state.midiLearnTarget = MidiLearnTarget.GridCell(cell, param)

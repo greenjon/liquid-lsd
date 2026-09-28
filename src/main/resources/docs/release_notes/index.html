@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#button-text-now-stays-legible-on-light-backgrounds-tangopalettekt-temposyncpanelkt-menubarkt-fxchainheaderkt-audiomodulatorsectionkt-broadcastpreferencespanelkt-lfo2sectionkt-midimodulatorsectionkt-midipreferencespanelkt-modulatorheaderrowkt-oscpreferencespanelkt-parameterstabskt-performanceclockcontrolskt-performancetransitionscontrolskt-propertiespanelkt-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Button Text Now Stays Legible on Light Backgrounds (TangoPalette.kt, TempoSyncPanel.kt, MenuBar.kt, FxChainHeader.kt, AudioModulatorSection.kt, BroadcastPreferencesPanel.kt, Lfo2Section.kt, MidiModulatorSection.kt, MidiPreferencesPanel.kt, ModulatorHeaderRow.kt, OscPreferencesPanel.kt, ParametersTabs.kt, PerformanceClockControls.kt, PerformanceTransitionsControls.kt, PropertiesPanel.kt, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#full-tango-desktop-project-palette-is-now-the-single-source-for-all-ui-color-tangopalettekt-browserdeckbuttonskt-performanceuicontextkt-uithemestylerkt-fxchainheaderkt-fxslotcellkt-temposyncpanelkt-mixerpanelkt-macroknobwidgetkt-menubarkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4536,6 +4547,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#button-text-now-stays-legible-on-light-backgrounds-tangopalettekt-temposyncpanelkt-menubarkt-fxchainheaderkt-audiomodulatorsectionkt-broadcastpreferencespanelkt-lfo2sectionkt-midimodulatorsectionkt-midipreferencespanelkt-modulatorheaderrowkt-oscpreferencespanelkt-parameterstabskt-performanceclockcontrolskt-performancetransitionscontrolskt-propertiespanelkt-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Button Text Now Stays Legible on Light Backgrounds (TangoPalette.kt, TempoSyncPanel.kt, MenuBar.kt, FxChainHeader.kt, AudioModulatorSection.kt, BroadcastPreferencesPanel.kt, Lfo2Section.kt, MidiModulatorSection.kt, MidiPreferencesPanel.kt, ModulatorHeaderRow.kt, OscPreferencesPanel.kt, ParametersTabs.kt, PerformanceClockControls.kt, PerformanceTransitionsControls.kt, PropertiesPanel.kt, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#full-tango-desktop-project-palette-is-now-the-single-source-for-all-ui-color-tangopalettekt-browserdeckbuttonskt-performanceuicontextkt-uithemestylerkt-fxchainheaderkt-fxslotcellkt-temposyncpanelkt-mixerpanelkt-macroknobwidgetkt-menubarkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7839,6 +7861,10 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="button-text-now-stays-legible-on-light-backgrounds-tangopalettekt-temposyncpanelkt-menubarkt-fxchainheaderkt-audiomodulatorsectionkt-broadcastpreferencespanelkt-lfo2sectionkt-midimodulatorsectionkt-midipreferencespanelkt-modulatorheaderrowkt-oscpreferencespanelkt-parameterstabskt-performanceclockcontrolskt-performancetransitionscontrolskt-propertiespanelkt-docsdeveloperuimd">Button Text Now Stays Legible on Light Backgrounds (<code>TangoPalette.kt</code>, <code>TempoSyncPanel.kt</code>, <code>MenuBar.kt</code>, <code>FxChainHeader.kt</code>, <code>AudioModulatorSection.kt</code>, <code>BroadcastPreferencesPanel.kt</code>, <code>Lfo2Section.kt</code>, <code>MidiModulatorSection.kt</code>, <code>MidiPreferencesPanel.kt</code>, <code>ModulatorHeaderRow.kt</code>, <code>OscPreferencesPanel.kt</code>, <code>ParametersTabs.kt</code>, <code>PerformanceClockControls.kt</code>, <code>PerformanceTransitionsControls.kt</code>, <code>PropertiesPanel.kt</code>, <code>docs/developer/ui.md</code>)</h3>
+<ul>
+<li><strong>New <code>TangoPalette.inkFor(vararg backgrounds)</code></strong>: picks near-black or near-white ink from a background's perceptual luminance (0.55 threshold), matching how Mixxx's Tango skin pairs dark text with its light hues rather than outlining labels. Fixed the TAP tempo button's "armed" state (<code>TempoSyncPanel.kt</code>) showing white text against increasingly bright Butter-yellow hover/press backgrounds, then swept every other custom <code>ImGuiCol.Button</code> color push app-wide (broadcast/link/ISF status pills, MIDI/OSC learn buttons, modulator bypass and source-mode buttons, deck/CV parameter sub-tabs, transitions auto-fade and clock TAP/LINK buttons) for the same class of bug -- any button whose background is switched away from the app's default dark surface now pushes a matching <code>ImGuiCol.Text</code> instead of inheriting the global off-white default.</li>
+</ul>
 <h3 id="full-tango-desktop-project-palette-is-now-the-single-source-for-all-ui-color-tangopalettekt-browserdeckbuttonskt-performanceuicontextkt-uithemestylerkt-fxchainheaderkt-fxslotcellkt-temposyncpanelkt-mixerpanelkt-macroknobwidgetkt-menubarkt">Full Tango Desktop Project Palette Is Now the Single Source for All UI Color (<code>TangoPalette.kt</code>, <code>BrowserDeckButtons.kt</code>, <code>PerformanceUiContext.kt</code>, <code>UIThemeStyler.kt</code>, <code>FxChainHeader.kt</code>, <code>FxSlotCell.kt</code>, <code>TempoSyncPanel.kt</code>, <code>MixerPanel.kt</code>, <code>MacroKnobWidget.kt</code>, <code>MenuBar.kt</code>)</h3>
 <ul>
 <li><strong>New <code>TangoPalette.kt</code></strong>: Reproduces the actual Tango Desktop Project palette (8 hues x light/normal/dark — Butter, Orange, Chocolate, Chameleon, Sky Blue, Plum, Scarlet Red, Aluminium 1/2 — plus Mixxx's own sync/link cyan extension) as the single source for every accent and status color in the app. Each hue is assigned to exactly one role so a deck's color and a status meaning never collide.</li>

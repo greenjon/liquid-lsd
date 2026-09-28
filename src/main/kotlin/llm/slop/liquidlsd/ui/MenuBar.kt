@@ -188,22 +188,26 @@ class MenuBar(
                     when (broadcastState) {
                         llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED -> {
                             val c = TangoPalette.ACTIVE
+                            val ink = TangoPalette.inkFor(c.dark, c.normal)
                             ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 1.0f)
                             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                             if (ImGui.button("${Icons.ACTIVITY} LIVE")) {
                                 llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
                             }
-                            ImGui.popStyleColor(2)
+                            ImGui.popStyleColor(3)
                             itemTooltip("Broadcasting live session state to Web TV client.\nClick to stop.")
                         }
                         llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTING -> {
                             val c = TangoPalette.ALERT
+                            val ink = TangoPalette.inkFor(c.dark, c.normal)
                             ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 1.0f)
                             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                             if (ImGui.button("${Icons.REFRESH} CONNECTING")) {
                                 llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
                             }
-                            ImGui.popStyleColor(2)
+                            ImGui.popStyleColor(3)
                             itemTooltip("Connecting to relay server...\nClick to cancel.")
                         }
                         llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.ERROR -> {
@@ -225,10 +229,12 @@ class MenuBar(
                     if (llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.isScanning) {
                         val progress = (llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanProgress * 100f).toInt()
                         val currentPath = llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanCurrentPath
+                        val scanInk = TangoPalette.inkFor(TangoPalette.SYNC.normal, TangoPalette.SYNC.bright)
                         ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.SYNC.normal[0], TangoPalette.SYNC.normal[1], TangoPalette.SYNC.normal[2], 0.9f)
                         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.SYNC.bright[0], TangoPalette.SYNC.bright[1], TangoPalette.SYNC.bright[2], 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.Text, scanInk[0], scanInk[1], scanInk[2], 1.0f)
                         ImGui.button("${Icons.REFRESH} SCANNING ($progress%)")
-                        ImGui.popStyleColor(2)
+                        ImGui.popStyleColor(3)
                         itemTooltip("Scanning ISF Shaders ($progress% complete)\n${if (currentPath.isNotEmpty()) currentPath else "Indexing library..."}")
                     }
 
@@ -242,18 +248,22 @@ class MenuBar(
                         val label = "${Icons.ACTIVITY} LINK [$peerText]"
 
                         if (peers > 0) {
+                            val ink = TangoPalette.inkFor(TangoPalette.SYNC.normal, TangoPalette.SYNC.bright)
                             ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.SYNC.normal[0], TangoPalette.SYNC.normal[1], TangoPalette.SYNC.normal[2], 1.0f)
                             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.SYNC.bright[0], TangoPalette.SYNC.bright[1], TangoPalette.SYNC.bright[2], 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                         } else {
                             val c = TangoPalette.ALERT
+                            val ink = TangoPalette.inkFor(c.dark, c.normal)
                             ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 1.0f)
                             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
+                            ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                         }
 
                         if (ImGui.button(label)) {
                             PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
                         }
-                        ImGui.popStyleColor(2)
+                        ImGui.popStyleColor(3)
 
                         val backendName = linkEngine.getActiveBackendName()
                         val bpmText = syncManager.formattedActiveBpm

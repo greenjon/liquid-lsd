@@ -70,12 +70,13 @@ object PropertiesPanel {
                 val isActive = currentCvId == targetCvId || (targetCvId == "value" && currentCvId == "final")
                 if (isActive) {
                     val rgb = CvTheme.getThemeColorRGB(targetCvId)
-                    val activeCol = ImGui.colorConvertFloat4ToU32(rgb[0] * 0.70f, rgb[1] * 0.70f, rgb[2] * 0.70f, 1f)
-                    val hoverCol = ImGui.colorConvertFloat4ToU32(rgb[0] * 0.85f, rgb[1] * 0.85f, rgb[2] * 0.85f, 1f)
-                    val pressedCol = ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], 1f)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, hoverCol)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  pressedCol)
+                    val activeRgb = floatArrayOf(rgb[0] * 0.70f, rgb[1] * 0.70f, rgb[2] * 0.70f)
+                    val hoverRgb = floatArrayOf(rgb[0] * 0.85f, rgb[1] * 0.85f, rgb[2] * 0.85f)
+                    val ink = TangoPalette.inkFor(activeRgb, hoverRgb, rgb)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(activeRgb[0], activeRgb[1], activeRgb[2], 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(hoverRgb[0], hoverRgb[1], hoverRgb[2], 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                 } else {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
@@ -86,7 +87,7 @@ object PropertiesPanel {
                     state.selectedCell = ParameterCellId(currentParamKey, targetCvId)
                 }
                 itemTooltip("Switch Properties view to $label CV modulation for parameter")
-                ImGui.popStyleColor(3)
+                ImGui.popStyleColor(if (isActive) 4 else 3)
             }
 
             // Right-aligned [ LIVE ] / [ MUTED ] Master Cell Mute Toggle
@@ -114,13 +115,17 @@ object PropertiesPanel {
                 }
 
                 if (isMuted) {
+                    val ink = TangoPalette.inkFor(floatArrayOf(0.8f, 0.6f, 0.1f), floatArrayOf(0.9f, 0.7f, 0.2f), floatArrayOf(1.0f, 0.8f, 0.3f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.1f, 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.9f, 0.7f, 0.2f, 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(1.0f, 0.8f, 0.3f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                 } else {
+                    val ink = TangoPalette.inkFor(floatArrayOf(0.1f, 0.5f, 0.4f), floatArrayOf(0.2f, 0.6f, 0.5f), floatArrayOf(0.3f, 0.7f, 0.6f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.1f, 0.5f, 0.4f, 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.5f, 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 0.6f, 1f))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                 }
 
                 if (ImGui.button(btnText, liveBtnW, btnH)) {
@@ -137,7 +142,7 @@ object PropertiesPanel {
                     if (isMuted) "Unmute cell modulation (Route to Value)" else "Mute cell modulation (Preview on O-scope)"
                 }
                 itemTooltip(tip)
-                ImGui.popStyleColor(3)
+                ImGui.popStyleColor(4)
             }
         }
         ImGui.popStyleVar()
@@ -219,12 +224,14 @@ object PropertiesPanel {
             val isThisCellLearning = currentTarget is MidiLearnTarget.GridCell && currentTarget.cellId == cell
 
             if (isThisCellLearning) {
+                val ink = TangoPalette.inkFor(floatArrayOf(0.72f, 0.45f, 1.00f), floatArrayOf(0.80f, 0.55f, 1.00f))
                 imgui.ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.72f, 0.45f, 1.00f, 0.6f)
                 imgui.ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.80f, 0.55f, 1.00f, 0.8f)
+                imgui.ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                 if (imgui.ImGui.button("${Icons.REFRESH} Waiting for MIDI CC... (Click to Cancel)##midi_learn")) {
                     state.midiLearnTarget = null
                 }
-                imgui.ImGui.popStyleColor(2)
+                imgui.ImGui.popStyleColor(3)
             } else {
                 if (imgui.ImGui.button("Learn MIDI##midi_learn")) {
                     state.midiLearnTarget = MidiLearnTarget.GridCell(cell, param)
@@ -322,15 +329,17 @@ object PropertiesPanel {
                 if (cvId == "audio" && idx == 1 && idx >= activeMods.size) {
                     val fontScale = 0.95f
                     val btnH = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(26f * fontScale)
+                    val enableAudioInk = TangoPalette.inkFor(floatArrayOf(0.18f, 0.18f, 0.18f), floatArrayOf(0.28f, 0.28f, 0.28f), CvTheme.getThemeColorRGB(cvId))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.28f, 0.28f, 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, enableAudioInk[0], enableAudioInk[1], enableAudioInk[2], 1.0f)
                     if (ImGui.button("${Icons.PLUS} Enable Audio Slot 2##enable_audio_2", ImGui.getContentRegionAvailX(), btnH)) {
                         val newMod = existing.copy(id = java.util.UUID.randomUUID().toString(), bypassed = false, depth = 0.5f)
                         replaceModulator(state, param, newMod, mixer)
                     }
                     itemTooltip("Enable a second concurrent audio-reactive modulator on this parameter.")
-                    ImGui.popStyleColor(3)
+                    ImGui.popStyleColor(4)
                     ImGui.popID()
                     continue
                 }

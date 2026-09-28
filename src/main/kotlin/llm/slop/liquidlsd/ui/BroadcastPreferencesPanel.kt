@@ -134,14 +134,16 @@ object BroadcastPreferencesPanel {
             if (!canConnect) {
                 ImGui.beginDisabled()
             }
+            val goLiveInk = TangoPalette.inkFor(floatArrayOf(0.15f, 0.6f, 0.25f), floatArrayOf(0.25f, 0.75f, 0.35f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.15f, 0.6f, 0.25f, 1f)
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.25f, 0.75f, 0.35f, 1f)
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, goLiveInk[0], goLiveInk[1], goLiveInk[2], 1.0f)
             if (ImGui.button("${Icons.ZAP} Go Live (Connect)", 200f, 32f)) {
                 if (mixer != null) {
                     llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
                 }
             }
-            ImGui.popStyleColor(2)
+            ImGui.popStyleColor(3)
             if (!canConnect) {
                 ImGui.endDisabled()
                 itemTooltip("Relay Server URL and Broadcaster Secret Token must both be configured in Preferences.")

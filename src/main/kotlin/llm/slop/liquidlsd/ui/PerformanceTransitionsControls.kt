@@ -603,8 +603,10 @@ internal object PerformanceTransitionsControls {
         val autoY = ImGui.getCursorScreenPosY()
         val isAuto = mixer.isAutoFading
         if (isAuto) {
+            val autoInk = TangoPalette.inkFor(floatArrayOf(0.9f, 0.6f, 0.1f), floatArrayOf(1.0f, 0.7f, 0.2f))
             ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.9f, 0.6f, 0.1f, 0.9f))
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(1.0f, 0.7f, 0.2f, 1.0f))
+            ImGui.pushStyleColor(ImGuiCol.Text, autoInk[0], autoInk[1], autoInk[2], 1.0f)
         } else {
             ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.24f, 0.28f, 0.35f, 1f))
@@ -620,7 +622,7 @@ internal object PerformanceTransitionsControls {
                 mixer.muteCrossfadeNonMidiCv()
             }
         }
-        ImGui.popStyleColor(2)
+        ImGui.popStyleColor(if (isAuto) 3 else 2)
         if (isMidiLearnAutoFade) {
             dl.addRect(autoX - 1f, autoY - 1f, autoX + autoBtnW + 1f, autoY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
         }

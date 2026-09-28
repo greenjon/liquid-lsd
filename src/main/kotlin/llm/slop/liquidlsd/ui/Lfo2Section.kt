@@ -50,11 +50,17 @@ object Lfo2Section {
         val btnColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.7f, 0.2f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
         val btnHoverColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.8f, 0.3f, 0.3f, 1f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.3f, 1f)
         val btnActiveColor = if (lfo2Bypassed) ImGui.colorConvertFloat4ToU32(0.9f, 0.4f, 0.4f, 1f) else ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 0.4f, 1f)
-        
+        val ink = if (lfo2Bypassed) {
+            TangoPalette.inkFor(floatArrayOf(0.7f, 0.2f, 0.2f), floatArrayOf(0.8f, 0.3f, 0.3f), floatArrayOf(0.9f, 0.4f, 0.4f))
+        } else {
+            TangoPalette.inkFor(floatArrayOf(0.1f, 0.6f, 0.2f), floatArrayOf(0.2f, 0.7f, 0.3f), floatArrayOf(0.3f, 0.8f, 0.4f))
+        }
+
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, btnColor)
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
-        
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
+
         val powerIcon = if (lfo2Bypassed) Icons.POWER_OFF else Icons.POWER
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ImGui.button("$powerIcon##bypass_lfo2_$idx", btnWidth, btnHeight)) {
@@ -69,7 +75,7 @@ object Lfo2Section {
             }
         }
         itemTooltip(if (lfo2Bypassed) "Enable LFO 2 (Active)" else "Bypass LFO 2")
-        ImGui.popStyleColor(3)
+        ImGui.popStyleColor(4)
 
         // 2. Dice button for LFO 2
         if (session.uiTheme.randomizationEnabled) {

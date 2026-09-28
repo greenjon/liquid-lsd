@@ -116,22 +116,25 @@ object TempoSyncPanel {
         // Tap Button styling: flash bright Alert (Butter) on tap cadence
         if (tapFlash > 0.05f) {
             val c = TangoPalette.ALERT
+            val ink = TangoPalette.inkFor(c.normal, c.light)
             ImGui.pushStyleColor(ImGuiCol.Button, c.normal[0], c.normal[1], c.normal[2], 1.0f)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.light[0], c.light[1], c.light[2], 1.0f)
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, c.light[0], c.light[1], c.light[2], 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.05f, 0.05f, 0.05f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
         } else if (tapCount > 0) {
             val c = TangoPalette.ALERT
+            val ink = TangoPalette.inkFor(c.dark, c.normal, c.light)
             ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 0.9f)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, c.light[0], c.light[1], c.light[2], 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 1.0f, 1.0f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
         } else {
             val c = TangoPalette.NEUTRAL_DARK
+            val ink = TangoPalette.inkFor(c.normal, c.light, TangoPalette.SYNC.normal)
             ImGui.pushStyleColor(ImGuiCol.Button, c.normal[0], c.normal[1], c.normal[2], 0.9f)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.light[0], c.light[1], c.light[2], 1.0f)
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, TangoPalette.SYNC.normal[0], TangoPalette.SYNC.normal[1], TangoPalette.SYNC.normal[2], 1.0f)
-            ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 1.0f, 1.0f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
         }
 
         if (ImGui.button("$tapLabel##tempo_tap_btn", 110f, 32f)) {

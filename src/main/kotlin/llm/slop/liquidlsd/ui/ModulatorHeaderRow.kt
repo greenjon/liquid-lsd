@@ -92,11 +92,17 @@ object ModulatorHeaderRow {
         val btnColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.8f, 0.6f, 0.1f, 1f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.6f, 0.2f, 1f)
         val btnHoverColor = if (bypassed) ImGui.colorConvertFloat4ToU32(0.9f, 0.7f, 0.2f, 1f) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.3f, 1f)
         val btnActiveColor = if (bypassed) ImGui.colorConvertFloat4ToU32(1.0f, 0.8f, 0.3f, 1f) else ImGui.colorConvertFloat4ToU32(0.3f, 0.8f, 0.4f, 1f)
-        
+        val headerInk = if (bypassed) {
+            TangoPalette.inkFor(floatArrayOf(0.8f, 0.6f, 0.1f), floatArrayOf(0.9f, 0.7f, 0.2f), floatArrayOf(1.0f, 0.8f, 0.3f))
+        } else {
+            TangoPalette.inkFor(floatArrayOf(0.1f, 0.6f, 0.2f), floatArrayOf(0.2f, 0.7f, 0.3f), floatArrayOf(0.3f, 0.8f, 0.4f))
+        }
+
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, btnColor)
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, btnHoverColor)
         ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, btnActiveColor)
-        
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, headerInk[0], headerInk[1], headerInk[2], 1.0f)
+
         val powerIcon = if (bypassed) Icons.POWER_OFF else Icons.POWER
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ImGui.button("$powerIcon##bypass_bar_$idx", btnWidth, btnHeight)) {
@@ -104,7 +110,7 @@ object ModulatorHeaderRow {
             }
         }
         itemTooltip(if (bypassed) "Unmute modulator (Enable)" else "Mute modulator (Bypass)")
-        ImGui.popStyleColor(3)
+        ImGui.popStyleColor(4)
 
         // 2. Dice icon (Randomize button)
         if (session.uiTheme.randomizationEnabled) {

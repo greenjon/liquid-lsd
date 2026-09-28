@@ -61,4 +61,25 @@ object TangoPalette {
     // Neutrals
     val NEUTRAL_LIGHT = ALUMINIUM_1  // text, master/neutral accent
     val NEUTRAL_DARK  = ALUMINIUM_2  // panels, disabled text, idle button surfaces
+
+    // -- Ink pairing -----------------------------------------------------------------------------
+    // Mixxx's Tango skin never outlines button labels -- it pairs each background shade with dark
+    // or light ink chosen for contrast against that specific shade. The app's global default Text
+    // color (see UIThemeStyler) is Aluminium-1, an off-white tuned for the default dark Button
+    // surface; any call site that pushes a lighter ImGuiCol.Button/Hovered/Active (e.g. ALERT's
+    // Butter shades) without also pushing Text inherits that off-white and reads poorly. Use
+    // inkFor() whenever a button's background is switched away from the default dark surface.
+    val INK_DARK  = floatArrayOf(0.08f, 0.08f, 0.08f)
+    val INK_LIGHT = floatArrayOf(0.97f, 0.97f, 0.97f)
+
+    private fun luminance(rgb: FloatArray): Float =
+        0.299f * rgb[0] + 0.587f * rgb[1] + 0.114f * rgb[2]
+
+    /**
+     * Ink that stays legible against the lightest of the given background shades (pass every
+     * Button/ButtonHovered/ButtonActive shade a widget cycles through -- Text can't itself react
+     * to hover, so it must be safe for the brightest state the button can show).
+     */
+    fun inkFor(vararg backgrounds: FloatArray): FloatArray =
+        if (backgrounds.maxOf { luminance(it) } > 0.55f) INK_DARK else INK_LIGHT
 }

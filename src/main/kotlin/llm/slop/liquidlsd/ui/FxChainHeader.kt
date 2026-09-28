@@ -248,8 +248,11 @@ object FxChainHeader {
 
     private fun drawSaveButton(session: SessionContext, chain: FxChain, bankId: String, ctrlH: Float, isDirty: Boolean) {
         val canOverwrite = chain.sourceFile != null
+        val saveColRgb = if (isDirty) TangoPalette.ALERT.dark else floatArrayOf(0.18f, 0.20f, 0.24f)
         val saveCol = if (isDirty) TangoPalette.u32(TangoPalette.ALERT.dark) else ImGui.colorConvertFloat4ToU32(0.18f, 0.20f, 0.24f, 0.8f)
+        val ink = TangoPalette.inkFor(saveColRgb)
         ImGui.pushStyleColor(ImGuiCol.Button, saveCol)
+        ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
         if (ImGui.button("Save##save_$bankId", SAVE_BTN_W, ctrlH)) {
             if (canOverwrite) {
                 val file = chain.sourceFile!!
@@ -260,7 +263,7 @@ object FxChainHeader {
                 openSaveAsModal(session, chain)
             }
         }
-        ImGui.popStyleColor()
+        ImGui.popStyleColor(2)
         itemTooltip(if (canOverwrite) "Save changes to ${chain.sourceFile?.name}." else "Save as new FX chain (.lsdfxchain).")
     }
 

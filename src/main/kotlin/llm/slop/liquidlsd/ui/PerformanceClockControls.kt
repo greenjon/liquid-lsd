@@ -52,14 +52,16 @@ internal object PerformanceClockControls {
             if (peers > 0) {
                 ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f)
             } else {
+                val linkInk = TangoPalette.inkFor(floatArrayOf(0.75f, 0.55f, 0.15f))
                 ImGui.pushStyleColor(ImGuiCol.Button, 0.75f, 0.55f, 0.15f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.Text, linkInk[0], linkInk[1], linkInk[2], 1.0f)
             }
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 if (ImGui.button("LINK $peers##perf_clock_link", 56f, headerH)) {
                     PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
                 }
             }
-            ImGui.popStyleColor()
+            ImGui.popStyleColor(if (peers > 0) 1 else 2)
             itemTooltip("Ableton Link: $peers peer(s). Click to open Tempo & Sync preferences.")
         }
 
@@ -155,14 +157,20 @@ internal object PerformanceClockControls {
             tapCount > 0 -> ImGui.colorConvertFloat4ToU32(0.75f, 0.50f, 0.10f, 0.9f)
             else -> ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 0.9f)
         }
+        val tapInk = when {
+            tapFlash > 0.05f -> TangoPalette.inkFor(floatArrayOf(0.95f, 0.75f, 0.15f))
+            tapCount > 0 -> TangoPalette.inkFor(floatArrayOf(0.75f, 0.50f, 0.10f))
+            else -> TangoPalette.inkFor(floatArrayOf(0.20f, 0.45f, 0.70f))
+        }
         val tapX = ImGui.getCursorScreenPosX()
         val tapY = ImGui.getCursorScreenPosY()
         val tapW = 64f
         ImGui.pushStyleColor(ImGuiCol.Button, btnCol)
+        ImGui.pushStyleColor(ImGuiCol.Text, tapInk[0], tapInk[1], tapInk[2], 1.0f)
         if (ImGui.button("$label##perf_clock_tap", tapW, headerH)) {
             tapController.tap()
         }
-        ImGui.popStyleColor()
+        ImGui.popStyleColor(2)
         if (isMidiLearnTap) {
             ImGui.getWindowDrawList().addRect(tapX - 1f, tapY - 1f, tapX + tapW + 1f, tapY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
         }

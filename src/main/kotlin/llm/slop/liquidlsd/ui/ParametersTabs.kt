@@ -13,14 +13,16 @@ object ParametersTabs {
 
     private val fxEnabledBuf = imgui.type.ImBoolean()
 
+    fun getDeckColorRGB(tab: String): FloatArray = when (tab) {
+        "Deck A", "A" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorA()
+        "Deck B", "B" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorB()
+        "Deck BG", "BG" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorBG()
+        "Deck PV", "PV" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorPV()
+        else -> floatArrayOf(0.4f, 0.4f, 0.4f) // Mixer / MIX
+    }
+
     fun getDeckColor(tab: String, alpha: Float = 1f): Int {
-        val rgb = when (tab) {
-            "Deck A", "A" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorA()
-            "Deck B", "B" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorB()
-            "Deck BG", "BG" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorBG()
-            "Deck PV", "PV" -> llm.slop.liquidlsd.ui.browser.BrowserDeckButtons.colorPV()
-            else -> floatArrayOf(0.4f, 0.4f, 0.4f) // Mixer / MIX
-        }
+        val rgb = getDeckColorRGB(tab)
         return ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], alpha)
     }
 
@@ -106,7 +108,12 @@ object ParametersTabs {
             }
             val textX = pMinX + (buttonWidth - tw) * 0.5f
             val textY = pMinY + (buttonHeight - th) * 0.5f
-            val textCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, if (isActive) 1f else 0.8f)
+            val textCol = if (isActive) {
+                val ink = TangoPalette.inkFor(getDeckColorRGB(fullTab))
+                ImGui.colorConvertFloat4ToU32(ink[0], ink[1], ink[2], 1f)
+            } else {
+                ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.8f)
+            }
             session.uiTheme.withFont(UITheme.FontLevel.H3) {
                 dl.addText(textX, textY, textCol, shortLabel)
             }
@@ -180,11 +187,15 @@ object ParametersTabs {
                 if (i > 0) ImGui.sameLine()
                 val isActive = currentSubTab == tab
 
+                var pushedTabInk = false
                 if (isActive) {
                     val bgCol = getSubTabColor(state, 1f)
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        bgCol)
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, bgCol)
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  bgCol)
+                    val ink = TangoPalette.inkFor(getDeckColorRGB(state.activeTopTab))
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
+                    pushedTabInk = true
                 } else {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
@@ -213,7 +224,7 @@ object ParametersTabs {
                     else -> "$tab parameters"
                 }
                 itemTooltip(tooltip)
-                ImGui.popStyleColor(3)
+                ImGui.popStyleColor(if (pushedTabInk) 4 else 3)
             }
         }
         ImGui.popStyleVar(2)

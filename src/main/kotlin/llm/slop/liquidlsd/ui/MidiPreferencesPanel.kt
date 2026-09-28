@@ -208,11 +208,13 @@ object MidiPreferencesPanel {
                     } ?: false
 
                     if (isLearning) {
+                        val ink = TangoPalette.inkFor(floatArrayOf(0.72f, 0.45f, 1.00f))
                         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.72f, 0.45f, 1.00f, 0.6f)
+                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                         if (ImGui.button("Cancel##cancel_$actionKey")) {
                             parametersState.midiLearnTarget = null
                         }
-                        ImGui.popStyleColor()
+                        ImGui.popStyleColor(2)
                     } else {
                         if (ImGui.button("Learn##learn_$actionKey")) {
                             parametersState?.let { ps ->
