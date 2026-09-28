@@ -192,7 +192,7 @@ object ParametersTabs {
                 }
 
                 val tw = ImGui.calcTextSize(tab).x
-                val btnW = (tw + 18f).coerceAtLeast(44f)
+                val btnW = (tw + 9f).coerceAtLeast(22f)
                 val subTabH = btnH ?: (ImGui.getTextLineHeight() + 8f).coerceAtLeast(26f)
 
                 if (ImGui.button(tab, btnW, subTabH)) {

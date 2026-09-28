@@ -172,7 +172,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
 
     fun deepEditParamsWidth(session: SessionContext, metrics: GridMetrics): Float {
         val lastCol = rackVisibleColumns(session).last()
-        val maxGridW = rackColumnOffset(session, lastCol, metrics) + metrics.cell + metrics.cellPad * 0.5f + ParameterGridHeaders.getKebabWidth(session)
+        val maxGridW = rackColumnOffset(session, lastCol, metrics) + metrics.cell + metrics.cellPad * 0.5f
         return DEEP_EDIT_LABEL_COL_W + maxGridW + 24f
     }
 

@@ -25,7 +25,7 @@ Each column is colour-coded:
 - **SEQ** (lime green) — Step sequencer.
 - **AUD** (amber) — Audio modulation.
 
-You can hide columns you're not using via the **⋮** kebab menu to the right of the column headers. That menu also shows warnings if a loaded preset uses modulators that are currently hidden or offline, with a one-click **Turn On Needed Columns** button to sort it out.
+You can hide columns you're not using via the **⋮** kebab menu, positioned just left of the **VAL** column header and aligned with the row action buttons below it. That menu also shows warnings if a loaded preset uses modulators that are currently hidden or offline, with a one-click **Turn On Needed Columns** button to sort it out.
 
 ---
 
@@ -115,7 +115,7 @@ LFO 2 modulates LFO 1 to add movement and complexity:
 
 The sequencer outputs a stepped voltage pattern that advances with each beat or at a set interval — good for geometric shifts, colour steps, and rhythmic stutter effects.
 
-> **Note:** The sequencer is disabled by default. Enable it in **Preferences → General** (under Features, "Enable Step Sequencer"), or toggle it directly from the **⋮** kebab menu next to Deep Edit's column headers.
+> **Note:** The sequencer is disabled by default. Enable it in **Preferences → General** (under Features, "Enable Step Sequencer"), or toggle it directly from the **⋮** kebab menu left of Deep Edit's **VAL** column header.
 
 ### The step grid
 

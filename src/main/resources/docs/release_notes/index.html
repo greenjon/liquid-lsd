@@ -1208,6 +1208,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#parameter-grid-kebab-repositioned-left-of-val-column-parametergridheaderskt-parameterstabskt-performancedeepeditbaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Grid Kebab Repositioned Left of VAL Column (ParameterGridHeaders.kt, ParametersTabs.kt, PerformanceDeepEditBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-select-category-dropdown-in-shader-fx-browser-shaderpickerpopupkt-performancebrowsebaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Select Category Dropdown in Shader &amp; FX Browser (ShaderPickerPopup.kt, PerformanceBrowseBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-panel-browse-panels-font-size-harmonization-uithemekt-parametersrendererkt-performancedeepeditbaykt-parameterstabskt-shaderpickerpopupkt-performancebrowsebaykt-presetlistpanelkt-fxbrowserpanelkt-transitionbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Panel &amp; Browse Panels Font Size Harmonization (UITheme.kt, ParametersRenderer.kt, PerformanceDeepEditBay.kt, ParametersTabs.kt, ShaderPickerPopup.kt, PerformanceBrowseBay.kt, PresetListPanel.kt, FXBrowserPanel.kt, TransitionBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#library-toolbars-deck-load-buttons-removed-browseractiontoolbarkt-librarypanelkt-shortcutmanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4437,6 +4470,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#parameter-grid-kebab-repositioned-left-of-val-column-parametergridheaderskt-parameterstabskt-performancedeepeditbaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Grid Kebab Repositioned Left of VAL Column (ParameterGridHeaders.kt, ParametersTabs.kt, PerformanceDeepEditBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#multi-select-category-dropdown-in-shader-fx-browser-shaderpickerpopupkt-performancebrowsebaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-Select Category Dropdown in Shader &amp; FX Browser (ShaderPickerPopup.kt, PerformanceBrowseBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#parameter-panel-browse-panels-font-size-harmonization-uithemekt-parametersrendererkt-performancedeepeditbaykt-parameterstabskt-shaderpickerpopupkt-performancebrowsebaykt-presetlistpanelkt-fxbrowserpanelkt-transitionbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Parameter Panel &amp; Browse Panels Font Size Harmonization (UITheme.kt, ParametersRenderer.kt, PerformanceDeepEditBay.kt, ParametersTabs.kt, ShaderPickerPopup.kt, PerformanceBrowseBay.kt, PresetListPanel.kt, FXBrowserPanel.kt, TransitionBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#library-toolbars-deck-load-buttons-removed-browseractiontoolbarkt-librarypanelkt-shortcutmanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7641,6 +7707,25 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="parameter-grid-kebab-repositioned-left-of-val-column-parametergridheaderskt-parameterstabskt-performancedeepeditbaykt">Parameter Grid Kebab Repositioned Left of VAL Column (<code>ParameterGridHeaders.kt</code>, <code>ParametersTabs.kt</code>, <code>PerformanceDeepEditBay.kt</code>)</h3>
+<ul>
+<li><strong>Column Settings Kebab Moved</strong>: The <code>⋮</code> kebab menu that toggles the <code>MIDI</code>/<code>LFO</code>/<code>SEQ</code>/<code>AUD</code> columns and modulator engines now sits immediately left of the <code>VAL</code> column header, pixel-aligned with the row kebabs (<code>BrowserRowMoreButton</code>) below it, instead of trailing off the right edge of the grid.</li>
+<li><strong>Narrower Deep Edit Bay</strong>: Removing the trailing kebab margin shrinks Deep Edit's minimum required width by ~20px.</li>
+<li><strong>Tighter Section Tabs</strong>: Halved the <code>[SRC]</code>/<code>[FX]</code>/<code>[CTRL]</code>/<code>[TRANS]</code> section-tab button padding and minimum width so the Mixer tab's three tabs (<code>CTRL</code>/<code>FX</code>/<code>TRANS</code>) still fit cleanly beside the relocated kebab.</li>
+</ul>
+<h3 id="multi-select-category-dropdown-in-shader-fx-browser-shaderpickerpopupkt-performancebrowsebaykt">Multi-Select Category Dropdown in Shader &amp; FX Browser (<code>ShaderPickerPopup.kt</code>, <code>PerformanceBrowseBay.kt</code>)</h3>
+<ul>
+<li><strong>Multi-Select Category Dropdown</strong>: Replaced the horizontal scrolling category chips row in the Performance row Browse bay (<code>ShaderPickerPopup.kt</code>) with a compact <code>ImGui.beginCombo</code> multi-select dropdown.</li>
+<li><strong>Top Toolbar Integration</strong>: Positioned the category dropdown directly beside the search bar (<code>[Search Input] [Category Dropdown ▾] [ ⋮ ]</code>), reclaiming 32px of vertical space for the shader results table in compact rack bays.</li>
+<li><strong>Native Checkbox Toggling</strong>: Renders category options with native vector checkboxes (<code>ImGui.checkbox</code>) using zero per-frame heap allocations. Features exclusive "All Categories" clearing/fallback, dynamic summary preview (<code>"All Categories"</code>, <code>"Color Adjustment"</code>, <code>"N Categories"</code>), active filter hover tooltip, and clean grouping of <code>★ Favorites</code> and <code>Saved FX</code> above standard shader categories.</li>
+</ul>
+<h3 id="parameter-panel-browse-panels-font-size-harmonization-uithemekt-parametersrendererkt-performancedeepeditbaykt-parameterstabskt-shaderpickerpopupkt-performancebrowsebaykt-presetlistpanelkt-fxbrowserpanelkt-transitionbrowserpanelkt">Parameter Panel &amp; Browse Panels Font Size Harmonization (<code>UITheme.kt</code>, <code>ParametersRenderer.kt</code>, <code>PerformanceDeepEditBay.kt</code>, <code>ParametersTabs.kt</code>, <code>ShaderPickerPopup.kt</code>, <code>PerformanceBrowseBay.kt</code>, <code>PresetListPanel.kt</code>, <code>FXBrowserPanel.kt</code>, <code>TransitionBrowserPanel.kt</code>)</h3>
+<ul>
+<li><strong>Consistent 18px Typography</strong>: Scaled parameter labels in the Parameter Panel (Deep Edit parameter grid) and item rows/controls in the Browse Panels (inline source/FX/transition pickers and Library browser search inputs) to match the <strong>18px</strong> font size used by tooltips and dropdown menus (<code>UITheme.FONT_TOOLTIP</code> / <code>UITheme.FontLevel.TOOLTIP</code>).</li>
+<li><strong>Semantic Text Helpers</strong>: Added <code>session.uiTheme.tooltip(text)</code> and <code>tooltipColored(r, g, b, a, text)</code> to <code>UITheme.kt</code> for clean 18px typography rendering.</li>
+<li><strong>Label Column Widening</strong>: Expanded <code>PerformanceDeepEditBay.DEEP_EDIT_LABEL_COL_W</code> from 160px to 185px, ensuring parameter names have comfortable clearance beside row kebab menu buttons and modulator cells without truncation.</li>
+<li><strong>Browse Panel Scaling</strong>: Wrapped <code>ShaderPickerPopup.drawInline</code>, <code>PerformanceBrowseBay</code> chain lists and FX tabs, and Library search inputs in <code>UITheme.FontLevel.TOOLTIP</code>, providing high legibility and visual continuity between browsing, parameter adjustment, and tooltip inspection.</li>
+</ul>
 <h3 id="library-toolbars-deck-load-buttons-removed-browseractiontoolbarkt-librarypanelkt-shortcutmanagerkt">Library Toolbar's Deck-Load Buttons Removed (<code>BrowserActionToolbar.kt</code>, <code>LibraryPanel.kt</code>, <code>ShortcutManager.kt</code>)</h3>
 <ul>
 <li>Removed the <code>[A]</code>/<code>[B]</code>/<code>[BG]</code>/<code>[PV]</code> deck-load buttons and their <code>1</code>/<code>2</code>/<code>3</code>/<code>4</code> shortcuts from the Library's menu-bar action toolbar — the inline <strong>Browse</strong> panel on each Performance row now covers picking a generator, FX single, or FX chain straight onto a deck, making the toolbar's duplicate path redundant. The <code>[Q]</code>/<code>[BGQ]</code> queue buttons and their <code>Q</code>/<code>Shift+Q</code> shortcuts stay, since queuing to the AutoVJ Play/Background queues has no equivalent in Browse.</li>

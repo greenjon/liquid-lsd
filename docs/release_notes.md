@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Parameter Grid Kebab Repositioned Left of VAL Column (`ParameterGridHeaders.kt`, `ParametersTabs.kt`, `PerformanceDeepEditBay.kt`)
+- **Column Settings Kebab Moved**: The `⋮` kebab menu that toggles the `MIDI`/`LFO`/`SEQ`/`AUD` columns and modulator engines now sits immediately left of the `VAL` column header, pixel-aligned with the row kebabs (`BrowserRowMoreButton`) below it, instead of trailing off the right edge of the grid.
+- **Narrower Deep Edit Bay**: Removing the trailing kebab margin shrinks Deep Edit's minimum required width by ~20px.
+- **Tighter Section Tabs**: Halved the `[SRC]`/`[FX]`/`[CTRL]`/`[TRANS]` section-tab button padding and minimum width so the Mixer tab's three tabs (`CTRL`/`FX`/`TRANS`) still fit cleanly beside the relocated kebab.
+
 ### Multi-Select Category Dropdown in Shader & FX Browser (`ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`)
 - **Multi-Select Category Dropdown**: Replaced the horizontal scrolling category chips row in the Performance row Browse bay (`ShaderPickerPopup.kt`) with a compact `ImGui.beginCombo` multi-select dropdown.
 - **Top Toolbar Integration**: Positioned the category dropdown directly beside the search bar (`[Search Input] [Category Dropdown ▾] [ ⋮ ]`), reclaiming 32px of vertical space for the shader results table in compact rack bays.

@@ -52,10 +52,7 @@ object ParameterGridHeaders {
         return CvTheme.getThemeColor(colId, alpha)
     }
 
-    fun getKebabWidth(session: llm.slop.liquidlsd.SessionContext): Float {
-        val scrollbarW = ImGui.getStyle().scrollbarSize
-        return maxOf(18f, scrollbarW)
-    }
+    const val KEBAB_W = 20f
 
     fun calculateHeaderHeight(session: llm.slop.liquidlsd.SessionContext): Float {
         val subTabH = (session.uiTheme.withFont(UITheme.FontLevel.H3) {
@@ -197,11 +194,8 @@ object ParameterGridHeaders {
 
         val anyMissing = midiMissing || lfoMissing || seqMissing || audioMissing
 
-        val isMidiVisible = session.uiTheme.midiEnabled
-        val lastColId = if (cvCols.isNotEmpty()) cvCols.last() else if (isMidiVisible) "midi" else "value"
-        val lastColRightX = startX + labelColW + getColumnOffset(session, lastColId) + CELL
-        val kebabX = lastColRightX + CELL_PAD * 0.5f
-        val kebabW = getKebabWidth(session)
+        val kebabW = KEBAB_W
+        val kebabX = startX + labelColW - CELL_PAD - kebabW
         val popupId = "parameters_columns_popup"
         val isPopupOpen = ImGui.isPopupOpen(popupId)
 
