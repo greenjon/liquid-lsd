@@ -109,12 +109,12 @@ When incoming audio level drops below the analysis threshold (`localAudioEnergy 
 ### 4. Audio Engine Disabled / Internal Manual Clock Mode
 When the Audio Engine is disabled (`UITheme.audioEngineEnabled = false`):
 - **Suspended Audio Capture**: Live audio input capture, backend drivers, and audio-reactive CV signals (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `audio_flux_*`) are stopped to conserve CPU cycles.
-- **Persistent Title Bar Telemetry**: Both the BPM readout (rendered in warm amber to distinguish manual fixed clock mode) and the 4-beat phase meter remain visible in the top title bar, with hover tooltips clarifying that the audio engine is disabled and clicking opening Settings.
+- **Clock Row & Preferences Telemetry**: Both the BPM readout and the 4-beat phase meter remain visible and interactive on the Performance MASTER tab's Clock row and within Preferences > Tempo & Sync, reflecting manual fixed clock mode with monotonic phase advance.
 
 ### 5. VJ Tap Tempo & Phase Synchronization
-The application features a real-time Tap Tempo system ([`TapTempoController.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/TapTempoController.kt)) enabling VJs to rhythmically tap in tempos via mouse click on the top-bar BPM display, keyboard shortcut (`T` default, configurable to `.` or `None`), or MIDI CC (`Mixer/tapTempo` or `Global/tapTempo`):
+The application features a real-time Tap Tempo system ([`TapTempoController.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/TapTempoController.kt)) enabling VJs to rhythmically tap in tempos via the Clock row's `[TAP]` button, global keyboard shortcut (`T`), or MIDI CC (`Mixer/tapTempo` or `Global/tapTempo`):
 - **Interval Averaging & Timeout Reset**: Tracks a rolling buffer of up to 8 taps with microsecond resolution. Taps separated by > 2.0 seconds (30 BPM) automatically reset the sequence so a new cadence begins cleanly.
-- **Immediate Top-Bar Visual Feedback**: While tapping, the BPM readout instantly confirms incoming taps with a bright gold flash and counter readout (`[TAP 1]`, `[TAP 2]`), returning to standard display once the cadence times out.
+- **Immediate Visual Feedback**: While tapping, the `[TAP]` button and Clock row BPM readout instantly confirm incoming taps with an active cadence color highlight and counter readout (`TAP [1]`, `TAP [2]`), returning to standard display once the cadence times out.
 - **Manual / Locked Mode Behavior**:
   - Immediately updates `manualBpm`, `estimatedBpm`, and `CVRegistry.alignBeatPhase` to the tapped tempo.
   - **Downbeat Phase Quantization**: Every tap represents an arrival on the beat; the engine quantizes `totalBeats` to the nearest whole integer boundary (`round(totalBeats)`), resetting render monotonic progress so visual pulses and the 4-beat meter immediately lock to the musical downbeat.

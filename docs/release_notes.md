@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Streamline Title Bar & Menu Bar (`MenuBar.kt`, `docs/developer/ui.md`, `docs/developer/beat_sync.md`)
+- **Removed Redundant Clock Menu**: Eliminated the dynamic `Clock: <Source>` dropdown menu from the top menu bar. Timing and clock source selection (`MAN` vs `AUDIO`) are accessible with a single click on the Performance MASTER tab's Clock row, and in depth via `Preferences > Tempo & Sync` (`Ctrl+P`).
+- **Telemetry HUD Streamlining**: Removed the `BPM` readout and 4-beat phase meter dots from the top-bar hardware telemetry section. Hardware metrics now focus strictly on performance telemetry (`CPU`, `DSP`, `FPS`, `ms`, `FBO`), resolving the category mismatch between hardware load and musical state.
+- **Consolidated Timing Controls**: Musical clock state and actions (clock source toggle, Link status, BPM display, 4-beat bar dots, `[TAP]` with MIDI learn, `[RESYNC]`, `[/2]`, `[x2]`, and `[-]` / `[+]` nudges) are unified on the Performance MASTER tab's Clock row, with global keyboard tap tempo (`T`) remaining active application-wide.
+
 ### Context-Aware Monitor Clicks & Non-Sticky Edit/Browse Bay (`ParametersState.kt`, `DeckControlPanel.kt`, `MacroPanel.kt`, `MixerPanel.kt`, `PerformanceDeckControls.kt`, `RackUnit.kt`, `PerformanceDeepEditBay.kt`)
 - **De-Stickified Bay Mode**: Replaced the per-deck `rackSectionMode` map with a unified global bay mode. Opening a source or FX browser on one deck no longer permanently leaves that deck stuck in Browse mode.
 - **Context-Aware Monitor Clicks (`ParametersState.openFromMonitor`)**:

@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Streamline Title Bar & Menu Bar (`MenuBar.kt`, `docs/developer/ui.md`, `docs/developer/beat_sync.md`)
+- **Removed Redundant Clock Menu**: Eliminated the dynamic `Clock: <Source>` dropdown menu from the top menu bar. Timing and clock source selection (`MAN` vs `AUDIO`) are accessible with a single click on the Performance MASTER tab's Clock row, and in depth via `Preferences > Tempo & Sync` (`Ctrl+P`).
+- **Telemetry HUD Streamlining**: Removed the `BPM` readout and 4-beat phase meter dots from the top-bar hardware telemetry section. Hardware metrics now focus strictly on performance telemetry (`CPU`, `DSP`, `FPS`, `ms`, `FBO`), resolving the category mismatch between hardware load and musical state.
+- **Consolidated Timing Controls**: Musical clock state and actions (clock source toggle, Link status, BPM display, 4-beat bar dots, `[TAP]` with MIDI learn, `[RESYNC]`, `[/2]`, `[x2]`, and `[-]` / `[+]` nudges) are unified on the Performance MASTER tab's Clock row, with global keyboard tap tempo (`T`) remaining active application-wide.
+
 ### External Video Streams Excluded from Presets with Disabled Save UI (`DeckControlPanel.kt`, `PerformanceBrowseBay.kt`, `ParametersKeyboard.kt`, `DeckPresetController.kt`, `PresetManager.kt`, `PresetRepository.kt`, `TooltipHelper.kt`)
 - Saving `.lsd` deck presets is now completely disabled when a deck's visual source is an external video stream (`ExternalVideoSource` via Spout2, Syphon, or PipeWire). Live video streams have 0 procedural shader parameters and saving ephemeral server handles can produce dead "ghost" presets. Direct live selection in the Universal Shader Picker remains the recommended live workflow.
 - **Visual Button State & Tooltips**: The floppy-disk Save button in both the Deck Control Panel and Gen Browse is visibly dimmed and disabled when an external video stream is active. Hovering the disabled button shows a helpful tooltip: `External video streams (<source name>) cannot be saved as presets.` (implemented via new `allowWhenDisabled` support in `TooltipHelper`).

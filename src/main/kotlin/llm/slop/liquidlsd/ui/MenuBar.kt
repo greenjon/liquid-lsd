@@ -5,7 +5,6 @@ import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.presets.PresetManager
 import mu.KotlinLogging
-import llm.slop.liquidlsd.audio.AudioEngine
 
 class MenuBar(
     private val popupManager: PopupManager,
@@ -232,10 +231,9 @@ class MenuBar(
                     }
                     itemTooltip("Open live Theme Color Tuner to adjust element colors in real-time.")
 
-                    // ── Clock Source & Ableton Link Status Pill ─────────────────────
+                    // ── Ableton Link Status Pill (visible only when enabled) ─────────
                     val linkEngine = llm.slop.liquidlsd.link.AbletonLinkEngine
                     val syncManager = llm.slop.liquidlsd.link.LinkSyncManager
-                    val currentClock = AudioEngine.clockSource
 
                     if (linkEngine.isEnabled) {
                         val peers = linkEngine.getNumPeers()
@@ -261,27 +259,6 @@ class MenuBar(
                         val linkTip = "Ableton Link Sync: Active\nActive BPM: $bpmText\nPeers: $peers connected\nTracking Confidence: $confPercent%\nBackend: $backendName\nClick to open Tempo & Link deck."
                         itemTooltip(linkTip)
                     }
-
-                    if (ImGui.beginMenu("Clock: ${currentClock.displayName}")) {
-                        for (source in llm.slop.liquidlsd.audio.ClockSource.entries) {
-                            val isSelected = (source == currentClock)
-                            if (ImGui.menuItem(source.displayName, "", isSelected)) {
-                                AudioEngine.clockSource = source
-                                AppPreferencesStore.savePreferences()
-                            }
-                        }
-                        ImGui.separator()
-                        val linkItemLabel = if (linkEngine.isEnabled) "Disable Ableton Link" else "Enable Ableton Link"
-                        if (ImGui.menuItem(linkItemLabel, "", linkEngine.isEnabled)) {
-                            linkEngine.setEnabled(!linkEngine.isEnabled)
-                            AppPreferencesStore.savePreferences()
-                        }
-                        if (ImGui.menuItem("Configure Tempo & Link...")) {
-                            PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
-                        }
-                        ImGui.endMenu()
-                    }
-                    itemTooltip("Select timing and beat clock synchronization source.")
 
                     if (ImGui.beginMenu("Help")) {
                         if (ImGui.menuItem("Documentation")) {
@@ -319,38 +296,24 @@ class MenuBar(
     }
 
     /**
-     * Renders empty drag zone, telemetry stats (FPS, frame time, CPU%, BPM, DSP), and
+     * Renders empty drag zone, telemetry stats (FPS, frame time, CPU%, DSP), and
      * custom window control buttons (Minimize, Maximize/Restore, Close) when running in frameless mode.
      */
     private fun drawPerformanceStatsAndControls(session: llm.slop.liquidlsd.SessionContext) {
         val fps        = PerformanceStats.fps
         val ftMs       = PerformanceStats.frameTimeMs
         val cpuFrac    = PerformanceStats.processCpuFraction   // -1 if unavailable
-        val bpm        = PerformanceStats.bpm
         val audioActive = session.audioEngine.isActive()
         val audioLatency = PerformanceStats.audioCallbackMs
         val isAudioDisabled = !session.uiTheme.audioEngineEnabled
         val showAudio = audioActive && session.uiTheme.audioEngineEnabled && audioLatency > 0.0f
-        val showBeatDots = true
-
-        val dotR = 3.3f
-        val dotGap = 6.6f
-        val dotsTotalW = (dotR * 2f * 4f) + (dotGap * 3f) + 9.5f
-
-        val flash = session.tapTempoController.getFlashIntensity()
-        val tapCount = session.tapTempoController.getActiveTapCount()
 
         val cpuText = if (cpuFrac >= 0.0) "CPU: %2.0f%%  ".format(cpuFrac * 100.0) else ""
-        val bpmText = when {
-            tapCount == 1 -> "BPM: [TAP 1]  "
-            tapCount >= 2 -> "BPM: %3.0f [%d]  ".format(bpm, tapCount)
-            else -> "BPM: %3.0f  ".format(bpm)
-        }
         val dspText = if (showAudio) "DSP: %.2fms  ".format(audioLatency) else if (isAudioDisabled) "DSP: OFF  " else "DSP: --  "
         val fpsText = "%3.0f fps  ".format(fps)
         val ftText  = "%3.0f ms  ".format(ftMs)
         val fboText = "FBO: %d (%.0fMB)".format(PerformanceStats.fboCount, PerformanceStats.fboMemoryMB)
-        val fullLabel = cpuText + bpmText + dspText + fpsText + ftText + fboText
+        val fullLabel = cpuText + dspText + fpsText + ftText + fboText
 
         val isFrameless = session.uiTheme.framelessWindow && windowFrameController != null
         val btnW = 24f
@@ -362,8 +325,7 @@ class MenuBar(
         session.uiTheme.withFont(UITheme.FontLevel.CODE) {
             val textH = ImGui.getTextLineHeight()
             val contentRightX = ImGui.getCursorPosX() + ImGui.getContentRegionAvailX()
-            val textWidth = ImGui.calcTextSize(fullLabel).x
-            val statsTotalW = textWidth + dotsTotalW
+            val statsTotalW = ImGui.calcTextSize(fullLabel).x
             val btnsStartX = contentRightX - windowBtnsW
             val statsEndX = if (isFrameless) btnsStartX - statsToBtnsGap else contentRightX
             val statsStartX = (statsEndX - statsTotalW).coerceAtLeast(ImGui.getCursorPosX())
@@ -395,87 +357,6 @@ class MenuBar(
                 ImGui.popStyleColor()
                 ImGui.sameLine(0f, 0f)
             }
-
-            // ── 4-Beat Phase Meter ────────────────────────────────────────────────
-            if (showBeatDots) {
-                val totalBeats = llm.slop.liquidlsd.cv.CVRegistry.getSynchronizedTotalBeats()
-                val currentBeat = (((totalBeats.toLong() % 4) + 4) % 4).toInt()
-                val beatFract = (totalBeats - kotlin.math.floor(totalBeats)).toFloat()
-
-                val dotsStartX = ImGui.getCursorScreenPosX()
-                val dotsStartY = ImGui.getCursorScreenPosY()
-                val dl = ImGui.getWindowDrawList()
-                val cy = dotsStartY + (textH * 0.5f)
-
-                for (i in 0..3) {
-                    val cx = dotsStartX + dotR + (i * (dotR * 2f + dotGap))
-                    if (i == currentBeat) {
-                        val intensity = (1.0f - beatFract * 0.35f).coerceIn(0.65f, 1.0f)
-                        val col = if (i == 0) {
-                            ImGui.colorConvertFloat4ToU32(0.2f * intensity, 0.95f * intensity, 1.0f * intensity, 1.0f)
-                        } else {
-                            ImGui.colorConvertFloat4ToU32(0.85f * intensity, 0.95f * intensity, 0.85f * intensity, 1.0f)
-                        }
-                        dl.addCircleFilled(cx, cy, dotR, col)
-                    } else {
-                        val dimCol = ImGui.colorConvertFloat4ToU32(0.40f, 0.45f, 0.50f, 0.6f)
-                        dl.addCircle(cx, cy, dotR, dimCol, 0, 1.2f)
-                    }
-                }
-
-                ImGui.invisibleButton("##beat_phase_meter", dotsTotalW - 3.8f, textH)
-                if (ImGui.isItemClicked()) {
-                    PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
-                }
-                val beatTip = "Beat Phase (4/4 Bar Sync)\nClick to open Tempo & Sync preferences."
-                itemTooltip(beatTip)
-                ImGui.sameLine(0f, 3.8f)
-            }
-
-            // ── BPM ───────────────────────────────────────────────────────────────
-            val bpmW = ImGui.calcTextSize(bpmText).x
-            val bpmPosX = ImGui.getCursorPosX()
-            val bpmPosY = ImGui.getCursorPosY()
-
-            ImGui.invisibleButton("##bpm_tap_button", bpmW, textH)
-            val isBpmHovered = ImGui.isItemHovered()
-            val isBpmClicked = ImGui.isItemClicked(0)
-            val isBpmRightClicked = ImGui.isItemClicked(1)
-
-            ImGui.setCursorPos(bpmPosX, bpmPosY)
-
-            if (flash > 0.01f) {
-                // Bright yellow/gold flash highlight on tap
-                ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.95f, 0.2f, 1.0f)
-            } else if (tapCount > 0) {
-                // Warm amber tone during active tap cadence
-                ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.82f, 0.35f, 1.0f)
-            } else if (isAudioDisabled) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.95f, 0.80f, 0.40f, 1.0f) // warm amber tone for manual tempo
-            } else {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.6f, 0.85f, 1.0f, 1.0f) // light blue for live audio engine
-            }
-            ImGui.textUnformatted(bpmText)
-            ImGui.popStyleColor()
-
-            if (isBpmClicked) {
-                session.tapTempoController.tap()
-            }
-            if (isBpmRightClicked) {
-                PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
-            }
-            if (isBpmHovered) {
-                val keyHint = "Key: [T]"
-                val bpmTip = if (isAudioDisabled) {
-                    "Manual BPM (Tempo Fixed)\nClick to tap tempo ($keyHint).\nRight-click to open Tempo & Sync preferences."
-                } else if (audioActive) {
-                    "Audio Engine BPM\nClick to tap tempo ($keyHint) to nudge audio tracker.\nRight-click to open Tempo & Sync preferences."
-                } else {
-                    "Audio Engine BPM (Engine Inactive)\nClick to tap tempo ($keyHint).\nRight-click to open Tempo & Sync preferences."
-                }
-                showTooltip(bpmTip, "bpm_tap_tooltip".hashCode())
-            }
-            ImGui.sameLine(0f, 0f)
 
             // ── DSP Latency ───────────────────────────────────────────────────────
             val dspW = ImGui.calcTextSize(dspText).x
