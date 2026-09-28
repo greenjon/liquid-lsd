@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Multi-Select Category Dropdown in Shader & FX Browser (`ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`)
+- **Multi-Select Category Dropdown**: Replaced the horizontal scrolling category chips row in the Performance row Browse bay (`ShaderPickerPopup.kt`) with a compact `ImGui.beginCombo` multi-select dropdown.
+- **Top Toolbar Integration**: Positioned the category dropdown directly beside the search bar (`[Search Input] [Category Dropdown ▾] [ ⋮ ]`), reclaiming 32px of vertical space for the shader results table in compact rack bays.
+- **Native Checkbox Toggling**: Renders category options with native vector checkboxes (`ImGui.checkbox`) using zero per-frame heap allocations. Features exclusive "All Categories" clearing/fallback, dynamic summary preview (`"All Categories"`, `"Color Adjustment"`, `"N Categories"`), active filter hover tooltip, and clean grouping of `★ Favorites` and `Saved FX` above standard shader categories.
+
 ### Parameter Panel & Browse Panels Font Size Harmonization (`UITheme.kt`, `ParametersRenderer.kt`, `PerformanceDeepEditBay.kt`, `ParametersTabs.kt`, `ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`, `PresetListPanel.kt`, `FXBrowserPanel.kt`, `TransitionBrowserPanel.kt`)
 - **Consistent 18px Typography**: Scaled parameter labels in the Parameter Panel (Deep Edit parameter grid) and item rows/controls in the Browse Panels (inline source/FX/transition pickers and Library browser search inputs) to match the **18px** font size used by tooltips and dropdown menus (`UITheme.FONT_TOOLTIP` / `UITheme.FontLevel.TOOLTIP`).
 - **Semantic Text Helpers**: Added `session.uiTheme.tooltip(text)` and `tooltipColored(r, g, b, a, text)` to `UITheme.kt` for clean 18px typography rendering.

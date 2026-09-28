@@ -1,11 +1,14 @@
 package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
-import imgui.flag.ImGuiWindowFlags
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiComboFlags
+import imgui.flag.ImGuiKey
 import imgui.flag.ImGuiSelectableFlags
-import imgui.flag.ImGuiTableFlags
 import imgui.flag.ImGuiTableColumnFlags
+import imgui.flag.ImGuiTableFlags
+import imgui.flag.ImGuiWindowFlags
+import imgui.type.ImBoolean
 import imgui.type.ImString
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
@@ -19,7 +22,7 @@ import llm.slop.liquidlsd.SessionContext
  * saved under a name), ISF Filters, saved single-FX files, and Mixer Transitions.
  *
  * Designed to handle 300+ items with zero-allocation per-frame filtering.
- * Supports category pill filtering and instant fuzzy search.
+ * Supports multi-select category dropdown filtering and instant fuzzy search.
  *
  * Drawn inline in the Performance row bay's Browse content (see [PerformanceBrowseBay]), not as a
  * modal popup -- selecting a row applies it immediately and leaves the list open, so rapidly trying
@@ -62,8 +65,11 @@ object ShaderPickerPopup {
     private var title = "Select Shader"
 
     private val searchBuf = ImString(64)
-    /** Active category pill filters, OR-combined. "All" is exclusive with every other entry. */
+    /** Active category filters, OR-combined. "All" is exclusive with every other entry. */
     private var selectedCategories: MutableSet<String> = mutableSetOf("All")
+    private val catCheckRef = ImBoolean()
+    private var categoryPreviewText: String = "All Categories"
+    private var categoryTooltipText: String = "All"
 
     enum class ViewMode { FOLDERS, FLAT }
     private var viewMode = ViewMode.FOLDERS
@@ -71,7 +77,7 @@ object ShaderPickerPopup {
     /** Last-seen [FileSystemManager.scanAllPresets] result for the SOURCE picker, so [drawInline]
      *  can cheaply detect a rename/duplicate/delete from [drawPresetManageButton] (reference
      *  equality, same idiom [llm.slop.liquidlsd.ui.browser.PresetListPanel] uses) and refresh the
-     *  list even though nothing was typed into search or a category pill. */
+     *  list even though nothing was typed into search or the category dropdown. */
     private var lastSourcePresetsScan: List<AssetItem>? = null
 
     // Internal cache to avoid allocations in drawInline()
@@ -174,7 +180,7 @@ object ShaderPickerPopup {
     }
 
     /**
-     * Whether an item belongs to at least one active category pill (OR match). "All" or an empty
+     * Whether an item belongs to at least one active category filter (OR match). "All" or an empty
      * selection means no filtering. [isFavorite] only applies to FX filters.
      */
     private fun matchesSelectedCategories(itemCategories: List<String>, folderPath: String, isFavorite: Boolean = false): Boolean {
@@ -265,7 +271,7 @@ object ShaderPickerPopup {
 
             // ── Saved deck presets -- a preset is just a generator with its parameter values
             // saved under a name, so it belongs in the same list as the stock types above,
-            // always shown (unlike FX's opt-in "Saved FX" pill, matching the old preset picker's
+            // always shown (unlike FX's opt-in "Saved FX" category, matching the old preset picker's
             // always-visible list).
             FileSystemManager.scanAllPresets().forEach { asset ->
                 asset.tags.forEach { tempCats.add(it) }
@@ -336,7 +342,7 @@ object ShaderPickerPopup {
                 }
             }
 
-            // Saved single-FX presets -- included only when that pill is explicitly active,
+            // Saved single-FX presets -- included only when that category is explicitly active,
             // additive with whatever stock tag filters are also selected.
             if (selectedCategories.contains(CATEGORY_SAVED)) {
                 FileSystemManager.scanAllFxPresets().forEach { asset ->
@@ -392,6 +398,78 @@ object ShaderPickerPopup {
         filteredItems.forEach { item ->
             folderGroups.getOrPut(item.folderPath) { mutableListOf() }.add(item)
         }
+        updateCategoryPreview()
+    }
+
+    private fun updateCategoryPreview() {
+        categoryPreviewText = when {
+            selectedCategories.isEmpty() || selectedCategories.contains("All") -> "All Categories"
+            selectedCategories.size == 1 -> selectedCategories.first()
+            selectedCategories.size == 2 -> {
+                val joined = selectedCategories.joinToString(", ")
+                if (joined.length <= 18) joined else "2 Categories"
+            }
+            else -> "${selectedCategories.size} Categories"
+        }
+        categoryTooltipText = if (selectedCategories.isEmpty() || selectedCategories.contains("All")) {
+            "All"
+        } else {
+            selectedCategories.joinToString(", ")
+        }
+    }
+
+    private fun toggleCategory(cat: String) {
+        if (cat == "All") {
+            selectedCategories.clear()
+            selectedCategories.add("All")
+        } else {
+            selectedCategories.remove("All")
+            if (selectedCategories.contains(cat)) {
+                selectedCategories.remove(cat)
+                if (selectedCategories.isEmpty()) selectedCategories.add("All")
+            } else {
+                selectedCategories.add(cat)
+            }
+        }
+        updateItems()
+    }
+
+    private fun drawCategoryDropdown() {
+        pushOpenDropdownPadding()
+        if (ImGui.beginCombo("##category_filter", categoryPreviewText, ImGuiComboFlags.HeightLargest)) {
+            pushOpenDropdownFont()
+
+            for (i in 0 until categories.size) {
+                val cat = categories[i]
+                if (cat == "All") {
+                    val isAll = selectedCategories.isEmpty() || selectedCategories.contains("All")
+                    catCheckRef.set(isAll)
+                    if (ImGui.checkbox("All Categories##cat_all", catCheckRef)) {
+                        toggleCategory("All")
+                    }
+                    if (categories.size > 1) {
+                        ImGui.separator()
+                    }
+                } else {
+                    if (isFxPicker && i == 3 && categories.size > 3) {
+                        ImGui.separator()
+                    }
+                    if (pickerType == PickerType.SOURCE && i == 2 && categories.size > 2) {
+                        ImGui.separator()
+                    }
+
+                    val isSelected = selectedCategories.contains(cat)
+                    catCheckRef.set(isSelected)
+                    if (ImGui.checkbox("$cat##cat_$i", catCheckRef)) {
+                        toggleCategory(cat)
+                    }
+                }
+            }
+
+            popOpenDropdownFont()
+            ImGui.endCombo()
+        }
+        popOpenDropdownPadding()
     }
 
     /** SOURCE picker rows get a 3rd column too, for the saved-preset management ("...") button. */
@@ -525,16 +603,32 @@ object ShaderPickerPopup {
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             ImGui.textDisabled("${Icons.SEARCH} $title")
         }
-        ImGui.sameLine()
 
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            // ── Search Bar & Overflow Menu (view mode toggle, detach) ──
-            ImGui.setNextItemWidth((ImGui.getContentRegionAvailX() - 40f).coerceAtLeast(120f))
+            // ── Search Bar, Category Multi-Select Dropdown & Overflow Menu ──
+            val availW = ImGui.getContentRegionAvailX()
+            val moreBtnW = ImGui.getFrameHeight()
+            val itemSpacingX = ImGui.getStyle().getItemSpacingX()
+            val comboW = (availW * 0.38f).coerceIn(130f, 180f)
+            val searchW = (availW - comboW - moreBtnW - itemSpacingX * 2).coerceAtLeast(80f)
+
+            ImGui.setNextItemWidth(searchW)
             if (ImGui.inputTextWithHint("##search", "Search by name, ID or folder...", searchBuf)) {
                 updateItems()
             }
+            if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
+                searchBuf.set("")
+                updateItems()
+            }
+            itemTooltip("Type to filter by name, ID, or folder.\nPress Esc to clear.")
+
             ImGui.sameLine()
-            if (ImGui.button("${Icons.MORE_VERTICAL}##picker_more", 0f, 0f)) {
+            ImGui.setNextItemWidth(comboW)
+            drawCategoryDropdown()
+            itemTooltip("Filter by category (multi-select).\nActive: $categoryTooltipText")
+
+            ImGui.sameLine()
+            if (ImGui.button("${Icons.MORE_VERTICAL}##picker_more", moreBtnW, moreBtnW)) {
                 ImGui.openPopup("picker_more_menu")
             }
             itemTooltip("View options and detach")
@@ -554,39 +648,6 @@ object ShaderPickerPopup {
             }
             popOpenDropdownPadding()
 
-            // ── Category Pills Row (multi-select, OR-combined; "All" is exclusive) ──
-            ImGui.beginChild("##categories_pills", 0f, 32f, false, ImGuiWindowFlags.HorizontalScrollbar)
-            for (i in 0 until categories.size) {
-                val cat = categories[i]
-                val isSelected = selectedCategories.contains(cat)
-                if (isSelected) {
-                    ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.5f, 0.8f, 1.0f)
-                    ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.25f, 0.55f, 0.85f, 1.0f)
-                    ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.15f, 0.45f, 0.75f, 1.0f)
-                }
-
-                if (ImGui.button(cat)) {
-                    if (cat == "All") {
-                        selectedCategories.clear()
-                        selectedCategories.add("All")
-                    } else {
-                        selectedCategories.remove("All")
-                        if (isSelected) {
-                            selectedCategories.remove(cat)
-                            if (selectedCategories.isEmpty()) selectedCategories.add("All")
-                        } else {
-                            selectedCategories.add(cat)
-                        }
-                    }
-                    updateItems()
-                }
-
-                if (isSelected) {
-                    ImGui.popStyleColor(3)
-                }
-                ImGui.sameLine()
-            }
-            ImGui.endChild()
             ImGui.separator()
 
             val tableFlags = ImGuiTableFlags.ScrollY         or

@@ -185,7 +185,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── AppPreferences.kt       — App preferences data model, persistent layout & feature toggles
 │   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop
 │   ├── MenuBar.kt              — Unified header bar, navigation menus, telemetry HUD & window controls
-│   ├── ShaderPickerPopup.kt    — High-performance category-based shader & source selector
+│   ├── ShaderPickerPopup.kt    — High-performance category-based shader & source selector with multi-select dropdown
 │   ├── WindowFrameController.kt— Client-Side Decorations (CSD), window dragging & perimeter edge resizing
 │   ├── DeckPresetController.kt — Deck preset file lifecycle and dialog controller
 │   ├── UIThemeStyler.kt        — ImGui dynamic styling, theme palettes, and font scaling
@@ -393,7 +393,7 @@ Transforms the laptop trackpad into an absolute 4-zone performance surface when 
   - 0 image inputs: Generator / Visual Source (`ISFAssetType.GENERATOR` $\to$ `VisualSourceRegistry`)
   - 1 image input: Filter / FX (`ISFAssetType.FILTER` $\to$ `ISFFilterRegistry`)
   - 2+ image inputs (or transition `progress` input): Mixer Transition (`ISFAssetType.TRANSITION` $\to$ `ISFTransitionRegistry`)
-- **Preserved Folder Hierarchies & Tags**: Retains relative subfolder paths in `ISFAsset.folderPath` and tags in `categories`. `ShaderPickerPopup` provides both a collapsible folder tree view (`Icons.FOLDER`) and flat table view (`Icons.LAYOUT_FULL`) with zero per-frame render thread allocations.
+- **Preserved Folder Hierarchies & Tags**: Retains relative subfolder paths in `ISFAsset.folderPath` and tags in `categories`. `ShaderPickerPopup` provides a multi-select category dropdown, collapsible folder tree view (`Icons.FOLDER`), and flat table view (`Icons.LAYOUT_FULL`) with zero per-frame render thread allocations.
 ## 100% ISF Pipeline & Modular Effects Engine
 
 All post-processing effects, 2D-to-3D projection geometry, and mixer transitions run as modular Interactive Shader Format (ISF) effects:

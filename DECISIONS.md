@@ -1,3 +1,14 @@
+## Multi-Select Category Dropdown in Shader & FX Browser (`ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`, docs, tests)
+
+- **Context**: 2026-09-28. In the Performance row Browse bay (`ShaderPickerPopup.kt`), filtering shader effects, transitions, and sources by category previously relied on a horizontally scrollable row of chips (`##categories_pills`). The chips row occupied 32px of fixed height plus scrollbar margins and required tedious horizontal dragging when many categories were present (such as the 15+ ISF filter tags).
+- **Decision**:
+  - **Multi-Select Dropdown (`drawCategoryDropdown`)**: Replaced the scrollable category pills child window with a compact `ImGui.beginCombo` multi-select dropdown placed directly beside the search bar on the top toolbar:
+    - **Header Row Geometry**: `[Search Input] [Category Dropdown ▾] [ ⋮ ]`. The search bar stretches responsively (`availW - comboW - moreBtnW - spacing * 2`), and the dropdown occupies a comfortable 130px–180px width (`availW * 0.38f`).
+    - **Preview & Tooltip**: Closed dropdown displays `"All Categories"` when unfiltered, single category names, or count summaries (`"2 Categories"`, `"N Categories"`). A tooltip displays active categories (`itemTooltip("Filter by category (multi-select).\nActive: ...")`).
+    - **Checkbox Toggling & Grouping**: Items inside the combo use native `ImGui.checkbox` with cached `catCheckRef: ImBoolean` (zero per-frame heap allocations). "All Categories" is positioned at the top; clicking "All" deselects individual categories, while toggling a category deselects "All" (falling back to "All" if all categories are unchecked). For FX pickers, `★ Favorites` and `Saved FX` are cleanly grouped above standard ISF filter categories with a separator.
+  - **Vertical Space Reclaimed**: Eliminating the 32px chips strip frees up vertical space for 1–2 additional rows in the shader results table in compact rack bays.
+- **Consequences**: Improves browsing ergonomics and filter visibility, eliminates horizontal strip scrolling, and standardizes multi-select category filtering across FX, Transitions, and Generator browse pickers.
+
 ## Harmonize Parameter Panel & Browse Panels Font Size to Match Tooltips (18px) (`UITheme.kt`, `ParametersRenderer.kt`, `PerformanceDeepEditBay.kt`, `ParametersTabs.kt`, `ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`, `PresetListPanel.kt`, `FXBrowserPanel.kt`, `TransitionBrowserPanel.kt`, docs, tests)
 
 - **Context**: 2026-09-28. In live performance environments, high readability of active parameter names and asset browser rows is essential. While tooltips and open dropdown popups were scaled to 18px (`FONT_TOOLTIP`), the Parameter Panel (Deep Edit parameter rows) rendered labels at 15px (`H3`), and the inline Browse Panel (`ShaderPickerPopup`, `PerformanceBrowseBay`) defaulted to 14px (`BODY`).
