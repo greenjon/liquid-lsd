@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Persistent EDIT and FX Buttons with Shared SRC/FX Hitbox (`RackUnit.kt`, `FxChainHeader.kt`, `PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `PerformanceMatrixPanel.kt`, `PerformanceUiContext.kt`)
+- **Persistent `[EDIT]` Button**: Replaced the alternating `[Edit]` / `[Collapse]` button in the top-right corner of rack rows with a persistent `[EDIT]` button. When active (Deep Edit open), it displays a green fill (`#33BF59`) with black text; when inactive (collapsed), it displays a dark neutral fill (`#232833`) with off-white text (`#E0E0E6`).
+- **Persistent `[FX]` Button**: Replaced the `[FX ON]` / `[BYPASS]` button on the right side of Deck rows and the Master row with a persistent `[FX]` button, using the identical active green / inactive dark toggle styling.
+- **Unified `[SRC]` / `[FX]` Hitbox on Deck Rows**: Unified the left-side `[SRC]` and `[FX]` mode pills into a single combined bounding-box hitbox covering both pills and the vertical gap between them. Clicking anywhere in the combined area toggles between Visual Source (`SRC`) and Insert FX (`FX`). The active mode pill is rendered in green with black text, while the inactive mode pill is rendered in dark neutral with off-white text.
+- **Unified `[MIX]` / `[FX]` Hitbox on Master Row**: Applied the same unified hitbox and active/inactive toggle styling to the `[MIX]` and `[FX]` mode pills on the Master row.
+
 ### Streamline Mixer Panel: Transition Button, Deck Save/Eject Buttons, and Preset Boxes Removed (`MixerPanel.kt`, `DeckControlPanel.kt`, `MixerLayout.kt`, `UIManager.kt`)
 - **Transition Selector Button Removed**: Removed the `Icons.SETTINGS [Transition Name]` button beside Deck B on the crossfader row. Deck B's badge is now aligned flush to the right edge, centering and stretching the crossfader slider symmetrically across the strip between `[A]` and `[B]`. Transitions can be selected via Deep Edit, Performance Transitions Controls, or asset drag-and-drop onto the crossfader track.
 - **Deck Save & Eject Buttons Removed**: Removed the top toolbar button row (`drawDeckButtonRow` — Save and Eject) across all four decks (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`). Presets can be saved using `Ctrl+S` / `Cmd+S`, `Ctrl+Shift+S`, or the Gen Browse Save button.

@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiMouseCursor
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.rendering.Mixer
@@ -34,34 +35,46 @@ internal object PerformanceMasterControls {
         val gap = 4f
         val modeBtnW = 28f
         val isFx = ctx.isMasterRowFx(parametersState)
-        val inactiveCol = ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f)
+        val isMix = !isFx
+        val dl = ImGui.getWindowDrawList()
 
-        // Line 1: [MIX] pill + Mix description badge & reset
+        // Line 1: Shared [MIX] / [FX] toggle hitbox covering Row 1, gap, and Row 2
         ImGui.setCursorScreenPos(startX, row1Y)
-        ImGui.pushStyleColor(ImGuiCol.Button, if (!isFx) ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f) else inactiveCol)
-        if (ImGui.button("MIX##perf_mode_mix_mst", modeBtnW, ctrlH)) {
-            llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "CTRL")
-            ctx.masterRowMode = "MIX"
-            if (parametersState.activeMixerSubTab == "FX") parametersState.activeMixerSubTab = "CTRL"
+        val totalModeH = (row2Y + ctrlH) - row1Y
+        ImGui.setNextItemAllowOverlap()
+        val toggleClicked = ImGui.invisibleButton("##perf_mode_toggle_mst", modeBtnW, totalModeH)
+        val isModeHovered = ImGui.isItemHovered()
+        if (toggleClicked) {
+            if (isMix) {
+                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "FX")
+                ctx.masterRowMode = "FX"
+                parametersState.activeMixerSubTab = "FX"
+                llm.slop.liquidlsd.macro.FxMacroSync.syncFor(MacroEngine.MASTER_FX, mixer)
+            } else {
+                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "CTRL")
+                ctx.masterRowMode = "MIX"
+                if (parametersState.activeMixerSubTab == "FX") parametersState.activeMixerSubTab = "CTRL"
+            }
         }
-        ImGui.popStyleColor()
-        itemTooltip("Assign the Master row's knobs to the mix: Deck A / Deck B / Deck BG alphas and master level.")
+        if (isModeHovered) {
+            ImGui.setMouseCursor(ImGuiMouseCursor.Hand)
+        }
+        itemTooltip("Toggle Master knobs between Mix controls (MIX) and Master FX (FX).")
+
+        val mouseY = ImGui.getMousePosY()
+        val midY = row1Y + ctrlH + (row2Y - (row1Y + ctrlH)) * 0.5f
+        val isMixHovered = isModeHovered && (mouseY <= midY)
+        val isFxHovered = isModeHovered && (mouseY > midY)
+
+        PerformanceColors.drawTogglePill(dl, startX, row1Y, modeBtnW, ctrlH, "MIX", isMix, isMixHovered, session)
+        PerformanceColors.drawTogglePill(dl, startX, row2Y, modeBtnW, ctrlH, "FX", isFx, isFxHovered, session)
 
         drawMixBadgeAndReset(session, mixer, parametersState, ctx, startX + modeBtnW + gap, row1Y, ctrlH, rowW - modeBtnW - gap)
 
-        // Line 2: [FX] pill + Master FX chain header
+        // Line 2: [FX] pill spacer + Master FX chain header
         ImGui.setCursorScreenPos(startX, row2Y)
         ImGui.beginGroup()
-        ImGui.pushStyleColor(ImGuiCol.Button, if (isFx) ImGui.colorConvertFloat4ToU32(0.80f, 0.40f, 0.15f, 1f) else inactiveCol)
-        if (ImGui.button("FX##perf_mode_fx_mst", modeBtnW, ctrlH)) {
-            llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "FX")
-            ctx.masterRowMode = "FX"
-            parametersState.activeMixerSubTab = "FX"
-            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(MacroEngine.MASTER_FX, mixer)
-        }
-        ImGui.popStyleColor()
-        itemTooltip("Assign the Master row's knobs to the Master FX chain (Super Knob + 3 Metaknobs). FX chain controls stay available either way.")
-
+        ImGui.dummy(modeBtnW, ctrlH)
         ImGui.sameLine(0f, gap)
         FxChainHeader.drawControls(session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH, maxW = rowW - modeBtnW - gap) {
             parametersState.openFxChainBrowse(MacroEngine.MASTER, deckLabel = null, slotIndex = null)

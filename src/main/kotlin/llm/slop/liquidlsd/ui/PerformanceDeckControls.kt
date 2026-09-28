@@ -95,15 +95,35 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         ImGui.setCursorScreenPos(startX, row1Y)
         ImGui.beginGroup()
 
-        // 1. [SRC] mode pill
-        ImGui.pushStyleColor(ImGuiCol.Button, if (isSrc) ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
-        if (ImGui.button("SRC##perf_mode_src_$tag", modeBtnW, ctrlH)) {
-            llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "SRC")
-            ctx.deckRowMode[tag] = "SRC"
-            parametersState.setDeckSubTab(deckLabel, "SRC")
+        // 1. Shared [SRC] / [FX] toggle hitbox covering Row 1, gap, and Row 2
+        val totalModeH = (row2Y + ctrlH) - row1Y
+        ImGui.setNextItemAllowOverlap()
+        val toggleClicked = ImGui.invisibleButton("##perf_mode_toggle_$tag", modeBtnW, totalModeH)
+        val isModeHovered = ImGui.isItemHovered()
+        if (toggleClicked) {
+            if (isSrc) {
+                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "FX")
+                ctx.deckRowMode[tag] = "FX"
+                parametersState.setDeckSubTab(deckLabel, "FX")
+                llm.slop.liquidlsd.macro.FxMacroSync.syncFor(ctx.targetBankIdFor(tag), mixer)
+            } else {
+                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "SRC")
+                ctx.deckRowMode[tag] = "SRC"
+                parametersState.setDeckSubTab(deckLabel, "SRC")
+            }
         }
-        ImGui.popStyleColor()
-        itemTooltip("Assign $deckLabel's on-screen knobs to Visual Source macros. Source controls stay available either way.")
+        if (isModeHovered) {
+            ImGui.setMouseCursor(ImGuiMouseCursor.Hand)
+        }
+        itemTooltip("Toggle $deckLabel knobs between Visual Source (SRC) and Insert FX (FX).")
+
+        val mouseY = ImGui.getMousePosY()
+        val midY = row1Y + ctrlH + (row2Y - (row1Y + ctrlH)) * 0.5f
+        val isSrcHovered = isModeHovered && (mouseY <= midY)
+        val isFxHovered = isModeHovered && (mouseY > midY)
+
+        PerformanceColors.drawTogglePill(dl, startX, row1Y, modeBtnW, ctrlH, "SRC", isSrc, isSrcHovered, session)
+        PerformanceColors.drawTogglePill(dl, startX, row2Y, modeBtnW, ctrlH, "FX", isFx, isFxHovered, session)
 
         ImGui.sameLine(0f, gap)
 
@@ -491,17 +511,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         ImGui.setCursorScreenPos(startX, row2Y)
         ImGui.beginGroup()
 
-        // 1. [FX] mode pill
-        ImGui.pushStyleColor(ImGuiCol.Button, if (isFx) ImGui.colorConvertFloat4ToU32(0.80f, 0.40f, 0.15f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
-        if (ImGui.button("FX##perf_mode_fx_$tag", modeBtnW, ctrlH)) {
-            llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "FX")
-            ctx.deckRowMode[tag] = "FX"
-            parametersState.setDeckSubTab(deckLabel, "FX")
-            llm.slop.liquidlsd.macro.FxMacroSync.syncFor(ctx.targetBankIdFor(tag), mixer)
-        }
-        ImGui.popStyleColor()
-        itemTooltip("Assign $deckLabel's on-screen knobs to its insert FX chain (Super Knob + 3 Metaknobs). FX chain controls stay available either way.")
-
+        // 1. Spacing for [FX] pill (rendered and hit-tested with [SRC] in Row 1 above)
+        ImGui.dummy(modeBtnW, ctrlH)
         ImGui.sameLine(0f, gap)
 
         // 2. Dedicated FX chain controls

@@ -25,21 +25,15 @@ object RackUnit {
     }
 
     /**
-     * Draws an "Edit" / "Collapse" toggle button at the current ImGui cursor that cycles
+     * Draws an "EDIT" toggle button at the current ImGui cursor that cycles
      * [moduleId]'s disclosure tier. Caller is responsible for positioning the cursor first (e.g.
      * `ImGui.setCursorScreenPos(...)`).
      */
     fun drawChevron(parametersState: ParametersState, moduleId: String, idSuffix: String) {
         val level = parametersState.disclosureFor(moduleId)
         val isExpanded = level != ParametersState.DisclosureLevel.COLLAPSED
-        val label = if (isExpanded) "Collapse" else "Edit"
-        if (isExpanded) {
-            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f))
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.15f, 0.62f, 0.82f, 1f))
-        } else {
-            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 0.85f))
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.24f, 0.27f, 0.32f, 1f))
-        }
+        val label = "EDIT"
+        llm.slop.liquidlsd.ui.PerformanceColors.pushActiveToggleStyle(isExpanded)
         if (ImGui.smallButton("$label##rack_chevron_$idSuffix")) {
             if (isExpanded) {
                 parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.COLLAPSED)
@@ -47,9 +41,9 @@ object RackUnit {
                 parametersState.openParams(moduleId)
             }
         }
-        ImGui.popStyleColor(2)
+        llm.slop.liquidlsd.ui.PerformanceColors.popActiveToggleStyle()
         itemTooltip(
-            if (isExpanded) "Collapse module back to standard row view." else "Expand Deep Edit (full parameter editor)."
+            if (isExpanded) "Deep Edit is active. Click to close." else "Click to open Deep Edit parameter editor."
         )
     }
 

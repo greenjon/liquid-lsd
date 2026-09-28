@@ -1,5 +1,9 @@
 package llm.slop.liquidlsd.ui
 
+import imgui.ImDrawList
+import imgui.ImGui
+import imgui.flag.ImGuiCol
+import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FxChain
@@ -17,6 +21,70 @@ internal object PerformanceColors {
 
     /** Uniform height of every row-side control (buttons, badges, preset combo) left/right of the knobs. */
     const val CTRL_H = 24f
+
+    val TOGGLE_ACTIVE_BG = ImGui.colorConvertFloat4ToU32(0.20f, 0.75f, 0.35f, 1f)
+    val TOGGLE_ACTIVE_HOVER = ImGui.colorConvertFloat4ToU32(0.26f, 0.82f, 0.42f, 1f)
+    val TOGGLE_ACTIVE_PRESSED = ImGui.colorConvertFloat4ToU32(0.16f, 0.68f, 0.30f, 1f)
+    val TOGGLE_ACTIVE_TEXT = ImGui.colorConvertFloat4ToU32(0.05f, 0.05f, 0.05f, 1f)
+
+    val TOGGLE_INACTIVE_BG = ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
+    val TOGGLE_INACTIVE_HOVER = ImGui.colorConvertFloat4ToU32(0.20f, 0.23f, 0.28f, 1f)
+    val TOGGLE_INACTIVE_PRESSED = ImGui.colorConvertFloat4ToU32(0.12f, 0.14f, 0.17f, 1f)
+    val TOGGLE_INACTIVE_TEXT = ImGui.colorConvertFloat4ToU32(0.88f, 0.88f, 0.90f, 1f)
+
+    fun pushActiveToggleStyle(active: Boolean) {
+        if (active) {
+            ImGui.pushStyleColor(ImGuiCol.Button, TOGGLE_ACTIVE_BG)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TOGGLE_ACTIVE_HOVER)
+            ImGui.pushStyleColor(ImGuiCol.ButtonActive, TOGGLE_ACTIVE_PRESSED)
+            ImGui.pushStyleColor(ImGuiCol.Text, TOGGLE_ACTIVE_TEXT)
+        } else {
+            ImGui.pushStyleColor(ImGuiCol.Button, TOGGLE_INACTIVE_BG)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TOGGLE_INACTIVE_HOVER)
+            ImGui.pushStyleColor(ImGuiCol.ButtonActive, TOGGLE_INACTIVE_PRESSED)
+            ImGui.pushStyleColor(ImGuiCol.Text, TOGGLE_INACTIVE_TEXT)
+        }
+    }
+
+    fun popActiveToggleStyle() {
+        ImGui.popStyleColor(4)
+    }
+
+    fun drawTogglePill(
+        dl: ImDrawList,
+        x: Float,
+        y: Float,
+        w: Float,
+        h: Float,
+        text: String,
+        isActive: Boolean,
+        isHovered: Boolean,
+        session: SessionContext
+    ) {
+        val bgCol = when {
+            isActive && isHovered -> TOGGLE_ACTIVE_HOVER
+            isActive -> TOGGLE_ACTIVE_BG
+            isHovered -> TOGGLE_INACTIVE_HOVER
+            else -> TOGGLE_INACTIVE_BG
+        }
+        val textCol = if (isActive) TOGGLE_ACTIVE_TEXT else TOGGLE_INACTIVE_TEXT
+        val rounding = ImGui.getStyle().frameRounding
+
+        dl.addRectFilled(x, y, x + w, y + h, bgCol, rounding)
+        val borderCol = if (isHovered) {
+            ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.4f)
+        } else {
+            ImGui.colorConvertFloat4ToU32(0.25f, 0.28f, 0.35f, 0.5f)
+        }
+        dl.addRect(x, y, x + w, y + h, borderCol, rounding, 0, 1f)
+
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            val sz = ImGui.calcTextSize(text)
+            val tx = x + (w - sz.x) * 0.5f
+            val ty = y + (h - sz.y) * 0.5f
+            dl.addText(tx, ty, textCol, text)
+        }
+    }
 }
 
 internal class PerformanceUiContext {

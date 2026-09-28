@@ -353,22 +353,17 @@ object FxChainHeader {
     }
 
     /**
-     * Draws the top-level [BYPASS] button for [chain].
+     * Draws the top-level [FX] toggle button for [chain].
      */
     fun drawBypassButton(chain: FxChain, id: String, ctrlH: Float, width: Float = 64f) {
-        val isBypassed = !chain.enabled
-        val btnCol = if (isBypassed) {
-            ImGui.colorConvertFloat4ToU32(0.70f, 0.18f, 0.18f, 1f)
-        } else {
-            ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
-        }
-        val label = if (isBypassed) "BYPASS" else "FX ON"
+        val isActive = chain.enabled
+        val label = "FX"
 
-        ImGui.pushStyleColor(ImGuiCol.Button, btnCol)
+        PerformanceColors.pushActiveToggleStyle(isActive)
         if (ImGui.button("$label##bypass_$id", width, ctrlH)) {
             chain.enabled = !chain.enabled
         }
-        ImGui.popStyleColor()
-        itemTooltip(if (isBypassed) "Chain is bypassed. Click to enable FX." else "Chain is active. Click to bypass FX.")
+        PerformanceColors.popActiveToggleStyle()
+        itemTooltip(if (isActive) "FX chain is active. Click to bypass." else "FX chain is bypassed. Click to enable.")
     }
 }

@@ -509,10 +509,13 @@ class PerformanceMatrixPanel {
                 }
             }
 
-            // Modular Rack disclosure toggle in top-right of box: [Edit] / [Collapse]
+            // Modular Rack disclosure toggle in top-right of box: [EDIT]
             if (descriptor.canExpand) {
                 val chevronY = boxTopY + 3f
-                ImGui.setCursorScreenPos(boxX2 - 84f, chevronY)
+                val editBtnW = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                    ImGui.calcTextSize("EDIT").x + ImGui.getStyle().framePaddingX * 2f
+                }
+                ImGui.setCursorScreenPos(boxX2 - pad - editBtnW, chevronY)
                 session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                     llm.slop.liquidlsd.ui.rack.RackUnit.drawChevron(
                         parametersState, activeModuleId, "${tabIdx}_${rowIdx}"
