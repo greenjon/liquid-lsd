@@ -435,6 +435,10 @@ object ShaderPickerPopup {
         }
         // Applies immediately and leaves the list open -- there's no popup to close, and trying
         // several picks in a row (each undoable with Ctrl+Z) is the point.
+        // AllowOverlap: selectableRow spans all columns for its click/hover rect (SpanAllColumns),
+        // which without this would swallow clicks on the ★ favorite / "..." manage button drawn
+        // in column 2 afterward -- the later widget only wins hover if the row beneath it opts in.
+        ImGui.setNextItemAllowOverlap()
         if (selectableRow(itemLabel, false, flags = ImGuiSelectableFlags.AllowDoubleClick)) {
             onSelect?.invoke(item.id)
         }
