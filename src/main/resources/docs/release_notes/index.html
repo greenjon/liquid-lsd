@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#new-orange-sunshine-daytime-high-contrast-theme-uithemekt-uithemestylerkt-themetestkt-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New 'Orange Sunshine' Daytime High-Contrast Theme (UITheme.kt, UIThemeStyler.kt, ThemeTest.kt, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#button-text-now-stays-legible-on-light-backgrounds-tangopalettekt-temposyncpanelkt-menubarkt-fxchainheaderkt-audiomodulatorsectionkt-broadcastpreferencespanelkt-lfo2sectionkt-midimodulatorsectionkt-midipreferencespanelkt-modulatorheaderrowkt-oscpreferencespanelkt-parameterstabskt-performanceclockcontrolskt-performancetransitionscontrolskt-propertiespanelkt-docsdeveloperuimd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4547,6 +4558,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#new-orange-sunshine-daytime-high-contrast-theme-uithemekt-uithemestylerkt-themetestkt-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        New 'Orange Sunshine' Daytime High-Contrast Theme (UITheme.kt, UIThemeStyler.kt, ThemeTest.kt, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#button-text-now-stays-legible-on-light-backgrounds-tangopalettekt-temposyncpanelkt-menubarkt-fxchainheaderkt-audiomodulatorsectionkt-broadcastpreferencespanelkt-lfo2sectionkt-midimodulatorsectionkt-midipreferencespanelkt-modulatorheaderrowkt-oscpreferencespanelkt-parameterstabskt-performanceclockcontrolskt-performancetransitionscontrolskt-propertiespanelkt-docsdeveloperuimd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7861,6 +7883,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="new-orange-sunshine-daytime-high-contrast-theme-uithemekt-uithemestylerkt-themetestkt-docsdeveloperuimd">New 'Orange Sunshine' Daytime High-Contrast Theme (<code>UITheme.kt</code>, <code>UIThemeStyler.kt</code>, <code>ThemeTest.kt</code>, <code>docs/developer/ui.md</code>)</h3>
+<ul>
+<li><strong>Direct Sunlight &amp; Glare Resistance</strong>: Added <code>ORANGE_SUNSHINE</code>, a daytime high-contrast theme engineered for outdoor festival and direct summer sunlight environments where dark themes turn displays into mirrors. Features chalk off-white surfaces (<code>#F6F7F9</code> window background, <code>#FFFFFF</code> crisp frame wells), high-contrast jet-black typography (<code>#0F1115</code> &gt; 14:1 contrast ratio), and solid dark slate borders (<code>#343A40</code>) so controls remain sharply delineated under heavy ambient glare and through polarized sunglasses.</li>
+<li><strong>Tango Orange Accent &amp; Deck Identity Preservation</strong>: Uses Tango Orange (<code>#F57900</code> / <code>#CE5C00</code>) as its primary active accent for sliders, checkmarks, and active buttons while preserving the exact canonical <code>TangoPalette</code> deck colors (Deck A Orange, Deck B Sky Blue, Deck BG Chameleon, Deck PV Plum) across all badges, strips, and monitor outlines.</li>
+<li><strong>Theme Picker Selection</strong>: Available directly alongside <code>Grey Acid</code> in <strong>Preferences → Theme</strong> with seamless hot-reloading on change.</li>
+</ul>
 <h3 id="button-text-now-stays-legible-on-light-backgrounds-tangopalettekt-temposyncpanelkt-menubarkt-fxchainheaderkt-audiomodulatorsectionkt-broadcastpreferencespanelkt-lfo2sectionkt-midimodulatorsectionkt-midipreferencespanelkt-modulatorheaderrowkt-oscpreferencespanelkt-parameterstabskt-performanceclockcontrolskt-performancetransitionscontrolskt-propertiespanelkt-docsdeveloperuimd">Button Text Now Stays Legible on Light Backgrounds (<code>TangoPalette.kt</code>, <code>TempoSyncPanel.kt</code>, <code>MenuBar.kt</code>, <code>FxChainHeader.kt</code>, <code>AudioModulatorSection.kt</code>, <code>BroadcastPreferencesPanel.kt</code>, <code>Lfo2Section.kt</code>, <code>MidiModulatorSection.kt</code>, <code>MidiPreferencesPanel.kt</code>, <code>ModulatorHeaderRow.kt</code>, <code>OscPreferencesPanel.kt</code>, <code>ParametersTabs.kt</code>, <code>PerformanceClockControls.kt</code>, <code>PerformanceTransitionsControls.kt</code>, <code>PropertiesPanel.kt</code>, <code>docs/developer/ui.md</code>)</h3>
 <ul>
 <li><strong>New <code>TangoPalette.inkFor(vararg backgrounds)</code></strong>: picks near-black or near-white ink from a background's perceptual luminance (0.55 threshold), matching how Mixxx's Tango skin pairs dark text with its light hues rather than outlining labels. Fixed the TAP tempo button's "armed" state (<code>TempoSyncPanel.kt</code>) showing white text against increasingly bright Butter-yellow hover/press backgrounds, then swept every other custom <code>ImGuiCol.Button</code> color push app-wide (broadcast/link/ISF status pills, MIDI/OSC learn buttons, modulator bypass and source-mode buttons, deck/CV parameter sub-tabs, transitions auto-fade and clock TAP/LINK buttons) for the same class of bug -- any button whose background is switched away from the app's default dark surface now pushes a matching <code>ImGuiCol.Text</code> instead of inheriting the global off-white default.</li>
