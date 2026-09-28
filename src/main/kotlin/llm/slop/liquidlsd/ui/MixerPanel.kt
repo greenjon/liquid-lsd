@@ -46,6 +46,15 @@ class MixerPanel(
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
         ImGui.image(mixer.masterFBO.texture.toLong(), availW, masterH, 0f, 1f, 1f, 0f)
 
+        // Thin neutral border (deliberately grey, not deck-colored, so it doesn't tint perception of the monitor content).
+        // Coordinates snapped to whole pixels so top/bottom edges don't anti-alias thinner than the sides.
+        val masterBorderCol = ImGui.colorConvertFloat4ToU32(0.45f, 0.45f, 0.45f, 0.8f)
+        val masterBorderMinX = kotlin.math.round(imgScreenX - 1f)
+        val masterBorderMinY = kotlin.math.round(imgScreenY - 1f)
+        val masterBorderMaxX = kotlin.math.round(imgScreenX + availW + 1f)
+        val masterBorderMaxY = kotlin.math.round(imgScreenY + masterH + 1f)
+        dlMaster.addRect(masterBorderMinX, masterBorderMinY, masterBorderMaxX, masterBorderMaxY, masterBorderCol, 0f, 0, 1.5f)
+
         val overlayW = 60f
         val monitorBtnW = (availW - overlayW).coerceAtLeast(1f)
 
@@ -72,7 +81,7 @@ class MixerPanel(
 
         // --- Master Output Overlays: [M] Badge, [🎲 ALL], and Vertical Master Level Fader ---
         val masterThemeCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.82f, 0.65f, 1f) // Mint accent for Master
-        val fontLevel = UITheme.FontLevel.H2
+        val fontLevel = UITheme.FontLevel.CAPTION
         var textW = 0f
         var textH = 0f
         session.uiTheme.withFont(fontLevel) {
@@ -191,8 +200,6 @@ class MixerPanel(
         // Restore Y cursor position
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY + masterH)
         ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
 
         // --- Master Mixer Controls (Single Row: Crossfader) ---
         val masterControlsH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -209,8 +216,6 @@ class MixerPanel(
         ImGui.endChild()
         ImGui.popStyleColor()
 
-        ImGui.spacing()
-        ImGui.separator()
         ImGui.spacing()
 
         // --- Deck Monitors (2x2 Grid) ---
@@ -249,7 +254,7 @@ class MixerPanel(
     ) {
         val contentW = ImGui.getContentRegionAvailX()
 
-        val fontLevel = UITheme.FontLevel.H2
+        val fontLevel = UITheme.FontLevel.CAPTION
         var textWA = 0f
         var textWB = 0f
         var textH = 0f

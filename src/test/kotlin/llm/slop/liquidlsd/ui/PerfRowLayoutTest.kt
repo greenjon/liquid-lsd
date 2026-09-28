@@ -47,7 +47,7 @@ class PerfRowLayoutTest {
     fun sideButtonsStayInsideTheirOwnColumnAndClearTheLeftControls() {
         for (gridW in listOf(1000f, 1280f, 1920f)) {
             val g = geo(gridW, 74f)
-            assertTrue(g.sideBtnX(0) >= PerfRowGeometry.PAD + leftW, "col 0 side buttons overlap left controls at $gridW")
+            assertTrue(g.sideBtnX(0) >= PerfRowGeometry.ROW_INSET_X + leftW, "col 0 side buttons overlap left controls at $gridW")
             for (col in 0 until 4) {
                 val colLeft = g.clusterLeft + col * g.colW
                 assertTrue(g.sideBtnX(col) >= colLeft - 0.01f, "col $col side buttons reach col ${col - 1} at $gridW")

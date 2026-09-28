@@ -57,7 +57,11 @@ class DeckControlPanel(
         val aspect = session.uiTheme.renderAspectRatio
         val naturalH = (imgAvailW * aspect)
         val childH = maxOf(previewH.coerceAtLeast(1f), naturalH)
-        val imgAvailH = childH.coerceAtMost(imgAvailW * aspect).coerceAtLeast(1f)
+        // Reserve the same inset vertically as horizontally so the border (drawn just outside the
+        // image edge) always has room inside the child's clip rect - otherwise, whenever the image
+        // fills the child height exactly, the top/bottom border gets clipped off entirely.
+        val availHForFit = (childH - (inset * 2f)).coerceAtLeast(1f)
+        val imgAvailH = availHForFit.coerceAtMost(imgAvailW * aspect).coerceAtLeast(1f)
 
         // Explicitly set the Child window width and height
         ImGui.beginChild("Child_$label", safePanelW, childH, false, imgui.flag.ImGuiWindowFlags.NoScrollbar)
@@ -186,14 +190,20 @@ class DeckControlPanel(
             dl.addRectFilled(imgX, imgY, imgX + imgAvailW, imgY + imgAvailH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, dimAlpha))
         }
 
-        // Draw border perfectly wrapped around the image
-        dl.addRect(imgX - 1f, imgY - 1f, imgX + imgAvailW + 1f, imgY + imgAvailH + 1f, themeCol, 0f, 0, 2f)
+        // Draw border perfectly wrapped around the image.
+        // Coordinates are snapped to whole pixels so top/bottom edges don't land on a fractional
+        // Y and get anti-aliased across two rows (which made them look thinner than the sides).
+        val borderMinX = kotlin.math.round(imgX - 1f)
+        val borderMinY = kotlin.math.round(imgY - 1f)
+        val borderMaxX = kotlin.math.round(imgX + imgAvailW + 1f)
+        val borderMaxY = kotlin.math.round(imgY + imgAvailH + 1f)
+        dl.addRect(borderMinX, borderMinY, borderMaxX, borderMaxY, themeCol, 0f, 0, 1.5f)
 
         // --- Clustered Inner Overlays: Badge, Die, and Vertical Level Fader ---
         val letter = deckPayloadName
         val badgePadX = 8f
         val badgePadY = 3f
-        val fontLevel = UITheme.FontLevel.H2
+        val fontLevel = UITheme.FontLevel.CAPTION
         var textW = 0f
         var textH = 0f
         session.uiTheme.withFont(fontLevel) {
@@ -268,16 +278,8 @@ class DeckControlPanel(
             }
         }
 
-        // --- Right-Side FX Controls Geometry (Square FX Kill Button & FX Wet/Dry Slider) ---
-        val fxBtnW = badgeH
-        val fxBtnH = badgeH
-        val fxBtnMinX = imgX + imgAvailW - badgeMargin - fxBtnW
-        val fxBtnMaxX = fxBtnMinX + fxBtnW
-        val fxBtnMaxY = imgY + imgAvailH - badgeMargin
-        val fxBtnMinY = fxBtnMaxY - fxBtnH
-
-        // Shared vertical bounds for Alpha and FX sliders (both start at top, end above bottom buttons)
-        val stripW = 14f
+        // Vertical bounds for the Alpha slider (starts at top, ends above the badge)
+        val stripW = 4f
         val stripMinY = imgY + badgeMargin
         val rawStripMaxY = badgeMinY - 4f
         val stripH = (rawStripMaxY - stripMinY).coerceAtLeast(20f)
@@ -349,103 +351,12 @@ class DeckControlPanel(
         val fillH = stripH * liveLevel
         val fillTop = stripMaxY - fillH
         if (fillH > 1f) {
-            dl.addRectFilled(stripMinX + 2f, fillTop, stripMinX + stripW - 2f, stripMaxY - 1f, themeCol, 2f)
+            dl.addRectFilled(stripMinX + 1f, fillTop, stripMinX + stripW - 1f, stripMaxY - 1f, themeCol, 1f)
         }
 
         // Draw Alpha Handle Indicator line
         val handleCol = if (isFaderActive) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f) else ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 0.85f)
-        dl.addLine(stripMinX + 1f, fillTop, stripMinX + stripW - 1f, fillTop, handleCol, 2f)
-
-        // 4. Vertical FX Wet/Dry Fader (directly above the FX button on the right)
-        val fxStripMinX = fxBtnMinX + (fxBtnW - stripW) * 0.5f
-
-        ImGui.setCursorScreenPos(fxStripMinX, stripMinY)
-        ImGui.invisibleButton("##fader_fx_$label", stripW, stripH)
-        val isFxFaderHovered = ImGui.isItemHovered()
-        val isFxFaderActive = ImGui.isItemActive()
-
-        if (isFxFaderActive) {
-            val mouseY = ImGui.getIO().mousePos.y
-            val pct = ((stripMaxY - mouseY) / stripH).coerceIn(0f, 1f)
-            deck.fxChain.dryWet.baseValue = pct
-        }
-
-        if (isFxFaderHovered || isFxFaderActive) {
-            if (io.mouseWheel != 0f) {
-                val delta = if (io.keyShift) 0.01f else 0.05f
-                val current = deck.fxChain.dryWet.value
-                val newLevel = (current + io.mouseWheel * delta).coerceIn(0f, 1f)
-                deck.fxChain.dryWet.baseValue = newLevel
-                io.mouseWheel = 0f
-            }
-            if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle-click reset to 100%
-                deck.fxChain.dryWet.baseValue = 1.0f
-            }
-            showTooltip("$label FX Wet/Dry\nDrag or scroll to adjust. Middle-click to reset (100%).")
-        }
-
-        // Draw FX Fader Track
-        val fxFaderBorder = if (isFxFaderHovered || isFxFaderActive) themeCol else ImGui.colorConvertFloat4ToU32(0.25f, 0.28f, 0.35f, 0.7f)
-        dl.addRectFilled(fxStripMinX, stripMinY, fxStripMinX + stripW, stripMaxY, faderBg, 3f)
-        dl.addRect(fxStripMinX, stripMinY, fxStripMinX + stripW, stripMaxY, fxFaderBorder, 3f, 0, 1.0f)
-
-        // Draw Filled FX Level Bar (bottom up) with live dryWet value
-        val liveFxLevel = deck.fxChain.dryWet.value
-        val fxFillH = stripH * liveFxLevel
-        val fxFillTop = stripMaxY - fxFillH
-        val isFxEnabled = deck.fxChain.enabled
-        if (fxFillH > 1f) {
-            val fxFillCol = if (isFxEnabled) themeCol else ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.38f, 0.55f)
-            dl.addRectFilled(fxStripMinX + 2f, fxFillTop, fxStripMinX + stripW - 2f, stripMaxY - 1f, fxFillCol, 2f)
-        }
-
-        // Draw FX Handle Indicator line
-        val fxHandleCol = if (isFxFaderActive) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f) else ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 0.85f)
-        dl.addLine(fxStripMinX + 1f, fxFillTop, fxStripMinX + stripW - 1f, fxFillTop, fxHandleCol, 2f)
-
-        // 5. Square FX Kill Button (bottom right corner, directly below FX fader)
-        ImGui.setCursorScreenPos(fxBtnMinX, fxBtnMinY)
-        val isFxBtnClicked = ImGui.invisibleButton("##btn_fx_kill_$label", fxBtnW, fxBtnH)
-        val isFxBtnHovered = ImGui.isItemHovered()
-        val isFxBtnActive = ImGui.isItemActive()
-
-        if (isFxBtnClicked) {
-            deck.fxChain.enabled = !deck.fxChain.enabled
-        }
-
-        val fxStatus = if (deck.fxChain.enabled) "ON" else "BYPASS / KILLED"
-        val fxAction = if (deck.fxChain.enabled) "kill FX" else "enable FX"
-        itemTooltip("$label FX Kill ($fxStatus)\nClick to $fxAction.")
-
-        val fxBtnBg = when {
-            !deck.fxChain.enabled -> {
-                if (isFxBtnHovered || isFxBtnActive) ImGui.colorConvertFloat4ToU32(0.75f, 0.20f, 0.20f, 0.95f)
-                else ImGui.colorConvertFloat4ToU32(0.60f, 0.15f, 0.15f, 0.90f)
-            }
-            isFxBtnActive -> ImGui.colorConvertFloat4ToU32(0.30f, 0.32f, 0.38f, 0.95f)
-            isFxBtnHovered -> ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.26f, 0.90f)
-            else -> ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.10f, 0.85f)
-        }
-        val fxBtnBorder = when {
-            !deck.fxChain.enabled -> ImGui.colorConvertFloat4ToU32(0.95f, 0.35f, 0.35f, 0.95f)
-            isFxBtnHovered -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
-            else -> themeCol
-        }
-        val fxBtnTextCol = when {
-            !deck.fxChain.enabled -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
-            isFxBtnHovered -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
-            else -> themeCol
-        }
-
-        dl.addRectFilled(fxBtnMinX, fxBtnMinY, fxBtnMaxX, fxBtnMaxY, fxBtnBg, 4f)
-        dl.addRect(fxBtnMinX, fxBtnMinY, fxBtnMaxX, fxBtnMaxY, fxBtnBorder, 4f, 0, 1.5f)
-
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            val sz = ImGui.calcTextSize("FX")
-            val tX = fxBtnMinX + (fxBtnW - sz.x) * 0.5f
-            val tY = fxBtnMinY + (fxBtnH - sz.y) * 0.5f
-            dl.addText(tX, tY, fxBtnTextCol, "FX")
-        }
+        dl.addLine(stripMinX, fillTop, stripMinX + stripW, fillTop, handleCol, 2f)
 
         ImGui.endChild()
         ImGui.popStyleVar()

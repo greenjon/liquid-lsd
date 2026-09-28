@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Compact Performance Matrix Title Badges Merged with Row Corner (`PerformanceMatrixPanel.kt`, `PerfRowGeometry.kt`, `PerfRowLayoutTest.kt`, `docs/developer/ui.md`)
+- **Top-Left Corner Integration**: Relocated row title badges (`A`, `B`, `BG`, `PV`, `MASTER`, `TRANS`, `CLOCK`, `WET/DRY`) to flush against the row card's top-left corner (`boxX1`, `boxTopY`). The badge's top-left corner matches the row container's 8px rounding (`ImDrawFlags.RoundCornersTopLeft`), and its bottom-right corner has smooth 8px rounding (`ImDrawFlags.RoundCornersBottomRight`) while vertically spanning to the baseline of the row's 2-line controls (`(row2YFinal + ctrlH) - boxTopY`).
+- **Reclaimed Horizontal Space**: Reclaimed the 6px outer padding gap on the left and tightened badge widths (deck badges: 54px → 42px; master tab badges: 90px → 78px), saving ~18px of horizontal width per row for expanded controls and knob clusters.
+- **Drop Target Alignment**: Updated drag-and-drop targets on Deck, Master, and Transitions badges to accurately match the new top-left corner coordinates and dimensions.
+
 ### Streamline Mixer Panel: Transition Button, Deck Save/Eject Buttons, and Preset Boxes Removed (`MixerPanel.kt`, `DeckControlPanel.kt`, `MixerLayout.kt`, `UIManager.kt`)
 - **Transition Selector Button Removed**: Removed the `Icons.SETTINGS [Transition Name]` button beside Deck B on the crossfader row. Deck B's badge is now aligned flush to the right edge, centering and stretching the crossfader slider symmetrically across the strip between `[A]` and `[B]`. Transitions can be selected via Deep Edit, Performance Transitions Controls, or asset drag-and-drop onto the crossfader track.
 - **Deck Save & Eject Buttons Removed**: Removed the top toolbar button row (`drawDeckButtonRow` — Save and Eject) across all four decks (`Deck A`, `Deck B`, `Deck BG`, `Deck PV`). Presets can be saved using `Ctrl+S` / `Cmd+S`, `Ctrl+Shift+S`, or the Gen Browse Save button.

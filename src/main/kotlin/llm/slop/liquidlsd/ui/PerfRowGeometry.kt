@@ -23,6 +23,8 @@ internal class PerfRowGeometry(
     rightW: Float
 ) {
     companion object {
+        /** Outer horizontal inset of the row box from the grid bounds. */
+        const val ROW_INSET_X = 2f
         /** Horizontal inset of row content from the box edge. */
         const val PAD = 6f
         /** Gap between a row's box and the next row's / the grid's edge. */
@@ -51,7 +53,7 @@ internal class PerfRowGeometry(
     val stripH: Float = stripHeight(bodyLineH)
 
     /** Left edge of the knob cluster's reserved band, after the left controls. */
-    val clusterLeft: Float = PAD + leftW + SIDE_GUTTER
+    val clusterLeft: Float = ROW_INSET_X + leftW + SIDE_GUTTER
     private val clusterRight: Float = gridW - PAD - rightW - SIDE_GUTTER
     private val clusterW: Float = (clusterRight - clusterLeft).coerceAtLeast(100f)
 

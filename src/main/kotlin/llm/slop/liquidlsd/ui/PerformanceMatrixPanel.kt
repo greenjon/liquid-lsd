@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
+import imgui.flag.ImDrawFlags
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiKey
 import imgui.flag.ImGuiMouseCursor
@@ -336,7 +337,7 @@ class PerformanceMatrixPanel {
 
         // Every row: a title badge spanning both control lines, then two stacked control lines,
         // then the knobs. Deck badges are a large A/B/BG/PV; MASTER-tab badges are wider for words.
-        val deckBadgeW = 54f
+        val deckBadgeW = 42f
         val deckComboW = (gridW * 0.11f).coerceIn(85f, 140f)
         // Reserved at the full-height CTRL_H (the wider case) so compact rows never widen it.
         val deckRow1W = DeckRowMetrics.row1Width(PerformanceColors.CTRL_H, deckComboW, session.uiTheme.randomizationEnabled)
@@ -344,7 +345,7 @@ class PerformanceMatrixPanel {
         val deckRightW = 56f
         // MASTER tab: Master ([MIX] + crossfader over [FX] + chain header), Transitions (picker +
         // queue nav), FX Wet/Dry (badge only), Clock (source/BPM/beat over tempo actions).
-        val masterTabBadgeW = 90f
+        val masterTabBadgeW = 78f
         val masterRowW = maxOf(deckRow1W, (gridW * 0.38f).coerceAtMost(420f))
         val masterTabLeftW = masterTabBadgeW + 6f + masterRowW
         val masterRightW = 56f
@@ -430,7 +431,7 @@ class PerformanceMatrixPanel {
                     }
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
-                    ImGui.invisibleButton("##perf_deck_drop_${rowIdx}_$dropTag", (pad + deckBadgeW + 4f).coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
+                    ImGui.invisibleButton("##perf_deck_drop_${rowIdx}_$dropTag", deckBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
                     applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
@@ -469,7 +470,7 @@ class PerformanceMatrixPanel {
                 } else if (isMasterRow) {
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
-                    ImGui.invisibleButton("##perf_master_drop_${rowIdx}", (pad + masterTabBadgeW + 4f).coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
+                    ImGui.invisibleButton("##perf_master_drop_${rowIdx}", masterTabBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
                     applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
@@ -484,7 +485,7 @@ class PerformanceMatrixPanel {
                 } else if (isTransRow) {
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
-                    ImGui.invisibleButton("##perf_trans_drop_${rowIdx}", (pad + masterTabBadgeW + 4f).coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
+                    ImGui.invisibleButton("##perf_trans_drop_${rowIdx}", masterTabBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
                     applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
@@ -527,20 +528,22 @@ class PerformanceMatrixPanel {
             val ctrlY = (contentTopY + contentBottomY - ctrlH) * 0.5f
 
             if (descriptor.hasExtraHeader) {
-                val badgeX = boxX1 + pad
+                val badgeX = boxX1
+                val badgeY = boxTopY
+                val badgeH = (row2YFinal + ctrlH) - boxTopY
                 val masterTabStartX = badgeX + masterTabBadgeW + 6f
                 if (isMasterRow) {
-                    drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "MASTER", UITheme.FontLevel.H2)
+                    drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "MASTER", UITheme.FontLevel.H2)
                     PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW)
                     PerformanceMasterControls.drawBypassControls(mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                 } else if (isTransRow) {
-                    drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "TRANS", UITheme.FontLevel.H2)
+                    drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "TRANS", UITheme.FontLevel.H2)
                     PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW)
                 } else if (isClockRow) {
-                    drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "CLOCK", UITheme.FontLevel.H2)
+                    drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "CLOCK", UITheme.FontLevel.H2)
                     PerformanceClockControls.draw(session, masterTabStartX, row1Y, row2YFinal, ctrlH)
                 } else if (descriptor.bankId == MacroEngine.FX_SENDS) {
-                    drawTitleBadge(session, badgeX, row1Y, masterTabBadgeW, totalCtrlH, descriptor.accent, "WET/DRY", UITheme.FontLevel.H2,
+                    drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "WET/DRY", UITheme.FontLevel.H2,
                         tooltip = "Per-deck FX send levels (each deck's FX chain wet/dry).")
                     PerformanceFxSendsControls.drawRightControls(boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                 } else if (isDeckRow) {
@@ -559,7 +562,7 @@ class PerformanceMatrixPanel {
                     val deckLabel = "Deck $deckTag"
 
                     // Deck title badge: just the deck letter(s) -- the [SRC]/[FX] pills beside it show the mode.
-                    drawTitleBadge(session, badgeX, row1Y, deckBadgeW, totalCtrlH, descriptor.accent, deckTag, UITheme.FontLevel.H1)
+                    drawTitleBadge(session, badgeX, badgeY, deckBadgeW, badgeH, descriptor.accent, deckTag, UITheme.FontLevel.H1)
 
                     val leftStartX = badgeX + deckBadgeW + 6f
                     deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W)
@@ -762,7 +765,7 @@ class PerformanceMatrixPanel {
     }
 
     /**
-     * Row title badge: accent-tinted box spanning both control lines, with [text] centered in
+     * Row title badge: accent-tinted box merged with the row's top-left corner, with [text] centered in
      * [level]'s font. The font is pushed at its explicit size -- on this draw-list addText path
      * UITheme.withFont passes 0f ("native baked size"), which renders H1/H2 no bigger than H3.
      */
@@ -779,10 +782,11 @@ class PerformanceMatrixPanel {
         tooltip: String? = null
     ) {
         val dl = ImGui.getWindowDrawList()
-        val bg = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.12f)
+        val bg = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.14f)
         val border = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.85f)
-        dl.addRectFilled(x, y, x + w, y + h, bg, 4f)
-        dl.addRect(x, y, x + w, y + h, border, 4f, 0, 1.5f)
+        val cornerFlags = ImDrawFlags.RoundCornersTopLeft or ImDrawFlags.RoundCornersBottomRight
+        dl.addRectFilled(x, y, x + w, y + h, bg, 8f, cornerFlags)
+        dl.addRect(x, y, x + w, y + h, border, 8f, cornerFlags, 1.5f)
         val font = session.uiTheme.fontFor(level)
         val size = if (level == UITheme.FontLevel.H1) UITheme.FONT_H1 else UITheme.FONT_H2
         val pushable = font != null && font.ptr != 0L
