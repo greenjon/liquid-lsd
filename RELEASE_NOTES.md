@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Library Multi-Selection Support (`MultiSelectionModel.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `BrowserActionToolbar.kt`, `LibraryPanel.kt`, `BrowserPopupHandler.kt`)
+- Added complete multi-selection support across the Library browser and playlist/queue panels:
+  - **Click Modes**: Standard single-click (selects single item, resets multi-selection), **Ctrl+Click** / **Cmd+Click** (toggles individual item selection), and **Shift+Click** (continuous range selection relative to the lead/anchor item across visible list order).
+  - **Batch Queuing**: Pressing `Q` or clicking the toolbar `[ Q ]` button enqueues all selected presets into the A/B Play Queue. Pressing `Shift+Q` or clicking `[ BGQ ]` enqueues all selected presets into the Background Queue.
+  - **Multi-Item Drag & Drop**: Dragging any item within a multi-selection carries the full set of selected presets (`\n`-delimited asset payload) into playlist insertion slots, live queues, or background queues.
+  - **Context Menu & Batch Deletion**: Context menu reflects multi-selection actions (**Add N Presets to Playlist**, **Add N Presets to Queue**, **Delete N Presets...**). Deletion invokes a consolidated confirmation modal detailing all selected targets and cleanly removing deleted files across all active playlists and queues.
+  - **Playlist & Queue Management**: Playlists and Queues support index-based multi-selection with batch removal and slot-drop unpacking.
+
 ### Library Toolbar's Deck-Load Buttons Removed (`BrowserActionToolbar.kt`, `LibraryPanel.kt`, `ShortcutManager.kt`)
 - Removed the `[A]`/`[B]`/`[BG]`/`[PV]` deck-load buttons and their `1`/`2`/`3`/`4` shortcuts from the Library's menu-bar action toolbar — the inline **Browse** panel on each Performance row now covers picking a generator, FX single, or FX chain straight onto a deck, making the toolbar's duplicate path redundant. The `[Q]`/`[BGQ]` queue buttons and their `Q`/`Shift+Q` shortcuts stay, since queuing to the AutoVJ Play/Background queues has no equivalent in Browse.
 - **Quick Audition Latch simplified**: The padlock button no longer lets you cycle its target across Deck A/B/BG via the removed buttons — it always previews to Deck PV, which was already its default target.

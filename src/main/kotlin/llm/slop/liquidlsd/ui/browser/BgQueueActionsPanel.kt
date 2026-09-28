@@ -22,7 +22,16 @@ import java.io.File
 
 object BgQueueActionsPanel {
     private val logger = KotlinLogging.logger {}
-    var selectedIndex: Int = -1
+    val selection = MultiSelectionModel<Int>()
+    var selectedIndex: Int
+        get() = selection.leadItem ?: -1
+        set(value) {
+            if (value >= 0) selection.setSingle(value) else selection.clear()
+        }
+
+    fun clearSelection() {
+        selection.clear()
+    }
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val navBtnW = ImGui.calcTextSize(">").x + ImGui.getStyle().getFramePaddingX() * 2f
@@ -124,14 +133,14 @@ object BgQueueActionsPanel {
             // Queue list
             var moveFrom = -1
             var moveTo = -1
-        var removeFromQueueIndex = -1
-        var insertSlot = -1
-        var insertLineY = -1f
-        val insertLineColor = (255 shl 24) or (166 shl 16) or (90 shl 8) or 230 // Rose/magenta, ABGR
+            var removeIndices: List<Int> = emptyList()
+            var insertSlot = -1
+            var insertLineY = -1f
+            val insertLineColor = (255 shl 24) or (166 shl 16) or (90 shl 8) or 230 // Rose/magenta, ABGR
 
         BgQueueManager.queue.forEachIndexed { index, file ->
             val isActive = index == BgQueueManager.activeIndex
-            val isSelected = index == selectedIndex
+            val isSelected = selection.isSelected(index)
             val label = "${index + 1}. ${file.nameWithoutExtension}${if (isActive) " ->" else ""}"
 
             if (isActive) {
@@ -157,18 +166,32 @@ object BgQueueActionsPanel {
                     itemClicked = true
                 }
             }
+            val io = ImGui.getIO()
             if (itemClicked) {
-                LibraryPanel.selectQueueBg(index, session, mixer)
+                val isCtrl = io.keyCtrl || io.keySuper
+                val isShift = io.keyShift
+                selection.handleClick(index, BgQueueManager.queue.indices.toList(), isCtrl, isShift)
+                LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.QUEUE_BG
+                PresetListPanel.selection.clear()
+                PlaylistEditorPanel.clearSelection()
+                QueueActionsPanel.clearSelection()
+                LibraryPanel.auditionIfLocked(file, session, mixer)
             }
             val isRowHovered = ImGui.isItemHovered()
             if (ImGui.isItemClicked(1)) {
+                if (!selection.isSelected(index)) {
+                    selection.setSingle(index)
+                    LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.QUEUE_BG
+                    PresetListPanel.selection.clear()
+                    PlaylistEditorPanel.clearSelection()
+                    QueueActionsPanel.clearSelection()
+                }
                 ImGui.openPopup(popupId)
             }
 
-            val io = ImGui.getIO()
             val isWindowFocused = ImGui.isWindowFocused(ImGuiFocusedFlags.ChildWindows)
             val canAutoSelect = isWindowFocused && LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.QUEUE_BG
-            if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
+            if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput && !io.keyCtrl && !io.keyShift && !io.keySuper) {
                 LibraryPanel.selectQueueBg(index, session, mixer)
             }
 
@@ -208,15 +231,20 @@ object BgQueueActionsPanel {
 
                 val assetPayload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                 if (assetPayload != null) {
-                    val droppedFile = File(assetPayload)
-                    val insertAt = effectiveSlot.coerceIn(0, BgQueueManager.queue.size)
-                    if (droppedFile.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                        BgQueueManager.insertAt(insertAt, droppedFile)
-                        logger.info { "Inserted BG preset from drag-drop at slot $insertAt: ${droppedFile.name}" }
-                    } else if (droppedFile.extension.lowercase() in listOf("playlist", "lsdplay")) {
-                        val files = session.playQueueManager.parsePlaylist(droppedFile)
-                        files.forEachIndexed { i, f -> BgQueueManager.insertAt(insertAt + i, f) }
-                        logger.info { "Inserted BG playlist from drag-drop at slot $insertAt: ${droppedFile.name} (${files.size} items)" }
+                    val paths = assetPayload.lines().map { it.trim() }.filter { it.isNotBlank() }
+                    var insertAt = effectiveSlot.coerceIn(0, BgQueueManager.queue.size)
+                    for (path in paths) {
+                        val droppedFile = File(path)
+                        if (droppedFile.extension.lowercase() in listOf("patch", "lsd", "json")) {
+                            BgQueueManager.insertAt(insertAt, droppedFile)
+                            insertAt++
+                        } else if (droppedFile.extension.lowercase() in listOf("playlist", "lsdplay")) {
+                            val files = session.playQueueManager.parsePlaylist(droppedFile)
+                            files.forEach { f ->
+                                BgQueueManager.insertAt(insertAt, f)
+                                insertAt++
+                            }
+                        }
                     }
                 }
                 ImGui.endDragDropTarget()
@@ -230,36 +258,53 @@ object BgQueueActionsPanel {
             pushOpenDropdownPadding()
             if (ImGui.beginPopup(popupId)) {
                 pushOpenDropdownFont()
-                if (ImGui.menuItem("Play (Dip to Black)")) {
-                    BgQueueManager.playIndex(index, mixer, withDipToBlack = true)
+                val inOrder = selection.selectedItems.filter { it in BgQueueManager.queue.indices }.sorted()
+                val targetIndices = if (inOrder.contains(index)) inOrder else listOf(index)
+                val count = targetIndices.size
+
+                if (count > 1) {
+                    ImGui.textDisabled("$count Presets Selected")
+                    ImGui.separator()
                 }
-                if (ImGui.menuItem("Play (Instant Cut)")) {
-                    BgQueueManager.playIndex(index, mixer, withDipToBlack = false)
+
+                if (count == 1) {
+                    if (ImGui.menuItem("Play (Dip to Black)")) {
+                        BgQueueManager.playIndex(index, mixer, withDipToBlack = true)
+                    }
+                    if (ImGui.menuItem("Play (Instant Cut)")) {
+                        BgQueueManager.playIndex(index, mixer, withDipToBlack = false)
+                    }
+                    if (ImGui.menuItem("Load to Deck A")) {
+                        session.presetRepository.loadDeckPresetAsync(file, isDeckA = true)
+                    }
+                    if (ImGui.menuItem("Load to Deck B")) {
+                        session.presetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = false, isDeckPV = false)
+                    }
+                    if (ImGui.menuItem("Preview on Deck PV")) {
+                        session.presetRepository.loadDeckPresetAsync(file, isDeckPV = true)
+                    }
+                    ImGui.separator()
                 }
-                if (ImGui.menuItem("Load to Deck A")) {
-                    session.presetRepository.loadDeckPresetAsync(file, isDeckA = true)
-                }
-                if (ImGui.menuItem("Load to Deck B")) {
-                    session.presetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = false, isDeckPV = false)
-                }
-                if (ImGui.menuItem("Preview on Deck PV")) {
-                    session.presetRepository.loadDeckPresetAsync(file, isDeckPV = true)
+                val abLabel = if (count > 1) "Add $count Presets to A/B Queue" else "Add to A/B Queue"
+                if (ImGui.menuItem(abLabel)) {
+                    targetIndices.forEach { idx ->
+                        val f = BgQueueManager.queue.getOrNull(idx)
+                        if (f != null) session.playQueueManager.appendToQueue(f)
+                    }
                 }
                 ImGui.separator()
-                if (ImGui.menuItem("Add to A/B Queue")) {
-                    session.playQueueManager.appendToQueue(file)
+                val remLabel = if (count > 1) "Remove $count presets from BG queue" else "Remove from BG queue"
+                if (ImGui.menuItem(remLabel)) {
+                    removeIndices = targetIndices
                 }
-                ImGui.separator()
-                if (ImGui.menuItem("Remove from BG queue")) {
-                    removeFromQueueIndex = index
-                }
-                if (ImGui.menuItem("Delete preset from library...")) {
-                    BrowserPopupHandler.deleteTarget = AssetItem(
-                        path = file.absolutePath,
-                        name = file.nameWithoutExtension,
-                        type = AssetType.PRESET
-                    )
-                    BrowserPopupHandler.pendingOpenDeletePopup = true
+                val delLabel = if (count > 1) "Delete $count presets from library..." else "Delete preset from library..."
+                if (ImGui.menuItem(delLabel)) {
+                    val targets = targetIndices.mapNotNull { idx ->
+                        BgQueueManager.queue.getOrNull(idx)?.let { f ->
+                            AssetItem(path = f.absolutePath, name = f.nameWithoutExtension, type = AssetType.PRESET)
+                        }
+                    }
+                    BrowserPopupHandler.openDeleteConfirmation(targets)
                 }
                 popOpenDropdownFont()
                 ImGui.endPopup()
@@ -267,12 +312,13 @@ object BgQueueActionsPanel {
             popOpenDropdownPadding()
         }
 
-        // Keyboard shortcuts (Delete / Backspace removes selected item from queue)
+        // Keyboard shortcuts (Delete / Backspace removes selected items from queue)
         val io = ImGui.getIO()
-        if (selectedIndex in BgQueueManager.queue.indices && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+        val inOrder = selection.selectedItems.filter { it in BgQueueManager.queue.indices }.sorted()
+        if (inOrder.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
             if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
                 ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
-                removeFromQueueIndex = selectedIndex
+                removeIndices = inOrder
             }
         }
 
@@ -289,12 +335,11 @@ object BgQueueActionsPanel {
             BgQueueManager.move(moveFrom, moveTo)
             if (selectedIndex == moveFrom) selectedIndex = moveTo
         }
-        if (removeFromQueueIndex != -1) {
-            BgQueueManager.removeAt(removeFromQueueIndex)
-            val newSize = BgQueueManager.queue.size
-            if (selectedIndex >= newSize) {
-                selectedIndex = newSize - 1
+        if (removeIndices.isNotEmpty()) {
+            removeIndices.sortedDescending().forEach { idx ->
+                BgQueueManager.removeAt(idx)
             }
+            selection.clear()
         }
 
         // Drop target for the empty space below all queue items (append to end)
@@ -305,12 +350,15 @@ object BgQueueActionsPanel {
             if (ImGui.beginDragDropTarget()) {
                 val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                 if (payload != null) {
-                    val file = File(payload)
-                    if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                        BgQueueManager.appendToQueue(file)
-                    } else if (file.extension.lowercase() in listOf("playlist", "lsdplay")) {
-                        val files = session.playQueueManager.parsePlaylist(file)
-                        BgQueueManager.appendAllToQueue(files)
+                    val paths = payload.lines().map { it.trim() }.filter { it.isNotBlank() }
+                    for (path in paths) {
+                        val file = File(path)
+                        if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
+                            BgQueueManager.appendToQueue(file)
+                        } else if (file.extension.lowercase() in listOf("playlist", "lsdplay")) {
+                            val files = session.playQueueManager.parsePlaylist(file)
+                            BgQueueManager.appendAllToQueue(files)
+                        }
                     }
                 }
                 ImGui.endDragDropTarget()

@@ -5,6 +5,8 @@ import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.presets.BgQueueManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.AssetItem
+import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.ParametersState
@@ -96,28 +98,54 @@ object BrowserActionToolbar {
             ImGui.sameLine(0f, 14f)
 
             // 1. [ Q ] (Disabled for FX items or when already in Play Queue A/B)
-            val canQueueAB = hasSelection && !isFxItem && source != LibraryPanel.SelectionSource.QUEUE_AB
+            val selectedFiles = if (source == LibraryPanel.SelectionSource.PRESETS) {
+                PresetListPanel.selection.getSelectedInOrder(PresetListPanel.filteredPresets)
+                    .filter { it.type != AssetType.SOURCE_STOCK }
+                    .map { File(it.path) }
+            } else if (selectedFile != null && !isFxItem) {
+                listOf(selectedFile)
+            } else {
+                emptyList()
+            }
+
+            val canQueueAB = selectedFiles.isNotEmpty() && !isFxItem && source != LibraryPanel.SelectionSource.QUEUE_AB
             val alphaQ = if (canQueueAB) 1f else 0.35f
             BrowserDeckButtons.push(BrowserDeckButtons.colorQ(), alphaQ)
             if (ImGui.button("Q##toolbar_deck_q", btnW, btnH) && canQueueAB) {
-                session.playQueueManager.appendToQueue(selectedFile)
+                selectedFiles.forEach { session.playQueueManager.appendToQueue(it) }
                 LibraryPanel.shouldReclaimFocus = true
             }
-            val qTip = if (isFxItem) "Queueing is for full visual presets." else if (source == LibraryPanel.SelectionSource.QUEUE_AB) "Preset is already in the A/B Play Queue." else "Add selected preset to the A/B Play Queue (Hotkey: Q)."
+            val qTip = if (isFxItem) {
+                "Queueing is for full visual presets."
+            } else if (source == LibraryPanel.SelectionSource.QUEUE_AB) {
+                "Preset is already in the A/B Play Queue."
+            } else if (selectedFiles.size > 1) {
+                "Add ${selectedFiles.size} selected presets to the A/B Play Queue (Hotkey: Q)."
+            } else {
+                "Add selected preset to the A/B Play Queue (Hotkey: Q)."
+            }
             itemTooltip(qTip)
             BrowserDeckButtons.pop()
 
             ImGui.sameLine(0f, 6f)
 
             // 2. [ BGQ ] (Disabled for FX items or when already in BG Queue)
-            val canQueueBG = hasSelection && !isFxItem && source != LibraryPanel.SelectionSource.QUEUE_BG
+            val canQueueBG = selectedFiles.isNotEmpty() && !isFxItem && source != LibraryPanel.SelectionSource.QUEUE_BG
             val alphaBGQ = if (canQueueBG) 1f else 0.35f
             BrowserDeckButtons.push(BrowserDeckButtons.colorBGQ(), alphaBGQ)
             if (ImGui.button("BGQ##toolbar_deck_bgq", btnW, btnH) && canQueueBG) {
-                BgQueueManager.appendToQueue(selectedFile)
+                selectedFiles.forEach { BgQueueManager.appendToQueue(it) }
                 LibraryPanel.shouldReclaimFocus = true
             }
-            val bgqTip = if (isFxItem) "Queueing is for full visual presets." else if (source == LibraryPanel.SelectionSource.QUEUE_BG) "Preset is already in the Background Queue." else "Add selected preset to the Background Queue (Hotkey: Shift+Q)."
+            val bgqTip = if (isFxItem) {
+                "Queueing is for full visual presets."
+            } else if (source == LibraryPanel.SelectionSource.QUEUE_BG) {
+                "Preset is already in the Background Queue."
+            } else if (selectedFiles.size > 1) {
+                "Add ${selectedFiles.size} selected presets to the Background Queue (Hotkey: Shift+Q)."
+            } else {
+                "Add selected preset to the Background Queue (Hotkey: Shift+Q)."
+            }
             itemTooltip(bgqTip)
             BrowserDeckButtons.pop()
 

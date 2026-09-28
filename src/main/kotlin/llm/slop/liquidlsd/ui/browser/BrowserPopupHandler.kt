@@ -24,8 +24,16 @@ object BrowserPopupHandler {
 
     var renameTarget: AssetItem? = null
     var deleteTarget: AssetItem? = null
+    var deleteTargets: List<AssetItem> = emptyList()
     var pendingOpenRenamePopup = false
     var pendingOpenDeletePopup = false
+
+    fun openDeleteConfirmation(targets: List<AssetItem>) {
+        if (targets.isEmpty()) return
+        deleteTargets = targets
+        deleteTarget = targets.firstOrNull()
+        pendingOpenDeletePopup = true
+    }
     var pendingOpenNewPlaylistPopup = false
     var pendingOpenExportQueuePopup = false
     var pendingOpenExportFxQueuePopup = false
@@ -207,62 +215,77 @@ object BrowserPopupHandler {
             pendingOpenDeletePopup = false
         }
         if (ImGui.beginPopupModal("ConfirmDeleteAssetPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
-            val target = deleteTarget
-            if (target == null) {
+            val targets = if (deleteTargets.isNotEmpty()) deleteTargets else listOfNotNull(deleteTarget)
+            if (targets.isEmpty()) {
                 ImGui.closeCurrentPopup()
                 ImGui.endPopup()
                 return
             }
             
-            val typeStr = when (target.type) {
-                AssetType.PRESET -> "Preset"
-                AssetType.PLAYLIST -> "Playlist"
-                AssetType.FOLDER -> "Folder"
-                AssetType.SOURCE_STOCK -> "Stock Generator"
-                AssetType.FX_STOCK -> "Stock FX Filter"
-                AssetType.FX_PRESET -> "FX Preset"
-                AssetType.FX_CHAIN -> "FX Chain"
-                AssetType.FX_PLAYLIST -> "FX Playlist"
-                AssetType.TRANSITION_STOCK -> "Stock Transition"
-                AssetType.TRANSITION_PRESET -> "Transition Preset"
-                AssetType.TRANSITION_PLAYLIST -> "Transition Playlist"
-            }
+            if (targets.size == 1) {
+                val target = targets.first()
+                val typeStr = when (target.type) {
+                    AssetType.PRESET -> "Preset"
+                    AssetType.PLAYLIST -> "Playlist"
+                    AssetType.FOLDER -> "Folder"
+                    AssetType.SOURCE_STOCK -> "Stock Generator"
+                    AssetType.FX_STOCK -> "Stock FX Filter"
+                    AssetType.FX_PRESET -> "FX Preset"
+                    AssetType.FX_CHAIN -> "FX Chain"
+                    AssetType.FX_PLAYLIST -> "FX Playlist"
+                    AssetType.TRANSITION_STOCK -> "Stock Transition"
+                    AssetType.TRANSITION_PRESET -> "Transition Preset"
+                    AssetType.TRANSITION_PLAYLIST -> "Transition Playlist"
+                }
 
-            ImGui.text("Delete $typeStr '${target.name}'?")
-            ImGui.text("Warning: This will permanently delete this $typeStr from your library.")
-            ImGui.text("This action cannot be undone.")
+                ImGui.text("Delete $typeStr '${target.name}'?")
+                ImGui.text("Warning: This will permanently delete this $typeStr from your library.")
+                ImGui.text("This action cannot be undone.")
+            } else {
+                ImGui.text("Delete ${targets.size} items from library?")
+                ImGui.text("Warning: This will permanently delete these ${targets.size} files from your library.")
+                ImGui.text("This action cannot be undone.")
+                ImGui.spacing()
+                val previewNames = targets.take(4).joinToString(", ") { it.name }
+                val suffix = if (targets.size > 4) " ... and ${targets.size - 4} more" else ""
+                ImGui.textDisabled("Selected: $previewNames$suffix")
+            }
             ImGui.separator()
             if (ImGui.button("Delete", 120f, 0f)) {
-                FileSystemManager.deleteFile(target.path).onSuccess {
-                    if (target.type == AssetType.PRESET) {
-                        PlaylistManager.removePresetFromAllPlaylists(target.path)
-                        llm.slop.liquidlsd.presets.PlayQueueManager.removeFileFromQueue(File(target.path))
-                        LibraryPanel.activePlaylistData = null
-                        LibraryPanel.refreshAssets()
-                    } else if (target.type == AssetType.PLAYLIST) {
-                        val currentPlaylistPath = LibraryPanel.selectedPlaylistFile?.absolutePath
-                        if (target.path == currentPlaylistPath) {
-                            LibraryPanel.selectedPlaylistFile = null
-                            LibraryPanel.activePlaylistData = null
-                        }
-                    } else if (target.type == AssetType.TRANSITION_PLAYLIST) {
-                        val currentPlaylistPath = LibraryPanel.selectedTransitionPlaylistFile?.absolutePath
-                        if (target.path == currentPlaylistPath) {
-                            LibraryPanel.selectedTransitionPlaylistFile = null
-                        }
-                    } else if (target.type == AssetType.FX_PLAYLIST) {
-                        val currentPlaylistPath = LibraryPanel.selectedFxPlaylistFile?.absolutePath
-                        if (target.path == currentPlaylistPath) {
-                            LibraryPanel.selectedFxPlaylistFile = null
+                for (target in targets) {
+                    FileSystemManager.deleteFile(target.path).onSuccess {
+                        if (target.type == AssetType.PRESET) {
+                            PlaylistManager.removePresetFromAllPlaylists(target.path)
+                            llm.slop.liquidlsd.presets.PlayQueueManager.removeFileFromQueue(File(target.path))
+                            llm.slop.liquidlsd.presets.BgQueueManager.removeFileFromQueue(File(target.path))
+                        } else if (target.type == AssetType.PLAYLIST) {
+                            val currentPlaylistPath = LibraryPanel.selectedPlaylistFile?.absolutePath
+                            if (target.path == currentPlaylistPath) {
+                                LibraryPanel.selectedPlaylistFile = null
+                            }
+                        } else if (target.type == AssetType.TRANSITION_PLAYLIST) {
+                            val currentPlaylistPath = LibraryPanel.selectedTransitionPlaylistFile?.absolutePath
+                            if (target.path == currentPlaylistPath) {
+                                LibraryPanel.selectedTransitionPlaylistFile = null
+                            }
+                        } else if (target.type == AssetType.FX_PLAYLIST) {
+                            val currentPlaylistPath = LibraryPanel.selectedFxPlaylistFile?.absolutePath
+                            if (target.path == currentPlaylistPath) {
+                                LibraryPanel.selectedFxPlaylistFile = null
+                            }
                         }
                     }
                 }
+                LibraryPanel.activePlaylistData = null
+                LibraryPanel.refreshAssets()
                 deleteTarget = null
+                deleteTargets = emptyList()
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
             if (ImGui.button("Cancel", 120f, 0f)) {
                 deleteTarget = null
+                deleteTargets = emptyList()
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()

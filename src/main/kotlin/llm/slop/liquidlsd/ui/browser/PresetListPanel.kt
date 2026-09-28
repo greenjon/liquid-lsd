@@ -39,7 +39,12 @@ object PresetListPanel {
     const val PAYLOAD_STOCK_SOURCE = "ASSET_ITEM_STOCK_SOURCE"
 
     val searchBuffer = ImString(256)
-    var selectedAsset: AssetItem? = null
+    val selection = MultiSelectionModel<AssetItem>()
+    var selectedAsset: AssetItem?
+        get() = selection.leadItem
+        set(value) {
+            selection.setSingle(value)
+        }
     var shouldFocusSearch: Boolean = false
     var filteredPresets: List<AssetItem> = emptyList()
 
@@ -203,7 +208,7 @@ object PresetListPanel {
 
             val icon = if (isStock) Icons.SQUARE else Icons.DISC
             val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else "$icon ${asset.displayName}"
-            val isSelected = selectedAsset?.path == asset.path
+            val isSelected = selection.isSelected(asset)
 
             val popupId = "preset_context_menu_$index"
 
@@ -227,21 +232,37 @@ object PresetListPanel {
                     itemClicked = true
                 }
             }
+            val io = ImGui.getIO()
             if (itemClicked) {
-                LibraryPanel.selectPreset(asset, session, mixer)
+                val isCtrl = io.keyCtrl || io.keySuper
+                val isShift = io.keyShift
+                selection.handleClick(asset, filtered, isCtrl, isShift)
+                LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
+                PlaylistEditorPanel.clearSelection()
+                QueueActionsPanel.clearSelection()
+                llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
+                if (asset.type != AssetType.SOURCE_STOCK) {
+                    LibraryPanel.auditionIfLocked(File(asset.path), session, mixer)
+                }
             }
             if (hasIssues && !isSelected) {
                 ImGui.popStyleColor()
             }
             val isRowHovered = ImGui.isItemHovered()
             if (ImGui.isItemClicked(1)) {
+                if (!selection.isSelected(asset)) {
+                    selection.setSingle(asset)
+                    LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
+                    PlaylistEditorPanel.clearSelection()
+                    QueueActionsPanel.clearSelection()
+                    llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
+                }
                 ImGui.openPopup(popupId)
             }
 
-            val io = ImGui.getIO()
             val isWindowFocused = ImGui.isWindowFocused(ImGuiFocusedFlags.ChildWindows)
             val canAutoSelect = isWindowFocused && (LibraryPanel.activeSelectionSource == null || LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.PRESETS)
-            if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
+            if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput && !io.keyCtrl && !io.keyShift && !io.keySuper) {
                 LibraryPanel.selectPreset(asset, session, mixer)
             }
 
@@ -291,10 +312,18 @@ object PresetListPanel {
             if (ImGui.beginDragDropSource()) {
                 if (isStock) {
                     ImGui.setDragDropPayload(PAYLOAD_STOCK_SOURCE, asset.path.removePrefix(STOCK_PATH_PREFIX) as Any)
+                    ImGui.textUnformatted(asset.name)
                 } else {
-                    ImGui.setDragDropPayload("ASSET_ITEM", asset.path as Any)
+                    val inOrder = selection.getSelectedInOrder(filtered).filter { it.type != AssetType.SOURCE_STOCK }
+                    val targets = if (inOrder.any { it.path == asset.path }) inOrder else listOf(asset)
+                    val payload = targets.joinToString("\n") { it.path }
+                    ImGui.setDragDropPayload("ASSET_ITEM", payload as Any)
+                    if (targets.size > 1) {
+                        ImGui.text("Moving ${targets.size} presets")
+                    } else {
+                        ImGui.textUnformatted(asset.name)
+                    }
                 }
-                ImGui.textUnformatted(asset.name)
                 ImGui.endDragDropSource()
             }
 
@@ -322,54 +351,70 @@ object PresetListPanel {
                         }
                     }
                 } else {
-                    if (ImGui.menuItem("Load to Deck A")) {
-                        session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = true)
+                    val inOrder = selection.getSelectedInOrder(filtered).filter { it.type != AssetType.SOURCE_STOCK }
+                    val targets = if (inOrder.any { it.path == asset.path }) inOrder else listOf(asset)
+                    val count = targets.size
+
+                    if (count > 1) {
+                        ImGui.textDisabled("$count Presets Selected")
+                        ImGui.separator()
                     }
-                    if (ImGui.menuItem("Load to Deck B")) {
-                        session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckBG = false, isDeckPV = false)
+
+                    if (count == 1) {
+                        if (ImGui.menuItem("Load to Deck A")) {
+                            session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = true)
+                        }
+                        if (ImGui.menuItem("Load to Deck B")) {
+                            session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckBG = false, isDeckPV = false)
+                        }
+                        if (ImGui.menuItem("Load to Deck BG")) {
+                            session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckBG = true)
+                        }
+                        if (ImGui.menuItem("Preview on Deck PV")) {
+                            session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckPV = true)
+                        }
+                        ImGui.separator()
                     }
-                    if (ImGui.menuItem("Load to Deck BG")) {
-                        session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckBG = true)
+                    val abLabel = if (count > 1) "Add $count Presets to A/B Queue" else "Add to A/B Queue"
+                    if (ImGui.menuItem(abLabel)) {
+                        targets.forEach { session.playQueueManager.appendToQueue(File(it.path)) }
                     }
-                    if (ImGui.menuItem("Preview on Deck PV")) {
-                        session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckPV = true)
-                    }
-                    ImGui.separator()
-                    if (ImGui.menuItem("Add to A/B Queue")) {
-                        session.playQueueManager.appendToQueue(File(asset.path))
-                    }
-                    if (ImGui.menuItem("Add to Background Queue")) {
-                        llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(File(asset.path))
+                    val bgLabel = if (count > 1) "Add $count Presets to Background Queue" else "Add to Background Queue"
+                    if (ImGui.menuItem(bgLabel)) {
+                        targets.forEach { llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(File(it.path)) }
                     }
                     val activePl = LibraryPanel.activePlaylistData
                     if (activePl != null) {
-                        if (ImGui.menuItem("Add to '${activePl.name}'")) {
-                            PlaylistManager.insertPreset(activePl, asset.path, activePl.presets.size)
+                        val plLabel = if (count > 1) "Add $count Presets to '${activePl.name}'" else "Add to '${activePl.name}'"
+                        if (ImGui.menuItem(plLabel)) {
+                            targets.forEach { PlaylistManager.insertPreset(activePl, it.path, activePl.presets.size) }
                         }
                     }
                     ImGui.separator()
-                    if (asset.type == AssetType.PRESET) {
-                        if (ImGui.menuItem("Rename / Edit Tags...")) {
-                            BrowserPopupHandler.openRenamePresetModal(asset)
-                        }
-                        if (ImGui.menuItem("Duplicate Preset...")) {
-                            BrowserPopupHandler.openDuplicatePresetModal(asset)
-                        }
-                    } else {
-                        if (ImGui.menuItem("Rename")) {
-                            BrowserPopupHandler.renameTarget = asset
-                            BrowserPopupHandler.renameBuffer.set(asset.name)
-                            BrowserPopupHandler.pendingOpenRenamePopup = true
-                        }
-                        if (ImGui.menuItem("Clone")) {
-                            FileSystemManager.cloneFile(asset.path).onSuccess {
-                                LibraryPanel.refreshAssets()
+                    if (count == 1) {
+                        if (asset.type == AssetType.PRESET) {
+                            if (ImGui.menuItem("Rename / Edit Tags...")) {
+                                BrowserPopupHandler.openRenamePresetModal(asset)
+                            }
+                            if (ImGui.menuItem("Duplicate Preset...")) {
+                                BrowserPopupHandler.openDuplicatePresetModal(asset)
+                            }
+                        } else {
+                            if (ImGui.menuItem("Rename")) {
+                                BrowserPopupHandler.renameTarget = asset
+                                BrowserPopupHandler.renameBuffer.set(asset.name)
+                                BrowserPopupHandler.pendingOpenRenamePopup = true
+                            }
+                            if (ImGui.menuItem("Clone")) {
+                                FileSystemManager.cloneFile(asset.path).onSuccess {
+                                    LibraryPanel.refreshAssets()
+                                }
                             }
                         }
                     }
-                    if (ImGui.menuItem("Delete")) {
-                        BrowserPopupHandler.deleteTarget = asset
-                        BrowserPopupHandler.pendingOpenDeletePopup = true
+                    val delLabel = if (count > 1) "Delete $count Presets..." else "Delete"
+                    if (ImGui.menuItem(delLabel)) {
+                        BrowserPopupHandler.openDeleteConfirmation(targets)
                     }
                 }
                 popOpenDropdownFont()
@@ -383,14 +428,13 @@ object PresetListPanel {
         }
         ImGui.endChild()
 
-        // Keyboard shortcuts (Delete / Backspace deletes selected asset with confirmation)
+        // Keyboard shortcuts (Delete / Backspace deletes selected asset(s) with confirmation)
         val io = ImGui.getIO()
-        val selected = selectedAsset
-        if (selected != null && selected.type != AssetType.SOURCE_STOCK && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+        val targetsToDelete = selection.getSelectedInOrder(filteredPresets).filter { it.type != AssetType.SOURCE_STOCK }
+        if (targetsToDelete.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
             if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
                 ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
-                BrowserPopupHandler.deleteTarget = selected
-                BrowserPopupHandler.pendingOpenDeletePopup = true
+                BrowserPopupHandler.openDeleteConfirmation(targetsToDelete)
             }
         }
     }

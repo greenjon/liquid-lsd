@@ -27,7 +27,16 @@ import java.io.File
 
 object PlaylistEditorPanel {
     private val logger = KotlinLogging.logger {}
-    var selectedPresetIndex: Int = -1
+    val selection = MultiSelectionModel<Int>()
+    var selectedPresetIndex: Int
+        get() = selection.leadItem ?: -1
+        set(value) {
+            if (value >= 0) selection.setSingle(value) else selection.clear()
+        }
+
+    fun clearSelection() {
+        selection.clear()
+    }
 
     fun getSelectedPresetFile(): File? {
         val playlist = LibraryPanel.activePlaylistData ?: return null
@@ -206,7 +215,7 @@ object PlaylistEditorPanel {
     private fun drawPlaylistContent(session: SessionContext, mixer: Mixer, playlist: PlaylistManager.Playlist) {
         var moveFrom = -1
         var moveTo = -1
-        var removePresetIndex = -1
+        var removeIndices: List<Int> = emptyList()
 
         var insertSlot = -1
         var insertLineY = -1f
@@ -225,7 +234,7 @@ object PlaylistEditorPanel {
             val exists = resolvedFile.exists()
             val displayName = resolvedFile.nameWithoutExtension.ifBlank { presetPath }
             val label = "${index + 1}. ${if (exists) "" else "[!] "}$displayName${if (!exists) " (missing)" else ""}"
-            val isSelected = index == selectedPresetIndex
+            val isSelected = selection.isSelected(index)
 
             ImGui.pushID(index)
 
@@ -252,18 +261,34 @@ object PlaylistEditorPanel {
                     itemClicked = true
                 }
             }
+            val io = ImGui.getIO()
             if (itemClicked) {
-                LibraryPanel.selectPlaylistPreset(index, session, mixer)
+                val isCtrl = io.keyCtrl || io.keySuper
+                val isShift = io.keyShift
+                selection.handleClick(index, (0 until playlist.presets.size).toList(), isCtrl, isShift)
+                LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PLAYLIST
+                PresetListPanel.selection.clear()
+                QueueActionsPanel.clearSelection()
+                llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
+                if (exists) {
+                    LibraryPanel.auditionIfLocked(resolvedFile, session, mixer)
+                }
             }
             val isRowHovered = ImGui.isItemHovered()
             if (ImGui.isItemClicked(1)) {
+                if (!selection.isSelected(index)) {
+                    selection.setSingle(index)
+                    LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PLAYLIST
+                    PresetListPanel.selection.clear()
+                    QueueActionsPanel.clearSelection()
+                    llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
+                }
                 ImGui.openPopup(popupId)
             }
 
-            val io = ImGui.getIO()
             val isWindowFocused = ImGui.isWindowFocused(ImGuiFocusedFlags.ChildWindows)
             val canAutoSelect = isWindowFocused && LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.PLAYLIST
-            if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
+            if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput && !io.keyCtrl && !io.keyShift && !io.keySuper) {
                 LibraryPanel.selectPlaylistPreset(index, session, mixer)
             }
 
@@ -305,14 +330,19 @@ object PlaylistEditorPanel {
                     moveTo = rawTo.coerceIn(0, playlist.presets.size - 1)
                 }
 
-                // Accept preset dropped from presets library
+                // Accept preset(s) dropped from presets library
                 val assetPayload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                 if (assetPayload != null) {
-                    val assetFile = File(assetPayload)
-                    if (assetFile.extension == "lsdplay") {
-                        PlaylistManager.unpackPlaylistInto(playlist, assetPayload, effectiveSlot)
-                    } else {
-                        PlaylistManager.insertPreset(playlist, assetPayload, effectiveSlot)
+                    val paths = assetPayload.lines().map { it.trim() }.filter { it.isNotBlank() }
+                    var currentSlot = effectiveSlot
+                    for (path in paths) {
+                        val assetFile = File(path)
+                        if (assetFile.extension == "lsdplay") {
+                            PlaylistManager.unpackPlaylistInto(playlist, path, currentSlot)
+                        } else {
+                            PlaylistManager.insertPreset(playlist, path, currentSlot)
+                            currentSlot++
+                        }
                     }
                 }
 
@@ -327,7 +357,16 @@ object PlaylistEditorPanel {
             pushOpenDropdownPadding()
             if (ImGui.beginPopup(popupId)) {
                 pushOpenDropdownFont()
-                if (exists) {
+                val inOrder = selection.selectedItems.filter { it in playlist.presets.indices }.sorted()
+                val targetIndices = if (inOrder.contains(index)) inOrder else listOf(index)
+                val count = targetIndices.size
+
+                if (count > 1) {
+                    ImGui.textDisabled("$count Presets Selected")
+                    ImGui.separator()
+                }
+
+                if (count == 1 && exists) {
                     if (ImGui.menuItem("Load to Deck A")) {
                         session.presetRepository.loadDeckPresetAsync(resolvedFile, isDeckA = true)
                     }
@@ -341,24 +380,33 @@ object PlaylistEditorPanel {
                         session.presetRepository.loadDeckPresetAsync(resolvedFile, isDeckPV = true)
                     }
                     ImGui.separator()
-                    if (ImGui.menuItem("Add to A/B Queue")) {
-                        session.playQueueManager.appendToQueue(resolvedFile)
-                    }
-                    if (ImGui.menuItem("Add to Background Queue")) {
-                        BgQueueManager.appendToQueue(resolvedFile)
-                    }
-                    ImGui.separator()
                 }
-                if (ImGui.menuItem("Remove from playlist")) {
-                    removePresetIndex = index
+                val qLabel = if (count > 1) "Add $count Presets to A/B Queue" else "Add to A/B Queue"
+                if (ImGui.menuItem(qLabel)) {
+                    targetIndices.forEach { idx ->
+                        val f = PlaylistManager.resolvePreset(playlist.presets[idx])
+                        if (f.exists()) session.playQueueManager.appendToQueue(f)
+                    }
                 }
-                if (ImGui.menuItem("Delete preset from library...")) {
-                    BrowserPopupHandler.deleteTarget = AssetItem(
-                        path = resolvedFile.absolutePath,
-                        name = displayName,
-                        type = AssetType.PRESET
-                    )
-                    BrowserPopupHandler.pendingOpenDeletePopup = true
+                val bgqLabel = if (count > 1) "Add $count Presets to Background Queue" else "Add to Background Queue"
+                if (ImGui.menuItem(bgqLabel)) {
+                    targetIndices.forEach { idx ->
+                        val f = PlaylistManager.resolvePreset(playlist.presets[idx])
+                        if (f.exists()) BgQueueManager.appendToQueue(f)
+                    }
+                }
+                ImGui.separator()
+                val remLabel = if (count > 1) "Remove $count presets from playlist" else "Remove from playlist"
+                if (ImGui.menuItem(remLabel)) {
+                    removeIndices = targetIndices
+                }
+                val delLabel = if (count > 1) "Delete $count presets from library..." else "Delete preset from library..."
+                if (ImGui.menuItem(delLabel)) {
+                    val targets = targetIndices.mapNotNull { idx ->
+                        val f = PlaylistManager.resolvePreset(playlist.presets[idx])
+                        if (f.exists()) AssetItem(path = f.absolutePath, name = f.nameWithoutExtension.ifBlank { playlist.presets[idx] }, type = AssetType.PRESET) else null
+                    }
+                    BrowserPopupHandler.openDeleteConfirmation(targets)
                 }
                 popOpenDropdownFont()
                 ImGui.endPopup()
@@ -368,12 +416,13 @@ object PlaylistEditorPanel {
             ImGui.popID()
         }
 
-        // Keyboard shortcuts (Delete / Backspace removes selected preset from active playlist)
+        // Keyboard shortcuts (Delete / Backspace removes selected presets from active playlist)
         val io = ImGui.getIO()
-        if (selectedPresetIndex in playlist.presets.indices && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+        val inOrder = selection.selectedItems.filter { it in playlist.presets.indices }.sorted()
+        if (inOrder.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
             if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
                 ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
-                removePresetIndex = selectedPresetIndex
+                removeIndices = inOrder
             }
         }
 
@@ -393,11 +442,14 @@ object PlaylistEditorPanel {
         if (ImGui.beginDragDropTarget()) {
             val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
             if (payload != null) {
-                val assetFile = File(payload)
-                if (assetFile.extension == "lsdplay") {
-                    PlaylistManager.unpackPlaylistInto(playlist, payload, playlist.presets.size)
-                } else {
-                    PlaylistManager.insertPreset(playlist, payload, playlist.presets.size)
+                val paths = payload.lines().map { it.trim() }.filter { it.isNotBlank() }
+                for (path in paths) {
+                    val assetFile = File(path)
+                    if (assetFile.extension == "lsdplay") {
+                        PlaylistManager.unpackPlaylistInto(playlist, path, playlist.presets.size)
+                    } else {
+                        PlaylistManager.insertPreset(playlist, path, playlist.presets.size)
+                    }
                 }
             }
             ImGui.endDragDropTarget()
@@ -409,12 +461,11 @@ object PlaylistEditorPanel {
             if (selectedPresetIndex == moveFrom) selectedPresetIndex = moveTo
         }
 
-        if (removePresetIndex != -1) {
-            PlaylistManager.removePreset(playlist, removePresetIndex)
-            val newSize = playlist.presets.size
-            if (selectedPresetIndex >= newSize) {
-                selectedPresetIndex = newSize - 1
+        if (removeIndices.isNotEmpty()) {
+            removeIndices.sortedDescending().forEach { idx ->
+                PlaylistManager.removePreset(playlist, idx)
             }
+            selection.clear()
         }
     }
 }

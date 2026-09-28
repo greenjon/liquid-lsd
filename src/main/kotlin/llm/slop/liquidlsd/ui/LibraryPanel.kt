@@ -177,14 +177,14 @@ object LibraryPanel {
 
     fun clearAllSelection() {
         activeSelectionSource = null
-        PresetListPanel.selectedAsset = null
+        PresetListPanel.selection.clear()
         FXBrowserPanel.selectedAsset = null
         TransitionBrowserPanel.selectedAsset = null
         TransitionPlaylistEditorPanel.selectedItemIndex = -1
         TransitionQueuePanel.selectedIndex = -1
-        PlaylistEditorPanel.selectedPresetIndex = -1
-        QueueActionsPanel.selectedIndex = -1
-        llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
+        PlaylistEditorPanel.clearSelection()
+        QueueActionsPanel.clearSelection()
+        llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
         FXPlaylistEditorPanel.selectedItemIndex = -1
         FXQueueActionsPanel.selectedIndex = -1
         FXBgQueueActionsPanel.selectedIndex = -1
@@ -470,13 +470,23 @@ object LibraryPanel {
                 val isNavDown = !io.keyCtrl && !io.keyAlt && !io.keySuper && !io.keyShift && ImGui.isKeyPressed(ImGuiKey.DownArrow, false)
 
                 val isFxMode = viewMode == LibraryViewMode.FX
-                if (isQueueBG && activeFile != null && activeFile.exists()) {
-                    if (isFxMode) llm.slop.liquidlsd.presets.FXBgQueueManager.appendToQueue(activeFile)
-                    else llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(activeFile)
+                val targetFiles = if (activeSelectionSource == SelectionSource.PRESETS && viewMode == LibraryViewMode.PRESETS) {
+                    PresetListPanel.selection.getSelectedInOrder(PresetListPanel.filteredPresets)
+                        .filter { it.type != AssetType.SOURCE_STOCK }
+                        .map { File(it.path) }
+                } else if (activeFile != null && activeFile.exists()) {
+                    listOf(activeFile)
+                } else {
+                    emptyList()
+                }
+
+                if (isQueueBG && targetFiles.isNotEmpty()) {
+                    if (isFxMode) targetFiles.forEach { llm.slop.liquidlsd.presets.FXBgQueueManager.appendToQueue(it) }
+                    else targetFiles.forEach { llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(it) }
                     shouldReclaimFocus = true
-                } else if (isQueueAB && activeFile != null && activeFile.exists()) {
-                    if (isFxMode) llm.slop.liquidlsd.presets.FXQueueManager.appendToQueue(activeFile)
-                    else session.playQueueManager.appendToQueue(activeFile)
+                } else if (isQueueAB && targetFiles.isNotEmpty()) {
+                    if (isFxMode) targetFiles.forEach { llm.slop.liquidlsd.presets.FXQueueManager.appendToQueue(it) }
+                    else targetFiles.forEach { session.playQueueManager.appendToQueue(it) }
                     shouldReclaimFocus = true
                 } else if (isNavUp) {
                     navigateSelection(-1, session, mixer)
