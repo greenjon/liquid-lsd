@@ -94,4 +94,16 @@ class ParametersClipboardTest {
         assertEquals("midi_cc_16", destParam.modulators[0].sourceId)
         assertEquals(0.6f, destParam.modulators[0].depth)
     }
+
+    @Test
+    fun testFxSlotAndChainClipboardCopyPaste() {
+        val dryWetDto = ModulatableParameter(baseValue = 0.75f).toDto()
+        val slotDto = llm.slop.liquidlsd.models.FXSlotDto(filterId = "invert", dryWet = dryWetDto)
+        ClipboardManager.copyFxSlot(slotDto)
+        assertEquals(slotDto, ClipboardManager.fxSlotClipboard)
+
+        val chainDto = llm.slop.liquidlsd.models.FXChainDto(name = "Test Chain", slots = listOf(slotDto, null, null))
+        ClipboardManager.copyFxChain(chainDto)
+        assertEquals(chainDto, ClipboardManager.fxChainClipboard)
+    }
 }
