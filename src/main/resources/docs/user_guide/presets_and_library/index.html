@@ -1881,7 +1881,6 @@
 <ul>
 <li><strong>Search</strong> — Type to filter by name, tag, or (for stock sources) category. <code>Ctrl+F</code> or <code>/</code> jumps focus to the search box from anywhere in the app.</li>
 <li><strong>Double-click</strong> — Loads the item into whichever deck is currently inactive on the crossfader. For a stock source this replaces only the deck's visual source, leaving its FX chain untouched; for a saved preset it loads the full deck state.</li>
-<li><strong>Number keys 1–4</strong> — Route the selected saved preset to Deck A, B, BG, or PV respectively (stock sources aren't reachable via these shortcuts or the shared toolbar's deck buttons — use double-click or the row's right-click menu).</li>
 <li><strong>Right-click or ⋮ (saved presets)</strong> — Rename, retag, duplicate, load to a specific deck, add to a queue or playlist, or delete.</li>
 <li><strong>Right-click or ⋮ (stock sources)</strong> — <strong>Load to Deck A/B/BG/PV</strong> only. Stock sources have no persisted parameter state, and their bundled defaults and Metaknob auto-bindings haven't all been individually audited yet, so they're intentionally left out of playlists and the live/background queues — an unattended queue firing an unverified default has no performer there to catch it. Loading straight to a deck is fine, since you're present to dial it in.</li>
 <li><strong>Drag-and-drop</strong> — Drag any row onto a deck's monitor in the Mixer panel or onto its row in the Performance Matrix to load it (source-only for stock rows, full preset for saved rows). Saved presets can also be dragged into the Playlists Editor (Column 2) or a queue; stock sources can't, for the same reason the context menu omits those options.</li>
@@ -1982,7 +1981,7 @@
 </ul>
 <p>The <strong>A/B queue</strong> applies to whichever of Deck A/B is currently dominant on the crossfader; the <strong>BG queue</strong> always applies to Deck BG.</p>
 <h3 id="audition-latch">Audition Latch</h3>
-<p>Click <strong><code>[ Lock ]</code></strong> in the toolbar to enable audition mode. While latched, clicking any preset (or pressing <code>↑</code> / <code>↓</code>) immediately loads it into the preview deck (Deck PV) so you can see it without touching the live output. Click <code>A</code>, <code>B</code>, or <code>BG</code> while latched to target a different deck. Click the lock again to return to normal selection.</p>
+<p>Click <strong><code>[ Lock ]</code></strong> in the toolbar to enable audition mode. While latched, clicking any preset (or pressing <code>↑</code> / <code>↓</code>) immediately loads it into the preview deck (Deck PV) so you can see it without touching the live output. Click the lock again to return to normal selection.</p>
 <hr />
 <h2 id="playlists-setlists">Playlists (Setlists)</h2>
 <p>The playlist column is where you build your setlist. Playlists are <code>.lsdplay</code> files — simple ordered lists of presets.</p>

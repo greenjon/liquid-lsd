@@ -77,7 +77,6 @@ Use the **`[⋮]`** filter menu above the list to show/hide each tier (**Stock S
 
 - **Search** — Type to filter by name, tag, or (for stock sources) category. `Ctrl+F` or `/` jumps focus to the search box from anywhere in the app.
 - **Double-click** — Loads the item into whichever deck is currently inactive on the crossfader. For a stock source this replaces only the deck's visual source, leaving its FX chain untouched; for a saved preset it loads the full deck state.
-- **Number keys 1–4** — Route the selected saved preset to Deck A, B, BG, or PV respectively (stock sources aren't reachable via these shortcuts or the shared toolbar's deck buttons — use double-click or the row's right-click menu).
 - **Right-click or ⋮ (saved presets)** — Rename, retag, duplicate, load to a specific deck, add to a queue or playlist, or delete.
 - **Right-click or ⋮ (stock sources)** — **Load to Deck A/B/BG/PV** only. Stock sources have no persisted parameter state, and their bundled defaults and Metaknob auto-bindings haven't all been individually audited yet, so they're intentionally left out of playlists and the live/background queues — an unattended queue firing an unverified default has no performer there to catch it. Loading straight to a deck is fine, since you're present to dial it in.
 - **Drag-and-drop** — Drag any row onto a deck's monitor in the Mixer panel or onto its row in the Performance Matrix to load it (source-only for stock rows, full preset for saved rows). Saved presets can also be dragged into the Playlists Editor (Column 2) or a queue; stock sources can't, for the same reason the context menu omits those options.
@@ -173,7 +172,7 @@ The **A/B queue** applies to whichever of Deck A/B is currently dominant on the 
 
 ### Audition Latch
 
-Click **`[ Lock ]`** in the toolbar to enable audition mode. While latched, clicking any preset (or pressing `↑` / `↓`) immediately loads it into the preview deck (Deck PV) so you can see it without touching the live output. Click `A`, `B`, or `BG` while latched to target a different deck. Click the lock again to return to normal selection.
+Click **`[ Lock ]`** in the toolbar to enable audition mode. While latched, clicking any preset (or pressing `↑` / `↓`) immediately loads it into the preview deck (Deck PV) so you can see it without touching the live output. Click the lock again to return to normal selection.
 
 ---
 

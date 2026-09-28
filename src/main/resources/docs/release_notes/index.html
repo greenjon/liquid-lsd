@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#library-toolbars-deck-load-buttons-removed-browseractiontoolbarkt-librarypanelkt-shortcutmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library Toolbar's Deck-Load Buttons Removed (BrowserActionToolbar.kt, LibraryPanel.kt, ShortcutManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#crossfader-relocated-to-transitions-row-in-performance-matrix-performancetransitionscontrolskt-performancemastercontrolskt-performancematrixpanelkt-architecturemd-decisionsmd-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crossfader Relocated to Transitions Row in Performance Matrix (PerformanceTransitionsControls.kt, PerformanceMasterControls.kt, PerformanceMatrixPanel.kt, ARCHITECTURE.md, DECISIONS.md, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#streamline-title-bar-menu-bar-menubarkt-docsdeveloperuimd-docsdeveloperbeat_syncmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4415,6 +4437,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#library-toolbars-deck-load-buttons-removed-browseractiontoolbarkt-librarypanelkt-shortcutmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library Toolbar's Deck-Load Buttons Removed (BrowserActionToolbar.kt, LibraryPanel.kt, ShortcutManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#crossfader-relocated-to-transitions-row-in-performance-matrix-performancetransitionscontrolskt-performancemastercontrolskt-performancematrixpanelkt-architecturemd-decisionsmd-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Crossfader Relocated to Transitions Row in Performance Matrix (PerformanceTransitionsControls.kt, PerformanceMasterControls.kt, PerformanceMatrixPanel.kt, ARCHITECTURE.md, DECISIONS.md, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#streamline-title-bar-menu-bar-menubarkt-docsdeveloperuimd-docsdeveloperbeat_syncmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7597,6 +7641,22 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="library-toolbars-deck-load-buttons-removed-browseractiontoolbarkt-librarypanelkt-shortcutmanagerkt">Library Toolbar's Deck-Load Buttons Removed (<code>BrowserActionToolbar.kt</code>, <code>LibraryPanel.kt</code>, <code>ShortcutManager.kt</code>)</h3>
+<ul>
+<li>Removed the <code>[A]</code>/<code>[B]</code>/<code>[BG]</code>/<code>[PV]</code> deck-load buttons and their <code>1</code>/<code>2</code>/<code>3</code>/<code>4</code> shortcuts from the Library's menu-bar action toolbar — the inline <strong>Browse</strong> panel on each Performance row now covers picking a generator, FX single, or FX chain straight onto a deck, making the toolbar's duplicate path redundant. The <code>[Q]</code>/<code>[BGQ]</code> queue buttons and their <code>Q</code>/<code>Shift+Q</code> shortcuts stay, since queuing to the AutoVJ Play/Background queues has no equivalent in Browse.</li>
+<li><strong>Quick Audition Latch simplified</strong>: The padlock button no longer lets you cycle its target across Deck A/B/BG via the removed buttons — it always previews to Deck PV, which was already its default target.</li>
+</ul>
+<h3 id="crossfader-relocated-to-transitions-row-in-performance-matrix-performancetransitionscontrolskt-performancemastercontrolskt-performancematrixpanelkt-architecturemd-decisionsmd-docsdeveloperuimd">Crossfader Relocated to Transitions Row in Performance Matrix (<code>PerformanceTransitionsControls.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>ARCHITECTURE.md</code>, <code>DECISIONS.md</code>, <code>docs/developer/ui.md</code>)</h3>
+<ul>
+<li><strong>Semantic Alignment</strong>: The A/B crossfader directly drives transition interpolation between Deck A and Deck B. Relocated the crossfader from the Master row to the Transitions row in the Performance Matrix (<code>MASTER</code> tab), grouping transition selection, queuing, and crossfade execution together.</li>
+<li><strong>Two-Line Transitions Row Layout</strong>:</li>
+<li><strong>Line 1 (Selection &amp; Stepping)</strong>: Transition picker badge (<code>[ ⚙ &lt;Name&gt; * ]</code> opening inline Browse), Transition Queue stepping (<code>&lt; [N/Total] &gt;</code>), and randomize transition button (<code>[🎲]</code>).</li>
+<li><strong>Line 2 (Crossfader Strip)</strong>: <code>[A]</code> snap badge, bipolar slider track with drag-and-drop asset support, center snap reset (<code>[||]</code>), live amber modulation dot, <code>[B]</code> snap badge, auto-crossfade trigger (<code>[AUTO]</code> / <code>[FADING]</code>), and fade speed button (<code>[N.Ns]</code>).</li>
+<li><strong>Streamlined Master Row</strong>:</li>
+<li>Freed from the crossfader, the Master row cleanly aligns <code>[MIX]</code> and <code>[FX]</code> mode pills with Deck rows.</li>
+<li>In <code>[MIX]</code> mode, Line 1 features the <code>Deck Alphas &amp; Master</code> badge (opens deep edit parameters on click, right-click opens reset context menu) and a quick <code>[100%]</code> reset button (<code>levelA</code>, <code>levelB</code>, <code>levelBG</code>, and <code>masterLevel</code> restored to 1.0).</li>
+<li>In <code>[FX]</code> mode, Line 2 houses the Master FX chain header and preset loader, with chain bypass on the right wing.</li>
+</ul>
 <h3 id="streamline-title-bar-menu-bar-menubarkt-docsdeveloperuimd-docsdeveloperbeat_syncmd">Streamline Title Bar &amp; Menu Bar (<code>MenuBar.kt</code>, <code>docs/developer/ui.md</code>, <code>docs/developer/beat_sync.md</code>)</h3>
 <ul>
 <li><strong>Removed Redundant Clock Menu</strong>: Eliminated the dynamic <code>Clock: &lt;Source&gt;</code> dropdown menu from the top menu bar. Timing and clock source selection (<code>MAN</code> vs <code>AUDIO</code>) are accessible with a single click on the Performance MASTER tab's Clock row, and in depth via <code>Preferences &gt; Tempo &amp; Sync</code> (<code>Ctrl+P</code>).</li>

@@ -44,10 +44,6 @@ object ShortcutManager {
         register(ShortcutAction("properties.step_value", ShortcutCategory.PROPERTIES, "Step Numeric Value (Focused Input)", "Increments/decrements focused number box (\u00B10.001 fine, Shift \u00B10.01, Ctrl+Shift \u00B10.1).", KeyCombination(GLFW_KEY_UP), allowConflict = true))
 
         // 4. Library & Asset Browser
-        register(ShortcutAction("library.load_deck_a", ShortcutCategory.LIBRARY, "Load to Deck A", "Loads selected preset into Deck A.", KeyCombination(GLFW_KEY_1)))
-        register(ShortcutAction("library.load_deck_b", ShortcutCategory.LIBRARY, "Load to Deck B", "Loads selected preset into Deck B.", KeyCombination(GLFW_KEY_2)))
-        register(ShortcutAction("library.load_deck_bg", ShortcutCategory.LIBRARY, "Load to Deck BG", "Loads selected preset into Background Deck (BG).", KeyCombination(GLFW_KEY_3)))
-        register(ShortcutAction("library.load_deck_pv", ShortcutCategory.LIBRARY, "Preview on Deck PV", "Loads selected preset into Preview Deck (PV).", KeyCombination(GLFW_KEY_4)))
         register(ShortcutAction("library.queue_ab", ShortcutCategory.LIBRARY, "Add to A/B Queue", "Appends selected preset to the A/B Play Queue.", KeyCombination(GLFW_KEY_Q)))
         register(ShortcutAction("library.queue_bg", ShortcutCategory.LIBRARY, "Add to Background Queue", "Appends selected preset to the Background Queue (BG).", KeyCombination(GLFW_KEY_Q, GLFW_MOD_SHIFT)))
         register(ShortcutAction("library.navigate", ShortcutCategory.LIBRARY, "Navigate List Items", "Moves focus selection across presets, playlists, and queue items.", KeyCombination(GLFW_KEY_UP), allowConflict = true))

@@ -15,26 +15,18 @@ import llm.slop.liquidlsd.ui.pushOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import java.io.File
 
-enum class DeckAuditionTarget(val label: String, val deckIndex: Int) {
-    DECK_A("Deck A", 1),
-    DECK_B("Deck B", 2),
-    DECK_BG("Deck BG", 3),
-    DECK_PV("Deck PV", 4)
-}
-
 object BrowserActionToolbar {
     fun calculateButtonWidth(btnHeight: Float): Float = kotlin.math.round(btnHeight * 1.5f)
 
     fun calculateToolbarWidth(btnHeight: Float): Float {
         val btnW = calculateButtonWidth(btnHeight)
-        return (7 * btnW) + (5 * 6f) + (1 * 14f)
+        return (3 * btnW) + (1 * 6f) + (1 * 14f)
     }
 
     const val BTN_WIDTH: Float = 36f
-    const val TOOLBAR_WIDTH: Float = (7 * BTN_WIDTH) + (5 * 6f) + (1 * 14f)
+    const val TOOLBAR_WIDTH: Float = (3 * BTN_WIDTH) + (1 * 6f) + (1 * 14f)
 
     var isAuditionLocked: Boolean = false
-    var latchedDeckTarget: DeckAuditionTarget? = null
 
     private var pendingOverwriteDeck: Deck? = null
     private var pendingOverwriteDeckLabel: String = ""
@@ -42,8 +34,7 @@ object BrowserActionToolbar {
 
     /** Extension-aware deck load: FX singles/chains resolve via [llm.slop.liquidlsd.presets.FxOps]
      *  (first vacant slot, or an overwrite prompt when full); everything else loads as a full preset.
-     *  Shared by the toolbar `[A][B][BG][PV]` buttons and LibraryPanel's numeric-key shortcuts so both
-     *  paths apply FX items the same way regardless of Library view mode. */
+     *  Used by the Quick Audition Latch to preview selections on Deck PV. */
     fun handleDeckLoad(session: SessionContext, mixer: Mixer, deckIndex: Int, deck: Deck, deckLabel: String, selectedFile: File) {
         val ext = selectedFile.extension.lowercase()
         when (ext) {
@@ -83,113 +74,28 @@ object BrowserActionToolbar {
         val isFxItem = ext == "lsdfx" || ext == "lsdfxchain"
 
         session.uiTheme.withFont(llm.slop.liquidlsd.ui.UITheme.FontLevel.BODY) {
-            // 0. [ LOCK / PADLOCK ]
+            // 0. [ LOCK / PADLOCK ] — Quick Audition Latch: auto-preview selections on Deck PV
             val lockColor = BrowserDeckButtons.colorLock()
             BrowserDeckButtons.push(lockColor, alpha = 1f, isLatched = isAuditionLocked)
             val lockIcon = if (isAuditionLocked) Icons.LOCK else Icons.UNLOCK
             if (ImGui.button("$lockIcon##toolbar_lock", btnW, btnH)) {
                 isAuditionLocked = !isAuditionLocked
-                if (isAuditionLocked) {
-                    latchedDeckTarget = DeckAuditionTarget.DECK_PV
-                    if (selectedFile != null) {
-                        handleDeckLoad(session, mixer, 4, mixer.deckPV, "Deck PV", selectedFile)
-                    }
-                } else {
-                    latchedDeckTarget = null
-                }
-                LibraryPanel.shouldReclaimFocus = true
-            }
-            val tooltip = if (isAuditionLocked) {
-                "Quick Audition Latch: ON (Target: ${latchedDeckTarget?.label ?: "None"}).\nClick presets or use Up/Down arrows to auto-load."
-            } else {
-                "Quick Audition Latch: OFF.\nClick to arm audition mode (defaults to Deck PV)."
-            }
-            itemTooltip(tooltip)
-            BrowserDeckButtons.pop()
-
-            ImGui.sameLine(0f, 6f)
-
-            // 1. [ A ]
-            val isLatchedA = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_A
-            val alphaA = if (isLatchedA || hasSelection) 1f else 0.35f
-            BrowserDeckButtons.push(BrowserDeckButtons.colorA(), alphaA, isLatched = isLatchedA)
-            if (ImGui.button("A##toolbar_deck_a", btnW, btnH)) {
-                if (isAuditionLocked) {
-                    latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_A) null else DeckAuditionTarget.DECK_A
-                    if (latchedDeckTarget == DeckAuditionTarget.DECK_A && selectedFile != null) {
-                        handleDeckLoad(session, mixer, 1, mixer.deckA, "Deck A", selectedFile)
-                    }
-                } else if (selectedFile != null) {
-                    handleDeckLoad(session, mixer, 1, mixer.deckA, "Deck A", selectedFile)
-                }
-                LibraryPanel.shouldReclaimFocus = true
-            }
-            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck A." else "Load selected item to Deck A (Hotkey: 1).")
-            BrowserDeckButtons.pop()
-
-            ImGui.sameLine(0f, 6f)
-
-            // 2. [ B ]
-            val isLatchedB = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_B
-            val alphaB = if (isLatchedB || hasSelection) 1f else 0.35f
-            BrowserDeckButtons.push(BrowserDeckButtons.colorB(), alphaB, isLatched = isLatchedB)
-            if (ImGui.button("B##toolbar_deck_b", btnW, btnH)) {
-                if (isAuditionLocked) {
-                    latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_B) null else DeckAuditionTarget.DECK_B
-                    if (latchedDeckTarget == DeckAuditionTarget.DECK_B && selectedFile != null) {
-                        handleDeckLoad(session, mixer, 2, mixer.deckB, "Deck B", selectedFile)
-                    }
-                } else if (selectedFile != null) {
-                    handleDeckLoad(session, mixer, 2, mixer.deckB, "Deck B", selectedFile)
-                }
-                LibraryPanel.shouldReclaimFocus = true
-            }
-            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck B." else "Load selected item to Deck B (Hotkey: 2).")
-            BrowserDeckButtons.pop()
-
-            ImGui.sameLine(0f, 6f)
-
-            // 3. [ BG ]
-            val isLatchedBG = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_BG
-            val alphaBG = if (isLatchedBG || hasSelection) 1f else 0.35f
-            BrowserDeckButtons.push(BrowserDeckButtons.colorBG(), alphaBG, isLatched = isLatchedBG)
-            if (ImGui.button("BG##toolbar_deck_bg", btnW, btnH)) {
-                if (isAuditionLocked) {
-                    latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_BG) null else DeckAuditionTarget.DECK_BG
-                    if (latchedDeckTarget == DeckAuditionTarget.DECK_BG && selectedFile != null) {
-                        handleDeckLoad(session, mixer, 3, mixer.deckBG, "Deck BG", selectedFile)
-                    }
-                } else if (selectedFile != null) {
-                    handleDeckLoad(session, mixer, 3, mixer.deckBG, "Deck BG", selectedFile)
-                }
-                LibraryPanel.shouldReclaimFocus = true
-            }
-            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck BG." else "Load selected item to Deck BG (Hotkey: 3).")
-            BrowserDeckButtons.pop()
-
-            ImGui.sameLine(0f, 6f)
-
-            // 4. [ PV ]
-            val isLatchedPV = isAuditionLocked && latchedDeckTarget == DeckAuditionTarget.DECK_PV
-            val alphaPV = if (isLatchedPV || hasSelection) 1f else 0.35f
-            BrowserDeckButtons.push(BrowserDeckButtons.colorPV(), alphaPV, isLatched = isLatchedPV)
-            if (ImGui.button("PV##toolbar_deck_pv", btnW, btnH)) {
-                if (isAuditionLocked) {
-                    latchedDeckTarget = if (latchedDeckTarget == DeckAuditionTarget.DECK_PV) null else DeckAuditionTarget.DECK_PV
-                    if (latchedDeckTarget == DeckAuditionTarget.DECK_PV && selectedFile != null) {
-                        handleDeckLoad(session, mixer, 4, mixer.deckPV, "Deck PV", selectedFile)
-                    }
-                } else if (selectedFile != null) {
+                if (isAuditionLocked && selectedFile != null) {
                     handleDeckLoad(session, mixer, 4, mixer.deckPV, "Deck PV", selectedFile)
                 }
                 LibraryPanel.shouldReclaimFocus = true
             }
-            itemTooltip(if (isAuditionLocked) "Latch audition target to Deck PV." else "Preview selected item on Deck PV (Hotkey: 4).")
+            val tooltip = if (isAuditionLocked) {
+                "Quick Audition Latch: ON (Deck PV).\nClick presets or use Up/Down arrows to auto-load."
+            } else {
+                "Quick Audition Latch: OFF.\nClick to auto-preview selections on Deck PV."
+            }
+            itemTooltip(tooltip)
             BrowserDeckButtons.pop()
 
             ImGui.sameLine(0f, 14f)
 
-            // 5. [ Q ] (Disabled for FX items or when already in Play Queue A/B)
+            // 1. [ Q ] (Disabled for FX items or when already in Play Queue A/B)
             val canQueueAB = hasSelection && !isFxItem && source != LibraryPanel.SelectionSource.QUEUE_AB
             val alphaQ = if (canQueueAB) 1f else 0.35f
             BrowserDeckButtons.push(BrowserDeckButtons.colorQ(), alphaQ)
@@ -203,7 +109,7 @@ object BrowserActionToolbar {
 
             ImGui.sameLine(0f, 6f)
 
-            // 6. [ BGQ ] (Disabled for FX items or when already in BG Queue)
+            // 2. [ BGQ ] (Disabled for FX items or when already in BG Queue)
             val canQueueBG = hasSelection && !isFxItem && source != LibraryPanel.SelectionSource.QUEUE_BG
             val alphaBGQ = if (canQueueBG) 1f else 0.35f
             BrowserDeckButtons.push(BrowserDeckButtons.colorBGQ(), alphaBGQ)

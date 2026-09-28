@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Library Toolbar's Deck-Load Buttons Removed (`BrowserActionToolbar.kt`, `LibraryPanel.kt`, `ShortcutManager.kt`)
+- Removed the `[A]`/`[B]`/`[BG]`/`[PV]` deck-load buttons and their `1`/`2`/`3`/`4` shortcuts from the Library's menu-bar action toolbar — the inline **Browse** panel on each Performance row now covers picking a generator, FX single, or FX chain straight onto a deck, making the toolbar's duplicate path redundant. The `[Q]`/`[BGQ]` queue buttons and their `Q`/`Shift+Q` shortcuts stay, since queuing to the AutoVJ Play/Background queues has no equivalent in Browse.
+- **Quick Audition Latch simplified**: The padlock button no longer lets you cycle its target across Deck A/B/BG via the removed buttons — it always previews to Deck PV, which was already its default target.
+
 ### Crossfader Relocated to Transitions Row in Performance Matrix (`PerformanceTransitionsControls.kt`, `PerformanceMasterControls.kt`, `PerformanceMatrixPanel.kt`, `ARCHITECTURE.md`, `DECISIONS.md`, `docs/developer/ui.md`)
 - **Semantic Alignment**: The A/B crossfader directly drives transition interpolation between Deck A and Deck B. Relocated the crossfader from the Master row to the Transitions row in the Performance Matrix (`MASTER` tab), grouping transition selection, queuing, and crossfade execution together.
 - **Two-Line Transitions Row Layout**:
