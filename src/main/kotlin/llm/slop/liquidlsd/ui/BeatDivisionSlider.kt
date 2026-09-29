@@ -232,6 +232,11 @@ object BeatDivisionSlider {
                         )
                     }
                 }
+                val oscAddress = llm.slop.liquidlsd.osc.OscMappingManager.getAddressForParameter(targetPath)
+                if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, oscAddress != null)) {
+                    llm.slop.liquidlsd.osc.OscMappingManager.removeMapping(oscAddress!!)
+                    llm.slop.liquidlsd.osc.OscMappingManager.saveActiveProfile()
+                }
 
                 if (isMidiLearningThis) {
                     if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
@@ -248,6 +253,11 @@ object BeatDivisionSlider {
                             )
                         )
                     }
+                }
+                val hasMidiMap = session.midiMappingManager.hasMapping(targetPath)
+                if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping", null, false, hasMidiMap)) {
+                    session.midiMappingManager.removeMapping(targetPath)
+                    session.midiMappingManager.saveActiveProfile()
                 }
             }
             popOpenDropdownFont()
@@ -272,9 +282,7 @@ object BeatDivisionSlider {
             val borderCol = TangoPalette.u32(TangoPalette.SYNC.bright, pulseAlpha)
             dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 1.5f)
         } else if (isOscLearningThis) {
-            val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
-            val borderCol = TangoPalette.u32(TangoPalette.ALERT.normal, pulseAlpha)
-            dl.addRect(startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, borderCol, 3f, 0, 2.0f)
+            TangoPalette.drawOscLearnPulseBorder(dl, startX - 2f, row2Y - 2f, startX + labelW + 2f, row2Y + buttonSize + 2f, 3f, 2.0f)
         } else if (isMidiLearningThis) {
             val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
             val borderCol = TangoPalette.u32(TangoPalette.SYNC.normal, pulseAlpha)

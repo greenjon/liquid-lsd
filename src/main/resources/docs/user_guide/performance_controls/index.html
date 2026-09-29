@@ -2061,11 +2061,11 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <p>You can map OSC controls either in-situ from the UI or manually from Preferences:</p>
 <ol>
 <li><strong>In-Situ Right-Click Learn (Fastest)</strong>:</li>
-<li>Right-click any slider or variable label in the UI — including an LFO's <strong>Speed / Subdivision</strong>, <strong>Depth</strong>, <strong>Min/Max bounds</strong>, <strong>Asymmetry</strong>, or a parameter's <strong>Initial Range (Base Value)</strong>.</li>
-<li>Select <strong>Learn OSC (...)</strong> from the context menu. The slider will pulse in amber while awaiting input.</li>
-<li>Move a fader, knob, or XY pad on your TouchOSC surface. Liquid LSD immediately binds the control, preserves your configured min/max limits, and saves the mapping to the active profile.</li>
+<li>Right-click any slider or variable label in the UI — including an LFO's <strong>Speed / Subdivision</strong>, <strong>Depth</strong>, <strong>Min/Max bounds</strong>, <strong>Asymmetry</strong>, a parameter's <strong>Initial Range (Base Value)</strong>, the crossfader, fade speed, or a deck/transition queue's <code>&lt;</code>/<code>&gt;</code> buttons.</li>
+<li>Select <strong>Learn OSC (...)</strong> from the context menu. The control will pulse in amber while awaiting input.</li>
+<li>Move a fader, knob, or XY pad on your TouchOSC surface. Liquid LSD ignores the first packet from a new address (guarding against a controller's connect-time sync burst) and binds once a later packet actually moves the value, preserving your configured min/max limits and saving the mapping to the active profile.</li>
 <li>
-<p>Right-click again and select <strong>Cancel OSC Learn</strong> (or cancel from Preferences) if needed.</p>
+<p>Right-click again and select <strong>Cancel OSC Learn</strong> (or cancel from Preferences) if needed. Once bound, the same context menu offers <strong>Clear OSC Mapping</strong> to remove it without leaving the performance view.</p>
 </li>
 <li>
 <p><strong>Manual Learn from Preferences</strong>:</p>

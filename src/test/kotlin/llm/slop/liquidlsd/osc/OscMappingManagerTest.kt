@@ -15,6 +15,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class OscMappingManagerTest {
@@ -183,14 +184,38 @@ class OscMappingManagerTest {
         OscLearnState.startLearn("Test/param", minVal = 0f, maxVal = 1f)
         assertTrue(OscLearnState.isLearning())
 
+        // First packet only establishes the movement-threshold baseline; a lone packet (e.g. a
+        // controller's connect-time sync burst) must not bind by itself.
         OscMappingManager.onOscMessage(OscMessage("/1/rotary1", listOf(0.6f)), mixer)
+        assertTrue(OscLearnState.isLearning())
+        assertNull(OscMappingManager.getMappingForAddress("/1/rotary1"))
+
+        // A later packet that actually moves past the threshold completes the binding.
+        OscMappingManager.onOscMessage(OscMessage("/1/rotary1", listOf(0.7f)), mixer)
 
         assertFalse(OscLearnState.isLearning())
         val mapping = OscMappingManager.getMappingForAddress("/1/rotary1")
         assertNotNull(mapping)
         assertEquals("Test/param", mapping.parameterPath)
-        // Learn only creates the binding; it does not also apply this first message's value.
+        // Learn only creates the binding; it does not also apply this message's value.
         assertEquals(0f, param.baseValue, absoluteTolerance = 1e-4f)
+    }
+
+    @Test
+    fun testLearnModeIgnoresSingleStrayPacketBelowMovementThreshold() {
+        val param = ModulatableParameter(0f, minClamp = 0f, maxClamp = 1f)
+        val mixer = mockMixerWithParams("Test/param" to param)
+
+        OscLearnState.startLearn("Test/param", minVal = 0f, maxVal = 1f)
+
+        // A connect-time sync burst: same address, negligible movement -- must never bind.
+        OscMappingManager.onOscMessage(OscMessage("/1/rotary1", listOf(0.60f)), mixer)
+        OscMappingManager.onOscMessage(OscMessage("/1/rotary1", listOf(0.61f)), mixer)
+
+        assertTrue(OscLearnState.isLearning())
+        assertNull(OscMappingManager.getMappingForAddress("/1/rotary1"))
+
+        OscLearnState.cancelLearn()
     }
 
     // --- Modulator property dispatch & formatting ---

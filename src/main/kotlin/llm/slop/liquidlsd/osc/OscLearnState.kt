@@ -8,6 +8,9 @@ package llm.slop.liquidlsd.osc
 object OscLearnState {
     const val TIMEOUT_MS = 20_000L
 
+    /** Minimum value change required from a candidate address before it's accepted as the binding. */
+    private const val MOVEMENT_THRESHOLD = 0.05f
+
     data class LearnSession(
         val parameterPath: String,
         val minVal: Float,
@@ -16,8 +19,17 @@ object OscLearnState {
         val startTimeMs: Long = System.currentTimeMillis()
     )
 
+    private data class PendingCandidate(val address: String, val baselineValue: Float)
+
     var activeSession: LearnSession? = null
         private set
+
+    /**
+     * The first-seen (address, value) pair while armed, held until a later packet from the
+     * same address moves far enough to distinguish real input from a controller's connect-time
+     * sync burst (TouchOSC page changes, accelerometer noise, initial state dumps, etc.).
+     */
+    private var pendingCandidate: PendingCandidate? = null
 
     var statusBanner: String? = null
         private set
@@ -47,12 +59,14 @@ object OscLearnState {
     /** Arms Learn Mode: the next inbound OSC message will be bound to [parameterPath]. */
     fun startLearn(parameterPath: String, minVal: Float = 0f, maxVal: Float = 1f, displayLabel: String = parameterPath) {
         activeSession = LearnSession(parameterPath, minVal, maxVal, displayLabel)
+        pendingCandidate = null
         setStatus("OSC LEARN: Move a control on your OSC surface to bind '$displayLabel'.")
     }
 
     fun cancelLearn() {
         if (activeSession != null) {
             activeSession = null
+            pendingCandidate = null
             setStatus("OSC Learn cancelled.", 2000L)
         }
     }
@@ -62,6 +76,7 @@ object OscLearnState {
         val session = activeSession ?: return false
         if (System.currentTimeMillis() - session.startTimeMs > TIMEOUT_MS) {
             activeSession = null
+            pendingCandidate = null
             setStatus("OSC Learn timed out.", 3000L)
             return false
         }
@@ -72,13 +87,34 @@ object OscLearnState {
     fun isTargetLearning(parameterPath: String): Boolean = isLearning() && activeSession?.parameterPath == parameterPath
 
     /**
-     * Consumes an inbound OSC message to complete the active Learn session, creating
-     * (and persisting) a new [OscControlMapping] in [OscMappingManager]. Multi-argument
-     * messages bind to the first component (e.g. the X axis of an XY pad).
+     * Consumes an inbound OSC message towards completing the active Learn session. Multi-argument
+     * messages bind to the first component (e.g. the X axis of an XY pad). A message carrying a
+     * numeric value only completes the binding once a later packet from the same address moves by
+     * at least [MOVEMENT_THRESHOLD] from the first-seen value -- see [pendingCandidate]. Messages
+     * with no numeric arg (bangs, strings) bind immediately since there's nothing to threshold.
      */
     fun captureLearnedAddress(message: OscMessage) {
         val session = activeSession ?: return
         val key = if (message.args.size > 1) "${message.address}/0" else message.address
+        val value = message.args.getOrNull(0)?.let(::asFloat)
+
+        if (value == null) {
+            bind(session, key)
+            return
+        }
+
+        val candidate = pendingCandidate
+        if (candidate == null || candidate.address != key) {
+            pendingCandidate = PendingCandidate(key, value)
+            return
+        }
+
+        if (kotlin.math.abs(value - candidate.baselineValue) >= MOVEMENT_THRESHOLD) {
+            bind(session, key)
+        }
+    }
+
+    private fun bind(session: LearnSession, key: String) {
         OscMappingManager.addMapping(
             key,
             OscControlMapping(parameterPath = session.parameterPath, minVal = session.minVal, maxVal = session.maxVal)
@@ -86,6 +122,13 @@ object OscLearnState {
         OscMappingManager.saveActiveProfile()
         val label = session.displayLabel
         activeSession = null
+        pendingCandidate = null
         setStatus("Bound '$label' -> $key", 4000L)
+    }
+
+    private fun asFloat(arg: Any): Float? = when (arg) {
+        is Float -> arg
+        is Int -> arg.toFloat()
+        else -> null
     }
 }

@@ -114,6 +114,8 @@ internal object PerformanceTransitionsControls {
         }
         if (isMidiLearnTransQPrev) {
             dl.addRect(transPrevX - 1f, transPrevY - 1f, transPrevX + navBtnW + 1f, transPrevY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+        } else if (isOscLearnTransQPrev) {
+            TangoPalette.drawOscLearnPulseBorder(dl, transPrevX - 1f, transPrevY - 1f, transPrevX + navBtnW + 1f, transPrevY + headerH + 1f)
         }
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_trans_q_prev_ctx")) {
@@ -147,6 +149,11 @@ internal object PerformanceTransitionsControls {
                 if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Trans Queue Prev)")) {
                     OscLearnState.startLearn(transQPrevOscKey, 0f, 1f, "Trans Queue Prev")
                 }
+            }
+            val transQPrevOscAddress = OscMappingManager.getAddressForParameter(transQPrevOscKey)
+            if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, transQPrevOscAddress != null)) {
+                OscMappingManager.removeMapping(transQPrevOscAddress!!)
+                OscMappingManager.saveActiveProfile()
             }
             popOpenDropdownFont()
             ImGui.endPopup()
@@ -184,6 +191,8 @@ internal object PerformanceTransitionsControls {
         }
         if (isMidiLearnTransQNext) {
             dl.addRect(transNextX - 1f, transNextY - 1f, transNextX + navBtnW + 1f, transNextY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+        } else if (isOscLearnTransQNext) {
+            TangoPalette.drawOscLearnPulseBorder(dl, transNextX - 1f, transNextY - 1f, transNextX + navBtnW + 1f, transNextY + headerH + 1f)
         }
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_trans_q_next_ctx")) {
@@ -217,6 +226,11 @@ internal object PerformanceTransitionsControls {
                 if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Trans Queue Next)")) {
                     OscLearnState.startLearn(transQNextOscKey, 0f, 1f, "Trans Queue Next")
                 }
+            }
+            val transQNextOscAddress = OscMappingManager.getAddressForParameter(transQNextOscKey)
+            if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, transQNextOscAddress != null)) {
+                OscMappingManager.removeMapping(transQNextOscAddress!!)
+                OscMappingManager.saveActiveProfile()
             }
             popOpenDropdownFont()
             ImGui.endPopup()
@@ -518,6 +532,8 @@ internal object PerformanceTransitionsControls {
         // Hover / Active border
         if (isTarget) {
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, ImGui.colorConvertFloat4ToU32(0f, 0.8f, 1f, 1f), 4f, 0, 1.5f)
+        } else if (isOscLearnXfader) {
+            TangoPalette.drawOscLearnPulseBorder(dl, lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, 4f, 1.5f)
         } else if (isTrackHovered || isTrackActive) {
             val borderCol = if (isTrackActive) ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) else ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f)
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
@@ -700,6 +716,8 @@ internal object PerformanceTransitionsControls {
 
         if (isMidiLearnSpeed) {
             dl.addRect(speedX - 1f, speedY - 1f, speedX + speedBtnW + 1f, speedY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+        } else if (isOscLearnSpeed) {
+            TangoPalette.drawOscLearnPulseBorder(dl, speedX - 1f, speedY - 1f, speedX + speedBtnW + 1f, speedY + headerH + 1f)
         }
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_speed_ctx")) {

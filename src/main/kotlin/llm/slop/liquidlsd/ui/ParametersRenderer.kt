@@ -397,18 +397,21 @@ object ParametersRenderer {
             showTooltip(tipText, (valX.toInt() shl 16) xor (valY.toInt() and 0xFFFF))
         }
 
-        val pulseAlpha = if (isMacroLearning) {
+        val isOscLearningThis = OscLearnState.isTargetLearning(paramKey)
+        val pulseAlpha = if (isMacroLearning || isOscLearningThis) {
             (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
         } else 1.0f
 
         val bgCol = when {
             isMacroLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.5f, 0.7f, 0.25f * pulseAlpha)
+            isOscLearningThis -> ImGui.colorConvertFloat4ToU32(TangoPalette.ALERT.normal[0], TangoPalette.ALERT.normal[1], TangoPalette.ALERT.normal[2], 0.25f * pulseAlpha)
             isMacroBound   -> ImGui.colorConvertFloat4ToU32(0.1f, 0.4f, 0.6f, 0.4f)
             isValSelected  -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
             else           -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
         }
         val borderCol = when {
             isMacroLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
+            isOscLearningThis -> TangoPalette.u32(TangoPalette.ALERT.normal, pulseAlpha)
             isMacroBound   -> ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 0.9f)
             isValSelected  -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
             else           -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)

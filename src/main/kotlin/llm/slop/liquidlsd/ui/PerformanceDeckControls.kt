@@ -6,6 +6,7 @@ import imgui.flag.ImGuiMouseCursor
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.osc.OscLearnState
+import llm.slop.liquidlsd.osc.OscMappingManager
 import llm.slop.liquidlsd.presets.GeneratorDefaults
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.ExternalVideoSource
@@ -276,6 +277,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             if (isMidiLearnQPrev) {
                 dl.addRect(qPrevX - 1f, qPrevY - 1f, qPrevX + navBtnW + 1f, qPrevY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            } else if (isOscLearnQPrev) {
+                TangoPalette.drawOscLearnPulseBorder(dl, qPrevX - 1f, qPrevY - 1f, qPrevX + navBtnW + 1f, qPrevY + ctrlH + 1f)
             }
             pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_q_prev_ctx_$tag")) {
@@ -309,6 +312,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                     if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Queue Prev)")) {
                         OscLearnState.startLearn(qPrevOscKey, 0f, 1f, "PlayQueue Prev")
                     }
+                }
+                val qPrevOscAddress = OscMappingManager.getAddressForParameter(qPrevOscKey)
+                if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, qPrevOscAddress != null)) {
+                    OscMappingManager.removeMapping(qPrevOscAddress!!)
+                    OscMappingManager.saveActiveProfile()
                 }
                 popOpenDropdownFont()
                 ImGui.endPopup()
@@ -345,6 +353,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             if (isMidiLearnQNext) {
                 dl.addRect(qNextX - 1f, qNextY - 1f, qNextX + navBtnW + 1f, qNextY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            } else if (isOscLearnQNext) {
+                TangoPalette.drawOscLearnPulseBorder(dl, qNextX - 1f, qNextY - 1f, qNextX + navBtnW + 1f, qNextY + ctrlH + 1f)
             }
             pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_q_next_ctx_$tag")) {
@@ -379,6 +389,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                         OscLearnState.startLearn(qNextOscKey, 0f, 1f, "PlayQueue Next")
                     }
                 }
+                val qNextOscAddress = OscMappingManager.getAddressForParameter(qNextOscKey)
+                if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, qNextOscAddress != null)) {
+                    OscMappingManager.removeMapping(qNextOscAddress!!)
+                    OscMappingManager.saveActiveProfile()
+                }
                 popOpenDropdownFont()
                 ImGui.endPopup()
             }
@@ -403,6 +418,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             if (isMidiLearnBgPrev) {
                 dl.addRect(bgPrevX - 1f, bgPrevY - 1f, bgPrevX + navBtnW + 1f, bgPrevY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            } else if (isOscLearnBgPrev) {
+                TangoPalette.drawOscLearnPulseBorder(dl, bgPrevX - 1f, bgPrevY - 1f, bgPrevX + navBtnW + 1f, bgPrevY + ctrlH + 1f)
             }
             pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_bg_prev_ctx")) {
@@ -436,6 +453,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                     if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (BG Queue Prev)")) {
                         OscLearnState.startLearn(bgPrevOscKey, 0f, 1f, "BG Queue Prev")
                     }
+                }
+                val bgPrevOscAddress = OscMappingManager.getAddressForParameter(bgPrevOscKey)
+                if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, bgPrevOscAddress != null)) {
+                    OscMappingManager.removeMapping(bgPrevOscAddress!!)
+                    OscMappingManager.saveActiveProfile()
                 }
                 popOpenDropdownFont()
                 ImGui.endPopup()
@@ -472,6 +494,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             if (isMidiLearnBgNext) {
                 dl.addRect(bgNextX - 1f, bgNextY - 1f, bgNextX + navBtnW + 1f, bgNextY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            } else if (isOscLearnBgNext) {
+                TangoPalette.drawOscLearnPulseBorder(dl, bgNextX - 1f, bgNextY - 1f, bgNextX + navBtnW + 1f, bgNextY + ctrlH + 1f)
             }
             pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_bg_next_ctx")) {
@@ -505,6 +529,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                     if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (BG Queue Next)")) {
                         OscLearnState.startLearn(bgNextOscKey, 0f, 1f, "BG Queue Next")
                     }
+                }
+                val bgNextOscAddress = OscMappingManager.getAddressForParameter(bgNextOscKey)
+                if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, bgNextOscAddress != null)) {
+                    OscMappingManager.removeMapping(bgNextOscAddress!!)
+                    OscMappingManager.saveActiveProfile()
                 }
                 popOpenDropdownFont()
                 ImGui.endPopup()

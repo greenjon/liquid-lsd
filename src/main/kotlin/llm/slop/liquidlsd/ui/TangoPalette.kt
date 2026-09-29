@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import imgui.ImDrawList
 import imgui.ImGui
 
 /**
@@ -25,6 +26,16 @@ object TangoPalette {
     /** Float [r,g,b] plus alpha, packed to ImGui's U32 color format. */
     fun u32(hue: FloatArray, alpha: Float = 1f): Int =
         ImGui.colorConvertFloat4ToU32(hue[0], hue[1], hue[2], alpha)
+
+    /**
+     * Draws the amber "armed" border shared by every OSC-Learn-capable control, so the pulse
+     * rate and color can't drift between call sites the way they did when each one inlined its
+     * own `sin()` copy.
+     */
+    fun drawOscLearnPulseBorder(dl: ImDrawList, x1: Float, y1: Float, x2: Float, y2: Float, rounding: Float = 3f, thickness: Float = 1.5f) {
+        val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+        dl.addRect(x1, y1, x2, y2, u32(ALERT.normal, pulseAlpha), rounding, 0, thickness)
+    }
 
     // -- The 8 canonical Tango hues -------------------------------------------------------------
     val BUTTER      = Hue(rgb(0xFCE94F), rgb(0xEDD400), rgb(0xC4A000))

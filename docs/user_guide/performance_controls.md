@@ -266,10 +266,10 @@ Liquid LSD includes a native, zero-dependency OSC 1.0 server for wireless contro
 You can map OSC controls either in-situ from the UI or manually from Preferences:
 
 1. **In-Situ Right-Click Learn (Fastest)**:
-   - Right-click any slider or variable label in the UI — including an LFO's **Speed / Subdivision**, **Depth**, **Min/Max bounds**, **Asymmetry**, or a parameter's **Initial Range (Base Value)**.
-   - Select **Learn OSC (...)** from the context menu. The slider will pulse in amber while awaiting input.
-   - Move a fader, knob, or XY pad on your TouchOSC surface. Liquid LSD immediately binds the control, preserves your configured min/max limits, and saves the mapping to the active profile.
-   - Right-click again and select **Cancel OSC Learn** (or cancel from Preferences) if needed.
+   - Right-click any slider or variable label in the UI — including an LFO's **Speed / Subdivision**, **Depth**, **Min/Max bounds**, **Asymmetry**, a parameter's **Initial Range (Base Value)**, the crossfader, fade speed, or a deck/transition queue's `<`/`>` buttons.
+   - Select **Learn OSC (...)** from the context menu. The control will pulse in amber while awaiting input.
+   - Move a fader, knob, or XY pad on your TouchOSC surface. Liquid LSD ignores the first packet from a new address (guarding against a controller's connect-time sync burst) and binds once a later packet actually moves the value, preserving your configured min/max limits and saving the mapping to the active profile.
+   - Right-click again and select **Cancel OSC Learn** (or cancel from Preferences) if needed. Once bound, the same context menu offers **Clear OSC Mapping** to remove it without leaving the performance view.
 
 2. **Manual Learn from Preferences**:
    - Open **Preferences → OSC Controls**.

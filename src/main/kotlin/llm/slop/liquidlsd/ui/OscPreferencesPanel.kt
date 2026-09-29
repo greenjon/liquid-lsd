@@ -274,11 +274,15 @@ object OscPreferencesPanel {
                     val maxArr = floatArrayOf(map.maxVal)
                     ImGui.setNextItemWidth(55f)
                     val changedMin = ImGui.dragFloat("##osc_min_$address", minArr, 0.01f, -100f, 100f, "%.2f")
+                    val commitMin = ImGui.isItemDeactivatedAfterEdit()
                     ImGui.sameLine()
                     ImGui.setNextItemWidth(55f)
                     val changedMax = ImGui.dragFloat("##osc_max_$address", maxArr, 0.01f, -100f, 100f, "%.2f")
+                    val commitMax = ImGui.isItemDeactivatedAfterEdit()
                     if (changedMin || changedMax) {
                         OscMappingManager.updateMapping(address, map.copy(minVal = minArr[0], maxVal = maxArr[0]))
+                    }
+                    if (commitMin || commitMax) {
                         OscMappingManager.saveActiveProfile()
                     }
 
@@ -292,8 +296,11 @@ object OscPreferencesPanel {
                     ImGui.tableNextColumn()
                     val slewArr = floatArrayOf(map.slewMs)
                     ImGui.setNextItemWidth(70f)
-                    if (ImGui.dragFloat("##osc_slew_$address", slewArr, 1f, 0f, 250f, "%.0f ms")) {
+                    val changedSlew = ImGui.dragFloat("##osc_slew_$address", slewArr, 1f, 0f, 250f, "%.0f ms")
+                    if (changedSlew) {
                         OscMappingManager.updateMapping(address, map.copy(slewMs = slewArr[0]))
+                    }
+                    if (ImGui.isItemDeactivatedAfterEdit()) {
                         OscMappingManager.saveActiveProfile()
                     }
 
