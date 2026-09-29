@@ -381,9 +381,14 @@ class FxChain(val label: String) {
     }
 
     fun computeIsDirty(): Boolean {
-        val base = baselineDto ?: return slots.any { it != null }
-        val current = toFxChainDto(base.name, base.tags)
-        return current != base
+        val base = baselineDto ?: return slots.any { it != null && it.id.isNotBlank() }
+        val maxSlots = maxOf(slots.size, base.slots.size)
+        for (i in 0 until maxSlots) {
+            val currentId = slots.getOrNull(i)?.id?.takeIf { it.isNotBlank() }
+            val baseId = base.slots.getOrNull(i)?.filterId?.takeIf { it.isNotBlank() }
+            if (currentId != baseId) return true
+        }
+        return false
     }
 
     fun markClean(file: java.io.File? = sourceFile) {

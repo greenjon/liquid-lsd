@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import llm.slop.liquidlsd.macro.MacroBank
 import llm.slop.liquidlsd.macro.MacroControl
+import llm.slop.liquidlsd.parameters.MeterType
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.rendering.FxChain
 import java.util.Locale
@@ -39,7 +40,8 @@ internal data class KnobSpec(
     val under: UnderKnob,
     val side: SideButtons,
     /** Drawn inside the knob face (focus mode's parameter values), keeping the strip for the name. */
-    val valueOverlay: String? = null
+    val valueOverlay: String? = null,
+    val meterType: MeterType = MeterType.MONOPOLAR
 )
 
 /** The slice of an [FxChain]'s state the resolver needs -- a plain value so tests needn't build GL filters. */
@@ -79,11 +81,19 @@ internal object PerfKnobResolver {
         }
 
     private fun focusSpec(col: Int, knobIdx: Int, control: MacroControl, fx: FxRowState, focusedSlot: Int): KnobSpec {
-        if (col == 0) return KnobSpec(col, knobIdx, control, UnderKnob.SlotCell(focusedSlot), SideButtons.Bypass(focusedSlot))
+        if (col == 0) return KnobSpec(col, knobIdx, control, UnderKnob.SlotCell(focusedSlot), SideButtons.Bypass(focusedSlot), meterType = MeterType.MONOPOLAR)
         val entry = fx.focusedParams.getOrNull(fx.focusParamPage * 3 + (col - 1))
             ?: return KnobSpec(col, knobIdx, control, UnderKnob.ParamCell(null, null), SideButtons.None)
         val (name, param) = entry
-        return KnobSpec(col, knobIdx, control, UnderKnob.ParamCell(name, param), SideButtons.Reset(name, param), formatValue(param.baseValue))
+        return KnobSpec(
+            col = col,
+            knobIndex = knobIdx,
+            control = control,
+            under = UnderKnob.ParamCell(name, param),
+            side = SideButtons.Reset(name, param),
+            valueOverlay = formatValue(param.baseValue),
+            meterType = param.meterType
+        )
     }
 
     /** Integers as-is, everything else to 2 decimals -- short enough for the knob face. */

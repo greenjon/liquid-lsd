@@ -47,25 +47,85 @@ class FxChainDirtyAndSteppingTest {
         assertEquals(file, chain.sourceFile)
         assertEquals(baselineDto, chain.baselineDto)
 
-        // 3. Tweak parameter -> dirty
+        // 3. Tweak parameter or superknob -> should NOT mark chain dirty
         filter0.dryWet.baseValue = 0.42f
         filter0.dryWet.evaluate()
-        assertTrue(chain.computeIsDirty(), "Tweak should mark chain dirty")
+        chain.superKnob.baseValue = 0.85f
+        chain.superKnob.evaluate()
+        assertFalse(chain.computeIsDirty(), "Parameter and Superknob tweaks should not mark chain dirty")
 
-        // 4. Mark clean (as Save would)
+        // 4. Add filter -> dirty
+        chain.slots[1] = testFilter("invert")
+        assertTrue(chain.computeIsDirty(), "Adding an FX slot should mark chain dirty")
+
+        // 5. Mark clean (as Save would)
         chain.markClean(file)
         assertFalse(chain.computeIsDirty(), "Marking clean should reset dirty flag")
 
-        // 5. Tweak again -> dirty
-        chain.slots[1] = testFilter("invert")
-        assertTrue(chain.computeIsDirty())
+        // 6. Change order of FX -> dirty
+        val filter1 = chain.slots[1]
+        chain.slots[0] = filter1
+        chain.slots[1] = filter0
+        assertTrue(chain.computeIsDirty(), "Changing FX order in slots should mark chain dirty")
 
-        // 6. Reset tweak back -> matches clean baseline
+        // 7. Reset order back -> matches clean baseline
+        chain.slots[0] = filter0
+        chain.slots[1] = filter1
+        assertFalse(chain.computeIsDirty(), "Restoring slot order should reset dirty flag")
+    }
+
+    @Test
+    fun testSuperKnobDoesNotTriggerDirty() {
+        val chain = FxChain("Test Chain")
+        chain.slots[0] = testFilter("blur")
+        chain.baselineDto = chain.toFxChainDto()
+
+        assertFalse(chain.computeIsDirty())
+
+        chain.superKnob.baseValue = 0.9f
+        chain.superKnob.evaluate()
+        chain.update()
+
+        assertFalse(chain.computeIsDirty(), "Superknob movements must not trigger FX chain dirty state")
+    }
+
+    @Test
+    fun testFxChangeAndOrderTriggersDirty() {
+        val chain = FxChain("Test Chain")
+        val blur = testFilter("blur")
+        val glow = testFilter("glow")
+        chain.slots[0] = blur
+        chain.slots[1] = glow
+        chain.baselineDto = chain.toFxChainDto()
+
+        assertFalse(chain.computeIsDirty(), "Freshly loaded chain should be clean")
+
+        // 1. Reordering slots triggers dirty state
+        chain.slots[0] = glow
+        chain.slots[1] = blur
+        assertTrue(chain.computeIsDirty(), "Reordering FX slots must trigger dirty state")
+
+        // Restore order
+        chain.slots[0] = blur
+        chain.slots[1] = glow
+        assertFalse(chain.computeIsDirty(), "Restoring slot order should restore clean state")
+
+        // 2. Replacing a filter triggers dirty state
+        val invert = testFilter("invert")
+        chain.slots[1] = invert
+        assertTrue(chain.computeIsDirty(), "Replacing an FX slot must trigger dirty state")
+
+        // Restore filter
+        chain.slots[1] = glow
+        assertFalse(chain.computeIsDirty(), "Restoring original filter should restore clean state")
+
+        // 3. Removing a filter triggers dirty state
         chain.slots[1] = null
-        filter0.dryWet.baseValue = 0f
-        filter0.dryWet.evaluate()
-        chain.markClean(file)
-        assertFalse(chain.computeIsDirty(), "Clean state matches baseline")
+        assertTrue(chain.computeIsDirty(), "Removing an FX slot must trigger dirty state")
+
+        // Restore filter
+        chain.slots[1] = glow
+        assertFalse(chain.computeIsDirty(), "Restoring original filter should restore clean state")
     }
 
     @Test

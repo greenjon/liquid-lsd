@@ -1399,6 +1399,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#fx-chain-dirty-tracking-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Chain Dirty Tracking Criteria
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2096,6 +2107,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#fx-chain-dirty-tracking-criteria" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Chain Dirty Tracking Criteria
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2296,6 +2318,12 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <p>Unifies the formerly separate <code>FXPresetListPanel</code> (single <code>.lsdfx</code> presets) and <code>FXChainListPanel</code> (<code>.lsdfxchain</code> chains) into one Column 1 browser with ISF stock filters, saved singles, and saved chains, tier badges, and an All / Stock / Singles / Chains filter menu. Stock (built-in ISF) filters and presets load into any deck's or Master's 3-slot FX chain via <code>FxOps</code>; saved presets and chains can additionally be added to FX playlists and live FX queues. "Load to" submenus for stock/single items let you target any of the 3 slots, while chains load directly. (The <code>.lsdfxbank</code> format was removed along with <code>FxBank</code>: Master FX is a plain <code>FxChain</code> now.)</p>
 <h3 id="fx-metaknob-super-knob-persistence">FX Metaknob / Super Knob Persistence</h3>
 <p><code>FXSlotDto</code> (in <code>PresetModels.kt</code>) carries <code>metaKnob: ParameterDto?</code> and <code>metaBinding: FxMetaBindingDto?</code> (see <code>rendering/isf/FxMetaBinding.kt</code>); <code>FXChainDto</code> carries <code>superKnob: ParameterDto?</code> and <code>slotSuperKnobLink: List&lt;Boolean&gt;?</code>. Both are <strong>baked at save time</strong> — a saved slot/chain preset always restores the exact Metaknob binding/position it had when saved, even if <code>ISFAutoBindEngine</code>'s resolution for that shader (curated table, or a since-changed user override under <code>library/isf_overrides/</code>) has since changed. There is no live re-resolution path from a saved preset; re-save (or an explicit future "re-resolve" UI action) is required to pick up a changed binding.</p>
+<h3 id="fx-chain-dirty-tracking-criteria">FX Chain Dirty Tracking Criteria</h3>
+<p><code>FxChain.isDirty()</code> / <code>computeIsDirty()</code> tracks unsaved structural edits to an FX chain without falsely triggering during live performance knob sweeps.
+- <strong>Criteria</strong>: An FX chain is marked dirty (<code>•</code> indicator on the chain name button and Alert-colored Save button) <strong>only</strong> if:
+  1. An effect is added, removed, or replaced in any slot (filter ID mismatch against the loaded baseline).
+  2. The ordering of effects across slots is altered (e.g. slots swapped or moved).
+- <strong>Performance Parameter Immunity</strong>: Continuous movements of the Superknob, linked slot Metaknobs, Dry/Wet blends, and individual effect parameters do not mark an FX chain as dirty.</p>
 
 
 

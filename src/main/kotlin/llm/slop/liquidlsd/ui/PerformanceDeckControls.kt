@@ -42,37 +42,35 @@ internal object DeckRowMetrics {
      */
     fun genBadgeW(comboW: Float): Float = GEN_BADGE_BASE_W + GAP + comboW
 
-    /**
-     * Headroom reserved past the last drawn Row 1 control, past the knob cluster's [SIDE_GUTTER]
-     * -- room to add another icon or two later without another geometry pass across every row.
-     */
-    fun growthSlack(ctrlH: Float): Float = 2f * iconBtnW(ctrlH)
+    fun growthSlack(ctrlH: Float): Float = 0f
 
     /**
-     * Line 1 (SRC) width: pill, generator/preset badge, eject, [dice], queue nav or PV's PREVIEW
+     * Line 1 (SRC) width: pill, generator/preset badge, eject, queue nav or PV's PREVIEW
      * badge (whichever is wider), then Save + kebab -- mirroring the Save/⋮ pair Row 2's FX chain
-     * header already has, so SRC and FX aren't lopsided -- plus growth slack.
+     * header has, so SRC and FX line up cleanly at the kebab.
+     * (Randomize die button is placed in the right wing above the BYPASS button.)
      */
-    fun row1Width(ctrlH: Float, comboW: Float, randomization: Boolean): Float =
+    fun row1Width(ctrlH: Float, comboW: Float): Float =
         MODE_PILL_W + GAP + genBadgeW(comboW) + GAP + iconBtnW(ctrlH) +
-            (if (randomization) GAP + iconBtnW(ctrlH) else 0f) +
             GAP + maxOf(queueNavW(ctrlH), PV_BADGE_W) +
-            GAP + iconBtnW(ctrlH) + GAP + KEBAB_W +
-            growthSlack(ctrlH)
+            GAP + iconBtnW(ctrlH) + GAP + KEBAB_W
+
+    @Deprecated("Randomize die is now placed above the BYPASS button in the right wing.", ReplaceWith("row1Width(ctrlH, comboW)"))
+    fun row1Width(ctrlH: Float, comboW: Float, randomization: Boolean): Float = row1Width(ctrlH, comboW)
 }
 
 /**
  * Deck row controls (Deck A, B, BG, PV):
  * - Left controls, two stacked rows: Row 1 (SRC) knob-assign pill, generator/preset badge,
- *   eject, randomize, queue navigation; Row 2 (FX) knob-assign pill and FX chain header.
- * - Right controls: FX bypass button.
+ *   eject, queue navigation, Save, kebab; Row 2 (FX) knob-assign pill and FX chain header.
+ * - Right controls: Row 1 randomize die button (applies to both SRC and FX); Row 2 FX bypass button.
  */
 internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
     /**
      * Controls to the left of the knobs for Deck rows (Deck A, B, BG, PV) in two stacked rows:
      * - Row 1 (SRC): [SRC] knob-assign pill, generator/preset badge, eject button,
-     *   randomize die button, and play queue / bg queue navigation.
+     *   play queue / bg queue navigation (or preview button for PV), Save, kebab.
      * - Row 2 (FX): [FX] knob-assign pill and dedicated FX chain controls.
      */
     fun drawDeckRowLeftControls(
@@ -233,31 +231,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         ImGui.popStyleColor(2)
         itemTooltip("Eject current preset from $deckLabel and reset to defaults.")
 
-        // 4. Randomize Die Button [ DICES ]
-        if (session.uiTheme.randomizationEnabled) {
-            ImGui.sameLine(0f, gap)
-            val randBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.20f, 0.16f, 0.24f, 0.90f)
-            val randBtnHov = if (isLight) TangoPalette.u32(TangoPalette.PLUM.light) else ImGui.colorConvertFloat4ToU32(0.35f, 0.22f, 0.42f, 1f)
-            ImGui.pushStyleColor(ImGuiCol.Button, randBtnBg)
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, randBtnHov)
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.DICES}##perf_rand_$tag", iconBtnW, ctrlH)) {
-                    ParametersUndo.pushUndoState(parametersState, mixer)
-                    when {
-                        isDeckA -> mixer.randomizeDeckA()
-                        isDeckB -> mixer.randomizeDeckB()
-                        isDeckBG -> mixer.randomizeDeckBG()
-                        else -> mixer.randomizeDeckPV()
-                    }
-                }
-            }
-            ImGui.popStyleColor(2)
-            itemTooltip("Randomize $deckLabel modulators & base values.\nClick to randomize with undo support.")
-        }
-
         ImGui.sameLine(0f, gap)
 
-        // 5. PlayQueue / BG Queue navigation (or preview indicator for PV)
+        // 4. PlayQueue / BG Queue navigation (or preview indicator for PV)
         val navBtnW = DeckRowMetrics.navBtnW(ctrlH)
         if (isDeckA || isDeckB) {
             val q = session.playQueueManager.queue
@@ -559,7 +535,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             itemTooltip("Advance to next item in BG Queue.$bgNextMidiText\nRight-click for MIDI/OSC Learn.")
         } else {
             // Deck PV indicator / focus button
-            val pvBadgeW = DeckRowMetrics.PV_BADGE_W
+            val pvBadgeW = maxOf(DeckRowMetrics.queueNavW(ctrlH), DeckRowMetrics.PV_BADGE_W)
             val pvBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.12f, 0.22f, 0.18f, 0.85f)
             val pvBtnHov = if (isLight) TangoPalette.u32(TangoPalette.PLUM.light) else ImGui.colorConvertFloat4ToU32(0.18f, 0.32f, 0.25f, 1f)
             ImGui.pushStyleColor(ImGuiCol.Button, pvBtnBg)
@@ -575,7 +551,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
         ImGui.sameLine(0f, gap)
 
-        // 6. Save button -- save-if-possible, else Save As modal (mirrors the FX chain's [Save]
+        // 5. Save button -- save-if-possible, else Save As modal (mirrors the FX chain's [Save]
         // in Row 2, so SRC has the same visible save affordance FX already does).
         val saveBtnBg = when {
             isDirty -> TangoPalette.u32(TangoPalette.ALERT.dark)
@@ -593,7 +569,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
         ImGui.sameLine(0f, gap)
 
-        // 7. [⋮] Kebab -- same menu as the gen badge's right-click (Browse, Save As, defaults),
+        // 6. [⋮] Kebab -- same menu as the gen badge's right-click (Browse, Save As, defaults),
         // just also reachable without knowing to right-click the badge (mirrors FX chain's ⋮).
         if (ImGui.button("${Icons.MORE_VERTICAL}##perf_src_more_$tag", DeckRowMetrics.KEBAB_W, ctrlH)) {
             ImGui.openPopup("##perf_gen_badge_ctx_$tag")
@@ -614,7 +590,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val deckChain = deck.fxChain
         val targetBank = ctx.targetBankIdFor(tag)
         val fxCanonicalBankId = MacroEngine.deckBankIdFor(deck, mixer) ?: MacroEngine.DECK_A
-        FxChainHeader.drawControls(session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH, maxW = rowW - modeBtnW - gap) {
+        val targetRowW = DeckRowMetrics.row1Width(ctrlH, comboW)
+        FxChainHeader.drawControls(session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH, maxW = targetRowW - modeBtnW - gap) {
             parametersState.openFxChainBrowse(fxCanonicalBankId, deckLabel, slotIndex = null)
         }
 
@@ -622,18 +599,23 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
     }
 
     /**
-     * Deck FX chain bypass + Resync buttons placed to the right of the knobs for Deck rows.
+     * Deck controls placed to the right of the knobs for Deck rows:
+     * - Row 1 (above BYPASS): Randomize die button, randomizing modulators & base values across
+     *   both Visual Source and Insert FX.
+     * - Row 2: Deck FX chain bypass button.
      */
     fun drawDeckRowRightControls(
         session: SessionContext,
         mixer: Mixer,
+        parametersState: ParametersState,
         deckLabel: String,
         deck: Deck,
         startX: Float,
-        startY: Float,
-        ctrlH: Float
+        row1Y: Float,
+        row2Y: Float,
+        ctrlH: Float,
+        width: Float = 56f
     ) {
-        val gap = 4f
         val isDeckA = deckLabel.endsWith("A")
         val isDeckB = deckLabel.endsWith("B")
         val isDeckBG = deckLabel.endsWith("BG")
@@ -643,10 +625,36 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             isDeckBG -> "BG"
             else -> "PV"
         }
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
 
-        ImGui.setCursorScreenPos(startX, startY)
+        // Row 1: Randomize Die Button [ DICES ] (above BYPASS button; applies to both SRC and FX)
+        if (session.uiTheme.randomizationEnabled) {
+            ImGui.setCursorScreenPos(startX, row1Y)
+            ImGui.beginGroup()
+            val randBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.20f, 0.16f, 0.24f, 0.90f)
+            val randBtnHov = if (isLight) TangoPalette.u32(TangoPalette.PLUM.light) else ImGui.colorConvertFloat4ToU32(0.35f, 0.22f, 0.42f, 1f)
+            ImGui.pushStyleColor(ImGuiCol.Button, randBtnBg)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, randBtnHov)
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.DICES}##perf_rand_$tag", width, ctrlH)) {
+                    ParametersUndo.pushUndoState(parametersState, mixer)
+                    when {
+                        isDeckA -> mixer.randomizeDeckA()
+                        isDeckB -> mixer.randomizeDeckB()
+                        isDeckBG -> mixer.randomizeDeckBG()
+                        else -> mixer.randomizeDeckPV()
+                    }
+                }
+            }
+            ImGui.popStyleColor(2)
+            itemTooltip("Randomize $deckLabel modulators & base values (Source and FX).\nClick to randomize with undo support.")
+            ImGui.endGroup()
+        }
+
+        // Row 2: FX chain bypass button
+        ImGui.setCursorScreenPos(startX, row2Y)
         ImGui.beginGroup()
-        FxChainHeader.drawBypassButton(session, deck.fxChain, tag, ctrlH, 56f)
+        FxChainHeader.drawBypassButton(session, deck.fxChain, tag, ctrlH, width)
         ImGui.endGroup()
     }
 }

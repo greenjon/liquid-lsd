@@ -213,3 +213,10 @@ Unifies the formerly separate `FXPresetListPanel` (single `.lsdfx` presets) and 
 ### FX Metaknob / Super Knob Persistence
 `FXSlotDto` (in `PresetModels.kt`) carries `metaKnob: ParameterDto?` and `metaBinding: FxMetaBindingDto?` (see `rendering/isf/FxMetaBinding.kt`); `FXChainDto` carries `superKnob: ParameterDto?` and `slotSuperKnobLink: List<Boolean>?`. Both are **baked at save time** — a saved slot/chain preset always restores the exact Metaknob binding/position it had when saved, even if `ISFAutoBindEngine`'s resolution for that shader (curated table, or a since-changed user override under `library/isf_overrides/`) has since changed. There is no live re-resolution path from a saved preset; re-save (or an explicit future "re-resolve" UI action) is required to pick up a changed binding.
 
+### FX Chain Dirty Tracking Criteria
+`FxChain.isDirty()` / `computeIsDirty()` tracks unsaved structural edits to an FX chain without falsely triggering during live performance knob sweeps.
+- **Criteria**: An FX chain is marked dirty (`•` indicator on the chain name button and Alert-colored Save button) **only** if:
+  1. An effect is added, removed, or replaced in any slot (filter ID mismatch against the loaded baseline).
+  2. The ordering of effects across slots is altered (e.g. slots swapped or moved).
+- **Performance Parameter Immunity**: Continuous movements of the Superknob, linked slot Metaknobs, Dry/Wet blends, and individual effect parameters do not mark an FX chain as dirty.
+

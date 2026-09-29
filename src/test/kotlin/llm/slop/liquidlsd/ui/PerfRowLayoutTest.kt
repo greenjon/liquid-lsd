@@ -75,22 +75,37 @@ class PerfRowLayoutTest {
         val comboW = 100f
         val nav = (ctrlH * 0.85f).coerceAtLeast(20f)
         val queueNav = nav + 2f + 38f + 2f + nav
-        val growthSlack = 2f * ctrlH
-        // pill, badge, combo, eject, dice, queue nav, save, kebab -- each followed by a 4px gap
-        // except the last, then growth slack reserved past everything drawn.
-        val expected = 28f + 4f + 74f + 4f + comboW + 4f + ctrlH + 4f + ctrlH + 4f + queueNav +
-            4f + ctrlH + 4f + DeckRowMetrics.KEBAB_W + growthSlack
-        assertEquals(expected, DeckRowMetrics.row1Width(ctrlH, comboW, randomization = true), 0.01f)
-        assertEquals(expected - 4f - ctrlH, DeckRowMetrics.row1Width(ctrlH, comboW, randomization = false), 0.01f)
+        // pill, badge, combo, eject, queue nav, save, kebab -- each followed by a 4px gap
+        // except the last. SRC row ends cleanly at the kebab with no trailing growth slack.
+        // Note: dice is placed in the right wing above the BYPASS button.
+        val expected = 28f + 4f + 74f + 4f + comboW + 4f + ctrlH + 4f + queueNav +
+            4f + ctrlH + 4f + DeckRowMetrics.KEBAB_W
+        assertEquals(expected, DeckRowMetrics.row1Width(ctrlH, comboW), 0.01f)
+    }
+
+    @Test
+    fun fxRowHeaderWidthFillsMaxWAndLinesUpKebabWithSrcRow() {
+        val ctrlH = 24f
+        val gap = 3f
+        val saveW = FxChainHeader.saveBtnW(ctrlH)
+        val slotPillsW = 20f * llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT + gap * (llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT - 1)
+        val maxW = 320f
+        val nameW = (maxW - (FxChainHeader.ARROW_W * 2f + saveW + FxChainHeader.MORE_BTN_W + slotPillsW + gap * 5f)).coerceAtLeast(48f)
+
+        // Total width from left of ◀ to right of kebab ⋮:
+        // ◀ (ARROW_W) + gap + nameW + gap + ▶ (ARROW_W) + gap + slotPillsW + gap + saveW + gap + MORE_BTN_W
+        val totalDrawnW = FxChainHeader.ARROW_W + gap + nameW + gap + FxChainHeader.ARROW_W + gap + slotPillsW + gap + saveW + gap + FxChainHeader.MORE_BTN_W
+        assertEquals(maxW, totalDrawnW, 0.01f)
+
+        // Furthermore, FxChainHeader's MORE_BTN_W matches DeckRowMetrics.KEBAB_W
+        assertEquals(DeckRowMetrics.KEBAB_W, FxChainHeader.MORE_BTN_W)
     }
 
     @Test
     fun compactControlsNeverNeedMoreThanTheReservedWidth() {
-        for (rand in listOf(true, false)) {
-            assertTrue(
-                DeckRowMetrics.row1Width(21f, 120f, rand) <= DeckRowMetrics.row1Width(PerformanceColors.CTRL_H, 120f, rand)
-            )
-        }
+        assertTrue(
+            DeckRowMetrics.row1Width(21f, 120f) <= DeckRowMetrics.row1Width(PerformanceColors.CTRL_H, 120f)
+        )
     }
 
     @Test

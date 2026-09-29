@@ -12,12 +12,13 @@ import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
 import java.io.File
 
 /**
- * Transitions row (MASTER tab) controls left of the knobs, beside the TRANS title badge drawn by
- * [PerformanceMatrixPanel]:
- * - Line 1: Transition picker button showing the active transition with a modified indicator (`*`),
- *   TransitionQueue prev/status/next navigation, and randomize die.
- * - Line 2: The crossfader line (Deck A/B snap badges, crossfader slider track, AUTO/FADING button,
- *   fade-time badge).
+ * Transitions row (MASTER tab) controls beside the TRANS title badge drawn by [PerformanceMatrixPanel]:
+ * - Left of the knobs:
+ *   - Line 1: Transition picker button showing the active transition with a modified indicator (`*`)
+ *     and TransitionQueue prev/status/next navigation.
+ *   - Line 2: The crossfader line (Deck A/B snap badges, crossfader slider track, AUTO/FADING button,
+ *     fade-time badge).
+ * - Right of the knobs: Randomize die button on Line 1, matching the deck rows.
  */
 internal object PerformanceTransitionsControls {
 
@@ -35,6 +36,44 @@ internal object PerformanceTransitionsControls {
         drawCrossfader(session, mixer, parametersState, startX, row2Y, ctrlH, width)
     }
 
+    /**
+     * Transitions row right-side controls: randomize die button placed on Row 1, matching deck rows.
+     */
+    fun drawRightControls(
+        session: SessionContext,
+        mixer: Mixer,
+        startX: Float,
+        startY: Float,
+        ctrlH: Float,
+        width: Float
+    ) {
+        if (!session.uiTheme.randomizationEnabled) return
+
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+        val randBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.20f, 0.16f, 0.24f, 0.90f)
+        val randBtnHov = if (isLight) TangoPalette.u32(TangoPalette.PLUM.light) else ImGui.colorConvertFloat4ToU32(0.35f, 0.22f, 0.42f, 1f)
+
+        ImGui.setCursorScreenPos(startX, startY)
+        ImGui.beginGroup()
+        ImGui.pushStyleColor(ImGuiCol.Button, randBtnBg)
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, randBtnHov)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.DICES}##perf_trans_rand", width, ctrlH)) {
+                ParametersUndo.pushUndoState(session.parametersState, mixer)
+                mixer.transitionFilter?.let { filter ->
+                    filter.parameters.values.forEach { param ->
+                        val min = param.minClamp
+                        val max = param.maxClamp
+                        param.baseValue = (min + Math.random().toFloat() * (max - min)).coerceIn(min, max)
+                    }
+                }
+            }
+        }
+        ImGui.popStyleColor(2)
+        itemTooltip("Randomize transition parameters.\nClick to randomize with undo support.")
+        ImGui.endGroup()
+    }
+
     private fun drawTransitionPickerAndQueue(
         session: SessionContext,
         mixer: Mixer,
@@ -50,13 +89,12 @@ internal object PerformanceTransitionsControls {
         ImGui.setCursorScreenPos(startX, headerY)
         ImGui.beginGroup()
 
-        // Transition Queue nav: Prev + Count + Next, plus the die when randomization is on.
+        // Transition Queue nav: Prev + Count + Next.
         val navBtnW = (headerH * 0.9f).coerceIn(22f, 28f)
         val qTextW = 46f
-        val diceW = if (session.uiTheme.randomizationEnabled) gap + navBtnW else 0f
 
         // Transition Picker button takes the rest of the line.
-        val transBtnW = (width - gap - navBtnW - 2f - qTextW - 2f - navBtnW - diceW).coerceAtLeast(60f)
+        val transBtnW = (width - gap - navBtnW - 2f - qTextW - 2f - navBtnW).coerceAtLeast(60f)
 
         // 1. Transition Picker Button [ Settings Icon + Name * ]
         val transName = mixer.transitionFilter?.displayName ?: "Default Blend"
@@ -238,27 +276,6 @@ internal object PerformanceTransitionsControls {
         }
         popOpenDropdownPadding()
         itemTooltip("Advance to next transition in Transition Queue.$transQNextMidiText\nRight-click for MIDI/OSC Learn.")
-
-        // 3. Randomize Die Button [ DICES ]
-        if (session.uiTheme.randomizationEnabled) {
-            ImGui.sameLine(0f, gap)
-            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.20f, 0.16f, 0.24f, 0.90f))
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.35f, 0.22f, 0.42f, 1f))
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.DICES}##perf_trans_rand", navBtnW, headerH)) {
-                    ParametersUndo.pushUndoState(session.parametersState, mixer)
-                    mixer.transitionFilter?.let { filter ->
-                        filter.parameters.values.forEach { param ->
-                            val min = param.minClamp
-                            val max = param.maxClamp
-                            param.baseValue = (min + Math.random().toFloat() * (max - min)).coerceIn(min, max)
-                        }
-                    }
-                }
-            }
-            ImGui.popStyleColor(2)
-            itemTooltip("Randomize transition parameters.\nClick to randomize with undo support.")
-        }
 
         ImGui.endGroup()
     }

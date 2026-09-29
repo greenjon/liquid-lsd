@@ -1,5 +1,33 @@
 ## [Unreleased]
 
+### Macro Knob DAW Ergonomics: Shift-Drag Fine Tuning, Bipolar/Endless Meter Modes & Direct Numeric Entry (`MacroKnobWidget.kt`, `PerfKnobSpec.kt`, `PerformanceMatrixPanel.kt`, `MacroKnobWidgetTest.kt`, `macros_and_rack.md`)
+- **Shift-Drag Fine-Tuning**: Holding Shift while dragging a Macro Knob scales the sweep distance by 6x (`FINE_SWEEP_MULTIPLIER = 6f`, 1200px full sweep vs 200px default) for surgical decimal adjustments. Smoothly re-anchors origin when Shift is pressed or released mid-drag to prevent cursor jump.
+- **Bipolar & Endless Meter Modes**: Added `MeterType` support to `MacroKnobWidget`:
+  - **Bipolar**: Displays a center notch at 12 o'clock (noon) and sweeps active arc left (negative) or right (positive) from noon. Automatically wires in Focus Mode to focused FX and deck parameters with negative minimums (`param.meterType == MeterType.BIPOLAR`). Middle-clicking resets to 0.5 (neutral center).
+  - **Endless**: Continuous 360° circle where 0 and 1 meet at 6 o'clock straight down, rendering a continuous rim with 360° needle rotation for angle, hue, and rotational parameters (`MeterType.ENDLESS`).
+- **Double-Click Direct Numeric Entry**: Double-clicking any macro knob opens an inline text box centered on the knob face. Commits on Enter or click-away and cancels on Escape. Automatically scales entered values to the parameter's actual range when bound (e.g. typing `2.5` for Zoom [0.1..5.0] maps correctly), or normalized 0..1 when unbound.
+- **Subtle Center Value Readout**: Displays formatted live parameter values inside the knob face on hover/drag when no authored overlay is active.
+
+### Deck & Transitions Row Randomize Dice Relocated to Right Wing (`PerformanceDeckControls.kt`, `PerformanceTransitionsControls.kt`, `PerformanceMatrixPanel.kt`, `PerfRowLayoutTest.kt`, `docs/developer/ui.md`, `docs/user_guide/macros_and_rack.md`, `DECISIONS.md`)
+- **Semantic Affordance Alignment**: Moved the randomize die button (`Icons.DICES`) from the left wing's Visual Source row (Row 1) in Deck rows to the right wing, positioning it on Row 1 directly above the persistent `[BYPASS]` button on Row 2.
+- **Transitions Row Parity**: Relocated the Transitions row randomize die button from Line 1 left controls to the right wing at `row1Y` (`width = 56f`), expanding room for the transition picker button and providing uniform right-wing dice placement across all rows.
+- **Whole-Deck Randomization Clarity**: Reflects that randomizing a deck affects modulators and base values across both the Visual Generator and Insert FX, rather than only visual source parameters.
+- **Vertical Button Symmetry**: Both the randomize die button and BYPASS button share identical width (`56f`) on the right wing, creating a clean stacked two-button column.
+- **Left Wing Streamlining**: Removed the die button from Row 1 left controls, transitioning directly from Eject to Queue Navigation (`< N/Total >` / `[PREVIEW]`) and updating `DeckRowMetrics.row1Width`.
+
+### Performance Row Edit Gear Button Inset (`PerformanceMatrixPanel.kt`)
+- **Row Border Overlap Clearance**: Inset the icon-only Deep Edit gear disclosure button in performance rows (Decks A, B, BG, PV, Master, Transitions) 2px to the right (`gearShiftX = 2f`). This eliminates visual overlap with the colored 2px outer border of the row box while preserving clean 4px control spacing to the adjacent mode toggle pill.
+
+### FX Chain Dirty State Restricted to FX Changes and Reordering (`FxChain.kt`, `FxChainDirtyAndSteppingTest.kt`, `preset_management.md`, `DECISIONS.md`)
+- **Superknob & Parameter Dirty Immunity**: Turning the Superknob or tweaking effect parameters / metaknobs in deck rows no longer marks the FX chain dirty.
+- **Structural Dirty Tracking**: `FxChain.computeIsDirty()` now triggers dirty state (`•` dot indicator and alert-colored Save button) only when effects in the chain are added, removed, or replaced, or when their slot order changes.
+
+### Deck Row Left Controls Alignment, FX Row Save Glyph & Expanded Knob Width (`PerformanceDeckControls.kt`, `FxChainHeader.kt`, `PerfRowLayoutTest.kt`, `docs/developer/ui.md`, `DECISIONS.md`)
+- **Kebab Alignment (FX & SRC Rows)**: Eliminated trailing growth slack (48px) from `DeckRowMetrics.row1Width` and bound Row 2's FX chain header width directly to Row 1 (`DeckRowMetrics.row1Width(ctrlH, comboW)`), perfectly aligning the kebab (`⋮`) menu buttons of both rows to the same vertical column.
+- **FX Row Save Button Glyph**: Replaced the text `"Save"` button (42px) in `FxChainHeader.kt` with a compact `${Icons.SAVE}` icon glyph matching `ctrlH` (24px/21px), mirroring the Save button style and width from the SRC row.
+- **Deck PV Badge Alignment**: Deck PV's `[PREVIEW]` badge now expands to match the queue navigation width (`maxOf(queueNavW, PV_BADGE_W)`), ensuring Deck PV's kebab button lines up identically with Decks A, B, and BG.
+- **Reclaimed Horizontal Space for Knobs**: Removing the 48px trailing slack from `deckRow1W` reduces `leftW` in `PerfRowGeometry`, expanding the available horizontal width for the knob cluster and allowing the macro knobs to render larger across all performance rows.
+
 ### OSC Learn/Clear Menu Parity, Shared Armed-Pulse Border, Movement-Threshold Binding, and Debounced Profile Saves (`TangoPalette.kt`, `OscLearnState.kt`, `OscPreferencesPanel.kt`, `ParametersRenderer.kt`, `CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `PerformanceDeckControls.kt`, `PerformanceTransitionsControls.kt`, `OscMappingManagerTest.kt`, `performance_controls.md`)
 - **"Clear OSC Mapping" Everywhere "Learn OSC" Exists**: Every right-click Learn OSC menu now also offers a matching Clear OSC Mapping item — extended to the deck/BG queue nav buttons (`PerformanceDeckControls.kt`) and the transition queue nav buttons (`PerformanceTransitionsControls.kt`), which previously had no way to remove an OSC binding without opening Preferences. `CustomRangeSlider.kt`'s two context menus (min/max bound labels and the main slider) and `BeatDivisionSlider.kt` gained Clear items for both MIDI and OSC, having previously had neither.
 - **Shared Amber "Armed" Pulse Border (`TangoPalette.drawOscLearnPulseBorder`)**: Extracted the pulsing-amber-outline formula duplicated across `CustomRangeSlider.kt` and `BeatDivisionSlider.kt` into a single `TangoPalette` helper, then wired it into every control that previously had no OSC-armed visual feedback: deck/BG queue nav buttons, transition queue nav buttons, the Transitions crossfader and fade-speed badge, and the Parameters grid's VALUE cell (which previously pulsed only for Macro Learn, not OSC Learn).

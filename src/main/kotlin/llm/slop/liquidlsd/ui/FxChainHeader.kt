@@ -25,9 +25,9 @@ import java.io.File
  */
 object FxChainHeader {
 
-    private const val ARROW_W = 16f
-    private const val MORE_BTN_W = 20f
-    private const val SAVE_BTN_W = 42f
+    const val ARROW_W = 16f
+    const val MORE_BTN_W = 20f
+    fun saveBtnW(ctrlH: Float): Float = ctrlH
 
     /** Steps [chain] to the previous (-1) or next (+1) chain file in its folder. */
     fun stepChain(session: SessionContext, chain: FxChain, dir: Int) {
@@ -135,8 +135,9 @@ object FxChainHeader {
             ImGui.sameLine()
 
             // 2. Chain name button
+            val saveW = saveBtnW(ctrlH)
             val slotPillsW = 20f * FxChain.SLOT_COUNT + gap * (FxChain.SLOT_COUNT - 1)
-            val nameW = (maxW - (ARROW_W * 2f + SAVE_BTN_W + MORE_BTN_W + slotPillsW + gap * 6f)).coerceAtLeast(48f)
+            val nameW = (maxW - (ARROW_W * 2f + saveW + MORE_BTN_W + slotPillsW + gap * 5f)).coerceAtLeast(48f)
             drawChainNameButton(session, chain, bankId, ctrlH, nameW, isDirty, onOpenChainBrowse)
 
             ImGui.sameLine()
@@ -275,14 +276,17 @@ object FxChainHeader {
         val ink = if (isLight && !isDirty) floatArrayOf(0.06f, 0.07f, 0.08f) else TangoPalette.inkFor(saveColRgb)
         ImGui.pushStyleColor(ImGuiCol.Button, saveCol)
         ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
-        if (ImGui.button("Save##save_$bankId", SAVE_BTN_W, ctrlH)) {
-            if (canOverwrite) {
-                val file = chain.sourceFile!!
-                val dto = chain.toFxChainDto(chain.name)
-                session.presetRepository.saveFxChainAsync(file, chain.name, dto)
-                chain.markClean(file)
-            } else {
-                openSaveAsModal(session, chain)
+        val saveW = saveBtnW(ctrlH)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.SAVE}##save_$bankId", saveW, ctrlH)) {
+                if (canOverwrite) {
+                    val file = chain.sourceFile!!
+                    val dto = chain.toFxChainDto(chain.name)
+                    session.presetRepository.saveFxChainAsync(file, chain.name, dto)
+                    chain.markClean(file)
+                } else {
+                    openSaveAsModal(session, chain)
+                }
             }
         }
         ImGui.popStyleColor(2)

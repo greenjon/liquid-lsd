@@ -282,7 +282,7 @@ class PerformanceMatrixPanel {
         val deckBadgeW = 42f
         val deckComboW = (gridW * 0.11f).coerceIn(85f, 140f)
         // Reserved at the full-height CTRL_H (the wider case) so compact rows never widen it.
-        val deckRow1W = DeckRowMetrics.row1Width(PerformanceColors.CTRL_H, deckComboW, session.uiTheme.randomizationEnabled)
+        val deckRow1W = DeckRowMetrics.row1Width(PerformanceColors.CTRL_H, deckComboW)
         val deckLeftW = deckBadgeW + 6f + deckRow1W
         val deckRightW = 56f
         // MASTER tab: Master ([MIX] + crossfader over [FX] + chain header), Transitions (picker +
@@ -488,6 +488,7 @@ class PerformanceMatrixPanel {
                     drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "TRANS", UITheme.FontLevel.H2)
                     drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
                     PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW)
+                    PerformanceTransitionsControls.drawRightControls(session, mixer, boxX2 - pad - masterRightW, row1Y, ctrlH, masterRightW)
                 } else if (isClockRow) {
                     drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "CLOCK", UITheme.FontLevel.H2)
                     PerformanceClockControls.draw(session, masterTabStartX, row1Y, row2YFinal, ctrlH)
@@ -516,7 +517,10 @@ class PerformanceMatrixPanel {
 
                     val leftStartX = badgeX + deckBadgeW + 6f
                     deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W)
-                    deckControls.drawDeckRowRightControls(session, mixer, deckLabel, targetDeck, boxX2 - pad - deckRightW, row2YFinal, ctrlH)
+                    deckControls.drawDeckRowRightControls(
+                        session, mixer, parametersState, deckLabel, targetDeck,
+                        boxX2 - pad - deckRightW, row1Y, row2YFinal, ctrlH, deckRightW
+                    )
                 }
             }
 
@@ -577,6 +581,7 @@ class PerformanceMatrixPanel {
                     id = "perf_${tabIdx}_r${rowIdx}_c${col}",
                     label = knobLabel,
                     value = control.value,
+                    meterType = spec.meterType,
                     diameter = diameter,
                     defaultValue = 0.5f,
                     pixelsForFullSweep = 200f,
@@ -755,7 +760,8 @@ class PerformanceMatrixPanel {
     /**
      * Icon-only EDIT toggle docked in the bottom half of a row's title-badge column -- [drawTitleBadge]
      * only fills the top half (see its `h` param there), leaving this gap free for the disclosure
-     * toggle instead of a separate top-right corner button.
+     * toggle instead of a separate top-right corner button. Inset slightly (`gearShiftX = 2f`) so its
+     * frame clears the row's outer border stroke.
      */
     private fun drawEditGearInBadge(
         session: llm.slop.liquidlsd.SessionContext,
@@ -770,7 +776,8 @@ class PerformanceMatrixPanel {
         badgeH: Float
     ) {
         if (!descriptor.canExpand) return
-        ImGui.setCursorScreenPos(badgeX, badgeY + badgeH)
+        val gearShiftX = 2f
+        ImGui.setCursorScreenPos(badgeX + gearShiftX, badgeY + badgeH)
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             llm.slop.liquidlsd.ui.rack.RackUnit.drawChevronIcon(
                 parametersState, activeModuleId, "${tabIdx}_${rowIdx}", badgeW, badgeH
