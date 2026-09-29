@@ -234,4 +234,13 @@ class MacroKnobWidgetTest {
         MacroKnobWidget.clearCursorReleaseRequest()
         assertFalse(MacroKnobWidget.wantsCursorRelease)
     }
+
+    @Test
+    fun testInitialCursorLockState() {
+        MacroKnobWidget.abortDrag()
+        assertFalse(MacroKnobWidget.isDragLocked)
+        assertFalse(MacroKnobWidget.wantsCursorLock)
+        assertFalse(MacroKnobWidget.wantsCursorRelease)
+        assertNull(MacroKnobWidget.activeKnobId)
+    }
 }

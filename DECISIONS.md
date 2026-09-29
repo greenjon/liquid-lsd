@@ -194,13 +194,15 @@
 
 ## Relative Knob Dragging & Cursor Locking / Restoration (`MacroKnobWidget.kt`, `UIManager.kt`, `Main.kt`, `PreferencesPanel.kt`, docs, tests)
 
-- **Context**: 2026-09-26. Adjusting rotary macro knobs across banks previously moved the mouse cursor across the screen, leaving it displaced when released. Near screen edges, the cursor hit monitor boundaries and stopped accumulating motion. On Linux Wayland, client-side global pointer warping in normal mode is strictly prohibited by compositors.
+- **Context**: 2026-09-26. Adjusting rotary macro knobs across banks previously moved the mouse cursor across the screen, leaving it displaced when released. Near screen edges, the cursor hit monitor boundaries and stopped accumulating motion. On Linux Wayland, client-side global pointer warping in normal mode is strictly prohibited by compositors. Furthermore, on certain Wayland compositors (Mutter, KWin) and during fine Shift-drag adjustments within the 3px deadzone, the mouse cursor remained visible directly atop the knob face, obscuring the changing numeric value readout.
 - **Decision**:
   - Implemented relative pointer locking using GLFW's `GLFW_CURSOR_DISABLED` mode once drag motion exceeds a 3px deadzone (`DRAG_LOCK_DEADZONE_PX`).
-  - Implemented Wayland-safe cursor restoration in `UIManager`: calling `glfwSetCursorPos(windowHandle, originX, originY)` while still in `GLFW_CURSOR_DISABLED` before restoring `GLFW_CURSOR_NORMAL`. This satisfies the `zwp_pointer_constraints_v1` protocol and restores the cursor to its initial click coordinates across all platforms.
+  - When **Shift** is held for fine-tuning (`FINE_SWEEP_MULTIPLIER = 6f`), immediately bypass the deadzone on drag initiation so that fine sub-pixel adjustments lock and hide the cursor right away.
+  - Paired `GLFW_CURSOR_DISABLED` with an explicit `ImGui.setMouseCursor(ImGuiMouseCursor.None)` and a 16x16 transparent GLFW cursor (`blankCursor`) set via `glfwSetCursor(windowHandle, blankCursor)` while locked. This ensures the cursor image is completely hidden even if a Wayland compositor does not automatically clear the cursor surface during pointer confinement.
+  - Implemented Wayland-safe cursor restoration in `UIManager`: calling `glfwSetCursorPos(windowHandle, originX, originY)` while still in `GLFW_CURSOR_DISABLED` before restoring standard cursor (`glfwSetCursor(windowHandle, 0L)`) and `GLFW_CURSOR_NORMAL`. This satisfies the `zwp_pointer_constraints_v1` protocol and restores the cursor to its initial click coordinates across all platforms.
   - Added safety recovery in `Main.kt` (`glfwSetWindowFocusCallback`) and `UIManager.dispose()` to abort active knob dragging and restore normal cursor mode if focus is lost or the window closes.
   - Added user toggle `lockCursorOnKnobDrag` (default: `true`) in `AppPreferences` and `PreferencesPanel` (under **General > Features**), with automatic bypass when the performance touch console is active.
-- **Consequences**: Performers enjoy unbounded knob sweep range and muscle memory preservation without cursor drift, fully compatible with Wayland, X11, macOS, and Windows.
+- **Consequences**: Performers enjoy unbounded knob sweep range, unobstructed visibility of numeric value readouts during both standard and Shift fine-tuning adjustments, and muscle memory preservation without cursor drift, fully compatible with Wayland, X11, macOS, and Windows.
 
 ## Mixxx-Inspired List & Dropdown Readability Redesign (BORING theme only) (`UIThemeStyler.kt`, `DropdownStyleHelper.kt`, 18 list/dropdown renderer files, docs)
 

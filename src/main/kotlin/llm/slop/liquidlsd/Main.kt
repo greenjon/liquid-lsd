@@ -310,6 +310,7 @@ fun main(args: Array<String>) {
             session.touchConsoleController.onFocusLost()
             if (llm.slop.liquidlsd.ui.MacroKnobWidget.isDragLocked) {
                 glfwSetCursorPos(window, llm.slop.liquidlsd.ui.MacroKnobWidget.lockOriginX.toDouble(), llm.slop.liquidlsd.ui.MacroKnobWidget.lockOriginY.toDouble())
+                glfwSetCursor(window, 0L)
                 glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL)
             }
             llm.slop.liquidlsd.ui.MacroKnobWidget.abortDrag()

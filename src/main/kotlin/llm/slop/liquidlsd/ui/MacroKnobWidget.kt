@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import imgui.flag.ImGuiInputTextFlags
 import imgui.flag.ImGuiKey
+import imgui.flag.ImGuiMouseCursor
 import imgui.type.ImString
 import llm.slop.liquidlsd.parameters.MeterType
 import java.util.Locale
@@ -246,6 +247,14 @@ object MacroKnobWidget {
             isDragLocked = false
             wantsCursorLock = false
             wantsCursorRelease = false
+
+            // Holding Shift on drag initiation indicates intentional fine-tuning; lock and hide the cursor immediately
+            if (io.keyShift && session.uiTheme.lockCursorOnKnobDrag && !session.touchConsoleController.isActive) {
+                isDragLocked = true
+                lockOriginX = dragStartX
+                lockOriginY = dragStartY
+                wantsCursorLock = true
+            }
         }
 
         var newValue = value
@@ -263,12 +272,17 @@ object MacroKnobWidget {
 
             if (!isDragLocked && session.uiTheme.lockCursorOnKnobDrag && !session.touchConsoleController.isActive) {
                 val distSq = deltaX * deltaX + deltaY * deltaY
-                if (distSq >= DRAG_LOCK_DEADZONE_PX * DRAG_LOCK_DEADZONE_PX) {
+                val threshold = if (io.keyShift) 0f else DRAG_LOCK_DEADZONE_PX
+                if (distSq >= threshold * threshold) {
                     isDragLocked = true
                     lockOriginX = dragStartX
                     lockOriginY = dragStartY
                     wantsCursorLock = true
                 }
+            }
+
+            if (isDragLocked) {
+                ImGui.setMouseCursor(ImGuiMouseCursor.None)
             }
 
             val effectiveSweep = if (io.keyShift) pixelsForFullSweep * FINE_SWEEP_MULTIPLIER else pixelsForFullSweep

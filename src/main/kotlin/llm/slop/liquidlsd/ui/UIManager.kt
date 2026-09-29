@@ -594,6 +594,20 @@ class UIManager(
         }
     }
 
+    private val blankCursor: Long by lazy {
+        try {
+            org.lwjgl.system.MemoryStack.stackPush().use { stack ->
+                val image = org.lwjgl.glfw.GLFWImage.malloc(stack)
+                val pixels = stack.calloc(16 * 16 * 4)
+                image.set(16, 16, pixels)
+                org.lwjgl.glfw.GLFW.glfwCreateCursor(image, 0, 0)
+            }
+        } catch (e: Throwable) {
+            logger.warn(e) { "Failed to create blank cursor for relative knob drag" }
+            0L
+        }
+    }
+
     private fun handleKnobCursorLocking() {
         if (MacroKnobWidget.isDragLocked && !ImGui.getIO().mouseDown[0]) {
             MacroKnobWidget.abortDrag()
@@ -605,21 +619,37 @@ class UIManager(
             // Critical for Linux Wayland: set cursor position hint while locked, then return to normal.
             // Calling glfwSetCursorPos after GLFW_CURSOR_NORMAL is dropped on Wayland compositors.
             org.lwjgl.glfw.GLFW.glfwSetCursorPos(windowHandle, originX, originY)
+            if (blankCursor != 0L) {
+                org.lwjgl.glfw.GLFW.glfwSetCursor(windowHandle, 0L)
+            }
             org.lwjgl.glfw.GLFW.glfwSetInputMode(windowHandle, org.lwjgl.glfw.GLFW.GLFW_CURSOR, org.lwjgl.glfw.GLFW.GLFW_CURSOR_NORMAL)
             MacroKnobWidget.clearCursorReleaseRequest()
         } else if (MacroKnobWidget.wantsCursorLock) {
             if (!session.touchConsoleController.isActive) {
+                if (blankCursor != 0L) {
+                    org.lwjgl.glfw.GLFW.glfwSetCursor(windowHandle, blankCursor)
+                }
                 org.lwjgl.glfw.GLFW.glfwSetInputMode(windowHandle, org.lwjgl.glfw.GLFW.GLFW_CURSOR, org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED)
             }
             MacroKnobWidget.clearCursorLockRequest()
+        }
+
+        if (MacroKnobWidget.isDragLocked) {
+            ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.None)
         }
     }
 
     fun dispose() {
         if (MacroKnobWidget.isDragLocked) {
             org.lwjgl.glfw.GLFW.glfwSetCursorPos(windowHandle, MacroKnobWidget.lockOriginX.toDouble(), MacroKnobWidget.lockOriginY.toDouble())
+            if (blankCursor != 0L) {
+                org.lwjgl.glfw.GLFW.glfwSetCursor(windowHandle, 0L)
+            }
             org.lwjgl.glfw.GLFW.glfwSetInputMode(windowHandle, org.lwjgl.glfw.GLFW.GLFW_CURSOR, org.lwjgl.glfw.GLFW.GLFW_CURSOR_NORMAL)
             MacroKnobWidget.abortDrag()
+        }
+        if (blankCursor != 0L) {
+            org.lwjgl.glfw.GLFW.glfwDestroyCursor(blankCursor)
         }
         prevMouseButtonCallback?.free()
         windowFrameController.destroy()
