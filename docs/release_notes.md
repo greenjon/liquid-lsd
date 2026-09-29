@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Reordered Deck SRC and FX Row Controls & Removed PlayQueue Status (`PerformanceDeckControls.kt`, `FxChainHeader.kt`, `PerfRowLayoutTest.kt`, `DeckRowMetrics`, docs)
+- **Symmetric Control Flow**: Reordered the left control blocks on Deck rows to achieve vertical alignment and parallel control layout between Row 1 (Visual Source) and Row 2 (Insert FX):
+  - Row 1 (SRC): `[SRC]` mode pill → `[⋮]` kebab → `[source]` badge → `[Save]` → `[<]` prev → `[>]` next → `[⏏]` eject.
+  - Row 2 (FX): `[FX]` mode pill → `[⋮]` kebab → `[chain]` name → `[Save]` → `[◀]` prev → `[▶]` next → `[1][2][3]` slot pills.
+- **Removed PlayQueue Status Text**: Removed the middle queue status text (`n/m`) from the deck row queue navigation to streamline the control row, with queue items stepped cleanly via the adjacent `<` and `>` buttons.
+- **Focus Mode & PV Consistency**: In FX Focus Mode, the kebab menu button `[⋮]` remains anchored at the start of the row directly following the `[FX]` pill, preventing button jumping when entering or exiting focus mode. Deck PV's `[PREVIEW]` badge spans the unified navigation width (`56f`), maintaining identical row length across all decks.
+
 ### Performance Matrix Title Badge Unification & Row Length Alignment (`PerformanceMatrixPanel.kt`, `PerfRowLayoutTest.kt`, `docs/developer/ui.md`)
 - **Uniform 42px Title Badge Width**: Standardized all row title badges to a uniform 42px width across both DECKS and MASTER tabs (`masterTabBadgeW = 42f`, matching `deckBadgeW = 42f`).
 - **Standardized Badge Labels**: Updated MASTER tab badges to concise, clear acronyms:

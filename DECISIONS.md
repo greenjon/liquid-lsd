@@ -1,3 +1,15 @@
+## Reorder Deck SRC and FX Row Controls & Remove PlayQueue Status (`PerformanceDeckControls.kt`, `FxChainHeader.kt`, `PerfRowLayoutTest.kt`, `DeckRowMetrics`, docs, tests)
+
+- **Context**: 2026-09-29. In the Performance Matrix deck rows (Decks A, B, BG, and PV), Row 1 (Visual Source) and Row 2 (Insert FX) had diverging control sequences. Row 1 had `[SRC] [source] [eject] [<] [n/m] [>] [Save] [⋮]`, whereas Row 2 had `[FX] [◀] [chain] [▶] [1][2][3] [Save] [⋮]`. The different button placements disrupted horizontal scannability, placed the kebab action menus at the far right, and included a redundant playqueue status readout (`n/m`) in Row 1 that crowded the navigation controls.
+- **Decision**:
+  - **Symmetric Parallel Ordering**: Reordered controls on both rows to follow an identical semantic sequence:
+    - **Row 1 (SRC)**: `[SRC]` mode pill → `[⋮]` kebab → `[source]` badge → `[Save]` → `[<]` prev → `[>]` next → `[⏏]` eject.
+    - **Row 2 (FX)**: `[FX]` mode pill → `[⋮]` kebab → `[chain]` name → `[Save]` → `[◀]` prev → `[▶]` next → `[1][2][3]` slot pills.
+  - **Remove PlayQueue Status Text**: Removed the middle index text (`n/m`) from Row 1 queue navigation, letting performers step items quickly via `<` and `>` while saving horizontal space.
+  - **Kebab Stability in FX Focus Mode**: Positioned the kebab menu button `[⋮]` as the first control following the `[FX]` pill in both Group Mode and Focus Mode (`[FX] [⋮] [◀ CHAIN] [Save] [1][2][3]`), preventing the button from jumping positions when focusing a slot.
+  - **Deck PV & Metrics Consistency**: Updated `DeckRowMetrics.row1Width` and `FxChainHeader.calculateNameWidth` so both rows remain exactly identical in total width. Deck PV's `[PREVIEW]` badge spans `PV_BADGE_W = 56f` (matching `<` + gap + `>`), ensuring zero layout drift.
+- **Consequences**: Provides vertical alignment between source and effect operations across all decks, unclutters queue controls, and anchors primary action menus (`[⋮]`) predictably across both rows.
+
 ## Deck FX Row Stepper Arrows Linked to Live FX Queues (`FxChainHeader.kt`, `FxQueueEngine.kt`, `PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `PerfRowLayoutTest.kt`, `FXQueueManagerTest.kt`, docs, tests)
 
 - **Context**: 2026-09-29. In the Performance Matrix, the Generator row (Row 1) features `< n/m >` stepper arrows linked to the PlayQueue (Decks A/B) and BG Queue (Deck BG). In contrast, the FX row (Row 2) previously had `[◀] Name [▶]` arrows that stepped through `.lsdfxchain` files alphabetically in the current folder. Performers expected FX row arrows to navigate the live FX queues in the same way visual sources navigate their queues, rather than traversing disk folders. Furthermore, Deck PV (a preview monitor) and Master FX (a curated final stage) do not use rotating queues.

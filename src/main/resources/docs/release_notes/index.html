@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#reordered-deck-src-and-fx-row-controls-removed-playqueue-status-performancedeckcontrolskt-fxchainheaderkt-perfrowlayouttestkt-deckrowmetrics-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reordered Deck SRC and FX Row Controls &amp; Removed PlayQueue Status (PerformanceDeckControls.kt, FxChainHeader.kt, PerfRowLayoutTest.kt, DeckRowMetrics, docs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-matrix-title-badge-unification-row-length-alignment-performancematrixpanelkt-perfrowlayouttestkt-docsdeveloperuimd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4635,6 +4646,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#reordered-deck-src-and-fx-row-controls-removed-playqueue-status-performancedeckcontrolskt-fxchainheaderkt-perfrowlayouttestkt-deckrowmetrics-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reordered Deck SRC and FX Row Controls &amp; Removed PlayQueue Status (PerformanceDeckControls.kt, FxChainHeader.kt, PerfRowLayoutTest.kt, DeckRowMetrics, docs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-matrix-title-badge-unification-row-length-alignment-performancematrixpanelkt-perfrowlayouttestkt-docsdeveloperuimd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8037,6 +8059,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="reordered-deck-src-and-fx-row-controls-removed-playqueue-status-performancedeckcontrolskt-fxchainheaderkt-perfrowlayouttestkt-deckrowmetrics-docs">Reordered Deck SRC and FX Row Controls &amp; Removed PlayQueue Status (<code>PerformanceDeckControls.kt</code>, <code>FxChainHeader.kt</code>, <code>PerfRowLayoutTest.kt</code>, <code>DeckRowMetrics</code>, docs)</h3>
+<ul>
+<li><strong>Symmetric Control Flow</strong>: Reordered the left control blocks on Deck rows to achieve vertical alignment and parallel control layout between Row 1 (Visual Source) and Row 2 (Insert FX):</li>
+<li>Row 1 (SRC): <code>[SRC]</code> mode pill → <code>[⋮]</code> kebab → <code>[source]</code> badge → <code>[Save]</code> → <code>[&lt;]</code> prev → <code>[&gt;]</code> next → <code>[⏏]</code> eject.</li>
+<li>Row 2 (FX): <code>[FX]</code> mode pill → <code>[⋮]</code> kebab → <code>[chain]</code> name → <code>[Save]</code> → <code>[◀]</code> prev → <code>[▶]</code> next → <code>[1][2][3]</code> slot pills.</li>
+<li><strong>Removed PlayQueue Status Text</strong>: Removed the middle queue status text (<code>n/m</code>) from the deck row queue navigation to streamline the control row, with queue items stepped cleanly via the adjacent <code>&lt;</code> and <code>&gt;</code> buttons.</li>
+<li><strong>Focus Mode &amp; PV Consistency</strong>: In FX Focus Mode, the kebab menu button <code>[⋮]</code> remains anchored at the start of the row directly following the <code>[FX]</code> pill, preventing button jumping when entering or exiting focus mode. Deck PV's <code>[PREVIEW]</code> badge spans the unified navigation width (<code>56f</code>), maintaining identical row length across all decks.</li>
+</ul>
 <h3 id="performance-matrix-title-badge-unification-row-length-alignment-performancematrixpanelkt-perfrowlayouttestkt-docsdeveloperuimd">Performance Matrix Title Badge Unification &amp; Row Length Alignment (<code>PerformanceMatrixPanel.kt</code>, <code>PerfRowLayoutTest.kt</code>, <code>docs/developer/ui.md</code>)</h3>
 <ul>
 <li><strong>Uniform 42px Title Badge Width</strong>: Standardized all row title badges to a uniform 42px width across both DECKS and MASTER tabs (<code>masterTabBadgeW = 42f</code>, matching <code>deckBadgeW = 42f</code>).</li>

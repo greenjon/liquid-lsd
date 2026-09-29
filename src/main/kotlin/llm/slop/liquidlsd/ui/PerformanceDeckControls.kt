@@ -24,17 +24,19 @@ internal object DeckRowMetrics {
     /** Base width of the merged generator/preset badge, before adding the space the old
      *  separate preset combo used to occupy (see [genBadgeW]). */
     const val GEN_BADGE_BASE_W = 74f
-    const val QUEUE_IDX_W = 38f
-    const val QUEUE_INNER_GAP = 2f
-    const val PV_BADGE_W = 60f
+    @Deprecated("Playqueue status removed from deck row")
+    const val QUEUE_IDX_W = 0f
+    @Deprecated("Inner gap removed from queue nav")
+    const val QUEUE_INNER_GAP = 0f
+    const val PV_BADGE_W = 56f
     /** Kebab menu button -- narrower than a square icon button, matching [FxChainHeader]'s ⋮. */
     const val KEBAB_W = 20f
 
     fun iconBtnW(ctrlH: Float): Float = ctrlH
-    fun navBtnW(ctrlH: Float): Float = (ctrlH * 0.85f).coerceAtLeast(20f)
+    fun navBtnW(ctrlH: Float): Float = ((PV_BADGE_W - GAP) * 0.5f).coerceAtLeast(20f)
 
-    /** `< n/m >` queue navigation (Decks A, B, BG). */
-    fun queueNavW(ctrlH: Float): Float = navBtnW(ctrlH) * 2f + QUEUE_IDX_W + QUEUE_INNER_GAP * 2f
+    /** `< >` queue navigation (Decks A, B, BG). */
+    fun queueNavW(ctrlH: Float): Float = navBtnW(ctrlH) * 2f + GAP
 
     /**
      * Width of the single generator/preset badge -- absorbs the width once used by the
@@ -45,15 +47,14 @@ internal object DeckRowMetrics {
     fun growthSlack(ctrlH: Float): Float = 0f
 
     /**
-     * Line 1 (SRC) width: pill, generator/preset badge, eject, queue nav or PV's PREVIEW
-     * badge (whichever is wider), then Save + kebab -- mirroring the Save/⋮ pair Row 2's FX chain
-     * header has, so SRC and FX line up cleanly at the kebab.
+     * Line 1 (SRC) width: pill, kebab, generator/preset badge, save, queue nav or PV's PREVIEW
+     * badge (whichever is wider), and eject.
      * (Randomize die button is placed in the right wing above the BYPASS button.)
      */
     fun row1Width(ctrlH: Float, comboW: Float): Float =
-        MODE_PILL_W + GAP + genBadgeW(comboW) + GAP + iconBtnW(ctrlH) +
+        MODE_PILL_W + GAP + KEBAB_W + GAP + genBadgeW(comboW) + GAP + iconBtnW(ctrlH) +
             GAP + maxOf(queueNavW(ctrlH), PV_BADGE_W) +
-            GAP + iconBtnW(ctrlH) + GAP + KEBAB_W
+            GAP + iconBtnW(ctrlH)
 
     @Deprecated("Randomize die is now placed above the BYPASS button in the right wing.", ReplaceWith("row1Width(ctrlH, comboW)"))
     fun row1Width(ctrlH: Float, comboW: Float, randomization: Boolean): Float = row1Width(ctrlH, comboW)
@@ -61,16 +62,17 @@ internal object DeckRowMetrics {
 
 /**
  * Deck row controls (Deck A, B, BG, PV):
- * - Left controls, two stacked rows: Row 1 (SRC) knob-assign pill, generator/preset badge,
- *   eject, queue navigation, Save, kebab; Row 2 (FX) knob-assign pill and FX chain header.
+ * - Left controls, two stacked rows:
+ *   Row 1 (SRC): [SRC] knob-assign pill, kebab, generator/preset badge, Save, queue navigation, eject;
+ *   Row 2 (FX): [FX] knob-assign pill, kebab, chain name, Save, queue navigation, [1][2][3] slot pills.
  * - Right controls: Row 1 randomize die button (applies to both SRC and FX); Row 2 FX bypass button.
  */
 internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
     /**
      * Controls to the left of the knobs for Deck rows (Deck A, B, BG, PV) in two stacked rows:
-     * - Row 1 (SRC): [SRC] knob-assign pill, generator/preset badge, eject button,
-     *   play queue / bg queue navigation (or preview button for PV), Save, kebab.
+     * - Row 1 (SRC): [SRC] knob-assign pill, kebab, generator/preset badge, Save,
+     *   play queue / bg queue navigation (or preview button for PV), eject button.
      * - Row 2 (FX): [FX] knob-assign pill and dedicated FX chain controls.
      */
     fun drawDeckRowLeftControls(
@@ -101,6 +103,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val isFx = ctx.isDeckRowFx(tag, parametersState)
         val isSrc = !isFx
         val modeBtnW = DeckRowMetrics.MODE_PILL_W
+        val iconBtnW = DeckRowMetrics.iconBtnW(ctrlH)
 
         // --- ROW 1 (SRC) -------------------------------------------------------------
         ImGui.setCursorScreenPos(startX, row1Y)
@@ -138,9 +141,15 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
         ImGui.sameLine(0f, gap)
 
-        // 2. Generator/preset badge -- click to Browse stock generators + saved presets
-        // (a preset is just a generator with its params saved under a name, so there's one
-        // control, not two -- see PerformanceBrowseBay.drawGenBrowse for the merged Browse list).
+        // 2. [⋮] Kebab -- source operations (Browse, Save As, defaults)
+        if (ImGui.button("${Icons.MORE_VERTICAL}##perf_src_more_$tag", DeckRowMetrics.KEBAB_W, ctrlH)) {
+            ImGui.openPopup("##perf_gen_badge_ctx_$tag")
+        }
+        itemTooltip("Source operations (Browse, Save As, defaults).")
+
+        ImGui.sameLine(0f, gap)
+
+        // 3. Generator/preset badge -- click to Browse stock generators + saved presets
         val genBadgeW = DeckRowMetrics.genBadgeW(comboW)
         val activePreset = when {
             isDeckA -> session.presetManager.activePresetA
@@ -217,29 +226,26 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
         ImGui.sameLine(0f, gap)
 
-        // 3. Eject Button [ EJECT ]
-        val iconBtnW = DeckRowMetrics.iconBtnW(ctrlH)
-        val ejectBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
-        val ejectBtnHov = if (isLight) TangoPalette.u32(TangoPalette.DANGER.light) else ImGui.colorConvertFloat4ToU32(0.45f, 0.20f, 0.20f, 1f)
-        ImGui.pushStyleColor(ImGuiCol.Button, ejectBtnBg)
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ejectBtnHov)
+        // 4. Save button -- save-if-possible, else Save As modal
+        val saveBtnBg = when {
+            isDirty -> TangoPalette.u32(TangoPalette.ALERT.dark)
+            isLight -> ImGui.getColorU32(ImGuiCol.Button)
+            else -> ImGui.colorConvertFloat4ToU32(0.18f, 0.20f, 0.24f, 0.8f)
+        }
+        ImGui.pushStyleColor(ImGuiCol.Button, saveBtnBg)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.EJECT}##perf_eject_$tag", iconBtnW, ctrlH)) {
-                UIManager.triggerDeckEject(deck, isDeckA = isDeckA, isDeckPV = isDeckPV)
+            if (ImGui.button("${Icons.SAVE}##perf_src_save_$tag", iconBtnW, ctrlH)) {
+                ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = false)
             }
         }
-        ImGui.popStyleColor(2)
-        itemTooltip("Eject current preset from $deckLabel and reset to defaults.")
+        ImGui.popStyleColor()
+        itemTooltip("Save $deckLabel's current source & parameters as a preset.")
 
         ImGui.sameLine(0f, gap)
 
-        // 4. PlayQueue / BG Queue navigation (or preview indicator for PV)
+        // 5. PlayQueue / BG Queue navigation (or preview indicator for PV) -- status text removed
         val navBtnW = DeckRowMetrics.navBtnW(ctrlH)
         if (isDeckA || isDeckB) {
-            val q = session.playQueueManager.queue
-            val qIdx = session.playQueueManager.activeIndex
-            val qCountStr = if (q.isNotEmpty() && qIdx in q.indices) "${qIdx + 1}/${q.size}" else if (q.isNotEmpty()) "-/${q.size}" else "--"
-
             val qPrevKey = "Global/queuePrev"
             val qPrevOscKey = "Mixer/queuePrev"
             val isMidiLearnQPrev = session.parametersState.isMidiTargetLearning(qPrevKey)
@@ -305,20 +311,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             popOpenDropdownPadding()
             itemTooltip("Advance to previous item in PlayQueue.$qPrevMidiText\nRight-click for MIDI/OSC Learn.")
 
-            ImGui.sameLine(0f, DeckRowMetrics.QUEUE_INNER_GAP)
-
-            val qTextW = DeckRowMetrics.QUEUE_IDX_W
-            val qCurX = ImGui.getCursorScreenPosX()
-            val qCurY = ImGui.getCursorScreenPosY()
-            dl.addRectFilled(qCurX, qCurY, qCurX + qTextW, qCurY + ctrlH, genBgCol, 3f)
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                val sz = ImGui.calcTextSize(qCountStr)
-                dl.addText(qCurX + (qTextW - sz.x) * 0.5f, qCurY + (ctrlH - sz.y) * 0.5f, genTextCol, qCountStr)
-            }
-            ImGui.invisibleButton("##perf_q_idx_$tag", qTextW, ctrlH)
-            itemTooltip("PlayQueue status: $qCountStr")
-
-            ImGui.sameLine(0f, DeckRowMetrics.QUEUE_INNER_GAP)
+            ImGui.sameLine(0f, gap)
 
             val qNextKey = "Global/queueNext"
             val qNextOscKey = "Mixer/queueNext"
@@ -385,10 +378,6 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             popOpenDropdownPadding()
             itemTooltip("Advance to next item in PlayQueue.$qNextMidiText\nRight-click for MIDI/OSC Learn.")
         } else if (isDeckBG) {
-            val bgQ = session.bgQueueManager.queue
-            val bgQIdx = session.bgQueueManager.activeIndex
-            val bgQCountStr = if (bgQ.isNotEmpty() && bgQIdx in bgQ.indices) "${bgQIdx + 1}/${bgQ.size}" else if (bgQ.isNotEmpty()) "-/${bgQ.size}" else "--"
-
             val bgPrevKey = "Global/bgQueuePrev"
             val bgPrevOscKey = "Mixer/bgQueuePrev"
             val isMidiLearnBgPrev = session.parametersState.isMidiTargetLearning(bgPrevKey)
@@ -454,20 +443,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             popOpenDropdownPadding()
             itemTooltip("Advance to previous item in BG Queue.$bgPrevMidiText\nRight-click for MIDI/OSC Learn.")
 
-            ImGui.sameLine(0f, DeckRowMetrics.QUEUE_INNER_GAP)
-
-            val bgQTextW = DeckRowMetrics.QUEUE_IDX_W
-            val bgCurX = ImGui.getCursorScreenPosX()
-            val bgCurY = ImGui.getCursorScreenPosY()
-            dl.addRectFilled(bgCurX, bgCurY, bgCurX + bgQTextW, bgCurY + ctrlH, genBgCol, 3f)
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                val sz = ImGui.calcTextSize(bgQCountStr)
-                dl.addText(bgCurX + (bgQTextW - sz.x) * 0.5f, bgCurY + (ctrlH - sz.y) * 0.5f, genTextCol, bgQCountStr)
-            }
-            ImGui.invisibleButton("##perf_bg_idx", bgQTextW, ctrlH)
-            itemTooltip("BG Queue status: $bgQCountStr")
-
-            ImGui.sameLine(0f, DeckRowMetrics.QUEUE_INNER_GAP)
+            ImGui.sameLine(0f, gap)
 
             val bgNextKey = "Global/bgQueueNext"
             val bgNextOscKey = "Mixer/bgQueueNext"
@@ -551,30 +527,18 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
         ImGui.sameLine(0f, gap)
 
-        // 5. Save button -- save-if-possible, else Save As modal (mirrors the FX chain's [Save]
-        // in Row 2, so SRC has the same visible save affordance FX already does).
-        val saveBtnBg = when {
-            isDirty -> TangoPalette.u32(TangoPalette.ALERT.dark)
-            isLight -> ImGui.getColorU32(ImGuiCol.Button)
-            else -> ImGui.colorConvertFloat4ToU32(0.18f, 0.20f, 0.24f, 0.8f)
-        }
-        ImGui.pushStyleColor(ImGuiCol.Button, saveBtnBg)
+        // 6. Eject Button [ EJECT ]
+        val ejectBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
+        val ejectBtnHov = if (isLight) TangoPalette.u32(TangoPalette.DANGER.light) else ImGui.colorConvertFloat4ToU32(0.45f, 0.20f, 0.20f, 1f)
+        ImGui.pushStyleColor(ImGuiCol.Button, ejectBtnBg)
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ejectBtnHov)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.SAVE}##perf_src_save_$tag", iconBtnW, ctrlH)) {
-                ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = false)
+            if (ImGui.button("${Icons.EJECT}##perf_eject_$tag", iconBtnW, ctrlH)) {
+                UIManager.triggerDeckEject(deck, isDeckA = isDeckA, isDeckPV = isDeckPV)
             }
         }
-        ImGui.popStyleColor()
-        itemTooltip("Save $deckLabel's current source & parameters as a preset.")
-
-        ImGui.sameLine(0f, gap)
-
-        // 6. [⋮] Kebab -- same menu as the gen badge's right-click (Browse, Save As, defaults),
-        // just also reachable without knowing to right-click the badge (mirrors FX chain's ⋮).
-        if (ImGui.button("${Icons.MORE_VERTICAL}##perf_src_more_$tag", DeckRowMetrics.KEBAB_W, ctrlH)) {
-            ImGui.openPopup("##perf_gen_badge_ctx_$tag")
-        }
-        itemTooltip("Source operations (Browse, Save As, defaults).")
+        ImGui.popStyleColor(2)
+        itemTooltip("Eject current preset from $deckLabel and reset to defaults.")
 
         ImGui.endGroup()
 

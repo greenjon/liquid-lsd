@@ -17,14 +17,15 @@ import java.io.File
 /**
  * Shared chain-level controls for every Performance FX chain row (deck rows and the Master row):
  *
- *   `[◀]  Chain Name •  [▶]  [Save] [⋮]`   ...   `[BYPASS]`
+ *   `[⋮]  Chain Name •  [Save]  [◀] [▶]  [1] [2] [3]`   ...   `[BYPASS]`
  *
- * - **◀ / ▶**: on Deck A, B, and BG, steps through the respective live FX queue (A/B or BG) directly
- *   on that deck. Bypassed/omitted on Deck PV and Master FX. If the queue is empty, rendered disabled.
+ * - **⋮ menu**: Save As, New, Revert, Clear, Copy / Paste chain, Resync knobs.
  * - **Name**: click opens that row's Browse content on the whole-chain list (search filter). Drops of .lsdfxchain load here.
  * - **• (dirty dot)**: shows amber when the chain differs from its loaded baseline or has unsaved edits.
  * - **Save**: overwrites source file (or acts as Save As if untitled).
- * - **⋮ menu**: Save As, New, Revert, Clear, Copy / Paste chain, Resync knobs.
+ * - **◀ / ▶**: on Deck A, B, and BG, steps through the respective live FX queue (A/B or BG) directly
+ *   on that deck. Bypassed/omitted on Deck PV and Master FX. If the queue is empty, rendered disabled.
+ * - **1 / 2 / 3**: slot pills for focusing specific FX slots.
  * - **BYPASS**: top-level chain kill-switch.
  */
 object FxChainHeader {
@@ -35,7 +36,7 @@ object FxChainHeader {
 
     /**
      * Calculates the width of the chain name button so the entire header row
-     * fills exactly [maxW] and lines up cleanly with Row 1's kebab button.
+     * fills exactly [maxW] and lines up cleanly with Row 1.
      */
     fun calculateNameWidth(maxW: Float, ctrlH: Float, showArrows: Boolean): Float {
         val gap = 3f
@@ -63,7 +64,7 @@ object FxChainHeader {
 
     /**
      * Draws the chain selection and management controls:
-     * `[◀]  Chain Name •  [▶]  [Save] [⋮]`
+     * `[⋮]  Chain Name •  [Save]  [◀] [▶]  [1] [2] [3]`
      *
      * [onOpenChainBrowse] opens that row's Browse content on the whole-chain list (clicking the
      * chain name), replacing what used to be a small popup here.
@@ -91,7 +92,12 @@ object FxChainHeader {
             val focusedSlot = chain.focusedSlot!!
             val totalPages = chain.totalParamPages(focusedSlot)
 
-            // 1. [◀ CHAIN] Exit Focus Mode button
+            // 1. [⋮] More actions menu
+            drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, menuId)
+
+            ImGui.sameLine()
+
+            // 2. [◀ CHAIN] Exit Focus Mode button
             val backCol = TangoPalette.u32(TangoPalette.SYNC.normal, 0.90f)
             ImGui.pushStyleColor(ImGuiCol.Button, backCol)
             if (ImGui.button("◀ CHAIN##exit_focus_$bankId", 58f, ctrlH)) {
@@ -102,10 +108,15 @@ object FxChainHeader {
 
             ImGui.sameLine()
 
-            // 2. Slot pills [1] [2] [3]
+            // 3. [Save] button
+            drawSaveButton(session, chain, bankId, ctrlH, isDirty)
+
+            ImGui.sameLine()
+
+            // 4. Slot pills [1] [2] [3]
             drawSlotPills(session, mixer, chain, bankId, ctrlH, focusedSlot)
 
-            // 3. Parameter page stepper [◀ P1/2 ▶] (if totalPages > 1)
+            // 5. Parameter page stepper [◀ P1/2 ▶] (if totalPages > 1)
             if (totalPages > 1) {
                 ImGui.sameLine()
                 if (ImGui.button("◀##focus_prev_page_$bankId", ARROW_W, ctrlH)) {
@@ -131,16 +142,6 @@ object FxChainHeader {
                 }
                 itemTooltip("Next parameter page.")
             }
-
-            ImGui.sameLine()
-
-            // 4. [Save] button
-            drawSaveButton(session, chain, bankId, ctrlH, isDirty)
-
-            ImGui.sameLine()
-
-            // 5. [⋮] More actions menu
-            drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, menuId)
         } else {
             // -- GROUP MODE HEADER ----------------------------------------------------------------
             val isDeckAB = deck === mixer.deckA || deck === mixer.deckB
@@ -162,8 +163,24 @@ object FxChainHeader {
 
             val emptyTooltip = if (isDeckBG) "BG FX Queue is empty. Add items from the Library." else "FX Queue is empty. Add items from the Library."
 
-            // 1. [◀] Prev FX queue item (only if deck supports queues)
+            // 1. [⋮] More actions menu
+            drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, menuId)
+
+            ImGui.sameLine()
+
+            // 2. Chain name button
+            val nameW = calculateNameWidth(maxW, ctrlH, showArrows)
+            drawChainNameButton(session, chain, bankId, ctrlH, nameW, isDirty, onOpenChainBrowse)
+
+            ImGui.sameLine()
+
+            // 3. [Save] button
+            drawSaveButton(session, chain, bankId, ctrlH, isDirty)
+
+            // 4. [◀] and [▶] FX queue items (only if deck supports queues)
             if (showArrows) {
+                ImGui.sameLine()
+
                 if (isQueueEmpty) ImGui.beginDisabled(true)
                 if (ImGui.button("◀##prev_chain_$bankId", ARROW_W, ctrlH)) {
                     if (isDeckAB) {
@@ -179,15 +196,6 @@ object FxChainHeader {
                     itemTooltip("Previous FX in queue ($deckTag).")
                 }
 
-                ImGui.sameLine()
-            }
-
-            // 2. Chain name button
-            val nameW = calculateNameWidth(maxW, ctrlH, showArrows)
-            drawChainNameButton(session, chain, bankId, ctrlH, nameW, isDirty, onOpenChainBrowse)
-
-            // 3. [▶] Next FX queue item (only if deck supports queues)
-            if (showArrows) {
                 ImGui.sameLine()
 
                 if (isQueueEmpty) ImGui.beginDisabled(true)
@@ -208,18 +216,8 @@ object FxChainHeader {
 
             ImGui.sameLine()
 
-            // 4. Slot focus pills [1] [2] [3]
+            // 5. Slot focus pills [1] [2] [3]
             drawSlotPills(session, mixer, chain, bankId, ctrlH, null)
-
-            ImGui.sameLine()
-
-            // 5. [Save] button
-            drawSaveButton(session, chain, bankId, ctrlH, isDirty)
-
-            ImGui.sameLine()
-
-            // 6. [⋮] More actions menu
-            drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, menuId)
         }
 
         ImGui.popStyleVar()

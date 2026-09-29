@@ -73,13 +73,16 @@ class PerfRowLayoutTest {
     fun deckRow1WidthMatchesTheDrawnControls() {
         val ctrlH = 24f
         val comboW = 100f
-        val nav = (ctrlH * 0.85f).coerceAtLeast(20f)
-        val queueNav = nav + 2f + 38f + 2f + nav
-        // pill, badge, combo, eject, queue nav, save, kebab -- each followed by a 4px gap
-        // except the last. SRC row ends cleanly at the kebab with no trailing growth slack.
-        // Note: dice is placed in the right wing above the BYPASS button.
-        val expected = 28f + 4f + 74f + 4f + comboW + 4f + ctrlH + 4f + queueNav +
-            4f + ctrlH + 4f + DeckRowMetrics.KEBAB_W
+        val nav = ((DeckRowMetrics.PV_BADGE_W - DeckRowMetrics.GAP) * 0.5f).coerceAtLeast(20f)
+        val queueNav = nav * 2f + DeckRowMetrics.GAP
+        // pill, kebab, badge, combo, save, queue nav, eject -- each followed by a 4px gap except the last.
+        // Queue status text (n/m) is removed.
+        val expected = DeckRowMetrics.MODE_PILL_W + DeckRowMetrics.GAP +
+            DeckRowMetrics.KEBAB_W + DeckRowMetrics.GAP +
+            DeckRowMetrics.GEN_BADGE_BASE_W + DeckRowMetrics.GAP + comboW + DeckRowMetrics.GAP +
+            ctrlH + DeckRowMetrics.GAP +
+            maxOf(queueNav, DeckRowMetrics.PV_BADGE_W) + DeckRowMetrics.GAP +
+            ctrlH
         assertEquals(expected, DeckRowMetrics.row1Width(ctrlH, comboW), 0.01f)
     }
 
@@ -91,14 +94,14 @@ class PerfRowLayoutTest {
         val slotPillsW = 20f * llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT + gap * (llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT - 1)
         val maxW = 320f
 
-        // Case 1: showArrows == true (Decks A, B, BG)
+        // Case 1: showArrows == true (Decks A, B, BG): [⋮][chain][Save][◀][▶][1][2][3]
         val nameWWithArrows = FxChainHeader.calculateNameWidth(maxW, ctrlH, showArrows = true)
-        val totalDrawnWWithArrows = FxChainHeader.ARROW_W + gap + nameWWithArrows + gap + FxChainHeader.ARROW_W + gap + slotPillsW + gap + saveW + gap + FxChainHeader.MORE_BTN_W
+        val totalDrawnWWithArrows = FxChainHeader.MORE_BTN_W + gap + nameWWithArrows + gap + saveW + gap + FxChainHeader.ARROW_W + gap + FxChainHeader.ARROW_W + gap + slotPillsW
         assertEquals(maxW, totalDrawnWWithArrows, 0.01f)
 
-        // Case 2: showArrows == false (Deck PV, Master FX)
+        // Case 2: showArrows == false (Deck PV, Master FX): [⋮][chain][Save][1][2][3]
         val nameWNoArrows = FxChainHeader.calculateNameWidth(maxW, ctrlH, showArrows = false)
-        val totalDrawnWNoArrows = nameWNoArrows + gap + slotPillsW + gap + saveW + gap + FxChainHeader.MORE_BTN_W
+        val totalDrawnWNoArrows = FxChainHeader.MORE_BTN_W + gap + nameWNoArrows + gap + saveW + gap + slotPillsW
         assertEquals(maxW, totalDrawnWNoArrows, 0.01f)
 
         // Furthermore, FxChainHeader's MORE_BTN_W matches DeckRowMetrics.KEBAB_W
