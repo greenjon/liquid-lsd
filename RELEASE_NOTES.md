@@ -1,11 +1,13 @@
 ## [Unreleased]
 
-### Reordered Deck SRC and FX Row Controls & Removed PlayQueue Status (`PerformanceDeckControls.kt`, `FxChainHeader.kt`, `PerfRowLayoutTest.kt`, `DeckRowMetrics`, docs)
+### Reordered Deck SRC & FX Controls, Hybrid Focus Mode & Auto-Switch to FX (`PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `FxChainHeader.kt`, `PerfRowLayoutTest.kt`, `DeckRowMetrics`, docs)
 - **Symmetric Control Flow**: Reordered the left control blocks on Deck rows to achieve vertical alignment and parallel control layout between Row 1 (Visual Source) and Row 2 (Insert FX):
-  - Row 1 (SRC): `[SRC]` mode pill → `[⋮]` kebab → `[source]` badge → `[Save]` → `[<]` prev → `[>]` next → `[⏏]` eject.
-  - Row 2 (FX): `[FX]` mode pill → `[⋮]` kebab → `[chain]` name → `[Save]` → `[◀]` prev → `[▶]` next → `[1][2][3]` slot pills.
-- **Removed PlayQueue Status Text**: Removed the middle queue status text (`n/m`) from the deck row queue navigation to streamline the control row, with queue items stepped cleanly via the adjacent `<` and `>` buttons.
-- **Focus Mode & PV Consistency**: In FX Focus Mode, the kebab menu button `[⋮]` remains anchored at the start of the row directly following the `[FX]` pill, preventing button jumping when entering or exiting focus mode. Deck PV's `[PREVIEW]` badge spans the unified navigation width (`56f`), maintaining identical row length across all decks.
+  - Row 1 (SRC): `[SRC]` mode pill → `[⋮]` kebab → `[source]` badge → `[Save]` → `[◀]` prev → `[▶]` next → `[⏏]` eject.
+  - Row 2 (FX Group Mode): `[FX]` mode pill → `[⋮]` kebab → `[chain]` name → `[Save]` → `[◀]` prev → `[▶]` next → `[1][2][3]` slot pills.
+- **Auto-Switch to FX on Slot Focus**: Activating slot pills `[1]`, `[2]`, or `[3]` when the row is currently driving Visual Source automatically switches the row to `FX`, instantly binding the 4 macro knobs to the focused effect parameters.
+- **Hybrid Focus Mode**: Reordered Focus Mode to `[FX]` → `[⋮]` → `[◀ CHAIN]` → `[Focused Effect Name ▾]` → `[◀ Px/y ▶]` (multi-page) → `[1][2][3]`. Omitted the redundant Save button in Focus Mode, and clicking the focused effect name opens inline FX Browse targeted directly at that slot.
+- **Removed PlayQueue Status Text & Matched Glyphs**: Removed the middle queue status text (`n/m`) from Row 1 queue navigation and updated previous/next buttons to use unified `◀` and `▶` glyphs matching Row 2.
+- **Focus Mode & PV Consistency**: Deck PV's `[PREVIEW]` badge spans `56f` and `calculateFocusedNameWidth` guarantees exact `maxW` matching with zero layout drift.
 
 ### Performance Matrix Title Badge Unification & Row Length Alignment (`PerformanceMatrixPanel.kt`, `PerfRowLayoutTest.kt`, `docs/developer/ui.md`)
 - **Uniform 42px Title Badge Width**: Standardized all row title badges to a uniform 42px width across both DECKS and MASTER tabs (`masterTabBadgeW = 42f`, matching `deckBadgeW = 42f`).

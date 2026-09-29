@@ -32,6 +32,8 @@ object FxChainHeader {
 
     const val ARROW_W = 16f
     const val MORE_BTN_W = 20f
+    const val EXIT_BTN_W = 54f
+    const val PAGE_TEXT_W = 34f
     fun saveBtnW(ctrlH: Float): Float = ctrlH
 
     /**
@@ -44,6 +46,17 @@ object FxChainHeader {
         val slotPillsW = 20f * FxChain.SLOT_COUNT + gap * (FxChain.SLOT_COUNT - 1)
         val arrowsReservation = if (showArrows) (ARROW_W * 2f + gap * 2f) else 0f
         return (maxW - (arrowsReservation + saveW + MORE_BTN_W + slotPillsW + gap * 3f)).coerceAtLeast(48f)
+    }
+
+    /**
+     * Calculates the width of the focused effect name button in Focus Mode
+     * so the row fills exactly [maxW].
+     */
+    fun calculateFocusedNameWidth(maxW: Float, totalPages: Int): Float {
+        val gap = 3f
+        val slotPillsW = 20f * FxChain.SLOT_COUNT + gap * (FxChain.SLOT_COUNT - 1)
+        val stepperReservation = if (totalPages > 1) (ARROW_W * 2f + PAGE_TEXT_W + gap * 3f) else 0f
+        return (maxW - (MORE_BTN_W + gap + EXIT_BTN_W + gap + stepperReservation + gap + slotPillsW)).coerceAtLeast(48f)
     }
 
     /** Steps [chain] to the previous (-1) or next (+1) chain file in its folder. */
@@ -64,10 +77,12 @@ object FxChainHeader {
 
     /**
      * Draws the chain selection and management controls:
-     * `[⋮]  Chain Name •  [Save]  [◀] [▶]  [1] [2] [3]`
+     * - Group Mode: `[⋮]  Chain Name •  [Save]  [◀] [▶]  [1] [2] [3]`
+     * - Focus Mode: `[⋮]  [◀ CHAIN]  [Focused Effect Name ▾]  [◀ Px/y ▶]  [1] [2] [3]`
      *
-     * [onOpenChainBrowse] opens that row's Browse content on the whole-chain list (clicking the
-     * chain name), replacing what used to be a small popup here.
+     * [onOpenChainBrowse] opens that row's Browse content on the whole-chain list.
+     * [onOpenSlotBrowse] opens that row's Browse content targeted at a specific FX slot.
+     * [onFocusSlot] notifies callers when a slot is focused or unfocused (allowing auto-switch to FX).
      */
     fun drawControls(
         session: SessionContext,
@@ -78,6 +93,8 @@ object FxChainHeader {
         ctrlH: Float,
         maxW: Float = 220f,
         deck: Deck? = null,
+        onOpenSlotBrowse: ((Int) -> Unit)? = null,
+        onFocusSlot: ((Int?) -> Unit)? = null,
         onOpenChainBrowse: () -> Unit
     ) {
         val gap = 3f
@@ -100,23 +117,22 @@ object FxChainHeader {
             // 2. [◀ CHAIN] Exit Focus Mode button
             val backCol = TangoPalette.u32(TangoPalette.SYNC.normal, 0.90f)
             ImGui.pushStyleColor(ImGuiCol.Button, backCol)
-            if (ImGui.button("◀ CHAIN##exit_focus_$bankId", 58f, ctrlH)) {
+            if (ImGui.button("◀ CHAIN##exit_focus_$bankId", EXIT_BTN_W, ctrlH)) {
                 FxMacroSync.focusSlot(bankId, mixer, null)
+                onFocusSlot?.invoke(null)
             }
             ImGui.popStyleColor()
             itemTooltip("Exit Focus Mode and return to 3-slot chain view.")
 
             ImGui.sameLine()
 
-            // 3. [Save] button
-            drawSaveButton(session, chain, bankId, ctrlH, isDirty)
+            // 3. [Focused Effect Name] button (click to browse/replace effect in this slot)
+            val focusedNameW = calculateFocusedNameWidth(maxW, totalPages)
+            drawFocusedEffectButton(session, chain, bankId, focusedSlot, ctrlH, focusedNameW) { slotIdx ->
+                onOpenSlotBrowse?.invoke(slotIdx)
+            }
 
-            ImGui.sameLine()
-
-            // 4. Slot pills [1] [2] [3]
-            drawSlotPills(session, mixer, chain, bankId, ctrlH, focusedSlot)
-
-            // 5. Parameter page stepper [◀ P1/2 ▶] (if totalPages > 1)
+            // 4. Parameter page stepper [◀ P1/2 ▶] (if totalPages > 1)
             if (totalPages > 1) {
                 ImGui.sameLine()
                 if (ImGui.button("◀##focus_prev_page_$bankId", ARROW_W, ctrlH)) {
@@ -127,12 +143,13 @@ object FxChainHeader {
                 ImGui.sameLine()
                 session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                     val pageText = "P${chain.focusParamPage + 1}/$totalPages"
-                    val ptw = ImGui.calcTextSize(pageText).x
                     val curX = ImGui.getCursorScreenPosX()
                     val curY = ImGui.getCursorScreenPosY()
-                    ImGui.dummy(ptw + 4f, ctrlH)
-                    val textY = curY + (ctrlH - ImGui.getTextLineHeight()) * 0.5f
-                    ImGui.getWindowDrawList().addText(curX + 2f, textY, ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.95f, 1f), pageText)
+                    ImGui.dummy(PAGE_TEXT_W, ctrlH)
+                    val textSz = ImGui.calcTextSize(pageText)
+                    val textX = curX + (PAGE_TEXT_W - textSz.x) * 0.5f
+                    val textY = curY + (ctrlH - textSz.y) * 0.5f
+                    ImGui.getWindowDrawList().addText(textX, textY, ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.95f, 1f), pageText)
                 }
                 itemTooltip("Parameter page ${chain.focusParamPage + 1} of $totalPages.")
 
@@ -142,6 +159,11 @@ object FxChainHeader {
                 }
                 itemTooltip("Next parameter page.")
             }
+
+            ImGui.sameLine()
+
+            // 5. Slot focus pills [1] [2] [3]
+            drawSlotPills(session, mixer, chain, bankId, ctrlH, focusedSlot, onFocusSlot)
         } else {
             // -- GROUP MODE HEADER ----------------------------------------------------------------
             val isDeckAB = deck === mixer.deckA || deck === mixer.deckB
@@ -217,7 +239,7 @@ object FxChainHeader {
             ImGui.sameLine()
 
             // 5. Slot focus pills [1] [2] [3]
-            drawSlotPills(session, mixer, chain, bankId, ctrlH, null)
+            drawSlotPills(session, mixer, chain, bankId, ctrlH, null, onFocusSlot)
         }
 
         ImGui.popStyleVar()
@@ -229,7 +251,8 @@ object FxChainHeader {
         chain: FxChain,
         bankId: String,
         ctrlH: Float,
-        focusedSlot: Int?
+        focusedSlot: Int?,
+        onFocusSlot: ((Int?) -> Unit)? = null
     ) {
         val pillW = 20f
         for (i in 0 until FxChain.SLOT_COUNT) {
@@ -258,8 +281,10 @@ object FxChainHeader {
             if (ImGui.button("$btnLabel##slot_focus_${bankId}_$i", pillW, ctrlH)) {
                 if (isFocused) {
                     FxMacroSync.focusSlot(bankId, mixer, null)
+                    onFocusSlot?.invoke(null)
                 } else {
                     FxMacroSync.focusSlot(bankId, mixer, i)
+                    onFocusSlot?.invoke(i)
                 }
             }
             ImGui.popStyleColor(2)
@@ -272,6 +297,50 @@ object FxChainHeader {
                 }
             )
         }
+    }
+
+    private fun drawFocusedEffectButton(
+        session: SessionContext,
+        chain: FxChain,
+        bankId: String,
+        focusedSlot: Int,
+        ctrlH: Float,
+        nameW: Float,
+        onOpenSlotBrowse: (Int) -> Unit
+    ) {
+        val slot = chain.slots.getOrNull(focusedSlot)
+        val effectName = slot?.displayName ?: "Slot ${focusedSlot + 1} (Empty)"
+        val fullLabel = "$effectName ${Icons.CHEVRON_DOWN}"
+
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+        val bgCol = if (isLight) ImGui.getColorU32(ImGuiCol.FrameBg) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
+        val borderCol = if (isLight) ImGui.getColorU32(ImGuiCol.Border) else ImGui.colorConvertFloat4ToU32(0.35f, 0.40f, 0.50f, 0.70f)
+        val textCol = if (isLight) ImGui.getColorU32(ImGuiCol.Text) else ImGui.colorConvertFloat4ToU32(0.80f, 0.85f, 0.95f, 1f)
+
+        val curX = ImGui.getCursorScreenPosX()
+        val curY = ImGui.getCursorScreenPosY()
+        val dl = ImGui.getWindowDrawList()
+        dl.addRectFilled(curX, curY, curX + nameW, curY + ctrlH, bgCol, 4f)
+        dl.addRect(curX, curY, curX + nameW, curY + ctrlH, borderCol, 4f, 0, 1f)
+
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            val textSz = ImGui.calcTextSize(fullLabel)
+            val tx = curX + (nameW - textSz.x) * 0.5f
+            val ty = curY + (ctrlH - textSz.y) * 0.5f
+            dl.addText(tx.coerceAtLeast(curX + 4f), ty, textCol, fullLabel)
+        }
+
+        if (ImGui.invisibleButton("##focused_effect_${bankId}_$focusedSlot", nameW, ctrlH)) {
+            onOpenSlotBrowse(focusedSlot)
+        }
+        if (ImGui.isItemHovered()) {
+            val hoverBorderCol = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else ImGui.colorConvertFloat4ToU32(0.60f, 0.70f, 0.90f, 1f)
+            dl.addRect(curX, curY, curX + nameW, curY + ctrlH, hoverBorderCol, 4f, 0, 1.5f)
+        }
+        itemTooltip(
+            if (slot != null) "Focused Effect: ${slot.displayName} (Slot ${focusedSlot + 1})\nClick to browse/replace effect for this slot."
+            else "Slot ${focusedSlot + 1} is empty.\nClick to browse and load an effect."
+        )
     }
 
     private fun drawChainNameButton(

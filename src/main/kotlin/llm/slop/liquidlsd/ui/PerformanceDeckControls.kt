@@ -255,7 +255,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
             val qPrevX = ImGui.getCursorScreenPosX()
             val qPrevY = ImGui.getCursorScreenPosY()
-            if (ImGui.button("<##perf_q_prev_$tag", navBtnW, ctrlH)) {
+            if (ImGui.button("◀##perf_q_prev_$tag", navBtnW, ctrlH)) {
                 if (OscMapModeState.active) {
                     if (isOscLearnQPrev) OscLearnState.cancelLearn() else OscLearnState.startLearn(qPrevOscKey, 0f, 1f, "PlayQueue Prev")
                 } else {
@@ -270,7 +270,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_q_prev_ctx_$tag")) {
                 pushOpenDropdownFont()
-                ImGui.textDisabled("PlayQueue Prev (<)")
+                ImGui.textDisabled("PlayQueue Prev (◀)")
                 ImGui.separator()
                 if (ImGui.menuItem("Trigger Previous")) {
                     session.playQueueManager.triggerPrevious(mixer)
@@ -322,7 +322,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
             val qNextX = ImGui.getCursorScreenPosX()
             val qNextY = ImGui.getCursorScreenPosY()
-            if (ImGui.button(">##perf_q_next_$tag", navBtnW, ctrlH)) {
+            if (ImGui.button("▶##perf_q_next_$tag", navBtnW, ctrlH)) {
                 if (OscMapModeState.active) {
                     if (isOscLearnQNext) OscLearnState.cancelLearn() else OscLearnState.startLearn(qNextOscKey, 0f, 1f, "PlayQueue Next")
                 } else {
@@ -337,7 +337,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_q_next_ctx_$tag")) {
                 pushOpenDropdownFont()
-                ImGui.textDisabled("PlayQueue Next (>)")
+                ImGui.textDisabled("PlayQueue Next (▶)")
                 ImGui.separator()
                 if (ImGui.menuItem("Trigger Next")) {
                     session.playQueueManager.triggerNext(mixer)
@@ -387,7 +387,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
             val bgPrevX = ImGui.getCursorScreenPosX()
             val bgPrevY = ImGui.getCursorScreenPosY()
-            if (ImGui.button("<##perf_bg_prev", navBtnW, ctrlH)) {
+            if (ImGui.button("◀##perf_bg_prev", navBtnW, ctrlH)) {
                 if (OscMapModeState.active) {
                     if (isOscLearnBgPrev) OscLearnState.cancelLearn() else OscLearnState.startLearn(bgPrevOscKey, 0f, 1f, "BG Queue Prev")
                 } else {
@@ -402,7 +402,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_bg_prev_ctx")) {
                 pushOpenDropdownFont()
-                ImGui.textDisabled("BG Queue Prev (<)")
+                ImGui.textDisabled("BG Queue Prev (◀)")
                 ImGui.separator()
                 if (ImGui.menuItem("Trigger Previous")) {
                     session.bgQueueManager.triggerPrevious(mixer)
@@ -454,7 +454,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
             val bgNextX = ImGui.getCursorScreenPosX()
             val bgNextY = ImGui.getCursorScreenPosY()
-            if (ImGui.button(">##perf_bg_next", navBtnW, ctrlH)) {
+            if (ImGui.button("▶##perf_bg_next", navBtnW, ctrlH)) {
                 if (OscMapModeState.active) {
                     if (isOscLearnBgNext) OscLearnState.cancelLearn() else OscLearnState.startLearn(bgNextOscKey, 0f, 1f, "BG Queue Next")
                 } else {
@@ -469,7 +469,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             pushOpenDropdownPadding()
             if (ImGui.beginPopupContextItem("perf_bg_next_ctx")) {
                 pushOpenDropdownFont()
-                ImGui.textDisabled("BG Queue Next (>)")
+                ImGui.textDisabled("BG Queue Next (▶)")
                 ImGui.separator()
                 if (ImGui.menuItem("Trigger Next")) {
                     session.bgQueueManager.triggerNext(mixer)
@@ -555,9 +555,24 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val targetBank = ctx.targetBankIdFor(tag)
         val fxCanonicalBankId = MacroEngine.deckBankIdFor(deck, mixer) ?: MacroEngine.DECK_A
         val targetRowW = DeckRowMetrics.row1Width(ctrlH, comboW)
-        FxChainHeader.drawControls(session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH, maxW = targetRowW - modeBtnW - gap, deck = deck) {
-            parametersState.openFxChainBrowse(fxCanonicalBankId, deckLabel, slotIndex = null)
-        }
+        FxChainHeader.drawControls(
+            session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH,
+            maxW = targetRowW - modeBtnW - gap, deck = deck,
+            onOpenSlotBrowse = { slotIdx ->
+                parametersState.openFxChainBrowse(fxCanonicalBankId, deckLabel, slotIndex = slotIdx)
+            },
+            onFocusSlot = { slotIdx ->
+                if (slotIdx != null && !isFx) {
+                    llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "FX")
+                    ctx.deckRowMode[tag] = "FX"
+                    parametersState.setDeckSubTab(deckLabel, "FX")
+                    llm.slop.liquidlsd.macro.FxMacroSync.syncFor(targetBank, mixer)
+                }
+            },
+            onOpenChainBrowse = {
+                parametersState.openFxChainBrowse(fxCanonicalBankId, deckLabel, slotIndex = null)
+            }
+        )
 
         ImGui.endGroup()
     }

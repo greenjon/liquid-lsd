@@ -1,14 +1,19 @@
-## Reorder Deck SRC and FX Row Controls & Remove PlayQueue Status (`PerformanceDeckControls.kt`, `FxChainHeader.kt`, `PerfRowLayoutTest.kt`, `DeckRowMetrics`, docs, tests)
+## Reorder Deck SRC and FX Row Controls, Hybrid Focus Mode & Auto-Switch to FX (`PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `FxChainHeader.kt`, `PerfRowLayoutTest.kt`, `DeckRowMetrics`, docs, tests)
 
-- **Context**: 2026-09-29. In the Performance Matrix deck rows (Decks A, B, BG, and PV), Row 1 (Visual Source) and Row 2 (Insert FX) had diverging control sequences. Row 1 had `[SRC] [source] [eject] [<] [n/m] [>] [Save] [⋮]`, whereas Row 2 had `[FX] [◀] [chain] [▶] [1][2][3] [Save] [⋮]`. The different button placements disrupted horizontal scannability, placed the kebab action menus at the far right, and included a redundant playqueue status readout (`n/m`) in Row 1 that crowded the navigation controls.
+- **Context**: 2026-09-29. In the Performance Matrix deck rows (Decks A, B, BG, and PV), Row 1 (Visual Source) and Row 2 (Insert FX) had diverging control sequences. Row 1 had `[SRC] [source] [eject] [<] [n/m] [>] [Save] [⋮]`, whereas Row 2 had `[FX] [◀] [chain] [▶] [1][2][3] [Save] [⋮]`. The different button placements disrupted horizontal scannability, placed the kebab action menus at the far right, and included a redundant playqueue status readout (`n/m`) in Row 1. Furthermore, entering Focus Mode showed `◀ CHAIN` and page controls without actually displaying the name of the focused effect, leaving the Save button redundant in Focus Mode and requiring manual row toggling if the performer was currently in SRC mode.
 - **Decision**:
   - **Symmetric Parallel Ordering**: Reordered controls on both rows to follow an identical semantic sequence:
-    - **Row 1 (SRC)**: `[SRC]` mode pill → `[⋮]` kebab → `[source]` badge → `[Save]` → `[<]` prev → `[>]` next → `[⏏]` eject.
-    - **Row 2 (FX)**: `[FX]` mode pill → `[⋮]` kebab → `[chain]` name → `[Save]` → `[◀]` prev → `[▶]` next → `[1][2][3]` slot pills.
-  - **Remove PlayQueue Status Text**: Removed the middle index text (`n/m`) from Row 1 queue navigation, letting performers step items quickly via `<` and `>` while saving horizontal space.
-  - **Kebab Stability in FX Focus Mode**: Positioned the kebab menu button `[⋮]` as the first control following the `[FX]` pill in both Group Mode and Focus Mode (`[FX] [⋮] [◀ CHAIN] [Save] [1][2][3]`), preventing the button from jumping positions when focusing a slot.
-  - **Deck PV & Metrics Consistency**: Updated `DeckRowMetrics.row1Width` and `FxChainHeader.calculateNameWidth` so both rows remain exactly identical in total width. Deck PV's `[PREVIEW]` badge spans `PV_BADGE_W = 56f` (matching `<` + gap + `>`), ensuring zero layout drift.
-- **Consequences**: Provides vertical alignment between source and effect operations across all decks, unclutters queue controls, and anchors primary action menus (`[⋮]`) predictably across both rows.
+    - **Row 1 (SRC)**: `[SRC]` mode pill → `[⋮]` kebab → `[source]` badge → `[Save]` → `[◀]` prev → `[▶]` next → `[⏏]` eject.
+    - **Row 2 (FX Group Mode)**: `[FX]` mode pill → `[⋮]` kebab → `[chain]` name → `[Save]` → `[◀]` prev → `[▶]` next → `[1][2][3]` slot pills.
+  - **Auto-Switch to FX on Slot Focus**: Clicking any slot pill `[1]`, `[2]`, or `[3]` when the row is currently in SRC mode automatically switches the deck row mode to `FX` (`onFocusSlot`), immediately binding the 4 macro knobs to the focused effect's parameters.
+  - **Hybrid Focus Mode**: Reordered Focus Mode to:
+    - `[FX]` mode pill → `[⋮]` kebab → `[◀ CHAIN]` exit button → `[Focused Effect Name ▾]` → `[◀ Px/y ▶]` (if multi-page) → `[1][2][3]` slot pills.
+    - Omitted the redundant whole-chain `[Save]` button in Focus Mode.
+    - Clicking `[Focused Effect Name ▾]` opens inline FX Browse targeted directly at that slot (`onOpenSlotBrowse`) for quick effect auditioning and replacement.
+    - Retained slot pills `[1][2][3]` at the end of the row for instant 1-click slot switching and active-slot exit.
+  - **Remove PlayQueue Status Text & Harmonize Glyphs**: Removed the middle index text (`n/m`) from Row 1 queue navigation and aligned Row 1's previous/next buttons to use the exact same `◀` and `▶` glyphs as Row 2.
+  - **Deck PV & Metrics Consistency**: Updated `DeckRowMetrics.row1Width`, `FxChainHeader.calculateNameWidth`, and `FxChainHeader.calculateFocusedNameWidth` (`EXIT_BTN_W = 54f`, `PAGE_TEXT_W = 34f`) so all rows and modes fill `maxW` exactly with zero layout drift.
+- **Consequences**: Establishes complete visual and functional harmony across SRC and FX rows, delivers immediate context on which effect is focused, enables 1-click tactile slot transitions, and prevents button jumping.
 
 ## Deck FX Row Stepper Arrows Linked to Live FX Queues (`FxChainHeader.kt`, `FxQueueEngine.kt`, `PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `PerfRowLayoutTest.kt`, `FXQueueManagerTest.kt`, docs, tests)
 

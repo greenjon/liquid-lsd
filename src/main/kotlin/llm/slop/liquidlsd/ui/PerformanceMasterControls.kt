@@ -76,9 +76,24 @@ internal object PerformanceMasterControls {
         ImGui.beginGroup()
         ImGui.dummy(modeBtnW, ctrlH)
         ImGui.sameLine(0f, gap)
-        FxChainHeader.drawControls(session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH, maxW = rowW - modeBtnW - gap, deck = null) {
-            parametersState.openFxChainBrowse(MacroEngine.MASTER, deckLabel = null, slotIndex = null)
-        }
+        FxChainHeader.drawControls(
+            session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH,
+            maxW = rowW - modeBtnW - gap, deck = null,
+            onOpenSlotBrowse = { slotIdx ->
+                parametersState.openFxChainBrowse(MacroEngine.MASTER, deckLabel = null, slotIndex = slotIdx)
+            },
+            onFocusSlot = { slotIdx ->
+                if (slotIdx != null && !isFx) {
+                    llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "FX")
+                    ctx.masterRowMode = "FX"
+                    parametersState.activeMixerSubTab = "FX"
+                    llm.slop.liquidlsd.macro.FxMacroSync.syncFor(MacroEngine.MASTER_FX, mixer)
+                }
+            },
+            onOpenChainBrowse = {
+                parametersState.openFxChainBrowse(MacroEngine.MASTER, deckLabel = null, slotIndex = null)
+            }
+        )
         ImGui.endGroup()
     }
 
