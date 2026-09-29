@@ -6,6 +6,7 @@ import imgui.flag.ImGuiMouseCursor
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.osc.OscLearnState
+import llm.slop.liquidlsd.osc.OscMapModeState
 import llm.slop.liquidlsd.osc.OscMappingManager
 import llm.slop.liquidlsd.presets.GeneratorDefaults
 import llm.slop.liquidlsd.rendering.Deck
@@ -273,7 +274,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             val qPrevX = ImGui.getCursorScreenPosX()
             val qPrevY = ImGui.getCursorScreenPosY()
             if (ImGui.button("<##perf_q_prev_$tag", navBtnW, ctrlH)) {
-                session.playQueueManager.triggerPrevious(mixer)
+                if (OscMapModeState.active) {
+                    if (isOscLearnQPrev) OscLearnState.cancelLearn() else OscLearnState.startLearn(qPrevOscKey, 0f, 1f, "PlayQueue Prev")
+                } else {
+                    session.playQueueManager.triggerPrevious(mixer)
+                }
             }
             if (isMidiLearnQPrev) {
                 dl.addRect(qPrevX - 1f, qPrevY - 1f, qPrevX + navBtnW + 1f, qPrevY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
@@ -349,7 +354,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             val qNextX = ImGui.getCursorScreenPosX()
             val qNextY = ImGui.getCursorScreenPosY()
             if (ImGui.button(">##perf_q_next_$tag", navBtnW, ctrlH)) {
-                session.playQueueManager.triggerNext(mixer)
+                if (OscMapModeState.active) {
+                    if (isOscLearnQNext) OscLearnState.cancelLearn() else OscLearnState.startLearn(qNextOscKey, 0f, 1f, "PlayQueue Next")
+                } else {
+                    session.playQueueManager.triggerNext(mixer)
+                }
             }
             if (isMidiLearnQNext) {
                 dl.addRect(qNextX - 1f, qNextY - 1f, qNextX + navBtnW + 1f, qNextY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
@@ -414,7 +423,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             val bgPrevX = ImGui.getCursorScreenPosX()
             val bgPrevY = ImGui.getCursorScreenPosY()
             if (ImGui.button("<##perf_bg_prev", navBtnW, ctrlH)) {
-                session.bgQueueManager.triggerPrevious(mixer)
+                if (OscMapModeState.active) {
+                    if (isOscLearnBgPrev) OscLearnState.cancelLearn() else OscLearnState.startLearn(bgPrevOscKey, 0f, 1f, "BG Queue Prev")
+                } else {
+                    session.bgQueueManager.triggerPrevious(mixer)
+                }
             }
             if (isMidiLearnBgPrev) {
                 dl.addRect(bgPrevX - 1f, bgPrevY - 1f, bgPrevX + navBtnW + 1f, bgPrevY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
@@ -490,7 +503,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             val bgNextX = ImGui.getCursorScreenPosX()
             val bgNextY = ImGui.getCursorScreenPosY()
             if (ImGui.button(">##perf_bg_next", navBtnW, ctrlH)) {
-                session.bgQueueManager.triggerNext(mixer)
+                if (OscMapModeState.active) {
+                    if (isOscLearnBgNext) OscLearnState.cancelLearn() else OscLearnState.startLearn(bgNextOscKey, 0f, 1f, "BG Queue Next")
+                } else {
+                    session.bgQueueManager.triggerNext(mixer)
+                }
             }
             if (isMidiLearnBgNext) {
                 dl.addRect(bgNextX - 1f, bgNextY - 1f, bgNextX + navBtnW + 1f, bgNextY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)

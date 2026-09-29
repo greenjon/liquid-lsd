@@ -43,7 +43,13 @@ data class OscControlMapping(
     val maxVal: Float = 1f,
     val inverted: Boolean = false,
     val slewMs: Float = 0f,
-    val takeoverMode: OscTakeoverMode = OscTakeoverMode.IMMEDIATE
+    val takeoverMode: OscTakeoverMode = OscTakeoverMode.IMMEDIATE,
+    // The range the raw incoming OSC value is expected in (e.g. 0..127 for a MIDI-CC-style
+    // controller, -1..1 for a bipolar surface), rescaled to 0..1 before minVal/maxVal output
+    // scaling below. Defaults to 0..1 so existing profiles (saved before this field existed)
+    // keep behaving exactly as before.
+    val inputMin: Float = 0f,
+    val inputMax: Float = 1f
 )
 
 @Serializable
@@ -271,7 +277,11 @@ object OscMappingManager {
         val mapping = activeProfile.mappings[key] ?: return
         val (getter, setter) = resolveTarget(mixer, mapping.parameterPath) ?: return
 
-        var norm = rawValue.coerceIn(0f, 1f)
+        var norm = if (mapping.inputMax != mapping.inputMin) {
+            ((rawValue - mapping.inputMin) / (mapping.inputMax - mapping.inputMin)).coerceIn(0f, 1f)
+        } else {
+            rawValue.coerceIn(0f, 1f)
+        }
         if (mapping.inverted) norm = 1f - norm
         val scaledTarget = mapping.minVal + norm * (mapping.maxVal - mapping.minVal)
 

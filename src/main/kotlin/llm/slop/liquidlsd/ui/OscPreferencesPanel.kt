@@ -236,9 +236,10 @@ object OscPreferencesPanel {
             theme.caption("No address mappings in this profile. Use 'Learn OSC' above or right-click any slider in the UI to bind controls.")
         } else {
             val paramTableFlags = ImGuiTableFlags.BordersInnerH or ImGuiTableFlags.RowBg or ImGuiTableFlags.SizingStretchProp or ImGuiTableFlags.ScrollY
-            if (ImGui.beginTable("##osc_mappings_table", 7, paramTableFlags, 0f, 320f)) {
+            if (ImGui.beginTable("##osc_mappings_table", 8, paramTableFlags, 0f, 320f)) {
                 ImGui.tableSetupColumn("OSC Address", ImGuiTableColumnFlags.WidthStretch, 1f)
                 ImGui.tableSetupColumn("Parameter", ImGuiTableColumnFlags.WidthStretch, 1.2f)
+                ImGui.tableSetupColumn("Input Range", ImGuiTableColumnFlags.WidthFixed, 130f)
                 ImGui.tableSetupColumn("Min / Max", ImGuiTableColumnFlags.WidthFixed, 130f)
                 ImGui.tableSetupColumn("Invert", ImGuiTableColumnFlags.WidthFixed, 50f)
                 ImGui.tableSetupColumn("Slew", ImGuiTableColumnFlags.WidthFixed, 80f)
@@ -267,6 +268,25 @@ object OscPreferencesPanel {
                     theme.body(OscMappingManager.formatDisplayPath(map.parameterPath))
                     if (map.parameterPath.contains(":mod/")) {
                         itemTooltip("Full Path: ${map.parameterPath}")
+                    }
+
+                    ImGui.tableNextColumn()
+                    val inMinArr = floatArrayOf(map.inputMin)
+                    val inMaxArr = floatArrayOf(map.inputMax)
+                    ImGui.setNextItemWidth(55f)
+                    val changedInMin = ImGui.dragFloat("##osc_inmin_$address", inMinArr, 0.1f, -1000f, 1000f, "%.2f")
+                    val commitInMin = ImGui.isItemDeactivatedAfterEdit()
+                    itemTooltip("Input Min: the raw value your controller sends at its low end (e.g. 0 for TouchOSC, 0 for a 0-127 MIDI-style CC).")
+                    ImGui.sameLine()
+                    ImGui.setNextItemWidth(55f)
+                    val changedInMax = ImGui.dragFloat("##osc_inmax_$address", inMaxArr, 0.1f, -1000f, 1000f, "%.2f")
+                    val commitInMax = ImGui.isItemDeactivatedAfterEdit()
+                    itemTooltip("Input Max: the raw value your controller sends at its high end (e.g. 1 for TouchOSC, 127 for a 0-127 MIDI-style CC).")
+                    if (changedInMin || changedInMax) {
+                        OscMappingManager.updateMapping(address, map.copy(inputMin = inMinArr[0], inputMax = inMaxArr[0]))
+                    }
+                    if (commitInMin || commitInMax) {
+                        OscMappingManager.saveActiveProfile()
                     }
 
                     ImGui.tableNextColumn()

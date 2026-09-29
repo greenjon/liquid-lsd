@@ -91,6 +91,35 @@ class OscMappingManagerTest {
     }
 
     @Test
+    fun testOnOscMessageRemapsNonNormalizedInputRange() {
+        val param = ModulatableParameter(0f, minClamp = 0f, maxClamp = 10f)
+        val mixer = mockMixerWithParams("Test/param" to param)
+
+        // A MIDI-CC-style controller sending 0..127 instead of 0..1.
+        OscMappingManager.addMapping(
+            "/1/fader1",
+            OscControlMapping(parameterPath = "Test/param", minVal = 0f, maxVal = 10f, inputMin = 0f, inputMax = 127f)
+        )
+        OscMappingManager.onOscMessage(OscMessage("/1/fader1", listOf(63.5f)), mixer)
+
+        assertEquals(5.0f, param.baseValue, absoluteTolerance = 1e-2f)
+    }
+
+    @Test
+    fun testOnOscMessageClampsInputRangeOutliersInsteadOfOverflowing() {
+        val param = ModulatableParameter(0f, minClamp = 0f, maxClamp = 10f)
+        val mixer = mockMixerWithParams("Test/param" to param)
+
+        OscMappingManager.addMapping(
+            "/1/fader1",
+            OscControlMapping(parameterPath = "Test/param", minVal = 0f, maxVal = 10f, inputMin = 0f, inputMax = 127f)
+        )
+        OscMappingManager.onOscMessage(OscMessage("/1/fader1", listOf(200f)), mixer)
+
+        assertEquals(10.0f, param.baseValue, absoluteTolerance = 1e-4f)
+    }
+
+    @Test
     fun testOnOscMessageAppliesInversion() {
         val param = ModulatableParameter(0f, minClamp = 0f, maxClamp = 1f)
         val mixer = mockMixerWithParams("Test/param" to param)

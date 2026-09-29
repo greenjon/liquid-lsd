@@ -12,6 +12,7 @@ import llm.slop.liquidlsd.models.CellClipboardData
 import llm.slop.liquidlsd.models.RowClipboardData
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.osc.OscLearnState
+import llm.slop.liquidlsd.osc.OscMapModeState
 import llm.slop.liquidlsd.osc.OscMappingManager
 import llm.slop.liquidlsd.ui.browser.BrowserRowMoreButton
 import kotlin.math.PI
@@ -293,7 +294,7 @@ object ParametersRenderer {
         val r = CELL * 0.5f
 
         // 1. VALUE Cell
-        drawValueCell(session, dl, param, paramKey, state, mixer, gridStartX, labelColW, rowScreenY, CELL, r,
+        drawValueCell(session, dl, param, paramKey, label, state, mixer, gridStartX, labelColW, rowScreenY, CELL, r,
             getColumnOffset, onPushUndo)
 
         // 2. MIDI Cell
@@ -320,6 +321,7 @@ object ParametersRenderer {
         dl: ImDrawList,
         param: llm.slop.liquidlsd.parameters.ModulatableParameter,
         paramKey: String,
+        label: String,
         state: ParametersState,
         mixer: llm.slop.liquidlsd.rendering.Mixer,
         gridStartX: Float, labelColW: Float, rowScreenY: Float,
@@ -347,6 +349,12 @@ object ParametersRenderer {
                     minVal = param.minClamp,
                     maxVal = param.maxClamp
                 )
+            } else if (OscMapModeState.active) {
+                if (OscLearnState.isTargetLearning(paramKey)) {
+                    OscLearnState.cancelLearn()
+                } else {
+                    OscLearnState.startLearn(paramKey, param.minClamp, param.maxClamp, label)
+                }
             } else {
                 state.select(ParameterCellId(paramKey, "value"), param)
                 if (isMacroBound) {

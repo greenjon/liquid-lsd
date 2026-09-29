@@ -357,8 +357,9 @@ fun main(args: Array<String>) {
             llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preferences", key, mods)
         val isCapsLock = key == GLFW_KEY_CAPS_LOCK
         val isTapTempoKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("clock.tap_tempo", key, mods)
+        val isOscMapModeKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.osc_map_mode", key, mods)
 
-        val isHotKey = isFullscreenKey || isExitFullscreenKey || isBgVideoKey || isDecPresetSizeKey || isIncPresetSizeKey || isRecordHotKey || isPreferencesKey || isCapsLock || isTapTempoKey
+        val isHotKey = isFullscreenKey || isExitFullscreenKey || isBgVideoKey || isDecPresetSizeKey || isIncPresetSizeKey || isRecordHotKey || isPreferencesKey || isCapsLock || isTapTempoKey || isOscMapModeKey
 
         if (action == GLFW_PRESS) {
             if (isPreferencesKey) {
@@ -397,6 +398,9 @@ fun main(args: Array<String>) {
                 UITheme.backgroundVideoEnabled = !UITheme.backgroundVideoEnabled
                 AppPreferencesStore.savePreferences()
                 logger.info { "Background video toggled: ${UITheme.backgroundVideoEnabled}" }
+            } else if (isOscMapModeKey) {
+                llm.slop.liquidlsd.osc.OscMapModeState.toggle()
+                logger.info { "OSC Map Mode toggled: ${llm.slop.liquidlsd.osc.OscMapModeState.active}" }
             }
         }
         if (!isHotKey) {

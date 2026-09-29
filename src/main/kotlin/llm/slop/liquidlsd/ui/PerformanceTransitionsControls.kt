@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.osc.OscLearnState
+import llm.slop.liquidlsd.osc.OscMapModeState
 import llm.slop.liquidlsd.osc.OscMappingManager
 import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
@@ -383,6 +384,7 @@ internal object PerformanceTransitionsControls {
 
         val isTrackHovered = ImGui.isItemHovered()
         val isTrackActive = ImGui.isItemActive()
+        val isTrackClicked = ImGui.isItemClicked(0)
         val paramKey = "Mixer/crossfade"
         val isTarget = parametersState.midiLearnTarget?.let {
             it is MidiLearnTarget.BaseValueSlider && it.paramKey == paramKey
@@ -458,7 +460,12 @@ internal object PerformanceTransitionsControls {
         }
         popOpenDropdownPadding()
 
-        if (isTrackActive) {
+        if (OscMapModeState.active) {
+            if (isTrackClicked) {
+                if (isOscLearnXfader) OscLearnState.cancelLearn()
+                else OscLearnState.startLearn(parameterPath = paramKey, minVal = -1.0f, maxVal = 1.0f, displayLabel = "Crossfader")
+            }
+        } else if (isTrackActive) {
             mixer.onCrossfadeManualTakeover()
             val mouseX = ImGui.getIO().mousePos.x
             val pct = ((mouseX - lineStartX) / lineWidth).coerceIn(0f, 1f)
@@ -701,17 +708,25 @@ internal object PerformanceTransitionsControls {
 
         val isSpeedHovered = ImGui.isItemHovered()
         val isSpeedActive = ImGui.isItemActive()
-        if (isSpeedActive) {
-            val dragDelta = ImGui.getIO().mouseDelta.x - ImGui.getIO().mouseDelta.y
-            if (dragDelta != 0f) {
-                val step = if (ImGui.getIO().keyShift) 0.02f else 0.1f
-                mixer.xfadeSpeed.baseValue = (mixer.xfadeSpeed.baseValue + dragDelta * step).coerceIn(0.1f, 30.0f)
+        val isSpeedClicked = ImGui.isItemClicked(0)
+        if (OscMapModeState.active) {
+            if (isSpeedClicked) {
+                if (isOscLearnSpeed) OscLearnState.cancelLearn()
+                else OscLearnState.startLearn(xfadeSpeedParamKey, 0.1f, 15.0f, "Fade Speed")
             }
-        }
-        if (isSpeedHovered && ImGui.getIO().mouseWheel != 0f) {
-            val step = if (ImGui.getIO().keyShift) 0.05f else 0.2f
-            mixer.xfadeSpeed.baseValue = (mixer.xfadeSpeed.baseValue + ImGui.getIO().mouseWheel * step).coerceIn(0.1f, 30.0f)
-            ImGui.getIO().mouseWheel = 0f
+        } else {
+            if (isSpeedActive) {
+                val dragDelta = ImGui.getIO().mouseDelta.x - ImGui.getIO().mouseDelta.y
+                if (dragDelta != 0f) {
+                    val step = if (ImGui.getIO().keyShift) 0.02f else 0.1f
+                    mixer.xfadeSpeed.baseValue = (mixer.xfadeSpeed.baseValue + dragDelta * step).coerceIn(0.1f, 30.0f)
+                }
+            }
+            if (isSpeedHovered && ImGui.getIO().mouseWheel != 0f) {
+                val step = if (ImGui.getIO().keyShift) 0.05f else 0.2f
+                mixer.xfadeSpeed.baseValue = (mixer.xfadeSpeed.baseValue + ImGui.getIO().mouseWheel * step).coerceIn(0.1f, 30.0f)
+                ImGui.getIO().mouseWheel = 0f
+            }
         }
 
         if (isMidiLearnSpeed) {
