@@ -140,6 +140,12 @@ object MacroKnobWidget {
         bindings: List<llm.slop.liquidlsd.macro.MacroBinding> = emptyList(),
         /** When set, drawn as a small readout inside the knob face (e.g. an FX parameter's current value). */
         valueOverlay: String? = null,
+        /**
+         * The knob's fixed OSC address (e.g. "/macro/deckA/knob/1"), shown in the tooltip for
+         * discoverability. Macro knobs always respond to this address with no Learn step needed --
+         * see [llm.slop.liquidlsd.macro.MacroOscBridge]. Pass null to omit the line.
+         */
+        oscAddress: String? = null,
         onSelect: () -> Unit = {},
         onToggleLearn: () -> Unit = {},
         onChanged: (Float) -> Unit
@@ -288,7 +294,8 @@ object MacroKnobWidget {
 
         val learnTip = if (isLearning) " [LEARNING... Click target to bind]" else ""
         val bindingLine = formatBindingSummary(bindings)
-        itemTooltip("$label: ${"%.2f".format(newValue)}$learnTip\n$bindingLine\nDrag to adjust. Left-click to inspect. Right-click for Learn.")
+        val oscLine = if (oscAddress != null) "\nOSC: $oscAddress (always live, no Learn needed)" else ""
+        itemTooltip("$label: ${"%.2f".format(newValue)}$learnTip\n$bindingLine\nDrag to adjust. Left-click to inspect. Right-click for Learn.$oscLine")
 
         ImGui.setCursorScreenPos(startX, startY + diameter)
     }

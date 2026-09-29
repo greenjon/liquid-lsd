@@ -11,6 +11,7 @@ import llm.slop.liquidlsd.macro.MacroBank
 import llm.slop.liquidlsd.macro.MacroControl
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.macro.MacroLearnState
+import llm.slop.liquidlsd.macro.MacroOscBridge
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
@@ -584,6 +585,7 @@ class PerformanceMatrixPanel {
                     accentColor = row.accent,
                     bindings = control.bindings,
                     valueOverlay = spec.valueOverlay,
+                    oscAddress = MacroOscBridge.getKnobAddress(row.bankId, knobIdx),
                     onSelect = {
                         if (isModuleExpanded) {
                             parametersState.selectedRackMacroId[moduleId] = control.id

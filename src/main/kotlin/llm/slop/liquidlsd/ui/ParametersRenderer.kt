@@ -11,6 +11,8 @@ import llm.slop.liquidlsd.models.ClipboardManager
 import llm.slop.liquidlsd.models.CellClipboardData
 import llm.slop.liquidlsd.models.RowClipboardData
 import llm.slop.liquidlsd.models.toDto
+import llm.slop.liquidlsd.osc.OscLearnState
+import llm.slop.liquidlsd.osc.OscMappingManager
 import llm.slop.liquidlsd.ui.browser.BrowserRowMoreButton
 import kotlin.math.PI
 import kotlin.math.abs
@@ -48,6 +50,7 @@ object ParametersRenderer {
 
         val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(null, paramKey)
         val isMacroBound = macroInfo != null
+        val oscMappedAddress = OscMappingManager.getAddressForParameter(paramKey)
 
         val dl = ImGui.getWindowDrawList()
         if (isEven) {
@@ -116,13 +119,21 @@ object ParametersRenderer {
         ImGui.setCursorPosX(cursorStartX)
         ImGui.setCursorPosY(rowY + (CELL - textH) * 0.5f)
         
-        // Render label (with badge if macro-bound)
+        // Render label (with badges for macro-bound and/or OSC-mapped)
         if (isMacroBound) {
             val badge = "[${macroInfo!!.badgeLabel}]"
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 ImGui.textColored(0.0f, 0.85f, 1.0f, 1.0f, badge)
             }
             ImGui.sameLine(0f, 4f)
+        }
+        if (oscMappedAddress != null) {
+            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+                ImGui.textColored(TangoPalette.ALERT.normal[0], TangoPalette.ALERT.normal[1], TangoPalette.ALERT.normal[2], 1.0f, "${Icons.ACTIVITY} OSC")
+            }
+            ImGui.sameLine(0f, 4f)
+        }
+        if (isMacroBound) {
             session.uiTheme.tooltipColored(0.2f, 0.85f, 1.0f, 1.0f, label)
         } else {
             session.uiTheme.tooltip(label)
@@ -137,6 +148,12 @@ object ParametersRenderer {
                     ImGui.text("${Icons.LOCK} Bound to ${info.controlName} [${info.badgeLabel}]")
                     ImGui.popStyleColor()
                     ImGui.textDisabled("Click row or VAL cell to jump to Column 3 Macro Inspector.")
+                    ImGui.separator()
+                }
+                if (oscMappedAddress != null) {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.u32(TangoPalette.ALERT.normal))
+                    ImGui.text("${Icons.ACTIVITY} OSC-mapped: $oscMappedAddress")
+                    ImGui.popStyleColor()
                     ImGui.separator()
                 }
 
@@ -241,6 +258,20 @@ object ParametersRenderer {
             if (ImGui.menuItem("Clear MIDI mapping", null, false, hasMidiMap)) {
                 session.midiMappingManager.removeMapping(paramKey)
                 session.midiMappingManager.saveActiveProfile()
+            }
+            if (OscLearnState.isTargetLearning(paramKey)) {
+                if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
+                    OscLearnState.cancelLearn()
+                }
+            } else {
+                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC")) {
+                    OscLearnState.startLearn(paramKey, param.minClamp, param.maxClamp, label)
+                }
+            }
+            val oscAddress = OscMappingManager.getAddressForParameter(paramKey)
+            if (ImGui.menuItem("${Icons.TRASH} Clear OSC mapping", null, false, oscAddress != null)) {
+                OscMappingManager.removeMapping(oscAddress!!)
+                OscMappingManager.saveActiveProfile()
             }
             ImGui.separator()
             // Note editing: derive deckLabel from paramKey

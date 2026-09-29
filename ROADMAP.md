@@ -71,6 +71,8 @@ While the multi-type MIDI subsystem (Notes, CC, Pitch Bend, Soft Takeover, Relat
 - [ ] **Universal Right-Click "Learn" Overlay**:
   - Context menu on any UI slider, button, or toggle to trigger MIDI Learn, key shortcut assignment, or CV binding.
 
+**Open question, revisit later (2026-09-28, from OSC UX audit):** Macro knobs currently reach OSC via a fixed, permanent address (`/macro/<bankId>/knob/<n>`, forwarded straight to `MacroOscBridge` — no Learn step needed, unlike every other OSC-mappable control in the app). MIDI has no such fixed-CC convention for macro knobs — it treats them as genuinely learnable via a dedicated `Macro/<bankId>/knob_N` path (`MidiMappingManager`'s regex-matched dispatch branch). Giving macro knobs the same *learnable, variable-address* OSC binding as MIDI (so a performer could point an arbitrary/unconventional TouchOSC control at a specific knob instead of using its fixed address) would require extending `OscMappingManager`'s dispatch with a matching `Macro/<bankId>/knob_N` case and turning `MacroKnobWidget`'s right-click from a bare MIDI-learn toggle into an actual Learn-MIDI/Learn-OSC context menu. Deferred for now — v1.0 shipped only a tooltip on each macro knob surfacing its fixed OSC address for discoverability. Decide later whether the fixed-address model is sufficient on its own or whether performers actually want the learnable escape hatch too.
+
 ---
 
 ### Milestone 2: Session Scratchpad & Live Notes

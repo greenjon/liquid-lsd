@@ -148,6 +148,10 @@ object OscMappingManager {
     fun getMappingForAddress(address: String): OscControlMapping? = activeProfile.mappings[address]
     fun hasMapping(address: String): Boolean = activeProfile.mappings.containsKey(address)
 
+    /** Reverse lookup: the OSC address bound to [parameterPath], or null if unmapped. */
+    fun getAddressForParameter(parameterPath: String): String? =
+        activeProfile.mappings.entries.find { it.value.parameterPath == parameterPath }?.key
+
     fun addMapping(address: String, mapping: OscControlMapping) {
         val newMappings = activeProfile.mappings.toMutableMap()
         newMappings[address] = mapping

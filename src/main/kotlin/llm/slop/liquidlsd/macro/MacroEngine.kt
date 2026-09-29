@@ -353,6 +353,29 @@ object MacroEngine {
         syncLinkedFxChainKnobValues(DECK_BG_FX, mixer.deckBG.fxChain)
         syncLinkedFxChainKnobValues(DECK_PV_FX, mixer.deckPV.fxChain)
         syncLinkedFxChainKnobValues(MASTER_FX, mixer.masterFxChain)
+
+        broadcastChangedKnobsToOsc()
+    }
+
+    // Last value broadcast to OSC listeners per canonical "<bankId>/<knobIndex>" key, so any
+    // write path (GUI drag, MIDI, FX-macro-sync above) reaches TouchOSC-style bidirectional
+    // feedback uniformly without instrumenting every call site. Inbound OSC writes land in
+    // the bank via MacroOscBridge.handleOscMessage before this runs, so they're already
+    // reflected in the cache and won't re-broadcast themselves.
+    private val lastBroadcastValues = HashMap<String, Float>()
+
+    private fun broadcastChangedKnobsToOsc() {
+        for (bankId in CANONICAL_BANK_IDS) {
+            val bank = synchronized(lock) { banks[bankId] } ?: continue
+            for (i in bank.knobs.indices) {
+                val value = bank.knobs[i].value
+                val cacheKey = "$bankId/$i"
+                if (lastBroadcastValues[cacheKey] != value) {
+                    lastBroadcastValues[cacheKey] = value
+                    MacroOscBridge.broadcast(MacroOscBridge.getKnobAddress(bankId, i), value)
+                }
+            }
+        }
     }
 
     private fun syncLinkedFxChainKnobValues(bankId: String, chain: FxChain) {

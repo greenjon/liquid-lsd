@@ -432,7 +432,7 @@ internal object PerformanceTransitionsControls {
                     )
                 }
             }
-            val oscAddress = OscMappingManager.getMappings().entries.find { it.value.parameterPath == paramKey }?.key
+            val oscAddress = OscMappingManager.getAddressForParameter(paramKey)
             if (oscAddress != null) {
                 if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping ($oscAddress)")) {
                     OscMappingManager.removeMapping(oscAddress)
@@ -744,7 +744,7 @@ internal object PerformanceTransitionsControls {
                     OscLearnState.startLearn(xfadeSpeedParamKey, 0.1f, 15.0f, "Fade Speed")
                 }
             }
-            val oscAddress = OscMappingManager.getMappings().entries.find { it.value.parameterPath == xfadeSpeedParamKey }?.key
+            val oscAddress = OscMappingManager.getAddressForParameter(xfadeSpeedParamKey)
             if (oscAddress != null) {
                 if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping ($oscAddress)")) {
                     OscMappingManager.removeMapping(oscAddress)

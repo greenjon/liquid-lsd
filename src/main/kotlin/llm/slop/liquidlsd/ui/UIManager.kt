@@ -288,6 +288,11 @@ class UIManager(
             deckPresetController.drawFileBrowsers()
         }
 
+        // Drawn outside the Clean Mode gate: a performer who arms "Learn OSC" and then flips to
+        // Clean Mode should still see feedback that Learn is waiting, rather than it silently
+        // running with no visible indicator anywhere on screen.
+        OscLearnStatusOverlay.draw(displayWidth, displayHeight)
+
         handleKnobCursorLocking()
 
         ImGui.render()
