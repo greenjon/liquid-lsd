@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Standardized Interactive Control Tooltip Formatting & Hierarchy (`TooltipHelper.kt`, `MacroKnobWidget.kt`, `TooltipHelperTest.kt`, `docs/developer/ui.md`, `DECISIONS.md`)
+- **Visual Section Chunking**: Separated control tooltips into three clearly delineated semantic tiers using blank lines (`\n\n`) to eliminate run-on sentences:
+  1. *Header & Context*: Label, value readout, active status/learning indicators, and parameter routing (`Bound to: ...`).
+  2. *Interactive Actions*: Bulleted (`•`) list of user gestures in standard canonical order.
+  3. *Integrations*: OSC address and MIDI binding endpoints.
+- **Canonical Action Ordering**: Standardized mouse and keyboard interactions into a consistent continuous-to-discrete sequence: `Drag` → `Shift-drag` → `Scroll` → `Left-click` → `Double-click` → `Middle-click` → `Right-click`.
+- **`ControlTooltipBuilder` DSL**: Introduced `ControlTooltipBuilder`, `buildControlTooltip { ... }`, and `controlTooltip { ... }` in `TooltipHelper.kt` for type-safe, ergonomic, and consistent tooltip authoring across all UI controls.
+- **Macro Knob Tooltip Modernization**: Updated rotary knobs in `MacroKnobWidget.kt` to use the new builder, providing clear vertical line breaks and bullet points for all value-adjustment, inspection, and learn actions.
+
 ### Macro Knob DAW Ergonomics: Shift-Drag Fine Tuning, Bipolar/Endless Meter Modes & Direct Numeric Entry (`MacroKnobWidget.kt`, `PerfKnobSpec.kt`, `PerformanceMatrixPanel.kt`, `MacroKnobWidgetTest.kt`, `macros_and_rack.md`)
 - **Shift-Drag Fine-Tuning**: Holding Shift while dragging a Macro Knob scales the sweep distance by 6x (`FINE_SWEEP_MULTIPLIER = 6f`, 1200px full sweep vs 200px default) for surgical decimal adjustments. Smoothly re-anchors origin when Shift is pressed or released mid-drag to prevent cursor jump.
 - **Bipolar & Endless Meter Modes**: Added `MeterType` support to `MacroKnobWidget`:

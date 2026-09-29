@@ -248,6 +248,18 @@ A row's Edit bay (see the Modular Rack in §9/macros_and_rack.md) shows one of t
   - `itemTooltip(text: String, delayMs: Long = 250L)`: Replaces the verbose boilerplate pattern `if (isItemHovered() && tooltipsEnabled) ImGui.setTooltip(text)` across all UI panels.
   - `itemTooltip(delayMs: Long = 250L, block: () -> Unit)`: Renders custom multi-section tooltips with dimension measurement caching.
   - `showTooltip(text: String)`: Positions and displays an ergonomic tooltip when hover detection is handled externally (e.g. within complex custom slider hitboxes).
+  - `controlTooltip(block: ControlTooltipBuilder.() -> Unit)`: High-level declarative API for interactive controls (knobs, sliders, buttons). Enforces the canonical 3-tier layout:
+    1. **Header & Context**: Control Label / formatted value / state badge, followed by target parameter routing (`Bound to: ...`) or context description.
+    2. **Interactive Gestures** (in canonical Order 2 with bullet indicators `•` and blank line chunking):
+       - `• Drag to <action>` (Primary physical manipulation)
+       - `• Shift-drag to <action>` (Precision modifier)
+       - `• Scroll to <action>` (Continuous wheel adjustment)
+       - `• Left-click to <action>` (Primary selection / inspection / toggle)
+       - `• Double-click to <action>` (Direct numeric typing / reset / focus)
+       - `• Middle-click to <action>` (Center / reset to default)
+       - `• Right-click for <action>` / `Right-click to <action>` (Learn / context menu)
+    3. **Hardware / Protocols / Integrations**: OSC and MIDI endpoints (`OSC: ...`, `MIDI: ...`).
+  - `buildControlTooltip(block: ControlTooltipBuilder.() -> Unit): String`: Pure string-generation version of the builder for unit testing or custom tooltip composition.
 
 ---
 

@@ -460,8 +460,18 @@ object MacroKnobWidget {
 
         val learnTip = if (isLearning) " [LEARNING... Click target to bind]" else ""
         val bindingLine = formatBindingSummary(bindings)
-        val oscLine = if (oscAddress != null) "\nOSC: $oscAddress (always live, no Learn needed)" else ""
-        itemTooltip("$label: ${"%.2f".format(newValue)}$learnTip\n$bindingLine\nDrag to adjust (Shift for fine). Double-click to type. Left-click to inspect. Right-click for Learn.$oscLine")
+        controlTooltip {
+            header = "$label: ${"%.2f".format(newValue)}$learnTip"
+            binding = bindingLine
+            drag = "adjust"
+            shiftDrag = "fine-tune"
+            leftClick = "inspect"
+            doubleClick = "type"
+            rightClick = "Learn"
+            if (oscAddress != null) {
+                osc = "$oscAddress (always live, no Learn needed)"
+            }
+        }
 
         ImGui.setCursorScreenPos(startX, startY + diameter)
     }

@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#standardized-interactive-control-tooltip-formatting-hierarchy-tooltiphelperkt-macroknobwidgetkt-tooltiphelpertestkt-docsdeveloperuimd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standardized Interactive Control Tooltip Formatting &amp; Hierarchy (TooltipHelper.kt, MacroKnobWidget.kt, TooltipHelperTest.kt, docs/developer/ui.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#macro-knob-daw-ergonomics-shift-drag-fine-tuning-bipolarendless-meter-modes-direct-numeric-entry-macroknobwidgetkt-perfknobspeckt-performancematrixpanelkt-macroknobwidgettestkt-macros_and_rackmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4613,6 +4624,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#standardized-interactive-control-tooltip-formatting-hierarchy-tooltiphelperkt-macroknobwidgetkt-tooltiphelpertestkt-docsdeveloperuimd-decisionsmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Standardized Interactive Control Tooltip Formatting &amp; Hierarchy (TooltipHelper.kt, MacroKnobWidget.kt, TooltipHelperTest.kt, docs/developer/ui.md, DECISIONS.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#macro-knob-daw-ergonomics-shift-drag-fine-tuning-bipolarendless-meter-modes-direct-numeric-entry-macroknobwidgetkt-perfknobspeckt-performancematrixpanelkt-macroknobwidgettestkt-macros_and_rackmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -7993,6 +8015,16 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="standardized-interactive-control-tooltip-formatting-hierarchy-tooltiphelperkt-macroknobwidgetkt-tooltiphelpertestkt-docsdeveloperuimd-decisionsmd">Standardized Interactive Control Tooltip Formatting &amp; Hierarchy (<code>TooltipHelper.kt</code>, <code>MacroKnobWidget.kt</code>, <code>TooltipHelperTest.kt</code>, <code>docs/developer/ui.md</code>, <code>DECISIONS.md</code>)</h3>
+<ul>
+<li><strong>Visual Section Chunking</strong>: Separated control tooltips into three clearly delineated semantic tiers using blank lines (<code>\n\n</code>) to eliminate run-on sentences:</li>
+<li><em>Header &amp; Context</em>: Label, value readout, active status/learning indicators, and parameter routing (<code>Bound to: ...</code>).</li>
+<li><em>Interactive Actions</em>: Bulleted (<code>•</code>) list of user gestures in standard canonical order.</li>
+<li><em>Integrations</em>: OSC address and MIDI binding endpoints.</li>
+<li><strong>Canonical Action Ordering</strong>: Standardized mouse and keyboard interactions into a consistent continuous-to-discrete sequence: <code>Drag</code> → <code>Shift-drag</code> → <code>Scroll</code> → <code>Left-click</code> → <code>Double-click</code> → <code>Middle-click</code> → <code>Right-click</code>.</li>
+<li><strong><code>ControlTooltipBuilder</code> DSL</strong>: Introduced <code>ControlTooltipBuilder</code>, <code>buildControlTooltip { ... }</code>, and <code>controlTooltip { ... }</code> in <code>TooltipHelper.kt</code> for type-safe, ergonomic, and consistent tooltip authoring across all UI controls.</li>
+<li><strong>Macro Knob Tooltip Modernization</strong>: Updated rotary knobs in <code>MacroKnobWidget.kt</code> to use the new builder, providing clear vertical line breaks and bullet points for all value-adjustment, inspection, and learn actions.</li>
+</ul>
 <h3 id="macro-knob-daw-ergonomics-shift-drag-fine-tuning-bipolarendless-meter-modes-direct-numeric-entry-macroknobwidgetkt-perfknobspeckt-performancematrixpanelkt-macroknobwidgettestkt-macros_and_rackmd">Macro Knob DAW Ergonomics: Shift-Drag Fine Tuning, Bipolar/Endless Meter Modes &amp; Direct Numeric Entry (<code>MacroKnobWidget.kt</code>, <code>PerfKnobSpec.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>MacroKnobWidgetTest.kt</code>, <code>macros_and_rack.md</code>)</h3>
 <ul>
 <li><strong>Shift-Drag Fine-Tuning</strong>: Holding Shift while dragging a Macro Knob scales the sweep distance by 6x (<code>FINE_SWEEP_MULTIPLIER = 6f</code>, 1200px full sweep vs 200px default) for surgical decimal adjustments. Smoothly re-anchors origin when Shift is pressed or released mid-drag to prevent cursor jump.</li>

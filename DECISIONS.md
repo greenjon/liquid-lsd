@@ -1,3 +1,23 @@
+## Standardized Interactive Control Tooltip Formatting & Hierarchy (`TooltipHelper.kt`, `MacroKnobWidget.kt`, `TooltipHelperTest.kt`, docs, tests)
+
+- **Context**: 2026-09-29. Interactive control tooltips (specifically rotary macro knobs in `MacroKnobWidget.kt`) previously concatenated multiple user interactions into a single run-on sentence: `Drag to adjust (Shift for fine). Double-click to type. Left-click to inspect. Right-click for Learn.` As features like Shift-drag fine tuning, direct numeric entry, and OSC/MIDI learn were added, this format became visually cluttered and difficult to scan during high-pressure live performances.
+- **Decision**:
+  - **Standardized 3-Tier Layout & Blank Line Chunking (Option A)**: Structured control tooltips into three clear semantic sections separated by blank line (`\n\n`) breaks:
+    1. *Header & Context*: Control label, formatted value readout, learn mode indicators, and routing context (`Bound to: ...` or `Unbound – right-click to assign`).
+    2. *Interactive Gestures*: Concrete user actions formatted with bullet symbols (`•`, Option C).
+    3. *Hardware / Protocols*: Fixed or live integration endpoints (`OSC: ...`, `MIDI: ...`).
+  - **Canonical Gesture Hierarchy (Order 2)**: Standardized mouse and keyboard interactions into a consistent continuous-to-discrete sequence:
+    - `• Drag to <action>` (Continuous primary adjustment)
+    - `• Shift-drag to <action>` (Precision modifier)
+    - `• Scroll to <action>` (Continuous wheel adjustment)
+    - `• Left-click to <action>` (Primary selection / inspection / toggle)
+    - `• Double-click to <action>` (Direct numeric entry / reset / focus)
+    - `• Middle-click to <action>` (Center / reset to default)
+    - `• Right-click for <action>` / `Right-click to <action>` (Learn / context menu)
+  - **Reusable `ControlTooltipBuilder` (`TooltipHelper.kt`)**: Added `ControlTooltipBuilder`, `buildControlTooltip { ... }`, and `controlTooltip { ... }` in `TooltipHelper.kt` to enforce canonical ordering, bullet formatting, and blank line chunking automatically across callers, preventing inconsistent string concatenation.
+  - **Macro Knob Tooltip Refactoring (`MacroKnobWidget.kt`)**: Updated `MacroKnobWidget` to render via `controlTooltip`, presenting rotary knob interactions with clear vertical structure and bulleted lines.
+- **Consequences**: Significantly improves tooltip scannability and visual ergonomics across the application. Eliminates run-on sentence clutter, establishes a uniform interaction grammar across all control types, and provides a type-safe DSL for future interactive controls.
+
 ## Relocate Deck & Transitions Randomize Dice to Right Wing (`PerformanceDeckControls.kt`, `PerformanceTransitionsControls.kt`, `PerformanceMatrixPanel.kt`, `PerfRowLayoutTest.kt`, docs, tests)
 
 - **Context**: 2026-09-29. In the Performance Matrix deck rows (Decks A, B, BG, and PV), the randomize dice button (`Icons.DICES`) was located in Row 1 (the Visual Source / SRC row) between the Eject button and Queue Navigation. However, clicking the randomize die randomizes all modulators and base values for the entire deck — encompassing both the Visual Source parameters and the Insert FX parameters (`mixer.randomizeDeckA()` -> `deck.randomizeModulators()` -> `getAllRandomizableParameters()`). Placing the dice exclusively in the SRC row miscommunicated its operational scope as affecting only visual source parameters. Similarly, in the Transitions (TRANS) row, the randomize die button was cramped into Line 1 beside the TransitionQueue navigation, reducing the width available for the transition shader/preset picker button.

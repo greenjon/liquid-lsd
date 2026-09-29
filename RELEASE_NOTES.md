@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Standardized Interactive Control Tooltip Formatting & Hierarchy (`TooltipHelper.kt`, `MacroKnobWidget.kt`, `TooltipHelperTest.kt`, `docs/developer/ui.md`, `DECISIONS.md`)
+- **Visual Section Chunking**: Separated control tooltips into three clearly delineated semantic tiers using blank lines (`\n\n`) to eliminate run-on sentences:
+  1. *Header & Context*: Label, value readout, active status/learning indicators, and parameter routing (`Bound to: ...`).
+  2. *Interactive Actions*: Bulleted (`•`) list of user gestures in standard canonical order.
+  3. *Integrations*: OSC address and MIDI binding endpoints.
+- **Canonical Action Ordering**: Standardized mouse and keyboard interactions into a consistent continuous-to-discrete sequence: `Drag` → `Shift-drag` → `Scroll` → `Left-click` → `Double-click` → `Middle-click` → `Right-click`.
+- **`ControlTooltipBuilder` DSL**: Introduced `ControlTooltipBuilder`, `buildControlTooltip { ... }`, and `controlTooltip { ... }` in `TooltipHelper.kt` for type-safe, ergonomic, and consistent tooltip authoring across all UI controls.
+- **Macro Knob Tooltip Modernization**: Updated rotary knobs in `MacroKnobWidget.kt` to use the new builder, providing clear vertical line breaks and bullet points for all value-adjustment, inspection, and learn actions.
+
 ### Deck & Transitions Row Randomize Dice Relocated to Right Wing (`PerformanceDeckControls.kt`, `PerformanceTransitionsControls.kt`, `PerformanceMatrixPanel.kt`, `PerfRowLayoutTest.kt`, `docs/developer/ui.md`, `docs/user_guide/macros_and_rack.md`, `DECISIONS.md`)
 - **Semantic Affordance Alignment**: Moved the randomize die button (`Icons.DICES`) from the left wing's Visual Source row (Row 1) in Deck rows to the right wing, positioning it on Row 1 directly above the persistent `[BYPASS]` button on Row 2.
 - **Transitions Row Parity**: Relocated the Transitions row randomize die button from Line 1 left controls to the right wing at `row1Y` (`width = 56f`), expanding room for the transition picker button and providing uniform right-wing dice placement across all rows.

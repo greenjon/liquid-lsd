@@ -435,3 +435,158 @@ fun endCustomTooltip(key: Int = 0) {
     ImGui.endTooltip()
     popTooltipStyles()
 }
+
+// ── Standardized Control Tooltip Builder ─────────────────────────────────────
+
+/**
+ * Builder for standardized interactive control tooltips in Liquid LSD.
+ *
+ * Implements a canonical 3-tier hierarchy:
+ * 1. **Header & Context**: Control Label / formatted value / state badge, followed by target parameter routing or context description.
+ * 2. **Interaction Gestures** (in canonical Order 2 with bullet indicators `•`):
+ *    - `Drag to <action>` (Primary physical manipulation)
+ *    - `Shift-drag to <action>` (Precision modifier)
+ *    - `Scroll to <action>` (Continuous wheel adjustment)
+ *    - `Left-click to <action>` (Primary selection / inspection / toggle)
+ *    - `Double-click to <action>` (Direct numeric typing / reset / focus)
+ *    - `Middle-click to <action>` (Center / reset to default)
+ *    - `Right-click for <action>` / `Right-click to <action>` (Learn / context menu)
+ *    - Any custom actions added via [action]
+ * 3. **Hardware / Protocols / Integrations**: OSC and MIDI endpoints
+ *
+ * Separates non-empty sections with an empty line (`\n\n`) for clean, readable visual chunking.
+ */
+class ControlTooltipBuilder {
+    var header: String? = null
+    var status: String? = null
+    var binding: String? = null
+    var description: String? = null
+
+    var drag: String? = null
+    var shiftDrag: String? = null
+    var scroll: String? = null
+    var leftClick: String? = null
+    var doubleClick: String? = null
+    var middleClick: String? = null
+    var rightClick: String? = null
+
+    private val customActions = mutableListOf<String>()
+
+    var osc: String? = null
+    var midi: String? = null
+    var footer: String? = null
+
+    fun action(text: String) {
+        if (text.isNotBlank()) customActions.add(text)
+    }
+
+    private fun formatGesture(prefix: String, text: String): String {
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) return ""
+        val body = when {
+            trimmed.startsWith("to ", ignoreCase = true) || trimmed.startsWith("for ", ignoreCase = true) ->
+                "$prefix $trimmed"
+            prefix.endsWith("for") || prefix.endsWith("to") ->
+                "$prefix $trimmed"
+            else -> "$prefix to $trimmed"
+        }
+        return if (body.startsWith("• ")) body else "• $body"
+    }
+
+    private fun formatRightClick(text: String): String {
+        val trimmed = text.trim()
+        if (trimmed.isEmpty()) return ""
+        val body = when {
+            trimmed.startsWith("to ", ignoreCase = true) || trimmed.startsWith("for ", ignoreCase = true) ->
+                "Right-click $trimmed"
+            trimmed.equals("Learn", ignoreCase = true) ||
+            trimmed.startsWith("Learn ", ignoreCase = true) ||
+            trimmed.startsWith("options", ignoreCase = true) ->
+                "Right-click for $trimmed"
+            else ->
+                "Right-click to $trimmed"
+        }
+        return if (body.startsWith("• ")) body else "• $body"
+    }
+
+    fun build(): String {
+        val sections = mutableListOf<String>()
+
+        // 1. Header / Context section
+        val headerLines = mutableListOf<String>()
+        header?.takeIf { it.isNotBlank() }?.let { headerLines.add(it.trim()) }
+        status?.takeIf { it.isNotBlank() }?.let { headerLines.add(it.trim()) }
+        binding?.takeIf { it.isNotBlank() }?.let {
+            val b = it.trim()
+            val formatted = if (b.startsWith("Bound to", ignoreCase = true) || b.startsWith("Unbound", ignoreCase = true)) {
+                b
+            } else {
+                "Bound to: $b"
+            }
+            headerLines.add(formatted)
+        }
+        description?.takeIf { it.isNotBlank() }?.let { headerLines.add(it.trim()) }
+        if (headerLines.isNotEmpty()) {
+            sections.add(headerLines.joinToString("\n"))
+        }
+
+        // 2. Gesture / Actions section (Canonical Order 2 with • bullets)
+        val actionLines = mutableListOf<String>()
+        drag?.takeIf { it.isNotBlank() }?.let { actionLines.add(formatGesture("Drag", it)) }
+        shiftDrag?.takeIf { it.isNotBlank() }?.let { actionLines.add(formatGesture("Shift-drag", it)) }
+        scroll?.takeIf { it.isNotBlank() }?.let { actionLines.add(formatGesture("Scroll", it)) }
+        leftClick?.takeIf { it.isNotBlank() }?.let { actionLines.add(formatGesture("Left-click", it)) }
+        doubleClick?.takeIf { it.isNotBlank() }?.let { actionLines.add(formatGesture("Double-click", it)) }
+        middleClick?.takeIf { it.isNotBlank() }?.let { actionLines.add(formatGesture("Middle-click", it)) }
+        rightClick?.takeIf { it.isNotBlank() }?.let { actionLines.add(formatRightClick(it)) }
+
+        for (custom in customActions) {
+            val trimmed = custom.trim()
+            if (trimmed.isNotEmpty()) {
+                val formatted = if (trimmed.startsWith("• ")) trimmed else "• $trimmed"
+                actionLines.add(formatted)
+            }
+        }
+        if (actionLines.isNotEmpty()) {
+            sections.add(actionLines.joinToString("\n"))
+        }
+
+        // 3. Hardware / Protocols / Integrations section
+        val integrationLines = mutableListOf<String>()
+        osc?.takeIf { it.isNotBlank() }?.let {
+            val trimmed = it.trim()
+            val formatted = if (trimmed.startsWith("OSC:", ignoreCase = true)) trimmed else "OSC: $trimmed"
+            integrationLines.add(formatted)
+        }
+        midi?.takeIf { it.isNotBlank() }?.let {
+            val trimmed = it.trim()
+            val formatted = if (trimmed.startsWith("MIDI:", ignoreCase = true)) trimmed else "MIDI: $trimmed"
+            integrationLines.add(formatted)
+        }
+        footer?.takeIf { it.isNotBlank() }?.let { integrationLines.add(it.trim()) }
+        if (integrationLines.isNotEmpty()) {
+            sections.add(integrationLines.joinToString("\n"))
+        }
+
+        return sections.joinToString("\n\n")
+    }
+}
+
+/**
+ * Builds a standardized, multi-section control tooltip string using [ControlTooltipBuilder].
+ */
+inline fun buildControlTooltip(block: ControlTooltipBuilder.() -> Unit): String =
+    ControlTooltipBuilder().apply(block).build()
+
+/**
+ * Displays a Mixxx-style tooltip for the currently hovered item formatted according to
+ * standardized control tooltip hierarchy and spacing conventions.
+ */
+inline fun controlTooltip(
+    delayMs: Long = TooltipHelper.DEFAULT_HOVER_DELAY_MS,
+    allowWhenDisabled: Boolean = false,
+    block: ControlTooltipBuilder.() -> Unit
+) {
+    itemTooltip(buildControlTooltip(block), delayMs, allowWhenDisabled)
+}
+

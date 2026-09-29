@@ -1925,6 +1925,20 @@
 <li><code>itemTooltip(text: String, delayMs: Long = 250L)</code>: Replaces the verbose boilerplate pattern <code>if (isItemHovered() &amp;&amp; tooltipsEnabled) ImGui.setTooltip(text)</code> across all UI panels.</li>
 <li><code>itemTooltip(delayMs: Long = 250L, block: () -&gt; Unit)</code>: Renders custom multi-section tooltips with dimension measurement caching.</li>
 <li><code>showTooltip(text: String)</code>: Positions and displays an ergonomic tooltip when hover detection is handled externally (e.g. within complex custom slider hitboxes).</li>
+<li><code>controlTooltip(block: ControlTooltipBuilder.() -&gt; Unit)</code>: High-level declarative API for interactive controls (knobs, sliders, buttons). Enforces the canonical 3-tier layout:<ol>
+<li><strong>Header &amp; Context</strong>: Control Label / formatted value / state badge, followed by target parameter routing (<code>Bound to: ...</code>) or context description.</li>
+<li><strong>Interactive Gestures</strong> (in canonical Order 2 with bullet indicators <code>•</code> and blank line chunking):</li>
+<li><code>• Drag to &lt;action&gt;</code> (Primary physical manipulation)</li>
+<li><code>• Shift-drag to &lt;action&gt;</code> (Precision modifier)</li>
+<li><code>• Scroll to &lt;action&gt;</code> (Continuous wheel adjustment)</li>
+<li><code>• Left-click to &lt;action&gt;</code> (Primary selection / inspection / toggle)</li>
+<li><code>• Double-click to &lt;action&gt;</code> (Direct numeric typing / reset / focus)</li>
+<li><code>• Middle-click to &lt;action&gt;</code> (Center / reset to default)</li>
+<li><code>• Right-click for &lt;action&gt;</code> / <code>Right-click to &lt;action&gt;</code> (Learn / context menu)</li>
+<li><strong>Hardware / Protocols / Integrations</strong>: OSC and MIDI endpoints (<code>OSC: ...</code>, <code>MIDI: ...</code>).</li>
+</ol>
+</li>
+<li><code>buildControlTooltip(block: ControlTooltipBuilder.() -&gt; Unit): String</code>: Pure string-generation version of the builder for unit testing or custom tooltip composition.</li>
 </ul>
 <hr />
 <h2 id="imgui-native-memory-allocation-rules">ImGui Native Memory &amp; Allocation Rules</h2>

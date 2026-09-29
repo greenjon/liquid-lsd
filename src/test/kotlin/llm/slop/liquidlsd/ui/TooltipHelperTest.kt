@@ -166,4 +166,109 @@ class TooltipHelperTest {
         assertEquals(320f, cached?.first)
         assertEquals(180f, cached?.second)
     }
+
+    @Test
+    fun testBuildControlTooltipFullCanonicalOrder() {
+        // Properties configured deliberately out of canonical order to verify strict Order 2 sorting
+        val tooltip = buildControlTooltip {
+            rightClick = "Learn"
+            shiftDrag = "fine-tune"
+            leftClick = "inspect"
+            osc = "/macro/deckBG_fx/knob/1 (always live, no Learn needed)"
+            doubleClick = "type"
+            binding = "Deck BG/FX/Super [0.00 – 1.00]"
+            drag = "adjust"
+            header = "SUPER: 0.52"
+        }
+
+        val expected = """
+            SUPER: 0.52
+            Bound to: Deck BG/FX/Super [0.00 – 1.00]
+
+            • Drag to adjust
+            • Shift-drag to fine-tune
+            • Left-click to inspect
+            • Double-click to type
+            • Right-click for Learn
+
+            OSC: /macro/deckBG_fx/knob/1 (always live, no Learn needed)
+        """.trimIndent()
+
+        assertEquals(expected, tooltip)
+    }
+
+    @Test
+    fun testBuildControlTooltipIntelligentPrefixes() {
+        val tooltip = buildControlTooltip {
+            header = "Volume: 80%"
+            drag = "to adjust level"
+            shiftDrag = "for fine tuning"
+            scroll = "nudge by 1%"
+            leftClick = "to mute"
+            doubleClick = "to reset to 0dB"
+            middleClick = "center"
+            rightClick = "reset levels"
+            midi = "Ch 1 CC 7"
+        }
+
+        val expected = """
+            Volume: 80%
+
+            • Drag to adjust level
+            • Shift-drag for fine tuning
+            • Scroll to nudge by 1%
+            • Left-click to mute
+            • Double-click to reset to 0dB
+            • Middle-click to center
+            • Right-click to reset levels
+
+            MIDI: Ch 1 CC 7
+        """.trimIndent()
+
+        assertEquals(expected, tooltip)
+    }
+
+    @Test
+    fun testBuildControlTooltipUnboundAndEmptySections() {
+        val tooltip = buildControlTooltip {
+            header = "MACRO 1: 0.00"
+            binding = "Unbound – right-click to assign"
+            leftClick = "select"
+            rightClick = "for Learn"
+        }
+
+        val expected = """
+            MACRO 1: 0.00
+            Unbound – right-click to assign
+
+            • Left-click to select
+            • Right-click for Learn
+        """.trimIndent()
+
+        assertEquals(expected, tooltip)
+    }
+
+    @Test
+    fun testBuildControlTooltipCustomActions() {
+        val tooltip = buildControlTooltip {
+            header = "Master Crossfader"
+            drag = "blend"
+            middleClick = "snap to center"
+            action("Drop video clip here to load")
+            osc = "OSC: /master/xfade"
+        }
+
+        val expected = """
+            Master Crossfader
+
+            • Drag to blend
+            • Middle-click to snap to center
+            • Drop video clip here to load
+
+            OSC: /master/xfade
+        """.trimIndent()
+
+        assertEquals(expected, tooltip)
+    }
 }
+
