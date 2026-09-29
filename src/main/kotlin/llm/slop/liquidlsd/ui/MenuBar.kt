@@ -43,6 +43,9 @@ class MenuBar(
                     }
                     ImGui.sameLine(0f, 10f)
 
+                    drawPerformanceTabStrip(session, mixer)
+                    ImGui.sameLine(0f, 10f)
+
                     if (ImGui.beginMenu("File")) {
                         if (ImGui.beginMenu("New Preset")) {
                             if (ImGui.menuItem("To Deck A")) {
@@ -304,6 +307,68 @@ class MenuBar(
             }
         } finally {
             ImGui.popStyleVar()
+        }
+    }
+
+    /**
+     * The [DECKS]/[MASTER] tab toggle for [PerformanceMatrixPanel], plus the Learn indicator and
+     * Randomize ALL button that used to sit in the matrix's own tab-strip row. Moved here so that
+     * row can be removed entirely, recovering its height for the knob grid.
+     */
+    private fun drawPerformanceTabStrip(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
+        val theme = session.uiTheme
+        val tabs = PerformanceMatrixPanel.Tab.values()
+        val gap = 4f
+        val tabH = ImGui.getFrameHeight()
+        val tabW = 68f
+        val isLight = theme.theme == UITheme.Theme.ORANGE_SUNSHINE
+
+        for ((i, tab) in tabs.withIndex()) {
+            if (i > 0) ImGui.sameLine(0f, gap)
+            val isActive = theme.performanceMatrixTab == i
+            val activeBg = if (isLight) TangoPalette.u32(TangoPalette.SYNC.normal) else ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f)
+            val activeHover = if (isLight) TangoPalette.u32(TangoPalette.SYNC.bright) else ImGui.colorConvertFloat4ToU32(0.15f, 0.62f, 0.82f, 1f)
+            val activeText = if (isLight) ImGui.colorConvertFloat4ToU32(0.05f, 0.05f, 0.05f, 1f) else ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
+
+            val inactiveBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
+            val inactiveHover = if (isLight) ImGui.getColorU32(ImGuiCol.ButtonHovered) else ImGui.colorConvertFloat4ToU32(0.22f, 0.25f, 0.30f, 1f)
+            val inactiveText = ImGui.getColorU32(ImGuiCol.Text)
+
+            if (isActive) {
+                ImGui.pushStyleColor(ImGuiCol.Button, activeBg)
+                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, activeHover)
+                ImGui.pushStyleColor(ImGuiCol.Text, activeText)
+            } else {
+                ImGui.pushStyleColor(ImGuiCol.Button, inactiveBg)
+                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, inactiveHover)
+                ImGui.pushStyleColor(ImGuiCol.Text, inactiveText)
+            }
+            session.uiTheme.withFont(UITheme.FontLevel.H3) {
+                if (ImGui.button("${tab.label}##perf_tab_$i", tabW, tabH)) {
+                    theme.performanceMatrixTab = i
+                    AppPreferencesStore.savePreferences()
+                }
+            }
+            itemTooltip(tab.tooltip)
+            ImGui.popStyleColor(3)
+        }
+
+        ImGui.sameLine(0f, 10f)
+        llm.slop.liquidlsd.ui.rack.RackUnit.drawLearnIndicator()
+
+        if (theme.randomizationEnabled) {
+            ImGui.sameLine(0f, 10f)
+            ImGui.pushStyleColor(ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.25f, 0.18f, 0.32f, 0.90f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.25f, 0.48f, 1f))
+            ImGui.pushStyleColor(ImGuiCol.Text,          ImGui.colorConvertFloat4ToU32(0.95f, 0.85f, 1.0f, 1f))
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.button("${Icons.DICES} ALL##perf_rand_all", 76f, tabH)) {
+                    ParametersUndo.pushUndoState(parametersState, mixer)
+                    mixer.randomizeAll()
+                }
+            }
+            ImGui.popStyleColor(3)
+            itemTooltip("Randomize ALL Decks (A, B, BG, PV) and Modulators.\nClick to randomize all decks with undo support.")
         }
     }
 

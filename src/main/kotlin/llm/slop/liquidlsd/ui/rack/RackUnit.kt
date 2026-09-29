@@ -48,6 +48,27 @@ object RackUnit {
     }
 
     /**
+     * Icon-only variant of [drawChevron] (gear glyph, no text) sized to exactly `w` x `h` --
+     * for docking into the title badge's gap rather than auto-sizing like a toolbar button.
+     */
+    fun drawChevronIcon(parametersState: ParametersState, moduleId: String, idSuffix: String, w: Float, h: Float) {
+        val level = parametersState.disclosureFor(moduleId)
+        val isExpanded = level != ParametersState.DisclosureLevel.COLLAPSED
+        llm.slop.liquidlsd.ui.PerformanceColors.pushActiveToggleStyle(isExpanded)
+        if (ImGui.button("${llm.slop.liquidlsd.ui.Icons.SETTINGS}##rack_chevron_$idSuffix", w, h)) {
+            if (isExpanded) {
+                parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.COLLAPSED)
+            } else {
+                parametersState.openParams(moduleId)
+            }
+        }
+        llm.slop.liquidlsd.ui.PerformanceColors.popActiveToggleStyle()
+        itemTooltip(
+            if (isExpanded) "Deep Edit is active. Click to close." else "Click to open Deep Edit parameter editor."
+        )
+    }
+
+    /**
      * Persistent one-line indicator for an armed Macro Learn, shown outside all Rack Units (e.g.
      * in the toolbar) so the state is never invisible even if the owning module's Deep Edit was
      * collapsed by other means. Returns true if it drew anything.

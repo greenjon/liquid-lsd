@@ -25,6 +25,8 @@ internal object DeckRowMetrics {
     const val QUEUE_IDX_W = 38f
     const val QUEUE_INNER_GAP = 2f
     const val PV_BADGE_W = 60f
+    /** Kebab menu button -- narrower than a square icon button, matching [FxChainHeader]'s ⋮. */
+    const val KEBAB_W = 20f
 
     fun iconBtnW(ctrlH: Float): Float = ctrlH
     fun navBtnW(ctrlH: Float): Float = (ctrlH * 0.85f).coerceAtLeast(20f)
@@ -39,13 +41,22 @@ internal object DeckRowMetrics {
     fun genBadgeW(comboW: Float): Float = GEN_BADGE_BASE_W + GAP + comboW
 
     /**
-     * Line 1 (SRC) width: pill, generator/preset badge, eject, [dice], then the queue nav
-     * or PV's PREVIEW badge -- whichever is wider, so every deck reserves the same width.
+     * Headroom reserved past the last drawn Row 1 control, past the knob cluster's [SIDE_GUTTER]
+     * -- room to add another icon or two later without another geometry pass across every row.
+     */
+    fun growthSlack(ctrlH: Float): Float = 2f * iconBtnW(ctrlH)
+
+    /**
+     * Line 1 (SRC) width: pill, generator/preset badge, eject, [dice], queue nav or PV's PREVIEW
+     * badge (whichever is wider), then Save + kebab -- mirroring the Save/⋮ pair Row 2's FX chain
+     * header already has, so SRC and FX aren't lopsided -- plus growth slack.
      */
     fun row1Width(ctrlH: Float, comboW: Float, randomization: Boolean): Float =
         MODE_PILL_W + GAP + genBadgeW(comboW) + GAP + iconBtnW(ctrlH) +
             (if (randomization) GAP + iconBtnW(ctrlH) else 0f) +
-            GAP + maxOf(queueNavW(ctrlH), PV_BADGE_W)
+            GAP + maxOf(queueNavW(ctrlH), PV_BADGE_W) +
+            GAP + iconBtnW(ctrlH) + GAP + KEBAB_W +
+            growthSlack(ctrlH)
 }
 
 /**
@@ -172,6 +183,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             pushOpenDropdownFont()
             if (ImGui.menuItem("Browse...")) {
                 parametersState.openGenBrowse(canonicalBankId, deckLabel)
+            }
+            if (!isExternalVideo && ImGui.menuItem("Save As...")) {
+                ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = true)
             }
             if (!deck.isEmpty && !isExternalVideo) {
                 ImGui.separator()
@@ -513,6 +527,33 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             itemTooltip("Deck PV (Preview Deck)\nClick to open Deck PV in Deep Edit.")
         }
 
+        ImGui.sameLine(0f, gap)
+
+        // 6. Save button -- save-if-possible, else Save As modal (mirrors the FX chain's [Save]
+        // in Row 2, so SRC has the same visible save affordance FX already does).
+        val saveBtnBg = when {
+            isDirty -> TangoPalette.u32(TangoPalette.ALERT.dark)
+            isLight -> ImGui.getColorU32(ImGuiCol.Button)
+            else -> ImGui.colorConvertFloat4ToU32(0.18f, 0.20f, 0.24f, 0.8f)
+        }
+        ImGui.pushStyleColor(ImGuiCol.Button, saveBtnBg)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.button("${Icons.SAVE}##perf_src_save_$tag", iconBtnW, ctrlH)) {
+                ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = false)
+            }
+        }
+        ImGui.popStyleColor()
+        itemTooltip("Save $deckLabel's current source & parameters as a preset.")
+
+        ImGui.sameLine(0f, gap)
+
+        // 7. [⋮] Kebab -- same menu as the gen badge's right-click (Browse, Save As, defaults),
+        // just also reachable without knowing to right-click the badge (mirrors FX chain's ⋮).
+        if (ImGui.button("${Icons.MORE_VERTICAL}##perf_src_more_$tag", DeckRowMetrics.KEBAB_W, ctrlH)) {
+            ImGui.openPopup("##perf_gen_badge_ctx_$tag")
+        }
+        itemTooltip("Source operations (Browse, Save As, defaults).")
+
         ImGui.endGroup()
 
         // --- ROW 2 (FX) --------------------------------------------------------------
@@ -559,7 +600,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.beginGroup()
-        FxChainHeader.drawBypassButton(deck.fxChain, tag, ctrlH, 56f)
+        FxChainHeader.drawBypassButton(session, deck.fxChain, tag, ctrlH, 56f)
         ImGui.endGroup()
     }
 }

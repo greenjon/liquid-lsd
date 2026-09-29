@@ -378,15 +378,20 @@ object FxChainHeader {
     }
 
     /**
-     * Draws the top-level [FX] toggle button for [chain].
+     * Draws the top-level chain kill-switch for [chain]. Static "BYPASS" label (state shown by
+     * color, not text) so it reads as a signal-chain switch, distinct from the [SRC]/[FX]
+     * knob-assign pill this sits beside -- the pill picks *what the knobs show*, this picks
+     * *whether the chain processes audio/video at all*.
      */
-    fun drawBypassButton(chain: FxChain, id: String, ctrlH: Float, width: Float = 64f) {
+    fun drawBypassButton(session: SessionContext, chain: FxChain, id: String, ctrlH: Float, width: Float = 64f) {
         val isActive = chain.enabled
-        val label = "FX"
+        val label = "BYPASS"
 
         PerformanceColors.pushActiveToggleStyle(isActive)
-        if (ImGui.button("$label##bypass_$id", width, ctrlH)) {
-            chain.enabled = !chain.enabled
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            if (ImGui.button("$label##bypass_$id", width, ctrlH)) {
+                chain.enabled = !chain.enabled
+            }
         }
         PerformanceColors.popActiveToggleStyle()
         itemTooltip(if (isActive) "FX chain is active. Click to bypass." else "FX chain is bypassed. Click to enable.")

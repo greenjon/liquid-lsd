@@ -134,8 +134,6 @@ class PerformanceMatrixPanel {
         val theme = session.uiTheme
 
         deepEditBay.beginFrame(parametersState, mixer)
-        drawTabStrip(session, theme, mixer, parametersState)
-        ImGui.dummy(0f, 2f)
 
         // Modular Rack: when a module is in Deep Edit, every other row is hidden from the grid and
         // the Deep-Edit bay below gets the rest of the height. The open row is exactly as tall as
@@ -222,74 +220,6 @@ class PerformanceMatrixPanel {
 
         // Show the active macro row for each expanded module
         return expandedModuleIds.map { rowDescriptorForModule(it, parametersState) }
-    }
-
-    // -- Tab strip ----------------------------------------------------------------
-
-    private fun drawTabStrip(
-        session: llm.slop.liquidlsd.SessionContext,
-        theme: UITheme,
-        mixer: Mixer,
-        parametersState: ParametersState
-    ) {
-        val tabs = Tab.values()
-        val availW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)
-        val gap = 4f
-        val tabH = 26f
-        val tabW = 85f
-        val showAllDice = session.uiTheme.randomizationEnabled
-        val allDiceBtnW = if (showAllDice) 76f else 0f
-
-        val isLight = theme.theme == UITheme.Theme.ORANGE_SUNSHINE
-        for ((i, tab) in tabs.withIndex()) {
-            if (i > 0) ImGui.sameLine(0f, gap)
-            val isActive = theme.performanceMatrixTab == i
-            val activeBg = if (isLight) TangoPalette.u32(TangoPalette.SYNC.normal) else ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f)
-            val activeHover = if (isLight) TangoPalette.u32(TangoPalette.SYNC.bright) else ImGui.colorConvertFloat4ToU32(0.15f, 0.62f, 0.82f, 1f)
-            val activeText = if (isLight) ImGui.colorConvertFloat4ToU32(0.05f, 0.05f, 0.05f, 1f) else ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
-
-            val inactiveBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
-            val inactiveHover = if (isLight) ImGui.getColorU32(ImGuiCol.ButtonHovered) else ImGui.colorConvertFloat4ToU32(0.22f, 0.25f, 0.30f, 1f)
-            val inactiveText = ImGui.getColorU32(ImGuiCol.Text)
-
-            if (isActive) {
-                ImGui.pushStyleColor(ImGuiCol.Button, activeBg)
-                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, activeHover)
-                ImGui.pushStyleColor(ImGuiCol.Text, activeText)
-            } else {
-                ImGui.pushStyleColor(ImGuiCol.Button, inactiveBg)
-                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, inactiveHover)
-                ImGui.pushStyleColor(ImGuiCol.Text, inactiveText)
-            }
-            session.uiTheme.withFont(UITheme.FontLevel.H3) {
-                if (ImGui.button("${tab.label}##perf_tab_$i", tabW, tabH)) {
-                    theme.performanceMatrixTab = i
-                    AppPreferencesStore.savePreferences()
-                }
-            }
-            itemTooltip(tab.tooltip)
-            ImGui.popStyleColor(3)
-        }
-
-        // Modular Rack toolbar: Learn indicator
-        ImGui.sameLine(0f, 10f)
-        llm.slop.liquidlsd.ui.rack.RackUnit.drawLearnIndicator()
-
-        if (showAllDice) {
-            val diceStartX = (availW - allDiceBtnW).coerceAtLeast(ImGui.getCursorPosX() + gap)
-            ImGui.sameLine(diceStartX, 0f)
-            ImGui.pushStyleColor(ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.25f, 0.18f, 0.32f, 0.90f))
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.25f, 0.48f, 1f))
-            ImGui.pushStyleColor(ImGuiCol.Text,          ImGui.colorConvertFloat4ToU32(0.95f, 0.85f, 1.0f, 1f))
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.DICES} ALL##perf_rand_all", allDiceBtnW, tabH)) {
-                    ParametersUndo.pushUndoState(parametersState, mixer)
-                    mixer.randomizeAll()
-                }
-            }
-            ImGui.popStyleColor(3)
-            itemTooltip("Randomize ALL Decks (A, B, BG, PV) and Modulators.\nClick to randomize all decks with undo support.")
-        }
     }
 
     // -- 4x4 Knob Grid -----------------------------------------------------------
@@ -520,8 +450,10 @@ class PerformanceMatrixPanel {
                 }
             }
 
-            // Modular Rack disclosure toggle in top-right of box: [EDIT]
-            if (descriptor.canExpand) {
+            // Modular Rack disclosure toggle in top-right of box: [EDIT]. Only for rows with no
+            // title badge to dock into -- badge rows get the icon-only gear in the badge's own
+            // gap instead (see drawEditGearInBadge, called per-branch below).
+            if (descriptor.canExpand && !descriptor.hasExtraHeader) {
                 val chevronY = boxTopY + 3f
                 val editBtnW = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                     ImGui.calcTextSize("EDIT").x + ImGui.getStyle().framePaddingX * 2f
@@ -548,10 +480,12 @@ class PerformanceMatrixPanel {
                 val masterTabStartX = badgeX + masterTabBadgeW + 6f
                 if (isMasterRow) {
                     drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "MASTER", UITheme.FontLevel.H2)
+                    drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
                     PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW)
-                    PerformanceMasterControls.drawBypassControls(mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
+                    PerformanceMasterControls.drawBypassControls(session, mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                 } else if (isTransRow) {
                     drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "TRANS", UITheme.FontLevel.H2)
+                    drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
                     PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW)
                 } else if (isClockRow) {
                     drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "CLOCK", UITheme.FontLevel.H2)
@@ -577,6 +511,7 @@ class PerformanceMatrixPanel {
 
                     // Deck title badge: just the deck letter(s) -- the [SRC]/[FX] pills beside it show the mode.
                     drawTitleBadge(session, badgeX, badgeY, deckBadgeW, badgeH, descriptor.accent, deckTag, UITheme.FontLevel.H1)
+                    drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, deckBadgeW, badgeH)
 
                     val leftStartX = badgeX + deckBadgeW + 6f
                     deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W)
@@ -812,6 +747,32 @@ class PerformanceMatrixPanel {
             ImGui.setCursorScreenPos(x, y)
             ImGui.invisibleButton("##title_badge_$text", w.coerceAtLeast(1f), h.coerceAtLeast(1f))
             itemTooltip(tooltip)
+        }
+    }
+
+    /**
+     * Icon-only EDIT toggle docked in the bottom half of a row's title-badge column -- [drawTitleBadge]
+     * only fills the top half (see its `h` param there), leaving this gap free for the disclosure
+     * toggle instead of a separate top-right corner button.
+     */
+    private fun drawEditGearInBadge(
+        session: llm.slop.liquidlsd.SessionContext,
+        parametersState: ParametersState,
+        descriptor: RowDescriptor,
+        activeModuleId: String,
+        tabIdx: Int,
+        rowIdx: Int,
+        badgeX: Float,
+        badgeY: Float,
+        badgeW: Float,
+        badgeH: Float
+    ) {
+        if (!descriptor.canExpand) return
+        ImGui.setCursorScreenPos(badgeX, badgeY + badgeH)
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            llm.slop.liquidlsd.ui.rack.RackUnit.drawChevronIcon(
+                parametersState, activeModuleId, "${tabIdx}_${rowIdx}", badgeW, badgeH
+            )
         }
     }
 

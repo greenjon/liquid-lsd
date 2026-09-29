@@ -75,8 +75,11 @@ class PerfRowLayoutTest {
         val comboW = 100f
         val nav = (ctrlH * 0.85f).coerceAtLeast(20f)
         val queueNav = nav + 2f + 38f + 2f + nav
-        // pill, badge, combo, eject, dice, queue nav -- each followed by a 4px gap except the last.
-        val expected = 28f + 4f + 74f + 4f + comboW + 4f + ctrlH + 4f + ctrlH + 4f + queueNav
+        val growthSlack = 2f * ctrlH
+        // pill, badge, combo, eject, dice, queue nav, save, kebab -- each followed by a 4px gap
+        // except the last, then growth slack reserved past everything drawn.
+        val expected = 28f + 4f + 74f + 4f + comboW + 4f + ctrlH + 4f + ctrlH + 4f + queueNav +
+            4f + ctrlH + 4f + DeckRowMetrics.KEBAB_W + growthSlack
         assertEquals(expected, DeckRowMetrics.row1Width(ctrlH, comboW, randomization = true), 0.01f)
         assertEquals(expected - 4f - ctrlH, DeckRowMetrics.row1Width(ctrlH, comboW, randomization = false), 0.01f)
     }

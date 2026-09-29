@@ -83,10 +83,10 @@ internal object PerformanceMasterControls {
     }
 
     /** Master FX chain bypass, placed to the right of the knobs like a deck row's. */
-    fun drawBypassControls(mixer: Mixer, startX: Float, startY: Float, ctrlH: Float, width: Float) {
+    fun drawBypassControls(session: SessionContext, mixer: Mixer, startX: Float, startY: Float, ctrlH: Float, width: Float) {
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.beginGroup()
-        FxChainHeader.drawBypassButton(mixer.masterFxChain, "MST", ctrlH, width - 4f)
+        FxChainHeader.drawBypassButton(session, mixer.masterFxChain, "MST", ctrlH, width - 4f)
         ImGui.endGroup()
     }
 
