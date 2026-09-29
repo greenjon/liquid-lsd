@@ -1,5 +1,16 @@
 ## [Unreleased]
 
+### Performance Matrix Title Badge Unification & Row Length Alignment (`PerformanceMatrixPanel.kt`, `PerfRowLayoutTest.kt`, `docs/developer/ui.md`)
+- **Uniform 42px Title Badge Width**: Standardized all row title badges to a uniform 42px width across both DECKS and MASTER tabs (`masterTabBadgeW = 42f`, matching `deckBadgeW = 42f`).
+- **Standardized Badge Labels**: Updated MASTER tab badges to concise, clear acronyms:
+  - Master: `"M"` (rendered in `UITheme.FontLevel.H1`)
+  - Transitions: `"TR"` (rendered in `UITheme.FontLevel.H1`)
+  - Clock: `"CLK"` (rendered in `UITheme.FontLevel.H2`)
+  - FX Wet/Dry: `"W/D"` (rendered in `UITheme.FontLevel.H2`)
+- **Descriptive Badge Unit Tooltips**: Added informative two-line unit tooltips to all title badges across both tabs explaining their role and controls (e.g. `"Master Unit\nConfigure Master parameters and FX"`, `"Transitions Unit\nConfigure video crossfader and transition shaders"`, `"Clock Unit\nConfigure tempo, BPM, synchronization, and Global macros"`, `"FX Wet/Dry Unit\nConfigure per-deck FX wet/dry send levels"`, and `"$deckLabel Unit\nConfigure $deckLabel video source and FX"`).
+- **Master FX and MIX Row Length Alignment**: With identical 42px badges and 6px gap, Master row controls start at the exact same horizontal position (`badgeX + 48f`) as Deck rows. Sized Master controls to `masterRowW = DeckRowMetrics.row1Width(ctrlH, deckComboW)`, ensuring both Master `[FX]` and `[MIX]` rows match the exact length and right-edge horizontal alignment of the deck rows' FX row.
+- **Dedicated Transitions Row Width**: Maintained `transRowW = maxOf(deckRow1W, (gridW * 0.38f).coerceAtMost(420f))` specifically for the Transitions crossfader row, preventing crossfader reservations from stretching the Master row.
+
 ### Standardized Interactive Control Tooltip Formatting & Hierarchy (`TooltipHelper.kt`, `MacroKnobWidget.kt`, `TooltipHelperTest.kt`, `docs/developer/ui.md`, `DECISIONS.md`)
 - **Visual Section Chunking**: Separated control tooltips into three clearly delineated semantic tiers using blank lines (`\n\n`) to eliminate run-on sentences:
   1. *Header & Context*: Label, value readout, active status/learning indicators, and parameter routing (`Bound to: ...`).

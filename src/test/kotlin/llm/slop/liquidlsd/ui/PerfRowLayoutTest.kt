@@ -106,6 +106,40 @@ class PerfRowLayoutTest {
     }
 
     @Test
+    fun masterRowFxAndMixRowsMatchDeckFxRowLength() {
+        val deckBadgeW = 42f
+        val masterTabBadgeW = 42f
+        for (ctrlH in listOf(21f, 24f)) {
+            for (comboW in listOf(85f, 100f, 140f)) {
+                val deckFxRowW = DeckRowMetrics.row1Width(ctrlH, comboW)
+                val masterRowW = DeckRowMetrics.row1Width(ctrlH, comboW)
+
+                // Master FX row length: mode pill + gap + FxChainHeader (maxW = masterRowW - modeBtnW - gap)
+                val modeBtnW = DeckRowMetrics.MODE_PILL_W
+                val gap = DeckRowMetrics.GAP
+                val fxMaxW = masterRowW - modeBtnW - gap
+                val nameW = FxChainHeader.calculateNameWidth(fxMaxW, ctrlH, showArrows = false)
+                val slotPillsW = 20f * llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT + 3f * (llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT - 1)
+                val saveW = FxChainHeader.saveBtnW(ctrlH)
+                val masterFxDrawnW = modeBtnW + gap + nameW + 3f + slotPillsW + 3f + saveW + 3f + FxChainHeader.MORE_BTN_W
+
+                // Master MIX row length: mode pill + gap + badge + gap + reset button (badgeW = width - resetBtnW - gap)
+                val mixWidth = masterRowW - modeBtnW - gap
+                val resetBtnW = 44f
+                val badgeW = mixWidth - resetBtnW - gap
+                val masterMixDrawnW = modeBtnW + gap + badgeW + gap + resetBtnW
+
+                // Visual right edge alignment: badge width + gap (6f) + row width
+                val deckVisualRightEdge = deckBadgeW + 6f + deckFxRowW
+                val masterVisualRightEdge = masterTabBadgeW + 6f + masterFxDrawnW
+                assertEquals(deckFxRowW, masterFxDrawnW, 0.01f, "Master FX row length should equal deck FX row length")
+                assertEquals(deckVisualRightEdge, masterVisualRightEdge, 0.01f, "Master FX row right edge should align with deck FX row right edge")
+                assertEquals(masterFxDrawnW, masterMixDrawnW, 0.01f, "Master MIX row length should equal Master FX row length")
+            }
+        }
+    }
+
+    @Test
     fun compactControlsNeverNeedMoreThanTheReservedWidth() {
         assertTrue(
             DeckRowMetrics.row1Width(21f, 120f) <= DeckRowMetrics.row1Width(PerformanceColors.CTRL_H, 120f)

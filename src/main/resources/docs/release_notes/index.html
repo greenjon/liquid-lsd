@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-matrix-title-badge-unification-row-length-alignment-performancematrixpanelkt-perfrowlayouttestkt-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix Title Badge Unification &amp; Row Length Alignment (PerformanceMatrixPanel.kt, PerfRowLayoutTest.kt, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#standardized-interactive-control-tooltip-formatting-hierarchy-tooltiphelperkt-macroknobwidgetkt-tooltiphelpertestkt-docsdeveloperuimd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4624,6 +4635,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-matrix-title-badge-unification-row-length-alignment-performancematrixpanelkt-perfrowlayouttestkt-docsdeveloperuimd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Matrix Title Badge Unification &amp; Row Length Alignment (PerformanceMatrixPanel.kt, PerfRowLayoutTest.kt, docs/developer/ui.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#standardized-interactive-control-tooltip-formatting-hierarchy-tooltiphelperkt-macroknobwidgetkt-tooltiphelpertestkt-docsdeveloperuimd-decisionsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8015,6 +8037,18 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="performance-matrix-title-badge-unification-row-length-alignment-performancematrixpanelkt-perfrowlayouttestkt-docsdeveloperuimd">Performance Matrix Title Badge Unification &amp; Row Length Alignment (<code>PerformanceMatrixPanel.kt</code>, <code>PerfRowLayoutTest.kt</code>, <code>docs/developer/ui.md</code>)</h3>
+<ul>
+<li><strong>Uniform 42px Title Badge Width</strong>: Standardized all row title badges to a uniform 42px width across both DECKS and MASTER tabs (<code>masterTabBadgeW = 42f</code>, matching <code>deckBadgeW = 42f</code>).</li>
+<li><strong>Standardized Badge Labels</strong>: Updated MASTER tab badges to concise, clear acronyms:</li>
+<li>Master: <code>"M"</code> (rendered in <code>UITheme.FontLevel.H1</code>)</li>
+<li>Transitions: <code>"TR"</code> (rendered in <code>UITheme.FontLevel.H1</code>)</li>
+<li>Clock: <code>"CLK"</code> (rendered in <code>UITheme.FontLevel.H2</code>)</li>
+<li>FX Wet/Dry: <code>"W/D"</code> (rendered in <code>UITheme.FontLevel.H2</code>)</li>
+<li><strong>Descriptive Badge Unit Tooltips</strong>: Added informative two-line unit tooltips to all title badges across both tabs explaining their role and controls (e.g. <code>"Master Unit\nConfigure Master parameters and FX"</code>, <code>"Transitions Unit\nConfigure video crossfader and transition shaders"</code>, <code>"Clock Unit\nConfigure tempo, BPM, synchronization, and Global macros"</code>, <code>"FX Wet/Dry Unit\nConfigure per-deck FX wet/dry send levels"</code>, and <code>"$deckLabel Unit\nConfigure $deckLabel video source and FX"</code>).</li>
+<li><strong>Master FX and MIX Row Length Alignment</strong>: With identical 42px badges and 6px gap, Master row controls start at the exact same horizontal position (<code>badgeX + 48f</code>) as Deck rows. Sized Master controls to <code>masterRowW = DeckRowMetrics.row1Width(ctrlH, deckComboW)</code>, ensuring both Master <code>[FX]</code> and <code>[MIX]</code> rows match the exact length and right-edge horizontal alignment of the deck rows' FX row.</li>
+<li><strong>Dedicated Transitions Row Width</strong>: Maintained <code>transRowW = maxOf(deckRow1W, (gridW * 0.38f).coerceAtMost(420f))</code> specifically for the Transitions crossfader row, preventing crossfader reservations from stretching the Master row.</li>
+</ul>
 <h3 id="standardized-interactive-control-tooltip-formatting-hierarchy-tooltiphelperkt-macroknobwidgetkt-tooltiphelpertestkt-docsdeveloperuimd-decisionsmd">Standardized Interactive Control Tooltip Formatting &amp; Hierarchy (<code>TooltipHelper.kt</code>, <code>MacroKnobWidget.kt</code>, <code>TooltipHelperTest.kt</code>, <code>docs/developer/ui.md</code>, <code>DECISIONS.md</code>)</h3>
 <ul>
 <li><strong>Visual Section Chunking</strong>: Separated control tooltips into three clearly delineated semantic tiers using blank lines (<code>\n\n</code>) to eliminate run-on sentences:</li>

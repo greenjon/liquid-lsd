@@ -1,5 +1,16 @@
 ## [Unreleased]
 
+### Performance Matrix Title Badge Unification & Row Length Alignment (`PerformanceMatrixPanel.kt`, `PerfRowLayoutTest.kt`, `docs/developer/ui.md`)
+- **Uniform 42px Title Badge Width**: Standardized all row title badges to a uniform 42px width across both DECKS and MASTER tabs (`masterTabBadgeW = 42f`, matching `deckBadgeW = 42f`).
+- **Standardized Badge Labels**: Updated MASTER tab badges to concise, clear acronyms:
+  - Master: `"M"` (rendered in `UITheme.FontLevel.H1`)
+  - Transitions: `"TR"` (rendered in `UITheme.FontLevel.H1`)
+  - Clock: `"CLK"` (rendered in `UITheme.FontLevel.H2`)
+  - FX Wet/Dry: `"W/D"` (rendered in `UITheme.FontLevel.H2`)
+- **Descriptive Badge Unit Tooltips**: Added informative two-line unit tooltips to all title badges across both tabs explaining their role and controls (e.g. `"Master Unit\nConfigure Master parameters and FX"`, `"Transitions Unit\nConfigure video crossfader and transition shaders"`, `"Clock Unit\nConfigure tempo, BPM, synchronization, and Global macros"`, `"FX Wet/Dry Unit\nConfigure per-deck FX wet/dry send levels"`, and `"$deckLabel Unit\nConfigure $deckLabel video source and FX"`).
+- **Master FX and MIX Row Length Alignment**: With identical 42px badges and 6px gap, Master row controls start at the exact same horizontal position (`badgeX + 48f`) as Deck rows. Sized Master controls to `masterRowW = DeckRowMetrics.row1Width(ctrlH, deckComboW)`, ensuring both Master `[FX]` and `[MIX]` rows match the exact length and right-edge horizontal alignment of the deck rows' FX row.
+- **Dedicated Transitions Row Width**: Maintained `transRowW = maxOf(deckRow1W, (gridW * 0.38f).coerceAtMost(420f))` specifically for the Transitions crossfader row, preventing crossfader reservations from stretching the Master row.
+
 ### Deck FX Row Stepper Arrows Linked to Live FX Queues (`FxChainHeader.kt`, `FxQueueEngine.kt`, `PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `PerfRowLayoutTest.kt`, `FXQueueManagerTest.kt`, `docs/user_guide/performance_controls.md`, `DECISIONS.md`)
 - **Live FX Queue Navigation**: The `◀` / `▶` stepper arrows on Deck rows now step through the live FX queue (`FXQueueManager` for Decks A & B, `FXBgQueueManager` for Deck BG) instead of traversing disk folders.
 - **Deterministic Per-Deck Targeting**: Clicking `◀` or `▶` on Deck A or Deck B applies the queued FX item directly and deterministically to the clicked deck via `explicitTargetDeck`, rather than following the crossfader position.

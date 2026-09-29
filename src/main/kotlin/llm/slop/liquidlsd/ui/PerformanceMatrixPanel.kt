@@ -285,11 +285,13 @@ class PerformanceMatrixPanel {
         val deckRow1W = DeckRowMetrics.row1Width(PerformanceColors.CTRL_H, deckComboW)
         val deckLeftW = deckBadgeW + 6f + deckRow1W
         val deckRightW = 56f
-        // MASTER tab: Master ([MIX] + crossfader over [FX] + chain header), Transitions (picker +
-        // queue nav), FX Wet/Dry (badge only), Clock (source/BPM/beat over tempo actions).
-        val masterTabBadgeW = 78f
-        val masterRowW = maxOf(deckRow1W, (gridW * 0.38f).coerceAtMost(420f))
-        val masterTabLeftW = masterTabBadgeW + 6f + masterRowW
+        // MASTER tab: Master ([MIX] over [FX] + chain header), Transitions (picker +
+        // queue nav over crossfader), FX Wet/Dry (badge only), Clock (source/BPM/beat over tempo actions).
+        // Uniform 42px title badge width across both DECKS and MASTER tabs.
+        val masterTabBadgeW = 42f
+        val transRowW = maxOf(deckRow1W, (gridW * 0.38f).coerceAtMost(420f))
+        val masterRowW = DeckRowMetrics.row1Width(ctrlH, deckComboW)
+        val masterTabLeftW = masterTabBadgeW + 6f + transRowW
         val masterRightW = 56f
 
         // Reserved unconditionally (not just on the tab that currently needs it) so the knob
@@ -480,21 +482,32 @@ class PerformanceMatrixPanel {
                 val badgeH = ((row2YFinal + ctrlH) - boxTopY) * 0.5f
                 val masterTabStartX = badgeX + masterTabBadgeW + 6f
                 if (isMasterRow) {
-                    drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "MASTER", UITheme.FontLevel.H2)
+                    drawTitleBadge(
+                        session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "M", UITheme.FontLevel.H1,
+                        tooltip = "Master Unit\nConfigure Master parameters and FX"
+                    )
                     drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
                     PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW)
                     PerformanceMasterControls.drawBypassControls(session, mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                 } else if (isTransRow) {
-                    drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "TRANS", UITheme.FontLevel.H2)
+                    drawTitleBadge(
+                        session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "TR", UITheme.FontLevel.H1,
+                        tooltip = "Transitions Unit\nConfigure video crossfader and transition shaders"
+                    )
                     drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
-                    PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW)
+                    PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, transRowW)
                     PerformanceTransitionsControls.drawRightControls(session, mixer, boxX2 - pad - masterRightW, row1Y, ctrlH, masterRightW)
                 } else if (isClockRow) {
-                    drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "CLOCK", UITheme.FontLevel.H2)
+                    drawTitleBadge(
+                        session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "CLK", UITheme.FontLevel.H2,
+                        tooltip = "Clock Unit\nConfigure tempo, BPM, synchronization, and Global macros"
+                    )
                     PerformanceClockControls.draw(session, masterTabStartX, row1Y, row2YFinal, ctrlH)
                 } else if (descriptor.bankId == MacroEngine.FX_SENDS) {
-                    drawTitleBadge(session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "WET/DRY", UITheme.FontLevel.H2,
-                        tooltip = "Per-deck FX send levels (each deck's FX chain wet/dry).")
+                    drawTitleBadge(
+                        session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "W/D", UITheme.FontLevel.H2,
+                        tooltip = "FX Wet/Dry Unit\nConfigure per-deck FX wet/dry send levels"
+                    )
                     PerformanceFxSendsControls.drawRightControls(boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                 } else if (isDeckRow) {
                     val deckTag = when {
@@ -511,8 +524,10 @@ class PerformanceMatrixPanel {
                     }
                     val deckLabel = "Deck $deckTag"
 
-                    // Deck title badge: just the deck letter(s) -- the [SRC]/[FX] pills beside it show the mode.
-                    drawTitleBadge(session, badgeX, badgeY, deckBadgeW, badgeH, descriptor.accent, deckTag, UITheme.FontLevel.H1)
+                    drawTitleBadge(
+                        session, badgeX, badgeY, deckBadgeW, badgeH, descriptor.accent, deckTag, UITheme.FontLevel.H1,
+                        tooltip = "$deckLabel Unit\nConfigure $deckLabel video source and FX"
+                    )
                     drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, deckBadgeW, badgeH)
 
                     val leftStartX = badgeX + deckBadgeW + 6f
@@ -752,7 +767,9 @@ class PerformanceMatrixPanel {
         if (pushable) ImGui.popFont()
         if (tooltip != null) {
             ImGui.setCursorScreenPos(x, y)
-            ImGui.invisibleButton("##title_badge_$text", w.coerceAtLeast(1f), h.coerceAtLeast(1f))
+            ImGui.setNextItemAllowOverlap()
+            ImGui.invisibleButton("##title_badge_${text}_${x.toInt()}_${y.toInt()}", w.coerceAtLeast(1f), h.coerceAtLeast(1f))
+            applyDragScroll()
             itemTooltip(tooltip)
         }
     }
