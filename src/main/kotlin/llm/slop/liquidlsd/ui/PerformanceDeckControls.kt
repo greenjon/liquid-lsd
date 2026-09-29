@@ -591,7 +591,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val targetBank = ctx.targetBankIdFor(tag)
         val fxCanonicalBankId = MacroEngine.deckBankIdFor(deck, mixer) ?: MacroEngine.DECK_A
         val targetRowW = DeckRowMetrics.row1Width(ctrlH, comboW)
-        FxChainHeader.drawControls(session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH, maxW = targetRowW - modeBtnW - gap) {
+        FxChainHeader.drawControls(session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH, maxW = targetRowW - modeBtnW - gap, deck = deck) {
             parametersState.openFxChainBrowse(fxCanonicalBankId, deckLabel, slotIndex = null)
         }
 

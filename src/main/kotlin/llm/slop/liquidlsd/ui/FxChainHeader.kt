@@ -6,7 +6,10 @@ import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.FxMacroSync
 import llm.slop.liquidlsd.models.ClipboardManager
+import llm.slop.liquidlsd.presets.FXBgQueueManager
+import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.presets.FxOps
+import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 import java.io.File
@@ -16,7 +19,8 @@ import java.io.File
  *
  *   `[◀]  Chain Name •  [▶]  [Save] [⋮]`   ...   `[BYPASS]`
  *
- * - **◀ / ▶**: steps through .lsdfxchain files in the current chain's folder alphabetically.
+ * - **◀ / ▶**: on Deck A, B, and BG, steps through the respective live FX queue (A/B or BG) directly
+ *   on that deck. Bypassed/omitted on Deck PV and Master FX. If the queue is empty, rendered disabled.
  * - **Name**: click opens that row's Browse content on the whole-chain list (search filter). Drops of .lsdfxchain load here.
  * - **• (dirty dot)**: shows amber when the chain differs from its loaded baseline or has unsaved edits.
  * - **Save**: overwrites source file (or acts as Save As if untitled).
@@ -28,6 +32,18 @@ object FxChainHeader {
     const val ARROW_W = 16f
     const val MORE_BTN_W = 20f
     fun saveBtnW(ctrlH: Float): Float = ctrlH
+
+    /**
+     * Calculates the width of the chain name button so the entire header row
+     * fills exactly [maxW] and lines up cleanly with Row 1's kebab button.
+     */
+    fun calculateNameWidth(maxW: Float, ctrlH: Float, showArrows: Boolean): Float {
+        val gap = 3f
+        val saveW = saveBtnW(ctrlH)
+        val slotPillsW = 20f * FxChain.SLOT_COUNT + gap * (FxChain.SLOT_COUNT - 1)
+        val arrowsReservation = if (showArrows) (ARROW_W * 2f + gap * 2f) else 0f
+        return (maxW - (arrowsReservation + saveW + MORE_BTN_W + slotPillsW + gap * 3f)).coerceAtLeast(48f)
+    }
 
     /** Steps [chain] to the previous (-1) or next (+1) chain file in its folder. */
     fun stepChain(session: SessionContext, chain: FxChain, dir: Int) {
@@ -60,6 +76,7 @@ object FxChainHeader {
         chainLabel: String,
         ctrlH: Float,
         maxW: Float = 220f,
+        deck: Deck? = null,
         onOpenChainBrowse: () -> Unit
     ) {
         val gap = 3f
@@ -126,27 +143,68 @@ object FxChainHeader {
             drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, menuId)
         } else {
             // -- GROUP MODE HEADER ----------------------------------------------------------------
-            // 1. [◀] Prev chain
-            if (ImGui.button("◀##prev_chain_$bankId", ARROW_W, ctrlH)) {
-                stepChain(session, chain, -1)
-            }
-            itemTooltip("Previous FX chain in folder.")
+            val isDeckAB = deck === mixer.deckA || deck === mixer.deckB
+            val isDeckBG = deck === mixer.deckBG
+            val showArrows = isDeckAB || isDeckBG
 
-            ImGui.sameLine()
+            val isQueueEmpty = when {
+                isDeckAB -> FXQueueManager.queue.isEmpty()
+                isDeckBG -> FXBgQueueManager.queue.isEmpty()
+                else -> true
+            }
+
+            val deckTag = when {
+                deck === mixer.deckA -> "Deck A"
+                deck === mixer.deckB -> "Deck B"
+                deck === mixer.deckBG -> "Deck BG"
+                else -> ""
+            }
+
+            val emptyTooltip = if (isDeckBG) "BG FX Queue is empty. Add items from the Library." else "FX Queue is empty. Add items from the Library."
+
+            // 1. [◀] Prev FX queue item (only if deck supports queues)
+            if (showArrows) {
+                if (isQueueEmpty) ImGui.beginDisabled(true)
+                if (ImGui.button("◀##prev_chain_$bankId", ARROW_W, ctrlH)) {
+                    if (isDeckAB) {
+                        FXQueueManager.advancePrevious(session, mixer, explicitTargetDeck = deck)
+                    } else if (isDeckBG) {
+                        FXBgQueueManager.advancePrevious(session, mixer, explicitTargetDeck = deck)
+                    }
+                }
+                if (isQueueEmpty) {
+                    ImGui.endDisabled()
+                    itemTooltip(emptyTooltip, allowWhenDisabled = true)
+                } else {
+                    itemTooltip("Previous FX in queue ($deckTag).")
+                }
+
+                ImGui.sameLine()
+            }
 
             // 2. Chain name button
-            val saveW = saveBtnW(ctrlH)
-            val slotPillsW = 20f * FxChain.SLOT_COUNT + gap * (FxChain.SLOT_COUNT - 1)
-            val nameW = (maxW - (ARROW_W * 2f + saveW + MORE_BTN_W + slotPillsW + gap * 5f)).coerceAtLeast(48f)
+            val nameW = calculateNameWidth(maxW, ctrlH, showArrows)
             drawChainNameButton(session, chain, bankId, ctrlH, nameW, isDirty, onOpenChainBrowse)
 
-            ImGui.sameLine()
+            // 3. [▶] Next FX queue item (only if deck supports queues)
+            if (showArrows) {
+                ImGui.sameLine()
 
-            // 3. [▶] Next chain
-            if (ImGui.button("▶##next_chain_$bankId", ARROW_W, ctrlH)) {
-                stepChain(session, chain, 1)
+                if (isQueueEmpty) ImGui.beginDisabled(true)
+                if (ImGui.button("▶##next_chain_$bankId", ARROW_W, ctrlH)) {
+                    if (isDeckAB) {
+                        FXQueueManager.advanceNext(session, mixer, explicitTargetDeck = deck)
+                    } else if (isDeckBG) {
+                        FXBgQueueManager.advanceNext(session, mixer, explicitTargetDeck = deck)
+                    }
+                }
+                if (isQueueEmpty) {
+                    ImGui.endDisabled()
+                    itemTooltip(emptyTooltip, allowWhenDisabled = true)
+                } else {
+                    itemTooltip("Next FX in queue ($deckTag).")
+                }
             }
-            itemTooltip("Next FX chain in folder.")
 
             ImGui.sameLine()
 

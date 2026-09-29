@@ -90,12 +90,16 @@ class PerfRowLayoutTest {
         val saveW = FxChainHeader.saveBtnW(ctrlH)
         val slotPillsW = 20f * llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT + gap * (llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT - 1)
         val maxW = 320f
-        val nameW = (maxW - (FxChainHeader.ARROW_W * 2f + saveW + FxChainHeader.MORE_BTN_W + slotPillsW + gap * 5f)).coerceAtLeast(48f)
 
-        // Total width from left of ◀ to right of kebab ⋮:
-        // ◀ (ARROW_W) + gap + nameW + gap + ▶ (ARROW_W) + gap + slotPillsW + gap + saveW + gap + MORE_BTN_W
-        val totalDrawnW = FxChainHeader.ARROW_W + gap + nameW + gap + FxChainHeader.ARROW_W + gap + slotPillsW + gap + saveW + gap + FxChainHeader.MORE_BTN_W
-        assertEquals(maxW, totalDrawnW, 0.01f)
+        // Case 1: showArrows == true (Decks A, B, BG)
+        val nameWWithArrows = FxChainHeader.calculateNameWidth(maxW, ctrlH, showArrows = true)
+        val totalDrawnWWithArrows = FxChainHeader.ARROW_W + gap + nameWWithArrows + gap + FxChainHeader.ARROW_W + gap + slotPillsW + gap + saveW + gap + FxChainHeader.MORE_BTN_W
+        assertEquals(maxW, totalDrawnWWithArrows, 0.01f)
+
+        // Case 2: showArrows == false (Deck PV, Master FX)
+        val nameWNoArrows = FxChainHeader.calculateNameWidth(maxW, ctrlH, showArrows = false)
+        val totalDrawnWNoArrows = nameWNoArrows + gap + slotPillsW + gap + saveW + gap + FxChainHeader.MORE_BTN_W
+        assertEquals(maxW, totalDrawnWNoArrows, 0.01f)
 
         // Furthermore, FxChainHeader's MORE_BTN_W matches DeckRowMetrics.KEBAB_W
         assertEquals(DeckRowMetrics.KEBAB_W, FxChainHeader.MORE_BTN_W)

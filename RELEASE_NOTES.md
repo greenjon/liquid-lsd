@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Deck FX Row Stepper Arrows Linked to Live FX Queues (`FxChainHeader.kt`, `FxQueueEngine.kt`, `PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `PerfRowLayoutTest.kt`, `FXQueueManagerTest.kt`, `docs/user_guide/performance_controls.md`, `DECISIONS.md`)
+- **Live FX Queue Navigation**: The `◀` / `▶` stepper arrows on Deck rows now step through the live FX queue (`FXQueueManager` for Decks A & B, `FXBgQueueManager` for Deck BG) instead of traversing disk folders.
+- **Deterministic Per-Deck Targeting**: Clicking `◀` or `▶` on Deck A or Deck B applies the queued FX item directly and deterministically to the clicked deck via `explicitTargetDeck`, rather than following the crossfader position.
+- **Empty Queue Disabled State**: When the corresponding FX queue is empty, the arrows render disabled (`ImGui.beginDisabled(true)`) with an informative hover tooltip (`"FX Queue is empty. Add items from the Library."` / `"BG FX Queue is empty. Add items from the Library."`).
+- **Omitted on PV & Master FX**: Omitted `◀` and `▶` buttons from Deck PV and Master FX rows, allowing the chain name button to expand while keeping row width and kebab button (`⋮`) alignment identical across all decks.
+
 ### Standardized Interactive Control Tooltip Formatting & Hierarchy (`TooltipHelper.kt`, `MacroKnobWidget.kt`, `TooltipHelperTest.kt`, `docs/developer/ui.md`, `DECISIONS.md`)
 - **Visual Section Chunking**: Separated control tooltips into three clearly delineated semantic tiers using blank lines (`\n\n`) to eliminate run-on sentences:
   1. *Header & Context*: Label, value readout, active status/learning indicators, and parameter routing (`Bound to: ...`).

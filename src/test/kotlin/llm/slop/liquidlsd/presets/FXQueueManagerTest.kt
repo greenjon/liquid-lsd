@@ -192,4 +192,36 @@ class FXQueueManagerTest {
 
         assertEquals(listOf(realItem.absoluteFile), resolved.map { it.absoluteFile })
     }
+
+    @Test
+    fun testAdvanceWithExplicitTargetDeck() {
+        mockkObject(FxOps)
+        every { FxOps.applyItem(any(), any(), any()) } returns Unit
+        try {
+            val f1 = File("fx1.lsdfx")
+            val f2 = File("fx2.lsdfx")
+            FXQueueManager.appendToQueue(f1)
+            FXQueueManager.appendToQueue(f2)
+
+            // Crossfader is at 1.0f (which normally defaults to Deck B)
+            every { mixer.crossfade.value } returns 1.0f
+
+            // Explicitly target Deck A
+            FXQueueManager.advanceNext(session, mixer, explicitTargetDeck = mixer.deckA)
+            assertEquals(0, FXQueueManager.activeIndex)
+            io.mockk.verify { FxOps.applyItem(session, f1, mixer.deckA.fxChain) }
+
+            // Explicitly target Deck B
+            FXQueueManager.advanceNext(session, mixer, explicitTargetDeck = mixer.deckB)
+            assertEquals(1, FXQueueManager.activeIndex)
+            io.mockk.verify { FxOps.applyItem(session, f2, mixer.deckB.fxChain) }
+
+            // Explicitly target Deck A on advancePrevious
+            FXQueueManager.advancePrevious(session, mixer, explicitTargetDeck = mixer.deckA)
+            assertEquals(0, FXQueueManager.activeIndex)
+            io.mockk.verify { FxOps.applyItem(session, f1, mixer.deckA.fxChain) }
+        } finally {
+            unmockkObject(FxOps)
+        }
+    }
 }

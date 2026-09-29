@@ -76,7 +76,7 @@ internal object PerformanceMasterControls {
         ImGui.beginGroup()
         ImGui.dummy(modeBtnW, ctrlH)
         ImGui.sameLine(0f, gap)
-        FxChainHeader.drawControls(session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH, maxW = rowW - modeBtnW - gap) {
+        FxChainHeader.drawControls(session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH, maxW = rowW - modeBtnW - gap, deck = null) {
             parametersState.openFxChainBrowse(MacroEngine.MASTER, deckLabel = null, slotIndex = null)
         }
         ImGui.endGroup()

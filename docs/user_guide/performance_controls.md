@@ -135,7 +135,7 @@ for the FX Rack view that exposes these.
   deck's FX chain. FX chains are saved with your session and restored on the next launch.
 - **Performance Matrix FX Controls**:
   - **Shared Chain Header (`[◀] Name • [▶] [Save] [⋮] ... [BYPASS]`)**:
-    - **`◀` / `▶`**: Steps alphabetically through `.lsdfxchain` presets in the current chain folder.
+    - **`◀` / `▶` (Decks A, B, BG)**: On Decks A, B, and BG, steps through the respective live FX queue (A/B or BG) directly on that deck, advancing the queue while targeting the clicked deck. Rendered disabled when the FX queue is empty. Omitted on Deck PV and Master FX, allowing the chain name button to expand while keeping row width perfectly aligned.
     - **Chain Name Button**: Displays current chain name with `•` dirty indicator when modified from baseline. Clicking opens inline Browse on the **Chain** sub-tab, with live text search over saved `.lsdfxchain` files. Accepts `.lsdfxchain` drag-and-drop.
     - **`[Save]`**: Overwrites the loaded chain file with current state, or triggers Save As if untitled.
     - **`[⋮]` Menu**: Save As..., New Chain, Revert to Saved (undoes tweaks back to clean loaded state), Clear All Slots, Copy/Paste Chain, and Resync Knobs.
