@@ -96,16 +96,20 @@ object PreferencesPanel {
             return
         }
 
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+
         // ── Top Header Bar ───────────────────────────────────────────────
         session.uiTheme.withFont(UITheme.FontLevel.H2) {
-            ImGui.textColored(0.3f, 0.75f, 1.0f, 1.0f, "${Icons.SETTINGS} Preferences")
+            val titleCol = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else ImGui.colorConvertFloat4ToU32(0.3f, 0.75f, 1.0f, 1.0f)
+            ImGui.textColored(titleCol, "${Icons.SETTINGS} Preferences")
         }
         ImGui.sameLine(0f, 10f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             ImGui.alignTextToFramePadding()
             ImGui.textDisabled("›")
             ImGui.sameLine(0f, 10f)
-            ImGui.textColored(0.85f, 0.85f, 0.85f, 1.0f, activeCategory.label)
+            val breadcrumbCol = if (isLight) ImGui.getColorU32(imgui.flag.ImGuiCol.Text) else ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 1.0f)
+            ImGui.textColored(breadcrumbCol, activeCategory.label)
         }
 
         // Close button on the far right of the header bar
@@ -143,20 +147,27 @@ object PreferencesPanel {
             Category.values().forEach { cat ->
                 val selected = activeCategory == cat
                 if (selected) {
-                    val activeCol = ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.8f, 1f)
+                    val activeCol = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.8f, 1f)
+                    val activeHover = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.dark) else ImGui.colorConvertFloat4ToU32(0.25f, 0.55f, 0.85f, 1f)
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        activeCol)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, activeCol)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  activeCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, activeHover)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  activeHover)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text,          ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f))
                 } else {
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f))
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.22f, 1f))
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.32f, 0.32f, 0.32f, 1f))
+                    val inactiveCol = if (isLight) ImGui.getColorU32(imgui.flag.ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f)
+                    val inactiveHover = if (isLight) ImGui.getColorU32(imgui.flag.ImGuiCol.ButtonHovered) else ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.22f, 1f)
+                    val inactiveActive = if (isLight) ImGui.getColorU32(imgui.flag.ImGuiCol.ButtonActive) else ImGui.colorConvertFloat4ToU32(0.32f, 0.32f, 0.32f, 1f)
+                    val inactiveText = if (isLight) ImGui.getColorU32(imgui.flag.ImGuiCol.Text) else ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 1f)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        inactiveCol)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, inactiveHover)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  inactiveActive)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text,          inactiveText)
                 }
 
                 if (ImGui.button(cat.label, sidebarW - 16f, btnH)) {
                     activeCategory = cat
                 }
-                ImGui.popStyleColor(3)
+                ImGui.popStyleColor(4)
                 ImGui.spacing()
             }
         }
@@ -232,7 +243,9 @@ object PreferencesPanel {
         }
         itemTooltip("Enable or disable the step sequencer modulation engine across presets and parameter properties.")
 
-        session.uiTheme.captionColored(0.5f, 0.7f, 1.0f, 1.0f, "MIDI hardware configuration has moved to the 'MIDI Controls' tab.")
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+        val infoCol = if (isLight) TangoPalette.SKY_BLUE.dark else floatArrayOf(0.5f, 0.7f, 1.0f)
+        session.uiTheme.captionColored(infoCol[0], infoCol[1], infoCol[2], 1.0f, "MIDI hardware configuration has moved to the 'MIDI Controls' tab.")
 
         val framelessEnabled = ImBoolean(session.uiTheme.framelessWindow)
         if (ImGui.checkbox("Frameless Window (Custom Title Bar) [Requires restart]", framelessEnabled)) {
@@ -264,10 +277,12 @@ object PreferencesPanel {
             ImGui.textDisabled("${Icons.ACTIVITY} Touchpad Status: Configuring permissions via Polkit...")
         } else when (state) {
             TouchBackendState.READY -> {
-                ImGui.textColored(0.2f, 0.9f, 0.3f, 1f, "${Icons.ACTIVITY} Touchpad Status: Ready (Press CapsLock to engage)")
+                val readyCol = if (isLight) TangoPalette.ACTIVE.dark else floatArrayOf(0.2f, 0.9f, 0.3f)
+                ImGui.textColored(readyCol[0], readyCol[1], readyCol[2], 1f, "${Icons.ACTIVITY} Touchpad Status: Ready (Press CapsLock to engage)")
             }
             TouchBackendState.PERMISSION_REQUIRED -> {
-                ImGui.textColored(1.0f, 0.6f, 0.1f, 1f, "${Icons.ALERT} Touchpad Status: Read/Write Permission Required")
+                val permCol = if (isLight) TangoPalette.ALERT.dark else floatArrayOf(1.0f, 0.6f, 0.1f)
+                ImGui.textColored(permCol[0], permCol[1], permCol[2], 1f, "${Icons.ALERT} Touchpad Status: Read/Write Permission Required")
                 ImGui.sameLine()
                 if (ImGui.button("Install Permissions (Polkit)")) {
                     controller.requestPermissionElevation()
@@ -318,7 +333,8 @@ object PreferencesPanel {
             is llm.slop.liquidlsd.update.UpdateCheckResult.UpdateAvailable -> {
                 ImGui.spacing()
                 ImGui.alignTextToFramePadding()
-                ImGui.textColored(0.3f, 0.9f, 0.4f, 1.0f, "${Icons.DOWNLOAD} Update available: ${lastResult.latestRelease.tagName}")
+                val updateAvailCol = if (isLight) TangoPalette.ACTIVE.dark else floatArrayOf(0.3f, 0.9f, 0.4f)
+                ImGui.textColored(updateAvailCol[0], updateAvailCol[1], updateAvailCol[2], 1.0f, "${Icons.DOWNLOAD} Update available: ${lastResult.latestRelease.tagName}")
                 ImGui.sameLine()
                 if (ImGui.button("View Update##preferences_update", 120f, 0f)) {
                     UpdatePromptModal.request(lastResult.latestRelease, lastResult.currentVersion)
@@ -327,12 +343,14 @@ object PreferencesPanel {
             is llm.slop.liquidlsd.update.UpdateCheckResult.UpToDate -> {
                 ImGui.spacing()
                 ImGui.alignTextToFramePadding()
-                ImGui.textColored(0.5f, 0.9f, 0.5f, 1.0f, "Liquid LSD is up to date (${lastResult.currentVersion}).")
+                val upToDateCol = if (isLight) TangoPalette.ACTIVE.dark else floatArrayOf(0.5f, 0.9f, 0.5f)
+                ImGui.textColored(upToDateCol[0], upToDateCol[1], upToDateCol[2], 1.0f, "Liquid LSD is up to date (${lastResult.currentVersion}).")
             }
             is llm.slop.liquidlsd.update.UpdateCheckResult.Error -> {
                 ImGui.spacing()
                 ImGui.alignTextToFramePadding()
-                ImGui.textColored(1.0f, 0.4f, 0.4f, 1.0f, "Check failed: ${lastResult.message}")
+                val errCol = if (isLight) TangoPalette.DANGER.normal else floatArrayOf(1.0f, 0.4f, 0.4f)
+                ImGui.textColored(errCol[0], errCol[1], errCol[2], 1.0f, "Check failed: ${lastResult.message}")
             }
             is llm.slop.liquidlsd.update.UpdateCheckResult.Idle, is llm.slop.liquidlsd.update.UpdateCheckResult.Checking -> {
                 // Handled inline via the button / checking state above
@@ -389,7 +407,8 @@ object PreferencesPanel {
 
         session.uiTheme.h2("Font Size")
         ImGui.sameLine(0f, 15f)
-        session.uiTheme.captionColored(0.7f, 0.7f, 0.7f, 0.85f, "only changes the size of the text in the Library of Presets")
+        val captionNoteCol = if (isLight) TangoPalette.NEUTRAL_DARK.normal else floatArrayOf(0.7f, 0.7f, 0.7f)
+        session.uiTheme.captionColored(captionNoteCol[0], captionNoteCol[1], captionNoteCol[2], 0.85f, "only changes the size of the text in the Library of Presets")
         ImGui.separator()
         ImGui.spacing()
 
@@ -398,6 +417,7 @@ object PreferencesPanel {
         val committedScale = session.uiTheme.presetNameScalePercent
         val currentScale = pendingPresetScale ?: committedScale
         val sliderW = (ImGui.getContentRegionAvailX() * 0.25f).coerceAtLeast(160f)
+        val sliderThemeColor = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f)
         if (ImGui.beginChild("##preset_slider_child", sliderW, 52f, false, imgui.flag.ImGuiWindowFlags.NoScrollbar)) {
             CustomRangeSlider.drawCompactSlider(
                 session = session,
@@ -411,7 +431,7 @@ object PreferencesPanel {
                     "$snapped%"
                 },
                 idPrefix = "settings_preset_name_scale",
-                themeColor = ImGui.colorConvertFloat4ToU32(0.2f, 0.7f, 0.9f, 0.9f),
+                themeColor = sliderThemeColor,
                 showCurrentLabel = false,
                 customBoxWidth = sliderBoxW,
                 readOnly = true,

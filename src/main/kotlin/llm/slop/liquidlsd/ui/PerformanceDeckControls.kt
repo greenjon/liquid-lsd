@@ -144,9 +144,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             activePreset != null -> "$activePreset$dirtyMarker"
             else -> deck.source.displayName
         }
-        val genBorderCol = ImGui.colorConvertFloat4ToU32(0.35f, 0.40f, 0.50f, 0.70f)
-        val genBgCol = ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
-        val genTextCol = ImGui.colorConvertFloat4ToU32(0.80f, 0.85f, 0.95f, 1f)
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+        val genBorderCol = if (isLight) ImGui.getColorU32(ImGuiCol.Border) else ImGui.colorConvertFloat4ToU32(0.35f, 0.40f, 0.50f, 0.70f)
+        val genBgCol = if (isLight) ImGui.getColorU32(ImGuiCol.FrameBg) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
+        val genTextCol = if (isLight) ImGui.getColorU32(ImGuiCol.Text) else ImGui.colorConvertFloat4ToU32(0.80f, 0.85f, 0.95f, 1f)
         val curX = ImGui.getCursorScreenPosX()
         val curY = ImGui.getCursorScreenPosY()
         dl.addRectFilled(curX, curY, curX + genBadgeW, curY + ctrlH, genBgCol, 4f)
@@ -191,7 +192,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         popOpenDropdownPadding()
         if (ImGui.isItemHovered()) {
             ImGui.setMouseCursor(ImGuiMouseCursor.Hand)
-            dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, ImGui.colorConvertFloat4ToU32(0.60f, 0.70f, 0.90f, 1f), 4f, 0, 1.5f)
+            val hoverBorderCol = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else ImGui.colorConvertFloat4ToU32(0.60f, 0.70f, 0.90f, 1f)
+            dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, hoverBorderCol, 4f, 0, 1.5f)
         }
         itemTooltip(
             if (deck.isEmpty) "$deckLabel is empty. Click to browse sources and presets."
@@ -203,8 +205,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
         // 3. Eject Button [ EJECT ]
         val iconBtnW = DeckRowMetrics.iconBtnW(ctrlH)
-        ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.45f, 0.20f, 0.20f, 1f))
+        val ejectBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
+        val ejectBtnHov = if (isLight) TangoPalette.u32(TangoPalette.DANGER.light) else ImGui.colorConvertFloat4ToU32(0.45f, 0.20f, 0.20f, 1f)
+        ImGui.pushStyleColor(ImGuiCol.Button, ejectBtnBg)
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ejectBtnHov)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ImGui.button("${Icons.EJECT}##perf_eject_$tag", iconBtnW, ctrlH)) {
                 UIManager.triggerDeckEject(deck, isDeckA = isDeckA, isDeckPV = isDeckPV)
@@ -216,8 +220,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         // 4. Randomize Die Button [ DICES ]
         if (session.uiTheme.randomizationEnabled) {
             ImGui.sameLine(0f, gap)
-            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.20f, 0.16f, 0.24f, 0.90f))
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.35f, 0.22f, 0.42f, 1f))
+            val randBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.20f, 0.16f, 0.24f, 0.90f)
+            val randBtnHov = if (isLight) TangoPalette.u32(TangoPalette.PLUM.light) else ImGui.colorConvertFloat4ToU32(0.35f, 0.22f, 0.42f, 1f)
+            ImGui.pushStyleColor(ImGuiCol.Button, randBtnBg)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, randBtnHov)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 if (ImGui.button("${Icons.DICES}##perf_rand_$tag", iconBtnW, ctrlH)) {
                     ParametersUndo.pushUndoState(parametersState, mixer)
@@ -494,8 +500,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         } else {
             // Deck PV indicator / focus button
             val pvBadgeW = DeckRowMetrics.PV_BADGE_W
-            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.12f, 0.22f, 0.18f, 0.85f))
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.18f, 0.32f, 0.25f, 1f))
+            val pvBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.12f, 0.22f, 0.18f, 0.85f)
+            val pvBtnHov = if (isLight) TangoPalette.u32(TangoPalette.PLUM.light) else ImGui.colorConvertFloat4ToU32(0.18f, 0.32f, 0.25f, 1f)
+            ImGui.pushStyleColor(ImGuiCol.Button, pvBtnBg)
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, pvBtnHov)
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 if (ImGui.button("PREVIEW##perf_pv_badge", pvBadgeW, ctrlH)) {
                     parametersState.openFromMonitor(MacroEngine.DECK_PV, "Deck PV")

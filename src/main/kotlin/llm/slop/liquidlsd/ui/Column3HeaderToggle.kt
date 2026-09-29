@@ -20,11 +20,13 @@ object Column3HeaderToggle {
         val dl = ImGui.getWindowDrawList()
         val current = session.uiTheme.column3Mode
 
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+
         fun segmentColor(isSelected: Boolean, isActiveItem: Boolean, isHovered: Boolean): Int = when {
-            isSelected -> ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f)
-            isActiveItem -> ImGui.colorConvertFloat4ToU32(0.32f, 0.32f, 0.32f, 1f)
-            isHovered -> ImGui.colorConvertFloat4ToU32(0.24f, 0.24f, 0.24f, 1f)
-            else -> ImGui.colorConvertFloat4ToU32(0.14f, 0.14f, 0.14f, 1f)
+            isSelected -> if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f)
+            isActiveItem -> if (isLight) TangoPalette.u32(TangoPalette.NEUTRAL_DARK.light) else ImGui.colorConvertFloat4ToU32(0.32f, 0.32f, 0.32f, 1f)
+            isHovered -> if (isLight) ImGui.getColorU32(imgui.flag.ImGuiCol.ButtonHovered) else ImGui.colorConvertFloat4ToU32(0.24f, 0.24f, 0.24f, 1f)
+            else -> if (isLight) ImGui.getColorU32(imgui.flag.ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.14f, 0.14f, 0.14f, 1f)
         }
 
         // -- MIXER segment (left, rounded on the outer/left edge) --
@@ -43,7 +45,11 @@ object Column3HeaderToggle {
             val bgCol = segmentColor(isSelected, isActiveItem, isHovered)
             dl.addRectFilled(pMinX, startY, pMaxX, startY + btnH, bgCol, 4f)
             dl.addRectFilled(pMaxX - 6f, startY, pMaxX, startY + btnH, bgCol, 0f)
-            drawSegmentLabel(session, "MIXER", pMinX, startY, segW, btnH, isSelected)
+            if (isLight) {
+                val borderCol = ImGui.getColorU32(imgui.flag.ImGuiCol.Border)
+                dl.addRect(pMinX, startY, pMaxX, startY + btnH, borderCol, 4f)
+            }
+            drawSegmentLabel(session, "MIXER", pMinX, startY, segW, btnH, isSelected, isLight)
             itemTooltip("4-deck crossfader mixer view.")
         }
 
@@ -63,7 +69,11 @@ object Column3HeaderToggle {
             val bgCol = segmentColor(isSelected, isActiveItem, isHovered)
             dl.addRectFilled(pMinX, startY, pMaxX, startY + btnH, bgCol, 4f)
             dl.addRectFilled(pMinX, startY, pMinX + 6f, startY + btnH, bgCol, 0f)
-            drawSegmentLabel(session, "MACROS", pMinX, startY, segW, btnH, isSelected)
+            if (isLight) {
+                val borderCol = ImGui.getColorU32(imgui.flag.ImGuiCol.Border)
+                dl.addRect(pMinX, startY, pMaxX, startY + btnH, borderCol, 4f)
+            }
+            drawSegmentLabel(session, "MACROS", pMinX, startY, segW, btnH, isSelected, isLight)
             itemTooltip("Macro Knobs, Switches, and single-deck preview.")
         }
 
@@ -78,7 +88,8 @@ object Column3HeaderToggle {
         y: Float,
         w: Float,
         h: Float,
-        isSelected: Boolean
+        isSelected: Boolean,
+        isLight: Boolean
     ) {
         var tw = 0f
         var th = 0f
@@ -89,7 +100,11 @@ object Column3HeaderToggle {
         }
         val textX = x + (w - tw) / 2f
         val textY = y + (h - th) / 2f
-        val col = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, if (isSelected) 1f else 0.8f)
+        val col = if (isLight) {
+            if (isSelected) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f) else ImGui.getColorU32(imgui.flag.ImGuiCol.Text)
+        } else {
+            ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, if (isSelected) 1f else 0.8f)
+        }
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
             ImGui.getWindowDrawList().addText(textX, textY, col, text)
         }

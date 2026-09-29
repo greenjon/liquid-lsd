@@ -240,15 +240,26 @@ class PerformanceMatrixPanel {
         val showAllDice = session.uiTheme.randomizationEnabled
         val allDiceBtnW = if (showAllDice) 76f else 0f
 
+        val isLight = theme.theme == UITheme.Theme.ORANGE_SUNSHINE
         for ((i, tab) in tabs.withIndex()) {
             if (i > 0) ImGui.sameLine(0f, gap)
             val isActive = theme.performanceMatrixTab == i
+            val activeBg = if (isLight) TangoPalette.u32(TangoPalette.SYNC.normal) else ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f)
+            val activeHover = if (isLight) TangoPalette.u32(TangoPalette.SYNC.bright) else ImGui.colorConvertFloat4ToU32(0.15f, 0.62f, 0.82f, 1f)
+            val activeText = if (isLight) ImGui.colorConvertFloat4ToU32(0.05f, 0.05f, 0.05f, 1f) else ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
+
+            val inactiveBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
+            val inactiveHover = if (isLight) ImGui.getColorU32(ImGuiCol.ButtonHovered) else ImGui.colorConvertFloat4ToU32(0.22f, 0.25f, 0.30f, 1f)
+            val inactiveText = ImGui.getColorU32(ImGuiCol.Text)
+
             if (isActive) {
-                ImGui.pushStyleColor(ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f))
-                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.15f, 0.62f, 0.82f, 1f))
+                ImGui.pushStyleColor(ImGuiCol.Button, activeBg)
+                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, activeHover)
+                ImGui.pushStyleColor(ImGuiCol.Text, activeText)
             } else {
-                ImGui.pushStyleColor(ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
-                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.22f, 0.25f, 0.30f, 1f))
+                ImGui.pushStyleColor(ImGuiCol.Button, inactiveBg)
+                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, inactiveHover)
+                ImGui.pushStyleColor(ImGuiCol.Text, inactiveText)
             }
             session.uiTheme.withFont(UITheme.FontLevel.H3) {
                 if (ImGui.button("${tab.label}##perf_tab_$i", tabW, tabH)) {
@@ -257,7 +268,7 @@ class PerformanceMatrixPanel {
                 }
             }
             itemTooltip(tab.tooltip)
-            ImGui.popStyleColor(2)
+            ImGui.popStyleColor(3)
         }
 
         // Modular Rack toolbar: Learn indicator
@@ -693,8 +704,8 @@ class PerformanceMatrixPanel {
 
                 if (isModuleExpanded) {
                     val valStr = "Val: ${"%.2f".format(control.value)}"
-                    val valCol = if (isSelectedKnob) ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 0.95f)
-                                 else ImGui.colorConvertFloat4ToU32(0.6f, 0.65f, 0.75f, 0.85f)
+                    val valCol = if (isSelectedKnob) TangoPalette.u32(TangoPalette.SYNC.normal)
+                                 else ImGui.getColorU32(ImGuiCol.TextDisabled)
                     session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                         dl.addText(cellCenterX - ImGui.calcTextSize(valStr).x / 2f, valueLineY, valCol, valStr)
                     }
@@ -758,8 +769,8 @@ class PerformanceMatrixPanel {
      * full label is in the knob's tooltip.
      */
     private fun drawStripLabel(session: llm.slop.liquidlsd.SessionContext, text: String, x: Float, y: Float, w: Float, h: Float, isSelected: Boolean) {
-        val col = if (isSelected) ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f)
-                  else ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 0.9f)
+        val col = if (isSelected) TangoPalette.u32(TangoPalette.SYNC.normal)
+                  else ImGui.getColorU32(ImGuiCol.Text)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             val shown = TextFit.ellipsize(text, w - 4f)
             val tw = ImGui.calcTextSize(shown).x

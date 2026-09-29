@@ -180,13 +180,24 @@ object FxChainHeader {
             val isFocused = focusedSlot == i
             val slot = chain.slots.getOrNull(i)
             val slotNum = i + 1
-
             val btnLabel = if (isFocused) "●$slotNum" else "$slotNum"
-            val activeCol = TangoPalette.u32(TangoPalette.SYNC.normal, 0.95f)
-            val inactiveCol = if (slot != null) ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.26f, 0.9f)
-                              else ImGui.colorConvertFloat4ToU32(0.14f, 0.15f, 0.18f, 0.6f)
+
+            val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+            val activeCol = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else TangoPalette.u32(TangoPalette.SYNC.normal, 0.95f)
+            val inactiveCol = when {
+                isLight && slot != null -> ImGui.getColorU32(ImGuiCol.Button)
+                isLight -> ImGui.colorConvertFloat4ToU32(0.95f, 0.96f, 0.97f, 1f)
+                slot != null -> ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.26f, 0.9f)
+                else -> ImGui.colorConvertFloat4ToU32(0.14f, 0.15f, 0.18f, 0.6f)
+            }
+            val textCol = when {
+                isFocused -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
+                isLight -> if (slot != null) ImGui.getColorU32(ImGuiCol.Text) else ImGui.getColorU32(ImGuiCol.TextDisabled)
+                else -> if (slot != null) ImGui.colorConvertFloat4ToU32(0.90f, 0.92f, 0.95f, 1f) else ImGui.colorConvertFloat4ToU32(0.55f, 0.58f, 0.62f, 1f)
+            }
 
             ImGui.pushStyleColor(ImGuiCol.Button, if (isFocused) activeCol else inactiveCol)
+            ImGui.pushStyleColor(ImGuiCol.Text, textCol)
             if (ImGui.button("$btnLabel##slot_focus_${bankId}_$i", pillW, ctrlH)) {
                 if (isFocused) {
                     FxMacroSync.focusSlot(bankId, mixer, null)
@@ -194,7 +205,7 @@ object FxChainHeader {
                     FxMacroSync.focusSlot(bankId, mixer, i)
                 }
             }
-            ImGui.popStyleColor()
+            ImGui.popStyleColor(2)
 
             itemTooltip(
                 when {
@@ -219,8 +230,10 @@ object FxChainHeader {
         val dirtyMarker = if (isDirty) " •" else ""
         val fullLabel = "$displayName$dirtyMarker ${Icons.CHEVRON_DOWN}"
 
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
         if (isDirty) {
-            ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.u32(TangoPalette.ALERT.light))
+            val dirtyTextCol = if (isLight) TangoPalette.ALERT.dark else TangoPalette.ALERT.light
+            ImGui.pushStyleColor(ImGuiCol.Text, dirtyTextCol[0], dirtyTextCol[1], dirtyTextCol[2], 1.0f)
         }
         if (ImGui.button("$fullLabel##fx_chain_name_$bankId", nameW, ctrlH)) {
             onOpenChainBrowse()
@@ -248,9 +261,18 @@ object FxChainHeader {
 
     private fun drawSaveButton(session: SessionContext, chain: FxChain, bankId: String, ctrlH: Float, isDirty: Boolean) {
         val canOverwrite = chain.sourceFile != null
-        val saveColRgb = if (isDirty) TangoPalette.ALERT.dark else floatArrayOf(0.18f, 0.20f, 0.24f)
-        val saveCol = if (isDirty) TangoPalette.u32(TangoPalette.ALERT.dark) else ImGui.colorConvertFloat4ToU32(0.18f, 0.20f, 0.24f, 0.8f)
-        val ink = TangoPalette.inkFor(saveColRgb)
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+        val saveColRgb = when {
+            isDirty -> TangoPalette.ALERT.dark
+            isLight -> floatArrayOf(0.90f, 0.91f, 0.92f)
+            else -> floatArrayOf(0.18f, 0.20f, 0.24f)
+        }
+        val saveCol = when {
+            isDirty -> TangoPalette.u32(TangoPalette.ALERT.dark)
+            isLight -> ImGui.getColorU32(ImGuiCol.Button)
+            else -> ImGui.colorConvertFloat4ToU32(0.18f, 0.20f, 0.24f, 0.8f)
+        }
+        val ink = if (isLight && !isDirty) floatArrayOf(0.06f, 0.07f, 0.08f) else TangoPalette.inkFor(saveColRgb)
         ImGui.pushStyleColor(ImGuiCol.Button, saveCol)
         ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
         if (ImGui.button("Save##save_$bankId", SAVE_BTN_W, ctrlH)) {

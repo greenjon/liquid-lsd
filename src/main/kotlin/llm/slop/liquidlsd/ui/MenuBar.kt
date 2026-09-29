@@ -357,13 +357,20 @@ class MenuBar(
                 ImGui.setCursorPosX(statsStartX)
             }
 
+            val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+            val statGreen = if (isLight) TangoPalette.ACTIVE.dark else floatArrayOf(0.55f, 1.0f, 0.55f)
+            val statYellow = if (isLight) TangoPalette.ALERT.dark else floatArrayOf(1.0f, 0.75f, 0.0f)
+            val statRed = if (isLight) TangoPalette.DANGER.normal else floatArrayOf(1.0f, 0.25f, 0.25f)
+            val statDim = if (isLight) TangoPalette.NEUTRAL_DARK.normal else floatArrayOf(0.50f, 0.55f, 0.60f)
+            val fboCol = if (isLight) TangoPalette.NEUTRAL_DARK.dark else floatArrayOf(0.70f, 0.75f, 0.80f)
+
             // ── CPU % ──────────────────────────────────────────────────────────────
             if (cpuFrac >= 0.0) {
                 val cpuPct = cpuFrac * 100.0
                 when {
-                    cpuPct >= 80.0 -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.25f, 0.25f, 1.0f) // red
-                    cpuPct >= 50.0 -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.0f,  1.0f) // yellow
-                    else           -> ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 1.0f, 0.55f, 1.0f) // green
+                    cpuPct >= 80.0 -> ImGui.pushStyleColor(ImGuiCol.Text, statRed[0], statRed[1], statRed[2], 1.0f)
+                    cpuPct >= 50.0 -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow[0], statYellow[1], statYellow[2], 1.0f)
+                    else           -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen[0], statGreen[1], statGreen[2], 1.0f)
                 }
                 ImGui.textUnformatted(cpuText)
                 ImGui.popStyleColor()
@@ -382,11 +389,11 @@ class MenuBar(
             ImGui.setCursorPos(dspPosX, dspPosY)
 
             if (!showAudio) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.50f, 0.55f, 0.60f, 1.0f) // dim slate gray when inactive/off
+                ImGui.pushStyleColor(ImGuiCol.Text, statDim[0], statDim[1], statDim[2], 1.0f)
             } else when {
-                audioLatency >= 5.0f -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.25f, 0.25f, 1.0f) // red
-                audioLatency >= 2.0f -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.0f,  1.0f) // yellow
-                else                 -> ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 1.0f, 0.55f, 1.0f) // green
+                audioLatency >= 5.0f -> ImGui.pushStyleColor(ImGuiCol.Text, statRed[0], statRed[1], statRed[2], 1.0f)
+                audioLatency >= 2.0f -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow[0], statYellow[1], statYellow[2], 1.0f)
+                else                 -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen[0], statGreen[1], statGreen[2], 1.0f)
             }
             ImGui.textUnformatted(dspText)
             ImGui.popStyleColor()
@@ -414,9 +421,9 @@ class MenuBar(
                 30f to 50f
             }
             when {
-                fps < fpsRed    -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.25f, 0.25f, 1.0f) // red
-                fps < fpsYellow -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.0f,  1.0f) // yellow
-                else            -> ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 1.0f, 0.55f, 1.0f) // green
+                fps < fpsRed    -> ImGui.pushStyleColor(ImGuiCol.Text, statRed[0], statRed[1], statRed[2], 1.0f)
+                fps < fpsYellow -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow[0], statYellow[1], statYellow[2], 1.0f)
+                else            -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen[0], statGreen[1], statGreen[2], 1.0f)
             }
             ImGui.textUnformatted(fpsText)
             ImGui.popStyleColor()
@@ -429,16 +436,16 @@ class MenuBar(
                 33.3f to 20.0f
             }
             when {
-                ftMs > ftRed    -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.25f, 0.25f, 1.0f) // red
-                ftMs > ftYellow -> ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.75f, 0.0f,  1.0f) // yellow
-                else            -> ImGui.pushStyleColor(ImGuiCol.Text, 0.55f, 1.0f, 0.55f, 1.0f) // green
+                ftMs > ftRed    -> ImGui.pushStyleColor(ImGuiCol.Text, statRed[0], statRed[1], statRed[2], 1.0f)
+                ftMs > ftYellow -> ImGui.pushStyleColor(ImGuiCol.Text, statYellow[0], statYellow[1], statYellow[2], 1.0f)
+                else            -> ImGui.pushStyleColor(ImGuiCol.Text, statGreen[0], statGreen[1], statGreen[2], 1.0f)
             }
             ImGui.textUnformatted(ftText)
             ImGui.popStyleColor()
             ImGui.sameLine(0f, 0f)
 
             // ── FBO & GPU Memory ──────────────────────────────────────────────────
-            ImGui.pushStyleColor(ImGuiCol.Text, 0.70f, 0.75f, 0.80f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.Text, fboCol[0], fboCol[1], fboCol[2], 1.0f)
             ImGui.textUnformatted(fboText)
             ImGui.popStyleColor()
             if (ImGui.isItemHovered()) {

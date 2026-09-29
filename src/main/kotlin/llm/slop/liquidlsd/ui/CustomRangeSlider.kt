@@ -1041,16 +1041,18 @@ object CustomRangeSlider {
                 activeSliderLabel = null
             }
             
+            val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+
             // Draw tracks
-            val lineCol = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f) // Darker inactive track
+            val lineCol = if (isLight) ImGui.colorConvertFloat4ToU32(0.80f, 0.82f, 0.85f, 1.0f) else TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f)
             dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
             dl.addLine(minHandleX, centerY, maxHandleX, centerY, effectiveThemeColor, 3f) // Active track
 
             // Draw handles
             val handleW = 6f
             val handleH = 16f
-            val handleBgCol = TangoPalette.u32(TangoPalette.NEUTRAL_LIGHT.normal, 1.0f)
-            val handleBorderCol = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f)
+            val handleBgCol = if (isLight) TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f) else TangoPalette.u32(TangoPalette.NEUTRAL_LIGHT.normal, 1.0f)
+            val handleBorderCol = if (isLight) ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f) else TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f)
 
             dl.addRectFilled(minHandleX - handleW / 2f, centerY - handleH / 2f, minHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
             dl.addRect(minHandleX - handleW / 2f, centerY - handleH / 2f, minHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
@@ -1085,16 +1087,22 @@ object CustomRangeSlider {
                 activeSliderLabel = null
             }
             
+            val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+
             // Draw tracks
-            val lineCol = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f) // Darker inactive track
+            val lineCol = if (isLight) ImGui.colorConvertFloat4ToU32(0.80f, 0.82f, 0.85f, 1.0f) else TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f)
             dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
             dl.addLine(lineStartX, centerY, valHandleX, centerY, effectiveThemeColor, 3f) // Active track
 
             // Draw single handle
             val handleW = 6f
             val handleH = 16f
-            val handleBgCol = if (isMacroBound) TangoPalette.u32(TangoPalette.SYNC.normal, 1.0f) else TangoPalette.u32(TangoPalette.NEUTRAL_DARK.light, 1.0f)
-            val handleBorderCol = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f)
+            val handleBgCol = when {
+                isMacroBound -> TangoPalette.u32(TangoPalette.SYNC.normal, 1.0f)
+                isLight -> TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f)
+                else -> TangoPalette.u32(TangoPalette.NEUTRAL_DARK.light, 1.0f)
+            }
+            val handleBorderCol = if (isLight) ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f) else TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 1.0f)
             
             dl.addRectFilled(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
             dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)

@@ -47,6 +47,7 @@ object UIThemeStyler {
                 // Mixxx Tango-theme neutrals (Aluminium 1/2 charcoal/panel grays) with the Tango
                 // sync/link cyan as the sole "acid" accent -- see TangoPalette.
                 style.setColor(ImGuiCol.WindowBg, 0.10f, 0.10f, 0.10f, alpha) // #1A1A1A
+                style.setColor(ImGuiCol.ChildBg, 0.10f, 0.10f, 0.12f, 0.60f)
                 style.setColor(ImGuiCol.PopupBg, 0.17f, 0.17f, 0.17f, 1.00f) // #2B2B2B
                 style.setColor(ImGuiCol.TitleBg, 0.07f, 0.07f, 0.07f, alpha) // #111111
                 style.setColor(ImGuiCol.TitleBgActive, aluminium2.dark[0], aluminium2.dark[1], aluminium2.dark[2], alpha) // #2E3436
@@ -80,6 +81,7 @@ object UIThemeStyler {
                 // maintains > 12:1 contrast with jet-black copy, preserves crisp button/input edges with
                 // solid dark slate borders, and uses Tango Orange as the primary "sunshine" accent.
                 style.setColor(ImGuiCol.WindowBg, 0.965f, 0.969f, 0.976f, alpha) // #F6F7F9
+                style.setColor(ImGuiCol.ChildBg, 1.000f, 1.000f, 1.000f, 1.00f) // #FFFFFF stark white panels
                 style.setColor(ImGuiCol.PopupBg, 1.000f, 1.000f, 1.000f, 1.00f) // #FFFFFF
                 style.setColor(ImGuiCol.TitleBg, 0.898f, 0.906f, 0.922f, alpha) // #E5E7EB
                 style.setColor(ImGuiCol.TitleBgActive, 0.820f, 0.835f, 0.859f, alpha) // #D1D5DB

@@ -1208,10 +1208,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-orange-sunshine-daytime-high-contrast-theme-uithemekt-uithemestylerkt-themetestkt-docsdeveloperuimd" class="md-nav__link">
+  <a href="#new-orange-sunshine-daytime-high-contrast-theme-uithemekt-uithemestylerkt-librarypanelkt-performancematrixpanelkt-performancedeckcontrolskt-performancemastercontrolskt-fxchainheaderkt-preferencespanelkt-customrangesliderkt-menubarkt-column3headertogglekt-mixerpanelkt-browserdeckbuttonskt-browserrowmorebuttonkt-themetestkt-docsdeveloperuimd" class="md-nav__link">
     <span class="md-ellipsis">
       
-        New 'Orange Sunshine' Daytime High-Contrast Theme (UITheme.kt, UIThemeStyler.kt, ThemeTest.kt, docs/developer/ui.md)
+        New 'Orange Sunshine' Daytime High-Contrast Theme (UITheme.kt, UIThemeStyler.kt, LibraryPanel.kt, PerformanceMatrixPanel.kt, PerformanceDeckControls.kt, PerformanceMasterControls.kt, FxChainHeader.kt, PreferencesPanel.kt, CustomRangeSlider.kt, MenuBar.kt, Column3HeaderToggle.kt, MixerPanel.kt, BrowserDeckButtons.kt, BrowserRowMoreButton.kt, ThemeTest.kt, docs/developer/ui.md)
       
     </span>
   </a>
@@ -4558,10 +4558,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#new-orange-sunshine-daytime-high-contrast-theme-uithemekt-uithemestylerkt-themetestkt-docsdeveloperuimd" class="md-nav__link">
+  <a href="#new-orange-sunshine-daytime-high-contrast-theme-uithemekt-uithemestylerkt-librarypanelkt-performancematrixpanelkt-performancedeckcontrolskt-performancemastercontrolskt-fxchainheaderkt-preferencespanelkt-customrangesliderkt-menubarkt-column3headertogglekt-mixerpanelkt-browserdeckbuttonskt-browserrowmorebuttonkt-themetestkt-docsdeveloperuimd" class="md-nav__link">
     <span class="md-ellipsis">
       
-        New 'Orange Sunshine' Daytime High-Contrast Theme (UITheme.kt, UIThemeStyler.kt, ThemeTest.kt, docs/developer/ui.md)
+        New 'Orange Sunshine' Daytime High-Contrast Theme (UITheme.kt, UIThemeStyler.kt, LibraryPanel.kt, PerformanceMatrixPanel.kt, PerformanceDeckControls.kt, PerformanceMasterControls.kt, FxChainHeader.kt, PreferencesPanel.kt, CustomRangeSlider.kt, MenuBar.kt, Column3HeaderToggle.kt, MixerPanel.kt, BrowserDeckButtons.kt, BrowserRowMoreButton.kt, ThemeTest.kt, docs/developer/ui.md)
       
     </span>
   </a>
@@ -7883,10 +7883,20 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
-<h3 id="new-orange-sunshine-daytime-high-contrast-theme-uithemekt-uithemestylerkt-themetestkt-docsdeveloperuimd">New 'Orange Sunshine' Daytime High-Contrast Theme (<code>UITheme.kt</code>, <code>UIThemeStyler.kt</code>, <code>ThemeTest.kt</code>, <code>docs/developer/ui.md</code>)</h3>
+<h3 id="new-orange-sunshine-daytime-high-contrast-theme-uithemekt-uithemestylerkt-librarypanelkt-performancematrixpanelkt-performancedeckcontrolskt-performancemastercontrolskt-fxchainheaderkt-preferencespanelkt-customrangesliderkt-menubarkt-column3headertogglekt-mixerpanelkt-browserdeckbuttonskt-browserrowmorebuttonkt-themetestkt-docsdeveloperuimd">New 'Orange Sunshine' Daytime High-Contrast Theme (<code>UITheme.kt</code>, <code>UIThemeStyler.kt</code>, <code>LibraryPanel.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>FxChainHeader.kt</code>, <code>PreferencesPanel.kt</code>, <code>CustomRangeSlider.kt</code>, <code>MenuBar.kt</code>, <code>Column3HeaderToggle.kt</code>, <code>MixerPanel.kt</code>, <code>BrowserDeckButtons.kt</code>, <code>BrowserRowMoreButton.kt</code>, <code>ThemeTest.kt</code>, <code>docs/developer/ui.md</code>)</h3>
 <ul>
 <li><strong>Direct Sunlight &amp; Glare Resistance</strong>: Added <code>ORANGE_SUNSHINE</code>, a daytime high-contrast theme engineered for outdoor festival and direct summer sunlight environments where dark themes turn displays into mirrors. Features chalk off-white surfaces (<code>#F6F7F9</code> window background, <code>#FFFFFF</code> crisp frame wells), high-contrast jet-black typography (<code>#0F1115</code> &gt; 14:1 contrast ratio), and solid dark slate borders (<code>#343A40</code>) so controls remain sharply delineated under heavy ambient glare and through polarized sunglasses.</li>
 <li><strong>Tango Orange Accent &amp; Deck Identity Preservation</strong>: Uses Tango Orange (<code>#F57900</code> / <code>#CE5C00</code>) as its primary active accent for sliders, checkmarks, and active buttons while preserving the exact canonical <code>TangoPalette</code> deck colors (Deck A Orange, Deck B Sky Blue, Deck BG Chameleon, Deck PV Plum) across all badges, strips, and monitor outlines.</li>
+<li><strong>Contrast Remediation Across All UI Elements</strong>: Eliminated dark-mode hardcoded color literals across all primary panels when running under <code>ORANGE_SUNSHINE</code>:</li>
+<li><strong>FX Slot Focus Pills &amp; Controls (<code>FxChainHeader.kt</code>)</strong>: Slot focus buttons <code>[1] [2] [3]</code> on each deck's FX row now use light theme buttons with dark slate numbers (focused slots render in vibrant Tango Orange with white text); <code>[Save]</code> and chain name dropdowns adopt theme-adaptive colors and contrast.</li>
+<li><strong>Preferences Panel (<code>PreferencesPanel.kt</code>)</strong>: Left category navigation sidebar buttons (<code>General</code>, <code>Shader Locations</code>, <code>Video &amp; Display</code>, etc.) dynamically render with high-contrast text and bright Tango Orange active tabs with crisp white text; header text, category breadcrumbs, informational captions, and update status readouts use daylight-legible Tango palette tones.</li>
+<li><strong>Custom Range Sliders (<code>CustomRangeSlider.kt</code>)</strong>: Inactive slider tracks and handles across Preferences (Font Size, FX Swap Fade) and parameter modulation adopt light gray tracks and dark slate handles with bright Tango Orange active ranges.</li>
+<li><strong>Library Panel</strong>: Mode toggles (<code>Sources</code>, <code>FX</code>, <code>Trans</code>) adopt theme-aware button and text styling; container child panels render on clean white backgrounds with dark borders.</li>
+<li><strong>Performance Matrix Panel</strong>: Replaced low-contrast gray strip knob captions (<code>WARP</code>, <code>SWIRL</code>, <code>SPEED</code>, etc.) and value readouts with theme text tokens (<code>ImGuiCol.Text</code> and <code>ImGuiCol.TextDisabled</code>); made <code>[DECKS]</code> and <code>[MASTER]</code> tab buttons theme-adaptive.</li>
+<li><strong>Performance Deck Controls &amp; Master Controls</strong>: Generator/preset badges (<code>+ Source</code>, <code>active preset</code>), Deck PV <code>[PREVIEW]</code> badge, and Master <code>Deck Alphas &amp; Master</code> badges dynamically adapt to stark white wells with dark slate borders and jet-black text; Eject, Randomize, and 100% Reset buttons adopt theme-adaptive styling.</li>
+<li><strong>Menu Bar Telemetry</strong>: Switched CPU, DSP, FPS, and FBO stats to dark Tango status colors (<code>TangoPalette.ACTIVE.dark</code>, <code>ALERT.dark</code>, <code>DANGER.normal</code>, and <code>NEUTRAL_DARK.dark</code>) for clear outdoor visibility against the light menu bar.</li>
+<li><strong>Column 3 &amp; Mixer</strong>: <code>[MIXER | MACROS]</code> header toggle renders crisp slate borders and legible text on unselected states; Mixer crossfader container, track line, and snap badges adopt theme-aware backgrounds and high-contrast tick marks.</li>
+<li><strong>Browser Deck Buttons &amp; Menus</strong>: Toolbar queue buttons (<code>Q</code>, <code>BGQ</code>) and 3-dot row menus use dark charcoal (<code>#2E3436</code> / <code>#555753</code>) rather than washed-out white.</li>
 <li><strong>Theme Picker Selection</strong>: Available directly alongside <code>Grey Acid</code> in <strong>Preferences → Theme</strong> with seamless hot-reloading on change.</li>
 </ul>
 <h3 id="button-text-now-stays-legible-on-light-backgrounds-tangopalettekt-temposyncpanelkt-menubarkt-fxchainheaderkt-audiomodulatorsectionkt-broadcastpreferencespanelkt-lfo2sectionkt-midimodulatorsectionkt-midipreferencespanelkt-modulatorheaderrowkt-oscpreferencespanelkt-parameterstabskt-performanceclockcontrolskt-performancetransitionscontrolskt-propertiespanelkt-docsdeveloperuimd">Button Text Now Stays Legible on Light Backgrounds (<code>TangoPalette.kt</code>, <code>TempoSyncPanel.kt</code>, <code>MenuBar.kt</code>, <code>FxChainHeader.kt</code>, <code>AudioModulatorSection.kt</code>, <code>BroadcastPreferencesPanel.kt</code>, <code>Lfo2Section.kt</code>, <code>MidiModulatorSection.kt</code>, <code>MidiPreferencesPanel.kt</code>, <code>ModulatorHeaderRow.kt</code>, <code>OscPreferencesPanel.kt</code>, <code>ParametersTabs.kt</code>, <code>PerformanceClockControls.kt</code>, <code>PerformanceTransitionsControls.kt</code>, <code>PropertiesPanel.kt</code>, <code>docs/developer/ui.md</code>)</h3>

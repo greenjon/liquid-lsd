@@ -247,34 +247,40 @@ object LibraryPanel {
             ImGui.setCursorPosY(yOffset)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 val btnWMode = 54f
-                val btnWModeWide = 74f
-                val activeCol = ImGui.colorConvertFloat4ToU32(0.25f, 0.45f, 0.75f, 0.8f)
-                val inactiveCol = ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 0.8f)
+                val btnWModeWide = 64f
+                val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+                val activeCol = if (isLight) TangoPalette.u32(TangoPalette.SYNC.normal) else ImGui.colorConvertFloat4ToU32(0.25f, 0.45f, 0.75f, 0.8f)
+                val inactiveCol = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 0.8f)
+                val activeTextCol = if (isLight) ImGui.colorConvertFloat4ToU32(0.05f, 0.05f, 0.05f, 1f) else ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
+                val inactiveTextCol = ImGui.getColorU32(ImGuiCol.Text)
 
                 val isPresets = viewMode == LibraryViewMode.PRESETS
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isPresets) activeCol else inactiveCol)
+                ImGui.pushStyleColor(ImGuiCol.Text, if (isPresets) activeTextCol else inactiveTextCol)
                 if (ImGui.button("Sources##mode_presets", btnWModeWide, btnH)) {
                     viewMode = LibraryViewMode.PRESETS
                 }
-                ImGui.popStyleColor()
+                ImGui.popStyleColor(2)
 
                 ImGui.sameLine(0f, 2f)
 
                 val isFx = viewMode == LibraryViewMode.FX
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isFx) activeCol else inactiveCol)
+                ImGui.pushStyleColor(ImGuiCol.Text, if (isFx) activeTextCol else inactiveTextCol)
                 if (ImGui.button("FX##mode_fx", btnWMode, btnH)) {
                     viewMode = LibraryViewMode.FX
                 }
-                ImGui.popStyleColor()
+                ImGui.popStyleColor(2)
 
                 ImGui.sameLine(0f, 2f)
 
                 val isTrans = viewMode == LibraryViewMode.TRANS
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isTrans) activeCol else inactiveCol)
+                ImGui.pushStyleColor(ImGuiCol.Text, if (isTrans) activeTextCol else inactiveTextCol)
                 if (ImGui.button("Trans##mode_trans", btnWMode, btnH)) {
                     viewMode = LibraryViewMode.TRANS
                 }
-                ImGui.popStyleColor()
+                ImGui.popStyleColor(2)
             }
 
             // Centered Action Toolbar
@@ -325,8 +331,11 @@ object LibraryPanel {
 
         ImGui.pushStyleVar(ImGuiStyleVar.ChildRounding, 6f)
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 6f, 6f)
-        ImGui.pushStyleColor(ImGuiCol.ChildBg, ImGui.colorConvertFloat4ToU32(0.10f, 0.10f, 0.12f, 0.6f))
-        ImGui.pushStyleColor(ImGuiCol.Border, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.28f, 0.8f))
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+        val childBg = if (isLight) ImGui.getColorU32(ImGuiCol.ChildBg) else ImGui.colorConvertFloat4ToU32(0.10f, 0.10f, 0.12f, 0.6f)
+        val childBorder = if (isLight) ImGui.getColorU32(ImGuiCol.Border) else ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.28f, 0.8f)
+        ImGui.pushStyleColor(ImGuiCol.ChildBg, childBg)
+        ImGui.pushStyleColor(ImGuiCol.Border, childBorder)
 
         // Group 1 Box: Col 1 & Col 2
         ImGui.beginChild("LibraryGroup1", groupW1, contentH, true, outerFlags)

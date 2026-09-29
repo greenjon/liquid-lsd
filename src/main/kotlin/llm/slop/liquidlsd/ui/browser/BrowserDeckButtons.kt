@@ -6,6 +6,7 @@ import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.TangoPalette
+import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.UIManager
 import java.io.File
 
@@ -30,6 +31,8 @@ internal object BrowserDeckButtons {
     // Aluminium shades keep them visually distinct from every deck/status accent above.
     private val DECK_Q   = TangoPalette.NEUTRAL_LIGHT.normal // #D3D7CF
     private val DECK_BGQ = TangoPalette.NEUTRAL_LIGHT.dark   // #BABDB6
+    private val DECK_Q_LIGHT   = TangoPalette.NEUTRAL_DARK.dark   // #2E3436
+    private val DECK_BGQ_LIGHT = TangoPalette.NEUTRAL_DARK.normal // #555753
 
     private val LOCK_COLOR = TangoPalette.SYNC.normal // #06AFDF sync/link cyan
 
@@ -37,8 +40,8 @@ internal object BrowserDeckButtons {
     fun colorB() = DECK_B
     fun colorBG() = DECK_BG
     fun colorPV() = DECK_PV
-    fun colorQ() = DECK_Q
-    fun colorBGQ() = DECK_BGQ
+    fun colorQ() = if (UITheme.theme == UITheme.Theme.ORANGE_SUNSHINE) DECK_Q_LIGHT else DECK_Q
+    fun colorBGQ() = if (UITheme.theme == UITheme.Theme.ORANGE_SUNSHINE) DECK_BGQ_LIGHT else DECK_BGQ
     fun colorLock() = LOCK_COLOR
 
     /**

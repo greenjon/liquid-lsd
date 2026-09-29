@@ -66,7 +66,7 @@ object BrowserRowMoreButton {
             val dotCol = if (isBtnHovered) {
                 ImGui.getColorU32(ImGuiCol.Text)
             } else {
-                ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 0.75f)
+                ImGui.getColorU32(ImGuiCol.TextDisabled)
             }
             val cx = btnMinX + btnWidth * 0.5f
             val cy = btnMinY + rowH * 0.5f

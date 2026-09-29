@@ -206,7 +206,9 @@ class MixerPanel(
             ImGui.getFrameHeightWithSpacing() + 12f
         }.coerceAtLeast(34f)
 
-        ImGui.pushStyleColor(ImGuiCol.ChildBg, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.4f)) // Faint neutral background
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+        val masterChildBg = if (isLight) ImGui.getColorU32(ImGuiCol.ChildBg) else ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.4f)
+        ImGui.pushStyleColor(ImGuiCol.ChildBg, masterChildBg)
         ImGui.setCursorScreenPos(imgScreenX, ImGui.getCursorScreenPosY())
         ImGui.beginChild("MasterControls", availW, masterControlsH, true, imgui.flag.ImGuiWindowFlags.NoScrollbar)
         
@@ -283,8 +285,10 @@ class MixerPanel(
         val badgeAY = startY
         val rgbA = BrowserDeckButtons.colorA()
         val colorA = ImGui.colorConvertFloat4ToU32(rgbA[0], rgbA[1], rgbA[2], 1f)
+        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
+        val badgeBg = if (isLight) ImGui.getColorU32(ImGuiCol.FrameBg) else ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f)
 
-        dl.addRectFilled(badgeAX, badgeAY, badgeAX + badgeW, badgeAY + badgeH, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
+        dl.addRectFilled(badgeAX, badgeAY, badgeAX + badgeW, badgeAY + badgeH, badgeBg, 4f)
         dl.addRect(badgeAX, badgeAY, badgeAX + badgeW, badgeAY + badgeH, colorA, 4f, 0, 1.5f)
 
         val textAX = badgeAX + (badgeW - textWA) * 0.5f
@@ -311,7 +315,7 @@ class MixerPanel(
         val rgbB = BrowserDeckButtons.colorB()
         val colorB = ImGui.colorConvertFloat4ToU32(rgbB[0], rgbB[1], rgbB[2], 1f)
 
-        dl.addRectFilled(badgeBX, badgeBY, badgeBX + badgeW, badgeBY + badgeH, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
+        dl.addRectFilled(badgeBX, badgeBY, badgeBX + badgeW, badgeBY + badgeH, badgeBg, 4f)
         dl.addRect(badgeBX, badgeBY, badgeBX + badgeW, badgeBY + badgeH, colorB, 4f, 0, 1.5f)
 
         val textBX = badgeBX + (badgeW - textWB) * 0.5f
@@ -404,13 +408,13 @@ class MixerPanel(
 
         // --- Render Slider Visuals ---
         // Inactive track line
-        val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f)
+        val lineCol = if (isLight) ImGui.colorConvertFloat4ToU32(0.80f, 0.82f, 0.85f, 1.0f) else ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f)
         dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
 
-        // Faint vertical marks: ends (-1.0, +1.0), midway (-0.5, +0.5), and middle (0.0)
-        val markColFaint = ImGui.colorConvertFloat4ToU32(0.65f, 0.65f, 0.65f, 0.28f)
-        val markColCenter = ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 0.45f)
-        val markColEnds = ImGui.colorConvertFloat4ToU32(0.70f, 0.70f, 0.70f, 0.35f)
+        // Vertical marks: ends (-1.0, +1.0), midway (-0.5, +0.5), and middle (0.0)
+        val markColFaint = if (isLight) ImGui.colorConvertFloat4ToU32(0.40f, 0.42f, 0.45f, 0.45f) else ImGui.colorConvertFloat4ToU32(0.65f, 0.65f, 0.65f, 0.28f)
+        val markColCenter = if (isLight) ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.25f, 0.80f) else ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 0.45f)
+        val markColEnds = if (isLight) ImGui.colorConvertFloat4ToU32(0.30f, 0.32f, 0.35f, 0.60f) else ImGui.colorConvertFloat4ToU32(0.70f, 0.70f, 0.70f, 0.35f)
 
         // Ends: 0% (-1.0) and 100% (+1.0)
         dl.addLine(lineStartX, centerY - 6f, lineStartX, centerY + 6f, markColEnds, 1.5f)
@@ -437,12 +441,12 @@ class MixerPanel(
         // Single handle (standard CustomRangeSlider dimensions and styling)
         val handleW = 6f
         val handleH = 16f
-        val handleBgCol = if (isTrackActive) {
-            ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 1.0f)
+        val handleBgCol = if (isLight) {
+            if (isTrackActive) TangoPalette.u32(TangoPalette.ORANGE.normal) else ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.25f, 1.0f)
         } else {
-            ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 1.0f)
+            if (isTrackActive) ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 1.0f) else ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 1.0f)
         }
-        val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
+        val handleBorderCol = if (isLight) ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
 
         dl.addRectFilled(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
         dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
