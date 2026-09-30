@@ -1,9 +1,11 @@
 package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
+import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.parameters.ParameterResolver
+import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 
 /**
@@ -121,15 +123,14 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
      * jumps there automatically (see [navigateMacroPanelTo]). No title or Collapse button here: the
      * row above already says which deck/section this is, and it has its own Collapse (as does Esc).
      *
-     * A module that has any Browse target (every [deepEditModuleIds] member does) gets a
-     * Browse <-> Params toggle above its content; clicking a row's generator badge/FX slot/FX
+     * A module that has any Browse target (every [deepEditModuleIds] member does) gets a tab row
+     * (Edit | SRC/TRANS | Chain | FX1-3, see [drawModeTabs]) above its content; clicking a row's generator badge/FX slot/FX
      * chain name/transition name jumps straight into Browse (see [ParametersState.openBrowse]),
-     * bypassing this toggle, but it's how you get back to Params, or into Browse without one of
-     * those triggers at hand.
+     * bypassing the tabs, which are how you get back to Params or move between targets.
      */
     fun drawRackBayModule(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
         if (moduleId in deepEditModuleIds) {
-            drawModeToggle(session, parametersState, moduleId, ctx.deckLabelForModuleId(moduleId))
+            drawModeTabs(session, parametersState, moduleId, ctx.deckLabelForModuleId(moduleId))
         }
         when (parametersState.sectionModeFor(moduleId)) {
             ParametersState.SectionMode.BROWSE -> browseBay.draw(session, mixer, parametersState, moduleId)
@@ -137,37 +138,47 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         }
     }
 
-    private fun drawModeToggle(session: SessionContext, parametersState: ParametersState, moduleId: String, deckLabel: String?) {
-        val mode = parametersState.sectionModeFor(moduleId)
+    /**
+     * The bay's single tab row: `Edit | SRC | Chain | FX1 | FX2 | FX3` for a deck, with TRANS in place
+     * of SRC on Master. Edit is the Params editor; the rest are Browse targets (see
+     * [ParametersState.BrowseTarget]), so the active tab is derived from [ParametersState.sectionModeFor]
+     * and [ParametersState.browseTargetFor] rather than stored separately.
+     */
+    private fun drawModeTabs(session: SessionContext, parametersState: ParametersState, moduleId: String, deckLabel: String?) {
+        val inBrowse = parametersState.sectionModeFor(moduleId) == ParametersState.SectionMode.BROWSE
+        val target = parametersState.browseTargetFor(moduleId)
+        val lead = if (deckLabel != null) "SRC" else "TRANS"
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            if (mode == ParametersState.SectionMode.BROWSE) {
-                if (ImGui.button("${Icons.SETTINGS} View Params##bay_mode_toggle_$moduleId")) {
-                    parametersState.openParams(moduleId)
+            fun tab(label: String, tip: String, active: Boolean, onClick: () -> Unit) {
+                if (active) ImGui.pushStyleColor(ImGuiCol.Button, ImGui.getStyle().getColor(ImGuiCol.ButtonActive))
+                if (ImGui.button("$label##bay_tab_${moduleId}_$label")) onClick()
+                if (active) ImGui.popStyleColor()
+                itemTooltip(tip)
+            }
+            tab("Edit", "Edit parameters, modulation and properties.", !inBrowse) { parametersState.openParams(moduleId) }
+            ImGui.sameLine()
+            if (deckLabel != null) {
+                tab(lead, "Pick this deck's source.", inBrowse && target is ParametersState.BrowseTarget.Gen) {
+                    parametersState.openGenBrowse(moduleId, deckLabel)
                 }
             } else {
-                if (ImGui.button("${Icons.SEARCH} Browse...##bay_mode_toggle_$moduleId")) {
-                    openBrowseForCurrentContext(parametersState, moduleId, deckLabel)
+                tab(lead, "Pick the active mixer transition.", inBrowse && target is ParametersState.BrowseTarget.Transition) {
+                    parametersState.openTransitionBrowse()
                 }
+            }
+            val fxSlot = (target as? ParametersState.BrowseTarget.FxChain)?.let { it.slotIndex }
+            val inFx = inBrowse && target is ParametersState.BrowseTarget.FxChain
+            for (i in -1 until FxChain.SLOT_COUNT) {
+                ImGui.sameLine()
+                val label = if (i == -1) "Chain" else "FX${i + 1}"
+                val tip = if (i == -1) "Load or clear a saved FX chain." else "Pick the effect in slot ${i + 1}."
+                val slot = if (i == -1) null else i
+                tab(label, tip, inFx && fxSlot == slot) { parametersState.openFxChainBrowse(moduleId, deckLabel, slot) }
             }
         }
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
-    }
-
-    /** What "Browse..." should show given whatever sub-tab/mode the module is currently in. */
-    private fun openBrowseForCurrentContext(parametersState: ParametersState, moduleId: String, deckLabel: String?) {
-        if (deckLabel != null) {
-            if (parametersState.getActiveSubTab(deckLabel) == "FX") {
-                parametersState.openFxChainBrowse(moduleId, deckLabel, null)
-            } else {
-                parametersState.openGenBrowse(moduleId, deckLabel)
-            }
-        } else if (parametersState.activeMixerSubTab == "TRANS") {
-            parametersState.openTransitionBrowse()
-        } else {
-            parametersState.openFxChainBrowse(moduleId, null, null)
-        }
     }
 
     fun deepEditParamsWidth(session: SessionContext, metrics: GridMetrics): Float {

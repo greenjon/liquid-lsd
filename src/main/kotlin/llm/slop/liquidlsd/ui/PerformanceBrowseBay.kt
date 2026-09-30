@@ -1,7 +1,6 @@
 package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
-import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.presets.FxOps
@@ -13,8 +12,8 @@ import java.io.File
  * Inline "Browse" content for the Performance row bay: picking a deck's generator, a saved whole
  * FX chain, one FX chain slot's effect, or the active transition -- everything that used to be
  * [ShaderPickerPopup]'s modal popup or [FxChainHeader]'s small chain-browser popup. Lives beside
- * [PerformanceDeepEditBay]'s Params content as the other half of each row's Browse <-> Params
- * toggle: picking something applies it immediately (Ctrl+Z undoes it) and leaves the list open, so
+ * [PerformanceDeepEditBay]'s Params content; the bay's tab row (Edit | SRC | Chain | FX1-3) picks which
+ * one shows. Picking something applies it immediately (Ctrl+Z undoes it) and leaves the list open, so
  * trying several generators/effects/chains in a row doesn't mean reopening anything.
  */
 internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
@@ -115,30 +114,10 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
         ShaderPickerPopup.drawInline(session)
     }
 
-    /** [moduleId] is the canonical rack module (a deck, or MASTER) -- used only to key the FX1/FX2/FX3-vs-Chain sub-tab choice. */
+    /** [moduleId] is the canonical rack module (a deck, or MASTER) -- used only to look up the Chain/FX1/FX2/FX3 target chosen in the bay's tab row. */
     private fun drawFxChainBrowse(session: SessionContext, parametersState: ParametersState, moduleId: String, chain: FxChain, chainLabel: String) {
         val target = parametersState.browseTargetFor(moduleId) as? ParametersState.BrowseTarget.FxChain
         val activeSlot = target?.slotIndex
-
-        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            ImGui.beginGroup()
-            for (i in -1 until FxChain.SLOT_COUNT) {
-                if (i > -1) ImGui.sameLine()
-                val isActive = activeSlot == (if (i == -1) null else i)
-                val label = if (i == -1) "Chain" else "FX${i + 1}"
-                if (isActive) {
-                    ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f))
-                }
-                if (ImGui.button("$label##browse_fxtab_${moduleId}_$i")) {
-                    parametersState.rackBrowseTarget[moduleId] = ParametersState.BrowseTarget.FxChain(if (i == -1) null else i)
-                }
-                if (isActive) {
-                    ImGui.popStyleColor()
-                }
-            }
-            ImGui.endGroup()
-        }
-        ImGui.separator()
 
         if (activeSlot == null) {
             drawChainList(session, chain)

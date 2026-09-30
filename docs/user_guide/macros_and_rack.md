@@ -318,9 +318,10 @@ watching the show while you pick.
   list doesn't close, so you can try several generators, effects, or chains back-to-back. `Ctrl+Z`
   undoes any one pick. Changing a deck's source while a named/dirty preset is loaded still prompts
   the usual confirmation before discarding it.
-- **Browse ↔ Params toggle**: a small button at the top of the bay (`Browse...` / `View Params`)
-  switches that row between Browse and Deep Edit's parameter grid without closing either — pick a
-  generator, then flip straight to its parameters.
+- **Tab row**: the top of the bay has one row of tabs — `Edit | SRC | Chain | FX1 | FX2 | FX3` on a
+  deck, and `Edit | TRANS | Chain | FX1 | FX2 | FX3` on Master. `Edit` is the parameter grid; the
+  others browse that target. Pick a generator or effect, click `Edit` to tweak it, click the tab
+  again to pick the next one.
 - **Gen Browse lists generators and presets together**: stock generator types and saved presets
   always appear in the same list — a preset is just a generator with its parameter values saved
   under a name. Saved-preset rows get a "⋮" menu for **Rename / Edit Tags**, **Duplicate**, and
