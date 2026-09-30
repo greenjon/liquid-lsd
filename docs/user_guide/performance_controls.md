@@ -74,6 +74,8 @@ Hovering over almost any parameter in the app shows a tooltip with:
 2. A plain-English description of what the parameter does.
 3. Any personal note you've attached to the parameter (in amber text).
 
+Macro knob tooltips show the value in the bound parameter's real units, with the knob position as a percentage: `ZOOM: 5.00 (100%)`. The same real value is shown on the knob face (always while a row is in Deep Edit, otherwise on hover).
+
 Tooltips appear after a short delay (~250ms) so they don't flash annoyingly as you move the mouse.
 
 ### The three-tier notes system
@@ -161,10 +163,10 @@ for the FX Rack view that exposes these.
       - Or double-click any slot cell's effect name.
       - Or right-click a slot cell and select **Focus Mode (Edit Parameters)**.
     - **Header Controls in Focus Mode**:
-      - `[◀ CHAIN]`: Returns immediately to standard 3-slot Group/Chain mode.
-      - `[1] [2] [3]`: The active slot pill is accented with a dot (e.g. `●2`); click another slot to switch focus directly, or click the active pill to exit Focus Mode.
+      - `[⋮]`: Chain kebab menu remains accessible for Save As, Clear, etc.
+      - `[Focused Effect Name ▾]`: Displays the name of the focused effect; clicking opens inline FX Browse directly for that slot to audition or swap shaders.
       - `[◀ P1/N ▶]`: Parameter page stepper; appears automatically whenever the focused shader exposes more than 3 parameters.
-      - `[Save]` & `[⋮]`: Chain saving, presets, and actions remain fully accessible.
+      - `[1] [2] [3]`: Slot focus pills with clean styling. The active slot pill is highlighted in blue accent. Click another slot pill to switch focus instantly, or click the active focused slot pill a second time (or press `Escape`) to exit Focus Mode back to the 3-slot chain view.
     - **4 Knobs in Focus Mode**:
       - **Knob 1 (`DRY/WET`)**: Controls the focused slot's individual wet/dry blend (`$chainLabel/FX/FX<slot>/DryWet`). The focused slot's `FxSlotCell` is drawn underneath so shortlist stepping (hover `◀ ▶` or mouse wheel) and picker access remain directly below its Dry/Wet knob, with the slot's bypass button to the left of the knob.
       - **Knobs 2–4 (`Top Parameters`)**: Dynamically retargeted to the focused shader's top parameters on the active page (e.g. `SPEED`, `INTENSITY`, `COLOR`).

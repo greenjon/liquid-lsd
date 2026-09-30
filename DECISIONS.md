@@ -6,14 +6,17 @@
     - **Row 1 (SRC)**: `[SRC]` mode pill → `[⋮]` kebab → `[source]` badge → `[Save]` → `[◀]` prev → `[▶]` next → `[⏏]` eject.
     - **Row 2 (FX Group Mode)**: `[FX]` mode pill → `[⋮]` kebab → `[chain]` name → `[Save]` → `[◀]` prev → `[▶]` next → `[1][2][3]` slot pills.
   - **Auto-Switch to FX on Slot Focus**: Clicking any slot pill `[1]`, `[2]`, or `[3]` when the row is currently in SRC mode automatically switches the deck row mode to `FX` (`onFocusSlot`), immediately binding the 4 macro knobs to the focused effect's parameters.
-  - **Hybrid Focus Mode**: Reordered Focus Mode to:
-    - `[FX]` mode pill → `[⋮]` kebab → `[◀ CHAIN]` exit button → `[Focused Effect Name ▾]` → `[◀ Px/y ▶]` (if multi-page) → `[1][2][3]` slot pills.
+  - **Streamlined Hybrid Focus Mode**:
+    - Reordered Focus Mode to: `[FX]` mode pill → `[⋮]` kebab → `[Focused Effect Name ▾]` → `[◀ Px/y ▶]` (if multi-page) → `[1][2][3]` slot pills.
+    - Removed the dedicated `[◀ CHAIN]` button. Clicking the active focused slot pill (`1`, `2`, or `3`) a second time toggles/exits focus mode back to 3-slot chain view.
+    - Added global `Escape` shortcut support to exit focus mode back to chain group mode.
+    - Slot pill numbers are rendered plainly (`1`, `2`, `3`) without the dot (`●`) prefix when focused; the active blue accent styling provides clear visual feedback.
     - Omitted the redundant whole-chain `[Save]` button in Focus Mode.
+    - Sized `calculateFocusedNameWidth` so the focused effect name button dynamically expands to fill the entire remaining width up to `maxW`, maintaining exact alignment across all rows.
     - Clicking `[Focused Effect Name ▾]` opens inline FX Browse targeted directly at that slot (`onOpenSlotBrowse`) for quick effect auditioning and replacement.
-    - Retained slot pills `[1][2][3]` at the end of the row for instant 1-click slot switching and active-slot exit.
   - **Remove PlayQueue Status Text & Harmonize Glyphs**: Removed the middle index text (`n/m`) from Row 1 queue navigation and aligned Row 1's previous/next buttons to use the exact same `◀` and `▶` glyphs as Row 2.
-  - **Deck PV & Metrics Consistency**: Updated `DeckRowMetrics.row1Width`, `FxChainHeader.calculateNameWidth`, and `FxChainHeader.calculateFocusedNameWidth` (`EXIT_BTN_W = 54f`, `PAGE_TEXT_W = 34f`) so all rows and modes fill `maxW` exactly with zero layout drift.
-- **Consequences**: Establishes complete visual and functional harmony across SRC and FX rows, delivers immediate context on which effect is focused, enables 1-click tactile slot transitions, and prevents button jumping.
+  - **Deck PV & Metrics Consistency**: Updated `DeckRowMetrics.row1Width`, `FxChainHeader.calculateNameWidth`, and `FxChainHeader.calculateFocusedNameWidth` (`PAGE_TEXT_W = 34f`) so all rows and modes fill `maxW` exactly with zero layout drift.
+- **Consequences**: Establishes complete visual and functional harmony across SRC and FX rows, delivers maximum width for the focused effect name button, enables 1-click tactile slot transitions and toggle-to-exit, and prevents button jumping.
 
 ## Deck FX Row Stepper Arrows Linked to Live FX Queues (`FxChainHeader.kt`, `FxQueueEngine.kt`, `PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `PerfRowLayoutTest.kt`, `FXQueueManagerTest.kt`, docs, tests)
 

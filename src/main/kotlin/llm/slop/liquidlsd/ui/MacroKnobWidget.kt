@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import kotlin.math.roundToInt
 import imgui.ImGui
 import imgui.flag.ImGuiInputTextFlags
 import imgui.flag.ImGuiKey
@@ -98,6 +99,12 @@ object MacroKnobWidget {
     fun toScreenAngle(knobAngleRadians: Float): Float = SCREEN_UP_ANGLE + knobAngleRadians
 
     /** Formats a floating-point value for knob center display or text edit. */
+    /** The value the user sees: the first binding's mapped value, or the raw 0-1 value when unbound. */
+    fun displayValue(norm: Float, bindings: List<llm.slop.liquidlsd.macro.MacroBinding>): Float {
+        val b = bindings.firstOrNull() ?: return norm
+        return b.minVal + norm * (b.maxVal - b.minVal)
+    }
+
     fun formatDisplayValue(v: Float): String =
         if (v == v.toInt().toFloat() && kotlin.math.abs(v) < 1000f) v.toInt().toString()
         else String.format(Locale.ROOT, "%.2f", v)
@@ -186,6 +193,8 @@ object MacroKnobWidget {
         bindings: List<llm.slop.liquidlsd.macro.MacroBinding> = emptyList(),
         /** When set, drawn as a small readout inside the knob face (e.g. an FX parameter's current value). */
         valueOverlay: String? = null,
+        /** Draw the in-face readout at rest, not only while hovered/dragged (Deep Edit has no separate value line). */
+        alwaysShowReadout: Boolean = false,
         /**
          * The knob's fixed OSC address (e.g. "/macro/deckA/knob/1"), shown in the tooltip for
          * discoverability. Macro knobs always respond to this address with no Learn step needed --
@@ -224,15 +233,7 @@ object MacroKnobWidget {
                 isDragLocked = false
                 wantsCursorRelease = true
             }
-            val initialText = if (valueOverlay != null) {
-                valueOverlay
-            } else if (bindings.isNotEmpty()) {
-                val b = bindings.first()
-                val realVal = b.minVal + value * (b.maxVal - b.minVal)
-                formatDisplayValue(realVal)
-            } else {
-                formatDisplayValue(value)
-            }
+            val initialText = valueOverlay ?: formatDisplayValue(displayValue(value, bindings))
             editBuffer.set(initialText)
         }
 
@@ -456,14 +457,8 @@ object MacroKnobWidget {
                     val ovCol = ImGui.colorConvertFloat4ToU32(0.92f, 0.94f, 0.97f, 0.95f)
                     dl.addText(cx - sz.x / 2f, cy + radius * 0.42f - sz.y / 2f, ovCol, valueOverlay)
                 }
-            } else if (isHovered || isActive) {
-                val readout = if (bindings.isNotEmpty()) {
-                    val b = bindings.first()
-                    val realVal = b.minVal + newValue * (b.maxVal - b.minVal)
-                    formatDisplayValue(realVal)
-                } else {
-                    formatDisplayValue(newValue)
-                }
+            } else if (isHovered || isActive || alwaysShowReadout) {
+                val readout = formatDisplayValue(displayValue(newValue, bindings))
                 session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                     val sz = ImGui.calcTextSize(readout)
                     val ovCol = ImGui.colorConvertFloat4ToU32(0.92f, 0.94f, 0.97f, if (isActive) 0.95f else 0.70f)
@@ -475,7 +470,7 @@ object MacroKnobWidget {
         val learnTip = if (isLearning) " [LEARNING... Click target to bind]" else ""
         val bindingLine = formatBindingSummary(bindings)
         controlTooltip {
-            header = "$label: ${"%.2f".format(newValue)}$learnTip"
+            header = "$label: ${"%.2f".format(displayValue(newValue, bindings))} (${(newValue * 100f).roundToInt()}%)$learnTip"
             binding = bindingLine
             drag = "adjust"
             shiftDrag = "fine-tune"

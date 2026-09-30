@@ -114,14 +114,14 @@ class PerfRowLayoutTest {
         val slotPillsW = 20f * llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT + gap * (llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT - 1)
         val maxW = 320f
 
-        // Case 1: totalPages = 1 (no parameter page stepper)
+        // Case 1: totalPages = 1 (no parameter page stepper): [⋮] [name] [1] [2] [3]
         val nameW1 = FxChainHeader.calculateFocusedNameWidth(maxW, totalPages = 1)
-        val totalDrawn1 = FxChainHeader.MORE_BTN_W + gap + FxChainHeader.EXIT_BTN_W + gap + nameW1 + gap + slotPillsW
+        val totalDrawn1 = FxChainHeader.MORE_BTN_W + gap + nameW1 + gap + slotPillsW
         assertEquals(maxW, totalDrawn1, 0.01f)
 
-        // Case 2: totalPages = 2 (stepper included)
+        // Case 2: totalPages = 2 (stepper included): [⋮] [name] [◀] [P1/2] [▶] [1] [2] [3]
         val nameW2 = FxChainHeader.calculateFocusedNameWidth(maxW, totalPages = 2)
-        val totalDrawn2 = FxChainHeader.MORE_BTN_W + gap + FxChainHeader.EXIT_BTN_W + gap + nameW2 + gap +
+        val totalDrawn2 = FxChainHeader.MORE_BTN_W + gap + nameW2 + gap +
             FxChainHeader.ARROW_W + gap + FxChainHeader.PAGE_TEXT_W + gap + FxChainHeader.ARROW_W + gap + slotPillsW
         assertEquals(maxW, totalDrawn2, 0.01f)
     }

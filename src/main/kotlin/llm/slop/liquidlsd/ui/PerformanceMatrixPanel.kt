@@ -138,7 +138,7 @@ class PerformanceMatrixPanel {
 
         // Modular Rack: when a module is in Deep Edit, every other row is hidden from the grid and
         // the Deep-Edit bay below gets the rest of the height. The open row is exactly as tall as
-        // in Perform view plus [expandedExtraH] for the value readout and Learn button under its knobs.
+        // in Perform view plus [expandedExtraH] for the Learn button under its knobs.
         val tabIdx = theme.performanceMatrixTab.coerceIn(0, Tab.entries.size - 1)
         val visibleRows = visibleRowsForTab(tabIdx, parametersState)
         val anyExpanded = parametersState.anyRackModuleExpanded()
@@ -146,7 +146,7 @@ class PerformanceMatrixPanel {
         // Only the Perform-view tab's row *count* sizes rows -- never their modes (see PerfRowGeometry).
         val layoutRowCount = TAB_ROWS[layoutTabIdx(tabIdx, visibleRows, anyExpanded)].size
         val baseRowH = ((availH - hiddenLibraryH).coerceAtLeast(4f) / layoutRowCount).coerceAtLeast(MIN_ROW_H)
-        val gridH = if (!anyExpanded) availH else (visibleRows.size * (baseRowH + expandedExtraH(session))).coerceAtMost((availH - 160f).coerceAtLeast(160f))
+        val gridH = if (!anyExpanded) availH else (visibleRows.size * (baseRowH + expandedExtraH())).coerceAtMost((availH - 160f).coerceAtLeast(160f))
         val bayH = (availH - gridH - (if (anyExpanded) ImGui.getStyle().getItemSpacingY() else 0f)).coerceAtLeast(0f)
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)
@@ -161,9 +161,8 @@ class PerformanceMatrixPanel {
         }
     }
 
-    /** Extra row height while a row is in Deep Edit: the second caption line (value readout) plus the Learn button. */
-    private fun expandedExtraH(session: llm.slop.liquidlsd.SessionContext): Float =
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() } + 24f
+    /** Extra row height while a row is in Deep Edit: the Learn button. */
+    private fun expandedExtraH(): Float = 24f
 
     /** The tab whose Perform-view rows size the grid: the current tab, or in Edit view the tab that holds the open row. */
     private fun layoutTabIdx(tabIdx: Int, visibleRows: List<RowDescriptor>, anyExpanded: Boolean): Int {
@@ -245,7 +244,7 @@ class PerformanceMatrixPanel {
 
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
         val gridW = ImGui.getContentRegionAvailX().coerceAtLeast(4f)
-        val extraH = expandedExtraH(session)
+        val extraH = expandedExtraH()
         fun isRowExpanded(row: RowDescriptor): Boolean =
             parametersState.disclosureFor(ctx.canonicalModuleId(row.bankId)) != ParametersState.DisclosureLevel.COLLAPSED ||
                 parametersState.disclosureFor(row.bankId) != ParametersState.DisclosureLevel.COLLAPSED
@@ -267,7 +266,6 @@ class PerformanceMatrixPanel {
         applyDragScroll()
         ImGui.setCursorScreenPos(gridStartX, gridStartY)
 
-        val captionH = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
         val bodyLineH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
         val boxMarginY = PerfRowGeometry.BOX_MARGIN_Y
         val boxPad = PerfRowGeometry.BOX_PAD
@@ -572,9 +570,8 @@ class PerformanceMatrixPanel {
                 }
 
                 val isSelectedKnob = isModuleExpanded && (control.id == parametersState.selectedRackMacroId[moduleId])
-                // Deep Edit extras, below the strip: value readout, then the Learn button.
-                val valueLineY = stripY + geo.stripH + 1f
-                val learnBtnY = valueLineY + captionH + 3f
+                // Deep Edit extra, below the strip: the Learn button (the value shows in the knob face).
+                val learnBtnY = stripY + geo.stripH + 4f
                 if (isSelectedKnob) {
                     val cardX1 = cellCenterX - geo.colW / 2f + 6f
                     val cardX2 = cellCenterX + geo.colW / 2f - 6f
@@ -605,6 +602,7 @@ class PerformanceMatrixPanel {
                     accentColor = row.accent,
                     bindings = control.bindings,
                     valueOverlay = spec.valueOverlay,
+                    alwaysShowReadout = isModuleExpanded,
                     oscAddress = MacroOscBridge.getKnobAddress(row.bankId, knobIdx),
                     onSelect = {
                         if (isModuleExpanded) {
@@ -657,15 +655,6 @@ class PerformanceMatrixPanel {
                         w = geo.stripW,
                         accent = row.accent
                     )
-                }
-
-                if (isModuleExpanded) {
-                    val valStr = "Val: ${"%.2f".format(control.value)}"
-                    val valCol = if (isSelectedKnob) TangoPalette.u32(TangoPalette.SYNC.normal)
-                                 else ImGui.getColorU32(ImGuiCol.TextDisabled)
-                    session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                        dl.addText(cellCenterX - ImGui.calcTextSize(valStr).x / 2f, valueLineY, valCol, valStr)
-                    }
                 }
 
                 // If expanded and selected, draw compact Learn/Cancel button beneath the value readout

@@ -1,11 +1,15 @@
 ## [Unreleased]
 
+### Macro Knob Values Shown in Real Units (`MacroKnobWidget.kt`, `PerformanceMatrixPanel.kt`, `MacroBindingInspector.kt`)
+- **One scale for the user**: Knob tooltips and the Deep Edit inspector now show the bound parameter's real value (e.g. Zoom `5.00` on a `0.10 - 5.00` binding) with the normalized position as a percentage, `ZOOM: 5.00 (100%)`. Previously the knob face showed `5` while the tooltip and `Val:` line showed the raw `1.00`. Unbound knobs show the raw 0-1 value.
+- **Removed the `Val:` line under Deep Edit knobs**: the knob face now always shows the value while a row is in Deep Edit (hover-only elsewhere), and the row's Deep Edit extra height shrinks by one caption line.
+
 ### Reordered Deck SRC & FX Controls, Hybrid Focus Mode & Auto-Switch to FX (`PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `FxChainHeader.kt`, `PerfRowLayoutTest.kt`, `DeckRowMetrics`, docs)
 - **Symmetric Control Flow**: Reordered the left control blocks on Deck rows to achieve vertical alignment and parallel control layout between Row 1 (Visual Source) and Row 2 (Insert FX):
   - Row 1 (SRC): `[SRC]` mode pill → `[⋮]` kebab → `[source]` badge → `[Save]` → `[◀]` prev → `[▶]` next → `[⏏]` eject.
   - Row 2 (FX Group Mode): `[FX]` mode pill → `[⋮]` kebab → `[chain]` name → `[Save]` → `[◀]` prev → `[▶]` next → `[1][2][3]` slot pills.
 - **Auto-Switch to FX on Slot Focus**: Activating slot pills `[1]`, `[2]`, or `[3]` when the row is currently driving Visual Source automatically switches the row to `FX`, instantly binding the 4 macro knobs to the focused effect parameters.
-- **Hybrid Focus Mode**: Reordered Focus Mode to `[FX]` → `[⋮]` → `[◀ CHAIN]` → `[Focused Effect Name ▾]` → `[◀ Px/y ▶]` (multi-page) → `[1][2][3]`. Omitted the redundant Save button in Focus Mode, and clicking the focused effect name opens inline FX Browse targeted directly at that slot.
+- **Streamlined Hybrid Focus Mode**: Reordered Focus Mode to `[FX]` → `[⋮]` → `[Focused Effect Name ▾]` → `[◀ Px/y ▶]` (multi-page) → `[1][2][3]`. The dedicated `[◀ CHAIN]` button was removed in favor of clicking the active slot pill a second time to exit or pressing `Escape`. Removed the dot (`●`) indicator from focused slot pills in favor of clean blue active pill styling. The focused effect name button dynamically expands to fill freed row space, and clicking it opens inline FX Browse directly for that slot.
 - **Removed PlayQueue Status Text & Matched Glyphs**: Removed the middle queue status text (`n/m`) from Row 1 queue navigation and updated previous/next buttons to use unified `◀` and `▶` glyphs matching Row 2.
 - **Focus Mode & PV Consistency**: Deck PV's `[PREVIEW]` badge spans `56f` and `calculateFocusedNameWidth` guarantees exact `maxW` matching with zero layout drift.
 

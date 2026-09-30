@@ -1853,6 +1853,7 @@
 1. The parameter name, valid range, and factory default value.
 2. A plain-English description of what the parameter does.
 3. Any personal note you've attached to the parameter (in amber text).</p>
+<p>Macro knob tooltips show the value in the bound parameter's real units, with the knob position as a percentage: <code>ZOOM: 5.00 (100%)</code>. The same real value is shown on the knob face (always while a row is in Deep Edit, otherwise on hover).</p>
 <p>Tooltips appear after a short delay (~250ms) so they don't flash annoyingly as you move the mouse.</p>
 <h3 id="the-three-tier-notes-system">The three-tier notes system</h3>
 <p>You can attach notes at three different scopes:</p>
@@ -1960,10 +1961,10 @@ for the FX Rack view that exposes these.</p>
 <li>Or double-click any slot cell's effect name.</li>
 <li>Or right-click a slot cell and select <strong>Focus Mode (Edit Parameters)</strong>.</li>
 <li><strong>Header Controls in Focus Mode</strong>:</li>
-<li><code>[◀ CHAIN]</code>: Returns immediately to standard 3-slot Group/Chain mode.</li>
-<li><code>[1] [2] [3]</code>: The active slot pill is accented with a dot (e.g. <code>●2</code>); click another slot to switch focus directly, or click the active pill to exit Focus Mode.</li>
+<li><code>[⋮]</code>: Chain kebab menu remains accessible for Save As, Clear, etc.</li>
+<li><code>[Focused Effect Name ▾]</code>: Displays the name of the focused effect; clicking opens inline FX Browse directly for that slot to audition or swap shaders.</li>
 <li><code>[◀ P1/N ▶]</code>: Parameter page stepper; appears automatically whenever the focused shader exposes more than 3 parameters.</li>
-<li><code>[Save]</code> &amp; <code>[⋮]</code>: Chain saving, presets, and actions remain fully accessible.</li>
+<li><code>[1] [2] [3]</code>: Slot focus pills with clean styling. The active slot pill is highlighted in blue accent. Click another slot pill to switch focus instantly, or click the active focused slot pill a second time (or press <code>Escape</code>) to exit Focus Mode back to the 3-slot chain view.</li>
 <li><strong>4 Knobs in Focus Mode</strong>:</li>
 <li><strong>Knob 1 (<code>DRY/WET</code>)</strong>: Controls the focused slot's individual wet/dry blend (<code>$chainLabel/FX/FX&lt;slot&gt;/DryWet</code>). The focused slot's <code>FxSlotCell</code> is drawn underneath so shortlist stepping (hover <code>◀ ▶</code> or mouse wheel) and picker access remain directly below its Dry/Wet knob, with the slot's bypass button to the left of the knob.</li>
 <li><strong>Knobs 2–4 (<code>Top Parameters</code>)</strong>: Dynamically retargeted to the focused shader's top parameters on the active page (e.g. <code>SPEED</code>, <code>INTENSITY</code>, <code>COLOR</code>).</li>

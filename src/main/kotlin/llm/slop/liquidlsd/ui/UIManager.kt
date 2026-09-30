@@ -319,6 +319,16 @@ class UIManager(
                 llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
             } else if (PreferencesPanel.isOpen) {
                 PreferencesPanel.close()
+            } else if (currentMixer?.let { m ->
+                val focusedBankId = llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS.firstOrNull { bankId ->
+                    llm.slop.liquidlsd.macro.FxMacroSync.chainFor(bankId, m)?.isFocused() == true
+                }
+                if (focusedBankId != null) {
+                    llm.slop.liquidlsd.macro.FxMacroSync.focusSlot(focusedBankId, m, null)
+                    true
+                } else false
+            } == true) {
+                // Exited FX focus mode back to chain group mode
             } else if (parametersState.anyRackModuleExpanded()) {
                 parametersState.collapseAllRackModules()
             }

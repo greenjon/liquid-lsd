@@ -56,7 +56,7 @@ object FxChainHeader {
         val gap = 3f
         val slotPillsW = 20f * FxChain.SLOT_COUNT + gap * (FxChain.SLOT_COUNT - 1)
         val stepperReservation = if (totalPages > 1) (ARROW_W * 2f + PAGE_TEXT_W + gap * 3f) else 0f
-        return (maxW - (MORE_BTN_W + gap + EXIT_BTN_W + gap + stepperReservation + gap + slotPillsW)).coerceAtLeast(48f)
+        return (maxW - (MORE_BTN_W + gap + stepperReservation + gap + slotPillsW)).coerceAtLeast(48f)
     }
 
     /** Steps [chain] to the previous (-1) or next (+1) chain file in its folder. */
@@ -78,7 +78,7 @@ object FxChainHeader {
     /**
      * Draws the chain selection and management controls:
      * - Group Mode: `[⋮]  Chain Name •  [Save]  [◀] [▶]  [1] [2] [3]`
-     * - Focus Mode: `[⋮]  [◀ CHAIN]  [Focused Effect Name ▾]  [◀ Px/y ▶]  [1] [2] [3]`
+     * - Focus Mode: `[⋮]  [Focused Effect Name ▾]  [◀ Px/y ▶]  [1] [2] [3]`
      *
      * [onOpenChainBrowse] opens that row's Browse content on the whole-chain list.
      * [onOpenSlotBrowse] opens that row's Browse content targeted at a specific FX slot.
@@ -114,19 +114,7 @@ object FxChainHeader {
 
             ImGui.sameLine()
 
-            // 2. [◀ CHAIN] Exit Focus Mode button
-            val backCol = TangoPalette.u32(TangoPalette.SYNC.normal, 0.90f)
-            ImGui.pushStyleColor(ImGuiCol.Button, backCol)
-            if (ImGui.button("◀ CHAIN##exit_focus_$bankId", EXIT_BTN_W, ctrlH)) {
-                FxMacroSync.focusSlot(bankId, mixer, null)
-                onFocusSlot?.invoke(null)
-            }
-            ImGui.popStyleColor()
-            itemTooltip("Exit Focus Mode and return to 3-slot chain view.")
-
-            ImGui.sameLine()
-
-            // 3. [Focused Effect Name] button (click to browse/replace effect in this slot)
+            // 2. [Focused Effect Name] button (click to browse/replace effect in this slot)
             val focusedNameW = calculateFocusedNameWidth(maxW, totalPages)
             drawFocusedEffectButton(session, chain, bankId, focusedSlot, ctrlH, focusedNameW) { slotIdx ->
                 onOpenSlotBrowse?.invoke(slotIdx)
@@ -260,7 +248,7 @@ object FxChainHeader {
             val isFocused = focusedSlot == i
             val slot = chain.slots.getOrNull(i)
             val slotNum = i + 1
-            val btnLabel = if (isFocused) "●$slotNum" else "$slotNum"
+            val btnLabel = "$slotNum"
 
             val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
             val activeCol = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else TangoPalette.u32(TangoPalette.SYNC.normal, 0.95f)

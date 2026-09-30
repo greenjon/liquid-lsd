@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import kotlin.math.roundToInt
 import imgui.ImGui
 import imgui.type.ImBoolean
 import imgui.type.ImInt
@@ -113,7 +114,7 @@ object MacroBindingInspector {
 
         ImGui.sameLine(0f, 8f)
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            ImGui.textDisabled("Val: ${"%.2f".format(control.value)}")
+            ImGui.textDisabled("Val: ${"%.2f".format(MacroKnobWidget.displayValue(control.value, control.bindings))} (${(control.value * 100f).roundToInt()}%)")
         }
 
         val isLearning = MacroLearnState.isControlLearning(control.id)

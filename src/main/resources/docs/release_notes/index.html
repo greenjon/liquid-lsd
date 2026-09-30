@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#macro-knob-values-shown-in-real-units-macroknobwidgetkt-performancematrixpanelkt-macrobindinginspectorkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro Knob Values Shown in Real Units (MacroKnobWidget.kt, PerformanceMatrixPanel.kt, MacroBindingInspector.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#reordered-deck-src-fx-controls-hybrid-focus-mode-auto-switch-to-fx-performancedeckcontrolskt-performancemastercontrolskt-fxchainheaderkt-perfrowlayouttestkt-deckrowmetrics-docs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4646,6 +4657,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#macro-knob-values-shown-in-real-units-macroknobwidgetkt-performancematrixpanelkt-macrobindinginspectorkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro Knob Values Shown in Real Units (MacroKnobWidget.kt, PerformanceMatrixPanel.kt, MacroBindingInspector.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#reordered-deck-src-fx-controls-hybrid-focus-mode-auto-switch-to-fx-performancedeckcontrolskt-performancemastercontrolskt-fxchainheaderkt-perfrowlayouttestkt-deckrowmetrics-docs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8059,13 +8081,18 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="macro-knob-values-shown-in-real-units-macroknobwidgetkt-performancematrixpanelkt-macrobindinginspectorkt">Macro Knob Values Shown in Real Units (<code>MacroKnobWidget.kt</code>, <code>PerformanceMatrixPanel.kt</code>, <code>MacroBindingInspector.kt</code>)</h3>
+<ul>
+<li><strong>One scale for the user</strong>: Knob tooltips and the Deep Edit inspector now show the bound parameter's real value (e.g. Zoom <code>5.00</code> on a <code>0.10 - 5.00</code> binding) with the normalized position as a percentage, <code>ZOOM: 5.00 (100%)</code>. Previously the knob face showed <code>5</code> while the tooltip and <code>Val:</code> line showed the raw <code>1.00</code>. Unbound knobs show the raw 0-1 value.</li>
+<li><strong>Removed the <code>Val:</code> line under Deep Edit knobs</strong>: the knob face now always shows the value while a row is in Deep Edit (hover-only elsewhere), and the row's Deep Edit extra height shrinks by one caption line.</li>
+</ul>
 <h3 id="reordered-deck-src-fx-controls-hybrid-focus-mode-auto-switch-to-fx-performancedeckcontrolskt-performancemastercontrolskt-fxchainheaderkt-perfrowlayouttestkt-deckrowmetrics-docs">Reordered Deck SRC &amp; FX Controls, Hybrid Focus Mode &amp; Auto-Switch to FX (<code>PerformanceDeckControls.kt</code>, <code>PerformanceMasterControls.kt</code>, <code>FxChainHeader.kt</code>, <code>PerfRowLayoutTest.kt</code>, <code>DeckRowMetrics</code>, docs)</h3>
 <ul>
 <li><strong>Symmetric Control Flow</strong>: Reordered the left control blocks on Deck rows to achieve vertical alignment and parallel control layout between Row 1 (Visual Source) and Row 2 (Insert FX):</li>
 <li>Row 1 (SRC): <code>[SRC]</code> mode pill → <code>[⋮]</code> kebab → <code>[source]</code> badge → <code>[Save]</code> → <code>[◀]</code> prev → <code>[▶]</code> next → <code>[⏏]</code> eject.</li>
 <li>Row 2 (FX Group Mode): <code>[FX]</code> mode pill → <code>[⋮]</code> kebab → <code>[chain]</code> name → <code>[Save]</code> → <code>[◀]</code> prev → <code>[▶]</code> next → <code>[1][2][3]</code> slot pills.</li>
 <li><strong>Auto-Switch to FX on Slot Focus</strong>: Activating slot pills <code>[1]</code>, <code>[2]</code>, or <code>[3]</code> when the row is currently driving Visual Source automatically switches the row to <code>FX</code>, instantly binding the 4 macro knobs to the focused effect parameters.</li>
-<li><strong>Hybrid Focus Mode</strong>: Reordered Focus Mode to <code>[FX]</code> → <code>[⋮]</code> → <code>[◀ CHAIN]</code> → <code>[Focused Effect Name ▾]</code> → <code>[◀ Px/y ▶]</code> (multi-page) → <code>[1][2][3]</code>. Omitted the redundant Save button in Focus Mode, and clicking the focused effect name opens inline FX Browse targeted directly at that slot.</li>
+<li><strong>Streamlined Hybrid Focus Mode</strong>: Reordered Focus Mode to <code>[FX]</code> → <code>[⋮]</code> → <code>[Focused Effect Name ▾]</code> → <code>[◀ Px/y ▶]</code> (multi-page) → <code>[1][2][3]</code>. The dedicated <code>[◀ CHAIN]</code> button was removed in favor of clicking the active slot pill a second time to exit or pressing <code>Escape</code>. Removed the dot (<code>●</code>) indicator from focused slot pills in favor of clean blue active pill styling. The focused effect name button dynamically expands to fill freed row space, and clicking it opens inline FX Browse directly for that slot.</li>
 <li><strong>Removed PlayQueue Status Text &amp; Matched Glyphs</strong>: Removed the middle queue status text (<code>n/m</code>) from Row 1 queue navigation and updated previous/next buttons to use unified <code>◀</code> and <code>▶</code> glyphs matching Row 2.</li>
 <li><strong>Focus Mode &amp; PV Consistency</strong>: Deck PV's <code>[PREVIEW]</code> badge spans <code>56f</code> and <code>calculateFocusedNameWidth</code> guarantees exact <code>maxW</code> matching with zero layout drift.</li>
 </ul>
