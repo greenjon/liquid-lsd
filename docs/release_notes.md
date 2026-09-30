@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Edit Row Keeps Its Height (`PerformanceMatrixPanel.kt`)
+- **No more taller Edit row**: the open row is the same height as in Perform. The selected knob's highlight box now extends below the row and its **Learn** button sits beside the Browse / View Params toggle instead of adding a row of its own height.
+
 ### Macro Knob Values Shown in Real Units (`MacroKnobWidget.kt`, `PerformanceMatrixPanel.kt`, `MacroBindingInspector.kt`)
 - **One scale for the user**: Knob tooltips and the Deep Edit inspector now show the bound parameter's real value (e.g. Zoom `5.00` on a `0.10 - 5.00` binding) with the normalized position as a percentage, `ZOOM: 5.00 (100%)`. Previously the knob face showed `5` while the tooltip and `Val:` line showed the raw `1.00`. Unbound knobs show the raw 0-1 value.
 - **Removed the `Val:` line under Deep Edit knobs**: the knob face now always shows the value while a row is in Deep Edit (hover-only elsewhere), and the row's Deep Edit extra height shrinks by one caption line.

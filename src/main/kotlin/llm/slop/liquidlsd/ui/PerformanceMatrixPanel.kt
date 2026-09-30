@@ -138,7 +138,7 @@ class PerformanceMatrixPanel {
 
         // Modular Rack: when a module is in Deep Edit, every other row is hidden from the grid and
         // the Deep-Edit bay below gets the rest of the height. The open row is exactly as tall as
-        // in Perform view plus [expandedExtraH] for the Learn button under its knobs.
+        // in Perform view; the selected knob's Learn button hangs below it, over the bay's toggle line.
         val tabIdx = theme.performanceMatrixTab.coerceIn(0, Tab.entries.size - 1)
         val visibleRows = visibleRowsForTab(tabIdx, parametersState)
         val anyExpanded = parametersState.anyRackModuleExpanded()
@@ -146,10 +146,11 @@ class PerformanceMatrixPanel {
         // Only the Perform-view tab's row *count* sizes rows -- never their modes (see PerfRowGeometry).
         val layoutRowCount = TAB_ROWS[layoutTabIdx(tabIdx, visibleRows, anyExpanded)].size
         val baseRowH = ((availH - hiddenLibraryH).coerceAtLeast(4f) / layoutRowCount).coerceAtLeast(MIN_ROW_H)
-        val gridH = if (!anyExpanded) availH else (visibleRows.size * (baseRowH + expandedExtraH())).coerceAtMost((availH - 160f).coerceAtLeast(160f))
+        val gridH = if (!anyExpanded) availH else (visibleRows.size * baseRowH).coerceAtMost((availH - 160f).coerceAtLeast(160f))
         val bayH = (availH - gridH - (if (anyExpanded) ImGui.getStyle().getItemSpacingY() else 0f)).coerceAtLeast(0f)
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)
+        overhangDraws.clear()
         if (ImGui.beginChild("##rack_grid_area", 0f, gridH, false)) {
             drawMatrix(session, theme, mixer, parametersState, visibleRows, baseRowH)
         }
@@ -159,10 +160,21 @@ class PerformanceMatrixPanel {
         if (anyExpanded) {
             deepEditBay.drawRackBay(session, mixer, parametersState, bayH)
         }
+
+        // The selected knob's card + Learn button extend below the row, past the grid child's clip
+        // rect, so they're drawn here in the parent window, on top of the bay's toggle line.
+        if (overhangDraws.isNotEmpty()) {
+            val cx = ImGui.getCursorScreenPosX()
+            val cy = ImGui.getCursorScreenPosY()
+            for (draw in overhangDraws) draw()
+            ImGui.setCursorScreenPos(cx, cy)
+            ImGui.dummy(0f, 0f) // ImGui asserts if a SetCursorPos isn't followed by an item
+            overhangDraws.clear()
+        }
     }
 
-    /** Extra row height while a row is in Deep Edit: the Learn button. */
-    private fun expandedExtraH(): Float = 24f
+    /** Selected-knob extras deferred until after the grid child ends (see [draw]). */
+    private val overhangDraws = mutableListOf<() -> Unit>()
 
     /** The tab whose Perform-view rows size the grid: the current tab, or in Edit view the tab that holds the open row. */
     private fun layoutTabIdx(tabIdx: Int, visibleRows: List<RowDescriptor>, anyExpanded: Boolean): Int {
@@ -226,7 +238,7 @@ class PerformanceMatrixPanel {
 
     /**
      * Draws [rows] (the visible rows -- see [visibleRowsForTab]), each [rowH] tall in the
-     * Perform-view band (plus [expandedExtraH] below it while in Deep Edit).
+     * Perform-view band.
      *
      * Every position comes from one [PerfRowGeometry] built from the window size and fonts only --
      * never from a row's mode or bank -- and what each knob shows comes from [PerfKnobResolver].
@@ -244,14 +256,10 @@ class PerformanceMatrixPanel {
 
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
         val gridW = ImGui.getContentRegionAvailX().coerceAtLeast(4f)
-        val extraH = expandedExtraH()
-        fun isRowExpanded(row: RowDescriptor): Boolean =
-            parametersState.disclosureFor(ctx.canonicalModuleId(row.bankId)) != ParametersState.DisclosureLevel.COLLAPSED ||
-                parametersState.disclosureFor(row.bankId) != ParametersState.DisclosureLevel.COLLAPSED
         // Rows past MIN_ROW_H overflow and the ##rack_grid_area child scrolls (see the cursor
         // advance at the end of this function).
         val rowTopOffsets = FloatArray(rows.size + 1)
-        for (i in rows.indices) rowTopOffsets[i + 1] = rowTopOffsets[i] + rowH + (if (isRowExpanded(rows[i])) extraH else 0f)
+        for (i in rows.indices) rowTopOffsets[i + 1] = rowTopOffsets[i] + rowH
         val gridTotalH = rowTopOffsets[rows.size]
 
         val gridStartX = ImGui.getCursorScreenPosX()
@@ -314,8 +322,6 @@ class PerformanceMatrixPanel {
             val descriptor = row
             val rowTopY = gridStartY + rowTopOffsets[rowIdx]
             val rowBottomY = gridStartY + rowTopOffsets[rowIdx + 1]
-            // Controls and knobs are laid out in the Perform-view band; an expanded row's extra
-            // height only extends the box downward.
             val layoutBottomY = rowTopY + rowH
 
             val boxTopY = rowTopY + boxMarginY
@@ -326,8 +332,39 @@ class PerformanceMatrixPanel {
             // Rounded box (faint fill + accent border) around the row.
             val fillCol = ImGui.colorConvertFloat4ToU32(descriptor.accent[0], descriptor.accent[1], descriptor.accent[2], 0.07f)
             val borderCol = ImGui.colorConvertFloat4ToU32(descriptor.accent[0], descriptor.accent[1], descriptor.accent[2], 0.85f)
+            val rawModuleId = descriptor.bankId
+            val canonicalId = ctx.canonicalModuleId(rawModuleId)
+            val isModuleExpanded = parametersState.disclosureFor(canonicalId) != ParametersState.DisclosureLevel.COLLAPSED ||
+                                   parametersState.disclosureFor(rawModuleId) != ParametersState.DisclosureLevel.COLLAPSED
+            val activeModuleId = if (parametersState.disclosureFor(canonicalId) != ParametersState.DisclosureLevel.COLLAPSED) canonicalId else rawModuleId
+            val moduleId = activeModuleId
+
+            val bank: MacroBank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
+            val isFxBankId = row.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS
+            val rowChain = if (isFxBankId && descriptor.hasExtraHeader) ctx.resolveFxChain(mixer, row.bankId) else null
+            val specs = PerfKnobResolver.resolve(bank, row.knobOffset, rowChain?.let { FxRowState.of(it) })
+            // The selected knob's card hangs below the row (see overhangDraws); the row border is
+            // left open across its column so the card reads as a tab of the row.
+            val selectedCol = if (isModuleExpanded) specs.firstOrNull { it.control.id == parametersState.selectedRackMacroId[moduleId] }?.col else null
+
             dl.addRectFilled(boxX1, boxTopY, boxX2, boxBottomY, fillCol, 8f)
-            dl.addRect(boxX1, boxTopY, boxX2, boxBottomY, borderCol, 8f, 0, 2f)
+            if (selectedCol == null) {
+                dl.addRect(boxX1, boxTopY, boxX2, boxBottomY, borderCol, 8f, 0, 2f)
+            } else {
+                val gapX1 = gridStartX + geo.colCenterX(selectedCol) - geo.colW / 2f + 6f
+                val gapX2 = gridStartX + geo.colCenterX(selectedCol) + geo.colW / 2f - 6f
+                val pad = 3f
+                val clips = listOf(
+                    floatArrayOf(boxX1 - pad, boxTopY - pad, gapX1, boxBottomY + pad),
+                    floatArrayOf(gapX2, boxTopY - pad, boxX2 + pad, boxBottomY + pad),
+                    floatArrayOf(gapX1, boxTopY - pad, gapX2, boxBottomY - pad)
+                )
+                for (c in clips) {
+                    dl.pushClipRect(c[0], c[1], c[2], c[3], true)
+                    dl.addRect(boxX1, boxTopY, boxX2, boxBottomY, borderCol, 8f, 0, 2f)
+                    dl.popClipRect()
+                }
+            }
 
             val isDeckA = descriptor.bankId == MacroEngine.DECK_A || descriptor.bankId == MacroEngine.DECK_A_FX
             val isDeckB = descriptor.bankId == MacroEngine.DECK_B || descriptor.bankId == MacroEngine.DECK_B_FX
@@ -339,13 +376,6 @@ class PerformanceMatrixPanel {
             val isClockRow = descriptor.bankId == MacroEngine.GLOBAL
             val isMasterRow = descriptor.bankId == MacroEngine.MASTER || descriptor.bankId == MacroEngine.MASTER_FX
             val displayLabel = descriptor.groupLabel
-
-            val rawModuleId = descriptor.bankId
-            val canonicalId = ctx.canonicalModuleId(rawModuleId)
-            val isModuleExpanded = parametersState.disclosureFor(canonicalId) != ParametersState.DisclosureLevel.COLLAPSED ||
-                                   parametersState.disclosureFor(rawModuleId) != ParametersState.DisclosureLevel.COLLAPSED
-            val activeModuleId = if (parametersState.disclosureFor(canonicalId) != ParametersState.DisclosureLevel.COLLAPSED) canonicalId else rawModuleId
-            val moduleId = activeModuleId
 
             val isSpecialHeaderRow = descriptor.hasExtraHeader && (isTransRow || isMasterRow || isClockRow)
 
@@ -538,10 +568,6 @@ class PerformanceMatrixPanel {
             }
 
             // 4 knobs for this row: content from the resolver, every position from [geo].
-            val bank: MacroBank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
-            val isFxBankId = row.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS
-            val rowChain = if (isFxBankId && descriptor.hasExtraHeader) ctx.resolveFxChain(mixer, row.bankId) else null
-            val specs = PerfKnobResolver.resolve(bank, row.knobOffset, rowChain?.let { FxRowState.of(it) })
             val chainLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(row.bankId) ?: "FX"
             val openDeepEdit = {
                 parametersState.setDisclosure(ctx.canonicalModuleId(row.bankId), ParametersState.DisclosureLevel.DEEP_EDIT)
@@ -577,8 +603,11 @@ class PerformanceMatrixPanel {
                     val cardX2 = cellCenterX + geo.colW / 2f - 6f
                     val selFill = ImGui.colorConvertFloat4ToU32(0.10f, 0.65f, 0.92f, 0.14f)
                     val selBorder = ImGui.colorConvertFloat4ToU32(0.20f, 0.85f, 1.0f, 0.85f)
-                    dl.addRectFilled(cardX1, knobTopY - 4f, cardX2, learnBtnY + 18f + 4f, selFill, 6f)
-                    dl.addRect(cardX1, knobTopY - 4f, cardX2, learnBtnY + 18f + 4f, selBorder, 6f, 0, 1.5f)
+                    overhangDraws += {
+                        val parentDl = ImGui.getWindowDrawList()
+                        parentDl.addRectFilled(cardX1, knobTopY - 4f, cardX2, learnBtnY + 18f + 4f, selFill, 6f)
+                        parentDl.addRect(cardX1, knobTopY - 4f, cardX2, learnBtnY + 18f + 4f, selBorder, 6f, 0, 1.5f)
+                    }
                 }
 
                 val midiPath = MacroEngine.midiPathFor(bank, control)
@@ -658,7 +687,7 @@ class PerformanceMatrixPanel {
                 }
 
                 // If expanded and selected, draw compact Learn/Cancel button beneath the value readout
-                if (isSelectedKnob) {
+                if (isSelectedKnob) overhangDraws += {
                     val btnW = 54f
                     val btnX = cellCenterX - btnW / 2f
                     val btnY = learnBtnY
