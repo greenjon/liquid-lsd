@@ -26,6 +26,11 @@ internal object PerformanceColors {
     val COLOR_FX       = TangoPalette.CHOCOLATE.normal     // #C17D11
     val COLOR_GLOBAL   = TangoPalette.NEUTRAL_DARK.normal  // #555753
 
+    // Controller LED colours. An RGB LED can't show the Aluminium greys that badge Master and Global
+    // on screen, so those two rows get a hue of their own on the hardware (the screen keeps its greys).
+    val LED_MASTER     = TangoPalette.SCARLET_RED.normal
+    val LED_GLOBAL     = TangoPalette.PLUM.normal
+
     /** Uniform height of every row-side control (buttons, badges, preset combo) left/right of the knobs. */
     const val CTRL_H = 24f
 

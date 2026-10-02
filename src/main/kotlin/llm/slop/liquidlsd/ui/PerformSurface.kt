@@ -1,6 +1,8 @@
 package llm.slop.liquidlsd.ui
 
 import llm.slop.liquidlsd.control.KnobCommands
+import llm.slop.liquidlsd.control.KnobLight
+import llm.slop.liquidlsd.control.KnobLightSource
 import llm.slop.liquidlsd.control.KnobSurface
 import llm.slop.liquidlsd.macro.FxMacroSync
 import llm.slop.liquidlsd.macro.MacroControl
@@ -10,7 +12,7 @@ import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.rendering.Mixer
 
 /** One addressable knob of the Perform view: its row's bank plus what the knob currently shows. */
-internal data class PageKnob(val bankId: String, val spec: KnobSpec) {
+internal data class PageKnob(val bankId: String, val spec: KnobSpec, val accent: FloatArray) {
     val control: MacroControl get() = spec.control
 }
 
@@ -19,6 +21,13 @@ internal class PerformPage(val knobs: List<PageKnob?>)
 
 internal object PerformPages {
     private const val COLS = 4
+
+    /** The LED colour for [row]: its accent, except the greyscale Master and Global rows (see [PerformanceColors.LED_MASTER]). */
+    fun ledColor(row: RowDescriptor): FloatArray = when (row.bankId) {
+        MacroEngine.MASTER, MacroEngine.MASTER_FX -> PerformanceColors.LED_MASTER
+        MacroEngine.GLOBAL -> PerformanceColors.LED_GLOBAL
+        else -> row.accent
+    }
 
     /**
      * Resolves the page the way [PerformanceMatrixPanel] draws it: the rows [PerfRows.visibleRowsForTab]
@@ -32,7 +41,7 @@ internal object PerformPages {
             val isFxBank = row.bankId in FxMacroSync.FX_BANK_IDS
             val chain = if (isFxBank && row.hasExtraHeader) ctx.resolveFxChain(mixer, row.bankId) else null
             for (spec in PerfKnobResolver.resolve(bank, row.knobOffset, chain?.let { FxRowState.of(it) })) {
-                knobs[rowIdx * COLS + spec.col] = PageKnob(row.bankId, spec)
+                knobs[rowIdx * COLS + spec.col] = PageKnob(row.bankId, spec, ledColor(row))
             }
         }
         return PerformPage(knobs.toList())
@@ -48,7 +57,7 @@ internal class PerformSurface(
     private val ctx: PerformanceUiContext,
     private val parametersState: ParametersState,
     private val mixer: Mixer
-) : KnobSurface {
+) : KnobSurface, KnobLightSource {
 
     private fun knob(index: Int): PageKnob? =
         PerformPages.resolve(theme.performanceMatrixTab, ctx, parametersState, mixer).knobs.getOrNull(index)
@@ -85,6 +94,21 @@ internal class PerformSurface(
             PAGE_DECKS -> theme.performanceMatrixTab = PerfRows.TAB_DECKS
             PAGE_MASTER -> theme.performanceMatrixTab = PerfRows.TAB_MASTER
         }
+    }
+
+    /**
+     * Ring = the knob's value; LED = its row's accent colour, dark where nothing is there to
+     * control (an empty or bypassed FX slot, a blank parameter page position).
+     */
+    override fun knobLights(): List<KnobLight?> =
+        PerformPages.resolve(theme.performanceMatrixTab, ctx, parametersState, mixer).knobs.map { target ->
+            target?.let { KnobLight(it.control.value, it.accent[0], it.accent[1], it.accent[2], lit = isLit(it)) }
+        }
+
+    private fun isLit(target: PageKnob): Boolean = when (val under = target.spec.under) {
+        is UnderKnob.SlotCell -> FxMacroSync.chainFor(target.bankId, mixer)?.slots?.getOrNull(under.slotIndex)?.enabled == true
+        is UnderKnob.ParamCell -> under.param != null
+        is UnderKnob.Label -> true
     }
 
     private fun toggleBypass(bankId: String, slotIndex: Int) {

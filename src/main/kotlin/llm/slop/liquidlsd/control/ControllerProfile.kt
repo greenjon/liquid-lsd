@@ -52,6 +52,76 @@ data class InputDef(
 )
 
 /**
+ * How a hue (RGB colour) becomes the single CC value the controller's RGB LEDs take. Values
+ * [min]..[max] sweep the colour wheel starting at [hueAtMin] degrees and moving [degreesPerStep]
+ * per value (negative = hue decreases); [off] turns the LED off and [white] is used for greys.
+ * The defaults are the Midi Fighter Twister's wheel as best understood; tune them in the profile.
+ */
+@Serializable
+data class HueWheel(
+    val min: Int = 1,
+    val max: Int = 126,
+    val off: Int = 0,
+    val white: Int = 127,
+    val hueAtMin: Float = 240f,
+    val degreesPerStep: Float = -2.88f
+) {
+    /** The CC value closest to the colour ([r], [g], [b] each 0..1). */
+    fun valueFor(r: Float, g: Float, b: Float): Int {
+        val hi = maxOf(r, g, b)
+        val lo = minOf(r, g, b)
+        val chroma = hi - lo
+        if (hi <= 0.02f) return off
+        if (chroma < 0.1f * hi) return white
+        val hue = when (hi) {
+            r -> 60f * (((g - b) / chroma) % 6f)
+            g -> 60f * ((b - r) / chroma + 2f)
+            else -> 60f * ((r - g) / chroma + 4f)
+        }.let { if (it < 0f) it + 360f else it }
+        val travel = if (degreesPerStep < 0f) hueAtMin - hue else hue - hueAtMin
+        val wrapped = ((travel % 360f) + 360f) % 360f
+        return (min + Math.round(wrapped / kotlin.math.abs(degreesPerStep))).coerceIn(min, max)
+    }
+}
+
+/**
+ * Ring and LED feedback for an encoder group ([input]): the ring (position indicator) is set by
+ * sending the encoder's own CC back on [ringChannel] (default: the encoder's channel), and the RGB
+ * LED by sending the same CC number on [colorChannel] (null = no colour feedback).
+ */
+@Serializable
+data class KnobFeedbackDef(
+    val input: String = "knob",
+    val ringChannel: Int? = null,
+    val colorChannel: Int? = null,
+    val color: HueWheel = HueWheel(),
+    val addressing: FeedbackAddressing = FeedbackAddressing.BANK_ABSOLUTE
+)
+
+/**
+ * Which CC numbers a bank's rings and LEDs are written to. [BANK_ABSOLUTE] uses the numbers the
+ * encoders send on that bank (knob 1 on bank 2 is CC 16); [ACTIVE_BANK] always uses the first bank's
+ * numbers (CC 0..15), which some firmware treats as "whichever bank is showing"; [BOTH] writes both,
+ * which is harmless when only one form is live (the bank is rewritten whenever it is entered).
+ * On the Twister the per-bank numbers are the live ones (checked with amidi: CC 16 lights bank 2's
+ * knob 1 while it is showing, CC 0 does nothing visible), so [BANK_ABSOLUTE] is the default.
+ */
+@Serializable
+enum class FeedbackAddressing { BANK_ABSOLUTE, ACTIVE_BANK, BOTH }
+
+/**
+ * [minIntervalMs] is the least time between two feedback messages to the device: controllers drop
+ * messages that arrive in a burst (the Twister's rings and LEDs did).
+ */
+@Serializable
+data class OutputConfig(
+    val knobs: KnobFeedbackDef? = null,
+    val minIntervalMs: Int = 2,
+    /** Log every feedback message sent, every bank change and every encoder message at INFO (also enabled by env LSD_MIDI_TRACE=1). */
+    val trace: Boolean = false
+)
+
+/**
  * Declarative description of a MIDI controller: how to recognise it, what its inputs are, and the
  * default command bindings. Binding keys are an input id with optional held-modifier prefixes
  * (`shift+knob.3.press`); values are [CommandRegistry] ids. In the last part of a key `*` matches
@@ -67,7 +137,8 @@ data class ControllerProfile(
     val banks: BankConfig = BankConfig(),
     val inputs: List<InputDef> = emptyList(),
     val bindings: Map<String, String> = emptyMap(),
-    val bankBindings: Map<String, Map<String, String>> = emptyMap()
+    val bankBindings: Map<String, Map<String, String>> = emptyMap(),
+    val output: OutputConfig = OutputConfig()
 ) {
     /** True if [deviceName] contains any of the [match] strings (case-insensitive). */
     fun matches(deviceName: String): Boolean =
@@ -215,6 +286,23 @@ class CompiledController private constructor(
                     }
                     if (def.press != null) inputIds["$inputId.press"] = InputKind.BUTTON
                 }
+            }
+
+            if (profile.output.minIntervalMs !in 0..100) problems += "output.minIntervalMs must be 0..100"
+            profile.output.knobs?.let { fb ->
+                val group = profile.inputs.firstOrNull { it.id == fb.input }
+                when {
+                    group == null -> problems += "output.knobs.input '${fb.input}' is not an input"
+                    group.kind != InputKind.ENCODER -> problems += "output.knobs.input '${fb.input}' must be an ENCODER"
+                }
+                listOf("ringChannel" to fb.ringChannel, "colorChannel" to fb.colorChannel).forEach { (name, channel) ->
+                    if (channel != null && channel !in 0..15) problems += "output.knobs.$name $channel out of range 0..15"
+                }
+                val c = fb.color
+                if (c.min !in 0..127 || c.max !in c.min..127 || c.off !in 0..127 || c.white !in 0..127) {
+                    problems += "output.knobs.color values must be 0..127 with min <= max"
+                }
+                if (c.degreesPerStep == 0f) problems += "output.knobs.color.degreesPerStep must not be 0"
             }
 
             // Expands one binding map: wildcard keys first so explicit keys override them.

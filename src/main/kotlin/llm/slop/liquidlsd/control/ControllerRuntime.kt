@@ -8,7 +8,11 @@ import mu.KotlinLogging
  * tracks the active bank and held modifiers, turns encoder messages into acceleration-scaled
  * deltas, and routes each input to its bound command. Render thread only.
  */
-class ControllerRuntime(val compiled: CompiledController, private val registry: CommandRegistry) {
+class ControllerRuntime(
+    val compiled: CompiledController,
+    private val registry: CommandRegistry,
+    private val trace: Boolean = false
+) {
     /** The device's active 0-based bank, once known (after a bank button or any bank-aware input). */
     var activeBank: Int? = null
         private set
@@ -46,6 +50,7 @@ class ControllerRuntime(val compiled: CompiledController, private val registry: 
     }
 
     private fun enterBank(bank: Int, ctx: CommandContext) {
+        if (trace) logger.info { "controller rx bank entered: ${bank + 1} (page ${compiled.profile.banks.pages.getOrNull(bank)})" }
         activeBank = bank
         val page = compiled.profile.banks.pages.getOrNull(bank)
         if (!page.isNullOrBlank()) ctx.knobSurface?.showPage(page)
@@ -54,6 +59,7 @@ class ControllerRuntime(val compiled: CompiledController, private val registry: 
     private fun turn(input: ResolvedInput, event: MidiEvent, ctx: CommandContext): Boolean {
         val command = compiled.bindingFor(input.inputId, heldModifiers, input.bank) ?: return false
         val stateKey = "${input.bank}:${input.inputId}"
+        if (trace) logger.info { "controller rx turn cc=${event.index} raw=${event.rawValue} -> ${input.inputId} bank=${input.bank?.plus(1)} mode=${input.mode}" }
 
         val ticks = if (input.mode == EncoderMode.ABSOLUTE) {
             // The first message only tells us where the knob is; later ones are changes from there.

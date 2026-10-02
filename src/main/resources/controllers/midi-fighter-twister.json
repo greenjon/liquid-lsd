@@ -1,12 +1,12 @@
 {
   "id": "midi-fighter-twister",
   "name": "DJ TechTools Midi Fighter Twister",
-  "description": "16 encoders x 4 hardware banks. Encoder turns on ch1 (CC = knob + 16 * bank), encoder switches on ch2 with the same CC numbers, side buttons and bank switches on ch4. The 16 knobs control the Perform view's visible 4x4 knob grid: bank 1 shows DECKS, bank 2 shows MASTER. Switch tap = primary action (FX slot bypass / reset to default); shift + tap = secondary (focus FX slot, leave focus, next parameter page); turn while holding the switch = fine. Encoders must be set to relative in Midi Fighter Utility (\"ENC 3FH/41H\", binary offset: clockwise sends 65, counter-clockwise 63). For the factory absolute mode, use a copy of this profile with mode ABSOLUTE.",
+  "description": "16 encoders x 4 hardware banks. Encoder turns on ch1 (CC = knob + 16 * bank), encoder switches on ch2 with the same CC numbers, side buttons and bank switches on ch4. The 16 knobs control the Perform view's visible 4x4 knob grid: bank 1 shows DECKS, bank 2 shows MASTER, and banks 3 and 4 repeat them until they get pages of their own. Rings show each knob's value and the LEDs take the row colour (dark for a bypassed or empty slot); the lights are written to the bank that is showing. Switch tap = primary action (FX slot bypass / reset to default); shift + tap = secondary (focus FX slot, leave focus, next parameter page); turn while holding the switch = fine. Encoders must be set to relative in Midi Fighter Utility (\"ENC 3FH/41H\", binary offset: clockwise sends 65, counter-clockwise 63). For the factory absolute mode, use a copy of this profile with mode ABSOLUTE.",
   "match": ["Midi Fighter Twister", "Twister"],
   "banks": {
     "count": 4,
     "switch": { "channel": 3, "cc": 0 },
-    "pages": ["perform.decks", "perform.master"]
+    "pages": ["perform.decks", "perform.master", "perform.decks", "perform.master"]
   },
   "inputs": [
     {
@@ -38,5 +38,11 @@
     "knob.*": "knob.{n}",
     "knob.*.press": "knob.{n}.press",
     "shift+knob.*.press": "knob.{n}.press_alt"
+  },
+  "output": {
+    "knobs": {
+      "input": "knob",
+      "colorChannel": 1
+    }
   }
 }

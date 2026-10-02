@@ -1366,6 +1366,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#66-ring-and-led-feedback-phase-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.6 Ring and LED feedback (phase 4)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1806,6 +1817,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#66-ring-and-led-feedback-phase-4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.6 Ring and LED feedback (phase 4)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1830,7 +1852,7 @@
 
 <h1 id="unified-control-mapping-architecture-midi-keyboard-mouse-cv">Unified Control Mapping Architecture (MIDI / Keyboard / Mouse / CV)</h1>
 <blockquote>
-<p><strong>Status</strong>: Design specification. Phases 1-2 (command registry, device tagging, controller profiles, Perform-grid knob control for the Twister) are implemented for MIDI; see section 6. The rest is roadmap.<br />
+<p><strong>Status</strong>: Design specification. Phases 1-2 and 4 (command registry, device tagging, controller profiles, Perform-grid knob control, ring/LED feedback for the Twister) are implemented for MIDI; see section 6. The rest is roadmap.<br />
 <strong>Inspiration</strong>: <a href="https://mixxx.org/">Mixxx DJ Software</a> Controller &amp; Keyboard Mapping Architecture</p>
 </blockquote>
 <hr />
@@ -2574,7 +2596,7 @@
 <li><code>banks.switch</code> describes the device's bank buttons (<code>CC = cc + bankIndex</code>; a non-zero value means that bank is now active).</li>
 <li>Binding keys are an input id with optional held-modifier prefixes (<code>shift+knob.3.press</code>); <code>bankBindings</code> (1-based bank) override <code>bindings</code>. In the last part of a key <code>*</code> matches a group index and <code>{n}</code> in the value is replaced by it (<code>"knob.*": "knob.{n}"</code>). <code>CompiledController.bindingFor(inputId, held, bank)</code> picks the most specific binding: more modifiers beat fewer, then a bank binding beats a global one.</li>
 <li><code>ControllerProfile.compile()</code> builds a <code>(type, channel, cc) -&gt; ResolvedInput(inputId, kind, bank, mode)</code> table and a list of structural problems (CC collisions, out-of-range values, duplicate ids, bindings naming unknown inputs or non-modifier prefixes). <code>unknownCommands(registry)</code> lists binding targets that aren't registered.</li>
-<li>Bindings, modifiers, banks and encoder handling are live (6.5). Not implemented yet: response curves, navigation/browse commands, MIDI output. See <code>.planning/midi-controller-plan.md</code>.</li>
+<li>Bindings, modifiers, banks and encoder handling are live (6.5). Not implemented yet: response curves, navigation/browse commands. See <code>.planning/midi-controller-plan.md</code>.</li>
 </ul>
 <h3 id="64-built-in-profile">6.4 Built-in profile</h3>
 <p><code>midi-fighter-twister</code>: 64 encoders (CC 0..63 on ch1 = knob + 16 * bank), encoder switches on ch2 with the same CCs, 4 side buttons per bank on ch4 (CC 8, 10, 11, 13, +4 per bank), bank buttons on ch4 CC 0..3. Measured on hardware.</p>
@@ -2584,6 +2606,13 @@
 <li>The runtime tracks the active bank (from the bank buttons, or any bank-aware input), held modifiers, and per-encoder state. Encoder messages become signed ticks (relative modes decode directly; <code>ABSOLUTE</code> is the change since the last value, so the first message only locates the knob), scaled by <code>step</code> and a speed-based boost (<code>accel</code>, full at &lt;= 8 ms between ticks, none at &gt;= 60 ms), then sent as <code>CommandInput.Delta</code>. A button's release goes to the command that received its press.</li>
 <li><code>KnobCommands</code> registers <code>knob.1..16</code> (RELATIVE), <code>knob.&lt;n&gt;.press</code> and <code>knob.&lt;n&gt;.press_alt</code> (MOMENTARY). It tracks which switches are held (the Twister sends the same turn messages either way): turning while held is fine (x0.1) and cancels the tap; a tap runs <code>KnobSurface.primary</code> (<code>press</code>) or <code>secondary</code> (<code>press_alt</code>).</li>
 <li><code>KnobSurface</code> (render thread) is implemented by <code>ui/PerformSurface</code>. Its page is <code>PerformPages.resolve</code>: <code>PerfRows.visibleRowsForTab</code> (the same rows <code>PerformanceMatrixPanel</code> draws, now in a shared object) through <code>PerfKnobResolver</code>, flattened row-major into 16 slots. Actions: turn adds to <code>MacroControl.value</code>; primary on an FX slot cell = <code>FxOps.setSlotEnabled</code>, on a parameter = reset to default, on a label knob = reset to 0.5; secondary on a slot cell = <code>FxMacroSync.focusSlot</code> (or leave focus when it is knob 1 of a focused row), on a parameter = <code>FxMacroSync.stepParamPage</code>; <code>showPage</code> sets the matrix tab.</li>
+</ul>
+<h3 id="66-ring-and-led-feedback-phase-4">6.6 Ring and LED feedback (phase 4)</h3>
+<ul>
+<li>Profile <code>output.knobs</code>: <code>input</code> (the encoder group, e.g. <code>knob</code>), <code>ringChannel</code> (default: the encoder's channel), <code>colorChannel</code> (null = no LEDs) and <code>color</code>, a <code>HueWheel</code> (<code>min</code>/<code>max</code> value range, <code>off</code>, <code>white</code>, <code>hueAtMin</code>, <code>degreesPerStep</code>; defaults are the Twister's wheel: blue = 1, hue decreasing 2.88 degrees per step). The ring is set by sending the encoder's own CC on <code>ringChannel</code>; the LED by sending the same CC number on <code>colorChannel</code>.</li>
+<li><code>KnobLightSource.knobLights()</code> (implemented by <code>ui/PerformSurface</code>) returns 16 <code>KnobLight</code>s: ring value, LED colour (<code>PerformPages.ledColor</code>: the row accent, except <code>PerformanceColors.LED_MASTER</code>/<code>LED_GLOBAL</code>), <code>lit</code>. <code>ControllerFeedback.update(lights, activeBank, nowMs)</code> expands them to the encoder CCs of the group and writes only changed values, for the active bank only (all banks while it is unknown; the whole new bank when it changes, since the Twister showed its stored colours on banks that were not on screen). It also rewrites the active bank once <code>SETTLE_MS</code> after the last change or bank switch and every <code>HEARTBEAT_MS</code>; rewrites do not re-arm the settle timer. <code>resync()</code> forces a full rewrite. <code>output.knobs.addressing</code> picks the CC numbers: <code>BANK_ABSOLUTE</code> (CC = knob + stride * bank), <code>ACTIVE_BANK</code> (always the first bank's CC 0..15, which some firmware treats as the bank on screen) or <code>BOTH</code>. <code>BANK_ABSOLUTE</code> is the default and the right one on the Twister (verified with amidi: CC 16 is live on bank 2, CC 0 is not). <code>output.trace</code> (or env <code>LSD_MIDI_TRACE=1</code>) logs every feedback message (<code>TracingSink</code>), bank change and encoder message at INFO. The staged rewrites after connecting or a bank switch are <code>BANK_REWRITES_MS</code> (+100/+400/+1200 ms).</li>
+<li><code>MidiOutputPorts.openFor(name, minIntervalMs)</code> writes through a <code>CcQueue</code> (one pending value per channel/CC, so a slow device never accumulates stale values) from a daemon thread that keeps at least <code>output.minIntervalMs</code> (default 2) between messages, because the Twister drops bursts. It logs send time and backlog every 5 s (INFO when a send takes over 5 ms or the backlog exceeds 40).</li>
+<li><code>ControllerManager.updateFeedback</code> runs once per frame from <code>UIManager.render</code>. Once a second it scans <code>MidiEngine.getConnectedDeviceNames()</code>: matching devices get a <code>ControllerFeedback</code> over <code>MidiOutputPorts.openFor(name)</code> (an output port with the same device name, written from a daemon thread); devices that left or whose sink is unhealthy are dropped, and a failed open is retried after 10 s.</li>
 </ul>
 
 

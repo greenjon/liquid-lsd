@@ -1,6 +1,6 @@
 # MIDI controller support: command registry + controller profiles
 
-Status (updated: shipped profile now relative binary-offset after user switched the device): Phases 1-2 implemented and verified on the real Twister 2026-10-02 (registry, device tagging, profiles; control pages, knob gestures, banks->tabs, modifiers, acceleration). Phases 3-5 open. Phase 2 notes: curves deferred (relative deltas have no useful curve; macros already have MacroCurve); only `shift` (CC 10, left-bottom) is bound among side buttons; side.1-3 are free for phase 3. First hardware target: Midi Fighter Twister (MFT).
+Status (2026-10-02): phases 1, 2 and 4 implemented (1-2 committed and hardware-verified; 4 working on all banks with the stock 4-bank firmware, uncommitted); phases 3 and 5 open. **Current state, architecture map, hardware facts and next steps: see `.planning/midi-controller-handoff.md`.** The notes below are the original plan and per-phase design notes.
 Builds on `docs/developer/unified_control_mapping.md` and ROADMAP "Unified Control".
 
 ## Decisions (from brainstorm)

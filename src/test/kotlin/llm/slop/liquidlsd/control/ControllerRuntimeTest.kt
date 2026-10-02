@@ -154,9 +154,11 @@ class ControllerRuntimeTest {
         assertEquals(listOf("page perform.master"), surface.calls)
         assertTrue(side3(0, 127))
         assertEquals(listOf("page perform.master", "page perform.decks"), surface.calls)
-        assertTrue(side3(2, 127))             // bank 3 has no page: the screen is left alone
+        assertTrue(side3(2, 127))             // bank 3 repeats DECKS until it gets a page of its own
         assertEquals(2, runtime.activeBank)
-        assertEquals(2, surface.calls.size)
+        assertEquals(listOf("page perform.master", "page perform.decks", "page perform.decks"), surface.calls)
+        assertTrue(side3(3, 127))
+        assertEquals("page perform.master", surface.calls.last())
     }
 
     private fun side3(cc: Int, value: Int) = send(3, cc, value)

@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Midi Fighter Twister Rings and LEDs Mirror the Screen (`control/ControllerFeedback.kt`, `midi/MidiOutputPorts.kt`, `PerformSurface.kt`)
+- **Rings show values, LEDs show rows**: each encoder's ring follows its knob's value, including changes made with the mouse, and its LED takes the row's colour. An empty or bypassed FX slot, or a blank parameter position, goes dark.
+- **Connect and go**: the app opens the Twister's output port when it appears (and again after a replug) and writes every ring and LED, then sends only what changes to the bank that is showing. Messages are paced (the Twister drops bursts) and a newer ring value replaces an older one still waiting. Switching banks rewrites that bank a few times, and a short pause after you stop turning re-sends it, because the Twister redraws its stored colours after its own messages.
+- **LED colours**: LEDs take the row colour, except Master (red) and Global (violet), whose on-screen greys can't be shown on an RGB LED. Twister banks 3 and 4 now repeat DECKS and MASTER.
+- **Tunable**: the colour wheel (which CC value is which hue) and the feedback channels live in the controller profile's `output` section.
+
 ### Midi Fighter Twister Works Out of the Box (`control/`, `PerformSurface.kt`, `PerfRows.kt`, `resources/controllers/midi-fighter-twister.json`)
 - **No learning needed**: plug in a Midi Fighter Twister and its 16 encoders drive the Performance Matrix's 4x4 knob grid, row by row. A row's encoders follow what the row shows: source knobs, FX Super/Metaknobs, or the focused effect's parameters.
 - **Switch gestures**: tap = bypass an FX slot / reset a value; hold + turn = fine adjustment; shift + tap = focus a slot, leave focus, or next parameter page. Fast turns accelerate.

@@ -200,13 +200,16 @@ class UIManager(
 
         // Drain all MIDI events queued by the MIDI receiver thread and dispatch MIDI-learn /
         // global actions (queue next/prev, bg-queue next/prev, tap tempo) / parameter bindings.
+        val performSurface = PerformSurface(session.uiTheme, performanceMatrixPanel.ctx, parametersState, mixer)
         val (midiCcDelta, bgMidiCcDelta, transMidiCcDelta) = session.midiMappingManager.processGlobalMidiEvents(
             midiEnabled = session.uiTheme.midiEnabled,
             parametersState = parametersState,
             mixer = mixer,
             onTapTempo = { session.tapTempoController.tap() },
-            knobSurface = PerformSurface(session.uiTheme, performanceMatrixPanel.ctx, parametersState, mixer)
+            knobSurface = performSurface
         )
+        // Rings and LEDs of connected controllers (e.g. Midi Fighter Twister) mirror the Perform knobs.
+        if (session.uiTheme.midiEnabled) session.midiMappingManager.controllers.updateFeedback(performSurface)
 
         val cvDelta = if (session.playQueueManager.isAutoVJEnabled) mixer.pollQueueAdvance() else { mixer.pollQueueAdvance(); 0 }
         if (mixer.pollTapTempo()) {

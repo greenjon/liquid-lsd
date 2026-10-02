@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#midi-fighter-twister-rings-and-leds-mirror-the-screen-controlcontrollerfeedbackkt-midimidioutputportskt-performsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Midi Fighter Twister Rings and LEDs Mirror the Screen (control/ControllerFeedback.kt, midi/MidiOutputPorts.kt, PerformSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#midi-fighter-twister-works-out-of-the-box-control-performsurfacekt-perfrowskt-resourcescontrollersmidi-fighter-twisterjson" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4723,6 +4734,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#midi-fighter-twister-rings-and-leds-mirror-the-screen-controlcontrollerfeedbackkt-midimidioutputportskt-performsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Midi Fighter Twister Rings and LEDs Mirror the Screen (control/ControllerFeedback.kt, midi/MidiOutputPorts.kt, PerformSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#midi-fighter-twister-works-out-of-the-box-control-performsurfacekt-perfrowskt-resourcescontrollersmidi-fighter-twisterjson" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8213,6 +8235,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="midi-fighter-twister-rings-and-leds-mirror-the-screen-controlcontrollerfeedbackkt-midimidioutputportskt-performsurfacekt">Midi Fighter Twister Rings and LEDs Mirror the Screen (<code>control/ControllerFeedback.kt</code>, <code>midi/MidiOutputPorts.kt</code>, <code>PerformSurface.kt</code>)</h3>
+<ul>
+<li><strong>Rings show values, LEDs show rows</strong>: each encoder's ring follows its knob's value, including changes made with the mouse, and its LED takes the row's colour. An empty or bypassed FX slot, or a blank parameter position, goes dark.</li>
+<li><strong>Connect and go</strong>: the app opens the Twister's output port when it appears (and again after a replug) and writes every ring and LED, then sends only what changes to the bank that is showing. Messages are paced (the Twister drops bursts) and a newer ring value replaces an older one still waiting. Switching banks rewrites that bank a few times, and a short pause after you stop turning re-sends it, because the Twister redraws its stored colours after its own messages.</li>
+<li><strong>LED colours</strong>: LEDs take the row colour, except Master (red) and Global (violet), whose on-screen greys can't be shown on an RGB LED. Twister banks 3 and 4 now repeat DECKS and MASTER.</li>
+<li><strong>Tunable</strong>: the colour wheel (which CC value is which hue) and the feedback channels live in the controller profile's <code>output</code> section.</li>
+</ul>
 <h3 id="midi-fighter-twister-works-out-of-the-box-control-performsurfacekt-perfrowskt-resourcescontrollersmidi-fighter-twisterjson">Midi Fighter Twister Works Out of the Box (<code>control/</code>, <code>PerformSurface.kt</code>, <code>PerfRows.kt</code>, <code>resources/controllers/midi-fighter-twister.json</code>)</h3>
 <ul>
 <li><strong>No learning needed</strong>: plug in a Midi Fighter Twister and its 16 encoders drive the Performance Matrix's 4x4 knob grid, row by row. A row's encoders follow what the row shows: source knobs, FX Super/Metaknobs, or the focused effect's parameters.</li>

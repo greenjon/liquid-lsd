@@ -112,7 +112,7 @@ class ControllerProfileTest {
 
     @Test
     fun twisterBanksNamePerformPages() {
-        assertEquals(listOf("perform.decks", "perform.master"), twister().profile.banks.pages)
+        assertEquals(listOf("perform.decks", "perform.master", "perform.decks", "perform.master"), twister().profile.banks.pages)
     }
 
     // --- Binding resolution ---

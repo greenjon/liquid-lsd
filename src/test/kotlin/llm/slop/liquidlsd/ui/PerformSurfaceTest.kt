@@ -34,7 +34,9 @@ class PerformSurfaceTest {
 
     @BeforeTest
     fun setUp() {
+        // The tab is persisted between runs (the real app leaves it wherever you last were), so pin it.
         savedTab = UITheme.performanceMatrixTab
+        UITheme.performanceMatrixTab = PerfRows.TAB_DECKS
         // A new ParametersState restores the persisted Deep Edit disclosure, which other tests leave
         // expanded; clear the in-memory map (not setDisclosure, which would persist) to start in Perform view.
         state.rackModuleDisclosure.clear()
@@ -178,5 +180,76 @@ class PerformSurfaceTest {
         surface().showPage("nonsense")
         assertEquals(PerfRows.TAB_DECKS, UITheme.performanceMatrixTab)
         assertNotNull(page())
+    }
+
+    // --- Lights (ring + LED feedback) ---
+
+    @Test
+    fun lightsCarryTheKnobValueAndTheRowAccent() {
+        val a = page().knobs[0]!!
+        a.control.value = 0.25f
+        val lights = surface().knobLights()
+        assertEquals(16, lights.size)
+        val first = lights[0]!!
+        assertEquals(0.25f, first.value)
+        assertEquals(PerformanceColors.COLOR_DECK_A.toList(), listOf(first.r, first.g, first.b))
+        assertTrue(first.lit)
+        val deckB = lights[4]!!
+        assertEquals(PerformanceColors.COLOR_DECK_B.toList(), listOf(deckB.r, deckB.g, deckB.b))
+    }
+
+    @Test
+    fun anEmptyOrBypassedSlotGoesDarkButKeepsItsRing() {
+        ctx.deckRowMode["A"] = "FX"
+        FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
+        assertFalse(surface().knobLights()[1]!!.lit, "slot 1 is empty")
+
+        deckAChain.slots[0] = filter("glow", listOf("intensity"))
+        FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
+        assertTrue(surface().knobLights()[1]!!.lit)
+
+        surface().primary(1)
+        FxOps.drainOnGlThread(mixer)
+        val bypassed = surface().knobLights()[1]!!
+        assertFalse(bypassed.lit)
+        assertEquals(page().knobs[1]!!.control.value, bypassed.value)
+    }
+
+    @Test
+    fun blankParameterPositionsOnAFocusedPageAreDark() {
+        deckAChain.slots[0] = filter("glow", listOf("intensity"))      // one parameter: knobs 3 and 4 are blank
+        ctx.deckRowMode["A"] = "FX"
+        FxMacroSync.focusSlot(MacroEngine.DECK_A_FX, mixer, 0)
+        val lights = surface().knobLights()
+        assertTrue(lights[0]!!.lit, "the focused slot's Metaknob")
+        assertTrue(lights[1]!!.lit, "the parameter")
+        assertFalse(lights[2]!!.lit)
+        assertFalse(lights[3]!!.lit)
+    }
+
+    @Test
+    fun masterAndGlobalRowsUseHueColoursOnTheHardware() {
+        val lights = surface().let { UITheme.performanceMatrixTab = PerfRows.TAB_MASTER; it.knobLights() }
+        fun rgb(i: Int) = lights[i]!!.let { listOf(it.r, it.g, it.b) }
+        assertEquals(PerformanceColors.LED_MASTER.toList(), rgb(0))
+        assertEquals(PerformanceColors.COLOR_TRANS.toList(), rgb(4))
+        assertEquals(PerformanceColors.COLOR_FX.toList(), rgb(8))
+        assertEquals(PerformanceColors.LED_GLOBAL.toList(), rgb(12))
+    }
+
+    @Test
+    fun everyRowCanBeShownOnAnRgbLedWithItsOwnColour() {
+        val wheel = llm.slop.liquidlsd.control.HueWheel()
+        val rows = PerfRows.TAB_ROWS.flatMap { it } +
+            RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER (FX)")
+        val values = rows.map { row ->
+            val c = PerformPages.ledColor(row)
+            wheel.valueFor(c[0], c[1], c[2]).also {
+                assertTrue(it != wheel.off && it != wheel.white, "${row.groupLabel} needs a real hue, got $it")
+            }
+        }
+        // The four rows that share a tab must be told apart: DECKS (first four) and MASTER (next four).
+        assertEquals(4, values.take(4).distinct().size, "deck LEDs: $values")
+        assertEquals(4, values.drop(4).take(4).distinct().size, "master-tab LEDs: $values")
     }
 }
