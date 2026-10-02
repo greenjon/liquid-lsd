@@ -1,6 +1,6 @@
 # Unified Control Mapping Architecture (MIDI / Keyboard / Mouse / CV)
 
-> **Status**: Architectural Brainstorm & Design Specification (Roadmap)  
+> **Status**: Design specification. Phases 1-2 (command registry, device tagging, controller profiles, Perform-grid knob control for the Twister) are implemented for MIDI; see section 6. The rest is roadmap.  
 > **Inspiration**: [Mixxx DJ Software](https://mixxx.org/) Controller & Keyboard Mapping Architecture
 
 ---
@@ -271,3 +271,38 @@ Community and out-of-the-box hardware profiles stored under `library/mappings/`:
 4. **Phase 4: Mapping Configuration UI & Profile Exporter**:
    - Build the GUI mapping table and right-click "Learn" modals in ImGui.
    - Support loading/saving controller presets to `library/mappings/`.
+
+---
+
+## 6. Implemented So Far (2026-10-01)
+
+Package `llm.slop.liquidlsd.control`; tests in `src/test/kotlin/.../control/` and `midi/GlobalCommandDispatchTest.kt`.
+
+### 6.1 Command registry
+- `CommandRegistry` holds `Command(id, kind, category, description, handler)`. Kinds: `TRIGGER`, `TOGGLE` (both fire on the rising edge only), `MOMENTARY` (both edges), `SCALAR` (0..1), `RELATIVE` (signed steps). Inputs are `CommandInput.Press/Value/Delta`; an input that doesn't fit the command's kind is rejected.
+- Edge detection lives in the registry (per command id), not in each caller.
+- Aliases map legacy identifiers to command ids. The ten `Global/*` mapping paths are aliases of the commands in `GlobalCommands` (`mixer.queue_next`, `mixer.queue_prev`, `mixer.bg_queue_next/prev`, `mixer.trans_queue_next/prev`, `clock.tap_tempo`, `mixer.auto_crossfade_trigger`, `mixer.crossfade_snap_a/b`). Existing `library/midi/*.json` profiles load unchanged.
+- `MidiMappingManager.processGlobalMidiEvents` runs `Global/*` mappings through `MidiMappingManager.commands`. Handlers get a `CommandContext` (mixer, tap callback, queue deltas) and run on the render thread only; the registry is not thread-safe.
+- Parameter and `Macro/...` bindings are not on the registry yet.
+
+### 6.2 Device tagging
+`MidiEvent.deviceId` is the javax.sound.midi device name of the port that produced the event ("" for synthetic events). On connect, `MidiEngine` logs which controller profile (if any) matches the device.
+
+### 6.3 Controller profiles
+- A profile is JSON: `id`, `name`, `description`, `match` (case-insensitive substrings of the device name), `banks`, `inputs`, `bindings`, `bankBindings`.
+- Built-ins live in `src/main/resources/controllers/` and are listed in `ControllerProfileStore.BUILT_IN_NAMES`; user profiles in `library/controllers/*.json`. A user profile with the same `id` replaces the built-in, and user profiles win when two match one device. Profiles that fail to parse or validate are skipped with an error in the log.
+- `banks.pages` lists the app page to show when each hardware bank becomes active (index = 0-based bank; `perform.decks`, `perform.master`). `inputs`: each entry is one input or a group. Group members come from `ccs` or `cc until cc + count` and are named `<id>.<n>` (1-based). `bankStride` adds `bank * bankStride` to the CC so a logical input keeps one id on every hardware bank. An `ENCODER` can carry `press: {channel}` (same CCs on another channel), exposed as `<id>.<n>.press`. `kind` is `ENCODER`, `BUTTON`, `FADER` or `MODIFIER` (a held button that selects alternate bindings). Encoders also take `mode` (`ABSOLUTE`, `RELATIVE_BINARY_OFFSET`, `RELATIVE_SIGNED_BIT`, `RELATIVE_TWOS_COMP`), `step` (fraction of a control's range per tick, default 1/127) and `accel` (maximum speed-up, 1 disables).
+- `banks.switch` describes the device's bank buttons (`CC = cc + bankIndex`; a non-zero value means that bank is now active).
+- Binding keys are an input id with optional held-modifier prefixes (`shift+knob.3.press`); `bankBindings` (1-based bank) override `bindings`. In the last part of a key `*` matches a group index and `{n}` in the value is replaced by it (`"knob.*": "knob.{n}"`). `CompiledController.bindingFor(inputId, held, bank)` picks the most specific binding: more modifiers beat fewer, then a bank binding beats a global one.
+- `ControllerProfile.compile()` builds a `(type, channel, cc) -> ResolvedInput(inputId, kind, bank, mode)` table and a list of structural problems (CC collisions, out-of-range values, duplicate ids, bindings naming unknown inputs or non-modifier prefixes). `unknownCommands(registry)` lists binding targets that aren't registered.
+- Bindings, modifiers, banks and encoder handling are live (6.5). Not implemented yet: response curves, navigation/browse commands, MIDI output. See `.planning/midi-controller-plan.md`.
+
+### 6.4 Built-in profile
+`midi-fighter-twister`: 64 encoders (CC 0..63 on ch1 = knob + 16 * bank), encoder switches on ch2 with the same CCs, 4 side buttons per bank on ch4 (CC 8, 10, 11, 13, +4 per bank), bank buttons on ch4 CC 0..3. Measured on hardware.
+
+### 6.5 Controller runtime and the Perform grid (phase 2)
+- `ControllerManager` creates one `ControllerRuntime` per device the first time it sends a message and its name matches a profile. `MidiMappingManager.processGlobalMidiEvents` offers each event to it before the legacy `Global/*` and parameter bindings; a runtime consumes an event only if the profile binds that input, and a learned mapping on the exact channel/CC takes precedence over the profile.
+- The runtime tracks the active bank (from the bank buttons, or any bank-aware input), held modifiers, and per-encoder state. Encoder messages become signed ticks (relative modes decode directly; `ABSOLUTE` is the change since the last value, so the first message only locates the knob), scaled by `step` and a speed-based boost (`accel`, full at <= 8 ms between ticks, none at >= 60 ms), then sent as `CommandInput.Delta`. A button's release goes to the command that received its press.
+- `KnobCommands` registers `knob.1..16` (RELATIVE), `knob.<n>.press` and `knob.<n>.press_alt` (MOMENTARY). It tracks which switches are held (the Twister sends the same turn messages either way): turning while held is fine (x0.1) and cancels the tap; a tap runs `KnobSurface.primary` (`press`) or `secondary` (`press_alt`).
+- `KnobSurface` (render thread) is implemented by `ui/PerformSurface`. Its page is `PerformPages.resolve`: `PerfRows.visibleRowsForTab` (the same rows `PerformanceMatrixPanel` draws, now in a shared object) through `PerfKnobResolver`, flattened row-major into 16 slots. Actions: turn adds to `MacroControl.value`; primary on an FX slot cell = `FxOps.setSlotEnabled`, on a parameter = reset to default, on a label knob = reset to 0.5; secondary on a slot cell = `FxMacroSync.focusSlot` (or leave focus when it is knob 1 of a focused row), on a parameter = `FxMacroSync.stepParamPage`; `showPage` sets the matrix tab.
+

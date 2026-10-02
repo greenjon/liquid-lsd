@@ -36,7 +36,11 @@ class DeckControlPanel(
         isDeckA: Boolean,
         onUtilityAction: (Int, Deck, Deck) -> Unit,
         onSaveDeck: ((Deck, Boolean, Boolean) -> Unit)? = null,
-        onEjectDeck: ((Deck, Boolean, Boolean) -> Unit)? = null
+        onEjectDeck: ((Deck, Boolean, Boolean) -> Unit)? = null,
+        // Macros-tab mode: true = this tile is the deck being edited (pulsing frame), false = dimmed.
+        // null (Mixer view) = no edit highlighting. onSelect replaces the open-Deep-Edit click action.
+        editing: Boolean? = null,
+        onSelect: ((String) -> Unit)? = null
     ) {
         ImGui.pushID(label)
 
@@ -85,7 +89,7 @@ class DeckControlPanel(
         ImGui.invisibleButton("##drag_source_$label", dragBtnW, imgAvailH.coerceAtLeast(1f))
         itemTooltip("Interactive monitor for $label. Click to open Deep Edit, drag to route to another deck, or drop presets to load.")
         if (ImGui.isItemClicked(0)) {
-            openDeepEdit(label)
+            if (onSelect != null) onSelect(label) else openDeepEdit(label)
         }
         
         val deckPayloadName = when (label) {
@@ -190,6 +194,10 @@ class DeckControlPanel(
             dl.addRectFilled(imgX, imgY, imgX + imgAvailW, imgY + imgAvailH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, dimAlpha))
         }
 
+        if (editing == false) {
+            dl.addRectFilled(imgX, imgY, imgX + imgAvailW, imgY + imgAvailH, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 0.45f))
+        }
+
         // Draw border perfectly wrapped around the image.
         // Coordinates are snapped to whole pixels so top/bottom edges don't land on a fractional
         // Y and get anti-aliased across two rows (which made them look thinner than the sides).
@@ -198,6 +206,9 @@ class DeckControlPanel(
         val borderMaxX = kotlin.math.round(imgX + imgAvailW + 1f)
         val borderMaxY = kotlin.math.round(imgY + imgAvailH + 1f)
         dl.addRect(borderMinX, borderMinY, borderMaxX, borderMaxY, themeCol, 0f, 0, 1.5f)
+        if (editing == true) {
+            TangoPalette.drawEditingPulseFrame(dl, borderMinX - 1f, borderMinY - 1f, borderMaxX + 1f, borderMaxY + 1f, themeCol)
+        }
 
         // --- Clustered Inner Overlays: Badge, Die, and Vertical Level Fader ---
         val letter = deckPayloadName
@@ -237,7 +248,7 @@ class DeckControlPanel(
 
         ImGui.setCursorScreenPos(badgeMinX, badgeMinY)
         if (ImGui.invisibleButton("##badge_btn_$label", badgeW, badgeH) || ImGui.isItemClicked(0)) {
-            openDeepEdit(label)
+            if (onSelect != null) onSelect(label) else openDeepEdit(label)
         }
         itemTooltip("Open $label in Deep Edit.")
 

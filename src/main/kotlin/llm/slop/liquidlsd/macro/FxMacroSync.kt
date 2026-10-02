@@ -4,19 +4,18 @@ import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 
 /**
- * Smart-default bridge from an [FxChain] to its FX row's [MacroBank]: Knob 1 becomes the chain's
- * Super Knob, Knobs 2-4 become each slot's Metaknob. Runs whenever a chain's contents change
- * (load, slot swap, link toggle), so the Performance Console's generic 4-knob FX rows (and
- * Column 3's MACROS view, which reads the same banks) show a sensible default without the user
- * hand-wiring bindings.
+ * Fixed (Mixxx-style) mapping from an [FxChain] to its FX row's [MacroBank]:
+ *  - Group mode: Knob 1 = the chain's Super Knob, Knobs 2-4 = each slot's Metaknob.
+ *  - Focus mode: Knob 1 = the focused slot's Metaknob, Knobs 2-4 = its top parameters (paged).
+ *    The focused slot's Dry/Wet lives on the chain header, not on a knob.
+ * Runs whenever a chain's contents change (load, slot swap, link toggle, focus), so the
+ * Performance Console's 4-knob FX rows and Column 3's MACROS view (which read the same banks)
+ * always show the current mapping. FX banks are not user-bindable: every sync rewrites all four
+ * knobs, so a physical knob's meaning is fixed per mode.
  *
  * Every FX chain -- each deck's and the master bus's -- lives under "<label>/FX/..." (e.g.
  * "Deck A/FX/Super", "Master/FX/FX2/Meta"); [labelFor]/[chainFor] map an FX bank id to it.
  *
- * Ownership rule: a knob is only overwritten if it's unbound or its current primary binding
- * already matches this sync's own path pattern for the *same* chain -- a knob the user manually
- * retargeted to something else (e.g. "deckA/Warp") is left alone on every future sync.
- * [forceResync] bypasses that check for the row's explicit "Resync" action.
  *
  * Mutually exclusive with [FxChain]'s Link checkbox: both would otherwise write
  * [llm.slop.liquidlsd.rendering.isf.ISFFilter.metaKnob]'s base value every frame (one via this
@@ -25,8 +24,6 @@ import llm.slop.liquidlsd.rendering.Mixer
  * for the reverse: enabling Link there clears this sync's binding for that slot.
  */
 object FxMacroSync {
-
-    private val OWNED_PATH_PATTERN = Regex("""^([^/]+)/FX/(Super|DryWet|FX\d+(/.*)?)$""")
 
     /** The FX bank ids, one per FX chain, in display order. */
     val FX_BANK_IDS = listOf(
@@ -57,46 +54,46 @@ object FxMacroSync {
     fun bankIdFor(chain: FxChain, mixer: Mixer): String? = FX_BANK_IDS.firstOrNull { chainFor(it, mixer) === chain }
 
     /** Re-syncs [bankId]'s knobs to its chain. No-op for non-FX bank ids. */
-    fun syncFor(bankId: String, mixer: Mixer, forceResync: Boolean = false) {
+    fun syncFor(bankId: String, mixer: Mixer) {
         val chain = chainFor(bankId, mixer) ?: return
         val label = labelFor(bankId) ?: return
-        syncChain(bankId, label, chain, forceResync)
+        syncChain(bankId, label, chain)
     }
 
     /** Focuses slot [slotIndex] (or null to return to Group mode) for [bankId] and re-syncs. */
     fun focusSlot(bankId: String, mixer: Mixer, slotIndex: Int?) {
         val chain = chainFor(bankId, mixer) ?: return
         chain.focusSlot(slotIndex)
-        syncFor(bankId, mixer, forceResync = true)
+        syncFor(bankId, mixer)
     }
 
     /** Steps parameter page by [dir] (-1 or +1) for [bankId] and re-syncs. */
     fun stepParamPage(bankId: String, mixer: Mixer, dir: Int) {
         val chain = chainFor(bankId, mixer) ?: return
         chain.stepParamPage(dir)
-        syncFor(bankId, mixer, forceResync = true)
+        syncFor(bankId, mixer)
     }
 
     /** Re-syncs every FX bank. */
-    fun syncAll(mixer: Mixer, forceResync: Boolean = false) {
-        for (bankId in FX_BANK_IDS) syncFor(bankId, mixer, forceResync)
+    fun syncAll(mixer: Mixer) {
+        for (bankId in FX_BANK_IDS) syncFor(bankId, mixer)
     }
 
     /**
      * Re-syncs [bankId]'s [MacroBank] knobs 0-3 to [chain].
      * In Group Mode: Knob 0 becomes Super Knob, Knobs 1-3 each slot's Metaknob.
-     * In Focus Mode: Knob 0 becomes focused slot's Dry/Wet, Knobs 1-3 its top parameters (paged).
+     * In Focus Mode: Knob 0 becomes the focused slot's Metaknob, Knobs 1-3 its top parameters (paged).
      */
-    fun syncChain(bankId: String, chainLabel: String, chain: FxChain, forceResync: Boolean = false) {
+    fun syncChain(bankId: String, chainLabel: String, chain: FxChain) {
         val macroBank = MacroEngine.getBank(bankId) ?: MacroEngine.newBankFor(bankId).also {
             MacroEngine.registerBank(bankId, it)
         }
 
         val focused = chain.focusedSlot
         if (focused != null && focused in 0 until FxChain.SLOT_COUNT) {
-            syncFocusMode(macroBank, chainLabel, chain, focused, forceResync)
+            syncFocusMode(macroBank, chainLabel, chain, focused)
         } else {
-            syncGroupMode(macroBank, chainLabel, chain, forceResync)
+            syncGroupMode(macroBank, chainLabel, chain)
         }
 
         MacroEngine.invalidate()
@@ -105,17 +102,14 @@ object FxMacroSync {
     private fun syncGroupMode(
         macroBank: MacroBank,
         chainLabel: String,
-        chain: FxChain,
-        forceResync: Boolean
+        chain: FxChain
     ) {
         syncKnob(
             macroBank = macroBank,
             knobIndex = 0,
-            bankLabel = chainLabel,
             defaultLabel = "SUPER",
             targetPath = "$chainLabel/FX/Super",
-            initialValue = chain.superKnob.baseValue,
-            forceResync = forceResync
+            initialValue = chain.superKnob.baseValue
         )
 
         for (slotIdx in 0 until FxChain.SLOT_COUNT) {
@@ -125,20 +119,17 @@ object FxMacroSync {
             if (chain.slotSuperKnobLink.getOrNull(slotIdx) == true) {
                 // Linked slots are driven by the Super Knob's soft-takeover propagation
                 // (FxChain.propagateSuperKnob) -- a MacroBinding here would race it for the same
-                // field. Clear any previously-owned binding and leave the knob unbound while
+                // field. Clear any binding and leave the knob unbound while
                 // keeping the label.
-                clearOwnedBinding(macroBank, knobIndex, chainLabel)
-                macroBank.knobs.getOrNull(knobIndex)?.let { if (isOwnedOrEmpty(it, chainLabel)) it.label = label }
+                macroBank.knobs.getOrNull(knobIndex)?.let { it.bindings.clear(); it.label = label }
                 continue
             }
             syncKnob(
                 macroBank = macroBank,
                 knobIndex = knobIndex,
-                bankLabel = chainLabel,
                 defaultLabel = label,
                 targetPath = "$chainLabel/FX/FX$knobIndex/Meta",
-                initialValue = slot?.metaKnob?.baseValue ?: 0f,
-                forceResync = forceResync
+                initialValue = slot?.metaKnob?.baseValue ?: 0f
             )
         }
     }
@@ -147,24 +138,24 @@ object FxMacroSync {
         macroBank: MacroBank,
         chainLabel: String,
         chain: FxChain,
-        slotIdx: Int,
-        forceResync: Boolean
+        slotIdx: Int
     ) {
         val slotNum = slotIdx + 1
         val slot = chain.slots.getOrNull(slotIdx)
 
-        // Knob 0: Focused slot's individual Dry/Wet
-        syncKnob(
-            macroBank = macroBank,
-            knobIndex = 0,
-            bankLabel = chainLabel,
-            defaultLabel = "DRY/WET",
-            targetPath = "$chainLabel/FX/FX$slotNum/DryWet",
-            minVal = 0f,
-            maxVal = 1f,
-            initialValue = slot?.dryWet?.baseValue ?: 1f,
-            forceResync = forceResync
-        )
+        // Knob 0: Focused slot's Metaknob (its Dry/Wet is on the chain header). A slot linked to the
+        // Super Knob is driven by FxChain's propagation instead, so its knob stays unbound (see group mode).
+        if (chain.slotSuperKnobLink.getOrNull(slotIdx) == true) {
+            macroBank.knobs.getOrNull(0)?.let { it.bindings.clear(); it.label = "META" }
+        } else {
+            syncKnob(
+                macroBank = macroBank,
+                knobIndex = 0,
+                defaultLabel = "META",
+                targetPath = "$chainLabel/FX/FX$slotNum/Meta",
+                initialValue = slot?.metaKnob?.baseValue ?: 0f
+            )
+        }
 
         // Knobs 1..3: Focused slot's parameters for active page
         val paramEntries = slot?.parameters?.entries?.toList() ?: emptyList()
@@ -186,36 +177,20 @@ object FxMacroSync {
                 syncKnob(
                     macroBank = macroBank,
                     knobIndex = knobIndex,
-                    bankLabel = chainLabel,
-                    defaultLabel = label,
+                            defaultLabel = label,
                     targetPath = "$chainLabel/FX/FX$slotNum/$paramName",
                     minVal = minVal,
                     maxVal = maxVal,
                     initialValue = normVal,
-                    forceResync = forceResync
                 )
             } else {
-                clearKnob(macroBank, knobIndex, chainLabel, forceResync)
+                clearKnob(macroBank, knobIndex)
             }
         }
     }
 
-    private fun isOwnedOrEmpty(control: MacroControl, bankLabel: String): Boolean {
-        val binding = control.bindings.firstOrNull() ?: return true
-        val match = OWNED_PATH_PATTERN.matchEntire(binding.parameterId) ?: return false
-        return match.groupValues[1] == bankLabel
-    }
-
-    private fun clearOwnedBinding(macroBank: MacroBank, knobIndex: Int, bankLabel: String) {
+    private fun clearKnob(macroBank: MacroBank, knobIndex: Int) {
         val control = macroBank.knobs.getOrNull(knobIndex) ?: return
-        if (control.bindings.isNotEmpty() && isOwnedOrEmpty(control, bankLabel)) {
-            control.bindings.clear()
-        }
-    }
-
-    private fun clearKnob(macroBank: MacroBank, knobIndex: Int, bankLabel: String, forceResync: Boolean) {
-        val control = macroBank.knobs.getOrNull(knobIndex) ?: return
-        if (!forceResync && !isOwnedOrEmpty(control, bankLabel)) return
         control.label = "—"
         control.bindings.clear()
         control.value = 0f
@@ -224,16 +199,13 @@ object FxMacroSync {
     private fun syncKnob(
         macroBank: MacroBank,
         knobIndex: Int,
-        bankLabel: String,
         defaultLabel: String,
         targetPath: String,
         minVal: Float = 0f,
         maxVal: Float = 1f,
-        initialValue: Float,
-        forceResync: Boolean
+        initialValue: Float
     ) {
         val control = macroBank.knobs.getOrNull(knobIndex) ?: return
-        if (!forceResync && !isOwnedOrEmpty(control, bankLabel)) return
 
         control.label = defaultLabel
         control.bindings.clear()

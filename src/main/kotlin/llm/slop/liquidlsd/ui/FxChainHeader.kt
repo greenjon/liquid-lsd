@@ -34,6 +34,7 @@ object FxChainHeader {
     const val MORE_BTN_W = 20f
     const val EXIT_BTN_W = 54f
     const val PAGE_TEXT_W = 34f
+    const val DRYWET_W = 64f
     fun saveBtnW(ctrlH: Float): Float = ctrlH
 
     /**
@@ -56,7 +57,7 @@ object FxChainHeader {
         val gap = 3f
         val slotPillsW = 20f * FxChain.SLOT_COUNT + gap * (FxChain.SLOT_COUNT - 1)
         val stepperReservation = if (totalPages > 1) (ARROW_W * 2f + PAGE_TEXT_W + gap * 3f) else 0f
-        return (maxW - (MORE_BTN_W + gap + stepperReservation + gap + slotPillsW)).coerceAtLeast(48f)
+        return (maxW - (MORE_BTN_W + gap + DRYWET_W + gap + stepperReservation + gap + slotPillsW)).coerceAtLeast(48f)
     }
 
     /** Steps [chain] to the previous (-1) or next (+1) chain file in its folder. */
@@ -78,7 +79,7 @@ object FxChainHeader {
     /**
      * Draws the chain selection and management controls:
      * - Group Mode: `[⋮]  Chain Name •  [Save]  [◀] [▶]  [1] [2] [3]`
-     * - Focus Mode: `[⋮]  [Focused Effect Name ▾]  [◀ Px/y ▶]  [1] [2] [3]`
+     * - Focus Mode: `[⋮]  [Focused Effect Name ▾]  [Wet 100%]  [◀ Px/y ▶]  [1] [2] [3]`
      *
      * [onOpenChainBrowse] opens that row's Browse content on the whole-chain list.
      * [onOpenSlotBrowse] opens that row's Browse content targeted at a specific FX slot.
@@ -119,6 +120,10 @@ object FxChainHeader {
             drawFocusedEffectButton(session, chain, bankId, focusedSlot, ctrlH, focusedNameW) { slotIdx ->
                 onOpenSlotBrowse?.invoke(slotIdx)
             }
+
+            // 3. Focused slot's Dry/Wet (moved off the knobs: knob 1 is the slot's Metaknob)
+            ImGui.sameLine()
+            drawFocusedDryWet(chain, bankId, focusedSlot, ctrlH)
 
             // 4. Parameter page stepper [◀ P1/2 ▶] (if totalPages > 1)
             if (totalPages > 1) {
@@ -280,11 +285,25 @@ object FxChainHeader {
             itemTooltip(
                 when {
                     isFocused -> "Slot $slotNum (${slot?.displayName ?: "empty"}) is focused.\nClick to exit Focus Mode."
-                    slot != null -> "Focus Slot $slotNum (${slot.displayName}).\nKnob 1 = Dry/Wet, Knobs 2-4 = top parameters."
+                    slot != null -> "Focus Slot $slotNum (${slot.displayName}).\nKnob 1 = Metaknob, Knobs 2-4 = top parameters; Dry/Wet is on the header."
                     else -> "Focus Slot $slotNum (empty).\nClick to focus and edit."
                 }
             )
         }
+    }
+
+    private fun drawFocusedDryWet(chain: FxChain, bankId: String, slotIdx: Int, ctrlH: Float) {
+        val slot = chain.slots.getOrNull(slotIdx)
+        ImGui.beginDisabled(slot == null)
+        ImGui.setNextItemWidth(DRYWET_W)
+        val pct = floatArrayOf(((slot?.dryWet?.baseValue ?: 1f) * 100f))
+        if (ImGui.sliderFloat("##focus_drywet_$bankId", pct, 0f, 100f, "Wet %.0f%%")) {
+            slot?.dryWet?.baseValue = (pct[0] / 100f).coerceIn(0f, 1f)
+        }
+        // Middle-click resets to fully wet, matching the level faders.
+        if (ImGui.isItemHovered() && ImGui.isMouseClicked(2)) slot?.dryWet?.baseValue = 1f
+        ImGui.endDisabled()
+        itemTooltip("Dry/Wet of the focused effect.\nMiddle-click to reset (100%).")
     }
 
     private fun drawFocusedEffectButton(
@@ -467,11 +486,6 @@ object FxChainHeader {
             val canPaste = ClipboardManager.fxChainClipboard != null
             if (ImGui.menuItem("Paste Chain", "", false, canPaste)) {
                 ClipboardManager.fxChainClipboard?.let { FxOps.applyChain(chain, it) }
-            }
-            ImGui.separator()
-
-            if (ImGui.menuItem("Resync Knobs")) {
-                FxMacroSync.syncFor(bankId, mixer, forceResync = true)
             }
             popOpenDropdownFont()
             ImGui.endPopup()

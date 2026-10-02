@@ -119,54 +119,45 @@ class FxMacroSyncTest {
     }
 
     @Test
-    fun testOwnershipRuleLeavesManuallyRetargetedKnobAlone() {
+    fun testSyncRewritesManuallyRetargetedKnob() {
         val chain = unlinkedChain("Master FX")
         FxMacroSync.syncChain(MacroEngine.MASTER_FX, "Master", chain)
 
         val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
-        // User manually retargets Knob 2 away from the FxMacroSync pattern.
-        macroBank.knobs[1].bindings.clear()
-        macroBank.knobs[1].bindings.add(
-            MacroBinding(parameterId = "Deck A/fbZoom", targetType = MacroTargetType.PARAM_BASE_VALUE)
-        )
-        macroBank.knobs[1].label = "MY WARP"
-
-        // A new effect lands in the chain -- a real resync trigger.
-        chain.slots[1] = testFilter("fx_b")
-        FxMacroSync.syncChain(MacroEngine.MASTER_FX, "Master", chain)
-
-        assertEquals("Deck A/fbZoom", macroBank.knobs[1].bindings.single().parameterId, "Manually retargeted knob must not be reclaimed")
-        assertEquals("MY WARP", macroBank.knobs[1].label)
-        // Untouched knobs still follow the chain.
-        assertEquals("META", macroBank.knobs[2].label)
-    }
-
-    @Test
-    fun testForceResyncOverridesManualRetarget() {
-        val chain = unlinkedChain("Master FX")
-        FxMacroSync.syncChain(MacroEngine.MASTER_FX, "Master", chain)
-
-        val macroBank = MacroEngine.getBank(MacroEngine.MASTER_FX)!!
+        // A stale session / old build left a user-retargeted knob with extra bindings.
         macroBank.knobs[1].bindings.clear()
         macroBank.knobs[1].bindings.add(MacroBinding(parameterId = "Deck A/fbZoom", targetType = MacroTargetType.PARAM_BASE_VALUE))
+        macroBank.knobs[1].bindings.add(MacroBinding(parameterId = "Deck A/fbRot", targetType = MacroTargetType.PARAM_BASE_VALUE))
+        macroBank.knobs[1].label = "MY WARP"
 
-        FxMacroSync.syncChain(MacroEngine.MASTER_FX, "Master", chain, forceResync = true)
+        FxMacroSync.syncChain(MacroEngine.MASTER_FX, "Master", chain)
 
         assertEquals("Master/FX/FX1/Meta", macroBank.knobs[1].bindings.single().parameterId)
+        assertEquals("META", macroBank.knobs[1].label)
     }
 
     @Test
-    fun testKnobOwnedByAnotherChainIsNotReclaimed() {
+    fun testSyncRewritesKnobPointedAtAnotherChain() {
         val chain = unlinkedChain("Deck A FX")
         FxMacroSync.syncChain(MacroEngine.DECK_A_FX, "Deck A", chain)
         val macroBank = MacroEngine.getBank(MacroEngine.DECK_A_FX)!!
-        // User points Deck A's knob 1 at Deck B's Super Knob on purpose.
         macroBank.knobs[0].bindings.clear()
         macroBank.knobs[0].bindings.add(MacroBinding(parameterId = "Deck B/FX/Super", targetType = MacroTargetType.PARAM_BASE_VALUE))
 
         FxMacroSync.syncChain(MacroEngine.DECK_A_FX, "Deck A", chain)
 
-        assertEquals("Deck B/FX/Super", macroBank.knobs[0].bindings.single().parameterId)
+        assertEquals("Deck A/FX/Super", macroBank.knobs[0].bindings.single().parameterId)
+    }
+
+    @Test
+    fun testFocusModeKnobOneIsFocusedSlotMetaknob() {
+        val chain = unlinkedChain("Deck A FX")
+        chain.focusSlot(1)
+        FxMacroSync.syncChain(MacroEngine.DECK_A_FX, "Deck A", chain)
+
+        val knob = MacroEngine.getBank(MacroEngine.DECK_A_FX)!!.knobs[0]
+        assertEquals("META", knob.label)
+        assertEquals("Deck A/FX/FX2/Meta", knob.bindings.single().parameterId)
     }
 
     @Test

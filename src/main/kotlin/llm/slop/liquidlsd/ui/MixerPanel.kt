@@ -221,33 +221,10 @@ class MixerPanel(
         ImGui.spacing()
 
         // --- Deck Monitors (2x2 Grid) ---
-        val padding = 8f
-        val halfW = ((availW - padding) * 0.5f).coerceAtLeast(1f)
-        
-        val startX = baseScreenX + offsetX
-        val centerY = ImGui.getCursorScreenPosY()
-        val rightColStartX = startX + halfW + padding
-
-        val subH = layout.deckChildHeight.coerceAtLeast(1f)
-        
-        // --- Row 1: Deck A & Deck B ---
-        ImGui.setCursorScreenPos(startX, centerY)
-        drawDeckControls(mixer, "Deck A", mixer.deckA, halfW, subH, true)
-        
-        ImGui.setCursorScreenPos(rightColStartX, centerY)
-        drawDeckControls(mixer, "Deck B", mixer.deckB, halfW, subH, false)
-        
-        // --- Row 2: Deck BG & Deck PV ---
-        val row2Y = centerY + subH + ImGui.getStyle().getItemSpacingY() + 6f
-        
-        ImGui.setCursorScreenPos(startX, row2Y)
-        drawDeckControls(mixer, "Deck BG", mixer.deckBG, halfW, subH, false)
-        
-        ImGui.setCursorScreenPos(rightColStartX, row2Y)
-        drawDeckControls(mixer, "Deck PV", mixer.deckPV, halfW, subH, false)
-        
-        ImGui.setCursorScreenPos(startX, row2Y + subH + 4f)
-        ImGui.dummy(0f, 0f)
+        DeckMonitorGrid.draw(
+            mixer, baseScreenX + offsetX, ImGui.getCursorScreenPosY(), availW,
+            layout.deckChildHeight.coerceAtLeast(1f)
+        ) { label, deck, w, h, isA -> drawDeckControls(mixer, label, deck, w, h, isA) }
     }
 
     private fun drawCrossfaderSlider(

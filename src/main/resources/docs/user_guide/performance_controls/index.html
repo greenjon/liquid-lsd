@@ -757,6 +757,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#controller-profiles-midi-fighter-twister" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controller Profiles: Midi Fighter Twister
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1723,6 +1734,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#controller-profiles-midi-fighter-twister" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controller Profiles: Midi Fighter Twister
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1928,7 +1950,7 @@ for the FX Rack view that exposes these.</p>
 <li><strong><code>◀</code> / <code>▶</code> (Decks A, B, BG)</strong>: On Decks A, B, and BG, steps through the respective live FX queue (A/B or BG) directly on that deck, advancing the queue while targeting the clicked deck. Rendered disabled when the FX queue is empty. Omitted on Deck PV and Master FX, allowing the chain name button to expand while keeping row width perfectly aligned.</li>
 <li><strong>Chain Name Button</strong>: Displays current chain name with <code>•</code> dirty indicator when modified from baseline. Clicking opens inline Browse on the <strong>Chain</strong> sub-tab, with live text search over saved <code>.lsdfxchain</code> files. Accepts <code>.lsdfxchain</code> drag-and-drop.</li>
 <li><strong><code>[Save]</code></strong>: Overwrites the loaded chain file with current state, or triggers Save As if untitled.</li>
-<li><strong><code>[⋮]</code> Menu</strong>: Save As..., New Chain, Revert to Saved (undoes tweaks back to clean loaded state), Clear All Slots, Copy/Paste Chain, and Resync Knobs.</li>
+<li><strong><code>[⋮]</code> Menu</strong>: Save As..., New Chain, Revert to Saved (undoes tweaks back to clean loaded state), Clear All Slots, and Copy/Paste Chain.</li>
 <li><strong><code>[BYPASS]</code></strong>: Top-level kill switch to immediately bypass or re-enable the entire FX chain.</li>
 </ul>
 </li>
@@ -1966,14 +1988,14 @@ for the FX Rack view that exposes these.</p>
 <li><code>[◀ P1/N ▶]</code>: Parameter page stepper; appears automatically whenever the focused shader exposes more than 3 parameters.</li>
 <li><code>[1] [2] [3]</code>: Slot focus pills with clean styling. The active slot pill is highlighted in blue accent. Click another slot pill to switch focus instantly, or click the active focused slot pill a second time (or press <code>Escape</code>) to exit Focus Mode back to the 3-slot chain view.</li>
 <li><strong>4 Knobs in Focus Mode</strong>:</li>
-<li><strong>Knob 1 (<code>DRY/WET</code>)</strong>: Controls the focused slot's individual wet/dry blend (<code>$chainLabel/FX/FX&lt;slot&gt;/DryWet</code>). The focused slot's <code>FxSlotCell</code> is drawn underneath so shortlist stepping (hover <code>◀ ▶</code> or mouse wheel) and picker access remain directly below its Dry/Wet knob, with the slot's bypass button to the left of the knob.</li>
+<li><strong>Knob 1 (<code>META</code>)</strong>: The focused slot's Metaknob (<code>$chainLabel/FX/FX&lt;slot&gt;/Meta</code>). Its Dry/Wet is the <code>Wet</code> slider in the chain header. The focused slot's <code>FxSlotCell</code> is drawn underneath so shortlist stepping (hover <code>◀ ▶</code> or mouse wheel) and picker access remain directly below the knob, with the slot's bypass button to its left.</li>
 <li><strong>Knobs 2–4 (<code>Top Parameters</code>)</strong>: Dynamically retargeted to the focused shader's top parameters on the active page (e.g. <code>SPEED</code>, <code>INTENSITY</code>, <code>COLOR</code>).</li>
 <li><strong>Parameter Cells (<code>FxParamCell</code>)</strong>: Drawn under Knobs 2–4 with the parameter's name and a modulation indicator dot. The current value is shown inside the knob face, and a <code>[⟲]</code> reset button (restores the authored default) sits to the left of the knob.</li>
 </ul>
 </li>
 <li><strong>Stable Layout</strong>: Knobs stay the same size and in the same place whichever mode a row is in (<code>[SRC]</code>, <code>[FX]</code> group, or Focus Mode), and switching one row never resizes the others. Knob names and effect/parameter names share the same line under each knob. Names too long for it end in <code>…</code>; hover the knob for the full name.<ul>
 <li><strong>Seamless Hardware MIDI Retargeting</strong>:</li>
-<li>Physical MIDI controllers mapped to the row's standard macro paths (<code>Macro/&lt;bankId&gt;/knob_1..4</code>) immediately control the focused slot's Dry/Wet and parameters without requiring any MIDI remapping or controller mode switching.</li>
+<li>Physical MIDI controllers mapped to the row's standard macro paths (<code>Macro/&lt;bankId&gt;/knob_1..4</code>) immediately control the focused slot's Metaknob and parameters without requiring any MIDI remapping or controller mode switching.</li>
 <li>Exiting Focus Mode restores Knob 1 to <code>SUPER</code> and Knobs 2–4 to <code>META</code>.</li>
 </ul>
 </li>
@@ -2048,6 +2070,59 @@ for the FX Rack view that exposes these.</p>
 Each rotary mapping includes an editable <strong>Step</strong> multiplier to dial in coarse or fine rotational sensitivity.</p>
 <h3 id="profiles">Profiles</h3>
 <p>All assignments are stored in JSON profiles under <code>library/midi/&lt;profile_name&gt;.json</code>. You can create, save, switch, and delete mapping profiles in the MIDI tab, allowing you to quickly switch between different hardware setups (e.g. home studio controller vs live gig setup).</p>
+<h3 id="controller-profiles-midi-fighter-twister">Controller Profiles: Midi Fighter Twister</h3>
+<p>Some controllers are recognised automatically. When a device whose name contains <code>Twister</code> connects, the app loads the built-in <strong>Midi Fighter Twister</strong> profile and its 16 encoders drive the Performance Matrix with no learning at all. (The log line <code>Controller profile 'midi-fighter-twister' matches MIDI device: ...</code> confirms the match.)</p>
+<p><strong>The 16 knobs are the 16 knobs on screen.</strong> Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between <code>SRC</code> and <code>FX</code>, or focus a slot, with the mouse or the Twister and the same encoders follow. In Deep Edit the knobs follow the open row.</p>
+<table>
+<thead>
+<tr>
+<th>Gesture</th>
+<th>On a source / mix knob</th>
+<th>On an FX slot knob</th>
+<th>On a focused parameter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Turn</strong></td>
+<td>moves the knob</td>
+<td>moves the slot's Metaknob</td>
+<td>moves the parameter</td>
+</tr>
+<tr>
+<td><strong>Tap the switch</strong></td>
+<td>reset to centre</td>
+<td>bypass or un-bypass that slot</td>
+<td>reset to the parameter's default</td>
+</tr>
+<tr>
+<td><strong>Hold the switch and turn</strong></td>
+<td>fine adjustment (10× slower)</td>
+<td>same</td>
+<td>same</td>
+</tr>
+<tr>
+<td><strong>Shift + tap</strong></td>
+<td>-</td>
+<td>focus that slot</td>
+<td>next parameter page</td>
+</tr>
+<tr>
+<td><strong>Shift + tap on knob 1 of a focused row</strong></td>
+<td>-</td>
+<td>leave focus</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Banks:</strong> the Twister's own banks pick the page. <strong>Bank 1 shows DECKS, bank 2 shows MASTER</strong>; banks 3 and 4 leave the screen alone. The matrix tab and the encoders always agree, and clicking a tab on screen also moves the encoders to it.</li>
+<li><strong>Shift</strong> is the bottom button on the Twister's left side (it is the same physical button on every bank).</li>
+<li><strong>Fast turns accelerate</strong> up to 4×; slow turns stay exact.</li>
+<li><strong>Your own mappings win.</strong> If you have learned a mapping on a specific Twister channel/CC, that mapping still runs and the profile ignores that input.</li>
+<li><strong>Encoder mode:</strong> the profile expects the Twister's encoders in <strong>relative</strong> mode. In DJ TechTools' <strong>Midi Fighter Utility</strong> set each encoder's MIDI type to <code>ENC 3FH/41H</code> (binary offset: clockwise sends 65, counter-clockwise 63) and its movement to <em>Direct</em> (the app does its own acceleration). Relative mode has no end stops, so a knob never gets stuck at 0 or 127. Leave the knob switches on <code>CC Hold</code> (127 on press, 0 on release). To use the factory absolute mode instead, copy the profile to <code>library/controllers/</code> and set <code>"mode": "ABSOLUTE"</code> on the <code>knob</code> input (the app then tracks each change, and a knob can hit the end of its 0-127 range).</li>
+</ul>
+<p><strong>Your own profiles.</strong> Profiles are JSON files: built-ins ship inside the app, and yours go in <code>library/controllers/*.json</code>. A file with the same <code>id</code> as a built-in replaces it, so copy a built-in's JSON and edit it. A file with a mistake is skipped and the reason is logged. See <code>docs/developer/unified_control_mapping.md</code> for the format.</p>
 <hr />
 <h2 id="osc-touchosc-control-surfaces">OSC / TouchOSC Control Surfaces</h2>
 <p>Liquid LSD includes a native, zero-dependency OSC 1.0 server for wireless control from TouchOSC and other OSC-capable apps on phones and tablets — no external bridge software required.</p>

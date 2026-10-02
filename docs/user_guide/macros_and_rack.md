@@ -13,7 +13,7 @@ Column 3 (the right-hand panel, where the Mixer normally lives) has a mode toggl
 **`[ MIXER | MACROS ]`**.
 
 - **MIXER** — The classic 4-deck crossfader layout (Deck A, B, BG, Master).
-- **MACROS** — Macro knobs for the active bank, a binding inspector, and a single-deck preview. This is
+- **MACROS** — Macro knobs for the active bank, a binding inspector, and monitors. Deck pages show all four deck monitors (the edited deck pulses, click a tile to switch decks); Master/Transition/Global pages show one large monitor. This is
   the **editing** surface for your macro layout. At the top of the panel, a two-row tab bar lets you switch between canonical banks:
   - **Row 1 (Generators & Composites)**: `[ A ] [ B ] [ BG ] [ PV ] [ MSTR ] [ TRAN ] [ GLBL ]`
   - **Row 2 (Insert FX)**: `[ A FX ] [ B FX ] [ BG FX ] [ PV FX ] [ MSTR FX ]`, aligned directly underneath each corresponding deck/master channel.
@@ -162,10 +162,10 @@ are saved with your session, not with deck presets.
   move the Super Knob far enough for it to reach the Metaknob's current position first (soft
   pickup), the same behavior used for hardware MIDI/OSC takeover elsewhere in the app.
 - **Focus Mode** (per slot) — focuses on an individual effect slot across the Performance Matrix FX rows and Column 3.
-  - **Knob 1**: Controls the focused slot's individual Dry/Wet blend.
+  - **Knob 1**: The focused slot's Metaknob. The slot's **Dry/Wet** is the `Wet` slider in the chain header (middle-click resets to 100%).
   - **Knobs 2–4**: Retargeted to the focused effect's top parameters on the active page, with parameter paging (`[◀ P1/N ▶]`) when more than 3 parameters exist.
   - **Parameter Cells (`FxParamCell`)**: Display parameter values with a reset-to-default button (counter-clockwise arrow).
-  - **Hardware MIDI**: Physical controllers mapped to `Macro/<bankId>/knob_1..4` retarget dynamically to the focused slot's Dry/Wet and parameters without requiring any MIDI remapping.
+  - **Hardware MIDI**: Physical controllers mapped to `Macro/<bankId>/knob_1..4` keep their paths; in Focus Mode they control the focused slot's Metaknob and parameters. The layout is fixed per mode (Mixxx-style), so a bound CC changes meaning when you toggle focus.
   - Click `[◀ CHAIN]` in the header, or the active slot pill, to return to standard Group Mode.
 - **Right-click a Metaknob** to rebind it to a different parameter, to the Dry/Wet safety net, or
   to reset it back to the auto-bind default.
@@ -408,7 +408,7 @@ There are 12 always-resident canonical macro banks (4 knobs each, conforming to 
 | **Master FX** | FX Wet/Dry | 4 | `fxSends` | Deck A, B, BG, PV Insert FX Wet/Dry Levels |
 | | Master FX | 4 | `masterFx` | Super Knob + 3 Metaknobs |
 
-Deck generator banks initialize from their generator's default preset. Master, Transitions, and FX banks initialize with pre-mapped smart defaults. The five FX banks bind to their chain's `Deck A/FX/...` … `Master/FX/...` parameters and re-sync automatically whenever that chain's contents change (loading a chain, swapping a slot, restoring a session) — any knob you've retargeted by hand is left alone; **Resync** forces the defaults back. All 12 canonical banks are preserved in `last_session.json` and session files.
+Deck generator banks initialize from their generator's default preset. Master, Transitions, and FX banks initialize with pre-mapped smart defaults. The five FX banks bind to their chain's `Deck A/FX/...` … `Master/FX/...` parameters and re-sync automatically whenever that chain's contents change (loading a chain, swapping a slot, restoring a session) — FX knobs are fixed (Super + 3 Metaknobs, or Metaknob + 3 parameters when focused) and can't be rebound; change what a Metaknob controls with its **Rebind** menu. Sessions saved with hand-retargeted FX knobs lose those bindings on load. All 12 canonical banks are preserved in `last_session.json` and session files.
 
 Banks are saved in `last_session.json` and bundled into preset files automatically.
 

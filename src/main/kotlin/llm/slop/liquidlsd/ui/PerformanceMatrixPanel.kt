@@ -57,22 +57,6 @@ class PerformanceMatrixPanel {
         MASTER("MASTER", "Master ([MIX|FX]: composite alphas or Master FX chain), Transitions (crossfader + picker + queue),\nper-deck FX wet/dry, and Clock (tap tempo / resync / clock source + 4 Global macro knobs).")
     }
 
-    /**
-     * Describes one row of 4 knobs: which bank to pull from, which 4-knob offset within that
-     * bank (0 = knobs 0–3, 4 = knobs 4–7), and the RGB accent color for the row. Each row is
-     * drawn in its own box (see [drawMatrix]).
-     */
-    private data class RowDescriptor(
-        val bankId: String,
-        val knobOffset: Int,
-        val accent: FloatArray,
-        val groupLabel: String,
-        /** True for rows that draw a title badge and side controls (deck/Master mode pills, chain header, bypass, Transitions/Clock lines). */
-        val hasExtraHeader: Boolean = false,
-        /** When false, the modular rack disclosure chevron and collapse controls are omitted. */
-        val canExpand: Boolean = true
-    )
-
     // Canonical deck colors matching BrowserDeckButtons are in PerformanceColors.
     companion object {
         /**
@@ -80,36 +64,6 @@ class PerformanceMatrixPanel {
          * 1280x720 display's ~688px window (~74px per row; knobs ~40-45px). Below this the grid scrolls.
          */
         private const val MIN_ROW_H = 68f
-
-        /** A deck row's tag, source-macro bank, FX-chain bank and accent. */
-        private data class DeckRowBanks(val tag: String, val srcBankId: String, val fxBankId: String, val accent: FloatArray)
-
-        private val DECK_ROW_BANKS = listOf(
-            DeckRowBanks("A",  MacroEngine.DECK_A,  MacroEngine.DECK_A_FX,  PerformanceColors.COLOR_DECK_A),
-            DeckRowBanks("B",  MacroEngine.DECK_B,  MacroEngine.DECK_B_FX,  PerformanceColors.COLOR_DECK_B),
-            DeckRowBanks("BG", MacroEngine.DECK_BG, MacroEngine.DECK_BG_FX, PerformanceColors.COLOR_DECK_BG),
-            DeckRowBanks("PV", MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX, PerformanceColors.COLOR_DECK_PV),
-        )
-
-        private val TAB_ROWS: Array<List<RowDescriptor>> = arrayOf(
-            // DECKS: one row per deck (knobs 0–3 each: Deck A, Deck B, Deck BG, Deck PV)
-            listOf(
-                RowDescriptor(MacroEngine.DECK_A,  0, PerformanceColors.COLOR_DECK_A,  "DECK A",  hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_B,  0, PerformanceColors.COLOR_DECK_B,  "DECK B",  hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_BG, 0, PerformanceColors.COLOR_DECK_BG, "DECK BG", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.DECK_PV, 0, PerformanceColors.COLOR_DECK_PV, "DECK PV", hasExtraHeader = true),
-            ),
-            // MASTER: Master ([MIX] over [FX] + chain header; knobs on composite alphas or the
-            // Master FX chain), Transitions (transition picker + queue nav over crossfader), FX
-            // Wet/Dry (per-deck FX sends), Clock (tempo controls + Global macro knobs) -- 1 row of
-            // 4 knobs each, laid out like deck rows (title badge + two control lines, see drawMatrix).
-            listOf(
-                RowDescriptor(MacroEngine.MASTER,    0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.TRANS,     0, PerformanceColors.COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true),
-                RowDescriptor(MacroEngine.FX_SENDS,  0, PerformanceColors.COLOR_FX,     "FX WET/DRY", hasExtraHeader = true, canExpand = false),
-                RowDescriptor(MacroEngine.GLOBAL,    0, PerformanceColors.COLOR_GLOBAL, "CLOCK & GLOBAL", hasExtraHeader = true, canExpand = false),
-            ),
-        )
     }
 
     internal val ctx = PerformanceUiContext()
@@ -144,7 +98,7 @@ class PerformanceMatrixPanel {
         val anyExpanded = parametersState.anyRackModuleExpanded()
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
         // Only the Perform-view tab's row *count* sizes rows -- never their modes (see PerfRowGeometry).
-        val layoutRowCount = TAB_ROWS[layoutTabIdx(tabIdx, visibleRows, anyExpanded)].size
+        val layoutRowCount = PerfRows.TAB_ROWS[layoutTabIdx(tabIdx, visibleRows, anyExpanded)].size
         val baseRowH = ((availH - hiddenLibraryH).coerceAtLeast(4f) / layoutRowCount).coerceAtLeast(MIN_ROW_H)
         val gridH = if (!anyExpanded) availH else (visibleRows.size * baseRowH).coerceAtMost((availH - 160f).coerceAtLeast(160f))
         val bayH = (availH - gridH - (if (anyExpanded) ImGui.getStyle().getItemSpacingY() else 0f)).coerceAtLeast(0f)
@@ -180,59 +134,13 @@ class PerformanceMatrixPanel {
     private fun layoutTabIdx(tabIdx: Int, visibleRows: List<RowDescriptor>, anyExpanded: Boolean): Int {
         if (!anyExpanded) return tabIdx
         val moduleId = visibleRows.firstOrNull()?.let { ctx.canonicalModuleId(it.bankId) } ?: return tabIdx
-        val idx = TAB_ROWS.indexOfFirst { rows -> rows.any { ctx.canonicalModuleId(it.bankId) == moduleId } }
+        val idx = PerfRows.TAB_ROWS.indexOfFirst { rows -> rows.any { ctx.canonicalModuleId(it.bankId) == moduleId } }
         return if (idx >= 0) idx else tabIdx
     }
 
-    /** Resolves the active 4-knob row descriptor for a specific module id based on the current subtab/mode. */
-    private fun rowDescriptorForModule(moduleId: String, parametersState: ParametersState): RowDescriptor {
-        DECK_ROW_BANKS.firstOrNull { moduleId == it.srcBankId || moduleId == it.fxBankId }?.let { deck ->
-            val template = RowDescriptor(deck.srcBankId, 0, deck.accent, "DECK ${deck.tag}", hasExtraHeader = true)
-            return withDeckRowMode(template, parametersState)
-        }
-        return when (moduleId) {
-            MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.MASTER_FX, "Mixer" -> {
-                when {
-                    parametersState.activeMixerSubTab == "TRANS" -> RowDescriptor(MacroEngine.TRANS, 0, PerformanceColors.COLOR_TRANS, "TRANSITIONS", hasExtraHeader = true)
-                    ctx.isMasterRowFx(parametersState) -> RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER (FX)", hasExtraHeader = true)
-                    else -> RowDescriptor(MacroEngine.MASTER, 0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true)
-                }
-            }
-            else -> RowDescriptor(moduleId, 0, PerformanceColors.COLOR_MASTER, deepEditBay.rackModuleDisplayLabel(moduleId), hasExtraHeader = true)
-        }
-    }
-
-    /** [row] with the per-deck [SRC|FX] or Master [MIX|FX] toggle applied (retargeted to the FX bank when on). */
-    private fun withDeckRowMode(row: RowDescriptor, parametersState: ParametersState?): RowDescriptor {
-        val deck = DECK_ROW_BANKS.firstOrNull { it.srcBankId == row.bankId }
-        return when {
-            deck != null && ctx.isDeckRowFx(deck.tag, parametersState) ->
-                row.copy(bankId = deck.fxBankId, groupLabel = "DECK ${deck.tag} (FX)")
-            row.bankId == MacroEngine.MASTER && parametersState != null && ctx.isMasterRowFx(parametersState) ->
-                row.copy(bankId = MacroEngine.MASTER_FX, groupLabel = "MASTER (FX)")
-            else -> row
-        }
-    }
-
-    /** This tab's rows with the per-deck [SRC|FX] and Master [MIX|FX] toggles applied. */
-    private fun substitutedRowsForTab(tabIdx: Int, parametersState: ParametersState? = null): List<RowDescriptor> =
-        TAB_ROWS[tabIdx].map { withDeckRowMode(it, parametersState) }
-
-    /**
-     * When any module is in Deep Edit, returns the macro row(s) corresponding to the expanded module(s)
-     * (reflecting active subtab e.g. SRC vs FX), decoupling the row from the matrix tab.
-     * When all modules are collapsed, returns the current tab's 4 rows.
-     */
-    private fun visibleRowsForTab(tabIdx: Int, parametersState: ParametersState): List<RowDescriptor> {
-        val expandedModuleIds = parametersState.rackModuleDisclosure
-            .filterValues { it != ParametersState.DisclosureLevel.COLLAPSED }
-            .keys
-            .filter { it != MacroEngine.FX_SENDS }
-        if (expandedModuleIds.isEmpty()) return substitutedRowsForTab(tabIdx, parametersState)
-
-        // Show the active macro row for each expanded module
-        return expandedModuleIds.map { rowDescriptorForModule(it, parametersState) }
-    }
+    /** The rows to draw: the current tab's rows, or the expanded module's row(s) in Deep Edit. See [PerfRows]. */
+    private fun visibleRowsForTab(tabIdx: Int, parametersState: ParametersState): List<RowDescriptor> =
+        PerfRows.visibleRowsForTab(tabIdx, ctx, parametersState) { deepEditBay.rackModuleDisplayLabel(it) }
 
     // -- 4x4 Knob Grid -----------------------------------------------------------
 

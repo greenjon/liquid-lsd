@@ -1,3 +1,32 @@
+## Twister Drives the Perform Grid via Control Pages, Gestures and Hardware Banks (`control/ControllerRuntime.kt`, `KnobCommands.kt`, `ui/PerformSurface.kt`, `ui/PerfRows.kt`)
+
+- **Decision**: Phase 2 of the controller work. A controller's 16 knobs are a *page*: the Performance Matrix's visible rows flattened row-major (the tab's four rows, or the open row in Deep Edit), resolved through the same `PerfRows` + `PerfKnobResolver` the panel draws with. Profile bindings send `knob.<n>` (turn), `knob.<n>.press` (tap) and `knob.<n>.press_alt` (shift + tap) to a `KnobSurface`; `PerformSurface` applies them to the live view.
+  - The row-selection code moved out of `PerformanceMatrixPanel` into `PerfRows` so the panel and controllers cannot disagree about what a row is.
+  - Hardware bank buttons select a *tab* (`banks.pages`: bank 1 = DECKS, bank 2 = MASTER); the UI tab stays the single source of truth, so clicking a tab on screen also retargets the encoders.
+  - Gestures: tap = FX slot bypass / reset to default; shift + tap = focus slot, leave focus (knob 1 of a focused row), or next parameter page; hold switch + turn = fine (x0.1). The hold is tracked in the app because the Twister sends identical turn messages whether or not the switch is down. A press's release goes to the command that received its press, so releasing shift first cannot break a tap.
+  - Encoders: the shipped profile uses relative binary-offset (`ENC 3FH/41H`: no end stops, no resync needed before MIDI output exists); relative modes decode to ticks, and absolute mode (the factory setting, available via a profile copy) is read as the change since the previous value. Speed-based acceleration (up to 4x, profile `accel`) and `step` are per input.
+  - Bindings support modifier prefixes (`shift+knob.3.press`), per-bank overrides and `*` / `{n}` wildcards, and the most specific binding wins.
+  - Learned (legacy) mappings on an exact channel/CC take precedence over the profile.
+- **Rationale**: The Perform matrix was built around a 4x4 Twister, so mirroring it makes the hardware and the screen agree with no per-controller mapping work, and focus/bypass/reset gestures use the actions the on-screen side buttons already have (`FxOps.setSlotEnabled`, `FxMacroSync.focusSlot`/`stepParamPage`, the reset button's logic).
+- **Alternatives rejected**: fixed per-bank targets (a bank per deck row: gives up following SRC/FX/focus and the Edit row); software-only layers; response curves for encoders in this phase (relative deltas have no useful curve; macro bindings already have `MacroCurve`).
+- **Consequences**: SRC/mix knobs reset to 0.5 on tap, matching the mouse middle-click. Side buttons other than shift are unbound until the navigation phase; MIDI output (ring/LED feedback) is not implemented yet, so the ring does not reflect app values and absolute mode can hit the 0/127 end stops.
+
+## Command Registry and Declarative Controller Profiles (`control/`, `MidiMappingManager.kt`, `MidiEngine.kt`, `resources/controllers/`)
+
+- **Decision**: Controller support is built as a stable-id `CommandRegistry` plus declarative JSON controller profiles (built-ins in the jar, user files in `library/controllers/`), with the Midi Fighter Twister as the first profile. Phase 1 only: the ten hard-coded `Global/*` MIDI actions now run through the registry (legacy paths kept as aliases), `MidiEvent` carries its source `deviceId`, and profiles load, validate and resolve `(channel, cc)` to a logical input and bank. Nothing in a profile drives the app yet.
+  - Hardware bank is part of the profile: bank-aware inputs add a CC stride per bank, and the device's bank buttons are recognised, so one logical input (`knob.3`) keeps one id across banks.
+  - Edge detection moved from ten `last*High` fields into the registry.
+- **Rationale**: The app had no device identity, command layer, or profile concept, so a Twister-only mapping would have to be redone for the next controller. Declarative JSON (no scripting) covers the Twister and most grid/knob controllers, and files can be copied and edited like Mixxx mappings.
+- **Alternatives rejected**: Mixxx-style JS scripting (heavier to build and sandbox, not needed for v1.0); a Twister-only hard-coded mapping (throwaway); keying bindings by raw CC (breaks when the device bank changes the CC numbers).
+- **Consequences**: Old `library/midi/*.json` profiles load unchanged. The plan for the remaining phases (control pages, navigation commands, MIDI output and ring feedback, profile UI) is in `.planning/midi-controller-plan.md`.
+
+## FX Macro Knobs: Fixed Mapping, Dry/Wet on the Header (`FxMacroSync.kt`, `FxChainHeader.kt`, `FxMacroSummary.kt`)
+
+- **Decision**: FX banks use a fixed Mixxx-style layout. Group: Super + 3 Metaknobs. Focus: focused slot's Metaknob + top 3 parameters; Dry/Wet moves to a `Wet` slider in the focus header.
+  - `FxMacroSync` rewrites all four knobs on every sync; the ownership rule (`OWNED_PATH_PATTERN`, `forceResync`) and the "Resync Knobs" menu item are gone. The Macros tab's FX pages show a read-only summary instead of the Binding Inspector.
+- **Rationale**: The free 4-binding editor was rarely used on FX knobs and the ownership rule was fragile. The per-slot Metaknob (`metaBindings`) already holds the real per-effect mapping. A fixed layout also settles the focus-mode hardware-binding tradeoff: a knob's meaning is predictable per mode.
+- **Consequences**: Sessions with hand-retargeted FX knobs lose those bindings on load (accepted). Learn on an FX performance knob still does hardware MIDI/OSC learn; parameter-target Learn is unreachable for FX banks because they no longer use the Binding Inspector.
+
 ## Unified Edit/Browse Tab Row in the Edit Bay (`PerformanceDeepEditBay.kt`, `PerformanceBrowseBay.kt`, docs)
 
 - **Decision**: Replace the `Browse...` / `View Params` toggle button with one tab row, `Edit | SRC | Chain | FX1 | FX2 | FX3` (`TRANS` replaces `SRC` on Master), and remove the Chain/FX1/FX2/FX3 sub-tabs from inside Browse.

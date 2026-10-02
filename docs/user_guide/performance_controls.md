@@ -140,7 +140,7 @@ for the FX Rack view that exposes these.
     - **`◀` / `▶` (Decks A, B, BG)**: On Decks A, B, and BG, steps through the respective live FX queue (A/B or BG) directly on that deck, advancing the queue while targeting the clicked deck. Rendered disabled when the FX queue is empty. Omitted on Deck PV and Master FX, allowing the chain name button to expand while keeping row width perfectly aligned.
     - **Chain Name Button**: Displays current chain name with `•` dirty indicator when modified from baseline. Clicking opens inline Browse on the **Chain** sub-tab, with live text search over saved `.lsdfxchain` files. Accepts `.lsdfxchain` drag-and-drop.
     - **`[Save]`**: Overwrites the loaded chain file with current state, or triggers Save As if untitled.
-    - **`[⋮]` Menu**: Save As..., New Chain, Revert to Saved (undoes tweaks back to clean loaded state), Clear All Slots, Copy/Paste Chain, and Resync Knobs.
+    - **`[⋮]` Menu**: Save As..., New Chain, Revert to Saved (undoes tweaks back to clean loaded state), Clear All Slots, and Copy/Paste Chain.
     - **`[BYPASS]`**: Top-level kill switch to immediately bypass or re-enable the entire FX chain.
   - **FX Slot Cells (`Effect Name`)**:
     - Drawn under each of knobs 2–4 on Deck rows in `[FX]` mode and the Master row in `[FX]` mode. The cell is just the effect name, so names get the full cell width.
@@ -168,12 +168,12 @@ for the FX Rack view that exposes these.
       - `[◀ P1/N ▶]`: Parameter page stepper; appears automatically whenever the focused shader exposes more than 3 parameters.
       - `[1] [2] [3]`: Slot focus pills with clean styling. The active slot pill is highlighted in blue accent. Click another slot pill to switch focus instantly, or click the active focused slot pill a second time (or press `Escape`) to exit Focus Mode back to the 3-slot chain view.
     - **4 Knobs in Focus Mode**:
-      - **Knob 1 (`DRY/WET`)**: Controls the focused slot's individual wet/dry blend (`$chainLabel/FX/FX<slot>/DryWet`). The focused slot's `FxSlotCell` is drawn underneath so shortlist stepping (hover `◀ ▶` or mouse wheel) and picker access remain directly below its Dry/Wet knob, with the slot's bypass button to the left of the knob.
+      - **Knob 1 (`META`)**: The focused slot's Metaknob (`$chainLabel/FX/FX<slot>/Meta`). Its Dry/Wet is the `Wet` slider in the chain header. The focused slot's `FxSlotCell` is drawn underneath so shortlist stepping (hover `◀ ▶` or mouse wheel) and picker access remain directly below the knob, with the slot's bypass button to its left.
       - **Knobs 2–4 (`Top Parameters`)**: Dynamically retargeted to the focused shader's top parameters on the active page (e.g. `SPEED`, `INTENSITY`, `COLOR`).
       - **Parameter Cells (`FxParamCell`)**: Drawn under Knobs 2–4 with the parameter's name and a modulation indicator dot. The current value is shown inside the knob face, and a `[⟲]` reset button (restores the authored default) sits to the left of the knob.
   - **Stable Layout**: Knobs stay the same size and in the same place whichever mode a row is in (`[SRC]`, `[FX]` group, or Focus Mode), and switching one row never resizes the others. Knob names and effect/parameter names share the same line under each knob. Names too long for it end in `…`; hover the knob for the full name.
     - **Seamless Hardware MIDI Retargeting**:
-      - Physical MIDI controllers mapped to the row's standard macro paths (`Macro/<bankId>/knob_1..4`) immediately control the focused slot's Dry/Wet and parameters without requiring any MIDI remapping or controller mode switching.
+      - Physical MIDI controllers mapped to the row's standard macro paths (`Macro/<bankId>/knob_1..4`) immediately control the focused slot's Metaknob and parameters without requiring any MIDI remapping or controller mode switching.
       - Exiting Focus Mode restores Knob 1 to `SUPER` and Knobs 2–4 to `META`.
   - **Performance Matrix Tabs**:
     - Deck FX chains are on each deck row (`[SRC|FX]`); Master FX is on the Master row (`[MIX|FX]`) on the **MASTER** tab.
@@ -249,6 +249,28 @@ Each rotary mapping includes an editable **Step** multiplier to dial in coarse o
 ### Profiles
 
 All assignments are stored in JSON profiles under `library/midi/<profile_name>.json`. You can create, save, switch, and delete mapping profiles in the MIDI tab, allowing you to quickly switch between different hardware setups (e.g. home studio controller vs live gig setup).
+
+### Controller Profiles: Midi Fighter Twister
+
+Some controllers are recognised automatically. When a device whose name contains `Twister` connects, the app loads the built-in **Midi Fighter Twister** profile and its 16 encoders drive the Performance Matrix with no learning at all. (The log line `Controller profile 'midi-fighter-twister' matches MIDI device: ...` confirms the match.)
+
+**The 16 knobs are the 16 knobs on screen.** Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between `SRC` and `FX`, or focus a slot, with the mouse or the Twister and the same encoders follow. In Deep Edit the knobs follow the open row.
+
+| Gesture | On a source / mix knob | On an FX slot knob | On a focused parameter |
+|---|---|---|---|
+| **Turn** | moves the knob | moves the slot's Metaknob | moves the parameter |
+| **Tap the switch** | reset to centre | bypass or un-bypass that slot | reset to the parameter's default |
+| **Hold the switch and turn** | fine adjustment (10× slower) | same | same |
+| **Shift + tap** | - | focus that slot | next parameter page |
+| **Shift + tap on knob 1 of a focused row** | - | leave focus | - |
+
+- **Banks:** the Twister's own banks pick the page. **Bank 1 shows DECKS, bank 2 shows MASTER**; banks 3 and 4 leave the screen alone. The matrix tab and the encoders always agree, and clicking a tab on screen also moves the encoders to it.
+- **Shift** is the bottom button on the Twister's left side (it is the same physical button on every bank).
+- **Fast turns accelerate** up to 4×; slow turns stay exact.
+- **Your own mappings win.** If you have learned a mapping on a specific Twister channel/CC, that mapping still runs and the profile ignores that input.
+- **Encoder mode:** the profile expects the Twister's encoders in **relative** mode. In DJ TechTools' **Midi Fighter Utility** set each encoder's MIDI type to `ENC 3FH/41H` (binary offset: clockwise sends 65, counter-clockwise 63) and its movement to *Direct* (the app does its own acceleration). Relative mode has no end stops, so a knob never gets stuck at 0 or 127. Leave the knob switches on `CC Hold` (127 on press, 0 on release). To use the factory absolute mode instead, copy the profile to `library/controllers/` and set `"mode": "ABSOLUTE"` on the `knob` input (the app then tracks each change, and a knob can hit the end of its 0-127 range).
+
+**Your own profiles.** Profiles are JSON files: built-ins ship inside the app, and yours go in `library/controllers/*.json`. A file with the same `id` as a built-in replaces it, so copy a built-in's JSON and edit it. A file with a mistake is skipped and the reason is logged. See `docs/developer/unified_control_mapping.md` for the format.
 
 ---
 

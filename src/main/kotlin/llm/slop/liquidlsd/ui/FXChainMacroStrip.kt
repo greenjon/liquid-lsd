@@ -283,7 +283,7 @@ object FXChainMacroStrip {
     }
 
     /** Menu items to rebind a slot's Metaknob to a different parameter (or the safety-net Dry/Wet); shared by both the compact-mode right-click popup and the grid-mode row menu. */
-    private fun drawRebindMenuItems(fx: llm.slop.liquidlsd.rendering.isf.ISFFilter) {
+    internal fun drawRebindMenuItems(fx: llm.slop.liquidlsd.rendering.isf.ISFFilter) {
         val floatInputs = fx.header.INPUTS.filter { it.TYPE.equals("float", ignoreCase = true) }
         for (input in floatInputs) {
             val param = fx.parameters[input.NAME] ?: continue

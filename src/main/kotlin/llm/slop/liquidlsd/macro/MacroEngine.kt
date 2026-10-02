@@ -379,8 +379,15 @@ object MacroEngine {
     }
 
     private fun syncLinkedFxChainKnobValues(bankId: String, chain: FxChain) {
-        if (chain.focusedSlot != null) return
         val macroBank = synchronized(lock) { banks[bankId] } ?: return
+        val focused = chain.focusedSlot
+        if (focused != null) {
+            // Focus mode: knob 0 is the focused slot's Metaknob; mirror it when that slot is linked.
+            if (chain.slotSuperKnobLink.getOrNull(focused) == true) {
+                macroBank.knobs.getOrNull(0)?.value = chain.slots.getOrNull(focused)?.metaKnob?.baseValue ?: chain.superKnob.baseValue
+            }
+            return
+        }
         for (i in 0 until FxChain.SLOT_COUNT) {
             if (chain.slotSuperKnobLink.getOrNull(i) == true) {
                 val knob = macroBank.knobs.getOrNull(i + 1) ?: continue

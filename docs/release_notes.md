@@ -1,5 +1,27 @@
 ## [Unreleased]
 
+### Midi Fighter Twister Works Out of the Box (`control/`, `PerformSurface.kt`, `PerfRows.kt`, `resources/controllers/midi-fighter-twister.json`)
+- **No learning needed**: plug in a Midi Fighter Twister and its 16 encoders drive the Performance Matrix's 4x4 knob grid, row by row. A row's encoders follow what the row shows: source knobs, FX Super/Metaknobs, or the focused effect's parameters.
+- **Switch gestures**: tap = bypass an FX slot / reset a value; hold + turn = fine adjustment; shift + tap = focus a slot, leave focus, or next parameter page. Fast turns accelerate.
+- **Banks pick the page**: Twister bank 1 shows DECKS and bank 2 shows MASTER; the screen follows the bank buttons.
+- **Your learned mappings still win** on any channel/CC you have learned. The profile expects the encoders in relative mode (`ENC 3FH/41H` in Midi Fighter Utility); the user guide lists the recommended utility settings and how to write your own controller profile in `library/controllers/`.
+
+### Controller Profiles: Groundwork for Midi Fighter Twister (`control/`, `MidiEngine.kt`, `MidiMappingManager.kt`)
+- **Controller profile files**: the app now reads declarative controller profiles from the jar and from `library/controllers/*.json` (a user file with the same `id` replaces the built-in). A built-in `midi-fighter-twister` profile describes its 64 encoders, push switches, side buttons and four hardware banks. The log shows which profile matched when a controller connects.
+- **Existing mappings unchanged**: MIDI profiles and MIDI Learn behave as before, including the queue, tap-tempo and crossfader actions, which now run through a shared command registry.
+
+### FX Macro Knobs Are Now Fixed-Mapping (`FxMacroSync.kt`, `FxChainHeader.kt`, `FxMacroSummary.kt`, `MacroPanel.kt`)
+- **Mixxx-style layout**: Group mode = Super + 3 slot Metaknobs; Focus mode = the focused slot's Metaknob + its top 3 parameters. FX knobs can no longer be rebound by hand; every sync rewrites them, so a physical knob's meaning is fixed per mode. MIDI/OSC paths (`Macro/<bank>/knob_1..4`) are unchanged.
+- **Dry/Wet moved to the header**: in Focus mode the slot's Dry/Wet is a `Wet` slider in the chain header (was Knob 1).
+- **Macros tab FX pages**: the knob chips and Binding Inspector are replaced by a read-only knob summary plus each slot's Metaknob targets with a **Rebind** menu.
+- **Removed**: the "Resync Knobs" chain menu item (nothing to resync now).
+- **Migration**: sessions saved with hand-retargeted FX knobs lose those bindings on load.
+
+### Macros Tab: Four Deck Monitors + Pulsing Edit Frame (`MacroPanel.kt`, `DeckMonitorGrid.kt`, `DeckControlPanel.kt`)
+- **See all four decks while editing one**: on the deck and deck-FX pages the single preview is replaced by the Mixer view's 2x2 deck tiles (shared `DeckMonitorGrid`), anchored at the bottom of the panel. The deck being edited has a slow pulsing frame in its deck colour; the other three are dimmed. Clicking a tile switches the edited deck without opening Deep Edit.
+- **Master / Transition / Global pages** keep one large monitor, now with the same pulsing frame.
+- **Super Link checkboxes removed from the Macros tab**: link toggles remain on the deck FX cells and the Parameters panel (same state).
+
 ### Edit Bay Tab Row (`PerformanceDeepEditBay.kt`, `PerformanceBrowseBay.kt`)
 - **One tab row instead of Browse / View Params**: the Edit bay now has `Edit | SRC | Chain | FX1 | FX2 | FX3` tabs (`TRANS` replaces `SRC` on Master). Jump straight between editing a deck's parameters and picking its source, FX chain or any single FX slot. The separate Chain/FX1/FX2/FX3 buttons inside FX Browse are gone.
 

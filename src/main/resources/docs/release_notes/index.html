@@ -1208,6 +1208,50 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#midi-fighter-twister-works-out-of-the-box-control-performsurfacekt-perfrowskt-resourcescontrollersmidi-fighter-twisterjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Midi Fighter Twister Works Out of the Box (control/, PerformSurface.kt, PerfRows.kt, resources/controllers/midi-fighter-twister.json)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#controller-profiles-groundwork-for-midi-fighter-twister-control-midienginekt-midimappingmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controller Profiles: Groundwork for Midi Fighter Twister (control/, MidiEngine.kt, MidiMappingManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-macro-knobs-are-now-fixed-mapping-fxmacrosynckt-fxchainheaderkt-fxmacrosummarykt-macropanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Macro Knobs Are Now Fixed-Mapping (FxMacroSync.kt, FxChainHeader.kt, FxMacroSummary.kt, MacroPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macros-tab-four-deck-monitors-pulsing-edit-frame-macropanelkt-deckmonitorgridkt-deckcontrolpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macros Tab: Four Deck Monitors + Pulsing Edit Frame (MacroPanel.kt, DeckMonitorGrid.kt, DeckControlPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#edit-bay-tab-row-performancedeepeditbaykt-performancebrowsebaykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4679,6 +4723,50 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#midi-fighter-twister-works-out-of-the-box-control-performsurfacekt-perfrowskt-resourcescontrollersmidi-fighter-twisterjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Midi Fighter Twister Works Out of the Box (control/, PerformSurface.kt, PerfRows.kt, resources/controllers/midi-fighter-twister.json)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#controller-profiles-groundwork-for-midi-fighter-twister-control-midienginekt-midimappingmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controller Profiles: Groundwork for Midi Fighter Twister (control/, MidiEngine.kt, MidiMappingManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fx-macro-knobs-are-now-fixed-mapping-fxmacrosynckt-fxchainheaderkt-fxmacrosummarykt-macropanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Macro Knobs Are Now Fixed-Mapping (FxMacroSync.kt, FxChainHeader.kt, FxMacroSummary.kt, MacroPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#macros-tab-four-deck-monitors-pulsing-edit-frame-macropanelkt-deckmonitorgridkt-deckcontrolpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macros Tab: Four Deck Monitors + Pulsing Edit Frame (MacroPanel.kt, DeckMonitorGrid.kt, DeckControlPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#edit-bay-tab-row-performancedeepeditbaykt-performancebrowsebaykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8125,6 +8213,32 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="midi-fighter-twister-works-out-of-the-box-control-performsurfacekt-perfrowskt-resourcescontrollersmidi-fighter-twisterjson">Midi Fighter Twister Works Out of the Box (<code>control/</code>, <code>PerformSurface.kt</code>, <code>PerfRows.kt</code>, <code>resources/controllers/midi-fighter-twister.json</code>)</h3>
+<ul>
+<li><strong>No learning needed</strong>: plug in a Midi Fighter Twister and its 16 encoders drive the Performance Matrix's 4x4 knob grid, row by row. A row's encoders follow what the row shows: source knobs, FX Super/Metaknobs, or the focused effect's parameters.</li>
+<li><strong>Switch gestures</strong>: tap = bypass an FX slot / reset a value; hold + turn = fine adjustment; shift + tap = focus a slot, leave focus, or next parameter page. Fast turns accelerate.</li>
+<li><strong>Banks pick the page</strong>: Twister bank 1 shows DECKS and bank 2 shows MASTER; the screen follows the bank buttons.</li>
+<li><strong>Your learned mappings still win</strong> on any channel/CC you have learned. The profile expects the encoders in relative mode (<code>ENC 3FH/41H</code> in Midi Fighter Utility); the user guide lists the recommended utility settings and how to write your own controller profile in <code>library/controllers/</code>.</li>
+</ul>
+<h3 id="controller-profiles-groundwork-for-midi-fighter-twister-control-midienginekt-midimappingmanagerkt">Controller Profiles: Groundwork for Midi Fighter Twister (<code>control/</code>, <code>MidiEngine.kt</code>, <code>MidiMappingManager.kt</code>)</h3>
+<ul>
+<li><strong>Controller profile files</strong>: the app now reads declarative controller profiles from the jar and from <code>library/controllers/*.json</code> (a user file with the same <code>id</code> replaces the built-in). A built-in <code>midi-fighter-twister</code> profile describes its 64 encoders, push switches, side buttons and four hardware banks. The log shows which profile matched when a controller connects.</li>
+<li><strong>Existing mappings unchanged</strong>: MIDI profiles and MIDI Learn behave as before, including the queue, tap-tempo and crossfader actions, which now run through a shared command registry.</li>
+</ul>
+<h3 id="fx-macro-knobs-are-now-fixed-mapping-fxmacrosynckt-fxchainheaderkt-fxmacrosummarykt-macropanelkt">FX Macro Knobs Are Now Fixed-Mapping (<code>FxMacroSync.kt</code>, <code>FxChainHeader.kt</code>, <code>FxMacroSummary.kt</code>, <code>MacroPanel.kt</code>)</h3>
+<ul>
+<li><strong>Mixxx-style layout</strong>: Group mode = Super + 3 slot Metaknobs; Focus mode = the focused slot's Metaknob + its top 3 parameters. FX knobs can no longer be rebound by hand; every sync rewrites them, so a physical knob's meaning is fixed per mode. MIDI/OSC paths (<code>Macro/&lt;bank&gt;/knob_1..4</code>) are unchanged.</li>
+<li><strong>Dry/Wet moved to the header</strong>: in Focus mode the slot's Dry/Wet is a <code>Wet</code> slider in the chain header (was Knob 1).</li>
+<li><strong>Macros tab FX pages</strong>: the knob chips and Binding Inspector are replaced by a read-only knob summary plus each slot's Metaknob targets with a <strong>Rebind</strong> menu.</li>
+<li><strong>Removed</strong>: the "Resync Knobs" chain menu item (nothing to resync now).</li>
+<li><strong>Migration</strong>: sessions saved with hand-retargeted FX knobs lose those bindings on load.</li>
+</ul>
+<h3 id="macros-tab-four-deck-monitors-pulsing-edit-frame-macropanelkt-deckmonitorgridkt-deckcontrolpanelkt">Macros Tab: Four Deck Monitors + Pulsing Edit Frame (<code>MacroPanel.kt</code>, <code>DeckMonitorGrid.kt</code>, <code>DeckControlPanel.kt</code>)</h3>
+<ul>
+<li><strong>See all four decks while editing one</strong>: on the deck and deck-FX pages the single preview is replaced by the Mixer view's 2x2 deck tiles (shared <code>DeckMonitorGrid</code>), anchored at the bottom of the panel. The deck being edited has a slow pulsing frame in its deck colour; the other three are dimmed. Clicking a tile switches the edited deck without opening Deep Edit.</li>
+<li><strong>Master / Transition / Global pages</strong> keep one large monitor, now with the same pulsing frame.</li>
+<li><strong>Super Link checkboxes removed from the Macros tab</strong>: link toggles remain on the deck FX cells and the Parameters panel (same state).</li>
+</ul>
 <h3 id="edit-bay-tab-row-performancedeepeditbaykt-performancebrowsebaykt">Edit Bay Tab Row (<code>PerformanceDeepEditBay.kt</code>, <code>PerformanceBrowseBay.kt</code>)</h3>
 <ul>
 <li><strong>One tab row instead of Browse / View Params</strong>: the Edit bay now has <code>Edit | SRC | Chain | FX1 | FX2 | FX3</code> tabs (<code>TRANS</code> replaces <code>SRC</code> on Master). Jump straight between editing a deck's parameters and picking its source, FX chain or any single FX slot. The separate Chain/FX1/FX2/FX3 buttons inside FX Browse are gone.</li>

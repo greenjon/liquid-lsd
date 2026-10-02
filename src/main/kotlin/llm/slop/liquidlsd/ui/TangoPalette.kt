@@ -37,6 +37,18 @@ object TangoPalette {
         dl.addRect(x1, y1, x2, y2, u32(ALERT.normal, pulseAlpha), rounding, 0, thickness)
     }
 
+    /**
+     * Slow (~0.5 Hz) pulsing thick frame marking "this is the thing being edited". Deliberately slower
+     * and thicker than [drawOscLearnPulseBorder] so the two can't be confused. [col] is an opaque u32.
+     */
+    fun drawEditingPulseFrame(dl: ImDrawList, x1: Float, y1: Float, x2: Float, y2: Float, col: Int) {
+        val t = (kotlin.math.sin(llm.slop.liquidlsd.utils.TimeSource.getTimeSec() * 3.0) * 0.5 + 0.5).toFloat()
+        val a = 0.35f + 0.65f * t
+        val rgb = col and 0x00FFFFFF
+        val argb = rgb or ((a * 255f).toInt().coerceIn(0, 255) shl 24)
+        dl.addRect(x1, y1, x2, y2, argb, 0f, 0, 3f)
+    }
+
     // -- The 8 canonical Tango hues -------------------------------------------------------------
     val BUTTER      = Hue(rgb(0xFCE94F), rgb(0xEDD400), rgb(0xC4A000))
     val ORANGE      = Hue(rgb(0xFCAF3E), rgb(0xF57900), rgb(0xCE5C00))

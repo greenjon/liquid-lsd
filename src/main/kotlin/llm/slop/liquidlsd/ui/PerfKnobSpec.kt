@@ -16,7 +16,7 @@ import java.util.Locale
 internal sealed interface UnderKnob {
     /** The macro's own caption (source/mix rows, and an FX row's Super Knob in group mode). */
     data class Label(val text: String) : UnderKnob
-    /** An FX slot's cell ([FxSlotCell]): group-mode knobs 2-4, or focus mode's knob 1 (the focused slot's dry/wet). */
+    /** An FX slot's cell ([FxSlotCell]): group-mode knobs 2-4, or focus mode's knob 1 (the focused slot's name and bypass; its Metaknob value). */
     data class SlotCell(val slotIndex: Int) : UnderKnob
     /** A focused slot's parameter cell ([FxParamCell]); null name/param = blank knob on this page. */
     data class ParamCell(val name: String?, val param: ModulatableParameter?) : UnderKnob

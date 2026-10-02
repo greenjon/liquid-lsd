@@ -1,5 +1,12 @@
 package llm.slop.liquidlsd.midi
 
+import llm.slop.liquidlsd.control.CommandContext
+import llm.slop.liquidlsd.control.CommandInput
+import llm.slop.liquidlsd.control.CommandRegistry
+import llm.slop.liquidlsd.control.ControllerManager
+import llm.slop.liquidlsd.control.GlobalCommands
+import llm.slop.liquidlsd.control.KnobCommands
+import llm.slop.liquidlsd.control.KnobSurface
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ModulationOperator
@@ -115,18 +122,17 @@ object MidiMappingManager {
 
     private var lastUpdateTimeNanos = System.nanoTime()
 
-    // Edge-detection state for the fixed set of global (non-parameter) MIDI actions,
-    // consumed each frame by processGlobalMidiEvents().
-    private var lastNextMidiCcHigh = false
-    private var lastPrevMidiCcHigh = false
-    private var lastBgNextMidiCcHigh = false
-    private var lastBgPrevMidiCcHigh = false
-    private var lastTransNextMidiCcHigh = false
-    private var lastTransPrevMidiCcHigh = false
-    private var lastTapMidiCcHigh = false
-    private var lastAutoFadeMidiCcHigh = false
-    private var lastSnapAMidiCcHigh = false
-    private var lastSnapBMidiCcHigh = false
+    /**
+     * Global (non-parameter) actions. `Global/...` mapping paths resolve to these through aliases;
+     * rising-edge detection lives in the registry.
+     */
+    val commands = CommandRegistry().also {
+        GlobalCommands.registerAll(it)
+        KnobCommands().register(it)
+    }
+
+    /** Runs connected controllers that match a controller profile (e.g. Midi Fighter Twister). */
+    val controllers = ControllerManager(commands)
 
     init {
         if (!midiDir.exists()) midiDir.mkdirs()
@@ -574,6 +580,12 @@ object MidiMappingManager {
         }
     }
 
+    private fun hasLearnedMapping(event: MidiEvent): Boolean =
+        activeProfile.mappings.values.any {
+            it.cc == event.index && it.channel == event.channel &&
+                (it.messageType == event.type || (it.messageType == MidiMessageType.CC && event.type == MidiMessageType.PITCH_BEND))
+        }
+
     /** Queue-navigation deltas accumulated from global MIDI CC actions this frame. */
     data class GlobalMidiDeltas(val queueDelta: Int, val bgQueueDelta: Int, val transQueueDelta: Int = 0)
 
@@ -590,11 +602,10 @@ object MidiMappingManager {
         midiEnabled: Boolean,
         parametersState: ParametersState,
         mixer: Mixer,
-        onTapTempo: () -> Unit
+        onTapTempo: () -> Unit,
+        knobSurface: KnobSurface? = null
     ): GlobalMidiDeltas {
-        var midiCcDelta = 0
-        var bgMidiCcDelta = 0
-        var transMidiCcDelta = 0
+        val ctx = CommandContext(mixer, onTapTempo, knobSurface)
 
         if (!midiEnabled) {
             MidiEngine.receivedEvents.clear()
@@ -707,108 +718,17 @@ object MidiMappingManager {
                 }
                 parametersState.midiLearnTarget = null
             } else {
-                // Global Actions
-                val nextCc = getCcForSpecial("Global/queueNext")
-                val nextCh = getChannelForSpecial("Global/queueNext")
-                if (nextCc != -1 && event.index == nextCc && event.channel == nextCh) {
-                    val isHigh = event.normalizedValue > 0.5f
-                    if (isHigh && !lastNextMidiCcHigh) {
-                        midiCcDelta += 1
-                    }
-                    lastNextMidiCcHigh = isHigh
-                }
-                val prevCc = getCcForSpecial("Global/queuePrev")
-                val prevCh = getChannelForSpecial("Global/queuePrev")
-                if (prevCc != -1 && event.index == prevCc && event.channel == prevCh) {
-                    val isHigh = event.normalizedValue > 0.5f
-                    if (isHigh && !lastPrevMidiCcHigh) {
-                        midiCcDelta -= 1
-                    }
-                    lastPrevMidiCcHigh = isHigh
-                }
-                val bgNextCc = getCcForSpecial("Global/bgQueueNext")
-                val bgNextCh = getChannelForSpecial("Global/bgQueueNext")
-                if (bgNextCc != -1 && event.index == bgNextCc && event.channel == bgNextCh) {
-                    val isHigh = event.normalizedValue > 0.5f
-                    if (isHigh && !lastBgNextMidiCcHigh) {
-                        bgMidiCcDelta += 1
-                    }
-                    lastBgNextMidiCcHigh = isHigh
-                }
-                val bgPrevCc = getCcForSpecial("Global/bgQueuePrev")
-                val bgPrevCh = getChannelForSpecial("Global/bgQueuePrev")
-                if (bgPrevCc != -1 && event.index == bgPrevCc && event.channel == bgPrevCh) {
-                    val isHigh = event.normalizedValue > 0.5f
-                    if (isHigh && !lastBgPrevMidiCcHigh) {
-                        bgMidiCcDelta -= 1
-                    }
-                    lastBgPrevMidiCcHigh = isHigh
-                }
-                val transNextCc = getCcForSpecial("Global/transQueueNext")
-                val transNextCh = getChannelForSpecial("Global/transQueueNext")
-                if (transNextCc != -1 && event.index == transNextCc && event.channel == transNextCh) {
-                    val isHigh = event.normalizedValue > 0.5f
-                    if (isHigh && !lastTransNextMidiCcHigh) {
-                        transMidiCcDelta += 1
-                    }
-                    lastTransNextMidiCcHigh = isHigh
-                }
-                val transPrevCc = getCcForSpecial("Global/transQueuePrev")
-                val transPrevCh = getChannelForSpecial("Global/transQueuePrev")
-                if (transPrevCc != -1 && event.index == transPrevCc && event.channel == transPrevCh) {
-                    val isHigh = event.normalizedValue > 0.5f
-                    if (isHigh && !lastTransPrevMidiCcHigh) {
-                        transMidiCcDelta -= 1
-                    }
-                    lastTransPrevMidiCcHigh = isHigh
-                }
-                val tapCc = getCcForSpecial("Global/tapTempo")
-                val tapCh = getChannelForSpecial("Global/tapTempo")
-                if (tapCc != -1 && event.index == tapCc && event.channel == tapCh) {
-                    val isHigh = event.normalizedValue > 0.5f
-                    if (isHigh && !lastTapMidiCcHigh) {
-                        onTapTempo()
-                    }
-                    lastTapMidiCcHigh = isHigh
-                }
+                // A controller profile (e.g. Midi Fighter Twister) handles the inputs it binds, unless
+                // the user has learned a mapping on that exact channel/CC, which stays on top.
+                if (!hasLearnedMapping(event) && controllers.handle(event, ctx)) continue
 
-                val autoFadeCc = getCcForSpecial("Global/autoFade")
-                val autoFadeCh = getChannelForSpecial("Global/autoFade")
-                if (autoFadeCc != -1 && event.index == autoFadeCc && event.channel == autoFadeCh) {
-                    val isHigh = event.normalizedValue > 0.5f
-                    if (isHigh && !lastAutoFadeMidiCcHigh) {
-                        if (mixer.isAutoFading) {
-                            mixer.onCrossfadeManualTakeover()
-                        } else {
-                            val targetIsA = mixer.crossfade.baseValue > 0.0f
-                            mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
-                            mixer.isAutoFading = true
-                            mixer.muteCrossfadeNonMidiCv()
-                        }
-                    }
-                    lastAutoFadeMidiCcHigh = isHigh
-                }
-
-                val snapACc = getCcForSpecial("Global/snapDeckA")
-                val snapACh = getChannelForSpecial("Global/snapDeckA")
-                if (snapACc != -1 && event.index == snapACc && event.channel == snapACh) {
-                    val isHigh = event.normalizedValue > 0.5f
-                    if (isHigh && !lastSnapAMidiCcHigh) {
-                        mixer.onCrossfadeManualTakeover()
-                        mixer.crossfade.set(-1.0f)
-                    }
-                    lastSnapAMidiCcHigh = isHigh
-                }
-
-                val snapBCc = getCcForSpecial("Global/snapDeckB")
-                val snapBCh = getChannelForSpecial("Global/snapDeckB")
-                if (snapBCc != -1 && event.index == snapBCc && event.channel == snapBCh) {
-                    val isHigh = event.normalizedValue > 0.5f
-                    if (isHigh && !lastSnapBMidiCcHigh) {
-                        mixer.onCrossfadeManualTakeover()
-                        mixer.crossfade.set(1.0f)
-                    }
-                    lastSnapBMidiCcHigh = isHigh
+                // Global actions (queue next/prev, tap tempo, crossfader snaps/auto-fade): any
+                // "Global/..." mapping on this channel/CC runs its registered command.
+                val press = CommandInput.Press(event.normalizedValue > 0.5f)
+                for ((path, mapping) in activeProfile.mappings) {
+                    if (!path.startsWith("Global/")) continue
+                    if (mapping.cc != event.index || mapping.channel != event.channel) continue
+                    commands.execute(path, press, ctx)
                 }
 
                 // Forward to parameter bindings (rotary deltas, buttons, continuous takeover)
@@ -817,7 +737,7 @@ object MidiMappingManager {
         }
         MidiEngine.receivedCcEvents.clear()
 
-        return GlobalMidiDeltas(midiCcDelta, bgMidiCcDelta, transMidiCcDelta)
+        return GlobalMidiDeltas(ctx.queueDelta, ctx.bgQueueDelta, ctx.transQueueDelta)
     }
 
     /**

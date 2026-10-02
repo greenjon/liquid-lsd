@@ -1299,6 +1299,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#6-implemented-so-far-2026-10-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Implemented So Far (2026-10-01)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Implemented So Far (2026-10-01)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-command-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Command registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-device-tagging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Device tagging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-controller-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Controller profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-built-in-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Built-in profile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-controller-runtime-and-the-perform-grid-phase-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Controller runtime and the Perform grid (phase 2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1667,6 +1739,78 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#6-implemented-so-far-2026-10-01" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Implemented So Far (2026-10-01)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Implemented So Far (2026-10-01)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-command-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 Command registry
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-device-tagging" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 Device tagging
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-controller-profiles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Controller profiles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#64-built-in-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.4 Built-in profile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#65-controller-runtime-and-the-perform-grid-phase-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.5 Controller runtime and the Perform grid (phase 2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1686,7 +1830,7 @@
 
 <h1 id="unified-control-mapping-architecture-midi-keyboard-mouse-cv">Unified Control Mapping Architecture (MIDI / Keyboard / Mouse / CV)</h1>
 <blockquote>
-<p><strong>Status</strong>: Architectural Brainstorm &amp; Design Specification (Roadmap)<br />
+<p><strong>Status</strong>: Design specification. Phases 1-2 (command registry, device tagging, controller profiles, Perform-grid knob control for the Twister) are implemented for MIDI; see section 6. The rest is roadmap.<br />
 <strong>Inspiration</strong>: <a href="https://mixxx.org/">Mixxx DJ Software</a> Controller &amp; Keyboard Mapping Architecture</p>
 </blockquote>
 <hr />
@@ -2409,6 +2553,38 @@
 <li>Build the GUI mapping table and right-click "Learn" modals in ImGui.</li>
 <li>Support loading/saving controller presets to <code>library/mappings/</code>.</li>
 </ol>
+<hr />
+<h2 id="6-implemented-so-far-2026-10-01">6. Implemented So Far (2026-10-01)</h2>
+<p>Package <code>llm.slop.liquidlsd.control</code>; tests in <code>src/test/kotlin/.../control/</code> and <code>midi/GlobalCommandDispatchTest.kt</code>.</p>
+<h3 id="61-command-registry">6.1 Command registry</h3>
+<ul>
+<li><code>CommandRegistry</code> holds <code>Command(id, kind, category, description, handler)</code>. Kinds: <code>TRIGGER</code>, <code>TOGGLE</code> (both fire on the rising edge only), <code>MOMENTARY</code> (both edges), <code>SCALAR</code> (0..1), <code>RELATIVE</code> (signed steps). Inputs are <code>CommandInput.Press/Value/Delta</code>; an input that doesn't fit the command's kind is rejected.</li>
+<li>Edge detection lives in the registry (per command id), not in each caller.</li>
+<li>Aliases map legacy identifiers to command ids. The ten <code>Global/*</code> mapping paths are aliases of the commands in <code>GlobalCommands</code> (<code>mixer.queue_next</code>, <code>mixer.queue_prev</code>, <code>mixer.bg_queue_next/prev</code>, <code>mixer.trans_queue_next/prev</code>, <code>clock.tap_tempo</code>, <code>mixer.auto_crossfade_trigger</code>, <code>mixer.crossfade_snap_a/b</code>). Existing <code>library/midi/*.json</code> profiles load unchanged.</li>
+<li><code>MidiMappingManager.processGlobalMidiEvents</code> runs <code>Global/*</code> mappings through <code>MidiMappingManager.commands</code>. Handlers get a <code>CommandContext</code> (mixer, tap callback, queue deltas) and run on the render thread only; the registry is not thread-safe.</li>
+<li>Parameter and <code>Macro/...</code> bindings are not on the registry yet.</li>
+</ul>
+<h3 id="62-device-tagging">6.2 Device tagging</h3>
+<p><code>MidiEvent.deviceId</code> is the javax.sound.midi device name of the port that produced the event ("" for synthetic events). On connect, <code>MidiEngine</code> logs which controller profile (if any) matches the device.</p>
+<h3 id="63-controller-profiles">6.3 Controller profiles</h3>
+<ul>
+<li>A profile is JSON: <code>id</code>, <code>name</code>, <code>description</code>, <code>match</code> (case-insensitive substrings of the device name), <code>banks</code>, <code>inputs</code>, <code>bindings</code>, <code>bankBindings</code>.</li>
+<li>Built-ins live in <code>src/main/resources/controllers/</code> and are listed in <code>ControllerProfileStore.BUILT_IN_NAMES</code>; user profiles in <code>library/controllers/*.json</code>. A user profile with the same <code>id</code> replaces the built-in, and user profiles win when two match one device. Profiles that fail to parse or validate are skipped with an error in the log.</li>
+<li><code>banks.pages</code> lists the app page to show when each hardware bank becomes active (index = 0-based bank; <code>perform.decks</code>, <code>perform.master</code>). <code>inputs</code>: each entry is one input or a group. Group members come from <code>ccs</code> or <code>cc until cc + count</code> and are named <code>&lt;id&gt;.&lt;n&gt;</code> (1-based). <code>bankStride</code> adds <code>bank * bankStride</code> to the CC so a logical input keeps one id on every hardware bank. An <code>ENCODER</code> can carry <code>press: {channel}</code> (same CCs on another channel), exposed as <code>&lt;id&gt;.&lt;n&gt;.press</code>. <code>kind</code> is <code>ENCODER</code>, <code>BUTTON</code>, <code>FADER</code> or <code>MODIFIER</code> (a held button that selects alternate bindings). Encoders also take <code>mode</code> (<code>ABSOLUTE</code>, <code>RELATIVE_BINARY_OFFSET</code>, <code>RELATIVE_SIGNED_BIT</code>, <code>RELATIVE_TWOS_COMP</code>), <code>step</code> (fraction of a control's range per tick, default 1/127) and <code>accel</code> (maximum speed-up, 1 disables).</li>
+<li><code>banks.switch</code> describes the device's bank buttons (<code>CC = cc + bankIndex</code>; a non-zero value means that bank is now active).</li>
+<li>Binding keys are an input id with optional held-modifier prefixes (<code>shift+knob.3.press</code>); <code>bankBindings</code> (1-based bank) override <code>bindings</code>. In the last part of a key <code>*</code> matches a group index and <code>{n}</code> in the value is replaced by it (<code>"knob.*": "knob.{n}"</code>). <code>CompiledController.bindingFor(inputId, held, bank)</code> picks the most specific binding: more modifiers beat fewer, then a bank binding beats a global one.</li>
+<li><code>ControllerProfile.compile()</code> builds a <code>(type, channel, cc) -&gt; ResolvedInput(inputId, kind, bank, mode)</code> table and a list of structural problems (CC collisions, out-of-range values, duplicate ids, bindings naming unknown inputs or non-modifier prefixes). <code>unknownCommands(registry)</code> lists binding targets that aren't registered.</li>
+<li>Bindings, modifiers, banks and encoder handling are live (6.5). Not implemented yet: response curves, navigation/browse commands, MIDI output. See <code>.planning/midi-controller-plan.md</code>.</li>
+</ul>
+<h3 id="64-built-in-profile">6.4 Built-in profile</h3>
+<p><code>midi-fighter-twister</code>: 64 encoders (CC 0..63 on ch1 = knob + 16 * bank), encoder switches on ch2 with the same CCs, 4 side buttons per bank on ch4 (CC 8, 10, 11, 13, +4 per bank), bank buttons on ch4 CC 0..3. Measured on hardware.</p>
+<h3 id="65-controller-runtime-and-the-perform-grid-phase-2">6.5 Controller runtime and the Perform grid (phase 2)</h3>
+<ul>
+<li><code>ControllerManager</code> creates one <code>ControllerRuntime</code> per device the first time it sends a message and its name matches a profile. <code>MidiMappingManager.processGlobalMidiEvents</code> offers each event to it before the legacy <code>Global/*</code> and parameter bindings; a runtime consumes an event only if the profile binds that input, and a learned mapping on the exact channel/CC takes precedence over the profile.</li>
+<li>The runtime tracks the active bank (from the bank buttons, or any bank-aware input), held modifiers, and per-encoder state. Encoder messages become signed ticks (relative modes decode directly; <code>ABSOLUTE</code> is the change since the last value, so the first message only locates the knob), scaled by <code>step</code> and a speed-based boost (<code>accel</code>, full at &lt;= 8 ms between ticks, none at &gt;= 60 ms), then sent as <code>CommandInput.Delta</code>. A button's release goes to the command that received its press.</li>
+<li><code>KnobCommands</code> registers <code>knob.1..16</code> (RELATIVE), <code>knob.&lt;n&gt;.press</code> and <code>knob.&lt;n&gt;.press_alt</code> (MOMENTARY). It tracks which switches are held (the Twister sends the same turn messages either way): turning while held is fine (x0.1) and cancels the tap; a tap runs <code>KnobSurface.primary</code> (<code>press</code>) or <code>secondary</code> (<code>press_alt</code>).</li>
+<li><code>KnobSurface</code> (render thread) is implemented by <code>ui/PerformSurface</code>. Its page is <code>PerformPages.resolve</code>: <code>PerfRows.visibleRowsForTab</code> (the same rows <code>PerformanceMatrixPanel</code> draws, now in a shared object) through <code>PerfKnobResolver</code>, flattened row-major into 16 slots. Actions: turn adds to <code>MacroControl.value</code>; primary on an FX slot cell = <code>FxOps.setSlotEnabled</code>, on a parameter = reset to default, on a label knob = reset to 0.5; secondary on a slot cell = <code>FxMacroSync.focusSlot</code> (or leave focus when it is knob 1 of a focused row), on a parameter = <code>FxMacroSync.stepParamPage</code>; <code>showPage</code> sets the matrix tab.</li>
+</ul>
 
 
 

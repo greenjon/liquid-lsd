@@ -48,12 +48,13 @@ class FxFocusModeTest {
     }
 
     @Test
-    fun testFocusRetargetingBindsDryWetAndParameters() {
+    fun testFocusRetargetingBindsMetaknobAndParameters() {
         val chain = FxChain("Master FX")
         val filter = testFilterWithParams("glow", listOf("intensity", "radius", "threshold"))
         filter.parameters["intensity"]?.baseValue = 1.0f // 1.0 in [0, 2] -> 0.5 normalized
-        filter.dryWet.baseValue = 0.85f
+        filter.metaKnob.baseValue = 0.3f
         chain.slots[0] = filter
+        for (i in 0 until FxChain.SLOT_COUNT) chain.setSlotLinked(i, false)
 
         val bankId = MacroEngine.MASTER_FX
         FxMacroSync.syncChain(bankId, "Master", chain)
@@ -71,11 +72,10 @@ class FxFocusModeTest {
         assertTrue(chain.isFocused())
         assertEquals(0, chain.focusedSlot)
 
-        // Knob 0: Focused slot's individual Dry/Wet
-        assertEquals("DRY/WET", bank.knobs[0].label)
-        val dryWetBinding = bank.knobs[0].bindings.single()
-        assertEquals("Master/FX/FX1/DryWet", dryWetBinding.parameterId)
-        assertEquals(0.85f, bank.knobs[0].value)
+        // Knob 0: Focused slot's Metaknob (Dry/Wet lives on the chain header)
+        assertEquals("META", bank.knobs[0].label)
+        assertEquals("Master/FX/FX1/Meta", bank.knobs[0].bindings.single().parameterId)
+        assertEquals(0.3f, bank.knobs[0].value)
 
         // Knobs 1-3: Parameters
         assertEquals("INTENSITY", bank.knobs[1].label)
@@ -148,7 +148,7 @@ class FxFocusModeTest {
         // Focus slot 0
         FxMacroSync.focusSlot(bankId, mixer, 0)
         val bank = MacroEngine.getBank(bankId)!!
-        assertEquals("DRY/WET", bank.knobs[0].label)
+        assertEquals("META", bank.knobs[0].label)
         assertEquals("SPEED", bank.knobs[1].label)
 
         // Exit focus
@@ -190,7 +190,7 @@ class FxFocusModeTest {
     }
 
     @Test
-    fun testCustomUserBindingPreservedAcrossFocus() {
+    fun testFixedMappingOverwritesStrayBindingAcrossFocus() {
         val chain = FxChain("Deck A FX")
         chain.slots[0] = testFilterWithParams("fx", listOf("p1"))
         for (i in 0 until FxChain.SLOT_COUNT) chain.setSlotLinked(i, false)
@@ -199,32 +199,21 @@ class FxFocusModeTest {
         FxMacroSync.syncChain(bankId, "Deck A", chain)
 
         val bank = MacroEngine.getBank(bankId)!!
-        // Manually bind Knob 3 (index 2) to custom parameter outside Deck A/FX/...
+        // FX banks are fixed-mapping: a stray binding (e.g. from an old session) is discarded by sync.
         bank.knobs[2].label = "ZOOM"
         bank.knobs[2].bindings.clear()
-        bank.knobs[2].bindings.add(
-            MacroBinding(
-                parameterId = "Deck A/Geometry/Zoom",
-                targetType = MacroTargetType.PARAM_BASE_VALUE,
-                minVal = 0.5f,
-                maxVal = 2.0f
-            )
-        )
+        bank.knobs[2].bindings.add(MacroBinding(parameterId = "Deck A/Geometry/Zoom", targetType = MacroTargetType.PARAM_BASE_VALUE))
 
-        // Focus Slot 0
         chain.focusSlot(0)
         FxMacroSync.syncChain(bankId, "Deck A", chain)
+        // Focus mode, page 0: only one param, so knob 3 is unused.
+        assertEquals("—", bank.knobs[2].label)
+        assertTrue(bank.knobs[2].bindings.isEmpty())
 
-        // Knob 3 custom binding should be preserved!
-        assertEquals("ZOOM", bank.knobs[2].label)
-        assertEquals("Deck A/Geometry/Zoom", bank.knobs[2].bindings.single().parameterId)
-
-        // Exit Focus
         chain.focusSlot(null)
         FxMacroSync.syncChain(bankId, "Deck A", chain)
-
-        assertEquals("ZOOM", bank.knobs[2].label)
-        assertEquals("Deck A/Geometry/Zoom", bank.knobs[2].bindings.single().parameterId)
+        assertEquals("META", bank.knobs[2].label)
+        assertEquals("Deck A/FX/FX2/Meta", bank.knobs[2].bindings.single().parameterId)
     }
 
     @Test

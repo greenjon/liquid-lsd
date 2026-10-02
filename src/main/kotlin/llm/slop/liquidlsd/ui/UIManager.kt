@@ -177,7 +177,15 @@ class UIManager(
         }
     )
 
-    private val macroPanel = MacroPanel(parametersState = parametersState)
+    private val macroPanel = MacroPanel(
+        parametersState = parametersState,
+        drawDeckTile = { mixer, label, deck, width, height, isDeckA, editing, onSelect ->
+            deckControlPanel.drawDeckControls(
+                session, mixer, label, deck, width, height, isDeckA, deckUtilityAction,
+                editing = editing, onSelect = onSelect
+            )
+        }
+    )
     private val performanceMatrixPanel = PerformanceMatrixPanel()
 
     fun render(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
@@ -196,7 +204,8 @@ class UIManager(
             midiEnabled = session.uiTheme.midiEnabled,
             parametersState = parametersState,
             mixer = mixer,
-            onTapTempo = { session.tapTempoController.tap() }
+            onTapTempo = { session.tapTempoController.tap() },
+            knobSurface = PerformSurface(session.uiTheme, performanceMatrixPanel.ctx, parametersState, mixer)
         )
 
         val cvDelta = if (session.playQueueManager.isAutoVJEnabled) mixer.pollQueueAdvance() else { mixer.pollQueueAdvance(); 0 }

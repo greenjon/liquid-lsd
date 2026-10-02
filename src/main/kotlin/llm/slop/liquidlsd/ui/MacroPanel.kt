@@ -31,9 +31,9 @@ import llm.slop.liquidlsd.rendering.Mixer
  * [Column3HeaderToggle].
  */
 class MacroPanel(
-    private val parametersState: ParametersState
+    private val parametersState: ParametersState,
+    private val drawDeckTile: (Mixer, String, llm.slop.liquidlsd.rendering.Deck, Float, Float, Boolean, Boolean, (String) -> Unit) -> Unit
 ) {
-    private val linkBufs = Array(llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) { imgui.type.ImBoolean(true) }
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         drawDeckTabs(session)
         ImGui.spacing()
@@ -60,13 +60,17 @@ class MacroPanel(
         ImGui.separator()
         ImGui.spacing()
 
-        drawBindingInspectorDrawer(session, bank, mixer)
+        // FX banks have a fixed knob mapping (see FxMacroSummary), so no Binding Inspector on those pages.
+        if (!isFxTab) {
+            drawBindingInspectorDrawer(session, bank, mixer)
 
-        ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+        }
 
-        drawPreviewMonitor(session, mixer)
+        val deckLabel = editedDeckLabel()
+        if (deckLabel != null) drawDeckQuad(session, mixer, deckLabel) else drawPreviewMonitor(session, mixer)
     }
 
     /**
@@ -221,9 +225,8 @@ class MacroPanel(
 
     // -- Dedicated FX Rack View (Traktor/Mixxx-style Super Knob + 3 Metaknobs) --------------------
     // Replaces the generic knob grid for the five independent FX tabs (A FX / B FX / BG FX /
-    // PV FX / MST FX): each deck owns its own FxChain and there is no chain-picker here. The
-    // Super Link checkboxes mirror the link toggles in the main parameters panel and in
-    // PerformanceMatrixPanel, writing through to the same FxChain object.
+    // PV FX / MST FX): each deck owns its own FxChain and there is no chain-picker here. Super Link
+    // toggles live only on the deck FX cells (PerformanceMatrixPanel) and the Parameters panel.
 
     private fun drawFxRackView(
         session: llm.slop.liquidlsd.SessionContext,
@@ -243,27 +246,7 @@ class MacroPanel(
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("FX RACK: $displayLabel") }
         ImGui.spacing()
 
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            ImGui.textDisabled("SUPER LINK:")
-            for (slotIdx in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
-                ImGui.sameLine(0f, 8f)
-                val linked = chain.slotSuperKnobLink.getOrNull(slotIdx) ?: false
-                val buf = linkBufs[slotIdx]
-                buf.set(linked)
-                val slot = chain.slots.getOrNull(slotIdx)
-                val slotName = slot?.displayName?.takeIf { it.isNotBlank() } ?: "S${slotIdx + 1}"
-                if (ImGui.checkbox("$slotName##macro_fx_link_${tabId}_$slotIdx", buf)) {
-                    chain.setSlotLinked(slotIdx, buf.get())
-                    llm.slop.liquidlsd.macro.FxMacroSync.syncFor(activeBankId(), mixer)
-                }
-            }
-        }
-
-        ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
-
-        drawMacroGrid(session, bank)
+        FxMacroSummary.draw(session, bank, chain)
     }
 
     // -- Knob Selector Strip (picks which knob's bindings the inspector below shows) -----------------
@@ -324,7 +307,37 @@ class MacroPanel(
         }
     }
 
-    // -- Single-deck preview monitor (bottom) ------------------------------------------------------
+    /** "Deck A".."Deck PV" when the current page edits a deck (SRC or FX), else null (master/transition/global). */
+    private fun editedDeckLabel(): String? = when (macroTab()) {
+        "Deck A", "A FX" -> "Deck A"
+        "Deck B", "B FX" -> "Deck B"
+        "Deck BG", "BG FX" -> "Deck BG"
+        "Deck PV", "PV FX" -> "Deck PV"
+        else -> null
+    }
+
+    // -- Four-deck monitors (deck pages): same tiles/geometry as the Mixer view, edited deck pulses ----
+
+    private fun drawDeckQuad(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, editedLabel: String) {
+        val availW = ImGui.getContentRegionAvailX().coerceAtLeast(1f)
+        val halfW = (availW - DeckMonitorGrid.PADDING) * 0.5f
+        val tileH = (halfW * session.uiTheme.renderAspectRatio).coerceAtLeast(1f)
+        // Anchor to the bottom of the panel when there is room.
+        val gridH = DeckMonitorGrid.totalHeight(tileH)
+        val slack = ImGui.getContentRegionAvailY() - gridH
+        if (slack > 0f) ImGui.setCursorPosY(ImGui.getCursorPosY() + slack)
+
+        DeckMonitorGrid.draw(mixer, ImGui.getCursorScreenPosX(), ImGui.getCursorScreenPosY(), availW, tileH) { label, deck, w, h, isA ->
+            drawDeckTile(mixer, label, deck, w, h, isA, label == editedLabel) { picked ->
+                val top = picked
+                parametersState.hideGlobalMacros()
+                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(top, parametersState.getActiveSubTab(top))
+                parametersState.activeTopTab = top
+            }
+        }
+    }
+
+    // -- Single large preview monitor (master / transition / global pages) ------------------------ ------------------------------------------------------
 
     private fun drawPreviewMonitor(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val tab = macroTab()
@@ -367,6 +380,11 @@ class MacroPanel(
         val textureId = resolvePreviewTexture(mixer)
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.image(textureId.toLong(), previewW, previewH, 0f, 1f, 1f, 0f)
+
+        TangoPalette.drawEditingPulseFrame(
+            dl, startX - 2f, startY - 2f, startX + previewW + 2f, startY + previewH + 2f,
+            TangoPalette.u32(TangoPalette.NEUTRAL_LIGHT.normal)
+        )
 
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.invisibleButton("##macro_preview_monitor", previewW, previewH)

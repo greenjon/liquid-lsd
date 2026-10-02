@@ -19,7 +19,8 @@ data class MidiEvent(
     val index: Int,             // CC# (0..127), Note# (0..127), or 0 for Pitch Bend
     val rawValue: Int,          // 0..127, or 0..16383 for Pitch Bend
     val normalizedValue: Float, // 0.0..1.0, or -1.0..1.0 for Pitch Bend
-    val timestampMs: Long = System.currentTimeMillis()
+    val timestampMs: Long = System.currentTimeMillis(),
+    val deviceId: String = ""   // Name of the source MIDI device ("" if unknown, e.g. synthetic events)
 )
 
 object MidiEngine {
@@ -70,9 +71,10 @@ object MidiEngine {
                     if (device.maxTransmitters != 0) {
                         device.open()
                         val transmitter = device.transmitter
-                        transmitter.receiver = MidiInputReceiver()
+                        transmitter.receiver = MidiInputReceiver(info.name ?: "")
                         openDevices.add(device)
                         logger.info { "Successfully opened MIDI input device: ${info.name} - ${info.description}" }
+                        logControllerProfileMatch(info.name)
                     }
                 } catch (e: Throwable) {
                     logger.warn { "Could not open MIDI device: ${info.name}. Error: ${e.message}" }
@@ -130,9 +132,10 @@ object MidiEngine {
                     if (device.maxTransmitters != 0) {
                         device.open()
                         val transmitter = device.transmitter
-                        transmitter.receiver = MidiInputReceiver()
+                        transmitter.receiver = MidiInputReceiver(info.name ?: "")
                         openDevices.add(device)
                         logger.info { "Successfully opened newly detected MIDI input device: ${info.name} - ${info.description}" }
+                        logControllerProfileMatch(info.name)
                     }
                 } catch (e: Throwable) {
                     // Log at debug so as not to spam warnings if a device is locked by another app
@@ -140,6 +143,11 @@ object MidiEngine {
                 }
             }
         }
+    }
+
+    private fun logControllerProfileMatch(deviceName: String?) {
+        val profile = llm.slop.liquidlsd.control.ControllerProfileStore.matchFor(deviceName ?: return)
+        if (profile != null) logger.info { "Controller profile '${profile.id}' matches MIDI device: $deviceName" }
     }
 
     fun getActiveDeviceCount(): Int {
@@ -219,7 +227,7 @@ object MidiEngine {
         }
     }
 
-    private class MidiInputReceiver : Receiver {
+    private class MidiInputReceiver(private val deviceId: String) : Receiver {
         override fun send(message: MidiMessage?, timeStamp: Long) {
             if (message !is ShortMessage) return
             val channel = message.channel.coerceIn(0, 15)
@@ -233,7 +241,7 @@ object MidiEngine {
                     val idx = (channel * 128) + cc
                     ccValues.set(idx, normalizedValue.toBits())
 
-                    val event = MidiEvent(channel, MidiMessageType.CC, cc, rawVal, normalizedValue)
+                    val event = MidiEvent(channel, MidiMessageType.CC, cc, rawVal, normalizedValue, deviceId = deviceId)
                     receivedEvents.offer(event)
                     receivedCcEvents.offer(channel to cc)
                     recordRecentEvent(event)
@@ -246,7 +254,7 @@ object MidiEngine {
                     val idx = (channel * 128) + note
                     noteValues.set(idx, normalizedValue.toBits())
 
-                    val event = MidiEvent(channel, MidiMessageType.NOTE, note, velocity, normalizedValue)
+                    val event = MidiEvent(channel, MidiMessageType.NOTE, note, velocity, normalizedValue, deviceId = deviceId)
                     receivedEvents.offer(event)
                     recordRecentEvent(event)
                 }
@@ -257,7 +265,7 @@ object MidiEngine {
                     val idx = (channel * 128) + note
                     noteValues.set(idx, 0.0f.toBits())
 
-                    val event = MidiEvent(channel, MidiMessageType.NOTE, note, 0, 0.0f)
+                    val event = MidiEvent(channel, MidiMessageType.NOTE, note, 0, 0.0f, deviceId = deviceId)
                     receivedEvents.offer(event)
                     recordRecentEvent(event)
                 }
@@ -269,7 +277,7 @@ object MidiEngine {
 
                     pitchBendValues.set(channel, normalizedValue.toBits())
 
-                    val event = MidiEvent(channel, MidiMessageType.PITCH_BEND, 0, raw, normalizedValue)
+                    val event = MidiEvent(channel, MidiMessageType.PITCH_BEND, 0, raw, normalizedValue, deviceId = deviceId)
                     receivedEvents.offer(event)
                     recordRecentEvent(event)
                 }
