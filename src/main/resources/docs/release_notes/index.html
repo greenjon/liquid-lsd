@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-opens-and-drives-the-src-fx-transition-pickers-uinavigationsurfacekt-shaderpickerpopupkt-performancebrowsebaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister Opens and Drives the SRC / FX / Transition Pickers (ui/NavigationSurface.kt, ShaderPickerPopup.kt, PerformanceBrowseBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#twister-side-buttons-navigate-the-library-controlnavcommandskt-uinavigationsurfacekt-uilibrarynavigationkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister Side Buttons Navigate the Library (control/NavCommands.kt, ui/NavigationSurface.kt, ui/LibraryNavigation.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#default-pages-and-a-16-row-twister-layout-resourcesperform_pages-resourcescontrollersmidi-fighter-twisterjson" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4767,6 +4789,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-opens-and-drives-the-src-fx-transition-pickers-uinavigationsurfacekt-shaderpickerpopupkt-performancebrowsebaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister Opens and Drives the SRC / FX / Transition Pickers (ui/NavigationSurface.kt, ShaderPickerPopup.kt, PerformanceBrowseBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#twister-side-buttons-navigate-the-library-controlnavcommandskt-uinavigationsurfacekt-uilibrarynavigationkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister Side Buttons Navigate the Library (control/NavCommands.kt, ui/NavigationSurface.kt, ui/LibraryNavigation.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#default-pages-and-a-16-row-twister-layout-resourcesperform_pages-resourcescontrollersmidi-fighter-twisterjson" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8301,6 +8345,19 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="twister-opens-and-drives-the-src-fx-transition-pickers-uinavigationsurfacekt-shaderpickerpopupkt-performancebrowsebaykt">Twister Opens and Drives the SRC / FX / Transition Pickers (<code>ui/NavigationSurface.kt</code>, <code>ShaderPickerPopup.kt</code>, <code>PerformanceBrowseBay.kt</code>)</h3>
+<ul>
+<li><strong>Open</strong>: in the Perform view the right-bottom side button opens the picker for the row of the knob you touched last: a deck's SRC row opens its source list, an FX row opens the slot under that knob (knob 1 opens the saved-chain list), the Transitions row opens the transition list.</li>
+<li><strong>Browse</strong>: while a picker is showing, <strong>knob 1 is the cursor</strong> (turn = move the highlight, tap = apply the highlighted row; moving never applies anything). Right-top steps the category (shift: back), shift + right-bottom clears the slot or chain, left-top closes the picker. Moving the cursor switches the list to the flat view.</li>
+<li>The highlighted row is also drawn on screen, so the picker is usable from the mouse too.</li>
+</ul>
+<h3 id="twister-side-buttons-navigate-the-library-controlnavcommandskt-uinavigationsurfacekt-uilibrarynavigationkt">Twister Side Buttons Navigate the Library (<code>control/NavCommands.kt</code>, <code>ui/NavigationSurface.kt</code>, <code>ui/LibraryNavigation.kt</code>)</h3>
+<ul>
+<li><strong>Perform view</strong>: the left-top side button is <strong>back</strong> (the same steps as Esc: cancel Learn, close Preferences, leave FX focus, close Edit); the right-top button opens the <strong>Library</strong> view.</li>
+<li><strong>Library view</strong>: left-top leaves the Library, right-top steps the <strong>tab</strong> (Sources, FX, Trans), right-bottom steps the <strong>list</strong> (browser, playlist, BG queue, A/B queue). <strong>Knob 1 becomes the cursor</strong>: turn to move, tap to load (a preset or generator goes to the deck the crossfader is moving away from, a BG queue item to Deck BG, a transition to the mixer; in the FX tab it adds to the FX queue), shift + tap to add to the A/B queue. Shift + the side buttons add to the BG queue and step the tab and list backwards.</li>
+<li><strong>Changing tab</strong> now starts the cursor in that tab's own list (it used to keep the previous tab's selection, which Up/Down then acted on).</li>
+<li>Not yet: SRC and FX pickers, queue transport and playlist panes in the FX/Trans tabs.</li>
+</ul>
 <h3 id="default-pages-and-a-16-row-twister-layout-resourcesperform_pages-resourcescontrollersmidi-fighter-twisterjson">Default Pages and a 16-Row Twister Layout (<code>resources/perform_pages/</code>, <code>resources/controllers/midi-fighter-twister.json</code>)</h3>
 <ul>
 <li><strong>Three new pages</strong> join DECKS and MASTER in the tab strip: <strong>A/B</strong> (Deck A SRC, Deck A FX, Deck B SRC, Deck B FX), <strong>BG/PV</strong> (the same for BG and PV) and <strong>MIXER</strong> (Master MIX, Master FX, Transitions, FX Wet/Dry). Every deck half and both Master halves are pinned rows, so there is nothing to toggle.</li>

@@ -60,7 +60,7 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
 - Gesture map (profile + `PerformSurface`): turn = move; tap switch = FX slot bypass / reset to default (source knobs reset to
   0.5); shift + tap = focus slot / leave focus (knob 1 of a focused row) / next parameter page; hold switch + turn = fine
   (x0.1). Shift = side button CC 10 (left-bottom). Free side buttons: `side.1` (CC 8), `side.2` (CC 11), `side.3` (CC 13).
-- Bank 1 = DECKS tab, bank 2 = MASTER tab, banks 3 and 4 repeat them (profile `banks.pages`). The page always follows
+- Banks select Perform pages (profile `banks.pages`): bank 1 = `ab` (A SRC/FX, B SRC/FX), 2 = `bgpv`, 3 = `mixer`, 4 = `master` (since perform-pages phase 3; was DECKS, MASTER, repeated). See `.planning/perform-pages-plan.md`. The page always follows
   the UI tab, not the bank, so every bank's knob n controls page knob n.
 - LED colours: row accents, except Master (`LED_MASTER` scarlet) and Global (`LED_GLOBAL` plum) because their on-screen
   greys have no hue. Dark LED = empty/bypassed slot or blank parameter position.

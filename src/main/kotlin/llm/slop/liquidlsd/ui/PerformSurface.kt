@@ -81,11 +81,13 @@ internal class PerformSurface(
         PerformPages.resolve(theme.performancePageId, ctx, parametersState, mixer).knobs.getOrNull(index)
 
     override fun turn(knob: Int, delta: Float) {
+        lastTouchedKnob = knob
         val control = knob(knob)?.control ?: return
         control.value = (control.value + delta).coerceIn(0f, 1f)
     }
 
     override fun primary(knob: Int) {
+        lastTouchedKnob = knob
         val target = knob(knob) ?: return
         when (val under = target.spec.under) {
             is UnderKnob.SlotCell -> toggleBypass(target.bankId, under.slotIndex)
@@ -95,6 +97,7 @@ internal class PerformSurface(
     }
 
     override fun secondary(knob: Int) {
+        lastTouchedKnob = knob
         val target = knob(knob) ?: return
         when (val under = target.spec.under) {
             is UnderKnob.SlotCell -> {
@@ -147,5 +150,8 @@ internal class PerformSurface(
 
         /** What a mouse middle-click does on these knobs (the matrix passes 0.5 as every macro's default). */
         const val LABEL_KNOB_DEFAULT = 0.5f
+
+        /** The knob (0-based) a controller touched last; the controller's "pick" button opens the picker of its row. */
+        @Volatile var lastTouchedKnob: Int? = null
     }
 }

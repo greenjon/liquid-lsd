@@ -258,7 +258,7 @@ object LibraryPanel {
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isPresets) activeCol else inactiveCol)
                 ImGui.pushStyleColor(ImGuiCol.Text, if (isPresets) activeTextCol else inactiveTextCol)
                 if (ImGui.button("Sources##mode_presets", btnWModeWide, btnH)) {
-                    viewMode = LibraryViewMode.PRESETS
+                    LibraryNavigation.setViewMode(LibraryViewMode.PRESETS)
                 }
                 ImGui.popStyleColor(2)
 
@@ -268,7 +268,7 @@ object LibraryPanel {
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isFx) activeCol else inactiveCol)
                 ImGui.pushStyleColor(ImGuiCol.Text, if (isFx) activeTextCol else inactiveTextCol)
                 if (ImGui.button("FX##mode_fx", btnWMode, btnH)) {
-                    viewMode = LibraryViewMode.FX
+                    LibraryNavigation.setViewMode(LibraryViewMode.FX)
                 }
                 ImGui.popStyleColor(2)
 
@@ -278,7 +278,7 @@ object LibraryPanel {
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isTrans) activeCol else inactiveCol)
                 ImGui.pushStyleColor(ImGuiCol.Text, if (isTrans) activeTextCol else inactiveTextCol)
                 if (ImGui.button("Trans##mode_trans", btnWMode, btnH)) {
-                    viewMode = LibraryViewMode.TRANS
+                    LibraryNavigation.setViewMode(LibraryViewMode.TRANS)
                 }
                 ImGui.popStyleColor(2)
             }
@@ -478,24 +478,9 @@ object LibraryPanel {
                 val isNavUp = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.isTriggered("library.navigate")
                 val isNavDown = !io.keyCtrl && !io.keyAlt && !io.keySuper && !io.keyShift && ImGui.isKeyPressed(ImGuiKey.DownArrow, false)
 
-                val isFxMode = viewMode == LibraryViewMode.FX
-                val targetFiles = if (activeSelectionSource == SelectionSource.PRESETS && viewMode == LibraryViewMode.PRESETS) {
-                    PresetListPanel.selection.getSelectedInOrder(PresetListPanel.filteredPresets)
-                        .filter { it.type != AssetType.SOURCE_STOCK }
-                        .map { File(it.path) }
-                } else if (activeFile != null && activeFile.exists()) {
-                    listOf(activeFile)
-                } else {
-                    emptyList()
-                }
-
-                if (isQueueBG && targetFiles.isNotEmpty()) {
-                    if (isFxMode) targetFiles.forEach { llm.slop.liquidlsd.presets.FXBgQueueManager.appendToQueue(it) }
-                    else targetFiles.forEach { llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(it) }
+                if (isQueueBG && LibraryNavigation.enqueue(session, bg = true)) {
                     shouldReclaimFocus = true
-                } else if (isQueueAB && targetFiles.isNotEmpty()) {
-                    if (isFxMode) targetFiles.forEach { llm.slop.liquidlsd.presets.FXQueueManager.appendToQueue(it) }
-                    else targetFiles.forEach { session.playQueueManager.appendToQueue(it) }
+                } else if (isQueueAB && LibraryNavigation.enqueue(session, bg = false)) {
                     shouldReclaimFocus = true
                 } else if (isNavUp) {
                     navigateSelection(-1, session, mixer)

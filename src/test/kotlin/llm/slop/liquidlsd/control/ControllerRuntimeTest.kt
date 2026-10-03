@@ -23,8 +23,15 @@ class ControllerRuntimeTest {
     }
 
     private val surface = FakeSurface()
-    private val registry = CommandRegistry().also { GlobalCommands.registerAll(it); KnobCommands().register(it) }
-    private val ctx = CommandContext(mockk<Mixer>(relaxed = true), knobSurface = surface)
+    private val registry = CommandRegistry().also { GlobalCommands.registerAll(it); KnobCommands().register(it); NavCommands.register(it) }
+    private val navCalls = ArrayList<String>()
+    private val nav = object : NavSurface {
+        override val browsing = false
+        override fun button(index: Int, shifted: Boolean) { navCalls += "button $index${if (shifted) " shifted" else ""}" }
+        override fun browseStep(steps: Int) {}
+        override fun browseAccept(shifted: Boolean) {}
+    }
+    private val ctx = CommandContext(mockk<Mixer>(relaxed = true), knobSurface = surface, navSurface = nav)
     private val shipped = ControllerProfileStore(createTempDirectory("controllers").toFile()).get("midi-fighter-twister")!!
 
     /** The shipped profile with its encoders switched to the factory absolute mode. */
@@ -215,8 +222,9 @@ class ControllerRuntimeTest {
 
     @Test
     fun unboundAndUnknownInputsFallThroughToLegacyBindings() {
-        assertFalse(side(8, true))             // side.1 has no binding yet
-        assertFalse(side(8, false))
+        assertTrue(side(8, true))              // side.1 is bound to nav.button.1
+        assertTrue(side(8, false))
+        assertEquals(listOf("button 0"), navCalls)
         assertFalse(send(5, 30, 127))          // not a Twister input at all
         assertFalse(send(0, 100, 5))           // CC beyond the 64 encoders
         assertTrue(surface.calls.isEmpty())

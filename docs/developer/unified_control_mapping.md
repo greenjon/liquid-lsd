@@ -312,3 +312,8 @@ Package `llm.slop.liquidlsd.control`; tests in `src/test/kotlin/.../control/` an
 - `MidiOutputPorts.openFor(name, minIntervalMs)` writes through a `CcQueue` (one pending value per channel/CC, so a slow device never accumulates stale values) from a daemon thread that keeps at least `output.minIntervalMs` (default 2) between messages, because the Twister drops bursts. It logs send time and backlog every 5 s (INFO when a send takes over 5 ms or the backlog exceeds 40).
 - `ControllerManager.updateFeedback` runs once per frame from `UIManager.render`. Once a second it scans `MidiEngine.getConnectedDeviceNames()`: matching devices get a `ControllerFeedback` over `MidiOutputPorts.openFor(name)` (an output port with the same device name, written from a daemon thread); devices that left or whose sink is unhealthy are dropped, and a failed open is retried after 10 s.
 
+### 6.7 Navigation (phase 3, first slice)
+`NavSurface` (on `CommandContext`, like `KnobSurface`) gets `nav.button.1..3` / `.alt` from `NavCommands` and the knob 1 cursor from `KnobCommands` while `browsing`. The UI implementation is `ui/NavigationSurface.kt`; it dispatches on the current view (Library FULL vs Perform/Edit) and calls `LibraryNavigation` (tab, list, cursor, accept, enqueue) and `BackNavigation` (the Esc stack). See `.planning/midi-phase3-navigation-plan.md` for what is still open (pickers).
+
+The picker context: `NavigationSurface.inPicker` = Edit view and `ShaderPickerPopup.isShowing` or `ChainListBrowse.isShowing` (both stamp the time of their last draw). Cursor API: `ShaderPickerPopup.moveCursor/acceptCursor/stepCategory/detach`, `ChainListBrowse.move/accept/clear`. Opening uses `PerformSurface.lastTouchedKnob` to find the row.
+

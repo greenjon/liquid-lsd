@@ -7,6 +7,8 @@ import llm.slop.liquidlsd.control.ControllerManager
 import llm.slop.liquidlsd.control.GlobalCommands
 import llm.slop.liquidlsd.control.KnobCommands
 import llm.slop.liquidlsd.control.KnobSurface
+import llm.slop.liquidlsd.control.NavCommands
+import llm.slop.liquidlsd.control.NavSurface
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ModulationOperator
@@ -129,6 +131,7 @@ object MidiMappingManager {
     val commands = CommandRegistry().also {
         GlobalCommands.registerAll(it)
         KnobCommands().register(it)
+        NavCommands.register(it)
     }
 
     /** Runs connected controllers that match a controller profile (e.g. Midi Fighter Twister). */
@@ -603,9 +606,10 @@ object MidiMappingManager {
         parametersState: ParametersState,
         mixer: Mixer,
         onTapTempo: () -> Unit,
-        knobSurface: KnobSurface? = null
+        knobSurface: KnobSurface? = null,
+        navSurface: NavSurface? = null
     ): GlobalMidiDeltas {
-        val ctx = CommandContext(mixer, onTapTempo, knobSurface)
+        val ctx = CommandContext(mixer, onTapTempo, knobSurface, navSurface)
 
         if (!midiEnabled) {
             MidiEngine.receivedEvents.clear()

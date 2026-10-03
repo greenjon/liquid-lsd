@@ -52,6 +52,7 @@ object ShaderPickerPopup {
 
     const val CATEGORY_FAVORITES = "\u2605 Favorites"
     const val CATEGORY_SAVED = "Saved FX"
+    private const val SHOWING_WINDOW_MS = 300L
     private const val SAVED_PREFIX = "saved:"
     private const val SAVED_SOURCE_PREFIX = "preset:"
 
@@ -80,6 +81,50 @@ object ShaderPickerPopup {
      *  list even though nothing was typed into search or the category dropdown. */
     private var lastSourcePresetsScan: List<AssetItem>? = null
 
+    /** Controller cursor: the id of the highlighted row (null = none yet). Moves with [moveCursor], applies with [acceptCursor]. */
+    private var cursorId: String? = null
+    private var scrollToCursor = false
+    /** When [drawInline] last ran; lets a controller tell whether a picker is actually on screen. */
+    @Volatile var lastDrawMs: Long = 0L
+        private set
+
+    val isShowing: Boolean get() = System.currentTimeMillis() - lastDrawMs < SHOWING_WINDOW_MS
+
+    /**
+     * Moves the cursor [steps] rows through the list in its flat order (clamped). Switches to the flat
+     * view first, because the folder view hides the rows of collapsed groups.
+     */
+    fun moveCursor(steps: Int) {
+        if (filteredItems.isEmpty()) return
+        viewMode = ViewMode.FLAT
+        val current = filteredItems.indexOfFirst { it.id == cursorId }
+        val target = if (current < 0) (if (steps > 0) steps - 1 else filteredItems.size + steps) else current + steps
+        cursorId = filteredItems[target.coerceIn(0, filteredItems.lastIndex)].id
+        scrollToCursor = true
+    }
+
+    /** Applies the highlighted row, if any. Returns whether something was applied. */
+    fun acceptCursor(): Boolean {
+        val id = cursorId?.takeIf { id -> filteredItems.any { it.id == id } } ?: return false
+        onSelect?.invoke(id)
+        return true
+    }
+
+    /** Detaches / clears whatever the picker targets (the overflow menu's "Detach / None"). */
+    fun detach() { onSelect?.invoke(null) }
+
+    /** True when the current picker clears a target on [detach] (FX slots do; a source or a transition can't be unset). */
+    val canDetach: Boolean get() = isFxPicker
+
+    /** Steps the single active category through the dropdown's list, wrapping; the cursor restarts at the top. */
+    fun stepCategory(delta: Int) {
+        if (categories.isEmpty()) return
+        val current = if (selectedCategories.size == 1) categories.indexOf(selectedCategories.first()).coerceAtLeast(0) else 0
+        selectedCategories = mutableSetOf(categories[Math.floorMod(current + delta, categories.size)])
+        cursorId = null
+        updateItems()
+    }
+
     // Internal cache to avoid allocations in drawInline()
     private val filteredItems = mutableListOf<ShaderItem>()
     private val folderGroups = mutableMapOf<String, MutableList<ShaderItem>>()
@@ -103,6 +148,7 @@ object ShaderPickerPopup {
     /** Resets search/category/results state for a freshly-selected [type]. */
     private fun resetForType(type: PickerType) {
         pickerType = type
+        cursorId = null
         searchBuf.set("")
         selectedCategories = mutableSetOf(
             when (type) {
@@ -517,8 +563,14 @@ object ShaderPickerPopup {
         // which without this would swallow clicks on the ★ favorite / "..." manage button drawn
         // in column 2 afterward -- the later widget only wins hover if the row beneath it opts in.
         ImGui.setNextItemAllowOverlap()
-        if (selectableRow(itemLabel, false, flags = ImGuiSelectableFlags.AllowDoubleClick)) {
+        val isCursor = item.id == cursorId
+        if (selectableRow(itemLabel, isCursor, flags = ImGuiSelectableFlags.AllowDoubleClick)) {
+            cursorId = item.id
             onSelect?.invoke(item.id)
+        }
+        if (isCursor && scrollToCursor) {
+            ImGui.setScrollHereY()
+            scrollToCursor = false
         }
         if (item.isExternal) {
             ImGui.popStyleColor(1)
@@ -592,6 +644,7 @@ object ShaderPickerPopup {
      * (or switching to a different target) is the caller's job, not this widget's.
      */
     fun drawInline(session: SessionContext) {
+        lastDrawMs = System.currentTimeMillis()
         if (pickerType == PickerType.SOURCE) {
             val currentScan = FileSystemManager.scanAllPresets()
             if (currentScan !== lastSourcePresetsScan) {

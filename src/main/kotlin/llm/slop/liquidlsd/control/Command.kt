@@ -27,7 +27,9 @@ class CommandContext(
     val mixer: Mixer,
     val onTapTempo: () -> Unit = {},
     /** The Perform-view knobs, when a UI is attached (null in headless tests). */
-    var knobSurface: KnobSurface? = null
+    var knobSurface: KnobSurface? = null,
+    /** Navigation/browse (side buttons, knob 1 cursor), when a UI is attached. */
+    var navSurface: NavSurface? = null
 ) {
     var queueDelta = 0
     var bgQueueDelta = 0

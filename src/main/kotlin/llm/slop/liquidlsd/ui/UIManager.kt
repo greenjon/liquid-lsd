@@ -206,7 +206,8 @@ class UIManager(
             parametersState = parametersState,
             mixer = mixer,
             onTapTempo = { session.tapTempoController.tap() },
-            knobSurface = performSurface
+            knobSurface = performSurface,
+            navSurface = NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx)
         )
         // Rings and LEDs of connected controllers (e.g. Midi Fighter Twister) mirror the Perform knobs.
         if (session.uiTheme.midiEnabled) session.midiMappingManager.controllers.updateFeedback(performSurface)
@@ -319,31 +320,10 @@ class UIManager(
      */
     private fun processQueueKeyboardShortcuts(): Int {
         var keyDelta = 0
-        // Modular Rack Esc priority stack (docs/user_guide/macros_and_rack.md):
-        //   1. A [MacroLearnState] arm survives independently of any widget's visibility, so it
-        //      takes priority -- a flat "Esc always collapses" would let a user reflexively
-        //      dismiss the accordion while a Learn arm silently keeps running underneath.
-        //   2. Otherwise, if any Rack Unit is above Tier 1, collapse them all back to Tier 1.
-        //   3. Otherwise, no-op.
+        // Esc runs the shared back stack (see [BackNavigation]; docs/user_guide/macros_and_rack.md).
         // Guarded so it never fires while a text/search input has keyboard focus.
         if (!ImGui.getIO().wantTextInput && ImGui.isKeyPressed(imgui.flag.ImGuiKey.Escape, false)) {
-            if (llm.slop.liquidlsd.macro.MacroLearnState.isLearning()) {
-                llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
-            } else if (PreferencesPanel.isOpen) {
-                PreferencesPanel.close()
-            } else if (currentMixer?.let { m ->
-                val focusedBankId = llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS.firstOrNull { bankId ->
-                    llm.slop.liquidlsd.macro.FxMacroSync.chainFor(bankId, m)?.isFocused() == true
-                }
-                if (focusedBankId != null) {
-                    llm.slop.liquidlsd.macro.FxMacroSync.focusSlot(focusedBankId, m, null)
-                    true
-                } else false
-            } == true) {
-                // Exited FX focus mode back to chain group mode
-            } else if (parametersState.anyRackModuleExpanded()) {
-                parametersState.collapseAllRackModules()
-            }
+            BackNavigation.back(parametersState, currentMixer)
         }
 
         // Guarded so Ctrl+F / "/" don't hijack the library while a text field (e.g. a macro

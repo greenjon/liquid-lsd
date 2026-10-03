@@ -12,6 +12,7 @@ package llm.slop.liquidlsd.control
 class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFactor: Float = FINE_FACTOR) {
     private val held = BooleanArray(knobCount)
     private val turnedWhileHeld = BooleanArray(knobCount)
+    private var browseAccum = 0f
 
     fun register(registry: CommandRegistry) {
         for (n in 1..knobCount) {
@@ -19,6 +20,11 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
             registry.register(Command("knob.$n", CommandKind.RELATIVE, "knob", "Turn knob $n (fine while its switch is held)") { input, ctx ->
                 val delta = (input as CommandInput.Delta).steps
                 if (held[knob]) turnedWhileHeld[knob] = true
+                val nav = ctx.navSurface
+                if (knob == 0 && nav != null && nav.browsing) {
+                    browseTurn(delta, nav)
+                    return@Command
+                }
                 ctx.knobSurface?.turn(knob, if (held[knob]) delta * fineFactor else delta)
             })
             registry.register(Command("knob.$n.press", CommandKind.MOMENTARY, "knob", "Knob $n switch: tap for its primary action") { input, ctx ->
@@ -27,6 +33,16 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
             registry.register(Command("knob.$n.press_alt", CommandKind.MOMENTARY, "knob", "Knob $n switch with shift: tap for its secondary action") { input, ctx ->
                 press(knob, (input as CommandInput.Press).down, shifted = true, ctx)
             })
+        }
+    }
+
+    /** Turns knob 1 into whole cursor steps: [BROWSE_STEP] of knob travel is one item. */
+    private fun browseTurn(delta: Float, nav: NavSurface) {
+        browseAccum += delta
+        val steps = (browseAccum / BROWSE_STEP).toInt()
+        if (steps != 0) {
+            browseAccum -= steps * BROWSE_STEP
+            nav.browseStep(steps)
         }
     }
 
@@ -39,6 +55,11 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         val wasHeld = held[knob]
         held[knob] = false
         if (!wasHeld || turnedWhileHeld[knob]) return
+        val nav = ctx.navSurface
+        if (knob == 0 && nav != null && nav.browsing) {
+            nav.browseAccept(shifted)
+            return
+        }
         val surface = ctx.knobSurface ?: return
         if (shifted) surface.secondary(knob) else surface.primary(knob)
     }
@@ -47,5 +68,7 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         const val KNOB_COUNT = 16
         /** How much a held switch scales a turn. */
         const val FINE_FACTOR = 0.1f
+        /** Knob travel (fraction of range, before fine scaling) per browse cursor step: about 4 encoder ticks. */
+        const val BROWSE_STEP = 4f / 127f
     }
 }

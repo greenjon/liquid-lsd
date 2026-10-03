@@ -14,6 +14,7 @@ import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.FileSystemManager
 import llm.slop.liquidlsd.ui.Icons
+import llm.slop.liquidlsd.ui.LibraryNavigation
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.ParametersState
@@ -293,19 +294,7 @@ object PresetListPanel {
 
             // Double-click: Load to the inactive deck (>0% crossfader).
             if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
-                val targetIsA = mixer.crossfade.value > 0.0f
-                val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
-                val targetLabel = if (targetIsA) "Deck A" else "Deck B"
-                if (isStock) {
-                    val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(STOCK_PATH_PREFIX) }
-                    if (source != null) {
-                        logger.info { "Loading stock generator ${asset.name} to inactive deck $targetLabel" }
-                        UIManager.changeVisualSourceSafely(mixer, targetDeck, targetLabel, source, parametersState)
-                    }
-                } else {
-                    logger.info { "Loading preset ${asset.name} to inactive deck $targetLabel" }
-                    UIManager.loadDeckPresetSafely(mixer, targetDeck, File(asset.path))
-                }
+                LibraryNavigation.loadAssetToInactiveDeck(session, mixer, asset, parametersState)
             }
 
             // Drag source: saved presets carry their file path (ASSET_ITEM) so they can also go

@@ -100,13 +100,14 @@ class ControllerProfileTest {
         assertEquals("knob.3.press_alt", t.bindingFor("knob.3.press", held = listOf("shift")))
         // Shift has no turn binding of its own, so a shifted turn falls back to the plain one.
         assertEquals("knob.3", t.bindingFor("knob.3", held = listOf("shift")))
-        assertNull(t.bindingFor("side.1"))
+        assertEquals("nav.button.1", t.bindingFor("side.1"))
+        assertEquals("nav.button.3.alt", t.bindingFor("side.3", held = listOf("shift")))
         assertNull(t.bindingFor("knob.17"))
     }
 
     @Test
     fun twisterBindingsAllNameRegisteredCommands() {
-        val registry = CommandRegistry().also { GlobalCommands.registerAll(it); KnobCommands().register(it) }
+        val registry = CommandRegistry().also { GlobalCommands.registerAll(it); KnobCommands().register(it); NavCommands.register(it) }
         assertEquals(emptyList(), twister().unknownCommands(registry))
     }
 

@@ -3,6 +3,14 @@
 Decided 2026-10-03 (v1.0 scope). Replaces the two hardcoded Perform tabs (DECKS, MASTER) with user-definable pages of
 exactly 4 rows chosen from a row catalog. Twister banks select pages. Memory note: `project_perform_pages_catalog`.
 
+## Status (updated 2026-10-02, after phase 3 was committed)
+
+- **Phases 1-3 are implemented and committed** (suite green, docs regenerated): `ui/PerfPageStore.kt` (`PerfPageDef`, `RowPlacement`, `PerfPageStore`), `PerfRows.CATALOG`, `RowDescriptor.pinnedMode`, `UITheme.performancePageId`, built-in pages `decks`, `master`, `ab`, `bgpv`, `mixer` in `src/main/resources/perform_pages/`, Twister `banks.pages` = `perform.ab|bgpv|mixer|master`. DECISIONS.md has an entry per phase.
+- **Not done / not verified**: no hardware test of the four banks and LED hues on a real Twister; nobody has looked at the pinned rows' empty half on screen (fallback: centre the single line vertically); phase 4 (user editing) waits for MIDI phase 5.
+- **Open details, as settled so far**: (a) there is no separate Clock row: today's CLOCK & GLOBAL row is the catalog row `global`, FX_SENDS is `wetdry`; (b) bank 4 shows the legacy MASTER page, since there is no empty / user-bindable row type (design it with MIDI phase 5); (c) the tab strip still has a fixed 68px button width and does not scroll, so many user pages overflow it (5 built-in pages fit).
+- **Not implemented from the model above**: the optional starting toggle on a placement (`mode` on `RowPlacement`) for `srcfx` rows; page-name tooltips come from the page file's `tooltip` field.
+- **Next**: hardware check, then resume MIDI phase 3 (navigation/browse; the shift layer can be smaller since SRC/FX needs no toggle). See `.planning/midi-controller-handoff.md`.
+
 ## Goal and model
 
 - **Catalog row** (stable string id, persisted): per deck A/B/BG/PV `deck.<X>.srcfx` (today's row with the SRC/FX toggle),

@@ -272,7 +272,7 @@ object TransitionBrowserPanel {
         }
     }
 
-    private fun applyToMixer(session: SessionContext, mixer: Mixer, asset: AssetItem) {
+    internal fun applyToMixer(session: SessionContext, mixer: Mixer, asset: AssetItem) {
         if (asset.type == AssetType.TRANSITION_STOCK) {
             val id = asset.path.removePrefix(STOCK_PATH_PREFIX)
             logger.info { "Applying stock transition $id to mixer" }

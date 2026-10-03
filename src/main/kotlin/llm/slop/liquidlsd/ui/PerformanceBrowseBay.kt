@@ -9,6 +9,50 @@ import llm.slop.liquidlsd.rendering.Mixer
 import java.io.File
 
 /**
+ * Controller cursor over the saved-chain list drawn by [PerformanceBrowseBay]: the draw code publishes
+ * what is on screen and how to apply or clear it, [move]/[accept]/[clear] act on that.
+ */
+internal object ChainListBrowse {
+    private var items: List<AssetItem> = emptyList()
+    private var apply: ((AssetItem) -> Unit)? = null
+    private var clearChain: (() -> Unit)? = null
+    private var cursor = -1
+    private var scrollToCursor = false
+    @Volatile private var lastDrawMs = 0L
+
+    val isShowing: Boolean get() = System.currentTimeMillis() - lastDrawMs < 300L
+
+    fun reset() { cursor = -1 }
+
+    fun publish(items: List<AssetItem>, apply: (AssetItem) -> Unit, clearChain: () -> Unit) {
+        this.items = items
+        this.apply = apply
+        this.clearChain = clearChain
+        lastDrawMs = System.currentTimeMillis()
+        if (cursor > items.lastIndex) cursor = items.lastIndex
+    }
+
+    fun move(steps: Int) {
+        if (items.isEmpty()) return
+        cursor = (if (cursor < 0) (if (steps > 0) steps - 1 else items.size + steps) else cursor + steps).coerceIn(0, items.lastIndex)
+        scrollToCursor = true
+    }
+
+    fun accept(): Boolean {
+        val item = items.getOrNull(cursor) ?: return false
+        apply?.invoke(item)
+        return true
+    }
+
+    fun clear() { clearChain?.invoke() }
+
+    /** Whether row [index] is the cursor row; consumes the pending scroll request when it is. */
+    fun isCursor(index: Int): Boolean = index == cursor
+
+    fun consumeScroll(): Boolean = scrollToCursor.also { scrollToCursor = false }
+}
+
+/**
  * Inline "Browse" content for the Performance row bay: picking a deck's generator, a saved whole
  * FX chain, one FX chain slot's effect, or the active transition -- everything that used to be
  * [ShaderPickerPopup]'s modal popup or [FxChainHeader]'s small chain-browser popup. Lives beside
@@ -144,6 +188,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             cachedChainsKey = contextKey
             cachedChains = FileSystemManager.scanAllFxChains()
             chainSearchBuf.set("")
+            ChainListBrowse.reset()
         }
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
             ImGui.setNextItemWidth(260f)
@@ -162,6 +207,8 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             val chains = cachedChains ?: emptyList()
             val filtered = if (query.isBlank()) chains else chains.filter { it.name.lowercase().contains(query) }
 
+            ChainListBrowse.publish(filtered, { FxOps.loadChain(session, File(it.path), chain) }, { FxOps.clearChain(chain) })
+
             ImGui.spacing()
             ImGui.separator()
             ImGui.spacing()
@@ -170,11 +217,13 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 if (filtered.isEmpty()) {
                     ImGui.textDisabled("No matching chains")
                 } else {
-                    for (asset in filtered) {
+                    for ((index, asset) in filtered.withIndex()) {
                         val isCurrent = chain.sourceFile?.absolutePath == asset.path
-                        if (selectableRow("${asset.name}##browse_chain_item_${asset.path.hashCode()}", isCurrent)) {
+                        val isCursor = ChainListBrowse.isCursor(index)
+                        if (selectableRow("${asset.name}##browse_chain_item_${asset.path.hashCode()}", isCurrent || isCursor)) {
                             FxOps.loadChain(session, File(asset.path), chain)
                         }
+                        if (isCursor && ChainListBrowse.consumeScroll()) ImGui.setScrollHereY()
                     }
                 }
             }
