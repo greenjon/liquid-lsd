@@ -30,13 +30,13 @@ class PerformSurfaceTest {
         MacroEngine.DECK_A, MacroEngine.DECK_B, MacroEngine.DECK_BG, MacroEngine.DECK_PV,
         MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.FX_SENDS, MacroEngine.GLOBAL
     ) + FxMacroSync.FX_BANK_IDS
-    private var savedTab = 0
+    private var savedPage = PerfPageDef.DEFAULT_ID
 
     @BeforeTest
     fun setUp() {
         // The tab is persisted between runs (the real app leaves it wherever you last were), so pin it.
-        savedTab = UITheme.performanceMatrixTab
-        UITheme.performanceMatrixTab = PerfRows.TAB_DECKS
+        savedPage = UITheme.performancePageId
+        UITheme.performancePageId = "decks"
         // A new ParametersState restores the persisted Deep Edit disclosure, which other tests leave
         // expanded; clear the in-memory map (not setDisclosure, which would persist) to start in Perform view.
         state.rackModuleDisclosure.clear()
@@ -47,13 +47,13 @@ class PerformSurfaceTest {
 
     @AfterTest
     fun tearDown() {
-        UITheme.performanceMatrixTab = savedTab
+        UITheme.performancePageId = savedPage
         for (id in bankIds) MacroEngine.unregisterBank(id)
     }
 
     private fun surface() = PerformSurface(UITheme, ctx, state, mixer)
 
-    private fun page(tab: Int = PerfRows.TAB_DECKS) = PerformPages.resolve(tab, ctx, state, mixer)
+    private fun page(pageId: String = "decks") = PerformPages.resolve(pageId, ctx, state, mixer)
 
     private fun filter(id: String, params: List<String>): ISFFilter {
         val inputs = mutableListOf(ISFInput(NAME = "inputImage", TYPE = "image"))
@@ -77,7 +77,7 @@ class PerformSurfaceTest {
 
     @Test
     fun masterTabIsMasterTransitionsFxSendsAndGlobal() {
-        val p = page(PerfRows.TAB_MASTER)
+        val p = page("master")
         assertEquals(listOf(MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.FX_SENDS, MacroEngine.GLOBAL),
             listOf(0, 4, 8, 12).map { p.knobs[it]?.bankId })
     }
@@ -174,11 +174,13 @@ class PerformSurfaceTest {
     @Test
     fun showPageSelectsTheMatrixTabAndIgnoresUnknownPages() {
         surface().showPage(PerformSurface.PAGE_MASTER)
-        assertEquals(PerfRows.TAB_MASTER, UITheme.performanceMatrixTab)
+        assertEquals("master", UITheme.performancePageId)
         surface().showPage(PerformSurface.PAGE_DECKS)
-        assertEquals(PerfRows.TAB_DECKS, UITheme.performanceMatrixTab)
+        assertEquals("decks", UITheme.performancePageId)
+        surface().showPage("master") // a bare page id works too
+        assertEquals("master", UITheme.performancePageId)
         surface().showPage("nonsense")
-        assertEquals(PerfRows.TAB_DECKS, UITheme.performanceMatrixTab)
+        assertEquals("master", UITheme.performancePageId)
         assertNotNull(page())
     }
 
@@ -229,7 +231,7 @@ class PerformSurfaceTest {
 
     @Test
     fun masterAndGlobalRowsUseHueColoursOnTheHardware() {
-        val lights = surface().let { UITheme.performanceMatrixTab = PerfRows.TAB_MASTER; it.knobLights() }
+        val lights = surface().let { UITheme.performancePageId = "master"; it.knobLights() }
         fun rgb(i: Int) = lights[i]!!.let { listOf(it.r, it.g, it.b) }
         assertEquals(PerformanceColors.LED_MASTER.toList(), rgb(0))
         assertEquals(PerformanceColors.COLOR_TRANS.toList(), rgb(4))
@@ -240,16 +242,18 @@ class PerformSurfaceTest {
     @Test
     fun everyRowCanBeShownOnAnRgbLedWithItsOwnColour() {
         val wheel = llm.slop.liquidlsd.control.HueWheel()
-        val rows = PerfRows.TAB_ROWS.flatMap { it } +
-            RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER (FX)")
-        val values = rows.map { row ->
+        val pages = PerfPageStore.default.all()
+        fun hue(row: RowDescriptor): Int {
             val c = PerformPages.ledColor(row)
-            wheel.valueFor(c[0], c[1], c[2]).also {
+            return wheel.valueFor(c[0], c[1], c[2]).also {
                 assertTrue(it != wheel.off && it != wheel.white, "${row.groupLabel} needs a real hue, got $it")
             }
         }
-        // The four rows that share a tab must be told apart: DECKS (first four) and MASTER (next four).
-        assertEquals(4, values.take(4).distinct().size, "deck LEDs: $values")
-        assertEquals(4, values.drop(4).take(4).distinct().size, "master-tab LEDs: $values")
+        hue(RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER (FX)"))
+        // The four rows that share a page must be told apart.
+        for (page in pages) {
+            val values = PerfRows.substitutedRowsForPage(page, ctx).map(::hue)
+            assertEquals(4, values.distinct().size, "${page.id} LEDs: $values")
+        }
     }
 }

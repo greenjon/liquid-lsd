@@ -1,3 +1,14 @@
+## Perform Pages Are Data: Row Catalog, Page Files and a Focus Lookup (`ui/PerfPageStore.kt`, `ui/PerfRows.kt`, `ui/PerformSurface.kt`, `resources/perform_pages/`)
+
+- **Decision**: Phase 1 of `.planning/perform-pages-plan.md`. The hardcoded `Tab` enum / `TAB_ROWS` / `performanceMatrixTab` index became `PerfPageDef(id, name, tooltip, rows: 4 x RowPlacement(catalogId))`. `PerfRows.CATALOG` maps stable ids (`deck.<tag>.srcfx`, `master`, `trans`, `wetdry`, `global`) to `RowDescriptor`s. `PerfPageStore` loads built-ins (`decks`, `master`) from the jar and user pages from `library/perform_pages/`, same override-by-id convention as `ControllerProfileStore`; pages that are not exactly 4 rows of known ids are skipped with a log line. Preferences keep only the active page id (`performancePageId`; the old `performanceMatrixTab` 0/1 migrates to `decks`/`master`, unknown ids fall back to the first page).
+  - `PerformSurface.showPage` accepts `perform.<id>` or a bare id, so the profile's `perform.decks` / `perform.master` still work and a profile can name a user page.
+  - Deep Edit's row choice goes through `PerfRows.catalogRowForModule`: scan the active page top to bottom, then the following pages wrapping last to first. With only `srcfx` rows this equals the old behaviour; it is the hook for pinned SRC/FX rows (phase 2).
+  - Layout: row count is the constant `PerfPageDef.ROWS` (4), so `layoutTabIdx` is gone; widget ids embed the page's position and each deck row's controls sit in an `ImGui.pushID(rowIdx)` scope, so the same deck on two slots cannot collide.
+- **Clock / Global**: today's single "CLOCK & GLOBAL" row (`MacroEngine.GLOBAL`) is the catalog row `global`; FX_SENDS is `wetdry`. The plan's separate `clock` row does not exist as its own row, so it is not in the catalog.
+- **Rationale**: user-definable pages are the prerequisite for the 16-row Twister layout; doing the data move first, with built-ins identical to DECKS/MASTER, makes regressions checkable by the existing tests.
+- **Alternatives rejected**: keeping `Tab` and adding user tabs beside it (two sources of truth); one JSON list of all pages (a per-file layout lets a user override one page without copying the rest).
+- **Consequences**: the tab strip still has a fixed button width, so many user pages will overflow it (scrolling is open). Bank 4's "assignable" knobs are not designed yet. `PerformSurface` tests pin `performancePageId` instead of the tab index.
+
 ## Controller Ring/LED Feedback Writes the Active Bank Only (`control/ControllerFeedback.kt`, `ControllerManager.kt`, `midi/MidiOutputPorts.kt`, `ui/PerformSurface.kt`)
 
 - **Decision**: Phase 4. `PerformSurface` also exposes the 16 knobs' lights (`KnobLight`: ring value, LED colour, lit/dark). `ControllerFeedback` sends them to the device: the ring by echoing the encoder's own CC back on its channel, the LED by sending the same CC number on a second channel with a hue-wheel value.

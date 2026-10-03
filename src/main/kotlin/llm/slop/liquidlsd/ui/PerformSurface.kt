@@ -30,11 +30,13 @@ internal object PerformPages {
     }
 
     /**
-     * Resolves the page the way [PerformanceMatrixPanel] draws it: the rows [PerfRows.visibleRowsForTab]
-     * returns (the tab's four rows, or the open module's row in Deep Edit), each through [PerfKnobResolver].
+     * Resolves the page the way [PerformanceMatrixPanel] draws it: the rows [PerfRows.visibleRowsForPage]
+     * returns (the page's four rows, or the open module's row in Deep Edit), each through [PerfKnobResolver].
      */
-    fun resolve(tabIdx: Int, ctx: PerformanceUiContext, parametersState: ParametersState, mixer: Mixer): PerformPage {
-        val rows = PerfRows.visibleRowsForTab(tabIdx.coerceIn(0, PerfRows.TAB_ROWS.size - 1), ctx, parametersState) { it }
+    fun resolve(pageId: String, ctx: PerformanceUiContext, parametersState: ParametersState, mixer: Mixer): PerformPage {
+        val pages = PerfPageStore.default.all()
+        val page = pages.firstOrNull { it.id == pageId } ?: pages.first()
+        val rows = PerfRows.visibleRowsForPage(page, ctx, parametersState, { it }, pages)
         val knobs = arrayOfNulls<PageKnob>(KnobCommands.KNOB_COUNT)
         for ((rowIdx, row) in rows.take(KnobCommands.KNOB_COUNT / COLS).withIndex()) {
             val bank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
@@ -60,7 +62,7 @@ internal class PerformSurface(
 ) : KnobSurface, KnobLightSource {
 
     private fun knob(index: Int): PageKnob? =
-        PerformPages.resolve(theme.performanceMatrixTab, ctx, parametersState, mixer).knobs.getOrNull(index)
+        PerformPages.resolve(theme.performancePageId, ctx, parametersState, mixer).knobs.getOrNull(index)
 
     override fun turn(knob: Int, delta: Float) {
         val control = knob(knob)?.control ?: return
@@ -90,10 +92,9 @@ internal class PerformSurface(
     }
 
     override fun showPage(pageId: String) {
-        when (pageId) {
-            PAGE_DECKS -> theme.performanceMatrixTab = PerfRows.TAB_DECKS
-            PAGE_MASTER -> theme.performanceMatrixTab = PerfRows.TAB_MASTER
-        }
+        // `perform.<id>` names a page; the legacy `perform.decks` / `perform.master` are the built-ins' ids.
+        val id = pageId.removePrefix("perform.")
+        if (PerfPageStore.default.get(id) != null) theme.performancePageId = id
     }
 
     /**
@@ -101,7 +102,7 @@ internal class PerformSurface(
      * control (an empty or bypassed FX slot, a blank parameter page position).
      */
     override fun knobLights(): List<KnobLight?> =
-        PerformPages.resolve(theme.performanceMatrixTab, ctx, parametersState, mixer).knobs.map { target ->
+        PerformPages.resolve(theme.performancePageId, ctx, parametersState, mixer).knobs.map { target ->
             target?.let { KnobLight(it.control.value, it.accent[0], it.accent[1], it.accent[2], lit = isLit(it)) }
         }
 

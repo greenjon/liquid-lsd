@@ -40,7 +40,8 @@ data class AppPreferences(
     val startupBehavior: UITheme.StartupBehavior = UITheme.StartupBehavior.PREVIOUS_SESSION,
     val libraryMode: UITheme.LibraryMode = UITheme.LibraryMode.HALF,
     val column3Mode: UITheme.Column3Mode = UITheme.Column3Mode.MIXER,
-    val performanceMatrixTab: Int = PerformanceMatrixPanel.Tab.entries.indexOf(PerformanceMatrixPanel.Tab.DECKS),
+    /** Id of the active Perform page (see [PerfPageStore]). */
+    val performancePageId: String = PerfPageDef.DEFAULT_ID,
     /** Modular Rack: moduleId -> [ParametersState.DisclosureLevel] name, persisted only for BAY/DEEP_EDIT (never a mid-Learn-pinned state). */
     val rackExpandedModules: Map<String, String> = emptyMap(),
     val theme: UITheme.Theme = UITheme.Theme.GREY_ACID,

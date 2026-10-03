@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#perform-pages-are-now-data-uiperfpagestorekt-perfrowskt-resourcesperform_pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform Pages Are Now Data (ui/PerfPageStore.kt, PerfRows.kt, resources/perform_pages/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#midi-fighter-twister-rings-and-leds-mirror-the-screen-controlcontrollerfeedbackkt-midimidioutputportskt-performsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4734,6 +4745,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#perform-pages-are-now-data-uiperfpagestorekt-perfrowskt-resourcesperform_pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform Pages Are Now Data (ui/PerfPageStore.kt, PerfRows.kt, resources/perform_pages/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#midi-fighter-twister-rings-and-leds-mirror-the-screen-controlcontrollerfeedbackkt-midimidioutputportskt-performsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8235,6 +8257,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="perform-pages-are-now-data-uiperfpagestorekt-perfrowskt-resourcesperform_pages">Perform Pages Are Now Data (<code>ui/PerfPageStore.kt</code>, <code>PerfRows.kt</code>, <code>resources/perform_pages/</code>)</h3>
+<ul>
+<li><strong>No visible change</strong>: the DECKS and MASTER tabs are now two built-in <em>pages</em>, each four rows picked from a row catalog. Looks, behaviour and Twister banks are the same as before.</li>
+<li><strong>Page files</strong>: the tab strip lists every page found in the jar and in <code>library/perform_pages/*.json</code>. A user file with the same <code>id</code> replaces the built-in; a new <code>id</code> adds a tab. A page needs exactly 4 rows from the catalog (<code>deck.A.srcfx</code>, <code>master</code>, <code>trans</code>, <code>wetdry</code>, <code>global</code>, ...); bad files are skipped and the reason is logged. Controller profiles can name a page as <code>perform.&lt;id&gt;</code>.</li>
+<li><strong>Migration</strong>: your last-used tab carries over (the preference is now a page id instead of a tab number).</li>
+</ul>
 <h3 id="midi-fighter-twister-rings-and-leds-mirror-the-screen-controlcontrollerfeedbackkt-midimidioutputportskt-performsurfacekt">Midi Fighter Twister Rings and LEDs Mirror the Screen (<code>control/ControllerFeedback.kt</code>, <code>midi/MidiOutputPorts.kt</code>, <code>PerformSurface.kt</code>)</h3>
 <ul>
 <li><strong>Rings show values, LEDs show rows</strong>: each encoder's ring follows its knob's value, including changes made with the mouse, and its LED takes the row's colour. An empty or bypassed FX slot, or a blank parameter position, goes dark.</li>

@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Perform Pages Are Now Data (`ui/PerfPageStore.kt`, `PerfRows.kt`, `resources/perform_pages/`)
+- **No visible change**: the DECKS and MASTER tabs are now two built-in *pages*, each four rows picked from a row catalog. Looks, behaviour and Twister banks are the same as before.
+- **Page files**: the tab strip lists every page found in the jar and in `library/perform_pages/*.json`. A user file with the same `id` replaces the built-in; a new `id` adds a tab. A page needs exactly 4 rows from the catalog (`deck.A.srcfx`, `master`, `trans`, `wetdry`, `global`, ...); bad files are skipped and the reason is logged. Controller profiles can name a page as `perform.<id>`.
+- **Migration**: your last-used tab carries over (the preference is now a page id instead of a tab number).
+
 ### Midi Fighter Twister Rings and LEDs Mirror the Screen (`control/ControllerFeedback.kt`, `midi/MidiOutputPorts.kt`, `PerformSurface.kt`)
 - **Rings show values, LEDs show rows**: each encoder's ring follows its knob's value, including changes made with the mouse, and its LED takes the row's colour. An empty or bypassed FX slot, or a blank parameter position, goes dark.
 - **Connect and go**: the app opens the Twister's output port when it appears (and again after a replug) and writes every ring and LED, then sends only what changes to the bank that is showing. Messages are paced (the Twister drops bursts) and a newer ring value replaces an older one still waiting. Switching banks rewrites that bank a few times, and a short pause after you stop turning re-sends it, because the Twister redraws its stored colours after its own messages.

@@ -207,10 +207,12 @@ object AppPreferencesStore {
                     logger.info { "Loaded column3Mode from settings file: ${UITheme.column3Mode}" }
                 }
                 // "workspaceMode" (Classic vs Performance) is no longer read: Classic view was removed.
-                props.getProperty("performanceMatrixTab")?.toIntOrNull()?.let {
-                    // Out-of-range = a removed tab (LIVE CONSOLE / ALL FX, both deck-centric) -> DECKS.
-                    UITheme.performanceMatrixTab = if (it in PerformanceMatrixPanel.Tab.entries.indices) it else PerformanceMatrixPanel.Tab.DECKS.ordinal
-                    logger.info { "Loaded performanceMatrixTab from settings file: ${UITheme.performanceMatrixTab}" }
+                val savedPageId = props.getProperty("performancePageId")
+                    // Migration: the old tab index 0/1 was the built-in DECKS/MASTER page; anything else was a removed tab -> DECKS.
+                    ?: props.getProperty("performanceMatrixTab")?.toIntOrNull()?.let { if (it == 1) "master" else PerfPageDef.DEFAULT_ID }
+                if (savedPageId != null) {
+                    UITheme.performancePageId = savedPageId
+                    logger.info { "Loaded performancePageId from settings file: ${UITheme.performancePageId}" }
                 }
                 val savedAutoVj = props.getProperty("autoVjDirtyBehavior")
                 if (savedAutoVj != null) {
@@ -330,7 +332,7 @@ object AppPreferencesStore {
             props.setProperty("maxFps", UITheme.maxFps.toString())
             props.setProperty("libraryMode", UITheme.libraryMode.name)
             props.setProperty("column3Mode", UITheme.column3Mode.name)
-            props.setProperty("performanceMatrixTab", UITheme.performanceMatrixTab.toString())
+            props.setProperty("performancePageId", UITheme.performancePageId)
             props.setProperty("autoVjDirtyBehavior", UITheme.autoVjDirtyBehavior.name)
             props.setProperty("activeMidiProfile", UITheme.activeMidiProfile)
             props.setProperty("queueKeyTrigger", UITheme.queueKeyTrigger.name)

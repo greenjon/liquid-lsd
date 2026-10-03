@@ -175,10 +175,13 @@ object UITheme {
         get() = settings.column3Mode
         set(value) { settings = settings.copy(column3Mode = value) }
 
-    /** Index of the active tab in the Performance Mode 4×4 Matrix (see [PerformanceMatrixPanel.Tab]). */
-    var performanceMatrixTab: Int
-        get() = settings.performanceMatrixTab
-        set(value) { settings = settings.copy(performanceMatrixTab = value.coerceIn(0, PerformanceMatrixPanel.Tab.entries.size - 1)) }
+    /** Id of the active page of the Performance Mode 4×4 Matrix (see [PerfPageStore]); an unknown id falls back to the first page. */
+    var performancePageId: String
+        get() = settings.performancePageId
+        set(value) {
+            val known = PerfPageStore.default
+            settings = settings.copy(performancePageId = if (known.get(value) != null) value else known.all().first().id)
+        }
 
     /** Modular Rack: persisted moduleId -> [ParametersState.DisclosureLevel] name (BAY/DEEP_EDIT only). */
     var rackExpandedModules: Map<String, String>

@@ -834,6 +834,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#perform-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform Pages
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1811,6 +1822,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#perform-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform Pages
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2170,6 +2192,18 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <p>Macro Knobs also respond directly to <code>/macro/&lt;bankId&gt;/knob/1</code>–<code>/macro/&lt;bankId&gt;/knob/8</code> (no manual mapping needed), and broadcast their values back out over OSC whenever they change — keeping tablet layouts in bidirectional sync. See <a href="../macros_and_rack/">Macro Controls &amp; Performance Mode</a>.</p>
 <h3 id="profiles_1">Profiles</h3>
 <p>Like MIDI, OSC address mappings are stored in JSON profiles under <code>library/osc/&lt;profile_name&gt;.json</code>. Create, save, switch, and delete profiles from the OSC Controls tab to switch between different tablet layouts or venues.</p>
+<h2 id="perform-pages">Perform Pages</h2>
+<p>The tab strip above the matrix (DECKS, MASTER) lists <em>pages</em>: each is four rows. You can add your own by putting a JSON file in <code>library/perform_pages/</code> (restart the app to pick it up):</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;mine&quot;,
+  &quot;name&quot;: &quot;MINE&quot;,
+  &quot;tooltip&quot;: &quot;Deck A, Master, Transitions and Clock &amp; Global&quot;,
+  &quot;rows&quot;: [
+    { &quot;row&quot;: &quot;deck.A.srcfx&quot; }, { &quot;row&quot;: &quot;master&quot; }, { &quot;row&quot;: &quot;trans&quot; }, { &quot;row&quot;: &quot;global&quot; }
+  ]
+}
+</code></pre>
+<p>A page needs exactly 4 rows. Row names: <code>deck.A.srcfx</code>, <code>deck.B.srcfx</code>, <code>deck.BG.srcfx</code>, <code>deck.PV.srcfx</code>, <code>master</code>, <code>trans</code>, <code>wetdry</code>, <code>global</code>. A file whose <code>id</code> is <code>decks</code> or <code>master</code> replaces that built-in page. Files with mistakes are skipped; the log says why. A controller profile can select your page with <code>perform.mine</code>.</p>
 
 
 

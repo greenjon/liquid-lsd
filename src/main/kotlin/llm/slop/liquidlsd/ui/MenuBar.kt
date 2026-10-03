@@ -311,21 +311,21 @@ class MenuBar(
     }
 
     /**
-     * The [DECKS]/[MASTER] tab toggle for [PerformanceMatrixPanel], plus the Learn indicator and
+     * The Perform page tab toggle (DECKS, MASTER, plus user pages) for [PerformanceMatrixPanel], plus the Learn indicator and
      * Randomize ALL button that used to sit in the matrix's own tab-strip row. Moved here so that
      * row can be removed entirely, recovering its height for the knob grid.
      */
     private fun drawPerformanceTabStrip(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val theme = session.uiTheme
-        val tabs = PerformanceMatrixPanel.Tab.values()
+        val pages = PerfPageStore.default.all()
         val gap = 4f
         val tabH = ImGui.getFrameHeight()
         val tabW = 68f
         val isLight = theme.theme == UITheme.Theme.ORANGE_SUNSHINE
 
-        for ((i, tab) in tabs.withIndex()) {
+        for ((i, page) in pages.withIndex()) {
             if (i > 0) ImGui.sameLine(0f, gap)
-            val isActive = theme.performanceMatrixTab == i
+            val isActive = theme.performancePageId == page.id
             val activeBg = if (isLight) TangoPalette.u32(TangoPalette.SYNC.normal) else ImGui.colorConvertFloat4ToU32(0.10f, 0.52f, 0.72f, 1f)
             val activeHover = if (isLight) TangoPalette.u32(TangoPalette.SYNC.bright) else ImGui.colorConvertFloat4ToU32(0.15f, 0.62f, 0.82f, 1f)
             val activeText = if (isLight) ImGui.colorConvertFloat4ToU32(0.05f, 0.05f, 0.05f, 1f) else ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
@@ -344,12 +344,12 @@ class MenuBar(
                 ImGui.pushStyleColor(ImGuiCol.Text, inactiveText)
             }
             session.uiTheme.withFont(UITheme.FontLevel.H3) {
-                if (ImGui.button("${tab.label}##perf_tab_$i", tabW, tabH)) {
-                    theme.performanceMatrixTab = i
+                if (ImGui.button("${page.name}##perf_tab_${page.id}", tabW, tabH)) {
+                    theme.performancePageId = page.id
                     AppPreferencesStore.savePreferences()
                 }
             }
-            itemTooltip(tab.tooltip)
+            if (page.tooltip.isNotBlank()) itemTooltip(page.tooltip)
             ImGui.popStyleColor(3)
         }
 

@@ -321,3 +321,20 @@ Macro Knobs also respond directly to `/macro/<bankId>/knob/1`–`/macro/<bankId>
 
 Like MIDI, OSC address mappings are stored in JSON profiles under `library/osc/<profile_name>.json`. Create, save, switch, and delete profiles from the OSC Controls tab to switch between different tablet layouts or venues.
 
+
+## Perform Pages
+
+The tab strip above the matrix (DECKS, MASTER) lists *pages*: each is four rows. You can add your own by putting a JSON file in `library/perform_pages/` (restart the app to pick it up):
+
+```json
+{
+  "id": "mine",
+  "name": "MINE",
+  "tooltip": "Deck A, Master, Transitions and Clock & Global",
+  "rows": [
+    { "row": "deck.A.srcfx" }, { "row": "master" }, { "row": "trans" }, { "row": "global" }
+  ]
+}
+```
+
+A page needs exactly 4 rows. Row names: `deck.A.srcfx`, `deck.B.srcfx`, `deck.BG.srcfx`, `deck.PV.srcfx`, `master`, `trans`, `wetdry`, `global`. A file whose `id` is `decks` or `master` replaces that built-in page. Files with mistakes are skipped; the log says why. A controller profile can select your page with `perform.mine`.

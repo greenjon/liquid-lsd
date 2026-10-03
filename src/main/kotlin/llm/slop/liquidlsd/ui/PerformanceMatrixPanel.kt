@@ -38,7 +38,7 @@ import java.io.File
  * [navigateMacroPanelTo]), since the actual binding inspector (labels, bindings, curves, ranges)
  * lives there, not in this panel.
  *
- * Active tab is persisted via [UITheme.performanceMatrixTab] / [AppPreferences.performanceMatrixTab].
+ * The active page (see [PerfPageStore]) is persisted via [UITheme.performancePageId] / [AppPreferences.performancePageId].
  *
  * Knob sizing and every position on a row come from [PerfRowGeometry] (window size + fonts only),
  * and what each knob shows from [PerfKnobResolver] -- so a row's mode (SRC/FX, MIX/FX, FX focus)
@@ -47,15 +47,6 @@ import java.io.File
  * Each row of 4 knobs is enclosed in a rounded, accent-colored box with a title badge on its left.
  */
 class PerformanceMatrixPanel {
-
-    // -- Tab definitions ----------------------------------------------------------
-
-    // internal (not private): UITheme needs Tab.entries.size to coerce the persisted tab index
-    // without hardcoding a count that silently drifts when a tab is added/removed.
-    internal enum class Tab(val label: String, val tooltip: String) {
-        DECKS("DECKS", "One row per deck (Deck A / Deck B / Deck BG / Deck PV), knobs 1-4 each.\nEach row's [SRC|FX] pills switch its knobs between the visual source and the deck's FX chain."),
-        MASTER("MASTER", "Master ([MIX|FX]: composite alphas or Master FX chain), Transitions (crossfader + picker + queue),\nper-deck FX wet/dry, and Clock (tap tempo / resync / clock source + 4 Global macro knobs).")
-    }
 
     // Canonical deck colors matching BrowserDeckButtons are in PerformanceColors.
     companion object {
@@ -93,13 +84,13 @@ class PerformanceMatrixPanel {
         // Modular Rack: when a module is in Deep Edit, every other row is hidden from the grid and
         // the Deep-Edit bay below gets the rest of the height. The open row is exactly as tall as
         // in Perform view; the selected knob's Learn button hangs below it, over the bay's toggle line.
-        val tabIdx = theme.performanceMatrixTab.coerceIn(0, Tab.entries.size - 1)
-        val visibleRows = visibleRowsForTab(tabIdx, parametersState)
+        val pages = PerfPageStore.default.all()
+        val page = pages.firstOrNull { it.id == theme.performancePageId } ?: pages.first()
+        val visibleRows = visibleRowsForPage(page, pages, parametersState)
         val anyExpanded = parametersState.anyRackModuleExpanded()
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
-        // Only the Perform-view tab's row *count* sizes rows -- never their modes (see PerfRowGeometry).
-        val layoutRowCount = PerfRows.TAB_ROWS[layoutTabIdx(tabIdx, visibleRows, anyExpanded)].size
-        val baseRowH = ((availH - hiddenLibraryH).coerceAtLeast(4f) / layoutRowCount).coerceAtLeast(MIN_ROW_H)
+        // Only the Perform-view page's row *count* sizes rows -- never their modes (see PerfRowGeometry).
+        val baseRowH = ((availH - hiddenLibraryH).coerceAtLeast(4f) / PerfPageDef.ROWS).coerceAtLeast(MIN_ROW_H)
         val gridH = if (!anyExpanded) availH else (visibleRows.size * baseRowH).coerceAtMost((availH - 160f).coerceAtLeast(160f))
         val bayH = (availH - gridH - (if (anyExpanded) ImGui.getStyle().getItemSpacingY() else 0f)).coerceAtLeast(0f)
 
@@ -130,22 +121,14 @@ class PerformanceMatrixPanel {
     /** Selected-knob extras deferred until after the grid child ends (see [draw]). */
     private val overhangDraws = mutableListOf<() -> Unit>()
 
-    /** The tab whose Perform-view rows size the grid: the current tab, or in Edit view the tab that holds the open row. */
-    private fun layoutTabIdx(tabIdx: Int, visibleRows: List<RowDescriptor>, anyExpanded: Boolean): Int {
-        if (!anyExpanded) return tabIdx
-        val moduleId = visibleRows.firstOrNull()?.let { ctx.canonicalModuleId(it.bankId) } ?: return tabIdx
-        val idx = PerfRows.TAB_ROWS.indexOfFirst { rows -> rows.any { ctx.canonicalModuleId(it.bankId) == moduleId } }
-        return if (idx >= 0) idx else tabIdx
-    }
-
-    /** The rows to draw: the current tab's rows, or the expanded module's row(s) in Deep Edit. See [PerfRows]. */
-    private fun visibleRowsForTab(tabIdx: Int, parametersState: ParametersState): List<RowDescriptor> =
-        PerfRows.visibleRowsForTab(tabIdx, ctx, parametersState) { deepEditBay.rackModuleDisplayLabel(it) }
+    /** The rows to draw: the active page's rows, or the expanded module's row(s) in Deep Edit. See [PerfRows]. */
+    private fun visibleRowsForPage(page: PerfPageDef, pages: List<PerfPageDef>, parametersState: ParametersState): List<RowDescriptor> =
+        PerfRows.visibleRowsForPage(page, ctx, parametersState, { deepEditBay.rackModuleDisplayLabel(it) }, pages)
 
     // -- 4x4 Knob Grid -----------------------------------------------------------
 
     /**
-     * Draws [rows] (the visible rows -- see [visibleRowsForTab]), each [rowH] tall in the
+     * Draws [rows] (the visible rows -- see [visibleRowsForPage]), each [rowH] tall in the
      * Perform-view band.
      *
      * Every position comes from one [PerfRowGeometry] built from the window size and fonts only --
@@ -160,7 +143,8 @@ class PerformanceMatrixPanel {
         rows: List<RowDescriptor>,
         rowH: Float
     ) {
-        val tabIdx = theme.performanceMatrixTab.coerceIn(0, Tab.entries.size - 1)
+        // Widget/disclosure ids embed the page's position so two pages never share ImGui ids.
+        val tabIdx = PerfPageStore.default.indexOf(theme.performancePageId).coerceAtLeast(0)
 
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
         val gridW = ImGui.getContentRegionAvailX().coerceAtLeast(4f)
@@ -467,11 +451,14 @@ class PerformanceMatrixPanel {
                     drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, deckBadgeW, badgeH)
 
                     val leftStartX = badgeX + deckBadgeW + 6f
+                    // Per-slot ImGui id scope: the same deck may sit in two slots (or pages), so tag-based ids must not collide.
+                    ImGui.pushID(rowIdx)
                     deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W)
                     deckControls.drawDeckRowRightControls(
                         session, mixer, parametersState, deckLabel, targetDeck,
                         boxX2 - pad - deckRightW, row1Y, row2YFinal, ctrlH, deckRightW
                     )
+                    ImGui.popID()
                 }
             }
 
