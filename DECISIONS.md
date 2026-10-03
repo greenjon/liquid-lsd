@@ -2530,3 +2530,9 @@
 - **Rationale**:
   - `Perform` tab strip reads `PerfPageStore` every frame and `ControllerManager.handle` reads the profile store in the MIDI loop, so a throw there was a crash path for a bad file.
   - `writeText` directly on the target truncates a user's file on a crash or full disk; silent id overrides made results depend on scan order.
+
+## Tango Semantic Roles Replace Per-Theme Colour Forks in the Perform UI (`TangoPalette.kt`, `Performance*Controls.kt`, `LibraryPanel.kt`, `MidiPreferencesPanel.kt`)
+- **Context**: 2026-10-02 audit found Perform-UI call sites with `if (isLight) <Tango/ImGui style colour> else colorConvertFloat4ToU32(<literal>)` forks and a hard-coded learn-cyan `(0, 0.85, 1)` repeated about eight times, contradicting "TangoPalette is the sole colour source".
+- **Decision**: `TangoPalette` gains `Role(dark, light?, lightSlot)` objects (`BADGE_*`, `BUTTON_*`, `RANDOM_*`, `PREVIEW_*`, `EJECT_HOVER`, `MODE_*`, `PANEL_*`, `BEAT_*`, `PILL_*`, ...) plus plain swatches (`ACTIVE_BLUE`, `TAP_FLASH`, ...) and `learnBorder()` (= `SYNC.normal`). The theme is held in `TangoPalette.isLightTheme`, set by `UIThemeStyler.setupThemeColors`; `Role.u32()` uses the explicit light RGBA, else the live ImGui style slot, else the dark value. Call sites no longer test the theme. Dark values were taken from the old literals so the look is preserved; ink pairings use `inkFor` with palette swatches.
+- **Deck row**: the four queue prev/next buttons share `learnableNavButton` (inline, no per-frame lambda); ImGui IDs and geometry are unchanged.
+- **Out of scope**: `CvTheme`, slider literals, `PerformanceMatrixPanel` and the Crossfader handle/amber literals in `PerformanceTransitionsControls`.

@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#perform-ui-colours-now-all-come-from-the-tango-palette-uitangopalettekt-performancecontrolskt-librarypanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform UI Colours Now All Come From the Tango Palette (ui/TangoPalette.kt, Performance*Controls.kt, LibraryPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#user-profile-and-perform-page-files-are-safer-controluserjsonfileskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5086,6 +5097,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#perform-ui-colours-now-all-come-from-the-tango-palette-uitangopalettekt-performancecontrolskt-librarypanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform UI Colours Now All Come From the Tango Palette (ui/TangoPalette.kt, Performance*Controls.kt, LibraryPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#user-profile-and-perform-page-files-are-safer-controluserjsonfileskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8939,6 +8961,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="perform-ui-colours-now-all-come-from-the-tango-palette-uitangopalettekt-performancecontrolskt-librarypanelkt">Perform UI Colours Now All Come From the Tango Palette (<code>ui/TangoPalette.kt</code>, <code>Performance*Controls.kt</code>, <code>LibraryPanel.kt</code>)</h3>
+<ul>
+<li>Badges, buttons, beat dots, TAP/AUTO/LINK states, Library mode toggle and panel surfaces now use named <code>TangoPalette</code> roles that resolve per theme, instead of dark-theme RGB literals with Tango colours only in the light theme. The dark theme looks essentially the same (a few blues and ambers shift to the nearest Tango swatch); the light theme is unchanged.</li>
+<li>The MIDI-learn border is now the Tango sync cyan everywhere in the Perform rows (slightly deeper than the old bright cyan).</li>
+<li>Internal: the four near-identical queue prev/next buttons on the deck row share one helper; no layout or ImGui ID changes.</li>
+</ul>
 <h3 id="user-profile-and-perform-page-files-are-safer-controluserjsonfileskt">User Profile and Perform Page Files Are Safer (<code>control/UserJsonFiles.kt</code>)</h3>
 <ul>
 <li>An unreadable file in <code>library/controllers/</code> or <code>library/perform_pages/</code> (permissions, a folder named <code>x.json</code>) is now listed as rejected instead of causing errors. Two files with the same id no longer override each other silently: the first by file name is used and the other is rejected as a duplicate. Saving writes to a temporary file and moves it into place, so a crash or full disk can no longer truncate your profile or page.</li>

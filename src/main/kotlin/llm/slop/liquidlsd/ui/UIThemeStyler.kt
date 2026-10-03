@@ -24,6 +24,7 @@ object UIThemeStyler {
     }
 
     fun setupThemeColors(theme: UITheme.Theme, bgVideoEnabled: Boolean) {
+        TangoPalette.isLightTheme = theme == UITheme.Theme.ORANGE_SUNSHINE
         val style = ImGui.getStyle()
         when (theme) {
             UITheme.Theme.GREY_ACID -> ImGui.styleColorsDark()

@@ -34,7 +34,7 @@ internal object PerformanceClockControls {
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             for ((source, label) in listOf(ClockSource.MANUAL to "MAN", ClockSource.AUDIO_TRACKER to "AUDIO")) {
                 val isActive = currentClock == source
-                ImGui.pushStyleColor(ImGuiCol.Button, if (isActive) ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 1f) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.7f))
+                ImGui.pushStyleColor(ImGuiCol.Button, if (isActive) TangoPalette.u32(TangoPalette.ACTIVE_BLUE) else TangoPalette.CLOCK_IDLE_BG.u32())
                 if (ImGui.button("$label##perf_clock_src_${source.name}", 50f, headerH)) {
                     audioEngine.clockSource = source
                     AppPreferencesStore.savePreferences()
@@ -50,10 +50,10 @@ internal object PerformanceClockControls {
             ImGui.sameLine(0f, gap)
             val peers = AbletonLinkEngine.getNumPeers()
             if (peers > 0) {
-                ImGui.pushStyleColor(ImGuiCol.Button, 0.15f, 0.60f, 0.75f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.SYNC.normal))
             } else {
-                val linkInk = TangoPalette.inkFor(floatArrayOf(0.75f, 0.55f, 0.15f))
-                ImGui.pushStyleColor(ImGuiCol.Button, 0.75f, 0.55f, 0.15f, 1.0f)
+                val linkInk = TangoPalette.inkFor(TangoPalette.LINK_NO_PEERS)
+                ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.LINK_NO_PEERS))
                 ImGui.pushStyleColor(ImGuiCol.Text, linkInk[0], linkInk[1], linkInk[2], 1.0f)
             }
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
@@ -69,7 +69,7 @@ internal object PerformanceClockControls {
         ImGui.sameLine(0f, gap * 2f)
         val bpmText = "%.1f".format(audioEngine.getEstimatedBpm())
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f))
+            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.PILL_BG.u32())
             if (ImGui.button("$bpmText BPM##perf_clock_bpm", 96f, headerH)) {
                 PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
             }
@@ -88,10 +88,10 @@ internal object PerformanceClockControls {
         for (i in 0..3) {
             val cx = dotsX + dotR + i * (dotR * 2f + dotGap)
             if (i == currentBeat) {
-                val col = if (i == 0) ImGui.colorConvertFloat4ToU32(0.2f, 0.95f, 1.0f, 1f) else ImGui.colorConvertFloat4ToU32(0.9f, 0.95f, 0.4f, 1f)
+                val col = if (i == 0) TangoPalette.BEAT_DOWNBEAT.u32() else TangoPalette.BEAT_DOT.u32()
                 dl.addCircleFilled(cx, dotsCy, dotR, col)
             } else {
-                dl.addCircle(cx, dotsCy, dotR, ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.40f, 0.6f), 0, 1.2f)
+                dl.addCircle(cx, dotsCy, dotR, TangoPalette.BEAT_IDLE_RING.u32(), 0, 1.2f)
             }
         }
         ImGui.dummy(dotR * 2f * 4f + dotGap * 3f, headerH)
@@ -153,14 +153,14 @@ internal object PerformanceClockControls {
 
         val label = if (tapCount > 0) "TAP [$tapCount]" else "TAP"
         val btnCol = when {
-            tapFlash > 0.05f -> ImGui.colorConvertFloat4ToU32(0.95f, 0.75f, 0.15f, 1f)
-            tapCount > 0 -> ImGui.colorConvertFloat4ToU32(0.75f, 0.50f, 0.10f, 0.9f)
-            else -> ImGui.colorConvertFloat4ToU32(0.20f, 0.45f, 0.70f, 0.9f)
+            tapFlash > 0.05f -> TangoPalette.u32(TangoPalette.TAP_FLASH)
+            tapCount > 0 -> TangoPalette.u32(TangoPalette.TAP_COUNTING, 0.9f)
+            else -> TangoPalette.u32(TangoPalette.ACTIVE_BLUE, 0.9f)
         }
         val tapInk = when {
-            tapFlash > 0.05f -> TangoPalette.inkFor(floatArrayOf(0.95f, 0.75f, 0.15f))
-            tapCount > 0 -> TangoPalette.inkFor(floatArrayOf(0.75f, 0.50f, 0.10f))
-            else -> TangoPalette.inkFor(floatArrayOf(0.20f, 0.45f, 0.70f))
+            tapFlash > 0.05f -> TangoPalette.inkFor(TangoPalette.TAP_FLASH)
+            tapCount > 0 -> TangoPalette.inkFor(TangoPalette.TAP_COUNTING)
+            else -> TangoPalette.inkFor(TangoPalette.ACTIVE_BLUE)
         }
         val tapX = ImGui.getCursorScreenPosX()
         val tapY = ImGui.getCursorScreenPosY()
@@ -172,7 +172,7 @@ internal object PerformanceClockControls {
         }
         ImGui.popStyleColor(2)
         if (isMidiLearnTap) {
-            ImGui.getWindowDrawList().addRect(tapX - 1f, tapY - 1f, tapX + tapW + 1f, tapY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            ImGui.getWindowDrawList().addRect(tapX - 1f, tapY - 1f, tapX + tapW + 1f, tapY + headerH + 1f, TangoPalette.learnBorder(), 3f, 0, 1.5f)
         }
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_clock_tap_ctx")) {

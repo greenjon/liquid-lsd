@@ -192,6 +192,18 @@ class UIThemeTest {
         assertHex(TangoPalette.SYNC_CYAN.bright, 0x34E2E2)
     }
 
+    @Test
+    fun testTangoSemanticRolesDefinedForBothThemes() {
+        assertTrue(TangoPalette.ALL_ROLES.isNotEmpty())
+        for (role in TangoPalette.ALL_ROLES) {
+            assertEquals(4, role.dark.size)
+            // A role is theme-independent, has explicit light RGBA, or follows an ImGui style slot.
+            role.light?.let { assertEquals(4, it.size) }
+            assertFalse(role.light != null && role.lightSlot >= 0, "role must not define both light RGBA and a style slot")
+            (role.dark + (role.light ?: FloatArray(0))).forEach { assertTrue(it in 0f..1f) }
+        }
+    }
+
     // --- UI Layout & Component Elements ---
 
     @Test

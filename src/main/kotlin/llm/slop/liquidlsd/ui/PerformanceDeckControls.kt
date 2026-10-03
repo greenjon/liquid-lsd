@@ -70,6 +70,93 @@ internal object DeckRowMetrics {
 internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
     /**
+     * Prev/next queue button shared by Decks A/B (PlayQueue) and BG (BG queue): click triggers
+     * [trigger] (or starts/cancels OSC learn in OSC map mode), draws the MIDI/OSC learn border, and
+     * offers the right-click MIDI/OSC Learn/Clear menu. [btnId]/[ctxId] are the complete ImGui IDs.
+     * Inline so [trigger] doesn't allocate a lambda per frame.
+     */
+    private inline fun learnableNavButton(
+        session: SessionContext,
+        mixer: Mixer,
+        dl: imgui.ImDrawList,
+        key: String,
+        oscKey: String,
+        glyph: String,
+        btnId: String,
+        ctxId: String,
+        navBtnW: Float,
+        ctrlH: Float,
+        oscName: String,
+        menuName: String,
+        triggerLabel: String,
+        tooltipBase: String,
+        trigger: () -> Unit
+    ) {
+        val isMidiLearn = session.parametersState.isMidiTargetLearning(key)
+        val isOscLearn = OscLearnState.isTargetLearning(oscKey)
+        val midiMapping = session.midiMappingManager.getMappingForParameter(key)
+        val midiText = midiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+
+        val x = ImGui.getCursorScreenPosX()
+        val y = ImGui.getCursorScreenPosY()
+        if (ImGui.button(btnId, navBtnW, ctrlH)) {
+            if (OscMapModeState.active) {
+                if (isOscLearn) OscLearnState.cancelLearn() else OscLearnState.startLearn(oscKey, 0f, 1f, oscName)
+            } else {
+                trigger()
+            }
+        }
+        if (isMidiLearn) {
+            dl.addRect(x - 1f, y - 1f, x + navBtnW + 1f, y + ctrlH + 1f, TangoPalette.learnBorder(), 3f, 0, 1.5f)
+        } else if (isOscLearn) {
+            TangoPalette.drawOscLearnPulseBorder(dl, x - 1f, y - 1f, x + navBtnW + 1f, y + ctrlH + 1f)
+        }
+        pushOpenDropdownPadding()
+        if (ImGui.beginPopupContextItem(ctxId)) {
+            pushOpenDropdownFont()
+            ImGui.textDisabled("$oscName ($glyph)")
+            ImGui.separator()
+            if (ImGui.menuItem(triggerLabel)) {
+                trigger()
+            }
+            ImGui.separator()
+            if (isMidiLearn) {
+                if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
+                    session.parametersState.midiLearnTarget = null
+                }
+            } else {
+                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI ($menuName)")) {
+                    session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(key))
+                }
+            }
+            if (midiMapping != null) {
+                if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
+                    session.midiMappingManager.removeMapping(key)
+                    session.midiMappingManager.saveActiveProfile()
+                }
+            }
+            if (isOscLearn) {
+                if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
+                    OscLearnState.cancelLearn()
+                }
+            } else {
+                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC ($menuName)")) {
+                    OscLearnState.startLearn(oscKey, 0f, 1f, oscName)
+                }
+            }
+            val oscAddress = OscMappingManager.getAddressForParameter(oscKey)
+            if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, oscAddress != null)) {
+                OscMappingManager.removeMapping(oscAddress!!)
+                OscMappingManager.saveActiveProfile()
+            }
+            popOpenDropdownFont()
+            ImGui.endPopup()
+        }
+        popOpenDropdownPadding()
+        itemTooltip("$tooltipBase$midiText\nRight-click for MIDI/OSC Learn.")
+    }
+
+    /**
      * Controls to the left of the knobs for Deck rows (Deck A, B, BG, PV) in two stacked rows:
      * - Row 1 (SRC): [SRC] knob-assign pill, kebab, generator/preset badge, Save,
      *   play queue / bg queue navigation (or preview button for PV), eject button.
@@ -171,10 +258,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                 activePreset != null -> "$activePreset$dirtyMarker"
                 else -> deck.source.displayName
             }
-            val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
-            val genBorderCol = if (isLight) ImGui.getColorU32(ImGuiCol.Border) else ImGui.colorConvertFloat4ToU32(0.35f, 0.40f, 0.50f, 0.70f)
-            val genBgCol = if (isLight) ImGui.getColorU32(ImGuiCol.FrameBg) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
-            val genTextCol = if (isLight) ImGui.getColorU32(ImGuiCol.Text) else ImGui.colorConvertFloat4ToU32(0.80f, 0.85f, 0.95f, 1f)
+            val genBorderCol = TangoPalette.BADGE_BORDER.u32()
+            val genBgCol = TangoPalette.BADGE_BG.u32()
+            val genTextCol = TangoPalette.BADGE_TEXT.u32()
             val curX = ImGui.getCursorScreenPosX()
             val curY = ImGui.getCursorScreenPosY()
             dl.addRectFilled(curX, curY, curX + genBadgeW, curY + ctrlH, genBgCol, 4f)
@@ -222,7 +308,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             popOpenDropdownPadding()
             if (ImGui.isItemHovered()) {
                 ImGui.setMouseCursor(ImGuiMouseCursor.Hand)
-                val hoverBorderCol = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else ImGui.colorConvertFloat4ToU32(0.60f, 0.70f, 0.90f, 1f)
+                val hoverBorderCol = TangoPalette.BADGE_HOVER_BORDER.u32()
                 dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, hoverBorderCol, 4f, 0, 1.5f)
             }
             itemTooltip(
@@ -236,8 +322,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             // 4. Save button -- save-if-possible, else Save As modal
             val saveBtnBg = when {
                 isDirty -> TangoPalette.u32(TangoPalette.ALERT.dark)
-                isLight -> ImGui.getColorU32(ImGuiCol.Button)
-                else -> ImGui.colorConvertFloat4ToU32(0.18f, 0.20f, 0.24f, 0.8f)
+                else -> TangoPalette.BUTTON_SOFT_BG.u32()
             }
             ImGui.pushStyleColor(ImGuiCol.Button, saveBtnBg)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -253,274 +338,30 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             // 5. PlayQueue / BG Queue navigation (or preview indicator for PV) -- status text removed
             val navBtnW = DeckRowMetrics.navBtnW(ctrlH)
             if (isDeckA || isDeckB) {
-                val qPrevKey = "Global/queuePrev"
-                val qPrevOscKey = "Mixer/queuePrev"
-                val isMidiLearnQPrev = session.parametersState.isMidiTargetLearning(qPrevKey)
-                val isOscLearnQPrev = OscLearnState.isTargetLearning(qPrevOscKey)
-                val qPrevMidiMapping = session.midiMappingManager.getMappingForParameter(qPrevKey)
-                val qPrevMidiText = qPrevMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-
-                val qPrevX = ImGui.getCursorScreenPosX()
-                val qPrevY = ImGui.getCursorScreenPosY()
-                if (ImGui.button("◀##perf_q_prev_$tag", navBtnW, ctrlH)) {
-                    if (OscMapModeState.active) {
-                        if (isOscLearnQPrev) OscLearnState.cancelLearn() else OscLearnState.startLearn(qPrevOscKey, 0f, 1f, "PlayQueue Prev")
-                    } else {
-                        session.playQueueManager.triggerPrevious(mixer)
-                    }
-                }
-                if (isMidiLearnQPrev) {
-                    dl.addRect(qPrevX - 1f, qPrevY - 1f, qPrevX + navBtnW + 1f, qPrevY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
-                } else if (isOscLearnQPrev) {
-                    TangoPalette.drawOscLearnPulseBorder(dl, qPrevX - 1f, qPrevY - 1f, qPrevX + navBtnW + 1f, qPrevY + ctrlH + 1f)
-                }
-                pushOpenDropdownPadding()
-                if (ImGui.beginPopupContextItem("perf_q_prev_ctx_$tag")) {
-                    pushOpenDropdownFont()
-                    ImGui.textDisabled("PlayQueue Prev (◀)")
-                    ImGui.separator()
-                    if (ImGui.menuItem("Trigger Previous")) {
-                        session.playQueueManager.triggerPrevious(mixer)
-                    }
-                    ImGui.separator()
-                    if (isMidiLearnQPrev) {
-                        if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
-                            session.parametersState.midiLearnTarget = null
-                        }
-                    } else {
-                        if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Queue Prev)")) {
-                            session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(qPrevKey))
-                        }
-                    }
-                    if (qPrevMidiMapping != null) {
-                        if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
-                            session.midiMappingManager.removeMapping(qPrevKey)
-                            session.midiMappingManager.saveActiveProfile()
-                        }
-                    }
-                    if (isOscLearnQPrev) {
-                        if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
-                            OscLearnState.cancelLearn()
-                        }
-                    } else {
-                        if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Queue Prev)")) {
-                            OscLearnState.startLearn(qPrevOscKey, 0f, 1f, "PlayQueue Prev")
-                        }
-                    }
-                    val qPrevOscAddress = OscMappingManager.getAddressForParameter(qPrevOscKey)
-                    if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, qPrevOscAddress != null)) {
-                        OscMappingManager.removeMapping(qPrevOscAddress!!)
-                        OscMappingManager.saveActiveProfile()
-                    }
-                    popOpenDropdownFont()
-                    ImGui.endPopup()
-                }
-                popOpenDropdownPadding()
-                itemTooltip("Advance to previous item in PlayQueue.$qPrevMidiText\nRight-click for MIDI/OSC Learn.")
+                learnableNavButton(session, mixer, dl, "Global/queuePrev", "Mixer/queuePrev", "◀", "◀##perf_q_prev_$tag", "perf_q_prev_ctx_$tag",
+                    navBtnW, ctrlH, "PlayQueue Prev", "Queue Prev", "Trigger Previous",
+                    "Advance to previous item in PlayQueue.") { session.playQueueManager.triggerPrevious(mixer) }
 
                 ImGui.sameLine(0f, gap)
 
-                val qNextKey = "Global/queueNext"
-                val qNextOscKey = "Mixer/queueNext"
-                val isMidiLearnQNext = session.parametersState.isMidiTargetLearning(qNextKey)
-                val isOscLearnQNext = OscLearnState.isTargetLearning(qNextOscKey)
-                val qNextMidiMapping = session.midiMappingManager.getMappingForParameter(qNextKey)
-                val qNextMidiText = qNextMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-
-                val qNextX = ImGui.getCursorScreenPosX()
-                val qNextY = ImGui.getCursorScreenPosY()
-                if (ImGui.button("▶##perf_q_next_$tag", navBtnW, ctrlH)) {
-                    if (OscMapModeState.active) {
-                        if (isOscLearnQNext) OscLearnState.cancelLearn() else OscLearnState.startLearn(qNextOscKey, 0f, 1f, "PlayQueue Next")
-                    } else {
-                        session.playQueueManager.triggerNext(mixer)
-                    }
-                }
-                if (isMidiLearnQNext) {
-                    dl.addRect(qNextX - 1f, qNextY - 1f, qNextX + navBtnW + 1f, qNextY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
-                } else if (isOscLearnQNext) {
-                    TangoPalette.drawOscLearnPulseBorder(dl, qNextX - 1f, qNextY - 1f, qNextX + navBtnW + 1f, qNextY + ctrlH + 1f)
-                }
-                pushOpenDropdownPadding()
-                if (ImGui.beginPopupContextItem("perf_q_next_ctx_$tag")) {
-                    pushOpenDropdownFont()
-                    ImGui.textDisabled("PlayQueue Next (▶)")
-                    ImGui.separator()
-                    if (ImGui.menuItem("Trigger Next")) {
-                        session.playQueueManager.triggerNext(mixer)
-                    }
-                    ImGui.separator()
-                    if (isMidiLearnQNext) {
-                        if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
-                            session.parametersState.midiLearnTarget = null
-                        }
-                    } else {
-                        if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Queue Next)")) {
-                            session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(qNextKey))
-                        }
-                    }
-                    if (qNextMidiMapping != null) {
-                        if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
-                            session.midiMappingManager.removeMapping(qNextKey)
-                            session.midiMappingManager.saveActiveProfile()
-                        }
-                    }
-                    if (isOscLearnQNext) {
-                        if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
-                            OscLearnState.cancelLearn()
-                        }
-                    } else {
-                        if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Queue Next)")) {
-                            OscLearnState.startLearn(qNextOscKey, 0f, 1f, "PlayQueue Next")
-                        }
-                    }
-                    val qNextOscAddress = OscMappingManager.getAddressForParameter(qNextOscKey)
-                    if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, qNextOscAddress != null)) {
-                        OscMappingManager.removeMapping(qNextOscAddress!!)
-                        OscMappingManager.saveActiveProfile()
-                    }
-                    popOpenDropdownFont()
-                    ImGui.endPopup()
-                }
-                popOpenDropdownPadding()
-                itemTooltip("Advance to next item in PlayQueue.$qNextMidiText\nRight-click for MIDI/OSC Learn.")
+                learnableNavButton(session, mixer, dl, "Global/queueNext", "Mixer/queueNext", "▶", "▶##perf_q_next_$tag", "perf_q_next_ctx_$tag",
+                    navBtnW, ctrlH, "PlayQueue Next", "Queue Next", "Trigger Next",
+                    "Advance to next item in PlayQueue.") { session.playQueueManager.triggerNext(mixer) }
             } else if (isDeckBG) {
-                val bgPrevKey = "Global/bgQueuePrev"
-                val bgPrevOscKey = "Mixer/bgQueuePrev"
-                val isMidiLearnBgPrev = session.parametersState.isMidiTargetLearning(bgPrevKey)
-                val isOscLearnBgPrev = OscLearnState.isTargetLearning(bgPrevOscKey)
-                val bgPrevMidiMapping = session.midiMappingManager.getMappingForParameter(bgPrevKey)
-                val bgPrevMidiText = bgPrevMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-
-                val bgPrevX = ImGui.getCursorScreenPosX()
-                val bgPrevY = ImGui.getCursorScreenPosY()
-                if (ImGui.button("◀##perf_bg_prev", navBtnW, ctrlH)) {
-                    if (OscMapModeState.active) {
-                        if (isOscLearnBgPrev) OscLearnState.cancelLearn() else OscLearnState.startLearn(bgPrevOscKey, 0f, 1f, "BG Queue Prev")
-                    } else {
-                        session.bgQueueManager.triggerPrevious(mixer)
-                    }
-                }
-                if (isMidiLearnBgPrev) {
-                    dl.addRect(bgPrevX - 1f, bgPrevY - 1f, bgPrevX + navBtnW + 1f, bgPrevY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
-                } else if (isOscLearnBgPrev) {
-                    TangoPalette.drawOscLearnPulseBorder(dl, bgPrevX - 1f, bgPrevY - 1f, bgPrevX + navBtnW + 1f, bgPrevY + ctrlH + 1f)
-                }
-                pushOpenDropdownPadding()
-                if (ImGui.beginPopupContextItem("perf_bg_prev_ctx")) {
-                    pushOpenDropdownFont()
-                    ImGui.textDisabled("BG Queue Prev (◀)")
-                    ImGui.separator()
-                    if (ImGui.menuItem("Trigger Previous")) {
-                        session.bgQueueManager.triggerPrevious(mixer)
-                    }
-                    ImGui.separator()
-                    if (isMidiLearnBgPrev) {
-                        if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
-                            session.parametersState.midiLearnTarget = null
-                        }
-                    } else {
-                        if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (BG Queue Prev)")) {
-                            session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(bgPrevKey))
-                        }
-                    }
-                    if (bgPrevMidiMapping != null) {
-                        if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
-                            session.midiMappingManager.removeMapping(bgPrevKey)
-                            session.midiMappingManager.saveActiveProfile()
-                        }
-                    }
-                    if (isOscLearnBgPrev) {
-                        if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
-                            OscLearnState.cancelLearn()
-                        }
-                    } else {
-                        if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (BG Queue Prev)")) {
-                            OscLearnState.startLearn(bgPrevOscKey, 0f, 1f, "BG Queue Prev")
-                        }
-                    }
-                    val bgPrevOscAddress = OscMappingManager.getAddressForParameter(bgPrevOscKey)
-                    if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, bgPrevOscAddress != null)) {
-                        OscMappingManager.removeMapping(bgPrevOscAddress!!)
-                        OscMappingManager.saveActiveProfile()
-                    }
-                    popOpenDropdownFont()
-                    ImGui.endPopup()
-                }
-                popOpenDropdownPadding()
-                itemTooltip("Advance to previous item in BG Queue.$bgPrevMidiText\nRight-click for MIDI/OSC Learn.")
+                learnableNavButton(session, mixer, dl, "Global/bgQueuePrev", "Mixer/bgQueuePrev", "◀", "◀##perf_bg_prev", "perf_bg_prev_ctx",
+                    navBtnW, ctrlH, "BG Queue Prev", "BG Queue Prev", "Trigger Previous",
+                    "Advance to previous item in BG Queue.") { session.bgQueueManager.triggerPrevious(mixer) }
 
                 ImGui.sameLine(0f, gap)
 
-                val bgNextKey = "Global/bgQueueNext"
-                val bgNextOscKey = "Mixer/bgQueueNext"
-                val isMidiLearnBgNext = session.parametersState.isMidiTargetLearning(bgNextKey)
-                val isOscLearnBgNext = OscLearnState.isTargetLearning(bgNextOscKey)
-                val bgNextMidiMapping = session.midiMappingManager.getMappingForParameter(bgNextKey)
-                val bgNextMidiText = bgNextMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-
-                val bgNextX = ImGui.getCursorScreenPosX()
-                val bgNextY = ImGui.getCursorScreenPosY()
-                if (ImGui.button("▶##perf_bg_next", navBtnW, ctrlH)) {
-                    if (OscMapModeState.active) {
-                        if (isOscLearnBgNext) OscLearnState.cancelLearn() else OscLearnState.startLearn(bgNextOscKey, 0f, 1f, "BG Queue Next")
-                    } else {
-                        session.bgQueueManager.triggerNext(mixer)
-                    }
-                }
-                if (isMidiLearnBgNext) {
-                    dl.addRect(bgNextX - 1f, bgNextY - 1f, bgNextX + navBtnW + 1f, bgNextY + ctrlH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
-                } else if (isOscLearnBgNext) {
-                    TangoPalette.drawOscLearnPulseBorder(dl, bgNextX - 1f, bgNextY - 1f, bgNextX + navBtnW + 1f, bgNextY + ctrlH + 1f)
-                }
-                pushOpenDropdownPadding()
-                if (ImGui.beginPopupContextItem("perf_bg_next_ctx")) {
-                    pushOpenDropdownFont()
-                    ImGui.textDisabled("BG Queue Next (▶)")
-                    ImGui.separator()
-                    if (ImGui.menuItem("Trigger Next")) {
-                        session.bgQueueManager.triggerNext(mixer)
-                    }
-                    ImGui.separator()
-                    if (isMidiLearnBgNext) {
-                        if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
-                            session.parametersState.midiLearnTarget = null
-                        }
-                    } else {
-                        if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (BG Queue Next)")) {
-                            session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(bgNextKey))
-                        }
-                    }
-                    if (bgNextMidiMapping != null) {
-                        if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
-                            session.midiMappingManager.removeMapping(bgNextKey)
-                            session.midiMappingManager.saveActiveProfile()
-                        }
-                    }
-                    if (isOscLearnBgNext) {
-                        if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
-                            OscLearnState.cancelLearn()
-                        }
-                    } else {
-                        if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (BG Queue Next)")) {
-                            OscLearnState.startLearn(bgNextOscKey, 0f, 1f, "BG Queue Next")
-                        }
-                    }
-                    val bgNextOscAddress = OscMappingManager.getAddressForParameter(bgNextOscKey)
-                    if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, bgNextOscAddress != null)) {
-                        OscMappingManager.removeMapping(bgNextOscAddress!!)
-                        OscMappingManager.saveActiveProfile()
-                    }
-                    popOpenDropdownFont()
-                    ImGui.endPopup()
-                }
-                popOpenDropdownPadding()
-                itemTooltip("Advance to next item in BG Queue.$bgNextMidiText\nRight-click for MIDI/OSC Learn.")
+                learnableNavButton(session, mixer, dl, "Global/bgQueueNext", "Mixer/bgQueueNext", "▶", "▶##perf_bg_next", "perf_bg_next_ctx",
+                    navBtnW, ctrlH, "BG Queue Next", "BG Queue Next", "Trigger Next",
+                    "Advance to next item in BG Queue.") { session.bgQueueManager.triggerNext(mixer) }
             } else {
                 // Deck PV indicator / focus button
                 val pvBadgeW = maxOf(DeckRowMetrics.queueNavW(ctrlH), DeckRowMetrics.PV_BADGE_W)
-                val pvBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.12f, 0.22f, 0.18f, 0.85f)
-                val pvBtnHov = if (isLight) TangoPalette.u32(TangoPalette.PLUM.light) else ImGui.colorConvertFloat4ToU32(0.18f, 0.32f, 0.25f, 1f)
+                val pvBtnBg = TangoPalette.PREVIEW_BG.u32()
+                val pvBtnHov = TangoPalette.PREVIEW_HOVER.u32()
                 ImGui.pushStyleColor(ImGuiCol.Button, pvBtnBg)
                 ImGui.pushStyleColor(ImGuiCol.ButtonHovered, pvBtnHov)
                 session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
@@ -535,8 +376,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.sameLine(0f, gap)
 
             // 6. Eject Button [ EJECT ]
-            val ejectBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
-            val ejectBtnHov = if (isLight) TangoPalette.u32(TangoPalette.DANGER.light) else ImGui.colorConvertFloat4ToU32(0.45f, 0.20f, 0.20f, 1f)
+            val ejectBtnBg = TangoPalette.BUTTON_BG.u32()
+            val ejectBtnHov = TangoPalette.EJECT_HOVER.u32()
             ImGui.pushStyleColor(ImGuiCol.Button, ejectBtnBg)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ejectBtnHov)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -615,14 +456,13 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             isDeckBG -> "BG"
             else -> "PV"
         }
-        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
 
         // Row 1: Randomize Die Button [ DICES ] (above BYPASS button; applies to both SRC and FX)
         if (session.uiTheme.randomizationEnabled) {
             ImGui.setCursorScreenPos(startX, row1Y)
             ImGui.beginGroup()
-            val randBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.20f, 0.16f, 0.24f, 0.90f)
-            val randBtnHov = if (isLight) TangoPalette.u32(TangoPalette.PLUM.light) else ImGui.colorConvertFloat4ToU32(0.35f, 0.22f, 0.42f, 1f)
+            val randBtnBg = TangoPalette.RANDOM_BG.u32()
+            val randBtnHov = TangoPalette.RANDOM_HOVER.u32()
             ImGui.pushStyleColor(ImGuiCol.Button, randBtnBg)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, randBtnHov)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {

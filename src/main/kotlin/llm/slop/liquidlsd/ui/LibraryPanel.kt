@@ -248,10 +248,9 @@ object LibraryPanel {
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 val btnWMode = 54f
                 val btnWModeWide = 64f
-                val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
-                val activeCol = if (isLight) TangoPalette.u32(TangoPalette.SYNC.normal) else ImGui.colorConvertFloat4ToU32(0.25f, 0.45f, 0.75f, 0.8f)
-                val inactiveCol = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.18f, 0.18f, 0.18f, 0.8f)
-                val activeTextCol = if (isLight) ImGui.colorConvertFloat4ToU32(0.05f, 0.05f, 0.05f, 1f) else ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
+                val activeCol = TangoPalette.MODE_ACTIVE.u32()
+                val inactiveCol = TangoPalette.MODE_INACTIVE.u32()
+                val activeTextCol = TangoPalette.MODE_ACTIVE_TEXT.u32()
                 val inactiveTextCol = ImGui.getColorU32(ImGuiCol.Text)
 
                 val isPresets = viewMode == LibraryViewMode.PRESETS
@@ -331,9 +330,8 @@ object LibraryPanel {
 
         ImGui.pushStyleVar(ImGuiStyleVar.ChildRounding, 6f)
         ImGui.pushStyleVar(ImGuiStyleVar.WindowPadding, 6f, 6f)
-        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
-        val childBg = if (isLight) ImGui.getColorU32(ImGuiCol.ChildBg) else ImGui.colorConvertFloat4ToU32(0.10f, 0.10f, 0.12f, 0.6f)
-        val childBorder = if (isLight) ImGui.getColorU32(ImGuiCol.Border) else ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.28f, 0.8f)
+        val childBg = TangoPalette.PANEL_BG.u32()
+        val childBorder = TangoPalette.PANEL_BORDER.u32()
         ImGui.pushStyleColor(ImGuiCol.ChildBg, childBg)
         ImGui.pushStyleColor(ImGuiCol.Border, childBorder)
 

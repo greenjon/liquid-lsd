@@ -129,10 +129,9 @@ internal object PerformanceMasterControls {
 
         val curX = startX
         val curY = headerY
-        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
-        val genBgCol = if (isLight) ImGui.getColorU32(ImGuiCol.FrameBg) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
-        val genBorderCol = if (isLight) ImGui.getColorU32(ImGuiCol.Border) else ImGui.colorConvertFloat4ToU32(0.35f, 0.40f, 0.50f, 0.70f)
-        val genTextCol = if (isLight) ImGui.getColorU32(ImGuiCol.Text) else ImGui.colorConvertFloat4ToU32(0.80f, 0.85f, 0.95f, 1f)
+        val genBgCol = TangoPalette.BADGE_BG.u32()
+        val genBorderCol = TangoPalette.BADGE_BORDER.u32()
+        val genTextCol = TangoPalette.BADGE_TEXT.u32()
         val badgeText = "Deck Alphas & Master"
 
         dl.addRectFilled(curX, curY, curX + badgeW, curY + headerH, genBgCol, 4f)
@@ -192,8 +191,8 @@ internal object PerformanceMasterControls {
         // Reset button [ 100% ]
         val resetX = curX + badgeW + gap
         ImGui.setCursorScreenPos(resetX, curY)
-        val resetBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f)
-        val resetBtnHov = if (isLight) ImGui.getColorU32(ImGuiCol.ButtonHovered) else ImGui.colorConvertFloat4ToU32(0.24f, 0.28f, 0.35f, 1f)
+        val resetBtnBg = TangoPalette.BUTTON_BG.u32()
+        val resetBtnHov = TangoPalette.BUTTON_HOVER.u32()
         ImGui.pushStyleColor(ImGuiCol.Button, resetBtnBg)
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, resetBtnHov)
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {

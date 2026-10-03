@@ -49,9 +49,8 @@ internal object PerformanceTransitionsControls {
     ) {
         if (!session.uiTheme.randomizationEnabled) return
 
-        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
-        val randBtnBg = if (isLight) ImGui.getColorU32(ImGuiCol.Button) else ImGui.colorConvertFloat4ToU32(0.20f, 0.16f, 0.24f, 0.90f)
-        val randBtnHov = if (isLight) TangoPalette.u32(TangoPalette.PLUM.light) else ImGui.colorConvertFloat4ToU32(0.35f, 0.22f, 0.42f, 1f)
+        val randBtnBg = TangoPalette.RANDOM_BG.u32()
+        val randBtnHov = TangoPalette.RANDOM_HOVER.u32()
 
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.beginGroup()
@@ -152,7 +151,7 @@ internal object PerformanceTransitionsControls {
             TransitionQueueManager.advancePrevious(mixer)
         }
         if (isMidiLearnTransQPrev) {
-            dl.addRect(transPrevX - 1f, transPrevY - 1f, transPrevX + navBtnW + 1f, transPrevY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            dl.addRect(transPrevX - 1f, transPrevY - 1f, transPrevX + navBtnW + 1f, transPrevY + headerH + 1f, TangoPalette.learnBorder(), 3f, 0, 1.5f)
         } else if (isOscLearnTransQPrev) {
             TangoPalette.drawOscLearnPulseBorder(dl, transPrevX - 1f, transPrevY - 1f, transPrevX + navBtnW + 1f, transPrevY + headerH + 1f)
         }
@@ -204,8 +203,8 @@ internal object PerformanceTransitionsControls {
 
         val transCurX = ImGui.getCursorScreenPosX()
         val transCurY = ImGui.getCursorScreenPosY()
-        val genBgCol = ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
-        val genTextCol = ImGui.colorConvertFloat4ToU32(0.80f, 0.85f, 0.95f, 1f)
+        val genBgCol = TangoPalette.CELL_BG.u32()
+        val genTextCol = TangoPalette.CELL_TEXT.u32()
         dl.addRectFilled(transCurX, transCurY, transCurX + qTextW, transCurY + headerH, genBgCol, 3f)
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             val sz = ImGui.calcTextSize(transCountStr)
@@ -229,7 +228,7 @@ internal object PerformanceTransitionsControls {
             TransitionQueueManager.advanceNext(mixer)
         }
         if (isMidiLearnTransQNext) {
-            dl.addRect(transNextX - 1f, transNextY - 1f, transNextX + navBtnW + 1f, transNextY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            dl.addRect(transNextX - 1f, transNextY - 1f, transNextX + navBtnW + 1f, transNextY + headerH + 1f, TangoPalette.learnBorder(), 3f, 0, 1.5f)
         } else if (isOscLearnTransQNext) {
             TangoPalette.drawOscLearnPulseBorder(dl, transNextX - 1f, transNextY - 1f, transNextX + navBtnW + 1f, transNextY + headerH + 1f)
         }
@@ -311,8 +310,8 @@ internal object PerformanceTransitionsControls {
         val snapAMapping = session.midiMappingManager.getMappingForParameter(snapAKey)
         val snapAMidiText = snapAMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
 
-        dl.addRectFilled(badgeAX, badgeAY, badgeAX + badgeW, badgeAY + headerH, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
-        val badgeBorderColorA = if (isMidiLearnSnapA) ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f) else colorA
+        dl.addRectFilled(badgeAX, badgeAY, badgeAX + badgeW, badgeAY + headerH, TangoPalette.PILL_BG.u32(), 4f)
+        val badgeBorderColorA = if (isMidiLearnSnapA) TangoPalette.learnBorder() else colorA
         dl.addRect(badgeAX, badgeAY, badgeAX + badgeW, badgeAY + headerH, badgeBorderColorA, 4f, 0, if (isMidiLearnSnapA) 2f else 1.5f)
 
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
@@ -555,11 +554,11 @@ internal object PerformanceTransitionsControls {
 
         // Hover / Active border
         if (isTarget) {
-            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, ImGui.colorConvertFloat4ToU32(0f, 0.8f, 1f, 1f), 4f, 0, 1.5f)
+            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, TangoPalette.learnBorder(), 4f, 0, 1.5f)
         } else if (isOscLearnXfader) {
             TangoPalette.drawOscLearnPulseBorder(dl, lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, 4f, 1.5f)
         } else if (isTrackHovered || isTrackActive) {
-            val borderCol = if (isTrackActive) ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 1.0f) else ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f)
+            val borderCol = if (isTrackActive) TangoPalette.learnBorder() else ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f)
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
         }
 
@@ -584,8 +583,8 @@ internal object PerformanceTransitionsControls {
         val snapBMapping = session.midiMappingManager.getMappingForParameter(snapBKey)
         val snapBMidiText = snapBMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
 
-        val badgeBorderColorB = if (isMidiLearnSnapB) ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f) else colorB
-        dl.addRectFilled(badgeBX, badgeBY, badgeBX + badgeBW, badgeBY + headerH, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
+        val badgeBorderColorB = if (isMidiLearnSnapB) TangoPalette.learnBorder() else colorB
+        dl.addRectFilled(badgeBX, badgeBY, badgeBX + badgeBW, badgeBY + headerH, TangoPalette.PILL_BG.u32(), 4f)
         dl.addRect(badgeBX, badgeBY, badgeBX + badgeBW, badgeBY + headerH, badgeBorderColorB, 4f, 0, if (isMidiLearnSnapB) 2f else 1.5f)
 
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
@@ -643,13 +642,13 @@ internal object PerformanceTransitionsControls {
         val autoY = ImGui.getCursorScreenPosY()
         val isAuto = mixer.isAutoFading
         if (isAuto) {
-            val autoInk = TangoPalette.inkFor(floatArrayOf(0.9f, 0.6f, 0.1f), floatArrayOf(1.0f, 0.7f, 0.2f))
-            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.9f, 0.6f, 0.1f, 0.9f))
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(1.0f, 0.7f, 0.2f, 1.0f))
+            val autoInk = TangoPalette.inkFor(TangoPalette.AUTOFADE_ACTIVE, TangoPalette.AUTOFADE_HOVER)
+            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.AUTOFADE_ACTIVE, 0.9f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.u32(TangoPalette.AUTOFADE_HOVER))
             ImGui.pushStyleColor(ImGuiCol.Text, autoInk[0], autoInk[1], autoInk[2], 1.0f)
         } else {
-            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.16f, 0.18f, 0.22f, 1f))
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.24f, 0.28f, 0.35f, 1f))
+            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.BUTTON_BG.u32())
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.BUTTON_HOVER.u32())
         }
         val autoLabel = if (isAuto) "FADING" else "AUTO"
         if (ImGui.button("$autoLabel##perf_autofade_btn", autoBtnW, headerH)) {
@@ -664,7 +663,7 @@ internal object PerformanceTransitionsControls {
         }
         ImGui.popStyleColor(if (isAuto) 3 else 2)
         if (isMidiLearnAutoFade) {
-            dl.addRect(autoX - 1f, autoY - 1f, autoX + autoBtnW + 1f, autoY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            dl.addRect(autoX - 1f, autoY - 1f, autoX + autoBtnW + 1f, autoY + headerH + 1f, TangoPalette.learnBorder(), 3f, 0, 1.5f)
         }
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_autofade_ctx")) {
@@ -716,8 +715,8 @@ internal object PerformanceTransitionsControls {
         val speedY = ImGui.getCursorScreenPosY()
         val speedStr = "${String.format(java.util.Locale.US, "%.1f", mixer.xfadeSpeed.baseValue)}s"
 
-        ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.90f))
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.20f, 0.24f, 0.32f, 1f))
+        ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.SPEED_BG.u32())
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.SPEED_HOVER.u32())
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             ImGui.button("$speedStr##perf_speed_badge", speedBtnW, headerH)
         }
@@ -747,7 +746,7 @@ internal object PerformanceTransitionsControls {
         }
 
         if (isMidiLearnSpeed) {
-            dl.addRect(speedX - 1f, speedY - 1f, speedX + speedBtnW + 1f, speedY + headerH + 1f, ImGui.colorConvertFloat4ToU32(0f, 0.85f, 1f, 1f), 3f, 0, 1.5f)
+            dl.addRect(speedX - 1f, speedY - 1f, speedX + speedBtnW + 1f, speedY + headerH + 1f, TangoPalette.learnBorder(), 3f, 0, 1.5f)
         } else if (isOscLearnSpeed) {
             TangoPalette.drawOscLearnPulseBorder(dl, speedX - 1f, speedY - 1f, speedX + speedBtnW + 1f, speedY + headerH + 1f)
         }

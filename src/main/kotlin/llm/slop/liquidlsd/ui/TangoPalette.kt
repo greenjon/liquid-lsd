@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImDrawList
 import imgui.ImGui
+import imgui.flag.ImGuiCol
 
 /**
  * The Tango Desktop Project palette (tango.freedesktop.org/Tango_Icon_Theme_Guidelines): 8 hues x
@@ -84,6 +85,92 @@ object TangoPalette {
     // Neutrals
     val NEUTRAL_LIGHT = ALUMINIUM_1  // text, master/neutral accent
     val NEUTRAL_DARK  = ALUMINIUM_2  // panels, disabled text, idle button surfaces
+
+    // -- Semantic UI roles (theme-aware) ---------------------------------------------------------
+    /**
+     * True while the light theme (ORANGE_SUNSHINE) is active. Set by [UIThemeStyler.setupThemeColors]
+     * whenever the theme is applied, so call sites resolve a [Role] without testing the theme
+     * themselves.
+     */
+    @JvmStatic var isLightTheme: Boolean = false
+
+    /**
+     * A named surface/ink color with one value per theme. [dark] is RGBA for the dark theme. The
+     * light theme uses [light] RGBA when given, else the live ImGui style color in [lightSlot] (so
+     * light surfaces follow the styled theme), else falls back to [dark]. Must define exactly one of
+     * [light] / [lightSlot] or neither (theme-independent role).
+     */
+    class Role(val dark: FloatArray, val light: FloatArray? = null, val lightSlot: Int = -1) {
+        fun u32(): Int {
+            if (isLightTheme) {
+                if (light != null) return ImGui.colorConvertFloat4ToU32(light[0], light[1], light[2], light[3])
+                if (lightSlot >= 0) return ImGui.getColorU32(lightSlot)
+            }
+            return ImGui.colorConvertFloat4ToU32(dark[0], dark[1], dark[2], dark[3])
+        }
+    }
+
+    private fun a(h: FloatArray, alpha: Float = 1f) = floatArrayOf(h[0], h[1], h[2], alpha)
+    private fun c(r: Float, g: Float, b: Float, alpha: Float = 1f) = floatArrayOf(r, g, b, alpha)
+
+    // Badges (generator / master readout badges)
+    val BADGE_BG           = Role(c(0.14f, 0.16f, 0.20f, 0.85f), lightSlot = ImGuiCol.FrameBg)
+    val BADGE_BORDER       = Role(c(0.35f, 0.40f, 0.50f, 0.70f), lightSlot = ImGuiCol.Border)
+    val BADGE_TEXT         = Role(c(0.80f, 0.85f, 0.95f, 1f), lightSlot = ImGuiCol.Text)
+    val BADGE_HOVER_BORDER = Role(c(0.60f, 0.70f, 0.90f, 1f), light = a(ORANGE.normal))
+    /** Flat dark readout cells (queue counters etc.): same look in both themes. */
+    val CELL_BG            = Role(c(0.14f, 0.16f, 0.20f, 0.85f))
+    val CELL_TEXT          = Role(c(0.80f, 0.85f, 0.95f, 1f))
+    /** Near-black pill behind a coloured outline (BPM readout, snapshot badges). */
+    val PILL_BG            = Role(c(0.08f, 0.08f, 0.08f, 0.80f))
+
+    // Buttons
+    val BUTTON_BG          = Role(c(0.16f, 0.18f, 0.22f, 1f), lightSlot = ImGuiCol.Button)
+    val BUTTON_HOVER       = Role(c(0.24f, 0.28f, 0.35f, 1f), lightSlot = ImGuiCol.ButtonHovered)
+    val BUTTON_SOFT_BG     = Role(c(0.18f, 0.20f, 0.24f, 0.80f), lightSlot = ImGuiCol.Button)
+    val SPEED_BG           = Role(c(0.14f, 0.16f, 0.20f, 0.90f))
+    val SPEED_HOVER        = Role(c(0.20f, 0.24f, 0.32f, 1f))
+    val CLOCK_IDLE_BG      = Role(c(0.14f, 0.16f, 0.20f, 0.70f))
+    val PREVIEW_BG         = Role(c(0.12f, 0.22f, 0.18f, 0.85f), lightSlot = ImGuiCol.Button)
+    val PREVIEW_HOVER      = Role(c(0.18f, 0.32f, 0.25f, 1f), light = a(PLUM.light))
+    val EJECT_HOVER        = Role(c(0.45f, 0.20f, 0.20f, 1f), light = a(DANGER.light))
+    val RANDOM_BG          = Role(c(0.20f, 0.16f, 0.24f, 0.90f), lightSlot = ImGuiCol.Button)
+    val RANDOM_HOVER       = Role(c(0.35f, 0.22f, 0.42f, 1f), light = a(PLUM.light))
+    /** Selected tab/button in blue (clock source, TAP idle). */
+    val ACTIVE_BLUE        = SKY_BLUE.normal
+    val TAP_FLASH          = ORANGE.light
+    val TAP_COUNTING       = CHOCOLATE.normal
+    val AUTOFADE_ACTIVE    = ORANGE.normal
+    val AUTOFADE_HOVER     = ORANGE.light
+    val LINK_NO_PEERS      = CHOCOLATE.normal
+
+    // Library mode toggle + panel surfaces
+    val MODE_ACTIVE        = Role(c(0.25f, 0.45f, 0.75f, 0.80f), light = a(SYNC.normal))
+    val MODE_INACTIVE      = Role(c(0.18f, 0.18f, 0.18f, 0.80f), lightSlot = ImGuiCol.Button)
+    val MODE_ACTIVE_TEXT   = Role(c(1f, 1f, 1f, 1f), light = c(0.05f, 0.05f, 0.05f, 1f))
+    val PANEL_BG           = Role(c(0.10f, 0.10f, 0.12f, 0.60f), lightSlot = ImGuiCol.ChildBg)
+    val PANEL_BORDER       = Role(c(0.25f, 0.25f, 0.28f, 0.80f), lightSlot = ImGuiCol.Border)
+
+    // Pill toggle outline
+    val PILL_BORDER        = Role(c(0.25f, 0.28f, 0.35f, 0.50f))
+    val PILL_BORDER_HOVER  = Role(c(1f, 1f, 1f, 0.40f))
+
+    // Beat dots (4-beat bar phase)
+    val BEAT_DOWNBEAT      = Role(c(0.2f, 0.95f, 1f, 1f))
+    val BEAT_DOT           = Role(c(0.9f, 0.95f, 0.4f, 1f))
+    val BEAT_IDLE_RING     = Role(c(0.35f, 0.35f, 0.40f, 0.6f))
+
+    /** Border drawn around any control armed for MIDI learn (SYNC cyan). */
+    fun learnBorder(): Int = u32(SYNC.normal)
+
+    /** Every [Role], for the unit test that checks they resolve for both themes. */
+    val ALL_ROLES: List<Role> by lazy {
+        listOf(BADGE_BG, BADGE_BORDER, BADGE_TEXT, BADGE_HOVER_BORDER, CELL_BG, CELL_TEXT, PILL_BG,
+            BUTTON_BG, BUTTON_HOVER, BUTTON_SOFT_BG, SPEED_BG, SPEED_HOVER, CLOCK_IDLE_BG, PREVIEW_BG,
+            PREVIEW_HOVER, EJECT_HOVER, RANDOM_BG, RANDOM_HOVER, MODE_ACTIVE, MODE_INACTIVE,
+            MODE_ACTIVE_TEXT, PANEL_BG, PANEL_BORDER, PILL_BORDER, PILL_BORDER_HOVER, BEAT_DOWNBEAT,
+            BEAT_DOT, BEAT_IDLE_RING)
+    }
 
     // -- Ink pairing -----------------------------------------------------------------------------
     // Mixxx's Tango skin never outlines button labels -- it pairs each background shade with dark

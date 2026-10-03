@@ -37,7 +37,7 @@ internal object PerformanceColors {
     val TOGGLE_ACTIVE_BG = TangoPalette.u32(TangoPalette.ACTIVE.dark)
     val TOGGLE_ACTIVE_HOVER = TangoPalette.u32(TangoPalette.ACTIVE.normal)
     val TOGGLE_ACTIVE_PRESSED = TangoPalette.u32(TangoPalette.ACTIVE.dark, 0.85f)
-    val TOGGLE_ACTIVE_TEXT = ImGui.colorConvertFloat4ToU32(0.05f, 0.05f, 0.05f, 1f)
+    val TOGGLE_ACTIVE_TEXT = TangoPalette.u32(TangoPalette.INK_DARK)
 
     val TOGGLE_INACTIVE_BG = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.dark, 0.85f)
     val TOGGLE_INACTIVE_HOVER = TangoPalette.u32(TangoPalette.NEUTRAL_DARK.normal)
@@ -84,9 +84,9 @@ internal object PerformanceColors {
 
         dl.addRectFilled(x, y, x + w, y + h, bgCol, rounding)
         val borderCol = if (isHovered) {
-            ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.4f)
+            TangoPalette.PILL_BORDER_HOVER.u32()
         } else {
-            ImGui.colorConvertFloat4ToU32(0.25f, 0.28f, 0.35f, 0.5f)
+            TangoPalette.PILL_BORDER.u32()
         }
         dl.addRect(x, y, x + w, y + h, borderCol, rounding, 0, 1f)
 

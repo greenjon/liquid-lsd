@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Perform UI Colours Now All Come From the Tango Palette (`ui/TangoPalette.kt`, `Performance*Controls.kt`, `LibraryPanel.kt`)
+- Badges, buttons, beat dots, TAP/AUTO/LINK states, Library mode toggle and panel surfaces now use named `TangoPalette` roles that resolve per theme, instead of dark-theme RGB literals with Tango colours only in the light theme. The dark theme looks essentially the same (a few blues and ambers shift to the nearest Tango swatch); the light theme is unchanged.
+- The MIDI-learn border is now the Tango sync cyan everywhere in the Perform rows (slightly deeper than the old bright cyan).
+- Internal: the four near-identical queue prev/next buttons on the deck row share one helper; no layout or ImGui ID changes.
+
 ### User Profile and Perform Page Files Are Safer (`control/UserJsonFiles.kt`)
 - An unreadable file in `library/controllers/` or `library/perform_pages/` (permissions, a folder named `x.json`) is now listed as rejected instead of causing errors. Two files with the same id no longer override each other silently: the first by file name is used and the other is rejected as a duplicate. Saving writes to a temporary file and moves it into place, so a crash or full disk can no longer truncate your profile or page.
 
