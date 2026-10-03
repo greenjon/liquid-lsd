@@ -23,10 +23,26 @@ internal object PerformPages {
     private const val COLS = 4
 
     /** The LED colour for [row]: its accent, except the greyscale Master and Global rows (see [PerformanceColors.LED_MASTER]). */
-    fun ledColor(row: RowDescriptor): FloatArray = when (row.bankId) {
-        MacroEngine.MASTER, MacroEngine.MASTER_FX -> PerformanceColors.LED_MASTER
-        MacroEngine.GLOBAL -> PerformanceColors.LED_GLOBAL
-        else -> row.accent
+    fun ledColor(row: RowDescriptor): FloatArray {
+        val base = when (row.bankId) {
+            MacroEngine.MASTER, MacroEngine.MASTER_FX -> PerformanceColors.LED_MASTER
+            MacroEngine.GLOBAL -> PerformanceColors.LED_GLOBAL
+            else -> row.accent
+        }
+        // A pinned FX row sits beside its deck's (or Master's) SRC/MIX row on one page; a hue shift tells them apart on the LEDs.
+        if (row.pinnedMode != "FX") return base
+        val shift = if (row.bankId == MacroEngine.MASTER_FX) -FX_HUE_SHIFT else FX_HUE_SHIFT
+        return rotateHue(base, shift)
+    }
+
+    /** How far a pinned FX row's LED hue moves from its SRC row's (degrees); Master goes the other way to stay clear of Wet/Dry. */
+    private const val FX_HUE_SHIFT = 30f
+
+    private fun rotateHue(rgb: FloatArray, degrees: Float): FloatArray {
+        val hsb = java.awt.Color.RGBtoHSB((rgb[0] * 255f).toInt(), (rgb[1] * 255f).toInt(), (rgb[2] * 255f).toInt(), null)
+        val h = ((hsb[0] + degrees / 360f) % 1f + 1f) % 1f
+        val c = java.awt.Color(java.awt.Color.HSBtoRGB(h, hsb[1], hsb[2]))
+        return floatArrayOf(c.red / 255f, c.green / 255f, c.blue / 255f)
     }
 
     /**

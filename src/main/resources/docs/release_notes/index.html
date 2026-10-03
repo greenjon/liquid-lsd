@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#pinned-deck-and-master-rows-for-perform-pages-uiperfrowskt-performancedeckcontrolskt-performancemastercontrolskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pinned Deck and Master Rows for Perform Pages (ui/PerfRows.kt, PerformanceDeckControls.kt, PerformanceMasterControls.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#perform-pages-are-now-data-uiperfpagestorekt-perfrowskt-resourcesperform_pages" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4745,6 +4756,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#pinned-deck-and-master-rows-for-perform-pages-uiperfrowskt-performancedeckcontrolskt-performancemastercontrolskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pinned Deck and Master Rows for Perform Pages (ui/PerfRows.kt, PerformanceDeckControls.kt, PerformanceMasterControls.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#perform-pages-are-now-data-uiperfpagestorekt-perfrowskt-resourcesperform_pages" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8257,6 +8279,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="pinned-deck-and-master-rows-for-perform-pages-uiperfrowskt-performancedeckcontrolskt-performancemastercontrolskt">Pinned Deck and Master Rows for Perform Pages (<code>ui/PerfRows.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>PerformanceMasterControls.kt</code>)</h3>
+<ul>
+<li><strong>New page rows</strong>: pages can now place just one half of a deck or of Master: <code>deck.A.src</code>, <code>deck.A.fx</code> (likewise B, BG, PV), <code>master.mix</code> and <code>master.fx</code>. A pinned row has no SRC/FX (MIX/FX) toggle, only a fixed pill for its half, and the other half of the row stays empty. Row size and knob positions are unchanged.</li>
+<li><strong>Independent of the toggle rows</strong>: a pinned row ignores the DECKS / MASTER toggles and never changes them, so an A-SRC row and an A-FX row on one page stay put while you flip a normal Deck A row elsewhere.</li>
+<li><strong>Hardware LEDs</strong>: a pinned FX row's LED is shifted 30 degrees round the colour wheel from its SRC row, so the four LEDs of a page stay different. Master FX shifts the other way to stay clear of FX Wet/Dry.</li>
+<li><strong>Deep Edit</strong>: opening a deck or Master for editing picks the first row, on the active page and then the following pages, that shows the half you are editing.</li>
+<li>No built-in page uses these yet; add them in <code>library/perform_pages/*.json</code>.</li>
+</ul>
 <h3 id="perform-pages-are-now-data-uiperfpagestorekt-perfrowskt-resourcesperform_pages">Perform Pages Are Now Data (<code>ui/PerfPageStore.kt</code>, <code>PerfRows.kt</code>, <code>resources/perform_pages/</code>)</h3>
 <ul>
 <li><strong>No visible change</strong>: the DECKS and MASTER tabs are now two built-in <em>pages</em>, each four rows picked from a row catalog. Looks, behaviour and Twister banks are the same as before.</li>

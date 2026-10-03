@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Pinned Deck and Master Rows for Perform Pages (`ui/PerfRows.kt`, `PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`)
+- **New page rows**: pages can now place just one half of a deck or of Master: `deck.A.src`, `deck.A.fx` (likewise B, BG, PV), `master.mix` and `master.fx`. A pinned row has no SRC/FX (MIX/FX) toggle, only a fixed pill for its half, and the other half of the row stays empty. Row size and knob positions are unchanged.
+- **Independent of the toggle rows**: a pinned row ignores the DECKS / MASTER toggles and never changes them, so an A-SRC row and an A-FX row on one page stay put while you flip a normal Deck A row elsewhere.
+- **Hardware LEDs**: a pinned FX row's LED is shifted 30 degrees round the colour wheel from its SRC row, so the four LEDs of a page stay different. Master FX shifts the other way to stay clear of FX Wet/Dry.
+- **Deep Edit**: opening a deck or Master for editing picks the first row, on the active page and then the following pages, that shows the half you are editing.
+- No built-in page uses these yet; add them in `library/perform_pages/*.json`.
+
 ### Perform Pages Are Now Data (`ui/PerfPageStore.kt`, `PerfRows.kt`, `resources/perform_pages/`)
 - **No visible change**: the DECKS and MASTER tabs are now two built-in *pages*, each four rows picked from a row catalog. Looks, behaviour and Twister banks are the same as before.
 - **Page files**: the tab strip lists every page found in the jar and in `library/perform_pages/*.json`. A user file with the same `id` replaces the built-in; a new `id` adds a tab. A page needs exactly 4 rows from the catalog (`deck.A.srcfx`, `master`, `trans`, `wetdry`, `global`, ...); bad files are skipped and the reason is logged. Controller profiles can name a page as `perform.<id>`.

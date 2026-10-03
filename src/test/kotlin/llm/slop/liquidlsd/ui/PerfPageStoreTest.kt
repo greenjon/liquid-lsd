@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.ui
 
 import java.io.File
+import llm.slop.liquidlsd.macro.MacroEngine
 import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -44,8 +45,30 @@ class PerfPageStoreTest {
     fun focusLookupScansActivePageThenFollowingPagesWrapping() {
         val pages = store().all()
         // DECKS places every deck row; from MASTER the scan wraps to DECKS and finds the same catalog row.
-        val row = PerfRows.catalogRowForModule("deckA", pages, "master")
+        val row = PerfRows.catalogRowForModule("deckA", "SRC", pages, "master")
         assertEquals(PerfRows.CATALOG["deck.A.srcfx"], row)
-        assertNull(PerfRows.catalogRowForModule("Mixer", pages, "decks"))
+        assertNull(PerfRows.catalogRowForModule("Mixer", "MIX", pages, "decks")?.takeIf { it.pinnedMode != null })
+    }
+
+    @Test
+    fun focusLookupMatchesTheTargetHalfAndSkipsOtherPinnedRows() {
+        fun page(id: String, vararg rows: String) = PerfPageDef(id, id, rows = rows.map(::RowPlacement))
+        val pages = listOf(
+            page("p1", "deck.A.fx", "deck.A.src", "master.fx", "master.mix"),
+            page("p2", "deck.A.srcfx", "trans", "wetdry", "global"),
+        )
+        assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "p1"))
+        assertEquals(PerfRows.CATALOG["deck.A.fx"], PerfRows.catalogRowForModule(MacroEngine.DECK_A_FX, "FX", pages, "p1"))
+        assertEquals(PerfRows.CATALOG["master.mix"], PerfRows.catalogRowForModule("Mixer", "MIX", pages, "p1"))
+        // Active page p2 first: its toggle row covers either half.
+        assertEquals(PerfRows.CATALOG["deck.A.srcfx"], PerfRows.catalogRowForModule("deckA", "FX", pages, "p2"))
+        // Nothing places Deck B anywhere.
+        assertNull(PerfRows.catalogRowForModule("deckB", "SRC", pages, "p1"))
+    }
+
+    @Test
+    fun pagesMayUsePinnedRows() {
+        val page = PerfPageDef("x", "X", rows = listOf("deck.A.src", "deck.A.fx", "master.mix", "master.fx").map(::RowPlacement))
+        assertTrue(page.problems().isEmpty())
     }
 }

@@ -407,8 +407,12 @@ class PerformanceMatrixPanel {
                         tooltip = "Master Unit\nConfigure Master parameters and FX"
                     )
                     drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
-                    PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW)
-                    PerformanceMasterControls.drawBypassControls(session, mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
+                    ImGui.pushID(rowIdx)
+                    PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW, descriptor.pinnedMode)
+                    if (descriptor.pinnedMode != "MIX") {
+                        PerformanceMasterControls.drawBypassControls(session, mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
+                    }
+                    ImGui.popID()
                 } else if (isTransRow) {
                     drawTitleBadge(
                         session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "TR", UITheme.FontLevel.H1,
@@ -453,10 +457,10 @@ class PerformanceMatrixPanel {
                     val leftStartX = badgeX + deckBadgeW + 6f
                     // Per-slot ImGui id scope: the same deck may sit in two slots (or pages), so tag-based ids must not collide.
                     ImGui.pushID(rowIdx)
-                    deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W)
+                    deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W, descriptor.pinnedMode)
                     deckControls.drawDeckRowRightControls(
                         session, mixer, parametersState, deckLabel, targetDeck,
-                        boxX2 - pad - deckRightW, row1Y, row2YFinal, ctrlH, deckRightW
+                        boxX2 - pad - deckRightW, row1Y, row2YFinal, ctrlH, deckRightW, descriptor.pinnedMode
                     )
                     ImGui.popID()
                 }

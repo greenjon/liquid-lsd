@@ -256,4 +256,43 @@ class PerformSurfaceTest {
             assertEquals(4, values.distinct().size, "${page.id} LEDs: $values")
         }
     }
+
+    private fun pageOf(vararg rows: String) = PerfPageDef("t", "T", rows = rows.map(::RowPlacement))
+
+    @Test
+    fun pinnedRowsIgnoreTheSharedModeAndDoNotFlipNeighbours() {
+        val pinned = pageOf("deck.A.src", "deck.A.fx", "master.mix", "master.fx")
+        fun banks() = PerfRows.substitutedRowsForPage(pinned, ctx, state).map { it.bankId }
+        val expected = listOf(MacroEngine.DECK_A, MacroEngine.DECK_A_FX, MacroEngine.MASTER, MacroEngine.MASTER_FX)
+        assertEquals(expected, banks())
+        ctx.deckRowMode["A"] = "FX"; ctx.masterRowMode = "FX"
+        try {
+            assertEquals(expected, banks())
+            // The toggle row, by contrast, follows the shared mode.
+            assertEquals(MacroEngine.DECK_A_FX,
+                PerfRows.substitutedRowsForPage(pageOf("deck.A.srcfx", "trans", "wetdry", "global"), ctx, state).first().bankId)
+        } finally {
+            ctx.deckRowMode.remove("A"); ctx.masterRowMode = "MIX"
+        }
+    }
+
+    @Test
+    fun pinnedFxRowsKeepTheirOwnHueOnTheHardware() {
+        val wheel = llm.slop.liquidlsd.control.HueWheel()
+        val candidatePages = listOf(
+            pageOf("deck.A.src", "deck.A.fx", "deck.B.src", "deck.B.fx"),
+            pageOf("deck.BG.src", "deck.BG.fx", "deck.PV.src", "deck.PV.fx"),
+            pageOf("master.mix", "master.fx", "trans", "wetdry"),
+        )
+        for (page in candidatePages) {
+            val values = PerfRows.substitutedRowsForPage(page, ctx).map { row ->
+                val c = PerformPages.ledColor(row)
+                wheel.valueFor(c[0], c[1], c[2]).also { assertTrue(it != wheel.off && it != wheel.white, "${row.groupLabel}: $it") }
+            }
+            // Every LED on a page needs its own hue, and neighbouring hues must be a few wheel steps apart to be told apart by eye.
+            assertEquals(4, values.distinct().size, "${page.rows.map { it.row }}: $values")
+            val sorted = values.sorted()
+            assertTrue(sorted.zipWithNext().all { (a, b) -> b - a >= 4 }, "hues too close: $values")
+        }
+    }
 }

@@ -337,4 +337,6 @@ The tab strip above the matrix (DECKS, MASTER) lists *pages*: each is four rows.
 }
 ```
 
-A page needs exactly 4 rows. Row names: `deck.A.srcfx`, `deck.B.srcfx`, `deck.BG.srcfx`, `deck.PV.srcfx`, `master`, `trans`, `wetdry`, `global`. A file whose `id` is `decks` or `master` replaces that built-in page. Files with mistakes are skipped; the log says why. A controller profile can select your page with `perform.mine`.
+A page needs exactly 4 rows. Row names: `deck.A.srcfx`, `deck.B.srcfx`, `deck.BG.srcfx`, `deck.PV.srcfx` (the usual deck row with its SRC/FX toggle), `master` (MIX/FX toggle), `trans`, `wetdry`, `global`.
+
+Pinned rows show just one half and have no toggle: `deck.A.src` and `deck.A.fx` (likewise `B`, `BG`, `PV`), `master.mix` and `master.fx`. They are not affected by the toggle rows, so a page of `deck.A.src`, `deck.A.fx`, `deck.B.src`, `deck.B.fx` shows both halves of both decks at once. A file whose `id` is `decks` or `master` replaces that built-in page. Files with mistakes are skipped; the log says why. A controller profile can select your page with `perform.mine`.
