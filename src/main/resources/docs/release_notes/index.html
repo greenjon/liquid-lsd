@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#schema-version-in-controller-profile-and-perform-page-json-controlcontrollerprofilekt-uiperfpagestorekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema Version in Controller Profile and Perform Page JSON (control/ControllerProfile*.kt, ui/PerfPageStore.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#esc-backs-out-of-the-full-library-like-the-controllers-back-button-uinavigationsurfacekt-uiuimanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5119,6 +5130,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#schema-version-in-controller-profile-and-perform-page-json-controlcontrollerprofilekt-uiperfpagestorekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schema Version in Controller Profile and Perform Page JSON (control/ControllerProfile*.kt, ui/PerfPageStore.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#esc-backs-out-of-the-full-library-like-the-controllers-back-button-uinavigationsurfacekt-uiuimanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9005,6 +9027,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="schema-version-in-controller-profile-and-perform-page-json-controlcontrollerprofilekt-uiperfpagestorekt">Schema Version in Controller Profile and Perform Page JSON (<code>control/ControllerProfile*.kt</code>, <code>ui/PerfPageStore.kt</code>)</h3>
+<ul>
+<li>Controller profiles and Perform pages now carry <code>"version": 1</code>. Files without it keep loading as version 1, and everything this app writes includes it.</li>
+<li>A file written by a newer build still loads, with an amber warning under the profile/page list. The app will not overwrite such a file on Save, so nothing in it is silently lost; edit it by hand or delete it.</li>
+</ul>
 <h3 id="esc-backs-out-of-the-full-library-like-the-controllers-back-button-uinavigationsurfacekt-uiuimanagerkt">Esc Backs Out of the Full Library Like the Controller's Back Button (<code>ui/NavigationSurface.kt</code>, <code>ui/UIManager.kt</code>)</h3>
 <ul>
 <li>Esc now backs out of the full Library the same way the controller's Back button does: it first undoes anything open (Learn, Preferences, FX focus, expanded modules) and then returns the Library from full to half.</li>

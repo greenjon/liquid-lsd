@@ -73,6 +73,10 @@ object PerformPagesPanel {
             theme.captionColored(0.95f, 0.35f, 0.3f, 1.0f, "${rejected.file.name} is not loaded:")
             for (problem in rejected.problems) theme.captionColored(0.95f, 0.35f, 0.3f, 1.0f, "  - $problem")
         }
+        for (warning in store.warnings()) {
+            theme.captionColored(0.95f, 0.75f, 0.2f, 1.0f, "${warning.file.name}:")
+            for (problem in warning.problems) theme.captionColored(0.95f, 0.75f, 0.2f, 1.0f, "  - $problem")
+        }
         for (problem in problems) theme.captionColored(0.95f, 0.35f, 0.3f, 1.0f, "  - $problem")
 
         ImGui.setNextItemWidth(160f)

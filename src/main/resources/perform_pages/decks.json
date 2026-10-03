@@ -1,4 +1,5 @@
 {
+  "version": 1,
   "id": "decks",
   "name": "DECKS",
   "tooltip": "One row per deck (Deck A / Deck B / Deck BG / Deck PV), knobs 1-4 each.\nEach row's [SRC|FX] pills switch its knobs between the visual source and the deck's FX chain.",

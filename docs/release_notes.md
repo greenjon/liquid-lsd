@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Schema Version in Controller Profile and Perform Page JSON (`control/ControllerProfile*.kt`, `ui/PerfPageStore.kt`)
+- Controller profiles and Perform pages now carry `"version": 1`. Files without it keep loading as version 1, and everything this app writes includes it.
+- A file written by a newer build still loads, with an amber warning under the profile/page list. The app will not overwrite such a file on Save, so nothing in it is silently lost; edit it by hand or delete it.
+
 ### Esc Backs Out of the Full Library Like the Controller's Back Button (`ui/NavigationSurface.kt`, `ui/UIManager.kt`)
 - Esc now backs out of the full Library the same way the controller's Back button does: it first undoes anything open (Learn, Preferences, FX focus, expanded modules) and then returns the Library from full to half.
 - Internal: picker-visibility tests no longer sleep; they advance a fake clock.

@@ -126,7 +126,9 @@ data class ControllerProfile(
     val inputs: List<InputDef> = emptyList(),
     val bindings: Map<String, String> = emptyMap(),
     val bankBindings: Map<String, Map<String, String>> = emptyMap(),
-    val output: OutputConfig = OutputConfig()
+    val output: OutputConfig = OutputConfig(),
+    /** Schema version of this file; a missing field means 1. Writers emit [CURRENT_SCHEMA_VERSION]. */
+    val version: Int = 1
 ) {
     /** True if [deviceName] contains any of the [match] strings (case-insensitive). */
     fun matches(deviceName: String): Boolean =
@@ -135,6 +137,15 @@ data class ControllerProfile(
     fun compile(): CompiledController = CompiledController.build(this)
 
     companion object {
+        /** The schema version this build reads and writes. Bump when the format changes and add a step to [migrate]. */
+        const val CURRENT_SCHEMA_VERSION = 1
+
+        /**
+         * Upgrades a profile read from an older schema ([ControllerProfile.version] < [CURRENT_SCHEMA_VERSION]) to the
+         * current one. Identity for now: version 1 is the first versioned format. Add one `if (v < N)` step per bump.
+         */
+        fun migrate(profile: ControllerProfile): ControllerProfile = profile
+
         /** [profile] with every `knob` encoder group switched to [mode] (e.g. a copy for the factory absolute mode). */
         fun copyWithKnobMode(profile: ControllerProfile, mode: EncoderMode): ControllerProfile =
             profile.copy(inputs = profile.inputs.map { if (it.id == "knob") it.copy(mode = mode) else it })

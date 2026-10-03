@@ -14,11 +14,6 @@
 - Issue: both implement built-in + user-dir scan, same-id override, rejection reporting, copy-built-in-to-user and atomic save. Only the low-level scan/atomic write is shared (`control/UserJsonFiles.kt`); the override/validation logic is copied. They live in different packages (`control/` vs `ui/`).
 - Fix approach: extract a generic `UserOverridableStore<T>` on top of `UserJsonFiles` if a third JSON-backed store appears; until then keep them in step by hand.
 
-**No schema version in controller profile / Perform page JSON:**
-- Issue: `ControllerProfile` (`control/ControllerProfile.kt`) and `PerfPageDef` (`ui/PerfPageStore.kt`) carry no `version` field; both load with `ignoreUnknownKeys`. Contrast `FxDefaultDto.version` and versioned preset DTOs.
-- Impact: a future format change cannot be detected or migrated; user files will silently misparse or be rejected by the validator.
-- Fix approach: add `version: Int = 1` now (cheap, backward compatible) and reject/migrate newer values explicitly.
-
 **Remaining per-event allocations on the controller / render path:**
 - `CommandInput.Delta(steps)` and `CommandInput.Value(value)` (`control/Command.kt`) are allocated per encoder/fader message (button `Press.DOWN/UP` are shared instances; those are fine).
 - `isTransModified` in `ui/PerformanceTransitionsControls.kt` (`mixer.transitionFilter?.let { ... }`) evaluates a capturing lambda per frame.
@@ -96,7 +91,6 @@
 
 - **No integrated render/audio latency budget view.**
 - **I/O status:** `PresetIOStatus` exists for UI feedback, but not every async failure path is confirmed surfaced; verify before claiming parity.
-- **No profile-binding or Perform-page versioning/migration** (see Tech Debt).
 
 ## Resolved / Stale (do not re-investigate)
 

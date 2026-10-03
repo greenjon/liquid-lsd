@@ -2558,3 +2558,9 @@
 - **Decision**: `MidiLearnTarget` and `ParameterCellId` moved to `midi/MidiLearnTarget.kt` (plain move). `midi.MidiLearnSink` (`midiLearnTarget`, `midiLearnStartTimeMs`) is implemented by `ParametersState` and is what `processGlobalMidiEvents` takes. `midi.MidiEnabledSource` plus an optional device-opened listener are passed to `MidiEngine.install(...)` from `Main`, which also opens devices (the old `init` block read `UITheme`); default source is "disabled". Interface calls on the hot path do not allocate.
 - **Guard**: `LayerDependencyTest` fails if any `midi/` or `control/` file references `llm.slop.liquidlsd.ui`.
 - **Left alone**: `MidiMappingManager` -> `ControllerProfileStore.default` (profile learn) and `CommandContext`'s concrete `Mixer` (wide use in `GlobalCommands`).
+
+## Schema Version in Controller Profile and Perform Page JSON (`ControllerProfile.version`, `PerfPageDef.version`, `UserJsonFiles.newerVersionWarning`)
+- **Context**: the 2026-10-03 audit found neither format versioned; `ignoreUnknownKeys` hides fields from newer builds and there was no migration hook.
+- **Decision**: field is `version: Int = 1`, matching `FxDefaultDto`/preset DTOs (not `schemaVersion`). Missing means 1. Each format has `CURRENT_SCHEMA_VERSION` (1) and `migrate(dto)` (identity), called when `version < current`. Stores always write `version = CURRENT_SCHEMA_VERSION`.
+- **Newer file**: loads best-effort and is listed in `store.warnings()` (amber lines in `MidiPreferencesPanel` / `PerformPagesPanel`, plus a log warning). `saveUser` REFUSES to overwrite it (returns a problem) because saving would drop unknown fields; `deleteUser` still works.
+- **Rejected alternative**: a hard reject of newer files, which would lose a user's page/profile entirely for a harmless extra key.

@@ -26,7 +26,9 @@ class ControllerProfileStore(
         val profiles: List<CompiledController>,
         val builtIn: Map<String, CompiledController>,
         val userFiles: Map<String, File>,
-        val rejected: List<Rejected>
+        val rejected: List<Rejected>,
+        val warnings: List<Rejected>,
+        val newerIds: Set<String>
     )
 
     @Volatile
@@ -40,6 +42,9 @@ class ControllerProfileStore(
 
     /** User files that failed to parse or validate; they are not in [all]. */
     fun rejected(): List<Rejected> = snapshot().rejected
+
+    /** Non-fatal notes about loaded user files (currently: written by a newer schema version). They are in [all]. */
+    fun warnings(): List<Rejected> = snapshot().warnings
 
     fun get(id: String): CompiledController? = all().firstOrNull { it.profile.id == id }
 
@@ -79,7 +84,12 @@ class ControllerProfileStore(
     fun saveUser(profile: ControllerProfile): List<String> {
         val problems = profile.compile().problems
         if (problems.isNotEmpty()) return problems
-        val target = snapshot().userFiles[profile.id] ?: File(userDir, "${profile.id}.json")
+        val snap = snapshot()
+        // Policy: refuse. Saving would write the current schema and silently drop fields this build does not know.
+        if (profile.id in snap.newerIds) {
+            return listOf("${snap.userFiles[profile.id]?.name ?: profile.id} was written by a newer build; not overwriting it. Edit the file by hand or delete it.")
+        }
+        val target = snap.userFiles[profile.id] ?: File(userDir, "${profile.id}.json")
         return listOfNotNull(write(target, profile))
     }
 
@@ -92,7 +102,7 @@ class ControllerProfileStore(
     }
 
     private fun write(target: File, profile: ControllerProfile): String? = try {
-        UserJsonFiles.writeAtomic(target, json.encodeToString(ControllerProfile.serializer(), profile))
+        UserJsonFiles.writeAtomic(target, json.encodeToString(ControllerProfile.serializer(), profile.copy(version = ControllerProfile.CURRENT_SCHEMA_VERSION)))
         null
     } catch (e: Exception) {
         logger.error(e) { "Could not write controller profile ${target.path}" }
@@ -116,18 +126,24 @@ class ControllerProfileStore(
         val user = scan.loaded.associate { it.id to it.value }
         val userFileById = scan.loaded.associate { it.id to it.file }
         val rejected = scan.rejected.map { Rejected(it.first, it.second) }
+        val newer = scan.loaded.filter { it.value.profile.version > ControllerProfile.CURRENT_SCHEMA_VERSION }
+        val warnings = newer.mapNotNull { l ->
+            UserJsonFiles.newerVersionWarning(l.value.profile.version, ControllerProfile.CURRENT_SCHEMA_VERSION)?.let { Rejected(l.file, listOf(it)) }
+        }
+        warnings.forEach { logger.warn { "${it.file.path}: ${it.problems.first()}" } }
         // User profiles first, so a user's own profile wins when two match the same device.
         val profiles = user.values + builtIn.values.filter { it.profile.id !in user }
-        return Snapshot(profiles, builtIn, userFileById, rejected)
+        return Snapshot(profiles, builtIn, userFileById, rejected, warnings, newer.map { it.id }.toSet())
     }
 
     private fun parse(text: String, source: String): Pair<CompiledController?, List<String>> {
-        val profile = try {
+        val decoded = try {
             json.decodeFromString<ControllerProfile>(text)
         } catch (e: Exception) {
             logger.error(e) { "Could not parse controller profile ($source)" }
             return null to listOf("Not a valid profile: ${e.message?.lineSequence()?.firstOrNull()}")
         }
+        val profile = if (decoded.version < ControllerProfile.CURRENT_SCHEMA_VERSION) ControllerProfile.migrate(decoded) else decoded
         val compiled = profile.compile()
         if (compiled.problems.isNotEmpty()) {
             logger.error { "Skipping controller profile ${profile.id} ($source): ${compiled.problems.joinToString("; ")}" }

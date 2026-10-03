@@ -54,6 +54,14 @@ internal object UserJsonFiles {
         return Scan(loaded, rejected)
     }
 
+    /**
+     * Warning for a file whose schema [version] is newer than this build's [current] (null otherwise). Such a file
+     * is still loaded best-effort (unknown fields are ignored), so the stores refuse to overwrite it on save.
+     */
+    fun newerVersionWarning(version: Int, current: Int): String? =
+        if (version > current) "written by a newer build (schema version $version, this build reads $current): loaded best-effort, unknown fields are ignored, and it will not be overwritten by Save"
+        else null
+
     /** Writes [text] to a temp file beside [target] then moves it into place, so a crash never leaves a truncated file. */
     fun writeAtomic(target: File, text: String) {
         val dir = target.absoluteFile.parentFile

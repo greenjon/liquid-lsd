@@ -16,7 +16,9 @@ data class PerfPageDef(
     val id: String,
     val name: String,
     val tooltip: String = "",
-    val rows: List<RowPlacement>
+    val rows: List<RowPlacement>,
+    /** Schema version of this file; a missing field means 1. Writers emit [CURRENT_SCHEMA_VERSION]. */
+    val version: Int = 1
 ) {
     /** Structural problems; empty when the page can be shown. */
     fun problems(): List<String> = buildList {
@@ -28,6 +30,15 @@ data class PerfPageDef(
 
     companion object {
         const val ROWS = 4
+
+        /** The schema version this build reads and writes. Bump when the format changes and add a step to [migrate]. */
+        const val CURRENT_SCHEMA_VERSION = 1
+
+        /**
+         * Upgrades a page read from an older schema ([PerfPageDef.version] < [CURRENT_SCHEMA_VERSION]) to the current
+         * one. Identity for now: version 1 is the first versioned format. Add one `if (v < N)` step per bump.
+         */
+        fun migrate(page: PerfPageDef): PerfPageDef = page
 
         /** A page id from a display name: lowercase letters and digits joined by '-'. Empty if nothing usable. */
         fun idFromName(name: String): String = name.trim().lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
@@ -75,7 +86,9 @@ class PerfPageStore(
         val builtInIds: Set<String>,
         val builtIn: Map<String, PerfPageDef>,
         val userFiles: Map<String, File>,
-        val rejected: List<Rejected>
+        val rejected: List<Rejected>,
+        val warnings: List<Rejected>,
+        val newerIds: Set<String>
     )
 
     @Volatile
@@ -94,6 +107,9 @@ class PerfPageStore(
 
     /** User files that failed to parse or validate; they are not in [all]. */
     fun rejected(): List<Rejected> = snapshot().rejected
+
+    /** Non-fatal notes about loaded user files (currently: written by a newer schema version). They are in [all]. */
+    fun warnings(): List<Rejected> = snapshot().warnings
 
     fun sourceOf(id: String): Source? {
         val snap = snapshot()
@@ -121,7 +137,12 @@ class PerfPageStore(
     fun saveUser(page: PerfPageDef): List<String> {
         val problems = page.problems() + idProblems(page.id)
         if (problems.isNotEmpty()) return problems
-        val target = snapshot().userFiles[page.id] ?: File(userDir, "${page.id}.json")
+        val snap = snapshot()
+        // Policy: refuse. Saving would write the current schema and silently drop fields this build does not know.
+        if (page.id in snap.newerIds) {
+            return listOf("${snap.userFiles[page.id]?.name ?: page.id} was written by a newer build; not overwriting it. Edit the file by hand or delete it.")
+        }
+        val target = snap.userFiles[page.id] ?: File(userDir, "${page.id}.json")
         return listOfNotNull(write(target, page))
     }
 
@@ -138,7 +159,7 @@ class PerfPageStore(
         else listOf("page id '$id' must be lowercase letters, digits, '_' or '-'")
 
     private fun write(target: File, page: PerfPageDef): String? = try {
-        UserJsonFiles.writeAtomic(target, json.encodeToString(PerfPageDef.serializer(), page))
+        UserJsonFiles.writeAtomic(target, json.encodeToString(PerfPageDef.serializer(), page.copy(version = PerfPageDef.CURRENT_SCHEMA_VERSION)))
         null
     } catch (e: Exception) {
         logger.error(e) { "Could not write perform page ${target.path}" }
@@ -163,21 +184,27 @@ class PerfPageStore(
         val userFileById = scan.loaded.associate { it.id to it.file }
         for (l in scan.loaded) pages[l.id] = l.value
         val rejected = scan.rejected.map { Rejected(it.first, it.second) }
+        val newer = scan.loaded.filter { it.value.version > PerfPageDef.CURRENT_SCHEMA_VERSION }
+        val warnings = newer.mapNotNull { l ->
+            UserJsonFiles.newerVersionWarning(l.value.version, PerfPageDef.CURRENT_SCHEMA_VERSION)?.let { Rejected(l.file, listOf(it)) }
+        }
+        warnings.forEach { logger.warn { "${it.file.path}: ${it.problems.first()}" } }
         if (pages.isEmpty()) {
             logger.error { "No perform pages loaded; using a synthesised DECKS page" }
             val fallback = PerfPageDef("decks", "DECKS", rows = PerfRows.DECK_TAGS.map { RowPlacement("deck.$it.srcfx") })
             pages[fallback.id] = fallback
         }
-        return Snapshot(pages.values.toList(), builtIn.keys.toSet(), builtIn, userFileById, rejected)
+        return Snapshot(pages.values.toList(), builtIn.keys.toSet(), builtIn, userFileById, rejected, warnings, newer.map { it.id }.toSet())
     }
 
     private fun parse(text: String, source: String): Pair<PerfPageDef?, List<String>> {
-        val page = try {
+        val decoded = try {
             json.decodeFromString<PerfPageDef>(text)
         } catch (e: Exception) {
             logger.error(e) { "Could not parse perform page ($source)" }
             return null to listOf("Not a valid page: ${e.message?.lineSequence()?.firstOrNull()}")
         }
+        val page = if (decoded.version < PerfPageDef.CURRENT_SCHEMA_VERSION) PerfPageDef.migrate(decoded) else decoded
         val problems = page.problems()
         if (problems.isNotEmpty()) {
             logger.error { "Skipping perform page ${page.id} ($source): ${problems.joinToString("; ")}" }
