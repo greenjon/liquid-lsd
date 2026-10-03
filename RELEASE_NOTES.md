@@ -12,7 +12,7 @@
 - **Perform view**: the left-top side button is **back** (the same steps as Esc: cancel Learn, close Preferences, leave FX focus, close Edit); the right-top button opens the **Library** view.
 - **Library view**: left-top leaves the Library, right-top steps the **tab** (Sources, FX, Trans), right-bottom steps the **list** (browser, playlist, BG queue, A/B queue). **Knob 1 becomes the cursor**: turn to move, tap to load (a preset or generator goes to the deck the crossfader is moving away from, a BG queue item to Deck BG, a transition to the mixer; in the FX tab it adds to the FX queue), shift + tap to add to the A/B queue. Shift + the side buttons add to the BG queue and step the tab and list backwards.
 - **Changing tab** now starts the cursor in that tab's own list (it used to keep the previous tab's selection, which Up/Down then acted on).
-- Not yet: playlist panes in the FX/Trans tabs.
+- **FX and Trans playlist panes** now take the cursor like the other lists (right-bottom steps into them; knob 1 tap applies an FX item to the crossfader-active deck, or a transition to the mixer).
 
 ### Default Pages and a 16-Row Twister Layout (`resources/perform_pages/`, `resources/controllers/midi-fighter-twister.json`)
 - **Three new pages** join DECKS and MASTER in the tab strip: **A/B** (Deck A SRC, Deck A FX, Deck B SRC, Deck B FX), **BG/PV** (the same for BG and PV) and **MIXER** (Master MIX, Master FX, Transitions, FX Wet/Dry). Every deck half and both Master halves are pinned rows, so there is nothing to toggle.

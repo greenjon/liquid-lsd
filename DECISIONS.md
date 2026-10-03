@@ -1,3 +1,9 @@
+## FX and Transition Playlist Panes Join the Library Cursor (`ui/LibraryNavigation.kt`, `LibraryPanel.navigateSelection`)
+
+- **Decision**: `FX_PLAYLIST` and `TRANSITION_PLAYLIST` are cursor panes of their tabs (`itemCount()` on each editor panel, stepping through `selectedItemIndex`). Accept applies the FX item to the crossfader-active deck's chain, or the transition to the mixer.
+- **Rationale**: closes the last gap in Library navigation; the panels' own click selection already used `selectedItemIndex`, so no new state.
+- **Consequences**: `itemCount()` re-reads the playlist file on each step. Not hardware-tested.
+
 ## FX Queue Transport Commands and FX Queue Accept (`control/GlobalCommands.kt`, `ui/LibraryNavigation.kt`)
 
 - **Decision**: four unbound commands `fx.queue_next/prev` and `fx.bg_queue_next/prev` (deltas on `CommandContext`, consumed in `UIManager` like the other queues). In the Library FX tab, accepting an FX queue item calls `jumpToIndex` on that queue.

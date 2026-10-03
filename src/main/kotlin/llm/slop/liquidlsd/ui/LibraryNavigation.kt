@@ -4,6 +4,7 @@ import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.presets.BgQueueManager
 import llm.slop.liquidlsd.presets.FXBgQueueManager
 import llm.slop.liquidlsd.presets.FXQueueManager
+import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
@@ -14,7 +15,9 @@ import llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.FXBgQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
 import llm.slop.liquidlsd.ui.browser.FXQueueActionsPanel
+import llm.slop.liquidlsd.ui.browser.FXPlaylistEditorPanel
 import llm.slop.liquidlsd.ui.browser.PlaylistEditorPanel
+import llm.slop.liquidlsd.ui.browser.TransitionPlaylistEditorPanel
 import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.TransitionQueuePanel
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
@@ -40,11 +43,11 @@ internal object LibraryNavigation {
         setViewMode(modes[Math.floorMod(LibraryPanel.viewMode.ordinal + delta, modes.size)])
     }
 
-    /** The lists the cursor can sit in for the current tab, left to right. Playlist editors of the FX and Trans tabs have no cursor yet. */
+    /** The lists the cursor can sit in for the current tab, left to right. */
     private fun panes(): List<SelectionSource> = when (LibraryPanel.viewMode) {
         LibraryViewMode.PRESETS -> listOf(SelectionSource.PRESETS, SelectionSource.PLAYLIST, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB)
-        LibraryViewMode.FX -> listOf(SelectionSource.PRESETS, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB)
-        LibraryViewMode.TRANS -> listOf(SelectionSource.PRESETS, SelectionSource.TRANSITION_QUEUE)
+        LibraryViewMode.FX -> listOf(SelectionSource.PRESETS, SelectionSource.FX_PLAYLIST, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB)
+        LibraryViewMode.TRANS -> listOf(SelectionSource.PRESETS, SelectionSource.TRANSITION_PLAYLIST, SelectionSource.TRANSITION_QUEUE)
     }
 
     private fun paneSize(source: SelectionSource, session: SessionContext): Int = when (source) {
@@ -59,7 +62,8 @@ internal object LibraryNavigation {
         SelectionSource.TRANSITION_QUEUE -> TransitionQueueManager.queue.size
         SelectionSource.FX_QUEUE_AB -> FXQueueManager.queue.size
         SelectionSource.FX_QUEUE_BG -> FXBgQueueManager.queue.size
-        SelectionSource.TRANSITION_PLAYLIST, SelectionSource.FX_PLAYLIST -> 0
+        SelectionSource.TRANSITION_PLAYLIST -> TransitionPlaylistEditorPanel.itemCount()
+        SelectionSource.FX_PLAYLIST -> FXPlaylistEditorPanel.itemCount()
     }
 
     private fun hasCursor(source: SelectionSource): Boolean = when (source) {
@@ -70,7 +74,8 @@ internal object LibraryNavigation {
         SelectionSource.TRANSITION_QUEUE -> TransitionQueuePanel.selectedIndex >= 0
         SelectionSource.FX_QUEUE_AB -> FXQueueActionsPanel.selectedIndex >= 0
         SelectionSource.FX_QUEUE_BG -> FXBgQueueActionsPanel.selectedIndex >= 0
-        SelectionSource.TRANSITION_PLAYLIST, SelectionSource.FX_PLAYLIST -> false
+        SelectionSource.TRANSITION_PLAYLIST -> TransitionPlaylistEditorPanel.selectedItemIndex >= 0
+        SelectionSource.FX_PLAYLIST -> FXPlaylistEditorPanel.selectedItemIndex >= 0
     }
 
     /** Moves the cursor to the next (or previous) non-empty list of this tab and puts it on an item. */
@@ -146,7 +151,11 @@ internal object LibraryNavigation {
             SelectionSource.TRANSITION_QUEUE, SelectionSource.TRANSITION_PLAYLIST -> file?.let { TransitionQueueManager.applyTransitionItem(it, mixer) }
             SelectionSource.FX_QUEUE_AB -> FXQueueManager.jumpToIndex(FXQueueActionsPanel.selectedIndex, session, mixer)
             SelectionSource.FX_QUEUE_BG -> FXBgQueueManager.jumpToIndex(FXBgQueueActionsPanel.selectedIndex, session, mixer)
-            SelectionSource.FX_PLAYLIST, null -> Unit
+            SelectionSource.FX_PLAYLIST -> file?.let {
+                val deck = if (mixer.crossfade.value <= 0.0f) mixer.deckA else mixer.deckB
+                FxOps.applyItem(session, it, deck.fxChain)
+            }
+            null -> Unit
         }
     }
 }

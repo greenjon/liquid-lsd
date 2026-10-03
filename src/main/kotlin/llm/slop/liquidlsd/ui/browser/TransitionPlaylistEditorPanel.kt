@@ -31,6 +31,9 @@ object TransitionPlaylistEditorPanel {
 
     var selectedItemIndex: Int = -1
 
+    /** Number of items in the selected playlist (0 when none), for cursor stepping from a controller. */
+    fun itemCount(): Int = LibraryPanel.selectedTransitionPlaylistFile?.let { loadPlaylistItems(it).size } ?: 0
+
     fun getSelectedPresetFile(): File? {
         val selectedFile = LibraryPanel.selectedTransitionPlaylistFile ?: return null
         val items = loadPlaylistItems(selectedFile)

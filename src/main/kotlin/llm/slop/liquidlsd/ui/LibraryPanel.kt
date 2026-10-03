@@ -630,8 +630,16 @@ object LibraryPanel {
                 }
             }
             SelectionSource.TRANSITION_PLAYLIST -> {
-                val list = TransitionPlaylistEditorPanel.getSelectedPresetFile()
-                // Navigation handled inside panel
+                val count = TransitionPlaylistEditorPanel.itemCount()
+                if (count > 0) {
+                    val currentIdx = TransitionPlaylistEditorPanel.selectedItemIndex
+                    val targetIdx = if (currentIdx < 0) (if (delta > 0) 0 else count - 1) else (currentIdx + delta).coerceIn(0, count - 1)
+                    if (targetIdx != currentIdx) {
+                        TransitionPlaylistEditorPanel.selectedItemIndex = targetIdx
+                        shouldScrollToSelection = true
+                        shouldReclaimFocus = true
+                    }
+                }
             }
             SelectionSource.TRANSITION_QUEUE -> {
                 val queue = TransitionQueueManager.queue
@@ -650,7 +658,16 @@ object LibraryPanel {
                 }
             }
             SelectionSource.FX_PLAYLIST -> {
-                // Navigation handled inside panel
+                val count = FXPlaylistEditorPanel.itemCount()
+                if (count > 0) {
+                    val currentIdx = FXPlaylistEditorPanel.selectedItemIndex
+                    val targetIdx = if (currentIdx < 0) (if (delta > 0) 0 else count - 1) else (currentIdx + delta).coerceIn(0, count - 1)
+                    if (targetIdx != currentIdx) {
+                        FXPlaylistEditorPanel.selectedItemIndex = targetIdx
+                        shouldScrollToSelection = true
+                        shouldReclaimFocus = true
+                    }
+                }
             }
             SelectionSource.FX_QUEUE_AB -> {
                 val queue = FXQueueManager.queue
