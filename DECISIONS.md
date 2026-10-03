@@ -1,3 +1,10 @@
+## Esc Follows the Controller Back Path, Including Leaving Library FULL (`NavigationSurface.back`, `shouldHandleEscape`)
+
+- **Decision**: `NavigationSurface.back()` is the one back action: run the `BackNavigation` stack, else (in Library FULL) drop to HALF. The controller back button and the Esc key both call it. `shouldHandleEscape` is the pure Esc guard (pressed and no text input focus). `UiClock.nowMs` is the injectable clock behind the picker `isShowing` windows so tests advance time instead of sleeping.
+- **Rationale**: Esc called only `BackNavigation.back`, so it could never leave Library FULL while the controller could.
+- **Alternatives rejected**: keeping Esc as the shorter stack (two behaviors for one "back" concept).
+- **Consequences**: ImGui still closes its own popups on Esc independently; Esc is still ignored while a text field is active.
+
 ## A Hidden Page Gets a Temporary Tab While Active (`UITheme.visiblePerformPages`)
 
 - **Decision**: `visiblePerformPages()` returns every non-hidden page plus the active page even if hidden, in normal order. The tab disappears when another page becomes active.

@@ -329,10 +329,12 @@ class UIManager(
 
     private fun processQueueKeyboardShortcuts(): Int {
         var keyDelta = 0
-        // Esc runs the shared back stack (see [BackNavigation]; docs/user_guide/macros_and_rack.md).
+        // Esc takes the same path as the controller's back button ([NavigationSurface.back]; see DECISIONS.md).
         // Guarded so it never fires while a text/search input has keyboard focus.
-        if (!ImGui.getIO().wantTextInput && ImGui.isKeyPressed(imgui.flag.ImGuiKey.Escape, false)) {
-            BackNavigation.back(parametersState, currentMixer)
+        if (shouldHandleEscape(ImGui.getIO().wantTextInput, ImGui.isKeyPressed(imgui.flag.ImGuiKey.Escape, false))) {
+            val mixer = currentMixer
+            if (mixer != null) NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx).back()
+            else BackNavigation.back(parametersState, null)
         }
 
         // Guarded so Ctrl+F / "/" don't hijack the library while a text field (e.g. a macro

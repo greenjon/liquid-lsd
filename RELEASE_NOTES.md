@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Esc Backs Out of the Full Library Like the Controller's Back Button (`ui/NavigationSurface.kt`, `ui/UIManager.kt`)
+- Esc now backs out of the full Library the same way the controller's Back button does: it first undoes anything open (Learn, Preferences, FX focus, expanded modules) and then returns the Library from full to half.
+- Internal: picker-visibility tests no longer sleep; they advance a fake clock.
+
 ### Smoother Controller and Perform Rows (`control/*`, `MidiEngine.kt`, `Performance*.kt`)
 - Internal: knob twists, controller LED feedback and the Perform rows no longer allocate on every event or frame, which reduces garbage-collection hitches during long sets.
 - The MIDI event queue is now capped, so a stalled UI can no longer grow memory without bound; extra events are dropped and counted.

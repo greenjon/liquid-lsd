@@ -42,7 +42,7 @@ internal class NavigationSurface(
 
     private fun pickerButton(index: Int, shifted: Boolean) {
         when (index) {
-            0 -> if (!shifted) BackNavigation.back(parametersState, mixer)
+            0 -> if (!shifted) back()
             1 -> if (!ChainListBrowse.isShowing) ShaderPickerPopup.stepCategory(if (shifted) -1 else 1)
             2 -> if (shifted) {
                 if (ChainListBrowse.isShowing) ChainListBrowse.clear() else if (ShaderPickerPopup.canDetach) ShaderPickerPopup.detach()
@@ -53,7 +53,7 @@ internal class NavigationSurface(
     private fun libraryButton(index: Int, shifted: Boolean) {
         val dir = if (shifted) -1 else 1
         when (index) {
-            0 -> if (shifted) LibraryNavigation.enqueue(session, bg = true) else leaveLibrary()
+            0 -> if (shifted) LibraryNavigation.enqueue(session, bg = true) else back()
             1 -> LibraryNavigation.stepTab(dir)
             2 -> LibraryNavigation.stepPane(dir, session, mixer)
         }
@@ -62,7 +62,7 @@ internal class NavigationSurface(
     private fun performButton(index: Int, shifted: Boolean) {
         if (shifted) return
         when (index) {
-            0 -> BackNavigation.back(parametersState, mixer)
+            0 -> back()
             1 -> openLibrary()
             2 -> openPicker()
         }
@@ -85,10 +85,17 @@ internal class NavigationSurface(
         }
     }
 
-    private fun leaveLibrary() {
-        if (BackNavigation.back(parametersState, mixer)) return
+    /**
+     * The single back action for both the controller's back button and the Esc key: undo the innermost thing
+     * on the [BackNavigation] stack; in Library FULL with nothing left to undo, drop to Library HALF.
+     * Returns true if anything changed.
+     */
+    fun back(): Boolean {
+        if (BackNavigation.back(parametersState, mixer)) return true
+        if (!inLibraryView) return false
         theme.libraryMode = UITheme.LibraryMode.HALF
         AppPreferencesStore.savePreferences()
+        return true
     }
 
     private fun openLibrary() {
@@ -114,4 +121,12 @@ internal class NavigationSurface(
         }
         if (shifted) LibraryNavigation.enqueue(session, bg = false) else LibraryNavigation.accept(session, mixer, parametersState)
     }
+}
+
+/** Whether the Esc key should run [NavigationSurface.back] this frame: pressed, and no text field has keyboard focus. */
+internal fun shouldHandleEscape(wantTextInput: Boolean, escPressed: Boolean): Boolean = escPressed && !wantTextInput
+
+/** Wall clock for the "is a picker on screen" windows; tests replace it to advance time without sleeping. */
+internal object UiClock {
+    @Volatile var nowMs: () -> Long = { System.currentTimeMillis() }
 }

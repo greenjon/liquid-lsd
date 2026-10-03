@@ -90,7 +90,7 @@ object ShaderPickerPopup {
     @Volatile var lastDrawMs: Long = 0L
         private set
 
-    val isShowing: Boolean get() = System.currentTimeMillis() - lastDrawMs < SHOWING_WINDOW_MS
+    val isShowing: Boolean get() = UiClock.nowMs() - lastDrawMs < SHOWING_WINDOW_MS
 
     /**
      * Moves the cursor [steps] rows through the list in its flat order (clamped). Switches to the flat
@@ -650,7 +650,7 @@ object ShaderPickerPopup {
      * (or switching to a different target) is the caller's job, not this widget's.
      */
     fun drawInline(session: SessionContext) {
-        lastDrawMs = System.currentTimeMillis()
+        lastDrawMs = UiClock.nowMs()
         if (pickerType == PickerType.SOURCE) {
             val currentScan = FileSystemManager.scanAllPresets()
             if (currentScan !== lastSourcePresetsScan) {

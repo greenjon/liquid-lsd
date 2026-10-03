@@ -67,7 +67,7 @@
 ## Test Coverage Gaps
 
 **Controller/navigation UI (updated 2026-10-03):** `src/test/.../control/` covers CcQueue, CommandRegistry, ControllerFeedback (+sequence, manager), ControllerProfile, ControllerRuntime, KnobCommands browse and NavCommands; `midi/MidiEngineQueueTest` covers the capped queue; `ui/` has `PerfPageStoreTest`, `PerformSurfaceTest`, `PerfRowLayoutTest`, `LibraryNavigationTest` and `NavigationSurfaceTest` (new, uncommitted). Still without tests when this was written:
-- `BackNavigation` (Esc / controller back priority stack),
+- `BackNavigation` stack itself is now covered by `NavigationSurfaceTest`; Esc and controller back share `NavigationSurface.back()`,
 - `PerformPagesPanel` temporary-tab behavior,
 - `PerformanceBrowseBay` / `ChainListBrowse` cursor,
 - `PerfKnobSpec` (`KnobSpec` resolution per row mode).

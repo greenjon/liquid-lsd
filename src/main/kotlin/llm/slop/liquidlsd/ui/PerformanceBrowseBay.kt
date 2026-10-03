@@ -20,7 +20,7 @@ internal object ChainListBrowse {
     private var scrollToCursor = false
     @Volatile private var lastDrawMs = 0L
 
-    val isShowing: Boolean get() = System.currentTimeMillis() - lastDrawMs < 300L
+    val isShowing: Boolean get() = UiClock.nowMs() - lastDrawMs < 300L
 
     fun reset() { cursor = -1 }
 
@@ -28,7 +28,7 @@ internal object ChainListBrowse {
         this.items = items
         this.apply = apply
         this.clearChain = clearChain
-        lastDrawMs = System.currentTimeMillis()
+        lastDrawMs = UiClock.nowMs()
         if (cursor > items.lastIndex) cursor = items.lastIndex
     }
 

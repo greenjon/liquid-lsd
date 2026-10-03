@@ -41,6 +41,8 @@ class NavigationSurfaceTest {
     @BeforeTest
     fun setUp() {
         session = SessionContext()
+        clock = nextEpoch.also { nextEpoch += 1_000_000L } // later than any picker stamp left by an earlier test
+        UiClock.nowMs = { clock }
         savedPage = UITheme.performancePageId
         savedMode = UITheme.libraryMode
         savedExpanded = UITheme.rackExpandedModules
@@ -54,8 +56,15 @@ class NavigationSurfaceTest {
         PerformSurface.lastTouchedKnob = null
     }
 
+    private var clock = 0L
+
+    private companion object {
+        var nextEpoch = 1_000_000L
+    }
+
     @AfterTest
     fun tearDown() {
+        UiClock.nowMs = { System.currentTimeMillis() }
         MacroLearnState.cancelLearn()
         PreferencesPanel.close()
         PerformSurface.lastTouchedKnob = null
@@ -119,21 +128,22 @@ class NavigationSurfaceTest {
         UITheme.libraryMode = UITheme.LibraryMode.FULL
         assertTrue(nav().browsing)
         // Library FULL wins over a still-open Deep Edit module (Edit view is "expanded and not FULL").
-        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
+        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT) // setDisclosure itself drops FULL to HALF
+        UITheme.libraryMode = UITheme.LibraryMode.FULL
         assertTrue(nav().browsing)
         UITheme.libraryMode = UITheme.LibraryMode.HALF
-        Thread.sleep(350)
+        clock += 350
         assertFalse(nav().browsing) // Edit view without a picker list
     }
 
     @Test
     fun browsingIsTrueInEditViewOnlyWhileAPickerListIsShowing() {
         state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
-        Thread.sleep(350) // let any picker list another test published expire
+        clock += 350 // let any picker list another test published expire
         assertFalse(nav().browsing)
         ChainListBrowse.publish(emptyList(), {}, {})
         assertTrue(nav().browsing)
-        Thread.sleep(350)
+        clock += 350
         assertFalse(nav().browsing)
     }
 
@@ -171,6 +181,48 @@ class NavigationSurfaceTest {
         assertEquals(UITheme.LibraryMode.FULL, UITheme.libraryMode)
         nav().button(0, false)
         assertEquals(UITheme.LibraryMode.HALF, UITheme.libraryMode)
+    }
+
+    private enum class Where { LIBRARY_FULL, LIBRARY_HALF, PICKER, NOTHING }
+
+    private fun arrange(w: Where) {
+        UITheme.libraryMode = if (w == Where.LIBRARY_FULL) UITheme.LibraryMode.FULL else UITheme.LibraryMode.HALF
+        if (w == Where.PICKER) {
+            state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
+            ChainListBrowse.publish(emptyList(), {}, {})
+        }
+        PreferencesPanel.close()
+        if (w == Where.LIBRARY_HALF) PreferencesPanel.open()
+    }
+
+    private fun snapshot() = Triple(UITheme.libraryMode, PreferencesPanel.isOpen, state.anyRackModuleExpanded())
+
+    @Test
+    fun escAndControllerBackProduceTheSameResultInEveryState() {
+        for (w in Where.values()) {
+            tearDown(); setUp()
+            arrange(w)
+            nav().button(0, false)
+            val viaButton = snapshot()
+            tearDown(); setUp()
+            arrange(w)
+            nav().back()
+            assertEquals(viaButton, snapshot(), "state $w")
+        }
+        // Library FULL with nothing else open: both leave to HALF.
+        tearDown(); setUp()
+        UITheme.libraryMode = UITheme.LibraryMode.FULL
+        assertTrue(nav().back())
+        assertEquals(UITheme.LibraryMode.HALF, UITheme.libraryMode)
+        // Nothing open: nothing happens.
+        assertFalse(nav().back())
+    }
+
+    @Test
+    fun escapeIsIgnoredWhileATextFieldHasFocus() {
+        assertTrue(shouldHandleEscape(wantTextInput = false, escPressed = true))
+        assertFalse(shouldHandleEscape(wantTextInput = true, escPressed = true))
+        assertFalse(shouldHandleEscape(wantTextInput = false, escPressed = false))
     }
 
     @Test
