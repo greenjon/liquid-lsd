@@ -180,7 +180,7 @@ class MidiMappingManagerTest {
             MidiMappingManager.addMapping("Global/snapDeckB", cc = 51, channel = 0)
 
             // Trigger snapDeckA
-            MidiEngine.receivedEvents.offer(
+            MidiEngine.enqueueEvent(
                 MidiEvent(channel = 0, type = MidiMessageType.CC, index = 50, rawValue = 127, normalizedValue = 1.0f)
             )
             MidiMappingManager.processGlobalMidiEvents(
@@ -194,7 +194,7 @@ class MidiMappingManagerTest {
             io.mockk.verify { mixer.crossfade.set(-1.0f) }
 
             // Trigger snapDeckB
-            MidiEngine.receivedEvents.offer(
+            MidiEngine.enqueueEvent(
                 MidiEvent(channel = 0, type = MidiMessageType.CC, index = 51, rawValue = 127, normalizedValue = 1.0f)
             )
             MidiMappingManager.processGlobalMidiEvents(
@@ -224,7 +224,7 @@ class MidiMappingManagerTest {
         try {
             MidiMappingManager.addMapping("Global/autoFade", cc = 52, channel = 0)
 
-            MidiEngine.receivedEvents.offer(
+            MidiEngine.enqueueEvent(
                 MidiEvent(channel = 0, type = MidiMessageType.CC, index = 52, rawValue = 127, normalizedValue = 1.0f)
             )
             MidiMappingManager.processGlobalMidiEvents(

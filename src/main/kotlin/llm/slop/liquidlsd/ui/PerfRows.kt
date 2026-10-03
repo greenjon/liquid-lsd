@@ -39,7 +39,11 @@ internal object PerfRows {
     )
 
     /** Deck tags in strip order; catalog ids are `deck.<tag>.srcfx`. */
-    val DECK_TAGS: List<String> get() = DECK_ROW_BANKS.map { it.tag }
+    val DECK_TAGS: List<String> = DECK_ROW_BANKS.map { it.tag }
+
+    /** The deck whose source or FX-chain bank is [bankId], or null. */
+    private fun deckForBank(bankId: String): DeckRowBanks? =
+        DECK_ROW_BANKS.firstOrNull { it.srcBankId == bankId || it.fxBankId == bankId }
 
     /**
      * Every row a page can place, by stable id (persisted in page files): the per-deck `srcfx` row (with its
@@ -92,7 +96,7 @@ internal object PerfRows {
             val page = pages[(start + offset) % pages.size]
             for (placement in page.rows) {
                 val row = CATALOG[placement.row] ?: continue
-                val deck = DECK_ROW_BANKS.firstOrNull { it.srcBankId == row.bankId || it.fxBankId == row.bankId }
+                val deck = deckForBank(row.bankId)
                 val covers = when {
                     deck != null -> moduleId == deck.srcBankId || moduleId == deck.fxBankId
                     row.bankId == MacroEngine.MASTER || row.bankId == MacroEngine.MASTER_FX ->
@@ -107,7 +111,7 @@ internal object PerfRows {
 
     /** `FX` when Deep Edit's target for [moduleId] is the FX half of its deck / Master, else `SRC` (decks) or `MIX` (Master). */
     private fun halfFor(moduleId: String, ctx: PerformanceUiContext, parametersState: ParametersState): String? {
-        DECK_ROW_BANKS.firstOrNull { moduleId == it.srcBankId || moduleId == it.fxBankId }?.let {
+        deckForBank(moduleId)?.let {
             return if (ctx.isDeckRowFx(it.tag, parametersState)) "FX" else "SRC"
         }
         if (moduleId == MacroEngine.MASTER || moduleId == MacroEngine.MASTER_FX || moduleId == "Mixer") {
@@ -127,7 +131,7 @@ internal object PerfRows {
         parametersState: ParametersState,
         labelFor: (String) -> String
     ): RowDescriptor {
-        DECK_ROW_BANKS.firstOrNull { moduleId == it.srcBankId || moduleId == it.fxBankId }?.let { deck ->
+        deckForBank(moduleId)?.let { deck ->
             val template = RowDescriptor(deck.srcBankId, 0, deck.accent, "DECK ${deck.tag}", hasExtraHeader = true)
             return withDeckRowMode(template, ctx, parametersState)
         }
@@ -168,5 +172,87 @@ internal object PerfRows {
             if (template != null) withDeckRowMode(template, ctx, parametersState)
             else rowDescriptorForModule(id, ctx, parametersState, labelFor)
         }
+    }
+
+    /** True when [moduleId]'s Deep Edit row is named by the caller's `labelFor` (so its result can't be cached by state alone). */
+    private fun usesLabel(moduleId: String): Boolean =
+        deckForBank(moduleId) == null &&
+            moduleId != MacroEngine.MASTER && moduleId != MacroEngine.TRANS && moduleId != MacroEngine.MASTER_FX && moduleId != "Mixer"
+
+    /**
+     * Memoises [visibleRowsForPage] for one caller (the matrix panel, a hardware surface). The result is a pure
+     * function of the page and page list (compared by reference: the store hands out a new list on reload), the
+     * four deck [SRC|FX] flags, the Master [MIX|FX] flag, the Mixer sub-tab and the ordered set of expanded
+     * Deep Edit modules, so those are compared each call (no allocation) and the rows are rebuilt only on a change.
+     * Deep Edit on a module named by `labelFor` is never cached because the label can change without any of the above.
+     * Not thread-safe; give each thread/caller its own instance.
+     */
+    class RowsCache {
+        private var page: PerfPageDef? = null
+        private var pages: List<PerfPageDef>? = null
+        private var fxMask = -1
+        private var mixerSub: String? = null
+        private var expanded = arrayOfNulls<String>(4)
+        private var expandedCount = -1
+        private var scratch = arrayOfNulls<String>(4)
+        private var result: List<RowDescriptor> = emptyList()
+
+        fun rows(
+            page: PerfPageDef,
+            ctx: PerformanceUiContext,
+            parametersState: ParametersState,
+            labelFor: (String) -> String,
+            pages: List<PerfPageDef> = listOf(page)
+        ): List<RowDescriptor> {
+            var mask = 0
+            for (i in DECK_ROW_BANKS.indices) if (ctx.isDeckRowFx(DECK_ROW_BANKS[i].tag, parametersState)) mask = mask or (1 shl i)
+            if (ctx.isMasterRowFx(parametersState)) mask = mask or (1 shl DECK_ROW_BANKS.size)
+
+            var n = 0
+            var uncacheable = false
+            for ((id, level) in parametersState.rackModuleDisclosure) {
+                if (level == ParametersState.DisclosureLevel.COLLAPSED || id == MacroEngine.FX_SENDS) continue
+                if (n == scratch.size) scratch = scratch.copyOf(n * 2)
+                scratch[n++] = id
+                if (usesLabel(id)) uncacheable = true
+            }
+            if (uncacheable) return visibleRowsForPage(page, ctx, parametersState, labelFor, pages)
+
+            var same = this.page === page && this.pages === pages && fxMask == mask &&
+                mixerSub == parametersState.activeMixerSubTab && expandedCount == n
+            if (same) for (i in 0 until n) if (expanded[i] != scratch[i]) { same = false; break }
+            if (same) return result
+
+            result = visibleRowsForPage(page, ctx, parametersState, labelFor, pages)
+            this.page = page; this.pages = pages; fxMask = mask
+            mixerSub = parametersState.activeMixerSubTab
+            val t = expanded; expanded = scratch; scratch = t
+            expandedCount = n
+            return result
+        }
+    }
+}
+
+/**
+ * Remembers one built string per call site so a per-frame tooltip/label is only rebuilt when the values it
+ * is made from change. Keys compare with `==`; the [build] lambda is inline, so a hit allocates nothing.
+ */
+internal class TipCache {
+    private var k1: Any? = null
+    private var k2: Any? = null
+    private var k3: Any? = null
+    private var text: String? = null
+
+    inline fun get(a: Any?, b: Any? = null, c: Any? = null, build: () -> String): String {
+        val cached = lookup(a, b, c)
+        if (cached != null) return cached
+        return store(a, b, c, build())
+    }
+
+    fun lookup(a: Any?, b: Any?, c: Any?): String? = if (text != null && k1 == a && k2 == b && k3 == c) text else null
+
+    fun store(a: Any?, b: Any?, c: Any?, value: String): String {
+        k1 = a; k2 = b; k3 = c; text = value
+        return value
     }
 }

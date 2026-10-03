@@ -64,6 +64,16 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
 
     private var cachedChains: List<AssetItem>? = null
     private var cachedChainsKey: String? = null
+
+    // Filtered list + item IDs rebuilt only when the query or the scanned list changes; publish callbacks only when the chain/session changes.
+    private var filterQuery: String? = null
+    private var filterSource: List<AssetItem>? = null
+    private var filteredChains: List<AssetItem> = emptyList()
+    private var filteredLabels: Array<String> = emptyArray()
+    private var publishChain: FxChain? = null
+    private var publishSession: SessionContext? = null
+    private var publishApply: (AssetItem) -> Unit = {}
+    private var publishClear: () -> Unit = {}
     private val chainSearchBuf = imgui.type.ImString(64)
 
     fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
@@ -205,9 +215,21 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
 
             val query = chainSearchBuf.get().trim().lowercase()
             val chains = cachedChains ?: emptyList()
-            val filtered = if (query.isBlank()) chains else chains.filter { it.name.lowercase().contains(query) }
+            if (filterQuery != query || filterSource !== chains) {
+                filterQuery = query
+                filterSource = chains
+                filteredChains = if (query.isBlank()) chains else chains.filter { it.name.lowercase().contains(query) }
+                filteredLabels = Array(filteredChains.size) { "${filteredChains[it].name}##browse_chain_item_${filteredChains[it].path.hashCode()}" }
+            }
+            val filtered = filteredChains
 
-            ChainListBrowse.publish(filtered, { FxOps.loadChain(session, File(it.path), chain) }, { FxOps.clearChain(chain) })
+            if (publishChain !== chain || publishSession !== session) {
+                publishChain = chain
+                publishSession = session
+                publishApply = { FxOps.loadChain(session, File(it.path), chain) }
+                publishClear = { FxOps.clearChain(chain) }
+            }
+            ChainListBrowse.publish(filtered, publishApply, publishClear)
 
             ImGui.spacing()
             ImGui.separator()
@@ -217,10 +239,11 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 if (filtered.isEmpty()) {
                     ImGui.textDisabled("No matching chains")
                 } else {
-                    for ((index, asset) in filtered.withIndex()) {
+                    for (index in filtered.indices) {
+                        val asset = filtered[index]
                         val isCurrent = chain.sourceFile?.absolutePath == asset.path
                         val isCursor = ChainListBrowse.isCursor(index)
-                        if (selectableRow("${asset.name}##browse_chain_item_${asset.path.hashCode()}", isCurrent || isCursor)) {
+                        if (selectableRow(filteredLabels[index], isCurrent || isCursor)) {
                             FxOps.loadChain(session, File(asset.path), chain)
                         }
                         if (isCursor && ChainListBrowse.consumeScroll()) ImGui.setScrollHereY()

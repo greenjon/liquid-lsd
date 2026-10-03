@@ -70,6 +70,90 @@ internal object DeckRowMetrics {
 internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
     /**
+     * Strings a deck row would otherwise rebuild every frame: ImGui IDs (fixed per tag) and tooltips (rebuilt
+     * only when the deck label or the badge's content changes). One instance per deck tag.
+     */
+    private class DeckStrings(tag: String) {
+        val modeToggleId = "##perf_mode_toggle_$tag"
+        val kebabId = "${Icons.MORE_VERTICAL}##perf_src_more_$tag"
+        val badgeCtxId = "##perf_gen_badge_ctx_$tag"
+        val badgeId = "##perf_gen_badge_$tag"
+        val saveId = "${Icons.SAVE}##perf_src_save_$tag"
+        val ejectId = "${Icons.EJECT}##perf_eject_$tag"
+        val randId = "${Icons.DICES}##perf_rand_$tag"
+        val qPrevId = "◀##perf_q_prev_$tag"
+        val qPrevCtxId = "perf_q_prev_ctx_$tag"
+        val qNextId = "▶##perf_q_next_$tag"
+        val qNextCtxId = "perf_q_next_ctx_$tag"
+
+        private var label: String? = null
+        var toggleTip = ""; private set
+        var saveTip = ""; private set
+        var ejectTip = ""; private set
+        var randTip = ""; private set
+        var fxTitle = ""; private set
+        var emptyTip = ""; private set
+
+        /** Rebuilds the label-derived strings when [deckLabel] differs from the last call. */
+        fun ensureLabel(deckLabel: String) {
+            if (deckLabel == label) return
+            label = deckLabel
+            toggleTip = "Toggle $deckLabel knobs between Visual Source (SRC) and Insert FX (FX)."
+            saveTip = "Save $deckLabel's current source & parameters as a preset."
+            ejectTip = "Eject current preset from $deckLabel and reset to defaults."
+            randTip = "Randomize $deckLabel modulators & base values (Source and FX).\nClick to randomize with undo support."
+            fxTitle = "$deckLabel FX"
+            emptyTip = "$deckLabel is empty. Click to browse sources and presets."
+            badgeKeyLabel = null // the badge strings embed the label too
+        }
+
+        // Source badge: name + tooltip, rebuilt when the deck's content (not the frame) changes.
+        private var badgeKeyLabel: String? = null
+        private var badgeEmpty = false
+        private var badgeExternal = false
+        private var badgePreset: String? = null
+        private var badgeDirty = false
+        private var badgeSource = ""
+        var genName = ""; private set
+        var genTip = ""; private set
+
+        fun updateBadge(deckLabel: String, empty: Boolean, external: Boolean, preset: String?, dirty: Boolean, sourceName: String) {
+            if (badgeKeyLabel === label && badgeEmpty == empty && badgeExternal == external &&
+                badgePreset == preset && badgeDirty == dirty && badgeSource == sourceName && label != null) return
+            badgeKeyLabel = label; badgeEmpty = empty; badgeExternal = external
+            badgePreset = preset; badgeDirty = dirty; badgeSource = sourceName
+            genName = when {
+                empty -> "${Icons.PLUS} Source"
+                preset != null -> "$preset${if (dirty) " *" else ""}"
+                else -> sourceName
+            }
+            genTip = when {
+                empty -> emptyTip
+                external -> "External Source: $genName ($deckLabel). Click to change the visual source."
+                else -> "$genName ($deckLabel). Click to browse sources/presets, right-click for defaults."
+            }
+        }
+    }
+
+    private val deckStrings = Array(PerfRows.DECK_TAGS.size) { DeckStrings(PerfRows.DECK_TAGS[it]) }
+
+    private fun stringsFor(tag: String): DeckStrings = deckStrings[PerfRows.DECK_TAGS.indexOf(tag).coerceAtLeast(0)]
+
+    /** MIDI-mapping suffix + tooltip per learnable-button key, rebuilt only when that key's mapping changes. */
+    private class NavTip { var mapping: Any? = null; var text = ""; var built = false }
+    private val navTips = HashMap<String, NavTip>()
+    private fun navTooltip(key: String, base: String, mapping: llm.slop.liquidlsd.midi.MidiControlMapping?): String {
+        val tip = navTips.getOrPut(key) { NavTip() }
+        if (!tip.built || tip.mapping != mapping) {
+            tip.built = true
+            tip.mapping = mapping
+            val midiText = mapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+            tip.text = "$base$midiText\nRight-click for MIDI/OSC Learn."
+        }
+        return tip.text
+    }
+
+    /**
      * Prev/next queue button shared by Decks A/B (PlayQueue) and BG (BG queue): click triggers
      * [trigger] (or starts/cancels OSC learn in OSC map mode), draws the MIDI/OSC learn border, and
      * offers the right-click MIDI/OSC Learn/Clear menu. [btnId]/[ctxId] are the complete ImGui IDs.
@@ -95,7 +179,6 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val isMidiLearn = session.parametersState.isMidiTargetLearning(key)
         val isOscLearn = OscLearnState.isTargetLearning(oscKey)
         val midiMapping = session.midiMappingManager.getMappingForParameter(key)
-        val midiText = midiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
 
         val x = ImGui.getCursorScreenPosX()
         val y = ImGui.getCursorScreenPosY()
@@ -153,7 +236,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip("$tooltipBase$midiText\nRight-click for MIDI/OSC Learn.")
+        itemTooltip(navTooltip(key, tooltipBase, midiMapping))
     }
 
     /**
@@ -188,6 +271,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             else -> "PV"
         }
         val dl = ImGui.getWindowDrawList()
+        val str = stringsFor(tag)
+        str.ensureLabel(deckLabel)
         // A pinned row shows one half only and neither reads nor writes the shared per-deck mode.
         val isFx = if (pinned != null) pinned == "FX" else ctx.isDeckRowFx(tag, parametersState)
         val isSrc = !isFx
@@ -204,7 +289,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val totalModeH = (row2Y + ctrlH) - row1Y
         ImGui.setNextItemAllowOverlap()
         // Pinned rows keep the toggle's footprint (layout stability) but have nothing to toggle.
-        val toggleClicked = if (pinned == null) ImGui.invisibleButton("##perf_mode_toggle_$tag", modeBtnW, totalModeH)
+        val toggleClicked = if (pinned == null) ImGui.invisibleButton(str.modeToggleId, modeBtnW, totalModeH)
                             else { ImGui.dummy(modeBtnW, totalModeH); false }
         val isModeHovered = pinned == null && ImGui.isItemHovered()
         if (toggleClicked) {
@@ -222,7 +307,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         if (isModeHovered) {
             ImGui.setMouseCursor(ImGuiMouseCursor.Hand)
         }
-        if (pinned == null) itemTooltip("Toggle $deckLabel knobs between Visual Source (SRC) and Insert FX (FX).")
+        if (pinned == null) itemTooltip(str.toggleTip)
 
         val mouseY = ImGui.getMousePosY()
         val midY = row1Y + ctrlH + (row2Y - (row1Y + ctrlH)) * 0.5f
@@ -236,8 +321,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.sameLine(0f, gap)
 
             // 2. [⋮] Kebab -- source operations (Browse, Save As, defaults)
-            if (ImGui.button("${Icons.MORE_VERTICAL}##perf_src_more_$tag", DeckRowMetrics.KEBAB_W, ctrlH)) {
-                ImGui.openPopup("##perf_gen_badge_ctx_$tag")
+            if (ImGui.button(str.kebabId, DeckRowMetrics.KEBAB_W, ctrlH)) {
+                ImGui.openPopup(str.badgeCtxId)
             }
             itemTooltip("Source operations (Browse, Save As, defaults).")
 
@@ -252,12 +337,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                 else -> session.presetManager.activePresetPV
             }
             val isDirty = session.presetManager.isDeckDirty(deck, mixer)
-            val dirtyMarker = if (isDirty) " *" else ""
-            val genName = when {
-                deck.isEmpty -> "${Icons.PLUS} Source"
-                activePreset != null -> "$activePreset$dirtyMarker"
-                else -> deck.source.displayName
-            }
+            val isExternalVideo = deck.source is ExternalVideoSource
+            str.updateBadge(deckLabel, deck.isEmpty, isExternalVideo, activePreset, isDirty, deck.source.displayName)
+            val genName = str.genName
             val genBorderCol = TangoPalette.BADGE_BORDER.u32()
             val genBgCol = TangoPalette.BADGE_BG.u32()
             val genTextCol = TangoPalette.BADGE_TEXT.u32()
@@ -273,15 +355,14 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                 dl.addText(tx.coerceAtLeast(curX + 4f), ty, genTextCol, genName)
             }
             val canonicalBankId = MacroEngine.deckBankIdFor(deck, mixer) ?: MacroEngine.DECK_A
-            if (ImGui.invisibleButton("##perf_gen_badge_$tag", genBadgeW, ctrlH)) {
+            if (ImGui.invisibleButton(str.badgeId, genBadgeW, ctrlH)) {
                 parametersState.openGenBrowse(canonicalBankId, deckLabel)
             }
-            val isExternalVideo = deck.source is ExternalVideoSource
             val sourceId = GeneratorDefaults.sourceIdFor(deck.source)
             val hasUserDef = GeneratorDefaults.hasUserDefault(sourceId)
 
             pushOpenDropdownPadding()
-            if (ImGui.beginPopupContextItem("##perf_gen_badge_ctx_$tag")) {
+            if (ImGui.beginPopupContextItem(str.badgeCtxId)) {
                 pushOpenDropdownFont()
                 if (ImGui.menuItem("Browse...")) {
                     parametersState.openGenBrowse(canonicalBankId, deckLabel)
@@ -311,11 +392,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                 val hoverBorderCol = TangoPalette.BADGE_HOVER_BORDER.u32()
                 dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, hoverBorderCol, 4f, 0, 1.5f)
             }
-            itemTooltip(
-                if (deck.isEmpty) "$deckLabel is empty. Click to browse sources and presets."
-                else if (isExternalVideo) "External Source: $genName ($deckLabel). Click to change the visual source."
-                else "$genName ($deckLabel). Click to browse sources/presets, right-click for defaults."
-            )
+            itemTooltip(str.genTip)
 
             ImGui.sameLine(0f, gap)
 
@@ -326,25 +403,25 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             ImGui.pushStyleColor(ImGuiCol.Button, saveBtnBg)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.SAVE}##perf_src_save_$tag", iconBtnW, ctrlH)) {
+                if (ImGui.button(str.saveId, iconBtnW, ctrlH)) {
                     ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = false)
                 }
             }
             ImGui.popStyleColor()
-            itemTooltip("Save $deckLabel's current source & parameters as a preset.")
+            itemTooltip(str.saveTip)
 
             ImGui.sameLine(0f, gap)
 
             // 5. PlayQueue / BG Queue navigation (or preview indicator for PV) -- status text removed
             val navBtnW = DeckRowMetrics.navBtnW(ctrlH)
             if (isDeckA || isDeckB) {
-                learnableNavButton(session, mixer, dl, "Global/queuePrev", "Mixer/queuePrev", "◀", "◀##perf_q_prev_$tag", "perf_q_prev_ctx_$tag",
+                learnableNavButton(session, mixer, dl, "Global/queuePrev", "Mixer/queuePrev", "◀", str.qPrevId, str.qPrevCtxId,
                     navBtnW, ctrlH, "PlayQueue Prev", "Queue Prev", "Trigger Previous",
                     "Advance to previous item in PlayQueue.") { session.playQueueManager.triggerPrevious(mixer) }
 
                 ImGui.sameLine(0f, gap)
 
-                learnableNavButton(session, mixer, dl, "Global/queueNext", "Mixer/queueNext", "▶", "▶##perf_q_next_$tag", "perf_q_next_ctx_$tag",
+                learnableNavButton(session, mixer, dl, "Global/queueNext", "Mixer/queueNext", "▶", str.qNextId, str.qNextCtxId,
                     navBtnW, ctrlH, "PlayQueue Next", "Queue Next", "Trigger Next",
                     "Advance to next item in PlayQueue.") { session.playQueueManager.triggerNext(mixer) }
             } else if (isDeckBG) {
@@ -381,12 +458,12 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.pushStyleColor(ImGuiCol.Button, ejectBtnBg)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ejectBtnHov)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.EJECT}##perf_eject_$tag", iconBtnW, ctrlH)) {
+                if (ImGui.button(str.ejectId, iconBtnW, ctrlH)) {
                     UIManager.triggerDeckEject(deck, isDeckA = isDeckA, isDeckPV = isDeckPV)
                 }
             }
             ImGui.popStyleColor(2)
-            itemTooltip("Eject current preset from $deckLabel and reset to defaults.")
+            itemTooltip(str.ejectTip)
 
         }
         ImGui.endGroup()
@@ -406,7 +483,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             val fxCanonicalBankId = MacroEngine.deckBankIdFor(deck, mixer) ?: MacroEngine.DECK_A
             val targetRowW = DeckRowMetrics.row1Width(ctrlH, comboW)
             FxChainHeader.drawControls(
-                session, mixer, deckChain, targetBank, "$deckLabel FX", ctrlH,
+                session, mixer, deckChain, targetBank, str.fxTitle, ctrlH,
                 maxW = targetRowW - modeBtnW - gap, deck = deck,
                 onOpenSlotBrowse = { slotIdx ->
                     parametersState.openFxChainBrowse(fxCanonicalBankId, deckLabel, slotIndex = slotIdx)
@@ -457,6 +534,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             else -> "PV"
         }
 
+        val str = stringsFor(tag)
+        str.ensureLabel(deckLabel)
+
         // Row 1: Randomize Die Button [ DICES ] (above BYPASS button; applies to both SRC and FX)
         if (session.uiTheme.randomizationEnabled) {
             ImGui.setCursorScreenPos(startX, row1Y)
@@ -466,7 +546,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.pushStyleColor(ImGuiCol.Button, randBtnBg)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, randBtnHov)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.DICES}##perf_rand_$tag", width, ctrlH)) {
+                if (ImGui.button(str.randId, width, ctrlH)) {
                     ParametersUndo.pushUndoState(parametersState, mixer)
                     when {
                         isDeckA -> mixer.randomizeDeckA()
@@ -477,7 +557,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                 }
             }
             ImGui.popStyleColor(2)
-            itemTooltip("Randomize $deckLabel modulators & base values (Source and FX).\nClick to randomize with undo support.")
+            itemTooltip(str.randTip)
             ImGui.endGroup()
         }
 

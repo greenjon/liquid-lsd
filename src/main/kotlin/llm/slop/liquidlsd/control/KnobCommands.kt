@@ -14,8 +14,20 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
     private val held = BooleanArray(knobCount)
     private val turnedWhileHeld = BooleanArray(knobCount)
     private var browseAccum = 0f
+    private var browseWasActive = false
+
+    /** Drops leftover browse travel so it can't leak into the next browse session. */
+    private fun endBrowseSession() {
+        if (browseWasActive) { browseWasActive = false; browseAccum = 0f }
+    }
 
     fun register(registry: CommandRegistry) {
+        registry.onClearHeldState {
+            held.fill(false)
+            turnedWhileHeld.fill(false)
+            browseAccum = 0f
+            browseWasActive = false
+        }
         for (n in 1..knobCount) {
             val knob = n - 1
             registry.register(Command("knob.$n", CommandKind.RELATIVE, "knob", "Turn knob $n (fine while its switch is held)") { input, ctx ->
@@ -23,9 +35,11 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
                 if (held[knob]) turnedWhileHeld[knob] = true
                 val nav = ctx.navSurface
                 if (nav != null && nav.browsing) {
+                    browseWasActive = true
                     if (knob == 0) browseTurn(delta, nav)
                     return@Command // other knobs are inert while browsing
                 }
+                endBrowseSession()
                 ctx.knobSurface?.turn(knob, if (held[knob]) delta * fineFactor else delta)
             })
             registry.register(Command("knob.$n.press", CommandKind.MOMENTARY, "knob", "Knob $n switch: tap for its primary action") { input, ctx ->
@@ -61,6 +75,7 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
             if (knob == 0) nav.browseAccept(shifted)
             return
         }
+        endBrowseSession()
         val surface = ctx.knobSurface ?: return
         if (shifted) surface.secondary(knob) else surface.primary(knob)
     }

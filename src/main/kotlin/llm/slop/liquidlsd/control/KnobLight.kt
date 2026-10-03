@@ -15,4 +15,13 @@ data class KnobLight(
 /** The 16 Perform-view knobs' lights, row-major; null = nothing there (ring at zero, LED off). */
 interface KnobLightSource {
     fun knobLights(): List<KnobLight?>
+
+    /**
+     * Fills [out] (index = knob; entries past the source's lights become null). Per-frame feedback
+     * uses this with a reused buffer; override it to avoid building a list. Defaults to [knobLights].
+     */
+    fun fillKnobLights(out: Array<KnobLight?>) {
+        val lights = knobLights()
+        for (i in out.indices) out[i] = lights.getOrNull(i)
+    }
 }

@@ -150,7 +150,15 @@ data class ResolvedInput(
     val mode: EncoderMode = EncoderMode.ABSOLUTE,
     val step: Float = 1f / 127f,
     val accel: Float = 1f
-)
+) {
+    /** Dense index unique to this (input id, bank) pair within its [CompiledController]; -1 if not compiled. Not part of equality. */
+    var slot: Int = -1
+        internal set
+
+    /** Dense index of [inputId] alone (shared by every bank's copy of the input); -1 if not compiled. */
+    var idIndex: Int = -1
+        internal set
+}
 
 /**
  * A [ControllerProfile] expanded into a (type, channel, cc) lookup table and concrete bindings,
@@ -163,8 +171,20 @@ class CompiledController private constructor(
     private val bankBindings: Map<Int, Map<String, String>>,
     val problems: List<String>,
     /** Every bindable input id (groups expanded, `.press` included) with its kind. */
-    val inputKinds: Map<String, InputKind> = emptyMap()
+    val inputKinds: Map<String, InputKind> = emptyMap(),
+    private val modifierBits: Map<String, Int> = emptyMap(),
+    private val bindingIndex: Map<String, Array<BindingEntry>> = emptyMap(),
+    /** Number of distinct (input id, bank) states; size arrays indexed by [ResolvedInput.slot] with this. */
+    val slotCount: Int = 0,
+    /** Number of distinct input ids; size arrays indexed by [ResolvedInput.idIndex] with this. */
+    val idCount: Int = 0
 ) {
+    /** One concrete binding: usable when all [mask] modifier bits are held and [bank] (1-based, 0 = any) matches. */
+    internal class BindingEntry(val mask: Int, val bank: Int, val command: String)
+
+    /** Bit for modifier [inputId] in a held-modifier mask, or 0 if it isn't a modifier of this profile. */
+    fun modifierBit(inputId: String): Int = modifierBits[inputId] ?: 0
+
     fun resolve(type: MidiMessageType, channel: Int, index: Int): ResolvedInput? =
         table[key(type, channel, index)]
 
@@ -183,10 +203,18 @@ class CompiledController private constructor(
      * modifier set a bank binding beats a global one. Null if nothing is bound.
      */
     fun bindingFor(inputId: String, held: Collection<String> = emptyList(), bank: Int? = null): String? {
-        for (modifiers in modifierSubsetsLargestFirst(held.toSortedSet().toList())) {
-            val key = (modifiers + inputId).joinToString("+")
-            if (bank != null) bankBindings[bank + 1]?.get(key)?.let { return it }
-            bindings[key]?.let { return it }
+        var mask = 0
+        for (m in held) mask = mask or modifierBit(m)
+        return bindingForMask(inputId, mask, bank ?: -1)
+    }
+
+    /** Allocation-free [bindingFor]: [heldMask] is the OR of [modifierBit]s held; [bank] is 0-based, or -1 for none. */
+    fun bindingForMask(inputId: String, heldMask: Int, bank: Int): String? {
+        val entries = bindingIndex[inputId] ?: return null
+        for (e in entries) {
+            if (e.mask and heldMask != e.mask) continue
+            if (e.bank != 0 && e.bank != bank + 1) continue
+            return e.command
         }
         return null
     }
@@ -203,9 +231,34 @@ class CompiledController private constructor(
         private fun key(type: MidiMessageType, channel: Int, index: Int): Long =
             (type.ordinal.toLong() shl 16) or (channel.toLong() shl 8) or index.toLong()
 
-        private fun modifierSubsetsLargestFirst(sorted: List<String>): List<List<String>> {
-            val subsets = (0 until (1 shl sorted.size)).map { mask -> sorted.filterIndexed { i, _ -> mask and (1 shl i) != 0 } }
-            return subsets.sortedByDescending { it.size }
+        /** Per input id, its bindings ordered most specific first: more modifiers, then bank over global. */
+        private fun indexBindings(
+            global: Map<String, String>,
+            perBank: Map<Int, Map<String, String>>,
+            bits: Map<String, Int>
+        ): Map<String, Array<BindingEntry>> {
+            val byInput = HashMap<String, MutableList<BindingEntry>>()
+            fun add(bank: Int, map: Map<String, String>) {
+                for ((key, command) in map) {
+                    val parts = key.split('+')
+                    var mask = 0
+                    var known = true
+                    for (m in parts.dropLast(1)) {
+                        val bit = bits[m]
+                        if (bit == null) known = false else mask = mask or bit
+                    }
+                    if (known) byInput.getOrPut(parts.last()) { ArrayList() } += BindingEntry(mask, bank, command)
+                }
+            }
+            add(0, global)
+            perBank.forEach { (bank, map) -> add(bank, map) }
+            return byInput.mapValues { (_, list) ->
+                list.sortedWith(
+                    compareByDescending<BindingEntry> { Integer.bitCount(it.mask) }
+                        .thenByDescending { it.bank != 0 }
+                        .thenBy { it.mask }
+                ).toTypedArray()
+            }
         }
 
         internal fun build(profile: ControllerProfile): CompiledController {
@@ -332,7 +385,22 @@ class CompiledController private constructor(
                 if (bankNumber != null) expandedBank[bankNumber] = concrete
             }
 
-            return CompiledController(profile, table, expanded, expandedBank, problems, inputKinds = inputIds)
+            // Dense indexes for allocation-free runtime state and held-modifier masks.
+            val idIndexes = HashMap<String, Int>()
+            var slots = 0
+            for (resolved in table.values) {
+                resolved.slot = slots++
+                resolved.idIndex = idIndexes.getOrPut(resolved.inputId) { idIndexes.size }
+            }
+            val modifierBits = HashMap<String, Int>()
+            inputIds.filterValues { it == InputKind.MODIFIER }.keys.sorted().take(31)
+                .forEachIndexed { i, id -> modifierBits[id] = 1 shl i }
+            val index = indexBindings(expanded, expandedBank, modifierBits)
+
+            return CompiledController(
+                profile, table, expanded, expandedBank, problems, inputKinds = inputIds,
+                modifierBits = modifierBits, bindingIndex = index, slotCount = slots, idCount = idIndexes.size
+            )
         }
     }
 }

@@ -593,7 +593,27 @@ object MidiMappingManager {
 
     /** Queue-navigation deltas accumulated from global MIDI CC actions this frame. */
     data class GlobalMidiDeltas(val queueDelta: Int, val bgQueueDelta: Int, val transQueueDelta: Int = 0,
-                                val fxQueueDelta: Int = 0, val fxBgQueueDelta: Int = 0)
+                                val fxQueueDelta: Int = 0, val fxBgQueueDelta: Int = 0) {
+        companion object {
+            /** Shared result for frames that produced no queue movement (the common case). */
+            val NONE = GlobalMidiDeltas(0, 0, 0, 0, 0)
+        }
+    }
+
+    // `Global/...` mappings, re-split only when the (immutable, replaced-on-edit) mappings map changes.
+    private class GlobalMapping(val path: String, val cc: Int, val channel: Int)
+    private var globalMappingsSource: Map<String, MidiControlMapping>? = null
+    private var globalMappings: Array<GlobalMapping> = emptyArray()
+
+    private fun globalMappingsForCurrentProfile(): Array<GlobalMapping> {
+        val source = activeProfile.mappings
+        if (source !== globalMappingsSource) {
+            globalMappings = source.entries.filter { it.key.startsWith("Global/") }
+                .map { GlobalMapping(it.key, it.value.cc, it.value.channel) }.toTypedArray()
+            globalMappingsSource = source
+        }
+        return globalMappings
+    }
 
     /**
      * Drains all MIDI events queued by the MIDI receiver thread since the last frame,
@@ -638,12 +658,9 @@ object MidiMappingManager {
         knobSurface: KnobSurface? = null,
         navSurface: NavSurface? = null
     ): GlobalMidiDeltas {
-        val ctx = CommandContext(mixer, onTapTempo, knobSurface, navSurface)
-
         if (!midiEnabled) {
-            MidiEngine.receivedEvents.clear()
-            MidiEngine.receivedCcEvents.clear()
-            return GlobalMidiDeltas(0, 0, 0)
+            MidiEngine.clearEvents()
+            return GlobalMidiDeltas.NONE
         }
 
         // Check for MIDI learn auto-timeout (15 seconds)
@@ -651,8 +668,11 @@ object MidiMappingManager {
             parametersState.midiLearnTarget = null
         }
 
+        // The dispatch context is only built once an event actually arrives; most frames have none.
+        var dispatchCtx: CommandContext? = null
         while (true) {
-            val event = MidiEngine.receivedEvents.poll() ?: break
+            val event = MidiEngine.pollEvent() ?: break
+            val ctx = dispatchCtx ?: CommandContext(mixer, onTapTempo, knobSurface, navSurface).also { dispatchCtx = it }
             val target = parametersState.midiLearnTarget
             if (target is MidiLearnTarget.ProfileCommand) {
                 if (learnIntoProfile(target, event)) parametersState.midiLearnTarget = null
@@ -761,20 +781,21 @@ object MidiMappingManager {
 
                 // Global actions (queue next/prev, tap tempo, crossfader snaps/auto-fade): any
                 // "Global/..." mapping on this channel/CC runs its registered command.
-                val press = CommandInput.Press(event.normalizedValue > 0.5f)
-                for ((path, mapping) in activeProfile.mappings) {
-                    if (!path.startsWith("Global/")) continue
-                    if (mapping.cc != event.index || mapping.channel != event.channel) continue
-                    commands.execute(path, press, ctx)
+                val press = CommandInput.Press.of(event.normalizedValue > 0.5f)
+                for (g in globalMappingsForCurrentProfile()) {
+                    if (g.cc != event.index || g.channel != event.channel) continue
+                    commands.execute(g.path, press, ctx)
                 }
 
                 // Forward to parameter bindings (rotary deltas, buttons, continuous takeover)
                 onMidiEvent(event, mixer)
             }
         }
-        MidiEngine.receivedCcEvents.clear()
 
-        return GlobalMidiDeltas(ctx.queueDelta, ctx.bgQueueDelta, ctx.transQueueDelta, ctx.fxQueueDelta, ctx.fxBgQueueDelta)
+        val done = dispatchCtx ?: return GlobalMidiDeltas.NONE
+        if (done.queueDelta == 0 && done.bgQueueDelta == 0 && done.transQueueDelta == 0 &&
+            done.fxQueueDelta == 0 && done.fxBgQueueDelta == 0) return GlobalMidiDeltas.NONE
+        return GlobalMidiDeltas(done.queueDelta, done.bgQueueDelta, done.transQueueDelta, done.fxQueueDelta, done.fxBgQueueDelta)
     }
 
     /**

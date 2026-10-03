@@ -13,7 +13,14 @@ enum class CommandKind {
 
 /** A normalized input event delivered to a [Command] handler. */
 sealed interface CommandInput {
-    data class Press(val down: Boolean) : CommandInput
+    data class Press(val down: Boolean) : CommandInput {
+        companion object {
+            /** Shared instances so button dispatch on the event path allocates nothing. */
+            @JvmField val DOWN = Press(true)
+            @JvmField val UP = Press(false)
+            fun of(down: Boolean): Press = if (down) DOWN else UP
+        }
+    }
     data class Value(val value: Float) : CommandInput
     /** A signed change; the unit is defined by the command (knob commands take a fraction of full range). */
     data class Delta(val steps: Float) : CommandInput
@@ -54,6 +61,25 @@ class CommandRegistry {
     private val commands = LinkedHashMap<String, Command>()
     private val aliases = HashMap<String, String>()
     private val wasDown = HashMap<String, Boolean>()
+
+    private val heldStateResetters = ArrayList<() -> Unit>()
+
+    /** Registers [reset] to run from [clearHeldState] (for handlers that keep their own hold state). */
+    fun onClearHeldState(reset: () -> Unit) { heldStateResetters += reset }
+
+    /**
+     * Forgets which edge-triggered commands are held and resets handlers' own hold state, so a
+     * release lost to an unplugged device can't leave a button stuck down.
+     */
+    fun clearHeldState() {
+        wasDown.clear()
+        for (r in heldStateResetters) r()
+    }
+
+    /** Forgets that [idOrAlias] is held, so its next press fires again. */
+    fun forgetHeld(idOrAlias: String) {
+        resolveId(idOrAlias)?.let { wasDown.remove(it) }
+    }
 
     fun register(command: Command) {
         require(command.id !in commands) { "Duplicate command id: ${command.id}" }

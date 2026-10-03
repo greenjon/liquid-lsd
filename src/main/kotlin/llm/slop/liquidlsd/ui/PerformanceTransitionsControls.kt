@@ -22,6 +22,28 @@ import java.io.File
  */
 internal object PerformanceTransitionsControls {
 
+    // Per-frame strings are cached by value (the render path must not allocate).
+    private val suffixCache = HashMap<llm.slop.liquidlsd.midi.MidiControlMapping, String>()
+    private fun midiSuffix(m: llm.slop.liquidlsd.midi.MidiControlMapping?): String {
+        if (m == null) return ""
+        return suffixCache.getOrPut(m) { if (m.channel == 0) " [CC ${m.cc}]" else " [Ch ${m.channel + 1} CC ${m.cc}]" }
+    }
+    private val tipPickerLabel = TipCache()
+    private val tipPicker = TipCache()
+    private val tipQCount = TipCache()
+    private val tipQStatus = TipCache()
+    private val tipQPrev = TipCache()
+    private val tipQNext = TipCache()
+    private val tipXfade = TipCache()
+    private val tipSnapA = TipCache()
+    private val tipSnapB = TipCache()
+    private val tipAutoFade = TipCache()
+    private val tipSpeedLabel = TipCache()
+    private val tipSpeed = TipCache()
+    private val tipSpeedBadge = TipCache()
+    private val AUTOFADE_INK = TangoPalette.inkFor(TangoPalette.AUTOFADE_ACTIVE, TangoPalette.AUTOFADE_HOVER)
+
+
     fun draw(
         session: SessionContext,
         mixer: Mixer,
@@ -106,10 +128,10 @@ internal object PerformanceTransitionsControls {
         } ?: false
         val modBadge = if (isTransModified) " *" else ""
 
-        if (ImGui.button("${Icons.SETTINGS} $transName$modBadge##perf_trans_picker_btn", transBtnW, headerH)) {
+        if (ImGui.button(tipPickerLabel.get(transName, modBadge) { "${Icons.SETTINGS} $transName$modBadge##perf_trans_picker_btn" }, transBtnW, headerH)) {
             parametersState.openTransitionBrowse()
         }
-        itemTooltip("Select ISF transition shader or blend mode.\nActive: $transName$modBadge")
+        itemTooltip(tipPicker.get(transName, modBadge) { "Select ISF transition shader or blend mode.\nActive: $transName$modBadge" })
 
         if (ImGui.beginDragDropTarget()) {
             val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
@@ -136,14 +158,16 @@ internal object PerformanceTransitionsControls {
         // 2. Transition Queue Navigation [ < ] [ N/Total ] [ > ]
         val transQ = TransitionQueueManager.queue
         val transQIdx = TransitionQueueManager.activeIndex
-        val transCountStr = if (transQ.isNotEmpty() && transQIdx in transQ.indices) "${transQIdx + 1}/${transQ.size}" else if (transQ.isNotEmpty()) "-/${transQ.size}" else "--"
+        val transCountStr = tipQCount.get(transQIdx, transQ.size) {
+            if (transQ.isNotEmpty() && transQIdx in transQ.indices) "${transQIdx + 1}/${transQ.size}" else if (transQ.isNotEmpty()) "-/${transQ.size}" else "--"
+        }
 
         val transQPrevKey = "Global/transQueuePrev"
         val transQPrevOscKey = "Mixer/transQueuePrev"
         val isMidiLearnTransQPrev = session.parametersState.isMidiTargetLearning(transQPrevKey)
         val isOscLearnTransQPrev = OscLearnState.isTargetLearning(transQPrevOscKey)
         val transQPrevMidiMapping = session.midiMappingManager.getMappingForParameter(transQPrevKey)
-        val transQPrevMidiText = transQPrevMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+        val transQPrevMidiText = midiSuffix(transQPrevMidiMapping)
 
         val transPrevX = ImGui.getCursorScreenPosX()
         val transPrevY = ImGui.getCursorScreenPosY()
@@ -197,7 +221,7 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip("Advance to previous transition in Transition Queue.$transQPrevMidiText\nRight-click for MIDI/OSC Learn.")
+        itemTooltip(tipQPrev.get(transQPrevMidiText) { "Advance to previous transition in Transition Queue.$transQPrevMidiText\nRight-click for MIDI/OSC Learn." })
 
         ImGui.sameLine(0f, 2f)
 
@@ -211,7 +235,7 @@ internal object PerformanceTransitionsControls {
             dl.addText(transCurX + (qTextW - sz.x) * 0.5f, transCurY + (headerH - sz.y) * 0.5f, genTextCol, transCountStr)
         }
         ImGui.invisibleButton("##perf_trans_q_idx", qTextW, headerH)
-        itemTooltip("Transition Queue status: $transCountStr")
+        itemTooltip(tipQStatus.get(transCountStr) { "Transition Queue status: $transCountStr" })
 
         ImGui.sameLine(0f, 2f)
 
@@ -220,7 +244,7 @@ internal object PerformanceTransitionsControls {
         val isMidiLearnTransQNext = session.parametersState.isMidiTargetLearning(transQNextKey)
         val isOscLearnTransQNext = OscLearnState.isTargetLearning(transQNextOscKey)
         val transQNextMidiMapping = session.midiMappingManager.getMappingForParameter(transQNextKey)
-        val transQNextMidiText = transQNextMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+        val transQNextMidiText = midiSuffix(transQNextMidiMapping)
 
         val transNextX = ImGui.getCursorScreenPosX()
         val transNextY = ImGui.getCursorScreenPosY()
@@ -274,7 +298,7 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip("Advance to next transition in Transition Queue.$transQNextMidiText\nRight-click for MIDI/OSC Learn.")
+        itemTooltip(tipQNext.get(transQNextMidiText) { "Advance to next transition in Transition Queue.$transQNextMidiText\nRight-click for MIDI/OSC Learn." })
 
         ImGui.endGroup()
     }
@@ -308,7 +332,7 @@ internal object PerformanceTransitionsControls {
         val snapAKey = "Global/snapDeckA"
         val isMidiLearnSnapA = session.parametersState.isMidiTargetLearning(snapAKey)
         val snapAMapping = session.midiMappingManager.getMappingForParameter(snapAKey)
-        val snapAMidiText = snapAMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+        val snapAMidiText = midiSuffix(snapAMapping)
 
         dl.addRectFilled(badgeAX, badgeAY, badgeAX + badgeW, badgeAY + headerH, TangoPalette.PILL_BG.u32(), 4f)
         val badgeBorderColorA = if (isMidiLearnSnapA) TangoPalette.learnBorder() else colorA
@@ -355,7 +379,7 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip("Deck A (Click to snap crossfader to Deck A)$snapAMidiText\nRight-click for MIDI Learn.")
+        itemTooltip(tipSnapA.get(snapAMidiText) { "Deck A (Click to snap crossfader to Deck A)$snapAMidiText\nRight-click for MIDI Learn." })
 
         ImGui.sameLine(0f, gap)
 
@@ -508,8 +532,8 @@ internal object PerformanceTransitionsControls {
 
         if (isTrackHovered && session.uiTheme.tooltipsEnabled) {
             val mapping = session.midiMappingManager.getMappingForParameter(paramKey)
-            val midiText = mapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-            itemTooltip("Crossfader$midiText\nDrag or scroll to blend. Middle-click to center.\nRight-click for MIDI/OSC Learn.")
+            val midiText = midiSuffix(mapping)
+            itemTooltip(tipXfade.get(midiText) { "Crossfader$midiText\nDrag or scroll to blend. Middle-click to center.\nRight-click for MIDI/OSC Learn." })
         }
 
         // Render crossfader visual tracks & ticks
@@ -581,7 +605,7 @@ internal object PerformanceTransitionsControls {
         val snapBKey = "Global/snapDeckB"
         val isMidiLearnSnapB = session.parametersState.isMidiTargetLearning(snapBKey)
         val snapBMapping = session.midiMappingManager.getMappingForParameter(snapBKey)
-        val snapBMidiText = snapBMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+        val snapBMidiText = midiSuffix(snapBMapping)
 
         val badgeBorderColorB = if (isMidiLearnSnapB) TangoPalette.learnBorder() else colorB
         dl.addRectFilled(badgeBX, badgeBY, badgeBX + badgeBW, badgeBY + headerH, TangoPalette.PILL_BG.u32(), 4f)
@@ -628,7 +652,7 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip("Deck B (Click to snap crossfader to Deck B)$snapBMidiText\nRight-click for MIDI Learn.")
+        itemTooltip(tipSnapB.get(snapBMidiText) { "Deck B (Click to snap crossfader to Deck B)$snapBMidiText\nRight-click for MIDI Learn." })
 
         ImGui.sameLine(0f, gap * 2f)
 
@@ -636,13 +660,13 @@ internal object PerformanceTransitionsControls {
         val autoFadeKey = "Global/autoFade"
         val isMidiLearnAutoFade = session.parametersState.isMidiTargetLearning(autoFadeKey)
         val autoFadeMapping = session.midiMappingManager.getMappingForParameter(autoFadeKey)
-        val autoFadeMidiText = autoFadeMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+        val autoFadeMidiText = midiSuffix(autoFadeMapping)
 
         val autoX = ImGui.getCursorScreenPosX()
         val autoY = ImGui.getCursorScreenPosY()
         val isAuto = mixer.isAutoFading
         if (isAuto) {
-            val autoInk = TangoPalette.inkFor(TangoPalette.AUTOFADE_ACTIVE, TangoPalette.AUTOFADE_HOVER)
+            val autoInk = AUTOFADE_INK
             ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.AUTOFADE_ACTIVE, 0.9f))
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.u32(TangoPalette.AUTOFADE_HOVER))
             ImGui.pushStyleColor(ImGuiCol.Text, autoInk[0], autoInk[1], autoInk[2], 1.0f)
@@ -650,8 +674,8 @@ internal object PerformanceTransitionsControls {
             ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.BUTTON_BG.u32())
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.BUTTON_HOVER.u32())
         }
-        val autoLabel = if (isAuto) "FADING" else "AUTO"
-        if (ImGui.button("$autoLabel##perf_autofade_btn", autoBtnW, headerH)) {
+        val autoLabel = if (isAuto) "FADING##perf_autofade_btn" else "AUTO##perf_autofade_btn"
+        if (ImGui.button(autoLabel, autoBtnW, headerH)) {
             if (mixer.isAutoFading) {
                 mixer.onCrossfadeManualTakeover()
             } else {
@@ -700,7 +724,7 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip("Auto-fade between Deck A and Deck B over ${String.format(java.util.Locale.US, "%.1f", mixer.xfadeSpeed.value)}s.$autoFadeMidiText\nClick while fading to stop. Right-click for MIDI Learn.")
+        itemTooltip(tipAutoFade.get(Math.round(mixer.xfadeSpeed.value * 10f), autoFadeMidiText) { "Auto-fade between Deck A and Deck B over ${String.format(java.util.Locale.US, "%.1f", mixer.xfadeSpeed.value)}s.$autoFadeMidiText\nClick while fading to stop. Right-click for MIDI Learn." })
 
         ImGui.sameLine(0f, gap)
 
@@ -709,16 +733,17 @@ internal object PerformanceTransitionsControls {
         val isMidiLearnSpeed = session.parametersState.isMidiTargetLearning(xfadeSpeedParamKey)
         val isOscLearnSpeed = OscLearnState.isTargetLearning(xfadeSpeedParamKey)
         val speedMidiMapping = session.midiMappingManager.getMappingForParameter(xfadeSpeedParamKey)
-        val speedMidiText = speedMidiMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+        val speedMidiText = midiSuffix(speedMidiMapping)
 
         val speedX = ImGui.getCursorScreenPosX()
         val speedY = ImGui.getCursorScreenPosY()
-        val speedStr = "${String.format(java.util.Locale.US, "%.1f", mixer.xfadeSpeed.baseValue)}s"
+        val speedTenths = Math.round(mixer.xfadeSpeed.baseValue * 10f)
+        val speedStr = tipSpeedLabel.get(speedTenths) { "${String.format(java.util.Locale.US, "%.1f", mixer.xfadeSpeed.baseValue)}s" }
 
         ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.SPEED_BG.u32())
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.SPEED_HOVER.u32())
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            ImGui.button("$speedStr##perf_speed_badge", speedBtnW, headerH)
+            ImGui.button(tipSpeedBadge.get(speedStr) { "$speedStr##perf_speed_badge" }, speedBtnW, headerH)
         }
         ImGui.popStyleColor(2)
 
@@ -804,7 +829,7 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip("Auto-fade duration: $speedStr$speedMidiText\nDrag or scroll to adjust speed.\nRight-click for quick presets & MIDI/OSC Learn.")
+        itemTooltip(tipSpeed.get(speedStr, speedMidiText) { "Auto-fade duration: $speedStr$speedMidiText\nDrag or scroll to adjust speed.\nRight-click for quick presets & MIDI/OSC Learn." })
 
         ImGui.endGroup()
     }

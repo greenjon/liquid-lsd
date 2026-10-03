@@ -95,7 +95,8 @@ class PerformanceMatrixPanel {
         val bayH = (availH - gridH - (if (anyExpanded) ImGui.getStyle().getItemSpacingY() else 0f)).coerceAtLeast(0f)
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)
-        overhangDraws.clear()
+        overhangCount = 0
+        badgeSlot = 0
         if (ImGui.beginChild("##rack_grid_area", 0f, gridH, false)) {
             drawMatrix(session, theme, mixer, parametersState, visibleRows, baseRowH)
         }
@@ -108,22 +109,132 @@ class PerformanceMatrixPanel {
 
         // The selected knob's card + Learn button extend below the row, past the grid child's clip
         // rect, so they're drawn here in the parent window, on top of the bay's toggle line.
-        if (overhangDraws.isNotEmpty()) {
+        if (overhangCount > 0) {
             val cx = ImGui.getCursorScreenPosX()
             val cy = ImGui.getCursorScreenPosY()
-            for (draw in overhangDraws) draw()
+            for (i in 0 until overhangCount) drawOverhang(session, parametersState, overhangPool[i])
             ImGui.setCursorScreenPos(cx, cy)
             ImGui.dummy(0f, 0f) // ImGui asserts if a SetCursorPos isn't followed by an item
-            overhangDraws.clear()
+            overhangCount = 0
         }
     }
 
-    /** Selected-knob extras deferred until after the grid child ends (see [draw]). */
-    private val overhangDraws = mutableListOf<() -> Unit>()
+    /**
+     * Selected-knob extras deferred until after the grid child ends (see [draw]). Pooled records rather than
+     * closures, so a selected knob costs no allocation per frame. [kind] is [OVERHANG_CARD] or [OVERHANG_LEARN].
+     */
+    private class Overhang {
+        var kind = 0
+        var cardX1 = 0f; var cardX2 = 0f; var cardTop = 0f; var cardBottom = 0f
+        var selFill = 0; var selBorder = 0
+        var cellCenterX = 0f; var btnY = 0f
+        var bankId = ""
+        var control: MacroControl? = null
+    }
+    private val overhangPool = ArrayList<Overhang>().also { for (i in 0 until 8) it.add(Overhang()) }
+    private var overhangCount = 0
+    private fun nextOverhang(kind: Int): Overhang {
+        if (overhangCount == overhangPool.size) overhangPool.add(Overhang())
+        return overhangPool[overhangCount++].also { it.kind = kind }
+    }
+    private val OVERHANG_CARD = 0
+    private val OVERHANG_LEARN = 1
+
+    // Per-frame ids/labels built once per distinct value (the render path must not allocate).
+    private val knobIdCache = ArrayList<String?>()
+    private fun knobId(tabIdx: Int, rowIdx: Int, col: Int): String {
+        val key = (tabIdx * 16 + rowIdx.coerceIn(0, 15)) * 4 + col.coerceIn(0, 3)
+        while (knobIdCache.size <= key) knobIdCache.add(null)
+        return knobIdCache[key] ?: "perf_${tabIdx}_r${rowIdx}_c${col}".also { knobIdCache[key] = it }
+    }
+    private val knobFallbackLabels = Array(16) { "K${it + 1}" }
+    private fun knobFallbackLabel(knobIdx: Int): String = knobFallbackLabels.getOrNull(knobIdx) ?: "K${knobIdx + 1}"
+    private val rackIdCache = ArrayList<String?>()
+    private fun rackId(tabIdx: Int, rowIdx: Int): String {
+        val key = tabIdx * 16 + rowIdx.coerceIn(0, 15)
+        while (rackIdCache.size <= key) rackIdCache.add(null)
+        return rackIdCache[key] ?: "${tabIdx}_${rowIdx}".also { rackIdCache[key] = it }
+    }
+    private val deckLabels = Array(PerfRows.DECK_TAGS.size) { "Deck ${PerfRows.DECK_TAGS[it]}" }
+    private val deckBadgeTips = Array(PerfRows.DECK_TAGS.size) { "${deckLabels[it]} Unit\nConfigure ${deckLabels[it]} video source and FX" }
+    private fun deckTagIndex(tag: String): Int = PerfRows.DECK_TAGS.indexOf(tag).coerceAtLeast(0)
+    private val dropIdCaches = Array(8) { TipCache() }
+    private val badgeIdCaches = Array(16) { TipCache() }
+    private var badgeSlot = 0
+    private val cancelIdCache = TipCache()
+    private val learnIdCache = TipCache()
+    private val clipRect = FloatArray(4)
+
+    /** One "edit in Deep Edit" callback per bank, reused across frames (rebuilt if the ParametersState changes). */
+    private val openDeepEditByBank = HashMap<String, () -> Unit>()
+    private var openDeepEditOwner: ParametersState? = null
+    private fun openDeepEditFor(parametersState: ParametersState, bankId: String): () -> Unit {
+        if (openDeepEditOwner !== parametersState) { openDeepEditByBank.clear(); openDeepEditOwner = parametersState }
+        return openDeepEditByBank.getOrPut(bankId) {
+            {
+                parametersState.setDisclosure(ctx.canonicalModuleId(bankId), ParametersState.DisclosureLevel.DEEP_EDIT)
+                ctx.navigateMacroPanelTo(parametersState, bankId)
+            }
+        }
+    }
+    private var rowOffsets = FloatArray(8)
+
+    private fun drawOverhang(session: llm.slop.liquidlsd.SessionContext, parametersState: ParametersState, o: Overhang) {
+        if (o.kind == OVERHANG_CARD) {
+            val parentDl = ImGui.getWindowDrawList()
+            parentDl.addRectFilled(o.cardX1, o.cardTop, o.cardX2, o.cardBottom, o.selFill, 6f)
+            parentDl.addRect(o.cardX1, o.cardTop, o.cardX2, o.cardBottom, o.selBorder, 6f, 0, 1.5f)
+            return
+        }
+        val control = o.control ?: return
+        val bankId = o.bankId
+        val btnW = 54f
+        val btnX = o.cellCenterX - btnW / 2f
+        val btnY = o.btnY
+        val btnH = 18f
+        val isParamLearning = MacroLearnState.isControlLearning(control.id)
+        ImGui.setCursorScreenPos(btnX, btnY)
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            if (isParamLearning) {
+                ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.CANCEL_BTN_BG.u32())
+                if (ImGui.button(cancelIdCache.get(control.id) { "${Icons.X} Cancel##inline_cancel_${control.id}" }, btnW, btnH)) {
+                    MacroLearnState.cancelLearn()
+                }
+                ImGui.popStyleColor()
+                itemTooltip("Cancel Learn Mode.")
+            } else {
+                val canLearn = control.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL
+                if (canLearn) {
+                    ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.LEARN_BTN_BG.u32())
+                    if (ImGui.button(learnIdCache.get(control.id) { "${Icons.REFRESH} Learn##inline_learn_${control.id}" }, btnW, btnH)) {
+                        MacroLearnState.startLearn(control.id)
+                        MacroLearnState.selectedControlId = control.id
+                        ctx.navigateMacroPanelTo(parametersState, bankId)
+                        session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
+                        // Learn needs a parameter to click: open this row's Deep Edit if it's closed.
+                        val learnModuleId = ctx.canonicalModuleId(bankId)
+                        if (learnModuleId in PerformanceDeepEditBay.deepEditModuleIds && parametersState.disclosureFor(learnModuleId) == ParametersState.DisclosureLevel.COLLAPSED) {
+                            parametersState.setDisclosure(learnModuleId, ParametersState.DisclosureLevel.DEEP_EDIT)
+                        }
+                    }
+                    ImGui.popStyleColor()
+                    itemTooltip(
+                        if (bankId == MacroEngine.GLOBAL) "Arm Learn Mode and open the Mixer panel's Macros tab. Then open any Deep Edit and click a parameter slider or modulator property -- Global knobs can bind anywhere."
+                        else "Arm Learn Mode, open this row's Deep Edit and the Mixer panel's Macros tab. Then click a parameter slider or modulator property in this row's deck and section."
+                    )
+                } else {
+                    ImGui.textDisabled("Max 4")
+                }
+            }
+        }
+    }
 
     /** The rows to draw: the active page's rows, or the expanded module's row(s) in Deep Edit. See [PerfRows]. */
     private fun visibleRowsForPage(page: PerfPageDef, pages: List<PerfPageDef>, parametersState: ParametersState): List<RowDescriptor> =
-        PerfRows.visibleRowsForPage(page, ctx, parametersState, { deepEditBay.rackModuleDisplayLabel(it) }, pages)
+        rowsCache.rows(page, ctx, parametersState, rackLabelFor, pages)
+
+    private val rowsCache = PerfRows.RowsCache()
+    private val rackLabelFor: (String) -> String = { deepEditBay.rackModuleDisplayLabel(it) }
 
     // -- 4x4 Knob Grid -----------------------------------------------------------
 
@@ -150,7 +261,9 @@ class PerformanceMatrixPanel {
         val gridW = ImGui.getContentRegionAvailX().coerceAtLeast(4f)
         // Rows past MIN_ROW_H overflow and the ##rack_grid_area child scrolls (see the cursor
         // advance at the end of this function).
-        val rowTopOffsets = FloatArray(rows.size + 1)
+        if (rowOffsets.size < rows.size + 1) rowOffsets = FloatArray(rows.size + 1)
+        val rowTopOffsets = rowOffsets
+        rowTopOffsets[0] = 0f
         for (i in rows.indices) rowTopOffsets[i + 1] = rowTopOffsets[i] + rowH
         val gridTotalH = rowTopOffsets[rows.size]
 
@@ -210,7 +323,8 @@ class PerformanceMatrixPanel {
         val h1Font = session.uiTheme.fontFor(UITheme.FontLevel.H1)
         val h1Pushable = h1Font != null && h1Font.ptr != 0L
 
-        for ((rowIdx, row) in rows.withIndex()) {
+        for (rowIdx in rows.indices) {
+            val row = rows[rowIdx]
             val descriptor = row
             val rowTopY = gridStartY + rowTopOffsets[rowIdx]
             val rowBottomY = gridStartY + rowTopOffsets[rowIdx + 1]
@@ -246,13 +360,13 @@ class PerformanceMatrixPanel {
                 val gapX1 = gridStartX + geo.colCenterX(selectedCol) - geo.colW / 2f + 6f
                 val gapX2 = gridStartX + geo.colCenterX(selectedCol) + geo.colW / 2f - 6f
                 val pad = 3f
-                val clips = listOf(
-                    floatArrayOf(boxX1 - pad, boxTopY - pad, gapX1, boxBottomY + pad),
-                    floatArrayOf(gapX2, boxTopY - pad, boxX2 + pad, boxBottomY + pad),
-                    floatArrayOf(gapX1, boxTopY - pad, gapX2, boxBottomY - pad)
-                )
-                for (c in clips) {
-                    dl.pushClipRect(c[0], c[1], c[2], c[3], true)
+                for (clip in 0..2) {
+                    when (clip) {
+                        0 -> { clipRect[0] = boxX1 - pad; clipRect[1] = boxTopY - pad; clipRect[2] = gapX1; clipRect[3] = boxBottomY + pad }
+                        1 -> { clipRect[0] = gapX2; clipRect[1] = boxTopY - pad; clipRect[2] = boxX2 + pad; clipRect[3] = boxBottomY + pad }
+                        else -> { clipRect[0] = gapX1; clipRect[1] = boxTopY - pad; clipRect[2] = gapX2; clipRect[3] = boxBottomY - pad }
+                    }
+                    dl.pushClipRect(clipRect[0], clipRect[1], clipRect[2], clipRect[3], true)
                     dl.addRect(boxX1, boxTopY, boxX2, boxBottomY, borderCol, 8f, 0, 2f)
                     dl.popClipRect()
                 }
@@ -295,7 +409,7 @@ class PerformanceMatrixPanel {
                     }
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
-                    ImGui.invisibleButton("##perf_deck_drop_${rowIdx}_$dropTag", deckBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
+                    ImGui.invisibleButton(dropIdCaches[rowIdx.coerceIn(0, 7)].get(rowIdx, dropTag) { "##perf_deck_drop_${rowIdx}_$dropTag" }, deckBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
                     applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
@@ -320,12 +434,7 @@ class PerformanceMatrixPanel {
                         val stockSourcePayload = ImGui.acceptDragDropPayload<String>(PresetListPanel.PAYLOAD_STOCK_SOURCE)
                         if (stockSourcePayload != null) {
                             VisualSourceRegistry.availableSources.find { it.id == stockSourcePayload }?.let { source ->
-                                val deckLabel = when {
-                                    isDeckA -> "Deck A"
-                                    isDeckB -> "Deck B"
-                                    isDeckBG -> "Deck BG"
-                                    else -> "Deck PV"
-                                }
+                                val deckLabel = deckLabels[deckTagIndex(dropTag)]
                                 UIManager.changeVisualSourceSafely(mixer, targetDeck, deckLabel, source, parametersState)
                             }
                         }
@@ -334,7 +443,7 @@ class PerformanceMatrixPanel {
                 } else if (isMasterRow) {
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
-                    ImGui.invisibleButton("##perf_master_drop_${rowIdx}", masterTabBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
+                    ImGui.invisibleButton(dropIdCaches[rowIdx.coerceIn(0, 7)].get(rowIdx, "master") { "##perf_master_drop_${rowIdx}" }, masterTabBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
                     applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
@@ -349,7 +458,7 @@ class PerformanceMatrixPanel {
                 } else if (isTransRow) {
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
-                    ImGui.invisibleButton("##perf_trans_drop_${rowIdx}", masterTabBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
+                    ImGui.invisibleButton(dropIdCaches[rowIdx.coerceIn(0, 7)].get(rowIdx, "trans") { "##perf_trans_drop_${rowIdx}" }, masterTabBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
                     applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
@@ -384,7 +493,7 @@ class PerformanceMatrixPanel {
                 ImGui.setCursorScreenPos(boxX2 - pad - editBtnW, chevronY)
                 session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                     llm.slop.liquidlsd.ui.rack.RackUnit.drawChevron(
-                        parametersState, activeModuleId, "${tabIdx}_${rowIdx}"
+                        parametersState, activeModuleId, rackId(tabIdx, rowIdx)
                     )
                 }
             }
@@ -446,11 +555,12 @@ class PerformanceMatrixPanel {
                         isDeckBG -> mixer.deckBG
                         else -> mixer.deckPV
                     }
-                    val deckLabel = "Deck $deckTag"
+                    val deckTagIdx = deckTagIndex(deckTag)
+                    val deckLabel = deckLabels[deckTagIdx]
 
                     drawTitleBadge(
                         session, badgeX, badgeY, deckBadgeW, badgeH, descriptor.accent, deckTag, UITheme.FontLevel.H1,
-                        tooltip = "$deckLabel Unit\nConfigure $deckLabel video source and FX"
+                        tooltip = deckBadgeTips[deckTagIdx]
                     )
                     drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, deckBadgeW, badgeH)
 
@@ -468,10 +578,7 @@ class PerformanceMatrixPanel {
 
             // 4 knobs for this row: content from the resolver, every position from [geo].
             val chainLabel = llm.slop.liquidlsd.macro.FxMacroSync.labelFor(row.bankId) ?: "FX"
-            val openDeepEdit = {
-                parametersState.setDisclosure(ctx.canonicalModuleId(row.bankId), ParametersState.DisclosureLevel.DEEP_EDIT)
-                ctx.navigateMacroPanelTo(parametersState, row.bankId)
-            }
+            val openDeepEdit = openDeepEditFor(parametersState, row.bankId)
             val knobTopY = rowTopY + geo.knobTop
             val stripY = rowTopY + geo.stripTop
 
@@ -502,23 +609,22 @@ class PerformanceMatrixPanel {
                     val cardX2 = cellCenterX + geo.colW / 2f - 6f
                     val selFill = TangoPalette.u32(TangoPalette.SYNC.normal, 0.14f)
                     val selBorder = TangoPalette.u32(TangoPalette.SYNC.bright, 0.85f)
-                    overhangDraws += {
-                        val parentDl = ImGui.getWindowDrawList()
-                        parentDl.addRectFilled(cardX1, knobTopY - 4f, cardX2, learnBtnY + 18f + 4f, selFill, 6f)
-                        parentDl.addRect(cardX1, knobTopY - 4f, cardX2, learnBtnY + 18f + 4f, selBorder, 6f, 0, 1.5f)
-                    }
+                    val card = nextOverhang(OVERHANG_CARD)
+                    card.cardX1 = cardX1; card.cardX2 = cardX2
+                    card.cardTop = knobTopY - 4f; card.cardBottom = learnBtnY + 18f + 4f
+                    card.selFill = selFill; card.selBorder = selBorder
                 }
 
                 val midiPath = MacroEngine.midiPathFor(bank, control)
                 val isMidiLearning = midiPath != null &&
                     parametersState.midiLearnTarget.let { it is MidiLearnTarget.MacroTarget && it.macroPath == midiPath }
-                val knobLabel = control.label.ifEmpty { "K${knobIdx + 1}" }
+                val knobLabel = control.label.ifEmpty { knobFallbackLabel(knobIdx) }
 
                 ImGui.setCursorScreenPos(gridStartX + geo.knobX(col), knobTopY)
                 // The widget draws the face only -- the caption and value readout go into the fixed strip/extras below.
                 MacroKnobWidget.draw(
                     session = session,
-                    id = "perf_${tabIdx}_r${rowIdx}_c${col}",
+                    id = knobId(tabIdx, rowIdx, col),
                     label = knobLabel,
                     value = control.value,
                     meterType = spec.meterType,
@@ -586,46 +692,10 @@ class PerformanceMatrixPanel {
                 }
 
                 // If expanded and selected, draw compact Learn/Cancel button beneath the value readout
-                if (isSelectedKnob) overhangDraws += {
-                    val btnW = 54f
-                    val btnX = cellCenterX - btnW / 2f
-                    val btnY = learnBtnY
-                    val btnH = 18f
-                    val isParamLearning = MacroLearnState.isControlLearning(control.id)
-                    ImGui.setCursorScreenPos(btnX, btnY)
-                    session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                        if (isParamLearning) {
-                            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.CANCEL_BTN_BG.u32())
-                            if (ImGui.button("${Icons.X} Cancel##inline_cancel_${control.id}", btnW, btnH)) {
-                                MacroLearnState.cancelLearn()
-                            }
-                            ImGui.popStyleColor()
-                            itemTooltip("Cancel Learn Mode.")
-                        } else {
-                            val canLearn = control.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL
-                            if (canLearn) {
-                                ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.LEARN_BTN_BG.u32())
-                                if (ImGui.button("${Icons.REFRESH} Learn##inline_learn_${control.id}", btnW, btnH)) {
-                                    MacroLearnState.startLearn(control.id)
-                                    MacroLearnState.selectedControlId = control.id
-                                    ctx.navigateMacroPanelTo(parametersState, row.bankId)
-                                    session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
-                                    // Learn needs a parameter to click: open this row's Deep Edit if it's closed.
-                                    val learnModuleId = ctx.canonicalModuleId(row.bankId)
-                                    if (learnModuleId in PerformanceDeepEditBay.deepEditModuleIds && parametersState.disclosureFor(learnModuleId) == ParametersState.DisclosureLevel.COLLAPSED) {
-                                        parametersState.setDisclosure(learnModuleId, ParametersState.DisclosureLevel.DEEP_EDIT)
-                                    }
-                                }
-                                ImGui.popStyleColor()
-                                itemTooltip(
-                                    if (row.bankId == MacroEngine.GLOBAL) "Arm Learn Mode and open the Mixer panel's Macros tab. Then open any Deep Edit and click a parameter slider or modulator property -- Global knobs can bind anywhere."
-                                    else "Arm Learn Mode, open this row's Deep Edit and the Mixer panel's Macros tab. Then click a parameter slider or modulator property in this row's deck and section."
-                                )
-                            } else {
-                                ImGui.textDisabled("Max 4")
-                            }
-                        }
-                    }
+                if (isSelectedKnob) {
+                    val learn = nextOverhang(OVERHANG_LEARN)
+                    learn.cellCenterX = cellCenterX; learn.btnY = learnBtnY
+                    learn.bankId = row.bankId; learn.control = control
                 }
             }
         }
@@ -685,7 +755,7 @@ class PerformanceMatrixPanel {
         if (tooltip != null) {
             ImGui.setCursorScreenPos(x, y)
             ImGui.setNextItemAllowOverlap()
-            ImGui.invisibleButton("##title_badge_${text}_${x.toInt()}_${y.toInt()}", w.coerceAtLeast(1f), h.coerceAtLeast(1f))
+            ImGui.invisibleButton(badgeIdCaches[badgeSlot++ and 15].get(text, x.toInt(), y.toInt()) { "##title_badge_${text}_${x.toInt()}_${y.toInt()}" }, w.coerceAtLeast(1f), h.coerceAtLeast(1f))
             applyDragScroll()
             itemTooltip(tooltip)
         }
@@ -714,7 +784,7 @@ class PerformanceMatrixPanel {
         ImGui.setCursorScreenPos(badgeX + gearShiftX, badgeY + badgeH)
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             llm.slop.liquidlsd.ui.rack.RackUnit.drawChevronIcon(
-                parametersState, activeModuleId, "${tabIdx}_${rowIdx}", badgeW, badgeH
+                parametersState, activeModuleId, rackId(tabIdx, rowIdx), badgeW, badgeH
             )
         }
     }

@@ -14,7 +14,7 @@ class GlobalCommandDispatchTest {
     )
 
     private fun dispatch(vararg events: MidiEvent, onTap: () -> Unit = {}): MidiMappingManager.GlobalMidiDeltas {
-        events.forEach { MidiEngine.receivedEvents.offer(it) }
+        events.forEach { MidiEngine.enqueueEvent(it) }
         return MidiMappingManager.processGlobalMidiEvents(
             midiEnabled = true,
             parametersState = ParametersState(),

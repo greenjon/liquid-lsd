@@ -17,10 +17,24 @@ class ControllerRuntime(
     var activeBank: Int? = null
         private set
 
-    private val heldModifiers = LinkedHashSet<String>()
-    private val lastAbsolute = HashMap<String, Int>()
-    private val lastTurnMs = HashMap<String, Long>()
-    private val pressCommand = HashMap<String, String>()
+    // Bit set of held modifiers (see CompiledController.modifierBit) and per-input state in flat
+    // arrays indexed by ResolvedInput.slot / idIndex, so the event path allocates nothing.
+    private var heldMask = 0
+    private val absoluteSeen = BooleanArray(compiled.slotCount)
+    private val lastAbsolute = IntArray(compiled.slotCount)
+    private val turnSeen = BooleanArray(compiled.slotCount)
+    private val lastTurnMs = LongArray(compiled.slotCount)
+    private val pressCommand = arrayOfNulls<String>(compiled.idCount)
+
+    /** Forgets held modifiers and in-flight presses (device went away mid-press); no release is delivered. */
+    fun clearHeldState() {
+        for (i in pressCommand.indices) {
+            val command = pressCommand[i] ?: continue
+            pressCommand[i] = null
+            registry.forgetHeld(command)
+        }
+        heldMask = 0
+    }
 
     /** Handles [event]; returns true if the profile consumed it (so legacy MIDI bindings skip it). */
     fun handle(event: MidiEvent, ctx: CommandContext): Boolean {
@@ -35,13 +49,14 @@ class ControllerRuntime(
 
         return when (input.kind) {
             InputKind.MODIFIER -> {
-                if (down) heldModifiers += input.inputId else heldModifiers -= input.inputId
+                val bit = compiled.modifierBit(input.inputId)
+                heldMask = if (down) heldMask or bit else heldMask and bit.inv()
                 true
             }
             InputKind.ENCODER -> turn(input, event, ctx)
             InputKind.BUTTON -> button(input, down, ctx)
             InputKind.FADER -> {
-                val command = compiled.bindingFor(input.inputId, heldModifiers, input.bank) ?: return false
+                val command = compiled.bindingForMask(input.inputId, heldMask, input.bank ?: -1) ?: return false
                 registry.execute(command, CommandInput.Value(event.rawValue / 127f), ctx)
                 true
             }
@@ -57,37 +72,45 @@ class ControllerRuntime(
     }
 
     private fun turn(input: ResolvedInput, event: MidiEvent, ctx: CommandContext): Boolean {
-        val command = compiled.bindingFor(input.inputId, heldModifiers, input.bank) ?: return false
-        val stateKey = "${input.bank}:${input.inputId}"
+        val command = compiled.bindingForMask(input.inputId, heldMask, input.bank ?: -1) ?: return false
+        val slot = input.slot
         if (trace) logger.info { "controller rx turn cc=${event.index} raw=${event.rawValue} -> ${input.inputId} bank=${input.bank?.plus(1)} mode=${input.mode}" }
 
         val ticks = if (input.mode == EncoderMode.ABSOLUTE) {
             // The first message only tells us where the knob is; later ones are changes from there.
-            val previous = lastAbsolute.put(stateKey, event.rawValue)
-            if (previous == null) 0 else event.rawValue - previous
+            val seen = absoluteSeen[slot]
+            val previous = lastAbsolute[slot]
+            absoluteSeen[slot] = true
+            lastAbsolute[slot] = event.rawValue
+            if (!seen) 0 else event.rawValue - previous
         } else {
             decodeRelative(input.mode, event.rawValue)
         }
         if (ticks == 0) return true
 
-        val previousMs = lastTurnMs.put(stateKey, event.timestampMs)
-        val boost = if (previousMs == null) 1f else accelerationFactor(event.timestampMs - previousMs, input.accel)
+        val hadPrevious = turnSeen[slot]
+        val previousMs = lastTurnMs[slot]
+        turnSeen[slot] = true
+        lastTurnMs[slot] = event.timestampMs
+        val boost = if (!hadPrevious) 1f else accelerationFactor(event.timestampMs - previousMs, input.accel)
         registry.execute(command, CommandInput.Delta(ticks * input.step * boost), ctx)
         return true
     }
 
     private fun button(input: ResolvedInput, down: Boolean, ctx: CommandContext): Boolean {
         if (down) {
-            val command = compiled.bindingFor(input.inputId, heldModifiers, input.bank) ?: return false
+            val command = compiled.bindingForMask(input.inputId, heldMask, input.bank ?: -1) ?: return false
             // The release goes to the command that got the press, even if shift has changed since.
-            pressCommand[input.inputId] = command
-            registry.execute(command, CommandInput.Press(true), ctx)
+            pressCommand[input.idIndex] = command
+            registry.execute(command, CommandInput.Press.DOWN, ctx)
             return true
         }
-        val command = pressCommand.remove(input.inputId)
-            ?: compiled.bindingFor(input.inputId, heldModifiers, input.bank)
+        val pressed = pressCommand[input.idIndex]
+        pressCommand[input.idIndex] = null
+        val command = pressed
+            ?: compiled.bindingForMask(input.inputId, heldMask, input.bank ?: -1)
             ?: return false
-        registry.execute(command, CommandInput.Press(false), ctx)
+        registry.execute(command, CommandInput.Press.UP, ctx)
         return true
     }
 

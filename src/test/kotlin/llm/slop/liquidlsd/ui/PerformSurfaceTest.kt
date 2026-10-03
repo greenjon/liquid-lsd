@@ -295,4 +295,87 @@ class PerformSurfaceTest {
             assertTrue(sorted.zipWithNext().all { (a, b) -> b - a >= 4 }, "hues too close: $values")
         }
     }
+
+    // --- Row-resolution cache ---
+
+    private fun uncachedRows(page: PerfPageDef, pages: List<PerfPageDef>) =
+        PerfRows.visibleRowsForPage(page, ctx, state, { it }, pages)
+
+    @Test
+    fun rowsCacheReusesTheResultUntilAnInputChanges() {
+        val cache = PerfRows.RowsCache()
+        val pages = PerfPageStore.default.all()
+        val decks = pages.first { it.id == "decks" }
+        val first = cache.rows(decks, ctx, state, { it }, pages)
+        assertEquals(uncachedRows(decks, pages), first)
+        assertTrue(first === cache.rows(decks, ctx, state, { it }, pages), "unchanged inputs reuse the list")
+
+        ctx.deckRowMode["A"] = "FX"                       // SRC -> FX toggle
+        val fx = cache.rows(decks, ctx, state, { it }, pages)
+        assertTrue(fx !== first)
+        assertEquals(uncachedRows(decks, pages), fx)
+        assertEquals(MacroEngine.DECK_A_FX, fx[0].bankId)
+
+        ctx.deckRowMode["A"] = "SRC"
+        assertEquals(uncachedRows(decks, pages), cache.rows(decks, ctx, state, { it }, pages))
+
+        ctx.masterRowMode = "FX"
+        val master = pages.first { it.id == "master" }
+        assertEquals(uncachedRows(master, pages), cache.rows(master, ctx, state, { it }, pages))
+        ctx.masterRowMode = "MIX"
+        assertEquals(uncachedRows(master, pages), cache.rows(master, ctx, state, { it }, pages))
+    }
+
+    @Test
+    fun rowsCacheFollowsPinsAndTheStoreList() {
+        val cache = PerfRows.RowsCache()
+        val pinned = PerfPageDef("t1", "T1", rows = List(PerfPageDef.ROWS) { RowPlacement(if (it % 2 == 0) "deck.A.src" else "deck.A.fx") })
+        val unpinned = pinned.copy(rows = List(PerfPageDef.ROWS) { RowPlacement("deck.A.srcfx") })
+        val a = cache.rows(pinned, ctx, state, { it }, listOf(pinned))
+        assertEquals(uncachedRows(pinned, listOf(pinned)), a)
+        val b = cache.rows(unpinned, ctx, state, { it }, listOf(unpinned))
+        assertEquals(uncachedRows(unpinned, listOf(unpinned)), b)
+        assertTrue(a.map { it.pinnedMode } != b.map { it.pinnedMode })
+        // A reloaded store hands out a new list; the cache must not keep serving the old page's rows.
+        val edited = unpinned.copy(rows = List(PerfPageDef.ROWS) { RowPlacement("deck.B.srcfx") })
+        assertEquals(MacroEngine.DECK_B, cache.rows(edited, ctx, state, { it }, listOf(edited))[0].bankId)
+    }
+
+    @Test
+    fun rowsCacheFollowsDeepEditAndTheMixerSubTab() {
+        val cache = PerfRows.RowsCache()
+        val pages = PerfPageStore.default.all()
+        val decks = pages.first { it.id == "decks" }
+        assertEquals(4, cache.rows(decks, ctx, state, { it }, pages).size)
+        state.rackModuleDisclosure[MacroEngine.DECK_B] = ParametersState.DisclosureLevel.DEEP_EDIT
+        val open = cache.rows(decks, ctx, state, { it }, pages)
+        assertEquals(uncachedRows(decks, pages), open)
+        assertEquals(1, open.size)
+        state.rackModuleDisclosure[MacroEngine.DECK_B] = ParametersState.DisclosureLevel.COLLAPSED
+        assertEquals(4, cache.rows(decks, ctx, state, { it }, pages).size)
+
+        state.rackModuleDisclosure["Mixer"] = ParametersState.DisclosureLevel.DEEP_EDIT
+        val saved = state.activeMixerSubTab
+        try {
+            for (tab in listOf("TRANS", "FX", "CTRL")) {
+                state.activeMixerSubTab = tab
+                assertEquals(uncachedRows(decks, pages), cache.rows(decks, ctx, state, { it }, pages), tab)
+            }
+        } finally {
+            state.activeMixerSubTab = saved
+        }
+    }
+
+    @Test
+    fun surfaceRetargetsKnobsAfterAModeFlipDespiteTheCache() {
+        val s = surface()
+        assertEquals(MacroEngine.DECK_A, s.knobLights().let { page().knobs[0]!!.bankId })
+        s.turn(0, 0.1f)
+        ctx.deckRowMode["A"] = "FX"
+        FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
+        val fxControl = page().knobs[0]!!.control
+        val before = fxControl.value
+        s.turn(0, 0.2f)
+        assertEquals((before + 0.2f).coerceIn(0f, 1f), fxControl.value)
+    }
 }

@@ -27,6 +27,16 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
 
     private val wheel: HueWheel
     private val targets: List<Target>
+    /** [targets] split by bank, so a frame only walks the active bank's. */
+    private val targetsByBank: Array<Array<Target>>
+    private val allTargets: Array<Target>
+    private val knobSlots: Int
+    private val scratchLights: Array<KnobLight?>
+    // Per-knob ring/LED values computed at most once per update (several banks share a knob's light).
+    private val ringValue: IntArray
+    private val colorValue: IntArray
+    private val valueStamp: IntArray
+    private var stamp = 0
     private var lastActiveBank: Int? = null
     private var hasUpdated = false
 
@@ -46,6 +56,17 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
         }
     }
 
+    init {
+        val bankCount = (targets.maxOfOrNull { it.bank } ?: -1) + 1
+        targetsByBank = Array(bankCount) { b -> targets.filter { it.bank == b }.toTypedArray() }
+        allTargets = targets.toTypedArray()
+        knobSlots = (targets.maxOfOrNull { it.knob } ?: -1) + 1
+        scratchLights = arrayOfNulls(knobSlots)
+        ringValue = IntArray(knobSlots)
+        colorValue = IntArray(knobSlots)
+        valueStamp = IntArray(knobSlots)
+    }
+
     val isHealthy: Boolean get() = sink.isHealthy
 
     /**
@@ -54,25 +75,40 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
      */
     fun update(lights: List<KnobLight?>, activeBank: Int? = null) {
         if (targets.isEmpty()) return
-        val active = targets.filter { activeBank == null || it.bank == activeBank }
+        for (i in scratchLights.indices) scratchLights[i] = lights.getOrNull(i)
+        update(scratchLights, activeBank)
+    }
+
+    /** As [update] for a reusable buffer (index = knob; knobs past its end count as null). Allocation-free. */
+    fun update(lights: Array<KnobLight?>, activeBank: Int? = null) {
+        if (targets.isEmpty()) return
+        val active = if (activeBank == null) allTargets else targetsByBank.getOrNull(activeBank) ?: return
 
         val bankChanged = hasUpdated && activeBank != lastActiveBank
         hasUpdated = true
         lastActiveBank = activeBank
-        if (bankChanged) active.forEach { it.forget() }
+        if (bankChanged) for (t in active) t.forget()
 
-        for (t in active) send(t, lights.getOrNull(t.knob))
+        stamp++
+        for (t in active) send(t, lights)
     }
 
     /** Sends [t]'s ring and LED, on the encoder's own (per-bank) CC numbers, if they changed. */
-    private fun send(t: Target, light: KnobLight?) {
-        val ring = ((light?.value ?: 0f).coerceIn(0f, 1f) * 127f).roundToInt()
+    private fun send(t: Target, lights: Array<KnobLight?>) {
+        val knob = t.knob
+        if (valueStamp[knob] != stamp) {
+            valueStamp[knob] = stamp
+            val light = if (knob < lights.size) lights[knob] else null
+            ringValue[knob] = ((light?.value ?: 0f).coerceIn(0f, 1f) * 127f).roundToInt()
+            colorValue[knob] = if (light == null || !light.lit) wheel.off else wheel.valueFor(light.r, light.g, light.b)
+        }
+        val ring = ringValue[knob]
         if (ring != t.lastRing) {
             t.lastRing = ring
             sink.sendCc(t.ringChannel, t.ringCc, ring)
         }
         val colorChannel = t.colorChannel ?: return
-        val color = if (light == null || !light.lit) wheel.off else wheel.valueFor(light.r, light.g, light.b)
+        val color = colorValue[knob]
         if (color != t.lastColor) {
             t.lastColor = color
             sink.sendCc(colorChannel, t.colorCc, color)
@@ -81,7 +117,7 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
 
     /** Forgets what was sent, so the next [update] rewrites every ring and LED (new connection, device reset). */
     fun resync() {
-        targets.forEach { it.forget() }
+        for (t in allTargets) t.forget()
     }
 
     fun close() = sink.close()

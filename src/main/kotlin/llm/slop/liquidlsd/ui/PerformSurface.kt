@@ -49,12 +49,35 @@ internal object PerformPages {
      * Resolves the page the way [PerformanceMatrixPanel] draws it: the rows [PerfRows.visibleRowsForPage]
      * returns (the page's four rows, or the open module's row in Deep Edit), each through [PerfKnobResolver].
      */
-    fun resolve(pageId: String, ctx: PerformanceUiContext, parametersState: ParametersState, mixer: Mixer): PerformPage {
+    fun resolve(
+        pageId: String,
+        ctx: PerformanceUiContext,
+        parametersState: ParametersState,
+        mixer: Mixer,
+        rowsCache: PerfRows.RowsCache? = null
+    ): PerformPage {
+        val knobs = arrayOfNulls<PageKnob>(KnobCommands.KNOB_COUNT)
+        resolveInto(pageId, ctx, parametersState, mixer, rowsCache, knobs)
+        return PerformPage(knobs.toList())
+    }
+
+    /** [resolve] into a caller-owned [knobs] array of [KnobCommands.KNOB_COUNT] (cleared first); rows come from [rowsCache] when given. */
+    fun resolveInto(
+        pageId: String,
+        ctx: PerformanceUiContext,
+        parametersState: ParametersState,
+        mixer: Mixer,
+        rowsCache: PerfRows.RowsCache?,
+        knobs: Array<PageKnob?>
+    ) {
+        java.util.Arrays.fill(knobs, null)
         val pages = PerfPageStore.default.all()
         val page = pages.firstOrNull { it.id == pageId } ?: pages.first()
-        val rows = PerfRows.visibleRowsForPage(page, ctx, parametersState, { it }, pages)
-        val knobs = arrayOfNulls<PageKnob>(KnobCommands.KNOB_COUNT)
-        for ((rowIdx, row) in rows.take(KnobCommands.KNOB_COUNT / COLS).withIndex()) {
+        val rows = if (rowsCache != null) rowsCache.rows(page, ctx, parametersState, IDENTITY, pages)
+        else PerfRows.visibleRowsForPage(page, ctx, parametersState, IDENTITY, pages)
+        val rowCount = minOf(rows.size, KnobCommands.KNOB_COUNT / COLS)
+        for (rowIdx in 0 until rowCount) {
+            val row = rows[rowIdx]
             val bank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
             val isFxBank = row.bankId in FxMacroSync.FX_BANK_IDS
             val chain = if (isFxBank && row.hasExtraHeader) ctx.resolveFxChain(mixer, row.bankId) else null
@@ -62,8 +85,9 @@ internal object PerformPages {
                 knobs[rowIdx * COLS + spec.col] = PageKnob(row.bankId, spec, ledColor(row))
             }
         }
-        return PerformPage(knobs.toList())
     }
+
+    private val IDENTITY: (String) -> String = { it }
 }
 
 /**
@@ -77,8 +101,17 @@ internal class PerformSurface(
     private val mixer: Mixer
 ) : KnobSurface, KnobLightSource {
 
-    private fun knob(index: Int): PageKnob? =
-        PerformPages.resolve(theme.performancePageId, ctx, parametersState, mixer).knobs.getOrNull(index)
+    private val rowsCache = PerfRows.RowsCache()
+    private val knobBuffer = arrayOfNulls<PageKnob>(KnobCommands.KNOB_COUNT)
+    private val lightBuffer = ArrayList<KnobLight?>(KnobCommands.KNOB_COUNT)
+
+    /** Fresh specs every call (chain state is live), but the page's rows come from the cache. Callers run on one thread at a time. */
+    @Synchronized
+    private fun knob(index: Int): PageKnob? {
+        if (index !in knobBuffer.indices) return null
+        PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
+        return knobBuffer[index]
+    }
 
     override fun turn(knob: Int, delta: Float) {
         lastTouchedKnob = knob
@@ -120,10 +153,16 @@ internal class PerformSurface(
      * Ring = the knob's value; LED = its row's accent colour, dark where nothing is there to
      * control (an empty or bypassed FX slot, a blank parameter page position).
      */
-    override fun knobLights(): List<KnobLight?> =
-        PerformPages.resolve(theme.performancePageId, ctx, parametersState, mixer).knobs.map { target ->
-            target?.let { KnobLight(it.control.value, it.accent[0], it.accent[1], it.accent[2], lit = isLit(it)) }
+    @Synchronized
+    override fun knobLights(): List<KnobLight?> {
+        PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
+        // The returned list is reused on the next poll; the poller reads it before polling again.
+        lightBuffer.clear()
+        for (target in knobBuffer) {
+            lightBuffer.add(target?.let { KnobLight(it.control.value, it.accent[0], it.accent[1], it.accent[2], lit = isLit(it)) })
         }
+        return lightBuffer
+    }
 
     private fun isLit(target: PageKnob): Boolean = when (val under = target.spec.under) {
         is UnderKnob.SlotCell -> FxMacroSync.chainFor(target.bankId, mixer)?.slots?.getOrNull(under.slotIndex)?.enabled == true

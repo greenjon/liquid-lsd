@@ -33,10 +33,43 @@ object MidiEngine {
     private val noteValues = AtomicIntegerArray(16 * 128)
     private val pitchBendValues = AtomicIntegerArray(16) // 1 per channel
 
-    // Thread-safe queue to pass typed MIDI events to the main render thread
-    val receivedEvents = ConcurrentLinkedQueue<MidiEvent>()
-    // Maintained for backward compatibility
-    val receivedCcEvents = ConcurrentLinkedQueue<Pair<Int, Int>>()
+    /** Most events held for the render thread; beyond this the newest are dropped (and counted). */
+    const val MAX_QUEUED_EVENTS = 4096
+
+    // Thread-safe queue to pass typed MIDI events to the main render thread. Bounded by
+    // MAX_QUEUED_EVENTS so a stalled render thread can't grow memory without limit.
+    private val receivedEvents = ConcurrentLinkedQueue<MidiEvent>()
+    private val queuedCount = java.util.concurrent.atomic.AtomicInteger(0)
+    private val droppedCount = java.util.concurrent.atomic.AtomicLong(0)
+
+    /** Events discarded because the event queue was full. */
+    val droppedEventCount: Long get() = droppedCount.get()
+
+    /**
+     * Queues [event] for the render thread, or drops it (drop-newest) and counts it if the queue is
+     * full. Always use [pollEvent] to take events so the size count stays right.
+     */
+    fun enqueueEvent(event: MidiEvent): Boolean {
+        if (queuedCount.incrementAndGet() > MAX_QUEUED_EVENTS) {
+            queuedCount.decrementAndGet()
+            if (droppedCount.getAndIncrement() == 0L) logger.warn { "MIDI event queue full ($MAX_QUEUED_EVENTS); dropping new events until it drains" }
+            return false
+        }
+        receivedEvents.offer(event)
+        return true
+    }
+
+    /** Takes the oldest queued event, or null if none. */
+    fun pollEvent(): MidiEvent? {
+        val event = receivedEvents.poll() ?: return null
+        queuedCount.decrementAndGet()
+        return event
+    }
+
+    /** Discards every queued event. */
+    fun clearEvents() {
+        while (pollEvent() != null) { /* drain */ }
+    }
 
     // Thread-safe circular buffer for live monitoring / sniffer UI
     private const val MAX_RECENT_EVENTS = 32
@@ -220,8 +253,7 @@ object MidiEngine {
             }
             openDevices.clear()
         }
-        receivedEvents.clear()
-        receivedCcEvents.clear()
+        clearEvents()
         synchronized(recentEventsLock) {
             recentEventsList.clear()
         }
@@ -242,8 +274,7 @@ object MidiEngine {
                     ccValues.set(idx, normalizedValue.toBits())
 
                     val event = MidiEvent(channel, MidiMessageType.CC, cc, rawVal, normalizedValue, deviceId = deviceId)
-                    receivedEvents.offer(event)
-                    receivedCcEvents.offer(channel to cc)
+                    enqueueEvent(event)
                     recordRecentEvent(event)
                 }
                 ShortMessage.NOTE_ON -> {
@@ -255,7 +286,7 @@ object MidiEngine {
                     noteValues.set(idx, normalizedValue.toBits())
 
                     val event = MidiEvent(channel, MidiMessageType.NOTE, note, velocity, normalizedValue, deviceId = deviceId)
-                    receivedEvents.offer(event)
+                    enqueueEvent(event)
                     recordRecentEvent(event)
                 }
                 ShortMessage.NOTE_OFF -> {
@@ -266,7 +297,7 @@ object MidiEngine {
                     noteValues.set(idx, 0.0f.toBits())
 
                     val event = MidiEvent(channel, MidiMessageType.NOTE, note, 0, 0.0f, deviceId = deviceId)
-                    receivedEvents.offer(event)
+                    enqueueEvent(event)
                     recordRecentEvent(event)
                 }
                 ShortMessage.PITCH_BEND -> {
@@ -278,7 +309,7 @@ object MidiEngine {
                     pitchBendValues.set(channel, normalizedValue.toBits())
 
                     val event = MidiEvent(channel, MidiMessageType.PITCH_BEND, 0, raw, normalizedValue, deviceId = deviceId)
-                    receivedEvents.offer(event)
+                    enqueueEvent(event)
                     recordRecentEvent(event)
                 }
             }

@@ -252,4 +252,46 @@ class ControllerRuntimeTest {
         manager.reset()
         assertNull(manager.runtimeFor("Midi Fighter Twister [hw:2,0,0]"))
     }
+
+    @Test
+    fun resetClearsHeldKnobSwitchesAndModifiers() {
+        val store = ControllerProfileStore(createTempDirectory("controllers").toFile())
+        val manager = ControllerManager(registry, store)
+        fun cc(channel: Int, cc: Int, v: Int) = MidiEvent(channel, MidiMessageType.CC, cc, v, v / 127f, timestampMs = 1, deviceId = "Midi Fighter Twister")
+
+        manager.handle(cc(1, 3, 127), ctx)      // knob 3 switch down, never released
+        manager.handle(cc(3, 10, 127), ctx)     // shift down
+        manager.reset()
+        val fresh = manager.run { handle(cc(1, 3, 127), ctx); runtimeFor("Midi Fighter Twister") }
+        assertNotNull(fresh)
+        surface.calls.clear()
+        // A turn on knob 3 is a normal (not fine) turn: the stale hold was dropped.
+        registry.execute("knob.3", CommandInput.Delta(0.5f), ctx)
+        manager.handle(cc(1, 3, 0), ctx)        // release the new press
+        assertEquals(0.5f, surface.turns.last().second, 1e-6f).also { }
+    }
+
+    @Test
+    fun clearHeldStateLetsATriggerFireAgainAfterALostRelease() {
+        var fired = 0
+        val r = CommandRegistry()
+        r.register(Command("t", CommandKind.TRIGGER, "x", "x") { _, _ -> fired++ })
+        r.execute("t", CommandInput.Press.DOWN, ctx)
+        r.execute("t", CommandInput.Press.DOWN, ctx)
+        assertEquals(1, fired)
+        r.clearHeldState()
+        r.execute("t", CommandInput.Press.DOWN, ctx)
+        assertEquals(2, fired)
+    }
+
+    @Test
+    fun runtimeClearHeldStateDropsModifiersAndPendingPresses() {
+        side(10, true)                         // shift held
+        switch(1, true)                        // press bound while shifted -> knob.1.press_alt
+        runtime.clearHeldState()
+        registry.clearHeldState()
+        surface.calls.clear()
+        switch(1, true); switch(1, false)      // no shift now: plain tap
+        assertEquals(listOf("primary 1"), surface.calls)
+    }
 }

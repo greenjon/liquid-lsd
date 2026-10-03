@@ -24,6 +24,7 @@ class ControllerManager(
     private val lastOpenAttemptMs = HashMap<String, Long>()
     private var lastScanMs = 0L
     private var hasScanned = false
+    private val lightBuffer = arrayOfNulls<KnobLight>(KnobCommands.KNOB_COUNT)
 
     /** Handles [event] via its device's profile; false if the device has no profile or the profile ignores the input. */
     fun handle(event: MidiEvent, ctx: CommandContext): Boolean {
@@ -48,8 +49,8 @@ class ControllerManager(
             scanDevices(nowMs)
         }
         if (feedbacks.isEmpty()) return
-        val lights = source.knobLights()
-        for ((name, feedback) in feedbacks) feedback.update(lights, runtimes[name]?.activeBank)
+        source.fillKnobLights(lightBuffer)
+        for ((name, feedback) in feedbacks) feedback.update(lightBuffer, runtimes[name]?.activeBank)
     }
 
     private fun scanDevices(nowMs: Long) {
@@ -57,9 +58,10 @@ class ControllerManager(
         val gone = feedbacks.filter { (name, fb) -> name !in connected || !fb.isHealthy }.keys.toList()
         for (name in gone) {
             feedbacks.remove(name)?.close()
-            runtimes.remove(name)   // a replugged device may be on any bank, with nothing held
+            runtimes.remove(name)?.clearHeldState()   // a replugged device may be on any bank, with nothing held
             lastOpenAttemptMs.remove(name)
         }
+        if (gone.isNotEmpty()) registry.clearHeldState()   // a button held on the lost device will never send its release
         for (name in connected) {
             if (name in feedbacks) continue
             val compiled = store.matchFor(name) ?: continue
@@ -86,7 +88,9 @@ class ControllerManager(
 
     /** Forgets all runtimes and feedback (e.g. after profiles are reloaded), so held state and bank knowledge start fresh. */
     fun reset() {
+        runtimes.values.forEach { it?.clearHeldState() }
         runtimes.clear()
+        registry.clearHeldState()
         feedbacks.values.forEach { it.close() }
         feedbacks.clear()
         lastOpenAttemptMs.clear()

@@ -141,6 +141,32 @@ class ControllerProfileTest {
     }
 
     @Test
+    fun maskLookupMatchesTheReferenceSubsetSearch() {
+        val c = compile(modifierProfile)
+        val global = mapOf("b.1" to "plain.1", "b.2" to "plain.2", "shift+b.1" to "shifted.1", "alt+shift+b.1" to "both.1")
+        val perBank = mapOf(2 to mapOf("b.1" to "bank2.1", "shift+b.1" to "bank2.shifted"))
+        fun reference(inputId: String, held: Set<String>, bank: Int?): String? {
+            val sorted = held.sorted()
+            val subsets = (0 until (1 shl sorted.size)).map { m -> sorted.filterIndexed { i, _ -> m and (1 shl i) != 0 } }
+                .sortedByDescending { it.size }
+            for (mods in subsets) {
+                val key = (mods + inputId).joinToString("+")
+                if (bank != null) perBank[bank + 1]?.get(key)?.let { return it }
+                global[key]?.let { return it }
+            }
+            return null
+        }
+        for (held in listOf(emptySet(), setOf("shift"), setOf("alt"), setOf("shift", "alt")))
+            for (bank in listOf(null, 0, 1))
+                for (input in listOf("b.1", "b.2", "b.3")) {
+                    assertEquals(reference(input, held, bank), c.bindingFor(input, held, bank), "$input $held bank=$bank")
+                    var mask = 0
+                    for (m in held) mask = mask or c.modifierBit(m)
+                    assertEquals(reference(input, held, bank), c.bindingForMask(input, mask, bank ?: -1))
+                }
+    }
+
+    @Test
     fun bankBindingsOverrideGlobalOnesWithTheSameModifiers() {
         val c = compile(modifierProfile)
         assertEquals("plain.1", c.bindingFor("b.1", bank = 0))

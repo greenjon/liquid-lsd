@@ -167,7 +167,7 @@ class MidiMappingManagerModulatorTest {
 
         val mixer = mockMixerWithParams()
         val event = MidiEvent(channel = 1, type = MidiMessageType.CC, index = 44, rawValue = 64, normalizedValue = 64f / 127f)
-        MidiEngine.receivedEvents.offer(event)
+        MidiEngine.enqueueEvent(event)
 
         MidiMappingManager.processGlobalMidiEvents(
             midiEnabled = true,

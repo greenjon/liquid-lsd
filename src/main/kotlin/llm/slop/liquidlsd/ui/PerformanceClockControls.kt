@@ -15,6 +15,30 @@ import llm.slop.liquidlsd.link.AbletonLinkEngine
  */
 internal object PerformanceClockControls {
 
+    // Per-frame strings/colors are precomputed or cached by value (the render path must not allocate).
+    private val SOURCES = arrayOf(ClockSource.MANUAL, ClockSource.AUDIO_TRACKER)
+    private val SOURCE_LABELS = arrayOf("MAN", "AUDIO")
+    private val SOURCE_IDS = Array(SOURCES.size) { "${SOURCE_LABELS[it]}##perf_clock_src_${SOURCES[it].name}" }
+    private val SOURCE_TIPS = Array(SOURCES.size) { "Clock source: ${SOURCES[it].displayName}." }
+    private val BPM_TIPS = Array(ClockSource.values().size) {
+        "Current tempo (${ClockSource.values()[it].displayName}). Click to open Tempo & Sync preferences."
+    }
+
+    private val LINK_NO_PEERS_INK = TangoPalette.inkFor(TangoPalette.LINK_NO_PEERS)
+    private val TAP_FLASH_INK = TangoPalette.inkFor(TangoPalette.TAP_FLASH)
+    private val TAP_COUNTING_INK = TangoPalette.inkFor(TangoPalette.TAP_COUNTING)
+    private val TAP_IDLE_INK = TangoPalette.inkFor(TangoPalette.ACTIVE_BLUE)
+
+    private var linkPeers = -1
+    private var linkLabel = ""
+    private var linkTip = ""
+    private var bpmTenths = Int.MIN_VALUE
+    private var bpmLabel = ""
+    private var tapCountShown = -1
+    private var tapLabel = "TAP##perf_clock_tap"
+    private var tapMapping: Any? = null
+    private var tapTip = ""
+
     fun draw(
         session: SessionContext,
         startX: Float,
@@ -32,15 +56,16 @@ internal object PerformanceClockControls {
 
         // 1. Clock source pills [MAN] [AUDIO]
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            for ((source, label) in listOf(ClockSource.MANUAL to "MAN", ClockSource.AUDIO_TRACKER to "AUDIO")) {
+            for (i in SOURCES.indices) {
+                val source = SOURCES[i]
                 val isActive = currentClock == source
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isActive) TangoPalette.u32(TangoPalette.ACTIVE_BLUE) else TangoPalette.CLOCK_IDLE_BG.u32())
-                if (ImGui.button("$label##perf_clock_src_${source.name}", 50f, headerH)) {
+                if (ImGui.button(SOURCE_IDS[i], 50f, headerH)) {
                     audioEngine.clockSource = source
                     AppPreferencesStore.savePreferences()
                 }
                 ImGui.popStyleColor()
-                itemTooltip("Clock source: ${source.displayName}.")
+                itemTooltip(SOURCE_TIPS[i])
                 ImGui.sameLine(0f, 2f)
             }
         }
@@ -52,30 +77,39 @@ internal object PerformanceClockControls {
             if (peers > 0) {
                 ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.SYNC.normal))
             } else {
-                val linkInk = TangoPalette.inkFor(TangoPalette.LINK_NO_PEERS)
+                val linkInk = LINK_NO_PEERS_INK
                 ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.LINK_NO_PEERS))
                 ImGui.pushStyleColor(ImGuiCol.Text, linkInk[0], linkInk[1], linkInk[2], 1.0f)
             }
+            if (peers != linkPeers) {
+                linkPeers = peers
+                linkLabel = "LINK $peers##perf_clock_link"
+                linkTip = "Ableton Link: $peers peer(s). Click to open Tempo & Sync preferences."
+            }
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                if (ImGui.button("LINK $peers##perf_clock_link", 56f, headerH)) {
+                if (ImGui.button(linkLabel, 56f, headerH)) {
                     PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
                 }
             }
             ImGui.popStyleColor(if (peers > 0) 1 else 2)
-            itemTooltip("Ableton Link: $peers peer(s). Click to open Tempo & Sync preferences.")
+            itemTooltip(linkTip)
         }
 
         // 3. BPM readout -- click opens Tempo & Sync preferences.
         ImGui.sameLine(0f, gap * 2f)
-        val bpmText = "%.1f".format(audioEngine.getEstimatedBpm())
+        val tenths = Math.round(audioEngine.getEstimatedBpm() * 10f)
+        if (tenths != bpmTenths) {
+            bpmTenths = tenths
+            bpmLabel = "${"%.1f".format(tenths / 10.0)} BPM##perf_clock_bpm"
+        }
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
             ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.PILL_BG.u32())
-            if (ImGui.button("$bpmText BPM##perf_clock_bpm", 96f, headerH)) {
+            if (ImGui.button(bpmLabel, 96f, headerH)) {
                 PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
             }
             ImGui.popStyleColor()
         }
-        itemTooltip("Current tempo (${currentClock.displayName}). Click to open Tempo & Sync preferences.")
+        itemTooltip(BPM_TIPS[currentClock.ordinal])
 
         // 4. 4-beat bar dots
         ImGui.sameLine(0f, gap * 2f)
@@ -149,25 +183,31 @@ internal object PerformanceClockControls {
         val tapKey = "Global/tapTempo"
         val isMidiLearnTap = session.parametersState.isMidiTargetLearning(tapKey)
         val tapMapping = session.midiMappingManager.getMappingForParameter(tapKey)
-        val tapMidiText = tapMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
-
-        val label = if (tapCount > 0) "TAP [$tapCount]" else "TAP"
+        if (tapMapping != this.tapMapping || tapTip.isEmpty()) {
+            this.tapMapping = tapMapping
+            val tapMidiText = tapMapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
+            tapTip = "Tap tempo (hotkey: T).$tapMidiText In Audio Tracker mode, nudges the detected tempo and phase.\nRight-click for MIDI Learn."
+        }
+        if (tapCount != tapCountShown) {
+            tapCountShown = tapCount
+            tapLabel = (if (tapCount > 0) "TAP [$tapCount]" else "TAP") + "##perf_clock_tap"
+        }
         val btnCol = when {
             tapFlash > 0.05f -> TangoPalette.u32(TangoPalette.TAP_FLASH)
             tapCount > 0 -> TangoPalette.u32(TangoPalette.TAP_COUNTING, 0.9f)
             else -> TangoPalette.u32(TangoPalette.ACTIVE_BLUE, 0.9f)
         }
         val tapInk = when {
-            tapFlash > 0.05f -> TangoPalette.inkFor(TangoPalette.TAP_FLASH)
-            tapCount > 0 -> TangoPalette.inkFor(TangoPalette.TAP_COUNTING)
-            else -> TangoPalette.inkFor(TangoPalette.ACTIVE_BLUE)
+            tapFlash > 0.05f -> TAP_FLASH_INK
+            tapCount > 0 -> TAP_COUNTING_INK
+            else -> TAP_IDLE_INK
         }
         val tapX = ImGui.getCursorScreenPosX()
         val tapY = ImGui.getCursorScreenPosY()
         val tapW = 64f
         ImGui.pushStyleColor(ImGuiCol.Button, btnCol)
         ImGui.pushStyleColor(ImGuiCol.Text, tapInk[0], tapInk[1], tapInk[2], 1.0f)
-        if (ImGui.button("$label##perf_clock_tap", tapW, headerH)) {
+        if (ImGui.button(tapLabel, tapW, headerH)) {
             tapController.tap()
         }
         ImGui.popStyleColor(2)
@@ -198,6 +238,6 @@ internal object PerformanceClockControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip("Tap tempo (hotkey: T).$tapMidiText In Audio Tracker mode, nudges the detected tempo and phase.\nRight-click for MIDI Learn.")
+        itemTooltip(tapTip)
     }
 }
