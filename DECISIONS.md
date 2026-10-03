@@ -2519,3 +2519,14 @@
   - Matches the multi-select filter pattern already used elsewhere in the library UI (e.g. the FX browser's tier checkboxes), instead of a bespoke single-select pill row.
 
 
+
+## Robust User File Loading and Saving for Controller Profiles and Perform Pages (`control/UserJsonFiles.kt`, `ControllerProfileStore.kt`, `PerfPageStore.kt`)
+
+- **Decision**: Extract the shared file-IO of the two user-file stores into one internal helper in `control/` (no `ui/` imports there):
+  - **Safe scan**: reading is inside the same guard as parsing, so any IO or parse failure on a user file becomes a `Rejected` entry and never throws out of `all()`/`rejected()`/`snapshot()`.
+  - **Duplicate ids**: the first file by name wins; later files with the same id are rejected with a "duplicate id" reason.
+  - **Atomic write**: write to a `.tmp` sibling (not matched by the `*.json` scan) then `Files.move` with `ATOMIC_MOVE`, falling back to `REPLACE_EXISTING`; the temp file is deleted on failure.
+  - `ControllerProfileStore.saveUser` needs no extra id check: `ControllerProfile.compile()` already enforces `[a-z0-9][a-z0-9_-]*`. Public APIs are unchanged; no generic-store rewrite.
+- **Rationale**:
+  - `Perform` tab strip reads `PerfPageStore` every frame and `ControllerManager.handle` reads the profile store in the MIDI loop, so a throw there was a crash path for a bad file.
+  - `writeText` directly on the target truncates a user's file on a crash or full disk; silent id overrides made results depend on scan order.

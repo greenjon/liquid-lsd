@@ -190,4 +190,45 @@ class PerfPageStoreTest {
         assertEquals(PerfPageStore.Source.BUILT_IN, store.sourceOf("ab"))
         assertEquals(ab.rows, store.get("my-ab")!!.rows)
     }
+
+    private val goodPage = """{"id":"%s","name":"N","rows":[{"row":"master"},{"row":"trans"},{"row":"wetdry"},{"row":"global"}]}"""
+
+    @Test
+    fun unreadableUserFileIsRejectedWithoutThrowing() {
+        val dir = createTempDirectory().toFile()
+        File(dir, "bad.json").mkdir()
+        val s = store(dir)
+        assertEquals(listOf("decks", "master", "ab", "bgpv", "mixer"), s.all().map { it.id })
+        assertEquals(listOf("bad.json"), s.rejected().map { it.file.name })
+    }
+
+    @Test
+    fun duplicateIdsFirstFileByNameWinsAndLaterIsRejected() {
+        val dir = createTempDirectory().toFile()
+        File(dir, "b.json").writeText(goodPage.format("dup").replace("\"N\"", "\"SECOND\""))
+        File(dir, "a.json").writeText(goodPage.format("dup").replace("\"N\"", "\"FIRST\""))
+        val s = store(dir)
+        assertEquals("FIRST", s.get("dup")!!.name)
+        val rej = s.rejected().single()
+        assertEquals("b.json", rej.file.name)
+        assertTrue(rej.problems.single().contains("duplicate id"))
+    }
+
+    @Test
+    fun saveReplacesContentAtomicallyAndLeavesNoTempFile() {
+        val dir = createTempDirectory().toFile()
+        val s = store(dir)
+        assertEquals(emptyList(), s.saveUser(PerfPageDef("mine", "First", rows = rows)))
+        assertEquals(emptyList(), s.saveUser(PerfPageDef("mine", "Second", rows = rows)))
+        assertEquals("Second", s.get("mine")!!.name)
+        assertEquals(listOf("mine.json"), dir.list()!!.toList())
+    }
+
+    @Test
+    fun saveUserRejectsUnsafeIds() {
+        val dir = createTempDirectory().toFile()
+        val s = store(dir)
+        for (id in listOf("../evil", "a/b", "", "Up", "-x")) assertTrue(s.saveUser(PerfPageDef(id, "X", rows = rows)).isNotEmpty(), id)
+        assertEquals(0, dir.list()!!.size)
+    }
 }

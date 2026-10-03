@@ -92,8 +92,7 @@ class ControllerProfileStore(
     }
 
     private fun write(target: File, profile: ControllerProfile): String? = try {
-        userDir.mkdirs()
-        target.writeText(json.encodeToString(ControllerProfile.serializer(), profile))
+        UserJsonFiles.writeAtomic(target, json.encodeToString(ControllerProfile.serializer(), profile))
         null
     } catch (e: Exception) {
         logger.error(e) { "Could not write controller profile ${target.path}" }
@@ -113,19 +112,10 @@ class ControllerProfileStore(
             }
             parse(text, "built-in $name").first?.let { builtIn[it.profile.id] = it }
         }
-        val user = LinkedHashMap<String, CompiledController>()
-        val userFileById = LinkedHashMap<String, File>()
-        val rejected = ArrayList<Rejected>()
-        val userFiles = userDir.listFiles { _, n -> n.endsWith(".json") }?.sortedBy { it.name } ?: emptyList()
-        for (file in userFiles) {
-            val (compiled, problems) = parse(file.readText(), file.path)
-            if (compiled != null) {
-                user[compiled.profile.id] = compiled
-                userFileById[compiled.profile.id] = file
-            } else {
-                rejected += Rejected(file, problems)
-            }
-        }
+        val scan = UserJsonFiles.scan<CompiledController>(userDir, { it.profile.id }) { text, src -> parse(text, src) }
+        val user = scan.loaded.associate { it.id to it.value }
+        val userFileById = scan.loaded.associate { it.id to it.file }
+        val rejected = scan.rejected.map { Rejected(it.first, it.second) }
         // User profiles first, so a user's own profile wins when two match the same device.
         val profiles = user.values + builtIn.values.filter { it.profile.id !in user }
         return Snapshot(profiles, builtIn, userFileById, rejected)

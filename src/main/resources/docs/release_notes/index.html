@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#user-profile-and-perform-page-files-are-safer-controluserjsonfileskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User Profile and Perform Page Files Are Safer (control/UserJsonFiles.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-documentation-rewritten-around-a-first-walkthrough-docsuser_guideperformance_controlsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4877,6 +4888,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#user-profile-and-perform-page-files-are-safer-controluserjsonfileskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User Profile and Perform Page Files Are Safer (control/UserJsonFiles.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-documentation-rewritten-around-a-first-walkthrough-docsuser_guideperformance_controlsmd" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8521,6 +8543,10 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="user-profile-and-perform-page-files-are-safer-controluserjsonfileskt">User Profile and Perform Page Files Are Safer (<code>control/UserJsonFiles.kt</code>)</h3>
+<ul>
+<li>An unreadable file in <code>library/controllers/</code> or <code>library/perform_pages/</code> (permissions, a folder named <code>x.json</code>) is now listed as rejected instead of causing errors. Two files with the same id no longer override each other silently: the first by file name is used and the other is rejected as a duplicate. Saving writes to a temporary file and moves it into place, so a crash or full disk can no longer truncate your profile or page.</li>
+</ul>
 <h3 id="twister-documentation-rewritten-around-a-first-walkthrough-docsuser_guideperformance_controlsmd">Twister Documentation Rewritten Around a First Walkthrough (<code>docs/user_guide/performance_controls.md</code>)</h3>
 <ul>
 <li>The Midi Fighter Twister section is now ordered for a new user: Utility setup, what each bank and knob controls (with a table), gestures, a step-by-step "load an effect onto Deck A with only the Twister" walkthrough, a side-button table per view (Perform, picker, Library), lights, troubleshooting, and your own profiles.</li>

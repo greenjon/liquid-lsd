@@ -319,6 +319,47 @@ class ControllerProfileTest {
     }
 
     @Test
+    fun unreadableUserFileIsRejectedWithoutThrowing() {
+        val dir = emptyUserDir()
+        File(dir, "bad.json").mkdir()
+        val store = ControllerProfileStore(dir)
+        assertEquals(listOf("midi-fighter-twister"), store.all().map { it.profile.id })
+        assertEquals(listOf("bad.json"), store.rejected().map { it.file.name })
+    }
+
+    @Test
+    fun duplicateIdsFirstFileByNameWinsAndLaterIsRejected() {
+        val dir = emptyUserDir()
+        File(dir, "b.json").writeText("""{"id":"dup","name":"SECOND"}""")
+        File(dir, "a.json").writeText("""{"id":"dup","name":"FIRST"}""")
+        val store = ControllerProfileStore(dir)
+        assertEquals("FIRST", store.get("dup")?.profile?.name)
+        val rej = store.rejected().single()
+        assertEquals("b.json", rej.file.name)
+        assertTrue(rej.problems.single().contains("duplicate id"))
+        assertTrue(store.deleteUser("dup"))
+        assertTrue(File(dir, "b.json").exists())
+    }
+
+    @Test
+    fun saveReplacesContentAtomicallyAndLeavesNoTempFile() {
+        val dir = emptyUserDir()
+        val store = ControllerProfileStore(dir)
+        assertEquals(emptyList(), store.saveUser(ControllerProfile(id = "mine", name = "First")))
+        assertEquals(emptyList(), store.saveUser(ControllerProfile(id = "mine", name = "Second")))
+        assertEquals("Second", store.get("mine")?.profile?.name)
+        assertEquals(listOf("mine.json"), dir.list()!!.toList())
+    }
+
+    @Test
+    fun saveUserRejectsUnsafeIds() {
+        val dir = emptyUserDir()
+        val store = ControllerProfileStore(dir)
+        for (id in listOf("../evil", "a/b", "", "Up", "-x")) assertTrue(store.saveUser(ControllerProfile(id = id)).isNotEmpty(), id)
+        assertEquals(0, dir.list()!!.size)
+    }
+
+    @Test
     fun reloadPicksUpHandEditsAndRejectedFilesAreReported() {
         val dir = emptyUserDir()
         val store = ControllerProfileStore(dir)

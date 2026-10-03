@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### User Profile and Perform Page Files Are Safer (`control/UserJsonFiles.kt`)
+- An unreadable file in `library/controllers/` or `library/perform_pages/` (permissions, a folder named `x.json`) is now listed as rejected instead of causing errors. Two files with the same id no longer override each other silently: the first by file name is used and the other is rejected as a duplicate. Saving writes to a temporary file and moves it into place, so a crash or full disk can no longer truncate your profile or page.
+
 ### Twister Documentation Rewritten Around a First Walkthrough (`docs/user_guide/performance_controls.md`)
 - The Midi Fighter Twister section is now ordered for a new user: Utility setup, what each bank and knob controls (with a table), gestures, a step-by-step "load an effect onto Deck A with only the Twister" walkthrough, a side-button table per view (Perform, picker, Library), lights, troubleshooting, and your own profiles.
 

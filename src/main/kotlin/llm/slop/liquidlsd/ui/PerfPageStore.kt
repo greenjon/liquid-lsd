@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import llm.slop.liquidlsd.control.UserJsonFiles
 import mu.KotlinLogging
 import java.io.File
 
@@ -137,8 +138,7 @@ class PerfPageStore(
         else listOf("page id '$id' must be lowercase letters, digits, '_' or '-'")
 
     private fun write(target: File, page: PerfPageDef): String? = try {
-        userDir.mkdirs()
-        target.writeText(json.encodeToString(PerfPageDef.serializer(), page))
+        UserJsonFiles.writeAtomic(target, json.encodeToString(PerfPageDef.serializer(), page))
         null
     } catch (e: Exception) {
         logger.error(e) { "Could not write perform page ${target.path}" }
@@ -159,18 +159,10 @@ class PerfPageStore(
             parse(text, "built-in $name").first?.let { builtIn[it.id] = it }
         }
         val pages = LinkedHashMap<String, PerfPageDef>(builtIn)
-        val userFileById = LinkedHashMap<String, File>()
-        val rejected = ArrayList<Rejected>()
-        val userFiles = userDir.listFiles { _, n -> n.endsWith(".json") }?.sortedBy { it.name } ?: emptyList()
-        for (file in userFiles) {
-            val (page, problems) = parse(file.readText(), file.path)
-            if (page != null) {
-                pages[page.id] = page
-                userFileById[page.id] = file
-            } else {
-                rejected += Rejected(file, problems)
-            }
-        }
+        val scan = UserJsonFiles.scan<PerfPageDef>(userDir, { it.id }) { text, src -> parse(text, src) }
+        val userFileById = scan.loaded.associate { it.id to it.file }
+        for (l in scan.loaded) pages[l.id] = l.value
+        val rejected = scan.rejected.map { Rejected(it.first, it.second) }
         if (pages.isEmpty()) {
             logger.error { "No perform pages loaded; using a synthesised DECKS page" }
             val fallback = PerfPageDef("decks", "DECKS", rows = PerfRows.DECK_TAGS.map { RowPlacement("deck.$it.srcfx") })
