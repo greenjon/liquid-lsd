@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Controller Profiles Section in MIDI Controls (`ui/MidiPreferencesPanel.kt`, `control/ControllerProfileStore.kt`)
+- **New "Controller Profiles" section** in Preferences > MIDI Controls: lists every controller profile with its source (built-in, user file, user file overriding a built-in), which connected device currently uses it, and any binding that names an unknown command.
+- **Copy to User File** writes an editable copy of a built-in profile to `library/controllers/<id>.json` (it replaces the built-in); **Delete User File** removes it and the built-in is active again; **Reload Profiles** re-reads the folder after you edit a file by hand. All three apply to connected devices immediately.
+- **Broken files are shown**: a user profile that does not parse or fails validation is listed with the reasons instead of only being logged.
+- The old "Active Mapping Profile" bar is now **Learned Mappings**, since it holds learned CC mappings, not controller profiles.
+
 ### Twister Opens and Drives the SRC / FX / Transition Pickers (`ui/NavigationSurface.kt`, `ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`)
 - **Open**: in the Perform view the right-bottom side button opens the picker for the row of the knob you touched last: a deck's SRC row opens its source list, an FX row opens the slot under that knob (knob 1 opens the saved-chain list), the Transitions row opens the transition list.
 - **Browse**: while a picker is showing, **knob 1 is the cursor** (turn = move the highlight, tap = apply the highlighted row; moving never applies anything). Right-top steps the category (shift: back), shift + right-bottom clears the slot or chain, left-top closes the picker. Moving the cursor switches the list to the flat view.

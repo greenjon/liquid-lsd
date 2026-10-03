@@ -319,3 +319,6 @@ Package `llm.slop.liquidlsd.control`; tests in `src/test/kotlin/.../control/` an
 
 The picker context: `NavigationSurface.inPicker` = Edit view and `ShaderPickerPopup.isShowing` or `ChainListBrowse.isShowing` (both stamp the time of their last draw). Cursor API: `ShaderPickerPopup.moveCursor/acceptCursor/stepCategory/detach`, `ChainListBrowse.move/accept/clear`. Opening uses `PerformSurface.lastTouchedKnob` to find the row.
 
+
+### 6.8 Profile store writes and the profile UI (phase 5, slice 1)
+`ControllerProfileStore` can write: `copyBuiltInToUser(id)` (refuses when a user file with that id exists), `saveUser(profile)` (returns `compile().problems` and writes nothing when invalid), `deleteUser(id)` (locates the file by profile id). `sourceOf(id)` reports BUILT_IN / USER / USER_OVERRIDE and `rejected()` lists user files that failed to parse or validate, with the reasons. The cache is one immutable snapshot, dropped by `reload()`; after any change call `ControllerManager.reset()` so runtimes pick up the new profile. The UI is `MidiPreferencesPanel.drawControllerProfiles`. Open: in-app binding editor, learn-into-profile, see `.planning/midi-phase5-profile-ui-plan.md`.

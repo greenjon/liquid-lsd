@@ -271,4 +271,63 @@ class ControllerProfileTest {
         val store = ControllerProfileStore(File(emptyUserDir(), "does-not-exist"))
         assertFalse(store.all().isEmpty())
     }
+
+    @Test
+    fun copyBuiltInWritesUserFileAndRefusesDuplicate() {
+        val dir = emptyUserDir()
+        val store = ControllerProfileStore(dir)
+        assertEquals(ControllerProfileStore.Source.BUILT_IN, store.sourceOf("midi-fighter-twister"))
+
+        assertNull(store.copyBuiltInToUser("midi-fighter-twister"))
+        assertTrue(File(dir, "midi-fighter-twister.json").exists())
+        assertEquals(ControllerProfileStore.Source.USER_OVERRIDE, store.sourceOf("midi-fighter-twister"))
+        assertNotNull(store.copyBuiltInToUser("midi-fighter-twister"))
+        assertNotNull(store.copyBuiltInToUser("nope"))
+    }
+
+    @Test
+    fun saveUserValidatesBeforeWriting() {
+        val dir = emptyUserDir()
+        val store = ControllerProfileStore(dir)
+        val ok = ControllerProfile(id = "mine", match = listOf("Foo"))
+        assertEquals(emptyList(), store.saveUser(ok))
+        assertEquals(ControllerProfileStore.Source.USER, store.sourceOf("mine"))
+        assertEquals("mine", store.matchFor("Foo Bar")?.profile?.id)
+
+        assertTrue(store.saveUser(ControllerProfile(id = "Bad Id")).isNotEmpty())
+        assertFalse(File(dir, "Bad Id.json").exists())
+    }
+
+    @Test
+    fun deleteUserRevertsToBuiltIn() {
+        val dir = emptyUserDir()
+        val store = ControllerProfileStore(dir)
+        store.copyBuiltInToUser("midi-fighter-twister")
+        assertTrue(store.deleteUser("midi-fighter-twister"))
+        assertFalse(File(dir, "midi-fighter-twister.json").exists())
+        assertEquals(ControllerProfileStore.Source.BUILT_IN, store.sourceOf("midi-fighter-twister"))
+        assertFalse(store.deleteUser("midi-fighter-twister"))
+    }
+
+    @Test
+    fun deleteUserRemovesFileWhoseNameDiffersFromId() {
+        val dir = emptyUserDir()
+        File(dir, "whatever.json").writeText("""{"id":"mine"}""")
+        val store = ControllerProfileStore(dir)
+        assertTrue(store.deleteUser("mine"))
+        assertFalse(File(dir, "whatever.json").exists())
+    }
+
+    @Test
+    fun reloadPicksUpHandEditsAndRejectedFilesAreReported() {
+        val dir = emptyUserDir()
+        val store = ControllerProfileStore(dir)
+        assertTrue(store.rejected().isEmpty())
+        File(dir, "garbage.json").writeText("{ not json")
+        File(dir, "invalid.json").writeText("""{"id":"Bad Id"}""")
+        assertTrue(store.rejected().isEmpty()) // cached until reload
+        store.reload()
+        assertEquals(setOf("garbage.json", "invalid.json"), store.rejected().map { it.file.name }.toSet())
+        assertTrue(store.rejected().all { it.problems.isNotEmpty() })
+    }
 }

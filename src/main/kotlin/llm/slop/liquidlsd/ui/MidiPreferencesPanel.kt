@@ -6,6 +6,7 @@ import imgui.type.ImString
 import imgui.type.ImInt
 import imgui.flag.ImGuiTableFlags
 import imgui.flag.ImGuiTableColumnFlags
+import llm.slop.liquidlsd.control.ControllerProfileStore
 import llm.slop.liquidlsd.midi.MidiEngine
 import llm.slop.liquidlsd.midi.MidiMessageType
 import llm.slop.liquidlsd.midi.MidiInputType
@@ -24,6 +25,65 @@ import llm.slop.liquidlsd.midi.sanitiseProfileName
  * Rendered within the "MIDI Controls" category of [PreferencesPanel].
  */
 object MidiPreferencesPanel {
+
+    private var profileMessage: String? = null
+
+    private fun drawControllerProfiles(session: llm.slop.liquidlsd.SessionContext, deviceNames: List<String>) {
+        val store = ControllerProfileStore.default
+        if (!ImGui.collapsingHeader("${Icons.SETTINGS} Controller Profiles##controller_profiles", imgui.flag.ImGuiTreeNodeFlags.DefaultOpen)) return
+        val theme = session.uiTheme
+        theme.caption("Controller profiles map a device's knobs and buttons to commands. A device uses the first profile whose match text fits its name; your own profiles win over built-in ones.")
+        val changed = { store.reload(); session.midiMappingManager.controllers.reset() }
+
+        for (compiled in store.all()) {
+            val profile = compiled.profile
+            val source = store.sourceOf(profile.id)
+            val sourceLabel = when (source) {
+                ControllerProfileStore.Source.BUILT_IN -> "built-in"
+                ControllerProfileStore.Source.USER -> "user file"
+                ControllerProfileStore.Source.USER_OVERRIDE -> "user file (overrides built-in)"
+                null -> ""
+            }
+            ImGui.text(profile.name)
+            ImGui.sameLine()
+            theme.caption("[${profile.id}] $sourceLabel")
+            val devices = deviceNames.filter { store.matchFor(it)?.profile?.id == profile.id }
+            if (devices.isNotEmpty()) {
+                theme.captionColored(0.2f, 0.9f, 0.4f, 1.0f, "In use by: ${devices.joinToString(", ")}")
+            }
+            val unknown = compiled.unknownCommands(session.midiMappingManager.commands)
+            if (unknown.isNotEmpty()) {
+                theme.captionColored(0.9f, 0.6f, 0.2f, 1.0f, "Binds unknown commands: ${unknown.joinToString(", ")}")
+            }
+            if (source == ControllerProfileStore.Source.BUILT_IN) {
+                if (ImGui.button("${Icons.COPY} Copy to User File##copy_${profile.id}")) {
+                    profileMessage = store.copyBuiltInToUser(profile.id)?: "Copied to library/controllers/${profile.id}.json"
+                    changed()
+                }
+                itemTooltip("Writes an editable copy to library/controllers/. It replaces the built-in profile until you delete it.")
+            } else {
+                if (ImGui.button("${Icons.TRASH} Delete User File##delete_${profile.id}")) {
+                    profileMessage = if (store.deleteUser(profile.id)) "Deleted user profile ${profile.id}" else "Could not delete ${profile.id}"
+                    changed()
+                }
+                itemTooltip("Removes the user file. A built-in profile with the same id becomes active again.")
+            }
+            ImGui.spacing()
+        }
+
+        for (rejected in store.rejected()) {
+            theme.captionColored(0.95f, 0.35f, 0.3f, 1.0f, "${rejected.file.name} is not loaded:")
+            for (problem in rejected.problems) theme.captionColored(0.95f, 0.35f, 0.3f, 1.0f, "  - $problem")
+        }
+
+        if (ImGui.button("${Icons.REFRESH} Reload Profiles##reload_controller_profiles")) {
+            changed()
+            profileMessage = "Reloaded controller profiles"
+        }
+        itemTooltip("Re-reads library/controllers/*.json after you edit a file by hand.")
+        profileMessage?.let { theme.caption(it) }
+        theme.caption("Edit the JSON files in library/controllers/ with any text editor, then press Reload.")
+    }
 
     private val newProfileInput = ImString(32)
     private val filterMappingInput = ImString(64)
@@ -75,9 +135,15 @@ object MidiPreferencesPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        // 2. Profile Management Bar
+        drawControllerProfiles(session, deviceNames)
+
+        ImGui.spacing()
+        ImGui.separator()
+        ImGui.spacing()
+
+        // 2. Learned mappings (legacy per-parameter profile bar)
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("Active Mapping Profile")
+            ImGui.text("Learned Mappings")
         }
         val profiles = session.midiMappingManager.listProfiles()
         val currentIdx = ImInt(profiles.indexOf(session.uiTheme.activeMidiProfile).coerceAtLeast(0))

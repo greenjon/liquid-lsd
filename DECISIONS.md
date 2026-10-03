@@ -1,3 +1,10 @@
+## Controller Profile Section: Same-Id Copy, Hand-Edit Loop (`control/ControllerProfileStore.kt`, `ui/MidiPreferencesPanel.kt`)
+
+- **Decision**: the store gets `copyBuiltInToUser`, `saveUser` (validates first), `deleteUser` (finds the file by profile id, not by file name), `sourceOf` and `rejected()` (skipped files with their problems). Each write reloads; the UI then calls `controllers.reset()`. A copy keeps the built-in's id, so it overrides it.
+- **Rationale**: slice 1 of `.planning/midi-phase5-profile-ui-plan.md`. Overriding by id needs no new matching logic, and deleting the file is the undo.
+- **Alternatives rejected**: copying under a new id (two profiles then match the same device and user-first ordering decides silently); a per-device manual profile choice (needs a persisted setting; automatic matching is enough for now).
+- **Consequences**: editing is by hand in a text editor plus Reload; the in-app binding editor and learn-into-profile are later slices. Not hardware-tested; the UI has no automated test.
+
 ## Pickers Mark the Applied Item (`ui/ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`)
 
 - **Decision**: `ensureInline*` take an optional `applied` provider (deck source id, mixer transition id, FX slot filter id); the matching row gets a `●` prefix. The highlight stays the cursor only.

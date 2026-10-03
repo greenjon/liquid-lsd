@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#controller-profiles-section-in-midi-controls-uimidipreferencespanelkt-controlcontrollerprofilestorekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controller Profiles Section in MIDI Controls (ui/MidiPreferencesPanel.kt, control/ControllerProfileStore.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-opens-and-drives-the-src-fx-transition-pickers-uinavigationsurfacekt-shaderpickerpopupkt-performancebrowsebaykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4789,6 +4800,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#controller-profiles-section-in-midi-controls-uimidipreferencespanelkt-controlcontrollerprofilestorekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controller Profiles Section in MIDI Controls (ui/MidiPreferencesPanel.kt, control/ControllerProfileStore.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-opens-and-drives-the-src-fx-transition-pickers-uinavigationsurfacekt-shaderpickerpopupkt-performancebrowsebaykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8345,6 +8367,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="controller-profiles-section-in-midi-controls-uimidipreferencespanelkt-controlcontrollerprofilestorekt">Controller Profiles Section in MIDI Controls (<code>ui/MidiPreferencesPanel.kt</code>, <code>control/ControllerProfileStore.kt</code>)</h3>
+<ul>
+<li><strong>New "Controller Profiles" section</strong> in Preferences &gt; MIDI Controls: lists every controller profile with its source (built-in, user file, user file overriding a built-in), which connected device currently uses it, and any binding that names an unknown command.</li>
+<li><strong>Copy to User File</strong> writes an editable copy of a built-in profile to <code>library/controllers/&lt;id&gt;.json</code> (it replaces the built-in); <strong>Delete User File</strong> removes it and the built-in is active again; <strong>Reload Profiles</strong> re-reads the folder after you edit a file by hand. All three apply to connected devices immediately.</li>
+<li><strong>Broken files are shown</strong>: a user profile that does not parse or fails validation is listed with the reasons instead of only being logged.</li>
+<li>The old "Active Mapping Profile" bar is now <strong>Learned Mappings</strong>, since it holds learned CC mappings, not controller profiles.</li>
+</ul>
 <h3 id="twister-opens-and-drives-the-src-fx-transition-pickers-uinavigationsurfacekt-shaderpickerpopupkt-performancebrowsebaykt">Twister Opens and Drives the SRC / FX / Transition Pickers (<code>ui/NavigationSurface.kt</code>, <code>ShaderPickerPopup.kt</code>, <code>PerformanceBrowseBay.kt</code>)</h3>
 <ul>
 <li><strong>Open</strong>: in the Perform view the right-bottom side button opens the picker for the row of the knob you touched last: a deck's SRC row opens its source list, an FX row opens the slot under that knob (knob 1 opens the saved-chain list), the Transitions row opens the transition list.</li>

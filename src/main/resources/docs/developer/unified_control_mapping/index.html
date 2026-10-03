@@ -1388,6 +1388,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#68-profile-store-writes-and-the-profile-ui-phase-5-slice-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.8 Profile store writes and the profile UI (phase 5, slice 1)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1844,6 +1855,17 @@
     <span class="md-ellipsis">
       
         6.7 Navigation (phase 3, first slice)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#68-profile-store-writes-and-the-profile-ui-phase-5-slice-1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.8 Profile store writes and the profile UI (phase 5, slice 1)
       
     </span>
   </a>
@@ -2649,6 +2671,8 @@
 <h3 id="67-navigation-phase-3-first-slice">6.7 Navigation (phase 3, first slice)</h3>
 <p><code>NavSurface</code> (on <code>CommandContext</code>, like <code>KnobSurface</code>) gets <code>nav.button.1..3</code> / <code>.alt</code> from <code>NavCommands</code> and the knob 1 cursor from <code>KnobCommands</code> while <code>browsing</code>. The UI implementation is <code>ui/NavigationSurface.kt</code>; it dispatches on the current view (Library FULL vs Perform/Edit) and calls <code>LibraryNavigation</code> (tab, list, cursor, accept, enqueue) and <code>BackNavigation</code> (the Esc stack). See <code>.planning/midi-phase3-navigation-plan.md</code> for what is still open (pickers).</p>
 <p>The picker context: <code>NavigationSurface.inPicker</code> = Edit view and <code>ShaderPickerPopup.isShowing</code> or <code>ChainListBrowse.isShowing</code> (both stamp the time of their last draw). Cursor API: <code>ShaderPickerPopup.moveCursor/acceptCursor/stepCategory/detach</code>, <code>ChainListBrowse.move/accept/clear</code>. Opening uses <code>PerformSurface.lastTouchedKnob</code> to find the row.</p>
+<h3 id="68-profile-store-writes-and-the-profile-ui-phase-5-slice-1">6.8 Profile store writes and the profile UI (phase 5, slice 1)</h3>
+<p><code>ControllerProfileStore</code> can write: <code>copyBuiltInToUser(id)</code> (refuses when a user file with that id exists), <code>saveUser(profile)</code> (returns <code>compile().problems</code> and writes nothing when invalid), <code>deleteUser(id)</code> (locates the file by profile id). <code>sourceOf(id)</code> reports BUILT_IN / USER / USER_OVERRIDE and <code>rejected()</code> lists user files that failed to parse or validate, with the reasons. The cache is one immutable snapshot, dropped by <code>reload()</code>; after any change call <code>ControllerManager.reset()</code> so runtimes pick up the new profile. The UI is <code>MidiPreferencesPanel.drawControllerProfiles</code>. Open: in-app binding editor, learn-into-profile, see <code>.planning/midi-phase5-profile-ui-plan.md</code>.</p>
 
 
 
