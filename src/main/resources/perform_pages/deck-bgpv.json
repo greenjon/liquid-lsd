@@ -1,0 +1,19 @@
+{
+  "id": "bgpv",
+  "name": "BG/PV",
+  "tooltip": "Deck BG and Deck PV, each as a pinned SRC row over a pinned FX row (no SRC/FX toggle).\nTwister bank 2.",
+  "rows": [
+    {
+      "row": "deck.BG.src"
+    },
+    {
+      "row": "deck.BG.fx"
+    },
+    {
+      "row": "deck.PV.src"
+    },
+    {
+      "row": "deck.PV.fx"
+    }
+  ]
+}

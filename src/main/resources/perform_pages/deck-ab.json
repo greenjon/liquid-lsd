@@ -1,0 +1,19 @@
+{
+  "id": "ab",
+  "name": "A/B",
+  "tooltip": "Deck A and Deck B, each as a pinned SRC row over a pinned FX row (no SRC/FX toggle).\nTwister bank 1.",
+  "rows": [
+    {
+      "row": "deck.A.src"
+    },
+    {
+      "row": "deck.A.fx"
+    },
+    {
+      "row": "deck.B.src"
+    },
+    {
+      "row": "deck.B.fx"
+    }
+  ]
+}

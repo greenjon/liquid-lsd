@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#default-pages-and-a-16-row-twister-layout-resourcesperform_pages-resourcescontrollersmidi-fighter-twisterjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default Pages and a 16-Row Twister Layout (resources/perform_pages/, resources/controllers/midi-fighter-twister.json)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pinned-deck-and-master-rows-for-perform-pages-uiperfrowskt-performancedeckcontrolskt-performancemastercontrolskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4756,6 +4767,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#default-pages-and-a-16-row-twister-layout-resourcesperform_pages-resourcescontrollersmidi-fighter-twisterjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Default Pages and a 16-Row Twister Layout (resources/perform_pages/, resources/controllers/midi-fighter-twister.json)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pinned-deck-and-master-rows-for-perform-pages-uiperfrowskt-performancedeckcontrolskt-performancemastercontrolskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8279,6 +8301,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="default-pages-and-a-16-row-twister-layout-resourcesperform_pages-resourcescontrollersmidi-fighter-twisterjson">Default Pages and a 16-Row Twister Layout (<code>resources/perform_pages/</code>, <code>resources/controllers/midi-fighter-twister.json</code>)</h3>
+<ul>
+<li><strong>Three new pages</strong> join DECKS and MASTER in the tab strip: <strong>A/B</strong> (Deck A SRC, Deck A FX, Deck B SRC, Deck B FX), <strong>BG/PV</strong> (the same for BG and PV) and <strong>MIXER</strong> (Master MIX, Master FX, Transitions, FX Wet/Dry). Every deck half and both Master halves are pinned rows, so there is nothing to toggle.</li>
+<li><strong>Twister banks</strong>: bank 1 = A/B, bank 2 = BG/PV, bank 3 = MIXER, bank 4 = MASTER (Clock &amp; Global). Banks 3 and 4 no longer repeat DECKS and MASTER. The screen follows the bank buttons as before.</li>
+<li><strong>Opening Deep Edit</strong> on a deck from a page that doesn't show it now picks that deck's row from the next page that does (A/B for Decks A and B), so the edit row can be a pinned SRC or FX row.</li>
+</ul>
 <h3 id="pinned-deck-and-master-rows-for-perform-pages-uiperfrowskt-performancedeckcontrolskt-performancemastercontrolskt">Pinned Deck and Master Rows for Perform Pages (<code>ui/PerfRows.kt</code>, <code>PerformanceDeckControls.kt</code>, <code>PerformanceMasterControls.kt</code>)</h3>
 <ul>
 <li><strong>New page rows</strong>: pages can now place just one half of a deck or of Master: <code>deck.A.src</code>, <code>deck.A.fx</code> (likewise B, BG, PV), <code>master.mix</code> and <code>master.fx</code>. A pinned row has no SRC/FX (MIX/FX) toggle, only a fixed pill for its half, and the other half of the row stays empty. Row size and knob positions are unchanged.</li>

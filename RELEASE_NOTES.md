@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Default Pages and a 16-Row Twister Layout (`resources/perform_pages/`, `resources/controllers/midi-fighter-twister.json`)
+- **Three new pages** join DECKS and MASTER in the tab strip: **A/B** (Deck A SRC, Deck A FX, Deck B SRC, Deck B FX), **BG/PV** (the same for BG and PV) and **MIXER** (Master MIX, Master FX, Transitions, FX Wet/Dry). Every deck half and both Master halves are pinned rows, so there is nothing to toggle.
+- **Twister banks**: bank 1 = A/B, bank 2 = BG/PV, bank 3 = MIXER, bank 4 = MASTER (Clock & Global). Banks 3 and 4 no longer repeat DECKS and MASTER. The screen follows the bank buttons as before.
+- **Opening Deep Edit** on a deck from a page that doesn't show it now picks that deck's row from the next page that does (A/B for Decks A and B), so the edit row can be a pinned SRC or FX row.
+
 ### Pinned Deck and Master Rows for Perform Pages (`ui/PerfRows.kt`, `PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`)
 - **New page rows**: pages can now place just one half of a deck or of Master: `deck.A.src`, `deck.A.fx` (likewise B, BG, PV), `master.mix` and `master.fx`. A pinned row has no SRC/FX (MIX/FX) toggle, only a fixed pill for its half, and the other half of the row stays empty. Row size and knob positions are unchanged.
 - **Independent of the toggle rows**: a pinned row ignores the DECKS / MASTER toggles and never changes them, so an A-SRC row and an A-FX row on one page stay put while you flip a normal Deck A row elsewhere.

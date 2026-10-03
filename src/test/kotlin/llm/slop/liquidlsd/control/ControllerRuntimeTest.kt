@@ -151,12 +151,12 @@ class ControllerRuntimeTest {
         assertTrue(side3(0, 0))               // leaving bank 1: consumed, nothing happens
         assertTrue(side3(1, 127))             // entering bank 2
         assertEquals(1, runtime.activeBank)
-        assertEquals(listOf("page perform.master"), surface.calls)
+        assertEquals(listOf("page perform.bgpv"), surface.calls)
         assertTrue(side3(0, 127))
-        assertEquals(listOf("page perform.master", "page perform.decks"), surface.calls)
-        assertTrue(side3(2, 127))             // bank 3 repeats DECKS until it gets a page of its own
+        assertEquals(listOf("page perform.bgpv", "page perform.ab"), surface.calls)
+        assertTrue(side3(2, 127))
         assertEquals(2, runtime.activeBank)
-        assertEquals(listOf("page perform.master", "page perform.decks", "page perform.decks"), surface.calls)
+        assertEquals("page perform.mixer", surface.calls.last())
         assertTrue(side3(3, 127))
         assertEquals("page perform.master", surface.calls.last())
     }

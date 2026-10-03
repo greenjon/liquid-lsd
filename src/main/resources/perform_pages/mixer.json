@@ -1,0 +1,19 @@
+{
+  "id": "mixer",
+  "name": "MIXER",
+  "tooltip": "Master MIX, Master FX, Transitions and per-deck FX wet/dry, each pinned (no MIX/FX toggle).\nTwister bank 3.",
+  "rows": [
+    {
+      "row": "master.mix"
+    },
+    {
+      "row": "master.fx"
+    },
+    {
+      "row": "trans"
+    },
+    {
+      "row": "wetdry"
+    }
+  ]
+}

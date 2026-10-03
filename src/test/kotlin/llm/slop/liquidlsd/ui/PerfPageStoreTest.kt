@@ -14,10 +14,18 @@ class PerfPageStoreTest {
     @Test
     fun builtInPagesReproduceDecksAndMaster() {
         val pages = store().all()
-        assertEquals(listOf("decks", "master"), pages.map { it.id })
+        assertEquals(listOf("decks", "master", "ab", "bgpv", "mixer"), pages.take(5).map { it.id })
         assertEquals(listOf("deck.A.srcfx", "deck.B.srcfx", "deck.BG.srcfx", "deck.PV.srcfx"), pages[0].rows.map { it.row })
         assertEquals(listOf("master", "trans", "wetdry", "global"), pages[1].rows.map { it.row })
         assertTrue(pages.all { it.problems().isEmpty() })
+    }
+
+    @Test
+    fun defaultTwisterPagesPinEachDeckHalf() {
+        val pages = store().all().associateBy { it.id }
+        assertEquals(listOf("deck.A.src", "deck.A.fx", "deck.B.src", "deck.B.fx"), pages.getValue("ab").rows.map { it.row })
+        assertEquals(listOf("deck.BG.src", "deck.BG.fx", "deck.PV.src", "deck.PV.fx"), pages.getValue("bgpv").rows.map { it.row })
+        assertEquals(listOf("master.mix", "master.fx", "trans", "wetdry"), pages.getValue("mixer").rows.map { it.row })
     }
 
     @Test
@@ -26,7 +34,7 @@ class PerfPageStoreTest {
         File(dir, "a.json").writeText("""{"id":"decks","name":"MY DECKS","rows":[{"row":"master"},{"row":"trans"},{"row":"wetdry"},{"row":"global"}]}""")
         File(dir, "b.json").writeText("""{"id":"extra","name":"EXTRA","rows":[{"row":"deck.A.srcfx"},{"row":"deck.A.srcfx"},{"row":"deck.B.srcfx"},{"row":"global"}]}""")
         val pages = store(dir).all()
-        assertEquals(listOf("decks", "master", "extra"), pages.map { it.id })
+        assertEquals(listOf("decks", "master", "ab", "bgpv", "mixer", "extra"), pages.map { it.id })
         assertEquals("MY DECKS", pages[0].name)
     }
 
@@ -37,16 +45,18 @@ class PerfPageStoreTest {
         File(dir, "unknown.json").writeText("""{"id":"unk","name":"U","rows":[{"row":"x"},{"row":"master"},{"row":"trans"},{"row":"global"}]}""")
         File(dir, "garbage.json").writeText("not json")
         val s = store(dir)
-        assertEquals(listOf("decks", "master"), s.all().map { it.id })
+        assertEquals(listOf("decks", "master", "ab", "bgpv", "mixer"), s.all().map { it.id })
         assertNull(s.get("short"))
     }
 
     @Test
     fun focusLookupScansActivePageThenFollowingPagesWrapping() {
         val pages = store().all()
-        // DECKS places every deck row; from MASTER the scan wraps to DECKS and finds the same catalog row.
-        val row = PerfRows.catalogRowForModule("deckA", "SRC", pages, "master")
-        assertEquals(PerfRows.CATALOG["deck.A.srcfx"], row)
+        // From DECKS the toggle row wins; from MASTER the scan continues with A/B and finds the pinned SRC row.
+        assertEquals(PerfRows.CATALOG["deck.A.srcfx"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "decks"))
+        assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "master"))
+        // Deck BG from the last page wraps all the way round to DECKS.
+        assertEquals(PerfRows.CATALOG["deck.BG.srcfx"], PerfRows.catalogRowForModule("deckBG", "SRC", pages.filter { it.id in setOf("mixer", "decks") }, "mixer"))
         assertNull(PerfRows.catalogRowForModule("Mixer", "MIX", pages, "decks")?.takeIf { it.pinnedMode != null })
     }
 

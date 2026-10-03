@@ -1,3 +1,13 @@
+## Default Pages and the Twister's Four Banks (`resources/perform_pages/`, `resources/controllers/midi-fighter-twister.json`)
+
+- **Decision**: Phase 3 of `.planning/perform-pages-plan.md`. Built-ins: `decks` and `master` (unchanged), `ab` (`deck.A.src`, `deck.A.fx`, `deck.B.src`, `deck.B.fx`), `bgpv` (the same for BG/PV) and `mixer` (`master.mix`, `master.fx`, `trans`, `wetdry`). The Twister profile's `banks.pages` is `perform.ab`, `perform.bgpv`, `perform.mixer`, `perform.master`. A test requires every page a profile names to exist among the built-ins.
+  - **Bank 4 = the legacy MASTER page** (Master toggle row, Transitions, FX Wet/Dry, Clock & Global) rather than a page with free "assignable" rows: there is no empty or user-bound row type, and Clock & Global lives only on that page. Bank 4's free knobs are therefore not designed; revisit with MIDI phase 5 (profile UI).
+  - There is no separate Clock row (see the phase 1 entry), so "Clock + Global" is the `global` row.
+  - The strip now lists five pages at the fixed 68px width; it still does not scroll for many user pages.
+- **Rationale**: one pinned SRC row and one pinned FX row per deck gives the hardware a fixed meaning per knob, with no toggle gesture, and every deck half and Master half is on some bank.
+- **Alternatives rejected**: replacing DECKS/MASTER with the new pages (they remain the screen's one-row-per-deck view and a compact Master page); a bank-4 page of duplicated rows.
+- **Consequences**: no bank shows DECKS, so toggling a deck row on screen no longer shows on the hardware (pinned rows ignore the toggle). Deep Edit from a page that doesn't contain a deck lands on that deck's row from the next page that does, which is a pinned row for Decks A-PV unless the active page is DECKS. **Not yet hardware-tested**: banks, LED hues on a real Twister.
+
 ## Pinned Deck and Master Rows (`ui/PerfRows.kt`, `PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `ui/PerformSurface.kt`)
 
 - **Decision**: Phase 2 of `.planning/perform-pages-plan.md`. `RowDescriptor.pinnedMode` (`SRC`/`FX` for decks, `MIX`/`FX` for Master) marks a row that shows one half. Catalog gains `deck.<tag>.src`, `deck.<tag>.fx`, `master.mix`, `master.fx` (the FX rows use the FX bank ids, so the knob resolver, chain lookup and Deep Edit need no new code). `withDeckRowMode` returns pinned rows unchanged, so they neither read nor write `deckRowMode`, `activeDeck*SubTab` or `masterRowMode`; the FX-header click that forces FX mode is skipped on them.

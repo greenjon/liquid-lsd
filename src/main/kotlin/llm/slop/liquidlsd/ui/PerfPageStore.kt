@@ -96,7 +96,7 @@ class PerfPageStore(
     }
 
     companion object {
-        val BUILT_IN_NAMES = listOf("decks", "master")
+        val BUILT_IN_NAMES = listOf("decks", "master", "deck-ab", "deck-bgpv", "mixer")
 
         /** Shared instance backed by the real `library/perform_pages/` directory. */
         val default: PerfPageStore by lazy { PerfPageStore() }
