@@ -33,6 +33,21 @@ data class PerfPageDef(
     }
 }
 
+/** Perform tab-strip sizing. */
+object PerfTabStrip {
+    const val TAB_WIDTH = 68f
+    const val GAP = 4f
+    private const val MIN_TAB_WIDTH = 36f
+    private const val FULL_WIDTH_TABS = 5
+
+    /** Tab width for [count] tabs: [TAB_WIDTH] up to five, then shrunk so the strip never grows beyond five tabs' width. */
+    fun tabWidth(count: Int): Float {
+        if (count <= FULL_WIDTH_TABS) return TAB_WIDTH
+        val budget = FULL_WIDTH_TABS * TAB_WIDTH + (FULL_WIDTH_TABS - 1) * GAP
+        return ((budget - (count - 1) * GAP) / count).coerceAtLeast(MIN_TAB_WIDTH)
+    }
+}
+
 /**
  * Finds Perform pages: built-ins shipped in the jar (`perform_pages/<name>.json`) and user pages in
  * `library/perform_pages/`. A user page with the same id replaces the built-in in place; new user pages

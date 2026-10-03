@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Hide Perform Pages, Tabs Shrink to Fit (`ui/PerformPagesPanel.kt`, `MenuBar.kt`, `UITheme.kt`)
+- **Show in tab strip**: each page in Preferences > MIDI Controls > Perform Pages has a checkbox. Unticking it removes the tab (for example hide DECKS to keep four pages); the setting is remembered. A controller bank that selects the page (`perform.<id>`) still shows it, and the last visible tab can't be hidden. Hiding the page you are on switches to the first visible one.
+- **Tab strip overflow**: with more than five tabs they narrow to stay within the width of five, and a tab's tooltip always shows its full name.
+- **Perform Pages stays available when MIDI is disabled**: the section moved above the MIDI-enabled check.
+
 ### Perform Page Editor (`ui/PerformPagesPanel.kt`, `ui/PerfPageStore.kt`)
 - **New "Perform Pages" section** in Preferences > MIDI Controls: lists the pages of the Perform tab strip (built-in, user, or user override). **Copy to User File** makes a built-in editable; **New Page** creates a page; **Delete User File** reverts a copy to the built-in or removes your page; **Reload Pages** re-reads `library/perform_pages/` after a hand edit.
 - **Edit a user page** in place: rename it and choose each of its four rows from the row catalog (deck rows with the SRC/FX toggle, pinned SRC or FX halves, Master, Transitions, FX Wet/Dry, Clock & Global). Every edit is validated and saved at once, and the tab strip updates immediately; problems are listed under the pages. Page files that fail to load are listed with the reason.

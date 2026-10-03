@@ -1,3 +1,10 @@
+## Hidden Perform Pages Are a Preference, Tabs Shrink Past Five (`UITheme.hiddenPerformPages`, `PerfTabStrip`)
+
+- **Decision**: hiding is a per-user preference (`hiddenPerformPages`, comma-separated ids), not a field of the page file, so built-ins can be hidden without copying. It only affects the tab strip: controller banks and Deep Edit's page lookup still use every page. The last visible page can't be hidden. Tabs keep 68 px up to five, then narrow so the strip never grows past five tabs' width (minimum 36 px).
+- **Rationale**: a user who drives pages from a controller may want pages that never appear as tabs; and the strip sits in the menu bar next to File, so it can't take more room.
+- **Alternatives rejected**: a scrolling strip (needs a clipped child inside the main menu bar); a `hidden` flag in the page JSON (read-only built-ins).
+- **Consequences**: a bank can show a hidden page with no highlighted tab. Page ids stay stable on rename (profiles reference `perform.<id>`).
+
 ## Perform Page Editor, Same Store Pattern as Controller Profiles (`ui/PerformPagesPanel.kt`, `PerfPageStore`)
 
 - **Decision**: `PerfPageStore` gets `copyBuiltInToUser`, `saveUser`, `deleteUser`, `sourceOf` and `rejected()` (immutable snapshot, reload on every write), mirroring `ControllerProfileStore`. The editor changes a user page's name and its four rows through combos over `PerfRows.CATALOG` and saves each change immediately.

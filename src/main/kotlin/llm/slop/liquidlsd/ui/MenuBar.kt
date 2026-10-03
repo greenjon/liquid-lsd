@@ -317,10 +317,10 @@ class MenuBar(
      */
     private fun drawPerformanceTabStrip(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
         val theme = session.uiTheme
-        val pages = PerfPageStore.default.all()
-        val gap = 4f
+        val pages = theme.visiblePerformPages()
+        val gap = PerfTabStrip.GAP
         val tabH = ImGui.getFrameHeight()
-        val tabW = 68f
+        val tabW = PerfTabStrip.tabWidth(pages.size)
         val isLight = theme.theme == UITheme.Theme.ORANGE_SUNSHINE
 
         for ((i, page) in pages.withIndex()) {
@@ -349,7 +349,8 @@ class MenuBar(
                     AppPreferencesStore.savePreferences()
                 }
             }
-            if (page.tooltip.isNotBlank()) itemTooltip(page.tooltip)
+            // A narrowed tab clips its name, so the tooltip always carries it.
+            itemTooltip(if (page.tooltip.isBlank()) page.name else "${page.name}\n${page.tooltip}")
             ImGui.popStyleColor(3)
         }
 

@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
+import imgui.type.ImBoolean
 import imgui.type.ImInt
 import imgui.type.ImString
 
@@ -42,6 +43,12 @@ object PerformPagesPanel {
             ImGui.text(page.name)
             ImGui.sameLine()
             theme.caption("[perform.${page.id}] $label")
+            val shown = ImBoolean(page.id !in theme.hiddenPerformPages)
+            if (ImGui.checkbox("Show in tab strip##show", shown)) {
+                if (theme.setPerformPageHidden(page.id, !shown.get())) AppPreferencesStore.savePreferences()
+                else message = "At least one page must stay in the tab strip"
+            }
+            itemTooltip("Hidden pages leave the tab strip, but a controller bank that selects perform.${page.id} still shows it.")
             if (source == PerfPageStore.Source.BUILT_IN) {
                 for (placement in page.rows) theme.caption("  ${rowLabel(placement.row)}")
                 if (ImGui.button("${Icons.COPY} Copy to User File##copy")) {

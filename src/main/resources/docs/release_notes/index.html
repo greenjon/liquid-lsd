@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#hide-perform-pages-tabs-shrink-to-fit-uiperformpagespanelkt-menubarkt-uithemekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hide Perform Pages, Tabs Shrink to Fit (ui/PerformPagesPanel.kt, MenuBar.kt, UITheme.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#perform-page-editor-uiperformpagespanelkt-uiperfpagestorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4833,6 +4844,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#hide-perform-pages-tabs-shrink-to-fit-uiperformpagespanelkt-menubarkt-uithemekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hide Perform Pages, Tabs Shrink to Fit (ui/PerformPagesPanel.kt, MenuBar.kt, UITheme.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#perform-page-editor-uiperformpagespanelkt-uiperfpagestorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8433,6 +8455,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="hide-perform-pages-tabs-shrink-to-fit-uiperformpagespanelkt-menubarkt-uithemekt">Hide Perform Pages, Tabs Shrink to Fit (<code>ui/PerformPagesPanel.kt</code>, <code>MenuBar.kt</code>, <code>UITheme.kt</code>)</h3>
+<ul>
+<li><strong>Show in tab strip</strong>: each page in Preferences &gt; MIDI Controls &gt; Perform Pages has a checkbox. Unticking it removes the tab (for example hide DECKS to keep four pages); the setting is remembered. A controller bank that selects the page (<code>perform.&lt;id&gt;</code>) still shows it, and the last visible tab can't be hidden. Hiding the page you are on switches to the first visible one.</li>
+<li><strong>Tab strip overflow</strong>: with more than five tabs they narrow to stay within the width of five, and a tab's tooltip always shows its full name.</li>
+<li><strong>Perform Pages stays available when MIDI is disabled</strong>: the section moved above the MIDI-enabled check.</li>
+</ul>
 <h3 id="perform-page-editor-uiperformpagespanelkt-uiperfpagestorekt">Perform Page Editor (<code>ui/PerformPagesPanel.kt</code>, <code>ui/PerfPageStore.kt</code>)</h3>
 <ul>
 <li><strong>New "Perform Pages" section</strong> in Preferences &gt; MIDI Controls: lists the pages of the Perform tab strip (built-in, user, or user override). <strong>Copy to User File</strong> makes a built-in editable; <strong>New Page</strong> creates a page; <strong>Delete User File</strong> reverts a copy to the built-in or removes your page; <strong>Reload Pages</strong> re-reads <code>library/perform_pages/</code> after a hand edit.</li>

@@ -214,6 +214,9 @@ object AppPreferencesStore {
                     UITheme.performancePageId = savedPageId
                     logger.info { "Loaded performancePageId from settings file: ${UITheme.performancePageId}" }
                 }
+                props.getProperty("hiddenPerformPages")?.let { saved ->
+                    UITheme.hiddenPerformPages = saved.split(',').map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+                }
                 val savedAutoVj = props.getProperty("autoVjDirtyBehavior")
                 if (savedAutoVj != null) {
                     UITheme.autoVjDirtyBehavior = try { UITheme.AutoVjDirtyBehavior.valueOf(savedAutoVj) } catch (e: Exception) { UITheme.AutoVjDirtyBehavior.AUTO_DISCARD }
@@ -333,6 +336,7 @@ object AppPreferencesStore {
             props.setProperty("libraryMode", UITheme.libraryMode.name)
             props.setProperty("column3Mode", UITheme.column3Mode.name)
             props.setProperty("performancePageId", UITheme.performancePageId)
+            props.setProperty("hiddenPerformPages", UITheme.hiddenPerformPages.sorted().joinToString(","))
             props.setProperty("autoVjDirtyBehavior", UITheme.autoVjDirtyBehavior.name)
             props.setProperty("activeMidiProfile", UITheme.activeMidiProfile)
             props.setProperty("queueKeyTrigger", UITheme.queueKeyTrigger.name)

@@ -183,6 +183,29 @@ object UITheme {
             settings = settings.copy(performancePageId = if (known.get(value) != null) value else known.all().first().id)
         }
 
+    var hiddenPerformPages: Set<String>
+        get() = settings.hiddenPerformPages
+        set(value) { settings = settings.copy(hiddenPerformPages = value) }
+
+    /** The pages shown as tabs: every page not hidden. Never empty (if everything is hidden, the first page stays). */
+    fun visiblePerformPages(): List<PerfPageDef> {
+        val all = PerfPageStore.default.all()
+        return all.filter { it.id !in hiddenPerformPages }.ifEmpty { all.take(1) }
+    }
+
+    /** Hides or shows a page's tab. The last visible tab can't be hidden; hiding the active page activates the first visible one. */
+    fun setPerformPageHidden(id: String, hidden: Boolean): Boolean {
+        if (hidden) {
+            val remaining = PerfPageStore.default.all().filter { it.id !in hiddenPerformPages && it.id != id }
+            if (remaining.isEmpty()) return false
+            hiddenPerformPages = hiddenPerformPages + id
+            if (performancePageId == id) performancePageId = remaining.first().id
+        } else {
+            hiddenPerformPages = hiddenPerformPages - id
+        }
+        return true
+    }
+
     /** Modular Rack: persisted moduleId -> [ParametersState.DisclosureLevel] name (BAY/DEEP_EDIT only). */
     var rackExpandedModules: Map<String, String>
         get() = settings.rackExpandedModules

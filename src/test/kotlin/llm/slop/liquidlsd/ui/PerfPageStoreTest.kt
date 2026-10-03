@@ -122,4 +122,39 @@ class PerfPageStoreTest {
         store.reload()
         assertEquals(listOf("garbage.json"), store.rejected().map { it.file.name })
     }
+
+    @Test
+    fun tabsKeepFullWidthUpToFiveThenShrinkWithinTheSameStrip() {
+        assertEquals(68f, PerfTabStrip.tabWidth(1))
+        assertEquals(68f, PerfTabStrip.tabWidth(5))
+        val strip = { n: Int -> n * PerfTabStrip.tabWidth(n) + (n - 1) * PerfTabStrip.GAP }
+        assertTrue(PerfTabStrip.tabWidth(7) < 68f)
+        assertTrue(strip(7) <= strip(5) + 0.01f)
+        assertTrue(PerfTabStrip.tabWidth(40) >= 36f)
+    }
+
+    @Test
+    fun hidingPagesKeepsOneTabAndMovesTheActivePage() {
+        val savedHidden = UITheme.hiddenPerformPages
+        val savedActive = UITheme.performancePageId
+        try {
+            UITheme.hiddenPerformPages = emptySet()
+            UITheme.performancePageId = "decks"
+            val all = PerfPageStore.default.all().map { it.id }
+
+            assertTrue(UITheme.setPerformPageHidden("decks", true))
+            assertTrue("decks" !in UITheme.visiblePerformPages().map { it.id })
+            assertEquals(all.first { it != "decks" }, UITheme.performancePageId)
+
+            for (id in all.filter { it != "decks" }.dropLast(1)) assertTrue(UITheme.setPerformPageHidden(id, true))
+            assertEquals(1, UITheme.visiblePerformPages().size)
+            assertTrue(!UITheme.setPerformPageHidden(UITheme.visiblePerformPages().single().id, true))
+
+            assertTrue(UITheme.setPerformPageHidden("decks", false))
+            assertTrue("decks" in UITheme.visiblePerformPages().map { it.id })
+        } finally {
+            UITheme.hiddenPerformPages = savedHidden
+            UITheme.performancePageId = savedActive
+        }
+    }
 }

@@ -263,6 +263,9 @@ object MidiPreferencesPanel {
             session.uiTheme.captionColored(0.2f, 0.9f, 0.4f, 1.0f, "Status: $midiCount active controller(s) connected ($namesStr).")
         }
 
+        ImGui.spacing()
+        PerformPagesPanel.draw(session)
+
         if (!session.uiTheme.midiEnabled) {
             ImGui.spacing()
             session.uiTheme.captionColored(0.6f, 0.6f, 0.6f, 1.0f, "MIDI is currently disabled. Check 'Enable MIDI Subsystem' to activate input processing.")
@@ -274,7 +277,6 @@ object MidiPreferencesPanel {
         ImGui.spacing()
 
         drawControllerProfiles(session, deviceNames, parametersState)
-        PerformPagesPanel.draw(session)
 
         ImGui.spacing()
         ImGui.separator()

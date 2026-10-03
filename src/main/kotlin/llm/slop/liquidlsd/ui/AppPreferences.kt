@@ -42,6 +42,8 @@ data class AppPreferences(
     val column3Mode: UITheme.Column3Mode = UITheme.Column3Mode.MIXER,
     /** Id of the active Perform page (see [PerfPageStore]). */
     val performancePageId: String = PerfPageDef.DEFAULT_ID,
+    /** Ids of Perform pages the user hid from the tab strip (a controller bank can still show them). */
+    val hiddenPerformPages: Set<String> = emptySet(),
     /** Modular Rack: moduleId -> [ParametersState.DisclosureLevel] name, persisted only for BAY/DEEP_EDIT (never a mid-Learn-pinned state). */
     val rackExpandedModules: Map<String, String> = emptyMap(),
     val theme: UITheme.Theme = UITheme.Theme.GREY_ACID,
