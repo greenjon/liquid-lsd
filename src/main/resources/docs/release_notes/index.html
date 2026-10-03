@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#smoother-controller-and-perform-rows-control-midienginekt-performancekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Smoother Controller and Perform Rows (control/*, MidiEngine.kt, Performance*.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#perform-ui-colours-now-all-come-from-the-tango-palette-uitangopalettekt-performancecontrolskt-librarypanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5097,6 +5108,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#smoother-controller-and-perform-rows-control-midienginekt-performancekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Smoother Controller and Perform Rows (control/*, MidiEngine.kt, Performance*.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#perform-ui-colours-now-all-come-from-the-tango-palette-uitangopalettekt-performancecontrolskt-librarypanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8961,6 +8983,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="smoother-controller-and-perform-rows-control-midienginekt-performancekt">Smoother Controller and Perform Rows (<code>control/*</code>, <code>MidiEngine.kt</code>, <code>Performance*.kt</code>)</h3>
+<ul>
+<li>Internal: knob twists, controller LED feedback and the Perform rows no longer allocate on every event or frame, which reduces garbage-collection hitches during long sets.</li>
+<li>The MIDI event queue is now capped, so a stalled UI can no longer grow memory without bound; extra events are dropped and counted.</li>
+<li>Held-button state and half-finished browse travel are cleared when a controller is reset or unplugged.</li>
+</ul>
 <h3 id="perform-ui-colours-now-all-come-from-the-tango-palette-uitangopalettekt-performancecontrolskt-librarypanelkt">Perform UI Colours Now All Come From the Tango Palette (<code>ui/TangoPalette.kt</code>, <code>Performance*Controls.kt</code>, <code>LibraryPanel.kt</code>)</h3>
 <ul>
 <li>Badges, buttons, beat dots, TAP/AUTO/LINK states, Library mode toggle and panel surfaces now use named <code>TangoPalette</code> roles that resolve per theme, instead of dark-theme RGB literals with Tango colours only in the light theme. The dark theme looks essentially the same (a few blues and ambers shift to the nearest Tango swatch); the light theme is unchanged.</li>

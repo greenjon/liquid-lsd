@@ -1,294 +1,177 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-07-07
+**Analysis Date:** 2026-10-03 (rewritten against the real tree; the 2026-07-07 version predated the Patch->Preset rename, the `control/` package, the ISF pipeline and the Perform view)
 
 ## Directory Layout
 
 ```text
-liquid-lsd-desktop/
-├── .agents/                 # Project-local agent skills and repository agent guidance
-│   └── skills/              # Native ImGui, JACK, and LWJGL constraint docs
-├── .github/                 # GitHub repository automation/configuration
-├── .planning/               # GSD planning and generated codebase maps
-│   └── codebase/            # STRUCTURE.md and other generated codebase maps live here
-├── docs/                    # MkDocs source documentation
-│   ├── developer/           # Developer architecture/audio/rendering docs
-│   └── user_guide/          # User-facing concepts and workflow docs
-├── gradle/wrapper/          # Gradle wrapper JAR/properties
-├── presets/                 # Runtime preset data and shader visual source folders
-│   └── sources/             # Dynamic visual source metadata and shaders
-├── src/
-│   ├── main/
-│   │   ├── kotlin/llm/slop/liquidlsd/  # Kotlin application source
-│   │   └── resources/                # Fonts, shaders, default patch, logback config
-│   └── test/kotlin/llm/slop/liquidlsd/ # Kotlin tests
-├── build.gradle.kts         # Gradle build, dependencies, app entry point, packaging tasks
+liquid-lsd/
+├── .agents/                 # AGENTS.md, PROJECT.md, skills/ (imgui_memory_management, jack_callback_safety, lwjgl_thread_restriction)
+├── .github/workflows/       # release.yml, smoke-test.yml
+├── .planning/               # Planning notes; codebase/ holds these maps (STRUCTURE, CONCERNS, STACK, ...)
+├── build.gradle.kts         # Gradle build, dependencies, packaging tasks
 ├── settings.gradle.kt       # Gradle root project name
-├── mkdocs.yml               # Documentation site configuration
-├── README.md                # Project overview
-├── ARCHITECTURE.md          # Root architecture overview
-├── TODO.md                  # Project TODO notes
-└── local.properties         # Local machine Gradle properties
+├── ARCHITECTURE.md          # Root architecture overview (File Map, controller input architecture)
+├── DECISIONS.md, ROADMAP.md, README.md, RELEASE_NOTES.md
+├── docs/                    # MkDocs source: developer/ (architecture.md, ui.md, rendering.md, ...) and user_guide/
+├── library/                 # Runtime user data: presets, playlists, fx, fx_chains, fx_playlists,
+│                            #   transitions, transition_playlists, sources, filters, generator_defaults, isf_overrides,
+│                            #   midi, osc, controllers (user controller profiles), perform_pages (user Perform pages),
+│                            #   fx_shortlist.json, last_session.json
+├── defaults/                # Bundled default fx_chains / playlists / presets
+├── scripts/                 # install_desktop.sh, sync_web.py
+├── web/, website/, greenjon/, server/   # WebGL2 player, site sources and generated site, broadcast relay
+├── src/main/kotlin/llm/slop/liquidlsd/  # Application source (271 files, see below)
+├── src/main/resources/      # controllers/, perform_pages/, default_filters/, default_sources/, default_transitions/,
+│                            #   shaders/, fonts/, icons/, presets/default.json, natives/, docs/, logback.xml, version.txt
+└── src/test/kotlin/llm/slop/liquidlsd/  # Tests, package-mirrored
 ```
 
-## Directory Purposes
+## Source Packages
 
-**`.agents/`:**
-- Purpose: Store project-specific agent instructions and skills.
-- Contains: `.agents/AGENTS.md`, `.agents/skills/imgui_memory_management/SKILL.md`, `.agents/skills/jack_callback_safety/SKILL.md`, `.agents/skills/lwjgl_thread_restriction/SKILL.md`.
-- Key files: `.agents/skills/imgui_memory_management/SKILL.md`, `.agents/skills/jack_callback_safety/SKILL.md`, `.agents/skills/lwjgl_thread_restriction/SKILL.md`.
+Packages are listed with every file; for one-line descriptions of each file see the File Map in `ARCHITECTURE.md`. Dependency direction is meant to be `ui -> {control, presets, rendering, macro, ...}`; known exceptions (`midi/` importing `ui/`, etc.) are recorded in `CONCERNS.md`.
 
-**`.planning/`:**
-- Purpose: Store GSD planning artifacts and generated codebase maps.
-- Contains: `.planning/codebase/`.
-- Key files: `.planning/codebase/STRUCTURE.md`, `.planning/codebase/CONCERNS.md`.
+**`src/main/kotlin/llm/slop/liquidlsd/`**:
+- Purpose: App entry point and session facade.
+- Files: `Main.kt`, `SessionContext.kt`
 
-**`docs/`:**
-- Purpose: Source content for MkDocs documentation and packaged help docs.
-- Contains: High-level docs in `docs/*.md`, developer docs in `docs/developer`, user docs in `docs/user_guide`.
-- Key files: `docs/developer/architecture.md`, `docs/developer/audio_dsp.md`, `docs/developer/rendering.md`, `docs/user_guide/custom_visuals.md`.
+**`src/main/kotlin/llm/slop/liquidlsd/audio/`**:
+- Purpose: Audio capture (JACK / Java Sound), DSP, beat tracking, tap tempo, system volume, JACK watchdog.
+- Files: `AmplitudeExtractor.kt`, `AudioChannelRouting.kt`, `AudioEngine.kt`, `AudioInputDevice.kt`, `BeatTrackerEngine.kt`, `BiquadFilter.kt`, `ClockSource.kt`, `JackClient.kt`, `JavaSoundClient.kt`, `MidiJackWatchdog.kt`, `SystemAudioVolume.kt`, `TapTempoController.kt`
 
-**`gradle/`:**
-- Purpose: Gradle wrapper support files.
-- Contains: `gradle/wrapper/`.
-- Key files: `gradle/wrapper/gradle-wrapper.properties`, `gradle/wrapper/gradle-wrapper.jar`.
+**`src/main/kotlin/llm/slop/liquidlsd/broadcast/`**:
+- Purpose: Web broadcast relay client and web-preset serialization.
+- Files: `BroadcastEngine.kt`, `BroadcastPreferences.kt`, `WebPresetSerializer.kt`
 
-**`presets/`:**
-- Purpose: Runtime user/application preset storage and dynamic source definitions.
-- Contains: `presets/sources/*/meta.json`, `presets/sources/*/shader.frag`, optional `presets/sources/*/shader.vert`; runtime-created directories include `presets/patches`, `presets/playlists`, and `presets/midi`.
-- Key files: `presets/sources/mandala/meta.json`, `presets/sources/mandala/shader.frag`, `presets/sources/mandala/shader.vert`.
+**`src/main/kotlin/llm/slop/liquidlsd/cli/`**:
+- Purpose: Startup CLI argument parsing.
+- Files: `CliArgs.kt`
 
-**`src/main/kotlin/llm/slop/liquidlsd/`:**
-- Purpose: Main Kotlin/JVM application package.
-- Contains: `Main.kt` and domain subpackages for audio, CV, MIDI, models, parameters, patches, rendering, UI, and utilities.
-- Key files: `src/main/kotlin/llm/slop/liquidlsd/Main.kt`.
+**`src/main/kotlin/llm/slop/liquidlsd/control/`**:
+- Purpose: Controller input: profiles, command registry, runtime, knob/nav commands and surfaces, LED feedback, user-JSON helper. See ARCHITECTURE.md "Controller input architecture".
+- Files: `CcQueue.kt`, `Command.kt`, `ControllerFeedback.kt`, `ControllerManager.kt`, `ControllerProfile.kt`, `ControllerProfileStore.kt`, `ControllerRuntime.kt`, `GlobalCommands.kt`, `KnobCommands.kt`, `KnobLight.kt`, `KnobSurface.kt`, `MidiSink.kt`, `NavCommands.kt`, `NavSurface.kt`, `ProfileBindingEdit.kt`, `TracingSink.kt`, `UserJsonFiles.kt`
 
-**`src/main/kotlin/llm/slop/liquidlsd/audio/`:**
-- Purpose: Audio capture, JACK integration, DSP, beat detection, system volume, and watchdog coordination.
-- Contains: `AudioEngine.kt`, `JackClient.kt`, `BiquadFilter.kt`, `AmplitudeExtractor.kt`, `MidiJackWatchdog.kt`, `SystemAudioVolume.kt`.
-- Key files: `src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt`, `src/main/kotlin/llm/slop/liquidlsd/audio/JackClient.kt`.
+**`src/main/kotlin/llm/slop/liquidlsd/cv/`**:
+- Purpose: CV source registry, LFO / sample-and-hold sources, beat clock, evaluators, history buffers.
+- Files: `BeatClock.kt`, `CVRegistry.kt`, `CVSource.kt`, `CvHistoryBuffer.kt`, `Evaluators.kt`, `GenCVSource.kt`, `LFO.kt`, `SampleAndHold.kt`
 
-**`src/main/kotlin/llm/slop/liquidlsd/cv/`:**
-- Purpose: Control voltage source registry, generated CV sources, histories, beat clocks, and modulator evaluation functions.
-- Contains: `CVRegistry.kt`, `CVSource.kt`, `CvHistoryBuffer.kt`, `Evaluators.kt`, `BeatClock.kt`, `GenCVSource.kt`, `LFO.kt`, `SampleAndHold.kt`.
-- Key files: `src/main/kotlin/llm/slop/liquidlsd/cv/CVRegistry.kt`, `src/main/kotlin/llm/slop/liquidlsd/cv/Evaluators.kt`.
+**`src/main/kotlin/llm/slop/liquidlsd/export/`**:
+- Purpose: Offline/realtime video + audio export, screenshots, FFmpeg pipe.
+- Files: `AccumulationBuffer.kt`, `AudioDecoder.kt`, `FFmpegProcessPipe.kt`, `OfflineRenderStudio.kt`, `PboReadbackPipeline.kt`, `RealtimeRecorder.kt`, `ScreenshotCapture.kt`
 
-**`src/main/kotlin/llm/slop/liquidlsd/midi/`:**
-- Purpose: Java MIDI input handling and MIDI mapping profiles.
-- Contains: `MidiEngine.kt`, `MidiMappingManager.kt`.
-- Key files: `src/main/kotlin/llm/slop/liquidlsd/midi/MidiEngine.kt`, `src/main/kotlin/llm/slop/liquidlsd/midi/MidiMappingManager.kt`.
+**`src/main/kotlin/llm/slop/liquidlsd/input/`**:
+- Purpose: Touchpad performance console and native touch backends.
+- Files: `LinuxEvdevTouchBackend.kt`, `MacCocoaTouchBackend.kt`, `NoOpTouchBackend.kt`, `TouchConsoleController.kt`, `TouchConsoleEvent.kt`, `TouchStripBackend.kt`
 
-**`src/main/kotlin/llm/slop/liquidlsd/models/`:**
-- Purpose: Serializable DTO models, runtime-to-DTO converters, clipboard data.
-- Contains: `PatchModels.kt`, `ClipboardManager.kt`.
-- Key files: `src/main/kotlin/llm/slop/liquidlsd/models/PatchModels.kt`.
+**`src/main/kotlin/llm/slop/liquidlsd/link/`**:
+- Purpose: Ableton Link engine and backends.
+- Files: `AbletonLinkEngine.kt`, `BeatTrackToLinkDamping.kt`, `CarabinerTcpLinkBackend.kt`, `LinkBackend.kt`, `LinkSyncManager.kt`, `NativeJniLinkBackend.kt`, `NoOpLinkBackend.kt`
 
-**`src/main/kotlin/llm/slop/liquidlsd/parameters/`:**
-- Purpose: Modulation parameter types, CV modulator model, enum definitions, resolver helpers, waveform math.
-- Contains: `ModulatableParameter.kt`, `CvModulator.kt`, `Enums.kt`, `ParameterResolver.kt`, `WaveformMath.kt`.
-- Key files: `src/main/kotlin/llm/slop/liquidlsd/parameters/ModulatableParameter.kt`, `src/main/kotlin/llm/slop/liquidlsd/parameters/CvModulator.kt`.
+**`src/main/kotlin/llm/slop/liquidlsd/macro/`**:
+- Purpose: Macro banks, curves, learn mode, FX macro sync, OSC bridge, bank serialization.
+- Files: `FxMacroSync.kt`, `MacroBankSerializer.kt`, `MacroCurve.kt`, `MacroEngine.kt`, `MacroLearnState.kt`, `MacroModels.kt`, `MacroOscBridge.kt`
 
-**`src/main/kotlin/llm/slop/liquidlsd/patches/`:**
-- Purpose: Patch/session persistence, playlist persistence, active play queue behavior.
-- Contains: `PatchManager.kt`, `PlaylistManager.kt`, `PlayQueueManager.kt`.
-- Key files: `src/main/kotlin/llm/slop/liquidlsd/patches/PatchManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/patches/PlayQueueManager.kt`.
+**`src/main/kotlin/llm/slop/liquidlsd/midi/`**:
+- Purpose: MIDI input engine (capped queue), legacy mapping manager, MIDI output ports for controller feedback.
+- Files: `MidiEngine.kt`, `MidiMappingManager.kt`, `MidiOutputPorts.kt`
 
-**`src/main/kotlin/llm/slop/liquidlsd/rendering/`:**
-- Purpose: OpenGL rendering, framebuffers, shaders, visual source registry, decks, mixer, Mandala visual.
-- Contains: `Renderer.kt`, `Deck.kt`, `Mixer.kt`, `FBO.kt`, `Shader.kt`, `Geometry.kt`, `VisualSource.kt`, `DynamicVisualSource.kt`, `VisualSourceRegistry.kt`, `Mandala.kt`, `MandalaLibrary.kt`, `GLDebug.kt`.
-- Key files: `src/main/kotlin/llm/slop/liquidlsd/rendering/Renderer.kt`, `src/main/kotlin/llm/slop/liquidlsd/rendering/Deck.kt`, `src/main/kotlin/llm/slop/liquidlsd/rendering/Mixer.kt`.
+**`src/main/kotlin/llm/slop/liquidlsd/models/`**:
+- Purpose: Preset / FX preset / generator-default DTOs and clipboard.
+- Files: `ClipboardManager.kt`, `FXPresetModels.kt`, `GeneratorDefaultModels.kt`, `PresetModels.kt`
 
-**`src/main/kotlin/llm/slop/liquidlsd/ui/`:**
-- Purpose: Immediate-mode UI panels, widgets, asset management, patch grid, theme/fonts, settings, popups, and documentation launcher.
-- Contains: 33 Kotlin files including `UIManager.kt`, `UITheme.kt`, `AssetBrowserPanel.kt`, `PatchGridPanel.kt`, `PatchGridRenderer.kt`, `MixerMonitorPanel.kt`, `DeckControlPanel.kt`, `SettingsPanel.kt`.
-- Key files: `src/main/kotlin/llm/slop/liquidlsd/ui/UIManager.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/UITheme.kt`, `src/main/kotlin/llm/slop/liquidlsd/ui/AssetBrowserPanel.kt`.
+**`src/main/kotlin/llm/slop/liquidlsd/notes/`**:
+- Purpose: 3-tier notes persistence.
+- Files: `NotesManager.kt`
 
-**`src/main/kotlin/llm/slop/liquidlsd/utils/`:**
-- Purpose: Small shared utilities.
-- Contains: `TimeUtils.kt`.
-- Key files: `src/main/kotlin/llm/slop/liquidlsd/utils/TimeUtils.kt`.
+**`src/main/kotlin/llm/slop/liquidlsd/osc/`**:
+- Purpose: OSC codec, engine, learn / map-mode state, mapping manager, preferences.
+- Files: `OscCodec.kt`, `OscEngine.kt`, `OscLearnState.kt`, `OscMapModeState.kt`, `OscMappingManager.kt`, `OscPreferences.kt`
 
-**`src/main/resources/`:**
-- Purpose: Runtime classpath resources.
-- Contains: `logback.xml`, `fonts/`, `patches/default.json`, `shaders/`.
-- Key files: `src/main/resources/shaders/blit.vert`, `src/main/resources/shaders/feedback.frag`, `src/main/resources/shaders/mixer.frag`, `src/main/resources/fonts/Inter-Regular.ttf`, `src/main/resources/logback.xml`.
+**`src/main/kotlin/llm/slop/liquidlsd/parameters/`**:
+- Purpose: ModulatableParameter, CvModulator, enums, resolver, waveform math.
+- Files: `CvModulator.kt`, `Enums.kt`, `ModulatableParameter.kt`, `ModulatorPropertyAccessor.kt`, `ParameterOwner.kt`, `ParameterResolver.kt`, `WaveformMath.kt`
 
-**`src/test/kotlin/llm/slop/liquidlsd/`:**
-- Purpose: Unit and regression tests.
-- Contains: Package-mirrored tests for patches, rendering, and UI utilities.
-- Key files: `src/test/kotlin/llm/slop/liquidlsd/patches/DirtyStateTest.kt`, `src/test/kotlin/llm/slop/liquidlsd/patches/PlayQueueManagerTest.kt`, `src/test/kotlin/llm/slop/liquidlsd/patches/SessionStateTest.kt`, `src/test/kotlin/llm/slop/liquidlsd/rendering/DeckUtilityTest.kt`, `src/test/kotlin/llm/slop/liquidlsd/ui/FontInspectorTest.kt`.
+**`src/main/kotlin/llm/slop/liquidlsd/presets/`**:
+- Purpose: Preset/session persistence, queues (play, BG, FX, transition), playlist parsing, FX operations and shortlist, generator defaults.
+- Files: `BgQueueManager.kt`, `DeckLifecycleManager.kt`, `FXBgQueueManager.kt`, `FXQueueManager.kt`, `FxOps.kt`, `FxQueueEngine.kt`, `FxShortlist.kt`, `GeneratorDefaults.kt`, `PlayQueueManager.kt`, `PlaylistParser.kt`, `PresetDependencyAnalyzer.kt`, `PresetIOStatus.kt`, `PresetManager.kt`, `PresetMigrator.kt`, `PresetRepository.kt`, `QueueEngine.kt`, `SessionSerializer.kt`, `SessionState.kt`, `TransitionQueueManager.kt`
 
-## Key File Locations
+**`src/main/kotlin/llm/slop/liquidlsd/rendering/`**:
+- Purpose: Decks, mixer, FX chain, renderer, FBO/shader/GL helpers, visual sources, external video, mandala.
+- Files: `AudioTexture.kt`, `Deck.kt`, `DynamicVisualSource.kt`, `ExternalVideoDiscovery.kt`, `ExternalVideoSource.kt`, `FBO.kt`, `FxChain.kt`, `GLDebug.kt`, `GLResourceTracker.kt`, `Geometry.kt`, `Mandala.kt`, `MandalaLibrary.kt`, `Mixer.kt`, `MorphState.kt`, `Renderer.kt`, `Shader.kt`, `SourceDocRegistry.kt`, `TextureReceiver.kt`, `TextureStreamer.kt`, `VideoOutputSettings.kt`, `ViewportHelper.kt`, `VisualEffect.kt`, `VisualSource.kt`, `VisualSourceRegistry.kt`
 
-**Entry Points:**
-- `src/main/kotlin/llm/slop/liquidlsd/Main.kt`: Desktop app entry point, native startup, main loop, secondary window management, and shutdown.
-- `build.gradle.kts`: Gradle `application` configuration sets `llm.slop.liquidlsd.MainKt` as the runnable main class.
+**`src/main/kotlin/llm/slop/liquidlsd/rendering/isf/`**:
+- Purpose: ISF/Shadertoy/GLSLSandbox parsing, filters, registries, directory management, auto-bind engine.
+- Files: `FxMetaBinding.kt`, `ISFAutoBindEngine.kt`, `ISFDirectoryManager.kt`, `ISFDirectoryModels.kt`, `ISFFileWatcher.kt`, `ISFFilter.kt`, `ISFFilterRegistry.kt`, `ISFLibraryRegistry.kt`, `ISFModels.kt`, `ISFParser.kt`, `ISFScanner.kt`, `ISFTextureLoader.kt`, `ISFTransitionRegistry.kt`, `ISFVisualSource.kt`
 
-**Configuration:**
-- `build.gradle.kts`: Kotlin/JVM plugins, dependencies, JVM toolchain, app runtime args, docs task, packaging tasks.
-- `settings.gradle.kt`: Gradle root project name.
-- `mkdocs.yml`: MkDocs documentation configuration.
-- `src/main/resources/logback.xml`: Logback logging configuration.
-- `local.properties`: Local build properties; keep machine-specific changes out of architectural assumptions.
+**`src/main/kotlin/llm/slop/liquidlsd/rendering/pipewire/`**:
+- Purpose: PipeWire JNA bridge (Linux video streams).
+- Files: `PipeWireBridge.kt`, `PipeWireLibrary.kt`
 
-**Core Logic:**
-- `src/main/kotlin/llm/slop/liquidlsd/rendering/Renderer.kt`: Render passes and compositing.
-- `src/main/kotlin/llm/slop/liquidlsd/rendering/Deck.kt`: Deck visual chain state.
-- `src/main/kotlin/llm/slop/liquidlsd/rendering/Mixer.kt`: Global mix state.
-- `src/main/kotlin/llm/slop/liquidlsd/rendering/VisualSourceRegistry.kt`: Dynamic visual source loading.
-- `src/main/kotlin/llm/slop/liquidlsd/parameters/ModulatableParameter.kt`: Runtime parameter evaluation.
-- `src/main/kotlin/llm/slop/liquidlsd/cv/CVRegistry.kt`: CV source registry and histories.
-- `src/main/kotlin/llm/slop/liquidlsd/models/PatchModels.kt`: Persistence DTOs and conversion functions.
-- `src/main/kotlin/llm/slop/liquidlsd/patches/PatchManager.kt`: Patch/session save-load orchestration.
-- `src/main/kotlin/llm/slop/liquidlsd/ui/UIManager.kt`: UI frame orchestration.
-- `src/main/kotlin/llm/slop/liquidlsd/audio/AudioEngine.kt`: Audio processing and CV publishing.
-- `src/main/kotlin/llm/slop/liquidlsd/midi/MidiEngine.kt`: MIDI device input and event handoff.
+**`src/main/kotlin/llm/slop/liquidlsd/tools/`**:
+- Purpose: Site generator (docs HTML / ZIP).
+- Files: `SiteGenerator.kt`
 
-**Resources:**
-- `src/main/resources/shaders/`: Built-in shader files loaded from the classpath.
-- `presets/sources/`: Data-driven dynamic visual sources loaded from the filesystem.
-- `src/main/resources/fonts/`: Fonts used by `UITheme`.
-- `src/main/resources/patches/default.json`: Bundled default patch resource.
-- `docs/`: MkDocs source, optionally generated into `src/main/resources/docs` by Gradle.
+**`src/main/kotlin/llm/slop/liquidlsd/ui/`**:
+- Purpose: ImGui panels, widgets, Perform view (matrix, pages, geometry, knob specs), navigation surfaces, themes (UITheme, TangoPalette, CvTheme), preferences.
+- Files: `AboutModal.kt`, `AppPreferences.kt`, `AppPreferencesStore.kt`, `AssetType.kt`, `AudioEnginePanel.kt`, `AudioModulatorSection.kt`, `BackNavigation.kt`, `BeatDivisionSlider.kt`, `BroadcastPreferencesPanel.kt`, `Column3HeaderToggle.kt`, `CustomIconButton.kt`, `CustomRangeSlider.kt`, `CvModulatorSliderHelpers.kt`, `CvTheme.kt`, `DeckControlPanel.kt`, `DeckMonitorGrid.kt`, `DeckPresetController.kt`, `DeckSourcePicker.kt`, `DocManager.kt`, `DropdownStyleHelper.kt`, `FXChainMacroStrip.kt`, `FileSystemManager.kt`, `FxChainHeader.kt`, `FxMacroSummary.kt`, `FxParamCell.kt`, `FxSlotCell.kt`, `GridMetrics.kt`, `Icons.kt`, `ImGuiFileBrowser.kt`, `Lfo1Section.kt`, `Lfo2Section.kt`, `LibraryNavigation.kt`, `LibraryPanel.kt`, `LinkModeButton.kt`, `MacroBindingInspector.kt`, `MacroKnobWidget.kt`, `MacroPanel.kt`, `MenuBar.kt`, `MidiModulatorSection.kt`, `MidiPreferencesPanel.kt`, `MissingItemsPanel.kt`, `MixerLayout.kt`, `MixerPanel.kt`, `ModulatorHeaderRow.kt`, `NavigationSurface.kt`, `NoteEditorModal.kt`, `OscLearnStatusOverlay.kt`, `OscPreferencesPanel.kt`, `OscilloscopeDrawer.kt`, `ParameterGridHeaders.kt`, `ParametersKeyboard.kt`, `ParametersRenderer.kt`, `ParametersState.kt`, `ParametersTabs.kt`, `ParametersUndo.kt`, `PerfKnobSpec.kt`, `PerfPageStore.kt`, `PerfRowGeometry.kt`, `PerfRows.kt`, `PerformPagesPanel.kt`, `PerformSurface.kt`, `PerformanceBrowseBay.kt`, `PerformanceClockControls.kt`, `PerformanceDeckControls.kt`, `PerformanceDeepEditBay.kt`, `PerformanceFxSendsControls.kt`, `PerformanceMasterControls.kt`, `PerformanceMatrixPanel.kt`, `PerformanceStats.kt`, `PerformanceTransitionsControls.kt`, `PerformanceUiContext.kt`, `PlaylistManager.kt`, `PopupManager.kt`, `PreferencesPanel.kt`, `PropertiesPanel.kt`, `SavePresetModal.kt`, `SeqSection.kt`, `ShaderLocationsPreferencesPanel.kt`, `ShaderPickerPopup.kt`, `ShortcutsPreferencesPanel.kt`, `SplitterManager.kt`, `TangoPalette.kt`, `TempoSyncPanel.kt`, `TextFit.kt`, `TooltipHelper.kt`, `UIManager.kt`, `UITheme.kt`, `UIThemeStyler.kt`, `UiLabPanel.kt`, `UpdatePromptModal.kt`, `ValueParamSection.kt`, `VideoDisplayPreferencesPanel.kt`, `VideoExportModal.kt`, `WindowFrameController.kt`
 
-**Testing:**
-- `src/test/kotlin/llm/slop/liquidlsd/patches/`: Patch/session/queue regression tests.
-- `src/test/kotlin/llm/slop/liquidlsd/rendering/`: Rendering-domain utility tests.
-- `src/test/kotlin/llm/slop/liquidlsd/ui/`: UI utility tests.
+**`src/main/kotlin/llm/slop/liquidlsd/ui/browser/`**:
+- Purpose: Library sub-panels (preset / FX / transition lists, playlist editors, queue actions, shared popups).
+- Files: `BgQueueActionsPanel.kt`, `BrowserActionToolbar.kt`, `BrowserDeckButtons.kt`, `BrowserPopupHandler.kt`, `BrowserRowMoreButton.kt`, `FXBgQueueActionsPanel.kt`, `FXBrowserPanel.kt`, `FXPlaylistEditorPanel.kt`, `FXQueueActionsPanel.kt`, `MultiSelectionModel.kt`, `PlaylistEditorPanel.kt`, `PresetListPanel.kt`, `QueueActionsPanel.kt`, `TransitionBrowserPanel.kt`, `TransitionPlaylistEditorPanel.kt`, `TransitionQueuePanel.kt`
+
+**`src/main/kotlin/llm/slop/liquidlsd/ui/rack/`**:
+- Purpose: Modular Rack disclosure helper.
+- Files: `RackUnit.kt`
+
+**`src/main/kotlin/llm/slop/liquidlsd/ui/shortcuts/`**:
+- Purpose: Rebindable keyboard shortcuts.
+- Files: `KeyCombination.kt`, `ShortcutAction.kt`, `ShortcutManager.kt`
+
+**`src/main/kotlin/llm/slop/liquidlsd/update/`**:
+- Purpose: Version resolution, SemVer, update checker.
+- Files: `AppVersion.kt`, `SemVer.kt`, `UpdateChecker.kt`
+
+**`src/main/kotlin/llm/slop/liquidlsd/utils/`**:
+- Purpose: Native library loader, time source and utilities.
+- Files: `NativeLibraryLoader.kt`, `TimeSource.kt`, `TimeUtils.kt`
+
+## Resource And Runtime Data
+
+- `src/main/resources/controllers/midi-fighter-twister.json`: built-in controller profile. User profiles go in `library/controllers/` (same id overrides).
+- `src/main/resources/perform_pages/`: built-in Perform pages `decks.json`, `deck-ab.json`, `deck-bgpv.json`, `mixer.json`, `master.json`. User pages go in `library/perform_pages/`.
+- `src/main/resources/default_filters|default_sources|default_transitions/`: bundled ISF shaders (`.fs`), role by image-input count.
+- `src/main/resources/shaders/`: built-in GLSL (`blit`, `mixer.frag`, `view2d.frag`, legacy/test shaders).
+- `src/main/resources/fonts/`: Inter, JetBrains Mono, Lucide icon font.
+- `src/main/resources/presets/default.json`: bundled default preset.
+
+## Where To Add New Code
+
+- **Render pass / GL primitive**: `rendering/` (keep GL on Thread 0, explicit `dispose()`); built-in shaders in `src/main/resources/shaders/`.
+- **Visual source / filter / transition**: drop an ISF shader into a registered ISF directory (role auto-detected); built-in Kotlin sources implement `VisualSource` in `rendering/`.
+- **UI panel**: `ui/<Feature>Panel.kt`, wired from `UIManager.kt`/`MenuBar.kt`; app-level settings in `UITheme.kt`/`AppPreferences.kt`; colors from `TangoPalette.kt` only. Render thread only.
+- **Perform row / page**: add a row to `PerfRows.CATALOG` (`ui/PerfRows.kt`); geometry in `PerfRowGeometry.kt`, knob content in `PerfKnobSpec.kt`; a page is a JSON file (`PerfPageStore`).
+- **Controller command or device**: commands in `control/` (register on `CommandRegistry`), device profile JSON in `resources/controllers/`; UI-facing behaviour goes behind `KnobSurface`/`NavSurface`.
+- **Preset field**: DTOs and converters in `models/PresetModels.kt`, migration in `presets/PresetMigrator.kt`, orchestration in `presets/PresetManager.kt`; keep DTOs backward compatible.
+- **CV source / modulator behaviour**: `cv/` (register in `CVRegistry.kt`), `parameters/`, `cv/Evaluators.kt`.
+- **Audio DSP**: helpers in `audio/`, integrated through `AudioEngine.kt`; pre-allocate, no allocation/logging/IO in the callback.
+- **Queue / playlist behaviour**: `presets/QueueEngine.kt` (FX / transition) or `PlayQueueManager.kt` / `BgQueueManager.kt`; UI in `ui/browser/`.
+- **Tests**: mirror the production package under `src/test/kotlin/llm/slop/liquidlsd/`, `*Test.kt`.
+- **Docs**: Markdown under `docs/`, nav in `mkdocs.yml`.
 
 ## Naming Conventions
 
-**Files:**
-- Kotlin classes/objects use PascalCase file names matching the main type: `Renderer.kt`, `PatchManager.kt`, `ModulatableParameter.kt`, `UIManager.kt`.
-- UI panels end with `Panel` when they draw a major UI area: `AssetBrowserPanel.kt`, `AudioEnginePanel.kt`, `CellConfigPanel.kt`, `MixerMonitorPanel.kt`, `PatchGridPanel.kt`, `SettingsPanel.kt`.
-- UI reusable controls/widgets use descriptive component names: `CustomIconButton.kt`, `CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `ImGuiFileBrowser.kt`.
-- Persistence DTOs are grouped in `PatchModels.kt`; add closely related patch DTOs/converters there unless the file is intentionally split.
-- Tests use `*Test.kt` names and mirror the production package: `DirtyStateTest.kt`, `DeckUtilityTest.kt`.
-- Shader resources use lowercase descriptive names with `.vert` and `.frag`: `blit.vert`, `feedback.frag`, `mixer.frag`.
-- Dynamic visual source folders use lowercase snake_case identifiers: `presets/sources/pseudo_kleinian`, `presets/sources/clifford_torus`, `presets/sources/attractor_feedback`.
-
-**Directories:**
-- Kotlin package directories mirror `llm.slop.liquidlsd` and domain package names: `audio`, `cv`, `midi`, `models`, `parameters`, `patches`, `rendering`, `ui`, `utils`.
-- Runtime preset directories use plural noun groups: `presets/sources`, `presets/patches`, `presets/playlists`, `presets/midi`.
-- Documentation directories separate developer and user audiences: `docs/developer`, `docs/user_guide`.
-
-## Where to Add New Code
-
-**New OpenGL Render Pass Or Rendering Primitive:**
-- Primary code: `src/main/kotlin/llm/slop/liquidlsd/rendering/Renderer.kt`, `src/main/kotlin/llm/slop/liquidlsd/rendering/Geometry.kt`, or a new focused file under `src/main/kotlin/llm/slop/liquidlsd/rendering/`.
-- Resources: Add shaders under `src/main/resources/shaders/` when they are built-in render infrastructure.
-- Tests: Add domain tests under `src/test/kotlin/llm/slop/liquidlsd/rendering/`.
-- Constraint: Keep GL calls on the main thread and add explicit `dispose()` cleanup for new GL resources.
-
-**New Data-Driven Visual Source:**
-- Primary code: Usually no Kotlin code. Add `presets/sources/<source_id>/meta.json` and `presets/sources/<source_id>/shader.frag`; add `shader.vert` only when the source needs custom vertex behavior.
-- Registry: Use existing loading in `src/main/kotlin/llm/slop/liquidlsd/rendering/VisualSourceRegistry.kt`.
-- Tests: Add validation or source selection tests under `src/test/kotlin/llm/slop/liquidlsd/rendering/` if Kotlin logic changes.
-
-**New Built-In Visual Source Type:**
-- Primary code: Add a `VisualSource` implementation in `src/main/kotlin/llm/slop/liquidlsd/rendering/`.
-- Registry: Extend `src/main/kotlin/llm/slop/liquidlsd/rendering/VisualSourceRegistry.kt` only if data-driven `DynamicVisualSource` is insufficient.
-- Persistence: Update `src/main/kotlin/llm/slop/liquidlsd/models/PatchModels.kt` if serialization needs new fields.
-
-**New UI Panel:**
-- Primary code: Add `src/main/kotlin/llm/slop/liquidlsd/ui/<Feature>Panel.kt`.
-- Integration: Wire it from `src/main/kotlin/llm/slop/liquidlsd/ui/UIManager.kt`, `MenuBar.kt`, or the relevant existing panel.
-- State: Keep panel-specific transient UI state in the panel or `PatchGridState.kt`; keep app-level settings in `UITheme.kt`.
-- Constraint: Draw from the render thread only and follow ImGui native memory guidance from `.agents/skills/imgui_memory_management/SKILL.md`.
-
-**New UI Widget:**
-- Primary code: Add `src/main/kotlin/llm/slop/liquidlsd/ui/<WidgetName>.kt`.
-- Reuse: Follow patterns in `CustomIconButton.kt`, `CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, and `ModulatorHeaderRow.kt`.
-
-**New Patch/Session Field:**
-- DTOs: Add fields and defaults in `src/main/kotlin/llm/slop/liquidlsd/models/PatchModels.kt`.
-- Conversion: Update `toDto()` and `applyDto()` extension functions in `src/main/kotlin/llm/slop/liquidlsd/models/PatchModels.kt`.
-- Save/load orchestration: Update `src/main/kotlin/llm/slop/liquidlsd/patches/PatchManager.kt`.
-- Tests: Add/update tests in `src/test/kotlin/llm/slop/liquidlsd/patches/`.
-- Constraint: Preserve backward compatibility with existing versioned DTOs.
-
-**New Modulation Source Or CV Generator:**
-- Primary code: Add a `CVSource` implementation under `src/main/kotlin/llm/slop/liquidlsd/cv/`.
-- Registration: Register it in `src/main/kotlin/llm/slop/liquidlsd/cv/CVRegistry.kt`.
-- UI: Expose it in patch grid labels/colors in `src/main/kotlin/llm/slop/liquidlsd/ui/PatchGridPanel.kt` or related patch-grid files.
-- Tests: Add evaluation tests under `src/test/kotlin/llm/slop/liquidlsd/cv/` or parameter tests if the directory is introduced.
-
-**New Parameter Or Modulator Behavior:**
-- Primary code: `src/main/kotlin/llm/slop/liquidlsd/parameters/ModulatableParameter.kt`, `src/main/kotlin/llm/slop/liquidlsd/parameters/CvModulator.kt`, `src/main/kotlin/llm/slop/liquidlsd/cv/Evaluators.kt`, or `src/main/kotlin/llm/slop/liquidlsd/parameters/WaveformMath.kt`.
-- Persistence: Update `src/main/kotlin/llm/slop/liquidlsd/models/PatchModels.kt`.
-- UI: Update patch-grid controls under `src/main/kotlin/llm/slop/liquidlsd/ui/`.
-
-**New Audio DSP Feature:**
-- Primary code: Add focused DSP helpers under `src/main/kotlin/llm/slop/liquidlsd/audio/` and integrate through `AudioEngine.kt`.
-- Constraint: Pre-allocate buffers before the JACK callback path. Do not allocate, log, block, or perform IO inside `AudioEngine.processAudio()`.
-- Tests: Add unit tests under `src/test/kotlin/llm/slop/liquidlsd/audio/` if introduced.
-
-**New MIDI Control Feature:**
-- Input handling: Use `src/main/kotlin/llm/slop/liquidlsd/midi/MidiEngine.kt` for raw MIDI device input and event queues.
-- Mapping: Use `src/main/kotlin/llm/slop/liquidlsd/midi/MidiMappingManager.kt` for persistent control mappings.
-- UI learn behavior: Drain queued MIDI events from `src/main/kotlin/llm/slop/liquidlsd/ui/UIManager.kt` or a delegated render-thread UI component.
-
-**New Playlist Or Queue Behavior:**
-- Primary code: `src/main/kotlin/llm/slop/liquidlsd/patches/PlayQueueManager.kt` and `src/main/kotlin/llm/slop/liquidlsd/patches/PlaylistManager.kt`.
-- UI integration: `src/main/kotlin/llm/slop/liquidlsd/ui/AssetBrowserPanel.kt` and `src/main/kotlin/llm/slop/liquidlsd/ui/PlaylistManager.kt`.
-- Tests: `src/test/kotlin/llm/slop/liquidlsd/patches/PlayQueueManagerTest.kt`.
-
-**New Documentation Page:**
-- Source: Add Markdown under `docs/`, `docs/developer/`, or `docs/user_guide/`.
-- Navigation: Update `mkdocs.yml`.
-- Runtime packaging: Gradle `generateDocs` writes built docs to `src/main/resources/docs` when MkDocs is available.
-
-**Utilities:**
-- Shared non-domain helpers: `src/main/kotlin/llm/slop/liquidlsd/utils/`.
-- Domain-specific helpers: Keep them in the owning package, for example rendering helpers in `src/main/kotlin/llm/slop/liquidlsd/rendering/` and file asset helpers in `src/main/kotlin/llm/slop/liquidlsd/ui/`.
+- PascalCase files matching the main type; `*Panel.kt` for major UI areas, `*Section.kt` for modulator editor sections, `*Test.kt` for tests.
+- Presets are `.lsd`, FX slots `.lsdfx`, FX chains `.lsdfxchain`, playlists `.lsdplay` / `.lsdfxplay` / `.lsdtransplay`, transition presets `.lsdtrans`.
+- Terminology: "preset" (formerly "patch"); the `patches/` package no longer exists.
 
 ## Special Directories
 
-**`.agents/skills/`:**
-- Purpose: Project-specific safety/convention instructions for agents.
-- Generated: No.
-- Committed: Yes.
-
-**`.planning/codebase/`:**
-- Purpose: Generated codebase maps consumed by GSD planning/execution commands.
-- Generated: Yes.
-- Committed: Depends on workflow, but documents are intended to be written to the repo.
-
-**`presets/sources/`:**
-- Purpose: Dynamic visual source definitions loaded at runtime by `VisualSourceRegistry`.
-- Generated: No.
-- Committed: Yes for bundled sources.
-
-**`presets/patches/`, `presets/playlists/`, `presets/midi/`:**
-- Purpose: Runtime-created user preset, playlist, and MIDI profile storage.
-- Generated: Yes at runtime by `Main.kt` and manager classes.
-- Committed: Usually no for user-generated data unless intentionally adding bundled presets.
-
-**`src/main/resources/shaders/`:**
-- Purpose: Built-in shader resources loaded from the classpath by rendering code.
-- Generated: No.
-- Committed: Yes.
-
-**`src/main/resources/fonts/`:**
-- Purpose: Bundled font resources loaded by `UITheme`.
-- Generated: No.
-- Committed: Yes.
-
-**`src/main/resources/docs/`:**
-- Purpose: Built documentation output for runtime documentation access.
-- Generated: Yes by `generateDocs` when MkDocs is available.
-- Committed: Only if the project chooses to ship prebuilt docs in resources.
-
-**`build/`:**
-- Purpose: Gradle build outputs, distribution packages, cached JRE downloads.
-- Generated: Yes.
-- Committed: No.
-
-**`.gradle/`:**
-- Purpose: Gradle local cache/state.
-- Generated: Yes.
-- Committed: No.
+- `.agents/skills/`: project safety/convention instructions for agents (committed).
+- `.planning/codebase/`: codebase maps (committed).
+- `library/`: user data; runtime-written by managers (`last_session.json`, saved presets).
+- `src/main/resources/docs/`: built documentation for in-app help (generated).
+- `build/`, `.gradle/`: build output and cache (not committed).
 
 ---
 
-*Structure analysis: 2026-07-07*
+*Structure analysis: 2026-10-03*

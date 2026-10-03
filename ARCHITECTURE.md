@@ -48,14 +48,16 @@ To maintain stable 60–120 FPS playback without ZGC pause interruptions or fram
 - **MIDI Evaluation & Dispatch (`MidiEngine.kt`, `MidiMappingManager.kt`, `ParameterResolver.kt`, `ModulatorPropertyAccessor.kt`)**: `MidiEngine` captures `ShortMessage.CONTROL_CHANGE`, `NOTE_ON`, `NOTE_OFF`, and `PITCH_BEND` into atomic storage and lock-free queues (`receivedEvents`). `MidiMappingManager` resolves parameter paths once when mappings change, supporting both direct parameter paths and hierarchical modulator variables (`:mod/<index>/<property>`), storing bindings in an unboxed, flat `ResolvedMidiBinding` array. The event dispatch delegates value mutations to `ModulatorPropertyAccessor` or `param.baseValue`, processing incoming relative rotary deltas (Binary Offset, Signed Bit, Two's Complement), discrete button triggers (Momentary, Toggle, Step), and continuous soft takeover (pickup). The per-frame `update(mixer)` loop evaluates exponential slew smoothing without heap allocations, map lookups, or garbage collection churn.
 - **CV Source Evaluation & MIDI Routing (`CVRegistry.kt`, `Evaluators.kt`)**: Non-audio CV sources are maintained in a pre-allocated `activeNonAudioSources` array traversed via indexed loops during `updateAll()`. MIDI CC and Note lookups bit-pack channel and index into 64-bit keys (`(channel.toLong() shl 32) or index.toLong()`) avoiding string splitting, and `AudioFollowerTracker` guards state map retrieval before calling `computeIfAbsent` to eliminate capturing lambda allocations on the audio path.
 - **Mixer & Modulators (`Mixer.kt`, `ModulatableParameter.kt`)**: Modulator activity checks on `CopyOnWriteArrayList` use index-based O(1) traversal (`hasActiveModulator()`) instead of `.any { }` to prevent per-frame `COWIterator` allocations.
-- **Registries (`ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`, `ISFLibraryRegistry.kt`, `VisualSourceRegistry.kt`)**: `availableFilters`, `availableTransitions`, `availableSources`, and `allAssets` are backed by `@Volatile` immutable sorted snapshots rebuilt once per scan or modification, eliminating per-frame list re-allocation and re-sorting during picker rendering. Directory scoping prevents cross-scanning between generator and filter/transition folders (`library/sources`, `library/filters`, `library/transitions`). All visual source and preset menu items in `ParametersPanel.drawLaunchpad` enforce non-blank labels with unique `##` identifier scoping to prevent ImGui empty-ID root assertion crashes (`id != window->ID`). Compilation errors in user shaders are logged as concise warnings rather than dumping multi-page stack traces during startup.
+- **Registries (`ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`, `ISFLibraryRegistry.kt`, `VisualSourceRegistry.kt`)**: `availableFilters`, `availableTransitions`, `availableSources`, and `allAssets` are backed by `@Volatile` immutable sorted snapshots rebuilt once per scan or modification, eliminating per-frame list re-allocation and re-sorting during picker rendering. Directory scoping prevents cross-scanning between generator and filter/transition folders (`library/sources`, `library/filters`, `library/transitions`). All visual source and preset menu items in `DeckSourcePicker.drawLaunchpad` enforce non-blank labels with unique `##` identifier scoping to prevent ImGui empty-ID root assertion crashes (`id != window->ID`). Compilation errors in user shaders are logged as concise warnings rather than dumping multi-page stack traces during startup.
 
 ## File Map
+
+Every `.kt` file under `src/main/kotlin/llm/slop/liquidlsd/` is listed here (271 files, last verified 2026-10-03 by script). Runtime-loaded JSON lives under `src/main/resources/` (see the end of the tree).
 
 ```
 src/main/kotlin/llm/slop/liquidlsd/
 ├── Main.kt                     — GLFW window, multi-resolution app icon loading (16x16 to 256x256), render loop
-├── SessionContext.kt           — Application state & context
+├── SessionContext.kt           — Application state & context (facade passed to UI panels)
 ├── audio/
 │   ├── AudioEngine.kt          — Audio lifecycle, coordinates JACK & Java Sound, pushes CV values
 │   ├── AudioChannelRouting.kt  — Stereo channel routing enum (Mix L+R, Left Only, Right Only)
@@ -67,7 +69,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── AmplitudeExtractor.kt   — RMS amplitude per band
 │   ├── AudioInputDevice.kt     — Input device selection
 │   ├── SystemAudioVolume.kt    — Master volume control
-│   ├── MidiJackWatchdog.kt     — MIDI hotplug monitoring
+│   ├── MidiJackWatchdog.kt     — MIDI hotplug monitoring and JACK reconnect
 │   └── TapTempoController.kt   — VJ tap tempo cadence tracking, interval averaging, 2.0s timeout reset, and phase alignment
 ├── link/                       — Ableton Link network interop & clock synchronization
 │   ├── LinkSyncManager.kt      — Session status accessor and audio tempo damping orchestrator
@@ -87,14 +89,36 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── BeatClock.kt            — Beat phase 0..1, JACK-synced
 │   ├── Evaluators.kt           — Evaluators for lfo, beatPhase, sampleAndHold, audio
 │   ├── GenCVSource.kt          — Registry placeholder for the lfo generator
+│   ├── LFO.kt                  — Time-based LFO CV source (sine, 0..1)
+│   ├── SampleAndHold.kt        — Sample & Hold CV source (new random value each beat)
 │   └── CvHistoryBuffer.kt      — Ring buffer (200 samples)
-├── midi/
-│   ├── MidiEngine.kt           — Multi-message MIDI receiver, atomic state, event queue, and live sniffer buffer
-│   └── MidiMappingManager.kt   — Multi-type parameter mapping, soft takeover, rotary decoding, and slew smoothing
+├── midi/                       — MIDI I/O and the legacy parameter-mapping layer (see "Controller input architecture" and its layering note)
+│   ├── MidiEngine.kt           — Multi-message MIDI receiver, atomic state, capped event queue (MAX_QUEUED_EVENTS), and live sniffer buffer
+│   ├── MidiMappingManager.kt   — Multi-type parameter mapping, soft takeover, rotary decoding, and slew smoothing; also hosts the global-command bindings
+│   └── MidiOutputPorts.kt      — Opens a MIDI output port by device name for controller feedback; each sink writes from its own daemon thread
+├── control/                    — Controller input: profiles, command registry, runtime, LED/ring feedback (see "Controller input architecture")
+│   ├── Command.kt              — CommandKind, CommandInput (preallocated Press instances), Command, CommandContext, CommandRegistry (id -> command, edge detection)
+│   ├── ControllerProfile.kt    — Serializable profile DTOs (inputs, banks, bindings, output) and CompiledController (flat lookup tables built once)
+│   ├── ControllerProfileStore.kt — Finds profiles: built-ins in the jar (controllers/*.json) and user files in library/controllers/; user id overrides built-in
+│   ├── ControllerManager.kt    — One ControllerRuntime + ControllerFeedback per connected device, created on first message; render thread only
+│   ├── ControllerRuntime.kt    — Drives the CommandRegistry from one device: active bank, held modifiers, acceleration-scaled encoder deltas, routing to bound commands
+│   ├── ControllerFeedback.kt   — Keeps one controller's rings and LEDs in step with the app (active bank only, changes only)
+│   ├── CcQueue.kt              — Coalescing (channel, cc) -> value queue so a slow device never builds a backlog of stale ring positions
+│   ├── MidiSink.kt             — Interface for where feedback CCs go (sendCc must not block)
+│   ├── TracingSink.kt          — MidiSink wrapper that logs every outgoing message for diagnosis
+│   ├── GlobalCommands.kt       — Fixed global (non-parameter) command ids (queue next/prev, etc.), with Global/... aliases for old MIDI profiles
+│   ├── KnobCommands.kt         — knob.<n>, knob.<n>.press, knob.<n>.press_alt command family; fine-adjust hold state; browse-cursor accumulation
+│   ├── KnobSurface.kt          — Interface: the 16 Perform knobs as seen by devices (turn/primary/secondary/showPage); implemented by ui/PerformSurface
+│   ├── KnobLight.kt            — KnobLight (ring value + LED colour) and KnobLightSource interface that feedback reads
+│   ├── NavCommands.kt          — nav.button.<n> and .alt command family (free side buttons)
+│   ├── NavSurface.kt           — Interface: context-dependent side buttons and browse cursor; implemented by ui/NavigationSurface
+│   ├── ProfileBindingEdit.kt   — Pure edits of a profile's global bindings map for the binding editor
+│   └── UserJsonFiles.kt        — Shared safe scan + atomic write for user JSON stores (controller profiles, Perform pages)
 ├── osc/
 │   ├── OscCodec.kt             — Pure Kotlin zero-dependency binary OSC 1.0 encoder/decoder (messages & bundles)
 │   ├── OscEngine.kt            — Low-latency UDP receiver/transmitter, remote client auto-learn & packet sniffer
 │   ├── OscLearnState.kt        — Interactive "Learn OSC" target-arming state machine, mirrors MacroLearnState
+│   ├── OscMapModeState.kt      — Global "click any control to bind it" OSC map mode (Ctrl+Shift+O)
 │   ├── OscMappingManager.kt    — OSC address routing (parameters & modulators), vector unpacking, slew smoothing & profile persistence
 │   └── OscPreferences.kt       — OSC network port, enable flag & active profile persistence settings
 ├── input/
@@ -122,7 +146,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── macro/                      — Macro Controls & Parameter Linking engine; see docs/user_guide/macros_and_rack.md
 │   ├── MacroModels.kt          — Data model: `MacroBinding`, `MacroControl` (rotary knob value), `MacroBank` (up to 4 knobs)
 │   ├── MacroCurve.kt           — Pure curve-shaping math (LINEAR/EXPONENTIAL/LOGARITHMIC/S_CURVE/STEP), inverse curve mapping (`inverse`), knob-travel windowing, and min/max/invert range mapping
-│   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; 12 canonical bank ids (`DECK_A`..`DECK_PV`, `DECK_A_FX`..`DECK_PV_FX`, `TRANS`, `MASTER`, `FX_SENDS`, `MASTER_FX`), read/written by both Column 3 MACROS and the Performance Mode 4×4 Matrix
+│   ├── MacroEngine.kt          — Per-frame binding evaluation singleton; canonical bank ids (`DECK_A`..`DECK_PV`, `DECK_A_FX`..`DECK_PV_FX`, `TRANS`, `MASTER`, `FX_SENDS`, `MASTER_FX`, `GLOBAL`), read/written by both the Macros tab and the Performance 4×4 Matrix
 │   ├── FxMacroSync.kt          — Bidirectional synchronization between FX chains/banks and canonical macro knobs (Super Knob + Metaknobs)
 │   ├── MacroLearnState.kt      — Interactive click-to-bind Learn Mode session state machine and UI status banner
 │   ├── MacroBankSerializer.kt  — Deck-scoped bank filtering/remapping for `.lsd`/`.lsdplay` DTOs, plus standalone `.knobpreset.json` export/import
@@ -135,16 +159,17 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── PresetMigrator.kt       — Sanitizes a loaded `DeckPresetDto` against the active visual source/feedback schema, filling defaults & stripping obsolete keys
 │   ├── DeckLifecycleManager.kt — Deck clear/copy/move/swap operations and associated active-preset bookkeeping
 │   ├── PlayQueueManager.kt     — Manages the A/B playback queue (shuffle/repeat/history, dirty-deck SKIP/AUTO_SAVE/AUTO_DISCARD guard via `UITheme.autoVjDirtyBehavior`); has its own independent copy of the index-bookkeeping helpers, not on `QueueEngine`
-│   ├── BgQueueManager.kt       — Manages the background deck queue, incl. dip-to-black transition state machine; also not on `QueueEngine` (see PlayQueueManager.kt note)
+│   ├── BgQueueManager.kt       — Manages the background deck queue, incl. dip-to-black transition state machine; also not on `QueueEngine`
 │   ├── QueueEngine.kt          — Shared abstract base for FX and Transition queues: shuffle/repeat/history-index bookkeeping, playlist parsing (via `PlaylistParser`), append/insert/remove/move/clear, `computeNextIndex`/`computePrevIndex`
 │   ├── FxQueueEngine.kt        — `QueueEngine` + deck-targeting & dirty-deck guard, backing the FX A/B and FX BG queues
 │   ├── FXQueueManager.kt       — `FxQueueEngine` for Deck A/B, targets the crossfader-active deck
 │   ├── FXBgQueueManager.kt     — `FxQueueEngine` for Deck BG
 │   ├── FxOps.kt                — Single entry point for FX chain changes (deck or Master): queues every load/swap/clear and applies it on the GL thread, then re-syncs that chain's FX row knobs
+│   ├── FxShortlist.kt          — Starred-effects shortlist (`library/fx_shortlist.json`) that a slot cell's ◀ / ▶ steps through; falls back to the current effect's category
 │   ├── TransitionQueueManager.kt — `QueueEngine` + transition apply/auto-fade-hook/session-restore, for the Transition Queue (`.lsdtrans`/`.lsdtransplay`); keeps unresolved playlist items as literal stock-shader-ID tokens instead of dropping them
-│   ├── PlaylistParser.kt       — Parses playlist files
+│   ├── PlaylistParser.kt       — Generic playlist parser (extracts an `items` array from any playlist DTO; also line/`#`-comment text format)
 │   ├── SessionState.kt         — Session state management
-│   ├── SessionSerializer.kt    — Persists/restores the active session, incl. the 12 canonical macro banks
+│   ├── SessionSerializer.kt    — Persists/restores the active session, incl. the canonical macro banks
 │   └── PresetIOStatus.kt       — IO status for UI feedback
 ├── cli/                        — Startup CLI argument parsing & validation
 │   └── CliArgs.kt              — Command line options (--screenshot-ui, --window, --no-audio, --ui-lab)
@@ -159,8 +184,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── rendering/
 │   ├── Mandala.kt              — Mandala4Arm (recipe + field docs), Mandala (VisualSource), analytical arm normalization
 │   ├── MandalaLibrary.kt       — ~300 curated MandalaRatio entries
+│   ├── MorphState.kt           — Mandala morph/boundary-transition state (BoundaryTarget and interpolation between mandala recipes)
 │   ├── VisualEffect.kt         — Interface for post-processing effects
-│   ├── isf/                    — Universal shader preprocessor, ISF/Shadertoy/GLSLSandbox format parser, models, ISFFilter (incl. per-effect Metaknob), ISFAutoBindEngine & FxMetaBinding (3-tier Metaknob auto-bind: user override cache/curated/heuristic), multi-pass ISFVisualSource, ISFTransitionRegistry, ISFDirectoryManager, ISFScanner, ISFLibraryRegistry & ISFFileWatcher
 │   ├── AudioTexture.kt         — Universal 512x2 floating-point audio FFT spectrum and live waveform OpenGL texture stream
 │   ├── FxChain.kt              — Individual FX chain hosting 3 ISF filter slots with chain-level wet/dry and bypass, plus a Super Knob that drives linked slots' Metaknobs via soft-takeover
 │   ├── Deck.kt                 — VisualSource + cleanFBO + dedicated 3-slot FxChain with FBO ping-pong architecture (scratch fxPingFBO/fxPongFBO + fxOutFBO) + 3D View params
@@ -180,71 +205,186 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── TextureStreamer.kt      — Multi-endpoint live video sharing (Spout2 on Windows, Syphon Obj-C Runtime on macOS, PipeWire 0.3 on Linux)
 │   ├── TextureReceiver.kt      — Live video stream ingestion client bindings (Spout2 on Windows, Syphon Client on macOS, PipeWire 0.3 on Linux)
 │   ├── VideoOutputSettings.kt  — Video output endpoints, resolution overrides, scaling modes, and stream configurations
-│   └── ViewportHelper.kt       — Output scaling modes
+│   ├── ViewportHelper.kt       — Output scaling modes
+│   ├── isf/                    — Universal shader preprocessor and ISF/Shadertoy/GLSLSandbox support
+│   │   ├── ISFModels.kt        — ISF data models (ShaderFormat, inputs, passes)
+│   │   ├── ISFParser.kt        — ISF/Shadertoy/GLSLSandbox header parser and preprocessor
+│   │   ├── ISFFilter.kt        — Runnable multi-pass ISF filter (FX slots and transitions), incl. per-effect Metaknob
+│   │   ├── ISFVisualSource.kt  — Multi-pass ISF generator as a VisualSource
+│   │   ├── ISFFilterRegistry.kt — Registry of filter-role (1 image input) assets
+│   │   ├── ISFTransitionRegistry.kt — Registry of transition-role (2+ image inputs / `progress`) assets
+│   │   ├── ISFLibraryRegistry.kt — Combined asset registry (`allAssets`) feeding the pickers
+│   │   ├── ISFDirectoryManager.kt — Registered ISF directory sources, path expansion and status
+│   │   ├── ISFDirectoryModels.kt — DirectorySourceType (Custom > UserStandard > SystemStandard > BuiltIn priority) and related DTOs
+│   │   ├── ISFScanner.kt       — Recursive directory scan; parses ISF headers and metadata safely
+│   │   ├── ISFFileWatcher.kt   — NIO WatchService monitor with debounced rescans
+│   │   ├── ISFTextureLoader.kt — Thread-0 GL texture loading for IMPORTED assets (LUTs, noise maps)
+│   │   ├── ISFAutoBindEngine.kt — 3-tier Metaknob auto-bind (user override cache / curated / heuristic) so no ISF loads with a dead knob
+│   │   └── FxMetaBinding.kt    — Metaknob binding model: MetaCurve and knob-travel windowing
+│   └── pipewire/
+│       ├── PipeWireBridge.kt   — Native PipeWire streaming sessions (Linux)
+│       └── PipeWireLibrary.kt  — JNA interface for libpipewire-0.3
 ├── ui/                         — ImGui panels and UI orchestration; see docs/developer/ui.md
-│   ├── AppPreferences.kt       — App preferences data model, persistent layout & feature toggles
 │   ├── UIManager.kt            — Top-level layout orchestrator & GLFW/ImGui render loop
-│   ├── MenuBar.kt              — Unified header bar, navigation menus, telemetry HUD & window controls
-│   ├── ShaderPickerPopup.kt    — High-performance category-based shader & source selector with multi-select dropdown
-│   ├── WindowFrameController.kt— Client-Side Decorations (CSD), window dragging & perimeter edge resizing
-│   ├── DeckPresetController.kt — Deck preset file lifecycle and dialog controller
+│   ├── UITheme.kt              — Typography levels, persisted UI/feature settings singleton (also read by midi/ and others)
 │   ├── UIThemeStyler.kt        — ImGui dynamic styling, theme palettes, and font scaling
+│   ├── TangoPalette.kt         — Tango palette: sole source of accent/status colors for the Perform UI
+│   ├── CvTheme.kt              — Modulation-source signal palette (CV graphs, grid cells); deliberately not drawn from TangoPalette
+│   ├── AppPreferences.kt       — App preferences data model, persistent layout & feature toggles
+│   ├── AppPreferencesStore.kt  — Reads/writes lsd-preferences.properties (with legacy lsd-settings fallback)
+│   ├── MenuBar.kt              — Unified header bar, navigation menus, telemetry HUD & window controls
+│   ├── WindowFrameController.kt — Client-Side Decorations (CSD), window dragging & perimeter edge resizing
 │   ├── SplitterManager.kt      — Multi-column layout dragging and divider render manager
-│   ├── ParameterGridHeaders.kt — Deep Edit parameter-grid column layout and VAL/MIDI/LFO/SEQ/AUD headers (with section tabs)
-│   ├── ParametersTabs.kt       — Tabbed parameter container rendering per-deck generator controls and insert FX racks
-│   ├── DeckSourcePicker.kt     — Shared deck visual-source picker + empty-deck launchpad (Performance deck-row badge, Deep Edit)
-│   ├── PropertiesPanel.kt      — Edits parameter values and modulators with oscilloscope
-│   ├── LibraryPanel.kt         — Library dock panel (presets, playlists, queue)
-│   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
-│   ├── PreferencesPanel.kt     — App configuration & docked 2/3 workspace preferences panel
-│   ├── AudioEnginePanel.kt     — Audio input, beat detection, and real-time oscilloscopes (Preferences tab drawer)
-│   ├── MidiPreferencesPanel.kt — MIDI port configuration, channel filters & mapping table UI
-│   ├── OscPreferencesPanel.kt  — TouchOSC / OSC server config, live packet sniffer & Learn UI
-│   ├── ColorTunerPanel.kt      — Interactive theme editor
-│   ├── DeckControlPanel.kt     — Individual deck preview monitor, toolbar, inside-clustered badge/die overlays, and vertical channel level fader
-│   ├── MixerPanel.kt           — 2x2 monitor matrix, master output monitor with [M] badge, [🎲 ALL], master level fader, and streamlined crossfader
-│   ├── PlaylistManager.kt      — Manages saved setlists
-│   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
-│   ├── MacroPanel.kt           — Column 3 MACROS editing surface: two-row bank selector tabs (row 1 generators/composites, row 2 insert FX aligned below decks), 4 knobs, binding inspector, Learn Mode; renders the dedicated FX Rack view instead of the generic grid for FX tabs
-│   ├── MacroBindingInspector.kt — Drawer for inspecting and editing target parameter bindings, response curves, travel windows, and invert toggles
-│   ├── MacroKnobWidget.kt      — Rotary macro knob widget: drag/wheel interaction, accent-colored arc fill, optional deck tint
-│   ├── FxChainHeader.kt        — Shared Performance FX row header: chain browsing, dirty indicator, Save/Save As, kebab menu, slot focus selector pills ([1][2][3]), parameter page stepper ([◀ P1/N ▶]), and top-level [BYPASS]
-│   ├── FxSlotCell.kt           — Interactive slot drawer under knobs 2-4 (or knob 1 in Focus Mode): on/off mute pill, shortlist stepping, name truncation/picker, drag-and-drop swap/reorder, and double-click focus toggle
-│   ├── FxParamCell.kt          — Compact parameter drawer under knobs 2-4 in Focus Mode: [⟲] reset to default, formatted value readout, and CV modulation indicator dot
-│   ├── PerformanceMatrixPanel.kt — Performance Mode 4×4 knob grid: 2 tabs (DECKS, MASTER), deck-colored rows (deck rows toggle [SRC|FX], the Master row toggles [MIX|FX]; no standalone FX rows; MASTER's Clock row = tempo header bar + the section-free GLOBAL macro bank), plus the Modular Rack accordion (see `rack/` below) — a chevron on each row group toggles Faceplate ↔ Deep Edit, expanding the selected module while collapsing other rows; orchestrates dedicated modular sub-controllers:
+│   ├── PopupManager.kt         — Shared popup orchestration (exit confirm, deck save prompts)
+│   ├── TooltipHelper.kt        — Cursor-relative quadrant tooltip positioning and hover delay
+│   ├── DropdownStyleHelper.kt  — Padding/font styling for open combos, context menus and small dropdowns
+│   ├── TextFit.kt              — Fitting text into fixed-width cells (knob strips, FX slot/param cells)
+│   ├── Icons.kt                — Unicode mapping for the Lucide icon font
+│   ├── GridMetrics.kt          — Layout tokens for Parameters cell rendering (precomputed singleton)
+│   ├── DocManager.kt           — Bundled help-doc extraction and opening
+│   ├── PerformanceStats.kt     — Zero-allocation per-frame stats for the menu bar HUD
+│   ├── PerformanceMatrixPanel.kt — Perform view: 4×4 knob grid on 2 tabs (DECKS, MASTER) plus controller-driven Perform pages; deck rows toggle [SRC|FX], Master row toggles [MIX|FX]; MASTER's Clock row = tempo header bar + section-free GLOBAL macro bank. A chevron on each row group opens the Edit row (Deep Edit). Orchestrates:
 │   │   ├── PerformanceUiContext.kt      — Shared state container, colors, deck row mode registry, and module id / label resolvers
 │   │   ├── PerformanceTransitionsControls.kt — Transitions row: Line 1 transition picker, queue stepping & dice; Line 2 crossfader (deck snap badges, bipolar slider track, AUTO button, fade speed widget)
 │   │   ├── PerformanceFxSendsControls.kt — FX WET/DRY row wing controls (FX SENDS badge, Resync)
 │   │   ├── PerformanceClockControls.kt  — Clock row header bar: clock source, Link status, BPM, beat dots, TAP/RESYNC/÷2/×2/nudge
 │   │   ├── PerformanceMasterControls.kt — Master row: Line 1 [MIX] pill + Deck Alphas & Master badge + 100% reset button; Line 2 [FX] pill + Master FX chain header; right-wing Master FX bypass
 │   │   ├── PerformanceDeckControls.kt   — Deck rows left/right wing controls (stacked two-row left wing: Row 1 SRC controls, Row 2 FX chain controls; right wing FX bypass)
-│   │   └── PerformanceDeepEditBay.kt    — Modular Rack Deep Edit accordion bay, 3-column layout, and keyboard focus management
-│   ├── rack/
-│   │   └── RackUnit.kt          — Shared chevron/disclosure-tier drawing helper for the Modular Rack accordion, and the persistent "Learning: …" indicator; stateless, operates only on `ParametersState` (never `Mixer`/`FxChain`, enforcing that disclosure changes can't trigger FX refocus or `FxMacroSync` re-runs)
+│   │   ├── PerformanceDeepEditBay.kt    — Edit row (Deep Edit) bay: 3-column layout, keyboard focus management
+│   │   └── PerformanceBrowseBay.kt      — Inline Browse<->Params toggle inside the Edit row (SRC/FX/transition pickers and saved-chain list, ChainListBrowse controller cursor)
+│   ├── PerfRows.kt             — Row catalog (RowDescriptor, `PerfRows.CATALOG`) that Perform pages choose rows from
+│   ├── PerfRowGeometry.kt      — Pure geometry of a Perform row (knobs, strips, side buttons); takes no row mode, so mode changes never move anything
+│   ├── PerfKnobSpec.kt         — KnobSpec / UnderKnob: what each knob shows, resolved per row mode
+│   ├── PerfPageStore.kt        — Perform page definitions: built-ins (resources/perform_pages) + user pages, validation, atomic save via UserJsonFiles
+│   ├── PerformPagesPanel.kt    — Perform page editor in Preferences > MIDI Controls (copy built-in, create, edit rows)
+│   ├── PerformSurface.kt       — Implements control/KnobSurface: maps the 16 visible knobs to banks/specs, LED colors and knob lights
+│   ├── NavigationSurface.kt    — Implements control/NavSurface: context-dependent side buttons (Library, picker, Perform/Edit) and browse cursor
+│   ├── LibraryNavigation.kt    — Draw-independent Library actions (tab/pane stepping, cursor, load, enqueue) shared by keyboard, mouse and controller
+│   ├── BackNavigation.kt       — Shared "back" priority stack for Esc and the controller back button
+│   ├── ParametersState.kt      — Selection state & 30-level Undo Stack; also owns Modular Rack accordion state (`rackModuleDisclosure`/`DisclosureLevel`, `rackSoloMode`, `selectedRackMacroId`, `rackSelectedCell` — per-moduleId)
+│   ├── ParametersRenderer.kt   — Parameter row/cell drawing (value, MIDI, LFO, SEQ, AUD cells), knob meters
+│   ├── ParametersTabs.kt       — Deep Edit side rail and per-deck generator/insert-FX parameter rows
+│   ├── ParametersKeyboard.kt   — Keyboard handling and modulator lookup for the parameter grid
+│   ├── ParametersUndo.kt       — Snapshot create/restore helpers for the parameter undo stack
+│   ├── ParameterGridHeaders.kt — Deep Edit parameter-grid column layout and VAL/MIDI/LFO/SEQ/AUD headers (with section tabs)
+│   ├── PropertiesPanel.kt      — Deep Edit Properties column: edits modulators with oscilloscope (a component of the Edit row, not a top-level panel)
+│   ├── ValueParamSection.kt    — Value/base-parameter editing section (incl. 3D mode labels, point-count presets)
+│   ├── ModulatorHeaderRow.kt   — Shared header row for modulator sections
+│   ├── AudioModulatorSection.kt — Audio CV modulator UI: envelope follower presets, attack/decay, offset, depth
+│   ├── MidiModulatorSection.kt — MIDI CC modulator UI: mapped channel/CC readout, offset, depth
+│   ├── Lfo1Section.kt          — LFO 1 / generator shaping UI
+│   ├── Lfo2Section.kt          — LFO 2 secondary modulator UI
+│   ├── SeqSection.kt           — Step Sequencer UI (8/16/32 steps, timing, hold/glide, depth/offset)
+│   ├── BeatDivisionSlider.kt   — Beat-division selector slider
+│   ├── CvModulatorSliderHelpers.kt — Callback bundle (CvSliderCallbacks) for sliders bound to CvModulator fields
+│   ├── OscilloscopeDrawer.kt   — Zero-allocation oscilloscope/waveform drawing
+│   ├── CustomRangeSlider.kt    — Custom min/max range slider widget
+│   ├── CustomIconButton.kt     — Icon buttons and waveform-shape glyph (WaveShape)
+│   ├── LinkModeButton.kt       — Vector-glyph transfer-curve button for macro/parameter linking
+│   ├── MacroPanel.kt           — Macros tab: bank selector tabs, 4 knobs, binding inspector, Learn Mode; FX pages use the dedicated FX Rack view
+│   ├── MacroBindingInspector.kt — Drawer for inspecting and editing target parameter bindings, response curves, travel windows, and invert toggles
+│   ├── MacroKnobWidget.kt      — Rotary macro knob widget: drag/wheel interaction, accent-colored arc fill, optional deck tint
+│   ├── FxChainHeader.kt        — Shared Performance FX row header: chain browsing, dirty indicator, Save/Save As, kebab menu, slot focus pills ([1][2][3]), parameter page stepper, top-level [BYPASS]
+│   ├── FxSlotCell.kt           — Slot drawer under knobs 2-4 (or knob 1 in Focus Mode): mute pill, shortlist stepping, picker, drag-and-drop reorder, double-click focus
+│   ├── FxParamCell.kt          — Parameter drawer under knobs in Focus Mode: reset, value readout, CV modulation dot
+│   ├── FXChainMacroStrip.kt    — Chain Super Knob + Single FX Focus Mode strip drawn above the per-slot accordion
+│   ├── FxMacroSummary.kt       — Read-only view of an FX bank's fixed knob mapping and per-slot Metaknob targets (Macros tab FX pages)
+│   ├── DeckSourcePicker.kt     — Shared deck visual-source picker + empty-deck launchpad
+│   ├── ShaderPickerPopup.kt    — Category-based shader & source selector with multi-select dropdown, star-to-shortlist
+│   ├── DeckPresetController.kt — Deck preset file lifecycle and dialog controller
+│   ├── DeckControlPanel.kt     — Individual deck preview monitor, toolbar, badge/die overlays, vertical level fader
+│   ├── DeckMonitorGrid.kt      — 2x2 deck monitor grid (A | B over BG | PV) shared by Mixer view and Macros tab
+│   ├── MixerPanel.kt           — Column 3 Mixer: monitor matrix, master output monitor, master level fader, crossfader
+│   ├── MixerLayout.kt          — Deck-tile geometry (DeckTileMetrics) and MixerLayoutCalculator
+│   ├── Column3HeaderToggle.kt  — Column 3 header toggle `[ MIXER | MACROS ]`
+│   ├── LibraryPanel.kt         — Library view (HALF in Perform, FULL as the Library view): presets, playlists, queues
+│   ├── PlaylistManager.kt      — Manages saved setlists
+│   ├── FileSystemManager.kt    — Managed-root-confined file operations, scans (1s scan cache) and playlist validation
+│   ├── AssetType.kt            — Asset type enum for the unified browser
+│   ├── MissingItemsPanel.kt    — Repair UI for unresolved session/playlist items
+│   ├── ImGuiFileBrowser.kt     — ImGui-native modal file browser (no native OS dialogs)
+│   ├── SavePresetModal.kt      — Save/rename/clone modal for deck presets, FX slot presets and FX chains
+│   ├── NoteEditorModal.kt      — Zero-allocation modal editor for the 3-tier Note System
+│   ├── VideoExportModal.kt     — Modal for offline video render studio & file chooser
+│   ├── UpdatePromptModal.kt    — New-release prompt (download / remind / skip)
+│   ├── AboutModal.kt           — Version, manual update check, repository links
+│   ├── PreferencesPanel.kt     — App configuration & docked workspace preferences panel
+│   ├── AudioEnginePanel.kt     — Audio input, beat detection, and real-time oscilloscopes (Preferences tab)
+│   ├── TempoSyncPanel.kt       — Master tempo & Ableton Link control deck
+│   ├── MidiPreferencesPanel.kt — MIDI port configuration, channel filters, mapping table and controller profile UI
+│   ├── OscPreferencesPanel.kt  — TouchOSC / OSC server config, live packet sniffer & Learn UI
+│   ├── OscLearnStatusOverlay.kt — Top-center OSC Learn status banner visible from any view
+│   ├── BroadcastPreferencesPanel.kt — Web Broadcast relay preferences and live status
+│   ├── ShaderLocationsPreferencesPanel.kt — ISF directory locations preferences
+│   ├── ShortcutsPreferencesPanel.kt — Rebindable keyboard shortcut editor
+│   ├── VideoDisplayPreferencesPanel.kt — Video output / display preferences
 │   ├── UiLabPanel.kt           — Isolated UI component gallery sandbox (swatches, icons, custom widgets)
-│   ├── browser/                — LibraryPanel sub-panels: preset/FX/transition list, playlist editor & queue actions
-│   │   ├── PresetListPanel.kt          — Preset list/grid tier of the library browser
-│   │   ├── PlaylistEditorPanel.kt      — `.lsdplay` playlist editor tier
-│   │   ├── QueueActionsPanel.kt        — Play Queue (A/B) actions: reorder, shuffle/repeat, jump/advance
-│   │   ├── BgQueueActionsPanel.kt      — Background Queue actions (mirrors QueueActionsPanel for Deck BG)
-│   │   ├── FXBrowserPanel.kt           — Unified FX browser: stock ISF filters, saved `.lsdfx`, saved `.lsdfxchain` in one list
-│   │   ├── FXPlaylistEditorPanel.kt    — `.lsdfxplay` FX playlist editor tier
-│   │   ├── FXQueueActionsPanel.kt      — FX Queue (A/B) actions, mirrors QueueActionsPanel for FX items
-│   │   ├── FXBgQueueActionsPanel.kt    — FX Queue (BG) actions, mirrors QueueActionsPanel for Deck BG FX items
-│   │   ├── TransitionBrowserPanel.kt   — Unified transition browser: stock ISF transition shaders, saved `.lsdtrans` in one list
-│   │   ├── TransitionPlaylistEditorPanel.kt — `.lsdtransplay` transition playlist editor tier
-│   │   ├── TransitionQueuePanel.kt     — Live Transition Queue actions
-│   │   ├── BrowserPopupHandler.kt      — Rename/delete/new-playlist/export-queue modal popups shared across all list tiers
-│   │   ├── BrowserActionToolbar.kt     — Shared top toolbar (view toggles, search, sort) across list tiers
-│   │   ├── BrowserDeckButtons.kt       — Shared deck-target button styling for PresetListPanel/PlaylistEditorPanel
-│   │   └── BrowserRowMoreButton.kt     — Shared right-aligned kebab (⋮) row context-menu button
-│   └── ParametersState.kt      — Selection state & 30-level Undo Stack; also owns Modular Rack accordion state (`rackModuleDisclosure`/`DisclosureLevel`, `rackSoloMode`, `selectedRackMacroId`, `rackSelectedCell` — the last two are per-moduleId so two simultaneously open Deep Edits in Multi mode don't fight over one shared selection)
+│   ├── rack/
+│   │   └── RackUnit.kt         — Stateless chevron/disclosure-tier drawing helper for the Modular Rack and the "Learning: …" indicator; operates only on `ParametersState` (never `Mixer`/`FxChain`)
+│   ├── shortcuts/
+│   │   ├── KeyCombination.kt   — Key + modifier flags value type
+│   │   ├── ShortcutAction.kt   — Rebindable action and ShortcutCategory definitions
+│   │   └── ShortcutManager.kt  — Binding table, persistence and dispatch
+│   └── browser/                — LibraryPanel sub-panels: preset/FX/transition list, playlist editor & queue actions
+│       ├── PresetListPanel.kt          — Preset list/grid tier of the library browser
+│       ├── PlaylistEditorPanel.kt      — `.lsdplay` playlist editor tier
+│       ├── QueueActionsPanel.kt        — Play Queue (A/B) actions: reorder, shuffle/repeat, jump/advance
+│       ├── BgQueueActionsPanel.kt      — Background Queue actions (mirrors QueueActionsPanel for Deck BG)
+│       ├── FXBrowserPanel.kt           — Unified FX browser: stock ISF filters, saved `.lsdfx`, saved `.lsdfxchain` in one list
+│       ├── FXPlaylistEditorPanel.kt    — `.lsdfxplay` FX playlist editor tier
+│       ├── FXQueueActionsPanel.kt      — FX Queue (A/B) actions
+│       ├── FXBgQueueActionsPanel.kt    — FX Queue (BG) actions
+│       ├── TransitionBrowserPanel.kt   — Unified transition browser: stock ISF transition shaders, saved `.lsdtrans` in one list
+│       ├── TransitionPlaylistEditorPanel.kt — `.lsdtransplay` transition playlist editor tier
+│       ├── TransitionQueuePanel.kt     — Live Transition Queue actions
+│       ├── BrowserPopupHandler.kt      — Rename/delete/new-playlist/export-queue modal popups shared across list tiers
+│       ├── BrowserActionToolbar.kt     — Shared top toolbar (view toggles, search, sort)
+│       ├── BrowserDeckButtons.kt       — Shared deck-target button styling
+│       ├── BrowserRowMoreButton.kt     — Shared right-aligned kebab (⋮) row context-menu button
+│       └── MultiSelectionModel.kt      — Headless multi-selection model (click, shift-range, ctrl-toggle)
+├── update/
+│   ├── AppVersion.kt           — Runtime version resolution
+│   ├── SemVer.kt               — SemVer 2.0.0 parser/comparator
+│   └── UpdateChecker.kt        — Background GitHub release checker
 ├── tools/
 │   └── SiteGenerator.kt        — Static site, documentation HTML, and offline ZIP builder for greenjon.com
 └── utils/
+    ├── NativeLibraryLoader.kt  — Host platform detection and native library extraction/loading
     ├── TimeSource.kt           — Time virtualization provider for live and deterministic rendering
     └── TimeUtils.kt            — Timing utilities
+
+src/main/resources/
+├── controllers/
+│   └── midi-fighter-twister.json — Built-in controller profile (4 banks, 16 encoders, side buttons, feedback output)
+└── perform_pages/
+    ├── decks.json              — Perform page `decks`: one row per deck with [SRC|FX] toggle (DECKS tab)
+    ├── deck-ab.json            — Perform page `ab` (Twister bank 1): Deck A and B, pinned SRC over FX rows
+    ├── deck-bgpv.json          — Perform page `bgpv` (Twister bank 2): Deck BG and PV, pinned SRC over FX rows
+    ├── mixer.json              — Perform page `mixer` (Twister bank 3): pinned Master MIX, Master FX, Transitions, FX wet/dry
+    └── master.json             — Perform page `master` (MASTER tab / Twister bank 4): Master, Transitions, FX wet/dry, Clock+Global
 ```
+
+## Controller input architecture
+
+```
+MIDI device ─► MidiEngine (capped queue, MAX_QUEUED_EVENTS = 4096; drops + one warning when full)
+                  │  drained on the render thread each frame
+                  ├─► MidiMappingManager     (legacy parameter/global mappings)
+                  └─► ControllerManager      (one ControllerRuntime per device whose name matches a profile)
+                         └─► ControllerRuntime   (active bank, held modifiers, encoder accel, CompiledController lookup)
+                                └─► CommandRegistry  (control/Command.kt: id -> Command, TRIGGER/TOGGLE/MOMENTARY/SCALAR/RELATIVE)
+                                       ├─► KnobCommands ─► KnobSurface ◄── ui/PerformSurface    (16 Perform knobs)
+                                       ├─► NavCommands  ─► NavSurface  ◄── ui/NavigationSurface (side buttons + browse cursor)
+                                       └─► GlobalCommands (queue next/prev, ...)
+ControllerFeedback ◄─ KnobLightSource (PerformSurface) ─► CcQueue ─► MidiSink (MidiOutputPorts, optional TracingSink) ─► device rings/LEDs
+```
+
+- **Profiles** are JSON (`ControllerProfile`): inputs, banks (`bankStride`, bank switch CCs, and `pages` naming the app page each hardware bank shows, e.g. `perform.decks`), global `bindings` (`"shift+knob.1.press" -> command id`), and an optional `output` section for feedback. Built-ins ship in `src/main/resources/controllers/`; user profiles live in `library/controllers/` and a user file with the same id overrides the built-in. `ControllerProfileStore` skips structurally invalid files and reports why.
+- **Perform pages** (`PerfPageStore`) are JSON files of exactly four row ids from the `PerfRows.CATALOG`; built-ins in `src/main/resources/perform_pages/`, user pages in `library/perform_pages/`. The Twister banks select the pages `ab`, `bgpv`, `mixer`, `master`. `ControllerProfileStore` and `PerfPageStore` share only the `UserJsonFiles` scan/atomic-write helper.
+- **Knob addressing**: knobs are 0-based, row-major over the visible rows; the page follows the screen, so every hardware bank shows the same 16 lights. Taps run `primary` (bypass / reset) or `secondary` (focus / page step); while a browse context is active knob 1 is a cursor and knobs 2-16 are inert.
+- **Zero-allocation rules**: encoder messages, button presses (shared `CommandInput.Press.DOWN/UP`) and feedback travel without allocating on the MIDI path; `CcQueue` coalesces by (channel, cc) so a slow device cannot build a backlog; each `MidiSink` writes from its own daemon thread. Known remaining per-event allocations: `CommandInput.Delta`/`Value` instances, `isTransModified`, and the `FxChainHeader` lambdas (see `.planning/codebase/CONCERNS.md`).
+- **Threading**: `ControllerManager`/`ControllerRuntime` and surface handlers run on the render thread only; `MidiEngine` callbacks only enqueue.
+- **Known layering exception (honest note)**: `control/` is meant to be UI-free (it sees the UI only through `KnobSurface`/`NavSurface`), but `midi/` still imports `ui/`: `MidiMappingManager` uses `ParametersState`/`MidiLearnTarget`, and `MidiEngine` reads `UITheme.midiEnabled`. `CommandContext` also holds a concrete `Mixer` rather than an interface. Several `presets/`, `audio/`, `cv/` and `rendering/` files likewise reach into `ui/` (mostly `UITheme`).
 
 ## CV Sources (registered IDs)
 
@@ -284,21 +424,24 @@ value = result.coerceIn(minClamp, maxClamp)
 
 ## UI Layout
 
+Three views only (Parameters/Properties "classic" panels are gone; `PropertiesPanel`/`ParametersTabs` survive only as components of the Edit row). The window is a menu bar plus a content area; Column 3 (right) toggles `[ MIXER | MACROS ]`.
+
 ```
-┌──────────────────┬────────────────┬────────────────┐
-│                  │                │                │
-│  Parameters      │  Properties    │  Mixer         │
-│  (40% width)     │  (30% width)   │  (30% width)   │
-│                  │                │                │
-├──────────────────┴────────────────┴────────────────┤
-│                 Library Panel                      │
-│        (Presets | Playlists | Q | BGQ)             │
-└────────────────────────────────────────────────────┘
+Perform (default)                         Edit (Deep Edit open)               Library (FULL)
+┌───────────────────────┬─────────────┐   ┌───────────────────────┬─────────┐ ┌─────────────────────────────┐
+│ Performance matrix    │ Column 3    │   │ Performance matrix    │ Column 3│ │ Library: presets, playlists,│
+│ 4 rows x 4 knobs      │ Mixer or    │   │ rows + one expanded   │ Mixer / │ │ FX, transitions, queues     │
+│ tabs: DECKS | MASTER  │ Macros      │   │ Edit row (Deep Edit,  │ Macros  │ │                             │
+│ + Perform pages       │             │   │ Browse<->Params)      │         │ │                             │
+├───────────────────────┴─────────────┤   │ (Library fully hidden)│         │ │                             │
+│ Library (HALF, drag-resizable)      │   └───────────────────────┴─────────┘ └─────────────────────────────┘
+└─────────────────────────────────────┘
 ```
 
-Parameters rows: Mixer → Deck A [Geometry, Color, Feedback] → Deck B [same] → Deck BG [same] → Deck PV [same]  
-Parameters columns: VAL | MIDI | LFO | SEQ | AUD  
-*(Note: Engine subsystems `midiEnabled`, `sequencerEnabled`, and `audioEngineEnabled` serve as the single source of truth for Parameters and Properties column visibility; the header kebab menu `⋮` allows immediate toggling of these engines and columns).*
+- **Perform**: performance matrix + Library HALF. **Edit**: opening Deep Edit on a row removes the Library entirely. **Library**: `LibraryMode.FULL`. The old HIDE state is no longer selectable (a saved HIDE loads as HALF); the Modular Rack's multi-expand (MULTI) mode was removed, so rack accordion behavior is always solo.
+- Deck rows toggle `[SRC|FX]`; the Master row toggles `[MIX|FX]`. Pickers (source, FX, transition) open inline in the Edit row (`PerformanceBrowseBay`), not as modal pickers.
+- Deep Edit parameter columns: VAL | MIDI | LFO | SEQ | AUD. Engine flags `midiEnabled`, `sequencerEnabled`, `audioEngineEnabled` remain the single source of truth for column visibility.
+- Minimum supported screen is 1280x720.
 
 ## Application Icons & Window Branding
 The project includes an official application icon featuring an audio-reactive psychedelic eye with chromatic aberration and a falling liquid drop.
@@ -312,7 +455,7 @@ The project includes an official application icon featuring an audio-reactive ps
 - **Deck PV preview** — third deck runs the full render pipeline but is excluded from `Mixer` output; used for preset authoring while A/B perform live
 - **VisualSource abstraction** — Deck is source-agnostic; `Mandala`, `DynamicVisualSource`, `DynamicSpiral` all satisfy the interface
 - **VisualSourceRegistry** — pluggable dynamic visual sources (GLSL shaders loaded from `library/sources/`)
-- **Per-Slot FX Presets & FX Chains** — Modular `.lsdfx` (stored in `library/fx/`) and `.lsdfxchain` (stored in `library/fx_chains/`) serialized DTOs for saving and recalling single slot effects or 4-slot FX chains.
+- **Per-Slot FX Presets & FX Chains** — Modular `.lsdfx` (stored in `library/fx/`) and `.lsdfxchain` (stored in `library/fx_chains/`) serialized DTOs for saving and recalling single slot effects or 3-slot FX chains.
 - **FX Queues & Playlists** — `.lsdfxplay` FX playlists (stored in `library/fx_playlists/`) and the live volatile FX Queue (A/B and BG, `FxQueueEngine` + `FXQueueManager`/`FXBgQueueManager`) apply queued `.lsdfx`/`.lsdfxchain` items deterministically to all 3 slots via `FxOps.applyItem` — never a per-slot merge. Mirrors the `PlayQueueManager`/`BgQueueManager` shuffle/repeat/history/dirty-deck-guard pattern already used for presets.
 - **Thread safety & OpenGL Thread 0 Discipline** — `@Volatile` primitive fields (`anchorBeats`, `anchorBpm`, `anchorTimeNs`) for zero-allocation audio thread beat clock sync, `CopyOnWriteArrayList` for modulators, `ConcurrentLinkedQueue` for MIDI CC events, and strict Main OS Thread (Thread 0) execution for all GLFW window polling, OpenGL context operations, and ISFFilter creation/disposal.
 - **Blank startup state** — Decks default to empty (`isEmpty = true`); on initial application launch without a prior session file, all four decks start with clean blank screens and Launchpad controls rather than pre-populated visual sources
@@ -402,7 +545,7 @@ All post-processing effects, 2D-to-3D projection geometry, and mixer transitions
   - Exactly preserves the legacy cubic decay curve ($s \to (1 - s)^3$) and 9-parameter feedback optics (`fbDecay`, `fbGain`, `fbZoom`, `fbRotate`, `fbHueShift`, `fbBlur`, `fbChroma`, `fbMode`, `fbKaleido`).
   - History buffers clear to zero on filter reset or preset loading (`ISFFilter.reset()`) to eliminate ghost frames.
 - **Modular 3D Elevation (`default_filters/3d_elevation.fs`)**:
-  - Replaces legacy hardcoded `tri_planar.*` and `tetra_kaleido.*` shaders with a raymarched ISF filter, conventionally loaded into FX Slot 2 (any of the 4 slots works).
+  - Replaces legacy hardcoded `tri_planar.*` and `tetra_kaleido.*` shaders with a raymarched ISF filter, conventionally loaded into FX Slot 2 (any of the 3 slots works).
   - Implements Tri-Planar, Cube Cage, Hex-Planar, and 24-Chamber Tetrahedral Coxeter space folding via analytic inverse camera raymarching with exact 1:1 scale normalization matching 2D mode height at $z = 0$.
   - Supports dual blend modes (`blendMode`): luminous additive energy synthesis (`glBlendFunc(GL_ONE, GL_ONE)` equivalent) and premultiplied alpha over.
   - All 10 parameters are directly accessible and modulatable under the Deck "FX" tab, in whichever slot the filter is loaded.
