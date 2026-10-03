@@ -12,7 +12,7 @@ Decided 2026-10-02. Read `.planning/midi-controller-handoff.md` first. Explore p
 - Buttons are **mode dependent** (a different set per context). Knob 1 has a **browse mode**: turn = step, press = accept
   ("accept with click"). Stepping moves a cursor only; nothing applies until accept.
 
-## Status (2026-10-02)
+## Status (2026-10-02): DONE, hardware-tested and committed by the user
 
 Library slice implemented (suite green, docs written, not hardware-tested): `NavSurface`/`NavCommands`, `NavigationSurface`, `LibraryNavigation`, `BackNavigation`, profile bindings `side.*`/`shift+side.*`. Final Library layout: side.1 back (shift: enqueue BG), side.2 tab next (shift: prev), side.3 list next (shift: prev), knob 1 turn = step (4 ticks per item, a guess), tap = accept, shift + tap = enqueue A/B. Perform: side.1 back, side.2 open Library, side.3 unassigned (reserved for the picker). Picker slice implemented too (suite green, docs written, not hardware-tested): Perform side.3 = open the picker of the last-touched knob's row; picker context: knob 1 step/accept, side.2 category (shift back), shift+side.3 clear, side.1 back. **Next**: hardware check of both slices; FX queue transport; Library playlist panes of FX/Trans tabs; highlight of the currently applied item in pickers; decide knob 2-16 behavior in browse contexts (currently still Perform knobs).
 

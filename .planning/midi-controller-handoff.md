@@ -1,6 +1,6 @@
 # MIDI controller support: handoff for a fresh session
 
-Written 2026-10-02 at the end of a long session. Read this first, then `.planning/midi-controller-plan.md`
+Written 2026-10-02, updated at the end of the phase 3 session. Read this first, then `.planning/midi-controller-plan.md`
 (original phased plan), the three `DECISIONS.md` entries at the top ("Command Registry and Declarative
 Controller Profiles", "Twister Drives the Perform Grid...", "Controller Ring/LED Feedback...") and
 `docs/developer/unified_control_mapping.md` section 6.
@@ -18,10 +18,10 @@ Feedback (rings/LEDs) is v1.0 scope.
 | 1 | `CommandRegistry`, device tagging (`MidiEvent.deviceId`), controller profile model/loader/resolver, built-in Twister profile | done, committed (91e868e) |
 | 2 | Perform-grid control: control pages, knob gestures, banks -> tabs, shift modifier, acceleration | done, committed, verified on hardware |
 | 4 | Ring/LED feedback | done, committed (b64f1a2), working on all 4 banks with the stock 4-bank firmware (see "Feedback history") |
-| 3 | Navigation/browse commands on the free side buttons | **not started** |
+| 3 | Navigation/browse commands on the free side buttons | done, hardware-tested, committed (Library slice + picker slice); details in `.planning/midi-phase3-navigation-plan.md` |
 | 5 | Profile UI (pick profile, copy a built-in, edit, learn-into-profile) | not started |
 
-Full suite: 778 tests, 0 failures (`./gradlew test --offline -q`).
+Full suite: 784 tests, 0 failures (`./gradlew test --offline -q`).
 Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `docs/`.
 
 ## Architecture map (all under `src/main/kotlin/llm/slop/liquidlsd/`)
@@ -47,6 +47,18 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
 - `MidiMappingManager.processGlobalMidiEvents` offers each event to `controllers.handle(...)` first, unless the user has a
   learned mapping on that exact channel/CC (learned mappings stay on top).
 
+## Navigation (phase 3, done)
+
+- Side buttons (`side.1..3` = CC 8, 11, 13; shift = CC 10 on left-bottom, unchanged; fine = hold a knob's switch and turn) are commands
+  `nav.button.N` / `nav.button.N.alt` (`control/NavCommands.kt`). `NavSurface` (`control/NavSurface.kt`, UI side
+  `ui/NavigationSurface.kt`) decides the meaning from the context: Library view (Library FULL), picker (an SRC/FX/transition list
+  or the saved-chain list is showing in the Edit row), else Perform/Edit. While `browsing`, `KnobCommands` sends knob 1's turn
+  (4 encoder ticks = 1 item, `BROWSE_STEP`) and tap to the surface; knobs 2-16 are unchanged.
+- Helpers: `ui/LibraryNavigation.kt` (tabs, lists, cursor, accept, enqueue), `ui/BackNavigation.kt` (the Esc stack, shared with the
+  keyboard), `ShaderPickerPopup.moveCursor/acceptCursor/stepCategory/detach`, `ChainListBrowse`. Perform's right-bottom button opens
+  the picker of the last-touched knob's row (`PerformSurface.lastTouchedKnob`).
+- Layout: see the user guide's controller section and `.planning/midi-phase3-navigation-plan.md`.
+
 ## Twister facts (measured on the real device)
 
 - Encoder turns: ch1 (0-based 0), CC = knob 0..15 + 16 * bank. Knob switches: ch2 (0-based 1), same CCs, 127 down / 0 up;
@@ -59,7 +71,7 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
   `HueWheel`: blue = 1, hue decreasing 2.88 degrees per value, 127 = white; DECKS colours were confirmed correct).
 - Gesture map (profile + `PerformSurface`): turn = move; tap switch = FX slot bypass / reset to default (source knobs reset to
   0.5); shift + tap = focus slot / leave focus (knob 1 of a focused row) / next parameter page; hold switch + turn = fine
-  (x0.1). Shift = side button CC 10 (left-bottom). Free side buttons: `side.1` (CC 8), `side.2` (CC 11), `side.3` (CC 13).
+  (x0.1). Shift = side button CC 10 (left-bottom). Side buttons `side.1` (CC 8), `side.2` (CC 11), `side.3` (CC 13) navigate (see Navigation).
 - Banks select Perform pages (profile `banks.pages`): bank 1 = `ab` (A SRC/FX, B SRC/FX), 2 = `bgpv`, 3 = `mixer`, 4 = `master` (since perform-pages phase 3; was DECKS, MASTER, repeated). See `.planning/perform-pages-plan.md`. The page always follows
   the UI tab, not the bank, so every bank's knob n controls page knob n.
 - LED colours: row accents, except Master (`LED_MASTER` scarlet) and Global (`LED_GLOBAL` plum) because their on-screen
@@ -81,12 +93,9 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
 1. **Commit the feedback work** (after the user confirms it is stable). Commit messages end with the attribution line from
    the session's system reminder.
 2. ~~Simplify feedback~~ done 2026-10-02: addressing modes, staged/settle/heartbeat rewrites removed (hardware-verified).
-3. **Phase 3, navigation/browse from the Twister.** Ask the user what they reach for most. Candidates: toggle a row's SRC/FX
-   mode, switch Edit/Perform/Library view, open the SRC picker and step through generators, accept/back. Only three free
-   side buttons, so expect a shift layer (profile bindings already support `shift+side.1`). Needs an Explore pass over
-   `PerformanceBrowseBay.kt`, `PerformanceDeepEditBay.kt`, `PerformanceDeckControls.kt` (row mode pills),
-   `ParametersState.openParams/openGenBrowse/openFxChainBrowse`, `LibraryPanel`. Add commands such as `nav.*`/`browse.*`
-   to the registry and bind them in the profile; `KnobSurface` can grow methods or a separate navigation surface.
+3. ~~Phase 3, navigation/browse~~ done (see "Navigation" below). Small leftovers, all listed in `.planning/midi-phase3-navigation-plan.md`:
+   decide whether knobs 2-16 go inert while a browse context is active (today they still change Perform parameters), FX queue
+   transport commands, a cursor for the FX/Trans playlist panes, highlight the currently applied source/FX in pickers.
 4. **Phase 5, profile UI**: choose/copy/edit controller profiles, learn into a profile. (The MIDI Controls panel's profile list
    is the legacy learned-mapping list, `library/midi/*.json`, not controller profiles; this confused the user once.)
 
