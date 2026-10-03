@@ -1,31 +1,17 @@
 package llm.slop.liquidlsd.ui
 
 import llm.slop.liquidlsd.macro.MacroEngine
+import llm.slop.liquidlsd.midi.MidiLearnSink
+import llm.slop.liquidlsd.midi.MidiLearnTarget
+import llm.slop.liquidlsd.midi.ParameterCellId
 import llm.slop.liquidlsd.macro.MacroLearnState
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 
 /**
- * Identifies a single cell in the Deep Edit parameter grid.
- * @param paramKey   Fully-qualified parameter key, e.g. "Mixer/crossfade" or "Deck A/Geometry/L1"
- * @param cvSourceId The CV source column, e.g. "beatPhase", "amp", "lfo"
- */
-data class ParameterCellId(val paramKey: String, val cvSourceId: String)
-
-sealed class MidiLearnTarget {
-    data class GridCell(val cellId: ParameterCellId, val param: ModulatableParameter) : MidiLearnTarget()
-    data class BaseValueSlider(val paramKey: String, val label: String, val param: ModulatableParameter? = null, val min: Float, val max: Float) : MidiLearnTarget()
-    data class ModulatorProperty(val fullPath: String, val label: String, val min: Float, val max: Float) : MidiLearnTarget()
-    data class GlobalAction(val actionKey: String) : MidiLearnTarget()
-    data class MacroTarget(val macroPath: String, val label: String) : MidiLearnTarget()
-    /** Bind [commandId] in controller profile [profileId] to the next control moved, held with [modifiers]. */
-    data class ProfileCommand(val profileId: String, val commandId: String, val modifiers: List<String>) : MidiLearnTarget()
-}
-
-/**
  * Holds transient UI state for the Parameters and Properties panels.
  */
-class ParametersState {
+class ParametersState : MidiLearnSink {
     /** The cell the user has clicked on (null = nothing selected). */
     var selectedCell: ParameterCellId? = null
 
@@ -273,8 +259,8 @@ class ParametersState {
     }
 
     /** Active MIDI Learn target and start timestamp */
-    var midiLearnStartTimeMs: Long = 0L
-    var midiLearnTarget: MidiLearnTarget? = null
+    override var midiLearnStartTimeMs: Long = 0L
+    override var midiLearnTarget: MidiLearnTarget? = null
         set(value) {
             field = value
             if (value != null) {

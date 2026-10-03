@@ -150,6 +150,15 @@ fun main(args: Array<String>) {
 
 
 
+    // Wire midi/ to the UI preference switch and controller-profile logging (midi/ must not import ui/ or control/).
+    llm.slop.liquidlsd.midi.MidiEngine.install(
+        enabled = { llm.slop.liquidlsd.ui.UITheme.midiEnabled },
+        onDeviceOpened = { deviceName ->
+            val profile = llm.slop.liquidlsd.control.ControllerProfileStore.matchFor(deviceName ?: return@install)
+            if (profile != null) logger.info { "Controller profile '${profile.id}' matches MIDI device: $deviceName" }
+        }
+    )
+
     // Load active MIDI mapping profile
     if (llm.slop.liquidlsd.ui.UITheme.midiEnabled) {
         llm.slop.liquidlsd.midi.MidiMappingManager.loadProfile(llm.slop.liquidlsd.ui.UITheme.activeMidiProfile)

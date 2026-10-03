@@ -1,5 +1,7 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.midi.ParameterCellId
+import llm.slop.liquidlsd.midi.MidiLearnTarget
 import imgui.ImGui
 import imgui.type.ImInt
 import llm.slop.liquidlsd.cv.CVRegistry

@@ -78,9 +78,25 @@ object MidiEngine {
 
     private val openDevices = mutableListOf<MidiDevice>()
 
-    init {
+    /** Supplies the global "MIDI enabled" switch; wired by the composition root so midi/ never reads ui/. */
+    @Volatile
+    private var enabledSource: MidiEnabledSource = MidiEnabledSource { false }
+
+    /** Told the name of each newly opened input device (e.g. to log a matching controller profile). */
+    @Volatile
+    private var deviceOpenedListener: ((String?) -> Unit)? = null
+
+    private val midiEnabled: Boolean get() = enabledSource.isMidiEnabled()
+
+    /**
+     * Wires the enabled switch and device-opened listener, then opens devices if MIDI is enabled.
+     * Call once at startup, after preferences are loaded.
+     */
+    fun install(enabled: MidiEnabledSource, onDeviceOpened: ((String?) -> Unit)? = null) {
+        enabledSource = enabled
+        deviceOpenedListener = onDeviceOpened
         try {
-            if (llm.slop.liquidlsd.ui.UITheme.midiEnabled) {
+            if (midiEnabled) {
                 initialize()
             }
         } catch (e: Throwable) {
@@ -107,7 +123,7 @@ object MidiEngine {
                         transmitter.receiver = MidiInputReceiver(info.name ?: "")
                         openDevices.add(device)
                         logger.info { "Successfully opened MIDI input device: ${info.name} - ${info.description}" }
-                        logControllerProfileMatch(info.name)
+                        deviceOpenedListener?.invoke(info.name)
                     }
                 } catch (e: Throwable) {
                     logger.warn { "Could not open MIDI device: ${info.name}. Error: ${e.message}" }
@@ -122,7 +138,7 @@ object MidiEngine {
      * 2. Probe for newly plugged-in MIDI controllers and open them
      */
     fun scanForNewDevices() {
-        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return
+        if (!midiEnabled) return
         synchronized(openDevices) {
             // 1. Clean up dead or closed devices
             val iterator = openDevices.iterator()
@@ -168,7 +184,7 @@ object MidiEngine {
                         transmitter.receiver = MidiInputReceiver(info.name ?: "")
                         openDevices.add(device)
                         logger.info { "Successfully opened newly detected MIDI input device: ${info.name} - ${info.description}" }
-                        logControllerProfileMatch(info.name)
+                        deviceOpenedListener?.invoke(info.name)
                     }
                 } catch (e: Throwable) {
                     // Log at debug so as not to spam warnings if a device is locked by another app
@@ -178,20 +194,15 @@ object MidiEngine {
         }
     }
 
-    private fun logControllerProfileMatch(deviceName: String?) {
-        val profile = llm.slop.liquidlsd.control.ControllerProfileStore.matchFor(deviceName ?: return)
-        if (profile != null) logger.info { "Controller profile '${profile.id}' matches MIDI device: $deviceName" }
-    }
-
     fun getActiveDeviceCount(): Int {
-        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0
+        if (!midiEnabled) return 0
         return synchronized(openDevices) {
             openDevices.size
         }
     }
 
     fun getConnectedDeviceNames(): List<String> {
-        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return emptyList()
+        if (!midiEnabled) return emptyList()
         return synchronized(openDevices) {
             openDevices.map { 
                 try { it.deviceInfo.name ?: "Unknown" } catch (e: Throwable) { "Unknown" }
@@ -200,19 +211,19 @@ object MidiEngine {
     }
 
     fun getCcValue(channel: Int, cc: Int): Float {
-        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0.0f
+        if (!midiEnabled) return 0.0f
         val idx = (channel.coerceIn(0, 15) * 128) + cc.coerceIn(0, 127)
         return Float.fromBits(ccValues.get(idx))
     }
 
     fun getNoteValue(channel: Int, note: Int): Float {
-        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0.0f
+        if (!midiEnabled) return 0.0f
         val idx = (channel.coerceIn(0, 15) * 128) + note.coerceIn(0, 127)
         return Float.fromBits(noteValues.get(idx))
     }
 
     fun getPitchBendValue(channel: Int): Float {
-        if (!llm.slop.liquidlsd.ui.UITheme.midiEnabled) return 0.0f
+        if (!midiEnabled) return 0.0f
         return Float.fromBits(pitchBendValues.get(channel.coerceIn(0, 15)))
     }
 

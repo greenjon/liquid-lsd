@@ -16,8 +16,6 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ModulationOperator
 import llm.slop.liquidlsd.parameters.ParameterResolver
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.ui.MidiLearnTarget
-import llm.slop.liquidlsd.ui.ParametersState
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
@@ -652,7 +650,7 @@ object MidiMappingManager {
 
     fun processGlobalMidiEvents(
         midiEnabled: Boolean,
-        parametersState: ParametersState,
+        parametersState: MidiLearnSink,
         mixer: Mixer,
         onTapTempo: () -> Unit,
         knobSurface: KnobSurface? = null,

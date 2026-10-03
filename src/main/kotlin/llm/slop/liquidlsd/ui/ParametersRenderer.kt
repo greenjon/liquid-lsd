@@ -1,5 +1,7 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.midi.ParameterCellId
+import llm.slop.liquidlsd.midi.MidiLearnTarget
 import imgui.ImDrawList
 import imgui.ImGui
 import llm.slop.liquidlsd.notes.NotesManager

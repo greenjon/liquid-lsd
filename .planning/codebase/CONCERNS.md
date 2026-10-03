@@ -5,10 +5,10 @@
 
 ## Tech Debt
 
-**Layering inversion: `midi/` (and others) import `ui/`:**
-- Issue: `midi/MidiMappingManager.kt` imports `ui.ParametersState` and `ui.MidiLearnTarget`; `midi/MidiEngine.kt` reads `llm.slop.liquidlsd.ui.UITheme.midiEnabled` in several places. `UITheme` is also reached from `presets/`, `audio/`, `cv/`, `parameters/`, `rendering/` and `macro/` files. `control/` is cleaner (it sees the UI only through `KnobSurface`/`NavSurface`), but `CommandContext` (`control/Command.kt`) holds a concrete `rendering.Mixer` instead of a narrow interface.
-- Impact: lower layers cannot be tested or reused without the UI singleton; the "UI is a leaf" mental model is false.
-- Fix approach: move learn-target and "MIDI enabled" state into `midi/` (or a small `settings` holder), have the UI observe it; give `CommandContext` an interface for what commands need from the mixer.
+**Layering inversion: `presets/`, `audio/`, `cv/`, `parameters/`, `rendering/`, `macro/` import `ui/` (midi/ and control/ fixed 2026-10-03):**
+- Issue: `UITheme` is reached from those packages. `midi/` and `control/` no longer import `ui/` (`MidiLearnSink`, `MidiEnabledSource`, `MidiEngine.install`; guarded by `LayerDependencyTest`). Remaining: `MidiMappingManager` -> `control.ControllerProfileStore.default` (midi<->control cycle, since `ControllerManager` uses `MidiEngine`), and `CommandContext` holds a concrete `rendering.Mixer` (commands use `onCrossfadeManualTakeover()`, `crossfade` and more in `GlobalCommands`).
+- Impact: those lower layers cannot be tested or reused without the UI singleton.
+- Fix approach: inject a profile store into `MidiMappingManager`; give `CommandContext` a narrow mixer interface; move shared settings out of `UITheme`.
 
 **Near-duplicate stores: `ControllerProfileStore` and `PerfPageStore`:**
 - Issue: both implement built-in + user-dir scan, same-id override, rejection reporting, copy-built-in-to-user and atomic save. Only the low-level scan/atomic write is shared (`control/UserJsonFiles.kt`); the override/validation logic is copied. They live in different packages (`control/` vs `ui/`).

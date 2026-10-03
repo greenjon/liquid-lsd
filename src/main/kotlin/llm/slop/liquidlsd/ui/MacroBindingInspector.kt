@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.midi.ParameterCellId
 import kotlin.math.roundToInt
 import imgui.ImGui
 import imgui.type.ImBoolean

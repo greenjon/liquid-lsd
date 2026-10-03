@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.midi.MidiLearnTarget
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.SessionContext

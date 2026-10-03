@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.midi.ParameterCellId
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

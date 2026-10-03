@@ -6,7 +6,6 @@ import io.mockk.unmockkAll
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.ui.MidiLearnTarget
 import llm.slop.liquidlsd.ui.ParametersState
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
