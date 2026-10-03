@@ -86,7 +86,7 @@ object FxSlotCell {
         val h = HEIGHT
 
         val bgAlpha = if (fx == null) 0.25f else 0.45f
-        dl.addRectFilled(x, y, x + w, y + h, ImGui.colorConvertFloat4ToU32(0.08f, 0.09f, 0.11f, bgAlpha), 4f)
+        dl.addRectFilled(x, y, x + w, y + h, TangoPalette.u32(TangoPalette.FX_CELL_BG_RGB, bgAlpha), 4f)
 
         // -- ◀ (hover only) -----------------------------------------------------------------
         // The arrows only appear while the mouse is over the cell, so the name gets the full width.
@@ -153,11 +153,11 @@ object FxSlotCell {
             val shown = TextFit.ellipsize(nameText, nameW - 4f)
             val tw = ImGui.calcTextSize(shown).x
             val textCol = when {
-                fx == null -> ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.55f, 0.8f)
-                !fx.enabled -> ImGui.colorConvertFloat4ToU32(0.55f, 0.55f, 0.6f, 0.75f)
+                fx == null -> TangoPalette.FX_SLOT_NAME_EMPTY.u32()
+                !fx.enabled -> TangoPalette.FX_SLOT_NAME_OFF.u32()
                 isThisSlotFocused -> TangoPalette.u32(TangoPalette.SYNC.bright)
-                nameHovered -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
-                else -> ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.88f, 0.95f)
+                nameHovered -> TangoPalette.WHITE.u32()
+                else -> TangoPalette.FX_SLOT_NAME.u32()
             }
             dl.addText(nameX + (nameW - tw) / 2f, TextFit.centeredY(y, h, ImGui.getTextLineHeight()), textCol, shown)
         }
@@ -182,14 +182,14 @@ object FxSlotCell {
         ImGui.setCursorScreenPos(x, y)
         val (bg, bgHover, text) = when {
             fx == null -> Triple(
-                ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.35f),
-                ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.35f),
-                ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.45f, 0.5f)
+                TangoPalette.FX_BTN_IDLE_BG.u32(),
+                TangoPalette.FX_BTN_IDLE_BG.u32(),
+                TangoPalette.FX_BTN_EMPTY_TEXT.u32()
             )
             fx.enabled -> Triple(
-                ImGui.colorConvertFloat4ToU32(accent[0] * 0.35f, accent[1] * 0.35f, accent[2] * 0.35f, 0.75f),
-                ImGui.colorConvertFloat4ToU32(accent[0] * 0.5f, accent[1] * 0.5f, accent[2] * 0.5f, 0.9f),
-                ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 1f)
+                TangoPalette.u32Scaled(accent, 0.35f, 0.75f),
+                TangoPalette.u32Scaled(accent, 0.5f, 0.9f),
+                TangoPalette.u32(accent)
             )
             else -> Triple(
                 TangoPalette.u32(TangoPalette.DANGER.dark, 0.85f),
@@ -232,9 +232,9 @@ object FxSlotCell {
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.u32(TangoPalette.SYNC.normal, 0.90f))
             ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.u32(TangoPalette.SYNC.bright))
         } else {
-            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.50f))
-            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.22f, 0.25f, 0.32f, 0.80f))
-            ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.55f, 0.58f, 0.65f, 0.80f))
+            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.FX_LINK_IDLE_BG.u32())
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.FX_LINK_IDLE_HOVER.u32())
+            ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.FX_LINK_IDLE_TEXT.u32())
         }
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 1f, 1f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -256,7 +256,7 @@ object FxSlotCell {
         ImGui.setCursorScreenPos(ax, ay)
         if (ImGui.invisibleButton(id, ARROW_W, h)) onClick()
         val hovered = ImGui.isItemHovered()
-        val col = if (hovered) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f) else ImGui.colorConvertFloat4ToU32(0.6f, 0.62f, 0.68f, 0.85f)
+        val col = if (hovered) TangoPalette.WHITE.u32() else TangoPalette.FX_ARROW_IDLE.u32()
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             val sz = ImGui.calcTextSize(glyph)
             ImGui.getWindowDrawList().addText(ax + (ARROW_W - sz.x) / 2f, ay + (h - sz.y) / 2f, col, glyph)

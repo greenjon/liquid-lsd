@@ -160,6 +160,59 @@ object TangoPalette {
     val BEAT_DOT           = Role(c(0.9f, 0.95f, 0.4f, 1f))
     val BEAT_IDLE_RING     = Role(c(0.35f, 0.35f, 0.40f, 0.6f))
 
+    // Crossfader track / handle (PerformanceTransitionsControls)
+    val XF_LINE            = Role(c(0.15f, 0.15f, 0.15f, 1f))
+    val XF_MARK_FAINT      = Role(c(0.65f, 0.65f, 0.65f, 0.28f))
+    val XF_MARK_CENTER     = Role(c(0.85f, 0.85f, 0.85f, 0.45f))
+    val XF_MARK_ENDS       = Role(c(0.70f, 0.70f, 0.70f, 0.35f))
+    val XF_HANDLE_IDLE     = Role(c(0.5f, 0.5f, 0.5f, 1f))
+    val XF_HANDLE_ACTIVE   = Role(c(0.8f, 0.8f, 0.8f, 1f))
+    val XF_HANDLE_BORDER   = Role(c(0.1f, 0.1f, 0.1f, 1f))
+    /** Hovered-track border and live (modulated / auto-fading) position dot: ALERT butter. */
+    val XF_HOVER_BORDER    = Role(a(ALERT.normal, 0.9f))
+    val XF_LIVE_DOT        = Role(a(ALERT.normal))
+
+    // Macro-knob inline Learn / Cancel buttons (PerformanceMatrixPanel)
+    val LEARN_BTN_BG       = Role(c(0.18f, 0.38f, 0.24f, 0.85f))
+    val CANCEL_BTN_BG      = Role(a(DANGER.light, 0.85f))
+
+    // FX chain header (slot pills, focused-effect name, save button)
+    val FX_PILL_ON         = Role(a(SYNC.normal, 0.95f), light = a(ORANGE.normal))
+    val FX_PILL_FILLED     = Role(c(0.20f, 0.22f, 0.26f, 0.9f), lightSlot = ImGuiCol.Button)
+    val FX_PILL_EMPTY      = Role(c(0.14f, 0.15f, 0.18f, 0.6f), light = c(0.95f, 0.96f, 0.97f, 1f))
+    val FX_PILL_TEXT       = Role(c(0.90f, 0.92f, 0.95f, 1f), lightSlot = ImGuiCol.Text)
+    val FX_PILL_TEXT_EMPTY = Role(c(0.55f, 0.58f, 0.62f, 1f), lightSlot = ImGuiCol.TextDisabled)
+    val FX_PAGE_TEXT       = Role(c(0.9f, 0.9f, 0.95f, 1f))
+    val FX_SAVE_BG         = Role(c(0.18f, 0.20f, 0.24f, 0.8f), lightSlot = ImGuiCol.Button)
+    val FX_SAVE_INK        = Role(c(0.97f, 0.97f, 0.97f, 1f), light = c(0.06f, 0.07f, 0.08f, 1f))
+    /** Unsaved-chain name ink: ALERT butter, darker on the light theme for contrast. */
+    val FX_DIRTY_TEXT      = Role(a(ALERT.light), light = a(ALERT.dark))
+    val WHITE              = Role(c(1f, 1f, 1f, 1f))
+
+    // FX slot / param cells (flat dark cells, same in both themes)
+    /** RGB of the cell backdrop; alpha varies with filled/empty so it is applied by the caller via [u32]. */
+    val FX_CELL_BG_RGB     = floatArrayOf(0.08f, 0.09f, 0.11f)
+    val FX_PLACEHOLDER     = Role(c(0.40f, 0.42f, 0.48f, 0.6f))
+    val FX_PARAM_NAME      = Role(c(0.85f, 0.88f, 0.92f, 0.95f))
+    val FX_SLOT_NAME       = Role(c(0.85f, 0.85f, 0.88f, 0.95f))
+    val FX_SLOT_NAME_EMPTY = Role(c(0.5f, 0.5f, 0.55f, 0.8f))
+    val FX_SLOT_NAME_OFF   = Role(c(0.55f, 0.55f, 0.6f, 0.75f))
+    val FX_ARROW_IDLE      = Role(c(0.6f, 0.62f, 0.68f, 0.85f))
+    val FX_BTN_IDLE_BG     = Role(c(0.14f, 0.16f, 0.20f, 0.35f))
+    val FX_BTN_IDLE_HOVER  = Role(c(0.20f, 0.22f, 0.27f, 0.6f))
+    val FX_BTN_IDLE_TEXT   = Role(c(0.5f, 0.52f, 0.58f, 0.7f))
+    val FX_BTN_EMPTY_TEXT  = Role(c(0.4f, 0.4f, 0.45f, 0.5f))
+    val FX_RESET_BG        = Role(c(0.45f, 0.35f, 0.10f, 0.75f))
+    val FX_RESET_HOVER     = Role(c(0.60f, 0.47f, 0.14f, 0.9f))
+    val FX_RESET_TEXT      = Role(c(0.95f, 0.85f, 0.55f, 1f))
+    val FX_LINK_IDLE_BG    = Role(c(0.14f, 0.16f, 0.20f, 0.50f))
+    val FX_LINK_IDLE_HOVER = Role(c(0.22f, 0.25f, 0.32f, 0.80f))
+    val FX_LINK_IDLE_TEXT  = Role(c(0.55f, 0.58f, 0.65f, 0.80f))
+
+    /** [rgb] scaled by [k] (dimmed accent) with [alpha], packed to U32. */
+    fun u32Scaled(rgb: FloatArray, k: Float, alpha: Float): Int =
+        ImGui.colorConvertFloat4ToU32(rgb[0] * k, rgb[1] * k, rgb[2] * k, alpha)
+
     /** Border drawn around any control armed for MIDI learn (SYNC cyan). */
     fun learnBorder(): Int = u32(SYNC.normal)
 
@@ -169,7 +222,13 @@ object TangoPalette {
             BUTTON_BG, BUTTON_HOVER, BUTTON_SOFT_BG, SPEED_BG, SPEED_HOVER, CLOCK_IDLE_BG, PREVIEW_BG,
             PREVIEW_HOVER, EJECT_HOVER, RANDOM_BG, RANDOM_HOVER, MODE_ACTIVE, MODE_INACTIVE,
             MODE_ACTIVE_TEXT, PANEL_BG, PANEL_BORDER, PILL_BORDER, PILL_BORDER_HOVER, BEAT_DOWNBEAT,
-            BEAT_DOT, BEAT_IDLE_RING)
+            BEAT_DOT, BEAT_IDLE_RING, XF_LINE, XF_MARK_FAINT, XF_MARK_CENTER, XF_MARK_ENDS, XF_HANDLE_IDLE,
+            XF_HANDLE_ACTIVE, XF_HANDLE_BORDER, XF_HOVER_BORDER, XF_LIVE_DOT, LEARN_BTN_BG, CANCEL_BTN_BG,
+            FX_PILL_ON, FX_PILL_FILLED, FX_PILL_EMPTY, FX_PILL_TEXT, FX_PILL_TEXT_EMPTY, FX_PAGE_TEXT,
+            FX_SAVE_BG, FX_SAVE_INK, FX_DIRTY_TEXT, WHITE, FX_PLACEHOLDER, FX_PARAM_NAME, FX_SLOT_NAME, FX_SLOT_NAME_EMPTY,
+            FX_SLOT_NAME_OFF, FX_ARROW_IDLE, FX_BTN_IDLE_BG, FX_BTN_IDLE_HOVER, FX_BTN_IDLE_TEXT,
+            FX_BTN_EMPTY_TEXT, FX_RESET_BG, FX_RESET_HOVER, FX_RESET_TEXT, FX_LINK_IDLE_BG, FX_LINK_IDLE_HOVER,
+            FX_LINK_IDLE_TEXT)
     }
 
     // -- Ink pairing -----------------------------------------------------------------------------

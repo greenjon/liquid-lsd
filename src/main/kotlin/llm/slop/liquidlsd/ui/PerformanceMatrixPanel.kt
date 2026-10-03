@@ -222,8 +222,8 @@ class PerformanceMatrixPanel {
             val boxX2 = gridStartX + gridW - 2f
 
             // Rounded box (faint fill + accent border) around the row.
-            val fillCol = ImGui.colorConvertFloat4ToU32(descriptor.accent[0], descriptor.accent[1], descriptor.accent[2], 0.07f)
-            val borderCol = ImGui.colorConvertFloat4ToU32(descriptor.accent[0], descriptor.accent[1], descriptor.accent[2], 0.85f)
+            val fillCol = TangoPalette.u32(descriptor.accent, 0.07f)
+            val borderCol = TangoPalette.u32(descriptor.accent, 0.85f)
             val rawModuleId = descriptor.bankId
             val canonicalId = ctx.canonicalModuleId(rawModuleId)
             val isModuleExpanded = parametersState.disclosureFor(canonicalId) != ParametersState.DisclosureLevel.COLLAPSED ||
@@ -500,8 +500,8 @@ class PerformanceMatrixPanel {
                 if (isSelectedKnob) {
                     val cardX1 = cellCenterX - geo.colW / 2f + 6f
                     val cardX2 = cellCenterX + geo.colW / 2f - 6f
-                    val selFill = ImGui.colorConvertFloat4ToU32(0.10f, 0.65f, 0.92f, 0.14f)
-                    val selBorder = ImGui.colorConvertFloat4ToU32(0.20f, 0.85f, 1.0f, 0.85f)
+                    val selFill = TangoPalette.u32(TangoPalette.SYNC.normal, 0.14f)
+                    val selBorder = TangoPalette.u32(TangoPalette.SYNC.bright, 0.85f)
                     overhangDraws += {
                         val parentDl = ImGui.getWindowDrawList()
                         parentDl.addRectFilled(cardX1, knobTopY - 4f, cardX2, learnBtnY + 18f + 4f, selFill, 6f)
@@ -595,7 +595,7 @@ class PerformanceMatrixPanel {
                     ImGui.setCursorScreenPos(btnX, btnY)
                     session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                         if (isParamLearning) {
-                            ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.85f, 0.2f, 0.2f, 0.85f))
+                            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.CANCEL_BTN_BG.u32())
                             if (ImGui.button("${Icons.X} Cancel##inline_cancel_${control.id}", btnW, btnH)) {
                                 MacroLearnState.cancelLearn()
                             }
@@ -604,7 +604,7 @@ class PerformanceMatrixPanel {
                         } else {
                             val canLearn = control.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL
                             if (canLearn) {
-                                ImGui.pushStyleColor(ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.18f, 0.38f, 0.24f, 0.85f))
+                                ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.LEARN_BTN_BG.u32())
                                 if (ImGui.button("${Icons.REFRESH} Learn##inline_learn_${control.id}", btnW, btnH)) {
                                     MacroLearnState.startLearn(control.id)
                                     MacroLearnState.selectedControlId = control.id
@@ -670,8 +670,8 @@ class PerformanceMatrixPanel {
         tooltip: String? = null
     ) {
         val dl = ImGui.getWindowDrawList()
-        val bg = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.14f)
-        val border = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.85f)
+        val bg = TangoPalette.u32(accent, 0.14f)
+        val border = TangoPalette.u32(accent, 0.85f)
         val cornerFlags = ImDrawFlags.RoundCornersTopLeft or ImDrawFlags.RoundCornersBottomRight
         dl.addRectFilled(x, y, x + w, y + h, bg, 8f, cornerFlags)
         dl.addRect(x, y, x + w, y + h, border, 8f, cornerFlags, 1.5f)

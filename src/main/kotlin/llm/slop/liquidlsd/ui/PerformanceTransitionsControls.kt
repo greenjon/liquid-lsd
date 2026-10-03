@@ -304,7 +304,7 @@ internal object PerformanceTransitionsControls {
         // 1. Deck A Snap Badge [ A ]
         val badgeW = (headerH * 1.05f).coerceIn(24f, 32f)
         val rgbA = BrowserDeckButtons.colorA()
-        val colorA = ImGui.colorConvertFloat4ToU32(rgbA[0], rgbA[1], rgbA[2], 1f)
+        val colorA = TangoPalette.u32(rgbA)
         val snapAKey = "Global/snapDeckA"
         val isMidiLearnSnapA = session.parametersState.isMidiTargetLearning(snapAKey)
         val snapAMapping = session.midiMappingManager.getMappingForParameter(snapAKey)
@@ -514,13 +514,13 @@ internal object PerformanceTransitionsControls {
 
         // Render crossfader visual tracks & ticks
         val rgbB = BrowserDeckButtons.colorB()
-        val colorB = ImGui.colorConvertFloat4ToU32(rgbB[0], rgbB[1], rgbB[2], 1f)
-        val lineCol = ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1.0f)
+        val colorB = TangoPalette.u32(rgbB)
+        val lineCol = TangoPalette.XF_LINE.u32()
         dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
 
-        val markColFaint = ImGui.colorConvertFloat4ToU32(0.65f, 0.65f, 0.65f, 0.28f)
-        val markColCenter = ImGui.colorConvertFloat4ToU32(0.85f, 0.85f, 0.85f, 0.45f)
-        val markColEnds = ImGui.colorConvertFloat4ToU32(0.70f, 0.70f, 0.70f, 0.35f)
+        val markColFaint = TangoPalette.XF_MARK_FAINT.u32()
+        val markColCenter = TangoPalette.XF_MARK_CENTER.u32()
+        val markColEnds = TangoPalette.XF_MARK_ENDS.u32()
 
         // Ends (-1.0, +1.0)
         dl.addLine(lineStartX, centerY - 6f, lineStartX, centerY + 6f, markColEnds, 1.5f)
@@ -547,8 +547,8 @@ internal object PerformanceTransitionsControls {
         // Handle
         val handleW = 6f
         val handleH = 16f
-        val handleBgCol = if (isTrackActive) ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 1.0f) else ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 1.0f)
-        val handleBorderCol = ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
+        val handleBgCol = if (isTrackActive) TangoPalette.XF_HANDLE_ACTIVE.u32() else TangoPalette.XF_HANDLE_IDLE.u32()
+        val handleBorderCol = TangoPalette.XF_HANDLE_BORDER.u32()
         dl.addRectFilled(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
         dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
 
@@ -558,7 +558,7 @@ internal object PerformanceTransitionsControls {
         } else if (isOscLearnXfader) {
             TangoPalette.drawOscLearnPulseBorder(dl, lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, 4f, 1.5f)
         } else if (isTrackHovered || isTrackActive) {
-            val borderCol = if (isTrackActive) TangoPalette.learnBorder() else ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 0.9f)
+            val borderCol = if (isTrackActive) TangoPalette.learnBorder() else TangoPalette.XF_HOVER_BORDER.u32()
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
         }
 
@@ -568,9 +568,9 @@ internal object PerformanceTransitionsControls {
             val livePct = ((mixer.crossfade.value - (-1f)) / 2f).coerceIn(0f, 1f)
             val liveX = lineStartX + livePct * lineWidth
             val dotR = 4f
-            val curDotCol = ImGui.colorConvertFloat4ToU32(1.0f, 0.75f, 0.15f, 1.0f)
+            val curDotCol = TangoPalette.XF_LIVE_DOT.u32()
             dl.addCircleFilled(liveX, centerY, dotR, curDotCol)
-            dl.addCircle(liveX, centerY, dotR + 0.5f, ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f), 12, 1.0f)
+            dl.addCircle(liveX, centerY, dotR + 0.5f, TangoPalette.XF_HANDLE_BORDER.u32(), 12, 1.0f)
         }
 
         ImGui.sameLine(0f, gap)

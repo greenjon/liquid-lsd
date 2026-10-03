@@ -52,14 +52,14 @@ object FxParamCell {
         val idBase = "fxparam_${bankId}_k${knobIndex}"
 
         val bgAlpha = if (param == null) 0.20f else 0.40f
-        dl.addRectFilled(x, y, x + w, y + h, ImGui.colorConvertFloat4ToU32(0.08f, 0.09f, 0.11f, bgAlpha), 4f)
+        dl.addRectFilled(x, y, x + w, y + h, TangoPalette.u32(TangoPalette.FX_CELL_BG_RGB, bgAlpha), 4f)
 
         if (param == null || paramName == null) {
             // Blank / unused knob on this page
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 val placeholder = "—"
                 val tw = ImGui.calcTextSize(placeholder).x
-                val col = ImGui.colorConvertFloat4ToU32(0.40f, 0.42f, 0.48f, 0.6f)
+                val col = TangoPalette.FX_PLACEHOLDER.u32()
                 dl.addText(x + (w - tw) * 0.5f, TextFit.centeredY(y, h, ImGui.getTextLineHeight()), col, placeholder)
             }
             return
@@ -72,7 +72,7 @@ object FxParamCell {
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             val shown = TextFit.ellipsize(paramName, nameW - 4f)
             val tw = ImGui.calcTextSize(shown).x
-            val textCol = ImGui.colorConvertFloat4ToU32(0.85f, 0.88f, 0.92f, 0.95f)
+            val textCol = TangoPalette.FX_PARAM_NAME.u32()
             dl.addText(x + (nameW - tw) * 0.5f, TextFit.centeredY(y, h, ImGui.getTextLineHeight()), textCol, shown)
         }
 
@@ -91,7 +91,7 @@ object FxParamCell {
         if (hasModulation) {
             val dotX = x + w - 6f
             val dotY = y + h * 0.5f
-            val modCol = ImGui.colorConvertFloat4ToU32(accent[0], accent[1], accent[2], 0.90f)
+            val modCol = TangoPalette.u32(accent, 0.90f)
             dl.addCircleFilled(dotX, dotY, 2.5f, modCol, 8)
         }
     }
@@ -106,14 +106,14 @@ object FxParamCell {
         ImGui.setCursorScreenPos(x, y)
         val (bg, bgHover, text) = when {
             isModified -> Triple(
-                ImGui.colorConvertFloat4ToU32(0.45f, 0.35f, 0.10f, 0.75f),
-                ImGui.colorConvertFloat4ToU32(0.60f, 0.47f, 0.14f, 0.9f),
-                ImGui.colorConvertFloat4ToU32(0.95f, 0.85f, 0.55f, 1f)
+                TangoPalette.FX_RESET_BG.u32(),
+                TangoPalette.FX_RESET_HOVER.u32(),
+                TangoPalette.FX_RESET_TEXT.u32()
             )
             else -> Triple(
-                ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.35f),
-                ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.27f, 0.6f),
-                ImGui.colorConvertFloat4ToU32(0.5f, 0.52f, 0.58f, 0.7f)
+                TangoPalette.FX_BTN_IDLE_BG.u32(),
+                TangoPalette.FX_BTN_IDLE_HOVER.u32(),
+                TangoPalette.FX_BTN_IDLE_TEXT.u32()
             )
         }
         ImGui.pushStyleColor(ImGuiCol.Button, bg)

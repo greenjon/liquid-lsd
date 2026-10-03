@@ -142,7 +142,7 @@ object FxChainHeader {
                     val textSz = ImGui.calcTextSize(pageText)
                     val textX = curX + (PAGE_TEXT_W - textSz.x) * 0.5f
                     val textY = curY + (ctrlH - textSz.y) * 0.5f
-                    ImGui.getWindowDrawList().addText(textX, textY, ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.95f, 1f), pageText)
+                    ImGui.getWindowDrawList().addText(textX, textY, TangoPalette.FX_PAGE_TEXT.u32(), pageText)
                 }
                 itemTooltip("Parameter page ${chain.focusParamPage + 1} of $totalPages.")
 
@@ -255,18 +255,12 @@ object FxChainHeader {
             val slotNum = i + 1
             val btnLabel = "$slotNum"
 
-            val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
-            val activeCol = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else TangoPalette.u32(TangoPalette.SYNC.normal, 0.95f)
-            val inactiveCol = when {
-                isLight && slot != null -> ImGui.getColorU32(ImGuiCol.Button)
-                isLight -> ImGui.colorConvertFloat4ToU32(0.95f, 0.96f, 0.97f, 1f)
-                slot != null -> ImGui.colorConvertFloat4ToU32(0.20f, 0.22f, 0.26f, 0.9f)
-                else -> ImGui.colorConvertFloat4ToU32(0.14f, 0.15f, 0.18f, 0.6f)
-            }
+            val activeCol = TangoPalette.FX_PILL_ON.u32()
+            val inactiveCol = if (slot != null) TangoPalette.FX_PILL_FILLED.u32() else TangoPalette.FX_PILL_EMPTY.u32()
             val textCol = when {
-                isFocused -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f)
-                isLight -> if (slot != null) ImGui.getColorU32(ImGuiCol.Text) else ImGui.getColorU32(ImGuiCol.TextDisabled)
-                else -> if (slot != null) ImGui.colorConvertFloat4ToU32(0.90f, 0.92f, 0.95f, 1f) else ImGui.colorConvertFloat4ToU32(0.55f, 0.58f, 0.62f, 1f)
+                isFocused -> TangoPalette.WHITE.u32()
+                slot != null -> TangoPalette.FX_PILL_TEXT.u32()
+                else -> TangoPalette.FX_PILL_TEXT_EMPTY.u32()
             }
 
             ImGui.pushStyleColor(ImGuiCol.Button, if (isFocused) activeCol else inactiveCol)
@@ -319,10 +313,9 @@ object FxChainHeader {
         val effectName = slot?.displayName ?: "Slot ${focusedSlot + 1} (Empty)"
         val fullLabel = "$effectName ${Icons.CHEVRON_DOWN}"
 
-        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
-        val bgCol = if (isLight) ImGui.getColorU32(ImGuiCol.FrameBg) else ImGui.colorConvertFloat4ToU32(0.14f, 0.16f, 0.20f, 0.85f)
-        val borderCol = if (isLight) ImGui.getColorU32(ImGuiCol.Border) else ImGui.colorConvertFloat4ToU32(0.35f, 0.40f, 0.50f, 0.70f)
-        val textCol = if (isLight) ImGui.getColorU32(ImGuiCol.Text) else ImGui.colorConvertFloat4ToU32(0.80f, 0.85f, 0.95f, 1f)
+        val bgCol = TangoPalette.BADGE_BG.u32()
+        val borderCol = TangoPalette.BADGE_BORDER.u32()
+        val textCol = TangoPalette.BADGE_TEXT.u32()
 
         val curX = ImGui.getCursorScreenPosX()
         val curY = ImGui.getCursorScreenPosY()
@@ -341,7 +334,7 @@ object FxChainHeader {
             onOpenSlotBrowse(focusedSlot)
         }
         if (ImGui.isItemHovered()) {
-            val hoverBorderCol = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else ImGui.colorConvertFloat4ToU32(0.60f, 0.70f, 0.90f, 1f)
+            val hoverBorderCol = TangoPalette.BADGE_HOVER_BORDER.u32()
             dl.addRect(curX, curY, curX + nameW, curY + ctrlH, hoverBorderCol, 4f, 0, 1.5f)
         }
         itemTooltip(
@@ -363,10 +356,8 @@ object FxChainHeader {
         val dirtyMarker = if (isDirty) " •" else ""
         val fullLabel = "$displayName$dirtyMarker ${Icons.CHEVRON_DOWN}"
 
-        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
         if (isDirty) {
-            val dirtyTextCol = if (isLight) TangoPalette.ALERT.dark else TangoPalette.ALERT.light
-            ImGui.pushStyleColor(ImGuiCol.Text, dirtyTextCol[0], dirtyTextCol[1], dirtyTextCol[2], 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.FX_DIRTY_TEXT.u32())
         }
         if (ImGui.button("$fullLabel##fx_chain_name_$bankId", nameW, ctrlH)) {
             onOpenChainBrowse()
@@ -394,20 +385,10 @@ object FxChainHeader {
 
     private fun drawSaveButton(session: SessionContext, chain: FxChain, bankId: String, ctrlH: Float, isDirty: Boolean) {
         val canOverwrite = chain.sourceFile != null
-        val isLight = session.uiTheme.theme == UITheme.Theme.ORANGE_SUNSHINE
-        val saveColRgb = when {
-            isDirty -> TangoPalette.ALERT.dark
-            isLight -> floatArrayOf(0.90f, 0.91f, 0.92f)
-            else -> floatArrayOf(0.18f, 0.20f, 0.24f)
-        }
-        val saveCol = when {
-            isDirty -> TangoPalette.u32(TangoPalette.ALERT.dark)
-            isLight -> ImGui.getColorU32(ImGuiCol.Button)
-            else -> ImGui.colorConvertFloat4ToU32(0.18f, 0.20f, 0.24f, 0.8f)
-        }
-        val ink = if (isLight && !isDirty) floatArrayOf(0.06f, 0.07f, 0.08f) else TangoPalette.inkFor(saveColRgb)
+        val saveCol = if (isDirty) TangoPalette.u32(TangoPalette.ALERT.dark) else TangoPalette.FX_SAVE_BG.u32()
+        val inkCol = if (isDirty) TangoPalette.u32(TangoPalette.inkFor(TangoPalette.ALERT.dark)) else TangoPalette.FX_SAVE_INK.u32()
         ImGui.pushStyleColor(ImGuiCol.Button, saveCol)
-        ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
+        ImGui.pushStyleColor(ImGuiCol.Text, inkCol)
         val saveW = saveBtnW(ctrlH)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ImGui.button("${Icons.SAVE}##save_$bankId", saveW, ctrlH)) {

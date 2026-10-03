@@ -3,6 +3,7 @@
 ### Perform UI Colours Now All Come From the Tango Palette (`ui/TangoPalette.kt`, `Performance*Controls.kt`, `LibraryPanel.kt`)
 - Badges, buttons, beat dots, TAP/AUTO/LINK states, Library mode toggle and panel surfaces now use named `TangoPalette` roles that resolve per theme, instead of dark-theme RGB literals with Tango colours only in the light theme. The dark theme looks essentially the same (a few blues and ambers shift to the nearest Tango swatch); the light theme is unchanged.
 - The MIDI-learn border is now the Tango sync cyan everywhere in the Perform rows (slightly deeper than the old bright cyan).
+- The crossfader, macro Learn/Cancel buttons, matrix selection card and FX slot/parameter cells also use Tango roles now; the crossfader amber is now Tango butter, and the selection cyan and Cancel red sit on the nearest Tango swatches.
 - Internal: the four near-identical queue prev/next buttons on the deck row share one helper; no layout or ImGui ID changes.
 
 ### User Profile and Perform Page Files Are Safer (`control/UserJsonFiles.kt`)
