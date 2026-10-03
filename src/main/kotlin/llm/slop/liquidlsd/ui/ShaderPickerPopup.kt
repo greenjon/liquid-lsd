@@ -84,6 +84,8 @@ object ShaderPickerPopup {
     /** Controller cursor: the id of the highlighted row (null = none yet). Moves with [moveCursor], applies with [acceptCursor]. */
     private var cursorId: String? = null
     private var scrollToCursor = false
+    /** The id of what the target currently uses (null = unknown), marked in the list; set by each ensureInline call. */
+    private var appliedId: (() -> String?)? = null
     /** When [drawInline] last ran; lets a controller tell whether a picker is actually on screen. */
     @Volatile var lastDrawMs: Long = 0L
         private set
@@ -167,8 +169,9 @@ object ShaderPickerPopup {
      * render this frame. Cheap to call every frame: search text and category filters only reset
      * when [contextKey] differs from the last call (a new Browse target), not on every redraw.
      */
-    fun ensureInline(contextKey: String, title: String, type: PickerType, callback: (String?) -> Unit) {
+    fun ensureInline(contextKey: String, title: String, type: PickerType, applied: (() -> String?)? = null, callback: (String?) -> Unit) {
         this.title = title
+        this.appliedId = applied
         this.onSelect = callback
         if (activeContextKey == contextKey) return
         activeContextKey = contextKey
@@ -179,8 +182,9 @@ object ShaderPickerPopup {
      * [ensureInline] for a deck's generator: the SOURCE list merges stock [VisualSourceRegistry]
      * types with saved deck presets (`.lsd` files), so picking a row can mean either.
      */
-    fun ensureInlineSource(contextKey: String, title: String, callback: (SourcePick) -> Unit) {
+    fun ensureInlineSource(contextKey: String, title: String, applied: (() -> String?)? = null, callback: (SourcePick) -> Unit) {
         this.title = title
+        this.appliedId = applied
         this.onSelect = { id ->
             callback(
                 when {
@@ -200,13 +204,14 @@ object ShaderPickerPopup {
      * and opens on the user's favorites when there are any (the extra "Saved FX" category lists
      * saved single-FX files, .lsdfx).
      */
-    fun ensureInlineFx(contextKey: String, title: String, slotIndex: Int, callback: (FxPick) -> Unit) {
+    fun ensureInlineFx(contextKey: String, title: String, slotIndex: Int, applied: (() -> String?)? = null, callback: (FxPick) -> Unit) {
         val type = when (slotIndex) {
             0 -> PickerType.FX_SLOT_1
             1 -> PickerType.FX_SLOT_2
             else -> PickerType.FX_SLOT_3
         }
         this.title = title
+        this.appliedId = applied
         this.onSelect = { id ->
             callback(
                 when {
@@ -549,11 +554,12 @@ object ShaderPickerPopup {
 
         // Col 0: Name -- the whole row is the click target (single or double click selects it).
         ImGui.tableSetColumnIndex(0)
+        val isApplied = item.id == appliedId?.invoke()
         val itemLabel = when {
             item.isExternal -> "${Icons.ACTIVITY}  ${item.displayName}"
             item.type == "Preset" -> "${Icons.DISC} ${item.displayName}"
             else -> item.displayName
-        }
+        }.let { if (isApplied) "\u25cf $it" else it }
         if (item.isExternal) {
             ImGui.pushStyleColor(ImGuiCol.Text, 0.2f, 0.85f, 0.45f, 1.0f)
         }

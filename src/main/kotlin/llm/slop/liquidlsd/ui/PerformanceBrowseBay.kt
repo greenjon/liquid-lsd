@@ -95,7 +95,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
     }
 
     private fun drawGenBrowse(session: SessionContext, parametersState: ParametersState, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String) {
-        ShaderPickerPopup.ensureInlineSource("gen/$deckLabel", "Select Source for $deckLabel") { pick ->
+        ShaderPickerPopup.ensureInlineSource("gen/$deckLabel", "Select Source for $deckLabel", applied = { deck.source.id }) { pick ->
             when (pick) {
                 is ShaderPickerPopup.SourcePick.Id ->
                     DeckSourcePicker.applyPickedSourceId(session, parametersState, mixer, deck, deckLabel, pick.sourceId, ctx.deckPresetController)
@@ -152,7 +152,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
     }
 
     private fun drawTransitionBrowse(session: SessionContext, mixer: Mixer) {
-        ShaderPickerPopup.ensureInline("transition", "Select Mixer Transition", ShaderPickerPopup.PickerType.MIXER_TRANSITION) { id ->
+        ShaderPickerPopup.ensureInline("transition", "Select Mixer Transition", ShaderPickerPopup.PickerType.MIXER_TRANSITION, applied = { mixer.transitionFilter?.id ?: "linear_crossfade" }) { id ->
             mixer.setTransition(id)
         }
         ShaderPickerPopup.drawInline(session)
@@ -172,7 +172,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
 
     private fun drawFxSlotPicker(session: SessionContext, chain: FxChain, slotIndex: Int, chainLabel: String) {
         val contextKey = "fxslot/${System.identityHashCode(chain)}/$slotIndex"
-        ShaderPickerPopup.ensureInlineFx(contextKey, "Select FX Slot ${slotIndex + 1} for $chainLabel", slotIndex) { pick ->
+        ShaderPickerPopup.ensureInlineFx(contextKey, "Select FX Slot ${slotIndex + 1} for $chainLabel", slotIndex, applied = { chain.slots[slotIndex]?.id }) { pick ->
             when (pick) {
                 is ShaderPickerPopup.FxPick.Stock -> FxOps.setSlotFilter(chain, slotIndex, pick.filterId)
                 is ShaderPickerPopup.FxPick.Saved -> FxOps.loadSlot(session, pick.file, chain, slotIndex)

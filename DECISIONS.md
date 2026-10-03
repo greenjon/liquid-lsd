@@ -1,3 +1,9 @@
+## Pickers Mark the Applied Item (`ui/ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`)
+
+- **Decision**: `ensureInline*` take an optional `applied` provider (deck source id, mixer transition id, FX slot filter id); the matching row gets a `●` prefix. The highlight stays the cursor only.
+- **Rationale**: with a controller cursor, "what is on now" and "what I'm about to pick" must be told apart.
+- **Consequences**: only stock ids match; a saved preset or `.lsdfx` in use isn't marked. Not hardware-tested.
+
 ## FX and Transition Playlist Panes Join the Library Cursor (`ui/LibraryNavigation.kt`, `LibraryPanel.navigateSelection`)
 
 - **Decision**: `FX_PLAYLIST` and `TRANSITION_PLAYLIST` are cursor panes of their tabs (`itemCount()` on each editor panel, stepping through `selectedItemIndex`). Accept applies the FX item to the crossfader-active deck's chain, or the transition to the mixer.
