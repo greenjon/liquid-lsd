@@ -17,15 +17,11 @@ Feedback (rings/LEDs) is v1.0 scope.
 |---|---|---|
 | 1 | `CommandRegistry`, device tagging (`MidiEvent.deviceId`), controller profile model/loader/resolver, built-in Twister profile | done, committed (91e868e) |
 | 2 | Perform-grid control: control pages, knob gestures, banks -> tabs, shift modifier, acceleration | done, committed, verified on hardware |
-| 4 | Ring/LED feedback | done, **UNCOMMITTED**, working on all 4 banks with the stock 4-bank firmware (see "Feedback history") |
+| 4 | Ring/LED feedback | done, committed (b64f1a2), working on all 4 banks with the stock 4-bank firmware (see "Feedback history") |
 | 3 | Navigation/browse commands on the free side buttons | **not started** |
 | 5 | Profile UI (pick profile, copy a built-in, edit, learn-into-profile) | not started |
 
-Uncommitted: `control/{CcQueue,ControllerFeedback,KnobLight,MidiSink,TracingSink}.kt`, `midi/MidiOutputPorts.kt`,
-edits to `ControllerManager/ControllerProfile/ControllerRuntime.kt`, `ui/PerformSurface.kt`,
-`ui/PerformanceUiContext.kt` (LED colours), `ui/UIManager.kt` (feedback call), the Twister profile JSON, their
-tests, docs (`DECISIONS.md`, both release-notes files, user guide, dev doc, `.planning`) and the regenerated
-`src/main/resources/docs/**` HTML. Full suite: 778 tests, 0 failures (`./gradlew test --offline -q`).
+Full suite: 778 tests, 0 failures (`./gradlew test --offline -q`).
 Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `docs/`.
 
 ## Architecture map (all under `src/main/kotlin/llm/slop/liquidlsd/`)
@@ -74,8 +70,8 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
 1. Original 2014 firmware: bank 1 rings fine, banks 2-4 partial/stale. Devices drop bursts of messages, hence the paced,
    coalescing writer (`minIntervalMs` default 2) and writes to the active bank only.
 2. XT firmware (2022): bank 1 fully live, banks 2-4 correct on entry but never updated live. An `amidi` test proved the
-   per-bank CC numbers (CC 16 on bank 2) are live and CC 0 is not "the bank on screen", so `FeedbackAddressing.BANK_ABSOLUTE`
-   is the default (`ACTIVE_BANK` / `BOTH` exist but are disproved for the Twister).
+   per-bank CC numbers (CC 16 on bank 2) are live and CC 0 is not "the bank on screen", so per-bank numbers are used
+   (the `FeedbackAddressing` modes were removed 2026-10-02).
 3. A replay of the real sequence (`ControllerFeedbackSequenceTest`) showed the app sends the right CC after turns on banks 2-4,
    so that failure was firmware-side.
 4. Stock 4-bank firmware (no sequencer): everything works on all 4 banks. The user is staying on it.
@@ -84,9 +80,9 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
 
 1. **Commit the feedback work** (after the user confirms it is stable). Commit messages end with the attribution line from
    the session's system reminder.
-2. **Simplify what the hardware no longer needs** (verify on the stock firmware first, ask the user): the
-   `FeedbackAddressing` modes other than `BANK_ABSOLUTE`, and possibly the staged bank rewrites / settle rewrite /
-   heartbeat in `ControllerFeedback`. Keep the paced coalescing writer, the trace option and the tests that still apply.
+2. **Simplify what the hardware may no longer need** (`FeedbackAddressing` already removed): the staged bank rewrites /
+   settle rewrite / heartbeat in `ControllerFeedback`. Test on the stock firmware with each disabled, ask the user.
+   Keep the paced coalescing writer, the trace option and the tests that still apply.
 3. **Phase 3, navigation/browse from the Twister.** Ask the user what they reach for most. Candidates: toggle a row's SRC/FX
    mode, switch Edit/Perform/Library view, open the SRC picker and step through generators, accept/back. Only three free
    side buttons, so expect a shift layer (profile bindings already support `shift+side.1`). Needs an Explore pass over

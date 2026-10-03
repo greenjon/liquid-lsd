@@ -17,14 +17,7 @@ class ControllerFeedbackTest {
     private val twister = ControllerProfileStore(createTempDirectory("controllers").toFile()).get("midi-fighter-twister")!!
     private val sink = FakeSink()
 
-    private fun feedbackWith(addressing: FeedbackAddressing): ControllerFeedback {
-        val profile = twister.profile
-        val knobs = profile.output.knobs!!.copy(addressing = addressing)
-        return ControllerFeedback(profile.copy(output = profile.output.copy(knobs = knobs)).compile(), sink)
-    }
-
-    /** Most tests pin the plain per-bank numbering; the addressing modes have their own tests below. */
-    private val feedback = feedbackWith(FeedbackAddressing.BANK_ABSOLUTE)
+    private val feedback = ControllerFeedback(twister.profile.compile(), sink)
 
     private fun lights(vararg overrides: Pair<Int, KnobLight?>): List<KnobLight?> {
         val out = MutableList<KnobLight?>(16) { null }
@@ -284,69 +277,13 @@ class ControllerFeedbackTest {
         assertEquals(bankSize, sink.drain().size, "and keeps beating")
     }
 
-    // --- Addressing modes ---
-
     @Test
-    fun theShippedTwisterProfileUsesEachBanksOwnNumbers() {
+    fun eachBanksOwnNumbersAreUsed() {
         // Checked with amidi on the hardware: CC 16 lights bank 2's knob 1 live, CC 0 does nothing visible.
-        assertEquals(FeedbackAddressing.BANK_ABSOLUTE, twister.profile.output.knobs!!.addressing)
-    }
-
-    @Test
-    fun bothAddressingAlsoWritesTheCurrentBanksFirstBankNumbers() {
-        feedbackWith(FeedbackAddressing.BOTH).update(lights(0 to blue), activeBank = 1, nowMs = 0)
-        val sent = sink.drain()
-        assertEquals(16 * 2 * 2, sent.size)
-        assertTrue(Triple(0, 16, 64) in sent && Triple(0, 0, 64) in sent, "ring on CC 16 and CC 0")
-        assertTrue(Triple(1, 16, 1) in sent && Triple(1, 0, 1) in sent, "LED on CC 16 and CC 0")
-        assertTrue(sent.none { it.second in 32..63 }, "other banks are left alone")
-    }
-
-    @Test
-    fun bothAddressingDoesNotDuplicateOnTheFirstBank() {
-        feedbackWith(FeedbackAddressing.BOTH).update(lights(0 to blue), activeBank = 0, nowMs = 0)
-        assertEquals(16 * 2, sink.drain().size)
-    }
-
-    @Test
-    fun bothAddressingWithAnUnknownBankWritesEverythingOnce() {
-        feedbackWith(FeedbackAddressing.BOTH).update(lights(0 to blue), activeBank = null, nowMs = 0)
-        assertEquals(128, sink.drain().size, "bank 1 is assumed live; the first-bank numbers are its own")
-    }
-
-    @Test
-    fun activeBankAddressingOnlyEverUsesTheFirstBankNumbers() {
-        val fb = feedbackWith(FeedbackAddressing.ACTIVE_BANK)
-        fb.update(lights(0 to blue), activeBank = 2, nowMs = 0)
-        val sent = sink.drain()
+        feedback.update(lights(0 to blue), activeBank = 1, nowMs = 0)
+        val sent = feedback.let { sink.drain() }
         assertEquals(16 * 2, sent.size)
-        assertTrue(sent.all { it.second in 0..15 }, sent.toString())
-        assertTrue(Triple(0, 0, 64) in sent && Triple(1, 0, 1) in sent)
-
-        fb.update(lights(0 to KnobLight(1f, 0f, 0f, 1f)), activeBank = 2, nowMs = 10)
-        assertEquals(listOf(Triple(0, 0, 127)), sink.drain(), "a single change is a single message")
-    }
-
-    @Test
-    fun activeBankAddressingWithAnUnknownBankWritesOnlyTheFirstBank() {
-        feedbackWith(FeedbackAddressing.ACTIVE_BANK).update(lights(0 to blue), activeBank = null, nowMs = 0)
-        val sent = sink.drain()
-        assertEquals(16 * 2, sent.size)
-        assertTrue(sent.all { it.second in 0..15 })
-    }
-
-    @Test
-    fun aLiveChangeOnALaterBankGoesToBothNumbers() {
-        val fb = feedbackWith(FeedbackAddressing.BOTH)
-        settle(fb, bank = 1, lights(2 to KnobLight(0.25f, 0f, 0f, 1f)))
-        fb.update(lights(2 to KnobLight(0.5f, 0f, 0f, 1f)), activeBank = 1, nowMs = 2100)
-        assertEquals(setOf(Triple(0, 18, 64), Triple(0, 2, 64)), sink.drain().toSet())
-    }
-
-    private fun settle(fb: ControllerFeedback, bank: Int, current: List<KnobLight?>) {
-        fb.update(current, activeBank = bank, nowMs = 0)
-        fb.update(current, activeBank = bank, nowMs = 2000)
-        sink.drain()
+        assertTrue(Triple(0, 16, 64) in sent && Triple(1, 16, 1) in sent)
     }
 
     // --- Profile ---

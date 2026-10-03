@@ -94,20 +94,8 @@ data class KnobFeedbackDef(
     val input: String = "knob",
     val ringChannel: Int? = null,
     val colorChannel: Int? = null,
-    val color: HueWheel = HueWheel(),
-    val addressing: FeedbackAddressing = FeedbackAddressing.BANK_ABSOLUTE
+    val color: HueWheel = HueWheel()
 )
-
-/**
- * Which CC numbers a bank's rings and LEDs are written to. [BANK_ABSOLUTE] uses the numbers the
- * encoders send on that bank (knob 1 on bank 2 is CC 16); [ACTIVE_BANK] always uses the first bank's
- * numbers (CC 0..15), which some firmware treats as "whichever bank is showing"; [BOTH] writes both,
- * which is harmless when only one form is live (the bank is rewritten whenever it is entered).
- * On the Twister the per-bank numbers are the live ones (checked with amidi: CC 16 lights bank 2's
- * knob 1 while it is showing, CC 0 does nothing visible), so [BANK_ABSOLUTE] is the default.
- */
-@Serializable
-enum class FeedbackAddressing { BANK_ABSOLUTE, ACTIVE_BANK, BOTH }
 
 /**
  * [minIntervalMs] is the least time between two feedback messages to the device: controllers drop
