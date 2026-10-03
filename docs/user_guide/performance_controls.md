@@ -309,7 +309,7 @@ Each row is pinned to one half (source or FX), so no `SRC`/`FX` switching is nee
 2. **Touch the slot you want.** Give knob 6 (slot 1) a small turn. The picker opens for the *last knob you touched*, so this step chooses the target. Don't tap it: a tap bypasses the slot.
 3. **Press the right-bottom side button.** The picker for that slot opens on screen (stock filters, favourites and saved effects).
 4. **Browse.** Turn **knob 1** (the first knob of the whole grid, not knob 6) to move the highlight. Nothing is applied while you move. Press **right-top** to step to the next category (hold Shift for the previous one).
-5. **Tap knob 1** to apply the highlighted effect to the slot. The item currently loaded is marked in the list.
+5. **Tap knob 1** to apply the highlighted effect to the slot. The item currently loaded is marked in the list (stock items only).
 6. **Close the picker** with **left-top**. The effect is now in slot 1; turn knob 6 for its Metaknob and knob 5 for the Super Knob.
 7. **Tune it.** Hold **Shift** and tap knob 6 to focus the slot: its parameters spread over knobs 6-8 and knob 5 becomes the Metaknob. **Shift + tap knob 5** leaves focus.
 
@@ -330,7 +330,7 @@ The three side buttons other than Shift change meaning with the view:
 | View | Left-top | Right-top | Right-bottom | Knob 1 |
 |---|---|---|---|---|
 | **Perform** | back (same as Esc) | open the **Library** | open the **picker** for the row of the knob you touched last | normal knob |
-| **Picker open** | close the picker | step the category | step nothing; **Shift +** it clears the slot or chain | **cursor**: turn to move, tap to apply |
+| **Picker open** | close the picker | step the category | nothing; **Shift +** it clears the slot or chain | **cursor**: turn to move, tap to apply |
 | **Library** | leave the Library | step the **tab** (Sources, FX, Trans) | step the **list** (browser, playlist, BG queue, A/B queue) | **cursor**: turn to move, tap to load |
 
 - **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active.

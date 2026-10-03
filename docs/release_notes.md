@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Twister Documentation Rewritten Around a First Walkthrough (`docs/user_guide/performance_controls.md`)
+- The Midi Fighter Twister section is now ordered for a new user: Utility setup, what each bank and knob controls (with a table), gestures, a step-by-step "load an effect onto Deck A with only the Twister" walkthrough, a side-button table per view (Perform, picker, Library), lights, troubleshooting, and your own profiles.
+
 ### Hidden Page Selected From a Controller Gets a Temporary Tab (`UITheme.visiblePerformPages`)
 - A page hidden with **Show in tab strip** off still appears as a tab while it is the active page (for example when a Twister bank selects it), so the strip always highlights where you are. The tab disappears again when you switch to another page.
 
