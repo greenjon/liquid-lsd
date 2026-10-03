@@ -96,7 +96,7 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
 3. ~~Phase 3, navigation/browse~~ done (see "Navigation" below). Small leftovers, all listed in `.planning/midi-phase3-navigation-plan.md`:
    knobs 2-16 now inert while browsing (done), FX queue
    transport commands (done, unbound; FX queue accept done), FX/Trans playlist-pane cursor (done), pickers mark the applied item (done; stock ids only). Phase 3 leftovers are finished.
-4. **Phase 5, profile UI**: choose/copy/edit controller profiles, learn into a profile. (The MIDI Controls panel's profile list
+4. **Phase 5, profile UI**: choose/copy/edit controller profiles, learn into a profile. **The plan, with the recon findings and a first slice, is in `.planning/midi-phase5-profile-ui-plan.md`; start there.** (The MIDI Controls panel's profile list
    is the legacy learned-mapping list, `library/midi/*.json`, not controller profiles; this confused the user once.)
 
 ## Gotchas
