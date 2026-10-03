@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#bi-directional-bank-sync-bipolar-metertype-support-for-controller-feedback-control-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bi-directional Bank Sync &amp; Bipolar MeterType Support for Controller Feedback (control/*, ui/*)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#schema-version-in-controller-profile-and-perform-page-json-controlcontrollerprofilekt-uiperfpagestorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5130,6 +5141,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#bi-directional-bank-sync-bipolar-metertype-support-for-controller-feedback-control-ui" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bi-directional Bank Sync &amp; Bipolar MeterType Support for Controller Feedback (control/*, ui/*)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#schema-version-in-controller-profile-and-perform-page-json-controlcontrollerprofilekt-uiperfpagestorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9027,6 +9049,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="bi-directional-bank-sync-bipolar-metertype-support-for-controller-feedback-control-ui">Bi-directional Bank Sync &amp; Bipolar MeterType Support for Controller Feedback (<code>control/*</code>, <code>ui/*</code>)</h3>
+<ul>
+<li><strong>Bi-directional Bank Switching</strong>: When switching Perform view tabs or pages in the software UI (via mouse, menu, or keyboard shortcuts), connected controllers with hardware bank support (like the DJ TechTools Midi Fighter Twister) now automatically switch their active hardware bank to stay synchronized with the active screen page.</li>
+<li><strong>Bipolar &amp; Endless MeterType Detection</strong>: Perform knobs and macro controls now detect whether their bound parameters or link modes are bipolar (e.g., Crossfader, Pan, Pitch/Detune, Bipolar link mode) or endless. <code>KnobLight</code> carries this <code>meterType</code> so hardware ring feedback (such as the Twister's EQ/Center Fill mode) accurately aligns center-detent values at CC 64.</li>
+</ul>
 <h3 id="schema-version-in-controller-profile-and-perform-page-json-controlcontrollerprofilekt-uiperfpagestorekt">Schema Version in Controller Profile and Perform Page JSON (<code>control/ControllerProfile*.kt</code>, <code>ui/PerfPageStore.kt</code>)</h3>
 <ul>
 <li>Controller profiles and Perform pages now carry <code>"version": 1</code>. Files without it keep loading as version 1, and everything this app writes includes it.</li>

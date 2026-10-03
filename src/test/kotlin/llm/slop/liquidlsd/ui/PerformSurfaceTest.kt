@@ -5,6 +5,7 @@ import io.mockk.mockk
 import kotlinx.serialization.json.JsonPrimitive
 import llm.slop.liquidlsd.macro.FxMacroSync
 import llm.slop.liquidlsd.macro.MacroEngine
+import llm.slop.liquidlsd.parameters.MeterType
 import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
@@ -294,6 +295,13 @@ class PerformSurfaceTest {
             val sorted = values.sorted()
             assertTrue(sorted.zipWithNext().all { (a, b) -> b - a >= 4 }, "hues too close: $values")
         }
+    }
+
+    @Test
+    fun knobLightsIncludesMeterTypeFromResolvedSpec() {
+        val lights = surface().knobLights()
+        assertNotNull(lights[0], "knob light 0 exists")
+        assertEquals(MeterType.MONOPOLAR, lights[0]?.meterType)
     }
 
     // --- Row-resolution cache ---

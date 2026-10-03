@@ -210,7 +210,12 @@ class UIManager(
             navSurface = NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx)
         )
         // Rings and LEDs of connected controllers (e.g. Midi Fighter Twister) mirror the Perform knobs.
-        if (session.uiTheme.midiEnabled) session.midiMappingManager.controllers.updateFeedback(performSurface)
+        if (session.uiTheme.midiEnabled) {
+            session.midiMappingManager.controllers.updateFeedback(
+                performSurface,
+                activePageId = session.uiTheme.performancePageId
+            )
+        }
 
         val cvDelta = if (session.playQueueManager.isAutoVJEnabled) mixer.pollQueueAdvance() else { mixer.pollQueueAdvance(); 0 }
         if (mixer.pollTapTempo()) {

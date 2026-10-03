@@ -2,9 +2,12 @@ package llm.slop.liquidlsd.ui
 
 import llm.slop.liquidlsd.macro.MacroBank
 import llm.slop.liquidlsd.macro.MacroControl
+import llm.slop.liquidlsd.macro.MacroLinkMode
 import llm.slop.liquidlsd.parameters.MeterType
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import llm.slop.liquidlsd.parameters.ParameterResolver
 import llm.slop.liquidlsd.rendering.FxChain
+import llm.slop.liquidlsd.rendering.Mixer
 import java.util.Locale
 
 /**
@@ -62,21 +65,38 @@ internal data class FxRowState(
 
 internal object PerfKnobResolver {
 
+    /** Resolves the effective [MeterType] for a [MacroControl] by inspecting its bindings or target parameter in [mixer]. */
+    fun resolveControlMeterType(control: MacroControl, mixer: Mixer? = null): MeterType {
+        if (control.bindings.isEmpty()) return MeterType.MONOPOLAR
+        for (binding in control.bindings) {
+            if (!binding.enabled) continue
+            if (binding.linkMode == MacroLinkMode.BIPOLAR) return MeterType.BIPOLAR
+            if (mixer != null) {
+                val param = ParameterResolver.findParameterByPath(mixer, binding.parameterId)
+                if (param != null && param.meterType != MeterType.MONOPOLAR) {
+                    return param.meterType
+                }
+            }
+        }
+        return MeterType.MONOPOLAR
+    }
+
     /**
      * Resolves the 4 knobs (cols 0-3, from [knobOffset]) of a row driven by [bank]. [fx] is non-null
      * only for rows whose knobs drive an FX chain *and* carry slot cells (deck/Master rows in FX mode).
      * Columns without a control in [bank] are omitted.
      */
-    fun resolve(bank: MacroBank, knobOffset: Int, fx: FxRowState?): List<KnobSpec> =
+    fun resolve(bank: MacroBank, knobOffset: Int, fx: FxRowState?, mixer: Mixer? = null): List<KnobSpec> =
         (0 until 4).mapNotNull { col ->
             val knobIdx = knobOffset + col
             val control = bank.knobs.getOrNull(knobIdx) ?: return@mapNotNull null
             val label = UnderKnob.Label(control.label.ifEmpty { "K${knobIdx + 1}" })
+            val meterType = resolveControlMeterType(control, mixer)
             when {
-                fx == null -> KnobSpec(col, knobIdx, control, label, SideButtons.None)
+                fx == null -> KnobSpec(col, knobIdx, control, label, SideButtons.None, meterType = meterType)
                 fx.focusedSlot != null -> focusSpec(col, knobIdx, control, fx, fx.focusedSlot)
-                col == 0 -> KnobSpec(col, knobIdx, control, label, SideButtons.None)
-                else -> KnobSpec(col, knobIdx, control, UnderKnob.SlotCell(col - 1), SideButtons.LinkAndBypass(col - 1))
+                col == 0 -> KnobSpec(col, knobIdx, control, label, SideButtons.None, meterType = meterType)
+                else -> KnobSpec(col, knobIdx, control, UnderKnob.SlotCell(col - 1), SideButtons.LinkAndBypass(col - 1), meterType = meterType)
             }
         }
 

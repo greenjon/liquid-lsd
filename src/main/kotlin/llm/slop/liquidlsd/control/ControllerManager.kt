@@ -42,7 +42,11 @@ class ControllerManager(
      * it also looks for newly connected devices (opening their output port and writing every ring and
      * LED) and forgets devices that went away or whose port died.
      */
-    fun updateFeedback(source: KnobLightSource, nowMs: Long = System.currentTimeMillis()) {
+    fun updateFeedback(
+        source: KnobLightSource,
+        nowMs: Long = System.currentTimeMillis(),
+        activePageId: String? = null
+    ) {
         if (!hasScanned || nowMs - lastScanMs >= SCAN_INTERVAL_MS) {
             hasScanned = true
             lastScanMs = nowMs
@@ -50,7 +54,13 @@ class ControllerManager(
         }
         if (feedbacks.isEmpty()) return
         source.fillKnobLights(lightBuffer)
-        for ((name, feedback) in feedbacks) feedback.update(lightBuffer, runtimes[name]?.activeBank)
+        for ((name, feedback) in feedbacks) {
+            val runtime = runtimes[name]
+            if (activePageId != null) {
+                feedback.syncActiveBank(activePageId, runtime)
+            }
+            feedback.update(lightBuffer, runtime?.activeBank)
+        }
     }
 
     private fun scanDevices(nowMs: Long) {

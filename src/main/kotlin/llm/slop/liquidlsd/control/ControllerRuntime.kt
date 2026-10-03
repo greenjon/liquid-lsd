@@ -15,7 +15,6 @@ class ControllerRuntime(
 ) {
     /** The device's active 0-based bank, once known (after a bank button or any bank-aware input). */
     var activeBank: Int? = null
-        private set
 
     // Bit set of held modifiers (see CompiledController.modifierBit) and per-input state in flat
     // arrays indexed by ResolvedInput.slot / idIndex, so the event path allocates nothing.

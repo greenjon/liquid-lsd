@@ -70,6 +70,34 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
     val isHealthy: Boolean get() = sink.isHealthy
 
     /**
+     * Synchronizes the hardware controller's active bank with [activePageId] (from the app's UI).
+     * If the profile defines bank switch outputs ([BankConfig.switch]) and pages ([BankConfig.pages]),
+     * and [activePageId] maps to a different bank than the current active bank, sends a bank switch
+     * CC message to the controller hardware and updates [runtime]'s active bank.
+     */
+    fun syncActiveBank(activePageId: String, runtime: ControllerRuntime? = null) {
+        val switchDef = compiled.profile.banks.switch ?: return
+        val pages = compiled.profile.banks.pages
+        if (pages.isEmpty()) return
+
+        val normalizedActive = activePageId.removePrefix("perform.")
+        val targetBank = pages.indexOfFirst { page ->
+            page == activePageId || page.removePrefix("perform.") == normalizedActive
+        }
+        if (targetBank < 0 || targetBank >= compiled.profile.banks.count) return
+
+        val currentBank = runtime?.activeBank ?: lastActiveBank
+        if (currentBank != null && currentBank != targetBank) {
+            sink.sendCc(switchDef.channel, switchDef.cc + targetBank, 127)
+            runtime?.activeBank = targetBank
+            lastActiveBank = targetBank
+            for (t in targetsByBank.getOrNull(targetBank) ?: emptyArray()) {
+                t.forget()
+            }
+        }
+    }
+
+    /**
      * Sends what differs from the last send for [lights] (index = knob, null = nothing there).
      * [activeBank] is the device's 0-based bank if known; a bank change rewrites the whole new bank.
      */

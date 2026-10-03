@@ -349,7 +349,7 @@ class PerformanceMatrixPanel {
             val bank: MacroBank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
             val isFxBankId = row.bankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS
             val rowChain = if (isFxBankId && descriptor.hasExtraHeader) ctx.resolveFxChain(mixer, row.bankId) else null
-            val specs = PerfKnobResolver.resolve(bank, row.knobOffset, rowChain?.let { FxRowState.of(it) })
+            val specs = PerfKnobResolver.resolve(bank, row.knobOffset, rowChain?.let { FxRowState.of(it) }, mixer)
             // The selected knob's card hangs below the row (see overhangDraws); the row border is
             // left open across its column so the card reads as a tab of the row.
             val selectedCol = if (isModuleExpanded) specs.firstOrNull { it.control.id == parametersState.selectedRackMacroId[moduleId] }?.col else null

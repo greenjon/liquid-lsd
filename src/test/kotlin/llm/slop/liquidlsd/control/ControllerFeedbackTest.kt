@@ -1,6 +1,9 @@
 package llm.slop.liquidlsd.control
 
+import io.mockk.mockk
 import kotlinx.serialization.json.Json
+import llm.slop.liquidlsd.midi.MidiEvent
+import llm.slop.liquidlsd.midi.MidiMessageType
 import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -191,6 +194,30 @@ class ControllerFeedbackTest {
         // Switching back rewrites bank 1 again: the device may have shown its own colours meanwhile.
         feedback.update(lights(0 to blue), activeBank = 0)
         assertEquals(16 * 2, sink.drain().size)
+    }
+
+    @Test
+    fun syncActiveBankSendsBankSwitchCcWhenPageChangesToDifferentBank() {
+        val runtime = ControllerRuntime(twister.profile.compile(), CommandRegistry())
+        runtime.handle(MidiEvent(3, MidiMessageType.CC, 0, 127, 1f), CommandContext(mockk(relaxed = true)))
+        assertEquals(0, runtime.activeBank, "bank 1 entered from event")
+        sink.drain()
+
+        feedback.syncActiveBank("perform.mixer", runtime)
+        val sent = sink.drain()
+        assertEquals(1, sent.size)
+        assertEquals(Triple(3, 2, 127), sent[0], "Channel 4 (0-based 3) CC 2 value 127 sent for bank 3 (index 2)")
+        assertEquals(2, runtime.activeBank, "runtime active bank updated to 2")
+    }
+
+    @Test
+    fun syncActiveBankDoesNothingWhenPageMatchesCurrentBank() {
+        val runtime = ControllerRuntime(twister.profile.compile(), CommandRegistry())
+        runtime.handle(MidiEvent(3, MidiMessageType.CC, 0, 127, 1f), CommandContext(mockk(relaxed = true)))
+        sink.drain()
+
+        feedback.syncActiveBank("perform.ab", runtime)
+        assertEquals(emptyList(), sink.drain(), "page perform.ab is bank index 0, matching current bank")
     }
 
     @Test

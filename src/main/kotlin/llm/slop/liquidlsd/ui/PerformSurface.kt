@@ -81,7 +81,7 @@ internal object PerformPages {
             val bank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
             val isFxBank = row.bankId in FxMacroSync.FX_BANK_IDS
             val chain = if (isFxBank && row.hasExtraHeader) ctx.resolveFxChain(mixer, row.bankId) else null
-            for (spec in PerfKnobResolver.resolve(bank, row.knobOffset, chain?.let { FxRowState.of(it) })) {
+            for (spec in PerfKnobResolver.resolve(bank, row.knobOffset, chain?.let { FxRowState.of(it) }, mixer)) {
                 knobs[rowIdx * COLS + spec.col] = PageKnob(row.bankId, spec, ledColor(row))
             }
         }
@@ -159,7 +159,16 @@ internal class PerformSurface(
         // The returned list is reused on the next poll; the poller reads it before polling again.
         lightBuffer.clear()
         for (target in knobBuffer) {
-            lightBuffer.add(target?.let { KnobLight(it.control.value, it.accent[0], it.accent[1], it.accent[2], lit = isLit(it)) })
+            lightBuffer.add(target?.let {
+                KnobLight(
+                    value = it.control.value,
+                    r = it.accent[0],
+                    g = it.accent[1],
+                    b = it.accent[2],
+                    lit = isLit(it),
+                    meterType = it.spec.meterType
+                )
+            })
         }
         return lightBuffer
     }

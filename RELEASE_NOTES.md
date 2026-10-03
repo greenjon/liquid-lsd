@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Bi-directional Bank Sync & Bipolar MeterType Support for Controller Feedback (`control/*`, `ui/*`)
+- **Bi-directional Bank Switching**: When switching Perform view tabs or pages in the software UI (via mouse, menu, or keyboard shortcuts), connected controllers with hardware bank support (like the DJ TechTools Midi Fighter Twister) now automatically switch their active hardware bank to stay synchronized with the active screen page.
+- **Bipolar & Endless MeterType Detection**: Perform knobs and macro controls now detect whether their bound parameters or link modes are bipolar (e.g., Crossfader, Pan, Pitch/Detune, Bipolar link mode) or endless. `KnobLight` carries this `meterType` so hardware ring feedback (such as the Twister's EQ/Center Fill mode) accurately aligns center-detent values at CC 64.
+
 ### Schema Version in Controller Profile and Perform Page JSON (`control/ControllerProfile*.kt`, `ui/PerfPageStore.kt`)
 - Controller profiles and Perform pages now carry `"version": 1`. Files without it keep loading as version 1, and everything this app writes includes it.
 - A file written by a newer build still loads, with an amber warning under the profile/page list. The app will not overwrite such a file on Save, so nothing in it is silently lost; edit it by hand or delete it.
