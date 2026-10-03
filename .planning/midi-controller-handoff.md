@@ -41,7 +41,7 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
 - `ui/PerfRows.kt`: row selection extracted from `PerformanceMatrixPanel` (single source of truth for "what rows are shown").
   `ui/PerformSurface.kt`: `PerformPages.resolve` (16-knob page from visible rows via `PerfKnobResolver`), `PerformSurface`
   (turn/primary/secondary/showPage/knobLights). Hooked up in `ui/UIManager.kt` next to `processGlobalMidiEvents`.
-- Feedback: `control/ControllerFeedback.kt` (diffs + staged rewrites), `control/CcQueue.kt` (one pending value per
+- Feedback: `control/ControllerFeedback.kt` (diffs; whole-bank rewrite on bank change), `control/CcQueue.kt` (one pending value per
   channel/CC), `midi/MidiOutputPorts.kt` (opens the output port by input device name, paced writer thread),
   `control/TracingSink.kt` (opt-in logging: profile `output.trace` or env `LSD_MIDI_TRACE=1`).
 - `MidiMappingManager.processGlobalMidiEvents` offers each event to `controllers.handle(...)` first, unless the user has a
@@ -80,9 +80,7 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
 
 1. **Commit the feedback work** (after the user confirms it is stable). Commit messages end with the attribution line from
    the session's system reminder.
-2. **Simplify what the hardware may no longer need** (`FeedbackAddressing` already removed): the staged bank rewrites /
-   settle rewrite / heartbeat in `ControllerFeedback`. Test on the stock firmware with each disabled, ask the user.
-   Keep the paced coalescing writer, the trace option and the tests that still apply.
+2. ~~Simplify feedback~~ done 2026-10-02: addressing modes, staged/settle/heartbeat rewrites removed (hardware-verified).
 3. **Phase 3, navigation/browse from the Twister.** Ask the user what they reach for most. Candidates: toggle a row's SRC/FX
    mode, switch Edit/Perform/Library view, open the SRC picker and step through generators, accept/back. Only three free
    side buttons, so expect a shift layer (profile bindings already support `shift+side.1`). Needs an Explore pass over

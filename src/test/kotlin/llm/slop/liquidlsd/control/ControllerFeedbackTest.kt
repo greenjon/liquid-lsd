@@ -66,7 +66,7 @@ class ControllerFeedbackTest {
 
     @Test
     fun firstUpdateWritesEveryRingAndLedOnEveryBankWhileTheBankIsUnknown() {
-        feedback.update(lights(0 to blue), nowMs = 0)
+        feedback.update(lights(0 to blue))
         val sent = sink.drain()
         assertEquals(64 * 2, sent.size)
         // Knob 1 on each of the four banks: ring on ch1 (0), LED on ch2 (1), CC = knob + 16 * bank.
@@ -81,25 +81,25 @@ class ControllerFeedbackTest {
 
     @Test
     fun anUnchangedPageSendsNothing() {
-        feedback.update(lights(0 to blue), nowMs = 0)
+        feedback.update(lights(0 to blue))
         sink.drain()
-        feedback.update(lights(0 to blue), nowMs = 10)
+        feedback.update(lights(0 to blue))
         assertEquals(emptyList(), sink.drain())
     }
 
     @Test
     fun aValueChangeSendsOneRingMessagePerBank() {
-        feedback.update(lights(3 to KnobLight(0f, 1f, 0f, 0f)), nowMs = 0)
+        feedback.update(lights(3 to KnobLight(0f, 1f, 0f, 0f)))
         sink.drain()
-        feedback.update(lights(3 to KnobLight(1f, 1f, 0f, 0f)), nowMs = 10)
+        feedback.update(lights(3 to KnobLight(1f, 1f, 0f, 0f)))
         assertEquals(setOf(Triple(0, 3, 127), Triple(0, 19, 127), Triple(0, 35, 127), Triple(0, 51, 127)), sink.drain().toSet())
     }
 
     @Test
     fun aColourChangeSendsOnlyTheLed() {
-        feedback.update(lights(2 to KnobLight(0.5f, 1f, 0f, 0f)), nowMs = 0)
+        feedback.update(lights(2 to KnobLight(0.5f, 1f, 0f, 0f)))
         sink.drain()
-        feedback.update(lights(2 to KnobLight(0.5f, 0f, 1f, 0f)), nowMs = 10)
+        feedback.update(lights(2 to KnobLight(0.5f, 0f, 1f, 0f)))
         val sent = sink.drain()
         assertEquals(4, sent.size)
         assertTrue(sent.all { it.first == 1 && it.third == 43 }, sent.toString())
@@ -107,17 +107,17 @@ class ControllerFeedbackTest {
 
     @Test
     fun anUnlitKnobKeepsItsRingButGoesDark() {
-        feedback.update(lights(1 to KnobLight(0.25f, 1f, 0f, 0f)), nowMs = 0)
+        feedback.update(lights(1 to KnobLight(0.25f, 1f, 0f, 0f)))
         sink.drain()
-        feedback.update(lights(1 to KnobLight(0.25f, 1f, 0f, 0f, lit = false)), nowMs = 10)
+        feedback.update(lights(1 to KnobLight(0.25f, 1f, 0f, 0f, lit = false)))
         assertEquals(setOf(Triple(1, 1, 0), Triple(1, 17, 0), Triple(1, 33, 0), Triple(1, 49, 0)), sink.drain().toSet())
     }
 
     @Test
     fun aKnobThatDisappearsGoesToZeroAndDark() {
-        feedback.update(lights(4 to blue), nowMs = 0)
+        feedback.update(lights(4 to blue))
         sink.drain()
-        feedback.update(lights(), nowMs = 10)
+        feedback.update(lights())
         val sent = sink.drain()
         assertEquals(8, sent.size)
         assertTrue(sent.all { it.third == 0 }, sent.toString())
@@ -125,16 +125,16 @@ class ControllerFeedbackTest {
 
     @Test
     fun resyncRewritesEverything() {
-        feedback.update(lights(0 to blue), nowMs = 0)
+        feedback.update(lights(0 to blue))
         sink.drain()
         feedback.resync()
-        feedback.update(lights(0 to blue), nowMs = 10)
+        feedback.update(lights(0 to blue))
         assertEquals(128, sink.drain().size)
     }
 
     @Test
     fun valuesAreClampedToTheMidiRange() {
-        feedback.update(lights(0 to KnobLight(7f, 0f, 0f, 1f), 1 to KnobLight(-3f, 0f, 0f, 1f)), nowMs = 0)
+        feedback.update(lights(0 to KnobLight(7f, 0f, 0f, 1f), 1 to KnobLight(-3f, 0f, 0f, 1f)))
         val sent = sink.drain()
         assertTrue(Triple(0, 0, 127) in sent)
         assertTrue(Triple(0, 1, 0) in sent)
@@ -144,7 +144,7 @@ class ControllerFeedbackTest {
     fun aProfileWithoutOutputSendsNothing() {
         val plain = Json.decodeFromString<ControllerProfile>(
             """{"id":"x","inputs":[{"id":"knob","kind":"ENCODER","channel":0,"cc":0,"count":4}]}""").compile()
-        ControllerFeedback(plain, sink).update(lights(0 to blue), nowMs = 0)
+        ControllerFeedback(plain, sink).update(lights(0 to blue))
         assertEquals(emptyList(), sink.drain())
     }
 
@@ -153,22 +153,22 @@ class ControllerFeedbackTest {
         val custom = Json.decodeFromString<ControllerProfile>(
             """{"id":"x","inputs":[{"id":"knob","kind":"ENCODER","channel":5,"cc":10,"count":2}],
                 "output":{"knobs":{"input":"knob"}}}""").compile()
-        ControllerFeedback(custom, sink).update(lights(0 to blue), nowMs = 0)
+        ControllerFeedback(custom, sink).update(lights(0 to blue))
         assertEquals(listOf(Triple(5, 10, 64), Triple(5, 11, 0)), sink.drain(), "no colourChannel means no LED messages")
 
         val moved = Json.decodeFromString<ControllerProfile>(
             """{"id":"x","inputs":[{"id":"knob","kind":"ENCODER","channel":5,"cc":10,"count":1}],
                 "output":{"knobs":{"input":"knob","ringChannel":2,"colorChannel":3}}}""").compile()
-        ControllerFeedback(moved, sink).update(lights(0 to blue), nowMs = 0)
+        ControllerFeedback(moved, sink).update(lights(0 to blue))
         assertEquals(listOf(Triple(2, 10, 64), Triple(3, 10, 1)), sink.drain())
     }
 
 
-    // --- Active bank, settle and heartbeat ---
+    // --- Active bank ---
 
     @Test
     fun withAKnownBankOnlyThatBanksEncodersAreWritten() {
-        feedback.update(lights(0 to blue), activeBank = 1, nowMs = 0)
+        feedback.update(lights(0 to blue), activeBank = 1)
         val sent = sink.drain()
         assertEquals(16 * 2, sent.size)
         assertTrue(sent.all { it.second in 16..31 }, "bank 2 is CC 16..31: $sent")
@@ -178,110 +178,34 @@ class ControllerFeedbackTest {
 
     @Test
     fun enteringABankRewritesAllOfItEvenIfNothingChanged() {
-        feedback.update(lights(0 to blue), activeBank = 0, nowMs = 0)
+        feedback.update(lights(0 to blue), activeBank = 0)
         sink.drain()
-        feedback.update(lights(0 to blue), activeBank = 0, nowMs = 10)
+        feedback.update(lights(0 to blue), activeBank = 0)
         assertEquals(emptyList(), sink.drain())
 
-        feedback.update(lights(0 to blue), activeBank = 2, nowMs = 20)
+        feedback.update(lights(0 to blue), activeBank = 2)
         val sent = sink.drain()
         assertEquals(16 * 2, sent.size)
         assertTrue(sent.all { it.second in 32..47 }, sent.toString())
 
         // Switching back rewrites bank 1 again: the device may have shown its own colours meanwhile.
-        feedback.update(lights(0 to blue), activeBank = 0, nowMs = 30)
+        feedback.update(lights(0 to blue), activeBank = 0)
         assertEquals(16 * 2, sink.drain().size)
     }
 
     @Test
     fun learningTheBankAfterAnUnknownStartRewritesThatBank() {
-        feedback.update(lights(0 to blue), activeBank = null, nowMs = 0)
+        feedback.update(lights(0 to blue), activeBank = null)
         assertEquals(128, sink.drain().size)
-        feedback.update(lights(0 to blue), activeBank = 3, nowMs = 10)
+        feedback.update(lights(0 to blue), activeBank = 3)
         assertEquals(16 * 2, sink.drain().size)
-    }
-
-    private val bankSize = 16 * 2
-
-    /** Gets past the staged rewrites that follow connecting, so the next steps start from a quiet device. */
-    private fun settleIn(bank: Int = 0, light: KnobLight = blue) {
-        feedback.update(lights(0 to light), activeBank = bank, nowMs = 0)
-        feedback.update(lights(0 to light), activeBank = bank, nowMs = 2000)
-        sink.drain()
-    }
-
-    @Test
-    fun connectingAndSwitchingBankAreFollowedByStagedRewrites() {
-        val (first, second, third) = ControllerFeedback.BANK_REWRITES_MS.toList()
-        feedback.update(lights(0 to blue), activeBank = 0, nowMs = 0)
-        assertEquals(bankSize, sink.drain().size)
-        for (due in listOf(first, second, third)) {
-            feedback.update(lights(0 to blue), activeBank = 0, nowMs = due - 1)
-            assertEquals(emptyList(), sink.drain(), "not before $due")
-            feedback.update(lights(0 to blue), activeBank = 0, nowMs = due)
-            assertEquals(bankSize, sink.drain().size, "rewrite at $due")
-        }
-        feedback.update(lights(0 to blue), activeBank = 0, nowMs = third + 500)
-        assertEquals(emptyList(), sink.drain(), "then quiet")
-
-        // The same schedule follows a bank switch.
-        feedback.update(lights(0 to blue), activeBank = 1, nowMs = 5000)
-        assertEquals(bankSize, sink.drain().size)
-        feedback.update(lights(0 to blue), activeBank = 1, nowMs = 5000 + first)
-        assertEquals(bankSize, sink.drain().size)
-    }
-
-    @Test
-    fun theActiveBankIsRewrittenOnceAfterTheLastChange() {
-        settleIn()
-        feedback.update(lights(0 to KnobLight(0.75f, 0f, 0f, 1f)), activeBank = 0, nowMs = 2100)   // a real change
-        assertEquals(1, sink.drain().size)
-
-        val now = 2100 + ControllerFeedback.SETTLE_MS
-        feedback.update(lights(0 to KnobLight(0.75f, 0f, 0f, 1f)), activeBank = 0, nowMs = now - 1)
-        assertEquals(emptyList(), sink.drain(), "not yet")
-        feedback.update(lights(0 to KnobLight(0.75f, 0f, 0f, 1f)), activeBank = 0, nowMs = now)
-        val settle = sink.drain()
-        assertEquals(bankSize, settle.size, "the whole active bank, once")
-        assertTrue(Triple(0, 0, 95) in settle, "with the latest ring value (0.75 * 127)")
-
-        feedback.update(lights(0 to KnobLight(0.75f, 0f, 0f, 1f)), activeBank = 0, nowMs = now + 500)
-        assertEquals(emptyList(), sink.drain(), "and not again")
-    }
-
-    @Test
-    fun continuousChangesPushTheSettleRewriteBack() {
-        settleIn()
-        for ((i, v) in listOf(0.6f, 0.7f, 0.8f).withIndex()) {
-            feedback.update(lights(0 to KnobLight(v, 0f, 0f, 1f)), activeBank = 0, nowMs = 2050L + 50L * i)
-            assertEquals(1, sink.drain().size, "only the changed ring")
-        }
-        // Last change at t=2150: the settle rewrite is due at 2150 + SETTLE_MS, not earlier.
-        val due = 2150 + ControllerFeedback.SETTLE_MS
-        feedback.update(lights(0 to KnobLight(0.8f, 0f, 0f, 1f)), activeBank = 0, nowMs = due - 1)
-        assertEquals(emptyList(), sink.drain())
-        feedback.update(lights(0 to KnobLight(0.8f, 0f, 0f, 1f)), activeBank = 0, nowMs = due)
-        assertEquals(bankSize, sink.drain().size)
-    }
-
-    @Test
-    fun theHeartbeatRewritesTheActiveBankEvenWhenNothingChanges() {
-        settleIn()
-        feedback.update(lights(0 to blue), activeBank = 0, nowMs = ControllerFeedback.HEARTBEAT_MS - 1)
-        assertEquals(emptyList(), sink.drain())
-        feedback.update(lights(0 to blue), activeBank = 0, nowMs = ControllerFeedback.HEARTBEAT_MS)
-        assertEquals(bankSize, sink.drain().size)
-        feedback.update(lights(0 to blue), activeBank = 0, nowMs = ControllerFeedback.HEARTBEAT_MS + 1)
-        assertEquals(emptyList(), sink.drain())
-        feedback.update(lights(0 to blue), activeBank = 0, nowMs = 2 * ControllerFeedback.HEARTBEAT_MS)
-        assertEquals(bankSize, sink.drain().size, "and keeps beating")
     }
 
     @Test
     fun eachBanksOwnNumbersAreUsed() {
         // Checked with amidi on the hardware: CC 16 lights bank 2's knob 1 live, CC 0 does nothing visible.
-        feedback.update(lights(0 to blue), activeBank = 1, nowMs = 0)
-        val sent = feedback.let { sink.drain() }
+        feedback.update(lights(0 to blue), activeBank = 1)
+        val sent = sink.drain()
         assertEquals(16 * 2, sent.size)
         assertTrue(Triple(0, 16, 64) in sent && Triple(1, 16, 1) in sent)
     }

@@ -67,7 +67,7 @@ class ControllerFeedbackSequenceTest {
         val entry = sink.drain()
         assertTrue(entry.any { it.first == 0 && it.second == 16 }, "bank 2 is written on entry: $entry")
 
-        // Settle past the staged rewrites so only the turn can produce a message.
+        // Drain the entry writes so only the turn can produce a message.
         frame(2000); sink.drain()
 
         send(0, 16, 65)                     // knob 1 on bank 2, one tick up

@@ -49,7 +49,7 @@ class ControllerManager(
         }
         if (feedbacks.isEmpty()) return
         val lights = source.knobLights()
-        for ((name, feedback) in feedbacks) feedback.update(lights, runtimes[name]?.activeBank, nowMs)
+        for ((name, feedback) in feedbacks) feedback.update(lights, runtimes[name]?.activeBank)
     }
 
     private fun scanDevices(nowMs: Long) {
