@@ -2584,3 +2584,11 @@
 - **Decision (B)**: `control.UserJsonLibrary<S, T>` (configured by a `Spec`) holds snapshot caching, built-in loading, scan, same-id override, rejected/warnings, newer-version save refusal, copy-built-in, save, delete and atomic write. Each store keeps its public API, nested `Source`/`Rejected` types (mapped from the library's), validation, ordering and (PerfPageStore) fallback page. Error and log messages are parameterised by `kind`/`noun` and read as before.
 - **Guard**: `LayerDependencyTest` now bans profile-storage names in `midi/` and allow-lists the existing midi -> control files (`MidiMappingManager`, `MidiOutputPorts`) so nothing new can be added.
 - **Left alone**: midi -> control for the command registry / `ControllerManager` / `CommandContext` / `MidiSink` (control -> midi also exists, so a full split needs moving `MidiMappingManager`'s host role). Result mapping between library and store `Rejected` types allocates per call; only the preferences panels call it.
+
+## Automated GitHub Release Retention & Pruning (`.github/workflows/release.yml`)
+- **Decision**: Integrate `dev-drprasad/delete-older-releases@v0.3.3` into `.github/workflows/release.yml` in the `publish-release` job immediately following release publishing.
+- **Configuration**: `keep_latest: 3`, `delete_tags: true`, authenticated via `secrets.GITHUB_TOKEN`.
+- **Rationale**:
+  - Prevents GitHub repository release list and tag accumulation across continuous deployment and automated release workflows.
+  - Automatically preserves the 3 most recent verified platform release builds while removing stale historical release artifacts and tags.
+
