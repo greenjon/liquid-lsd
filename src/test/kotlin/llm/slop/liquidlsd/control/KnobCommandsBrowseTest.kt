@@ -9,8 +9,10 @@ class KnobCommandsBrowseTest {
     private val registry = CommandRegistry().also { KnobCommands().register(it) }
     private var browsing = true
     private var steps = 0
+    private var session = 0
     private val nav = object : NavSurface {
         override val browsing get() = this@KnobCommandsBrowseTest.browsing
+        override val browseSession get() = this@KnobCommandsBrowseTest.session
         override fun button(index: Int, shifted: Boolean) {}
         override fun browseStep(steps: Int) { this@KnobCommandsBrowseTest.steps += steps }
         override fun browseAccept(shifted: Boolean) {}
@@ -33,6 +35,17 @@ class KnobCommandsBrowseTest {
         browsing = true
         registry.execute("knob.1", CommandInput.Delta(half), ctx)
         assertEquals(0, steps)                                         // 0.6 + 0.6 would have been one step
+    }
+
+    @Test
+    fun restartingBrowsingWithNoOtherKnobEventStartsFromZero() {
+        registry.execute("knob.1", CommandInput.Delta(half), ctx)
+        assertEquals(0, steps)
+        browsing = false
+        browsing = true
+        session++                                                      // a new browse session began
+        registry.execute("knob.1", CommandInput.Delta(half), ctx)
+        assertEquals(0, steps)                                         // would have been one step with carry-over
     }
 
     @Test

@@ -7,6 +7,7 @@ import kotlin.test.assertEquals
 
 class NavCommandsTest {
     private class FakeNav(override var browsing: Boolean) : NavSurface {
+        override val browseSession = 0
         val calls = ArrayList<String>()
         override fun button(index: Int, shifted: Boolean) { calls += "button $index${if (shifted) " shifted" else ""}" }
         override fun browseStep(steps: Int) { calls += "step $steps" }

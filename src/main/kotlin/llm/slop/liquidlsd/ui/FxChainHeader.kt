@@ -37,6 +37,56 @@ object FxChainHeader {
     const val DRYWET_W = 64f
     fun saveBtnW(ctrlH: Float): Float = ctrlH
 
+    /** Row-specific reactions to header clicks. One long-lived instance per row, so drawing allocates no closures. */
+    interface Actions {
+        /** Opens the row's Browse content targeted at FX slot [slotIdx]. */
+        fun openSlotBrowse(slotIdx: Int)
+        /** A slot was focused ([slotIdx]) or focus was cleared (null). */
+        fun focusSlot(slotIdx: Int?)
+        /** Opens the row's Browse content on the whole-chain list. */
+        fun openChainBrowse()
+    }
+
+    /**
+     * Per-bank widget ids and cached strings. ImGui ids are built once per bank; texts are rebuilt only when
+     * the values they are made from change. The draw path is single-threaded, so the scratch array is shared safely.
+     */
+    private class Strings(bankId: String) {
+        val menuId = "##fx_chain_more_$bankId"
+        val moreBtn = "${Icons.MORE_VERTICAL}##more_btn_$bankId"
+        val prevPage = "◀##focus_prev_page_$bankId"
+        val nextPage = "▶##focus_next_page_$bankId"
+        val prevChain = "◀##prev_chain_$bankId"
+        val nextChain = "▶##next_chain_$bankId"
+        val chainNameSuffix = "##fx_chain_name_$bankId"
+        val save = "${Icons.SAVE}##save_$bankId"
+        val dryWet = "##focus_drywet_$bankId"
+        val pillLabels = Array(FxChain.SLOT_COUNT) { "${it + 1}##slot_focus_${bankId}_$it" }
+        val focusedEffectIds = Array(FxChain.SLOT_COUNT) { "##focused_effect_${bankId}_$it" }
+        val pillTips = Array(FxChain.SLOT_COUNT) { TipCache() }
+        val pageText = TipCache()
+        val pageTip = TipCache()
+        val chainLabel = TipCache()
+        val chainTip = TipCache()
+        val focusedLabel = TipCache()
+        val focusedTip = TipCache()
+        val saveTip = TipCache()
+        val menuTitle = TipCache()
+        val wet = floatArrayOf(0f)
+    }
+
+    private val strings = HashMap<String, Strings>()
+    private fun stringsFor(bankId: String): Strings = strings.getOrPut(bankId) { Strings(bankId) }
+
+    private const val EMPTY_TIP_BG = "BG FX Queue is empty. Add items from the Library."
+    private const val TIP_PREV_A = "Previous FX in queue (Deck A)."
+    private const val TIP_PREV_B = "Previous FX in queue (Deck B)."
+    private const val TIP_PREV_BG = "Previous FX in queue (Deck BG)."
+    private const val TIP_NEXT_A = "Next FX in queue (Deck A)."
+    private const val TIP_NEXT_B = "Next FX in queue (Deck B)."
+    private const val TIP_NEXT_BG = "Next FX in queue (Deck BG)."
+    private const val EMPTY_TIP = "FX Queue is empty. Add items from the Library."
+
     /**
      * Calculates the width of the chain name button so the entire header row
      * fills exactly [maxW] and lines up cleanly with Row 1.
@@ -81,9 +131,7 @@ object FxChainHeader {
      * - Group Mode: `[⋮]  Chain Name •  [Save]  [◀] [▶]  [1] [2] [3]`
      * - Focus Mode: `[⋮]  [Focused Effect Name ▾]  [Wet 100%]  [◀ Px/y ▶]  [1] [2] [3]`
      *
-     * [onOpenChainBrowse] opens that row's Browse content on the whole-chain list.
-     * [onOpenSlotBrowse] opens that row's Browse content targeted at a specific FX slot.
-     * [onFocusSlot] notifies callers when a slot is focused or unfocused (allowing auto-switch to FX).
+     * [actions] receives chain-browse, slot-browse and slot-focus clicks (focus lets callers auto-switch to FX).
      */
     fun drawControls(
         session: SessionContext,
@@ -94,14 +142,13 @@ object FxChainHeader {
         ctrlH: Float,
         maxW: Float = 220f,
         deck: Deck? = null,
-        onOpenSlotBrowse: ((Int) -> Unit)? = null,
-        onFocusSlot: ((Int?) -> Unit)? = null,
-        onOpenChainBrowse: () -> Unit
+        actions: Actions
     ) {
         val gap = 3f
         val isDirty = chain.isDirty()
         val isFocused = chain.isFocused()
-        val menuId = "##fx_chain_more_$bankId"
+        val st = stringsFor(bankId)
+        val menuId = st.menuId
 
         ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, gap, 0f)
 
@@ -111,31 +158,29 @@ object FxChainHeader {
             val totalPages = chain.totalParamPages(focusedSlot)
 
             // 1. [⋮] More actions menu
-            drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, menuId)
+            drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, st)
 
             ImGui.sameLine()
 
             // 2. [Focused Effect Name] button (click to browse/replace effect in this slot)
             val focusedNameW = calculateFocusedNameWidth(maxW, totalPages)
-            drawFocusedEffectButton(session, chain, bankId, focusedSlot, ctrlH, focusedNameW) { slotIdx ->
-                onOpenSlotBrowse?.invoke(slotIdx)
-            }
+            drawFocusedEffectButton(session, chain, st, focusedSlot, ctrlH, focusedNameW, actions)
 
             // 3. Focused slot's Dry/Wet (moved off the knobs: knob 1 is the slot's Metaknob)
             ImGui.sameLine()
-            drawFocusedDryWet(chain, bankId, focusedSlot, ctrlH)
+            drawFocusedDryWet(chain, st, focusedSlot, ctrlH)
 
             // 4. Parameter page stepper [◀ P1/2 ▶] (if totalPages > 1)
             if (totalPages > 1) {
                 ImGui.sameLine()
-                if (ImGui.button("◀##focus_prev_page_$bankId", ARROW_W, ctrlH)) {
+                if (ImGui.button(st.prevPage, ARROW_W, ctrlH)) {
                     FxMacroSync.stepParamPage(bankId, mixer, -1)
                 }
                 itemTooltip("Previous parameter page.")
 
                 ImGui.sameLine()
                 session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                    val pageText = "P${chain.focusParamPage + 1}/$totalPages"
+                    val pageText = st.pageText.get(chain.focusParamPage, totalPages) { "P${chain.focusParamPage + 1}/$totalPages" }
                     val curX = ImGui.getCursorScreenPosX()
                     val curY = ImGui.getCursorScreenPosY()
                     ImGui.dummy(PAGE_TEXT_W, ctrlH)
@@ -144,10 +189,10 @@ object FxChainHeader {
                     val textY = curY + (ctrlH - textSz.y) * 0.5f
                     ImGui.getWindowDrawList().addText(textX, textY, TangoPalette.FX_PAGE_TEXT.u32(), pageText)
                 }
-                itemTooltip("Parameter page ${chain.focusParamPage + 1} of $totalPages.")
+                itemTooltip(st.pageTip.get(chain.focusParamPage, totalPages) { "Parameter page ${chain.focusParamPage + 1} of $totalPages." })
 
                 ImGui.sameLine()
-                if (ImGui.button("▶##focus_next_page_$bankId", ARROW_W, ctrlH)) {
+                if (ImGui.button(st.nextPage, ARROW_W, ctrlH)) {
                     FxMacroSync.stepParamPage(bankId, mixer, 1)
                 }
                 itemTooltip("Next parameter page.")
@@ -156,7 +201,7 @@ object FxChainHeader {
             ImGui.sameLine()
 
             // 5. Slot focus pills [1] [2] [3]
-            drawSlotPills(session, mixer, chain, bankId, ctrlH, focusedSlot, onFocusSlot)
+            drawSlotPills(mixer, chain, bankId, st, ctrlH, focusedSlot, actions)
         } else {
             // -- GROUP MODE HEADER ----------------------------------------------------------------
             val isDeckAB = deck === mixer.deckA || deck === mixer.deckB
@@ -169,35 +214,28 @@ object FxChainHeader {
                 else -> true
             }
 
-            val deckTag = when {
-                deck === mixer.deckA -> "Deck A"
-                deck === mixer.deckB -> "Deck B"
-                deck === mixer.deckBG -> "Deck BG"
-                else -> ""
-            }
-
-            val emptyTooltip = if (isDeckBG) "BG FX Queue is empty. Add items from the Library." else "FX Queue is empty. Add items from the Library."
+            val emptyTooltip = if (isDeckBG) EMPTY_TIP_BG else EMPTY_TIP
 
             // 1. [⋮] More actions menu
-            drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, menuId)
+            drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, st)
 
             ImGui.sameLine()
 
             // 2. Chain name button
             val nameW = calculateNameWidth(maxW, ctrlH, showArrows)
-            drawChainNameButton(session, chain, bankId, ctrlH, nameW, isDirty, onOpenChainBrowse)
+            drawChainNameButton(session, chain, st, ctrlH, nameW, isDirty, actions)
 
             ImGui.sameLine()
 
             // 3. [Save] button
-            drawSaveButton(session, chain, bankId, ctrlH, isDirty)
+            drawSaveButton(session, chain, st, ctrlH, isDirty)
 
             // 4. [◀] and [▶] FX queue items (only if deck supports queues)
             if (showArrows) {
                 ImGui.sameLine()
 
                 if (isQueueEmpty) ImGui.beginDisabled(true)
-                if (ImGui.button("◀##prev_chain_$bankId", ARROW_W, ctrlH)) {
+                if (ImGui.button(st.prevChain, ARROW_W, ctrlH)) {
                     if (isDeckAB) {
                         FXQueueManager.advancePrevious(session, mixer, explicitTargetDeck = deck)
                     } else if (isDeckBG) {
@@ -208,13 +246,13 @@ object FxChainHeader {
                     ImGui.endDisabled()
                     itemTooltip(emptyTooltip, allowWhenDisabled = true)
                 } else {
-                    itemTooltip("Previous FX in queue ($deckTag).")
+                    itemTooltip(if (isDeckAB) (if (deck === mixer.deckA) TIP_PREV_A else TIP_PREV_B) else TIP_PREV_BG)
                 }
 
                 ImGui.sameLine()
 
                 if (isQueueEmpty) ImGui.beginDisabled(true)
-                if (ImGui.button("▶##next_chain_$bankId", ARROW_W, ctrlH)) {
+                if (ImGui.button(st.nextChain, ARROW_W, ctrlH)) {
                     if (isDeckAB) {
                         FXQueueManager.advanceNext(session, mixer, explicitTargetDeck = deck)
                     } else if (isDeckBG) {
@@ -225,35 +263,33 @@ object FxChainHeader {
                     ImGui.endDisabled()
                     itemTooltip(emptyTooltip, allowWhenDisabled = true)
                 } else {
-                    itemTooltip("Next FX in queue ($deckTag).")
+                    itemTooltip(if (isDeckAB) (if (deck === mixer.deckA) TIP_NEXT_A else TIP_NEXT_B) else TIP_NEXT_BG)
                 }
             }
 
             ImGui.sameLine()
 
             // 5. Slot focus pills [1] [2] [3]
-            drawSlotPills(session, mixer, chain, bankId, ctrlH, null, onFocusSlot)
+            drawSlotPills(mixer, chain, bankId, st, ctrlH, null, actions)
         }
 
         ImGui.popStyleVar()
     }
 
     private fun drawSlotPills(
-        session: SessionContext,
         mixer: Mixer,
         chain: FxChain,
         bankId: String,
+        st: Strings,
         ctrlH: Float,
         focusedSlot: Int?,
-        onFocusSlot: ((Int?) -> Unit)? = null
+        actions: Actions
     ) {
         val pillW = 20f
         for (i in 0 until FxChain.SLOT_COUNT) {
             if (i > 0) ImGui.sameLine()
             val isFocused = focusedSlot == i
             val slot = chain.slots.getOrNull(i)
-            val slotNum = i + 1
-            val btnLabel = "$slotNum"
 
             val activeCol = TangoPalette.FX_PILL_ON.u32()
             val inactiveCol = if (slot != null) TangoPalette.FX_PILL_FILLED.u32() else TangoPalette.FX_PILL_EMPTY.u32()
@@ -265,33 +301,36 @@ object FxChainHeader {
 
             ImGui.pushStyleColor(ImGuiCol.Button, if (isFocused) activeCol else inactiveCol)
             ImGui.pushStyleColor(ImGuiCol.Text, textCol)
-            if (ImGui.button("$btnLabel##slot_focus_${bankId}_$i", pillW, ctrlH)) {
+            if (ImGui.button(st.pillLabels[i], pillW, ctrlH)) {
                 if (isFocused) {
                     FxMacroSync.focusSlot(bankId, mixer, null)
-                    onFocusSlot?.invoke(null)
+                    actions.focusSlot(null)
                 } else {
                     FxMacroSync.focusSlot(bankId, mixer, i)
-                    onFocusSlot?.invoke(i)
+                    actions.focusSlot(i)
                 }
             }
             ImGui.popStyleColor(2)
 
-            itemTooltip(
+            val slotName = slot?.displayName
+            itemTooltip(st.pillTips[i].get(isFocused, slotName) {
+                val slotNum = i + 1
                 when {
-                    isFocused -> "Slot $slotNum (${slot?.displayName ?: "empty"}) is focused.\nClick to exit Focus Mode."
-                    slot != null -> "Focus Slot $slotNum (${slot.displayName}).\nKnob 1 = Metaknob, Knobs 2-4 = top parameters; Dry/Wet is on the header."
+                    isFocused -> "Slot $slotNum (${slotName ?: "empty"}) is focused.\nClick to exit Focus Mode."
+                    slot != null -> "Focus Slot $slotNum ($slotName).\nKnob 1 = Metaknob, Knobs 2-4 = top parameters; Dry/Wet is on the header."
                     else -> "Focus Slot $slotNum (empty).\nClick to focus and edit."
                 }
-            )
+            })
         }
     }
 
-    private fun drawFocusedDryWet(chain: FxChain, bankId: String, slotIdx: Int, ctrlH: Float) {
+    private fun drawFocusedDryWet(chain: FxChain, st: Strings, slotIdx: Int, ctrlH: Float) {
         val slot = chain.slots.getOrNull(slotIdx)
         ImGui.beginDisabled(slot == null)
         ImGui.setNextItemWidth(DRYWET_W)
-        val pct = floatArrayOf(((slot?.dryWet?.baseValue ?: 1f) * 100f))
-        if (ImGui.sliderFloat("##focus_drywet_$bankId", pct, 0f, 100f, "Wet %.0f%%")) {
+        val pct = st.wet
+        pct[0] = (slot?.dryWet?.baseValue ?: 1f) * 100f
+        if (ImGui.sliderFloat(st.dryWet, pct, 0f, 100f, "Wet %.0f%%")) {
             slot?.dryWet?.baseValue = (pct[0] / 100f).coerceIn(0f, 1f)
         }
         // Middle-click resets to fully wet, matching the level faders.
@@ -303,15 +342,15 @@ object FxChainHeader {
     private fun drawFocusedEffectButton(
         session: SessionContext,
         chain: FxChain,
-        bankId: String,
+        st: Strings,
         focusedSlot: Int,
         ctrlH: Float,
         nameW: Float,
-        onOpenSlotBrowse: (Int) -> Unit
+        actions: Actions
     ) {
         val slot = chain.slots.getOrNull(focusedSlot)
-        val effectName = slot?.displayName ?: "Slot ${focusedSlot + 1} (Empty)"
-        val fullLabel = "$effectName ${Icons.CHEVRON_DOWN}"
+        val slotName = slot?.displayName
+        val fullLabel = st.focusedLabel.get(slotName, focusedSlot) { "${slotName ?: "Slot ${focusedSlot + 1} (Empty)"} ${Icons.CHEVRON_DOWN}" }
 
         val bgCol = TangoPalette.BADGE_BG.u32()
         val borderCol = TangoPalette.BADGE_BORDER.u32()
@@ -330,46 +369,48 @@ object FxChainHeader {
             dl.addText(tx.coerceAtLeast(curX + 4f), ty, textCol, fullLabel)
         }
 
-        if (ImGui.invisibleButton("##focused_effect_${bankId}_$focusedSlot", nameW, ctrlH)) {
-            onOpenSlotBrowse(focusedSlot)
+        if (ImGui.invisibleButton(st.focusedEffectIds[focusedSlot], nameW, ctrlH)) {
+            actions.openSlotBrowse(focusedSlot)
         }
         if (ImGui.isItemHovered()) {
             val hoverBorderCol = TangoPalette.BADGE_HOVER_BORDER.u32()
             dl.addRect(curX, curY, curX + nameW, curY + ctrlH, hoverBorderCol, 4f, 0, 1.5f)
         }
-        itemTooltip(
+        itemTooltip(st.focusedTip.get(slotName, focusedSlot) {
             if (slot != null) "Focused Effect: ${slot.displayName} (Slot ${focusedSlot + 1})\nClick to browse/replace effect for this slot."
             else "Slot ${focusedSlot + 1} is empty.\nClick to browse and load an effect."
-        )
+        })
     }
 
     private fun drawChainNameButton(
         session: SessionContext,
         chain: FxChain,
-        bankId: String,
+        st: Strings,
         ctrlH: Float,
         nameW: Float,
         isDirty: Boolean,
-        onOpenChainBrowse: () -> Unit
+        actions: Actions
     ) {
-        val displayName = if (chain.name.isBlank()) "Untitled" else chain.name
-        val dirtyMarker = if (isDirty) " •" else ""
-        val fullLabel = "$displayName$dirtyMarker ${Icons.CHEVRON_DOWN}"
+        val name = chain.name
+        val fullLabel = st.chainLabel.get(name, isDirty) {
+            "${name.ifBlank { "Untitled" }}${if (isDirty) " •" else ""} ${Icons.CHEVRON_DOWN}${st.chainNameSuffix}"
+        }
 
         if (isDirty) {
             ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.FX_DIRTY_TEXT.u32())
         }
-        if (ImGui.button("$fullLabel##fx_chain_name_$bankId", nameW, ctrlH)) {
-            onOpenChainBrowse()
+        if (ImGui.button(fullLabel, nameW, ctrlH)) {
+            actions.openChainBrowse()
         }
         if (isDirty) {
             ImGui.popStyleColor()
         }
-        itemTooltip(
-            "${chain.name.ifBlank { "Untitled" }}${if (isDirty) " (Modified)" else ""}\n" +
-            "Source: ${chain.sourceFile?.name ?: "Unsaved"}\n" +
+        val sourceName = chain.sourceFile?.name
+        itemTooltip(st.chainTip.get(name, isDirty, sourceName) {
+            "${name.ifBlank { "Untitled" }}${if (isDirty) " (Modified)" else ""}\n" +
+            "Source: ${sourceName ?: "Unsaved"}\n" +
             "Click to browse saved chains, or drop a .lsdfxchain here."
-        )
+        })
 
         // Drag & drop receiver for chain name button
         if (ImGui.beginDragDropTarget()) {
@@ -383,7 +424,7 @@ object FxChainHeader {
         }
     }
 
-    private fun drawSaveButton(session: SessionContext, chain: FxChain, bankId: String, ctrlH: Float, isDirty: Boolean) {
+    private fun drawSaveButton(session: SessionContext, chain: FxChain, st: Strings, ctrlH: Float, isDirty: Boolean) {
         val canOverwrite = chain.sourceFile != null
         val saveCol = if (isDirty) TangoPalette.u32(TangoPalette.ALERT.dark) else TangoPalette.FX_SAVE_BG.u32()
         val inkCol = if (isDirty) TangoPalette.u32(TangoPalette.inkFor(TangoPalette.ALERT.dark)) else TangoPalette.FX_SAVE_INK.u32()
@@ -391,7 +432,7 @@ object FxChainHeader {
         ImGui.pushStyleColor(ImGuiCol.Text, inkCol)
         val saveW = saveBtnW(ctrlH)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.SAVE}##save_$bankId", saveW, ctrlH)) {
+            if (ImGui.button(st.save, saveW, ctrlH)) {
                 if (canOverwrite) {
                     val file = chain.sourceFile!!
                     val dto = chain.toFxChainDto(chain.name)
@@ -403,7 +444,8 @@ object FxChainHeader {
             }
         }
         ImGui.popStyleColor(2)
-        itemTooltip(if (canOverwrite) "Save changes to ${chain.sourceFile?.name}." else "Save as new FX chain (.lsdfxchain).")
+        val saveName = chain.sourceFile?.name
+        itemTooltip(st.saveTip.get(saveName) { if (saveName != null) "Save changes to $saveName." else "Save as new FX chain (.lsdfxchain)." })
     }
 
     private fun drawMoreButton(
@@ -413,9 +455,10 @@ object FxChainHeader {
         bankId: String,
         chainLabel: String,
         ctrlH: Float,
-        menuId: String
+        st: Strings
     ) {
-        if (ImGui.button("${Icons.MORE_VERTICAL}##more_btn_$bankId", MORE_BTN_W, ctrlH)) {
+        val menuId = st.menuId
+        if (ImGui.button(st.moreBtn, MORE_BTN_W, ctrlH)) {
             ImGui.openPopup(menuId)
         }
         itemTooltip("Chain operations (Save As, New, Revert, Clear, Copy/Paste, Focus, Resync).")

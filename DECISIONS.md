@@ -1,3 +1,10 @@
+## Control Sees the Mixer Only Through `CrossfadeControl`; Browse Sessions Are Counted (`CommandContext`, `NavSurface.browseSession`)
+
+- **Decision**: `CommandContext` holds a `control.CrossfadeControl` (auto-fade flag/target, crossfade base, set, manual takeover, mute CV) that `Mixer` implements, so `control/` imports nothing from `rendering/` (enforced in `LayerDependencyTest`). `NavSurface.browseSession` increases whenever browsing turns on (`NavigationSurface` samples it each frame, state in its companion); `KnobCommands` zeroes `browseAccum` when it changes. `FxChainHeader` takes one long-lived `Actions` object per row (`DeckFxActions`, `MasterFxActions`) and caches ids and texts per bank; `isTransitionModified` loops over the filter's inputs.
+- **Rationale**: commands used five mixer members, which a fake can now stand in for. A browse that ended and restarted with no other knob event kept leftover travel. The per-frame lambdas and strings were allocation noise on the draw path.
+- **Alternatives rejected**: an adapter in the composition root (Mixer implements the interface cleanly); resetting from `ChainListBrowse`/`LibraryNavigation` call sites (many places to forget).
+- **Consequences**: no user-visible change. The midi <-> control cycle and per-event `CommandInput.Delta/Value` allocation stay as v1.1 items.
+
 ## Esc Follows the Controller Back Path, Including Leaving Library FULL (`NavigationSurface.back`, `shouldHandleEscape`)
 
 - **Decision**: `NavigationSurface.back()` is the one back action: run the `BackNavigation` stack, else (in Library FULL) drop to HALF. The controller back button and the Esc key both call it. `shouldHandleEscape` is the pure Esc guard (pressed and no text input focus). `UiClock.nowMs` is the injectable clock behind the picker `isShowing` windows so tests advance time instead of sleeping.

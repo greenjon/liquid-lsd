@@ -16,6 +16,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  * - Right of the knobs: Master FX bypass.
  */
 internal object PerformanceMasterControls {
+    private val masterFxActions = MasterFxActions()
 
     /**
      * [MIX] / [FX] knob-assign pills (see [PerformanceUiContext.isMasterRowFx]) stacked like a
@@ -85,20 +86,7 @@ internal object PerformanceMasterControls {
             FxChainHeader.drawControls(
                 session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH,
                 maxW = rowW - modeBtnW - gap, deck = null,
-                onOpenSlotBrowse = { slotIdx ->
-                    parametersState.openFxChainBrowse(MacroEngine.MASTER, deckLabel = null, slotIndex = slotIdx)
-                },
-                onFocusSlot = { slotIdx ->
-                    if (slotIdx != null && !isFx && pinned == null) {
-                        llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "FX")
-                        ctx.masterRowMode = "FX"
-                        parametersState.activeMixerSubTab = "FX"
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncFor(MacroEngine.MASTER_FX, mixer)
-                    }
-                },
-                onOpenChainBrowse = {
-                    parametersState.openFxChainBrowse(MacroEngine.MASTER, deckLabel = null, slotIndex = null)
-                }
+                actions = masterFxActions.also { it.set(parametersState, ctx, mixer, isFx, pinned != null) }
             )
             ImGui.endGroup()
         }

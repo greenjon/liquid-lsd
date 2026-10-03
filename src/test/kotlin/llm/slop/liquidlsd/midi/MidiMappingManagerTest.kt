@@ -191,7 +191,7 @@ class MidiMappingManagerTest {
             )
 
             io.mockk.verify { mixer.onCrossfadeManualTakeover() }
-            io.mockk.verify { mixer.crossfade.set(-1.0f) }
+            io.mockk.verify { mixer.setCrossfade(-1.0f) }
 
             // Trigger snapDeckB
             MidiEngine.enqueueEvent(
@@ -204,7 +204,7 @@ class MidiMappingManagerTest {
                 onTapTempo = {}
             )
 
-            io.mockk.verify { mixer.crossfade.set(1.0f) }
+            io.mockk.verify { mixer.setCrossfade(1.0f) }
         } finally {
             MidiMappingManager.clearAllMappings()
             MidiMappingManager.deleteProfile("global_snap_test")
@@ -217,7 +217,7 @@ class MidiMappingManagerTest {
     fun testGlobalAutoFadeAction() {
         val mixer = io.mockk.mockk<llm.slop.liquidlsd.rendering.Mixer>(relaxed = true)
         io.mockk.every { mixer.isAutoFading } returns false
-        io.mockk.every { mixer.crossfade.baseValue } returns 0.5f
+        io.mockk.every { mixer.crossfadeBase } returns 0.5f
         val state = llm.slop.liquidlsd.ui.ParametersState()
 
         MidiMappingManager.loadProfile("global_autofade_test")

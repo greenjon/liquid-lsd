@@ -23,7 +23,7 @@ class Mixer(
     val deckPV: Deck,
     var width: Int = 1920,
     var height: Int = 1080
-) : ParameterOwner {
+) : ParameterOwner, llm.slop.liquidlsd.control.CrossfadeControl {
 
     // The master FBO where the final output result is rendered
     var masterFBO = FBO(width, height)
@@ -174,13 +174,15 @@ class Mixer(
     val levelPV = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
     val masterLevel = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
 
-    @Volatile var targetCrossfade = -1.0f
-    var isAutoFading = false
+    @Volatile override var targetCrossfade = -1.0f
+    override var isAutoFading = false
+    override val crossfadeBase: Float get() = crossfade.baseValue
+    override fun setCrossfade(value: Float) = crossfade.set(value)
 
     /**
      * Mutes all non-MIDI modulators on the crossfader (e.g. when Auto-VJ or auto-fading starts).
      */
-    fun muteCrossfadeNonMidiCv() {
+    override fun muteCrossfadeNonMidiCv() {
         val hasActiveNonMidiMods = crossfade.modulators.any { !it.sourceId.startsWith("midi_cc_") && !it.bypassed }
         if (hasActiveNonMidiMods) {
             val updated = crossfade.modulators.map { mod ->
@@ -195,7 +197,7 @@ class Mixer(
      * Called when the user manually interacts with the crossfader (via mouse or MIDI).
      * Disarms Auto-VJ, halts active auto-fade transitions, and mutes all non-MIDI CV modulators on crossfade.
      */
-    fun onCrossfadeManualTakeover() {
+    override fun onCrossfadeManualTakeover() {
         llm.slop.liquidlsd.presets.PlayQueueManager.isAutoVJEnabled = false
         isAutoFading = false
         muteCrossfadeNonMidiCv()

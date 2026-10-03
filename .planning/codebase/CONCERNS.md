@@ -6,21 +6,15 @@
 ## Tech Debt
 
 **Layering inversion: `presets/`, `audio/`, `cv/`, `parameters/`, `rendering/`, `macro/` import `ui/` (midi/ and control/ fixed 2026-10-03):**
-- Issue: `UITheme` is reached from those packages. `midi/` and `control/` no longer import `ui/` (`MidiLearnSink`, `MidiEnabledSource`, `MidiEngine.install`; guarded by `LayerDependencyTest`). Profile learn now goes through `midi.ProfileLearner`. Remaining: `MidiMappingManager` and `MidiOutputPorts` still reference other `control` types (registry, `ControllerManager`, `CommandContext`, `MidiSink`; allow-listed in `LayerDependencyTest`, midi<->control cycle since `ControllerManager` uses `MidiEngine`), and `CommandContext` holds a concrete `rendering.Mixer` (commands use `onCrossfadeManualTakeover()`, `crossfade` and more in `GlobalCommands`).
+- Issue: `UITheme` is reached from those packages. `midi/` and `control/` no longer import `ui/` (`MidiLearnSink`, `MidiEnabledSource`, `MidiEngine.install`; guarded by `LayerDependencyTest`). Profile learn now goes through `midi.ProfileLearner`. Remaining: `MidiMappingManager` and `MidiOutputPorts` still reference other `control` types (registry, `ControllerManager`, `CommandContext`, `MidiSink`; allow-listed in `LayerDependencyTest`, midi<->control cycle since `ControllerManager` uses `MidiEngine`). `CommandContext` takes the narrow `control.CrossfadeControl` (Mixer implements it; `LayerDependencyTest` forbids control -> rendering).
 - Impact: those lower layers cannot be tested or reused without the UI singleton.
-- Fix approach: move the command/controller host out of `MidiMappingManager` so midi/ is a pure leaf; give `CommandContext` a narrow mixer interface; move shared settings out of `UITheme`.
+- Fix approach: move the command/controller host out of `MidiMappingManager` so midi/ is a pure leaf; move shared settings out of `UITheme`.
 
 **Remaining per-event allocations on the controller / render path:**
 - `CommandInput.Delta(steps)` and `CommandInput.Value(value)` (`control/Command.kt`) are allocated per encoder/fader message (button `Press.DOWN/UP` are shared instances; those are fine).
-- `isTransModified` in `ui/PerformanceTransitionsControls.kt` (`mixer.transitionFilter?.let { ... }`) evaluates a capturing lambda per frame.
-- `ui/FxChainHeader.kt` builds lambdas per frame.
 - Impact: small GC pressure during fast encoder turns / every frame; contradicts the zero-allocation rules in `ARCHITECTURE.md`. Not measured.
-- Fix approach: reuse a mutable per-runtime input object (handlers run on one thread), hoist lambdas to fields.
+- Fix approach: reuse a mutable per-runtime input object (handlers run on one thread). Deferred to v1.1.
 
-**`KnobCommands.browseAccum` carry-over:**
-- Issue: `browseAccum` (`control/KnobCommands.kt`) is reset when browse mode ends and in a couple of paths, but a sub-step remainder from a previous browse session can carry into the next one if browse restarts without passing through those resets (e.g. switching list/context while a partial delta is pending).
-- Impact: first detent of a new browse can step early/late. Minor; unconfirmed on hardware.
-- Fix approach: reset on every browse-context change (publish/reset of `ChainListBrowse`, `LibraryNavigation.setViewMode`), and add a regression test.
 
 **Global mutable singletons:**
 - Issue: `PresetManager`, `PlayQueueManager`, `BgQueueManager`, `FXQueueManager`, `FXBgQueueManager`, `TransitionQueueManager`, `UITheme`, `MidiMappingManager`, `OscMappingManager`, `MacroEngine`, `MacroLearnState`, `OscLearnState`, `FxShortlist`, `CVRegistry` are process-wide `object`s. `SessionContext` is a partial facade. Newer code (`ControllerManager`, `ControllerProfileStore`, `PerfPageStore`) takes injectable dependencies, which is the better pattern.

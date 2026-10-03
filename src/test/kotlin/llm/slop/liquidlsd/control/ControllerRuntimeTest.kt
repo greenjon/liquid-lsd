@@ -27,6 +27,7 @@ class ControllerRuntimeTest {
     private val navCalls = ArrayList<String>()
     private val nav = object : NavSurface {
         override val browsing = false
+        override val browseSession = 0
         override fun button(index: Int, shifted: Boolean) { navCalls += "button $index${if (shifted) " shifted" else ""}" }
         override fun browseStep(steps: Int) {}
         override fun browseAccept(shifted: Boolean) {}

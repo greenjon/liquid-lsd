@@ -41,24 +41,24 @@ object GlobalCommands {
         fxTrigger(FX_BG_QUEUE_PREV, "Step the background FX queue back") { it.fxBgQueueDelta -= 1 }
         trigger(TAP_TEMPO, "Global/tapTempo", "clock", "Tap tempo") { it.onTapTempo() }
 
-        trigger(AUTO_CROSSFADE, "Global/autoFade", "mixer", "Start or cancel an automated crossfade") { ctx ->
-            val mixer = ctx.mixer
-            if (mixer.isAutoFading) {
-                mixer.onCrossfadeManualTakeover()
+        trigger(AUTO_CROSSFADE, "Global/autoFade", "xf", "Start or cancel an automated crossfade") { ctx ->
+            val xf = ctx.crossfade
+            if (xf.isAutoFading) {
+                xf.onCrossfadeManualTakeover()
             } else {
-                val targetIsA = mixer.crossfade.baseValue > 0.0f
-                mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
-                mixer.isAutoFading = true
-                mixer.muteCrossfadeNonMidiCv()
+                val targetIsA = xf.crossfadeBase > 0.0f
+                xf.targetCrossfade = if (targetIsA) -1.0f else 1.0f
+                xf.isAutoFading = true
+                xf.muteCrossfadeNonMidiCv()
             }
         }
         trigger(SNAP_A, "Global/snapDeckA", "mixer", "Snap the crossfader to Deck A") { ctx ->
-            ctx.mixer.onCrossfadeManualTakeover()
-            ctx.mixer.crossfade.set(-1.0f)
+            ctx.crossfade.onCrossfadeManualTakeover()
+            ctx.crossfade.setCrossfade(-1.0f)
         }
         trigger(SNAP_B, "Global/snapDeckB", "mixer", "Snap the crossfader to Deck B") { ctx ->
-            ctx.mixer.onCrossfadeManualTakeover()
-            ctx.mixer.crossfade.set(1.0f)
+            ctx.crossfade.onCrossfadeManualTakeover()
+            ctx.crossfade.setCrossfade(1.0f)
         }
     }
 }

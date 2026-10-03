@@ -56,4 +56,12 @@ class LayerDependencyTest {
             .map { it.path }.toList()
         assertTrue(v.isEmpty(), "midi/ must reach controller profiles through ProfileLearner, not the store: $v")
     }
+
+    @Test
+    fun controlDoesNotDependOnRendering() {
+        val v = File(root, "control").walkTopDown().filter { it.isFile && it.extension == "kt" }
+            .filter { f -> f.readLines().any { "llm.slop.liquidlsd.rendering" in it } }
+            .map { it.path }.toList()
+        assertTrue(v.isEmpty(), "control/ must reach the mixer through CrossfadeControl, not rendering/: $v")
+    }
 }

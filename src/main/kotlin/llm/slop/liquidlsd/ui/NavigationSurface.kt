@@ -32,6 +32,23 @@ internal class NavigationSurface(
 
     override val browsing: Boolean get() = inLibraryView || inPicker
 
+    // The surface is rebuilt every frame, so the session counter lives in the companion; sampling on
+    // construction and on read catches every inactive -> active edge.
+    init { sampleBrowsing() }
+
+    override val browseSession: Int get() { sampleBrowsing(); return session_ }
+
+    private fun sampleBrowsing() {
+        val now = browsing
+        if (now && !wasBrowsing) session_++
+        wasBrowsing = now
+    }
+
+    private companion object {
+        var session_ = 0
+        var wasBrowsing = false
+    }
+
     override fun button(index: Int, shifted: Boolean) {
         when {
             inLibraryView -> libraryButton(index, shifted)

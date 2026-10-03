@@ -15,6 +15,7 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
     private val turnedWhileHeld = BooleanArray(knobCount)
     private var browseAccum = 0f
     private var browseWasActive = false
+    private var lastBrowseSession = 0
 
     /** Drops leftover browse travel so it can't leak into the next browse session. */
     private fun endBrowseSession() {
@@ -35,6 +36,8 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
                 if (held[knob]) turnedWhileHeld[knob] = true
                 val nav = ctx.navSurface
                 if (nav != null && nav.browsing) {
+                    val session = nav.browseSession
+                    if (session != lastBrowseSession) { lastBrowseSession = session; browseAccum = 0f }
                     browseWasActive = true
                     if (knob == 0) browseTurn(delta, nav)
                     return@Command // other knobs are inert while browsing

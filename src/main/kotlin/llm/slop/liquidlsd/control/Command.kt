@@ -1,6 +1,5 @@
 package llm.slop.liquidlsd.control
 
-import llm.slop.liquidlsd.rendering.Mixer
 
 /** How a [Command] consumes input. The registry uses this for edge detection and input validation. */
 enum class CommandKind {
@@ -31,7 +30,7 @@ sealed interface CommandInput {
  * deltas can be plain fields; the caller reads them after dispatching a batch of events.
  */
 class CommandContext(
-    val mixer: Mixer,
+    val crossfade: CrossfadeControl,
     val onTapTempo: () -> Unit = {},
     /** The Perform-view knobs, when a UI is attached (null in headless tests). */
     var knobSurface: KnobSurface? = null,

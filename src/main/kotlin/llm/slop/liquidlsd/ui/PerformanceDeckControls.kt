@@ -69,6 +69,7 @@ internal object DeckRowMetrics {
  * - Right controls: Row 1 randomize die button (applies to both SRC and FX); Row 2 FX bypass button.
  */
 internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
+    private val deckFxActions = HashMap<String, DeckFxActions>()
 
     /**
      * Strings a deck row would otherwise rebuild every frame: ImGui IDs (fixed per tag) and tooltips (rebuilt
@@ -486,19 +487,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             FxChainHeader.drawControls(
                 session, mixer, deckChain, targetBank, str.fxTitle, ctrlH,
                 maxW = targetRowW - modeBtnW - gap, deck = deck,
-                onOpenSlotBrowse = { slotIdx ->
-                    parametersState.openFxChainBrowse(fxCanonicalBankId, deckLabel, slotIndex = slotIdx)
-                },
-                onFocusSlot = { slotIdx ->
-                    if (slotIdx != null && !isFx && pinned == null) {
-                        llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "FX")
-                        ctx.deckRowMode[tag] = "FX"
-                        parametersState.setDeckSubTab(deckLabel, "FX")
-                        llm.slop.liquidlsd.macro.FxMacroSync.syncFor(targetBank, mixer)
-                    }
-                },
-                onOpenChainBrowse = {
-                    parametersState.openFxChainBrowse(fxCanonicalBankId, deckLabel, slotIndex = null)
+                actions = deckFxActions.getOrPut(tag) { DeckFxActions() }.also {
+                    it.set(parametersState, ctx, mixer, deckLabel, tag, fxCanonicalBankId, targetBank, isFx, pinned != null)
                 }
             )
 

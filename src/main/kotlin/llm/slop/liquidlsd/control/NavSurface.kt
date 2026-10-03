@@ -10,6 +10,9 @@ interface NavSurface {
     /** True while knob 1 should drive a cursor (turn = step, tap = accept) instead of its Perform knob. */
     val browsing: Boolean
 
+    /** Increases every time [browsing] turns on, so consumers can drop per-session state (e.g. partial knob travel). */
+    val browseSession: Int
+
     /** Side button [index] (0-based, in the order of the profile's `side` input), with shift held or not. */
     fun button(index: Int, shifted: Boolean)
 
