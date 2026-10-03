@@ -7,7 +7,7 @@ exactly 4 rows chosen from a row catalog. Twister banks select pages. Memory not
 
 - **Phases 1-3 are implemented and committed** (suite green, docs regenerated): `ui/PerfPageStore.kt` (`PerfPageDef`, `RowPlacement`, `PerfPageStore`), `PerfRows.CATALOG`, `RowDescriptor.pinnedMode`, `UITheme.performancePageId`, built-in pages `decks`, `master`, `ab`, `bgpv`, `mixer` in `src/main/resources/perform_pages/`, Twister `banks.pages` = `perform.ab|bgpv|mixer|master`. DECISIONS.md has an entry per phase.
 - **Verified 2026-10-02**: the four banks and LED hues were checked on a real Twister and are fine. Pinned rows' empty half is not centred vertically; accepted for now.
-- **Not done**: phase 4 (user editing) waits for MIDI phase 5.
+- **Phase 4 done 2026-10-03**: `ui/PerformPagesPanel.kt` (copy, create, rename, choose rows, delete); not yet tried on screen. Still open: the per-placement starting toggle, strip overflow.
 - **Open details, as settled so far**: (a) there is no separate Clock row: today's CLOCK & GLOBAL row is the catalog row `global`, FX_SENDS is `wetdry`; (b) bank 4 shows the legacy MASTER page, since there is no empty / user-bindable row type (design it with MIDI phase 5); (c) the tab strip still has a fixed 68px button width and does not scroll, so many user pages overflow it (5 built-in pages fit).
 - **Not implemented from the model above**: the optional starting toggle on a placement (`mode` on `RowPlacement`) for `srcfx` rows; page-name tooltips come from the page file's `tooltip` field.
 - **Next**: MIDI phase 3 (navigation/browse) is done; remaining work is MIDI phase 5 (profile UI) and page editing. See `.planning/midi-controller-handoff.md`.

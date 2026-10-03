@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#perform-page-editor-uiperformpagespanelkt-uiperfpagestorekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform Page Editor (ui/PerformPagesPanel.kt, ui/PerfPageStore.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#learn-into-a-controller-profile-midimidimappingmanagerkt-controlprofilebindingeditkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4822,6 +4833,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#perform-page-editor-uiperformpagespanelkt-uiperfpagestorekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform Page Editor (ui/PerformPagesPanel.kt, ui/PerfPageStore.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#learn-into-a-controller-profile-midimidimappingmanagerkt-controlprofilebindingeditkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8411,6 +8433,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="perform-page-editor-uiperformpagespanelkt-uiperfpagestorekt">Perform Page Editor (<code>ui/PerformPagesPanel.kt</code>, <code>ui/PerfPageStore.kt</code>)</h3>
+<ul>
+<li><strong>New "Perform Pages" section</strong> in Preferences &gt; MIDI Controls: lists the pages of the Perform tab strip (built-in, user, or user override). <strong>Copy to User File</strong> makes a built-in editable; <strong>New Page</strong> creates a page; <strong>Delete User File</strong> reverts a copy to the built-in or removes your page; <strong>Reload Pages</strong> re-reads <code>library/perform_pages/</code> after a hand edit.</li>
+<li><strong>Edit a user page</strong> in place: rename it and choose each of its four rows from the row catalog (deck rows with the SRC/FX toggle, pinned SRC or FX halves, Master, Transitions, FX Wet/Dry, Clock &amp; Global). Every edit is validated and saved at once, and the tab strip updates immediately; problems are listed under the pages. Page files that fail to load are listed with the reason.</li>
+<li>Controller profiles select a page per bank with <code>perform.&lt;id&gt;</code> (shown next to each page name).</li>
+</ul>
 <h3 id="learn-into-a-controller-profile-midimidimappingmanagerkt-controlprofilebindingeditkt">Learn Into a Controller Profile (<code>midi/MidiMappingManager.kt</code>, <code>control/ProfileBindingEdit.kt</code>)</h3>
 <ul>
 <li><strong>Learn button in the Bindings editor</strong>: pick a command, optionally a modifier (such as shift), press <strong>Learn</strong>, then move or press a control on the device. The binding is written to the profile and takes effect straight away.</li>

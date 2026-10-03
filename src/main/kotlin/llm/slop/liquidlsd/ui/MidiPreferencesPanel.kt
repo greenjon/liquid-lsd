@@ -274,6 +274,7 @@ object MidiPreferencesPanel {
         ImGui.spacing()
 
         drawControllerProfiles(session, deviceNames, parametersState)
+        PerformPagesPanel.draw(session)
 
         ImGui.spacing()
         ImGui.separator()

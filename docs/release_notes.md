@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Perform Page Editor (`ui/PerformPagesPanel.kt`, `ui/PerfPageStore.kt`)
+- **New "Perform Pages" section** in Preferences > MIDI Controls: lists the pages of the Perform tab strip (built-in, user, or user override). **Copy to User File** makes a built-in editable; **New Page** creates a page; **Delete User File** reverts a copy to the built-in or removes your page; **Reload Pages** re-reads `library/perform_pages/` after a hand edit.
+- **Edit a user page** in place: rename it and choose each of its four rows from the row catalog (deck rows with the SRC/FX toggle, pinned SRC or FX halves, Master, Transitions, FX Wet/Dry, Clock & Global). Every edit is validated and saved at once, and the tab strip updates immediately; problems are listed under the pages. Page files that fail to load are listed with the reason.
+- Controller profiles select a page per bank with `perform.<id>` (shown next to each page name).
+
 ### Learn Into a Controller Profile (`midi/MidiMappingManager.kt`, `control/ProfileBindingEdit.kt`)
 - **Learn button in the Bindings editor**: pick a command, optionally a modifier (such as shift), press **Learn**, then move or press a control on the device. The binding is written to the profile and takes effect straight away.
 - **Unknown controls become inputs**: a control the profile does not define yet (a new device, or an unmapped knob) is added as a new input named from its message (`note-1-36`, `cc-10-20`); notes become buttons, relative-encoder CCs encoders and other CCs faders. Modifier and bank buttons are ignored while learning; move another control.

@@ -1,3 +1,10 @@
+## Perform Page Editor, Same Store Pattern as Controller Profiles (`ui/PerformPagesPanel.kt`, `PerfPageStore`)
+
+- **Decision**: `PerfPageStore` gets `copyBuiltInToUser`, `saveUser`, `deleteUser`, `sourceOf` and `rejected()` (immutable snapshot, reload on every write), mirroring `ControllerProfileStore`. The editor changes a user page's name and its four rows through combos over `PerfRows.CATALOG` and saves each change immediately.
+- **Rationale**: perform-pages phase 4, paired with MIDI phase 5. Pages are tiny (4 row ids), so combos plus save-on-change need no draft state; the tab strip already reads the store every frame, so no reset hook is needed.
+- **Alternatives rejected**: drag-to-reorder pages in the strip (order is built-ins then file name); the optional starting SRC/FX toggle per placement (still unimplemented in the model).
+- **Consequences**: the section sits in MIDI Controls and so hides when MIDI is disabled; page tab-strip overflow with many user pages (fixed 68 px buttons) is still open. Not tried on screen.
+
 ## Learn Into Controller Profile (`MidiLearnTarget.ProfileCommand`, `ProfileBindingEdit.learn`)
 
 - **Decision**: command first, control second. `ProfileCommand(profileId, commandId, modifiers)` is consumed in `processGlobalMidiEvents` before the controller runtime sees the event; the pure `ProfileBindingEdit.learn` resolves it (or invents an `InputDef` from the message) and the manager saves via `saveUser`, then resets the runtimes.

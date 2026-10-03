@@ -81,4 +81,45 @@ class PerfPageStoreTest {
         val page = PerfPageDef("x", "X", rows = listOf("deck.A.src", "deck.A.fx", "master.mix", "master.fx").map(::RowPlacement))
         assertTrue(page.problems().isEmpty())
     }
+
+    private val rows = listOf("deck.A.src", "deck.A.fx", "master.mix", "master.fx").map(::RowPlacement)
+
+    @Test
+    fun copyBuiltInThenDeleteReverts() {
+        val dir = createTempDirectory().toFile()
+        val store = store(dir)
+        assertEquals(PerfPageStore.Source.BUILT_IN, store.sourceOf("ab"))
+        assertNull(store.copyBuiltInToUser("ab"))
+        assertTrue(File(dir, "ab.json").exists())
+        assertEquals(PerfPageStore.Source.USER_OVERRIDE, store.sourceOf("ab"))
+        assertEquals(listOf("decks", "master", "ab", "bgpv", "mixer"), store.all().map { it.id }.take(5))
+        assertTrue(store.copyBuiltInToUser("ab") != null)
+        assertTrue(store.copyBuiltInToUser("nope") != null)
+        assertTrue(store.deleteUser("ab"))
+        assertEquals(PerfPageStore.Source.BUILT_IN, store.sourceOf("ab"))
+        assertTrue(!store.deleteUser("ab"))
+    }
+
+    @Test
+    fun saveUserValidatesAndAddsNewPage() {
+        val dir = createTempDirectory().toFile()
+        val store = store(dir)
+        assertEquals(emptyList(), store.saveUser(PerfPageDef("mine", "Mine", rows = rows)))
+        assertEquals(PerfPageStore.Source.USER, store.sourceOf("mine"))
+        assertEquals("mine", store.all().last().id)
+
+        assertTrue(store.saveUser(PerfPageDef("mine", "Mine", rows = rows.take(3))).isNotEmpty())
+        assertTrue(store.saveUser(PerfPageDef("Bad Id", "Bad", rows = rows)).isNotEmpty())
+        assertTrue(!File(dir, "Bad Id.json").exists())
+        assertEquals(4, store.get("mine")!!.rows.size)
+    }
+
+    @Test
+    fun rejectedFilesAreReportedAfterReload() {
+        val dir = createTempDirectory().toFile()
+        val store = store(dir)
+        File(dir, "garbage.json").writeText("{ nope")
+        store.reload()
+        assertEquals(listOf("garbage.json"), store.rejected().map { it.file.name })
+    }
 }
