@@ -49,7 +49,7 @@ Packages are listed with every file; for one-line descriptions of each file see 
 
 **`src/main/kotlin/llm/slop/liquidlsd/control/`**:
 - Purpose: Controller input: profiles, command registry, runtime, knob/nav commands and surfaces, LED feedback, user-JSON helper. See ARCHITECTURE.md "Controller input architecture".
-- Files: `CcQueue.kt`, `Command.kt`, `ControllerFeedback.kt`, `ControllerManager.kt`, `ControllerProfile.kt`, `ControllerProfileStore.kt`, `ControllerRuntime.kt`, `GlobalCommands.kt`, `KnobCommands.kt`, `KnobLight.kt`, `KnobSurface.kt`, `MidiSink.kt`, `NavCommands.kt`, `NavSurface.kt`, `ProfileBindingEdit.kt`, `TracingSink.kt`, `UserJsonFiles.kt`
+- Files: `CcQueue.kt`, `Command.kt`, `ControllerFeedback.kt`, `ControllerManager.kt`, `ControllerProfile.kt`, `ControllerProfileLearner.kt`, `ControllerProfileStore.kt`, `ControllerRuntime.kt`, `GlobalCommands.kt`, `KnobCommands.kt`, `KnobLight.kt`, `KnobSurface.kt`, `MidiSink.kt`, `NavCommands.kt`, `NavSurface.kt`, `ProfileBindingEdit.kt`, `TracingSink.kt`, `UserJsonFiles.kt`, `UserJsonLibrary.kt`
 
 **`src/main/kotlin/llm/slop/liquidlsd/cv/`**:
 - Purpose: CV source registry, LFO / sample-and-hold sources, beat clock, evaluators, history buffers.
@@ -73,7 +73,7 @@ Packages are listed with every file; for one-line descriptions of each file see 
 
 **`src/main/kotlin/llm/slop/liquidlsd/midi/`**:
 - Purpose: MIDI input engine (capped queue), legacy mapping manager, MIDI output ports for controller feedback.
-- Files: `MidiEngine.kt`, `MidiMappingManager.kt`, `MidiOutputPorts.kt`
+- Files: `MidiEngine.kt`, `MidiMappingManager.kt`, `MidiOutputPorts.kt`, `ProfileLearner.kt`
 
 **`src/main/kotlin/llm/slop/liquidlsd/models/`**:
 - Purpose: Preset / FX preset / generator-default DTOs and clipboard.

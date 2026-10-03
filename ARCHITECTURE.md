@@ -95,10 +95,12 @@ src/main/kotlin/llm/slop/liquidlsd/
 ├── midi/                       — MIDI I/O and the legacy parameter-mapping layer (see "Controller input architecture" and its layering note)
 │   ├── MidiEngine.kt           — Multi-message MIDI receiver, atomic state, capped event queue (MAX_QUEUED_EVENTS), and live sniffer buffer
 │   ├── MidiMappingManager.kt   — Multi-type parameter mapping, soft takeover, rotary decoding, and slew smoothing; also hosts the global-command bindings
+│   ├── ProfileLearner.kt       — Interface (+ Outcome, no-op NONE) MidiMappingManager uses to bind a profile command to the next control moved; implemented in control/
 │   └── MidiOutputPorts.kt      — Opens a MIDI output port by device name for controller feedback; each sink writes from its own daemon thread
 ├── control/                    — Controller input: profiles, command registry, runtime, LED/ring feedback (see "Controller input architecture")
 │   ├── Command.kt              — CommandKind, CommandInput (preallocated Press instances), Command, CommandContext, CommandRegistry (id -> command, edge detection)
 │   ├── ControllerProfile.kt    — Serializable profile DTOs (inputs, banks, bindings, output) and CompiledController (flat lookup tables built once)
+│   ├── ControllerProfileLearner.kt — ProfileLearner implementation over ControllerProfileStore + ProfileBindingEdit; wired by Main
 │   ├── ControllerProfileStore.kt — Finds profiles: built-ins in the jar (controllers/*.json) and user files in library/controllers/; user id overrides built-in
 │   ├── ControllerManager.kt    — One ControllerRuntime + ControllerFeedback per connected device, created on first message; render thread only
 │   ├── ControllerRuntime.kt    — Drives the CommandRegistry from one device: active bank, held modifiers, acceleration-scaled encoder deltas, routing to bound commands
@@ -113,7 +115,8 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   ├── NavCommands.kt          — nav.button.<n> and .alt command family (free side buttons)
 │   ├── NavSurface.kt           — Interface: context-dependent side buttons and browse cursor; implemented by ui/NavigationSurface
 │   ├── ProfileBindingEdit.kt   — Pure edits of a profile's global bindings map for the binding editor
-│   └── UserJsonFiles.kt        — Shared safe scan + atomic write for user JSON stores (controller profiles, Perform pages)
+│   ├── UserJsonFiles.kt        — Shared safe scan + atomic write for user JSON files
+│   └── UserJsonLibrary.kt      — Generic built-in + user-dir library (override, rejection, newer-version warnings, copy/save/delete, snapshot cache) behind ControllerProfileStore and ui/PerfPageStore
 ├── osc/
 │   ├── OscCodec.kt             — Pure Kotlin zero-dependency binary OSC 1.0 encoder/decoder (messages & bundles)
 │   ├── OscEngine.kt            — Low-latency UDP receiver/transmitter, remote client auto-learn & packet sniffer
@@ -380,11 +383,11 @@ ControllerFeedback ◄─ KnobLightSource (PerformSurface) ─► CcQueue ─►
 ```
 
 - **Profiles** are JSON (`ControllerProfile`): inputs, banks (`bankStride`, bank switch CCs, and `pages` naming the app page each hardware bank shows, e.g. `perform.decks`), global `bindings` (`"shift+knob.1.press" -> command id`), and an optional `output` section for feedback. Built-ins ship in `src/main/resources/controllers/`; user profiles live in `library/controllers/` and a user file with the same id overrides the built-in. `ControllerProfileStore` skips structurally invalid files and reports why.
-- **Perform pages** (`PerfPageStore`) are JSON files of exactly four row ids from the `PerfRows.CATALOG`; built-ins in `src/main/resources/perform_pages/`, user pages in `library/perform_pages/`. The Twister banks select the pages `ab`, `bgpv`, `mixer`, `master`. `ControllerProfileStore` and `PerfPageStore` share only the `UserJsonFiles` scan/atomic-write helper.
+- **Perform pages** (`PerfPageStore`) are JSON files of exactly four row ids from the `PerfRows.CATALOG`; built-ins in `src/main/resources/perform_pages/`, user pages in `library/perform_pages/`. The Twister banks select the pages `ab`, `bgpv`, `mixer`, `master`. `ControllerProfileStore` and `PerfPageStore` both delegate the load/override/save plumbing to `control.UserJsonLibrary<S, T>` and keep only their domain parts (validation, ordering, fallback page).
 - **Knob addressing**: knobs are 0-based, row-major over the visible rows; the page follows the screen, so every hardware bank shows the same 16 lights. Taps run `primary` (bypass / reset) or `secondary` (focus / page step); while a browse context is active knob 1 is a cursor and knobs 2-16 are inert.
 - **Zero-allocation rules**: encoder messages, button presses (shared `CommandInput.Press.DOWN/UP`) and feedback travel without allocating on the MIDI path; `CcQueue` coalesces by (channel, cc) so a slow device cannot build a backlog; each `MidiSink` writes from its own daemon thread. Known remaining per-event allocations: `CommandInput.Delta`/`Value` instances, `isTransModified`, and the `FxChainHeader` lambdas (see `.planning/codebase/CONCERNS.md`).
 - **Threading**: `ControllerManager`/`ControllerRuntime` and surface handlers run on the render thread only; `MidiEngine` callbacks only enqueue.
-- **Layering**: `midi/` and `control/` do not import `ui/` (guarded by `LayerDependencyTest`). `midi.MidiLearnTarget`/`ParameterCellId` live in `midi/`; `ParametersState` implements `midi.MidiLearnSink`; `MidiEngine.install(enabled, onDeviceOpened)` receives the MIDI-enabled switch and a device-opened listener from `Main`. Remaining known couplings: `MidiMappingManager` uses `control.ControllerProfileStore.default` for profile learn (midi -> control), and `CommandContext` still holds a concrete `rendering.Mixer`. Several `presets/`, `audio/`, `cv/` and `rendering/` files still reach into `ui/` (mostly `UITheme`).
+- **Layering**: `midi/` and `control/` do not import `ui/` (guarded by `LayerDependencyTest`). `midi.MidiLearnTarget`/`ParameterCellId` live in `midi/`; `ParametersState` implements `midi.MidiLearnSink`; `MidiEngine.install(enabled, onDeviceOpened)` receives the MIDI-enabled switch and a device-opened listener from `Main`. Profile learn goes through `midi.ProfileLearner` (no-op default; `Main` installs `control.ControllerProfileLearner`), so `midi/` never touches the profile store. Remaining midi -> control references (dispatch plumbing in `MidiMappingManager`, `MidiOutputPorts`) are allow-listed in `LayerDependencyTest`; control -> midi also exists, so a full split means moving them. `CommandContext` still holds a concrete `rendering.Mixer`. Several `presets/`, `audio/`, `cv/` and `rendering/` files still reach into `ui/` (mostly `UITheme`).
 
 ## CV Sources (registered IDs)
 

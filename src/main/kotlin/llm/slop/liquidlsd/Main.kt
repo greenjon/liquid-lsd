@@ -159,6 +159,8 @@ fun main(args: Array<String>) {
         }
     )
 
+    llm.slop.liquidlsd.midi.MidiMappingManager.profileLearner = llm.slop.liquidlsd.control.ControllerProfileLearner()
+
     // Load active MIDI mapping profile
     if (llm.slop.liquidlsd.ui.UITheme.midiEnabled) {
         llm.slop.liquidlsd.midi.MidiMappingManager.loadProfile(llm.slop.liquidlsd.ui.UITheme.activeMidiProfile)

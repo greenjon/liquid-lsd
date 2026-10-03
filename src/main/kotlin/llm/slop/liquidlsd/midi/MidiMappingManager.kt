@@ -9,8 +9,6 @@ import llm.slop.liquidlsd.control.KnobCommands
 import llm.slop.liquidlsd.control.KnobSurface
 import llm.slop.liquidlsd.control.NavCommands
 import llm.slop.liquidlsd.control.NavSurface
-import llm.slop.liquidlsd.control.ControllerProfileStore
-import llm.slop.liquidlsd.control.ProfileBindingEdit
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ModulationOperator
@@ -626,25 +624,22 @@ object MidiMappingManager {
     @Volatile var profileLearnMessage: String? = null
 
     /** Returns true when the event was bound (learning is done); false to keep waiting. */
+    /** Writes learned bindings into controller profiles; wired by the composition root, a no-op until then. */
+    @Volatile var profileLearner: ProfileLearner = ProfileLearner.NONE
+
+    /** Returns true when the event was bound (learning is done); false to keep waiting. */
     private fun learnIntoProfile(target: MidiLearnTarget.ProfileCommand, event: MidiEvent): Boolean {
-        val store = ControllerProfileStore.default
-        val compiled = store.get(target.profileId)
-        if (compiled == null) {
-            profileLearnMessage = "Profile ${target.profileId} no longer exists"
-            return true
-        }
-        return when (val result = ProfileBindingEdit.learn(compiled, event, target.commandId, target.modifiers)) {
-            is ProfileBindingEdit.Learned.Ignored -> { profileLearnMessage = "Ignored: ${result.reason}. Move another control."; false }
-            is ProfileBindingEdit.Learned.Bound -> {
-                val problems = store.saveUser(result.profile)
-                profileLearnMessage = if (problems.isEmpty()) {
-                    controllers.reset()
-                    val added = result.addedInput?.let { " (new input $it)" } ?: ""
-                    "Bound ${target.commandId} to ${result.key}$added" +
-                        if (hasLearnedMapping(event)) ". A learned mapping on the same control still takes priority; clear it under Learned Mappings." else ""
-                } else "Not saved: ${problems.joinToString("; ")}"
+        return when (val result = profileLearner.learn(target.profileId, event, target.commandId, target.modifiers)) {
+            is ProfileLearner.Outcome.Missing -> { profileLearnMessage = "Profile ${target.profileId} no longer exists"; true }
+            is ProfileLearner.Outcome.Ignored -> { profileLearnMessage = "Ignored: ${result.reason}. Move another control."; false }
+            is ProfileLearner.Outcome.Saved -> {
+                controllers.reset()
+                val added = result.addedInput?.let { " (new input $it)" } ?: ""
+                profileLearnMessage = "Bound ${target.commandId} to ${result.key}$added" +
+                    if (hasLearnedMapping(event)) ". A learned mapping on the same control still takes priority; clear it under Learned Mappings." else ""
                 true
             }
+            is ProfileLearner.Outcome.NotSaved -> { profileLearnMessage = "Not saved: ${result.problems.joinToString("; ")}"; true }
         }
     }
 

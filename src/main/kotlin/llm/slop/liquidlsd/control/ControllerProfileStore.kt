@@ -1,7 +1,6 @@
 package llm.slop.liquidlsd.control
 
 import kotlinx.serialization.json.Json
-import mu.KotlinLogging
 import java.io.File
 
 /**
@@ -10,11 +9,30 @@ import java.io.File
  * copy of a built-in can be edited in place. Profiles with structural problems are skipped.
  */
 class ControllerProfileStore(
-    private val userDir: File = File("library/controllers"),
-    private val builtInNames: List<String> = BUILT_IN_NAMES
+    userDir: File = File("library/controllers"),
+    builtInNames: List<String> = BUILT_IN_NAMES
 ) {
-    private val logger = KotlinLogging.logger {}
-    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true; encodeDefaults = true }
+    private val library = UserJsonLibrary(
+        userDir, builtInNames,
+        UserJsonLibrary.Spec<ControllerProfile, CompiledController>(
+            kind = "controller profile", noun = "profile", resourceDir = "/controllers",
+            resourceAnchor = ControllerProfileStore::class.java,
+            json = Json { ignoreUnknownKeys = true; prettyPrint = true; encodeDefaults = true },
+            serializer = ControllerProfile.serializer(),
+            currentVersion = ControllerProfile.CURRENT_SCHEMA_VERSION,
+            idOf = { it.profile.id },
+            versionOf = { it.profile.version },
+            toSource = { it.profile },
+            stamped = { it.copy(version = ControllerProfile.CURRENT_SCHEMA_VERSION) },
+            decodedVersion = { it.version },
+            migrate = { ControllerProfile.migrate(it) },
+            idOfSource = { it.id },
+            compile = { p -> p.compile().let { c -> if (c.problems.isEmpty()) c to emptyList() else null to c.problems } },
+            saveProblems = { it.compile().problems },
+            // User profiles first, so a user's own profile wins when two match the same device.
+            arrange = { builtIn, user -> user.values + builtIn.values.filter { it.profile.id !in user } }
+        )
+    )
 
     /** Where a profile in [all] comes from. */
     enum class Source { BUILT_IN, USER, USER_OVERRIDE }
@@ -22,43 +40,19 @@ class ControllerProfileStore(
     /** A user file that was skipped, with the reason, so the UI can show it. */
     data class Rejected(val file: File, val problems: List<String>)
 
-    private class Snapshot(
-        val profiles: List<CompiledController>,
-        val builtIn: Map<String, CompiledController>,
-        val userFiles: Map<String, File>,
-        val rejected: List<Rejected>,
-        val warnings: List<Rejected>,
-        val newerIds: Set<String>
-    )
+    fun reload() = library.reload()
 
-    @Volatile
-    private var cache: Snapshot? = null
-
-    fun reload() { cache = null }
-
-    private fun snapshot(): Snapshot = cache ?: load().also { cache = it }
-
-    fun all(): List<CompiledController> = snapshot().profiles
+    fun all(): List<CompiledController> = library.all()
 
     /** User files that failed to parse or validate; they are not in [all]. */
-    fun rejected(): List<Rejected> = snapshot().rejected
+    fun rejected(): List<Rejected> = library.rejected().map { Rejected(it.file, it.problems) }
 
     /** Non-fatal notes about loaded user files (currently: written by a newer schema version). They are in [all]. */
-    fun warnings(): List<Rejected> = snapshot().warnings
+    fun warnings(): List<Rejected> = library.warnings().map { Rejected(it.file, it.problems) }
 
     fun get(id: String): CompiledController? = all().firstOrNull { it.profile.id == id }
 
-    fun sourceOf(id: String): Source? {
-        val snap = snapshot()
-        val user = id in snap.userFiles
-        val builtIn = id in snap.builtIn
-        return when {
-            user && builtIn -> Source.USER_OVERRIDE
-            user -> Source.USER
-            builtIn -> Source.BUILT_IN
-            else -> null
-        }
-    }
+    fun sourceOf(id: String): Source? = library.sourceOf(id)?.let { Source.valueOf(it.name) }
 
     /** The first profile (user profiles first) whose match strings fit [deviceName]. */
     fun matchFor(deviceName: String): CompiledController? =
@@ -68,89 +62,16 @@ class ControllerProfileStore(
      * Writes the built-in profile [id] to `<userDir>/<id>.json`; it then overrides the built-in.
      * Returns an error message, or null on success.
      */
-    fun copyBuiltInToUser(id: String): String? {
-        val snap = snapshot()
-        val builtIn = snap.builtIn[id] ?: return "No built-in profile '$id'"
-        if (id in snap.userFiles) return "A user profile '$id' already exists"
-        val target = File(userDir, "$id.json")
-        if (target.exists()) return "${target.path} already exists"
-        return write(target, builtIn.profile)
-    }
+    fun copyBuiltInToUser(id: String): String? = library.copyBuiltInToUser(id)
 
     /**
      * Validates and writes [profile] to the user directory (replacing the file that holds the same id,
      * or `<id>.json`). Returns the problems, empty on success.
      */
-    fun saveUser(profile: ControllerProfile): List<String> {
-        val problems = profile.compile().problems
-        if (problems.isNotEmpty()) return problems
-        val snap = snapshot()
-        // Policy: refuse. Saving would write the current schema and silently drop fields this build does not know.
-        if (profile.id in snap.newerIds) {
-            return listOf("${snap.userFiles[profile.id]?.name ?: profile.id} was written by a newer build; not overwriting it. Edit the file by hand or delete it.")
-        }
-        val target = snap.userFiles[profile.id] ?: File(userDir, "${profile.id}.json")
-        return listOfNotNull(write(target, profile))
-    }
+    fun saveUser(profile: ControllerProfile): List<String> = library.saveUser(profile)
 
     /** Deletes the user file for [id]; a built-in with that id becomes active again. */
-    fun deleteUser(id: String): Boolean {
-        val file = snapshot().userFiles[id] ?: return false
-        val ok = file.delete()
-        reload()
-        return ok
-    }
-
-    private fun write(target: File, profile: ControllerProfile): String? = try {
-        UserJsonFiles.writeAtomic(target, json.encodeToString(ControllerProfile.serializer(), profile.copy(version = ControllerProfile.CURRENT_SCHEMA_VERSION)))
-        null
-    } catch (e: Exception) {
-        logger.error(e) { "Could not write controller profile ${target.path}" }
-        "Could not write ${target.path}: ${e.message}"
-    } finally {
-        reload()
-    }
-
-    private fun load(): Snapshot {
-        val builtIn = LinkedHashMap<String, CompiledController>()
-        for (name in builtInNames) {
-            val text = ControllerProfileStore::class.java.getResourceAsStream("/controllers/$name.json")
-                ?.bufferedReader()?.use { it.readText() }
-            if (text == null) {
-                logger.error { "Built-in controller profile missing from resources: $name" }
-                continue
-            }
-            parse(text, "built-in $name").first?.let { builtIn[it.profile.id] = it }
-        }
-        val scan = UserJsonFiles.scan<CompiledController>(userDir, { it.profile.id }) { text, src -> parse(text, src) }
-        val user = scan.loaded.associate { it.id to it.value }
-        val userFileById = scan.loaded.associate { it.id to it.file }
-        val rejected = scan.rejected.map { Rejected(it.first, it.second) }
-        val newer = scan.loaded.filter { it.value.profile.version > ControllerProfile.CURRENT_SCHEMA_VERSION }
-        val warnings = newer.mapNotNull { l ->
-            UserJsonFiles.newerVersionWarning(l.value.profile.version, ControllerProfile.CURRENT_SCHEMA_VERSION)?.let { Rejected(l.file, listOf(it)) }
-        }
-        warnings.forEach { logger.warn { "${it.file.path}: ${it.problems.first()}" } }
-        // User profiles first, so a user's own profile wins when two match the same device.
-        val profiles = user.values + builtIn.values.filter { it.profile.id !in user }
-        return Snapshot(profiles, builtIn, userFileById, rejected, warnings, newer.map { it.id }.toSet())
-    }
-
-    private fun parse(text: String, source: String): Pair<CompiledController?, List<String>> {
-        val decoded = try {
-            json.decodeFromString<ControllerProfile>(text)
-        } catch (e: Exception) {
-            logger.error(e) { "Could not parse controller profile ($source)" }
-            return null to listOf("Not a valid profile: ${e.message?.lineSequence()?.firstOrNull()}")
-        }
-        val profile = if (decoded.version < ControllerProfile.CURRENT_SCHEMA_VERSION) ControllerProfile.migrate(decoded) else decoded
-        val compiled = profile.compile()
-        if (compiled.problems.isNotEmpty()) {
-            logger.error { "Skipping controller profile ${profile.id} ($source): ${compiled.problems.joinToString("; ")}" }
-            return null to compiled.problems
-        }
-        return compiled to emptyList()
-    }
+    fun deleteUser(id: String): Boolean = library.deleteUser(id)
 
     companion object {
         val BUILT_IN_NAMES = listOf("midi-fighter-twister")

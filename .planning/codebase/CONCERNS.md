@@ -6,13 +6,9 @@
 ## Tech Debt
 
 **Layering inversion: `presets/`, `audio/`, `cv/`, `parameters/`, `rendering/`, `macro/` import `ui/` (midi/ and control/ fixed 2026-10-03):**
-- Issue: `UITheme` is reached from those packages. `midi/` and `control/` no longer import `ui/` (`MidiLearnSink`, `MidiEnabledSource`, `MidiEngine.install`; guarded by `LayerDependencyTest`). Remaining: `MidiMappingManager` -> `control.ControllerProfileStore.default` (midi<->control cycle, since `ControllerManager` uses `MidiEngine`), and `CommandContext` holds a concrete `rendering.Mixer` (commands use `onCrossfadeManualTakeover()`, `crossfade` and more in `GlobalCommands`).
+- Issue: `UITheme` is reached from those packages. `midi/` and `control/` no longer import `ui/` (`MidiLearnSink`, `MidiEnabledSource`, `MidiEngine.install`; guarded by `LayerDependencyTest`). Profile learn now goes through `midi.ProfileLearner`. Remaining: `MidiMappingManager` and `MidiOutputPorts` still reference other `control` types (registry, `ControllerManager`, `CommandContext`, `MidiSink`; allow-listed in `LayerDependencyTest`, midi<->control cycle since `ControllerManager` uses `MidiEngine`), and `CommandContext` holds a concrete `rendering.Mixer` (commands use `onCrossfadeManualTakeover()`, `crossfade` and more in `GlobalCommands`).
 - Impact: those lower layers cannot be tested or reused without the UI singleton.
-- Fix approach: inject a profile store into `MidiMappingManager`; give `CommandContext` a narrow mixer interface; move shared settings out of `UITheme`.
-
-**Near-duplicate stores: `ControllerProfileStore` and `PerfPageStore`:**
-- Issue: both implement built-in + user-dir scan, same-id override, rejection reporting, copy-built-in-to-user and atomic save. Only the low-level scan/atomic write is shared (`control/UserJsonFiles.kt`); the override/validation logic is copied. They live in different packages (`control/` vs `ui/`).
-- Fix approach: extract a generic `UserOverridableStore<T>` on top of `UserJsonFiles` if a third JSON-backed store appears; until then keep them in step by hand.
+- Fix approach: move the command/controller host out of `MidiMappingManager` so midi/ is a pure leaf; give `CommandContext` a narrow mixer interface; move shared settings out of `UITheme`.
 
 **Remaining per-event allocations on the controller / render path:**
 - `CommandInput.Delta(steps)` and `CommandInput.Value(value)` (`control/Command.kt`) are allocated per encoder/fader message (button `Press.DOWN/UP` are shared instances; those are fine).

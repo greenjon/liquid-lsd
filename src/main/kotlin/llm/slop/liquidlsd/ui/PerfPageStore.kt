@@ -2,8 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import llm.slop.liquidlsd.control.UserJsonFiles
-import mu.KotlinLogging
+import llm.slop.liquidlsd.control.UserJsonLibrary
 import java.io.File
 
 /** One slot of a page: a [PerfRows.CATALOG] row id. */
@@ -69,11 +68,31 @@ object PerfTabStrip {
  * follow the built-ins, sorted by file name. Pages with structural problems are skipped.
  */
 class PerfPageStore(
-    private val userDir: File = File("library/perform_pages"),
-    private val builtInNames: List<String> = BUILT_IN_NAMES
+    userDir: File = File("library/perform_pages"),
+    builtInNames: List<String> = BUILT_IN_NAMES
 ) {
-    private val logger = KotlinLogging.logger {}
-    private val json = Json { ignoreUnknownKeys = true; prettyPrint = true; encodeDefaults = true }
+    private val library = UserJsonLibrary(
+        userDir, builtInNames,
+        UserJsonLibrary.Spec<PerfPageDef, PerfPageDef>(
+            kind = "perform page", noun = "page", resourceDir = "/perform_pages",
+            resourceAnchor = PerfPageStore::class.java,
+            json = Json { ignoreUnknownKeys = true; prettyPrint = true; encodeDefaults = true },
+            serializer = PerfPageDef.serializer(),
+            currentVersion = PerfPageDef.CURRENT_SCHEMA_VERSION,
+            idOf = { it.id },
+            versionOf = { it.version },
+            toSource = { it },
+            stamped = { it.copy(version = PerfPageDef.CURRENT_SCHEMA_VERSION) },
+            decodedVersion = { it.version },
+            migrate = { PerfPageDef.migrate(it) },
+            idOfSource = { it.id },
+            compile = { p -> p.problems().let { pr -> if (pr.isEmpty()) p to emptyList() else null to pr } },
+            saveProblems = { it.problems() + idProblems(it.id) },
+            // A user page with a built-in's id replaces it in place; new user pages follow, in file-name order.
+            arrange = { builtIn, user -> LinkedHashMap(builtIn).also { it.putAll(user) }.values.toList() },
+            fallback = { PerfPageDef("decks", "DECKS", rows = PerfRows.DECK_TAGS.map { RowPlacement("deck.$it.srcfx") }) }
+        )
+    )
 
     /** Where a page in [all] comes from. */
     enum class Source { BUILT_IN, USER, USER_OVERRIDE }
@@ -81,139 +100,38 @@ class PerfPageStore(
     /** A user file that was skipped, with the reasons, so the UI can show it. */
     data class Rejected(val file: File, val problems: List<String>)
 
-    private class Snapshot(
-        val pages: List<PerfPageDef>,
-        val builtInIds: Set<String>,
-        val builtIn: Map<String, PerfPageDef>,
-        val userFiles: Map<String, File>,
-        val rejected: List<Rejected>,
-        val warnings: List<Rejected>,
-        val newerIds: Set<String>
-    )
-
-    @Volatile
-    private var cache: Snapshot? = null
-
-    fun reload() { cache = null }
-
-    private fun snapshot(): Snapshot = cache ?: load().also { cache = it }
+    fun reload() = library.reload()
 
     /** Every usable page, in strip order. Never empty: if nothing loads, a minimal DECKS page is synthesised. */
-    fun all(): List<PerfPageDef> = snapshot().pages
+    fun all(): List<PerfPageDef> = library.all()
 
     fun get(id: String): PerfPageDef? = all().firstOrNull { it.id == id }
 
     fun indexOf(id: String): Int = all().indexOfFirst { it.id == id }
 
     /** User files that failed to parse or validate; they are not in [all]. */
-    fun rejected(): List<Rejected> = snapshot().rejected
+    fun rejected(): List<Rejected> = library.rejected().map { Rejected(it.file, it.problems) }
 
     /** Non-fatal notes about loaded user files (currently: written by a newer schema version). They are in [all]. */
-    fun warnings(): List<Rejected> = snapshot().warnings
+    fun warnings(): List<Rejected> = library.warnings().map { Rejected(it.file, it.problems) }
 
-    fun sourceOf(id: String): Source? {
-        val snap = snapshot()
-        val user = id in snap.userFiles
-        val builtIn = id in snap.builtInIds
-        return when {
-            user && builtIn -> Source.USER_OVERRIDE
-            user -> Source.USER
-            builtIn -> Source.BUILT_IN
-            else -> null
-        }
-    }
+    fun sourceOf(id: String): Source? = library.sourceOf(id)?.let { Source.valueOf(it.name) }
 
     /** Writes the built-in page [id] to `<userDir>/<id>.json`, where it overrides the built-in. Returns an error message or null. */
-    fun copyBuiltInToUser(id: String): String? {
-        val snap = snapshot()
-        val builtIn = snap.builtIn[id] ?: return "No built-in page '$id'"
-        if (id in snap.userFiles) return "A user page '$id' already exists"
-        val target = File(userDir, "$id.json")
-        if (target.exists()) return "${target.path} already exists"
-        return write(target, builtIn)
-    }
+    fun copyBuiltInToUser(id: String): String? = library.copyBuiltInToUser(id)
 
     /** Validates and writes [page] (replacing the file that holds the same id, or `<id>.json`). Returns the problems, empty on success. */
-    fun saveUser(page: PerfPageDef): List<String> {
-        val problems = page.problems() + idProblems(page.id)
-        if (problems.isNotEmpty()) return problems
-        val snap = snapshot()
-        // Policy: refuse. Saving would write the current schema and silently drop fields this build does not know.
-        if (page.id in snap.newerIds) {
-            return listOf("${snap.userFiles[page.id]?.name ?: page.id} was written by a newer build; not overwriting it. Edit the file by hand or delete it.")
-        }
-        val target = snap.userFiles[page.id] ?: File(userDir, "${page.id}.json")
-        return listOfNotNull(write(target, page))
-    }
+    fun saveUser(page: PerfPageDef): List<String> = library.saveUser(page)
 
     /** Deletes the user file for [id]; a built-in with that id becomes active again. */
-    fun deleteUser(id: String): Boolean {
-        val file = snapshot().userFiles[id] ?: return false
-        val ok = file.delete()
-        reload()
-        return ok
-    }
-
-    private fun idProblems(id: String): List<String> =
-        if (Regex("[a-z0-9][a-z0-9_-]*").matches(id)) emptyList()
-        else listOf("page id '$id' must be lowercase letters, digits, '_' or '-'")
-
-    private fun write(target: File, page: PerfPageDef): String? = try {
-        UserJsonFiles.writeAtomic(target, json.encodeToString(PerfPageDef.serializer(), page.copy(version = PerfPageDef.CURRENT_SCHEMA_VERSION)))
-        null
-    } catch (e: Exception) {
-        logger.error(e) { "Could not write perform page ${target.path}" }
-        "Could not write ${target.path}: ${e.message}"
-    } finally {
-        reload()
-    }
-
-    private fun load(): Snapshot {
-        val builtIn = LinkedHashMap<String, PerfPageDef>()
-        for (name in builtInNames) {
-            val text = PerfPageStore::class.java.getResourceAsStream("/perform_pages/$name.json")
-                ?.bufferedReader()?.use { it.readText() }
-            if (text == null) {
-                logger.error { "Built-in perform page missing from resources: $name" }
-                continue
-            }
-            parse(text, "built-in $name").first?.let { builtIn[it.id] = it }
-        }
-        val pages = LinkedHashMap<String, PerfPageDef>(builtIn)
-        val scan = UserJsonFiles.scan<PerfPageDef>(userDir, { it.id }) { text, src -> parse(text, src) }
-        val userFileById = scan.loaded.associate { it.id to it.file }
-        for (l in scan.loaded) pages[l.id] = l.value
-        val rejected = scan.rejected.map { Rejected(it.first, it.second) }
-        val newer = scan.loaded.filter { it.value.version > PerfPageDef.CURRENT_SCHEMA_VERSION }
-        val warnings = newer.mapNotNull { l ->
-            UserJsonFiles.newerVersionWarning(l.value.version, PerfPageDef.CURRENT_SCHEMA_VERSION)?.let { Rejected(l.file, listOf(it)) }
-        }
-        warnings.forEach { logger.warn { "${it.file.path}: ${it.problems.first()}" } }
-        if (pages.isEmpty()) {
-            logger.error { "No perform pages loaded; using a synthesised DECKS page" }
-            val fallback = PerfPageDef("decks", "DECKS", rows = PerfRows.DECK_TAGS.map { RowPlacement("deck.$it.srcfx") })
-            pages[fallback.id] = fallback
-        }
-        return Snapshot(pages.values.toList(), builtIn.keys.toSet(), builtIn, userFileById, rejected, warnings, newer.map { it.id }.toSet())
-    }
-
-    private fun parse(text: String, source: String): Pair<PerfPageDef?, List<String>> {
-        val decoded = try {
-            json.decodeFromString<PerfPageDef>(text)
-        } catch (e: Exception) {
-            logger.error(e) { "Could not parse perform page ($source)" }
-            return null to listOf("Not a valid page: ${e.message?.lineSequence()?.firstOrNull()}")
-        }
-        val page = if (decoded.version < PerfPageDef.CURRENT_SCHEMA_VERSION) PerfPageDef.migrate(decoded) else decoded
-        val problems = page.problems()
-        if (problems.isNotEmpty()) {
-            logger.error { "Skipping perform page ${page.id} ($source): ${problems.joinToString("; ")}" }
-            return null to problems
-        }
-        return page to emptyList()
-    }
+    fun deleteUser(id: String): Boolean = library.deleteUser(id)
 
     companion object {
+        private fun idProblems(id: String): List<String> =
+            if (Regex("[a-z0-9][a-z0-9_-]*").matches(id)) emptyList()
+            else listOf("page id '$id' must be lowercase letters, digits, '_' or '-'")
+
+
         val BUILT_IN_NAMES = listOf("decks", "master", "deck-ab", "deck-bgpv", "mixer")
 
         /** Shared instance backed by the real `library/perform_pages/` directory. */
