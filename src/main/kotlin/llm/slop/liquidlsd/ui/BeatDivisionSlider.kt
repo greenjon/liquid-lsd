@@ -197,7 +197,6 @@ object BeatDivisionSlider {
         } else if (isMacroBound && ImGui.isItemClicked(0)) {
             macroInfo?.control?.id?.let { ctrlId ->
                 llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = ctrlId
-                session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
             }
         }
         if (ImGui.isItemClicked(2) && !isMacroBound) {

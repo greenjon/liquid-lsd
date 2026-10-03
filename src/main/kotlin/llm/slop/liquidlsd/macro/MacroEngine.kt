@@ -435,26 +435,40 @@ object MacroEngine {
         parameterId: String,
         modulatorIndex: Int? = null,
         propertyName: String? = null
-    ): MacroBindingInfo? {
-        val bindings = findBindingsTargeting(unitInstanceId, parameterId, modulatorIndex, propertyName)
-        if (bindings.isEmpty()) return null
-        val targetBinding = bindings.first()
+    ): MacroBindingInfo? =
+        findBindingsTargeting(unitInstanceId, parameterId, modulatorIndex, propertyName)
+            .firstOrNull()?.let { infoFor(it) }
 
-        // Search every registered bank for the control owning this binding -- unitInstanceId
-        // describes the binding's *target* scope, not which bank the knob itself lives in, so it
-        // can't be used to pick a single bank to look in (a Deck A bank can perfectly well hold a
-        // binding whose unitInstanceId is null, or vice versa).
+    /**
+     * Every [MacroBindingInfo] targeting the specified parameter (and optional modulator property).
+     * More than one macro knob can bind the same target, so editors list each one.
+     */
+    fun findBindingInfos(
+        unitInstanceId: String?,
+        parameterId: String,
+        modulatorIndex: Int? = null,
+        propertyName: String? = null
+    ): List<MacroBindingInfo> {
+        val bindings = findBindingsTargeting(unitInstanceId, parameterId, modulatorIndex, propertyName)
+        if (bindings.isEmpty()) return emptyList()
+        return bindings.mapNotNull { infoFor(it) }
+    }
+
+    /**
+     * Resolves the owning control for [binding]. Searches every registered bank -- unitInstanceId
+     * describes the binding's *target* scope, not which bank the knob itself lives in, so it
+     * can't be used to pick a single bank to look in.
+     */
+    private fun infoFor(binding: MacroBinding): MacroBindingInfo? {
         val allBanks = synchronized(lock) { banks.values.toList() }
         for (bank in allBanks) {
-            val knobIdx = bank.knobs.indexOfFirst { it.bindings.contains(targetBinding) }
+            val knobIdx = bank.knobs.indexOfFirst { it.bindings.contains(binding) }
             if (knobIdx >= 0) {
                 val ctrl = bank.knobs[knobIdx]
-                val badge = "K${knobIdx + 1}"
                 val name = if (ctrl.label.isNotBlank()) ctrl.label else "Knob ${knobIdx + 1}"
-                return MacroBindingInfo(targetBinding, ctrl, index = knobIdx, badgeLabel = badge, controlName = name)
+                return MacroBindingInfo(binding, ctrl, index = knobIdx, badgeLabel = "K${knobIdx + 1}", controlName = name)
             }
         }
-
         return null
     }
 }

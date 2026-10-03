@@ -32,6 +32,28 @@ object ValueParamSection {
     private val comboInt = ImInt()
     private val hueLabelsCache = HashMap<Int, Array<String>>()
 
+    /** One header + [MacroBindingEditor] per macro knob that drives this param's base value. */
+    private fun drawMacroBindings(
+        session: llm.slop.liquidlsd.SessionContext,
+        paramKey: String,
+        param: ModulatableParameter
+    ) {
+        val infos = llm.slop.liquidlsd.macro.MacroEngine.findBindingInfos(null, paramKey)
+            .filter { it.binding.targetType == llm.slop.liquidlsd.macro.MacroTargetType.PARAM_BASE_VALUE }
+        for (info in infos) {
+            ImGui.pushID(info.control.id)
+            session.uiTheme.caption("${Icons.LOCK} Base value controlled by ${info.controlName} [${info.badgeLabel}]")
+            itemTooltip("A Macro Control continuously sets this parameter's base value. Uncheck the binding to release it.")
+            val width = ImGui.getContentRegionAvailX() - 10f
+            val delete = MacroBindingEditor.drawFull(session, info.control, info.binding, param, width)
+            if (delete) {
+                info.control.bindings.remove(info.binding)
+                llm.slop.liquidlsd.macro.MacroEngine.invalidate()
+            }
+            ImGui.popID()
+        }
+    }
+
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
         state: ParametersState,
@@ -123,16 +145,7 @@ object ValueParamSection {
             }
 
             if (isMacroBound) {
-                val info = macroInfo
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.0f, 0.45f, 0.65f, 0.7f))
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.0f, 0.65f, 0.85f, 0.85f))
-                if (ImGui.button("${Icons.LOCK} Base value controlled by ${info.controlName} [${info.badgeLabel}]. Click to inspect in Column 3.", ImGui.getContentRegionAvailX(), 26f)) {
-                    llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = info.control.id
-                    session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
-                }
-                ImGui.popStyleColor(2)
-                itemTooltip("This parameter's base value is continuously set by a Macro Control. Uncheck its binding in the Column 3 Binding Inspector to release it.")
-                ImGui.spacing()
+                drawMacroBindings(session, paramKey, param)
             }
 
             if (isHueSweep && mandala != null) {

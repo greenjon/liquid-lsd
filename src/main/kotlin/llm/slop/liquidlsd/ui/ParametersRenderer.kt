@@ -96,7 +96,6 @@ object ParametersRenderer {
             if (isMacroBound) {
                 macroInfo?.control?.id?.let { ctrlId ->
                     llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = ctrlId
-                    session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
                 }
             }
         }
@@ -362,7 +361,6 @@ object ParametersRenderer {
                 if (isMacroBound) {
                     macroInfo?.control?.id?.let { ctrlId ->
                         llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = ctrlId
-                        session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
                     }
                 }
             }

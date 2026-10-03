@@ -403,23 +403,18 @@ object PropertiesPanel {
 
                     val boundProps = llm.slop.liquidlsd.macro.MacroEngine.findBindingsTargeting(null, cell.paramKey, modulatorIndex = globalModIndex)
                     if (boundProps.isNotEmpty()) {
-                        val propNames = boundProps.joinToString(", ") { it.propertyName }
-                        val owner = llm.slop.liquidlsd.macro.MacroEngine.CANONICAL_BANK_IDS
-                            .mapNotNull { llm.slop.liquidlsd.macro.MacroEngine.getBank(it) }
-                            .firstNotNullOfOrNull { bank ->
-                                bank.knobs.find { k -> k.bindings.any { boundProps.contains(it) } }
+                        for (info in llm.slop.liquidlsd.macro.MacroEngine.findBindingInfos(null, cell.paramKey, modulatorIndex = globalModIndex)) {
+                            val b = info.binding
+                            if (b.targetType != llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY) continue
+                            ImGui.pushID("macro_bind_${info.control.id}_${b.propertyName}")
+                            session.uiTheme.caption("${Icons.LOCK} [${b.propertyName}] controlled by ${info.controlName} [${info.badgeLabel}]")
+                            itemTooltip("This modulator property is continuously updated by a Macro Control. Uncheck the binding to release it.")
+                            if (MacroBindingEditor.drawFull(session, info.control, b, null, ImGui.getContentRegionAvailX() - 10f)) {
+                                info.control.bindings.remove(b)
+                                llm.slop.liquidlsd.macro.MacroEngine.invalidate()
                             }
-                        val ownerName = owner?.label?.ifEmpty { owner.id } ?: "Macro"
-
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.1f, 0.45f, 0.65f, 0.6f))
-                        if (ImGui.button("${Icons.LOCK} Properties [$propNames] controlled by $ownerName. Click to inspect##macro_inspect_${cell.paramKey}_$idx", ImGui.getContentRegionAvailX(), 22f)) {
-                            if (owner != null) {
-                                llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = owner.id
-                            }
-                            session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
+                            ImGui.popID()
                         }
-                        ImGui.popStyleColor()
-                        itemTooltip("These modulator properties are continuously updated by a Macro Control. Uncheck their bindings in the Column 3 Binding Inspector to release them.")
                         ImGui.spacing()
                     }
 
