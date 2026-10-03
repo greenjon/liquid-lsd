@@ -590,7 +590,8 @@ object MidiMappingManager {
         }
 
     /** Queue-navigation deltas accumulated from global MIDI CC actions this frame. */
-    data class GlobalMidiDeltas(val queueDelta: Int, val bgQueueDelta: Int, val transQueueDelta: Int = 0)
+    data class GlobalMidiDeltas(val queueDelta: Int, val bgQueueDelta: Int, val transQueueDelta: Int = 0,
+                                val fxQueueDelta: Int = 0, val fxBgQueueDelta: Int = 0)
 
     /**
      * Drains all MIDI events queued by the MIDI receiver thread since the last frame,
@@ -741,7 +742,7 @@ object MidiMappingManager {
         }
         MidiEngine.receivedCcEvents.clear()
 
-        return GlobalMidiDeltas(ctx.queueDelta, ctx.bgQueueDelta, ctx.transQueueDelta)
+        return GlobalMidiDeltas(ctx.queueDelta, ctx.bgQueueDelta, ctx.transQueueDelta, ctx.fxQueueDelta, ctx.fxBgQueueDelta)
     }
 
     /**

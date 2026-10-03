@@ -12,6 +12,10 @@ object GlobalCommands {
     const val BG_QUEUE_PREV = "mixer.bg_queue_prev"
     const val TRANS_QUEUE_NEXT = "mixer.trans_queue_next"
     const val TRANS_QUEUE_PREV = "mixer.trans_queue_prev"
+    const val FX_QUEUE_NEXT = "fx.queue_next"
+    const val FX_QUEUE_PREV = "fx.queue_prev"
+    const val FX_BG_QUEUE_NEXT = "fx.bg_queue_next"
+    const val FX_BG_QUEUE_PREV = "fx.bg_queue_prev"
     const val TAP_TEMPO = "clock.tap_tempo"
     const val AUTO_CROSSFADE = "mixer.auto_crossfade_trigger"
     const val SNAP_A = "mixer.crossfade_snap_a"
@@ -29,6 +33,12 @@ object GlobalCommands {
         trigger(BG_QUEUE_PREV, "Global/bgQueuePrev", "mixer", "Step the background shader queue back") { it.bgQueueDelta -= 1 }
         trigger(TRANS_QUEUE_NEXT, "Global/transQueueNext", "mixer", "Advance the transition queue") { it.transQueueDelta += 1 }
         trigger(TRANS_QUEUE_PREV, "Global/transQueuePrev", "mixer", "Step the transition queue back") { it.transQueueDelta -= 1 }
+        fun fxTrigger(id: String, description: String, run: (CommandContext) -> Unit) =
+            registry.register(Command(id, CommandKind.TRIGGER, "fx", description) { _, ctx -> run(ctx) })
+        fxTrigger(FX_QUEUE_NEXT, "Advance the A/B FX queue") { it.fxQueueDelta += 1 }
+        fxTrigger(FX_QUEUE_PREV, "Step the A/B FX queue back") { it.fxQueueDelta -= 1 }
+        fxTrigger(FX_BG_QUEUE_NEXT, "Advance the background FX queue") { it.fxBgQueueDelta += 1 }
+        fxTrigger(FX_BG_QUEUE_PREV, "Step the background FX queue back") { it.fxBgQueueDelta -= 1 }
         trigger(TAP_TEMPO, "Global/tapTempo", "clock", "Tap tempo") { it.onTapTempo() }
 
         trigger(AUTO_CROSSFADE, "Global/autoFade", "mixer", "Start or cancel an automated crossfade") { ctx ->

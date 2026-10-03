@@ -1,3 +1,10 @@
+## FX Queue Transport Commands and FX Queue Accept (`control/GlobalCommands.kt`, `ui/LibraryNavigation.kt`)
+
+- **Decision**: four unbound commands `fx.queue_next/prev` and `fx.bg_queue_next/prev` (deltas on `CommandContext`, consumed in `UIManager` like the other queues). In the Library FX tab, accepting an FX queue item calls `jumpToIndex` on that queue.
+- **Rationale**: every Twister button already has a meaning, so default bindings would steal one; commands stay available to user profiles and phase 5. Accept reuses the knob 1 cursor.
+- **Alternatives rejected**: a bank override binding on knob presses (collides with Perform gestures).
+- **Consequences**: no hardware path to FX queue stepping until a profile binds it.
+
 ## Twister: Knobs 2-16 Are Inert While Browsing (`control/KnobCommands.kt`)
 
 - **Decision**: while `NavSurface.browsing` is true, knob 1 browses and knobs 2-16 ignore both turns and taps. Resolves the open question in `.planning/midi-phase3-navigation-plan.md`.

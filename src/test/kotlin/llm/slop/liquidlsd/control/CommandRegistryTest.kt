@@ -110,7 +110,8 @@ class CommandRegistryTest {
             "Global/snapDeckB" to GlobalCommands.SNAP_B
         )
         for ((path, id) in legacy) assertEquals(id, registry.resolveId(path), path)
-        assertEquals(legacy.size, registry.all().size)
+        // The four fx.* queue commands are new and have no legacy path.
+        assertEquals(legacy.size + 4, registry.all().size)
     }
 
     @Test
@@ -123,5 +124,19 @@ class CommandRegistryTest {
         assertEquals(1, c.queueDelta)
         assertEquals(-1, c.bgQueueDelta)
         assertEquals(1, c.transQueueDelta)
+    }
+
+    @Test
+    fun fxQueueCommandsAccumulateTheirOwnDeltas() {
+        val registry = CommandRegistry().also { GlobalCommands.registerAll(it) }
+        val c = ctx()
+        repeat(2) {
+            registry.execute(GlobalCommands.FX_QUEUE_NEXT, CommandInput.Press(true), c)
+            registry.execute(GlobalCommands.FX_QUEUE_NEXT, CommandInput.Press(false), c)
+        }
+        registry.execute(GlobalCommands.FX_BG_QUEUE_PREV, CommandInput.Press(true), c)
+        assertEquals(2, c.fxQueueDelta)
+        assertEquals(-1, c.fxBgQueueDelta)
+        assertEquals(0, c.queueDelta)
     }
 }

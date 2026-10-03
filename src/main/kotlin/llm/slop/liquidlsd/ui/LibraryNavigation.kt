@@ -130,7 +130,7 @@ internal object LibraryNavigation {
 
     /**
      * Applies the cursor item: a preset or generator loads to the inactive deck (the BG queue loads to
-     * Deck BG), a transition applies to the mixer, an FX browser item goes to the FX A/B queue.
+     * Deck BG), a transition applies to the mixer, an FX browser item goes to the FX A/B queue, an FX queue item is applied to its deck.
      */
     fun accept(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
         val file = LibraryPanel.getActiveSelectedFile(session)
@@ -144,7 +144,9 @@ internal object LibraryNavigation {
                 file?.let { BrowserDeckButtons.loadPresetToDeck(session, mixer, it, if (mixer.crossfade.value > 0.0f) 1 else 2) }
             SelectionSource.QUEUE_BG -> file?.let { BrowserDeckButtons.loadPresetToDeck(session, mixer, it, 3) }
             SelectionSource.TRANSITION_QUEUE, SelectionSource.TRANSITION_PLAYLIST -> file?.let { TransitionQueueManager.applyTransitionItem(it, mixer) }
-            SelectionSource.FX_PLAYLIST, SelectionSource.FX_QUEUE_AB, SelectionSource.FX_QUEUE_BG, null -> Unit
+            SelectionSource.FX_QUEUE_AB -> FXQueueManager.jumpToIndex(FXQueueActionsPanel.selectedIndex, session, mixer)
+            SelectionSource.FX_QUEUE_BG -> FXBgQueueManager.jumpToIndex(FXBgQueueActionsPanel.selectedIndex, session, mixer)
+            SelectionSource.FX_PLAYLIST, null -> Unit
         }
     }
 }

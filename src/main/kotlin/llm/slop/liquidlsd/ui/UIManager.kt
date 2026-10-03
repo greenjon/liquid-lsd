@@ -201,7 +201,7 @@ class UIManager(
         // Drain all MIDI events queued by the MIDI receiver thread and dispatch MIDI-learn /
         // global actions (queue next/prev, bg-queue next/prev, tap tempo) / parameter bindings.
         val performSurface = PerformSurface(session.uiTheme, performanceMatrixPanel.ctx, parametersState, mixer)
-        val (midiCcDelta, bgMidiCcDelta, transMidiCcDelta) = session.midiMappingManager.processGlobalMidiEvents(
+        val (midiCcDelta, bgMidiCcDelta, transMidiCcDelta, fxMidiDelta, fxBgMidiDelta) = session.midiMappingManager.processGlobalMidiEvents(
             midiEnabled = session.uiTheme.midiEnabled,
             parametersState = parametersState,
             mixer = mixer,
@@ -245,6 +245,9 @@ class UIManager(
                 llm.slop.liquidlsd.presets.TransitionQueueManager.advancePrevious(mixer)
             }
         }
+
+        stepFxQueue(llm.slop.liquidlsd.presets.FXQueueManager, mixer, fxMidiDelta)
+        stepFxQueue(llm.slop.liquidlsd.presets.FXBgQueueManager, mixer, fxBgMidiDelta)
 
         if (pendingFontRebuild) {
             pendingFontRebuild = false
@@ -318,6 +321,12 @@ class UIManager(
      * net queue-navigation delta (-1/0/+1) produced by this frame's key presses; search-focus
      * and library-mode side effects are applied directly.
      */
+    private fun stepFxQueue(queue: llm.slop.liquidlsd.presets.FxQueueEngine, mixer: Mixer, delta: Int) {
+        repeat(kotlin.math.abs(delta)) {
+            if (delta > 0) queue.advanceNext(session, mixer) else queue.advancePrevious(session, mixer)
+        }
+    }
+
     private fun processQueueKeyboardShortcuts(): Int {
         var keyDelta = 0
         // Esc runs the shared back stack (see [BackNavigation]; docs/user_guide/macros_and_rack.md).

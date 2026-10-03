@@ -34,6 +34,8 @@ class CommandContext(
     var queueDelta = 0
     var bgQueueDelta = 0
     var transQueueDelta = 0
+    var fxQueueDelta = 0
+    var fxBgQueueDelta = 0
 }
 
 class Command(

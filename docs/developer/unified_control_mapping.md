@@ -113,6 +113,8 @@ The following is an exhaustive breakdown of every user-accessible function, menu
 | `mixer.whiteout_strobe` | Flash master output to pure white | Momentary |
 | `mixer.queue_prev` | Play previous item in play queue | Trigger |
 | `mixer.queue_next` | Play next item in play queue | Trigger |
+| `fx.queue_next` / `fx.queue_prev` | Step the A/B FX queue (target deck follows the crossfader) | Trigger |
+| `fx.bg_queue_next` / `fx.bg_queue_prev` | Step the background FX queue | Trigger |
 | `mixer.toggle_auto_vj` | Enable / disable Auto-VJ automated setlist playback | Toggle |
 
 ---
@@ -281,7 +283,7 @@ Package `llm.slop.liquidlsd.control`; tests in `src/test/kotlin/.../control/` an
 ### 6.1 Command registry
 - `CommandRegistry` holds `Command(id, kind, category, description, handler)`. Kinds: `TRIGGER`, `TOGGLE` (both fire on the rising edge only), `MOMENTARY` (both edges), `SCALAR` (0..1), `RELATIVE` (signed steps). Inputs are `CommandInput.Press/Value/Delta`; an input that doesn't fit the command's kind is rejected.
 - Edge detection lives in the registry (per command id), not in each caller.
-- Aliases map legacy identifiers to command ids. The ten `Global/*` mapping paths are aliases of the commands in `GlobalCommands` (`mixer.queue_next`, `mixer.queue_prev`, `mixer.bg_queue_next/prev`, `mixer.trans_queue_next/prev`, `clock.tap_tempo`, `mixer.auto_crossfade_trigger`, `mixer.crossfade_snap_a/b`). Existing `library/midi/*.json` profiles load unchanged.
+- Aliases map legacy identifiers to command ids. The ten `Global/*` mapping paths are aliases of the commands in `GlobalCommands` (`mixer.queue_next`, `mixer.queue_prev`, `mixer.bg_queue_next/prev`, `mixer.trans_queue_next/prev`, `clock.tap_tempo`, `mixer.auto_crossfade_trigger`, `mixer.crossfade_snap_a/b`). The four `fx.*` queue commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no legacy path and are not bound in the built-in Twister profile (no free input); bind them in a user profile. Existing `library/midi/*.json` profiles load unchanged.
 - `MidiMappingManager.processGlobalMidiEvents` runs `Global/*` mappings through `MidiMappingManager.commands`. Handlers get a `CommandContext` (mixer, tap callback, queue deltas) and run on the render thread only; the registry is not thread-safe.
 - Parameter and `Macro/...` bindings are not on the registry yet.
 

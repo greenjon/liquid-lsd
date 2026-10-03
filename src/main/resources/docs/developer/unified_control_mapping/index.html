@@ -2096,6 +2096,16 @@
 <td>Trigger</td>
 </tr>
 <tr>
+<td><code>fx.queue_next</code> / <code>fx.queue_prev</code></td>
+<td>Step the A/B FX queue (target deck follows the crossfader)</td>
+<td>Trigger</td>
+</tr>
+<tr>
+<td><code>fx.bg_queue_next</code> / <code>fx.bg_queue_prev</code></td>
+<td>Step the background FX queue</td>
+<td>Trigger</td>
+</tr>
+<tr>
 <td><code>mixer.toggle_auto_vj</code></td>
 <td>Enable / disable Auto-VJ automated setlist playback</td>
 <td>Toggle</td>
@@ -2604,7 +2614,7 @@
 <ul>
 <li><code>CommandRegistry</code> holds <code>Command(id, kind, category, description, handler)</code>. Kinds: <code>TRIGGER</code>, <code>TOGGLE</code> (both fire on the rising edge only), <code>MOMENTARY</code> (both edges), <code>SCALAR</code> (0..1), <code>RELATIVE</code> (signed steps). Inputs are <code>CommandInput.Press/Value/Delta</code>; an input that doesn't fit the command's kind is rejected.</li>
 <li>Edge detection lives in the registry (per command id), not in each caller.</li>
-<li>Aliases map legacy identifiers to command ids. The ten <code>Global/*</code> mapping paths are aliases of the commands in <code>GlobalCommands</code> (<code>mixer.queue_next</code>, <code>mixer.queue_prev</code>, <code>mixer.bg_queue_next/prev</code>, <code>mixer.trans_queue_next/prev</code>, <code>clock.tap_tempo</code>, <code>mixer.auto_crossfade_trigger</code>, <code>mixer.crossfade_snap_a/b</code>). Existing <code>library/midi/*.json</code> profiles load unchanged.</li>
+<li>Aliases map legacy identifiers to command ids. The ten <code>Global/*</code> mapping paths are aliases of the commands in <code>GlobalCommands</code> (<code>mixer.queue_next</code>, <code>mixer.queue_prev</code>, <code>mixer.bg_queue_next/prev</code>, <code>mixer.trans_queue_next/prev</code>, <code>clock.tap_tempo</code>, <code>mixer.auto_crossfade_trigger</code>, <code>mixer.crossfade_snap_a/b</code>). The four <code>fx.*</code> queue commands (<code>fx.queue_next/prev</code>, <code>fx.bg_queue_next/prev</code>) have no legacy path and are not bound in the built-in Twister profile (no free input); bind them in a user profile. Existing <code>library/midi/*.json</code> profiles load unchanged.</li>
 <li><code>MidiMappingManager.processGlobalMidiEvents</code> runs <code>Global/*</code> mappings through <code>MidiMappingManager.commands</code>. Handlers get a <code>CommandContext</code> (mixer, tap callback, queue deltas) and run on the render thread only; the registry is not thread-safe.</li>
 <li>Parameter and <code>Macro/...</code> bindings are not on the registry yet.</li>
 </ul>
