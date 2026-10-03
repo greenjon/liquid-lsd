@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Hidden Page Selected From a Controller Gets a Temporary Tab (`UITheme.visiblePerformPages`)
+- A page hidden with **Show in tab strip** off still appears as a tab while it is the active page (for example when a Twister bank selects it), so the strip always highlights where you are. The tab disappears again when you switch to another page.
+
 ### Perform Pages: Copy As New Page, Controller Names Shown
 - **Copy As New Page**: every page in Perform Pages has a "Name for a copy" field and a button that makes an independent user page with the same rows and its own controller name (`perform.<name>`), leaving the original untouched. Use it instead of renaming a copied built-in (which keeps its old `perform.decks`-style name); hide the original with Show in tab strip if you don't want its tab.
 - Each page now shows its **controller name** (`perform.<id>`) as the thing to put in a controller profile's `banks.pages`.

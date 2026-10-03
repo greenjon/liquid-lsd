@@ -1,3 +1,10 @@
+## A Hidden Page Gets a Temporary Tab While Active (`UITheme.visiblePerformPages`)
+
+- **Decision**: `visiblePerformPages()` returns every non-hidden page plus the active page even if hidden, in normal order. The tab disappears when another page becomes active.
+- **Rationale**: a controller bank can select a hidden page (hiding only removes the tab); the strip then showed no highlighted tab, which looked like a bug.
+- **Alternatives rejected**: blocking banks from hidden pages (breaks profiles that deliberately use tab-less pages); a separate "current page" label outside the strip (more UI, same information).
+- **Consequences**: supersedes the "no highlighted tab" consequence of the hidden-pages entry below. The tab count, and so the tab width, can briefly grow by one.
+
 ## Perform Page Ids Stay Stable; Copy As New Page Mints a New One (`PerformPagesPanel`, `PerfPageDef.idFromName`)
 
 - **Decision**: a page's id never follows its name. To get a new `perform.<name>`, "Copy As New Page" saves the rows under an id derived from a typed name (refused if that id exists). The panel labels the id as the "controller name".

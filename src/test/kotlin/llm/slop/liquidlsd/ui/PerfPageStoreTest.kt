@@ -159,6 +159,27 @@ class PerfPageStoreTest {
     }
 
     @Test
+    fun aHiddenPageThatBecomesActiveGetsATemporaryTab() {
+        val savedHidden = UITheme.hiddenPerformPages
+        val savedActive = UITheme.performancePageId
+        try {
+            UITheme.hiddenPerformPages = emptySet()
+            UITheme.performancePageId = "ab"
+            assertTrue(UITheme.setPerformPageHidden("decks", true))
+            assertTrue("decks" !in UITheme.visiblePerformPages().map { it.id })
+
+            UITheme.performancePageId = "decks" // a controller bank selects the hidden page
+            assertTrue("decks" in UITheme.visiblePerformPages().map { it.id })
+
+            UITheme.performancePageId = "ab"
+            assertTrue("decks" !in UITheme.visiblePerformPages().map { it.id })
+        } finally {
+            UITheme.hiddenPerformPages = savedHidden
+            UITheme.performancePageId = savedActive
+        }
+    }
+
+    @Test
     fun idFromNameAndIndependentCopy() {
         assertEquals("my-page-2", PerfPageDef.idFromName("  My Page #2! "))
         assertEquals("", PerfPageDef.idFromName("!!!"))

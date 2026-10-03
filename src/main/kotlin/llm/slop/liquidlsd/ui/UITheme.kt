@@ -187,10 +187,13 @@ object UITheme {
         get() = settings.hiddenPerformPages
         set(value) { settings = settings.copy(hiddenPerformPages = value) }
 
-    /** The pages shown as tabs: every page not hidden. Never empty (if everything is hidden, the first page stays). */
+    /**
+     * The pages shown as tabs: every page not hidden, plus the active page even when hidden (a controller bank can
+     * select it), so a tab is always highlighted. Never empty (if everything is hidden, the first page stays).
+     */
     fun visiblePerformPages(): List<PerfPageDef> {
         val all = PerfPageStore.default.all()
-        return all.filter { it.id !in hiddenPerformPages }.ifEmpty { all.take(1) }
+        return all.filter { it.id !in hiddenPerformPages || it.id == performancePageId }.ifEmpty { all.take(1) }
     }
 
     /** Hides or shows a page's tab. The last visible tab can't be hidden; hiding the active page activates the first visible one. */
