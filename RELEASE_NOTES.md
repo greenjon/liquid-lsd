@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Binding Editor for Controller Profiles (`ui/MidiPreferencesPanel.kt`, `control/ProfileBindingEdit.kt`)
+- **Bindings table**: each user profile in Preferences > MIDI Controls > Controller Profiles has a **Bindings** list (input key to command). Click a command to pick another from a filterable list grouped by category; the trash button removes a binding; the add row takes an optional modifier (such as shift), an input and a command.
+- **Kind check**: commands whose kind cannot be driven by the input (an encoder bound to a trigger, say) are dimmed in the picker, and an existing binding of that sort is shown in orange, since it would silently do nothing. Unregistered commands are flagged the same way.
+- **Safe saves**: every edit is validated before it is written; problems are listed under the table and nothing is saved. Connected devices pick the change up about half a second after the last edit.
+- Built-in profiles are read-only: use Copy to User File first. Only global bindings are editable for now (per-bank bindings stay in the JSON).
+
 ### Controller Profiles Section in MIDI Controls (`ui/MidiPreferencesPanel.kt`, `control/ControllerProfileStore.kt`)
 - **New "Controller Profiles" section** in Preferences > MIDI Controls: lists every controller profile with its source (built-in, user file, user file overriding a built-in), which connected device currently uses it, and any binding that names an unknown command.
 - **Copy to User File** writes an editable copy of a built-in profile to `library/controllers/<id>.json` (it replaces the built-in); **Delete User File** removes it and the built-in is active again; **Reload Profiles** re-reads the folder after you edit a file by hand. All three apply to connected devices immediately.

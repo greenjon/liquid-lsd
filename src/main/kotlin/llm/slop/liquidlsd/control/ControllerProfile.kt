@@ -161,7 +161,9 @@ class CompiledController private constructor(
     private val table: Map<Long, ResolvedInput>,
     private val bindings: Map<String, String>,
     private val bankBindings: Map<Int, Map<String, String>>,
-    val problems: List<String>
+    val problems: List<String>,
+    /** Every bindable input id (groups expanded, `.press` included) with its kind. */
+    val inputKinds: Map<String, InputKind> = emptyMap()
 ) {
     fun resolve(type: MidiMessageType, channel: Int, index: Int): ResolvedInput? =
         table[key(type, channel, index)]
@@ -330,7 +332,7 @@ class CompiledController private constructor(
                 if (bankNumber != null) expandedBank[bankNumber] = concrete
             }
 
-            return CompiledController(profile, table, expanded, expandedBank, problems)
+            return CompiledController(profile, table, expanded, expandedBank, problems, inputKinds = inputIds)
         }
     }
 }

@@ -331,3 +331,46 @@ class ControllerProfileTest {
         assertTrue(store.rejected().all { it.problems.isNotEmpty() })
     }
 }
+
+class ProfileBindingEditTest {
+    private val profile = Json.decodeFromString<ControllerProfile>("""{"id":"x","inputs":[
+        {"id":"knob","kind":"ENCODER","channel":0,"cc":0,"count":2,"press":{"channel":1}},
+        {"id":"btn","kind":"BUTTON","channel":3,"cc":8},
+        {"id":"fad","kind":"FADER","channel":4,"cc":1},
+        {"id":"shift","kind":"MODIFIER","channel":3,"cc":10}],
+        "bindings":{"btn":"mixer.queue_next"}}""")
+    private val compiled = profile.compile()
+    private val registry = CommandRegistry().also { GlobalCommands.registerAll(it); KnobCommands().register(it) }
+
+    @Test
+    fun exposesInputIdsWithKinds() {
+        assertEquals(InputKind.ENCODER, compiled.inputKinds["knob.1"])
+        assertEquals(InputKind.BUTTON, compiled.inputKinds["knob.2.press"])
+        assertEquals(listOf("shift"), ProfileBindingEdit.modifierInputs(compiled))
+        assertFalse("shift" in ProfileBindingEdit.bindableInputs(compiled))
+    }
+
+    @Test
+    fun keysSortModifiersAndSplit() {
+        assertEquals("a+b+btn", ProfileBindingEdit.key(listOf("b", "a"), "btn"))
+        assertEquals("btn", ProfileBindingEdit.inputOf("shift+btn"))
+        assertEquals(listOf("shift"), ProfileBindingEdit.modifiersOf("shift+btn"))
+    }
+
+    @Test
+    fun setAndRemoveStayValid() {
+        val set = ProfileBindingEdit.set(profile, "shift+btn", "mixer.queue_prev")
+        assertEquals(emptyList(), set.compile().problems)
+        assertEquals("mixer.queue_prev", set.compile().bindingFor("btn", listOf("shift")))
+        assertEquals(emptyMap(), ProfileBindingEdit.remove(profile, "btn").bindings)
+    }
+
+    @Test
+    fun commandKindMustFitInputKind() {
+        assertTrue(ProfileBindingEdit.commandFits(compiled, registry, "btn", "mixer.queue_next"))
+        assertFalse(ProfileBindingEdit.commandFits(compiled, registry, "knob.1", "mixer.queue_next"))
+        assertTrue(ProfileBindingEdit.commandFits(compiled, registry, "knob.1", "knob.1"))
+        assertFalse(ProfileBindingEdit.commandFits(compiled, registry, "fad", "mixer.queue_next"))
+        assertTrue(ProfileBindingEdit.commandFits(compiled, registry, "knob.*", "mixer.queue_next"))
+    }
+}

@@ -6,7 +6,11 @@ import imgui.type.ImString
 import imgui.type.ImInt
 import imgui.flag.ImGuiTableFlags
 import imgui.flag.ImGuiTableColumnFlags
+import llm.slop.liquidlsd.control.CommandRegistry
+import llm.slop.liquidlsd.control.CompiledController
+import llm.slop.liquidlsd.control.ControllerProfile
 import llm.slop.liquidlsd.control.ControllerProfileStore
+import llm.slop.liquidlsd.control.ProfileBindingEdit
 import llm.slop.liquidlsd.midi.MidiEngine
 import llm.slop.liquidlsd.midi.MidiMessageType
 import llm.slop.liquidlsd.midi.MidiInputType
@@ -27,6 +31,119 @@ import llm.slop.liquidlsd.midi.sanitiseProfileName
 object MidiPreferencesPanel {
 
     private var profileMessage: String? = null
+
+    private const val RESET_DEBOUNCE_MS = 600L
+    private var pendingResetAt = 0L
+    private var editorProblems: List<String> = emptyList()
+    private var pickerKey: String? = null // binding key being edited; ADD_ROW for the add row
+    private const val ADD_ROW = "\u0000add"
+    private val pickerFilter = ImString(64)
+    private val addInput = ImInt(0)
+    private val addModifier = ImInt(0)
+    private var addCommand = ""
+
+    /** Runtimes keep the old compiled profile, so reset them, but not on every edit (reset drops bank and modifier state). */
+    private fun flushPendingReset(session: llm.slop.liquidlsd.SessionContext) {
+        if (pendingResetAt != 0L && System.currentTimeMillis() >= pendingResetAt) {
+            pendingResetAt = 0L
+            session.midiMappingManager.controllers.reset()
+        }
+    }
+
+    private fun applyEdit(store: ControllerProfileStore, edited: ControllerProfile): Boolean {
+        val problems = store.saveUser(edited)
+        editorProblems = problems
+        if (problems.isEmpty()) pendingResetAt = System.currentTimeMillis() + RESET_DEBOUNCE_MS
+        return problems.isEmpty()
+    }
+
+    private fun drawBindingEditor(session: llm.slop.liquidlsd.SessionContext, store: ControllerProfileStore, compiled: CompiledController) {
+        val profile = compiled.profile
+        val registry = session.midiMappingManager.commands
+        if (!ImGui.treeNode("Bindings (${profile.bindings.size})##bindings_${profile.id}")) return
+        val theme = session.uiTheme
+        theme.caption("Global bindings. Keys like knob.* are wildcards (knob.{n} in the command expands to the same number). Hold-modifier keys read shift+input.")
+
+        for ((key, commandId) in profile.bindings.entries.sortedBy { it.key }) {
+            ImGui.pushID("bind_$key")
+            ImGui.text(key)
+            ImGui.sameLine(260f)
+            val fits = ProfileBindingEdit.commandFits(compiled, registry, key, commandId)
+            val known = registry.resolveId(commandId) != null
+            if (!fits || !known) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.9f, 0.6f, 0.2f, 1f)
+            if (ImGui.button("$commandId##cmd")) { pickerKey = key; pickerFilter.set(""); ImGui.openPopup("command_picker") }
+            if (!fits || !known) {
+                ImGui.popStyleColor()
+                itemTooltip(if (!known) "Not a registered command." else "This command's kind does not fit this input, so it will do nothing.")
+            }
+            drawCommandPicker(key, registry, compiled, key) { chosen -> applyEdit(store, ProfileBindingEdit.set(profile, key, chosen)) }
+            ImGui.sameLine()
+            if (ImGui.button("${Icons.TRASH}##del")) applyEdit(store, ProfileBindingEdit.remove(profile, key))
+            ImGui.popID()
+        }
+
+        // Add row: modifier, input, command.
+        ImGui.separator()
+        val inputs = ProfileBindingEdit.bindableInputs(compiled)
+        val modifiers = listOf("(no modifier)") + ProfileBindingEdit.modifierInputs(compiled)
+        if (inputs.isNotEmpty()) {
+            addInput.set(addInput.get().coerceIn(0, inputs.size - 1))
+            addModifier.set(addModifier.get().coerceIn(0, modifiers.size - 1))
+            ImGui.setNextItemWidth(130f)
+            ImGui.combo("##add_mod", addModifier, modifiers.toTypedArray())
+            ImGui.sameLine()
+            ImGui.setNextItemWidth(130f)
+            ImGui.combo("##add_input", addInput, inputs.toTypedArray())
+            ImGui.sameLine()
+            val addKey = ProfileBindingEdit.key(modifiers.getOrNull(addModifier.get())?.takeIf { addModifier.get() > 0 }?.let { listOf(it) } ?: emptyList(), inputs[addInput.get()])
+            if (ImGui.button((addCommand.ifEmpty { "Choose command..." }) + "##add_cmd")) {
+                pickerKey = ADD_ROW; pickerFilter.set(""); ImGui.openPopup("command_picker")
+            }
+            drawCommandPicker(ADD_ROW, registry, compiled, addKey) { chosen -> addCommand = chosen; false }
+            ImGui.sameLine()
+            val exists = addKey in profile.bindings
+            if (addCommand.isEmpty() || exists) ImGui.beginDisabled()
+            if (ImGui.button("${Icons.PLUS} Add##add_binding")) {
+                if (applyEdit(store, ProfileBindingEdit.set(profile, addKey, addCommand))) addCommand = ""
+            }
+            if (addCommand.isEmpty() || exists) ImGui.endDisabled()
+            if (exists) itemTooltip("$addKey is already bound; edit its row above.", allowWhenDisabled = true)
+        }
+        for (problem in editorProblems) theme.captionColored(0.95f, 0.35f, 0.3f, 1.0f, "  - $problem")
+        ImGui.treePop()
+    }
+
+    /** Popup with a filter box and the commands grouped by category; those that fit [key]'s input come first and unfit ones are dimmed. */
+    private fun drawCommandPicker(
+        slot: String, registry: CommandRegistry, compiled: CompiledController, key: String, onChoose: (String) -> Boolean
+    ) {
+        if (pickerKey != slot) return
+        pushOpenDropdownPadding()
+        if (ImGui.beginPopup("command_picker")) {
+            pushOpenDropdownFont()
+            ImGui.setNextItemWidth(320f)
+            ImGui.inputTextWithHint("##picker_filter", "${Icons.SEARCH} Filter commands...", pickerFilter)
+            val needle = pickerFilter.get().trim().lowercase()
+            ImGui.beginChild("##picker_list", 460f, 320f)
+            val matches = registry.all().filter {
+                needle.isEmpty() || needle in it.id.lowercase() || needle in it.description.lowercase()
+            }
+            for ((category, commands) in matches.groupBy { it.category }) {
+                ImGui.textDisabled(category)
+                for (command in commands) {
+                    val fits = ProfileBindingEdit.commandFits(compiled, registry, key, command.id)
+                    if (!fits) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.5f, 0.5f, 0.5f, 1f)
+                    val clicked = selectableRow("${command.id}  -  ${command.description}##pick_${command.id}", false)
+                    if (!fits) ImGui.popStyleColor()
+                    if (clicked) { onChoose(command.id); pickerKey = null; ImGui.closeCurrentPopup() }
+                }
+            }
+            ImGui.endChild()
+            popOpenDropdownFont()
+            ImGui.endPopup()
+        }
+        popOpenDropdownPadding()
+    }
 
     private fun drawControllerProfiles(session: llm.slop.liquidlsd.SessionContext, deviceNames: List<String>) {
         val store = ControllerProfileStore.default
@@ -68,8 +185,12 @@ object MidiPreferencesPanel {
                 }
                 itemTooltip("Removes the user file. A built-in profile with the same id becomes active again.")
             }
+            if (source != ControllerProfileStore.Source.BUILT_IN) {
+                drawBindingEditor(session, store, compiled)
+            }
             ImGui.spacing()
         }
+        flushPendingReset(session)
 
         for (rejected in store.rejected()) {
             theme.captionColored(0.95f, 0.35f, 0.3f, 1.0f, "${rejected.file.name} is not loaded:")

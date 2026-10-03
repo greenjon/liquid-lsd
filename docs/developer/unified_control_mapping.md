@@ -322,3 +322,6 @@ The picker context: `NavigationSurface.inPicker` = Edit view and `ShaderPickerPo
 
 ### 6.8 Profile store writes and the profile UI (phase 5, slice 1)
 `ControllerProfileStore` can write: `copyBuiltInToUser(id)` (refuses when a user file with that id exists), `saveUser(profile)` (returns `compile().problems` and writes nothing when invalid), `deleteUser(id)` (locates the file by profile id). `sourceOf(id)` reports BUILT_IN / USER / USER_OVERRIDE and `rejected()` lists user files that failed to parse or validate, with the reasons. The cache is one immutable snapshot, dropped by `reload()`; after any change call `ControllerManager.reset()` so runtimes pick up the new profile. The UI is `MidiPreferencesPanel.drawControllerProfiles`. Open: in-app binding editor, learn-into-profile, see `.planning/midi-phase5-profile-ui-plan.md`.
+
+### 6.9 Binding editor (phase 5, slice 2)
+`ProfileBindingEdit` holds the pure edits (`set`, `remove`, `key`, `fits`, `commandFits`); `CompiledController.inputKinds` lists every bindable input id with its kind. `MidiPreferencesPanel.drawBindingEditor` writes through `ControllerProfileStore.saveUser` and schedules `ControllerManager.reset()` 600 ms after the last successful edit. Only global `bindings` are editable; `bankBindings` and learn-into-profile (`MidiLearnTarget.ProfileCommand`) are open.

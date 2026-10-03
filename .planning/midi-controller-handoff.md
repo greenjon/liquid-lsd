@@ -19,7 +19,7 @@ Feedback (rings/LEDs) is v1.0 scope.
 | 2 | Perform-grid control: control pages, knob gestures, banks -> tabs, shift modifier, acceleration | done, committed, verified on hardware |
 | 4 | Ring/LED feedback | done, committed (b64f1a2), working on all 4 banks with the stock 4-bank firmware (see "Feedback history") |
 | 3 | Navigation/browse commands on the free side buttons | done, hardware-tested, committed (Library slice + picker slice); details in `.planning/midi-phase3-navigation-plan.md` |
-| 5 | Profile UI (pick profile, copy a built-in, edit, learn-into-profile) | slice 1 done (store writes + Controller Profiles section); editor and learn-into-profile open |
+| 5 | Profile UI (pick profile, copy a built-in, edit, learn-into-profile) | slices 1-2 done (store writes, Controller Profiles section, global binding editor); per-bank editing and learn-into-profile open |
 
 Full suite: 784 tests, 0 failures (`./gradlew test --offline -q`).
 Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `docs/`.

@@ -1399,6 +1399,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#69-binding-editor-phase-5-slice-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.9 Binding editor (phase 5, slice 2)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1866,6 +1877,17 @@
     <span class="md-ellipsis">
       
         6.8 Profile store writes and the profile UI (phase 5, slice 1)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#69-binding-editor-phase-5-slice-2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.9 Binding editor (phase 5, slice 2)
       
     </span>
   </a>
@@ -2673,6 +2695,8 @@
 <p>The picker context: <code>NavigationSurface.inPicker</code> = Edit view and <code>ShaderPickerPopup.isShowing</code> or <code>ChainListBrowse.isShowing</code> (both stamp the time of their last draw). Cursor API: <code>ShaderPickerPopup.moveCursor/acceptCursor/stepCategory/detach</code>, <code>ChainListBrowse.move/accept/clear</code>. Opening uses <code>PerformSurface.lastTouchedKnob</code> to find the row.</p>
 <h3 id="68-profile-store-writes-and-the-profile-ui-phase-5-slice-1">6.8 Profile store writes and the profile UI (phase 5, slice 1)</h3>
 <p><code>ControllerProfileStore</code> can write: <code>copyBuiltInToUser(id)</code> (refuses when a user file with that id exists), <code>saveUser(profile)</code> (returns <code>compile().problems</code> and writes nothing when invalid), <code>deleteUser(id)</code> (locates the file by profile id). <code>sourceOf(id)</code> reports BUILT_IN / USER / USER_OVERRIDE and <code>rejected()</code> lists user files that failed to parse or validate, with the reasons. The cache is one immutable snapshot, dropped by <code>reload()</code>; after any change call <code>ControllerManager.reset()</code> so runtimes pick up the new profile. The UI is <code>MidiPreferencesPanel.drawControllerProfiles</code>. Open: in-app binding editor, learn-into-profile, see <code>.planning/midi-phase5-profile-ui-plan.md</code>.</p>
+<h3 id="69-binding-editor-phase-5-slice-2">6.9 Binding editor (phase 5, slice 2)</h3>
+<p><code>ProfileBindingEdit</code> holds the pure edits (<code>set</code>, <code>remove</code>, <code>key</code>, <code>fits</code>, <code>commandFits</code>); <code>CompiledController.inputKinds</code> lists every bindable input id with its kind. <code>MidiPreferencesPanel.drawBindingEditor</code> writes through <code>ControllerProfileStore.saveUser</code> and schedules <code>ControllerManager.reset()</code> 600 ms after the last successful edit. Only global <code>bindings</code> are editable; <code>bankBindings</code> and learn-into-profile (<code>MidiLearnTarget.ProfileCommand</code>) are open.</p>
 
 
 

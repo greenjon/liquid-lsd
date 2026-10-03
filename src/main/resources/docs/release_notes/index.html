@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#binding-editor-for-controller-profiles-uimidipreferencespanelkt-controlprofilebindingeditkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Binding Editor for Controller Profiles (ui/MidiPreferencesPanel.kt, control/ProfileBindingEdit.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#controller-profiles-section-in-midi-controls-uimidipreferencespanelkt-controlcontrollerprofilestorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4800,6 +4811,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#binding-editor-for-controller-profiles-uimidipreferencespanelkt-controlprofilebindingeditkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Binding Editor for Controller Profiles (ui/MidiPreferencesPanel.kt, control/ProfileBindingEdit.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#controller-profiles-section-in-midi-controls-uimidipreferencespanelkt-controlcontrollerprofilestorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8367,6 +8389,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="binding-editor-for-controller-profiles-uimidipreferencespanelkt-controlprofilebindingeditkt">Binding Editor for Controller Profiles (<code>ui/MidiPreferencesPanel.kt</code>, <code>control/ProfileBindingEdit.kt</code>)</h3>
+<ul>
+<li><strong>Bindings table</strong>: each user profile in Preferences &gt; MIDI Controls &gt; Controller Profiles has a <strong>Bindings</strong> list (input key to command). Click a command to pick another from a filterable list grouped by category; the trash button removes a binding; the add row takes an optional modifier (such as shift), an input and a command.</li>
+<li><strong>Kind check</strong>: commands whose kind cannot be driven by the input (an encoder bound to a trigger, say) are dimmed in the picker, and an existing binding of that sort is shown in orange, since it would silently do nothing. Unregistered commands are flagged the same way.</li>
+<li><strong>Safe saves</strong>: every edit is validated before it is written; problems are listed under the table and nothing is saved. Connected devices pick the change up about half a second after the last edit.</li>
+<li>Built-in profiles are read-only: use Copy to User File first. Only global bindings are editable for now (per-bank bindings stay in the JSON).</li>
+</ul>
 <h3 id="controller-profiles-section-in-midi-controls-uimidipreferencespanelkt-controlcontrollerprofilestorekt">Controller Profiles Section in MIDI Controls (<code>ui/MidiPreferencesPanel.kt</code>, <code>control/ControllerProfileStore.kt</code>)</h3>
 <ul>
 <li><strong>New "Controller Profiles" section</strong> in Preferences &gt; MIDI Controls: lists every controller profile with its source (built-in, user file, user file overriding a built-in), which connected device currently uses it, and any binding that names an unknown command.</li>

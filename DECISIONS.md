@@ -1,3 +1,10 @@
+## Controller Profile Binding Editor, Global Bindings Only (`ui/MidiPreferencesPanel.kt`, `control/ProfileBindingEdit.kt`)
+
+- **Decision**: the editor edits the raw global `bindings` map of user profiles through `saveUser` (validate, then write). `CompiledController.inputKinds` exposes the bindable input ids; `ProfileBindingEdit.fits` maps input kind to command kind (ENCODER-RELATIVE, BUTTON-TRIGGER/TOGGLE/MOMENTARY, FADER-SCALAR). The runtime reset after an edit is debounced (600 ms).
+- **Rationale**: slice 2 of `.planning/midi-phase5-profile-ui-plan.md`. `CommandRegistry.execute` silently drops a command whose kind does not match the input, so the picker has to say so. `reset()` drops bank and modifier state, so it must not run per click.
+- **Alternatives rejected**: per-bank scope in the first cut (needs a display of which global bindings a bank entry shadows); editing built-ins in place (they are resources; Copy to User File exists).
+- **Consequences**: raw wildcard keys are shown as written. Per-bank bindings and learn-into-profile are the next slices. The UI has no automated test and has not been tried on screen.
+
 ## Controller Profile Section: Same-Id Copy, Hand-Edit Loop (`control/ControllerProfileStore.kt`, `ui/MidiPreferencesPanel.kt`)
 
 - **Decision**: the store gets `copyBuiltInToUser`, `saveUser` (validates first), `deleteUser` (finds the file by profile id, not by file name), `sourceOf` and `rejected()` (skipped files with their problems). Each write reloads; the UI then calls `controllers.reset()`. A copy keeps the built-in's id, so it overrides it.
