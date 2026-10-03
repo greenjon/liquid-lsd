@@ -57,7 +57,7 @@ object MidiPreferencesPanel {
         return problems.isEmpty()
     }
 
-    private fun drawBindingEditor(session: llm.slop.liquidlsd.SessionContext, store: ControllerProfileStore, compiled: CompiledController) {
+    private fun drawBindingEditor(session: llm.slop.liquidlsd.SessionContext, store: ControllerProfileStore, compiled: CompiledController, parametersState: ParametersState?) {
         val profile = compiled.profile
         val registry = session.midiMappingManager.commands
         if (!ImGui.treeNode("Bindings (${profile.bindings.size})##bindings_${profile.id}")) return
@@ -108,6 +108,23 @@ object MidiPreferencesPanel {
             }
             if (addCommand.isEmpty() || exists) ImGui.endDisabled()
             if (exists) itemTooltip("$addKey is already bound; edit its row above.", allowWhenDisabled = true)
+            ImGui.sameLine()
+            val learning = (parametersState?.midiLearnTarget as? MidiLearnTarget.ProfileCommand)?.profileId == profile.id
+            if (learning) {
+                if (ImGui.button("Cancel##learn_cancel")) parametersState?.midiLearnTarget = null
+                theme.captionColored(0.9f, 0.8f, 0.2f, 1f, "Move or press a control on the device...")
+            } else {
+                if (addCommand.isEmpty() || parametersState == null) ImGui.beginDisabled()
+                if (ImGui.button("Learn##learn_binding")) {
+                    val mod = modifiers.getOrNull(addModifier.get())?.takeIf { addModifier.get() > 0 }
+                    session.midiMappingManager.profileLearnMessage = null
+                    parametersState?.startMidiLearn(MidiLearnTarget.ProfileCommand(profile.id, addCommand, listOfNotNull(mod)))
+                    addCommand = ""
+                }
+                if (addCommand.isEmpty() || parametersState == null) ImGui.endDisabled()
+                itemTooltip("Choose a command, then Learn and move the control to bind it. A control the profile does not know becomes a new input.", allowWhenDisabled = true)
+            }
+            session.midiMappingManager.profileLearnMessage?.let { theme.caption(it) }
         }
         for (problem in editorProblems) theme.captionColored(0.95f, 0.35f, 0.3f, 1.0f, "  - $problem")
         ImGui.treePop()
@@ -145,7 +162,7 @@ object MidiPreferencesPanel {
         popOpenDropdownPadding()
     }
 
-    private fun drawControllerProfiles(session: llm.slop.liquidlsd.SessionContext, deviceNames: List<String>) {
+    private fun drawControllerProfiles(session: llm.slop.liquidlsd.SessionContext, deviceNames: List<String>, parametersState: ParametersState?) {
         val store = ControllerProfileStore.default
         if (!ImGui.collapsingHeader("${Icons.SETTINGS} Controller Profiles##controller_profiles", imgui.flag.ImGuiTreeNodeFlags.DefaultOpen)) return
         val theme = session.uiTheme
@@ -186,7 +203,7 @@ object MidiPreferencesPanel {
                 itemTooltip("Removes the user file. A built-in profile with the same id becomes active again.")
             }
             if (source != ControllerProfileStore.Source.BUILT_IN) {
-                drawBindingEditor(session, store, compiled)
+                drawBindingEditor(session, store, compiled, parametersState)
             }
             ImGui.spacing()
         }
@@ -256,7 +273,7 @@ object MidiPreferencesPanel {
         ImGui.separator()
         ImGui.spacing()
 
-        drawControllerProfiles(session, deviceNames)
+        drawControllerProfiles(session, deviceNames, parametersState)
 
         ImGui.spacing()
         ImGui.separator()

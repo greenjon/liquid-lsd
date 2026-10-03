@@ -1,5 +1,8 @@
 package llm.slop.liquidlsd.control
 
+import llm.slop.liquidlsd.midi.MidiEvent
+import llm.slop.liquidlsd.midi.MidiMessageType
+
 /** Pure edits of a profile's global `bindings` map, used by the binding editor. */
 object ProfileBindingEdit {
 
@@ -44,4 +47,41 @@ object ProfileBindingEdit {
 
     fun modifierInputs(compiled: CompiledController): List<String> =
         compiled.inputKinds.filterValues { it == InputKind.MODIFIER }.keys.toList()
+
+    /** Outcome of [learn]: the edited profile and key, or a reason the event cannot be learned. */
+    sealed class Learned {
+        data class Bound(val profile: ControllerProfile, val key: String, val addedInput: String?) : Learned()
+        data class Ignored(val reason: String) : Learned()
+    }
+
+    /**
+     * Binds [commandId] to whichever input [event] came from, held with [modifiers]. An event no
+     * input of the profile claims (a control the profile does not know yet) becomes a new input,
+     * guessed from the message: notes are buttons, 63/65 CCs are relative encoders, other CCs faders.
+     * Modifier and bank-switch inputs cannot be bound, so those events are ignored.
+     */
+    fun learn(compiled: CompiledController, event: MidiEvent, commandId: String, modifiers: Collection<String>): Learned {
+        val profile = compiled.profile
+        val resolved = compiled.resolve(event)
+        if (resolved != null) {
+            if (resolved.kind == InputKind.MODIFIER || resolved.kind == InputKind.BANK_SWITCH) {
+                return Learned.Ignored("${resolved.inputId} is a ${resolved.kind.name.lowercase().replace('_', ' ')}, not a bindable input")
+            }
+            val key = key(modifiers, resolved.inputId)
+            return Learned.Bound(set(profile, key, commandId), key, null)
+        }
+        val kind = when {
+            event.type == MidiMessageType.NOTE -> InputKind.BUTTON
+            event.type == MidiMessageType.CC && (event.rawValue == 63 || event.rawValue == 65) -> InputKind.ENCODER
+            else -> InputKind.FADER
+        }
+        val id = "${event.type.name.lowercase()}-${event.channel + 1}-${event.index}"
+        val def = InputDef(
+            id = id, kind = kind, channel = event.channel, messageType = event.type, cc = event.index,
+            mode = if (kind == InputKind.ENCODER) EncoderMode.RELATIVE_BINARY_OFFSET else EncoderMode.ABSOLUTE
+        )
+        val key = key(modifiers, id)
+        val edited = set(profile.copy(inputs = profile.inputs + def), key, commandId)
+        return Learned.Bound(edited, key, id)
+    }
 }

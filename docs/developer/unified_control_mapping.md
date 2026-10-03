@@ -325,3 +325,6 @@ The picker context: `NavigationSurface.inPicker` = Edit view and `ShaderPickerPo
 
 ### 6.9 Binding editor (phase 5, slice 2)
 `ProfileBindingEdit` holds the pure edits (`set`, `remove`, `key`, `fits`, `commandFits`); `CompiledController.inputKinds` lists every bindable input id with its kind. `MidiPreferencesPanel.drawBindingEditor` writes through `ControllerProfileStore.saveUser` and schedules `ControllerManager.reset()` 600 ms after the last successful edit. Only global `bindings` are editable; `bankBindings` and learn-into-profile (`MidiLearnTarget.ProfileCommand`) are open.
+
+### 6.10 Learn into a profile (phase 5, slice 3)
+`MidiLearnTarget.ProfileCommand(profileId, commandId, modifiers)` is handled by `MidiMappingManager.learnIntoProfile`, which calls `ProfileBindingEdit.learn(compiled, event, commandId, modifiers)`: a resolved input gets a key (modifiers sorted + input id), an unresolved one gets a new `InputDef` (`<type>-<channel>-<index>`, kind guessed from the message). Result text goes to `profileLearnMessage`. Open: per-bank bindings.

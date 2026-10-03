@@ -18,6 +18,8 @@ sealed class MidiLearnTarget {
     data class ModulatorProperty(val fullPath: String, val label: String, val min: Float, val max: Float) : MidiLearnTarget()
     data class GlobalAction(val actionKey: String) : MidiLearnTarget()
     data class MacroTarget(val macroPath: String, val label: String) : MidiLearnTarget()
+    /** Bind [commandId] in controller profile [profileId] to the next control moved, held with [modifiers]. */
+    data class ProfileCommand(val profileId: String, val commandId: String, val modifiers: List<String>) : MidiLearnTarget()
 }
 
 /**

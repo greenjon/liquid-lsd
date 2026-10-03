@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#learn-into-a-controller-profile-midimidimappingmanagerkt-controlprofilebindingeditkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learn Into a Controller Profile (midi/MidiMappingManager.kt, control/ProfileBindingEdit.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#binding-editor-for-controller-profiles-uimidipreferencespanelkt-controlprofilebindingeditkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4811,6 +4822,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#learn-into-a-controller-profile-midimidimappingmanagerkt-controlprofilebindingeditkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learn Into a Controller Profile (midi/MidiMappingManager.kt, control/ProfileBindingEdit.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#binding-editor-for-controller-profiles-uimidipreferencespanelkt-controlprofilebindingeditkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8389,6 +8411,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="learn-into-a-controller-profile-midimidimappingmanagerkt-controlprofilebindingeditkt">Learn Into a Controller Profile (<code>midi/MidiMappingManager.kt</code>, <code>control/ProfileBindingEdit.kt</code>)</h3>
+<ul>
+<li><strong>Learn button in the Bindings editor</strong>: pick a command, optionally a modifier (such as shift), press <strong>Learn</strong>, then move or press a control on the device. The binding is written to the profile and takes effect straight away.</li>
+<li><strong>Unknown controls become inputs</strong>: a control the profile does not define yet (a new device, or an unmapped knob) is added as a new input named from its message (<code>note-1-36</code>, <code>cc-10-20</code>); notes become buttons, relative-encoder CCs encoders and other CCs faders. Modifier and bank buttons are ignored while learning; move another control.</li>
+<li>If a learned mapping from the Learned Mappings list sits on the same control it still wins, and the panel says so.</li>
+</ul>
 <h3 id="binding-editor-for-controller-profiles-uimidipreferencespanelkt-controlprofilebindingeditkt">Binding Editor for Controller Profiles (<code>ui/MidiPreferencesPanel.kt</code>, <code>control/ProfileBindingEdit.kt</code>)</h3>
 <ul>
 <li><strong>Bindings table</strong>: each user profile in Preferences &gt; MIDI Controls &gt; Controller Profiles has a <strong>Bindings</strong> list (input key to command). Click a command to pick another from a filterable list grouped by category; the trash button removes a binding; the add row takes an optional modifier (such as shift), an input and a command.</li>

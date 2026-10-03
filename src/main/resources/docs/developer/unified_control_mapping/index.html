@@ -1410,6 +1410,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#610-learn-into-a-profile-phase-5-slice-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.10 Learn into a profile (phase 5, slice 3)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1888,6 +1899,17 @@
     <span class="md-ellipsis">
       
         6.9 Binding editor (phase 5, slice 2)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#610-learn-into-a-profile-phase-5-slice-3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.10 Learn into a profile (phase 5, slice 3)
       
     </span>
   </a>
@@ -2697,6 +2719,8 @@
 <p><code>ControllerProfileStore</code> can write: <code>copyBuiltInToUser(id)</code> (refuses when a user file with that id exists), <code>saveUser(profile)</code> (returns <code>compile().problems</code> and writes nothing when invalid), <code>deleteUser(id)</code> (locates the file by profile id). <code>sourceOf(id)</code> reports BUILT_IN / USER / USER_OVERRIDE and <code>rejected()</code> lists user files that failed to parse or validate, with the reasons. The cache is one immutable snapshot, dropped by <code>reload()</code>; after any change call <code>ControllerManager.reset()</code> so runtimes pick up the new profile. The UI is <code>MidiPreferencesPanel.drawControllerProfiles</code>. Open: in-app binding editor, learn-into-profile, see <code>.planning/midi-phase5-profile-ui-plan.md</code>.</p>
 <h3 id="69-binding-editor-phase-5-slice-2">6.9 Binding editor (phase 5, slice 2)</h3>
 <p><code>ProfileBindingEdit</code> holds the pure edits (<code>set</code>, <code>remove</code>, <code>key</code>, <code>fits</code>, <code>commandFits</code>); <code>CompiledController.inputKinds</code> lists every bindable input id with its kind. <code>MidiPreferencesPanel.drawBindingEditor</code> writes through <code>ControllerProfileStore.saveUser</code> and schedules <code>ControllerManager.reset()</code> 600 ms after the last successful edit. Only global <code>bindings</code> are editable; <code>bankBindings</code> and learn-into-profile (<code>MidiLearnTarget.ProfileCommand</code>) are open.</p>
+<h3 id="610-learn-into-a-profile-phase-5-slice-3">6.10 Learn into a profile (phase 5, slice 3)</h3>
+<p><code>MidiLearnTarget.ProfileCommand(profileId, commandId, modifiers)</code> is handled by <code>MidiMappingManager.learnIntoProfile</code>, which calls <code>ProfileBindingEdit.learn(compiled, event, commandId, modifiers)</code>: a resolved input gets a key (modifiers sorted + input id), an unresolved one gets a new <code>InputDef</code> (<code>&lt;type&gt;-&lt;channel&gt;-&lt;index&gt;</code>, kind guessed from the message). Result text goes to <code>profileLearnMessage</code>. Open: per-bank bindings.</p>
 
 
 

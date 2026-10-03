@@ -1,3 +1,10 @@
+## Learn Into Controller Profile (`MidiLearnTarget.ProfileCommand`, `ProfileBindingEdit.learn`)
+
+- **Decision**: command first, control second. `ProfileCommand(profileId, commandId, modifiers)` is consumed in `processGlobalMidiEvents` before the controller runtime sees the event; the pure `ProfileBindingEdit.learn` resolves it (or invents an `InputDef` from the message) and the manager saves via `saveUser`, then resets the runtimes.
+- **Rationale**: slice 3 of `.planning/midi-phase5-profile-ui-plan.md`. Learn swallows events before the runtime, so held modifiers cannot be observed; the user picks the modifier explicitly.
+- **Alternatives rejected**: reading held modifiers from the runtime (a different timing model, and learn would then depend on runtime state).
+- **Consequences**: a new input has default settings (encoders RELATIVE_BINARY_OFFSET, faders ABSOLUTE) and edits by hand for anything else. Per-bank bindings are still not learnable. Not tried on hardware.
+
 ## Controller Profile Binding Editor, Global Bindings Only (`ui/MidiPreferencesPanel.kt`, `control/ProfileBindingEdit.kt`)
 
 - **Decision**: the editor edits the raw global `bindings` map of user profiles through `saveUser` (validate, then write). `CompiledController.inputKinds` exposes the bindable input ids; `ProfileBindingEdit.fits` maps input kind to command kind (ENCODER-RELATIVE, BUTTON-TRIGGER/TOGGLE/MOMENTARY, FADER-SCALAR). The runtime reset after an edit is debounced (600 ms).

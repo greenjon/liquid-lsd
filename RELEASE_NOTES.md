@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Learn Into a Controller Profile (`midi/MidiMappingManager.kt`, `control/ProfileBindingEdit.kt`)
+- **Learn button in the Bindings editor**: pick a command, optionally a modifier (such as shift), press **Learn**, then move or press a control on the device. The binding is written to the profile and takes effect straight away.
+- **Unknown controls become inputs**: a control the profile does not define yet (a new device, or an unmapped knob) is added as a new input named from its message (`note-1-36`, `cc-10-20`); notes become buttons, relative-encoder CCs encoders and other CCs faders. Modifier and bank buttons are ignored while learning; move another control.
+- If a learned mapping from the Learned Mappings list sits on the same control it still wins, and the panel says so.
+
 ### Binding Editor for Controller Profiles (`ui/MidiPreferencesPanel.kt`, `control/ProfileBindingEdit.kt`)
 - **Bindings table**: each user profile in Preferences > MIDI Controls > Controller Profiles has a **Bindings** list (input key to command). Click a command to pick another from a filterable list grouped by category; the trash button removes a binding; the add row takes an optional modifier (such as shift), an input and a command.
 - **Kind check**: commands whose kind cannot be driven by the input (an encoder bound to a trigger, say) are dimmed in the picker, and an existing binding of that sort is shown in orange, since it would silently do nothing. Unregistered commands are flagged the same way.

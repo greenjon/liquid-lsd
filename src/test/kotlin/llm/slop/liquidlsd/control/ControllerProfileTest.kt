@@ -373,4 +373,37 @@ class ProfileBindingEditTest {
         assertFalse(ProfileBindingEdit.commandFits(compiled, registry, "fad", "mixer.queue_next"))
         assertTrue(ProfileBindingEdit.commandFits(compiled, registry, "knob.*", "mixer.queue_next"))
     }
+
+    private fun ev(type: MidiMessageType, ch: Int, idx: Int, raw: Int = 127) =
+        MidiEvent(ch, type, idx, raw, raw / 127f, deviceId = "dev")
+
+    @Test
+    fun learnBindsKnownInputWithModifier() {
+        val r = ProfileBindingEdit.learn(compiled, ev(MidiMessageType.CC, 3, 8), "mixer.queue_prev", listOf("shift"))
+        r as ProfileBindingEdit.Learned.Bound
+        assertEquals("shift+btn", r.key)
+        assertNull(r.addedInput)
+        assertEquals("mixer.queue_prev", r.profile.bindings["shift+btn"])
+        assertEquals(emptyList(), r.profile.compile().problems)
+    }
+
+    @Test
+    fun learnIgnoresModifierInputs() {
+        val r = ProfileBindingEdit.learn(compiled, ev(MidiMessageType.CC, 3, 10), "mixer.queue_prev", emptyList())
+        assertTrue(r is ProfileBindingEdit.Learned.Ignored)
+    }
+
+    @Test
+    fun learnAddsInputForUnknownControl() {
+        val note = ProfileBindingEdit.learn(compiled, ev(MidiMessageType.NOTE, 0, 36), "mixer.queue_next", emptyList())
+        note as ProfileBindingEdit.Learned.Bound
+        assertEquals("note-1-36", note.addedInput)
+        assertEquals(InputKind.BUTTON, note.profile.compile().inputKinds["note-1-36"])
+        assertEquals(emptyList(), note.profile.compile().problems)
+
+        val enc = ProfileBindingEdit.learn(compiled, ev(MidiMessageType.CC, 9, 20, 65), "knob.1", emptyList())
+        enc as ProfileBindingEdit.Learned.Bound
+        assertEquals(InputKind.ENCODER, enc.profile.compile().inputKinds["cc-10-20"])
+        assertEquals(emptyList(), enc.profile.compile().problems)
+    }
 }
