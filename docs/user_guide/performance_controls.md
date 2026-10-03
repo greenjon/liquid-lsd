@@ -254,7 +254,41 @@ All assignments are stored in JSON profiles under `library/midi/<profile_name>.j
 
 Some controllers are recognised automatically. When a device whose name contains `Twister` connects, the app loads the built-in **Midi Fighter Twister** profile and its 16 encoders drive the Performance Matrix with no learning at all. (The log line `Controller profile 'midi-fighter-twister' matches MIDI device: ...` confirms the match.)
 
+This section is in the order you will need it: [one-time setup](#twister-setup), [what the knobs control](#twister-layout), [gestures](#twister-gestures), [a first walkthrough](#twister-walkthrough), [the side buttons](#twister-side-buttons), [lights](#twister-lights), [troubleshooting](#twister-troubleshooting), and [your own profiles](#twister-own-profiles).
+
+<a id="twister-setup"></a>
+#### One-time setup in the Midi Fighter Utility
+
+Do this once, in DJ TechTools' **Midi Fighter Utility**, then send the settings to the Twister:
+
+1. **Encoders:** set every encoder on **all four bank tabs** (select all 16 on each tab) to MIDI type `Relative (ENC 3FH/41H)` (binary offset: clockwise sends 65, counter-clockwise 63) and movement *Direct* (the app does its own acceleration). Relative mode has no end stops, so a knob never gets stuck at 0 or 127. Encoders left on the factory `CC` setting manage their own rings.
+2. **Knob switches:** leave them on `CC Hold` (127 on press, 0 on release).
+3. **Side buttons:** the four corner buttons stay on `CC Hold`. Keep the left-middle and right-middle buttons as **Previous/Next Bank**: the app learns which bank you are on from them.
+
+Then start Liquid LSD with the Twister plugged in and check **Preferences → MIDI Controls** → *Controller Profiles*: the Twister profile should be listed with your device. The log reports `Controller feedback on for ...` when the output port is opened; if it says `No MIDI output port found`, the app can read the Twister but cannot light it. While the app runs it overrides the ring and LED colours set in the Utility.
+
+To use the factory absolute mode instead, copy the profile to `library/controllers/` and set `"mode": "ABSOLUTE"` on the `knob` input (the app then tracks each change, and a knob can hit the end of its 0-127 range).
+
+<a id="twister-layout"></a>
+#### What the knobs control
+
 **The 16 knobs are the 16 knobs on screen.** Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between `SRC` and `FX`, or focus a slot, with the mouse or the Twister and the same encoders follow. In Deep Edit the knobs follow the open row.
+
+The Twister's four hardware **banks** pick the page shown on screen. Press a bank button (or use Previous/Next Bank) and the matrix changes with it; clicking a tab on screen moves the encoders to that page too, so screen and hardware always agree.
+
+| Bank | Page | Knobs 1-4 | Knobs 5-8 | Knobs 9-12 | Knobs 13-16 |
+|---|---|---|---|---|---|
+| 1 | **A/B** | Deck A source | Deck A FX | Deck B source | Deck B FX |
+| 2 | **BG/PV** | Deck BG source | Deck BG FX | Deck PV source | Deck PV FX |
+| 3 | **MIXER** | Master MIX | Master FX | Transitions | FX Wet/Dry |
+| 4 | **MASTER** | Master | Transitions | FX Wet/Dry | Clock & Global |
+
+Each row is pinned to one half (source or FX), so no `SRC`/`FX` switching is needed on the hardware. The DECKS page (one row per deck with SRC/FX toggles) is still on screen but no bank shows it. Which page each bank shows is the profile's `banks.pages`; you can point a bank at your own page (see [Perform Pages](#perform-pages)).
+
+**An FX row** has the chain's **Super Knob** on its first knob and the three slots' **Metaknobs** on the other three. **Focusing** a slot (shift + tap) hands the whole row to that effect: knob 1 becomes the slot's Metaknob and knobs 2-4 its parameters (more than three parameters make extra pages).
+
+<a id="twister-gestures"></a>
+#### Gestures
 
 | Gesture | On a source / mix knob | On an FX slot knob | On a focused parameter |
 |---|---|---|---|
@@ -264,17 +298,77 @@ Some controllers are recognised automatically. When a device whose name contains
 | **Shift + tap** | - | focus that slot | next parameter page |
 | **Shift + tap on knob 1 of a focused row** | - | leave focus | - |
 
-- **Banks:** the Twister's own banks pick the page: **bank 1 = A/B** (Deck A's SRC row and FX row, then Deck B's), **bank 2 = BG/PV** (the same for Deck BG and Deck PV), **bank 3 = MIXER** (Master MIX, Master FX, Transitions, FX Wet/Dry) and **bank 4 = MASTER** (Master, Transitions, FX Wet/Dry, Clock & Global). Each of those rows is pinned to one half, so no SRC/FX switching is needed on the hardware. The DECKS page (one row per deck with SRC/FX toggles) is still on screen but no bank shows it. Which page each bank shows is the profile's `banks.pages`. The matrix tab and the encoders always agree, and clicking a tab on screen also moves the encoders to it.
-- **Shift** is the bottom button on the Twister's left side (it is the same physical button on every bank).
+- **Shift** is the bottom button on the Twister's left side (the same physical button on every bank).
 - **Fast turns accelerate** up to 4×; slow turns stay exact.
-- **Side buttons navigate.** The three side buttons other than Shift change meaning with the view. In the **Perform view**: left-top is **back** (the same as Esc), right-top opens the **Library**. In the **Library view**: left-top leaves the Library, right-top steps the **tab** (Sources, FX, Trans), right-bottom steps the **list** (browser, playlist, BG queue, A/B queue), and **knob 1 is the cursor**: turn to move, tap to load (a preset or generator goes to the deck the crossfader is moving away from, a BG queue item to Deck BG, a transition to the mixer; in the FX tab it adds to the FX queue), shift + tap to add to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards. Knobs 2-16 keep their Perform meaning.
-- **Pickers.** In the Perform view the **right-bottom** button opens the picker for the row of the knob you touched last: a deck's SRC row opens its source list, an FX row opens the slot under that knob (knob 1 opens the saved-chain list), the Transitions row opens the transition list. While a picker is showing, **knob 1 is the cursor** (turn to move the highlight, tap to apply the highlighted row; moving never applies anything), **right-top** steps the category (with Shift, back), **Shift + right-bottom** clears the slot or chain, and **left-top** closes the picker. Touch a knob of the row first; with none touched yet the button does nothing.
 - **Your own mappings win.** If you have learned a mapping on a specific Twister channel/CC, that mapping still runs and the profile ignores that input.
-- **Encoder mode:** the profile expects the Twister's encoders in **relative** mode. In DJ TechTools' **Midi Fighter Utility** set each encoder's MIDI type to `ENC 3FH/41H` (binary offset: clockwise sends 65, counter-clockwise 63) and its movement to *Direct* (the app does its own acceleration). Relative mode has no end stops, so a knob never gets stuck at 0 or 127. Leave the knob switches on `CC Hold` (127 on press, 0 on release). To use the factory absolute mode instead, copy the profile to `library/controllers/` and set `"mode": "ABSOLUTE"` on the `knob` input (the app then tracks each change, and a knob can hit the end of its 0-127 range).
 
-**Rings and LEDs.** The Twister mirrors the screen. Each encoder's ring shows its knob's value, and its LED takes the colour of the row it controls. A knob with nothing to control goes dark: an empty or bypassed FX slot, or a blank position on a focused effect's parameter page (its ring still shows the value). LEDs can't show greys, so on the MASTER and MIXER pages the Master row is red and the Global row is violet (the screen keeps its greys); Transitions stay cyan and FX Wet/Dry orange. On pages with a pinned FX row (A/B, BG/PV, MIXER) the FX row's LED is a shifted hue of its SRC row's, so the four LEDs of a bank differ. The app writes the lights to the bank that is showing, a few messages at a time (the Twister drops messages that arrive in a burst), rewrites the whole bank a few times just after you switch to it, and re-sends it shortly after you stop turning, because the Twister redraws its own stored colours after bank changes. If rings still lag or drop, raise `output.minIntervalMs` (default 2) in a copy of the profile; to see exactly what is sent, set `"trace": true` in the profile's `output` section (or start the app with `LSD_MIDI_TRACE=1`): every message sent to the device, every bank change and every encoder message is then logged. Make sure every encoder on every bank is set to `Relative (ENC 3FH/41H)` in Midi Fighter Utility (select all 16 on each of the four bank tabs, then send to the Twister): encoders left on the factory `CC` setting manage their own rings. The controller profile is chosen automatically from the device name; it is listed under Controller Profiles in MIDI Controls, not in the Learned Mappings bar, which holds your learned mappings. Keep the left-middle and right-middle buttons as **Previous/Next Bank** in Midi Fighter Utility: the app learns which bank you are on from them. The log reports `Controller feedback on for ...` when the output port is opened; if it says `No MIDI output port found`, the app can read the Twister but cannot light it. While the app runs it overrides the ring and LED colours set in Midi Fighter Utility.
+<a id="twister-walkthrough"></a>
+#### Walkthrough: load an effect onto Deck A with only the Twister
 
-**Your own profiles.** Profiles are JSON files: built-ins ship inside the app, and yours go in `library/controllers/*.json`. A file with the same `id` as a built-in replaces it, so copy a built-in's JSON and edit it. A file with a mistake is skipped; the reason is logged and shown in the **Controller Profiles** section of Preferences > MIDI Controls. That section lists each profile and the device using it, and has **Copy to User File** (for built-ins), **Delete User File** (reverts to the built-in) and **Reload Profiles** (after you edit a file by hand). Each user profile also has a **Bindings** list: click a command to choose another (the list is filterable and dimmed where the command can't be driven by that input), use the trash button to remove a binding, or add one with the row at the bottom (modifier, input, command). Invalid edits are not saved; the problems are listed. To bind by touch, choose a command and a modifier in the add row, press **Learn** and move the control on the device; a control the profile doesn't know becomes a new input. Modifier and bank buttons can't be learned. Only global bindings can be edited there; per-bank bindings are still edited in the JSON. See `docs/developer/unified_control_mapping.md` for the format.
+1. **Go to bank 1** (A/B). Deck A's FX row is knobs 5-8 (the second row of the grid): knob 5 is the chain's Super Knob, knobs 6-8 are slots 1-3.
+2. **Touch the slot you want.** Give knob 6 (slot 1) a small turn. The picker opens for the *last knob you touched*, so this step chooses the target. Don't tap it: a tap bypasses the slot.
+3. **Press the right-bottom side button.** The picker for that slot opens on screen (stock filters, favourites and saved effects).
+4. **Browse.** Turn **knob 1** (the first knob of the whole grid, not knob 6) to move the highlight. Nothing is applied while you move. Press **right-top** to step to the next category (hold Shift for the previous one).
+5. **Tap knob 1** to apply the highlighted effect to the slot. The item currently loaded is marked in the list.
+6. **Close the picker** with **left-top**. The effect is now in slot 1; turn knob 6 for its Metaknob and knob 5 for the Super Knob.
+7. **Tune it.** Hold **Shift** and tap knob 6 to focus the slot: its parameters spread over knobs 6-8 and knob 5 becomes the Metaknob. **Shift + tap knob 5** leaves focus.
+
+Variations:
+
+- **Replace** an effect: repeat steps 2-5 on the same slot. **Clear** a slot: with the picker open, **Shift + right-bottom**.
+- **Load a saved chain** into all three slots: touch **knob 5** (the Super Knob) before step 3. The picker then lists your saved chains, and **Shift + right-bottom** clears the whole chain.
+- **Change Deck A's source** instead: touch any knob in the source row (knobs 1-4) and press right-bottom for the source list.
+- **Master FX or a transition:** use bank 3 and touch a knob in Master FX (knobs 5-8) or Transitions (knobs 9-12).
+- If nothing happens when you press right-bottom, you haven't touched a knob since the app started: turn one first.
+- Picking from the **Library view** instead is described below.
+
+<a id="twister-side-buttons"></a>
+#### Side buttons
+
+The three side buttons other than Shift change meaning with the view:
+
+| View | Left-top | Right-top | Right-bottom | Knob 1 |
+|---|---|---|---|---|
+| **Perform** | back (same as Esc) | open the **Library** | open the **picker** for the row of the knob you touched last | normal knob |
+| **Picker open** | close the picker | step the category | step nothing; **Shift +** it clears the slot or chain | **cursor**: turn to move, tap to apply |
+| **Library** | leave the Library | step the **tab** (Sources, FX, Trans) | step the **list** (browser, playlist, BG queue, A/B queue) | **cursor**: turn to move, tap to load |
+
+- **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active.
+- **Library:** a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and **Shift + tap** adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.
+- The FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in profile; bind them in your own profile.
+
+<a id="twister-lights"></a>
+#### Rings and LEDs
+
+The Twister mirrors the screen. Each encoder's ring shows its knob's value, and its LED takes the colour of the row it controls. A knob with nothing to control goes dark: an empty or bypassed FX slot, or a blank position on a focused effect's parameter page (its ring still shows the value).
+
+- LEDs can't show greys, so on the MASTER and MIXER pages the Master row is red and the Global row is violet (the screen keeps its greys); Transitions stay cyan and FX Wet/Dry orange.
+- On pages with a pinned FX row (A/B, BG/PV, MIXER) the FX row's LED is a shifted hue of its source row's, so the four LEDs of a bank differ.
+
+<a id="twister-troubleshooting"></a>
+#### Troubleshooting
+
+- **Nothing responds:** check *Enable MIDI Subsystem* in Preferences → MIDI Controls, and that the log shows the `matches MIDI device` line. Watch the Live MIDI Monitor to confirm the Twister's messages arrive.
+- **Knobs jump to the ends or stick:** the encoders are not in `Relative (ENC 3FH/41H)` mode on every bank (see setup).
+- **Wrong page, or rings and LEDs from the wrong bank:** the Previous/Next Bank buttons must keep their factory role; the app learns the current bank from them.
+- **No lights at all:** the log says `No MIDI output port found`. Reconnect the device, or close other software holding the Twister's port.
+- **Rings lag or drop:** the app writes lights to the showing bank a few messages at a time (the Twister drops bursts), rewrites the whole bank just after you switch to it, and re-sends it shortly after you stop turning, because the Twister redraws its own stored colours after bank changes. If rings still lag, raise `output.minIntervalMs` (default 2) in a copy of the profile.
+- **See exactly what is sent:** set `"trace": true` in the profile's `output` section (or start the app with `LSD_MIDI_TRACE=1`). Every message sent to the device, every bank change and every encoder message is then logged.
+- **The Twister profile isn't in the Learned Mappings bar:** that bar holds your learned mappings. The controller profile is chosen automatically from the device name and is listed under *Controller Profiles* in MIDI Controls.
+
+<a id="twister-own-profiles"></a>
+#### Your own profiles
+
+Profiles are JSON files: built-ins ship inside the app, and yours go in `library/controllers/*.json`. A file with the same `id` as a built-in replaces it, so copy a built-in's JSON and edit it. A file with a mistake is skipped; the reason is logged and shown in the **Controller Profiles** section of Preferences > MIDI Controls. That section lists each profile and the device using it, and has **Copy to User File** (for built-ins), **Delete User File** (reverts to the built-in) and **Reload Profiles** (after you edit a file by hand).
+
+Each user profile also has a **Bindings** list:
+
+- Click a command to choose another (the list is filterable and dimmed where the command can't be driven by that input).
+- Use the trash button to remove a binding, or add one with the row at the bottom (modifier, input, command). Invalid edits are not saved; the problems are listed.
+- To bind by touch, choose a command and a modifier in the add row, press **Learn** and move the control on the device. A control the profile doesn't know becomes a new input. Modifier and bank buttons can't be learned.
+- Only global bindings can be edited there; per-bank bindings are still edited in the JSON.
+
+See `docs/developer/unified_control_mapping.md` for the format.
 
 ---
 
