@@ -130,6 +130,12 @@
 - **Master FX and MIX Row Length Alignment**: With identical 42px badges and 6px gap, Master row controls start at the exact same horizontal position (`badgeX + 48f`) as Deck rows. Sized Master controls to `masterRowW = DeckRowMetrics.row1Width(ctrlH, deckComboW)`, ensuring both Master `[FX]` and `[MIX]` rows match the exact length and right-edge horizontal alignment of the deck rows' FX row.
 - **Dedicated Transitions Row Width**: Maintained `transRowW = maxOf(deckRow1W, (gridW * 0.38f).coerceAtMost(420f))` specifically for the Transitions crossfader row, preventing crossfader reservations from stretching the Master row.
 
+### Deck FX Row Stepper Arrows Linked to Live FX Queues (`FxChainHeader.kt`, `FxQueueEngine.kt`, `PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `PerfRowLayoutTest.kt`, `FXQueueManagerTest.kt`, `docs/user_guide/performance_controls.md`, `DECISIONS.md`)
+- **Live FX Queue Navigation**: The `◀` / `▶` stepper arrows on Deck rows now step through the live FX queue (`FXQueueManager` for Decks A & B, `FXBgQueueManager` for Deck BG) instead of traversing disk folders.
+- **Deterministic Per-Deck Targeting**: Clicking `◀` or `▶` on Deck A or Deck B applies the queued FX item directly and deterministically to the clicked deck via `explicitTargetDeck`, rather than following the crossfader position.
+- **Empty Queue Disabled State**: When the corresponding FX queue is empty, the arrows render disabled (`ImGui.beginDisabled(true)`) with an informative hover tooltip (`"FX Queue is empty. Add items from the Library."` / `"BG FX Queue is empty. Add items from the Library."`).
+- **Omitted on PV & Master FX**: Omitted `◀` and `▶` buttons from Deck PV and Master FX rows, allowing the chain name button to expand while keeping row width and kebab button (`⋮`) alignment identical across all decks.
+
 ### Standardized Interactive Control Tooltip Formatting & Hierarchy (`TooltipHelper.kt`, `MacroKnobWidget.kt`, `TooltipHelperTest.kt`, `docs/developer/ui.md`, `DECISIONS.md`)
 - **Visual Section Chunking**: Separated control tooltips into three clearly delineated semantic tiers using blank lines (`\n\n`) to eliminate run-on sentences:
   1. *Header & Context*: Label, value readout, active status/learning indicators, and parameter routing (`Bound to: ...`).
@@ -189,6 +195,9 @@
 ### Button Text Now Stays Legible on Light Backgrounds (`TangoPalette.kt`, `TempoSyncPanel.kt`, `MenuBar.kt`, `FxChainHeader.kt`, `AudioModulatorSection.kt`, `BroadcastPreferencesPanel.kt`, `Lfo2Section.kt`, `MidiModulatorSection.kt`, `MidiPreferencesPanel.kt`, `ModulatorHeaderRow.kt`, `OscPreferencesPanel.kt`, `ParametersTabs.kt`, `PerformanceClockControls.kt`, `PerformanceTransitionsControls.kt`, `PropertiesPanel.kt`, `docs/developer/ui.md`)
 - **New `TangoPalette.inkFor(vararg backgrounds)`**: picks near-black or near-white ink from a background's perceptual luminance (0.55 threshold), matching how Mixxx's Tango skin pairs dark text with its light hues rather than outlining labels. Fixed the TAP tempo button's "armed" state (`TempoSyncPanel.kt`) showing white text against increasingly bright Butter-yellow hover/press backgrounds, then swept every other custom `ImGuiCol.Button` color push app-wide (broadcast/link/ISF status pills, MIDI/OSC learn buttons, modulator bypass and source-mode buttons, deck/CV parameter sub-tabs, transitions auto-fade and clock TAP/LINK buttons) for the same class of bug -- any button whose background is switched away from the app's default dark surface now pushes a matching `ImGuiCol.Text` instead of inheriting the global off-white default.
 
+### Performance Matrix Row Title Badge Height Refinement (`PerformanceMatrixPanel.kt`, `docs/developer/ui.md`)
+- **Compact Badge Box Height**: Reduced the vertical height of the row title badges (`A`, `B`, `BG`, `PV`, `MASTER`, `TRANS`, `CLOCK`, `WET/DRY`) by ~50% (`badgeH = ((row2YFinal + ctrlH) - boxTopY) * 0.5f`), tightening vertical padding around the label text and creating a clean, compact top-left corner header tab.
+
 ### Full Tango Desktop Project Palette Is Now the Single Source for All UI Color (`TangoPalette.kt`, `BrowserDeckButtons.kt`, `PerformanceUiContext.kt`, `UIThemeStyler.kt`, `FxChainHeader.kt`, `FxSlotCell.kt`, `TempoSyncPanel.kt`, `MixerPanel.kt`, `MacroKnobWidget.kt`, `MenuBar.kt`)
 - **New `TangoPalette.kt`**: Reproduces the actual Tango Desktop Project palette (8 hues x light/normal/dark — Butter, Orange, Chocolate, Chameleon, Sky Blue, Plum, Scarlet Red, Aluminium 1/2 — plus Mixxx's own sync/link cyan extension) as the single source for every accent and status color in the app. Each hue is assigned to exactly one role so a deck's color and a status meaning never collide.
 - **Deck accents corrected to exact Tango hex**: Deck A → Orange `#F57900` (was `#FF7F00`), Deck B → Sky Blue `#3465A4` (was `#0099FF`), Deck BG → Chameleon green `#73D216` (unchanged, matching Mixxx's own Deck 3 -- Chocolate was tried first but reads as near-identical to Orange, the opposite of the goal), Deck PV → Plum `#75507B` (was `#AD7FA8`). `BrowserDeckButtons.kt` and `PerformanceUiContext.kt` remain the two canonical sources of truth for every per-deck accent (badges, monitor tile borders, crossfader snap badges, Deep Edit tab colors, Performance Matrix row accents, macro knob rings, FX slot/param cell strips), now both reading from `TangoPalette`.
@@ -203,6 +212,10 @@
 - **Removed Themes**: Removed `DARK_SOLARIZED`, `LIGHT_SOLARIZED`, `DARK_LUNARIZED`, `LIGHT_LUNARIZED`, `NEON`, and `BORING` (along with the Neon animated background gradient and BORING's slate-teal list/dropdown styling), leaving a single built-in theme. Existing saved preferences referencing a removed theme safely fall back to `GREY_ACID` on load. The theme picker combo in Preferences now shows a single entry.
 - **New Grey Acid Theme (new default)**: Added `GREY_ACID`, reproducing the Mixxx Tango theme's charcoal/panel-gray neutrals (`#1A1A1A`, `#2B2B2B`, `#3C3B37`, `#444444`, `#3E3D3A`, `#555753`, `#D3D7CF`, `#888A85`) with the Tango sync/link cyan (`#06AFDF` / `#34E2E2`) as its sole accent for sliders, checkmarks, and active buttons/headers.
 
+### Compact Performance Matrix Title Badges Merged with Row Corner (`PerformanceMatrixPanel.kt`, `PerfRowGeometry.kt`, `PerfRowLayoutTest.kt`, `docs/developer/ui.md`)
+- **Top-Left Corner Integration**: Relocated row title badges (`A`, `B`, `BG`, `PV`, `MASTER`, `TRANS`, `CLOCK`, `WET/DRY`) to flush against the row card's top-left corner (`boxX1`, `boxTopY`). The badge's top-left corner matches the row container's 8px rounding (`ImDrawFlags.RoundCornersTopLeft`), and its bottom-right corner has smooth 8px rounding (`ImDrawFlags.RoundCornersBottomRight`) while vertically spanning to the baseline of the row's 2-line controls (`(row2YFinal + ctrlH) - boxTopY`).
+- **Reclaimed Horizontal Space**: Reclaimed the 6px outer padding gap on the left and tightened badge widths (deck badges: 54px → 42px; master tab badges: 90px → 78px), saving ~18px of horizontal width per row for expanded controls and knob clusters.
+- **Drop Target Alignment**: Updated drag-and-drop targets on Deck, Master, and Transitions badges to accurately match the new top-left corner coordinates and dimensions.
 ### Persistent EDIT and FX Buttons with Shared SRC/FX Hitbox (`RackUnit.kt`, `FxChainHeader.kt`, `PerformanceDeckControls.kt`, `PerformanceMasterControls.kt`, `PerformanceMatrixPanel.kt`, `PerformanceUiContext.kt`)
 - **Persistent `[EDIT]` Button**: Replaced the alternating `[Edit]` / `[Collapse]` button in the top-right corner of rack rows with a persistent `[EDIT]` button. When active (Deep Edit open), it displays a green fill (`#33BF59`) with black text; when inactive (collapsed), it displays a dark neutral fill (`#232833`) with off-white text (`#E0E0E6`).
 - **Persistent `[FX]` Button**: Replaced the `[FX ON]` / `[BYPASS]` button on the right side of Deck rows and the Master row with a persistent `[FX]` button, using the identical active green / inactive dark toggle styling.
@@ -234,6 +247,14 @@
 - **Semantic Text Helpers**: Added `session.uiTheme.tooltip(text)` and `tooltipColored(r, g, b, a, text)` to `UITheme.kt` for clean 18px typography rendering.
 - **Label Column Widening**: Expanded `PerformanceDeepEditBay.DEEP_EDIT_LABEL_COL_W` from 160px to 185px, ensuring parameter names have comfortable clearance beside row kebab menu buttons and modulator cells without truncation.
 - **Browse Panel Scaling**: Wrapped `ShaderPickerPopup.drawInline`, `PerformanceBrowseBay` chain lists and FX tabs, and Library search inputs in `UITheme.FontLevel.TOOLTIP`, providing high legibility and visual continuity between browsing, parameter adjustment, and tooltip inspection.
+
+### Library Multi-Selection Support (`MultiSelectionModel.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `BrowserActionToolbar.kt`, `LibraryPanel.kt`, `BrowserPopupHandler.kt`)
+- Added complete multi-selection support across the Library browser and playlist/queue panels:
+  - **Click Modes**: Standard single-click (selects single item, resets multi-selection), **Ctrl+Click** / **Cmd+Click** (toggles individual item selection), and **Shift+Click** (continuous range selection relative to the lead/anchor item across visible list order).
+  - **Batch Queuing**: Pressing `Q` or clicking the toolbar `[ Q ]` button enqueues all selected presets into the A/B Play Queue. Pressing `Shift+Q` or clicking `[ BGQ ]` enqueues all selected presets into the Background Queue.
+  - **Multi-Item Drag & Drop**: Dragging any item within a multi-selection carries the full set of selected presets (`\n`-delimited asset payload) into playlist insertion slots, live queues, or background queues.
+  - **Context Menu & Batch Deletion**: Context menu reflects multi-selection actions (**Add N Presets to Playlist**, **Add N Presets to Queue**, **Delete N Presets...**). Deletion invokes a consolidated confirmation modal detailing all selected targets and cleanly removing deleted files across all active playlists and queues.
+  - **Playlist & Queue Management**: Playlists and Queues support index-based multi-selection with batch removal and slot-drop unpacking.
 
 ### Library Toolbar's Deck-Load Buttons Removed (`BrowserActionToolbar.kt`, `LibraryPanel.kt`, `ShortcutManager.kt`)
 - Removed the `[A]`/`[B]`/`[BG]`/`[PV]` deck-load buttons and their `1`/`2`/`3`/`4` shortcuts from the Library's menu-bar action toolbar — the inline **Browse** panel on each Performance row now covers picking a generator, FX single, or FX chain straight onto a deck, making the toolbar's duplicate path redundant. The `[Q]`/`[BGQ]` queue buttons and their `Q`/`Shift+Q` shortcuts stay, since queuing to the AutoVJ Play/Background queues has no equivalent in Browse.
@@ -561,13 +582,18 @@
 - **Macro Row & Parameter Grid Full Sync**: Switching sections via the side rail or toggling between `SRC`/`CTRL` and `FX` immediately updates both the bottom parameter grid and the top 4-knob macro row (`DECK A` ↔ `DECK A (FX)`, `MASTER` ↔ `MASTER FX` ↔ `TRANSITIONS`).
 - **Option B Layout Preservation**: The top macro row remains full-width across the panel, protecting knob spacing and wing controls from being squeezed horizontally, while the side rail sits comfortably alongside the parameter and properties editors in the bay below.
 
-
 ### Performance Matrix Row Layout, Minimum Row Height & Knob Highlight (`PerformanceMatrixPanel.kt`, `MacroKnobWidget.kt`, `docs/user_guide/macros_and_rack.md`, `docs/developer/ui.md`)
 - **No more title/control overlap on short rows**: Side-wing controls on deck and FX rows are now bottom-aligned with the knobs (and never placed above the row title), so they no longer collide with `DECK A`/`FX: …` titles when the Library dock is at half height.
 - **Uniform control height**: The deck preset dropdown now matches the 24px height of every other wing button and badge (new `CTRL_H` constant).
 - **Minimum row height + vertical scroll**: Matrix rows stop shrinking at `MIN_ROW_H` (96px); beyond that the matrix scrolls vertically instead of squeezing knobs too small to use. The mouse wheel still adjusts a knob when hovering it and scrolls the matrix elsewhere.
 - **Click-drag to scroll**: Click-dragging up/down on empty row space (anywhere outside the knobs and controls, including the row title band) scrolls the matrix, touch-style.
 - **Clearer knob hover/drag highlight**: Macro knob bodies tint toward their accent color on hover and more strongly while dragging, instead of relying only on the ring, which shares the arc's color.
+
+### Sync Macro Knob Editor FX Tabs with Performance View (`MacroPanel.kt`, `docs/user_guide/macros_and_rack.md`)
+- **Removed stale FX1 / FX2 / MFX tabs from Classic MACROS editor**: The Macro Knob Editor (Column 3 `[ MACROS ]` tab) was still showing three old shared-bank tabs (`FX1`, `FX2`, `MFX`) that no longer match the independent per-deck FX architecture. These have been replaced with the five independent tabs that mirror the Performance Matrix exactly.
+- **Added A FX / B FX / BG FX / PV FX / MST FX tabs**: Each maps directly to its `MacroEngine` constant (`DECK_A_FX`, `DECK_B_FX`, `DECK_BG_FX`, `DECK_PV_FX`, `MASTER_FX`) and resolves the correct `FxChain` from the Mixer (`deck.fxChain` for decks, `masterFxBank.activeChain` for Master).
+- **Removed multi-chain tab picker from FX Rack view**: Per-deck FX chains are single chains — there is no chain 1/2/3 picker. `drawFxRackView` now accepts `FxChain` directly and routes Super Link sync through `FxMacroSync.syncDeckFx()` (deck tabs) or `syncChain()` (MST FX).
+- **Preview monitor follows FX tabs**: Selecting `A FX` shows Deck A's output; `MST FX` shows the master FBO, matching what you'd expect from the corresponding Performance Matrix row.
 
 ### Fix Performance Matrix ImGui ID Conflict on Deck FX Mode (`PerformanceMatrixPanel.kt`, `DECISIONS.md`)
 - **Resolved Conflicting Widget IDs in Deck FX Mode**: When a deck row was toggled to `FX` mode via `[ SRC | FX ]` (assigning its `bankId` to `DECK_A_FX`), its header drop area collided with the dedicated FX row's drop area on `LIVE CONSOLE` (which was also focused on Deck A FX), triggering Dear ImGui's ID conflict overlay (`2 visible items with conflicting ID: ##perf_fx_drop_deck_a_fx`).
@@ -601,6 +627,12 @@
 - **Parameters Tabs Subgroup Cleanup**: Removed the unused "FX Route" parameter row and conditional "FX Send Level" row from `drawDeckViewSubgroup` in `ParametersTabs.kt`.
 - **Browser Panel Direct Deck Targeting**: Updated `BrowserActionToolbar.kt` and `FXBrowserPanel.kt` to target each deck's own 3-slot `FxChain` directly (`deck.applyFxSlot`, `deck.applyFxChain`, `deck.fxSlots`, `deck.toFxSlotDto`, `deck.toFxChainDto`) instead of relying on `deck.assignedFxBank`.
 
+### Mixxx-Style Visual Link Buttons & Multi-Parameter FX Metaknob Linking (`LinkModeButton.kt`, `MacroBindingInspector.kt`, `FxMetaBinding.kt`, `ISFFilter.kt`, `FXChainMacroStrip.kt`, `ParametersTabs.kt`, `PresetModels.kt`, `FxChain.kt`, `FxMetaBindingTest.kt`, `docs/user_guide/macros_and_rack.md`)
+- **Intuitive Visual Transfer Curve Buttons**: Replaced text dropdowns with compact vector glyph buttons rendered via `ImDrawList`, displaying the exact transfer curve directly on the button face: `[  /  ]` (Full), `[ / ‾ ]` (First Half), `[ _ / ]` (Second Half), `[ /\ ]` (Triangle Peak), `[ \/ ]` (Bipolar Center-0), and `[  —  ]` (Unlinked).
+- **Dynamic Inversion (`[±]`)**: Adjacent invert toggle dynamically flips the transfer curve geometry and highlights in Electric Cyan when active.
+- **Multi-Parameter FX Metaknob Linking**: An ISF effect slot's Metaknob can now drive multiple parameters of the shader simultaneously, with independent link modes and inversion per parameter (e.g. Cutoff on First Half, Resonance on Triangle Peak, Wet/Delay on Second Half).
+- **Focus Mode & Parameter List Controls**: One-click visual link buttons appear directly beside parameter sliders in FX Focus Mode (`FXChainMacroStrip`) and in the expanded slot accordion's parameter menus (`ParametersTabs`).
+- **Full Preset Serialization & Backwards Compatibility**: `FXSlotDto` serializes `metaBindings` list while preserving `metaBinding` for 100% backwards compatibility with legacy presets.
 ### Macro Link Modes: Mixxx-Style Knob-Travel Windowing (`MacroModels.kt`, `MacroCurve.kt`, `MacroBindingInspector.kt`, `MacroCurveTest.kt`, `docs/user_guide/macros_and_rack.md`)
 - **New `Link` field per binding**: Each of a knob's up to 4 bindings now independently chooses which zone of the knob's travel it responds to — `Full (0-100%)` (default, unchanged behavior), `1st Half (0-50%)`, `2nd Half (50-100%)`, `Triangle (Peak)`, or `Bipolar (Center-0)` — via `MacroBinding.linkMode` and the new `MacroCurve.window()` transfer function, applied before curve shaping and invert.
 - **Split-zone choreography from one knob**: Lets a single macro knob drive multiple targets in sequence or crossfade between them — e.g. bind Target A to `1st Half` and Target B to `2nd Half` so the first half of the turn ramps up A while B stays idle, then the second half ramps up B.
@@ -794,7 +826,6 @@
   - `2d_to_3d_elevation_with_feedback.lsdfxchain`: Iconic Liquid LSD elevation chaining `3d_elevation` (heightmap 3D mesh) → `feedback` (recursive camera rotation) → `color_levels` (ACES highlight curve).
 - **Automated Validation**: Integrated automated generation and roundtrip deserialization verification in `FXPresetSerializationTest.kt`.
 
-
 ### Phase 3 Curated High-Quality Cleanroom ISF FX Suite (`ISFFilterRegistry.kt`, `ISFAutoBindEngine.kt`, `ISFFilterTest.kt`, `default_filters/`, `docs/licenses/SHADERS_LICENSE.md`)
 - **Cleanroom High-Quality ISF FX Suite (Phase 3 - Advanced Synthesis & Temporal FX)**: Added 5 native, permissively licensed (MIT) image filters engineered from scratch for commercial distribution, fluid dynamics, and live rhythmic performance:
   - `luma_displace.fs` (Option B): 2D surface normal gradient refraction simulating liquid marbling, oily fluids, and melting glass with multi-spectral chromatic dispersion.
@@ -888,9 +919,29 @@
 - **Export Queue to Playlist**: Enabled instant exporting of live FX queues (A/B and BG) directly to new `.lsdfxplay` playlists.
 - **Fixed FX-Mode Keyboard Shortcuts**: `1`–`4` (load to deck) and `Q`/`Shift+Q` (add to queue) previously routed through the visual-preset managers even while browsing `[ FX ]` mode, silently misapplying FX files as `.lsd` presets or queuing them on the wrong manager. `LibraryPanel`'s shortcut handler now dispatches through `BrowserActionToolbar.handleDeckLoad` and `FXQueueManager`/`FXBgQueueManager` when the Library is in FX view mode, matching the toolbar buttons' existing extension-aware behavior.
 
+### Performance Mode 4×4 Macro Matrix — Rack Retired (`PerformanceMatrixPanel.kt`, `MacroEngine.kt`, `MacroKnobWidget.kt`, `UIManager.kt`, `MenuBar.kt`, `AppPreferences.kt`, `UITheme.kt`, `SessionSerializer.kt`)
+- **Retired the Modular Video Rack**: The experimental 19" rack chassis UI (patch cables, rear panel, rack unit faceplates) has been removed entirely. All rack module files (`RackPanel`, `RackManager`, `RackPipeline`, `RackPatchBay`, `RackUnit`, `RackUnitType`, `RackChassisRenderer`, etc.) are deleted.
+- **Introduced Performance Mode (`PerformanceMatrixPanel`)**: `F4` now switches between Classic Deck View and a new **4×4 Macro Knob Matrix** spanning Columns 1 & 2, with the Mixer and Library dock remaining visible. 16 knobs are arranged in 4 rows × 4 columns, color-coded by deck (blue / orange / amber / mint / violet / crimson). Four tabs — **LIVE QUAD**, **DUAL DECKS**, **PREP & BG**, **MASTER & FX** — offer different row-to-bank mappings for different performance contexts.
+- **Performance Panel is read-only**: Dragging a knob adjusts its `MacroControl.value` live; right-click is a no-op. Editing (Learn Mode, binding inspector, Min/Max/Curve) stays in Classic mode's Column 3 `[ MACROS ]` tab. Both surfaces read and write the same underlying `MacroEngine` banks.
+- **New `MASTER` canonical bank**: `MacroEngine` now registers six always-resident banks (`DECK_A`, `DECK_B`, `DECK_BG`, `DECK_PV`, `TRANS`, `MASTER`). `canonicalIdForDeckLabel("Master")` routes correctly to `MASTER` instead of falling through to `TRANS`. All six banks start blank — no default bindings.
+- **`MacroKnobWidget` accent color**: Added `accentColor: FloatArray?` parameter so the Performance Matrix can tint each row's arc fill, indicator, and hover ring with its deck color. Passing `null` preserves the existing amber style in the Classic `[ MACROS ]` view.
+- **Active tab persisted**: `AppPreferences.performanceMatrixTab: Int` stores which of the 4 tabs was last active and restores it on next launch.
+- **Knob sizing is height-bounded**: `diameter = min(availW/4 − pad, availH/4 − labelH − pad)` ensures all 16 knobs and their labels remain visible at any window aspect ratio.
+- **Toolbar & menu labels updated**: The `[ RACK ]` pill is now `[ PERF ]`; the View menu entry is "Performance Mode"; the F4 tooltip no longer mentions "19\" Modular Video Rack".
+- **`SessionSerializer` is now the sole bank registrar**: `RackManager.populateFromSession` was the only other site that called `MacroEngine.registerBank`; it's now deleted. `SessionSerializer.loadSession` and `startEmpty` already handled all six canonical banks independently, so no behavior change occurs.
+- **`MacroEngine.unitParameterResolver` removed**: The rack-scoped parameter resolver hook is gone. `resolveControls` always uses `ParameterResolver.findParameterByPath` directly.
+
 ### Minimum System Requirements & Startup Diagnostics (`Main.kt`, `README.md`, `docs/getting_started.md`, `ARCHITECTURE.md`)
 - **Documented Minimum & Recommended System Requirements**: Formalized comprehensive hardware and software requirements across documentation (`README.md`, `docs/getting_started.md`, `ARCHITECTURE.md`). Explicitly documented that OpenGL 3.3 Core Profile hardware support is mandatory. Added prominent alerts clarifying that legacy architectures like Intel Core 2 Duo / Core 2 Quad and legacy Intel GMA graphics (GMA 3000/X3100/X4500) lack OpenGL 3.3 Core Profile capabilities and cannot run Liquid LSD.
 - **Enhanced GLFW Error Diagnostics on Window Creation**: Registered a global `GLFWErrorCallback` before initialization in `Main.kt`. If window creation fails (e.g. on unsupported GPUs or headless environments lacking OpenGL 3.3 Core context creation), the application now queries and displays the exact GLFW error reason along with clear troubleshooting guidance regarding graphics drivers and hardware requirements rather than a generic `Failed to create GLFW window` exception.
+
+### Macro Binding Inspector Navigation & Bound-Parameter Visual Feedback (`MacroBindingInspector.kt`, `ParametersRenderer.kt`, `CustomRangeSlider.kt`, `BeatDivisionSlider.kt`)
+- **Binding target name is now a navigation link**: In the Binding Inspector, clicking the target parameter name (e.g. `Deck A/Mandala/L1`) switches Column 1 directly to that deck and sub-tab. Hover reveals a `→ Go to Deck A → SRC` tooltip.
+- **Bound Parameter & Modulator Visual Feedback**: When a parameter or modulator property is bound to a Macro Control, it now displays rich visual affordances across Columns 1 and 2:
+  - In the Parameters matrix (Column 1), the row is highlighted with an Electric Cyan left border and tint, with an inline badge (e.g. `[K1]` or `[SW2]`) and cyan text.
+  - In the Properties and Slider sections (Column 2), an Electric Cyan bounding box and background highlight frames the entire slider row, the track and dynamic indicator dot glow in cyan, and numeric text boxes are set to read-only with a cyan outline.
+  - Hovering over bound rows, labels, sliders, or text inputs displays a contextual tooltip identifying the controlling macro (e.g. `"Locked: Driven by Knob 1 (WARP) [K1]"`).
+  - Clicking any bound parameter label, badge, or value cell provides bidirectional jump-to-inspect navigation straight into the Column 3 Macro Inspector.
 
 ### Full Screen Video & Monitor Alpha Blend Parity (`Main.kt`, `default_filters/feedback.fs`)
 - **Fixed Full Screen vs Monitor Alpha Blend Mismatch**: Changed full screen viewport and secondary window rendering in `Main.kt` from `glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)` to `glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)` to match ImGui's monitor rendering pipeline. Previously, `GL_ONE` caused non-premultiplied decaying alpha pixels (such as feedback trails) to render at 100% RGB intensity on full screen video without alpha attenuation, appearing drastically heavier and thicker than in confidence monitors.
@@ -1008,7 +1059,6 @@
 - **Restored Queue & Session Path Helper Visibility**: Exposed `startEmpty`, `serializeSessionPath`, `resolveSessionPath`, and `resolveRestoredQueue` with `internal` access on `SessionSerializer` and added delegating methods on `PresetManager`.
 - **Deck DTO Apply Safety**: Added null-safe fallback when resolving default visual sources during empty deck resets to prevent `NoSuchElementException` when operating on mock deck instances in unit tests.
 
-
 ### ImGui SetCursorPos Un-submitted Bounds & Preferences Child Window Fix (`CustomRangeSlider.kt`, `BeatDivisionSlider.kt`, `OscilloscopeDrawer.kt`, `ParametersPanel.kt`, `PreferencesPanel.kt`)
 - **Fix ImGui Assertion Crash on Preferences Modal**: Fixed `Dear ImGui Assertion Failed: (0) && "Code uses SetCursorPos()/SetCursorScreenPos() to extend window/parent boundaries."` caused by `ImGui.setCursorScreenPos(...)` positioning layout cursors without a trailing `ImGui.dummy(0f, 0f)` item submission to reset `DC.IsSetPos` before closing child windows.
 - **Adjusted Preset Name Scale Child Height**: Increased `##preset_slider_child` height from `46f` to `52f` with `ImGuiWindowFlags.NoScrollbar` to accommodate theme window padding and custom slider heights cleanly.
@@ -1028,6 +1078,22 @@
 - **Macro Controls & Parameter Linking Architecture RFC (`docs/developer/macro_controls_and_parameter_linking_proposal.md`)**:
   - Published comprehensive technical design for 8 Performance Macro Knobs + 4 Macro Switches per session with 1-to-many parameter mapping, curve shapes (Linear, Exp, Log, S-Curve), min/max travel bounds, and modulation matrix integration.
 
+### Phase 2: Transition Presets & Transition Queue Engine (`TransitionPresetDto`, `TransitionPlaylistDto`, `TransitionQueueManager.kt`, `FileSystemManager.kt`, `PresetManager.kt`, `Mixer.kt`, `PlayQueueManager.kt`)
+- **Transition Presets (`.lsdtrans`) & Playlists (`.lsdtransplay`)**:
+  - Introduced `.lsdtrans` data format for saving and recalling transition parameter states (e.g., customized wipe angle, softness, glitch intensity, and dry/wet blend) stored under `library/transitions/`.
+  - Introduced `.lsdtransplay` data format for saving ordered transition setlists stored under `library/transition_playlists/`.
+- **High-Performance Transition Queue Engine (`TransitionQueueManager.kt`)**:
+  - Volatile queue engine supporting unified stock transition shader IDs and `.lsdtrans` custom preset files.
+  - Implemented repeat modes, battle-tested shuffle cycle tracking (`playedIndices`/`playbackHistory`), queue mutation index re-basing (`insertAt`, `removeFromQueue`, `moveItem`), and history back-stepping (`advancePrevious`).
+- **Filesystem Scanner Caching & Unified Asset Types (`FileSystemManager.kt`)**:
+  - Added scanning support for `.lsdtrans` and `.lsdtransplay` files in `FileSystemManager` with signature-cached recursive directory indexing.
+  - Added root directory getters (`getTransitionsRoot()`, `getTransitionPlaylistsRoot()`) and extended `AssetType` with `TRANSITION_PRESET` and `TRANSITION_PLAYLIST`.
+- **Auto-Advance Crossfade Integration (`PlayQueueManager.kt`, `Mixer.kt`)**:
+  - Added `mixer.applyTransitionPreset(dto)` helper to apply transition presets seamlessly to `mixer.transitionFilter`.
+  - Integrated `TransitionQueueManager.advanceOnAutoFade(mixer)` auto-advance hooks into `PlayQueueManager.triggerNext()`, `triggerPrevious()`, and `playIndex()`, staging new transition filters prior to crossfader movement.
+- **Session State Persistence (`SessionStateDto` version 6)**:
+  - Extended `SessionStateDto` to serialize and restore transition queue items (`transQueue`), active index (`transActiveIndex`), auto-advance (`isTransAutoAdvanceEnabled`), repeat (`isTransRepeatEnabled`), and shuffle (`isTransShuffleEnabled`).
+
 ### Phase 1: Master Output FX Pipeline & Mixer Sub-Tabs (`Mixer.kt`, `Renderer.kt`, `PresetModels.kt`, `PresetManager.kt`, `ParametersState.kt`, `ParametersTabs.kt`, `ParametersPanel.kt`)
 - **4-Slot Serial Master FX Chain**: Added a 4-slot ISF effect chain to the Master Output stage in `Mixer.kt`, allowing VJs to chain serial post-composite effects (e.g. master bloom, CRT glitch, color adjustment, hue shift, or distortion) across the blended output of Deck A, Deck B, and Deck BG.
 - **3-Pass Composite Rendering Pipeline**: Refactored `Renderer.renderMixer()` into a 3-pass GPU architecture: Pass 1 (ISF Transition -> `blendFBO`), Pass 2 (Composite -> `masterCompositeFBO`), and Pass 3 (Serial Master FX chain -> `masterFxFBOs` -> target `masterFBO`). Downstream capture engines (recording, NDI/texture streaming, and display output) continue to consume `masterFBO` seamlessly.
@@ -1037,6 +1103,21 @@
   - **`FX` Tab**: Master FX Chain options (Save/Copy/Paste/Clear), 4 slot expand/collapse chevrons, shader selectors, bypass checkboxes, slot presets (`.lsdfx`), drag-and-drop targets, and dry/wet / parameter rows on the CV grid.
 - **Clean `MixerDto` & `SessionStateDto` Version 6**: Refactored session state to cleanly nest all mixer settings, levels, transition filters, and master FX slots into a dedicated `MixerDto`. Bumped `SessionStateDto` version to 6 with automatic graceful fallback on legacy session deserialization.
 
+### 2x2 Grouped Container Layout for Library Panel (`LibraryPanel.kt`, `docs/developer/ui.md`)
+- **2x2 Grouped Box Architecture**: The 4 Library columns are now logically organized into two rounded container boxes (`LibraryGroup1` and `LibraryGroup2`) featuring 6 px rounded corners (`ChildRounding`), a subtle dark child background, and border frames (`Border`).
+  - **Group 1 (Assets & Setlists)**: Encloses Column 1 (Presets / FX Presets) and Column 2 (Playlist Editor / FX Chains).
+  - **Group 2 (Live Play Queues)**: Encloses Column 3 (Background Queue) and Column 4 (Play Queue A/B).
+- **Seamless Alignment**: An 8 px horizontal gap (`groupGap`) separates the two rounded group containers, and the top edge of both boxes touches the bottom of the top toolbar menu bar.
+
+### Per-Slot FX Presets & 4-Slot FX Chains (`FXPresetModels.kt`, `ParametersTabs.kt`, `FXPresetListPanel.kt`, `FXChainListPanel.kt`, `LibraryPanel.kt`, `SavePresetModal.kt`, `PresetManager.kt`, `FileSystemManager.kt`)
+- **Per-Slot FX Presets (`.lsdfx`)**: Individual slot FX configurations (filter ID, bypass, dry/wet, and parameters) can now be saved into `.lsdfx` files under `library/fx/` and loaded directly onto any deck slot.
+- **4-Slot FX Chains (`.lsdfxchain`)**: Full 4-slot FX chains can be captured and saved into `.lsdfxchain` files under `library/fx_chains/` to instantly recall complete effect pipelines.
+- **Parameters Panel Kebab Menus & Drag-and-Drop**:
+  - **FX Chain Header Bar**: Added a compact header bar above the FX slot list with an options kebab menu (`Save Chain As...`, `Copy Chain`, `Paste Chain`, `Clear All Slots`).
+  - **Per-Slot Kebabs**: Each slot features an options kebab menu (`Save Slot Preset As...`, `Copy Slot`, `Paste Slot`, `Reset Slot`).
+  - **Drag-and-Drop Targets**: Drag `.lsdfx` or `.lsdfxchain` files directly from the Library onto any slot to update or swap effects with undo support.
+- **Library Mode Toggle (`[ Presets ]` / `[ FX ]`)**: Added a segmented mode toggle in the Library menu bar to swap Columns 1 & 2 between Presets/Playlists and FX Presets/FX Chains while anchoring Columns 3 & 4 (BG Queue & Play Queue).
+- **Hybrid Toolbar & Smart Overwrite Prompt**: Single FX preset load buttons (`[A]`, `[B]`, `[BG]`, `[PV]`) route into the first vacant slot on a deck, prompting with a slot overwrite selector when all 4 slots are full.
 
 ### Fix ImGui 1.92 Icon Font Atlas Glyph Corruption via Inter PUA Cmap Stripping & Dynamic Icon Ranges (`UITheme.kt`, `Icons.kt`, TTF Assets)
 - **Inter PUA Cmap Stripping**: Stripped stray Private Use Area (`E000–F8FF`) OpenType stylistic-alternate cmap entries (e.g., `"G.1"`) from bundled Inter TTF font files (`Inter-Regular.ttf`, `Inter-Medium.ttf`, `Inter-Bold.ttf`). Left in place, those entries collided with Lucide merged icon glyphs at the same codepoints, causing icon corruption and glyph aliasing onto unrelated digits in Dear ImGui 1.92.
@@ -1069,6 +1150,11 @@
 - **Playlist Editor Popup Scoping & Creation Modal (`PlaylistEditorPanel.kt`, `BrowserPopupHandler.kt`, `LibraryPanel.kt`)**: Added `pendingOpenNewPlaylistPopup` so clicking "+ New Playlist" from inside child panels properly triggers the root modal popup in Dear ImGui 1.92.
 - **Explicit Font Scoping for UI Icon Buttons**: Ensured all icon-bearing button calls have font levels pushed appropriately so the merged Lucide PUA glyph atlas is active when calculating text metrics and drawing buttons.
 
+### Fix Dear ImGui 1.92 Format String Memory Corruption in Performance Readouts (`MenuBar.kt`, `UITheme.kt`, `TooltipHelper.kt`, `DeckControlPanel.kt`, `MissingItemsPanel.kt`, `PresetListPanel.kt`)
+- **Unformatted Telemetry Text Rendering**: Replaced `ImGui.text(...)` calls in `MenuBar.kt` performance readouts (`CPU %`, `BPM`, `DSP latency`, `FPS`, `Frame Time`, and live video recording `dropped frames`) with `ImGui.textUnformatted(...)`. Upstream `imgui-java` 1.92 passes strings directly to native `ImGui::Text(fmt, ...)`, causing `vsnprintf` format string specifier parsing and stack memory corruption whenever a string contains `%` characters.
+- **Global Typography Helper Safety**: Switched all semantic text helpers (`h1`, `h2`, `h3`, `body`, `caption`, `code` and their colored variants) in `UITheme.kt` to call `ImGui.textUnformatted(...)`, globally eliminating format string vulnerabilities across all theme typography.
+- **Tooltip System Safety**: Updated `itemTooltip(text: String)` and `showTooltip(text: String)` in `TooltipHelper.kt` to use `ImGui.textUnformatted(...)`, preventing garbled rendering when displaying tooltips with percentage symbols or formatted string indicators.
+- **Dynamic Asset & File Path Protection**: Updated dynamic text rendering for preset names, missing item paths, and asset names across `DeckControlPanel.kt`, `MissingItemsPanel.kt`, and `PresetListPanel.kt` to use `ImGui.textUnformatted(...)`.
 ### Restore All 4 Distinct 3D Elevation Projection Modes (`3d_elevation.fs`, `ISFFilter.kt`, `PresetModels.kt`, `ValueParamSection.kt`, `ISFFilterTest.kt`)
 - **Restored All 4 Distinct Projection Modes**: Fully restored and calibrated all 4 geometric elevation modes in `3d_elevation.fs`:
   - `Mode 0: Tri-Axial (3 Planes Intersecting)` — 3 orthogonal planes intersecting at origin.
@@ -1101,6 +1187,21 @@
 - **Guarded Title Bar `drawExtra` Lambda**: In `ParametersPanel.kt`, only supply the source tab trailing lambda to `PanelTitleBar.draw` when `activeDeck` is non-null and not empty (`activeDeck != null && !activeDeck.isEmpty`). Passing `null` prevents spurious cursor movements via `ImGui.sameLine()` and `ImGui.setCursorPosY()` when viewing the Mixer tab or an empty deck launchpad.
 - **Defensive MenuBar Boundary Dummy**: Added `ImGui.dummy(0f, 0f)` inside `PanelTitleBar.draw()` immediately after invoking `drawExtra()`. This resets ImGui's internal `window->DC.IsSetPos` flag and ensures window boundaries are always closed cleanly, preventing Dear ImGui 1.90+ assertions (`Code uses SetCursorPos()/SetCursorScreenPos() to extend window/parent boundaries`) from triggering inside `ImGui.endMenuBar()`.
 
+### Fix Audio Device Disappearance & WirePlumber Link Negotiation Races (`JavaSoundClient.kt`, `JackClient.kt`, `AudioEngine.kt`, `MidiJackWatchdog.kt`, `AudioEnginePanel.kt`)
+- **Suppressed Playback Device Probing Storms**: Screened out playback-only soundcards (HDMI, analog speakers, headphones, digital sinks) before querying JavaSound/ALSA lines in `JavaSoundClient.kt`. This eliminates microsecond `snd_pcm_open`/`close` probes on the internal speaker (`hw:0,0`), preventing WirePlumber link negotiation crashes (`proxy destroyed / link failed`) and avoiding GNOME Settings dropping the laptop speaker.
+- **Hardware Device Caching**: Cached discovered input devices in memory; re-probing only occurs when explicitly clicking Refresh in preferences.
+- **JACK Mode Isolation**: When running under JACK / PipeWire, `getAvailableInputDevices()` returns a virtual `"JACK System Capture"` representation and suppresses all JavaSound ALSA hardware scans.
+- **Coordinated Audio Teardown**: In `JavaSoundClient.stop()`, audio capture is paused and flushed, the reader thread is joined with a timeout (`thread.join(1000)`), and the native handle is closed only once confirmed idle. In `JackClient.stop()`, all active links are disconnected via `jack.disconnect()` before client deactivation and closure.
+- **Settling Cooldown & No-Op Switching**: Enforced a 150ms settling cooldown between `stop()` and `startClient()` during audio transitions to allow WirePlumber to finish graph cleanup, and short-circuited no-op device selections.
+- **Watchdog Reconnect Throttling**: Limited consecutive automatic audio reconnection attempts in `MidiJackWatchdog.kt` to 3 before pausing to prevent rapid cyclic stream recreation.
+
+### 100% ISF Pipeline Migration — Deprecating Hard-Wired FX & Mixer (`Renderer.kt`, `Deck.kt`, `Mixer.kt`, `ISFFilter.kt`, `ISFTransitionRegistry.kt`, `PresetModels.kt`, `default_filters/`, `default_transitions/`)
+- **100% Modular Feedback Effect (`default_filters/feedback.fs`)**: Replaced monolithic hardcoded `feedback.frag` with native ISF multi-pass persistent history buffers. Calibrated with 100% mathematical fidelity to the legacy cubic decay curve ($s \to (1 - s)^3$) and all 9 parameters (`fbDecay`, `fbGain`, `fbZoom`, `fbRotate`, `fbHueShift`, `fbBlur`, `fbChroma`, `fbMode`, `fbKaleido`). Added buffer zeroing on reset to prevent ghosting between presets.
+- **Modular 3D Elevation (`default_filters/3d_elevation.fs`, `Renderer.kt`, `ParametersTabs.kt`, `PresetModels.kt`)**: Replaced legacy `tri_planar.*` and `tetra_kaleido.*` geometry shaders with a raymarched ISF shader in FX Slot 2. Engineered exact 1:1 scale-normalized analytic inverse projection where vertical quad bounds match 2D flat mode at $z=0$ under `Zoom = 1.0`, and perspective smoothly transitions from orthographic parallel rays to perspective without scaling the focal plane. Added `blendMode` parameter (defaulting to Additive Luminous with `(1.0 + lum * 0.2)` boost) alongside premultiplied Alpha Over. Bypassed 2D zoom/rotation in `Renderer.renderDeck()` to eliminate double-transforms, exposed full 3D controls under the View tab, and ported `viewBlendMode` in preset migration. Supports Tri-Axial, Cube Cage, Hex-Planar, and 24-Chamber Tetrahedral Coxeter space folding with continuous roundness control.
+- **Pure ISF Mixer Transitions**: Migrated mixer transitions to 100% ISF shaders taking `startImage`, `endImage`, and `progress`. Bundled high-performance shaders for `additive_blend.fs`, `screen_blend.fs`, `multiply_blend.fs`, and `max_blend.fs` alongside `linear_crossfade.fs`, wipes, and glitch transitions.
+- **Preserved Deck BG Compositing**: Master compositing preserves Deck BG behind the active A/B transition output ($\text{Master Output} = \text{Composite}(\text{Deck BG}, \text{ISF\_Transition}(\text{Deck A}, \text{Deck B}, \text{progress}))$).
+- **Reduced GPU Memory Footprint**: Removed obsolete `rawSourceFBO`, `rawSource2DFBO`, `fb1`, and `fb2` ping-pong framebuffers from `Deck.kt`, eliminating 16 full-resolution / square FBO allocations across the 4 decks and saving hundreds of megabytes of VRAM.
+- **Automatic Preset Migration**: Existing presets containing legacy 3D modes or feedback parameters automatically map to `3d_elevation` in `fxSlot2` and `feedback` in `fxSlot1` upon loading.
 
 ### Modernization Upgrade to Dear ImGui 1.92 (`build.gradle.kts`, `KeyCombination.kt`, `ShortcutManager.kt`, `UIManager.kt`, `UITheme.kt`, `UIThemeStyler.kt`, `ParametersKeyboardTest.kt`)
 - **Dear ImGui 1.92.7.1 Upgrade**: Upgraded `io.github.spair:imgui-java` from `1.86.12` to `1.92.7.1`, bringing the desktop UI to the latest ImGui release.
@@ -1134,6 +1235,24 @@
 - **Modulation Matrix Note Integration**: Expanded `CVRegistry` and `ParametersRenderer` to support `midi_note_<channel>_<note>` modulators alongside `midi_cc_<channel>_<cc>`.
 - **Full Backward Compatibility**: All new fields in `MidiControlMapping` default seamlessly, ensuring existing `library/midi/*.json` profile files load without error or data loss.
 
+### Flexible ISF Shader Management, Role Auto-Detection & Folder Hierarchy (`ISFScanner.kt`, `ISFModels.kt`, `ISFParser.kt`, `ISFTextureLoader.kt`, `ISFVisualSource.kt`, `ISFFilter.kt`, `VisualSourceRegistry.kt`, `ISFFilterRegistry.kt`, `ISFTransitionRegistry.kt`, `ShaderPickerPopup.kt`)
+- **JSON Input Role Auto-Detection**: Eliminated rigid directory requirements (such as forcing shaders into specific `Generators/`, `Filters/`, or `Transitions/` folders). The scanner inspects the declared `INPUTS` in the shader's JSON header:
+  - **0 image inputs** $\to$ Auto-classified as **Generator** (`ISFAssetType.GENERATOR` / `VisualSourceRegistry`).
+  - **1 image input** (`inputImage`) $\to$ Auto-classified as **Filter** (`ISFAssetType.FILTER` / `ISFFilterRegistry`).
+  - **2+ image inputs** (`startImage`, `endImage`) or presence of a `progress` float $\to$ Auto-classified as **Transition** (`ISFAssetType.TRANSITION` / `ISFTransitionRegistry`).
+- **Preserved Folder Hierarchies as Categories**:
+  - Automatically captures user subfolder structures (e.g. `Packs/Retro/Noise`) and attaches them to `folderPath` and shader category tags.
+  - Recursively scans directory trees without requiring root-level flattening.
+- **Hierarchical UI Browser & View Modes**:
+  - `ShaderPickerPopup` now provides a dual view mode toggle: **Folders** (`Icons.FOLDER`) and **Flat** (`Icons.LAYOUT_FULL`).
+  - **Folders Mode**: Renders collapsible, organized tree nodes (`ImGui.treeNodeEx`) matching the user's filesystem structure, with auto-expansion when searching.
+  - **Flat Mode**: Displays a high-density 3-column table with category badges.
+- **Relative Asset Resolution for `IMPORTED` Textures (`ISFTextureLoader.kt`)**:
+  - Fully parses ISF `IMPORTED` asset declarations in both JSON dictionary and array schemas.
+  - Loads referenced local assets (noise textures, lookup tables, image masks) relative to the shader file's original directory using thread-safe STBImage loading on Thread 0.
+  - Injects `uniform sampler2D <name>;` into generated GLSL.
+  - Binds imported textures across sequential texture units in `ISFVisualSource` and `ISFFilter` with zero per-frame heap allocations during render loops.
+
 ### Transition Settings to Preferences Across UI, Storage & Shortcuts (`PreferencesPanel.kt`, `AppPreferences.kt`, `BroadcastPreferences.kt`, `UITheme.kt`, `MenuBar.kt`, `ShortcutManager.kt`)
 - **UI Nomenclature**: Standardized all user-facing dialogs, menus, and HUD tooltips from "Settings" to "Preferences". The top menu bar now provides `File > Preferences...` and telemetry quick-launch actions open Preferences categories directly.
 - **Dedicated Global Shortcut**: Added `Ctrl+P` (Windows/Linux) and `Cmd+P` (macOS) shortcut (`global.preferences`) to immediately open the Preferences dialog from anywhere in the application.
@@ -1154,6 +1273,21 @@
 - **Tab Row `[ LIVE ]` / `[ MUTED ]` Button**: Relocated the Master Cell Mute/Live toggle button to the top tab row (`Value`, `MIDI`, `LFO`, `SEQ`, `Audio`), aligned to the right, matching tab height and maintaining consistent button width.
 - **Streamlined Tab-to-Scope Header**: Removed the redundant parameter path header row (`Deck A | ...`), the separator line beneath the tab bar, and the separator line beneath the header row, maximizing vertical screen real estate for the oscilloscope and modulator controls.
 - **Zero-Allocation Render Path**: Preallocated immutable label arrays across all physical Auto duration tiers (`1s`, `10s`, `100s`, `15m`, `2.5h`, `24h`) in `OscilloscopeDrawer`, avoiding GC string and array allocations during render loops.
+
+### Universal Shader Ecosystem Support — ISF, Shadertoy & GLSLSandbox (`ISFParser.kt`, `ISFVisualSource.kt`, `Renderer.kt`, `AudioTexture.kt`, `VisualSourceRegistry.kt`, `ISFScanner.kt`)
+- **Multi-Format Ingestion & Smart Detection**: Shaders across the live visuals ecosystem (**ISF**, **Shadertoy**, and **The Book of Shaders / GLSLSandbox**) are now automatically recognized, normalized, and cataloged without requiring manual code conversion or JSON headers.
+- **Legacy GLSL 1.20 Core 3.30 Compatibility**: Injects automatic polyfills for legacy GLSL calls (`texture2D`, `textureCube`, `texture2DRect`, `texture2DProj`) and aliases `gl_FragColor` to modern core outputs.
+- **Complete ISF Macro Suite**: Added built-in macros `IMG_THIS_PIXEL`, `IMG_THIS_NORM_PIXEL`, and `IMG_SIZE` alongside existing `IMG_NORM_PIXEL` and `IMG_PIXEL`.
+- **Automatic Shadertoy Entry Point Shim**: Shaders featuring `void mainImage(...)` automatically receive entry-point bridging to `void main()` writing to normalized fragment coordinates.
+- **Unified Uniform Bridge**: Pre-injects and binds unified uniform sets on every frame in `Renderer.kt`:
+  - Resolution: `RENDERSIZE`, `iResolution` (vec3), `u_resolution`, `resolution`
+  - Clocks & Time: `TIME`, `iTime`, `u_time`, `time`, `TIMEDELTA`, `iTimeDelta`, `u_delta`
+  - Frame & FrameRate: `FRAMEINDEX`, `iFrame`, `u_frame`, `iFrameRate`
+  - Calendar / Clock: `DATE`, `iDate` (year, month, day, seconds since midnight)
+  - Interactive Mouse: `iMouse` (vec4 with pixel coordinates and click drag status), `u_mouse` / `mouse` (normalized vec2)
+  - Audio Scalars: `audioVolume`, `audioBass`, `audioMid`, `audioTreble` from `CVRegistry`
+- **Real-Time Audio FFT & Waveform Texture (`AudioTexture.kt`)**: Implemented a dedicated 512x2 floating-point texture (`GL_R32F`) updating live from `AudioEngine` (Row 0: 512 FFT magnitude bins; Row 1: 512 waveform samples) bound to `audioFFT` and `iChannel0` with zero audio thread allocation.
+- **Multi-Pass Visual Generators (`ISFVisualSource.kt`)**: Extended full multi-pass ping-pong FBO rendering to visual generators, supporting offscreen pass targets, dimension expressions (`$WIDTH/2.0`, `$HEIGHT/2.0`), persistent history buffers, and 32-bit floating point passes (`FLOAT: true`).
 
 ### Properties Panel Title Bar & Typography Synchronization (`PropertiesPanel.kt`, `UIManager.kt`)
 - **Synchronized 1.5x Title Bar Height**: Configured the Properties panel window with `NoTitleBar` and `MenuBar` flags wrapped in `PanelTitleBar.withFramePadding(session)`, eliminating the default un-styled window title bar and rendering the synchronized 1.5x scaled title bar (`PanelTitleBar.calculateHeight(session)`) matching the height of the Parameters panel to the left.
@@ -1460,6 +1594,8 @@
 - **ISF 3D Mode & Feedback Flags**: Added `is3D` and `feedback` metadata support to `ISFHeader` and automatic 3D mode classification based on `Rotate X` and `Rotate Y` parameter detection.
 - **Colors Source Parity**: Preserved all 7 parameters (`Style`, `Hue`, `Sat`, `Val`, `Sweep`, `Speed`, `Zoom`) and restored full backwards compatibility.
 
+---
+
 ## Version 1.0.0-beta.58
 
 > [!NOTE]
@@ -1612,6 +1748,12 @@
 - **Inline Controls Row & Unified Button Styling (`QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`)**:
   - Moved the `Clear` button to the second row inline directly after `Export`.
   - Unified the active color scheme across both queues: Shuffle and Repeat buttons highlight with mint-green text and background when active, and revert to standard theme button styling when inactive.
+
+### Build System & Toolchain Warning Cleanups (`build.gradle.kts`, `gradlew`, `gradlew.bat`, `gradle.properties`, `SessionStateTest.kt`)
+- **JDK 25 Native Access Enablement (`gradlew`, `gradlew.bat`, `gradle.properties`)**: Configured `--enable-native-access=ALL-UNNAMED` in Gradle wrapper default JVM options and daemon JVM args (`org.gradle.jvmargs`), eliminating the Java 25 `System::load` restricted method warning from `native-platform` on modern JDKs.
+- **Gradle 9 Dependency Notation Deprecations (`build.gradle.kts`)**: Converted multi-argument `implementation(...)` and `runtimeOnly(...)` dependency calls for LWJGL and ImGui to standard single-string coordinate notation (`"group:name:version"` and `"group:name:version:classifier"`), resolving all Gradle 9 deprecation warnings.
+- **Documentation Task Logging (`build.gradle.kts`)**: Switched `mkdocs` missing fallback notice in `generateDocs` from stdout warning formatting to `logger.info`, keeping standard build task output clean when MkDocs is not installed.
+- **Kotlin Smart-Cast Nullability Warnings (`SessionStateTest.kt`)**: Removed redundant safe-call operators (`?.`) on values following `assertNotNull` assertions in `SessionStateTest`, resolving Kotlin 2.3+ compiler warnings.
 
 ---
 
@@ -1861,6 +2003,13 @@
 - **Zero Breaking Changes**: Version 1.86.12 preserves 100% binary and source compatibility with existing UI code, ensuring zero risk of visual or behavioral regressions.
 - **Modernization Roadmap**: Documented the full multi-architecture investigation and Phase 2 migration guide for Dear ImGui 1.92.x in `docs/developer/imgui_upgrade_guide.md`.
 
+#### 0.1. Automated 5-Platform Binary Smoke Testing & Selective Release Gating (`Main.kt`, `build.gradle.kts`, `.github/workflows/smoke-test.yml`, `.github/workflows/release.yml`)
+- **Headless Diagnostic Smoke Test (`--smoke-test`)**: Added a fast, 5-stage headless self-diagnostic test to the application entry point. Verifies JVM runtime/architecture, tests LWJGL native library linkage, tests Dear ImGui native bindings and context creation/destruction (`ImGui.createContext()`), verifies classpath resource packaging (core shaders and presets), and verifies AudioEngine fallback initialization without requiring a physical monitor or GPU.
+- **CLI Flags & Info Dispatch (`Main.kt`)**: Added `--version` / `-v` (prints version, OS, architecture, and JVM runtime details) and `--help` / `-h`.
+- **Launcher CLI Argument Forwarding (`build.gradle.kts`)**: Updated generated desktop launchers (`run-linux.sh`, `run-windows.bat`, `run-mac-arm.command`, `run-mac-intel.command`) to forward all command-line arguments directly to the application JAR (`"$@"` on Unix and `%*` on Windows).
+- **Parallel 5-Platform CI Matrix (`.github/workflows/smoke-test.yml`)**: Automated native smoke testing on GitHub-hosted runners (`ubuntu-latest`, `ubuntu-24.04-arm`, `macos-latest`, `macos-13`, and `windows-latest`) on pull requests and workflow dispatch.
+- **Selective Release Gating (`.github/workflows/release.yml`)**: Release builds run the 5-platform matrix before publishing. Only platform distribution ZIPs that pass automated smoke testing are published to GitHub Releases, preventing broken builds from reaching users while permitting functioning platforms to release even if a single platform experiences a regression.
+
 #### 0.1. Release Packaging, Launcher Permissions, and Library Distribution (`build.gradle.kts`, `VisualSourceRegistry.kt`, `Main.kt`)
 - **Executable Permissions on Release Scripts**: Fixed an issue where `run-linux.sh`, `run-mac-arm.command`, `run-mac-intel.command`, and bundled `bin/java` binaries lost executable permissions in GitHub release ZIPs. Updated `build.gradle.kts` to invoke `permissions { unix("755") }` on `FileCopyDetails` in all distribution zip tasks.
 - **Library Sources & Presets Bundled in Releases**: Added `library/**` packaging into `packageThumbDrive` and all platform ZIP distributions (`zipWindows`, `zipLinux`, `zipLinuxArm`, `zipMacArm`, `zipMacIntel`), resolving runtime crashes where `VisualSourceRegistry` failed to find `library/sources/mandala`.
@@ -1895,7 +2044,7 @@
 - **Morphing vs. Breathing**: Prevents visual clipping and extreme shrinkage when arm lengths vary or are modulated by LFOs, shifting dynamics to harmonic petal balance morphing while anchoring the outer bounding circle.
 - **Desktop & WebGL2 Parity**: Uniformly applied in desktop OpenGL (`Renderer.kt`) and browser WebGL2 (`web/renderer.js`) pipelines, ensuring identical visual scaling and radial depth shading across platforms.
 
-#### 0.1. Universal 3D Tri-Axial & 2D View Stage (`Deck.kt`, `Renderer.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `tri_planar.vert`, `tri_planar.frag`, `view2d.frag`)
+#### 0.2. Universal 3D Tri-Axial & 2D View Stage (`Deck.kt`, `Renderer.kt`, `PresetGridTabs.kt`, `PresetModels.kt`, `tri_planar.vert`, `tri_planar.frag`, `view2d.frag`)
 - **Universal 3D Orthogonal Transformation**: Elevates any 2D visual source (Chladni, Dynamic Spiral, Attractor, Video, etc.) into a 3D rotating structure across intersecting orthogonal planes ($XY$, $YZ$, $ZX$) at $90^\circ$ angles, forming a holographic gyroscope / celestial sphere, or a 6-sided Cube Cage.
 - **Universal 2D View Transformation (`view2d.frag`, `rawSource2DFBO`)**: When in standard 2D mode (`3D Mode < 0.5`), universal View parameters `Zoom` and `Rotate Z` (Roll) actively transform the 2D source before entering the feedback loop. Operates at full native widescreen resolution via `rawSource2DFBO` with isotropic aspect-ratio-corrected rotation and transparent border blanking.
 - **Contextual View UI Parameter Visibility (`PresetGridTabs.kt`)**: Reordered the View tab to place universal controls at the top (`Zoom`, `Rotate Z`, `3D Mode`). Automatically hides 3D-only controls (`Rotate X`, `Rotate Y`, `3D Persp`, `Depth Dim`, `Separation`, `Blend Mode`) when in 2D mode (`3D Mode < 0.5`), eliminating confusing non-functional sliders while preserving parameter paths and modulation bindings.
@@ -1904,7 +2053,7 @@
 - **Luminance-Derived Transparency & Pedestal Discard (`tri_planar.frag`)**: Empty 2D background space on intersecting 3D planes is rendered 100% transparent via smoothstep luminance gating ($<1.5\%$ noise floor discarded), preventing opaque black planar quads from occluding intersecting geometries or casting gray shadows over background elements.
 - **Preset Serialization & Backward Compatibility**: Fully serialized under `viewParameters` in `.lsd` preset files with default fallback to ensure all legacy presets load without interruption.
 
-#### 0.2. Mandala Architecture Unification (`Mandala.kt`, `PresetGridTabs.kt`, `PresetGridPanel.kt`, `PresetModels.kt`, `WebPresetSerializer.kt`, `ValueParamSection.kt`, `CellConfigPanel.kt`)
+#### 0.3. Mandala Architecture Unification (`Mandala.kt`, `PresetGridTabs.kt`, `PresetGridPanel.kt`, `PresetModels.kt`, `WebPresetSerializer.kt`, `ValueParamSection.kt`, `CellConfigPanel.kt`)
 - **Streamlined Source Parameters & View Tab Cleanup**: Cleaned up Mandala's `meta.json` declaration so generator geometry controls (`Lobes`, `Recipe Select`, `L1`–`L4`, `Thickness`, `Hue Offset`, `Hue Sweep`, `Depth`) populate the `SRC` tab in natural declaration order. Removed legacy hardcoded Mandala transform parameters (`Zoom`, `Rotate Z`, `Rotate Y`, `Rotate X`, `3D Persp`), eliminating duplicate spatial controls in the `View` subtab and delegating all spatial transformation to the universal Deck View pipeline.
 - **Streamlined Source Dropdown**: Pruned hardcoded "Mandala" menu entries from `PresetGridTabs.kt` and `PresetGridPanel.kt` in favor of single-loop iteration over `VisualSourceRegistry.availableSources`.
 - **Preset Model Simplification & Dynamic Recipe Restoration**: Eliminated `MandalaRecipeDto` and the redundant `recipe` field in `DeckPresetDto`. Presets now serialize and restore `Lobes` and `Recipe Select` as standard modulatable parameters; upon loading, `Mandala.update()` evaluates those parameters and restores the matching Fourier ratio automatically.
@@ -1949,6 +2098,8 @@
   - Enforced `NoScrollbar` on outer Library and Mixer/Monitor panels and added horizontal scroll resets (`setScrollX(0f)`) across child panels to prevent parameter labels or cards from drifting off-screen.
 - **Library & Preset Grid Vertical Kebab More Actions Button (`⋮`) (`Icons.kt`, `BrowserRowMoreButton.kt`, `PresetListPanel.kt`, `PlaylistEditorPanel.kt`, `QueueActionsPanel.kt`, `BgQueueActionsPanel.kt`, `PresetGridRenderer.kt`)**: 
   - Corrected `Icons.MORE_VERTICAL` (`\ue0b7`) and `Icons.MORE_HORIZONTAL` (`\ue0b6`) to match Lucide's TrueType Private Use Area codepoints for true vertical kebab (`⋮`) and horizontal ellipsis, replacing an incorrect mouse pointer arrow glyph.
+  - Widened button hit target width to 28px across Library panels and the Preset Grid, enlarged dot size to 3.5px radius with 9.0px vertical spacing, and centered the three vertical dots cleanly with subpixel precision using geometric circle rendering (`ImDrawList.addCircleFilled`), eliminating font advance skew where dots were touching the right border.
+  - Implemented seamless popup switching: clicking any kebab button immediately closes any currently open popup and opens the target row's context menu in a single click, suppressing hover tooltips when the menu opens.
   - Sized list row selectables and invisible buttons across the Library and Preset Grid to maintain dedicated hit-testing bounds, ensuring left-clicks and right-clicks on the kebab button reliably trigger context menus on the first click without selectable event stealing or hover flicker.
   - Added the vertical kebab button to parameter rows in the Preset Grid (flush right within the parameter label column), providing left-click discoverability for row actions (Randomize row, Copy/Paste modulations, Reset to default, Clear CVs/MIDI, and Add/Edit Parameter Notes).
 - **Instant Search Focus (<kbd>Ctrl+F</kbd> / <kbd>/</kbd>) & Clear (<kbd>Esc</kbd>)**: Pressing <kbd>Ctrl+F</kbd> or <kbd>/</kbd> (when not focused on a text input) automatically opens the Library (if hidden) and focuses the preset search bar with text highlighted. Pressing <kbd>Esc</kbd> while the search box is active clears the filter query and returns focus back to the preset table for seamless keyboard navigation (`1`–`4`, `Q`, `Shift+Q`, `↑`, `↓`).
@@ -2031,8 +2182,11 @@
 - **Robot Icon Queue Toggles**: Replaced text checkboxes with robot toggle buttons (`Icons.BOT` / `Icons.BOT_OFF`) for both A/B Queue (`AUTO-VJ`) and Background Queue (`AUTO-BG`).
 - **Deck BG Dirty State Protection**: Symmetrically guards BG Queue auto-advances with `PresetManager.isDeckDirty` respecting `UITheme.autoVjDirtyBehavior`.
 
-#### 5. Consolidated Audio Engine Settings & UI Polish (`llm.slop.liquidlsd.ui`)
+#### 5. Consolidated Audio Engine Settings & UI Polish (`llm.slop.liquidlsd.ui`, `llm.slop.liquidlsd.cv`, `llm.slop.liquidlsd.audio`)
 
+- **Decoupled Audio-Rate CV History Pushing**: Directly appends audio RMS and onset signals (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `trigger_onset`, `trigger_accent`) to `CvHistoryBuffer` ring buffers inside `AudioEngine.processAudio()` at the audio block rate (~86–344 Hz). Eagerly caches buffer references on `AudioEngine` to maintain zero-allocation, lock-free JACK callback safety, making audio oscilloscopes immune to UI frame drops, GC pauses, or render-thread hitches.
+- **Frame-Delta Beat Clock Extrapolation**: Replaced the static flatline clamp (`safeBeats = current`) in `CVRegistry.getSynchronizedTotalBeats()` with elapsed frame-delta forward extrapolation (`current + frameDtSec * (bpm / 60.0)`), completely eliminating periodic oscilloscope freezes, flatlines, and stutter on `beatSine`, `beatPhase`, and beat-synced LFO modulators.
+- **Anchor Block Duration Alignment**: Fixed beat anchor timestamps in `AudioEngine.kt` to reflect `currentTime + blockDurationNs`, perfectly aligning `anchorTimeNs` with `totalBeats` calculated at the end of the processed block.
 - **Two-Column Audio Engine Settings Tab**: Consolidated driver selection, JACK auto-reconnect, beat detection settings, interactive dual-headed BPM range slider, input gain, and sound-derived CV oscilloscopes into a balanced 2-column layout in Settings.
 - **Zero-Lag Oscilloscope Slicing**: Fixed `CvHistoryBuffer.copyTo()` to display the true latest chronological window without latency delay, and expanded the trace buffer to 400 samples.
 - **Hardware Device Caching**: Cached ALSA/JavaSound device introspection in `AudioEngine.kt` to prevent per-frame querying handle leaks and out-of-memory crashes.
