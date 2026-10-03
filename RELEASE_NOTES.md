@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Perform Pages: Copy As New Page, Controller Names Shown
+- **Copy As New Page**: every page in Perform Pages has a "Name for a copy" field and a button that makes an independent user page with the same rows and its own controller name (`perform.<name>`), leaving the original untouched. Use it instead of renaming a copied built-in (which keeps its old `perform.decks`-style name); hide the original with Show in tab strip if you don't want its tab.
+- Each page now shows its **controller name** (`perform.<id>`) as the thing to put in a controller profile's `banks.pages`.
+
 ### Hide Perform Pages, Tabs Shrink to Fit (`ui/PerformPagesPanel.kt`, `MenuBar.kt`, `UITheme.kt`)
 - **Show in tab strip**: each page in Preferences > MIDI Controls > Perform Pages has a checkbox. Unticking it removes the tab (for example hide DECKS to keep four pages); the setting is remembered. A controller bank that selects the page (`perform.<id>`) still shows it, and the last visible tab can't be hidden. Hiding the page you are on switches to the first visible one.
 - **Tab strip overflow**: with more than five tabs they narrow to stay within the width of five, and a tab's tooltip always shows its full name.

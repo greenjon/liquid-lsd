@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#perform-pages-copy-as-new-page-controller-names-shown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform Pages: Copy As New Page, Controller Names Shown
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#hide-perform-pages-tabs-shrink-to-fit-uiperformpagespanelkt-menubarkt-uithemekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4844,6 +4855,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#perform-pages-copy-as-new-page-controller-names-shown" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perform Pages: Copy As New Page, Controller Names Shown
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#hide-perform-pages-tabs-shrink-to-fit-uiperformpagespanelkt-menubarkt-uithemekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8455,6 +8477,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="perform-pages-copy-as-new-page-controller-names-shown">Perform Pages: Copy As New Page, Controller Names Shown</h3>
+<ul>
+<li><strong>Copy As New Page</strong>: every page in Perform Pages has a "Name for a copy" field and a button that makes an independent user page with the same rows and its own controller name (<code>perform.&lt;name&gt;</code>), leaving the original untouched. Use it instead of renaming a copied built-in (which keeps its old <code>perform.decks</code>-style name); hide the original with Show in tab strip if you don't want its tab.</li>
+<li>Each page now shows its <strong>controller name</strong> (<code>perform.&lt;id&gt;</code>) as the thing to put in a controller profile's <code>banks.pages</code>.</li>
+</ul>
 <h3 id="hide-perform-pages-tabs-shrink-to-fit-uiperformpagespanelkt-menubarkt-uithemekt">Hide Perform Pages, Tabs Shrink to Fit (<code>ui/PerformPagesPanel.kt</code>, <code>MenuBar.kt</code>, <code>UITheme.kt</code>)</h3>
 <ul>
 <li><strong>Show in tab strip</strong>: each page in Preferences &gt; MIDI Controls &gt; Perform Pages has a checkbox. Unticking it removes the tab (for example hide DECKS to keep four pages); the setting is remembered. A controller bank that selects the page (<code>perform.&lt;id&gt;</code>) still shows it, and the last visible tab can't be hidden. Hiding the page you are on switches to the first visible one.</li>

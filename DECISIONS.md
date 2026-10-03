@@ -1,3 +1,10 @@
+## Perform Page Ids Stay Stable; Copy As New Page Mints a New One (`PerformPagesPanel`, `PerfPageDef.idFromName`)
+
+- **Decision**: a page's id never follows its name. To get a new `perform.<name>`, "Copy As New Page" saves the rows under an id derived from a typed name (refused if that id exists). The panel labels the id as the "controller name".
+- **Rationale**: profiles reference `perform.<id>` and `showPage` ignores unknown ids silently, so renaming-driven ids or positional ids (`perform.1`) would break banks on rename, hide or delete.
+- **Alternatives rejected**: ids derived from the name on rename; positional ids; renaming the id in place (would need to rewrite every profile that names it).
+- **Consequences**: a copied built-in that is only renamed keeps its old controller name; copying under a new name is the way out.
+
 ## Hidden Perform Pages Are a Preference, Tabs Shrink Past Five (`UITheme.hiddenPerformPages`, `PerfTabStrip`)
 
 - **Decision**: hiding is a per-user preference (`hiddenPerformPages`, comma-separated ids), not a field of the page file, so built-ins can be hidden without copying. It only affects the tab strip: controller banks and Deep Edit's page lookup still use every page. The last visible page can't be hidden. Tabs keep 68 px up to five, then narrow so the strip never grows past five tabs' width (minimum 36 px).

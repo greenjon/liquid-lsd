@@ -28,6 +28,9 @@ data class PerfPageDef(
     companion object {
         const val ROWS = 4
 
+        /** A page id from a display name: lowercase letters and digits joined by '-'. Empty if nothing usable. */
+        fun idFromName(name: String): String = name.trim().lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
+
         /** The built-in page shown first. */
         const val DEFAULT_ID = "decks"
     }

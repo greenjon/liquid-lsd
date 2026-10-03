@@ -157,4 +157,16 @@ class PerfPageStoreTest {
             UITheme.performancePageId = savedActive
         }
     }
+
+    @Test
+    fun idFromNameAndIndependentCopy() {
+        assertEquals("my-page-2", PerfPageDef.idFromName("  My Page #2! "))
+        assertEquals("", PerfPageDef.idFromName("!!!"))
+        val store = store()
+        val ab = store.get("ab")!!
+        assertEquals(emptyList(), store.saveUser(ab.copy(id = "my-ab", name = "My AB")))
+        assertEquals(PerfPageStore.Source.USER, store.sourceOf("my-ab"))
+        assertEquals(PerfPageStore.Source.BUILT_IN, store.sourceOf("ab"))
+        assertEquals(ab.rows, store.get("my-ab")!!.rows)
+    }
 }

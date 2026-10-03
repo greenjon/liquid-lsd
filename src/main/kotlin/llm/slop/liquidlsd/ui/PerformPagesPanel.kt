@@ -15,6 +15,7 @@ object PerformPagesPanel {
     private var problems: List<String> = emptyList()
     private val newName = ImString(32)
     private val nameFields = HashMap<String, ImString>()
+    private val duplicateNames = HashMap<String, ImString>()
 
     private val catalogIds: List<String> by lazy { PerfRows.CATALOG.keys.toList() }
 
@@ -42,7 +43,7 @@ object PerformPagesPanel {
             }
             ImGui.text(page.name)
             ImGui.sameLine()
-            theme.caption("[perform.${page.id}] $label")
+            theme.caption("$label  |  controller name: perform.${page.id}")
             val shown = ImBoolean(page.id !in theme.hiddenPerformPages)
             if (ImGui.checkbox("Show in tab strip##show", shown)) {
                 if (theme.setPerformPageHidden(page.id, !shown.get())) AppPreferencesStore.savePreferences()
@@ -63,6 +64,7 @@ object PerformPagesPanel {
                 }
                 itemTooltip("Removes the user file. A built-in page with the same id becomes active again; a page of your own disappears from the strip.")
             }
+            drawDuplicate(store, page, theme)
             ImGui.popID()
             ImGui.spacing()
         }
@@ -77,7 +79,7 @@ object PerformPagesPanel {
         ImGui.inputTextWithHint("##new_page_name", "New page name", newName)
         ImGui.sameLine()
         val name = newName.get().trim()
-        val id = name.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
+        val id = PerfPageDef.idFromName(name)
         val canCreate = id.isNotEmpty() && store.get(id) == null
         if (!canCreate) ImGui.beginDisabled()
         if (ImGui.button("${Icons.PLUS} New Page##new_page")) {
@@ -96,6 +98,29 @@ object PerformPagesPanel {
         }
         itemTooltip("Re-reads library/perform_pages/*.json after you edit a file by hand.")
         message?.let { theme.caption(it) }
+    }
+
+    /** Copies [page]'s rows into a new user page whose id comes from the name typed here, leaving [page] alone. */
+    private fun drawDuplicate(store: PerfPageStore, page: PerfPageDef, theme: UITheme) {
+        val field = duplicateNames.getOrPut(page.id) { ImString(32) }
+        ImGui.setNextItemWidth(160f)
+        ImGui.inputTextWithHint("##dup_name", "Name for a copy", field)
+        ImGui.sameLine()
+        val name = field.get().trim()
+        val id = PerfPageDef.idFromName(name)
+        val taken = id.isNotEmpty() && store.get(id) != null
+        if (id.isEmpty() || taken) ImGui.beginDisabled()
+        if (ImGui.button("${Icons.COPY} Copy As New Page##dup")) {
+            problems = store.saveUser(page.copy(id = id, name = name))
+            message = if (problems.isEmpty()) "Created page $id (controller name perform.$id)" else null
+            if (problems.isEmpty()) field.set("")
+        }
+        if (id.isEmpty() || taken) ImGui.endDisabled()
+        itemTooltip(
+            if (taken) "A page with the id '$id' already exists."
+            else "Makes an independent page with its own controller name${if (id.isEmpty()) "" else " (perform.$id)"}, so this one stays as it is.",
+            allowWhenDisabled = true
+        )
     }
 
     private fun drawEditor(store: PerfPageStore, page: PerfPageDef) {
