@@ -62,14 +62,15 @@ class NavCommandsTest {
     }
 
     @Test
-    fun otherKnobsAndNonBrowsingKeepTheirPerformMeaning() {
+    fun otherKnobsAreInertWhileBrowsingAndKeepPerformMeaningOtherwise() {
         val nav = FakeNav(browsing = true)
         registry.execute("knob.2", CommandInput.Delta(0.01f), ctx(nav))
         press("knob.2.press", ctx(nav))
+        assertEquals(emptyList(), knobs.calls)
         val idle = FakeNav(browsing = false)
         registry.execute("knob.1", CommandInput.Delta(0.01f), ctx(idle))
         press("knob.1.press", ctx(idle))
-        assertEquals(listOf("turn 1", "primary 1", "turn 0", "primary 0"), knobs.calls)
+        assertEquals(listOf("turn 0", "primary 0"), knobs.calls)
         assertEquals(emptyList(), nav.calls + idle.calls)
     }
 }

@@ -1,3 +1,10 @@
+## Twister: Knobs 2-16 Are Inert While Browsing (`control/KnobCommands.kt`)
+
+- **Decision**: while `NavSurface.browsing` is true, knob 1 browses and knobs 2-16 ignore both turns and taps. Resolves the open question in `.planning/midi-phase3-navigation-plan.md`.
+- **Rationale**: the hands are on knob 1 and the side buttons; an accidental brush of another knob would silently change a live Perform parameter while the screen shows a list.
+- **Alternatives rejected**: keeping Perform meaning for knobs 2-16 (the previous behavior; risks live changes while browsing).
+- **Consequences**: tweaking a parameter mid-browse means closing the picker first. Covered by `NavCommandsTest`.
+
 ## Twister Pickers: Last-Touched Knob Opens, Knob 1 Cursor Browses (`ui/NavigationSurface.kt`, `ShaderPickerPopup.kt`, `PerformanceBrowseBay.kt`, `PerformSurface.kt`)
 
 - **Decision**: second slice of MIDI phase 3. A third context, *picker*, is "Edit row showing a `ShaderPickerPopup` list or the saved-chain list" (each stamps `lastDrawMs` on draw; `isShowing` = drawn in the last 300 ms, which also covers Master's MIX tab falling back to Params). Perform's right-bottom button opens a picker for the row of the **last-touched knob** (`PerformSurface.lastTouchedKnob`): SRC row = source list, FX row = the slot under the knob (SlotCell) or the focused slot, knob 1 = chain list, Transitions row = transition list. In the picker, knob 1 steps (`moveCursor`, flat view forced because the folder view hides collapsed groups) and taps to apply (`acceptCursor`); right-top = `stepCategory` (shift: back); shift + right-bottom = detach / clear (shift because it is destructive); left-top = back.
@@ -7,7 +14,7 @@
 
 ## Twister Navigation: Context-Dependent Side Buttons and a Knob 1 Cursor (`control/NavSurface.kt`, `NavCommands.kt`, `ui/NavigationSurface.kt`, `ui/LibraryNavigation.kt`, `ui/BackNavigation.kt`)
 
-- **Decision**: first slice of MIDI phase 3 (`.planning/midi-phase3-navigation-plan.md`). Shift stays on left-bottom (CC 10) and fine adjustment stays hold-the-knob-switch-and-turn. The free side buttons are commands `nav.button.1..3` and `.alt` (shift); a `NavSurface` on `CommandContext` decides what they mean from the current context (Library FULL = browse, otherwise Perform/Edit). While browsing, `KnobCommands` sends knob 1's turn (accumulated: 4 encoder ticks per item) and tap to the surface as `browseStep`/`browseAccept`; knobs 2-16 keep their Perform meaning. Accept applies, stepping never does.
+- **Decision**: first slice of MIDI phase 3 (`.planning/midi-phase3-navigation-plan.md`). Shift stays on left-bottom (CC 10) and fine adjustment stays hold-the-knob-switch-and-turn. The free side buttons are commands `nav.button.1..3` and `.alt` (shift); a `NavSurface` on `CommandContext` decides what they mean from the current context (Library FULL = browse, otherwise Perform/Edit). While browsing, `KnobCommands` sends knob 1's turn (accumulated: 4 encoder ticks per item) and tap to the surface as `browseStep`/`browseAccept`; knobs 2-16 were left on their Perform meaning (later made inert, see the newest entry). Accept applies, stepping never does.
   - Perform: left-top = back, right-top = open Library. Library: left-top = back, right-top = tab, right-bottom = list; shift = enqueue BG / previous tab / previous list; knob 1 tap = load or apply, shift + tap = enqueue A/B.
   - Extracted so keyboard, mouse and controller share them: the Esc stack (`BackNavigation`), enqueue and load-to-inactive-deck (`LibraryNavigation`). `setViewMode` clears `activeSelectionSource` so a cursor step after a tab change acts on the new tab's list.
 - **Rationale**: three buttons can't cover the Library, so context sets plus an encoder cursor can; the dispatch is in the surface so the controller profile stays static.

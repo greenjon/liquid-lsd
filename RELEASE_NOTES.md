@@ -4,6 +4,7 @@
 - **Open**: in the Perform view the right-bottom side button opens the picker for the row of the knob you touched last: a deck's SRC row opens its source list, an FX row opens the slot under that knob (knob 1 opens the saved-chain list), the Transitions row opens the transition list.
 - **Browse**: while a picker is showing, **knob 1 is the cursor** (turn = move the highlight, tap = apply the highlighted row; moving never applies anything). Right-top steps the category (shift: back), shift + right-bottom clears the slot or chain, left-top closes the picker. Moving the cursor switches the list to the flat view.
 - The highlighted row is also drawn on screen, so the picker is usable from the mouse too.
+- **Browsing locks the other knobs**: while a picker or the Library is being browsed, knobs 2-16 ignore turns and taps, so a stray touch can't change a Perform parameter. Knob 1 is the only live knob.
 
 ### Twister Side Buttons Navigate the Library (`control/NavCommands.kt`, `ui/NavigationSurface.kt`, `ui/LibraryNavigation.kt`)
 - **Perform view**: the left-top side button is **back** (the same steps as Esc: cancel Learn, close Preferences, leave FX focus, close Edit); the right-top button opens the **Library** view.

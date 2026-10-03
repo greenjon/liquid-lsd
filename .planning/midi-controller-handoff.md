@@ -53,7 +53,7 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
   `nav.button.N` / `nav.button.N.alt` (`control/NavCommands.kt`). `NavSurface` (`control/NavSurface.kt`, UI side
   `ui/NavigationSurface.kt`) decides the meaning from the context: Library view (Library FULL), picker (an SRC/FX/transition list
   or the saved-chain list is showing in the Edit row), else Perform/Edit. While `browsing`, `KnobCommands` sends knob 1's turn
-  (4 encoder ticks = 1 item, `BROWSE_STEP`) and tap to the surface; knobs 2-16 are unchanged.
+  (4 encoder ticks = 1 item, `BROWSE_STEP`) and tap to the surface; knobs 2-16 are inert.
 - Helpers: `ui/LibraryNavigation.kt` (tabs, lists, cursor, accept, enqueue), `ui/BackNavigation.kt` (the Esc stack, shared with the
   keyboard), `ShaderPickerPopup.moveCursor/acceptCursor/stepCategory/detach`, `ChainListBrowse`. Perform's right-bottom button opens
   the picker of the last-touched knob's row (`PerformSurface.lastTouchedKnob`).
@@ -94,7 +94,7 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
    the session's system reminder.
 2. ~~Simplify feedback~~ done 2026-10-02: addressing modes, staged/settle/heartbeat rewrites removed (hardware-verified).
 3. ~~Phase 3, navigation/browse~~ done (see "Navigation" below). Small leftovers, all listed in `.planning/midi-phase3-navigation-plan.md`:
-   decide whether knobs 2-16 go inert while a browse context is active (today they still change Perform parameters), FX queue
+   knobs 2-16 now inert while browsing (done), FX queue
    transport commands, a cursor for the FX/Trans playlist panes, highlight the currently applied source/FX in pickers.
 4. **Phase 5, profile UI**: choose/copy/edit controller profiles, learn into a profile. (The MIDI Controls panel's profile list
    is the legacy learned-mapping list, `library/midi/*.json`, not controller profiles; this confused the user once.)

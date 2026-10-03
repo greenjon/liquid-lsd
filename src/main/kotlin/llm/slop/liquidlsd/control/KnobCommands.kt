@@ -5,6 +5,7 @@ package llm.slop.liquidlsd.control
  *  - `knob.<n>` turns knob n. Turning while its switch is held is a fine adjustment.
  *  - `knob.<n>.press` is the switch: a tap (released without turning) runs the knob's primary action.
  *  - `knob.<n>.press_alt` is the same switch with shift held: a tap runs the secondary action.
+ * While a browse context is active, knob 1 browses and knobs 2-16 are inert.
  * Hold state lives here, not in the device, because the Twister sends identical turn messages whether
  * or not its switch is down. One instance serves all devices; the switch is expected to be held on
  * one device at a time.
@@ -21,9 +22,9 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
                 val delta = (input as CommandInput.Delta).steps
                 if (held[knob]) turnedWhileHeld[knob] = true
                 val nav = ctx.navSurface
-                if (knob == 0 && nav != null && nav.browsing) {
-                    browseTurn(delta, nav)
-                    return@Command
+                if (nav != null && nav.browsing) {
+                    if (knob == 0) browseTurn(delta, nav)
+                    return@Command // other knobs are inert while browsing
                 }
                 ctx.knobSurface?.turn(knob, if (held[knob]) delta * fineFactor else delta)
             })
@@ -56,8 +57,8 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         held[knob] = false
         if (!wasHeld || turnedWhileHeld[knob]) return
         val nav = ctx.navSurface
-        if (knob == 0 && nav != null && nav.browsing) {
-            nav.browseAccept(shifted)
+        if (nav != null && nav.browsing) {
+            if (knob == 0) nav.browseAccept(shifted)
             return
         }
         val surface = ctx.knobSurface ?: return

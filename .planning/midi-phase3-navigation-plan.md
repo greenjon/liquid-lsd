@@ -25,7 +25,7 @@ Library slice implemented (suite green, docs written, not hardware-tested): `Nav
 | Picker | back | category next | enqueue or chain-list toggle (decide) | turn = step cursor, press = accept |
 
 Shift layer (`shift+side.N`): tab prev, pane prev, enqueue A/B, enqueue BG for Library; category prev for Picker. Knobs 2-16 are
-inert in browse contexts (or keep their page meaning; decide when building).
+inert in browse contexts (decided and implemented 2026-10-02).
 
 ## Work items (new code unless noted)
 
