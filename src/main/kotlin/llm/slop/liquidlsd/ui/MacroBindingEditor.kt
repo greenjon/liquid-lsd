@@ -8,10 +8,11 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 
 /**
  * Reusable editor for one [MacroBinding]: enabled lock, travel range (Min/Max), link mode / invert,
- * response curve, step count and delete. Hosted by the Properties panel (and, later, the Edit-row strip).
+ * response curve, step count and delete. Hosted by the Properties panel ([drawFull]) and the Edit-row strip
+ * ([drawLine]); both share [drawRangeBar] and the Min/Max fields.
  *
  * Callers own the header (which macro, which target); this draws only the binding's settings.
- * Edits aren't on the undo stack, same as the Binding Inspector it replaces.
+ * Edits are undone by `MacroUndoTracker`, which watches the banks each frame, not by anything here.
  */
 object MacroBindingEditor {
     // Scratch buffers allocated once as fields (imgui_memory_management guidelines).

@@ -1208,6 +1208,50 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#transition-changes-are-applied-on-the-render-thread-presetstransitionopskt-presetsdeckslotkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transition Changes Are Applied on the Render Thread (presets/TransitionOps.kt, presets/DeckSlot.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ctrlz-now-undoes-macro-knob-edits-uimacroundotrackerkt-macromacroenginekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ctrl+Z Now Undoes Macro Knob Edits (ui/MacroUndoTracker.kt, macro/MacroEngine.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edit-view-shows-what-the-queue-plays-next-uiperformancedeepeditbaykt-presetsqueuenextupkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit View Shows What the Queue Plays Next (ui/PerformanceDeepEditBay.kt, presets/QueueNextUp.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edit-bay-tabs-are-grouped-edit-then-pick-uiperformancedeepeditbaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit Bay Tabs Are Grouped: Edit, then "Pick:" (ui/PerformanceDeepEditBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fx-knob-tooltip-no-longer-offers-rename-uiperformancemacrostripkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5218,6 +5262,50 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#transition-changes-are-applied-on-the-render-thread-presetstransitionopskt-presetsdeckslotkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transition Changes Are Applied on the Render Thread (presets/TransitionOps.kt, presets/DeckSlot.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ctrlz-now-undoes-macro-knob-edits-uimacroundotrackerkt-macromacroenginekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ctrl+Z Now Undoes Macro Knob Edits (ui/MacroUndoTracker.kt, macro/MacroEngine.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edit-view-shows-what-the-queue-plays-next-uiperformancedeepeditbaykt-presetsqueuenextupkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit View Shows What the Queue Plays Next (ui/PerformanceDeepEditBay.kt, presets/QueueNextUp.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edit-bay-tabs-are-grouped-edit-then-pick-uiperformancedeepeditbaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit Bay Tabs Are Grouped: Edit, then "Pick:" (ui/PerformanceDeepEditBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fx-knob-tooltip-no-longer-offers-rename-uiperformancemacrostripkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9203,6 +9291,27 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="transition-changes-are-applied-on-the-render-thread-presetstransitionopskt-presetsdeckslotkt">Transition Changes Are Applied on the Render Thread (<code>presets/TransitionOps.kt</code>, <code>presets/DeckSlot.kt</code>)</h3>
+<ul>
+<li>Dropping a transition preset (<code>.lsdtrans</code>) onto the crossfader, the Mixer transition button or the Master row used to swap the transition on a background thread. Swapping creates and deletes GPU resources, so this could glitch or crash. Every way of changing the transition (drops, the Library Transitions browser, the transition queue and playlists, the inline picker, "Reset Transition") now goes through one queue that applies the change at the start of the next frame, the same way FX changes already do.</li>
+<li>If a transition preset can't be read, a message now says so and the matching stock transition is used instead. Before, this only went to the log.</li>
+<li>Internal: new <code>TransitionOps</code> (replaces five copies of the drop handler and the queue manager's own loader; <code>PresetRepository.loadTransitionPresetAsync</code> is removed). New <code>DeckSlot</code> enum (A/B/BG/PV) with per-slot accessors on <code>PresetManager</code> (<code>activePreset</code>, <code>cachedDto</code>, <code>setActive</code>, <code>clearActive</code>, <code>mtime</code>), replacing hand-written four-way <code>when</code> chains in <code>DeckLifecycleManager</code> and <code>DeckPresetController</code>. No behaviour change from <code>DeckSlot</code>.</li>
+</ul>
+<h3 id="ctrlz-now-undoes-macro-knob-edits-uimacroundotrackerkt-macromacroenginekt">Ctrl+Z Now Undoes Macro Knob Edits (<code>ui/MacroUndoTracker.kt</code>, <code>macro/MacroEngine.kt</code>)</h3>
+<ul>
+<li>Adding or deleting a target, dragging a target's Min/Max, changing its curve, steps, invert, link mode or enabled state, renaming a knob, and importing a macro bank into a deck can all be undone with Ctrl+Z. A drag is one undo step.</li>
+<li>Not tracked: knob positions (they move constantly while performing) and FX knobs (the FX chain manages those). Loading a preset or source resets the macro knobs as before; that is covered by the source/deck undo step, not a separate one. Importing into Master/Global is undone as one step too.</li>
+<li>Internal: a per-frame tracker compares a hash of each knob's label and targets, so no widget had to be changed. <code>MacroEngine.bankReplaceEpoch</code> marks wholesale bank loads so they are not mistaken for hand edits.</li>
+</ul>
+<h3 id="edit-view-shows-what-the-queue-plays-next-uiperformancedeepeditbaykt-presetsqueuenextupkt">Edit View Shows What the Queue Plays Next (<code>ui/PerformanceDeepEditBay.kt</code>, <code>presets/QueueNextUp.kt</code>)</h3>
+<ul>
+<li>The Library's queue columns are hidden while a module is open in Edit view. The bay's tab row now ends with a dimmed one-liner, right-aligned: "Next: <preset> (2/12)", "Next: staged on Deck B" (a preset you loaded onto the standby deck, which plays first), "Next: shuffle (12 in queue)", "End of queue" or "Queue empty". Decks A/B and Master show the play queue, Deck BG shows its own queue, Deck PV shows nothing. It is hidden when the bay is too narrow, and long names are shortened (hover for the full text).</li>
+<li>Row geometry is unchanged: the text sits in the existing tab row, not in the Perform rows.</li>
+</ul>
+<h3 id="edit-bay-tabs-are-grouped-edit-then-pick-uiperformancedeepeditbaykt">Edit Bay Tabs Are Grouped: Edit, then "Pick:" (<code>ui/PerformanceDeepEditBay.kt</code>)</h3>
+<ul>
+<li>The bay's tab row mixed one tab that shows parameters (<code>Edit</code>) with tabs that open pickers (<code>SRC</code>/<code>TRANS</code>, <code>Chain</code>, <code>FX1-3</code>). A small "Pick:" label now sits between them so the two kinds read as separate groups.</li>
+</ul>
 <h3 id="fx-knob-tooltip-no-longer-offers-rename-uiperformancemacrostripkt">FX Knob Tooltip No Longer Offers Rename (<code>ui/PerformanceMacroStrip.kt</code>)</h3>
 <ul>
 <li>In the Edit-row strip, an FX knob's name tooltip said "Double-click to rename" although FX knobs can't be renamed. It now says they follow the FX chain.</li>
@@ -9219,8 +9328,8 @@
 <h3 id="changing-a-decks-source-now-says-when-it-replaces-your-macro-bindings-uidecksourcepickerkt-uitoastoverlaykt-presetsgeneratordefaultskt">Changing a Deck's Source Now Says When It Replaces Your Macro Bindings (<code>ui/DeckSourcePicker.kt</code>, <code>ui/ToastOverlay.kt</code>, <code>presets/GeneratorDefaults.kt</code>)</h3>
 <ul>
 <li>Picking a different source resets the deck's macro knobs to that source's defaults, as before. If that discarded bindings you had set up, a message at the bottom of the window now says so ("Deck A macro knobs reset to Gyroid defaults (previous bindings replaced)").</li>
-<li><strong>Ctrl+Z does not bring the old bindings back</strong> (undo covers modulators only). To keep a custom bank across source changes, export it first from the macro strip's kebab menu.</li>
-<li>Internal: new <code>ToastOverlay</code> (one transient bottom-centre message, drawn from <code>UIManager</code>); <code>GeneratorDefaults.applyToDeck</code> now returns whether it replaced existing bindings.</li>
+<li><strong>Ctrl+Z undoes a source change</strong>: it puts back the previous source, the macro knobs (labels, values, targets) and the deck's active preset. Before, undo ignored source changes entirely. Parameter edits made after the change are not undone separately; one Ctrl+Z reverts the whole swap. The message says "Ctrl+Z to undo".</li>
+<li>Internal: new <code>ToastOverlay</code> (one transient bottom-centre message, drawn from <code>UIManager</code>); <code>GeneratorDefaults.applyToDeck</code> now returns whether it replaced existing bindings; <code>ParametersUndoSnapshot</code> gained an optional <code>restore</code> lambda, and <code>DeckSourcePicker.swapSource</code> now pushes its snapshot before the swap, not after.</li>
 </ul>
 <h3 id="fixed-deck-and-master-row-modes-could-disagree-with-deep-edit-uiperformanceuicontextkt-uiperformancedeckcontrolskt-uiperformancemastercontrolskt-uifxheaderactionskt">Fixed: Deck and Master Row Modes Could Disagree With Deep Edit (<code>ui/PerformanceUiContext.kt</code>, <code>ui/PerformanceDeckControls.kt</code>, <code>ui/PerformanceMasterControls.kt</code>, <code>ui/FxHeaderActions.kt</code>)</h3>
 <ul>

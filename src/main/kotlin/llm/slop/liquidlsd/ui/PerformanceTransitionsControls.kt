@@ -156,18 +156,7 @@ internal object PerformanceTransitionsControls {
             val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
             if (payload != null) {
                 val file = File(payload)
-                if (file.extension.equals("lsdtrans", ignoreCase = true) && file.exists()) {
-                    session.presetRepository.loadTransitionPresetAsync(file).thenAccept { dto ->
-                        mixer.applyTransitionPreset(dto)
-                    }
-                } else {
-                    val id = if (file.extension.equals("fs", ignoreCase = true) || file.extension.equals("isf", ignoreCase = true)) {
-                        file.nameWithoutExtension
-                    } else {
-                        file.nameWithoutExtension.ifBlank { file.name }
-                    }
-                    mixer.setTransition(id)
-                }
+                llm.slop.liquidlsd.presets.TransitionOps.applyItem(file)
             }
             ImGui.endDragDropTarget()
         }
@@ -425,18 +414,7 @@ internal object PerformanceTransitionsControls {
             val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
             if (payload != null) {
                 val file = File(payload)
-                if (file.extension.equals("lsdtrans", ignoreCase = true) && file.exists()) {
-                    session.presetRepository.loadTransitionPresetAsync(file).thenAccept { dto ->
-                        mixer.applyTransitionPreset(dto)
-                    }
-                } else {
-                    val id = if (file.extension.equals("fs", ignoreCase = true) || file.extension.equals("isf", ignoreCase = true)) {
-                        file.nameWithoutExtension
-                    } else {
-                        file.nameWithoutExtension.ifBlank { file.name }
-                    }
-                    mixer.setTransition(id)
-                }
+                llm.slop.liquidlsd.presets.TransitionOps.applyItem(file)
             }
             ImGui.endDragDropTarget()
         }

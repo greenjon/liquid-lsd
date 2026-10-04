@@ -185,14 +185,6 @@ object PresetRepository {
         }, PresetManager.presetIoExecutor)
     }
 
-    fun loadTransitionPresetAsync(file: File): CompletableFuture<TransitionPresetDto> {
-        return CompletableFuture.supplyAsync({
-            if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
-            val content = file.readText()
-            PresetManager.json.decodeFromString<TransitionPresetDto>(content)
-        }, PresetManager.presetIoExecutor)
-    }
-
     fun saveTransitionPlaylistAsync(file: File, playlist: TransitionPlaylistDto) {
         CompletableFuture.runAsync({
             try {

@@ -5,6 +5,7 @@ import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.parameters.ParameterResolver
+import llm.slop.liquidlsd.presets.QueueNextUp
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 
@@ -155,6 +156,10 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
                 itemTooltip(tip)
             }
             tab("Edit", "Edit parameters, modulation and properties.", !inBrowse) { parametersState.openParams(moduleId) }
+            // Edit shows parameters; every tab after the label opens a picker for that slot.
+            ImGui.sameLine(0f, 12f)
+            ImGui.alignTextToFramePadding()
+            ImGui.textDisabled("Pick:")
             ImGui.sameLine()
             if (deckLabel != null) {
                 tab(lead, "Pick this deck's source.", inBrowse && target is ParametersState.BrowseTarget.Gen) {
@@ -174,10 +179,42 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
                 val slot = if (i == -1) null else i
                 tab(label, tip, inFx && fxSlot == slot) { parametersState.openFxChainBrowse(moduleId, deckLabel, slot) }
             }
+            drawQueueNextUp(session, deckLabel)
         }
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
+    }
+
+    /**
+     * Right-aligned, on the tab row: what the queue feeding this module plays next. The Library (and its queue
+     * columns) is off screen in Edit view, so without this a performer can't see what's coming. Decks A/B and
+     * Master show the play queue, BG its own queue; PV has none.
+     */
+    private fun drawQueueNextUp(session: SessionContext, deckLabel: String?) {
+        val text = when {
+            deckLabel == "Deck BG" -> session.bgQueueManager.let {
+                QueueNextUp.describe(it.queue, it.activeIndex, it.isShuffleEnabled, it.isRepeatEnabled)
+            }
+            deckLabel == "Deck PV" -> return
+            else -> session.playQueueManager.let {
+                val staged = when {
+                    it.stagedDeckA -> "A"
+                    it.stagedDeckB -> "B"
+                    else -> null
+                }
+                QueueNextUp.describe(it.queue, it.activeIndex, it.isShuffleEnabled, it.isRepeatEnabled, staged)
+            }
+        }
+        val left = ImGui.getCursorPosX() + ImGui.getStyle().itemSpacingX
+        val avail = ImGui.getWindowWidth() - left - ImGui.getStyle().windowPaddingX
+        if (avail < 60f) return
+        val fitted = TextFit.ellipsize(text, avail)
+        ImGui.sameLine()
+        ImGui.setCursorPosX((ImGui.getWindowWidth() - ImGui.getStyle().windowPaddingX - ImGui.calcTextSize(fitted).x).coerceAtLeast(left))
+        ImGui.alignTextToFramePadding()
+        ImGui.textDisabled(fitted)
+        itemTooltip(text + "\nThe Library queue columns are hidden in Edit view; Esc returns to them.")
     }
 
     fun deepEditParamsWidth(session: SessionContext, metrics: GridMetrics): Float {

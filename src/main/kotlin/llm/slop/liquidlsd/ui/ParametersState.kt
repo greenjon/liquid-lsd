@@ -349,7 +349,9 @@ class ParametersState : MidiLearnSink {
 
 
 data class ParametersUndoSnapshot(
-    val modulatorsByParamKey: Map<String, List<CvModulator>>
+    val modulatorsByParamKey: Map<String, List<CvModulator>>,
+    /** Extra state to put back on undo, run before the modulators are restored (e.g. a deck's source and macro bank). */
+    val restore: (() -> Unit)? = null
 )
 
 

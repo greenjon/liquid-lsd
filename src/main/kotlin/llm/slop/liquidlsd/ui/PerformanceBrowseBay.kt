@@ -163,7 +163,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
 
     private fun drawTransitionBrowse(session: SessionContext, mixer: Mixer) {
         ShaderPickerPopup.ensureInline("transition", "Select Mixer Transition", ShaderPickerPopup.PickerType.MIXER_TRANSITION, applied = { mixer.transitionFilter?.id ?: "linear_crossfade" }) { id ->
-            mixer.setTransition(id)
+            llm.slop.liquidlsd.presets.TransitionOps.setStock(id)
         }
         ShaderPickerPopup.drawInline(session)
     }

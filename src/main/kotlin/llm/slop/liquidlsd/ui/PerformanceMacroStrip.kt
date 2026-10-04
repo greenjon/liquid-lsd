@@ -223,6 +223,8 @@ internal object PerformanceMacroStrip {
                     MacroLearnState.setStatus("Exported macro bank to ${file.name}")
                 } else {
                     val (imported, skipped) = MacroBankSerializer.importFromFile(file, mixer)
+                    // Deck imports re-baseline the tracker (installBankForDeck bumps the epoch), so record the step here.
+                    if (browserDeckLabel != null) MacroUndoTracker.recordBeforeBulkEdit()
                     importInto(bank, imported, browserDeckLabel)
                     MacroLearnState.setStatus("Imported ${file.name}" + if (skipped > 0) " ($skipped target(s) skipped: parameter not found)" else "")
                 }

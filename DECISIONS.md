@@ -1,12 +1,30 @@
+## All Transition Changes Go Through `TransitionOps` (GL-thread queue), Like `FxOps` (`presets/TransitionOps.kt`)
+- **Decision**: `Mixer.setTransition` / `applyTransitionPreset` dispose and create ISF GL filters, so UI and queue code never call them directly. `TransitionOps.setStock / applyPreset / loadPreset / applyItem` queue the change; `Main.kt` drains it once per frame next to `FxOps.drainOnGlThread`. Session restore at startup still calls the mixer directly (main thread, before rendering).
+- **Why**: five copies of the `.lsdtrans` drop handler applied the preset in `thenAccept` on `presetIoExecutor` (a GL-thread violation), and the queue manager read the file synchronously on the UI thread. Review: `docs/developer/ui_interaction_architecture_review.md` section 7 (defect 12).
+- **Failure**: an unreadable preset toasts and falls back to the stock transition named after the file, as the queue manager already did silently.
+- **Next**: `DeckOps` is the same idea for deck loads (`.planning/deck-transition-ops-plan.md`). `DeckSlot` and the `PresetManager` per-slot accessors are its groundwork; the legacy `activePresetA/B/BG/PV` fields remain the backing store and are migrated only where touched.
+
 ## Source Change Reports Replaced Macro Bindings via a Toast (`GeneratorDefaults.applyToDeck`, `ToastOverlay`)
 - **Decision**: `applyToDeck` returns true when the bank held bindings and the default installed different ones; `DeckSourcePicker.swapSource` shows a `ToastOverlay` message in that case. Bindings are not carried over by parameter name (names such as Scale/Speed/Depth mean different things per generator).
-- **Why a toast and no "Ctrl+Z" hint**: `ParametersUndo` snapshots modulators only, so the macro bank is not restored by undo. An earlier version of the architecture review wrongly said it was.
+- **Undo (follow-up)**: `ParametersUndo` used to snapshot modulators only, and `swapSource` pushed its snapshot *after* the swap, so Ctrl+Z after a source change did nothing (the docs claiming otherwise were wrong). `ParametersUndoSnapshot` now has an optional `restore` lambda run before modulators are restored; `swapSource` pushes before the swap with a lambda that restores the old source, `isEmpty`, the deck's macro bank and the active-preset marker (`DeckLifecycleManager.captureActivePreset`). The toast therefore says "Ctrl+Z to undo". Not covered: other macro-bank edits (binding edits, renames) are still not undoable.
 - **Open**: restoring the replaced bank (stash it in `swapSource`, offer a restore action) is the follow-up if the toast proves insufficient. `MacroLearnState.statusBanner` (used for "Added target...") has no on-screen reader in `ui/`; **Done**: `UIManager` passes `MacroLearnState.getActiveStatus()` to `ToastOverlay.draw` as a fallback (macro/ cannot depend on ui/, so the UI pulls rather than macro pushing).
 
 ## Browser Search Is One Rule: `SearchMatcher` (`ui/browser/SearchMatcher.kt`)
 - **Decision**: all asset browsers (Library Preset/FX/Transition panels, `ShaderPickerPopup`, Browse-bay chain list) filter with `SearchMatcher.matches(tokens, fields, extra)`: whitespace-split words, each must be a case-insensitive substring of some field (name/id/folder, plus categories or tags). One buffer size (`BUFFER_SIZE` = 256).
 - **Why**: the same text used to give different results per browser (FX panel: name only; picker: no tags for stock items; phrase-only multi-word). Review: `docs/developer/ui_interaction_architecture_review.md` section 3.1.
 - **Left alone**: the two browsers still keep separate search *buffers* (typing in one does not fill the other), and category-chip filtering in the picker is unchanged. Library panels tokenise only on a cache miss, not per frame.
+
+## Macro-Bank Edits Are Undone via a Per-Frame Change Tracker, Not Per-Widget Hooks (`MacroUndoTracker`)
+- **Decision**: `MacroUndoTracker.update` (called from `UIManager` each frame) hashes the label + bindings of every Deck/Master/Global knob; the first change of a gesture pushes a `ParametersUndoSnapshot` whose `restore` lambda puts the previous copy back. A gesture ends when the mouse is up and nothing changed that frame, so a Min/Max drag is one step.
+- **Why not instrument the widgets**: the edits are made in ~15 places across `MacroBindingEditor` (strip and Properties), `PerformanceMacroStrip`, `PropertiesPanel`, `MacroLearnState` and `CustomRangeSlider`, each a drag/click/text input; a hook per site would miss new ones and need per-widget drag coalescing.
+- **Not user edits**: `MacroEngine.bankReplaceEpoch` (bumped by register/unregister and `installBankForDeck`) makes the tracker re-baseline silently; the source-swap undo step restores via `noteBankReplaced()` too. Knob `value` is ignored; FX banks are skipped (`FxMacroSync` rewrites them).
+- **Known edge**: a wholesale load and a hand edit in the same frame count as a load (the edit is not separately undoable). Importing into a deck records its step explicitly (`recordBeforeBulkEdit`) because the install bumps the epoch.
+
+## Edit View "Next Up" Lives in the Bay Tab Row, Not the Perform Rows (`QueueNextUp`, `PerformanceDeepEditBay.drawQueueNextUp`)
+- **Decision**: a one-line, right-aligned readout of the queue feeding the open module. `QueueNextUp.describe` is a pure function mirroring `triggerNext`'s next-index rules (staged standby deck first, then shuffle, repeat wrap, end of queue); it advances nothing.
+- **Why there**: Perform rows have fixed geometry (layout-stability work) and deck-row queue *status text* was deliberately removed earlier (`DeckRowMetrics`). The bay tab row has free space on the right and exists only in Edit view, exactly where the Library is hidden.
+- **Shuffle**: names no item, because the next item is chosen at trigger time (`unplayed.random()`); showing one would be wrong half the time.
+- **Left alone**: a resizable Library dock in Edit view (conflicts with the three-view decision); Auto-VJ countdown/state is not shown.
 
 ## Deck Row SRC/FX Mode Is One Stored Value: The Deck Sub-Tab (`PerformanceUiContext.isDeckRowFx`)
 - **Decision**: `ParametersState` deck sub-tab (`SRC`/`FX`) is the single source of truth for a deck row's mode. `PerformanceUiContext.deckRowMode` is deleted; `isDeckRowFx` reads the sub-tab only.

@@ -64,6 +64,7 @@ object MacroBankSerializer {
             srcKnob?.bindings?.forEach { destKnob.bindings.add(it.copy(parameterId = remapParamId(it.parameterId))) }
         }
 
+        MacroEngine.noteBankReplaced()
         MacroEngine.invalidate()
     }
 

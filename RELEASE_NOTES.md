@@ -1,5 +1,22 @@
 ## [Unreleased]
 
+### Transition Changes Are Applied on the Render Thread (`presets/TransitionOps.kt`, `presets/DeckSlot.kt`)
+- Dropping a transition preset (`.lsdtrans`) onto the crossfader, the Mixer transition button or the Master row used to swap the transition on a background thread. Swapping creates and deletes GPU resources, so this could glitch or crash. Every way of changing the transition (drops, the Library Transitions browser, the transition queue and playlists, the inline picker, "Reset Transition") now goes through one queue that applies the change at the start of the next frame, the same way FX changes already do.
+- If a transition preset can't be read, a message now says so and the matching stock transition is used instead. Before, this only went to the log.
+- Internal: new `TransitionOps` (replaces five copies of the drop handler and the queue manager's own loader; `PresetRepository.loadTransitionPresetAsync` is removed). New `DeckSlot` enum (A/B/BG/PV) with per-slot accessors on `PresetManager` (`activePreset`, `cachedDto`, `setActive`, `clearActive`, `mtime`), replacing hand-written four-way `when` chains in `DeckLifecycleManager` and `DeckPresetController`. No behaviour change from `DeckSlot`.
+
+### Ctrl+Z Now Undoes Macro Knob Edits (`ui/MacroUndoTracker.kt`, `macro/MacroEngine.kt`)
+- Adding or deleting a target, dragging a target's Min/Max, changing its curve, steps, invert, link mode or enabled state, renaming a knob, and importing a macro bank into a deck can all be undone with Ctrl+Z. A drag is one undo step.
+- Not tracked: knob positions (they move constantly while performing) and FX knobs (the FX chain manages those). Loading a preset or source resets the macro knobs as before; that is covered by the source/deck undo step, not a separate one. Importing into Master/Global is undone as one step too.
+- Internal: a per-frame tracker compares a hash of each knob's label and targets, so no widget had to be changed. `MacroEngine.bankReplaceEpoch` marks wholesale bank loads so they are not mistaken for hand edits.
+
+### Edit View Shows What the Queue Plays Next (`ui/PerformanceDeepEditBay.kt`, `presets/QueueNextUp.kt`)
+- The Library's queue columns are hidden while a module is open in Edit view. The bay's tab row now ends with a dimmed one-liner, right-aligned: "Next: <preset> (2/12)", "Next: staged on Deck B" (a preset you loaded onto the standby deck, which plays first), "Next: shuffle (12 in queue)", "End of queue" or "Queue empty". Decks A/B and Master show the play queue, Deck BG shows its own queue, Deck PV shows nothing. It is hidden when the bay is too narrow, and long names are shortened (hover for the full text).
+- Row geometry is unchanged: the text sits in the existing tab row, not in the Perform rows.
+
+### Edit Bay Tabs Are Grouped: Edit, then "Pick:" (`ui/PerformanceDeepEditBay.kt`)
+- The bay's tab row mixed one tab that shows parameters (`Edit`) with tabs that open pickers (`SRC`/`TRANS`, `Chain`, `FX1-3`). A small "Pick:" label now sits between them so the two kinds read as separate groups.
+
 ### FX Knob Tooltip No Longer Offers Rename (`ui/PerformanceMacroStrip.kt`)
 - In the Edit-row strip, an FX knob's name tooltip said "Double-click to rename" although FX knobs can't be renamed. It now says they follow the FX chain.
 
@@ -12,8 +29,8 @@
 
 ### Changing a Deck's Source Now Says When It Replaces Your Macro Bindings (`ui/DeckSourcePicker.kt`, `ui/ToastOverlay.kt`, `presets/GeneratorDefaults.kt`)
 - Picking a different source resets the deck's macro knobs to that source's defaults, as before. If that discarded bindings you had set up, a message at the bottom of the window now says so ("Deck A macro knobs reset to Gyroid defaults (previous bindings replaced)").
-- **Ctrl+Z does not bring the old bindings back** (undo covers modulators only). To keep a custom bank across source changes, export it first from the macro strip's kebab menu.
-- Internal: new `ToastOverlay` (one transient bottom-centre message, drawn from `UIManager`); `GeneratorDefaults.applyToDeck` now returns whether it replaced existing bindings.
+- **Ctrl+Z undoes a source change**: it puts back the previous source, the macro knobs (labels, values, targets) and the deck's active preset. Before, undo ignored source changes entirely. Parameter edits made after the change are not undone separately; one Ctrl+Z reverts the whole swap. The message says "Ctrl+Z to undo".
+- Internal: new `ToastOverlay` (one transient bottom-centre message, drawn from `UIManager`); `GeneratorDefaults.applyToDeck` now returns whether it replaced existing bindings; `ParametersUndoSnapshot` gained an optional `restore` lambda, and `DeckSourcePicker.swapSource` now pushes its snapshot before the swap, not after.
 
 ### Fixed: Deck and Master Row Modes Could Disagree With Deep Edit (`ui/PerformanceUiContext.kt`, `ui/PerformanceDeckControls.kt`, `ui/PerformanceMasterControls.kt`, `ui/FxHeaderActions.kt`)
 - **Bug**: after clicking a deck row's `[FX]` pill, switching the Edit bay to its `SRC` tab (or picking a source) left the row's knobs and pill on FX while the bay showed the source.

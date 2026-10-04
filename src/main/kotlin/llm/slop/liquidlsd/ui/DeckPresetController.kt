@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import java.io.File
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.models.toDto
+import llm.slop.liquidlsd.presets.DeckSlot
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 
@@ -40,45 +41,13 @@ class DeckPresetController(
         val cleanName = name.removeSuffix(".lsd").trim()
         if (cleanName.isBlank()) return
 
-        val resolvedTags = tags ?: run {
-            val cached = when {
-                deck === mixer.deckA -> session.presetManager.cachedDtoA
-                deck === mixer.deckB -> session.presetManager.cachedDtoB
-                deck === mixer.deckBG -> session.presetManager.cachedDtoBG
-                deck === mixer.deckPV -> session.presetManager.cachedDtoPV
-                else -> null
-            }
-            cached?.tags ?: emptyList()
-        }
+        val slot = DeckSlot.of(deck, mixer)
+        val resolvedTags = tags ?: slot?.let { session.presetManager.cachedDto(it)?.tags } ?: emptyList()
 
         val dto = deck.toDto(cleanName, resolvedTags)
-        when {
-            deck === mixer.deckA -> {
-                session.presetManager.activePresetA = cleanName
-                session.presetManager.cachedDtoA = dto
-            }
-            deck === mixer.deckB -> {
-                session.presetManager.activePresetB = cleanName
-                session.presetManager.cachedDtoB = dto
-            }
-            deck === mixer.deckBG -> {
-                session.presetManager.activePresetBG = cleanName
-                session.presetManager.cachedDtoBG = dto
-            }
-            deck === mixer.deckPV -> {
-                session.presetManager.activePresetPV = cleanName
-                session.presetManager.cachedDtoPV = dto
-            }
-        }
+        slot?.let { session.presetManager.setActive(it, cleanName, dto) }
         val file = File("library/presets/$cleanName.lsd")
-
-        val deckIndex = when {
-            deck === mixer.deckA -> 0
-            deck === mixer.deckB -> 1
-            deck === mixer.deckBG -> 2
-            deck === mixer.deckPV -> 3
-            else -> -1
-        }
+        val deckIndex = slot?.index ?: -1
         session.presetRepository.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex)
     }
 
@@ -100,22 +69,12 @@ class DeckPresetController(
         when (session.uiTheme.autoVjDirtyBehavior) {
             UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
                 if (deck.source !is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
-                    val activeName = when {
-                        deck === mixer.deckA -> session.presetManager.activePresetA
-                        deck === mixer.deckB -> session.presetManager.activePresetB
-                        deck === mixer.deckBG -> session.presetManager.activePresetBG
-                        else -> session.presetManager.activePresetPV
-                    }
-                    val deckLabel = when {
-                        deck === mixer.deckA -> "Deck A"
-                        deck === mixer.deckB -> "Deck B"
-                        deck === mixer.deckBG -> "Deck BG"
-                        else -> "Deck PV"
-                    }
+                    val slot = DeckSlot.of(deck, mixer) ?: DeckSlot.PV
+                    val activeName = session.presetManager.activePreset(slot)
                     val saveName = if (!activeName.isNullOrBlank() && activeName != "None") {
                         activeName
                     } else {
-                        "AutoSave_${deckLabel.replace(" ", "")}_${System.currentTimeMillis()}"
+                        "AutoSave_${slot.label.replace(" ", "")}_${System.currentTimeMillis()}"
                     }
                     saveDeckPreset(mixer, saveName, deck, deck === mixer.deckA)
                 }
@@ -125,12 +84,7 @@ class DeckPresetController(
                 onProceed()
             }
             UITheme.AutoVjDirtyBehavior.SKIP -> {
-                val deckLabel = when {
-                    deck === mixer.deckA -> "Deck A"
-                    deck === mixer.deckB -> "Deck B"
-                    deck === mixer.deckBG -> "Deck BG"
-                    else -> "Deck PV"
-                }
+                val deckLabel = (DeckSlot.of(deck, mixer) ?: DeckSlot.PV).label
                 popupManager.requestDeckConfirm(deck, deckLabel, onProceed)
             }
         }
@@ -148,23 +102,12 @@ class DeckPresetController(
 
     fun handleSaveDeck(mixer: Mixer, deck: Deck, isDeckA: Boolean, isSaveAs: Boolean) {
         if (deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource) return
-        val activeName = when {
-            deck === mixer.deckA -> session.presetManager.activePresetA
-            deck === mixer.deckB -> session.presetManager.activePresetB
-            deck === mixer.deckBG -> session.presetManager.activePresetBG
-            deck === mixer.deckPV -> session.presetManager.activePresetPV
-            else -> null
-        }
+        val slot = DeckSlot.of(deck, mixer)
+        val activeName = slot?.let { session.presetManager.activePreset(it) }
         if (activeName != null && !isSaveAs) {
             saveDeckPreset(mixer, activeName, deck, isDeckA)
         } else {
-            val cached = when {
-                deck === mixer.deckA -> session.presetManager.cachedDtoA
-                deck === mixer.deckB -> session.presetManager.cachedDtoB
-                deck === mixer.deckBG -> session.presetManager.cachedDtoBG
-                deck === mixer.deckPV -> session.presetManager.cachedDtoPV
-                else -> null
-            }
+            val cached = slot?.let { session.presetManager.cachedDto(it) }
             val defaultName = if (activeName != null && isSaveAs) {
                 generateUniqueCopyName(activeName)
             } else {
@@ -216,12 +159,7 @@ class DeckPresetController(
         val currentSource = deck.source
         if (currentSource == newSource) return
 
-        val activeName = when {
-            deck === mixer.deckA -> session.presetManager.activePresetA
-            deck === mixer.deckB -> session.presetManager.activePresetB
-            deck === mixer.deckBG -> session.presetManager.activePresetBG
-            else -> session.presetManager.activePresetPV
-        }
+        val activeName = session.presetManager.activePreset(DeckSlot.of(deck, mixer) ?: DeckSlot.PV)
         val isDirty = session.presetManager.isDeckDirty(deck, mixer)
 
         val doSwitch = {

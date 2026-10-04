@@ -378,7 +378,7 @@ object ParametersTabs {
             if (ImGui.beginPopup("MixerTransKebabPopup")) {
                 pushOpenDropdownFont()
                 if (ImGui.menuItem("Reset Transition")) {
-                    mixer.setTransition("linear_crossfade")
+                    llm.slop.liquidlsd.presets.TransitionOps.setStock("linear_crossfade")
                     onPushUndo()
                 }
                 popOpenDropdownFont()

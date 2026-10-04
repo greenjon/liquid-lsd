@@ -5,20 +5,21 @@ import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ParameterResolver
 
 object ParametersUndo {
-    fun createUndoSnapshot(mixer: Mixer): ParametersUndoSnapshot {
+    fun createUndoSnapshot(mixer: Mixer, restore: (() -> Unit)? = null): ParametersUndoSnapshot {
         val mods = mutableMapOf<String, List<CvModulator>>()
         ParameterResolver.getAllParameterPaths(mixer).forEach { (path, p) ->
             mods[path] = p.modulators.map { it.copy() }
         }
-        return ParametersUndoSnapshot(mods)
+        return ParametersUndoSnapshot(mods, restore)
     }
 
-    fun pushUndoState(state: ParametersState, mixer: Mixer) {
-        state.pushUndoState(createUndoSnapshot(mixer))
+    fun pushUndoState(state: ParametersState, mixer: Mixer, restore: (() -> Unit)? = null) {
+        state.pushUndoState(createUndoSnapshot(mixer, restore))
     }
 
     fun performUndo(state: ParametersState, mixer: Mixer) {
         val snapshot = state.popUndoState() ?: return
+        snapshot.restore?.invoke()
         ParameterResolver.getAllParameterPaths(mixer).forEach { (path, p) ->
             snapshot.modulatorsByParamKey[path]?.let { savedMods ->
                 p.modulators.clear()

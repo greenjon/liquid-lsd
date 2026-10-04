@@ -26,27 +26,9 @@ object TransitionQueueManager : QueueEngine(queueLabel = "transition queue") {
 
     override fun resolveUnmatchedPlaylistItem(item: String): File = File(item)
 
-    fun applyTransitionItem(file: File, mixer: Mixer) {
-        if (file.extension.equals("lsdtrans", ignoreCase = true) && file.exists()) {
-            try {
-                val dto = json.decodeFromString<TransitionPresetDto>(file.readText())
-                mixer.applyTransitionPreset(dto)
-                logger.info { "Applied transition preset ${dto.name} from ${file.name}" }
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to load transition preset ${file.absolutePath}, falling back to stock transition" }
-                val fallbackId = file.nameWithoutExtension.ifBlank { "linear_crossfade" }
-                mixer.setTransition(fallbackId)
-            }
-        } else {
-            val id = if (file.extension.equals("fs", ignoreCase = true) || file.extension.equals("isf", ignoreCase = true)) {
-                file.nameWithoutExtension
-            } else {
-                file.nameWithoutExtension.ifBlank { file.name }
-            }
-            mixer.setTransition(id)
-            logger.info { "Applied transition shader ID: $id" }
-        }
-    }
+    /** Queues [file] on [TransitionOps]; applied on the GL thread. [mixer] is unused, kept for the queue-engine call shape. */
+    @Suppress("UNUSED_PARAMETER")
+    fun applyTransitionItem(file: File, mixer: Mixer) = TransitionOps.applyItem(file)
 
     fun jumpToIndex(index: Int, mixer: Mixer) {
         if (index !in queue.indices) return

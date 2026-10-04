@@ -1280,10 +1280,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#42-two-range-editing-widgets" class="md-nav__link">
+  <a href="#42-range-editing-already-one-widget" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4.2 Two range-editing widgets
+        4.2 Range editing (already one widget)
       
     </span>
   </a>
@@ -1406,6 +1406,67 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#7-second-pass-entry-points-october-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7. Second Pass: Entry Points (October 2026)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="7. Second Pass: Entry Points (October 2026)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#71-root-cause" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.1 Root cause
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#72-defects-found" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.2 Defects found
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#73-inconsistencies-design" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.3 Inconsistencies (design)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#74-recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        7.4 Recommendations
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1437,6 +1498,7 @@
 <li>The Library and play queues</li>
 </ol>
 <p>This document records the friction points that were checked against the code, separates real defects from design observations, and sorts the recommendations by release. <strong>v1.0 is feature-frozen</strong> (polish, usability, stability), so only the items in §6.1 are candidates for v1.0. Everything else is v1.1.</p>
+<p>A second pass (§7, October 2026) traced every load path, binding path and Library flow end to end. It found that most of the remaining friction comes from one cause: FX loads go through a single entry point (<code>FxOps</code>), but generator loads, transition loads and macro binding do not. Each UI element reimplements the rules for undo, the dirty guard, the macro bank and threading.</p>
 <p>Decisions this review takes as given: the three-view layout (Perform / Edit / Library), where Edit view replaces the Library rather than sharing the screen with it; inline Browse inside the Edit row (<code>PerformanceBrowseBay.kt</code>); and macro editing in the Edit-row strip plus Properties.</p>
 <hr />
 <h2 id="2-workspace-topology">2. Workspace Topology</h2>
@@ -1555,18 +1617,17 @@
 </ul>
 <p>Clicking a bound parameter cell opens <code>MacroBindingEditor.drawFull</code> in <code>PropertiesPanel</code>, which uses <code>CustomRangeSlider</code> (range brackets plus a live position dot). The grid cells also show a small arc for the macro range.</p>
 <p>This is a deliberate design: a performer can edit a binding straight from the row without opening anything else. That should be kept.</p>
-<h3 id="42-two-range-editing-widgets">4.2 Two range-editing widgets</h3>
-<p>The same <code>MacroBinding</code> min/max is edited with numeric scrubbers in the strip and with draggable brackets in Properties. They differ in feel and precision, and the strip has no visual of where the range sits within the parameter's span.</p>
-<p>Recommendation (§6.2): keep editing in both places, but use one shared range widget, sized differently, so there is one mental model.</p>
+<h3 id="42-range-editing-already-one-widget">4.2 Range editing (already one widget)</h3>
+<p>An earlier draft of this review said the strip only had numeric scrubbers and Properties had the bracket slider. That was wrong (checked Oct 2026): <code>MacroBindingEditor.drawLine</code> (strip) and <code>drawFull</code> (Properties/popup) both call the same <code>drawRangeBar</code> (track, filled segment, two draggable handles, live dot) and the same <code>drawMinField</code> / <code>drawMaxField</code>. The only difference is that the strip hides the bar when fewer than 50px remain after the lock, path, link, curve and Min/Max controls. No unification work is needed.</p>
 <h3 id="43-generator-change-replaces-the-macro-bank">4.3 Generator change replaces the macro bank</h3>
 <p>Choosing a new source in <code>DeckSourcePicker</code> (<code>:59</code>) calls <code>GeneratorDefaults.applyToDeck</code>, which resets the source's parameters and installs the default macro bank over the deck's bank.</p>
 <p>What the code does:</p>
 <ul>
 <li>Stock generators carry no bank of their own. Their bank comes from <code>GeneratorDefaults.resolve(source)</code>, either a user-saved default or the factory table.</li>
 <li><code>saveDefault</code> stores bindings with deck-agnostic parameter IDs, so a bank saved for one source is not meaningful for a different source.</li>
-<li><code>ParametersUndo</code> snapshots modulators only, so Ctrl+Z does <strong>not</strong> restore the previous macro bank. (An earlier draft of this review said it did; that was wrong.)</li>
+<li><code>ParametersUndo</code> snapshotted modulators only, and the swap pushed its snapshot after the change, so Ctrl+Z did <strong>not</strong> undo a source change at all. <strong>Fixed Oct 2026</strong>: the swap now pushes a snapshot first with a restore lambda (old source, macro bank, active preset), so Ctrl+Z undoes it.</li>
 </ul>
-<p>So the previous bindings are lost, and nothing told the user. <strong>Update (Oct 2026):</strong> a toast now reports the replacement (<code>ToastOverlay</code>, <code>GeneratorDefaults.applyToDeck</code> return value). Restoring the old bank is still open; see §6.2.</p>
+<p>So the previous bindings were lost, and nothing told the user. <strong>Update (Oct 2026):</strong> a toast now reports the replacement (<code>ToastOverlay</code>, <code>GeneratorDefaults.applyToDeck</code> return value) and Ctrl+Z restores it. Other macro-bank edits (binding changes, renames) are still not undoable; see §6.2.</p>
 <p><strong>Why not carry bindings over by parameter name:</strong> an earlier draft of this review suggested keeping bindings whose parameter names match in the new generator. That is not safe. Parameter names are reused for unrelated things across generators (for example "Scale", "Speed", "Depth"). Matching by name would quietly aim a performer's knobs at the wrong controls, which is worse than resetting them.</p>
 <h3 id="44-fx-knobs-are-not-user-bindable">4.4 FX knobs are not user-bindable</h3>
 <p>Deck and Master knobs are freely bindable. FX bank knobs (<code>DECK_*_FX</code>, <code>MASTER_FX</code>) are assigned by <code>FxMacroSync</code> to slot wet/dry and ISF auto-map, and the strip shows a read-only role line for them. This is intentional (FX knobs follow the chain), and the read-only line is the correct response. It only needs to look read-only, not like an empty editor.</p>
@@ -1633,11 +1694,11 @@
 </ol>
 <h3 id="62-v11">6.2 v1.1</h3>
 <ul>
-<li><strong>Shared range widget (§4.2).</strong> One compact widget used by both the strip and Properties.</li>
-<li><strong>Clearer bay tabs (§3.3).</strong> Visually separate <code>Edit</code> from the picker tabs (for example a divider or a "Pick:" label).</li>
-<li><strong>Queue visibility in Edit view (§5.1).</strong> At minimum a compact "next up" readout. A resizable Library dock in Edit view is a larger layout change and conflicts with the three-view decision, so treat it as a separate proposal.</li>
+<li><strong>~~Shared range widget (§4.2).~~ Not needed</strong>: already shared (see §4.2). If the strip's bar vanishes too often at narrow widths, shorten the path label (currently 20% of the strip) rather than adding a widget.</li>
+<li><strong>~~Clearer bay tabs (§3.3).~~ Done.</strong> A "Pick:" label separates <code>Edit</code> from the picker tabs.</li>
+<li><strong>~~Queue visibility in Edit view (§5.1).~~ Done (readout).</strong> The bay tab row shows what the queue plays next (<code>QueueNextUp</code>). A resizable Library dock in Edit view is a larger layout change and conflicts with the three-view decision, so treat it as a separate proposal.</li>
 <li><strong>Scene bundles (§5.2).</strong> A schema referencing deck presets, master FX chain, active transition and controller profile.</li>
-<li><strong>Restore the replaced bank</strong> (stash it on swap, offer a restore action), or make <code>ParametersUndo</code> snapshot macro banks.</li>
+<li><strong>~~Undo for macro-bank edits~~ Done.</strong> <code>MacroUndoTracker</code> (per-frame change detection) covers add/remove/range/curve/rename/import; source swaps were done earlier.</li>
 <li><strong>Optional "lock macro bank" per deck</strong> so a custom bank survives source changes.</li>
 </ul>
 <h3 id="63-not-recommended">6.3 Not recommended</h3>
@@ -1645,6 +1706,136 @@
 <li><strong>Carrying bindings across generators by parameter name</strong> (see §4.3).</li>
 <li><strong>Removing numeric/range editing from the Edit-row strip.</strong> It would force a trip into Deep Edit for every binding tweak, which undoes the Phase 2 work that put binding editing on the row.</li>
 </ul>
+<hr />
+<h2 id="7-second-pass-entry-points-october-2026">7. Second Pass: Entry Points (October 2026)</h2>
+<p>The second pass traced about 30 load paths, 20+ binding paths and every Library flow, and checked each one against the code. Items marked ✔ were re-read in the code after the trace. The rest are cited by <code>file:line</code> from the trace.</p>
+<h3 id="71-root-cause">7.1 Root cause</h3>
+<table>
+<thead>
+<tr>
+<th>Change</th>
+<th>Entry point</th>
+<th>Undo</th>
+<th>Dirty guard</th>
+<th>Macro bank</th>
+<th>Thread</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FX slot / chain</td>
+<td><code>FxOps</code> (one family)</td>
+<td>no</td>
+<td>n/a</td>
+<td><code>FxMacroSync</code> always</td>
+<td>queued, GL thread</td>
+</tr>
+<tr>
+<td>Bare generator</td>
+<td><code>DeckSourcePicker.swapSource</code></td>
+<td>yes</td>
+<td>separate source-change confirm</td>
+<td>generator default bank, toast</td>
+<td>UI thread</td>
+</tr>
+<tr>
+<td>Deck preset</td>
+<td><code>PresetRepository.loadDeckPresetAsync</code>, called from 10+ places</td>
+<td>no</td>
+<td>only if the caller remembered <code>loadDeckPresetSafely</code></td>
+<td>preset bank, no toast</td>
+<td>IO, then queued</td>
+</tr>
+<tr>
+<td>Copy / Move / Swap deck</td>
+<td><code>DeckLifecycleManager</code></td>
+<td>no</td>
+<td>yes</td>
+<td><strong>not installed</strong></td>
+<td>UI thread</td>
+</tr>
+<tr>
+<td>Transition</td>
+<td><code>Mixer.setTransition</code> / <code>applyTransitionPreset</code>, called from 9 places</td>
+<td>no</td>
+<td>n/a</td>
+<td>n/a</td>
+<td><strong>sometimes the IO thread</strong></td>
+</tr>
+</tbody>
+</table>
+<p>FX loads behave the same whichever button starts them, because there is one entry point. Generator and transition loads do not, because there isn't.</p>
+<h3 id="72-defects-found">7.2 Defects found</h3>
+<p><strong>Losing work</strong></p>
+<ol>
+<li>✔ <strong>Manual loads discard edits by default.</strong> <code>guardDeckTransition</code> uses the AutoVJ preference <code>autoVjDirtyBehavior</code>, which defaults to <code>AUTO_DISCARD</code> (<code>AppPreferences.kt:35</code>, <code>DeckPresetController.kt:100-126</code>). To get a prompt, the user has to pick "SKIP", which also makes queue advances skip.</li>
+<li>✔ <strong>A freshly picked generator is never dirty.</strong> <code>isDeckDirty</code> returns false when there is no cached DTO (<code>PresetManager.kt:77</code>), and <code>swapSource</code> clears it. Tweaks to a new generator are never guarded and never marked <code>*</code>.</li>
+<li>✔ <strong>Some load paths skip the dirty guard.</strong> These call <code>loadDeckPresetAsync</code> directly:</li>
+<li>the "Load to Deck A/B/BG/PV" context menus in <code>PresetListPanel</code>, <code>QueueActionsPanel</code>, <code>BgQueueActionsPanel</code> and <code>PlaylistEditorPanel</code></li>
+<li>the empty-deck launchpad (<code>DeckSourcePicker.kt:202</code>)</li>
+<li>the Browse bay's saved-preset pick (<code>PerformanceBrowseBay.kt:113</code>). This one also has no undo, although its doc comment says Ctrl+Z works.</li>
+<li><strong>Macro-bank edits don't make a deck dirty.</strong> <code>Deck.toDto</code> doesn't include the bank; it is added only at save time (<code>PresetRepository.kt:91</code>).</li>
+<li><strong>The guard depends on the path for other cases too.</strong> The source-change confirm ignores the dirty preference and fires whenever a preset name is active, even on a clean deck (<code>DeckPresetController.kt:231</code>). Re-picking the current generator resets the deck: the <code>==</code> check at <code>:217</code> compares a clone, and <code>VisualSource</code> has no <code>equals</code>.</li>
+</ol>
+<p><strong>Knobs and bindings</strong></p>
+<ol>
+<li>✔ <strong>Copy / Move / Swap deck leave the knob bank behind.</strong> <code>DeckLifecycleManager</code> calls <code>Deck.applyDto</code>, which never installs a macro bank. After copying A→B, Deck B's knobs still target B's old generator.</li>
+<li>✔ <strong>Modulator-property bindings break when modulators are removed.</strong> These bindings store a position in the modulator list (<code>MacroModels.kt:65</code>). Removing modulators doesn't update them: <code>PropertiesPanel.kt:380-388</code>, "Clear all CVs", and MIDI unbind. The binding then drops silently (<code>MacroEngine.kt:340</code>) or starts driving the wrong modulator.</li>
+<li>✔ <strong>MIDI and OSC mappings on a knob-bound parameter do nothing.</strong> <code>MacroEngine.tick</code> writes <code>baseValue</code> every frame, after the mappings have.</li>
+<li><strong>A disabled binding can't be re-enabled in the editor that disabled it.</strong> The slider popup and Properties editor read the resolved cache, which skips disabled bindings. Only the strip can re-enable it.</li>
+<li><strong>"Bound" doesn't distinguish base-value bindings from modulator-property bindings.</strong> <code>findPrimaryBindingInfo(null, paramKey)</code> matches any binding on the parameter. The VAL cell and base slider lock when only, for example, the LFO depth is bound, while the arcs show the parameter as unbound.</li>
+<li><strong>Preset loads install a blank bank when the preset has none</strong> (<code>MacroBankSerializer.kt:72-81</code>). Bare-source loads install the generator default instead. Preset loads never toast.</li>
+</ol>
+<p><strong>Threading and Library</strong></p>
+<ol>
+<li>✔ <strong><code>.lsdtrans</code> drops apply the transition on the IO thread.</strong> Four drop sites, plus the TransitionBrowser menu, call <code>applyTransitionPreset</code> inside <code>thenAccept</code>. <code>setTransition</code> disposes and creates GL filters there. <code>TransitionQueueManager.applyTransitionItem</code> instead reads the file synchronously on the UI thread.</li>
+<li>✔ <strong>Missing Files "Locate…" always appends to the A/B play queue,</strong> whatever kind of item was missing (<code>MissingItemsPanel.kt:53</code>).</li>
+<li><strong>Library toolbar Q can queue a hidden selection.</strong> After clicking in the FX or Trans tab, Q still queues the Sources tab's multi-selection (<code>BrowserActionToolbar.kt:262-265</code>).</li>
+<li><strong>Ctrl+F focuses only the Sources search</strong> and collapses the Edit view.</li>
+<li><strong>The FX chain dirty dot is only cleared by the chain header's save.</strong> Saving from the Deep Edit kebab or Library "+" leaves it on, and both capture the DTO when the menu opens, not when the save is confirmed.</li>
+<li><strong>The FX queue checks the deck <em>preset's</em> dirty flag</strong> (<code>FxQueueEngine.kt:40</code>), even though it only changes FX.</li>
+</ol>
+<h3 id="73-inconsistencies-design">7.3 Inconsistencies (design)</h3>
+<p><strong>Loading</strong></p>
+<ul>
+<li><strong>Loading a single <code>.lsdfx</code> into a full chain has three different outcomes:</strong></li>
+<li>FXBrowser double-click overwrites slot 1 silently.</li>
+<li>The audition latch asks which slot to overwrite.</li>
+<li>The FX queue and FX playlist replace the whole chain.</li>
+<li><strong>Target deck rules differ.</strong> Preset accept and the queues use the <em>inactive</em> A/B deck. FX double-click, the FX queue and the FX playlist use the <em>live</em> deck. BG and PV can't be targeted from the keyboard or MIDI.</li>
+<li><strong>Queue double-click and MIDI accept do different things.</strong> Double-click moves the queue index, auto-fades and advances the transition queue. MIDI accept just loads.</li>
+<li><strong>Labels and drop targets are inconsistent.</strong></li>
+<li>"Reset Slot" clears the slot, while elsewhere "Reset Parameters" resets values.</li>
+<li>In the Library, "+" means "empty the deck" in Sources but "save current" in FX and Trans.</li>
+<li>Drop targets accept different file types.</li>
+</ul>
+<p><strong>Binding</strong></p>
+<ul>
+<li><strong>Seven systems can drive a parameter:</strong> macro bindings, the modulator stack, ISF meta-bindings, Super Knob, MIDI, OSC and controller profiles. Three of them write <code>baseValue</code>.</li>
+<li><strong>"Learn" has three meanings:</strong> macro target, MIDI and OSC. Up to four modes can be armed at once, and Esc cancels two of them.</li>
+<li><strong>Knob selection is stored twice</strong> (<code>MacroLearnState.selectedControlId</code>, <code>ParametersState.selectedRackMacroId</code>). A parameter click sets only the first.</li>
+<li><strong>FX-bank bindings look editable</strong> in Properties and the slider popups, but <code>FxMacroSync</code> overwrites the edits on the next re-sync.</li>
+</ul>
+<p><strong>Library</strong></p>
+<ul>
+<li><strong>Leaving Edit collapses the expanded module</strong>, and there is no way back to it.</li>
+<li><strong>Transitions can only be saved from the Library.</strong></li>
+<li><strong>Macro banks and Perform pages never appear in the Library.</strong></li>
+<li><strong>FX favourites exist only in the inline picker.</strong></li>
+</ul>
+<h3 id="74-recommendations">7.4 Recommendations</h3>
+<p>Use three entry points, modelled on <code>FxOps</code>, rather than patching each button. The implementation plan is in <code>.planning/deck-transition-ops-plan.md</code>.</p>
+<ol>
+<li><strong><code>DeckOps</code></strong> is the only way to change what a deck holds: bare source, preset file, eject, copy/move/swap. It owns:</li>
+<li>the dirty guard, with its own manual-load preference that defaults to Prompt</li>
+<li>undo</li>
+<li>the macro-bank policy and toast</li>
+<li>per-deck bookkeeping</li>
+</ol>
+<p>It fixes defects 1–6 and 11 and removes four copies of the dirty policy.
+2. <strong><code>TransitionOps</code></strong> queues every transition change on the GL thread. It fixes defect 12 and replaces five copied drop blocks.
+3. <strong>Bindings get stable modulator IDs and one knob-selection state.</strong> This fixes defects 7 and 9 and the selection drift. It changes the saved-file format, so it is v1.1. The v1.0 stopgap is to remap or drop bindings when a modulator is removed.</p>
+<p>Defects 8, 10 and 13–17 are small local fixes and fit v1.0. The design items in §7.3 are v1.1.</p>
 
 
 

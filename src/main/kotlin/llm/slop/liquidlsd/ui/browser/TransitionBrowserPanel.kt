@@ -9,6 +9,7 @@ import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.models.FXSlotDto
 import llm.slop.liquidlsd.models.TransitionPlaylistDto
 import llm.slop.liquidlsd.models.toDto
+import llm.slop.liquidlsd.presets.TransitionOps
 import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.isf.ISFFilter
@@ -271,11 +272,9 @@ object TransitionBrowserPanel {
         if (asset.type == AssetType.TRANSITION_STOCK) {
             val id = asset.path.removePrefix(STOCK_PATH_PREFIX)
             logger.info { "Applying stock transition $id to mixer" }
-            mixer.setTransition(id)
+            TransitionOps.setStock(id)
         } else {
-            session.presetRepository.loadTransitionPresetAsync(fileFor(asset)).thenAccept { dto ->
-                mixer.applyTransitionPreset(dto)
-            }
+            TransitionOps.loadPreset(fileFor(asset))
         }
     }
 

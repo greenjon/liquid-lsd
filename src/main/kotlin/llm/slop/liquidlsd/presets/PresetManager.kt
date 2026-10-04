@@ -60,6 +60,49 @@ object PresetManager {
     var activePresetMtimeBG: Long? = null
     var activePresetMtimePV: Long? = null
 
+    /** Name of the preset loaded into [slot], or null if none. */
+    fun activePreset(slot: DeckSlot): String? = when (slot) {
+        DeckSlot.A -> activePresetA
+        DeckSlot.B -> activePresetB
+        DeckSlot.BG -> activePresetBG
+        DeckSlot.PV -> activePresetPV
+    }
+
+    /** The DTO [slot] was last loaded or saved as (the dirty baseline), or null. */
+    fun cachedDto(slot: DeckSlot): DeckPresetDto? = when (slot) {
+        DeckSlot.A -> cachedDtoA
+        DeckSlot.B -> cachedDtoB
+        DeckSlot.BG -> cachedDtoBG
+        DeckSlot.PV -> cachedDtoPV
+    }
+
+    fun setActive(slot: DeckSlot, name: String?, dto: DeckPresetDto?) {
+        when (slot) {
+            DeckSlot.A -> { activePresetA = name; cachedDtoA = dto }
+            DeckSlot.B -> { activePresetB = name; cachedDtoB = dto }
+            DeckSlot.BG -> { activePresetBG = name; cachedDtoBG = dto }
+            DeckSlot.PV -> { activePresetPV = name; cachedDtoPV = dto }
+        }
+    }
+
+    fun clearActive(slot: DeckSlot) = setActive(slot, null, null)
+
+    fun mtime(slot: DeckSlot): Long? = when (slot) {
+        DeckSlot.A -> activePresetMtimeA
+        DeckSlot.B -> activePresetMtimeB
+        DeckSlot.BG -> activePresetMtimeBG
+        DeckSlot.PV -> activePresetMtimePV
+    }
+
+    fun setMtime(slot: DeckSlot, value: Long?) {
+        when (slot) {
+            DeckSlot.A -> activePresetMtimeA = value
+            DeckSlot.B -> activePresetMtimeB = value
+            DeckSlot.BG -> activePresetMtimeBG = value
+            DeckSlot.PV -> activePresetMtimePV = value
+        }
+    }
+
     internal data class RestoredQueueState(
         val files: List<File>,
         val activeIndex: Int,
@@ -67,13 +110,7 @@ object PresetManager {
     )
 
     fun isDeckDirty(deck: Deck, mixer: Mixer): Boolean {
-        val cached = when {
-            deck === mixer.deckA -> cachedDtoA
-            deck === mixer.deckB -> cachedDtoB
-            deck === mixer.deckBG -> cachedDtoBG
-            deck === mixer.deckPV -> cachedDtoPV
-            else -> null
-        }
+        val cached = DeckSlot.of(deck, mixer)?.let { cachedDto(it) }
         if (cached == null) return false
         val isExternal = runCatching { deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource }.getOrDefault(false)
         if (isExternal) return false

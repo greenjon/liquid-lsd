@@ -180,11 +180,23 @@ object MacroEngine {
 
     private val banks = LinkedHashMap<String?, MacroBank>()
 
+    /**
+     * Bumped whenever a bank is replaced or loaded wholesale (register/unregister, preset or default install),
+     * as opposed to edited by hand. `ui/MacroUndoTracker` treats a bump as "not a user edit": it re-baselines
+     * instead of recording an undo step.
+     */
+    @Volatile
+    var bankReplaceEpoch: Long = 0L
+        private set
+
+    fun noteBankReplaced() { bankReplaceEpoch++ }
+
     /** Registers (or replaces) the bank for [unitInstanceId] and invalidates the resolved cache. */
     fun registerBank(unitInstanceId: String?, bank: MacroBank) {
         synchronized(lock) {
             banks[unitInstanceId] = bank
         }
+        noteBankReplaced()
         invalidate()
     }
 
@@ -193,6 +205,7 @@ object MacroEngine {
         synchronized(lock) {
             banks.remove(unitInstanceId)
         }
+        noteBankReplaced()
         invalidate()
     }
 
