@@ -277,6 +277,6 @@ Use three entry points, modelled on `FxOps`, rather than patching each button. T
 
    It fixes defects 1–6 and 11 and removes four copies of the dirty policy.
 2. **`TransitionOps`** queues every transition change on the GL thread. It fixes defect 12 and replaces five copied drop blocks.
-3. **Bindings get stable modulator IDs and one knob-selection state.** This fixes defects 7 and 9 and the selection drift. It changes the saved-file format, so it is v1.1. The v1.0 stopgap is to remap or drop bindings when a modulator is removed.
+3. **Bindings get stable modulator IDs and one knob-selection state.** This fixes defects 7 and 9 and the selection drift. It changes the saved-file format, so it is done in v1.0, before release: after release every saved preset, session and macro bank would need a permanent migration. The knob-selection part is a design item (§7.3) and stays v1.1; the modulator IDs are the v1.0 piece. See `.planning/d-items-handoff.md`.
 
 Defects 8, 10 and 13–17 are small local fixes and fit v1.0. The design items in §7.3 are v1.1.
