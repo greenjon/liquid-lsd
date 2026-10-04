@@ -60,7 +60,7 @@ object OscLearnState {
     fun startLearn(parameterPath: String, minVal: Float = 0f, maxVal: Float = 1f, displayLabel: String = parameterPath) {
         activeSession = LearnSession(parameterPath, minVal, maxVal, displayLabel)
         pendingCandidate = null
-        setStatus("OSC LEARN: Move a control on your OSC surface to bind '$displayLabel'.")
+        setStatus("OSC LEARN: Move a control on your OSC surface to map '$displayLabel'.")
     }
 
     fun cancelLearn() {
@@ -123,7 +123,7 @@ object OscLearnState {
         val label = session.displayLabel
         activeSession = null
         pendingCandidate = null
-        setStatus("Bound '$label' -> $key", 4000L)
+        setStatus("Mapped '$label' -> $key", 4000L)
     }
 
     private fun asFloat(arg: Any): Float? = when (arg) {

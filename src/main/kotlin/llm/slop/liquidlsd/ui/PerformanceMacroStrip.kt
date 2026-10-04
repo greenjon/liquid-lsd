@@ -19,7 +19,14 @@ import llm.slop.liquidlsd.rendering.Mixer
 internal object PerformanceMacroStrip {
     private val renameBuf = ImString(64)
     private const val RENAME_POPUP = "macro_strip_rename"
-    private const val HINT = "Click a parameter or property below to bind"
+    private const val MENU_POPUP = "macro_strip_menu"
+    private val bankBrowser = ImGuiFileBrowser("##macroBankBrowser")
+    private val bankDir get() = java.io.File("library/knobpresets")
+
+    /** Bank the open Export/Import file browser acts on (set when the kebab item is picked). */
+    private var browserBankId: String? = null
+    private var browserDeckLabel: String? = null
+    private const val HINT = "Click Add Target, then a parameter or property below"
     private val chipLabels = Array(MacroControl.MAX_BINDINGS_PER_CONTROL) { "${it + 1}" }
     private val chipIds = Array(MacroControl.MAX_BINDINGS_PER_CONTROL) { "##chip$it" }
 
@@ -63,11 +70,11 @@ internal object PerformanceMacroStrip {
         }
 
         val closeW = ctrlH
-        val learnW = 58f
+        val learnW = 76f
         val chipW = ctrlH
         val chipsW = if (isFx) 0f else (chipW + 2f) * MacroControl.MAX_BINDINGS_PER_CONTROL
         val valueW = 38f
-        val rightW = closeW + gap + (if (isFx) 0f else learnW + gap + chipsW + gap)
+        val rightW = closeW + gap + (if (isFx) 0f else learnW + gap + chipsW + gap + closeW + gap)
         val nameW = (x + w - cx - rightW - valueW - gap * 2).coerceAtLeast(40f)
 
         val name = control.label.ifEmpty { "Knob" }
@@ -75,10 +82,7 @@ internal object PerformanceMacroStrip {
         ImGui.invisibleButton("##name", nameW, ctrlH)
         dl.addText(cx + 2f, TextFit.centeredY(row1Y, ctrlH, ImGui.getTextLineHeight()), ImGui.getColorU32(imgui.flag.ImGuiCol.Text), TextFit.ellipsize(name, nameW - 4f))
         itemTooltip("$name\nDouble-click to rename.")
-        if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0) && !isFx) {
-            renameBuf.set(control.label)
-            ImGui.openPopup(RENAME_POPUP)
-        }
+        if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0) && !isFx) openRename(control)
         if (ImGui.beginPopup(RENAME_POPUP)) {
             ImGui.setNextItemWidth(160f)
             if (ImGui.isWindowAppearing()) ImGui.setKeyboardFocusHere()
@@ -98,14 +102,14 @@ internal object PerformanceMacroStrip {
             ImGui.setCursorScreenPos(cx, row1Y)
             val canLearn = control.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL
             ImGui.beginDisabled(!canLearn && !learning)
-            if (ImGui.button(if (learning) "${Icons.X} Cancel##learn" else "${Icons.REFRESH} Learn##learn", learnW, ctrlH)) {
+            if (ImGui.button(if (learning) "${Icons.X} Cancel##learn" else "Add Target##learn", learnW, ctrlH)) {
                 if (learning) MacroLearnState.cancelLearn() else onLearn()
             }
             ImGui.endDisabled()
             itemTooltip(
-                if (learning) "Cancel Learn."
-                else if (bankId == MacroEngine.GLOBAL) "Arm Learn, then open any Edit row and click a parameter or modulator property. Global knobs can bind anywhere."
-                else "Arm Learn, then click a parameter or modulator property in this row's section."
+                if (learning) "Cancel adding a target."
+                else if (bankId == MacroEngine.GLOBAL) "Open any Edit row, then click a parameter or modulator property to add it as a target. Global knobs can target anything."
+                else "Then click a parameter or modulator property in this row's section to add it as a target."
             )
             cx += learnW + gap
 
@@ -127,9 +131,16 @@ internal object PerformanceMacroStrip {
             }
         }
 
+        if (!isFx) {
+            ImGui.setCursorScreenPos(cx, row1Y)
+            if (ImGui.button("${Icons.MORE_VERTICAL}##menu", closeW, ctrlH)) ImGui.openPopup(MENU_POPUP)
+            itemTooltip("Rename this knob, or export / import the whole bank.")
+            drawMenu(bankId, control)
+        }
+
         ImGui.setCursorScreenPos(x + w - closeW, row1Y)
         if (ImGui.button("${Icons.X}##close", closeW, ctrlH)) close = true
-        itemTooltip("Close the binding strip and show the row's controls.")
+        itemTooltip("Close the target strip and show the row's controls.")
 
         // -- Line 2 --
         val bindings = control.bindings
@@ -141,7 +152,7 @@ internal object PerformanceMacroStrip {
                     TextFit.ellipsize("$role (fixed assignment)", w - 4f))
             }
             bindings.isEmpty() -> {
-                val text = if (learning) "Learning: click a parameter or property to bind" else HINT
+                val text = if (learning) "Adding target: click a parameter or property" else HINT
                 dl.addText(x + 2f, TextFit.centeredY(row2Y, ctrlH, ImGui.getTextLineHeight()), ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled),
                     TextFit.ellipsize(text, w - 4f))
             }
@@ -163,4 +174,78 @@ internal object PerformanceMacroStrip {
     private fun targetLabel(binding: MacroBinding): String =
         if (binding.targetType == MacroTargetType.PARAM_BASE_VALUE) binding.parameterId
         else "${binding.parameterId} [${binding.propertyName}]"
+    private fun openRename(control: MacroControl) {
+        renameBuf.set(control.label)
+        ImGui.openPopup(RENAME_POPUP)
+    }
+
+    private fun drawMenu(bankId: String, control: MacroControl) {
+        pushOpenDropdownPadding()
+        if (ImGui.beginPopup(MENU_POPUP)) {
+            pushOpenDropdownFont()
+            if (ImGui.menuItem("Rename")) renameRequested = true
+            ImGui.separator()
+            if (ImGui.menuItem("Export Macro Bank...")) {
+                browserBankId = bankId
+                bankBrowser.open(ImGuiFileBrowser.Mode.SAVE, bankDir.also { it.mkdirs() }, "$bankId.knobpreset.json", listOf(".json"))
+            }
+            if (ImGui.menuItem("Import Macro Bank...")) {
+                browserBankId = bankId
+                browserDeckLabel = when (bankId) {
+                    MacroEngine.DECK_A -> "Deck A"
+                    MacroEngine.DECK_B -> "Deck B"
+                    MacroEngine.DECK_BG -> "Deck BG"
+                    MacroEngine.DECK_PV -> "Deck PV"
+                    else -> null
+                }
+                bankBrowser.open(ImGuiFileBrowser.Mode.LOAD, bankDir.also { it.mkdirs() }, "", listOf(".json"))
+            }
+            popOpenDropdownFont()
+            ImGui.endPopup()
+        }
+        popOpenDropdownPadding()
+        if (renameRequested) {
+            renameRequested = false
+            openRename(control)
+        }
+    }
+
+    private var renameRequested = false
+
+    /** Draws the Export/Import file browser; call every frame from the root ID scope (see UIManager). */
+    fun drawFileBrowser(mixer: Mixer) {
+        bankBrowser.draw { file ->
+            val bankId = browserBankId ?: return@draw
+            val bank = MacroEngine.getBank(bankId) ?: return@draw
+            try {
+                if (bankBrowser.mode == ImGuiFileBrowser.Mode.SAVE) {
+                    MacroBankSerializer.exportToFile(file, bank)
+                    MacroLearnState.setStatus("Exported macro bank to ${file.name}")
+                } else {
+                    val (imported, skipped) = MacroBankSerializer.importFromFile(file, mixer)
+                    importInto(bank, imported, browserDeckLabel)
+                    MacroLearnState.setStatus("Imported ${file.name}" + if (skipped > 0) " ($skipped target(s) skipped: parameter not found)" else "")
+                }
+            } catch (e: Exception) {
+                MacroLearnState.setStatus("Macro bank ${if (bankBrowser.mode == ImGuiFileBrowser.Mode.SAVE) "export" else "import"} failed: ${e.message}", 6000L)
+            }
+        }
+    }
+
+    /** Deck banks retarget bindings to their own deck (like a preset load); others (Master, Global...) keep them as saved. */
+    private fun importInto(target: MacroBank, imported: MacroBank, deckLabel: String?) {
+        if (deckLabel != null) {
+            MacroBankSerializer.installBankForDeck(imported, target, deckLabel)
+            return
+        }
+        for (i in target.knobs.indices) {
+            val dest = target.knobs[i]
+            val src = imported.knobs.getOrNull(i)
+            dest.label = src?.label ?: ""
+            dest.value = src?.value ?: 0f
+            dest.bindings.clear()
+            src?.bindings?.take(MacroControl.MAX_BINDINGS_PER_CONTROL)?.forEach { dest.bindings.add(it.copy()) }
+        }
+        MacroEngine.invalidate()
+    }
 }

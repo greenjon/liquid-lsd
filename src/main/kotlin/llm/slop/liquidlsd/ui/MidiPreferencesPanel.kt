@@ -61,9 +61,9 @@ object MidiPreferencesPanel {
     private fun drawBindingEditor(session: llm.slop.liquidlsd.SessionContext, store: ControllerProfileStore, compiled: CompiledController, parametersState: ParametersState?) {
         val profile = compiled.profile
         val registry = session.midiMappingManager.commands
-        if (!ImGui.treeNode("Bindings (${profile.bindings.size})##bindings_${profile.id}")) return
+        if (!ImGui.treeNode("Mappings (${profile.bindings.size})##bindings_${profile.id}")) return
         val theme = session.uiTheme
-        theme.caption("Global bindings. Keys like knob.* are wildcards (knob.{n} in the command expands to the same number). Hold-modifier keys read shift+input.")
+        theme.caption("Global mappings. Keys like knob.* are wildcards (knob.{n} in the command expands to the same number). Hold-modifier keys read shift+input.")
 
         for ((key, commandId) in profile.bindings.entries.sortedBy { it.key }) {
             ImGui.pushID("bind_$key")
@@ -108,7 +108,7 @@ object MidiPreferencesPanel {
                 if (applyEdit(store, ProfileBindingEdit.set(profile, addKey, addCommand))) addCommand = ""
             }
             if (addCommand.isEmpty() || exists) ImGui.endDisabled()
-            if (exists) itemTooltip("$addKey is already bound; edit its row above.", allowWhenDisabled = true)
+            if (exists) itemTooltip("$addKey is already mapped; edit its row above.", allowWhenDisabled = true)
             ImGui.sameLine()
             val learning = (parametersState?.midiLearnTarget as? MidiLearnTarget.ProfileCommand)?.profileId == profile.id
             if (learning) {
@@ -123,7 +123,7 @@ object MidiPreferencesPanel {
                     addCommand = ""
                 }
                 if (addCommand.isEmpty() || parametersState == null) ImGui.endDisabled()
-                itemTooltip("Choose a command, then Learn and move the control to bind it. A control the profile does not know becomes a new input.", allowWhenDisabled = true)
+                itemTooltip("Choose a command, then Learn and move the control to map it. A control the profile does not know becomes a new input.", allowWhenDisabled = true)
             }
             session.midiMappingManager.profileLearnMessage?.let { theme.caption(it) }
         }
@@ -188,7 +188,7 @@ object MidiPreferencesPanel {
             }
             val unknown = compiled.unknownCommands(session.midiMappingManager.commands)
             if (unknown.isNotEmpty()) {
-                theme.captionColored(0.9f, 0.6f, 0.2f, 1.0f, "Binds unknown commands: ${unknown.joinToString(", ")}")
+                theme.captionColored(0.9f, 0.6f, 0.2f, 1.0f, "Maps unknown commands: ${unknown.joinToString(", ")}")
             }
             if (source == ControllerProfileStore.Source.BUILT_IN) {
                 if (ImGui.button("${Icons.COPY} Copy to User File##copy_${profile.id}")) {
@@ -235,7 +235,7 @@ object MidiPreferencesPanel {
         session.uiTheme.withFont(UITheme.FontLevel.H2) {
             ImGui.text("MIDI Hardware & Control Mappings")
         }
-        session.uiTheme.caption("Configure hardware MIDI controllers, live input sniffing, profiles, and parameter bindings.")
+        session.uiTheme.caption("Configure hardware MIDI controllers, live input sniffing, profiles, and parameter mappings.")
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()

@@ -208,7 +208,7 @@ object OscPreferencesPanel {
             }
             if (target.isEmpty()) ImGui.endDisabled()
         }
-        itemTooltip("Type a target parameter path or modulator variable (e.g. 'Deck A/geometry/zoom:mod/0/subdivision'), click Start Learn, then move a control on your OSC surface to bind it. You can also right-click any slider in the UI to Learn OSC directly.")
+        itemTooltip("Type a target parameter path or modulator variable (e.g. 'Deck A/geometry/zoom:mod/0/subdivision'), click Start Learn, then move a control on your OSC surface to map it. You can also right-click any slider in the UI to Learn OSC directly.")
 
         ImGui.spacing()
         ImGui.separator()
@@ -233,7 +233,7 @@ object OscPreferencesPanel {
 
         if (mappings.isEmpty()) {
             ImGui.spacing()
-            theme.caption("No address mappings in this profile. Use 'Learn OSC' above or right-click any slider in the UI to bind controls.")
+            theme.caption("No address mappings in this profile. Use 'Learn OSC' above or right-click any slider in the UI to map controls.")
         } else {
             val paramTableFlags = ImGuiTableFlags.BordersInnerH or ImGuiTableFlags.RowBg or ImGuiTableFlags.SizingStretchProp or ImGuiTableFlags.ScrollY
             if (ImGui.beginTable("##osc_mappings_table", 8, paramTableFlags, 0f, 320f)) {

@@ -635,7 +635,7 @@ object MidiMappingManager {
             is ProfileLearner.Outcome.Saved -> {
                 controllers.reset()
                 val added = result.addedInput?.let { " (new input $it)" } ?: ""
-                profileLearnMessage = "Bound ${target.commandId} to ${result.key}$added" +
+                profileLearnMessage = "Mapped ${target.commandId} to ${result.key}$added" +
                     if (hasLearnedMapping(event)) ". A learned mapping on the same control still takes priority; clear it under Learned Mappings." else ""
                 true
             }

@@ -183,7 +183,7 @@ class TooltipHelperTest {
 
         val expected = """
             SUPER: 0.52
-            Bound to: Deck BG/FX/Super [0.00 – 1.00]
+            Target: Deck BG/FX/Super [0.00 – 1.00]
 
             • Drag to adjust
             • Shift-drag to fine-tune
@@ -232,14 +232,14 @@ class TooltipHelperTest {
     fun testBuildControlTooltipUnboundAndEmptySections() {
         val tooltip = buildControlTooltip {
             header = "MACRO 1: 0.00"
-            binding = "Unbound – right-click to assign"
+            binding = "No target – right-click for MIDI Learn"
             leftClick = "select"
             rightClick = "for Learn"
         }
 
         val expected = """
             MACRO 1: 0.00
-            Unbound – right-click to assign
+            No target – right-click for MIDI Learn
 
             • Left-click to select
             • Right-click for Learn

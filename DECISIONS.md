@@ -1,9 +1,17 @@
+## Learn Means Hardware; Macro Knobs Add Targets (`MacroLearnState`, UI strings)
+
+- **Decision**: "MIDI Learn" / "OSC Learn" keep "Learn" and use "map". Macro knob to parameter is **Add Target** and each assignment is a **target**. "Bind/bound/binding" is removed from user-facing text.
+- **Rationale**: "Learn" covered three different jobs (MIDI, OSC, macro knobs), and "Link" was already taken (link mode, Ableton Link).
+- **Alternatives rejected**: "Assign" (generic), "Link" (collision), keeping "Bind" for macros (still collides with MIDI/OSC "bind").
+- **Consequences**: text and docs only; code identifiers (`MacroBinding`, `MacroLearnState`, `ProfileBindingEdit`) keep their names. `TooltipHelper` recognizes `Target:` / `No target` and `MIDI Learn` / `OSC Learn` right-click prefixes.
+
 ## Column 3 MACROS Tab Removed; Macro Binding Is Edited in the Edit Row (`PerformanceMacroStrip`, `MacroBindingEditor`)
 
 - **Decision**: Column 3 always draws the Mixer. Binding editing moved to an Edit-row strip (`PerformanceMacroStrip`) plus the Properties editor; the GLOBAL bank uses a guest strip on the open Edit row. `Column3HeaderToggle`, `MacroPanel`, `MacroBindingInspector`, `UITheme.Column3Mode` and the GLB tab pin in `ParametersState` were deleted.
 - **Rationale**: the MACROS tab was a second place to find the same knobs, and arming Learn there meant navigating away from the row being edited. The strip keeps selection, Learn and bindings on the row itself.
+- **Follow-up**: the Clock row's 4 Global knobs were removed (unbindable from Perform). `MacroEngine.GLOBAL` stays registered with 0 knobs so the v1.1 "global knobs row" (rows of free knobs, possibly several Global banks) needs no migration; the GUEST strip code is dormant until then.
 - **Alternatives rejected**: keeping MACROS as an optional tab (two editing surfaces to keep in sync); a modal inspector (hides the parameter grid Learn needs to click).
-- **Consequences**: Export/Import Macro Bank has no UI until re-homed. The Perform-view Clock row cannot arm GLOBAL Learn (its knobs cannot be selected there). `PerformanceUiContext.focusDeepEditTab` is what remains of the old panel navigation.
+- **Consequences**: Export/Import Macro Bank (`.knobpreset.json`) is exposed in the strip's kebab menu via `ImGuiFileBrowser`; the old inspector never had it. The Perform-view Clock row cannot arm GLOBAL Learn (its knobs cannot be selected there). `PerformanceUiContext.focusDeepEditTab` is what remains of the old panel navigation.
 
 ## Bi-directional Bank Sync and MeterType Detection for Controllers (`control/ControllerFeedback.kt`, `ui/PerfKnobSpec.kt`, `control/KnobLight.kt`)
 

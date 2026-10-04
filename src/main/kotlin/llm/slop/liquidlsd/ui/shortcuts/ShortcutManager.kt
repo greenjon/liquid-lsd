@@ -31,7 +31,7 @@ object ShortcutManager {
         register(ShortcutAction("global.preset_size_inc", ShortcutCategory.GLOBAL, "Increase Preset Name Size", "Increases Library browser preset name font size by 10% (80%–120%).", KeyCombination(GLFW_KEY_EQUAL, GLFW_MOD_CONTROL)))
         register(ShortcutAction("global.record_output", ShortcutCategory.GLOBAL, "Start / Stop Recording", "Toggles live master output recording to MP4 video.", KeyCombination(GLFW_KEY_R, GLFW_MOD_CONTROL)))
         register(ShortcutAction("global.preferences", ShortcutCategory.GLOBAL, "Open Preferences", "Opens the application preferences dialog.", KeyCombination(GLFW_KEY_P, GLFW_MOD_CONTROL)))
-        register(ShortcutAction("global.osc_map_mode", ShortcutCategory.GLOBAL, "Toggle OSC Map Mode", "Arms click-to-bind on every OSC-learnable control; click one to bind it, then click the next.", KeyCombination(GLFW_KEY_O, GLFW_MOD_CONTROL or GLFW_MOD_SHIFT)))
+        register(ShortcutAction("global.osc_map_mode", ShortcutCategory.GLOBAL, "Toggle OSC Map Mode", "Arms click-to-map on every OSC-learnable control; click one to map it, then click the next.", KeyCombination(GLFW_KEY_O, GLFW_MOD_CONTROL or GLFW_MOD_SHIFT)))
 
         // 2. Deep Edit & Modulation Matrix
         register(ShortcutAction("parameters.save_deck", ShortcutCategory.PARAMETERS, "Save Active Deck Preset", "Saves the preset of the deck open in Deep Edit (opens Save As if untitled).", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL)))

@@ -188,7 +188,7 @@ class PerformanceMatrixPanel {
         }
         val control = o.control ?: return
         val bankId = o.bankId
-        val btnW = 54f
+        val btnW = 72f
         val btnX = o.cellCenterX - btnW / 2f
         val btnY = o.btnY
         val btnH = 18f
@@ -196,15 +196,15 @@ class PerformanceMatrixPanel {
         ImGui.setCursorScreenPos(btnX, btnY)
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             if (isParamLearning) {
-                if (overhangButton(session, cancelIdCache.get(control.id) { "${Icons.X} Cancel##inline_cancel_${control.id}" }, btnX, btnY, btnW, btnH, TangoPalette.CANCEL_BTN_BG.u32(), "Cancel Learn Mode.")) {
+                if (overhangButton(session, cancelIdCache.get(control.id) { "${Icons.X} Cancel##inline_cancel_${control.id}" }, btnX, btnY, btnW, btnH, TangoPalette.CANCEL_BTN_BG.u32(), "Cancel adding a target.")) {
                     MacroLearnState.cancelLearn()
                 }
             } else {
                 val canLearn = control.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL
                 if (canLearn) {
-                    val learnTip = if (bankId == MacroEngine.GLOBAL) "Arm Learn Mode, then open any Edit row and click a parameter slider or modulator property -- Global knobs can bind anywhere."
-                        else "Arm Learn Mode and open this row's Edit. Then click a parameter slider or modulator property in this row's deck and section."
-                    if (overhangButton(session, learnIdCache.get(control.id) { "${Icons.REFRESH} Learn##inline_learn_${control.id}" }, btnX, btnY, btnW, btnH, TangoPalette.LEARN_BTN_BG.u32(), learnTip)) {
+                    val learnTip = if (bankId == MacroEngine.GLOBAL) "Add a target: open any Edit row, then click a parameter slider or modulator property -- Global knobs can target anything."
+                        else "Add a target: open this row's Edit, then click a parameter slider or modulator property in this row's deck and section."
+                    if (overhangButton(session, learnIdCache.get(control.id) { "Add Target##inline_learn_${control.id}" }, btnX, btnY, btnW, btnH, TangoPalette.LEARN_BTN_BG.u32(), learnTip)) {
                         startLearnFor(session, parametersState, bankId, control)
                     }
                 } else {
@@ -220,7 +220,7 @@ class PerformanceMatrixPanel {
         MacroLearnState.selectedControlId = control.id
         // GLOBAL has no Deep Edit of its own: stay put and let the guest strip appear in whichever Edit the user opens.
         if (bankId == MacroEngine.GLOBAL) {
-            if (!LibraryPanel.isEditView(session)) MacroLearnState.setStatus("LEARN MODE: Open any Edit and click a parameter or property to bind.", 6000L)
+            if (!LibraryPanel.isEditView(session)) MacroLearnState.setStatus("ADD TARGET: Open any Edit and click a parameter or property.", 6000L)
             return
         }
         ctx.focusDeepEditTab(parametersState, bankId)
@@ -380,7 +380,11 @@ class PerformanceMatrixPanel {
             val specs = PerfKnobResolver.resolve(bank, row.knobOffset, rowChain?.let { FxRowState.of(it) }, mixer)
             // The selected knob's card hangs below the row (see overhangDraws); the row border is
             // left open across its column so the card reads as a tab of the row.
-            val selectedCol = if (isModuleExpanded) specs.firstOrNull { it.control.id == parametersState.selectedRackMacroId[moduleId] }?.col else null
+            // Rows showing the macro strip carry their own Learn, so the selected knob's card stays inside the row
+            // (no open border gap); other rows hang the card below the row for the Learn button.
+            val rowHasStrip = stripControl != null && descriptor.hasExtraHeader &&
+                macroStripModeFor(isEditView, row.bankId, stripBankId) != MacroStripMode.NONE
+            val selectedCol = if (isModuleExpanded && !rowHasStrip) specs.firstOrNull { it.control.id == parametersState.selectedRackMacroId[moduleId] }?.col else null
 
             dl.addRectFilled(boxX1, boxTopY, boxX2, boxBottomY, fillCol, 8f)
             if (selectedCol == null) {
@@ -568,7 +572,7 @@ class PerformanceMatrixPanel {
                 } else if (isClockRow) {
                     drawTitleBadge(
                         session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "CLK", UITheme.FontLevel.H2,
-                        tooltip = "Clock Unit\nConfigure tempo, BPM, synchronization, and Global macros"
+                        tooltip = "Clock Unit\nConfigure tempo, BPM, and synchronization"
                     )
                     if (!stripOn) PerformanceClockControls.draw(session, masterTabStartX, row1Y, row2YFinal, ctrlH)
                 } else if (descriptor.bankId == MacroEngine.FX_SENDS) {
@@ -660,7 +664,7 @@ class PerformanceMatrixPanel {
                     val selBorder = TangoPalette.u32(TangoPalette.SYNC.bright, 0.85f)
                     val card = nextOverhang(OVERHANG_CARD)
                     card.cardX1 = cardX1; card.cardX2 = cardX2
-                    card.cardTop = knobTopY - 4f; card.cardBottom = learnBtnY + 18f + 4f
+                    card.cardTop = knobTopY - 4f; card.cardBottom = if (stripOn) stripY + geo.stripH + 4f else learnBtnY + 18f + 4f
                     card.selFill = selFill; card.selBorder = selBorder
                 }
 

@@ -217,7 +217,7 @@ object PropertiesPanel {
         if (isVirtual && cvId == "midi") {
             activeHistory = null
             activeCellId = null
-            session.uiTheme.caption("No MIDI controller bound to this parameter.")
+            session.uiTheme.caption("No MIDI controller mapped to this parameter.")
             ImGui.spacing()
             session.uiTheme.caption("To connect a MIDI controller, click 'Learn MIDI' and move a knob, fader, or button on your device:")
             ImGui.spacing()
@@ -397,7 +397,7 @@ object PropertiesPanel {
 
                     val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
                     if (isMacroLearning) {
-                        ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, "${Icons.REFRESH} Click a slider's name to bind it.")
+                        ImGui.textColored(0.2f, 0.85f, 1.0f, 1.0f, "${Icons.REFRESH} Click a slider's name to add it as a target.")
                         ImGui.spacing()
                     }
 
@@ -408,7 +408,7 @@ object PropertiesPanel {
                             if (b.targetType != llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY) continue
                             ImGui.pushID("macro_bind_${info.control.id}_${b.propertyName}")
                             session.uiTheme.caption("${Icons.LOCK} [${b.propertyName}] controlled by ${info.controlName} [${info.badgeLabel}]")
-                            itemTooltip("This modulator property is continuously updated by a Macro Control. Uncheck the binding to release it.")
+                            itemTooltip("This modulator property is continuously updated by a macro knob. Uncheck the target to release it.")
                             if (MacroBindingEditor.drawFull(session, info.control, b, null, ImGui.getContentRegionAvailX() - 10f)) {
                                 info.control.bindings.remove(b)
                                 llm.slop.liquidlsd.macro.MacroEngine.invalidate()

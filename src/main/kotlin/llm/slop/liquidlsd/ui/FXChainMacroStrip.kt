@@ -94,7 +94,7 @@ object FXChainMacroStrip {
                 onValueChanged = { chain.superKnob.set(it); onPushUndo() }
             )
             ImGui.endGroup()
-            itemTooltip("Sweeps every linked slot's Metaknob together. Right-click to bind hardware MIDI/OSC.")
+            itemTooltip("Sweeps every linked slot's Metaknob together. Right-click to map hardware MIDI/OSC.")
         }
 
         val focusedIndex = state.focusedSlotIndexFor(chainPrefix)
@@ -162,7 +162,7 @@ object FXChainMacroStrip {
                             state.toggleFxFocus(chainPrefix, i)
                         }
                         ImGui.separator()
-                        ImGui.textDisabled("Rebind Metaknob To…")
+                        ImGui.textDisabled("Retarget Metaknob To…")
                         drawRebindMenuItems(fx)
                     },
                     descriptionOverride = fx.header.DESCRIPTION?.takeIf { it.isNotBlank() },
@@ -198,7 +198,7 @@ object FXChainMacroStrip {
                     onValueChanged = { fx.metaKnob.set(it); onPushUndo() }
                 )
                 ImGui.endGroup()
-                itemTooltip("${fx.displayName}'s macro control (bound to ${fx.metaBinding.targetParamName ?: "Dry/Wet"}). Right-click to rebind or save defaults, or bind hardware MIDI/OSC.")
+                itemTooltip("${fx.displayName}'s macro control (targets ${fx.metaBinding.targetParamName ?: "Dry/Wet"}). Right-click to retarget or save defaults, or map hardware MIDI/OSC.")
                 drawRebindContextMenu(fx, chainPrefix, i)
             }
         }
@@ -277,7 +277,7 @@ object FXChainMacroStrip {
                 onValueChanged = { param.set(it); onPushUndo() }
             )
             ImGui.endGroup()
-            itemTooltip("${fx.displayName}'s own ${input.LABEL ?: input.NAME} parameter (Focus Mode). Right-click to bind hardware MIDI/OSC.")
+            itemTooltip("${fx.displayName}'s own ${input.LABEL ?: input.NAME} parameter (Focus Mode). Right-click to map hardware MIDI/OSC.")
         }
         ImGui.setCursorPosX(rowStartX)
     }
@@ -294,7 +294,7 @@ object FXChainMacroStrip {
         }
         ImGui.separator()
         val isDryWet = fx.metaBinding.targetParamName == null
-        if (ImGui.menuItem("Bind to Dry/Wet (safety net)", "", isDryWet)) {
+        if (ImGui.menuItem("Target Dry/Wet (safety net)", "", isDryWet)) {
             fx.rebindMetaKnob(FxMetaBinding.DRY_WET_SAFETY_NET, persistOverride = false)
         }
         if (fx.contentHash != null) {
@@ -319,7 +319,7 @@ object FXChainMacroStrip {
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem(popupId)) {
             pushOpenDropdownFont()
-            ImGui.textDisabled("Rebind Metaknob")
+            ImGui.textDisabled("Retarget Metaknob")
             ImGui.separator()
             drawRebindMenuItems(fx)
             popOpenDropdownFont()

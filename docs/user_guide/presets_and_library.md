@@ -45,7 +45,7 @@ The Library panel spans the left and middle columns. That column has three views
 - **Edit** — Open a row's **Deep Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Swap a deck's source or FX from the controls on the row itself. Press **Esc** or click the row's **Collapse** button to get back to Perform.
 - **Library** — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.
 
-Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Deep Edit (cancelling any armed Learn) and brings the Library back.
+Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Deep Edit (cancelling any armed Add Target or Learn) and brings the Library back.
 
 In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.
 
@@ -86,7 +86,7 @@ Use the **`[⋮]`** filter menu above the list to show/hide each tier (**Stock S
   - **Batch Deletion** — Pressing `Delete` or selecting Delete from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.
 - **Double-click** — Loads the item into whichever deck is currently inactive on the crossfader. For a stock source this replaces only the deck's visual source, leaving its FX chain untouched; for a saved preset it loads the full deck state.
 - **Right-click or ⋮ (saved presets)** — Rename, retag, duplicate, load to a specific deck, add to a queue or playlist, or delete.
-- **Right-click or ⋮ (stock sources)** — **Load to Deck A/B/BG/PV** only. Stock sources have no persisted parameter state, and their bundled defaults and Metaknob auto-bindings haven't all been individually audited yet, so they're intentionally left out of playlists and the live/background queues — an unattended queue firing an unverified default has no performer there to catch it. Loading straight to a deck is fine, since you're present to dial it in.
+- **Right-click or ⋮ (stock sources)** — **Load to Deck A/B/BG/PV** only. Stock sources have no persisted parameter state, and their bundled defaults and Metaknob auto-mappings haven't all been individually audited yet, so they're intentionally left out of playlists and the live/background queues — an unattended queue firing an unverified default has no performer there to catch it. Loading straight to a deck is fine, since you're present to dial it in.
 - **Drag-and-drop** — Drag any row (or multi-selection) onto a deck's monitor in the Mixer panel or onto its row in the Performance Matrix to load it (source-only for stock rows, full preset for saved rows). Saved presets can also be dragged into the Playlists Editor (Column 2) or a queue; stock sources can't, for the same reason the context menu omits those options.
 - **`[!]` badge** — Appears when a saved preset uses a subsystem that's currently offline (e.g. MIDI or audio). The preset still loads fine; hover the badge to see what's missing.
 
@@ -278,13 +278,13 @@ Liquid LSD keeps hardware controller maps separate from visual presets, so you c
 
 **There are two levels of MIDI mapping:**
 
-1. **Hardware Profile** (stored in `library/midi/default.json`) — Maps physical knobs and faders to global controls like the master crossfader, deck gain, and level faders. These bindings follow you regardless of which preset is loaded.
+1. **Hardware Profile** (stored in `library/midi/default.json`) — Maps physical knobs and faders to global controls like the master crossfader, deck gain, and level faders. These mappings follow you regardless of which preset is loaded.
 
-2. **Grid Cell Modulators** (stored inside each `.lsd` file) — Binds MIDI CC numbers to specific parameters as dynamic modulation sources in the CV grid. These travel with the preset.
+2. **Grid Cell Modulators** (stored inside each `.lsd` file) — Maps MIDI CC numbers to specific parameters as dynamic modulation sources in the CV grid. These travel with the preset.
 
 ### MIDI Learn
 
 1. Click the **MIDI Learn** button in the Parameters header or next to any parameter slider.
 2. Move a knob, fader, or button on your controller.
-3. Liquid LSD captures the CC and confirms the binding automatically.
+3. Liquid LSD captures the CC and confirms the mapping automatically.
 4. To unbind, right-click the mapped control and clear the MIDI assignment.

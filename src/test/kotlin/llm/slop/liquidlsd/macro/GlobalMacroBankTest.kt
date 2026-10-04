@@ -17,10 +17,9 @@ class GlobalMacroBankTest {
     }
 
     @Test
-    fun globalBankDefaultsToFourUnboundKnobs() {
-        val bank = MacroEngine.newBankFor(MacroEngine.GLOBAL)
-        assertEquals(listOf("GLOBAL 1", "GLOBAL 2", "GLOBAL 3", "GLOBAL 4"), bank.knobs.map { it.label })
-        assertTrue(bank.knobs.all { it.bindings.isEmpty() })
+    fun globalBankHasNoKnobsForNow() {
+        assertTrue(MacroEngine.newBankFor(MacroEngine.GLOBAL).knobs.isEmpty())
+        assertEquals(4, MacroEngine.defaultKnobCountFor(MacroEngine.MASTER))
     }
 
     @Test

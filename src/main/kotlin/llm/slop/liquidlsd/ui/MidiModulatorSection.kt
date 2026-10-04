@@ -62,7 +62,7 @@ object MidiModulatorSection {
                     }
                 }
                 ImGui.sameLine()
-                if (ImGui.button("Unbind MIDI##midi_unbind")) {
+                if (ImGui.button("Clear MIDI Mapping##midi_unbind")) {
                     onUnbind()
                 }
             }

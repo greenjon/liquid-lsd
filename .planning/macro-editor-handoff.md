@@ -40,7 +40,7 @@ Paths below are relative to `src/main/kotlin/llm/slop/liquidlsd/` unless noted.
    `docs/developer/preset_management.md:175`, `docs/user_guide/presets_and_library.md` (Column 3 mention), `DECISIONS.md` entry.
 
 ## Known gaps / open items (decide or park, don't silently fix)
-- Perform-view Clock row can't arm GLOBAL Learn: GLOBAL knobs can't be selected there (row not expandable), so `startLearnFor`'s GLOBAL status text is currently reachable only indirectly. Needs a design call from the user.
+- RESOLVED 2026-10-03: Clock row's 4 Global knobs removed (GLOBAL bank kept with 0 knobs). v1.1 idea (user): a catalog row of 4 free global knobs so a Page can be 16 user-configured knobs; needs multiple Global banks, selectable on Perform, and revives the dormant GUEST strip.
 - Line-2 range bar in the strip is hidden unless >=50px spare (likely hidden at 1280); Min/Max drag fields are always shown.
 - No "+" chip (Learn button covers it); rename is double-click only (no kebab entry).
 - Per-frame small string allocations in `PerformanceMacroStrip` (`"%.2f".format`, target label) -- minor, could be cached.

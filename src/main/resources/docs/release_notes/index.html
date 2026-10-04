@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#clearer-language-add-target-midi-learn-osc-learn-ui-macromacrolearnstatekt-oscosclearnstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clearer Language: Add Target, MIDI Learn, OSC Learn (ui/*, macro/MacroLearnState.kt, osc/OscLearnState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#removed-the-column-3-macros-tab-binding-editing-lives-in-the-edit-view-uiuimanagerkt-uiperformancemacrostripkt-uiuithemekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5152,6 +5163,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#clearer-language-add-target-midi-learn-osc-learn-ui-macromacrolearnstatekt-oscosclearnstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Clearer Language: Add Target, MIDI Learn, OSC Learn (ui/*, macro/MacroLearnState.kt, osc/OscLearnState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#removed-the-column-3-macros-tab-binding-editing-lives-in-the-edit-view-uiuimanagerkt-uiperformancemacrostripkt-uiuithemekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9071,12 +9093,19 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="clearer-language-add-target-midi-learn-osc-learn-ui-macromacrolearnstatekt-oscosclearnstatekt">Clearer Language: Add Target, MIDI Learn, OSC Learn (<code>ui/*</code>, <code>macro/MacroLearnState.kt</code>, <code>osc/OscLearnState.kt</code>)</h3>
+<ul>
+<li><strong>Macro knobs now "add targets"</strong>: the macro <code>Learn</code> button is <code>Add Target</code>, banners and toasts say "Add Target" / "Added target: ...", and bindings are called targets everywhere (tooltips, the knob tooltip's <code>Target: ...</code> line, the target strip, "Delete this target"). FX Metaknobs are "retargeted" instead of rebound.</li>
+<li><strong>MIDI and OSC keep "Learn"</strong> and now say "map" instead of "bind": "Move a knob to map it", "Mapped X -&gt; Y", controller profiles have a <strong>Mappings</strong> list (was Bindings), and the per-modulator <code>Unbind MIDI</code> button is <code>Clear MIDI Mapping</code>.</li>
+<li>The macro knob's right-click tooltip now reads "MIDI Learn". Behavior is unchanged; this is text and docs only (class names such as <code>MacroBinding</code> are unchanged).</li>
+</ul>
 <h3 id="removed-the-column-3-macros-tab-binding-editing-lives-in-the-edit-view-uiuimanagerkt-uiperformancemacrostripkt-uiuithemekt">Removed the Column 3 MACROS Tab; Binding Editing Lives in the Edit View (<code>ui/UIManager.kt</code>, <code>ui/PerformanceMacroStrip.kt</code>, <code>ui/UITheme.kt</code>)</h3>
 <ul>
 <li><strong>Column 3 is the Mixer only</strong>: the <code>[ MIXER | MACROS ]</code> toggle, the MACROS panel and the Binding Inspector are gone. Binding a macro knob (Learn, targets, Min/Max/Curve/Link/Invert/Enabled, rename) is done in the Edit-row macro strip and the Properties editor.</li>
 <li><strong>Global knobs</strong> use a guest strip on whichever Edit row is open, so they can be bound without leaving the deck being edited.</li>
 <li>The Mixer gets back the ~36px the toggle used. The saved <code>column3Mode</code> preference is no longer read or written; old settings files are unaffected.</li>
-<li>The Export/Import Macro Bank buttons lived in the removed inspector and are not in the UI for now (the <code>.knobpreset.json</code> serializer is unchanged).</li>
+<li><strong>Export / Import Macro Bank</strong> are now in a new kebab menu (⋮) on the macro strip, alongside Rename (the old inspector never exposed them). Import skips bindings to missing parameters and reports the count.</li>
+<li><strong>Clock row has no macro knobs</strong>: the 4 Global knobs on the MASTER page's Clock row did nothing without a way to bind them, so they are removed (the Twister's knobs 13-16 on bank 4 are unassigned). The Clock controls are unchanged. A configurable row of free "global" knobs is planned for v1.1. Old sessions load fine; bindings on those knobs are dropped.</li>
 <li>Internal: <code>PerformanceUiContext.navigateMacroPanelTo</code> is now <code>focusDeepEditTab</code>; <code>ParametersState</code> no longer has the GLB-tab pin (<code>showGlobalMacros</code> and friends); <code>FxMacroSummary.draw</code> removed.</li>
 </ul>
 <h3 id="bi-directional-bank-sync-bipolar-metertype-support-for-controller-feedback-control-ui">Bi-directional Bank Sync &amp; Bipolar MeterType Support for Controller Feedback (<code>control/*</code>, <code>ui/*</code>)</h3>

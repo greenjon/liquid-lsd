@@ -77,10 +77,11 @@ class PerformSurfaceTest {
     }
 
     @Test
-    fun masterTabIsMasterTransitionsFxSendsAndGlobal() {
+    fun masterTabIsMasterTransitionsFxSendsAndAKnoblessClockRow() {
         val p = page("master")
-        assertEquals(listOf(MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.FX_SENDS, MacroEngine.GLOBAL),
+        assertEquals(listOf(MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.FX_SENDS, null),
             listOf(0, 4, 8, 12).map { p.knobs[it]?.bankId })
+        assertTrue((12..15).all { p.knobs[it] == null })
     }
 
     @Test
@@ -231,13 +232,13 @@ class PerformSurfaceTest {
     }
 
     @Test
-    fun masterAndGlobalRowsUseHueColoursOnTheHardware() {
+    fun masterRowsUseHueColoursOnTheHardware() {
         val lights = surface().let { UITheme.performancePageId = "master"; it.knobLights() }
         fun rgb(i: Int) = lights[i]!!.let { listOf(it.r, it.g, it.b) }
         assertEquals(PerformanceColors.LED_MASTER.toList(), rgb(0))
         assertEquals(PerformanceColors.COLOR_TRANS.toList(), rgb(4))
         assertEquals(PerformanceColors.COLOR_FX.toList(), rgb(8))
-        assertEquals(PerformanceColors.LED_GLOBAL.toList(), rgb(12))
+        assertNull(lights[12])  // the Clock row has no knobs
     }
 
     @Test

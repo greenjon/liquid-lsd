@@ -1,10 +1,16 @@
 ## [Unreleased]
 
+### Clearer Language: Add Target, MIDI Learn, OSC Learn (`ui/*`, `macro/MacroLearnState.kt`, `osc/OscLearnState.kt`)
+- **Macro knobs now "add targets"**: the macro `Learn` button is `Add Target`, banners and toasts say "Add Target" / "Added target: ...", and bindings are called targets everywhere (tooltips, the knob tooltip's `Target: ...` line, the target strip, "Delete this target"). FX Metaknobs are "retargeted" instead of rebound.
+- **MIDI and OSC keep "Learn"** and now say "map" instead of "bind": "Move a knob to map it", "Mapped X -> Y", controller profiles have a **Mappings** list (was Bindings), and the per-modulator `Unbind MIDI` button is `Clear MIDI Mapping`.
+- The macro knob's right-click tooltip now reads "MIDI Learn". Behavior is unchanged; this is text and docs only (class names such as `MacroBinding` are unchanged).
+
 ### Removed the Column 3 MACROS Tab; Binding Editing Lives in the Edit View (`ui/UIManager.kt`, `ui/PerformanceMacroStrip.kt`, `ui/UITheme.kt`)
 - **Column 3 is the Mixer only**: the `[ MIXER | MACROS ]` toggle, the MACROS panel and the Binding Inspector are gone. Binding a macro knob (Learn, targets, Min/Max/Curve/Link/Invert/Enabled, rename) is done in the Edit-row macro strip and the Properties editor.
 - **Global knobs** use a guest strip on whichever Edit row is open, so they can be bound without leaving the deck being edited.
 - The Mixer gets back the ~36px the toggle used. The saved `column3Mode` preference is no longer read or written; old settings files are unaffected.
-- The Export/Import Macro Bank buttons lived in the removed inspector and are not in the UI for now (the `.knobpreset.json` serializer is unchanged).
+- **Export / Import Macro Bank** are now in a new kebab menu (⋮) on the macro strip, alongside Rename (the old inspector never exposed them). Import skips bindings to missing parameters and reports the count.
+- **Clock row has no macro knobs**: the 4 Global knobs on the MASTER page's Clock row did nothing without a way to bind them, so they are removed (the Twister's knobs 13-16 on bank 4 are unassigned). The Clock controls are unchanged. A configurable row of free "global" knobs is planned for v1.1. Old sessions load fine; bindings on those knobs are dropped.
 - Internal: `PerformanceUiContext.navigateMacroPanelTo` is now `focusDeepEditTab`; `ParametersState` no longer has the GLB-tab pin (`showGlobalMacros` and friends); `FxMacroSummary.draw` removed.
 
 ### Perform View Macro Binding Strips & Edit Row Integration (`ui/PerformanceMacroStrip.kt`, `ui/MacroBindingNav.kt`, `ui/PerformanceMatrixPanel.kt`)

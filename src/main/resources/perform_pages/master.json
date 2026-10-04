@@ -2,7 +2,7 @@
   "version": 1,
   "id": "master",
   "name": "MASTER",
-  "tooltip": "Master ([MIX|FX]: composite alphas or Master FX chain), Transitions (crossfader + picker + queue),\nper-deck FX wet/dry, and Clock (tap tempo / resync / clock source + 4 Global macro knobs).",
+  "tooltip": "Master ([MIX|FX]: composite alphas or Master FX chain), Transitions (crossfader + picker + queue),\nper-deck FX wet/dry, and Clock (tap tempo / resync / clock source).",
   "rows": [
     { "row": "master" },
     { "row": "trans" },

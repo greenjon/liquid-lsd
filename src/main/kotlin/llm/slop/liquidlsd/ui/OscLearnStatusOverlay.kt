@@ -13,13 +13,13 @@ import llm.slop.liquidlsd.osc.OscMapModeState
  * feedback anywhere on screen (see osc_ux_analysis.md item #2).
  *
  * Also doubles as the persistent indicator for [OscMapModeState]: while Map Mode is active but no
- * specific control is currently armed, it falls back to a standing "click a control to bind"
- * banner instead of disappearing between binds.
+ * specific control is currently armed, it falls back to a standing "click a control to map"
+ * banner instead of disappearing between mappings.
  */
 object OscLearnStatusOverlay {
     fun draw(displayWidth: Float, displayHeight: Float) {
         val status = OscLearnState.getActiveStatus()
-            ?: if (OscMapModeState.active) "OSC MAP MODE: click a control to bind it. Ctrl+Shift+O to exit." else null
+            ?: if (OscMapModeState.active) "OSC MAP MODE: click a control to map it. Ctrl+Shift+O to exit." else null
             ?: return
 
         val flags = ImGuiWindowFlags.NoDecoration or ImGuiWindowFlags.NoInputs or

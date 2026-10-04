@@ -412,12 +412,12 @@ object CustomRangeSlider {
             dl.addRect(x - 2f, y - 2f, x + w + 2f, y + captionHeight + 2f, borderCol, 3f, 0, 2.0f)
         }
         if (isHovered) {
-            val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
-            val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to bind." else ""
-            val midiHint = if (isMidiLearningThis) "\n[MIDI LEARN ARMED] Move a knob/fader on your MIDI controller to bind." else ""
+            val learnHint = if (isMacroLearning) "\nClick to add as a target of the armed macro knob." else ""
+            val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to map it." else ""
+            val midiHint = if (isMidiLearningThis) "\n[MIDI LEARN ARMED] Move a knob/fader on your MIDI controller to map it." else ""
             val menuHint = if (!isOscLearningThis && !isMidiLearningThis && targetPath != null) "\nRight-click for OSC/MIDI Learn." else ""
-            val macroHint = if (macroInfo != null) "\nControlled by ${macroInfo.controlName} [${macroInfo.badgeLabel}]. Click to edit the binding." else ""
-            showTooltip("$text bound$macroHint$learnHint$oscHint$midiHint$menuHint")
+            val macroHint = if (macroInfo != null) "\nControlled by ${macroInfo.controlName} [${macroInfo.badgeLabel}]. Click to edit the target." else ""
+            showTooltip("$text$macroHint$learnHint$oscHint$midiHint$menuHint")
         }
     }
 
@@ -864,12 +864,12 @@ object CustomRangeSlider {
             if (isLabelHovered) {
                 if (isMacroBound) {
                     val info = macroInfo!!
-                    showTooltip("Variable: $label [${info.badgeLabel}]\nControlled by ${info.controlName}.\nClick to edit the binding.")
+                    showTooltip("Variable: $label [${info.badgeLabel}]\nControlled by ${info.controlName}.\nClick to edit the target.")
                 } else {
                     val defFmt = defaultValue?.let { ": ${labelFormatFunc(it)}" } ?: ""
-                    val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
-                    val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to bind." else ""
-                    val midiHint = if (isMidiLearningThis) "\n[MIDI LEARN ARMED] Move a knob/fader on your MIDI controller to bind." else ""
+                    val learnHint = if (isMacroLearning) "\nClick to add as a target of the armed macro knob." else ""
+                    val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to map it." else ""
+                    val midiHint = if (isMidiLearningThis) "\n[MIDI LEARN ARMED] Move a knob/fader on your MIDI controller to map it." else ""
                     val menuHint = if (!isOscLearningThis && !isMidiLearningThis && targetPath != null) "\nRight-click for OSC/MIDI Learn." else ""
                     showTooltip("Variable: $label$defFmt\nMiddle-click to reset to default.$learnHint$oscHint$midiHint$menuHint")
                 }
@@ -1193,7 +1193,7 @@ object CustomRangeSlider {
 
             if (isMacroBound) {
                 val info = macroInfo!!
-                showTooltip("Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nAdjust the binding in the Edit row or Properties.")
+                showTooltip("Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nAdjust the target in the Edit row or Properties.")
             } else if (effectiveIsRandomizable) {
                 val minPct = toPct(currentMin)
                 val maxPct = toPct(currentMax)

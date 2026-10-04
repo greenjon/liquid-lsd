@@ -77,7 +77,7 @@ object RackUnit {
         val session = MacroLearnState.activeSession ?: return false
         val label = MacroLearnState.findControl(session.controlId)?.label?.ifEmpty { "Knob" } ?: "Knob"
         ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(1f, 0.75f, 0.15f, 1f))
-        ImGui.text("${llm.slop.liquidlsd.ui.Icons.REFRESH} Learning: $label -- Esc to cancel")
+        ImGui.text("${llm.slop.liquidlsd.ui.Icons.REFRESH} Adding target: $label -- Esc to cancel")
         ImGui.popStyleColor()
         return true
     }

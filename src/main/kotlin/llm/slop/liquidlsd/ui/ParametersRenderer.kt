@@ -147,9 +147,9 @@ object ParametersRenderer {
                 if (isMacroBound) {
                     val info = macroInfo!!
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f))
-                    ImGui.text("${Icons.LOCK} Bound to ${info.controlName} [${info.badgeLabel}]")
+                    ImGui.text("${Icons.LOCK} Target of ${info.controlName} [${info.badgeLabel}]")
                     ImGui.popStyleColor()
-                    ImGui.textDisabled("Click row or VAL cell to edit the binding.")
+                    ImGui.textDisabled("Click row or VAL cell to edit the target.")
                     ImGui.separator()
                 }
                 if (oscMappedAddress != null) {
@@ -385,10 +385,10 @@ object ParametersRenderer {
         if (isValHovered && session.uiTheme.tooltipsEnabled) {
             val tipText = when {
                 isMacroLearning ->
-                    "Macro Learn Mode: Click to bind this parameter's base value to armed Macro Control."
+                    "Add Target: Click to make this parameter's base value a target of the armed macro knob."
                 isMacroBound -> {
                     val info = macroInfo!!
-                    "Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nClick to select its macro and edit the binding in Properties."
+                    "Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nClick to select its macro and edit the target in Properties."
                 }
                 paramKey.endsWith("/Max Points") ->
                     "Base parameter value (non-modulatable).\nClick to configure in VAL panel. Middle-click to reset."
@@ -527,7 +527,7 @@ object ParametersRenderer {
             } else if (isMidiTarget) {
                 "Waiting for MIDI Note/CC... Move a knob, fader, or press a pad."
             } else {
-                "No MIDI mapping. Click to configure MIDI learn & settings in Properties."
+                "No MIDI mapping. Click to configure MIDI Learn & settings in Properties."
             }
             showTooltip(details, (midiX.toInt() shl 16) xor (midiY.toInt() and 0xFFFF))
         }

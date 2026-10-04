@@ -587,10 +587,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#binding-a-knob-learn-mode" class="md-nav__link">
+  <a href="#adding-targets-to-a-knob" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Binding a knob (Learn Mode)
+        Adding targets to a knob
       
     </span>
   </a>
@@ -598,10 +598,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#editing-a-binding" class="md-nav__link">
+  <a href="#editing-a-target" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Editing a binding
+        Editing a target
       
     </span>
   </a>
@@ -764,10 +764,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#setting-up-knob-labels-and-bindings" class="md-nav__link">
+  <a href="#setting-up-knob-labels-and-targets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Setting up knob labels and bindings
+        Setting up knob labels and targets
       
     </span>
   </a>
@@ -1514,10 +1514,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#binding-a-knob-learn-mode" class="md-nav__link">
+  <a href="#adding-targets-to-a-knob" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Binding a knob (Learn Mode)
+        Adding targets to a knob
       
     </span>
   </a>
@@ -1525,10 +1525,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#editing-a-binding" class="md-nav__link">
+  <a href="#editing-a-target" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Editing a binding
+        Editing a target
       
     </span>
   </a>
@@ -1691,10 +1691,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#setting-up-knob-labels-and-bindings" class="md-nav__link">
+  <a href="#setting-up-knob-labels-and-targets" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Setting up knob labels and bindings
+        Setting up knob labels and targets
       
     </span>
   </a>
@@ -1794,51 +1794,48 @@ purpose-built for live performance, with Deep Edit underneath for everything els
 <p>Macro knobs live in the <strong>Performance Mode 4×4 matrix</strong>, and they are edited in place. Column 3
 (the right-hand panel) shows only the Mixer; there is no separate MACROS tab.</p>
 <p>In the <strong>Edit</strong> view, select a macro knob in an expanded row. That row's left side switches to the
-<strong>macro binding strip</strong>:</p>
+<strong>target strip</strong>:</p>
 <ul>
-<li><strong>Line 1</strong> — the knob's name (double-click to rename), its live value, <strong>Learn</strong> / <strong>Cancel</strong>,
-  one chip per binding (1–4), and a close button.</li>
-<li><strong>Line 2</strong> — the selected binding's settings (target, Min/Max, Curve, Link, Invert, Enabled).</li>
+<li><strong>Line 1</strong> — the knob's name (double-click to rename), its live value, <strong>Add Target</strong> / <strong>Cancel</strong>,
+  one chip per target (1–4), a kebab menu (⋮), and a close button.</li>
+<li><strong>Line 2</strong> — the selected target's settings (name, Min/Max, Curve, Link, Invert, Enabled).</li>
 </ul>
 <p>FX rows show a read-only strip instead: FX knobs have a fixed role per mode (Super Knob + 3
 Metaknobs, or Metaknob + 3 parameters when a slot is focused), so the strip names the role rather
-than offering bindings.</p>
-<p><strong>Global knobs</strong> (the Clock row's 4 knobs) aren't tied to a deck. Their strip appears as a <em>guest</em>
-strip on whichever Edit row is open, so you can arm Learn and bind them to any parameter without
-leaving the deck you're editing.</p>
-<h3 id="binding-a-knob-learn-mode">Binding a knob (Learn Mode)</h3>
+than offering targets.</p>
+<h3 id="adding-targets-to-a-knob">Adding targets to a knob</h3>
 <ol>
-<li>Click <strong><code>LEARN</code></strong> on any Macro Knob. It starts pulsing to show it's armed, and a banner
-   appears: <em>"LEARN MODE: Click any parameter slider or modulator to bind."</em></li>
+<li>Click <strong><code>Add Target</code></strong> on a macro knob. It starts pulsing to show it's armed, and a banner
+   appears: <em>"ADD TARGET: Click any parameter slider or modulator property."</em></li>
 <li>Click the target:</li>
-<li>A parameter slider in a Deep Edit <strong>parameter grid</strong> binds to that parameter's base
-     value.</li>
+<li>A parameter slider in a Deep Edit <strong>parameter grid</strong> becomes a target through that
+     parameter's base value.</li>
 <li>A modulator control in Deep Edit's <strong>Properties</strong> column — e.g. an LFO's Subdivision or
-     Morph slider, or an envelope's Attack/Decay — binds to that modulator property directly.
+     Morph slider, or an envelope's Attack/Decay — becomes a target directly.
      This lets a macro knob speed up an LFO or shorten an envelope's decay, not just move a value.</li>
-<li>A toast confirms the binding (e.g. <em>"Bound Knob 3 → Zoom [LFO 1 Morph]"</em>) and Learn Mode
+<li>A toast confirms the target (e.g. <em>"Added target: Knob 3 → Zoom [LFO 1 Morph]"</em>) and Add Target
    turns itself off.</li>
 </ol>
-<p>A knob can only bind to parameters in <strong>its own deck and section</strong>:</p>
+<p>A knob can only target parameters in <strong>its own deck and section</strong>:</p>
 <ul>
-<li>Deck A <strong>SRC</strong> knobs bind to Deck A's SRC parameters only.</li>
-<li>Deck A <strong>FX</strong> knobs bind to Deck A's FX chain only.</li>
-<li><strong>Master FX</strong> knobs bind to the Master FX chain only.</li>
+<li>Deck A <strong>SRC</strong> knobs target Deck A's SRC parameters only.</li>
+<li>Deck A <strong>FX</strong> knobs target Deck A's FX chain only.</li>
+<li><strong>Master FX</strong> knobs target the Master FX chain only.</li>
 </ul>
-<p>If you click a parameter outside that section, the banner says <em>"Cannot bind…"</em> and Learn stays
-armed, so you can click the right one. If you move to another section while Learn is armed, Learn
+<p>If you click a parameter outside that section, the banner says <em>"Cannot add target…"</em> and Add Target stays
+armed, so you can click the right one. If you move to another section while Add Target is armed, it
 is cancelled. That includes Deep Edit's SRC/FX tabs, the side rail, and a Deck
 row's <code>[SRC]</code>/<code>[FX]</code> pills. Master, Transitions and FX Sends knobs aren't limited this way.</p>
-<p>Each knob can hold up to <strong>4 bindings</strong>, so one knob can drive several parameters (or modulator
-properties) simultaneously — with independent settings per binding.</p>
-<h3 id="editing-a-binding">Editing a binding</h3>
-<p>Selecting a knob shows its bindings in the macro binding strip (Edit view) and in the Properties
-editor of the open Deep Edit. For each binding you can set:</p>
+<p>Each knob can hold up to <strong>4 targets</strong>, so one knob can drive several parameters (or modulator
+properties) simultaneously — with independent settings per target.</p>
+<h3 id="editing-a-target">Editing a target</h3>
+<p>Selecting a knob shows its targets in the target strip (Edit view) and in the Properties
+editor of the open Deep Edit. For each target you can set:</p>
 <ul>
-<li><strong>Min / Max</strong> — the travel range the binding maps onto, independent of the target's own range.</li>
+<li><strong>Min / Max</strong> — the travel range the target maps onto, independent of the target's own range.</li>
 <li><strong>Curve</strong> — Linear, Exponential, Logarithmic, S-Curve, or Step (quantized into a fixed number
   of positions).</li>
-<li><strong>Link</strong> — which zone of the knob's travel this binding responds to (Mixxx-style parameter
+<li><strong>Link</strong> — which zone of the knob's travel this target responds to (Mixxx-style parameter
   linking). Instead of a plain dropdown, this is controlled via an intuitive <strong>vector transfer curve
   button</strong> displaying the exact response curve on the button face, with an adjacent <strong><code>[±]</code></strong> invert toggle:</li>
 <li><strong>Full (0-100%)</strong> <code>[  /  ]</code> — tracks the entire knob travel.</li>
@@ -1852,16 +1849,16 @@ editor of the open Deep Edit. For each binding you can set:</p>
 <li><strong>Invert Toggle <code>[±]</code></strong> — dynamically flips the direction and mirrors the vector glyph geometry.</li>
 </ul>
 <p>Left-click the link button to cycle through the modes; right-click to open a context menu and select directly.
-  A common pattern: bind two targets to the same knob, one on <strong>1st Half</strong> and one on <strong>2nd
+  A common pattern: give one knob two targets, one on <strong>1st Half</strong> and one on <strong>2nd
   Half</strong>, to crossfade or choreograph between them from a single knob turn.
-- <strong>Live Value Meter Knob</strong> — on the second row of each binding (to the left of Min/Max, Link Mode, and Curve), a rotary meter knob (the same crisp knob widget used in the parameter grid) displays the live evaluated output value in relation to the macro knob position. If you use a Triangle ramp (peak) curve or a half-turn zone, moving the macro knob from 0 to 1 lets you see the binding sweep (e.g. 0 → 1 → 0) in real time. Hovering over the knob displays exact numerical readouts.
-- <strong>Enabled</strong> — toggling a binding off immediately hands the target field back to normal
+- <strong>Live Value Meter Knob</strong> — on the second row of each target (to the left of Min/Max, Link Mode, and Curve), a rotary meter knob (the same crisp knob widget used in the parameter grid) displays the live evaluated output value in relation to the macro knob position. If you use a Triangle ramp (peak) curve or a half-turn zone, moving the macro knob from 0 to 1 lets you see the binding sweep (e.g. 0 → 1 → 0) in real time. Hovering over the knob displays exact numerical readouts.
+- <strong>Enabled</strong> — toggling a target off immediately hands the target field back to normal
   manual/mouse editing; toggling it back on resumes macro control.</p>
-<p>The <strong>binding target name</strong> (e.g. <code>Deck A/Mandala/L1</code>) is a clickable link. Clicking it opens the
+<p>The <strong>target name</strong> (e.g. <code>Deck A/Mandala/L1</code>) is a clickable link. Clicking it opens the
 corresponding deck's (or the Mixer's) Deep Edit on the right sub-tab with the parameter selected,
 so you can immediately reach the parameter being controlled without hunting for it manually.</p>
 <h3 id="locked-fields-visual-indicators">Locked fields &amp; Visual Indicators</h3>
-<p>Any parameter base value or modulator property that is actively bound to an enabled macro control
+<p>Any parameter base value or modulator property that is the target of an enabled macro knob
 receives distinct visual cues in Deep Edit:</p>
 <ul>
 <li><strong>Parameter grid</strong>:</li>
@@ -1873,7 +1870,7 @@ receives distinct visual cues in Deep Edit:</p>
     macro (e.g. <code>Locked: Driven by Knob 1 (WARP) [K1]</code>).</li>
 <li>
 <p><strong>Clicking the row label, badge, or VAL cell</strong> selects that macro control and shows its
-    binding strip.</p>
+    target strip.</p>
 </li>
 <li>
 <p><strong>Properties &amp; Sliders</strong>:</p>
@@ -1883,22 +1880,26 @@ receives distinct visual cues in Deep Edit:</p>
 <li>The slider track and dynamic indicator dot glow Electric Cyan instead of their default color.</li>
 <li>Numeric input text boxes are outlined in cyan and set to read-only to prevent fighting the
     engine.</li>
-<li>Hovering over the slider track, handle, or text box displays a tooltip indicating the bound
-    macro control.</li>
-<li>Clicking the variable label or badge selects the controlling macro and shows its binding strip.</li>
+<li>Hovering over the slider track, handle, or text box displays a tooltip indicating the controlling
+    macro knob.</li>
+<li>Clicking the variable label or badge selects the controlling macro and shows its target strip.</li>
 </ul>
 <h3 id="saving-your-knob-layout">Saving your knob layout</h3>
 <p>Macro banks are bundled directly into <code>.lsd</code> / <code>.lsdplay</code> preset files — they load and save with
 the preset automatically, with no extra file to manage. If you want to reuse a favorite knob
-layout across unrelated presets, a standalone <code>.knobpreset.json</code> can be saved and loaded.
-(The Export/Import buttons lived in the old MACROS inspector and are not in the UI at present.)</p>
+layout across unrelated presets, use the <strong>kebab menu (⋮)</strong> on the target strip: <strong>Export Macro Bank...</strong> saves the whole bank
+(all 4 knobs) as a standalone <code>.knobpreset.json</code> (default folder <code>library/knobpresets</code>), and <strong>Import
+Macro Bank...</strong> loads one into the bank you're editing. Targets that no longer exist
+are skipped and counted in the status message. Importing onto a deck bank points its targets at that deck
+to that deck, like a preset load; the Master bank keeps targets as saved. The same menu
+has <strong>Rename</strong> (double-clicking the name also works). FX banks have no menu.</p>
 <h3 id="hardware-control">Hardware control</h3>
 <p>Macro Knobs sit at the top of the MIDI/OSC input hierarchy:</p>
 <ul>
 <li>Right-click any knob in the <strong>Performance Mode 4×4 matrix</strong> (see below) to arm hardware MIDI
-  Learn for it — the next CC your controller sends binds to that knob. Hardware MIDI Learn is
-  Performance-Mode-only; the binding strip's <code>Learn</code> button is for parameter binding, not
-  MIDI mapping.</li>
+  Learn for it — the next CC your controller sends is mapped to that knob. Hardware MIDI Learn is
+  Performance-Mode-only; the target strip's <code>Add Target</code> button chooses what a knob controls, not
+  which controller moves it.</li>
 <li>Turn on the OSC server in <strong>Preferences → OSC Controls</strong>, and <code>/macro/knob/1</code>–<code>/macro/knob/8</code>
   send and receive live updates.</li>
 </ul>
@@ -1917,11 +1918,6 @@ regardless of what the other decks are doing.</p>
 </ul>
 <p>The same applies to the other decks and Master (<strong>MST</strong>, <strong>TRANS</strong> and <strong>MST FX</strong> match Deep Edit's
 Mixer <strong>CTRL</strong>, <strong>TRANS</strong> and <strong>FX</strong> tabs).</p>
-<p>The 4 <strong>Global</strong> knobs (the Performance MASTER tab's Clock row) are different from every other
-bank: they aren't tied to one deck or section. One Global knob can drive, say, Deck A's zoom,
-Deck B's zoom and the Master FX Super Knob together. Select a Global knob, click <strong>Learn</strong>, then
-click parameters in any open Deep Edit to bind. Global knobs are saved with your session, not
-with deck presets.</p>
 <h3 id="chain-super-knob-effect-metaknobs">Chain Super Knob &amp; effect Metaknobs</h3>
 <ul>
 <li><strong>Super Knob</strong> — one knob that sweeps every <strong>linked</strong> slot's own Metaknob together.</li>
@@ -1940,17 +1936,17 @@ with deck presets.</p>
 <li><strong>Knob 1</strong>: The focused slot's Metaknob. The slot's <strong>Dry/Wet</strong> is the <code>Wet</code> slider in the chain header (middle-click resets to 100%).</li>
 <li><strong>Knobs 2–4</strong>: Retargeted to the focused effect's top parameters on the active page, with parameter paging (<code>[◀ P1/N ▶]</code>) when more than 3 parameters exist.</li>
 <li><strong>Parameter Cells (<code>FxParamCell</code>)</strong>: Display parameter values with a reset-to-default button (counter-clockwise arrow).</li>
-<li><strong>Hardware MIDI</strong>: Physical controllers mapped to <code>Macro/&lt;bankId&gt;/knob_1..4</code> keep their paths; in Focus Mode they control the focused slot's Metaknob and parameters. The layout is fixed per mode (Mixxx-style), so a bound CC changes meaning when you toggle focus.</li>
+<li><strong>Hardware MIDI</strong>: Physical controllers mapped to <code>Macro/&lt;bankId&gt;/knob_1..4</code> keep their paths; in Focus Mode they control the focused slot's Metaknob and parameters. The layout is fixed per mode (Mixxx-style), so a mapped CC changes meaning when you toggle focus.</li>
 <li>Click <code>[◀ CHAIN]</code> in the header, or the active slot pill, to return to standard Group Mode.</li>
-<li><strong>Right-click a Metaknob</strong> to rebind it to a different parameter, to the Dry/Wet safety net, or
-  to reset it back to the auto-bind default.</li>
+<li><strong>Right-click a Metaknob</strong> to retarget it to a different parameter, to the Dry/Wet safety net, or
+  to reset it back to the auto-mapped default.</li>
 </ul>
 <h3 id="hardware-control-note">Hardware control note</h3>
 <p>Every knob in the strip (Super Knob, each Metaknob, and each focused-mode parameter row) supports
 the same right-click <strong>Learn MIDI</strong> / <strong>Learn OSC</strong> as any other slider in the app — each has its
-own fixed control path. <strong>This means a physical knob you've bound to a slot's Metaknob in Group
+own fixed control path. <strong>This means a physical knob you've mapped to a slot's Metaknob in Group
 Mode will <em>not</em> automatically control that slot's parameters once you switch to Focus Mode</strong> (and
-vice versa) — they're different paths, so you'd bind the physical knob again for the focused view
+vice versa) — they're different paths, so you'd map the physical knob again for the focused view
 if you want it there too. A true Traktor/Mixxx hardware unit keeps the same 4 physical knobs
 mapped regardless of focus state; matching that exactly would need new plumbing this pass didn't
 build. If this turns out to matter in practice for your hardware workflow, it's a known follow-up.</p>
@@ -2023,7 +2019,7 @@ Master row. There are no separate FX-only rows.</p>
       - <em>Bipolar</em> (12 o'clock center detent, sweeping left for negative or right for positive; middle-click resets to 0.5 center). Focused FX and Deck parameters with negative ranges (e.g. shifts, pans, zooms) render in bipolar mode.
       - <em>Endless</em> (continuous 360° circle where 0 and 1 meet at 6 o'clock straight down, sweeping continuous angles for rotation and hue).
     - <strong>Double-Click Direct Numeric Entry</strong>: Double-click any macro knob face to open an inline text entry box. Type exact numerical values (e.g. <code>0.25</code>, <code>-1.5</code>, <code>42</code>) and press <code>Enter</code> to commit, or <code>Escape</code> to cancel. Values are mapped directly to the bound parameter's authored range.
-    - <strong>In-Face Readouts</strong>: Hovering or dragging over an unbound or group-mode knob displays a subtle real-time value readout in the center of the knob face.
+    - <strong>In-Face Readouts</strong>: Hovering or dragging over a targetless or group-mode knob displays a subtle real-time value readout in the center of the knob face.
   - <strong>Right Wing</strong>:
     - <strong>Randomize Die Button (<code>🎲</code>)</strong>: Instantly randomizes that deck's modulators &amp; base values across both Visual Source and Insert FX with undo support (when randomization is enabled). Positioned on Row 1 directly above the BYPASS button.
     - <strong><code>[ BYPASS / FX ON ]</code></strong>: Dedicated insert FX kill switch, positioned on Row 2 aligned with the FX row.
@@ -2040,10 +2036,10 @@ Master row. There are no separate FX-only rows.</p>
   - <strong><code>[ RESYNC ]</code></strong>: snaps the beat phase to the downbeat.
   - <strong><code>[ /2 ]</code> <code>[ x2 ]</code></strong>: halve or double the tempo.
   - <strong><code>[ - ]</code> <code>[ + ]</code></strong>: nudge the tempo by 0.5 BPM.</p>
-<p>The BPM is deliberately not a knob, since one bump would shift the whole show. The row's 4 knobs are the <strong>Global</strong> macros (see the <strong>GLB</strong> tab above), which can bind to any parameter.</p>
+<p>The BPM is deliberately not a knob, since one bump would shift the whole show. The row has no macro knobs; a configurable row of free "global" knobs that can target any parameter is planned for a later release.</p>
 <h3 id="midi-learn-in-the-performance-matrix">MIDI Learn in the Performance Matrix</h3>
 <p>Right-click any knob to arm it for MIDI Learn — a cyan pulsing ring appears around the knob,
-identical to the Learn ring on Parameter rows. Send a CC message from any connected controller to bind
+identical to the Learn ring on Parameter rows. Send a CC message from any connected controller to map
 it immediately. Right-click again while armed to cancel.</p>
 <p>Interactive header controls in the Performance Matrix also support right-click MIDI &amp; OSC Learn:
 - <strong>Deck A and Deck B Badges</strong>: Right-click to Learn MIDI (<code>Global/snapDeckA</code>, <code>Global/snapDeckB</code>) or Learn OSC (<code>Mixer/snapDeckA</code>, <code>Mixer/snapDeckB</code>) to instantly snap the crossfader left or right.
@@ -2058,9 +2054,9 @@ Controls actively armed for MIDI learn display a pulsing cyan highlight border. 
 <li><strong>Hover/drag highlight</strong>: the knob body tints toward the row's accent color on hover, and more
   strongly while you're dragging it, so the knob under your pointer is easy to spot.</li>
 <li><strong>Right-click</strong> arms hardware MIDI Learn for that knob — the knob pulses cyan while armed, and
-  the next CC message from your controller binds to it. Right-click again to cancel.</li>
+  the next CC message from your controller is mapped to it. Right-click again to cancel.</li>
 </ul>
-<p>Knobs in the 4×4 matrix, the macro binding strip and the hardware controller all read from and
+<p>Knobs in the 4×4 matrix, the target strip and the hardware controller all read from and
 write to the <strong>same underlying <code>MacroEngine</code> banks</strong> — changes in one are immediately visible in the others.</p>
 <h3 id="the-modular-rack-deep-edit">The Modular Rack: Deep Edit</h3>
 <p>Every deep-editable row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Master, Transitions)
@@ -2069,8 +2065,8 @@ between two disclosure tiers, without leaving Performance Mode:</p>
 <ol>
 <li><strong>Faceplate</strong> (collapsed, the default) — just the 4 knobs, exactly like the plain 4×4 matrix
    above. The <code>[EDIT]</code> button has a dark fill and off-white text. Clicking a knob selects it (electric cyan focus card, glowing rim, cyan label), shows
-   its current value (<code>Val: 0.00</code>) beneath the label, and reveals a compact <code>[Learn]</code> / <code>[Cancel]</code>
-   button for arming parameter-bind Learn on the spot.</li>
+   its current value (<code>Val: 0.00</code>) beneath the label, and reveals a compact <code>[Add Target]</code> / <code>[Cancel]</code>
+   button for adding a target on the spot.</li>
 <li><strong>Deep Edit</strong> — click <code>[EDIT]</code> to open the comprehensive Deep Edit bay below the top macro row.
    The <code>[EDIT]</code> button turns green with black text while active.
    The bay is arranged into a 3-column layout:</li>
@@ -2122,7 +2118,7 @@ Performance panel has focus, so <code>Delete</code> in the Library doesn't also 
 <p><strong>While in Deep Edit</strong>, the top macro row renders the macro controls corresponding to the active channel and subtab,
 reserving the freed vertical space for the side rail and parameter bay. The row keeps the same knob size and control
 positions it has in the four-row view; it only grows by one line under each knob for the value readout (and the
-<strong>Learn</strong> button under the selected knob). There's no separate title above the parameters, since the row says which
+<strong>Add Target</strong> button under the selected knob). There's no separate title above the parameters, since the row says which
 deck and section you're editing.
 Collapsing back to Faceplate brings the rest of the 4×4 grid, and the Library, back. While
 Deep Edit is open the Library is hidden completely (the <strong>Edit</strong> view — see
@@ -2133,24 +2129,23 @@ In addition to the row's <code>[EDIT]</code> button, clicking any preview monito
 <p><strong>One Deep Edit at a time</strong>: opening a row's Deep Edit collapses any other open one. To move
 between decks, use the Deep Edit side rail (<strong>MIX / A / B / BG / PV</strong>) rather than opening
 rows side by side.</p>
-<p><strong>Esc</strong> collapses every expanded row back to the Faceplate — unless a Macro Learn is currently
-armed, in which case Esc cancels the Learn instead (a second Esc then collapses the rack). A
-row whose own knob has an armed Learn is also exempt from the auto-collapse, so it can't
-be accidentally folded away mid-Learn; a <strong>"Learning: ‹name› — Esc to cancel"</strong> indicator stays
-visible in the toolbar the whole time a Learn is armed, even if you've expanded a different row.
+<p><strong>Esc</strong> collapses every expanded row back to the Faceplate — unless Add Target is currently
+armed, in which case Esc cancels it instead (a second Esc then collapses the rack). A
+row whose own knob has an armed Add Target is also exempt from the auto-collapse, so it can't
+be accidentally folded away mid-way; a <strong>"Adding target: ‹name› — Esc to cancel"</strong> indicator stays
+visible in the toolbar the whole time Add Target is armed, even if you've expanded a different row.
 <strong>View → Close Deep Edit</strong> does the same as the row's <code>[EDIT]</code> button.</p>
 <p>Expanding or collapsing a row is purely a display change — it never re-syncs the Super Knob/Metaknob mapping.</p>
-<h3 id="setting-up-knob-labels-and-bindings">Setting up knob labels and bindings</h3>
-<p>Binding is edited in the <strong>Edit</strong> view, in the macro binding strip described above (rename,
+<h3 id="setting-up-knob-labels-and-targets">Setting up knob labels and targets</h3>
+<p>Targets are edited in the <strong>Edit</strong> view, in the target strip described above (rename,
 target chips, Min/Max/Curve/Invert/Link/Enabled) and in the Properties editor of the open Deep Edit.
-Clicking a bound target's name opens that deck's (or the Mixer's) Deep Edit on the right sub-tab
+Clicking a target's name opens that deck's (or the Mixer's) Deep Edit on the right sub-tab
 with the parameter selected.</p>
 <ul>
-<li><strong>From the 4×4 matrix</strong>: click a knob to select it, then click <strong><code>Learn</code></strong> (on the binding strip,
-  or the inline button in the Perform view). This arms parameter-bind Learn and opens that row's
+<li><strong>From the 4×4 matrix</strong>: click a knob to select it, then click <strong><code>Add Target</code></strong> (on the target strip,
+  or the inline button in the Perform view). This arms Add Target and opens that row's
   <strong>Deep Edit</strong> <em>Params</em> — click a target parameter and set Min/Max/Curve as desired. The target
-  must be in the knob's own deck and section (see <em>Binding a knob</em> above). Global knobs may bind
-  anywhere.</li>
+  must be in the knob's own deck and section (see <em>Adding targets to a knob</em> above).</li>
 </ul>
 <p>The change is live immediately everywhere, since all views share the same <code>MacroEngine</code> banks.</p>
 <hr />
@@ -2253,7 +2248,7 @@ with the parameter selected.</p>
 </tr>
 </tbody>
 </table>
-<p>Deck generator banks initialize from their generator's default preset. Master, Transitions, and FX banks initialize with pre-mapped smart defaults. The five FX banks bind to their chain's <code>Deck A/FX/...</code> … <code>Master/FX/...</code> parameters and re-sync automatically whenever that chain's contents change (loading a chain, swapping a slot, restoring a session) — FX knobs are fixed (Super + 3 Metaknobs, or Metaknob + 3 parameters when focused) and can't be rebound; change what a Metaknob controls with its <strong>Rebind</strong> menu. Sessions saved with hand-retargeted FX knobs lose those bindings on load. All 12 canonical banks are preserved in <code>last_session.json</code> and session files.</p>
+<p>Deck generator banks initialize from their generator's default preset. Master, Transitions, and FX banks initialize with pre-mapped smart defaults. The five FX banks target their chain's <code>Deck A/FX/...</code> … <code>Master/FX/...</code> parameters and re-sync automatically whenever that chain's contents change (loading a chain, swapping a slot, restoring a session) — FX knobs are fixed (Super + 3 Metaknobs, or Metaknob + 3 parameters when focused) and can't be retargeted per knob; change what a Metaknob controls with its <strong>Retarget</strong> menu. Sessions saved with hand-retargeted FX knobs lose those targets on load. All 12 canonical banks are preserved in <code>last_session.json</code> and session files.</p>
 <p>Banks are saved in <code>last_session.json</code> and bundled into preset files automatically.</p>
 <hr />
 <h2 id="generator-fx-defaults-save-as-default">Generator &amp; FX Defaults ("Save as Default")</h2>
@@ -2261,9 +2256,9 @@ with the parameter selected.</p>
 <h3 id="visual-generator-defaults">Visual Generator Defaults</h3>
 <p>When swapping visual sources on any deck (via the generator badge or launchpad), the incoming generator's default configuration is resolved across three tiers:
 1. <strong>User Default</strong>: Custom parameter baselines, <code>globalAlpha</code>, and 4-knob macro layout saved in <code>library/generator_defaults/&lt;sourceId&gt;.json</code>.
-2. <strong>Curated Stock Default</strong>: Hand-curated 4-knob macro bindings for bundled generators (<code>mandala</code>, <code>dynamic_spiral</code>, <code>icosa_h3</code>, <code>domain_warp_fluid</code>, <code>gyroid_hyperspace</code>, <code>celestial_engine</code>, <code>hyper_slice</code>, <code>chladni_cymatics</code>).
+2. <strong>Curated Stock Default</strong>: Hand-curated 4-knob macro targets for bundled generators (<code>mandala</code>, <code>dynamic_spiral</code>, <code>icosa_h3</code>, <code>domain_warp_fluid</code>, <code>gyroid_hyperspace</code>, <code>celestial_engine</code>, <code>hyper_slice</code>, <code>chladni_cymatics</code>).
 3. <strong>Automated Heuristic Fallback</strong>: For third-party ISF shaders, continuous floats (e.g. speed, rate, zoom, scale, morph, depth, detail) are prioritized, discrete stepped selectors are filtered out, and speed/frequency parameters are shaped with exponential response curves.</p>
-<p><strong>Bank Replacement Behavior</strong>: Applying a default replaces the resident 4-knob deck bank wholesale, identical to preset loading. Stored <code>Deck/*</code> bindings are dynamically remapped to the target deck slot (e.g., <code>Deck A</code>, <code>Deck B</code>). Knobs are positioned via inverse-curve mapping so parameter values do not jump on load. Hardware MIDI mappings are stripped on save to avoid duplicate hardware CC collisions across decks.</p>
+<p><strong>Bank Replacement Behavior</strong>: Applying a default replaces the resident 4-knob deck bank wholesale, identical to preset loading. Stored <code>Deck/*</code> targets are dynamically remapped to the target deck slot (e.g., <code>Deck A</code>, <code>Deck B</code>). Knobs are positioned via inverse-curve mapping so parameter values do not jump on load. Hardware MIDI mappings are stripped on save to avoid duplicate hardware CC collisions across decks.</p>
 <p><strong>How to Save or Reset Generator Defaults</strong>:
 - <strong>Right-click the generator badge</strong> on any deck row in Performance Mode to open the context menu:
   - <code>Save as Default for &lt;Generator&gt;</code>: Saves current parameters, alpha, and 4-knob macro layout as the generator default.
@@ -2274,9 +2269,9 @@ with the parameter selected.</p>
 <p>In the FX Chain Macro Strip (and Deep Edit FX views), slot Metaknobs and parameters can be customized and explicitly saved:
 - Tweaking parameters or re-targeting Metaknobs during performance is purely temporary and does <strong>not</strong> silently overwrite defaults on disk.
 - <strong>Right-click any Metaknob</strong> in the FX strip:
-  - Select any parameter from the list (or <code>Bind to Dry/Wet (safety net)</code>) to rebind the Metaknob.
-  - Choose <code>Save as Default for &lt;Filter&gt;</code> to persist the current Metaknob bindings and parameter baseline into <code>library/isf_overrides/&lt;contentHash&gt;.json</code>.
-  - When a user default is present, choose <code>Reset to Factory Default</code> to revert to stock curated/heuristic bindings.</p>
+  - Select any parameter from the list (or <code>Target Dry/Wet (safety net)</code>) to retarget the Metaknob.
+  - Choose <code>Save as Default for &lt;Filter&gt;</code> to persist the current Metaknob targets and parameter baseline into <code>library/isf_overrides/&lt;contentHash&gt;.json</code>.
+  - When a user default is present, choose <code>Reset to Factory Default</code> to revert to stock curated/heuristic targets.</p>
 <hr />
 <h2 id="shortcuts">Shortcuts</h2>
 <table>
@@ -2289,7 +2284,7 @@ with the parameter selected.</p>
 <tbody>
 <tr>
 <td><code>Esc</code></td>
-<td>Cancel an armed Macro Learn, or (if none is armed) collapse every expanded Rack row back to Faceplate</td>
+<td>Cancel an armed Add Target, or (if none is armed) collapse every expanded Rack row back to Faceplate</td>
 </tr>
 </tbody>
 </table>

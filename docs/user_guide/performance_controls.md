@@ -74,7 +74,7 @@ Hovering over almost any parameter in the app shows a tooltip with:
 2. A plain-English description of what the parameter does.
 3. Any personal note you've attached to the parameter (in amber text).
 
-Macro knob tooltips show the value in the bound parameter's real units, with the knob position as a percentage: `ZOOM: 5.00 (100%)`. The same real value is shown on the knob face (always while a row is in Deep Edit, otherwise on hover).
+Macro knob tooltips show the value in the target parameter's real units, with the knob position as a percentage: `ZOOM: 5.00 (100%)`. The same real value is shown on the knob face (always while a row is in Deep Edit, otherwise on hover).
 
 Tooltips appear after a short delay (~250ms) so they don't flash annoyingly as you move the mouse.
 
@@ -125,7 +125,7 @@ for the FX Rack view that exposes these.
   - **Copy Chain / Paste Chain**: Copies or pastes one chain's 3 slots between any decks and Master FX.
   - **Clear Chain Slots**: Disposes and empties that chain's 3 slots.
 - **Per-Slot Kebab (`⋮`)**:
-  - **Save Slot Preset As...**: Saves the slot's filter ID, dry/wet, Metaknob position/binding,
+  - **Save Slot Preset As...**: Saves the slot's filter ID, dry/wet, Metaknob position/target,
     and parameters into an `.lsdfx` file in `library/fx/`.
   - **Copy Slot / Paste Slot**: Copies or pastes individual slot configurations across slots or chains.
   - **Reset Slot**: Clears the slot filter and resets parameters.
@@ -156,7 +156,7 @@ for the FX Rack view that exposes these.
     - Duration is customizable in Preferences (`FX Swap Fade (ms)`, 0–1000 ms, default 150 ms; 0 = immediate hard cut).
   - **Knob Labeling**:
     - Knob 1 controls the chain's `SUPER` knob.
-    - Knobs 2–4 display `META` (or the bound parameter name when custom-routed), while the effect name itself is clearly displayed in the slot cell below.
+    - Knobs 2–4 display `META` (or the target parameter name when custom-routed), while the effect name itself is clearly displayed in the slot cell below.
   - **Focus Mode (Traktor / Mixxx style)**:
     - **Entering Focus Mode**:
       - Click any slot pill (`[1]`, `[2]`, or `[3]`) in the FX row header.
@@ -200,7 +200,7 @@ You can map any parameter, internal modulator variable, matrix CV modulator, or 
 1. **In-Situ Right-Click Learn (Fastest)**:
    - Right-click any slider or variable label in the UI — including an LFO's **Speed / Subdivision**, **Depth**, **Min/Max bounds**, **Asymmetry (Slope)**, **Morph**, **Hold**, or a parameter's **Initial Range (Base Value)**.
    - Select **Learn MIDI (...)** from the context menu. The slider will pulse in cyan/blue while awaiting hardware input.
-   - Move a knob, fader, or press a pad on your MIDI controller. Liquid LSD immediately binds the control, preserves your configured min/max limits, and saves the mapping to the active profile.
+   - Move a knob, fader, or press a pad on your MIDI controller. Liquid LSD immediately maps the control, preserves your configured min/max limits, and saves the mapping to the active profile.
    - Right-click again and select **Cancel MIDI Learn** if needed.
 
 2. **Modulation Matrix Cells**:
@@ -335,14 +335,14 @@ The three side buttons other than Shift change meaning with the view:
 
 - **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active.
 - **Library:** a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and **Shift + tap** adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.
-- The FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in profile; bind them in your own profile.
+- The FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in profile; map them in your own profile.
 
 <a id="twister-lights"></a>
 #### Rings and LEDs
 
 The Twister mirrors the screen. Each encoder's ring shows its knob's value, and its LED takes the colour of the row it controls. A knob with nothing to control goes dark: an empty or bypassed FX slot, or a blank position on a focused effect's parameter page (its ring still shows the value).
 
-- LEDs can't show greys, so on the MASTER and MIXER pages the Master row is red and the Global row is violet (the screen keeps its greys); Transitions stay cyan and FX Wet/Dry orange.
+- LEDs can't show greys, so on the MASTER and MIXER pages the Master row is red (the screen keeps its greys); Transitions stay cyan and FX Wet/Dry orange.
 - On pages with a pinned FX row (A/B, BG/PV, MIXER) the FX row's LED is a shifted hue of its source row's, so the four LEDs of a bank differ.
 
 <a id="twister-troubleshooting"></a>
@@ -361,12 +361,12 @@ The Twister mirrors the screen. Each encoder's ring shows its knob's value, and 
 
 Profiles are JSON files: built-ins ship inside the app, and yours go in `library/controllers/*.json`. A file with the same `id` as a built-in replaces it, so copy a built-in's JSON and edit it. A file with a mistake is skipped; the reason is logged and shown in the **Controller Profiles** section of Preferences > MIDI Controls. That section lists each profile and the device using it, and has **Copy to User File** (for built-ins), **Delete User File** (reverts to the built-in) and **Reload Profiles** (after you edit a file by hand).
 
-Each user profile also has a **Bindings** list:
+Each user profile also has a **Mappings** list:
 
 - Click a command to choose another (the list is filterable and dimmed where the command can't be driven by that input).
-- Use the trash button to remove a binding, or add one with the row at the bottom (modifier, input, command). Invalid edits are not saved; the problems are listed.
-- To bind by touch, choose a command and a modifier in the add row, press **Learn** and move the control on the device. A control the profile doesn't know becomes a new input. Modifier and bank buttons can't be learned.
-- Only global bindings can be edited there; per-bank bindings are still edited in the JSON.
+- Use the trash button to remove a mapping, or add one with the row at the bottom (modifier, input, command). Invalid edits are not saved; the problems are listed.
+- To map by touch, choose a command and a modifier in the add row, press **Learn** and move the control on the device. A control the profile doesn't know becomes a new input. Modifier and bank buttons can't be learned.
+- Only global mappings can be edited there; per-bank mappings are still edited in the JSON.
 
 See `docs/developer/unified_control_mapping.md` for the format.
 
@@ -390,8 +390,8 @@ You can map OSC controls either in-situ from the UI or manually from Preferences
 1. **In-Situ Right-Click Learn (Fastest)**:
    - Right-click any slider or variable label in the UI — including an LFO's **Speed / Subdivision**, **Depth**, **Min/Max bounds**, **Asymmetry**, a parameter's **Initial Range (Base Value)**, the crossfader, fade speed, or a deck/transition queue's `<`/`>` buttons.
    - Select **Learn OSC (...)** from the context menu. The control will pulse in amber while awaiting input.
-   - Move a fader, knob, or XY pad on your TouchOSC surface. Liquid LSD ignores the first packet from a new address (guarding against a controller's connect-time sync burst) and binds once a later packet actually moves the value, preserving your configured min/max limits and saving the mapping to the active profile.
-   - Right-click again and select **Cancel OSC Learn** (or cancel from Preferences) if needed. Once bound, the same context menu offers **Clear OSC Mapping** to remove it without leaving the performance view.
+   - Move a fader, knob, or XY pad on your TouchOSC surface. Liquid LSD ignores the first packet from a new address (guarding against a controller's connect-time sync burst) and maps once a later packet actually moves the value, preserving your configured min/max limits and saving the mapping to the active profile.
+   - Right-click again and select **Cancel OSC Learn** (or cancel from Preferences) if needed. Once mapped, the same context menu offers **Clear OSC Mapping** to remove it without leaving the performance view.
 
 2. **Manual Learn from Preferences**:
    - Open **Preferences → OSC Controls**.
@@ -401,7 +401,7 @@ You can map OSC controls either in-situ from the UI or manually from Preferences
    - Click **Start Learn**, then move the control on your OSC surface.
 
 3. **TouchOSC XY Pads & Multi-Argument Vectors**:
-   - Multi-argument messages (e.g. `/2/xy`) are automatically unpacked into per-axis sub-addresses (`/2/xy/0` for X, `/2/xy/1` for Y). Learning from an XY pad binds the active axis.
+   - Multi-argument messages (e.g. `/2/xy`) are automatically unpacked into per-axis sub-addresses (`/2/xy/0` for X, `/2/xy/1` for Y). Learning from an XY pad maps the active axis.
 
 ### Fine-Tuning & Shaping
 

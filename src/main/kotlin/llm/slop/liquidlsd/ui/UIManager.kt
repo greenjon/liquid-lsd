@@ -298,6 +298,7 @@ class UIManager(
             missingItemsPanel.draw(session)
 
             deckPresetController.drawFileBrowsers()
+            PerformanceMacroStrip.drawFileBrowser(mixer)
         }
 
         // Drawn outside the Clean Mode gate: a performer who arms "Learn OSC" and then flips to

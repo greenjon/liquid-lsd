@@ -2085,7 +2085,7 @@
 1. The parameter name, valid range, and factory default value.
 2. A plain-English description of what the parameter does.
 3. Any personal note you've attached to the parameter (in amber text).</p>
-<p>Macro knob tooltips show the value in the bound parameter's real units, with the knob position as a percentage: <code>ZOOM: 5.00 (100%)</code>. The same real value is shown on the knob face (always while a row is in Deep Edit, otherwise on hover).</p>
+<p>Macro knob tooltips show the value in the target parameter's real units, with the knob position as a percentage: <code>ZOOM: 5.00 (100%)</code>. The same real value is shown on the knob face (always while a row is in Deep Edit, otherwise on hover).</p>
 <p>Tooltips appear after a short delay (~250ms) so they don't flash annoyingly as you move the mouse.</p>
 <h3 id="the-three-tier-notes-system">The three-tier notes system</h3>
 <p>You can attach notes at three different scopes:</p>
@@ -2145,7 +2145,7 @@ for the FX Rack view that exposes these.</p>
 <li><strong>Copy Chain / Paste Chain</strong>: Copies or pastes one chain's 3 slots between any decks and Master FX.</li>
 <li><strong>Clear Chain Slots</strong>: Disposes and empties that chain's 3 slots.</li>
 <li><strong>Per-Slot Kebab (<code>⋮</code>)</strong>:</li>
-<li><strong>Save Slot Preset As...</strong>: Saves the slot's filter ID, dry/wet, Metaknob position/binding,
+<li><strong>Save Slot Preset As...</strong>: Saves the slot's filter ID, dry/wet, Metaknob position/target,
     and parameters into an <code>.lsdfx</code> file in <code>library/fx/</code>.</li>
 <li><strong>Copy Slot / Paste Slot</strong>: Copies or pastes individual slot configurations across slots or chains.</li>
 <li><strong>Reset Slot</strong>: Clears the slot filter and resets parameters.</li>
@@ -2184,7 +2184,7 @@ for the FX Rack view that exposes these.</p>
 </li>
 <li><strong>Knob Labeling</strong>:<ul>
 <li>Knob 1 controls the chain's <code>SUPER</code> knob.</li>
-<li>Knobs 2–4 display <code>META</code> (or the bound parameter name when custom-routed), while the effect name itself is clearly displayed in the slot cell below.</li>
+<li>Knobs 2–4 display <code>META</code> (or the target parameter name when custom-routed), while the effect name itself is clearly displayed in the slot cell below.</li>
 </ul>
 </li>
 <li><strong>Focus Mode (Traktor / Mixxx style)</strong>:<ul>
@@ -2232,7 +2232,7 @@ for the FX Rack view that exposes these.</p>
 <li><strong>In-Situ Right-Click Learn (Fastest)</strong>:</li>
 <li>Right-click any slider or variable label in the UI — including an LFO's <strong>Speed / Subdivision</strong>, <strong>Depth</strong>, <strong>Min/Max bounds</strong>, <strong>Asymmetry (Slope)</strong>, <strong>Morph</strong>, <strong>Hold</strong>, or a parameter's <strong>Initial Range (Base Value)</strong>.</li>
 <li>Select <strong>Learn MIDI (...)</strong> from the context menu. The slider will pulse in cyan/blue while awaiting hardware input.</li>
-<li>Move a knob, fader, or press a pad on your MIDI controller. Liquid LSD immediately binds the control, preserves your configured min/max limits, and saves the mapping to the active profile.</li>
+<li>Move a knob, fader, or press a pad on your MIDI controller. Liquid LSD immediately maps the control, preserves your configured min/max limits, and saves the mapping to the active profile.</li>
 <li>
 <p>Right-click again and select <strong>Cancel MIDI Learn</strong> if needed.</p>
 </li>
@@ -2454,13 +2454,13 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <ul>
 <li><strong>Picker:</strong> moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active.</li>
 <li><strong>Library:</strong> a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and <strong>Shift + tap</strong> adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.</li>
-<li>The FX queue transport commands (<code>fx.queue_next/prev</code>, <code>fx.bg_queue_next/prev</code>) have no free button in the built-in profile; bind them in your own profile.</li>
+<li>The FX queue transport commands (<code>fx.queue_next/prev</code>, <code>fx.bg_queue_next/prev</code>) have no free button in the built-in profile; map them in your own profile.</li>
 </ul>
 <p><a id="twister-lights"></a></p>
 <h4 id="rings-and-leds">Rings and LEDs</h4>
 <p>The Twister mirrors the screen. Each encoder's ring shows its knob's value, and its LED takes the colour of the row it controls. A knob with nothing to control goes dark: an empty or bypassed FX slot, or a blank position on a focused effect's parameter page (its ring still shows the value).</p>
 <ul>
-<li>LEDs can't show greys, so on the MASTER and MIXER pages the Master row is red and the Global row is violet (the screen keeps its greys); Transitions stay cyan and FX Wet/Dry orange.</li>
+<li>LEDs can't show greys, so on the MASTER and MIXER pages the Master row is red (the screen keeps its greys); Transitions stay cyan and FX Wet/Dry orange.</li>
 <li>On pages with a pinned FX row (A/B, BG/PV, MIXER) the FX row's LED is a shifted hue of its source row's, so the four LEDs of a bank differ.</li>
 </ul>
 <p><a id="twister-troubleshooting"></a></p>
@@ -2477,12 +2477,12 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <p><a id="twister-own-profiles"></a></p>
 <h4 id="your-own-profiles">Your own profiles</h4>
 <p>Profiles are JSON files: built-ins ship inside the app, and yours go in <code>library/controllers/*.json</code>. A file with the same <code>id</code> as a built-in replaces it, so copy a built-in's JSON and edit it. A file with a mistake is skipped; the reason is logged and shown in the <strong>Controller Profiles</strong> section of Preferences &gt; MIDI Controls. That section lists each profile and the device using it, and has <strong>Copy to User File</strong> (for built-ins), <strong>Delete User File</strong> (reverts to the built-in) and <strong>Reload Profiles</strong> (after you edit a file by hand).</p>
-<p>Each user profile also has a <strong>Bindings</strong> list:</p>
+<p>Each user profile also has a <strong>Mappings</strong> list:</p>
 <ul>
 <li>Click a command to choose another (the list is filterable and dimmed where the command can't be driven by that input).</li>
-<li>Use the trash button to remove a binding, or add one with the row at the bottom (modifier, input, command). Invalid edits are not saved; the problems are listed.</li>
-<li>To bind by touch, choose a command and a modifier in the add row, press <strong>Learn</strong> and move the control on the device. A control the profile doesn't know becomes a new input. Modifier and bank buttons can't be learned.</li>
-<li>Only global bindings can be edited there; per-bank bindings are still edited in the JSON.</li>
+<li>Use the trash button to remove a mapping, or add one with the row at the bottom (modifier, input, command). Invalid edits are not saved; the problems are listed.</li>
+<li>To map by touch, choose a command and a modifier in the add row, press <strong>Learn</strong> and move the control on the device. A control the profile doesn't know becomes a new input. Modifier and bank buttons can't be learned.</li>
+<li>Only global mappings can be edited there; per-bank mappings are still edited in the JSON.</li>
 </ul>
 <p>See <code>docs/developer/unified_control_mapping.md</code> for the format.</p>
 <hr />
@@ -2501,9 +2501,9 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <li><strong>In-Situ Right-Click Learn (Fastest)</strong>:</li>
 <li>Right-click any slider or variable label in the UI — including an LFO's <strong>Speed / Subdivision</strong>, <strong>Depth</strong>, <strong>Min/Max bounds</strong>, <strong>Asymmetry</strong>, a parameter's <strong>Initial Range (Base Value)</strong>, the crossfader, fade speed, or a deck/transition queue's <code>&lt;</code>/<code>&gt;</code> buttons.</li>
 <li>Select <strong>Learn OSC (...)</strong> from the context menu. The control will pulse in amber while awaiting input.</li>
-<li>Move a fader, knob, or XY pad on your TouchOSC surface. Liquid LSD ignores the first packet from a new address (guarding against a controller's connect-time sync burst) and binds once a later packet actually moves the value, preserving your configured min/max limits and saving the mapping to the active profile.</li>
+<li>Move a fader, knob, or XY pad on your TouchOSC surface. Liquid LSD ignores the first packet from a new address (guarding against a controller's connect-time sync burst) and maps once a later packet actually moves the value, preserving your configured min/max limits and saving the mapping to the active profile.</li>
 <li>
-<p>Right-click again and select <strong>Cancel OSC Learn</strong> (or cancel from Preferences) if needed. Once bound, the same context menu offers <strong>Clear OSC Mapping</strong> to remove it without leaving the performance view.</p>
+<p>Right-click again and select <strong>Cancel OSC Learn</strong> (or cancel from Preferences) if needed. Once mapped, the same context menu offers <strong>Clear OSC Mapping</strong> to remove it without leaving the performance view.</p>
 </li>
 <li>
 <p><strong>Manual Learn from Preferences</strong>:</p>
@@ -2520,7 +2520,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <li>
 <p><strong>TouchOSC XY Pads &amp; Multi-Argument Vectors</strong>:</p>
 </li>
-<li>Multi-argument messages (e.g. <code>/2/xy</code>) are automatically unpacked into per-axis sub-addresses (<code>/2/xy/0</code> for X, <code>/2/xy/1</code> for Y). Learning from an XY pad binds the active axis.</li>
+<li>Multi-argument messages (e.g. <code>/2/xy</code>) are automatically unpacked into per-axis sub-addresses (<code>/2/xy/0</code> for X, <code>/2/xy/1</code> for Y). Learning from an XY pad maps the active axis.</li>
 </ol>
 <h3 id="fine-tuning-shaping">Fine-Tuning &amp; Shaping</h3>
 <p>The <strong>Address Mappings</strong> table in the OSC Controls tab offers comprehensive per-control shaping:

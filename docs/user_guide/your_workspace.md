@@ -12,7 +12,7 @@ The Library panel spans the left and middle columns of the app. That column has 
 - **Edit** — Open a row's **Deep Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Swap a deck's source or FX from the controls on the row itself. Press **Esc** or click the row's **Collapse** button to get back to Perform.
 - **Library** — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.
 
-Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Deep Edit (cancelling any armed Learn) and brings the Library back.
+Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Deep Edit (cancelling any armed Add Target or Learn) and brings the Library back.
 
 In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.
 
@@ -79,7 +79,7 @@ The right panel shows:
 
 Clicking a deck monitor opens that deck in Deep Edit; clicking the master monitor opens the Master (**MIX**) Deep Edit.
 
-A **`[ MIXER | MACROS ]`** toggle at the top of this panel switches it to the Macro Controls view, where you bind the Performance panel's knobs to any parameter or modulator. See [Macro Controls & Performance Mode](macros_and_rack.md).
+Macro knobs are edited in the Performance rows' Edit view, where each knob gets a target strip for choosing what it controls. See [Macro Controls & Performance Mode](macros_and_rack.md).
 
 ---
 

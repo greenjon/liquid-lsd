@@ -123,7 +123,7 @@ object MacroBindingEditor {
         val btn = 20f
         ImGui.sameLine(ImGui.getCursorPosX() + maxOf(0f, ImGui.getContentRegionAvailX() - btn))
         if (ImGui.button("${Icons.TRASH}##del", btn, btn)) delete = true
-        itemTooltip("Delete this binding.")
+        itemTooltip("Delete this target.")
 
         // Line 2: range bar with live position dot.
         val barLo = minOf(lo, binding.minVal, binding.maxVal)
@@ -186,7 +186,7 @@ object MacroBindingEditor {
         drawMaxField(binding, barLo, barHi, useLog, compact = true)
         ImGui.sameLine(0f, gap)
         if (ImGui.button("${Icons.TRASH}##del", h, h)) delete = true
-        itemTooltip("Delete this binding.")
+        itemTooltip("Delete this target.")
 
         var cx = x
         ImGui.setCursorScreenPos(cx, y)

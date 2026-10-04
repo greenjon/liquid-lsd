@@ -1853,7 +1853,7 @@
 <li><strong>Edit</strong> — Open a row's <strong>Deep Edit</strong> and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Swap a deck's source or FX from the controls on the row itself. Press <strong>Esc</strong> or click the row's <strong>Collapse</strong> button to get back to Perform.</li>
 <li><strong>Library</strong> — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.</li>
 </ul>
-<p>Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, <code>Space</code>, <code>Ctrl+F</code> or <code>/</code> closes Deep Edit (cancelling any armed Learn) and brings the Library back.</p>
+<p>Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, <code>Space</code>, <code>Ctrl+F</code> or <code>/</code> closes Deep Edit (cancelling any armed Add Target or Learn) and brings the Library back.</p>
 <p>In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.</p>
 <h3 id="library-view-mode-sources-fx-trans">Library View Mode (<code>[ Sources ]</code> / <code>[ FX ]</code> / <code>[ Trans ]</code>)</h3>
 <p>Toggle between sources, FX, and transitions using the segmented mode button in the top-left of the Library menu bar:</p>
@@ -1890,7 +1890,7 @@
 <li><strong>Batch Deletion</strong> — Pressing <code>Delete</code> or selecting Delete from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.</li>
 <li><strong>Double-click</strong> — Loads the item into whichever deck is currently inactive on the crossfader. For a stock source this replaces only the deck's visual source, leaving its FX chain untouched; for a saved preset it loads the full deck state.</li>
 <li><strong>Right-click or ⋮ (saved presets)</strong> — Rename, retag, duplicate, load to a specific deck, add to a queue or playlist, or delete.</li>
-<li><strong>Right-click or ⋮ (stock sources)</strong> — <strong>Load to Deck A/B/BG/PV</strong> only. Stock sources have no persisted parameter state, and their bundled defaults and Metaknob auto-bindings haven't all been individually audited yet, so they're intentionally left out of playlists and the live/background queues — an unattended queue firing an unverified default has no performer there to catch it. Loading straight to a deck is fine, since you're present to dial it in.</li>
+<li><strong>Right-click or ⋮ (stock sources)</strong> — <strong>Load to Deck A/B/BG/PV</strong> only. Stock sources have no persisted parameter state, and their bundled defaults and Metaknob auto-mappings haven't all been individually audited yet, so they're intentionally left out of playlists and the live/background queues — an unattended queue firing an unverified default has no performer there to catch it. Loading straight to a deck is fine, since you're present to dial it in.</li>
 <li><strong>Drag-and-drop</strong> — Drag any row (or multi-selection) onto a deck's monitor in the Mixer panel or onto its row in the Performance Matrix to load it (source-only for stock rows, full preset for saved rows). Saved presets can also be dragged into the Playlists Editor (Column 2) or a queue; stock sources can't, for the same reason the context menu omits those options.</li>
 <li><strong><code>[!]</code> badge</strong> — Appears when a saved preset uses a subsystem that's currently offline (e.g. MIDI or audio). The preset still loads fine; hover the badge to see what's missing.</li>
 </ul>
@@ -2127,17 +2127,17 @@
 <p><strong>There are two levels of MIDI mapping:</strong></p>
 <ol>
 <li>
-<p><strong>Hardware Profile</strong> (stored in <code>library/midi/default.json</code>) — Maps physical knobs and faders to global controls like the master crossfader, deck gain, and level faders. These bindings follow you regardless of which preset is loaded.</p>
+<p><strong>Hardware Profile</strong> (stored in <code>library/midi/default.json</code>) — Maps physical knobs and faders to global controls like the master crossfader, deck gain, and level faders. These mappings follow you regardless of which preset is loaded.</p>
 </li>
 <li>
-<p><strong>Grid Cell Modulators</strong> (stored inside each <code>.lsd</code> file) — Binds MIDI CC numbers to specific parameters as dynamic modulation sources in the CV grid. These travel with the preset.</p>
+<p><strong>Grid Cell Modulators</strong> (stored inside each <code>.lsd</code> file) — Maps MIDI CC numbers to specific parameters as dynamic modulation sources in the CV grid. These travel with the preset.</p>
 </li>
 </ol>
 <h3 id="midi-learn">MIDI Learn</h3>
 <ol>
 <li>Click the <strong>MIDI Learn</strong> button in the Parameters header or next to any parameter slider.</li>
 <li>Move a knob, fader, or button on your controller.</li>
-<li>Liquid LSD captures the CC and confirms the binding automatically.</li>
+<li>Liquid LSD captures the CC and confirms the mapping automatically.</li>
 <li>To unbind, right-click the mapped control and clear the MIDI assignment.</li>
 </ol>
 

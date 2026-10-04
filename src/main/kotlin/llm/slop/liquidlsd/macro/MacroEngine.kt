@@ -41,9 +41,10 @@ object MacroEngine {
     // to "Master/FX/..." exactly like the deck FX banks.
     const val FX_SENDS = "fxSends"
     const val MASTER_FX = "masterFx"
-    // GLOBAL: 4 free knobs on the Performance MASTER tab's Clock row, not section-scoped (see
-    // MacroLearnState.sectionFor) -- one knob can drive parameters on several decks at once.
-    // Saved with the session like every canonical bank; never bundled into deck presets.
+    // GLOBAL: free, non-section-scoped knobs (see MacroLearnState.sectionFor) -- one knob can drive
+    // parameters on several decks at once. Currently 0 knobs: the Clock row's 4 knobs were removed for v1.0
+    // and a configurable "global knobs" row is planned for v1.1. The bank stays registered so that work (and
+    // old sessions/OSC/MIDI mappings, which just find no knobs) needs no migration.
     const val GLOBAL = "global"
 
     /** The always-resident per-deck/mixer/FX-bank bank ids, in display order. */
@@ -63,10 +64,10 @@ object MacroEngine {
     }
 
     /**
-     * Knob count for a freshly auto-vivified bank. All canonical banks
-     * ([CANONICAL_BANK_IDS]) hold 4 knobs, conforming to the 4-column performance grid.
+     * Knob count for a freshly auto-vivified bank. All canonical banks ([CANONICAL_BANK_IDS]) hold 4 knobs,
+     * conforming to the 4-column performance grid, except [GLOBAL], which is empty for now (see [GLOBAL]).
      */
-    fun defaultKnobCountFor(bankId: String?): Int = 4
+    fun defaultKnobCountFor(bankId: String?): Int = if (bankId == GLOBAL) 0 else 4
 
     /** Builds a fresh, correctly-sized, blank-labeled or pre-bound default bank for [bankId]. */
     fun newBankFor(bankId: String?): MacroBank = when (bankId) {
@@ -174,7 +175,6 @@ object MacroEngine {
                 )
             )
         )
-        GLOBAL -> MacroBank(knobs = List(defaultKnobCountFor(bankId)) { MacroControl(label = "GLOBAL ${it + 1}") })
         else -> MacroBank(knobs = List(defaultKnobCountFor(bankId)) { MacroControl(label = "KNOB ${it + 1}") })
     }
 

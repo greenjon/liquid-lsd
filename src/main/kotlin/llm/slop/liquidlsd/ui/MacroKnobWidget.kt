@@ -467,7 +467,7 @@ object MacroKnobWidget {
             }
         }
 
-        val learnTip = if (isLearning) " [LEARNING... Click target to bind]" else ""
+        val learnTip = if (isLearning) " [ADDING TARGET... Click a parameter]" else ""
         val bindingLine = formatBindingSummary(bindings)
         controlTooltip {
             header = "$label: ${"%.2f".format(displayValue(newValue, bindings))} (${(newValue * 100f).roundToInt()}%)$learnTip"
@@ -476,9 +476,9 @@ object MacroKnobWidget {
             shiftDrag = "fine-tune"
             leftClick = "inspect"
             doubleClick = "type"
-            rightClick = "Learn"
+            rightClick = "MIDI Learn"
             if (oscAddress != null) {
-                osc = "$oscAddress (always live, no Learn needed)"
+                osc = "$oscAddress (always live, no OSC Learn needed)"
             }
         }
 
@@ -487,14 +487,14 @@ object MacroKnobWidget {
 
     /**
      * Builds the one-line binding summary shown in knob/switch tooltips, e.g.
-     * "Bound to: viewZoom [0.20 – 3.00]", sourced straight from the control's primary
+     * "Target: viewZoom [0.20 – 3.00]", sourced straight from the control's primary
      * (first) [llm.slop.liquidlsd.macro.MacroBinding]. Falls back to an "Unbound" hint
      * matching the empty-state affordance (right-click arms Learn Mode; see
      * onToggleLearn) when no binding exists yet.
      */
     private fun formatBindingSummary(bindings: List<llm.slop.liquidlsd.macro.MacroBinding>): String {
-        val binding = bindings.firstOrNull() ?: return "Unbound – right-click to assign"
-        return "Bound to: ${binding.parameterId} [${"%.2f".format(binding.minVal)} – ${"%.2f".format(binding.maxVal)}]"
+        val binding = bindings.firstOrNull() ?: return "No target – right-click for MIDI Learn"
+        return "Target: ${binding.parameterId} [${"%.2f".format(binding.minVal)} – ${"%.2f".format(binding.maxVal)}]"
     }
 }
 

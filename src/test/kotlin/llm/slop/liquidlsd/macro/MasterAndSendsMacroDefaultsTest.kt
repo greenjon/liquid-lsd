@@ -8,7 +8,8 @@ class MasterAndSendsMacroDefaultsTest {
 
     @Test
     fun testDefaultKnobCountForAllCanonicalBanksIsFour() {
-        for (canonicalId in MacroEngine.CANONICAL_BANK_IDS) {
+        // GLOBAL is intentionally empty until the v1.1 global-knobs row (see MacroEngine.GLOBAL).
+        for (canonicalId in MacroEngine.CANONICAL_BANK_IDS - MacroEngine.GLOBAL) {
             assertEquals(
                 4,
                 MacroEngine.defaultKnobCountFor(canonicalId),

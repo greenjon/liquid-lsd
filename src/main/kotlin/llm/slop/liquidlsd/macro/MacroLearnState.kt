@@ -61,7 +61,7 @@ object MacroLearnState {
     fun startLearn(controlId: String) {
         selectedControlId = controlId
         activeSession = LearnSession(controlId, System.currentTimeMillis())
-        setStatus("LEARN MODE: Click any parameter slider or modulator property to bind.")
+        setStatus("ADD TARGET: Click any parameter slider or modulator property.")
     }
 
     /** Restarts the Learn timeout for the armed session, e.g. when a GLOBAL Learn finally reaches an Edit view. */
@@ -74,7 +74,7 @@ object MacroLearnState {
     fun cancelLearn() {
         if (activeSession != null) {
             activeSession = null
-            setStatus("Learn Mode cancelled.", 2000L)
+            setStatus("Add Target cancelled.", 2000L)
         }
     }
 
@@ -123,7 +123,7 @@ object MacroLearnState {
         val section = sectionFor(bankId) ?: return
         if (section != (topTab to subTab)) {
             activeSession = null
-            setStatus("Learn cancelled: left ${sectionLabel(bankId)}.", 3000L)
+            setStatus("Add Target cancelled: left ${sectionLabel(bankId)}.", 3000L)
         }
     }
 
@@ -132,7 +132,7 @@ object MacroLearnState {
         val session = activeSession ?: return false
         if (System.currentTimeMillis() - session.startTimeMs > TIMEOUT_MS) {
             activeSession = null
-            setStatus("Learn Mode timed out.", 3000L)
+            setStatus("Add Target timed out.", 3000L)
             return false
         }
         return true
@@ -194,12 +194,12 @@ object MacroLearnState {
         val controlBankId = controlPair?.first
         if (!acceptsTarget(controlBankId, parameterId)) {
             val ctrlName = control.label.ifEmpty { "This knob" }
-            setStatus("Cannot bind: $ctrlName is a ${sectionLabel(controlBankId)} knob -- click a ${sectionLabel(controlBankId)} parameter.")
+            setStatus("Cannot add target: $ctrlName is a ${sectionLabel(controlBankId)} knob -- click a ${sectionLabel(controlBankId)} parameter.")
             return false
         }
 
         if (control.bindings.size >= MacroControl.MAX_BINDINGS_PER_CONTROL) {
-            setStatus("Cannot bind: ${control.label.ifEmpty { "Control" }} reached max ${MacroControl.MAX_BINDINGS_PER_CONTROL} bindings limit.")
+            setStatus("Cannot add target: ${control.label.ifEmpty { "Control" }} already has the maximum of ${MacroControl.MAX_BINDINGS_PER_CONTROL} targets.")
             activeSession = null
             return false
         }
@@ -212,7 +212,7 @@ object MacroLearnState {
             (targetType != MacroTargetType.MODULATOR_PROPERTY || (it.modulatorIndex == modulatorIndex && it.propertyName == propertyName))
         }
         if (existing != null) {
-            setStatus("Already bound: ${control.label.ifEmpty { "Control" }} -> $parameterId")
+            setStatus("Already a target: ${control.label.ifEmpty { "Control" }} -> $parameterId")
             activeSession = null
             return false
         }
@@ -239,7 +239,7 @@ object MacroLearnState {
             "$parameterId [$propertyName]"
         }
         val ctrlName = control.label.ifEmpty { "Knob" }
-        setStatus("Bound $ctrlName -> $targetDesc", 4000L)
+        setStatus("Added target: $ctrlName -> $targetDesc", 4000L)
         return true
     }
 }

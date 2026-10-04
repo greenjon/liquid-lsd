@@ -501,6 +501,8 @@ class ControlTooltipBuilder {
                 "Right-click $trimmed"
             trimmed.equals("Learn", ignoreCase = true) ||
             trimmed.startsWith("Learn ", ignoreCase = true) ||
+            trimmed.equals("MIDI Learn", ignoreCase = true) ||
+            trimmed.equals("OSC Learn", ignoreCase = true) ||
             trimmed.startsWith("options", ignoreCase = true) ->
                 "Right-click for $trimmed"
             else ->
@@ -518,10 +520,10 @@ class ControlTooltipBuilder {
         status?.takeIf { it.isNotBlank() }?.let { headerLines.add(it.trim()) }
         binding?.takeIf { it.isNotBlank() }?.let {
             val b = it.trim()
-            val formatted = if (b.startsWith("Bound to", ignoreCase = true) || b.startsWith("Unbound", ignoreCase = true)) {
+            val formatted = if (b.startsWith("Target", ignoreCase = true) || b.startsWith("No target", ignoreCase = true)) {
                 b
             } else {
-                "Bound to: $b"
+                "Target: $b"
             }
             headerLines.add(formatted)
         }
