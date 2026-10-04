@@ -76,6 +76,8 @@ Tabs SRC | FX | Trans (| Maps, see Open items) stay on top.
   - Not yet verified by hand: FX/Trans playlist drag-reorder and insert, FX overwrite popup from the pane, FX/Trans multi-select (FX/Trans keep single selection).
   - FX/Trans have no playlist transport beyond "add all to queue" (same as classic).
 
+- Step 5 (dirty-deck modal MIDI answer) DONE 2026-10-04 (f0112c4). Step 3 handoff: `.planning/unified-browser-step3-handoff.md`.
+
 ## Open items
 - MAPS tab (`LibraryViewMode.MAPS`, MapsBrowserPanel; saved macro banks in `library/knobpresets` + Perform pages; no queues, nothing loads to a deck). DECIDED 2026-10-04: keep it as a 4th tab in the same shell, same 25/50/25 geometry, but not forced into the queue model: left = Banks | Pages, middle = list, right = detail/actions (save-from / apply-to bank, show/hide/copy/delete page) instead of queues. Library view only; not a target in Edit view. Its panel ports in step 2 with minimal change; MIDI nav stays `emptyList()` for it.
 - Presets have no folder field on `AssetItem`; derive from `walkTopDown` relative path (step 1).
