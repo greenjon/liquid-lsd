@@ -103,4 +103,4 @@ A few keyboard shortcuts work anywhere in the app:
 | `Ctrl+S` | Save the preset of the deck open in Deep Edit |
 | `Ctrl+R` | Start / stop recording |
 | `Ctrl+P` | Open Preferences |
-| `Ctrl+F` or `/` | Jump to preset search |
+| `Ctrl+F` or `/` | Jump to the search box of the open Library tab |

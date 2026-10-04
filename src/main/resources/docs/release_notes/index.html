@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#library-qbgq-buttons-ctrlf-and-missing-files-relink-now-follow-the-current-tab-and-asset-type-uibrowserbrowseractiontoolbarkt-uilibrarypanelkt-uiuimanagerkt-uimissingitemspanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library Q/BGQ Buttons, Ctrl+F and Missing-Files Relink Now Follow the Current Tab and Asset Type (ui/browser/BrowserActionToolbar.kt, ui/LibraryPanel.kt, ui/UIManager.kt, ui/MissingItemsPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#learn-midiosc-is-disabled-on-values-a-macro-knob-is-driving-base-value-lock-ignores-modulator-targets-macromacroenginekt-uicustomrangesliderkt-uibeatdivisionsliderkt-uiparametersrendererkt-uivalueparamsectionkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5328,6 +5339,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#library-qbgq-buttons-ctrlf-and-missing-files-relink-now-follow-the-current-tab-and-asset-type-uibrowserbrowseractiontoolbarkt-uilibrarypanelkt-uiuimanagerkt-uimissingitemspanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library Q/BGQ Buttons, Ctrl+F and Missing-Files Relink Now Follow the Current Tab and Asset Type (ui/browser/BrowserActionToolbar.kt, ui/LibraryPanel.kt, ui/UIManager.kt, ui/MissingItemsPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#learn-midiosc-is-disabled-on-values-a-macro-knob-is-driving-base-value-lock-ignores-modulator-targets-macromacroenginekt-uicustomrangesliderkt-uibeatdivisionsliderkt-uiparametersrendererkt-uivalueparamsectionkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9423,6 +9445,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="library-qbgq-buttons-ctrlf-and-missing-files-relink-now-follow-the-current-tab-and-asset-type-uibrowserbrowseractiontoolbarkt-uilibrarypanelkt-uiuimanagerkt-uimissingitemspanelkt">Library Q/BGQ Buttons, Ctrl+F and Missing-Files Relink Now Follow the Current Tab and Asset Type (<code>ui/browser/BrowserActionToolbar.kt</code>, <code>ui/LibraryPanel.kt</code>, <code>ui/UIManager.kt</code>, <code>ui/MissingItemsPanel.kt</code>)</h3>
+<ul>
+<li><strong>The toolbar Q and BGQ buttons act on the tab you are looking at.</strong> After clicking in the FX or Trans tab, Q still queued the Sources tab's hidden multi-selection (and could put a transition into the preset queue). They now behave like the Q / Shift+Q hotkeys: Sources items go to the A/B or Background play queue, FX items to the FX queues, transitions to the transition queue (BGQ is greyed out there, as transitions have no background queue). Tooltips name the queue.</li>
+<li><strong>Ctrl+F (and <code>/</code>) focuses the search box of the open tab</strong> (Sources, FX or Trans). Before, it always focused Sources.</li>
+<li><strong>"Locate..." in the Missing Session Files dialog sends the file to the right queue.</strong> A relinked transition (<code>.lsdtrans</code> / <code>.lsdtransplay</code>) now goes to the transition queue instead of the A/B play queue. Relinked presets still go to the A/B play queue: the dialog doesn't record which queue an item came from, so a missing Background Queue item is relinked into the A/B queue.</li>
+<li>Internal: the toolbar reuses <code>LibraryNavigation.enqueueTargets/enqueue</code>; new <code>LibraryPanel.focusActiveSearch()</code> and <code>MissingItemsPanel.isTransitionAsset</code>.</li>
+</ul>
 <h3 id="learn-midiosc-is-disabled-on-values-a-macro-knob-is-driving-base-value-lock-ignores-modulator-targets-macromacroenginekt-uicustomrangesliderkt-uibeatdivisionsliderkt-uiparametersrendererkt-uivalueparamsectionkt">Learn MIDI/OSC Is Disabled on Values a Macro Knob Is Driving; Base-Value Lock Ignores Modulator Targets (<code>macro/MacroEngine.kt</code>, <code>ui/CustomRangeSlider.kt</code>, <code>ui/BeatDivisionSlider.kt</code>, <code>ui/ParametersRenderer.kt</code>, <code>ui/ValueParamSection.kt</code>)</h3>
 <ul>
 <li><strong>No more silently dead mappings.</strong> A value driven by a macro knob target is rewritten every frame, so a MIDI or OSC mapping on it did nothing. Its right-click <strong>Learn MIDI / Learn OSC</strong> is now greyed out as "locked by K#", and clicking the value cell in OSC map mode selects the knob instead of arming a learn. Release the target (uncheck it) to map the value directly.</li>

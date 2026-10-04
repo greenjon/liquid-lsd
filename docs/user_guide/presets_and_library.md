@@ -85,12 +85,12 @@ Column 1 of `[ Sources ]` mode lists two kinds of row side by side, each marked 
 
 Use the **`[⋮]`** filter menu above the list to show/hide each tier (**Stock Sources / Saved Presets**). Use **`[+]`** to eject a deck to blank so you can build a new preset on it (see [Saving a preset](#saving-a-preset) below).
 
-- **Search** — Type to filter by name, tag, or (for stock sources) category. `Ctrl+F` or `/` jumps focus to the search box from anywhere in the app.
+- **Search** — Type to filter by name, tag, or (for stock sources) category. `Ctrl+F` or `/` jumps focus to the search box of the open tab (Sources, FX or Trans) from anywhere in the app.
 - **Multi-Selection (Shift-Click & Ctrl/Cmd-Click)**:
   - **Click** — Selects a single preset, clearing existing selections.
   - **Ctrl+Click** (or **Cmd+Click** on macOS) — Toggles selection of an individual item without affecting others.
   - **Shift+Click** — Extends selection from the anchor/lead item to the clicked item across all visible rows.
-  - **Batch Queueing** — When multiple presets are selected, pressing `Q` or clicking `[ Q ]` enqueues all selected presets in order into the A/B Play Queue. Pressing `Shift+Q` or clicking `[ BGQ ]` enqueues them into the Background Queue.
+  - **Batch Queueing** — When multiple presets are selected, pressing `Q` or clicking `[ Q ]` enqueues all selected presets in order into the A/B Play Queue. Pressing `Shift+Q` or clicking `[ BGQ ]` enqueues them into the Background Queue. The buttons and hotkeys always act on the open tab: in the FX tab they feed the FX queues, and in the Trans tab `[ Q ]` feeds the transition queue (`[ BGQ ]` is greyed out there).
   - **Batch Context Menu** — Right-clicking with multiple items selected presents options like **Add N Presets to Playlist**, **Add N Presets to Queue**, and **Delete N Presets...**.
   - **Multi-Item Drag & Drop** — Dragging any item from a multi-selection carries all selected presets simultaneously into Playlists or Queues.
   - **Batch Deletion** — Pressing `Delete` or selecting Delete from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.

@@ -69,6 +69,15 @@ object LibraryPanel {
         session.parametersState.collapseAllRackModules()
     }
 
+    /** Ctrl+F / "/": focuses the search box of the tab currently shown (Sources, FX or Trans). */
+    fun focusActiveSearch() {
+        when (viewMode) {
+            LibraryViewMode.PRESETS -> PresetListPanel.shouldFocusSearch = true
+            LibraryViewMode.FX -> FXBrowserPanel.shouldFocusSearch = true
+            LibraryViewMode.TRANS -> TransitionBrowserPanel.shouldFocusSearch = true
+        }
+    }
+
     /** Library shortcut: from Edit view, brings the Library back (Perform view); otherwise toggles HALF <-> FULL. */
     fun cycleMode(session: SessionContext) {
         if (isEditView(session)) {

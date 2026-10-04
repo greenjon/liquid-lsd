@@ -150,9 +150,9 @@ Per the repo's definition of done:
 - ~~D8: MIDI/OSC on a knob-bound parameter. Lock or indicate it, like the macro lock.~~ Done 2026-10-04.
 - D9: re-enabling a binding. Editors should read `control.bindings`, not the resolved cache.
 - ~~D10: lock only for base-value bindings.~~ Done 2026-10-04.
-- D13: Missing Files relink by asset type.
-- D14: toolbar Q uses the visible tab's selection.
-- D15: Ctrl+F focuses the active tab's search.
+- ~~D13: Missing Files relink by asset type.~~ Done 2026-10-04.
+- ~~D14: toolbar Q uses the visible tab's selection.~~ Done 2026-10-04.
+- ~~D15: Ctrl+F focuses the active tab's search.~~ Done 2026-10-04.
 - ~~D16: FX chain `markClean` on every save path, with the DTO captured at confirm time.~~ Done 2026-10-04.
 - D7: stable modulator IDs for bindings (saved-format change), decided 2026-10-04 to be done in v1.0, before release, not as a stopgap. First task in `.planning/d-items-handoff.md`.
 - ~~Video export with a preset snapshot~~ moved to Phase 5.
@@ -166,3 +166,4 @@ Per the repo's definition of done:
 Stable modulator ids implemented (MacroBinding.modulatorId, :mod/<id>/ paths, legacy migration, tests in MacroEngineTest). D9 not yet done: it is a separate change in the editors' query functions.
 D9 done (2026-10-04): editors read control bindings via includeDisabled; lock queries unchanged.
 D8 + D10 done (2026-10-04): lock per target kind, Learn MIDI/OSC disabled when locked.
+D13-D15 done (2026-10-04). D13 limitation: relinked BG-queue presets land in the A/B queue (unresolved list doesn't record the source queue).

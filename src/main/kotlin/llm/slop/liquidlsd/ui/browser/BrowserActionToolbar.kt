@@ -2,12 +2,12 @@ package llm.slop.liquidlsd.ui.browser
 
 import imgui.ImGui
 import llm.slop.liquidlsd.SessionContext
-import llm.slop.liquidlsd.presets.BgQueueManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.Icons
+import llm.slop.liquidlsd.ui.LibraryNavigation
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.ParametersState
 import llm.slop.liquidlsd.ui.itemTooltip
@@ -68,12 +68,8 @@ object BrowserActionToolbar {
         source: LibraryPanel.SelectionSource?,
         btnHeight: Float = 0f
     ) {
-        val hasSelection = selectedFile != null && selectedFile.exists()
         val btnH = if (btnHeight > 0f) btnHeight else ImGui.getFrameHeight()
         val btnW = calculateButtonWidth(btnH)
-
-        val ext = selectedFile?.extension?.lowercase() ?: ""
-        val isFxItem = ext == "lsdfx" || ext == "lsdfxchain"
 
         session.uiTheme.withFont(llm.slop.liquidlsd.ui.UITheme.FontLevel.BODY) {
             // 0. [ LOCK / PADLOCK ] — Quick Audition Latch: auto-preview selections on Deck PV
@@ -97,56 +93,60 @@ object BrowserActionToolbar {
 
             ImGui.sameLine(0f, 14f)
 
-            // 1. [ Q ] (Disabled for FX items or when already in Play Queue A/B)
-            val selectedFiles = if (source == LibraryPanel.SelectionSource.PRESETS) {
-                PresetListPanel.selection.getSelectedInOrder(PresetListPanel.filteredPresets)
-                    .filter { it.type != AssetType.SOURCE_STOCK }
-                    .map { File(it.path) }
-            } else if (selectedFile != null && !isFxItem) {
-                listOf(selectedFile)
-            } else {
-                emptyList()
+            // 1. [ Q ] / 2. [ BGQ ]: act on the *visible tab's* selection and queue, exactly like the
+            // Q / Shift+Q hotkeys (LibraryNavigation.enqueue). Sources -> A/B or BG play queue,
+            // FX -> FX queues, Trans -> transition queue (which has no BG variant).
+            val mode = LibraryPanel.viewMode
+            val selectedFiles = LibraryNavigation.enqueueTargets(session)
+            val inQueueA = source == LibraryPanel.SelectionSource.QUEUE_AB ||
+                source == LibraryPanel.SelectionSource.FX_QUEUE_AB ||
+                source == LibraryPanel.SelectionSource.TRANSITION_QUEUE
+            val inQueueBG = source == LibraryPanel.SelectionSource.QUEUE_BG ||
+                source == LibraryPanel.SelectionSource.FX_QUEUE_BG
+            val noun = when (mode) {
+                LibraryPanel.LibraryViewMode.PRESETS -> "preset"
+                LibraryPanel.LibraryViewMode.FX -> "FX item"
+                LibraryPanel.LibraryViewMode.TRANS -> "transition"
             }
+            val queueA = when (mode) {
+                LibraryPanel.LibraryViewMode.PRESETS -> "A/B Play Queue"
+                LibraryPanel.LibraryViewMode.FX -> "FX Queue"
+                LibraryPanel.LibraryViewMode.TRANS -> "Transition Queue"
+            }
+            val queueBG = when (mode) {
+                LibraryPanel.LibraryViewMode.PRESETS -> "Background Queue"
+                LibraryPanel.LibraryViewMode.FX -> "FX Background Queue"
+                LibraryPanel.LibraryViewMode.TRANS -> null
+            }
+            val many = selectedFiles.size > 1
 
-            val canQueueAB = selectedFiles.isNotEmpty() && !isFxItem && source != LibraryPanel.SelectionSource.QUEUE_AB
-            val alphaQ = if (canQueueAB) 1f else 0.35f
-            BrowserDeckButtons.push(BrowserDeckButtons.colorQ(), alphaQ)
+            val canQueueAB = selectedFiles.isNotEmpty() && !inQueueA
+            BrowserDeckButtons.push(BrowserDeckButtons.colorQ(), if (canQueueAB) 1f else 0.35f)
             if (ImGui.button("Q##toolbar_deck_q", btnW, btnH) && canQueueAB) {
-                selectedFiles.forEach { session.playQueueManager.appendToQueue(it) }
+                LibraryNavigation.enqueue(session, bg = false)
                 LibraryPanel.shouldReclaimFocus = true
             }
-            val qTip = if (isFxItem) {
-                "Queueing is for full visual presets."
-            } else if (source == LibraryPanel.SelectionSource.QUEUE_AB) {
-                "Preset is already in the A/B Play Queue."
-            } else if (selectedFiles.size > 1) {
-                "Add ${selectedFiles.size} selected presets to the A/B Play Queue (Hotkey: Q)."
-            } else {
-                "Add selected preset to the A/B Play Queue (Hotkey: Q)."
-            }
-            itemTooltip(qTip)
+            itemTooltip(
+                if (inQueueA) "Already in the $queueA."
+                else if (many) "Add ${selectedFiles.size} selected ${noun}s to the $queueA (Hotkey: Q)."
+                else "Add selected $noun to the $queueA (Hotkey: Q)."
+            )
             BrowserDeckButtons.pop()
 
             ImGui.sameLine(0f, 6f)
 
-            // 2. [ BGQ ] (Disabled for FX items or when already in BG Queue)
-            val canQueueBG = selectedFiles.isNotEmpty() && !isFxItem && source != LibraryPanel.SelectionSource.QUEUE_BG
-            val alphaBGQ = if (canQueueBG) 1f else 0.35f
-            BrowserDeckButtons.push(BrowserDeckButtons.colorBGQ(), alphaBGQ)
+            val canQueueBG = selectedFiles.isNotEmpty() && queueBG != null && !inQueueBG
+            BrowserDeckButtons.push(BrowserDeckButtons.colorBGQ(), if (canQueueBG) 1f else 0.35f)
             if (ImGui.button("BGQ##toolbar_deck_bgq", btnW, btnH) && canQueueBG) {
-                selectedFiles.forEach { BgQueueManager.appendToQueue(it) }
+                LibraryNavigation.enqueue(session, bg = true)
                 LibraryPanel.shouldReclaimFocus = true
             }
-            val bgqTip = if (isFxItem) {
-                "Queueing is for full visual presets."
-            } else if (source == LibraryPanel.SelectionSource.QUEUE_BG) {
-                "Preset is already in the Background Queue."
-            } else if (selectedFiles.size > 1) {
-                "Add ${selectedFiles.size} selected presets to the Background Queue (Hotkey: Shift+Q)."
-            } else {
-                "Add selected preset to the Background Queue (Hotkey: Shift+Q)."
-            }
-            itemTooltip(bgqTip)
+            itemTooltip(
+                if (queueBG == null) "Transitions have no background queue."
+                else if (inQueueBG) "Already in the $queueBG."
+                else if (many) "Add ${selectedFiles.size} selected ${noun}s to the $queueBG (Hotkey: Shift+Q)."
+                else "Add selected $noun to the $queueBG (Hotkey: Shift+Q)."
+            )
             BrowserDeckButtons.pop()
 
             // Overwrite Slot Selection Popup

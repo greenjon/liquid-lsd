@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiWindowFlags
 import llm.slop.liquidlsd.presets.PresetManager
 import llm.slop.liquidlsd.presets.PlayQueueManager
+import llm.slop.liquidlsd.presets.TransitionQueueManager
 import java.io.File
 
 class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBrowser("MissingItemsBrowser")) {
@@ -49,10 +50,17 @@ class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBro
                 val newUnresolved = session.presetManager.sessionState.unresolvedItems.filter { it != item }
                 session.presetManager.sessionState = session.presetManager.sessionState.copy(unresolvedItems = newUnresolved)
                 
-                // Add the newly found file to the PlayQueueManager
-                session.playQueueManager.appendToQueue(selectedFile)
+                // Relinked files go back to the queue their asset type belongs to.
+                if (isTransitionAsset(selectedFile)) TransitionQueueManager.appendToQueue(selectedFile)
+                else session.playQueueManager.appendToQueue(selectedFile)
             }
             browserOpenForItem = null
         }
+    }
+
+    companion object {
+        /** True for transition presets and transition playlists, which belong in the transition queue. */
+        internal fun isTransitionAsset(file: File): Boolean =
+            file.extension.equals("lsdtrans", ignoreCase = true) || file.extension.equals("lsdtransplay", ignoreCase = true)
     }
 }

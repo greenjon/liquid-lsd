@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Library Q/BGQ Buttons, Ctrl+F and Missing-Files Relink Now Follow the Current Tab and Asset Type (`ui/browser/BrowserActionToolbar.kt`, `ui/LibraryPanel.kt`, `ui/UIManager.kt`, `ui/MissingItemsPanel.kt`)
+- **The toolbar Q and BGQ buttons act on the tab you are looking at.** After clicking in the FX or Trans tab, Q still queued the Sources tab's hidden multi-selection (and could put a transition into the preset queue). They now behave like the Q / Shift+Q hotkeys: Sources items go to the A/B or Background play queue, FX items to the FX queues, transitions to the transition queue (BGQ is greyed out there, as transitions have no background queue). Tooltips name the queue.
+- **Ctrl+F (and `/`) focuses the search box of the open tab** (Sources, FX or Trans). Before, it always focused Sources.
+- **"Locate..." in the Missing Session Files dialog sends the file to the right queue.** A relinked transition (`.lsdtrans` / `.lsdtransplay`) now goes to the transition queue instead of the A/B play queue. Relinked presets still go to the A/B play queue: the dialog doesn't record which queue an item came from, so a missing Background Queue item is relinked into the A/B queue.
+- Internal: the toolbar reuses `LibraryNavigation.enqueueTargets/enqueue`; new `LibraryPanel.focusActiveSearch()` and `MissingItemsPanel.isTransitionAsset`.
+
 ### Learn MIDI/OSC Is Disabled on Values a Macro Knob Is Driving; Base-Value Lock Ignores Modulator Targets (`macro/MacroEngine.kt`, `ui/CustomRangeSlider.kt`, `ui/BeatDivisionSlider.kt`, `ui/ParametersRenderer.kt`, `ui/ValueParamSection.kt`)
 - **No more silently dead mappings.** A value driven by a macro knob target is rewritten every frame, so a MIDI or OSC mapping on it did nothing. Its right-click **Learn MIDI / Learn OSC** is now greyed out as "locked by K#", and clicking the value cell in OSC map mode selects the knob instead of arming a learn. Release the target (uncheck it) to map the value directly.
 - **A knob aimed at an LFO's depth no longer locks the parameter's own value.** The value cell and base slider locked whenever any knob targeted anything on that parameter, even though the arcs showed it as unbound. They now lock only when a knob drives the base value itself, and a modulator property (e.g. LFO depth) locks only that property.

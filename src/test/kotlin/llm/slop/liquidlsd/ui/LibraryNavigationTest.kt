@@ -6,12 +6,50 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.assertFalse
+import io.mockk.mockk
+import llm.slop.liquidlsd.SessionContext
+import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
+import llm.slop.liquidlsd.ui.browser.PresetListPanel
+import llm.slop.liquidlsd.ui.browser.TransitionBrowserPanel
 
 class LibraryNavigationTest {
     @AfterTest
     fun reset() {
         LibraryPanel.viewMode = LibraryViewMode.PRESETS
         LibraryPanel.activeSelectionSource = null
+        PresetListPanel.selection.clear()
+        PresetListPanel.filteredPresets = emptyList()
+        FXBrowserPanel.selectedAsset = null
+        FXBrowserPanel.shouldFocusSearch = false
+        TransitionBrowserPanel.shouldFocusSearch = false
+        PresetListPanel.shouldFocusSearch = false
+    }
+
+    @Test
+    fun ctrlFFocusesTheSearchOfTheVisibleTabOnly() {
+        for (mode in LibraryViewMode.values()) {
+            LibraryPanel.viewMode = mode
+            LibraryPanel.focusActiveSearch()
+            assertEquals(mode == LibraryViewMode.PRESETS, PresetListPanel.shouldFocusSearch, "$mode sources")
+            assertEquals(mode == LibraryViewMode.FX, FXBrowserPanel.shouldFocusSearch, "$mode fx")
+            assertEquals(mode == LibraryViewMode.TRANS, TransitionBrowserPanel.shouldFocusSearch, "$mode trans")
+            PresetListPanel.shouldFocusSearch = false
+            FXBrowserPanel.shouldFocusSearch = false
+            TransitionBrowserPanel.shouldFocusSearch = false
+        }
+    }
+
+    @Test
+    fun enqueueTargetsIgnoreTheHiddenSourcesSelectionWhenAnotherTabIsShown() {
+        val a = AssetItem(path = "/x/a.lsdpreset", name = "a", type = AssetType.PRESET)
+        PresetListPanel.filteredPresets = listOf(a)
+        PresetListPanel.selection.setSingle(a)
+        LibraryPanel.activeSelectionSource = SelectionSource.PRESETS
+        LibraryPanel.viewMode = LibraryViewMode.FX
+        // FX tab with nothing selected there: must not fall back to the Sources selection.
+        assertTrue(LibraryNavigation.enqueueTargets(mockk<SessionContext>(relaxed = true)).isEmpty())
     }
 
     @Test

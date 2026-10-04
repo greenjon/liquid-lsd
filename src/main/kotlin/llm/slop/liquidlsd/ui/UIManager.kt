@@ -359,7 +359,7 @@ class UIManager(
         val isSlash = !wantTextInput && ImGui.isKeyPressed(imgui.flag.ImGuiKey.Slash, false)
         if (isCtrlF || isSlash) {
             LibraryPanel.show(session)
-            llm.slop.liquidlsd.ui.browser.PresetListPanel.shouldFocusSearch = true
+            LibraryPanel.focusActiveSearch()
         }
 
         if (!wantTextInput) {
