@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#unified-pane-polish-playlist-enqueue-from-the-tree-honest-folder-counts-in-the-edit-bay-uibrowserbrowserpanekt-uibrowserbrowsemodelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified Pane Polish: Playlist Enqueue from the Tree, Honest Folder Counts in the Edit Bay (ui/browser/BrowserPane.kt, ui/browser/BrowseModel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ctrlz-undoes-fx-and-transition-picks-made-in-the-edit-bay-presetsfxopskt-presetstransitionopskt-uiuimanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ctrl+Z Undoes FX and Transition Picks Made in the Edit Bay (presets/FxOps.kt, presets/TransitionOps.kt, ui/UIManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#edit-bay-browse-tabs-can-use-the-unified-pane-uibrowserapplytargetkt-uiperformancebrowsebaykt-uinavigationsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5471,6 +5493,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#unified-pane-polish-playlist-enqueue-from-the-tree-honest-folder-counts-in-the-edit-bay-uibrowserbrowserpanekt-uibrowserbrowsemodelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unified Pane Polish: Playlist Enqueue from the Tree, Honest Folder Counts in the Edit Bay (ui/browser/BrowserPane.kt, ui/browser/BrowseModel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ctrlz-undoes-fx-and-transition-picks-made-in-the-edit-bay-presetsfxopskt-presetstransitionopskt-uiuimanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ctrl+Z Undoes FX and Transition Picks Made in the Edit Bay (presets/FxOps.kt, presets/TransitionOps.kt, ui/UIManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#edit-bay-browse-tabs-can-use-the-unified-pane-uibrowserapplytargetkt-uiperformancebrowsebaykt-uinavigationsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9709,9 +9753,20 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="unified-pane-polish-playlist-enqueue-from-the-tree-honest-folder-counts-in-the-edit-bay-uibrowserbrowserpanekt-uibrowserbrowsemodelkt">Unified Pane Polish: Playlist Enqueue from the Tree, Honest Folder Counts in the Edit Bay (<code>ui/browser/BrowserPane.kt</code>, <code>ui/browser/BrowseModel.kt</code>)</h3>
+<ul>
+<li><strong>With the beta pane, Shift + tap on a playlist in the tree adds the whole playlist to the A/B queue</strong> (the Shift + left-top button adds it to the BG queue), like the playlist's right-click menu. On other folders it still does nothing.</li>
+<li><strong>In the Edit bay the folder counts only count rows that tab can take</strong> (the Chain tab no longer says 47 for All when it lists 18 chains).</li>
+<li>Internal: <code>BrowserPane.enqueueCursorPlaylist</code>; <code>BrowseCatalog.tree(accepts)</code>.</li>
+</ul>
+<h3 id="ctrlz-undoes-fx-and-transition-picks-made-in-the-edit-bay-presetsfxopskt-presetstransitionopskt-uiuimanagerkt">Ctrl+Z Undoes FX and Transition Picks Made in the Edit Bay (<code>presets/FxOps.kt</code>, <code>presets/TransitionOps.kt</code>, <code>ui/UIManager.kt</code>)</h3>
+<ul>
+<li><strong>Picking or clearing an FX slot, a whole FX chain or the mixer transition in the Edit bay can now be undone with Ctrl+Z</strong> (before, only deck source and preset picks could). Undo puts back the previous effect with its knob values, the previous chain (with its file name, so it isn't marked unsaved), or the previous transition and its settings. Loads from the Library, queues, macros and session restore are not undoable.</li>
+<li>Internal: <code>FxOps.undoSink</code> / <code>TransitionOps.undoSink</code> (same stack as <code>DeckOps</code>) and an opt-in <code>undoable</code> parameter; the snapshot is taken when the queued change applies.</li>
+</ul>
 <h3 id="edit-bay-browse-tabs-can-use-the-unified-pane-uibrowserapplytargetkt-uiperformancebrowsebaykt-uinavigationsurfacekt">Edit Bay Browse Tabs Can Use the Unified Pane (<code>ui/browser/ApplyTarget.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
 <ul>
-<li><strong>With the beta "Unified" pane on, the Edit bay's SRC, Chain, FX1-3 and TRANS tabs show the same folder tree | list | queue pane as the Library.</strong> One click applies the row to that deck, slot, chain or the mixer transition; the row that is currently applied shows a <code>●</code>. Each tab lists only what it can take (an FX slot: single effects; Chain: saved chains) and starts in its own folder (Chain: Saved chains, FX slots: Stock filters); each tab remembers the folder you last used there. <strong>Clear Slot / Clear Chain</strong> sit above the pane, the deck's Save button stays, and live external video feeds are under <strong>External video...</strong>. Ctrl+Z still undoes deck source and preset picks only (FX and transition picks were never undoable).</li>
+<li><strong>With the beta "Unified" pane on, the Edit bay's SRC, Chain, FX1-3 and TRANS tabs show the same folder tree | list | queue pane as the Library.</strong> One click applies the row to that deck, slot, chain or the mixer transition; the row that is currently applied shows a <code>●</code>. Each tab lists only what it can take (an FX slot: single effects; Chain: saved chains) and starts in its own folder (Chain: Saved chains, FX slots: Stock filters); each tab remembers the folder you last used there. <strong>Clear Slot / Clear Chain</strong> sit above the pane, the deck's Save button stays, and live external video feeds are under <strong>External video...</strong>. </li>
 <li><strong>On the Twister</strong> in the bay: the right-top button steps tree &gt; list &gt; queues (instead of the category), turning knob 1 steps the cursor, a tap applies the list row, and a tap on a folder selects it and jumps to the list. <strong>Shift + right-bottom</strong> clears the slot or chain, left-top goes back.</li>
 <li>Internal: <code>ApplyTarget</code> + <code>ScopeMemory</code>; <code>BrowserPane.hosted()/applyCursorRow()</code>; <code>LibraryPanel.navMode</code>; <code>-Dlsd.editBrowse=gen|chain|fx1-3|trans</code> opens Deck A's bay on a tab (screenshots). The old inline picker and <code>ChainListBrowse</code> remain the default.</li>
 </ul>

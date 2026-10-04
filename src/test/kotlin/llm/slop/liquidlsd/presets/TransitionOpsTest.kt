@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.presets
 
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.serialization.encodeToString
@@ -78,5 +79,30 @@ class TransitionOpsTest {
         TransitionOps.drainOnGlThread(mixer)
         verify(exactly = 1) { mixer.setTransition("dissolve") }
         verify(exactly = 1) { mixer.setTransition("cube") }
+    }
+
+    @Test
+    fun onlyUndoableChangesPushARestore() {
+        val restores = mutableListOf<() -> Unit>()
+        TransitionOps.undoSink = { restores += it }
+        every { mixer.transitionFilter } returns null
+        try {
+            TransitionOps.setStock("wipe")
+            TransitionOps.drainOnGlThread(mixer)
+            assertEquals(0, restores.size)
+
+            TransitionOps.setStock("wipe", undoable = true)
+            TransitionOps.applyPreset(dto("dissolve"), undoable = true)
+            TransitionOps.drainOnGlThread(mixer)
+            assertEquals(2, restores.size)
+
+            // With no active transition the restore falls back to the default crossfade.
+            restores.first().invoke()
+            TransitionOps.drainOnGlThread(mixer)
+            verify { mixer.setTransition(null) }
+
+        } finally {
+            TransitionOps.undoSink = null
+        }
     }
 }

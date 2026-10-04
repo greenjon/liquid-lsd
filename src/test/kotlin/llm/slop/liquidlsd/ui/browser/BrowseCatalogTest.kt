@@ -38,6 +38,18 @@ class BrowseCatalogTest {
     }
 
     @Test
+    fun `tree counts follow a hosting target's filter`() {
+        val c = BrowseCatalog(
+            BrowseKind.FX,
+            listOf(stock("blur"), saved("/x/a.lsdfx", BrowseSection.SINGLE), saved("/x/b.lsdfxchain", BrowseSection.CHAIN)),
+            listOf(BrowsePlaylist("mix", "/pl/mix.lsdfxplay", listOf("blur", "/x/b.lsdfxchain")))
+        )
+        // A chain-only target: stock and single rows vanish from the counts, the playlist counts its chain item only.
+        val chainsOnly = c.tree { it.section == BrowseSection.CHAIN }.map { "${it.label}(${it.count})" }
+        assertEquals(listOf("All(1)", "Stock filters(0)", "Saved single FX(0)", "Saved chains(1)", "Playlists(1)", "mix(1)"), chainsOnly)
+    }
+
+    @Test
     fun `subfolders nest, count cumulatively and filter by prefix`() {
         val c = BrowseCatalog(
             BrowseKind.SRC,

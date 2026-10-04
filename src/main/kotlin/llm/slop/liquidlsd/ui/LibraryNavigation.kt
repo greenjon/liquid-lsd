@@ -139,8 +139,10 @@ internal object LibraryNavigation {
         return if (file != null && file.exists()) listOf(file) else emptyList()
     }
 
-    /** Appends the cursor item(s) to the background queue ([bg]) or the A/B queue of the current tab. Returns false if nothing was added. */
+    /** Appends the cursor item(s) (on the unified tree: the cursor playlist) to the background queue ([bg]) or the A/B queue of the current tab. Returns false if nothing was added. */
     fun enqueue(session: SessionContext, bg: Boolean): Boolean {
+        // On the unified pane's tree the cursor row is a folder; a playlist there enqueues as a whole.
+        if (LibraryPanel.activeSelectionSource == SelectionSource.TREE) return unifiedKind()?.let { BrowserPane.enqueueCursorPlaylist(session, it, bg) } ?: false
         val files = enqueueTargets(session)
         if (files.isEmpty()) return false
         when (LibraryPanel.navMode) {

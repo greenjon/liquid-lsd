@@ -83,4 +83,47 @@ class FxOpsTest {
         at(0f);  assertEquals(mixer.deckA, mixer.liveDeck); assertEquals(mixer.deckB, mixer.inactiveDeck)
         at(1f);  assertEquals(mixer.deckB, mixer.liveDeck); assertEquals(mixer.deckA, mixer.inactiveDeck)
     }
+
+    @Test
+    fun anUndoableChainChangePushesARestoreAndAPlainOneDoesNot() {
+        val chain = FxChain("Deck A FX")
+        chain.name = "Before"
+        val restores = mutableListOf<() -> Unit>()
+        FxOps.undoSink = { restores += it }
+        try {
+            FxOps.applyChain(chain, FXChainDto(name = "Loaded"))
+            FxOps.drainOnGlThread(mixer)
+            assertEquals("Loaded", chain.name)
+            assertTrue(restores.isEmpty(), "queue/macro-style changes must not touch the undo stack")
+
+            FxOps.applyChain(chain, FXChainDto(name = "Picked"), undoable = true)
+            FxOps.drainOnGlThread(mixer)
+            assertEquals("Picked", chain.name)
+            assertEquals(1, restores.size)
+
+            restores.single().invoke()
+            FxOps.drainOnGlThread(mixer)
+            assertEquals("Loaded", chain.name)
+            assertEquals(1, restores.size, "the restore itself is not undoable")
+        } finally {
+            FxOps.undoSink = null
+        }
+    }
+
+    @Test
+    fun anUndoableSlotClearRestoresTheEmptySlotState() {
+        val chain = FxChain("Deck A FX")
+        val restores = mutableListOf<() -> Unit>()
+        FxOps.undoSink = { restores += it }
+        try {
+            FxOps.clearSlot(chain, 1, undoable = true) // already empty
+            FxOps.drainOnGlThread(mixer)
+            assertEquals(1, restores.size)
+            restores.single().invoke()
+            FxOps.drainOnGlThread(mixer)
+            assertEquals(null, chain.slots[1])
+        } finally {
+            FxOps.undoSink = null
+        }
+    }
 }

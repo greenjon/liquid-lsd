@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.presets
 
 import llm.slop.liquidlsd.models.TransitionPresetDto
+import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.ToastOverlay
 import mu.KotlinLogging
@@ -23,14 +24,46 @@ object TransitionOps {
 
     private val pending = ConcurrentLinkedQueue<(Mixer) -> Unit>()
 
+    /**
+     * Receives a restore action just before an `undoable` change is applied (wired in `UIManager` to Ctrl+Z). Only picks made in
+     * the UI ask for it; queue steps and session restore do not.
+     */
+    var undoSink: (((() -> Unit)) -> Unit)? = null
+
+    /** Hands [undoSink] a restore for the transition the mixer runs now: its id, enabled flag, dry/wet and parameters. */
+    private fun pushUndo(mixer: Mixer) {
+        val sink = undoSink ?: return
+        val filter = mixer.transitionFilter
+        if (filter == null) {
+            sink { setStock(null) }
+            return
+        }
+        val dto = TransitionPresetDto(
+            name = filter.id,
+            slot = llm.slop.liquidlsd.models.FXSlotDto(
+                filterId = filter.id,
+                enabled = filter.enabled,
+                dryWet = filter.dryWet.toDto(),
+                parameters = filter.parameters.mapValues { it.value.toDto() }
+            )
+        )
+        sink { applyPreset(dto) }
+    }
+
     /** Switches to the stock transition [id] (null or blank = the default crossfade). */
-    fun setStock(id: String?) {
-        pending.offer { mixer -> mixer.setTransition(id) }
+    fun setStock(id: String?, undoable: Boolean = false) {
+        pending.offer { mixer ->
+            if (undoable) pushUndo(mixer)
+            mixer.setTransition(id)
+        }
     }
 
     /** Applies an already-decoded transition preset. */
-    fun applyPreset(dto: TransitionPresetDto) {
-        pending.offer { mixer -> mixer.applyTransitionPreset(dto) }
+    fun applyPreset(dto: TransitionPresetDto, undoable: Boolean = false) {
+        pending.offer { mixer ->
+            if (undoable) pushUndo(mixer)
+            mixer.applyTransitionPreset(dto)
+        }
     }
 
     /**
@@ -38,11 +71,11 @@ object TransitionOps {
      * toast and falls back to the stock transition named after the file. The returned future
      * completes once the change is queued (not applied); it exists for tests.
      */
-    fun loadPreset(file: File): CompletableFuture<Void> =
+    fun loadPreset(file: File, undoable: Boolean = false): CompletableFuture<Void> =
         CompletableFuture.runAsync({
             try {
                 if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
-                applyPreset(PresetManager.json.decodeFromString<TransitionPresetDto>(file.readText()))
+                applyPreset(PresetManager.json.decodeFromString<TransitionPresetDto>(file.readText()), undoable)
                 logger.info { "Queued transition preset from ${file.name}" }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load transition preset ${file.absolutePath}, falling back to stock transition" }

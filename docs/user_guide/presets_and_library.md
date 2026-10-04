@@ -27,7 +27,7 @@ Loading a preset, picking a generator, ejecting, or using Copy / Move / Swap ont
 - **Discard** — Overwrite without asking.
 - **Auto-Save** — Save the deck's preset first, then load.
 
-Press **Ctrl+Z** after loading a preset or changing a generator to put back the previous deck, its knobs and its preset name. Eject and Copy / Move / Swap can't be undone yet. Copy, Move and Swap carry the knobs along, so the knobs on the target deck control the copied parameters. A preset saved without knobs gets the generator's default knobs.
+Press **Ctrl+Z** after loading a preset or changing a generator to put back the previous deck, its knobs and its preset name. Picking or clearing an FX slot, FX chain or the mixer transition in the Edit bay can be undone the same way. Eject, Copy / Move / Swap and Library loads of FX or transitions can't be undone yet. Copy, Move and Swap carry the knobs along, so the knobs on the target deck control the copied parameters. A preset saved without knobs gets the generator's default knobs.
 
 ### The `.lsd` format
 

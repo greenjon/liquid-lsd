@@ -218,15 +218,15 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                         it.path.removePrefix(BrowseCatalogs.STOCK_TRANS_PREFIX) == (mixer.transitionFilter?.id ?: "linear_crossfade")
                 },
                 apply = { asset ->
-                    if (asset.type == AssetType.TRANSITION_STOCK) TransitionOps.setStock(asset.path.removePrefix(BrowseCatalogs.STOCK_TRANS_PREFIX))
-                    else TransitionOps.loadPreset(File(asset.path))
+                    if (asset.type == AssetType.TRANSITION_STOCK) TransitionOps.setStock(asset.path.removePrefix(BrowseCatalogs.STOCK_TRANS_PREFIX), undoable = true)
+                    else TransitionOps.loadPreset(File(asset.path), undoable = true)
                 }
             )
             BrowserPane.draw(session, mixer, parametersState, BrowseKind.TRANS, target)
             return
         }
         ShaderPickerPopup.ensureInline("transition", "Select Mixer Transition", ShaderPickerPopup.PickerType.MIXER_TRANSITION, applied = { mixer.transitionFilter?.id ?: "linear_crossfade" }) { id ->
-            llm.slop.liquidlsd.presets.TransitionOps.setStock(id)
+            llm.slop.liquidlsd.presets.TransitionOps.setStock(id, undoable = true)
         }
         ShaderPickerPopup.drawInline(session)
         if (ImGui.button("Save current as preset...##trans_save_current")) TransitionSave.requestSaveCurrent(session, mixer)
@@ -259,8 +259,8 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 defaultScope = ApplyTarget.defaultFxScope(null),
                 accepts = { ApplyTarget.acceptsFxChain(it.type) },
                 isApplied = { it.type == AssetType.FX_CHAIN && chain.sourceFile?.absolutePath == it.path },
-                apply = { FxOps.loadChain(session, File(it.path), chain) },
-                clear = { FxOps.clearChain(chain) }
+                apply = { FxOps.loadChain(session, File(it.path), chain, undoable = true) },
+                clear = { FxOps.clearChain(chain, undoable = true) }
             )
         } else {
             ApplyTarget(
@@ -270,10 +270,10 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 accepts = { ApplyTarget.acceptsFxSlot(it.type) },
                 isApplied = { it.type == AssetType.FX_STOCK && chain.slots[slotIndex]?.id == it.path.removePrefix(BrowseCatalogs.STOCK_FX_PREFIX) },
                 apply = { asset ->
-                    if (asset.type == AssetType.FX_STOCK) FxOps.setSlotFilter(chain, slotIndex, asset.path.removePrefix(BrowseCatalogs.STOCK_FX_PREFIX))
-                    else FxOps.loadSlot(session, File(asset.path), chain, slotIndex)
+                    if (asset.type == AssetType.FX_STOCK) FxOps.setSlotFilter(chain, slotIndex, asset.path.removePrefix(BrowseCatalogs.STOCK_FX_PREFIX), undoable = true)
+                    else FxOps.loadSlot(session, File(asset.path), chain, slotIndex, undoable = true)
                 },
-                clear = { FxOps.clearSlot(chain, slotIndex) }
+                clear = { FxOps.clearSlot(chain, slotIndex, undoable = true) }
             )
         }
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
@@ -287,9 +287,9 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
         val contextKey = "fxslot/${System.identityHashCode(chain)}/$slotIndex"
         ShaderPickerPopup.ensureInlineFx(contextKey, "Select FX Slot ${slotIndex + 1} for $chainLabel", slotIndex, applied = { chain.slots[slotIndex]?.id }) { pick ->
             when (pick) {
-                is ShaderPickerPopup.FxPick.Stock -> FxOps.setSlotFilter(chain, slotIndex, pick.filterId)
-                is ShaderPickerPopup.FxPick.Saved -> FxOps.loadSlot(session, pick.file, chain, slotIndex)
-                ShaderPickerPopup.FxPick.None -> FxOps.clearSlot(chain, slotIndex)
+                is ShaderPickerPopup.FxPick.Stock -> FxOps.setSlotFilter(chain, slotIndex, pick.filterId, undoable = true)
+                is ShaderPickerPopup.FxPick.Saved -> FxOps.loadSlot(session, pick.file, chain, slotIndex, undoable = true)
+                ShaderPickerPopup.FxPick.None -> FxOps.clearSlot(chain, slotIndex, undoable = true)
             }
         }
         ShaderPickerPopup.drawInline(session)
@@ -313,7 +313,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             itemTooltip("Refresh the saved chains list.")
             ImGui.sameLine()
             if (ImGui.button("${Icons.TRASH} Clear Chain##browse_chain_clear")) {
-                FxOps.clearChain(chain)
+                FxOps.clearChain(chain, undoable = true)
             }
 
             val query = chainSearchBuf.get().trim().lowercase()
@@ -330,8 +330,8 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             if (publishChain !== chain || publishSession !== session) {
                 publishChain = chain
                 publishSession = session
-                publishApply = { FxOps.loadChain(session, File(it.path), chain) }
-                publishClear = { FxOps.clearChain(chain) }
+                publishApply = { FxOps.loadChain(session, File(it.path), chain, undoable = true) }
+                publishClear = { FxOps.clearChain(chain, undoable = true) }
             }
             ChainListBrowse.publish(filtered, publishApply, publishClear)
 
@@ -348,7 +348,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                         val isCurrent = chain.sourceFile?.absolutePath == asset.path
                         val isCursor = ChainListBrowse.isCursor(index)
                         if (selectableRow(filteredLabels[index], isCurrent || isCursor)) {
-                            FxOps.loadChain(session, File(asset.path), chain)
+                            FxOps.loadChain(session, File(asset.path), chain, undoable = true)
                         }
                         if (isCursor && ChainListBrowse.consumeScroll()) ImGui.setScrollHereY()
                     }

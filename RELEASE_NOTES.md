@@ -1,7 +1,16 @@
 ## [Unreleased]
 
+### Unified Pane Polish: Playlist Enqueue from the Tree, Honest Folder Counts in the Edit Bay (`ui/browser/BrowserPane.kt`, `ui/browser/BrowseModel.kt`)
+- **With the beta pane, Shift + tap on a playlist in the tree adds the whole playlist to the A/B queue** (the Shift + left-top button adds it to the BG queue), like the playlist's right-click menu. On other folders it still does nothing.
+- **In the Edit bay the folder counts only count rows that tab can take** (the Chain tab no longer says 47 for All when it lists 18 chains).
+- Internal: `BrowserPane.enqueueCursorPlaylist`; `BrowseCatalog.tree(accepts)`.
+
+### Ctrl+Z Undoes FX and Transition Picks Made in the Edit Bay (`presets/FxOps.kt`, `presets/TransitionOps.kt`, `ui/UIManager.kt`)
+- **Picking or clearing an FX slot, a whole FX chain or the mixer transition in the Edit bay can now be undone with Ctrl+Z** (before, only deck source and preset picks could). Undo puts back the previous effect with its knob values, the previous chain (with its file name, so it isn't marked unsaved), or the previous transition and its settings. Loads from the Library, queues, macros and session restore are not undoable.
+- Internal: `FxOps.undoSink` / `TransitionOps.undoSink` (same stack as `DeckOps`) and an opt-in `undoable` parameter; the snapshot is taken when the queued change applies.
+
 ### Edit Bay Browse Tabs Can Use the Unified Pane (`ui/browser/ApplyTarget.kt`, `ui/PerformanceBrowseBay.kt`, `ui/NavigationSurface.kt`)
-- **With the beta "Unified" pane on, the Edit bay's SRC, Chain, FX1-3 and TRANS tabs show the same folder tree | list | queue pane as the Library.** One click applies the row to that deck, slot, chain or the mixer transition; the row that is currently applied shows a `●`. Each tab lists only what it can take (an FX slot: single effects; Chain: saved chains) and starts in its own folder (Chain: Saved chains, FX slots: Stock filters); each tab remembers the folder you last used there. **Clear Slot / Clear Chain** sit above the pane, the deck's Save button stays, and live external video feeds are under **External video...**. Ctrl+Z still undoes deck source and preset picks only (FX and transition picks were never undoable).
+- **With the beta "Unified" pane on, the Edit bay's SRC, Chain, FX1-3 and TRANS tabs show the same folder tree | list | queue pane as the Library.** One click applies the row to that deck, slot, chain or the mixer transition; the row that is currently applied shows a `●`. Each tab lists only what it can take (an FX slot: single effects; Chain: saved chains) and starts in its own folder (Chain: Saved chains, FX slots: Stock filters); each tab remembers the folder you last used there. **Clear Slot / Clear Chain** sit above the pane, the deck's Save button stays, and live external video feeds are under **External video...**. 
 - **On the Twister** in the bay: the right-top button steps tree > list > queues (instead of the category), turning knob 1 steps the cursor, a tap applies the list row, and a tap on a folder selects it and jumps to the list. **Shift + right-bottom** clears the slot or chain, left-top goes back.
 - Internal: `ApplyTarget` + `ScopeMemory`; `BrowserPane.hosted()/applyCursorRow()`; `LibraryPanel.navMode`; `-Dlsd.editBrowse=gen|chain|fx1-3|trans` opens Deck A's bay on a tab (screenshots). The old inline picker and `ChainListBrowse` remain the default.
 

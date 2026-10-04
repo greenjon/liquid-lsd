@@ -90,20 +90,27 @@ class BrowseCatalog(
 ) {
     private val byPath: Map<String, BrowsePlaylist> = playlists.associateBy { it.path }
 
-    /** The folder tree, flattened depth-first. Sections and the Playlists header are always present so the tree does not jump around. */
-    fun tree(): List<BrowseNode> {
+    /**
+     * The folder tree, flattened depth-first. Sections and the Playlists header are always present so the tree does not jump around.
+     * With [accepts] (a hosting target's filter) the counts only include rows the list would show.
+     */
+    fun tree(accepts: ((BrowseEntry) -> Boolean)? = null): List<BrowseNode> {
+        val shown = if (accepts == null) entries else entries.filter(accepts)
         val nodes = mutableListOf<BrowseNode>()
-        nodes += BrowseNode(BrowseScope.All, "All", 0, entries.size)
+        nodes += BrowseNode(BrowseScope.All, "All", 0, shown.size)
         if (favorites != null) {
-            nodes += BrowseNode(BrowseScope.Favorites, "Favorites", 0, entries.count { it.key in favorites })
+            nodes += BrowseNode(BrowseScope.Favorites, "Favorites", 0, shown.count { it.key in favorites })
         }
         for (section in sectionsFor(kind)) {
-            val inSection = entries.filter { it.section == section }
+            val inSection = shown.filter { it.section == section }
             nodes += BrowseNode(BrowseScope.Folder(section), sectionLabel(kind, section), 0, inSection.size)
             nodes += folderNodes(section, inSection)
         }
         nodes += BrowseNode(BrowseScope.PlaylistsHeader, "Playlists", 0, playlists.size)
-        playlists.forEach { nodes += BrowseNode(BrowseScope.Playlist(it.path), it.name, 1, it.items.size) }
+        playlists.forEach { pl ->
+            val count = if (accepts == null) pl.items.size else pl.items.count { item -> resolve(item)?.let(accepts) == true }
+            nodes += BrowseNode(BrowseScope.Playlist(pl.path), pl.name, 1, count)
+        }
         return nodes
     }
 

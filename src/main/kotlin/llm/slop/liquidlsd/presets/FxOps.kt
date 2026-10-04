@@ -47,10 +47,36 @@ object FxOps {
         FxMacroSync.bankIdFor(chain, mixer)?.let { FxMacroSync.syncFor(it, mixer) }
     }
 
+    /**
+     * Receives a restore action just before an `undoable` change is applied (wired in `UIManager` to Ctrl+Z). Only changes the UI
+     * asks to be undoable push one (bay picks and clears); queues, macros and session restore never do.
+     */
+    var undoSink: (((() -> Unit)) -> Unit)? = null
+
+    /** Hands [undoSink] a restore for [slotIndex]'s current contents (the saved slot DTO, or an empty slot). */
+    private fun pushSlotUndo(chain: FxChain, slotIndex: Int) {
+        val dto = chain.toFxSlotDto(slotIndex)
+        undoSink?.invoke { if (dto != null) applySlot(chain, slotIndex, dto) else clearSlot(chain, slotIndex) }
+    }
+
+    /** Hands [undoSink] a restore for the whole chain: its DTO, the file it came from and its dirty baseline. */
+    private fun pushChainUndo(chain: FxChain) {
+        val dto = chain.toFxChainDto()
+        val file = chain.sourceFile
+        val baseline = chain.baselineDto
+        undoSink?.invoke {
+            postChainChange(chain) { c ->
+                c.applyFxChain(dto, file, isBaseline = false)
+                c.baselineDto = baseline
+            }
+        }
+    }
+
     /** Queues a change to one slot, applied behind a slot dip. */
-    private fun postSlotChange(chain: FxChain, slotIndex: Int, change: (FxChain) -> Unit) = post { mixer ->
+    private fun postSlotChange(chain: FxChain, slotIndex: Int, undoable: Boolean = false, change: (FxChain) -> Unit) = post { mixer ->
         chain.scheduleSlotChange(slotIndex, fadeSec()) {
             val start = System.nanoTime()
+            if (undoable) pushSlotUndo(chain, slotIndex)
             change(chain)
             logger.debug { "FX slot ${slotIndex + 1} change applied in ${"%.2f".format((System.nanoTime() - start) / 1e6)} ms" }
             resync(chain, mixer)
@@ -58,8 +84,9 @@ object FxOps {
     }
 
     /** Queues a change touching the whole chain, applied behind a chain dip. */
-    private fun postChainChange(chain: FxChain, change: (FxChain) -> Unit) = post { mixer ->
+    private fun postChainChange(chain: FxChain, undoable: Boolean = false, change: (FxChain) -> Unit) = post { mixer ->
         chain.scheduleChainChange(fadeSec()) {
+            if (undoable) pushChainUndo(chain)
             change(chain)
             resync(chain, mixer)
         }
@@ -92,11 +119,11 @@ object FxOps {
     }
 
     /** Replaces [chain]'s whole contents with [dto]. */
-    fun applyChain(chain: FxChain, dto: FXChainDto, source: File? = null, isBaseline: Boolean = false) =
-        postChainChange(chain) { it.applyFxChain(dto, source, isBaseline) }
+    fun applyChain(chain: FxChain, dto: FXChainDto, source: File? = null, isBaseline: Boolean = false, undoable: Boolean = false) =
+        postChainChange(chain, undoable) { it.applyFxChain(dto, source, isBaseline) }
 
     /** Empties all of [chain]'s slots. */
-    fun clearChain(chain: FxChain) = postChainChange(chain) { c ->
+    fun clearChain(chain: FxChain, undoable: Boolean = false) = postChainChange(chain, undoable) { c ->
         for (i in 0 until FxChain.SLOT_COUNT) c.clearFxSlot(i)
         c.baselineDto = null
         c.sourceFile = null
@@ -118,14 +145,14 @@ object FxOps {
     }
 
     /** Loads a saved chain file (.lsdfxchain) into [chain]. */
-    fun loadChain(session: SessionContext, file: File, chain: FxChain) {
+    fun loadChain(session: SessionContext, file: File, chain: FxChain, undoable: Boolean = false) {
         session.presetRepository.loadFxChainAsync(file)
-            .thenAccept { dto -> applyChain(chain, dto, source = file, isBaseline = true) }
+            .thenAccept { dto -> applyChain(chain, dto, source = file, isBaseline = true, undoable = undoable) }
             .exceptionally { e -> reportFailure("Could not load FX chain ${file.name}", e) }
     }
 
     /** Puts a fresh instance of stock ISF filter [filterId] into [slotIndex], or clears the slot if null. */
-    fun setSlotFilter(chain: FxChain, slotIndex: Int, filterId: String?) = postSlotChange(chain, slotIndex) { c ->
+    fun setSlotFilter(chain: FxChain, slotIndex: Int, filterId: String?, undoable: Boolean = false) = postSlotChange(chain, slotIndex, undoable) { c ->
         replaceWithStock(c, slotIndex, filterId)
     }
 
@@ -157,7 +184,7 @@ object FxOps {
     }
 
     /** Clears [slotIndex]. */
-    fun clearSlot(chain: FxChain, slotIndex: Int) = postSlotChange(chain, slotIndex) { it.clearFxSlot(slotIndex) }
+    fun clearSlot(chain: FxChain, slotIndex: Int, undoable: Boolean = false) = postSlotChange(chain, slotIndex, undoable) { it.clearFxSlot(slotIndex) }
 
     /** Resets [slotIndex]'s effect to its authored defaults, keeping the effect loaded. */
     fun resetSlot(chain: FxChain, slotIndex: Int) = postInstant(chain) { it.slots[slotIndex]?.reset() }
@@ -195,15 +222,15 @@ object FxOps {
     }
 
     /** Loads a saved single-FX file (.lsdfx) into [slotIndex], leaving the other slots alone. */
-    fun loadSlot(session: SessionContext, file: File, chain: FxChain, slotIndex: Int) {
+    fun loadSlot(session: SessionContext, file: File, chain: FxChain, slotIndex: Int, undoable: Boolean = false) {
         session.presetRepository.loadFxPresetAsync(file)
-            .thenAccept { dto -> applySlot(chain, slotIndex, dto.slot) }
+            .thenAccept { dto -> applySlot(chain, slotIndex, dto.slot, undoable) }
             .exceptionally { e -> reportFailure("Could not load FX preset ${file.name}", e) }
     }
 
     /** Applies an already-loaded slot DTO (e.g. from the clipboard) to [slotIndex]. */
-    fun applySlot(chain: FxChain, slotIndex: Int, dto: llm.slop.liquidlsd.models.FXSlotDto) =
-        postSlotChange(chain, slotIndex) { it.applyFxSlot(slotIndex, dto) }
+    fun applySlot(chain: FxChain, slotIndex: Int, dto: llm.slop.liquidlsd.models.FXSlotDto, undoable: Boolean = false) =
+        postSlotChange(chain, slotIndex, undoable) { it.applyFxSlot(slotIndex, dto) }
 
     /**
      * Applies a dropped library file to [chain]: a `.lsdfxchain` replaces the chain, a `.lsdfx` goes to

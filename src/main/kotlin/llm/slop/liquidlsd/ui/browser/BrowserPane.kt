@@ -75,7 +75,7 @@ object BrowserPane {
     private val treeCursors = HashMap<BrowseKind, BrowseScope>()
 
     private fun visibleScopes(kind: BrowseKind): List<BrowseScope> =
-        visibleSelectableScopes(BrowseCatalogs.get(kind).tree(), collapsed[kind] ?: emptySet())
+        visibleSelectableScopes(treeOf(BrowseCatalogs.get(kind), kind), collapsed[kind] ?: emptySet())
 
     /** Where the tree cursor is now: the stepped-to row while it is still visible, else the selected scope. */
     fun treeCursorOf(kind: BrowseKind): BrowseScope = treeCursors[kind]?.takeIf { it in visibleScopes(kind) } ?: scopeOf(kind)
@@ -157,6 +157,24 @@ object BrowserPane {
         ImGui.popStyleVar(2)
     }
 
+    /** Appends the playlist under the tree cursor to the BG ([bg]) or A/B queue of [kind] (the one queue for transitions). False when the cursor is not on a playlist. */
+    fun enqueueCursorPlaylist(session: SessionContext, kind: BrowseKind, bg: Boolean): Boolean {
+        val playlist = treeCursorOf(kind) as? BrowseScope.Playlist ?: return false
+        val file = File(playlist.path)
+        when (kind) {
+            BrowseKind.SRC -> if (bg) BgQueueManager.appendPlaylistToQueue(file) else session.playQueueManager.appendPlaylistToQueue(file)
+            BrowseKind.FX -> if (bg) FXBgQueueManager.appendToQueue(file) else FXQueueManager.appendToQueue(file)
+            BrowseKind.TRANS -> TransitionQueueManager.appendToQueue(file)
+        }
+        return true
+    }
+
+    /** The tree of [catalog]; while hosted its counts only include the rows the target accepts. */
+    private fun treeOf(catalog: BrowseCatalog, kind: BrowseKind): List<BrowseNode> {
+        val target = hosted()?.takeIf { it.kind == kind } ?: return catalog.tree()
+        return catalog.tree { target.accepts(it.asset) }
+    }
+
     /** Records where the pane is hosted; a controller cursor left over from another host (or the Library) is dropped when that changes. */
     internal fun noteHosting(target: ApplyTarget?) {
         if (target?.contextKey != hostedTarget?.contextKey) LibraryPanel.activeSelectionSource = null
@@ -181,7 +199,7 @@ object BrowserPane {
             ImGui.endChild()
             return
         }
-        val tree = catalog.tree()
+        val tree = treeOf(catalog, kind)
         syncPlaylistSelection(kind, tree)
         val current = scopeOf(kind)
         val cursor = if (LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.TREE) treeCursorOf(kind) else null
@@ -306,7 +324,7 @@ object BrowserPane {
 
     private fun drawList(session: SessionContext, mixer: Mixer, parametersState: ParametersState, catalog: BrowseCatalog, kind: BrowseKind, target: ApplyTarget?) {
         val scope = scopeOf(kind)
-        val title = catalog.tree().firstOrNull { it.scope == scope }?.label ?: "All"
+        val title = treeOf(catalog, kind).firstOrNull { it.scope == scope }?.label ?: "All"
         drawListHeader(session, mixer, parametersState, title, kind)
         ImGui.separator()
 

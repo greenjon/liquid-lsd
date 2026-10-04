@@ -117,6 +117,8 @@ class UIManager(
             if (mixer == null) proceed() else popupManager.requestDeckConfirm(slot.deck(mixer), slot.label, proceed, cancel)
         }
         DeckOps.undoSink = { restore -> currentMixer?.let { ParametersUndo.pushUndoState(parametersState, it, restore) } }
+        llm.slop.liquidlsd.presets.FxOps.undoSink = DeckOps.undoSink
+        llm.slop.liquidlsd.presets.TransitionOps.undoSink = DeckOps.undoSink
         DeckOps.postApply = { slot, change ->
             if (change is DeckChange.Source) {
                 parametersState.clearSelection()
