@@ -454,8 +454,11 @@ class PerformanceMatrixPanel {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                         if (payload != null) {
                             val file = File(payload)
-                            if (file.exists() && file.extension.lowercase() == "lsdfxchain") {
-                                llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, targetDeck.fxChain)
+                            if (file.exists() && file.extension.lowercase() in listOf("lsdfx", "lsdfxchain")) {
+                                // A single FX takes the first vacant slot; a full chain needs a slot named (drop on the slot instead).
+                                if (!llm.slop.liquidlsd.presets.FxOps.dropAsset(session, file, targetDeck.fxChain)) {
+                                    llm.slop.liquidlsd.ui.ToastOverlay.show("${deckLabels[deckTagIndex(dropTag)]} FX slots are full. Drop the effect onto a slot to replace it.")
+                                }
                             } else if (file.exists() && file.extension.lowercase() in listOf("patch", "lsd", "json")) {
                                 UIManager.loadDeckPresetSafely(mixer, targetDeck, file)
                             }

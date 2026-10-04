@@ -28,6 +28,9 @@ object FxOps {
 
     private val pending = ConcurrentLinkedQueue<(Mixer) -> Unit>()
 
+    /** The first empty slot of [chain], or null when all [FxChain.SLOT_COUNT] are in use. Where a bare single FX goes when no slot is named. */
+    fun firstVacantSlot(chain: FxChain): Int? = chain.slots.indexOfFirst { it == null }.takeIf { it >= 0 }
+
     /**
      * Total length of the fade-out/fade-in "dip" wrapped around effect replacements, in seconds
      * (see [FxChain.scheduleSlotChange]). 0 = hard cut. Reads the user preference by default.
@@ -192,6 +195,20 @@ object FxOps {
     /** Applies an already-loaded slot DTO (e.g. from the clipboard) to [slotIndex]. */
     fun applySlot(chain: FxChain, slotIndex: Int, dto: llm.slop.liquidlsd.models.FXSlotDto) =
         postSlotChange(chain, slotIndex) { it.applyFxSlot(slotIndex, dto) }
+
+    /**
+     * Applies a dropped library file to [chain]: a `.lsdfxchain` replaces the chain, a `.lsdfx` goes to
+     * [slot], or to the first vacant slot when [slot] is null.
+     * @return false when nothing was applied (unknown extension, or no slot named and the chain is full).
+     */
+    fun dropAsset(session: SessionContext, file: File, chain: FxChain, slot: Int? = null): Boolean {
+        when (file.extension.lowercase()) {
+            "lsdfxchain" -> loadChain(session, file, chain)
+            "lsdfx" -> loadSlot(session, file, chain, slot ?: firstVacantSlot(chain) ?: return false)
+            else -> return false
+        }
+        return true
+    }
 
     /**
      * Applies a playlist/queue FX item deterministically -- always all 3 slots, never "first vacant

@@ -44,7 +44,7 @@ object BrowserActionToolbar {
                 llm.slop.liquidlsd.presets.FxOps.loadChain(session, selectedFile, deck.fxChain)
             }
             "lsdfx" -> {
-                val vacantIndex = (0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT).firstOrNull { deck.fxSlots[it] == null }
+                val vacantIndex = llm.slop.liquidlsd.presets.FxOps.firstVacantSlot(deck.fxChain)
                 if (vacantIndex != null) {
                     llm.slop.liquidlsd.presets.FxOps.loadSlot(session, selectedFile, deck.fxChain, vacantIndex)
                 } else {

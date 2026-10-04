@@ -55,6 +55,13 @@ object VideoExportModal {
     private var statusMessage: String? = null
     private var isSuccess: Boolean? = null
     @Volatile private var awaitingPresetLoad = false
+    /** Bumped when the window closes, so an export still waiting on a preset load (or its unsaved-changes prompt) doesn't start. */
+    private val exportToken = java.util.concurrent.atomic.AtomicInteger()
+
+    private fun cancelPendingExport() {
+        exportToken.incrementAndGet()
+        awaitingPresetLoad = false
+    }
 
     fun open() {
         isOpen = true
@@ -83,6 +90,7 @@ object VideoExportModal {
         val flags = ImGuiWindowFlags.NoCollapse or ImGuiWindowFlags.AlwaysAutoResize
 
         if (!ImGui.beginPopupModal(POPUP_ID, flags)) {
+            cancelPendingExport()
             isOpen = false
             return
         }
@@ -274,7 +282,9 @@ object VideoExportModal {
                     OfflineRenderStudio.startExport(config, mixer, renderer)
                 } else {
                     awaitingPresetLoad = true
+                    val token = exportToken.incrementAndGet()
                     DeckOps.request(DeckSlot.A, DeckChange.Preset(pFile)) { applied ->
+                        if (token != exportToken.get()) return@request
                         awaitingPresetLoad = false
                         if (applied) {
                             logger.info { "Loaded preset snapshot for export: ${pFile.name}" }
@@ -291,6 +301,7 @@ object VideoExportModal {
 
         ImGui.sameLine()
         if (ImGui.button("Close", 100f, 32f)) {
+            cancelPendingExport()
             isOpen = false
             ImGui.closeCurrentPopup()
         }

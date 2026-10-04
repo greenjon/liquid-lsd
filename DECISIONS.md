@@ -2681,6 +2681,17 @@
 - **Not done**: sliders on a Metaknob-owned uniform do not yet show a lock badge (the lock UI is macro-only).
 - **Alternative rejected**: letting the macro win over the Metaknob (suspending the meta-binding) would need per-binding state in presets and breaks the "you never get a dead Metaknob" guarantee.
 
+## DeckOps Requests Are Ordered Per Slot; Closing Video Export Cancels Its Pending Start; Queue Accept Plays (`DeckOps.requestSeq`, `VideoExportModal.exportToken`, `LibraryNavigation.accept`)
+- **Decision**: every accepted `DeckOps.request` gets a per-slot sequence number; `drainOnGlThread` drops an op older than the last applied one (`onResult(false)`). The number is taken when the request proceeds (after the dirty prompt), so a preset whose file read finishes late can't land after a newer change.
+- **Video Export**: closing the window bumps a token so an export waiting on its preset load or the unsaved-changes prompt doesn't start.
+- **Queue accept**: MIDI accept on an A/B queue item calls `PlayQueueManager.playIndex`, same as double-click (index, fade, transition queue). Playlist accept stays a plain load. Decided 2026-10-04.
+- **Undo (item 17)**: Eject and Copy/Move/Swap stay non-undoable (FX chain isn't captured); the Preferences tooltip and the "Don't ask again" label now say only preset/generator loads undo.
+
+## A Single FX Without a Named Slot Takes the First Vacant Slot; FX Goes to the Live Deck, Presets to the Inactive One (`FxOps.firstVacantSlot/dropAsset`, `Mixer.liveDeck/inactiveDeck`)
+- **Decision**: where a UI route has no slot to name (browser double-click, audition latch, Performance Matrix badge drop), a single FX uses the first vacant slot; when full, the browser double-click and the latch ask which slot to overwrite, the badge drop toasts. Queues and playlists keep the deterministic rule (`.lsdfx` = slot 1 of an empty chain), because their target must not depend on live state.
+- **Deck rule**: FX targets `Mixer.liveDeck` (crossfade <= 0 = A), presets and generators `Mixer.inactiveDeck` (crossfade > 0 = A). The tie at exactly 0 is unchanged. BG/PV keyboard/MIDI targeting is a separate feature (not added).
+- **Drops**: the monitor takes presets/generators only; FX drops go to slots, chain headers and deck badges. Decided 2026-10-04.
+
 ## FX-Bank Knobs Are Read-Only Outside FxMacroSync; Master/Transition/FX-Send Knobs Are Path-Scoped (`MacroLearnState.acceptsTarget`, `FxMacroSync.isFxBank`)
 - **Decision**: `FxMacroSync` owns every FX-bank binding and rewrites it from the chain, so no other editor may add, edit or delete one: `acceptsTarget` rejects FX banks, and Properties, the base-value panel and the slider popup show a read-only line. MASTER and TRANS knobs accept `Mixer/...` only, FX_SENDS accepts `.../FXChain/...` only, GLOBAL stays unscoped. Bank import remaps only deck-rooted paths (everything except `Mixer`, `Master`, `Global`, `Macro`) and validates after remapping. Decided 2026-10-04 (backlog items 8, 22, 23, 7).
 - **Selection**: one `MacroLearnState.selectedControlId` drives the strip, the card highlight and the Learn button; the per-module `selectedRackMacroId` map was dropped. Consequence: one highlighted knob across all expanded modules.

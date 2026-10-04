@@ -147,6 +147,18 @@ class DeckOpsTest {
     }
 
     @Test
+    fun aSlowPresetReadNeverOverwritesANewerChange() {
+        val stalePreset = DeckOps.lastRequestedSeq(DeckSlot.A)
+        DeckOps.request(DeckSlot.A, DeckChange.Source(Src("newer_gen")))
+        // The preset was requested first (older seq) but its file read finished after the generator was queued.
+        DeckOps.postLoaded(DeckSlot.A, dto("slow_preset", "preset_gen"), seq = stalePreset)
+        DeckOps.drainOnGlThread(mixer)
+
+        assertEquals("newer_gen", a.current.id)
+        assertNull(PresetManager.activePreset(DeckSlot.A))
+    }
+
+    @Test
     fun presetLoadCapturesUndoAndUndoRestoresDeckBankAndName() {
         loadClean("old_preset", bankWith("MINE", "Deck A/zoom"))
         assertEquals("MINE", bank(DeckSlot.A).knobs[0].label)

@@ -1857,7 +1857,7 @@
 </ul>
 <p>When you modify a loaded preset, a <code>*</code> appears next to the deck name to show there are unsaved changes. A generator you picked without loading a preset is tracked the same way: tweak it and the deck shows <code>*</code>. Editing a knob's label or its targets counts as a change; turning a knob does not.</p>
 <h3 id="loading-onto-a-deck-with-unsaved-changes">Loading onto a deck with unsaved changes</h3>
-<p>Loading a preset, picking a generator, ejecting, or using Copy / Move / Swap onto a deck that has unsaved changes asks first: <strong>Save</strong>, <strong>Discard</strong> or <strong>Cancel</strong>. Tick <strong>Don't ask again</strong> on the prompt to discard silently from then on. You can change this in <strong>Preferences → General → Manual Load Dirty Behavior</strong>:</p>
+<p>Loading a preset, picking a generator, ejecting, or using Copy / Move / Swap onto a deck that has unsaved changes asks first: <strong>Save</strong>, <strong>Discard</strong> or <strong>Cancel</strong>. Tick <strong>Don't ask again</strong> on the prompt to always discard from then on (Ctrl+Z still undoes preset and generator loads). You can change this in <strong>Preferences → General → Manual Load Dirty Behavior</strong>:</p>
 <ul>
 <li><strong>Prompt</strong> (default) — Ask each time.</li>
 <li><strong>Discard</strong> — Overwrite without asking.</li>
@@ -1934,7 +1934,7 @@
 <p>Use the <strong><code>[⋮]</code></strong> filter menu above the list to show/hide each tier (<strong>All / Stock / Singles / Chains</strong>). Use <strong><code>[+]</code></strong> to save the current FX state of any deck or Master FX slot (or all 3 slots as a chain) into a new preset.</p>
 <ul>
 <li><strong>Drag-and-Drop</strong>: Drag a saved single or chain onto Slot 1–3 in a deck's Deep Edit <code>FX</code> subtab, onto the FX Playlist editor (Column 2), or onto a Live FX Queue (Columns 3/4).</li>
-<li><strong>Double-click</strong>: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains).</li>
+<li><strong>Double-click</strong>: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains). If all 3 slots are full, a single effect asks which slot to overwrite. FX always goes to the deck the crossfader is on (it is audible now); presets and generators go to the other deck (the next look). At exactly the middle of the crossfader, FX goes to Deck A and presets to Deck B.</li>
 <li><strong>Right-click menu</strong>: <code>Load to &gt; Deck [A|B|BG|PV] / Master FX &gt; Slot [1|2|3]</code> (stock filters and singles) or <code>Load to Deck [A|B|BG|PV] / Master FX</code> (chains), plus <strong>Add to Live FX Queue (A/B)</strong>, <strong>Add to BG FX Queue</strong>, <strong>Add to '<playlist>' Playlist</strong>, Rename, Clone, Delete, and Reveal in File Manager.</li>
 </ul>
 <h4 id="bundled-stock-fx-chains">Bundled Stock FX Chains</h4>
@@ -2015,7 +2015,7 @@
 <li><strong>Export</strong> — Save the current live queue as a new <code>.lsdfxplay</code> playlist.</li>
 <li><strong>Clear</strong> — Empty the queue.</li>
 <li><strong>Drag-and-drop</strong> — Reorder items within a queue, or drag a preset/chain from the FX Browser to append or insert it.</li>
-<li><strong>Double-click</strong> an item to jump straight to it.</li>
+<li><strong>Double-click</strong> an item to jump straight to it. Pressing the MIDI controller's accept on a queue item does the same: it moves the queue position, fades to the loaded deck and advances the transition queue.</li>
 </ul>
 <p>The <strong>A/B queue</strong> applies to whichever of Deck A/B is currently dominant on the crossfader; the <strong>BG queue</strong> always applies to Deck BG.</p>
 <h3 id="audition-latch">Audition Latch</h3>
@@ -2117,37 +2117,28 @@
 <td>Loads into target slot</td>
 </tr>
 <tr>
+<td>Stock FX filter</td>
+<td>FX Slot in Parameters or the Performance Matrix</td>
+<td>Loads into that slot</td>
+</tr>
+<tr>
+<td>FX Preset (<code>.lsdfx</code>)</td>
+<td>Deck badge in the Performance Matrix</td>
+<td>Loads into the first vacant slot (a toast says so if all 3 are full; drop on a slot instead)</td>
+</tr>
+<tr>
 <td>FX Chain (<code>.lsdfxchain</code>)</td>
-<td>FX Slot / Chain in Parameters</td>
+<td>FX Slot / Chain in Parameters, or the deck badge</td>
 <td>Overwrites 3-slot chain</td>
-</tr>
-<tr>
-<td>FX Browser row</td>
-<td>FX Playlist (Column 2)</td>
-<td>Inserts/appends to playlist</td>
-</tr>
-<tr>
-<td>FX Browser row</td>
-<td>Live FX Queue (A/B or BG)</td>
-<td>Appends/inserts into that queue</td>
-</tr>
-<tr>
-<td>Live FX Queue item</td>
-<td>Up / down in the same queue</td>
-<td>Reorders</td>
-</tr>
-<tr>
-<td>Transition Browser row</td>
-<td>Transition Playlist (Column 2)</td>
-<td>Inserts/appends to playlist</td>
-</tr>
-<tr>
-<td>Transition Browser row</td>
-<td>Live Transition Queue (Column 3)</td>
-<td>Appends/inserts into the queue</td>
 </tr>
 </tbody>
 </table>
+<p>A deck's monitor takes presets and generators only, not FX.
+| FX Browser row              | FX Playlist (Column 2)         | Inserts/appends to playlist |
+| FX Browser row              | Live FX Queue (A/B or BG)      | Appends/inserts into that queue |
+| Live FX Queue item          | Up / down in the same queue    | Reorders                 |
+| Transition Browser row      | Transition Playlist (Column 2) | Inserts/appends to playlist |
+| Transition Browser row      | Live Transition Queue (Column 3) | Appends/inserts into the queue |</p>
 <hr />
 <h2 id="midi-mapping">MIDI Mapping</h2>
 <blockquote>

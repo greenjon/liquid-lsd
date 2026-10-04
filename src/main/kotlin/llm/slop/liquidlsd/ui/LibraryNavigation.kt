@@ -1,5 +1,7 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.rendering.liveDeck
+import llm.slop.liquidlsd.rendering.inactiveDeck
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.presets.BgQueueManager
 import llm.slop.liquidlsd.presets.FXBgQueueManager
@@ -122,9 +124,8 @@ internal object LibraryNavigation {
 
     /** Loads a Sources-list item (preset file or stock generator) to the deck the crossfader is moving away from. */
     fun loadAssetToInactiveDeck(session: SessionContext, mixer: Mixer, asset: AssetItem, parametersState: ParametersState) {
-        val targetIsA = mixer.crossfade.value > 0.0f
-        val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
-        val targetLabel = if (targetIsA) "Deck A" else "Deck B"
+        val targetDeck = mixer.inactiveDeck
+        val targetLabel = if (targetDeck === mixer.deckA) "Deck A" else "Deck B"
         if (asset.type == AssetType.SOURCE_STOCK) {
             val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(PresetListPanel.STOCK_PATH_PREFIX) } ?: return
             UIManager.changeVisualSourceSafely(mixer, targetDeck, targetLabel, source, parametersState)
@@ -134,7 +135,7 @@ internal object LibraryNavigation {
     }
 
     /**
-     * Applies the cursor item: a preset or generator loads to the inactive deck (the BG queue loads to
+     * Applies the cursor item: a preset or generator loads to the inactive deck (an A/B queue item plays like a double-click; the BG queue loads to
      * Deck BG), a transition applies to the mixer, an FX browser item goes to the FX A/B queue, an FX queue item is applied to its deck.
      */
     fun accept(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
@@ -145,15 +146,16 @@ internal object LibraryNavigation {
                 LibraryViewMode.FX -> enqueue(session, bg = false)
                 LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset?.let { TransitionBrowserPanel.applyToMixer(session, mixer, it) }
             }
-            SelectionSource.PLAYLIST, SelectionSource.QUEUE_AB ->
+            SelectionSource.PLAYLIST ->
                 file?.let { BrowserDeckButtons.loadPresetToDeck(session, mixer, it, if (mixer.crossfade.value > 0.0f) 1 else 2) }
+            // Same as a double-click: moves the queue position, fades to the loaded deck and advances the transition queue.
+            SelectionSource.QUEUE_AB -> session.playQueueManager.playIndex(QueueActionsPanel.selectedIndex, mixer)
             SelectionSource.QUEUE_BG -> file?.let { BrowserDeckButtons.loadPresetToDeck(session, mixer, it, 3) }
             SelectionSource.TRANSITION_QUEUE, SelectionSource.TRANSITION_PLAYLIST -> file?.let { TransitionQueueManager.applyTransitionItem(it, mixer) }
             SelectionSource.FX_QUEUE_AB -> FXQueueManager.jumpToIndex(FXQueueActionsPanel.selectedIndex, session, mixer)
             SelectionSource.FX_QUEUE_BG -> FXBgQueueManager.jumpToIndex(FXBgQueueActionsPanel.selectedIndex, session, mixer)
             SelectionSource.FX_PLAYLIST -> file?.let {
-                val deck = if (mixer.crossfade.value <= 0.0f) mixer.deckA else mixer.deckB
-                FxOps.applyItem(session, it, deck.fxChain)
+                FxOps.applyItem(session, it, mixer.liveDeck.fxChain)
             }
             null -> Unit
         }

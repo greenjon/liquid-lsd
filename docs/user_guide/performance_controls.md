@@ -128,7 +128,7 @@ for the FX Rack view that exposes these.
   - **Save Slot Preset As...**: Saves the slot's filter ID, dry/wet, Metaknob position/target,
     and parameters into an `.lsdfx` file in `library/fx/`.
   - **Copy Slot / Paste Slot**: Copies or pastes individual slot configurations across slots or chains.
-  - **Reset Slot**: Clears the slot filter and resets parameters.
+  - **Clear Slot**: Clears the slot filter and resets parameters.
 - **Drag-and-Drop Targets**: Drag `.lsdfxchain` onto a chain header, or `.lsdfx` onto a slot, to
   instantly load/swap effects.
 - **Library Browser**: The `[ FX ]` Library view's right-click menus can load stock filters, saved

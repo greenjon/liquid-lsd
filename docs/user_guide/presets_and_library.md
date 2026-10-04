@@ -21,7 +21,7 @@ When you modify a loaded preset, a `*` appears next to the deck name to show the
 
 ### Loading onto a deck with unsaved changes
 
-Loading a preset, picking a generator, ejecting, or using Copy / Move / Swap onto a deck that has unsaved changes asks first: **Save**, **Discard** or **Cancel**. Tick **Don't ask again** on the prompt to discard silently from then on. You can change this in **Preferences → General → Manual Load Dirty Behavior**:
+Loading a preset, picking a generator, ejecting, or using Copy / Move / Swap onto a deck that has unsaved changes asks first: **Save**, **Discard** or **Cancel**. Tick **Don't ask again** on the prompt to always discard from then on (Ctrl+Z still undoes preset and generator loads). You can change this in **Preferences → General → Manual Load Dirty Behavior**:
 
 - **Prompt** (default) — Ask each time.
 - **Discard** — Overwrite without asking.
@@ -111,7 +111,7 @@ Column 1 of `[ FX ]` mode lists three kinds of row side by side, each marked wit
 Use the **`[⋮]`** filter menu above the list to show/hide each tier (**All / Stock / Singles / Chains**). Use **`[+]`** to save the current FX state of any deck or Master FX slot (or all 3 slots as a chain) into a new preset.
 
 - **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–3 in a deck's Deep Edit `FX` subtab, onto the FX Playlist editor (Column 2), or onto a Live FX Queue (Columns 3/4).
-- **Double-click**: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains).
+- **Double-click**: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains). If all 3 slots are full, a single effect asks which slot to overwrite. FX always goes to the deck the crossfader is on (it is audible now); presets and generators go to the other deck (the next look). At exactly the middle of the crossfader, FX goes to Deck A and presets to Deck B.
 - **Right-click menu**: `Load to > Deck [A|B|BG|PV] / Master FX > Slot [1|2|3]` (stock filters and singles) or `Load to Deck [A|B|BG|PV] / Master FX` (chains), plus **Add to Live FX Queue (A/B)**, **Add to BG FX Queue**, **Add to '<playlist>' Playlist**, Rename, Clone, Delete, and Reveal in File Manager.
 
 #### Bundled Stock FX Chains
@@ -184,7 +184,7 @@ While in `[ FX ]` mode, the Library's Background Queue and Play Queue columns (3
 - **Export** — Save the current live queue as a new `.lsdfxplay` playlist.
 - **Clear** — Empty the queue.
 - **Drag-and-drop** — Reorder items within a queue, or drag a preset/chain from the FX Browser to append or insert it.
-- **Double-click** an item to jump straight to it.
+- **Double-click** an item to jump straight to it. Pressing the MIDI controller's accept on a queue item does the same: it moves the queue position, fades to the loaded deck and advances the transition queue.
 
 The **A/B queue** applies to whichever of Deck A/B is currently dominant on the crossfader; the **BG queue** always applies to Deck BG.
 
@@ -271,7 +271,11 @@ Use the **`[⋮]`** filter menu above the list to show/hide each tier (**Stock S
 | Sources Browser (saved preset) or Playlist | Queue                          | Adds to the live queue   |
 | Sources Browser row (stock or saved) | Deck monitor (Mixer) or deck row (Performance Matrix) | Loads source (stock) or full preset (saved) to that deck |
 | FX Preset (`.lsdfx`)       | FX Slot 1–3 in Parameters      | Loads into target slot   |
-| FX Chain (`.lsdfxchain`)   | FX Slot / Chain in Parameters  | Overwrites 3-slot chain  |
+| Stock FX filter            | FX Slot in Parameters or the Performance Matrix | Loads into that slot |
+| FX Preset (`.lsdfx`)       | Deck badge in the Performance Matrix | Loads into the first vacant slot (a toast says so if all 3 are full; drop on a slot instead) |
+| FX Chain (`.lsdfxchain`)   | FX Slot / Chain in Parameters, or the deck badge | Overwrites 3-slot chain  |
+
+A deck's monitor takes presets and generators only, not FX.
 | FX Browser row              | FX Playlist (Column 2)         | Inserts/appends to playlist |
 | FX Browser row              | Live FX Queue (A/B or BG)      | Appends/inserts into that queue |
 | Live FX Queue item          | Up / down in the same queue    | Reorders                 |

@@ -81,12 +81,12 @@ object PresetListPanel {
                 ImGui.openPopup("create_new_preset_popup")
             }
         }
-        itemTooltip("Create new preset on a deck...")
+        itemTooltip("New blank preset on a deck...")
 
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("create_new_preset_popup")) {
             pushOpenDropdownFont()
-            ImGui.textDisabled("Create new preset on:")
+            ImGui.textDisabled("New blank preset on:")
             ImGui.separator()
             if (ImGui.menuItem("Deck A")) {
                 UIManager.newPresetSafely(mixer, mixer.deckA)

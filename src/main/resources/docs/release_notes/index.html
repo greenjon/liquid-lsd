@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-and-library-load-rules-one-place-for-a-single-fx-one-rule-for-which-deck-matching-drop-targets-presetsfxopskt-renderingmixerdeckskt-uibrowserfxbrowserpanelkt-uiparameterstabskt-uiperformancematrixpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX and Library Load Rules: One Place for a Single FX, One Rule for Which Deck, Matching Drop Targets (presets/FxOps.kt, rendering/MixerDecks.kt, ui/browser/FXBrowserPanel.kt, ui/ParametersTabs.kt, ui/PerformanceMatrixPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deck-load-ordering-export-cancel-and-queue-accept-presetsdeckopskt-uivideoexportmodalkt-uilibrarynavigationkt-uipopupmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck Load Ordering, Export Cancel and Queue Accept (presets/DeckOps.kt, ui/VideoExportModal.kt, ui/LibraryNavigation.kt, ui/PopupManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#macro-knob-cleanups-one-selected-knob-bank-import-checks-the-target-deck-mastertransitionfx-send-knobs-take-only-their-own-targets-fx-knobs-are-read-only-everywhere-macromacrolearnstatekt-macromacrobankserializerkt-uiperformancematrixpanelkt-uiperformancemacrostripkt-uivalueparamsectionkt-uipropertiespanelkt-uimacrobindingeditorkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5372,6 +5394,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-and-library-load-rules-one-place-for-a-single-fx-one-rule-for-which-deck-matching-drop-targets-presetsfxopskt-renderingmixerdeckskt-uibrowserfxbrowserpanelkt-uiparameterstabskt-uiperformancematrixpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX and Library Load Rules: One Place for a Single FX, One Rule for Which Deck, Matching Drop Targets (presets/FxOps.kt, rendering/MixerDecks.kt, ui/browser/FXBrowserPanel.kt, ui/ParametersTabs.kt, ui/PerformanceMatrixPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deck-load-ordering-export-cancel-and-queue-accept-presetsdeckopskt-uivideoexportmodalkt-uilibrarynavigationkt-uipopupmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck Load Ordering, Export Cancel and Queue Accept (presets/DeckOps.kt, ui/VideoExportModal.kt, ui/LibraryNavigation.kt, ui/PopupManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#macro-knob-cleanups-one-selected-knob-bank-import-checks-the-target-deck-mastertransitionfx-send-knobs-take-only-their-own-targets-fx-knobs-are-read-only-everywhere-macromacrolearnstatekt-macromacrobankserializerkt-uiperformancematrixpanelkt-uiperformancemacrostripkt-uivalueparamsectionkt-uipropertiespanelkt-uimacrobindingeditorkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9511,6 +9555,22 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fx-and-library-load-rules-one-place-for-a-single-fx-one-rule-for-which-deck-matching-drop-targets-presetsfxopskt-renderingmixerdeckskt-uibrowserfxbrowserpanelkt-uiparameterstabskt-uiperformancematrixpanelkt">FX and Library Load Rules: One Place for a Single FX, One Rule for Which Deck, Matching Drop Targets (<code>presets/FxOps.kt</code>, <code>rendering/MixerDecks.kt</code>, <code>ui/browser/FXBrowserPanel.kt</code>, <code>ui/ParametersTabs.kt</code>, <code>ui/PerformanceMatrixPanel.kt</code>)</h3>
+<ul>
+<li><strong>Double-clicking a single effect in a full FX chain asks which slot to overwrite</strong>, like the audition latch. It used to silently replace slot 1.</li>
+<li><strong>Dropping an effect works the same everywhere.</strong> Stock filters can now be dropped on a slot in the Parameters FX tab (as in the Performance Matrix), and the deck badge in the Performance Matrix accepts a single <code>.lsdfx</code> (first vacant slot; a toast tells you if all 3 are full). The deck monitor still takes presets and generators only.</li>
+<li><strong>One rule for which deck:</strong> FX goes to the deck the crossfader is on, presets and generators to the other one. At exactly the middle, FX goes to Deck A and presets to Deck B (as before, now in one place).</li>
+<li><strong>Labels:</strong> the slot menu's "Reset Slot" is now "Clear Slot" (it empties the slot, as in the Performance Matrix), and the Sources "+" says it makes a new blank preset.</li>
+<li>Internal: <code>FxOps.firstVacantSlot</code> and <code>FxOps.dropAsset</code>; <code>Mixer.liveDeck</code> / <code>Mixer.inactiveDeck</code> extensions replace six copies of the crossfade test. FX queues and playlists still apply a <code>.lsdfx</code> as slot 1 of an otherwise empty chain.</li>
+</ul>
+<h3 id="deck-load-ordering-export-cancel-and-queue-accept-presetsdeckopskt-uivideoexportmodalkt-uilibrarynavigationkt-uipopupmanagerkt">Deck Load Ordering, Export Cancel and Queue Accept (<code>presets/DeckOps.kt</code>, <code>ui/VideoExportModal.kt</code>, <code>ui/LibraryNavigation.kt</code>, <code>ui/PopupManager.kt</code>)</h3>
+<ul>
+<li><strong>A slow preset load can't overwrite a newer change.</strong> Clicking a preset and then quickly picking a generator on the same deck used to apply the generator first and the preset last. The deck now ends on what you did last.</li>
+<li><strong>Closing the Video Export window cancels an export that was still waiting</strong> on its preset load or the unsaved-changes prompt.</li>
+<li><strong>MIDI accept on an A/B queue item now behaves like a double-click</strong>: it moves the queue position, fades to the loaded deck and advances the transition queue.</li>
+<li><strong>The "Don't ask again" label and the Manual Load Dirty Behavior tooltip say what Ctrl+Z covers</strong>: preset and generator loads, not eject or copy/move/swap.</li>
+<li>Internal: per-slot <code>requestSeq</code>/<code>lastApplied</code> in <code>DeckOps</code> (stale ops get <code>onResult(false)</code>); <code>VideoExportModal.exportToken</code>; <code>LibraryNavigation.accept</code> QUEUE_AB calls <code>playIndex</code>.</li>
+</ul>
 <h3 id="macro-knob-cleanups-one-selected-knob-bank-import-checks-the-target-deck-mastertransitionfx-send-knobs-take-only-their-own-targets-fx-knobs-are-read-only-everywhere-macromacrolearnstatekt-macromacrobankserializerkt-uiperformancematrixpanelkt-uiperformancemacrostripkt-uivalueparamsectionkt-uipropertiespanelkt-uimacrobindingeditorkt">Macro Knob Cleanups: One Selected Knob, Bank Import Checks the Target Deck, Master/Transition/FX-Send Knobs Take Only Their Own Targets, FX Knobs Are Read-Only Everywhere (<code>macro/MacroLearnState.kt</code>, <code>macro/MacroBankSerializer.kt</code>, <code>ui/PerformanceMatrixPanel.kt</code>, <code>ui/PerformanceMacroStrip.kt</code>, <code>ui/ValueParamSection.kt</code>, <code>ui/PropertiesPanel.kt</code>, <code>ui/MacroBindingEditor.kt</code>)</h3>
 <ul>
 <li><strong>The highlighted knob and the knob strip can no longer disagree.</strong> Clicking a parameter that a knob drives used to open that knob's strip while the card highlight stayed on the previously clicked knob, and closing the strip left the highlight (and its Add Target button) behind. There is now one selected knob.</li>

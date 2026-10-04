@@ -144,7 +144,7 @@ class PopupManager(
                 ImGui.closeCurrentPopup()
             }
             ImGui.spacing()
-            ImGui.checkbox("Don't ask again (discard silently; change in Preferences)", dontAskAgain)
+            ImGui.checkbox("Don't ask again (always discard; Ctrl+Z undoes preset/generator loads; change in Preferences)", dontAskAgain)
             ImGui.endPopup()
         }
     }

@@ -283,11 +283,7 @@ object FxSlotCell {
             FxOps.setSlotFilter(chain, slotIndex, filterId)
         }
         ImGui.acceptDragDropPayload<String>("ASSET_ITEM")?.let { path ->
-            val file = File(path)
-            when (file.extension.lowercase()) {
-                "lsdfx" -> FxOps.loadSlot(session, file, chain, slotIndex)
-                "lsdfxchain" -> FxOps.loadChain(session, file, chain)
-            }
+            FxOps.dropAsset(session, File(path), chain, slotIndex)
         }
         ImGui.endDragDropTarget()
     }

@@ -381,7 +381,7 @@ object PreferencesPanel {
             session.uiTheme.autoVjDirtyBehavior = autoVjBehaviors[currentAutoVjIdx.get()]
             AppPreferencesStore.savePreferences()
         }
-        itemTooltip("What AutoVJ queue advances do when the target deck has unsaved changes.\nSKIP: leave the deck alone. AUTO_DISCARD: overwrite. AUTO_SAVE: save the deck's preset first.")
+        itemTooltip("What AutoVJ queue advances do when the target deck has unsaved changes.\nSKIP: leave the deck alone. AUTO_DISCARD: overwrite. AUTO_SAVE: save the deck's preset first.\nOnly preset and generator loads can be undone with Ctrl+Z; eject and copy/move/swap cannot.")
 
         ImGui.spacing()
         val manualBehaviors = UITheme.ManualLoadDirtyBehavior.values()

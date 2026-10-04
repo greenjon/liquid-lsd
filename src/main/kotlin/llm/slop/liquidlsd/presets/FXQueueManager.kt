@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.presets
 
+import llm.slop.liquidlsd.rendering.liveDeck
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 
@@ -10,6 +11,6 @@ import llm.slop.liquidlsd.rendering.Mixer
 object FXQueueManager : FxQueueEngine(queueLabel = "FX queue") {
 
     override fun getTargetDeck(mixer: Mixer): Deck {
-        return if (mixer.crossfade.value <= 0.0f) mixer.deckA else mixer.deckB
+        return mixer.liveDeck
     }
 }

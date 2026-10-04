@@ -638,7 +638,7 @@ object ParametersTabs {
                         onPushUndo()
                     }
                 }
-                if (ImGui.menuItem("Reset Slot", "", false, hasFx)) {
+                if (ImGui.menuItem("Clear Slot", "", false, hasFx)) {
                     llm.slop.liquidlsd.presets.FxOps.clearSlot(chain, i)
                     onPushUndo()
                 }
@@ -706,16 +706,11 @@ object ParametersTabs {
                 val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                 if (payload != null) {
                     val file = java.io.File(payload)
-                    if (file.exists()) {
-                        val ext = file.extension.lowercase()
-                        if (ext == "lsdfx") {
-                            llm.slop.liquidlsd.presets.FxOps.loadSlot(session, file, chain, i)
-                            onPushUndo()
-                        } else if (ext == "lsdfxchain") {
-                            llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, chain)
-                            onPushUndo()
-                        }
-                    }
+                    if (file.exists() && llm.slop.liquidlsd.presets.FxOps.dropAsset(session, file, chain, i)) onPushUndo()
+                }
+                ImGui.acceptDragDropPayload<String>(llm.slop.liquidlsd.ui.FxSlotCell.PAYLOAD_STOCK_FILTER)?.let { filterId ->
+                    llm.slop.liquidlsd.presets.FxOps.setSlotFilter(chain, i, filterId)
+                    onPushUndo()
                 }
                 ImGui.endDragDropTarget()
             }

@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.rendering.inactiveDeck
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiComboFlags
@@ -294,9 +295,7 @@ object PlaylistEditorPanel {
 
             // Double click loads to standby deck
             if (isRowHovered && ImGui.isMouseDoubleClicked(0) && exists) {
-                val targetIsA = mixer.crossfade.value > 0.0f
-                val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
-                UIManager.loadDeckPresetSafely(mixer, targetDeck, resolvedFile)
+                UIManager.loadDeckPresetSafely(mixer, mixer.inactiveDeck, resolvedFile)
             }
 
             // Drag source for reordering within playlist

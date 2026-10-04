@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.rendering.liveDeck
 import imgui.ImGui
 import imgui.flag.ImGuiKey
 import imgui.type.ImBoolean
@@ -85,6 +86,7 @@ object FXBrowserPanel {
         }
         itemTooltip("Save FX slot or 3-slot chain from a deck...")
         drawCreatePopup(session, mixer)
+        drawOverwritePopup(session, mixer)
 
         ImGui.sameLine()
 
@@ -278,10 +280,7 @@ object FXBrowserPanel {
         }
 
         if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
-            // crossfade: -1.0 = Deck A, 1.0 = Deck B (see Mixer.crossfade) — target the
-            // deck that's actually dominant, matching FXQueueManager/FXPlaylistEditorPanel.
-            val targetDeck = if (mixer.crossfade.value <= 0.0f) mixer.deckA else mixer.deckB
-            applyToDeck(session, asset, targetDeck)
+            applyToDeck(session, asset, mixer.liveDeck)
         }
 
         // Drag source. Saved singles/chains carry their file path (ASSET_ITEM) so they can also go
@@ -310,25 +309,50 @@ object FXBrowserPanel {
         popOpenDropdownPadding()
     }
 
-    /** Finds the first empty slotIndex in [deck], or 0 if full. */
-    private fun firstVacantSlot(deck: Deck): Int {
-        for (s in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
-            if (deck.fxSlots[s] == null) return s
-        }
-        return 0
-    }
+    /** A single FX that found no vacant slot, waiting for the user to pick the slot to overwrite. */
+    private var pendingOverwrite: Pair<Deck, AssetItem>? = null
+    private var openOverwritePopup = false
 
     private fun applyToDeck(session: SessionContext, asset: AssetItem, deck: Deck) {
         val file = File(asset.path)
         when (asset.type) {
-            AssetType.FX_STOCK -> {
-                val id = asset.path.removePrefix(STOCK_PATH_PREFIX)
-                FxOps.setSlotFilter(deck.fxChain, firstVacantSlot(deck), id)
+            AssetType.FX_STOCK, AssetType.FX_PRESET -> {
+                val slot = FxOps.firstVacantSlot(deck.fxChain)
+                if (slot == null) {
+                    pendingOverwrite = deck to asset
+                    openOverwritePopup = true
+                } else loadSingle(session, asset, deck, slot)
             }
-            AssetType.FX_PRESET -> FxOps.loadSlot(session, file, deck.fxChain, firstVacantSlot(deck))
             AssetType.FX_CHAIN -> FxOps.loadChain(session, file, deck.fxChain)
             else -> {}
         }
+    }
+
+    private fun loadSingle(session: SessionContext, asset: AssetItem, deck: Deck, slot: Int) {
+        if (asset.type == AssetType.FX_STOCK) FxOps.setSlotFilter(deck.fxChain, slot, asset.path.removePrefix(STOCK_PATH_PREFIX))
+        else FxOps.loadSlot(session, File(asset.path), deck.fxChain, slot)
+    }
+
+    /** Asks which slot to overwrite when a double-clicked single FX finds the live deck's chain full. */
+    private fun drawOverwritePopup(session: SessionContext, mixer: Mixer) {
+        if (openOverwritePopup) { ImGui.openPopup("fx_browser_overwrite_slot"); openOverwritePopup = false }
+        pushOpenDropdownPadding()
+        if (ImGui.beginPopup("fx_browser_overwrite_slot")) {
+            pushOpenDropdownFont()
+            val (deck, asset) = pendingOverwrite ?: (null to null)
+            val label = if (deck === mixer.deckA) "Deck A" else "Deck B"
+            ImGui.textDisabled("$label FX slots are full. Select slot to overwrite:")
+            ImGui.separator()
+            if (deck != null && asset != null) {
+                for (s in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
+                    val fx = deck.fxSlots[s]
+                    if (ImGui.menuItem("Slot ${s + 1}: ${fx?.displayName ?: "Empty"}")) loadSingle(session, asset, deck, s)
+                }
+            }
+            popOpenDropdownFont()
+            ImGui.endPopup()
+        }
+        popOpenDropdownPadding()
     }
 
     private fun drawContextMenu(session: SessionContext, mixer: Mixer, asset: AssetItem) {

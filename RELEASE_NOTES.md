@@ -1,5 +1,19 @@
 ## [Unreleased]
 
+### FX and Library Load Rules: One Place for a Single FX, One Rule for Which Deck, Matching Drop Targets (`presets/FxOps.kt`, `rendering/MixerDecks.kt`, `ui/browser/FXBrowserPanel.kt`, `ui/ParametersTabs.kt`, `ui/PerformanceMatrixPanel.kt`)
+- **Double-clicking a single effect in a full FX chain asks which slot to overwrite**, like the audition latch. It used to silently replace slot 1.
+- **Dropping an effect works the same everywhere.** Stock filters can now be dropped on a slot in the Parameters FX tab (as in the Performance Matrix), and the deck badge in the Performance Matrix accepts a single `.lsdfx` (first vacant slot; a toast tells you if all 3 are full). The deck monitor still takes presets and generators only.
+- **One rule for which deck:** FX goes to the deck the crossfader is on, presets and generators to the other one. At exactly the middle, FX goes to Deck A and presets to Deck B (as before, now in one place).
+- **Labels:** the slot menu's "Reset Slot" is now "Clear Slot" (it empties the slot, as in the Performance Matrix), and the Sources "+" says it makes a new blank preset.
+- Internal: `FxOps.firstVacantSlot` and `FxOps.dropAsset`; `Mixer.liveDeck` / `Mixer.inactiveDeck` extensions replace six copies of the crossfade test. FX queues and playlists still apply a `.lsdfx` as slot 1 of an otherwise empty chain.
+
+### Deck Load Ordering, Export Cancel and Queue Accept (`presets/DeckOps.kt`, `ui/VideoExportModal.kt`, `ui/LibraryNavigation.kt`, `ui/PopupManager.kt`)
+- **A slow preset load can't overwrite a newer change.** Clicking a preset and then quickly picking a generator on the same deck used to apply the generator first and the preset last. The deck now ends on what you did last.
+- **Closing the Video Export window cancels an export that was still waiting** on its preset load or the unsaved-changes prompt.
+- **MIDI accept on an A/B queue item now behaves like a double-click**: it moves the queue position, fades to the loaded deck and advances the transition queue.
+- **The "Don't ask again" label and the Manual Load Dirty Behavior tooltip say what Ctrl+Z covers**: preset and generator loads, not eject or copy/move/swap.
+- Internal: per-slot `requestSeq`/`lastApplied` in `DeckOps` (stale ops get `onResult(false)`); `VideoExportModal.exportToken`; `LibraryNavigation.accept` QUEUE_AB calls `playIndex`.
+
 ### Macro Knob Cleanups: One Selected Knob, Bank Import Checks the Target Deck, Master/Transition/FX-Send Knobs Take Only Their Own Targets, FX Knobs Are Read-Only Everywhere (`macro/MacroLearnState.kt`, `macro/MacroBankSerializer.kt`, `ui/PerformanceMatrixPanel.kt`, `ui/PerformanceMacroStrip.kt`, `ui/ValueParamSection.kt`, `ui/PropertiesPanel.kt`, `ui/MacroBindingEditor.kt`)
 - **The highlighted knob and the knob strip can no longer disagree.** Clicking a parameter that a knob drives used to open that knob's strip while the card highlight stayed on the previously clicked knob, and closing the strip left the highlight (and its Add Target button) behind. There is now one selected knob.
 - **Importing a macro bank into a deck checks the deck it lands on.** Parameters were checked against the deck the bank was exported from, so importing a Deck A bank onto Deck B kept targets Deck B doesn't have and dropped ones it does (the "skipped" count was wrong too). Importing also no longer rewrites `Mixer/...` or `Master/...` targets to the deck, and caps each knob at 4 targets.

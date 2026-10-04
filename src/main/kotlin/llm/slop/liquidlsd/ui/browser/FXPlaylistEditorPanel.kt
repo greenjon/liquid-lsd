@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.rendering.liveDeck
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiComboFlags
@@ -288,7 +289,7 @@ object FXPlaylistEditorPanel {
 
             // Double click: apply to crossfader-active deck (A or B)
             if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
-                val targetDeck = if (mixer.crossfade.value <= 0.0f) mixer.deckA else mixer.deckB
+                val targetDeck = mixer.liveDeck
                 llm.slop.liquidlsd.presets.FxOps.applyItem(session, resolvedFile, targetDeck.fxChain)
             }
 
@@ -337,7 +338,7 @@ object FXPlaylistEditorPanel {
             if (ImGui.beginPopup(popupId)) {
                 pushOpenDropdownFont()
                 if (ImGui.menuItem("Apply to Active Deck (A/B)")) {
-                    val targetDeck = if (mixer.crossfade.value <= 0.0f) mixer.deckA else mixer.deckB
+                    val targetDeck = mixer.liveDeck
                     llm.slop.liquidlsd.presets.FxOps.applyItem(session, resolvedFile, targetDeck.fxChain)
                 }
                 if (ImGui.menuItem("Apply to Deck BG")) {

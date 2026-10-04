@@ -65,6 +65,25 @@ class LibraryNavigationTest {
     }
 
     @Test
+    fun acceptOnTheABQueuePlaysTheIndexLikeADoubleClick() {
+        val session = mockk<SessionContext>(relaxed = true)
+        val mixer = mockk<llm.slop.liquidlsd.rendering.Mixer>(relaxed = true)
+        val queue = llm.slop.liquidlsd.presets.PlayQueueManager
+        io.mockk.mockkObject(queue)
+        io.mockk.every { session.playQueueManager } returns queue
+        io.mockk.every { queue.playIndex(any(), any()) } returns Unit
+        LibraryPanel.activeSelectionSource = SelectionSource.QUEUE_AB
+        llm.slop.liquidlsd.ui.browser.QueueActionsPanel.selectedIndex = 2
+        try {
+            LibraryNavigation.accept(session, mixer, mockk(relaxed = true))
+            io.mockk.verify(exactly = 1) { queue.playIndex(2, mixer) }
+        } finally {
+            io.mockk.unmockkObject(queue)
+            llm.slop.liquidlsd.ui.browser.QueueActionsPanel.clearSelection()
+        }
+    }
+
+    @Test
     fun changingTabDropsTheSelectionSourceButReselectingTheSameTabKeepsIt() {
         LibraryPanel.activeSelectionSource = SelectionSource.QUEUE_AB
         LibraryNavigation.setViewMode(LibraryViewMode.PRESETS)

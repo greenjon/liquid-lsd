@@ -18,6 +18,7 @@ import mu.KotlinLogging
 import java.io.File
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicLong
 
 /** One change to what a deck holds; see [DeckOps.request]. */
 sealed interface DeckChange {
@@ -64,10 +65,17 @@ object DeckOps {
         val origin: LoadOrigin,
         val dto: DeckPresetDto? = null,
         val mtime: Long? = null,
-        val onResult: ((Boolean) -> Unit)? = null
+        val onResult: ((Boolean) -> Unit)? = null,
+        val seq: Long = 0L
     )
 
     private val pending = ConcurrentLinkedQueue<Op>()
+
+    /** Per-slot request order. Stamped when a request is accepted, so a slow preset read can't land after a newer change. */
+    private val requestSeq = Array(DeckSlot.entries.size) { AtomicLong() }
+    private val lastApplied = LongArray(DeckSlot.entries.size)
+
+    private fun nextSeq(slot: DeckSlot): Long = requestSeq[slot.index].incrementAndGet()
 
     /**
      * Queues [change] for [slot]. Safe to call from any thread.
@@ -89,9 +97,10 @@ object DeckOps {
             return false
         }
         val accepted = guard(slot, mixer, origin, { onResult?.invoke(false) }) {
+            val seq = nextSeq(slot)
             when (change) {
-                is DeckChange.Preset -> readPreset(slot, change.file, origin, onResult)
-                else -> pending.offer(Op(slot, change, origin, onResult = onResult))
+                is DeckChange.Preset -> readPreset(slot, change.file, origin, onResult, seq)
+                else -> pending.offer(Op(slot, change, origin, onResult = onResult, seq = seq))
             }
         }
         if (!accepted) onResult?.invoke(false)
@@ -141,7 +150,7 @@ object DeckOps {
     }
 
     /** Reads, migrates and queues [file]. The returned future completes once queued (not applied); it exists for tests. */
-    private fun readPreset(slot: DeckSlot, file: File, origin: LoadOrigin, onResult: ((Boolean) -> Unit)?): CompletableFuture<Void> {
+    private fun readPreset(slot: DeckSlot, file: File, origin: LoadOrigin, onResult: ((Boolean) -> Unit)?, seq: Long): CompletableFuture<Void> {
         PresetManager.deckStatus[slot.index].set(PresetIOStatus(PresetIOState.LOADING))
         val fileMtime = file.lastModified().takeIf { it > 0L }
         return CompletableFuture.runAsync({
@@ -159,7 +168,7 @@ object DeckOps {
                         logger.warn(e) { "Could not auto-save migrated preset '${file.name}'" }
                     }
                 }
-                pending.offer(Op(slot, DeckChange.Preset(file), origin, dto, fileMtime, onResult))
+                pending.offer(Op(slot, DeckChange.Preset(file), origin, dto, fileMtime, onResult, seq))
                 PresetManager.deckStatus[slot.index].set(PresetIOStatus(PresetIOState.IDLE))
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load deck preset from ${file.absolutePath}" }
@@ -172,9 +181,12 @@ object DeckOps {
     }
 
     /** Test hook: queues an already-decoded preset as if it had just been read from disk. */
-    internal fun postLoaded(slot: DeckSlot, dto: DeckPresetDto, origin: LoadOrigin = LoadOrigin.MANUAL, mtime: Long? = null) {
-        pending.offer(Op(slot, DeckChange.Preset(File("${dto.name}.lsd")), origin, dto, mtime))
+    internal fun postLoaded(slot: DeckSlot, dto: DeckPresetDto, origin: LoadOrigin = LoadOrigin.MANUAL, mtime: Long? = null, seq: Long = nextSeq(slot)) {
+        pending.offer(Op(slot, DeckChange.Preset(File("${dto.name}.lsd")), origin, dto, mtime, seq = seq))
     }
+
+    /** Test hook: the sequence number of the most recent accepted request for [slot]. */
+    internal fun lastRequestedSeq(slot: DeckSlot): Long = requestSeq[slot.index].get()
 
     /** Test hook: number of changes waiting for [drainOnGlThread]. */
     internal val pendingCount: Int get() = pending.size
@@ -194,6 +206,12 @@ object DeckOps {
         var appliedAny = false
         while (true) {
             val op = pending.poll() ?: break
+            if (op.seq < lastApplied[op.slot.index]) {
+                logger.info { "Dropping stale ${op.change::class.simpleName} for ${op.slot.label}: a newer change was already applied" }
+                op.onResult?.invoke(false)
+                continue
+            }
+            lastApplied[op.slot.index] = op.seq
             appliedAny = true
             var ok = false
             try {
