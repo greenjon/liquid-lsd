@@ -314,14 +314,16 @@ class DeckOpsTest {
         // QUEUE + SKIP leaves a dirty deck alone, without prompting.
         loadClean("p3")
         a.tweak = 0.2f
-        DeckOps.request(DeckSlot.A, DeckChange.Eject, LoadOrigin.QUEUE)
+        assertTrue(DeckOps.wouldSkipQueueLoad(DeckSlot.A, mixer))
+        assertFalse(DeckOps.request(DeckSlot.A, DeckChange.Eject, LoadOrigin.QUEUE), "a skipped queue load reports false")
         assertEquals(0, DeckOps.pendingCount)
         assertNull(prompted)
 
         // QUEUE + AUTO_DISCARD proceeds even though the manual preference is PROMPT.
         UITheme.manualLoadDirtyBehavior = UITheme.ManualLoadDirtyBehavior.PROMPT
         UITheme.autoVjDirtyBehavior = UITheme.AutoVjDirtyBehavior.AUTO_DISCARD
-        DeckOps.request(DeckSlot.A, DeckChange.Eject, LoadOrigin.QUEUE)
+        assertFalse(DeckOps.wouldSkipQueueLoad(DeckSlot.A, mixer))
+        assertTrue(DeckOps.request(DeckSlot.A, DeckChange.Eject, LoadOrigin.QUEUE))
         assertEquals(1, DeckOps.pendingCount)
         assertNull(prompted)
     }

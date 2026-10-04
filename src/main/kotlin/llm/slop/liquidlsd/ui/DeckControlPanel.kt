@@ -116,17 +116,7 @@ class DeckControlPanel(
             if (payload != null) {
                 val file = File(payload)
                 if (file.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                    val isDirty = session.presetManager.isDeckDirty(deck, mixer)
-                    if (!isDirty) {
-                        session.presetRepository.loadDeckPresetAsync(
-                            file,
-                            isDeckA = label == "Deck A",
-                            isDeckBG = label == "Deck BG",
-                            isDeckPV = label == "Deck PV"
-                        )
-                    } else {
-                        UIManager.triggerDeckDragDrop(file, deck, isDeckA, mixer)
-                    }
+                    UIManager.loadDeckPresetSafely(mixer, deck, file)
                 }
             }
             val stockSourcePayload = ImGui.acceptDragDropPayload<String>(llm.slop.liquidlsd.ui.browser.PresetListPanel.PAYLOAD_STOCK_SOURCE)

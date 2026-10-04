@@ -275,13 +275,13 @@ object BgQueueActionsPanel {
                         BgQueueManager.playIndex(index, mixer, withDipToBlack = false)
                     }
                     if (ImGui.menuItem("Load to Deck A")) {
-                        session.presetRepository.loadDeckPresetAsync(file, isDeckA = true)
+                        BrowserDeckButtons.loadPresetToDeck(session, mixer, file, 1)
                     }
                     if (ImGui.menuItem("Load to Deck B")) {
-                        session.presetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = false, isDeckPV = false)
+                        BrowserDeckButtons.loadPresetToDeck(session, mixer, file, 2)
                     }
                     if (ImGui.menuItem("Preview on Deck PV")) {
-                        session.presetRepository.loadDeckPresetAsync(file, isDeckPV = true)
+                        BrowserDeckButtons.loadPresetToDeck(session, mixer, file, 4)
                     }
                     ImGui.separator()
                 }

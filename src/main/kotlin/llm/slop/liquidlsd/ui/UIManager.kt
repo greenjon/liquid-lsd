@@ -427,11 +427,6 @@ class UIManager(
          */
         const val TITLE_BAR_PANEL_GAP = 2.0f
 
-        fun triggerDeckDragDrop(file: File, deck: Deck, isDeckA: Boolean, mixer: Mixer) {
-            val ui = instance ?: return
-            ui.deckPresetController.loadDeckPresetSafely(mixer, deck, file)
-        }
-
         fun triggerDeckEject(deck: Deck, isDeckA: Boolean = false, isDeckPV: Boolean = false) {
             val ui = instance ?: return
             val mixer = ui.currentMixer ?: return

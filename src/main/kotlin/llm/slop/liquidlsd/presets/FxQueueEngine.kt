@@ -4,16 +4,14 @@ import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.FileSystemManager
-import llm.slop.liquidlsd.ui.UITheme
 import java.io.File
 
 /**
  * [QueueEngine] specialization for the FX queues (Deck A/B and Deck BG): resolves `.lsdfxplay`
- * playlists against the FX preset/chain roots, and adds the dirty-deck autosave/skip/discard
- * guard [PlayQueueManager] and [BgQueueManager] already apply before an auto-advance overwrites
- * a deck's FX slots.
+ * playlists against the FX preset/chain roots. FX changes don't touch the deck preset, so
+ * there is no dirty-deck guard here.
  */
-abstract class FxQueueEngine(queueLabel: String, private val savePrefix: String) : QueueEngine(queueLabel) {
+abstract class FxQueueEngine(queueLabel: String) : QueueEngine(queueLabel) {
 
     override fun playlistItemExtension(): String = "lsdfxplay"
 
@@ -26,54 +24,9 @@ abstract class FxQueueEngine(queueLabel: String, private val savePrefix: String)
     /** Resolves the deck an advance/jump should apply to for the current mixer state. */
     abstract fun getTargetDeck(mixer: Mixer): Deck
 
-    /** Short label ("A", "B", "BG") used in dirty-deck autosave names and log messages. */
-    protected abstract fun deckLabel(mixer: Mixer): String
-
-    /** The deck's currently active saved preset name, if any; used as the autosave target name. */
-    protected abstract fun activePresetName(mixer: Mixer): String?
-
-    /**
-     * Gates an auto-advance against a dirty target deck the same way [PlayQueueManager] and
-     * [BgQueueManager] already do, per [UITheme.autoVjDirtyBehavior] (SKIP / AUTO_SAVE / AUTO_DISCARD).
-     * @return true if the advance should proceed, false if it was skipped.
-     */
-    private fun handleDirtyDeck(deck: Deck, mixer: Mixer): Boolean {
-        if (!PresetManager.isDeckDirty(deck, mixer)) return true
-        val label = when (deck) {
-            mixer.deckA -> "A"
-            mixer.deckB -> "B"
-            mixer.deckBG -> "BG"
-            mixer.deckPV -> "PV"
-            else -> deckLabel(mixer)
-        }
-        return when (UITheme.autoVjDirtyBehavior) {
-            UITheme.AutoVjDirtyBehavior.SKIP -> {
-                logger.info { "$savePrefix: Skipping $queueLabel advance because Deck $label is dirty" }
-                false
-            }
-            UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
-                val saveName = (when (deck) {
-                    mixer.deckA -> PresetManager.activePresetA
-                    mixer.deckB -> PresetManager.activePresetB
-                    mixer.deckBG -> PresetManager.activePresetBG
-                    mixer.deckPV -> PresetManager.activePresetPV
-                    else -> activePresetName(mixer)
-                }) ?: "${savePrefix}_${label}_${System.currentTimeMillis()}"
-                logger.info { "$savePrefix: Autosaving dirty Deck $label to $saveName" }
-                PresetRepository.saveDeckPresetAsync(File("library/presets/$saveName.lsd"), deck, saveName)
-                true
-            }
-            UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {
-                logger.info { "$savePrefix: Discarding changes on dirty Deck $label" }
-                true
-            }
-        }
-    }
-
     fun jumpToIndex(index: Int, session: SessionContext, mixer: Mixer, explicitTargetDeck: Deck? = null) {
         if (index !in queue.indices) return
         val targetDeck = explicitTargetDeck ?: getTargetDeck(mixer)
-        if (!handleDirtyDeck(targetDeck, mixer)) return
 
         if (isShuffleEnabled) {
             if (activeIndex in queue.indices) {
@@ -90,7 +43,6 @@ abstract class FxQueueEngine(queueLabel: String, private val savePrefix: String)
     fun advanceNext(session: SessionContext, mixer: Mixer, explicitTargetDeck: Deck? = null) {
         val nextIndex = computeNextIndex() ?: return
         val targetDeck = explicitTargetDeck ?: getTargetDeck(mixer)
-        if (!handleDirtyDeck(targetDeck, mixer)) return
 
         activeIndex = nextIndex
         val file = queue[activeIndex]
@@ -101,7 +53,6 @@ abstract class FxQueueEngine(queueLabel: String, private val savePrefix: String)
     fun advancePrevious(session: SessionContext, mixer: Mixer, explicitTargetDeck: Deck? = null) {
         val prevIndex = computePrevIndex() ?: return
         val targetDeck = explicitTargetDeck ?: getTargetDeck(mixer)
-        if (!handleDirtyDeck(targetDeck, mixer)) return
 
         activeIndex = prevIndex
         val file = queue[activeIndex]

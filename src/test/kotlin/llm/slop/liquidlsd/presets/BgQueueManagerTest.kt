@@ -22,8 +22,10 @@ class BgQueueManagerTest {
     fun setUp() {
         mockkObject(PresetManager)
         mockkObject(PresetRepository)
+        mockkObject(DeckOps)
         every { PresetManager.isDeckDirty(any(), any()) } returns false
-        every { PresetRepository.loadDeckPresetAsync(any(), any(), any(), any(), any()) } returns Unit
+        every { DeckOps.request(any(), any(), any()) } returns true
+        every { DeckOps.wouldSkipQueueLoad(any(), any()) } returns false
         BgQueueManager.clearQueue()
         BgQueueManager.isAutoBGEnabled = false
         BgQueueManager.isRepeatEnabled = false
@@ -34,6 +36,8 @@ class BgQueueManagerTest {
     fun tearDown() {
         unmockkObject(PresetManager)
         unmockkObject(PresetRepository)
+        unmockkObject(DeckOps)
+        mockkObject(DeckOps)
     }
 
     @Test
@@ -166,12 +170,13 @@ class BgQueueManagerTest {
         BgQueueManager.appendToQueue(f1)
         BgQueueManager.appendToQueue(f2)
 
-        every { PresetManager.isDeckDirty(any(), any()) } returns true
+        every { DeckOps.wouldSkipQueueLoad(any(), any()) } returns true
         llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = llm.slop.liquidlsd.ui.UITheme.AutoVjDirtyBehavior.SKIP
 
         BgQueueManager.playIndex(0, mixer, withDipToBlack = false)
         assertEquals(-1, BgQueueManager.activeIndex, "Dirty deck with SKIP should not advance activeIndex")
 
+        every { DeckOps.wouldSkipQueueLoad(any(), any()) } returns false
         llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = llm.slop.liquidlsd.ui.UITheme.AutoVjDirtyBehavior.AUTO_DISCARD
         BgQueueManager.playIndex(0, mixer, withDipToBlack = false)
         assertEquals(0, BgQueueManager.activeIndex, "AUTO_DISCARD should proceed with playback")

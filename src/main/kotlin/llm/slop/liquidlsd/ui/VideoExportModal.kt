@@ -1,5 +1,11 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.presets.DeckSlot
+
+import llm.slop.liquidlsd.presets.DeckOps
+
+import llm.slop.liquidlsd.presets.DeckChange
+
 import imgui.ImGui
 import imgui.flag.ImGuiCond
 import imgui.flag.ImGuiWindowFlags
@@ -240,7 +246,7 @@ object VideoExportModal {
                     val pFile = File(pPath)
                     if (pFile.exists()) {
                         try {
-                            session.presetRepository.loadDeckPresetAsync(pFile, isDeckA = true)
+                            DeckOps.request(DeckSlot.A, DeckChange.Preset(pFile))
                             logger.info { "Loaded preset snapshot for export: ${pFile.name}" }
                         } catch (e: Exception) {
                             logger.warn(e) { "Could not load preset snapshot before export: ${e.message}" }

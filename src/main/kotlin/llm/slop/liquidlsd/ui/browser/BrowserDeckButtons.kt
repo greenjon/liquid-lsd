@@ -1,5 +1,11 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.presets.DeckSlot
+
+import llm.slop.liquidlsd.presets.DeckOps
+
+import llm.slop.liquidlsd.presets.DeckChange
+
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
@@ -7,7 +13,6 @@ import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.TangoPalette
 import llm.slop.liquidlsd.ui.UITheme
-import llm.slop.liquidlsd.ui.UIManager
 import java.io.File
 
 /**
@@ -74,17 +79,9 @@ internal object BrowserDeckButtons {
         ImGui.popStyleVar(2)
     }
 
-    /**
-     * Load a preset file into Deck A (1), B (2), BG (3), or PV (4) using the unified transition guard.
-     */
+    /** Load a preset file into Deck A (1), B (2), BG (3), or PV (4) through [DeckOps] (dirty guard and undo). */
     fun loadPresetToDeck(session: SessionContext, mixer: Mixer, file: File, deckIndex: Int) {
-        val targetDeck = when (deckIndex) {
-            1 -> mixer.deckA
-            2 -> mixer.deckB
-            3 -> mixer.deckBG
-            4 -> mixer.deckPV
-            else -> return
-        }
-        UIManager.loadDeckPresetSafely(mixer, targetDeck, file)
+        val slot = DeckSlot.entries.getOrNull(deckIndex - 1) ?: return
+        DeckOps.request(slot, DeckChange.Preset(file))
     }
 }

@@ -12,26 +12,6 @@ import java.util.concurrent.CompletableFuture
 object PresetRepository {
     private val logger = KotlinLogging.logger {}
 
-    /**
-     * Compatibility shim: queues a preset load through [DeckOps], so the dirty guard, undo and
-     * macro-bank policy apply to every caller. [isManual] = false marks a queue/session load.
-     * Call [DeckOps.request] directly instead.
-     */
-    @Deprecated("Use DeckOps.request(slot, DeckChange.Preset(file), origin)", ReplaceWith("DeckOps.request(slot, DeckChange.Preset(file), origin)"))
-    fun loadDeckPresetAsync(
-        file: File,
-        isDeckA: Boolean = false,
-        isDeckBG: Boolean = false,
-        isDeckPV: Boolean = false,
-        isManual: Boolean = true
-    ) {
-        DeckOps.request(
-            DeckSlot.ofFlags(isDeckA, isDeckBG, isDeckPV),
-            DeckChange.Preset(file),
-            if (isManual) LoadOrigin.MANUAL else LoadOrigin.QUEUE
-        )
-    }
-
     fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) {
         if (deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
             logger.warn { "Refusing to save deck preset: source is an external video stream (${deck.source.displayName})" }

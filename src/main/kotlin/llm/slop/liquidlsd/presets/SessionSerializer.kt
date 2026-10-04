@@ -396,7 +396,7 @@ object SessionSerializer {
     private fun loadInitialPreset(mixer: Mixer) {
         val initialFile = File(PresetManager.PRESETS_ROOT, "Decks/Liquid LSD Default.json")
         if (initialFile.exists()) {
-            PresetRepository.loadDeckPresetAsync(initialFile, isDeckA = true, isManual = false)
+            DeckOps.request(DeckSlot.A, DeckChange.Preset(initialFile), LoadOrigin.QUEUE)
         }
     }
 }

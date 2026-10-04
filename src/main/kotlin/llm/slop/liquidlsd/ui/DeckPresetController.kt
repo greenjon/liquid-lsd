@@ -104,8 +104,4 @@ class DeckPresetController(
             idx++
         }
     }
-
-    fun triggerDeckDragDrop(file: File, deck: Deck, isDeckA: Boolean, mixer: Mixer) {
-        loadDeckPresetSafely(mixer, deck, file)
-    }
 }

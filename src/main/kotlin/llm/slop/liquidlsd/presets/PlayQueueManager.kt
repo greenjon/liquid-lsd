@@ -179,12 +179,12 @@ object PlayQueueManager {
         val targetIsA = mixer.crossfade.value > 0.0f
         val targetDeck = if (targetIsA) mixer.deckA else mixer.deckB
 
-        if (!handleDirtyDeck(targetIsA, targetDeck, mixer)) return
+        val file = queue[index]
+        if (!DeckOps.request(DeckSlot.ofFlags(targetIsA, false, false), DeckChange.Preset(file), LoadOrigin.QUEUE)) return
 
         activeIndex = index
         stagedDeckA = false
         stagedDeckB = false
-        val file = queue[activeIndex]
 
         if (isShuffleEnabled) {
             playedIndices.add(index)
@@ -192,8 +192,6 @@ object PlayQueueManager {
         }
 
         logger.info { "Playing index $index: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
-        PresetRepository.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
-
         // Advance transition queue if auto-advance enabled
         TransitionQueueManager.advanceOnAutoFade(mixer)
 
@@ -351,14 +349,12 @@ object PlayQueueManager {
 
         if (nextIndex == -1 || nextIndex !in queue.indices) return
 
-        if (!handleDirtyDeck(targetIsA, targetDeck, mixer)) return
+        val file = queue[nextIndex]
+        if (!DeckOps.request(DeckSlot.ofFlags(targetIsA, false, false), DeckChange.Preset(file), LoadOrigin.QUEUE)) return
 
         activeIndex = nextIndex
-        val file = queue[activeIndex]
         
         logger.info { "Triggering next: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
-        
-        PresetRepository.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
         
         // Advance transition queue if auto-advance enabled
         TransitionQueueManager.advanceOnAutoFade(mixer)
@@ -441,14 +437,12 @@ object PlayQueueManager {
 
         if (prevIndex == -1 || prevIndex !in queue.indices) return
 
-        if (!handleDirtyDeck(targetIsA, targetDeck, mixer)) return
+        val file = queue[prevIndex]
+        if (!DeckOps.request(DeckSlot.ofFlags(targetIsA, false, false), DeckChange.Preset(file), LoadOrigin.QUEUE)) return
 
         activeIndex = prevIndex
-        val file = queue[activeIndex]
         
         logger.info { "Triggering previous: ${file.name} to Deck ${if (targetIsA) "A" else "B"}" }
-        
-        PresetRepository.loadDeckPresetAsync(file, isDeckA = targetIsA, isManual = false)
         
         // Advance transition queue if auto-advance enabled
         TransitionQueueManager.advanceOnAutoFade(mixer)
@@ -457,30 +451,5 @@ object PlayQueueManager {
         mixer.targetCrossfade = if (targetIsA) -1.0f else 1.0f
         mixer.isAutoFading = true
         mixer.muteCrossfadeNonMidiCv()
-    }
-
-    /**
-     * Handles a dirty target deck according to the configured AutoVJ dirty behavior.
-     * @return true if the queue advance should proceed, false if it should be skipped.
-     */
-    private fun handleDirtyDeck(targetIsA: Boolean, targetDeck: Deck, mixer: Mixer): Boolean {
-        if (!PresetManager.isDeckDirty(targetDeck, mixer)) return true
-        return when (UITheme.autoVjDirtyBehavior) {
-            UITheme.AutoVjDirtyBehavior.SKIP -> {
-                logger.info { "AutoVJ: Skipping because target deck is dirty" }
-                false
-            }
-            UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
-                val activeName = if (targetIsA) PresetManager.activePresetA else PresetManager.activePresetB
-                val saveName = activeName ?: "AutoVJ_${if (targetIsA) "A" else "B"}_${System.currentTimeMillis()}"
-                logger.info { "AutoVJ: Autosaving dirty deck to $saveName" }
-                PresetRepository.saveDeckPresetAsync(File("library/presets/$saveName.lsd"), targetDeck, saveName)
-                true
-            }
-            UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {
-                logger.info { "AutoVJ: Discarding changes on dirty deck" }
-                true
-            }
-        }
     }
 }

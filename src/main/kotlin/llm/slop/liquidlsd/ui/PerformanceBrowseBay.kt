@@ -1,5 +1,11 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.presets.DeckSlot
+
+import llm.slop.liquidlsd.presets.DeckOps
+
+import llm.slop.liquidlsd.presets.DeckChange
+
 import imgui.ImGui
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
@@ -110,12 +116,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 is ShaderPickerPopup.SourcePick.Id ->
                     DeckSourcePicker.applyPickedSourceId(session, parametersState, mixer, deck, deckLabel, pick.sourceId, ctx.deckPresetController)
                 is ShaderPickerPopup.SourcePick.Saved ->
-                    session.presetRepository.loadDeckPresetAsync(
-                        pick.file,
-                        isDeckA = deckLabel == "Deck A",
-                        isDeckBG = deckLabel == "Deck BG",
-                        isDeckPV = deckLabel == "Deck PV"
-                    )
+                    DeckSlot.entries.firstOrNull { it.label == deckLabel }?.let { DeckOps.request(it, DeckChange.Preset(pick.file)) }
                 ShaderPickerPopup.SourcePick.None -> {}
             }
         }

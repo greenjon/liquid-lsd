@@ -148,23 +148,6 @@ class FXQueueManagerTest {
     }
 
     @Test
-    fun testDirtyTargetDeckSkipsAdvance() {
-        io.mockk.every { PresetManager.isDeckDirty(any(), any()) } returns true
-        val originalBehavior = llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior
-        llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = llm.slop.liquidlsd.ui.UITheme.AutoVjDirtyBehavior.SKIP
-        try {
-            FXQueueManager.appendToQueue(File("fx1.lsdfx"))
-            FXQueueManager.appendToQueue(File("fx2.lsdfx"))
-
-            FXQueueManager.advanceNext(session, mixer)
-
-            assertEquals(-1, FXQueueManager.activeIndex, "Dirty target deck with SKIP behavior must not advance")
-        } finally {
-            llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = originalBehavior
-        }
-    }
-
-    @Test
     fun testDirtyTargetDeckWithDiscardStillAdvances() {
         io.mockk.every { PresetManager.isDeckDirty(any(), any()) } returns true
         val originalBehavior = llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior

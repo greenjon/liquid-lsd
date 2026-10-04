@@ -237,7 +237,7 @@ object BgQueueManager {
         if (!withDipToBlack || transitionDurationSec <= 0.05f) {
             transitionState = TransitionState.IDLE
             pendingFile = null
-            PresetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = true, isManual = false)
+            DeckOps.request(DeckSlot.BG, DeckChange.Preset(file), LoadOrigin.QUEUE)
             return
         }
         pendingFile = file
@@ -248,7 +248,7 @@ object BgQueueManager {
 
     fun playIndex(index: Int, mixer: Mixer, withDipToBlack: Boolean = true) {
         if (index in queue.indices) {
-            if (!handleDirtyDeck(mixer)) return
+            if (DeckOps.wouldSkipQueueLoad(DeckSlot.BG, mixer)) return
             activeIndex = index
             timeOnCurrentPresetSec = 0f
             val file = queue[index]
@@ -292,7 +292,7 @@ object BgQueueManager {
 
         if (isShuffleEnabled) {
             if (playbackHistory.size > 1) {
-                if (!handleDirtyDeck(mixer)) return
+                if (DeckOps.wouldSkipQueueLoad(DeckSlot.BG, mixer)) return
                 playbackHistory.removeAt(playbackHistory.size - 1)
                 val prevIdx = playbackHistory.last()
                 activeIndex = prevIdx
@@ -310,31 +310,6 @@ object BgQueueManager {
         }
     }
 
-    /**
-     * Handles a dirty target Deck BG according to the configured AutoVJ dirty behavior.
-     * @return true if the queue advance should proceed, false if it should be skipped.
-     */
-    private fun handleDirtyDeck(mixer: Mixer): Boolean {
-        if (!PresetManager.isDeckDirty(mixer.deckBG, mixer)) return true
-        return when (UITheme.autoVjDirtyBehavior) {
-            UITheme.AutoVjDirtyBehavior.SKIP -> {
-                logger.info { "AutoBG: Skipping because Deck BG is dirty" }
-                false
-            }
-            UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> {
-                val activeName = PresetManager.activePresetBG
-                val saveName = activeName ?: "AutoBG_BG_${System.currentTimeMillis()}"
-                logger.info { "AutoBG: Autosaving dirty deck to $saveName" }
-                PresetRepository.saveDeckPresetAsync(File("library/presets/$saveName.lsd"), mixer.deckBG, saveName)
-                true
-            }
-            UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> {
-                logger.info { "AutoBG: Discarding changes on dirty Deck BG" }
-                true
-            }
-        }
-    }
-
     fun update(mixer: Mixer, deltaTimeSec: Float) {
         val halfDuration = (transitionDurationSec * 0.5f).coerceAtLeast(0.05f)
 
@@ -346,7 +321,7 @@ object BgQueueManager {
                     mixer.deckBG.source.globalAlpha.baseValue = 0f
                     val file = pendingFile
                     if (file != null) {
-                        PresetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = true, isManual = false)
+                        DeckOps.request(DeckSlot.BG, DeckChange.Preset(file), LoadOrigin.QUEUE)
                     }
                     pendingFile = null
                     transitionProgress = 0f

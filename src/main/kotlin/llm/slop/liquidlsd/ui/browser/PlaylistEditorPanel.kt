@@ -368,16 +368,16 @@ object PlaylistEditorPanel {
 
                 if (count == 1 && exists) {
                     if (ImGui.menuItem("Load to Deck A")) {
-                        session.presetRepository.loadDeckPresetAsync(resolvedFile, isDeckA = true)
+                        BrowserDeckButtons.loadPresetToDeck(session, mixer, resolvedFile, 1)
                     }
                     if (ImGui.menuItem("Load to Deck B")) {
-                        session.presetRepository.loadDeckPresetAsync(resolvedFile, isDeckA = false, isDeckBG = false, isDeckPV = false)
+                        BrowserDeckButtons.loadPresetToDeck(session, mixer, resolvedFile, 2)
                     }
                     if (ImGui.menuItem("Load to Deck BG")) {
-                        session.presetRepository.loadDeckPresetAsync(resolvedFile, isDeckBG = true)
+                        BrowserDeckButtons.loadPresetToDeck(session, mixer, resolvedFile, 3)
                     }
                     if (ImGui.menuItem("Preview on Deck PV")) {
-                        session.presetRepository.loadDeckPresetAsync(resolvedFile, isDeckPV = true)
+                        BrowserDeckButtons.loadPresetToDeck(session, mixer, resolvedFile, 4)
                     }
                     ImGui.separator()
                 }

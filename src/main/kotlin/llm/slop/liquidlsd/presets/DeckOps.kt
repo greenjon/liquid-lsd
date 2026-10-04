@@ -68,11 +68,16 @@ object DeckOps {
 
     private val pending = ConcurrentLinkedQueue<Op>()
 
-    /** Queues [change] for [slot]. Safe to call from any thread. */
-    fun request(slot: DeckSlot, change: DeckChange, origin: LoadOrigin = LoadOrigin.MANUAL) {
+    /**
+     * Queues [change] for [slot]. Safe to call from any thread.
+     * @return false if the change was dropped (a no-op source re-pick, or a QUEUE load skipped by
+     * the AutoVJ dirty setting), so queue managers can leave their position unchanged. A MANUAL
+     * change waiting on the dirty prompt counts as accepted.
+     */
+    fun request(slot: DeckSlot, change: DeckChange, origin: LoadOrigin = LoadOrigin.MANUAL): Boolean {
         val mixer = mixerProvider()
-        if (change is DeckChange.Source && mixer != null && isNoOp(slot.deck(mixer), change)) return
-        guard(slot, mixer, origin) {
+        if (change is DeckChange.Source && mixer != null && isNoOp(slot.deck(mixer), change)) return false
+        return guard(slot, mixer, origin) {
             when (change) {
                 is DeckChange.Preset -> readPreset(slot, change.file, origin)
                 else -> pending.offer(Op(slot, change, origin))
@@ -80,16 +85,26 @@ object DeckOps {
         }
     }
 
+    /**
+     * True when a QUEUE load to [slot] would be dropped for unsaved changes (AutoVJ "skip"). Queue
+     * managers that delay the load, like BG's dip-to-black, ask up front so they don't fade a deck they won't reload.
+     */
+    fun wouldSkipQueueLoad(slot: DeckSlot, mixer: Mixer): Boolean =
+        UITheme.autoVjDirtyBehavior == UITheme.AutoVjDirtyBehavior.SKIP && isDirty(slot.deck(mixer), mixer)
+
     /** Re-picking the generator a deck already runs must not reset it (external video is always re-applied). */
     private fun isNoOp(deck: Deck, change: DeckChange.Source): Boolean =
         !change.force && !deck.isEmpty && deck.source !is ExternalVideoSource && deck.source.id == change.source.id
 
-    private fun guard(slot: DeckSlot, mixer: Mixer?, origin: LoadOrigin, proceed: () -> Unit) {
+    private fun guard(slot: DeckSlot, mixer: Mixer?, origin: LoadOrigin, proceed: () -> Unit): Boolean {
         val deck = mixer?.let { slot.deck(it) }
-        if (deck == null || !isDirty(deck, mixer)) return proceed()
+        if (deck == null || !isDirty(deck, mixer)) { proceed(); return true }
         when (origin) {
             LoadOrigin.QUEUE -> when (UITheme.autoVjDirtyBehavior) {
-                UITheme.AutoVjDirtyBehavior.SKIP -> logger.info { "Skipping queue load: ${slot.label} has unsaved changes" }
+                UITheme.AutoVjDirtyBehavior.SKIP -> {
+                    logger.info { "Skipping queue load: ${slot.label} has unsaved changes" }
+                    return false
+                }
                 UITheme.AutoVjDirtyBehavior.AUTO_SAVE -> { autoSave(slot, deck); proceed() }
                 UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> proceed()
             }
@@ -99,6 +114,7 @@ object DeckOps {
                 UITheme.ManualLoadDirtyBehavior.DISCARD -> proceed()
             }
         }
+        return true
     }
 
     private fun autoSave(slot: DeckSlot, deck: Deck) {

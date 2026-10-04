@@ -9,6 +9,9 @@ import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.osc.OscLearnState
 import llm.slop.liquidlsd.osc.OscMapModeState
 import llm.slop.liquidlsd.osc.OscMappingManager
+import llm.slop.liquidlsd.presets.DeckChange
+import llm.slop.liquidlsd.presets.DeckOps
+import llm.slop.liquidlsd.presets.DeckSlot
 import llm.slop.liquidlsd.presets.GeneratorDefaults
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.ExternalVideoSource
@@ -376,11 +379,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                         GeneratorDefaults.saveDefault(deck, canonicalBankId)
                     }
                     if (ImGui.menuItem("Apply Default Now")) {
-                        GeneratorDefaults.applyToDeck(deck, deckLabel, canonicalBankId)
+                        DeckSlot.of(deck, mixer)?.let { DeckOps.request(it, DeckChange.Source(deck.source, force = true)) }
                     }
                     if (hasUserDef && ImGui.menuItem("Reset to Factory Default")) {
                         GeneratorDefaults.deleteDefault(sourceId)
-                        GeneratorDefaults.applyToDeck(deck, deckLabel, canonicalBankId)
+                        DeckSlot.of(deck, mixer)?.let { DeckOps.request(it, DeckChange.Source(deck.source, force = true)) }
                     }
                 }
                 popOpenDropdownFont()

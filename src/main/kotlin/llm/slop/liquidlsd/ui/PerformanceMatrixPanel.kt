@@ -457,17 +457,7 @@ class PerformanceMatrixPanel {
                             if (file.exists() && file.extension.lowercase() == "lsdfxchain") {
                                 llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, targetDeck.fxChain)
                             } else if (file.exists() && file.extension.lowercase() in listOf("patch", "lsd", "json")) {
-                                val isDirty = session.presetManager.isDeckDirty(targetDeck, mixer)
-                                if (!isDirty) {
-                                    session.presetRepository.loadDeckPresetAsync(
-                                        file,
-                                        isDeckA = isDeckA,
-                                        isDeckBG = isDeckBG,
-                                        isDeckPV = isDeckPV
-                                    )
-                                } else {
-                                    UIManager.triggerDeckDragDrop(file, targetDeck, isDeckA, mixer)
-                                }
+                                UIManager.loadDeckPresetSafely(mixer, targetDeck, file)
                             }
                         }
                         val stockSourcePayload = ImGui.acceptDragDropPayload<String>(PresetListPanel.PAYLOAD_STOCK_SOURCE)

@@ -354,16 +354,16 @@ object PresetListPanel {
 
                     if (count == 1) {
                         if (ImGui.menuItem("Load to Deck A")) {
-                            session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = true)
+                            BrowserDeckButtons.loadPresetToDeck(session, mixer, File(asset.path), 1)
                         }
                         if (ImGui.menuItem("Load to Deck B")) {
-                            session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckA = false, isDeckBG = false, isDeckPV = false)
+                            BrowserDeckButtons.loadPresetToDeck(session, mixer, File(asset.path), 2)
                         }
                         if (ImGui.menuItem("Load to Deck BG")) {
-                            session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckBG = true)
+                            BrowserDeckButtons.loadPresetToDeck(session, mixer, File(asset.path), 3)
                         }
                         if (ImGui.menuItem("Preview on Deck PV")) {
-                            session.presetRepository.loadDeckPresetAsync(File(asset.path), isDeckPV = true)
+                            BrowserDeckButtons.loadPresetToDeck(session, mixer, File(asset.path), 4)
                         }
                         ImGui.separator()
                     }

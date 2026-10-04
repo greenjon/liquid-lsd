@@ -89,20 +89,4 @@ class FXBgQueueManagerTest {
         assertEquals(-1, FXBgQueueManager.activeIndex)
     }
 
-    @Test
-    fun testDirtyTargetDeckSkipsAdvance() {
-        every { PresetManager.isDeckDirty(any(), any()) } returns true
-        val originalBehavior = llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior
-        llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = llm.slop.liquidlsd.ui.UITheme.AutoVjDirtyBehavior.SKIP
-        try {
-            FXBgQueueManager.appendToQueue(File("bg_fx1.lsdfx"))
-            FXBgQueueManager.appendToQueue(File("bg_fx2.lsdfx"))
-
-            FXBgQueueManager.advanceNext(session, mixer)
-
-            assertEquals(-1, FXBgQueueManager.activeIndex, "Dirty Deck BG with SKIP behavior must not advance")
-        } finally {
-            llm.slop.liquidlsd.ui.UITheme.autoVjDirtyBehavior = originalBehavior
-        }
-    }
 }
