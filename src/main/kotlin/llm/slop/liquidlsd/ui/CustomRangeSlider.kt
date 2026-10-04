@@ -1193,7 +1193,7 @@ object CustomRangeSlider {
 
             if (isMacroBound) {
                 val info = macroInfo!!
-                showTooltip("Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nAdjust in Column 3 Macro Inspector.")
+                showTooltip("Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nAdjust the binding in the Edit row or Properties.")
             } else if (effectiveIsRandomizable) {
                 val minPct = toPct(currentMin)
                 val maxPct = toPct(currentMax)

@@ -11,6 +11,18 @@ object MacroLearnState {
 
     var selectedControlId: String? = null
 
+    // UI-only: which of a control's bindings the Edit-row strip shows on line 2. Keyed by control id.
+    private val selectedBindingIdxByControl = HashMap<String, Int>()
+
+    /** Index of [control]'s binding shown in the strip, clamped to its current bindings (0 when empty). */
+    fun selectedBindingIdx(control: MacroControl): Int =
+        (selectedBindingIdxByControl[control.id] ?: 0).coerceIn(0, (control.bindings.size - 1).coerceAtLeast(0))
+
+    /** Selects binding [idx] of [control] for the strip; out-of-range values are clamped on read. */
+    fun selectBinding(control: MacroControl, idx: Int) {
+        selectedBindingIdxByControl[control.id] = idx.coerceAtLeast(0)
+    }
+
     data class LearnSession(
         val controlId: String,
         val startTimeMs: Long = System.currentTimeMillis()
@@ -50,6 +62,12 @@ object MacroLearnState {
         selectedControlId = controlId
         activeSession = LearnSession(controlId, System.currentTimeMillis())
         setStatus("LEARN MODE: Click any parameter slider or modulator property to bind.")
+    }
+
+    /** Restarts the Learn timeout for the armed session, e.g. when a GLOBAL Learn finally reaches an Edit view. */
+    fun restartLearnTimeout() {
+        val session = activeSession ?: return
+        activeSession = session.copy(startTimeMs = System.currentTimeMillis())
     }
 
     /** Cancels any active Learn Mode session. */

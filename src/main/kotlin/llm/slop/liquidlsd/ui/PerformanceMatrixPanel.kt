@@ -203,22 +203,30 @@ class PerformanceMatrixPanel {
             } else {
                 val canLearn = control.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL
                 if (canLearn) {
-                    val learnTip = if (bankId == MacroEngine.GLOBAL) "Arm Learn Mode and open the Mixer panel's Macros tab. Then open any Deep Edit and click a parameter slider or modulator property -- Global knobs can bind anywhere."
-                        else "Arm Learn Mode, open this row's Deep Edit and the Mixer panel's Macros tab. Then click a parameter slider or modulator property in this row's deck and section."
+                    val learnTip = if (bankId == MacroEngine.GLOBAL) "Arm Learn Mode, then open any Edit row and click a parameter slider or modulator property -- Global knobs can bind anywhere."
+                        else "Arm Learn Mode and open this row's Edit. Then click a parameter slider or modulator property in this row's deck and section."
                     if (overhangButton(session, learnIdCache.get(control.id) { "${Icons.REFRESH} Learn##inline_learn_${control.id}" }, btnX, btnY, btnW, btnH, TangoPalette.LEARN_BTN_BG.u32(), learnTip)) {
-                        MacroLearnState.startLearn(control.id)
-                        MacroLearnState.selectedControlId = control.id
-                        ctx.navigateMacroPanelTo(parametersState, bankId)
-                        session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
-                        // Learn needs a parameter to click: show this row's Deep Edit *Params* (not a Browse picker).
-                        val learnModuleId = ctx.canonicalModuleId(bankId)
-                        if (learnModuleId in PerformanceDeepEditBay.deepEditModuleIds) parametersState.openParams(learnModuleId)
+                        startLearnFor(session, parametersState, bankId, control)
                     }
                 } else {
                     ImGui.textDisabled("Max 4")
                 }
             }
         }
+    }
+
+    /** Arms Learn for [control] and shows its row's Deep Edit *Params* (not a Browse picker) so there's something to click. */
+    private fun startLearnFor(session: llm.slop.liquidlsd.SessionContext, parametersState: ParametersState, bankId: String, control: MacroControl) {
+        MacroLearnState.startLearn(control.id)
+        MacroLearnState.selectedControlId = control.id
+        // GLOBAL has no Deep Edit of its own: stay put and let the guest strip appear in whichever Edit the user opens.
+        if (bankId == MacroEngine.GLOBAL) {
+            if (!LibraryPanel.isEditView(session)) MacroLearnState.setStatus("LEARN MODE: Open any Edit and click a parameter or property to bind.", 6000L)
+            return
+        }
+        ctx.navigateMacroPanelTo(parametersState, bankId)
+        val learnModuleId = ctx.canonicalModuleId(bankId)
+        if (learnModuleId in PerformanceDeepEditBay.deepEditModuleIds) parametersState.openParams(learnModuleId)
     }
 
     /**
@@ -334,6 +342,17 @@ class PerformanceMatrixPanel {
         val h1Font = session.uiTheme.fontFor(UITheme.FontLevel.H1)
         val h1Pushable = h1Font != null && h1Font.ptr != 0L
 
+        // Edit-row binding strip: which knob is selected and in which bank (see macroStripModeFor).
+        val isEditView = LibraryPanel.isEditView(session)
+        val stripControl = if (isEditView) MacroLearnState.selectedControlId?.let { MacroLearnState.findControl(it) } else null
+        val stripBankId = stripControl?.let { MacroEngine.bankKeyOfControl(it.id) }
+        // A GLOBAL Learn armed in Perform view starts its timeout over once an Edit view opens.
+        if (isEditView && !wasEditView && MacroLearnState.activeSession?.controlId?.let { MacroEngine.bankKeyOfControl(it) } == MacroEngine.GLOBAL) {
+            MacroLearnState.restartLearnTimeout()
+        }
+        wasEditView = isEditView
+        val stripLeftW = maxOf(deckLeftW, masterTabLeftW) - deckBadgeW - 6f
+
         for (rowIdx in rows.indices) {
             val row = rows[rowIdx]
             val descriptor = row
@@ -393,6 +412,12 @@ class PerformanceMatrixPanel {
             val isClockRow = descriptor.bankId == MacroEngine.GLOBAL
             val isMasterRow = descriptor.bankId == MacroEngine.MASTER || descriptor.bankId == MacroEngine.MASTER_FX
             val displayLabel = descriptor.groupLabel
+
+            var stripMode = if (stripControl != null && descriptor.hasExtraHeader) macroStripModeFor(isEditView, row.bankId, stripBankId) else MacroStripMode.NONE
+            // A visiting GLOBAL strip rides only on the row whose Edit is open.
+            if (stripMode == MacroStripMode.GUEST && !isModuleExpanded) stripMode = MacroStripMode.NONE
+            val stripOn = stripMode != MacroStripMode.NONE
+            badgeClicked = false
 
             val isSpecialHeaderRow = descriptor.hasExtraHeader && (isTransRow || isMasterRow || isClockRow)
 
@@ -528,7 +553,7 @@ class PerformanceMatrixPanel {
                     )
                     drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
                     ImGui.pushID(rowIdx)
-                    PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW, descriptor.pinnedMode)
+                    if (!stripOn) PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW, descriptor.pinnedMode)
                     if (descriptor.pinnedMode != "MIX") {
                         PerformanceMasterControls.drawBypassControls(session, mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                     }
@@ -539,14 +564,14 @@ class PerformanceMatrixPanel {
                         tooltip = "Transitions Unit\nConfigure video crossfader and transition shaders"
                     )
                     drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
-                    PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, transRowW)
+                    if (!stripOn) PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, transRowW)
                     PerformanceTransitionsControls.drawRightControls(session, mixer, boxX2 - pad - masterRightW, row1Y, ctrlH, masterRightW)
                 } else if (isClockRow) {
                     drawTitleBadge(
                         session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "CLK", UITheme.FontLevel.H2,
                         tooltip = "Clock Unit\nConfigure tempo, BPM, synchronization, and Global macros"
                     )
-                    PerformanceClockControls.draw(session, masterTabStartX, row1Y, row2YFinal, ctrlH)
+                    if (!stripOn) PerformanceClockControls.draw(session, masterTabStartX, row1Y, row2YFinal, ctrlH)
                 } else if (descriptor.bankId == MacroEngine.FX_SENDS) {
                     drawTitleBadge(
                         session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "W/D", UITheme.FontLevel.H2,
@@ -578,12 +603,26 @@ class PerformanceMatrixPanel {
                     val leftStartX = badgeX + deckBadgeW + 6f
                     // Per-slot ImGui id scope: the same deck may sit in two slots (or pages), so tag-based ids must not collide.
                     ImGui.pushID(rowIdx)
-                    deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W, descriptor.pinnedMode)
+                    if (!stripOn) deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W, descriptor.pinnedMode)
                     deckControls.drawDeckRowRightControls(
                         session, mixer, parametersState, deckLabel, targetDeck,
                         boxX2 - pad - deckRightW, row1Y, row2YFinal, ctrlH, deckRightW, descriptor.pinnedMode
                     )
                     ImGui.popID()
+                }
+
+                if (stripOn && stripControl != null) {
+                    ImGui.pushID(rowIdx)
+                    val closed = PerformanceMacroStrip.draw(
+                        session, mixer, parametersState, stripMode, stripBankId ?: row.bankId, stripControl,
+                        if (stripBankId in llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS) ctx.resolveFxChain(mixer, stripBankId!!) else null,
+                        masterTabStartX, row1Y, row2YFinal, stripLeftW, ctrlH
+                    ) { startLearnFor(session, parametersState, stripBankId ?: row.bankId, stripControl) }
+                    ImGui.popID()
+                    if (closed || badgeClicked) {
+                        if (MacroLearnState.isControlLearning(stripControl.id)) MacroLearnState.cancelLearn()
+                        MacroLearnState.selectedControlId = null
+                    }
                 }
             }
 
@@ -652,6 +691,8 @@ class PerformanceMatrixPanel {
                     onSelect = {
                         if (isModuleExpanded) {
                             parametersState.selectedRackMacroId[moduleId] = control.id
+                            // Picking a knob in the Edit view opens its binding strip (see macroStripModeFor).
+                            MacroLearnState.selectedControlId = control.id
                         }
                     },
                     onToggleLearn = {
@@ -703,7 +744,8 @@ class PerformanceMatrixPanel {
                 }
 
                 // If expanded and selected, draw compact Learn/Cancel button beneath the value readout
-                if (isSelectedKnob) {
+                // (The Edit-view strip carries its own Learn/Cancel, so its row drops this one.)
+                if (isSelectedKnob && !stripOn) {
                     val learn = nextOverhang(OVERHANG_LEARN)
                     learn.cellCenterX = cellCenterX; learn.btnY = learnBtnY
                     learn.bankId = row.bankId; learn.control = control
@@ -738,6 +780,9 @@ class PerformanceMatrixPanel {
      * [level]'s font. The font is pushed at its explicit size -- on this draw-list addText path
      * UITheme.withFont passes 0f ("native baked size"), which renders H1/H2 no bigger than H3.
      */
+    private var badgeClicked = false
+    private var wasEditView = false
+
     private fun drawTitleBadge(
         session: llm.slop.liquidlsd.SessionContext,
         x: Float,
@@ -769,6 +814,7 @@ class PerformanceMatrixPanel {
             ImGui.invisibleButton(badgeIdCaches[badgeSlot++ and 15].get(text, x.toInt(), y.toInt()) { "##title_badge_${text}_${x.toInt()}_${y.toInt()}" }, w.coerceAtLeast(1f), h.coerceAtLeast(1f))
             applyDragScroll()
             itemTooltip(tooltip)
+            badgeClicked = ImGui.isItemClicked(0)
         }
     }
 

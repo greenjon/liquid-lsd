@@ -145,21 +145,121 @@ object MacroBindingEditor {
         return delete
     }
 
+    /**
+     * One-control-line layout for the Edit-row strip, drawn at screen ([x], [y]) in a [w] x [h] slot:
+     * lock, target path, link/invert, curve, steps (STEP only), then a range bar (when there's room),
+     * Min/Max and delete. Returns true if the user asked to delete the binding (caller removes it and
+     * calls [MacroEngine.invalidate]). [targetLabel] is the full path shown ellipsized; [param] is the
+     * resolved target, used for its travel range when no slider has reported one.
+     */
+    fun drawLine(
+        control: MacroControl,
+        binding: MacroBinding,
+        param: ModulatableParameter?,
+        targetLabel: String,
+        x: Float,
+        y: Float,
+        w: Float,
+        h: Float
+    ): Boolean {
+        var delete = false
+        val known = ranges[binding]
+        val lo = known?.lo ?: param?.minClamp ?: 0f
+        val hi = known?.hi ?: param?.maxClamp ?: 1f
+        val barLo = minOf(lo, binding.minVal, binding.maxVal)
+        val barHi = maxOf(hi, binding.minVal, binding.maxVal)
+        val useLog = (known?.log ?: false) && barLo > 0f
+
+        ImGui.pushID(System.identityHashCode(binding))
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, 4f, ((h - ImGui.getFontSize()) * 0.5f).coerceAtLeast(0f))
+        val gap = 4f
+        val fieldW = 44f
+
+        // Right-aligned group first so the left group knows how much room it has.
+        val rightW = h + gap + fieldW * 2 + gap
+        val rx = x + w - rightW
+        ImGui.setCursorScreenPos(rx, y)
+        ImGui.setNextItemWidth(fieldW)
+        drawMinField(binding, barLo, barHi, useLog, compact = true)
+        ImGui.sameLine(0f, gap)
+        ImGui.setNextItemWidth(fieldW)
+        drawMaxField(binding, barLo, barHi, useLog, compact = true)
+        ImGui.sameLine(0f, gap)
+        if (ImGui.button("${Icons.TRASH}##del", h, h)) delete = true
+        itemTooltip("Delete this binding.")
+
+        var cx = x
+        ImGui.setCursorScreenPos(cx, y)
+        enabledBuf.set(binding.enabled)
+        if (ImGui.checkbox("##enabled", enabledBuf)) {
+            binding.enabled = enabledBuf.get()
+            MacroEngine.invalidate()
+        }
+        itemTooltip(if (binding.enabled) "Active: target locked to this macro. Uncheck to release it for manual control." else "Disabled: target released for manual control. Check to resume macro lock.")
+        cx = ImGui.getItemRectMaxX() + gap
+
+        val pathW = (w * 0.2f).coerceAtLeast(40f)
+        val shown = TextFit.ellipsize(targetLabel, pathW)
+        ImGui.getWindowDrawList().addText(cx, TextFit.centeredY(y, h, ImGui.getTextLineHeight()), ImGui.getColorU32(imgui.flag.ImGuiCol.Text), shown)
+        ImGui.setCursorScreenPos(cx, y)
+        ImGui.dummy(pathW, h)
+        itemTooltip(targetLabel)
+        cx += pathW + gap
+
+        ImGui.setCursorScreenPos(cx, y)
+        LinkModeButton.drawMacroLink(
+            id = "macro_line_${control.id}_${System.identityHashCode(binding)}",
+            mode = binding.linkMode,
+            inverted = binding.inverted,
+            isLinked = binding.enabled,
+            width = 28f,
+            height = h,
+            onCycleMode = { cycleLinkMode(binding) },
+            onSelectMode = { binding.linkMode = it },
+            onToggleInvert = { binding.inverted = !binding.inverted }
+        )
+        cx = ImGui.getItemRectMaxX() + gap
+
+        ImGui.setCursorScreenPos(cx, y)
+        ImGui.setNextItemWidth(78f)
+        drawCurveCombo(binding)
+        cx = ImGui.getItemRectMaxX() + gap
+
+        if (binding.curve == MacroCurveType.STEP) {
+            ImGui.setCursorScreenPos(cx, y)
+            ImGui.setNextItemWidth(38f)
+            drawStepCount(binding)
+            cx = ImGui.getItemRectMaxX() + gap
+        }
+
+        val barW = rx - gap - cx
+        if (barW >= 50f) {
+            ImGui.setCursorScreenPos(cx, y + (h - BAR_H) * 0.5f)
+            drawRangeBar(binding, barLo, barHi, MacroCurve.mapToRange(control.value, binding), barW, useLog)
+        }
+
+        ImGui.popStyleVar()
+        ImGui.popID()
+        return delete
+    }
+
+    private fun cycleLinkMode(binding: MacroBinding) {
+        binding.linkMode = when (binding.linkMode) {
+            MacroLinkMode.FULL -> MacroLinkMode.FIRST_HALF
+            MacroLinkMode.FIRST_HALF -> MacroLinkMode.SECOND_HALF
+            MacroLinkMode.SECOND_HALF -> MacroLinkMode.TRIANGLE
+            MacroLinkMode.TRIANGLE -> MacroLinkMode.BIPOLAR
+            MacroLinkMode.BIPOLAR -> MacroLinkMode.FULL
+        }
+    }
+
     private fun drawLinkMode(control: MacroControl, binding: MacroBinding) {
         LinkModeButton.drawMacroLink(
             id = "macro_bind_${control.id}_${System.identityHashCode(binding)}",
             mode = binding.linkMode,
             inverted = binding.inverted,
             isLinked = binding.enabled,
-            onCycleMode = {
-                binding.linkMode = when (binding.linkMode) {
-                    MacroLinkMode.FULL -> MacroLinkMode.FIRST_HALF
-                    MacroLinkMode.FIRST_HALF -> MacroLinkMode.SECOND_HALF
-                    MacroLinkMode.SECOND_HALF -> MacroLinkMode.TRIANGLE
-                    MacroLinkMode.TRIANGLE -> MacroLinkMode.BIPOLAR
-                    MacroLinkMode.BIPOLAR -> MacroLinkMode.FULL
-                }
-            },
+            onCycleMode = { cycleLinkMode(binding) },
             onSelectMode = { binding.linkMode = it },
             onToggleInvert = { binding.inverted = !binding.inverted }
         )
@@ -181,15 +281,15 @@ object MacroBindingEditor {
         itemTooltip("Number of quantized steps across the travel range.")
     }
 
-    private fun drawMinField(binding: MacroBinding, lo: Float, hi: Float, log: Boolean) {
+    private fun drawMinField(binding: MacroBinding, lo: Float, hi: Float, log: Boolean, compact: Boolean = false) {
         minValBuf[0] = binding.minVal
-        if (ImGui.dragFloat("Min##min", minValBuf, dragSpeed(lo, hi, binding.minVal, log), lo, hi, "%.3f")) binding.minVal = minValBuf[0]
+        if (ImGui.dragFloat(if (compact) "##min" else "Min##min", minValBuf, dragSpeed(lo, hi, binding.minVal, log), lo, hi, "%.3f")) binding.minVal = minValBuf[0]
         itemTooltip("Output value when the macro is at 0.0. Ctrl+click to type a value.")
     }
 
-    private fun drawMaxField(binding: MacroBinding, lo: Float, hi: Float, log: Boolean) {
+    private fun drawMaxField(binding: MacroBinding, lo: Float, hi: Float, log: Boolean, compact: Boolean = false) {
         maxValBuf[0] = binding.maxVal
-        if (ImGui.dragFloat("Max##max", maxValBuf, dragSpeed(lo, hi, binding.maxVal, log), lo, hi, "%.3f")) binding.maxVal = maxValBuf[0]
+        if (ImGui.dragFloat(if (compact) "##max" else "Max##max", maxValBuf, dragSpeed(lo, hi, binding.maxVal, log), lo, hi, "%.3f")) binding.maxVal = maxValBuf[0]
         itemTooltip("Output value when the macro is at 1.0. Ctrl+click to type a value.")
     }
 
@@ -209,7 +309,7 @@ object MacroBindingEditor {
      * Track spanning [lo]..[hi] with a filled min→max segment, two draggable handles and a dot at the
      * binding's current mapped output [live].
      */
-    private fun drawRangeBar(binding: MacroBinding, lo: Float, hi: Float, live: Float, width: Float, log: Boolean) {
+    private fun drawRangeBar(binding: MacroBinding, lo: Float, hi: Float, live: Float, width: Float, log: Boolean, barH: Float = BAR_H) {
         val span = (hi - lo).coerceAtLeast(1e-6f)
         val logLo = if (log) Math.log10(lo.toDouble()) else 0.0
         val logSpan = if (log) (Math.log10(hi.toDouble()) - logLo).coerceAtLeast(1e-6) else 1.0
@@ -220,7 +320,7 @@ object MacroBindingEditor {
         val y0 = ImGui.getCursorScreenPosY()
         val localX = ImGui.getCursorPosX()
         val localY = ImGui.getCursorPosY()
-        val cy = y0 + BAR_H * 0.5f
+        val cy = y0 + barH * 0.5f
         val dl = ImGui.getWindowDrawList()
 
         fun xOf(v: Float) = x0 + pctOf(v).coerceIn(0f, 1f) * usable
@@ -239,7 +339,7 @@ object MacroBindingEditor {
 
         fun handle(id: String, value: Float, x: Float, set: (Float) -> Unit) {
             ImGui.setCursorScreenPos(x - HANDLE_W * 0.5f, y0)
-            ImGui.invisibleButton(id, HANDLE_W, BAR_H)
+            ImGui.invisibleButton(id, HANDLE_W, barH)
             if (ImGui.isItemActive()) {
                 set(roundSig(valueAt(((ImGui.getMousePosX() - x0) / usable).coerceIn(0f, 1f))).coerceIn(lo, hi))
             }
@@ -247,7 +347,7 @@ object MacroBindingEditor {
                 ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.ResizeEW)
                 itemTooltip("%.3f".format(value))
             }
-            dl.addRectFilled(x - HANDLE_W * 0.5f, y0 + 2f, x + HANDLE_W * 0.5f, y0 + BAR_H - 2f, handleCol, 2f)
+            dl.addRectFilled(x - HANDLE_W * 0.5f, y0 + 2f, x + HANDLE_W * 0.5f, y0 + barH - 2f, handleCol, 2f)
         }
         handle("##min_h", binding.minVal, xa) { binding.minVal = it }
         handle("##max_h", binding.maxVal, xb) { binding.maxVal = it }
@@ -255,7 +355,7 @@ object MacroBindingEditor {
         if (active) dl.addCircleFilled(xOf(live), cy, 3.5f, dotCol)
 
         // Resume layout below the bar.
-        ImGui.setCursorPos(localX, localY + BAR_H + 2f)
+        ImGui.setCursorPos(localX, localY + barH + 2f)
         ImGui.dummy(width, 0f)
     }
 }

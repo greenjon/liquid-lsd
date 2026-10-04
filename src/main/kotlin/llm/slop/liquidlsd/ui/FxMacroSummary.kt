@@ -11,6 +11,17 @@ import llm.slop.liquidlsd.rendering.FxChain
  */
 object FxMacroSummary {
 
+    /** What FX knob [i] does in [chain]'s current mode (group vs. focused slot). */
+    fun knobRole(chain: FxChain, i: Int, control: llm.slop.liquidlsd.macro.MacroControl): String {
+        val focused = chain.focusedSlot
+        return when {
+            focused == null && i == 0 -> "Chain Super Knob"
+            focused == null -> if (chain.slotSuperKnobLink.getOrNull(i - 1) == true) "Slot $i Metaknob (linked to Super)" else "Slot $i Metaknob"
+            i == 0 -> "Slot ${focused + 1} Metaknob"
+            else -> if (control.bindings.isEmpty()) "(unused on this page)" else "Slot ${focused + 1} parameter"
+        }
+    }
+
     fun draw(session: llm.slop.liquidlsd.SessionContext, bank: MacroBank, chain: FxChain) {
         val focused = chain.focusedSlot
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
@@ -19,12 +30,7 @@ object FxMacroSummary {
         ImGui.spacing()
 
         bank.knobs.forEachIndexed { i, control ->
-            val what = when {
-                focused == null && i == 0 -> "Chain Super Knob"
-                focused == null -> if (chain.slotSuperKnobLink.getOrNull(i - 1) == true) "Slot $i Metaknob (linked to Super)" else "Slot $i Metaknob"
-                i == 0 -> "Slot ${focused + 1} Metaknob"
-                else -> if (control.bindings.isEmpty()) "(unused on this page)" else "Slot ${focused + 1} parameter"
-            }
+            val what = knobRole(chain, i, control)
             ImGui.text("K${i + 1}  ${control.label.ifEmpty { "-" }}")
             ImGui.sameLine(110f)
             ImGui.textDisabled(what)

@@ -149,7 +149,7 @@ object ParametersRenderer {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f))
                     ImGui.text("${Icons.LOCK} Bound to ${info.controlName} [${info.badgeLabel}]")
                     ImGui.popStyleColor()
-                    ImGui.textDisabled("Click row or VAL cell to jump to Column 3 Macro Inspector.")
+                    ImGui.textDisabled("Click row or VAL cell to edit the binding.")
                     ImGui.separator()
                 }
                 if (oscMappedAddress != null) {

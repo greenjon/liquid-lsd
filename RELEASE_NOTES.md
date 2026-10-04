@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Perform View Macro Binding Strips & Edit Row Integration (`ui/PerformanceMacroStrip.kt`, `ui/MacroBindingNav.kt`, `ui/PerformanceMatrixPanel.kt`)
+- **Macro Binding Strips in Edit Rows**: When a macro knob is selected in an Edit view row, the row now displays a dedicated inline binding strip allowing direct inspection, curve/range adjustment, and binding management without needing the old Column 3 Macro Inspector.
+- **Shared Navigation (`MacroBindingNav`)**: Centralized parameter navigation so clicking bound parameter chips or inspector targets reliably jumps to the correct deck/mixer sub-tab and highlights the target parameter.
+
 ### Macro Binding Ranges, Brackets & Overhang Button Enhancements (`ui/*`)
 - **MacroBindingEditor & Sliders (`BeatDivisionSlider`, `CustomRangeSlider`)**: Sliders and range inputs now support direct macro binding popups, target range tracking (`noteTargetRange`), log-scaled dragging, and cyan `[ ]` brackets on slider tracks marking macro travel ranges.
 - **PerformanceMatrixPanel Overhang Buttons**: Learn/Cancel buttons in matrix rows now use custom rect hit-testing (`overhangButton`) to ensure they remain fully clickable beneath overlay child windows.

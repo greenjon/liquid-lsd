@@ -42,3 +42,11 @@ Then Phase 3 + docs per the plan's checklist (both release-notes files, user gui
 ## Repo workflow notes
 - User commits themselves; do not add Claude co-author/attribution lines (user memory overrides the harness reminder).
 - "Done" = code + both release-notes files + user_guide/dev docs + tooltips (see memory `feedback_docs_release_notes_completeness`).
+
+## Phase 2 progress (2026-10-03)
+- Steps 1-3 coded, full suite passes, **not yet checked in the running app**: `ui/MacroStripVisibility.kt`, `ui/MacroBindingNav.kt`
+  (shared nav), `ui/PerformanceMacroStrip.kt`, `MacroBindingEditor.drawLine`, `FxMacroSummary.knobRole`,
+  `MacroLearnState.selectedBindingIdx/selectBinding`; wired in `PerformanceMatrixPanel` row loop (`stripMode`, `badgeClicked`, `startLearnFor`).
+- Perform-view Learn no longer forces `column3Mode = MACROS` (all forcers gone). Knob click in an expanded row now also sets `selectedControlId`.
+- Known gaps: "+" chip omitted (Learn button covers it); line-2 range bar only shows if >=50px spare (likely hidden at 1280); rename popup
+  not on kebab; no GLOBAL Learn path from Perform-view Clock row yet (step 4). Step 4 (overhang cleanup, tooltips) still open.

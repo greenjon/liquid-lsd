@@ -269,7 +269,7 @@ object BeatDivisionSlider {
         if (isLabelHovered) {
             if (isMacroBound) {
                 val info = macroInfo!!
-                showTooltip("Variable: $label [${info.badgeLabel}]\nControlled by ${info.controlName}.\nClick to inspect in Column 3 Macro Inspector.")
+                showTooltip("Variable: $label [${info.badgeLabel}]\nControlled by ${info.controlName}.\nClick to edit the binding.")
             } else {
                 val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
                 val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to bind." else ""
@@ -536,7 +536,7 @@ object BeatDivisionSlider {
 
             if (isMacroBound) {
                 val info = macroInfo!!
-                showTooltip("Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nAdjust in Column 3 Macro Inspector.")
+                showTooltip("Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nAdjust the binding in the Edit row or Properties.")
             } else if (effectiveIsRandomizable) {
                 val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
                 val maxPct = if (rangeSpan > 0f) (currentMax - minLimit) / rangeSpan else 0f
