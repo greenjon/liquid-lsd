@@ -58,9 +58,6 @@ class ParametersState : MidiLearnSink {
         AppPreferencesStore.savePreferences()
     }
 
-    /** Per rack-module: which macro knob is selected -- drives the Tier-1 grid highlight and inline Learn button. */
-    val selectedRackMacroId = mutableMapOf<String, String?>()
-
     /** Per rack-module: that module's own Tier-3 Deep Edit selected cell (analogue of [selectedCell]). */
     val rackSelectedCell = mutableMapOf<String, ParameterCellId?>()
 

@@ -39,8 +39,10 @@ than offering targets.
 A knob can only target parameters in **its own deck and section**:
 
 - Deck A **SRC** knobs target Deck A's SRC parameters only.
-- Deck A **FX** knobs target Deck A's FX chain only.
-- **Master FX** knobs target the Master FX chain only.
+- **FX** knobs (each deck's and Master's) follow their FX chain automatically and take no manual targets;
+  the editors show them as "Driven by the FX chain".
+- **Master** and **Transition** knobs take Mixer parameters only, and **FX Send** knobs take the per-deck FX send only.
+- **Global** knobs can target anything.
 
 If you click a parameter outside that section, the banner says *"Cannot add target…"* and Add Target stays
 armed, so you can click the right one. If you move to another section while Add Target is armed, it
@@ -113,7 +115,7 @@ Macro banks are bundled directly into `.lsd` / `.lsdplay` preset files — they 
 the preset automatically, with no extra file to manage. If you want to reuse a favorite knob
 layout across unrelated presets, use the **kebab menu (⋮)** on the target strip: **Export Macro Bank...** saves the whole bank
 (all 4 knobs) as a standalone `.knobpreset.json` (default folder `library/knobpresets`), and **Import
-Macro Bank...** loads one into the bank you're editing. Targets that no longer exist
+Macro Bank...** loads one into the bank you're editing. Targets that don't exist on the deck it lands on
 are skipped and counted in the status message. Importing onto a deck bank points its targets at that deck
 to that deck, like a preset load; the Master bank keeps targets as saved. The same menu
 has **Rename** (double-clicking the name also works). FX banks have no menu.

@@ -406,6 +406,11 @@ object PropertiesPanel {
                             ImGui.pushID("macro_bind_${info.control.id}_${b.propertyName}")
                             session.uiTheme.caption("${if (b.enabled) Icons.LOCK else Icons.UNLOCK} [${b.propertyName}] ${if (b.enabled) "controlled by" else "released from"} ${info.controlName} [${info.badgeLabel}]")
                             itemTooltip("This modulator property is continuously updated by a macro knob. Uncheck the target to release it.")
+                            if (llm.slop.liquidlsd.macro.FxMacroSync.isFxBank(info.bankKey)) {
+                                session.uiTheme.caption("Driven by the FX chain; edit the chain's Metaknob link instead.")
+                                ImGui.popID()
+                                continue
+                            }
                             if (MacroBindingEditor.drawFull(session, info.control, b, null, ImGui.getContentRegionAvailX() - 10f)) {
                                 info.control.bindings.remove(b)
                                 llm.slop.liquidlsd.macro.MacroEngine.invalidate()

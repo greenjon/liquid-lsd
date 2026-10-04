@@ -384,7 +384,7 @@ class PerformanceMatrixPanel {
             // (no open border gap); other rows hang the card below the row for the Learn button.
             val rowHasStrip = stripControl != null && descriptor.hasExtraHeader &&
                 macroStripModeFor(isEditView, row.bankId, stripBankId) != MacroStripMode.NONE
-            val selectedCol = if (isModuleExpanded && !rowHasStrip) specs.firstOrNull { it.control.id == parametersState.selectedRackMacroId[moduleId] }?.col else null
+            val selectedCol = if (isModuleExpanded && !rowHasStrip) specs.firstOrNull { it.control.id == MacroLearnState.selectedControlId }?.col else null
 
             dl.addRectFilled(boxX1, boxTopY, boxX2, boxBottomY, fillCol, 8f)
             if (selectedCol == null) {
@@ -633,7 +633,7 @@ class PerformanceMatrixPanel {
                         FxParamCell.drawResetButton(row.bankId, knobIdx + 1, side.name, side.param, sideBtnX, rowTopY + geo.sideBtnY(0, 1), sideBtnSize)
                 }
 
-                val isSelectedKnob = isModuleExpanded && (control.id == parametersState.selectedRackMacroId[moduleId])
+                val isSelectedKnob = isModuleExpanded && (control.id == MacroLearnState.selectedControlId)
                 // Deep Edit extra, below the strip: the Learn button (the value shows in the knob face).
                 val learnBtnY = stripY + geo.stripH + 4f
                 if (isSelectedKnob) {
@@ -672,7 +672,6 @@ class PerformanceMatrixPanel {
                     oscAddress = MacroOscBridge.getKnobAddress(row.bankId, knobIdx),
                     onSelect = {
                         if (isModuleExpanded) {
-                            parametersState.selectedRackMacroId[moduleId] = control.id
                             // Picking a knob in the Edit view opens its binding strip (see macroStripModeFor).
                             MacroLearnState.selectedControlId = control.id
                         }
@@ -727,7 +726,7 @@ class PerformanceMatrixPanel {
 
                 // If expanded and selected, draw compact Learn/Cancel button beneath the value readout
                 // (The Edit-view strip carries its own Learn/Cancel, so its row drops this one.)
-                if (isSelectedKnob && !stripOn) {
+                if (isSelectedKnob && !stripOn && !llm.slop.liquidlsd.macro.FxMacroSync.isFxBank(row.bankId)) {
                     val learn = nextOverhang(OVERHANG_LEARN)
                     learn.cellCenterX = cellCenterX; learn.btnY = learnBtnY
                     learn.bankId = row.bankId; learn.control = control

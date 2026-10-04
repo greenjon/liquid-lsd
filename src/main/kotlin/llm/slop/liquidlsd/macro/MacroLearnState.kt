@@ -98,12 +98,26 @@ object MacroLearnState {
 
     /** True if a knob in [bankId] may bind to [parameterId] (see [sectionFor]). */
     fun acceptsTarget(bankId: String?, parameterId: String): Boolean {
+        // FX-bank knobs are owned by FxMacroSync (re-synced from the chain), so nothing can be added by hand.
+        if (bankId in FxMacroSync.FX_BANK_IDS) return false
+        when (bankId) {
+            MacroEngine.MASTER, MacroEngine.TRANS -> return parameterId.startsWith("Mixer/")
+            MacroEngine.FX_SENDS -> return parameterId.contains("/FXChain/")
+        }
         val (top, section) = sectionFor(bankId) ?: return true
         return when {
             top == "Mixer" -> parameterId.startsWith("Master/FX/")
             section == "FX" -> parameterId.startsWith("$top/FX/")
             else -> parameterId.startsWith("$top/") && !parameterId.startsWith("$top/FX/")
         }
+    }
+
+    /** What [bankId]'s knobs may bind to, for the "Cannot add target" status message. */
+    private fun targetHint(bankId: String?): String = when (bankId) {
+        in FxMacroSync.FX_BANK_IDS -> "an FX-chain knob (it follows the chain) -- edit the chain instead"
+        MacroEngine.MASTER, MacroEngine.TRANS -> "a Master/Transition knob -- click a Master or Transition parameter"
+        MacroEngine.FX_SENDS -> "an FX Send knob -- click a deck's FX Send"
+        else -> "a ${sectionLabel(bankId)} knob -- click a ${sectionLabel(bankId)} parameter"
     }
 
     /** Human-readable name for [bankId]'s section, e.g. "Deck B FX", for status messages. */
@@ -194,7 +208,7 @@ object MacroLearnState {
         val controlBankId = controlPair?.first
         if (!acceptsTarget(controlBankId, parameterId)) {
             val ctrlName = control.label.ifEmpty { "This knob" }
-            setStatus("Cannot add target: $ctrlName is a ${sectionLabel(controlBankId)} knob -- click a ${sectionLabel(controlBankId)} parameter.")
+            setStatus("Cannot add target: $ctrlName is ${targetHint(controlBankId)}.")
             return false
         }
 

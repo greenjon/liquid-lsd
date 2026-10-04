@@ -44,6 +44,12 @@ object ValueParamSection {
             ImGui.pushID(info.control.id)
             session.uiTheme.caption("${if (info.binding.enabled) Icons.LOCK else Icons.UNLOCK} Base value ${if (info.binding.enabled) "controlled by" else "released from"} ${info.controlName} [${info.badgeLabel}]")
             itemTooltip("A macro knob continuously sets this parameter's base value. Uncheck the target to release it.")
+            if (llm.slop.liquidlsd.macro.FxMacroSync.isFxBank(info.bankKey)) {
+                // Owned by FxMacroSync, which rewrites it from the chain: show, don't edit.
+                session.uiTheme.caption("Driven by the FX chain; edit the chain's Metaknob link instead.")
+                ImGui.popID()
+                continue
+            }
             val width = ImGui.getContentRegionAvailX() - 10f
             val delete = MacroBindingEditor.drawFull(session, info.control, info.binding, param, width)
             if (delete) {

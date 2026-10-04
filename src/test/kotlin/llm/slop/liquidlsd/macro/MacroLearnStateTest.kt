@@ -140,16 +140,17 @@ class MacroLearnStateTest {
         assertFalse(MacroLearnState.acceptsTarget(MacroEngine.DECK_A, "Deck B/fbZoom"))
         assertFalse(MacroLearnState.acceptsTarget(MacroEngine.DECK_B, "Deck BG/fbZoom"))
 
-        assertTrue(MacroLearnState.acceptsTarget(MacroEngine.DECK_A_FX, "Deck A/FX/slot1/mix"))
-        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.DECK_A_FX, "Deck A/fbZoom"))
-        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.DECK_A_FX, "Deck B/FX/slot1/mix"))
+        // FX banks are owned by FxMacroSync: nothing can be added by hand.
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.DECK_A_FX, "Deck A/FX/slot1/mix"))
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.MASTER_FX, "Master/FX/slot1/mix"))
 
-        assertTrue(MacroLearnState.acceptsTarget(MacroEngine.MASTER_FX, "Master/FX/slot1/mix"))
-        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.MASTER_FX, "Deck A/FX/slot1/mix"))
-
-        // Master, Transitions and FX Sends aren't section-scoped.
+        // Master and Transitions take only Mixer paths; FX Sends only per-deck FXChain paths.
         assertTrue(MacroLearnState.acceptsTarget(MacroEngine.MASTER, "Mixer/levelA"))
-        assertTrue(MacroLearnState.acceptsTarget(MacroEngine.FX_SENDS, "Deck B/fxSendLevel"))
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.MASTER, "Deck A/fbZoom"))
+        assertTrue(MacroLearnState.acceptsTarget(MacroEngine.TRANS, "Mixer/levelA"))
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.TRANS, "Deck B/FX/slot1/mix"))
+        assertTrue(MacroLearnState.acceptsTarget(MacroEngine.FX_SENDS, "Deck B/FXChain/DryWet"))
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.FX_SENDS, "Deck B/fbZoom"))
     }
 
     @Test

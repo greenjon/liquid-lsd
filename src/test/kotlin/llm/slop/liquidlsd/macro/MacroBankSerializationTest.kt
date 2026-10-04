@@ -7,6 +7,7 @@ import kotlinx.serialization.encodeToString
 import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.models.SessionStateDto
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import llm.slop.liquidlsd.parameters.ParameterResolver
 import llm.slop.liquidlsd.presets.PresetManager
 import llm.slop.liquidlsd.rendering.Mixer
 import java.io.File
@@ -108,5 +109,32 @@ class MacroBankSerializationTest {
         assertEquals(1, skippedCount, "Should skip the 1 missing parameter binding")
         assertEquals(1, importedBank.knobs[0].bindings.size)
         assertEquals("Deck A/validParam", importedBank.knobs[0].bindings[0].parameterId)
+    }
+
+    @Test
+    fun testRemapDeckPathOnlyRewritesDeckSegments() {
+        assertEquals("Deck B/fbZoom", MacroBankSerializer.remapDeckPath("Deck A/fbZoom", "Deck B"))
+        assertEquals("Deck B/FX/x", MacroBankSerializer.remapDeckPath("Deck BG/FX/x", "Deck B"))
+        assertEquals("Mixer/levelA", MacroBankSerializer.remapDeckPath("Mixer/levelA", "Deck B"))
+        assertEquals("Master/FX/1/mix", MacroBankSerializer.remapDeckPath("Master/FX/1/mix", "Deck B"))
+    }
+
+    @Test
+    fun testImportValidatesAgainstTargetDeck() {
+        val tempFile = File.createTempFile("test_macro_bank_xdeck", ".knobpreset.json")
+        tempFile.deleteOnExit()
+        val bank = MacroBank(knobs = listOf(MacroControl(label = "T", bindings = mutableListOf(
+            MacroBinding(parameterId = "Deck A/onlyOnB", targetType = MacroTargetType.PARAM_BASE_VALUE),
+            MacroBinding(parameterId = "Deck A/onlyOnA", targetType = MacroTargetType.PARAM_BASE_VALUE)
+        ))))
+        MacroBankSerializer.exportToFile(tempFile, bank)
+
+        val mixer = mockk<Mixer>()
+        every { mixer.getParameterPaths("Mixer") } returns listOf("Deck B/onlyOnB" to ModulatableParameter(0.5f), "Deck A/onlyOnA" to ModulatableParameter(0.5f))
+        ParameterResolver.clearCache()
+
+        val (imported, skipped) = MacroBankSerializer.importFromFile(tempFile, mixer, "Deck B")
+        assertEquals(1, skipped)
+        assertEquals(listOf("Deck B/onlyOnB"), imported.knobs[0].bindings.map { it.parameterId })
     }
 }

@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#macro-knob-cleanups-one-selected-knob-bank-import-checks-the-target-deck-mastertransitionfx-send-knobs-take-only-their-own-targets-fx-knobs-are-read-only-everywhere-macromacrolearnstatekt-macromacrobankserializerkt-uiperformancematrixpanelkt-uiperformancemacrostripkt-uivalueparamsectionkt-uipropertiespanelkt-uimacrobindingeditorkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro Knob Cleanups: One Selected Knob, Bank Import Checks the Target Deck, Master/Transition/FX-Send Knobs Take Only Their Own Targets, FX Knobs Are Read-Only Everywhere (macro/MacroLearnState.kt, macro/MacroBankSerializer.kt, ui/PerformanceMatrixPanel.kt, ui/PerformanceMacroStrip.kt, ui/ValueParamSection.kt, ui/PropertiesPanel.kt, ui/MacroBindingEditor.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#who-wins-when-several-things-drive-a-value-macro-knobs-suspend-midiosc-mappings-metaknob-links-own-their-parameter-and-range-sliders-lock-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt-renderingisfisffilterkt-uicustomrangesliderkt-uivalueparamsectionkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5361,6 +5372,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#macro-knob-cleanups-one-selected-knob-bank-import-checks-the-target-deck-mastertransitionfx-send-knobs-take-only-their-own-targets-fx-knobs-are-read-only-everywhere-macromacrolearnstatekt-macromacrobankserializerkt-uiperformancematrixpanelkt-uiperformancemacrostripkt-uivalueparamsectionkt-uipropertiespanelkt-uimacrobindingeditorkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Macro Knob Cleanups: One Selected Knob, Bank Import Checks the Target Deck, Master/Transition/FX-Send Knobs Take Only Their Own Targets, FX Knobs Are Read-Only Everywhere (macro/MacroLearnState.kt, macro/MacroBankSerializer.kt, ui/PerformanceMatrixPanel.kt, ui/PerformanceMacroStrip.kt, ui/ValueParamSection.kt, ui/PropertiesPanel.kt, ui/MacroBindingEditor.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#who-wins-when-several-things-drive-a-value-macro-knobs-suspend-midiosc-mappings-metaknob-links-own-their-parameter-and-range-sliders-lock-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt-renderingisfisffilterkt-uicustomrangesliderkt-uivalueparamsectionkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9489,6 +9511,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="macro-knob-cleanups-one-selected-knob-bank-import-checks-the-target-deck-mastertransitionfx-send-knobs-take-only-their-own-targets-fx-knobs-are-read-only-everywhere-macromacrolearnstatekt-macromacrobankserializerkt-uiperformancematrixpanelkt-uiperformancemacrostripkt-uivalueparamsectionkt-uipropertiespanelkt-uimacrobindingeditorkt">Macro Knob Cleanups: One Selected Knob, Bank Import Checks the Target Deck, Master/Transition/FX-Send Knobs Take Only Their Own Targets, FX Knobs Are Read-Only Everywhere (<code>macro/MacroLearnState.kt</code>, <code>macro/MacroBankSerializer.kt</code>, <code>ui/PerformanceMatrixPanel.kt</code>, <code>ui/PerformanceMacroStrip.kt</code>, <code>ui/ValueParamSection.kt</code>, <code>ui/PropertiesPanel.kt</code>, <code>ui/MacroBindingEditor.kt</code>)</h3>
+<ul>
+<li><strong>The highlighted knob and the knob strip can no longer disagree.</strong> Clicking a parameter that a knob drives used to open that knob's strip while the card highlight stayed on the previously clicked knob, and closing the strip left the highlight (and its Add Target button) behind. There is now one selected knob.</li>
+<li><strong>Importing a macro bank into a deck checks the deck it lands on.</strong> Parameters were checked against the deck the bank was exported from, so importing a Deck A bank onto Deck B kept targets Deck B doesn't have and dropped ones it does (the "skipped" count was wrong too). Importing also no longer rewrites <code>Mixer/...</code> or <code>Master/...</code> targets to the deck, and caps each knob at 4 targets.</li>
+<li><strong>Master, Transition and FX Send knobs only accept their own targets.</strong> A Master knob could be pointed at a Deck parameter, whose strip is never shown in the Master row. Master and Transition knobs now take Mixer targets only, FX Send knobs take the per-deck FX send only, and importing a bank into one of them drops targets it couldn't take. Global knobs still take anything.</li>
+<li><strong>FX knobs are read-only everywhere.</strong> Deck and Master FX knobs are rewritten from the FX chain, but the parameter panel, the Properties panel and the slider badge popup still offered the full editor (and delete), and Add Target could attach a target that the next sync wiped. They now show "Driven by the FX chain", and Add Target is refused.</li>
+<li>Internal: <code>acceptsTarget</code> rejects <code>FxMacroSync.FX_BANK_IDS</code> banks and scopes MASTER/TRANS/FX_SENDS by path prefix (<code>sectionFor</code> is unchanged for these, so leaving a Mixer sub-tab does not disarm Learn); new <code>FxMacroSync.isFxBank</code>, <code>MacroBankSerializer.remapDeckPath</code> and <code>importFromFile(..., targetDeckLabel)</code>; <code>ParametersState.selectedRackMacroId</code> removed in favour of <code>MacroLearnState.selectedControlId</code>.</li>
+</ul>
 <h3 id="who-wins-when-several-things-drive-a-value-macro-knobs-suspend-midiosc-mappings-metaknob-links-own-their-parameter-and-range-sliders-lock-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt-renderingisfisffilterkt-uicustomrangesliderkt-uivalueparamsectionkt">Who Wins When Several Things Drive a Value: Macro Knobs Suspend MIDI/OSC Mappings, Metaknob Links Own Their Parameter, and Range Sliders Lock (<code>macro/MacroEngine.kt</code>, <code>midi/MidiMappingManager.kt</code>, <code>osc/OscMappingManager.kt</code>, <code>rendering/isf/ISFFilter.kt</code>, <code>ui/CustomRangeSlider.kt</code>, <code>ui/ValueParamSection.kt</code>)</h3>
 <ul>
 <li><strong>A MIDI or OSC mapping made before a knob target no longer fights it.</strong> While a macro knob drives a value, the mapping on that value is suspended (before, the knob silently won every frame and soft takeover could sit on "Awaiting Pickup" forever). The mapping tables in Preferences show "Suspended: driven by ...", and the mapping works again when you release the target.</li>

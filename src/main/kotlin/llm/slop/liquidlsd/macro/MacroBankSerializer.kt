@@ -28,6 +28,19 @@ object MacroBankSerializer {
         encodeDefaults = true
     }
 
+    private val NON_DECK_ROOTS = setOf("Mixer", "Master", "Global", "Macro")
+
+    /**
+     * Rewrites the leading segment of a deck-scoped path ("Deck A/...", or the generic "Deck/..." of
+     * generator defaults) to [targetDeckLabel]. Paths rooted outside any deck (`Mixer/...`,
+     * `Master/FX/...`) are returned unchanged.
+     */
+    fun remapDeckPath(path: String, targetDeckLabel: String): String {
+        val slashIdx = path.indexOf('/')
+        if (slashIdx <= 0 || path.substring(0, slashIdx) in NON_DECK_ROOTS) return path
+        return "$targetDeckLabel/" + path.substring(slashIdx + 1)
+    }
+
     /** Deep-copies [bank] for bundling into a preset file so the saved snapshot is immutable. */
     fun snapshotForPreset(bank: MacroBank): MacroBank = MacroBank(
         knobs = bank.knobs.map { it.copy(bindings = it.bindings.map { b -> b.copy() }.toMutableList()) }
@@ -43,10 +56,7 @@ object MacroBankSerializer {
      * bundled bindings always target whichever deck slot the preset actually lands on.
      */
     fun installBankForDeck(deckBank: MacroBank?, targetBank: MacroBank, targetDeckLabel: String) {
-        fun remapParamId(originalId: String): String {
-            val slashIdx = originalId.indexOf('/')
-            return if (slashIdx > 0) "$targetDeckLabel/" + originalId.substring(slashIdx + 1) else originalId
-        }
+        fun remapParamId(originalId: String) = remapDeckPath(originalId, targetDeckLabel)
 
         if (deckBank != null && deckBank.knobs.size > targetBank.knobs.size) {
             logger.warn {
@@ -61,7 +71,7 @@ object MacroBankSerializer {
             destKnob.label = srcKnob?.label ?: ""
             destKnob.value = srcKnob?.value ?: 0f
             destKnob.bindings.clear()
-            srcKnob?.bindings?.forEach { destKnob.bindings.add(it.copy(parameterId = remapParamId(it.parameterId))) }
+            srcKnob?.bindings?.take(MacroControl.MAX_BINDINGS_PER_CONTROL)?.forEach { destKnob.bindings.add(it.copy(parameterId = remapParamId(it.parameterId))) }
         }
 
         MacroEngine.noteBankReplaced()
@@ -91,8 +101,10 @@ object MacroBankSerializer {
     /**
      * Imports a [MacroBank] from a standalone JSON file.
      * When [mixer] is supplied, bindings referencing missing parameters are safely skipped.
+     * With [targetDeckLabel], deck paths are remapped to that deck first, so validation checks the
+     * parameters of the deck the bindings will actually land on (not the deck they were saved from).
      */
-    fun importFromFile(file: File, mixer: Mixer? = null): Pair<MacroBank, Int> {
+    fun importFromFile(file: File, mixer: Mixer? = null, targetDeckLabel: String? = null): Pair<MacroBank, Int> {
         val content = file.readText()
         val rawBank = json.decodeFromString<MacroBank>(content)
         if (mixer == null) return rawBank to 0
@@ -101,7 +113,8 @@ object MacroBankSerializer {
 
         fun filterValid(bindings: List<MacroBinding>): MutableList<MacroBinding> {
             val valid = mutableListOf<MacroBinding>()
-            for (b in bindings) {
+            for (original in bindings) {
+                val b = if (targetDeckLabel != null) original.copy(parameterId = remapDeckPath(original.parameterId, targetDeckLabel)) else original
                 val param = ParameterResolver.findParameterByPath(mixer, b.parameterId)
                 if (param != null) {
                     valid.add(b)

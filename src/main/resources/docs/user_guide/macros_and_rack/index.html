@@ -1841,8 +1841,10 @@ than offering targets.</p>
 <p>A knob can only target parameters in <strong>its own deck and section</strong>:</p>
 <ul>
 <li>Deck A <strong>SRC</strong> knobs target Deck A's SRC parameters only.</li>
-<li>Deck A <strong>FX</strong> knobs target Deck A's FX chain only.</li>
-<li><strong>Master FX</strong> knobs target the Master FX chain only.</li>
+<li><strong>FX</strong> knobs (each deck's and Master's) follow their FX chain automatically and take no manual targets;
+  the editors show them as "Driven by the FX chain".</li>
+<li><strong>Master</strong> and <strong>Transition</strong> knobs take Mixer parameters only, and <strong>FX Send</strong> knobs take the per-deck FX send only.</li>
+<li><strong>Global</strong> knobs can target anything.</li>
 </ul>
 <p>If you click a parameter outside that section, the banner says <em>"Cannot add target…"</em> and Add Target stays
 armed, so you can click the right one. If you move to another section while Add Target is armed, it
@@ -1911,7 +1913,7 @@ receives distinct visual cues in Deep Edit:</p>
 the preset automatically, with no extra file to manage. If you want to reuse a favorite knob
 layout across unrelated presets, use the <strong>kebab menu (⋮)</strong> on the target strip: <strong>Export Macro Bank...</strong> saves the whole bank
 (all 4 knobs) as a standalone <code>.knobpreset.json</code> (default folder <code>library/knobpresets</code>), and <strong>Import
-Macro Bank...</strong> loads one into the bank you're editing. Targets that no longer exist
+Macro Bank...</strong> loads one into the bank you're editing. Targets that don't exist on the deck it lands on
 are skipped and counted in the status message. Importing onto a deck bank points its targets at that deck
 to that deck, like a preset load; the Master bank keeps targets as saved. The same menu
 has <strong>Rename</strong> (double-clicking the name also works). FX banks have no menu.</p>

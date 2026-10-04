@@ -51,6 +51,9 @@ object FxMacroSync {
     }
 
     /** The FX bank id owning [chain] (identity match), or null if it isn't one of [mixer]'s chains. */
+    /** True for banks whose knobs/bindings are owned by [FxMacroSync] (read-only everywhere else). */
+    fun isFxBank(bankId: String?): Boolean = bankId in FX_BANK_IDS
+
     fun bankIdFor(chain: FxChain, mixer: Mixer): String? = FX_BANK_IDS.firstOrNull { chainFor(it, mixer) === chain }
 
     /** Re-syncs [bankId]'s knobs to its chain. No-op for non-FX bank ids. */
