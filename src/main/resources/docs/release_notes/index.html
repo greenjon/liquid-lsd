@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#controller-navigates-the-unified-browser-tree-uibrowserbrowserpanekt-uilibrarynavigationkt-uibrowserbrowsemodelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controller Navigates the Unified Browser Tree (ui/browser/BrowserPane.kt, ui/LibraryNavigation.kt, ui/browser/BrowseModel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unsaved-changes-prompt-can-be-answered-from-the-controller-uipopupmanagerkt-uinavigationsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5449,6 +5460,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#controller-navigates-the-unified-browser-tree-uibrowserbrowserpanekt-uilibrarynavigationkt-uibrowserbrowsemodelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controller Navigates the Unified Browser Tree (ui/browser/BrowserPane.kt, ui/LibraryNavigation.kt, ui/browser/BrowseModel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unsaved-changes-prompt-can-be-answered-from-the-controller-uipopupmanagerkt-uinavigationsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9665,6 +9687,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="controller-navigates-the-unified-browser-tree-uibrowserbrowserpanekt-uilibrarynavigationkt-uibrowserbrowsemodelkt">Controller Navigates the Unified Browser Tree (<code>ui/browser/BrowserPane.kt</code>, <code>ui/LibraryNavigation.kt</code>, <code>ui/browser/BrowseModel.kt</code>)</h3>
+<ul>
+<li><strong>With the beta "Unified" Library pane on, the Twister's pane button walks tree, list, BG queue, A/B queue</strong> (FX: FX BG and FX A/B queues; Trans: its one queue). A fresh tab starts in the list. In the tree, turning knob 1 moves a cursor over the visible folders and playlists (shown as an outline) and <strong>a tap selects</strong> the folder or playlist, which fills the list. Turning never changes the list. Changing the folder or playlist, by controller or mouse, clears the list selection so a row of the previous view can't be loaded by accident. The classic four columns are unchanged.</li>
+<li>Internal: <code>SelectionSource.TREE</code>; <code>BrowserPane.stepTree/acceptTree/treeCursorOf/treeSize</code>; pure <code>visibleSelectableScopes</code> and <code>stepTreeCursor</code> in <code>BrowseModel.kt</code>; <code>LibraryNavigation.panes()</code> has a unified branch (<code>unifiedKind()</code>).</li>
+</ul>
 <h3 id="unsaved-changes-prompt-can-be-answered-from-the-controller-uipopupmanagerkt-uinavigationsurfacekt">Unsaved-Changes Prompt Can Be Answered from the Controller (<code>ui/PopupManager.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
 <ul>
 <li><strong>The "unsaved changes on this deck" prompt now answers to the Twister.</strong> While it is up, <strong>left-top</strong> (or Esc) is Cancel, <strong>right-top</strong> or a <strong>knob 1 tap</strong> is Save, <strong>right-bottom</strong> or <strong>Shift + tap</strong> is Discard. Nothing else navigates until you answer, so a stray turn can't change the Library behind it. The prompt shows the mapping.</li>

@@ -14,10 +14,11 @@ Host the pane in the Edit view: `BrowserPane(kind, target)` where `target` is nu
 - Nav: port the picker's cursor/category stepping onto the pane's panes (tree/list/queue) for the Edit context; keep the old path behind a flag until parity (plan step 4 says so). The picker context buttons are documented in `docs/user_guide/performance_controls.md` (picker row of the side-button table): update when the model changes.
 - Do not do step 5 (deleting the old panels) here; that waits until nothing uses them.
 
-## Open decisions to ask the user before planning
-1. Flag: reuse `BrowserPane.enabled` for the Edit bay, or a separate switch so the Library and the bay can be adopted independently?
-2. In Edit view, should tapping the tree on the controller select the scope and also move focus to the list (fewer button presses), or keep tree/list/queue as in the Library for consistency?
-3. Click semantics with a target: confirm single click applies (as the bay does today) while the Library pane keeps double-click to load.
+## Decisions (user, 2026-10-04; step 3 hardware check passed, "works well")
+1. Flag: reuse `BrowserPane.enabled` for the Edit bay (one beta switch). This was the agent's recommendation and the user's "yes to all" did not pick between the options, so mention it once when you present the plan; switch to a separate flag if they object.
+2. Edit context on the controller: tapping a tree row selects the scope AND moves the cursor to the list (fewer presses). The Library keeps tap-selects-only.
+3. Click semantics with a target: single click applies (as the bay does today); the Library pane keeps double-click to load.
+The user is open to discussion, so raise any problem you find rather than working around it.
 
 ## Verification
 - Unit tests for any new pure logic; `./gradlew test --offline` must stay green (it is as of step 3).
