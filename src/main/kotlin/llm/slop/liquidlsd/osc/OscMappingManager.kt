@@ -275,6 +275,7 @@ object OscMappingManager {
 
     private fun dispatchToParameter(key: String, rawValue: Float, mixer: Mixer) {
         val mapping = activeProfile.mappings[key] ?: return
+        if (llm.slop.liquidlsd.macro.MacroEngine.mappingSuspendReason(mapping.parameterPath) != null) return
         val (getter, setter) = resolveTarget(mixer, mapping.parameterPath) ?: return
 
         var norm = if (mapping.inputMax != mapping.inputMin) {
@@ -323,6 +324,7 @@ object OscMappingManager {
             if (mapping.slewMs <= 0f) continue
             val state = slewStates[key] ?: continue
             if (!state.hasTarget) continue
+            if (llm.slop.liquidlsd.macro.MacroEngine.mappingSuspendReason(mapping.parameterPath) != null) continue
             val (getter, setter) = resolveTarget(mixer, mapping.parameterPath) ?: continue
 
             val current = if (state.hasSmoothed) state.smoothedValue else (getter() ?: 0f)

@@ -227,6 +227,8 @@ object ValueParamSection {
                 }
             )
         } else {
+            // These special widgets write baseValue directly; a macro binding owns it and would overwrite the edit.
+            if (isMacroBound) ImGui.beginDisabled()
             if (isMaxPoints) {
                 session.uiTheme.caption("Point Count (GPU Performance):")
                 val currentPts = param.baseValue.roundToInt()
@@ -397,6 +399,7 @@ object ValueParamSection {
                 ImGui.separator()
                 ImGui.spacing()
             }
+            if (isMacroBound) ImGui.endDisabled()
 
             val scale = if (param.isAngle) (180f / kotlin.math.PI.toFloat()) else 1f
             val invScale = if (param.isAngle) (kotlin.math.PI.toFloat() / 180f) else 1f

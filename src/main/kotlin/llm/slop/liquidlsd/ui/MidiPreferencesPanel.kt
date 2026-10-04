@@ -498,6 +498,9 @@ object MidiPreferencesPanel {
                     if (paramPath.contains(":mod/")) {
                         itemTooltip("Full Path: $paramPath")
                     }
+                    llm.slop.liquidlsd.macro.MacroEngine.mappingSuspendReason(paramPath)?.let {
+                        session.uiTheme.captionColored(1.0f, 0.65f, 0.2f, 1.0f, "${Icons.ALERT} Suspended: $it")
+                    }
                     if (map.takeoverMode == TakeoverMode.SOFT_TAKEOVER) {
                         val isLocked = session.midiMappingManager.isSoftTakeoverActive(paramPath)
                         if (!isLocked) {

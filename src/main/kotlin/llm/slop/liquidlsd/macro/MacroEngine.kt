@@ -331,6 +331,37 @@ object MacroEngine {
         if (propertyName == null) findBaseBindingInfo(paramKey)
         else findPrimaryBindingInfo(null, paramKey, modulatorId, propertyName)
 
+    /**
+     * True when a macro binding drives the target of a MIDI/OSC mapping path
+     * (`<param>` or `<param>:mod/<modulator id>/<property>`). Such mappings are suspended:
+     * [tick] would overwrite whatever they write every frame, and soft takeover would chase the
+     * macro-driven value. They resume as soon as the binding is removed or disabled.
+     */
+    @Volatile
+    private var lastMixer: Mixer? = null
+
+    /** Name of the Metaknob link that owns [parameterId]'s base value, or null. Needs one [tick] to have run. */
+    fun metaOwnerOf(parameterId: String): String? =
+        lastMixer?.let { ParameterResolver.findParameterByPath(it, parameterId) }?.metaDrivenBy
+
+    fun isMappingTargetLocked(mappingPath: String): Boolean {
+        if (!mappingPath.contains(":mod/")) return findBaseBindingInfo(mappingPath) != null
+        val base = mappingPath.substringBefore(":mod/")
+        val rem = mappingPath.substringAfter(":mod/")
+        return findBindingsTargeting(null, base, rem.substringBefore("/"), rem.substringAfter("/")).isNotEmpty()
+    }
+
+    /** Why a mapping is suspended (macro knob or Metaknob link), for the caption in the mapping tables; null if active. */
+    fun mappingSuspendReason(mappingPath: String): String? {
+        val info = if (!mappingPath.contains(":mod/")) findBaseBindingInfo(mappingPath) else {
+            val rem = mappingPath.substringAfter(":mod/")
+            findPrimaryBindingInfo(null, mappingPath.substringBefore(":mod/"), rem.substringBefore("/"), rem.substringAfter("/"))
+        }
+        if (info != null) return "driven by ${info.controlName} [${info.badgeLabel}]"
+        if (!mappingPath.contains(":mod/")) metaOwnerOf(mappingPath)?.let { return "driven by $it" }
+        return null
+    }
+
     private class ResolvedBinding(
         val control: MacroControl,
         val binding: MacroBinding,
@@ -394,6 +425,7 @@ object MacroEngine {
      * before CV evaluation reads them for this frame.
      */
     fun tick(mixer: Mixer) {
+        lastMixer = mixer
         if (bindingsDirty) {
             rebuildResolvedBindings(mixer)
         }
@@ -403,7 +435,8 @@ object MacroEngine {
             val rb = bindings[i]
             val mapped = MacroCurve.mapToRange(rb.control.value, rb.binding)
             when (rb.binding.targetType) {
-                MacroTargetType.PARAM_BASE_VALUE -> rb.param.baseValue = mapped
+                // A Metaknob link owns the parameter (see ModulatableParameter.metaDrivenBy); skip so the two don't fight.
+                MacroTargetType.PARAM_BASE_VALUE -> if (rb.param.metaDrivenBy == null) rb.param.baseValue = mapped
                 MacroTargetType.MODULATOR_PROPERTY -> {
                     // Re-fetched every tick rather than cached at rebuild time: UI edits to a
                     // modulator (any slider drag/waveform-preset click) replace the CvModulator

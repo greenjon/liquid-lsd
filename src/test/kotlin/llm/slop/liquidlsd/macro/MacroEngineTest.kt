@@ -87,6 +87,43 @@ class MacroEngineTest {
         assertEquals(0.9f, zoom.baseValue, absoluteTolerance = 1e-5f)
     }
 
+    // --- Ownership: Metaknob link vs macro vs MIDI/OSC mapping ---
+
+    @Test
+    fun testMetaDrivenParameterIsNotWrittenByMacro() {
+        val p = ModulatableParameter(0.3f, minClamp = 0f, maxClamp = 1f)
+        p.metaDrivenBy = "Metaknob"
+        val mixer = createTestMixer(listOf("Deck A/fx/p" to p))
+        val binding = MacroBinding(parameterId = "Deck A/fx/p", targetType = MacroTargetType.PARAM_BASE_VALUE)
+        MacroEngine.registerBank(null, MacroBank(knobs = listOf(MacroControl(label = "K1", value = 0.9f, bindings = mutableListOf(binding)))))
+
+        MacroEngine.tick(mixer)
+        assertEquals(0.3f, p.baseValue, absoluteTolerance = 1e-5f)
+        assertEquals("Metaknob", MacroEngine.metaOwnerOf("Deck A/fx/p"))
+
+        p.metaDrivenBy = null
+        MacroEngine.tick(mixer)
+        assertEquals(0.9f, p.baseValue, absoluteTolerance = 1e-5f)
+    }
+
+    @Test
+    fun testMappingSuspendedWhileMacroBindingExists() {
+        val p = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+        val mixer = createTestMixer(listOf("Deck A/fbZoom" to p))
+        assertFalse(MacroEngine.isMappingTargetLocked("Deck A/fbZoom"))
+        val control = MacroControl(label = "K1", value = 0.5f, bindings = mutableListOf(MacroBinding(parameterId = "Deck A/fbZoom", targetType = MacroTargetType.PARAM_BASE_VALUE)))
+        MacroEngine.registerBank(null, MacroBank(knobs = listOf(control)))
+        MacroEngine.tick(mixer)
+
+        assertTrue(MacroEngine.isMappingTargetLocked("Deck A/fbZoom"))
+        assertTrue(MacroEngine.mappingSuspendReason("Deck A/fbZoom")!!.startsWith("driven by"))
+
+        control.bindings[0] = control.bindings[0].copy(enabled = false)
+        MacroEngine.invalidate()
+        MacroEngine.tick(mixer)
+        assertFalse(MacroEngine.isMappingTargetLocked("Deck A/fbZoom"))
+    }
+
     // --- MODULATOR_PROPERTY ---
 
     @Test

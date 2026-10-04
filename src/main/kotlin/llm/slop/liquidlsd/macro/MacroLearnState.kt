@@ -198,6 +198,13 @@ object MacroLearnState {
             return false
         }
 
+        if (targetType == MacroTargetType.PARAM_BASE_VALUE) {
+            MacroEngine.metaOwnerOf(parameterId)?.let {
+                setStatus("Cannot add target: $parameterId is driven by its $it. Disable the Metaknob link first.")
+                return false
+            }
+        }
+
         if (control.bindings.size >= MacroControl.MAX_BINDINGS_PER_CONTROL) {
             setStatus("Cannot add target: ${control.label.ifEmpty { "Control" }} already has the maximum of ${MacroControl.MAX_BINDINGS_PER_CONTROL} targets.")
             activeSession = null

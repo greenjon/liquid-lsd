@@ -91,7 +91,7 @@ object CustomRangeSlider {
         callback.formatValue = formatValue
         callback.onChanged = onChanged
 
-        val isBoundValue = isMacroBound && key.endsWith("_value")
+        val isBoundValue = isMacroBound
         if (isBoundValue) {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.u32(TangoPalette.SYNC.normal, 1.0f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.FrameBg, TangoPalette.u32(TangoPalette.SYNC.normal, 0.08f))
@@ -150,6 +150,9 @@ object CustomRangeSlider {
         textWidgetActive[key] = isItemFocused
         ImGui.popItemWidth()
     }
+
+    private fun minMaxLock(paramKey: String?, modulatorId: String?, prop: String): llm.slop.liquidlsd.macro.MacroBindingInfo? =
+        if (paramKey != null && modulatorId != null) llm.slop.liquidlsd.macro.MacroEngine.lockingBindingInfo(paramKey, modulatorId, prop) else null
 
     fun drawMinMaxRangeSlider(
         session: llm.slop.liquidlsd.SessionContext,
@@ -254,10 +257,12 @@ object CustomRangeSlider {
                 )
             }
 
-            drawTextInput(session, "${idPrefix}_min", currentMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinMaxChanged(it, maxOf(it, currentMax)) }, formatValue)
-            drawTextInput(session, "${idPrefix}_max", currentMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinMaxChanged(minOf(it, currentMin), it) }, formatValue)
+            val minLock = minMaxLock(paramKey, modulatorId, "lfoMin")
+            val maxLock = minMaxLock(paramKey, modulatorId, "lfoMax")
+            drawTextInput(session, "${idPrefix}_min", currentMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinMaxChanged(it, maxOf(it, currentMax)) }, formatValue, macroBindingInfo = minLock)
+            drawTextInput(session, "${idPrefix}_max", currentMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinMaxChanged(minOf(it, currentMin), it) }, formatValue, macroBindingInfo = maxLock)
 
-            renderInternalDualSlider(idPrefix + label + "_single", currentMin, currentMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinMaxChanged)
+            renderInternalDualSlider(idPrefix + label + "_single", currentMin, currentMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinMaxChanged, locked = minLock ?: maxLock)
         } else {
             // DOUBLE tracks (Top for Min, Bottom for Max)
             val rowLabelH = 14f
@@ -277,15 +282,20 @@ object CustomRangeSlider {
                 )
             }
 
+            val dcMinLock = minMaxLock(paramKey, modulatorId, "dcOffsetMin")
+            val dcMaxLock = minMaxLock(paramKey, modulatorId, "dcOffsetMax")
+            val depthMinLock = minMaxLock(paramKey, modulatorId, "depthMin")
+            val depthMaxLock = minMaxLock(paramKey, modulatorId, "depthMax")
+
             // Labels for columns (Top row: dcOffset randomization bounds)
             val labelY = startY - 14f
             drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModId = modulatorId, macroProp = "dcOffsetMin") { bindRangeBound("dcOffsetMin") }
             drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModId = modulatorId, macroProp = "dcOffsetMax") { bindRangeBound("dcOffsetMax") }
 
             // Top: Min range
-            drawTextInput(session, "${idPrefix}_min_r_min", minRangeMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinRangeChanged(it, maxOf(it, minRangeMax)) }, formatValue)
-            drawTextInput(session, "${idPrefix}_min_r_max", minRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinRangeChanged(minOf(it, minRangeMin), it) }, formatValue)
-            renderInternalDualSlider(idPrefix + label + "_min_r", minRangeMin, minRangeMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinRangeChanged)
+            drawTextInput(session, "${idPrefix}_min_r_min", minRangeMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinRangeChanged(it, maxOf(it, minRangeMax)) }, formatValue, macroBindingInfo = dcMinLock)
+            drawTextInput(session, "${idPrefix}_min_r_max", minRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinRangeChanged(minOf(it, minRangeMin), it) }, formatValue, macroBindingInfo = dcMaxLock)
+            renderInternalDualSlider(idPrefix + label + "_min_r", minRangeMin, minRangeMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinRangeChanged, locked = dcMinLock ?: dcMaxLock)
 
             // Labels for columns (Bottom row: depth randomization bounds)
             val labelY2 = row2Y - 14f
@@ -293,9 +303,9 @@ object CustomRangeSlider {
             drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModId = modulatorId, macroProp = "depthMax") { bindRangeBound("depthMax") }
 
             // Bottom: Max range
-            drawTextInput(session, "${idPrefix}_max_r_min", maxRangeMin, minLimit, maxLimit, textBoxesStartX, row2Y, boxWidth, null, { onMaxRangeChanged(it, maxOf(it, maxRangeMax)) }, formatValue)
-            drawTextInput(session, "${idPrefix}_max_r_max", maxRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, row2Y, boxWidth, null, { onMaxRangeChanged(minOf(it, maxRangeMin), it) }, formatValue)
-            renderInternalDualSlider(idPrefix + label + "_max_r", maxRangeMin, maxRangeMax, minLimit, maxLimit, sliderStartX, row2Y, lineWidth, themeColor, onMaxRangeChanged)
+            drawTextInput(session, "${idPrefix}_max_r_min", maxRangeMin, minLimit, maxLimit, textBoxesStartX, row2Y, boxWidth, null, { onMaxRangeChanged(it, maxOf(it, maxRangeMax)) }, formatValue, macroBindingInfo = depthMinLock)
+            drawTextInput(session, "${idPrefix}_max_r_max", maxRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, row2Y, boxWidth, null, { onMaxRangeChanged(minOf(it, maxRangeMin), it) }, formatValue, macroBindingInfo = depthMaxLock)
+            renderInternalDualSlider(idPrefix + label + "_max_r", maxRangeMin, maxRangeMax, minLimit, maxLimit, sliderStartX, row2Y, lineWidth, themeColor, onMaxRangeChanged, locked = depthMinLock ?: depthMaxLock)
 
             ImGui.setCursorPosY(ImGui.getCursorPosY() + buttonSize + 4f)
         }
@@ -433,7 +443,8 @@ object CustomRangeSlider {
         startY: Float,
         lineWidth: Float,
         themeColor: Int,
-        onChanged: (Float, Float) -> Unit
+        onChanged: (Float, Float) -> Unit,
+        locked: llm.slop.liquidlsd.macro.MacroBindingInfo? = null
     ) {
         val buttonSize = ImGui.getFrameHeight()
         val centerY = startY + buttonSize / 2f
@@ -455,7 +466,7 @@ object CustomRangeSlider {
         ImGui.invisibleButton("##track_$id", lineWidth + trackPadX * 2f, buttonSize)
         val isTrackHovered = ImGui.isItemHovered()
         val isTrackActive = ImGui.isItemActive()
-        val isTrackActivated = ImGui.isItemActivated()
+        val isTrackActivated = ImGui.isItemActivated() && locked == null
 
         if (isTrackActivated) {
             activeSliderLabel = id
@@ -472,7 +483,7 @@ object CustomRangeSlider {
             }
         }
 
-        if (isTrackActive && activeSliderLabel == id) {
+        if (locked == null && isTrackActive && activeSliderLabel == id) {
             val pct = ((mouseX - lineStartX) / lineWidth).coerceIn(0f, 1f)
             val rawVal = toVal(pct)
             if (!draggingMin && !draggingMax) {
@@ -508,14 +519,16 @@ object CustomRangeSlider {
                             else TangoPalette.u32(TangoPalette.ALERT.normal, 0.9f)
             dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
             
-            if (io.mouseWheel != 0f) {
+            if (locked != null) {
+                showTooltip("Controlled by ${locked.controlName} [${locked.badgeLabel}].\nManual edits are disabled while macro is active.")
+            } else if (io.mouseWheel != 0f) {
                 val delta = io.mouseWheel * (if (io.keyCtrl && io.keyShift) 0.1f else if (io.keyShift) 0.01f else 0.001f)
                 val dMin = kotlin.math.abs(mouseX - minHandleX)
                 val dMax = kotlin.math.abs(mouseX - maxHandleX)
                 if (dMin < dMax) onChanged((curMin + delta).coerceIn(minLimit, curMax), curMax)
                 else onChanged(curMin, (curMax + delta).coerceIn(curMin, maxLimit))
             }
-            if (ImGui.isMouseClicked(2)) onChanged(minLimit, maxLimit)
+            if (locked == null && ImGui.isMouseClicked(2)) onChanged(minLimit, maxLimit)
         }
     }
 
@@ -956,7 +969,8 @@ object CustomRangeSlider {
                     onRangeChanged(nextMin, maxOf(nextMin, currentMax))
                 },
                 formatValue = formatValue,
-                parseValue = parseValue
+                parseValue = parseValue,
+                macroBindingInfo = macroInfo
             )
             drawTextInput(
                 session = session,
@@ -972,7 +986,8 @@ object CustomRangeSlider {
                     onRangeChanged(minOf(nextMax, currentMin), nextMax)
                 },
                 formatValue = formatValue,
-                parseValue = parseValue
+                parseValue = parseValue,
+                macroBindingInfo = macroInfo
             )
         } else {
             drawTextInput(

@@ -30,6 +30,14 @@ class ModulatableParameter(
     val isAngle: Boolean
         get() = explicitIsAngle || (minClamp in -3.15f..-3.13f && maxClamp in 3.13f..3.15f)
     val modulators = CopyOnWriteArrayList<CvModulator>()
+
+    /**
+     * Non-null while a Metaknob link (an ISF meta-binding, which a Super Knob link also drives) owns
+     * [baseValue]; refreshed every frame by the owning filter. Macro bindings and MIDI/OSC mappings
+     * on such a parameter are suspended, because the meta-binding would overwrite them.
+     */
+    @Volatile
+    var metaDrivenBy: String? = null
     val history = CvHistoryBuffer(historySize)
 
     /**

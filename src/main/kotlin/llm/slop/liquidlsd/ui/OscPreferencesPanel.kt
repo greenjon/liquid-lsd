@@ -269,6 +269,9 @@ object OscPreferencesPanel {
                     if (map.parameterPath.contains(":mod/")) {
                         itemTooltip("Full Path: ${map.parameterPath}")
                     }
+                    llm.slop.liquidlsd.macro.MacroEngine.mappingSuspendReason(map.parameterPath)?.let {
+                        theme.captionColored(1.0f, 0.65f, 0.2f, 1.0f, "${Icons.ALERT} Suspended: $it")
+                    }
 
                     ImGui.tableNextColumn()
                     val inMinArr = floatArrayOf(map.inputMin)

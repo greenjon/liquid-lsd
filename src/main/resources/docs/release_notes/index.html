@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#who-wins-when-several-things-drive-a-value-macro-knobs-suspend-midiosc-mappings-metaknob-links-own-their-parameter-and-range-sliders-lock-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt-renderingisfisffilterkt-uicustomrangesliderkt-uivalueparamsectionkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who Wins When Several Things Drive a Value: Macro Knobs Suspend MIDI/OSC Mappings, Metaknob Links Own Their Parameter, and Range Sliders Lock (macro/MacroEngine.kt, midi/MidiMappingManager.kt, osc/OscMappingManager.kt, rendering/isf/ISFFilter.kt, ui/CustomRangeSlider.kt, ui/ValueParamSection.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unsaved-changes-fixes-after-the-deck-load-refactor-uipopupmanagerkt-presetssessionserializerkt-presetspresetmanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5350,6 +5361,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#who-wins-when-several-things-drive-a-value-macro-knobs-suspend-midiosc-mappings-metaknob-links-own-their-parameter-and-range-sliders-lock-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt-renderingisfisffilterkt-uicustomrangesliderkt-uivalueparamsectionkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who Wins When Several Things Drive a Value: Macro Knobs Suspend MIDI/OSC Mappings, Metaknob Links Own Their Parameter, and Range Sliders Lock (macro/MacroEngine.kt, midi/MidiMappingManager.kt, osc/OscMappingManager.kt, rendering/isf/ISFFilter.kt, ui/CustomRangeSlider.kt, ui/ValueParamSection.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unsaved-changes-fixes-after-the-deck-load-refactor-uipopupmanagerkt-presetssessionserializerkt-presetspresetmanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9467,6 +9489,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="who-wins-when-several-things-drive-a-value-macro-knobs-suspend-midiosc-mappings-metaknob-links-own-their-parameter-and-range-sliders-lock-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt-renderingisfisffilterkt-uicustomrangesliderkt-uivalueparamsectionkt">Who Wins When Several Things Drive a Value: Macro Knobs Suspend MIDI/OSC Mappings, Metaknob Links Own Their Parameter, and Range Sliders Lock (<code>macro/MacroEngine.kt</code>, <code>midi/MidiMappingManager.kt</code>, <code>osc/OscMappingManager.kt</code>, <code>rendering/isf/ISFFilter.kt</code>, <code>ui/CustomRangeSlider.kt</code>, <code>ui/ValueParamSection.kt</code>)</h3>
+<ul>
+<li><strong>A MIDI or OSC mapping made before a knob target no longer fights it.</strong> While a macro knob drives a value, the mapping on that value is suspended (before, the knob silently won every frame and soft takeover could sit on "Awaiting Pickup" forever). The mapping tables in Preferences show "Suspended: driven by ...", and the mapping works again when you release the target.</li>
+<li><strong>An effect's Metaknob link owns its parameter.</strong> You can't add a macro knob target to a parameter an enabled Metaknob link (or the Super Knob through it) drives, and an existing target there is ignored while the link is on. MIDI/OSC mappings on it are suspended too. Disable the link to use a knob there. The order is now documented in the Macros guide ("Who wins when several things drive the same value").</li>
+<li><strong>Min/Max range sliders lock when a knob drives them.</strong> The Min and Max boxes and the range handles (LFO min/max, and the randomize bounds) were still editable and fought the knob. They now lock like the other sliders, and so do the max-points, lobe and recipe pills and the 3D mode combo on a knob-driven value.</li>
+<li><strong>Slider mapping paths always use the stable modulator id</strong>, and the OSC help text now shows <code>:mod/&lt;modulator id&gt;/...</code>.</li>
+<li>Internal: new <code>MacroEngine.isMappingTargetLocked/mappingSuspendReason/metaOwnerOf</code> and <code>ModulatableParameter.metaDrivenBy</code> (set each frame by <code>ISFFilter.applyMetaKnobBinding</code>); <code>MacroEngine.tick</code> skips meta-driven parameters and <code>MacroLearnState.bindTarget</code> refuses them. Sliders on a Metaknob-owned uniform don't show a lock badge yet.</li>
+</ul>
 <h3 id="unsaved-changes-fixes-after-the-deck-load-refactor-uipopupmanagerkt-presetssessionserializerkt-presetspresetmanagerkt">Unsaved-Changes Fixes After the Deck-Load Refactor (<code>ui/PopupManager.kt</code>, <code>presets/SessionSerializer.kt</code>, <code>presets/PresetManager.kt</code>)</h3>
 <ul>
 <li><strong>"Save" in the unsaved-changes prompt no longer overwrites an older preset.</strong> A deck with no preset name (for example a freshly picked generator) used to be saved as <code>Untitled_DeckA</code> every time, replacing the previous one. It now picks the first free name (<code>Untitled_DeckA</code>, <code>Untitled_DeckA_2</code>, ...).</li>

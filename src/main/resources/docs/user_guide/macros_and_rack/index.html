@@ -659,6 +659,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#who-wins-when-several-things-drive-the-same-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who wins when several things drive the same value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#chain-super-knob-effect-metaknobs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1586,6 +1597,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#who-wins-when-several-things-drive-the-same-value" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who wins when several things drive the same value
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#chain-super-knob-effect-metaknobs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1918,6 +1940,14 @@ regardless of what the other decks are doing.</p>
 </ul>
 <p>The same applies to the other decks and Master (<strong>MST</strong>, <strong>TRANS</strong> and <strong>MST FX</strong> match Deep Edit's
 Mixer <strong>CTRL</strong>, <strong>TRANS</strong> and <strong>FX</strong> tabs).</p>
+<h3 id="who-wins-when-several-things-drive-the-same-value">Who wins when several things drive the same value</h3>
+<p>A parameter's base value can be driven from several places. From strongest to weakest:</p>
+<ol>
+<li><strong>A macro knob target</strong> locks the value. Sliders are read-only, and any MIDI or OSC mapping on it is <strong>suspended</strong> (its row in Preferences shows "Suspended: driven by ...") and works again when you release the target.</li>
+<li><strong>An effect Metaknob link</strong> (including the Super Knob, which moves linked Metaknobs) owns the effect parameter it is aimed at. A macro knob can't be added to that parameter ("driven by its Metaknob"), and an existing macro target on it is ignored while the link is enabled. Disable the Metaknob link (right-click the Metaknob) to use a macro knob there instead. MIDI and OSC mappings on it are suspended as well.</li>
+<li><strong>Direct edits, MIDI and OSC mappings</strong> on an unlocked value: the last one to move wins.</li>
+<li><strong>Modulators (LFO, sequencer, audio)</strong> never compete. They are always added on top of whatever value results from 1-3.</li>
+</ol>
 <h3 id="chain-super-knob-effect-metaknobs">Chain Super Knob &amp; effect Metaknobs</h3>
 <ul>
 <li><strong>Super Knob</strong> — one knob that sweeps every <strong>linked</strong> slot's own Metaknob together.</li>

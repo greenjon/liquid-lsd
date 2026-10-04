@@ -316,12 +316,14 @@ class ISFFilter(
     /** Drives all [metaBindings]' target uniforms (or [dryWet] as safety net) from the current [metaKnob] value. */
     private fun applyMetaKnobBinding() {
         val k = metaKnob.value
+        for (i in 0 until cachedParams.size) cachedParams[i].metaDrivenBy = null
         for (i in 0 until metaBindings.size) {
             val binding = metaBindings[i]
             if (!binding.enabled) continue
             val target = binding.targetParamName?.let { parameters[it] }
             val mapped = binding.mapKnobToTarget(k)
             if (target != null) {
+                target.metaDrivenBy = "Metaknob"
                 target.baseValue = mapped
             } else {
                 dryWet.baseValue = mapped

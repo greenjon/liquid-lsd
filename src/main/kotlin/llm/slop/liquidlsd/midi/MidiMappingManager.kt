@@ -332,6 +332,10 @@ object MidiMappingManager {
         var hasSmoothed: Boolean = false
         var smoothedValue: Float = 0f
 
+        /** A macro binding or Metaknob link owns the target, so this mapping must not write to it. */
+        fun isSuspended(): Boolean =
+            llm.slop.liquidlsd.macro.MacroEngine.isMappingTargetLocked(path) || (modRef == null && param.metaDrivenBy != null)
+
         fun getCurrentValue(): Float {
             return if (modRef != null && propertyName != null) {
                 llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findByPathRef(param, modRef)?.let {
@@ -457,6 +461,7 @@ object MidiMappingManager {
             val b = bindings[i]
             if (b.channel != event.channel || b.index != event.index) continue
             if (b.messageType != event.type && !(b.messageType == MidiMessageType.CC && event.type == MidiMessageType.PITCH_BEND)) continue
+            if (b.isSuspended()) continue
 
             when (b.inputType) {
                 MidiInputType.ROTARY_BINARY_OFFSET,
@@ -807,6 +812,7 @@ object MidiMappingManager {
         for (i in 0 until bindings.size) {
             val b = bindings[i]
             if (!b.hasTarget) continue
+            if (b.slewMs > 0f && b.isSuspended()) continue
             val target = b.targetValue
 
             if (b.slewMs > 0f) {
