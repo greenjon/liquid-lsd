@@ -5,6 +5,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.presets.DeckLifecycleManager
+import llm.slop.liquidlsd.presets.DeckSlot
 import llm.slop.liquidlsd.presets.PresetManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
@@ -56,10 +57,10 @@ class PerformanceControlsParityTest {
         every { mixer.deckBG } returns deckBG
         every { mixer.deckPV } returns deckPV
 
-        PresetManager.activePresetA = "PresetA"
-        PresetManager.activePresetB = "PresetB"
-        PresetManager.activePresetBG = "PresetBG"
-        PresetManager.activePresetPV = "PresetPV"
+        PresetManager.setActive(DeckSlot.A, "PresetA", null)
+        PresetManager.setActive(DeckSlot.B, "PresetB", null)
+        PresetManager.setActive(DeckSlot.BG, "PresetBG", null)
+        PresetManager.setActive(DeckSlot.PV, "PresetPV", null)
 
         DeckLifecycleManager.clearDeckActivePreset(deckA, mixer)
         DeckLifecycleManager.clearDeckActivePreset(deckB, mixer)

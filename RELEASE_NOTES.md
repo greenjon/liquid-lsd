@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Unsaved-Changes Fixes After the Deck-Load Refactor (`ui/PopupManager.kt`, `presets/SessionSerializer.kt`, `presets/PresetManager.kt`)
+- **"Save" in the unsaved-changes prompt no longer overwrites an older preset.** A deck with no preset name (for example a freshly picked generator) used to be saved as `Untitled_DeckA` every time, replacing the previous one. It now picks the first free name (`Untitled_DeckA`, `Untitled_DeckA_2`, ...).
+- **A restored session now notices macro-knob edits.** After restarting with a restored session, changing a deck's knob targets or labels did not mark the deck as having unsaved changes until you next loaded or saved a preset. It does now.
+- Internal: `SessionSerializer.loadSession` and `startEmpty` go through `PresetManager.setActive` / `clearActive` (after the macro banks are registered, so the baseline includes them). The `activePreset*` and `cachedDto*` fields are now `private set`; everything else must use `setActive` / `clearActive`, which also snapshot the macro bank as the dirty baseline.
+
 ### Library Q/BGQ Buttons, Ctrl+F and Missing-Files Relink Now Follow the Current Tab and Asset Type (`ui/browser/BrowserActionToolbar.kt`, `ui/LibraryPanel.kt`, `ui/UIManager.kt`, `ui/MissingItemsPanel.kt`)
 - **The toolbar Q and BGQ buttons act on the tab you are looking at.** After clicking in the FX or Trans tab, Q still queued the Sources tab's hidden multi-selection (and could put a transition into the preset queue). They now behave like the Q / Shift+Q hotkeys: Sources items go to the A/B or Background play queue, FX items to the FX queues, transitions to the transition queue (BGQ is greyed out there, as transitions have no background queue). Tooltips name the queue.
 - **Ctrl+F (and `/`) focuses the search box of the open tab** (Sources, FX or Trans). Before, it always focused Sources.

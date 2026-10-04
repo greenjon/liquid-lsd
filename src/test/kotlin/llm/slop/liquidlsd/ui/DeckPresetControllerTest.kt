@@ -6,6 +6,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.models.DeckPresetDto
+import llm.slop.liquidlsd.presets.DeckSlot
 import llm.slop.liquidlsd.presets.PresetManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.ExternalVideoSource
@@ -33,8 +34,7 @@ class DeckPresetControllerTest {
         deckA = mockk(relaxed = true)
         every { mixer.deckA } returns deckA
 
-        PresetManager.activePresetA = "test_preset_a"
-        PresetManager.cachedDtoA = null
+        PresetManager.setActive(DeckSlot.A, "test_preset_a", null)
     }
 
     @Test
@@ -56,8 +56,24 @@ class DeckPresetControllerTest {
         every { deckA.source } returns extSource
 
         // Even with a cached DTO present, ExternalVideoSource should never report dirty
-        PresetManager.cachedDtoA = mockk(relaxed = true)
+        PresetManager.setActive(DeckSlot.A, PresetManager.activePresetA, mockk(relaxed = true))
         assertFalse(session.presetManager.isDeckDirty(deckA, mixer), "ExternalVideoSource deck must never be dirty")
     }
 
+}
+
+class FreePresetNameTest {
+    @Test
+    fun keepsTheBaseNameWhenFreeAndNeverReturnsAnExistingOne() {
+        val dir = java.nio.file.Files.createTempDirectory("presets").toFile()
+        try {
+            kotlin.test.assertEquals("Untitled_DeckA", DeckPresetController.freePresetName("Untitled_DeckA", dir))
+            java.io.File(dir, "Untitled_DeckA.lsd").writeText("{}")
+            kotlin.test.assertEquals("Untitled_DeckA_2", DeckPresetController.freePresetName("Untitled_DeckA", dir))
+            java.io.File(dir, "Untitled_DeckA_2.lsd").writeText("{}")
+            kotlin.test.assertEquals("Untitled_DeckA_3", DeckPresetController.freePresetName("Untitled_DeckA", dir))
+        } finally {
+            dir.deleteRecursively()
+        }
+    }
 }

@@ -1,3 +1,8 @@
+## Deck Preset Bookkeeping Is Written Only Through `PresetManager.setActive` / `clearActive`
+- **Decision**: `activePresetA/B/BG/PV` and `cachedDtoA/B/BG/PV` have private setters. `setActive(slot, name, dto)` stores both and snapshots the slot's macro bank as the dirty baseline (`bankBaseline`); `DeckOps.isDirty` compares against it. Session restore calls `setActive` *after* the macro banks are registered, otherwise the baseline would be taken from the previous run's banks.
+- **Why**: session restore wrote the cached DTO directly, so no baseline existed and bank edits never made a restored deck dirty (review section 7.2, defect 4). `bankBaseline` is tied to the DTO instance, so a stale baseline is never compared, but a bypass fails silently, which is why the setters are now closed.
+- **Unnamed decks**: the unsaved-changes prompt saves a deck with no preset name under the first free `Untitled_<Deck>[_n]` name instead of overwriting `Untitled_<Deck>`.
+
 ## All Deck Changes Go Through `DeckOps` (`presets/DeckOps.kt`)
 - **Decision**: what a deck holds (bare source, preset file, eject, copy/move/swap) changes only through `DeckOps.request(slot, DeckChange, LoadOrigin)`; UI and queue code never call `Deck.applyDto`, `deck.source =` or `PresetManager.setActive` for a load. Requests are guarded and queued on the calling thread (preset files are read on `presetIoExecutor`); `DeckOps.drainOnGlThread` applies them once per frame, in `Main` next to `FxOps` and `TransitionOps`.
 - **Why**: ten-plus call sites each remembered a different subset of dirty guard, undo, macro-bank install, toast and bookkeeping (review §7.2 D1-D6, D11), and four copies of the dirty policy had drifted.

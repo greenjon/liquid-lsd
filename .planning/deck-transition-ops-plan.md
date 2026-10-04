@@ -1,6 +1,6 @@
 # DeckOps / TransitionOps Plan
 
-**Status**: Phases 0 and 1 DONE 2026-10-03. Phase 2 DONE 2026-10-03 (907 tests pass): `DeckOps`, `manualLoadDirtyBehavior`, injected hooks, `loadDeckPresetAsync` shim, bank remap, `DeckOpsTest`. Deviations: undo is pushed for MANUAL `Source`/`Preset` only (eject/copy/move/swap can reset FX, which isn't captured); the old `applyPendingPresets` and per-deck queues were deleted rather than delegated; `DeckSourcePicker.swapSource`, `guardDeckTransition` and the dead file browsers were already removed in Phase 2; "Don't ask again" was added to the prompt; `DeckUtilityTest` was folded into `DeckOpsTest`. Phase 3 DONE 2026-10-03: all callers on `DeckOps.request`, shim deleted, `handleDirtyDeck` removed from Play/Bg/FX queues. `request` now returns Boolean (false = dropped; queue managers leave position unchanged) and `wouldSkipQueueLoad` lets BG skip before its dip-to-black. FX-queue skip tests deleted (D17). `UIManager`/`DeckPresetController` wrappers kept as thin delegates. Phase 4 (docs) DONE 2026-10-03. Phase 5 (video export waits for its snapshot) DONE 2026-10-04 and committed. DeckOps work is complete; the remaining D-items are tracked in `.planning/d-items-handoff.md`. Decisions confirmed by the user: manual loads PROMPT by default (no existing users, so no compatibility concern); clean-deck source change no longer prompts; presets without a bank get the generator default bank; D7 (stable modulator IDs) moves into v1.0 scope and is tackled after DeckOps.
+**Status**: Phases 0 and 1 DONE 2026-10-03. Phase 2 DONE 2026-10-03 (907 tests pass): `DeckOps`, `manualLoadDirtyBehavior`, injected hooks, `loadDeckPresetAsync` shim, bank remap, `DeckOpsTest`. Deviations: undo is pushed for MANUAL `Source`/`Preset` only (eject/copy/move/swap can reset FX, which isn't captured); the old `applyPendingPresets` and per-deck queues were deleted rather than delegated; `DeckSourcePicker.swapSource`, `guardDeckTransition` and the dead file browsers were already removed in Phase 2; "Don't ask again" was added to the prompt; `DeckUtilityTest` was folded into `DeckOpsTest`. Phase 3 DONE 2026-10-03: all callers on `DeckOps.request`, shim deleted, `handleDirtyDeck` removed from Play/Bg/FX queues. `request` now returns Boolean (false = dropped; queue managers leave position unchanged) and `wouldSkipQueueLoad` lets BG skip before its dip-to-black. FX-queue skip tests deleted (D17). `UIManager`/`DeckPresetController` wrappers kept as thin delegates. Phase 4 (docs) DONE 2026-10-03. Phase 5 (video export waits for its snapshot) DONE 2026-10-04 and committed. DeckOps work is complete; the remaining D-items are tracked in `.planning/pre-release-ui-backlog.md`. Decisions confirmed by the user: manual loads PROMPT by default (no existing users, so no compatibility concern); clean-deck source change no longer prompts; presets without a bank get the generator default bank; D7 (stable modulator IDs) moves into v1.0 scope and is tackled after DeckOps.
 **Source**: `docs/developer/ui_interaction_architecture_review.md` §7
 **Scope**: v1.0 (stability). It removes code paths and adds no features. Defect numbers (D1–D17) refer to review §7.2.
 
@@ -148,13 +148,13 @@ Per the repo's definition of done:
 
 ## Out of scope (separate small v1.0 fixes, see review §7.4)
 - ~~D8: MIDI/OSC on a knob-bound parameter. Lock or indicate it, like the macro lock.~~ Done 2026-10-04.
-- D9: re-enabling a binding. Editors should read `control.bindings`, not the resolved cache.
+- ~~D9: re-enabling a binding. Editors should read `control.bindings`, not the resolved cache.~~ Done 2026-10-04 (`findBindingInfos(includeDisabled = true)` in `PropertiesPanel` and `ValueParamSection`).
 - ~~D10: lock only for base-value bindings.~~ Done 2026-10-04.
 - ~~D13: Missing Files relink by asset type.~~ Done 2026-10-04.
 - ~~D14: toolbar Q uses the visible tab's selection.~~ Done 2026-10-04.
 - ~~D15: Ctrl+F focuses the active tab's search.~~ Done 2026-10-04.
 - ~~D16: FX chain `markClean` on every save path, with the DTO captured at confirm time.~~ Done 2026-10-04.
-- D7: stable modulator IDs for bindings (saved-format change), decided 2026-10-04 to be done in v1.0, before release, not as a stopgap. First task in `.planning/d-items-handoff.md`.
+- D7: stable modulator IDs for bindings (saved-format change), decided 2026-10-04 to be done in v1.0, before release, not as a stopgap. First task in `.planning/pre-release-ui-backlog.md`.
 - ~~Video export with a preset snapshot~~ moved to Phase 5.
 
 ## Risks

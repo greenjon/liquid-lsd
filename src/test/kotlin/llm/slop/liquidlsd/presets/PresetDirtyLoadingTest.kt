@@ -34,14 +34,7 @@ class PresetDirtyLoadingTest {
     @BeforeTest
     fun setup() {
         mockkStatic("llm.slop.liquidlsd.models.PresetModelsKt")
-        PresetManager.activePresetA = null
-        PresetManager.activePresetB = null
-        PresetManager.activePresetBG = null
-        PresetManager.activePresetPV = null
-        PresetManager.cachedDtoA = null
-        PresetManager.cachedDtoB = null
-        PresetManager.cachedDtoBG = null
-        PresetManager.cachedDtoPV = null
+        DeckSlot.values().forEach { PresetManager.clearActive(it) }
     }
 
     // --- Preset Decoding & Sanitization Tests ---
@@ -200,8 +193,7 @@ class PresetDirtyLoadingTest {
             globalAlpha = globalAlpha
         )
 
-        PresetManager.cachedDtoA = cachedDeckDto
-        PresetManager.activePresetA = "Test"
+        PresetManager.setActive(DeckSlot.A, "Test", cachedDeckDto)
 
         val currentDeckDto = DeckPresetDto(
             name = "Test",
@@ -260,10 +252,10 @@ class PresetDirtyLoadingTest {
         every { mixer.deckBG } returns deckBG
         every { mixer.deckPV } returns deckPV
 
-        PresetManager.activePresetA = "SomePresetA"
-        PresetManager.activePresetB = "SomePresetB"
-        PresetManager.activePresetBG = "SomePresetBG"
-        PresetManager.activePresetPV = "SomePresetPV"
+        PresetManager.setActive(DeckSlot.A, "SomePresetA", null)
+        PresetManager.setActive(DeckSlot.B, "SomePresetB", null)
+        PresetManager.setActive(DeckSlot.BG, "SomePresetBG", null)
+        PresetManager.setActive(DeckSlot.PV, "SomePresetPV", null)
 
         PresetManager.startEmpty(mixer)
 

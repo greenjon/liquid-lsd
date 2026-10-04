@@ -34,15 +34,24 @@ object PresetManager {
     val deckStatus = Array(4) { AtomicReference(PresetIOStatus()) }
     internal val pendingSaves = Array(4) { AtomicReference<CompletableFuture<*>?>(null) }
 
+    // Write only through setActive/clearActive: they also snapshot the macro bank as the dirty baseline.
     var activePresetA: String? = null
+        private set
     var activePresetB: String? = null
+        private set
     var activePresetBG: String? = null
+        private set
     var activePresetPV: String? = null
+        private set
 
     var cachedDtoA: DeckPresetDto? = null
+        private set
     var cachedDtoB: DeckPresetDto? = null
+        private set
     var cachedDtoBG: DeckPresetDto? = null
+        private set
     var cachedDtoPV: DeckPresetDto? = null
+        private set
 
     /** File modification time (ms since epoch) of the most recently loaded deck preset. */
     var activePresetMtimeA: Long? = null

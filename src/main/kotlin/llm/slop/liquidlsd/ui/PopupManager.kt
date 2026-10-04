@@ -119,7 +119,9 @@ class PopupManager(
 
             if (ImGui.button("Save", 80f, 0f)) {
                 val activeName = DeckSlot.of(deck, mixer)?.let { session.presetManager.activePreset(it) }
-                onSaveDeck(activeName ?: "Untitled_${label.replace(" ", "")}", deck, deck === mixer.deckA)
+                // A deck with no preset name (e.g. a fresh generator) gets a name no existing preset has, never overwriting an older one.
+                val saveName = activeName ?: DeckPresetController.freePresetName("Untitled_${label.replace(" ", "")}", FileSystemManager.getPresetsRoot())
+                onSaveDeck(saveName, deck, deck === mixer.deckA)
                 onProceed()
                 clearDeckConfirm()
                 ImGui.closeCurrentPopup()

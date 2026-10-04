@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#unsaved-changes-fixes-after-the-deck-load-refactor-uipopupmanagerkt-presetssessionserializerkt-presetspresetmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unsaved-Changes Fixes After the Deck-Load Refactor (ui/PopupManager.kt, presets/SessionSerializer.kt, presets/PresetManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#library-qbgq-buttons-ctrlf-and-missing-files-relink-now-follow-the-current-tab-and-asset-type-uibrowserbrowseractiontoolbarkt-uilibrarypanelkt-uiuimanagerkt-uimissingitemspanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5339,6 +5350,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#unsaved-changes-fixes-after-the-deck-load-refactor-uipopupmanagerkt-presetssessionserializerkt-presetspresetmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unsaved-Changes Fixes After the Deck-Load Refactor (ui/PopupManager.kt, presets/SessionSerializer.kt, presets/PresetManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#library-qbgq-buttons-ctrlf-and-missing-files-relink-now-follow-the-current-tab-and-asset-type-uibrowserbrowseractiontoolbarkt-uilibrarypanelkt-uiuimanagerkt-uimissingitemspanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9445,6 +9467,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="unsaved-changes-fixes-after-the-deck-load-refactor-uipopupmanagerkt-presetssessionserializerkt-presetspresetmanagerkt">Unsaved-Changes Fixes After the Deck-Load Refactor (<code>ui/PopupManager.kt</code>, <code>presets/SessionSerializer.kt</code>, <code>presets/PresetManager.kt</code>)</h3>
+<ul>
+<li><strong>"Save" in the unsaved-changes prompt no longer overwrites an older preset.</strong> A deck with no preset name (for example a freshly picked generator) used to be saved as <code>Untitled_DeckA</code> every time, replacing the previous one. It now picks the first free name (<code>Untitled_DeckA</code>, <code>Untitled_DeckA_2</code>, ...).</li>
+<li><strong>A restored session now notices macro-knob edits.</strong> After restarting with a restored session, changing a deck's knob targets or labels did not mark the deck as having unsaved changes until you next loaded or saved a preset. It does now.</li>
+<li>Internal: <code>SessionSerializer.loadSession</code> and <code>startEmpty</code> go through <code>PresetManager.setActive</code> / <code>clearActive</code> (after the macro banks are registered, so the baseline includes them). The <code>activePreset*</code> and <code>cachedDto*</code> fields are now <code>private set</code>; everything else must use <code>setActive</code> / <code>clearActive</code>, which also snapshot the macro bank as the dirty baseline.</li>
+</ul>
 <h3 id="library-qbgq-buttons-ctrlf-and-missing-files-relink-now-follow-the-current-tab-and-asset-type-uibrowserbrowseractiontoolbarkt-uilibrarypanelkt-uiuimanagerkt-uimissingitemspanelkt">Library Q/BGQ Buttons, Ctrl+F and Missing-Files Relink Now Follow the Current Tab and Asset Type (<code>ui/browser/BrowserActionToolbar.kt</code>, <code>ui/LibraryPanel.kt</code>, <code>ui/UIManager.kt</code>, <code>ui/MissingItemsPanel.kt</code>)</h3>
 <ul>
 <li><strong>The toolbar Q and BGQ buttons act on the tab you are looking at.</strong> After clicking in the FX or Trans tab, Q still queued the Sources tab's hidden multi-selection (and could put a transition into the preset queue). They now behave like the Q / Shift+Q hotkeys: Sources items go to the A/B or Background play queue, FX items to the FX queues, transitions to the transition queue (BGQ is greyed out there, as transitions have no background queue). Tooltips name the queue.</li>

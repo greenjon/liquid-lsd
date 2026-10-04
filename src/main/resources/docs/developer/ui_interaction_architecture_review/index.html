@@ -1774,26 +1774,26 @@
 <li>the "Load to Deck A/B/BG/PV" context menus in <code>PresetListPanel</code>, <code>QueueActionsPanel</code>, <code>BgQueueActionsPanel</code> and <code>PlaylistEditorPanel</code></li>
 <li>the empty-deck launchpad (<code>DeckSourcePicker.kt:202</code>)</li>
 <li>the Browse bay's saved-preset pick (<code>PerformanceBrowseBay.kt:113</code>). This one also has no undo, although its doc comment says Ctrl+Z works.</li>
-<li><strong>Macro-bank edits don't make a deck dirty.</strong> <code>Deck.toDto</code> doesn't include the bank; it is added only at save time (<code>PresetRepository.kt:91</code>).</li>
-<li><strong>The guard depends on the path for other cases too.</strong> The source-change confirm ignores the dirty preference and fires whenever a preset name is active, even on a clean deck (<code>DeckPresetController.kt:231</code>). Re-picking the current generator resets the deck: the <code>==</code> check at <code>:217</code> compares a clone, and <code>VisualSource</code> has no <code>equals</code>.</li>
+<li>✔ <strong>Macro-bank edits don't make a deck dirty.</strong> <code>Deck.toDto</code> doesn't include the bank; it is added only at save time (<code>PresetRepository.kt:91</code>). Fixed by <code>DeckOps.isDirty</code>, which compares the bank's labels and bindings against a baseline taken at <code>setActive</code>.</li>
+<li>✔ <strong>The guard depends on the path for other cases too.</strong> The source-change confirm ignores the dirty preference and fires whenever a preset name is active, even on a clean deck (<code>DeckPresetController.kt:231</code>). Re-picking the current generator resets the deck: the <code>==</code> check at <code>:217</code> compares a clone, and <code>VisualSource</code> has no <code>equals</code>. Fixed: the separate source-change confirm is gone; <code>DeckChange.Source</code> goes through <code>DeckOps</code> and the normal guard.</li>
 </ol>
 <p><strong>Knobs and bindings</strong></p>
 <ol>
 <li>✔ <strong>Copy / Move / Swap deck leave the knob bank behind.</strong> <code>DeckLifecycleManager</code> calls <code>Deck.applyDto</code>, which never installs a macro bank. After copying A→B, Deck B's knobs still target B's old generator.</li>
 <li>✔ <strong>Modulator-property bindings break when modulators are removed.</strong> These bindings store a position in the modulator list (<code>MacroModels.kt:65</code>). Removing modulators doesn't update them: <code>PropertiesPanel.kt:380-388</code>, "Clear all CVs", and MIDI unbind. The binding then drops silently (<code>MacroEngine.kt:340</code>) or starts driving the wrong modulator.</li>
 <li>✔ <strong>MIDI and OSC mappings on a knob-bound parameter do nothing.</strong> <code>MacroEngine.tick</code> writes <code>baseValue</code> every frame, after the mappings have.</li>
-<li><strong>A disabled binding can't be re-enabled in the editor that disabled it.</strong> The slider popup and Properties editor read the resolved cache, which skips disabled bindings. Only the strip can re-enable it.</li>
-<li><strong>"Bound" doesn't distinguish base-value bindings from modulator-property bindings.</strong> <code>findPrimaryBindingInfo(null, paramKey)</code> matches any binding on the parameter. The VAL cell and base slider lock when only, for example, the LFO depth is bound, while the arcs show the parameter as unbound.</li>
-<li><strong>Preset loads install a blank bank when the preset has none</strong> (<code>MacroBankSerializer.kt:72-81</code>). Bare-source loads install the generator default instead. Preset loads never toast.</li>
+<li>✔ <strong>A disabled binding can't be re-enabled in the editor that disabled it.</strong> The slider popup and Properties editor read the resolved cache, which skips disabled bindings. Only the strip can re-enable it. Fixed: editors list bindings with <code>findBindingInfos(includeDisabled = true)</code>.</li>
+<li>✔ <strong>"Bound" doesn't distinguish base-value bindings from modulator-property bindings.</strong> <code>findPrimaryBindingInfo(null, paramKey)</code> matches any binding on the parameter. The VAL cell and base slider lock when only, for example, the LFO depth is bound, while the arcs show the parameter as unbound. Fixed: <code>findBaseBindingInfo</code> / <code>lockingBindingInfo</code> lock per target kind.</li>
+<li>✔ <strong>Preset loads install a blank bank when the preset has none</strong> (<code>MacroBankSerializer.kt:72-81</code>). Bare-source loads install the generator default instead. Preset loads never toast. Fixed: a preset with no bank installs the generator's default bank, and <code>DeckOps</code> toasts when bindings were replaced.</li>
 </ol>
 <p><strong>Threading and Library</strong></p>
 <ol>
 <li>✔ <strong><code>.lsdtrans</code> drops apply the transition on the IO thread.</strong> Four drop sites, plus the TransitionBrowser menu, call <code>applyTransitionPreset</code> inside <code>thenAccept</code>. <code>setTransition</code> disposes and creates GL filters there. <code>TransitionQueueManager.applyTransitionItem</code> instead reads the file synchronously on the UI thread.</li>
 <li>✔ <strong>Missing Files "Locate…" always appends to the A/B play queue,</strong> whatever kind of item was missing (<code>MissingItemsPanel.kt:53</code>).</li>
-<li><strong>Library toolbar Q can queue a hidden selection.</strong> After clicking in the FX or Trans tab, Q still queues the Sources tab's multi-selection (<code>BrowserActionToolbar.kt:262-265</code>).</li>
-<li><strong>Ctrl+F focuses only the Sources search</strong> and collapses the Edit view.</li>
-<li><strong>The FX chain dirty dot is only cleared by the chain header's save.</strong> Saving from the Deep Edit kebab or Library "+" leaves it on, and both capture the DTO when the menu opens, not when the save is confirmed.</li>
-<li><strong>The FX queue checks the deck <em>preset's</em> dirty flag</strong> (<code>FxQueueEngine.kt:40</code>), even though it only changes FX.</li>
+<li>✔ <strong>Library toolbar Q can queue a hidden selection.</strong> After clicking in the FX or Trans tab, Q still queues the Sources tab's multi-selection (<code>BrowserActionToolbar.kt:262-265</code>). Fixed: the toolbar uses <code>LibraryNavigation.enqueueTargets/enqueue</code>, like the hotkeys.</li>
+<li>✔ <strong>Ctrl+F focuses only the Sources search</strong> and collapses the Edit view. Fixed: <code>LibraryPanel.focusActiveSearch()</code>.</li>
+<li>✔ <strong>The FX chain dirty dot is only cleared by the chain header's save.</strong> Saving from the Deep Edit kebab or Library "+" leaves it on, and both capture the DTO when the menu opens, not when the save is confirmed. Fixed: both save paths capture the DTO at confirm time and call <code>markClean</code>.</li>
+<li>✔ <strong>The FX queue checks the deck <em>preset's</em> dirty flag</strong> (<code>FxQueueEngine.kt:40</code>), even though it only changes FX. Fixed: the FX queue has no dirty guard (<code>FxQueueEngine</code>).</li>
 </ol>
 <h3 id="73-inconsistencies-design">7.3 Inconsistencies (design)</h3>
 <p><strong>Loading</strong></p>
@@ -1834,7 +1834,7 @@
 </ol>
 <p>It fixes defects 1–6 and 11 and removes four copies of the dirty policy.
 2. <strong><code>TransitionOps</code></strong> queues every transition change on the GL thread. It fixes defect 12 and replaces five copied drop blocks.
-3. <strong>Bindings get stable modulator IDs and one knob-selection state.</strong> This fixes defects 7 and 9 and the selection drift. It changes the saved-file format, so it is done in v1.0, before release: after release every saved preset, session and macro bank would need a permanent migration. The knob-selection part is a design item (§7.3) and stays v1.1; the modulator IDs are the v1.0 piece. See <code>.planning/d-items-handoff.md</code>.</p>
+3. <strong>Bindings get stable modulator IDs and one knob-selection state.</strong> This fixes defects 7 and 9 and the selection drift. It changes the saved-file format, so it is done in v1.0, before release: after release every saved preset, session and macro bank would need a permanent migration. The knob-selection part is a design item (§7.3); it is tracked with the other open items in <code>.planning/pre-release-ui-backlog.md</code>.</p>
 <p>Defects 8, 10 and 13–17 are small local fixes and fit v1.0. The design items in §7.3 are v1.1.</p>
 
 

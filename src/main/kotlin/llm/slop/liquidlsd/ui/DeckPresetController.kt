@@ -91,6 +91,16 @@ class DeckPresetController(
         DeckSlot.of(deck, mixer)?.let { DeckOps.request(it, DeckChange.Source(newSource)) }
     }
 
+    companion object {
+        /** [base] if no preset of that name exists in [presetsDir], else the first free `base_2`, `base_3`, ... */
+        internal fun freePresetName(base: String, presetsDir: File): String {
+            if (!File(presetsDir, "$base.lsd").exists()) return base
+            var idx = 2
+            while (File(presetsDir, "${base}_$idx.lsd").exists()) idx++
+            return "${base}_$idx"
+        }
+    }
+
     fun generateUniqueCopyName(baseName: String): String {
         val presetsDir = FileSystemManager.getPresetsRoot()
         val cleanBase = baseName.removeSuffix(".lsd").trim()

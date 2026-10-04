@@ -171,30 +171,6 @@ object SessionSerializer {
             mixer.tapTempo.baseValue = 0f
             mixer.syncQueueTriggerPrevValues()
             
-            PresetManager.activePresetA = if (session.deckA.isEmpty) null else session.deckA.name
-            PresetManager.cachedDtoA = if (session.deckA.isEmpty) null else mixer.deckA.toDto(session.deckA.name, session.deckA.tags).copy(
-                presetNotes = session.deckA.presetNotes,
-                paramNotes = session.deckA.paramNotes
-            )
-            
-            PresetManager.activePresetB = if (session.deckB.isEmpty) null else session.deckB.name
-            PresetManager.cachedDtoB = if (session.deckB.isEmpty) null else mixer.deckB.toDto(session.deckB.name, session.deckB.tags).copy(
-                presetNotes = session.deckB.presetNotes,
-                paramNotes = session.deckB.paramNotes
-            )
-
-            PresetManager.activePresetBG = if (bgDto.isEmpty) null else bgDto.name
-            PresetManager.cachedDtoBG = if (bgDto.isEmpty) null else mixer.deckBG.toDto(bgDto.name, bgDto.tags).copy(
-                presetNotes = bgDto.presetNotes,
-                paramNotes = bgDto.paramNotes
-            )
-
-            PresetManager.activePresetPV = if (pvDto.isEmpty) null else pvDto.name
-            PresetManager.cachedDtoPV = if (pvDto.isEmpty) null else mixer.deckPV.toDto(pvDto.name, pvDto.tags).copy(
-                presetNotes = pvDto.presetNotes,
-                paramNotes = pvDto.paramNotes
-            )
-            
             val allUnresolved = mutableListOf<String>()
 
             mDto.transitionSlot?.let { transDto ->
@@ -292,6 +268,19 @@ object SessionSerializer {
                 }
                 llm.slop.liquidlsd.macro.MacroEngine.registerBank(canonicalId, resolvedBank)
             }
+            // After the banks are registered: setActive snapshots the live bank as the dirty baseline,
+            // so a restored deck whose knobs are later edited counts as having unsaved changes.
+            fun restoreActive(slot: DeckSlot, dto: DeckPresetDto) {
+                if (dto.isEmpty) PresetManager.clearActive(slot)
+                else PresetManager.setActive(
+                    slot, dto.name,
+                    slot.deck(mixer).toDto(dto.name, dto.tags).copy(presetNotes = dto.presetNotes, paramNotes = dto.paramNotes)
+                )
+            }
+            restoreActive(DeckSlot.A, session.deckA)
+            restoreActive(DeckSlot.B, session.deckB)
+            restoreActive(DeckSlot.BG, bgDto)
+            restoreActive(DeckSlot.PV, pvDto)
             // Refresh FX row knob labels/bindings against the chains actually restored above. Not
             // forced: FxMacroSync's ownership rule leaves any knob the user retargeted untouched.
             llm.slop.liquidlsd.macro.FxMacroSync.syncAll(mixer)
@@ -364,14 +353,7 @@ object SessionSerializer {
         mixer.levelPV.baseValue = 1f
         mixer.masterLevel.baseValue = 1f
 
-        PresetManager.activePresetA = null
-        PresetManager.activePresetB = null
-        PresetManager.activePresetBG = null
-        PresetManager.activePresetPV = null
-        PresetManager.cachedDtoA = null
-        PresetManager.cachedDtoB = null
-        PresetManager.cachedDtoBG = null
-        PresetManager.cachedDtoPV = null
+        DeckSlot.values().forEach { PresetManager.clearActive(it) }
         PresetManager.activePresetMtimeA = null
         PresetManager.activePresetMtimeB = null
         PresetManager.activePresetMtimeBG = null
