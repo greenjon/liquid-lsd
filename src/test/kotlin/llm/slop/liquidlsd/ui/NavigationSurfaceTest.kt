@@ -292,7 +292,7 @@ class NavigationSurfaceTest {
 
     @Test
     fun pickerOpensTheSlotUnderAnFxRowKnobAndTheChainListForKnobOne() {
-        ctx.deckRowMode["B"] = "FX"
+        state.setDeckSubTab("Deck B", "FX")
         every { mixer.deckB.fxChain } returns FxChain("Deck B FX")
         PerformSurface.lastTouchedKnob = 6 // col 2 = slot index 1
         nav().button(2, false)

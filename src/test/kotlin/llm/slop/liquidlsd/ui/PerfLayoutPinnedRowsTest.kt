@@ -18,9 +18,10 @@ class PerfLayoutPinnedRowsTest {
 
     @Test
     fun pinnedRowsAreIgnoredByTheSharedDeckAndMasterToggles() {
-        val state = ParametersState().apply { activeDeckASubTab = "FX"; activeMixerSubTab = "FX" }
+        val state = ParametersState().apply {
+            activeDeckASubTab = "FX"; activeDeckBSubTab = "FX"; activeDeckBGSubTab = "FX"; activeDeckPVSubTab = "FX"; activeMixerSubTab = "FX"
+        }
         val ctx = PerformanceUiContext().apply {
-            for (t in PerfRows.DECK_TAGS) deckRowMode[t] = "FX"
             masterRowMode = "FX"
         }
         for (id in pinnedIds) {
@@ -53,8 +54,8 @@ class PerfLayoutPinnedRowsTest {
 
     @Test
     fun theToggleRowSwitchesBankButKeepsItsPlacementAttributes() {
-        val ctx = PerformanceUiContext().apply { deckRowMode["A"] = "FX"; masterRowMode = "FX" }
-        val state = ParametersState()
+        val ctx = PerformanceUiContext().apply { masterRowMode = "FX" }
+        val state = ParametersState().apply { activeDeckASubTab = "FX" }
         for (id in listOf("deck.A.srcfx", "master")) {
             val base = PerfRows.CATALOG.getValue(id)
             val fx = PerfRows.withDeckRowMode(base, ctx, state)

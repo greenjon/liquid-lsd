@@ -238,16 +238,22 @@ class PerfRowLayoutTest {
     // -- Mode accessor ----------------------------------------------------------------------
 
     @Test
-    fun deckRowIsFxWhenEitherThePillOrTheDeepEditSubTabSaysSo() {
-        for (pill in listOf(null, "SRC", "FX")) {
-            for (subTab in listOf("SRC", "FX")) {
-                val ctx = PerformanceUiContext()
-                pill?.let { ctx.deckRowMode["B"] = it }
-                val state = ParametersState().apply { activeDeckBSubTab = subTab }
-                assertEquals(pill == "FX" || subTab == "FX", ctx.isDeckRowFx("B", state), "pill=$pill subTab=$subTab")
-            }
+    fun deckRowIsFxExactlyWhenTheDeepEditSubTabIsFx() {
+        for (subTab in listOf("SRC", "FX")) {
+            val state = ParametersState().apply { activeDeckBSubTab = subTab }
+            assertEquals(subTab == "FX", PerformanceUiContext().isDeckRowFx("B", state), "subTab=$subTab")
         }
         assertEquals(false, PerformanceUiContext().isDeckRowFx("A", null))
+    }
+
+    @Test
+    fun pickingTheSourceTabAfterFxLeavesTheRowOnSrc() {
+        val state = ParametersState()
+        val ctx = PerformanceUiContext()
+        state.setDeckSubTab("Deck B", "FX")
+        assertEquals(true, ctx.isDeckRowFx("B", state))
+        state.openGenBrowse(llm.slop.liquidlsd.macro.MacroEngine.DECK_B, "Deck B")
+        assertEquals(false, ctx.isDeckRowFx("B", state), "bay SRC tab must also flip the row back to SRC")
     }
 
     // -- Text fitting -----------------------------------------------------------------------

@@ -1683,7 +1683,7 @@
 
 
 <h1 id="ui-architecture-imgui-systems">UI Architecture &amp; ImGui Systems</h1>
-<p>The <code>ui/</code> package manages the immediate-mode desktop interface using ImGui (<code>imgui-java</code>), LWJGL 3, and GLFW. This document maps component ownership, memory safety patterns, popup scheduling, and the <code>NoteEditorModal</code> architecture.</p>
+<p>The <code>ui/</code> package manages the immediate-mode desktop interface using ImGui (<code>imgui-java</code>), LWJGL 3, and GLFW. This document maps component ownership, memory safety patterns, popup scheduling, and the <code>NoteEditorModal</code> architecture. For an evaluation of workflow boundaries, loading interactions, and macro/library coordination, see <a href="../ui_interaction_architecture_review/">UI Interaction Architecture Review</a>.</p>
 <hr />
 <h2 id="component-dependency-graph">Component Dependency Graph</h2>
 <pre><code class="language-mermaid">graph TD
@@ -1761,7 +1761,7 @@
 <li><strong>Deferred Popup Triggering</strong>: Modal popups set a <code>pendingOpen*</code> flag and execute <code>ImGui.openPopup(id)</code> at the root ID stack level outside child windows.</li>
 <li><strong>Modal Rendering Pipeline</strong>: Invokes <code>NoteEditorModal.draw()</code>, <code>SavePresetModal.draw()</code>, and <code>PopupManager</code>'s specific draw methods (e.g. <code>drawExitPopup()</code>, <code>drawDeckConfirmPopups()</code>, <code>drawSourceChangeConfirmPopup()</code>, <code>drawMidiWarningPopup()</code>) at root scope.</li>
 <li><strong>Single workspace (Performance Mode)</strong>: <code>PerformanceMatrixPanel.kt</code> (4×4 macro knob matrix + Deep Edit — see <code>docs/user_guide/macros_and_rack.md</code>) is the primary live editing view, orchestrating dedicated sub-controllers for clean separation of concerns:</li>
-<li><code>PerformanceUiContext.kt</code>: Shared styling colors (<code>PerformanceColors</code>), cached deck row mode states (<code>deckRowMode</code>), and label/module resolution helpers.</li>
+<li><code>PerformanceUiContext.kt</code>: Shared styling colors (<code>PerformanceColors</code>), the deck SRC/FX predicate (<code>isDeckRowFx</code>, which reads the deck sub-tab in <code>ParametersState</code>), and label/module resolution helpers.</li>
 <li><code>PerformanceTransitionsControls.kt</code>: Transitions row controls: Line 1 transition picker (active shader/preset name with dirty marker) and TransitionQueue stepping (<code>&lt; [N/Total] &gt;</code>); Line 2 crossfader (Deck A/B snap badges, bipolar slider track, <code>[AUTO]</code>/<code>[FADING]</code> button, fade speed widget); right wing: randomize die button on Line 1 matching deck rows.</li>
 <li><code>PerformanceFxSendsControls.kt</code>: FX WET/DRY row right-wing Resync.</li>
 <li><code>PerformanceClockControls.kt</code>: Clock row's two control lines on the MASTER tab (line 1: clock-source pills, Link status, BPM readout, 4-beat dots; line 2: TAP with MIDI Learn on <code>Global/tapTempo</code>, RESYNC, ÷2/×2, ±0.5 nudge), reusing <code>AudioEngine</code>/<code>TapTempoController</code> actions like <code>TempoSyncPanel</code>. The row has no knobs: <code>MacroEngine.GLOBAL</code> stays registered with 0 knobs (<code>defaultKnobCountFor</code>), so old sessions, OSC and MIDI mappings find nothing; a configurable global-knobs row is planned for v1.1.</li>

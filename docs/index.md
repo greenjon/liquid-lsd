@@ -39,6 +39,7 @@ If you're building on or contributing to Liquid LSD, the developer docs cover th
 - [Media Export Pipeline](developer/export_pipeline.md)
 - [Web Subsystem](developer/web_subsystem.md)
 - [UI Architecture](developer/ui.md)
+- [UI Interaction Architecture Review](developer/ui_interaction_architecture_review.md)
 - [Preset Storage & Queues](developer/preset_management.md)
 - [Operations & Tuning](developer/ops_tuning.md)
 - [Build for ARM64 Linux](developer/build_arm64_linux.md)

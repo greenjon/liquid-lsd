@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fixed-deck-row-srcfx-mode-could-disagree-with-deep-edit-uiperformanceuicontextkt-uiperformancedeckcontrolskt-uifxheaderactionskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed: Deck Row SRC/FX Mode Could Disagree With Deep Edit (ui/PerformanceUiContext.kt, ui/PerformanceDeckControls.kt, ui/FxHeaderActions.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#clearer-language-add-target-midi-learn-osc-learn-ui-macromacrolearnstatekt-oscosclearnstatekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5163,6 +5174,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fixed-deck-row-srcfx-mode-could-disagree-with-deep-edit-uiperformanceuicontextkt-uiperformancedeckcontrolskt-uifxheaderactionskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixed: Deck Row SRC/FX Mode Could Disagree With Deep Edit (ui/PerformanceUiContext.kt, ui/PerformanceDeckControls.kt, ui/FxHeaderActions.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#clearer-language-add-target-midi-learn-osc-learn-ui-macromacrolearnstatekt-oscosclearnstatekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9093,6 +9115,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fixed-deck-row-srcfx-mode-could-disagree-with-deep-edit-uiperformanceuicontextkt-uiperformancedeckcontrolskt-uifxheaderactionskt">Fixed: Deck Row SRC/FX Mode Could Disagree With Deep Edit (<code>ui/PerformanceUiContext.kt</code>, <code>ui/PerformanceDeckControls.kt</code>, <code>ui/FxHeaderActions.kt</code>)</h3>
+<ul>
+<li><strong>Bug</strong>: after clicking a deck row's <code>[FX]</code> pill, switching the Edit bay to its <code>SRC</code> tab (or picking a source) left the row's knobs and pill on FX while the bay showed the source.</li>
+<li><strong>Fix</strong>: the deck's Deep Edit sub-tab is now the only stored SRC/FX state. The pill, the bay's SRC/FX tabs and Browse all write it, and the row reads it, so they always agree. The separate pill state (<code>PerformanceUiContext.deckRowMode</code>) is removed.</li>
+</ul>
 <h3 id="clearer-language-add-target-midi-learn-osc-learn-ui-macromacrolearnstatekt-oscosclearnstatekt">Clearer Language: Add Target, MIDI Learn, OSC Learn (<code>ui/*</code>, <code>macro/MacroLearnState.kt</code>, <code>osc/OscLearnState.kt</code>)</h3>
 <ul>
 <li><strong>Macro knobs now "add targets"</strong>: the macro <code>Learn</code> button is <code>Add Target</code>, banners and toasts say "Add Target" / "Added target: ...", and bindings are called targets everywhere (tooltips, the knob tooltip's <code>Target: ...</code> line, the target strip, "Delete this target"). FX Metaknobs are "retargeted" instead of rebound.</li>

@@ -86,7 +86,7 @@ class PerformSurfaceTest {
 
     @Test
     fun aRowInFxModeSwitchesItsKnobsToTheFxBank() {
-        ctx.deckRowMode["B"] = "FX"
+        state.setDeckSubTab("Deck B", "FX")
         every { mixer.deckB.fxChain } returns FxChain("Deck B FX")
         val p = page()
         assertEquals(MacroEngine.DECK_A, p.knobs[0]?.bankId)
@@ -126,7 +126,7 @@ class PerformSurfaceTest {
     @Test
     fun tapOnAnFxSlotKnobTogglesThatSlotsBypass() {
         deckAChain.slots[1] = filter("glow", listOf("intensity"))
-        ctx.deckRowMode["A"] = "FX"
+        state.setDeckSubTab("Deck A", "FX")
         FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
 
         assertTrue(deckAChain.slots[1]!!.enabled)
@@ -141,7 +141,7 @@ class PerformSurfaceTest {
     @Test
     fun shiftedTapFocusesTheSlotThenLeavesFocusFromKnobOne() {
         deckAChain.slots[0] = filter("glow", listOf("a", "b", "c", "d"))
-        ctx.deckRowMode["A"] = "FX"
+        state.setDeckSubTab("Deck A", "FX")
         FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
         assertNull(deckAChain.focusedSlot)
 
@@ -160,7 +160,7 @@ class PerformSurfaceTest {
     fun tapOnAFocusedParameterResetsItToDefaultAndMovesTheKnob() {
         val glow = filter("glow", listOf("intensity", "radius", "threshold"))
         deckAChain.slots[0] = glow
-        ctx.deckRowMode["A"] = "FX"
+        state.setDeckSubTab("Deck A", "FX")
         FxMacroSync.focusSlot(MacroEngine.DECK_A_FX, mixer, 0)
 
         val param = glow.parameters["intensity"]!!
@@ -204,7 +204,7 @@ class PerformSurfaceTest {
 
     @Test
     fun anEmptyOrBypassedSlotGoesDarkButKeepsItsRing() {
-        ctx.deckRowMode["A"] = "FX"
+        state.setDeckSubTab("Deck A", "FX")
         FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
         assertFalse(surface().knobLights()[1]!!.lit, "slot 1 is empty")
 
@@ -222,7 +222,7 @@ class PerformSurfaceTest {
     @Test
     fun blankParameterPositionsOnAFocusedPageAreDark() {
         deckAChain.slots[0] = filter("glow", listOf("intensity"))      // one parameter: knobs 3 and 4 are blank
-        ctx.deckRowMode["A"] = "FX"
+        state.setDeckSubTab("Deck A", "FX")
         FxMacroSync.focusSlot(MacroEngine.DECK_A_FX, mixer, 0)
         val lights = surface().knobLights()
         assertTrue(lights[0]!!.lit, "the focused slot's Metaknob")
@@ -267,14 +267,14 @@ class PerformSurfaceTest {
         fun banks() = PerfRows.substitutedRowsForPage(pinned, ctx, state).map { it.bankId }
         val expected = listOf(MacroEngine.DECK_A, MacroEngine.DECK_A_FX, MacroEngine.MASTER, MacroEngine.MASTER_FX)
         assertEquals(expected, banks())
-        ctx.deckRowMode["A"] = "FX"; ctx.masterRowMode = "FX"
+        state.setDeckSubTab("Deck A", "FX"); ctx.masterRowMode = "FX"
         try {
             assertEquals(expected, banks())
             // The toggle row, by contrast, follows the shared mode.
             assertEquals(MacroEngine.DECK_A_FX,
                 PerfRows.substitutedRowsForPage(pageOf("deck.A.srcfx", "trans", "wetdry", "global"), ctx, state).first().bankId)
         } finally {
-            ctx.deckRowMode.remove("A"); ctx.masterRowMode = "MIX"
+            state.setDeckSubTab("Deck A", "SRC"); ctx.masterRowMode = "MIX"
         }
     }
 
@@ -319,13 +319,13 @@ class PerformSurfaceTest {
         assertEquals(uncachedRows(decks, pages), first)
         assertTrue(first === cache.rows(decks, ctx, state, { it }, pages), "unchanged inputs reuse the list")
 
-        ctx.deckRowMode["A"] = "FX"                       // SRC -> FX toggle
+        state.setDeckSubTab("Deck A", "FX")                       // SRC -> FX toggle
         val fx = cache.rows(decks, ctx, state, { it }, pages)
         assertTrue(fx !== first)
         assertEquals(uncachedRows(decks, pages), fx)
         assertEquals(MacroEngine.DECK_A_FX, fx[0].bankId)
 
-        ctx.deckRowMode["A"] = "SRC"
+        state.setDeckSubTab("Deck A", "SRC")
         assertEquals(uncachedRows(decks, pages), cache.rows(decks, ctx, state, { it }, pages))
 
         ctx.masterRowMode = "FX"
@@ -380,7 +380,7 @@ class PerformSurfaceTest {
         val s = surface()
         assertEquals(MacroEngine.DECK_A, s.knobLights().let { page().knobs[0]!!.bankId })
         s.turn(0, 0.1f)
-        ctx.deckRowMode["A"] = "FX"
+        state.setDeckSubTab("Deck A", "FX")
         FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
         val fxControl = page().knobs[0]!!.control
         val before = fxControl.value

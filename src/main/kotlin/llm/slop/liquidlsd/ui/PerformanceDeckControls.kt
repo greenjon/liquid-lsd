@@ -297,12 +297,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         if (toggleClicked) {
             if (isSrc) {
                 llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "FX")
-                ctx.deckRowMode[tag] = "FX"
                 parametersState.setDeckSubTab(deckLabel, "FX")
                 llm.slop.liquidlsd.macro.FxMacroSync.syncFor(ctx.targetBankIdFor(tag), mixer)
             } else {
                 llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "SRC")
-                ctx.deckRowMode[tag] = "SRC"
                 parametersState.setDeckSubTab(deckLabel, "SRC")
             }
         }

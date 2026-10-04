@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Fixed: Deck Row SRC/FX Mode Could Disagree With Deep Edit (`ui/PerformanceUiContext.kt`, `ui/PerformanceDeckControls.kt`, `ui/FxHeaderActions.kt`)
+- **Bug**: after clicking a deck row's `[FX]` pill, switching the Edit bay to its `SRC` tab (or picking a source) left the row's knobs and pill on FX while the bay showed the source.
+- **Fix**: the deck's Deep Edit sub-tab is now the only stored SRC/FX state. The pill, the bay's SRC/FX tabs and Browse all write it, and the row reads it, so they always agree. The separate pill state (`PerformanceUiContext.deckRowMode`) is removed.
+
 ### Clearer Language: Add Target, MIDI Learn, OSC Learn (`ui/*`, `macro/MacroLearnState.kt`, `osc/OscLearnState.kt`)
 - **Macro knobs now "add targets"**: the macro `Learn` button is `Add Target`, banners and toasts say "Add Target" / "Added target: ...", and bindings are called targets everywhere (tooltips, the knob tooltip's `Target: ...` line, the target strip, "Delete this target"). FX Metaknobs are "retargeted" instead of rebound.
 - **MIDI and OSC keep "Learn"** and now say "map" instead of "bind": "Move a knob to map it", "Mapped X -> Y", controller profiles have a **Mappings** list (was Bindings), and the per-modulator `Unbind MIDI` button is `Clear MIDI Mapping`.

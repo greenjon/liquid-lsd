@@ -1,0 +1,1703 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for the Liquid LSD real-time graphics and audio workstation.">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>UI Interaction Architecture Review: Performance, Parameters, Browse, and Library - Liquid LSD</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ui-interaction-architecture-review-performance-parameters-browse-and-library" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="Liquid LSD" class="md-header__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Liquid LSD
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              UI Interaction Architecture Review: Performance, Parameters, Browse, and Library
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="dark" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="cyan"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Liquid LSD" class="md-nav__button md-logo" aria-label="Liquid LSD" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    Liquid LSD
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/your_workspace/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Your Workspace
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/visual_sources/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Visual Sources
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/presets_and_library/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Presets & Library
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/output_and_recording/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Output & Recording
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/performance_controls/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Performance Controls
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/macros_and_rack/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Macro Controls & Performance Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/web_broadcast/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Broadcast
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../user_guide/cli_usage/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Command Line Usage & Startup Options
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../architecture/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../audio_dsp/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Real-Time Audio & DSP
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../beat_sync/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beat Sync & Stability
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Modulation Engine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rendering/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    OpenGL Rendering
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../export_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Media Export & Recording Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../web_subsystem/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Web Subsystem & Broadcast Protocol
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ui/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UI Architecture & ImGui
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../imgui_upgrade_guide/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ImGui Upgrade & Modernization
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preset_management/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Preset & Queue Management
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandala_future_roadmap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandala UX Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../build_arm64_linux/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Build for ARM64 Linux
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../modular_video_rack_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Modular Video Rack Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../unified_control_mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Unified Control Mapping Architecture
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../screen_capture_and_ui_iteration_proposal/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFC: Screen Capture & UI Iteration Proposal
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli_and_screenshot_automation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    CLI & Automated Screen Capture Pipeline
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ops_tuning/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Operations & Tuning
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release_notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#1-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1. Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#2-workspace-topology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        2. Workspace Topology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#3-loading-generators-and-fx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3. Loading Generators and FX
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="3. Loading Generators and FX">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#31-two-browsers-no-shared-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.1 Two browsers, no shared model
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#32-pill-bay-state-can-drift-confirmed-bug-fixed-oct-2026" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.2 Pill / bay state can drift (confirmed bug, fixed Oct 2026)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#33-navigation-layers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        3.3 Navigation layers
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#4-macro-knobs-and-binding" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Macro Knobs and Binding
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="4. Macro Knobs and Binding">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#41-workflow-as-built" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.1 Workflow (as built)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#42-two-range-editing-widgets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.2 Two range-editing widgets
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#43-generator-change-replaces-the-macro-bank" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.3 Generator change replaces the macro bank
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#44-fx-knobs-are-not-user-bindable" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4.4 FX knobs are not user-bindable
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#5-the-library" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. The Library
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="5. The Library">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#51-two-jobs-in-one-panel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.1 Two jobs in one panel
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#52-asset-formats" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5.2 Asset formats
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#6-recommendations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6. Recommendations
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="6. Recommendations">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#61-v10-candidates-polish-stability-no-new-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.1 v1.0 candidates (polish, stability, no new features)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#62-v11" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.2 v1.1
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#63-not-recommended" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.3 Not recommended
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="ui-interaction-architecture-review-performance-parameters-browse-and-library">UI Interaction Architecture Review: Performance, Parameters, Browse, and Library</h1>
+<p><strong>Status</strong>: Architecture review &amp; UX analysis (revised after verification against the code)
+<strong>Target Area</strong>: <code>ui/</code>, <code>macro/</code>, <code>presets/</code>, <code>parameters/</code>
+<strong>Date</strong>: October 2026</p>
+<hr />
+<h2 id="1-summary">1. Summary</h2>
+<p>Liquid LSD's interface grew feature by feature. The individual pieces work well, but four areas have friction where the pieces meet:</p>
+<ol>
+<li>Loading visual generators and FX chains</li>
+<li>Editing and modulating parameters (Deep Edit)</li>
+<li>Binding and managing macro knobs</li>
+<li>The Library and play queues</li>
+</ol>
+<p>This document records the friction points that were checked against the code, separates real defects from design observations, and sorts the recommendations by release. <strong>v1.0 is feature-frozen</strong> (polish, usability, stability), so only the items in §6.1 are candidates for v1.0. Everything else is v1.1.</p>
+<p>Decisions this review takes as given: the three-view layout (Perform / Edit / Library), where Edit view replaces the Library rather than sharing the screen with it; inline Browse inside the Edit row (<code>PerformanceBrowseBay.kt</code>); and macro editing in the Edit-row strip plus Properties.</p>
+<hr />
+<h2 id="2-workspace-topology">2. Workspace Topology</h2>
+<pre><code>┌────────────────────────────────────────────────────────────────────────┐
+│ MENU BAR                                                               │
+├────────────────────────────────────────────────────────────────────────┤
+│ 1. PERFORMANCE MATRIX (rows)                                           │
+│    • 4 macro knobs per row; tabs DECKS and MASTER                      │
+│    • Left: [SRC|FX] pill, badges, queue nav, FX chain controls         │
+├────────────────────────────────────────────────────────────────────────┤
+│ 2. DEEP EDIT BAY (only when a module is expanded)                      │
+│    • Params: parameter grid + side rail + Properties                   │
+│    • Browse: inline source / FX / transition picker                    │
+├────────────────────────────────────────────────────────────────────────┤
+│ 3. LIBRARY DOCK                                                        │
+│    • Presets/FX/Trans | Playlists | Live Queue | BG Queue              │
+└────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<p>Which views are drawn (<code>UIManager.kt:483-490</code>, <code>LibraryPanel.isEditView</code>):</p>
+<table>
+<thead>
+<tr>
+<th>View</th>
+<th>Condition</th>
+<th>Library height</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Perform</td>
+<td><code>libraryMode == HALF</code>, no module expanded</td>
+<td><code>libraryRatio</code> of content</td>
+</tr>
+<tr>
+<td>Edit</td>
+<td><code>anyRackModuleExpanded() &amp;&amp; libraryMode != FULL</code></td>
+<td><code>0</code> (not drawn)</td>
+</tr>
+<tr>
+<td>Library</td>
+<td><code>libraryMode == FULL</code></td>
+<td>whole content area</td>
+</tr>
+</tbody>
+</table>
+<p>Edit and Library views are mutually exclusive by design.</p>
+<hr />
+<h2 id="3-loading-generators-and-fx">3. Loading Generators and FX</h2>
+<h3 id="31-two-browsers-no-shared-model">3.1 Two browsers, no shared model</h3>
+<p>The Library dock and the inline Browse bay both browse presets and sources, but share no state.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Docked Library (<code>LibraryPanel</code>, <code>PresetListPanel</code>, <code>FXBrowserPanel</code>, <code>TransitionBrowserPanel</code>)</th>
+<th>Inline bay (<code>PerformanceBrowseBay</code>, <code>ShaderPickerPopup</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Purpose</td>
+<td>Curating queues and playlists</td>
+<td>Swapping the source or FX of one slot</td>
+</tr>
+<tr>
+<td>Search buffer</td>
+<td>Three separate <code>ImString(256)</code> buffers, one per panel</td>
+<td><code>ImString(64)</code> in <code>ShaderPickerPopup</code></td>
+</tr>
+<tr>
+<td>Action</td>
+<td>Drag, <code>[Q]</code>/<code>[BGQ]</code>, context menu</td>
+<td>Click replaces the slot, with undo</td>
+</tr>
+<tr>
+<td>Playlists / queues</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>Having two surfaces is intended. The part worth fixing is that search syntax, tag matching, category grouping and result ordering are implemented separately in each, and the buffer sizes already disagree. A user who learns one search box gets different results in the other.</p>
+<h3 id="32-pill-bay-state-can-drift-confirmed-bug-fixed-oct-2026">3.2 Pill / bay state can drift (confirmed bug, fixed Oct 2026)</h3>
+<blockquote>
+<p><strong>Fixed</strong>: <code>deckRowMode</code> was removed and the deck sub-tab is now the only stored SRC/FX state. The text below describes the bug as found. <code>masterRowMode</code> still has the same shape and is a remaining candidate.</p>
+</blockquote>
+<p>A deck row's <code>[SRC|FX]</code> pill and the Deep Edit bay both feed one predicate, <code>PerformanceUiContext.isDeckRowFx</code> (<code>PerformanceUiContext.kt:111</code>):</p>
+<pre><code class="language-kotlin">deckRowMode[tag] == &quot;FX&quot; || parametersState?.getActiveDeckSubTabByTag(tag) == &quot;FX&quot;
+</code></pre>
+<p>Two pieces of state are OR-ed together, and only one of them is reset by the bay:</p>
+<ul>
+<li>Pill click to FX sets both <code>deckRowMode[tag] = "FX"</code> and the deck sub-tab to <code>"FX"</code> (<code>PerformanceDeckControls.kt:299-301</code>).</li>
+<li>Clicking the bay's <code>SRC</code> tab calls <code>openGenBrowse</code>, which sets only the sub-tab to <code>"SRC"</code> (<code>ParametersState.kt:226-228</code>). <code>deckRowMode[tag]</code> stays <code>"FX"</code>.</li>
+<li>Result: the bay shows source browsing while the row's knobs and pill still show FX. The OR keeps the row in FX mode.</li>
+</ul>
+<p>The opposite direction is milder. Clicking the pill while the bay is in a Browse tab changes the sub-tab, but the bay's <code>browseTargetFor</code> is unchanged, so the bay keeps showing the old picker. Also, <code>FxHeaderActions.kt:39</code> and <code>PerformanceUiContext.kt:154-170</code> write the two states independently, so every writer has to remember both.</p>
+<p>The code comment says "don't re-derive it from the two states", but two sources of truth still exist underneath. The fix is to store one state. The row mode should be derived from, or be the same field as, the deck sub-tab, so the bay's <code>openGenBrowse</code> and <code>openFxChainBrowse</code> set the row mode as a consequence.</p>
+<h3 id="33-navigation-layers">3.3 Navigation layers</h3>
+<p>Getting from "I want to change this effect" to the right control involves up to five independent selections:</p>
+<ol>
+<li>Row pill: <code>[SRC]</code> vs <code>[FX]</code></li>
+<li>Bay tab: <code>Edit | SRC | Chain | FX1 | FX2 | FX3</code> (derived from <code>sectionModeFor</code> / <code>browseTargetFor</code>)</li>
+<li>Side rail: <code>MIX | A | B | BG | PV</code></li>
+<li>Parameter grid sub-tab: <code>SRC</code> vs <code>FX</code> (Mixer: <code>CTRL | FX | TRANS</code>)</li>
+<li>Library menu: <code>Sources | FX | Trans</code></li>
+</ol>
+<p>Layer 5 is a separate view (Library) and not part of the Edit hierarchy, so the real nesting is four. Layers 1 and 4 are the two halves of the §3.2 bug. The bay tab row mixes two meanings: <code>Edit</code> opens the parameter grid, and the other tabs open pickers. This is acceptable, because the tab row says which, but is worth labelling more clearly (see §6.2).</p>
+<p>A clearer model is <em>Target (Deck A/B/BG/PV/Master) × View (Perform / Params / Browse)</em>. This is close to what the code does already. Making it exact is mostly the §3.2 consolidation.</p>
+<hr />
+<h2 id="4-macro-knobs-and-binding">4. Macro Knobs and Binding</h2>
+<h3 id="41-workflow-as-built">4.1 Workflow (as built)</h3>
+<p>Selecting a knob in Edit view sets <code>MacroLearnState.selectedControlId</code>. <code>PerformanceMacroStrip</code> then replaces the row's left controls:</p>
+<ul>
+<li>Line 1: name, live value, <code>Add Target</code>, target chips ①–④, kebab menu, close.</li>
+<li>Line 2: <code>MacroBindingEditor.drawLine</code> (path, min, max, invert, curve, steps).</li>
+</ul>
+<p>Clicking a bound parameter cell opens <code>MacroBindingEditor.drawFull</code> in <code>PropertiesPanel</code>, which uses <code>CustomRangeSlider</code> (range brackets plus a live position dot). The grid cells also show a small arc for the macro range.</p>
+<p>This is a deliberate design: a performer can edit a binding straight from the row without opening anything else. That should be kept.</p>
+<h3 id="42-two-range-editing-widgets">4.2 Two range-editing widgets</h3>
+<p>The same <code>MacroBinding</code> min/max is edited with numeric scrubbers in the strip and with draggable brackets in Properties. They differ in feel and precision, and the strip has no visual of where the range sits within the parameter's span.</p>
+<p>Recommendation (§6.2): keep editing in both places, but use one shared range widget, sized differently, so there is one mental model.</p>
+<h3 id="43-generator-change-replaces-the-macro-bank">4.3 Generator change replaces the macro bank</h3>
+<p>Choosing a new source in <code>DeckSourcePicker</code> (<code>:59</code>) calls <code>GeneratorDefaults.applyToDeck</code>, which resets the source's parameters and installs the default macro bank over the deck's bank.</p>
+<p>What the code does:</p>
+<ul>
+<li>Stock generators carry no bank of their own. Their bank comes from <code>GeneratorDefaults.resolve(source)</code>, either a user-saved default or the factory table.</li>
+<li><code>saveDefault</code> stores bindings with deck-agnostic parameter IDs, so a bank saved for one source is not meaningful for a different source.</li>
+<li><code>ParametersUndo.pushUndoState</code> runs after the swap (<code>DeckSourcePicker.kt:64</code>), so Ctrl+Z restores the previous bank.</li>
+</ul>
+<p>So the previous bindings are recoverable through undo, but nothing tells the user they were replaced. "Silently" is the accurate word. The loss is a visibility gap, not data destruction.</p>
+<p><strong>Why not carry bindings over by parameter name:</strong> an earlier draft of this review suggested keeping bindings whose parameter names match in the new generator. That is not safe. Parameter names are reused for unrelated things across generators (for example "Scale", "Speed", "Depth"). Matching by name would quietly aim a performer's knobs at the wrong controls, which is worse than resetting them.</p>
+<h3 id="44-fx-knobs-are-not-user-bindable">4.4 FX knobs are not user-bindable</h3>
+<p>Deck and Master knobs are freely bindable. FX bank knobs (<code>DECK_*_FX</code>, <code>MASTER_FX</code>) are assigned by <code>FxMacroSync</code> to slot wet/dry and ISF auto-map, and the strip shows a read-only role line for them. This is intentional (FX knobs follow the chain), and the read-only line is the correct response. It only needs to look read-only, not like an empty editor.</p>
+<hr />
+<h2 id="5-the-library">5. The Library</h2>
+<h3 id="51-two-jobs-in-one-panel">5.1 Two jobs in one panel</h3>
+<p><code>LibraryPanel</code> is both an asset browser (find, filter, dependency check) and a live queue console (A/B queue, BG queue, advance, auto-VJ). While in Edit view both are hidden. Edit view's own inline browser covers "swap this slot", but nothing covers "what's next in the queue". At present the only way to see the queue from Edit view is to leave it.</p>
+<h3 id="52-asset-formats">5.2 Asset formats</h3>
+<table>
+<thead>
+<tr>
+<th>Asset</th>
+<th>Extension</th>
+<th>Root</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Deck preset</td>
+<td><code>.patch</code> / <code>.lsd</code> / <code>.json</code></td>
+<td><code>library/presets/</code></td>
+</tr>
+<tr>
+<td>FX slot</td>
+<td><code>.lsdfx</code></td>
+<td><code>library/fxpresets/</code></td>
+</tr>
+<tr>
+<td>FX chain</td>
+<td><code>.lsdfxchain</code></td>
+<td><code>library/fxchains/</code></td>
+</tr>
+<tr>
+<td>Transition</td>
+<td><code>.lsdtrans</code></td>
+<td><code>library/transitions/</code></td>
+</tr>
+<tr>
+<td>Macro bank</td>
+<td><code>.knobpreset.json</code></td>
+<td><code>library/knobpresets/</code></td>
+</tr>
+<tr>
+<td>Playlist</td>
+<td><code>.json</code></td>
+<td><code>library/playlists/</code></td>
+</tr>
+<tr>
+<td>Controller profile</td>
+<td><code>.json</code></td>
+<td><code>library/controllers/</code></td>
+</tr>
+</tbody>
+</table>
+<p>Separate formats per asset type are reasonable and each has a clear owner. The one real gap is that there is no way to save or recall a whole <em>scene</em> (both decks, master FX, transition, controller profile) as one unit.</p>
+<hr />
+<h2 id="6-recommendations">6. Recommendations</h2>
+<h3 id="61-v10-candidates-polish-stability-no-new-features">6.1 v1.0 candidates (polish, stability, no new features)</h3>
+<ol>
+<li><strong>~~Fix the pill/bay drift (§3.2).~~ Done.</strong> Make the deck row's SRC/FX mode a single stored value (or derive it fully from the sub-tab), and have <code>openGenBrowse</code> / <code>openFxChainBrowse</code> / the pill all go through one setter. Add a test next to <code>NavigationSurfaceTest</code> covering pill→FX→bay SRC tab→row shows SRC.</li>
+<li><strong>Tell the user when a generator change replaces their macro bank (§4.3).</strong> If the deck's current bank differs from the incoming default, show a one-line toast ("Macro bank replaced. Ctrl+Z to undo") when the swap happens. No new persistence is needed.</li>
+<li><strong>Share one search implementation (§3.1).</strong> Extract the query matching (tags, categories, case folding) so the Library panels and <code>ShaderPickerPopup</code> return identical results for identical input, and use one buffer size. Keeping two UIs is fine.</li>
+<li><strong>Make FX knobs look read-only in the macro strip (§4.4)</strong> if they don't already (dimmed controls plus the role line).</li>
+</ol>
+<h3 id="62-v11">6.2 v1.1</h3>
+<ul>
+<li><strong>Shared range widget (§4.2).</strong> One compact widget used by both the strip and Properties.</li>
+<li><strong>Clearer bay tabs (§3.3).</strong> Visually separate <code>Edit</code> from the picker tabs (for example a divider or a "Pick:" label).</li>
+<li><strong>Queue visibility in Edit view (§5.1).</strong> At minimum a compact "next up" readout. A resizable Library dock in Edit view is a larger layout change and conflicts with the three-view decision, so treat it as a separate proposal.</li>
+<li><strong>Scene bundles (§5.2).</strong> A schema referencing deck presets, master FX chain, active transition and controller profile.</li>
+<li><strong>Optional "lock macro bank" per deck</strong> so a custom bank survives source changes.</li>
+</ul>
+<h3 id="63-not-recommended">6.3 Not recommended</h3>
+<ul>
+<li><strong>Carrying bindings across generators by parameter name</strong> (see §4.3).</li>
+<li><strong>Removing numeric/range editing from the Edit-row strip.</strong> It would force a trip into Deep Edit for every binding tweak, which undoes the Phase 2 work that put binding editing on the row.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.expand", "search.highlight", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

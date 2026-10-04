@@ -1,3 +1,8 @@
+## Deck Row SRC/FX Mode Is One Stored Value: The Deck Sub-Tab (`PerformanceUiContext.isDeckRowFx`)
+- **Decision**: `ParametersState` deck sub-tab (`SRC`/`FX`) is the single source of truth for a deck row's mode. `PerformanceUiContext.deckRowMode` is deleted; `isDeckRowFx` reads the sub-tab only.
+- **Why**: the predicate was `deckRowMode == "FX" || subTab == "FX"`. Writers that set the sub-tab to `SRC` (bay SRC tab, source pick, Deep Edit tabs) could not clear the pill's `FX`, so the row and bay drifted apart (found in `docs/developer/ui_interaction_architecture_review.md` section 3.2).
+- **Left alone**: Master's `masterRowMode` has the same shape (`MIX`/`FX` pill OR Mixer sub-tab) and the same latent drift; fix it the same way when touched.
+
 ## Learn Means Hardware; Macro Knobs Add Targets (`MacroLearnState`, UI strings)
 
 - **Decision**: "MIDI Learn" / "OSC Learn" keep "Learn" and use "map". Macro knob to parameter is **Add Target** and each assignment is a **target**. "Bind/bound/binding" is removed from user-facing text.

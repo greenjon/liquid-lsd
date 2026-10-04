@@ -100,15 +100,13 @@ internal object PerformanceColors {
 }
 
 internal class PerformanceUiContext {
-    /** Per-deck row mode: "SRC" (visual source generator macros) or "FX" (deck FX chain macros). */
-    val deckRowMode = mutableMapOf<String, String>()
-
     /**
-     * True when deck [tag]'s knobs drive its FX chain -- via the row's [FX] pill or Deep Edit's FX
-     * sub-tab. The single SRC/FX predicate for deck rows; don't re-derive it from the two states.
+     * True when deck [tag]'s knobs drive its FX chain. The deck's Deep Edit sub-tab ([ParametersState.setDeckSubTab])
+     * is the one stored SRC/FX state: the row's [SRC|FX] pill, the bay's SRC/FX tabs and Browse all write it,
+     * so the row and the bay can't disagree.
      */
     fun isDeckRowFx(tag: String, parametersState: ParametersState?): Boolean =
-        deckRowMode[tag] == "FX" || parametersState?.getActiveDeckSubTabByTag(tag) == "FX"
+        parametersState?.getActiveDeckSubTabByTag(tag) == "FX"
 
     /** Master row mode: "MIX" (composite alphas + master level) or "FX" (Master FX chain macros). */
     var masterRowMode: String = "MIX"

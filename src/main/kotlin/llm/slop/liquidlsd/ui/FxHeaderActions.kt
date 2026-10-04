@@ -36,7 +36,6 @@ internal class DeckFxActions : FxChainHeader.Actions {
     override fun focusSlot(slotIdx: Int?) {
         if (slotIdx != null && !isFx && !pinned) {
             MacroLearnState.onNavigateSection(deckLabel, "FX")
-            ctx.deckRowMode[tag] = "FX"
             parametersState.setDeckSubTab(deckLabel, "FX")
             FxMacroSync.syncFor(targetBank, mixer)
         }

@@ -1,6 +1,6 @@
 # UI Architecture & ImGui Systems
 
-The `ui/` package manages the immediate-mode desktop interface using ImGui (`imgui-java`), LWJGL 3, and GLFW. This document maps component ownership, memory safety patterns, popup scheduling, and the `NoteEditorModal` architecture.
+The `ui/` package manages the immediate-mode desktop interface using ImGui (`imgui-java`), LWJGL 3, and GLFW. This document maps component ownership, memory safety patterns, popup scheduling, and the `NoteEditorModal` architecture. For an evaluation of workflow boundaries, loading interactions, and macro/library coordination, see [UI Interaction Architecture Review](ui_interaction_architecture_review.md).
 
 ---
 
@@ -88,7 +88,7 @@ Each deck preview monitor features a standardized, symmetric dual-column overlay
 - **Deferred Popup Triggering**: Modal popups set a `pendingOpen*` flag and execute `ImGui.openPopup(id)` at the root ID stack level outside child windows.
 - **Modal Rendering Pipeline**: Invokes `NoteEditorModal.draw()`, `SavePresetModal.draw()`, and `PopupManager`'s specific draw methods (e.g. `drawExitPopup()`, `drawDeckConfirmPopups()`, `drawSourceChangeConfirmPopup()`, `drawMidiWarningPopup()`) at root scope.
 - **Single workspace (Performance Mode)**: `PerformanceMatrixPanel.kt` (4×4 macro knob matrix + Deep Edit — see `docs/user_guide/macros_and_rack.md`) is the primary live editing view, orchestrating dedicated sub-controllers for clean separation of concerns:
-  - `PerformanceUiContext.kt`: Shared styling colors (`PerformanceColors`), cached deck row mode states (`deckRowMode`), and label/module resolution helpers.
+  - `PerformanceUiContext.kt`: Shared styling colors (`PerformanceColors`), the deck SRC/FX predicate (`isDeckRowFx`, which reads the deck sub-tab in `ParametersState`), and label/module resolution helpers.
   - `PerformanceTransitionsControls.kt`: Transitions row controls: Line 1 transition picker (active shader/preset name with dirty marker) and TransitionQueue stepping (`< [N/Total] >`); Line 2 crossfader (Deck A/B snap badges, bipolar slider track, `[AUTO]`/`[FADING]` button, fade speed widget); right wing: randomize die button on Line 1 matching deck rows.
   - `PerformanceFxSendsControls.kt`: FX WET/DRY row right-wing Resync.
   - `PerformanceClockControls.kt`: Clock row's two control lines on the MASTER tab (line 1: clock-source pills, Link status, BPM readout, 4-beat dots; line 2: TAP with MIDI Learn on `Global/tapTempo`, RESYNC, ÷2/×2, ±0.5 nudge), reusing `AudioEngine`/`TapTempoController` actions like `TempoSyncPanel`. The row has no knobs: `MacroEngine.GLOBAL` stays registered with 0 knobs (`defaultKnobCountFor`), so old sessions, OSC and MIDI mappings find nothing; a configurable global-knobs row is planned for v1.1.
