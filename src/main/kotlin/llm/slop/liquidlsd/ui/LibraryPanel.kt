@@ -304,6 +304,18 @@ object LibraryPanel {
                     LibraryNavigation.setViewMode(LibraryViewMode.MAPS)
                 }
                 ImGui.popStyleColor(2)
+
+                if (llm.slop.liquidlsd.ui.browser.BrowserPane.supports(llm.slop.liquidlsd.ui.browser.BrowseKind.SRC)) {
+                    ImGui.sameLine(0f, 10f)
+                    val unified = llm.slop.liquidlsd.ui.browser.BrowserPane.enabled
+                    ImGui.pushStyleColor(ImGuiCol.Button, if (unified) activeCol else inactiveCol)
+                    ImGui.pushStyleColor(ImGuiCol.Text, if (unified) activeTextCol else inactiveTextCol)
+                    if (ImGui.button("Unified##unified_browser", btnWModeWide + 8f, btnH)) {
+                        llm.slop.liquidlsd.ui.browser.BrowserPane.enabled = !unified
+                    }
+                    ImGui.popStyleColor(2)
+                    itemTooltip("Beta: tree | list | queues browser (Sources tab only for now).")
+                }
             }
 
             // Centered Action Toolbar
@@ -359,6 +371,11 @@ object LibraryPanel {
         ImGui.pushStyleColor(ImGuiCol.ChildBg, childBg)
         ImGui.pushStyleColor(ImGuiCol.Border, childBorder)
 
+        if (viewMode == LibraryViewMode.PRESETS && llm.slop.liquidlsd.ui.browser.BrowserPane.enabled) {
+            ImGui.beginChild("LibraryUnified", availW, contentH, false, outerFlags)
+            llm.slop.liquidlsd.ui.browser.BrowserPane.draw(session, mixer, parametersState, llm.slop.liquidlsd.ui.browser.BrowseKind.SRC)
+            ImGui.endChild()
+        } else {
         // Group 1 Box: Col 1 & Col 2
         ImGui.beginChild("LibraryGroup1", groupW1, contentH, true, outerFlags)
         val g1AvailW = ImGui.getContentRegionAvailX().coerceAtLeast(20f)
@@ -478,6 +495,7 @@ object LibraryPanel {
         }
 
         ImGui.endChild()
+        }
 
         ImGui.popStyleColor(2)
         ImGui.popStyleVar(2)

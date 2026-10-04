@@ -202,6 +202,34 @@ object PresetListPanel {
                     itemTooltip("Re-extract bundled factory presets into library/presets")
                 }
             } else {
+                drawRows(session, mixer, parametersState, filtered)
+            }
+        }
+        ImGui.endChild()
+
+        // Keyboard shortcuts (Delete / Backspace deletes selected asset(s) with confirmation)
+        val io = ImGui.getIO()
+        val targetsToDelete = selection.getSelectedInOrder(filteredPresets).filter { it.type != AssetType.SOURCE_STOCK }
+        if (targetsToDelete.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
+            if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
+                ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
+                BrowserPopupHandler.openDeleteConfirmation(targetsToDelete)
+            }
+        }
+    }
+    /**
+     * The row loop of the list, shared by the classic Sources column and the unified [BrowserPane]. [favoriteKeys] (stock id or
+     * file path) get a star; [infoFor] is drawn as a muted second column; [contextExtras] adds items at the top of each row's context menu.
+     */
+    internal fun drawRows(
+        session: SessionContext,
+        mixer: Mixer,
+        parametersState: ParametersState,
+        filtered: List<AssetItem>,
+        favoriteKeys: Set<String>? = null,
+        infoFor: ((AssetItem) -> String)? = null,
+        contextExtras: ((AssetItem) -> Unit)? = null
+    ) {
                 filtered.forEachIndexed { index, asset ->
             ImGui.pushID(index)
 
@@ -211,7 +239,8 @@ object PresetListPanel {
             val hasIssues = issues.isNotEmpty()
 
             val icon = if (isStock) Icons.SQUARE else Icons.DISC
-            val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else "$icon ${asset.displayName}"
+            val star = if (favoriteKeys != null && (if (isStock) asset.path.removePrefix(STOCK_PATH_PREFIX) else asset.path) in favoriteKeys) "\u2605 " else ""
+            val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else "$star$icon ${asset.displayName}"
             val isSelected = selection.isSelected(asset)
 
             val popupId = "preset_context_menu_$index"
@@ -251,6 +280,14 @@ object PresetListPanel {
             }
             if (hasIssues && !isSelected) {
                 ImGui.popStyleColor()
+            }
+            if (infoFor != null) {
+                val info = infoFor(asset)
+                if (info.isNotEmpty()) {
+                    val x = ImGui.getItemRectMinX() + itemW * 0.58f
+                    val y = ImGui.getItemRectMinY() + (ImGui.getItemRectSizeY() - ImGui.getTextLineHeight()) * 0.5f
+                    ImGui.getWindowDrawList().addText(x, y, ImGui.getColorU32(ImGuiCol.TextDisabled), info)
+                }
             }
             val isRowHovered = ImGui.isItemHovered()
             if (ImGui.isItemClicked(1)) {
@@ -326,6 +363,10 @@ object PresetListPanel {
             pushOpenDropdownPadding()
             if (ImGui.beginPopup(popupId)) {
                 pushOpenDropdownFont()
+                if (contextExtras != null) {
+                    contextExtras(asset)
+                    ImGui.separator()
+                }
                 if (isStock) {
                     val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(STOCK_PATH_PREFIX) }
                     if (source != null) {
@@ -416,18 +457,5 @@ object PresetListPanel {
 
             ImGui.popID()
                 }
-            }
-        }
-        ImGui.endChild()
-
-        // Keyboard shortcuts (Delete / Backspace deletes selected asset(s) with confirmation)
-        val io = ImGui.getIO()
-        val targetsToDelete = selection.getSelectedInOrder(filteredPresets).filter { it.type != AssetType.SOURCE_STOCK }
-        if (targetsToDelete.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
-            if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
-                ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
-                BrowserPopupHandler.openDeleteConfirmation(targetsToDelete)
-            }
-        }
     }
 }

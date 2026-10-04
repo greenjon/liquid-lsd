@@ -59,6 +59,18 @@ Tabs SRC | FX | Trans (| Maps, see Open items) stay on top.
 - Correction: stock rows are read-only for SRC and FX playlists, but TRANSITION playlists store stock shader ids, so stock transitions CAN be added (`BrowseKind.stockInPlaylists`).
 - Favorites: only FX has a store (`FxShortlist`, stock filters only). Catalog takes `favorites = null` for SRC/TRANS and then shows no Favorites folder. Adding SRC/TRANS favorites would be a new feature (decide separately).
 
+- SRC/Trans favorites DECIDED (user, 2026-10-04): `BrowseFavorites` (SRC + TRANS JSON lists in `library/src_favorites.json` / `transition_favorites.json`; FX delegates to `FxShortlist`). Keys: stock id or saved file path. Done + tested (`BrowseFavoritesTest`). Context-menu star toggle wired for SRC only so far.
+- `BrowseCatalogs` (done): builds catalogs from registries/scans/playlist files, info column (FX chain = "A > B > C", single FX, saved transition = filter name), cached by upstream values.
+- Step 2, slice A DONE 2026-10-04 (uncommitted): `ui/browser/BrowserPane.kt` for the Sources tab only. Beta toggle "Unified" in the Library tab bar (or `-Dlsd.unifiedBrowser=true`), not persisted; classic 4 columns stay the default and were verified unchanged by screenshot. `PresetListPanel.drawRows` extracted so the old column and the pane share one row renderer (drag, context menus, audition, delete, selection) and gained `favoriteKeys` / `infoFor` / `contextExtras`. Verified visually at 1280x768 (tree 218, list 430, queues 218); full test suite green.
+- Known gaps in slice A (to reach parity before it becomes the default):
+  - No "+" new-preset button, "..." menu, or Stock/Saved filter; the tree replaces the filter, new-preset needs a home (toolbar above the list).
+  - Playlists: selecting one shows its rows but cannot reorder/remove (PlaylistEditorPanel did); "new playlist/rename/delete" have no entry point.
+  - Queues are two half-height panes in HALF Library (about 7 rows each at 720p); consider a splitter or tabs if cramped.
+  - Info column is drawn over the row and can overlap long names (no clipping).
+  - Tree has no collapse/expand yet and no remembered scope across restarts.
+  - FX and Trans tabs still classic; LibraryNavigation / MIDI nav still follow the old pane order (step 3).
+- Dev note: `--screenshot-ui` only fires when `--screenshot-after-frames` is below the frames drawn per second (frameCount resets every second in Main.kt:465); use `--screenshot-after-frames=10`.
+
 ## Open items
 - MAPS tab (`LibraryViewMode.MAPS`, MapsBrowserPanel; saved macro banks in `library/knobpresets` + Perform pages; no queues, nothing loads to a deck). DECIDED 2026-10-04: keep it as a 4th tab in the same shell, same 25/50/25 geometry, but not forced into the queue model: left = Banks | Pages, middle = list, right = detail/actions (save-from / apply-to bank, show/hide/copy/delete page) instead of queues. Library view only; not a target in Edit view. Its panel ports in step 2 with minimal change; MIDI nav stays `emptyList()` for it.
 - Presets have no folder field on `AssetItem`; derive from `walkTopDown` relative path (step 1).
