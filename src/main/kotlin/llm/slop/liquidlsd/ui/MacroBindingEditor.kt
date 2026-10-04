@@ -37,7 +37,7 @@ object MacroBindingEditor {
         width: Float
     ): Boolean {
         var delete = false
-        ImGui.pushID(binding.hashCode())
+        ImGui.pushID(System.identityHashCode(binding))
 
         // Line 1: lock, link mode, curve, steps, delete.
         enabledBuf.set(binding.enabled)
@@ -85,7 +85,7 @@ object MacroBindingEditor {
 
     private fun drawLinkMode(control: MacroControl, binding: MacroBinding) {
         LinkModeButton.drawMacroLink(
-            id = "macro_bind_${control.id}_${binding.hashCode()}",
+            id = "macro_bind_${control.id}_${System.identityHashCode(binding)}",
             mode = binding.linkMode,
             inverted = binding.inverted,
             isLinked = binding.enabled,

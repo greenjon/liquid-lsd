@@ -212,11 +212,9 @@ class PerformanceMatrixPanel {
                         MacroLearnState.selectedControlId = control.id
                         ctx.navigateMacroPanelTo(parametersState, bankId)
                         session.uiTheme.column3Mode = UITheme.Column3Mode.MACROS
-                        // Learn needs a parameter to click: open this row's Deep Edit if it's closed.
+                        // Learn needs a parameter to click: show this row's Deep Edit *Params* (not a Browse picker).
                         val learnModuleId = ctx.canonicalModuleId(bankId)
-                        if (learnModuleId in PerformanceDeepEditBay.deepEditModuleIds && parametersState.disclosureFor(learnModuleId) == ParametersState.DisclosureLevel.COLLAPSED) {
-                            parametersState.setDisclosure(learnModuleId, ParametersState.DisclosureLevel.DEEP_EDIT)
-                        }
+                        if (learnModuleId in PerformanceDeepEditBay.deepEditModuleIds) parametersState.openParams(learnModuleId)
                     }
                     ImGui.popStyleColor()
                     itemTooltip(

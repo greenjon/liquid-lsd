@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Macro Binding ID Stability & Macro Learn Parameter Navigation Fixes (`ui/MacroBindingEditor.kt`, `ui/PerformanceMatrixPanel.kt`)
+- **MacroBindingEditor**: Replaced `hashCode()` with `System.identityHashCode(binding)` for ImGui ID push and link mode hashing to ensure stable IDs regardless of object content changes.
+- **PerformanceMatrixPanel**: Fixed Macro Learn navigation to directly open Deep Edit *Params* for the target module rather than checking disclosure state against collapsed enum values incorrectly.
+
 ### Automated GitHub Release Pruning (`.github/workflows/release.yml`)
 - Added automated release cleanup via `dev-drprasad/delete-older-releases@v0.3.3` in the release workflow (`release.yml`).
 - Automatically retains the latest 3 releases and removes older releases and associated tags to prevent release clutter.
