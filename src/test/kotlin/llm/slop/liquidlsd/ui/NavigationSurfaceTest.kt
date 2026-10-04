@@ -12,6 +12,11 @@ import llm.slop.liquidlsd.rendering.Shader
 import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import llm.slop.liquidlsd.rendering.isf.ISFHeader
 import llm.slop.liquidlsd.rendering.isf.ISFInput
+import llm.slop.liquidlsd.ui.browser.ApplyTarget
+import llm.slop.liquidlsd.ui.browser.BrowseKind
+import llm.slop.liquidlsd.ui.browser.BrowseScope
+import llm.slop.liquidlsd.ui.browser.BrowserPane
+import llm.slop.liquidlsd.ui.browser.PresetListPanel
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -159,6 +164,75 @@ class NavigationSurfaceTest {
         assertTrue(nav().browsing)
         clock += 350
         assertFalse(nav().browsing)
+    }
+
+    // --- Unified pane hosted in the Edit bay ---
+
+    private fun hostPane(applied: MutableList<String>, cleared: MutableList<String>) {
+        BrowserPane.enabled = true
+        BrowserPane.noteHosting(
+            ApplyTarget(
+                kind = BrowseKind.SRC, contextKey = "gen/Deck A", defaultScope = BrowseScope.All,
+                accepts = { true }, isApplied = { false }, apply = { applied += it.path }, clear = { cleared += "x" }
+            )
+        )
+    }
+
+    private fun unhostPane() {
+        BrowserPane.noteHosting(null)
+        BrowserPane.enabled = false
+        LibraryPanel.activeSelectionSource = null
+        PresetListPanel.selectedAsset = null
+    }
+
+    @Test
+    fun aHostedPaneMakesEditViewBrowsingAndAppliesTheCursorRowOnTap() {
+        val applied = mutableListOf<String>()
+        try {
+            state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
+            clock += 350
+            assertFalse(nav().browsing)
+            hostPane(applied, mutableListOf())
+            assertTrue(nav().browsing)
+            LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
+            PresetListPanel.selectedAsset = AssetItem("stock-source://plasma", "Plasma", AssetType.SOURCE_STOCK)
+            nav().browseAccept(false)
+            assertEquals(listOf("stock-source://plasma"), applied)
+            nav().browseAccept(true) // shift + tap does nothing in the bay
+            assertEquals(1, applied.size)
+            clock += 350
+            assertFalse(nav().browsing)
+        } finally {
+            unhostPane()
+        }
+    }
+
+    @Test
+    fun hostedPaneButtonsStepPanesAndShiftRightBottomClears() {
+        val cleared = mutableListOf<String>()
+        try {
+            state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
+            hostPane(mutableListOf(), cleared)
+            nav().button(2, false)
+            assertTrue(cleared.isEmpty())
+            nav().button(2, true)
+            assertEquals(1, cleared.size)
+        } finally {
+            unhostPane()
+        }
+    }
+
+    @Test
+    fun tappingATreeRowInTheBayMovesTheCursorIntoTheList() {
+        try {
+            state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
+            hostPane(mutableListOf(), mutableListOf())
+            LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.TREE
+            nav().browseAccept(false)
+            assertEquals(LibraryPanel.SelectionSource.PRESETS, LibraryPanel.activeSelectionSource)
+        } finally {
+            unhostPane()
+        }
     }
 
     // --- Library open / leave ---

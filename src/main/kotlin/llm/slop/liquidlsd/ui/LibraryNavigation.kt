@@ -49,7 +49,7 @@ internal object LibraryNavigation {
 
     /** The browse kind of the current tab when the unified pane is what is on screen, else null (classic columns, Maps). */
     internal fun unifiedKind(): BrowseKind? {
-        val kind = when (LibraryPanel.viewMode) {
+        val kind = when (LibraryPanel.navMode) {
             LibraryViewMode.PRESETS -> BrowseKind.SRC
             LibraryViewMode.FX -> BrowseKind.FX
             LibraryViewMode.TRANS -> BrowseKind.TRANS
@@ -59,11 +59,11 @@ internal object LibraryNavigation {
     }
 
     /** The lists the cursor can sit in for the current tab, left to right. The unified pane has no playlist column: a playlist is a tree scope shown in the list. */
-    internal fun panes(): List<SelectionSource> = if (unifiedKind() != null) when (LibraryPanel.viewMode) {
+    internal fun panes(): List<SelectionSource> = if (unifiedKind() != null) when (LibraryPanel.navMode) {
         LibraryViewMode.PRESETS -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB)
         LibraryViewMode.FX -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB)
         else -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.TRANSITION_QUEUE)
-    } else when (LibraryPanel.viewMode) {
+    } else when (LibraryPanel.navMode) {
         LibraryViewMode.PRESETS -> listOf(SelectionSource.PRESETS, SelectionSource.PLAYLIST, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB)
         LibraryViewMode.FX -> listOf(SelectionSource.PRESETS, SelectionSource.FX_PLAYLIST, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB)
         LibraryViewMode.TRANS -> listOf(SelectionSource.PRESETS, SelectionSource.TRANSITION_PLAYLIST, SelectionSource.TRANSITION_QUEUE)
@@ -72,7 +72,7 @@ internal object LibraryNavigation {
 
     private fun paneSize(source: SelectionSource, session: SessionContext): Int = when (source) {
         SelectionSource.TREE -> unifiedKind()?.let { BrowserPane.treeSize(it) } ?: 0
-        SelectionSource.PRESETS -> when (LibraryPanel.viewMode) {
+        SelectionSource.PRESETS -> when (LibraryPanel.navMode) {
             LibraryViewMode.PRESETS -> PresetListPanel.filteredPresets.size
             LibraryViewMode.FX -> FXBrowserPanel.filteredRows.size
             LibraryViewMode.TRANS -> TransitionBrowserPanel.filteredRows.size
@@ -130,7 +130,7 @@ internal object LibraryNavigation {
 
     /** The files the enqueue shortcuts act on: the multi-selection in the Sources list, else the cursor item. */
     fun enqueueTargets(session: SessionContext): List<File> {
-        if (LibraryPanel.activeSelectionSource == SelectionSource.PRESETS && LibraryPanel.viewMode == LibraryViewMode.PRESETS) {
+        if (LibraryPanel.activeSelectionSource == SelectionSource.PRESETS && LibraryPanel.navMode == LibraryViewMode.PRESETS) {
             return PresetListPanel.selection.getSelectedInOrder(PresetListPanel.filteredPresets)
                 .filter { it.type != AssetType.SOURCE_STOCK }
                 .map { File(it.path) }
@@ -143,7 +143,7 @@ internal object LibraryNavigation {
     fun enqueue(session: SessionContext, bg: Boolean): Boolean {
         val files = enqueueTargets(session)
         if (files.isEmpty()) return false
-        when (LibraryPanel.viewMode) {
+        when (LibraryPanel.navMode) {
             LibraryViewMode.FX -> files.forEach { if (bg) FXBgQueueManager.appendToQueue(it) else FXQueueManager.appendToQueue(it) }
             LibraryViewMode.PRESETS -> files.forEach { if (bg) BgQueueManager.appendToQueue(it) else session.playQueueManager.appendToQueue(it) }
             LibraryViewMode.TRANS -> files.forEach { TransitionQueueManager.appendToQueue(it) }
@@ -171,8 +171,15 @@ internal object LibraryNavigation {
     fun accept(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
         val file = LibraryPanel.getActiveSelectedFile(session)
         when (LibraryPanel.activeSelectionSource) {
-            SelectionSource.TREE -> unifiedKind()?.let { BrowserPane.acceptTree(it) }
-            SelectionSource.PRESETS -> when (LibraryPanel.viewMode) {
+            SelectionSource.TREE -> unifiedKind()?.let {
+                BrowserPane.acceptTree(it)
+                // In the Edit bay a scope tap also moves the cursor into the list (fewer presses); the Library keeps tap-selects-only.
+                if (BrowserPane.hosted() != null) LibraryPanel.activeSelectionSource = SelectionSource.PRESETS
+            }
+            SelectionSource.PRESETS -> if (BrowserPane.hosted() != null) {
+                // Hosted in the Edit bay: the cursor row applies to the bay's target.
+                BrowserPane.applyCursorRow()
+            } else when (LibraryPanel.navMode) {
                 LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset?.let { loadAssetToInactiveDeck(session, mixer, it, parametersState) }
                 LibraryViewMode.FX -> enqueue(session, bg = false)
                 LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset?.let { TransitionBrowserPanel.applyToMixer(session, mixer, it) }

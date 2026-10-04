@@ -197,8 +197,24 @@ class UIManager(
 
     private val performanceMatrixPanel = PerformanceMatrixPanel()
 
+    private var devEditBrowseOpened = false
+
+    /** Dev aid for screenshots: `-Dlsd.editBrowse=gen|chain|fx1|fx2|fx3|trans` opens Deck A's (or Master's) Edit bay on that Browse tab once. */
+    private fun openDevEditBrowse() {
+        if (devEditBrowseOpened) return
+        devEditBrowseOpened = true
+        val tab = System.getProperty("lsd.editBrowse") ?: return
+        when (tab) {
+            "gen" -> parametersState.openGenBrowse(llm.slop.liquidlsd.macro.MacroEngine.DECK_A, "Deck A")
+            "trans" -> parametersState.openTransitionBrowse()
+            "chain" -> parametersState.openFxChainBrowse(llm.slop.liquidlsd.macro.MacroEngine.DECK_A, "Deck A", null)
+            else -> parametersState.openFxChainBrowse(llm.slop.liquidlsd.macro.MacroEngine.DECK_A, "Deck A", tab.removePrefix("fx").toInt() - 1)
+        }
+    }
+
     fun render(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
         currentMixer = mixer
+        openDevEditBrowse()
 
         // Update window title dynamically
         val title = "Liquid LSD - Libre Shader Decks"

@@ -80,6 +80,8 @@ Tabs SRC | FX | Trans (| Maps, see Open items) stay on top.
 
 - Step 3 (MIDI navigation) DONE 2026-10-04: tree cursor + pane order tree > list > queues (see DECISIONS.md). User decisions: fresh tab starts in the list; tree turn moves cursor only, tap selects; scope change resets list selection. Hardware check on the Twister still to do by the user. Step 4 handoff: `.planning/unified-browser-step4-handoff.md`.
 
+- Step 4 (Edit-bay hosting) DONE 2026-10-04 (uncommitted until noted): `ApplyTarget`/`ScopeMemory`, targets built in `PerformanceBrowseBay` for SRC/Chain/FX1-3/TRANS behind `BrowserPane.enabled`, nav via `BrowserPane.hosted()` + `LibraryPanel.navMode`. Verified by screenshots (`-Dlsd.editBrowse=...`) at 1280x768; tests green. Not hand-tested: clicking/applying in the bay, Twister in the bay. Known gaps: tree counts ignore the target's filter; no FX/transition undo (backlog); Shift+tap does nothing in the bay.
+
 ## Open items
 - MAPS tab (`LibraryViewMode.MAPS`, MapsBrowserPanel; saved macro banks in `library/knobpresets` + Perform pages; no queues, nothing loads to a deck). DECIDED 2026-10-04: keep it as a 4th tab in the same shell, same 25/50/25 geometry, but not forced into the queue model: left = Banks | Pages, middle = list, right = detail/actions (save-from / apply-to bank, show/hide/copy/delete page) instead of queues. Library view only; not a target in Edit view. Its panel ports in step 2 with minimal change; MIDI nav stays `emptyList()` for it.
 - Presets have no folder field on `AssetItem`; derive from `walkTopDown` relative path (step 1).

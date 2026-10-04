@@ -57,6 +57,8 @@ Written 2026-10-04. Replaces `d-items-handoff.md` and `v1.1-ui-inconsistencies.m
 9. **Leaving Edit collapses the expanded module**, with no way back to it. Restore the previously expanded module when returning. **OPEN 2026-10-04**: needs a decision on the restore trigger (no new UI in v1.0)
 ~~24. **Dead code:** GLOBAL has 0 knobs, so its GUEST strip and learn branches (`PerformanceMatrixPanel`, `MacroStripVisibility`) can't be reached. Remove, or keep with a comment tied to the v1.1 free-knob row (`project_global_knobs_row_v11` in memory).~~ **DONE 2026-10-04** (kept, commented)
 
+28. **FX and transition picks from the Edit bay are not undoable** (only `DeckOps` source/preset picks push undo; `FxOps` and `TransitionOps` have no undo hook). Add a restore-lambda push through `ParametersUndo.pushUndoState` for slot/chain/transition changes. **OPEN 2026-10-04**; user wants it before the 1.0 release.
+
 ### Tier 3: Library gaps **[decide]** (some may count as new features)
 
 ~~10. **Transitions can only be saved from the Library** (not from the Mixer TRANS tab or the inline picker).~~ **DONE 2026-10-04**

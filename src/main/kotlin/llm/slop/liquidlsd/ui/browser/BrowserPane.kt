@@ -20,6 +20,7 @@ import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.UIManager
+import llm.slop.liquidlsd.ui.UiClock
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownPadding
 import llm.slop.liquidlsd.ui.pushOpenDropdownFont
@@ -91,8 +92,41 @@ object BrowserPane {
     /** Selects the scope under the tree cursor, which fills the list. */
     fun acceptTree(kind: BrowseKind) = select(kind, treeCursorOf(kind))
 
-    fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, kind: BrowseKind) {
+    private val scopeMemory = ScopeMemory()
+
+    private var hostedTarget: ApplyTarget? = null
+    private var hostedAtMs = 0L
+
+    /** The target of the pane drawn in the Edit bay within the last 300 ms, else null (Library or not on screen). The controller reads it to pick its context. */
+    fun hosted(): ApplyTarget? = hostedTarget?.takeIf { UiClock.nowMs() - hostedAtMs < 300L }
+
+    /** Applies the list row under the controller's cursor to the hosted target; false when there is none. */
+    fun applyCursorRow(): Boolean {
+        val target = hosted() ?: return false
+        val asset = when (target.kind) {
+            BrowseKind.SRC -> PresetListPanel.selectedAsset
+            BrowseKind.FX -> FXBrowserPanel.selectedAsset
+            BrowseKind.TRANS -> TransitionBrowserPanel.selectedAsset
+        } ?: return false
+        if (!target.accepts(asset)) return false
+        target.apply(asset)
+        return true
+    }
+
+    /**
+     * Draws the pane. [target] is null in the Library (double-click loads) and set when the Edit bay hosts it (a click applies to
+     * the target, only rows it accepts are listed, and each target remembers its own scope).
+     */
+    fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, kind: BrowseKind, target: ApplyTarget? = null) {
         val catalog = BrowseCatalogs.get(kind)
+        noteHosting(target)
+        val (scope, moved) = scopeMemory.enter(kind, target?.contextKey ?: ScopeMemory.LIBRARY, scopeOf(kind), target?.defaultScope ?: BrowseScope.All)
+        if (moved) {
+            clearSelection(kind)
+            treeCursors.remove(kind)
+            searchBuffers[kind]?.set("")
+            scopes[kind] = scope
+        }
         val totalW = ImGui.getContentRegionAvailX().coerceAtLeast(3 * MIN_SIDE_W)
         val h = ImGui.getContentRegionAvailY().coerceAtLeast(1f)
         val usable = totalW - 2 * GAP
@@ -111,7 +145,7 @@ object BrowserPane {
 
         ImGui.sameLine(0f, GAP)
         ImGui.beginChild("BrowserPaneList", midW, h, true, flags)
-        drawList(session, mixer, parametersState, catalog, kind)
+        drawList(session, mixer, parametersState, catalog, kind, target)
         ImGui.endChild()
 
         ImGui.sameLine(0f, GAP)
@@ -121,6 +155,13 @@ object BrowserPane {
 
         ImGui.popStyleColor(2)
         ImGui.popStyleVar(2)
+    }
+
+    /** Records where the pane is hosted; a controller cursor left over from another host (or the Library) is dropped when that changes. */
+    internal fun noteHosting(target: ApplyTarget?) {
+        if (target?.contextKey != hostedTarget?.contextKey) LibraryPanel.activeSelectionSource = null
+        hostedTarget = target
+        if (target != null) hostedAtMs = UiClock.nowMs()
     }
 
     private fun drawTree(session: SessionContext, mixer: Mixer, catalog: BrowseCatalog, kind: BrowseKind) {
@@ -263,7 +304,7 @@ object BrowserPane {
         }
     }
 
-    private fun drawList(session: SessionContext, mixer: Mixer, parametersState: ParametersState, catalog: BrowseCatalog, kind: BrowseKind) {
+    private fun drawList(session: SessionContext, mixer: Mixer, parametersState: ParametersState, catalog: BrowseCatalog, kind: BrowseKind, target: ApplyTarget?) {
         val scope = scopeOf(kind)
         val title = catalog.tree().firstOrNull { it.scope == scope }?.label ?: "All"
         drawListHeader(session, mixer, parametersState, title, kind)
@@ -283,11 +324,12 @@ object BrowserPane {
         ImGui.spacing()
 
         val query = search.get().trim()
-        val entries = catalog.rows(scope, query)
+        val entries = catalog.rows(scope, query).let { all -> if (target == null) all else all.filter { target.accepts(it.asset) } }
         val missing = catalog.missing(scope)
         val infoByPath = entries.associate { it.asset.path to it.info }
         val assets = entries.map { it.asset }
-        val playlistRows = playlistRowsFor(catalog, scope, query)
+        // Reordering needs every playlist row visible, so it stays a Library feature.
+        val playlistRows = if (target == null) playlistRowsFor(catalog, scope, query) else null
 
         if (ImGui.beginChild("##browser_list_scroll", 0f, 0f, false)) {
             when (kind) {
@@ -320,10 +362,10 @@ object BrowserPane {
                 when (kind) {
                     BrowseKind.SRC -> PresetListPanel.drawRows(
                         session, mixer, parametersState, assets,
-                        favoriteKeys = BrowseFavorites.keys(kind), infoFor = infoFor, contextExtras = extras, playlistRows = playlistRows
+                        favoriteKeys = BrowseFavorites.keys(kind), infoFor = infoFor, contextExtras = extras, playlistRows = playlistRows, target = target
                     )
-                    BrowseKind.FX -> FXBrowserPanel.drawRows(session, mixer, assets, infoFor, extras, playlistRows)
-                    BrowseKind.TRANS -> TransitionBrowserPanel.drawRows(session, mixer, assets, infoFor, extras, playlistRows)
+                    BrowseKind.FX -> FXBrowserPanel.drawRows(session, mixer, assets, infoFor, extras, playlistRows, target)
+                    BrowseKind.TRANS -> TransitionBrowserPanel.drawRows(session, mixer, assets, infoFor, extras, playlistRows, target)
                 }
             }
             if (missing > 0) {
@@ -336,7 +378,7 @@ object BrowserPane {
         // Delete / Backspace: inside a playlist it removes the rows from the playlist, elsewhere it deletes from the library with confirmation.
         val io = ImGui.getIO()
         val selected = selectedAssets(kind, assets)
-        if (selected.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper &&
+        if (target == null && selected.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper &&
             (ImGui.isKeyPressed(ImGuiKey.Delete, false) || ImGui.isKeyPressed(ImGuiKey.Backspace, false))
         ) {
             if (playlistRows != null) {

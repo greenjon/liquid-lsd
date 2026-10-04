@@ -51,6 +51,15 @@ object LibraryPanel {
     }
 
     var viewMode: LibraryViewMode = System.getProperty("lsd.libraryTab")?.let { n -> LibraryViewMode.entries.firstOrNull { it.name.equals(n, true) } } ?: LibraryViewMode.PRESETS
+
+    /** The tab the controller and keyboard act on: the one the Edit bay's hosted pane is showing, else the Library's own [viewMode]. */
+    val navMode: LibraryViewMode
+        get() = when (llm.slop.liquidlsd.ui.browser.BrowserPane.hosted()?.kind) {
+            llm.slop.liquidlsd.ui.browser.BrowseKind.SRC -> LibraryViewMode.PRESETS
+            llm.slop.liquidlsd.ui.browser.BrowseKind.FX -> LibraryViewMode.FX
+            llm.slop.liquidlsd.ui.browser.BrowseKind.TRANS -> LibraryViewMode.TRANS
+            null -> viewMode
+        }
     var activeSelectionSource: SelectionSource? = null
     var selectedPlaylistFile: File? = null
     var selectedTransitionPlaylistFile: File? = null
@@ -101,7 +110,7 @@ object LibraryPanel {
         return when (activeSelectionSource) {
             SelectionSource.TREE -> null
             SelectionSource.PRESETS -> {
-                when (viewMode) {
+                when (navMode) {
                     LibraryViewMode.FX -> FXBrowserPanel.selectedAsset?.let { File(it.path) }
                     LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset?.let { TransitionBrowserPanel.fileFor(it) }
                     LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset
@@ -150,7 +159,7 @@ object LibraryPanel {
             PlaylistEditorPanel.selectedPresetIndex = -1
             QueueActionsPanel.selectedIndex = -1
             llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
-            if (asset.type != AssetType.SOURCE_STOCK) {
+            if (asset.type != AssetType.SOURCE_STOCK && llm.slop.liquidlsd.ui.browser.BrowserPane.hosted() == null) {
                 auditionIfLocked(File(asset.path), session, mixer)
             }
         }
@@ -591,14 +600,14 @@ object LibraryPanel {
     }
 
     fun navigateSelection(delta: Int, session: SessionContext, mixer: Mixer) {
-        if (viewMode == LibraryViewMode.MAPS) return // Maps rows are clicked, not stepped
+        if (navMode == LibraryViewMode.MAPS) return // Maps rows are clicked, not stepped
         when (activeSelectionSource) {
             SelectionSource.TREE -> {
                 LibraryNavigation.unifiedKind()?.let { llm.slop.liquidlsd.ui.browser.BrowserPane.stepTree(it, delta) }
                 shouldScrollToSelection = true
             }
             SelectionSource.PRESETS -> {
-                if (viewMode == LibraryViewMode.FX) {
+                if (navMode == LibraryViewMode.FX) {
                     val list = FXBrowserPanel.filteredRows
                     if (list.isNotEmpty()) {
                         val currentIdx = list.indexOfFirst { it.path == FXBrowserPanel.selectedAsset?.path }
@@ -613,7 +622,7 @@ object LibraryPanel {
                             shouldReclaimFocus = true
                         }
                     }
-                } else if (viewMode == LibraryViewMode.TRANS) {
+                } else if (navMode == LibraryViewMode.TRANS) {
                     val list = TransitionBrowserPanel.filteredRows
                     if (list.isNotEmpty()) {
                         val currentIdx = list.indexOfFirst { it.path == TransitionBrowserPanel.selectedAsset?.path }
@@ -766,7 +775,7 @@ object LibraryPanel {
                 }
             }
             null -> {
-                if (viewMode == LibraryViewMode.TRANS) {
+                if (navMode == LibraryViewMode.TRANS) {
                     val list = TransitionBrowserPanel.filteredRows
                     if (list.isNotEmpty()) {
                         TransitionBrowserPanel.selectedAsset = list.first()
@@ -774,7 +783,7 @@ object LibraryPanel {
                         shouldScrollToSelection = true
                         shouldReclaimFocus = true
                     }
-                } else if (viewMode == LibraryViewMode.FX) {
+                } else if (navMode == LibraryViewMode.FX) {
                     val list = FXBrowserPanel.filteredRows
                     if (list.isNotEmpty()) {
                         FXBrowserPanel.selectedAsset = list.first()
@@ -795,7 +804,7 @@ object LibraryPanel {
     }
 
     fun getSelectedAsset(): AssetItem? {
-        return when (viewMode) {
+        return when (navMode) {
             LibraryViewMode.FX -> FXBrowserPanel.selectedAsset
             LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset
             LibraryViewMode.MAPS -> null

@@ -12,6 +12,12 @@ import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.presets.TransitionOps
+import llm.slop.liquidlsd.ui.browser.ApplyTarget
+import llm.slop.liquidlsd.ui.browser.BrowseCatalogs
+import llm.slop.liquidlsd.ui.browser.BrowseKind
+import llm.slop.liquidlsd.ui.browser.BrowseScope
+import llm.slop.liquidlsd.ui.browser.BrowserPane
 import java.io.File
 
 /**
@@ -94,7 +100,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
     private fun drawDeckBrowse(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String, deckLabel: String) {
         val deck = ctx.deckForLabel(mixer, deckLabel)
         if (parametersState.getActiveSubTab(deckLabel) == "FX") {
-            drawFxChainBrowse(session, parametersState, moduleId, deck.fxChain, "$deckLabel FX")
+            drawFxChainBrowse(session, mixer, parametersState, moduleId, deck.fxChain, "$deckLabel FX")
         } else {
             drawGenBrowse(session, parametersState, mixer, deck, deckLabel)
         }
@@ -102,8 +108,8 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
 
     private fun drawMasterBrowse(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
         when (parametersState.activeMixerSubTab) {
-            "TRANS" -> drawTransitionBrowse(session, mixer)
-            "FX" -> drawFxChainBrowse(session, parametersState, MacroEngine.MASTER, mixer.masterFxChain, "Master FX")
+            "TRANS" -> drawTransitionBrowse(session, mixer, parametersState)
+            "FX" -> drawFxChainBrowse(session, mixer, parametersState, MacroEngine.MASTER, mixer.masterFxChain, "Master FX")
             // MIX (CTRL) has no Browse target -- e.g. the user flipped the row's pill back to MIX
             // while Browse was open. Nothing to show here, so fall back to Params.
             else -> parametersState.openParams(MacroEngine.MASTER)
@@ -111,6 +117,23 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
     }
 
     private fun drawGenBrowse(session: SessionContext, parametersState: ParametersState, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String) {
+        if (BrowserPane.enabled) {
+            val applyId = { id: String -> DeckSourcePicker.applyPickedSourceId(session, parametersState, mixer, deck, deckLabel, id, ctx.deckPresetController) }
+            val target = ApplyTarget(
+                kind = BrowseKind.SRC,
+                contextKey = "gen/$deckLabel",
+                defaultScope = BrowseScope.All,
+                accepts = { ApplyTarget.acceptsSource(it.type) },
+                isApplied = { it.type == AssetType.SOURCE_STOCK && it.path.removePrefix(BrowseCatalogs.STOCK_SOURCE_PREFIX) == deck.source.id },
+                apply = { asset ->
+                    if (asset.type == AssetType.SOURCE_STOCK) applyId(asset.path.removePrefix(BrowseCatalogs.STOCK_SOURCE_PREFIX))
+                    else DeckSlot.entries.firstOrNull { it.label == deckLabel }?.let { DeckOps.request(it, DeckChange.Preset(File(asset.path))) }
+                }
+            )
+            drawGenBrowseSaveButton(session, mixer, deck, deckLabel) { drawExternalVideoMenu(deckLabel, applyId) }
+            BrowserPane.draw(session, mixer, parametersState, BrowseKind.SRC, target)
+            return
+        }
         ShaderPickerPopup.ensureInlineSource("gen/$deckLabel", "Select Source for $deckLabel", applied = { deck.source.id }) { pick ->
             when (pick) {
                 is ShaderPickerPopup.SourcePick.Id ->
@@ -126,7 +149,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
 
     /** Floppy-disk Save/Save As -- same [DeckPresetController.handleSaveDeck] flow the Mixer's
      *  own Save button and Ctrl+Shift+S already use, just also reachable from this Browse list. */
-    private fun drawGenBrowseSaveButton(session: SessionContext, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String) {
+    private fun drawGenBrowseSaveButton(session: SessionContext, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String, extra: (() -> Unit)? = null) {
         val isDeckA = deckLabel == "Deck A"
         val isExternal = deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource
         val rowH = ImGui.getFrameHeight()
@@ -159,10 +182,49 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
+        if (extra != null) {
+            ImGui.sameLine()
+            extra()
+        }
         ImGui.spacing()
     }
 
-    private fun drawTransitionBrowse(session: SessionContext, mixer: Mixer) {
+    /** The unified pane lists saved and stock sources only; live external video feeds (the old picker's "External Sources") live in this menu. */
+    private fun drawExternalVideoMenu(deckLabel: String, apply: (String) -> Unit) {
+        val popupId = "browse_gen_ext_video_$deckLabel"
+        if (ImGui.button("External video...##$popupId")) ImGui.openPopup(popupId)
+        itemTooltip("Use a live external video stream as this deck's source.")
+        pushOpenDropdownPadding()
+        if (ImGui.beginPopup(popupId)) {
+            pushOpenDropdownFont()
+            val servers = llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.availableServers.value
+            if (servers.isEmpty()) ImGui.textDisabled("No external streams active")
+            servers.forEach { if (ImGui.menuItem(it)) apply("ext_video:$it") }
+            popOpenDropdownFont()
+            ImGui.endPopup()
+        }
+        popOpenDropdownPadding()
+    }
+
+    private fun drawTransitionBrowse(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
+        if (BrowserPane.enabled) {
+            val target = ApplyTarget(
+                kind = BrowseKind.TRANS,
+                contextKey = "transition",
+                defaultScope = BrowseScope.All,
+                accepts = { ApplyTarget.acceptsTransition(it.type) },
+                isApplied = {
+                    it.type == AssetType.TRANSITION_STOCK &&
+                        it.path.removePrefix(BrowseCatalogs.STOCK_TRANS_PREFIX) == (mixer.transitionFilter?.id ?: "linear_crossfade")
+                },
+                apply = { asset ->
+                    if (asset.type == AssetType.TRANSITION_STOCK) TransitionOps.setStock(asset.path.removePrefix(BrowseCatalogs.STOCK_TRANS_PREFIX))
+                    else TransitionOps.loadPreset(File(asset.path))
+                }
+            )
+            BrowserPane.draw(session, mixer, parametersState, BrowseKind.TRANS, target)
+            return
+        }
         ShaderPickerPopup.ensureInline("transition", "Select Mixer Transition", ShaderPickerPopup.PickerType.MIXER_TRANSITION, applied = { mixer.transitionFilter?.id ?: "linear_crossfade" }) { id ->
             llm.slop.liquidlsd.presets.TransitionOps.setStock(id)
         }
@@ -172,15 +234,53 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
     }
 
     /** [moduleId] is the canonical rack module (a deck, or MASTER) -- used only to look up the Chain/FX1/FX2/FX3 target chosen in the bay's tab row. */
-    private fun drawFxChainBrowse(session: SessionContext, parametersState: ParametersState, moduleId: String, chain: FxChain, chainLabel: String) {
+    private fun drawFxChainBrowse(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String, chain: FxChain, chainLabel: String) {
         val target = parametersState.browseTargetFor(moduleId) as? ParametersState.BrowseTarget.FxChain
         val activeSlot = target?.slotIndex
 
+        if (BrowserPane.enabled) {
+            drawFxPane(session, mixer, parametersState, chain, activeSlot)
+            return
+        }
         if (activeSlot == null) {
             drawChainList(session, chain)
         } else {
             drawFxSlotPicker(session, chain, activeSlot, chainLabel)
         }
+    }
+
+    /** The unified pane hosted for an FX slot (one effect) or, with [slotIndex] null, the whole chain. */
+    private fun drawFxPane(session: SessionContext, mixer: Mixer, parametersState: ParametersState, chain: FxChain, slotIndex: Int?) {
+        val key = System.identityHashCode(chain)
+        val target = if (slotIndex == null) {
+            ApplyTarget(
+                kind = BrowseKind.FX,
+                contextKey = "chain/$key",
+                defaultScope = ApplyTarget.defaultFxScope(null),
+                accepts = { ApplyTarget.acceptsFxChain(it.type) },
+                isApplied = { it.type == AssetType.FX_CHAIN && chain.sourceFile?.absolutePath == it.path },
+                apply = { FxOps.loadChain(session, File(it.path), chain) },
+                clear = { FxOps.clearChain(chain) }
+            )
+        } else {
+            ApplyTarget(
+                kind = BrowseKind.FX,
+                contextKey = "fxslot/$key/$slotIndex",
+                defaultScope = ApplyTarget.defaultFxScope(slotIndex),
+                accepts = { ApplyTarget.acceptsFxSlot(it.type) },
+                isApplied = { it.type == AssetType.FX_STOCK && chain.slots[slotIndex]?.id == it.path.removePrefix(BrowseCatalogs.STOCK_FX_PREFIX) },
+                apply = { asset ->
+                    if (asset.type == AssetType.FX_STOCK) FxOps.setSlotFilter(chain, slotIndex, asset.path.removePrefix(BrowseCatalogs.STOCK_FX_PREFIX))
+                    else FxOps.loadSlot(session, File(asset.path), chain, slotIndex)
+                },
+                clear = { FxOps.clearSlot(chain, slotIndex) }
+            )
+        }
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
+            if (ImGui.button("${Icons.TRASH} ${if (slotIndex == null) "Clear Chain" else "Clear Slot ${slotIndex + 1}"}##browse_fx_clear")) target.clear?.invoke()
+        }
+        ImGui.spacing()
+        BrowserPane.draw(session, mixer, parametersState, BrowseKind.FX, target)
     }
 
     private fun drawFxSlotPicker(session: SessionContext, chain: FxChain, slotIndex: Int, chainLabel: String) {

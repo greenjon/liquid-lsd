@@ -332,6 +332,7 @@ The three side buttons other than Shift change meaning with the view:
 |---|---|---|---|---|
 | **Perform** | back (same as Esc) | open the **Library** | open the **picker** for the row of the knob you touched last | normal knob |
 | **Picker open** | close the picker | step the category | nothing; **Shift +** it clears the slot or chain | **cursor**: turn to move, tap to apply |
+| **Picker open, unified pane on (beta)** | close the picker | step the pane: folders, list, queues | nothing; **Shift +** it clears the slot or chain | **cursor** in the active pane: turn to move; tap applies the list row, or selects a folder and jumps to the list |
 | **Library** | leave the Library | step the **tab** (Sources, FX, Trans) | step the **pane**: classic columns = browser, playlist, BG queue, A/B queue; Unified browser = folder tree, list, BG queue, A/B queue | **cursor**: turn to move, tap to load |
 
 - **Unsaved-changes prompt:** when loading would discard edits on a deck, the prompt takes over the controller: **left-top** = Cancel, **right-top** or **knob 1 tap** = Save, **right-bottom** or **Shift + tap** = Discard. Nothing else navigates until you answer.

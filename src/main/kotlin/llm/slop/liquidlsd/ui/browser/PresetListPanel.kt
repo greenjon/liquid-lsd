@@ -229,7 +229,8 @@ object PresetListPanel {
         favoriteKeys: Set<String>? = null,
         infoFor: ((AssetItem) -> String)? = null,
         contextExtras: ((AssetItem) -> Unit)? = null,
-        playlistRows: PlaylistRows? = null
+        playlistRows: PlaylistRows? = null,
+        target: ApplyTarget? = null
     ) {
                 filtered.forEachIndexed { index, asset ->
             ImGui.pushID(index)
@@ -241,7 +242,8 @@ object PresetListPanel {
 
             val icon = if (isStock) Icons.SQUARE else Icons.DISC
             val star = if (favoriteKeys != null && (if (isStock) asset.path.removePrefix(STOCK_PATH_PREFIX) else asset.path) in favoriteKeys) "\u2605 " else ""
-            val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else "$star$icon ${asset.displayName}"
+            val applied = if (target?.isApplied(asset) == true) "\u25CF " else ""
+            val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else "$applied$star$icon ${asset.displayName}"
             val isSelected = selection.isSelected(asset)
 
             val popupId = "preset_context_menu_$index"
@@ -272,12 +274,14 @@ object PresetListPanel {
             if (itemClicked) {
                 val isCtrl = io.keyCtrl || io.keySuper
                 val isShift = io.keyShift
-                selection.handleClick(asset, filtered, isCtrl, isShift)
+                if (target != null) selection.setSingle(asset) else selection.handleClick(asset, filtered, isCtrl, isShift)
                 LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
                 PlaylistEditorPanel.clearSelection()
                 QueueActionsPanel.clearSelection()
                 llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
-                if (asset.type != AssetType.SOURCE_STOCK) {
+                if (target != null) {
+                    target.apply(asset)
+                } else if (asset.type != AssetType.SOURCE_STOCK) {
                     LibraryPanel.auditionIfLocked(File(asset.path), session, mixer)
                 }
             }
@@ -327,7 +331,7 @@ object PresetListPanel {
             }
 
             // Double-click: Load to the inactive deck (>0% crossfader).
-            if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
+            if (target == null && isRowHovered && ImGui.isMouseDoubleClicked(0)) {
                 LibraryNavigation.loadAssetToInactiveDeck(session, mixer, asset, parametersState)
             }
 

@@ -187,11 +187,12 @@ object TransitionBrowserPanel {
     /** The row loop, shared by the classic column and the unified [BrowserPane]. [infoFor] is drawn as a muted second column; [contextExtras] adds items on top of each row menu. */
     internal fun drawRows(
         session: SessionContext, mixer: Mixer, rows: List<AssetItem>,
-        infoFor: ((AssetItem) -> String)? = null, contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null
+        infoFor: ((AssetItem) -> String)? = null, contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null,
+        target: ApplyTarget? = null
     ) {
         rows.forEachIndexed { index, asset ->
             ImGui.pushID(index)
-            drawRow(session, mixer, asset, index, 20f, infoFor?.invoke(asset) ?: "", contextExtras, playlistRows)
+            drawRow(session, mixer, asset, index, 20f, infoFor?.invoke(asset) ?: "", contextExtras, playlistRows, target)
             ImGui.popID()
         }
         playlistRows?.finish()
@@ -199,7 +200,8 @@ object TransitionBrowserPanel {
 
     private fun drawRow(
         session: SessionContext, mixer: Mixer, asset: AssetItem, index: Int, btnW: Float,
-        info: String = "", contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null
+        info: String = "", contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null,
+        target: ApplyTarget? = null
     ) {
         val icon = if (asset.type == AssetType.TRANSITION_STOCK) Icons.SQUARE else Icons.ACTIVITY
         val isSelected = selectedAsset?.path == asset.path
@@ -212,7 +214,7 @@ object TransitionBrowserPanel {
         }
 
         session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
-            val text = "$icon ${asset.displayName}"
+            val text = "${if (target?.isApplied(asset) == true) "\u25CF " else ""}$icon ${asset.displayName}"
             selectableRow("${if (info.isNotEmpty()) PresetListPanel.nameForInfo(text, itemW) else text}##trans_browser_$index", isSelected, itemW)
         }
         PresetListPanel.drawInfoColumn(info, itemW)
@@ -228,9 +230,10 @@ object TransitionBrowserPanel {
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
             selectedAsset = asset
+            target?.apply(asset)
         }
 
-        if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
+        if (target == null && isRowHovered && ImGui.isMouseDoubleClicked(0)) {
             applyToMixer(session, mixer, asset)
         }
 
