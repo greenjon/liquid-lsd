@@ -49,8 +49,8 @@ object DeckOps {
     /** Supplies the mixer for the dirty check at request time. Wired by the UI; null skips the guard. */
     var mixerProvider: () -> Mixer? = { null }
 
-    /** Asks the user about a dirty [DeckSlot], then runs the continuation if they agree. Null (tests) = proceed. */
-    var prompt: ((DeckSlot, () -> Unit) -> Unit)? = null
+    /** Asks the user about a dirty [DeckSlot], then runs the first continuation if they agree and the second if they cancel. Null (tests) = proceed. */
+    var prompt: ((DeckSlot, () -> Unit, () -> Unit) -> Unit)? = null
 
     /** Receives a restore lambda for each undoable MANUAL change, called before the change is applied. */
     var undoSink: (((() -> Unit)) -> Unit)? = null
@@ -63,7 +63,8 @@ object DeckOps {
         val change: DeckChange,
         val origin: LoadOrigin,
         val dto: DeckPresetDto? = null,
-        val mtime: Long? = null
+        val mtime: Long? = null,
+        val onResult: ((Boolean) -> Unit)? = null
     )
 
     private val pending = ConcurrentLinkedQueue<Op>()
@@ -73,16 +74,28 @@ object DeckOps {
      * @return false if the change was dropped (a no-op source re-pick, or a QUEUE load skipped by
      * the AutoVJ dirty setting), so queue managers can leave their position unchanged. A MANUAL
      * change waiting on the dirty prompt counts as accepted.
+     *
+     * [onResult] is called exactly once when the outcome is known: true after the change has been
+     * applied on the GL thread, false if it was dropped, the prompt was cancelled, the preset
+     * couldn't be read, or applying failed. It may run on any thread.
      */
-    fun request(slot: DeckSlot, change: DeckChange, origin: LoadOrigin = LoadOrigin.MANUAL): Boolean {
+    fun request(
+        slot: DeckSlot, change: DeckChange, origin: LoadOrigin = LoadOrigin.MANUAL,
+        onResult: ((Boolean) -> Unit)? = null
+    ): Boolean {
         val mixer = mixerProvider()
-        if (change is DeckChange.Source && mixer != null && isNoOp(slot.deck(mixer), change)) return false
-        return guard(slot, mixer, origin) {
+        if (change is DeckChange.Source && mixer != null && isNoOp(slot.deck(mixer), change)) {
+            onResult?.invoke(false)
+            return false
+        }
+        val accepted = guard(slot, mixer, origin, { onResult?.invoke(false) }) {
             when (change) {
-                is DeckChange.Preset -> readPreset(slot, change.file, origin)
-                else -> pending.offer(Op(slot, change, origin))
+                is DeckChange.Preset -> readPreset(slot, change.file, origin, onResult)
+                else -> pending.offer(Op(slot, change, origin, onResult = onResult))
             }
         }
+        if (!accepted) onResult?.invoke(false)
+        return accepted
     }
 
     /**
@@ -96,7 +109,7 @@ object DeckOps {
     private fun isNoOp(deck: Deck, change: DeckChange.Source): Boolean =
         !change.force && !deck.isEmpty && deck.source !is ExternalVideoSource && deck.source.id == change.source.id
 
-    private fun guard(slot: DeckSlot, mixer: Mixer?, origin: LoadOrigin, proceed: () -> Unit): Boolean {
+    private fun guard(slot: DeckSlot, mixer: Mixer?, origin: LoadOrigin, onCancel: () -> Unit = {}, proceed: () -> Unit): Boolean {
         val deck = mixer?.let { slot.deck(it) }
         if (deck == null || !isDirty(deck, mixer)) { proceed(); return true }
         when (origin) {
@@ -109,7 +122,7 @@ object DeckOps {
                 UITheme.AutoVjDirtyBehavior.AUTO_DISCARD -> proceed()
             }
             LoadOrigin.MANUAL -> when (UITheme.manualLoadDirtyBehavior) {
-                UITheme.ManualLoadDirtyBehavior.PROMPT -> prompt.let { if (it == null) proceed() else it(slot, proceed) }
+                UITheme.ManualLoadDirtyBehavior.PROMPT -> prompt.let { if (it == null) proceed() else it(slot, proceed, onCancel) }
                 UITheme.ManualLoadDirtyBehavior.AUTO_SAVE -> { autoSave(slot, deck); proceed() }
                 UITheme.ManualLoadDirtyBehavior.DISCARD -> proceed()
             }
@@ -128,7 +141,7 @@ object DeckOps {
     }
 
     /** Reads, migrates and queues [file]. The returned future completes once queued (not applied); it exists for tests. */
-    private fun readPreset(slot: DeckSlot, file: File, origin: LoadOrigin): CompletableFuture<Void> {
+    private fun readPreset(slot: DeckSlot, file: File, origin: LoadOrigin, onResult: ((Boolean) -> Unit)?): CompletableFuture<Void> {
         PresetManager.deckStatus[slot.index].set(PresetIOStatus(PresetIOState.LOADING))
         val fileMtime = file.lastModified().takeIf { it > 0L }
         return CompletableFuture.runAsync({
@@ -146,11 +159,12 @@ object DeckOps {
                         logger.warn(e) { "Could not auto-save migrated preset '${file.name}'" }
                     }
                 }
-                pending.offer(Op(slot, DeckChange.Preset(file), origin, dto, fileMtime))
+                pending.offer(Op(slot, DeckChange.Preset(file), origin, dto, fileMtime, onResult))
                 PresetManager.deckStatus[slot.index].set(PresetIOStatus(PresetIOState.IDLE))
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load deck preset from ${file.absolutePath}" }
                 PresetManager.deckStatus[slot.index].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
+                onResult?.invoke(false)
             } finally {
                 llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)
             }
@@ -181,11 +195,13 @@ object DeckOps {
         while (true) {
             val op = pending.poll() ?: break
             appliedAny = true
+            var ok = false
             try {
-                apply(op, mixer)
+                ok = apply(op, mixer)
             } catch (e: Exception) {
                 logger.error(e) { "Error applying ${op.change::class.simpleName} to ${op.slot.label}" }
             }
+            op.onResult?.invoke(ok)
         }
         if (appliedAny) {
             llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
@@ -195,7 +211,8 @@ object DeckOps {
         }
     }
 
-    private fun apply(op: Op, mixer: Mixer) {
+    /** @return false if nothing was applied. */
+    private fun apply(op: Op, mixer: Mixer): Boolean {
         val slot = op.slot
         val deck = slot.deck(mixer)
         val change = op.change
@@ -215,7 +232,7 @@ object DeckOps {
                 "${deck.source.displayName} defaults"
             }
             is DeckChange.Preset -> {
-                val dto = op.dto ?: return
+                val dto = op.dto ?: return false
                 deck.applyDto(dto)
                 if (dto.macroBank != null) {
                     MacroBankSerializer.installPresetBank(slot.bankId, dto.macroBank, slot.label)
@@ -262,6 +279,7 @@ object DeckOps {
             ToastOverlay.show("${slot.label} macro knobs replaced by $what (previous bindings replaced)" + if (undoPushed) ". Ctrl+Z to undo" else "")
         }
         postApply?.invoke(slot, change)
+        return true
     }
 
     private fun bindingsOf(slot: DeckSlot) = PresetManager.bankSignature(slot)?.map { it.second } ?: emptyList()

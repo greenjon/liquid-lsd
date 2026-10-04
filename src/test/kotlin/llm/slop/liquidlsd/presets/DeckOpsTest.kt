@@ -65,6 +65,7 @@ class DeckOpsTest {
     private lateinit var mixer: Mixer
     private val undo = mutableListOf<() -> Unit>()
     private var prompted: (() -> Unit)? = null
+    private var promptCancel: (() -> Unit)? = null
 
     companion object {
         fun dto(name: String, sourceId: String = "gen", tweak: Float = 1f, empty: Boolean = false, bank: MacroBank? = null) = DeckPresetDto(
@@ -106,7 +107,7 @@ class DeckOpsTest {
         undo.clear()
         prompted = null
         DeckOps.mixerProvider = { mixer }
-        DeckOps.prompt = { _, proceed -> prompted = proceed }
+        DeckOps.prompt = { _, proceed, cancel -> prompted = proceed; promptCancel = cancel }
         DeckOps.undoSink = { undo.add(it) }
         DeckOps.postApply = null
     }
@@ -285,6 +286,37 @@ class DeckOpsTest {
         assertFalse(DeckOps.isDirty(a.deck, mixer))
         bank(DeckSlot.A).knobs[1].bindings.add(MacroBinding(parameterId = "Deck A/x", targetType = MacroTargetType.PARAM_BASE_VALUE))
         assertTrue(DeckOps.isDirty(a.deck, mixer))
+    }
+
+    @Test
+    fun onResultReportsAppliedAfterTheDrain() {
+        var result: Boolean? = null
+        DeckOps.request(DeckSlot.A, DeckChange.Eject) { result = it }
+        assertNull(result)
+        DeckOps.drainOnGlThread(mixer)
+        assertEquals(true, result)
+    }
+
+    @Test
+    fun onResultReportsFalseWhenThePromptIsCancelled() {
+        loadClean("p")
+        a.tweak = 0.2f // dirty
+        var result: Boolean? = null
+        DeckOps.request(DeckSlot.A, DeckChange.Eject) { result = it }
+        assertNull(result)
+        promptCancel!!.invoke()
+        assertEquals(false, result)
+        assertEquals(0, DeckOps.pendingCount)
+    }
+
+    @Test
+    fun onResultReportsFalseWhenAQueueLoadIsSkipped() {
+        loadClean("p")
+        a.tweak = 0.2f
+        UITheme.autoVjDirtyBehavior = UITheme.AutoVjDirtyBehavior.SKIP
+        var result: Boolean? = null
+        DeckOps.request(DeckSlot.A, DeckChange.Eject, LoadOrigin.QUEUE) { result = it }
+        assertEquals(false, result)
     }
 
     @Test

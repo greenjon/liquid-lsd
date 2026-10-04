@@ -1219,6 +1219,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#video-export-waits-for-its-preset-snapshot-uivideoexportmodalkt-presetsdeckopskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Video Export Waits for Its Preset Snapshot (ui/VideoExportModal.kt, presets/DeckOps.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#transition-changes-are-applied-on-the-render-thread-presetstransitionopskt-presetsdeckslotkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5284,6 +5295,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#video-export-waits-for-its-preset-snapshot-uivideoexportmodalkt-presetsdeckopskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Video Export Waits for Its Preset Snapshot (ui/VideoExportModal.kt, presets/DeckOps.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#transition-changes-are-applied-on-the-render-thread-presetstransitionopskt-presetsdeckslotkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9322,7 +9344,12 @@
 <li><strong>Re-picking the generator a deck already runs no longer resets it.</strong> Changing to a different generator on a clean deck no longer asks for confirmation (it can be undone now). The separate "Change Visual Source" dialog is gone; the normal unsaved-changes prompt covers it.</li>
 <li><strong>Copy / Move / Swap carry the knob bank.</strong> After copying Deck A to B, B's knobs now control B's copy of A's parameters. Before, B kept knobs aimed at its old generator. Moving a deck clears the source deck's knobs.</li>
 <li><strong>Presets saved without a knob bank get the generator's default knobs</strong> instead of blank ones.</li>
-<li>Internal: new <code>DeckOps</code> (queue, then apply once per frame on the render thread, like <code>FxOps</code>/<code>TransitionOps</code>). Every caller (context menus, launchpad, Browse bay, queues, drops, Apply Default / Reset to Factory) now uses it, so each gets the guard and undo; <code>PresetRepository.loadDeckPresetAsync</code> is removed. <code>PresetManager.applyPendingPresets</code> and the four per-deck preset queues are removed; <code>DeckLifecycleManager</code> copy/move/swap, <code>DeckSourcePicker.swapSource</code>, <code>DeckPresetController.guardDeckTransition</code> and the dead file-browser code are removed. The queue managers' and FX queue's own dirty checks are removed (FX changes don't touch the deck preset). Known issue: exporting a video from a preset snapshot loads it into Deck A without waiting for the load or a dirty prompt; fixed in a later step.</li>
+<li>Internal: new <code>DeckOps</code> (queue, then apply once per frame on the render thread, like <code>FxOps</code>/<code>TransitionOps</code>). Every caller (context menus, launchpad, Browse bay, queues, drops, Apply Default / Reset to Factory) now uses it, so each gets the guard and undo; <code>PresetRepository.loadDeckPresetAsync</code> is removed. <code>PresetManager.applyPendingPresets</code> and the four per-deck preset queues are removed; <code>DeckLifecycleManager</code> copy/move/swap, <code>DeckSourcePicker.swapSource</code>, <code>DeckPresetController.guardDeckTransition</code> and the dead file-browser code are removed. The queue managers' and FX queue's own dirty checks are removed (FX changes don't touch the deck preset).</li>
+</ul>
+<h3 id="video-export-waits-for-its-preset-snapshot-uivideoexportmodalkt-presetsdeckopskt">Video Export Waits for Its Preset Snapshot (<code>ui/VideoExportModal.kt</code>, <code>presets/DeckOps.kt</code>)</h3>
+<ul>
+<li>When a video export names a preset snapshot, the export now starts only after that preset has actually been loaded into Deck A. If Deck A has unsaved changes you get the Save / Discard / Cancel prompt first, and Cancel (or a preset that can't be read) aborts the export with a message instead of rendering the wrong deck. <strong>Start Export</strong> is disabled while the load is pending.</li>
+<li>Internal: <code>DeckOps.request</code> takes an optional <code>onResult(Boolean)</code> callback (true once applied, false if dropped, cancelled or failed), and <code>DeckOps.prompt</code> / <code>PopupManager.requestDeckConfirm</code> take a cancel continuation.</li>
 </ul>
 <h3 id="transition-changes-are-applied-on-the-render-thread-presetstransitionopskt-presetsdeckslotkt">Transition Changes Are Applied on the Render Thread (<code>presets/TransitionOps.kt</code>, <code>presets/DeckSlot.kt</code>)</h3>
 <ul>

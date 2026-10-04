@@ -112,9 +112,9 @@ class UIManager(
     init {
         // DeckOps lives below the UI layer, so everything it needs from here is injected.
         DeckOps.mixerProvider = { currentMixer }
-        DeckOps.prompt = { slot, proceed ->
+        DeckOps.prompt = { slot, proceed, cancel ->
             val mixer = currentMixer
-            if (mixer == null) proceed() else popupManager.requestDeckConfirm(slot.deck(mixer), slot.label, proceed)
+            if (mixer == null) proceed() else popupManager.requestDeckConfirm(slot.deck(mixer), slot.label, proceed, cancel)
         }
         DeckOps.undoSink = { restore -> currentMixer?.let { ParametersUndo.pushUndoState(parametersState, it, restore) } }
         DeckOps.postApply = { slot, change ->

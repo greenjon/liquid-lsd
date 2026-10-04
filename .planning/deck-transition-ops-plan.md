@@ -1,6 +1,6 @@
 # DeckOps / TransitionOps Plan
 
-**Status**: Phases 0 and 1 DONE 2026-10-03. Phase 2 DONE 2026-10-03 (907 tests pass): `DeckOps`, `manualLoadDirtyBehavior`, injected hooks, `loadDeckPresetAsync` shim, bank remap, `DeckOpsTest`. Deviations: undo is pushed for MANUAL `Source`/`Preset` only (eject/copy/move/swap can reset FX, which isn't captured); the old `applyPendingPresets` and per-deck queues were deleted rather than delegated; `DeckSourcePicker.swapSource`, `guardDeckTransition` and the dead file browsers were already removed in Phase 2; "Don't ask again" was added to the prompt; `DeckUtilityTest` was folded into `DeckOpsTest`. Phase 3 DONE 2026-10-03: all callers on `DeckOps.request`, shim deleted, `handleDirtyDeck` removed from Play/Bg/FX queues. `request` now returns Boolean (false = dropped; queue managers leave position unchanged) and `wouldSkipQueueLoad` lets BG skip before its dip-to-black. FX-queue skip tests deleted (D17). `UIManager`/`DeckPresetController` wrappers kept as thin delegates. Phase 4 (docs) DONE 2026-10-03 except `./gradlew generateDocs`. Decisions confirmed by the user: manual loads PROMPT by default (no existing users, so no compatibility concern); clean-deck source change no longer prompts; presets without a bank get the generator default bank; D7 (stable modulator IDs) moves into v1.0 scope and is tackled after DeckOps.
+**Status**: Phases 0 and 1 DONE 2026-10-03. Phase 2 DONE 2026-10-03 (907 tests pass): `DeckOps`, `manualLoadDirtyBehavior`, injected hooks, `loadDeckPresetAsync` shim, bank remap, `DeckOpsTest`. Deviations: undo is pushed for MANUAL `Source`/`Preset` only (eject/copy/move/swap can reset FX, which isn't captured); the old `applyPendingPresets` and per-deck queues were deleted rather than delegated; `DeckSourcePicker.swapSource`, `guardDeckTransition` and the dead file browsers were already removed in Phase 2; "Don't ask again" was added to the prompt; `DeckUtilityTest` was folded into `DeckOpsTest`. Phase 3 DONE 2026-10-03: all callers on `DeckOps.request`, shim deleted, `handleDirtyDeck` removed from Play/Bg/FX queues. `request` now returns Boolean (false = dropped; queue managers leave position unchanged) and `wouldSkipQueueLoad` lets BG skip before its dip-to-black. FX-queue skip tests deleted (D17). `UIManager`/`DeckPresetController` wrappers kept as thin delegates. Phase 4 (docs) DONE 2026-10-03. Phase 5 (video export waits for its snapshot) DONE 2026-10-04. Decisions confirmed by the user: manual loads PROMPT by default (no existing users, so no compatibility concern); clean-deck source change no longer prompts; presets without a bank get the generator default bank; D7 (stable modulator IDs) moves into v1.0 scope and is tackled after DeckOps.
 **Source**: `docs/developer/ui_interaction_architecture_review.md` §7
 **Scope**: v1.0 (stability). It removes code paths and adds no features. Defect numbers (D1–D17) refer to review §7.2.
 
@@ -141,6 +141,11 @@ Per the repo's definition of done:
 - `DECISIONS.md`: the entry-point rule ("deck/transition changes go through DeckOps/TransitionOps only").
 - Regenerate the HTML docs (`./gradlew generateDocs`).
 
+### Phase 5: Video export waits for its preset snapshot (DONE 2026-10-04)
+- `DeckOps.request(..., onResult: ((Boolean) -> Unit)?)`: true after the drain applied the change, false if dropped, cancelled, unreadable or failed. `DeckOps.prompt` and `PopupManager.requestDeckConfirm` gained a cancel continuation (a newer prompt cancels an older one).
+- `VideoExportModal` starts `OfflineRenderStudio.startExport` from the callback, aborts with a status message on false, and disables Start Export while waiting.
+- Tests: three `onResult` cases in `DeckOpsTest` (applied, prompt cancelled, queue skip).
+
 ## Out of scope (separate small v1.0 fixes, see review §7.4)
 - D8: MIDI/OSC on a knob-bound parameter. Lock or indicate it, like the macro lock.
 - D9: re-enabling a binding. Editors should read `control.bindings`, not the resolved cache.
@@ -150,7 +155,7 @@ Per the repo's definition of done:
 - D15: Ctrl+F focuses the active tab's search.
 - D16: FX chain `markClean` on every save path, with the DTO captured at confirm time.
 - D7 stopgap: remap or drop modulator-property bindings when modulators are removed. Stable modulator IDs are v1.1.
-- Video export with a preset snapshot (found in Phase 3): `VideoExportModal.kt:243` loads the snapshot into Deck A with `DeckOps.request(DeckSlot.A, DeckChange.Preset(pFile))` and starts the export on the next line without waiting. Before Phase 3 the load silently discarded Deck A's unsaved changes. Now, with `manualLoadDirtyBehavior = PROMPT`, a dirty Deck A shows the dialog while the export is already rendering, so the snapshot can land mid-export or never. The async file read had a milder version of the same race. Fix: start the export only after the load has been applied (a completion callback from `DeckOps`, or disable the export button until `drainOnGlThread` has applied it), and treat a cancelled prompt as "abort the export". Decided 2026-10-03: do it later; the path is narrow (optional field).
+- ~~Video export with a preset snapshot~~ moved to Phase 5.
 
 ## Risks
 - **The prompt now defaults on.** Performers used to silent discard will see dialogs. Mitigation: the preference is in the first-run notes, and the prompt has a "don't ask again" option that sets DISCARD.

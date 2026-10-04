@@ -23,12 +23,16 @@ class PopupManager(
     private var pendingConfirmDeck: Deck? = null
     private var pendingConfirmLabel: String? = null
     private var pendingConfirmCallback: (() -> Unit)? = null
+    private var pendingConfirmCancel: (() -> Unit)? = null
 
 
     private val dontAskAgain = imgui.type.ImBoolean(false)
 
-    fun requestDeckConfirm(deck: Deck, label: String, onProceed: () -> Unit) {
+    fun requestDeckConfirm(deck: Deck, label: String, onProceed: () -> Unit, onCancel: () -> Unit = {}) {
+        // A second request replaces the first, which is therefore cancelled.
+        pendingConfirmCancel?.invoke()
         dontAskAgain.set(false)
+        pendingConfirmCancel = onCancel
         pendingConfirmDeck = deck
         pendingConfirmLabel = label
         pendingConfirmCallback = onProceed
@@ -38,6 +42,7 @@ class PopupManager(
         pendingConfirmDeck = null
         pendingConfirmLabel = null
         pendingConfirmCallback = null
+        pendingConfirmCancel = null
     }
 
     fun drawExitPopup(mixer: Mixer, displayW: Float, displayH: Float) {
@@ -131,7 +136,9 @@ class PopupManager(
             }
             ImGui.sameLine()
             if (ImGui.button("Cancel", 80f, 0f)) {
+                val onCancel = pendingConfirmCancel
                 clearDeckConfirm()
+                onCancel?.invoke()
                 ImGui.closeCurrentPopup()
             }
             ImGui.spacing()

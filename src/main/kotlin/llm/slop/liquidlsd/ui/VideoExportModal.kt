@@ -54,6 +54,7 @@ object VideoExportModal {
 
     private var statusMessage: String? = null
     private var isSuccess: Boolean? = null
+    @Volatile private var awaitingPresetLoad = false
 
     fun open() {
         isOpen = true
@@ -231,7 +232,10 @@ object VideoExportModal {
         ImGui.separator()
         ImGui.spacing()
 
-        if (ImGui.button("Start Export", 140f, 32f)) {
+        ImGui.beginDisabled(awaitingPresetLoad)
+        val startClicked = ImGui.button("Start Export", 140f, 32f)
+        ImGui.endDisabled()
+        if (startClicked) {
             val audioFile = File(audioPath.get().trim())
             if (!audioFile.exists() || audioFile.isDirectory) {
                 statusMessage = "Audio file not found: ${audioPath.get()}"
@@ -239,20 +243,6 @@ object VideoExportModal {
             } else {
                 statusMessage = null
                 isSuccess = null
-
-                // Optionally load selected preset snapshot
-                val pPath = presetPath.get().trim()
-                if (pPath.isNotBlank()) {
-                    val pFile = File(pPath)
-                    if (pFile.exists()) {
-                        try {
-                            DeckOps.request(DeckSlot.A, DeckChange.Preset(pFile))
-                            logger.info { "Loaded preset snapshot for export: ${pFile.name}" }
-                        } catch (e: Exception) {
-                            logger.warn(e) { "Could not load preset snapshot before export: ${e.message}" }
-                        }
-                    }
-                }
 
                 val (exportW, exportH) = if (selectedResolutionIdx.get() == 0) {
                     session.uiTheme.renderWidth to session.uiTheme.renderHeight
@@ -277,7 +267,25 @@ object VideoExportModal {
                     superSamplingFactor = chosenSampling
                 )
 
-                OfflineRenderStudio.startExport(config, mixer, renderer)
+                // Optionally load the selected preset snapshot into Deck A first. The load is applied on the
+                // next frame (and may wait on the unsaved-changes prompt), so the export starts from its callback.
+                val pFile = presetPath.get().trim().takeIf { it.isNotBlank() }?.let { File(it) }?.takeIf { it.exists() }
+                if (pFile == null) {
+                    OfflineRenderStudio.startExport(config, mixer, renderer)
+                } else {
+                    awaitingPresetLoad = true
+                    DeckOps.request(DeckSlot.A, DeckChange.Preset(pFile)) { applied ->
+                        awaitingPresetLoad = false
+                        if (applied) {
+                            logger.info { "Loaded preset snapshot for export: ${pFile.name}" }
+                            OfflineRenderStudio.startExport(config, mixer, renderer)
+                        } else {
+                            logger.warn { "Export aborted: preset snapshot ${pFile.name} was not loaded" }
+                            statusMessage = "Export cancelled: preset snapshot '${pFile.name}' was not loaded."
+                            isSuccess = false
+                        }
+                    }
+                }
             }
         }
 
