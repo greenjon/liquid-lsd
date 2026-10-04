@@ -2659,3 +2659,7 @@
 - **Missing id**: the binding is skipped and logged, not dropped, so undo that restores the modulator restores the binding.
 - **Not decided here**: D9 (editors reading the resolved cache, so disabled bindings vanish) is a separate change.
 - **Rationale**: removing, resetting or undoing modulators shifted indices, so bindings silently died or drove the wrong modulator.
+
+## Editors List Disabled Macro Bindings; Lock Queries Stay Enabled-Only (`MacroEngine.findBindingInfos(includeDisabled)`)
+- **Decision**: Two kinds of macro-binding query. Lock/indicator/arc queries (`findBindingsTargeting`, `findPrimaryBindingInfo`, `baseBindingInfos`) read the resolved cache: enabled and resolvable only, allocation-free, per-frame. Editor lists use `findBindingInfos(..., includeDisabled = true)`, which scans the controls' own `bindings`, so an unchecked target stays listed and re-enableable.
+- **Rationale**: a disabled binding is not locking anything, but it is still the user's data; hiding it from the editor that just disabled it made re-enabling impossible there (D9). Decided 2026-10-04.

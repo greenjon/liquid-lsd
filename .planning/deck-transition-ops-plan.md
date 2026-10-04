@@ -164,3 +164,4 @@ Per the repo's definition of done:
 
 ## D7 status (2026-10-04)
 Stable modulator ids implemented (MacroBinding.modulatorId, :mod/<id>/ paths, legacy migration, tests in MacroEngineTest). D9 not yet done: it is a separate change in the editors' query functions.
+D9 done (2026-10-04): editors read control bindings via includeDisabled; lock queries unchanged.

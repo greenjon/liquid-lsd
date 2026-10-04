@@ -503,16 +503,38 @@ object MacroEngine {
     /**
      * Every [MacroBindingInfo] targeting the specified parameter (and optional modulator property).
      * More than one macro knob can bind the same target, so editors list each one.
+     *
+     * By default reads the resolved cache, i.e. only enabled bindings that currently resolve
+     * (what the lock indicators and arcs want). With [includeDisabled] it scans the controls'
+     * own binding lists instead, so an editor still shows a binding the user just unchecked and
+     * can re-enable it. Not for per-frame-per-cell use: scans every bank.
      */
     fun findBindingInfos(
         unitInstanceId: String?,
         parameterId: String,
         modulatorId: String? = null,
-        propertyName: String? = null
+        propertyName: String? = null,
+        includeDisabled: Boolean = false
     ): List<MacroBindingInfo> {
-        val bindings = findBindingsTargeting(unitInstanceId, parameterId, modulatorId, propertyName)
-        if (bindings.isEmpty()) return emptyList()
-        return bindings.mapNotNull { infoFor(it) }
+        if (!includeDisabled) {
+            val bindings = findBindingsTargeting(unitInstanceId, parameterId, modulatorId, propertyName)
+            if (bindings.isEmpty()) return emptyList()
+            return bindings.mapNotNull { infoFor(it) }
+        }
+        val result = ArrayList<MacroBindingInfo>(2)
+        val allBanks = synchronized(lock) { banks.entries.toList() }
+        for ((key, bank) in allBanks) {
+            for ((knobIdx, ctrl) in bank.knobs.withIndex()) {
+                for (b in ctrl.bindings) {
+                    if (b.unitInstanceId != unitInstanceId || b.parameterId != parameterId) continue
+                    if (modulatorId != null && b.modulatorId != modulatorId) continue
+                    if (propertyName != null && b.propertyName != propertyName) continue
+                    val name = if (ctrl.label.isNotBlank()) ctrl.label else "Knob ${knobIdx + 1}"
+                    result.add(MacroBindingInfo(b, ctrl, index = knobIdx, badgeLabel = "K${knobIdx + 1}", controlName = name, bankKey = key))
+                }
+            }
+        }
+        return result
     }
 
     /**

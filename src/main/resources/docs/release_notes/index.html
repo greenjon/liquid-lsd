@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#unchecking-a-knob-target-no-longer-hides-it-from-the-editor-macromacroenginekt-uipropertiespanelkt-uivalueparamsectionkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unchecking a Knob Target No Longer Hides It From the Editor (macro/MacroEngine.kt, ui/PropertiesPanel.kt, ui/ValueParamSection.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#knob-targets-and-midiosc-modulator-mappings-now-follow-the-modulator-not-its-position-macromacromodelskt-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5295,6 +5306,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#unchecking-a-knob-target-no-longer-hides-it-from-the-editor-macromacroenginekt-uipropertiespanelkt-uivalueparamsectionkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unchecking a Knob Target No Longer Hides It From the Editor (macro/MacroEngine.kt, ui/PropertiesPanel.kt, ui/ValueParamSection.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#knob-targets-and-midiosc-modulator-mappings-now-follow-the-modulator-not-its-position-macromacromodelskt-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9357,6 +9379,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="unchecking-a-knob-target-no-longer-hides-it-from-the-editor-macromacroenginekt-uipropertiespanelkt-uivalueparamsectionkt">Unchecking a Knob Target No Longer Hides It From the Editor (<code>macro/MacroEngine.kt</code>, <code>ui/PropertiesPanel.kt</code>, <code>ui/ValueParamSection.kt</code>)</h3>
+<ul>
+<li>Unchecking a macro target in a parameter's or modulator's editor used to make the target disappear from that editor, so you could not re-check it there (only the knob's own strip could). It now stays listed with an unlocked icon and "released from <knob>", and the slider is free to edit until you re-check it.</li>
+<li>Internal: <code>MacroEngine.findBindingInfos(..., includeDisabled = true)</code> scans the controls' own binding lists; the lock and arc queries still read the enabled-only resolved cache. <code>ValueParamSection</code> no longer gates its list on the enabled-only "is bound" check.</li>
+</ul>
 <h3 id="knob-targets-and-midiosc-modulator-mappings-now-follow-the-modulator-not-its-position-macromacromodelskt-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt">Knob Targets and MIDI/OSC Modulator Mappings Now Follow the Modulator, Not Its Position (<code>macro/MacroModels.kt</code>, <code>macro/MacroEngine.kt</code>, <code>midi/MidiMappingManager.kt</code>, <code>osc/OscMappingManager.kt</code>)</h3>
 <ul>
 <li><strong>Deleting or reordering a modulator no longer breaks knob targets.</strong> Before, a knob target on an LFO/Seq/Audio property was remembered as "the Nth modulator", so removing an earlier modulator (Reset, Clear all CVs, MIDI unbind, undo) made the target go dead or drive a different modulator. Targets now stick to their own modulator. If that modulator is removed, the target simply stops and a line is logged.</li>

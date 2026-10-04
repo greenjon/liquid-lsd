@@ -38,11 +38,11 @@ object ValueParamSection {
         paramKey: String,
         param: ModulatableParameter
     ) {
-        val infos = llm.slop.liquidlsd.macro.MacroEngine.findBindingInfos(null, paramKey)
+        val infos = llm.slop.liquidlsd.macro.MacroEngine.findBindingInfos(null, paramKey, includeDisabled = true)
             .filter { it.binding.targetType == llm.slop.liquidlsd.macro.MacroTargetType.PARAM_BASE_VALUE }
         for (info in infos) {
             ImGui.pushID(info.control.id)
-            session.uiTheme.caption("${Icons.LOCK} Base value controlled by ${info.controlName} [${info.badgeLabel}]")
+            session.uiTheme.caption("${if (info.binding.enabled) Icons.LOCK else Icons.UNLOCK} Base value ${if (info.binding.enabled) "controlled by" else "released from"} ${info.controlName} [${info.badgeLabel}]")
             itemTooltip("A macro knob continuously sets this parameter's base value. Uncheck the target to release it.")
             val width = ImGui.getContentRegionAvailX() - 10f
             val delete = MacroBindingEditor.drawFull(session, info.control, info.binding, param, width)
@@ -144,9 +144,8 @@ object ValueParamSection {
                 ImGui.spacing()
             }
 
-            if (isMacroBound) {
-                drawMacroBindings(session, paramKey, param)
-            }
+            // Not gated on isMacroBound (enabled-only): a released target must stay listed to re-enable.
+            drawMacroBindings(session, paramKey, param)
 
             if (isHueSweep && mandala != null) {
             val petals = mandala.recipe.petals

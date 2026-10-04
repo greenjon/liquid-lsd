@@ -401,13 +401,15 @@ object PropertiesPanel {
                         ImGui.spacing()
                     }
 
-                    val boundProps = llm.slop.liquidlsd.macro.MacroEngine.findBindingsTargeting(null, cell.paramKey, modulatorId = existing.id)
-                    if (boundProps.isNotEmpty()) {
-                        for (info in llm.slop.liquidlsd.macro.MacroEngine.findBindingInfos(null, cell.paramKey, modulatorId = existing.id)) {
+                    // Read the controls' own bindings (not the enabled-only cache) so a target the user
+                    // just unchecked stays listed and can be re-enabled.
+                    val boundInfos = llm.slop.liquidlsd.macro.MacroEngine.findBindingInfos(null, cell.paramKey, modulatorId = existing.id, includeDisabled = true)
+                    if (boundInfos.isNotEmpty()) {
+                        for (info in boundInfos) {
                             val b = info.binding
                             if (b.targetType != llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY) continue
                             ImGui.pushID("macro_bind_${info.control.id}_${b.propertyName}")
-                            session.uiTheme.caption("${Icons.LOCK} [${b.propertyName}] controlled by ${info.controlName} [${info.badgeLabel}]")
+                            session.uiTheme.caption("${if (b.enabled) Icons.LOCK else Icons.UNLOCK} [${b.propertyName}] ${if (b.enabled) "controlled by" else "released from"} ${info.controlName} [${info.badgeLabel}]")
                             itemTooltip("This modulator property is continuously updated by a macro knob. Uncheck the target to release it.")
                             if (MacroBindingEditor.drawFull(session, info.control, b, null, ImGui.getContentRegionAvailX() - 10f)) {
                                 info.control.bindings.remove(b)

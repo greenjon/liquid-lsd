@@ -539,4 +539,35 @@ class MacroEngineTest {
         assertEquals(null, acc.findByPathRef(param, "9"))
         assertEquals(null, acc.findByPathRef(param, "no-such-id"))
     }
+
+    @Test
+    fun testFindBindingInfosIncludeDisabledListsReleasedBindingsForEditors() {
+        val zoom = ModulatableParameter(0.0f)
+        val mixer = createTestMixer(listOf("Deck A/fbZoom" to zoom))
+        val binding = MacroBinding(parameterId = "Deck A/fbZoom", targetType = MacroTargetType.PARAM_BASE_VALUE, enabled = false)
+        val control = MacroControl(label = "K1", bindings = mutableListOf(binding))
+        MacroEngine.registerBank(null, MacroBank(knobs = listOf(control)))
+        MacroEngine.tick(mixer)
+
+        assertTrue(MacroEngine.findBindingInfos(null, "Deck A/fbZoom").isEmpty(), "lock/arc queries stay enabled-only")
+        val editor = MacroEngine.findBindingInfos(null, "Deck A/fbZoom", includeDisabled = true)
+        assertEquals(1, editor.size)
+        assertTrue(editor[0].control === control)
+
+        // Re-enabling (as the editor checkbox does) brings it back into the enabled queries.
+        control.bindings[0] = binding.copy(enabled = true)
+        MacroEngine.invalidate()
+        MacroEngine.tick(mixer)
+        assertEquals(1, MacroEngine.findBindingInfos(null, "Deck A/fbZoom").size)
+    }
+
+    @Test
+    fun testIncludeDisabledFiltersByModulatorIdAndProperty() {
+        val (_, mods, mixer) = threeModParam()
+        bindAndTick(mixer, modBinding(mods[0].id, prop = "depth").copy(enabled = false), modBinding(mods[1].id, prop = "depth"))
+        val found = MacroEngine.findBindingInfos(null, "Deck A/warp", modulatorId = mods[0].id, includeDisabled = true)
+        assertEquals(1, found.size)
+        assertEquals(mods[0].id, found[0].binding.modulatorId)
+        assertTrue(MacroEngine.findBindingInfos(null, "Deck A/warp", modulatorId = "nope", includeDisabled = true).isEmpty())
+    }
 }

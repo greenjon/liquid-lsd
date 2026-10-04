@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Unchecking a Knob Target No Longer Hides It From the Editor (`macro/MacroEngine.kt`, `ui/PropertiesPanel.kt`, `ui/ValueParamSection.kt`)
+- Unchecking a macro target in a parameter's or modulator's editor used to make the target disappear from that editor, so you could not re-check it there (only the knob's own strip could). It now stays listed with an unlocked icon and "released from <knob>", and the slider is free to edit until you re-check it.
+- Internal: `MacroEngine.findBindingInfos(..., includeDisabled = true)` scans the controls' own binding lists; the lock and arc queries still read the enabled-only resolved cache. `ValueParamSection` no longer gates its list on the enabled-only "is bound" check.
+
 ### Knob Targets and MIDI/OSC Modulator Mappings Now Follow the Modulator, Not Its Position (`macro/MacroModels.kt`, `macro/MacroEngine.kt`, `midi/MidiMappingManager.kt`, `osc/OscMappingManager.kt`)
 - **Deleting or reordering a modulator no longer breaks knob targets.** Before, a knob target on an LFO/Seq/Audio property was remembered as "the Nth modulator", so removing an earlier modulator (Reset, Clear all CVs, MIDI unbind, undo) made the target go dead or drive a different modulator. Targets now stick to their own modulator. If that modulator is removed, the target simply stops and a line is logged.
 - **Existing presets, sessions and knob banks keep working.** Old position-based targets are converted the first time they load; no action needed.
