@@ -59,9 +59,9 @@ Press **`Space`** (when the cursor isn't in a text field) or the button at the r
 
 In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.
 
-### Library View Mode (`[ Sources ]` / `[ FX ]` / `[ Trans ]`)
+### Library View Mode (`[ Sources ]` / `[ FX ]` / `[ Trans ]` / `[ Maps ]`)
 
-Toggle between sources, FX, and transitions using the segmented mode button in the top-left of the Library menu bar:
+Toggle between sources, FX, transitions and maps (macro banks and Perform pages) using the segmented mode button in the top-left of the Library menu bar:
 
 - **`[ Sources ]` Mode**:
   - **Column 1 (Sources Browser)**: A unified, filterable list combining the bundled stock visual sources (Mandala, Dynamic Spiral, Icosa H3, and the rest — see below) with saved full deck presets (`.lsd`) in `library/presets/`.
@@ -256,9 +256,16 @@ Use the **`[⋮]`** filter menu above the list to show/hide each tier (**Stock S
 - **Failures**: a transition or FX file that can't be loaded or applied now shows a toast instead of failing silently.
 - **Right-click menu**: **Apply to Mixer**, **Add to Live Queue**, **Add to '<playlist>' Playlist**, plus Rename/Clone/Delete for saved presets (stock shaders have no file to rename or delete).
 
+### The Maps Tab (Macro Banks and Perform Pages)
+
+The **`[ Maps ]`** tab has two lists, switched with the **Banks** / **Pages** radio buttons. It has no playlists or queues, so it uses the whole Library width.
+
+- **Banks** lists the saved macro banks (`.knobpreset.json` files in `library/knobpresets`). **Save bank from...** saves the knobs of a deck, Master, Transition or FX Sends row under a name you choose. Right-click a bank to **Apply to** one of those rows (deck banks retarget to the deck they land on; targets that row can't take are dropped, and a toast says if parameters were missing) or **Delete** it. FX banks are rewritten from the FX chain, so they can't be saved or applied here. This is the same as the bank kebab menu in the Edit row, without the file browser.
+- **Pages** lists the Perform pages with where each comes from (built-in, user, or user override). Click a page to show it in Perform. Right-click for **Hide from / Show in tab strip**, **Copy to user file** (built-ins) or **Delete user file**. Editing a page's rows stays in **Preferences → MIDI Controls**.
+
 ### Transition Presets (`.lsdtrans`) & Playlists (`.lsdtransplay`)
 
-- **Transition Presets (`.lsdtrans`)**: Stored in `library/transitions/`. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) using the **[+]** button in the Transition Browser or right-clicking in the Mixer panel.
+- **Transition Presets (`.lsdtrans`)**: Stored in `library/transitions/`. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) from the Mixer's TRANS tab (**[⋮] > Save Transition As...**), from the **Save current as preset...** button under the transition list in Browse, or with the **[+]** button in the Transition Browser or right-clicking in the Mixer panel.
 - **Transition Playlists (`.lsdtransplay`)**: Stored in `library/transition_playlists/`. Group transitions into ordered setlists for the Transition Queue. A factory playlist, `festival_elite.lsdtransplay`, is bundled out of the box.
 - **AutoVJ Integration**: The Transition Queue automatically advances to the next staged transition preset or stock transition shader each time the crossfader cycles between decks.
 

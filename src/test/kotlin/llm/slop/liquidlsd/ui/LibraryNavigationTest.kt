@@ -59,9 +59,11 @@ class LibraryNavigationTest {
         LibraryNavigation.stepTab(1)
         assertEquals(LibraryViewMode.TRANS, LibraryPanel.viewMode)
         LibraryNavigation.stepTab(1)
+        assertEquals(LibraryViewMode.MAPS, LibraryPanel.viewMode)
+        LibraryNavigation.stepTab(1)
         assertEquals(LibraryViewMode.PRESETS, LibraryPanel.viewMode)
         LibraryNavigation.stepTab(-1)
-        assertEquals(LibraryViewMode.TRANS, LibraryPanel.viewMode)
+        assertEquals(LibraryViewMode.MAPS, LibraryPanel.viewMode)
     }
 
     @Test

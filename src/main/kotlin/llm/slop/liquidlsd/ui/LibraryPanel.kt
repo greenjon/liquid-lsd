@@ -13,6 +13,7 @@ import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
 import llm.slop.liquidlsd.ui.browser.BrowserPopupHandler
 import llm.slop.liquidlsd.ui.browser.FXBgQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
+import llm.slop.liquidlsd.ui.browser.MapsBrowserPanel
 import llm.slop.liquidlsd.ui.browser.FXPlaylistEditorPanel
 import llm.slop.liquidlsd.ui.browser.FXQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.PlaylistEditorPanel
@@ -30,7 +31,9 @@ object LibraryPanel {
     enum class LibraryViewMode {
         PRESETS,
         FX,
-        TRANS
+        TRANS,
+        /** Saved macro banks and Perform pages (see [MapsBrowserPanel]). Has no playlists or queues. */
+        MAPS
     }
 
     enum class SelectionSource {
@@ -75,6 +78,7 @@ object LibraryPanel {
             LibraryViewMode.PRESETS -> PresetListPanel.shouldFocusSearch = true
             LibraryViewMode.FX -> FXBrowserPanel.shouldFocusSearch = true
             LibraryViewMode.TRANS -> TransitionBrowserPanel.shouldFocusSearch = true
+            LibraryViewMode.MAPS -> Unit
         }
     }
 
@@ -100,6 +104,7 @@ object LibraryPanel {
                     LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset
                         ?.takeIf { it.type != AssetType.SOURCE_STOCK }
                         ?.let { File(it.path) }
+                    LibraryViewMode.MAPS -> null
                 }
             }
             SelectionSource.PLAYLIST -> {
@@ -289,6 +294,16 @@ object LibraryPanel {
                     LibraryNavigation.setViewMode(LibraryViewMode.TRANS)
                 }
                 ImGui.popStyleColor(2)
+
+                ImGui.sameLine(0f, 2f)
+
+                val isMaps = viewMode == LibraryViewMode.MAPS
+                ImGui.pushStyleColor(ImGuiCol.Button, if (isMaps) activeCol else inactiveCol)
+                ImGui.pushStyleColor(ImGuiCol.Text, if (isMaps) activeTextCol else inactiveTextCol)
+                if (ImGui.button("Maps##mode_maps", btnWMode, btnH)) {
+                    LibraryNavigation.setViewMode(LibraryViewMode.MAPS)
+                }
+                ImGui.popStyleColor(2)
             }
 
             // Centered Action Toolbar
@@ -353,6 +368,13 @@ object LibraryPanel {
         val c2W = (g1AvailW - c1W - colGap).coerceAtLeast(10f)
 
         when (viewMode) {
+            LibraryViewMode.MAPS -> {
+                // Banks and Pages take the whole group: no playlist column.
+                ImGui.beginChild("LibraryMaps", g1AvailW, g1AvailH, false, outerFlags)
+                ImGui.setScrollX(0f)
+                MapsBrowserPanel.draw(session, mixer)
+                ImGui.endChild()
+            }
             LibraryViewMode.PRESETS -> {
                 // Column 1: Presets Library
                 ImGui.beginChild("LibraryPresetsList", c1W, g1AvailH, false, outerFlags)
@@ -410,7 +432,10 @@ object LibraryPanel {
         val c3W = ((g2AvailW - colGap) * 0.5f).coerceAtLeast(10f)
         val c4W = (g2AvailW - c3W - colGap).coerceAtLeast(10f)
 
-        if (viewMode == LibraryViewMode.TRANS) {
+        if (viewMode == LibraryViewMode.MAPS) {
+            // Banks and Pages have no queues; the second group stays empty.
+            session.uiTheme.caption("Maps have no playlists or queues.")
+        } else if (viewMode == LibraryViewMode.TRANS) {
             // Column 3: Live Transition Queue
             ImGui.beginChild("LibraryTransitionQueue", c3W, g2AvailH, false, outerFlags)
             ImGui.setScrollX(0f)
@@ -539,6 +564,7 @@ object LibraryPanel {
     }
 
     fun navigateSelection(delta: Int, session: SessionContext, mixer: Mixer) {
+        if (viewMode == LibraryViewMode.MAPS) return // Maps rows are clicked, not stepped
         when (activeSelectionSource) {
             SelectionSource.PRESETS -> {
                 if (viewMode == LibraryViewMode.FX) {
@@ -741,6 +767,7 @@ object LibraryPanel {
         return when (viewMode) {
             LibraryViewMode.FX -> FXBrowserPanel.selectedAsset
             LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset
+            LibraryViewMode.MAPS -> null
             LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset
         }
     }

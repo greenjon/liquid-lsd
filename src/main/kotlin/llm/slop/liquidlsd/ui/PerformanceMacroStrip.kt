@@ -222,34 +222,14 @@ internal object PerformanceMacroStrip {
                     MacroBankSerializer.exportToFile(file, bank)
                     MacroLearnState.setStatus("Exported macro bank to ${file.name}")
                 } else {
-                    val (imported, skipped) = MacroBankSerializer.importFromFile(file, mixer, browserDeckLabel)
                     // Deck imports re-baseline the tracker (installBankForDeck bumps the epoch), so record the step here.
                     if (browserDeckLabel != null) MacroUndoTracker.recordBeforeBulkEdit()
-                    importInto(bankId, bank, imported, browserDeckLabel)
+                    val skipped = MacroBankSerializer.applyFileToBank(file, bankId, bank, browserDeckLabel, mixer)
                     MacroLearnState.setStatus("Imported ${file.name}" + if (skipped > 0) " ($skipped target(s) skipped: parameter not found)" else "")
                 }
             } catch (e: Exception) {
                 MacroLearnState.setStatus("Macro bank ${if (bankBrowser.mode == ImGuiFileBrowser.Mode.SAVE) "export" else "import"} failed: ${e.message}", 6000L)
             }
         }
-    }
-
-    /** Deck banks retarget bindings to their own deck (like a preset load); others (Master, Global...) keep them as saved. */
-    private fun importInto(bankId: String, target: MacroBank, imported: MacroBank, deckLabel: String?) {
-        if (deckLabel != null) {
-            MacroBankSerializer.installBankForDeck(imported, target, deckLabel)
-            return
-        }
-        for (i in target.knobs.indices) {
-            val dest = target.knobs[i]
-            val src = imported.knobs.getOrNull(i)
-            dest.label = src?.label ?: ""
-            dest.value = src?.value ?: 0f
-            dest.bindings.clear()
-            // Drop targets this bank can't take (e.g. Deck paths in a Master bank), as Learn would.
-            src?.bindings?.filter { MacroLearnState.acceptsTarget(bankId, it.parameterId) }
-                ?.take(MacroControl.MAX_BINDINGS_PER_CONTROL)?.forEach { dest.bindings.add(it.copy()) }
-        }
-        MacroEngine.invalidate()
     }
 }

@@ -50,6 +50,7 @@ internal object LibraryNavigation {
         LibraryViewMode.PRESETS -> listOf(SelectionSource.PRESETS, SelectionSource.PLAYLIST, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB)
         LibraryViewMode.FX -> listOf(SelectionSource.PRESETS, SelectionSource.FX_PLAYLIST, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB)
         LibraryViewMode.TRANS -> listOf(SelectionSource.PRESETS, SelectionSource.TRANSITION_PLAYLIST, SelectionSource.TRANSITION_QUEUE)
+        LibraryViewMode.MAPS -> emptyList()
     }
 
     private fun paneSize(source: SelectionSource, session: SessionContext): Int = when (source) {
@@ -57,6 +58,7 @@ internal object LibraryNavigation {
             LibraryViewMode.PRESETS -> PresetListPanel.filteredPresets.size
             LibraryViewMode.FX -> FXBrowserPanel.filteredRows.size
             LibraryViewMode.TRANS -> TransitionBrowserPanel.filteredRows.size
+            LibraryViewMode.MAPS -> 0
         }
         SelectionSource.PLAYLIST -> LibraryPanel.selectedPlaylistFile?.let { LibraryPanel.getOrLoadPlaylist(it) }?.presets?.size ?: 0
         SelectionSource.QUEUE_AB -> session.playQueueManager.queue.size
@@ -118,6 +120,7 @@ internal object LibraryNavigation {
             LibraryViewMode.FX -> files.forEach { if (bg) FXBgQueueManager.appendToQueue(it) else FXQueueManager.appendToQueue(it) }
             LibraryViewMode.PRESETS -> files.forEach { if (bg) BgQueueManager.appendToQueue(it) else session.playQueueManager.appendToQueue(it) }
             LibraryViewMode.TRANS -> files.forEach { TransitionQueueManager.appendToQueue(it) }
+            LibraryViewMode.MAPS -> Unit
         }
         return true
     }
@@ -145,6 +148,7 @@ internal object LibraryNavigation {
                 LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset?.let { loadAssetToInactiveDeck(session, mixer, it, parametersState) }
                 LibraryViewMode.FX -> enqueue(session, bg = false)
                 LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset?.let { TransitionBrowserPanel.applyToMixer(session, mixer, it) }
+                LibraryViewMode.MAPS -> Unit
             }
             SelectionSource.PLAYLIST ->
                 file?.let { BrowserDeckButtons.loadPresetToDeck(session, mixer, it, if (mixer.crossfade.value > 0.0f) 1 else 2) }

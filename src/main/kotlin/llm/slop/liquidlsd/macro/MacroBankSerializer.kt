@@ -90,6 +90,30 @@ object MacroBankSerializer {
         installBankForDeck(deckBank, targetBank, targetDeckLabel)
     }
 
+    /**
+     * Imports [file] into the resident bank [target] (id [bankId]) and returns how many bindings were skipped.
+     * Deck banks retarget bindings to their own deck ([deckLabel], like a preset load); others (Master, ...) keep
+     * them as saved but drop targets the bank can't take (as Learn would).
+     */
+    fun applyFileToBank(file: File, bankId: String, target: MacroBank, deckLabel: String?, mixer: Mixer): Int {
+        val (imported, skipped) = importFromFile(file, mixer, deckLabel)
+        if (deckLabel != null) {
+            installBankForDeck(imported, target, deckLabel)
+            return skipped
+        }
+        for (i in target.knobs.indices) {
+            val dest = target.knobs[i]
+            val src = imported.knobs.getOrNull(i)
+            dest.label = src?.label ?: ""
+            dest.value = src?.value ?: 0f
+            dest.bindings.clear()
+            src?.bindings?.filter { MacroLearnState.acceptsTarget(bankId, it.parameterId) }
+                ?.take(MacroControl.MAX_BINDINGS_PER_CONTROL)?.forEach { dest.bindings.add(it.copy()) }
+        }
+        MacroEngine.invalidate()
+        return skipped
+    }
+
     /** Exports [bank] to a standalone JSON file. */
     fun exportToFile(file: File, bank: MacroBank) {
         file.parentFile?.mkdirs()

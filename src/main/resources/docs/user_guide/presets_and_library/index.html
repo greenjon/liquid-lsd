@@ -586,10 +586,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#library-view-mode-sources-fx-trans" class="md-nav__link">
+  <a href="#library-view-mode-sources-fx-trans-maps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Library View Mode ([ Sources ] / [ FX ] / [ Trans ])
+        Library View Mode ([ Sources ] / [ FX ] / [ Trans ] / [ Maps ])
       
     </span>
   </a>
@@ -723,6 +723,17 @@
     <span class="md-ellipsis">
       
         The Unified Transition Browser
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#the-maps-tab-macro-banks-and-perform-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Maps Tab (Macro Banks and Perform Pages)
       
     </span>
   </a>
@@ -1625,10 +1636,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#library-view-mode-sources-fx-trans" class="md-nav__link">
+  <a href="#library-view-mode-sources-fx-trans-maps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Library View Mode ([ Sources ] / [ FX ] / [ Trans ])
+        Library View Mode ([ Sources ] / [ FX ] / [ Trans ] / [ Maps ])
       
     </span>
   </a>
@@ -1769,6 +1780,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#the-maps-tab-macro-banks-and-perform-pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Maps Tab (Macro Banks and Perform Pages)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#transition-presets-lsdtrans-playlists-lsdtransplay" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1885,8 +1907,8 @@
 </ul>
 <p>Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, <code>Space</code>, <code>Ctrl+F</code> or <code>/</code> closes Deep Edit (cancelling any armed Add Target or Learn) and brings the Library back.</p>
 <p>In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.</p>
-<h3 id="library-view-mode-sources-fx-trans">Library View Mode (<code>[ Sources ]</code> / <code>[ FX ]</code> / <code>[ Trans ]</code>)</h3>
-<p>Toggle between sources, FX, and transitions using the segmented mode button in the top-left of the Library menu bar:</p>
+<h3 id="library-view-mode-sources-fx-trans-maps">Library View Mode (<code>[ Sources ]</code> / <code>[ FX ]</code> / <code>[ Trans ]</code> / <code>[ Maps ]</code>)</h3>
+<p>Toggle between sources, FX, transitions and maps (macro banks and Perform pages) using the segmented mode button in the top-left of the Library menu bar:</p>
 <ul>
 <li><strong><code>[ Sources ]</code> Mode</strong>:</li>
 <li><strong>Column 1 (Sources Browser)</strong>: A unified, filterable list combining the bundled stock visual sources (Mandala, Dynamic Spiral, Icosa H3, and the rest — see below) with saved full deck presets (<code>.lsd</code>) in <code>library/presets/</code>.</li>
@@ -2072,9 +2094,15 @@
 <li><strong>Failures</strong>: a transition or FX file that can't be loaded or applied now shows a toast instead of failing silently.</li>
 <li><strong>Right-click menu</strong>: <strong>Apply to Mixer</strong>, <strong>Add to Live Queue</strong>, <strong>Add to '<playlist>' Playlist</strong>, plus Rename/Clone/Delete for saved presets (stock shaders have no file to rename or delete).</li>
 </ul>
+<h3 id="the-maps-tab-macro-banks-and-perform-pages">The Maps Tab (Macro Banks and Perform Pages)</h3>
+<p>The <strong><code>[ Maps ]</code></strong> tab has two lists, switched with the <strong>Banks</strong> / <strong>Pages</strong> radio buttons. It has no playlists or queues, so it uses the whole Library width.</p>
+<ul>
+<li><strong>Banks</strong> lists the saved macro banks (<code>.knobpreset.json</code> files in <code>library/knobpresets</code>). <strong>Save bank from...</strong> saves the knobs of a deck, Master, Transition or FX Sends row under a name you choose. Right-click a bank to <strong>Apply to</strong> one of those rows (deck banks retarget to the deck they land on; targets that row can't take are dropped, and a toast says if parameters were missing) or <strong>Delete</strong> it. FX banks are rewritten from the FX chain, so they can't be saved or applied here. This is the same as the bank kebab menu in the Edit row, without the file browser.</li>
+<li><strong>Pages</strong> lists the Perform pages with where each comes from (built-in, user, or user override). Click a page to show it in Perform. Right-click for <strong>Hide from / Show in tab strip</strong>, <strong>Copy to user file</strong> (built-ins) or <strong>Delete user file</strong>. Editing a page's rows stays in <strong>Preferences → MIDI Controls</strong>.</li>
+</ul>
 <h3 id="transition-presets-lsdtrans-playlists-lsdtransplay">Transition Presets (<code>.lsdtrans</code>) &amp; Playlists (<code>.lsdtransplay</code>)</h3>
 <ul>
-<li><strong>Transition Presets (<code>.lsdtrans</code>)</strong>: Stored in <code>library/transitions/</code>. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) using the <strong>[+]</strong> button in the Transition Browser or right-clicking in the Mixer panel.</li>
+<li><strong>Transition Presets (<code>.lsdtrans</code>)</strong>: Stored in <code>library/transitions/</code>. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) from the Mixer's TRANS tab (<strong>[⋮] &gt; Save Transition As...</strong>), from the <strong>Save current as preset...</strong> button under the transition list in Browse, or with the <strong>[+]</strong> button in the Transition Browser or right-clicking in the Mixer panel.</li>
 <li><strong>Transition Playlists (<code>.lsdtransplay</code>)</strong>: Stored in <code>library/transition_playlists/</code>. Group transitions into ordered setlists for the Transition Queue. A factory playlist, <code>festival_elite.lsdtransplay</code>, is bundled out of the box.</li>
 <li><strong>AutoVJ Integration</strong>: The Transition Queue automatically advances to the next staged transition preset or stock transition shader each time the crossfader cycles between decks.</li>
 </ul>

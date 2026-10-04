@@ -59,8 +59,8 @@ Written 2026-10-04. Replaces `d-items-handoff.md` and `v1.1-ui-inconsistencies.m
 
 ### Tier 3: Library gaps **[decide]** (some may count as new features)
 
-10. **Transitions can only be saved from the Library** (not from the Mixer TRANS tab or the inline picker).
-11. **Macro banks and Perform pages never appear in the Library** (banks export through a raw file browser; Perform pages are edited inside MIDI Preferences).
+~~10. **Transitions can only be saved from the Library** (not from the Mixer TRANS tab or the inline picker).~~ **DONE 2026-10-04**
+~~11. **Macro banks and Perform pages never appear in the Library** (banks export through a raw file browser; Perform pages are edited inside MIDI Preferences).~~ **DONE 2026-10-04** (Maps tab; not run in the app)
 ~~12. **FX favourites exist only in the inline picker**, not in the Library FX browser.~~ **DONE 2026-10-04**
 
 ## Suggested order

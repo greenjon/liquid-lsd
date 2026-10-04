@@ -107,16 +107,19 @@ object BrowserActionToolbar {
                 LibraryPanel.LibraryViewMode.PRESETS -> "preset"
                 LibraryPanel.LibraryViewMode.FX -> "FX item"
                 LibraryPanel.LibraryViewMode.TRANS -> "transition"
+                LibraryPanel.LibraryViewMode.MAPS -> "item"
             }
             val queueA = when (mode) {
                 LibraryPanel.LibraryViewMode.PRESETS -> "A/B Play Queue"
                 LibraryPanel.LibraryViewMode.FX -> "FX Queue"
                 LibraryPanel.LibraryViewMode.TRANS -> "Transition Queue"
+                LibraryPanel.LibraryViewMode.MAPS -> "queue"
             }
             val queueBG = when (mode) {
                 LibraryPanel.LibraryViewMode.PRESETS -> "Background Queue"
                 LibraryPanel.LibraryViewMode.FX -> "FX Background Queue"
                 LibraryPanel.LibraryViewMode.TRANS -> null
+                LibraryPanel.LibraryViewMode.MAPS -> null
             }
             val many = selectedFiles.size > 1
 

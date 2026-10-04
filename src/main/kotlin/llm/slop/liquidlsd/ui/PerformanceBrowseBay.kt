@@ -167,6 +167,8 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             llm.slop.liquidlsd.presets.TransitionOps.setStock(id)
         }
         ShaderPickerPopup.drawInline(session)
+        if (ImGui.button("Save current as preset...##trans_save_current")) TransitionSave.requestSaveCurrent(session, mixer)
+        itemTooltip("Save the mixer's current transition and its settings as a .lsdtrans preset in the Library.")
     }
 
     /** [moduleId] is the canonical rack module (a deck, or MASTER) -- used only to look up the Chain/FX1/FX2/FX3 target chosen in the bay's tab row. */

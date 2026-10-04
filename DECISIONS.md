@@ -2710,6 +2710,11 @@
 - **Decision (item 12)**: the Library FX browser reads and writes the same `FxShortlist` as the picker (stock filters only; saved FX can't be starred). Marked by a ★ in the row, a context-menu toggle and a "favorites only" filter, with no extra row button.
 - **Decision (item 19.2)**: MIDI modulators' own DC Offset/Depth sliders stay unbindable (controller driving a controller; keeps the menus simple). Decided 2026-10-04 with the user.
 
+## The Library Gets a Maps Tab (Banks + Pages); Transition Save Is One Helper (`MapsBrowserPanel`, `TransitionSave`)
+- **Decision (items 10, 11)**: one fourth Library mode instead of two, with a Banks/Pages toggle, since banks and pages have no playlists or queues. It reuses `MacroBankSerializer`/`PerfPageStore`; it adds no new file formats. Bank Save/Apply covers deck, Master, Transition and FX Sends banks (FX banks are chain-driven; GLOBAL has no knobs). Page row editing stays in Preferences. Nothing is dragged to decks and Maps rows can't be queued.
+- **Open**: keyboard/MIDI list stepping and Q/Enter don't act on Maps rows (they are mouse-driven); the layout wasn't checked at 1280x720 in the running app.
+- **Transition save** has one entry point (`TransitionSave.requestSaveCurrent`) called from the Library "+", the Mixer TRANS kebab and the inline picker. Decided 2026-10-04.
+
 ## FX-Bank Knobs Are Read-Only Outside FxMacroSync; Master/Transition/FX-Send Knobs Are Path-Scoped (`MacroLearnState.acceptsTarget`, `FxMacroSync.isFxBank`)
 - **Decision**: `FxMacroSync` owns every FX-bank binding and rewrites it from the chain, so no other editor may add, edit or delete one: `acceptsTarget` rejects FX banks, and Properties, the base-value panel and the slider popup show a read-only line. MASTER and TRANS knobs accept `Mixer/...` only, FX_SENDS accepts `.../FXChain/...` only, GLOBAL stays unscoped. Bank import remaps only deck-rooted paths (everything except `Mixer`, `Master`, `Global`, `Macro`) and validates after remapping. Decided 2026-10-04 (backlog items 8, 22, 23, 7).
 - **Selection**: one `MacroLearnState.selectedControlId` drives the strip, the card highlight and the Learn button; the per-module `selectedRackMacroId` map was dropped. Consequence: one highlighted knob across all expanded modules.

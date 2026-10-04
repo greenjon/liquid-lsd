@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Maps Tab in the Library, Save Transitions from Anywhere (`ui/browser/MapsBrowserPanel.kt`, `ui/TransitionSave.kt`, `macro/MacroBankSerializer.kt`)
+- **New `[ Maps ]` Library tab** with **Banks** and **Pages**. Banks lists your saved macro banks; **Save bank from...** saves a deck, Master, Transition or FX Sends row's knobs, and right-click applies a bank to a row or deletes it (no raw file browser). Pages lists the Perform pages: click to show one, right-click to hide/show it in the tab strip, copy a built-in to a user file, or delete a user file. Editing page rows stays in Preferences.
+- **Transitions can be saved from the Mixer's TRANS tab** (**[⋮] > Save Transition As...**) and from the inline picker (**Save current as preset...**), not only the Library "+".
+- Internal: `MacroBankSerializer.applyFileToBank` (the old private `PerformanceMacroStrip.importInto`); `TransitionSave.requestSaveCurrent` shared by three call sites; `LibraryViewMode.MAPS` (no playlists/queues; keyboard/MIDI list stepping skips it; the MIDI tab-step now includes it).
+
 ### FX Favorites in the Library; A/B and BG Queue Steps of More Than One (`ui/browser/FXBrowserPanel.kt`, `presets/FxShortlist.kt`, `presets/PlayQueueManager.kt`, `presets/BgQueueManager.kt`)
 - **The Library FX browser now shows and sets your favorites.** Starred stock filters show a ★, right-click offers **Add to / Remove from Favorites**, and **[⋮] > Favorite stock filters only** filters the list. They are the same favorites as the inline FX picker.
 - **A MIDI, CV or key step of +3 on the A/B or BG queue moves three items** (it moved one). Only the final item is loaded and faded to; the ones in between are skipped. Without Repeat it stops at the first or last item; with Repeat it wraps; in Shuffle the skipped picks count as played, so Previous retraces them. A deck you staged by hand still takes the whole step as one.

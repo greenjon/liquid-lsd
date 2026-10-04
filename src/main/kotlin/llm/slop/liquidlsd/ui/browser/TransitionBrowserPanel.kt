@@ -20,6 +20,7 @@ import llm.slop.liquidlsd.ui.FileSystemManager
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.SavePresetModal
+import llm.slop.liquidlsd.ui.TransitionSave
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
 import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
@@ -77,28 +78,7 @@ object TransitionBrowserPanel {
         // [ + ] Save active mixer transition as a preset
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ImGui.button("${Icons.PLUS}##trans_browser_new", btnSize, btnSize)) {
-                val currentTrans = mixer.transitionFilter
-                if (currentTrans != null) {
-                    val slotDto = FXSlotDto(
-                        filterId = currentTrans.id,
-                        enabled = currentTrans.enabled,
-                        dryWet = currentTrans.dryWet.toDto(),
-                        parameters = currentTrans.parameters.mapValues { p -> p.value.toDto() }
-                    )
-                    SavePresetModal.request(
-                        title = "Save Transition Preset As",
-                        confirmLabel = "Save",
-                        defaultName = currentTrans.displayName.lowercase().replace(" ", "_"),
-                        targetDir = FileSystemManager.getTransitionsRoot(),
-                        extension = "lsdtrans"
-                    ) { name, tags ->
-                        val file = File(FileSystemManager.getTransitionsRoot(), "$name.lsdtrans")
-                        session.presetRepository.saveTransitionPresetAsync(file, name, slotDto, tags)
-                        LibraryPanel.refreshAssets()
-                    }
-                } else {
-                    logger.warn { "No active transition filter to save as preset" }
-                }
+                TransitionSave.requestSaveCurrent(session, mixer)
             }
         }
         itemTooltip("Save current mixer transition as a preset (.lsdtrans)...")

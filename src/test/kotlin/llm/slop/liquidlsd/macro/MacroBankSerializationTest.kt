@@ -137,4 +137,26 @@ class MacroBankSerializationTest {
         assertEquals(1, skipped)
         assertEquals(listOf("Deck B/onlyOnB"), imported.knobs[0].bindings.map { it.parameterId })
     }
+
+    @Test
+    fun testApplyFileToANonDeckBankKeepsOnlyTargetsItAccepts() {
+        val tempFile = File.createTempFile("test_macro_bank_apply", ".knobpreset.json")
+        tempFile.deleteOnExit()
+        val saved = MacroBank(knobs = listOf(MacroControl(label = "XF", bindings = mutableListOf(
+            MacroBinding(parameterId = "Mixer/crossfade", targetType = MacroTargetType.PARAM_BASE_VALUE),
+            MacroBinding(parameterId = "Deck A/zoom", targetType = MacroTargetType.PARAM_BASE_VALUE)
+        ))))
+        MacroBankSerializer.exportToFile(tempFile, saved)
+
+        val mixer = mockk<Mixer>()
+        every { mixer.getParameterPaths("Mixer") } returns listOf("Mixer/crossfade" to ModulatableParameter(0.5f), "Deck A/zoom" to ModulatableParameter(0.5f))
+        ParameterResolver.clearCache()
+        val target = MacroBank(knobs = listOf(MacroControl(label = "OLD")))
+
+        val skipped = MacroBankSerializer.applyFileToBank(tempFile, MacroEngine.MASTER, target, null, mixer)
+
+        assertEquals(0, skipped)
+        assertEquals("XF", target.knobs[0].label)
+        assertEquals(listOf("Mixer/crossfade"), target.knobs[0].bindings.map { it.parameterId })
+    }
 }
