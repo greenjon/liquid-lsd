@@ -139,8 +139,8 @@ class GeneratorDefaultsTest {
         bank.knobs[0].value = 0f
         bank.knobs[0].bindings.clear()
 
-        // Apply default back
-        GeneratorDefaults.applyToDeck(deck, "Deck A", MacroEngine.DECK_A)
+        // Apply default back (knob 2 still held bindings and knob 1's differed, so this counts as a replacement)
+        assertTrue(GeneratorDefaults.applyToDeck(deck, "Deck A", MacroEngine.DECK_A))
 
         assertEquals(0.75f, p1.baseValue)
         assertEquals(15f, p2.baseValue)
@@ -156,6 +156,11 @@ class GeneratorDefaultsTest {
         assertEquals(0.15f, restoredBank.knobs[1].value)
         assertEquals(1, restoredBank.knobs[1].bindings.size)
         assertEquals("Deck A/resonance", restoredBank.knobs[1].bindings[0].parameterId)
+
+        // Re-applying onto an identical bank replaces nothing; onto a customised one it reports the replacement.
+        assertFalse(GeneratorDefaults.applyToDeck(deck, "Deck A", MacroEngine.DECK_A))
+        restoredBank.knobs[0].bindings[0].maxVal = 7f
+        assertTrue(GeneratorDefaults.applyToDeck(deck, "Deck A", MacroEngine.DECK_A))
     }
 
     @Test

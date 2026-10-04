@@ -1,7 +1,17 @@
+## Source Change Reports Replaced Macro Bindings via a Toast (`GeneratorDefaults.applyToDeck`, `ToastOverlay`)
+- **Decision**: `applyToDeck` returns true when the bank held bindings and the default installed different ones; `DeckSourcePicker.swapSource` shows a `ToastOverlay` message in that case. Bindings are not carried over by parameter name (names such as Scale/Speed/Depth mean different things per generator).
+- **Why a toast and no "Ctrl+Z" hint**: `ParametersUndo` snapshots modulators only, so the macro bank is not restored by undo. An earlier version of the architecture review wrongly said it was.
+- **Open**: restoring the replaced bank (stash it in `swapSource`, offer a restore action) is the follow-up if the toast proves insufficient. `MacroLearnState.statusBanner` (used for "Added target...") has no on-screen reader in `ui/`; **Done**: `UIManager` passes `MacroLearnState.getActiveStatus()` to `ToastOverlay.draw` as a fallback (macro/ cannot depend on ui/, so the UI pulls rather than macro pushing).
+
+## Browser Search Is One Rule: `SearchMatcher` (`ui/browser/SearchMatcher.kt`)
+- **Decision**: all asset browsers (Library Preset/FX/Transition panels, `ShaderPickerPopup`, Browse-bay chain list) filter with `SearchMatcher.matches(tokens, fields, extra)`: whitespace-split words, each must be a case-insensitive substring of some field (name/id/folder, plus categories or tags). One buffer size (`BUFFER_SIZE` = 256).
+- **Why**: the same text used to give different results per browser (FX panel: name only; picker: no tags for stock items; phrase-only multi-word). Review: `docs/developer/ui_interaction_architecture_review.md` section 3.1.
+- **Left alone**: the two browsers still keep separate search *buffers* (typing in one does not fill the other), and category-chip filtering in the picker is unchanged. Library panels tokenise only on a cache miss, not per frame.
+
 ## Deck Row SRC/FX Mode Is One Stored Value: The Deck Sub-Tab (`PerformanceUiContext.isDeckRowFx`)
 - **Decision**: `ParametersState` deck sub-tab (`SRC`/`FX`) is the single source of truth for a deck row's mode. `PerformanceUiContext.deckRowMode` is deleted; `isDeckRowFx` reads the sub-tab only.
 - **Why**: the predicate was `deckRowMode == "FX" || subTab == "FX"`. Writers that set the sub-tab to `SRC` (bay SRC tab, source pick, Deep Edit tabs) could not clear the pill's `FX`, so the row and bay drifted apart (found in `docs/developer/ui_interaction_architecture_review.md` section 3.2).
-- **Left alone**: Master's `masterRowMode` has the same shape (`MIX`/`FX` pill OR Mixer sub-tab) and the same latent drift; fix it the same way when touched.
+- **Master too**: `masterRowMode` is deleted the same way; `isMasterRowFx` reads `activeMixerSubTab == "FX"` only. Before, `FX` pill then the bay's `TRANS` tab left the Master row on FX.
 
 ## Learn Means Hardware; Macro Knobs Add Targets (`MacroLearnState`, UI strings)
 

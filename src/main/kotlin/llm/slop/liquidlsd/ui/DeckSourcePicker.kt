@@ -56,7 +56,8 @@ object DeckSourcePicker {
                 "Deck PV" -> llm.slop.liquidlsd.macro.MacroEngine.DECK_PV
                 else -> llm.slop.liquidlsd.macro.MacroEngine.DECK_A
             }
-        llm.slop.liquidlsd.presets.GeneratorDefaults.applyToDeck(deck, deckLabel, canonicalBankId)
+        val replacedBindings = llm.slop.liquidlsd.presets.GeneratorDefaults.applyToDeck(deck, deckLabel, canonicalBankId)
+        if (replacedBindings) ToastOverlay.show("$deckLabel macro knobs reset to ${deck.source.displayName} defaults (previous bindings replaced)")
         session.deckLifecycleManager.clearDeckActivePreset(deck, mixer)
         state.clearSelection()
         state.setDeckSubTab(deckLabel, "SRC")

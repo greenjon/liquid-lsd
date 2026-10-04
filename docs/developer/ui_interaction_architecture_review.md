@@ -61,15 +61,15 @@ The Library dock and the inline Browse bay both browse presets and sources, but 
 | | Docked Library (`LibraryPanel`, `PresetListPanel`, `FXBrowserPanel`, `TransitionBrowserPanel`) | Inline bay (`PerformanceBrowseBay`, `ShaderPickerPopup`) |
 |---|---|---|
 | Purpose | Curating queues and playlists | Swapping the source or FX of one slot |
-| Search buffer | Three separate `ImString(256)` buffers, one per panel | `ImString(64)` in `ShaderPickerPopup` |
+| Search buffer | Three separate buffers, one per panel (256 chars) | One in `ShaderPickerPopup` (256 chars since Oct 2026; was 64), plus one for the chain list |
 | Action | Drag, `[Q]`/`[BGQ]`, context menu | Click replaces the slot, with undo |
 | Playlists / queues | Yes | No |
 
-Having two surfaces is intended. The part worth fixing is that search syntax, tag matching, category grouping and result ordering are implemented separately in each, and the buffer sizes already disagree. A user who learns one search box gets different results in the other.
+Having two surfaces is intended. The problem was that search matching was implemented separately in each, so the same text gave different results. **Fixed Oct 2026:** all of them now use `SearchMatcher` (same rule, same buffer size). Still separate: the buffers themselves and the picker's category chips.
 
 ### 3.2 Pill / bay state can drift (confirmed bug, fixed Oct 2026)
 
-> **Fixed**: `deckRowMode` was removed and the deck sub-tab is now the only stored SRC/FX state. The text below describes the bug as found. `masterRowMode` still has the same shape and is a remaining candidate.
+> **Fixed**: `deckRowMode` was removed and the deck sub-tab is now the only stored SRC/FX state. The text below describes the bug as found. `masterRowMode` was removed the same way (the Mixer sub-tab is the only stored state).
 
 A deck row's `[SRC|FX]` pill and the Deep Edit bay both feed one predicate, `PerformanceUiContext.isDeckRowFx` (`PerformanceUiContext.kt:111`):
 
@@ -130,9 +130,9 @@ What the code does:
 
 - Stock generators carry no bank of their own. Their bank comes from `GeneratorDefaults.resolve(source)`, either a user-saved default or the factory table.
 - `saveDefault` stores bindings with deck-agnostic parameter IDs, so a bank saved for one source is not meaningful for a different source.
-- `ParametersUndo.pushUndoState` runs after the swap (`DeckSourcePicker.kt:64`), so Ctrl+Z restores the previous bank.
+- `ParametersUndo` snapshots modulators only, so Ctrl+Z does **not** restore the previous macro bank. (An earlier draft of this review said it did; that was wrong.)
 
-So the previous bindings are recoverable through undo, but nothing tells the user they were replaced. "Silently" is the accurate word. The loss is a visibility gap, not data destruction.
+So the previous bindings are lost, and nothing told the user. **Update (Oct 2026):** a toast now reports the replacement (`ToastOverlay`, `GeneratorDefaults.applyToDeck` return value). Restoring the old bank is still open; see §6.2.
 
 **Why not carry bindings over by parameter name:** an earlier draft of this review suggested keeping bindings whose parameter names match in the new generator. That is not safe. Parameter names are reused for unrelated things across generators (for example "Scale", "Speed", "Depth"). Matching by name would quietly aim a performer's knobs at the wrong controls, which is worse than resetting them.
 
@@ -169,9 +169,9 @@ Separate formats per asset type are reasonable and each has a clear owner. The o
 ### 6.1 v1.0 candidates (polish, stability, no new features)
 
 1. **~~Fix the pill/bay drift (§3.2).~~ Done.** Make the deck row's SRC/FX mode a single stored value (or derive it fully from the sub-tab), and have `openGenBrowse` / `openFxChainBrowse` / the pill all go through one setter. Add a test next to `NavigationSurfaceTest` covering pill→FX→bay SRC tab→row shows SRC.
-2. **Tell the user when a generator change replaces their macro bank (§4.3).** If the deck's current bank differs from the incoming default, show a one-line toast ("Macro bank replaced. Ctrl+Z to undo") when the swap happens. No new persistence is needed.
-3. **Share one search implementation (§3.1).** Extract the query matching (tags, categories, case folding) so the Library panels and `ShaderPickerPopup` return identical results for identical input, and use one buffer size. Keeping two UIs is fine.
-4. **Make FX knobs look read-only in the macro strip (§4.4)** if they don't already (dimmed controls plus the role line).
+2. **~~Tell the user when a generator change replaces their macro bank (§4.3).~~ Done.** A toast reports it; there is no undo hint because undo does not cover macro banks.
+3. **~~Share one search implementation (§3.1).~~ Done.** `ui/browser/SearchMatcher` is the one matching rule and buffer size; the browsers still keep separate buffers and filter chips.
+4. **~~Make FX knobs look read-only in the macro strip (§4.4).~~ Done.** Checked: the strip already hid Add Target, chips and the kebab and showed a disabled role line for FX knobs; only the name tooltip still offered rename, now fixed.
 
 ### 6.2 v1.1
 
@@ -179,6 +179,7 @@ Separate formats per asset type are reasonable and each has a clear owner. The o
 - **Clearer bay tabs (§3.3).** Visually separate `Edit` from the picker tabs (for example a divider or a "Pick:" label).
 - **Queue visibility in Edit view (§5.1).** At minimum a compact "next up" readout. A resizable Library dock in Edit view is a larger layout change and conflicts with the three-view decision, so treat it as a separate proposal.
 - **Scene bundles (§5.2).** A schema referencing deck presets, master FX chain, active transition and controller profile.
+- **Restore the replaced bank** (stash it on swap, offer a restore action), or make `ParametersUndo` snapshot macro banks.
 - **Optional "lock macro bank" per deck** so a custom bank survives source changes.
 
 ### 6.3 Not recommended

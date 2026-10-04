@@ -35,7 +35,7 @@ object MacroLearnState {
         private set
     private var statusBannerExpiryMs: Long = 0L
 
-    /** Sets a temporary status message displayed in the UI banner. */
+    /** Sets a temporary status message; `ui/ToastOverlay` shows it (pulled from [getActiveStatus] each frame). */
     fun setStatus(message: String, durationMs: Long = 4000L) {
         statusBanner = message
         statusBannerExpiryMs = System.currentTimeMillis() + durationMs

@@ -267,14 +267,14 @@ class PerformSurfaceTest {
         fun banks() = PerfRows.substitutedRowsForPage(pinned, ctx, state).map { it.bankId }
         val expected = listOf(MacroEngine.DECK_A, MacroEngine.DECK_A_FX, MacroEngine.MASTER, MacroEngine.MASTER_FX)
         assertEquals(expected, banks())
-        state.setDeckSubTab("Deck A", "FX"); ctx.masterRowMode = "FX"
+        state.setDeckSubTab("Deck A", "FX"); state.activeMixerSubTab = "FX"
         try {
             assertEquals(expected, banks())
             // The toggle row, by contrast, follows the shared mode.
             assertEquals(MacroEngine.DECK_A_FX,
                 PerfRows.substitutedRowsForPage(pageOf("deck.A.srcfx", "trans", "wetdry", "global"), ctx, state).first().bankId)
         } finally {
-            state.setDeckSubTab("Deck A", "SRC"); ctx.masterRowMode = "MIX"
+            state.setDeckSubTab("Deck A", "SRC"); state.activeMixerSubTab = "CTRL"
         }
     }
 
@@ -328,10 +328,10 @@ class PerformSurfaceTest {
         state.setDeckSubTab("Deck A", "SRC")
         assertEquals(uncachedRows(decks, pages), cache.rows(decks, ctx, state, { it }, pages))
 
-        ctx.masterRowMode = "FX"
+        state.activeMixerSubTab = "FX"
         val master = pages.first { it.id == "master" }
         assertEquals(uncachedRows(master, pages), cache.rows(master, ctx, state, { it }, pages))
-        ctx.masterRowMode = "MIX"
+        state.activeMixerSubTab = "CTRL"
         assertEquals(uncachedRows(master, pages), cache.rows(master, ctx, state, { it }, pages))
     }
 

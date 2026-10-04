@@ -247,6 +247,19 @@ class PerfRowLayoutTest {
     }
 
     @Test
+    fun masterRowIsFxExactlyWhenTheMixerSubTabIsFx() {
+        val ctx = PerformanceUiContext()
+        val state = ParametersState()
+        for ((tab, fx) in listOf("CTRL" to false, "FX" to true, "TRANS" to false)) {
+            state.activeMixerSubTab = tab
+            assertEquals(fx, ctx.isMasterRowFx(state), "mixer sub-tab=$tab")
+        }
+        state.activeMixerSubTab = "FX"
+        state.openTransitionBrowse()
+        assertEquals(false, ctx.isMasterRowFx(state), "bay TRANS tab must flip the Master row off FX")
+    }
+
+    @Test
     fun pickingTheSourceTabAfterFxLeavesTheRowOnSrc() {
         val state = ParametersState()
         val ctx = PerformanceUiContext()

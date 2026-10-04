@@ -1,8 +1,24 @@
 ## [Unreleased]
 
-### Fixed: Deck Row SRC/FX Mode Could Disagree With Deep Edit (`ui/PerformanceUiContext.kt`, `ui/PerformanceDeckControls.kt`, `ui/FxHeaderActions.kt`)
+### FX Knob Tooltip No Longer Offers Rename (`ui/PerformanceMacroStrip.kt`)
+- In the Edit-row strip, an FX knob's name tooltip said "Double-click to rename" although FX knobs can't be renamed. It now says they follow the FX chain.
+
+### One Search Rule for Every Browser (`ui/browser/SearchMatcher.kt`, `ui/ShaderPickerPopup.kt`, `ui/browser/*Panel.kt`, `ui/PerformanceBrowseBay.kt`)
+- The Library's Sources / FX / Transitions lists, the inline source/FX/transition picker in Edit view, and the saved-chain list now all search the same way: type several words and an item matches when every word appears in its name, id, folder, category or tag (any order, any case). Before, the Library's FX list searched names only, the picker ignored tags on stock items, and a multi-word search needed the exact phrase.
+- Every search box now accepts up to 256 characters (the inline picker's was 64).
+
+### Macro Status Messages Are Now Visible (`ui/ToastOverlay.kt`, `ui/UIManager.kt`)
+- Messages such as "ADD TARGET: Click any parameter...", "Added target: ...", "Already a target", "Cannot add target...", "Add Target cancelled" and macro bank "Exported / Imported / failed" were being set but never drawn. They now appear in the bottom-centre message (`ToastOverlay`).
+
+### Changing a Deck's Source Now Says When It Replaces Your Macro Bindings (`ui/DeckSourcePicker.kt`, `ui/ToastOverlay.kt`, `presets/GeneratorDefaults.kt`)
+- Picking a different source resets the deck's macro knobs to that source's defaults, as before. If that discarded bindings you had set up, a message at the bottom of the window now says so ("Deck A macro knobs reset to Gyroid defaults (previous bindings replaced)").
+- **Ctrl+Z does not bring the old bindings back** (undo covers modulators only). To keep a custom bank across source changes, export it first from the macro strip's kebab menu.
+- Internal: new `ToastOverlay` (one transient bottom-centre message, drawn from `UIManager`); `GeneratorDefaults.applyToDeck` now returns whether it replaced existing bindings.
+
+### Fixed: Deck and Master Row Modes Could Disagree With Deep Edit (`ui/PerformanceUiContext.kt`, `ui/PerformanceDeckControls.kt`, `ui/PerformanceMasterControls.kt`, `ui/FxHeaderActions.kt`)
 - **Bug**: after clicking a deck row's `[FX]` pill, switching the Edit bay to its `SRC` tab (or picking a source) left the row's knobs and pill on FX while the bay showed the source.
 - **Fix**: the deck's Deep Edit sub-tab is now the only stored SRC/FX state. The pill, the bay's SRC/FX tabs and Browse all write it, and the row reads it, so they always agree. The separate pill state (`PerformanceUiContext.deckRowMode`) is removed.
+- **Master row**: the same fix. After clicking Master's `[FX]` pill, switching the bay to `TRANS` left the row on FX. The Mixer sub-tab is now the only stored state and `masterRowMode` is removed.
 
 ### Clearer Language: Add Target, MIDI Learn, OSC Learn (`ui/*`, `macro/MacroLearnState.kt`, `osc/OscLearnState.kt`)
 - **Macro knobs now "add targets"**: the macro `Learn` button is `Add Target`, banners and toasts say "Add Target" / "Added target: ...", and bindings are called targets everywhere (tooltips, the knob tooltip's `Target: ...` line, the target strip, "Delete this target"). FX Metaknobs are "retargeted" instead of rebound.

@@ -43,7 +43,7 @@ object FXBrowserPanel {
 
     private const val STOCK_PATH_PREFIX = "stock-fx://"
 
-    val searchBuffer = ImString(256)
+    val searchBuffer = ImString(SearchMatcher.BUFFER_SIZE)
     var selectedAsset: AssetItem? = null
     var shouldFocusSearch: Boolean = false
     var filteredRows: List<AssetItem> = emptyList()
@@ -146,22 +146,23 @@ object FXBrowserPanel {
                 lastSingles = singles
                 lastChains = chains
                 lastQuery = query
+                val tokens = SearchMatcher.tokens(query) // only on a cache miss, not every frame
                 lastFilterState = filterState
                 val result = mutableListOf<AssetItem>()
                 if (showStock) {
                     stock
-                        .filter { query.isEmpty() || it.displayName.lowercase().contains(query) }
+                        .filter { SearchMatcher.matches(tokens, listOf(it.displayName, it.id, it.folderPath), it.categories) }
                         .sortedBy { it.displayName.lowercase() }
                         .forEach { result.add(AssetItem(path = STOCK_PATH_PREFIX + it.id, name = it.displayName, type = AssetType.FX_STOCK)) }
                 }
                 if (showSingle) {
                     singles
-                        .filter { query.isEmpty() || it.name.lowercase().contains(query) || it.tags.any { t -> t.lowercase().contains(query) } }
+                        .filter { SearchMatcher.matches(tokens, listOf(it.name), it.tags) }
                         .forEach { result.add(it) }
                 }
                 if (showChain) {
                     chains
-                        .filter { query.isEmpty() || it.name.lowercase().contains(query) || it.tags.any { t -> t.lowercase().contains(query) } }
+                        .filter { SearchMatcher.matches(tokens, listOf(it.name), it.tags) }
                         .forEach { result.add(it) }
                 }
                 cachedRows = result

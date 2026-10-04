@@ -53,13 +53,11 @@ internal object PerformanceMasterControls {
         if (toggleClicked) {
             if (isMix) {
                 llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "FX")
-                ctx.masterRowMode = "FX"
                 parametersState.activeMixerSubTab = "FX"
                 llm.slop.liquidlsd.macro.FxMacroSync.syncFor(MacroEngine.MASTER_FX, mixer)
             } else {
                 llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "CTRL")
-                ctx.masterRowMode = "MIX"
-                if (parametersState.activeMixerSubTab == "FX") parametersState.activeMixerSubTab = "CTRL"
+                parametersState.activeMixerSubTab = "CTRL"
             }
         }
         if (isModeHovered) {
@@ -135,7 +133,6 @@ internal object PerformanceMasterControls {
         ImGui.setCursorScreenPos(curX, curY)
         if (ImGui.invisibleButton("##perf_mix_badge", badgeW, headerH)) {
             llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "CTRL")
-            ctx.masterRowMode = "MIX"
             parametersState.activeMixerSubTab = "CTRL"
             parametersState.setDisclosure("master", ParametersState.DisclosureLevel.DEEP_EDIT)
             ctx.focusDeepEditTab(parametersState, MacroEngine.MASTER)
@@ -149,7 +146,6 @@ internal object PerformanceMasterControls {
             ImGui.separator()
             if (ImGui.menuItem("Inspect in Deep Edit")) {
                 llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "CTRL")
-                ctx.masterRowMode = "MIX"
                 parametersState.activeMixerSubTab = "CTRL"
                 parametersState.setDisclosure("master", ParametersState.DisclosureLevel.DEEP_EDIT)
                 ctx.focusDeepEditTab(parametersState, MacroEngine.MASTER)

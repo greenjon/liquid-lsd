@@ -108,12 +108,13 @@ internal class PerformanceUiContext {
     fun isDeckRowFx(tag: String, parametersState: ParametersState?): Boolean =
         parametersState?.getActiveDeckSubTabByTag(tag) == "FX"
 
-    /** Master row mode: "MIX" (composite alphas + master level) or "FX" (Master FX chain macros). */
-    var masterRowMode: String = "MIX"
-
-    /** True when the Master row's knobs drive Master FX -- via its [FX] pill or Deep Edit's Mixer FX section, mirroring the deck rows. */
+    /**
+     * True when the Master row's knobs drive Master FX. Like [isDeckRowFx], the Mixer sub-tab
+     * ([ParametersState.activeMixerSubTab]) is the one stored state: the [MIX|FX] pill, the bay's TRANS/FX tabs
+     * and Browse all write it, so the row and the bay can't disagree.
+     */
     fun isMasterRowFx(parametersState: ParametersState): Boolean =
-        masterRowMode == "FX" || parametersState.activeMixerSubTab == "FX"
+        parametersState.activeMixerSubTab == "FX"
 
     /** Set each frame by [PerformanceMatrixPanel.draw]; null in tests, where source swaps fall back to the unguarded path. */
     var deckPresetController: DeckPresetController? = null

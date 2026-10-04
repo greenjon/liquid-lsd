@@ -74,7 +74,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
     private var publishSession: SessionContext? = null
     private var publishApply: (AssetItem) -> Unit = {}
     private var publishClear: () -> Unit = {}
-    private val chainSearchBuf = imgui.type.ImString(64)
+    private val chainSearchBuf = imgui.type.ImString(llm.slop.liquidlsd.ui.browser.SearchMatcher.BUFFER_SIZE)
 
     fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
         val deckLabel = ctx.deckLabelForModuleId(moduleId)
@@ -218,7 +218,8 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             if (filterQuery != query || filterSource !== chains) {
                 filterQuery = query
                 filterSource = chains
-                filteredChains = if (query.isBlank()) chains else chains.filter { it.name.lowercase().contains(query) }
+                val tokens = llm.slop.liquidlsd.ui.browser.SearchMatcher.tokens(query)
+                filteredChains = if (query.isBlank()) chains else chains.filter { llm.slop.liquidlsd.ui.browser.SearchMatcher.matches(tokens, listOf(it.name), it.tags) }
                 filteredLabels = Array(filteredChains.size) { "${filteredChains[it].name}##browse_chain_item_${filteredChains[it].path.hashCode()}" }
             }
             val filtered = filteredChains

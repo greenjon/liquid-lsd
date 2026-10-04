@@ -1503,8 +1503,8 @@
 </tr>
 <tr>
 <td>Search buffer</td>
-<td>Three separate <code>ImString(256)</code> buffers, one per panel</td>
-<td><code>ImString(64)</code> in <code>ShaderPickerPopup</code></td>
+<td>Three separate buffers, one per panel (256 chars)</td>
+<td>One in <code>ShaderPickerPopup</code> (256 chars since Oct 2026; was 64), plus one for the chain list</td>
 </tr>
 <tr>
 <td>Action</td>
@@ -1518,10 +1518,10 @@
 </tr>
 </tbody>
 </table>
-<p>Having two surfaces is intended. The part worth fixing is that search syntax, tag matching, category grouping and result ordering are implemented separately in each, and the buffer sizes already disagree. A user who learns one search box gets different results in the other.</p>
+<p>Having two surfaces is intended. The problem was that search matching was implemented separately in each, so the same text gave different results. <strong>Fixed Oct 2026:</strong> all of them now use <code>SearchMatcher</code> (same rule, same buffer size). Still separate: the buffers themselves and the picker's category chips.</p>
 <h3 id="32-pill-bay-state-can-drift-confirmed-bug-fixed-oct-2026">3.2 Pill / bay state can drift (confirmed bug, fixed Oct 2026)</h3>
 <blockquote>
-<p><strong>Fixed</strong>: <code>deckRowMode</code> was removed and the deck sub-tab is now the only stored SRC/FX state. The text below describes the bug as found. <code>masterRowMode</code> still has the same shape and is a remaining candidate.</p>
+<p><strong>Fixed</strong>: <code>deckRowMode</code> was removed and the deck sub-tab is now the only stored SRC/FX state. The text below describes the bug as found. <code>masterRowMode</code> was removed the same way (the Mixer sub-tab is the only stored state).</p>
 </blockquote>
 <p>A deck row's <code>[SRC|FX]</code> pill and the Deep Edit bay both feed one predicate, <code>PerformanceUiContext.isDeckRowFx</code> (<code>PerformanceUiContext.kt:111</code>):</p>
 <pre><code class="language-kotlin">deckRowMode[tag] == &quot;FX&quot; || parametersState?.getActiveDeckSubTabByTag(tag) == &quot;FX&quot;
@@ -1564,9 +1564,9 @@
 <ul>
 <li>Stock generators carry no bank of their own. Their bank comes from <code>GeneratorDefaults.resolve(source)</code>, either a user-saved default or the factory table.</li>
 <li><code>saveDefault</code> stores bindings with deck-agnostic parameter IDs, so a bank saved for one source is not meaningful for a different source.</li>
-<li><code>ParametersUndo.pushUndoState</code> runs after the swap (<code>DeckSourcePicker.kt:64</code>), so Ctrl+Z restores the previous bank.</li>
+<li><code>ParametersUndo</code> snapshots modulators only, so Ctrl+Z does <strong>not</strong> restore the previous macro bank. (An earlier draft of this review said it did; that was wrong.)</li>
 </ul>
-<p>So the previous bindings are recoverable through undo, but nothing tells the user they were replaced. "Silently" is the accurate word. The loss is a visibility gap, not data destruction.</p>
+<p>So the previous bindings are lost, and nothing told the user. <strong>Update (Oct 2026):</strong> a toast now reports the replacement (<code>ToastOverlay</code>, <code>GeneratorDefaults.applyToDeck</code> return value). Restoring the old bank is still open; see §6.2.</p>
 <p><strong>Why not carry bindings over by parameter name:</strong> an earlier draft of this review suggested keeping bindings whose parameter names match in the new generator. That is not safe. Parameter names are reused for unrelated things across generators (for example "Scale", "Speed", "Depth"). Matching by name would quietly aim a performer's knobs at the wrong controls, which is worse than resetting them.</p>
 <h3 id="44-fx-knobs-are-not-user-bindable">4.4 FX knobs are not user-bindable</h3>
 <p>Deck and Master knobs are freely bindable. FX bank knobs (<code>DECK_*_FX</code>, <code>MASTER_FX</code>) are assigned by <code>FxMacroSync</code> to slot wet/dry and ISF auto-map, and the strip shows a read-only role line for them. This is intentional (FX knobs follow the chain), and the read-only line is the correct response. It only needs to look read-only, not like an empty editor.</p>
@@ -1627,9 +1627,9 @@
 <h3 id="61-v10-candidates-polish-stability-no-new-features">6.1 v1.0 candidates (polish, stability, no new features)</h3>
 <ol>
 <li><strong>~~Fix the pill/bay drift (§3.2).~~ Done.</strong> Make the deck row's SRC/FX mode a single stored value (or derive it fully from the sub-tab), and have <code>openGenBrowse</code> / <code>openFxChainBrowse</code> / the pill all go through one setter. Add a test next to <code>NavigationSurfaceTest</code> covering pill→FX→bay SRC tab→row shows SRC.</li>
-<li><strong>Tell the user when a generator change replaces their macro bank (§4.3).</strong> If the deck's current bank differs from the incoming default, show a one-line toast ("Macro bank replaced. Ctrl+Z to undo") when the swap happens. No new persistence is needed.</li>
-<li><strong>Share one search implementation (§3.1).</strong> Extract the query matching (tags, categories, case folding) so the Library panels and <code>ShaderPickerPopup</code> return identical results for identical input, and use one buffer size. Keeping two UIs is fine.</li>
-<li><strong>Make FX knobs look read-only in the macro strip (§4.4)</strong> if they don't already (dimmed controls plus the role line).</li>
+<li><strong>~~Tell the user when a generator change replaces their macro bank (§4.3).~~ Done.</strong> A toast reports it; there is no undo hint because undo does not cover macro banks.</li>
+<li><strong>~~Share one search implementation (§3.1).~~ Done.</strong> <code>ui/browser/SearchMatcher</code> is the one matching rule and buffer size; the browsers still keep separate buffers and filter chips.</li>
+<li><strong>~~Make FX knobs look read-only in the macro strip (§4.4).~~ Done.</strong> Checked: the strip already hid Add Target, chips and the kebab and showed a disabled role line for FX knobs; only the name tooltip still offered rename, now fixed.</li>
 </ol>
 <h3 id="62-v11">6.2 v1.1</h3>
 <ul>
@@ -1637,6 +1637,7 @@
 <li><strong>Clearer bay tabs (§3.3).</strong> Visually separate <code>Edit</code> from the picker tabs (for example a divider or a "Pick:" label).</li>
 <li><strong>Queue visibility in Edit view (§5.1).</strong> At minimum a compact "next up" readout. A resizable Library dock in Edit view is a larger layout change and conflicts with the three-view decision, so treat it as a separate proposal.</li>
 <li><strong>Scene bundles (§5.2).</strong> A schema referencing deck presets, master FX chain, active transition and controller profile.</li>
+<li><strong>Restore the replaced bank</strong> (stash it on swap, offer a restore action), or make <code>ParametersUndo</code> snapshot macro banks.</li>
 <li><strong>Optional "lock macro bank" per deck</strong> so a custom bank survives source changes.</li>
 </ul>
 <h3 id="63-not-recommended">6.3 Not recommended</h3>

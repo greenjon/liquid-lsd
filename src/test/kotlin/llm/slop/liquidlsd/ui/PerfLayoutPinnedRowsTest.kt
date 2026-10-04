@@ -22,7 +22,6 @@ class PerfLayoutPinnedRowsTest {
             activeDeckASubTab = "FX"; activeDeckBSubTab = "FX"; activeDeckBGSubTab = "FX"; activeDeckPVSubTab = "FX"; activeMixerSubTab = "FX"
         }
         val ctx = PerformanceUiContext().apply {
-            masterRowMode = "FX"
         }
         for (id in pinnedIds) {
             val row = PerfRows.CATALOG.getValue(id)
@@ -54,8 +53,8 @@ class PerfLayoutPinnedRowsTest {
 
     @Test
     fun theToggleRowSwitchesBankButKeepsItsPlacementAttributes() {
-        val ctx = PerformanceUiContext().apply { masterRowMode = "FX" }
-        val state = ParametersState().apply { activeDeckASubTab = "FX" }
+        val ctx = PerformanceUiContext()
+        val state = ParametersState().apply { activeDeckASubTab = "FX"; activeMixerSubTab = "FX" }
         for (id in listOf("deck.A.srcfx", "master")) {
             val base = PerfRows.CATALOG.getValue(id)
             val fx = PerfRows.withDeckRowMode(base, ctx, state)

@@ -66,7 +66,6 @@ internal class MasterFxActions : FxChainHeader.Actions {
     override fun focusSlot(slotIdx: Int?) {
         if (slotIdx != null && !isFx && !pinned) {
             MacroLearnState.onNavigateSection("Mixer", "FX")
-            ctx.masterRowMode = "FX"
             parametersState.activeMixerSubTab = "FX"
             FxMacroSync.syncFor(MacroEngine.MASTER_FX, mixer)
         }

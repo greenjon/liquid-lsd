@@ -305,6 +305,7 @@ class UIManager(
         // Clean Mode should still see feedback that Learn is waiting, rather than it silently
         // running with no visible indicator anywhere on screen.
         OscLearnStatusOverlay.draw(displayWidth, displayHeight)
+        ToastOverlay.draw(displayWidth, displayHeight, llm.slop.liquidlsd.macro.MacroLearnState.getActiveStatus())
 
         handleKnobCursorLocking()
 

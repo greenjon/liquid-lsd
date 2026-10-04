@@ -81,7 +81,7 @@ internal object PerformanceMacroStrip {
         ImGui.setCursorScreenPos(cx, row1Y)
         ImGui.invisibleButton("##name", nameW, ctrlH)
         dl.addText(cx + 2f, TextFit.centeredY(row1Y, ctrlH, ImGui.getTextLineHeight()), ImGui.getColorU32(imgui.flag.ImGuiCol.Text), TextFit.ellipsize(name, nameW - 4f))
-        itemTooltip("$name\nDouble-click to rename.")
+        itemTooltip(if (isFx) "$name\nFX knobs follow the FX chain: they can't be renamed or given targets." else "$name\nDouble-click to rename.")
         if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0) && !isFx) openRename(control)
         if (ImGui.beginPopup(RENAME_POPUP)) {
             ImGui.setNextItemWidth(160f)

@@ -39,7 +39,7 @@ object PresetListPanel {
     const val STOCK_PATH_PREFIX = "stock-source://"
     const val PAYLOAD_STOCK_SOURCE = "ASSET_ITEM_STOCK_SOURCE"
 
-    val searchBuffer = ImString(256)
+    val searchBuffer = ImString(SearchMatcher.BUFFER_SIZE)
     val selection = MultiSelectionModel<AssetItem>()
     var selectedAsset: AssetItem?
         get() = selection.leadItem
@@ -173,17 +173,18 @@ object PresetListPanel {
                 lastStock = stock
                 lastAllPresets = allPresets
                 lastQuery = query
+                val tokens = SearchMatcher.tokens(query) // only on a cache miss, not every frame
                 lastFilterState = filterState
                 val res = mutableListOf<AssetItem>()
                 if (showStock) {
                     stock
-                        .filter { query.isEmpty() || it.displayName.lowercase().contains(query) || it.categories.any { c -> c.lowercase().contains(query) } }
+                        .filter { SearchMatcher.matches(tokens, listOf(it.displayName, it.id, it.folderPath), it.categories) }
                         .sortedBy { it.displayName.lowercase() }
                         .forEach { res.add(AssetItem(path = STOCK_PATH_PREFIX + it.id, name = it.displayName, type = AssetType.SOURCE_STOCK, tags = it.categories)) }
                 }
                 if (showSaved) {
                     allPresets
-                        .filter { query.isEmpty() || it.name.lowercase().contains(query) || it.tags.any { t -> t.lowercase().contains(query) } }
+                        .filter { SearchMatcher.matches(tokens, listOf(it.name), it.tags) }
                         .forEach { res.add(it) }
                 }
                 cachedFiltered = res

@@ -243,8 +243,10 @@ object GeneratorDefaults {
 
     /**
      * Applies the resolved default for [deck.source] to [deck] and [canonicalBankId].
+     *
+     * @return true when the bank already held bindings and the default replaced them with different ones.
      */
-    fun applyToDeck(deck: Deck, deckLabel: String, canonicalBankId: String) {
+    fun applyToDeck(deck: Deck, deckLabel: String, canonicalBankId: String): Boolean {
         val defaultDto = resolve(deck.source)
 
         for ((key, pDto) in defaultDto.parameters) {
@@ -254,7 +256,9 @@ object GeneratorDefaults {
 
         val targetBank = MacroEngine.getBank(canonicalBankId)
             ?: MacroEngine.newBankFor(canonicalBankId).also { MacroEngine.registerBank(canonicalBankId, it) }
+        val before = targetBank.knobs.map { it.bindings.toList() }
         MacroBankSerializer.installBankForDeck(defaultDto.macroBank, targetBank, deckLabel)
+        return before.any { it.isNotEmpty() } && before != targetBank.knobs.map { it.bindings.toList() }
     }
 
     /**

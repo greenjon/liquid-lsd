@@ -42,7 +42,7 @@ object TransitionBrowserPanel {
 
     private const val STOCK_PATH_PREFIX = "stock-trans://"
 
-    val searchBuffer = ImString(256)
+    val searchBuffer = ImString(SearchMatcher.BUFFER_SIZE)
     var selectedAsset: AssetItem? = null
     var shouldFocusSearch: Boolean = false
     var filteredRows: List<AssetItem> = emptyList()
@@ -156,17 +156,12 @@ object TransitionBrowserPanel {
                 lastStock = stock
                 lastPresets = presets
                 lastQuery = query
+                val tokens = SearchMatcher.tokens(query) // only on a cache miss, not every frame
                 lastFilterState = filterState
                 val result = mutableListOf<AssetItem>()
                 if (showStock) {
                     stock
-                        .filter { trans ->
-                            query.isEmpty() ||
-                                trans.displayName.lowercase().contains(query) ||
-                                trans.id.lowercase().contains(query) ||
-                                trans.folderPath.lowercase().contains(query) ||
-                                trans.categories.any { it.lowercase().contains(query) }
-                        }
+                        .filter { SearchMatcher.matches(tokens, listOf(it.displayName, it.id, it.folderPath), it.categories) }
                         .sortedBy { it.displayName.lowercase() }
                         .forEach { trans ->
                             val folderLabel = if (trans.folderPath.isNotBlank()) " [${trans.folderPath}]" else ""
@@ -182,7 +177,7 @@ object TransitionBrowserPanel {
                 }
                 if (showPreset) {
                     presets
-                        .filter { query.isEmpty() || it.name.lowercase().contains(query) || it.tags.any { t -> t.lowercase().contains(query) } }
+                        .filter { SearchMatcher.matches(tokens, listOf(it.name), it.tags) }
                         .forEach { result.add(it) }
                 }
                 cachedRows = result

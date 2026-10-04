@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
+import llm.slop.liquidlsd.ui.browser.SearchMatcher
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiComboFlags
 import imgui.flag.ImGuiKey
@@ -65,7 +66,7 @@ object ShaderPickerPopup {
     private var onSelect: ((String?) -> Unit)? = null
     private var title = "Select Shader"
 
-    private val searchBuf = ImString(64)
+    private val searchBuf = ImString(SearchMatcher.BUFFER_SIZE)
     /** Active category filters, OR-combined. "All" is exclusive with every other entry. */
     private var selectedCategories: MutableSet<String> = mutableSetOf("All")
     private val catCheckRef = ImBoolean()
@@ -250,7 +251,7 @@ object ShaderPickerPopup {
         val tempCats = mutableSetOf<String>()
         tempCats.add("All")
         
-        val searchText = searchBuf.get().lowercase()
+        val tokens = SearchMatcher.tokens(searchBuf.get())
         
         if (pickerType == PickerType.SOURCE) {
             // ── Dynamic External Video Feeds ──
@@ -258,7 +259,7 @@ object ShaderPickerPopup {
             val externalServers = llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.availableServers.value
             if (externalServers.isNotEmpty()) {
                 externalServers.forEach { srv ->
-                    val matchesSearch = srv.lowercase().contains(searchText) || "external".contains(searchText) || "video".contains(searchText)
+                    val matchesSearch = SearchMatcher.matches(tokens, srv, "external", "video")
                     val matchesCategory = matchesSelectedCategories(listOf("External Sources"), "")
                     if (matchesSearch && matchesCategory) {
                         filteredItems.add(
@@ -274,7 +275,7 @@ object ShaderPickerPopup {
                 }
             } else {
                 val fallbackName = "External Video (No streams active)"
-                val matchesSearch = fallbackName.lowercase().contains(searchText) || "external".contains(searchText)
+                val matchesSearch = SearchMatcher.matches(tokens, fallbackName, "external", "video")
                 val matchesCategory = matchesSelectedCategories(listOf("External Sources"), "")
                 if (matchesSearch && matchesCategory) {
                     filteredItems.add(
@@ -301,9 +302,7 @@ object ShaderPickerPopup {
                     tempCats.add(source.folderPath)
                 }
                 
-                val matchesSearch = source.displayName.lowercase().contains(searchText) ||
-                    source.id.lowercase().contains(searchText) ||
-                    source.folderPath.lowercase().contains(searchText)
+                val matchesSearch = SearchMatcher.matches(tokens, listOf(source.displayName, source.id, source.folderPath), source.categories)
                 val matchesCategory = matchesSelectedCategories(source.categories, source.folderPath)
 
                 if (matchesSearch && matchesCategory) {
@@ -326,8 +325,7 @@ object ShaderPickerPopup {
             // always-visible list).
             FileSystemManager.scanAllPresets().forEach { asset ->
                 asset.tags.forEach { tempCats.add(it) }
-                val matchesSearch = asset.name.lowercase().contains(searchText) ||
-                    asset.tags.any { it.lowercase().contains(searchText) }
+                val matchesSearch = SearchMatcher.matches(tokens, listOf(asset.name), asset.tags)
                 val matchesCategory = matchesSelectedCategories(asset.tags, "")
                 if (matchesSearch && matchesCategory) {
                     filteredItems.add(
@@ -347,9 +345,7 @@ object ShaderPickerPopup {
                     tempCats.add(transition.folderPath)
                 }
 
-                val matchesSearch = transition.displayName.lowercase().contains(searchText) ||
-                    transition.id.lowercase().contains(searchText) ||
-                    transition.folderPath.lowercase().contains(searchText)
+                val matchesSearch = SearchMatcher.matches(tokens, listOf(transition.displayName, transition.id, transition.folderPath), transition.categories)
                 val matchesCategory = matchesSelectedCategories(transition.categories, transition.folderPath)
 
                 if (matchesSearch && matchesCategory) {
@@ -373,9 +369,7 @@ object ShaderPickerPopup {
                     tempCats.add(filter.folderPath)
                 }
 
-                val matchesSearch = filter.displayName.lowercase().contains(searchText) ||
-                    filter.id.lowercase().contains(searchText) ||
-                    filter.folderPath.lowercase().contains(searchText)
+                val matchesSearch = SearchMatcher.matches(tokens, listOf(filter.displayName, filter.id, filter.folderPath), filter.categories)
                 val isFavorite = llm.slop.liquidlsd.presets.FxShortlist.isFavorite(filter.id)
                 val matchesCategory = matchesSelectedCategories(filter.categories, filter.folderPath, isFavorite)
 
@@ -397,8 +391,7 @@ object ShaderPickerPopup {
             // additive with whatever stock tag filters are also selected.
             if (selectedCategories.contains(CATEGORY_SAVED)) {
                 FileSystemManager.scanAllFxPresets().forEach { asset ->
-                    val matchesSearch = asset.name.lowercase().contains(searchText) ||
-                        asset.tags.any { it.lowercase().contains(searchText) }
+                    val matchesSearch = SearchMatcher.matches(tokens, listOf(asset.name), asset.tags)
                     if (matchesSearch) {
                         filteredItems.add(
                             ShaderItem(
