@@ -113,7 +113,7 @@ class ParametersState : MidiLearnSink {
     /**
      * Sets [moduleId]'s disclosure tier. Deep Edit is solo: when [level] is not COLLAPSED, every
      * other module is collapsed -- except one currently pinned open by an active Learn. Opening a
-     * Deep Edit also focuses it ([activeTopTab]), so the MACROS panel follows it, and drops a FULL
+     * Deep Edit also focuses it ([activeTopTab]), and drops a FULL
      * Library back to HALF so the Edit view (which hides the Library) is actually on screen.
      */
     fun setDisclosure(moduleId: String, level: DisclosureLevel) {
@@ -289,26 +289,6 @@ class ParametersState : MidiLearnSink {
 
     var activeTopTab: String = "Deck A"
 
-    /**
-     * Column 3 MACROS panel's GLB tab. The Global bank has no Deep Edit section, so rather than a
-     * fake [activeTopTab] (which Deep Edit reads) this pins GLB to the tab/sub-tab that was active
-     * when GLB was picked; any later navigation (Deep Edit, side rail, another MACROS tab) changes
-     * that key and so drops back to the normal tab. See [isGlobalMacrosShown].
-     */
-    private var globalMacrosAnchor: String? = null
-
-    private fun macroNavKey(): String = "$activeTopTab/${getActiveSubTab(activeTopTab)}"
-
-    fun showGlobalMacros() { globalMacrosAnchor = macroNavKey() }
-
-    fun hideGlobalMacros() { globalMacrosAnchor = null }
-
-    fun isGlobalMacrosShown(): Boolean {
-        val anchor = globalMacrosAnchor ?: return false
-        if (anchor == macroNavKey()) return true
-        globalMacrosAnchor = null
-        return false
-    }
     var activeDeckASubTab: String = "SRC"
     var activeDeckBSubTab: String = "SRC"
     var activeDeckBGSubTab: String = "SRC"

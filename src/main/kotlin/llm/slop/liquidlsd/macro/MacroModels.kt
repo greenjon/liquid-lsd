@@ -92,7 +92,7 @@ data class MacroControl(
 }
 
 /**
- * The fixed-shape container for one macro surface: either the global Column 3 bank (session
+ * The fixed-shape container for one macro surface: either the global bank (session
  * scope, [MacroBinding.unitInstanceId] == null) or a single Rack unit's own local bank (see
  * proposal §6). Both use the same shape: up to 8 knobs.
  */

@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#removed-the-column-3-macros-tab-binding-editing-lives-in-the-edit-view-uiuimanagerkt-uiperformancemacrostripkt-uiuithemekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed the Column 3 MACROS Tab; Binding Editing Lives in the Edit View (ui/UIManager.kt, ui/PerformanceMacroStrip.kt, ui/UITheme.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#bi-directional-bank-sync-bipolar-metertype-support-for-controller-feedback-control-ui" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5141,6 +5152,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#removed-the-column-3-macros-tab-binding-editing-lives-in-the-edit-view-uiuimanagerkt-uiperformancemacrostripkt-uiuithemekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Removed the Column 3 MACROS Tab; Binding Editing Lives in the Edit View (ui/UIManager.kt, ui/PerformanceMacroStrip.kt, ui/UITheme.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#bi-directional-bank-sync-bipolar-metertype-support-for-controller-feedback-control-ui" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9049,6 +9071,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="removed-the-column-3-macros-tab-binding-editing-lives-in-the-edit-view-uiuimanagerkt-uiperformancemacrostripkt-uiuithemekt">Removed the Column 3 MACROS Tab; Binding Editing Lives in the Edit View (<code>ui/UIManager.kt</code>, <code>ui/PerformanceMacroStrip.kt</code>, <code>ui/UITheme.kt</code>)</h3>
+<ul>
+<li><strong>Column 3 is the Mixer only</strong>: the <code>[ MIXER | MACROS ]</code> toggle, the MACROS panel and the Binding Inspector are gone. Binding a macro knob (Learn, targets, Min/Max/Curve/Link/Invert/Enabled, rename) is done in the Edit-row macro strip and the Properties editor.</li>
+<li><strong>Global knobs</strong> use a guest strip on whichever Edit row is open, so they can be bound without leaving the deck being edited.</li>
+<li>The Mixer gets back the ~36px the toggle used. The saved <code>column3Mode</code> preference is no longer read or written; old settings files are unaffected.</li>
+<li>The Export/Import Macro Bank buttons lived in the removed inspector and are not in the UI for now (the <code>.knobpreset.json</code> serializer is unchanged).</li>
+<li>Internal: <code>PerformanceUiContext.navigateMacroPanelTo</code> is now <code>focusDeepEditTab</code>; <code>ParametersState</code> no longer has the GLB-tab pin (<code>showGlobalMacros</code> and friends); <code>FxMacroSummary.draw</code> removed.</li>
+</ul>
 <h3 id="bi-directional-bank-sync-bipolar-metertype-support-for-controller-feedback-control-ui">Bi-directional Bank Sync &amp; Bipolar MeterType Support for Controller Feedback (<code>control/*</code>, <code>ui/*</code>)</h3>
 <ul>
 <li><strong>Bi-directional Bank Switching</strong>: When switching Perform view tabs or pages in the software UI (via mouse, menu, or keyboard shortcuts), connected controllers with hardware bank support (like the DJ TechTools Midi Fighter Twister) now automatically switch their active hardware bank to stay synchronized with the active screen page.</li>

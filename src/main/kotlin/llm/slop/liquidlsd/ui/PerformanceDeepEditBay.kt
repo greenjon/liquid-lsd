@@ -118,9 +118,8 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
     /**
      * The Deep Edit tier: the full parameter/CV editor, reusing
      * [ParametersTabs.drawDeckGroupContent]/[ParametersTabs.drawMasterFxContent] and
-     * [PropertiesPanel.draw] (see [drawRackDeepEdit]). Macro target binding (arm Learn, inspect/edit bindings) lives
-     * on the Mixer panel's MACROS tab ([MacroPanel]), not here -- pressing Learn on a Tier-1 knob
-     * jumps there automatically (see [navigateMacroPanelTo]). No title or Collapse button here: the
+     * [PropertiesPanel.draw] (see [drawRackDeepEdit]). Macro binding is edited in the Edit-row [PerformanceMacroStrip]
+     * and the Properties editor; pressing Learn on a Tier-1 knob focuses this tab (see [focusDeepEditTab]). No title or Collapse button here: the
      * row above already says which deck/section this is, and it has its own Collapse (as does Esc).
      *
      * A module that has any Browse target (every [deepEditModuleIds] member does) gets a tab row

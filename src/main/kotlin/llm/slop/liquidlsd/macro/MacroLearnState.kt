@@ -3,7 +3,7 @@ package llm.slop.liquidlsd.macro
 /**
  * Transient state manager for Macro Learn Mode and Control selection in the UI.
  *
- * Coordinates interactive click-to-bind linking between Macro Controls (Column 3)
+ * Coordinates interactive click-to-bind linking between Macro Controls (Performance matrix knobs)
  * and target parameters (Column 1) or modulator properties (Column 2).
  */
 object MacroLearnState {
@@ -113,7 +113,7 @@ object MacroLearnState {
     }
 
     /**
-     * Call when the user navigates Deep Edit / MACROS / a Deck row's [SRC]/[FX] pill to ([topTab],
+     * Call when the user navigates Deep Edit / a Deck row's [SRC]/[FX] pill to ([topTab],
      * [subTab]). Leaving the armed knob's section disarms Learn, since the knob can't bind to
      * anything there anyway (see [acceptsTarget]).
      */

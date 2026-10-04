@@ -39,7 +39,6 @@ data class AppPreferences(
     val maxFps: Int = 30,
     val startupBehavior: UITheme.StartupBehavior = UITheme.StartupBehavior.PREVIOUS_SESSION,
     val libraryMode: UITheme.LibraryMode = UITheme.LibraryMode.HALF,
-    val column3Mode: UITheme.Column3Mode = UITheme.Column3Mode.MIXER,
     /** Id of the active Perform page (see [PerfPageStore]). */
     val performancePageId: String = PerfPageDef.DEFAULT_ID,
     /** Ids of Perform pages the user hid from the tab strip (a controller bank can still show them). */

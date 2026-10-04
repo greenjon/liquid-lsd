@@ -5,8 +5,7 @@ import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 
 /**
- * The 2x2 deck monitor grid (A | B over BG | PV), shared by the Mixer view and the Macros tab so their
- * geometry can't drift. [drawTile] draws one tile: (label, deck, width, height, isDeckA).
+ * The 2x2 deck monitor grid (A | B over BG | PV), used by the Mixer view. [drawTile] draws one tile: (label, deck, width, height, isDeckA).
  */
 object DeckMonitorGrid {
     const val PADDING = 8f

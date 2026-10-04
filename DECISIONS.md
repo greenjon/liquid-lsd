@@ -1,3 +1,10 @@
+## Column 3 MACROS Tab Removed; Macro Binding Is Edited in the Edit Row (`PerformanceMacroStrip`, `MacroBindingEditor`)
+
+- **Decision**: Column 3 always draws the Mixer. Binding editing moved to an Edit-row strip (`PerformanceMacroStrip`) plus the Properties editor; the GLOBAL bank uses a guest strip on the open Edit row. `Column3HeaderToggle`, `MacroPanel`, `MacroBindingInspector`, `UITheme.Column3Mode` and the GLB tab pin in `ParametersState` were deleted.
+- **Rationale**: the MACROS tab was a second place to find the same knobs, and arming Learn there meant navigating away from the row being edited. The strip keeps selection, Learn and bindings on the row itself.
+- **Alternatives rejected**: keeping MACROS as an optional tab (two editing surfaces to keep in sync); a modal inspector (hides the parameter grid Learn needs to click).
+- **Consequences**: Export/Import Macro Bank has no UI until re-homed. The Perform-view Clock row cannot arm GLOBAL Learn (its knobs cannot be selected there). `PerformanceUiContext.focusDeepEditTab` is what remains of the old panel navigation.
+
 ## Bi-directional Bank Sync and MeterType Detection for Controllers (`control/ControllerFeedback.kt`, `ui/PerfKnobSpec.kt`, `control/KnobLight.kt`)
 
 - **Decision**: `ControllerFeedback.syncActiveBank(activePageId, runtime)` maps the app's `UITheme.performancePageId` to the controller profile's `banks.pages`. When the UI page changes to a different bank, it sends a hardware bank switch CC message (`banks.switch`) to the controller and updates the runtime's active bank. `PerfKnobResolver.resolveControlMeterType` inspects macro bindings and target parameters in `Mixer` to resolve whether a knob is `MONOPOLAR`, `BIPOLAR` (e.g. Crossfader, Pan, Detune, Rotation, Zoom, Bipolar macro link mode) or `ENDLESS`. `KnobLight` carries this `meterType` to feedback targets.

@@ -36,7 +36,7 @@ class MixerLayoutTest {
         )
         val tight = MixerLayoutCalculator.calculate(
             windowWidth = 576f,
-            availableHeight = 720f,
+            availableHeight = 684f,
             windowPaddingX = 8f,
             scrollbarWidth = 14f,
             textLineHeightWithSpacing = 22f,

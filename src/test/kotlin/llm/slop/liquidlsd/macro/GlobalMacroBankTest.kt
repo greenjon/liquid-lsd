@@ -30,19 +30,4 @@ class GlobalMacroBankTest {
         assertTrue(MacroLearnState.acceptsTarget(MacroEngine.GLOBAL, "Deck B/FX/FX1/DryWet"))
         assertTrue(MacroLearnState.acceptsTarget(MacroEngine.GLOBAL, "Master/FX/Super"))
     }
-
-    @Test
-    fun macrosGlbTabDropsBackWhenNavigationMovesOn() {
-        val state = ParametersState()
-        state.activeTopTab = "Deck A"
-        state.showGlobalMacros()
-        assertTrue(state.isGlobalMacrosShown())
-
-        state.setDeckSubTab("Deck A", "FX")
-        assertFalse(state.isGlobalMacrosShown())
-
-        state.showGlobalMacros()
-        state.hideGlobalMacros()
-        assertFalse(state.isGlobalMacrosShown())
-    }
 }

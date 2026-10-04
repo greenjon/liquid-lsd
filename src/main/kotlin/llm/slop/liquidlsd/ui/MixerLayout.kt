@@ -119,8 +119,7 @@ object MixerLayoutCalculator {
     }
 
     /**
-     * Reconstructs the real non-preview vertical overhead in [MixerPanel.draw] (mode toggle,
-     * master controls, the two spacing+separator+spacing bands, and the inter-row gap) instead of
+     * Reconstructs the real non-preview vertical overhead in [MixerPanel.draw] (master controls, the two spacing+separator+spacing bands, and the inter-row gap) instead of
      * blind multipliers.
      */
     private fun estimateVerticalChrome(
@@ -128,7 +127,6 @@ object MixerLayoutCalculator {
         presetNameExtraHeight: Float,
         itemSpacingY: Float
     ): Float {
-        val modeToggleH = 28f + itemSpacingY * 2f
         // spacing() + separator() + spacing() after the master image.
         val postMasterSeparatorH = itemSpacingY * 3f + 1f
         // Same triple after the master-controls child, plus the item-spacing the child itself consumes.
@@ -136,6 +134,6 @@ object MixerLayoutCalculator {
         // Gap between deck row 1 and row 2 (matches MixerPanel's row2Y calculation exactly).
         val rowGap = itemSpacingY + 6f
         val roundingBuffer = itemSpacingY
-        return modeToggleH + masterControlsH + postMasterSeparatorH + postControlsSeparatorH + rowGap + (presetNameExtraHeight * 2f) + roundingBuffer
+        return masterControlsH + postMasterSeparatorH + postControlsSeparatorH + rowGap + (presetNameExtraHeight * 2f) + roundingBuffer
     }
 }

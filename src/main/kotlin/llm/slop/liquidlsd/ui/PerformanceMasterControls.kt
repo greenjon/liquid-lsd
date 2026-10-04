@@ -138,7 +138,7 @@ internal object PerformanceMasterControls {
             ctx.masterRowMode = "MIX"
             parametersState.activeMixerSubTab = "CTRL"
             parametersState.setDisclosure("master", ParametersState.DisclosureLevel.DEEP_EDIT)
-            ctx.navigateMacroPanelTo(parametersState, MacroEngine.MASTER)
+            ctx.focusDeepEditTab(parametersState, MacroEngine.MASTER)
         }
         itemTooltip("Composite mix levels: Deck A, Deck B, Deck BG alphas and Master output level.\nClick to inspect in Deep Edit. Right-click to reset levels.")
 
@@ -152,7 +152,7 @@ internal object PerformanceMasterControls {
                 ctx.masterRowMode = "MIX"
                 parametersState.activeMixerSubTab = "CTRL"
                 parametersState.setDisclosure("master", ParametersState.DisclosureLevel.DEEP_EDIT)
-                ctx.navigateMacroPanelTo(parametersState, MacroEngine.MASTER)
+                ctx.focusDeepEditTab(parametersState, MacroEngine.MASTER)
             }
             ImGui.separator()
             if (ImGui.menuItem("Reset Deck Alphas to 100%")) {

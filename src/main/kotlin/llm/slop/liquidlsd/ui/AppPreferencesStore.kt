@@ -201,11 +201,6 @@ object AppPreferencesStore {
                         logger.info { "Migrated assetManagerHalfHeight to libraryMode: ${UITheme.libraryMode}" }
                     }
                 }
-                val savedColumn3Mode = props.getProperty("column3Mode")
-                if (savedColumn3Mode != null) {
-                    UITheme.column3Mode = try { UITheme.Column3Mode.valueOf(savedColumn3Mode) } catch (e: Exception) { UITheme.Column3Mode.MIXER }
-                    logger.info { "Loaded column3Mode from settings file: ${UITheme.column3Mode}" }
-                }
                 // "workspaceMode" (Classic vs Performance) is no longer read: Classic view was removed.
                 val savedPageId = props.getProperty("performancePageId")
                     // Migration: the old tab index 0/1 was the built-in DECKS/MASTER page; anything else was a removed tab -> DECKS.
@@ -334,7 +329,6 @@ object AppPreferencesStore {
             props.setProperty("tooltipsEnabled", UITheme.tooltipsEnabled.toString())
             props.setProperty("maxFps", UITheme.maxFps.toString())
             props.setProperty("libraryMode", UITheme.libraryMode.name)
-            props.setProperty("column3Mode", UITheme.column3Mode.name)
             props.setProperty("performancePageId", UITheme.performancePageId)
             props.setProperty("hiddenPerformPages", UITheme.hiddenPerformPages.sorted().joinToString(","))
             props.setProperty("autoVjDirtyBehavior", UITheme.autoVjDirtyBehavior.name)

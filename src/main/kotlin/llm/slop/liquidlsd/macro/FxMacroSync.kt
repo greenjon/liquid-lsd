@@ -9,7 +9,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  *  - Focus mode: Knob 1 = the focused slot's Metaknob, Knobs 2-4 = its top parameters (paged).
  *    The focused slot's Dry/Wet lives on the chain header, not on a knob.
  * Runs whenever a chain's contents change (load, slot swap, link toggle, focus), so the
- * Performance Console's 4-knob FX rows and Column 3's MACROS view (which read the same banks)
+ * Performance Console's 4-knob FX rows and the Edit-row macro strip (which read the same banks)
  * always show the current mapping. FX banks are not user-bindable: every sync rewrites all four
  * knobs, so a physical knob's meaning is fixed per mode.
  *

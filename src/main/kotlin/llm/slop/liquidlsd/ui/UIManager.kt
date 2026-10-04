@@ -177,15 +177,6 @@ class UIManager(
         }
     )
 
-    private val macroPanel = MacroPanel(
-        parametersState = parametersState,
-        drawDeckTile = { mixer, label, deck, width, height, isDeckA, editing, onSelect ->
-            deckControlPanel.drawDeckControls(
-                session, mixer, label, deck, width, height, isDeckA, deckUtilityAction,
-                editing = editing, onSelect = onSelect
-            )
-        }
-    )
     private val performanceMatrixPanel = PerformanceMatrixPanel()
 
     fun render(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
@@ -604,12 +595,7 @@ class UIManager(
     }
 
     private fun drawMixer(mixer: Mixer) {
-        Column3HeaderToggle.draw(session)
-        ImGui.spacing()
-        when (session.uiTheme.column3Mode) {
-            UITheme.Column3Mode.MIXER -> mixerPanel.draw(session, mixer)
-            UITheme.Column3Mode.MACROS -> macroPanel.draw(session, mixer)
-        }
+        mixerPanel.draw(session, mixer)
     }
 
     private val blankCursor: Long by lazy {

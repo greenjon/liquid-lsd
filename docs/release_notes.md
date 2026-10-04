@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Removed the Column 3 MACROS Tab; Binding Editing Lives in the Edit View (`ui/UIManager.kt`, `ui/PerformanceMacroStrip.kt`, `ui/UITheme.kt`)
+- **Column 3 is the Mixer only**: the `[ MIXER | MACROS ]` toggle, the MACROS panel and the Binding Inspector are gone. Binding a macro knob (Learn, targets, Min/Max/Curve/Link/Invert/Enabled, rename) is done in the Edit-row macro strip and the Properties editor.
+- **Global knobs** use a guest strip on whichever Edit row is open, so they can be bound without leaving the deck being edited.
+- The Mixer gets back the ~36px the toggle used. The saved `column3Mode` preference is no longer read or written; old settings files are unaffected.
+- The Export/Import Macro Bank buttons lived in the removed inspector and are not in the UI for now (the `.knobpreset.json` serializer is unchanged).
+- Internal: `PerformanceUiContext.navigateMacroPanelTo` is now `focusDeepEditTab`; `ParametersState` no longer has the GLB-tab pin (`showGlobalMacros` and friends); `FxMacroSummary.draw` removed.
+
 ### Bi-directional Bank Sync & Bipolar MeterType Support for Controller Feedback (`control/*`, `ui/*`)
 - **Bi-directional Bank Switching**: When switching Perform view tabs or pages in the software UI (via mouse, menu, or keyboard shortcuts), connected controllers with hardware bank support (like the DJ TechTools Midi Fighter Twister) now automatically switch their active hardware bank to stay synchronized with the active screen page.
 - **Bipolar & Endless MeterType Detection**: Perform knobs and macro controls now detect whether their bound parameters or link modes are bipolar (e.g., Crossfader, Pan, Pitch/Detune, Bipolar link mode) or endless. `KnobLight` carries this `meterType` so hardware ring feedback (such as the Twister's EQ/Center Fill mode) accurately aligns center-detent values at CC 64.

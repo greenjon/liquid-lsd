@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Removed the Column 3 MACROS Tab; Binding Editing Lives in the Edit View (`ui/UIManager.kt`, `ui/PerformanceMacroStrip.kt`, `ui/UITheme.kt`)
+- **Column 3 is the Mixer only**: the `[ MIXER | MACROS ]` toggle, the MACROS panel and the Binding Inspector are gone. Binding a macro knob (Learn, targets, Min/Max/Curve/Link/Invert/Enabled, rename) is done in the Edit-row macro strip and the Properties editor.
+- **Global knobs** use a guest strip on whichever Edit row is open, so they can be bound without leaving the deck being edited.
+- The Mixer gets back the ~36px the toggle used. The saved `column3Mode` preference is no longer read or written; old settings files are unaffected.
+- The Export/Import Macro Bank buttons lived in the removed inspector and are not in the UI for now (the `.knobpreset.json` serializer is unchanged).
+- Internal: `PerformanceUiContext.navigateMacroPanelTo` is now `focusDeepEditTab`; `ParametersState` no longer has the GLB-tab pin (`showGlobalMacros` and friends); `FxMacroSummary.draw` removed.
+
 ### Perform View Macro Binding Strips & Edit Row Integration (`ui/PerformanceMacroStrip.kt`, `ui/MacroBindingNav.kt`, `ui/PerformanceMatrixPanel.kt`)
 - **Macro Binding Strips in Edit Rows**: When a macro knob is selected in an Edit view row, the row now displays a dedicated inline binding strip allowing direct inspection, curve/range adjustment, and binding management without needing the old Column 3 Macro Inspector.
 - **Shared Navigation (`MacroBindingNav`)**: Centralized parameter navigation so clicking bound parameter chips or inspector targets reliably jumps to the correct deck/mixer sub-tab and highlights the target parameter.

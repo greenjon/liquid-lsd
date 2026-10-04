@@ -168,13 +168,6 @@ object UITheme {
         get() = settings.libraryMode
         set(value) { settings = settings.copy(libraryMode = value) }
 
-    /** Column 3 dual-mode header toggle (see docs/user_guide/macros_and_rack.md). */
-    enum class Column3Mode { MIXER, MACROS }
-
-    var column3Mode: Column3Mode
-        get() = settings.column3Mode
-        set(value) { settings = settings.copy(column3Mode = value) }
-
     /** Id of the active page of the Performance Mode 4×4 Matrix (see [PerfPageStore]); an unknown id falls back to the first page. */
     var performancePageId: String
         get() = settings.performancePageId

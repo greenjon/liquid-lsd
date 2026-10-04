@@ -45,7 +45,7 @@ object FXChainMacroStrip {
      * Grid-rendering context supplied by the Parameters Panel so the Super Knob and each slot's
      * Metaknob render as full [ParametersRenderer.drawParamRow] rows (gaining Seq/LFO/Audio/MIDI
      * modulation columns) instead of the compact MIDI-learn-only slider. Left null by narrower
-     * callers -- e.g. the Column-3 "MACROS" performance strip in [MacroPanel] -- which don't have
+     * callers -- e.g. the Edit-row [PerformanceMacroStrip] -- which don't have
      * grid columns to spare and keep the original compact rendering.
      */
     class GridContext(

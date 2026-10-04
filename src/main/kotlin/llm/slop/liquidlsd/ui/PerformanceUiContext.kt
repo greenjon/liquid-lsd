@@ -142,15 +142,10 @@ internal class PerformanceUiContext {
     }
 
     /**
-     * Points [ParametersState.activeTopTab] (and Mixer sub-tab) at whichever tab [MacroPanel]
-     * reads to display [bankId], mirroring [MacroPanel.activeBankId]'s reverse mapping -- so
-     * arming Learn on a Performance-panel knob and having [UITheme.Column3Mode.MACROS] pop open
-     * lands on the *same* bank's knobs rather than whatever tab Deep Edit last had focused.
-     * FX_SENDS has no dedicated Macros-tab destination, so it's left as a no-op (Macros still
-     * opens, just without a matching tab switch).
+     * Focuses the Deep Edit tab (and Mixer/deck sub-tab) that belongs to [bankId]. GLOBAL and FX_SENDS
+     * have no tab, so they are left as a no-op.
      */
-    fun navigateMacroPanelTo(parametersState: ParametersState, bankId: String) {
-        if (bankId != MacroEngine.GLOBAL) parametersState.hideGlobalMacros()
+    fun focusDeepEditTab(parametersState: ParametersState, bankId: String) {
         when (bankId) {
             MacroEngine.DECK_A -> parametersState.activeTopTab = "Deck A"
             MacroEngine.DECK_B -> parametersState.activeTopTab = "Deck B"
@@ -184,7 +179,7 @@ internal class PerformanceUiContext {
                 parametersState.activeTopTab = "Mixer"
                 parametersState.activeMixerSubTab = "TRANS"
             }
-            MacroEngine.GLOBAL -> parametersState.showGlobalMacros()
+            // GLOBAL has no Deep Edit tab; its knobs are edited in the guest strip.
         }
     }
 

@@ -35,9 +35,8 @@ import java.io.File
  * [llm.slop.liquidlsd.macro.MacroControl.value] directly, and right-click arms hardware MIDI
  * Learn for that knob (the pulsing cyan ring shows an armed knob; a repeat right-click cancels).
  * A selected knob also shows an inline "Learn" button to arm parameter-bind Learn -- pressing it
- * jumps Column 3 to [UITheme.Column3Mode.MACROS] on the matching bank/tab (see
- * [navigateMacroPanelTo]), since the actual binding inspector (labels, bindings, curves, ranges)
- * lives there, not in this panel.
+ * focuses the matching Deep Edit tab (see [focusDeepEditTab]); bindings (labels, curves, ranges) are
+ * edited in the Edit-row [PerformanceMacroStrip] and the Properties editor.
  *
  * The active page (see [PerfPageStore]) is persisted via [UITheme.performancePageId] / [AppPreferences.performancePageId].
  *
@@ -174,7 +173,7 @@ class PerformanceMatrixPanel {
         return openDeepEditByBank.getOrPut(bankId) {
             {
                 parametersState.setDisclosure(ctx.canonicalModuleId(bankId), ParametersState.DisclosureLevel.DEEP_EDIT)
-                ctx.navigateMacroPanelTo(parametersState, bankId)
+                ctx.focusDeepEditTab(parametersState, bankId)
             }
         }
     }
@@ -224,7 +223,7 @@ class PerformanceMatrixPanel {
             if (!LibraryPanel.isEditView(session)) MacroLearnState.setStatus("LEARN MODE: Open any Edit and click a parameter or property to bind.", 6000L)
             return
         }
-        ctx.navigateMacroPanelTo(parametersState, bankId)
+        ctx.focusDeepEditTab(parametersState, bankId)
         val learnModuleId = ctx.canonicalModuleId(bankId)
         if (learnModuleId in PerformanceDeepEditBay.deepEditModuleIds) parametersState.openParams(learnModuleId)
     }

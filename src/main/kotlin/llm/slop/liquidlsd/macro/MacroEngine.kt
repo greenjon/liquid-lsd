@@ -16,8 +16,8 @@ import llm.slop.liquidlsd.rendering.Mixer
  * walks a plain `Array` with an indexed for-loop to stay allocation-free.
  *
  * Holds one [MacroBank] per scope, keyed by a canonical bank id. The canonical ids
- * ([CANONICAL_BANK_IDS]) are always-resident banks that Column 3's MACROS tab and the Performance
- * Mode 4×4 Matrix both read and write directly. [GLOBAL] is the one bank not scoped to a deck or
+ * ([CANONICAL_BANK_IDS]) are always-resident banks that the Performance Mode 4×4 Matrix (rows,
+ * Edit-row macro strips) and the hardware controller read and write directly. [GLOBAL] is the one bank not scoped to a deck or
  * section: its knobs may bind to any parameter. Registration and persistence is handled entirely by
  * [llm.slop.liquidlsd.presets.SessionSerializer]. Other keys are still supported generically for
  * anything that registers its own bank.
