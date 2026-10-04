@@ -216,7 +216,7 @@ class UIManager(
             mixer = mixer,
             onTapTempo = { session.tapTempoController.tap() },
             knobSurface = performSurface,
-            navSurface = NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx)
+            navSurface = NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx, popupManager)
         )
         // Rings and LEDs of connected controllers (e.g. Midi Fighter Twister) mirror the Perform knobs.
         if (session.uiTheme.midiEnabled) {

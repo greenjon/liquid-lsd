@@ -344,4 +344,46 @@ class NavigationSurfaceTest {
         surface.primary(3)
         assertEquals(3, PerformSurface.lastTouchedKnob)
     }
+
+    // --- dirty-deck modal ---
+
+    private class FakePrompt(var pending: Boolean = true) : DeckConfirmPrompt {
+        val answers = mutableListOf<DeckConfirmChoice>()
+        override val deckConfirmPending get() = pending
+        override fun answerDeckConfirm(choice: DeckConfirmChoice) { answers += choice }
+    }
+
+    private fun confirmNav(prompt: FakePrompt) = NavigationSurface(session, state, mixer, ctx, prompt)
+
+    @Test
+    fun deckConfirmModalTakesOverButtonsKnobAndBack() {
+        val prompt = FakePrompt()
+        val n = confirmNav(prompt)
+        assertTrue(n.browsing)
+        n.button(0, false)
+        n.button(1, false)
+        n.button(2, false)
+        n.browseAccept(false)
+        n.browseAccept(true)
+        n.browseStep(3) // ignored
+        assertTrue(n.back())
+        assertEquals(
+            listOf(
+                DeckConfirmChoice.CANCEL, DeckConfirmChoice.SAVE, DeckConfirmChoice.DISCARD,
+                DeckConfirmChoice.SAVE, DeckConfirmChoice.DISCARD, DeckConfirmChoice.CANCEL
+            ),
+            prompt.answers
+        )
+    }
+
+    @Test
+    fun deckConfirmIgnoresShiftedButtonsAndStepsAside() {
+        val prompt = FakePrompt()
+        confirmNav(prompt).button(1, true)
+        assertTrue(prompt.answers.isEmpty())
+        prompt.pending = false
+        assertFalse(confirmNav(prompt).browsing)
+        confirmNav(prompt).button(1, false) // normal Perform context again: opens the Library
+        assertTrue(prompt.answers.isEmpty())
+    }
 }

@@ -334,6 +334,7 @@ The three side buttons other than Shift change meaning with the view:
 | **Picker open** | close the picker | step the category | nothing; **Shift +** it clears the slot or chain | **cursor**: turn to move, tap to apply |
 | **Library** | leave the Library | step the **tab** (Sources, FX, Trans) | step the **list** (browser, playlist, BG queue, A/B queue) | **cursor**: turn to move, tap to load |
 
+- **Unsaved-changes prompt:** when loading would discard edits on a deck, the prompt takes over the controller: **left-top** = Cancel, **right-top** or **knob 1 tap** = Save, **right-bottom** or **Shift + tap** = Discard. Nothing else navigates until you answer.
 - **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active.
 - **Library:** a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and **Shift + tap** adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.
 - The FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in profile; map them in your own profile.

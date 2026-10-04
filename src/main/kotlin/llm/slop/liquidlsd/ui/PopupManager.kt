@@ -9,10 +9,21 @@ import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.presets.DeckSlot
 import llm.slop.liquidlsd.presets.PresetManager
 
+/** The three answers of the "unsaved changes on this deck" modal. */
+enum class DeckConfirmChoice { SAVE, DISCARD, CANCEL }
+
+/** What a controller needs from the dirty-deck modal: whether it is up, and a way to answer it. */
+interface DeckConfirmPrompt {
+    val deckConfirmPending: Boolean
+
+    /** Answers the pending modal; applied on the next draw. No-op when nothing is pending. */
+    fun answerDeckConfirm(choice: DeckConfirmChoice)
+}
+
 class PopupManager(
     private val onTriggerExit: () -> Unit,
     private val onSaveDeck: (String, Deck, Boolean) -> Unit
-) {
+) : DeckConfirmPrompt {
     companion object {
         var globalPendingMidiWarning = false
     }
@@ -38,7 +49,16 @@ class PopupManager(
         pendingConfirmCallback = onProceed
     }
 
+    override val deckConfirmPending: Boolean get() = pendingConfirmDeck != null && pendingConfirmCallback != null
+
+    private var midiChoice: DeckConfirmChoice? = null
+
+    override fun answerDeckConfirm(choice: DeckConfirmChoice) {
+        if (deckConfirmPending) midiChoice = choice
+    }
+
     fun clearDeckConfirm() {
+        midiChoice = null
         pendingConfirmDeck = null
         pendingConfirmLabel = null
         pendingConfirmCallback = null
@@ -117,31 +137,40 @@ class PopupManager(
             ImGui.text("You have unsaved changes in $label. Save before proceeding?")
             ImGui.spacing()
 
-            if (ImGui.button("Save", 80f, 0f)) {
-                val activeName = DeckSlot.of(deck, mixer)?.let { session.presetManager.activePreset(it) }
-                // A deck with no preset name (e.g. a fresh generator) gets a name no existing preset has, never overwriting an older one.
-                val saveName = activeName ?: DeckPresetController.freePresetName("Untitled_${label.replace(" ", "")}", FileSystemManager.getPresetsRoot())
-                onSaveDeck(saveName, deck, deck === mixer.deckA)
-                onProceed()
-                clearDeckConfirm()
-                ImGui.closeCurrentPopup()
-            }
+            // Mouse buttons and the controller (answerDeckConfirm) feed the same choice; it is applied here so closeCurrentPopup targets this modal.
+            var choice = midiChoice
+            if (ImGui.button("Save", 80f, 0f)) choice = DeckConfirmChoice.SAVE
             ImGui.sameLine()
-            if (ImGui.button("Discard", 80f, 0f)) {
-                if (dontAskAgain.get()) {
-                    session.uiTheme.manualLoadDirtyBehavior = UITheme.ManualLoadDirtyBehavior.DISCARD
-                    AppPreferencesStore.savePreferences()
+            if (ImGui.button("Discard", 80f, 0f)) choice = DeckConfirmChoice.DISCARD
+            ImGui.sameLine()
+            if (ImGui.button("Cancel", 80f, 0f)) choice = DeckConfirmChoice.CANCEL
+            ImGui.textDisabled("Controller: side 2 or knob tap = Save, side 3 or shift+tap = Discard, back = Cancel")
+            when (choice) {
+                DeckConfirmChoice.SAVE -> {
+                    val activeName = DeckSlot.of(deck, mixer)?.let { session.presetManager.activePreset(it) }
+                    // A deck with no preset name (e.g. a fresh generator) gets a name no existing preset has, never overwriting an older one.
+                    val saveName = activeName ?: DeckPresetController.freePresetName("Untitled_${label.replace(" ", "")}", FileSystemManager.getPresetsRoot())
+                    onSaveDeck(saveName, deck, deck === mixer.deckA)
+                    onProceed()
+                    clearDeckConfirm()
+                    ImGui.closeCurrentPopup()
                 }
-                onProceed()
-                clearDeckConfirm()
-                ImGui.closeCurrentPopup()
-            }
-            ImGui.sameLine()
-            if (ImGui.button("Cancel", 80f, 0f)) {
-                val onCancel = pendingConfirmCancel
-                clearDeckConfirm()
-                onCancel?.invoke()
-                ImGui.closeCurrentPopup()
+                DeckConfirmChoice.DISCARD -> {
+                    if (dontAskAgain.get()) {
+                        session.uiTheme.manualLoadDirtyBehavior = UITheme.ManualLoadDirtyBehavior.DISCARD
+                        AppPreferencesStore.savePreferences()
+                    }
+                    onProceed()
+                    clearDeckConfirm()
+                    ImGui.closeCurrentPopup()
+                }
+                DeckConfirmChoice.CANCEL -> {
+                    val onCancel = pendingConfirmCancel
+                    clearDeckConfirm()
+                    onCancel?.invoke()
+                    ImGui.closeCurrentPopup()
+                }
+                null -> {}
             }
             ImGui.spacing()
             ImGui.checkbox("Don't ask again (always discard; Ctrl+Z undoes preset/generator loads; change in Preferences)", dontAskAgain)

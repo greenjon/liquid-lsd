@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#unsaved-changes-prompt-can-be-answered-from-the-controller-uipopupmanagerkt-uinavigationsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unsaved-Changes Prompt Can Be Answered from the Controller (ui/PopupManager.kt, ui/NavigationSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#maps-tab-in-the-library-save-transitions-from-anywhere-uibrowsermapsbrowserpanelkt-uitransitionsavekt-macromacrobankserializerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5438,6 +5449,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#unsaved-changes-prompt-can-be-answered-from-the-controller-uipopupmanagerkt-uinavigationsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unsaved-Changes Prompt Can Be Answered from the Controller (ui/PopupManager.kt, ui/NavigationSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#maps-tab-in-the-library-save-transitions-from-anywhere-uibrowsermapsbrowserpanelkt-uitransitionsavekt-macromacrobankserializerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9643,6 +9665,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="unsaved-changes-prompt-can-be-answered-from-the-controller-uipopupmanagerkt-uinavigationsurfacekt">Unsaved-Changes Prompt Can Be Answered from the Controller (<code>ui/PopupManager.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
+<ul>
+<li><strong>The "unsaved changes on this deck" prompt now answers to the Twister.</strong> While it is up, <strong>left-top</strong> (or Esc) is Cancel, <strong>right-top</strong> or a <strong>knob 1 tap</strong> is Save, <strong>right-bottom</strong> or <strong>Shift + tap</strong> is Discard. Nothing else navigates until you answer, so a stray turn can't change the Library behind it. The prompt shows the mapping.</li>
+<li>Internal: <code>DeckConfirmPrompt</code> / <code>DeckConfirmChoice</code> (implemented by <code>PopupManager</code>; the choice is applied inside the modal on the next draw so <code>closeCurrentPopup</code> targets it); <code>NavigationSurface</code> takes the prompt and reports <code>browsing</code> while it is pending.</li>
+</ul>
 <h3 id="maps-tab-in-the-library-save-transitions-from-anywhere-uibrowsermapsbrowserpanelkt-uitransitionsavekt-macromacrobankserializerkt">Maps Tab in the Library, Save Transitions from Anywhere (<code>ui/browser/MapsBrowserPanel.kt</code>, <code>ui/TransitionSave.kt</code>, <code>macro/MacroBankSerializer.kt</code>)</h3>
 <ul>
 <li><strong>New <code>[ Maps ]</code> Library tab</strong> with <strong>Banks</strong> and <strong>Pages</strong>. Banks lists your saved macro banks; <strong>Save bank from...</strong> saves a deck, Master, Transition or FX Sends row's knobs, and right-click applies a bank to a row or deletes it (no raw file browser). Pages lists the Perform pages: click to show one, right-click to hide/show it in the tab strip, copy a built-in to a user file, or delete a user file. Editing page rows stays in Preferences.</li>

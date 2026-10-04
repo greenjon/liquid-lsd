@@ -12,6 +12,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  *    With shift: enqueue to the BG queue, previous tab, previous list.
  *  - Picker (an SRC / FX / transition list is showing in the Edit row): left-top = back, right-top = next
  *    category (shift: previous), shift + right-bottom = clear the slot or chain; knob 1 is the cursor (tap = apply).
+ *  - Dirty-deck modal up: back = Cancel, side 2 / knob tap = Save, side 3 / shift+tap = Discard (overrides every other context).
  *  - Perform / Edit view: back (the Esc stack), open the Library, open the picker of the row whose knob
  *    was touched last (an SRC row: its source; an FX row: the slot under the knob, or the chain list for knob 1;
  *    Transitions: the transition list).
@@ -20,7 +21,8 @@ internal class NavigationSurface(
     private val session: SessionContext,
     private val parametersState: ParametersState,
     private val mixer: Mixer,
-    private val ctx: PerformanceUiContext
+    private val ctx: PerformanceUiContext,
+    private val deckConfirm: DeckConfirmPrompt? = null
 ) : NavSurface {
     private val theme get() = session.uiTheme
 
@@ -30,7 +32,10 @@ internal class NavigationSurface(
     private val inPicker: Boolean
         get() = LibraryPanel.isEditView(session) && (ChainListBrowse.isShowing || ShaderPickerPopup.isShowing)
 
-    override val browsing: Boolean get() = inLibraryView || inPicker
+    private val confirming: Boolean get() = deckConfirm?.deckConfirmPending == true
+
+    /** While the dirty-deck modal is up, knob 1 and the side buttons answer it (see [DeckConfirmChoice]). */
+    override val browsing: Boolean get() = confirming || inLibraryView || inPicker
 
     // The surface is rebuilt every frame, so the session counter lives in the companion; sampling on
     // construction and on read catches every inactive -> active edge.
@@ -50,6 +55,15 @@ internal class NavigationSurface(
     }
 
     override fun button(index: Int, shifted: Boolean) {
+        if (confirming) {
+            if (shifted) return
+            when (index) {
+                0 -> deckConfirm?.answerDeckConfirm(DeckConfirmChoice.CANCEL)
+                1 -> deckConfirm?.answerDeckConfirm(DeckConfirmChoice.SAVE)
+                2 -> deckConfirm?.answerDeckConfirm(DeckConfirmChoice.DISCARD)
+            }
+            return
+        }
         when {
             inLibraryView -> libraryButton(index, shifted)
             inPicker -> pickerButton(index, shifted)
@@ -108,6 +122,10 @@ internal class NavigationSurface(
      * Returns true if anything changed.
      */
     fun back(): Boolean {
+        if (confirming) {
+            deckConfirm?.answerDeckConfirm(DeckConfirmChoice.CANCEL)
+            return true
+        }
         if (BackNavigation.back(parametersState, mixer)) return true
         if (!inLibraryView) return false
         theme.libraryMode = UITheme.LibraryMode.HALF
@@ -122,6 +140,7 @@ internal class NavigationSurface(
     }
 
     override fun browseStep(steps: Int) {
+        if (confirming) return
         when {
             inLibraryView -> LibraryNavigation.step(steps, session, mixer)
             ChainListBrowse.isShowing -> ChainListBrowse.move(steps)
@@ -130,6 +149,10 @@ internal class NavigationSurface(
     }
 
     override fun browseAccept(shifted: Boolean) {
+        if (confirming) {
+            deckConfirm?.answerDeckConfirm(if (shifted) DeckConfirmChoice.DISCARD else DeckConfirmChoice.SAVE)
+            return
+        }
         if (!inLibraryView) {
             if (!shifted) {
                 if (ChainListBrowse.isShowing) ChainListBrowse.accept() else ShaderPickerPopup.acceptCursor()

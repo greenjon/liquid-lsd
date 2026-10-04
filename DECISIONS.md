@@ -1,3 +1,8 @@
+## Dirty-Deck Prompt Is Answerable from the Controller, and Takes Over Navigation While Up (`ui/PopupManager.kt`, `ui/NavigationSurface.kt`)
+
+- **Decision**: `PopupManager` implements `DeckConfirmPrompt` (`deckConfirmPending`, `answerDeckConfirm(choice)`). `NavigationSurface` checks it first in `button`, `browseStep`, `browseAccept`, `back` and `browsing`: back = Cancel, side 2 / knob tap = Save, side 3 / Shift + tap = Discard; steps are ignored. A controller answer is stored and applied inside `drawDeckConfirmPopups`, the same code path as the mouse buttons.
+- **Rationale**: the modal blocks the mouse but not MIDI, so a knob turn could step the Library behind it, and a Twister-only user could not answer. Applying the answer inside the modal block keeps `closeCurrentPopup` valid (closing from outside would leave an orphaned modal swallowing input). Save is on the tap and the less destructive side-2 button; Discard needs side 3 or Shift.
+
 ## Deck Preset Bookkeeping Is Written Only Through `PresetManager.setActive` / `clearActive`
 - **Decision**: `activePresetA/B/BG/PV` and `cachedDtoA/B/BG/PV` have private setters. `setActive(slot, name, dto)` stores both and snapshots the slot's macro bank as the dirty baseline (`bankBaseline`); `DeckOps.isDirty` compares against it. Session restore calls `setActive` *after* the macro banks are registered, otherwise the baseline would be taken from the previous run's banks.
 - **Why**: session restore wrote the cached DTO directly, so no baseline existed and bank edits never made a restored deck dirty (review section 7.2, defect 4). `bankBaseline` is tied to the DTO instance, so a stale baseline is never compared, but a bypass fails silently, which is why the setters are now closed.

@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Unsaved-Changes Prompt Can Be Answered from the Controller (`ui/PopupManager.kt`, `ui/NavigationSurface.kt`)
+- **The "unsaved changes on this deck" prompt now answers to the Twister.** While it is up, **left-top** (or Esc) is Cancel, **right-top** or a **knob 1 tap** is Save, **right-bottom** or **Shift + tap** is Discard. Nothing else navigates until you answer, so a stray turn can't change the Library behind it. The prompt shows the mapping.
+- Internal: `DeckConfirmPrompt` / `DeckConfirmChoice` (implemented by `PopupManager`; the choice is applied inside the modal on the next draw so `closeCurrentPopup` targets it); `NavigationSurface` takes the prompt and reports `browsing` while it is pending.
+
 ### Maps Tab in the Library, Save Transitions from Anywhere (`ui/browser/MapsBrowserPanel.kt`, `ui/TransitionSave.kt`, `macro/MacroBankSerializer.kt`)
 - **New `[ Maps ]` Library tab** with **Banks** and **Pages**. Banks lists your saved macro banks; **Save bank from...** saves a deck, Master, Transition or FX Sends row's knobs, and right-click applies a bank to a row or deletes it (no raw file browser). Pages lists the Perform pages: click to show one, right-click to hide/show it in the tab strip, copy a built-in to a user file, or delete a user file. Editing page rows stays in Preferences.
 - **Transitions can be saved from the Mixer's TRANS tab** (**[⋮] > Save Transition As...**) and from the inline picker (**Save current as preset...**), not only the Library "+".
