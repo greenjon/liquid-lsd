@@ -2131,10 +2131,10 @@
 </code></pre>
 <h3 id="auto-healing-preset-loader-sanitizepresetdto">Auto-Healing Preset Loader (<code>sanitizePresetDto</code>)</h3>
 <p>To eliminate schema drift and prevent dirty-flag trip bugs when shaders or feedback parameters evolve:
-- When a preset is loaded asynchronously in <code>loadDeckPresetAsync</code>, <code>PresetManager.sanitizePresetDto(dto)</code> verifies the incoming parameter map against the target visual source's <code>meta.json</code> and canonical feedback parameter specifications.
+- When <code>DeckOps.request</code> reads a preset file on <code>presetIoExecutor</code>, <code>PresetMigrator.sanitizePresetDto(dto)</code> verifies the incoming parameter map against the target visual source's <code>meta.json</code> and canonical feedback parameter specifications.
 - <strong>Fills Missing Parameters</strong>: Injects default <code>ParameterDto</code> instances for any newly introduced visual source or feedback parameters (<code>fbKaleido</code>, <code>Stellation</code>, <code>Support H</code>, etc.).
 - <strong>Prunes Obsolete Keys</strong>: Strips unknown or deprecated legacy fields (e.g. <code>sourceSelect</code>, <code>globalScale</code>).
-- <strong>Background Auto-Save</strong>: If schema changes are detected, <code>loadDeckPresetAsync</code> immediately and quietly rewrites the updated <code>.lsd</code> file to disk on <code>presetIoExecutor</code> without blocking the main rendering thread.</p>
+- <strong>Background Auto-Save</strong>: If schema changes are detected, <code>DeckOps</code> immediately and quietly rewrites the updated <code>.lsd</code> file to disk on <code>presetIoExecutor</code> without blocking the main rendering thread.</p>
 <h3 id="thread-safe-deferred-queue-deckopsdrainonglthread-canonical-baseline-caching">Thread-Safe Deferred Queue (<code>DeckOps.drainOnGlThread</code>) &amp; Canonical Baseline Caching</h3>
 <p>Data Transfer Objects (DTOs) generated on the background executor are offered to <code>DeckOps</code>' single queue.
 - Every frame, Thread 0 invokes <code>DeckOps.drainOnGlThread(mixer)</code>.
@@ -2187,7 +2187,7 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 1. Identifies the inactive/standby deck from <code>mixer.crossfade.value</code>.
 2. Checks if the standby deck has a <strong>manually staged override</strong> (<code>stagedDeckA</code> or <code>stagedDeckB</code>).
    - If staged, Auto-VJ starts the crossfader transition (<code>mixer.isAutoFading = true</code>) directly to the staged preset without pulling from the queue or advancing <code>activeIndex</code>.
-   - If not staged, polls the next preset file path from the queue, loads it in background via <code>PresetManager.loadDeckPresetAsync</code>, advances <code>activeIndex</code>, and starts the crossfader transition.</p>
+   - If not staged, polls the next preset file path from the queue, loads it in background via <code>DeckOps.request(slot, DeckChange.Preset(file), LoadOrigin.QUEUE)</code>, advances <code>activeIndex</code>, and starts the crossfader transition.</p>
 <h3 id="manual-deck-loading-line-jumping-behaviors">Manual Deck Loading &amp; Line-Jumping Behaviors</h3>
 <ul>
 <li><strong>Auto-VJ OFF</strong>: Manually loading presets to any deck keeps the queue contents and <code>activeIndex</code> completely untouched.</li>
@@ -2202,7 +2202,7 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 - <strong>Dirty guard</strong>: a clean deck proceeds. <code>MANUAL</code> uses <code>UITheme.manualLoadDirtyBehavior</code> (<code>PROMPT</code> calls <code>DeckOps.prompt</code>, wired to <code>PopupManager.requestDeckConfirm</code>; <code>DISCARD</code>; <code>AUTO_SAVE</code>). <code>QUEUE</code> uses <code>UITheme.autoVjDirtyBehavior</code> (<code>SKIP</code> drops the load, <code>AUTO_SAVE</code>, <code>AUTO_DISCARD</code>).
 - <strong>Drain (<code>DeckOps.drainOnGlThread</code>, once per frame in <code>Main</code>)</strong>: for each queued change, push undo (MANUAL <code>Source</code>/<code>Preset</code> only, via <code>DeckOps.undoSink</code>), apply it, install the macro bank, update <code>PresetManager</code> bookkeeping, toast if bound knobs were replaced, then call <code>DeckOps.postApply</code> (the UI clears the selection and shows the SRC sub-tab after a source change). Once per drain: <code>MidiMappingManager.invalidateBindings</code>, <code>ParameterResolver.clearCache</code>, <code>BroadcastEngine.notifyStateChanged</code>.
 - <strong>Dirty check</strong>: <code>DeckOps.isDirty</code> (<code>PresetManager.isDeckDirty</code> delegates) compares <code>deck.toDto</code> with the cached DTO, plus the macro bank's labels and bindings with the signature <code>PresetManager.setActive</code> captured.
-- <code>PresetRepository.loadDeckPresetAsync</code> remains as a deprecated shim for call sites not yet migrated.</p>
+- All UI and queue call sites go through <code>DeckOps.request</code>; the old <code>PresetRepository.loadDeckPresetAsync</code> shim and the queue managers' own <code>handleDirtyDeck</code> are gone. <code>request</code> returns <code>false</code> when the change was dropped (no-op, prompt cancelled, or QUEUE <code>SKIP</code>); queue managers then leave their position unchanged. <code>DeckOps.wouldSkipQueueLoad</code> lets BG skip before its dip-to-black.</p>
 <hr />
 <h2 id="4-background-queue-manager-bgqueuemanagerkt">4. Background Queue Manager (<code>BgQueueManager.kt</code>)</h2>
 <p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/BgQueueManager.kt"><code>BgQueueManager.kt</code></a> controls the background video / generator deck (<code>Deck BG</code>) playlist and single-deck dip-to-black transitions.</p>

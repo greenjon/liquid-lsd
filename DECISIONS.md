@@ -7,7 +7,8 @@
 - **Macro bank**: preset with a bank installs it; without one gets `GeneratorDefaults.installDefaultBank`; copy/move/swap install the source deck's bank remapped to the target's path (swap snapshots both first); move clears the source's bank.
 - **Injected hooks** (`mixerProvider`, `prompt`, `undoSink`, `postApply`, wired in `UIManager`) keep `presets/` from importing UI state. With nothing wired (tests, headless) the guard is skipped or proceeds.
 - **Rejected**: keeping the four per-deck preset queues behind `DeckOps` (they added nothing once the drain is one loop).
-- **Open**: the queue managers' own `handleDirtyDeck` still runs before `DeckOps` applies the same policy (an AUTO_SAVE advance can save twice; harmless); removing them, the remaining direct call sites, and the `loadDeckPresetAsync` shim is plan phase 3 (`.planning/deck-transition-ops-plan.md`).
+- **Return value**: `request` returns `false` when dropped; queue managers leave their position unchanged. The queue managers' `handleDirtyDeck` and the `loadDeckPresetAsync` shim are deleted.
+- **Open**: video export from a preset snapshot starts rendering before the load is applied (or the prompt answered); needs a completion callback (`.planning/deck-transition-ops-plan.md`, Out of scope).
 
 ## All Transition Changes Go Through `TransitionOps` (GL-thread queue), Like `FxOps` (`presets/TransitionOps.kt`)
 - **Decision**: `Mixer.setTransition` / `applyTransitionPreset` dispose and create ISF GL filters, so UI and queue code never call them directly. `TransitionOps.setStock / applyPreset / loadPreset / applyItem` queue the change; `Main.kt` drains it once per frame next to `FxOps.drainOnGlThread`. Session restore at startup still calls the mixer directly (main thread, before rendering).

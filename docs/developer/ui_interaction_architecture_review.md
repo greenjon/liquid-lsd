@@ -199,7 +199,7 @@ The second pass traced about 30 load paths, 20+ binding paths and every Library 
 |---|---|---|---|---|---|
 | FX slot / chain | `FxOps` (one family) | no | n/a | `FxMacroSync` always | queued, GL thread |
 | Bare generator | `DeckSourcePicker.swapSource` | yes | separate source-change confirm | generator default bank, toast | UI thread |
-| Deck preset | `PresetRepository.loadDeckPresetAsync`, called from 10+ places | no | only if the caller remembered `loadDeckPresetSafely` | preset bank, no toast | IO, then queued |
+| Deck preset | `PresetRepository.loadDeckPresetAsync` (since removed; all callers now use `DeckOps.request`), called from 10+ places | no | only if the caller remembered `loadDeckPresetSafely` | preset bank, no toast | IO, then queued |
 | Copy / Move / Swap deck | `DeckLifecycleManager` | no | yes | **not installed** | UI thread |
 | Transition | `Mixer.setTransition` / `applyTransitionPreset`, called from 9 places | no | n/a | n/a | **sometimes the IO thread** |
 
@@ -211,7 +211,7 @@ FX loads behave the same whichever button starts them, because there is one entr
 
 1. ✔ **Manual loads discard edits by default.** `guardDeckTransition` uses the AutoVJ preference `autoVjDirtyBehavior`, which defaults to `AUTO_DISCARD` (`AppPreferences.kt:35`, `DeckPresetController.kt:100-126`). To get a prompt, the user has to pick "SKIP", which also makes queue advances skip.
 2. ✔ **A freshly picked generator is never dirty.** `isDeckDirty` returns false when there is no cached DTO (`PresetManager.kt:77`), and `swapSource` clears it. Tweaks to a new generator are never guarded and never marked `*`.
-3. ✔ **Some load paths skip the dirty guard.** These call `loadDeckPresetAsync` directly:
+3. ✔ **Some load paths skip the dirty guard.** These called `loadDeckPresetAsync` directly (fixed: all use `DeckOps.request`):
    - the "Load to Deck A/B/BG/PV" context menus in `PresetListPanel`, `QueueActionsPanel`, `BgQueueActionsPanel` and `PlaylistEditorPanel`
    - the empty-deck launchpad (`DeckSourcePicker.kt:202`)
    - the Browse bay's saved-preset pick (`PerformanceBrowseBay.kt:113`). This one also has no undo, although its doc comment says Ctrl+Z works.

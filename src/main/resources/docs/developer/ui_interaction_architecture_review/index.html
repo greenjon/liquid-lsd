@@ -1740,7 +1740,7 @@
 </tr>
 <tr>
 <td>Deck preset</td>
-<td><code>PresetRepository.loadDeckPresetAsync</code>, called from 10+ places</td>
+<td><code>PresetRepository.loadDeckPresetAsync</code> (since removed; all callers now use <code>DeckOps.request</code>), called from 10+ places</td>
 <td>no</td>
 <td>only if the caller remembered <code>loadDeckPresetSafely</code></td>
 <td>preset bank, no toast</td>
@@ -1770,7 +1770,7 @@
 <ol>
 <li>✔ <strong>Manual loads discard edits by default.</strong> <code>guardDeckTransition</code> uses the AutoVJ preference <code>autoVjDirtyBehavior</code>, which defaults to <code>AUTO_DISCARD</code> (<code>AppPreferences.kt:35</code>, <code>DeckPresetController.kt:100-126</code>). To get a prompt, the user has to pick "SKIP", which also makes queue advances skip.</li>
 <li>✔ <strong>A freshly picked generator is never dirty.</strong> <code>isDeckDirty</code> returns false when there is no cached DTO (<code>PresetManager.kt:77</code>), and <code>swapSource</code> clears it. Tweaks to a new generator are never guarded and never marked <code>*</code>.</li>
-<li>✔ <strong>Some load paths skip the dirty guard.</strong> These call <code>loadDeckPresetAsync</code> directly:</li>
+<li>✔ <strong>Some load paths skip the dirty guard.</strong> These called <code>loadDeckPresetAsync</code> directly (fixed: all use <code>DeckOps.request</code>):</li>
 <li>the "Load to Deck A/B/BG/PV" context menus in <code>PresetListPanel</code>, <code>QueueActionsPanel</code>, <code>BgQueueActionsPanel</code> and <code>PlaylistEditorPanel</code></li>
 <li>the empty-deck launchpad (<code>DeckSourcePicker.kt:202</code>)</li>
 <li>the Browse bay's saved-preset pick (<code>PerformanceBrowseBay.kt:113</code>). This one also has no undo, although its doc comment says Ctrl+Z works.</li>

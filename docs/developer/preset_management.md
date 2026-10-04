@@ -18,10 +18,10 @@ private val presetIoExecutor: ExecutorService = Executors.newSingleThreadExecuto
 
 ### Auto-Healing Preset Loader (`sanitizePresetDto`)
 To eliminate schema drift and prevent dirty-flag trip bugs when shaders or feedback parameters evolve:
-- When a preset is loaded asynchronously in `loadDeckPresetAsync`, `PresetManager.sanitizePresetDto(dto)` verifies the incoming parameter map against the target visual source's `meta.json` and canonical feedback parameter specifications.
+- When `DeckOps.request` reads a preset file on `presetIoExecutor`, `PresetMigrator.sanitizePresetDto(dto)` verifies the incoming parameter map against the target visual source's `meta.json` and canonical feedback parameter specifications.
 - **Fills Missing Parameters**: Injects default `ParameterDto` instances for any newly introduced visual source or feedback parameters (`fbKaleido`, `Stellation`, `Support H`, etc.).
 - **Prunes Obsolete Keys**: Strips unknown or deprecated legacy fields (e.g. `sourceSelect`, `globalScale`).
-- **Background Auto-Save**: If schema changes are detected, `loadDeckPresetAsync` immediately and quietly rewrites the updated `.lsd` file to disk on `presetIoExecutor` without blocking the main rendering thread.
+- **Background Auto-Save**: If schema changes are detected, `DeckOps` immediately and quietly rewrites the updated `.lsd` file to disk on `presetIoExecutor` without blocking the main rendering thread.
 
 ### Thread-Safe Deferred Queue (`DeckOps.drainOnGlThread`) & Canonical Baseline Caching
 Data Transfer Objects (DTOs) generated on the background executor are offered to `DeckOps`' single queue.
@@ -81,7 +81,7 @@ When `triggerNext()` is called:
 1. Identifies the inactive/standby deck from `mixer.crossfade.value`.
 2. Checks if the standby deck has a **manually staged override** (`stagedDeckA` or `stagedDeckB`).
    - If staged, Auto-VJ starts the crossfader transition (`mixer.isAutoFading = true`) directly to the staged preset without pulling from the queue or advancing `activeIndex`.
-   - If not staged, polls the next preset file path from the queue, loads it in background via `PresetManager.loadDeckPresetAsync`, advances `activeIndex`, and starts the crossfader transition.
+   - If not staged, polls the next preset file path from the queue, loads it in background via `DeckOps.request(slot, DeckChange.Preset(file), LoadOrigin.QUEUE)`, advances `activeIndex`, and starts the crossfader transition.
 
 ### Manual Deck Loading & Line-Jumping Behaviors
 - **Auto-VJ OFF**: Manually loading presets to any deck keeps the queue contents and `activeIndex` completely untouched.
@@ -96,7 +96,7 @@ Every change to what a deck holds goes through `DeckOps.request(slot, change, or
 - **Dirty guard**: a clean deck proceeds. `MANUAL` uses `UITheme.manualLoadDirtyBehavior` (`PROMPT` calls `DeckOps.prompt`, wired to `PopupManager.requestDeckConfirm`; `DISCARD`; `AUTO_SAVE`). `QUEUE` uses `UITheme.autoVjDirtyBehavior` (`SKIP` drops the load, `AUTO_SAVE`, `AUTO_DISCARD`).
 - **Drain (`DeckOps.drainOnGlThread`, once per frame in `Main`)**: for each queued change, push undo (MANUAL `Source`/`Preset` only, via `DeckOps.undoSink`), apply it, install the macro bank, update `PresetManager` bookkeeping, toast if bound knobs were replaced, then call `DeckOps.postApply` (the UI clears the selection and shows the SRC sub-tab after a source change). Once per drain: `MidiMappingManager.invalidateBindings`, `ParameterResolver.clearCache`, `BroadcastEngine.notifyStateChanged`.
 - **Dirty check**: `DeckOps.isDirty` (`PresetManager.isDeckDirty` delegates) compares `deck.toDto` with the cached DTO, plus the macro bank's labels and bindings with the signature `PresetManager.setActive` captured.
-- `PresetRepository.loadDeckPresetAsync` remains as a deprecated shim for call sites not yet migrated.
+- All UI and queue call sites go through `DeckOps.request`; the old `PresetRepository.loadDeckPresetAsync` shim and the queue managers' own `handleDirtyDeck` are gone. `request` returns `false` when the change was dropped (no-op, prompt cancelled, or QUEUE `SKIP`); queue managers then leave their position unchanged. `DeckOps.wouldSkipQueueLoad` lets BG skip before its dip-to-black.
 
 ---
 
