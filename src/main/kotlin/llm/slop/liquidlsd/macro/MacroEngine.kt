@@ -280,6 +280,23 @@ object MacroEngine {
      */
     fun invalidate() {
         bindingsDirty = true
+        baseBindingCache = java.util.concurrent.ConcurrentHashMap()
+    }
+
+    // paramKey -> base-value bindings targeting it. Replaced wholesale (never cleared in place) so a
+    // reader racing an invalidate can only write into the discarded map.
+    @Volatile
+    private var baseBindingCache = java.util.concurrent.ConcurrentHashMap<String, List<MacroBindingInfo>>()
+
+    /**
+     * Cached, allocation-free-on-hit lookup of every macro binding that drives [paramKey]'s base value,
+     * for per-cell-per-frame UI use (param grid arcs). Invalidated by [invalidate] and on rebuild.
+     */
+    fun baseBindingInfos(paramKey: String): List<MacroBindingInfo> {
+        val cache = baseBindingCache
+        return cache.getOrPut(paramKey) {
+            findBindingInfos(null, paramKey).filter { it.binding.targetType == MacroTargetType.PARAM_BASE_VALUE }
+        }
     }
 
     private class ResolvedBinding(
@@ -298,6 +315,7 @@ object MacroEngine {
             resolveControls(bank.knobs, mixer, list)
         }
         resolvedBindings = list.toTypedArray()
+        baseBindingCache = java.util.concurrent.ConcurrentHashMap()
         bindingsDirty = false
     }
 
@@ -439,6 +457,11 @@ object MacroEngine {
         findBindingsTargeting(unitInstanceId, parameterId, modulatorIndex, propertyName)
             .firstOrNull()?.let { infoFor(it) }
 
+    /** Registered bank id owning the control with [controlId], or null. */
+    fun bankKeyOfControl(controlId: String): String? = synchronized(lock) {
+        banks.entries.firstOrNull { (_, bank) -> bank.knobs.any { it.id == controlId } }?.key
+    }
+
     /**
      * Every [MacroBindingInfo] targeting the specified parameter (and optional modulator property).
      * More than one macro knob can bind the same target, so editors list each one.
@@ -460,13 +483,13 @@ object MacroEngine {
      * can't be used to pick a single bank to look in.
      */
     private fun infoFor(binding: MacroBinding): MacroBindingInfo? {
-        val allBanks = synchronized(lock) { banks.values.toList() }
-        for (bank in allBanks) {
+        val allBanks = synchronized(lock) { banks.entries.toList() }
+        for ((key, bank) in allBanks) {
             val knobIdx = bank.knobs.indexOfFirst { it.bindings.contains(binding) }
             if (knobIdx >= 0) {
                 val ctrl = bank.knobs[knobIdx]
                 val name = if (ctrl.label.isNotBlank()) ctrl.label else "Knob ${knobIdx + 1}"
-                return MacroBindingInfo(binding, ctrl, index = knobIdx, badgeLabel = "K${knobIdx + 1}", controlName = name)
+                return MacroBindingInfo(binding, ctrl, index = knobIdx, badgeLabel = "K${knobIdx + 1}", controlName = name, bankKey = key)
             }
         }
         return null

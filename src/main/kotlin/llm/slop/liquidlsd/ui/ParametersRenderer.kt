@@ -388,7 +388,7 @@ object ParametersRenderer {
                     "Macro Learn Mode: Click to bind this parameter's base value to armed Macro Control."
                 isMacroBound -> {
                     val info = macroInfo!!
-                    "Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nClick to view in Column 3 Macro Inspector."
+                    "Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nClick to select its macro and edit the binding in Properties."
                 }
                 paramKey.endsWith("/Max Points") ->
                     "Base parameter value (non-modulatable).\nClick to configure in VAL panel. Middle-click to reset."
@@ -437,6 +437,51 @@ object ParametersRenderer {
             color = cellColor, bgCol = bgCol, borderCol = borderCol,
             isHovered = isValHovered
         )
+        if (isMacroBound) drawMacroRangeArcs(dl, valX, valY, r, param, paramKey)
+    }
+
+    /**
+     * Outer ring showing where macro knobs drive [param]'s base value: the selected knob's min→max
+     * travel in bright cyan with a live dot, other knobs of the selected knob's bank dimmed.
+     * Skipped for wrap-around (ENDLESS/DISCRETE) meters.
+     */
+    private fun drawMacroRangeArcs(
+        dl: ImDrawList, x: Float, y: Float, r: Float,
+        param: ModulatableParameter,
+        paramKey: String
+    ) {
+        val type = param.meterType
+        if (type == llm.slop.liquidlsd.parameters.MeterType.ENDLESS || type == llm.slop.liquidlsd.parameters.MeterType.DISCRETE) return
+        val selectedId = llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId ?: return
+        val infos = llm.slop.liquidlsd.macro.MacroEngine.baseBindingInfos(paramKey)
+        if (infos.isEmpty()) return
+        val range = param.maxClamp - param.minClamp
+        if (range == 0f) return
+
+        val scale = r / 17.5f
+        val ringR = (r - 2f * scale).coerceAtLeast(3f)
+        val stroke = (2f * scale).coerceIn(1.5f, 4f)
+        val aMin = PI.toFloat() * 0.75f
+        val span = PI.toFloat() * 1.5f
+        fun angleOf(v: Float) = aMin + ((v - param.minClamp) / range).coerceIn(0f, 1f) * span
+
+        val selectedBank = llm.slop.liquidlsd.macro.MacroEngine.bankKeyOfControl(selectedId)
+        val cx = x + r
+        val cy = y + r
+        for (info in infos) {
+            val isSelected = info.control.id == selectedId
+            if (!isSelected && (selectedBank == null || info.bankKey != selectedBank)) continue
+            val b = info.binding
+            val a0 = angleOf(minOf(b.minVal, b.maxVal))
+            val a1 = angleOf(maxOf(b.minVal, b.maxVal))
+            val alpha = (if (isSelected) 0.95f else 0.3f) * (if (b.enabled) 1f else 0.5f)
+            dl.pathArcTo(cx, cy, ringR, a0, a1.coerceAtLeast(a0 + 0.02f), 16)
+            dl.pathStroke(ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1f, alpha), 0, stroke)
+            if (isSelected && b.enabled) {
+                val la = angleOf(llm.slop.liquidlsd.macro.MacroCurve.mapToRange(info.control.value, b))
+                dl.addCircleFilled(cx + ringR * cos(la), cy + ringR * sin(la), stroke * 1.2f, ImGui.colorConvertFloat4ToU32(1f, 0.88f, 0.2f, 1f))
+            }
+        }
     }
 
     private fun drawMidiCell(

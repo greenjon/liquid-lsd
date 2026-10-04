@@ -300,6 +300,31 @@ class MacroEngineTest {
         assertEquals(1.0f, param.baseValue)
     }
 
+    // --- baseBindingInfos cache ---
+
+    @Test
+    fun testBaseBindingInfosCacheInvalidatesWithInvalidate() {
+        val param = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+        val mixer = createTestMixer(listOf("Deck A/fbZoom" to param))
+        val control = MacroControl(label = "K1", bindings = mutableListOf())
+        MacroEngine.registerBank(null, MacroBank(knobs = listOf(control)))
+        MacroEngine.tick(mixer)
+
+        assertTrue(MacroEngine.baseBindingInfos("Deck A/fbZoom").isEmpty())
+
+        val binding = MacroBinding(parameterId = "Deck A/fbZoom", targetType = MacroTargetType.PARAM_BASE_VALUE)
+        control.bindings.add(binding)
+        // Cached empty result survives an in-place mutation until invalidate() runs.
+        assertTrue(MacroEngine.baseBindingInfos("Deck A/fbZoom").isEmpty())
+
+        MacroEngine.invalidate()
+        MacroEngine.tick(mixer)
+        val infos = MacroEngine.baseBindingInfos("Deck A/fbZoom")
+        assertEquals(1, infos.size)
+        assertEquals(control.id, infos[0].control.id)
+        assertEquals("K1", infos[0].badgeLabel)
+    }
+
     // --- findBindingsTargeting exact vs filtered lookups ---
 
     @Test

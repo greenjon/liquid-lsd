@@ -110,5 +110,6 @@ data class MacroBindingInfo(
     val control: MacroControl,
     val index: Int,            // 0-based index within the knobs list
     val badgeLabel: String,    // e.g. "K1"
-    val controlName: String    // e.g. "Knob 1" or "KNOB 1 (WARP)"
+    val controlName: String,   // e.g. "Knob 1" or "KNOB 1 (WARP)"
+    val bankKey: String? = null // registered bank id owning the control, e.g. "DECK_A"
 )
