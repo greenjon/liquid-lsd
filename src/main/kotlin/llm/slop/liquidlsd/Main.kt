@@ -480,7 +480,7 @@ fun main(args: Array<String>) {
             }
 
             // Apply loaded presets from queues atomically on the main thread
-            PresetManager.applyPendingPresets(mixer)
+            llm.slop.liquidlsd.presets.DeckOps.drainOnGlThread(mixer)
             llm.slop.liquidlsd.presets.FxOps.drainOnGlThread(mixer)
             llm.slop.liquidlsd.presets.TransitionOps.drainOnGlThread(mixer)
 

@@ -17,7 +17,17 @@ Presets are the core unit of work in Liquid LSD. A preset captures the complete 
 - **`Ctrl+S`** — Saves the active deck's preset to disk immediately. If the deck doesn't have a saved file yet, it opens a **Save As** dialog instead.
 - **`Shift+Ctrl+S`** — Always opens the Save As dialog, even for already-saved presets. The suggested name gets `_copy` appended so you don't accidentally overwrite the original.
 
-When you modify a loaded preset, a `*` appears next to the deck name to show there are unsaved changes.
+When you modify a loaded preset, a `*` appears next to the deck name to show there are unsaved changes. A generator you picked without loading a preset is tracked the same way: tweak it and the deck shows `*`. Editing a knob's label or its targets counts as a change; turning a knob does not.
+
+### Loading onto a deck with unsaved changes
+
+Loading a preset, picking a generator, ejecting, or using Copy / Move / Swap onto a deck that has unsaved changes asks first: **Save**, **Discard** or **Cancel**. Tick **Don't ask again** on the prompt to discard silently from then on. You can change this in **Preferences → General → Manual Load Dirty Behavior**:
+
+- **Prompt** (default) — Ask each time.
+- **Discard** — Overwrite without asking.
+- **Auto-Save** — Save the deck's preset first, then load.
+
+Press **Ctrl+Z** after loading a preset or changing a generator to put back the previous deck, its knobs and its preset name. Eject and Copy / Move / Swap can't be undone yet. Copy, Move and Swap carry the knobs along, so the knobs on the target deck control the copied parameters. A preset saved without knobs gets the generator's default knobs.
 
 ### The `.lsd` format
 
@@ -29,7 +39,7 @@ Right-clicking in the **VALUE** column (or in Deck Controls) gives you copy and 
 
 ### Unsaved changes & the Auto-VJ queue
 
-If Auto-VJ switches presets while a deck has unsaved changes, you can control what happens in **Preferences → General**:
+The prompt above is for loads you start yourself. If Auto-VJ switches presets while a deck has unsaved changes, you can control what happens in **Preferences → General**:
 
 - **Skip** — Don't load the next preset until changes are saved or discarded.
 - **Auto-Save** — Automatically save the current state before switching.

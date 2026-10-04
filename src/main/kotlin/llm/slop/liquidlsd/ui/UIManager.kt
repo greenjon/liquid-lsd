@@ -1,5 +1,7 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.presets.DeckChange
+import llm.slop.liquidlsd.presets.DeckOps
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiConfigFlags
@@ -106,6 +108,22 @@ class UIManager(
     }
 
     private var currentMixer: Mixer? = null
+
+    init {
+        // DeckOps lives below the UI layer, so everything it needs from here is injected.
+        DeckOps.mixerProvider = { currentMixer }
+        DeckOps.prompt = { slot, proceed ->
+            val mixer = currentMixer
+            if (mixer == null) proceed() else popupManager.requestDeckConfirm(slot.deck(mixer), slot.label, proceed)
+        }
+        DeckOps.undoSink = { restore -> currentMixer?.let { ParametersUndo.pushUndoState(parametersState, it, restore) } }
+        DeckOps.postApply = { slot, change ->
+            if (change is DeckChange.Source) {
+                parametersState.clearSelection()
+                parametersState.setDeckSubTab(slot.label, "SRC")
+            }
+        }
+    }
 
     private var lastWindowTitle: String? = null
 
@@ -285,7 +303,6 @@ class UIManager(
 
             popupManager.drawExitPopup(mixer, displayWidth, displayHeight)
             popupManager.drawDeckConfirmPopups(session, mixer)
-            popupManager.drawSourceChangeConfirmPopup(session, mixer)
             popupManager.drawMidiWarningPopup(displayWidth, displayHeight)
             popupManager.drawRestoreDefaultsPopup()
 
@@ -297,7 +314,6 @@ class UIManager(
 
             missingItemsPanel.draw(session)
 
-            deckPresetController.drawFileBrowsers()
             PerformanceMacroStrip.drawFileBrowser(mixer)
         }
 

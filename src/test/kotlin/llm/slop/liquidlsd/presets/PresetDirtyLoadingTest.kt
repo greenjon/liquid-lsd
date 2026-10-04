@@ -42,10 +42,6 @@ class PresetDirtyLoadingTest {
         PresetManager.cachedDtoB = null
         PresetManager.cachedDtoBG = null
         PresetManager.cachedDtoPV = null
-        PresetManager.deckAPresetQueue.clear()
-        PresetManager.deckBPresetQueue.clear()
-        PresetManager.deckBGPresetQueue.clear()
-        PresetManager.deckPVPresetQueue.clear()
     }
 
     // --- Preset Decoding & Sanitization Tests ---
@@ -119,7 +115,7 @@ class PresetDirtyLoadingTest {
 
     @Test
     fun testApplyPresetSetsCleanCachedDto() {
-        val mixer = mockk<Mixer>()
+        val mixer = mockk<Mixer>(relaxed = true)
         val deckA = mockk<Deck>(relaxed = true)
         every { mixer.deckA } returns deckA
 
@@ -140,8 +136,8 @@ class PresetDirtyLoadingTest {
         val presetDto = json.decodeFromString<DeckPresetDto>(file.readText())
 
         // Load preset through queue
-        PresetManager.deckAPresetQueue.offer(PresetManager.PendingDeckLoad(presetDto, isManual = true))
-        PresetManager.applyPendingPresets(mixer)
+        DeckOps.postLoaded(DeckSlot.A, presetDto)
+        DeckOps.drainOnGlThread(mixer)
 
         // Ensure active preset and cached DTO are updated cleanly
         assertEquals("test_preset_a", PresetManager.activePresetA)
@@ -150,7 +146,7 @@ class PresetDirtyLoadingTest {
 
     @Test
     fun testModifyingParameterTripsDirtyState() {
-        val mixer = mockk<Mixer>()
+        val mixer = mockk<Mixer>(relaxed = true)
         val deckA = mockk<Deck>(relaxed = true)
         every { mixer.deckA } returns deckA
 
@@ -167,8 +163,8 @@ class PresetDirtyLoadingTest {
         val file = File("library/presets/test_preset_a.lsd")
         val presetDto = json.decodeFromString<DeckPresetDto>(file.readText())
 
-        PresetManager.deckAPresetQueue.offer(PresetManager.PendingDeckLoad(presetDto, isManual = true))
-        PresetManager.applyPendingPresets(mixer)
+        DeckOps.postLoaded(DeckSlot.A, presetDto)
+        DeckOps.drainOnGlThread(mixer)
 
         assertFalse(PresetManager.isDeckDirty(deckA, mixer), "Deck should be clean initially")
 

@@ -217,6 +217,9 @@ object AppPreferencesStore {
                     UITheme.autoVjDirtyBehavior = try { UITheme.AutoVjDirtyBehavior.valueOf(savedAutoVj) } catch (e: Exception) { UITheme.AutoVjDirtyBehavior.AUTO_DISCARD }
                     logger.info { "Loaded autoVjDirtyBehavior from settings file: ${UITheme.autoVjDirtyBehavior}" }
                 }
+                props.getProperty("manualLoadDirtyBehavior")?.let { saved ->
+                    UITheme.manualLoadDirtyBehavior = try { UITheme.ManualLoadDirtyBehavior.valueOf(saved) } catch (e: Exception) { UITheme.ManualLoadDirtyBehavior.PROMPT }
+                }
                 val savedProfile = props.getProperty("activeMidiProfile")
                 if (savedProfile != null) {
                     UITheme.activeMidiProfile = savedProfile
@@ -332,6 +335,7 @@ object AppPreferencesStore {
             props.setProperty("performancePageId", UITheme.performancePageId)
             props.setProperty("hiddenPerformPages", UITheme.hiddenPerformPages.sorted().joinToString(","))
             props.setProperty("autoVjDirtyBehavior", UITheme.autoVjDirtyBehavior.name)
+            props.setProperty("manualLoadDirtyBehavior", UITheme.manualLoadDirtyBehavior.name)
             props.setProperty("activeMidiProfile", UITheme.activeMidiProfile)
             props.setProperty("queueKeyTrigger", UITheme.queueKeyTrigger.name)
             props.setProperty("startupBehavior", UITheme.startupBehavior.name)

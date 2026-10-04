@@ -237,7 +237,7 @@ object BgQueueManager {
         if (!withDipToBlack || transitionDurationSec <= 0.05f) {
             transitionState = TransitionState.IDLE
             pendingFile = null
-            PresetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = true)
+            PresetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = true, isManual = false)
             return
         }
         pendingFile = file
@@ -346,7 +346,7 @@ object BgQueueManager {
                     mixer.deckBG.source.globalAlpha.baseValue = 0f
                     val file = pendingFile
                     if (file != null) {
-                        PresetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = true)
+                        PresetRepository.loadDeckPresetAsync(file, isDeckA = false, isDeckBG = true, isManual = false)
                     }
                     pendingFile = null
                     transitionProgress = 0f

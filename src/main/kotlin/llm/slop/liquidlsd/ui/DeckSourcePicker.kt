@@ -1,6 +1,9 @@
 package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
+import llm.slop.liquidlsd.presets.DeckChange
+import llm.slop.liquidlsd.presets.DeckOps
+import llm.slop.liquidlsd.presets.DeckSlot
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.VisualSource
@@ -39,61 +42,6 @@ object DeckSourcePicker {
         }
     }
 
-    fun swapSource(
-        session: llm.slop.liquidlsd.SessionContext,
-        state: ParametersState,
-        mixer: Mixer,
-        deck: Deck,
-        deckLabel: String,
-        newSource: VisualSource
-    ) {
-        val canonicalBankId = llm.slop.liquidlsd.macro.MacroEngine.deckBankIdFor(deck, mixer)
-            ?: when (deckLabel) {
-                "Deck B" -> llm.slop.liquidlsd.macro.MacroEngine.DECK_B
-                "Deck BG" -> llm.slop.liquidlsd.macro.MacroEngine.DECK_BG
-                "Deck PV" -> llm.slop.liquidlsd.macro.MacroEngine.DECK_PV
-                else -> llm.slop.liquidlsd.macro.MacroEngine.DECK_A
-            }
-        // Pushed before the swap so Ctrl+Z puts the old source, its macro bank and the active preset back.
-        ParametersUndo.pushUndoState(state, mixer, captureDeckForUndo(mixer, deck, canonicalBankId))
-        deck.source = newSource.clone()
-        deck.isEmpty = false
-        val replacedBindings = llm.slop.liquidlsd.presets.GeneratorDefaults.applyToDeck(deck, deckLabel, canonicalBankId)
-        if (replacedBindings) ToastOverlay.show("$deckLabel macro knobs reset to ${deck.source.displayName} defaults (previous bindings replaced). Ctrl+Z to undo")
-        session.deckLifecycleManager.clearDeckActivePreset(deck, mixer)
-        state.clearSelection()
-        state.setDeckSubTab(deckLabel, "SRC")
-    }
-
-    /** Snapshot of everything a source change replaces; the returned lambda restores it. */
-    private fun captureDeckForUndo(
-        mixer: Mixer,
-        deck: Deck,
-        canonicalBankId: String
-    ): () -> Unit {
-        val oldSource = deck.source
-        val wasEmpty = deck.isEmpty
-        val restorePreset = llm.slop.liquidlsd.presets.DeckLifecycleManager.captureActivePreset(deck, mixer)
-        val bank = llm.slop.liquidlsd.macro.MacroEngine.getBank(canonicalBankId)
-        val savedKnobs = bank?.knobs?.map { Triple(it.label, it.value, it.bindings.toList()) }
-        return {
-            deck.source = oldSource
-            deck.isEmpty = wasEmpty
-            restorePreset()
-            if (bank != null && savedKnobs != null) {
-                bank.knobs.forEachIndexed { i, knob ->
-                    val (label, value, bindings) = savedKnobs[i]
-                    knob.label = label
-                    knob.value = value
-                    knob.bindings.clear()
-                    knob.bindings.addAll(bindings)
-                }
-                llm.slop.liquidlsd.macro.MacroEngine.noteBankReplaced() // tell MacroUndoTracker this wasn't a hand edit
-                llm.slop.liquidlsd.macro.MacroEngine.invalidate()
-            }
-        }
-    }
-
     fun changeSource(
         session: llm.slop.liquidlsd.SessionContext,
         state: ParametersState,
@@ -103,11 +51,7 @@ object DeckSourcePicker {
         newSource: VisualSource,
         deckPresetController: DeckPresetController?
     ) {
-        if (deckPresetController != null) {
-            deckPresetController.changeVisualSourceSafely(mixer, deck, deckLabel, newSource, state)
-        } else {
-            swapSource(session, state, mixer, deck, deckLabel, newSource)
-        }
+        DeckSlot.of(deck, mixer)?.let { DeckOps.request(it, DeckChange.Source(newSource)) }
     }
 
     /** Empty-deck card: Add Source / Load Preset / Open Library. */

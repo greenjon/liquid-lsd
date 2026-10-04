@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#deck-loads-go-through-one-entry-point-prompts-undo-and-knob-banks-now-agree-presetsdeckopskt-uiuithemekt-uipreferencespanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck Loads Go Through One Entry Point: Prompts, Undo and Knob Banks Now Agree (presets/DeckOps.kt, ui/UITheme.kt, ui/PreferencesPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#transition-changes-are-applied-on-the-render-thread-presetstransitionopskt-presetsdeckslotkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5262,6 +5273,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#deck-loads-go-through-one-entry-point-prompts-undo-and-knob-banks-now-agree-presetsdeckopskt-uiuithemekt-uipreferencespanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck Loads Go Through One Entry Point: Prompts, Undo and Knob Banks Now Agree (presets/DeckOps.kt, ui/UITheme.kt, ui/PreferencesPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#transition-changes-are-applied-on-the-render-thread-presetstransitionopskt-presetsdeckslotkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9291,6 +9313,17 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="deck-loads-go-through-one-entry-point-prompts-undo-and-knob-banks-now-agree-presetsdeckopskt-uiuithemekt-uipreferencespanelkt">Deck Loads Go Through One Entry Point: Prompts, Undo and Knob Banks Now Agree (<code>presets/DeckOps.kt</code>, <code>ui/UITheme.kt</code>, <code>ui/PreferencesPanel.kt</code>)</h3>
+<ul>
+<li><strong>Manual loads ask before discarding your edits.</strong> Loading a preset, picking a generator, ejecting, or Copy/Move/Swap onto a deck with unsaved changes now shows the Save / Discard / Cancel prompt by default. Before, the AutoVJ setting (default: discard) decided, so most loads silently threw edits away. The new <strong>Manual Load Dirty Behavior</strong> preference (Preferences → General, next to the AutoVJ one) can be Prompt, Discard or Auto-Save. The prompt has a "Don't ask again" box that switches it to Discard. AutoVJ queue advances still use the AutoVJ setting only.</li>
+<li><strong>Loading a preset can be undone.</strong> Ctrl+Z after a manual preset load or generator change puts back the old deck, its knob bank and its preset name. Queue and AutoVJ loads don't add undo steps. Eject and Copy/Move/Swap are still not undoable (they can also clear the deck's FX chain, which undo doesn't restore).</li>
+<li><strong>A fresh generator now shows unsaved changes.</strong> Pick a generator, tweak it, and the deck shows <code>*</code> and is protected by the prompt. Before, a new generator was never "dirty".</li>
+<li><strong>Changing a knob's label or its targets makes the deck dirty.</strong> Turning a knob doesn't.</li>
+<li><strong>Re-picking the generator a deck already runs no longer resets it.</strong> Changing to a different generator on a clean deck no longer asks for confirmation (it can be undone now). The separate "Change Visual Source" dialog is gone; the normal unsaved-changes prompt covers it.</li>
+<li><strong>Copy / Move / Swap carry the knob bank.</strong> After copying Deck A to B, B's knobs now control B's copy of A's parameters. Before, B kept knobs aimed at its old generator. Moving a deck clears the source deck's knobs.</li>
+<li><strong>Presets saved without a knob bank get the generator's default knobs</strong> instead of blank ones.</li>
+<li>Internal: new <code>DeckOps</code> (queue, then apply once per frame on the render thread, like <code>FxOps</code>/<code>TransitionOps</code>). <code>PresetRepository.loadDeckPresetAsync</code> is now a deprecated shim over it, so every caller gets the guard and undo. <code>PresetManager.applyPendingPresets</code> and the four per-deck preset queues are removed; <code>DeckLifecycleManager</code> copy/move/swap, <code>DeckSourcePicker.swapSource</code>, <code>DeckPresetController.guardDeckTransition</code> and the dead file-browser code are removed. Call sites that still pick their own dirty check (queue managers, some drops) are migrated in the next step.</li>
+</ul>
 <h3 id="transition-changes-are-applied-on-the-render-thread-presetstransitionopskt-presetsdeckslotkt">Transition Changes Are Applied on the Render Thread (<code>presets/TransitionOps.kt</code>, <code>presets/DeckSlot.kt</code>)</h3>
 <ul>
 <li>Dropping a transition preset (<code>.lsdtrans</code>) onto the crossfader, the Mixer transition button or the Master row used to swap the transition on a background thread. Swapping creates and deletes GPU resources, so this could glitch or crash. Every way of changing the transition (drops, the Library Transitions browser, the transition queue and playlists, the inline picker, "Reset Transition") now goes through one queue that applies the change at the start of the next frame, the same way FX changes already do.</li>

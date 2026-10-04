@@ -156,6 +156,7 @@ src/main/kotlin/llm/slop/liquidlsd/
 │   └── MacroOscBridge.kt       — `/macro/knob/N` & `/macro/switch/N` inbound OSC address routing and outbound feedback broadcast
 ├── presets/
 │   ├── PresetManager.kt        — Save/load presets, state management, per-deck dirty-state cache (`isDeckDirty`)
+│   ├── DeckOps.kt              — Single entry point for deck changes (source, preset, eject, copy/move/swap): dirty guard, undo, macro-bank policy, applied once per frame on the GL thread
 │   ├── PresetRepository.kt     — Async load/save for deck presets, FX presets/chains/playlists, and transition presets/playlists (`CompletableFuture` + bounded executor)
 │   ├── GeneratorDefaults.kt    — 3-tier defaults resolution engine (user defaults in `library/generator_defaults/<sourceId>.json`, curated stock defaults, heuristic fallback) with whole-bank swap and zero-jump inverse curve mapping
 │   ├── PresetDependencyAnalyzer.kt — Dependency analysis, disabled/offline feature inspection, zero-alloc memoization

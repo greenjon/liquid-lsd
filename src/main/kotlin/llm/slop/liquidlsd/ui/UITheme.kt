@@ -36,6 +36,9 @@ object UITheme {
 
     enum class AutoVjDirtyBehavior { SKIP, AUTO_DISCARD, AUTO_SAVE }
 
+    /** What a manual load / eject / copy does when the target deck has unsaved changes. */
+    enum class ManualLoadDirtyBehavior { PROMPT, DISCARD, AUTO_SAVE }
+
     enum class Theme {
         GREY_ACID,
         ORANGE_SUNSHINE
@@ -132,6 +135,10 @@ object UITheme {
     var autoVjDirtyBehavior: AutoVjDirtyBehavior
         get() = settings.autoVjDirtyBehavior
         set(value) { settings = settings.copy(autoVjDirtyBehavior = value) }
+
+    var manualLoadDirtyBehavior: ManualLoadDirtyBehavior
+        get() = settings.manualLoadDirtyBehavior
+        set(value) { settings = settings.copy(manualLoadDirtyBehavior = value) }
         
     var activeMidiProfile: String
         get() = settings.activeMidiProfile

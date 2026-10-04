@@ -1006,10 +1006,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#thread-safe-deferred-queue-applypendingpresets-canonical-baseline-caching" class="md-nav__link">
+  <a href="#thread-safe-deferred-queue-deckopsdrainonglthread-canonical-baseline-caching" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Thread-Safe Deferred Queue (applyPendingPresets) &amp; Canonical Baseline Caching
+        Thread-Safe Deferred Queue (DeckOps.drainOnGlThread) &amp; Canonical Baseline Caching
       
     </span>
   </a>
@@ -1117,21 +1117,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#unified-dirty-deck-transition-guard-deckpresetcontrollerguarddecktransition" class="md-nav__link">
+  <a href="#deck-changes-deckops-presetsdeckopskt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Unified Dirty Deck Transition Guard (DeckPresetController.guardDeckTransition)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#visual-source-change-guard-deckpresetcontrollerchangevisualsourcesafely" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Visual Source Change Guard (DeckPresetController.changeVisualSourceSafely)
+        Deck Changes: DeckOps (presets/DeckOps.kt)
       
     </span>
   </a>
@@ -1714,10 +1703,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#thread-safe-deferred-queue-applypendingpresets-canonical-baseline-caching" class="md-nav__link">
+  <a href="#thread-safe-deferred-queue-deckopsdrainonglthread-canonical-baseline-caching" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Thread-Safe Deferred Queue (applyPendingPresets) &amp; Canonical Baseline Caching
+        Thread-Safe Deferred Queue (DeckOps.drainOnGlThread) &amp; Canonical Baseline Caching
       
     </span>
   </a>
@@ -1825,21 +1814,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#unified-dirty-deck-transition-guard-deckpresetcontrollerguarddecktransition" class="md-nav__link">
+  <a href="#deck-changes-deckops-presetsdeckopskt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Unified Dirty Deck Transition Guard (DeckPresetController.guardDeckTransition)
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#visual-source-change-guard-deckpresetcontrollerchangevisualsourcesafely" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Visual Source Change Guard (DeckPresetController.changeVisualSourceSafely)
+        Deck Changes: DeckOps (presets/DeckOps.kt)
       
     </span>
   </a>
@@ -2157,10 +2135,10 @@
 - <strong>Fills Missing Parameters</strong>: Injects default <code>ParameterDto</code> instances for any newly introduced visual source or feedback parameters (<code>fbKaleido</code>, <code>Stellation</code>, <code>Support H</code>, etc.).
 - <strong>Prunes Obsolete Keys</strong>: Strips unknown or deprecated legacy fields (e.g. <code>sourceSelect</code>, <code>globalScale</code>).
 - <strong>Background Auto-Save</strong>: If schema changes are detected, <code>loadDeckPresetAsync</code> immediately and quietly rewrites the updated <code>.lsd</code> file to disk on <code>presetIoExecutor</code> without blocking the main rendering thread.</p>
-<h3 id="thread-safe-deferred-queue-applypendingpresets-canonical-baseline-caching">Thread-Safe Deferred Queue (<code>applyPendingPresets</code>) &amp; Canonical Baseline Caching</h3>
-<p>Data Transfer Objects (DTOs) generated on the background executor are offered to concurrent queues (<code>deckAPresetQueue</code>, <code>deckBPresetQueue</code>, <code>deckBGPresetQueue</code>, <code>deckPVPresetQueue</code>).
-- Every frame, Thread 0 invokes <code>applyPendingPresets(mixer)</code>.
-- <code>applyPendingPresets</code> polls the queues, resets baseline parameters and applies incoming DTO parameter values to <code>Deck</code> instances safely on Thread 0.
+<h3 id="thread-safe-deferred-queue-deckopsdrainonglthread-canonical-baseline-caching">Thread-Safe Deferred Queue (<code>DeckOps.drainOnGlThread</code>) &amp; Canonical Baseline Caching</h3>
+<p>Data Transfer Objects (DTOs) generated on the background executor are offered to <code>DeckOps</code>' single queue.
+- Every frame, Thread 0 invokes <code>DeckOps.drainOnGlThread(mixer)</code>.
+- It polls the queue, resets baseline parameters and applies incoming DTO parameter values to <code>Deck</code> instances safely on Thread 0.
 - Captures a canonical snapshot of the initialized deck (<code>deck.toDto(...)</code>) into <code>cachedDtoA</code>/<code>cachedDtoB</code>/<code>cachedDtoBG</code>/<code>cachedDtoPV</code>, ensuring that newly loaded presets start with a clean dirty flag (<code>isDeckDirty == false</code>).
 - Triggers <code>NotesManager.syncFromDto(deckLabel, dto)</code> to load patch and parameter notes into memory.</p>
 <h3 id="active-preset-timestamp-tracking">Active Preset Timestamp Tracking</h3>
@@ -2218,28 +2196,13 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <li><strong>Deck PV (Preview)</strong>: Manual loading on Deck PV is independent and never affects Auto-VJ or deck staging.</li>
 <li><strong>Auto-VJ Mid-Session Arming</strong>: Turning Auto-VJ ON while presets are playing manually arms the system for the next advance trigger without causing immediate jump cuts.</li>
 </ul>
-<h3 id="unified-dirty-deck-transition-guard-deckpresetcontrollerguarddecktransition">Unified Dirty Deck Transition Guard (<code>DeckPresetController.guardDeckTransition</code>)</h3>
-<p>Whenever a deck preset is replaced, ejected, overwritten, or reset through any UI pathway:
-- <strong>Pathways Guarded</strong>:
-  - Eject button on deck monitor toolbars
-  - Deck click-and-drag utility actions (Move, Copy, Swap)
-  - Library 4-column loader buttons (<code>[A] [B] [BG] [PV]</code>, numeric keys <code>1</code>–<code>4</code>, Quick Audition Padlock)
-  - Double-clicking presets in Preset Library or Playlist Editor
-  - "New Preset" popups in Preset Library
-  - "File -&gt; New Preset" and "File -&gt; Reset" in the main menu bar
-  - Dragging and dropping <code>.lsd</code> files directly onto decks
-- <strong>Configured Behaviors (<code>UITheme.autoVjDirtyBehavior</code>)</strong>:
-  - <strong><code>AUTO_SAVE</code></strong>: Silently saves the modified preset to disk immediately (preserving active name or creating timestamped backup) and proceeds with the transition without prompt.
-  - <strong><code>AUTO_DISCARD</code></strong>: Discards modifications immediately and executes the transition without prompt.
-  - <strong><code>SKIP</code> (Prompt)</strong>: Dispatches a confirmation request to <code>PopupManager.requestDeckConfirm</code> to prompt the user (Save, Discard, or Cancel).</p>
-<h3 id="visual-source-change-guard-deckpresetcontrollerchangevisualsourcesafely">Visual Source Change Guard (<code>DeckPresetController.changeVisualSourceSafely</code>)</h3>
-<ul>
-<li>Whenever changing the visual source on a deck (<code>PresetGridTabs</code> dropdown or Launchpad):</li>
-<li><strong>Confirmation Dialog (<code>PopupManager.drawSourceChangeConfirmPopup</code>)</strong>: If the deck has an active named preset or unsaved parameter edits, prompts the user before replacing the source.</li>
-<li><strong>Preset Unbinding</strong>: Clears <code>activePreset</code> and <code>cachedDto</code> in <code>PresetManager</code> so subsequent saves require naming or cannot overwrite the previous preset file.</li>
-<li><strong>Selection Invalidation &amp; Subtab Synchronization</strong>: Clears <code>PresetGridState.selectedCell</code> / <code>selectedParam</code> and switches the deck subtab to the new source.</li>
-<li><strong>Stale Parameter Protection (<code>PropertiesPanel</code>)</strong>: <code>PropertiesPanel.draw()</code> defensively validates <code>state.selectedParam</code> against <code>ParameterResolver.findParameterByPath()</code>. If the parameter was orphaned or detached, selection is immediately cleared.</li>
-</ul>
+<h3 id="deck-changes-deckops-presetsdeckopskt">Deck Changes: <code>DeckOps</code> (<code>presets/DeckOps.kt</code>)</h3>
+<p>Every change to what a deck holds goes through <code>DeckOps.request(slot, change, origin)</code>; see the <code>DeckOps</code> entry in <code>DECISIONS.md</code> for the rationale. <code>DeckChange</code> is <code>Source</code>, <code>Preset</code>, <code>Eject</code>, <code>CopyFrom</code>, <code>MoveFrom</code> or <code>SwapWith</code>; <code>LoadOrigin</code> is <code>MANUAL</code> or <code>QUEUE</code>.
+- <strong>Request time (calling thread)</strong>: drop a no-op <code>Source</code> change, run the dirty guard, then either queue the change or read the preset on <code>presetIoExecutor</code> and queue the result.
+- <strong>Dirty guard</strong>: a clean deck proceeds. <code>MANUAL</code> uses <code>UITheme.manualLoadDirtyBehavior</code> (<code>PROMPT</code> calls <code>DeckOps.prompt</code>, wired to <code>PopupManager.requestDeckConfirm</code>; <code>DISCARD</code>; <code>AUTO_SAVE</code>). <code>QUEUE</code> uses <code>UITheme.autoVjDirtyBehavior</code> (<code>SKIP</code> drops the load, <code>AUTO_SAVE</code>, <code>AUTO_DISCARD</code>).
+- <strong>Drain (<code>DeckOps.drainOnGlThread</code>, once per frame in <code>Main</code>)</strong>: for each queued change, push undo (MANUAL <code>Source</code>/<code>Preset</code> only, via <code>DeckOps.undoSink</code>), apply it, install the macro bank, update <code>PresetManager</code> bookkeeping, toast if bound knobs were replaced, then call <code>DeckOps.postApply</code> (the UI clears the selection and shows the SRC sub-tab after a source change). Once per drain: <code>MidiMappingManager.invalidateBindings</code>, <code>ParameterResolver.clearCache</code>, <code>BroadcastEngine.notifyStateChanged</code>.
+- <strong>Dirty check</strong>: <code>DeckOps.isDirty</code> (<code>PresetManager.isDeckDirty</code> delegates) compares <code>deck.toDto</code> with the cached DTO, plus the macro bank's labels and bindings with the signature <code>PresetManager.setActive</code> captured.
+- <code>PresetRepository.loadDeckPresetAsync</code> remains as a deprecated shim for call sites not yet migrated.</p>
 <hr />
 <h2 id="4-background-queue-manager-bgqueuemanagerkt">4. Background Queue Manager (<code>BgQueueManager.kt</code>)</h2>
 <p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/BgQueueManager.kt"><code>BgQueueManager.kt</code></a> controls the background video / generator deck (<code>Deck BG</code>) playlist and single-deck dip-to-black transitions.</p>
@@ -2247,7 +2210,7 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <ul>
 <li><strong>Transition States</strong>: <code>IDLE</code> -&gt; <code>FADING_OUT</code> -&gt; <code>FADING_IN</code> -&gt; <code>IDLE</code>.</li>
 <li><strong>Modulation &amp; MIDI Triggers</strong>: Symmetrically modulated by <code>Mixer/bgQueuePrev</code> and <code>Mixer/bgQueueNext</code>, along with dedicated MIDI CC bindings (<code>Global/bgQueuePrev</code>, <code>Global/bgQueueNext</code>).</li>
-<li><strong>Dirty Deck Guard</strong>: Observes <code>UITheme.autoVjDirtyBehavior</code> (<code>SKIP</code>, <code>AUTO_SAVE</code>, <code>AUTO_DISCARD</code>) when transitioning or advancing on Deck BG.</li>
+<li><strong>Dirty Deck Guard</strong>: Observes <code>UITheme.autoVjDirtyBehavior</code> (<code>SKIP</code>, <code>AUTO_SAVE</code>, <code>AUTO_DISCARD</code>) when transitioning or advancing on Deck BG; loads go through <code>DeckOps</code> with <code>LoadOrigin.QUEUE</code>.</li>
 <li><strong>Double-Click Playback</strong>: Double-clicking any track in BG Queue triggers immediate playback with dip-to-black (<code>playIndex(index, mixer, withDipToBlack = true)</code>), while double-clicking in Play Queue triggers standby deck load and auto-fade crossfading.</li>
 </ul>
 <h2 id="5-transition-queue-manager-transitionqueuemanagerkt">5. Transition Queue Manager (<code>TransitionQueueManager.kt</code>)</h2>

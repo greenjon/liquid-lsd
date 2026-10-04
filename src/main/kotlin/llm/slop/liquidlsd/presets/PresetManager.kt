@@ -34,16 +34,6 @@ object PresetManager {
     val deckStatus = Array(4) { AtomicReference(PresetIOStatus()) }
     internal val pendingSaves = Array(4) { AtomicReference<CompletableFuture<*>?>(null) }
 
-    data class PendingDeckLoad(
-        val dto: DeckPresetDto,
-        val isManual: Boolean = true
-    )
-
-    val deckAPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
-    val deckBPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
-    val deckBGPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
-    val deckPVPresetQueue = ConcurrentLinkedQueue<PendingDeckLoad>()
-
     var activePresetA: String? = null
     var activePresetB: String? = null
     var activePresetBG: String? = null
@@ -76,6 +66,22 @@ object PresetManager {
         DeckSlot.PV -> cachedDtoPV
     }
 
+    /** The macro bank's labels and bindings as of the last [setActive]; knob values are left out (they move live). */
+    internal class BankBaseline(val dto: DeckPresetDto, val signature: List<Pair<String, List<llm.slop.liquidlsd.macro.MacroBinding>>>)
+
+    private val bankBaselines = arrayOfNulls<BankBaseline>(4)
+
+    internal fun bankSignature(slot: DeckSlot): List<Pair<String, List<llm.slop.liquidlsd.macro.MacroBinding>>>? =
+        llm.slop.liquidlsd.macro.MacroEngine.getBank(slot.bankId)?.knobs?.map { it.label to it.bindings.toList() }
+
+    /**
+     * The bank signature captured when [slot]'s cached DTO was set, or null if the DTO was replaced
+     * without going through [setActive] (so a stale signature is never compared).
+     */
+    internal fun bankBaseline(slot: DeckSlot): List<Pair<String, List<llm.slop.liquidlsd.macro.MacroBinding>>>? =
+        bankBaselines[slot.index]?.takeIf { it.dto === cachedDto(slot) }?.signature
+
+    /** Sets [slot]'s active preset name and dirty baseline; the live macro bank is snapshotted as part of the baseline. */
     fun setActive(slot: DeckSlot, name: String?, dto: DeckPresetDto?) {
         when (slot) {
             DeckSlot.A -> { activePresetA = name; cachedDtoA = dto }
@@ -83,6 +89,7 @@ object PresetManager {
             DeckSlot.BG -> { activePresetBG = name; cachedDtoBG = dto }
             DeckSlot.PV -> { activePresetPV = name; cachedDtoPV = dto }
         }
+        bankBaselines[slot.index] = dto?.let { d -> bankSignature(slot)?.let { BankBaseline(d, it) } }
     }
 
     fun clearActive(slot: DeckSlot) = setActive(slot, null, null)
@@ -109,14 +116,7 @@ object PresetManager {
         val unresolvedPaths: List<String> = emptyList()
     )
 
-    fun isDeckDirty(deck: Deck, mixer: Mixer): Boolean {
-        val cached = DeckSlot.of(deck, mixer)?.let { cachedDto(it) }
-        if (cached == null) return false
-        val isExternal = runCatching { deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource }.getOrDefault(false)
-        if (isExternal) return false
-        val current = deck.toDto(cached.name)
-        return current != cached
-    }
+    fun isDeckDirty(deck: Deck, mixer: Mixer): Boolean = DeckOps.isDirty(deck, mixer)
 
     /**
      * Builds a canonical "empty" [DeckPresetDto] for the given deck.
@@ -133,109 +133,6 @@ object PresetManager {
             else -> "Deck"
         }
         return deck.toDto(label).copy(isEmpty = true, visualSourceType = "mandala")
-    }
-
-    fun applyPendingPresets(mixer: Mixer) {
-        var appliedAny = false
-        // Poll deck A preset queue
-        var pendingA = deckAPresetQueue.poll()
-        while (pendingA != null) {
-            appliedAny = true
-            try {
-                val deckADto = pendingA.dto
-                mixer.deckA.applyDto(deckADto)
-                llm.slop.liquidlsd.macro.MacroBankSerializer.installPresetBank(llm.slop.liquidlsd.macro.MacroEngine.DECK_A, deckADto.macroBank, "Deck A")
-                activePresetA = deckADto.name
-                cachedDtoA = mixer.deckA.toDto(deckADto.name, deckADto.tags).copy(
-                    presetNotes = deckADto.presetNotes,
-                    paramNotes = deckADto.paramNotes
-                )
-                NotesManager.syncFromDto("Deck A", deckADto)
-                if (pendingA.isManual) {
-                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = true, isDeckPV = false, mixer = mixer)
-                }
-                logger.info { "Successfully applied Deck A preset: ${deckADto.name}" }
-            } catch (e: Exception) {
-                logger.error(e) { "Error applying Deck A preset" }
-            }
-            pendingA = deckAPresetQueue.poll()
-        }
-
-        // Poll deck B preset queue
-        var pendingB = deckBPresetQueue.poll()
-        while (pendingB != null) {
-            appliedAny = true
-            try {
-                val deckBDto = pendingB.dto
-                mixer.deckB.applyDto(deckBDto)
-                llm.slop.liquidlsd.macro.MacroBankSerializer.installPresetBank(llm.slop.liquidlsd.macro.MacroEngine.DECK_B, deckBDto.macroBank, "Deck B")
-                activePresetB = deckBDto.name
-                cachedDtoB = mixer.deckB.toDto(deckBDto.name, deckBDto.tags).copy(
-                    presetNotes = deckBDto.presetNotes,
-                    paramNotes = deckBDto.paramNotes
-                )
-                NotesManager.syncFromDto("Deck B", deckBDto)
-                if (pendingB.isManual) {
-                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckPV = false, mixer = mixer)
-                }
-                logger.info { "Successfully applied Deck B preset: ${deckBDto.name}" }
-            } catch (e: Exception) {
-                logger.error(e) { "Error applying Deck B preset" }
-            }
-            pendingB = deckBPresetQueue.poll()
-        }
-
-        // Poll deck BG preset queue
-        var pendingBG = deckBGPresetQueue.poll()
-        while (pendingBG != null) {
-            appliedAny = true
-            try {
-                val deckBGDto = pendingBG.dto
-                mixer.deckBG.applyDto(deckBGDto)
-                llm.slop.liquidlsd.macro.MacroBankSerializer.installPresetBank(llm.slop.liquidlsd.macro.MacroEngine.DECK_BG, deckBGDto.macroBank, "Deck BG")
-                activePresetBG = deckBGDto.name
-                cachedDtoBG = mixer.deckBG.toDto(deckBGDto.name, deckBGDto.tags).copy(
-                    presetNotes = deckBGDto.presetNotes,
-                    paramNotes = deckBGDto.paramNotes
-                )
-                NotesManager.syncFromDto("Deck BG", deckBGDto)
-                logger.info { "Successfully applied Deck BG preset: ${deckBGDto.name}" }
-            } catch (e: Exception) {
-                logger.error(e) { "Error applying Deck BG preset" }
-            }
-            pendingBG = deckBGPresetQueue.poll()
-        }
-
-        // Poll deck PV preset queue
-        var pendingPV = deckPVPresetQueue.poll()
-        while (pendingPV != null) {
-            appliedAny = true
-            try {
-                val deckPVDto = pendingPV.dto
-                mixer.deckPV.applyDto(deckPVDto)
-                llm.slop.liquidlsd.macro.MacroBankSerializer.installPresetBank(llm.slop.liquidlsd.macro.MacroEngine.DECK_PV, deckPVDto.macroBank, "Deck PV")
-                activePresetPV = deckPVDto.name
-                cachedDtoPV = mixer.deckPV.toDto(deckPVDto.name, deckPVDto.tags).copy(
-                    presetNotes = deckPVDto.presetNotes,
-                    paramNotes = deckPVDto.paramNotes
-                )
-                NotesManager.syncFromDto("Deck PV", deckPVDto)
-                if (pendingPV.isManual) {
-                    PlayQueueManager.notifyManualDeckLoaded(isDeckA = false, isDeckPV = true, mixer = mixer)
-                }
-                logger.info { "Successfully applied Deck PV preset: ${deckPVDto.name}" }
-            } catch (e: Exception) {
-                logger.error(e) { "Error applying Deck PV preset" }
-            }
-            pendingPV = deckPVPresetQueue.poll()
-        }
-
-        if (appliedAny) {
-            llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
-            llm.slop.liquidlsd.parameters.ParameterResolver.clearCache()
-            // Notify broadcast engine if connected so full state is pushed immediately
-            llm.slop.liquidlsd.broadcast.BroadcastEngine.notifyStateChanged()
-        }
     }
 
     fun startEmpty(mixer: Mixer) = SessionSerializer.startEmpty(mixer)

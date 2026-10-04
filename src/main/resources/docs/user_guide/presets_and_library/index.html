@@ -525,6 +525,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#loading-onto-a-deck-with-unsaved-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading onto a deck with unsaved changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#the-lsd-format" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1553,6 +1564,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#loading-onto-a-deck-with-unsaved-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loading onto a deck with unsaved changes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#the-lsd-format" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1833,13 +1855,21 @@
 <li><strong><code>Ctrl+S</code></strong> — Saves the active deck's preset to disk immediately. If the deck doesn't have a saved file yet, it opens a <strong>Save As</strong> dialog instead.</li>
 <li><strong><code>Shift+Ctrl+S</code></strong> — Always opens the Save As dialog, even for already-saved presets. The suggested name gets <code>_copy</code> appended so you don't accidentally overwrite the original.</li>
 </ul>
-<p>When you modify a loaded preset, a <code>*</code> appears next to the deck name to show there are unsaved changes.</p>
+<p>When you modify a loaded preset, a <code>*</code> appears next to the deck name to show there are unsaved changes. A generator you picked without loading a preset is tracked the same way: tweak it and the deck shows <code>*</code>. Editing a knob's label or its targets counts as a change; turning a knob does not.</p>
+<h3 id="loading-onto-a-deck-with-unsaved-changes">Loading onto a deck with unsaved changes</h3>
+<p>Loading a preset, picking a generator, ejecting, or using Copy / Move / Swap onto a deck that has unsaved changes asks first: <strong>Save</strong>, <strong>Discard</strong> or <strong>Cancel</strong>. Tick <strong>Don't ask again</strong> on the prompt to discard silently from then on. You can change this in <strong>Preferences → General → Manual Load Dirty Behavior</strong>:</p>
+<ul>
+<li><strong>Prompt</strong> (default) — Ask each time.</li>
+<li><strong>Discard</strong> — Overwrite without asking.</li>
+<li><strong>Auto-Save</strong> — Save the deck's preset first, then load.</li>
+</ul>
+<p>Press <strong>Ctrl+Z</strong> after loading a preset or changing a generator to put back the previous deck, its knobs and its preset name. Eject and Copy / Move / Swap can't be undone yet. Copy, Move and Swap carry the knobs along, so the knobs on the target deck control the copied parameters. A preset saved without knobs gets the generator's default knobs.</p>
 <h3 id="the-lsd-format">The <code>.lsd</code> format</h3>
 <p>Presets are plain JSON files stored in <code>library/presets/</code> (and subfolders). You can open them in any text editor, back them up, share them, or paste them as JSON using <strong>Copy Preset JSON</strong> / <strong>Paste Preset JSON</strong> from the right-click context menu.</p>
 <h3 id="copying-settings-between-decks">Copying settings between decks</h3>
 <p>Right-clicking in the <strong>VALUE</strong> column (or in Deck Controls) gives you copy and paste options to clone parameters from one deck to another. You can also copy individual modulator cells and paste them onto other parameters — see the <a href="../modulation/">Modulation</a> page for details. You can also use the keyboard shortcuts CTRL-c and CTRL-v to copy and paste (or Command-c and -v on Macs)</p>
 <h3 id="unsaved-changes-the-auto-vj-queue">Unsaved changes &amp; the Auto-VJ queue</h3>
-<p>If Auto-VJ switches presets while a deck has unsaved changes, you can control what happens in <strong>Preferences → General</strong>:</p>
+<p>The prompt above is for loads you start yourself. If Auto-VJ switches presets while a deck has unsaved changes, you can control what happens in <strong>Preferences → General</strong>:</p>
 <ul>
 <li><strong>Skip</strong> — Don't load the next preset until changes are saved or discarded.</li>
 <li><strong>Auto-Save</strong> — Automatically save the current state before switching.</li>

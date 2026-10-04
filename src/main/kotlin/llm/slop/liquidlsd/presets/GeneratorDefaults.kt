@@ -254,10 +254,20 @@ object GeneratorDefaults {
         }
         defaultDto.globalAlpha?.let { deck.source.globalAlpha.applyDto(it) }
 
+        return installDefaultBank(deck, deckLabel, canonicalBankId)
+    }
+
+    /**
+     * Replaces [canonicalBankId]'s knobs with the resolved default bank for [deck.source], leaving
+     * parameter values alone (used for presets that carry no bank of their own).
+     *
+     * @return true when the bank already held bindings and the default replaced them with different ones.
+     */
+    fun installDefaultBank(deck: Deck, deckLabel: String, canonicalBankId: String): Boolean {
         val targetBank = MacroEngine.getBank(canonicalBankId)
             ?: MacroEngine.newBankFor(canonicalBankId).also { MacroEngine.registerBank(canonicalBankId, it) }
         val before = targetBank.knobs.map { it.bindings.toList() }
-        MacroBankSerializer.installBankForDeck(defaultDto.macroBank, targetBank, deckLabel)
+        MacroBankSerializer.installBankForDeck(resolve(deck.source).macroBank, targetBank, deckLabel)
         return before.any { it.isNotEmpty() } && before != targetBank.knobs.map { it.bindings.toList() }
     }
 

@@ -33,6 +33,7 @@ data class AppPreferences(
     val sequencerEnabled: Boolean = false,
     val midiEnabled: Boolean = false,
     val autoVjDirtyBehavior: UITheme.AutoVjDirtyBehavior = UITheme.AutoVjDirtyBehavior.AUTO_DISCARD,
+    val manualLoadDirtyBehavior: UITheme.ManualLoadDirtyBehavior = UITheme.ManualLoadDirtyBehavior.PROMPT,
     val activeMidiProfile: String = "default",
     val queueKeyTrigger: UITheme.QueueKeyTrigger = UITheme.QueueKeyTrigger.NONE,
     val tooltipsEnabled: Boolean = true,

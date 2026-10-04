@@ -12,6 +12,12 @@ import java.util.concurrent.CompletableFuture
 object PresetRepository {
     private val logger = KotlinLogging.logger {}
 
+    /**
+     * Compatibility shim: queues a preset load through [DeckOps], so the dirty guard, undo and
+     * macro-bank policy apply to every caller. [isManual] = false marks a queue/session load.
+     * Call [DeckOps.request] directly instead.
+     */
+    @Deprecated("Use DeckOps.request(slot, DeckChange.Preset(file), origin)", ReplaceWith("DeckOps.request(slot, DeckChange.Preset(file), origin)"))
     fun loadDeckPresetAsync(
         file: File,
         isDeckA: Boolean = false,
@@ -19,56 +25,11 @@ object PresetRepository {
         isDeckPV: Boolean = false,
         isManual: Boolean = true
     ) {
-        val deckIndex = when {
-            isDeckA -> 0
-            isDeckBG -> 2
-            isDeckPV -> 3
-            else -> 1 // Deck B
-        }
-        PresetManager.deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.LOADING))
-        val fileMtime = file.lastModified().takeIf { it > 0L }
-        CompletableFuture.runAsync({
-            llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(false, true)
-            try {
-                logger.info { "Loading deck preset from ${file.absolutePath} in background..." }
-                if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
-                
-                val content = file.readText()
-                val rawDto = PresetManager.json.decodeFromString<DeckPresetDto>(content)
-                val namedDto = rawDto.copy(name = file.nameWithoutExtension)
-                val (sanitizedDto, wasMigrated) = PresetMigrator.sanitizePresetDto(namedDto)
-
-                if (wasMigrated && file.canWrite()) {
-                    try {
-                        file.writeText(PresetManager.json.encodeToString(sanitizedDto))
-                        logger.info { "Auto-healed and migrated preset '${file.name}' to latest schema" }
-                    } catch (e: Exception) {
-                        logger.warn(e) { "Could not auto-save migrated preset '${file.name}'" }
-                    }
-                }
-
-                val pending = PresetManager.PendingDeckLoad(sanitizedDto, isManual)
-                when {
-                    isDeckA -> PresetManager.deckAPresetQueue.offer(pending)
-                    isDeckBG -> PresetManager.deckBGPresetQueue.offer(pending)
-                    isDeckPV -> PresetManager.deckPVPresetQueue.offer(pending)
-                    else -> PresetManager.deckBPresetQueue.offer(pending)
-                }
-                when {
-                    isDeckA -> PresetManager.activePresetMtimeA = fileMtime
-                    isDeckBG -> PresetManager.activePresetMtimeBG = fileMtime
-                    isDeckPV -> PresetManager.activePresetMtimePV = fileMtime
-                    else    -> PresetManager.activePresetMtimeB = fileMtime
-                }
-                logger.info { "Deck preset loaded and queued for main thread swap" }
-                PresetManager.deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.IDLE))
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to load deck preset from ${file.absolutePath}" }
-                PresetManager.deckStatus[deckIndex].set(PresetIOStatus(PresetIOState.ERROR, e.message ?: "Unknown error"))
-            } finally {
-                llm.slop.liquidlsd.audio.AudioEngine.presetIOInFlight.compareAndSet(true, false)
-            }
-        }, PresetManager.presetIoExecutor)
+        DeckOps.request(
+            DeckSlot.ofFlags(isDeckA, isDeckBG, isDeckPV),
+            DeckChange.Preset(file),
+            if (isManual) LoadOrigin.MANUAL else LoadOrigin.QUEUE
+        )
     }
 
     fun saveDeckPresetAsync(file: File, deck: Deck, name: String, tags: List<String> = emptyList(), deckIndex: Int = -1) {

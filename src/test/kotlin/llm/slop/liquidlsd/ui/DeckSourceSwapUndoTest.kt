@@ -7,6 +7,10 @@ import llm.slop.liquidlsd.macro.MacroBinding
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.macro.MacroTargetType
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import llm.slop.liquidlsd.presets.DeckChange
+import llm.slop.liquidlsd.presets.DeckOps
+import llm.slop.liquidlsd.presets.DeckSlot
+import llm.slop.liquidlsd.presets.PresetManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.VisualSource
@@ -17,7 +21,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
-/** Ctrl+Z after a source change must bring back the old source and the macro bank the swap replaced. */
+/** Ctrl+Z after a source change (via [DeckOps]) must bring back the old source and the macro bank the swap replaced. */
 class DeckSourceSwapUndoTest {
     private class Src(override val id: String) : VisualSource {
         override val displayName = id
@@ -35,6 +39,9 @@ class DeckSourceSwapUndoTest {
 
     @AfterTest
     fun tearDown() {
+        DeckOps.mixerProvider = { null }
+        DeckOps.undoSink = null
+        PresetManager.clearActive(DeckSlot.A)
         for (id in MacroEngine.CANONICAL_BANK_IDS) MacroEngine.registerBank(id, MacroEngine.newBankFor(id))
     }
 
@@ -58,7 +65,10 @@ class DeckSourceSwapUndoTest {
         bank.knobs[0].bindings.add(MacroBinding(parameterId = "Deck A/zoom", targetType = MacroTargetType.PARAM_BASE_VALUE, maxVal = 0.7f))
         val oldSource = current
 
-        DeckSourcePicker.swapSource(session, state, mixer, deck, "Deck A", Src("new_gen"))
+        DeckOps.mixerProvider = { mixer }
+        DeckOps.undoSink = { restore -> ParametersUndo.pushUndoState(state, mixer, restore) }
+        DeckOps.request(DeckSlot.A, DeckChange.Source(Src("new_gen")))
+        DeckOps.drainOnGlThread(mixer)
 
         assertEquals("new_gen", current.id)
         assertTrue(bank.knobs[0].bindings.isEmpty(), "the swap replaced the bank")

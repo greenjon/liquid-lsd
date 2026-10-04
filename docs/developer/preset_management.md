@@ -23,10 +23,10 @@ To eliminate schema drift and prevent dirty-flag trip bugs when shaders or feedb
 - **Prunes Obsolete Keys**: Strips unknown or deprecated legacy fields (e.g. `sourceSelect`, `globalScale`).
 - **Background Auto-Save**: If schema changes are detected, `loadDeckPresetAsync` immediately and quietly rewrites the updated `.lsd` file to disk on `presetIoExecutor` without blocking the main rendering thread.
 
-### Thread-Safe Deferred Queue (`applyPendingPresets`) & Canonical Baseline Caching
-Data Transfer Objects (DTOs) generated on the background executor are offered to concurrent queues (`deckAPresetQueue`, `deckBPresetQueue`, `deckBGPresetQueue`, `deckPVPresetQueue`).
-- Every frame, Thread 0 invokes `applyPendingPresets(mixer)`.
-- `applyPendingPresets` polls the queues, resets baseline parameters and applies incoming DTO parameter values to `Deck` instances safely on Thread 0.
+### Thread-Safe Deferred Queue (`DeckOps.drainOnGlThread`) & Canonical Baseline Caching
+Data Transfer Objects (DTOs) generated on the background executor are offered to `DeckOps`' single queue.
+- Every frame, Thread 0 invokes `DeckOps.drainOnGlThread(mixer)`.
+- It polls the queue, resets baseline parameters and applies incoming DTO parameter values to `Deck` instances safely on Thread 0.
 - Captures a canonical snapshot of the initialized deck (`deck.toDto(...)`) into `cachedDtoA`/`cachedDtoB`/`cachedDtoBG`/`cachedDtoPV`, ensuring that newly loaded presets start with a clean dirty flag (`isDeckDirty == false`).
 - Triggers `NotesManager.syncFromDto(deckLabel, dto)` to load patch and parameter notes into memory.
 
@@ -90,27 +90,13 @@ When `triggerNext()` is called:
 - **Deck PV (Preview)**: Manual loading on Deck PV is independent and never affects Auto-VJ or deck staging.
 - **Auto-VJ Mid-Session Arming**: Turning Auto-VJ ON while presets are playing manually arms the system for the next advance trigger without causing immediate jump cuts.
 
-### Unified Dirty Deck Transition Guard (`DeckPresetController.guardDeckTransition`)
-Whenever a deck preset is replaced, ejected, overwritten, or reset through any UI pathway:
-- **Pathways Guarded**:
-  - Eject button on deck monitor toolbars
-  - Deck click-and-drag utility actions (Move, Copy, Swap)
-  - Library 4-column loader buttons (`[A] [B] [BG] [PV]`, numeric keys `1`–`4`, Quick Audition Padlock)
-  - Double-clicking presets in Preset Library or Playlist Editor
-  - "New Preset" popups in Preset Library
-  - "File -> New Preset" and "File -> Reset" in the main menu bar
-  - Dragging and dropping `.lsd` files directly onto decks
-- **Configured Behaviors (`UITheme.autoVjDirtyBehavior`)**:
-  - **`AUTO_SAVE`**: Silently saves the modified preset to disk immediately (preserving active name or creating timestamped backup) and proceeds with the transition without prompt.
-  - **`AUTO_DISCARD`**: Discards modifications immediately and executes the transition without prompt.
-  - **`SKIP` (Prompt)**: Dispatches a confirmation request to `PopupManager.requestDeckConfirm` to prompt the user (Save, Discard, or Cancel).
-
-### Visual Source Change Guard (`DeckPresetController.changeVisualSourceSafely`)
-- Whenever changing the visual source on a deck (`PresetGridTabs` dropdown or Launchpad):
-  - **Confirmation Dialog (`PopupManager.drawSourceChangeConfirmPopup`)**: If the deck has an active named preset or unsaved parameter edits, prompts the user before replacing the source.
-  - **Preset Unbinding**: Clears `activePreset` and `cachedDto` in `PresetManager` so subsequent saves require naming or cannot overwrite the previous preset file.
-  - **Selection Invalidation & Subtab Synchronization**: Clears `PresetGridState.selectedCell` / `selectedParam` and switches the deck subtab to the new source.
-  - **Stale Parameter Protection (`PropertiesPanel`)**: `PropertiesPanel.draw()` defensively validates `state.selectedParam` against `ParameterResolver.findParameterByPath()`. If the parameter was orphaned or detached, selection is immediately cleared.
+### Deck Changes: `DeckOps` (`presets/DeckOps.kt`)
+Every change to what a deck holds goes through `DeckOps.request(slot, change, origin)`; see the `DeckOps` entry in `DECISIONS.md` for the rationale. `DeckChange` is `Source`, `Preset`, `Eject`, `CopyFrom`, `MoveFrom` or `SwapWith`; `LoadOrigin` is `MANUAL` or `QUEUE`.
+- **Request time (calling thread)**: drop a no-op `Source` change, run the dirty guard, then either queue the change or read the preset on `presetIoExecutor` and queue the result.
+- **Dirty guard**: a clean deck proceeds. `MANUAL` uses `UITheme.manualLoadDirtyBehavior` (`PROMPT` calls `DeckOps.prompt`, wired to `PopupManager.requestDeckConfirm`; `DISCARD`; `AUTO_SAVE`). `QUEUE` uses `UITheme.autoVjDirtyBehavior` (`SKIP` drops the load, `AUTO_SAVE`, `AUTO_DISCARD`).
+- **Drain (`DeckOps.drainOnGlThread`, once per frame in `Main`)**: for each queued change, push undo (MANUAL `Source`/`Preset` only, via `DeckOps.undoSink`), apply it, install the macro bank, update `PresetManager` bookkeeping, toast if bound knobs were replaced, then call `DeckOps.postApply` (the UI clears the selection and shows the SRC sub-tab after a source change). Once per drain: `MidiMappingManager.invalidateBindings`, `ParameterResolver.clearCache`, `BroadcastEngine.notifyStateChanged`.
+- **Dirty check**: `DeckOps.isDirty` (`PresetManager.isDeckDirty` delegates) compares `deck.toDto` with the cached DTO, plus the macro bank's labels and bindings with the signature `PresetManager.setActive` captured.
+- `PresetRepository.loadDeckPresetAsync` remains as a deprecated shim for call sites not yet migrated.
 
 ---
 
@@ -121,7 +107,7 @@ Whenever a deck preset is replaced, ejected, overwritten, or reset through any U
 ### Dip-to-Black & Modulation Pipeline
 - **Transition States**: `IDLE` -> `FADING_OUT` -> `FADING_IN` -> `IDLE`.
 - **Modulation & MIDI Triggers**: Symmetrically modulated by `Mixer/bgQueuePrev` and `Mixer/bgQueueNext`, along with dedicated MIDI CC bindings (`Global/bgQueuePrev`, `Global/bgQueueNext`).
-- **Dirty Deck Guard**: Observes `UITheme.autoVjDirtyBehavior` (`SKIP`, `AUTO_SAVE`, `AUTO_DISCARD`) when transitioning or advancing on Deck BG.
+- **Dirty Deck Guard**: Observes `UITheme.autoVjDirtyBehavior` (`SKIP`, `AUTO_SAVE`, `AUTO_DISCARD`) when transitioning or advancing on Deck BG; loads go through `DeckOps` with `LoadOrigin.QUEUE`.
 - **Double-Click Playback**: Double-clicking any track in BG Queue triggers immediate playback with dip-to-black (`playIndex(index, mixer, withDipToBlack = true)`), while double-clicking in Play Queue triggers standby deck load and auto-fade crossfading.
 
 ## 5. Transition Queue Manager (`TransitionQueueManager.kt`)
