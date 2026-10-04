@@ -464,7 +464,7 @@ object LibraryPanel {
             if (viewMode == LibraryViewMode.TRANS) {
                 // In TRANS mode: shortcuts Q (enqueue transition), Enter (apply to mixer), Up/Down (nav)
                 val isEnter = ImGui.isKeyPressed(ImGuiKey.Enter, false) || ImGui.isKeyPressed(ImGuiKey.KeypadEnter, false)
-                val isQueueKey = ImGui.isKeyPressed(ImGuiKey.Q, false)
+                val isQueueKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.isTriggered("library.queue_ab")
                 val isNavUp = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.isTriggered("library.navigate")
                 val isNavDown = !io.keyCtrl && !io.keyAlt && !io.keySuper && !io.keyShift && ImGui.isKeyPressed(ImGuiKey.DownArrow, false)
 

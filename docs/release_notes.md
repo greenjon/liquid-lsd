@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Failures Are Visible, Transition Queue Steps Add Up, Shortcut Rebinding Reaches the Transitions View (`presets/FxOps.kt`, `presets/TransitionOps.kt`, `ui/UIManager.kt`, `ui/LibraryPanel.kt`)
+- **A failed FX load now says so.** A `.lsdfx` / `.lsdfxchain` that can't be read, an unknown effect, a file that isn't an FX file, or a change that fails when applied shows a toast (they only wrote to the log before). Transition changes that fail to apply do the same.
+- **A MIDI or CV step of +3 on the transition queue moves three items** (up to 8 per frame); it used to move one.
+- **The queue key in the Library's Transitions view follows your shortcut binding** (default Q) instead of being hard-wired.
+- Internal: `FxOps.reportFailure`; `UIManager.MAX_TRANSITION_STEPS_PER_FRAME`; the Transitions view uses `ShortcutManager.isTriggered("library.queue_ab")`. The A/B and BG queue deltas still collapse to one step (each step loads a preset). Dormant GLOBAL-strip code in `MacroStripVisibility`/`PerformanceMatrixPanel` is now commented as waiting for the v1.1 free-knob row.
+
 ### Learn and Slider Fixes: Esc Cancels Every Armed Learn, Min/Max Bound Labels and Beat Division Labels Behave Like Other Sliders, MIDI Learn Labels, Typed Knob Values Follow the Curve (`ui/BackNavigation.kt`, `ui/CustomRangeSlider.kt`, `ui/BeatDivisionSlider.kt`, `ui/MacroKnobWidget.kt`, `ui/PropertiesPanel.kt`, `ui/MidiModulatorSection.kt`)
 - **Esc cancels every armed Learn in one press** (Add Target, MIDI Learn and OSC Learn). Before, it only cancelled Add Target, so a MIDI or OSC Learn stayed armed until it timed out.
 - **The randomize-bound labels on a two-track slider** ("Min Bound Range" / "Max Bound Range") now have the right-click Learn MIDI / Learn OSC menu like the other labels. A bound Beat Division label now opens the knob's target editor when clicked, as the other sliders do.

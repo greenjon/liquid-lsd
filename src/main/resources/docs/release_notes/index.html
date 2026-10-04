@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#failures-are-visible-transition-queue-steps-add-up-shortcut-rebinding-reaches-the-transitions-view-presetsfxopskt-presetstransitionopskt-uiuimanagerkt-uilibrarypanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failures Are Visible, Transition Queue Steps Add Up, Shortcut Rebinding Reaches the Transitions View (presets/FxOps.kt, presets/TransitionOps.kt, ui/UIManager.kt, ui/LibraryPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#learn-and-slider-fixes-esc-cancels-every-armed-learn-minmax-bound-labels-and-beat-division-labels-behave-like-other-sliders-midi-learn-labels-typed-knob-values-follow-the-curve-uibacknavigationkt-uicustomrangesliderkt-uibeatdivisionsliderkt-uimacroknobwidgetkt-uipropertiespanelkt-uimidimodulatorsectionkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5405,6 +5416,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#failures-are-visible-transition-queue-steps-add-up-shortcut-rebinding-reaches-the-transitions-view-presetsfxopskt-presetstransitionopskt-uiuimanagerkt-uilibrarypanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Failures Are Visible, Transition Queue Steps Add Up, Shortcut Rebinding Reaches the Transitions View (presets/FxOps.kt, presets/TransitionOps.kt, ui/UIManager.kt, ui/LibraryPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#learn-and-slider-fixes-esc-cancels-every-armed-learn-minmax-bound-labels-and-beat-division-labels-behave-like-other-sliders-midi-learn-labels-typed-knob-values-follow-the-curve-uibacknavigationkt-uicustomrangesliderkt-uibeatdivisionsliderkt-uimacroknobwidgetkt-uipropertiespanelkt-uimidimodulatorsectionkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9577,6 +9599,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="failures-are-visible-transition-queue-steps-add-up-shortcut-rebinding-reaches-the-transitions-view-presetsfxopskt-presetstransitionopskt-uiuimanagerkt-uilibrarypanelkt">Failures Are Visible, Transition Queue Steps Add Up, Shortcut Rebinding Reaches the Transitions View (<code>presets/FxOps.kt</code>, <code>presets/TransitionOps.kt</code>, <code>ui/UIManager.kt</code>, <code>ui/LibraryPanel.kt</code>)</h3>
+<ul>
+<li><strong>A failed FX load now says so.</strong> A <code>.lsdfx</code> / <code>.lsdfxchain</code> that can't be read, an unknown effect, a file that isn't an FX file, or a change that fails when applied shows a toast (they only wrote to the log before). Transition changes that fail to apply do the same.</li>
+<li><strong>A MIDI or CV step of +3 on the transition queue moves three items</strong> (up to 8 per frame); it used to move one.</li>
+<li><strong>The queue key in the Library's Transitions view follows your shortcut binding</strong> (default Q) instead of being hard-wired.</li>
+<li>Internal: <code>FxOps.reportFailure</code>; <code>UIManager.MAX_TRANSITION_STEPS_PER_FRAME</code>; the Transitions view uses <code>ShortcutManager.isTriggered("library.queue_ab")</code>. The A/B and BG queue deltas still collapse to one step (each step loads a preset). Dormant GLOBAL-strip code in <code>MacroStripVisibility</code>/<code>PerformanceMatrixPanel</code> is now commented as waiting for the v1.1 free-knob row.</li>
+</ul>
 <h3 id="learn-and-slider-fixes-esc-cancels-every-armed-learn-minmax-bound-labels-and-beat-division-labels-behave-like-other-sliders-midi-learn-labels-typed-knob-values-follow-the-curve-uibacknavigationkt-uicustomrangesliderkt-uibeatdivisionsliderkt-uimacroknobwidgetkt-uipropertiespanelkt-uimidimodulatorsectionkt">Learn and Slider Fixes: Esc Cancels Every Armed Learn, Min/Max Bound Labels and Beat Division Labels Behave Like Other Sliders, MIDI Learn Labels, Typed Knob Values Follow the Curve (<code>ui/BackNavigation.kt</code>, <code>ui/CustomRangeSlider.kt</code>, <code>ui/BeatDivisionSlider.kt</code>, <code>ui/MacroKnobWidget.kt</code>, <code>ui/PropertiesPanel.kt</code>, <code>ui/MidiModulatorSection.kt</code>)</h3>
 <ul>
 <li><strong>Esc cancels every armed Learn in one press</strong> (Add Target, MIDI Learn and OSC Learn). Before, it only cancelled Add Target, so a MIDI or OSC Learn stayed armed until it timed out.</li>

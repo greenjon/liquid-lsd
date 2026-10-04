@@ -218,6 +218,7 @@ class PerformanceMatrixPanel {
     private fun startLearnFor(session: llm.slop.liquidlsd.SessionContext, parametersState: ParametersState, bankId: String, control: MacroControl) {
         MacroLearnState.startLearn(control.id)
         MacroLearnState.selectedControlId = control.id
+        // Dormant until the v1.1 free-knob row: GLOBAL has 0 knobs today (DECISIONS.md, "Column 3 MACROS Tab Removed"). Kept on purpose.
         // GLOBAL has no Deep Edit of its own: stay put and let the guest strip appear in whichever Edit the user opens.
         if (bankId == MacroEngine.GLOBAL) {
             if (!LibraryPanel.isEditView(session)) MacroLearnState.setStatus("ADD TARGET: Open any Edit and click a parameter or property.", 6000L)
@@ -345,7 +346,7 @@ class PerformanceMatrixPanel {
         val isEditView = LibraryPanel.isEditView(session)
         val stripControl = if (isEditView) MacroLearnState.selectedControlId?.let { MacroLearnState.findControl(it) } else null
         val stripBankId = stripControl?.let { MacroEngine.bankKeyOfControl(it.id) }
-        // A GLOBAL Learn armed in Perform view starts its timeout over once an Edit view opens.
+        // Dormant (GLOBAL has 0 knobs until the v1.1 free-knob row). A GLOBAL Learn armed in Perform view starts its timeout over once an Edit view opens.
         if (isEditView && !wasEditView && MacroLearnState.activeSession?.controlId?.let { MacroEngine.bankKeyOfControl(it) } == MacroEngine.GLOBAL) {
             MacroLearnState.restartLearnTimeout()
         }
@@ -417,7 +418,7 @@ class PerformanceMatrixPanel {
             val displayLabel = descriptor.groupLabel
 
             var stripMode = if (stripControl != null && descriptor.hasExtraHeader) macroStripModeFor(isEditView, row.bankId, stripBankId) else MacroStripMode.NONE
-            // A visiting GLOBAL strip rides only on the row whose Edit is open.
+            // Dormant until the v1.1 free-knob row. A visiting GLOBAL strip rides only on the row whose Edit is open.
             if (stripMode == MacroStripMode.GUEST && !isModuleExpanded) stripMode = MacroStripMode.NONE
             val stripOn = stripMode != MacroStripMode.NONE
             badgeClicked = false

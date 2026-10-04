@@ -252,12 +252,10 @@ class UIManager(
 
         val transCvDelta = mixer.pollTransQueueAdvance()
         val totalTransDelta = transMidiCcDelta + transCvDelta
-        if (totalTransDelta != 0) {
-            if (totalTransDelta > 0) {
-                llm.slop.liquidlsd.presets.TransitionQueueManager.advanceNext(mixer)
-            } else {
-                llm.slop.liquidlsd.presets.TransitionQueueManager.advancePrevious(mixer)
-            }
+        // Applying a transition only selects it, so a +3 delta can step three items (capped against runaway CV).
+        repeat(kotlin.math.abs(totalTransDelta).coerceAtMost(MAX_TRANSITION_STEPS_PER_FRAME)) {
+            if (totalTransDelta > 0) llm.slop.liquidlsd.presets.TransitionQueueManager.advanceNext(mixer)
+            else llm.slop.liquidlsd.presets.TransitionQueueManager.advancePrevious(mixer)
         }
 
         stepFxQueue(llm.slop.liquidlsd.presets.FXQueueManager, mixer, fxMidiDelta)
@@ -419,6 +417,9 @@ class UIManager(
 
     companion object {
         private var instance: UIManager? = null
+
+        /** Most transition-queue steps one frame will apply, so a runaway CV can't spin the queue. */
+        private const val MAX_TRANSITION_STEPS_PER_FRAME = 8
 
         /**
          * Vertical gap in pixels between the bottom edge of the top title/menu bar

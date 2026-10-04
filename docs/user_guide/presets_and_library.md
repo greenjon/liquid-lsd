@@ -251,6 +251,8 @@ Column 1 of `[ Trans ]` mode lists two kinds of row side by side, each marked wi
 Use the **`[⋮]`** filter menu above the list to show/hide each tier (**Stock Shaders / Saved Presets**). Use **`[+]`** to save the mixer's current transition as a new preset.
 
 - **Double-click**: Applies the transition to the mixer immediately.
+- **Keyboard**: **Enter** applies the selected transition; the *Add to A/B Queue* shortcut (**Q** by default, rebindable in Preferences → Shortcuts) adds it to the transition queue.
+- **Failures**: a transition or FX file that can't be loaded or applied now shows a toast instead of failing silently.
 - **Right-click menu**: **Apply to Mixer**, **Add to Live Queue**, **Add to '<playlist>' Playlist**, plus Rename/Clone/Delete for saved presets (stock shaders have no file to rename or delete).
 
 ### Transition Presets (`.lsdtrans`) & Playlists (`.lsdtransplay`)

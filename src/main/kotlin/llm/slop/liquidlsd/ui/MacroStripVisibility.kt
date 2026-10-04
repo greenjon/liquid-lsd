@@ -10,7 +10,7 @@ enum class MacroStripMode {
     /** The selected knob belongs to this row's active bank: the strip replaces the controls. */
     STRIP,
 
-    /** A GLOBAL knob is selected and this Edit row is visiting: the strip draws with a "GLB" tag. */
+    /** Dormant until the v1.1 free-knob row: GLOBAL has 0 knobs today (DECISIONS.md, "Column 3 MACROS Tab Removed"). Kept on purpose. A GLOBAL knob is selected and this Edit row is visiting: the strip draws with a "GLB" tag. */
     GUEST
 }
 

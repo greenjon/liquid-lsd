@@ -71,6 +71,13 @@ object FxOps {
         resync(chain, mixer)
     }
 
+    /** Logs a failed async load and tells the user; always returns null for `.exceptionally`. */
+    private fun <T> reportFailure(message: String, e: Throwable): T? {
+        logger.error(e) { message }
+        llm.slop.liquidlsd.ui.ToastOverlay.show(message)
+        return null
+    }
+
     /** Applies every queued op. Main/GL thread only -- called once per frame from the render loop. */
     fun drainOnGlThread(mixer: Mixer) {
         while (true) {
@@ -79,6 +86,7 @@ object FxOps {
                 op(mixer)
             } catch (e: Exception) {
                 logger.error(e) { "Failed to apply queued FX operation" }
+                llm.slop.liquidlsd.ui.ToastOverlay.show("An FX change could not be applied (see log)")
             }
         }
     }
@@ -113,7 +121,7 @@ object FxOps {
     fun loadChain(session: SessionContext, file: File, chain: FxChain) {
         session.presetRepository.loadFxChainAsync(file)
             .thenAccept { dto -> applyChain(chain, dto, source = file, isBaseline = true) }
-            .exceptionally { e -> logger.error(e) { "Failed to load FX chain ${file.name}" }; null }
+            .exceptionally { e -> reportFailure("Could not load FX chain ${file.name}", e) }
     }
 
     /** Puts a fresh instance of stock ISF filter [filterId] into [slotIndex], or clears the slot if null. */
@@ -129,6 +137,7 @@ object FxOps {
         val filter = ISFFilterRegistry.createFilter(filterId)
         if (filter == null) {
             logger.warn { "Unknown ISF filter '$filterId', slot left unchanged" }
+            llm.slop.liquidlsd.ui.ToastOverlay.show("Unknown effect '$filterId'; the slot was left unchanged")
             return
         }
         c.slots[slotIndex]?.dispose()
@@ -189,7 +198,7 @@ object FxOps {
     fun loadSlot(session: SessionContext, file: File, chain: FxChain, slotIndex: Int) {
         session.presetRepository.loadFxPresetAsync(file)
             .thenAccept { dto -> applySlot(chain, slotIndex, dto.slot) }
-            .exceptionally { e -> logger.error(e) { "Failed to load FX preset ${file.name}" }; null }
+            .exceptionally { e -> reportFailure("Could not load FX preset ${file.name}", e) }
     }
 
     /** Applies an already-loaded slot DTO (e.g. from the clipboard) to [slotIndex]. */
@@ -222,8 +231,11 @@ object FxOps {
                 .thenAccept { dto ->
                     applyChain(chain, FXChainDto(name = dto.name, tags = dto.tags, slots = listOf(dto.slot, null, null)))
                 }
-                .exceptionally { e -> logger.error(e) { "Failed to load FX preset ${file.name}" }; null }
-            else -> logger.warn { "Unrecognized FX item extension for ${file.name}, ignoring" }
+                .exceptionally { e -> reportFailure("Could not load FX preset ${file.name}", e) }
+            else -> {
+                logger.warn { "Unrecognized FX item extension for ${file.name}, ignoring" }
+                llm.slop.liquidlsd.ui.ToastOverlay.show("Can't apply ${file.name}: not an FX file")
+            }
         }
     }
 

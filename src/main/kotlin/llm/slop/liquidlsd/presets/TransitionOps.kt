@@ -74,6 +74,7 @@ object TransitionOps {
                 op(mixer)
             } catch (e: Exception) {
                 logger.error(e) { "Failed to apply queued transition change" }
+                ToastOverlay.show("A transition change could not be applied (see log)")
             }
         }
     }

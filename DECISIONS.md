@@ -2698,6 +2698,13 @@
 - **Decision (item 21)**: a typed knob value goes through `MacroCurve.inverse`, and the readout through `mapToRange`, for the first binding. Non-monotonic or stepped bindings land on the nearest position.
 - **Not done (item 19 part 2)**: `MidiModulatorSection`'s DC Offset/Depth sliders still have no macro/MIDI/OSC binding. Mapping a MIDI modulator's own range is arguably meta; left for the user to decide. Decided 2026-10-04.
 
+## Failures Toast; Transition Queue Deltas Apply in Full; GLOBAL Strip Code Is Kept Dormant (`FxOps.reportFailure`, `UIManager.MAX_TRANSITION_STEPS_PER_FRAME`)
+- **Decision (item 25a)**: FX/transition load and apply failures log and show a `ToastOverlay` message; no new UI.
+- **Decision (item 25b)**: transition queue deltas apply as many steps as asked (cap 8/frame) because a transition step is just a selection. **Not done**: A/B and BG queue deltas still collapse to one step, since each step loads a preset; applying `+n` there needs an `advanceBy(n)` that loads only the final item (open).
+- **Decision (item 25c)**: the Transitions view queue key uses the registered `library.queue_ab` shortcut. Enter stays hard-wired (no registered action).
+- **Decision (item 24)**: the dormant GLOBAL guest-strip/learn code stays, with comments tying it to the v1.1 free-knob row (matches the existing GLOBAL-bank decision). Decided 2026-10-04.
+- **Open (item 9)**: restoring the previously expanded module after leaving Edit needs a trigger decision (no new button is allowed in v1.0); not implemented.
+
 ## FX-Bank Knobs Are Read-Only Outside FxMacroSync; Master/Transition/FX-Send Knobs Are Path-Scoped (`MacroLearnState.acceptsTarget`, `FxMacroSync.isFxBank`)
 - **Decision**: `FxMacroSync` owns every FX-bank binding and rewrites it from the chain, so no other editor may add, edit or delete one: `acceptsTarget` rejects FX banks, and Properties, the base-value panel and the slider popup show a read-only line. MASTER and TRANS knobs accept `Mixer/...` only, FX_SENDS accepts `.../FXChain/...` only, GLOBAL stays unscoped. Bank import remaps only deck-rooted paths (everything except `Mixer`, `Master`, `Global`, `Macro`) and validates after remapping. Decided 2026-10-04 (backlog items 8, 22, 23, 7).
 - **Selection**: one `MacroLearnState.selectedControlId` drives the strip, the card highlight and the Learn button; the per-module `selectedRackMacroId` map was dropped. Consequence: one highlighted knob across all expanded modules.

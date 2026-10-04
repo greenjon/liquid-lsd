@@ -13,6 +13,7 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class FxOpsTest {
     private val mixer = mockk<Mixer>(relaxed = true)
@@ -42,6 +43,13 @@ class FxOpsTest {
         assertEquals("Loaded", chain.name)
         assertFalse(chain.slotSuperKnobLink[1])
         assertEquals(0, FxOps.pendingCount)
+    }
+
+    @Test
+    fun unusableFxItemsToastInsteadOfFailingSilently() {
+        val session = mockk<llm.slop.liquidlsd.SessionContext>(relaxed = true)
+        FxOps.applyItem(session, java.io.File("notes.txt"), FxChain("Deck A FX"))
+        assertTrue(llm.slop.liquidlsd.ui.ToastOverlay.active()?.contains("notes.txt") == true)
     }
 
     @Test
