@@ -51,7 +51,7 @@ object ParametersRenderer {
 
         ImGui.pushID(paramKey)
 
-        val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(null, paramKey)
+        val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findBaseBindingInfo(paramKey)
         val isMacroBound = macroInfo != null
         val oscMappedAddress = OscMappingManager.getAddressForParameter(paramKey)
 
@@ -266,7 +266,7 @@ object ParametersRenderer {
                     OscLearnState.cancelLearn()
                 }
             } else {
-                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC")) {
+                if (ImGui.menuItem(if (macroInfo != null) "${Icons.ACTIVITY} Learn OSC (locked by ${macroInfo.badgeLabel})" else "${Icons.ACTIVITY} Learn OSC", "", false, macroInfo == null)) {
                     OscLearnState.startLearn(paramKey, param.minClamp, param.maxClamp, label)
                 }
             }
@@ -335,7 +335,7 @@ object ParametersRenderer {
         val isValSelected = state.selectedCell?.paramKey == paramKey && (state.selectedCell?.cvSourceId == "value" || state.selectedCell?.cvSourceId == "final")
 
         val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
-        val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(null, paramKey)
+        val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findBaseBindingInfo(paramKey)
         val isMacroBound = macroInfo != null
 
         ImGui.setCursorScreenPos(valX, valY)
@@ -350,7 +350,7 @@ object ParametersRenderer {
                     minVal = param.minClamp,
                     maxVal = param.maxClamp
                 )
-            } else if (OscMapModeState.active) {
+            } else if (OscMapModeState.active && !isMacroBound) {
                 if (OscLearnState.isTargetLearning(paramKey)) {
                     OscLearnState.cancelLearn()
                 } else {

@@ -126,7 +126,7 @@ object ValueParamSection {
             ImGui.spacing()
 
             val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
-            val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(null, paramKey)
+            val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findBaseBindingInfo(paramKey)
             val isMacroBound = macroInfo != null
 
             if (isMacroLearning) {

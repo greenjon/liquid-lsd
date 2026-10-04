@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Learn MIDI/OSC Is Disabled on Values a Macro Knob Is Driving; Base-Value Lock Ignores Modulator Targets (`macro/MacroEngine.kt`, `ui/CustomRangeSlider.kt`, `ui/BeatDivisionSlider.kt`, `ui/ParametersRenderer.kt`, `ui/ValueParamSection.kt`)
+- **No more silently dead mappings.** A value driven by a macro knob target is rewritten every frame, so a MIDI or OSC mapping on it did nothing. Its right-click **Learn MIDI / Learn OSC** is now greyed out as "locked by K#", and clicking the value cell in OSC map mode selects the knob instead of arming a learn. Release the target (uncheck it) to map the value directly.
+- **A knob aimed at an LFO's depth no longer locks the parameter's own value.** The value cell and base slider locked whenever any knob targeted anything on that parameter, even though the arcs showed it as unbound. They now lock only when a knob drives the base value itself, and a modulator property (e.g. LFO depth) locks only that property.
+- Internal: new `MacroEngine.findBaseBindingInfo` (cached, base-value bindings only) and `lockingBindingInfo(paramKey, modulatorId, propertyName)`; `ParametersRenderer`, `ValueParamSection` and both sliders use them instead of `findPrimaryBindingInfo(null, paramKey)`. Existing MIDI/OSC mappings on a locked value are kept but inert while the lock is on.
+
 ### Saving an FX Chain From the Kebab or Library "+" Now Clears Its Unsaved Dot (`ui/ParametersTabs.kt`, `ui/browser/FXBrowserPanel.kt`)
 - Saving a chain from the Deep Edit kebab ("Save Chain As...") or the Library "+" menu left the chain's unsaved-changes dot on, and the chain stayed unlinked from the file it had just been saved to. Both now behave like the chain header's Save: the dot clears and the chain remembers the file.
 - The saved file now holds the chain as it is when you click Save in the dialog, not as it was when you opened the menu.

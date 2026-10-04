@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#learn-midiosc-is-disabled-on-values-a-macro-knob-is-driving-base-value-lock-ignores-modulator-targets-macromacroenginekt-uicustomrangesliderkt-uibeatdivisionsliderkt-uiparametersrendererkt-uivalueparamsectionkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learn MIDI/OSC Is Disabled on Values a Macro Knob Is Driving; Base-Value Lock Ignores Modulator Targets (macro/MacroEngine.kt, ui/CustomRangeSlider.kt, ui/BeatDivisionSlider.kt, ui/ParametersRenderer.kt, ui/ValueParamSection.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#saving-an-fx-chain-from-the-kebab-or-library-now-clears-its-unsaved-dot-uiparameterstabskt-uibrowserfxbrowserpanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5317,6 +5328,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#learn-midiosc-is-disabled-on-values-a-macro-knob-is-driving-base-value-lock-ignores-modulator-targets-macromacroenginekt-uicustomrangesliderkt-uibeatdivisionsliderkt-uiparametersrendererkt-uivalueparamsectionkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learn MIDI/OSC Is Disabled on Values a Macro Knob Is Driving; Base-Value Lock Ignores Modulator Targets (macro/MacroEngine.kt, ui/CustomRangeSlider.kt, ui/BeatDivisionSlider.kt, ui/ParametersRenderer.kt, ui/ValueParamSection.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#saving-an-fx-chain-from-the-kebab-or-library-now-clears-its-unsaved-dot-uiparameterstabskt-uibrowserfxbrowserpanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9401,6 +9423,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="learn-midiosc-is-disabled-on-values-a-macro-knob-is-driving-base-value-lock-ignores-modulator-targets-macromacroenginekt-uicustomrangesliderkt-uibeatdivisionsliderkt-uiparametersrendererkt-uivalueparamsectionkt">Learn MIDI/OSC Is Disabled on Values a Macro Knob Is Driving; Base-Value Lock Ignores Modulator Targets (<code>macro/MacroEngine.kt</code>, <code>ui/CustomRangeSlider.kt</code>, <code>ui/BeatDivisionSlider.kt</code>, <code>ui/ParametersRenderer.kt</code>, <code>ui/ValueParamSection.kt</code>)</h3>
+<ul>
+<li><strong>No more silently dead mappings.</strong> A value driven by a macro knob target is rewritten every frame, so a MIDI or OSC mapping on it did nothing. Its right-click <strong>Learn MIDI / Learn OSC</strong> is now greyed out as "locked by K#", and clicking the value cell in OSC map mode selects the knob instead of arming a learn. Release the target (uncheck it) to map the value directly.</li>
+<li><strong>A knob aimed at an LFO's depth no longer locks the parameter's own value.</strong> The value cell and base slider locked whenever any knob targeted anything on that parameter, even though the arcs showed it as unbound. They now lock only when a knob drives the base value itself, and a modulator property (e.g. LFO depth) locks only that property.</li>
+<li>Internal: new <code>MacroEngine.findBaseBindingInfo</code> (cached, base-value bindings only) and <code>lockingBindingInfo(paramKey, modulatorId, propertyName)</code>; <code>ParametersRenderer</code>, <code>ValueParamSection</code> and both sliders use them instead of <code>findPrimaryBindingInfo(null, paramKey)</code>. Existing MIDI/OSC mappings on a locked value are kept but inert while the lock is on.</li>
+</ul>
 <h3 id="saving-an-fx-chain-from-the-kebab-or-library-now-clears-its-unsaved-dot-uiparameterstabskt-uibrowserfxbrowserpanelkt">Saving an FX Chain From the Kebab or Library "+" Now Clears Its Unsaved Dot (<code>ui/ParametersTabs.kt</code>, <code>ui/browser/FXBrowserPanel.kt</code>)</h3>
 <ul>
 <li>Saving a chain from the Deep Edit kebab ("Save Chain As...") or the Library "+" menu left the chain's unsaved-changes dot on, and the chain stayed unlinked from the file it had just been saved to. Both now behave like the chain header's Save: the dot clears and the chain remembers the file.</li>

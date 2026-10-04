@@ -352,7 +352,7 @@ object CustomRangeSlider {
                         llm.slop.liquidlsd.osc.OscLearnState.cancelLearn()
                     }
                 } else {
-                    if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC ($text)")) {
+                    if (ImGui.menuItem(if (macroInfo != null) "${Icons.ACTIVITY} Learn OSC (locked by ${macroInfo.badgeLabel})" else "${Icons.ACTIVITY} Learn OSC ($text)", "", false, macroInfo == null)) {
                         llm.slop.liquidlsd.osc.OscLearnState.startLearn(
                             parameterPath = targetPath,
                             minVal = minLimit,
@@ -372,7 +372,7 @@ object CustomRangeSlider {
                         session.parametersState.midiLearnTarget = null
                     }
                 } else {
-                    if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI ($text)")) {
+                    if (ImGui.menuItem(if (macroInfo != null) "${Icons.SETTINGS} Learn MIDI (locked by ${macroInfo.badgeLabel})" else "${Icons.SETTINGS} Learn MIDI ($text)", "", false, macroInfo == null)) {
                         session.parametersState.startMidiLearn(
                             MidiLearnTarget.ModulatorProperty(
                                 fullPath = targetPath,
@@ -746,12 +746,7 @@ object CustomRangeSlider {
         }
         
         val macroInfo = if (paramKey != null) {
-            llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(
-                unitInstanceId = null,
-                parameterId = paramKey,
-                modulatorId = modulatorId,
-                propertyName = propertyName
-            )
+            llm.slop.liquidlsd.macro.MacroEngine.lockingBindingInfo(paramKey, modulatorId, propertyName)
         } else null
         val isMacroBound = macroInfo != null
 
@@ -815,7 +810,7 @@ object CustomRangeSlider {
                             llm.slop.liquidlsd.osc.OscLearnState.cancelLearn()
                         }
                     } else {
-                        if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC ($propLabel)")) {
+                        if (ImGui.menuItem(if (macroInfo != null) "${Icons.ACTIVITY} Learn OSC (locked by ${macroInfo.badgeLabel})" else "${Icons.ACTIVITY} Learn OSC ($propLabel)", "", false, macroInfo == null)) {
                             llm.slop.liquidlsd.osc.OscLearnState.startLearn(
                                 parameterPath = targetPath,
                                 minVal = minLimit,
@@ -835,7 +830,7 @@ object CustomRangeSlider {
                             session.parametersState.midiLearnTarget = null
                         }
                     } else {
-                        if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI ($propLabel)")) {
+                        if (ImGui.menuItem(if (macroInfo != null) "${Icons.SETTINGS} Learn MIDI (locked by ${macroInfo.badgeLabel})" else "${Icons.SETTINGS} Learn MIDI ($propLabel)", "", false, macroInfo == null)) {
                             val midiTarget = if (propertyName != null) {
                                 MidiLearnTarget.ModulatorProperty(
                                     fullPath = targetPath,

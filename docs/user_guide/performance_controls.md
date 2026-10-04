@@ -201,6 +201,7 @@ You can map any parameter, internal modulator variable, matrix CV modulator, or 
    - Right-click any slider or variable label in the UI — including an LFO's **Speed / Subdivision**, **Depth**, **Min/Max bounds**, **Asymmetry (Slope)**, **Morph**, **Hold**, or a parameter's **Initial Range (Base Value)**.
    - Select **Learn MIDI (...)** from the context menu. The slider will pulse in cyan/blue while awaiting hardware input.
    - Move a knob, fader, or press a pad on your MIDI controller. Liquid LSD immediately maps the control, preserves your configured min/max limits, and saves the mapping to the active profile.
+   - If a macro knob currently drives that value (its slider shows the cyan lock and a `[K#]` badge), **Learn MIDI** is greyed out as "locked by K#": the knob rewrites the value every frame, so a mapping would do nothing. Release the target first (uncheck it in the macro editor), or map a different value.
    - Right-click again and select **Cancel MIDI Learn** if needed.
 
 2. **Modulation Matrix Cells**:
@@ -391,6 +392,7 @@ You can map OSC controls either in-situ from the UI or manually from Preferences
    - Right-click any slider or variable label in the UI — including an LFO's **Speed / Subdivision**, **Depth**, **Min/Max bounds**, **Asymmetry**, a parameter's **Initial Range (Base Value)**, the crossfader, fade speed, or a deck/transition queue's `<`/`>` buttons.
    - Select **Learn OSC (...)** from the context menu. The control will pulse in amber while awaiting input.
    - Move a fader, knob, or XY pad on your TouchOSC surface. Liquid LSD ignores the first packet from a new address (guarding against a controller's connect-time sync burst) and maps once a later packet actually moves the value, preserving your configured min/max limits and saving the mapping to the active profile.
+   - As with MIDI, **Learn OSC** is greyed out as "locked by K#" while an enabled macro knob target drives that value.
    - Right-click again and select **Cancel OSC Learn** (or cancel from Preferences) if needed. Once mapped, the same context menu offers **Clear OSC Mapping** to remove it without leaving the performance view.
 
 2. **Manual Learn from Preferences**:

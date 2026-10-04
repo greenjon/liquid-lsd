@@ -147,9 +147,9 @@ Per the repo's definition of done:
 - Tests: three `onResult` cases in `DeckOpsTest` (applied, prompt cancelled, queue skip).
 
 ## Out of scope (separate small v1.0 fixes, see review §7.4)
-- D8: MIDI/OSC on a knob-bound parameter. Lock or indicate it, like the macro lock.
+- ~~D8: MIDI/OSC on a knob-bound parameter. Lock or indicate it, like the macro lock.~~ Done 2026-10-04.
 - D9: re-enabling a binding. Editors should read `control.bindings`, not the resolved cache.
-- D10: lock only for base-value bindings.
+- ~~D10: lock only for base-value bindings.~~ Done 2026-10-04.
 - D13: Missing Files relink by asset type.
 - D14: toolbar Q uses the visible tab's selection.
 - D15: Ctrl+F focuses the active tab's search.
@@ -165,3 +165,4 @@ Per the repo's definition of done:
 ## D7 status (2026-10-04)
 Stable modulator ids implemented (MacroBinding.modulatorId, :mod/<id>/ paths, legacy migration, tests in MacroEngineTest). D9 not yet done: it is a separate change in the editors' query functions.
 D9 done (2026-10-04): editors read control bindings via includeDisabled; lock queries unchanged.
+D8 + D10 done (2026-10-04): lock per target kind, Learn MIDI/OSC disabled when locked.

@@ -2663,3 +2663,8 @@
 ## Editors List Disabled Macro Bindings; Lock Queries Stay Enabled-Only (`MacroEngine.findBindingInfos(includeDisabled)`)
 - **Decision**: Two kinds of macro-binding query. Lock/indicator/arc queries (`findBindingsTargeting`, `findPrimaryBindingInfo`, `baseBindingInfos`) read the resolved cache: enabled and resolvable only, allocation-free, per-frame. Editor lists use `findBindingInfos(..., includeDisabled = true)`, which scans the controls' own `bindings`, so an unchecked target stays listed and re-enableable.
 - **Rationale**: a disabled binding is not locking anything, but it is still the user's data; hiding it from the editor that just disabled it made re-enabling impossible there (D9). Decided 2026-10-04.
+
+## A Macro-Driven Value Is Locked Against Every Other Writer; "Locked" Is Per Target Kind (`MacroEngine.lockingBindingInfo`)
+- **Decision**: `MacroEngine.tick` rewrites a bound value every frame, so any other writer (slider, MIDI, OSC) is dead while an enabled binding drives it. The UI therefore treats the value as locked for all of them: sliders are read-only, and Learn MIDI/OSC is disabled with "locked by K#". Existing mappings are kept, inert, and work again when the binding is released. Decided 2026-10-04 (D8, D10).
+- **Target kind**: a base-value binding locks only the base value; a modulator-property binding locks only that property (`findBaseBindingInfo`, `lockingBindingInfo`). `findPrimaryBindingInfo(null, paramKey)` with no modulator or property still matches any binding on the parameter and must not be used to answer "is the base value locked?".
+- **Alternative rejected**: making the engine yield to MIDI/OSC (last-writer-wins) would need per-binding takeover state and make the knob unreliable on stage.

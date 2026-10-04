@@ -315,6 +315,22 @@ object MacroEngine {
         }
     }
 
+    /**
+     * The enabled binding that drives [paramKey]'s *base value*, or null. Unlike
+     * [findPrimaryBindingInfo] (which matches any binding on the parameter, including modulator
+     * properties) this is what "is the base value locked by a macro?" means.
+     */
+    fun findBaseBindingInfo(paramKey: String): MacroBindingInfo? = baseBindingInfos(paramKey).firstOrNull()
+
+    /**
+     * The enabled binding that currently drives the target a slider edits: the parameter's base
+     * value when [propertyName] is null, else that modulator property. Nothing the user sets
+     * on a locked target (slider, MIDI, OSC) survives [tick], which rewrites it every frame.
+     */
+    fun lockingBindingInfo(paramKey: String, modulatorId: String?, propertyName: String?): MacroBindingInfo? =
+        if (propertyName == null) findBaseBindingInfo(paramKey)
+        else findPrimaryBindingInfo(null, paramKey, modulatorId, propertyName)
+
     private class ResolvedBinding(
         val control: MacroControl,
         val binding: MacroBinding,

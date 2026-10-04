@@ -570,4 +570,32 @@ class MacroEngineTest {
         assertEquals(mods[0].id, found[0].binding.modulatorId)
         assertTrue(MacroEngine.findBindingInfos(null, "Deck A/warp", modulatorId = "nope", includeDisabled = true).isEmpty())
     }
+
+    @Test
+    fun testModulatorOnlyBindingDoesNotLockBaseValue() {
+        val (_, mods, mixer) = threeModParam()
+        bindAndTick(mixer, modBinding(mods[0].id, prop = "depth"))
+        assertEquals(null, MacroEngine.findBaseBindingInfo("Deck A/warp"), "a modulator-property binding must not lock the base value")
+        assertEquals(null, MacroEngine.lockingBindingInfo("Deck A/warp", null, null))
+        assertTrue(MacroEngine.lockingBindingInfo("Deck A/warp", mods[0].id, "depth") != null)
+        assertEquals(null, MacroEngine.lockingBindingInfo("Deck A/warp", mods[1].id, "depth"))
+        assertEquals(null, MacroEngine.lockingBindingInfo("Deck A/warp", mods[0].id, "morph"))
+    }
+
+    @Test
+    fun testBaseBindingLocksBaseValueButNotModulatorProperties() {
+        val (_, mods, mixer) = threeModParam()
+        val base = MacroBinding(parameterId = "Deck A/warp", targetType = MacroTargetType.PARAM_BASE_VALUE)
+        bindAndTick(mixer, base)
+        assertTrue(MacroEngine.findBaseBindingInfo("Deck A/warp") != null)
+        assertTrue(MacroEngine.lockingBindingInfo("Deck A/warp", null, null) != null)
+        assertEquals(null, MacroEngine.lockingBindingInfo("Deck A/warp", mods[0].id, "depth"))
+    }
+
+    @Test
+    fun testDisabledBaseBindingDoesNotLock() {
+        val (_, _, mixer) = threeModParam()
+        bindAndTick(mixer, MacroBinding(parameterId = "Deck A/warp", targetType = MacroTargetType.PARAM_BASE_VALUE, enabled = false))
+        assertEquals(null, MacroEngine.findBaseBindingInfo("Deck A/warp"))
+    }
 }
