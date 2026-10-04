@@ -45,6 +45,7 @@ class NavigationSurfaceTest {
 
     @BeforeTest
     fun setUp() {
+        BrowserPane.enabled = false // the classic picker is pinned here; hosted-pane tests opt in
         session = SessionContext()
         clock = nextEpoch.also { nextEpoch += 1_000_000L } // later than any picker stamp left by an earlier test
         UiClock.nowMs = { clock }

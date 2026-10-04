@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### The Unified Browser Is the Default (`ui/browser/BrowserPane.kt`, `ui/LibraryPanel.kt`)
+- **The Library and the Edit bay's SRC, Chain, FX1-3 and TRANS tabs now open the folder tree | list | queues browser by default.** Nothing to switch on. If you need the old four columns and inline picker for a while, turn off **Unified** in the Library tab bar (not remembered across restarts) or start with `-Dlsd.unifiedBrowser=false`. The old code goes once the new browser has had enough use.
+- Fixed: **Ctrl+Z did nothing after a pick in the Edit bay's Browse tabs** (source, preset, FX, Chain, TRANS). It works now.
+- Internal: `PerformanceDeepEditBay.drawRackBayModule` runs `handleDeepEditKeys(fullSet = false)` for the keyboard-owning module in Browse mode (only `drawRackDeepEdit` did before).
+
 ### Unified Pane Polish: Playlist Enqueue from the Tree, Honest Folder Counts in the Edit Bay (`ui/browser/BrowserPane.kt`, `ui/browser/BrowseModel.kt`)
 - **With the beta pane, Shift + tap on a playlist in the tree adds the whole playlist to the A/B queue** (the Shift + left-top button adds it to the BG queue), like the playlist's right-click menu. On other folders it still does nothing.
 - **In the Edit bay the folder counts only count rows that tab can take** (the Chain tab no longer says 47 for All when it lists 18 chains).
@@ -12,7 +17,7 @@
 ### Edit Bay Browse Tabs Can Use the Unified Pane (`ui/browser/ApplyTarget.kt`, `ui/PerformanceBrowseBay.kt`, `ui/NavigationSurface.kt`)
 - **With the beta "Unified" pane on, the Edit bay's SRC, Chain, FX1-3 and TRANS tabs show the same folder tree | list | queue pane as the Library.** One click applies the row to that deck, slot, chain or the mixer transition; the row that is currently applied shows a `●`. Each tab lists only what it can take (an FX slot: single effects; Chain: saved chains) and starts in its own folder (Chain: Saved chains, FX slots: Stock filters); each tab remembers the folder you last used there. **Clear Slot / Clear Chain** sit above the pane, the deck's Save button stays, and live external video feeds are under **External video...**. 
 - **On the Twister** in the bay: the right-top button steps tree > list > queues (instead of the category), turning knob 1 steps the cursor, a tap applies the list row, and a tap on a folder selects it and jumps to the list. **Shift + right-bottom** clears the slot or chain, left-top goes back.
-- Internal: `ApplyTarget` + `ScopeMemory`; `BrowserPane.hosted()/applyCursorRow()`; `LibraryPanel.navMode`; `-Dlsd.editBrowse=gen|chain|fx1-3|trans` opens Deck A's bay on a tab (screenshots). The old inline picker and `ChainListBrowse` remain the default.
+- Internal: `ApplyTarget` + `ScopeMemory`; `BrowserPane.hosted()/applyCursorRow()`; `LibraryPanel.navMode`; `-Dlsd.editBrowse=gen|chain|fx1-3|trans` opens Deck A's bay on a tab (screenshots). The old inline picker and `ChainListBrowse` remain as the fallback.
 
 ### Controller Navigates the Unified Browser Tree (`ui/browser/BrowserPane.kt`, `ui/LibraryNavigation.kt`, `ui/browser/BrowseModel.kt`)
 - **With the beta "Unified" Library pane on, the Twister's pane button walks tree, list, BG queue, A/B queue** (FX: FX BG and FX A/B queues; Trans: its one queue). A fresh tab starts in the list. In the tree, turning knob 1 moves a cursor over the visible folders and playlists (shown as an outline) and **a tap selects** the folder or playlist, which fills the list. Turning never changes the list. Changing the folder or playlist, by controller or mouse, clears the list selection so a row of the previous view can't be loaded by accident. The classic four columns are unchanged.

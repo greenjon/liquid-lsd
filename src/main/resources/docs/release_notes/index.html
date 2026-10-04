@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#the-unified-browser-is-the-default-uibrowserbrowserpanekt-uilibrarypanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Unified Browser Is the Default (ui/browser/BrowserPane.kt, ui/LibraryPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unified-pane-polish-playlist-enqueue-from-the-tree-honest-folder-counts-in-the-edit-bay-uibrowserbrowserpanekt-uibrowserbrowsemodelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5493,6 +5504,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#the-unified-browser-is-the-default-uibrowserbrowserpanekt-uilibrarypanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Unified Browser Is the Default (ui/browser/BrowserPane.kt, ui/LibraryPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unified-pane-polish-playlist-enqueue-from-the-tree-honest-folder-counts-in-the-edit-bay-uibrowserbrowserpanekt-uibrowserbrowsemodelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9753,6 +9775,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="the-unified-browser-is-the-default-uibrowserbrowserpanekt-uilibrarypanelkt">The Unified Browser Is the Default (<code>ui/browser/BrowserPane.kt</code>, <code>ui/LibraryPanel.kt</code>)</h3>
+<ul>
+<li><strong>The Library and the Edit bay's SRC, Chain, FX1-3 and TRANS tabs now open the folder tree | list | queues browser by default.</strong> Nothing to switch on. If you need the old four columns and inline picker for a while, turn off <strong>Unified</strong> in the Library tab bar (not remembered across restarts) or start with <code>-Dlsd.unifiedBrowser=false</code>. The old code goes once the new browser has had enough use.</li>
+<li>Fixed: <strong>Ctrl+Z did nothing after a pick in the Edit bay's Browse tabs</strong> (source, preset, FX, Chain, TRANS). It works now.</li>
+<li>Internal: <code>PerformanceDeepEditBay.drawRackBayModule</code> runs <code>handleDeepEditKeys(fullSet = false)</code> for the keyboard-owning module in Browse mode (only <code>drawRackDeepEdit</code> did before).</li>
+</ul>
 <h3 id="unified-pane-polish-playlist-enqueue-from-the-tree-honest-folder-counts-in-the-edit-bay-uibrowserbrowserpanekt-uibrowserbrowsemodelkt">Unified Pane Polish: Playlist Enqueue from the Tree, Honest Folder Counts in the Edit Bay (<code>ui/browser/BrowserPane.kt</code>, <code>ui/browser/BrowseModel.kt</code>)</h3>
 <ul>
 <li><strong>With the beta pane, Shift + tap on a playlist in the tree adds the whole playlist to the A/B queue</strong> (the Shift + left-top button adds it to the BG queue), like the playlist's right-click menu. On other folders it still does nothing.</li>
@@ -9768,7 +9796,7 @@
 <ul>
 <li><strong>With the beta "Unified" pane on, the Edit bay's SRC, Chain, FX1-3 and TRANS tabs show the same folder tree | list | queue pane as the Library.</strong> One click applies the row to that deck, slot, chain or the mixer transition; the row that is currently applied shows a <code>●</code>. Each tab lists only what it can take (an FX slot: single effects; Chain: saved chains) and starts in its own folder (Chain: Saved chains, FX slots: Stock filters); each tab remembers the folder you last used there. <strong>Clear Slot / Clear Chain</strong> sit above the pane, the deck's Save button stays, and live external video feeds are under <strong>External video...</strong>. </li>
 <li><strong>On the Twister</strong> in the bay: the right-top button steps tree &gt; list &gt; queues (instead of the category), turning knob 1 steps the cursor, a tap applies the list row, and a tap on a folder selects it and jumps to the list. <strong>Shift + right-bottom</strong> clears the slot or chain, left-top goes back.</li>
-<li>Internal: <code>ApplyTarget</code> + <code>ScopeMemory</code>; <code>BrowserPane.hosted()/applyCursorRow()</code>; <code>LibraryPanel.navMode</code>; <code>-Dlsd.editBrowse=gen|chain|fx1-3|trans</code> opens Deck A's bay on a tab (screenshots). The old inline picker and <code>ChainListBrowse</code> remain the default.</li>
+<li>Internal: <code>ApplyTarget</code> + <code>ScopeMemory</code>; <code>BrowserPane.hosted()/applyCursorRow()</code>; <code>LibraryPanel.navMode</code>; <code>-Dlsd.editBrowse=gen|chain|fx1-3|trans</code> opens Deck A's bay on a tab (screenshots). The old inline picker and <code>ChainListBrowse</code> remain as the fallback.</li>
 </ul>
 <h3 id="controller-navigates-the-unified-browser-tree-uibrowserbrowserpanekt-uilibrarynavigationkt-uibrowserbrowsemodelkt">Controller Navigates the Unified Browser Tree (<code>ui/browser/BrowserPane.kt</code>, <code>ui/LibraryNavigation.kt</code>, <code>ui/browser/BrowseModel.kt</code>)</h3>
 <ul>

@@ -326,7 +326,7 @@ object LibraryPanel {
                         llm.slop.liquidlsd.ui.browser.BrowserPane.enabled = !unified
                     }
                     ImGui.popStyleColor(2)
-                    itemTooltip("Beta: tree | list | queues browser (Sources, FX and Transitions).")
+                    itemTooltip("Tree | list | queues browser (Sources, FX and Transitions). Turn off to use the classic four columns.")
                 }
             }
 

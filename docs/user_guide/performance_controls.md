@@ -331,14 +331,14 @@ The three side buttons other than Shift change meaning with the view:
 | View | Left-top | Right-top | Right-bottom | Knob 1 |
 |---|---|---|---|---|
 | **Perform** | back (same as Esc) | open the **Library** | open the **picker** for the row of the knob you touched last | normal knob |
-| **Picker open** | close the picker | step the category | nothing; **Shift +** it clears the slot or chain | **cursor**: turn to move, tap to apply |
-| **Picker open, unified pane on (beta)** | close the picker | step the pane: folders, list, queues | nothing; **Shift +** it clears the slot or chain | **cursor** in the active pane: turn to move; tap applies the list row, or selects a folder and jumps to the list |
+| **Picker open** | close the picker | step the pane: folders, list, queues | nothing; **Shift +** it clears the slot or chain | **cursor** in the active pane: turn to move; tap applies the list row, or selects a folder and jumps to the list |
+| **Picker open, classic (Unified off)** | close the picker | step the category | nothing; **Shift +** it clears the slot or chain | **cursor**: turn to move, tap to apply |
 | **Library** | leave the Library | step the **tab** (Sources, FX, Trans) | step the **pane**: classic columns = browser, playlist, BG queue, A/B queue; Unified browser = folder tree, list, BG queue, A/B queue | **cursor**: turn to move, tap to load |
 
 - **Unsaved-changes prompt:** when loading would discard edits on a deck, the prompt takes over the controller: **left-top** = Cancel, **right-top** or **knob 1 tap** = Save, **right-bottom** or **Shift + tap** = Discard. Nothing else navigates until you answer.
 - **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active.
 - **Library:** a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and **Shift + tap** adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.
-- **Unified browser (beta):** a fresh tab starts in the list. **Right-bottom** moves on to the queues and **Shift +** it goes back to the folder tree. In the tree, turning moves a cursor (an outline) over the visible folders and playlists without changing the list; a **tap** selects the folder or playlist under it, which fills the list and clears the list's selection. A playlist is just a tree entry, so there is no separate playlist pane.
+- **Unified browser (default; the Library tab bar's "Unified" toggle turns it off):** a fresh tab starts in the list. **Right-bottom** moves on to the queues and **Shift +** it goes back to the folder tree. In the tree, turning moves a cursor (an outline) over the visible folders and playlists without changing the list; a **tap** selects the folder or playlist under it, which fills the list and clears the list's selection. A playlist is just a tree entry, so there is no separate playlist pane.
 - The FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in profile; map them in your own profile.
 
 <a id="twister-lights"></a>

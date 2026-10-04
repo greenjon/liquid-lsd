@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import llm.slop.liquidlsd.ui.LibraryPanel.LibraryViewMode
 import llm.slop.liquidlsd.ui.LibraryPanel.SelectionSource
 import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -16,6 +17,11 @@ import llm.slop.liquidlsd.ui.browser.PresetListPanel
 import llm.slop.liquidlsd.ui.browser.TransitionBrowserPanel
 
 class LibraryNavigationTest {
+    @BeforeTest
+    fun classicByDefault() {
+        BrowserPane.enabled = false // these tests pin the classic path; the pane opts in per test
+    }
+
     @AfterTest
     fun reset() {
         LibraryPanel.viewMode = LibraryViewMode.PRESETS

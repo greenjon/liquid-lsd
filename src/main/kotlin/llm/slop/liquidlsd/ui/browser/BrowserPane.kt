@@ -33,12 +33,12 @@ import java.io.File
 
 /**
  * The unified Library browser: folder tree (about 25% of the width), name | info list (50%) and the queues (25%).
- * One pane serves every asset kind; today only [BrowseKind.SRC] is ported ([supports]) and the pane is opt-in via [enabled]
- * (the Library's "Unified" toggle) while it reaches parity with the classic four columns. See `.planning/unified-browser-pane-plan.md`.
+ * One pane serves every asset kind; today only [BrowseKind.SRC] is ported ([supports]) and the pane is the default; [enabled]
+ * (the Library's "Unified" toggle, or `-Dlsd.unifiedBrowser=false`) falls back to the classic four columns until those are deleted. See `.planning/unified-browser-pane-plan.md`.
  */
 object BrowserPane {
-    /** Beta switch, not persisted: the classic four-column Library is the default until the pane reaches parity. */
-    var enabled = System.getProperty("lsd.unifiedBrowser") == "true"
+    /** Escape hatch, not persisted: the pane is the default; turning it off brings back the classic four-column Library and inline picker. */
+    var enabled = System.getProperty("lsd.unifiedBrowser") != "false"
 
     fun supports(kind: BrowseKind): Boolean = true
 
