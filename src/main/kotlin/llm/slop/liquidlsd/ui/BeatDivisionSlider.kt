@@ -197,6 +197,7 @@ object BeatDivisionSlider {
             macroInfo?.control?.id?.let { ctrlId ->
                 llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = ctrlId
             }
+            if (propertyName != null) ImGui.openPopup(MacroBindingEditor.popupIdFor(propertyName))
         }
         if (ImGui.isItemClicked(2) && !isMacroBound) {
             val resetVal = defaultValue
@@ -242,7 +243,7 @@ object BeatDivisionSlider {
                         session.parametersState.midiLearnTarget = null
                     }
                 } else {
-                    if (ImGui.menuItem(if (macroInfo != null) "${Icons.SETTINGS} Learn MIDI (locked by ${macroInfo.badgeLabel})" else "${Icons.SETTINGS} Learn MIDI ($propLabel)", "", false, macroInfo == null)) {
+                    if (ImGui.menuItem(if (macroInfo != null) "${Icons.SETTINGS} Learn MIDI Mapping (locked by ${macroInfo.badgeLabel})" else "${Icons.SETTINGS} Learn MIDI Mapping ($propLabel)", "", false, macroInfo == null)) {
                         session.parametersState.startMidiLearn(
                             MidiLearnTarget.ModulatorProperty(
                                 fullPath = targetPath,
@@ -263,6 +264,9 @@ object BeatDivisionSlider {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
+        if (macroInfo != null && propertyName != null) {
+            MacroBindingEditor.drawPopup(session, MacroBindingEditor.popupIdFor(propertyName), macroInfo, bindMinVal, bindMaxVal)
+        }
 
         if (isLabelHovered) {
             if (isMacroBound) {

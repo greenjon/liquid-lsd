@@ -289,8 +289,8 @@ object CustomRangeSlider {
 
             // Labels for columns (Top row: dcOffset randomization bounds)
             val labelY = startY - 14f
-            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModId = modulatorId, macroProp = "dcOffsetMin") { bindRangeBound("dcOffsetMin") }
-            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModId = modulatorId, macroProp = "dcOffsetMax") { bindRangeBound("dcOffsetMax") }
+            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, paramKey = paramKey, modulatorIndex = modulatorIndex, modulatorId = modulatorId, propertyName = "dcOffsetMin") { bindRangeBound("dcOffsetMin") }
+            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, paramKey = paramKey, modulatorIndex = modulatorIndex, modulatorId = modulatorId, propertyName = "dcOffsetMax") { bindRangeBound("dcOffsetMax") }
 
             // Top: Min range
             drawTextInput(session, "${idPrefix}_min_r_min", minRangeMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinRangeChanged(it, maxOf(it, minRangeMax)) }, formatValue, macroBindingInfo = dcMinLock)
@@ -299,8 +299,8 @@ object CustomRangeSlider {
 
             // Labels for columns (Bottom row: depth randomization bounds)
             val labelY2 = row2Y - 14f
-            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModId = modulatorId, macroProp = "depthMin") { bindRangeBound("depthMin") }
-            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModId = modulatorId, macroProp = "depthMax") { bindRangeBound("depthMax") }
+            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, paramKey = paramKey, modulatorIndex = modulatorIndex, modulatorId = modulatorId, propertyName = "depthMin") { bindRangeBound("depthMin") }
+            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, paramKey = paramKey, modulatorIndex = modulatorIndex, modulatorId = modulatorId, propertyName = "depthMax") { bindRangeBound("depthMax") }
 
             // Bottom: Max range
             drawTextInput(session, "${idPrefix}_max_r_min", maxRangeMin, minLimit, maxLimit, textBoxesStartX, row2Y, boxWidth, null, { onMaxRangeChanged(it, maxOf(it, maxRangeMax)) }, formatValue, macroBindingInfo = depthMinLock)
@@ -382,7 +382,7 @@ object CustomRangeSlider {
                         session.parametersState.midiLearnTarget = null
                     }
                 } else {
-                    if (ImGui.menuItem(if (macroInfo != null) "${Icons.SETTINGS} Learn MIDI (locked by ${macroInfo.badgeLabel})" else "${Icons.SETTINGS} Learn MIDI ($text)", "", false, macroInfo == null)) {
+                    if (ImGui.menuItem(if (macroInfo != null) "${Icons.SETTINGS} Learn MIDI Mapping (locked by ${macroInfo.badgeLabel})" else "${Icons.SETTINGS} Learn MIDI Mapping ($text)", "", false, macroInfo == null)) {
                         session.parametersState.startMidiLearn(
                             MidiLearnTarget.ModulatorProperty(
                                 fullPath = targetPath,
@@ -843,7 +843,7 @@ object CustomRangeSlider {
                             session.parametersState.midiLearnTarget = null
                         }
                     } else {
-                        if (ImGui.menuItem(if (macroInfo != null) "${Icons.SETTINGS} Learn MIDI (locked by ${macroInfo.badgeLabel})" else "${Icons.SETTINGS} Learn MIDI ($propLabel)", "", false, macroInfo == null)) {
+                        if (ImGui.menuItem(if (macroInfo != null) "${Icons.SETTINGS} Learn MIDI Mapping (locked by ${macroInfo.badgeLabel})" else "${Icons.SETTINGS} Learn MIDI Mapping ($propLabel)", "", false, macroInfo == null)) {
                             val midiTarget = if (propertyName != null) {
                                 MidiLearnTarget.ModulatorProperty(
                                     fullPath = targetPath,

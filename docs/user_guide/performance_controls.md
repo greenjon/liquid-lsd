@@ -199,13 +199,13 @@ You can map any parameter, internal modulator variable, matrix CV modulator, or 
 
 1. **In-Situ Right-Click Learn (Fastest)**:
    - Right-click any slider or variable label in the UI — including an LFO's **Speed / Subdivision**, **Depth**, **Min/Max bounds**, **Asymmetry (Slope)**, **Morph**, **Hold**, or a parameter's **Initial Range (Base Value)**.
-   - Select **Learn MIDI (...)** from the context menu. The slider will pulse in cyan/blue while awaiting hardware input.
+   - Select **Learn MIDI Mapping (...)** from the context menu. This is a controller mapping: it sets the value itself and is saved in your controller profile, not in the preset. The slider will pulse in cyan/blue while awaiting hardware input.
    - Move a knob, fader, or press a pad on your MIDI controller. Liquid LSD immediately maps the control, preserves your configured min/max limits, and saves the mapping to the active profile.
    - If a macro knob currently drives that value (its slider shows the cyan lock and a `[K#]` badge), **Learn MIDI** is greyed out as "locked by K#": the knob rewrites the value every frame, so a mapping would do nothing. Release the target first (uncheck it in the macro editor), or map a different value.
    - Right-click again and select **Cancel MIDI Learn** if needed.
 
 2. **Modulation Matrix Cells**:
-   - Click any cell in the MIDI column of the Parameters matrix, then click **Re-Learn MIDI** in Properties.
+   - Click any cell in the MIDI column of the Parameters matrix, then click **Learn MIDI Modulator** (or **Re-Learn MIDI Modulator**) in Properties. This adds a MIDI modulator that is saved in the preset and adds on top of the parameter's value; **Clear MIDI Modulator** removes it.
 
 3. **Global Performance Actions**:
    - In **Preferences → MIDI Controls**, click **Learn** next to *Queue Advance A/B Next*, *Queue Step Back A/B Prev*, *BG Shader Advance*, *BG Step Back*, or *Tap Tempo*.

@@ -99,10 +99,21 @@ object MacroKnobWidget {
     fun toScreenAngle(knobAngleRadians: Float): Float = SCREEN_UP_ANGLE + knobAngleRadians
 
     /** Formats a floating-point value for knob center display or text edit. */
-    /** The value the user sees: the first binding's mapped value, or the raw 0-1 value when unbound. */
+    /** The value the user sees: what the first binding's target actually receives (curve, invert and link mode applied), or the raw 0-1 value when unbound. */
     fun displayValue(norm: Float, bindings: List<llm.slop.liquidlsd.macro.MacroBinding>): Float {
         val b = bindings.firstOrNull() ?: return norm
-        return b.minVal + norm * (b.maxVal - b.minVal)
+        return llm.slop.liquidlsd.macro.MacroCurve.mapToRange(norm, b)
+    }
+
+    /**
+     * The knob position that produces the typed [value]: the inverse of [displayValue]. Exact for linear,
+     * exponential and logarithmic curves in full link mode; stepped, S-curve and piecewise link modes get the
+     * nearest position (the readout then shows the value actually reached).
+     */
+    fun knobValueFromTyped(value: Float, bindings: List<llm.slop.liquidlsd.macro.MacroBinding>): Float {
+        val b = bindings.firstOrNull() ?: return value.coerceIn(0f, 1f)
+        if (b.maxVal == b.minVal) return 0.5f
+        return llm.slop.liquidlsd.macro.MacroCurve.inverse(value, b).coerceIn(0f, 1f)
     }
 
     fun formatDisplayValue(v: Float): String =
@@ -435,13 +446,7 @@ object MacroKnobWidget {
                 val text = editBuffer.get().trim()
                 val parsed = text.toFloatOrNull()
                 if (parsed != null) {
-                    val newNorm = if (bindings.isNotEmpty()) {
-                        val b = bindings.first()
-                        val range = b.maxVal - b.minVal
-                        if (range != 0f) ((parsed - b.minVal) / range).coerceIn(0f, 1f) else 0.5f
-                    } else {
-                        parsed.coerceIn(0f, 1f)
-                    }
+                    val newNorm = knobValueFromTyped(parsed, bindings)
                     newValue = newNorm
                     onChanged(newValue)
                 }

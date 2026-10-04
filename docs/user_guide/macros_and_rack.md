@@ -247,7 +247,7 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
       - *Monopolar* (standard 7:30 to 4:30 sweep).
       - *Bipolar* (12 o'clock center detent, sweeping left for negative or right for positive; middle-click resets to 0.5 center). Focused FX and Deck parameters with negative ranges (e.g. shifts, pans, zooms) render in bipolar mode.
       - *Endless* (continuous 360° circle where 0 and 1 meet at 6 o'clock straight down, sweeping continuous angles for rotation and hue).
-    - **Double-Click Direct Numeric Entry**: Double-click any macro knob face to open an inline text entry box. Type exact numerical values (e.g. `0.25`, `-1.5`, `42`) and press `Enter` to commit, or `Escape` to cancel. Values are mapped directly to the bound parameter's authored range.
+    - **Double-Click Direct Numeric Entry**: Double-click any macro knob face to open an inline text entry box. Type exact numerical values (e.g. `0.25`, `-1.5`, `42`) and press `Enter` to commit, or `Escape` to cancel. The typed value is what the parameter receives, so the knob's curve, invert and link mode are taken into account (the readout shows the same value). For stepped or half-range bindings the knob snaps to the nearest position that gets closest.
     - **In-Face Readouts**: Hovering or dragging over a targetless or group-mode knob displays a subtle real-time value readout in the center of the knob face.
   - **Right Wing**:
     - **Randomize Die Button (`🎲`)**: Instantly randomizes that deck's modulators & base values across both Visual Source and Insert FX with undo support (when randomization is enabled). Positioned on Row 1 directly above the BYPASS button.
@@ -370,8 +370,8 @@ In addition to the row's `[EDIT]` button, clicking any preview monitor in Column
 between decks, use the Deep Edit side rail (**MIX / A / B / BG / PV**) rather than opening
 rows side by side.
 
-**Esc** collapses every expanded row back to the Faceplate — unless Add Target is currently
-armed, in which case Esc cancels it instead (a second Esc then collapses the rack). A
+**Esc** collapses every expanded row back to the Faceplate — unless a Learn is currently
+armed (Add Target, MIDI Learn or OSC Learn), in which case Esc cancels every armed Learn at once instead (a second Esc then collapses the rack). A
 row whose own knob has an armed Add Target is also exempt from the auto-collapse, so it can't
 be accidentally folded away mid-way; a **"Adding target: ‹name› — Esc to cancel"** indicator stays
 visible in the toolbar the whole time Add Target is armed, even if you've expanded a different row.
@@ -455,4 +455,4 @@ In the FX Chain Macro Strip (and Deep Edit FX views), slot Metaknobs and paramet
 
 | Key | What it does |
 |-----|-------------|
-| `Esc` | Cancel an armed Add Target, or (if none is armed) collapse every expanded Rack row back to Faceplate |
+| `Esc` | Cancel every armed Learn (Add Target, MIDI, OSC), or (if none is armed) collapse every expanded Rack row back to Faceplate |

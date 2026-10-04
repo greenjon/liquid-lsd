@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#learn-and-slider-fixes-esc-cancels-every-armed-learn-minmax-bound-labels-and-beat-division-labels-behave-like-other-sliders-midi-learn-labels-typed-knob-values-follow-the-curve-uibacknavigationkt-uicustomrangesliderkt-uibeatdivisionsliderkt-uimacroknobwidgetkt-uipropertiespanelkt-uimidimodulatorsectionkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learn and Slider Fixes: Esc Cancels Every Armed Learn, Min/Max Bound Labels and Beat Division Labels Behave Like Other Sliders, MIDI Learn Labels, Typed Knob Values Follow the Curve (ui/BackNavigation.kt, ui/CustomRangeSlider.kt, ui/BeatDivisionSlider.kt, ui/MacroKnobWidget.kt, ui/PropertiesPanel.kt, ui/MidiModulatorSection.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fx-and-library-load-rules-one-place-for-a-single-fx-one-rule-for-which-deck-matching-drop-targets-presetsfxopskt-renderingmixerdeckskt-uibrowserfxbrowserpanelkt-uiparameterstabskt-uiperformancematrixpanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5394,6 +5405,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#learn-and-slider-fixes-esc-cancels-every-armed-learn-minmax-bound-labels-and-beat-division-labels-behave-like-other-sliders-midi-learn-labels-typed-knob-values-follow-the-curve-uibacknavigationkt-uicustomrangesliderkt-uibeatdivisionsliderkt-uimacroknobwidgetkt-uipropertiespanelkt-uimidimodulatorsectionkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Learn and Slider Fixes: Esc Cancels Every Armed Learn, Min/Max Bound Labels and Beat Division Labels Behave Like Other Sliders, MIDI Learn Labels, Typed Knob Values Follow the Curve (ui/BackNavigation.kt, ui/CustomRangeSlider.kt, ui/BeatDivisionSlider.kt, ui/MacroKnobWidget.kt, ui/PropertiesPanel.kt, ui/MidiModulatorSection.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fx-and-library-load-rules-one-place-for-a-single-fx-one-rule-for-which-deck-matching-drop-targets-presetsfxopskt-renderingmixerdeckskt-uibrowserfxbrowserpanelkt-uiparameterstabskt-uiperformancematrixpanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9555,6 +9577,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="learn-and-slider-fixes-esc-cancels-every-armed-learn-minmax-bound-labels-and-beat-division-labels-behave-like-other-sliders-midi-learn-labels-typed-knob-values-follow-the-curve-uibacknavigationkt-uicustomrangesliderkt-uibeatdivisionsliderkt-uimacroknobwidgetkt-uipropertiespanelkt-uimidimodulatorsectionkt">Learn and Slider Fixes: Esc Cancels Every Armed Learn, Min/Max Bound Labels and Beat Division Labels Behave Like Other Sliders, MIDI Learn Labels, Typed Knob Values Follow the Curve (<code>ui/BackNavigation.kt</code>, <code>ui/CustomRangeSlider.kt</code>, <code>ui/BeatDivisionSlider.kt</code>, <code>ui/MacroKnobWidget.kt</code>, <code>ui/PropertiesPanel.kt</code>, <code>ui/MidiModulatorSection.kt</code>)</h3>
+<ul>
+<li><strong>Esc cancels every armed Learn in one press</strong> (Add Target, MIDI Learn and OSC Learn). Before, it only cancelled Add Target, so a MIDI or OSC Learn stayed armed until it timed out.</li>
+<li><strong>The randomize-bound labels on a two-track slider</strong> ("Min Bound Range" / "Max Bound Range") now have the right-click Learn MIDI / Learn OSC menu like the other labels. A bound Beat Division label now opens the knob's target editor when clicked, as the other sliders do.</li>
+<li><strong>MIDI learn names say what they do.</strong> The slider menu item is <strong>Learn MIDI Mapping</strong> (a controller mapping saved in your profile that sets the value). The Properties button is <strong>Learn MIDI Modulator</strong> (a modulator saved in the preset that adds on top), with a tooltip explaining the difference.</li>
+<li><strong>A value typed on a knob now matches what the parameter receives.</strong> It used to map linearly through the first target's range and ignore its curve, invert and link mode; the knob readout and tooltip showed the same wrong linear value. Both now use the real mapping.</li>
+<li>Internal: <code>BackNavigation.back</code> clears <code>MacroLearnState</code>, <code>OscLearnState</code> and <code>ParametersState.midiLearnTarget</code>; <code>MacroKnobWidget.displayValue</code> uses <code>MacroCurve.mapToRange</code> and the new <code>knobValueFromTyped</code> uses <code>MacroCurve.inverse</code>.</li>
+</ul>
 <h3 id="fx-and-library-load-rules-one-place-for-a-single-fx-one-rule-for-which-deck-matching-drop-targets-presetsfxopskt-renderingmixerdeckskt-uibrowserfxbrowserpanelkt-uiparameterstabskt-uiperformancematrixpanelkt">FX and Library Load Rules: One Place for a Single FX, One Rule for Which Deck, Matching Drop Targets (<code>presets/FxOps.kt</code>, <code>rendering/MixerDecks.kt</code>, <code>ui/browser/FXBrowserPanel.kt</code>, <code>ui/ParametersTabs.kt</code>, <code>ui/PerformanceMatrixPanel.kt</code>)</h3>
 <ul>
 <li><strong>Double-clicking a single effect in a full FX chain asks which slot to overwrite</strong>, like the audition latch. It used to silently replace slot 1.</li>

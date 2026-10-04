@@ -114,6 +114,20 @@ class NavigationSurfaceTest {
     }
 
     @Test
+    fun backCancelsEveryArmedLearnInOnePress() {
+        MacroLearnState.startLearn("deckA.k1")
+        llm.slop.liquidlsd.osc.OscLearnState.startLearn("Deck A/zoom")
+        state.midiLearnTarget = llm.slop.liquidlsd.midi.MidiLearnTarget.GlobalAction("test")
+        PreferencesPanel.open()
+
+        assertTrue(BackNavigation.back(state, mixer))
+        assertFalse(MacroLearnState.isLearning())
+        assertFalse(llm.slop.liquidlsd.osc.OscLearnState.isLearning())
+        assertNull(state.midiLearnTarget)
+        assertTrue(PreferencesPanel.isOpen, "the Preferences window waits for the next press")
+    }
+
+    @Test
     fun backWithoutAMixerSkipsTheFocusStep() {
         state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
         assertTrue(BackNavigation.back(state, null))

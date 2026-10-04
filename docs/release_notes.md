@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Learn and Slider Fixes: Esc Cancels Every Armed Learn, Min/Max Bound Labels and Beat Division Labels Behave Like Other Sliders, MIDI Learn Labels, Typed Knob Values Follow the Curve (`ui/BackNavigation.kt`, `ui/CustomRangeSlider.kt`, `ui/BeatDivisionSlider.kt`, `ui/MacroKnobWidget.kt`, `ui/PropertiesPanel.kt`, `ui/MidiModulatorSection.kt`)
+- **Esc cancels every armed Learn in one press** (Add Target, MIDI Learn and OSC Learn). Before, it only cancelled Add Target, so a MIDI or OSC Learn stayed armed until it timed out.
+- **The randomize-bound labels on a two-track slider** ("Min Bound Range" / "Max Bound Range") now have the right-click Learn MIDI / Learn OSC menu like the other labels. A bound Beat Division label now opens the knob's target editor when clicked, as the other sliders do.
+- **MIDI learn names say what they do.** The slider menu item is **Learn MIDI Mapping** (a controller mapping saved in your profile that sets the value). The Properties button is **Learn MIDI Modulator** (a modulator saved in the preset that adds on top), with a tooltip explaining the difference.
+- **A value typed on a knob now matches what the parameter receives.** It used to map linearly through the first target's range and ignore its curve, invert and link mode; the knob readout and tooltip showed the same wrong linear value. Both now use the real mapping.
+- Internal: `BackNavigation.back` clears `MacroLearnState`, `OscLearnState` and `ParametersState.midiLearnTarget`; `MacroKnobWidget.displayValue` uses `MacroCurve.mapToRange` and the new `knobValueFromTyped` uses `MacroCurve.inverse`.
+
 ### FX and Library Load Rules: One Place for a Single FX, One Rule for Which Deck, Matching Drop Targets (`presets/FxOps.kt`, `rendering/MixerDecks.kt`, `ui/browser/FXBrowserPanel.kt`, `ui/ParametersTabs.kt`, `ui/PerformanceMatrixPanel.kt`)
 - **Double-clicking a single effect in a full FX chain asks which slot to overwrite**, like the audition latch. It used to silently replace slot 1.
 - **Dropping an effect works the same everywhere.** Stock filters can now be dropped on a slot in the Parameters FX tab (as in the Performance Matrix), and the deck badge in the Performance Matrix accepts a single `.lsdfx` (first vacant slot; a toast tells you if all 3 are full). The deck monitor still takes presets and generators only.

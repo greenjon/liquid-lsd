@@ -2050,7 +2050,7 @@ Master row. There are no separate FX-only rows.</p>
       - <em>Monopolar</em> (standard 7:30 to 4:30 sweep).
       - <em>Bipolar</em> (12 o'clock center detent, sweeping left for negative or right for positive; middle-click resets to 0.5 center). Focused FX and Deck parameters with negative ranges (e.g. shifts, pans, zooms) render in bipolar mode.
       - <em>Endless</em> (continuous 360° circle where 0 and 1 meet at 6 o'clock straight down, sweeping continuous angles for rotation and hue).
-    - <strong>Double-Click Direct Numeric Entry</strong>: Double-click any macro knob face to open an inline text entry box. Type exact numerical values (e.g. <code>0.25</code>, <code>-1.5</code>, <code>42</code>) and press <code>Enter</code> to commit, or <code>Escape</code> to cancel. Values are mapped directly to the bound parameter's authored range.
+    - <strong>Double-Click Direct Numeric Entry</strong>: Double-click any macro knob face to open an inline text entry box. Type exact numerical values (e.g. <code>0.25</code>, <code>-1.5</code>, <code>42</code>) and press <code>Enter</code> to commit, or <code>Escape</code> to cancel. The typed value is what the parameter receives, so the knob's curve, invert and link mode are taken into account (the readout shows the same value). For stepped or half-range bindings the knob snaps to the nearest position that gets closest.
     - <strong>In-Face Readouts</strong>: Hovering or dragging over a targetless or group-mode knob displays a subtle real-time value readout in the center of the knob face.
   - <strong>Right Wing</strong>:
     - <strong>Randomize Die Button (<code>🎲</code>)</strong>: Instantly randomizes that deck's modulators &amp; base values across both Visual Source and Insert FX with undo support (when randomization is enabled). Positioned on Row 1 directly above the BYPASS button.
@@ -2161,8 +2161,8 @@ In addition to the row's <code>[EDIT]</code> button, clicking any preview monito
 <p><strong>One Deep Edit at a time</strong>: opening a row's Deep Edit collapses any other open one. To move
 between decks, use the Deep Edit side rail (<strong>MIX / A / B / BG / PV</strong>) rather than opening
 rows side by side.</p>
-<p><strong>Esc</strong> collapses every expanded row back to the Faceplate — unless Add Target is currently
-armed, in which case Esc cancels it instead (a second Esc then collapses the rack). A
+<p><strong>Esc</strong> collapses every expanded row back to the Faceplate — unless a Learn is currently
+armed (Add Target, MIDI Learn or OSC Learn), in which case Esc cancels every armed Learn at once instead (a second Esc then collapses the rack). A
 row whose own knob has an armed Add Target is also exempt from the auto-collapse, so it can't
 be accidentally folded away mid-way; a <strong>"Adding target: ‹name› — Esc to cancel"</strong> indicator stays
 visible in the toolbar the whole time Add Target is armed, even if you've expanded a different row.
@@ -2316,7 +2316,7 @@ with the parameter selected.</p>
 <tbody>
 <tr>
 <td><code>Esc</code></td>
-<td>Cancel an armed Add Target, or (if none is armed) collapse every expanded Rack row back to Faceplate</td>
+<td>Cancel every armed Learn (Add Target, MIDI, OSC), or (if none is armed) collapse every expanded Rack row back to Faceplate</td>
 </tr>
 </tbody>
 </table>

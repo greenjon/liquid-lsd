@@ -54,15 +54,16 @@ object MidiModulatorSection {
                 }
                 ImGui.popStyleColor(3)
             } else {
-                if (ImGui.button("Re-Learn MIDI##midi_relearn")) {
+                if (ImGui.button("Re-Learn MIDI Modulator##midi_relearn")) {
                     state.midiLearnTarget = MidiLearnTarget.GridCell(cell, param)
                     state.midiLearnStartTimeMs = System.currentTimeMillis()
                     if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
                         PopupManager.globalPendingMidiWarning = true
                     }
                 }
+                itemTooltip("Adds a MIDI modulator to this parameter, saved in the preset; it adds on top of the value.\nFor a controller mapping that sets the value itself (saved in your controller profile), right-click the slider and choose Learn MIDI Mapping.")
                 ImGui.sameLine()
-                if (ImGui.button("Clear MIDI Mapping##midi_unbind")) {
+                if (ImGui.button("Clear MIDI Modulator##midi_unbind")) {
                     onUnbind()
                 }
             }

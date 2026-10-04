@@ -163,6 +163,37 @@ class MacroKnobWidgetTest {
         assertEquals(MacroKnobWidget.valueToAngleRadians(1f), MacroKnobWidget.valueToAngleRadians(2f), 1e-5f)
     }
 
+    // -- displayValue / knobValueFromTyped --------------------------------------------------
+
+    private fun binding(curve: llm.slop.liquidlsd.macro.MacroCurveType, inverted: Boolean = false, link: llm.slop.liquidlsd.macro.MacroLinkMode = llm.slop.liquidlsd.macro.MacroLinkMode.FULL) =
+        llm.slop.liquidlsd.macro.MacroBinding(
+            parameterId = "Deck A/zoom", targetType = llm.slop.liquidlsd.macro.MacroTargetType.PARAM_BASE_VALUE,
+            minVal = 0f, maxVal = 10f, curve = curve, inverted = inverted, linkMode = link
+        )
+
+    @Test
+    fun testDisplayValueFollowsCurveInvertAndLinkMode() {
+        val exp = binding(llm.slop.liquidlsd.macro.MacroCurveType.EXPONENTIAL)
+        assertEquals(2.5f, MacroKnobWidget.displayValue(0.5f, listOf(exp)), 1e-4f)
+        val inv = binding(llm.slop.liquidlsd.macro.MacroCurveType.LINEAR, inverted = true)
+        assertEquals(7f, MacroKnobWidget.displayValue(0.3f, listOf(inv)), 1e-4f)
+        assertEquals(0.4f, MacroKnobWidget.displayValue(0.4f, emptyList()), 1e-6f)
+    }
+
+    @Test
+    fun testTypedValueRoundTripsThroughTheCurve() {
+        for (b in listOf(
+            binding(llm.slop.liquidlsd.macro.MacroCurveType.EXPONENTIAL),
+            binding(llm.slop.liquidlsd.macro.MacroCurveType.LOGARITHMIC, inverted = true),
+            binding(llm.slop.liquidlsd.macro.MacroCurveType.LINEAR, link = llm.slop.liquidlsd.macro.MacroLinkMode.SECOND_HALF)
+        )) {
+            val norm = if (b.linkMode == llm.slop.liquidlsd.macro.MacroLinkMode.SECOND_HALF) 0.75f else 0.4f
+            val typed = MacroKnobWidget.displayValue(norm, listOf(b))
+            assertEquals(norm, MacroKnobWidget.knobValueFromTyped(typed, listOf(b)), 1e-3f, "$b")
+        }
+        assertEquals(0.8f, MacroKnobWidget.knobValueFromTyped(2f, emptyList()).coerceAtMost(0.8f), 1e-6f)
+    }
+
     // -- formatDisplayValue ----------------------------------------------------------------
 
     @Test
