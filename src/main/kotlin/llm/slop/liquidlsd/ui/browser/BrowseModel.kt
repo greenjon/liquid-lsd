@@ -95,6 +95,10 @@ class BrowseCatalog(
         return base.filter { matches(tokens, it) }
     }
 
+    /** The entries of a playlist scope index-aligned with the playlist file: null where an item resolves to nothing. Empty for other scopes. */
+    fun playlistSlots(scope: BrowseScope): List<BrowseEntry?> =
+        if (scope is BrowseScope.Playlist) byPath[scope.path]?.items?.map { resolve(it) } ?: emptyList() else emptyList()
+
     /** How many playlist items of [scope] match no entry (deleted or renamed files); 0 for non-playlist scopes. */
     fun missing(scope: BrowseScope): Int {
         if (scope !is BrowseScope.Playlist) return 0

@@ -95,6 +95,8 @@ class BrowseCatalogTest {
         val scope = BrowseScope.Playlist(pl.path)
         assertEquals(listOf("three", "two", "one"), c.rows(scope).map { it.asset.name })
         assertEquals(1, c.missing(scope))
+        assertEquals(listOf("three", "two", "one", null), c.playlistSlots(scope).map { it?.asset?.name })
+        assertTrue(c.playlistSlots(BrowseScope.All).isEmpty())
         assertEquals(0, c.missing(BrowseScope.All))
         assertTrue(c.isReorderable(scope))
         assertFalse(c.isReorderable(BrowseScope.All))
