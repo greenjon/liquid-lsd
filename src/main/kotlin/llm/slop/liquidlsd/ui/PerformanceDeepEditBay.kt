@@ -133,7 +133,11 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
             drawModeTabs(session, parametersState, moduleId, ctx.deckLabelForModuleId(moduleId))
         }
         when (parametersState.sectionModeFor(moduleId)) {
-            ParametersState.SectionMode.BROWSE -> browseBay.draw(session, mixer, parametersState, moduleId)
+            ParametersState.SectionMode.BROWSE -> {
+                // Browse picks push undo steps, and drawRackDeepEdit (which normally runs the keys) isn't drawn here.
+                if (moduleId == keyboardOwnerModuleId) handleDeepEditKeys(parametersState, mixer, fullSet = false)
+                browseBay.draw(session, mixer, parametersState, moduleId)
+            }
             ParametersState.SectionMode.PARAMS -> drawRackDeepEdit(session, mixer, parametersState, moduleId)
         }
     }
