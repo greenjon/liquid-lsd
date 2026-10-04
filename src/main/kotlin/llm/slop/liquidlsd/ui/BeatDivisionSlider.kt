@@ -206,8 +206,8 @@ object BeatDivisionSlider {
                 onValueChanged(resetVal)
             }
         }
-        val targetPath = if (paramKey != null && propertyName != null) {
-            "$paramKey:mod/${modulatorId ?: modulatorIndex ?: 0}/$propertyName"
+        val targetPath = if (paramKey != null && propertyName != null && modulatorId != null) {
+            "$paramKey:mod/$modulatorId/$propertyName"
         } else null
         val isOscLearningThis = targetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(targetPath)
         val isMidiLearningThis = targetPath != null && session.parametersState.isMidiTargetLearning(targetPath)

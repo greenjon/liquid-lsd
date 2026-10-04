@@ -7,6 +7,7 @@ Written 2026-10-04. Replaces `d-items-handoff.md` and `v1.1-ui-inconsistencies.m
 ## Already done (don't redo)
 
 - DeckOps / TransitionOps refactor, phases 0-5. Rule to keep: deck and transition changes go only through `DeckOps` / `TransitionOps` (see `DECISIONS.md`).
+- D7 (stable modulator IDs), see the struck Task 1 below.
 - Review defects D1-D6, D8-D17 (fixed and verified in code on 2026-10-04). D8 is fixed for macro vs MIDI/OSC by locking (`MacroEngine.lockingBindingInfo`). D9 is done (`findBindingInfos(includeDisabled = true)`).
 - Follow-ups from the 2026-10-04 review: unique `Untitled_<Deck>` names in the unsaved-changes prompt, session restore taking a dirty baseline through `PresetManager.setActive` (fields are now `private set`).
 - Baseline at this point: 926 tests, 0 failures. Nothing in this file has been checked by running the app.
@@ -21,19 +22,9 @@ Written 2026-10-04. Replaces `d-items-handoff.md` and `v1.1-ui-inconsistencies.m
 - Items 1-27 below were written from review text and an agent trace. **Check each against the code before planning it**; line numbers have drifted.
 - Strike items here as they land.
 
-## Task 1: D7, stable modulator IDs (saved-format change; do first, on its own)
+## ~~Task 1: D7, stable modulator IDs~~ (DONE: 7532631, close-out 2026-10-04)
 
-Problem: `MacroBinding.modulatorIndex` (`MacroModels.kt`) is a position in the parameter's modulator list. Removing or reordering modulators (`PropertiesPanel.kt` ~380-388, "Clear all CVs", MIDI unbind) leaves bindings dropping silently (`MacroEngine.resolveControls`) or driving the wrong modulator.
-
-Proposed design (confirm or improve it):
-- Each modulator gets a stable `id` (UUID string, as `MacroControl.id` does). Bindings store `modulatorId`; `ModulatorPropertyAccessor` resolves id to modulator at read time. A binding whose id no longer exists is ignored with a log line (or dropped by the editor).
-- Old files: a binding with only `modulatorIndex` is resolved once against the modulator list as saved and given that modulator's id; modulators without an id get one on load. Keep it minimal (no external users; cover your own files and test fixtures).
-
-Steps:
-1. Delegate an inventory to an Explore agent: `modulatorIndex` has about 90 uses in 14 files (MacroEngine, MacroLearnState, MidiMappingManager, OscMappingManager, ModulatorPropertyAccessor, the Lfo/Seq/Audio sections, BeatDivisionSlider, CustomRangeSlider, PropertiesPanel, MacroBindingNav). Classify each as binding identity (must change) or UI/display index (leave).
-2. Give the user a short recommendation, then plan.
-3. Implement. Round-trip tests with an old-format fixture; tests for removing the first, middle and last modulator and for reordering.
-4. Commit-ready on its own before starting anything else.
+`MacroBinding.modulatorId` replaces the positional index (`modulatorIndex` is a legacy read field, migrated lazily in `MacroEngine.migrateLegacyModulatorIndex`). Slider mapping paths now always carry the modulator id. Old numeric `:mod/<n>/` MIDI/OSC mappings stay positional until re-learned (no rewrite).
 
 ## Open items
 

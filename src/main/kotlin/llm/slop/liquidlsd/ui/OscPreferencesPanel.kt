@@ -190,7 +190,7 @@ object OscPreferencesPanel {
             theme.captionColored(0.9f, 0.75f, 0.2f, 1.0f, activeStatus)
         }
         ImGui.setNextItemWidth(320f)
-        ImGui.inputTextWithHint("##osc_learn_target", "Target path (e.g. Deck A/geometry/zoom:mod/0/subdivision)", learnParamInput)
+        ImGui.inputTextWithHint("##osc_learn_target", "Target path (e.g. Deck A/geometry/zoom:mod/<modulator id>/subdivision)", learnParamInput)
         ImGui.sameLine()
         if (OscLearnState.isLearning()) {
             val ink = TangoPalette.inkFor(floatArrayOf(0.72f, 0.45f, 1.00f))
@@ -208,7 +208,7 @@ object OscPreferencesPanel {
             }
             if (target.isEmpty()) ImGui.endDisabled()
         }
-        itemTooltip("Type a target parameter path or modulator variable (e.g. 'Deck A/geometry/zoom:mod/0/subdivision'), click Start Learn, then move a control on your OSC surface to map it. You can also right-click any slider in the UI to Learn OSC directly.")
+        itemTooltip("Type a target parameter path or modulator variable (e.g. 'Deck A/geometry/zoom:mod/<modulator id>/subdivision'; a numeric position from older files still works), click Start Learn, then move a control on your OSC surface to map it. You can also right-click any slider in the UI to Learn OSC directly.")
 
         ImGui.spacing()
         ImGui.separator()

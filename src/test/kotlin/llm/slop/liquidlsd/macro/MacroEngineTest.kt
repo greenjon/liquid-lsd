@@ -99,7 +99,7 @@ class MacroEngineTest {
         val binding = MacroBinding(
             parameterId = "Deck A/warp",
             targetType = MacroTargetType.MODULATOR_PROPERTY,
-            modulatorIndex = 0,
+            modulatorId = mod.id,
             propertyName = "subdivision",
             minVal = 0.1f,
             maxVal = 10.0f
@@ -130,7 +130,7 @@ class MacroEngineTest {
         val binding = MacroBinding(
             parameterId = "Deck A/warp",
             targetType = MacroTargetType.MODULATOR_PROPERTY,
-            modulatorIndex = 0,
+            modulatorId = param.modulators[0].id,
             propertyName = "slope",
             minVal = 0.001f,
             maxVal = 0.999f
@@ -162,7 +162,7 @@ class MacroEngineTest {
         val binding = MacroBinding(
             parameterId = "Deck A/warp",
             targetType = MacroTargetType.MODULATOR_PROPERTY,
-            modulatorIndex = 0,
+            modulatorId = mod.id,
             propertyName = "notARealProperty",
             minVal = 0f,
             maxVal = 1f
@@ -241,7 +241,7 @@ class MacroEngineTest {
 
         val bindingLinear = MacroBinding(parameterId = "A", targetType = MacroTargetType.PARAM_BASE_VALUE, minVal = 0f, maxVal = 1f, curve = MacroCurveType.LINEAR)
         val bindingInverted = MacroBinding(parameterId = "B", targetType = MacroTargetType.PARAM_BASE_VALUE, minVal = 0f, maxVal = 1f, curve = MacroCurveType.LINEAR, inverted = true)
-        val bindingModProp = MacroBinding(parameterId = "C", targetType = MacroTargetType.MODULATOR_PROPERTY, modulatorIndex = 0, propertyName = "depth", minVal = 0f, maxVal = 2f)
+        val bindingModProp = MacroBinding(parameterId = "C", targetType = MacroTargetType.MODULATOR_PROPERTY, modulatorId = mod.id, propertyName = "depth", minVal = 0f, maxVal = 2f)
         val bindingStep = MacroBinding(parameterId = "D", targetType = MacroTargetType.PARAM_BASE_VALUE, minVal = 0f, maxVal = 1f, curve = MacroCurveType.STEP, stepCount = 4)
 
         assertTrue(4 <= MacroControl.MAX_BINDINGS_PER_CONTROL)

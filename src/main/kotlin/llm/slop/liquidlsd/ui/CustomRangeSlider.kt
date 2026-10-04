@@ -337,8 +337,8 @@ object CustomRangeSlider {
             ImGui.openPopup(MacroBindingEditor.popupIdFor(macroProp!!))
         }
 
-        val targetPath = if (paramKey != null && propertyName != null) {
-            "$paramKey:mod/${modulatorId ?: modulatorIndex ?: 0}/$propertyName"
+        val targetPath = if (paramKey != null && propertyName != null && modulatorId != null) {
+            "$paramKey:mod/$modulatorId/$propertyName"
         } else null
         val isOscLearningThis = targetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(targetPath)
         val isMidiLearningThis = targetPath != null && session.parametersState.isMidiTargetLearning(targetPath)
@@ -793,7 +793,7 @@ object CustomRangeSlider {
             }
 
             val targetPath = if (paramKey != null) {
-                if (propertyName != null) "$paramKey:mod/${modulatorId ?: modulatorIndex ?: 0}/$propertyName" else paramKey
+                if (propertyName == null) paramKey else if (modulatorId != null) "$paramKey:mod/$modulatorId/$propertyName" else null
             } else null
             val isOscLearningThis = targetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(targetPath)
             val isMidiLearningThis = targetPath != null && session.parametersState.isMidiTargetLearning(targetPath)

@@ -313,14 +313,9 @@ object PropertiesPanel {
                 
                 val bypassed = existing.bypassed
                 val currentThemeColor = CvTheme.getThemeColor(existing.sourceId)
-                // MacroBinding.modulatorIndex is consumed by MacroEngine as an index into
-                // param.modulators (the full, unfiltered list) — but `idx` above is only the
-                // position within modsToDraw (activeMods filtered to this cvId, plus virtual
-                // placeholders). Those only coincide when this is the sole modulator on the
-                // parameter; any additional modulator of another sourceId (e.g. an audio-reactive
-                // envelope stacked alongside this LFO) shifts the real index, causing macro binds
-                // created here to silently drive the wrong CvModulator. Falls back to `idx` for
-                // virtual (not-yet-added) placeholders, which aren't in param.modulators at all.
+                // Display-only position in the full param.modulators list (used for "LFO n"
+                // labels). Bindings and mappings are keyed by CvModulator.id, not this index.
+                // Falls back to `idx` for virtual (not-yet-added) placeholders.
                 val globalModIndex = param.modulators.indexOfFirst { it.id == existing.id }.let { if (it >= 0) it else idx }
                 
                 val panelStartX = ImGui.getCursorScreenPosX()
