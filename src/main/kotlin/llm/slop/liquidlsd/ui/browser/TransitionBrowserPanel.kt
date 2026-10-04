@@ -184,7 +184,23 @@ object TransitionBrowserPanel {
         ImGui.endChild()
     }
 
-    private fun drawRow(session: SessionContext, mixer: Mixer, asset: AssetItem, index: Int, btnW: Float) {
+    /** The row loop, shared by the classic column and the unified [BrowserPane]. [infoFor] is drawn as a muted second column; [contextExtras] adds items on top of each row menu. */
+    internal fun drawRows(
+        session: SessionContext, mixer: Mixer, rows: List<AssetItem>,
+        infoFor: ((AssetItem) -> String)? = null, contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null
+    ) {
+        rows.forEachIndexed { index, asset ->
+            ImGui.pushID(index)
+            drawRow(session, mixer, asset, index, 20f, infoFor?.invoke(asset) ?: "", contextExtras, playlistRows)
+            ImGui.popID()
+        }
+        playlistRows?.finish()
+    }
+
+    private fun drawRow(
+        session: SessionContext, mixer: Mixer, asset: AssetItem, index: Int, btnW: Float,
+        info: String = "", contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null
+    ) {
         val icon = if (asset.type == AssetType.TRANSITION_STOCK) Icons.SQUARE else Icons.ACTIVITY
         val isSelected = selectedAsset?.path == asset.path
         val popupId = "trans_browser_context_$index"
@@ -196,8 +212,10 @@ object TransitionBrowserPanel {
         }
 
         session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
-            selectableRow("$icon ${asset.displayName}##trans_browser_$index", isSelected, itemW)
+            val text = "$icon ${asset.displayName}"
+            selectableRow("${if (info.isNotEmpty()) PresetListPanel.nameForInfo(text, itemW) else text}##trans_browser_$index", isSelected, itemW)
         }
+        PresetListPanel.drawInfoColumn(info, itemW)
         val isRowHovered = ImGui.isItemHovered()
         itemTooltip(
             if (asset.type == AssetType.TRANSITION_STOCK) {
@@ -219,10 +237,18 @@ object TransitionBrowserPanel {
         // Drag source: both stock and saved presets resolve to a real file path under ASSET_ITEM,
         // matching whatever drop targets (crossfader track, transition picker) already accept.
         if (ImGui.beginDragDropSource()) {
-            ImGui.setDragDropPayload("ASSET_ITEM", fileFor(asset).path as Any)
-            ImGui.textUnformatted(asset.name)
-            ImGui.endDragDropSource()
+            if (playlistRows != null) {
+                ImGui.setDragDropPayload(PAYLOAD_PLAYLIST_ITEM, playlistRows.indexOfRow(index) as Any)
+                ImGui.textUnformatted(asset.name)
+                ImGui.endDragDropSource()
+            } else {
+                ImGui.setDragDropPayload("ASSET_ITEM", fileFor(asset).path as Any)
+                ImGui.textUnformatted(asset.name)
+                ImGui.endDragDropSource()
+            }
         }
+
+        playlistRows?.dropTarget(index)
 
         ImGui.sameLine(0f, 0f)
         BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "trans_browser_$index", btnW)
@@ -230,6 +256,10 @@ object TransitionBrowserPanel {
         pushOpenDropdownPadding()
         if (ImGui.beginPopup(popupId)) {
             pushOpenDropdownFont()
+            if (contextExtras != null) {
+                contextExtras(asset)
+                ImGui.separator()
+            }
             drawContextMenu(session, mixer, asset)
             popOpenDropdownFont()
             ImGui.endPopup()

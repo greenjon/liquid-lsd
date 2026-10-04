@@ -71,6 +71,11 @@ Tabs SRC | FX | Trans (| Maps, see Open items) stay on top.
   - FX and Trans tabs still classic; LibraryNavigation / MIDI nav still follow the old pane order (step 3).
 - Dev note: `--screenshot-ui` only fires when `--screenshot-after-frames` is below the frames drawn per second (frameCount resets every second in Main.kt:465); use `--screenshot-after-frames=10`.
 
+- Sources parity DONE 2026-10-04 (4fa09b6): list toolbar (+, ...), playlist reorder/remove/new/rename/clone/delete from the tree, tree fold, info clipping. Not done: scope persistence across restarts (Library tab itself isn't persisted), queue splitter.
+- Step 2 FX + Trans DONE 2026-10-04 (uncommitted until this note's commit): `FXBrowserPanel.drawRows` / `TransitionBrowserPanel.drawRows` extracted; `PlaylistEdit.kt` (`PlaylistEdit`, `PresetPlaylistEdit`, `TokenPlaylistEdit`, `PlaylistRows`, `PlaylistItems` + test) shared by all three kinds; pane is kind-aware (queues: FX = BG + A/B stacked, Trans = one full-height queue). "Unified" toggle now covers SRC/FX/Trans. Dev: `-Dlsd.libraryTab=fx|trans` picks the initial Library tab for screenshots. Verified by screenshot at 1280x768.
+  - Not yet verified by hand: FX/Trans playlist drag-reorder and insert, FX overwrite popup from the pane, FX/Trans multi-select (FX/Trans keep single selection).
+  - FX/Trans have no playlist transport beyond "add all to queue" (same as classic).
+
 ## Open items
 - MAPS tab (`LibraryViewMode.MAPS`, MapsBrowserPanel; saved macro banks in `library/knobpresets` + Perform pages; no queues, nothing loads to a deck). DECIDED 2026-10-04: keep it as a 4th tab in the same shell, same 25/50/25 geometry, but not forced into the queue model: left = Banks | Pages, middle = list, right = detail/actions (save-from / apply-to bank, show/hide/copy/delete page) instead of queues. Library view only; not a target in Edit view. Its panel ports in step 2 with minimal change; MIDI nav stays `emptyList()` for it.
 - Presets have no folder field on `AssetItem`; derive from `walkTopDown` relative path (step 1).

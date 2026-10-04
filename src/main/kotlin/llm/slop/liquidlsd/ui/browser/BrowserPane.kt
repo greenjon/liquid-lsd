@@ -9,6 +9,10 @@ import imgui.type.ImString
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.presets.BgQueueManager
+import llm.slop.liquidlsd.presets.FXBgQueueManager
+import llm.slop.liquidlsd.presets.FXQueueManager
+import llm.slop.liquidlsd.presets.TransitionQueueManager
+import llm.slop.liquidlsd.ui.TransitionSave
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.FileSystemManager
@@ -34,7 +38,7 @@ object BrowserPane {
     /** Beta switch, not persisted: the classic four-column Library is the default until the pane reaches parity. */
     var enabled = System.getProperty("lsd.unifiedBrowser") == "true"
 
-    fun supports(kind: BrowseKind): Boolean = kind == BrowseKind.SRC
+    fun supports(kind: BrowseKind): Boolean = true
 
     private val scopes = HashMap<BrowseKind, BrowseScope>()
     private val searchBuffers = HashMap<BrowseKind, ImString>()
@@ -42,8 +46,23 @@ object BrowserPane {
     /** Tree rows whose children are hidden, keyed by kind then by the node's scope. */
     private val collapsed = HashMap<BrowseKind, MutableSet<BrowseScope>>()
 
-    /** The playlist path last mirrored to/from [LibraryPanel.selectedPlaylistFile], so outside changes (a new playlist) move the scope. */
-    private var syncedPlaylist: String? = null
+    /** The playlist path last mirrored to/from the Library's selected playlist file of each kind, so outside changes (a new playlist) move the scope. */
+    private val syncedPlaylist = HashMap<BrowseKind, String?>()
+
+    private fun selectedPlaylistFile(kind: BrowseKind): File? = when (kind) {
+        BrowseKind.SRC -> LibraryPanel.selectedPlaylistFile
+        BrowseKind.FX -> LibraryPanel.selectedFxPlaylistFile
+        BrowseKind.TRANS -> LibraryPanel.selectedTransitionPlaylistFile
+    }
+
+    private fun setSelectedPlaylistFile(kind: BrowseKind, file: File) {
+        when (kind) {
+            BrowseKind.SRC -> { LibraryPanel.selectedPlaylistFile = file; LibraryPanel.activePlaylistData = null }
+            BrowseKind.FX -> LibraryPanel.selectedFxPlaylistFile = file
+            BrowseKind.TRANS -> LibraryPanel.selectedTransitionPlaylistFile = file
+        }
+        syncedPlaylist[kind] = file.absolutePath
+    }
 
     private const val GAP = 6f
     private const val MIN_SIDE_W = 150f
@@ -125,7 +144,7 @@ object BrowserPane {
                 select(kind, node.scope)
             }
             val playlist = node.scope as? BrowseScope.Playlist
-            if (playlist != null) playlistContextMenu(session, mixer, playlist)
+            if (playlist != null) playlistContextMenu(session, mixer, kind, playlist)
             if (node.selectable || node.count > 0) {
                 ImGui.sameLine()
                 val countText = node.count.toString()
@@ -139,19 +158,33 @@ object BrowserPane {
     }
 
     /** Right-click menu of a playlist node: queue transport, rename, clone, delete. */
-    private fun playlistContextMenu(session: SessionContext, mixer: Mixer, scope: BrowseScope.Playlist) {
+    private fun playlistContextMenu(session: SessionContext, mixer: Mixer, kind: BrowseKind, scope: BrowseScope.Playlist) {
         val file = File(scope.path)
         if (!ImGui.beginPopupContextItem("playlist_node_menu")) return
         pushOpenDropdownFont()
-        if (ImGui.menuItem("Play now in A/B Queue (and replace queue)")) session.playQueueManager.playPlaylistNow(file, mixer)
-        if (ImGui.menuItem("Insert into A/B Queue after current")) session.playQueueManager.insertPlaylistAfterCurrent(file)
-        if (ImGui.menuItem("Add to the bottom of A/B Queue")) session.playQueueManager.appendPlaylistToQueue(file)
+        when (kind) {
+            BrowseKind.SRC -> {
+                if (ImGui.menuItem("Play now in A/B Queue (and replace queue)")) session.playQueueManager.playPlaylistNow(file, mixer)
+                if (ImGui.menuItem("Insert into A/B Queue after current")) session.playQueueManager.insertPlaylistAfterCurrent(file)
+                if (ImGui.menuItem("Add to the bottom of A/B Queue")) session.playQueueManager.appendPlaylistToQueue(file)
+                ImGui.separator()
+                if (ImGui.menuItem("Play now in BG Queue (and replace queue)")) BgQueueManager.playPlaylistNow(file, mixer)
+                if (ImGui.menuItem("Insert into BG Queue after current")) BgQueueManager.insertPlaylistAfterCurrent(file)
+                if (ImGui.menuItem("Add to the bottom of BG Queue")) BgQueueManager.appendPlaylistToQueue(file)
+            }
+            BrowseKind.FX -> {
+                if (ImGui.menuItem("Add All to Live FX Queue (A/B)")) FXQueueManager.appendToQueue(file)
+                if (ImGui.menuItem("Add All to BG FX Queue")) FXBgQueueManager.appendToQueue(file)
+            }
+            BrowseKind.TRANS -> if (ImGui.menuItem("Load Playlist to Live Queue")) TransitionQueueManager.appendToQueue(file)
+        }
         ImGui.separator()
-        if (ImGui.menuItem("Play now in BG Queue (and replace queue)")) BgQueueManager.playPlaylistNow(file, mixer)
-        if (ImGui.menuItem("Insert into BG Queue after current")) BgQueueManager.insertPlaylistAfterCurrent(file)
-        if (ImGui.menuItem("Add to the bottom of BG Queue")) BgQueueManager.appendPlaylistToQueue(file)
-        ImGui.separator()
-        val asset = AssetItem(path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.PLAYLIST)
+        val assetType = when (kind) {
+            BrowseKind.SRC -> AssetType.PLAYLIST
+            BrowseKind.FX -> AssetType.FX_PLAYLIST
+            BrowseKind.TRANS -> AssetType.TRANSITION_PLAYLIST
+        }
+        val asset = AssetItem(path = file.absolutePath, name = file.nameWithoutExtension, type = assetType)
         if (ImGui.menuItem("Rename...")) {
             BrowserPopupHandler.renameTarget = asset
             BrowserPopupHandler.renameBuffer.set(asset.name)
@@ -159,9 +192,8 @@ object BrowserPane {
         }
         if (ImGui.menuItem("Clone")) {
             FileSystemManager.cloneFile(file.absolutePath).onSuccess { newPath ->
-                scopes[BrowseKind.SRC] = BrowseScope.Playlist(File(newPath).absolutePath)
-                LibraryPanel.selectedPlaylistFile = File(newPath)
-                LibraryPanel.activePlaylistData = null
+                scopes[kind] = BrowseScope.Playlist(File(newPath).absolutePath)
+                setSelectedPlaylistFile(kind, File(newPath))
             }
         }
         if (ImGui.menuItem("Delete")) {
@@ -172,12 +204,11 @@ object BrowserPane {
         ImGui.endPopup()
     }
 
-    /** Follows [LibraryPanel.selectedPlaylistFile] when something else changed it (a playlist just created) and drops a scope whose playlist is gone. */
+    /** Follows the Library's selected playlist file when something else changed it (a playlist just created) and drops a scope whose playlist is gone. */
     private fun syncPlaylistSelection(kind: BrowseKind, tree: List<BrowseNode>) {
-        if (kind != BrowseKind.SRC) return
-        val external = LibraryPanel.selectedPlaylistFile?.absolutePath
-        if (external != syncedPlaylist) {
-            syncedPlaylist = external
+        val external = selectedPlaylistFile(kind)?.absolutePath
+        if (external != syncedPlaylist[kind]) {
+            syncedPlaylist[kind] = external
             val target = tree.firstOrNull { (it.scope as? BrowseScope.Playlist)?.path == external }
             if (target != null) scopes[kind] = target.scope
         }
@@ -188,11 +219,10 @@ object BrowserPane {
     private fun select(kind: BrowseKind, scope: BrowseScope) {
         scopes[kind] = scope
         // A playlist scope becomes the Library's active playlist, so "Add to '<playlist>'" in row menus targets it.
-        if (scope is BrowseScope.Playlist && kind == BrowseKind.SRC) {
+        if (scope is BrowseScope.Playlist) {
             val file = File(scope.path)
-            LibraryPanel.selectedPlaylistFile = file
-            syncedPlaylist = file.absolutePath
-            LibraryPanel.getOrLoadPlaylist(file)
+            setSelectedPlaylistFile(kind, file)
+            if (kind == BrowseKind.SRC) LibraryPanel.getOrLoadPlaylist(file)
         }
     }
 
@@ -223,35 +253,41 @@ object BrowserPane {
         val playlistRows = playlistRowsFor(catalog, scope, query)
 
         if (ImGui.beginChild("##browser_list_scroll", 0f, 0f, false)) {
-            PresetListPanel.filteredPresets = assets
+            when (kind) {
+                BrowseKind.SRC -> PresetListPanel.filteredPresets = assets
+                BrowseKind.FX -> FXBrowserPanel.filteredRows = assets
+                BrowseKind.TRANS -> TransitionBrowserPanel.filteredRows = assets
+            }
             if (entries.isEmpty()) {
                 ImGui.textDisabled(
                     when {
                         query.isNotEmpty() -> "No matches"
-                        scope is BrowseScope.Playlist -> "Playlist is empty. Drag presets here or use a preset's menu."
+                        scope is BrowseScope.Playlist -> "Playlist is empty. Drag items here or use an item's menu."
                         else -> "Nothing here yet"
                     }
                 )
                 playlistRows?.finish()
             } else {
-                PresetListPanel.drawRows(
-                    session, mixer, parametersState, assets,
-                    favoriteKeys = BrowseFavorites.keys(kind),
-                    infoFor = { infoByPath[it.path] ?: "" },
-                    contextExtras = { asset ->
-                        val entry = entries.firstOrNull { it.asset.path == asset.path }
-                        if (entry != null) {
-                            val fav = BrowseFavorites.isFavorite(kind, entry.key)
-                            if (ImGui.menuItem(if (fav) "\u2605 Remove from Favorites" else "\u2606 Add to Favorites")) {
-                                BrowseFavorites.toggle(kind, entry.key)
-                            }
+                val infoFor = { asset: AssetItem -> infoByPath[asset.path] ?: "" }
+                val extras = { asset: AssetItem ->
+                    val entry = entries.firstOrNull { it.asset.path == asset.path }
+                    // FX stock rows already carry a Favorites item in their own menu.
+                    if (entry != null && kind != BrowseKind.FX) {
+                        val fav = BrowseFavorites.isFavorite(kind, entry.key)
+                        if (ImGui.menuItem(if (fav) "★ Remove from Favorites" else "☆ Add to Favorites")) {
+                            BrowseFavorites.toggle(kind, entry.key)
                         }
-                        if (playlistRows != null && ImGui.menuItem("Remove from playlist")) {
-                            removeFromPlaylist(playlistRows, assets)
-                        }
-                    },
-                    playlistRows = playlistRows
-                )
+                    }
+                    if (playlistRows != null && ImGui.menuItem("Remove from playlist")) removeFromPlaylist(kind, playlistRows, assets)
+                }
+                when (kind) {
+                    BrowseKind.SRC -> PresetListPanel.drawRows(
+                        session, mixer, parametersState, assets,
+                        favoriteKeys = BrowseFavorites.keys(kind), infoFor = infoFor, contextExtras = extras, playlistRows = playlistRows
+                    )
+                    BrowseKind.FX -> FXBrowserPanel.drawRows(session, mixer, assets, infoFor, extras, playlistRows)
+                    BrowseKind.TRANS -> TransitionBrowserPanel.drawRows(session, mixer, assets, infoFor, extras, playlistRows)
+                }
             }
             if (missing > 0) {
                 ImGui.spacing()
@@ -262,33 +298,68 @@ object BrowserPane {
 
         // Delete / Backspace: inside a playlist it removes the rows from the playlist, elsewhere it deletes from the library with confirmation.
         val io = ImGui.getIO()
-        val selected = PresetListPanel.selection.getSelectedInOrder(assets)
+        val selected = selectedAssets(kind, assets)
         if (selected.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper &&
             (ImGui.isKeyPressed(ImGuiKey.Delete, false) || ImGui.isKeyPressed(ImGuiKey.Backspace, false))
         ) {
             if (playlistRows != null) {
-                removeFromPlaylist(playlistRows, assets)
+                removeFromPlaylist(kind, playlistRows, assets)
             } else {
-                selected.filter { it.type != AssetType.SOURCE_STOCK }.takeIf { it.isNotEmpty() }
-                    ?.let { BrowserPopupHandler.openDeleteConfirmation(it) }
+                selected.filter { !isStock(it) }.takeIf { it.isNotEmpty() }?.let { BrowserPopupHandler.openDeleteConfirmation(it) }
             }
         }
     }
 
-    /** Title row of the list with the "+" (new blank preset on a deck) and "..." (maintenance) buttons, as in the classic Sources column. */
+    private fun isStock(asset: AssetItem): Boolean =
+        asset.type == AssetType.SOURCE_STOCK || asset.type == AssetType.FX_STOCK || asset.type == AssetType.TRANSITION_STOCK
+
+    /** The selected rows of the list, in list order. SRC supports multi-select; FX and Transitions keep a single selected row. */
+    private fun selectedAssets(kind: BrowseKind, assets: List<AssetItem>): List<AssetItem> = when (kind) {
+        BrowseKind.SRC -> PresetListPanel.selection.getSelectedInOrder(assets)
+        BrowseKind.FX -> assets.filter { it.path == FXBrowserPanel.selectedAsset?.path }
+        BrowseKind.TRANS -> assets.filter { it.path == TransitionBrowserPanel.selectedAsset?.path }
+    }
+
+    private fun clearSelection(kind: BrowseKind) {
+        when (kind) {
+            BrowseKind.SRC -> PresetListPanel.selection.clear()
+            BrowseKind.FX -> FXBrowserPanel.selectedAsset = null
+            BrowseKind.TRANS -> TransitionBrowserPanel.selectedAsset = null
+        }
+    }
+
+    /** Title row of the list with the per-kind "+" (and, for Sources, "..." maintenance) buttons, as in the classic columns. */
     private fun drawListHeader(session: SessionContext, mixer: Mixer, parametersState: ParametersState, title: String, kind: BrowseKind) {
         val btnSize = ImGui.getFrameHeight()
         ImGui.alignTextToFramePadding()
         session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.text(title) }
-        if (kind != BrowseKind.SRC) return
         ImGui.sameLine()
-        val rightX = ImGui.getWindowContentRegionMaxX() - (btnSize * 2f + ImGui.getStyle().itemSpacingX)
+        val buttons = if (kind == BrowseKind.SRC) 2 else 1
+        val rightX = ImGui.getWindowContentRegionMaxX() - (btnSize * buttons + ImGui.getStyle().itemSpacingX * (buttons - 1))
         if (rightX > ImGui.getCursorPosX()) ImGui.setCursorPosX(rightX)
 
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.PLUS}##browser_new_preset", btnSize, btnSize)) ImGui.openPopup("browser_new_preset_popup")
+            if (ImGui.button("${Icons.PLUS}##browser_new", btnSize, btnSize)) {
+                when (kind) {
+                    BrowseKind.SRC -> ImGui.openPopup("browser_new_preset_popup")
+                    BrowseKind.FX -> ImGui.openPopup("create_new_fx_popup")
+                    BrowseKind.TRANS -> TransitionSave.requestSaveCurrent(session, mixer)
+                }
+            }
         }
-        itemTooltip("New blank preset on a deck...")
+        itemTooltip(
+            when (kind) {
+                BrowseKind.SRC -> "New blank preset on a deck..."
+                BrowseKind.FX -> "Save FX slot or 3-slot chain from a deck..."
+                BrowseKind.TRANS -> "Save current mixer transition as a preset (.lsdtrans)..."
+            }
+        )
+        if (kind == BrowseKind.FX) {
+            FXBrowserPanel.drawCreatePopup(session, mixer)
+            FXBrowserPanel.drawOverwritePopup(session, mixer)
+        }
+        if (kind != BrowseKind.SRC) return
+
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("browser_new_preset_popup")) {
             pushOpenDropdownFont()
@@ -320,40 +391,50 @@ object BrowserPane {
         popOpenDropdownPadding()
     }
 
-    /** Playlist editing context for the list, or null outside a SRC playlist. Reordering is off while a search narrows the rows. */
-    private fun playlistRowsFor(catalog: BrowseCatalog, scope: BrowseScope, query: String): PresetListPanel.PlaylistRows? {
-        if (scope !is BrowseScope.Playlist || catalog.kind != BrowseKind.SRC) return null
-        val playlist = LibraryPanel.getOrLoadPlaylist(File(scope.path)) ?: return null
+    /** Playlist editing context for the list, or null outside a playlist. Reordering is off while a search narrows the rows. */
+    private fun playlistRowsFor(catalog: BrowseCatalog, scope: BrowseScope, query: String): PlaylistRows? {
+        if (scope !is BrowseScope.Playlist) return null
+        val file = File(scope.path)
+        val edit: PlaylistEdit = when (catalog.kind) {
+            BrowseKind.SRC -> LibraryPanel.getOrLoadPlaylist(file)?.let { PresetPlaylistEdit(it) }
+            else -> TokenPlaylistEdit.open(catalog.kind, file)
+        } ?: return null
         val slots = catalog.playlistSlots(scope)
-        if (slots.size != playlist.presets.size) return null // file changed under us; the catalog catches up next frame
+        if (slots.size != edit.size) return null // file changed under us; the catalog catches up next frame
         val rowToIndex = if (query.isEmpty()) {
             slots.indices.filter { slots[it] != null }
         } else {
             val visible = catalog.rows(scope, query).map { it.key }.toSet()
             slots.indices.filter { slots[it]?.key in visible }
         }
-        return PresetListPanel.PlaylistRows(playlist, rowToIndex, reorderEnabled = query.isEmpty())
+        return PlaylistRows(edit, rowToIndex, reorderEnabled = query.isEmpty())
     }
 
     /** Removes the selected rows (the right-clicked row is selected first by the row renderer) from the playlist. */
-    private fun removeFromPlaylist(rows: PresetListPanel.PlaylistRows, assets: List<AssetItem>) {
-        val selected = PresetListPanel.selection.getSelectedInOrder(assets).map { it.path }.toSet()
-        val indices = assets.indices.filter { assets[it].path in selected }.map { rows.indexOfRow(it) }
-        indices.sortedDescending().forEach { PlaylistManager.removePreset(rows.playlist, it) }
-        PresetListPanel.selection.clear()
+    private fun removeFromPlaylist(kind: BrowseKind, rows: PlaylistRows, assets: List<AssetItem>) {
+        val selected = selectedAssets(kind, assets).map { it.path }.toSet()
+        rows.edit.remove(assets.indices.filter { assets[it].path in selected }.map { rows.indexOfRow(it) })
+        clearSelection(kind)
     }
 
     private fun drawQueues(session: SessionContext, mixer: Mixer, kind: BrowseKind) {
         val flags = ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoScrollWithMouse
         val h = ImGui.getContentRegionAvailY()
         val w = ImGui.getContentRegionAvailX()
+        if (kind == BrowseKind.TRANS) {
+            // Transitions have a single queue, so it gets the whole column.
+            ImGui.beginChild("BrowserPaneQueue", w, h, false, flags)
+            TransitionQueuePanel.draw(session, mixer)
+            ImGui.endChild()
+            return
+        }
         val half = ((h - GAP) * 0.5f).coerceAtLeast(1f)
         ImGui.beginChild("BrowserPaneBgQueue", w, half, false, flags)
-        BgQueueActionsPanel.draw(session, mixer)
+        if (kind == BrowseKind.FX) FXBgQueueActionsPanel.draw(session, mixer) else BgQueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
         ImGui.separator()
         ImGui.beginChild("BrowserPaneQueue", w, 0f, false, flags)
-        QueueActionsPanel.draw(session, mixer)
+        if (kind == BrowseKind.FX) FXQueueActionsPanel.draw(session, mixer) else QueueActionsPanel.draw(session, mixer)
         ImGui.endChild()
     }
 }

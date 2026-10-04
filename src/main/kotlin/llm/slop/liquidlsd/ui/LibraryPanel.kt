@@ -48,7 +48,7 @@ object LibraryPanel {
         FX_QUEUE_BG
     }
 
-    var viewMode: LibraryViewMode = LibraryViewMode.PRESETS
+    var viewMode: LibraryViewMode = System.getProperty("lsd.libraryTab")?.let { n -> LibraryViewMode.entries.firstOrNull { it.name.equals(n, true) } } ?: LibraryViewMode.PRESETS
     var activeSelectionSource: SelectionSource? = null
     var selectedPlaylistFile: File? = null
     var selectedTransitionPlaylistFile: File? = null
@@ -305,7 +305,7 @@ object LibraryPanel {
                 }
                 ImGui.popStyleColor(2)
 
-                if (llm.slop.liquidlsd.ui.browser.BrowserPane.supports(llm.slop.liquidlsd.ui.browser.BrowseKind.SRC)) {
+                if (viewMode != LibraryViewMode.MAPS) {
                     ImGui.sameLine(0f, 10f)
                     val unified = llm.slop.liquidlsd.ui.browser.BrowserPane.enabled
                     ImGui.pushStyleColor(ImGuiCol.Button, if (unified) activeCol else inactiveCol)
@@ -314,7 +314,7 @@ object LibraryPanel {
                         llm.slop.liquidlsd.ui.browser.BrowserPane.enabled = !unified
                     }
                     ImGui.popStyleColor(2)
-                    itemTooltip("Beta: tree | list | queues browser (Sources tab only for now).")
+                    itemTooltip("Beta: tree | list | queues browser (Sources, FX and Transitions).")
                 }
             }
 
@@ -371,9 +371,15 @@ object LibraryPanel {
         ImGui.pushStyleColor(ImGuiCol.ChildBg, childBg)
         ImGui.pushStyleColor(ImGuiCol.Border, childBorder)
 
-        if (viewMode == LibraryViewMode.PRESETS && llm.slop.liquidlsd.ui.browser.BrowserPane.enabled) {
+        val unifiedKind = when (viewMode) {
+            LibraryViewMode.PRESETS -> llm.slop.liquidlsd.ui.browser.BrowseKind.SRC
+            LibraryViewMode.FX -> llm.slop.liquidlsd.ui.browser.BrowseKind.FX
+            LibraryViewMode.TRANS -> llm.slop.liquidlsd.ui.browser.BrowseKind.TRANS
+            LibraryViewMode.MAPS -> null
+        }
+        if (unifiedKind != null && llm.slop.liquidlsd.ui.browser.BrowserPane.enabled && llm.slop.liquidlsd.ui.browser.BrowserPane.supports(unifiedKind)) {
             ImGui.beginChild("LibraryUnified", availW, contentH, false, outerFlags)
-            llm.slop.liquidlsd.ui.browser.BrowserPane.draw(session, mixer, parametersState, llm.slop.liquidlsd.ui.browser.BrowseKind.SRC)
+            llm.slop.liquidlsd.ui.browser.BrowserPane.draw(session, mixer, parametersState, unifiedKind)
             ImGui.endChild()
         } else {
         // Group 1 Box: Col 1 & Col 2

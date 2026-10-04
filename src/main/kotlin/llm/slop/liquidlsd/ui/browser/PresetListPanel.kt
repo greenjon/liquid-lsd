@@ -262,9 +262,8 @@ object PresetListPanel {
             }
             var itemClicked = false
             val infoText = infoFor?.invoke(asset) ?: ""
-            val nameColW = itemW * INFO_COLUMN_START
             session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
-                val shown = if (infoText.isNotEmpty()) elide(label, nameColW - 12f) else label
+                val shown = if (infoText.isNotEmpty()) nameForInfo(label, itemW) else label
                 if (selectableRow("$shown##row", isSelected, itemW)) {
                     itemClicked = true
                 }
@@ -285,12 +284,7 @@ object PresetListPanel {
             if (hasIssues && !isSelected) {
                 ImGui.popStyleColor()
             }
-            if (infoText.isNotEmpty()) {
-                val x = ImGui.getItemRectMinX() + nameColW
-                val y = ImGui.getItemRectMinY() + (ImGui.getItemRectSizeY() - ImGui.getTextLineHeight()) * 0.5f
-                val shownInfo = elide(infoText, itemW - nameColW - 6f)
-                ImGui.getWindowDrawList().addText(x, y, ImGui.getColorU32(ImGuiCol.TextDisabled), shownInfo)
-            }
+            drawInfoColumn(infoText, itemW)
             val isRowHovered = ImGui.isItemHovered()
             if (ImGui.isItemClicked(1)) {
                 if (!selection.isSelected(asset)) {
@@ -467,8 +461,6 @@ object PresetListPanel {
         playlistRows?.finish()
     }
 
-    const val PAYLOAD_PLAYLIST_ITEM = "PLAYLIST_PATCH_ITEM"
-
     /** Fraction of the row width the name column may use when an info column is drawn. */
     private const val INFO_COLUMN_START = 0.58f
 
@@ -480,77 +472,15 @@ object PresetListPanel {
         return text.substring(0, end).trimEnd() + "..."
     }
 
-    /**
-     * Makes the rows of [drawRows] a playlist's reorderable contents. [indexOfRow] maps a visible row to its playlist position (rows are
-     * the playlist minus missing items). Rows accept drops of other rows (move) and of library assets (insert) and draw an insertion line.
-     */
-    class PlaylistRows(val playlist: PlaylistManager.Playlist, private val rowToIndex: List<Int>, private val reorderEnabled: Boolean) {
-        private var insertSlot = -1
-        private var insertLineY = -1f
-        private var moveFrom = -1
-        private var moveTo = -1
-
-        fun indexOfRow(row: Int): Int = rowToIndex[row]
-
-        fun dropTarget(row: Int) {
-            if (!reorderEnabled) return
-            val idx = rowToIndex[row]
-            val minY = ImGui.getItemRectMinY()
-            val maxY = ImGui.getItemRectMaxY()
-            ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
-            if (ImGui.beginDragDropTarget()) {
-                val before = ImGui.getMousePosY() < (minY + maxY) * 0.5f
-                val slot = if (before) idx else idx + 1
-                insertLineY = if (before) minY else maxY
-                insertSlot = slot
-                ImGui.acceptDragDropPayload<Int>(PAYLOAD_PLAYLIST_ITEM)?.let { from ->
-                    moveFrom = from
-                    moveTo = (if (from < slot) slot - 1 else slot).coerceIn(0, playlist.presets.size - 1)
-                }
-                ImGui.acceptDragDropPayload<String>("ASSET_ITEM")?.let { insertPaths(it, slot) }
-                ImGui.endDragDropTarget()
-            }
-            ImGui.popStyleColor()
-        }
-
-        /** Draws the insertion line, the append-at-end drop zone, and applies a pending move. Call after the last row. */
-        fun finish() {
-            if (insertLineY > 0f) {
-                val dl = ImGui.getWindowDrawList()
-                val color = (255 shl 24) or (204 shl 16) or (255 shl 8) or 102
-                val x0 = ImGui.getWindowPosX() + 4f
-                val x1 = ImGui.getWindowPosX() + ImGui.getWindowWidth() - 4f
-                dl.addCircleFilled(x0 + 2f, insertLineY, 3f, color)
-                dl.addLine(x0 + 5f, insertLineY, x1, insertLineY, color, 2f)
-            }
-            if (reorderEnabled) {
-                ImGui.dummy(ImGui.getContentRegionAvailX(), ImGui.getContentRegionAvailY().coerceAtLeast(30f))
-                ImGui.pushStyleColor(ImGuiCol.DragDropTarget, 0f, 0f, 0f, 0f)
-                if (ImGui.beginDragDropTarget()) {
-                    ImGui.acceptDragDropPayload<String>("ASSET_ITEM")?.let { insertPaths(it, playlist.presets.size) }
-                    ImGui.acceptDragDropPayload<Int>(PAYLOAD_PLAYLIST_ITEM)?.let { from ->
-                        moveFrom = from
-                        moveTo = playlist.presets.size - 1
-                    }
-                    ImGui.endDragDropTarget()
-                }
-                ImGui.popStyleColor()
-            }
-            if (moveFrom != -1 && moveTo != -1 && moveFrom != moveTo) {
-                PlaylistManager.movePreset(playlist, moveFrom, moveTo)
-            }
-        }
-
-        private fun insertPaths(payload: String, slot: Int) {
-            var at = slot
-            for (path in payload.lines().map { it.trim() }.filter { it.isNotBlank() }) {
-                if (File(path).extension == "lsdplay") {
-                    PlaylistManager.unpackPlaylistInto(playlist, path, at)
-                } else {
-                    PlaylistManager.insertPreset(playlist, path, at)
-                    at++
-                }
-            }
-        }
+    /** Draws the muted info text of a row in the info column, elided to fit. Call right after the row selectable. */
+    internal fun drawInfoColumn(info: String, itemW: Float) {
+        if (info.isEmpty()) return
+        val nameColW = itemW * INFO_COLUMN_START
+        val x = ImGui.getItemRectMinX() + nameColW
+        val y = ImGui.getItemRectMinY() + (ImGui.getItemRectSizeY() - ImGui.getTextLineHeight()) * 0.5f
+        ImGui.getWindowDrawList().addText(x, y, ImGui.getColorU32(ImGuiCol.TextDisabled), elide(info, itemW - nameColW - 6f))
     }
+
+    /** Name text shortened so it stays clear of the info column. */
+    internal fun nameForInfo(label: String, itemW: Float): String = elide(label, itemW * INFO_COLUMN_START - 12f)
 }

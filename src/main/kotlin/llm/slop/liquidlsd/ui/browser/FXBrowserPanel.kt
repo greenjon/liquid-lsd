@@ -193,7 +193,7 @@ object FXBrowserPanel {
         ImGui.endChild()
     }
 
-    private fun drawCreatePopup(session: SessionContext, mixer: Mixer) {
+    internal fun drawCreatePopup(session: SessionContext, mixer: Mixer) {
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("create_new_fx_popup")) {
             pushOpenDropdownFont()
@@ -254,7 +254,23 @@ object FXBrowserPanel {
         popOpenDropdownPadding()
     }
 
-    private fun drawRow(session: SessionContext, mixer: Mixer, asset: AssetItem, index: Int, btnW: Float) {
+    /** The row loop, shared by the classic column and the unified [BrowserPane]. [infoFor] is drawn as a muted second column; [contextExtras] adds items on top of each row menu. */
+    internal fun drawRows(
+        session: SessionContext, mixer: Mixer, rows: List<AssetItem>,
+        infoFor: ((AssetItem) -> String)? = null, contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null
+    ) {
+        rows.forEachIndexed { index, asset ->
+            ImGui.pushID(index)
+            drawRow(session, mixer, asset, index, 20f, infoFor?.invoke(asset) ?: "", contextExtras, playlistRows)
+            ImGui.popID()
+        }
+        playlistRows?.finish()
+    }
+
+    private fun drawRow(
+        session: SessionContext, mixer: Mixer, asset: AssetItem, index: Int, btnW: Float,
+        info: String = "", contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null
+    ) {
         val icon = when (asset.type) {
             AssetType.FX_STOCK -> if (FxShortlist.isFavorite(asset.path.removePrefix(STOCK_PATH_PREFIX))) "\u2605" else Icons.SQUARE
             AssetType.FX_CHAIN -> Icons.ACTIVITY
@@ -270,8 +286,10 @@ object FXBrowserPanel {
         }
 
         session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
-            selectableRow("$icon ${asset.displayName}##fx_browser_$index", isSelected, itemW)
+            val text = "$icon ${asset.displayName}"
+            selectableRow("${if (info.isNotEmpty()) PresetListPanel.nameForInfo(text, itemW) else text}##fx_browser_$index", isSelected, itemW)
         }
+        PresetListPanel.drawInfoColumn(info, itemW)
         val isRowHovered = ImGui.isItemHovered()
         itemTooltip(
             when (asset.type) {
@@ -294,14 +312,22 @@ object FXBrowserPanel {
         // into playlists and queues; stock filters have no persisted state, so they use their own
         // payload that only FX slots accept (see FxSlotCell).
         if (ImGui.beginDragDropSource()) {
-            if (asset.type == AssetType.FX_STOCK) {
-                ImGui.setDragDropPayload(llm.slop.liquidlsd.ui.FxSlotCell.PAYLOAD_STOCK_FILTER, asset.path.removePrefix(STOCK_PATH_PREFIX) as Any)
+            if (playlistRows != null) {
+                ImGui.setDragDropPayload(PAYLOAD_PLAYLIST_ITEM, playlistRows.indexOfRow(index) as Any)
+                ImGui.textUnformatted(asset.name)
+                ImGui.endDragDropSource()
             } else {
-                ImGui.setDragDropPayload("ASSET_ITEM", asset.path as Any)
+                if (asset.type == AssetType.FX_STOCK) {
+                    ImGui.setDragDropPayload(llm.slop.liquidlsd.ui.FxSlotCell.PAYLOAD_STOCK_FILTER, asset.path.removePrefix(STOCK_PATH_PREFIX) as Any)
+                } else {
+                    ImGui.setDragDropPayload("ASSET_ITEM", asset.path as Any)
             }
-            ImGui.textUnformatted(asset.name)
-            ImGui.endDragDropSource()
+                ImGui.textUnformatted(asset.name)
+                ImGui.endDragDropSource()
+            }
         }
+
+        playlistRows?.dropTarget(index)
 
         ImGui.sameLine(0f, 0f)
         BrowserRowMoreButton.draw(popupId, isRowHovered, isSelected, "fx_browser_$index", btnW)
@@ -309,6 +335,10 @@ object FXBrowserPanel {
         pushOpenDropdownPadding()
         if (ImGui.beginPopup(popupId)) {
             pushOpenDropdownFont()
+            if (contextExtras != null) {
+                contextExtras(asset)
+                ImGui.separator()
+            }
             drawContextMenu(session, mixer, asset)
             popOpenDropdownFont()
             ImGui.endPopup()
@@ -341,7 +371,7 @@ object FXBrowserPanel {
     }
 
     /** Asks which slot to overwrite when a double-clicked single FX finds the live deck's chain full. */
-    private fun drawOverwritePopup(session: SessionContext, mixer: Mixer) {
+    internal fun drawOverwritePopup(session: SessionContext, mixer: Mixer) {
         if (openOverwritePopup) { ImGui.openPopup("fx_browser_overwrite_slot"); openOverwritePopup = false }
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("fx_browser_overwrite_slot")) {
