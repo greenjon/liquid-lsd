@@ -61,8 +61,12 @@ data class MacroBinding(
     // e.g. "Deck A/fbZoom" (global scope) or "dimensionWarp" (local to unitInstanceId).
     val parameterId: String,
     val targetType: MacroTargetType,
-    // Index in the target parameter's modulator stack. Only meaningful for MODULATOR_PROPERTY.
-    val modulatorIndex: Int = 0,
+    // Stable [CvModulator.id] of the target modulator. Only meaningful for MODULATOR_PROPERTY.
+    // A binding whose id no longer exists on the parameter is skipped (see MacroEngine).
+    val modulatorId: String? = null,
+    // Legacy (pre-id) position in the modulator stack. Read from old files only; MacroEngine
+    // resolves it once to [modulatorId] and clears it. Never written by new code.
+    val modulatorIndex: Int? = null,
     // e.g. "subdivision", "morph", "depth", "attackMs". Only meaningful for MODULATOR_PROPERTY.
     val propertyName: String = "",
     var minVal: Float = 0.0f,

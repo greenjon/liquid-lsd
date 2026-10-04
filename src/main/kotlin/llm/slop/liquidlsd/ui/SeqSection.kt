@@ -166,6 +166,7 @@ object SeqSection {
                     onValueChanged = { v -> onReplace(existing.copy(subdivision = v, subdivisionMin = v, subdivisionMax = v)) },
                     paramKey = paramKey,
                     modulatorIndex = modulatorIndex,
+                    modulatorId = existing.id,
                     propertyName = "subdivision"
                 )
             }
@@ -191,6 +192,7 @@ object SeqSection {
                     onValueChanged = { v -> onReplace(existing.copy(subdivision = v, subdivisionMin = v, subdivisionMax = v)) },
                     paramKey = paramKey,
                     modulatorIndex = modulatorIndex,
+                    modulatorId = existing.id,
                     propertyName = "subdivision"
                 )
             }
@@ -216,6 +218,7 @@ object SeqSection {
                     onValueChanged = { v -> onReplace(existing.copy(subdivision = v, subdivisionMin = v, subdivisionMax = v)) },
                     paramKey = paramKey,
                     modulatorIndex = modulatorIndex,
+                    modulatorId = existing.id,
                     propertyName = "subdivision"
                 )
             }
@@ -394,6 +397,7 @@ object SeqSection {
             },
             paramKey = paramKey,
             modulatorIndex = modulatorIndex,
+            modulatorId = existing.id,
             propertyName = "seqHold"
         )
         itemTooltip("100% = Instant step jumps (no glide).\n0% = Continuous glide over full step duration.\n50% = Hold 50% of step, glide for 50%.")
@@ -452,6 +456,7 @@ object SeqSection {
             onValueChanged = { v -> onReplace(existing.copy(depth = v, depthMin = v, depthMax = v)) },
             paramKey = paramKey,
             modulatorIndex = modulatorIndex,
+            modulatorId = existing.id,
             propertyName = "depth"
         )
 

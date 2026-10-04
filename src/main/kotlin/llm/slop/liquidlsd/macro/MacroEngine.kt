@@ -2,7 +2,9 @@ package llm.slop.liquidlsd.macro
 
 import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor
 import llm.slop.liquidlsd.parameters.ParameterResolver
+import mu.KotlinLogging
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
@@ -23,6 +25,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  * anything that registers its own bank.
  */
 object MacroEngine {
+    private val logger = KotlinLogging.logger {}
     private val lock = Any()
 
     const val DECK_A = "deckA"
@@ -332,16 +335,38 @@ object MacroEngine {
         bindingsDirty = false
     }
 
+    /**
+     * One-time upgrade of a pre-id binding: pins its saved list position to the modulator's stable
+     * id (modulators without a saved id received one on load) and rewrites the control's binding.
+     */
+    private fun migrateLegacyModulatorIndex(control: MacroControl, binding: MacroBinding, param: ModulatableParameter): MacroBinding {
+        val legacy = binding.modulatorIndex ?: return binding
+        if (binding.modulatorId != null) return binding.copy(modulatorIndex = null).also { replaceBinding(control, binding, it) }
+        val id = param.modulators.getOrNull(legacy)?.id
+        val upgraded = binding.copy(modulatorId = id, modulatorIndex = null)
+        replaceBinding(control, binding, upgraded)
+        return upgraded
+    }
+
+    private fun replaceBinding(control: MacroControl, old: MacroBinding, new: MacroBinding) {
+        val i = control.bindings.indexOf(old)
+        if (i >= 0) control.bindings[i] = new
+    }
+
     private fun resolveControls(controls: List<MacroControl>, mixer: Mixer, out: MutableList<ResolvedBinding>) {
         for (control in controls) {
             for (binding in control.bindings) {
                 if (!binding.enabled) continue
                 val param = ParameterResolver.findParameterByPath(mixer, binding.parameterId) ?: continue
-                if (binding.targetType == MacroTargetType.MODULATOR_PROPERTY &&
-                    param.modulators.getOrNull(binding.modulatorIndex) == null) {
-                    continue
+                var resolved = binding
+                if (binding.targetType == MacroTargetType.MODULATOR_PROPERTY) {
+                    resolved = migrateLegacyModulatorIndex(control, binding, param)
+                    if (ModulatorPropertyAccessor.findById(param, resolved.modulatorId) == null) {
+                        logger.warn { "Macro binding on '${binding.parameterId}' targets missing modulator ${resolved.modulatorId}; skipped" }
+                        continue
+                    }
                 }
-                out.add(ResolvedBinding(control, binding, param))
+                out.add(ResolvedBinding(control, resolved, param))
             }
         }
     }
@@ -370,9 +395,9 @@ object MacroEngine {
                     // without invalidating this cache, so a cached reference would silently start
                     // mutating an orphaned object the moment the user touched any other control on
                     // the same modulator after binding it.
-                    val mod = rb.param.modulators.getOrNull(rb.binding.modulatorIndex)
+                    val mod = ModulatorPropertyAccessor.findById(rb.param, rb.binding.modulatorId)
                     if (mod != null) {
-                        llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(mod, rb.binding.propertyName, mapped)
+                        ModulatorPropertyAccessor.set(mod, rb.binding.propertyName, mapped)
                     }
                 }
             }
@@ -430,7 +455,7 @@ object MacroEngine {
 
     /**
      * Looks up enabled bindings from the resolved cache matching [unitInstanceId] and
-     * [parameterId] exactly, plus [modulatorIndex]/[propertyName] when non-null. Used by the
+     * [parameterId] exactly, plus [modulatorId]/[propertyName] when non-null. Used by the
      * Parameters/Properties panels to answer "is this slider/property locked by a macro?" (see
      * proposal §3.3). Called every frame for every rendered parameter row/modulator slot, so the
      * overwhelmingly common case (a field with no macro binding at all) must not allocate: only
@@ -440,7 +465,7 @@ object MacroEngine {
     fun findBindingsTargeting(
         unitInstanceId: String?,
         parameterId: String,
-        modulatorIndex: Int? = null,
+        modulatorId: String? = null,
         propertyName: String? = null
     ): List<MacroBinding> {
         val bindings = resolvedBindings
@@ -449,7 +474,7 @@ object MacroEngine {
             val b = bindings[i].binding
             if (b.unitInstanceId != unitInstanceId) continue
             if (b.parameterId != parameterId) continue
-            if (modulatorIndex != null && b.modulatorIndex != modulatorIndex) continue
+            if (modulatorId != null && b.modulatorId != modulatorId) continue
             if (propertyName != null && b.propertyName != propertyName) continue
             (result ?: ArrayList<MacroBinding>(4).also { result = it }).add(b)
         }
@@ -464,10 +489,10 @@ object MacroEngine {
     fun findPrimaryBindingInfo(
         unitInstanceId: String?,
         parameterId: String,
-        modulatorIndex: Int? = null,
+        modulatorId: String? = null,
         propertyName: String? = null
     ): MacroBindingInfo? =
-        findBindingsTargeting(unitInstanceId, parameterId, modulatorIndex, propertyName)
+        findBindingsTargeting(unitInstanceId, parameterId, modulatorId, propertyName)
             .firstOrNull()?.let { infoFor(it) }
 
     /** Registered bank id owning the control with [controlId], or null. */
@@ -482,10 +507,10 @@ object MacroEngine {
     fun findBindingInfos(
         unitInstanceId: String?,
         parameterId: String,
-        modulatorIndex: Int? = null,
+        modulatorId: String? = null,
         propertyName: String? = null
     ): List<MacroBindingInfo> {
-        val bindings = findBindingsTargeting(unitInstanceId, parameterId, modulatorIndex, propertyName)
+        val bindings = findBindingsTargeting(unitInstanceId, parameterId, modulatorId, propertyName)
         if (bindings.isEmpty()) return emptyList()
         return bindings.mapNotNull { infoFor(it) }
     }

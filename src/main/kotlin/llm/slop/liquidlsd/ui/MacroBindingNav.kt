@@ -42,7 +42,7 @@ object MacroBindingNav {
         val targetParam = ParameterResolver.findParameterByPath(mixer, binding.parameterId)
         if (targetParam != null) {
             val cvId = if (binding.targetType == MacroTargetType.MODULATOR_PROPERTY) {
-                targetParam.modulators.getOrNull(binding.modulatorIndex)?.let { modulatorCvId(it.sourceId) } ?: "value"
+                llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findById(targetParam, binding.modulatorId)?.let { modulatorCvId(it.sourceId) } ?: "value"
             } else {
                 "value"
             }

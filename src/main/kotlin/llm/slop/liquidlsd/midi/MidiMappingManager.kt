@@ -296,9 +296,9 @@ object MidiMappingManager {
         if (parameterPath.contains(":mod/")) {
             val base = parameterPath.substringBefore(":mod/")
             val remainder = parameterPath.substringAfter(":mod/")
-            val modIdx = remainder.substringBefore("/").toIntOrNull() ?: 0
+            val modRef = remainder.substringBefore("/")
             val prop = remainder.substringAfter("/")
-            val label = llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(modIdx, prop)
+            val label = llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPathRefLabel(modRef, prop)
             return "$base [$label]"
         }
         return parameterPath
@@ -319,7 +319,7 @@ object MidiMappingManager {
         val slewMs: Float,
         val stepSize: Float,
         val isCrossfade: Boolean,
-        val modIndex: Int? = null,
+        val modRef: String? = null,
         val propertyName: String? = null
     ) {
         // Per-binding slew state, mutated directly on the hot per-frame update() path.
@@ -333,8 +333,8 @@ object MidiMappingManager {
         var smoothedValue: Float = 0f
 
         fun getCurrentValue(): Float {
-            return if (modIndex != null && propertyName != null) {
-                param.modulators.getOrNull(modIndex)?.let {
+            return if (modRef != null && propertyName != null) {
+                llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findByPathRef(param, modRef)?.let {
                     llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.get(it, propertyName)
                 } ?: param.baseValue
             } else {
@@ -343,8 +343,8 @@ object MidiMappingManager {
         }
 
         fun applyValue(value: Float) {
-            if (modIndex != null && propertyName != null) {
-                param.modulators.getOrNull(modIndex)?.let {
+            if (modRef != null && propertyName != null) {
+                llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findByPathRef(param, modRef)?.let {
                     llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(it, propertyName, value)
                 }
             } else {
@@ -372,16 +372,16 @@ object MidiMappingManager {
         for ((path, mapping) in activeProfile.mappings) {
             if (path.startsWith("Global/") || path.startsWith("Macro/")) continue
 
-            val (baseParamPath, modIndex, propertyName) = if (path.contains(":mod/")) {
+            val (baseParamPath, modRef, propertyName) = if (path.contains(":mod/")) {
                 val base = path.substringBefore(":mod/")
                 val rem = path.substringAfter(":mod/")
-                val idx = rem.substringBefore("/").toIntOrNull()
+                val ref = rem.substringBefore("/").ifEmpty { null }
                 val prop = rem.substringAfter("/")
-                Triple(base, idx, prop)
+                Triple(base, ref, prop)
             } else {
                 Triple(path, null, null)
             }
-            if (path.contains(":mod/") && modIndex == null) continue
+            if (path.contains(":mod/") && modRef == null) continue
 
             val param = ParameterResolver.findParameterByPath(mixer, baseParamPath) ?: continue
             list.add(
@@ -399,8 +399,8 @@ object MidiMappingManager {
                     inverted = mapping.inverted,
                     slewMs = mapping.slewMs,
                     stepSize = mapping.stepSize,
-                    isCrossfade = (baseParamPath == "Mixer/crossfade" && modIndex == null),
-                    modIndex = modIndex,
+                    isCrossfade = (baseParamPath == "Mixer/crossfade" && modRef == null),
+                    modRef = modRef,
                     propertyName = propertyName
                 )
             )

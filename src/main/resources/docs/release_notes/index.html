@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#knob-targets-and-midiosc-modulator-mappings-now-follow-the-modulator-not-its-position-macromacromodelskt-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Knob Targets and MIDI/OSC Modulator Mappings Now Follow the Modulator, Not Its Position (macro/MacroModels.kt, macro/MacroEngine.kt, midi/MidiMappingManager.kt, osc/OscMappingManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#deck-loads-go-through-one-entry-point-prompts-undo-and-knob-banks-now-agree-presetsdeckopskt-uiuithemekt-uipreferencespanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5284,6 +5295,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#knob-targets-and-midiosc-modulator-mappings-now-follow-the-modulator-not-its-position-macromacromodelskt-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Knob Targets and MIDI/OSC Modulator Mappings Now Follow the Modulator, Not Its Position (macro/MacroModels.kt, macro/MacroEngine.kt, midi/MidiMappingManager.kt, osc/OscMappingManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#deck-loads-go-through-one-entry-point-prompts-undo-and-knob-banks-now-agree-presetsdeckopskt-uiuithemekt-uipreferencespanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9335,6 +9357,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="knob-targets-and-midiosc-modulator-mappings-now-follow-the-modulator-not-its-position-macromacromodelskt-macromacroenginekt-midimidimappingmanagerkt-oscoscmappingmanagerkt">Knob Targets and MIDI/OSC Modulator Mappings Now Follow the Modulator, Not Its Position (<code>macro/MacroModels.kt</code>, <code>macro/MacroEngine.kt</code>, <code>midi/MidiMappingManager.kt</code>, <code>osc/OscMappingManager.kt</code>)</h3>
+<ul>
+<li><strong>Deleting or reordering a modulator no longer breaks knob targets.</strong> Before, a knob target on an LFO/Seq/Audio property was remembered as "the Nth modulator", so removing an earlier modulator (Reset, Clear all CVs, MIDI unbind, undo) made the target go dead or drive a different modulator. Targets now stick to their own modulator. If that modulator is removed, the target simply stops and a line is logged.</li>
+<li><strong>Existing presets, sessions and knob banks keep working.</strong> Old position-based targets are converted the first time they load; no action needed.</li>
+<li><strong>MIDI/OSC mappings to modulator properties</strong> are now written as <code>...:mod/&lt;modulator id&gt;/&lt;property&gt;</code>. Old <code>:mod/0/...</code> mappings still load and still resolve by position. Their labels in the mapping tables now read "Mod <property>" for id-based paths.</li>
+<li>Internal: <code>MacroBinding.modulatorIndex</code> is now a legacy read-only field; <code>modulatorId</code> (the <code>CvModulator.id</code>) is the identity. <code>MacroEngine</code> migrates legacy bindings once in <code>resolveControls</code>. <code>ModulatorPropertyAccessor.findById</code> / <code>findByPathRef</code> resolve ids; <code>MacroEngine.findBindingsTargeting</code> and <code>MacroLearnState.bindTarget</code> take <code>modulatorId</code>. Slider/section <code>modulatorIndex</code> parameters remain for display labels only. Placeholder (not yet activated) modulators keep their fixed <code>virtual_*</code> id, so a target set on one starts working once it is activated.</li>
+</ul>
 <h3 id="deck-loads-go-through-one-entry-point-prompts-undo-and-knob-banks-now-agree-presetsdeckopskt-uiuithemekt-uipreferencespanelkt">Deck Loads Go Through One Entry Point: Prompts, Undo and Knob Banks Now Agree (<code>presets/DeckOps.kt</code>, <code>ui/UITheme.kt</code>, <code>ui/PreferencesPanel.kt</code>)</h3>
 <ul>
 <li><strong>Manual loads ask before discarding your edits.</strong> Loading a preset, picking a generator, ejecting, or Copy/Move/Swap onto a deck with unsaved changes now shows the Save / Discard / Cancel prompt by default. Before, the AutoVJ setting (default: discard) decided, so most loads silently threw edits away. The new <strong>Manual Load Dirty Behavior</strong> preference (Preferences → General, next to the AutoVJ one) can be Prompt, Discard or Auto-Save. The prompt has a "Don't ask again" box that switches it to Discard. AutoVJ queue advances still use the AutoVJ setting only.</li>

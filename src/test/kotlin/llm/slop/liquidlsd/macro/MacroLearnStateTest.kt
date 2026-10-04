@@ -71,7 +71,7 @@ class MacroLearnStateTest {
             bank = bank,
             targetType = MacroTargetType.MODULATOR_PROPERTY,
             parameterId = "Deck A/warp",
-            modulatorIndex = 0,
+            modulatorId = "mod-a",
             propertyName = "morph",
             minVal = 0f,
             maxVal = 1f,
@@ -85,7 +85,7 @@ class MacroLearnStateTest {
         val binding = knob.bindings[0]
         assertEquals("Deck A/warp", binding.parameterId)
         assertEquals(MacroTargetType.MODULATOR_PROPERTY, binding.targetType)
-        assertEquals(0, binding.modulatorIndex)
+        assertEquals("mod-a", binding.modulatorId)
         assertEquals("morph", binding.propertyName)
         assertEquals(MacroCurveType.S_CURVE, binding.curve)
     }

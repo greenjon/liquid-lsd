@@ -173,6 +173,7 @@ object CustomRangeSlider {
         onMinRangeChanged: (Float, Float) -> Unit,
         onMaxRangeChanged: (Float, Float) -> Unit,
         modulatorIndex: Int? = null,
+        modulatorId: String? = null,
         paramKey: String? = null
     ) {
         val effectiveIsRandomizable = if (isRandomizeDisabled) false else (isRandomizable && session.uiTheme.randomizationEnabled)
@@ -228,25 +229,25 @@ object CustomRangeSlider {
         if (!effectiveIsRandomizable) {
             // SINGLE track for Min/Max
             val labelY = startY - 14f
-            val isMacroBindable = modulatorIndex != null && paramKey != null
+            val isMacroBindable = modulatorId != null && paramKey != null
             val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
-            drawMinMaxBoundLabel(session, "Min", isMacroLearning, textBoxesStartX, labelY, boxWidth, paramKey, modulatorIndex, "lfoMin", minLimit, maxLimit) {
+            drawMinMaxBoundLabel(session, "Min", isMacroLearning, textBoxesStartX, labelY, boxWidth, paramKey, modulatorIndex, modulatorId, "lfoMin", minLimit, maxLimit) {
                 llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
                     bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                     targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
                     parameterId = paramKey!!,
-                    modulatorIndex = modulatorIndex ?: 0,
+                    modulatorId = modulatorId,
                     propertyName = "lfoMin",
                     minVal = minLimit,
                     maxVal = maxLimit
                 )
             }
-            drawMinMaxBoundLabel(session, "Max", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, paramKey, modulatorIndex, "lfoMax", minLimit, maxLimit) {
+            drawMinMaxBoundLabel(session, "Max", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, paramKey, modulatorIndex, modulatorId, "lfoMax", minLimit, maxLimit) {
                 llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
                     bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                     targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
                     parameterId = paramKey!!,
-                    modulatorIndex = modulatorIndex ?: 0,
+                    modulatorId = modulatorId,
                     propertyName = "lfoMax",
                     minVal = minLimit,
                     maxVal = maxLimit
@@ -262,14 +263,14 @@ object CustomRangeSlider {
             val rowLabelH = 14f
             val row2Y = startY + buttonSize + 4f + rowLabelH
 
-            val isMacroBindable = modulatorIndex != null && paramKey != null
+            val isMacroBindable = modulatorId != null && paramKey != null
             val isMacroLearning = isMacroBindable && llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
             val bindRangeBound = { propertyName: String ->
                 llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
                     bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                     targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
                     parameterId = paramKey!!,
-                    modulatorIndex = modulatorIndex ?: 0,
+                    modulatorId = modulatorId,
                     propertyName = propertyName,
                     minVal = minLimit,
                     maxVal = maxLimit
@@ -278,8 +279,8 @@ object CustomRangeSlider {
 
             // Labels for columns (Top row: dcOffset randomization bounds)
             val labelY = startY - 14f
-            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModIdx = modulatorIndex, macroProp = "dcOffsetMin") { bindRangeBound("dcOffsetMin") }
-            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModIdx = modulatorIndex, macroProp = "dcOffsetMax") { bindRangeBound("dcOffsetMax") }
+            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModId = modulatorId, macroProp = "dcOffsetMin") { bindRangeBound("dcOffsetMin") }
+            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModId = modulatorId, macroProp = "dcOffsetMax") { bindRangeBound("dcOffsetMax") }
 
             // Top: Min range
             drawTextInput(session, "${idPrefix}_min_r_min", minRangeMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinRangeChanged(it, maxOf(it, minRangeMax)) }, formatValue)
@@ -288,8 +289,8 @@ object CustomRangeSlider {
 
             // Labels for columns (Bottom row: depth randomization bounds)
             val labelY2 = row2Y - 14f
-            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModIdx = modulatorIndex, macroProp = "depthMin") { bindRangeBound("depthMin") }
-            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModIdx = modulatorIndex, macroProp = "depthMax") { bindRangeBound("depthMax") }
+            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModId = modulatorId, macroProp = "depthMin") { bindRangeBound("depthMin") }
+            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModId = modulatorId, macroProp = "depthMax") { bindRangeBound("depthMax") }
 
             // Bottom: Max range
             drawTextInput(session, "${idPrefix}_max_r_min", maxRangeMin, minLimit, maxLimit, textBoxesStartX, row2Y, boxWidth, null, { onMaxRangeChanged(it, maxOf(it, maxRangeMax)) }, formatValue)
@@ -312,11 +313,12 @@ object CustomRangeSlider {
         w: Float,
         paramKey: String? = null,
         modulatorIndex: Int? = null,
+        modulatorId: String? = null,
         propertyName: String? = null,
         minLimit: Float = 0f,
         maxLimit: Float = 1f,
         macroKey: String? = paramKey,
-        macroModIdx: Int? = modulatorIndex,
+        macroModId: String? = modulatorId,
         macroProp: String? = propertyName,
         onBind: () -> Unit
     ) {
@@ -328,7 +330,7 @@ object CustomRangeSlider {
             onBind()
         }
         val macroInfo = if (macroKey != null && macroProp != null) {
-            llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(null, macroKey, macroModIdx ?: 0, macroProp)
+            llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(null, macroKey, macroModId, macroProp)
         } else null
         if (macroInfo != null && !isMacroLearning && ImGui.isItemClicked(0)) {
             llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = macroInfo.control.id
@@ -336,7 +338,7 @@ object CustomRangeSlider {
         }
 
         val targetPath = if (paramKey != null && propertyName != null) {
-            "$paramKey:mod/${modulatorIndex ?: 0}/$propertyName"
+            "$paramKey:mod/${modulatorId ?: modulatorIndex ?: 0}/$propertyName"
         } else null
         val isOscLearningThis = targetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(targetPath)
         val isMidiLearningThis = targetPath != null && session.parametersState.isMidiTargetLearning(targetPath)
@@ -534,6 +536,7 @@ object CustomRangeSlider {
         onValueChanged: (Float) -> Unit,
         readOnly: Boolean = false,
         modulatorIndex: Int? = null,
+        modulatorId: String? = null,
         propertyName: String? = null,
         paramKey: String? = null
     ) {
@@ -558,6 +561,7 @@ object CustomRangeSlider {
             customBoxWidth = customBoxWidth,
             readOnly = readOnly,
             modulatorIndex = modulatorIndex,
+            modulatorId = modulatorId,
             propertyName = propertyName,
             paramKey = paramKey
         )
@@ -581,6 +585,7 @@ object CustomRangeSlider {
         customBoxWidth: Float? = null,
         readOnly: Boolean = false,
         modulatorIndex: Int? = null,
+        modulatorId: String? = null,
         propertyName: String? = null,
         paramKey: String? = null
     ) {
@@ -605,6 +610,7 @@ object CustomRangeSlider {
             customBoxWidth = customBoxWidth,
             readOnly = readOnly,
             modulatorIndex = modulatorIndex,
+            modulatorId = modulatorId,
             propertyName = propertyName,
             paramKey = paramKey
         )
@@ -637,6 +643,7 @@ object CustomRangeSlider {
         randomizeDisabledTooltip: String? = null,
         readOnly: Boolean = false,
         modulatorIndex: Int? = null,
+        modulatorId: String? = null,
         propertyName: String? = null,
         paramKey: String? = null
     ) {
@@ -742,7 +749,7 @@ object CustomRangeSlider {
             llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(
                 unitInstanceId = null,
                 parameterId = paramKey,
-                modulatorIndex = modulatorIndex,
+                modulatorId = modulatorId,
                 propertyName = propertyName
             )
         } else null
@@ -770,7 +777,7 @@ object CustomRangeSlider {
                     bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                     targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
                     parameterId = paramKey!!,
-                    modulatorIndex = modulatorIndex ?: 0,
+                    modulatorId = modulatorId,
                     propertyName = propertyName!!,
                     minVal = minLimit,
                     maxVal = maxLimit
@@ -791,7 +798,7 @@ object CustomRangeSlider {
             }
 
             val targetPath = if (paramKey != null) {
-                if (propertyName != null) "$paramKey:mod/${modulatorIndex ?: 0}/$propertyName" else paramKey
+                if (propertyName != null) "$paramKey:mod/${modulatorId ?: modulatorIndex ?: 0}/$propertyName" else paramKey
             } else null
             val isOscLearningThis = targetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(targetPath)
             val isMidiLearningThis = targetPath != null && session.parametersState.isMidiTargetLearning(targetPath)

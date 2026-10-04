@@ -164,7 +164,7 @@ object MacroLearnState {
         targetType: MacroTargetType,
         parameterId: String,
         unitInstanceId: String? = null,
-        modulatorIndex: Int = 0,
+        modulatorId: String? = null,
         propertyName: String = "",
         minVal: Float = 0.0f,
         maxVal: Float = 1.0f,
@@ -209,7 +209,7 @@ object MacroLearnState {
             it.unitInstanceId == targetUnitInstanceId &&
             it.parameterId == parameterId &&
             it.targetType == targetType &&
-            (targetType != MacroTargetType.MODULATOR_PROPERTY || (it.modulatorIndex == modulatorIndex && it.propertyName == propertyName))
+            (targetType != MacroTargetType.MODULATOR_PROPERTY || (it.modulatorId == modulatorId && it.propertyName == propertyName))
         }
         if (existing != null) {
             setStatus("Already a target: ${control.label.ifEmpty { "Control" }} -> $parameterId")
@@ -221,7 +221,7 @@ object MacroLearnState {
             unitInstanceId = targetUnitInstanceId,
             parameterId = parameterId,
             targetType = targetType,
-            modulatorIndex = modulatorIndex,
+            modulatorId = modulatorId,
             propertyName = propertyName,
             minVal = minVal,
             maxVal = maxVal,

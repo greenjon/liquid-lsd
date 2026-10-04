@@ -210,7 +210,7 @@ You can map any parameter, internal modulator variable, matrix CV modulator, or 
    - In **Preferences → MIDI Controls**, click **Learn** next to *Queue Advance A/B Next*, *Queue Step Back A/B Prev*, *BG Shader Advance*, *BG Step Back*, or *Tap Tempo*.
 
 4. **Modulator Variable Paths**:
-   - Modulator variables use unified path syntax: `<parameterPath>:mod/<modulatorIndex>/<propertyName>`, such as `Deck A/geometry/zoom:mod/0/subdivision` (LFO 1 Speed), `:mod/0/depth`, `:mod/0/slope`, or `:mod/1/morph`. Modulator mappings resolve dynamically each frame and display user-friendly labels (e.g. `Deck A/geometry/zoom [LFO 1 Speed]`) in the MIDI Preferences mapping table.
+   - Modulator variables use unified path syntax: `<parameterPath>:mod/<modulatorId>/<propertyName>`. Learn writes the modulator's stable id, so the mapping keeps following that modulator when others are added, removed or reordered. Older numeric paths such as `Deck A/geometry/zoom:mod/0/subdivision` (LFO 1 Speed), `:mod/0/depth` or `:mod/1/morph` still work and resolve by list position. Modulator mappings resolve dynamically each frame and display user-friendly labels (e.g. `Deck A/geometry/zoom [LFO 1 Speed]`) in the MIDI Preferences mapping table.
 
 ### Intelligent Signal Classification
 
@@ -397,7 +397,7 @@ You can map OSC controls either in-situ from the UI or manually from Preferences
    - Open **Preferences → OSC Controls**.
    - Type or paste the target parameter or modulator path into the **Learn OSC** field:
      - Base parameters: `Mixer/crossfade`, `Deck A/geometry/zoom`, `Master/FX1/speed`.
-     - Modulator variables: `Deck A/geometry/zoom:mod/0/subdivision` (LFO 1 Speed), `:mod/0/depth`, `:mod/0/slope`, `:mod/1/morph`, etc.
+     - Modulator variables: `Deck A/geometry/zoom:mod/<modulatorId>/subdivision` (a numeric `:mod/0/...` is a legacy list position and still works).
    - Click **Start Learn**, then move the control on your OSC surface.
 
 3. **TouchOSC XY Pads & Multi-Argument Vectors**:

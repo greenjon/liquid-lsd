@@ -401,9 +401,9 @@ object PropertiesPanel {
                         ImGui.spacing()
                     }
 
-                    val boundProps = llm.slop.liquidlsd.macro.MacroEngine.findBindingsTargeting(null, cell.paramKey, modulatorIndex = globalModIndex)
+                    val boundProps = llm.slop.liquidlsd.macro.MacroEngine.findBindingsTargeting(null, cell.paramKey, modulatorId = existing.id)
                     if (boundProps.isNotEmpty()) {
-                        for (info in llm.slop.liquidlsd.macro.MacroEngine.findBindingInfos(null, cell.paramKey, modulatorIndex = globalModIndex)) {
+                        for (info in llm.slop.liquidlsd.macro.MacroEngine.findBindingInfos(null, cell.paramKey, modulatorId = existing.id)) {
                             val b = info.binding
                             if (b.targetType != llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY) continue
                             ImGui.pushID("macro_bind_${info.control.id}_${b.propertyName}")

@@ -238,9 +238,9 @@ object OscMappingManager {
         if (parameterPath.contains(":mod/")) {
             val base = parameterPath.substringBefore(":mod/")
             val remainder = parameterPath.substringAfter(":mod/")
-            val modIdx = remainder.substringBefore("/").toIntOrNull() ?: 0
+            val modRef = remainder.substringBefore("/")
             val prop = remainder.substringAfter("/")
-            val label = llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPropertyLabel(modIdx, prop)
+            val label = llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.formatPathRefLabel(modRef, prop)
             return "$base [$label]"
         }
         return parameterPath
@@ -249,20 +249,20 @@ object OscMappingManager {
     /**
      * Resolves an OSC mapping parameter path to a getter and setter.
      * Supports both direct parameters (e.g. "Mixer/crossfade") and nested modulator
-     * variables (e.g. "Deck A/geometry/zoom:mod/0/subdivision").
+     * variables (e.g. "Deck A/geometry/zoom:mod/<modulator id>/subdivision"; a numeric id is a legacy list position).
      */
     private fun resolveTarget(mixer: Mixer, parameterPath: String): Pair<(() -> Float?), ((Float) -> Unit)>? {
         if (parameterPath.contains(":mod/")) {
             val baseParamPath = parameterPath.substringBefore(":mod/")
             val remainder = parameterPath.substringAfter(":mod/")
-            val modIndex = remainder.substringBefore("/").toIntOrNull() ?: return null
+            val modRef = remainder.substringBefore("/").ifEmpty { return null }
             val propName = remainder.substringAfter("/")
             val param = ParameterResolver.findParameterByPath(mixer, baseParamPath) ?: return null
             val getter: () -> Float? = {
-                param.modulators.getOrNull(modIndex)?.let { llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.get(it, propName) }
+                llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findByPathRef(param, modRef)?.let { llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.get(it, propName) }
             }
             val setter: (Float) -> Unit = { v ->
-                param.modulators.getOrNull(modIndex)?.let { llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(it, propName, v) }
+                llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.findByPathRef(param, modRef)?.let { llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor.set(it, propName, v) }
             }
             return Pair(getter, setter)
         } else {

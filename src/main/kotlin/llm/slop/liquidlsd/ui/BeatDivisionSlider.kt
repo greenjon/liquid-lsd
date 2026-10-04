@@ -30,6 +30,7 @@ object BeatDivisionSlider {
         idPrefix: String = "",
         themeColor: Int = TangoPalette.u32(TangoPalette.SYNC.normal, 0.6f),
         modulatorIndex: Int? = null,
+        modulatorId: String? = null,
         propertyName: String? = null,
         paramKey: String? = null,
         bindMinVal: Float = minLimit,
@@ -50,6 +51,7 @@ object BeatDivisionSlider {
             idPrefix = idPrefix,
             themeColor = themeColor,
             modulatorIndex = modulatorIndex,
+            modulatorId = modulatorId,
             propertyName = propertyName,
             paramKey = paramKey,
             bindMinVal = bindMinVal,
@@ -78,6 +80,7 @@ object BeatDivisionSlider {
         isRandomizeDisabled: Boolean = false,
         randomizeDisabledTooltip: String? = null,
         modulatorIndex: Int? = null,
+        modulatorId: String? = null,
         propertyName: String? = null,
         paramKey: String? = null,
         // minLimit/maxLimit above are the slider's own display range (subdivisionOptions array
@@ -162,7 +165,7 @@ object BeatDivisionSlider {
             llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(
                 unitInstanceId = null,
                 parameterId = paramKey,
-                modulatorIndex = modulatorIndex,
+                modulatorId = modulatorId,
                 propertyName = propertyName
             )
         } else null
@@ -190,7 +193,7 @@ object BeatDivisionSlider {
                 bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey!!),
                 targetType = llm.slop.liquidlsd.macro.MacroTargetType.MODULATOR_PROPERTY,
                 parameterId = paramKey!!,
-                modulatorIndex = modulatorIndex ?: 0,
+                modulatorId = modulatorId,
                 propertyName = propertyName!!,
                 minVal = bindMinVal,
                 maxVal = bindMaxVal
@@ -209,7 +212,7 @@ object BeatDivisionSlider {
             }
         }
         val targetPath = if (paramKey != null && propertyName != null) {
-            "$paramKey:mod/${modulatorIndex ?: 0}/$propertyName"
+            "$paramKey:mod/${modulatorId ?: modulatorIndex ?: 0}/$propertyName"
         } else null
         val isOscLearningThis = targetPath != null && llm.slop.liquidlsd.osc.OscLearnState.isTargetLearning(targetPath)
         val isMidiLearningThis = targetPath != null && session.parametersState.isMidiTargetLearning(targetPath)

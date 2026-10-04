@@ -2652,3 +2652,10 @@
   - Prevents GitHub repository release list and tag accumulation across continuous deployment and automated release workflows.
   - Automatically preserves the 3 most recent verified platform release builds while removing stale historical release artifacts and tags.
 
+
+## Modulator Targets Are Addressed by Stable ID, Not List Position (`MacroBinding.modulatorId`, `:mod/<id>/` paths)
+- **Decision**: Macro bindings and MIDI/OSC `:mod/` paths identify a modulator by `CvModulator.id`, never by its index in `param.modulators`. Decided 2026-10-04, before release, while no saved files exist outside the developer's: after release every preset, session and bank would need a permanent migration.
+- **Migration**: `MacroBinding.modulatorIndex` stays as a nullable legacy read field. `MacroEngine.resolveControls` pins it to the modulator's id on first resolve (modulators in old files get an id on load) and clears it, so the next save writes ids. A numeric `:mod/<n>/` path segment is still read as a position (`ModulatorPropertyAccessor.findByPathRef`) but is never written by new code.
+- **Missing id**: the binding is skipped and logged, not dropped, so undo that restores the modulator restores the binding.
+- **Not decided here**: D9 (editors reading the resolved cache, so disabled bindings vanish) is a separate change.
+- **Rationale**: removing, resetting or undoing modulators shifted indices, so bindings silently died or drove the wrong modulator.

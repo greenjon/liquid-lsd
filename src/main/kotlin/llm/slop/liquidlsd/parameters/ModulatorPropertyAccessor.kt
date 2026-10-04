@@ -9,6 +9,13 @@ package llm.slop.liquidlsd.parameters
  */
 object ModulatorPropertyAccessor {
 
+    /** Resolves a stable modulator id to the modulator currently on [param], or null if gone. */
+    fun findById(param: ModulatableParameter, id: String?): CvModulator? {
+        if (id == null) return null
+        for (m in param.modulators) if (m.id == id) return m
+        return null
+    }
+
     /**
      * Mutates the matching `var` field on [mod].
      * Unrecognized property names are a silent no-op — never throw.
@@ -81,6 +88,18 @@ object ModulatorPropertyAccessor {
     }
 
     /**
+     * Resolves the `<ref>` segment of a persisted `path:mod/<ref>/<prop>` MIDI/OSC target.
+     * New paths carry a stable modulator id; a purely numeric segment is a legacy list position.
+     */
+    fun findByPathRef(param: ModulatableParameter, ref: String): CvModulator? =
+        ref.toIntOrNull()?.let { param.modulators.getOrNull(it) } ?: findById(param, ref)
+
+    /** Label for a path `<ref>` segment: legacy positions keep "LFO 1/2"; ids can't be positioned here. */
+    fun formatPathRefLabel(ref: String, propertyName: String): String =
+        ref.toIntOrNull()?.let { formatPropertyLabel(it, propertyName) }
+            ?: formatPropertyLabel(-1, propertyName)
+
+    /**
      * Formats a user-friendly label for UI badges and mapping tables.
      * E.g. (0, "subdivision") -> "LFO 1 Speed", (1, "morph") -> "LFO 2 Morph".
      */
@@ -88,6 +107,7 @@ object ModulatorPropertyAccessor {
         val modName = when (modulatorIndex) {
             0 -> "LFO 1"
             1 -> "LFO 2"
+            -1 -> "Mod"
             else -> "Mod ${modulatorIndex + 1}"
         }
         val propLabel = when (propertyName) {

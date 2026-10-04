@@ -336,9 +336,9 @@ class MacroEngineTest {
         param.modulators.add(mod1)
         val mixer = createTestMixer(listOf("Deck A/warp" to param))
 
-        val bSubdiv0 = MacroBinding(parameterId = "Deck A/warp", targetType = MacroTargetType.MODULATOR_PROPERTY, modulatorIndex = 0, propertyName = "subdivision")
-        val bMorph0 = MacroBinding(parameterId = "Deck A/warp", targetType = MacroTargetType.MODULATOR_PROPERTY, modulatorIndex = 0, propertyName = "morph")
-        val bSubdiv1 = MacroBinding(parameterId = "Deck A/warp", targetType = MacroTargetType.MODULATOR_PROPERTY, modulatorIndex = 1, propertyName = "subdivision")
+        val bSubdiv0 = MacroBinding(parameterId = "Deck A/warp", targetType = MacroTargetType.MODULATOR_PROPERTY, modulatorId = mod0.id, propertyName = "subdivision")
+        val bMorph0 = MacroBinding(parameterId = "Deck A/warp", targetType = MacroTargetType.MODULATOR_PROPERTY, modulatorId = mod0.id, propertyName = "morph")
+        val bSubdiv1 = MacroBinding(parameterId = "Deck A/warp", targetType = MacroTargetType.MODULATOR_PROPERTY, modulatorId = mod1.id, propertyName = "subdivision")
 
         val control = MacroControl(label = "K1", bindings = mutableListOf(bSubdiv0, bMorph0, bSubdiv1))
         MacroEngine.registerBank(null, MacroBank(knobs = listOf(control)))
@@ -347,7 +347,7 @@ class MacroEngineTest {
         val allForParam = MacroEngine.findBindingsTargeting(null, "Deck A/warp")
         assertEquals(3, allForParam.size)
 
-        val onlyMod0 = MacroEngine.findBindingsTargeting(null, "Deck A/warp", modulatorIndex = 0)
+        val onlyMod0 = MacroEngine.findBindingsTargeting(null, "Deck A/warp", modulatorId = mod0.id)
         assertEquals(2, onlyMod0.size)
         assertTrue(onlyMod0.containsAll(listOf(bSubdiv0, bMorph0)))
 
@@ -355,7 +355,7 @@ class MacroEngineTest {
         assertEquals(2, onlySubdivision.size)
         assertTrue(onlySubdivision.containsAll(listOf(bSubdiv0, bSubdiv1)))
 
-        val exact = MacroEngine.findBindingsTargeting(null, "Deck A/warp", modulatorIndex = 1, propertyName = "subdivision")
+        val exact = MacroEngine.findBindingsTargeting(null, "Deck A/warp", modulatorId = mod1.id, propertyName = "subdivision")
         assertEquals(1, exact.size)
         assertTrue(exact.contains(bSubdiv1))
 
@@ -402,12 +402,12 @@ class MacroEngineTest {
     }
 
     @Test
-    fun testUnresolvableModulatorIndexIsSkippedWithoutCrashing() {
+    fun testUnresolvableModulatorIdIsSkippedWithoutCrashing() {
         val param = ModulatableParameter(0.0f)
-        // No modulators added, so index 0 does not resolve.
+        // No modulators added, so the id does not resolve.
         val mixer = createTestMixer(listOf("Deck A/warp" to param))
 
-        val badBinding = MacroBinding(parameterId = "Deck A/warp", targetType = MacroTargetType.MODULATOR_PROPERTY, modulatorIndex = 0, propertyName = "subdivision")
+        val badBinding = MacroBinding(parameterId = "Deck A/warp", targetType = MacroTargetType.MODULATOR_PROPERTY, modulatorId = "gone", propertyName = "subdivision")
         val control = MacroControl(value = 1.0f, bindings = mutableListOf(badBinding))
         MacroEngine.registerBank(null, MacroBank(knobs = listOf(control)))
 
@@ -440,5 +440,103 @@ class MacroEngineTest {
 
     private fun assertEquals(expected: Float, actual: Float, absoluteTolerance: Float, message: String? = null) {
         assertTrue(kotlin.math.abs(expected - actual) <= absoluteTolerance, message ?: "Expected $expected but was $actual (tolerance $absoluteTolerance)")
+    }
+
+    // --- Stable modulator ids (D7) ---
+
+    private fun modBinding(id: String?, legacyIndex: Int? = null, prop: String = "depth") = MacroBinding(
+        parameterId = "Deck A/warp", targetType = MacroTargetType.MODULATOR_PROPERTY,
+        modulatorId = id, modulatorIndex = legacyIndex, propertyName = prop, minVal = 0f, maxVal = 1f
+    )
+
+    private fun threeModParam(): Triple<ModulatableParameter, List<CvModulator>, Mixer> {
+        val param = ModulatableParameter(0.0f)
+        val mods = listOf(CvModulator(sourceId = "lfo"), CvModulator(sourceId = "seq"), CvModulator(sourceId = "audio_amp"))
+        mods.forEach { param.modulators.add(it) }
+        return Triple(param, mods, createTestMixer(listOf("Deck A/warp" to param)))
+    }
+
+    private fun bindAndTick(mixer: Mixer, vararg bindings: MacroBinding, value: Float = 0.7f): MacroControl {
+        val control = MacroControl(value = value, bindings = mutableListOf(*bindings))
+        MacroEngine.registerBank(null, MacroBank(knobs = listOf(control)))
+        MacroEngine.tick(mixer)
+        return control
+    }
+
+    @Test
+    fun testBindingFollowsModulatorAfterRemovingEarlierOne() {
+        val (param, mods, mixer) = threeModParam()
+        bindAndTick(mixer, modBinding(mods[2].id))
+        param.modulators.remove(mods[0])
+        MacroEngine.invalidate()
+        mods[1].depth = 0.123f
+        MacroEngine.tick(mixer)
+        assertEquals(0.7f, param.modulators.first { it.id == mods[2].id }.depth, absoluteTolerance = 1e-5f)
+        assertEquals(0.123f, param.modulators.first { it.id == mods[1].id }.depth, absoluteTolerance = 1e-5f)
+    }
+
+    @Test
+    fun testBindingOnRemovedFirstMiddleAndLastModulatorIsSkipped() {
+        for (removed in 0..2) {
+            val (param, mods, mixer) = threeModParam()
+            bindAndTick(mixer, modBinding(mods[removed].id))
+            param.modulators.remove(mods[removed])
+            MacroEngine.invalidate()
+            MacroEngine.tick(mixer)
+            assertTrue(MacroEngine.findBindingsTargeting(null, "Deck A/warp").isEmpty(), "removed index $removed")
+            param.modulators.forEach { assertFalse(it.depth == 0.7f, "survivor must stay untouched (removed $removed)") }
+        }
+    }
+
+    @Test
+    fun testBindingSurvivesReorder() {
+        val (param, mods, mixer) = threeModParam()
+        val untouchedDepth = mods[2].depth
+        bindAndTick(mixer, modBinding(mods[0].id))
+        val reordered = param.modulators.reversed()
+        param.modulators.clear(); param.modulators.addAll(reordered)
+        MacroEngine.invalidate()
+        mods[0].depth = 0f
+        MacroEngine.tick(mixer)
+        assertEquals(0.7f, param.modulators.first { it.id == mods[0].id }.depth, absoluteTolerance = 1e-5f)
+        assertEquals(untouchedDepth, param.modulators.first { it.id == mods[2].id }.depth, absoluteTolerance = 1e-5f)
+    }
+
+    @Test
+    fun testLegacyIndexBindingIsMigratedToIdOnFirstResolve() {
+        val (param, mods, mixer) = threeModParam()
+        val control = bindAndTick(mixer, modBinding(null, legacyIndex = 1))
+        val migrated = control.bindings.single()
+        assertEquals(mods[1].id, migrated.modulatorId)
+        assertEquals(null, migrated.modulatorIndex)
+        // Pinned to the id: removing an earlier modulator no longer retargets it.
+        param.modulators.remove(mods[0])
+        MacroEngine.invalidate()
+        MacroEngine.tick(mixer)
+        assertEquals(0.7f, param.modulators.first { it.id == mods[1].id }.depth, absoluteTolerance = 1e-5f)
+    }
+
+    @Test
+    fun testOldFormatJsonRoundTripsToIdFormat() {
+        val old = """{"parameterId":"Deck A/warp","targetType":"MODULATOR_PROPERTY","modulatorIndex":2,"propertyName":"depth"}"""
+        val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true; encodeDefaults = true }
+        val binding = json.decodeFromString<MacroBinding>(old)
+        assertEquals(2, binding.modulatorIndex)
+        assertEquals(null, binding.modulatorId)
+        val (_, mods, mixer) = threeModParam()
+        val control = bindAndTick(mixer, binding)
+        val reloaded = json.decodeFromString<MacroBinding>(json.encodeToString(MacroBinding.serializer(), control.bindings.single()))
+        assertEquals(mods[2].id, reloaded.modulatorId)
+        assertEquals(null, reloaded.modulatorIndex)
+    }
+
+    @Test
+    fun testFindModulatorByPathRefHandlesIdsAndLegacyIndexes() {
+        val (param, mods, _) = threeModParam()
+        val acc = llm.slop.liquidlsd.parameters.ModulatorPropertyAccessor
+        assertEquals(mods[1], acc.findByPathRef(param, "1"))
+        assertEquals(mods[2], acc.findByPathRef(param, mods[2].id))
+        assertEquals(null, acc.findByPathRef(param, "9"))
+        assertEquals(null, acc.findByPathRef(param, "no-such-id"))
     }
 }

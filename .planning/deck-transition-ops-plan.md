@@ -161,3 +161,6 @@ Per the repo's definition of done:
 - **The prompt now defaults on.** Performers used to silent discard will see dialogs. Mitigation: the preference is in the first-run notes, and the prompt has a "don't ask again" option that sets DISCARD.
 - **Async undo ordering.** Undo is captured at drain time, not request time, so an undo between the request and the drain is a no-op for that load. That is acceptable, since the drain happens on the next frame.
 - **Whole-deck DTO snapshots are larger than modulator snapshots.** The undo stack depth is unchanged, so memory stays bounded.
+
+## D7 status (2026-10-04)
+Stable modulator ids implemented (MacroBinding.modulatorId, :mod/<id>/ paths, legacy migration, tests in MacroEngineTest). D9 not yet done: it is a separate change in the editors' query functions.

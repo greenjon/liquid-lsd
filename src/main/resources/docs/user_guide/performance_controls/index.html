@@ -2251,7 +2251,7 @@ for the FX Rack view that exposes these.</p>
 <li>
 <p><strong>Modulator Variable Paths</strong>:</p>
 </li>
-<li>Modulator variables use unified path syntax: <code>&lt;parameterPath&gt;:mod/&lt;modulatorIndex&gt;/&lt;propertyName&gt;</code>, such as <code>Deck A/geometry/zoom:mod/0/subdivision</code> (LFO 1 Speed), <code>:mod/0/depth</code>, <code>:mod/0/slope</code>, or <code>:mod/1/morph</code>. Modulator mappings resolve dynamically each frame and display user-friendly labels (e.g. <code>Deck A/geometry/zoom [LFO 1 Speed]</code>) in the MIDI Preferences mapping table.</li>
+<li>Modulator variables use unified path syntax: <code>&lt;parameterPath&gt;:mod/&lt;modulatorId&gt;/&lt;propertyName&gt;</code>. Learn writes the modulator's stable id, so the mapping keeps following that modulator when others are added, removed or reordered. Older numeric paths such as <code>Deck A/geometry/zoom:mod/0/subdivision</code> (LFO 1 Speed), <code>:mod/0/depth</code> or <code>:mod/1/morph</code> still work and resolve by list position. Modulator mappings resolve dynamically each frame and display user-friendly labels (e.g. <code>Deck A/geometry/zoom [LFO 1 Speed]</code>) in the MIDI Preferences mapping table.</li>
 </ol>
 <h3 id="intelligent-signal-classification">Intelligent Signal Classification</h3>
 <p>When you turn a knob or tap a pad during Learn mode, Liquid LSD inspects the incoming stream and classifies it automatically:
@@ -2511,7 +2511,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <li>Open <strong>Preferences → OSC Controls</strong>.</li>
 <li>Type or paste the target parameter or modulator path into the <strong>Learn OSC</strong> field:<ul>
 <li>Base parameters: <code>Mixer/crossfade</code>, <code>Deck A/geometry/zoom</code>, <code>Master/FX1/speed</code>.</li>
-<li>Modulator variables: <code>Deck A/geometry/zoom:mod/0/subdivision</code> (LFO 1 Speed), <code>:mod/0/depth</code>, <code>:mod/0/slope</code>, <code>:mod/1/morph</code>, etc.</li>
+<li>Modulator variables: <code>Deck A/geometry/zoom:mod/&lt;modulatorId&gt;/subdivision</code> (a numeric <code>:mod/0/...</code> is a legacy list position and still works).</li>
 </ul>
 </li>
 <li>
