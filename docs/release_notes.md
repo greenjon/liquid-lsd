@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Controller Navigates the Unified Browser Tree (`ui/browser/BrowserPane.kt`, `ui/LibraryNavigation.kt`, `ui/browser/BrowseModel.kt`)
+- **With the beta "Unified" Library pane on, the Twister's pane button walks tree, list, BG queue, A/B queue** (FX: FX BG and FX A/B queues; Trans: its one queue). A fresh tab starts in the list. In the tree, turning knob 1 moves a cursor over the visible folders and playlists (shown as an outline) and **a tap selects** the folder or playlist, which fills the list. Turning never changes the list. Changing the folder or playlist, by controller or mouse, clears the list selection so a row of the previous view can't be loaded by accident. The classic four columns are unchanged.
+- Internal: `SelectionSource.TREE`; `BrowserPane.stepTree/acceptTree/treeCursorOf/treeSize`; pure `visibleSelectableScopes` and `stepTreeCursor` in `BrowseModel.kt`; `LibraryNavigation.panes()` has a unified branch (`unifiedKind()`).
+
 ### Unsaved-Changes Prompt Can Be Answered from the Controller (`ui/PopupManager.kt`, `ui/NavigationSurface.kt`)
 - **The "unsaved changes on this deck" prompt now answers to the Twister.** While it is up, **left-top** (or Esc) is Cancel, **right-top** or a **knob 1 tap** is Save, **right-bottom** or **Shift + tap** is Discard. Nothing else navigates until you answer, so a stray turn can't change the Library behind it. The prompt shows the mapping.
 - Internal: `DeckConfirmPrompt` / `DeckConfirmChoice` (implemented by `PopupManager`; the choice is applied inside the modal on the next draw so `closeCurrentPopup` targets it); `NavigationSurface` takes the prompt and reports `browsing` while it is pending.

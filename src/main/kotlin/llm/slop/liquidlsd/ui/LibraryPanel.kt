@@ -37,6 +37,8 @@ object LibraryPanel {
     }
 
     enum class SelectionSource {
+        /** Unified pane only: the folder/playlist tree (see [llm.slop.liquidlsd.ui.browser.BrowserPane.stepTree]). */
+        TREE,
         PRESETS,
         PLAYLIST,
         QUEUE_AB,
@@ -97,6 +99,7 @@ object LibraryPanel {
 
     fun getActiveSelectedFile(session: SessionContext): File? {
         return when (activeSelectionSource) {
+            SelectionSource.TREE -> null
             SelectionSource.PRESETS -> {
                 when (viewMode) {
                     LibraryViewMode.FX -> FXBrowserPanel.selectedAsset?.let { File(it.path) }
@@ -590,6 +593,10 @@ object LibraryPanel {
     fun navigateSelection(delta: Int, session: SessionContext, mixer: Mixer) {
         if (viewMode == LibraryViewMode.MAPS) return // Maps rows are clicked, not stepped
         when (activeSelectionSource) {
+            SelectionSource.TREE -> {
+                LibraryNavigation.unifiedKind()?.let { llm.slop.liquidlsd.ui.browser.BrowserPane.stepTree(it, delta) }
+                shouldScrollToSelection = true
+            }
             SelectionSource.PRESETS -> {
                 if (viewMode == LibraryViewMode.FX) {
                     val list = FXBrowserPanel.filteredRows

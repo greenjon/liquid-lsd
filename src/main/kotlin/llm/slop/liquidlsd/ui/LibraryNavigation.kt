@@ -12,7 +12,9 @@ import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.ui.LibraryPanel.LibraryViewMode
 import llm.slop.liquidlsd.ui.LibraryPanel.SelectionSource
+import llm.slop.liquidlsd.ui.browser.BrowseKind
 import llm.slop.liquidlsd.ui.browser.BrowserDeckButtons
+import llm.slop.liquidlsd.ui.browser.BrowserPane
 import llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.FXBgQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
@@ -45,8 +47,23 @@ internal object LibraryNavigation {
         setViewMode(modes[Math.floorMod(LibraryPanel.viewMode.ordinal + delta, modes.size)])
     }
 
-    /** The lists the cursor can sit in for the current tab, left to right. */
-    private fun panes(): List<SelectionSource> = when (LibraryPanel.viewMode) {
+    /** The browse kind of the current tab when the unified pane is what is on screen, else null (classic columns, Maps). */
+    internal fun unifiedKind(): BrowseKind? {
+        val kind = when (LibraryPanel.viewMode) {
+            LibraryViewMode.PRESETS -> BrowseKind.SRC
+            LibraryViewMode.FX -> BrowseKind.FX
+            LibraryViewMode.TRANS -> BrowseKind.TRANS
+            LibraryViewMode.MAPS -> return null
+        }
+        return kind.takeIf { BrowserPane.enabled && BrowserPane.supports(it) }
+    }
+
+    /** The lists the cursor can sit in for the current tab, left to right. The unified pane has no playlist column: a playlist is a tree scope shown in the list. */
+    internal fun panes(): List<SelectionSource> = if (unifiedKind() != null) when (LibraryPanel.viewMode) {
+        LibraryViewMode.PRESETS -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB)
+        LibraryViewMode.FX -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB)
+        else -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.TRANSITION_QUEUE)
+    } else when (LibraryPanel.viewMode) {
         LibraryViewMode.PRESETS -> listOf(SelectionSource.PRESETS, SelectionSource.PLAYLIST, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB)
         LibraryViewMode.FX -> listOf(SelectionSource.PRESETS, SelectionSource.FX_PLAYLIST, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB)
         LibraryViewMode.TRANS -> listOf(SelectionSource.PRESETS, SelectionSource.TRANSITION_PLAYLIST, SelectionSource.TRANSITION_QUEUE)
@@ -54,6 +71,7 @@ internal object LibraryNavigation {
     }
 
     private fun paneSize(source: SelectionSource, session: SessionContext): Int = when (source) {
+        SelectionSource.TREE -> unifiedKind()?.let { BrowserPane.treeSize(it) } ?: 0
         SelectionSource.PRESETS -> when (LibraryPanel.viewMode) {
             LibraryViewMode.PRESETS -> PresetListPanel.filteredPresets.size
             LibraryViewMode.FX -> FXBrowserPanel.filteredRows.size
@@ -71,6 +89,7 @@ internal object LibraryNavigation {
     }
 
     private fun hasCursor(source: SelectionSource): Boolean = when (source) {
+        SelectionSource.TREE -> true // the cursor starts on the selected scope
         SelectionSource.PRESETS -> LibraryPanel.getSelectedAsset() != null
         SelectionSource.PLAYLIST -> PlaylistEditorPanel.selectedPresetIndex >= 0
         SelectionSource.QUEUE_AB -> QueueActionsPanel.selectedIndex >= 0
@@ -85,7 +104,15 @@ internal object LibraryNavigation {
     /** Moves the cursor to the next (or previous) non-empty list of this tab and puts it on an item. */
     fun stepPane(delta: Int, session: SessionContext, mixer: Mixer) {
         val panes = panes()
-        val from = panes.indexOf(LibraryPanel.activeSelectionSource).let { if (it < 0) (if (delta > 0) -1 else 0) else it }
+        // No cursor yet: the unified pane counts as being in its list (where a fresh tab starts), the classic columns start before the first pane.
+        val from = panes.indexOf(LibraryPanel.activeSelectionSource).let {
+            when {
+                it >= 0 -> it
+                SelectionSource.TREE in panes -> panes.indexOf(SelectionSource.PRESETS)
+                delta > 0 -> -1
+                else -> 0
+            }
+        }
         for (i in 1..panes.size) {
             val candidate = panes[Math.floorMod(from + delta * i, panes.size)]
             if (paneSize(candidate, session) == 0) continue
@@ -144,6 +171,7 @@ internal object LibraryNavigation {
     fun accept(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
         val file = LibraryPanel.getActiveSelectedFile(session)
         when (LibraryPanel.activeSelectionSource) {
+            SelectionSource.TREE -> unifiedKind()?.let { BrowserPane.acceptTree(it) }
             SelectionSource.PRESETS -> when (LibraryPanel.viewMode) {
                 LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset?.let { loadAssetToInactiveDeck(session, mixer, it, parametersState) }
                 LibraryViewMode.FX -> enqueue(session, bg = false)

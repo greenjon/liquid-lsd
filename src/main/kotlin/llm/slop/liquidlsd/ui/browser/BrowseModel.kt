@@ -50,6 +50,31 @@ data class BrowseNode(val scope: BrowseScope, val label: String, val depth: Int,
     val selectable: Boolean get() = scope != BrowseScope.PlaylistsHeader
 }
 
+/** The selectable tree rows that are on screen: rows below a collapsed ancestor are hidden, headers are skipped. */
+fun visibleSelectableScopes(tree: List<BrowseNode>, collapsed: Set<BrowseScope>): List<BrowseScope> {
+    val visible = mutableListOf<BrowseScope>()
+    var hideBelow = Int.MAX_VALUE
+    for ((i, node) in tree.withIndex()) {
+        if (node.depth > hideBelow) continue
+        hideBelow = Int.MAX_VALUE
+        val expandable = tree.getOrNull(i + 1)?.let { it.depth > node.depth } == true
+        if (expandable && node.scope in collapsed) hideBelow = node.depth
+        if (node.selectable) visible += node.scope
+    }
+    return visible
+}
+
+/**
+ * The tree cursor after moving [delta] rows from [current] over the [visible] scopes, clamped at both ends. A [current]
+ * that is null or no longer visible (collapsed away, playlist deleted) starts from the first row going down, the last going up.
+ */
+fun stepTreeCursor(visible: List<BrowseScope>, current: BrowseScope?, delta: Int): BrowseScope? {
+    if (visible.isEmpty()) return null
+    val at = visible.indexOf(current)
+    if (at < 0) return if (delta > 0) visible.first() else visible.last()
+    return visible[(at + delta).coerceIn(0, visible.lastIndex)]
+}
+
 /**
  * The data behind one unified browser pane: every stock and saved entry of a [kind], its playlists, and (when the kind has
  * a favorites store) the favorite keys. Pure and UI-free so the tree, filtering and playlist rules can be unit tested;

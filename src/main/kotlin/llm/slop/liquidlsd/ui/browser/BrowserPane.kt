@@ -25,6 +25,7 @@ import llm.slop.liquidlsd.ui.popOpenDropdownPadding
 import llm.slop.liquidlsd.ui.pushOpenDropdownFont
 import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
 import llm.slop.liquidlsd.ui.ParametersState
+import llm.slop.liquidlsd.ui.TangoPalette
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
 import java.io.File
@@ -68,6 +69,27 @@ object BrowserPane {
     private const val MIN_SIDE_W = 150f
 
     fun scopeOf(kind: BrowseKind): BrowseScope = scopes[kind] ?: BrowseScope.All
+
+    /** The controller's tree cursor per kind. Null means "on the selected scope"; stepping moves it, [acceptTree] selects it. */
+    private val treeCursors = HashMap<BrowseKind, BrowseScope>()
+
+    private fun visibleScopes(kind: BrowseKind): List<BrowseScope> =
+        visibleSelectableScopes(BrowseCatalogs.get(kind).tree(), collapsed[kind] ?: emptySet())
+
+    /** Where the tree cursor is now: the stepped-to row while it is still visible, else the selected scope. */
+    fun treeCursorOf(kind: BrowseKind): BrowseScope = treeCursors[kind]?.takeIf { it in visibleScopes(kind) } ?: scopeOf(kind)
+
+    /** Number of rows the tree cursor can visit. */
+    fun treeSize(kind: BrowseKind): Int = visibleScopes(kind).size
+
+    /** Moves the tree cursor [delta] rows without selecting anything. */
+    fun stepTree(kind: BrowseKind, delta: Int) {
+        val next = stepTreeCursor(visibleScopes(kind), treeCursorOf(kind), delta) ?: return
+        treeCursors[kind] = next
+    }
+
+    /** Selects the scope under the tree cursor, which fills the list. */
+    fun acceptTree(kind: BrowseKind) = select(kind, treeCursorOf(kind))
 
     fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, kind: BrowseKind) {
         val catalog = BrowseCatalogs.get(kind)
@@ -121,6 +143,7 @@ object BrowserPane {
         val tree = catalog.tree()
         syncPlaylistSelection(kind, tree)
         val current = scopeOf(kind)
+        val cursor = if (LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.TREE) treeCursorOf(kind) else null
         val hidden = collapsed.getOrPut(kind) { HashSet() }
         var hideBelow = Int.MAX_VALUE
         for ((i, node) in tree.withIndex()) {
@@ -142,6 +165,13 @@ object BrowserPane {
                 ImGui.textDisabled(node.label)
             } else if (ImGui.selectable("${node.label}##node", node.scope == current)) {
                 select(kind, node.scope)
+            }
+            if (node.scope == cursor) {
+                // The controller's cursor: an outline, so it reads apart from the selected scope's fill.
+                val min = ImGui.getItemRectMin()
+                val max = ImGui.getItemRectMax()
+                ImGui.getWindowDrawList().addRect(min.x - 1f, min.y, max.x + 1f, max.y, TangoPalette.u32(TangoPalette.SYNC.normal), 3f)
+                if (LibraryPanel.shouldScrollToSelection) ImGui.setScrollHereY(0.5f)
             }
             val playlist = node.scope as? BrowseScope.Playlist
             if (playlist != null) playlistContextMenu(session, mixer, kind, playlist)
@@ -210,14 +240,21 @@ object BrowserPane {
         if (external != syncedPlaylist[kind]) {
             syncedPlaylist[kind] = external
             val target = tree.firstOrNull { (it.scope as? BrowseScope.Playlist)?.path == external }
-            if (target != null) scopes[kind] = target.scope
+            if (target != null) setScope(kind, target.scope)
         }
         val scope = scopes[kind]
         if (scope is BrowseScope.Playlist && tree.none { it.scope == scope }) scopes.remove(kind)
     }
 
-    private fun select(kind: BrowseKind, scope: BrowseScope) {
+    /** Changes the scope; the list selection is dropped when it moves, so a row of the previous scope cannot be accepted by accident. */
+    private fun setScope(kind: BrowseKind, scope: BrowseScope) {
+        if (scope != scopeOf(kind)) clearSelection(kind)
         scopes[kind] = scope
+    }
+
+    private fun select(kind: BrowseKind, scope: BrowseScope) {
+        setScope(kind, scope)
+        treeCursors.remove(kind)
         // A playlist scope becomes the Library's active playlist, so "Add to '<playlist>'" in row menus targets it.
         if (scope is BrowseScope.Playlist) {
             val file = File(scope.path)

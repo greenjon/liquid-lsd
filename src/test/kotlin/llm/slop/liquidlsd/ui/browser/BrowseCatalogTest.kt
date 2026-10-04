@@ -139,4 +139,43 @@ class BrowseCatalogTest {
         assertEquals("rave/deep", BrowseCatalog.folderOf(File("/lib/presets/rave/deep/a.lsd"), root))
         assertEquals("", BrowseCatalog.folderOf(File("/elsewhere/a.lsd"), root))
     }
+
+    private fun cursorFixture(): Pair<List<BrowseNode>, BrowseCatalog> {
+        val c = BrowseCatalog(
+            BrowseKind.SRC,
+            listOf(stock("blur"), saved("/lib/a/x.lsd", folder = "a"), saved("/lib/a/b/y.lsd", folder = "a/b")),
+            listOf(BrowsePlaylist("set", "/p/set.lsdplaylist", emptyList()))
+        )
+        return c.tree() to c
+    }
+
+    @Test
+    fun `visible selectable scopes skip the playlists header and anything under a collapsed folder`() {
+        val (tree, _) = cursorFixture()
+        val saved = BrowseScope.Folder(BrowseSection.SAVED)
+        val all = visibleSelectableScopes(tree, emptySet())
+        assertEquals(
+            listOf(
+                BrowseScope.All, BrowseScope.Folder(BrowseSection.STOCK), saved, BrowseScope.Folder(BrowseSection.SAVED, "a"),
+                BrowseScope.Folder(BrowseSection.SAVED, "a/b"), BrowseScope.Playlist("/p/set.lsdplaylist")
+            ),
+            all
+        )
+        assertEquals(
+            listOf(BrowseScope.All, BrowseScope.Folder(BrowseSection.STOCK), saved, BrowseScope.Playlist("/p/set.lsdplaylist")),
+            visibleSelectableScopes(tree, setOf(saved))
+        )
+    }
+
+    @Test
+    fun `tree cursor steps clamp at the ends and restart when the current row is gone`() {
+        val (tree, _) = cursorFixture()
+        val visible = visibleSelectableScopes(tree, emptySet())
+        assertEquals(visible[1], stepTreeCursor(visible, visible[0], 1))
+        assertEquals(visible.first(), stepTreeCursor(visible, visible.first(), -1))
+        assertEquals(visible.last(), stepTreeCursor(visible, visible.last(), 1))
+        assertEquals(visible.first(), stepTreeCursor(visible, null, 1))
+        assertEquals(visible.last(), stepTreeCursor(visible, BrowseScope.Playlist("/gone"), -1))
+        assertEquals(null, stepTreeCursor(emptyList(), null, 1))
+    }
 }

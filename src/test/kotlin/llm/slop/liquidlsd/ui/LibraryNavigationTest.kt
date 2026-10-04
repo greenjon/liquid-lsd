@@ -10,6 +10,7 @@ import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 import io.mockk.mockk
 import llm.slop.liquidlsd.SessionContext
+import llm.slop.liquidlsd.ui.browser.BrowserPane
 import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
 import llm.slop.liquidlsd.ui.browser.TransitionBrowserPanel
@@ -19,6 +20,7 @@ class LibraryNavigationTest {
     fun reset() {
         LibraryPanel.viewMode = LibraryViewMode.PRESETS
         LibraryPanel.activeSelectionSource = null
+        BrowserPane.enabled = false
         PresetListPanel.selection.clear()
         PresetListPanel.filteredPresets = emptyList()
         FXBrowserPanel.selectedAsset = null
@@ -83,6 +85,65 @@ class LibraryNavigationTest {
             io.mockk.unmockkObject(queue)
             llm.slop.liquidlsd.ui.browser.QueueActionsPanel.clearSelection()
         }
+    }
+
+    @Test
+    fun unifiedPaneOrdersTreeListThenQueuesAndLeavesTheClassicColumnsAlone() {
+        val classic = LibraryViewMode.values().filter { it != LibraryViewMode.MAPS }.associateWith {
+            LibraryPanel.viewMode = it
+            LibraryNavigation.panes()
+        }
+        BrowserPane.enabled = true
+        LibraryPanel.viewMode = LibraryViewMode.PRESETS
+        assertEquals(listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB), LibraryNavigation.panes())
+        LibraryPanel.viewMode = LibraryViewMode.FX
+        assertEquals(listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB), LibraryNavigation.panes())
+        LibraryPanel.viewMode = LibraryViewMode.TRANS
+        assertEquals(listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.TRANSITION_QUEUE), LibraryNavigation.panes())
+        LibraryPanel.viewMode = LibraryViewMode.MAPS
+        assertTrue(LibraryNavigation.panes().isEmpty())
+        BrowserPane.enabled = false
+        for ((mode, panes) in classic) {
+            LibraryPanel.viewMode = mode
+            assertEquals(panes, LibraryNavigation.panes())
+            assertFalse(SelectionSource.TREE in panes)
+        }
+    }
+
+    @Test
+    fun unifiedPaneStartsInTheListAndStepsBackToTheTree() {
+        BrowserPane.enabled = true
+        val a = AssetItem(path = "/x/a.lsdpreset", name = "a", type = AssetType.PRESET)
+        PresetListPanel.filteredPresets = listOf(a)
+        val session = mockk<SessionContext>(relaxed = true)
+        val mixer = mockk<llm.slop.liquidlsd.rendering.Mixer>(relaxed = true)
+        // Fresh tab, no cursor: previous-pane goes from the list to the tree, which always has rows (All).
+        LibraryNavigation.stepPane(-1, session, mixer)
+        assertEquals(SelectionSource.TREE, LibraryPanel.activeSelectionSource)
+        // Next pane from the tree is the list, and it puts the cursor on its first row.
+        LibraryNavigation.stepPane(1, session, mixer)
+        assertEquals(SelectionSource.PRESETS, LibraryPanel.activeSelectionSource)
+    }
+
+    @Test
+    fun treeCursorMovesWithoutSelectingAndAcceptSelectsTheScope() {
+        BrowserPane.enabled = true
+        val kind = llm.slop.liquidlsd.ui.browser.BrowseKind.SRC
+        val session = mockk<SessionContext>(relaxed = true)
+        val mixer = mockk<llm.slop.liquidlsd.rendering.Mixer>(relaxed = true)
+        LibraryPanel.activeSelectionSource = SelectionSource.TREE
+        val before = BrowserPane.scopeOf(kind)
+        LibraryNavigation.step(1, session, mixer)
+        assertEquals(before, BrowserPane.scopeOf(kind), "stepping never applies")
+        val cursor = BrowserPane.treeCursorOf(kind)
+        assertTrue(cursor != before)
+        PresetListPanel.selection.setSingle(AssetItem(path = "/x/a.lsdpreset", name = "a", type = AssetType.PRESET))
+        LibraryNavigation.accept(session, mixer, mockk(relaxed = true))
+        assertEquals(cursor, BrowserPane.scopeOf(kind))
+        assertTrue(PresetListPanel.selection.isEmpty, "list selection resets when the scope changes")
+        BrowserPane.stepTree(kind, -9)
+        BrowserPane.acceptTree(kind)
+        assertEquals(llm.slop.liquidlsd.ui.browser.BrowseScope.All, BrowserPane.scopeOf(kind))
     }
 
     @Test

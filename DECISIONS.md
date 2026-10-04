@@ -1,3 +1,8 @@
+## Controller Navigation of the Unified Browser: Tree Cursor, Tap to Select (`ui/browser/BrowserPane.kt`, `ui/LibraryNavigation.kt`)
+- **Decision**: in pane mode `LibraryNavigation.panes()` is TREE, PRESETS (the list), then the kind's queues; playlists are tree scopes, not a pane. The tree has its own cursor (`BrowserPane.treeCursors`, per kind), stepped by `stepTreeCursor` over `visibleSelectableScopes` (clamped, skips the Playlists header and collapsed children). A tab starts in the list (a missing cursor counts as the list for pane stepping); stepping never selects a scope, tap (`acceptTree`) does.
+- **List reset**: every scope change (click, tap, a playlist created elsewhere) clears the kind's list selection (`setScope`), so a row from the previous scope can't be accepted.
+- **Why**: "stepping never applies" is the existing rule for every pane; a list that doesn't update while turning is the accepted cost. Gated on `BrowserPane.enabled`, so the classic `panes()` branch and the Edit-row picker (`ChainListBrowse`) are untouched. Shift+tap enqueue does nothing on the tree (no file under the cursor).
+
 ## Dirty-Deck Prompt Is Answerable from the Controller, and Takes Over Navigation While Up (`ui/PopupManager.kt`, `ui/NavigationSurface.kt`)
 
 - **Decision**: `PopupManager` implements `DeckConfirmPrompt` (`deckConfirmPending`, `answerDeckConfirm(choice)`). `NavigationSurface` checks it first in `button`, `browseStep`, `browseAccept`, `back` and `browsing`: back = Cancel, side 2 / knob tap = Save, side 3 / Shift + tap = Discard; steps are ignored. A controller answer is stored and applied inside `drawDeckConfirmPopups`, the same code path as the mouse buttons.

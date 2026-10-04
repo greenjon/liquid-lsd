@@ -61,3 +61,5 @@ inert in browse contexts (decided and implemented 2026-10-02).
 - The Edit view hides the Library: Library commands must `show` first or no-op.
 - Learned mappings win over controller profiles on the same channel/CC; nothing runs if `midiEnabled` is false.
 - Never write a slash-star inside a KDoc.
+
+**Unified pane (2026-10-04):** with the beta "Unified" Library pane on, side.3 steps TREE > list > BG queue > A/B queue (FX/Trans: their own queues; no playlist pane). Fresh tab starts in the list; knob 1 in the tree moves a cursor, tap selects the scope. See DECISIONS.md "Controller Navigation of the Unified Browser".
