@@ -284,6 +284,56 @@ object PlayQueueManager {
         }
     }
 
+    /**
+     * Chooses the item after the current one (shuffle: a random unplayed one) and records it in the shuffle
+     * bookkeeping. Returns -1 at the end of the queue. [triggerNext] and [advanceBy] share this.
+     */
+    private fun pickNextIndex(): Int {
+        var nextIndex = -1
+
+        if (isShuffleEnabled) {
+            val unplayed = queue.indices.filter { it !in playedIndices }
+            if (unplayed.isEmpty()) {
+                if (isRepeatEnabled) {
+                    playedIndices.clear()
+                    if (activeIndex in queue.indices) {
+                        playedIndices.add(activeIndex)
+                    }
+                    val freshUnplayed = queue.indices.filter { it !in playedIndices }
+                    if (freshUnplayed.isNotEmpty()) {
+                        nextIndex = freshUnplayed.random()
+                    } else if (queue.isNotEmpty()) {
+                        nextIndex = 0
+                    }
+                } else {
+                    logger.info { "End of shuffle queue reached (all tracks played once)." }
+                    return -1
+                }
+            } else {
+                nextIndex = unplayed.random()
+            }
+
+            if (nextIndex != -1) {
+                if (activeIndex in queue.indices) {
+                    playbackHistory.add(activeIndex)
+                }
+                playedIndices.add(nextIndex)
+            }
+        } else {
+            nextIndex = activeIndex + 1
+            if (nextIndex >= queue.size) {
+                if (isRepeatEnabled) {
+                    nextIndex = 0
+                } else {
+                    logger.info { "End of queue reached." }
+                    return -1
+                }
+            }
+        }
+
+        return nextIndex
+    }
+
     fun triggerNext(mixer: Mixer) {
         // Determine which deck is inactive
         // crossfade -1.0 = Deck A, 1.0 = Deck B
@@ -305,48 +355,7 @@ object PlayQueueManager {
 
         if (queue.isEmpty()) return
 
-        var nextIndex = -1
-
-        if (isShuffleEnabled) {
-            val unplayed = queue.indices.filter { it !in playedIndices }
-            if (unplayed.isEmpty()) {
-                if (isRepeatEnabled) {
-                    playedIndices.clear()
-                    if (activeIndex in queue.indices) {
-                        playedIndices.add(activeIndex)
-                    }
-                    val freshUnplayed = queue.indices.filter { it !in playedIndices }
-                    if (freshUnplayed.isNotEmpty()) {
-                        nextIndex = freshUnplayed.random()
-                    } else if (queue.isNotEmpty()) {
-                        nextIndex = 0
-                    }
-                } else {
-                    logger.info { "End of shuffle queue reached (all tracks played once)." }
-                    return
-                }
-            } else {
-                nextIndex = unplayed.random()
-            }
-
-            if (nextIndex != -1) {
-                if (activeIndex in queue.indices) {
-                    playbackHistory.add(activeIndex)
-                }
-                playedIndices.add(nextIndex)
-            }
-        } else {
-            nextIndex = activeIndex + 1
-            if (nextIndex >= queue.size) {
-                if (isRepeatEnabled) {
-                    nextIndex = 0
-                } else {
-                    logger.info { "End of queue reached." }
-                    return
-                }
-            }
-        }
-
+        val nextIndex = pickNextIndex()
         if (nextIndex == -1 || nextIndex !in queue.indices) return
 
         val file = queue[nextIndex]
@@ -365,6 +374,46 @@ object PlayQueueManager {
         mixer.muteCrossfadeNonMidiCv()
     }
     
+    /**
+     * Moves the queue by [n] items (negative = back) and loads only the final one, so a MIDI/CV step of +3 lands
+     * three items on without loading (and fading to) the two in between. A manually staged deck consumes the whole
+     * step instead. Without repeat the move stops at the first or last item.
+     */
+    fun advanceBy(n: Int, mixer: Mixer) {
+        if (n == 0 || queue.isEmpty()) return
+        val forward = n > 0
+        val steps = kotlin.math.abs(n)
+        val targetIsA = mixer.crossfade.value > 0.0f
+        val staged = if (targetIsA) stagedDeckA else stagedDeckB
+        if (steps == 1 || staged) {
+            if (forward) triggerNext(mixer) else triggerPrevious(mixer)
+            return
+        }
+        if (isShuffleEnabled) {
+            // Intermediate picks only update the shuffle bookkeeping; Previous can still retrace them.
+            repeat(steps - 1) {
+                if (forward) {
+                    val i = pickNextIndex()
+                    if (i in queue.indices) activeIndex = i
+                } else if (playbackHistory.isNotEmpty()) {
+                    val prev = playbackHistory.removeAt(playbackHistory.size - 1)
+                    playedIndices.remove(activeIndex)
+                    activeIndex = prev
+                }
+            }
+            if (forward) triggerNext(mixer) else triggerPrevious(mixer)
+            return
+        }
+        val old = activeIndex
+        val raw = old + n
+        val target = if (isRepeatEnabled) Math.floorMod(raw, queue.size) else raw.coerceIn(0, queue.size - 1)
+        if (target == old) return
+        val sign = if (forward) 1 else -1
+        activeIndex = Math.floorMod(target - sign, queue.size)
+        if (forward) triggerNext(mixer) else triggerPrevious(mixer)
+        if (activeIndex != target) activeIndex = old // the load was skipped (dirty deck), leave the position alone
+    }
+
     fun clearQueue() {
         queue.clear()
         activeIndex = -1

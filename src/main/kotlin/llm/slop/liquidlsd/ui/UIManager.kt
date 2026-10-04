@@ -232,28 +232,16 @@ class UIManager(
         }
         val keyDelta = processQueueKeyboardShortcuts()
         val totalDelta = midiCcDelta + cvDelta + keyDelta
-        if (totalDelta != 0) {
-            if (totalDelta > 0) {
-                session.playQueueManager.triggerNext(mixer)
-            } else {
-                session.playQueueManager.triggerPrevious(mixer)
-            }
-        }
+        session.playQueueManager.advanceBy(totalDelta.coerceIn(-MAX_QUEUE_STEPS_PER_FRAME, MAX_QUEUE_STEPS_PER_FRAME), mixer)
 
         val bgCvDelta = if (session.bgQueueManager.isAutoBGEnabled) mixer.pollBgQueueAdvance() else { mixer.pollBgQueueAdvance(); 0 }
         val totalBgDelta = bgMidiCcDelta + bgCvDelta
-        if (totalBgDelta != 0) {
-            if (totalBgDelta > 0) {
-                session.bgQueueManager.triggerNext(mixer)
-            } else {
-                session.bgQueueManager.triggerPrevious(mixer)
-            }
-        }
+        session.bgQueueManager.advanceBy(totalBgDelta.coerceIn(-MAX_QUEUE_STEPS_PER_FRAME, MAX_QUEUE_STEPS_PER_FRAME), mixer)
 
         val transCvDelta = mixer.pollTransQueueAdvance()
         val totalTransDelta = transMidiCcDelta + transCvDelta
         // Applying a transition only selects it, so a +3 delta can step three items (capped against runaway CV).
-        repeat(kotlin.math.abs(totalTransDelta).coerceAtMost(MAX_TRANSITION_STEPS_PER_FRAME)) {
+        repeat(kotlin.math.abs(totalTransDelta).coerceAtMost(MAX_QUEUE_STEPS_PER_FRAME)) {
             if (totalTransDelta > 0) llm.slop.liquidlsd.presets.TransitionQueueManager.advanceNext(mixer)
             else llm.slop.liquidlsd.presets.TransitionQueueManager.advancePrevious(mixer)
         }
@@ -418,8 +406,8 @@ class UIManager(
     companion object {
         private var instance: UIManager? = null
 
-        /** Most transition-queue steps one frame will apply, so a runaway CV can't spin the queue. */
-        private const val MAX_TRANSITION_STEPS_PER_FRAME = 8
+        /** Most queue steps one frame will apply (transitions, A/B and BG), so a runaway CV can't spin a queue. */
+        private const val MAX_QUEUE_STEPS_PER_FRAME = 8
 
         /**
          * Vertical gap in pixels between the bottom edge of the top title/menu bar

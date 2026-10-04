@@ -200,4 +200,25 @@ class BgQueueManagerTest {
         BgQueueManager.triggerPrevious(mixer)
         assertEquals(0, BgQueueManager.activeIndex)
     }
+
+    @Test
+    fun testAdvanceByMovesSeveralItemsAndClampsAtTheEnds() {
+        (1..5).forEach { BgQueueManager.appendToQueue(File("library/presets/p$it.lsd")) }
+        BgQueueManager.isShuffleEnabled = false
+        BgQueueManager.isRepeatEnabled = false
+        BgQueueManager.playIndex(0, mixer, withDipToBlack = false)
+
+        BgQueueManager.advanceBy(3, mixer)
+        assertEquals(3, BgQueueManager.activeIndex)
+
+        BgQueueManager.advanceBy(-2, mixer)
+        assertEquals(1, BgQueueManager.activeIndex)
+
+        BgQueueManager.advanceBy(10, mixer)
+        assertEquals(4, BgQueueManager.activeIndex)
+
+        BgQueueManager.isRepeatEnabled = true
+        BgQueueManager.advanceBy(2, mixer)
+        assertEquals(1, BgQueueManager.activeIndex)
+    }
 }

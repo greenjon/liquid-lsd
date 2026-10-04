@@ -2705,6 +2705,11 @@
 - **Decision (item 24)**: the dormant GLOBAL guest-strip/learn code stays, with comments tying it to the v1.1 free-knob row (matches the existing GLOBAL-bank decision). Decided 2026-10-04.
 - **Open (item 9)**: restoring the previously expanded module after leaving Edit needs a trigger decision (no new button is allowed in v1.0); not implemented.
 
+## Multi-Step Queue Moves Load Only the Final Item; FX Favorites Are Stock-Only and Shared (`PlayQueueManager.advanceBy`, `FxShortlist.version`)
+- **Decision (item 25b)**: `advanceBy(n)` moves by n and loads once. Linear: clamp without repeat, wrap with it, and a load rejected by the dirty-deck SKIP rule restores the old position. Shuffle: intermediate picks only update the bookkeeping. A staged deck consumes the whole step as one. All queue deltas are capped at 8 per frame.
+- **Decision (item 12)**: the Library FX browser reads and writes the same `FxShortlist` as the picker (stock filters only; saved FX can't be starred). Marked by a ★ in the row, a context-menu toggle and a "favorites only" filter, with no extra row button.
+- **Decision (item 19.2)**: MIDI modulators' own DC Offset/Depth sliders stay unbindable (controller driving a controller; keeps the menus simple). Decided 2026-10-04 with the user.
+
 ## FX-Bank Knobs Are Read-Only Outside FxMacroSync; Master/Transition/FX-Send Knobs Are Path-Scoped (`MacroLearnState.acceptsTarget`, `FxMacroSync.isFxBank`)
 - **Decision**: `FxMacroSync` owns every FX-bank binding and rewrites it from the chain, so no other editor may add, edit or delete one: `acceptsTarget` rejects FX banks, and Properties, the base-value panel and the slider popup show a read-only line. MASTER and TRANS knobs accept `Mixer/...` only, FX_SENDS accepts `.../FXChain/...` only, GLOBAL stays unscoped. Bank import remaps only deck-rooted paths (everything except `Mixer`, `Master`, `Global`, `Macro`) and validates after remapping. Decided 2026-10-04 (backlog items 8, 22, 23, 7).
 - **Selection**: one `MacroLearnState.selectedControlId` drives the strip, the card highlight and the Learn button; the per-module `selectedRackMacroId` map was dropped. Consequence: one highlighted knob across all expanded modules.

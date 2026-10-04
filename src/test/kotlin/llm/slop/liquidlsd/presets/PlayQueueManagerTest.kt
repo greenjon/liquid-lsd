@@ -375,4 +375,44 @@ class PlayQueueManagerTest {
         io.mockk.verify { mixer.isAutoFading = true }
         io.mockk.verify { mixer.muteCrossfadeNonMidiCv() }
     }
+
+    private fun queueAt(n: Int, index: Int, repeat: Boolean = false) =
+        PlayQueueManager.restoreSessionQueue((1..n).map { File("library/presets/p$it.lsd") }, index, false, repeat, false)
+
+    @Test
+    fun testAdvanceByMovesSeveralItemsAndLoadsOnlyTheFinalOne() {
+        queueAt(5, 0)
+        every { mixer.crossfade.value } returns -1.0f
+
+        PlayQueueManager.advanceBy(3, mixer)
+
+        assertEquals(3, PlayQueueManager.activeIndex)
+        io.mockk.verify(exactly = 1) { DeckOps.request(any(), any(), any()) }
+
+        PlayQueueManager.advanceBy(-2, mixer)
+        assertEquals(1, PlayQueueManager.activeIndex)
+    }
+
+    @Test
+    fun testAdvanceByStopsAtTheEndWithoutRepeatAndWrapsWithIt() {
+        every { mixer.crossfade.value } returns -1.0f
+        queueAt(4, 2)
+        PlayQueueManager.advanceBy(5, mixer)
+        assertEquals(3, PlayQueueManager.activeIndex)
+
+        queueAt(4, 3, repeat = true)
+        PlayQueueManager.advanceBy(3, mixer)
+        assertEquals(2, PlayQueueManager.activeIndex)
+    }
+
+    @Test
+    fun testAdvanceByLeavesThePositionAloneWhenTheLoadIsSkipped() {
+        queueAt(5, 0)
+        every { mixer.crossfade.value } returns -1.0f
+        every { DeckOps.request(any(), any(), any()) } returns false
+
+        PlayQueueManager.advanceBy(3, mixer)
+
+        assertEquals(0, PlayQueueManager.activeIndex)
+    }
 }

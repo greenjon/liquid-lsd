@@ -105,6 +105,7 @@ Use the **`[⋮]`** filter menu above the list to show/hide each tier (**Stock S
 Column 1 of `[ FX ]` mode lists three kinds of row side by side, each marked with its own icon:
 
 - **Stock ISF Filters** — Built-in filters with no saved parameters. A deck or Master has several FX chain slots, so a bare stock filter is ambiguous without knowing which slot it targets — double-click and drag-and-drop resolve this by loading into the first vacant slot, and the right-click menu lets you pick a specific slot explicitly (**Load to Deck/Master > Slot 1–3**). That same ambiguity is why stock filters can't be added to a playlist or live queue: there's no interactive slot-picker available when a queued item gets applied automatically later.
+- **Favorites** — Right-click a stock filter and choose **Add to Favorites** (or **Remove from Favorites**) to star it. Starred filters show a ★ in the list, and **[⋮] > Favorite stock filters only** hides the rest. They are the same favorites the inline FX picker and the slot shortlist use.
 - **Saved Single FX Presets (`.lsdfx`)** — One FX slot's full parameter state, captured from a deck.
 - **Saved FX Chains (`.lsdfxchain`)** — A complete 3-slot FX pipeline, captured from a deck's or Master's FX chain. Loading a chain replaces all 3 slots on the target chain.
 

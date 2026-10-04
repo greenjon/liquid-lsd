@@ -287,6 +287,42 @@ object BgQueueManager {
         }
     }
 
+    /**
+     * Moves the queue by [n] items (negative = back) and loads only the final one (see [PlayQueueManager.advanceBy]).
+     * Without repeat the move stops at the first or last item.
+     */
+    fun advanceBy(n: Int, mixer: Mixer) {
+        if (n == 0 || queue.isEmpty()) return
+        val forward = n > 0
+        val steps = kotlin.math.abs(n)
+        if (steps == 1) {
+            if (forward) triggerNext(mixer) else triggerPrevious(mixer)
+            return
+        }
+        if (isShuffleEnabled) {
+            repeat(steps - 1) {
+                if (forward) {
+                    if (playedIndices.size >= queue.size && isRepeatEnabled) playedIndices.clear()
+                    val unplayed = queue.indices.filter { it !in playedIndices }
+                    if (unplayed.isNotEmpty()) {
+                        val i = unplayed.random()
+                        playedIndices.add(i)
+                        playbackHistory.add(i)
+                        activeIndex = i
+                    }
+                } else if (playbackHistory.size > 1) {
+                    playbackHistory.removeAt(playbackHistory.size - 1)
+                    activeIndex = playbackHistory.last()
+                }
+            }
+            if (forward) triggerNext(mixer) else triggerPrevious(mixer)
+            return
+        }
+        val raw = activeIndex + n
+        val target = if (isRepeatEnabled) Math.floorMod(raw, queue.size) else raw.coerceIn(0, queue.size - 1)
+        if (target != activeIndex) playIndex(target, mixer)
+    }
+
     fun triggerPrevious(mixer: Mixer) {
         if (queue.isEmpty()) return
 

@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### FX Favorites in the Library; A/B and BG Queue Steps of More Than One (`ui/browser/FXBrowserPanel.kt`, `presets/FxShortlist.kt`, `presets/PlayQueueManager.kt`, `presets/BgQueueManager.kt`)
+- **The Library FX browser now shows and sets your favorites.** Starred stock filters show a ★, right-click offers **Add to / Remove from Favorites**, and **[⋮] > Favorite stock filters only** filters the list. They are the same favorites as the inline FX picker.
+- **A MIDI, CV or key step of +3 on the A/B or BG queue moves three items** (it moved one). Only the final item is loaded and faded to; the ones in between are skipped. Without Repeat it stops at the first or last item; with Repeat it wraps; in Shuffle the skipped picks count as played, so Previous retraces them. A deck you staged by hand still takes the whole step as one.
+- Internal: `PlayQueueManager.advanceBy` / `BgQueueManager.advanceBy` (`triggerNext`/`triggerPrevious` are the single-step case; `pickNextIndex` is shared); `FxShortlist.version` invalidates the browser's row cache; `UIManager.MAX_QUEUE_STEPS_PER_FRAME` (8) caps all queue deltas.
+
 ### Failures Are Visible, Transition Queue Steps Add Up, Shortcut Rebinding Reaches the Transitions View (`presets/FxOps.kt`, `presets/TransitionOps.kt`, `ui/UIManager.kt`, `ui/LibraryPanel.kt`)
 - **A failed FX load now says so.** A `.lsdfx` / `.lsdfxchain` that can't be read, an unknown effect, a file that isn't an FX file, or a change that fails when applied shows a toast (they only wrote to the log before). Transition changes that fail to apply do the same.
 - **A MIDI or CV step of +3 on the transition queue moves three items** (up to 8 per frame); it used to move one.

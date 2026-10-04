@@ -31,6 +31,10 @@ object FxShortlist {
     private val favorites = mutableListOf<String>()
     private var loaded = false
 
+    /** Bumped on every change, so a list built from the favourites (the Library FX browser) knows when to rebuild. */
+    @Volatile var version: Int = 0
+        private set
+
     fun favorites(): List<String> {
         ensureLoaded()
         return favorites
@@ -45,6 +49,7 @@ object FxShortlist {
     fun toggle(id: String) {
         ensureLoaded()
         if (!favorites.remove(id)) favorites.add(id)
+        version++
         save()
     }
 
@@ -52,6 +57,7 @@ object FxShortlist {
     internal fun setForTest(ids: List<String>) {
         favorites.clear()
         favorites.addAll(ids)
+        version++
         loaded = true
     }
 

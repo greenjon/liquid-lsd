@@ -12,6 +12,7 @@ import llm.slop.liquidlsd.presets.FXBgQueueManager
 import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.presets.FxOps
+import llm.slop.liquidlsd.presets.FxShortlist
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
@@ -52,13 +53,15 @@ object FXBrowserPanel {
     var showStock = true
     var showSingle = true
     var showChain = true
+    var showFavsOnly = false
 
     private val showStockRef = ImBoolean(true)
     private val showSingleRef = ImBoolean(true)
     private val showChainRef = ImBoolean(true)
+    private val showFavsOnlyRef = ImBoolean(false)
 
     private var lastQuery: String = ""
-    private var lastFilterState: List<Boolean> = emptyList()
+    private var lastFilterState: List<Any> = emptyList()
     private var lastStock: List<ISFFilter>? = null
     private var lastSingles: List<AssetItem>? = null
     private var lastChains: List<AssetItem>? = null
@@ -106,6 +109,10 @@ object FXBrowserPanel {
             if (ImGui.checkbox("Saved Single FX", showSingleRef)) showSingle = showSingleRef.get()
             showChainRef.set(showChain)
             if (ImGui.checkbox("Saved FX Chains", showChainRef)) showChain = showChainRef.get()
+            ImGui.separator()
+            showFavsOnlyRef.set(showFavsOnly)
+            if (ImGui.checkbox("Favorite stock filters only", showFavsOnlyRef)) showFavsOnly = showFavsOnlyRef.get()
+            itemTooltip("Hides stock filters you haven't starred (right-click a stock filter > Add to Favorites). Saved FX are unaffected.")
             popOpenDropdownFont()
             ImGui.endPopup()
         }
@@ -139,7 +146,7 @@ object FXBrowserPanel {
             val singles = FileSystemManager.scanAllFxPresets()
             val chains = FileSystemManager.scanAllFxChains()
             val query = searchBuffer.get().trim().lowercase()
-            val filterState = listOf(showStock, showSingle, showChain)
+            val filterState = listOf(showStock, showSingle, showChain, showFavsOnly, FxShortlist.version)
             val rows = if (stock === lastStock && singles === lastSingles && chains === lastChains &&
                 query == lastQuery && filterState == lastFilterState) {
                 cachedRows
@@ -153,7 +160,7 @@ object FXBrowserPanel {
                 val result = mutableListOf<AssetItem>()
                 if (showStock) {
                     stock
-                        .filter { SearchMatcher.matches(tokens, listOf(it.displayName, it.id, it.folderPath), it.categories) }
+                        .filter { (!showFavsOnly || FxShortlist.isFavorite(it.id)) && SearchMatcher.matches(tokens, listOf(it.displayName, it.id, it.folderPath), it.categories) }
                         .sortedBy { it.displayName.lowercase() }
                         .forEach { result.add(AssetItem(path = STOCK_PATH_PREFIX + it.id, name = it.displayName, type = AssetType.FX_STOCK)) }
                 }
@@ -249,7 +256,7 @@ object FXBrowserPanel {
 
     private fun drawRow(session: SessionContext, mixer: Mixer, asset: AssetItem, index: Int, btnW: Float) {
         val icon = when (asset.type) {
-            AssetType.FX_STOCK -> Icons.SQUARE
+            AssetType.FX_STOCK -> if (FxShortlist.isFavorite(asset.path.removePrefix(STOCK_PATH_PREFIX))) "\u2605" else Icons.SQUARE
             AssetType.FX_CHAIN -> Icons.ACTIVITY
             else -> Icons.ZAP
         }
@@ -365,6 +372,10 @@ object FXBrowserPanel {
         when (asset.type) {
             AssetType.FX_STOCK -> {
                 val id = asset.path.removePrefix(STOCK_PATH_PREFIX)
+                if (ImGui.menuItem(if (FxShortlist.isFavorite(id)) "\u2605 Remove from Favorites" else "\u2606 Add to Favorites")) {
+                    FxShortlist.toggle(id)
+                }
+                ImGui.separator()
                 for ((chainLabel, chain) in chains) {
                     if (ImGui.beginMenu("Load to $chainLabel")) {
                         for (s in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {

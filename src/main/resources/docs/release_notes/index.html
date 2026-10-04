@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-favorites-in-the-library-ab-and-bg-queue-steps-of-more-than-one-uibrowserfxbrowserpanelkt-presetsfxshortlistkt-presetsplayqueuemanagerkt-presetsbgqueuemanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Favorites in the Library; A/B and BG Queue Steps of More Than One (ui/browser/FXBrowserPanel.kt, presets/FxShortlist.kt, presets/PlayQueueManager.kt, presets/BgQueueManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#failures-are-visible-transition-queue-steps-add-up-shortcut-rebinding-reaches-the-transitions-view-presetsfxopskt-presetstransitionopskt-uiuimanagerkt-uilibrarypanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5416,6 +5427,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-favorites-in-the-library-ab-and-bg-queue-steps-of-more-than-one-uibrowserfxbrowserpanelkt-presetsfxshortlistkt-presetsplayqueuemanagerkt-presetsbgqueuemanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Favorites in the Library; A/B and BG Queue Steps of More Than One (ui/browser/FXBrowserPanel.kt, presets/FxShortlist.kt, presets/PlayQueueManager.kt, presets/BgQueueManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#failures-are-visible-transition-queue-steps-add-up-shortcut-rebinding-reaches-the-transitions-view-presetsfxopskt-presetstransitionopskt-uiuimanagerkt-uilibrarypanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9599,6 +9621,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fx-favorites-in-the-library-ab-and-bg-queue-steps-of-more-than-one-uibrowserfxbrowserpanelkt-presetsfxshortlistkt-presetsplayqueuemanagerkt-presetsbgqueuemanagerkt">FX Favorites in the Library; A/B and BG Queue Steps of More Than One (<code>ui/browser/FXBrowserPanel.kt</code>, <code>presets/FxShortlist.kt</code>, <code>presets/PlayQueueManager.kt</code>, <code>presets/BgQueueManager.kt</code>)</h3>
+<ul>
+<li><strong>The Library FX browser now shows and sets your favorites.</strong> Starred stock filters show a ★, right-click offers <strong>Add to / Remove from Favorites</strong>, and <strong>[⋮] &gt; Favorite stock filters only</strong> filters the list. They are the same favorites as the inline FX picker.</li>
+<li><strong>A MIDI, CV or key step of +3 on the A/B or BG queue moves three items</strong> (it moved one). Only the final item is loaded and faded to; the ones in between are skipped. Without Repeat it stops at the first or last item; with Repeat it wraps; in Shuffle the skipped picks count as played, so Previous retraces them. A deck you staged by hand still takes the whole step as one.</li>
+<li>Internal: <code>PlayQueueManager.advanceBy</code> / <code>BgQueueManager.advanceBy</code> (<code>triggerNext</code>/<code>triggerPrevious</code> are the single-step case; <code>pickNextIndex</code> is shared); <code>FxShortlist.version</code> invalidates the browser's row cache; <code>UIManager.MAX_QUEUE_STEPS_PER_FRAME</code> (8) caps all queue deltas.</li>
+</ul>
 <h3 id="failures-are-visible-transition-queue-steps-add-up-shortcut-rebinding-reaches-the-transitions-view-presetsfxopskt-presetstransitionopskt-uiuimanagerkt-uilibrarypanelkt">Failures Are Visible, Transition Queue Steps Add Up, Shortcut Rebinding Reaches the Transitions View (<code>presets/FxOps.kt</code>, <code>presets/TransitionOps.kt</code>, <code>ui/UIManager.kt</code>, <code>ui/LibraryPanel.kt</code>)</h3>
 <ul>
 <li><strong>A failed FX load now says so.</strong> A <code>.lsdfx</code> / <code>.lsdfxchain</code> that can't be read, an unknown effect, a file that isn't an FX file, or a change that fails when applied shows a toast (they only wrote to the log before). Transition changes that fail to apply do the same.</li>
