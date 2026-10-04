@@ -225,7 +225,6 @@ object FXBrowserPanel {
             ImGui.separator()
             for ((chainLabel, chain) in chains) {
                 if (ImGui.menuItem(chainLabel)) {
-                    val chainDto = chain.toFxChainDto("fx_chain")
                     SavePresetModal.request(
                         title = "Save FX Chain As",
                         confirmLabel = "Save",
@@ -234,7 +233,9 @@ object FXBrowserPanel {
                         extension = "lsdfxchain"
                     ) { name, tags ->
                         val file = File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
-                        session.presetRepository.saveFxChainAsync(file, name, chainDto, tags)
+                        // Captured at confirm time, not when the menu opened; clears the chain's dirty dot.
+                        session.presetRepository.saveFxChainAsync(file, name, chain.toFxChainDto(name, tags), tags)
+                        chain.markClean(file)
                     }
                 }
             }

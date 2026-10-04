@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#saving-an-fx-chain-from-the-kebab-or-library-now-clears-its-unsaved-dot-uiparameterstabskt-uibrowserfxbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving an FX Chain From the Kebab or Library "+" Now Clears Its Unsaved Dot (ui/ParametersTabs.kt, ui/browser/FXBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unchecking-a-knob-target-no-longer-hides-it-from-the-editor-macromacroenginekt-uipropertiespanelkt-uivalueparamsectionkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5306,6 +5317,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#saving-an-fx-chain-from-the-kebab-or-library-now-clears-its-unsaved-dot-uiparameterstabskt-uibrowserfxbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Saving an FX Chain From the Kebab or Library "+" Now Clears Its Unsaved Dot (ui/ParametersTabs.kt, ui/browser/FXBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#unchecking-a-knob-target-no-longer-hides-it-from-the-editor-macromacroenginekt-uipropertiespanelkt-uivalueparamsectionkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9379,6 +9401,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="saving-an-fx-chain-from-the-kebab-or-library-now-clears-its-unsaved-dot-uiparameterstabskt-uibrowserfxbrowserpanelkt">Saving an FX Chain From the Kebab or Library "+" Now Clears Its Unsaved Dot (<code>ui/ParametersTabs.kt</code>, <code>ui/browser/FXBrowserPanel.kt</code>)</h3>
+<ul>
+<li>Saving a chain from the Deep Edit kebab ("Save Chain As...") or the Library "+" menu left the chain's unsaved-changes dot on, and the chain stayed unlinked from the file it had just been saved to. Both now behave like the chain header's Save: the dot clears and the chain remembers the file.</li>
+<li>The saved file now holds the chain as it is when you click Save in the dialog, not as it was when you opened the menu.</li>
+<li>Internal: both call sites build the DTO inside the confirm callback and call <code>FxChain.markClean(file)</code>. Covered by <code>FxChainMarkCleanTest</code>.</li>
+</ul>
 <h3 id="unchecking-a-knob-target-no-longer-hides-it-from-the-editor-macromacroenginekt-uipropertiespanelkt-uivalueparamsectionkt">Unchecking a Knob Target No Longer Hides It From the Editor (<code>macro/MacroEngine.kt</code>, <code>ui/PropertiesPanel.kt</code>, <code>ui/ValueParamSection.kt</code>)</h3>
 <ul>
 <li>Unchecking a macro target in a parameter's or modulator's editor used to make the target disappear from that editor, so you could not re-check it there (only the knob's own strip could). It now stays listed with an unlocked icon and "released from <knob>", and the slider is free to edit until you re-check it.</li>

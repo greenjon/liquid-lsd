@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Saving an FX Chain From the Kebab or Library "+" Now Clears Its Unsaved Dot (`ui/ParametersTabs.kt`, `ui/browser/FXBrowserPanel.kt`)
+- Saving a chain from the Deep Edit kebab ("Save Chain As...") or the Library "+" menu left the chain's unsaved-changes dot on, and the chain stayed unlinked from the file it had just been saved to. Both now behave like the chain header's Save: the dot clears and the chain remembers the file.
+- The saved file now holds the chain as it is when you click Save in the dialog, not as it was when you opened the menu.
+- Internal: both call sites build the DTO inside the confirm callback and call `FxChain.markClean(file)`. Covered by `FxChainMarkCleanTest`.
+
 ### Unchecking a Knob Target No Longer Hides It From the Editor (`macro/MacroEngine.kt`, `ui/PropertiesPanel.kt`, `ui/ValueParamSection.kt`)
 - Unchecking a macro target in a parameter's or modulator's editor used to make the target disappear from that editor, so you could not re-check it there (only the knob's own strip could). It now stays listed with an unlocked icon and "released from <knob>", and the slider is free to edit until you re-check it.
 - Internal: `MacroEngine.findBindingInfos(..., includeDisabled = true)` scans the controls' own binding lists; the lock and arc queries still read the enabled-only resolved cache. `ValueParamSection` no longer gates its list on the enabled-only "is bound" check.

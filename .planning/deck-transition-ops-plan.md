@@ -153,7 +153,7 @@ Per the repo's definition of done:
 - D13: Missing Files relink by asset type.
 - D14: toolbar Q uses the visible tab's selection.
 - D15: Ctrl+F focuses the active tab's search.
-- D16: FX chain `markClean` on every save path, with the DTO captured at confirm time.
+- ~~D16: FX chain `markClean` on every save path, with the DTO captured at confirm time.~~ Done 2026-10-04.
 - D7: stable modulator IDs for bindings (saved-format change), decided 2026-10-04 to be done in v1.0, before release, not as a stopgap. First task in `.planning/d-items-handoff.md`.
 - ~~Video export with a preset snapshot~~ moved to Phase 5.
 

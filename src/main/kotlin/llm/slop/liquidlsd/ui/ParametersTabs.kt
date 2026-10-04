@@ -515,7 +515,6 @@ object ParametersTabs {
             pushOpenDropdownFont()
             if (ImGui.menuItem("Save Chain As...")) {
                 val defaultChainName = chain.name.ifEmpty { chainPrefix.replace('/', '_').lowercase() }
-                val chainDto = chain.toFxChainDto(defaultChainName)
                 SavePresetModal.request(
                     title = "Save FX Chain As",
                     confirmLabel = "Save",
@@ -524,7 +523,10 @@ object ParametersTabs {
                     extension = "lsdfxchain"
                 ) { name, tags ->
                     val file = java.io.File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
-                    session.presetRepository.saveFxChainAsync(file, name, chainDto, tags)
+                    // Capture at confirm time (the user may keep editing while the modal is open), and
+                    // clear the dirty dot against exactly what was saved.
+                    session.presetRepository.saveFxChainAsync(file, name, chain.toFxChainDto(name, tags), tags)
+                    chain.markClean(file)
                 }
             }
             if (ImGui.menuItem("Copy Chain")) {
