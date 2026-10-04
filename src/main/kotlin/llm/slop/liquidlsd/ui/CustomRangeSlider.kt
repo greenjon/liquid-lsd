@@ -278,8 +278,8 @@ object CustomRangeSlider {
 
             // Labels for columns (Top row: dcOffset randomization bounds)
             val labelY = startY - 14f
-            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY, boxWidth) { bindRangeBound("dcOffsetMin") }
-            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth) { bindRangeBound("dcOffsetMax") }
+            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModIdx = modulatorIndex, macroProp = "dcOffsetMin") { bindRangeBound("dcOffsetMin") }
+            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModIdx = modulatorIndex, macroProp = "dcOffsetMax") { bindRangeBound("dcOffsetMax") }
 
             // Top: Min range
             drawTextInput(session, "${idPrefix}_min_r_min", minRangeMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinRangeChanged(it, maxOf(it, minRangeMax)) }, formatValue)
@@ -288,8 +288,8 @@ object CustomRangeSlider {
 
             // Labels for columns (Bottom row: depth randomization bounds)
             val labelY2 = row2Y - 14f
-            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY2, boxWidth) { bindRangeBound("depthMin") }
-            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY2, boxWidth) { bindRangeBound("depthMax") }
+            drawMinMaxBoundLabel(session, "Min Bound Range", isMacroLearning, textBoxesStartX, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModIdx = modulatorIndex, macroProp = "depthMin") { bindRangeBound("depthMin") }
+            drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, macroKey = paramKey, macroModIdx = modulatorIndex, macroProp = "depthMax") { bindRangeBound("depthMax") }
 
             // Bottom: Max range
             drawTextInput(session, "${idPrefix}_max_r_min", maxRangeMin, minLimit, maxLimit, textBoxesStartX, row2Y, boxWidth, null, { onMaxRangeChanged(it, maxOf(it, maxRangeMax)) }, formatValue)
@@ -315,6 +315,9 @@ object CustomRangeSlider {
         propertyName: String? = null,
         minLimit: Float = 0f,
         maxLimit: Float = 1f,
+        macroKey: String? = paramKey,
+        macroModIdx: Int? = modulatorIndex,
+        macroProp: String? = propertyName,
         onBind: () -> Unit
     ) {
         val captionHeight = session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.getTextLineHeight() }
@@ -323,6 +326,13 @@ object CustomRangeSlider {
         val isHovered = ImGui.isItemHovered()
         if (isMacroLearning && ImGui.isItemClicked(0)) {
             onBind()
+        }
+        val macroInfo = if (macroKey != null && macroProp != null) {
+            llm.slop.liquidlsd.macro.MacroEngine.findPrimaryBindingInfo(null, macroKey, macroModIdx ?: 0, macroProp)
+        } else null
+        if (macroInfo != null && !isMacroLearning && ImGui.isItemClicked(0)) {
+            llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = macroInfo.control.id
+            ImGui.openPopup(MacroBindingEditor.popupIdFor(macroProp!!))
         }
 
         val targetPath = if (paramKey != null && propertyName != null) {
@@ -381,8 +391,11 @@ object CustomRangeSlider {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
+        if (macroInfo != null) {
+            MacroBindingEditor.drawPopup(session, MacroBindingEditor.popupIdFor(macroProp!!), macroInfo, minLimit, maxLimit)
+        }
 
-        val col = if (isMacroLearning && isHovered) floatArrayOf(TangoPalette.SYNC.normal[0], TangoPalette.SYNC.normal[1], TangoPalette.SYNC.normal[2], 1.0f) else floatArrayOf(0.6f, 0.6f, 0.6f, 0.7f)
+        val col = if ((isMacroLearning && isHovered) || macroInfo != null) floatArrayOf(TangoPalette.SYNC.normal[0], TangoPalette.SYNC.normal[1], TangoPalette.SYNC.normal[2], 1.0f) else floatArrayOf(0.6f, 0.6f, 0.6f, 0.7f)
         ImGui.setCursorScreenPos(x, y)
         session.uiTheme.captionColored(col[0], col[1], col[2], col[3], text)
         if (isMacroLearning) {
@@ -403,7 +416,8 @@ object CustomRangeSlider {
             val oscHint = if (isOscLearningThis) "\n[OSC LEARN ARMED] Move a control on your OSC surface to bind." else ""
             val midiHint = if (isMidiLearningThis) "\n[MIDI LEARN ARMED] Move a knob/fader on your MIDI controller to bind." else ""
             val menuHint = if (!isOscLearningThis && !isMidiLearningThis && targetPath != null) "\nRight-click for OSC/MIDI Learn." else ""
-            showTooltip("$text bound$learnHint$oscHint$midiHint$menuHint")
+            val macroHint = if (macroInfo != null) "\nControlled by ${macroInfo.controlName} [${macroInfo.badgeLabel}]. Click to edit the binding." else ""
+            showTooltip("$text bound$macroHint$learnHint$oscHint$midiHint$menuHint")
         }
     }
 
@@ -765,6 +779,7 @@ object CustomRangeSlider {
                 macroInfo?.control?.id?.let { ctrlId ->
                     llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId = ctrlId
                 }
+                if (propertyName != null) ImGui.openPopup(MacroBindingEditor.popupIdFor(propertyName))
             }
             if (ImGui.isItemClicked(2) && !isMacroBound) {
                 val resetTarget = defaultValue ?: 0.0f.coerceIn(minLimit, maxLimit)
@@ -842,11 +857,14 @@ object CustomRangeSlider {
                 ImGui.endPopup()
             }
             popOpenDropdownPadding()
+            if (isMacroBound && propertyName != null) {
+                MacroBindingEditor.drawPopup(session, MacroBindingEditor.popupIdFor(propertyName), macroInfo!!, minLimit, maxLimit, isLogarithmic)
+            }
 
             if (isLabelHovered) {
                 if (isMacroBound) {
                     val info = macroInfo!!
-                    showTooltip("Variable: $label [${info.badgeLabel}]\nControlled by ${info.controlName}.\nClick to inspect in Column 3 Macro Inspector.")
+                    showTooltip("Variable: $label [${info.badgeLabel}]\nControlled by ${info.controlName}.\nClick to edit the binding.")
                 } else {
                     val defFmt = defaultValue?.let { ": ${labelFormatFunc(it)}" } ?: ""
                     val learnHint = if (isMacroLearning) "\nClick to bind to armed Macro Control." else ""
@@ -1207,8 +1225,30 @@ object CustomRangeSlider {
             }
         }
 
+        if (isMacroBound && macroInfo!!.binding.enabled && propertyName != null) {
+            drawMacroBrackets(dl, macroInfo.binding, toPct(macroInfo.binding.minVal), toPct(macroInfo.binding.maxVal), lineStartX, lineWidth, centerY, buttonSize)
+        }
+
         ImGui.popID()
         ImGui.setCursorScreenPos(rowStartX, startY + h)
         ImGui.dummy(0f, 0f)
+    }
+
+    /** Cyan "[ ]" on a slider track marking the macro knob's min→max travel for a bound property. */
+    private fun drawMacroBrackets(
+        dl: imgui.ImDrawList, binding: llm.slop.liquidlsd.macro.MacroBinding,
+        pctA: Float, pctB: Float, lineStartX: Float, lineWidth: Float, centerY: Float, buttonSize: Float
+    ) {
+        val xa = lineStartX + minOf(pctA, pctB) * lineWidth
+        val xb = lineStartX + maxOf(pctA, pctB) * lineWidth
+        val half = buttonSize * 0.4f
+        val serif = 4f
+        val col = TangoPalette.u32(TangoPalette.SYNC.bright, 0.95f)
+        dl.addLine(xa, centerY - half, xa, centerY + half, col, 2f)
+        dl.addLine(xa, centerY - half, xa + serif, centerY - half, col, 2f)
+        dl.addLine(xa, centerY + half, xa + serif, centerY + half, col, 2f)
+        dl.addLine(xb, centerY - half, xb, centerY + half, col, 2f)
+        dl.addLine(xb, centerY - half, xb - serif, centerY - half, col, 2f)
+        dl.addLine(xb, centerY + half, xb - serif, centerY + half, col, 2f)
     }
 }

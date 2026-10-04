@@ -36,6 +36,66 @@ object MacroBindingEditor {
         param: ModulatableParameter?,
         width: Float
     ): Boolean {
+        // Hosts that don't know the target's real travel (Properties) rely on the range its slider reported.
+        val known = ranges[binding]
+        return if (known != null) drawFull(session, control, binding, known.lo, known.hi, width, known.log)
+        else drawFull(session, control, binding, param?.minClamp ?: 0f, param?.maxClamp ?: 1f, width)
+    }
+
+    private class TargetRange(var lo: Float, var hi: Float, var log: Boolean)
+    // Identity-keyed: MacroBinding is a data class whose hashCode changes as its range is edited.
+    private val ranges = java.util.IdentityHashMap<MacroBinding, TargetRange>()
+
+    /**
+     * A bound slider reports its real travel [lo]..[hi] here each frame so every editor for [binding] scales
+     * to the target's limits, not to the binding's own (shrinking) min/max -- otherwise the bar rescales
+     * under the handle mid-drag.
+     */
+    fun noteTargetRange(binding: MacroBinding, lo: Float, hi: Float, log: Boolean) {
+        if (ranges.size > 512) ranges.clear()
+        val r = ranges[binding]
+        if (r == null) ranges[binding] = TargetRange(lo, hi, log) else { r.lo = lo; r.hi = hi; r.log = log }
+    }
+
+    private const val POPUP_W = 380f
+    private val popupIds = HashMap<String, String>()
+
+    /** Stable popup id per bound property ("macro_pop_lfoMin"); cached so the per-frame call allocates nothing. */
+    fun popupIdFor(propertyName: String): String = popupIds.getOrPut(propertyName) { "macro_pop_$propertyName" }
+
+    /**
+     * The binding popup opened by clicking a bound slider's macro badge. Call every frame after the
+     * badge; open it with `ImGui.openPopup(popupId)` on click. [lo]..[hi] is the target's travel range.
+     */
+    fun drawPopup(
+        session: llm.slop.liquidlsd.SessionContext,
+        popupId: String,
+        info: MacroBindingInfo,
+        lo: Float,
+        hi: Float,
+        logarithmic: Boolean = false
+    ) {
+        noteTargetRange(info.binding, lo, hi, logarithmic)
+        if (!ImGui.beginPopup(popupId)) return
+        session.uiTheme.caption("${Icons.LOCK} ${info.controlName} [${info.badgeLabel}] -> ${info.binding.propertyName.ifEmpty { "base value" }}")
+        if (drawFull(session, info.control, info.binding, lo, hi, POPUP_W, logarithmic)) {
+            info.control.bindings.remove(info.binding)
+            MacroEngine.invalidate()
+            ImGui.closeCurrentPopup()
+        }
+        ImGui.endPopup()
+    }
+
+    /** Same as the [ModulatableParameter] overload, with an explicit target travel range [lo]..[hi]. */
+    fun drawFull(
+        session: llm.slop.liquidlsd.SessionContext,
+        control: MacroControl,
+        binding: MacroBinding,
+        lo: Float,
+        hi: Float,
+        width: Float,
+        logarithmic: Boolean = false
+    ): Boolean {
         var delete = false
         ImGui.pushID(System.identityHashCode(binding))
 
@@ -66,17 +126,19 @@ object MacroBindingEditor {
         itemTooltip("Delete this binding.")
 
         // Line 2: range bar with live position dot.
-        val lo = minOf(param?.minClamp ?: 0f, binding.minVal, binding.maxVal)
-        val hi = maxOf(param?.maxClamp ?: 1f, binding.minVal, binding.maxVal)
-        drawRangeBar(binding, lo, hi, MacroCurve.mapToRange(control.value, binding), width)
+        val barLo = minOf(lo, binding.minVal, binding.maxVal)
+        val barHi = maxOf(hi, binding.minVal, binding.maxVal)
+        // A log track needs a strictly positive range (rate-style params span ms..hours).
+        val useLog = logarithmic && barLo > 0f
+        drawRangeBar(binding, barLo, barHi, MacroCurve.mapToRange(control.value, binding), width, useLog)
 
         // Line 3: numeric Min/Max.
         val fieldW = (width - 40f) * 0.5f
         ImGui.setNextItemWidth(fieldW)
-        drawMinField(binding)
+        drawMinField(binding, barLo, barHi, useLog)
         ImGui.sameLine(0f, 6f)
         ImGui.setNextItemWidth(fieldW)
-        drawMaxField(binding)
+        drawMaxField(binding, barLo, barHi, useLog)
 
         ImGui.spacing()
         ImGui.popID()
@@ -119,24 +181,40 @@ object MacroBindingEditor {
         itemTooltip("Number of quantized steps across the travel range.")
     }
 
-    private fun drawMinField(binding: MacroBinding) {
+    private fun drawMinField(binding: MacroBinding, lo: Float, hi: Float, log: Boolean) {
         minValBuf[0] = binding.minVal
-        if (ImGui.dragFloat("Min##min", minValBuf, 0.01f, -10f, 10f, "%.2f")) binding.minVal = minValBuf[0]
-        itemTooltip("Output value when the macro is at 0.0.")
+        if (ImGui.dragFloat("Min##min", minValBuf, dragSpeed(lo, hi, binding.minVal, log), lo, hi, "%.3f")) binding.minVal = minValBuf[0]
+        itemTooltip("Output value when the macro is at 0.0. Ctrl+click to type a value.")
     }
 
-    private fun drawMaxField(binding: MacroBinding) {
+    private fun drawMaxField(binding: MacroBinding, lo: Float, hi: Float, log: Boolean) {
         maxValBuf[0] = binding.maxVal
-        if (ImGui.dragFloat("Max##max", maxValBuf, 0.01f, -10f, 10f, "%.2f")) binding.maxVal = maxValBuf[0]
-        itemTooltip("Output value when the macro is at 1.0.")
+        if (ImGui.dragFloat("Max##max", maxValBuf, dragSpeed(lo, hi, binding.maxVal, log), lo, hi, "%.3f")) binding.maxVal = maxValBuf[0]
+        itemTooltip("Output value when the macro is at 1.0. Ctrl+click to type a value.")
+    }
+
+    /** Drag speed scaled to the target's real range (proportional to the value on a log range). */
+    private fun dragSpeed(lo: Float, hi: Float, value: Float, log: Boolean): Float =
+        if (log) (kotlin.math.abs(value) * 0.01f).coerceAtLeast(lo * 0.01f) else ((hi - lo) * 0.002f).coerceAtLeast(1e-5f)
+
+    /** Rounds to ~3 significant digits so dragged handles land on tidy values at any magnitude. */
+    private fun roundSig(v: Float): Float {
+        if (v == 0f || v.isNaN() || v.isInfinite()) return v
+        val mag = Math.floor(Math.log10(kotlin.math.abs(v).toDouble())).toInt()
+        val step = Math.pow(10.0, (mag - 2).toDouble())
+        return (Math.round(v / step) * step).toFloat()
     }
 
     /**
      * Track spanning [lo]..[hi] with a filled min→max segment, two draggable handles and a dot at the
      * binding's current mapped output [live].
      */
-    private fun drawRangeBar(binding: MacroBinding, lo: Float, hi: Float, live: Float, width: Float) {
-        val span = (hi - lo).coerceAtLeast(1e-4f)
+    private fun drawRangeBar(binding: MacroBinding, lo: Float, hi: Float, live: Float, width: Float, log: Boolean) {
+        val span = (hi - lo).coerceAtLeast(1e-6f)
+        val logLo = if (log) Math.log10(lo.toDouble()) else 0.0
+        val logSpan = if (log) (Math.log10(hi.toDouble()) - logLo).coerceAtLeast(1e-6) else 1.0
+        fun pctOf(v: Float): Float = if (log) ((Math.log10(v.toDouble().coerceAtLeast(lo.toDouble())) - logLo) / logSpan).toFloat() else (v - lo) / span
+        fun valueAt(p: Float): Float = if (log) Math.pow(10.0, logLo + p * logSpan).toFloat() else lo + p * span
         val usable = (width - HANDLE_W).coerceAtLeast(20f)
         val x0 = ImGui.getCursorScreenPosX() + HANDLE_W * 0.5f
         val y0 = ImGui.getCursorScreenPosY()
@@ -145,7 +223,7 @@ object MacroBindingEditor {
         val cy = y0 + BAR_H * 0.5f
         val dl = ImGui.getWindowDrawList()
 
-        fun xOf(v: Float) = x0 + ((v - lo) / span).coerceIn(0f, 1f) * usable
+        fun xOf(v: Float) = x0 + pctOf(v).coerceIn(0f, 1f) * usable
 
         val active = binding.enabled
         val trackCol = ImGui.colorConvertFloat4ToU32(0.12f, 0.14f, 0.18f, 1f)
@@ -163,12 +241,11 @@ object MacroBindingEditor {
             ImGui.setCursorScreenPos(x - HANDLE_W * 0.5f, y0)
             ImGui.invisibleButton(id, HANDLE_W, BAR_H)
             if (ImGui.isItemActive()) {
-                val v = lo + ((ImGui.getMousePosX() - x0) / usable).coerceIn(0f, 1f) * span
-                set((Math.round(v * 100f) / 100f))
+                set(roundSig(valueAt(((ImGui.getMousePosX() - x0) / usable).coerceIn(0f, 1f))).coerceIn(lo, hi))
             }
             if (ImGui.isItemHovered() || ImGui.isItemActive()) {
                 ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.ResizeEW)
-                itemTooltip("%.2f".format(value))
+                itemTooltip("%.3f".format(value))
             }
             dl.addRectFilled(x - HANDLE_W * 0.5f, y0 + 2f, x + HANDLE_W * 0.5f, y0 + BAR_H - 2f, handleCol, 2f)
         }

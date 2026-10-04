@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Macro Binding Ranges, Brackets & Overhang Button Enhancements (`ui/*`)
+- **MacroBindingEditor & Sliders (`BeatDivisionSlider`, `CustomRangeSlider`)**: Sliders and range inputs now support direct macro binding popups, target range tracking (`noteTargetRange`), log-scaled dragging, and cyan `[ ]` brackets on slider tracks marking macro travel ranges.
+- **PerformanceMatrixPanel Overhang Buttons**: Learn/Cancel buttons in matrix rows now use custom rect hit-testing (`overhangButton`) to ensure they remain fully clickable beneath overlay child windows.
+
 ### Macro Binding ID Stability & Macro Learn Parameter Navigation Fixes (`ui/MacroBindingEditor.kt`, `ui/PerformanceMatrixPanel.kt`)
 - **MacroBindingEditor**: Replaced `hashCode()` with `System.identityHashCode(binding)` for ImGui ID push and link mode hashing to ensure stable IDs regardless of object content changes.
 - **PerformanceMatrixPanel**: Fixed Macro Learn navigation to directly open Deep Edit *Params* for the target module rather than checking disclosure state against collapsed enum values incorrectly.

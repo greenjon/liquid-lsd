@@ -167,6 +167,7 @@ object BeatDivisionSlider {
             )
         } else null
         val isMacroBound = macroInfo != null
+        if (macroInfo != null) MacroBindingEditor.noteTargetRange(macroInfo.binding, bindMinVal, bindMaxVal, bindMinVal > 0f)
 
         // Draw bounding box / tint around the beat division slider row when controlled by a Macro
         if (isMacroBound) {

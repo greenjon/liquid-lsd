@@ -197,17 +197,15 @@ class PerformanceMatrixPanel {
         ImGui.setCursorScreenPos(btnX, btnY)
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             if (isParamLearning) {
-                ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.CANCEL_BTN_BG.u32())
-                if (ImGui.button(cancelIdCache.get(control.id) { "${Icons.X} Cancel##inline_cancel_${control.id}" }, btnW, btnH)) {
+                if (overhangButton(session, cancelIdCache.get(control.id) { "${Icons.X} Cancel##inline_cancel_${control.id}" }, btnX, btnY, btnW, btnH, TangoPalette.CANCEL_BTN_BG.u32(), "Cancel Learn Mode.")) {
                     MacroLearnState.cancelLearn()
                 }
-                ImGui.popStyleColor()
-                itemTooltip("Cancel Learn Mode.")
             } else {
                 val canLearn = control.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL
                 if (canLearn) {
-                    ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.LEARN_BTN_BG.u32())
-                    if (ImGui.button(learnIdCache.get(control.id) { "${Icons.REFRESH} Learn##inline_learn_${control.id}" }, btnW, btnH)) {
+                    val learnTip = if (bankId == MacroEngine.GLOBAL) "Arm Learn Mode and open the Mixer panel's Macros tab. Then open any Deep Edit and click a parameter slider or modulator property -- Global knobs can bind anywhere."
+                        else "Arm Learn Mode, open this row's Deep Edit and the Mixer panel's Macros tab. Then click a parameter slider or modulator property in this row's deck and section."
+                    if (overhangButton(session, learnIdCache.get(control.id) { "${Icons.REFRESH} Learn##inline_learn_${control.id}" }, btnX, btnY, btnW, btnH, TangoPalette.LEARN_BTN_BG.u32(), learnTip)) {
                         MacroLearnState.startLearn(control.id)
                         MacroLearnState.selectedControlId = control.id
                         ctx.navigateMacroPanelTo(parametersState, bankId)
@@ -216,16 +214,30 @@ class PerformanceMatrixPanel {
                         val learnModuleId = ctx.canonicalModuleId(bankId)
                         if (learnModuleId in PerformanceDeepEditBay.deepEditModuleIds) parametersState.openParams(learnModuleId)
                     }
-                    ImGui.popStyleColor()
-                    itemTooltip(
-                        if (bankId == MacroEngine.GLOBAL) "Arm Learn Mode and open the Mixer panel's Macros tab. Then open any Deep Edit and click a parameter slider or modulator property -- Global knobs can bind anywhere."
-                        else "Arm Learn Mode, open this row's Deep Edit and the Mixer panel's Macros tab. Then click a parameter slider or modulator property in this row's deck and section."
-                    )
                 } else {
                     ImGui.textDisabled("Max 4")
                 }
             }
         }
+    }
+
+    /**
+     * A button for the overhang, which hangs below the grid child's rect and so sits under the grid and bay
+     * *child windows* -- ImGui gives them hover priority, which left only a few pixels of a normal
+     * [ImGui.button] clickable. Hit-tested by rect against the parent window instead (no popup open).
+     */
+    private fun overhangButton(session: llm.slop.liquidlsd.SessionContext, label: String, x: Float, y: Float, w: Float, h: Float, bg: Int, tip: String): Boolean {
+        val hovered = ImGui.isWindowHovered(imgui.flag.ImGuiHoveredFlags.ChildWindows) &&
+            !ImGui.isPopupOpen("", imgui.flag.ImGuiPopupFlags.AnyPopupId or imgui.flag.ImGuiPopupFlags.AnyPopupLevel) &&
+            ImGui.isMouseHoveringRect(x, y, x + w, y + h, false)
+        val dl = ImGui.getWindowDrawList()
+        dl.addRectFilled(x, y, x + w, y + h, bg, 3f)
+        if (hovered) dl.addRectFilled(x, y, x + w, y + h, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, if (ImGui.isMouseDown(0)) 0.25f else 0.12f), 3f)
+        val text = label.substringBefore("##")
+        val ts = ImGui.calcTextSize(text)
+        dl.addText(x + (w - ts.x) * 0.5f, y + (h - ts.y) * 0.5f, ImGui.getColorU32(ImGuiCol.Text), text)
+        if (hovered) showTooltip(tip)
+        return hovered && ImGui.isMouseClicked(0)
     }
 
     /** The rows to draw: the active page's rows, or the expanded module's row(s) in Deep Edit. See [PerfRows]. */
