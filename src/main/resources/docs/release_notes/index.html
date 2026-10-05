@@ -520,7 +520,7 @@
   <span class="md-ellipsis">
     
   
-    Macro Controls & Performance Mode
+    Macro Controls & the Perform View
   
 
     
@@ -1208,10 +1208,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#ui-terminology-pass-edit-banks-ab-queue-ui-docs" class="md-nav__link">
+  <a href="#ui-terminology-pass-edit-macros-ab-queue-ui-docs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        UI Terminology Pass: Edit, Banks, A/B Queue (ui/*, docs)
+        UI Terminology Pass: Edit, Macros, A/B Queue (ui/*, docs)
       
     </span>
   </a>
@@ -5548,10 +5548,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#ui-terminology-pass-edit-banks-ab-queue-ui-docs" class="md-nav__link">
+  <a href="#ui-terminology-pass-edit-macros-ab-queue-ui-docs" class="md-nav__link">
     <span class="md-ellipsis">
       
-        UI Terminology Pass: Edit, Banks, A/B Queue (ui/*, docs)
+        UI Terminology Pass: Edit, Macros, A/B Queue (ui/*, docs)
       
     </span>
   </a>
@@ -9863,9 +9863,9 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
-<h3 id="ui-terminology-pass-edit-banks-ab-queue-ui-docs">UI Terminology Pass: Edit, Banks, A/B Queue (<code>ui/*</code>, docs)</h3>
+<h3 id="ui-terminology-pass-edit-macros-ab-queue-ui-docs">UI Terminology Pass: Edit, Macros, A/B Queue (<code>ui/*</code>, docs)</h3>
 <ul>
-<li><strong>One name per thing in menus, tooltips and the docs.</strong> "Deep Edit" is now <strong>Edit</strong>; the Library's <strong>Maps</strong> tab is <strong>Banks</strong> and <strong>Trans</strong> is <strong>Transitions</strong>; "Play Queue" and "Live Queue" are the <strong>A/B Queue</strong> (with <strong>BG Queue</strong>, <strong>A/B FX Queue</strong>, <strong>BG FX Queue</strong> and <strong>Transition Queue</strong>); <strong>Output → Record Output</strong> and <strong>Render Video (Offline)...</strong> replace "Record Master Output" and "Export Video (Offline Studio)"; deck alphas are <strong>Levels</strong>; the View menu's "Library Drawer" is <strong>Library</strong>; the crossfader row badge is <strong>XF</strong>; LFO 2's toggle says Mute/Unmute; the menu-bar FBO readout says <strong>GPU buffers</strong>; New Preset says <strong>To Deck Background / Preview</strong>. A short glossary is in the user guide (Your Workspace).</li>
+<li><strong>One name per thing in menus, tooltips and the docs.</strong> "Deep Edit" is now <strong>Edit</strong>; the Library's <strong>Maps</strong> tab is <strong>Macros</strong> and <strong>Trans</strong> is <strong>Transitions</strong>; "Play Queue" and "Live Queue" are the <strong>A/B Queue</strong> (with <strong>BG Queue</strong>, <strong>A/B FX Queue</strong>, <strong>BG FX Queue</strong> and <strong>Transition Queue</strong>); <strong>Output → Record Output</strong> and <strong>Render Video (Offline)...</strong> replace "Record Master Output" and "Export Video (Offline Studio)"; deck alphas are <strong>Levels</strong>; the View menu's "Library Drawer" is <strong>Library</strong>; the crossfader row badge is <strong>XF</strong>; LFO 2's toggle says Mute/Unmute; the menu-bar FBO readout says <strong>GPU buffers</strong>; New Preset says <strong>To Deck Background / Preview</strong>. The Edit view's right-hand <strong>Properties</strong> column is now <strong>Modulation</strong>, and the Edit bay's first tab is <strong>Parameters</strong> (was Edit). "Performance Mode" is the <strong>Perform view</strong> in the docs. A short glossary is in the user guide (Your Workspace).</li>
 <li>Internal: strings only; class and identifier names (<code>PerformanceDeepEditBay</code>, <code>LibraryViewMode.MAPS</code>, <code>FX_SENDS</code>) are unchanged.</li>
 </ul>
 <h3 id="twister-optional-six-button-profile-with-app-controlled-banks-resourcescontrollersmidi-fighter-twister-6btnjson-controlcontrollerruntimekt-controlnavcommandskt">Twister: Optional Six-Button Profile with App-Controlled Banks (<code>resources/controllers/midi-fighter-twister-6btn.json</code>, <code>control/ControllerRuntime.kt</code>, <code>control/NavCommands.kt</code>)</h3>
@@ -9882,7 +9882,7 @@
 </ul>
 <h3 id="the-classic-library-columns-and-the-old-picker-are-gone-uilibrarypanelkt-uiperformancebrowsebaykt-uinavigationsurfacekt">The Classic Library Columns and the Old Picker Are Gone (<code>ui/LibraryPanel.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
 <ul>
-<li><strong>The folder tree | list | queues browser is now the only browser</strong>, in the Library and in the Edit bay's Browse tabs. The <strong>Unified</strong> toggle in the Library tab bar and the <code>-Dlsd.unifiedBrowser=false</code> switch are gone, together with the old four columns, the playlist editor columns and the inline picker. Playlists are entries under <strong>Playlists</strong> in the folder tree. <strong>Ctrl+F</strong> (or <code>/</code>) focuses the search box of the open tab, and the Maps tab fills the whole Library.</li>
+<li><strong>The folder tree | list | queues browser is now the only browser</strong>, in the Library and in the Edit bay's Browse tabs. The <strong>Unified</strong> toggle in the Library tab bar and the <code>-Dlsd.unifiedBrowser=false</code> switch are gone, together with the old four columns, the playlist editor columns and the inline picker. Playlists are entries under <strong>Playlists</strong> in the folder tree. <strong>Ctrl+F</strong> (or <code>/</code>) focuses the search box of the open tab, and the Macros tab fills the whole Library.</li>
 <li><strong>What you lose compared with the old picker</strong>: category multi-select, the Folders/Flat toggle and the row manage buttons in the Edit bay (use the tree, search and the row's right-click menu), and the activity dot beside live external video servers (the <strong>External video...</strong> menu lists names only).</li>
 <li>Internal: <code>ShaderPickerPopup</code>, <code>ChainListBrowse</code>, <code>PlaylistEditorPanel</code>, <code>FXPlaylistEditorPanel</code>, <code>TransitionPlaylistEditorPanel</code>, <code>BrowserPane.enabled/supports</code> and <code>SelectionSource.PLAYLIST/FX_PLAYLIST/TRANSITION_PLAYLIST</code> deleted; <code>BrowserPane.focusSearch</code>; <code>NavigationSurface.inPicker</code> is <code>isEditView &amp;&amp; BrowserPane.hosted() != null</code>.</li>
 </ul>
@@ -12412,7 +12412,7 @@
 <ul>
 <li><strong>Universal 3D Orthogonal Transformation</strong>: Elevates any 2D visual source (Chladni, Dynamic Spiral, Attractor, Video, etc.) into a 3D rotating structure across intersecting orthogonal planes ($XY$, $YZ$, $ZX$) at $90^\circ$ angles, forming a holographic gyroscope / celestial sphere, or a 6-sided Cube Cage.</li>
 <li><strong>Universal 2D View Transformation (<code>view2d.frag</code>, <code>rawSource2DFBO</code>)</strong>: When in standard 2D mode (<code>3D Mode &lt; 0.5</code>), universal View parameters <code>Zoom</code> and <code>Rotate Z</code> (Roll) actively transform the 2D source before entering the feedback loop. Operates at full native widescreen resolution via <code>rawSource2DFBO</code> with isotropic aspect-ratio-corrected rotation and transparent border blanking.</li>
-<li><strong>Contextual View UI Parameter Visibility (<code>PresetGridTabs.kt</code>)</strong>: Reordered the View tab to place universal controls at the top (<code>Zoom</code>, <code>Rotate Z</code>, <code>3D Mode</code>). Automatically hides 3D-only controls (<code>Rotate X</code>, <code>Rotate Y</code>, <code>3D Persp</code>, <code>Depth Dim</code>, <code>Separation</code>, <code>Blend Mode</code>) when in 2D mode (<code>3D Mode &lt; 0.5</code>), eliminating confusing non-functional sliders while preserving parameter paths and modulation bindings.</li>
+<li><strong>Contextual View UI Parameter Visibility (<code>PresetGridTabs.kt</code>)</strong>: Reordered the View tab to place universal controls at the top (<code>Zoom</code>, <code>Rotate Z</code>, <code>3D Mode</code>). Automatically hides 3D-only controls (<code>Rotate X</code>, <code>Rotate Y</code>, <code>3D Persp</code>, <code>Depth Dim</code>, <code>Separation</code>, <code>Blend Mode</code>) when in 2D mode (<code>3D Mode &lt; 0.5</code>), eliminating confusing non-functional sliders while preserving parameter paths and modulators.</li>
 <li><strong>Camera Proximity Headlight (<code>Depth Dim</code>)</strong>: Applies virtual camera-aligned point lighting with inverse-square falloff in view space. Elements closest to the camera stay crisp and brilliant, while elements sweeping into the distance dim smoothly into atmospheric haze.</li>
 <li><strong>Perspective-Correct Interpolation &amp; Square Plane Aspect</strong>: Rendered 2D sources into a square $1:1$ <code>rawSourceFBO</code> (<code>FBO(height, height)</code>) to eliminate non-uniform plane stretching in 3D mode, and emitted homogeneous clip coordinates with $w$-buffering in <code>tri_planar.vert</code> for hardware perspective-correct texture mapping without affine distortion.</li>
 <li><strong>Luminance-Derived Transparency &amp; Pedestal Discard (<code>tri_planar.frag</code>)</strong>: Empty 2D background space on intersecting 3D planes is rendered 100% transparent via smoothstep luminance gating ($&lt;1.5\%$ noise floor discarded), preventing opaque black planar quads from occluding intersecting geometries or casting gray shadows over background elements.</li>

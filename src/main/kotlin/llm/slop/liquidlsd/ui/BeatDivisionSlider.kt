@@ -538,7 +538,7 @@ object BeatDivisionSlider {
 
             if (isMacroBound) {
                 val info = macroInfo!!
-                showTooltip("Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nAdjust the target in the Edit row or Properties.")
+                showTooltip("Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nAdjust the target in the Edit row or Modulation column.")
             } else if (effectiveIsRandomizable) {
                 val minPct = if (rangeSpan > 0f) (currentMin - minLimit) / rangeSpan else 0f
                 val maxPct = if (rangeSpan > 0f) (currentMax - minLimit) / rangeSpan else 0f

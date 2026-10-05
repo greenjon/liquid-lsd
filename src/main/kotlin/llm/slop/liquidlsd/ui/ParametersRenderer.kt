@@ -257,7 +257,7 @@ object ParametersRenderer {
                 param.modulators.clear()
             }
             val hasMidiMap = session.midiMappingManager.hasMapping(paramKey)
-            if (ImGui.menuItem("Clear MIDI mapping", null, false, hasMidiMap)) {
+            if (ImGui.menuItem("Clear MIDI Mapping", null, false, hasMidiMap)) {
                 session.midiMappingManager.removeMapping(paramKey)
                 session.midiMappingManager.saveActiveProfile()
             }
@@ -271,7 +271,7 @@ object ParametersRenderer {
                 }
             }
             val oscAddress = OscMappingManager.getAddressForParameter(paramKey)
-            if (ImGui.menuItem("${Icons.TRASH} Clear OSC mapping", null, false, oscAddress != null)) {
+            if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping", null, false, oscAddress != null)) {
                 OscMappingManager.removeMapping(oscAddress!!)
                 OscMappingManager.saveActiveProfile()
             }
@@ -388,7 +388,7 @@ object ParametersRenderer {
                     "Add Target: Click to make this parameter's base value a target of the armed macro knob."
                 isMacroBound -> {
                     val info = macroInfo!!
-                    "Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nClick to select its macro and edit the target in Properties."
+                    "Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nClick to select its macro and edit the target in the Modulation column."
                 }
                 paramKey.endsWith("/Max Points") ->
                     "Base parameter value (non-modulatable).\nClick to configure in VAL panel. Middle-click to reset."
@@ -523,11 +523,11 @@ object ParametersRenderer {
                     if (it.sourceId.startsWith("midi_note_")) "Note " + it.sourceId.removePrefix("midi_note_")
                     else "CC " + it.sourceId.removePrefix("midi_cc_")
                 }
-                "Mapped to MIDI: $targets\nClick to edit MIDI settings in Properties. Middle-click to toggle bypass."
+                "Mapped to MIDI: $targets\nClick to edit MIDI settings in the Modulation column. Middle-click to toggle bypass."
             } else if (isMidiTarget) {
                 "Waiting for MIDI Note/CC... Move a knob, fader, or press a pad."
             } else {
-                "No MIDI mapping. Click to configure MIDI Learn & settings in Properties."
+                "No MIDI mapping. Click to configure MIDI Learn & settings in the Modulation column."
             }
             showTooltip(details, (midiX.toInt() shl 16) xor (midiY.toInt() and 0xFFFF))
         }

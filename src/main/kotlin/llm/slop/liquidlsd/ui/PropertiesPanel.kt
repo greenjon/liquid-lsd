@@ -88,7 +88,7 @@ object PropertiesPanel {
                 if (ImGui.button(label, btnW, btnH)) {
                     state.selectedCell = ParameterCellId(currentParamKey, targetCvId)
                 }
-                itemTooltip("Switch Properties view to $label CV modulation for parameter")
+                itemTooltip("Switch Modulation view to $label CV modulation for parameter")
                 ImGui.popStyleColor(if (isActive) 4 else 3)
             }
 

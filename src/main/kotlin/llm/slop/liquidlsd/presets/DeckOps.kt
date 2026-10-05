@@ -294,7 +294,7 @@ object DeckOps {
         }
 
         if (what != null && bindingsBefore.any { it.isNotEmpty() } && bindingsBefore != bindingsOf(slot)) {
-            ToastOverlay.show("${slot.label} macro knobs replaced by $what (previous bindings replaced)" + if (undoPushed) ". Ctrl+Z to undo" else "")
+            ToastOverlay.show("${slot.label} macro knobs replaced by $what (previous targets replaced)" + if (undoPushed) ". Ctrl+Z to undo" else "")
         }
         postApply?.invoke(slot, change)
         return true

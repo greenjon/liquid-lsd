@@ -59,7 +59,7 @@ Press **`Space`** (when the cursor isn't in a text field) or the button at the r
 
 In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.
 
-### Library View Mode (`[ Sources ]` / `[ FX ]` / `[ Transitions ]` / `[ Banks ]`)
+### Library View Mode (`[ Sources ]` / `[ FX ]` / `[ Transitions ]` / `[ Macros ]`)
 
 Toggle between sources, FX, transitions and banks (macro banks and Perform pages) using the segmented mode button in the top-left of the Library menu bar. Sources, FX and Trans share one three-part browser:
 
@@ -246,7 +246,7 @@ Liquid LSD features a curated suite of 8 club-grade ISF transition shaders desig
 The `[ Transitions ]` list shows two kinds of row side by side, each marked with its own icon:
 
 - **Stock ISF Transition Shaders** — The curated suite above, plus any custom `.fs` transitions found in your configured shader directories. Unlike FX, there's only ever one active transition — no chain of slots to disambiguate — so a bare stock transition id is a complete, unambiguous instruction. Combined with sane bundled defaults, that makes them safe to apply, queue, or add to a playlist just like saved presets.
-- **Saved Transition Presets (`.lsdtrans`)** — A dialed-in transition configuration (parameters, dry/wet, modulation bindings) captured from the mixer.
+- **Saved Transition Presets (`.lsdtrans`)** — A dialed-in transition configuration (parameters, dry/wet, modulators) captured from the mixer.
 
 Pick a section in the folder tree to show only stock shaders or only saved presets. Use **`[+]`** to save the mixer's current transition as a new preset.
 
@@ -255,16 +255,16 @@ Pick a section in the folder tree to show only stock shaders or only saved prese
 - **Failures**: a transition or FX file that can't be loaded or applied now shows a toast instead of failing silently.
 - **Right-click menu**: **Apply to Mixer**, **Add to A/B Queue**, **Add to '<playlist>' Playlist**, plus Rename/Clone/Delete for saved presets (stock shaders have no file to rename or delete).
 
-### The Banks Tab (Macro Banks and Perform Pages)
+### The Macros Tab (Macro Banks and Perform Pages)
 
-The **`[ Banks ]`** tab has two lists, switched with the **Banks** / **Pages** radio buttons. It has no playlists or queues, so it uses the whole Library width.
+The **`[ Macros ]`** tab has two lists, switched with the **Banks** / **Pages** radio buttons. It has no playlists or queues, so it uses the whole Library width.
 
 - **Banks** lists the saved macro banks (`.knobpreset.json` files in `library/knobpresets`). **Save bank from...** saves the knobs of a deck, Master, Transition or FX Sends row under a name you choose. Right-click a bank to **Apply to** one of those rows (deck banks retarget to the deck they land on; targets that row can't take are dropped, and a toast says if parameters were missing) or **Delete** it. FX banks are rewritten from the FX chain, so they can't be saved or applied here. This is the same as the bank kebab menu in the Edit row, without the file browser.
 - **Pages** lists the Perform pages with where each comes from (built-in, user, or user override). Click a page to show it in Perform. Right-click for **Hide from / Show in tab strip**, **Copy to user file** (built-ins) or **Delete user file**. Editing a page's rows stays in **Preferences → MIDI Controls**.
 
 ### Transition Presets (`.lsdtrans`) & Playlists (`.lsdtransplay`)
 
-- **Transition Presets (`.lsdtrans`)**: Stored in `library/transitions/`. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) from the Mixer's TRANS tab (**[⋮] > Save Transition As...**), from the **Save current as preset...** button under the transition list in Browse, or with the **[+]** button above the Trans list or right-clicking in the Mixer panel.
+- **Transition Presets (`.lsdtrans`)**: Stored in `library/transitions/`. Save dialed-in transition configurations (including parameter values, dry/wet, and modulators) from the Mixer's TRANS tab (**[⋮] > Save Transition As...**), from the **Save current as preset...** button under the transition list in Browse, or with the **[+]** button above the Trans list or right-clicking in the Mixer panel.
 - **Transition Playlists (`.lsdtransplay`)**: Stored in `library/transition_playlists/`. Group transitions into ordered setlists for the Transition Queue. A factory playlist, `festival_elite.lsdtransplay`, is bundled out of the box.
 - **AutoVJ Integration**: The Transition Queue automatically advances to the next staged transition preset or stock transition shader each time the crossfader cycles between decks.
 
@@ -310,4 +310,4 @@ Liquid LSD keeps hardware controller maps separate from visual presets, so you c
 1. Click the **MIDI Learn** button in the Parameters header or next to any parameter slider.
 2. Move a knob, fader, or button on your controller.
 3. Liquid LSD captures the CC and confirms the mapping automatically.
-4. To unbind, right-click the mapped control and clear the MIDI assignment.
+4. To remove a mapping, right-click the mapped control and choose **Clear MIDI Mapping**.

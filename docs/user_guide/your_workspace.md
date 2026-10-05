@@ -49,7 +49,7 @@ Here's how audio becomes visuals:
 
 ## The Performance Panel (Left & Middle)
 
-The top of the left and middle columns is the **Performance panel**: a 4×4 grid of macro knobs,
+The top of the left and middle columns is the **Perform view**: a 4×4 grid of macro knobs,
 one row per deck or section, with tabs across the top (DECKS and
 MASTER). Click a deck row's generator badge to change its visual source.
 
@@ -60,11 +60,11 @@ the Mixer). Edit has three columns:
 - **Parameter grid** — every row is a visual parameter (like "Lobes", "Zoom", or "Hue") and each
   column is a modulation source (manual value, MIDI, LFO, sequencer, audio). Click a cell to
   configure that connection. See [Modulation](modulation.md) for the full guide.
-- **Properties** — the details of the selected cell: waveform controls for LFOs, band selectors
+- **Modulation** — the details of the selected cell: waveform controls for LFOs, band selectors
   for audio, step patterns for the sequencer, etc., with a live oscilloscope of the signal going
   to the parameter.
 
-See [Macro Controls & Performance Mode](macros_and_rack.md) for the knobs and Edit in detail.
+See [Macro Controls & the Perform View](macros_and_rack.md) for the knobs and Edit in detail.
 
 ---
 
@@ -79,7 +79,7 @@ The right panel shows:
 
 Clicking a deck monitor opens that deck in Edit; clicking the master monitor opens the Master (**MIX**) Edit.
 
-Macro knobs are edited in the Performance rows' Edit view, where each knob gets a target strip for choosing what it controls. See [Macro Controls & Performance Mode](macros_and_rack.md).
+Macro knobs are edited in the Performance rows' Edit view, where each knob gets a target strip for choosing what it controls. See [Macro Controls & the Perform View](macros_and_rack.md).
 
 ---
 
@@ -111,11 +111,11 @@ A few keyboard shortcuts work anywhere in the app:
 |------|---------|
 | **Source** | A stock ISF shader or an external video input. External video can't be saved as a preset. |
 | **Preset** | A Source you configured, named and saved. |
-| **Edit** | The parameter editor for one row: parameter grid, modulators and Properties. |
-| **Bank** | A saved set of macro knob assignments (Library → Banks). Perform pages are saved row layouts. |
+| **Edit** | The parameter editor for one row: parameter grid, modulators and Modulation. |
+| **Bank** | A saved set of macro knob targets (Library → Macros → Banks). Perform pages (Library → Macros → Pages) are saved row layouts. |
 | **A/B Queue / BG Queue** | The auto-VJ queues feeding Decks A/B and the Background deck. FX and Transitions have their own queues. |
 | **Level** | A deck's or the Master's output opacity. |
 | **XF** | Crossfader row: the crossfade and transition shader. |
 | **W/D** | Per-deck FX chain wet/dry. |
-| **Mapping** | A hardware (MIDI/OSC) control tied to a parameter. A macro **binding** is a macro knob tied to a parameter. |
+| **Mapping** | A hardware (MIDI/OSC) control tied to a parameter. A macro knob's **targets** are the parameters it drives (no hardware involved). |
 | **Bypass / Mute** | Bypass turns off an FX chain or shader; Mute turns off a modulator. |

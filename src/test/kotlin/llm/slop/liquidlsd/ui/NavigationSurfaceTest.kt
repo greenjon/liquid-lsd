@@ -215,6 +215,28 @@ class NavigationSurfaceTest {
     }
 
     @Test
+    fun browseStepMovesTreeCursorWhenActiveSelectionSourceIsTree() {
+        try {
+            state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
+            hostPane(mutableListOf(), mutableListOf())
+            LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.TREE
+            val initial = BrowserPane.treeCursorOf(BrowseKind.SRC)
+            val scopes = BrowserPane.treeSize(BrowseKind.SRC)
+            println("INITIAL: $initial, SIZE: $scopes")
+            nav().browseStep(1)
+            val stepped = BrowserPane.treeCursorOf(BrowseKind.SRC)
+            println("STEPPED: $stepped")
+            if (scopes > 1) {
+                assertTrue(initial != stepped)
+            } else {
+                assertEquals(initial, stepped)
+            }
+        } finally {
+            unhostPane()
+        }
+    }
+
+    @Test
     fun hostedPaneButtonsStepPanesAndShiftRightBottomClears() {
         val cleared = mutableListOf<String>()
         try {

@@ -76,4 +76,4 @@ A progress bar shows render percentage, elapsed time, estimated time remaining, 
 
 ## Hardware Preferences & Persistence
  
-Your audio routing, MIDI bindings, display preferences, and broadcast preferences all save automatically to `lsd-preferences.properties` in the app folder (with automatic backward compatibility for existing `lsd-settings.properties` files). You don't need to reconfigure anything between sessions.
+Your audio routing, MIDI mappings, display preferences, and broadcast preferences all save automatically to `lsd-preferences.properties` in the app folder (with automatic backward compatibility for existing `lsd-settings.properties` files). You don't need to reconfigure anything between sessions.

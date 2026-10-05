@@ -21,7 +21,7 @@ import llm.slop.liquidlsd.ui.selectableRow
 import java.io.File
 
 /**
- * Library "Banks" tab: saved macro banks (`.knobpreset.json` files in `library/knobpresets`) and Perform pages,
+ * Library "Macros" tab: saved macro banks (`.knobpreset.json` files in `library/knobpresets`) and Perform pages,
  * so both are found next to presets instead of through a raw file browser or Preferences.
  * Banks can be saved from, and applied to, a bank; pages can be shown, hidden, copied and deleted here
  * (editing a page's rows stays in Preferences > MIDI Controls).
@@ -60,7 +60,7 @@ object MapsBrowserPanel {
 
     fun draw(session: SessionContext, mixer: Mixer) {
         ImGui.alignTextToFramePadding()
-        session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.text("Banks") }
+        session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.text("Macros") }
         ImGui.sameLine()
         if (ImGui.radioButton("Banks##maps_tab_banks", tab == Tab.BANKS)) tab = Tab.BANKS
         itemTooltip("Saved macro knob banks: the knob layout and targets of a deck, Master, Transition or FX Sends row.")

@@ -34,6 +34,10 @@ Goal: settle user-facing terms before public release. Code identifiers are out o
 11. **Transitions**: "Trans Queue", "Transition Queue", "Live Transition Queue" in tooltips/actions. Use "Transition Queue" everywhere.
 12. **FBO telemetry** in the menu bar: GL jargon. Label it what a user cares about (e.g. buffers or GPU memory).
 
+## Status (2026-10-04)
+
+Done and committed: items 1-6, 8-12 (strings, user guide, release notes, glossary). Follow-up pass: Edit bay tab "Edit" -> "Parameters"; docs "Performance Mode"/"Performance panel" -> "Perform view", "Column 3" -> "Mixer column". Properties -> Modulation done. Done: Maps -> Macros tab (Banks/Pages inside); mapping (hardware) vs target (macro knob) wording; "binding" retired from user text. Still open: .planning/ARCHITECTURE.md terms.
+
 ## Next steps
 
 - Remaining decisions: item 9 (spell out BG/PV), item 12 (FBO label), Bypass/Mute rule (item 5).

@@ -1,16 +1,16 @@
-# Macro Controls & Performance Mode
+# Macro Controls & the Perform View
 
 Macro Controls give you a small number of physical-style knobs that each drive several
 parameters at once — the fast, tactile layer you reach for live instead of hunting through
-parameter grids. Performance Mode builds on the same macro system to give you a 4×4 knob matrix
+parameter grids. The Perform view builds on the same macro system to give you a 4×4 knob matrix
 purpose-built for live performance, with Edit underneath for everything else.
 
 ---
 
 ## Macro Controls
 
-Macro knobs live in the **Performance Mode 4×4 matrix**, and they are edited in place. Column 3
-(the right-hand panel) shows only the Mixer; there is no separate MACROS tab.
+Macro knobs live in the **Perform view 4×4 matrix**, and they are edited in place. The right-hand column
+shows only the Mixer; there is no separate MACROS tab.
 
 In the **Edit** view, select a macro knob in an expanded row. That row's left side switches to the
 **target strip**:
@@ -30,7 +30,7 @@ than offering targets.
 2. Click the target:
    - A parameter slider in a Edit **parameter grid** becomes a target through that
      parameter's base value.
-   - A modulator control in Edit's **Properties** column — e.g. an LFO's Subdivision or
+   - A modulator control in Edit's **Modulation** column — e.g. an LFO's Subdivision or
      Morph slider, or an envelope's Attack/Decay — becomes a target directly.
      This lets a macro knob speed up an LFO or shorten an envelope's decay, not just move a value.
 3. A toast confirms the target (e.g. *"Added target: Knob 3 → Zoom [LFO 1 Morph]"*) and Add Target
@@ -54,7 +54,7 @@ properties) simultaneously — with independent settings per target.
 
 ### Editing a target
 
-Selecting a knob shows its targets in the target strip (Edit view) and in the Properties
+Selecting a knob shows its targets in the target strip (Edit view) and in the Modulation
 editor of the open Edit. For each target you can set:
 
 - **Min / Max** — the travel range the target maps onto, independent of the target's own range.
@@ -99,7 +99,7 @@ receives distinct visual cues in Edit:
   - **Clicking the row label, badge, or VAL cell** selects that macro control and shows its
     target strip.
 
-- **Properties & Sliders**:
+- **Modulation & Sliders**:
   - An Electric Cyan **bounding box and background highlight** frames the entire slider row.
   - The variable label displays the **`[K1]`** badge in cyan.
   - The slider track and dynamic indicator dot glow Electric Cyan instead of their default color.
@@ -124,7 +124,7 @@ has **Rename** (double-clicking the name also works). FX banks have no menu.
 
 Macro Knobs sit at the top of the MIDI/OSC input hierarchy:
 
-- Right-click any knob in the **Performance Mode 4×4 matrix** (see below) to arm hardware MIDI
+- Right-click any knob in the **Perform view 4×4 matrix** (see below) to arm hardware MIDI
   Learn for it — the next CC your controller sends is mapped to that knob. Hardware MIDI Learn is
   Performance-Mode-only; the target strip's `Add Target` button chooses what a knob controls, not
   which controller moves it.
@@ -195,10 +195,10 @@ build. If this turns out to matter in practice for your hardware workflow, it's 
 
 ---
 
-## Performance Mode (4×4 Matrix)
+## The Perform View (4×4 Matrix)
 
-Performance Mode is the app's main view: a **4×4 Macro Knob Matrix** — 16 knobs arranged in 4
-rows across 4 columns, color-coded by deck — on the left, with the Mixer column (Column 3) and
+The Perform view is the app's main view: a **4×4 Macro Knob Matrix** — 16 knobs arranged in 4
+rows across 4 columns, color-coded by deck — on the left, with the Mixer column and
 Library dock alongside. (Earlier versions also had a "Classic" Parameters/Properties view,
 toggled with `F4`; everything it did now lives in Edit, below.)
 
@@ -297,7 +297,7 @@ write to the **same underlying `MacroEngine` banks** — changes in one are imme
 
 Every deep-editable row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Master, Transitions)
 has a small **`[EDIT]` button** in its top-right corner (FX Wet/Dry is a dedicated 4-knob macro row with no button). Clicking it toggles that row
-between two disclosure tiers, without leaving Performance Mode:
+between two disclosure tiers, without leaving the Perform view:
 
 1. **Faceplate** (collapsed, the default) — just the 4 knobs, exactly like the plain 4×4 matrix
    above. The `[EDIT]` button has a dark fill and off-white text. Clicking a knob selects it (electric cyan focus card, glowing rim, cyan label), shows
@@ -314,7 +314,7 @@ between two disclosure tiers, without leaving Performance Mode:
      - **`MIX`**: `[ CTRL ]  [ FX ]  [ TRANS ]` (Master controls, the Master FX chain's 3 ISF slots, and Transitions)
      - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]` (visual generator with Gain/Zoom/Rotate Z, and the insert FX chain)
      Switching between `SRC`/`CTRL` and `FX` in Edit automatically switches the on-screen macro knobs (and corresponding `[SRC]` / `[FX]` pill highlight) between visual source controls and insert/master FX macros (`Super Knob + 3 Metaknobs`). Source and FX chain controls on the deck's performance row remain available simultaneously.
-   - **Properties Editor** on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.
+   - **Modulation Editor** on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.
 
    If the deck is **empty**, Edit shows the empty-deck card instead: **Add Source** (opens
    Browse, see below, including external video), **Load Preset**, and **Open Library Panel**.
@@ -351,8 +351,8 @@ watching the show while you pick.
 **Keyboard shortcuts in Edit**: `Ctrl+C` / `Ctrl+V` (copy/paste a cell or row), `Delete` /
 `Backspace` (clear the cell's modulators, or reset the parameter), and `Ctrl+S` / `Shift+Ctrl+S`
 (save / save-as the deck being edited) act on the open Edit. Copy/paste/clear only fire while the
-Performance panel has focus, so `Delete` in the Library doesn't also reset a parameter. `Ctrl+Z`
-(undo) works anywhere in Performance Mode, with or without Edit open.
+Perform view has focus, so `Delete` in the Library doesn't also reset a parameter. `Ctrl+Z`
+(undo) works anywhere in the Perform view, with or without Edit open.
 
 **While in Edit**, the top macro row renders the macro controls corresponding to the active channel and subtab,
 reserving the freed vertical space for the side rail and parameter bay. The row keeps the same knob size and control
@@ -366,7 +366,7 @@ Edit is open the Library is hidden completely (the **Edit** view — see
 Click **`[EDIT]`** again (or press Esc) to fold back to the Faceplate.
 
 **Opening Edit from Confidence Monitors**:
-In addition to the row's `[EDIT]` button, clicking any preview monitor in Column 3 (Deck A, Deck B, Deck BG, Deck PV, or Main Output Master) will immediately open Edit focused directly on that module. This swaps the Edit bay from your current deck to the clicked deck without needing to scroll or find the row's button.
+In addition to the row's `[EDIT]` button, clicking any preview monitor in the Mixer column (Deck A, Deck B, Deck BG, Deck PV, or Main Output Master) will immediately open Edit focused directly on that module. This swaps the Edit bay from your current deck to the clicked deck without needing to scroll or find the row's button.
 
 **One Edit at a time**: opening a row's Edit collapses any other open one. To move
 between decks, use the Edit side rail (**MIX / A / B / BG / PV**) rather than opening
@@ -384,7 +384,7 @@ Expanding or collapsing a row is purely a display change — it never re-syncs t
 ### Setting up knob labels and targets
 
 Targets are edited in the **Edit** view, in the target strip described above (rename,
-target chips, Min/Max/Curve/Invert/Link/Enabled) and in the Properties editor of the open Edit.
+target chips, Min/Max/Curve/Invert/Link/Enabled) and in the Modulation editor of the open Edit.
 Clicking a target's name opens that deck's (or the Mixer's) Edit on the right sub-tab
 with the parameter selected.
 
@@ -436,7 +436,7 @@ When swapping visual sources on any deck (via the generator badge or launchpad),
 **Bank Replacement Behavior**: Applying a default replaces the resident 4-knob deck bank wholesale, identical to preset loading. Stored `Deck/*` targets are dynamically remapped to the target deck slot (e.g., `Deck A`, `Deck B`). Knobs are positioned via inverse-curve mapping so parameter values do not jump on load. Hardware MIDI mappings are stripped on save to avoid duplicate hardware CC collisions across decks.
 
 **How to Save or Reset Generator Defaults**:
-- **Right-click the generator badge** on any deck row in Performance Mode to open the context menu:
+- **Right-click the generator badge** on any deck row in the Perform view to open the context menu:
   - `Save as Default for <Generator>`: Saves current parameters, alpha, and 4-knob macro layout as the generator default.
   - `Apply Default Now`: Reapplies the default layout and parameters to the current deck.
   - `Reset to Factory Default`: Deletes the user default file and restores curated/heuristic factory defaults.

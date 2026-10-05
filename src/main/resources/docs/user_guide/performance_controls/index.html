@@ -962,7 +962,7 @@
   <span class="md-ellipsis">
     
   
-    Macro Controls & Performance Mode
+    Macro Controls & the Perform View
   
 
     
@@ -2136,7 +2136,7 @@ Open the Deck Menu popup and choose <strong>Add/Edit Source Note...</strong></p>
 <p>Every deck and the master bus each own one FX chain of 3 serial ISF filter slots: a deck's chain is
 its <strong><code>FX</code></strong> sub-tab, and <strong>Master FX</strong> (the Mixer's <strong><code>FX</code></strong> sub-tab in Edit) is applied to the
 final output after the crossfader. All five chains work the same way. Each chain has a <strong>Chain Super
-Knob</strong> and each slot its own <strong>Metaknob</strong> — see <a href="../macros_and_rack/">Macro Controls &amp; Performance Mode</a>
+Knob</strong> and each slot its own <strong>Metaknob</strong> — see <a href="../macros_and_rack/">Macro Controls &amp; the Perform View</a>
 for the FX Rack view that exposes these.</p>
 <ul>
 <li><strong>Chain Header Kebab (<code>⋮</code>)</strong>:</li>
@@ -2244,7 +2244,7 @@ for the FX Rack view that exposes these.</p>
 <p><strong>Modulation Matrix Cells</strong>:</p>
 </li>
 <li>
-<p>Click any cell in the MIDI column of the Parameters matrix, then click <strong>Learn MIDI Modulator</strong> (or <strong>Re-Learn MIDI Modulator</strong>) in Properties. This adds a MIDI modulator that is saved in the preset and adds on top of the parameter's value; <strong>Clear MIDI Modulator</strong> removes it.</p>
+<p>Click any cell in the MIDI column of the Parameters matrix, then click <strong>Learn MIDI Modulator</strong> (or <strong>Re-Learn MIDI Modulator</strong>) in Modulation. This adds a MIDI modulator that is saved in the preset and adds on top of the parameter's value; <strong>Clear MIDI Modulator</strong> removes it.</p>
 </li>
 <li>
 <p><strong>Global Performance Actions</strong>:</p>
@@ -2472,7 +2472,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <ul>
 <li><strong>Unsaved-changes prompt:</strong> when loading would discard edits on a deck, the prompt takes over the controller: <strong>left-top</strong> = Cancel, <strong>right-top</strong> or <strong>knob 1 tap</strong> = Save, <strong>right-bottom</strong> or <strong>Shift + tap</strong> = Discard. Nothing else navigates until you answer.</li>
 <li><strong>Picker:</strong> moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active. To pick for another deck or row, close the picker with <strong>left-top</strong> before touching the new row's knob.</li>
-<li><strong>Edit:</strong> Left-top closes Edit (collapsing the module bay back to Tier 1, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).</li>
+<li><strong>Edit:</strong> Left-top closes Edit (collapsing the module bay back to the Faceplate, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).</li>
 <li><strong>Library:</strong> a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and <strong>Shift + tap</strong> adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.</li>
 <li><strong>Unified browser (default; the Library tab bar's "Unified" toggle turns it off):</strong> a fresh tab starts in the list. <strong>Right-bottom</strong> moves on to the queues and <strong>Shift +</strong> it goes back to the folder tree. In the tree, turning moves a cursor (an outline) over the visible folders and playlists without changing the list; a <strong>tap</strong> selects the folder or playlist under it, which fills the list and clears the list's selection. A playlist is just a tree entry, so there is no separate playlist pane.</li>
 <li>The FX queue transport commands (<code>fx.queue_next/prev</code>, <code>fx.bg_queue_next/prev</code>) have no free button in the built-in profile; map them in your own profile.</li>
@@ -2550,7 +2550,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 - <strong>Invert</strong>: Inverts incoming values ($1.0 - x$).
 - <strong>Slew Rate Smoothing</strong>: Exponential filter ($0 \dots 250\,\text{ms}$) to smooth out coarse touch faders or packet jitter without visual stepping.
 - <strong>Soft Takeover (Pickup)</strong>: Prevents value jumping by waiting until the physical controller crosses the current software value before taking over control.</p>
-<p>Macro Knobs also respond directly to <code>/macro/&lt;bankId&gt;/knob/1</code>–<code>/macro/&lt;bankId&gt;/knob/8</code> (no manual mapping needed), and broadcast their values back out over OSC whenever they change — keeping tablet layouts in bidirectional sync. See <a href="../macros_and_rack/">Macro Controls &amp; Performance Mode</a>.</p>
+<p>Macro Knobs also respond directly to <code>/macro/&lt;bankId&gt;/knob/1</code>–<code>/macro/&lt;bankId&gt;/knob/8</code> (no manual mapping needed), and broadcast their values back out over OSC whenever they change — keeping tablet layouts in bidirectional sync. See <a href="../macros_and_rack/">Macro Controls &amp; the Perform View</a>.</p>
 <h3 id="profiles_1">Profiles</h3>
 <p>Like MIDI, OSC address mappings are stored in JSON profiles under <code>library/osc/&lt;profile_name&gt;.json</code>. Create, save, switch, and delete profiles from the OSC Controls tab to switch between different tablet layouts or venues.</p>
 <h2 id="perform-pages">Perform Pages</h2>

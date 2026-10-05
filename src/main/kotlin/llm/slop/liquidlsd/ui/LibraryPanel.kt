@@ -274,7 +274,7 @@ object LibraryPanel {
                 val isMaps = viewMode == LibraryViewMode.MAPS
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isMaps) activeCol else inactiveCol)
                 ImGui.pushStyleColor(ImGuiCol.Text, if (isMaps) activeTextCol else inactiveTextCol)
-                if (ImGui.button("Banks##mode_maps", btnWMode, btnH)) {
+                if (ImGui.button("Macros##mode_maps", btnWMode, btnH)) {
                     LibraryNavigation.setViewMode(LibraryViewMode.MAPS)
                 }
                 ImGui.popStyleColor(2)

@@ -116,7 +116,7 @@ If no preset is loaded yet (the deck is in an unsaved state), the label shows `U
 Every deck and the master bus each own one FX chain of 3 serial ISF filter slots: a deck's chain is
 its **`FX`** sub-tab, and **Master FX** (the Mixer's **`FX`** sub-tab in Edit) is applied to the
 final output after the crossfader. All five chains work the same way. Each chain has a **Chain Super
-Knob** and each slot its own **Metaknob** — see [Macro Controls & Performance Mode](macros_and_rack.md)
+Knob** and each slot its own **Metaknob** — see [Macro Controls & the Perform View](macros_and_rack.md)
 for the FX Rack view that exposes these.
 
 - **Chain Header Kebab (`⋮`)**:
@@ -206,7 +206,7 @@ You can map any parameter, internal modulator variable, matrix CV modulator, or 
    - Right-click again and select **Cancel MIDI Learn** if needed.
 
 2. **Modulation Matrix Cells**:
-   - Click any cell in the MIDI column of the Parameters matrix, then click **Learn MIDI Modulator** (or **Re-Learn MIDI Modulator**) in Properties. This adds a MIDI modulator that is saved in the preset and adds on top of the parameter's value; **Clear MIDI Modulator** removes it.
+   - Click any cell in the MIDI column of the Parameters matrix, then click **Learn MIDI Modulator** (or **Re-Learn MIDI Modulator**) in Modulation. This adds a MIDI modulator that is saved in the preset and adds on top of the parameter's value; **Clear MIDI Modulator** removes it.
 
 3. **Global Performance Actions**:
    - In **Preferences → MIDI Controls**, click **Learn** next to *Queue Advance A/B Next*, *Queue Step Back A/B Prev*, *BG Shader Advance*, *BG Step Back*, or *Tap Tempo*.
@@ -346,7 +346,7 @@ The three side buttons other than Shift change meaning with the view:
 
 - **Unsaved-changes prompt:** when loading would discard edits on a deck, the prompt takes over the controller: **left-top** = Cancel, **right-top** or **knob 1 tap** = Save, **right-bottom** or **Shift + tap** = Discard. Nothing else navigates until you answer.
 - **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active. To pick for another deck or row, close the picker with **left-top** before touching the new row's knob.
-- **Edit:** Left-top closes Edit (collapsing the module bay back to Tier 1, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).
+- **Edit:** Left-top closes Edit (collapsing the module bay back to the Faceplate, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).
 - **Library:** a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and **Shift + tap** adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.
 - **Unified browser (default; the Library tab bar's "Unified" toggle turns it off):** a fresh tab starts in the list. **Right-bottom** moves on to the queues and **Shift +** it goes back to the folder tree. In the tree, turning moves a cursor (an outline) over the visible folders and playlists without changing the list; a **tap** selects the folder or playlist under it, which fills the list and clears the list's selection. A playlist is just a tree entry, so there is no separate playlist pane.
 - The FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in profile; map them in your own profile.
@@ -426,7 +426,7 @@ The **Address Mappings** table in the OSC Controls tab offers comprehensive per-
 - **Slew Rate Smoothing**: Exponential filter ($0 \dots 250\,\text{ms}$) to smooth out coarse touch faders or packet jitter without visual stepping.
 - **Soft Takeover (Pickup)**: Prevents value jumping by waiting until the physical controller crosses the current software value before taking over control.
 
-Macro Knobs also respond directly to `/macro/<bankId>/knob/1`–`/macro/<bankId>/knob/8` (no manual mapping needed), and broadcast their values back out over OSC whenever they change — keeping tablet layouts in bidirectional sync. See [Macro Controls & Performance Mode](macros_and_rack.md).
+Macro Knobs also respond directly to `/macro/<bankId>/knob/1`–`/macro/<bankId>/knob/8` (no manual mapping needed), and broadcast their values back out over OSC whenever they change — keeping tablet layouts in bidirectional sync. See [Macro Controls & the Perform View](macros_and_rack.md).
 
 ### Profiles
 

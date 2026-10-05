@@ -143,7 +143,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
     }
 
     /**
-     * The bay's single tab row: `Edit | SRC | Chain | FX1 | FX2 | FX3` for a deck, with TRANS in place
+     * The bay's single tab row: `Parameters | SRC | Chain | FX1 | FX2 | FX3` for a deck, with TRANS in place
      * of SRC on Master. Edit is the Params editor; the rest are Browse targets (see
      * [ParametersState.BrowseTarget]), so the active tab is derived from [ParametersState.sectionModeFor]
      * and [ParametersState.browseTargetFor] rather than stored separately.
@@ -159,8 +159,8 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
                 if (active) ImGui.popStyleColor()
                 itemTooltip(tip)
             }
-            tab("Edit", "Edit parameters, modulation and properties.", !inBrowse) { parametersState.openParams(moduleId) }
-            // Edit shows parameters; every tab after the label opens a picker for that slot.
+            tab("Parameters", "Edit parameters, modulation and properties.", !inBrowse) { parametersState.openParams(moduleId) }
+            // Parameters shows the editor; every tab after the label opens a picker for that slot.
             ImGui.sameLine(0f, 12f)
             ImGui.alignTextToFramePadding()
             ImGui.textDisabled("Pick:")

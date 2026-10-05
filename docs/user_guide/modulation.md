@@ -6,14 +6,14 @@ Modulation is how you make your visuals react to music, touch, MIDI, oscillators
 
 ## The CV Grid
 
-The CV grid is the middle column of **Edit** (open a row's chevron in the Performance panel, or click a deck monitor in the Mixer). It's a matrix:
+The CV grid is the middle column of **Edit** (open a row's chevron in the Perform view, or click a deck monitor in the Mixer). It's a matrix:
 
 - **Rows** = visual parameters (Lobes, Zoom, Hue, Feedback Decay, etc.)
 - **Columns** = modulation sources (manual value, MIDI, LFO, Sequencer, Audio)
 
 Click any cell at the intersection of a parameter and a source type to configure that connection. Active cells show an animated readout knob so you can see the live signal at a glance.
 
-The side rail on the left (`[MIX] [A] [B] [BG] [PV]`) switches between the master mixer and the decks; the section tabs above the grid switch between a deck's source (`SRC`) and its `FX` chain, or the Mixer's `CTRL` / `FX` / `TRANS`. The selected cell's details appear in the Properties column on the right.
+The side rail on the left (`[MIX] [A] [B] [BG] [PV]`) switches between the master mixer and the decks; the section tabs above the grid switch between a deck's source (`SRC`) and its `FX` chain, or the Mixer's `CTRL` / `FX` / `TRANS`. The selected cell's details appear in the Modulation column on the right.
 
 ### Columns
 
