@@ -24,23 +24,23 @@ Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ per
 
 Liquid LSD is in active beta with a stable, production-ready core video and audio pipeline.
 
-| Subsystem | Status | Details |
-| :--- | :---: | :--- |
-| **Video Pipeline & FX** | **Operational** | 4 decks (A, B, BG, PV), 100% ISF 2.0 pipeline, 3-slot deck FX chains, 3-slot Master FX chain, feedback loops, ping-pong FBOs. |
-| **Audio & Beat Sync** | **Operational** | Sub-millisecond JACK/PipeWire audio capture, Adam Stark beat tracking DSP, continuous phase generator, Ableton Link network sync. |
-| **Transitions & Setlists** | **Operational** | ISF transition shaders, `.lsdtrans` presets, `.lsdtransplay` setlists, auto-advance transition queue, 2x2 Library panel layout. |
-| **Presets & Library** | **Operational** | Hierarchical preset system, `.lsdfx` slot presets, `.lsdfxchain` 3-slot chains, FX playlists (`.lsdfxplay`), live FX queues (A/B & BG), preset tags, instant tag search, drag-and-drop preset loading. |
-| **MIDI & Shortcuts** | **Operational** | Multi-type MIDI engine, soft takeover, relative encoders, customizable keyboard shortcuts, real-time packet sniffer. |
-| **Video Export & Sharing** | **Operational** | Asynchronous PBO GPU video export, zero-copy Spout2/Syphon/PipeWire streaming, camera ingest, WebGL2 broadcast engine. |
-| **Perform View & Macros** | **Operational** | Performance matrix (DECKS + MASTER tabs) with Edit, macro targets, curve editing, and FX slot editing on the rows. The 19" Modular Video Rack chassis UI this replaced has been fully removed. |
+| Subsystem                  | Status          | Details                                                                                                                                                                                                |
+|:-------------------------- |:---------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Video Pipeline & FX**    | **Operational** | 4 decks (A, B, BG, PV), 100% ISF 2.0 pipeline, 3-slot deck FX chains, 3-slot Master FX chain, feedback loops, ping-pong FBOs.                                                                          |
+| **Audio & Beat Sync**      | **Operational** | Sub-millisecond JACK/PipeWire audio capture, Adam Stark beat tracking DSP, continuous phase generator, Ableton Link network sync.                                                                      |
+| **Transitions & Setlists** | **Operational** | ISF transition shaders, `.lsdtrans` presets, `.lsdtransplay` setlists, auto-advance transition queue, 2x2 Library panel layout.                                                                        |
+| **Presets & Library**      | **Operational** | Hierarchical preset system, `.lsdfx` slot presets, `.lsdfxchain` 3-slot chains, FX playlists (`.lsdfxplay`), live FX queues (A/B & BG), preset tags, instant tag search, drag-and-drop preset loading. |
+| **MIDI & Shortcuts**       | **Operational** | Multi-type MIDI engine, soft takeover, relative encoders, customizable keyboard shortcuts, real-time packet sniffer.                                                                                   |
+| **Video Export & Sharing** | **Operational** | Asynchronous PBO GPU video export, zero-copy Spout2/Syphon/PipeWire streaming, camera ingest, WebGL2 broadcast engine.                                                                                 |
+| **Perform View & Macros**  | **Operational** | Performance matrix (DECKS + MASTER tabs) with Edit, macro targets, curve editing, and FX slot editing on the rows. The 19" Modular Video Rack chassis UI this replaced has been fully removed.         |
 
 ---
 
 ## Roadmap & Path to v1.0
 
-The core v1.0 feature set has shipped and is now frozen: the 100% ISF pipeline, the Performance matrix and Macro system, MIDI, TouchOSC/OSC control, and the 5-platform build (Linux x64/ARM64, macOS x64/ARM64, Windows x64). What remains before v1.0 is finishing and hardening:
+The core v1.0 feature set is in place: the 100% ISF pipeline, the Performance matrix and Macro system, MIDI, TouchOSC/OSC control, and the 5-platform build (Linux x64/ARM64, macOS x64/ARM64, Windows x64). What remains before v1.0 is finishing and hardening:
 
-- **UI & UX polish** across the Perform / Edit / Library views, down to the 1280×720 minimum screen size.
+- **UI & UX polish** across the Perform / Edit / Library views, down to the 1280×720 minimum screen size. This means the little details, but also includes deep overhauls if needed. We're going to keep pushing and pulling on the UI and UX until we love it.
 - **Stability testing**: long sessions, loading and swapping under load, session restore, device hot-plug.
 - **ISF binding audit**: every bundled ISF generator, filter and transition gets sensible default macro targets.
 - **Two polished themes.**
@@ -48,18 +48,25 @@ The core v1.0 feature set has shipped and is now frozen: the 100% ISF pipeline, 
 ### v1.1 Backlog
 
 1. **Unified Control Mapping & Hardware Profiles**:
+   
    - Decouple all user actions into a universal `CommandRegistry` for hardware controllers, MIDI, keyboard shortcuts, and GUI.
+   
    - Pre-packaged controller profiles (`library/mappings/`) for Launchpad, APC40, Pioneer DDJ, and Midi Fighter.
+   
    - Universal right-click "Learn" overlay across all UI widgets.
 
 2. **Session Scratchpad & Live Notes**:
+   
    - Floating or docked set scratchpad window (`~/.liquid-lsd/scratchpad.txt`) for persistent set notes during live performances.
 
 3. **Mandala Visual Generator v2+ Recipe Vault**:
+   
    - Recipe gallery popover featuring micro-previews of ~300 built-in recipes grouped by lobe counts.
+   
    - Geometric style tagging, global recipe sweep LFO index, and quick-recall performance bookmark slots.
 
 4. **Localization**:
+   
    - All user-facing text moved into string tables, with translation support and locale selection.
 
 5. **Also parked for v1.1**: FX Metaknob multi-parameter linking, the remaining macro-learn coverage (randomization bounds, per-step grid, dropdowns), headless screenshot automation and a UI Lab gallery, and a Mixxx-style expanded FX chain view.
@@ -72,15 +79,15 @@ The core v1.0 feature set has shipped and is now frozen: the 100% ISF pipeline, 
 
 Liquid LSD is a real-time procedural visual synthesizer and low-latency audio DSP performance workstation. Rendering 4 simultaneous visual decks (A, B, BG, PV) with multi-pass ISF FX chains, feedback buffers, and audio analysis requires modern 64-bit hardware with hardware-accelerated **OpenGL 3.3 Core Profile** support.
 
-| Component | Minimum Specification | Recommended Specification |
-| :--- | :--- | :--- |
-| **Operating System** | **64-bit only**:<br>• Linux (Ubuntu 20.04+, Debian 11+, Fedora 36+, Arch Linux)<br>• macOS 11.0 Big Sur or newer<br>• Windows 10 / 11 | **64-bit only**:<br>• Linux x64 / ARM64 (Wayland or X11)<br>• macOS 13+ (Apple Silicon M-Series)<br>• Windows 11 (x64) |
-| **GPU / Graphics** | **Hardware OpenGL 3.3 Core Profile support**:<br>• **Intel**: HD Graphics 3000 / 4000+ (Mesa 20+ on Linux; HD 4000+ on Windows), Iris, UHD, Xe, Arc<br>• **AMD**: Radeon HD 5000+ (TeraScale 2), HD 7000+ (GCN), RX series, RDNA<br>• **NVIDIA**: GeForce 8000/9000/GT 200+ (Tesla 2.0), GeForce GTX 400+ (Fermi, Kepler, Maxwell, Pascal, Turing, Ampere, Ada)<br>• **Apple**: Apple Silicon M1+ or Metal/OpenGL 3.3+ capable Intel Macs<br>• **VRAM**: 512 MB | Dedicated GPU with **2 GB+ VRAM**:<br>• NVIDIA GeForce GTX 1060 / RTX series<br>• AMD Radeon RX 580 / RX 6000+ series<br>• Apple Silicon M-Series (Unified Memory) |
-| **Processor (CPU)** | **64-bit dual-core** with SSE4.1/AVX:<br>• Intel Core i3 / i5 / i7 (2nd-Gen Sandy Bridge, 2011 or newer)<br>• AMD FX / Zen (Ryzen) series<br>• Apple Silicon M1+<br>• ARMv8 64-bit (Raspberry Pi 4/5 or equivalent) | **Quad-core or 6+ core** processor:<br>• Intel Core i5/i7 (8th-Gen or newer)<br>• AMD Ryzen 5 / 7 (3000 series or newer)<br>• Apple Silicon (M1 Pro / M2 / M3 / M4) |
-| **Memory (RAM)** | **4 GB RAM** | **8 GB – 16 GB RAM** (supports ZGC sub-millisecond GC and high-res multi-deck FBOs) |
-| **Display Resolution** | **1280 × 720** (minimum window size limit enforced by window manager) | **1920 × 1080 (Full HD)** or higher |
-| **Audio Input** | • **Linux**: ALSA / PulseAudio via Java Sound fallback<br>• **macOS / Windows**: Standard system audio input (built-in mic, interface, or loopback) | • **Linux**: PipeWire (`pipewire-jack`) or JACK daemon for sub-millisecond latency and inter-app patchbay routing<br>• **macOS / Windows**: Low-latency USB/Thunderbolt audio interface |
-| **Java / Runtime** | • **Bundled Releases**: Adoptium JRE 17+ bundled (no external Java install required)<br>• **Building from Source**: JDK 17 or higher (tested with JDK 17, 21, 25) | Bundled Adoptium JRE 17+ or JDK 21+ with ZGC |
+| Component              | Minimum Specification                                                                                                                                                                                                                                                                                                                                                                                                                                           | Recommended Specification                                                                                                                                                               |
+|:---------------------- |:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operating System**   | **64-bit only**:<br>• Linux (Ubuntu 20.04+, Debian 11+, Fedora 36+, Arch Linux)<br>• macOS 11.0 Big Sur or newer<br>• Windows 10 / 11                                                                                                                                                                                                                                                                                                                           | **64-bit only**:<br>• Linux x64 / ARM64 (Wayland or X11)<br>• macOS 13+ (Apple Silicon M-Series)<br>• Windows 11 (x64)                                                                  |
+| **GPU / Graphics**     | **Hardware OpenGL 3.3 Core Profile support**:<br>• **Intel**: HD Graphics 3000 / 4000+ (Mesa 20+ on Linux; HD 4000+ on Windows), Iris, UHD, Xe, Arc<br>• **AMD**: Radeon HD 5000+ (TeraScale 2), HD 7000+ (GCN), RX series, RDNA<br>• **NVIDIA**: GeForce 8000/9000/GT 200+ (Tesla 2.0), GeForce GTX 400+ (Fermi, Kepler, Maxwell, Pascal, Turing, Ampere, Ada)<br>• **Apple**: Apple Silicon M1+ or Metal/OpenGL 3.3+ capable Intel Macs<br>• **VRAM**: 512 MB | Dedicated GPU with **2 GB+ VRAM**:<br>• NVIDIA GeForce GTX 1060 / RTX series<br>• AMD Radeon RX 580 / RX 6000+ series<br>• Apple Silicon M-Series (Unified Memory)                      |
+| **Processor (CPU)**    | **64-bit dual-core** with SSE4.1/AVX:<br>• Intel Core i3 / i5 / i7 (2nd-Gen Sandy Bridge, 2011 or newer)<br>• AMD FX / Zen (Ryzen) series<br>• Apple Silicon M1+<br>• ARMv8 64-bit (Raspberry Pi 4/5 or equivalent)                                                                                                                                                                                                                                             | **Quad-core or 6+ core** processor:<br>• Intel Core i5/i7 (8th-Gen or newer)<br>• AMD Ryzen 5 / 7 (3000 series or newer)<br>• Apple Silicon (M1 Pro / M2 / M3 / M4)                     |
+| **Memory (RAM)**       | **4 GB RAM**                                                                                                                                                                                                                                                                                                                                                                                                                                                    | **8 GB – 16 GB RAM** (supports ZGC sub-millisecond GC and high-res multi-deck FBOs)                                                                                                     |
+| **Display Resolution** | **1280 × 720** (minimum window size limit enforced by window manager)                                                                                                                                                                                                                                                                                                                                                                                           | **1920 × 1080 (Full HD)** or higher                                                                                                                                                     |
+| **Audio Input**        | • **Linux**: ALSA / PulseAudio via Java Sound fallback<br>• **macOS / Windows**: Standard system audio input (built-in mic, interface, or loopback)                                                                                                                                                                                                                                                                                                             | • **Linux**: PipeWire (`pipewire-jack`) or JACK daemon for sub-millisecond latency and inter-app patchbay routing<br>• **macOS / Windows**: Low-latency USB/Thunderbolt audio interface |
+| **Java / Runtime**     | • **Bundled Releases**: Adoptium JRE 17+ bundled (no external Java install required)<br>• **Building from Source**: JDK 17 or higher (tested with JDK 17, 21, 25)                                                                                                                                                                                                                                                                                               | Bundled Adoptium JRE 17+ or JDK 21+ with ZGC                                                                                                                                            |
 
 > [!WARNING]
 > **Legacy Hardware Incompatibility (Intel Core 2 Duo / Core 2 Quad / Intel GMA Graphics)**:
