@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### The Library and the Edit Bay Browse Tabs Are One Browser (`ui/browser/BrowserDock.kt`, `ui/browser/DockActions.kt`, `ui/ViewState.kt`, `ui/PerformanceBrowseBay.kt`, `ui/LibraryPanel.kt`)
+- **The Edit bay's Browse tab now shows the same browser as the Library**, not a copy: the same tabs (**Sources | FX | Transitions | Macros**), the same toolbar (audition lock, **Q**, **BGQ**, deck load buttons), the same queue columns, and the same `Q` / `Shift+Q` / `Up` / `Down` keys.
+- **A line above the list says what a tap does.** On the tab of the row's own kind it reads "Applies to: Deck A source" (or "Deck A FX 2", "Deck B FX chain", "Transition") with that row's buttons (Save, External video..., Clear Slot / Clear Chain), and a tap applies. On any other tab it is the plain Library: double-click loads to the inactive deck, and the line tells you which tab applies to the row.
+- **Fixed: new playlist (+ in the folder tree) and playlist Rename did nothing in the Edit bay**, because their dialogs were only drawn by the Library window.
+- **The Library queue columns are now in the Edit bay**, so the dimmed "Next: ..." line moved: it only shows on the Parameters tab.
+- Changed: leaving Edit leaves the Library on the tab you were browsing there (one tab selection for both).
+- Internal: `BrowserDock` (tabs, toolbar, pane, shortcuts, popups; `DockBinding` for the row), `DockActions` (tap / double-click / controller accept in one place), `ViewState` (Perform / Edit / Library derived once; `LibraryPanel.isEditView` is an alias). Library FULL with a focused row stays unavailable: Edit is that layout.
+
 ### Twister: Send the Library Cursor Item to Any Deck or the Master Bus (`control/NavSurface.kt`, `control/KnobCommands.kt`, `ui/LibraryNavigation.kt`, `ui/NavigationSurface.kt`, `ui/PerformSurface.kt`)
 - **In the Library or the picker, tap a knob to send the highlighted item straight to a deck.** Row three is the decks: **knob 9 = Deck A, knob 10 = Deck B, knob 11 = Deck BG, knob 12 = Deck PV**. In the FX tab **knob 13 = Master FX**. Sources and presets load through the same path as the context menu (unsaved-changes prompt and undo included); an FX chain replaces all three slots of that deck's chain; a single FX goes into the first empty slot (the last slot when the chain is full).
 - **The target's row opens right away** in the Edit bay's Browse tab: the deck's source row for a source, its FX chain (on the slot a single FX landed in) for an effect, Master FX for the master bus. Row one (**knobs 1-4**) now plays what you just loaded while knob 16 keeps browsing and row three keeps sending, so you can audition on Deck PV, tweak, and send the next item elsewhere without leaving the flow. Back returns to Perform.
@@ -172,7 +180,7 @@
 - Internal: a per-frame tracker compares a hash of each knob's label and targets, so no widget had to be changed. `MacroEngine.bankReplaceEpoch` marks wholesale bank loads so they are not mistaken for hand edits.
 
 ### Edit View Shows What the Queue Plays Next (`ui/PerformanceDeepEditBay.kt`, `presets/QueueNextUp.kt`)
-- The Library's queue columns are hidden while a module is open in Edit view. The bay's tab row now ends with a dimmed one-liner, right-aligned: "Next: <preset> (2/12)", "Next: staged on Deck B" (a preset you loaded onto the standby deck, which plays first), "Next: shuffle (12 in queue)", "End of queue" or "Queue empty". Decks A/B and Master show the play queue, Deck BG shows its own queue, Deck PV shows nothing. It is hidden when the bay is too narrow, and long names are shortened (hover for the full text).
+- (Superseded: the Browse tabs now show the queue columns; this line only appears on the Parameters tab.) The bay's tab row now ends with a dimmed one-liner, right-aligned: "Next: <preset> (2/12)", "Next: staged on Deck B" (a preset you loaded onto the standby deck, which plays first), "Next: shuffle (12 in queue)", "End of queue" or "Queue empty". Decks A/B and Master show the play queue, Deck BG shows its own queue, Deck PV shows nothing. It is hidden when the bay is too narrow, and long names are shortened (hover for the full text).
 - Row geometry is unchanged: the text sits in the existing tab row, not in the Perform rows.
 
 ### Edit Bay Tabs Are Grouped: Edit, then "Pick:" (`ui/PerformanceDeepEditBay.kt`)

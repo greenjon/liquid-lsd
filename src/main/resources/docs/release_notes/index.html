@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#the-library-and-the-edit-bay-browse-tabs-are-one-browser-uibrowserbrowserdockkt-uibrowserdockactionskt-uiviewstatekt-uiperformancebrowsebaykt-uilibrarypanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Library and the Edit Bay Browse Tabs Are One Browser (ui/browser/BrowserDock.kt, ui/browser/DockActions.kt, ui/ViewState.kt, ui/PerformanceBrowseBay.kt, ui/LibraryPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-send-the-library-cursor-item-to-any-deck-or-the-master-bus-controlnavsurfacekt-controlknobcommandskt-uilibrarynavigationkt-uinavigationsurfacekt-uiperformsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5581,6 +5592,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#the-library-and-the-edit-bay-browse-tabs-are-one-browser-uibrowserbrowserdockkt-uibrowserdockactionskt-uiviewstatekt-uiperformancebrowsebaykt-uilibrarypanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Library and the Edit Bay Browse Tabs Are One Browser (ui/browser/BrowserDock.kt, ui/browser/DockActions.kt, ui/ViewState.kt, ui/PerformanceBrowseBay.kt, ui/LibraryPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-send-the-library-cursor-item-to-any-deck-or-the-master-bus-controlnavsurfacekt-controlknobcommandskt-uilibrarynavigationkt-uinavigationsurfacekt-uiperformsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9929,6 +9951,15 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="the-library-and-the-edit-bay-browse-tabs-are-one-browser-uibrowserbrowserdockkt-uibrowserdockactionskt-uiviewstatekt-uiperformancebrowsebaykt-uilibrarypanelkt">The Library and the Edit Bay Browse Tabs Are One Browser (<code>ui/browser/BrowserDock.kt</code>, <code>ui/browser/DockActions.kt</code>, <code>ui/ViewState.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>, <code>ui/LibraryPanel.kt</code>)</h3>
+<ul>
+<li><strong>The Edit bay's Browse tab now shows the same browser as the Library</strong>, not a copy: the same tabs (<strong>Sources | FX | Transitions | Macros</strong>), the same toolbar (audition lock, <strong>Q</strong>, <strong>BGQ</strong>, deck load buttons), the same queue columns, and the same <code>Q</code> / <code>Shift+Q</code> / <code>Up</code> / <code>Down</code> keys.</li>
+<li><strong>A line above the list says what a tap does.</strong> On the tab of the row's own kind it reads "Applies to: Deck A source" (or "Deck A FX 2", "Deck B FX chain", "Transition") with that row's buttons (Save, External video..., Clear Slot / Clear Chain), and a tap applies. On any other tab it is the plain Library: double-click loads to the inactive deck, and the line tells you which tab applies to the row.</li>
+<li><strong>Fixed: new playlist (+ in the folder tree) and playlist Rename did nothing in the Edit bay</strong>, because their dialogs were only drawn by the Library window.</li>
+<li><strong>The Library queue columns are now in the Edit bay</strong>, so the dimmed "Next: ..." line moved: it only shows on the Parameters tab.</li>
+<li>Changed: leaving Edit leaves the Library on the tab you were browsing there (one tab selection for both).</li>
+<li>Internal: <code>BrowserDock</code> (tabs, toolbar, pane, shortcuts, popups; <code>DockBinding</code> for the row), <code>DockActions</code> (tap / double-click / controller accept in one place), <code>ViewState</code> (Perform / Edit / Library derived once; <code>LibraryPanel.isEditView</code> is an alias). Library FULL with a focused row stays unavailable: Edit is that layout.</li>
+</ul>
 <h3 id="twister-send-the-library-cursor-item-to-any-deck-or-the-master-bus-controlnavsurfacekt-controlknobcommandskt-uilibrarynavigationkt-uinavigationsurfacekt-uiperformsurfacekt">Twister: Send the Library Cursor Item to Any Deck or the Master Bus (<code>control/NavSurface.kt</code>, <code>control/KnobCommands.kt</code>, <code>ui/LibraryNavigation.kt</code>, <code>ui/NavigationSurface.kt</code>, <code>ui/PerformSurface.kt</code>)</h3>
 <ul>
 <li><strong>In the Library or the picker, tap a knob to send the highlighted item straight to a deck.</strong> Row three is the decks: <strong>knob 9 = Deck A, knob 10 = Deck B, knob 11 = Deck BG, knob 12 = Deck PV</strong>. In the FX tab <strong>knob 13 = Master FX</strong>. Sources and presets load through the same path as the context menu (unsaved-changes prompt and undo included); an FX chain replaces all three slots of that deck's chain; a single FX goes into the first empty slot (the last slot when the chain is full).</li>
@@ -10134,7 +10165,7 @@
 </ul>
 <h3 id="edit-view-shows-what-the-queue-plays-next-uiperformancedeepeditbaykt-presetsqueuenextupkt">Edit View Shows What the Queue Plays Next (<code>ui/PerformanceDeepEditBay.kt</code>, <code>presets/QueueNextUp.kt</code>)</h3>
 <ul>
-<li>The Library's queue columns are hidden while a module is open in Edit view. The bay's tab row now ends with a dimmed one-liner, right-aligned: "Next: <preset> (2/12)", "Next: staged on Deck B" (a preset you loaded onto the standby deck, which plays first), "Next: shuffle (12 in queue)", "End of queue" or "Queue empty". Decks A/B and Master show the play queue, Deck BG shows its own queue, Deck PV shows nothing. It is hidden when the bay is too narrow, and long names are shortened (hover for the full text).</li>
+<li>(Superseded: the Browse tabs now show the queue columns; this line only appears on the Parameters tab.) The bay's tab row now ends with a dimmed one-liner, right-aligned: "Next: <preset> (2/12)", "Next: staged on Deck B" (a preset you loaded onto the standby deck, which plays first), "Next: shuffle (12 in queue)", "End of queue" or "Queue empty". Decks A/B and Master show the play queue, Deck BG shows its own queue, Deck PV shows nothing. It is hidden when the bay is too narrow, and long names are shortened (hover for the full text).</li>
 <li>Row geometry is unchanged: the text sits in the existing tab row, not in the Perform rows.</li>
 </ul>
 <h3 id="edit-bay-tabs-are-grouped-edit-then-pick-uiperformancedeepeditbaykt">Edit Bay Tabs Are Grouped: Edit, then "Pick:" (<code>ui/PerformanceDeepEditBay.kt</code>)</h3>

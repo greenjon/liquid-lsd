@@ -277,9 +277,9 @@ Deck loads, FX changes and transition changes each have exactly one mutation pat
 
 ## Edit View "Next Up" Lives in the Bay Tab Row, Not the Perform Rows (`QueueNextUp`, `PerformanceDeepEditBay.drawQueueNextUp`)
 - **Decision**: a one-line, right-aligned readout of the queue feeding the open module. `QueueNextUp.describe` is a pure function mirroring `triggerNext`'s next-index rules (staged standby deck first, then shuffle, repeat wrap, end of queue); it advances nothing.
-- **Why there**: Perform rows have fixed geometry (layout-stability work) and deck-row queue *status text* was deliberately removed earlier (`DeckRowMetrics`). The bay tab row has free space on the right and exists only in Edit view, exactly where the Library is hidden.
+- **Why there**: Perform rows have fixed geometry (layout-stability work) and deck-row queue *status text* was deliberately removed earlier (`DeckRowMetrics`). The bay tab row has free space on the right and exists only in Edit view. Since the Library/Edit browser unification the Browse tabs show the real queue columns, so the line only shows on the Parameters tab.
 - **Shuffle**: names no item, because the next item is chosen at trigger time (`unplayed.random()`); showing one would be wrong half the time.
-- **Left alone**: a resizable Library dock in Edit view (conflicts with the three-view decision); Auto-VJ countdown/state is not shown.
+- **Left alone**: a resizable Library dock in Edit view (conflicts with the three-view decision; the Edit bay's Browse tab is a fixed-size dock, see "The Library and the Edit Browse Tabs Are One Dock"); Auto-VJ countdown/state is not shown.
 
 ## Deck Row SRC/FX Mode Is One Stored Value: The Deck Sub-Tab (`PerformanceUiContext.isDeckRowFx`)
 - **Decision**: `ParametersState` deck sub-tab (`SRC`/`FX`) is the single source of truth for a deck row's mode. `PerformanceUiContext.deckRowMode` is deleted; `isDeckRowFx` reads the sub-tab only.
@@ -380,3 +380,8 @@ Each of these was built, then deliberately deleted. The reason is the point.
 - **Clock-row Global knobs.** The `GLOBAL` bank stays registered with 0 knobs so the v1.1 free-knob row needs no migration; its strip code is dormant.
 - **Linux ARM64 target** (section 11).
 - **Compatibility shims during beta** (section 1).
+
+## The Library and the Edit Browse Tabs Are One Dock (`BrowserDock`, `DockActions`, `ViewState`)
+- **Decision**: one browser dock (tabs, toolbar, pane, shortcuts, popups) whose only difference between the Library and the Edit bay is an optional bound apply-target. Bound = the selected tab's kind equals the focused row's kind; any other tab is the plain Library (chip says which). The dock owns one selected tab (`LibraryPanel.viewMode`); the Macros tab is shown in the bay unbound.
+- **Why**: two implementations of one browser drifted (new-playlist/rename dialogs did nothing in the bay, queues and `Q` keys were missing, tooltips explained the gaps). Plan: `.planning/library-browser-unification-plan.md`.
+- **Left alone**: Library FULL with a focused row above it stays illegal (Edit is that layout; `setDisclosure` still drops FULL to HALF); both controller side-button maps (Library vs bound) are kept until hardware use suggests one; Macros tab is not controller-navigable.

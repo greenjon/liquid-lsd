@@ -342,11 +342,14 @@ watching the show while you pick.
 - **FX Chain Browse** has **Chain / FX1 / FX2 / FX3** sub-tabs: **Chain** lists the saved
   `.lsdfxchain` files; **FX1**–**FX3** are that chain's per-slot effect pickers (stock filters, ★
   favorites, saved single-FX presets), each opening on its slot's usual folder.
-- **The same browser as the Library**: every Browse tab shows the Library's folder tree, list and
-  queues. Pick a folder or playlist in the tree, search in the list (`Ctrl+F` or `/`), and click a row
-  to apply it; the row that is applied shows a ●. Each tab remembers the folder you last used there
-  and lists only what it can take. **Clear Slot** / **Clear Chain** above the browser empties the
-  target, and **External video...** (SRC tab) picks a live video stream.
+- **The same browser as the Library**: every Browse tab is the Library's own browser, with its
+  **Sources / FX / Transitions / Macros** tabs, toolbar (audition lock, **Q**, **BGQ**, deck loads),
+  folder tree, list and queue columns. A line above the list says "Applies to: Deck A source" (or the
+  slot, chain or transition you are editing): on that tab a click applies the row, the row that is
+  applied shows a ●, and the list shows only what the target can take. Pick another tab and it is the
+  plain Library again (double-click loads to the inactive deck). Each target remembers the folder you
+  last used there. Search with `Ctrl+F` or `/`. **Clear Slot** / **Clear Chain** empties the target,
+  and **External video...** (Sources) picks a live video stream.
 
 **Keyboard shortcuts in Edit**: `Ctrl+C` / `Ctrl+V` (copy/paste a cell or row), `Delete` /
 `Backspace` (clear the cell's modulators, or reset the parameter), and `Ctrl+S` / `Shift+Ctrl+S`
