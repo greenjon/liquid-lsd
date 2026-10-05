@@ -1553,8 +1553,8 @@
 <thead>
 <tr>
 <th></th>
-<th>Docked Library (<code>LibraryPanel</code>, <code>PresetListPanel</code>, <code>FXBrowserPanel</code>, <code>TransitionBrowserPanel</code>)</th>
-<th>Inline bay (<code>PerformanceBrowseBay</code>, <code>ShaderPickerPopup</code>)</th>
+<th>Docked Library (<code>LibraryPanel</code>)</th>
+<th>Inline bay (<code>PerformanceBrowseBay</code>)</th>
 </tr>
 </thead>
 <tbody>
@@ -1565,8 +1565,8 @@
 </tr>
 <tr>
 <td>Search buffer</td>
-<td>Three separate buffers, one per panel (256 chars)</td>
-<td>One in <code>ShaderPickerPopup</code> (256 chars since Oct 2026; was 64), plus one for the chain list</td>
+<td>One per <code>BrowseKind</code> in <code>BrowserPane</code> (shared by both hosts)</td>
+<td>(same pane; was a separate buffer in <code>ShaderPickerPopup</code> until Oct 2026)</td>
 </tr>
 <tr>
 <td>Action</td>
@@ -1821,7 +1821,7 @@
 <li><strong>Leaving Edit collapses the expanded module</strong>, and there is no way back to it.</li>
 <li><strong>Transitions can only be saved from the Library.</strong></li>
 <li><strong>Macro banks and Perform pages never appear in the Library.</strong></li>
-<li><strong>FX favourites exist only in the inline picker.</strong></li>
+<li>~~FX favourites exist only in the inline picker.~~ Resolved Oct 2026: both hosts are the same <code>BrowserPane</code>, so favourites show in the Library too.</li>
 </ul>
 <h3 id="74-recommendations">7.4 Recommendations</h3>
 <p>Use three entry points, modelled on <code>FxOps</code>, rather than patching each button. The implementation plan is in <code>.planning/deck-transition-ops-plan.md</code>.</p>

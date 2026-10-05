@@ -33,7 +33,7 @@ import mu.KotlinLogging
 import java.io.File
 
 /**
- * Unified FX browser for Library column 1: stock ISF filters, saved single FX
+ * Unified FX browser for the Library: stock ISF filters, saved single FX
  * presets (.lsdfx), and saved FX chains (.lsdfxchain) in one filterable list.
  * Stock filters carry no persisted parameters, so they only support "Load to
  * Deck" — never "Add to Playlist"/"Add to Live Queue" (those are reserved for
@@ -45,153 +45,8 @@ object FXBrowserPanel {
 
     private const val STOCK_PATH_PREFIX = "stock-fx://"
 
-    val searchBuffer = ImString(SearchMatcher.BUFFER_SIZE)
     var selectedAsset: AssetItem? = null
-    var shouldFocusSearch: Boolean = false
     var filteredRows: List<AssetItem> = emptyList()
-
-    var showStock = true
-    var showSingle = true
-    var showChain = true
-    var showFavsOnly = false
-
-    private val showStockRef = ImBoolean(true)
-    private val showSingleRef = ImBoolean(true)
-    private val showChainRef = ImBoolean(true)
-    private val showFavsOnlyRef = ImBoolean(false)
-
-    private var lastQuery: String = ""
-    private var lastFilterState: List<Any> = emptyList()
-    private var lastStock: List<ISFFilter>? = null
-    private var lastSingles: List<AssetItem>? = null
-    private var lastChains: List<AssetItem>? = null
-    private var cachedRows: List<AssetItem> = emptyList()
-
-    fun draw(session: SessionContext, mixer: Mixer) {
-        val btnSize = ImGui.getFrameHeight()
-
-        ImGui.alignTextToFramePadding()
-        session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("FX")
-        }
-        ImGui.sameLine()
-        val totalButtonsWidth = btnSize * 2f + ImGui.getStyle().getItemSpacingX()
-        val rightX = ImGui.getWindowContentRegionMaxX() - totalButtonsWidth
-        if (rightX > ImGui.getCursorPosX()) {
-            ImGui.setCursorPosX(rightX)
-        }
-
-        // [ + ] Create / Save FX (single slot or 3-slot chain) button
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.PLUS}##fx_browser_new", btnSize, btnSize)) {
-                ImGui.openPopup("create_new_fx_popup")
-            }
-        }
-        itemTooltip("Save FX slot or 3-slot chain from a deck...")
-        drawCreatePopup(session, mixer)
-        drawOverwritePopup(session, mixer)
-
-        ImGui.sameLine()
-
-        // [...] tier filter kebab
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.MORE_VERTICAL}##fx_browser_filter", btnSize, btnSize)) {
-                ImGui.openPopup("fx_browser_tier_filter")
-            }
-        }
-        itemTooltip("Filter FX list by type.")
-        pushOpenDropdownPadding()
-        if (ImGui.beginPopup("fx_browser_tier_filter")) {
-            pushOpenDropdownFont()
-            showStockRef.set(showStock)
-            if (ImGui.checkbox("Stock Filters", showStockRef)) showStock = showStockRef.get()
-            showSingleRef.set(showSingle)
-            if (ImGui.checkbox("Saved Single FX", showSingleRef)) showSingle = showSingleRef.get()
-            showChainRef.set(showChain)
-            if (ImGui.checkbox("Saved FX Chains", showChainRef)) showChain = showChainRef.get()
-            ImGui.separator()
-            showFavsOnlyRef.set(showFavsOnly)
-            if (ImGui.checkbox("Favorite stock filters only", showFavsOnlyRef)) showFavsOnly = showFavsOnlyRef.get()
-            itemTooltip("Hides stock filters you haven't starred (right-click a stock filter > Add to Favorites). Saved FX are unaffected.")
-            popOpenDropdownFont()
-            ImGui.endPopup()
-        }
-        popOpenDropdownPadding()
-
-        ImGui.separator()
-        ImGui.spacing()
-
-        val searchWidth = ImGui.getContentRegionAvailX()
-        ImGui.setNextItemWidth(searchWidth)
-        if (shouldFocusSearch) {
-            ImGui.setKeyboardFocusHere()
-            shouldFocusSearch = false
-        }
-        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            ImGui.inputTextWithHint("##fxBrowserSearch", "Search FX & tags...", searchBuffer)
-        }
-        if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
-            searchBuffer.set("")
-            LibraryPanel.shouldReclaimFocus = true
-        }
-        itemTooltip("Type to filter by name or tags.")
-
-        ImGui.separator()
-        ImGui.spacing()
-
-        if (ImGui.beginChild("##fx_browser_scroll", 0f, 0f, false)) {
-            // Source lists are cached upstream and keep their identity until they change,
-            // so new saves / late-loaded filters invalidate the row cache.
-            val stock = ISFFilterRegistry.availableFilters
-            val singles = FileSystemManager.scanAllFxPresets()
-            val chains = FileSystemManager.scanAllFxChains()
-            val query = searchBuffer.get().trim().lowercase()
-            val filterState = listOf(showStock, showSingle, showChain, showFavsOnly, FxShortlist.version)
-            val rows = if (stock === lastStock && singles === lastSingles && chains === lastChains &&
-                query == lastQuery && filterState == lastFilterState) {
-                cachedRows
-            } else {
-                lastStock = stock
-                lastSingles = singles
-                lastChains = chains
-                lastQuery = query
-                val tokens = SearchMatcher.tokens(query) // only on a cache miss, not every frame
-                lastFilterState = filterState
-                val result = mutableListOf<AssetItem>()
-                if (showStock) {
-                    stock
-                        .filter { (!showFavsOnly || FxShortlist.isFavorite(it.id)) && SearchMatcher.matches(tokens, listOf(it.displayName, it.id, it.folderPath), it.categories) }
-                        .sortedBy { it.displayName.lowercase() }
-                        .forEach { result.add(AssetItem(path = STOCK_PATH_PREFIX + it.id, name = it.displayName, type = AssetType.FX_STOCK)) }
-                }
-                if (showSingle) {
-                    singles
-                        .filter { SearchMatcher.matches(tokens, listOf(it.name), it.tags) }
-                        .forEach { result.add(it) }
-                }
-                if (showChain) {
-                    chains
-                        .filter { SearchMatcher.matches(tokens, listOf(it.name), it.tags) }
-                        .forEach { result.add(it) }
-                }
-                cachedRows = result
-                result
-            }
-            filteredRows = rows
-
-            val btnW = 20f
-            val isPanelFocused = ImGui.isWindowFocused()
-
-            rows.forEachIndexed { index, asset ->
-                drawRow(session, mixer, asset, index, btnW)
-            }
-
-            if (LibraryPanel.shouldReclaimFocus && isPanelFocused) {
-                ImGui.setKeyboardFocusHere(-1)
-            }
-        }
-        ImGui.endChild()
-    }
 
     internal fun drawCreatePopup(session: SessionContext, mixer: Mixer) {
         pushOpenDropdownPadding()
@@ -254,7 +109,7 @@ object FXBrowserPanel {
         popOpenDropdownPadding()
     }
 
-    /** The row loop, shared by the classic column and the unified [BrowserPane]. [infoFor] is drawn as a muted second column; [contextExtras] adds items on top of each row menu. */
+    /** The row loop, used by the unified [BrowserPane]. [infoFor] is drawn as a muted second column; [contextExtras] adds items on top of each row menu. */
     internal fun drawRows(
         session: SessionContext, mixer: Mixer, rows: List<AssetItem>,
         infoFor: ((AssetItem) -> String)? = null, contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null,

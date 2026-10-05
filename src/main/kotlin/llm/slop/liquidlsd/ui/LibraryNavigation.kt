@@ -19,9 +19,6 @@ import llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.FXBgQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
 import llm.slop.liquidlsd.ui.browser.FXQueueActionsPanel
-import llm.slop.liquidlsd.ui.browser.FXPlaylistEditorPanel
-import llm.slop.liquidlsd.ui.browser.PlaylistEditorPanel
-import llm.slop.liquidlsd.ui.browser.TransitionPlaylistEditorPanel
 import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.TransitionQueuePanel
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
@@ -57,15 +54,11 @@ internal object LibraryNavigation {
         }
     }
 
-    /** The lists the cursor can sit in for the current tab, left to right. The unified pane has no playlist column: a playlist is a tree scope shown in the list. */
-    internal fun panes(): List<SelectionSource> = if (unifiedKind() != null) when (LibraryPanel.navMode) {
+    /** The lists the cursor can sit in for the current tab, left to right. A playlist is a tree scope shown in the list, so it has no pane of its own. */
+    internal fun panes(): List<SelectionSource> = when (LibraryPanel.navMode) {
         LibraryViewMode.PRESETS -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB)
         LibraryViewMode.FX -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB)
-        else -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.TRANSITION_QUEUE)
-    } else when (LibraryPanel.navMode) {
-        LibraryViewMode.PRESETS -> listOf(SelectionSource.PRESETS, SelectionSource.PLAYLIST, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB)
-        LibraryViewMode.FX -> listOf(SelectionSource.PRESETS, SelectionSource.FX_PLAYLIST, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB)
-        LibraryViewMode.TRANS -> listOf(SelectionSource.PRESETS, SelectionSource.TRANSITION_PLAYLIST, SelectionSource.TRANSITION_QUEUE)
+        LibraryViewMode.TRANS -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.TRANSITION_QUEUE)
         LibraryViewMode.MAPS -> emptyList()
     }
 
@@ -77,41 +70,28 @@ internal object LibraryNavigation {
             LibraryViewMode.TRANS -> TransitionBrowserPanel.filteredRows.size
             LibraryViewMode.MAPS -> 0
         }
-        SelectionSource.PLAYLIST -> LibraryPanel.selectedPlaylistFile?.let { LibraryPanel.getOrLoadPlaylist(it) }?.presets?.size ?: 0
         SelectionSource.QUEUE_AB -> session.playQueueManager.queue.size
         SelectionSource.QUEUE_BG -> BgQueueManager.queue.size
         SelectionSource.TRANSITION_QUEUE -> TransitionQueueManager.queue.size
         SelectionSource.FX_QUEUE_AB -> FXQueueManager.queue.size
         SelectionSource.FX_QUEUE_BG -> FXBgQueueManager.queue.size
-        SelectionSource.TRANSITION_PLAYLIST -> TransitionPlaylistEditorPanel.itemCount()
-        SelectionSource.FX_PLAYLIST -> FXPlaylistEditorPanel.itemCount()
     }
 
     private fun hasCursor(source: SelectionSource): Boolean = when (source) {
         SelectionSource.TREE -> true // the cursor starts on the selected scope
         SelectionSource.PRESETS -> LibraryPanel.getSelectedAsset() != null
-        SelectionSource.PLAYLIST -> PlaylistEditorPanel.selectedPresetIndex >= 0
         SelectionSource.QUEUE_AB -> QueueActionsPanel.selectedIndex >= 0
         SelectionSource.QUEUE_BG -> BgQueueActionsPanel.selectedIndex >= 0
         SelectionSource.TRANSITION_QUEUE -> TransitionQueuePanel.selectedIndex >= 0
         SelectionSource.FX_QUEUE_AB -> FXQueueActionsPanel.selectedIndex >= 0
         SelectionSource.FX_QUEUE_BG -> FXBgQueueActionsPanel.selectedIndex >= 0
-        SelectionSource.TRANSITION_PLAYLIST -> TransitionPlaylistEditorPanel.selectedItemIndex >= 0
-        SelectionSource.FX_PLAYLIST -> FXPlaylistEditorPanel.selectedItemIndex >= 0
     }
 
     /** Moves the cursor to the next (or previous) non-empty list of this tab and puts it on an item. */
     fun stepPane(delta: Int, session: SessionContext, mixer: Mixer) {
         val panes = panes()
-        // No cursor yet: the unified pane counts as being in its list (where a fresh tab starts), the classic columns start before the first pane.
-        val from = panes.indexOf(LibraryPanel.activeSelectionSource).let {
-            when {
-                it >= 0 -> it
-                SelectionSource.TREE in panes -> panes.indexOf(SelectionSource.PRESETS)
-                delta > 0 -> -1
-                else -> 0
-            }
-        }
+        // No cursor yet: count as being in the list, where a fresh tab starts.
+        val from = panes.indexOf(LibraryPanel.activeSelectionSource).takeIf { it >= 0 } ?: panes.indexOf(SelectionSource.PRESETS)
         for (i in 1..panes.size) {
             val candidate = panes[Math.floorMod(from + delta * i, panes.size)]
             if (paneSize(candidate, session) == 0) continue
@@ -186,17 +166,12 @@ internal object LibraryNavigation {
                 LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset?.let { TransitionBrowserPanel.applyToMixer(session, mixer, it) }
                 LibraryViewMode.MAPS -> Unit
             }
-            SelectionSource.PLAYLIST ->
-                file?.let { BrowserDeckButtons.loadPresetToDeck(session, mixer, it, if (mixer.crossfade.value > 0.0f) 1 else 2) }
             // Same as a double-click: moves the queue position, fades to the loaded deck and advances the transition queue.
             SelectionSource.QUEUE_AB -> session.playQueueManager.playIndex(QueueActionsPanel.selectedIndex, mixer)
             SelectionSource.QUEUE_BG -> file?.let { BrowserDeckButtons.loadPresetToDeck(session, mixer, it, 3) }
-            SelectionSource.TRANSITION_QUEUE, SelectionSource.TRANSITION_PLAYLIST -> file?.let { TransitionQueueManager.applyTransitionItem(it, mixer) }
+            SelectionSource.TRANSITION_QUEUE -> file?.let { TransitionQueueManager.applyTransitionItem(it, mixer) }
             SelectionSource.FX_QUEUE_AB -> FXQueueManager.jumpToIndex(FXQueueActionsPanel.selectedIndex, session, mixer)
             SelectionSource.FX_QUEUE_BG -> FXBgQueueManager.jumpToIndex(FXBgQueueActionsPanel.selectedIndex, session, mixer)
-            SelectionSource.FX_PLAYLIST -> file?.let {
-                FxOps.applyItem(session, it, mixer.liveDeck.fxChain)
-            }
             null -> Unit
         }
     }

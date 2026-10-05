@@ -318,7 +318,7 @@ Banks select Perform pages (`banks.pages`: `ab`, `bgpv`, `mixer`, `master`). Sid
 ### 6.7 Navigation (phase 3)
 `NavSurface` (on `CommandContext`, like `KnobSurface`) gets `nav.button.1..3` / `.alt` from `NavCommands` and the knob 1 cursor from `KnobCommands` while `browsing`. The UI implementation is `ui/NavigationSurface.kt`; it dispatches on the current view (Library FULL vs Perform/Edit) and calls `LibraryNavigation` (tab, list, cursor, accept, enqueue) and `BackNavigation` (the Esc stack). The user-facing layout (which button does what in the Perform, picker and Library contexts, and a worked "load an effect on Deck A" example) is in the user guide, `performance_controls.md`, section "Controller Profiles: Midi Fighter Twister".
 
-The picker context: `NavigationSurface.inPicker` = Edit view and `ShaderPickerPopup.isShowing` or `ChainListBrowse.isShowing` (both stamp the time of their last draw). Cursor API: `ShaderPickerPopup.moveCursor/acceptCursor/stepCategory/detach`, `ChainListBrowse.move/accept/clear`. Opening uses `PerformSurface.lastTouchedKnob` to find the row.
+The picker context: `NavigationSurface.inPicker` = Edit view and `BrowserPane.hosted() != null` (the target drawn in the last 300 ms). Cursor API: `LibraryNavigation.step/stepPane/accept` (the same functions the Library uses, following `LibraryPanel.navMode`) and the hosted `ApplyTarget.clear`. Opening uses `PerformSurface.lastTouchedKnob` to find the row.
 
 
 ### 6.8 Profile store writes and the profile UI (phase 5, slice 1)

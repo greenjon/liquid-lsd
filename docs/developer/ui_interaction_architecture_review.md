@@ -60,10 +60,10 @@ Edit and Library views are mutually exclusive by design.
 
 The Library dock and the inline Browse bay both browse presets and sources, but share no state.
 
-| | Docked Library (`LibraryPanel`, `PresetListPanel`, `FXBrowserPanel`, `TransitionBrowserPanel`) | Inline bay (`PerformanceBrowseBay`, `ShaderPickerPopup`) |
+| | Docked Library (`LibraryPanel`) | Inline bay (`PerformanceBrowseBay`) |
 |---|---|---|
 | Purpose | Curating queues and playlists | Swapping the source or FX of one slot |
-| Search buffer | Three separate buffers, one per panel (256 chars) | One in `ShaderPickerPopup` (256 chars since Oct 2026; was 64), plus one for the chain list |
+| Search buffer | One per `BrowseKind` in `BrowserPane` (shared by both hosts) | (same pane; was a separate buffer in `ShaderPickerPopup` until Oct 2026) |
 | Action | Drag, `[Q]`/`[BGQ]`, context menu | Click replaces the slot, with undo |
 | Playlists / queues | Yes | No |
 
@@ -263,7 +263,7 @@ FX loads behave the same whichever button starts them, because there is one entr
 - **Leaving Edit collapses the expanded module**, and there is no way back to it.
 - **Transitions can only be saved from the Library.**
 - **Macro banks and Perform pages never appear in the Library.**
-- **FX favourites exist only in the inline picker.**
+- ~~FX favourites exist only in the inline picker.~~ Resolved Oct 2026: both hosts are the same `BrowserPane`, so favourites show in the Library too.
 
 ### 7.4 Recommendations
 

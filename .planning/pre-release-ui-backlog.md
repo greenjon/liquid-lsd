@@ -73,3 +73,6 @@ D7 first, alone. Then, grouped by shared code: 13 + 20 + 5 (lock and precedence 
 
 - MIDI controller phase 5, the profile UI: `.planning/midi-controller-handoff.md`.
 - FX chain expanded view (shelved): `.planning/fx-chain-expanded-view-notes.md`.
+
+## Unified browser step 7 (2026-10-04)
+Classic browser code deleted (picker, columns, playlist editors, toggle); docs updated. Not hand-checked since the deletion: Sources/Trans tab screenshots, Ctrl+F in all three tabs, Maps tab. See DECISIONS.md.

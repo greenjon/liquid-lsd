@@ -173,7 +173,6 @@ object BgQueueActionsPanel {
                 selection.handleClick(index, BgQueueManager.queue.indices.toList(), isCtrl, isShift)
                 LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.QUEUE_BG
                 PresetListPanel.selection.clear()
-                PlaylistEditorPanel.clearSelection()
                 QueueActionsPanel.clearSelection()
                 LibraryPanel.auditionIfLocked(file, session, mixer)
             }
@@ -183,7 +182,6 @@ object BgQueueActionsPanel {
                     selection.setSingle(index)
                     LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.QUEUE_BG
                     PresetListPanel.selection.clear()
-                    PlaylistEditorPanel.clearSelection()
                     QueueActionsPanel.clearSelection()
                 }
                 ImGui.openPopup(popupId)

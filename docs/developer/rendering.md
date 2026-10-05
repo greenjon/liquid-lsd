@@ -214,10 +214,7 @@ Shaders are classified dynamically by parsing their ISF JSON header and inspecti
 
 ### 2. Folder Hierarchy Preservation
 - Relative subfolder structures (e.g., `PackName/Subfolder/shader.fs`) are captured in `ISFAsset.folderPath` and mirrored into `categories` tags.
-- The UI shader browser (`ShaderPickerPopup`) provides a dual-mode interface:
-  - **Collapsible Folder Tree Mode** (`Icons.FOLDER`): Groups shaders by their subfolder structure in expandable tree nodes.
-  - **Flat List Mode** (`Icons.LAYOUT_FULL`): Fast 3-column table showing folder tags in the Categories column.
-  - Category pill filter row incorporates top-level folder names and custom tags.
+- The unified browser (`BrowserPane`) shows these folders as tree entries under each section and searches the folder names and custom tags along with the shader name.
 
 ### 3. Respecting Relative Assets (`IMPORTED`)
 - Shaders remain in their original directories during execution.

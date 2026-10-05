@@ -339,12 +339,14 @@ watching the show while you pick.
   under a name. Saved-preset rows get a "⋮" menu for **Rename / Edit Tags**, **Duplicate**, and
   **Delete**, and a floppy-disk **Save / Save As** button sits above the list — the same save flow
   as the Mixer's Save button and `Ctrl+Shift+S` — so managing presets no longer requires the Library.
-- **FX Chain Browse** has **Chain / FX1 / FX2 / FX3** sub-tabs: **Chain** searches and loads a whole
-  saved `.lsdfxchain`; **FX1**–**FX3** are that chain's per-slot effect pickers (search, category
-  pills, ★ favorites, saved single-FX presets), each opening on its slot's usual category.
-- **Search & filter**: every Browse list has a search box, category pills (multi-select, OR-combined
-  — click `All` to clear them), and a **Folders**/**Flat** view toggle. **Detach / None** clears the
-  current pick.
+- **FX Chain Browse** has **Chain / FX1 / FX2 / FX3** sub-tabs: **Chain** lists the saved
+  `.lsdfxchain` files; **FX1**–**FX3** are that chain's per-slot effect pickers (stock filters, ★
+  favorites, saved single-FX presets), each opening on its slot's usual folder.
+- **The same browser as the Library**: every Browse tab shows the Library's folder tree, list and
+  queues. Pick a folder or playlist in the tree, search in the list (`Ctrl+F` or `/`), and click a row
+  to apply it; the row that is applied shows a ●. Each tab remembers the folder you last used there
+  and lists only what it can take. **Clear Slot** / **Clear Chain** above the browser empties the
+  target, and **External video...** (SRC tab) picks a live video stream.
 
 **Keyboard shortcuts in Deep Edit**: `Ctrl+C` / `Ctrl+V` (copy/paste a cell or row), `Delete` /
 `Backspace` (clear the cell's modulators, or reset the parameter), and `Ctrl+S` / `Shift+Ctrl+S`

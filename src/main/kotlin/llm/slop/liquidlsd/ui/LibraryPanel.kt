@@ -14,13 +14,10 @@ import llm.slop.liquidlsd.ui.browser.BrowserPopupHandler
 import llm.slop.liquidlsd.ui.browser.FXBgQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
 import llm.slop.liquidlsd.ui.browser.MapsBrowserPanel
-import llm.slop.liquidlsd.ui.browser.FXPlaylistEditorPanel
 import llm.slop.liquidlsd.ui.browser.FXQueueActionsPanel
-import llm.slop.liquidlsd.ui.browser.PlaylistEditorPanel
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
 import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.TransitionBrowserPanel
-import llm.slop.liquidlsd.ui.browser.TransitionPlaylistEditorPanel
 import llm.slop.liquidlsd.ui.browser.TransitionQueuePanel
 import mu.KotlinLogging
 import java.io.File
@@ -40,12 +37,9 @@ object LibraryPanel {
         /** Unified pane only: the folder/playlist tree (see [llm.slop.liquidlsd.ui.browser.BrowserPane.stepTree]). */
         TREE,
         PRESETS,
-        PLAYLIST,
         QUEUE_AB,
         QUEUE_BG,
-        TRANSITION_PLAYLIST,
         TRANSITION_QUEUE,
-        FX_PLAYLIST,
         FX_QUEUE_AB,
         FX_QUEUE_BG
     }
@@ -114,9 +108,6 @@ object LibraryPanel {
                     LibraryViewMode.MAPS -> null
                 }
             }
-            SelectionSource.PLAYLIST -> {
-                PlaylistEditorPanel.getSelectedPresetFile()
-            }
             SelectionSource.QUEUE_AB -> {
                 val idx = QueueActionsPanel.selectedIndex
                 if (idx in session.playQueueManager.queue.indices) session.playQueueManager.queue[idx] else null
@@ -125,15 +116,9 @@ object LibraryPanel {
                 val idx = llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex
                 if (idx in llm.slop.liquidlsd.presets.BgQueueManager.queue.indices) llm.slop.liquidlsd.presets.BgQueueManager.queue[idx] else null
             }
-            SelectionSource.TRANSITION_PLAYLIST -> {
-                TransitionPlaylistEditorPanel.getSelectedPresetFile()
-            }
             SelectionSource.TRANSITION_QUEUE -> {
                 val idx = TransitionQueuePanel.selectedIndex
                 if (idx in TransitionQueueManager.queue.indices) TransitionQueueManager.queue[idx] else null
-            }
-            SelectionSource.FX_PLAYLIST -> {
-                FXPlaylistEditorPanel.getSelectedPresetFile()
             }
             SelectionSource.FX_QUEUE_AB -> {
                 val idx = FXQueueActionsPanel.selectedIndex
@@ -151,7 +136,6 @@ object LibraryPanel {
         PresetListPanel.selectedAsset = asset
         if (asset != null) {
             activeSelectionSource = SelectionSource.PRESETS
-            PlaylistEditorPanel.selectedPresetIndex = -1
             QueueActionsPanel.selectedIndex = -1
             llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
             if (asset.type != AssetType.SOURCE_STOCK && llm.slop.liquidlsd.ui.browser.BrowserPane.hosted() == null) {
@@ -160,24 +144,11 @@ object LibraryPanel {
         }
     }
 
-    fun selectPlaylistPreset(index: Int, session: SessionContext, mixer: Mixer) {
-        PlaylistEditorPanel.selectedPresetIndex = index
-        if (index >= 0) {
-            activeSelectionSource = SelectionSource.PLAYLIST
-            PresetListPanel.selectedAsset = null
-            QueueActionsPanel.selectedIndex = -1
-            llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
-            val file = PlaylistEditorPanel.getSelectedPresetFile()
-            if (file != null) auditionIfLocked(file, session, mixer)
-        }
-    }
-
     fun selectQueueAb(index: Int, session: SessionContext, mixer: Mixer) {
         QueueActionsPanel.selectedIndex = index
         if (index >= 0) {
             activeSelectionSource = SelectionSource.QUEUE_AB
             PresetListPanel.selectedAsset = null
-            PlaylistEditorPanel.selectedPresetIndex = -1
             llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
             val file = session.playQueueManager.queue.getOrNull(index)
             if (file != null) auditionIfLocked(file, session, mixer)
@@ -189,7 +160,6 @@ object LibraryPanel {
         if (index >= 0) {
             activeSelectionSource = SelectionSource.QUEUE_BG
             PresetListPanel.selectedAsset = null
-            PlaylistEditorPanel.selectedPresetIndex = -1
             QueueActionsPanel.selectedIndex = -1
             val file = llm.slop.liquidlsd.presets.BgQueueManager.queue.getOrNull(index)
             if (file != null) auditionIfLocked(file, session, mixer)
@@ -201,12 +171,9 @@ object LibraryPanel {
         PresetListPanel.selection.clear()
         FXBrowserPanel.selectedAsset = null
         TransitionBrowserPanel.selectedAsset = null
-        TransitionPlaylistEditorPanel.selectedItemIndex = -1
         TransitionQueuePanel.selectedIndex = -1
-        PlaylistEditorPanel.clearSelection()
         QueueActionsPanel.clearSelection()
         llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
-        FXPlaylistEditorPanel.selectedItemIndex = -1
         FXQueueActionsPanel.selectedIndex = -1
         FXBgQueueActionsPanel.selectedIndex = -1
     }
@@ -523,22 +490,6 @@ object LibraryPanel {
                     }
                 }
             }
-            SelectionSource.PLAYLIST -> {
-                val playlist = activePlaylistData
-                if (playlist != null && playlist.presets.isNotEmpty()) {
-                    val currentIdx = PlaylistEditorPanel.selectedPresetIndex
-                    val targetIdx = if (currentIdx < 0) {
-                        if (delta > 0) 0 else playlist.presets.lastIndex
-                    } else {
-                        (currentIdx + delta).coerceIn(0, playlist.presets.lastIndex)
-                    }
-                    if (targetIdx != currentIdx) {
-                        selectPlaylistPreset(targetIdx, session, mixer)
-                        shouldScrollToSelection = true
-                        shouldReclaimFocus = true
-                    }
-                }
-            }
             SelectionSource.QUEUE_AB -> {
                 val queue = session.playQueueManager.queue
                 if (queue.isNotEmpty()) {
@@ -571,18 +522,6 @@ object LibraryPanel {
                     }
                 }
             }
-            SelectionSource.TRANSITION_PLAYLIST -> {
-                val count = TransitionPlaylistEditorPanel.itemCount()
-                if (count > 0) {
-                    val currentIdx = TransitionPlaylistEditorPanel.selectedItemIndex
-                    val targetIdx = if (currentIdx < 0) (if (delta > 0) 0 else count - 1) else (currentIdx + delta).coerceIn(0, count - 1)
-                    if (targetIdx != currentIdx) {
-                        TransitionPlaylistEditorPanel.selectedItemIndex = targetIdx
-                        shouldScrollToSelection = true
-                        shouldReclaimFocus = true
-                    }
-                }
-            }
             SelectionSource.TRANSITION_QUEUE -> {
                 val queue = TransitionQueueManager.queue
                 if (queue.isNotEmpty()) {
@@ -594,18 +533,6 @@ object LibraryPanel {
                     }
                     if (targetIdx != currentIdx) {
                         TransitionQueuePanel.selectedIndex = targetIdx
-                        shouldScrollToSelection = true
-                        shouldReclaimFocus = true
-                    }
-                }
-            }
-            SelectionSource.FX_PLAYLIST -> {
-                val count = FXPlaylistEditorPanel.itemCount()
-                if (count > 0) {
-                    val currentIdx = FXPlaylistEditorPanel.selectedItemIndex
-                    val targetIdx = if (currentIdx < 0) (if (delta > 0) 0 else count - 1) else (currentIdx + delta).coerceIn(0, count - 1)
-                    if (targetIdx != currentIdx) {
-                        FXPlaylistEditorPanel.selectedItemIndex = targetIdx
                         shouldScrollToSelection = true
                         shouldReclaimFocus = true
                     }

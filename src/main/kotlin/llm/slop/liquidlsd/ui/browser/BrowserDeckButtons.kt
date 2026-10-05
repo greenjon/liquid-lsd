@@ -16,7 +16,7 @@ import llm.slop.liquidlsd.ui.UITheme
 import java.io.File
 
 /**
- * Shared deck-button styling helpers used by [PresetListPanel] and [PlaylistEditorPanel].
+ * Shared deck-button styling helpers used by [PresetListPanel] and the unified [BrowserPane].
  *
  * Each deck has a canonical RGBA accent colour, sourced from [TangoPalette] so no two decks (or
  * deck vs. status role) ever share a hue. Call [push] before the button and [pop] after.

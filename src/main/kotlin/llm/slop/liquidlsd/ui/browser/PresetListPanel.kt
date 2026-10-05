@@ -39,186 +39,16 @@ object PresetListPanel {
     const val STOCK_PATH_PREFIX = "stock-source://"
     const val PAYLOAD_STOCK_SOURCE = "ASSET_ITEM_STOCK_SOURCE"
 
-    val searchBuffer = ImString(SearchMatcher.BUFFER_SIZE)
     val selection = MultiSelectionModel<AssetItem>()
     var selectedAsset: AssetItem?
         get() = selection.leadItem
         set(value) {
             selection.setSingle(value)
         }
-    var shouldFocusSearch: Boolean = false
     var filteredPresets: List<AssetItem> = emptyList()
 
-    var showStock = true
-    var showSaved = true
-    private val showStockRef = ImBoolean(true)
-    private val showSavedRef = ImBoolean(true)
-
-    private var lastQuery: String = ""
-    private var lastAllPresets: List<AssetItem>? = null
-    private var lastStock: List<llm.slop.liquidlsd.rendering.VisualSource>? = null
-    private var lastFilterState: List<Boolean> = emptyList()
-    private var cachedFiltered: List<AssetItem> = emptyList()
-
-    fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
-        val btnSize = ImGui.getFrameHeight()
-
-        // Title Bar: "Sources" on the left, [+] and [...] buttons on the right
-        ImGui.alignTextToFramePadding()
-        session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("Sources")
-        }
-        ImGui.sameLine()
-        val totalButtonsWidth = btnSize * 2f + ImGui.getStyle().getItemSpacingX()
-        val rightX = ImGui.getWindowContentRegionMaxX() - totalButtonsWidth
-        if (rightX > ImGui.getCursorPosX()) {
-            ImGui.setCursorPosX(rightX)
-        }
-
-        // [ + ] Create New Preset dropdown button
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.PLUS}##preset_new_preset", btnSize, btnSize)) {
-                ImGui.openPopup("create_new_preset_popup")
-            }
-        }
-        itemTooltip("New blank preset on a deck...")
-
-        pushOpenDropdownPadding()
-        if (ImGui.beginPopup("create_new_preset_popup")) {
-            pushOpenDropdownFont()
-            ImGui.textDisabled("New blank preset on:")
-            ImGui.separator()
-            if (ImGui.menuItem("Deck A")) {
-                UIManager.newPresetSafely(mixer, mixer.deckA)
-                parametersState.activeTopTab = "Deck A"
-            }
-            if (ImGui.menuItem("Deck B")) {
-                UIManager.newPresetSafely(mixer, mixer.deckB)
-                parametersState.activeTopTab = "Deck B"
-            }
-            if (ImGui.menuItem("Deck BG")) {
-                UIManager.newPresetSafely(mixer, mixer.deckBG)
-                parametersState.activeTopTab = "Deck BG"
-            }
-            if (ImGui.menuItem("Deck PV")) {
-                UIManager.newPresetSafely(mixer, mixer.deckPV)
-                parametersState.activeTopTab = "Deck PV"
-            }
-            ImGui.separator()
-            if (ImGui.menuItem("Restore Factory Presets")) {
-                FileSystemManager.restoreFactoryPresets()
-            }
-            popOpenDropdownFont()
-            ImGui.endPopup()
-        }
-        popOpenDropdownPadding()
-
-        ImGui.sameLine()
-
-        // [...] tier filter kebab
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.MORE_VERTICAL}##preset_browser_filter", btnSize, btnSize)) {
-                ImGui.openPopup("preset_browser_tier_filter")
-            }
-        }
-        itemTooltip("Filter Sources list by type.")
-        pushOpenDropdownPadding()
-        if (ImGui.beginPopup("preset_browser_tier_filter")) {
-            pushOpenDropdownFont()
-            showStockRef.set(showStock)
-            if (ImGui.checkbox("Stock Sources", showStockRef)) showStock = showStockRef.get()
-            showSavedRef.set(showSaved)
-            if (ImGui.checkbox("Saved Presets", showSavedRef)) showSaved = showSavedRef.get()
-            popOpenDropdownFont()
-            ImGui.endPopup()
-        }
-        popOpenDropdownPadding()
-
-        ImGui.separator()
-        ImGui.spacing()
-
-        // Search Filter Bar (Full width)
-        val searchWidth = ImGui.getContentRegionAvailX()
-        ImGui.setNextItemWidth(searchWidth)
-        if (shouldFocusSearch) {
-            ImGui.setKeyboardFocusHere()
-            shouldFocusSearch = false
-        }
-        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            ImGui.inputTextWithHint("##presetSearch", "Search sources, presets & tags... (Ctrl+F)", searchBuffer)
-        }
-        if (ImGui.isItemActive()) {
-            if (ImGui.isKeyPressed(ImGuiKey.Escape)) {
-                searchBuffer.set("")
-                LibraryPanel.shouldReclaimFocus = true
-            }
-        }
-        itemTooltip("Type to filter presets by name or tags.\nPress Esc while searching to clear.")
-
-        ImGui.separator()
-        ImGui.spacing()
-
-        if (ImGui.beginChild("##presets_scroll", 0f, 0f, false)) {
-            // Stock generators (VisualSourceRegistry) and saved presets (FileSystemManager) are
-            // merged into one filterable list, mirroring FXBrowserPanel/TransitionBrowserPanel.
-            val stock = VisualSourceRegistry.availableSources
-            val allPresets = FileSystemManager.scanAllPresets()
-            val query = searchBuffer.get().trim().lowercase()
-            val filterState = listOf(showStock, showSaved)
-
-            val filtered = if (stock === lastStock && allPresets === lastAllPresets &&
-                query == lastQuery && filterState == lastFilterState) {
-                cachedFiltered
-            } else {
-                lastStock = stock
-                lastAllPresets = allPresets
-                lastQuery = query
-                val tokens = SearchMatcher.tokens(query) // only on a cache miss, not every frame
-                lastFilterState = filterState
-                val res = mutableListOf<AssetItem>()
-                if (showStock) {
-                    stock
-                        .filter { SearchMatcher.matches(tokens, listOf(it.displayName, it.id, it.folderPath), it.categories) }
-                        .sortedBy { it.displayName.lowercase() }
-                        .forEach { res.add(AssetItem(path = STOCK_PATH_PREFIX + it.id, name = it.displayName, type = AssetType.SOURCE_STOCK, tags = it.categories)) }
-                }
-                if (showSaved) {
-                    allPresets
-                        .filter { SearchMatcher.matches(tokens, listOf(it.name), it.tags) }
-                        .forEach { res.add(it) }
-                }
-                cachedFiltered = res
-                res
-            }
-            filteredPresets = filtered
-
-            if (filtered.isEmpty()) {
-                ImGui.textDisabled(if (query.isEmpty()) "No presets found" else "No matching presets")
-                if (allPresets.isEmpty()) {
-                    ImGui.spacing()
-                    if (ImGui.button("${Icons.REFRESH} Restore Factory Presets")) {
-                        FileSystemManager.restoreFactoryPresets()
-                    }
-                    itemTooltip("Re-extract bundled factory presets into library/presets")
-                }
-            } else {
-                drawRows(session, mixer, parametersState, filtered)
-            }
-        }
-        ImGui.endChild()
-
-        // Keyboard shortcuts (Delete / Backspace deletes selected asset(s) with confirmation)
-        val io = ImGui.getIO()
-        val targetsToDelete = selection.getSelectedInOrder(filteredPresets).filter { it.type != AssetType.SOURCE_STOCK }
-        if (targetsToDelete.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
-            if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
-                ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
-                BrowserPopupHandler.openDeleteConfirmation(targetsToDelete)
-            }
-        }
-    }
     /**
-     * The row loop of the list, shared by the classic Sources column and the unified [BrowserPane]. [favoriteKeys] (stock id or
+     * The row loop of the list, shared by the unified [BrowserPane]. [favoriteKeys] (stock id or
      * file path) get a star; [infoFor] is drawn as a muted second column; [contextExtras] adds items at the top of each row's context menu.
      */
     internal fun drawRows(
@@ -276,7 +106,6 @@ object PresetListPanel {
                 val isShift = io.keyShift
                 if (target != null) selection.setSingle(asset) else selection.handleClick(asset, filtered, isCtrl, isShift)
                 LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
-                PlaylistEditorPanel.clearSelection()
                 QueueActionsPanel.clearSelection()
                 llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
                 if (target != null) {
@@ -294,7 +123,6 @@ object PresetListPanel {
                 if (!selection.isSelected(asset)) {
                     selection.setSingle(asset)
                     LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
-                    PlaylistEditorPanel.clearSelection()
                     QueueActionsPanel.clearSelection()
                     llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
                 }

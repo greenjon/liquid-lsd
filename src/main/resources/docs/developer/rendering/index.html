@@ -2074,10 +2074,7 @@ This is the same domain-folded CSG technique as the old <code>icosa-v3</code> so
 <h3 id="2-folder-hierarchy-preservation">2. Folder Hierarchy Preservation</h3>
 <ul>
 <li>Relative subfolder structures (e.g., <code>PackName/Subfolder/shader.fs</code>) are captured in <code>ISFAsset.folderPath</code> and mirrored into <code>categories</code> tags.</li>
-<li>The UI shader browser (<code>ShaderPickerPopup</code>) provides a dual-mode interface:</li>
-<li><strong>Collapsible Folder Tree Mode</strong> (<code>Icons.FOLDER</code>): Groups shaders by their subfolder structure in expandable tree nodes.</li>
-<li><strong>Flat List Mode</strong> (<code>Icons.LAYOUT_FULL</code>): Fast 3-column table showing folder tags in the Categories column.</li>
-<li>Category pill filter row incorporates top-level folder names and custom tags.</li>
+<li>The unified browser (<code>BrowserPane</code>) shows these folders as tree entries under each section and searches the folder names and custom tags along with the shader name.</li>
 </ul>
 <h3 id="3-respecting-relative-assets-imported">3. Respecting Relative Assets (<code>IMPORTED</code>)</h3>
 <ul>

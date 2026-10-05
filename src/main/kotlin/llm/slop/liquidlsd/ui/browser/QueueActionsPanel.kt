@@ -178,7 +178,6 @@ object QueueActionsPanel {
                 selection.handleClick(index, session.playQueueManager.queue.indices.toList(), isCtrl, isShift)
                 LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.QUEUE_AB
                 PresetListPanel.selection.clear()
-                PlaylistEditorPanel.clearSelection()
                 llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
                 LibraryPanel.auditionIfLocked(file, session, mixer)
             }
@@ -188,7 +187,6 @@ object QueueActionsPanel {
                     selection.setSingle(index)
                     LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.QUEUE_AB
                     PresetListPanel.selection.clear()
-                    PlaylistEditorPanel.clearSelection()
                     llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
                 }
                 ImGui.openPopup(popupId)

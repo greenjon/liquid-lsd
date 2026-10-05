@@ -32,7 +32,7 @@ import mu.KotlinLogging
 import java.io.File
 
 /**
- * Unified transition browser for Library column 1: stock ISF transition shaders
+ * Transition row helpers for the unified browser: stock ISF transition shaders
  * and saved transition presets (.lsdtrans) in one filterable list, mirroring
  * FXBrowserPanel's stock/saved merge. Unlike FX_STOCK filters, stock transitions
  * support Add to Live Queue / Add to Playlist same as saved presets — only
@@ -44,147 +44,10 @@ object TransitionBrowserPanel {
 
     private const val STOCK_PATH_PREFIX = "stock-trans://"
 
-    val searchBuffer = ImString(SearchMatcher.BUFFER_SIZE)
     var selectedAsset: AssetItem? = null
-    var shouldFocusSearch: Boolean = false
     var filteredRows: List<AssetItem> = emptyList()
 
-    var showStock = true
-    var showPreset = true
-
-    private val showStockRef = ImBoolean(true)
-    private val showPresetRef = ImBoolean(true)
-
-    private var lastQuery: String = ""
-    private var lastFilterState: List<Boolean> = emptyList()
-    private var lastStock: List<ISFFilter>? = null
-    private var lastPresets: List<AssetItem>? = null
-    private var cachedRows: List<AssetItem> = emptyList()
-
-    fun draw(session: SessionContext, mixer: Mixer) {
-        val btnSize = ImGui.getFrameHeight()
-
-        ImGui.alignTextToFramePadding()
-        session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("Transitions")
-        }
-        ImGui.sameLine()
-        val totalButtonsWidth = btnSize * 2f + ImGui.getStyle().getItemSpacingX()
-        val rightX = ImGui.getWindowContentRegionMaxX() - totalButtonsWidth
-        if (rightX > ImGui.getCursorPosX()) {
-            ImGui.setCursorPosX(rightX)
-        }
-
-        // [ + ] Save active mixer transition as a preset
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.PLUS}##trans_browser_new", btnSize, btnSize)) {
-                TransitionSave.requestSaveCurrent(session, mixer)
-            }
-        }
-        itemTooltip("Save current mixer transition as a preset (.lsdtrans)...")
-
-        ImGui.sameLine()
-
-        // [...] tier filter kebab
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.MORE_VERTICAL}##trans_browser_filter", btnSize, btnSize)) {
-                ImGui.openPopup("trans_browser_tier_filter")
-            }
-        }
-        itemTooltip("Filter transition list by type.")
-        pushOpenDropdownPadding()
-        if (ImGui.beginPopup("trans_browser_tier_filter")) {
-            pushOpenDropdownFont()
-            showStockRef.set(showStock)
-            if (ImGui.checkbox("Stock Shaders", showStockRef)) showStock = showStockRef.get()
-            showPresetRef.set(showPreset)
-            if (ImGui.checkbox("Saved Presets", showPresetRef)) showPreset = showPresetRef.get()
-            popOpenDropdownFont()
-            ImGui.endPopup()
-        }
-        popOpenDropdownPadding()
-
-        ImGui.separator()
-        ImGui.spacing()
-
-        val searchWidth = ImGui.getContentRegionAvailX()
-        ImGui.setNextItemWidth(searchWidth)
-        if (shouldFocusSearch) {
-            ImGui.setKeyboardFocusHere()
-            shouldFocusSearch = false
-        }
-        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            ImGui.inputTextWithHint("##transBrowserSearch", "Search transitions, categories & tags...", searchBuffer)
-        }
-        if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
-            searchBuffer.set("")
-            LibraryPanel.shouldReclaimFocus = true
-        }
-        itemTooltip("Type to filter by name, category, folder, or tags.")
-
-        ImGui.separator()
-        ImGui.spacing()
-
-        if (ImGui.beginChild("##trans_browser_scroll", 0f, 0f, false)) {
-            val stock = ISFTransitionRegistry.availableTransitions
-            val presets = FileSystemManager.scanAllTransitionPresets()
-            val query = searchBuffer.get().trim().lowercase()
-            val filterState = listOf(showStock, showPreset)
-            val rows = if (stock === lastStock && presets === lastPresets &&
-                query == lastQuery && filterState == lastFilterState) {
-                cachedRows
-            } else {
-                lastStock = stock
-                lastPresets = presets
-                lastQuery = query
-                val tokens = SearchMatcher.tokens(query) // only on a cache miss, not every frame
-                lastFilterState = filterState
-                val result = mutableListOf<AssetItem>()
-                if (showStock) {
-                    stock
-                        .filter { SearchMatcher.matches(tokens, listOf(it.displayName, it.id, it.folderPath), it.categories) }
-                        .sortedBy { it.displayName.lowercase() }
-                        .forEach { trans ->
-                            val folderLabel = if (trans.folderPath.isNotBlank()) " [${trans.folderPath}]" else ""
-                            result.add(
-                                AssetItem(
-                                    path = STOCK_PATH_PREFIX + trans.id,
-                                    name = "${trans.displayName}$folderLabel",
-                                    type = AssetType.TRANSITION_STOCK,
-                                    tags = trans.categories
-                                )
-                            )
-                        }
-                }
-                if (showPreset) {
-                    presets
-                        .filter { SearchMatcher.matches(tokens, listOf(it.name), it.tags) }
-                        .forEach { result.add(it) }
-                }
-                cachedRows = result
-                result
-            }
-            filteredRows = rows
-
-            if (rows.isEmpty()) {
-                ImGui.textDisabled(if (query.isEmpty()) "No transitions found" else "No matching transitions")
-            } else {
-                val btnW = 20f
-                val isPanelFocused = ImGui.isWindowFocused()
-
-                rows.forEachIndexed { index, asset ->
-                    drawRow(session, mixer, asset, index, btnW)
-                }
-
-                if (LibraryPanel.shouldReclaimFocus && isPanelFocused) {
-                    ImGui.setKeyboardFocusHere(-1)
-                }
-            }
-        }
-        ImGui.endChild()
-    }
-
-    /** The row loop, shared by the classic column and the unified [BrowserPane]. [infoFor] is drawn as a muted second column; [contextExtras] adds items on top of each row menu. */
+    /** The row loop, used by the unified [BrowserPane]. [infoFor] is drawn as a muted second column; [contextExtras] adds items on top of each row menu. */
     internal fun drawRows(
         session: SessionContext, mixer: Mixer, rows: List<AssetItem>,
         infoFor: ((AssetItem) -> String)? = null, contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null,

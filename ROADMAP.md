@@ -200,7 +200,7 @@ When editing an FX chain on the Performance matrix, show 3 sub-rows (one per slo
 - [x] Zero-copy GPU texture sharing outputs: **Spout2** (Windows), **Syphon** (macOS), and **PipeWire DMA-BUF** (Linux).
 - [x] Independent video output streams for Deck A, Deck B, Deck BG, Deck PV, and Master Composite.
 - [x] First-class external video stream ingest as native visual sources (cameras, OBS, media servers).
-- [x] Direct live video feed selection in `ShaderPickerPopup` with live activity indicators (`Icons.ACTIVITY`).
+- [x] Direct live video feed selection in the Edit bay's SRC Browse tab (`External video...` menu) (the menu lists server names only; the old activity indicators went with the modal picker).
 - [x] Ableton Link integration for network-wide tempo, beat phase, and quantum synchronization across local DAWs.
 
 ### Phase 5: Generative Morphing & Performance Controls

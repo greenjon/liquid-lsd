@@ -61,29 +61,28 @@ In Perform, drag the Library's title bar up or down to change the split. The hei
 
 ### Library View Mode (`[ Sources ]` / `[ FX ]` / `[ Trans ]` / `[ Maps ]`)
 
-Toggle between sources, FX, transitions and maps (macro banks and Perform pages) using the segmented mode button in the top-left of the Library menu bar:
+Toggle between sources, FX, transitions and maps (macro banks and Perform pages) using the segmented mode button in the top-left of the Library menu bar. Sources, FX and Trans share one three-part browser:
 
-- **`[ Sources ]` Mode**:
-  - **Column 1 (Sources Browser)**: A unified, filterable list combining the bundled stock visual sources (Mandala, Dynamic Spiral, Icosa H3, and the rest — see below) with saved full deck presets (`.lsd`) in `library/presets/`.
-  - **Column 2 (Playlists Editor)**: Setlists (`.lsdplay`) in `library/playlists/`.
-- **`[ FX ]` Mode**:
-  - **Column 1 (FX Browser)**: A unified, filterable list combining stock ISF filters, saved single-slot FX presets (`.lsdfx`) in `library/fx/`, and saved 4-slot FX chains (`.lsdfxchain`) in `library/fx_chains/`.
-  - **Column 2 (FX Playlists Editor)**: Curated FX playlist sequences (`.lsdfxplay`) in `library/fx_playlists/`.
-  - Columns 3 and 4 (the Background Queue and Play Queue columns) swap to the **Live FX Queues** described below.
-- **`[ Trans ]` Mode**:
-  - **Column 1 (Transition Browser)**: A unified, filterable list combining stock ISF transition shaders and saved transition presets (`.lsdtrans`) in `library/transitions/`.
-  - **Column 2 (Transition Playlists Editor)**: Setlists (`.lsdtransplay`) in `library/transition_playlists/`.
-  - **Column 3 (Live Transition Queue)**: The volatile, RAM-only transition queue the crossfader advances through automatically.
-  - Column 4 is reserved — Transitions don't need a second queue the way `[ FX ]` mode needs separate A/B and BG queues.
+- **Folder tree** (left) — **All**, **Favorites** (FX), the kind's sections (Sources: stock sources and saved presets; FX: stock filters, saved single FX and saved chains; Trans: stock transitions and saved transitions), and a **Playlists** group with one entry per playlist. Each entry shows how many rows it holds. Click one to list it. A playlist is just another tree entry: select it to see and edit its rows.
+- **List** (middle) — The rows of the selected tree entry, with a search box on top (`Ctrl+F` or `/` focuses it) and a **`[+]`** button for the kind's "new" action.
+- **Queues** (right) — Sources: the Background Queue and the Play Queue (A/B). FX: the **Live FX Queues** described below. Trans: the Live Transition Queue, which the crossfader advances through automatically.
+
+The mode buttons pick what the three parts show:
+
+- **`[ Sources ]`**: stock visual sources and saved full deck presets (`.lsd`, in `library/presets/`); setlists (`.lsdplay`) live in `library/playlists/`.
+- **`[ FX ]`**: stock ISF filters, saved single-slot FX presets (`.lsdfx`, in `library/fx/`) and saved 3-slot FX chains (`.lsdfxchain`, in `library/fx_chains/`); curated FX playlists (`.lsdfxplay`) live in `library/fx_playlists/`.
+- **`[ Trans ]`**: stock ISF transition shaders and saved transition presets (`.lsdtrans`, in `library/transitions/`); setlists (`.lsdtransplay`) live in `library/transition_playlists/`.
+
+The same browser opens inside the Edit row's **Browse** tabs (source, Chain, FX1-3, transition); there a click applies the row to that deck, slot, chain or the mixer transition.
 
 ### The Unified Sources Browser
 
-Column 1 of `[ Sources ]` mode lists two kinds of row side by side, each marked with its own icon:
+The `[ Sources ]` list shows two kinds of row side by side, each marked with its own icon:
 
 - **Stock Sources** — The 8 bundled built-in visual sources: Mandala, Dynamic Spiral, Icosa H3, Domain Warp Fluid, Gyroid Hyperspace, Celestial Engine, Hyper Slice, and Chladni Cymatics (plus external video streams and any custom sources dropped into your configured shader directories). They load straight to a deck's source stage with their shader's default parameters; they can't be added to a playlist or queue.
 - **Saved Presets (`.lsd`)** — A full deck preset: the visual source plus every parameter value, modulation connection, and note.
 
-Use the **`[⋮]`** filter menu above the list to show/hide each tier (**Stock Sources / Saved Presets**). Use **`[+]`** to eject a deck to blank so you can build a new preset on it (see [Saving a preset](#saving-a-preset) below).
+Pick a section in the folder tree to show only stock sources or only saved presets. Use **`[+]`** to eject a deck to blank so you can build a new preset on it (see [Saving a preset](#saving-a-preset) below).
 
 - **Search** — Type to filter by name, tag, or (for stock sources) category. `Ctrl+F` or `/` jumps focus to the search box of the open tab (Sources, FX or Trans) from anywhere in the app.
 - **Multi-Selection (Shift-Click & Ctrl/Cmd-Click)**:
@@ -97,21 +96,21 @@ Use the **`[⋮]`** filter menu above the list to show/hide each tier (**Stock S
 - **Double-click** — Loads the item into whichever deck is currently inactive on the crossfader. For a stock source this replaces only the deck's visual source, leaving its FX chain untouched; for a saved preset it loads the full deck state.
 - **Right-click or ⋮ (saved presets)** — Rename, retag, duplicate, load to a specific deck, add to a queue or playlist, or delete.
 - **Right-click or ⋮ (stock sources)** — **Load to Deck A/B/BG/PV** only. Stock sources have no persisted parameter state, and their bundled defaults and Metaknob auto-mappings haven't all been individually audited yet, so they're intentionally left out of playlists and the live/background queues — an unattended queue firing an unverified default has no performer there to catch it. Loading straight to a deck is fine, since you're present to dial it in.
-- **Drag-and-drop** — Drag any row (or multi-selection) onto a deck's monitor in the Mixer panel or onto its row in the Performance Matrix to load it (source-only for stock rows, full preset for saved rows). Saved presets can also be dragged into the Playlists Editor (Column 2) or a queue; stock sources can't, for the same reason the context menu omits those options.
+- **Drag-and-drop** — Drag any row (or multi-selection) onto a deck's monitor in the Mixer panel or onto its row in the Performance Matrix to load it (source-only for stock rows, full preset for saved rows). Saved presets can also be dragged into the playlist in the tree or a queue; stock sources can't, for the same reason the context menu omits those options.
 - **`[!]` badge** — Appears when a saved preset uses a subsystem that's currently offline (e.g. MIDI or audio). The preset still loads fine; hover the badge to see what's missing.
 
 ### The Unified FX Browser
 
-Column 1 of `[ FX ]` mode lists three kinds of row side by side, each marked with its own icon:
+The `[ FX ]` list shows three kinds of row side by side, each marked with its own icon:
 
 - **Stock ISF Filters** — Built-in filters with no saved parameters. A deck or Master has several FX chain slots, so a bare stock filter is ambiguous without knowing which slot it targets — double-click and drag-and-drop resolve this by loading into the first vacant slot, and the right-click menu lets you pick a specific slot explicitly (**Load to Deck/Master > Slot 1–3**). That same ambiguity is why stock filters can't be added to a playlist or live queue: there's no interactive slot-picker available when a queued item gets applied automatically later.
-- **Favorites** — Right-click a stock filter and choose **Add to Favorites** (or **Remove from Favorites**) to star it. Starred filters show a ★ in the list, and **[⋮] > Favorite stock filters only** hides the rest. They are the same favorites the inline FX picker and the slot shortlist use.
+- **Favorites** — Right-click a stock filter and choose **Add to Favorites** (or **Remove from Favorites**) to star it. Starred filters show a ★ in the list, and the **Favorites** folder in the tree lists only them. They are the same favorites the inline FX picker and the slot shortlist use.
 - **Saved Single FX Presets (`.lsdfx`)** — One FX slot's full parameter state, captured from a deck.
 - **Saved FX Chains (`.lsdfxchain`)** — A complete 3-slot FX pipeline, captured from a deck's or Master's FX chain. Loading a chain replaces all 3 slots on the target chain.
 
-Use the **`[⋮]`** filter menu above the list to show/hide each tier (**All / Stock / Singles / Chains**). Use **`[+]`** to save the current FX state of any deck or Master FX slot (or all 3 slots as a chain) into a new preset.
+Pick a section in the folder tree to show only stock filters, singles or chains. Use **`[+]`** to save the current FX state of any deck or Master FX slot (or all 3 slots as a chain) into a new preset.
 
-- **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–3 in a deck's Deep Edit `FX` subtab, onto the FX Playlist editor (Column 2), or onto a Live FX Queue (Columns 3/4).
+- **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–3 in a deck's Deep Edit `FX` subtab, onto an FX playlist in the tree, or onto a Live FX Queue.
 - **Double-click**: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains). If all 3 slots are full, a single effect asks which slot to overwrite. FX always goes to the deck the crossfader is on (it is audible now); presets and generators go to the other deck (the next look). At exactly the middle of the crossfader, FX goes to Deck A and presets to Deck B.
 - **Right-click menu**: `Load to > Deck [A|B|BG|PV] / Master FX > Slot [1|2|3]` (stock filters and singles) or `Load to Deck [A|B|BG|PV] / Master FX` (chains), plus **Add to Live FX Queue (A/B)**, **Add to BG FX Queue**, **Add to '<playlist>' Playlist**, Rename, Clone, Delete, and Reveal in File Manager.
 
@@ -173,18 +172,18 @@ On a fresh install, Master FX starts with *Subtle Optical Warmth*, Deck A with *
 
 ### FX Playlists (`.lsdfxplay`)
 
-Column 2 of `[ FX ]` mode is a dedicated FX playlist editor, working like the preset Playlists column: switch between playlists with the dropdown, drag singles/chains in from the FX Browser to insert or reorder them, and double-click an entry to apply it. Missing files show the same red `[!] (missing)` indicator as preset playlists.
+FX playlists are entries under **Playlists** in the FX tree. Select one to edit it like a preset playlist: drag singles/chains in from the list to insert them, drag rows to reorder, and double-click an entry to apply it. Missing files show the same red `[!] (missing)` indicator as preset playlists.
 
 ### Live FX Queues (A/B and BG)
 
-While in `[ FX ]` mode, the Library's Background Queue and Play Queue columns (3 and 4) swap to two independent **live FX queues** — volatile, RAM-only sequences of FX singles/chains you can improvise with mid-set:
+In `[ FX ]` mode the queues part of the browser holds two independent **live FX queues** — volatile, RAM-only sequences of FX singles/chains you can improvise with mid-set:
 
 - **`<` / `>`** — Step to the previous/next queued FX item and apply it.
 - **🔁 Repeat** — Cycle back to the start when the bottom of the queue is reached.
 - **🔀 Shuffle** — Play items in random order.
 - **Export** — Save the current live queue as a new `.lsdfxplay` playlist.
 - **Clear** — Empty the queue.
-- **Drag-and-drop** — Reorder items within a queue, or drag a preset/chain from the FX Browser to append or insert it.
+- **Drag-and-drop** — Reorder items within a queue, or drag a preset/chain from the list to append or insert it.
 - **Double-click** an item to jump straight to it. Pressing the MIDI controller's accept on a queue item does the same: it moves the queue position, fades to the loaded deck and advances the transition queue.
 
 The **A/B queue** applies to whichever of Deck A/B is currently dominant on the crossfader; the **BG queue** always applies to Deck BG.
@@ -197,9 +196,9 @@ Click **`[ Lock ]`** in the toolbar to enable audition mode. While latched, clic
 
 ## Playlists (Setlists)
 
-The playlist column is where you build your setlist. Playlists are `.lsdplay` files — simple ordered lists of presets.
+Playlists are where you build your setlist; they appear under **Playlists** in the Sources folder tree. Playlists are `.lsdplay` files — simple ordered lists of presets.
 
-- **Switch between playlists** — Use the dropdown at the top of the playlist column.
+- **Switch between playlists** — Click another playlist in the tree.
 - **Reorder** — Drag and drop presets within the list. Changes save automatically.
 - **Playlist actions (⋮ menu)**:
   - **Play Now** — Replaces the live queue with this playlist and starts playback.
@@ -244,12 +243,12 @@ Liquid LSD features a curated suite of 8 club-grade ISF transition shaders desig
 
 ### The Unified Transition Browser
 
-Column 1 of `[ Trans ]` mode lists two kinds of row side by side, each marked with its own icon:
+The `[ Trans ]` list shows two kinds of row side by side, each marked with its own icon:
 
 - **Stock ISF Transition Shaders** — The curated suite above, plus any custom `.fs` transitions found in your configured shader directories. Unlike FX, there's only ever one active transition — no chain of slots to disambiguate — so a bare stock transition id is a complete, unambiguous instruction. Combined with sane bundled defaults, that makes them safe to apply, queue, or add to a playlist just like saved presets.
 - **Saved Transition Presets (`.lsdtrans`)** — A dialed-in transition configuration (parameters, dry/wet, modulation bindings) captured from the mixer.
 
-Use the **`[⋮]`** filter menu above the list to show/hide each tier (**Stock Shaders / Saved Presets**). Use **`[+]`** to save the mixer's current transition as a new preset.
+Pick a section in the folder tree to show only stock shaders or only saved presets. Use **`[+]`** to save the mixer's current transition as a new preset.
 
 - **Double-click**: Applies the transition to the mixer immediately.
 - **Keyboard**: **Enter** applies the selected transition; the *Add to A/B Queue* shortcut (**Q** by default, rebindable in Preferences → Shortcuts) adds it to the transition queue.
@@ -265,7 +264,7 @@ The **`[ Maps ]`** tab has two lists, switched with the **Banks** / **Pages** ra
 
 ### Transition Presets (`.lsdtrans`) & Playlists (`.lsdtransplay`)
 
-- **Transition Presets (`.lsdtrans`)**: Stored in `library/transitions/`. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) from the Mixer's TRANS tab (**[⋮] > Save Transition As...**), from the **Save current as preset...** button under the transition list in Browse, or with the **[+]** button in the Transition Browser or right-clicking in the Mixer panel.
+- **Transition Presets (`.lsdtrans`)**: Stored in `library/transitions/`. Save dialed-in transition configurations (including parameter values, dry/wet, and modulation bindings) from the Mixer's TRANS tab (**[⋮] > Save Transition As...**), from the **Save current as preset...** button under the transition list in Browse, or with the **[+]** button above the Trans list or right-clicking in the Mixer panel.
 - **Transition Playlists (`.lsdtransplay`)**: Stored in `library/transition_playlists/`. Group transitions into ordered setlists for the Transition Queue. A factory playlist, `festival_elite.lsdtransplay`, is bundled out of the box.
 - **AutoVJ Integration**: The Transition Queue automatically advances to the next staged transition preset or stock transition shader each time the crossfader cycles between decks.
 
@@ -275,22 +274,22 @@ The **`[ Maps ]`** tab has two lists, switched with the **Banks** / **Pages** ra
 
 | From                       | To                             | Result                   |
 | -------------------------- | ------------------------------ | ------------------------ |
-| Sources Browser (saved preset) | Playlist (between items)       | Inserts at that position |
-| Sources Browser (saved preset) | Empty space at playlist bottom | Appends to the end       |
+| Sources list (saved preset) | Playlist (between items)       | Inserts at that position |
+| Sources list (saved preset) | Empty space at playlist bottom | Appends to the end       |
 | Playlist item              | Up / down in the same playlist | Reorders                 |
-| Sources Browser (saved preset) or Playlist | Queue                          | Adds to the live queue   |
-| Sources Browser row (stock or saved) | Deck monitor (Mixer) or deck row (Performance Matrix) | Loads source (stock) or full preset (saved) to that deck |
+| Sources list (saved preset) or Playlist | Queue                          | Adds to the live queue   |
+| Sources list row (stock or saved) | Deck monitor (Mixer) or deck row (Performance Matrix) | Loads source (stock) or full preset (saved) to that deck |
 | FX Preset (`.lsdfx`)       | FX Slot 1–3 in Parameters      | Loads into target slot   |
 | Stock FX filter            | FX Slot in Parameters or the Performance Matrix | Loads into that slot |
 | FX Preset (`.lsdfx`)       | Deck badge in the Performance Matrix | Loads into the first vacant slot (a toast says so if all 3 are full; drop on a slot instead) |
 | FX Chain (`.lsdfxchain`)   | FX Slot / Chain in Parameters, or the deck badge | Overwrites 3-slot chain  |
 
 A deck's monitor takes presets and generators only, not FX.
-| FX Browser row              | FX Playlist (Column 2)         | Inserts/appends to playlist |
-| FX Browser row              | Live FX Queue (A/B or BG)      | Appends/inserts into that queue |
+| FX list row                 | FX playlist in the tree        | Inserts/appends to playlist |
+| FX list row                 | Live FX Queue (A/B or BG)      | Appends/inserts into that queue |
 | Live FX Queue item          | Up / down in the same queue    | Reorders                 |
-| Transition Browser row      | Transition Playlist (Column 2) | Inserts/appends to playlist |
-| Transition Browser row      | Live Transition Queue (Column 3) | Appends/inserts into the queue |
+| Transition list row         | Transition playlist in the tree | Inserts/appends to playlist |
+| Transition list row         | Live Transition Queue          | Appends/inserts into the queue |
 
 ---
 

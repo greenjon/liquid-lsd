@@ -54,7 +54,7 @@
 **Controller/navigation UI (updated 2026-10-03):** `src/test/.../control/` covers CcQueue, CommandRegistry, ControllerFeedback (+sequence, manager), ControllerProfile, ControllerRuntime, KnobCommands browse and NavCommands; `midi/MidiEngineQueueTest` covers the capped queue; `ui/` has `PerfPageStoreTest`, `PerformSurfaceTest`, `PerfRowLayoutTest`, `LibraryNavigationTest` and `NavigationSurfaceTest` (new, uncommitted). Still without tests when this was written:
 - `BackNavigation` stack itself is now covered by `NavigationSurfaceTest`; Esc and controller back share `NavigationSurface.back()`,
 - `PerformPagesPanel` temporary-tab behavior,
-- `PerformanceBrowseBay` / `ChainListBrowse` cursor,
+- hosted-pane cursor in `PerformanceBrowseBay` (covered by `NavigationSurfaceTest`),
 - `PerfKnobSpec` (`KnobSpec` resolution per row mode).
 - `ProfileBindingEdit` and `ControllerProfileStore` (user override / rejection) have no dedicated test file; confirm before relying on them.
 
