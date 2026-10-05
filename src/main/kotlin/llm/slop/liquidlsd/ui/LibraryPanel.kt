@@ -264,7 +264,7 @@ object LibraryPanel {
                 val isTrans = viewMode == LibraryViewMode.TRANS
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isTrans) activeCol else inactiveCol)
                 ImGui.pushStyleColor(ImGuiCol.Text, if (isTrans) activeTextCol else inactiveTextCol)
-                if (ImGui.button("Trans##mode_trans", btnWMode, btnH)) {
+                if (ImGui.button("Transitions##mode_trans", 82f, btnH)) {
                     LibraryNavigation.setViewMode(LibraryViewMode.TRANS)
                 }
                 ImGui.popStyleColor(2)
@@ -274,7 +274,7 @@ object LibraryPanel {
                 val isMaps = viewMode == LibraryViewMode.MAPS
                 ImGui.pushStyleColor(ImGuiCol.Button, if (isMaps) activeCol else inactiveCol)
                 ImGui.pushStyleColor(ImGuiCol.Text, if (isMaps) activeTextCol else inactiveTextCol)
-                if (ImGui.button("Maps##mode_maps", btnWMode, btnH)) {
+                if (ImGui.button("Banks##mode_maps", btnWMode, btnH)) {
                     LibraryNavigation.setViewMode(LibraryViewMode.MAPS)
                 }
                 ImGui.popStyleColor(2)

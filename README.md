@@ -15,8 +15,8 @@ Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ per
 - **Tactile Performance Surface**: Modern frameless CSD windowing with live performance telemetry (FPS, DSP latency, CPU usage, frame time, beat phase), TouchConsole support (evdev/macOS), 2x2 grouped Library panel, drag-and-drop workflow, and clipboard management for presets, slots, and chains.
 - **Hardware & MIDI Control**: Multi-type MIDI engine (Notes, CC, Pitch Bend, Soft Takeover, Relative Rotary Encoders), centralized `ShortcutManager` for keyboard shortcuts, preset tagging & search, and 3-tier hierarchical set notes (`NotesManager`).
 - **Stage Interoperability & Recording**: Zero-copy GPU video streaming (Spout2 on Windows, Syphon on macOS, PipeWire DMA-BUF on Linux), video device/OBS ingest, high-performance asynchronous GPU PBO video export/recording pipeline (`PboReadbackPipeline`), and WebGL2 live web broadcast relay.
-- **FX Playlists & Live FX Queues**: Unified FX browser (ISF stock filters, saved `.lsdfx` singles, saved `.lsdfxchain` 3-slot chains) with deterministic apply, curated FX playlists (`.lsdfxplay`), and volatile live FX queues for A/B and BG with shuffle, repeat, and history back-stepping.
-- **Performance Mode & Macro Controls**: The main view is a 4×4 macro knob matrix spanning per-deck banks (Deck A/B/BG/PV, their FX, Transitions, Master, and free Global knobs) with color-coded rows and two tabs (Decks, Master — with a tap-tempo/resync Clock row), plus Deep Edit for every parameter and modulator. Knob bindings and response curves are edited in Column 3's MACROS view.
+- **FX Playlists & A/B FX Queues**: Unified FX browser (ISF stock filters, saved `.lsdfx` singles, saved `.lsdfxchain` 3-slot chains) with deterministic apply, curated FX playlists (`.lsdfxplay`), and volatile live FX queues for A/B and BG with shuffle, repeat, and history back-stepping.
+- **Performance Mode & Macro Controls**: The main view is a 4×4 macro knob matrix spanning per-deck banks (Deck A/B/BG/PV, their FX, Transitions, Master, and free Global knobs) with color-coded rows and two tabs (Decks, Master — with a tap-tempo/resync Clock row), plus Edit for every parameter and modulator. Knob bindings and response curves are edited in Column 3's MACROS view.
 
 ---
 
@@ -32,7 +32,7 @@ Liquid LSD is in active beta with a stable, production-ready core video and audi
 | **Presets & Library** | **Operational** | Hierarchical preset system, `.lsdfx` slot presets, `.lsdfxchain` 3-slot chains, FX playlists (`.lsdfxplay`), live FX queues (A/B & BG), preset tags, instant tag search, drag-and-drop preset loading. |
 | **MIDI & Shortcuts** | **Operational** | Multi-type MIDI engine, soft takeover, relative encoders, customizable keyboard shortcuts, real-time packet sniffer. |
 | **Video Export & Sharing** | **Operational** | Asynchronous PBO GPU video export, zero-copy Spout2/Syphon/PipeWire streaming, camera ingest, WebGL2 broadcast engine. |
-| **Performance Mode & Macros** | **Operational** | Performance matrix (DECKS + MASTER tabs) with Deep Edit, macro binding, curve editing, and FX slot editing on the rows. The 19" Modular Video Rack chassis UI this replaced has been fully removed. |
+| **Performance Mode & Macros** | **Operational** | Performance matrix (DECKS + MASTER tabs) with Edit, macro binding, curve editing, and FX slot editing on the rows. The 19" Modular Video Rack chassis UI this replaced has been fully removed. |
 
 ---
 

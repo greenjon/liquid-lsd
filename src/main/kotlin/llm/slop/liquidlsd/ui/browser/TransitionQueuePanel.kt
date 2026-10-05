@@ -31,10 +31,10 @@ object TransitionQueuePanel {
         val itemSpacingX = ImGui.getStyle().getItemSpacingX()
         val totalRightW = navBtnW * 2f + playPauseBtnW + itemSpacingX * 2f
 
-        // Title Bar: "Trans Queue" on the left, "<", "[Play/Pause]", ">" buttons on the right
+        // Title Bar: "Transition Queue" on the left, "<", "[Play/Pause]", ">" buttons on the right
         ImGui.alignTextToFramePadding()
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("Trans Queue")
+            ImGui.text("Transition Queue")
         }
         ImGui.sameLine()
         val rightX = ImGui.getWindowContentRegionMaxX() - totalRightW
@@ -46,7 +46,7 @@ object TransitionQueuePanel {
             if (ImGui.button("<##transQueuePrev", navBtnW, 0f)) {
                 TransitionQueueManager.advancePrevious(mixer)
             }
-            itemTooltip("Trigger previous transition in Live Transition Queue.")
+            itemTooltip("Trigger previous transition in Transition Queue.")
 
             ImGui.sameLine()
             val autoAdvanceActive = TransitionQueueManager.isAutoAdvanceEnabled
@@ -67,7 +67,7 @@ object TransitionQueuePanel {
             if (ImGui.button(">##transQueueNext", navBtnW, 0f)) {
                 TransitionQueueManager.advanceNext(mixer)
             }
-            itemTooltip("Trigger next transition in Live Transition Queue.")
+            itemTooltip("Trigger next transition in Transition Queue.")
 
             ImGui.separator()
             ImGui.spacing()

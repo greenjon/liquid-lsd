@@ -56,7 +56,7 @@ object BgQueueActionsPanel {
             if (ImGui.button("<##bgQueuePrev", navBtnW, 0f)) {
                 BgQueueManager.triggerPrevious(mixer)
             }
-            itemTooltip("Trigger previous preset in Background Queue (Mixer/bgQueuePrev).")
+            itemTooltip("Trigger previous preset in BG Queue (Mixer/bgQueuePrev).")
 
             ImGui.sameLine()
             val autoBgActive = BgQueueManager.isAutoBGEnabled
@@ -70,7 +70,7 @@ object BgQueueActionsPanel {
             if (ImGui.button(">##bgQueueNext", navBtnW, 0f)) {
                 BgQueueManager.triggerNext(mixer)
             }
-            itemTooltip("Trigger next preset in Background Queue (Mixer/bgQueueNext).")
+            itemTooltip("Trigger next preset in BG Queue (Mixer/bgQueueNext).")
 
             ImGui.separator()
             ImGui.spacing()

@@ -110,14 +110,14 @@ object BrowserActionToolbar {
                 LibraryPanel.LibraryViewMode.MAPS -> "item"
             }
             val queueA = when (mode) {
-                LibraryPanel.LibraryViewMode.PRESETS -> "A/B Play Queue"
+                LibraryPanel.LibraryViewMode.PRESETS -> "A/B Queue"
                 LibraryPanel.LibraryViewMode.FX -> "FX Queue"
                 LibraryPanel.LibraryViewMode.TRANS -> "Transition Queue"
                 LibraryPanel.LibraryViewMode.MAPS -> "queue"
             }
             val queueBG = when (mode) {
-                LibraryPanel.LibraryViewMode.PRESETS -> "Background Queue"
-                LibraryPanel.LibraryViewMode.FX -> "FX Background Queue"
+                LibraryPanel.LibraryViewMode.PRESETS -> "BG Queue"
+                LibraryPanel.LibraryViewMode.FX -> "BG FX Queue"
                 LibraryPanel.LibraryViewMode.TRANS -> null
                 LibraryPanel.LibraryViewMode.MAPS -> null
             }

@@ -54,10 +54,10 @@ class MenuBar(
                             if (ImGui.menuItem("To Deck B")) {
                                 UIManager.newPresetSafely(mixer, mixer.deckB)
                             }
-                            if (ImGui.menuItem("To Deck BG")) {
+                            if (ImGui.menuItem("To Deck Background")) {
                                 UIManager.newPresetSafely(mixer, mixer.deckBG)
                             }
-                            if (ImGui.menuItem("To Deck PV")) {
+                            if (ImGui.menuItem("To Deck Preview")) {
                                 UIManager.newPresetSafely(mixer, mixer.deckPV)
                             }
                             ImGui.endMenu()
@@ -84,11 +84,11 @@ class MenuBar(
                         if (ImGui.menuItem("Close Preferences", "Esc", false, PreferencesPanel.isOpen)) {
                             PreferencesPanel.close()
                         }
-                        if (ImGui.menuItem("Close Deep Edit", "Esc", false, session.parametersState.anyRackModuleExpanded())) {
+                        if (ImGui.menuItem("Close Edit", "Esc", false, session.parametersState.anyRackModuleExpanded())) {
                             session.parametersState.collapseAllRackModules()
                         }
                         ImGui.separator()
-                        if (ImGui.beginMenu("Library Drawer")) {
+                        if (ImGui.beginMenu("Library")) {
                             // Picking a size always lands on the Library: leave Edit view first (it hides the Library).
                             if (ImGui.menuItem("Full", "", session.uiTheme.libraryMode == UITheme.LibraryMode.FULL)) {
                                 LibraryPanel.show(session)
@@ -118,7 +118,7 @@ class MenuBar(
                         }
                         itemTooltip("Toggle secondary / external video output window (e.g. for projector or OBS window capture).")
 
-                        if (ImGui.menuItem("Record Master Output (REC)", "Ctrl+R", isRec)) {
+                        if (ImGui.menuItem("Record Output (REC)", "Ctrl+R", isRec)) {
                             if (isRec) {
                                 llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
                             } else {
@@ -149,7 +149,7 @@ class MenuBar(
                         }
 
                         ImGui.separator()
-                        if (ImGui.menuItem("Export Video (Offline Studio)...")) {
+                        if (ImGui.menuItem("Render Video (Offline)...")) {
                             VideoExportModal.open()
                         }
                         itemTooltip("Render high-quality offline video with precise per-frame timing.")
@@ -390,7 +390,7 @@ class MenuBar(
         val dspText = if (showAudio) "DSP: %.2fms  ".format(audioLatency) else if (isAudioDisabled) "DSP: OFF  " else "DSP: --  "
         val fpsText = "%3.0f fps  ".format(fps)
         val ftText  = "%3.0f ms  ".format(ftMs)
-        val fboText = "FBO: %d (%.0fMB)".format(PerformanceStats.fboCount, PerformanceStats.fboMemoryMB)
+        val fboText = "GPU buffers: %d (%.0f MB)".format(PerformanceStats.fboCount, PerformanceStats.fboMemoryMB)
         val fullLabel = cpuText + dspText + fpsText + ftText + fboText
 
         val isFrameless = session.uiTheme.framelessWindow && windowFrameController != null

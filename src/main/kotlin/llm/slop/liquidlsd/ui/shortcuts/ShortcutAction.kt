@@ -2,7 +2,7 @@ package llm.slop.liquidlsd.ui.shortcuts
 
 enum class ShortcutCategory(val label: String) {
     GLOBAL("Global & Display Controls"),
-    PARAMETERS("Deep Edit & Modulation Matrix"),
+    PARAMETERS("Edit & Modulation Matrix"),
     PROPERTIES("Properties & Number Inputs"),
     LIBRARY("Library & Asset Browser"),
     CLOCK("Audio & Clock Controls")

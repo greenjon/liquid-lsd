@@ -21,7 +21,7 @@ internal object PerformanceFxSendsControls {
                 knob.value = 1.0f
             }
         }
-        itemTooltip("Reset all FX Wet/Dry Send knobs to 100%.")
+        itemTooltip("Reset all FX Wet/Dry knobs to 100%.")
 
         ImGui.endGroup()
     }

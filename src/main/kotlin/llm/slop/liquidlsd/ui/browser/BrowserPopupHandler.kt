@@ -378,7 +378,7 @@ object BrowserPopupHandler {
 
     fun drawExportBgQueuePopup() {
         if (ImGui.beginPopupModal("ExportBgQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
-            ImGui.text("Export Background Queue as Playlist")
+            ImGui.text("Export BG Queue as Playlist")
             ImGui.separator()
             ImGui.inputText("Playlist Name", exportBgQueueNameBuffer)
             if (ImGui.button("Export", 120f, 0f)) {
@@ -405,7 +405,7 @@ object BrowserPopupHandler {
 
     fun drawExportTransQueuePopup() {
         if (ImGui.beginPopupModal("ExportTransQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
-            ImGui.text("Export Live Transition Queue as Playlist")
+            ImGui.text("Export Transition Queue as Playlist")
             ImGui.separator()
             ImGui.inputText("Playlist Name", exportTransQueueNameBuffer)
             if (ImGui.button("Export", 120f, 0f)) {
@@ -438,7 +438,7 @@ object BrowserPopupHandler {
 
     fun drawExportFxQueuePopup() {
         if (ImGui.beginPopupModal("ExportFxQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
-            ImGui.text("Export Live FX Queue (A/B) as Playlist")
+            ImGui.text("Export A/B FX Queue as Playlist")
             ImGui.separator()
             ImGui.inputText("Playlist Name", exportFxQueueNameBuffer)
             if (ImGui.button("Export", 120f, 0f)) {
@@ -471,7 +471,7 @@ object BrowserPopupHandler {
 
     fun drawExportFxBgQueuePopup() {
         if (ImGui.beginPopupModal("ExportFxBgQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
-            ImGui.text("Export Background FX Queue as Playlist")
+            ImGui.text("Export BG FX Queue as Playlist")
             ImGui.separator()
             ImGui.inputText("Playlist Name", exportFxBgQueueNameBuffer)
             if (ImGui.button("Export", 120f, 0f)) {

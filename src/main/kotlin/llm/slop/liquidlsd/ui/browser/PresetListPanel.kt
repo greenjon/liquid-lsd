@@ -34,7 +34,7 @@ object PresetListPanel {
     private val logger = KotlinLogging.logger {}
 
     /** Stock generators carry no persisted parameters, so they only support "Load to
-     *  Deck" -- never "Add to Playlist"/"Add to Live Queue" (those are reserved for
+     *  Deck" -- never "Add to Playlist"/"Add to A/B Queue" (those are reserved for
      *  saved presets, which have reproducible state). */
     const val STOCK_PATH_PREFIX = "stock-source://"
     const val PAYLOAD_STOCK_SOURCE = "ASSET_ITEM_STOCK_SOURCE"
@@ -245,7 +245,7 @@ object PresetListPanel {
                     if (ImGui.menuItem(abLabel)) {
                         targets.forEach { session.playQueueManager.appendToQueue(File(it.path)) }
                     }
-                    val bgLabel = if (count > 1) "Add $count Presets to Background Queue" else "Add to Background Queue"
+                    val bgLabel = if (count > 1) "Add $count Presets to BG Queue" else "Add to BG Queue"
                     if (ImGui.menuItem(bgLabel)) {
                         targets.forEach { llm.slop.liquidlsd.presets.BgQueueManager.appendToQueue(File(it.path)) }
                     }

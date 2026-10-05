@@ -52,26 +52,26 @@ The prompt above is for loads you start yourself. If Auto-VJ switches presets wh
 The Library panel spans the left and middle columns. That column has three views:
 
 - **Perform** — The Performance rows sit above the Library, which fills the lower half. This is the everyday view for playing a set.
-- **Edit** — Open a row's **Deep Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Swap a deck's source or FX from the controls on the row itself. Press **Esc** or click the row's **Collapse** button to get back to Perform.
+- **Edit** — Open a row's **Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Swap a deck's source or FX from the controls on the row itself. Press **Esc** or click the row's **Collapse** button to get back to Perform.
 - **Library** — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.
 
-Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Deep Edit (cancelling any armed Add Target or Learn) and brings the Library back.
+Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Edit (cancelling any armed Add Target or Learn) and brings the Library back.
 
 In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.
 
-### Library View Mode (`[ Sources ]` / `[ FX ]` / `[ Trans ]` / `[ Maps ]`)
+### Library View Mode (`[ Sources ]` / `[ FX ]` / `[ Transitions ]` / `[ Banks ]`)
 
-Toggle between sources, FX, transitions and maps (macro banks and Perform pages) using the segmented mode button in the top-left of the Library menu bar. Sources, FX and Trans share one three-part browser:
+Toggle between sources, FX, transitions and banks (macro banks and Perform pages) using the segmented mode button in the top-left of the Library menu bar. Sources, FX and Trans share one three-part browser:
 
 - **Folder tree** (left) — **All**, **Favorites** (FX), the kind's sections (Sources: stock sources and saved presets; FX: stock filters, saved single FX and saved chains; Trans: stock transitions and saved transitions), and a **Playlists** group with one entry per playlist. Each entry shows how many rows it holds. Click one to list it. A playlist is just another tree entry: select it to see and edit its rows.
 - **List** (middle) — The rows of the selected tree entry, with a search box on top (`Ctrl+F` or `/` focuses it) and a **`[+]`** button for the kind's "new" action.
-- **Queues** (right) — Sources: the Background Queue and the Play Queue (A/B). FX: the **Live FX Queues** described below. Trans: the Live Transition Queue, which the crossfader advances through automatically.
+- **Queues** (right) — Sources: the BG Queue and the A/B Queue. FX: the **A/B FX Queues** described below. Trans: the Transition Queue, which the crossfader advances through automatically.
 
 The mode buttons pick what the three parts show:
 
 - **`[ Sources ]`**: stock visual sources and saved full deck presets (`.lsd`, in `library/presets/`); setlists (`.lsdplay`) live in `library/playlists/`.
 - **`[ FX ]`**: stock ISF filters, saved single-slot FX presets (`.lsdfx`, in `library/fx/`) and saved 3-slot FX chains (`.lsdfxchain`, in `library/fx_chains/`); curated FX playlists (`.lsdfxplay`) live in `library/fx_playlists/`.
-- **`[ Trans ]`**: stock ISF transition shaders and saved transition presets (`.lsdtrans`, in `library/transitions/`); setlists (`.lsdtransplay`) live in `library/transition_playlists/`.
+- **`[ Transitions ]`**: stock ISF transition shaders and saved transition presets (`.lsdtrans`, in `library/transitions/`); setlists (`.lsdtransplay`) live in `library/transition_playlists/`.
 
 The same browser opens inside the Edit row's **Browse** tabs (source, Chain, FX1-3, transition); there a click applies the row to that deck, slot, chain or the mixer transition.
 
@@ -84,12 +84,12 @@ The `[ Sources ]` list shows two kinds of row side by side, each marked with its
 
 Pick a section in the folder tree to show only stock sources or only saved presets. Use **`[+]`** to eject a deck to blank so you can build a new preset on it (see [Saving a preset](#saving-a-preset) below).
 
-- **Search** — Type to filter by name, tag, or (for stock sources) category. `Ctrl+F` or `/` jumps focus to the search box of the open tab (Sources, FX or Trans) from anywhere in the app.
+- **Search** — Type to filter by name, tag, or (for stock sources) category. `Ctrl+F` or `/` jumps focus to the search box of the open tab (Sources, FX or Transitions) from anywhere in the app.
 - **Multi-Selection (Shift-Click & Ctrl/Cmd-Click)**:
   - **Click** — Selects a single preset, clearing existing selections.
   - **Ctrl+Click** (or **Cmd+Click** on macOS) — Toggles selection of an individual item without affecting others.
   - **Shift+Click** — Extends selection from the anchor/lead item to the clicked item across all visible rows.
-  - **Batch Queueing** — When multiple presets are selected, pressing `Q` or clicking `[ Q ]` enqueues all selected presets in order into the A/B Play Queue. Pressing `Shift+Q` or clicking `[ BGQ ]` enqueues them into the Background Queue. The buttons and hotkeys always act on the open tab: in the FX tab they feed the FX queues, and in the Trans tab `[ Q ]` feeds the transition queue (`[ BGQ ]` is greyed out there).
+  - **Batch Queueing** — When multiple presets are selected, pressing `Q` or clicking `[ Q ]` enqueues all selected presets in order into the A/B Queue. Pressing `Shift+Q` or clicking `[ BGQ ]` enqueues them into the BG Queue. The buttons and hotkeys always act on the open tab: in the FX tab they feed the FX queues, and in the Trans tab `[ Q ]` feeds the transition queue (`[ BGQ ]` is greyed out there).
   - **Batch Context Menu** — Right-clicking with multiple items selected presents options like **Add N Presets to Playlist**, **Add N Presets to Queue**, and **Delete N Presets...**.
   - **Multi-Item Drag & Drop** — Dragging any item from a multi-selection carries all selected presets simultaneously into Playlists or Queues.
   - **Batch Deletion** — Pressing `Delete` or selecting Delete from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.
@@ -110,9 +110,9 @@ The `[ FX ]` list shows three kinds of row side by side, each marked with its ow
 
 Pick a section in the folder tree to show only stock filters, singles or chains. Use **`[+]`** to save the current FX state of any deck or Master FX slot (or all 3 slots as a chain) into a new preset.
 
-- **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–3 in a deck's Deep Edit `FX` subtab, onto an FX playlist in the tree, or onto a Live FX Queue.
+- **Drag-and-Drop**: Drag a saved single or chain onto Slot 1–3 in a deck's Edit `FX` subtab, onto an FX playlist in the tree, or onto a A/B FX Queue.
 - **Double-click**: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains). If all 3 slots are full, a single effect asks which slot to overwrite. FX always goes to the deck the crossfader is on (it is audible now); presets and generators go to the other deck (the next look). At exactly the middle of the crossfader, FX goes to Deck A and presets to Deck B.
-- **Right-click menu**: `Load to > Deck [A|B|BG|PV] / Master FX > Slot [1|2|3]` (stock filters and singles) or `Load to Deck [A|B|BG|PV] / Master FX` (chains), plus **Add to Live FX Queue (A/B)**, **Add to BG FX Queue**, **Add to '<playlist>' Playlist**, Rename, Clone, Delete, and Reveal in File Manager.
+- **Right-click menu**: `Load to > Deck [A|B|BG|PV] / Master FX > Slot [1|2|3]` (stock filters and singles) or `Load to Deck [A|B|BG|PV] / Master FX` (chains), plus **Add to A/B FX Queue (A/B)**, **Add to BG FX Queue**, **Add to '<playlist>' Playlist**, Rename, Clone, Delete, and Reveal in File Manager.
 
 #### Bundled Stock FX Chains
 
@@ -174,7 +174,7 @@ On a fresh install, Master FX starts with *Subtle Optical Warmth*, Deck A with *
 
 FX playlists are entries under **Playlists** in the FX tree. Select one to edit it like a preset playlist: drag singles/chains in from the list to insert them, drag rows to reorder, and double-click an entry to apply it. Missing files show the same red `[!] (missing)` indicator as preset playlists.
 
-### Live FX Queues (A/B and BG)
+### A/B FX Queues (A/B and BG)
 
 In `[ FX ]` mode the queues part of the browser holds two independent **live FX queues** — volatile, RAM-only sequences of FX singles/chains you can improvise with mid-set:
 
@@ -209,7 +209,7 @@ If a playlist references a preset that's been moved or deleted, the row appears 
 
 ---
 
-## The Play Queue (Auto-VJ)
+## The A/B Queue (Auto-VJ)
 
 The play queue drives the main crossfader automatically, sequencing through presets with transitions between Deck A and Deck B.
 
@@ -222,9 +222,9 @@ When the queue is playing, the crossfader moves automatically between decks as p
 
 ---
 
-## Background Queue (Deck BG)
+## BG Queue (Deck BG)
 
-The Background Queue works the same way as the main queue but drives Deck BG independently. Add presets with `Shift+Q`. Background transitions use dip-to-black fades — double-click or right-click a queued item to choose between an instant cut or a fade.
+The BG Queue works the same way as the main queue but drives Deck BG independently. Add presets with `Shift+Q`. Background transitions use dip-to-black fades — double-click or right-click a queued item to choose between an instant cut or a fade.
 
 ---
 
@@ -243,7 +243,7 @@ Liquid LSD features a curated suite of 8 club-grade ISF transition shaders desig
 
 ### The Unified Transition Browser
 
-The `[ Trans ]` list shows two kinds of row side by side, each marked with its own icon:
+The `[ Transitions ]` list shows two kinds of row side by side, each marked with its own icon:
 
 - **Stock ISF Transition Shaders** — The curated suite above, plus any custom `.fs` transitions found in your configured shader directories. Unlike FX, there's only ever one active transition — no chain of slots to disambiguate — so a bare stock transition id is a complete, unambiguous instruction. Combined with sane bundled defaults, that makes them safe to apply, queue, or add to a playlist just like saved presets.
 - **Saved Transition Presets (`.lsdtrans`)** — A dialed-in transition configuration (parameters, dry/wet, modulation bindings) captured from the mixer.
@@ -253,11 +253,11 @@ Pick a section in the folder tree to show only stock shaders or only saved prese
 - **Double-click**: Applies the transition to the mixer immediately.
 - **Keyboard**: **Enter** applies the selected transition; the *Add to A/B Queue* shortcut (**Q** by default, rebindable in Preferences → Shortcuts) adds it to the transition queue.
 - **Failures**: a transition or FX file that can't be loaded or applied now shows a toast instead of failing silently.
-- **Right-click menu**: **Apply to Mixer**, **Add to Live Queue**, **Add to '<playlist>' Playlist**, plus Rename/Clone/Delete for saved presets (stock shaders have no file to rename or delete).
+- **Right-click menu**: **Apply to Mixer**, **Add to A/B Queue**, **Add to '<playlist>' Playlist**, plus Rename/Clone/Delete for saved presets (stock shaders have no file to rename or delete).
 
-### The Maps Tab (Macro Banks and Perform Pages)
+### The Banks Tab (Macro Banks and Perform Pages)
 
-The **`[ Maps ]`** tab has two lists, switched with the **Banks** / **Pages** radio buttons. It has no playlists or queues, so it uses the whole Library width.
+The **`[ Banks ]`** tab has two lists, switched with the **Banks** / **Pages** radio buttons. It has no playlists or queues, so it uses the whole Library width.
 
 - **Banks** lists the saved macro banks (`.knobpreset.json` files in `library/knobpresets`). **Save bank from...** saves the knobs of a deck, Master, Transition or FX Sends row under a name you choose. Right-click a bank to **Apply to** one of those rows (deck banks retarget to the deck they land on; targets that row can't take are dropped, and a toast says if parameters were missing) or **Delete** it. FX banks are rewritten from the FX chain, so they can't be saved or applied here. This is the same as the bank kebab menu in the Edit row, without the file browser.
 - **Pages** lists the Perform pages with where each comes from (built-in, user, or user override). Click a page to show it in Perform. Right-click for **Hide from / Show in tab strip**, **Copy to user file** (built-ins) or **Delete user file**. Editing a page's rows stays in **Preferences → MIDI Controls**.
@@ -286,16 +286,16 @@ The **`[ Maps ]`** tab has two lists, switched with the **Banks** / **Pages** ra
 
 A deck's monitor takes presets and generators only, not FX.
 | FX list row                 | FX playlist in the tree        | Inserts/appends to playlist |
-| FX list row                 | Live FX Queue (A/B or BG)      | Appends/inserts into that queue |
-| Live FX Queue item          | Up / down in the same queue    | Reorders                 |
+| FX list row                 | A/B FX Queue (A/B or BG)      | Appends/inserts into that queue |
+| A/B FX Queue item          | Up / down in the same queue    | Reorders                 |
 | Transition list row         | Transition playlist in the tree | Inserts/appends to playlist |
-| Transition list row         | Live Transition Queue          | Appends/inserts into the queue |
+| Transition list row         | Transition Queue          | Appends/inserts into the queue |
 
 ---
 
 ## MIDI Mapping
 
-> MIDI is disabled by default. Enable it in **Preferences → MIDI Controls** ("Enable MIDI Subsystem") or via the **⋮** kebab menu next to Deep Edit's column headers ("MIDI Column").
+> MIDI is disabled by default. Enable it in **Preferences → MIDI Controls** ("Enable MIDI Subsystem") or via the **⋮** kebab menu next to Edit's column headers ("MIDI Column").
 
 Liquid LSD keeps hardware controller maps separate from visual presets, so you can swap physical controllers without touching your preset files.
 

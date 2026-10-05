@@ -2085,7 +2085,7 @@
 1. The parameter name, valid range, and factory default value.
 2. A plain-English description of what the parameter does.
 3. Any personal note you've attached to the parameter (in amber text).</p>
-<p>Macro knob tooltips show the value in the target parameter's real units, with the knob position as a percentage: <code>ZOOM: 5.00 (100%)</code>. The same real value is shown on the knob face (always while a row is in Deep Edit, otherwise on hover).</p>
+<p>Macro knob tooltips show the value in the target parameter's real units, with the knob position as a percentage: <code>ZOOM: 5.00 (100%)</code>. The same real value is shown on the knob face (always while a row is in Edit, otherwise on hover).</p>
 <p>Tooltips appear after a short delay (~250ms) so they don't flash annoyingly as you move the mouse.</p>
 <h3 id="the-three-tier-notes-system">The three-tier notes system</h3>
 <p>You can attach notes at three different scopes:</p>
@@ -2122,7 +2122,7 @@
 <p>Source Notes are global and persist no matter which preset you load — good for tips about generators that are always true. Preset and Parameter Notes travel with the preset file when you share it.</p>
 <h3 id="adding-and-editing-notes">Adding and editing notes</h3>
 <p><strong>Parameter notes:</strong>
-Hover over any parameter row in Deep Edit's parameter grid and click <strong>⋮</strong> (or right-click the parameter name), then choose <strong>Add/Edit Parameter Note...</strong></p>
+Hover over any parameter row in Edit's parameter grid and click <strong>⋮</strong> (or right-click the parameter name), then choose <strong>Add/Edit Parameter Note...</strong></p>
 <p><strong>Preset notes:</strong>
 Right-click the preset name label below the deck monitor preview and choose <strong>Add/Edit Preset Note...</strong></p>
 <p><strong>Source notes:</strong>
@@ -2134,7 +2134,7 @@ Open the Deck Menu popup and choose <strong>Add/Edit Source Note...</strong></p>
 <hr />
 <h2 id="fx-chain-slot-management">FX Chain &amp; Slot Management</h2>
 <p>Every deck and the master bus each own one FX chain of 3 serial ISF filter slots: a deck's chain is
-its <strong><code>FX</code></strong> sub-tab, and <strong>Master FX</strong> (the Mixer's <strong><code>FX</code></strong> sub-tab in Deep Edit) is applied to the
+its <strong><code>FX</code></strong> sub-tab, and <strong>Master FX</strong> (the Mixer's <strong><code>FX</code></strong> sub-tab in Edit) is applied to the
 final output after the crossfader. All five chains work the same way. Each chain has a <strong>Chain Super
 Knob</strong> and each slot its own <strong>Metaknob</strong> — see <a href="../macros_and_rack/">Macro Controls &amp; Performance Mode</a>
 for the FX Rack view that exposes these.</p>
@@ -2177,7 +2177,7 @@ for the FX Rack view that exposes these.</p>
 <li><strong>Bypass (bottom, power icon)</strong>: turns just that effect on or off. Row-coloured when on, red when bypassed, dim when the slot is empty. In Focus Mode, only the focused slot's bypass is shown, next to knob 1.</li>
 <li><strong>Effect Name</strong>: Truncated caption showing loaded filter. Click opens inline Browse on that slot's <code>FX1</code>/<code>FX2</code>/<code>FX3</code> sub-tab (Stock filters, ★ Favorites, and Saved <code>.lsdfx</code> presets). Browse opens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't open it.</li>
 <li><strong>Drag &amp; Drop</strong>: Drag an effect name onto another slot's name to swap/reorder (hold <code>Ctrl</code> while dropping to duplicate). Accepts stock ISF filters and <code>.lsdfx</code> single presets from Library.</li>
-<li><strong>Right-Click Context Menu</strong>: Focus Mode, Previous/Next in Shortlist, Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Deep Edit.</li>
+<li><strong>Right-Click Context Menu</strong>: Focus Mode, Previous/Next in Shortlist, Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Edit.</li>
 </ul>
 </li>
 <li><strong>Swap Gain Dip</strong>:<ul>
@@ -2306,7 +2306,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <p>To use the factory absolute mode instead, copy the profile to <code>library/controllers/</code> and set <code>"mode": "ABSOLUTE"</code> on the <code>knob</code> input (the app then tracks each change, and a knob can hit the end of its 0-127 range).</p>
 <p><a id="twister-layout"></a></p>
 <h4 id="what-the-knobs-control">What the knobs control</h4>
-<p><strong>The 16 knobs are the 16 knobs on screen.</strong> Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between <code>SRC</code> and <code>FX</code>, or focus a slot, with the mouse or the Twister and the same encoders follow. In Deep Edit the Twister follows the open module: knobs 1-4 control that module's 4 macro knobs (reflecting its active sub-tab, e.g. SRC or FX), while knobs 5-16 are inert. Deep Edit itself (the full 3-column parameter matrix) is opened and edited with the mouse; the controller only opens inline Browse pickers.</p>
+<p><strong>The 16 knobs are the 16 knobs on screen.</strong> Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between <code>SRC</code> and <code>FX</code>, or focus a slot, with the mouse or the Twister and the same encoders follow. In Edit the Twister follows the open module: knobs 1-4 control that module's 4 macro knobs (reflecting its active sub-tab, e.g. SRC or FX), while knobs 5-16 are inert. Edit itself (the full 3-column parameter matrix) is opened and edited with the mouse; the controller only opens inline Browse pickers.</p>
 <p>The Twister's four hardware <strong>banks</strong> pick the page shown on screen. Press a bank button (or use Previous/Next Bank) and the matrix changes with it; clicking a tab on screen moves the encoders to that page too, so screen and hardware always agree.</p>
 <table>
 <thead>
@@ -2463,7 +2463,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <tr>
 <td><strong>Library</strong></td>
 <td>leave the Library</td>
-<td>step the <strong>tab</strong> (Sources, FX, Trans)</td>
+<td>step the <strong>tab</strong> (Sources, FX, Transitions)</td>
 <td>step the <strong>pane</strong>: folder tree, list, BG queue, A/B queue</td>
 <td><strong>cursor</strong>: turn to move, tap to load</td>
 </tr>
@@ -2472,7 +2472,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <ul>
 <li><strong>Unsaved-changes prompt:</strong> when loading would discard edits on a deck, the prompt takes over the controller: <strong>left-top</strong> = Cancel, <strong>right-top</strong> or <strong>knob 1 tap</strong> = Save, <strong>right-bottom</strong> or <strong>Shift + tap</strong> = Discard. Nothing else navigates until you answer.</li>
 <li><strong>Picker:</strong> moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active. To pick for another deck or row, close the picker with <strong>left-top</strong> before touching the new row's knob.</li>
-<li><strong>Deep Edit:</strong> Left-top closes Deep Edit (collapsing the module bay back to Tier 1, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).</li>
+<li><strong>Edit:</strong> Left-top closes Edit (collapsing the module bay back to Tier 1, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).</li>
 <li><strong>Library:</strong> a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and <strong>Shift + tap</strong> adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.</li>
 <li><strong>Unified browser (default; the Library tab bar's "Unified" toggle turns it off):</strong> a fresh tab starts in the list. <strong>Right-bottom</strong> moves on to the queues and <strong>Shift +</strong> it goes back to the folder tree. In the tree, turning moves a cursor (an outline) over the visible folders and playlists without changing the list; a <strong>tap</strong> selects the folder or playlist under it, which fills the list and clears the list's selection. A playlist is just a tree entry, so there is no separate playlist pane.</li>
 <li>The FX queue transport commands (<code>fx.queue_next/prev</code>, <code>fx.bg_queue_next/prev</code>) have no free button in the built-in profile; map them in your own profile.</li>

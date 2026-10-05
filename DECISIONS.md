@@ -30,6 +30,11 @@ Contents: 1 Foundations · 2 Rendering and shaders · 3 One path for every chang
 
 ---
 
+## UI Terminology Pass: One Name per Thing (`ui/*`, `docs/user_guide/*`)
+- **Edit** is the name of the parameter editor (the old "Deep Edit" is gone from menus, tooltips, shortcuts and docs). The Library's tabs are **Sources**, **FX**, **Transitions** and **Banks** (was Maps).
+- **Queues:** **A/B Queue** and **BG Queue** (FX: **A/B FX Queue**, **BG FX Queue**), plus **Transition Queue**. "Play Queue" and "Live Queue" are retired. Output menu: **Record Output** and **Render Video (Offline)...**. Deck levels are **Level**, not Alpha. The crossfader row badge is `XF`; the wet/dry row stays `W/D` (it is per-deck chain wet/dry, not a send).
+- Glossary in `docs/user_guide/your_workspace.md`. Code identifiers (`PerformanceDeepEditBay`, `FX_SENDS`, `LibraryViewMode.MAPS`, ...) keep their old names on purpose; rename them separately, if ever.
+
 # 2. Rendering and shaders
 
 ## Everything is ISF; there are no hard-wired effect or mixer shaders

@@ -8,7 +8,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Manages the volatile Background Queue and single-deck Dip-to-Black transitions.
+ * Manages the volatile BG Queue and single-deck Dip-to-Black transitions.
  */
 object BgQueueManager {
     private val logger = KotlinLogging.logger {}

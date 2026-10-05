@@ -28,10 +28,10 @@ object FXQueueActionsPanel {
         val itemSpacingX = ImGui.getStyle().getItemSpacingX()
         val totalRightW = navBtnW * 2f + itemSpacingX
 
-        // Title Bar: "FX Queue (A/B)" on the left, "<", ">" buttons on the right
+        // Title Bar: "A/B FX Queue" on the left, "<", ">" buttons on the right
         ImGui.alignTextToFramePadding()
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("FX Queue (A/B)")
+            ImGui.text("A/B FX Queue")
         }
         ImGui.sameLine()
         val rightX = ImGui.getWindowContentRegionMaxX() - totalRightW
@@ -43,13 +43,13 @@ object FXQueueActionsPanel {
             if (ImGui.button("<##fxQueuePrev", navBtnW, 0f)) {
                 FXQueueManager.advancePrevious(session, mixer)
             }
-            itemTooltip("Trigger previous item in live FX Queue.")
+            itemTooltip("Trigger previous item in A/B FX Queue.")
 
             ImGui.sameLine()
             if (ImGui.button(">##fxQueueNext", navBtnW, 0f)) {
                 FXQueueManager.advanceNext(session, mixer)
             }
-            itemTooltip("Trigger next item in live FX Queue.")
+            itemTooltip("Trigger next item in A/B FX Queue.")
 
             ImGui.separator()
             ImGui.spacing()

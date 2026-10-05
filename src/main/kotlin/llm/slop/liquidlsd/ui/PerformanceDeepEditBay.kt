@@ -283,7 +283,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         if (deckLabel == null && !isMasterFx && !isMixerModule) {
             if (ownsKeyboard) handleDeepEditKeys(parametersState, mixer, fullSet = false)
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                ImGui.textDisabled("Deep Edit isn't available for this module.")
+                ImGui.textDisabled("Edit isn't available for this module.")
             }
             return
         }

@@ -61,7 +61,7 @@ class MixerPanel(
 
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
         ImGui.invisibleButton("##main_output_monitor", monitorBtnW, masterH.coerceAtLeast(1f))
-        itemTooltip("Main output monitor. Click to open Deep Edit (Master).")
+        itemTooltip("Main output monitor. Click to open Edit (Master).")
         if (ImGui.isItemClicked(0)) {
             parametersState.openFromMonitor(MacroEngine.MASTER, "Mixer")
         }

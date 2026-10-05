@@ -546,8 +546,8 @@ class PerformanceMatrixPanel {
                     ImGui.popID()
                 } else if (isTransRow) {
                     drawTitleBadge(
-                        session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "TR", UITheme.FontLevel.H1,
-                        tooltip = "Transitions Unit\nConfigure video crossfader and transition shaders"
+                        session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "XF", UITheme.FontLevel.H1,
+                        tooltip = "Transitions Unit\nCrossfader (XF): configure the video crossfade and transition shaders"
                     )
                     drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
                     if (!stripOn) PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, transRowW)
@@ -561,7 +561,7 @@ class PerformanceMatrixPanel {
                 } else if (descriptor.bankId == MacroEngine.FX_SENDS) {
                     drawTitleBadge(
                         session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "W/D", UITheme.FontLevel.H2,
-                        tooltip = "FX Wet/Dry Unit\nConfigure per-deck FX wet/dry send levels"
+                        tooltip = "FX Wet/Dry Unit\nConfigure per-deck FX wet/dry levels"
                     )
                     PerformanceFxSendsControls.drawRightControls(boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                 } else if (isDeckRow) {

@@ -34,8 +34,8 @@ object ShortcutManager {
         register(ShortcutAction("global.osc_map_mode", ShortcutCategory.GLOBAL, "Toggle OSC Map Mode", "Arms click-to-map on every OSC-learnable control; click one to map it, then click the next.", KeyCombination(GLFW_KEY_O, GLFW_MOD_CONTROL or GLFW_MOD_SHIFT)))
 
         // 2. Deep Edit & Modulation Matrix
-        register(ShortcutAction("parameters.save_deck", ShortcutCategory.PARAMETERS, "Save Active Deck Preset", "Saves the preset of the deck open in Deep Edit (opens Save As if untitled).", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL)))
-        register(ShortcutAction("parameters.save_deck_as", ShortcutCategory.PARAMETERS, "Save Active Deck Preset As...", "Opens Save As modal for the deck open in Deep Edit.", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL or GLFW_MOD_SHIFT)))
+        register(ShortcutAction("parameters.save_deck", ShortcutCategory.PARAMETERS, "Save Active Deck Preset", "Saves the preset of the deck open in Edit (opens Save As if untitled).", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL)))
+        register(ShortcutAction("parameters.save_deck_as", ShortcutCategory.PARAMETERS, "Save Active Deck Preset As...", "Opens Save As modal for the deck open in Edit.", KeyCombination(GLFW_KEY_S, GLFW_MOD_CONTROL or GLFW_MOD_SHIFT)))
         register(ShortcutAction("parameters.undo", ShortcutCategory.PARAMETERS, "Undo Parameter Action", "Reverts last parameter tweak, randomize, paste, or reset.", KeyCombination(GLFW_KEY_Z, GLFW_MOD_CONTROL)))
         register(ShortcutAction("parameters.copy", ShortcutCategory.PARAMETERS, "Copy Cell or Row", "Copies modulation routing (or row settings if Base/Final cell is selected).", KeyCombination(GLFW_KEY_C, GLFW_MOD_CONTROL)))
         register(ShortcutAction("parameters.paste", ShortcutCategory.PARAMETERS, "Paste Cell or Row", "Applies copied modulators or parameter settings with an undo point.", KeyCombination(GLFW_KEY_V, GLFW_MOD_CONTROL)))
@@ -45,8 +45,8 @@ object ShortcutManager {
         register(ShortcutAction("properties.step_value", ShortcutCategory.PROPERTIES, "Step Numeric Value (Focused Input)", "Increments/decrements focused number box (\u00B10.001 fine, Shift \u00B10.01, Ctrl+Shift \u00B10.1).", KeyCombination(GLFW_KEY_UP), allowConflict = true))
 
         // 4. Library & Asset Browser
-        register(ShortcutAction("library.queue_ab", ShortcutCategory.LIBRARY, "Add to A/B Queue", "Appends selected preset to the A/B Play Queue.", KeyCombination(GLFW_KEY_Q)))
-        register(ShortcutAction("library.queue_bg", ShortcutCategory.LIBRARY, "Add to Background Queue", "Appends selected preset to the Background Queue (BG).", KeyCombination(GLFW_KEY_Q, GLFW_MOD_SHIFT)))
+        register(ShortcutAction("library.queue_ab", ShortcutCategory.LIBRARY, "Add to A/B Queue", "Appends selected preset to the A/B Queue.", KeyCombination(GLFW_KEY_Q)))
+        register(ShortcutAction("library.queue_bg", ShortcutCategory.LIBRARY, "Add to BG Queue", "Appends selected preset to the BG Queue (BG).", KeyCombination(GLFW_KEY_Q, GLFW_MOD_SHIFT)))
         register(ShortcutAction("library.navigate", ShortcutCategory.LIBRARY, "Navigate List Items", "Moves focus selection across presets, playlists, and queue items.", KeyCombination(GLFW_KEY_UP), allowConflict = true))
         register(ShortcutAction("library.delete_asset", ShortcutCategory.LIBRARY, "Delete Preset / Remove Queue Item", "Deletes selected user preset or removes item from queue.", KeyCombination(GLFW_KEY_DELETE), allowConflict = true))
 

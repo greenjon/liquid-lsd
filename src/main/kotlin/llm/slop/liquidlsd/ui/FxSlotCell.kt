@@ -394,7 +394,7 @@ object FxSlotCell {
             }
         }
         ImGui.separator()
-        if (ImGui.menuItem("Edit in Deep Edit")) onEditInDeepEdit()
+        if (ImGui.menuItem("Open in Edit")) onEditInDeepEdit()
         popOpenDropdownFont()
         ImGui.endPopup()
         popOpenDropdownPadding()

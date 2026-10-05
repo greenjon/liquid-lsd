@@ -41,7 +41,7 @@ The sharing method depends on your platform:
 
 ## Recording Your Set (REC)
 
-Press **`Ctrl+R`** (or go to **Output → Record Master Output**) to start recording. A red `REC mm:ss` badge appears on the title bar while recording is active, along with a dropped-frame counter.
+Press **`Ctrl+R`** (or go to **Output → Record Output**) to start recording. A red `REC mm:ss` badge appears on the title bar while recording is active, along with a dropped-frame counter.
 
 Press the same shortcut again, or click **Stop Recording**, to finish. The output file lands in the `recordings/` folder as an MP4, named with the date and time (e.g. `liquid_lsd_2026-09-01_20-15-00.mp4`).
 
@@ -55,7 +55,7 @@ You can also map the `REC` toggle to a MIDI controller button so you never have 
 
 The Offline Render Studio is for making video content — music videos, promotional visuals, or anything where quality matters more than real-time speed. It renders frame by frame at whatever resolution and frame rate you like, fully decoupled from the clock.
 
-Open it via **Output → Export Video (Offline Studio)...**.
+Open it via **Output → Render Video (Offline)...**.
 
 ### What you can set
 

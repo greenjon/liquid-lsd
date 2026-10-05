@@ -3,7 +3,7 @@
 Macro Controls give you a small number of physical-style knobs that each drive several
 parameters at once — the fast, tactile layer you reach for live instead of hunting through
 parameter grids. Performance Mode builds on the same macro system to give you a 4×4 knob matrix
-purpose-built for live performance, with Deep Edit underneath for everything else.
+purpose-built for live performance, with Edit underneath for everything else.
 
 ---
 
@@ -28,9 +28,9 @@ than offering targets.
 1. Click **`Add Target`** on a macro knob. It starts pulsing to show it's armed, and a banner
    appears: *"ADD TARGET: Click any parameter slider or modulator property."*
 2. Click the target:
-   - A parameter slider in a Deep Edit **parameter grid** becomes a target through that
+   - A parameter slider in a Edit **parameter grid** becomes a target through that
      parameter's base value.
-   - A modulator control in Deep Edit's **Properties** column — e.g. an LFO's Subdivision or
+   - A modulator control in Edit's **Properties** column — e.g. an LFO's Subdivision or
      Morph slider, or an envelope's Attack/Decay — becomes a target directly.
      This lets a macro knob speed up an LFO or shorten an envelope's decay, not just move a value.
 3. A toast confirms the target (e.g. *"Added target: Knob 3 → Zoom [LFO 1 Morph]"*) and Add Target
@@ -46,7 +46,7 @@ A knob can only target parameters in **its own deck and section**:
 
 If you click a parameter outside that section, the banner says *"Cannot add target…"* and Add Target stays
 armed, so you can click the right one. If you move to another section while Add Target is armed, it
-is cancelled. That includes Deep Edit's SRC/FX tabs, the side rail, and a Deck
+is cancelled. That includes Edit's SRC/FX tabs, the side rail, and a Deck
 row's `[SRC]`/`[FX]` pills. Master, Transitions and FX Sends knobs aren't limited this way.
 
 Each knob can hold up to **4 targets**, so one knob can drive several parameters (or modulator
@@ -55,7 +55,7 @@ properties) simultaneously — with independent settings per target.
 ### Editing a target
 
 Selecting a knob shows its targets in the target strip (Edit view) and in the Properties
-editor of the open Deep Edit. For each target you can set:
+editor of the open Edit. For each target you can set:
 
 - **Min / Max** — the travel range the target maps onto, independent of the target's own range.
 - **Curve** — Linear, Exponential, Logarithmic, S-Curve, or Step (quantized into a fixed number
@@ -81,13 +81,13 @@ editor of the open Deep Edit. For each target you can set:
   manual/mouse editing; toggling it back on resumes macro control.
 
 The **target name** (e.g. `Deck A/Mandala/L1`) is a clickable link. Clicking it opens the
-corresponding deck's (or the Mixer's) Deep Edit on the right sub-tab with the parameter selected,
+corresponding deck's (or the Mixer's) Edit on the right sub-tab with the parameter selected,
 so you can immediately reach the parameter being controlled without hunting for it manually.
 
 ### Locked fields & Visual Indicators
 
 Any parameter base value or modulator property that is the target of an enabled macro knob
-receives distinct visual cues in Deep Edit:
+receives distinct visual cues in Edit:
 
 - **Parameter grid**:
   - The row displays an **Electric Cyan left-accent border** and a subtle cyan background tint.
@@ -141,13 +141,13 @@ dedicated **FX Rack** view — a Traktor/Mixxx-style Super Knob + Metaknob strip
 own FX chain. Unlike the old shared FX1/FX2 banks, each deck's FX chain is always available
 regardless of what the other decks are doing.
 
-Deep Edit and the macro strip always point at the same deck and section:
+Edit and the macro strip always point at the same deck and section:
 
-- Opening a deck's Deep Edit anywhere (its row's `[EDIT]`, the side rail, the **SRC / FX** tabs)
+- Opening a deck's Edit anywhere (its row's `[EDIT]`, the side rail, the **SRC / FX** tabs)
   focuses that deck and section.
 - A Performance row's `[SRC]` / `[FX]` pill also switches that deck's section.
 
-The same applies to the other decks and Master (**MST**, **TRANS** and **MST FX** match Deep Edit's
+The same applies to the other decks and Master (**MST**, **TRANS** and **MST FX** match Edit's
 Mixer **CTRL**, **TRANS** and **FX** tabs).
 
 ### Who wins when several things drive the same value
@@ -200,7 +200,7 @@ build. If this turns out to matter in practice for your hardware workflow, it's 
 Performance Mode is the app's main view: a **4×4 Macro Knob Matrix** — 16 knobs arranged in 4
 rows across 4 columns, color-coded by deck — on the left, with the Mixer column (Column 3) and
 Library dock alongside. (Earlier versions also had a "Classic" Parameters/Properties view,
-toggled with `F4`; everything it did now lives in Deep Edit, below.)
+toggled with `F4`; everything it did now lives in Edit, below.)
 
 The active tab is remembered between sessions in application preferences.
 
@@ -293,7 +293,7 @@ Controls actively armed for MIDI learn display a pulsing cyan highlight border. 
 Knobs in the 4×4 matrix, the target strip and the hardware controller all read from and
 write to the **same underlying `MacroEngine` banks** — changes in one are immediately visible in the others.
 
-### The Modular Rack: Deep Edit
+### The Modular Rack: Edit
 
 Every deep-editable row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Master, Transitions)
 has a small **`[EDIT]` button** in its top-right corner (FX Wet/Dry is a dedicated 4-knob macro row with no button). Clicking it toggles that row
@@ -303,26 +303,26 @@ between two disclosure tiers, without leaving Performance Mode:
    above. The `[EDIT]` button has a dark fill and off-white text. Clicking a knob selects it (electric cyan focus card, glowing rim, cyan label), shows
    its current value (`Val: 0.00`) beneath the label, and reveals a compact `[Add Target]` / `[Cancel]`
    button for adding a target on the spot.
-2. **Deep Edit** — click `[EDIT]` to open the comprehensive Deep Edit bay below the top macro row.
+2. **Edit** — click `[EDIT]` to open the comprehensive Edit bay below the top macro row.
    The `[EDIT]` button turns green with black text while active.
    The bay is arranged into a 3-column layout:
    - **5-Channel Side Rail** on the left: color-coded buttons (`[MIX]`, `[A]`, `[B]`, `[BG]`, `[PV]`)
-     allowing instant 1-click navigation between all major sections of the app without closing Deep Edit.
+     allowing instant 1-click navigation between all major sections of the app without closing Edit.
      Selecting a side tab switches both the parameter editor below and the top macro row above.
    - **Parameter Grid** in the center: displays the full **VAL / MIDI / LFO / SEQ / AUD** parameter grid
      with section subtabs across the top. All 5 sections feature a uniform 3-tab layout with **`FX` in the center**:
      - **`MIX`**: `[ CTRL ]  [ FX ]  [ TRANS ]` (Master controls, the Master FX chain's 3 ISF slots, and Transitions)
      - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]` (visual generator with Gain/Zoom/Rotate Z, and the insert FX chain)
-     Switching between `SRC`/`CTRL` and `FX` in Deep Edit automatically switches the on-screen macro knobs (and corresponding `[SRC]` / `[FX]` pill highlight) between visual source controls and insert/master FX macros (`Super Knob + 3 Metaknobs`). Source and FX chain controls on the deck's performance row remain available simultaneously.
+     Switching between `SRC`/`CTRL` and `FX` in Edit automatically switches the on-screen macro knobs (and corresponding `[SRC]` / `[FX]` pill highlight) between visual source controls and insert/master FX macros (`Super Knob + 3 Metaknobs`). Source and FX chain controls on the deck's performance row remain available simultaneously.
    - **Properties Editor** on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.
 
-   If the deck is **empty**, Deep Edit shows the empty-deck card instead: **Add Source** (opens
+   If the deck is **empty**, Edit shows the empty-deck card instead: **Add Source** (opens
    Browse, see below, including external video), **Load Preset**, and **Open Library Panel**.
 
 ### Browse: picking a generator, FX or transition without leaving the row
 
 Clicking a generator/preset badge, an FX chain's name, an FX slot's name, or the active transition's
-name opens **Browse** in that row's bay — the same place Deep Edit's parameter grid shows, with the
+name opens **Browse** in that row's bay — the same place Edit's parameter grid shows, with the
 other rows collapsed the same way. Nothing covers the mixer or the deck/master monitors; you keep
 watching the show while you pick.
 
@@ -348,28 +348,28 @@ watching the show while you pick.
   and lists only what it can take. **Clear Slot** / **Clear Chain** above the browser empties the
   target, and **External video...** (SRC tab) picks a live video stream.
 
-**Keyboard shortcuts in Deep Edit**: `Ctrl+C` / `Ctrl+V` (copy/paste a cell or row), `Delete` /
+**Keyboard shortcuts in Edit**: `Ctrl+C` / `Ctrl+V` (copy/paste a cell or row), `Delete` /
 `Backspace` (clear the cell's modulators, or reset the parameter), and `Ctrl+S` / `Shift+Ctrl+S`
-(save / save-as the deck being edited) act on the open Deep Edit. Copy/paste/clear only fire while the
+(save / save-as the deck being edited) act on the open Edit. Copy/paste/clear only fire while the
 Performance panel has focus, so `Delete` in the Library doesn't also reset a parameter. `Ctrl+Z`
-(undo) works anywhere in Performance Mode, with or without Deep Edit open.
+(undo) works anywhere in Performance Mode, with or without Edit open.
 
-**While in Deep Edit**, the top macro row renders the macro controls corresponding to the active channel and subtab,
+**While in Edit**, the top macro row renders the macro controls corresponding to the active channel and subtab,
 reserving the freed vertical space for the side rail and parameter bay. The row keeps the same knob size and control
 positions it has in the four-row view; it only grows by one line under each knob for the value readout (and the
 **Add Target** button under the selected knob). There's no separate title above the parameters, since the row says which
 deck and section you're editing.
 Collapsing back to Faceplate brings the rest of the 4×4 grid, and the Library, back. While
-Deep Edit is open the Library is hidden completely (the **Edit** view — see
+Edit is open the Library is hidden completely (the **Edit** view — see
 [Your Workspace](your_workspace.md)).
 
 Click **`[EDIT]`** again (or press Esc) to fold back to the Faceplate.
 
-**Opening Deep Edit from Confidence Monitors**:
-In addition to the row's `[EDIT]` button, clicking any preview monitor in Column 3 (Deck A, Deck B, Deck BG, Deck PV, or Main Output Master) will immediately open Deep Edit focused directly on that module. This swaps the Deep Edit bay from your current deck to the clicked deck without needing to scroll or find the row's button.
+**Opening Edit from Confidence Monitors**:
+In addition to the row's `[EDIT]` button, clicking any preview monitor in Column 3 (Deck A, Deck B, Deck BG, Deck PV, or Main Output Master) will immediately open Edit focused directly on that module. This swaps the Edit bay from your current deck to the clicked deck without needing to scroll or find the row's button.
 
-**One Deep Edit at a time**: opening a row's Deep Edit collapses any other open one. To move
-between decks, use the Deep Edit side rail (**MIX / A / B / BG / PV**) rather than opening
+**One Edit at a time**: opening a row's Edit collapses any other open one. To move
+between decks, use the Edit side rail (**MIX / A / B / BG / PV**) rather than opening
 rows side by side.
 
 **Esc** collapses every expanded row back to the Faceplate — unless a Learn is currently
@@ -377,20 +377,20 @@ armed (Add Target, MIDI Learn or OSC Learn), in which case Esc cancels every arm
 row whose own knob has an armed Add Target is also exempt from the auto-collapse, so it can't
 be accidentally folded away mid-way; a **"Adding target: ‹name› — Esc to cancel"** indicator stays
 visible in the toolbar the whole time Add Target is armed, even if you've expanded a different row.
-**View → Close Deep Edit** does the same as the row's `[EDIT]` button.
+**View → Close Edit** does the same as the row's `[EDIT]` button.
 
 Expanding or collapsing a row is purely a display change — it never re-syncs the Super Knob/Metaknob mapping.
 
 ### Setting up knob labels and targets
 
 Targets are edited in the **Edit** view, in the target strip described above (rename,
-target chips, Min/Max/Curve/Invert/Link/Enabled) and in the Properties editor of the open Deep Edit.
-Clicking a target's name opens that deck's (or the Mixer's) Deep Edit on the right sub-tab
+target chips, Min/Max/Curve/Invert/Link/Enabled) and in the Properties editor of the open Edit.
+Clicking a target's name opens that deck's (or the Mixer's) Edit on the right sub-tab
 with the parameter selected.
 
 - **From the 4×4 matrix**: click a knob to select it, then click **`Add Target`** (on the target strip,
   or the inline button in the Perform view). This arms Add Target and opens that row's
-  **Deep Edit** *Params* — click a target parameter and set Min/Max/Curve as desired. The target
+  **Edit** *Params* — click a target parameter and set Min/Max/Curve as desired. The target
   must be in the knob's own deck and section (see *Adding targets to a knob* above).
 
 The change is live immediately everywhere, since all views share the same `MacroEngine` banks.
@@ -412,7 +412,7 @@ There are 12 always-resident canonical macro banks (4 knobs each, conforming to 
 | | Deck BG FX | 4 | `deckBG_fx` | Super Knob + 3 Metaknobs |
 | | Deck PV FX | 4 | `deckPV_fx` | Super Knob + 3 Metaknobs |
 | **Mixer & Transitions**| Transitions | 4 | `trans` | Crossfade, Type, Speed, Next |
-| | Master | 4 | `master` | Alpha A, Alpha B, Master Level, Crossfader |
+| | Master | 4 | `master` | Level A, Level B, Master Level, Crossfader |
 | **Master FX** | FX Wet/Dry | 4 | `fxSends` | Deck A, B, BG, PV Insert FX Wet/Dry Levels |
 | | Master FX | 4 | `masterFx` | Super Knob + 3 Metaknobs |
 
@@ -440,11 +440,11 @@ When swapping visual sources on any deck (via the generator badge or launchpad),
   - `Save as Default for <Generator>`: Saves current parameters, alpha, and 4-knob macro layout as the generator default.
   - `Apply Default Now`: Reapplies the default layout and parameters to the current deck.
   - `Reset to Factory Default`: Deletes the user default file and restores curated/heuristic factory defaults.
-- Alternatively, open the **Save menu** in Deep Edit's monitor toolbar and select `Save as Default for <Generator>`.
+- Alternatively, open the **Save menu** in Edit's monitor toolbar and select `Save as Default for <Generator>`.
 
 ### Explicit ISF FX Defaults
 
-In the FX Chain Macro Strip (and Deep Edit FX views), slot Metaknobs and parameters can be customized and explicitly saved:
+In the FX Chain Macro Strip (and Edit FX views), slot Metaknobs and parameters can be customized and explicitly saved:
 - Tweaking parameters or re-targeting Metaknobs during performance is purely temporary and does **not** silently overwrite defaults on disk.
 - **Right-click any Metaknob** in the FX strip:
   - Select any parameter from the list (or `Target Dry/Wet (safety net)`) to retarget the Metaknob.

@@ -43,7 +43,7 @@ object RackUnit {
         }
         llm.slop.liquidlsd.ui.PerformanceColors.popActiveToggleStyle()
         itemTooltip(
-            if (isExpanded) "Deep Edit is active. Click to close." else "Click to open Deep Edit parameter editor."
+            if (isExpanded) "Edit is active. Click to close." else "Click to open the parameter editor."
         )
     }
 
@@ -64,7 +64,7 @@ object RackUnit {
         }
         llm.slop.liquidlsd.ui.PerformanceColors.popActiveToggleStyle()
         itemTooltip(
-            if (isExpanded) "Deep Edit is active. Click to close." else "Click to open Deep Edit parameter editor."
+            if (isExpanded) "Edit is active. Click to close." else "Click to open the parameter editor."
         )
     }
 

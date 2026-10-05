@@ -56,7 +56,7 @@ object QueueActionsPanel {
             if (ImGui.button("<##queuePrev", navBtnW, 0f)) {
                 session.playQueueManager.triggerPrevious(mixer)
             }
-            itemTooltip("Trigger previous preset in Play Queue (Mixer/queuePrev).")
+            itemTooltip("Trigger previous preset in A/B Queue (Mixer/queuePrev).")
 
             ImGui.sameLine()
             val autoVjActive = session.playQueueManager.isAutoVJEnabled
@@ -74,7 +74,7 @@ object QueueActionsPanel {
             if (ImGui.button(">##queueNext", navBtnW, 0f)) {
                 session.playQueueManager.triggerNext(mixer)
             }
-            itemTooltip("Trigger next preset in Play Queue (Mixer/queueNext).")
+            itemTooltip("Trigger next preset in A/B Queue (Mixer/queueNext).")
 
             ImGui.separator()
             ImGui.spacing()
@@ -290,7 +290,7 @@ object QueueActionsPanel {
                     }
                     ImGui.separator()
                 }
-                val bgLabel = if (count > 1) "Add $count Presets to Background Queue" else "Add to Background Queue"
+                val bgLabel = if (count > 1) "Add $count Presets to BG Queue" else "Add to BG Queue"
                 if (ImGui.menuItem(bgLabel)) {
                     targetIndices.forEach { idx ->
                         val f = session.playQueueManager.queue.getOrNull(idx)

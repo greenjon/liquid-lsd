@@ -74,7 +74,7 @@ object Lfo2Section {
                 ))
             }
         }
-        itemTooltip(if (lfo2Bypassed) "Enable LFO 2 (Active)" else "Bypass LFO 2")
+        itemTooltip(if (lfo2Bypassed) "Unmute LFO 2" else "Mute LFO 2")
         ImGui.popStyleColor(4)
 
         // 2. Dice button for LFO 2

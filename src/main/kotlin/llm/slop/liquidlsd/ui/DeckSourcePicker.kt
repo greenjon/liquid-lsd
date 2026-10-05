@@ -148,7 +148,7 @@ object DeckSourcePicker {
                     }
                 }
                 ImGui.separator()
-                if (ImGui.menuItem("Open Library Panel...##launchpad_open_lib")) {
+                if (ImGui.menuItem("Open Library...##launchpad_open_lib")) {
                     LibraryPanel.show(session)
                     session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
                 }

@@ -35,7 +35,7 @@ import java.io.File
  * Transition row helpers for the unified browser: stock ISF transition shaders
  * and saved transition presets (.lsdtrans) in one filterable list, mirroring
  * FXBrowserPanel's stock/saved merge. Unlike FX_STOCK filters, stock transitions
- * support Add to Live Queue / Add to Playlist same as saved presets — only
+ * support Add to A/B Queue / Add to Playlist same as saved presets — only
  * Rename/Clone/Delete (file lifecycle ops) are preset-only.
  */
 object TransitionBrowserPanel {
@@ -158,7 +158,7 @@ object TransitionBrowserPanel {
         if (ImGui.menuItem("Apply to Mixer")) {
             applyToMixer(session, mixer, asset)
         }
-        if (ImGui.menuItem("Add to Live Queue")) {
+        if (ImGui.menuItem("Add to A/B Queue")) {
             TransitionQueueManager.appendToQueue(fileFor(asset))
         }
         val activePlFile = LibraryPanel.selectedTransitionPlaylistFile

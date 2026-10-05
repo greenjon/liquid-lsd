@@ -137,21 +137,21 @@ internal object PerformanceMasterControls {
             parametersState.setDisclosure("master", ParametersState.DisclosureLevel.DEEP_EDIT)
             ctx.focusDeepEditTab(parametersState, MacroEngine.MASTER)
         }
-        itemTooltip("Composite mix levels: Deck A, Deck B, Deck BG alphas and Master output level.\nClick to inspect in Deep Edit. Right-click to reset levels.")
+        itemTooltip("Composite mix levels: Deck A, Deck B, Deck BG levels and Master output level.\nClick to inspect in Edit. Right-click to reset levels.")
 
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_mix_badge_ctx")) {
             pushOpenDropdownFont()
             ImGui.textDisabled("Master Mix Levels")
             ImGui.separator()
-            if (ImGui.menuItem("Inspect in Deep Edit")) {
+            if (ImGui.menuItem("Inspect in Edit")) {
                 llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "CTRL")
                 parametersState.activeMixerSubTab = "CTRL"
                 parametersState.setDisclosure("master", ParametersState.DisclosureLevel.DEEP_EDIT)
                 ctx.focusDeepEditTab(parametersState, MacroEngine.MASTER)
             }
             ImGui.separator()
-            if (ImGui.menuItem("Reset Deck Alphas to 100%")) {
+            if (ImGui.menuItem("Reset Deck Levels to 100%")) {
                 mixer.levelA.baseValue = 1.0f
                 mixer.levelB.baseValue = 1.0f
                 mixer.levelBG.baseValue = 1.0f
@@ -159,7 +159,7 @@ internal object PerformanceMasterControls {
             if (ImGui.menuItem("Reset Master Level to 100%")) {
                 mixer.masterLevel.baseValue = 1.0f
             }
-            if (ImGui.menuItem("Reset All (Alphas & Master) to 100%")) {
+            if (ImGui.menuItem("Reset All (Deck & Master Levels) to 100%")) {
                 mixer.levelA.baseValue = 1.0f
                 mixer.levelB.baseValue = 1.0f
                 mixer.levelBG.baseValue = 1.0f
@@ -201,7 +201,7 @@ internal object PerformanceMasterControls {
                 mixer.levelBG.baseValue = 1.0f
                 mixer.masterLevel.baseValue = 1.0f
             }
-            if (ImGui.menuItem("Reset Deck Alphas Only")) {
+            if (ImGui.menuItem("Reset Deck Levels Only")) {
                 mixer.levelA.baseValue = 1.0f
                 mixer.levelB.baseValue = 1.0f
                 mixer.levelBG.baseValue = 1.0f

@@ -74,7 +74,7 @@ Hovering over almost any parameter in the app shows a tooltip with:
 2. A plain-English description of what the parameter does.
 3. Any personal note you've attached to the parameter (in amber text).
 
-Macro knob tooltips show the value in the target parameter's real units, with the knob position as a percentage: `ZOOM: 5.00 (100%)`. The same real value is shown on the knob face (always while a row is in Deep Edit, otherwise on hover).
+Macro knob tooltips show the value in the target parameter's real units, with the knob position as a percentage: `ZOOM: 5.00 (100%)`. The same real value is shown on the knob face (always while a row is in Edit, otherwise on hover).
 
 Tooltips appear after a short delay (~250ms) so they don't flash annoyingly as you move the mouse.
 
@@ -93,7 +93,7 @@ Source Notes are global and persist no matter which preset you load — good for
 ### Adding and editing notes
 
 **Parameter notes:**
-Hover over any parameter row in Deep Edit's parameter grid and click **⋮** (or right-click the parameter name), then choose **Add/Edit Parameter Note...**
+Hover over any parameter row in Edit's parameter grid and click **⋮** (or right-click the parameter name), then choose **Add/Edit Parameter Note...**
 
 **Preset notes:**
 Right-click the preset name label below the deck monitor preview and choose **Add/Edit Preset Note...**
@@ -114,7 +114,7 @@ If no preset is loaded yet (the deck is in an unsaved state), the label shows `U
 ## FX Chain & Slot Management
 
 Every deck and the master bus each own one FX chain of 3 serial ISF filter slots: a deck's chain is
-its **`FX`** sub-tab, and **Master FX** (the Mixer's **`FX`** sub-tab in Deep Edit) is applied to the
+its **`FX`** sub-tab, and **Master FX** (the Mixer's **`FX`** sub-tab in Edit) is applied to the
 final output after the crossfader. All five chains work the same way. Each chain has a **Chain Super
 Knob** and each slot its own **Metaknob** — see [Macro Controls & Performance Mode](macros_and_rack.md)
 for the FX Rack view that exposes these.
@@ -151,7 +151,7 @@ for the FX Rack view that exposes these.
     - **Bypass (bottom, power icon)**: turns just that effect on or off. Row-coloured when on, red when bypassed, dim when the slot is empty. In Focus Mode, only the focused slot's bypass is shown, next to knob 1.
     - **Effect Name**: Truncated caption showing loaded filter. Click opens inline Browse on that slot's `FX1`/`FX2`/`FX3` sub-tab (Stock filters, ★ Favorites, and Saved `.lsdfx` presets). Browse opens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't open it.
     - **Drag & Drop**: Drag an effect name onto another slot's name to swap/reorder (hold `Ctrl` while dropping to duplicate). Accepts stock ISF filters and `.lsdfx` single presets from Library.
-    - **Right-Click Context Menu**: Focus Mode, Previous/Next in Shortlist, Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Deep Edit.
+    - **Right-Click Context Menu**: Focus Mode, Previous/Next in Shortlist, Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Edit.
   - **Swap Gain Dip**:
     - Replacing an effect or loading a chain applies a smooth audio/visual gain dip (fade out -> swap -> fade in) instead of a hard cut.
     - Duration is customizable in Preferences (`FX Swap Fade (ms)`, 0–1000 ms, default 150 ms; 0 = immediate hard cut).
@@ -281,7 +281,7 @@ To use the factory absolute mode instead, copy the profile to `library/controlle
 <a id="twister-layout"></a>
 #### What the knobs control
 
-**The 16 knobs are the 16 knobs on screen.** Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between `SRC` and `FX`, or focus a slot, with the mouse or the Twister and the same encoders follow. In Deep Edit the Twister follows the open module: knobs 1-4 control that module's 4 macro knobs (reflecting its active sub-tab, e.g. SRC or FX), while knobs 5-16 are inert. Deep Edit itself (the full 3-column parameter matrix) is opened and edited with the mouse; the controller only opens inline Browse pickers.
+**The 16 knobs are the 16 knobs on screen.** Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between `SRC` and `FX`, or focus a slot, with the mouse or the Twister and the same encoders follow. In Edit the Twister follows the open module: knobs 1-4 control that module's 4 macro knobs (reflecting its active sub-tab, e.g. SRC or FX), while knobs 5-16 are inert. Edit itself (the full 3-column parameter matrix) is opened and edited with the mouse; the controller only opens inline Browse pickers.
 
 The Twister's four hardware **banks** pick the page shown on screen. Press a bank button (or use Previous/Next Bank) and the matrix changes with it; clicking a tab on screen moves the encoders to that page too, so screen and hardware always agree.
 
@@ -342,11 +342,11 @@ The three side buttons other than Shift change meaning with the view:
 |---|---|---|---|---|
 | **Perform** | back (same as Esc) | open the **Library** | open the **picker** for the row of the knob you touched last | normal knob |
 | **Picker open** | close the picker | step the pane: folders, list, queues | nothing; **Shift +** it clears the slot or chain | **cursor** in the active pane: turn to move; tap applies the list row, or selects a folder and jumps to the list |
-| **Library** | leave the Library | step the **tab** (Sources, FX, Trans) | step the **pane**: folder tree, list, BG queue, A/B queue | **cursor**: turn to move, tap to load |
+| **Library** | leave the Library | step the **tab** (Sources, FX, Transitions) | step the **pane**: folder tree, list, BG queue, A/B queue | **cursor**: turn to move, tap to load |
 
 - **Unsaved-changes prompt:** when loading would discard edits on a deck, the prompt takes over the controller: **left-top** = Cancel, **right-top** or **knob 1 tap** = Save, **right-bottom** or **Shift + tap** = Discard. Nothing else navigates until you answer.
 - **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active. To pick for another deck or row, close the picker with **left-top** before touching the new row's knob.
-- **Deep Edit:** Left-top closes Deep Edit (collapsing the module bay back to Tier 1, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).
+- **Edit:** Left-top closes Edit (collapsing the module bay back to Tier 1, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).
 - **Library:** a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and **Shift + tap** adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.
 - **Unified browser (default; the Library tab bar's "Unified" toggle turns it off):** a fresh tab starts in the list. **Right-bottom** moves on to the queues and **Shift +** it goes back to the folder tree. In the tree, turning moves a cursor (an outline) over the visible folders and playlists without changing the list; a **tap** selects the folder or playlist under it, which fills the list and clears the list's selection. A playlist is just a tree entry, so there is no separate playlist pane.
 - The FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in profile; map them in your own profile.

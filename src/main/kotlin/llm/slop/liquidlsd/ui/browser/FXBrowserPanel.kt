@@ -36,7 +36,7 @@ import java.io.File
  * Unified FX browser for the Library: stock ISF filters, saved single FX
  * presets (.lsdfx), and saved FX chains (.lsdfxchain) in one filterable list.
  * Stock filters carry no persisted parameters, so they only support "Load to
- * Deck" — never "Add to Playlist"/"Add to Live Queue" (those are reserved for
+ * Deck" — never "Add to Playlist"/"Add to A/B Queue" (those are reserved for
  * saved singles/chains, which have reproducible state).
  */
 object FXBrowserPanel {
@@ -289,7 +289,7 @@ object FXBrowserPanel {
                     }
                 }
                 ImGui.separator()
-                if (ImGui.menuItem("Add to Live FX Queue (A/B)")) {
+                if (ImGui.menuItem("Add to A/B FX Queue")) {
                     FXQueueManager.appendToQueue(file)
                 }
                 if (ImGui.menuItem("Add to BG FX Queue")) {
@@ -326,7 +326,7 @@ object FXBrowserPanel {
                     }
                 }
                 ImGui.separator()
-                if (ImGui.menuItem("Add to Live FX Queue (A/B)")) {
+                if (ImGui.menuItem("Add to A/B FX Queue")) {
                     FXQueueManager.appendToQueue(file)
                 }
                 if (ImGui.menuItem("Add to BG FX Queue")) {

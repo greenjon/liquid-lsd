@@ -9,14 +9,14 @@ Liquid LSD has a lot going on, but it's organized around a handful of core ideas
 The Library panel spans the left and middle columns of the app. That column has three views:
 
 - **Perform** — The Performance rows sit above the Library, which fills the lower half. This is the everyday view for playing a set.
-- **Edit** — Open a row's **Deep Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Swap a deck's source or FX from the controls on the row itself. Press **Esc** or click the row's **Collapse** button to get back to Perform.
+- **Edit** — Open a row's **Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Swap a deck's source or FX from the controls on the row itself. Press **Esc** or click the row's **Collapse** button to get back to Perform.
 - **Library** — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.
 
-Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Deep Edit (cancelling any armed Add Target or Learn) and brings the Library back.
+Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Edit (cancelling any armed Add Target or Learn) and brings the Library back.
 
 In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.
 
-The Library contains your **Presets**, **Playlists**, and **Play Queues** — not shaders (those are managed separately under **Preferences → Shader Locations**).
+The Library contains your **Presets**, **Playlists**, and **A/B Queues** — not shaders (those are managed separately under **Preferences → Shader Locations**).
 
 ---
 
@@ -53,8 +53,8 @@ The top of the left and middle columns is the **Performance panel**: a 4×4 grid
 one row per deck or section, with tabs across the top (DECKS and
 MASTER). Click a deck row's generator badge to change its visual source.
 
-For full control, open a row's **Deep Edit** (the chevron on the row, or click a deck monitor in
-the Mixer). Deep Edit has three columns:
+For full control, open a row's **Edit** (the chevron on the row, or click a deck monitor in
+the Mixer). Edit has three columns:
 
 - **Side rail** — `[MIX] [A] [B] [BG] [PV]` to jump between channels.
 - **Parameter grid** — every row is a visual parameter (like "Lobes", "Zoom", or "Hue") and each
@@ -64,7 +64,7 @@ the Mixer). Deep Edit has three columns:
   for audio, step patterns for the sequencer, etc., with a live oscilloscope of the signal going
   to the parameter.
 
-See [Macro Controls & Performance Mode](macros_and_rack.md) for the knobs and Deep Edit in detail.
+See [Macro Controls & Performance Mode](macros_and_rack.md) for the knobs and Edit in detail.
 
 ---
 
@@ -77,7 +77,7 @@ The right panel shows:
 - Master output monitor
 - Blend mode selector
 
-Clicking a deck monitor opens that deck in Deep Edit; clicking the master monitor opens the Master (**MIX**) Deep Edit.
+Clicking a deck monitor opens that deck in Edit; clicking the master monitor opens the Master (**MIX**) Edit.
 
 Macro knobs are edited in the Performance rows' Edit view, where each knob gets a target strip for choosing what it controls. See [Macro Controls & Performance Mode](macros_and_rack.md).
 
@@ -85,7 +85,7 @@ Macro knobs are edited in the Performance rows' Edit view, where each knob gets 
 
 ## The Library
 
-The Library spans the lower portion of the left and middle columns and holds your Presets, Playlists, and Play Queues. See [Presets & Library](presets_and_library.md) for the full guide.
+The Library spans the lower portion of the left and middle columns and holds your Presets, Playlists, and A/B Queues. See [Presets & Library](presets_and_library.md) for the full guide.
 
 ---
 
@@ -95,12 +95,27 @@ A few keyboard shortcuts work anywhere in the app:
 
 | Key | What it does |
 |-----|-------------|
-| `Space` | Switch the Library between Half (Perform) and Full; from Deep Edit, close it and bring the Library back (when cursor isn't in a text field) |
+| `Space` | Switch the Library between Half (Perform) and Full; from Edit, close it and bring the Library back (when cursor isn't in a text field) |
 | `F` | Fullscreen — hides the UI, pure video output |
 | `Esc` | Exit fullscreen |
 | `B` | Toggle background video rendering behind the UI |
 | `Ctrl+Z` | Undo the last parameter/modulator change (30-step history) |
-| `Ctrl+S` | Save the preset of the deck open in Deep Edit |
+| `Ctrl+S` | Save the preset of the deck open in Edit |
 | `Ctrl+R` | Start / stop recording |
 | `Ctrl+P` | Open Preferences |
 | `Ctrl+F` or `/` | Jump to the search box of the open Library tab |
+
+## Glossary
+
+| Term | Meaning |
+|------|---------|
+| **Source** | A stock ISF shader or an external video input. External video can't be saved as a preset. |
+| **Preset** | A Source you configured, named and saved. |
+| **Edit** | The parameter editor for one row: parameter grid, modulators and Properties. |
+| **Bank** | A saved set of macro knob assignments (Library → Banks). Perform pages are saved row layouts. |
+| **A/B Queue / BG Queue** | The auto-VJ queues feeding Decks A/B and the Background deck. FX and Transitions have their own queues. |
+| **Level** | A deck's or the Master's output opacity. |
+| **XF** | Crossfader row: the crossfade and transition shader. |
+| **W/D** | Per-deck FX chain wet/dry. |
+| **Mapping** | A hardware (MIDI/OSC) control tied to a parameter. A macro **binding** is a macro knob tied to a parameter. |
+| **Bypass / Mute** | Bypass turns off an FX chain or shader; Mute turns off a modulator. |

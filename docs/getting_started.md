@@ -62,7 +62,7 @@ When the app opens, you'll see the Performance panel on the left with the Mixer 
 ```
 +---------------------------------------------+---------------------+
 |              PERFORMANCE                    |        MIXER        |
-| (4×4 macro knobs, Deep Edit below)          | (Decks & Output)    |
+| (4×4 macro knobs, Edit below)          | (Decks & Output)    |
 +---------------------------------------------+                     |
 |              LIBRARY                        |                     |
 +---------------------------------------------+---------------------+
@@ -72,7 +72,7 @@ Here's what to try first:
 
 1. **Check the audio feed.** Open **Preferences → Audio Hardware** (`Ctrl+P`) — you should see the `AMP`, `BASS`, `MID`, and `HIGH` meters pulsing with your music. If nothing moves, check your audio routing (Step 2).
 
-2. **Click anything.** Click a deck monitor in the Mixer to open that deck's **Deep Edit**, then click any cell in its parameter grid — the **Properties** column on the right shows the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
+2. **Click anything.** Click a deck monitor in the Mixer to open that deck's **Edit**, then click any cell in its parameter grid — the **Properties** column on the right shows the controls for that parameter. Hover over any label to see a tooltip explaining what it does.
 
 3. **Open the Library.** Press **`Space`** (when not in a text field) to raise the Library panel into view. This is where you browse presets, build playlists, and manage your play queues. Cycle through Full Height, Half Height, and Docked to find the layout that suits what you're doing.
 

@@ -9,7 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Manages the volatile RAM Play Queue (Phase 1).
+ * Manages the volatile RAM A/B Queue (Phase 1).
  */
 object PlayQueueManager {
     private val logger = KotlinLogging.logger {}

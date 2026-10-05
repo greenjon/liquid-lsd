@@ -6,7 +6,7 @@ Modulation is how you make your visuals react to music, touch, MIDI, oscillators
 
 ## The CV Grid
 
-The CV grid is the middle column of **Deep Edit** (open a row's chevron in the Performance panel, or click a deck monitor in the Mixer). It's a matrix:
+The CV grid is the middle column of **Edit** (open a row's chevron in the Performance panel, or click a deck monitor in the Mixer). It's a matrix:
 
 - **Rows** = visual parameters (Lobes, Zoom, Hue, Feedback Decay, etc.)
 - **Columns** = modulation sources (manual value, MIDI, LFO, Sequencer, Audio)
@@ -115,7 +115,7 @@ LFO 2 modulates LFO 1 to add movement and complexity:
 
 The sequencer outputs a stepped voltage pattern that advances with each beat or at a set interval — good for geometric shifts, colour steps, and rhythmic stutter effects.
 
-> **Note:** The sequencer is disabled by default. Enable it in **Preferences → General** (under Features, "Enable Step Sequencer"), or toggle it directly from the **⋮** kebab menu left of Deep Edit's **VAL** column header.
+> **Note:** The sequencer is disabled by default. Enable it in **Preferences → General** (under Features, "Enable Step Sequencer"), or toggle it directly from the **⋮** kebab menu left of Edit's **VAL** column header.
 
 ### The step grid
 
@@ -166,10 +166,10 @@ Hover over any slider or number and scroll the mouse wheel:
 
 Middle-click any slider to reset to factory default.
 
-### Deep Edit shortcuts
+### Edit shortcuts
 
-These act on the selected cell in Deep Edit (see [Macros & the Rack](macros_and_rack.md) for which
-Deep Edit receives them when several are open).
+These act on the selected cell in Edit (see [Macros & the Rack](macros_and_rack.md) for which
+Edit receives them when several are open).
 
 | Action                      | Shortcut                                |
 | --------------------------- | --------------------------------------- |

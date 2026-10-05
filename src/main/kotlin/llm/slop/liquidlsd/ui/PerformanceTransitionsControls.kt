@@ -201,7 +201,7 @@ internal object PerformanceTransitionsControls {
                     session.parametersState.midiLearnTarget = null
                 }
             } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Trans Queue Prev)")) {
+                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Transition Queue Prev)")) {
                     session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(transQPrevKey))
                 }
             }
@@ -216,8 +216,8 @@ internal object PerformanceTransitionsControls {
                     OscLearnState.cancelLearn()
                 }
             } else {
-                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Trans Queue Prev)")) {
-                    OscLearnState.startLearn(transQPrevOscKey, 0f, 1f, "Trans Queue Prev")
+                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Transition Queue Prev)")) {
+                    OscLearnState.startLearn(transQPrevOscKey, 0f, 1f, "Transition Queue Prev")
                 }
             }
             val transQPrevOscAddress = OscMappingManager.getAddressForParameter(transQPrevOscKey)
@@ -278,7 +278,7 @@ internal object PerformanceTransitionsControls {
                     session.parametersState.midiLearnTarget = null
                 }
             } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Trans Queue Next)")) {
+                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Transition Queue Next)")) {
                     session.parametersState.startMidiLearn(MidiLearnTarget.GlobalAction(transQNextKey))
                 }
             }
@@ -293,8 +293,8 @@ internal object PerformanceTransitionsControls {
                     OscLearnState.cancelLearn()
                 }
             } else {
-                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Trans Queue Next)")) {
-                    OscLearnState.startLearn(transQNextOscKey, 0f, 1f, "Trans Queue Next")
+                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Transition Queue Next)")) {
+                    OscLearnState.startLearn(transQNextOscKey, 0f, 1f, "Transition Queue Next")
                 }
             }
             val transQNextOscAddress = OscMappingManager.getAddressForParameter(transQNextOscKey)

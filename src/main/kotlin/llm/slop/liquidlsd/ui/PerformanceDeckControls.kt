@@ -450,7 +450,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                     }
                 }
                 ImGui.popStyleColor(2)
-                itemTooltip("Deck PV (Preview Deck)\nClick to open Deck PV in Deep Edit.")
+                itemTooltip("Deck PV (Preview Deck)\nClick to open Deck PV in Edit.")
             }
 
             ImGui.sameLine(0f, gap)

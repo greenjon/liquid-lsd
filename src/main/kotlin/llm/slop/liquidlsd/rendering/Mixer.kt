@@ -403,7 +403,7 @@ class Mixer(
             }
         }
 
-        // Update Background Queue transitions
+        // Update BG Queue transitions
         llm.slop.liquidlsd.presets.BgQueueManager.update(this, deltaTime)
 
         crossfade.evaluate()

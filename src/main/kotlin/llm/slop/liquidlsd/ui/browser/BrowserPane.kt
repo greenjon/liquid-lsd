@@ -261,10 +261,10 @@ object BrowserPane {
                 if (ImGui.menuItem("Add to the bottom of BG Queue")) BgQueueManager.appendPlaylistToQueue(file)
             }
             BrowseKind.FX -> {
-                if (ImGui.menuItem("Add All to Live FX Queue (A/B)")) FXQueueManager.appendToQueue(file)
+                if (ImGui.menuItem("Add All to A/B FX Queue")) FXQueueManager.appendToQueue(file)
                 if (ImGui.menuItem("Add All to BG FX Queue")) FXBgQueueManager.appendToQueue(file)
             }
-            BrowseKind.TRANS -> if (ImGui.menuItem("Load Playlist to Live Queue")) TransitionQueueManager.appendToQueue(file)
+            BrowseKind.TRANS -> if (ImGui.menuItem("Load Playlist to A/B Queue")) TransitionQueueManager.appendToQueue(file)
         }
         ImGui.separator()
         val assetType = when (kind) {
