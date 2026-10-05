@@ -1,8 +1,7 @@
 package llm.slop.liquidlsd.ui.browser
 
 /**
- * The one search rule shared by every asset browser (Library source/FX/transition panels, the inline
- * [llm.slop.liquidlsd.ui.ShaderPickerPopup], and the saved-chain list in the Browse bay), so the same
+ * The one search rule shared by every asset browser (the unified [BrowserPane] in the Library and the Edit row's Browse bay), so the same
  * text finds the same things wherever it is typed.
  *
  * The query is split on whitespace; an item matches when **every** word is a case-insensitive substring of

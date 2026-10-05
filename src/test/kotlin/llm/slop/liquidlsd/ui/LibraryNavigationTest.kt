@@ -3,7 +3,6 @@ package llm.slop.liquidlsd.ui
 import llm.slop.liquidlsd.ui.LibraryPanel.LibraryViewMode
 import llm.slop.liquidlsd.ui.LibraryPanel.SelectionSource
 import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -11,42 +10,35 @@ import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 import io.mockk.mockk
 import llm.slop.liquidlsd.SessionContext
+import llm.slop.liquidlsd.ui.browser.BrowseKind
 import llm.slop.liquidlsd.ui.browser.BrowserPane
 import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
-import llm.slop.liquidlsd.ui.browser.TransitionBrowserPanel
 
 class LibraryNavigationTest {
-    @BeforeTest
-    fun classicByDefault() {
-        BrowserPane.enabled = false // these tests pin the classic path; the pane opts in per test
-    }
-
     @AfterTest
     fun reset() {
         LibraryPanel.viewMode = LibraryViewMode.PRESETS
         LibraryPanel.activeSelectionSource = null
-        BrowserPane.enabled = false
         PresetListPanel.selection.clear()
         PresetListPanel.filteredPresets = emptyList()
         FXBrowserPanel.selectedAsset = null
-        FXBrowserPanel.shouldFocusSearch = false
-        TransitionBrowserPanel.shouldFocusSearch = false
-        PresetListPanel.shouldFocusSearch = false
     }
 
     @Test
-    fun ctrlFFocusesTheSearchOfTheVisibleTabOnly() {
+    fun ctrlFFocusesTheSearchOfTheVisibleKindOnly() {
+        val expected = mapOf(
+            LibraryViewMode.PRESETS to BrowseKind.SRC,
+            LibraryViewMode.FX to BrowseKind.FX,
+            LibraryViewMode.TRANS to BrowseKind.TRANS,
+        )
         for (mode in LibraryViewMode.values()) {
+            BrowserPane.searchFocusRequests.clear()
             LibraryPanel.viewMode = mode
             LibraryPanel.focusActiveSearch()
-            assertEquals(mode == LibraryViewMode.PRESETS, PresetListPanel.shouldFocusSearch, "$mode sources")
-            assertEquals(mode == LibraryViewMode.FX, FXBrowserPanel.shouldFocusSearch, "$mode fx")
-            assertEquals(mode == LibraryViewMode.TRANS, TransitionBrowserPanel.shouldFocusSearch, "$mode trans")
-            PresetListPanel.shouldFocusSearch = false
-            FXBrowserPanel.shouldFocusSearch = false
-            TransitionBrowserPanel.shouldFocusSearch = false
+            assertEquals(listOfNotNull(expected[mode]), BrowserPane.searchFocusRequests.toList(), "$mode")
         }
+        BrowserPane.searchFocusRequests.clear()
     }
 
     @Test
@@ -94,12 +86,7 @@ class LibraryNavigationTest {
     }
 
     @Test
-    fun unifiedPaneOrdersTreeListThenQueuesAndLeavesTheClassicColumnsAlone() {
-        val classic = LibraryViewMode.values().filter { it != LibraryViewMode.MAPS }.associateWith {
-            LibraryPanel.viewMode = it
-            LibraryNavigation.panes()
-        }
-        BrowserPane.enabled = true
+    fun unifiedPaneOrdersTreeListThenQueues() {
         LibraryPanel.viewMode = LibraryViewMode.PRESETS
         assertEquals(listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB), LibraryNavigation.panes())
         LibraryPanel.viewMode = LibraryViewMode.FX
@@ -108,17 +95,10 @@ class LibraryNavigationTest {
         assertEquals(listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.TRANSITION_QUEUE), LibraryNavigation.panes())
         LibraryPanel.viewMode = LibraryViewMode.MAPS
         assertTrue(LibraryNavigation.panes().isEmpty())
-        BrowserPane.enabled = false
-        for ((mode, panes) in classic) {
-            LibraryPanel.viewMode = mode
-            assertEquals(panes, LibraryNavigation.panes())
-            assertFalse(SelectionSource.TREE in panes)
-        }
     }
 
     @Test
     fun unifiedPaneStartsInTheListAndStepsBackToTheTree() {
-        BrowserPane.enabled = true
         val a = AssetItem(path = "/x/a.lsdpreset", name = "a", type = AssetType.PRESET)
         PresetListPanel.filteredPresets = listOf(a)
         val session = mockk<SessionContext>(relaxed = true)
@@ -133,7 +113,6 @@ class LibraryNavigationTest {
 
     @Test
     fun treeCursorMovesWithoutSelectingAndAcceptSelectsTheScope() {
-        BrowserPane.enabled = true
         val kind = llm.slop.liquidlsd.ui.browser.BrowseKind.SRC
         val session = mockk<SessionContext>(relaxed = true)
         val mixer = mockk<llm.slop.liquidlsd.rendering.Mixer>(relaxed = true)
@@ -159,24 +138,5 @@ class LibraryNavigationTest {
         assertEquals(SelectionSource.QUEUE_AB, LibraryPanel.activeSelectionSource)
         LibraryNavigation.setViewMode(LibraryViewMode.FX)
         assertNull(LibraryPanel.activeSelectionSource)
-    }
-}
-
-class PickerCursorTest {
-    @Test
-    fun chainListCursorMovesClampedAndAppliesTheCursorRow() {
-        val applied = ArrayList<String>()
-        val items = listOf("a", "b", "c").map { AssetItem(path = "/x/$it", name = it, type = AssetType.FX_CHAIN) }
-        ChainListBrowse.reset()
-        ChainListBrowse.publish(items, { applied += it.name }, {})
-        assertEquals(false, ChainListBrowse.accept())          // no cursor yet
-        ChainListBrowse.move(1)
-        ChainListBrowse.move(1)
-        ChainListBrowse.move(5)                                // clamps at the last row
-        assertEquals(true, ChainListBrowse.accept())
-        ChainListBrowse.move(-9)                               // clamps at the first row
-        ChainListBrowse.accept()
-        assertEquals(listOf("c", "a"), applied)
-        assertEquals(true, ChainListBrowse.isShowing)
     }
 }

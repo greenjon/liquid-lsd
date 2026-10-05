@@ -6,7 +6,7 @@ import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.rendering.Mixer
 import java.io.File
 
-/** Saving the mixer's current transition as a `.lsdtrans` preset, shared by the Library "+", the Mixer TRANS tab and the inline picker. */
+/** Saving the mixer's current transition as a `.lsdtrans` preset, shared by the Library "+", the Mixer TRANS tab and the unified browser pane. */
 object TransitionSave {
     fun requestSaveCurrent(session: SessionContext, mixer: Mixer) {
         val current = mixer.transitionFilter

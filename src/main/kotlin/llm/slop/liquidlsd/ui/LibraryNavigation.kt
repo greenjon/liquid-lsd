@@ -47,15 +47,14 @@ internal object LibraryNavigation {
         setViewMode(modes[Math.floorMod(LibraryPanel.viewMode.ordinal + delta, modes.size)])
     }
 
-    /** The browse kind of the current tab when the unified pane is what is on screen, else null (classic columns, Maps). */
+    /** The browse kind of the current tab (the pane is what is on screen), else null (Maps). */
     internal fun unifiedKind(): BrowseKind? {
-        val kind = when (LibraryPanel.navMode) {
+        return when (LibraryPanel.navMode) {
             LibraryViewMode.PRESETS -> BrowseKind.SRC
             LibraryViewMode.FX -> BrowseKind.FX
             LibraryViewMode.TRANS -> BrowseKind.TRANS
-            LibraryViewMode.MAPS -> return null
+            LibraryViewMode.MAPS -> null
         }
-        return kind.takeIf { BrowserPane.enabled && BrowserPane.supports(it) }
     }
 
     /** The lists the cursor can sit in for the current tab, left to right. The unified pane has no playlist column: a playlist is a tree scope shown in the list. */

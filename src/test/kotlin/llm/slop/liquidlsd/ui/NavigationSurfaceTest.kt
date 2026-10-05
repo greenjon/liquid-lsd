@@ -45,7 +45,6 @@ class NavigationSurfaceTest {
 
     @BeforeTest
     fun setUp() {
-        BrowserPane.enabled = false // the classic picker is pinned here; hosted-pane tests opt in
         session = SessionContext()
         clock = nextEpoch.also { nextEpoch += 1_000_000L } // later than any picker stamp left by an earlier test
         UiClock.nowMs = { clock }
@@ -156,21 +155,9 @@ class NavigationSurfaceTest {
         assertFalse(nav().browsing) // Edit view without a picker list
     }
 
-    @Test
-    fun browsingIsTrueInEditViewOnlyWhileAPickerListIsShowing() {
-        state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
-        clock += 350 // let any picker list another test published expire
-        assertFalse(nav().browsing)
-        ChainListBrowse.publish(emptyList(), {}, {})
-        assertTrue(nav().browsing)
-        clock += 350
-        assertFalse(nav().browsing)
-    }
-
     // --- Unified pane hosted in the Edit bay ---
 
     private fun hostPane(applied: MutableList<String>, cleared: MutableList<String>) {
-        BrowserPane.enabled = true
         BrowserPane.noteHosting(
             ApplyTarget(
                 kind = BrowseKind.SRC, contextKey = "gen/Deck A", defaultScope = BrowseScope.All,
@@ -181,7 +168,6 @@ class NavigationSurfaceTest {
 
     private fun unhostPane() {
         BrowserPane.noteHosting(null)
-        BrowserPane.enabled = false
         LibraryPanel.activeSelectionSource = null
         PresetListPanel.selectedAsset = null
     }
@@ -204,6 +190,26 @@ class NavigationSurfaceTest {
             clock += 350
             assertFalse(nav().browsing)
         } finally {
+            unhostPane()
+        }
+    }
+
+    @Test
+    fun browseStepMovesTheHostedPaneCursor() {
+        val a = AssetItem("/x/a.lsdpreset", "a", AssetType.PRESET)
+        val b = AssetItem("/x/b.lsdpreset", "b", AssetType.PRESET)
+        try {
+            state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
+            hostPane(mutableListOf(), mutableListOf())
+            PresetListPanel.filteredPresets = listOf(a, b)
+            PresetListPanel.selectedAsset = a
+            LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
+            nav().browseStep(1)
+            assertEquals(b, PresetListPanel.selectedAsset)
+            nav().browseStep(-1)
+            assertEquals(a, PresetListPanel.selectedAsset)
+        } finally {
+            PresetListPanel.filteredPresets = emptyList()
             unhostPane()
         }
     }
@@ -278,7 +284,7 @@ class NavigationSurfaceTest {
         UITheme.libraryMode = if (w == Where.LIBRARY_FULL) UITheme.LibraryMode.FULL else UITheme.LibraryMode.HALF
         if (w == Where.PICKER) {
             state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
-            ChainListBrowse.publish(emptyList(), {}, {})
+            hostPane(mutableListOf(), mutableListOf())
         }
         PreferencesPanel.close()
         if (w == Where.LIBRARY_HALF) PreferencesPanel.open()
@@ -326,40 +332,16 @@ class NavigationSurfaceTest {
 
     @Test
     fun pickerLeftTopIsBackAndShiftedLeftTopIsNot() {
-        state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
-        ChainListBrowse.publish(emptyList(), {}, {})
-        nav().button(0, true)
-        assertTrue(state.anyRackModuleExpanded())
-        nav().button(0, false)
-        assertFalse(state.anyRackModuleExpanded())
-    }
-
-    @Test
-    fun pickerShiftedRightBottomClearsTheChain() {
-        var cleared = 0
-        state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", null)
-        ChainListBrowse.publish(emptyList(), {}, { cleared++ })
-        nav().button(2, false)
-        assertEquals(0, cleared)   // destructive: needs shift
-        nav().button(2, true)
-        assertEquals(1, cleared)
-    }
-
-    @Test
-    fun browseStepAndAcceptDriveTheChainListInThePicker() {
-        val applied = ArrayList<String>()
-        val items = listOf("a", "b").map { AssetItem(path = "/x/$it", name = it, type = AssetType.FX_CHAIN) }
-        state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", null)
-        ChainListBrowse.reset()
-        ChainListBrowse.publish(items, { applied += it.name }, {})
-        val n = nav()
-        n.browseAccept(false)
-        assertTrue(applied.isEmpty())          // stepping never applies; no cursor yet
-        n.browseStep(2)
-        n.browseAccept(true)                   // shifted accept does nothing in a picker
-        assertTrue(applied.isEmpty())
-        n.browseAccept(false)
-        assertEquals(listOf("b"), applied)
+        try {
+            state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
+            hostPane(mutableListOf(), mutableListOf())
+            nav().button(0, true)
+            assertTrue(state.anyRackModuleExpanded())
+            nav().button(0, false)
+            assertFalse(state.anyRackModuleExpanded())
+        } finally {
+            unhostPane()
+        }
     }
 
     // --- Last-touched-knob picker routing ---

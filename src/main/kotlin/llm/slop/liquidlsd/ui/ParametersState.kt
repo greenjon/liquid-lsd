@@ -140,7 +140,7 @@ class ParametersState : MidiLearnSink {
     /** True if any rack module is currently above Tier 1 (used by the Esc priority stack). */
     fun anyRackModuleExpanded(): Boolean = rackModuleDisclosure.values.any { it != DisclosureLevel.COLLAPSED }
 
-    // -- Browse content (replaces the old modal ShaderPickerPopup) -----------------------------
+    // -- Browse content (the unified BrowserPane is hosted here) -----------------------------
 
     /** Whether an open rack module's bay shows its Params (Deep Edit) or Browse content. */
     enum class SectionMode { PARAMS, BROWSE }

@@ -11,10 +11,9 @@ import llm.slop.liquidlsd.ui.browser.BrowserPane
  * Applies controller navigation to the live UI. The three side buttons mean different things per context:
  *  - Library view (Library FULL): back, next tab, next list; knob 1 is the cursor.
  *    With shift: enqueue to the BG queue, previous tab, previous list.
- *  - Picker (an SRC / FX / transition list is showing in the Edit row): left-top = back, right-top = next
- *    category (shift: previous), shift + right-bottom = clear the slot or chain; knob 1 is the cursor (tap = apply).
- *    With the unified pane hosted there, right-top steps its panes (tree > list > queues) instead of categories, and a tap
- *    on a tree row selects the scope and moves the cursor into the list.
+ *  - Picker (the unified pane is hosted in the Edit row's Browse tab): left-top = back, right-top = next pane
+ *    (tree > list > queues; shift: previous), shift + right-bottom = clear the slot or chain; knob 1 is the cursor
+ *    (tap = apply, and a tap on a tree row selects the scope and moves the cursor into the list).
  *  - Dirty-deck modal up: back = Cancel, side 2 / knob tap = Save, side 3 / shift+tap = Discard (overrides every other context).
  *  - Perform / Edit view: back (the Esc stack), open the Library, open the picker of the row whose knob
  *    was touched last (an SRC row: its source; an FX row: the slot under the knob, or the chain list for knob 1;
@@ -33,7 +32,7 @@ internal class NavigationSurface(
         get() = theme.libraryMode == UITheme.LibraryMode.FULL && !LibraryPanel.isEditView(session)
 
     private val inPicker: Boolean
-        get() = LibraryPanel.isEditView(session) && (BrowserPane.hosted() != null || ChainListBrowse.isShowing || ShaderPickerPopup.isShowing)
+        get() = LibraryPanel.isEditView(session) && BrowserPane.hosted() != null
 
     private val confirming: Boolean get() = deckConfirm?.deckConfirmPending == true
 
@@ -75,22 +74,12 @@ internal class NavigationSurface(
     }
 
     private fun pickerButton(index: Int, shifted: Boolean) {
-        val hosted = BrowserPane.hosted()
-        if (hosted != null) {
-            // The unified pane is in the bay: side 2 steps its panes (tree > list > queues), shift + side 3 clears the slot or chain.
-            when (index) {
-                0 -> if (!shifted) back()
-                1 -> LibraryNavigation.stepPane(if (shifted) -1 else 1, session, mixer)
-                2 -> if (shifted) hosted.clear?.invoke()
-            }
-            return
-        }
+        // The unified pane is in the bay: side 2 steps its panes (tree > list > queues), shift + side 3 clears the slot or chain.
+        val hosted = BrowserPane.hosted() ?: return
         when (index) {
             0 -> if (!shifted) back()
-            1 -> if (!ChainListBrowse.isShowing) ShaderPickerPopup.stepCategory(if (shifted) -1 else 1)
-            2 -> if (shifted) {
-                if (ChainListBrowse.isShowing) ChainListBrowse.clear() else if (ShaderPickerPopup.canDetach) ShaderPickerPopup.detach()
-            }
+            1 -> LibraryNavigation.stepPane(if (shifted) -1 else 1, session, mixer)
+            2 -> if (shifted) hosted.clear?.invoke()
         }
     }
 
@@ -154,11 +143,7 @@ internal class NavigationSurface(
 
     override fun browseStep(steps: Int) {
         if (confirming) return
-        when {
-            inLibraryView || BrowserPane.hosted() != null -> LibraryNavigation.step(steps, session, mixer)
-            ChainListBrowse.isShowing -> ChainListBrowse.move(steps)
-            else -> ShaderPickerPopup.moveCursor(steps)
-        }
+        if (inLibraryView || BrowserPane.hosted() != null) LibraryNavigation.step(steps, session, mixer)
     }
 
     override fun browseAccept(shifted: Boolean) {
@@ -170,12 +155,7 @@ internal class NavigationSurface(
             if (!shifted) LibraryNavigation.accept(session, mixer, parametersState)
             return
         }
-        if (!inLibraryView) {
-            if (!shifted) {
-                if (ChainListBrowse.isShowing) ChainListBrowse.accept() else ShaderPickerPopup.acceptCursor()
-            }
-            return
-        }
+        if (!inLibraryView) return
         if (shifted) LibraryNavigation.enqueue(session, bg = false) else LibraryNavigation.accept(session, mixer, parametersState)
     }
 }

@@ -33,17 +33,16 @@ import java.io.File
 
 /**
  * The unified Library browser: folder tree (about 25% of the width), name | info list (50%) and the queues (25%).
- * One pane serves every asset kind; today only [BrowseKind.SRC] is ported ([supports]) and the pane is the default; [enabled]
- * (the Library's "Unified" toggle, or `-Dlsd.unifiedBrowser=false`) falls back to the classic four columns until those are deleted. See `.planning/unified-browser-pane-plan.md`.
+ * One pane serves every asset kind (sources, FX, transitions). See `.planning/unified-browser-pane-plan.md`.
  */
 object BrowserPane {
-    /** Escape hatch, not persisted: the pane is the default; turning it off brings back the classic four-column Library and inline picker. */
-    var enabled = System.getProperty("lsd.unifiedBrowser") != "false"
-
-    fun supports(kind: BrowseKind): Boolean = true
-
     private val scopes = HashMap<BrowseKind, BrowseScope>()
     private val searchBuffers = HashMap<BrowseKind, ImString>()
+
+    /** Kinds whose search box takes keyboard focus on its next draw (Ctrl+F); consumed by [drawList]. */
+    internal val searchFocusRequests = HashSet<BrowseKind>()
+
+    fun focusSearch(kind: BrowseKind) { searchFocusRequests.add(kind) }
 
     /** Tree rows whose children are hidden, keyed by kind then by the node's scope. */
     private val collapsed = HashMap<BrowseKind, MutableSet<BrowseScope>>()
@@ -330,6 +329,7 @@ object BrowserPane {
 
         val search = searchBuffers.getOrPut(kind) { ImString(SearchMatcher.BUFFER_SIZE) }
         ImGui.setNextItemWidth(ImGui.getContentRegionAvailX())
+        if (searchFocusRequests.remove(kind)) ImGui.setKeyboardFocusHere()
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
             ImGui.inputTextWithHint("##browserPaneSearch", "Search name, tags, folder...", search)
         }

@@ -85,12 +85,7 @@ object LibraryPanel {
 
     /** Ctrl+F / "/": focuses the search box of the tab currently shown (Sources, FX or Trans). */
     fun focusActiveSearch() {
-        when (viewMode) {
-            LibraryViewMode.PRESETS -> PresetListPanel.shouldFocusSearch = true
-            LibraryViewMode.FX -> FXBrowserPanel.shouldFocusSearch = true
-            LibraryViewMode.TRANS -> TransitionBrowserPanel.shouldFocusSearch = true
-            LibraryViewMode.MAPS -> Unit
-        }
+        LibraryNavigation.unifiedKind()?.let { llm.slop.liquidlsd.ui.browser.BrowserPane.focusSearch(it) }
     }
 
     /** Library shortcut: from Edit view, brings the Library back (Perform view); otherwise toggles HALF <-> FULL. */
@@ -316,18 +311,6 @@ object LibraryPanel {
                     LibraryNavigation.setViewMode(LibraryViewMode.MAPS)
                 }
                 ImGui.popStyleColor(2)
-
-                if (viewMode != LibraryViewMode.MAPS) {
-                    ImGui.sameLine(0f, 10f)
-                    val unified = llm.slop.liquidlsd.ui.browser.BrowserPane.enabled
-                    ImGui.pushStyleColor(ImGuiCol.Button, if (unified) activeCol else inactiveCol)
-                    ImGui.pushStyleColor(ImGuiCol.Text, if (unified) activeTextCol else inactiveTextCol)
-                    if (ImGui.button("Unified##unified_browser", btnWModeWide + 8f, btnH)) {
-                        llm.slop.liquidlsd.ui.browser.BrowserPane.enabled = !unified
-                    }
-                    ImGui.popStyleColor(2)
-                    itemTooltip("Tree | list | queues browser (Sources, FX and Transitions). Turn off to use the classic four columns.")
-                }
             }
 
             // Centered Action Toolbar
@@ -389,130 +372,16 @@ object LibraryPanel {
             LibraryViewMode.TRANS -> llm.slop.liquidlsd.ui.browser.BrowseKind.TRANS
             LibraryViewMode.MAPS -> null
         }
-        if (unifiedKind != null && llm.slop.liquidlsd.ui.browser.BrowserPane.enabled && llm.slop.liquidlsd.ui.browser.BrowserPane.supports(unifiedKind)) {
+        if (viewMode == LibraryViewMode.MAPS) {
+            // Banks and Pages take the whole panel: no playlists or queues.
+            ImGui.beginChild("LibraryMaps", availW, contentH, true, outerFlags)
+            ImGui.setScrollX(0f)
+            MapsBrowserPanel.draw(session, mixer)
+            ImGui.endChild()
+        } else if (unifiedKind != null) {
             ImGui.beginChild("LibraryUnified", availW, contentH, false, outerFlags)
             llm.slop.liquidlsd.ui.browser.BrowserPane.draw(session, mixer, parametersState, unifiedKind)
             ImGui.endChild()
-        } else {
-        // Group 1 Box: Col 1 & Col 2
-        ImGui.beginChild("LibraryGroup1", groupW1, contentH, true, outerFlags)
-        val g1AvailW = ImGui.getContentRegionAvailX().coerceAtLeast(20f)
-        val g1AvailH = ImGui.getContentRegionAvailY().coerceAtLeast(1f)
-        val colGap = 6f
-        val c1W = ((g1AvailW - colGap) * 0.5f).coerceAtLeast(10f)
-        val c2W = (g1AvailW - c1W - colGap).coerceAtLeast(10f)
-
-        when (viewMode) {
-            LibraryViewMode.MAPS -> {
-                // Banks and Pages take the whole group: no playlist column.
-                ImGui.beginChild("LibraryMaps", g1AvailW, g1AvailH, false, outerFlags)
-                ImGui.setScrollX(0f)
-                MapsBrowserPanel.draw(session, mixer)
-                ImGui.endChild()
-            }
-            LibraryViewMode.PRESETS -> {
-                // Column 1: Presets Library
-                ImGui.beginChild("LibraryPresetsList", c1W, g1AvailH, false, outerFlags)
-                ImGui.setScrollX(0f)
-                PresetListPanel.draw(session, mixer, parametersState)
-                ImGui.endChild()
-
-                ImGui.sameLine(0f, colGap)
-
-                // Column 2: Playlist Editor
-                ImGui.beginChild("LibraryPlaylistEditor", c2W, g1AvailH, false, outerFlags)
-                ImGui.setScrollX(0f)
-                PlaylistEditorPanel.draw(session, mixer)
-                ImGui.endChild()
-            }
-            LibraryViewMode.FX -> {
-                // Column 1: unified FX browser (stock filters, saved singles, saved chains)
-                ImGui.beginChild("LibraryFXBrowser", c1W, g1AvailH, false, outerFlags)
-                ImGui.setScrollX(0f)
-                FXBrowserPanel.draw(session, mixer)
-                ImGui.endChild()
-
-                ImGui.sameLine(0f, colGap)
-
-                // Column 2: FX Playlists Editor
-                ImGui.beginChild("LibraryFXPlaylists", c2W, g1AvailH, false, outerFlags)
-                ImGui.setScrollX(0f)
-                FXPlaylistEditorPanel.draw(session, mixer)
-                ImGui.endChild()
-            }
-            LibraryViewMode.TRANS -> {
-                // Column 1: unified transition browser (stock shaders, saved presets)
-                ImGui.beginChild("LibraryTransitionBrowser", c1W, g1AvailH, false, outerFlags)
-                ImGui.setScrollX(0f)
-                TransitionBrowserPanel.draw(session, mixer)
-                ImGui.endChild()
-
-                ImGui.sameLine(0f, colGap)
-
-                // Column 2: Transition Playlists Editor
-                ImGui.beginChild("LibraryTransitionPlaylists", c2W, g1AvailH, false, outerFlags)
-                ImGui.setScrollX(0f)
-                TransitionPlaylistEditorPanel.draw(session, mixer)
-                ImGui.endChild()
-            }
-        }
-        ImGui.endChild()
-
-        ImGui.sameLine(0f, groupGap)
-
-        // Group 2 Box: Col 3 & Col 4
-        ImGui.beginChild("LibraryGroup2", groupW2, contentH, true, outerFlags)
-        val g2AvailW = ImGui.getContentRegionAvailX().coerceAtLeast(20f)
-        val g2AvailH = ImGui.getContentRegionAvailY().coerceAtLeast(1f)
-        val c3W = ((g2AvailW - colGap) * 0.5f).coerceAtLeast(10f)
-        val c4W = (g2AvailW - c3W - colGap).coerceAtLeast(10f)
-
-        if (viewMode == LibraryViewMode.MAPS) {
-            // Banks and Pages have no queues; the second group stays empty.
-            session.uiTheme.caption("Maps have no playlists or queues.")
-        } else if (viewMode == LibraryViewMode.TRANS) {
-            // Column 3: Live Transition Queue
-            ImGui.beginChild("LibraryTransitionQueue", c3W, g2AvailH, false, outerFlags)
-            ImGui.setScrollX(0f)
-            TransitionQueuePanel.draw(session, mixer)
-            ImGui.endChild()
-
-            ImGui.sameLine(0f, colGap)
-
-            // Column 4: reserved — Transitions has no second queue/list to pair here
-            ImGui.beginChild("LibraryTransitionReserved", c4W, g2AvailH, false, outerFlags)
-            ImGui.endChild()
-        } else if (viewMode == LibraryViewMode.FX) {
-            // Column 3: Background FX Queue (BG)
-            ImGui.beginChild("LibraryFxBgQueue", c3W, g2AvailH, false, outerFlags)
-            ImGui.setScrollX(0f)
-            FXBgQueueActionsPanel.draw(session, mixer)
-            ImGui.endChild()
-
-            ImGui.sameLine(0f, colGap)
-
-            // Column 4: Play FX Queue (A/B)
-            ImGui.beginChild("LibraryFxQueue", c4W, g2AvailH, false, outerFlags)
-            ImGui.setScrollX(0f)
-            FXQueueActionsPanel.draw(session, mixer)
-            ImGui.endChild()
-        } else {
-            // Column 3: Background Queue (BG)
-            ImGui.beginChild("LibraryBgQueue", c3W, g2AvailH, false, outerFlags)
-            ImGui.setScrollX(0f)
-            llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.draw(session, mixer)
-            ImGui.endChild()
-
-            ImGui.sameLine(0f, colGap)
-
-            // Column 4: Play Queue (A/B)
-            ImGui.beginChild("LibraryQueue", c4W, g2AvailH, false, outerFlags)
-            ImGui.setScrollX(0f)
-            QueueActionsPanel.draw(session, mixer)
-            ImGui.endChild()
-        }
-
-        ImGui.endChild()
         }
 
         ImGui.popStyleColor(2)
