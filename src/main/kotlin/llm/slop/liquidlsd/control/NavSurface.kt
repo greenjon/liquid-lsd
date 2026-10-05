@@ -1,14 +1,20 @@
 package llm.slop.liquidlsd.control
 
 /**
- * Navigation and browsing as seen by input devices: the free side buttons plus knob 1 acting as a
- * cursor while a browse context (the Library) is on screen. Implemented by the UI layer; handlers
+ * Navigation and browsing as seen by input devices: the free side buttons plus the last knob (16, bottom
+ * right) acting as a cursor while a browse context (the Library, the picker) is on screen. Implemented by the UI layer; handlers
  * run on the render thread. What a button does depends on the current context, so the surface
  * decides; the commands only say which physical button was pressed.
  */
 interface NavSurface {
-    /** True while knob 1 should drive a cursor (turn = step, tap = accept) instead of its Perform knob. */
+    /** True while knob 16 ([KnobCommands.BROWSE_KNOB]) should drive a cursor (turn = step, tap = accept) instead of its Perform knob. */
     val browsing: Boolean
+
+    /**
+     * True while [browsing] and the row being filled is on screen (the picker): knobs 1-4 stay live on it, so a
+     * freshly loaded source or chain can be tweaked at once. Every other knob except the cursor is inert.
+     */
+    val browseRowLive: Boolean get() = false
 
     /** Increases every time [browsing] turns on, so consumers can drop per-session state (e.g. partial knob travel). */
     val browseSession: Int
@@ -19,6 +25,6 @@ interface NavSurface {
     /** Moves the browse cursor by [steps] items (negative = up). */
     fun browseStep(steps: Int)
 
-    /** Knob 1's tap while [browsing]: apply the cursor item; with [shifted] its alternative (enqueue). */
+    /** The cursor knob's tap while [browsing]: apply the cursor item; with [shifted] its alternative (enqueue). */
     fun browseAccept(shifted: Boolean)
 }

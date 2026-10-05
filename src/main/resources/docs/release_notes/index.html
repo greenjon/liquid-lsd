@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-browse-cursor-moves-to-knob-16-row-one-stays-live-in-the-picker-controlknobcommandskt-controlnavsurfacekt-uinavigationsurfacekt-uiperformsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister: Browse Cursor Moves to Knob 16, Row One Stays Live in the Picker (control/KnobCommands.kt, control/NavSurface.kt, ui/NavigationSurface.kt, ui/PerformSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#controller-browsing-beats-learned-mappings-midimidimappingmanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5559,6 +5570,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-browse-cursor-moves-to-knob-16-row-one-stays-live-in-the-picker-controlknobcommandskt-controlnavsurfacekt-uinavigationsurfacekt-uiperformsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister: Browse Cursor Moves to Knob 16, Row One Stays Live in the Picker (control/KnobCommands.kt, control/NavSurface.kt, ui/NavigationSurface.kt, ui/PerformSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#controller-browsing-beats-learned-mappings-midimidimappingmanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9885,13 +9907,19 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="twister-browse-cursor-moves-to-knob-16-row-one-stays-live-in-the-picker-controlknobcommandskt-controlnavsurfacekt-uinavigationsurfacekt-uiperformsurfacekt">Twister: Browse Cursor Moves to Knob 16, Row One Stays Live in the Picker (<code>control/KnobCommands.kt</code>, <code>control/NavSurface.kt</code>, <code>ui/NavigationSurface.kt</code>, <code>ui/PerformSurface.kt</code>)</h3>
+<ul>
+<li><strong>The browse cursor is now knob 16</strong> (bottom right, the easiest to reach), not knob 1. Turn to move, tap to apply, Shift + tap for the alternative. Outside browsing it is a normal knob.</li>
+<li><strong>While a picker is open, the row you are filling stays live on knobs 1-4</strong>, so you can load a source or chain with knob 16 and tweak its macros straight away. Knobs 5-15 stay inert (and dark), so a stray touch can't change anything. In the Library view, where no row is on screen, only knob 16 is live.</li>
+<li><strong>The Twister shows it</strong>: during browsing only knob 16 (white) and, in the picker, knobs 1-4 (in the colour of the row being edited) stay lit.</li>
+</ul>
 <h3 id="controller-browsing-beats-learned-mappings-midimidimappingmanagerkt">Controller Browsing Beats Learned Mappings (<code>midi/MidiMappingManager.kt</code>)</h3>
 <ul>
 <li><strong>While you browse (Library view, or the Browse tab in the Edit bay), the controller profile gets its inputs first</strong>, even on a channel/CC you learned before. Before, a leftover learned mapping on a Twister knob 1 kept driving its parameter and the browse cursor never moved. Outside browsing nothing changes: a learned mapping still wins.</li>
-<li><strong>Knob 1 moves one row per click while browsing.</strong> The profile's turn acceleration used to skip 3-4 rows per click and slam into the ends of long lists and queues; browsing now ignores it.</li>
+<li><strong>Knob 16 moves one row per click while browsing.</strong> The profile's turn acceleration used to skip 3-4 rows per click and slam into the ends of long lists and queues; browsing now ignores it.</li>
 <li>Internal: <code>processGlobalMidiEvents</code> skips the <code>hasLearnedMapping</code> check when <code>navSurface.browsing</code> is true.</li>
 <li>Internal: <code>KnobCommands.browseTurn</code> caps a turn message at one step.</li>
-<li><strong>Knob 1 keeps scrolling after you click a list.</strong> A clicked row kept ImGui's keyboard focus, and the list re-selected the focused row every frame, so each knob step was undone before it was drawn (Sources list and every queue). Selection now follows focus only when the focus moves (arrow keys still work).</li>
+<li><strong>Knob 16 keeps scrolling after you click a list.</strong> A clicked row kept ImGui's keyboard focus, and the list re-selected the focused row every frame, so each knob step was undone before it was drawn (Sources list and every queue). Selection now follows focus only when the focus moves (arrow keys still work).</li>
 <li><strong>The Edit bay's Browse list no longer sticks to the cursor.</strong> After one knob step its list stayed pinned to the cursor row and kept grabbing keyboard focus (mouse-wheel scrolling snapped back, search couldn't be typed into) until the Library was opened again.</li>
 <li>Internal: new <code>ui/browser/FocusFollow.kt</code> replaces the <code>isItemFocused() &amp;&amp; !isSelected</code> auto-select in <code>PresetListPanel</code> and the five queue panels; the one-shot <code>shouldScrollToSelection</code>/<code>shouldReclaimFocus</code> flags are cleared by <code>LibraryPanel.endFrame()</code> at the end of <code>UIManager.render</code>, not inside <code>LibraryPanel.draw</code> (skipped in Edit view).</li>
 </ul>
@@ -9937,18 +9965,18 @@
 <h3 id="edit-bay-browse-tabs-can-use-the-unified-pane-uibrowserapplytargetkt-uiperformancebrowsebaykt-uinavigationsurfacekt">Edit Bay Browse Tabs Can Use the Unified Pane (<code>ui/browser/ApplyTarget.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
 <ul>
 <li><strong>The Edit bay's SRC, Chain, FX1-3 and TRANS tabs show the same folder tree | list | queue pane as the Library.</strong> One click applies the row to that deck, slot, chain or the mixer transition; the row that is currently applied shows a <code>●</code>. Each tab lists only what it can take (an FX slot: single effects; Chain: saved chains) and starts in its own folder (Chain: Saved chains, FX slots: Stock filters); each tab remembers the folder you last used there. <strong>Clear Slot / Clear Chain</strong> sit above the pane, the deck's Save button stays, and live external video feeds are under <strong>External video...</strong>. </li>
-<li><strong>On the Twister</strong> in the bay: the right-top button steps tree &gt; list &gt; queues (instead of the category), turning knob 1 steps the cursor, a tap applies the list row, and a tap on a folder selects it and jumps to the list. <strong>Shift + right-bottom</strong> clears the slot or chain, left-top goes back.</li>
+<li><strong>On the Twister</strong> in the bay: the right-top button steps tree &gt; list &gt; queues (instead of the category), turning knob 16 steps the cursor, a tap applies the list row, and a tap on a folder selects it and jumps to the list. <strong>Shift + right-bottom</strong> clears the slot or chain, left-top goes back.</li>
 <li>Internal: <code>ApplyTarget</code> + <code>ScopeMemory</code>; <code>BrowserPane.hosted()/applyCursorRow()</code>; <code>LibraryPanel.navMode</code>; <code>-Dlsd.editBrowse=gen|chain|fx1-3|trans</code> opens Deck A's bay on a tab (screenshots). </li>
 </ul>
 <h3 id="controller-navigates-the-unified-browser-tree-uibrowserbrowserpanekt-uilibrarynavigationkt-uibrowserbrowsemodelkt-controlknobcommandskt">Controller Navigates the Unified Browser Tree (<code>ui/browser/BrowserPane.kt</code>, <code>ui/LibraryNavigation.kt</code>, <code>ui/browser/BrowseModel.kt</code>, <code>control/KnobCommands.kt</code>)</h3>
 <ul>
-<li><strong>The Twister's pane button walks tree, list, BG queue, A/B queue</strong> (FX: FX BG and FX A/B queues; Trans: its one queue). A fresh tab starts in the list. In the tree, turning knob 1 moves a cursor over the visible folders and playlists (shown as an outline) and <strong>a tap selects</strong> the folder or playlist, which fills the list. Turning never changes the list. Changing the folder or playlist, by controller or mouse, clears the list selection so a row of the previous view can't be loaded by accident.</li>
-<li><strong>Tree cursor outline &amp; knob sensitivity</strong>: The controller cursor is drawn as a full-width, clean rounded cyan box (inset from window clip boundaries so all borders are visible, instead of appearing as an underline). Encoder knob 1 travel is 1 tick per item (was 4 ticks), so every single physical detent click on the Twister steps exactly one item forward or backward immediately.</li>
+<li><strong>The Twister's pane button walks tree, list, BG queue, A/B queue</strong> (FX: FX BG and FX A/B queues; Trans: its one queue). A fresh tab starts in the list. In the tree, turning knob 16 moves a cursor over the visible folders and playlists (shown as an outline) and <strong>a tap selects</strong> the folder or playlist, which fills the list. Turning never changes the list. Changing the folder or playlist, by controller or mouse, clears the list selection so a row of the previous view can't be loaded by accident.</li>
+<li><strong>Tree cursor outline &amp; knob sensitivity</strong>: The controller cursor is drawn as a full-width, clean rounded cyan box (inset from window clip boundaries so all borders are visible, instead of appearing as an underline). Encoder knob 16 travel is 1 tick per item (was 4 ticks), so every single physical detent click on the Twister steps exactly one item forward or backward immediately.</li>
 <li>Internal: <code>SelectionSource.TREE</code>; <code>BrowserPane.stepTree/acceptTree/treeCursorOf/treeSize</code>; pure <code>visibleSelectableScopes</code> and <code>stepTreeCursor</code> in <code>BrowseModel.kt</code>; <code>LibraryNavigation.panes()</code> has a unified branch (<code>unifiedKind()</code>); <code>KnobCommands.BROWSE_STEP = 1f / 127f</code>.</li>
 </ul>
 <h3 id="unsaved-changes-prompt-can-be-answered-from-the-controller-uipopupmanagerkt-uinavigationsurfacekt">Unsaved-Changes Prompt Can Be Answered from the Controller (<code>ui/PopupManager.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
 <ul>
-<li><strong>The "unsaved changes on this deck" prompt now answers to the Twister.</strong> While it is up, <strong>left-top</strong> (or Esc) is Cancel, <strong>right-top</strong> or a <strong>knob 1 tap</strong> is Save, <strong>right-bottom</strong> or <strong>Shift + tap</strong> is Discard. Nothing else navigates until you answer, so a stray turn can't change the Library behind it. The prompt shows the mapping.</li>
+<li><strong>The "unsaved changes on this deck" prompt now answers to the Twister.</strong> While it is up, <strong>left-top</strong> (or Esc) is Cancel, <strong>right-top</strong> or a <strong>knob 16 tap</strong> is Save, <strong>right-bottom</strong> or <strong>Shift + tap</strong> is Discard. Nothing else navigates until you answer, so a stray turn can't change the Library behind it. The prompt shows the mapping.</li>
 <li>Internal: <code>DeckConfirmPrompt</code> / <code>DeckConfirmChoice</code> (implemented by <code>PopupManager</code>; the choice is applied inside the modal on the next draw so <code>closeCurrentPopup</code> targets it); <code>NavigationSurface</code> takes the prompt and reports <code>browsing</code> while it is pending.</li>
 </ul>
 <h3 id="maps-tab-in-the-library-save-transitions-from-anywhere-uibrowsermapsbrowserpanelkt-uitransitionsavekt-macromacrobankserializerkt">Maps Tab in the Library, Save Transitions from Anywhere (<code>ui/browser/MapsBrowserPanel.kt</code>, <code>ui/TransitionSave.kt</code>, <code>macro/MacroBankSerializer.kt</code>)</h3>

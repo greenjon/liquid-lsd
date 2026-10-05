@@ -52,8 +52,8 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
 - Side buttons (`side.1..3` = CC 8, 11, 13; shift = CC 10 on left-bottom, unchanged; fine = hold a knob's switch and turn) are commands
   `nav.button.N` / `nav.button.N.alt` (`control/NavCommands.kt`). `NavSurface` (`control/NavSurface.kt`, UI side
   `ui/NavigationSurface.kt`) decides the meaning from the context: Library view (Library FULL), picker (an SRC/FX/transition list
-  or the saved-chain list is showing in the Edit row), else Perform/Edit. While `browsing`, `KnobCommands` sends knob 1's turn
-  (4 encoder ticks = 1 item, `BROWSE_STEP`) and tap to the surface; knobs 2-16 are inert.
+  or the saved-chain list is showing in the Edit row), else Perform/Edit. While `browsing`, `KnobCommands` sends knob 16's turn
+  (4 encoder ticks = 1 item, `BROWSE_STEP`) and tap to the surface; knobs 5-15 are inert; knobs 1-4 stay live when `browseRowLive` (picker).
 - Helpers: `ui/LibraryNavigation.kt` (tabs, lists, cursor, accept, enqueue), `ui/BackNavigation.kt` (the Esc stack, shared with the
   keyboard), `ShaderPickerPopup.moveCursor/acceptCursor/stepCategory/detach`, `ChainListBrowse`. Perform's right-bottom button opens
   the picker of the last-touched knob's row (`PerformSurface.lastTouchedKnob`).

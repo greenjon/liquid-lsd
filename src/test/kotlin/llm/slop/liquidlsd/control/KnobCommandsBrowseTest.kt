@@ -28,46 +28,46 @@ class KnobCommandsBrowseTest {
 
     @Test
     fun leftoverBrowseTravelDoesNotLeakIntoTheNextSession() {
-        registry.execute("knob.1", CommandInput.Delta(half), ctx)
+        registry.execute("knob.16", CommandInput.Delta(half), ctx)
         assertEquals(0, steps)
         browsing = false
         registry.execute("knob.2", CommandInput.Delta(0.01f), ctx)   // a normal turn ends the session
         browsing = true
-        registry.execute("knob.1", CommandInput.Delta(half), ctx)
+        registry.execute("knob.16", CommandInput.Delta(half), ctx)
         assertEquals(0, steps)                                         // 0.6 + 0.6 would have been one step
     }
 
     @Test
     fun restartingBrowsingWithNoOtherKnobEventStartsFromZero() {
-        registry.execute("knob.1", CommandInput.Delta(half), ctx)
+        registry.execute("knob.16", CommandInput.Delta(half), ctx)
         assertEquals(0, steps)
         browsing = false
         browsing = true
         session++                                                      // a new browse session began
-        registry.execute("knob.1", CommandInput.Delta(half), ctx)
+        registry.execute("knob.16", CommandInput.Delta(half), ctx)
         assertEquals(0, steps)                                         // would have been one step with carry-over
     }
 
     @Test
     fun travelWithinOneSessionStillAccumulates() {
-        registry.execute("knob.1", CommandInput.Delta(half), ctx)
-        registry.execute("knob.1", CommandInput.Delta(half), ctx)
+        registry.execute("knob.16", CommandInput.Delta(half), ctx)
+        registry.execute("knob.16", CommandInput.Delta(half), ctx)
         assertEquals(1, steps)
     }
 
     @Test
     fun clearHeldStateDropsBrowseTravel() {
-        registry.execute("knob.1", CommandInput.Delta(half), ctx)
+        registry.execute("knob.16", CommandInput.Delta(half), ctx)
         registry.clearHeldState()
-        registry.execute("knob.1", CommandInput.Delta(half), ctx)
+        registry.execute("knob.16", CommandInput.Delta(half), ctx)
         assertEquals(0, steps)
     }
 
     @Test
     fun anAcceleratedTurnStillMovesOneItem() {
-        registry.execute("knob.1", CommandInput.Delta(KnobCommands.BROWSE_STEP * 4f), ctx)
+        registry.execute("knob.16", CommandInput.Delta(KnobCommands.BROWSE_STEP * 4f), ctx)
         assertEquals(1, steps)
-        registry.execute("knob.1", CommandInput.Delta(-KnobCommands.BROWSE_STEP * 3f), ctx)
+        registry.execute("knob.16", CommandInput.Delta(-KnobCommands.BROWSE_STEP * 3f), ctx)
         assertEquals(0, steps)
     }
 }

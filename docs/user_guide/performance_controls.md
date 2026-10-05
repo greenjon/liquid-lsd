@@ -318,8 +318,8 @@ Each row is pinned to one half (source or FX), so no `SRC`/`FX` switching is nee
 1. **Go to bank 1** (A/B). Deck A's FX row is knobs 5-8 (the second row of the grid): knob 5 is the chain's Super Knob, knobs 6-8 are slots 1-3.
 2. **Touch the slot you want.** Give knob 6 (slot 1) a small turn. The picker opens for the *last knob you touched*, so this step chooses the target. Don't tap it: a tap bypasses the slot.
 3. **Press the right-bottom side button.** The picker for that slot opens on screen (stock filters, favourites and saved effects).
-4. **Browse.** Turn **knob 1** (the first knob of the whole grid, not knob 6) to move the highlight. Nothing is applied while you move. Press **right-top** to step to the next category (hold Shift for the previous one).
-5. **Tap knob 1** to apply the highlighted effect to the slot. The item currently loaded is marked in the list (stock items only).
+4. **Browse.** Turn **knob 16** (the last knob of the grid, bottom right) to move the highlight. Nothing is applied while you move. Press **right-top** to step to the next category (hold Shift for the previous one).
+5. **Tap knob 16** to apply the highlighted effect to the slot. The item currently loaded is marked in the list (stock items only).
 6. **Close the picker** with **left-top**. The effect is now in slot 1; turn knob 6 for its Metaknob and knob 5 for the Super Knob.
 7. **Tune it.** Hold **Shift** and tap knob 6 to focus the slot: its parameters spread over knobs 6-8 and knob 5 becomes the Metaknob. **Shift + tap knob 5** leaves focus.
 
@@ -328,7 +328,7 @@ Variations:
 - **Replace** an effect: repeat steps 2-5 on the same slot. **Clear** a slot: with the picker open, **Shift + right-bottom**.
 - **Load a saved chain** into all three slots: touch **knob 5** (the Super Knob) before step 3. The picker then lists your saved chains, and **Shift + right-bottom** clears the whole chain.
 - **Change Deck A's source** instead: touch any knob in the source row (knobs 1-4) and press right-bottom for the source list.
-- **Switching decks or targets:** The picker stays scoped to the deck and row that opened it. Because knobs 2-16 are inert while browsing, close the picker first with **left-top**, touch a knob on the other deck or row (switching Twister banks if needed), and press **right-bottom** to open its picker.
+- **Switching decks or targets:** The picker stays scoped to the deck and row that opened it. Because knobs 5-15 are inert while browsing and knobs 1-4 follow the row being filled, close the picker first with **left-top**, touch a knob on the other deck or row (switching Twister banks if needed), and press **right-bottom** to open its picker.
 - **Master FX or a transition:** use bank 3 and touch a knob in Master FX (knobs 5-8) or Transitions (knobs 9-12).
 - If nothing happens when you press right-bottom, you haven't touched a knob since the app started: turn one first.
 - Picking from the **Library view** instead is described below.
@@ -338,14 +338,14 @@ Variations:
 
 The three side buttons other than Shift change meaning with the view:
 
-| View | Left-top | Right-top | Right-bottom | Knob 1 |
+| View | Left-top | Right-top | Right-bottom | Knob 16 |
 |---|---|---|---|---|
 | **Perform** | back (same as Esc) | open the **Library** | open the **picker** for the row of the knob you touched last | normal knob |
 | **Picker open** | close the picker | step the pane: folders, list, queues | nothing; **Shift +** it clears the slot or chain | **cursor** in the active pane: turn to move; tap applies the list row, or selects a folder and jumps to the list |
 | **Library** | leave the Library | step the **tab** (Sources, FX, Transitions) | step the **pane**: folder tree, list, BG queue, A/B queue | **cursor**: turn to move, tap to load |
 
-- **Unsaved-changes prompt:** when loading would discard edits on a deck, the prompt takes over the controller: **left-top** = Cancel, **right-top** or **knob 1 tap** = Save, **right-bottom** or **Shift + tap** = Discard. Nothing else navigates until you answer.
-- **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active. To pick for another deck or row, close the picker with **left-top** before touching the new row's knob.
+- **Unsaved-changes prompt:** when loading would discard edits on a deck, the prompt takes over the controller: **left-top** = Cancel, **right-top** or **knob 16 tap** = Save, **right-bottom** or **Shift + tap** = Discard. Nothing else navigates until you answer.
+- **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knob 16 is the cursor. Knobs 5-15 do nothing while a picker or the Library is active; knobs 1-4 keep controlling the row you are filling while a picker is open (they light in that row's colour), so you can tweak a freshly loaded source or chain without closing the picker. To pick for another deck or row, close the picker with **left-top** before touching the new row's knob.
 - **Edit:** Left-top closes Edit (collapsing the module bay back to the Faceplate, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).
 - **Library:** a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and **Shift + tap** adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.
 - **Unified browser (default; the Library tab bar's "Unified" toggle turns it off):** a fresh tab starts in the list. **Right-bottom** moves on to the queues and **Shift +** it goes back to the folder tree. In the tree, turning moves a cursor (an outline) over the visible folders and playlists without changing the list; a **tap** selects the folder or playlist under it, which fills the list and clears the list's selection. A playlist is just a tree entry, so there is no separate playlist pane.

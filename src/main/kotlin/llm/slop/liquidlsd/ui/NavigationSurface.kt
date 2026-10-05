@@ -9,10 +9,10 @@ import llm.slop.liquidlsd.ui.browser.BrowserPane
 
 /**
  * Applies controller navigation to the live UI. The three side buttons mean different things per context:
- *  - Library view (Library FULL): back, next tab, next list; knob 1 is the cursor.
+ *  - Library view (Library FULL): back, next tab, next list; the cursor is knob 16.
  *    With shift: enqueue to the BG queue, previous tab, previous list.
  *  - Picker (the unified pane is hosted in the Edit row's Browse tab): left-top = back, right-top = next pane
- *    (tree > list > queues; shift: previous), shift + right-bottom = clear the slot or chain; knob 1 is the cursor
+ *    (tree > list > queues; shift: previous), shift + right-bottom = clear the slot or chain; the cursor is knob 16
  *    (tap = apply, and a tap on a tree row selects the scope and moves the cursor into the list).
  *  - Dirty-deck modal up: back = Cancel, side 2 / knob tap = Save, side 3 / shift+tap = Discard (overrides every other context).
  *  - Perform / Edit view: back (the Esc stack), open the Library, open the picker of the row whose knob
@@ -36,8 +36,11 @@ internal class NavigationSurface(
 
     private val confirming: Boolean get() = deckConfirm?.deckConfirmPending == true
 
-    /** While the dirty-deck modal is up, knob 1 and the side buttons answer it (see [DeckConfirmChoice]). */
+    /** While the dirty-deck modal is up, the cursor knob and the side buttons answer it (see [DeckConfirmChoice]). */
     override val browsing: Boolean get() = confirming || inLibraryView || inPicker
+
+    /** In the picker the row being filled is the only row on screen, so Twister row one drives it. */
+    override val browseRowLive: Boolean get() = inPicker && !confirming
 
     // The surface is rebuilt every frame, so the session counter lives in the companion; sampling on
     // construction and on read catches every inactive -> active edge.

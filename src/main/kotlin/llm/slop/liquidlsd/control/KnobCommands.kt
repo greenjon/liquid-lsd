@@ -5,7 +5,8 @@ package llm.slop.liquidlsd.control
  *  - `knob.<n>` turns knob n. Turning while its switch is held is a fine adjustment.
  *  - `knob.<n>.press` is the switch: a tap (released without turning) runs the knob's primary action.
  *  - `knob.<n>.press_alt` is the same switch with shift held: a tap runs the secondary action.
- * While a browse context is active, knob 1 browses and knobs 2-16 are inert.
+ * While a browse context is active, knob 16 browses and the others are inert, except knobs 1-4 while the
+ * browsed row is on screen ([NavSurface.browseRowLive]).
  * Hold state lives here, not in the device, because the Twister sends identical turn messages whether
  * or not its switch is down. One instance serves all devices; the switch is expected to be held on
  * one device at a time.
@@ -39,8 +40,9 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
                     val session = nav.browseSession
                     if (session != lastBrowseSession) { lastBrowseSession = session; browseAccum = 0f }
                     browseWasActive = true
-                    if (knob == 0) browseTurn(delta, nav)
-                    return@Command // other knobs are inert while browsing
+                    if (knob == BROWSE_KNOB) browseTurn(delta, nav)
+                    else if (isLiveRowKnob(knob, nav)) ctx.knobSurface?.turn(knob, if (held[knob]) delta * fineFactor else delta)
+                    return@Command // every other knob is inert while browsing
                 }
                 endBrowseSession()
                 ctx.knobSurface?.turn(knob, if (held[knob]) delta * fineFactor else delta)
@@ -55,7 +57,7 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
     }
 
     /**
-     * Turns knob 1 into whole cursor steps: [BROWSE_STEP] of knob travel is one item. At most one item per turn
+     * Turns the cursor knob into whole cursor steps: [BROWSE_STEP] of knob travel is one item. At most one item per turn
      * message: the profile's turn acceleration would otherwise skip rows and slam into the ends of long lists.
      */
     private fun browseTurn(delta: Float, nav: NavSurface) {
@@ -66,6 +68,9 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
             nav.browseStep(steps.coerceIn(-1, 1))
         }
     }
+
+    /** Knobs 1-4 (row one) stay on the browsed row while it is on screen. */
+    private fun isLiveRowKnob(knob: Int, nav: NavSurface) = nav.browseRowLive && knob < ROW_KNOBS
 
     private fun press(knob: Int, down: Boolean, shifted: Boolean, ctx: CommandContext) {
         if (down) {
@@ -78,7 +83,11 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         if (!wasHeld || turnedWhileHeld[knob]) return
         val nav = ctx.navSurface
         if (nav != null && nav.browsing) {
-            if (knob == 0) nav.browseAccept(shifted)
+            if (knob == BROWSE_KNOB) nav.browseAccept(shifted)
+            else if (isLiveRowKnob(knob, nav)) {
+                val surface = ctx.knobSurface ?: return
+                if (shifted) surface.secondary(knob) else surface.primary(knob)
+            }
             return
         }
         endBrowseSession()
@@ -88,6 +97,10 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
 
     companion object {
         const val KNOB_COUNT = 16
+        /** The browse cursor knob (0-based): 16, bottom right, the easiest to reach. */
+        const val BROWSE_KNOB = KNOB_COUNT - 1
+        /** Knobs per row; row one is the one that stays live in the picker. */
+        const val ROW_KNOBS = 4
         /** How much a held switch scales a turn. */
         const val FINE_FACTOR = 0.1f
         /** Knob travel (fraction of range, before fine scaling) per browse cursor step: 1 encoder tick = 1 item. */

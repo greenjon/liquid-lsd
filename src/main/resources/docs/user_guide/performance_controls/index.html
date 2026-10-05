@@ -2417,8 +2417,8 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <li><strong>Go to bank 1</strong> (A/B). Deck A's FX row is knobs 5-8 (the second row of the grid): knob 5 is the chain's Super Knob, knobs 6-8 are slots 1-3.</li>
 <li><strong>Touch the slot you want.</strong> Give knob 6 (slot 1) a small turn. The picker opens for the <em>last knob you touched</em>, so this step chooses the target. Don't tap it: a tap bypasses the slot.</li>
 <li><strong>Press the right-bottom side button.</strong> The picker for that slot opens on screen (stock filters, favourites and saved effects).</li>
-<li><strong>Browse.</strong> Turn <strong>knob 1</strong> (the first knob of the whole grid, not knob 6) to move the highlight. Nothing is applied while you move. Press <strong>right-top</strong> to step to the next category (hold Shift for the previous one).</li>
-<li><strong>Tap knob 1</strong> to apply the highlighted effect to the slot. The item currently loaded is marked in the list (stock items only).</li>
+<li><strong>Browse.</strong> Turn <strong>knob 16</strong> (the last knob of the grid, bottom right) to move the highlight. Nothing is applied while you move. Press <strong>right-top</strong> to step to the next category (hold Shift for the previous one).</li>
+<li><strong>Tap knob 16</strong> to apply the highlighted effect to the slot. The item currently loaded is marked in the list (stock items only).</li>
 <li><strong>Close the picker</strong> with <strong>left-top</strong>. The effect is now in slot 1; turn knob 6 for its Metaknob and knob 5 for the Super Knob.</li>
 <li><strong>Tune it.</strong> Hold <strong>Shift</strong> and tap knob 6 to focus the slot: its parameters spread over knobs 6-8 and knob 5 becomes the Metaknob. <strong>Shift + tap knob 5</strong> leaves focus.</li>
 </ol>
@@ -2427,7 +2427,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <li><strong>Replace</strong> an effect: repeat steps 2-5 on the same slot. <strong>Clear</strong> a slot: with the picker open, <strong>Shift + right-bottom</strong>.</li>
 <li><strong>Load a saved chain</strong> into all three slots: touch <strong>knob 5</strong> (the Super Knob) before step 3. The picker then lists your saved chains, and <strong>Shift + right-bottom</strong> clears the whole chain.</li>
 <li><strong>Change Deck A's source</strong> instead: touch any knob in the source row (knobs 1-4) and press right-bottom for the source list.</li>
-<li><strong>Switching decks or targets:</strong> The picker stays scoped to the deck and row that opened it. Because knobs 2-16 are inert while browsing, close the picker first with <strong>left-top</strong>, touch a knob on the other deck or row (switching Twister banks if needed), and press <strong>right-bottom</strong> to open its picker.</li>
+<li><strong>Switching decks or targets:</strong> The picker stays scoped to the deck and row that opened it. Because knobs 5-15 are inert while browsing and knobs 1-4 follow the row being filled, close the picker first with <strong>left-top</strong>, touch a knob on the other deck or row (switching Twister banks if needed), and press <strong>right-bottom</strong> to open its picker.</li>
 <li><strong>Master FX or a transition:</strong> use bank 3 and touch a knob in Master FX (knobs 5-8) or Transitions (knobs 9-12).</li>
 <li>If nothing happens when you press right-bottom, you haven't touched a knob since the app started: turn one first.</li>
 <li>Picking from the <strong>Library view</strong> instead is described below.</li>
@@ -2442,7 +2442,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <th>Left-top</th>
 <th>Right-top</th>
 <th>Right-bottom</th>
-<th>Knob 1</th>
+<th>Knob 16</th>
 </tr>
 </thead>
 <tbody>
@@ -2470,8 +2470,8 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 </tbody>
 </table>
 <ul>
-<li><strong>Unsaved-changes prompt:</strong> when loading would discard edits on a deck, the prompt takes over the controller: <strong>left-top</strong> = Cancel, <strong>right-top</strong> or <strong>knob 1 tap</strong> = Save, <strong>right-bottom</strong> or <strong>Shift + tap</strong> = Discard. Nothing else navigates until you answer.</li>
-<li><strong>Picker:</strong> moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active. To pick for another deck or row, close the picker with <strong>left-top</strong> before touching the new row's knob.</li>
+<li><strong>Unsaved-changes prompt:</strong> when loading would discard edits on a deck, the prompt takes over the controller: <strong>left-top</strong> = Cancel, <strong>right-top</strong> or <strong>knob 16 tap</strong> = Save, <strong>right-bottom</strong> or <strong>Shift + tap</strong> = Discard. Nothing else navigates until you answer.</li>
+<li><strong>Picker:</strong> moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knob 16 is the cursor. Knobs 5-15 do nothing while a picker or the Library is active; knobs 1-4 keep controlling the row you are filling while a picker is open (they light in that row's colour), so you can tweak a freshly loaded source or chain without closing the picker. To pick for another deck or row, close the picker with <strong>left-top</strong> before touching the new row's knob.</li>
 <li><strong>Edit:</strong> Left-top closes Edit (collapsing the module bay back to the Faceplate, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).</li>
 <li><strong>Library:</strong> a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and <strong>Shift + tap</strong> adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.</li>
 <li><strong>Unified browser (default; the Library tab bar's "Unified" toggle turns it off):</strong> a fresh tab starts in the list. <strong>Right-bottom</strong> moves on to the queues and <strong>Shift +</strong> it goes back to the folder tree. In the tree, turning moves a cursor (an outline) over the visible folders and playlists without changing the list; a <strong>tap</strong> selects the folder or playlist under it, which fills the list and clears the list's selection. A playlist is just a tree entry, so there is no separate playlist pane.</li>

@@ -6,7 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class NavCommandsTest {
-    private class FakeNav(override var browsing: Boolean) : NavSurface {
+    private class FakeNav(override var browsing: Boolean, override var browseRowLive: Boolean = false) : NavSurface {
         override val browseSession = 0
         val calls = ArrayList<String>()
         override fun button(index: Int, shifted: Boolean) { calls += "button $index${if (shifted) " shifted" else ""}" }
@@ -45,19 +45,19 @@ class NavCommandsTest {
     }
 
     @Test
-    fun knobOneStepsAndAcceptsWhileBrowsing() {
+    fun knobSixteenStepsAndAcceptsWhileBrowsing() {
         val nav = FakeNav(browsing = true)
         val c = ctx(nav)
         val tick = 1f / 127f
         // 1 tick = 1 step. Sub-tick remainder carries over.
-        registry.execute("knob.1", CommandInput.Delta(0.5f * tick), c)
+        registry.execute("knob.16", CommandInput.Delta(0.5f * tick), c)
         assertEquals(emptyList(), nav.calls)
-        registry.execute("knob.1", CommandInput.Delta(0.6f * tick), c)
+        registry.execute("knob.16", CommandInput.Delta(0.6f * tick), c)
         assertEquals(listOf("step 1"), nav.calls)
-        registry.execute("knob.1", CommandInput.Delta(-2f * tick), c)
+        registry.execute("knob.16", CommandInput.Delta(-2f * tick), c)
         assertEquals(listOf("step 1", "step -1"), nav.calls)
-        press("knob.1.press", c)
-        press("knob.1.press_alt", c)
+        press("knob.16.press", c)
+        press("knob.16.press_alt", c)
         assertEquals(listOf("accept", "accept shifted"), nav.calls.takeLast(2))
         assertEquals(emptyList(), knobs.calls)
     }
@@ -65,13 +65,28 @@ class NavCommandsTest {
     @Test
     fun otherKnobsAreInertWhileBrowsingAndKeepPerformMeaningOtherwise() {
         val nav = FakeNav(browsing = true)
-        registry.execute("knob.2", CommandInput.Delta(0.01f), ctx(nav))
-        press("knob.2.press", ctx(nav))
+        for (n in listOf(1, 2, 5, 15)) {
+            registry.execute("knob.$n", CommandInput.Delta(0.01f), ctx(nav))
+            press("knob.$n.press", ctx(nav))
+        }
         assertEquals(emptyList(), knobs.calls)
         val idle = FakeNav(browsing = false)
         registry.execute("knob.1", CommandInput.Delta(0.01f), ctx(idle))
         press("knob.1.press", ctx(idle))
-        assertEquals(listOf("turn 0", "primary 0"), knobs.calls)
+        registry.execute("knob.16", CommandInput.Delta(0.01f), ctx(idle))
+        assertEquals(listOf("turn 0", "primary 0", "turn 15"), knobs.calls)
         assertEquals(emptyList(), nav.calls + idle.calls)
+    }
+
+    @Test
+    fun rowOneStaysLiveWhileTheBrowsedRowIsOnScreen() {
+        val nav = FakeNav(browsing = true, browseRowLive = true)
+        for (n in listOf(1, 4, 5, 15)) {
+            registry.execute("knob.$n", CommandInput.Delta(0.01f), ctx(nav))
+            press("knob.$n.press", ctx(nav))
+        }
+        press("knob.2.press_alt", ctx(nav))
+        assertEquals(listOf("turn 0", "primary 0", "turn 3", "primary 3", "secondary 1"), knobs.calls)
+        assertEquals(emptyList(), nav.calls)
     }
 }

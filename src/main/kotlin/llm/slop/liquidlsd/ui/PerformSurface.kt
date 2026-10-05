@@ -4,9 +4,11 @@ import llm.slop.liquidlsd.control.KnobCommands
 import llm.slop.liquidlsd.control.KnobLight
 import llm.slop.liquidlsd.control.KnobLightSource
 import llm.slop.liquidlsd.control.KnobSurface
+import llm.slop.liquidlsd.control.NavSurface
 import llm.slop.liquidlsd.macro.FxMacroSync
 import llm.slop.liquidlsd.macro.MacroControl
 import llm.slop.liquidlsd.macro.MacroEngine
+import llm.slop.liquidlsd.parameters.MeterType
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.rendering.Mixer
@@ -98,7 +100,8 @@ internal class PerformSurface(
     private val theme: UITheme,
     private val ctx: PerformanceUiContext,
     private val parametersState: ParametersState,
-    private val mixer: Mixer
+    private val mixer: Mixer,
+    private val nav: NavSurface? = null
 ) : KnobSurface, KnobLightSource {
 
     private val rowsCache = PerfRows.RowsCache()
@@ -196,7 +199,16 @@ internal class PerformSurface(
                 )
             })
         }
+        if (nav?.browsing == true) dimForBrowse(nav.browseRowLive)
         return lightBuffer
+    }
+
+    /** While browsing only the cursor knob (white) and, with the browsed row on screen, knobs 1-4 (its colour) stay lit. */
+    private fun dimForBrowse(rowLive: Boolean) {
+        for (i in lightBuffer.indices) {
+            if (i == KnobCommands.BROWSE_KNOB) lightBuffer[i] = KnobLight(0.5f, meterType = MeterType.ENDLESS)
+            else if (!(rowLive && i < KnobCommands.ROW_KNOBS)) lightBuffer[i] = null
+        }
     }
 
     private fun isLit(target: PageKnob): Boolean = when (val under = target.spec.under) {
