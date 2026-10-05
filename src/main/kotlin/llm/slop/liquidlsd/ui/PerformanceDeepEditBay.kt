@@ -183,7 +183,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
                 val slot = if (i == -1) null else i
                 tab(label, tip, inFx && fxSlot == slot) { parametersState.openFxChainBrowse(moduleId, deckLabel, slot) }
             }
-            drawQueueNextUp(session, deckLabel)
+            if (!inBrowse) drawQueueNextUp(session, deckLabel)
         }
         ImGui.spacing()
         ImGui.separator()
@@ -191,8 +191,8 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
     }
 
     /**
-     * Right-aligned, on the tab row: what the queue feeding this module plays next. The Library (and its queue
-     * columns) is off screen in Edit view, so without this a performer can't see what's coming. Decks A/B and
+     * Right-aligned, on the tab row of the Parameters editor: what the queue feeding this module plays next. The Library
+     * is off screen in Edit view; the Browse tabs show the queue columns themselves. Decks A/B and
      * Master show the play queue, BG its own queue; PV has none.
      */
     private fun drawQueueNextUp(session: SessionContext, deckLabel: String?) {
@@ -218,7 +218,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         ImGui.setCursorPosX((ImGui.getWindowWidth() - ImGui.getStyle().windowPaddingX - ImGui.calcTextSize(fitted).x).coerceAtLeast(left))
         ImGui.alignTextToFramePadding()
         ImGui.textDisabled(fitted)
-        itemTooltip(text + "\nThe Library queue columns are hidden in Edit view; Esc returns to them.")
+        itemTooltip(text + "\nThe queue columns are in the Browse tabs; Esc returns to the Library.")
     }
 
     fun deepEditParamsWidth(session: SessionContext, metrics: GridMetrics): Float {

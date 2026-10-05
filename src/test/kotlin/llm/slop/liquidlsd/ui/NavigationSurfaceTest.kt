@@ -15,6 +15,7 @@ import llm.slop.liquidlsd.rendering.isf.ISFInput
 import llm.slop.liquidlsd.ui.browser.ApplyTarget
 import llm.slop.liquidlsd.ui.browser.BrowseKind
 import llm.slop.liquidlsd.ui.browser.BrowseScope
+import llm.slop.liquidlsd.ui.browser.BrowserDock
 import llm.slop.liquidlsd.ui.browser.BrowserPane
 import llm.slop.liquidlsd.control.SendTarget
 import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
@@ -212,6 +213,7 @@ class NavigationSurfaceTest {
     // --- Unified pane hosted in the Edit bay ---
 
     private fun hostPane(applied: MutableList<String>, cleared: MutableList<String>) {
+        BrowserDock.noteEditShown()
         BrowserPane.noteHosting(
             ApplyTarget(
                 kind = BrowseKind.SRC, contextKey = "gen/Deck A", defaultScope = BrowseScope.All,
@@ -222,6 +224,7 @@ class NavigationSurfaceTest {
 
     private fun unhostPane() {
         BrowserPane.noteHosting(null)
+        BrowserDock.noteEditShown(0L)
         LibraryPanel.activeSelectionSource = null
         PresetListPanel.selectedAsset = null
     }

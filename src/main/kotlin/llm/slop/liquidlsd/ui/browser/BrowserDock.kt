@@ -13,6 +13,7 @@ import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.LibraryPanel.LibraryViewMode
 import llm.slop.liquidlsd.ui.ParametersState
 import llm.slop.liquidlsd.ui.TangoPalette
+import llm.slop.liquidlsd.ui.UiClock
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.shortcuts.ShortcutManager
 
@@ -22,9 +23,39 @@ import llm.slop.liquidlsd.ui.shortcuts.ShortcutManager
  * window draws it unbound; see `.planning/library-browser-unification-plan.md`.
  */
 object BrowserDock {
+    /** What the dock applies to while it is opened from an Edit row: the row's [target], a [label] for the chip, and row-specific buttons ([actions], e.g. Save, Clear Slot). */
+    class DockBinding(val target: ApplyTarget, val label: String, val actions: (() -> Unit)? = null)
+
+    private var editShownAtMs = 0L
+    private var syncedKey: String? = null
+
+    internal fun noteEditShown(atMs: Long = UiClock.nowMs()) { editShownAtMs = atMs }
+
+    /** True when the dock was drawn inside the Edit bay within the last 300 ms (bound or not). */
+    fun editHosted(): Boolean = UiClock.nowMs() - editShownAtMs < 300L
+
+    /** The Library window is drawing the dock again, so the next Edit row re-selects its tab. */
+    fun libraryShown() { syncedKey = null }
+
+    private fun modeFor(kind: BrowseKind) = when (kind) {
+        BrowseKind.SRC -> LibraryViewMode.PRESETS
+        BrowseKind.FX -> LibraryViewMode.FX
+        BrowseKind.TRANS -> LibraryViewMode.TRANS
+    }
+
+    /** Opens on the tab of the row's kind whenever the row (or its slot) changes; a tab the user picks afterwards sticks until then. */
+    private fun syncTab(binding: DockBinding) {
+        noteEditShown()
+        if (binding.target.contextKey == syncedKey) return
+        syncedKey = binding.target.contextKey
+        LibraryNavigation.setViewMode(modeFor(binding.target.kind))
+    }
+
+    private const val TABS_W = 64f + 54f + 82f + 54f + 3 * 2f
+
     /** Tab strip `Sources | FX | Transitions | Macros` followed by the centred action toolbar. Leaves the cursor after the toolbar. */
-    fun drawHeader(session: SessionContext, mixer: Mixer, parametersState: ParametersState, width: Float, btnH: Float, yOffset: Float) {
-        ImGui.setCursorPosX(8f)
+    fun drawHeader(session: SessionContext, mixer: Mixer, parametersState: ParametersState, width: Float, btnH: Float, yOffset: Float, x0: Float = 8f) {
+        ImGui.setCursorPosX(x0)
         ImGui.setCursorPosY(yOffset)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             val activeCol = TangoPalette.MODE_ACTIVE.u32()
@@ -50,7 +81,8 @@ object BrowserDock {
 
         val totalToolbarW = BrowserActionToolbar.calculateToolbarWidth(btnH)
         val windowBtnW = (btnH * 1.15f).coerceIn(20f, 32f)
-        val targetCenterX = ((width - totalToolbarW) * 0.5f).coerceIn(120f, (width - totalToolbarW - windowBtnW - 8f).coerceAtLeast(120f))
+        val tabsEndX = x0 + TABS_W + 8f
+        val targetCenterX = ((width - totalToolbarW) * 0.5f).coerceIn(120f, (width - totalToolbarW - windowBtnW - 8f).coerceAtLeast(120f)).coerceAtLeast(tabsEndX)
         ImGui.setCursorPosX(targetCenterX)
         ImGui.setCursorPosY(yOffset)
         BrowserActionToolbar.draw(
@@ -63,8 +95,30 @@ object BrowserDock {
         )
     }
 
+    /** One line above the pane: what a tap applies to, plus the row's own buttons, or a reminder that this tab is the plain Library. */
+    private fun drawChip(binding: DockBinding, bound: Boolean) {
+        ImGui.alignTextToFramePadding()
+        if (bound) {
+            ImGui.text("Applies to: ${binding.label}")
+            binding.actions?.let { ImGui.sameLine(0f, 12f); it() }
+        } else {
+            ImGui.textDisabled("Library tab: double-click loads to the inactive deck. Pick the ${binding.target.kind.name.lowercase()} tab to apply to ${binding.label}.")
+        }
+        ImGui.spacing()
+    }
+
     /** The pane (or the Macros list) of the selected tab, filling the remaining space. */
-    fun drawBody(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
+    fun drawBody(session: SessionContext, mixer: Mixer, parametersState: ParametersState, binding: DockBinding? = null) {
+        if (binding != null) syncTab(binding)
+        val kind = when (LibraryPanel.viewMode) {
+            LibraryViewMode.PRESETS -> BrowseKind.SRC
+            LibraryViewMode.FX -> BrowseKind.FX
+            LibraryViewMode.TRANS -> BrowseKind.TRANS
+            LibraryViewMode.MAPS -> null
+        }
+        // Bound only while the selected tab is the kind the row edits; any other tab is the plain Library.
+        val bound = binding?.takeIf { it.target.kind == kind }
+        if (binding != null) drawChip(binding, bound != null)
         val contentH = (ImGui.getContentRegionAvailY() - 4f).coerceAtLeast(1f)
         val availW = ImGui.getContentRegionAvailX().coerceAtLeast(80f)
         val outerFlags = ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoScrollWithMouse
@@ -88,7 +142,7 @@ object BrowserDock {
             ImGui.endChild()
         } else if (unifiedKind != null) {
             ImGui.beginChild("LibraryUnified", availW, contentH, false, outerFlags)
-            BrowserPane.draw(session, mixer, parametersState, unifiedKind)
+            BrowserPane.draw(session, mixer, parametersState, unifiedKind, bound?.target)
             ImGui.endChild()
         }
 

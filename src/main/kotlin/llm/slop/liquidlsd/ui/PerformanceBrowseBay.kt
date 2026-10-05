@@ -17,13 +17,14 @@ import llm.slop.liquidlsd.ui.browser.ApplyTarget
 import llm.slop.liquidlsd.ui.browser.BrowseCatalogs
 import llm.slop.liquidlsd.ui.browser.BrowseKind
 import llm.slop.liquidlsd.ui.browser.BrowseScope
-import llm.slop.liquidlsd.ui.browser.BrowserPane
+import llm.slop.liquidlsd.ui.browser.BrowserDock
+import llm.slop.liquidlsd.ui.browser.BrowserDock.DockBinding
 import java.io.File
 
 /**
  * Inline "Browse" content for the Performance row bay: picking a deck's generator, a saved whole
  * FX chain, one FX chain slot's effect, or the active transition -- everything that used to be
- * the modal pickers that the unified [BrowserPane] replaced. Lives beside
+ * the modal pickers that the unified [BrowserPane] replaced. Draws the same [BrowserDock] as the Library, bound to the row. Lives beside
  * [PerformanceDeepEditBay]'s Params content; the bay's tab row (Edit | SRC | Chain | FX1-3) picks which
  * one shows. Picking something applies it immediately (Ctrl+Z undoes it) and leaves the list open, so
  * trying several generators/effects/chains in a row doesn't mean reopening anything.
@@ -71,8 +72,18 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 else DeckSlot.entries.firstOrNull { it.label == deckLabel }?.let { DeckOps.request(it, DeckChange.Preset(File(asset.path))) }
             }
         )
-        drawGenBrowseSaveButton(session, mixer, deck, deckLabel) { drawExternalVideoMenu(deckLabel, applyId) }
-        BrowserPane.draw(session, mixer, parametersState, BrowseKind.SRC, target)
+        val actions = { drawGenBrowseSaveButton(session, mixer, deck, deckLabel) { drawExternalVideoMenu(deckLabel, applyId) } }
+        drawDock(session, mixer, parametersState, DockBinding(target, "$deckLabel source", actions))
+    }
+
+    /** The one dock the Library also draws, bound to this row's [binding]: tabs and toolbar, the chip line, the pane, then its shortcuts and popups. */
+    private fun drawDock(session: SessionContext, mixer: Mixer, parametersState: ParametersState, binding: DockBinding) {
+        val btnH = 21f
+        BrowserDock.drawHeader(session, mixer, parametersState, ImGui.getWindowWidth(), btnH, ImGui.getCursorPosY(), ImGui.getCursorPosX())
+        ImGui.spacing()
+        BrowserDock.drawBody(session, mixer, parametersState, binding)
+        BrowserDock.drawShortcuts(session, mixer)
+        BrowserDock.drawPopups(session)
     }
 
     /** Floppy-disk Save/Save As -- same [DeckPresetController.handleSaveDeck] flow the Mixer's
@@ -114,7 +125,6 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             ImGui.sameLine()
             extra()
         }
-        ImGui.spacing()
     }
 
     /** The unified pane lists saved and stock sources only; live external video feeds (the old picker's "External Sources") live in this menu. */
@@ -149,17 +159,17 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 else TransitionOps.loadPreset(File(asset.path), undoable = true)
             }
         )
-        BrowserPane.draw(session, mixer, parametersState, BrowseKind.TRANS, target)
+        drawDock(session, mixer, parametersState, DockBinding(target, "Transition"))
     }
 
     /** [moduleId] is the canonical rack module (a deck, or MASTER) -- used only to look up the Chain/FX1/FX2/FX3 target chosen in the bay's tab row. */
     private fun drawFxChainBrowse(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String, chain: FxChain) {
         val target = parametersState.browseTargetFor(moduleId) as? ParametersState.BrowseTarget.FxChain
-        drawFxPane(session, mixer, parametersState, chain, target?.slotIndex)
+        drawFxPane(session, mixer, parametersState, chain, ctx.deckLabelForModuleId(moduleId) ?: "Master", target?.slotIndex)
     }
 
     /** The unified pane hosted for an FX slot (one effect) or, with [slotIndex] null, the whole chain. */
-    private fun drawFxPane(session: SessionContext, mixer: Mixer, parametersState: ParametersState, chain: FxChain, slotIndex: Int?) {
+    private fun drawFxPane(session: SessionContext, mixer: Mixer, parametersState: ParametersState, chain: FxChain, chainLabel: String, slotIndex: Int?) {
         val key = System.identityHashCode(chain)
         val target = if (slotIndex == null) {
             ApplyTarget(
@@ -185,10 +195,11 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 clear = { FxOps.clearSlot(chain, slotIndex, undoable = true) }
             )
         }
-        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            if (ImGui.button("${Icons.TRASH} ${if (slotIndex == null) "Clear Chain" else "Clear Slot ${slotIndex + 1}"}##browse_fx_clear")) target.clear?.invoke()
+        val actions = {
+            session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
+                if (ImGui.button("${Icons.TRASH} ${if (slotIndex == null) "Clear Chain" else "Clear Slot ${slotIndex + 1}"}##browse_fx_clear")) target.clear?.invoke()
+            }
         }
-        ImGui.spacing()
-        BrowserPane.draw(session, mixer, parametersState, BrowseKind.FX, target)
+        drawDock(session, mixer, parametersState, DockBinding(target, if (slotIndex == null) "$chainLabel FX chain" else "$chainLabel FX ${slotIndex + 1}", actions))
     }
 }

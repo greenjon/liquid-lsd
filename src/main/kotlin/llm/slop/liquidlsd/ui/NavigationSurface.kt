@@ -6,6 +6,7 @@ import llm.slop.liquidlsd.control.SendTarget
 import llm.slop.liquidlsd.macro.FxMacroSync
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.browser.BrowserDock
 import llm.slop.liquidlsd.ui.browser.BrowserPane
 
 /**
@@ -34,7 +35,7 @@ internal class NavigationSurface(
         get() = theme.libraryMode == UITheme.LibraryMode.FULL && !LibraryPanel.isEditView(session)
 
     private val inPicker: Boolean
-        get() = LibraryPanel.isEditView(session) && BrowserPane.hosted() != null
+        get() = LibraryPanel.isEditView(session) && BrowserDock.editHosted()
 
     private val confirming: Boolean get() = deckConfirm?.deckConfirmPending == true
 
@@ -80,11 +81,11 @@ internal class NavigationSurface(
 
     private fun pickerButton(index: Int, shifted: Boolean) {
         // The unified pane is in the bay: side 2 steps its panes (tree > list > queues), shift + side 3 clears the slot or chain.
-        val hosted = BrowserPane.hosted() ?: return
+        val hosted = BrowserPane.hosted()
         when (index) {
             0 -> if (!shifted) back()
             1 -> LibraryNavigation.stepPane(if (shifted) -1 else 1, session, mixer)
-            2 -> if (shifted) hosted.clear?.invoke()
+            2 -> if (shifted) hosted?.clear?.invoke()
         }
     }
 
@@ -154,7 +155,7 @@ internal class NavigationSurface(
 
     override fun browseStep(steps: Int) {
         if (confirming) return
-        if (inLibraryView || BrowserPane.hosted() != null) LibraryNavigation.step(steps, session, mixer)
+        if (inLibraryView || inPicker) LibraryNavigation.step(steps, session, mixer)
     }
 
     override fun browseAccept(shifted: Boolean) {
@@ -162,7 +163,7 @@ internal class NavigationSurface(
             deckConfirm?.answerDeckConfirm(if (shifted) DeckConfirmChoice.DISCARD else DeckConfirmChoice.SAVE)
             return
         }
-        if (!inLibraryView && BrowserPane.hosted() != null) {
+        if (inPicker) {
             if (!shifted) LibraryNavigation.accept(session, mixer, parametersState)
             return
         }

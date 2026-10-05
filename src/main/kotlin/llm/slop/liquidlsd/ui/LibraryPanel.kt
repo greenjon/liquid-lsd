@@ -47,14 +47,8 @@ object LibraryPanel {
 
     var viewMode: LibraryViewMode = System.getProperty("lsd.libraryTab")?.let { n -> LibraryViewMode.entries.firstOrNull { it.name.equals(n, true) } } ?: LibraryViewMode.PRESETS
 
-    /** The tab the controller and keyboard act on: the one the Edit bay's hosted pane is showing, else the Library's own [viewMode]. */
-    val navMode: LibraryViewMode
-        get() = when (llm.slop.liquidlsd.ui.browser.BrowserPane.hosted()?.kind) {
-            llm.slop.liquidlsd.ui.browser.BrowseKind.SRC -> LibraryViewMode.PRESETS
-            llm.slop.liquidlsd.ui.browser.BrowseKind.FX -> LibraryViewMode.FX
-            llm.slop.liquidlsd.ui.browser.BrowseKind.TRANS -> LibraryViewMode.TRANS
-            null -> viewMode
-        }
+    /** The tab the controller and keyboard act on. The dock owns one selected tab wherever it is drawn (Library or Edit bay). */
+    val navMode: LibraryViewMode get() = viewMode
     var activeSelectionSource: SelectionSource? = null
     var selectedPlaylistFile: File? = null
     var selectedTransitionPlaylistFile: File? = null
@@ -253,6 +247,7 @@ object LibraryPanel {
             ImGui.endMenuBar()
         }
 
+        BrowserDock.libraryShown()
         BrowserDock.drawBody(session, mixer, parametersState)
         BrowserDock.drawShortcuts(session, mixer)
         BrowserDock.drawPopups(session)
