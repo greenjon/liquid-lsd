@@ -13,6 +13,7 @@ data class AppPreferences(
     val audioBpmLocked: Boolean = true,
     val audioManualBpm: Float = 120.0f,
     val clockSource: llm.slop.liquidlsd.audio.ClockSource = llm.slop.liquidlsd.audio.ClockSource.AUDIO_TRACKER,
+    val fxLinkDefault: FxLinkDefault = FxLinkDefault.AUTO,
     val linkEnabled: Boolean = false,
     val linkQuantum: Double = 4.0,
     val linkStartStopSync: Boolean = false,

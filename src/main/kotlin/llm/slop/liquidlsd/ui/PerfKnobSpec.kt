@@ -28,6 +28,8 @@ internal sealed interface UnderKnob {
 /** The small buttons stacked left of a knob. */
 internal sealed interface SideButtons {
     data object None : SideButtons
+    /** Chain-wide Super Knob link toggle on the Super Knob (col 0) of an FX row in group mode. */
+    data object ChainLink : SideButtons
     /** Group mode, knobs 2-4: Super Knob link over the slot's bypass. */
     data class LinkAndBypass(val slotIndex: Int) : SideButtons
     /** Focus mode, knob 1: the focused slot's bypass. */
@@ -95,7 +97,7 @@ internal object PerfKnobResolver {
             when {
                 fx == null -> KnobSpec(col, knobIdx, control, label, SideButtons.None, meterType = meterType)
                 fx.focusedSlot != null -> focusSpec(col, knobIdx, control, fx, fx.focusedSlot)
-                col == 0 -> KnobSpec(col, knobIdx, control, label, SideButtons.None, meterType = meterType)
+                col == 0 -> KnobSpec(col, knobIdx, control, label, SideButtons.ChainLink, meterType = meterType)
                 else -> KnobSpec(col, knobIdx, control, UnderKnob.SlotCell(col - 1), SideButtons.LinkAndBypass(col - 1), meterType = meterType)
             }
         }

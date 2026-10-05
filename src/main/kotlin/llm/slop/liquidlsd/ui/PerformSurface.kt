@@ -139,7 +139,10 @@ internal class PerformSurface(
                 FxMacroSync.focusSlot(target.bankId, mixer, if (leaving) null else under.slotIndex)
             }
             is UnderKnob.ParamCell -> if (under.param != null) FxMacroSync.stepParamPage(target.bankId, mixer, +1)
-            is UnderKnob.Label -> Unit
+            is UnderKnob.Label -> if (target.spec.side is SideButtons.ChainLink) {
+                FxMacroSync.chainFor(target.bankId, mixer)?.toggleAllSlotsLinked()
+                FxMacroSync.syncFor(target.bankId, mixer)
+            }
         }
     }
 

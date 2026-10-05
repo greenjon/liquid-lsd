@@ -56,3 +56,7 @@ nav:
     - CLI & Automated Screen Capture Pipeline: developer/cli_and_screenshot_automation.md
   - Operations & Tuning: developer/ops_tuning.md
   - Release Notes: release_notes.md
+
+# Frozen history, not user documentation
+exclude_docs: |
+  archive/

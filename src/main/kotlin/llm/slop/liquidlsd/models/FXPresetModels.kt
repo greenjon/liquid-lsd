@@ -24,7 +24,7 @@ data class FXChainDto(
     val dryWet: ParameterDto? = null,
     val slots: List<FXSlotDto?> = emptyList(), // Size 3; null = empty slot
     val superKnob: ParameterDto? = null,
-    val slotSuperKnobLink: List<Boolean>? = null // Size 3; null = default (all linked)
+    val slotSuperKnobLink: List<Boolean>? = null // Size 3; null = follow the "Default FX chain linking" preference
 )
 
 /**

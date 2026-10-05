@@ -157,6 +157,21 @@ class PerformSurfaceTest {
     }
 
     @Test
+    fun shiftedTapOnKnobOneTogglesChainLinking() {
+        deckAChain.slots[0] = filter("glow", listOf("a"))
+        deckAChain.setAllSlotsLinked(false)
+        state.setDeckSubTab("Deck A", "FX")
+        FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
+
+        surface().secondary(0)
+        assertTrue(deckAChain.areAllSlotsLinked())
+        assertNull(deckAChain.focusedSlot)
+
+        surface().secondary(0)
+        assertTrue(deckAChain.areAllSlotsUnlinked())
+    }
+
+    @Test
     fun tapOnAFocusedParameterResetsItToDefaultAndMovesTheKnob() {
         val glow = filter("glow", listOf("intensity", "radius", "threshold"))
         deckAChain.slots[0] = glow

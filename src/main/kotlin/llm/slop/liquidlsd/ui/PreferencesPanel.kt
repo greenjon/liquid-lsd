@@ -373,6 +373,16 @@ object PreferencesPanel {
         }
 
         ImGui.spacing()
+        val fxLinkOptions = FxLinkDefault.values()
+        val fxLinkIdx = imgui.type.ImInt(session.uiTheme.fxLinkDefault.ordinal)
+        ImGui.setNextItemWidth(comboWidth)
+        if (ImGui.combo("Default FX chain linking", fxLinkIdx, fxLinkOptions.map { it.label }.toTypedArray())) {
+            session.uiTheme.fxLinkDefault = fxLinkOptions[fxLinkIdx.get()]
+            AppPreferencesStore.savePreferences()
+        }
+        itemTooltip("Whether new FX chains start with every slot linked to the Super Knob.\nAuto = unlinked when a knob controller (e.g. Midi Fighter Twister) is connected, so each slot Metaknob gets its own knob.\nSaved presets keep their own setting; applies to chains created or loaded afterwards.")
+
+        ImGui.spacing()
         val autoVjBehaviors = UITheme.AutoVjDirtyBehavior.values()
         val autoVjBehaviorNames = autoVjBehaviors.map { it.name }.toTypedArray()
         val currentAutoVjIdx = imgui.type.ImInt(session.uiTheme.autoVjDirtyBehavior.ordinal)

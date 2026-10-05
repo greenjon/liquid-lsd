@@ -81,7 +81,8 @@ object SiteGenerator {
         val docsOutputDir = File(outputDir, "docs")
         docsOutputDir.mkdirs()
 
-        val allDocs = scanMarkdownFiles(docsSourceDir)
+        // docs/archive/ holds frozen history (e.g. the old DECISIONS log); it is not published.
+        val allDocs = scanMarkdownFiles(docsSourceDir).filterNot { it.relativeTo(docsSourceDir).path.startsWith("archive") }
         println("Found ${allDocs.size} markdown doc files in docs/")
 
         for (docFile in allDocs) {

@@ -123,6 +123,7 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.utils.NativeLibraryLoader.prepareImGuiNatives()
 
     val cliArgs = llm.slop.liquidlsd.cli.CliArgs.parse(args)
+    llm.slop.liquidlsd.ui.FxLinkDefaults.install()
 
     if (cliArgs.helpRequested) {
         llm.slop.liquidlsd.cli.CliArgs.printHelp(getAppVersion())

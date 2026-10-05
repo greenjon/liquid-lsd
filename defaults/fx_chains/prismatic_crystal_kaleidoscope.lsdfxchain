@@ -134,10 +134,5 @@
         "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
-    },
-    "slotSuperKnobLink": [
-        true,
-        true,
-        true
-    ]
+    }
 }

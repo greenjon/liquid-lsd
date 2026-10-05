@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Configurable FX Chain Linking and a Chain Link Toggle (`rendering/FxChain.kt`, `ui/FxLinkDefaults.kt`, `ui/FxSlotCell.kt`, `ui/PerformSurface.kt`)
+- **New FX chains can start unlinked.** Preferences has **Default FX chain linking**: **Auto** (default: unlinked while a knob controller like the Midi Fighter Twister is connected, linked otherwise), **Linked** or **Unlinked**. It only applies to chains with no saved link flags: new or reset chains, and presets that don't store them. The factory FX chains no longer store link flags, so they follow the setting; chains you saved keep what they saved. Older presets that omit the flags now follow the setting too (they used to load linked).
+- **Chain Link button beside the Super Knob** (Perform rows in group mode, and the Macro Strip header): links or unlinks all three slots at once. If only some are linked, one click links all. Linking does not make Metaknobs jump (soft takeover still applies). Empty slots are ignored when deciding whether a chain is fully linked.
+- **On the Twister, Shift + tap on knob 1 of an FX row toggles Chain Link** (group mode only; in Focus mode that gesture leaves focus).
+- Internal: `FxChain.defaultLinked`, `linkedSlotCount/filledSlotCount/areAllSlotsLinked/areAllSlotsUnlinked/setAllSlotsLinked/toggleAllSlotsLinked`; `SideButtons.ChainLink`; `FxLinkDefault` + `FxLinkDefaults.resolve`; preference key `fxLinkDefault`.
+
 ### The Classic Library Columns and the Old Picker Are Gone (`ui/LibraryPanel.kt`, `ui/PerformanceBrowseBay.kt`, `ui/NavigationSurface.kt`)
 - **The folder tree | list | queues browser is now the only browser**, in the Library and in the Edit bay's Browse tabs. The **Unified** toggle in the Library tab bar and the `-Dlsd.unifiedBrowser=false` switch are gone, together with the old four columns, the playlist editor columns and the inline picker. Playlists are entries under **Playlists** in the folder tree. **Ctrl+F** (or `/`) focuses the search box of the open tab, and the Maps tab fills the whole Library.
 - **What you lose compared with the old picker**: category multi-select, the Folders/Flat toggle and the row manage buttons in the Edit bay (use the tree, search and the row's right-click menu), and the activity dot beside live external video servers (the **External video...** menu lists names only).

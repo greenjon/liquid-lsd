@@ -252,6 +252,46 @@ object FxSlotCell {
         )
     }
 
+    /**
+     * Square chain-wide Super Knob link toggle drawn at ([x], [y]) beside the Super Knob. Reflects only
+     * the filled slots: all linked / none linked / partial. Click links all unless all are already linked.
+     */
+    fun drawChainLinkButton(session: SessionContext, mixer: Mixer, bankId: String, x: Float, y: Float, size: Float) {
+        val chain = FxMacroSync.chainFor(bankId, mixer) ?: return
+        val linked = chain.linkedSlotCount()
+        val filled = chain.filledSlotCount()
+        val allLinked = chain.areAllSlotsLinked()
+        val noneLinked = chain.areAllSlotsUnlinked()
+        ImGui.setCursorScreenPos(x, y)
+        if (noneLinked) {
+            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.FX_LINK_IDLE_BG.u32())
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.FX_LINK_IDLE_HOVER.u32())
+            ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.FX_LINK_IDLE_TEXT.u32())
+        } else {
+            val a = if (allLinked) 0.75f else 0.45f
+            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.SYNC.normal, a))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.u32(TangoPalette.SYNC.normal, a + 0.15f))
+            ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.u32(TangoPalette.SYNC.bright))
+        }
+        ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 1f, 1f)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            val icon = if (noneLinked) Icons.UNLINK else Icons.LINK
+            if (ImGui.button("$icon##chainlink_$bankId", size, size)) {
+                chain.toggleAllSlotsLinked()
+                FxMacroSync.syncFor(bankId, mixer)
+            }
+        }
+        ImGui.popStyleVar()
+        ImGui.popStyleColor(3)
+        itemTooltip(
+            when {
+                allLinked -> "All FX slots are linked to the Super Knob.\nClick to unlink all."
+                noneLinked -> "All FX slots are unlinked.\nClick to link all to the Super Knob."
+                else -> "$linked of $filled slots are linked to the Super Knob.\nClick to link all."
+            }
+        )
+    }
+
     private fun drawArrow(session: SessionContext, id: String, glyph: String, ax: Float, ay: Float, h: Float, onClick: () -> Unit) {
         ImGui.setCursorScreenPos(ax, ay)
         if (ImGui.invisibleButton(id, ARROW_W, h)) onClick()

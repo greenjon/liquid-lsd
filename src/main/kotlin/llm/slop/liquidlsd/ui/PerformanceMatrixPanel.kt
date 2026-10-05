@@ -627,6 +627,8 @@ class PerformanceMatrixPanel {
 
                 when (val side = spec.side) {
                     SideButtons.None -> {}
+                    SideButtons.ChainLink ->
+                        FxSlotCell.drawChainLinkButton(session, mixer, row.bankId, sideBtnX, rowTopY + geo.sideBtnY(0, 1), sideBtnSize)
                     is SideButtons.LinkAndBypass -> {
                         FxSlotCell.drawLinkButton(session, mixer, row.bankId, side.slotIndex, control.label, sideBtnX, rowTopY + geo.sideBtnY(0, 2), sideBtnSize)
                         FxSlotCell.drawBypassButton(session, mixer, row.bankId, side.slotIndex, sideBtnX, rowTopY + geo.sideBtnY(1, 2), sideBtnSize, row.accent)

@@ -197,7 +197,7 @@ class PerfRowLayoutTest {
     fun fxGroupModeShowsSuperKnobLabelThenSlotCells() {
         val specs = PerfKnobResolver.resolve(bank(), 0, FxRowState(null, 0, emptyList()))
         assertEquals(UnderKnob.Label("M1"), specs[0].under)
-        assertEquals(SideButtons.None, specs[0].side)
+        assertEquals(SideButtons.ChainLink, specs[0].side)
         for (col in 1..3) {
             assertEquals(UnderKnob.SlotCell(col - 1), specs[col].under)
             assertEquals(SideButtons.LinkAndBypass(col - 1), specs[col].side)

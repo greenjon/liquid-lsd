@@ -144,5 +144,4 @@ Only read these if your task touches the area. Don't load all of them by default
 ## Current State & Known Gaps
 
 See `TODO.md` for the active task list.
-After completing significant work, update `TODO.md` and add a dated entry to `DECISIONS.md`
-(create it if it doesn't exist yet) explaining any non-obvious choices made.
+After completing significant work, update `TODO.md`. Touch `DECISIONS.md` only for a lasting decision (invariant, accepted trade-off, rejected alternative); edit the existing entry for that topic rather than appending a dated one. See `.agents/AGENTS.md` section 4.

@@ -18,12 +18,13 @@ real-time graphics and audio project.
   - `pw-link` to establish connections in PipeWire environments
 
 ## 4. Continuous Documentation Maintenance ("Doc-as-you-Code")
-- **Atomic Doc Updates**: Whenever modifying or refactoring code, features, preset schemas, audio engines, UI controls, or build settings, you MUST update the corresponding documentation files in `docs/`, `README.md`, `ARCHITECTURE.md`, or `DECISIONS.md` within the same turn/commit.
+- **Atomic Doc Updates**: Whenever modifying or refactoring code, features, preset schemas, audio engines, UI controls, or build settings, you MUST update the corresponding documentation files in `docs/`, `README.md`, `ARCHITECTURE.md` within the same turn/commit. `DECISIONS.md` is the exception: see the rule below.
 - **Documentation Mapping**:
   - Audio engine (`src/.../audio/`) → `docs/developer/` and `ARCHITECTURE.md`
   - Rendering / Shaders / UI (`src/.../render/`, `src/.../ui/`) → `docs/user_guide/` and `docs/developer/`
   - Presets & Configs (`presets/`, parameters) → `docs/user_guide/`
   - Architectural / System decisions → `DECISIONS.md` and `ARCHITECTURE.md`
+- **`DECISIONS.md` is not a changelog.** Add or edit an entry only for an invariant the code relies on, an accepted trade-off, or a rejected alternative with its reason. Layout tweaks, tuning, renames and "added X" go in the release notes. If the topic already has an entry, rewrite that entry in place instead of adding a new one; if a decision is reversed, delete its entry (and add a line under "Removed, do not reintroduce" if the reversal is worth remembering). Never append a dated per-change entry. The frozen pre-2026-10-04 log is `docs/archive/DECISIONS-history.md`; do not edit it.
 - **Release Notes & Logs**: Whenever completing feature additions or bug fixes, update `RELEASE_NOTES.md` or `docs/release_notes.md`.
 
 ## 5. UI Typography & Character Set Rules

@@ -147,6 +147,7 @@ for the FX Rack view that exposes these.
     - **`◀` / `▶` (on hover), Mouse Wheel, or Right-Click → Previous/Next in Shortlist**: Steps to previous/next effect in the **FX Shortlist** (favorited ★ effects, or the current effect's category alphabetically). The arrows only appear at the cell's edges while the mouse is over it.
   - **Slot Side Buttons (left of each slot knob)**: two stacked buttons.
     - **Link (top)**: links/unlinks that slot's Metaknob to the Super Knob.
+  - **Chain Link (left of the Super Knob, knob 1)**: links or unlinks all three slots at once. Click links all unless they are all linked already, in which case it unlinks all; the icon shows a chain when every filled slot is linked, a dimmer chain when only some are, and a broken chain when none are. The Macro Strip has the same toggle by the `CHAIN MACRO` title. Where a new chain starts (linked or unlinked) is the **Default FX chain linking** preference.
     - **Bypass (bottom, power icon)**: turns just that effect on or off. Row-coloured when on, red when bypassed, dim when the slot is empty. In Focus Mode, only the focused slot's bypass is shown, next to knob 1.
     - **Effect Name**: Truncated caption showing loaded filter. Click opens inline Browse on that slot's `FX1`/`FX2`/`FX3` sub-tab (Stock filters, ★ Favorites, and Saved `.lsdfx` presets). Browse opens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't open it.
     - **Drag & Drop**: Drag an effect name onto another slot's name to swap/reorder (hold `Ctrl` while dropping to duplicate). Accepts stock ISF filters and `.lsdfx` single presets from Library.
@@ -273,7 +274,7 @@ To use the factory absolute mode instead, copy the profile to `library/controlle
 <a id="twister-layout"></a>
 #### What the knobs control
 
-**The 16 knobs are the 16 knobs on screen.** Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between `SRC` and `FX`, or focus a slot, with the mouse or the Twister and the same encoders follow. In Deep Edit the knobs follow the open row.
+**The 16 knobs are the 16 knobs on screen.** Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between `SRC` and `FX`, or focus a slot, with the mouse or the Twister and the same encoders follow. In Deep Edit the Twister follows the open module: knobs 1-4 control that module's 4 macro knobs (reflecting its active sub-tab, e.g. SRC or FX), while knobs 5-16 are inert. Deep Edit itself (the full 3-column parameter matrix) is opened and edited with the mouse; the controller only opens inline Browse pickers.
 
 The Twister's four hardware **banks** pick the page shown on screen. Press a bank button (or use Previous/Next Bank) and the matrix changes with it; clicking a tab on screen moves the encoders to that page too, so screen and hardware always agree.
 
@@ -298,6 +299,7 @@ Each row is pinned to one half (source or FX), so no `SRC`/`FX` switching is nee
 | **Hold the switch and turn** | fine adjustment (10× slower) | same | same |
 | **Shift + tap** | - | focus that slot | next parameter page |
 | **Shift + tap on knob 1 of a focused row** | - | leave focus | - |
+| **Shift + tap on knob 1 (Super Knob) of an FX row** | - | Chain Link: link or unlink all three slots | - |
 
 - **Shift** is the bottom button on the Twister's left side (the same physical button on every bank).
 - **Fast turns accelerate** up to 4×; slow turns stay exact.
@@ -319,6 +321,7 @@ Variations:
 - **Replace** an effect: repeat steps 2-5 on the same slot. **Clear** a slot: with the picker open, **Shift + right-bottom**.
 - **Load a saved chain** into all three slots: touch **knob 5** (the Super Knob) before step 3. The picker then lists your saved chains, and **Shift + right-bottom** clears the whole chain.
 - **Change Deck A's source** instead: touch any knob in the source row (knobs 1-4) and press right-bottom for the source list.
+- **Switching decks or targets:** The picker stays scoped to the deck and row that opened it. Because knobs 2-16 are inert while browsing, close the picker first with **left-top**, touch a knob on the other deck or row (switching Twister banks if needed), and press **right-bottom** to open its picker.
 - **Master FX or a transition:** use bank 3 and touch a knob in Master FX (knobs 5-8) or Transitions (knobs 9-12).
 - If nothing happens when you press right-bottom, you haven't touched a knob since the app started: turn one first.
 - Picking from the **Library view** instead is described below.
@@ -335,7 +338,8 @@ The three side buttons other than Shift change meaning with the view:
 | **Library** | leave the Library | step the **tab** (Sources, FX, Trans) | step the **pane**: folder tree, list, BG queue, A/B queue | **cursor**: turn to move, tap to load |
 
 - **Unsaved-changes prompt:** when loading would discard edits on a deck, the prompt takes over the controller: **left-top** = Cancel, **right-top** or **knob 1 tap** = Save, **right-bottom** or **Shift + tap** = Discard. Nothing else navigates until you answer.
-- **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active.
+- **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active. To pick for another deck or row, close the picker with **left-top** before touching the new row's knob.
+- **Deep Edit:** Left-top closes Deep Edit (collapsing the module bay back to Tier 1, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).
 - **Library:** a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and **Shift + tap** adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.
 - **Unified browser (default; the Library tab bar's "Unified" toggle turns it off):** a fresh tab starts in the list. **Right-bottom** moves on to the queues and **Shift +** it goes back to the folder tree. In the tree, turning moves a cursor (an outline) over the visible folders and playlists without changing the list; a **tap** selects the folder or playlist under it, which fills the list and clears the list's selection. A playlist is just a tree entry, so there is no separate playlist pane.
 - The FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in profile; map them in your own profile.

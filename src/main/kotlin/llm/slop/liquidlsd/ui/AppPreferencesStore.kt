@@ -228,6 +228,9 @@ object AppPreferencesStore {
                 if (savedKeyTrigger != null) {
                     UITheme.queueKeyTrigger = try { UITheme.QueueKeyTrigger.valueOf(savedKeyTrigger) } catch (e: Exception) { UITheme.QueueKeyTrigger.NONE }
                 }
+                props.getProperty("fxLinkDefault")?.let { saved ->
+                    UITheme.fxLinkDefault = try { FxLinkDefault.valueOf(saved) } catch (e: Exception) { FxLinkDefault.AUTO }
+                }
                 val savedStartup = props.getProperty("startupBehavior")
                 if (savedStartup != null) {
                     UITheme.startupBehavior = try { UITheme.StartupBehavior.valueOf(savedStartup) } catch (e: Exception) { UITheme.StartupBehavior.PREVIOUS_SESSION }
@@ -339,6 +342,7 @@ object AppPreferencesStore {
             props.setProperty("activeMidiProfile", UITheme.activeMidiProfile)
             props.setProperty("queueKeyTrigger", UITheme.queueKeyTrigger.name)
             props.setProperty("startupBehavior", UITheme.startupBehavior.name)
+            props.setProperty("fxLinkDefault", UITheme.fxLinkDefault.name)
             props.setProperty("theme", UITheme.theme.name)
             props.setProperty("showMidiCol", UITheme.showMidiCol.toString())
             props.setProperty("showLfoCol", UITheme.showLfoCol.toString())

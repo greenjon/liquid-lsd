@@ -69,6 +69,21 @@ object FXChainMacroStrip {
     ): Int {
         val rowStartX = ImGui.getCursorPosX()
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("CHAIN MACRO") }
+        ImGui.sameLine()
+        val allLinked = chain.areAllSlotsLinked()
+        val linkLabel = when {
+            allLinked -> "Unlink all"
+            chain.areAllSlotsUnlinked() -> "Link all"
+            else -> "Link all (${chain.linkedSlotCount()}/${chain.filledSlotCount()})"
+        }
+        if (ImGui.smallButton("$linkLabel##fx_chain_link_$chainPrefix")) {
+            chain.toggleAllSlotsLinked()
+            resyncMacroKnobs(chainPrefix, chain)
+        }
+        itemTooltip(
+            if (allLinked) "All FX slots follow the Super Knob. Click to unlink all."
+            else "Link every FX slot to the Super Knob (soft-takeover: no jumps until the Super Knob crosses each Metaknob's value)."
+        )
         ImGui.spacing()
 
         var row = startRow

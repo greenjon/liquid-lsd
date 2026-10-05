@@ -158,6 +158,10 @@ object UITheme {
         get() = settings.maxFps
         set(value) { settings = settings.copy(maxFps = value) }
 
+    var fxLinkDefault: FxLinkDefault
+        get() = settings.fxLinkDefault
+        set(value) { settings = settings.copy(fxLinkDefault = value) }
+
     enum class StartupBehavior { PREVIOUS_SESSION, EMPTY }
     
     var startupBehavior: StartupBehavior

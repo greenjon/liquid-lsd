@@ -110,4 +110,62 @@ class FxChainSuperKnobTest {
         assertEquals(0.42f, restored.superKnob.baseValue)
         assertEquals(listOf(true, false, true), restored.slotSuperKnobLink.toList())
     }
+
+    @Test
+    fun `toggle links all unless all are linked, counting filled slots only`() {
+        val chain = FxChain("Chain 1")
+        chain.slots[0] = testFilter("a")
+        chain.slots[1] = testFilter("b")   // slot 2 stays empty
+        chain.setAllSlotsLinked(false)
+        assertTrue(chain.areAllSlotsUnlinked())
+
+        chain.setSlotLinked(0, true)       // partial
+        assertFalse(chain.areAllSlotsLinked())
+        assertFalse(chain.areAllSlotsUnlinked())
+        assertEquals(1, chain.linkedSlotCount())
+        assertEquals(2, chain.filledSlotCount())
+
+        chain.toggleAllSlotsLinked()       // partial -> link all
+        assertTrue(chain.areAllSlotsLinked())
+        chain.toggleAllSlotsLinked()       // all linked -> unlink all
+        assertTrue(chain.areAllSlotsUnlinked())
+    }
+
+    @Test
+    fun `link all arms soft takeover instead of snapping slots`() {
+        val chain = FxChain("Chain 1")
+        val fx = testFilter("a")
+        fx.metaKnob.set(0.5f)
+        fx.update()
+        chain.slots[0] = fx
+        chain.setAllSlotsLinked(false)
+        chain.superKnob.set(0.9f)
+        chain.update()
+
+        chain.toggleAllSlotsLinked()
+        chain.update()
+        assertEquals(0.5f, fx.metaKnob.value, 0.0001f)
+    }
+
+    @Test
+    fun `chains without saved link flags follow the default provider`() {
+        val saved = FxChain.defaultLinked
+        try {
+            FxChain.defaultLinked = { false }
+            val chain = FxChain("Chain 1")
+            assertTrue(chain.areAllSlotsUnlinked())
+            chain.setAllSlotsLinked(true)
+            chain.applyFxChain(llm.slop.liquidlsd.models.FXChainDto(name = "x", slots = listOf(null, null, null)))
+            assertEquals(listOf(false, false, false), chain.slotSuperKnobLink.toList())
+
+            FxChain.defaultLinked = { true }
+            chain.applyFxChain(llm.slop.liquidlsd.models.FXChainDto(name = "x", slots = listOf(null, null, null)))
+            assertEquals(listOf(true, true, true), chain.slotSuperKnobLink.toList())
+
+            chain.applyFxChain(llm.slop.liquidlsd.models.FXChainDto(name = "x", slots = listOf(null, null, null), slotSuperKnobLink = listOf(false, true, false)))
+            assertEquals(listOf(false, true, false), chain.slotSuperKnobLink.toList())
+        } finally {
+            FxChain.defaultLinked = saved
+        }
+    }
 }

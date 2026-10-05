@@ -30,7 +30,7 @@ class FxChain(val label: String) {
     var enabled: Boolean = true
 
     val superKnob = ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f)
-    val slotSuperKnobLink: BooleanArray = booleanArrayOf(true, true, true)
+    val slotSuperKnobLink: BooleanArray = BooleanArray(SLOT_COUNT) { defaultLinked() }
 
     // -- Focus Mode (Traktor / Mixxx style) ---------------------------------------------------
     /**
@@ -90,6 +90,25 @@ class FxChain(val label: String) {
             hasTakenOver[slotIndex] = false
         }
     }
+
+    /** Filled slots only: an empty slot has nothing to drive, so it never makes the chain "partially" linked. */
+    private fun filledSlotIndices() = (0 until SLOT_COUNT).filter { slots[it] != null }
+
+    fun linkedSlotCount(): Int = filledSlotIndices().count { slotSuperKnobLink[it] }
+
+    fun filledSlotCount(): Int = filledSlotIndices().size
+
+    fun areAllSlotsLinked(): Boolean = filledSlotCount() > 0 && linkedSlotCount() == filledSlotCount()
+
+    fun areAllSlotsUnlinked(): Boolean = linkedSlotCount() == 0
+
+    /** Goes through [setSlotLinked] so linking arms soft-takeover instead of snapping slots to the Super Knob. */
+    fun setAllSlotsLinked(linked: Boolean) {
+        for (i in 0 until SLOT_COUNT) setSlotLinked(i, linked)
+    }
+
+    /** All linked -> unlink all; anything else (none or some linked) -> link all. */
+    fun toggleAllSlotsLinked() = setAllSlotsLinked(!areAllSlotsLinked())
 
     // -- Fade on swap -------------------------------------------------------------------------
     // Replacing an effect mid-show is a hard visual cut (and feedback/trail effects restart from
@@ -288,7 +307,7 @@ class FxChain(val label: String) {
         dryWet.reset()
         superKnob.reset()
         for (i in 0 until SLOT_COUNT) {
-            slotSuperKnobLink[i] = true
+            slotSuperKnobLink[i] = defaultLinked()
             hasTakenOver[i] = false
         }
         focusedSlot = null
@@ -410,7 +429,7 @@ class FxChain(val label: String) {
         dto.superKnob?.let { superKnob.applyDto(it) }
         val linkFlags = dto.slotSuperKnobLink
         for (i in 0 until SLOT_COUNT) {
-            slotSuperKnobLink[i] = linkFlags?.getOrNull(i) ?: true
+            slotSuperKnobLink[i] = linkFlags?.getOrNull(i) ?: defaultLinked()
             hasTakenOver[i] = false
         }
         for (i in slots.indices) {
@@ -436,6 +455,12 @@ class FxChain(val label: String) {
 
     companion object {
         const val SLOT_COUNT = 3
+
+        /**
+         * Whether a chain with no saved link flags starts with its slots linked to the Super Knob.
+         * Set from the "Default FX chain linking" preference at startup; tests get a fixed `true`.
+         */
+        var defaultLinked: () -> Boolean = { true }
         private const val TAKEOVER_TOLERANCE = 0.04f
         private const val FADE_IDLE = 0
         private const val FADE_OUT = 1
