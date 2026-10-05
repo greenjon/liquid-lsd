@@ -8,6 +8,11 @@ import llm.slop.liquidlsd.presets.FXBgQueueManager
 import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.presets.TransitionQueueManager
+import llm.slop.liquidlsd.control.SendTarget
+import llm.slop.liquidlsd.presets.DeckChange
+import llm.slop.liquidlsd.presets.DeckOps
+import llm.slop.liquidlsd.presets.DeckSlot
+import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.ui.LibraryPanel.LibraryViewMode
@@ -173,6 +178,50 @@ internal object LibraryNavigation {
             SelectionSource.FX_QUEUE_AB -> FXQueueManager.jumpToIndex(FXQueueActionsPanel.selectedIndex, session, mixer)
             SelectionSource.FX_QUEUE_BG -> FXBgQueueManager.jumpToIndex(FXBgQueueActionsPanel.selectedIndex, session, mixer)
             null -> Unit
+        }
+    }
+
+    /** The cursor item a send knob would act on: the Sources or FX list row, when the cursor is in that list. */
+    private fun sendAsset(): AssetItem? {
+        if (LibraryPanel.activeSelectionSource != SelectionSource.PRESETS) return null
+        val asset = when (LibraryPanel.navMode) {
+            LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset?.takeIf { it.type == AssetType.PRESET || it.type == AssetType.SOURCE_STOCK }
+            LibraryViewMode.FX -> FXBrowserPanel.selectedAsset?.takeIf { it.type in FX_TYPES }
+            else -> null
+        }
+        return asset?.takeIf { it.isValid }
+    }
+
+    private val FX_TYPES = setOf(AssetType.FX_STOCK, AssetType.FX_PRESET, AssetType.FX_CHAIN)
+
+    /** The knobs that are live for the cursor item: every deck for a source or preset, the decks and the master bus for an FX. */
+    fun sendTargets(): Set<SendTarget> = when (sendAsset()?.type) {
+        null -> emptySet()
+        AssetType.PRESET, AssetType.SOURCE_STOCK -> DECK_TARGETS
+        else -> SendTarget.entries.toSet()
+    }
+
+    private val DECK_TARGETS = setOf(SendTarget.A, SendTarget.B, SendTarget.BG, SendTarget.PV)
+
+    /**
+     * Sends the cursor item to [target] through the same paths as the context menu: a source or preset via [DeckOps] (dirty guard and undo),
+     * a chain replacing all 3 slots, a single FX into the first vacant slot (the last slot when the chain is full: a controller has no popup).
+     */
+    fun send(target: SendTarget, session: SessionContext, mixer: Mixer) {
+        val asset = sendAsset() ?: return
+        if (target !in sendTargets()) return
+        val deckSlot = DeckSlot.entries.firstOrNull { it.name == target.name }
+        when (asset.type) {
+            AssetType.SOURCE_STOCK -> {
+                val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(PresetListPanel.STOCK_PATH_PREFIX) } ?: return
+                DeckOps.request(deckSlot ?: return, DeckChange.Source(source))
+            }
+            AssetType.PRESET -> DeckOps.request(deckSlot ?: return, DeckChange.Preset(File(asset.path)))
+            else -> {
+                val chain: FxChain = deckSlot?.deck(mixer)?.fxChain ?: mixer.masterFxChain
+                if (asset.type == AssetType.FX_CHAIN) FxOps.loadChain(session, File(asset.path), chain)
+                else FXBrowserPanel.loadSingle(session, asset, chain, FxOps.firstVacantSlot(chain) ?: (FxChain.SLOT_COUNT - 1))
+            }
         }
     }
 }

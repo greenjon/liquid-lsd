@@ -6,7 +6,7 @@ package llm.slop.liquidlsd.control
  *  - `knob.<n>.press` is the switch: a tap (released without turning) runs the knob's primary action.
  *  - `knob.<n>.press_alt` is the same switch with shift held: a tap runs the secondary action.
  * While a browse context is active, knob 16 browses and the others are inert, except knobs 1-4 while the
- * browsed row is on screen ([NavSurface.browseRowLive]).
+ * browsed row is on screen ([NavSurface.browseRowLive]) and the tap of a send knob ([SendTarget]) in the Library.
  * Hold state lives here, not in the device, because the Twister sends identical turn messages whether
  * or not its switch is down. One instance serves all devices; the switch is expected to be held on
  * one device at a time.
@@ -87,7 +87,7 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
             else if (isLiveRowKnob(knob, nav)) {
                 val surface = ctx.knobSurface ?: return
                 if (shifted) surface.secondary(knob) else surface.primary(knob)
-            }
+            } else SendTarget.forKnob(knob)?.takeIf { it in nav.sendTargets }?.let(nav::browseSend)
             return
         }
         endBrowseSession()

@@ -5,6 +5,7 @@ import llm.slop.liquidlsd.control.KnobLight
 import llm.slop.liquidlsd.control.KnobLightSource
 import llm.slop.liquidlsd.control.KnobSurface
 import llm.slop.liquidlsd.control.NavSurface
+import llm.slop.liquidlsd.control.SendTarget
 import llm.slop.liquidlsd.macro.FxMacroSync
 import llm.slop.liquidlsd.macro.MacroControl
 import llm.slop.liquidlsd.macro.MacroEngine
@@ -199,16 +200,28 @@ internal class PerformSurface(
                 )
             })
         }
-        if (nav?.browsing == true) dimForBrowse(nav.browseRowLive)
+        if (nav?.browsing == true) dimForBrowse(nav.browseRowLive, nav.sendTargets)
         return lightBuffer
     }
 
     /** While browsing only the cursor knob (white) and, with the browsed row on screen, knobs 1-4 (its colour) stay lit. */
-    private fun dimForBrowse(rowLive: Boolean) {
+    private fun dimForBrowse(rowLive: Boolean, sendTargets: Set<SendTarget>) {
         for (i in lightBuffer.indices) {
             if (i == KnobCommands.BROWSE_KNOB) lightBuffer[i] = KnobLight(0.5f, meterType = MeterType.ENDLESS)
-            else if (!(rowLive && i < KnobCommands.ROW_KNOBS)) lightBuffer[i] = null
+            else if (!(rowLive && i < KnobCommands.ROW_KNOBS)) lightBuffer[i] = SendTarget.forKnob(i)?.takeIf { it in sendTargets }?.let(::sendLight)
         }
+    }
+
+    /** A live send knob glows in its target's colour (the Master row's LED hue for the master bus). */
+    private fun sendLight(target: SendTarget): KnobLight {
+        val c = when (target) {
+            SendTarget.A -> PerformanceColors.COLOR_DECK_A
+            SendTarget.B -> PerformanceColors.COLOR_DECK_B
+            SendTarget.BG -> PerformanceColors.COLOR_DECK_BG
+            SendTarget.PV -> PerformanceColors.COLOR_DECK_PV
+            SendTarget.MASTER -> PerformanceColors.LED_MASTER
+        }
+        return KnobLight(0.5f, c[0], c[1], c[2], meterType = MeterType.ENDLESS)
     }
 
     private fun isLit(target: PageKnob): Boolean = when (val under = target.spec.under) {

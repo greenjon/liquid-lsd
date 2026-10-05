@@ -11,6 +11,7 @@ import llm.slop.liquidlsd.models.FXPlaylistDto
 import llm.slop.liquidlsd.presets.FXBgQueueManager
 import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.rendering.Deck
+import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.presets.FxShortlist
 import llm.slop.liquidlsd.rendering.Mixer
@@ -216,16 +217,17 @@ object FXBrowserPanel {
                 if (slot == null) {
                     pendingOverwrite = deck to asset
                     openOverwritePopup = true
-                } else loadSingle(session, asset, deck, slot)
+                } else loadSingle(session, asset, deck.fxChain, slot)
             }
             AssetType.FX_CHAIN -> FxOps.loadChain(session, file, deck.fxChain)
             else -> {}
         }
     }
 
-    private fun loadSingle(session: SessionContext, asset: AssetItem, deck: Deck, slot: Int) {
-        if (asset.type == AssetType.FX_STOCK) FxOps.setSlotFilter(deck.fxChain, slot, asset.path.removePrefix(STOCK_PATH_PREFIX))
-        else FxOps.loadSlot(session, File(asset.path), deck.fxChain, slot)
+    /** Puts a single stock or saved FX into [slot] of [chain]. */
+    internal fun loadSingle(session: SessionContext, asset: AssetItem, chain: FxChain, slot: Int) {
+        if (asset.type == AssetType.FX_STOCK) FxOps.setSlotFilter(chain, slot, asset.path.removePrefix(STOCK_PATH_PREFIX))
+        else FxOps.loadSlot(session, File(asset.path), chain, slot)
     }
 
     /** Asks which slot to overwrite when a double-clicked single FX finds the live deck's chain full. */
@@ -241,7 +243,7 @@ object FXBrowserPanel {
             if (deck != null && asset != null) {
                 for (s in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
                     val fx = deck.fxSlots[s]
-                    if (ImGui.menuItem("Slot ${s + 1}: ${fx?.displayName ?: "Empty"}")) loadSingle(session, asset, deck, s)
+                    if (ImGui.menuItem("Slot ${s + 1}: ${fx?.displayName ?: "Empty"}")) loadSingle(session, asset, deck.fxChain, s)
                 }
             }
             popOpenDropdownFont()

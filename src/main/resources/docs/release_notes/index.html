@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-send-the-library-cursor-item-to-any-deck-or-the-master-bus-controlnavsurfacekt-controlknobcommandskt-uilibrarynavigationkt-uinavigationsurfacekt-uiperformsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister: Send the Library Cursor Item to Any Deck or the Master Bus (control/NavSurface.kt, control/KnobCommands.kt, ui/LibraryNavigation.kt, ui/NavigationSurface.kt, ui/PerformSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-browse-cursor-moves-to-knob-16-row-one-stays-live-in-the-picker-controlknobcommandskt-controlnavsurfacekt-uinavigationsurfacekt-uiperformsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5570,6 +5581,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-send-the-library-cursor-item-to-any-deck-or-the-master-bus-controlnavsurfacekt-controlknobcommandskt-uilibrarynavigationkt-uinavigationsurfacekt-uiperformsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister: Send the Library Cursor Item to Any Deck or the Master Bus (control/NavSurface.kt, control/KnobCommands.kt, ui/LibraryNavigation.kt, ui/NavigationSurface.kt, ui/PerformSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-browse-cursor-moves-to-knob-16-row-one-stays-live-in-the-picker-controlknobcommandskt-controlnavsurfacekt-uinavigationsurfacekt-uiperformsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9907,6 +9929,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="twister-send-the-library-cursor-item-to-any-deck-or-the-master-bus-controlnavsurfacekt-controlknobcommandskt-uilibrarynavigationkt-uinavigationsurfacekt-uiperformsurfacekt">Twister: Send the Library Cursor Item to Any Deck or the Master Bus (<code>control/NavSurface.kt</code>, <code>control/KnobCommands.kt</code>, <code>ui/LibraryNavigation.kt</code>, <code>ui/NavigationSurface.kt</code>, <code>ui/PerformSurface.kt</code>)</h3>
+<ul>
+<li><strong>In the Library, tap a knob to send the highlighted item straight to a deck.</strong> Column one is the decks: <strong>knob 1 = Deck A, knob 5 = Deck B, knob 9 = Deck BG, knob 13 = Deck PV</strong>. In the FX tab <strong>knob 2 = Master FX</strong>. Sources and presets load through the same path as the context menu (unsaved-changes prompt and undo included); an FX chain replaces all three slots of that deck's chain; a single FX goes into the first empty slot (the last slot when the chain is full).</li>
+<li><strong>The knobs light up in their target's colour</strong> while the highlighted item can go there (a source never lights knob 2; nothing lights on a folder, queue or transition). Turning these knobs still does nothing. Knob 16 is unchanged.</li>
+<li>The Edit-bay picker is unchanged: knobs 1-4 still drive the row you are filling.</li>
+<li>Internal: <code>SendTarget</code>, <code>NavSurface.sendTargets/browseSend</code>, <code>LibraryNavigation.send</code>; <code>FXBrowserPanel.loadSingle</code> now takes the chain so the panel and the controller share it.</li>
+</ul>
 <h3 id="twister-browse-cursor-moves-to-knob-16-row-one-stays-live-in-the-picker-controlknobcommandskt-controlnavsurfacekt-uinavigationsurfacekt-uiperformsurfacekt">Twister: Browse Cursor Moves to Knob 16, Row One Stays Live in the Picker (<code>control/KnobCommands.kt</code>, <code>control/NavSurface.kt</code>, <code>ui/NavigationSurface.kt</code>, <code>ui/PerformSurface.kt</code>)</h3>
 <ul>
 <li><strong>The browse cursor is now knob 16</strong> (bottom right, the easiest to reach), not knob 1. Turn to move, tap to apply, Shift + tap for the alternative. Outside browsing it is a normal knob.</li>

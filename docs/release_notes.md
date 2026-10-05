@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Twister: Send the Library Cursor Item to Any Deck or the Master Bus (`control/NavSurface.kt`, `control/KnobCommands.kt`, `ui/LibraryNavigation.kt`, `ui/NavigationSurface.kt`, `ui/PerformSurface.kt`)
+- **In the Library, tap a knob to send the highlighted item straight to a deck.** Column one is the decks: **knob 1 = Deck A, knob 5 = Deck B, knob 9 = Deck BG, knob 13 = Deck PV**. In the FX tab **knob 2 = Master FX**. Sources and presets load through the same path as the context menu (unsaved-changes prompt and undo included); an FX chain replaces all three slots of that deck's chain; a single FX goes into the first empty slot (the last slot when the chain is full).
+- **The knobs light up in their target's colour** while the highlighted item can go there (a source never lights knob 2; nothing lights on a folder, queue or transition). Turning these knobs still does nothing. Knob 16 is unchanged.
+- The Edit-bay picker is unchanged: knobs 1-4 still drive the row you are filling.
+- Internal: `SendTarget`, `NavSurface.sendTargets/browseSend`, `LibraryNavigation.send`; `FXBrowserPanel.loadSingle` now takes the chain so the panel and the controller share it.
+
 ### Twister: Browse Cursor Moves to Knob 16, Row One Stays Live in the Picker (`control/KnobCommands.kt`, `control/NavSurface.kt`, `ui/NavigationSurface.kt`, `ui/PerformSurface.kt`)
 - **The browse cursor is now knob 16** (bottom right, the easiest to reach), not knob 1. Turn to move, tap to apply, Shift + tap for the alternative. Outside browsing it is a normal knob.
 - **While a picker is open, the row you are filling stays live on knobs 1-4**, so you can load a source or chain with knob 16 and tweak its macros straight away. Knobs 5-15 stay inert (and dark), so a stray touch can't change anything. In the Library view, where no row is on screen, only knob 16 is live.

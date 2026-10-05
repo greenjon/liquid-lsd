@@ -16,6 +16,8 @@ import llm.slop.liquidlsd.ui.browser.ApplyTarget
 import llm.slop.liquidlsd.ui.browser.BrowseKind
 import llm.slop.liquidlsd.ui.browser.BrowseScope
 import llm.slop.liquidlsd.ui.browser.BrowserPane
+import llm.slop.liquidlsd.control.SendTarget
+import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -153,6 +155,35 @@ class NavigationSurfaceTest {
         UITheme.libraryMode = UITheme.LibraryMode.HALF
         clock += 350
         assertFalse(nav().browsing) // Edit view without a picker list
+    }
+
+    @Test
+    fun sendKnobsAreLiveOnlyForTheListCursorInLibraryFull() {
+        val saved = LibraryPanel.viewMode
+        val savedSource = LibraryPanel.activeSelectionSource
+        val savedPreset = PresetListPanel.selectedAsset
+        val savedFx = FXBrowserPanel.selectedAsset
+        try {
+            LibraryPanel.viewMode = LibraryPanel.LibraryViewMode.PRESETS
+            LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
+            PresetListPanel.selectedAsset = AssetItem("stock-source://plasma", "Plasma", AssetType.SOURCE_STOCK)
+            assertTrue(nav().sendTargets.isEmpty()) // not in Library FULL
+            UITheme.libraryMode = UITheme.LibraryMode.FULL
+            assertEquals(setOf(SendTarget.A, SendTarget.B, SendTarget.BG, SendTarget.PV), nav().sendTargets) // a source never goes to master
+            LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.TREE
+            assertTrue(nav().sendTargets.isEmpty())
+            LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
+            LibraryPanel.viewMode = LibraryPanel.LibraryViewMode.FX
+            FXBrowserPanel.selectedAsset = AssetItem("stock-fx://glow", "Glow", AssetType.FX_STOCK)
+            assertEquals(SendTarget.entries.toSet(), nav().sendTargets)
+            LibraryPanel.viewMode = LibraryPanel.LibraryViewMode.TRANS
+            assertTrue(nav().sendTargets.isEmpty())
+        } finally {
+            LibraryPanel.viewMode = saved
+            LibraryPanel.activeSelectionSource = savedSource
+            PresetListPanel.selectedAsset = savedPreset
+            FXBrowserPanel.selectedAsset = savedFx
+        }
     }
 
     // --- Unified pane hosted in the Edit bay ---
