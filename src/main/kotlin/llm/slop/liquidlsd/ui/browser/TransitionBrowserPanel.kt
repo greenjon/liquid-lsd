@@ -93,11 +93,11 @@ object TransitionBrowserPanel {
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
             selectedAsset = asset
-            target?.apply(asset)
+            DockActions.tap(target, asset)
         }
 
-        if (target == null && isRowHovered && ImGui.isMouseDoubleClicked(0)) {
-            applyToMixer(session, mixer, asset)
+        if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
+            DockActions.doubleClick(session, mixer, null, BrowseKind.TRANS, asset, target)
         }
 
         // Drag source: both stock and saved presets resolve to a real file path under ASSET_ITEM,

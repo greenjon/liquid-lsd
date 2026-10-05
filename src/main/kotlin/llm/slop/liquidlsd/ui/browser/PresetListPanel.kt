@@ -109,9 +109,8 @@ object PresetListPanel {
                 LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
                 QueueActionsPanel.clearSelection()
                 llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
-                if (target != null) {
-                    target.apply(asset)
-                } else if (asset.type != AssetType.SOURCE_STOCK) {
+                DockActions.tap(target, asset)
+                if (target == null && asset.type != AssetType.SOURCE_STOCK) {
                     LibraryPanel.auditionIfLocked(File(asset.path), session, mixer)
                 }
             }
@@ -160,8 +159,8 @@ object PresetListPanel {
             }
 
             // Double-click: Load to the inactive deck (>0% crossfader).
-            if (target == null && isRowHovered && ImGui.isMouseDoubleClicked(0)) {
-                LibraryNavigation.loadAssetToInactiveDeck(session, mixer, asset, parametersState)
+            if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
+                DockActions.doubleClick(session, mixer, parametersState, BrowseKind.SRC, asset, target)
             }
 
             // Drag source: saved presets carry their file path (ASSET_ITEM) so they can also go

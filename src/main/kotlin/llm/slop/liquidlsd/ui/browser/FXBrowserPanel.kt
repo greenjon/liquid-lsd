@@ -160,11 +160,11 @@ object FXBrowserPanel {
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
             selectedAsset = asset
-            target?.apply(asset)
+            DockActions.tap(target, asset)
         }
 
-        if (target == null && isRowHovered && ImGui.isMouseDoubleClicked(0)) {
-            applyToDeck(session, asset, mixer.liveDeck)
+        if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
+            DockActions.doubleClick(session, mixer, null, BrowseKind.FX, asset, target)
         }
 
         // Drag source. Saved singles/chains carry their file path (ASSET_ITEM) so they can also go
@@ -209,7 +209,7 @@ object FXBrowserPanel {
     private var pendingOverwrite: Pair<Deck, AssetItem>? = null
     private var openOverwritePopup = false
 
-    private fun applyToDeck(session: SessionContext, asset: AssetItem, deck: Deck) {
+    internal fun applyToDeck(session: SessionContext, asset: AssetItem, deck: Deck) {
         val file = File(asset.path)
         when (asset.type) {
             AssetType.FX_STOCK, AssetType.FX_PRESET -> {

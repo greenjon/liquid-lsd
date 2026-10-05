@@ -27,6 +27,7 @@ import llm.slop.liquidlsd.ui.browser.FXBrowserPanel
 import llm.slop.liquidlsd.ui.browser.FXQueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.QueueActionsPanel
 import llm.slop.liquidlsd.ui.browser.TransitionQueuePanel
+import llm.slop.liquidlsd.ui.browser.DockActions
 import llm.slop.liquidlsd.ui.browser.PresetListPanel
 import llm.slop.liquidlsd.ui.browser.TransitionBrowserPanel
 import java.io.File
@@ -163,15 +164,7 @@ internal object LibraryNavigation {
                 // In the Edit bay a scope tap also moves the cursor into the list (fewer presses); the Library keeps tap-selects-only.
                 if (BrowserPane.hosted() != null) LibraryPanel.activeSelectionSource = SelectionSource.PRESETS
             }
-            SelectionSource.PRESETS -> if (BrowserPane.hosted() != null) {
-                // Hosted in the Edit bay: the cursor row applies to the bay's target.
-                BrowserPane.applyCursorRow()
-            } else when (LibraryPanel.navMode) {
-                LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset?.let { loadAssetToInactiveDeck(session, mixer, it, parametersState) }
-                LibraryViewMode.FX -> enqueue(session, bg = false)
-                LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset?.let { TransitionBrowserPanel.applyToMixer(session, mixer, it) }
-                LibraryViewMode.MAPS -> Unit
-            }
+            SelectionSource.PRESETS -> DockActions.acceptCursorRow(session, mixer, parametersState)
             // Same as a double-click: moves the queue position, fades to the loaded deck and advances the transition queue.
             SelectionSource.QUEUE_AB -> session.playQueueManager.playIndex(QueueActionsPanel.selectedIndex, mixer)
             SelectionSource.QUEUE_BG -> file?.let { BrowserDeckButtons.loadPresetToDeck(session, mixer, it, 3) }

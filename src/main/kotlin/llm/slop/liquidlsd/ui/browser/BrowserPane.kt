@@ -352,7 +352,7 @@ object BrowserPane {
         val infoByPath = entries.associate { it.asset.path to it.info }
         val assets = entries.map { it.asset }
         // Reordering needs every playlist row visible, so it stays a Library feature.
-        val playlistRows = if (target == null) playlistRowsFor(catalog, scope, query) else null
+        val playlistRows = if (DockActions.canManageList(target)) playlistRowsFor(catalog, scope, query) else null
 
         if (ImGui.beginChild("##browser_list_scroll", 0f, 0f, false)) {
             when (kind) {
@@ -401,7 +401,7 @@ object BrowserPane {
         // Delete / Backspace: inside a playlist it removes the rows from the playlist, elsewhere it deletes from the library with confirmation.
         val io = ImGui.getIO()
         val selected = selectedAssets(kind, assets)
-        if (target == null && selected.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper &&
+        if (DockActions.canManageList(target) && selected.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper &&
             (ImGui.isKeyPressed(ImGuiKey.Delete, false) || ImGui.isKeyPressed(ImGuiKey.Backspace, false))
         ) {
             if (playlistRows != null) {
