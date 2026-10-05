@@ -20,6 +20,7 @@ class ControllerRuntimeTest {
         override fun primary(knob: Int) { calls += "primary $knob" }
         override fun secondary(knob: Int) { calls += "secondary $knob" }
         override fun showPage(pageId: String) { calls += "page $pageId" }
+        override fun toggleChainLink() { calls += "chainlink" }
     }
 
     private val surface = FakeSurface()
@@ -294,5 +295,55 @@ class ControllerRuntimeTest {
         surface.calls.clear()
         switch(1, true); switch(1, false)      // no shift now: plain tap
         assertEquals(listOf("primary 1"), surface.calls)
+    }
+
+    // --- 6-button profile: all side buttons are CC buttons, bank step is an app command ---
+
+    private val sixButton = ControllerProfileStore(createTempDirectory("controllers").toFile()).get("midi-fighter-twister-6btn")!!
+
+    @Test
+    fun sixButtonProfileLoadsAndNamesRegisteredCommands() {
+        assertEquals(emptyList(), sixButton.problems)
+        assertEquals(emptyList(), sixButton.unknownCommands(registry))
+    }
+
+    @Test
+    fun sixButtonProfileDecodesTheMeasuredCcsOnEveryBank() {
+        // Measured on the device: bank n sends 8+6n..13+6n for LT, LM, LB, RT, RM, RB.
+        for (bank in 0..3) {
+            val base = 8 + 6 * bank
+            fun id(offset: Int) = sixButton.resolve(llm.slop.liquidlsd.midi.MidiMessageType.CC, 3, base + offset)
+            assertEquals("side.1", id(0)?.inputId)
+            assertEquals("chainlink", id(1)?.inputId)
+            assertEquals("shift", id(2)?.inputId)
+            assertEquals("side.2", id(3)?.inputId)
+            assertEquals("bankstep", id(4)?.inputId)
+            assertEquals("side.3", id(5)?.inputId)
+            assertEquals(bank, id(4)?.bank)
+        }
+    }
+
+    @Test
+    fun bankStepButtonShowsTheNextPageAndShiftGoesBackWrapping() {
+        runtime = ControllerRuntime(sixButton, registry)
+        val pages = sixButton.profile.banks.pages
+
+        side(12, true); side(12, false)                      // bank 1 right-middle: next -> bank 2
+        assertEquals("page ${pages[1]}", surface.calls.last())
+
+        side(8 + 6 * 3 + 2, true)                            // bank 4: hold shift
+        side(8 + 6 * 3 + 4, true); side(8 + 6 * 3 + 4, false)
+        side(8 + 6 * 3 + 2, false)
+        assertEquals("page ${pages[2]}", surface.calls.last())   // bank 4 shifted: previous -> bank 3
+
+        side(8 + 6 * 3 + 4, true); side(8 + 6 * 3 + 4, false) // bank 4 next wraps to bank 1
+        assertEquals("page ${pages[0]}", surface.calls.last())
+    }
+
+    @Test
+    fun leftMiddleTogglesChainLink() {
+        runtime = ControllerRuntime(sixButton, registry)
+        side(9, true); side(9, false)
+        assertEquals(listOf("chainlink"), surface.calls)
     }
 }

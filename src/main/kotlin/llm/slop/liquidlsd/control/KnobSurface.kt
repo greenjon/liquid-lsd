@@ -17,4 +17,7 @@ interface KnobSurface {
 
     /** Shows the named page (e.g. `perform.decks`) so the knobs and the screen agree. Unknown ids are ignored. */
     fun showPage(pageId: String)
+
+    /** Toggles Chain Link (all slots to/from the Super Knob) on the FX chain of the row touched last. */
+    fun toggleChainLink() {}
 }

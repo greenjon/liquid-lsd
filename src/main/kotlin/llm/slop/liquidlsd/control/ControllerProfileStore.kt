@@ -74,7 +74,7 @@ class ControllerProfileStore(
     fun deleteUser(id: String): Boolean = library.deleteUser(id)
 
     companion object {
-        val BUILT_IN_NAMES = listOf("midi-fighter-twister")
+        val BUILT_IN_NAMES = listOf("midi-fighter-twister", "midi-fighter-twister-6btn")
 
         /** Shared instance backed by the real `library/controllers/` directory. */
         val default: ControllerProfileStore by lazy { ControllerProfileStore() }

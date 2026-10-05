@@ -110,3 +110,7 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
 - Definition of done in this repo: code + tests + both release-notes files (`RELEASE_NOTES.md`, `docs/release_notes.md`) +
   `DECISIONS.md` entry (newest first) + user guide / developer docs + tooltips where UI-visible, then `generateDocs`.
 - The user prefers: delegate architecture research to an Explore agent, then give a short recommendation before planning.
+
+## Optional 6-button profile (2026-10-05)
+
+- `midi-fighter-twister-6btn`: middles on `CC Hold`; side buttons ch4, bank n (0-based) = CC `8+6n .. 13+6n` = LT, LM, LB, RT, RM, RB (measured). Shift stays LB; right-middle = `controller.bank_next` (shift: `_prev`), left-middle = `fx.chain_link_toggle` (targets the row touched last; a deck source row maps to its FX chain). Bank change reaches the device through `ControllerFeedback.syncActiveBank` after `showPage`. Selected by copying it to `library/controllers/` until phase 5 adds a picker. Not yet tried on hardware with the app running.

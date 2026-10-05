@@ -2171,6 +2171,9 @@ for the FX Rack view that exposes these.</p>
 </li>
 <li><strong>Slot Side Buttons (left of each slot knob)</strong>: two stacked buttons.<ul>
 <li><strong>Link (top)</strong>: links/unlinks that slot's Metaknob to the Super Knob.</li>
+</ul>
+</li>
+<li><strong>Chain Link (left of the Super Knob, knob 1)</strong>: links or unlinks all three slots at once. Click links all unless they are all linked already, in which case it unlinks all; the icon shows a chain when every filled slot is linked, a dimmer chain when only some are, and a broken chain when none are. The Macro Strip has the same toggle by the <code>CHAIN MACRO</code> title. Where a new chain starts (linked or unlinked) is the <strong>Default FX chain linking</strong> preference.<ul>
 <li><strong>Bypass (bottom, power icon)</strong>: turns just that effect on or off. Row-coloured when on, red when bypassed, dim when the slot is empty. In Focus Mode, only the focused slot's bypass is shown, next to knob 1.</li>
 <li><strong>Effect Name</strong>: Truncated caption showing loaded filter. Click opens inline Browse on that slot's <code>FX1</code>/<code>FX2</code>/<code>FX3</code> sub-tab (Stock filters, ★ Favorites, and Saved <code>.lsdfx</code> presets). Browse opens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't open it.</li>
 <li><strong>Drag &amp; Drop</strong>: Drag an effect name onto another slot's name to swap/reorder (hold <code>Ctrl</code> while dropping to duplicate). Accepts stock ISF filters and <code>.lsdfx</code> single presets from Library.</li>
@@ -2293,10 +2296,17 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <li><strong>Side buttons:</strong> the four corner buttons stay on <code>CC Hold</code>. Keep the left-middle and right-middle buttons as <strong>Previous/Next Bank</strong>: the app learns which bank you are on from them.</li>
 </ol>
 <p>Then start Liquid LSD with the Twister plugged in and check <strong>Preferences → MIDI Controls</strong> → <em>Controller Profiles</em>: the Twister profile should be listed with your device. The log reports <code>Controller feedback on for ...</code> when the output port is opened; if it says <code>No MIDI output port found</code>, the app can read the Twister but cannot light it. While the app runs it overrides the ring and LED colours set in the Utility.</p>
+<p><a id="twister-6btn"></a>
+<strong>Optional: six side buttons (the <code>midi-fighter-twister-6btn</code> profile).</strong> By default the two middle side buttons are the firmware's Previous/Next Bank buttons. If you set them to <code>CC Hold</code> instead and use this profile, the app steps the banks itself and one button is freed:</p>
+<ol>
+<li>In the Utility set <strong>all six side buttons</strong> to <code>CC Hold</code> (the middle ones included), then send the settings.</li>
+<li>In <strong>Preferences → MIDI Controls → Controller Profiles</strong>, copy <code>midi-fighter-twister-6btn</code> to your profiles. (Both built-in profiles match the Twister, and a profile of yours wins over a built-in.) Don't use the standard Twister profile with the middle buttons on <code>CC Hold</code>: the side buttons send different CC numbers on banks 2-4 and would misfire.</li>
+<li><strong>Right-middle</strong> steps to the next bank (wrapping 4 → 1), <strong>Shift + right-middle</strong> goes back. The app shows the bank's page and sends the bank change to the Twister, so the screen and the hardware agree. <strong>Left-middle</strong> toggles <strong>Chain Link</strong> on the FX chain of the row you touched last (a deck's source row counts as its FX chain; it also works while a slot is focused). The other four buttons are unchanged.</li>
+</ol>
 <p>To use the factory absolute mode instead, copy the profile to <code>library/controllers/</code> and set <code>"mode": "ABSOLUTE"</code> on the <code>knob</code> input (the app then tracks each change, and a knob can hit the end of its 0-127 range).</p>
 <p><a id="twister-layout"></a></p>
 <h4 id="what-the-knobs-control">What the knobs control</h4>
-<p><strong>The 16 knobs are the 16 knobs on screen.</strong> Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between <code>SRC</code> and <code>FX</code>, or focus a slot, with the mouse or the Twister and the same encoders follow. In Deep Edit the knobs follow the open row.</p>
+<p><strong>The 16 knobs are the 16 knobs on screen.</strong> Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between <code>SRC</code> and <code>FX</code>, or focus a slot, with the mouse or the Twister and the same encoders follow. In Deep Edit the Twister follows the open module: knobs 1-4 control that module's 4 macro knobs (reflecting its active sub-tab, e.g. SRC or FX), while knobs 5-16 are inert. Deep Edit itself (the full 3-column parameter matrix) is opened and edited with the mouse; the controller only opens inline Browse pickers.</p>
 <p>The Twister's four hardware <strong>banks</strong> pick the page shown on screen. Press a bank button (or use Previous/Next Bank) and the matrix changes with it; clicking a tab on screen moves the encoders to that page too, so screen and hardware always agree.</p>
 <table>
 <thead>
@@ -2388,6 +2398,12 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <td>leave focus</td>
 <td>-</td>
 </tr>
+<tr>
+<td><strong>Shift + tap on knob 1 (Super Knob) of an FX row</strong></td>
+<td>-</td>
+<td>Chain Link: link or unlink all three slots</td>
+<td>-</td>
+</tr>
 </tbody>
 </table>
 <ul>
@@ -2411,6 +2427,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <li><strong>Replace</strong> an effect: repeat steps 2-5 on the same slot. <strong>Clear</strong> a slot: with the picker open, <strong>Shift + right-bottom</strong>.</li>
 <li><strong>Load a saved chain</strong> into all three slots: touch <strong>knob 5</strong> (the Super Knob) before step 3. The picker then lists your saved chains, and <strong>Shift + right-bottom</strong> clears the whole chain.</li>
 <li><strong>Change Deck A's source</strong> instead: touch any knob in the source row (knobs 1-4) and press right-bottom for the source list.</li>
+<li><strong>Switching decks or targets:</strong> The picker stays scoped to the deck and row that opened it. Because knobs 2-16 are inert while browsing, close the picker first with <strong>left-top</strong>, touch a knob on the other deck or row (switching Twister banks if needed), and press <strong>right-bottom</strong> to open its picker.</li>
 <li><strong>Master FX or a transition:</strong> use bank 3 and touch a knob in Master FX (knobs 5-8) or Transitions (knobs 9-12).</li>
 <li>If nothing happens when you press right-bottom, you haven't touched a knob since the app started: turn one first.</li>
 <li>Picking from the <strong>Library view</strong> instead is described below.</li>
@@ -2454,7 +2471,8 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 </table>
 <ul>
 <li><strong>Unsaved-changes prompt:</strong> when loading would discard edits on a deck, the prompt takes over the controller: <strong>left-top</strong> = Cancel, <strong>right-top</strong> or <strong>knob 1 tap</strong> = Save, <strong>right-bottom</strong> or <strong>Shift + tap</strong> = Discard. Nothing else navigates until you answer.</li>
-<li><strong>Picker:</strong> moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active.</li>
+<li><strong>Picker:</strong> moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knobs 2-16 do nothing while a picker or the Library cursor is active. To pick for another deck or row, close the picker with <strong>left-top</strong> before touching the new row's knob.</li>
+<li><strong>Deep Edit:</strong> Left-top closes Deep Edit (collapsing the module bay back to Tier 1, same as Esc); right-bottom opens the picker for the last-touched knob's row (switching the bay to Browse).</li>
 <li><strong>Library:</strong> a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap adds the item to the FX queue and <strong>Shift + tap</strong> adds it to the A/B queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.</li>
 <li><strong>Unified browser (default; the Library tab bar's "Unified" toggle turns it off):</strong> a fresh tab starts in the list. <strong>Right-bottom</strong> moves on to the queues and <strong>Shift +</strong> it goes back to the folder tree. In the tree, turning moves a cursor (an outline) over the visible folders and playlists without changing the list; a <strong>tap</strong> selects the folder or playlist under it, which fills the list and clears the list's selection. A playlist is just a tree entry, so there is no separate playlist pane.</li>
 <li>The FX queue transport commands (<code>fx.queue_next/prev</code>, <code>fx.bg_queue_next/prev</code>) have no free button in the built-in profile; map them in your own profile.</li>

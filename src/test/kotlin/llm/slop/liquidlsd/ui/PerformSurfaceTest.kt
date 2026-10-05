@@ -172,6 +172,23 @@ class PerformSurfaceTest {
     }
 
     @Test
+    fun toggleChainLinkTargetsTheFxChainOfTheTouchedRowAndWorksInFocusMode() {
+        deckAChain.slots[0] = filter("glow", listOf("a", "b", "c", "d"))
+        deckAChain.setAllSlotsLinked(false)
+        state.setDeckSubTab("Deck A", "FX")
+        FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
+
+        surface().turn(0, 0.01f)                    // touch the Deck A FX row
+        surface().toggleChainLink()
+        assertTrue(deckAChain.areAllSlotsLinked())
+
+        surface().secondary(1)                      // focus slot 1: Shift+Tap on knob 1 would no longer toggle
+        assertEquals(0, deckAChain.focusedSlot)
+        surface().toggleChainLink()
+        assertTrue(deckAChain.areAllSlotsUnlinked())
+    }
+
+    @Test
     fun tapOnAFocusedParameterResetsItToDefaultAndMovesTheKnob() {
         val glow = filter("glow", listOf("intensity", "radius", "threshold"))
         deckAChain.slots[0] = glow

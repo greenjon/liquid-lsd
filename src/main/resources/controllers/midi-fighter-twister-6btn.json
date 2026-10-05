@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "id": "midi-fighter-twister-6btn",
+  "name": "DJ TechTools Midi Fighter Twister (6 side buttons as CC)",
+  "description": "Same as the Twister profile, for a device whose two middle side buttons are set to CC Hold in Midi Fighter Utility instead of Previous/Next Bank. All six side buttons then send ch4 CCs, six per bank (bank n, 0-based: 8+6n..13+6n, in the order left-top, left-middle, left-bottom, right-top, right-middle, right-bottom). Right-middle steps to the next bank (shift + right-middle: previous); the app shows the bank's page and sends the bank change to the device. Left-middle toggles Chain Link on the FX chain of the row you touched last. Left-top, right-top and right-bottom are the navigation buttons and left-bottom is Shift, as in the Twister profile. Utility: middle side buttons = CC Hold, side corners = CC Hold, encoders relative (ENC 3FH/41H), switches CC Hold. To use it, copy it to your profiles in Preferences > MIDI (a user profile with a matching device wins over the built-in Twister profile).",
+  "match": [
+    "Midi Fighter Twister",
+    "Twister"
+  ],
+  "banks": {
+    "count": 4,
+    "switch": {
+      "channel": 3,
+      "cc": 0
+    },
+    "pages": [
+      "perform.ab",
+      "perform.bgpv",
+      "perform.mixer",
+      "perform.master"
+    ]
+  },
+  "inputs": [
+    {
+      "id": "knob",
+      "kind": "ENCODER",
+      "channel": 0,
+      "cc": 0,
+      "count": 16,
+      "bankStride": 16,
+      "mode": "RELATIVE_BINARY_OFFSET",
+      "press": {
+        "channel": 1
+      }
+    },
+    {
+      "id": "shift",
+      "kind": "MODIFIER",
+      "channel": 3,
+      "cc": 10,
+      "bankStride": 6
+    },
+    {
+      "id": "side",
+      "kind": "BUTTON",
+      "channel": 3,
+      "ccs": [
+        8,
+        11,
+        13
+      ],
+      "bankStride": 6
+    },
+    {
+      "id": "chainlink",
+      "kind": "BUTTON",
+      "channel": 3,
+      "cc": 9,
+      "bankStride": 6
+    },
+    {
+      "id": "bankstep",
+      "kind": "BUTTON",
+      "channel": 3,
+      "cc": 12,
+      "bankStride": 6
+    }
+  ],
+  "bindings": {
+    "knob.*": "knob.{n}",
+    "knob.*.press": "knob.{n}.press",
+    "shift+knob.*.press": "knob.{n}.press_alt",
+    "side.*": "nav.button.{n}",
+    "shift+side.*": "nav.button.{n}.alt",
+    "chainlink": "fx.chain_link_toggle",
+    "bankstep": "controller.bank_next",
+    "shift+bankstep": "controller.bank_prev"
+  },
+  "output": {
+    "knobs": {
+      "input": "knob",
+      "colorChannel": 1
+    }
+  }
+}

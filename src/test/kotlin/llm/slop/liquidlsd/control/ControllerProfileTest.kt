@@ -269,7 +269,7 @@ class ControllerProfileTest {
                "inputs":[{"id":"only","kind":"BUTTON","channel":0,"cc":1}]}""")
         val store = ControllerProfileStore(dir)
 
-        assertEquals(1, store.all().size)
+        assertEquals(ControllerProfileStore.BUILT_IN_NAMES.size, store.all().size)
         assertEquals("My Twister", store.get("midi-fighter-twister")?.profile?.name)
         assertEquals("only", store.get("midi-fighter-twister")?.resolve(cc(0, 1))?.inputId)
     }
@@ -279,7 +279,7 @@ class ControllerProfileTest {
         val dir = emptyUserDir()
         File(dir, "mine.json").writeText("""{"id":"my-twister","match":["Twister"]}""")
         val store = ControllerProfileStore(dir)
-        assertEquals(2, store.all().size)
+        assertEquals(ControllerProfileStore.BUILT_IN_NAMES.size + 1, store.all().size)
         assertEquals("my-twister", store.matchFor("Midi Fighter Twister")?.profile?.id)
     }
 
@@ -289,7 +289,7 @@ class ControllerProfileTest {
         File(dir, "garbage.json").writeText("{ not json")
         File(dir, "invalid.json").writeText("""{"id":"Bad Id"}""")
         val store = ControllerProfileStore(dir)
-        assertEquals(listOf("midi-fighter-twister"), store.all().map { it.profile.id })
+        assertEquals(ControllerProfileStore.BUILT_IN_NAMES, store.all().map { it.profile.id })
     }
 
     @Test
@@ -349,7 +349,7 @@ class ControllerProfileTest {
         val dir = emptyUserDir()
         File(dir, "bad.json").mkdir()
         val store = ControllerProfileStore(dir)
-        assertEquals(listOf("midi-fighter-twister"), store.all().map { it.profile.id })
+        assertEquals(ControllerProfileStore.BUILT_IN_NAMES, store.all().map { it.profile.id })
         assertEquals(listOf("bad.json"), store.rejected().map { it.file.name })
     }
 

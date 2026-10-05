@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-optional-six-button-profile-with-app-controlled-banks-resourcescontrollersmidi-fighter-twister-6btnjson-controlcontrollerruntimekt-controlnavcommandskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister: Optional Six-Button Profile with App-Controlled Banks (resources/controllers/midi-fighter-twister-6btn.json, control/ControllerRuntime.kt, control/NavCommands.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configurable-fx-chain-linking-and-a-chain-link-toggle-renderingfxchainkt-uifxlinkdefaultskt-uifxslotcellkt-uiperformsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configurable FX Chain Linking and a Chain Link Toggle (rendering/FxChain.kt, ui/FxLinkDefaults.kt, ui/FxSlotCell.kt, ui/PerformSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#the-classic-library-columns-and-the-old-picker-are-gone-uilibrarypanelkt-uiperformancebrowsebaykt-uinavigationsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5515,6 +5537,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-optional-six-button-profile-with-app-controlled-banks-resourcescontrollersmidi-fighter-twister-6btnjson-controlcontrollerruntimekt-controlnavcommandskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister: Optional Six-Button Profile with App-Controlled Banks (resources/controllers/midi-fighter-twister-6btn.json, control/ControllerRuntime.kt, control/NavCommands.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configurable-fx-chain-linking-and-a-chain-link-toggle-renderingfxchainkt-uifxlinkdefaultskt-uifxslotcellkt-uiperformsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configurable FX Chain Linking and a Chain Link Toggle (rendering/FxChain.kt, ui/FxLinkDefaults.kt, ui/FxSlotCell.kt, ui/PerformSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#the-classic-library-columns-and-the-old-picker-are-gone-uilibrarypanelkt-uiperformancebrowsebaykt-uinavigationsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9797,6 +9841,18 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="twister-optional-six-button-profile-with-app-controlled-banks-resourcescontrollersmidi-fighter-twister-6btnjson-controlcontrollerruntimekt-controlnavcommandskt">Twister: Optional Six-Button Profile with App-Controlled Banks (<code>resources/controllers/midi-fighter-twister-6btn.json</code>, <code>control/ControllerRuntime.kt</code>, <code>control/NavCommands.kt</code>)</h3>
+<ul>
+<li><strong>New built-in profile <code>midi-fighter-twister-6btn</code></strong> for a Twister whose two middle side buttons are set to <code>CC Hold</code> in the Midi Fighter Utility. <strong>Right-middle</strong> steps to the next bank (Shift + it: previous, wrapping); <strong>left-middle</strong> toggles <strong>Chain Link</strong> on the FX chain of the row you touched last, in group and focus mode. The default Twister profile is unchanged; setup is in the user guide (copy the profile to your profiles to use it).</li>
+<li>Internal: commands <code>controller.bank_next</code>, <code>controller.bank_prev</code> (<code>CommandContext.bankDelta</code>, applied by <code>ControllerRuntime.stepBank</code>: it shows the neighbouring bank's page and <code>ControllerFeedback.syncActiveBank</code> sends the bank change) and <code>fx.chain_link_toggle</code> (<code>KnobSurface.toggleChainLink</code>). With the middles on <code>CC Hold</code> the side buttons send six CCs per bank (<code>8 + 6n .. 13 + 6n</code>), so the profile uses <code>bankStride</code> 6.</li>
+</ul>
+<h3 id="configurable-fx-chain-linking-and-a-chain-link-toggle-renderingfxchainkt-uifxlinkdefaultskt-uifxslotcellkt-uiperformsurfacekt">Configurable FX Chain Linking and a Chain Link Toggle (<code>rendering/FxChain.kt</code>, <code>ui/FxLinkDefaults.kt</code>, <code>ui/FxSlotCell.kt</code>, <code>ui/PerformSurface.kt</code>)</h3>
+<ul>
+<li><strong>New FX chains can start unlinked.</strong> Preferences has <strong>Default FX chain linking</strong>: <strong>Auto</strong> (default: unlinked while a knob controller like the Midi Fighter Twister is connected, linked otherwise), <strong>Linked</strong> or <strong>Unlinked</strong>. It only applies to chains with no saved link flags: new or reset chains, and presets that don't store them. The factory FX chains no longer store link flags, so they follow the setting; chains you saved keep what they saved. Older presets that omit the flags now follow the setting too (they used to load linked).</li>
+<li><strong>Chain Link button beside the Super Knob</strong> (Perform rows in group mode, and the Macro Strip header): links or unlinks all three slots at once. If only some are linked, one click links all. Linking does not make Metaknobs jump (soft takeover still applies). Empty slots are ignored when deciding whether a chain is fully linked.</li>
+<li><strong>On the Twister, Shift + tap on knob 1 of an FX row toggles Chain Link</strong> (group mode only; in Focus mode that gesture leaves focus).</li>
+<li>Internal: <code>FxChain.defaultLinked</code>, <code>linkedSlotCount/filledSlotCount/areAllSlotsLinked/areAllSlotsUnlinked/setAllSlotsLinked/toggleAllSlotsLinked</code>; <code>SideButtons.ChainLink</code>; <code>FxLinkDefault</code> + <code>FxLinkDefaults.resolve</code>; preference key <code>fxLinkDefault</code>.</li>
+</ul>
 <h3 id="the-classic-library-columns-and-the-old-picker-are-gone-uilibrarypanelkt-uiperformancebrowsebaykt-uinavigationsurfacekt">The Classic Library Columns and the Old Picker Are Gone (<code>ui/LibraryPanel.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
 <ul>
 <li><strong>The folder tree | list | queues browser is now the only browser</strong>, in the Library and in the Edit bay's Browse tabs. The <strong>Unified</strong> toggle in the Library tab bar and the <code>-Dlsd.unifiedBrowser=false</code> switch are gone, together with the old four columns, the playlist editor columns and the inline picker. Playlists are entries under <strong>Playlists</strong> in the folder tree. <strong>Ctrl+F</strong> (or <code>/</code>) focuses the search box of the open tab, and the Maps tab fills the whole Library.</li>

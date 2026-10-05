@@ -269,6 +269,13 @@ Do this once, in DJ TechTools' **Midi Fighter Utility**, then send the settings 
 
 Then start Liquid LSD with the Twister plugged in and check **Preferences → MIDI Controls** → *Controller Profiles*: the Twister profile should be listed with your device. The log reports `Controller feedback on for ...` when the output port is opened; if it says `No MIDI output port found`, the app can read the Twister but cannot light it. While the app runs it overrides the ring and LED colours set in the Utility.
 
+<a id="twister-6btn"></a>
+**Optional: six side buttons (the `midi-fighter-twister-6btn` profile).** By default the two middle side buttons are the firmware's Previous/Next Bank buttons. If you set them to `CC Hold` instead and use this profile, the app steps the banks itself and one button is freed:
+
+1. In the Utility set **all six side buttons** to `CC Hold` (the middle ones included), then send the settings.
+2. In **Preferences → MIDI Controls → Controller Profiles**, copy `midi-fighter-twister-6btn` to your profiles. (Both built-in profiles match the Twister, and a profile of yours wins over a built-in.) Don't use the standard Twister profile with the middle buttons on `CC Hold`: the side buttons send different CC numbers on banks 2-4 and would misfire.
+3. **Right-middle** steps to the next bank (wrapping 4 → 1), **Shift + right-middle** goes back. The app shows the bank's page and sends the bank change to the Twister, so the screen and the hardware agree. **Left-middle** toggles **Chain Link** on the FX chain of the row you touched last (a deck's source row counts as its FX chain; it also works while a slot is focused). The other four buttons are unchanged.
+
 To use the factory absolute mode instead, copy the profile to `library/controllers/` and set `"mode": "ABSOLUTE"` on the `knob` input (the app then tracks each change, and a knob can hit the end of its 0-127 range).
 
 <a id="twister-layout"></a>

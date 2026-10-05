@@ -70,6 +70,21 @@ class ControllerRuntime(
         if (!page.isNullOrBlank()) ctx.knobSurface?.showPage(page)
     }
 
+    /**
+     * A bank-step button: shows the neighbouring bank's page. The device's own bank follows from the
+     * page ([ControllerFeedback.syncActiveBank] sends the bank change), so [activeBank] is left alone here.
+     */
+    private fun stepBank(ctx: CommandContext) {
+        val delta = ctx.bankDelta
+        ctx.bankDelta = 0
+        val pages = compiled.profile.banks.pages
+        if (pages.isEmpty()) return
+        val count = compiled.profile.banks.count.coerceIn(1, pages.size)
+        val target = Math.floorMod((activeBank ?: 0) + delta, count)
+        if (trace) logger.info { "controller bank step $delta: ${(activeBank ?: 0) + 1} -> ${target + 1}" }
+        pages.getOrNull(target)?.takeIf { it.isNotBlank() }?.let { ctx.knobSurface?.showPage(it) }
+    }
+
     private fun turn(input: ResolvedInput, event: MidiEvent, ctx: CommandContext): Boolean {
         val command = compiled.bindingForMask(input.inputId, heldMask, input.bank ?: -1) ?: return false
         val slot = input.slot
@@ -102,6 +117,7 @@ class ControllerRuntime(
             // The release goes to the command that got the press, even if shift has changed since.
             pressCommand[input.idIndex] = command
             registry.execute(command, CommandInput.Press.DOWN, ctx)
+            if (ctx.bankDelta != 0) stepBank(ctx)
             return true
         }
         val pressed = pressCommand[input.idIndex]

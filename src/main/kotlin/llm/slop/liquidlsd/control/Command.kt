@@ -42,6 +42,8 @@ class CommandContext(
     var transQueueDelta = 0
     var fxQueueDelta = 0
     var fxBgQueueDelta = 0
+    /** Bank steps (+1 next, -1 previous) asked for by a bank-step button; [ControllerRuntime] applies and clears it. */
+    var bankDelta = 0
 }
 
 class Command(

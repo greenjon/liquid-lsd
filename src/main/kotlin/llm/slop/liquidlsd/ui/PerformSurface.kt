@@ -146,6 +146,29 @@ internal class PerformSurface(
         }
     }
 
+    /**
+     * Chain Link for the row touched last: an FX row's own chain, a deck row's FX chain, Master's FX chain.
+     * With nothing touched yet, the first FX row on the page.
+     */
+    @Synchronized
+    override fun toggleChainLink() {
+        PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
+        val touched = lastTouchedKnob?.let { knobBuffer.getOrNull(it) }?.bankId
+        val bankId = touched?.let { fxBankFor(it) } ?: knobBuffer.firstNotNullOfOrNull { it?.bankId?.let(::fxBankFor) } ?: return
+        FxMacroSync.chainFor(bankId, mixer)?.toggleAllSlotsLinked()
+        FxMacroSync.syncFor(bankId, mixer)
+    }
+
+    private fun fxBankFor(bankId: String): String? = when (bankId) {
+        in FxMacroSync.FX_BANK_IDS -> bankId
+        MacroEngine.DECK_A -> MacroEngine.DECK_A_FX
+        MacroEngine.DECK_B -> MacroEngine.DECK_B_FX
+        MacroEngine.DECK_BG -> MacroEngine.DECK_BG_FX
+        MacroEngine.DECK_PV -> MacroEngine.DECK_PV_FX
+        MacroEngine.MASTER -> MacroEngine.MASTER_FX
+        else -> null
+    }
+
     override fun showPage(pageId: String) {
         // `perform.<id>` names a page; the legacy `perform.decks` / `perform.master` are the built-ins' ids.
         val id = pageId.removePrefix("perform.")
