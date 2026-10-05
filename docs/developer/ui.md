@@ -28,7 +28,7 @@ graph TD
     
     UIManager --> MenuBar[MenuBar.kt]
     UIManager --> MixerPanel[MixerPanel.kt]
-    UIManager --> LibraryPanel[LibraryPanel.kt & PlaylistEditorPanel.kt]
+    UIManager --> LibraryPanel[LibraryPanel.kt & BrowserPane.kt]
     UIManager --> PerformanceMatrixPanel[PerformanceMatrixPanel.kt - Performance Mode 4x4 macro matrix orchestration]
 
     PerformanceMatrixPanel --> PerformanceUiContext[PerformanceUiContext.kt - Shared UI context & styling]

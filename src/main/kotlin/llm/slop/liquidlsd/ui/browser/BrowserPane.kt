@@ -425,7 +425,7 @@ object BrowserPane {
         }
     }
 
-    /** Title row of the list with the per-kind "+" (and, for Sources, "..." maintenance) buttons, as in the classic columns. */
+    /** Title row of the list with the per-kind "+" (and, for Sources, "..." maintenance) buttons. */
     private fun drawListHeader(session: SessionContext, mixer: Mixer, parametersState: ParametersState, title: String, kind: BrowseKind) {
         val btnSize = ImGui.getFrameHeight()
         ImGui.alignTextToFramePadding()
