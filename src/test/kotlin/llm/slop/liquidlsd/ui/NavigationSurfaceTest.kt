@@ -158,7 +158,7 @@ class NavigationSurfaceTest {
     }
 
     @Test
-    fun sendKnobsAreLiveOnlyForTheListCursorInLibraryFull() {
+    fun sendKnobsAreLiveOnlyForTheListCursorInLibraryFullOrThePicker() {
         val saved = LibraryPanel.viewMode
         val savedSource = LibraryPanel.activeSelectionSource
         val savedPreset = PresetListPanel.selectedAsset
@@ -182,6 +182,29 @@ class NavigationSurfaceTest {
             LibraryPanel.viewMode = saved
             LibraryPanel.activeSelectionSource = savedSource
             PresetListPanel.selectedAsset = savedPreset
+            FXBrowserPanel.selectedAsset = savedFx
+        }
+    }
+
+    @Test
+    fun sendingFromTheLibraryOpensTheTargetRowInTheBay() {
+        val saved = LibraryPanel.viewMode
+        val savedSource = LibraryPanel.activeSelectionSource
+        val savedFx = FXBrowserPanel.selectedAsset
+        try {
+            UITheme.libraryMode = UITheme.LibraryMode.FULL
+            LibraryPanel.viewMode = LibraryPanel.LibraryViewMode.FX
+            LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
+            FXBrowserPanel.selectedAsset = AssetItem("stock-fx://glow", "Glow", AssetType.FX_STOCK)
+            every { mixer.masterFxChain } returns FxChain("Master FX")
+            nav().browseSend(SendTarget.MASTER)
+            assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.rackModuleDisclosure[MacroEngine.MASTER])
+            assertEquals(ParametersState.SectionMode.BROWSE, state.rackSectionMode)
+            assertEquals("FX", state.activeMixerSubTab)
+            assertEquals(UITheme.LibraryMode.HALF, UITheme.libraryMode) // the Library gives way to the Edit bay
+        } finally {
+            LibraryPanel.viewMode = saved
+            LibraryPanel.activeSelectionSource = savedSource
             FXBrowserPanel.selectedAsset = savedFx
         }
     }

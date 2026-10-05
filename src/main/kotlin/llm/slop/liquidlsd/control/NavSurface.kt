@@ -28,7 +28,7 @@ interface NavSurface {
     /** The cursor knob's tap while [browsing]: apply the cursor item; with [shifted] its alternative (enqueue). */
     fun browseAccept(shifted: Boolean)
 
-    /** The send targets whose knob is live right now: the cursor item can go there (Library only; the picker keeps knobs 1-4 for its row). */
+    /** The send targets whose knob is live right now: the cursor item can go there (Library or picker). */
     val sendTargets: Set<SendTarget> get() = emptySet()
 
     /** A tap on a live send knob: send the cursor item to [target]. */
@@ -36,11 +36,11 @@ interface NavSurface {
 }
 
 /**
- * Where a Library knob tap sends the cursor item. Column one is the decks, top to bottom (knobs 1, 5, 9, 13); knob 2,
- * top of column two and next to Deck A, is the master bus (FX only).
+ * Where a Library or picker knob tap sends the cursor item. Row three is the decks (knobs 9-12 = A, B, BG, PV) and knob 13,
+ * first of row four, is the master bus (FX only); row one stays free for the row the send opens.
  */
 enum class SendTarget(val knob: Int) {
-    A(0), MASTER(1), B(4), BG(8), PV(12);
+    A(8), B(9), BG(10), PV(11), MASTER(12);
 
     companion object {
         fun forKnob(knob: Int): SendTarget? = entries.firstOrNull { it.knob == knob }

@@ -53,7 +53,7 @@ Regenerate docs HTML with `./gradlew generateDocs --offline -q` after editing `d
   `nav.button.N` / `nav.button.N.alt` (`control/NavCommands.kt`). `NavSurface` (`control/NavSurface.kt`, UI side
   `ui/NavigationSurface.kt`) decides the meaning from the context: Library view (Library FULL), picker (an SRC/FX/transition list
   or the saved-chain list is showing in the Edit row), else Perform/Edit. While `browsing`, `KnobCommands` sends knob 16's turn
-  (4 encoder ticks = 1 item, `BROWSE_STEP`) and tap to the surface; knobs 5-15 are inert except the Library send knobs (taps on 1/5/9/13/2 = A/B/BG/PV/master FX, `SendTarget`, plan in `.planning/twister-library-send-plan.md`); knobs 1-4 stay live when `browseRowLive` (picker).
+  (4 encoder ticks = 1 item, `BROWSE_STEP`) and tap to the surface; knobs 5-15 are inert except the Library send knobs (taps on 9-12 = A/B/BG/PV, 13 = master FX, `SendTarget`; a send opens the target row in the picker so knobs 1-4 play it; plans `.planning/twister-library-send-plan.md`, `twister-library-send-row-plan.md`); knobs 1-4 stay live when `browseRowLive` (picker).
 - Helpers: `ui/LibraryNavigation.kt` (tabs, lists, cursor, accept, enqueue), `ui/BackNavigation.kt` (the Esc stack, shared with the
   keyboard), `ShaderPickerPopup.moveCursor/acceptCursor/stepCategory/detach`, `ChainListBrowse`. Perform's right-bottom button opens
   the picker of the last-touched knob's row (`PerformSurface.lastTouchedKnob`).

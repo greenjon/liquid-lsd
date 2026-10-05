@@ -1,10 +1,10 @@
 ## [Unreleased]
 
 ### Twister: Send the Library Cursor Item to Any Deck or the Master Bus (`control/NavSurface.kt`, `control/KnobCommands.kt`, `ui/LibraryNavigation.kt`, `ui/NavigationSurface.kt`, `ui/PerformSurface.kt`)
-- **In the Library, tap a knob to send the highlighted item straight to a deck.** Column one is the decks: **knob 1 = Deck A, knob 5 = Deck B, knob 9 = Deck BG, knob 13 = Deck PV**. In the FX tab **knob 2 = Master FX**. Sources and presets load through the same path as the context menu (unsaved-changes prompt and undo included); an FX chain replaces all three slots of that deck's chain; a single FX goes into the first empty slot (the last slot when the chain is full).
-- **The knobs light up in their target's colour** while the highlighted item can go there (a source never lights knob 2; nothing lights on a folder, queue or transition). Turning these knobs still does nothing. Knob 16 is unchanged.
-- The Edit-bay picker is unchanged: knobs 1-4 still drive the row you are filling.
-- Internal: `SendTarget`, `NavSurface.sendTargets/browseSend`, `LibraryNavigation.send`; `FXBrowserPanel.loadSingle` now takes the chain so the panel and the controller share it.
+- **In the Library or the picker, tap a knob to send the highlighted item straight to a deck.** Row three is the decks: **knob 9 = Deck A, knob 10 = Deck B, knob 11 = Deck BG, knob 12 = Deck PV**. In the FX tab **knob 13 = Master FX**. Sources and presets load through the same path as the context menu (unsaved-changes prompt and undo included); an FX chain replaces all three slots of that deck's chain; a single FX goes into the first empty slot (the last slot when the chain is full).
+- **The target's row opens right away** in the Edit bay's Browse tab: the deck's source row for a source, its FX chain (on the slot a single FX landed in) for an effect, Master FX for the master bus. Row one (**knobs 1-4**) now plays what you just loaded while knob 16 keeps browsing and row three keeps sending, so you can audition on Deck PV, tweak, and send the next item elsewhere without leaving the flow. Back returns to Perform.
+- **The knobs light up in their target's colour** while the highlighted item can go there (a source never lights knob 13; nothing lights on a folder, queue or transition). Turning these knobs still does nothing. Knob 16 is unchanged.
+- Internal: `SendTarget`, `NavSurface.sendTargets/browseSend`, `LibraryNavigation.send` (also calls `ParametersState.openGenBrowse/openFxChainBrowse`); `FXBrowserPanel.loadSingle` now takes the chain so the panel and the controller share it.
 
 ### Twister: Browse Cursor Moves to Knob 16, Row One Stays Live in the Picker (`control/KnobCommands.kt`, `control/NavSurface.kt`, `ui/NavigationSurface.kt`, `ui/PerformSurface.kt`)
 - **The browse cursor is now knob 16** (bottom right, the easiest to reach), not knob 1. Turn to move, tap to apply, Shift + tap for the alternative. Outside browsing it is a normal knob.

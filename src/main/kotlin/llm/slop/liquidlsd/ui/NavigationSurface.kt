@@ -10,8 +10,8 @@ import llm.slop.liquidlsd.ui.browser.BrowserPane
 
 /**
  * Applies controller navigation to the live UI. The three side buttons mean different things per context:
- *  - Library view (Library FULL): back, next tab, next list; the cursor is knob 16. Tapping a send knob (1, 5, 9, 13 = A, B, BG, PV;
- *    2 = master FX) sends the cursor item there.
+ *  - Library view (Library FULL): back, next tab, next list; the cursor is knob 16. Tapping a send knob (9-12 = A, B, BG, PV;
+ *    13 = master FX) sends the cursor item there and opens that row in the picker, so it also works in the picker.
  *    With shift: enqueue to the BG queue, previous tab, previous list.
  *  - Picker (the unified pane is hosted in the Edit row's Browse tab): left-top = back, right-top = next pane
  *    (tree > list > queues; shift: previous), shift + right-bottom = clear the slot or chain; the cursor is knob 16
@@ -146,10 +146,10 @@ internal class NavigationSurface(
         AppPreferencesStore.savePreferences()
     }
 
-    override val sendTargets: Set<SendTarget> get() = if (inLibraryView && !confirming) LibraryNavigation.sendTargets() else emptySet()
+    override val sendTargets: Set<SendTarget> get() = if ((inLibraryView || inPicker) && !confirming) LibraryNavigation.sendTargets() else emptySet()
 
     override fun browseSend(target: SendTarget) {
-        if (inLibraryView && !confirming) LibraryNavigation.send(target, session, mixer)
+        if ((inLibraryView || inPicker) && !confirming) LibraryNavigation.send(target, session, mixer, parametersState)
     }
 
     override fun browseStep(steps: Int) {

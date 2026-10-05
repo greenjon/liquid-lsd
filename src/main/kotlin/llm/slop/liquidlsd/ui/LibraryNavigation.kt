@@ -9,6 +9,7 @@ import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.control.SendTarget
+import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.presets.DeckChange
 import llm.slop.liquidlsd.presets.DeckOps
 import llm.slop.liquidlsd.presets.DeckSlot
@@ -206,21 +207,35 @@ internal object LibraryNavigation {
     /**
      * Sends the cursor item to [target] through the same paths as the context menu: a source or preset via [DeckOps] (dirty guard and undo),
      * a chain replacing all 3 slots, a single FX into the first vacant slot (the last slot when the chain is full: a controller has no popup).
+     * Then opens the target's row in the Edit bay's Browse tab, so row one of the controller plays what was just loaded: the deck's SRC row for a
+     * source, its FX chain (the landed slot for a single FX) for an effect, the Master FX chain for the master bus.
      */
-    fun send(target: SendTarget, session: SessionContext, mixer: Mixer) {
+    fun send(target: SendTarget, session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
         val asset = sendAsset() ?: return
         if (target !in sendTargets()) return
         val deckSlot = DeckSlot.entries.firstOrNull { it.name == target.name }
+        val deckLabel = deckSlot?.label
+        val bankId = deckSlot?.bankId ?: MacroEngine.MASTER
         when (asset.type) {
             AssetType.SOURCE_STOCK -> {
                 val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(PresetListPanel.STOCK_PATH_PREFIX) } ?: return
                 DeckOps.request(deckSlot ?: return, DeckChange.Source(source))
+                parametersState.openGenBrowse(bankId, deckLabel ?: return)
             }
-            AssetType.PRESET -> DeckOps.request(deckSlot ?: return, DeckChange.Preset(File(asset.path)))
+            AssetType.PRESET -> {
+                DeckOps.request(deckSlot ?: return, DeckChange.Preset(File(asset.path)))
+                parametersState.openGenBrowse(bankId, deckLabel ?: return)
+            }
+            AssetType.FX_CHAIN -> {
+                val chain = deckSlot?.deck(mixer)?.fxChain ?: mixer.masterFxChain
+                FxOps.loadChain(session, File(asset.path), chain)
+                parametersState.openFxChainBrowse(bankId, deckLabel, null)
+            }
             else -> {
-                val chain: FxChain = deckSlot?.deck(mixer)?.fxChain ?: mixer.masterFxChain
-                if (asset.type == AssetType.FX_CHAIN) FxOps.loadChain(session, File(asset.path), chain)
-                else FXBrowserPanel.loadSingle(session, asset, chain, FxOps.firstVacantSlot(chain) ?: (FxChain.SLOT_COUNT - 1))
+                val chain = deckSlot?.deck(mixer)?.fxChain ?: mixer.masterFxChain
+                val slot = FxOps.firstVacantSlot(chain) ?: (FxChain.SLOT_COUNT - 1)
+                FXBrowserPanel.loadSingle(session, asset, chain, slot)
+                parametersState.openFxChainBrowse(bankId, deckLabel, slot)
             }
         }
     }

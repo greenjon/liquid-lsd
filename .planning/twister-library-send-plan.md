@@ -5,21 +5,21 @@ In Library FULL, knobs 1-15 are inert. Make a knob **tap** send the cursor item 
 
 | Knob | Target |
 |---|---|
-| 1 | Deck A |
-| 5 | Deck B |
-| 9 | Deck BG |
-| 13 | Deck PV |
-| 2 | Master FX (FX tab only) |
+| 9 | Deck A |
+| 10 | Deck B |
+| 11 | Deck BG |
+| 12 | Deck PV |
+| 13 | Master FX (FX tab only) |
 
-Column one = decks top to bottom; knob 2 (top of column two) = master bus, sitting next to Deck A.
+(Moved from column one / knob 2 by `twister-library-send-row-plan.md`: row three is the decks, knob 13 is master, row one stays free.)
 Knob 16 is unchanged (cursor / load to inactive deck / enqueue).
 
 ## Behaviour (cursor item in the list pane, Sources or FX tab)
 - Sources tab: preset file -> `DeckOps.request(slot, DeckChange.Preset)`; stock generator -> `DeckChange.Source`.
   Dirty-deck guard / undo / modal come from DeckOps (the controller already answers the modal).
-  Knob 2 does nothing (master has no source).
+  Knob 13 does nothing (master has no source).
 - FX tab: chain (`FX_CHAIN`) -> `FxOps.loadChain` replaces all 3 slots; single (`FX_PRESET` / `FX_STOCK`) -> first vacant slot
-  (`FxOps.firstVacantSlot`); chain full -> overwrite the last slot (no popup on a controller). Knob 2 targets `mixer.masterFxChain`.
+  (`FxOps.firstVacantSlot`); chain full -> overwrite the last slot (no popup on a controller). Knob 13 targets `mixer.masterFxChain`.
 - Transitions tab, Maps tab, tree/queue panes: taps do nothing (stay inert, dark).
 - Turning knobs 1-15 stays inert. Shift+tap = same as tap (no alt gesture in v1).
 - Picker (Edit bay) is untouched: knobs 1-4 still drive the row being filled there.

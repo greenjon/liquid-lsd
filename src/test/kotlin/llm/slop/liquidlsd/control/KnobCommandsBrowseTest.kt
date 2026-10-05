@@ -11,6 +11,7 @@ class KnobCommandsBrowseTest {
     private var steps = 0
     private var session = 0
     private var live: Set<SendTarget> = emptySet()
+    private var rowLive = false
     private val sent = mutableListOf<SendTarget>()
     private val primaries = mutableListOf<Int>()
     private val nav = object : NavSurface {
@@ -19,6 +20,7 @@ class KnobCommandsBrowseTest {
         override fun button(index: Int, shifted: Boolean) {}
         override fun browseStep(steps: Int) { this@KnobCommandsBrowseTest.steps += steps }
         override fun browseAccept(shifted: Boolean) {}
+        override val browseRowLive get() = this@KnobCommandsBrowseTest.rowLive
         override val sendTargets get() = this@KnobCommandsBrowseTest.live
         override fun browseSend(target: SendTarget) { sent += target }
     }
@@ -83,15 +85,15 @@ class KnobCommandsBrowseTest {
     }
 
     @Test
-    fun sendKnobsAreColumnOneAndKnobTwo() {
-        assertEquals(listOf(0, 4, 8, 12), listOf(SendTarget.A, SendTarget.B, SendTarget.BG, SendTarget.PV).map { it.knob })
-        assertEquals(1, SendTarget.MASTER.knob)
+    fun sendKnobsAreRowThreePlusKnob13() {
+        assertEquals(listOf(8, 9, 10, 11), listOf(SendTarget.A, SendTarget.B, SendTarget.BG, SendTarget.PV).map { it.knob })
+        assertEquals(12, SendTarget.MASTER.knob)
     }
 
     @Test
     fun tappingALiveSendKnobSendsToItsTarget() {
         live = SendTarget.entries.toSet()
-        tap(1); tap(5); tap(9); tap(13); tap(2)
+        tap(9); tap(10); tap(11); tap(12); tap(13)
         assertEquals(listOf(SendTarget.A, SendTarget.B, SendTarget.BG, SendTarget.PV, SendTarget.MASTER), sent)
         assertEquals(emptyList(), primaries)
     }
@@ -99,17 +101,26 @@ class KnobCommandsBrowseTest {
     @Test
     fun aSendKnobThatIsNotLiveIsInert() {
         live = setOf(SendTarget.A)
-        tap(2); tap(5)
+        tap(13); tap(10)
         assertEquals(emptyList(), sent)
-        tap(1, alt = true)
+        tap(9, alt = true)
         assertEquals(listOf(SendTarget.A), sent)
     }
 
     @Test
     fun otherKnobsStayInertAndTurnsNeverSend() {
         live = SendTarget.entries.toSet()
-        tap(3); tap(16)
+        tap(3); tap(8); tap(16)
         registry.execute("knob.1", CommandInput.Delta(0.5f), ctx)
         assertEquals(emptyList(), sent)
+    }
+
+    @Test
+    fun inThePickerRowOneStaysOnTheRowAndRowThreeSends() {
+        rowLive = true
+        live = SendTarget.entries.toSet()
+        tap(1); tap(4); tap(9)
+        assertEquals(listOf(0, 3), primaries)
+        assertEquals(listOf(SendTarget.A), sent)
     }
 }
