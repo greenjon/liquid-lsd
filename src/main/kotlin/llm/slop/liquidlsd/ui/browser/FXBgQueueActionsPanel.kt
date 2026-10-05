@@ -22,6 +22,7 @@ import java.io.File
 object FXBgQueueActionsPanel {
     private val logger = KotlinLogging.logger {}
     var selectedIndex: Int = -1
+    private val focusFollow = FocusFollow<Int>()
 
     fun draw(session: SessionContext, mixer: Mixer) {
         val navBtnW = ImGui.calcTextSize(">").x + ImGui.getStyle().getFramePaddingX() * 2f
@@ -153,7 +154,7 @@ object FXBgQueueActionsPanel {
                 val io = ImGui.getIO()
                 val isWindowFocused = ImGui.isWindowFocused(ImGuiFocusedFlags.ChildWindows)
                 val canAutoSelect = isWindowFocused && LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.FX_QUEUE_BG
-                if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput) {
+                if (focusFollow.arrived(index, ImGui.isItemFocused()) && canAutoSelect && !isSelected && !io.wantTextInput) {
                     selectedIndex = index
                     LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.FX_QUEUE_BG
                 }

@@ -54,13 +54,16 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         }
     }
 
-    /** Turns knob 1 into whole cursor steps: [BROWSE_STEP] of knob travel is one item. */
+    /**
+     * Turns knob 1 into whole cursor steps: [BROWSE_STEP] of knob travel is one item. At most one item per turn
+     * message: the profile's turn acceleration would otherwise skip rows and slam into the ends of long lists.
+     */
     private fun browseTurn(delta: Float, nav: NavSurface) {
         browseAccum += delta
         val steps = (browseAccum / BROWSE_STEP).toInt()
         if (steps != 0) {
             browseAccum -= steps * BROWSE_STEP
-            nav.browseStep(steps)
+            nav.browseStep(steps.coerceIn(-1, 1))
         }
     }
 

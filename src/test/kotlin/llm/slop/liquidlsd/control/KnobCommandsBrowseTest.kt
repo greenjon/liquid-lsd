@@ -62,4 +62,12 @@ class KnobCommandsBrowseTest {
         registry.execute("knob.1", CommandInput.Delta(half), ctx)
         assertEquals(0, steps)
     }
+
+    @Test
+    fun anAcceleratedTurnStillMovesOneItem() {
+        registry.execute("knob.1", CommandInput.Delta(KnobCommands.BROWSE_STEP * 4f), ctx)
+        assertEquals(1, steps)
+        registry.execute("knob.1", CommandInput.Delta(-KnobCommands.BROWSE_STEP * 3f), ctx)
+        assertEquals(0, steps)
+    }
 }

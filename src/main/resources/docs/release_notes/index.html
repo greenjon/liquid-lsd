@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#controller-browsing-beats-learned-mappings-midimidimappingmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controller Browsing Beats Learned Mappings (midi/MidiMappingManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ui-terminology-pass-edit-macros-ab-queue-ui-docs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1296,10 +1307,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#controller-navigates-the-unified-browser-tree-uibrowserbrowserpanekt-uilibrarynavigationkt-uibrowserbrowsemodelkt" class="md-nav__link">
+  <a href="#controller-navigates-the-unified-browser-tree-uibrowserbrowserpanekt-uilibrarynavigationkt-uibrowserbrowsemodelkt-controlknobcommandskt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Controller Navigates the Unified Browser Tree (ui/browser/BrowserPane.kt, ui/LibraryNavigation.kt, ui/browser/BrowseModel.kt)
+        Controller Navigates the Unified Browser Tree (ui/browser/BrowserPane.kt, ui/LibraryNavigation.kt, ui/browser/BrowseModel.kt, control/KnobCommands.kt)
       
     </span>
   </a>
@@ -5548,6 +5559,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#controller-browsing-beats-learned-mappings-midimidimappingmanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Controller Browsing Beats Learned Mappings (midi/MidiMappingManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#ui-terminology-pass-edit-macros-ab-queue-ui-docs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5636,10 +5658,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#controller-navigates-the-unified-browser-tree-uibrowserbrowserpanekt-uilibrarynavigationkt-uibrowserbrowsemodelkt" class="md-nav__link">
+  <a href="#controller-navigates-the-unified-browser-tree-uibrowserbrowserpanekt-uilibrarynavigationkt-uibrowserbrowsemodelkt-controlknobcommandskt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Controller Navigates the Unified Browser Tree (ui/browser/BrowserPane.kt, ui/LibraryNavigation.kt, ui/browser/BrowseModel.kt)
+        Controller Navigates the Unified Browser Tree (ui/browser/BrowserPane.kt, ui/LibraryNavigation.kt, ui/browser/BrowseModel.kt, control/KnobCommands.kt)
       
     </span>
   </a>
@@ -9863,6 +9885,16 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="controller-browsing-beats-learned-mappings-midimidimappingmanagerkt">Controller Browsing Beats Learned Mappings (<code>midi/MidiMappingManager.kt</code>)</h3>
+<ul>
+<li><strong>While you browse (Library view, or the Browse tab in the Edit bay), the controller profile gets its inputs first</strong>, even on a channel/CC you learned before. Before, a leftover learned mapping on a Twister knob 1 kept driving its parameter and the browse cursor never moved. Outside browsing nothing changes: a learned mapping still wins.</li>
+<li><strong>Knob 1 moves one row per click while browsing.</strong> The profile's turn acceleration used to skip 3-4 rows per click and slam into the ends of long lists and queues; browsing now ignores it.</li>
+<li>Internal: <code>processGlobalMidiEvents</code> skips the <code>hasLearnedMapping</code> check when <code>navSurface.browsing</code> is true.</li>
+<li>Internal: <code>KnobCommands.browseTurn</code> caps a turn message at one step.</li>
+<li><strong>Knob 1 keeps scrolling after you click a list.</strong> A clicked row kept ImGui's keyboard focus, and the list re-selected the focused row every frame, so each knob step was undone before it was drawn (Sources list and every queue). Selection now follows focus only when the focus moves (arrow keys still work).</li>
+<li><strong>The Edit bay's Browse list no longer sticks to the cursor.</strong> After one knob step its list stayed pinned to the cursor row and kept grabbing keyboard focus (mouse-wheel scrolling snapped back, search couldn't be typed into) until the Library was opened again.</li>
+<li>Internal: new <code>ui/browser/FocusFollow.kt</code> replaces the <code>isItemFocused() &amp;&amp; !isSelected</code> auto-select in <code>PresetListPanel</code> and the five queue panels; the one-shot <code>shouldScrollToSelection</code>/<code>shouldReclaimFocus</code> flags are cleared by <code>LibraryPanel.endFrame()</code> at the end of <code>UIManager.render</code>, not inside <code>LibraryPanel.draw</code> (skipped in Edit view).</li>
+</ul>
 <h3 id="ui-terminology-pass-edit-macros-ab-queue-ui-docs">UI Terminology Pass: Edit, Macros, A/B Queue (<code>ui/*</code>, docs)</h3>
 <ul>
 <li><strong>One name per thing in menus, tooltips and the docs.</strong> "Deep Edit" is now <strong>Edit</strong>; the Library's <strong>Maps</strong> tab is <strong>Macros</strong> and <strong>Trans</strong> is <strong>Transitions</strong>; "Play Queue" and "Live Queue" are the <strong>A/B Queue</strong> (with <strong>BG Queue</strong>, <strong>A/B FX Queue</strong>, <strong>BG FX Queue</strong> and <strong>Transition Queue</strong>); <strong>Output → Record Output</strong> and <strong>Render Video (Offline)...</strong> replace "Record Master Output" and "Export Video (Offline Studio)"; deck alphas are <strong>Levels</strong>; the View menu's "Library Drawer" is <strong>Library</strong>; the crossfader row badge is <strong>XF</strong>; LFO 2's toggle says Mute/Unmute; the menu-bar FBO readout says <strong>GPU buffers</strong>; New Preset says <strong>To Deck Background / Preview</strong>. The Edit view's right-hand <strong>Properties</strong> column is now <strong>Modulation</strong>, and the Edit bay's first tab is <strong>Parameters</strong> (was Edit). "Performance Mode" is the <strong>Perform view</strong> in the docs. A short glossary is in the user guide (Your Workspace).</li>
@@ -9908,10 +9940,11 @@
 <li><strong>On the Twister</strong> in the bay: the right-top button steps tree &gt; list &gt; queues (instead of the category), turning knob 1 steps the cursor, a tap applies the list row, and a tap on a folder selects it and jumps to the list. <strong>Shift + right-bottom</strong> clears the slot or chain, left-top goes back.</li>
 <li>Internal: <code>ApplyTarget</code> + <code>ScopeMemory</code>; <code>BrowserPane.hosted()/applyCursorRow()</code>; <code>LibraryPanel.navMode</code>; <code>-Dlsd.editBrowse=gen|chain|fx1-3|trans</code> opens Deck A's bay on a tab (screenshots). </li>
 </ul>
-<h3 id="controller-navigates-the-unified-browser-tree-uibrowserbrowserpanekt-uilibrarynavigationkt-uibrowserbrowsemodelkt">Controller Navigates the Unified Browser Tree (<code>ui/browser/BrowserPane.kt</code>, <code>ui/LibraryNavigation.kt</code>, <code>ui/browser/BrowseModel.kt</code>)</h3>
+<h3 id="controller-navigates-the-unified-browser-tree-uibrowserbrowserpanekt-uilibrarynavigationkt-uibrowserbrowsemodelkt-controlknobcommandskt">Controller Navigates the Unified Browser Tree (<code>ui/browser/BrowserPane.kt</code>, <code>ui/LibraryNavigation.kt</code>, <code>ui/browser/BrowseModel.kt</code>, <code>control/KnobCommands.kt</code>)</h3>
 <ul>
 <li><strong>The Twister's pane button walks tree, list, BG queue, A/B queue</strong> (FX: FX BG and FX A/B queues; Trans: its one queue). A fresh tab starts in the list. In the tree, turning knob 1 moves a cursor over the visible folders and playlists (shown as an outline) and <strong>a tap selects</strong> the folder or playlist, which fills the list. Turning never changes the list. Changing the folder or playlist, by controller or mouse, clears the list selection so a row of the previous view can't be loaded by accident.</li>
-<li>Internal: <code>SelectionSource.TREE</code>; <code>BrowserPane.stepTree/acceptTree/treeCursorOf/treeSize</code>; pure <code>visibleSelectableScopes</code> and <code>stepTreeCursor</code> in <code>BrowseModel.kt</code>; <code>LibraryNavigation.panes()</code> has a unified branch (<code>unifiedKind()</code>).</li>
+<li><strong>Tree cursor outline &amp; knob sensitivity</strong>: The controller cursor is drawn as a full-width, clean rounded cyan box (inset from window clip boundaries so all borders are visible, instead of appearing as an underline). Encoder knob 1 travel is 1 tick per item (was 4 ticks), so every single physical detent click on the Twister steps exactly one item forward or backward immediately.</li>
+<li>Internal: <code>SelectionSource.TREE</code>; <code>BrowserPane.stepTree/acceptTree/treeCursorOf/treeSize</code>; pure <code>visibleSelectableScopes</code> and <code>stepTreeCursor</code> in <code>BrowseModel.kt</code>; <code>LibraryNavigation.panes()</code> has a unified branch (<code>unifiedKind()</code>); <code>KnobCommands.BROWSE_STEP = 1f / 127f</code>.</li>
 </ul>
 <h3 id="unsaved-changes-prompt-can-be-answered-from-the-controller-uipopupmanagerkt-uinavigationsurfacekt">Unsaved-Changes Prompt Can Be Answered from the Controller (<code>ui/PopupManager.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
 <ul>

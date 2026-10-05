@@ -774,8 +774,10 @@ object MidiMappingManager {
                 parametersState.midiLearnTarget = null
             } else {
                 // A controller profile (e.g. Midi Fighter Twister) handles the inputs it binds, unless
-                // the user has learned a mapping on that exact channel/CC, which stays on top.
-                if (!hasLearnedMapping(event) && controllers.handle(event, ctx)) continue
+                // the user has learned a mapping on that exact channel/CC, which stays on top. Not while
+                // browsing: navigation is modal, so the profile gets the input first.
+                val browsing = ctx.navSurface?.browsing == true
+                if ((browsing || !hasLearnedMapping(event)) && controllers.handle(event, ctx)) continue
 
                 // Global actions (queue next/prev, tap tempo, crossfader snaps/auto-fade): any
                 // "Global/..." mapping on this channel/CC runs its registered command.

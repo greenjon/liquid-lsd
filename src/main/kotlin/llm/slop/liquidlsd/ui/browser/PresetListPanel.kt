@@ -40,6 +40,7 @@ object PresetListPanel {
     const val PAYLOAD_STOCK_SOURCE = "ASSET_ITEM_STOCK_SOURCE"
 
     val selection = MultiSelectionModel<AssetItem>()
+    private val focusFollow = FocusFollow<String>()
     var selectedAsset: AssetItem?
         get() = selection.leadItem
         set(value) {
@@ -131,7 +132,7 @@ object PresetListPanel {
 
             val isWindowFocused = ImGui.isWindowFocused(ImGuiFocusedFlags.ChildWindows)
             val canAutoSelect = isWindowFocused && (LibraryPanel.activeSelectionSource == null || LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.PRESETS)
-            if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput && !io.keyCtrl && !io.keyShift && !io.keySuper) {
+            if (focusFollow.arrived(asset.path, ImGui.isItemFocused()) && canAutoSelect && !isSelected && !io.wantTextInput && !io.keyCtrl && !io.keyShift && !io.keySuper) {
                 LibraryPanel.selectPreset(asset, session, mixer)
             }
 

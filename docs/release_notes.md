@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Controller Browsing Beats Learned Mappings (`midi/MidiMappingManager.kt`)
+- **While you browse (Library view, or the Browse tab in the Edit bay), the controller profile gets its inputs first**, even on a channel/CC you learned before. Before, a leftover learned mapping on a Twister knob 1 kept driving its parameter and the browse cursor never moved. Outside browsing nothing changes: a learned mapping still wins.
+- **Knob 1 moves one row per click while browsing.** The profile's turn acceleration used to skip 3-4 rows per click and slam into the ends of long lists and queues; browsing now ignores it.
+- Internal: `processGlobalMidiEvents` skips the `hasLearnedMapping` check when `navSurface.browsing` is true.
+- Internal: `KnobCommands.browseTurn` caps a turn message at one step.
+- **Knob 1 keeps scrolling after you click a list.** A clicked row kept ImGui's keyboard focus, and the list re-selected the focused row every frame, so each knob step was undone before it was drawn (Sources list and every queue). Selection now follows focus only when the focus moves (arrow keys still work).
+- **The Edit bay's Browse list no longer sticks to the cursor.** After one knob step its list stayed pinned to the cursor row and kept grabbing keyboard focus (mouse-wheel scrolling snapped back, search couldn't be typed into) until the Library was opened again.
+- Internal: new `ui/browser/FocusFollow.kt` replaces the `isItemFocused() && !isSelected` auto-select in `PresetListPanel` and the five queue panels; the one-shot `shouldScrollToSelection`/`shouldReclaimFocus` flags are cleared by `LibraryPanel.endFrame()` at the end of `UIManager.render`, not inside `LibraryPanel.draw` (skipped in Edit view).
+
 ### UI Terminology Pass: Edit, Macros, A/B Queue (`ui/*`, docs)
 - **One name per thing in menus, tooltips and the docs.** "Deep Edit" is now **Edit**; the Library's **Maps** tab is **Macros** and **Trans** is **Transitions**; "Play Queue" and "Live Queue" are the **A/B Queue** (with **BG Queue**, **A/B FX Queue**, **BG FX Queue** and **Transition Queue**); **Output → Record Output** and **Render Video (Offline)...** replace "Record Master Output" and "Export Video (Offline Studio)"; deck alphas are **Levels**; the View menu's "Library Drawer" is **Library**; the crossfader row badge is **XF**; LFO 2's toggle says Mute/Unmute; the menu-bar FBO readout says **GPU buffers**; New Preset says **To Deck Background / Preview**. The Edit view's right-hand **Properties** column is now **Modulation**, and the Edit bay's first tab is **Parameters** (was Edit). "Performance Mode" is the **Perform view** in the docs. A short glossary is in the user guide (Your Workspace).
 - Internal: strings only; class and identifier names (`PerformanceDeepEditBay`, `LibraryViewMode.MAPS`, `FX_SENDS`) are unchanged.

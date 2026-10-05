@@ -429,8 +429,13 @@ object LibraryPanel {
         BrowserPopupHandler.drawExportTransQueuePopup()
         BrowserPopupHandler.drawExportFxQueuePopup()
         BrowserPopupHandler.drawExportFxBgQueuePopup()
+    }
 
-        // Reset one-shot focus/scroll flags at end of frame
+    /**
+     * Clears the one-shot focus/scroll flags. Called by [UIManager] once the whole frame is drawn, not from [draw]: the Edit
+     * bay's picker lists are drawn while this panel is skipped, and the Library's own key shortcuts run after its lists.
+     */
+    fun endFrame() {
         shouldReclaimFocus = false
         shouldScrollToSelection = false
     }

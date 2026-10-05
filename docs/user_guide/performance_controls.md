@@ -368,6 +368,7 @@ The Twister mirrors the screen. Each encoder's ring shows its knob's value, and 
 - **No lights at all:** the log says `No MIDI output port found`. Reconnect the device, or close other software holding the Twister's port.
 - **Rings lag or drop:** the app writes lights to the showing bank a few messages at a time (the Twister drops bursts), rewrites the whole bank just after you switch to it, and re-sends it shortly after you stop turning, because the Twister redraws its own stored colours after bank changes. If rings still lag, raise `output.minIntervalMs` (default 2) in a copy of the profile.
 - **See exactly what is sent:** set `"trace": true` in the profile's `output` section (or start the app with `LSD_MIDI_TRACE=1`). Every message sent to the device, every bank change and every encoder message is then logged.
+- **A Twister knob drives something else, or the browse cursor won't move:** a learned mapping on that knob's channel/CC wins over the controller profile in the Perform view (while browsing, the profile wins). Clear the learned binding in the Learned Mappings list.
 - **The Twister profile isn't in the Learned Mappings bar:** that bar holds your learned mappings. The controller profile is chosen automatically from the device name and is listed under *Controller Profiles* in MIDI Controls.
 
 <a id="twister-own-profiles"></a>

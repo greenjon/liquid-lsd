@@ -2493,6 +2493,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <li><strong>No lights at all:</strong> the log says <code>No MIDI output port found</code>. Reconnect the device, or close other software holding the Twister's port.</li>
 <li><strong>Rings lag or drop:</strong> the app writes lights to the showing bank a few messages at a time (the Twister drops bursts), rewrites the whole bank just after you switch to it, and re-sends it shortly after you stop turning, because the Twister redraws its own stored colours after bank changes. If rings still lag, raise <code>output.minIntervalMs</code> (default 2) in a copy of the profile.</li>
 <li><strong>See exactly what is sent:</strong> set <code>"trace": true</code> in the profile's <code>output</code> section (or start the app with <code>LSD_MIDI_TRACE=1</code>). Every message sent to the device, every bank change and every encoder message is then logged.</li>
+<li><strong>A Twister knob drives something else, or the browse cursor won't move:</strong> a learned mapping on that knob's channel/CC wins over the controller profile in the Perform view (while browsing, the profile wins). Clear the learned binding in the Learned Mappings list.</li>
 <li><strong>The Twister profile isn't in the Learned Mappings bar:</strong> that bar holds your learned mappings. The controller profile is chosen automatically from the device name and is listed under <em>Controller Profiles</em> in MIDI Controls.</li>
 </ul>
 <p><a id="twister-own-profiles"></a></p>

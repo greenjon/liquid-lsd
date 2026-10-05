@@ -329,6 +329,7 @@ class UIManager(
         ToastOverlay.draw(displayWidth, displayHeight, llm.slop.liquidlsd.macro.MacroLearnState.getActiveStatus())
 
         handleKnobCursorLocking()
+        LibraryPanel.endFrame()
 
         ImGui.render()
         imguiGl3.renderDrawData(ImGui.getDrawData())

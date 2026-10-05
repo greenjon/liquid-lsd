@@ -23,6 +23,7 @@ import java.io.File
 object QueueActionsPanel {
     private val logger = KotlinLogging.logger {}
     val selection = MultiSelectionModel<Int>()
+    private val focusFollow = FocusFollow<Int>()
     var selectedIndex: Int
         get() = selection.leadItem ?: -1
         set(value) {
@@ -194,7 +195,7 @@ object QueueActionsPanel {
 
             val isWindowFocused = ImGui.isWindowFocused(ImGuiFocusedFlags.ChildWindows)
             val canAutoSelect = isWindowFocused && LibraryPanel.activeSelectionSource == LibraryPanel.SelectionSource.QUEUE_AB
-            if (canAutoSelect && ImGui.isItemFocused() && !isSelected && !io.wantTextInput && !io.keyCtrl && !io.keyShift && !io.keySuper) {
+            if (focusFollow.arrived(index, ImGui.isItemFocused()) && canAutoSelect && !isSelected && !io.wantTextInput && !io.keyCtrl && !io.keyShift && !io.keySuper) {
                 LibraryPanel.selectQueueAb(index, session, mixer)
             }
 
