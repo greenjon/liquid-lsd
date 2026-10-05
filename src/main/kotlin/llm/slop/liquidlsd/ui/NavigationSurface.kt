@@ -31,11 +31,10 @@ internal class NavigationSurface(
 ) : NavSurface {
     private val theme get() = session.uiTheme
 
-    private val inLibraryView: Boolean
-        get() = theme.libraryMode == UITheme.LibraryMode.FULL && !LibraryPanel.isEditView(session)
+    private val inLibraryView: Boolean get() = viewStateOf(session).maximized
 
-    private val inPicker: Boolean
-        get() = LibraryPanel.isEditView(session) && BrowserDock.editHosted()
+    /** The Edit bay's dock is up (bound to the row or on another tab). */
+    private val inPicker: Boolean get() = viewStateOf(session).let { it.editing && it.dockActive }
 
     private val confirming: Boolean get() = deckConfirm?.deckConfirmPending == true
 

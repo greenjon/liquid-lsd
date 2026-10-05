@@ -62,8 +62,7 @@ object LibraryPanel {
      * takes the whole left column and the Library isn't drawn at all. The other two views are
      * Perform (rows + HALF Library) and Library (FULL).
      */
-    fun isEditView(session: SessionContext): Boolean =
-        session.parametersState.anyRackModuleExpanded() && session.uiTheme.libraryMode != UITheme.LibraryMode.FULL
+    fun isEditView(session: SessionContext): Boolean = viewStateOf(session).editing
 
     /** Leaves Edit view so the Library is on screen: cancels any armed Learn (it pins its module open) and collapses Deep Edit. */
     fun show(session: SessionContext) {
