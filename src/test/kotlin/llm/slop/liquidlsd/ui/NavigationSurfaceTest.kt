@@ -221,16 +221,12 @@ class NavigationSurfaceTest {
             hostPane(mutableListOf(), mutableListOf())
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.TREE
             val initial = BrowserPane.treeCursorOf(BrowseKind.SRC)
-            val scopes = BrowserPane.treeSize(BrowseKind.SRC)
-            println("INITIAL: $initial, SIZE: $scopes")
+            assertEquals(BrowseScope.All, initial)
             nav().browseStep(1)
             val stepped = BrowserPane.treeCursorOf(BrowseKind.SRC)
-            println("STEPPED: $stepped")
-            if (scopes > 1) {
-                assertTrue(initial != stepped)
-            } else {
-                assertEquals(initial, stepped)
-            }
+            assertEquals(BrowseScope.Favorites, stepped)
+            nav().browseStep(-1)
+            assertEquals(BrowseScope.All, BrowserPane.treeCursorOf(BrowseKind.SRC))
         } finally {
             unhostPane()
         }

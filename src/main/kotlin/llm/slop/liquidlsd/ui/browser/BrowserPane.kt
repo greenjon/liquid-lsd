@@ -228,7 +228,12 @@ object BrowserPane {
                 // The controller's cursor: an outline, so it reads apart from the selected scope's fill.
                 val min = ImGui.getItemRectMin()
                 val max = ImGui.getItemRectMax()
-                ImGui.getWindowDrawList().addRect(min.x - 1f, min.y, max.x + 1f, max.y, TangoPalette.u32(TangoPalette.SYNC.normal), 3f)
+                val dl = ImGui.getWindowDrawList()
+                val boxMinX = (min.x + 1f).coerceAtLeast(ImGui.getWindowPosX() + ImGui.getStyle().windowPaddingX)
+                val boxMaxX = (max.x - 1f).coerceAtMost(ImGui.getWindowPosX() + ImGui.getWindowContentRegionMaxX())
+                val boxMinY = min.y + 1f
+                val boxMaxY = max.y - 1f
+                dl.addRect(boxMinX, boxMinY, boxMaxX, boxMaxY, TangoPalette.u32(TangoPalette.SYNC.normal), 3f, 0, 1.5f)
                 if (LibraryPanel.shouldScrollToSelection) ImGui.setScrollHereY(0.5f)
             }
             val playlist = node.scope as? BrowseScope.Playlist

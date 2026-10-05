@@ -49,13 +49,13 @@ class NavCommandsTest {
         val nav = FakeNav(browsing = true)
         val c = ctx(nav)
         val tick = 1f / 127f
-        // Below one step nothing happens, then the remainder carries over.
-        registry.execute("knob.1", CommandInput.Delta(3 * tick), c)
+        // 1 tick = 1 step. Sub-tick remainder carries over.
+        registry.execute("knob.1", CommandInput.Delta(0.5f * tick), c)
         assertEquals(emptyList(), nav.calls)
-        registry.execute("knob.1", CommandInput.Delta(2 * tick), c)
+        registry.execute("knob.1", CommandInput.Delta(0.6f * tick), c)
         assertEquals(listOf("step 1"), nav.calls)
-        registry.execute("knob.1", CommandInput.Delta(-8 * tick), c)
-        assertEquals("step -1", nav.calls[1].takeIf { nav.calls.size == 2 } ?: nav.calls.toString())
+        registry.execute("knob.1", CommandInput.Delta(-2f * tick), c)
+        assertEquals(listOf("step 1", "step -1"), nav.calls)
         press("knob.1.press", c)
         press("knob.1.press_alt", c)
         assertEquals(listOf("accept", "accept shifted"), nav.calls.takeLast(2))

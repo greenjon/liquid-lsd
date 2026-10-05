@@ -87,7 +87,7 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         const val KNOB_COUNT = 16
         /** How much a held switch scales a turn. */
         const val FINE_FACTOR = 0.1f
-        /** Knob travel (fraction of range, before fine scaling) per browse cursor step: about 4 encoder ticks. */
-        const val BROWSE_STEP = 4f / 127f
+        /** Knob travel (fraction of range, before fine scaling) per browse cursor step: 1 encoder tick = 1 item. */
+        const val BROWSE_STEP = 1f / 127f
     }
 }
