@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#the-library-dock-applies-to-whatever-row-slot-you-click-in-any-view-parametersstatedockselection-uidockoutlinekt-uibrowserbrowserdockkt-uiperformancebrowsebaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Library Dock Applies to Whatever Row Slot You Click, in Any View (ParametersState.dockSelection, ui/DockOutline.kt, ui/browser/BrowserDock.kt, ui/PerformanceBrowseBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#the-library-and-the-edit-bay-browse-tabs-are-one-browser-uibrowserbrowserdockkt-uibrowserdockactionskt-uiviewstatekt-uiperformancebrowsebaykt-uilibrarypanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5592,6 +5603,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#the-library-dock-applies-to-whatever-row-slot-you-click-in-any-view-parametersstatedockselection-uidockoutlinekt-uibrowserbrowserdockkt-uiperformancebrowsebaykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Library Dock Applies to Whatever Row Slot You Click, in Any View (ParametersState.dockSelection, ui/DockOutline.kt, ui/browser/BrowserDock.kt, ui/PerformanceBrowseBay.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#the-library-and-the-edit-bay-browse-tabs-are-one-browser-uibrowserbrowserdockkt-uibrowserdockactionskt-uiviewstatekt-uiperformancebrowsebaykt-uilibrarypanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9951,6 +9973,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="the-library-dock-applies-to-whatever-row-slot-you-click-in-any-view-parametersstatedockselection-uidockoutlinekt-uibrowserbrowserdockkt-uiperformancebrowsebaykt">The Library Dock Applies to Whatever Row Slot You Click, in Any View (<code>ParametersState.dockSelection</code>, <code>ui/DockOutline.kt</code>, <code>ui/browser/BrowserDock.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>)</h3>
+<ul>
+<li><strong>Click a row's source badge, chain name, effect cell or transition name and the Library dock below becomes bound to it</strong>, with no layout change: the four rows stay on screen, the slot gets an outline in the row's colour, the dock border takes that colour, and the header line shows a chip such as <code>● Deck A · FX 1  [Clear Slot]  ✕</code>. A single click on a list row still applies it (try several effects in a row).</li>
+<li><strong>Ending it</strong>: the chip's <strong>✕</strong>, <code>Esc</code>, or a <strong>double-click</strong> on a list row (applies and lets go). It also ends when the row leaves the screen (page change, SRC|FX flip) or its Edit bay closes. Picking a tab of another kind greys the chip ("paused") and keeps the binding.</li>
+<li><strong>Edit tabs are now <code>Parameters | Browse</code></strong>: the <code>Pick:</code> strip (SRC / Chain / FX1-3) is gone; the row itself is the slot selector, and Browse shows the dock bound to the slot you clicked last.</li>
+<li>Changed: browsing a slot in Perform uses the HALF dock, so the list is shorter than in the Edit bay (the splitter and Maximize still work; Maximize keeps the binding).</li>
+<li>Internal: one <code>dockSelection</code> replaces the per-row <code>rackBrowseTarget</code>; <code>BrowserPane.hosted()</code> and <code>ViewState</code> no longer depend on 300 ms "drawn recently" clocks (<code>UiClock</code> removed). Twister sends still open the row in the Edit bay.</li>
+</ul>
 <h3 id="the-library-and-the-edit-bay-browse-tabs-are-one-browser-uibrowserbrowserdockkt-uibrowserdockactionskt-uiviewstatekt-uiperformancebrowsebaykt-uilibrarypanelkt">The Library and the Edit Bay Browse Tabs Are One Browser (<code>ui/browser/BrowserDock.kt</code>, <code>ui/browser/DockActions.kt</code>, <code>ui/ViewState.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>, <code>ui/LibraryPanel.kt</code>)</h3>
 <ul>
 <li><strong>The Edit bay's Browse tab now shows the same browser as the Library</strong>, not a copy: the same tabs (<strong>Sources | FX | Transitions | Macros</strong>), the same toolbar (audition lock, <strong>Q</strong>, <strong>BGQ</strong>, deck load buttons), the same queue columns, and the same <code>Q</code> / <code>Shift+Q</code> / <code>Up</code> / <code>Down</code> keys.</li>

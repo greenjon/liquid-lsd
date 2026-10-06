@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### The Library Dock Applies to Whatever Row Slot You Click, in Any View (`ParametersState.dockSelection`, `ui/DockOutline.kt`, `ui/browser/BrowserDock.kt`, `ui/PerformanceBrowseBay.kt`)
+- **Click a row's source badge, chain name, effect cell or transition name and the Library dock below becomes bound to it**, with no layout change: the four rows stay on screen, the slot gets an outline in the row's colour, the dock border takes that colour, and the header line shows a chip such as `● Deck A · FX 1  [Clear Slot]  ✕`. A single click on a list row still applies it (try several effects in a row).
+- **Ending it**: the chip's **✕**, `Esc`, or a **double-click** on a list row (applies and lets go). It also ends when the row leaves the screen (page change, SRC|FX flip) or its Edit bay closes. Picking a tab of another kind greys the chip ("paused") and keeps the binding.
+- **Edit tabs are now `Parameters | Browse`**: the `Pick:` strip (SRC / Chain / FX1-3) is gone; the row itself is the slot selector, and Browse shows the dock bound to the slot you clicked last.
+- Changed: browsing a slot in Perform uses the HALF dock, so the list is shorter than in the Edit bay (the splitter and Maximize still work; Maximize keeps the binding).
+- Internal: one `dockSelection` replaces the per-row `rackBrowseTarget`; `BrowserPane.hosted()` and `ViewState` no longer depend on 300 ms "drawn recently" clocks (`UiClock` removed). Twister sends still open the row in the Edit bay.
+
 ### The Library and the Edit Bay Browse Tabs Are One Browser (`ui/browser/BrowserDock.kt`, `ui/browser/DockActions.kt`, `ui/ViewState.kt`, `ui/PerformanceBrowseBay.kt`, `ui/LibraryPanel.kt`)
 - **The Edit bay's Browse tab now shows the same browser as the Library**, not a copy: the same tabs (**Sources | FX | Transitions | Macros**), the same toolbar (audition lock, **Q**, **BGQ**, deck load buttons), the same queue columns, and the same `Q` / `Shift+Q` / `Up` / `Down` keys.
 - **A line above the list says what a tap does.** On the tab of the row's own kind it reads "Applies to: Deck A source" (or "Deck A FX 2", "Deck B FX chain", "Transition") with that row's buttons (Save, External video..., Clear Slot / Clear Chain), and a tap applies. On any other tab it is the plain Library: double-click loads to the inactive deck, and the line tells you which tab applies to the row.

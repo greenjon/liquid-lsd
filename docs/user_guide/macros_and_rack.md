@@ -344,10 +344,12 @@ watching the show while you pick.
   favorites, saved single-FX presets), each opening on its slot's usual folder.
 - **The same browser as the Library**: every Browse tab is the Library's own browser, with its
   **Sources / FX / Transitions / Macros** tabs, toolbar (audition lock, **Q**, **BGQ**, deck loads),
-  folder tree, list and queue columns. A line above the list says "Applies to: Deck A source" (or the
+  folder tree, list and queue columns. The header line shows a chip such as "● Deck A · FX 1" (the
   slot, chain or transition you are editing): on that tab a click applies the row, the row that is
-  applied shows a ●, and the list shows only what the target can take. Pick another tab and it is the
-  plain Library again (double-click loads to the inactive deck). Each target remembers the folder you
+  applied shows a ●, and the list shows only what the target can take. Pick another tab and the chip
+  greys out ("paused"): it is the plain Library again (double-click loads to the inactive deck).
+  The Edit row has just two tabs, **Parameters** and **Browse**; click a slot on the row (the source
+  badge, chain name, an effect cell or the transition name) to choose what Browse applies to. Each target remembers the folder you
   last used there. Search with `Ctrl+F` or `/`. **Clear Slot** / **Clear Chain** empties the target,
   and **External video...** (Sources) picks a live video stream.
 
