@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.midi.MidiLearnTarget
 import imgui.ImGui
 import imgui.flag.ImGuiCol
@@ -150,6 +151,7 @@ internal object PerformanceTransitionsControls {
         if (ImGui.button(tipPickerLabel.get(transName, modBadge) { "${Icons.SETTINGS} $transName$modBadge##perf_trans_picker_btn" }, transBtnW, headerH)) {
             parametersState.selectTransition()
         }
+        if (DockOutline.selects(parametersState, MacroEngine.TRANS, ParametersState.BrowseTarget.Transition)) DockOutline.drawAroundLastItem(MacroEngine.TRANS)
         itemTooltip(tipPicker.get(transName, modBadge) { "Select ISF transition shader or blend mode.\nActive: $transName$modBadge" })
 
         if (ImGui.beginDragDropTarget()) {

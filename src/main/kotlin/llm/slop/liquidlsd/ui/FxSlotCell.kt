@@ -169,6 +169,7 @@ object FxSlotCell {
         }
 
         drawContextMenu(session, mixer, bankId, chain, chainLabel, slotIndex, "##menu_$idBase", onEditInDeepEdit, onOpenBrowse)
+        if (DockOutline.selects(session.parametersState, bankId, ParametersState.BrowseTarget.FxChain(slotIndex))) DockOutline.draw(bankId, x, y, x + w, y + h)
     }
 
     /**

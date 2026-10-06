@@ -223,7 +223,7 @@ object FxChainHeader {
 
             // 2. Chain name button
             val nameW = calculateNameWidth(maxW, ctrlH, showArrows)
-            drawChainNameButton(session, chain, st, ctrlH, nameW, isDirty, actions)
+            drawChainNameButton(session, chain, st, ctrlH, nameW, isDirty, actions, DockOutline.selects(session.parametersState, bankId, ParametersState.BrowseTarget.FxChain(null)), bankId)
 
             ImGui.sameLine()
 
@@ -389,7 +389,9 @@ object FxChainHeader {
         ctrlH: Float,
         nameW: Float,
         isDirty: Boolean,
-        actions: Actions
+        actions: Actions,
+        dockSelected: Boolean,
+        bankId: String
     ) {
         val name = chain.name
         val fullLabel = st.chainLabel.get(name, isDirty) {
@@ -402,6 +404,7 @@ object FxChainHeader {
         if (ImGui.button(fullLabel, nameW, ctrlH)) {
             actions.openChainBrowse()
         }
+        if (dockSelected) DockOutline.drawAroundLastItem(bankId)
         if (isDirty) {
             ImGui.popStyleColor()
         }

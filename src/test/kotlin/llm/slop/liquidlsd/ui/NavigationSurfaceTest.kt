@@ -219,6 +219,22 @@ class NavigationSurfaceTest {
     }
 
     @Test
+    fun backDropsTheDockSelectionBeforeAnythingElse() {
+        state.selectGen(MacroEngine.DECK_A, "Deck A")
+        assertTrue(nav().back())
+        assertEquals(null, state.dockSelection)
+        assertFalse(nav().back())
+    }
+
+    @Test
+    fun leavingTheEditBayDropsTheDockSelection() {
+        state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
+        assertTrue(nav().back()) // closes the row, not just the selection
+        assertFalse(state.anyRackModuleExpanded())
+        assertEquals(null, state.dockSelection)
+    }
+
+    @Test
     fun aHostedPaneMakesEditViewBrowsingAndAppliesTheCursorRowOnTap() {
         val applied = mutableListOf<String>()
         try {

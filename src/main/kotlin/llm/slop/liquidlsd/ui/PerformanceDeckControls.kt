@@ -361,6 +361,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             if (ImGui.invisibleButton(str.badgeId, genBadgeW, ctrlH)) {
                 parametersState.selectGen(canonicalBankId, deckLabel)
             }
+            if (DockOutline.selects(parametersState, canonicalBankId, ParametersState.BrowseTarget.Gen)) DockOutline.drawAroundLastItem(canonicalBankId)
             val sourceId = GeneratorDefaults.sourceIdFor(deck.source)
             val hasUserDef = GeneratorDefaults.hasUserDefault(sourceId)
 

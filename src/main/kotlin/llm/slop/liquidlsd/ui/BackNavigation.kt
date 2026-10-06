@@ -26,6 +26,11 @@ internal object BackNavigation {
             PreferencesPanel.close()
             return true
         }
+        // Perform / Library FULL: Esc first drops the dock selection (in the Edit bay the row owns the dock, so Esc closes the row).
+        if (parametersState.dockSelection != null && !parametersState.anyRackModuleExpanded()) {
+            parametersState.clearDockSelection()
+            return true
+        }
         if (mixer != null) {
             val focusedBankId = FxMacroSync.FX_BANK_IDS.firstOrNull { FxMacroSync.chainFor(it, mixer)?.isFocused() == true }
             if (focusedBankId != null) {

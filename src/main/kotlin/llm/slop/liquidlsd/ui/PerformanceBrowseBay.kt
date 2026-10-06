@@ -60,10 +60,10 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
     }
 
     /** The dock binding for [selection] -- the apply-target (with its Save / Clear buttons) for a deck source, an FX chain or slot, or the transition. */
-    fun bindingFor(session: SessionContext, mixer: Mixer, selection: ParametersState.DockSelection): DockBinding? {
+    fun bindingFor(session: SessionContext, mixer: Mixer, selection: ParametersState.DockSelection, ownsSelection: Boolean = false): DockBinding? {
         val moduleId = selection.moduleId
         val deckLabel = ctx.deckLabelForModuleId(moduleId)
-        return when (val t = selection.target) {
+        val binding = when (val t = selection.target) {
             is ParametersState.BrowseTarget.Gen ->
                 deckLabel?.let { genBinding(session, mixer, ctx.deckForLabel(mixer, it), it) }
             is ParametersState.BrowseTarget.Transition -> transitionBinding(mixer)
@@ -73,6 +73,25 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 else -> null
             }
         }
+        if (binding == null) return null
+        val accent = if (selection.target is ParametersState.BrowseTarget.Transition) PerformanceColors.COLOR_TRANS else accentFor(moduleId)
+        if (!ownsSelection) return DockBinding(binding.target, binding.label, binding.actions, accent)
+        // The Library dock owns the selection: a double-click commits it, and the chip gets its close button.
+        val parametersState = session.parametersState
+        val target = binding.target
+        val committing = ApplyTarget(
+            target.kind, target.contextKey, target.defaultScope, target.accepts, target.isApplied, target.apply, target.clear,
+            onCommit = { parametersState.clearDockSelection() }
+        )
+        return DockBinding(committing, binding.label, binding.actions, accent, onClose = { parametersState.clearDockSelection() })
+    }
+
+    private fun accentFor(moduleId: String): FloatArray = when (moduleId) {
+        MacroEngine.DECK_A -> PerformanceColors.COLOR_DECK_A
+        MacroEngine.DECK_B -> PerformanceColors.COLOR_DECK_B
+        MacroEngine.DECK_BG -> PerformanceColors.COLOR_DECK_BG
+        MacroEngine.DECK_PV -> PerformanceColors.COLOR_DECK_PV
+        else -> PerformanceColors.COLOR_MASTER
     }
 
     private fun genBinding(session: SessionContext, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String): DockBinding {
@@ -90,13 +109,13 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             }
         )
         val actions = { drawGenBrowseSaveButton(session, mixer, deck, deckLabel) { drawExternalVideoMenu(deckLabel, applyId) } }
-        return DockBinding(target, "$deckLabel source", actions)
+        return DockBinding(target, "$deckLabel · Source", actions)
     }
 
     /** The one dock the Library also draws, bound to this row's [binding]: tabs and toolbar, the chip line, the pane, then its shortcuts and popups. */
     private fun drawDock(session: SessionContext, mixer: Mixer, parametersState: ParametersState, binding: DockBinding) {
         val btnH = 21f
-        BrowserDock.drawHeader(session, mixer, parametersState, ImGui.getWindowWidth(), btnH, ImGui.getCursorPosY(), ImGui.getCursorPosX())
+        BrowserDock.drawHeader(session, mixer, parametersState, ImGui.getWindowWidth(), btnH, ImGui.getCursorPosY(), ImGui.getCursorPosX(), binding)
         ImGui.spacing()
         BrowserDock.drawBody(session, mixer, parametersState, binding)
         BrowserDock.drawShortcuts(session, mixer)
@@ -211,6 +230,6 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 if (ImGui.button("${Icons.TRASH} ${if (slotIndex == null) "Clear Chain" else "Clear Slot ${slotIndex + 1}"}##browse_fx_clear")) target.clear?.invoke()
             }
         }
-        return DockBinding(target, if (slotIndex == null) "$chainLabel FX chain" else "$chainLabel FX ${slotIndex + 1}", actions)
+        return DockBinding(target, if (slotIndex == null) "$chainLabel · Chain" else "$chainLabel · FX ${slotIndex + 1}", actions)
     }
 }

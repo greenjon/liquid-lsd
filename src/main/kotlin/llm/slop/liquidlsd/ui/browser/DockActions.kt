@@ -19,9 +19,9 @@ internal object DockActions {
         target?.apply(asset)
     }
 
-    /** A double-click on a row ([parametersState] is only needed for sources). Bound docks already applied it on the tap, so only the unbound dock acts: it loads to the deck or mixer. */
+    /** A double-click on a row ([parametersState] is only needed for sources). Bound docks already applied it on the tap, so a double-click there only commits (drops the selection, see [ApplyTarget.onCommit]); the unbound dock loads to the deck or mixer. */
     fun doubleClick(session: SessionContext, mixer: Mixer, parametersState: ParametersState?, kind: BrowseKind, asset: AssetItem, target: ApplyTarget?) {
-        if (target != null) return
+        if (target != null) { target.onCommit?.invoke(); return }
         when (kind) {
             BrowseKind.SRC -> parametersState?.let { LibraryNavigation.loadAssetToInactiveDeck(session, mixer, asset, it) }
             BrowseKind.FX -> FXBrowserPanel.applyToDeck(session, asset, mixer.liveDeck)

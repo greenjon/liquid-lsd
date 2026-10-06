@@ -129,6 +129,7 @@ class ParametersState : MidiLearnSink {
 
     /** Collapses every rack module to Tier 1, except one currently pinned open by an active Learn. */
     fun collapseAllRackModules() {
+        dockSelection = null
         for (key in rackModuleDisclosure.keys.toList()) {
             if (!isLearnPinned(key)) {
                 rackModuleDisclosure[key] = DisclosureLevel.COLLAPSED

@@ -17,6 +17,8 @@ class ApplyTarget(
     val isApplied: (AssetItem) -> Boolean,
     val apply: (AssetItem) -> Unit,
     val clear: (() -> Unit)? = null,
+    /** Runs on a double-click while bound ("commit and done"); the Library dock uses it to drop the dock selection. */
+    val onCommit: (() -> Unit)? = null,
 ) {
     companion object {
         /** A deck source takes stock generators and saved presets. */

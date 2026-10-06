@@ -224,7 +224,7 @@ object LibraryPanel {
             val bottomSpacing = 2.5f
             val yOffset = (menuBarH - btnH - bottomSpacing).coerceAtLeast(0f)
 
-            BrowserDock.drawHeader(session, mixer, parametersState, safeW, btnH, yOffset)
+            BrowserDock.drawHeader(session, mixer, parametersState, safeW, btnH, yOffset, binding = binding)
 
             // Right-aligned Maximize / Restore button
             val windowBtnW = (btnH * 1.15f).coerceIn(20f, 32f)
