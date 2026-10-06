@@ -84,6 +84,20 @@ class ParametersStateMonitorTest {
     }
 
     @Test
+    fun editBayBrowseTabUsesTheSelectedSlotElseTheRowsHalf() {
+        val state = ParametersState()
+        state.selectFxChain(MacroEngine.DECK_A, "Deck A", slotIndex = 1)
+        state.openParams(MacroEngine.DECK_A)
+        state.openBrowseTab(MacroEngine.DECK_A, "Deck A")
+        assertEquals(ParametersState.BrowseTarget.FxChain(1), state.browseTargetFor(MacroEngine.DECK_A))
+        state.setDeckSubTab("Deck A", "SRC")
+        state.openBrowseTab(MacroEngine.DECK_A, "Deck A")
+        assertEquals(ParametersState.BrowseTarget.Gen, state.browseTargetFor(MacroEngine.DECK_A))
+        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.COLLAPSED)
+        assertEquals(null, state.dockSelection)
+    }
+
+    @Test
     fun openFromMonitor_whenInBrowseFx_switchesDeckAndStaysInFxBrowse() {
         val state = ParametersState()
         state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", slotIndex = 2)

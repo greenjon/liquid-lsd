@@ -40,6 +40,7 @@ internal object BackNavigation {
         }
         if (parametersState.anyRackModuleExpanded()) {
             parametersState.collapseAllRackModules()
+            parametersState.clearDockSelection()
             return true
         }
         return false

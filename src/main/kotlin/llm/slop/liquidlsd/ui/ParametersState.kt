@@ -115,6 +115,8 @@ class ParametersState : MidiLearnSink {
      */
     fun setDisclosure(moduleId: String, level: DisclosureLevel) {
         rackModuleDisclosure[moduleId] = level
+        // Closing a row's Edit bay ends its dock binding too (it would otherwise reappear bound in Perform).
+        if (level == DisclosureLevel.COLLAPSED && dockSelection?.moduleId == moduleId) dockSelection = null
         if (level != DisclosureLevel.COLLAPSED) {
             topTabForDeepEditModule(moduleId)?.let { activeTopTab = it }
             for (key in rackModuleDisclosure.keys.toList()) {
@@ -129,7 +131,6 @@ class ParametersState : MidiLearnSink {
 
     /** Collapses every rack module to Tier 1, except one currently pinned open by an active Learn. */
     fun collapseAllRackModules() {
-        dockSelection = null
         for (key in rackModuleDisclosure.keys.toList()) {
             if (!isLearnPinned(key)) {
                 rackModuleDisclosure[key] = DisclosureLevel.COLLAPSED
@@ -252,6 +253,16 @@ class ParametersState : MidiLearnSink {
                     }
                 }
             }
+        }
+    }
+
+    /** The Edit bay's Browse tab: the slot last selected on this row, else what the row's SRC|FX (or Master TRANS|FX) half shows. */
+    fun openBrowseTab(moduleId: String, deckLabel: String?) {
+        val slot = (dockSelection?.takeIf { it.moduleId == moduleId }?.target as? BrowseTarget.FxChain)?.slotIndex
+        if (deckLabel != null) {
+            if (getActiveSubTab(deckLabel) == "FX") openFxChainBrowse(moduleId, deckLabel, slot) else openGenBrowse(moduleId, deckLabel)
+        } else {
+            if (activeMixerSubTab == "FX") openFxChainBrowse(MacroEngine.MASTER, null, slot) else openTransitionBrowse()
         }
     }
 

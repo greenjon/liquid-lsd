@@ -146,15 +146,11 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
     }
 
     /**
-     * The bay's single tab row: `Parameters | SRC | Chain | FX1 | FX2 | FX3` for a deck, with TRANS in place
-     * of SRC on Master. Edit is the Params editor; the rest are Browse targets (see
-     * [ParametersState.BrowseTarget]), so the active tab is derived from [ParametersState.sectionModeFor]
-     * and [ParametersState.browseTargetFor] rather than stored separately.
+     * The bay's tab row: `Parameters | Browse`. Browse is the dock bound to the slot last clicked on the row (the row's SRC
+     * badge, chain name, FX cells or transition name are the slot selector; see [ParametersState.openBrowseTab]).
      */
     private fun drawModeTabs(session: SessionContext, parametersState: ParametersState, moduleId: String, deckLabel: String?) {
         val inBrowse = parametersState.sectionModeFor(moduleId) == ParametersState.SectionMode.BROWSE
-        val target = parametersState.browseTargetFor(moduleId)
-        val lead = if (deckLabel != null) "SRC" else "TRANS"
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
             fun tab(label: String, tip: String, active: Boolean, onClick: () -> Unit) {
                 if (active) ImGui.pushStyleColor(ImGuiCol.Button, ImGui.getStyle().getColor(ImGuiCol.ButtonActive))
@@ -163,28 +159,9 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
                 itemTooltip(tip)
             }
             tab("Parameters", "Edit parameters, modulation and properties.", !inBrowse) { parametersState.openParams(moduleId) }
-            // Parameters shows the editor; every tab after the label opens a picker for that slot.
-            ImGui.sameLine(0f, 12f)
-            ImGui.alignTextToFramePadding()
-            ImGui.textDisabled("Pick:")
             ImGui.sameLine()
-            if (deckLabel != null) {
-                tab(lead, "Pick this deck's source.", inBrowse && target is ParametersState.BrowseTarget.Gen) {
-                    parametersState.openGenBrowse(moduleId, deckLabel)
-                }
-            } else {
-                tab(lead, "Pick the active mixer transition.", inBrowse && target is ParametersState.BrowseTarget.Transition) {
-                    parametersState.openTransitionBrowse()
-                }
-            }
-            val fxSlot = (target as? ParametersState.BrowseTarget.FxChain)?.let { it.slotIndex }
-            val inFx = inBrowse && target is ParametersState.BrowseTarget.FxChain
-            for (i in -1 until FxChain.SLOT_COUNT) {
-                ImGui.sameLine()
-                val label = if (i == -1) "Chain" else "FX${i + 1}"
-                val tip = if (i == -1) "Load or clear a saved FX chain." else "Pick the effect in slot ${i + 1}."
-                val slot = if (i == -1) null else i
-                tab(label, tip, inFx && fxSlot == slot) { parametersState.openFxChainBrowse(moduleId, deckLabel, slot) }
+            tab("Browse", "Browse and apply sources, effects or transitions to this row. Click a slot on the row to choose what it applies to.", inBrowse) {
+                parametersState.openBrowseTab(moduleId, deckLabel)
             }
             if (!inBrowse) drawQueueNextUp(session, deckLabel)
         }
