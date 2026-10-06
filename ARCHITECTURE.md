@@ -53,7 +53,7 @@ Deeper: `docs/developer/architecture.md` (partly stale, see report), `docs/devel
    7. for A, B, BG, PV: `deck.update()` then `renderer.renderDeck(deck)`;
    8. `mixer.update()` then `renderer.renderMixer(mixer)`;
    9. `TextureStreamerManager.update` for each `VideoOutputEndpoint` (Spout/Syphon/PipeWire out), `RealtimeRecorder.captureFrame`, `BroadcastEngine.tick`.
-4. Blit `mixer.masterFBO` to the window (when background video or Clean Mode is on), then `uiManager.render(...)`. **Incoming MIDI events are drained inside `UIManager.render`** (`MidiMappingManager.processGlobalMidiEvents`, controller feedback, queue advances), i.e. after the frame's render phase, so a knob turn reaches the screen one frame later.
+4. Blit `mixer.masterFBO` to the window (when background video or Output View is on), then `uiManager.render(...)`. **Incoming MIDI events are drained inside `UIManager.render`** (`MidiMappingManager.processGlobalMidiEvents`, controller feedback, queue advances), i.e. after the frame's render phase, so a knob turn reaches the screen one frame later.
 5. `glfwSwapBuffers`; optional secondary output window (second GL context, blits `masterFBO`); frame cap from `UITheme.maxFps` by sleep (no spin).
 
 Shutdown order: save preferences, stop broadcast/recorder/streamers, `SessionSerializer.saveSession`, stop audio/MIDI/OSC, dispose GL, `GLResourceTracker.assertNoLeaks`.

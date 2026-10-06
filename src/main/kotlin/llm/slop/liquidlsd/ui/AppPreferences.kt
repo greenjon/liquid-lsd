@@ -28,7 +28,7 @@ data class AppPreferences(
     val audioTransitionAlpha: Float = 120.0f,
     val audioTrackingInertia: Float = 2.0f,
     val backgroundVideoEnabled: Boolean = false,
-    val cleanModeEnabled: Boolean = false,
+    val outputViewEnabled: Boolean = false,
     val randomizationEnabled: Boolean = false,
     val fxSwapFadeMs: Int = 150,
     val sequencerEnabled: Boolean = false,

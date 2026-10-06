@@ -37,7 +37,7 @@ class UIThemeTest {
             UITheme.showMidiCol = false
             UITheme.showLfoCol = true
             UITheme.showAudioCol = false
-            UITheme.cleanModeEnabled = true
+            UITheme.outputViewEnabled = true
             UITheme.backgroundVideoEnabled = true
             UITheme.tooltipsEnabled = false
             UITheme.maxFps = 60
@@ -57,7 +57,7 @@ class UIThemeTest {
             UITheme.showMidiCol = true
             UITheme.showLfoCol = false
             UITheme.showAudioCol = true
-            UITheme.cleanModeEnabled = false
+            UITheme.outputViewEnabled = false
             UITheme.backgroundVideoEnabled = false
             UITheme.tooltipsEnabled = true
             UITheme.maxFps = 30
@@ -77,7 +77,7 @@ class UIThemeTest {
             assertFalse(UITheme.showMidiCol)
             assertTrue(UITheme.showLfoCol)
             assertFalse(UITheme.showAudioCol)
-            assertTrue(UITheme.cleanModeEnabled)
+            assertTrue(UITheme.outputViewEnabled)
             assertTrue(UITheme.backgroundVideoEnabled)
             assertFalse(UITheme.tooltipsEnabled)
             assertEquals(60, UITheme.maxFps)
@@ -134,21 +134,21 @@ class UIThemeTest {
             legacySettingsFile.writeText(
                 """
                 maxFps=60
-                cleanModeEnabled=true
+                outputViewEnabled=true
                 settingsWidth=820.0
                 settingsHeight=620.0
                 """.trimIndent()
             )
 
             UITheme.maxFps = 30
-            UITheme.cleanModeEnabled = false
+            UITheme.outputViewEnabled = false
             UITheme.preferencesWidth = 640f
             UITheme.preferencesHeight = 520f
 
             AppPreferencesStore.loadPreferences()
 
             assertEquals(60, UITheme.maxFps)
-            assertTrue(UITheme.cleanModeEnabled)
+            assertTrue(UITheme.outputViewEnabled)
             assertEquals(820f, UITheme.preferencesWidth)
             assertEquals(620f, UITheme.preferencesHeight)
         } finally {

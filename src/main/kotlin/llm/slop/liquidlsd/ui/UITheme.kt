@@ -111,9 +111,9 @@ object UITheme {
         get() = settings.backgroundVideoEnabled
         set(value) { settings = settings.copy(backgroundVideoEnabled = value) }
 
-    var cleanModeEnabled: Boolean
-        get() = settings.cleanModeEnabled
-        set(value) { settings = settings.copy(cleanModeEnabled = value) }
+    var outputViewEnabled: Boolean
+        get() = settings.outputViewEnabled
+        set(value) { settings = settings.copy(outputViewEnabled = value) }
 
     var randomizationEnabled: Boolean
         get() = settings.randomizationEnabled

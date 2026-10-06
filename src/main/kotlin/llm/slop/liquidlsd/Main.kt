@@ -358,10 +358,11 @@ fun main(args: Array<String>) {
     var imguiKeyCallback: org.lwjgl.glfw.GLFWKeyCallback? = null
     imguiKeyCallback = glfwSetKeyCallback(window) { win, key, scancode, action, mods ->
         val io = imgui.ImGui.getIO()
-        val isShortcutAllowed = !io.wantTextInput || UITheme.cleanModeEnabled
+        val isShortcutAllowed = !io.wantTextInput || UITheme.outputViewEnabled
 
+        val isOutputViewKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.output_view", key, mods)
+        val isExitOutputViewKey = UITheme.outputViewEnabled && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.exit_output_view", key, mods)
         val isFullscreenKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.fullscreen", key, mods)
-        val isExitFullscreenKey = UITheme.cleanModeEnabled && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.exit_fullscreen", key, mods)
         val isBgVideoKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.bg_video", key, mods)
         val isDecPresetSizeKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preset_size_dec", key, mods)
         val isIncPresetSizeKey = llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.preset_size_inc", key, mods)
@@ -372,7 +373,7 @@ fun main(args: Array<String>) {
         val isTapTempoKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("clock.tap_tempo", key, mods)
         val isOscMapModeKey = isShortcutAllowed && llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.matchesKey("global.osc_map_mode", key, mods)
 
-        val isHotKey = isFullscreenKey || isExitFullscreenKey || isBgVideoKey || isDecPresetSizeKey || isIncPresetSizeKey || isRecordHotKey || isPreferencesKey || isCapsLock || isTapTempoKey || isOscMapModeKey
+        val isHotKey = isOutputViewKey || isExitOutputViewKey || isFullscreenKey || isBgVideoKey || isDecPresetSizeKey || isIncPresetSizeKey || isRecordHotKey || isPreferencesKey || isCapsLock || isTapTempoKey || isOscMapModeKey
 
         if (action == GLFW_PRESS) {
             if (isPreferencesKey) {
@@ -402,11 +403,13 @@ fun main(args: Array<String>) {
                     )
                 }
             } else if (isFullscreenKey) {
-                UITheme.cleanModeEnabled = !UITheme.cleanModeEnabled
-                logger.info { "Clean mode toggled: ${UITheme.cleanModeEnabled}" }
-            } else if (isExitFullscreenKey) {
-                UITheme.cleanModeEnabled = false
-                logger.info { "Clean mode exited via ESC: ${UITheme.cleanModeEnabled}" }
+                uiManager.windowFrameController.toggleFullscreen()
+            } else if (isOutputViewKey) {
+                UITheme.outputViewEnabled = !UITheme.outputViewEnabled
+                logger.info { "Output View toggled: ${UITheme.outputViewEnabled}" }
+            } else if (isExitOutputViewKey) {
+                UITheme.outputViewEnabled = false
+                logger.info { "Output View exited via ESC: ${UITheme.outputViewEnabled}" }
             } else if (isBgVideoKey) {
                 UITheme.backgroundVideoEnabled = !UITheme.backgroundVideoEnabled
                 AppPreferencesStore.savePreferences()
@@ -550,7 +553,7 @@ fun main(args: Array<String>) {
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f)
             glClear(GL_COLOR_BUFFER_BIT)
 
-            if (UITheme.backgroundVideoEnabled || UITheme.cleanModeEnabled) {
+            if (UITheme.backgroundVideoEnabled || UITheme.outputViewEnabled) {
                 val vp = llm.slop.liquidlsd.rendering.ViewportHelper.computeViewport(
                     fbW, fbH,
                     mixer.width, mixer.height,

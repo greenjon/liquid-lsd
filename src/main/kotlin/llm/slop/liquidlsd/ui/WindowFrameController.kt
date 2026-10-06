@@ -66,6 +66,47 @@ class WindowFrameController(
 
     fun isMaximized(): Boolean = glfwGetWindowAttrib(windowHandle, GLFW_MAXIMIZED) == GLFW_TRUE
 
+    /** True while the main window is fullscreen on a monitor (see [toggleFullscreen]). */
+    fun isFullscreen(): Boolean = glfwGetWindowMonitor(windowHandle) != 0L
+
+    private var windowedX = 0
+    private var windowedY = 0
+    private var windowedW = 0
+    private var windowedH = 0
+
+    /** Fullscreens the window on the monitor it mostly sits on, or restores its previous windowed bounds. */
+    fun toggleFullscreen() {
+        if (isFullscreen()) {
+            glfwSetWindowMonitor(windowHandle, 0L, windowedX, windowedY, windowedW, windowedH, GLFW_DONT_CARE)
+            return
+        }
+        val (x, y) = getWindowPos()
+        val (w, h) = getWindowSize()
+        windowedX = x; windowedY = y; windowedW = w; windowedH = h
+        val monitor = monitorUnderWindow(x, y, w, h)
+        val mode = glfwGetVideoMode(monitor) ?: return
+        glfwSetWindowMonitor(windowHandle, monitor, 0, 0, mode.width(), mode.height(), mode.refreshRate())
+    }
+
+    private fun monitorUnderWindow(x: Int, y: Int, w: Int, h: Int): Long {
+        val primary = glfwGetPrimaryMonitor()
+        if (isWayland) return primary
+        val monitors = glfwGetMonitors() ?: return primary
+        var best = primary
+        var bestArea = -1L
+        val mx = IntArray(1); val my = IntArray(1)
+        for (i in 0 until monitors.limit()) {
+            val m = monitors.get(i)
+            val mode = glfwGetVideoMode(m) ?: continue
+            glfwGetMonitorPos(m, mx, my)
+            val ow = minOf(x + w, mx[0] + mode.width()) - maxOf(x, mx[0])
+            val oh = minOf(y + h, my[0] + mode.height()) - maxOf(y, my[0])
+            val area = if (ow > 0 && oh > 0) ow.toLong() * oh else 0L
+            if (area > bestArea) { bestArea = area; best = m }
+        }
+        return best
+    }
+
     fun minimize() {
         glfwIconifyWindow(windowHandle)
     }
@@ -105,7 +146,7 @@ class WindowFrameController(
      * Called by the MenuBar when mouse interaction occurs over the empty header drag area.
      */
     fun onTopBarInteraction(isHovered: Boolean, isDoubleClicked: Boolean) {
-        if (!UITheme.framelessWindow) return
+        if (!UITheme.framelessWindow || isFullscreen()) return
 
         if (isDoubleClicked) {
             toggleMaximize()
@@ -163,8 +204,8 @@ class WindowFrameController(
             return
         }
 
-        // Handle perimeter edge / corner resizing when unmaximized and not in clean mode
-        if (!isMaximized() && !UITheme.cleanModeEnabled) {
+        // Handle perimeter edge / corner resizing when unmaximized and not in Output View or fullscreen
+        if (!isMaximized() && !isFullscreen() && !UITheme.outputViewEnabled) {
             updateEdgeResizing()
         } else if (currentCursor != arrowCursor) {
             setCursor(arrowCursor)

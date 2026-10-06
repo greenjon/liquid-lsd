@@ -45,23 +45,23 @@ class ShortcutManagerTest {
 
     @Test
     fun testConflictDetection() {
-        // Attempting to assign 'F' (which is global.fullscreen) to global.bg_video should detect a conflict
+        // Attempting to assign 'F' (which is global.output_view) to global.bg_video should detect a conflict
         val fKey = KeyCombination(GLFW_KEY_F)
         val conflicts = ShortcutManager.findConflicts("global.bg_video", fKey)
         assertEquals(1, conflicts.size)
-        assertEquals("global.fullscreen", conflicts[0].id)
+        assertEquals("global.output_view", conflicts[0].id)
     }
 
     @Test
     fun testNoConflictForDistinctKeys() {
         val unusedKey = KeyCombination(GLFW_KEY_X, GLFW_MOD_ALT)
-        val conflicts = ShortcutManager.findConflicts("global.fullscreen", unusedKey)
+        val conflicts = ShortcutManager.findConflicts("global.output_view", unusedKey)
         assertTrue(conflicts.isEmpty())
     }
 
     @Test
     fun testRebindAndReset() {
-        val actionId = "global.fullscreen"
+        val actionId = "global.output_view"
         val newKey = KeyCombination(GLFW_KEY_G)
 
         ShortcutManager.updateKeyBinding(actionId, newKey)
@@ -74,7 +74,7 @@ class ShortcutManagerTest {
 
     @Test
     fun testSwapBindings() {
-        val id1 = "global.fullscreen" // F
+        val id1 = "global.output_view" // F
         val id2 = "global.bg_video" // B
 
         ShortcutManager.swapBindings(id1, id2)

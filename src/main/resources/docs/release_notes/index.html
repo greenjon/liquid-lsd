@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#f11-toggles-fullscreen-clean-mode-is-now-output-view-mainkt-uiwindowframecontrollerkt-uishortcutsshortcutmanagerkt-uiuithemekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F11 Toggles Fullscreen; "Clean Mode" Is Now "Output View" (Main.kt, ui/WindowFrameController.kt, ui/shortcuts/ShortcutManager.kt, ui/UITheme.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-rows-are-a-fixed-height-the-library-fills-the-rest-uiperformancematrixpanelkt-uiuimanagerkt-uiperfrowgeometrykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5669,6 +5680,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#f11-toggles-fullscreen-clean-mode-is-now-output-view-mainkt-uiwindowframecontrollerkt-uishortcutsshortcutmanagerkt-uiuithemekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        F11 Toggles Fullscreen; "Clean Mode" Is Now "Output View" (Main.kt, ui/WindowFrameController.kt, ui/shortcuts/ShortcutManager.kt, ui/UITheme.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#performance-rows-are-a-fixed-height-the-library-fills-the-rest-uiperformancematrixpanelkt-uiuimanagerkt-uiperfrowgeometrykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10105,6 +10127,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="f11-toggles-fullscreen-clean-mode-is-now-output-view-mainkt-uiwindowframecontrollerkt-uishortcutsshortcutmanagerkt-uiuithemekt"><code>F11</code> Toggles Fullscreen; "Clean Mode" Is Now "Output View" (<code>Main.kt</code>, <code>ui/WindowFrameController.kt</code>, <code>ui/shortcuts/ShortcutManager.kt</code>, <code>ui/UITheme.kt</code>)</h3>
+<ul>
+<li><strong><code>F11</code> makes the main window fullscreen</strong> on the monitor it mostly sits on, UI intact; press it again to restore the previous size and position. Frameless edge-resize and title-bar double-click are disabled while fullscreen. Rebindable in Preferences → Shortcuts ("Toggle Fullscreen").</li>
+<li><strong><code>F</code> / <code>Esc</code> (hide all UI, show only the master) is renamed Output View</strong>, in shortcut labels and docs. The shortcut ids are now <code>global.output_view</code> / <code>global.exit_output_view</code>; <code>global.fullscreen</code> now means the window fullscreen on <code>F11</code>, so a rebinding saved under the old id carries over to the new fullscreen action, and Output View returns to its default keys.</li>
+<li>Internal: <code>UITheme.cleanModeEnabled</code> is now <code>outputViewEnabled</code>; the settings file writes <code>outputViewEnabled</code> and still reads the old <code>cleanModeEnabled</code> key.</li>
+</ul>
 <h3 id="performance-rows-are-a-fixed-height-the-library-fills-the-rest-uiperformancematrixpanelkt-uiuimanagerkt-uiperfrowgeometrykt">Performance Rows Are a Fixed Height; the Library Fills the Rest (<code>ui/PerformanceMatrixPanel.kt</code>, <code>ui/UIManager.kt</code>, <code>ui/PerfRowGeometry.kt</code>)</h3>
 <ul>
 <li><strong>Every Perform row is 74px</strong>, whatever the window or Library size. Knobs and wing controls no longer resize, the row grid no longer scrolls (click-drag scrolling is removed), and there is no compact/full control variant.</li>

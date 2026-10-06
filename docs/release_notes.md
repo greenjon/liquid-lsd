@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### `F11` Toggles Fullscreen; "Clean Mode" Is Now "Output View" (`Main.kt`, `ui/WindowFrameController.kt`, `ui/shortcuts/ShortcutManager.kt`, `ui/UITheme.kt`)
+- **`F11` makes the main window fullscreen** on the monitor it mostly sits on, UI intact; press it again to restore the previous size and position. Frameless edge-resize and title-bar double-click are disabled while fullscreen. Rebindable in Preferences → Shortcuts ("Toggle Fullscreen").
+- **`F` / `Esc` (hide all UI, show only the master) is renamed Output View**, in shortcut labels and docs. The shortcut ids are now `global.output_view` / `global.exit_output_view`; `global.fullscreen` now means the window fullscreen on `F11`, so a rebinding saved under the old id carries over to the new fullscreen action, and Output View returns to its default keys.
+- Internal: `UITheme.cleanModeEnabled` is now `outputViewEnabled`; the settings file writes `outputViewEnabled` and still reads the old `cleanModeEnabled` key.
+
 ### Performance Rows Are a Fixed Height; the Library Fills the Rest (`ui/PerformanceMatrixPanel.kt`, `ui/UIManager.kt`, `ui/PerfRowGeometry.kt`)
 - **Every Perform row is 74px**, whatever the window or Library size. Knobs and wing controls no longer resize, the row grid no longer scrolls (click-drag scrolling is removed), and there is no compact/full control variant.
 - **The Library takes the remaining window height** below the four rows (a taller window gives a taller Library). The Library title-bar splitter, its double-click reset and the saved `libraryRatio` preference are gone; old preference files just ignore the key.

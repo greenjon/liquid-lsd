@@ -24,8 +24,9 @@ object ShortcutManager {
         actions.clear()
 
         // 1. Global & Display
-        register(ShortcutAction("global.fullscreen", ShortcutCategory.GLOBAL, "Toggle Fullscreen / Clean Mode", "Hides all UI chrome to display full master video output.", KeyCombination(GLFW_KEY_F)))
-        register(ShortcutAction("global.exit_fullscreen", ShortcutCategory.GLOBAL, "Exit Fullscreen / Clean Mode", "Restores the user interface when in Fullscreen Clean Mode.", KeyCombination(GLFW_KEY_ESCAPE)))
+        register(ShortcutAction("global.output_view", ShortcutCategory.GLOBAL, "Toggle Output View", "Hides all UI chrome to display only the full master video output.", KeyCombination(GLFW_KEY_F)))
+        register(ShortcutAction("global.exit_output_view", ShortcutCategory.GLOBAL, "Exit Output View", "Restores the user interface when in Output View.", KeyCombination(GLFW_KEY_ESCAPE)))
+        register(ShortcutAction("global.fullscreen", ShortcutCategory.GLOBAL, "Toggle Fullscreen", "Switches the main window between fullscreen and its windowed size and position.", KeyCombination(GLFW_KEY_F11)))
         register(ShortcutAction("global.bg_video", ShortcutCategory.GLOBAL, "Toggle Background Video", "Renders master visuals behind the semi-transparent interface.", KeyCombination(GLFW_KEY_B)))
         register(ShortcutAction("global.preset_size_dec", ShortcutCategory.GLOBAL, "Decrease Preset Name Size", "Reduces Library browser preset name font size by 10% (80%–120%).", KeyCombination(GLFW_KEY_MINUS, GLFW_MOD_CONTROL)))
         register(ShortcutAction("global.preset_size_inc", ShortcutCategory.GLOBAL, "Increase Preset Name Size", "Increases Library browser preset name font size by 10% (80%–120%).", KeyCombination(GLFW_KEY_EQUAL, GLFW_MOD_CONTROL)))

@@ -6,7 +6,9 @@ This page covers everything about where your visuals go: sending them to project
 
 ## Fullscreen & Projector Output
 
-The simplest way to output: press **`F`** to go fullscreen. The UI disappears and the master output fills the screen. Press **`Esc`** to come back.
+The simplest way to output: press **`F`** for **Output View**. The UI disappears and the master output fills the screen. Press **`Esc`** to come back.
+
+To make the whole window fullscreen with the normal UI still showing, press **`F11`** (again to restore the previous size and position). The two combine: `F11` for a fullscreen window, then `F` for Output View on top of it.
 
 For a second display or projector, use **Preferences → Video & Display** to configure a secondary output window you can drag to the projector screen and go fullscreen there independently.
 

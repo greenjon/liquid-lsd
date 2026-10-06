@@ -96,8 +96,9 @@ A few keyboard shortcuts work anywhere in the app:
 | Key | What it does |
 |-----|-------------|
 | `Space` | Switch the Library between Half (Perform) and Full; from Edit, close it and bring the Library back (when cursor isn't in a text field) |
-| `F` | Fullscreen — hides the UI, pure video output |
-| `Esc` | Exit fullscreen |
+| `F` | Output View — hides the UI, pure video output |
+| `Esc` | Exit Output View |
+| `F11` | Toggle fullscreen for the main window (UI stays visible) |
 | `B` | Toggle background video rendering behind the UI |
 | `Ctrl+Z` | Undo the last parameter/modulator change (30-step history) |
 | `Ctrl+S` | Save the preset of the deck open in Edit |

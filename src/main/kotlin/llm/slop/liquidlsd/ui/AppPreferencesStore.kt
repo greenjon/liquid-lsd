@@ -150,10 +150,11 @@ object AppPreferencesStore {
                     logger.info { "Loaded backgroundVideoEnabled from settings file: ${UITheme.backgroundVideoEnabled}" }
                 }
 
-                val savedCleanMode = props.getBoolean("cleanModeEnabled")
+                // "cleanModeEnabled" is the pre-rename key; read it so existing settings files keep their value.
+                val savedCleanMode = props.getBoolean("outputViewEnabled") ?: props.getBoolean("cleanModeEnabled")
                 if (savedCleanMode != null) {
-                    UITheme.cleanModeEnabled = savedCleanMode
-                    logger.info { "Loaded cleanModeEnabled from settings file: ${UITheme.cleanModeEnabled}" }
+                    UITheme.outputViewEnabled = savedCleanMode
+                    logger.info { "Loaded outputViewEnabled from settings file: ${UITheme.outputViewEnabled}" }
                 }
 
                 val savedRandomization = props.getBoolean("randomizationEnabled")
@@ -326,7 +327,7 @@ object AppPreferencesStore {
             props.setProperty("audioTransitionAlpha", AudioEngine.beatDetector.settings.transitionWeightAlpha.toString())
             props.setProperty("audioTrackingInertia", AudioEngine.beatDetector.settings.trackingInertiaBpmPerBeat.toString())
             props.setProperty("backgroundVideoEnabled", UITheme.backgroundVideoEnabled.toString())
-            props.setProperty("cleanModeEnabled", UITheme.cleanModeEnabled.toString())
+            props.setProperty("outputViewEnabled", UITheme.outputViewEnabled.toString())
             props.setProperty("randomizationEnabled", UITheme.randomizationEnabled.toString())
             props.setProperty("sequencerEnabled", UITheme.sequencerEnabled.toString())
             props.setProperty("fxSwapFadeMs", UITheme.fxSwapFadeMs.toString())

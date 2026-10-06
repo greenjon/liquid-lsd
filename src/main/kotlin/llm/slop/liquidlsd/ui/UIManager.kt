@@ -288,7 +288,7 @@ class UIManager(
         UIThemeStyler.updateUiTransparency(session)
         windowFrameController.update()
 
-        if (!session.uiTheme.cleanModeEnabled) {
+        if (!session.uiTheme.outputViewEnabled) {
             menuBar.draw(session, mixer)
 
             if (popupManager.pendingOpenExitPopup) {
@@ -321,8 +321,8 @@ class UIManager(
             PerformanceMacroStrip.drawFileBrowser(mixer)
         }
 
-        // Drawn outside the Clean Mode gate: a performer who arms "Learn OSC" and then flips to
-        // Clean Mode should still see feedback that Learn is waiting, rather than it silently
+        // Drawn outside the Output View gate: a performer who arms "Learn OSC" and then flips to
+        // Output View should still see feedback that Learn is waiting, rather than it silently
         // running with no visible indicator anywhere on screen.
         OscLearnStatusOverlay.draw(displayWidth, displayHeight)
         currentMixer?.let { MacroUndoTracker.update(session.parametersState, it, ImGui.isMouseDown(0)) }
@@ -418,7 +418,7 @@ class UIManager(
     }
 
     fun triggerExitFlow() {
-        session.uiTheme.cleanModeEnabled = false
+        session.uiTheme.outputViewEnabled = false
         popupManager.pendingOpenExitPopup = true
     }
 
