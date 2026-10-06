@@ -155,18 +155,27 @@ class ParametersState : MidiLearnSink {
     /** Active mode for the expanded rack bay (shared across modules, defaulting to PARAMS). */
     var rackSectionMode: SectionMode = SectionMode.PARAMS
 
-    /** Per rack-module Browse target, remembered across a Browse<->Params toggle. */
-    val rackBrowseTarget = mutableMapOf<String, BrowseTarget>()
+    /** The dock's one apply-target: which row ([moduleId]) and what on it ([target]) Browse is bound to. */
+    data class DockSelection(val moduleId: String, val target: BrowseTarget)
+
+    /** Single dock-level selection; null means the plain Library. Survives a Browse<->Params toggle. */
+    var dockSelection: DockSelection? = null
+        private set
+
+    fun clearDockSelection() {
+        dockSelection = null
+    }
 
     fun sectionModeFor(moduleId: String): SectionMode = rackSectionMode
 
-    fun browseTargetFor(moduleId: String): BrowseTarget = rackBrowseTarget[moduleId] ?: BrowseTarget.Gen
+    fun browseTargetFor(moduleId: String): BrowseTarget =
+        dockSelection?.takeIf { it.moduleId == moduleId }?.target ?: BrowseTarget.Gen
 
     /** Opens [moduleId]'s Deep Edit (solo, same as [setDisclosure]) showing Browse content for [target]. */
     fun openBrowse(moduleId: String, target: BrowseTarget) {
         setDisclosure(moduleId, DisclosureLevel.DEEP_EDIT)
         rackSectionMode = SectionMode.BROWSE
-        rackBrowseTarget[moduleId] = target
+        dockSelection = DockSelection(moduleId, target)
     }
 
     /** Flips an already-open module back to its Params (Deep Edit) content. */

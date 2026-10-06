@@ -51,6 +51,18 @@ class ParametersStateMonitorTest {
     }
 
     @Test
+    fun dockSelection_isSingleAndClearable() {
+        val state = ParametersState()
+        assertEquals(null, state.dockSelection)
+        state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", slotIndex = 1)
+        state.openGenBrowse(MacroEngine.DECK_B, "Deck B")
+        assertEquals(MacroEngine.DECK_B, state.dockSelection?.moduleId)
+        assertTrue(state.browseTargetFor(MacroEngine.DECK_A) is ParametersState.BrowseTarget.Gen)
+        state.clearDockSelection()
+        assertEquals(null, state.dockSelection)
+    }
+
+    @Test
     fun openFromMonitor_whenInBrowseFx_switchesDeckAndStaysInFxBrowse() {
         val state = ParametersState()
         state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", slotIndex = 2)
