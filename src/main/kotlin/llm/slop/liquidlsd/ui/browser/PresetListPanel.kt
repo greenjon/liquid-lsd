@@ -293,8 +293,8 @@ object PresetListPanel {
         playlistRows?.finish()
     }
 
-    /** Fraction of the row width the name column may use when an info column is drawn. */
-    private const val INFO_COLUMN_START = 0.58f
+    /** Fraction of the row width the name column may use when an info column is drawn: a third, so names get a quarter of the dock and the info (tags, chain contents) half. */
+    private const val INFO_COLUMN_START = 1f / 3f
 
     /** [text] shortened with an ellipsis so it fits in [maxW] pixels in the current font. */
     internal fun elide(text: String, maxW: Float): String {

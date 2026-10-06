@@ -57,15 +57,16 @@ internal object LibraryNavigation {
             LibraryViewMode.PRESETS -> BrowseKind.SRC
             LibraryViewMode.FX -> BrowseKind.FX
             LibraryViewMode.TRANS -> BrowseKind.TRANS
-            LibraryViewMode.MAPS -> null
+            LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> null
         }
     }
 
     /** The lists the cursor can sit in for the current tab, left to right. A playlist is a tree scope shown in the list, so it has no pane of its own. */
     internal fun panes(): List<SelectionSource> = when (LibraryPanel.navMode) {
-        LibraryViewMode.PRESETS -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB)
-        LibraryViewMode.FX -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB)
-        LibraryViewMode.TRANS -> listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.TRANSITION_QUEUE)
+        LibraryViewMode.PRESETS, LibraryViewMode.FX, LibraryViewMode.TRANS -> listOf(SelectionSource.TREE, SelectionSource.PRESETS)
+        LibraryViewMode.QUEUES -> listOf(
+            SelectionSource.QUEUE_AB, SelectionSource.QUEUE_BG, SelectionSource.FX_QUEUE_AB, SelectionSource.FX_QUEUE_BG, SelectionSource.TRANSITION_QUEUE
+        )
         LibraryViewMode.MAPS -> emptyList()
     }
 
@@ -75,7 +76,7 @@ internal object LibraryNavigation {
             LibraryViewMode.PRESETS -> PresetListPanel.filteredPresets.size
             LibraryViewMode.FX -> FXBrowserPanel.filteredRows.size
             LibraryViewMode.TRANS -> TransitionBrowserPanel.filteredRows.size
-            LibraryViewMode.MAPS -> 0
+            LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> 0
         }
         SelectionSource.QUEUE_AB -> session.playQueueManager.queue.size
         SelectionSource.QUEUE_BG -> BgQueueManager.queue.size
@@ -116,6 +117,7 @@ internal object LibraryNavigation {
 
     /** The files the enqueue shortcuts act on: the multi-selection in the Sources list, else the cursor item. */
     fun enqueueTargets(session: SessionContext): List<File> {
+        if (LibraryPanel.navMode == LibraryViewMode.QUEUES) return emptyList() // the queues are the destination, not a source
         if (LibraryPanel.activeSelectionSource == SelectionSource.PRESETS && LibraryPanel.navMode == LibraryViewMode.PRESETS) {
             return PresetListPanel.selection.getSelectedInOrder(PresetListPanel.filteredPresets)
                 .filter { it.type != AssetType.SOURCE_STOCK }
@@ -135,7 +137,7 @@ internal object LibraryNavigation {
             LibraryViewMode.FX -> files.forEach { if (bg) FXBgQueueManager.appendToQueue(it) else FXQueueManager.appendToQueue(it) }
             LibraryViewMode.PRESETS -> files.forEach { if (bg) BgQueueManager.appendToQueue(it) else session.playQueueManager.appendToQueue(it) }
             LibraryViewMode.TRANS -> files.forEach { TransitionQueueManager.appendToQueue(it) }
-            LibraryViewMode.MAPS -> Unit
+            LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> Unit
         }
         return true
     }

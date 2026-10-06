@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### A Queues Tab Shows All Five Queues Side by Side (`ui/browser/QueuesPane.kt`, `ui/browser/BrowserDock.kt`, `ui/LibraryNavigation.kt`)
+- **New `Queues` tab** between Transitions and Macros: A/B, BG, A/B FX, BG FX and Transition queues, one column each, so you can watch and reorder them all without switching tabs. The Sources, FX and Transitions tabs no longer carry a queue column; their list gets the room (the info column is half the dock).
+- **Adding stays where the items are**: `Q` / `Shift+Q`, the toolbar buttons, the row menu and drag-and-drop still work from the other tabs; on the Queues tab the buttons explain this in their tooltip and the shortcuts do nothing.
+- **Keyboard / MIDI navigation**: on the Queues tab the cursor steps left to right through the five queues; the kind tabs step through tree and list only. Tab stepping now includes Queues.
+- The preset queue title now reads "A/B Queue" (was "Queue").
+- Internal: `LibraryViewMode.QUEUES`, `QueuesPane`; `BrowserPane.drawQueues` removed; `LibraryNavigation.panes()` per tab.
+
 ### The FX Wet/Dry Row and the MASTER Page Are Gone; Clock Moves to MIXER (`ui/PerfRows.kt`, `macro/MacroEngine.kt`, `resources/perform_pages/`, `control/ControllerRuntime.kt`)
 - **Removed the per-deck FX Wet/Dry row** (and its Resync button). Chain dry/wet is in the Edit bay; there is no Perform-side knob for it any more. Its `fxSends` macro bank is deleted, so MIDI/OSC mappings to those four knobs and banks saved from them no longer exist (old sessions just ignore it).
 - **Three Perform pages now: A/B, BG/PV, MIXER.** MIXER is Master MIX, Master FX, Transitions and Clock & Global; the MASTER page is gone. A saved active page `master` falls back to the first page, and a user page that names `wetdry` is skipped with a log line.

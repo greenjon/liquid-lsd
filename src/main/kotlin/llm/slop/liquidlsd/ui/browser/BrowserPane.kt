@@ -31,7 +31,7 @@ import llm.slop.liquidlsd.ui.itemTooltip
 import java.io.File
 
 /**
- * The unified Library browser: folder tree (about 25% of the width), name | info list (50%) and the queues (25%).
+ * The unified Library browser: folder tree (25% of the width) and the name | info list (the rest; the info column is half the dock). The queues live on the Queues tab ([QueuesPane]).
  * One pane serves every asset kind (sources, FX, transitions). See `.planning/unified-browser-pane-plan.md`.
  */
 object BrowserPane {
@@ -124,11 +124,11 @@ object BrowserPane {
             searchBuffers[kind]?.set("")
             scopes[kind] = scope
         }
-        val totalW = ImGui.getContentRegionAvailX().coerceAtLeast(3 * MIN_SIDE_W)
+        val totalW = ImGui.getContentRegionAvailX().coerceAtLeast(2 * MIN_SIDE_W)
         val h = ImGui.getContentRegionAvailY().coerceAtLeast(1f)
-        val usable = totalW - 2 * GAP
+        val usable = totalW - GAP
         val sideW = (usable * 0.25f).coerceAtLeast(MIN_SIDE_W)
-        val midW = (usable - 2 * sideW).coerceAtLeast(MIN_SIDE_W)
+        val midW = (usable - sideW).coerceAtLeast(MIN_SIDE_W)
         val flags = ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoScrollWithMouse
 
         ImGui.pushStyleVar(ImGuiStyleVar.ChildRounding, 6f)
@@ -143,11 +143,6 @@ object BrowserPane {
         ImGui.sameLine(0f, GAP)
         ImGui.beginChild("BrowserPaneList", midW, h, true, flags)
         drawList(session, mixer, parametersState, catalog, kind, target)
-        ImGui.endChild()
-
-        ImGui.sameLine(0f, GAP)
-        ImGui.beginChild("BrowserPaneQueues", sideW, h, true, flags)
-        drawQueues(session, mixer, kind)
         ImGui.endChild()
 
         ImGui.popStyleColor(2)
@@ -514,26 +509,5 @@ object BrowserPane {
         val selected = selectedAssets(kind, assets).map { it.path }.toSet()
         rows.edit.remove(assets.indices.filter { assets[it].path in selected }.map { rows.indexOfRow(it) })
         clearSelection(kind)
-    }
-
-    private fun drawQueues(session: SessionContext, mixer: Mixer, kind: BrowseKind) {
-        val flags = ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoScrollWithMouse
-        val h = ImGui.getContentRegionAvailY()
-        val w = ImGui.getContentRegionAvailX()
-        if (kind == BrowseKind.TRANS) {
-            // Transitions have a single queue, so it gets the whole column.
-            ImGui.beginChild("BrowserPaneQueue", w, h, false, flags)
-            TransitionQueuePanel.draw(session, mixer)
-            ImGui.endChild()
-            return
-        }
-        val half = ((h - GAP) * 0.5f).coerceAtLeast(1f)
-        ImGui.beginChild("BrowserPaneBgQueue", w, half, false, flags)
-        if (kind == BrowseKind.FX) FXBgQueueActionsPanel.draw(session, mixer) else BgQueueActionsPanel.draw(session, mixer)
-        ImGui.endChild()
-        ImGui.separator()
-        ImGui.beginChild("BrowserPaneQueue", w, 0f, false, flags)
-        if (kind == BrowseKind.FX) FXQueueActionsPanel.draw(session, mixer) else QueueActionsPanel.draw(session, mixer)
-        ImGui.endChild()
     }
 }

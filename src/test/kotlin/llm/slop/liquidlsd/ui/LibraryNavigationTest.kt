@@ -53,11 +53,22 @@ class LibraryNavigationTest {
     }
 
     @Test
+    fun theQueuesTabHasNothingToEnqueue() {
+        LibraryPanel.activeSelectionSource = SelectionSource.QUEUE_AB
+        LibraryPanel.viewMode = LibraryViewMode.QUEUES
+        val session = mockk<SessionContext>(relaxed = true)
+        assertTrue(LibraryNavigation.enqueueTargets(session).isEmpty())
+        assertFalse(LibraryNavigation.enqueue(session, bg = false))
+    }
+
+    @Test
     fun stepTabWrapsInBothDirections() {
         LibraryNavigation.stepTab(1)
         assertEquals(LibraryViewMode.FX, LibraryPanel.viewMode)
         LibraryNavigation.stepTab(1)
         assertEquals(LibraryViewMode.TRANS, LibraryPanel.viewMode)
+        LibraryNavigation.stepTab(1)
+        assertEquals(LibraryViewMode.QUEUES, LibraryPanel.viewMode)
         LibraryNavigation.stepTab(1)
         assertEquals(LibraryViewMode.MAPS, LibraryPanel.viewMode)
         LibraryNavigation.stepTab(1)
@@ -86,13 +97,17 @@ class LibraryNavigationTest {
     }
 
     @Test
-    fun unifiedPaneOrdersTreeListThenQueues() {
-        LibraryPanel.viewMode = LibraryViewMode.PRESETS
-        assertEquals(listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.QUEUE_BG, SelectionSource.QUEUE_AB), LibraryNavigation.panes())
-        LibraryPanel.viewMode = LibraryViewMode.FX
-        assertEquals(listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.FX_QUEUE_BG, SelectionSource.FX_QUEUE_AB), LibraryNavigation.panes())
-        LibraryPanel.viewMode = LibraryViewMode.TRANS
-        assertEquals(listOf(SelectionSource.TREE, SelectionSource.PRESETS, SelectionSource.TRANSITION_QUEUE), LibraryNavigation.panes())
+    fun panesAreTreeAndListOnKindTabsAndTheFiveQueuesOnTheQueuesTab() {
+        val treeAndList = listOf(SelectionSource.TREE, SelectionSource.PRESETS)
+        for (mode in listOf(LibraryViewMode.PRESETS, LibraryViewMode.FX, LibraryViewMode.TRANS)) {
+            LibraryPanel.viewMode = mode
+            assertEquals(treeAndList, LibraryNavigation.panes(), "$mode")
+        }
+        LibraryPanel.viewMode = LibraryViewMode.QUEUES
+        assertEquals(
+            listOf(SelectionSource.QUEUE_AB, SelectionSource.QUEUE_BG, SelectionSource.FX_QUEUE_AB, SelectionSource.FX_QUEUE_BG, SelectionSource.TRANSITION_QUEUE),
+            LibraryNavigation.panes()
+        )
         LibraryPanel.viewMode = LibraryViewMode.MAPS
         assertTrue(LibraryNavigation.panes().isEmpty())
     }

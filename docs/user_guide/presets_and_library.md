@@ -65,7 +65,7 @@ Toggle between sources, FX, transitions and banks (macro banks and Perform pages
 
 - **Folder tree** (left) — **All**, **Favorites** (FX), the kind's sections (Sources: stock sources and saved presets; FX: stock filters, saved single FX and saved chains; Trans: stock transitions and saved transitions), and a **Playlists** group with one entry per playlist. Each entry shows how many rows it holds. Click one to list it. A playlist is just another tree entry: select it to see and edit its rows.
 - **List** (middle) — The rows of the selected tree entry, with a search box on top (`Ctrl+F` or `/` focuses it) and a **`[+]`** button for the kind's "new" action.
-- **Queues** (right) — Sources: the BG Queue and the A/B Queue. FX: the **A/B FX Queues** described below. Trans: the Transition Queue, which the crossfader advances through automatically.
+- **Queues tab** — All five queues side by side: A/B, BG, A/B FX, BG FX and Transition (which the crossfader advances through automatically). Items get in from the other tabs (`Q`, `Shift+Q`, the toolbar buttons, the row menu or drag-and-drop); this tab is where you watch, reorder and play them.
 
 The mode buttons pick what the three parts show:
 
@@ -89,7 +89,7 @@ Pick a section in the folder tree to show only stock sources or only saved prese
   - **Click** — Selects a single preset, clearing existing selections.
   - **Ctrl+Click** (or **Cmd+Click** on macOS) — Toggles selection of an individual item without affecting others.
   - **Shift+Click** — Extends selection from the anchor/lead item to the clicked item across all visible rows.
-  - **Batch Queueing** — When multiple presets are selected, pressing `Q` or clicking `[ Q ]` enqueues all selected presets in order into the A/B Queue. Pressing `Shift+Q` or clicking `[ BGQ ]` enqueues them into the BG Queue. The buttons and hotkeys always act on the open tab: in the FX tab they feed the FX queues, and in the Trans tab `[ Q ]` feeds the transition queue (`[ BGQ ]` is greyed out there).
+  - **Batch Queueing** — When multiple presets are selected, pressing `Q` or clicking `[ Q ]` enqueues all selected presets in order into the A/B Queue. Pressing `Shift+Q` or clicking `[ BGQ ]` enqueues them into the BG Queue. The buttons and hotkeys act on the tab you picked the item on: in the FX tab they feed the FX queues, and in the Trans tab `[ Q ]` feeds the transition queue (`[ BGQ ]` is greyed out there).
   - **Batch Context Menu** — Right-clicking with multiple items selected presents options like **Add N Presets to Playlist**, **Add N Presets to Queue**, and **Delete N Presets...**.
   - **Multi-Item Drag & Drop** — Dragging any item from a multi-selection carries all selected presets simultaneously into Playlists or Queues.
   - **Batch Deletion** — Pressing `Delete` or selecting Delete from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.
@@ -176,7 +176,7 @@ FX playlists are entries under **Playlists** in the FX tree. Select one to edit 
 
 ### A/B FX Queues (A/B and BG)
 
-In `[ FX ]` mode the queues part of the browser holds two independent **live FX queues** — volatile, RAM-only sequences of FX singles/chains you can improvise with mid-set:
+On the **Queues** tab the two FX columns are independent **live FX queues** — volatile, RAM-only sequences of FX singles/chains you can improvise with mid-set:
 
 - **`<` / `>`** — Step to the previous/next queued FX item and apply it.
 - **🔁 Repeat** — Cycle back to the start when the bottom of the queue is reached.

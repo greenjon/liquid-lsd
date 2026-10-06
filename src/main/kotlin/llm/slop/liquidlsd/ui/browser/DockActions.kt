@@ -39,7 +39,7 @@ internal object DockActions {
             LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset?.let { LibraryNavigation.loadAssetToInactiveDeck(session, mixer, it, parametersState) }
             LibraryViewMode.FX -> LibraryNavigation.enqueue(session, bg = false)
             LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset?.let { TransitionBrowserPanel.applyToMixer(session, mixer, it) }
-            LibraryViewMode.MAPS -> Unit
+            LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> Unit
         }
     }
 

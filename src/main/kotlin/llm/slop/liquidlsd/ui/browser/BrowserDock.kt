@@ -52,9 +52,9 @@ object BrowserDock {
         LibraryNavigation.setViewMode(modeFor(binding.target.kind))
     }
 
-    private const val TABS_W = 64f + 54f + 82f + 54f + 3 * 2f
+    private const val TABS_W = 64f + 54f + 82f + 62f + 54f + 4 * 2f
 
-    /** Tab strip `Sources | FX | Transitions | Macros` followed by the centred action toolbar. Leaves the cursor after the toolbar. */
+    /** Tab strip `Sources | FX | Transitions | Queues | Macros` followed by the centred action toolbar. Leaves the cursor after the toolbar. */
     fun drawHeader(
         session: SessionContext,
         mixer: Mixer,
@@ -76,6 +76,7 @@ object BrowserDock {
                 Triple(LibraryViewMode.PRESETS, "Sources##mode_presets", 64f),
                 Triple(LibraryViewMode.FX, "FX##mode_fx", 54f),
                 Triple(LibraryViewMode.TRANS, "Transitions##mode_trans", 82f),
+                Triple(LibraryViewMode.QUEUES, "Queues##mode_queues", 62f),
                 Triple(LibraryViewMode.MAPS, "Macros##mode_maps", 54f)
             )
             for ((i, tab) in tabs.withIndex()) {
@@ -119,7 +120,7 @@ object BrowserDock {
         LibraryViewMode.PRESETS -> BrowseKind.SRC
         LibraryViewMode.FX -> BrowseKind.FX
         LibraryViewMode.TRANS -> BrowseKind.TRANS
-        LibraryViewMode.MAPS -> null
+        LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> null
     }
 
     /** The chip on the header line: `● Deck A · FX 1  [row buttons]  ✕`. Greyed (no buttons) while a tab of another kind is up, so the binding reads as paused, not gone. */
@@ -150,7 +151,7 @@ object BrowserDock {
             LibraryViewMode.PRESETS -> BrowseKind.SRC
             LibraryViewMode.FX -> BrowseKind.FX
             LibraryViewMode.TRANS -> BrowseKind.TRANS
-            LibraryViewMode.MAPS -> null
+            LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> null
         }
         // Bound only while the selected tab is the kind the row edits; any other tab is the plain Library.
         val bound = binding?.takeIf { it.target.kind == kind }
@@ -167,10 +168,14 @@ object BrowserDock {
             LibraryViewMode.PRESETS -> BrowseKind.SRC
             LibraryViewMode.FX -> BrowseKind.FX
             LibraryViewMode.TRANS -> BrowseKind.TRANS
-            LibraryViewMode.MAPS -> null
+            LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> null
         }
-        if (unifiedKind == null) BrowserPane.noteHosting(null) // the Maps tab has no apply-target
-        if (LibraryPanel.viewMode == LibraryViewMode.MAPS) {
+        if (unifiedKind == null) BrowserPane.noteHosting(null) // the Queues and Maps tabs have no apply-target
+        if (LibraryPanel.viewMode == LibraryViewMode.QUEUES) {
+            ImGui.beginChild("LibraryQueues", availW, contentH, false, outerFlags)
+            QueuesPane.draw(session, mixer)
+            ImGui.endChild()
+        } else if (LibraryPanel.viewMode == LibraryViewMode.MAPS) {
             // Banks and Pages take the whole panel: no playlists or queues.
             ImGui.beginChild("LibraryMaps", availW, contentH, true, outerFlags)
             ImGui.setScrollX(0f)
@@ -237,7 +242,7 @@ object BrowserDock {
             BrowserPopupHandler.pendingOpenNewPlaylistPopup = false
         }
         if (BrowserPopupHandler.pendingOpenExportQueuePopup) {
-            ImGui.openPopup(if (LibraryPanel.viewMode == LibraryViewMode.TRANS) "ExportTransQueuePopup" else "ExportQueuePopup")
+            ImGui.openPopup("ExportTransQueuePopup") // only the transition queue panel raises this flag; the preset queues open their own
             BrowserPopupHandler.pendingOpenExportQueuePopup = false
         }
         if (BrowserPopupHandler.pendingOpenExportFxQueuePopup) {

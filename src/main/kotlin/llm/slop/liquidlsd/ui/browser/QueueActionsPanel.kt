@@ -45,7 +45,7 @@ object QueueActionsPanel {
         // Title Bar: "Queue" on the left, "<", "[Play/Pause]", ">" buttons on the right
         ImGui.alignTextToFramePadding()
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("Queue")
+            ImGui.text("A/B Queue")
         }
         ImGui.sameLine()
         val rightX = ImGui.getWindowContentRegionMaxX() - totalRightW

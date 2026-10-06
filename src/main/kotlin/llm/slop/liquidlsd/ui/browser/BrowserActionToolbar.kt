@@ -107,19 +107,19 @@ object BrowserActionToolbar {
                 LibraryPanel.LibraryViewMode.PRESETS -> "preset"
                 LibraryPanel.LibraryViewMode.FX -> "FX item"
                 LibraryPanel.LibraryViewMode.TRANS -> "transition"
-                LibraryPanel.LibraryViewMode.MAPS -> "item"
+                LibraryPanel.LibraryViewMode.MAPS, LibraryPanel.LibraryViewMode.QUEUES -> "item"
             }
             val queueA = when (mode) {
                 LibraryPanel.LibraryViewMode.PRESETS -> "A/B Queue"
                 LibraryPanel.LibraryViewMode.FX -> "FX Queue"
                 LibraryPanel.LibraryViewMode.TRANS -> "Transition Queue"
-                LibraryPanel.LibraryViewMode.MAPS -> "queue"
+                LibraryPanel.LibraryViewMode.MAPS, LibraryPanel.LibraryViewMode.QUEUES -> "queue"
             }
             val queueBG = when (mode) {
                 LibraryPanel.LibraryViewMode.PRESETS -> "BG Queue"
                 LibraryPanel.LibraryViewMode.FX -> "BG FX Queue"
                 LibraryPanel.LibraryViewMode.TRANS -> null
-                LibraryPanel.LibraryViewMode.MAPS -> null
+                LibraryPanel.LibraryViewMode.MAPS, LibraryPanel.LibraryViewMode.QUEUES -> null
             }
             val many = selectedFiles.size > 1
 
@@ -130,7 +130,8 @@ object BrowserActionToolbar {
                 LibraryPanel.shouldReclaimFocus = true
             }
             itemTooltip(
-                if (inQueueA) "Already in the $queueA."
+                if (mode == LibraryPanel.LibraryViewMode.QUEUES) "Pick an item on the Sources, FX or Transitions tab to add it to a queue (Hotkey: Q)."
+                else if (inQueueA) "Already in the $queueA."
                 else if (many) "Add ${selectedFiles.size} selected ${noun}s to the $queueA (Hotkey: Q)."
                 else "Add selected $noun to the $queueA (Hotkey: Q)."
             )
@@ -145,7 +146,8 @@ object BrowserActionToolbar {
                 LibraryPanel.shouldReclaimFocus = true
             }
             itemTooltip(
-                if (queueBG == null) "Transitions have no background queue."
+                if (mode == LibraryPanel.LibraryViewMode.QUEUES) "Pick an item on the Sources or FX tab to add it to a background queue (Hotkey: Shift+Q)."
+                else if (queueBG == null) "Transitions have no background queue."
                 else if (inQueueBG) "Already in the $queueBG."
                 else if (many) "Add ${selectedFiles.size} selected ${noun}s to the $queueBG (Hotkey: Shift+Q)."
                 else "Add selected $noun to the $queueBG (Hotkey: Shift+Q)."

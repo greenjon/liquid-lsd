@@ -30,6 +30,8 @@ object LibraryPanel {
         PRESETS,
         FX,
         TRANS,
+        /** All five play queues side by side (A/B presets, BG presets, A/B FX, BG FX, transitions). The other tabs have no queue column. */
+        QUEUES,
         /** Saved macro banks and Perform pages (see [MapsBrowserPanel]). Has no playlists or queues. */
         MAPS
     }
@@ -99,7 +101,7 @@ object LibraryPanel {
                     LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset
                         ?.takeIf { it.type != AssetType.SOURCE_STOCK }
                         ?.let { File(it.path) }
-                    LibraryViewMode.MAPS -> null
+                    LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> null
                 }
             }
             SelectionSource.QUEUE_AB -> {
@@ -397,7 +399,9 @@ object LibraryPanel {
                 }
             }
             null -> {
-                if (navMode == LibraryViewMode.TRANS) {
+                if (navMode == LibraryViewMode.QUEUES) {
+                    LibraryNavigation.stepPane(1, session, mixer)
+                } else if (navMode == LibraryViewMode.TRANS) {
                     val list = TransitionBrowserPanel.filteredRows
                     if (list.isNotEmpty()) {
                         TransitionBrowserPanel.selectedAsset = list.first()
@@ -429,7 +433,7 @@ object LibraryPanel {
         return when (navMode) {
             LibraryViewMode.FX -> FXBrowserPanel.selectedAsset
             LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset
-            LibraryViewMode.MAPS -> null
+            LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> null
             LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset
         }
     }
