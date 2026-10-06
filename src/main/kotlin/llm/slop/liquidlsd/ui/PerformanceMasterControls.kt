@@ -118,7 +118,7 @@ internal object PerformanceMasterControls {
         val genBgCol = TangoPalette.BADGE_BG.u32()
         val genBorderCol = TangoPalette.BADGE_BORDER.u32()
         val genTextCol = TangoPalette.BADGE_TEXT.u32()
-        val badgeText = "Deck Alphas & Master"
+        val badgeText = "Deck Levels & Master"
 
         dl.addRectFilled(curX, curY, curX + badgeW, curY + headerH, genBgCol, 4f)
         dl.addRect(curX, curY, curX + badgeW, curY + headerH, genBorderCol, 4f, 0, 1f)

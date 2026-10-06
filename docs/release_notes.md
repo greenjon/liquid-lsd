@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Master Knobs Say Level, Not Alpha (`macro/MacroEngine.kt`, `ui/PerformanceMasterControls.kt`)
+- **The Master row's default knob labels are now LEVEL A, LEVEL B, LEVEL BG and MASTER** (they still drive `levelA`, `levelB`, `levelBG`, `masterLevel`), and the row badge reads **Deck Levels & Master**. Banks already saved in a session keep their old labels until reset.
+
 ### The Library Dock Applies to Whatever Row Slot You Click, in Any View (`ParametersState.dockSelection`, `ui/DockOutline.kt`, `ui/browser/BrowserDock.kt`, `ui/PerformanceBrowseBay.kt`)
 - **Click a row's source badge, chain name, effect cell or transition name and the Library dock below becomes bound to it**, with no layout change: the four rows stay on screen, the slot gets an outline in the row's colour, the dock border takes that colour, and the header line shows a chip such as `● Deck A · FX 1  [Clear Slot]  ✕`. A single click on a list row still applies it (try several effects in a row).
 - **Ending it**: the chip's **✕**, `Esc`, or a **double-click** on a list row (applies and lets go). It also ends when the row leaves the screen (page change, SRC|FX flip) or its Edit bay closes. Picking a tab of another kind greys the chip ("paused") and keeps the binding.

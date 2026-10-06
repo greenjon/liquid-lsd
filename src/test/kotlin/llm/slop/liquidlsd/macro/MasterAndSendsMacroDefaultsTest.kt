@@ -32,9 +32,9 @@ class MasterAndSendsMacroDefaultsTest {
         assertEquals(4, bank.knobs.size, "Master bank should have 4 knobs")
 
         val expected = listOf(
-            Triple("ALPHA A", 1.0f, "Mixer/levelA"),
-            Triple("ALPHA B", 1.0f, "Mixer/levelB"),
-            Triple("ALPHA BG", 0.0f, "Mixer/levelBG"),
+            Triple("LEVEL A", 1.0f, "Mixer/levelA"),
+            Triple("LEVEL B", 1.0f, "Mixer/levelB"),
+            Triple("LEVEL BG", 0.0f, "Mixer/levelBG"),
             Triple("MASTER", 1.0f, "Mixer/masterLevel")
         )
 

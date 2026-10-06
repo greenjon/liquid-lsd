@@ -12,7 +12,7 @@ Liquid LSD is a Kotlin/JVM VJ application: OpenGL 3.3 core (LWJGL 3 + GLFW), Dea
 | Modulation column | `PropertiesPanel` |
 | Library tabs Sources / FX / Transitions / Macros | `LibraryViewMode.PRESETS / FX / TRANS / MAPS` |
 | per-deck wet/dry bank (row `W/D`) | `MacroEngine.FX_SENDS`, `PerformanceFxSendsControls` |
-| Level | `levelA/B/BG/PV`, `masterLevel`; leftovers "ALPHA A/B/BG" in `MacroEngine.newBankFor(MASTER)` labels |
+| Level | `levelA/B/BG/PV`, `masterLevel` |
 | macro knob target | `MacroBinding`, `MacroLearnState`, `ProfileBindingEdit` |
 | Mixer column | `MixerPanel`, `MixerLayout` |
 

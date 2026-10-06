@@ -77,7 +77,7 @@ object MacroEngine {
         MASTER -> MacroBank(
             knobs = listOf(
                 MacroControl(
-                    label = "ALPHA A",
+                    label = "LEVEL A",
                     value = 1.0f,
                     bindings = mutableListOf(
                         MacroBinding(
@@ -89,7 +89,7 @@ object MacroEngine {
                     )
                 ),
                 MacroControl(
-                    label = "ALPHA B",
+                    label = "LEVEL B",
                     value = 1.0f,
                     bindings = mutableListOf(
                         MacroBinding(
@@ -101,7 +101,7 @@ object MacroEngine {
                     )
                 ),
                 MacroControl(
-                    label = "ALPHA BG",
+                    label = "LEVEL BG",
                     value = 0.0f,
                     bindings = mutableListOf(
                         MacroBinding(
