@@ -172,12 +172,12 @@ for the FX Rack view that exposes these.
       - **Knob 1 (`META`)**: The focused slot's Metaknob (`$chainLabel/FX/FX<slot>/Meta`). Its Dry/Wet is the `Wet` slider in the chain header. The focused slot's `FxSlotCell` is drawn underneath so shortlist stepping (hover `◀ ▶` or mouse wheel) and picker access remain directly below the knob, with the slot's bypass button to its left.
       - **Knobs 2–4 (`Top Parameters`)**: Dynamically retargeted to the focused shader's top parameters on the active page (e.g. `SPEED`, `INTENSITY`, `COLOR`).
       - **Parameter Cells (`FxParamCell`)**: Drawn under Knobs 2–4 with the parameter's name and a modulation indicator dot. The current value is shown inside the knob face, and a `[⟲]` reset button (restores the authored default) sits to the left of the knob.
-  - **Stable Layout**: Knobs stay the same size and in the same place whichever mode a row is in (`[SRC]`, `[FX]` group, or Focus Mode), and switching one row never resizes the others. Knob names and effect/parameter names share the same line under each knob. Names too long for it end in `…`; hover the knob for the full name.
+  - **Stable Layout**: Knobs stay the same size and in the same place whichever mode a row is in (source, FX group, or Focus Mode), and switching one row never resizes the others. Knob names and effect/parameter names share the same line under each knob. Names too long for it end in `…`; hover the knob for the full name.
     - **Seamless Hardware MIDI Retargeting**:
       - Physical MIDI controllers mapped to the row's standard macro paths (`Macro/<bankId>/knob_1..4`) immediately control the focused slot's Metaknob and parameters without requiring any MIDI remapping or controller mode switching.
       - Exiting Focus Mode restores Knob 1 to `SUPER` and Knobs 2–4 to `META`.
   - **Performance Matrix Tabs**:
-    - Deck FX chains are on each deck row (`[SRC|FX]`); Master FX is on the Master row (`[MIX|FX]`) on the **MASTER** tab.
+    - Deck FX chains are on each deck's FX row; Master FX is on the Master FX row, on the **MIXER** tab.
     - The **FX WET/DRY** row in the **MASTER** tab has a `WET/DRY` title badge and a **Resync** button.
     - The **Transitions** row includes a `[DICES]` die button to randomize transition parameters with undo support.
 
@@ -292,7 +292,7 @@ The Twister's four hardware **banks** pick the page shown on screen. Press a ban
 | 3 | **MIXER** | Master MIX | Master FX | Transitions | FX Wet/Dry |
 | 4 | **MASTER** | Master | Transitions | FX Wet/Dry | Clock & Global |
 
-Each row is pinned to one half (source or FX), so no `SRC`/`FX` switching is needed on the hardware. The DECKS page (one row per deck with SRC/FX toggles) is still on screen but no bank shows it. Which page each bank shows is the profile's `banks.pages`; you can point a bank at your own page (see [Perform Pages](#perform-pages)).
+Each row shows one half (source or FX), so no `SRC`/`FX` switching is needed on the hardware. Which page each bank shows is the profile's `banks.pages`; you can point a bank at your own page (see [Perform Pages](#perform-pages)).
 
 **An FX row** has the chain's **Super Knob** on its first knob and the three slots' **Metaknobs** on the other three. **Focusing** a slot (shift + tap) hands the whole row to that effect: knob 1 becomes the slot's Metaknob and knobs 2-4 its parameters (more than three parameters make extra pages).
 
@@ -439,19 +439,17 @@ Like MIDI, OSC address mappings are stored in JSON profiles under `library/osc/<
 
 You manage pages in **Preferences > MIDI Controls > Perform Pages** (it is there even with MIDI turned off).
 
-The tab strip above the matrix (DECKS, MASTER) lists *pages*: each is four rows. You can add your own by putting a JSON file in `library/perform_pages/` (press Reload Pages in Preferences > MIDI Controls, or restart the app, to pick it up):
+The tab strip above the matrix (A/B, BG/PV, MIXER, MASTER) lists *pages*: each is four rows. You can add your own by putting a JSON file in `library/perform_pages/` (press Reload Pages in Preferences > MIDI Controls, or restart the app, to pick it up):
 
 ```json
 {
   "id": "mine",
   "name": "MINE",
-  "tooltip": "Deck A, Master, Transitions and Clock & Global",
+  "tooltip": "Deck A source, Deck A FX, Transitions and Clock & Global",
   "rows": [
-    { "row": "deck.A.srcfx" }, { "row": "master" }, { "row": "trans" }, { "row": "global" }
+    { "row": "deck.A.src" }, { "row": "deck.A.fx" }, { "row": "trans" }, { "row": "global" }
   ]
 }
 ```
 
-A page needs exactly 4 rows. Row names: `deck.A.srcfx`, `deck.B.srcfx`, `deck.BG.srcfx`, `deck.PV.srcfx` (the usual deck row with its SRC/FX toggle), `master` (MIX/FX toggle), `trans`, `wetdry`, `global`.
-
-Pinned rows show just one half and have no toggle: `deck.A.src` and `deck.A.fx` (likewise `B`, `BG`, `PV`), `master.mix` and `master.fx`. They are not affected by the toggle rows, so a page of `deck.A.src`, `deck.A.fx`, `deck.B.src`, `deck.B.fx` shows both halves of both decks at once. A file whose `id` is `decks` or `master` replaces that built-in page. You can also manage pages in **Preferences > MIDI Controls > Perform Pages**: copy a built-in page to edit it, create a new page, rename it and pick each of its four rows from a list, or delete it again. Edits are saved at once. Each page shows its **controller name** (`perform.<id>`), the name a controller profile uses; it does not change when you rename the page. To get a different name, type one into **Name for a copy** and press **Copy As New Page**, then hide the original if you like. Untick **Show in tab strip** to hide a page's tab (a Twister bank that selects it still shows it, with a temporary tab while it is active); with more than five tabs they narrow to fit. Files with mistakes are skipped; the log says why. A controller profile can select your page with `perform.mine`.
+A page needs exactly 4 rows. Row names: `deck.A.src` and `deck.A.fx` (likewise `B`, `BG`, `PV`) for a deck's source row and FX row, `master.mix` and `master.fx` for Master's levels and Master FX, `trans`, `wetdry`, `global`. A page of `deck.A.src`, `deck.A.fx`, `deck.B.src`, `deck.B.fx` shows both halves of both decks at once. A file whose `id` is `ab`, `bgpv`, `mixer` or `master` replaces that built-in page. Pages saved by an earlier version that name `deck.<tag>.srcfx` or `master` are skipped (the log says why): replace those rows with the split ones above. You can also manage pages in **Preferences > MIDI Controls > Perform Pages**: copy a built-in page to edit it, create a new page, rename it and pick each of its four rows from a list, or delete it again. Edits are saved at once. Each page shows its **controller name** (`perform.<id>`), the name a controller profile uses; it does not change when you rename the page. To get a different name, type one into **Name for a copy** and press **Copy As New Page**, then hide the original if you like. Untick **Show in tab strip** to hide a page's tab (a Twister bank that selects it still shows it, with a temporary tab while it is active); with more than five tabs they narrow to fit. Files with mistakes are skipped; the log says why. A controller profile can select your page with `perform.mine`.

@@ -311,7 +311,7 @@ class MenuBar(
     }
 
     /**
-     * The Perform page tab toggle (DECKS, MASTER, plus user pages) for [PerformanceMatrixPanel], plus the Learn indicator and
+     * The Perform page tab toggle (A/B, BG/PV, MIXER, MASTER, plus user pages) for [PerformanceMatrixPanel], plus the Learn indicator and
      * Randomize ALL button that used to sit in the matrix's own tab-strip row. Moved here so that
      * row can be removed entirely, recovering its height for the knob grid.
      */

@@ -15,7 +15,7 @@ interface KnobSurface {
     /** The knob's shifted tap action: focus an FX slot / leave focus, or step the parameter page. */
     fun secondary(knob: Int)
 
-    /** Shows the named page (e.g. `perform.decks`) so the knobs and the screen agree. Unknown ids are ignored. */
+    /** Shows the named page (e.g. `perform.ab`) so the knobs and the screen agree. Unknown ids are ignored. */
     fun showPage(pageId: String)
 
     /** Toggles Chain Link (all slots to/from the Super Knob) on the FX chain of the row touched last. */

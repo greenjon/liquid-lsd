@@ -41,8 +41,6 @@ object FxChainHeader {
     interface Actions {
         /** Opens the row's Browse content targeted at FX slot [slotIdx]. */
         fun openSlotBrowse(slotIdx: Int)
-        /** A slot was focused ([slotIdx]) or focus was cleared (null). */
-        fun focusSlot(slotIdx: Int?)
         /** Opens the row's Browse content on the whole-chain list. */
         fun openChainBrowse()
     }
@@ -302,13 +300,7 @@ object FxChainHeader {
             ImGui.pushStyleColor(ImGuiCol.Button, if (isFocused) activeCol else inactiveCol)
             ImGui.pushStyleColor(ImGuiCol.Text, textCol)
             if (ImGui.button(st.pillLabels[i], pillW, ctrlH)) {
-                if (isFocused) {
-                    FxMacroSync.focusSlot(bankId, mixer, null)
-                    actions.focusSlot(null)
-                } else {
-                    FxMacroSync.focusSlot(bankId, mixer, i)
-                    actions.focusSlot(i)
-                }
+                FxMacroSync.focusSlot(bankId, mixer, if (isFocused) null else i)
             }
             ImGui.popStyleColor(2)
 

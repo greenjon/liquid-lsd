@@ -87,13 +87,13 @@ object PerformPagesPanel {
         val canCreate = id.isNotEmpty() && store.get(id) == null
         if (!canCreate) ImGui.beginDisabled()
         if (ImGui.button("${Icons.PLUS} New Page##new_page")) {
-            val page = PerfPageDef(id, name, rows = List(PerfPageDef.ROWS) { RowPlacement("deck.${PerfRows.DECK_TAGS[it % PerfRows.DECK_TAGS.size]}.srcfx") })
+            val page = PerfPageDef(id, name, rows = listOf("deck.A.src", "deck.A.fx", "deck.B.src", "deck.B.fx").map { RowPlacement(it) })
             problems = store.saveUser(page)
             message = if (problems.isEmpty()) "Created page $id" else null
             if (problems.isEmpty()) newName.set("")
         }
         if (!canCreate) ImGui.endDisabled()
-        itemTooltip("Creates a page with the four deck rows to start from, then choose each row.", allowWhenDisabled = true)
+        itemTooltip("Creates a page with Deck A and Deck B (source over FX) to start from, then choose each row.", allowWhenDisabled = true)
         ImGui.sameLine()
         if (ImGui.button("${Icons.REFRESH} Reload Pages##reload_pages")) {
             store.reload()

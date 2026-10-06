@@ -238,35 +238,35 @@ class PerfRowLayoutTest {
     // -- Mode accessor ----------------------------------------------------------------------
 
     @Test
-    fun deckRowIsFxExactlyWhenTheDeepEditSubTabIsFx() {
+    fun deckBayIsFxExactlyWhenTheDeepEditSubTabIsFx() {
         for (subTab in listOf("SRC", "FX")) {
             val state = ParametersState().apply { activeDeckBSubTab = subTab }
-            assertEquals(subTab == "FX", PerformanceUiContext().isDeckRowFx("B", state), "subTab=$subTab")
+            assertEquals(subTab == "FX", PerformanceUiContext().isDeckBayFx("B", state), "subTab=$subTab")
         }
-        assertEquals(false, PerformanceUiContext().isDeckRowFx("A", null))
+        assertEquals(false, PerformanceUiContext().isDeckBayFx("A", null))
     }
 
     @Test
-    fun masterRowIsFxExactlyWhenTheMixerSubTabIsFx() {
+    fun masterBayIsFxExactlyWhenTheMixerSubTabIsFx() {
         val ctx = PerformanceUiContext()
         val state = ParametersState()
         for ((tab, fx) in listOf("CTRL" to false, "FX" to true, "TRANS" to false)) {
             state.activeMixerSubTab = tab
-            assertEquals(fx, ctx.isMasterRowFx(state), "mixer sub-tab=$tab")
+            assertEquals(fx, ctx.isMasterBayFx(state), "mixer sub-tab=$tab")
         }
         state.activeMixerSubTab = "FX"
         state.openTransitionBrowse()
-        assertEquals(false, ctx.isMasterRowFx(state), "bay TRANS tab must flip the Master row off FX")
+        assertEquals(false, ctx.isMasterBayFx(state), "bay TRANS tab must flip the Master bay off FX")
     }
 
     @Test
-    fun pickingTheSourceTabAfterFxLeavesTheRowOnSrc() {
+    fun pickingTheSourceTabAfterFxLeavesTheBayOnSrc() {
         val state = ParametersState()
         val ctx = PerformanceUiContext()
         state.setDeckSubTab("Deck B", "FX")
-        assertEquals(true, ctx.isDeckRowFx("B", state))
+        assertEquals(true, ctx.isDeckBayFx("B", state))
         state.openGenBrowse(llm.slop.liquidlsd.macro.MacroEngine.DECK_B, "Deck B")
-        assertEquals(false, ctx.isDeckRowFx("B", state), "bay SRC tab must also flip the row back to SRC")
+        assertEquals(false, ctx.isDeckBayFx("B", state), "bay SRC tab must also flip back to SRC")
     }
 
     // -- Text fitting -----------------------------------------------------------------------

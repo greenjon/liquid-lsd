@@ -8,7 +8,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class PerfPageSchemaVersionTest {
-    private val rows = """[{"row":"master"},{"row":"trans"},{"row":"wetdry"},{"row":"global"}]"""
+    private val rows = """[{"row":"master.mix"},{"row":"trans"},{"row":"wetdry"},{"row":"global"}]"""
 
     @Test
     fun missingVersionLoadsAsOneWithoutWarning() {
@@ -38,7 +38,7 @@ class PerfPageSchemaVersionTest {
     fun writtenFilesCarryCurrentVersionAndRoundTrip() {
         val dir = createTempDirectory().toFile()
         val s = PerfPageStore(dir)
-        val page = PerfPageDef("mine", "MINE", rows = List(4) { RowPlacement("master") })
+        val page = PerfPageDef("mine", "MINE", rows = List(4) { RowPlacement("master.mix") })
         assertTrue(s.saveUser(page).isEmpty())
         assertTrue(File(dir, "mine.json").readText().contains("\"version\": ${PerfPageDef.CURRENT_SCHEMA_VERSION}"))
         assertEquals(page, s.get("mine"))

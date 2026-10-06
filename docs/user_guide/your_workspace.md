@@ -50,7 +50,7 @@ Here's how audio becomes visuals:
 ## The Performance Panel (Left & Middle)
 
 The top of the left and middle columns is the **Perform view**: a 4×4 grid of macro knobs,
-one row per deck or section, with tabs across the top (DECKS and
+one row per deck or section, with tabs across the top (A/B, BG/PV, MIXER and
 MASTER). Click a deck row's generator badge to change its visual source.
 
 For full control, open a row's **Edit** (the chevron on the row, or click a deck monitor in

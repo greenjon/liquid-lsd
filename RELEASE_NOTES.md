@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Deck and Master Rows Show One Half; the SRC/FX and MIX/FX Toggle Rows Are Gone (`ui/PerfRows.kt`, `ui/PerformanceDeckControls.kt`, `ui/PerformanceMasterControls.kt`, `resources/perform_pages/`)
+- **Removed the `deck.<tag>.srcfx` and `master` rows, their SRC/FX and MIX/FX pill toggles, and the DECKS page.** Every deck and Master row is now a source row or an FX row (`deck.<tag>.src` / `.fx`, `master.mix` / `master.fx`), as the Twister pages already were. The pill column keeps its footprint, so row geometry is unchanged.
+- **Built-in pages are now A/B, BG/PV, MIXER, MASTER** (the Twister's four banks, in bank order). MASTER's first row is Master MIX (Master FX lives on MIXER). New pages start as Deck A and Deck B, source over FX. A saved page that names a removed row is skipped with a log line; a saved active page `decks` falls back to the first page.
+- **Edit still follows its own tabs**: opening a deck in Edit shows its source or FX row according to the Edit bay's SRC/FX tab (Master: MIX/FX), and those tabs no longer share state with any row pill. Clicking an FX slot pill no longer jumps a source row over to FX.
+- Internal: `PerfRows.withDeckRowMode` and `PerformanceUiContext.isDeckRowFx` / `isMasterRowFx` are gone (`PerfRows.rowsForPage`, `isDeckBayFx` / `isMasterBayFx`); `FxChainHeader.Actions.focusSlot` removed; `PerformSurface.PAGE_DECKS` removed.
+
 ### Transitions Row Knobs Follow the Transition (`macro/TransitionMacroSync.kt`, `rendering/Mixer.kt`, `macro/MacroLearnState.kt`)
 - **Knob 1 is the crossfader; knobs 2-4 are the active transition's first three float sliders** (authored order; selects, toggles and images are skipped; spare knobs show "—"). They re-map on every transition change, preset load and session restore.
 - **Read-only like the FX knobs**: Learn is refused and Properties / the slider popups say "Driven by the active transition". Dry/Wet stays in the Edit bay.

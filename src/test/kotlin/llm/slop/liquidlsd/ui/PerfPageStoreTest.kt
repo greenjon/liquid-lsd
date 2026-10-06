@@ -12,11 +12,10 @@ class PerfPageStoreTest {
     private fun store(dir: File = createTempDirectory().toFile()) = PerfPageStore(dir)
 
     @Test
-    fun builtInPagesReproduceDecksAndMaster() {
+    fun builtInPagesAreAllValidAndInTwisterBankOrder() {
         val pages = store().all()
-        assertEquals(listOf("decks", "master", "ab", "bgpv", "mixer"), pages.take(5).map { it.id })
-        assertEquals(listOf("deck.A.srcfx", "deck.B.srcfx", "deck.BG.srcfx", "deck.PV.srcfx"), pages[0].rows.map { it.row })
-        assertEquals(listOf("master", "trans", "wetdry", "global"), pages[1].rows.map { it.row })
+        assertEquals(listOf("ab", "bgpv", "mixer", "master"), pages.take(4).map { it.id })
+        assertEquals(listOf("master.mix", "trans", "wetdry", "global"), pages[3].rows.map { it.row })
         assertTrue(pages.all { it.problems().isEmpty() })
     }
 
@@ -31,33 +30,36 @@ class PerfPageStoreTest {
     @Test
     fun userPageOverridesBuiltInInPlaceAndNewPagesFollow() {
         val dir = createTempDirectory().toFile()
-        File(dir, "a.json").writeText("""{"id":"decks","name":"MY DECKS","rows":[{"row":"master"},{"row":"trans"},{"row":"wetdry"},{"row":"global"}]}""")
-        File(dir, "b.json").writeText("""{"id":"extra","name":"EXTRA","rows":[{"row":"deck.A.srcfx"},{"row":"deck.A.srcfx"},{"row":"deck.B.srcfx"},{"row":"global"}]}""")
+        File(dir, "a.json").writeText("""{"id":"ab","name":"MY AB","rows":[{"row":"master.mix"},{"row":"trans"},{"row":"wetdry"},{"row":"global"}]}""")
+        File(dir, "b.json").writeText("""{"id":"extra","name":"EXTRA","rows":[{"row":"deck.A.src"},{"row":"deck.A.fx"},{"row":"deck.B.src"},{"row":"global"}]}""")
         val pages = store(dir).all()
-        assertEquals(listOf("decks", "master", "ab", "bgpv", "mixer", "extra"), pages.map { it.id })
-        assertEquals("MY DECKS", pages[0].name)
+        assertEquals(listOf("ab", "bgpv", "mixer", "master", "extra"), pages.map { it.id })
+        assertEquals("MY AB", pages[0].name)
     }
 
     @Test
     fun invalidUserPagesAreSkipped() {
         val dir = createTempDirectory().toFile()
-        File(dir, "short.json").writeText("""{"id":"short","name":"S","rows":[{"row":"master"}]}""")
-        File(dir, "unknown.json").writeText("""{"id":"unk","name":"U","rows":[{"row":"x"},{"row":"master"},{"row":"trans"},{"row":"global"}]}""")
+        File(dir, "short.json").writeText("""{"id":"short","name":"S","rows":[{"row":"master.mix"}]}""")
+        File(dir, "unknown.json").writeText("""{"id":"unk","name":"U","rows":[{"row":"x"},{"row":"master.mix"},{"row":"trans"},{"row":"global"}]}""")
+        // Pages saved before the SRC/FX toggle rows were removed name rows that no longer exist: skipped.
+        File(dir, "old.json").writeText("""{"id":"old","name":"O","rows":[{"row":"deck.A.srcfx"},{"row":"master"},{"row":"trans"},{"row":"global"}]}""")
         File(dir, "garbage.json").writeText("not json")
         val s = store(dir)
-        assertEquals(listOf("decks", "master", "ab", "bgpv", "mixer"), s.all().map { it.id })
+        assertEquals(listOf("ab", "bgpv", "mixer", "master"), s.all().map { it.id })
         assertNull(s.get("short"))
+        assertNull(s.get("old"))
     }
 
     @Test
     fun focusLookupScansActivePageThenFollowingPagesWrapping() {
         val pages = store().all()
-        // From DECKS the toggle row wins; from MASTER the scan continues with A/B and finds the pinned SRC row.
-        assertEquals(PerfRows.CATALOG["deck.A.srcfx"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "decks"))
-        assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "master"))
-        // Deck BG from the last page wraps all the way round to DECKS.
-        assertEquals(PerfRows.CATALOG["deck.BG.srcfx"], PerfRows.catalogRowForModule("deckBG", "SRC", pages.filter { it.id in setOf("mixer", "decks") }, "mixer"))
-        assertNull(PerfRows.catalogRowForModule("Mixer", "MIX", pages, "decks")?.takeIf { it.pinnedMode != null })
+        assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "ab"))
+        // From MIXER the scan wraps past MASTER to A/B and finds the pinned SRC row.
+        assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "mixer"))
+        // Deck BG from the last page wraps all the way round to BG/PV.
+        assertEquals(PerfRows.CATALOG["deck.BG.src"], PerfRows.catalogRowForModule("deckBG", "SRC", pages.filter { it.id in setOf("mixer", "bgpv") }, "mixer"))
+        assertEquals(PerfRows.CATALOG["master.mix"], PerfRows.catalogRowForModule("Mixer", "MIX", pages, "ab"))
     }
 
     @Test
@@ -65,13 +67,14 @@ class PerfPageStoreTest {
         fun page(id: String, vararg rows: String) = PerfPageDef(id, id, rows = rows.map(::RowPlacement))
         val pages = listOf(
             page("p1", "deck.A.fx", "deck.A.src", "master.fx", "master.mix"),
-            page("p2", "deck.A.srcfx", "trans", "wetdry", "global"),
+            page("p2", "deck.A.fx", "trans", "wetdry", "global"),
         )
         assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "p1"))
         assertEquals(PerfRows.CATALOG["deck.A.fx"], PerfRows.catalogRowForModule(MacroEngine.DECK_A_FX, "FX", pages, "p1"))
         assertEquals(PerfRows.CATALOG["master.mix"], PerfRows.catalogRowForModule("Mixer", "MIX", pages, "p1"))
-        // Active page p2 first: its toggle row covers either half.
-        assertEquals(PerfRows.CATALOG["deck.A.srcfx"], PerfRows.catalogRowForModule("deckA", "FX", pages, "p2"))
+        // Active page p2 first: its FX row wins for the FX half; the SRC half is found on the next page.
+        assertEquals(PerfRows.CATALOG["deck.A.fx"], PerfRows.catalogRowForModule("deckA", "FX", pages, "p2"))
+        assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "p2"))
         // Nothing places Deck B anywhere.
         assertNull(PerfRows.catalogRowForModule("deckB", "SRC", pages, "p1"))
     }
@@ -92,7 +95,7 @@ class PerfPageStoreTest {
         assertNull(store.copyBuiltInToUser("ab"))
         assertTrue(File(dir, "ab.json").exists())
         assertEquals(PerfPageStore.Source.USER_OVERRIDE, store.sourceOf("ab"))
-        assertEquals(listOf("decks", "master", "ab", "bgpv", "mixer"), store.all().map { it.id }.take(5))
+        assertEquals(listOf("ab", "bgpv", "mixer", "master"), store.all().map { it.id }.take(4))
         assertTrue(store.copyBuiltInToUser("ab") != null)
         assertTrue(store.copyBuiltInToUser("nope") != null)
         assertTrue(store.deleteUser("ab"))
@@ -139,19 +142,19 @@ class PerfPageStoreTest {
         val savedActive = UITheme.performancePageId
         try {
             UITheme.hiddenPerformPages = emptySet()
-            UITheme.performancePageId = "decks"
+            UITheme.performancePageId = "ab"
             val all = PerfPageStore.default.all().map { it.id }
 
-            assertTrue(UITheme.setPerformPageHidden("decks", true))
-            assertTrue("decks" !in UITheme.visiblePerformPages().map { it.id })
-            assertEquals(all.first { it != "decks" }, UITheme.performancePageId)
+            assertTrue(UITheme.setPerformPageHidden("ab", true))
+            assertTrue("ab" !in UITheme.visiblePerformPages().map { it.id })
+            assertEquals(all.first { it != "ab" }, UITheme.performancePageId)
 
-            for (id in all.filter { it != "decks" }.dropLast(1)) assertTrue(UITheme.setPerformPageHidden(id, true))
+            for (id in all.filter { it != "ab" }.dropLast(1)) assertTrue(UITheme.setPerformPageHidden(id, true))
             assertEquals(1, UITheme.visiblePerformPages().size)
             assertTrue(!UITheme.setPerformPageHidden(UITheme.visiblePerformPages().single().id, true))
 
-            assertTrue(UITheme.setPerformPageHidden("decks", false))
-            assertTrue("decks" in UITheme.visiblePerformPages().map { it.id })
+            assertTrue(UITheme.setPerformPageHidden("ab", false))
+            assertTrue("ab" in UITheme.visiblePerformPages().map { it.id })
         } finally {
             UITheme.hiddenPerformPages = savedHidden
             UITheme.performancePageId = savedActive
@@ -165,14 +168,14 @@ class PerfPageStoreTest {
         try {
             UITheme.hiddenPerformPages = emptySet()
             UITheme.performancePageId = "ab"
-            assertTrue(UITheme.setPerformPageHidden("decks", true))
-            assertTrue("decks" !in UITheme.visiblePerformPages().map { it.id })
+            assertTrue(UITheme.setPerformPageHidden("bgpv", true))
+            assertTrue("bgpv" !in UITheme.visiblePerformPages().map { it.id })
 
-            UITheme.performancePageId = "decks" // a controller bank selects the hidden page
-            assertTrue("decks" in UITheme.visiblePerformPages().map { it.id })
+            UITheme.performancePageId = "bgpv" // a controller bank selects the hidden page
+            assertTrue("bgpv" in UITheme.visiblePerformPages().map { it.id })
 
             UITheme.performancePageId = "ab"
-            assertTrue("decks" !in UITheme.visiblePerformPages().map { it.id })
+            assertTrue("bgpv" !in UITheme.visiblePerformPages().map { it.id })
         } finally {
             UITheme.hiddenPerformPages = savedHidden
             UITheme.performancePageId = savedActive
@@ -191,14 +194,14 @@ class PerfPageStoreTest {
         assertEquals(ab.rows, store.get("my-ab")!!.rows)
     }
 
-    private val goodPage = """{"id":"%s","name":"N","rows":[{"row":"master"},{"row":"trans"},{"row":"wetdry"},{"row":"global"}]}"""
+    private val goodPage = """{"id":"%s","name":"N","rows":[{"row":"master.mix"},{"row":"trans"},{"row":"wetdry"},{"row":"global"}]}"""
 
     @Test
     fun unreadableUserFileIsRejectedWithoutThrowing() {
         val dir = createTempDirectory().toFile()
         File(dir, "bad.json").mkdir()
         val s = store(dir)
-        assertEquals(listOf("decks", "master", "ab", "bgpv", "mixer"), s.all().map { it.id })
+        assertEquals(listOf("ab", "bgpv", "mixer", "master"), s.all().map { it.id })
         assertEquals(listOf("bad.json"), s.rejected().map { it.file.name })
     }
 

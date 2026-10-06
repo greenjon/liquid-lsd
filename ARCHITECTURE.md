@@ -182,11 +182,11 @@ Deeper: `docs/developer/beat_sync.md` (stale on `ClockSource`), `docs/developer/
 - **Library**: `LibraryMode.FULL`.
 
 Perform surface:
-- **Pages**: `PerfPageStore` (built-ins `resources/perform_pages/{decks,master,deck-ab,deck-bgpv,mixer}.json`, user pages `library/perform_pages/`) → `PerfPageDef` = exactly 4 `RowPlacement`s whose ids come from `PerfRows.CATALOG` (`deck.<tag>.srcfx|src|fx`, `master`, `master.mix|fx`, `trans`, `wetdry`, `global`). The tab strip is drawn in `MenuBar` (`PerfTabStrip`); the active id is `UITheme.performancePageId`. `PerformPagesPanel` edits pages in Preferences.
+- **Pages**: `PerfPageStore` (built-ins `resources/perform_pages/{deck-ab,deck-bgpv,mixer,master}.json`, user pages `library/perform_pages/`) → `PerfPageDef` = exactly 4 `RowPlacement`s whose ids come from `PerfRows.CATALOG` (`deck.<tag>.src|fx`, `master.mix|fx`, `trans`, `wetdry`, `global`). The tab strip is drawn in `MenuBar` (`PerfTabStrip`); the active id is `UITheme.performancePageId`. `PerformPagesPanel` edits pages in Preferences.
 - **Rows**:
   - `PerformanceMatrixPanel` orchestrates `PerformanceDeckControls`, `PerformanceMasterControls`, `PerformanceTransitionsControls`, `PerformanceFxSendsControls`, `PerformanceClockControls`, with shared state in `PerformanceUiContext`.
   - FX header and cells: `FxChainHeader`, `FxSlotCell`, `FxParamCell`, `FXChainMacroStrip`.
-  - Geometry never depends on row mode (`PerfRowGeometry`, `DeckRowMetrics`, `PerfKnobSpec` / `PerfKnobResolver`). A deck row's `[SRC|FX]` and Master's `[MIX|FX]` are one stored value in `ParametersState` (DECISIONS §8).
+  - Geometry never depends on row mode (`PerfRowGeometry`, `DeckRowMetrics`, `PerfKnobSpec` / `PerfKnobResolver`). Every deck and Master row shows one half (`pinnedMode`), so a row's meaning never depends on a mode; only the Edit bay's SRC/FX and MIX/FX tabs (`ParametersState`) choose which half an open module shows.
 - **Hardware view of the same grid**: `PerformSurface` and `NavigationSurface` (constructed in `UIManager.render`) resolve knobs with the same `PerfRows` + resolver the panel draws with.
 
 Edit bay (`PerformanceDeepEditBay.kt`, one per open row; tab row `Edit | SRC/TRANS | Chain | FX1-3`):

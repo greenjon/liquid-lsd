@@ -46,8 +46,8 @@ A knob can only target parameters in **its own deck and section**:
 
 If you click a parameter outside that section, the banner says *"Cannot add target…"* and Add Target stays
 armed, so you can click the right one. If you move to another section while Add Target is armed, it
-is cancelled. That includes Edit's SRC/FX tabs, the side rail, and a Deck
-row's `[SRC]`/`[FX]` pills. Master, Transitions and FX Sends knobs aren't limited this way.
+is cancelled. That includes Edit's SRC/FX tabs and the side rail. Master and FX Sends knobs aren't
+limited this way, and Transitions knobs can't be learned (they follow the active transition).
 
 Each knob can hold up to **4 targets**, so one knob can drive several parameters (or modulator
 properties) simultaneously — with independent settings per target.
@@ -145,7 +145,6 @@ Edit and the macro strip always point at the same deck and section:
 
 - Opening a deck's Edit anywhere (its row's `[EDIT]`, the side rail, the **SRC / FX** tabs)
   focuses that deck and section.
-- A Performance row's `[SRC]` / `[FX]` pill also switches that deck's section.
 
 The same applies to the other decks and Master (**MST**, **TRANS** and **MST FX** match Edit's
 Mixer **CTRL**, **TRANS** and **FX** tabs).
@@ -210,15 +209,17 @@ Each tab shows up to 4 rows of 4 knobs, mapped to different banks:
 
 | Tab | Row 1 | Row 2 | Row 3 | Row 4 |
 |:---|:---|:---|:---|:---|
-| **DECKS** | Deck A `[SRC\|FX]` | Deck B `[SRC\|FX]` | Deck BG `[SRC\|FX]` | Deck PV `[SRC\|FX]` |
-| **MASTER** | Master `[MIX\|FX]` | Transitions | FX Wet/Dry | Clock & Global |
+| **A/B** | Deck A source | Deck A FX | Deck B source | Deck B FX |
+| **BG/PV** | Deck BG source | Deck BG FX | Deck PV source | Deck PV FX |
+| **MIXER** | Master MIX | Master FX | Transitions | FX Wet/Dry |
+| **MASTER** | Master MIX | Transitions | FX Wet/Dry | Clock & Global |
 
-Every FX chain is reached from its own row: a deck's FX from that deck's row, Master FX from the
-Master row. There are no separate FX-only rows.
+Every deck and Master row shows one half (source or FX), so a knob never changes meaning under you.
+Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).
 
 - **Per-Deck Insert FX & Flexible Routing**: Every deck (A, B, BG, PV) now owns its own dedicated 3-slot `FxChain` running post-generator and pre-crossfader, completely decoupled from other decks.
-- **In-Row `[ SRC | FX ]` Knob Assignment & Stacked Controls (Deck Rows)**: In each Deck row, both visual generator and insert FX chain controls coexist in two stacked rows on the left wing. Click the **`[ SRC ]`** or **`[ FX ]`** knob-assign pill to choose which bank the row's 4 on-screen knobs control (`SRC` for visual generator macros, `FX` for that deck's insert FX Super Knob + 3 Metaknobs). Switching between `SRC` and `FX` retargets on-screen knobs without hiding or toggling away either row's controls. The right wing provides an instant `[ BYPASS / FX ON ]` button for that deck's FX chain.
-- **In-Row `[ MIX | FX ]` Knob Assignment (Master Row)**: The Master row works like a deck row. Its left wing stacks a **`[ MIX ]`** pill over an **`[ FX ]`** pill and the Master FX chain header (`[◀] Name • [▶] [Save] [⋮]`). `MIX` puts the knobs on the composite alphas and master level; `FX` puts them on the Master FX Super Knob + 3 Metaknobs. The right wing has the Master FX `[ BYPASS / FX ON ]` button. The crossfader sits on the `[ MIX ]` line in both modes.
+- **Deck Rows Are Split into a Source Row and an FX Row**: Each deck has a **source row** (`[ SRC ]` pill, kebab, generator/preset badge, Save, queue navigation, eject; its knobs are the source's macros) and an **FX row** (`[ FX ]` pill, kebab, chain name, Save, queue navigation, slot pills `1 2 3`; its knobs are the chain's Super Knob and three Metaknobs). The right wing of the FX row has the `[ BYPASS / FX ON ]` button. The source row's right wing has the randomize die (Source and FX).
+- **Master Rows Are Split Too**: The **Master MIX row** (`[ MIX ]` pill) has the deck-levels badge, with the four knobs on the deck levels and the master level. The **Master FX row** (`[ FX ]` pill) has the Master FX chain header (`[◀] Name • [▶] [Save] [⋮]`) and its `[ BYPASS / FX ON ]` button, with the knobs on the Master FX Super Knob + 3 Metaknobs. The crossfader sits on the Transitions row.
 - The Transitions row carries the transition picker (opens inline Browse — see below) and queue prev/next controls. Its four knobs are fixed: **knob 1 is the crossfader** (it follows auto-fades and the slider, and turning it takes over like the slider does), and **knobs 2-4 are the active transition's first three sliders**, relabelled whenever you change transition. Transitions with fewer than three sliders leave the spare knobs blank. These knobs cannot be re-learned; Dry/Wet stays in the Edit bay.
 
 Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) and starts with a title badge spanning both control lines: a large **A**, **B**, **BG** or **PV** on deck rows (the `[SRC]`/`[FX]` pills beside it show which the knobs control), and **MASTER**, **TRANS**, **WET/DRY** and **CLOCK** on the MASTER tab. No row has a header bar over its knobs, so MASTER-tab knobs are the same size as deck knobs.
@@ -231,7 +232,7 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
 - **Deck Rows (Deck A, B, BG, PV)**:
   - **Left Wing (Info & Deck Controls)**:
     - **Row 1 (SRC)**:
-      - **`[ SRC ]` Knob Pill**: Assigns the row's 4 on-screen macro knobs to the deck's Visual Generator.
+      - **`[ SRC ]` Pill**: Labels the source row, whose 4 on-screen macro knobs are the deck's Visual Generator.
       - **Generator / Preset Badge**: One control, not two -- a preset is just a generator with its parameter values saved under a name. Shows the active preset's name (with a dirty marker `*`) or, if nothing's been saved, the generator's own name. Click to open inline Browse listing stock generator types and saved presets together; right-click for source defaults.
       - **Eject Button (`⏏`)**: Resets the deck to defaults with dirty-state safety guard.
       - **Queue Navigation**: Deck A and Deck B connect to `PlayQueueManager` (`< N/Total >`), Deck BG connects to `BgQueueManager` (`< N/Total >`), and Deck PV features a quick Preview focus button.
@@ -254,7 +255,8 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
     - **`[ BYPASS / FX ON ]`**: Dedicated insert FX kill switch, positioned on Row 2 aligned with the FX row.
   - **Drag-and-Drop**: Dropping a deck preset (`.patch`, `.lsd`, `.json`) loads the visual preset; dropping a `.lsdfxchain` loads that FX chain onto the deck.
 - **Whole-Rig Randomize (`[ ALL 🎲 ]`)**: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking `mixer.randomizeAll()` across all decks simultaneously.
-- **Master (Row 1 in MASTER)**: Left wing: `[ MIX ]` over `[ FX ]` + Master FX chain header, as described above; right wing: Master FX `[ BYPASS / FX ON ]`. Dropping a `.lsdfxchain` onto the `MASTER` badge loads it into Master FX. The `[ MIX ]` line holds the crossfader: Deck A and Deck B quick-snap buttons (`[ A ]` and `[ B ]`), an interactive zero-centered crossfader track with mouse drag, mouse wheel, middle-click center reset, and live amber modulation/auto-fade indicator dot, a smooth `[ AUTO ]` crossfade trigger, and an interactive **Fade Speed Duration Badge** (crossfader time -- scrubbable with mouse drag/wheel and right-click context menu for duration presets `0.5s`–`8.0s` and MIDI/OSC learn). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) dropped onto the crossfader track apply directly.
+- **Master FX row**: Left wing: the `[ FX ]` pill + Master FX chain header, as described above; right wing: Master FX `[ BYPASS / FX ON ]`. Dropping a `.lsdfxchain` onto the `MASTER` badge loads it into Master FX.
+- **Master MIX row**: The `[ MIX ]` line holds the crossfader (the Transitions row also carries it): Deck A and Deck B quick-snap buttons (`[ A ]` and `[ B ]`), an interactive zero-centered crossfader track with mouse drag, mouse wheel, middle-click center reset, and live amber modulation/auto-fade indicator dot, a smooth `[ AUTO ]` crossfade trigger, and an interactive **Fade Speed Duration Badge** (crossfader time -- scrubbable with mouse drag/wheel and right-click context menu for duration presets `0.5s`–`8.0s` and MIDI/OSC learn). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) dropped onto the crossfader track apply directly.
 - **Transitions (Row 2 in MASTER)**: Left wing features a Transition Picker button displaying the active transition with modified indicator (`*`) — click it to open inline Browse on the transition list — and Transition Queue stepping controls (`<`, `N/Total`, `>`); right wing hosts the transition randomize die button (`🎲`) on Row 1 (matching the deck rows). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the picker button.
 - **Clock & Global (Row 4 in MASTER)**: The two lines beside the `CLOCK` badge have the tempo controls from Preferences > Tempo & Sync, placed here for use mid-set:
   - **`[ MAN ]` / `[ AUDIO ]`**: clock source (manual tempo or the audio beat tracker).

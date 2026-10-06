@@ -16,16 +16,13 @@ internal data class RowDescriptor(
     val hasExtraHeader: Boolean = false,
     /** When false, the modular rack disclosure chevron and collapse controls are omitted. */
     val canExpand: Boolean = true,
-    /**
-     * Non-null for a pinned row, which shows one half of a deck (`SRC` / `FX`) or of Master (`MIX` / `FX`) and has no toggle.
-     * A pinned row never reads or writes the shared per-deck / Master mode, so it cannot flip its neighbours.
-     */
+    /** Non-null for a deck row (`SRC` / `FX`) or a Master row (`MIX` / `FX`): the one half it shows. */
     val pinnedMode: String? = null
 )
 
 /**
- * Which rows the Performance matrix shows for a page, with the per-deck [SRC|FX] and Master [MIX|FX]
- * toggles applied. Pure (no drawing), so the panel and hardware controllers resolve the same rows.
+ * Which rows the Performance matrix shows for a page, or, while a module is open in the Edit bay, the row for the
+ * half its tab shows. Pure (no drawing), so the panel and hardware controllers resolve the same rows.
  */
 internal object PerfRows {
     /** A deck row's tag, source-macro bank, FX-chain bank and accent. */
@@ -38,7 +35,7 @@ internal object PerfRows {
         DeckRowBanks("PV", MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX, PerformanceColors.COLOR_DECK_PV),
     )
 
-    /** Deck tags in strip order; catalog ids are `deck.<tag>.srcfx`. */
+    /** Deck tags in strip order; catalog ids are `deck.<tag>.src` / `.fx`. */
     val DECK_TAGS: List<String> = DECK_ROW_BANKS.map { it.tag }
 
     /** The deck whose source or FX-chain bank is [bankId], or null. */
@@ -46,19 +43,15 @@ internal object PerfRows {
         DECK_ROW_BANKS.firstOrNull { it.srcBankId == bankId || it.fxBankId == bankId }
 
     /**
-     * Every row a page can place, by stable id (persisted in page files): the per-deck `srcfx` row (with its
-     * [SRC|FX] toggle) and its pinned halves `deck.<tag>.src` / `.fx`, Master ([MIX|FX]) and its pinned halves
-     * `master.mix` / `master.fx`, Transitions, FX Wet/Dry and Clock & Global.
+     * Every row a page can place, by stable id (persisted in page files): per deck `deck.<tag>.src` and `.fx`,
+     * Master `master.mix` and `master.fx`, Transitions, FX Wet/Dry and Clock & Global. Every deck and Master row
+     * shows one half, so a row's meaning never depends on a mode.
      */
     val CATALOG: Map<String, RowDescriptor> = linkedMapOf<String, RowDescriptor>().apply {
-        for (d in DECK_ROW_BANKS) {
-            put("deck.${d.tag}.srcfx", RowDescriptor(d.srcBankId, 0, d.accent, "DECK ${d.tag}", hasExtraHeader = true))
-        }
         for (d in DECK_ROW_BANKS) {
             put("deck.${d.tag}.src", RowDescriptor(d.srcBankId, 0, d.accent, "DECK ${d.tag}", hasExtraHeader = true, pinnedMode = "SRC"))
             put("deck.${d.tag}.fx", RowDescriptor(d.fxBankId, 0, d.accent, "DECK ${d.tag} (FX)", hasExtraHeader = true, pinnedMode = "FX"))
         }
-        put("master", RowDescriptor(MacroEngine.MASTER,   0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true))
         put("master.mix", RowDescriptor(MacroEngine.MASTER, 0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true, pinnedMode = "MIX"))
         put("master.fx", RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER (FX)", hasExtraHeader = true, pinnedMode = "FX"))
         put("trans",  RowDescriptor(MacroEngine.TRANS,    0, PerformanceColors.COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true))
@@ -66,27 +59,13 @@ internal object PerfRows {
         put("global", RowDescriptor(MacroEngine.GLOBAL,   0, PerformanceColors.COLOR_GLOBAL, "CLOCK & GLOBAL", hasExtraHeader = true, canExpand = false))
     }
 
-    /** [row] with the per-deck [SRC|FX] or Master [MIX|FX] toggle applied (retargeted to the FX bank when on). */
-    fun withDeckRowMode(row: RowDescriptor, ctx: PerformanceUiContext, parametersState: ParametersState?): RowDescriptor {
-        if (row.pinnedMode != null) return row
-        val deck = DECK_ROW_BANKS.firstOrNull { it.srcBankId == row.bankId }
-        return when {
-            deck != null && ctx.isDeckRowFx(deck.tag, parametersState) ->
-                row.copy(bankId = deck.fxBankId, groupLabel = "DECK ${deck.tag} (FX)")
-            row.bankId == MacroEngine.MASTER && parametersState != null && ctx.isMasterRowFx(parametersState) ->
-                row.copy(bankId = MacroEngine.MASTER_FX, groupLabel = "MASTER (FX)")
-            else -> row
-        }
-    }
-
-    /** [page]'s rows with the per-deck [SRC|FX] and Master [MIX|FX] toggles applied. */
-    fun substitutedRowsForPage(page: PerfPageDef, ctx: PerformanceUiContext, parametersState: ParametersState? = null): List<RowDescriptor> =
-        page.rows.mapNotNull { CATALOG[it.row] }.map { withDeckRowMode(it, ctx, parametersState) }
+    /** [page]'s rows, resolved from the catalog (unknown ids are skipped). */
+    fun rowsForPage(page: PerfPageDef): List<RowDescriptor> = page.rows.mapNotNull { CATALOG[it.row] }
 
     /**
      * The catalog row that Deep Edit on [moduleId] should show: the first placement that covers the module and
      * its [half] (`SRC`/`FX` for a deck, `MIX`/`FX` for Master), scanning the active page top to bottom and then
-     * the following pages, wrapping from last to first. A toggle row covers both halves; a pinned row only its own.
+     * the following pages, wrapping from last to first.
      * Null when no page places it (the caller falls back to [rowDescriptorForModule]).
      */
     fun catalogRowForModule(moduleId: String, half: String, pages: List<PerfPageDef>, activePageId: String): RowDescriptor? {
@@ -103,20 +82,20 @@ internal object PerfRows {
                         moduleId == MacroEngine.MASTER || moduleId == MacroEngine.MASTER_FX || moduleId == "Mixer"
                     else -> false
                 }
-                if (covers && (row.pinnedMode == null || row.pinnedMode == half)) return row
+                if (covers && row.pinnedMode == half) return row
             }
         }
         return null
     }
 
-    /** `FX` when Deep Edit's target for [moduleId] is the FX half of its deck / Master, else `SRC` (decks) or `MIX` (Master). */
+    /** `FX` when the Edit bay's tab for [moduleId] is the FX half of its deck / Master, else `SRC` (decks) or `MIX` (Master). */
     private fun halfFor(moduleId: String, ctx: PerformanceUiContext, parametersState: ParametersState): String? {
         deckForBank(moduleId)?.let {
-            return if (ctx.isDeckRowFx(it.tag, parametersState)) "FX" else "SRC"
+            return if (ctx.isDeckBayFx(it.tag, parametersState)) "FX" else "SRC"
         }
         if (moduleId == MacroEngine.MASTER || moduleId == MacroEngine.MASTER_FX || moduleId == "Mixer") {
             if (parametersState.activeMixerSubTab == "TRANS") return null // Transitions has no page variant; use the fallback
-            return if (ctx.isMasterRowFx(parametersState)) "FX" else "MIX"
+            return if (ctx.isMasterBayFx(parametersState)) "FX" else "MIX"
         }
         return null
     }
@@ -132,15 +111,16 @@ internal object PerfRows {
         labelFor: (String) -> String
     ): RowDescriptor {
         deckForBank(moduleId)?.let { deck ->
-            val template = RowDescriptor(deck.srcBankId, 0, deck.accent, "DECK ${deck.tag}", hasExtraHeader = true)
-            return withDeckRowMode(template, ctx, parametersState)
+            return if (ctx.isDeckBayFx(deck.tag, parametersState))
+                RowDescriptor(deck.fxBankId, 0, deck.accent, "DECK ${deck.tag} (FX)", hasExtraHeader = true, pinnedMode = "FX")
+            else RowDescriptor(deck.srcBankId, 0, deck.accent, "DECK ${deck.tag}", hasExtraHeader = true, pinnedMode = "SRC")
         }
         return when (moduleId) {
             MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.MASTER_FX, "Mixer" -> {
                 when {
                     parametersState.activeMixerSubTab == "TRANS" -> RowDescriptor(MacroEngine.TRANS, 0, PerformanceColors.COLOR_TRANS, "TRANSITIONS", hasExtraHeader = true)
-                    ctx.isMasterRowFx(parametersState) -> RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER (FX)", hasExtraHeader = true)
-                    else -> RowDescriptor(MacroEngine.MASTER, 0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true)
+                    ctx.isMasterBayFx(parametersState) -> RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER (FX)", hasExtraHeader = true, pinnedMode = "FX")
+                    else -> RowDescriptor(MacroEngine.MASTER, 0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true, pinnedMode = "MIX")
                 }
             }
             else -> RowDescriptor(moduleId, 0, PerformanceColors.COLOR_MASTER, labelFor(moduleId), hasExtraHeader = true)
@@ -163,14 +143,12 @@ internal object PerfRows {
             .filterValues { it != ParametersState.DisclosureLevel.COLLAPSED }
             .keys
             .filter { it != MacroEngine.FX_SENDS }
-        if (expandedModuleIds.isEmpty()) return substitutedRowsForPage(page, ctx, parametersState)
+        if (expandedModuleIds.isEmpty()) return rowsForPage(page)
 
         // Show the active macro row for each expanded module
         return expandedModuleIds.map { id ->
             val half = halfFor(id, ctx, parametersState)
-            val template = half?.let { catalogRowForModule(id, it, pages, page.id) }
-            if (template != null) withDeckRowMode(template, ctx, parametersState)
-            else rowDescriptorForModule(id, ctx, parametersState, labelFor)
+            half?.let { catalogRowForModule(id, it, pages, page.id) } ?: rowDescriptorForModule(id, ctx, parametersState, labelFor)
         }
     }
 
@@ -182,7 +160,7 @@ internal object PerfRows {
     /**
      * Memoises [visibleRowsForPage] for one caller (the matrix panel, a hardware surface). The result is a pure
      * function of the page and page list (compared by reference: the store hands out a new list on reload), the
-     * four deck [SRC|FX] flags, the Master [MIX|FX] flag, the Mixer sub-tab and the ordered set of expanded
+     * four deck Edit-bay [SRC|FX] tabs, the Master [MIX|FX] tab, the Mixer sub-tab and the ordered set of expanded
      * Deep Edit modules, so those are compared each call (no allocation) and the rows are rebuilt only on a change.
      * Deep Edit on a module named by `labelFor` is never cached because the label can change without any of the above.
      * Not thread-safe; give each thread/caller its own instance.
@@ -205,8 +183,8 @@ internal object PerfRows {
             pages: List<PerfPageDef> = listOf(page)
         ): List<RowDescriptor> {
             var mask = 0
-            for (i in DECK_ROW_BANKS.indices) if (ctx.isDeckRowFx(DECK_ROW_BANKS[i].tag, parametersState)) mask = mask or (1 shl i)
-            if (ctx.isMasterRowFx(parametersState)) mask = mask or (1 shl DECK_ROW_BANKS.size)
+            for (i in DECK_ROW_BANKS.indices) if (ctx.isDeckBayFx(DECK_ROW_BANKS[i].tag, parametersState)) mask = mask or (1 shl i)
+            if (ctx.isMasterBayFx(parametersState)) mask = mask or (1 shl DECK_ROW_BANKS.size)
 
             var n = 0
             var uncacheable = false

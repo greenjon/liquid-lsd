@@ -570,7 +570,7 @@ class PerformanceMatrixPanel {
                     )
                     drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
                     ImGui.pushID(rowIdx)
-                    if (!stripOn) PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW, descriptor.pinnedMode)
+                    if (!stripOn) PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW, checkNotNull(descriptor.pinnedMode))
                     if (descriptor.pinnedMode != "MIX") {
                         PerformanceMasterControls.drawBypassControls(session, mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                     }
@@ -620,10 +620,10 @@ class PerformanceMatrixPanel {
                     val leftStartX = badgeX + deckBadgeW + 6f
                     // Per-slot ImGui id scope: the same deck may sit in two slots (or pages), so tag-based ids must not collide.
                     ImGui.pushID(rowIdx)
-                    if (!stripOn) deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W, descriptor.pinnedMode)
+                    if (!stripOn) deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W, checkNotNull(descriptor.pinnedMode))
                     deckControls.drawDeckRowRightControls(
                         session, mixer, parametersState, deckLabel, targetDeck,
-                        boxX2 - pad - deckRightW, row1Y, row2YFinal, ctrlH, deckRightW, descriptor.pinnedMode
+                        boxX2 - pad - deckRightW, row1Y, row2YFinal, ctrlH, deckRightW, checkNotNull(descriptor.pinnedMode)
                     )
                     ImGui.popID()
                 }

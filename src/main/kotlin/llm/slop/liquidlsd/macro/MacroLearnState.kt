@@ -130,7 +130,7 @@ object MacroLearnState {
     }
 
     /**
-     * Call when the user navigates Deep Edit / a Deck row's [SRC]/[FX] pill to ([topTab],
+     * Call when the user navigates Deep Edit to ([topTab],
      * [subTab]). Leaving the armed knob's section disarms Learn, since the knob can't bind to
      * anything there anyway (see [acceptsTarget]).
      */

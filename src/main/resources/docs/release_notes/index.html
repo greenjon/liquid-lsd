@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#deck-and-master-rows-show-one-half-the-srcfx-and-mixfx-toggle-rows-are-gone-uiperfrowskt-uiperformancedeckcontrolskt-uiperformancemastercontrolskt-resourcesperform_pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck and Master Rows Show One Half; the SRC/FX and MIX/FX Toggle Rows Are Gone (ui/PerfRows.kt, ui/PerformanceDeckControls.kt, ui/PerformanceMasterControls.kt, resources/perform_pages/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#transitions-row-knobs-follow-the-transition-macrotransitionmacrosynckt-renderingmixerkt-macromacrolearnstatekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5625,6 +5636,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#deck-and-master-rows-show-one-half-the-srcfx-and-mixfx-toggle-rows-are-gone-uiperfrowskt-uiperformancedeckcontrolskt-uiperformancemastercontrolskt-resourcesperform_pages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck and Master Rows Show One Half; the SRC/FX and MIX/FX Toggle Rows Are Gone (ui/PerfRows.kt, ui/PerformanceDeckControls.kt, ui/PerformanceMasterControls.kt, resources/perform_pages/)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#transitions-row-knobs-follow-the-transition-macrotransitionmacrosynckt-renderingmixerkt-macromacrolearnstatekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10017,6 +10039,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="deck-and-master-rows-show-one-half-the-srcfx-and-mixfx-toggle-rows-are-gone-uiperfrowskt-uiperformancedeckcontrolskt-uiperformancemastercontrolskt-resourcesperform_pages">Deck and Master Rows Show One Half; the SRC/FX and MIX/FX Toggle Rows Are Gone (<code>ui/PerfRows.kt</code>, <code>ui/PerformanceDeckControls.kt</code>, <code>ui/PerformanceMasterControls.kt</code>, <code>resources/perform_pages/</code>)</h3>
+<ul>
+<li><strong>Removed the <code>deck.&lt;tag&gt;.srcfx</code> and <code>master</code> rows, their SRC/FX and MIX/FX pill toggles, and the DECKS page.</strong> Every deck and Master row is now a source row or an FX row (<code>deck.&lt;tag&gt;.src</code> / <code>.fx</code>, <code>master.mix</code> / <code>master.fx</code>), as the Twister pages already were. The pill column keeps its footprint, so row geometry is unchanged.</li>
+<li><strong>Built-in pages are now A/B, BG/PV, MIXER, MASTER</strong> (the Twister's four banks, in bank order). MASTER's first row is Master MIX (Master FX lives on MIXER). New pages start as Deck A and Deck B, source over FX. A saved page that names a removed row is skipped with a log line; a saved active page <code>decks</code> falls back to the first page.</li>
+<li><strong>Edit still follows its own tabs</strong>: opening a deck in Edit shows its source or FX row according to the Edit bay's SRC/FX tab (Master: MIX/FX), and those tabs no longer share state with any row pill. Clicking an FX slot pill no longer jumps a source row over to FX.</li>
+<li>Internal: <code>PerfRows.withDeckRowMode</code> and <code>PerformanceUiContext.isDeckRowFx</code> / <code>isMasterRowFx</code> are gone (<code>PerfRows.rowsForPage</code>, <code>isDeckBayFx</code> / <code>isMasterBayFx</code>); <code>FxChainHeader.Actions.focusSlot</code> removed; <code>PerformSurface.PAGE_DECKS</code> removed.</li>
+</ul>
 <h3 id="transitions-row-knobs-follow-the-transition-macrotransitionmacrosynckt-renderingmixerkt-macromacrolearnstatekt">Transitions Row Knobs Follow the Transition (<code>macro/TransitionMacroSync.kt</code>, <code>rendering/Mixer.kt</code>, <code>macro/MacroLearnState.kt</code>)</h3>
 <ul>
 <li><strong>Knob 1 is the crossfader; knobs 2-4 are the active transition's first three float sliders</strong> (authored order; selects, toggles and images are skipped; spare knobs show "—"). They re-map on every transition change, preset load and session restore.</li>

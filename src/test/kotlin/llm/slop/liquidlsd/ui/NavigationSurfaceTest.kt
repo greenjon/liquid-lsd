@@ -52,7 +52,7 @@ class NavigationSurfaceTest {
         savedPage = UITheme.performancePageId
         savedMode = UITheme.libraryMode
         savedExpanded = UITheme.rackExpandedModules
-        UITheme.performancePageId = "decks"
+        UITheme.performancePageId = "ab"
         UITheme.libraryMode = UITheme.LibraryMode.HALF
         state.rackModuleDisclosure.clear()
         for (id in bankIds) MacroEngine.registerBank(id, MacroEngine.newBankFor(id))
@@ -441,15 +441,14 @@ class NavigationSurfaceTest {
 
     @Test
     fun pickerOpensTheSlotUnderAnFxRowKnobAndTheChainListForKnobOne() {
-        state.setDeckSubTab("Deck B", "FX")
         every { mixer.deckB.fxChain } returns FxChain("Deck B FX")
-        PerformSurface.lastTouchedKnob = 6 // col 2 = slot index 1
+        PerformSurface.lastTouchedKnob = 14 // Deck B's FX row (row 3 of the A/B page), col 2 = slot index 1
         nav().button(2, false)
         assertEquals(ParametersState.BrowseTarget.FxChain(1), state.browseTargetFor(MacroEngine.DECK_B))
         assertEquals("FX", state.activeDeckBSubTab)
 
         state.rackModuleDisclosure.clear()
-        PerformSurface.lastTouchedKnob = 4 // col 0 in group mode = the chain list
+        PerformSurface.lastTouchedKnob = 12 // col 0 in group mode = the chain list
         nav().button(2, false)
         assertEquals(ParametersState.BrowseTarget.FxChain(null), state.browseTargetFor(MacroEngine.DECK_B))
     }

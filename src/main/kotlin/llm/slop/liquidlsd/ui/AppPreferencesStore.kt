@@ -203,7 +203,7 @@ object AppPreferencesStore {
                 }
                 // "workspaceMode" (Classic vs Performance) is no longer read: Classic view was removed.
                 val savedPageId = props.getProperty("performancePageId")
-                    // Migration: the old tab index 0/1 was the built-in DECKS/MASTER page; anything else was a removed tab -> DECKS.
+                    // Migration: the old tab index 0/1 was the built-in DECKS/MASTER page; anything else was a removed tab -> the default page. (A saved `decks` page id is gone too: an unknown id falls back to the first page.)
                     ?: props.getProperty("performanceMatrixTab")?.toIntOrNull()?.let { if (it == 1) "master" else PerfPageDef.DEFAULT_ID }
                 if (savedPageId != null) {
                     UITheme.performancePageId = savedPageId

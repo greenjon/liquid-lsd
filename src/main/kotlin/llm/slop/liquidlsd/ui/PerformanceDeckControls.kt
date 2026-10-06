@@ -79,7 +79,6 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
      * only when the deck label or the badge's content changes). One instance per deck tag.
      */
     private class DeckStrings(tag: String) {
-        val modeToggleId = "##perf_mode_toggle_$tag"
         val kebabId = "${Icons.MORE_VERTICAL}##perf_src_more_$tag"
         val badgeCtxId = "##perf_gen_badge_ctx_$tag"
         val badgeId = "##perf_gen_badge_$tag"
@@ -92,7 +91,6 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val qNextCtxId = "perf_q_next_ctx_$tag"
 
         private var label: String? = null
-        var toggleTip = ""; private set
         var saveTip = ""; private set
         var ejectTip = ""; private set
         var randTip = ""; private set
@@ -103,7 +101,6 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         fun ensureLabel(deckLabel: String) {
             if (deckLabel == label) return
             label = deckLabel
-            toggleTip = "Toggle $deckLabel knobs between Visual Source (SRC) and Insert FX (FX)."
             saveTip = "Save $deckLabel's current source & parameters as a preset."
             ejectTip = "Eject current preset from $deckLabel and reset to defaults."
             randTip = "Randomize $deckLabel modulators & base values (Source and FX).\nClick to randomize with undo support."
@@ -262,7 +259,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         ctrlH: Float,
         comboW: Float,
         rowW: Float,
-        pinned: String? = null
+        pinned: String
     ) {
         val gap = DeckRowMetrics.GAP
         val isDeckA = deck === mixer.deckA
@@ -278,8 +275,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val dl = ImGui.getWindowDrawList()
         val str = stringsFor(tag)
         str.ensureLabel(deckLabel)
-        // A pinned row shows one half only and neither reads nor writes the shared per-deck mode.
-        val isFx = if (pinned != null) pinned == "FX" else ctx.isDeckRowFx(tag, parametersState)
+        // A row shows one half only: SRC or FX.
+        val isFx = pinned == "FX"
         val isSrc = !isFx
         val showSrc = pinned != "FX"
         val showFx = pinned != "SRC"
@@ -290,35 +287,12 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         ImGui.setCursorScreenPos(startX, row1Y)
         ImGui.beginGroup()
 
-        // 1. Shared [SRC] / [FX] toggle hitbox covering Row 1, gap, and Row 2
+        // 1. The pill column keeps its footprint (layout stability); the pills only label the half this row shows.
         val totalModeH = (row2Y + ctrlH) - row1Y
-        ImGui.setNextItemAllowOverlap()
-        // Pinned rows keep the toggle's footprint (layout stability) but have nothing to toggle.
-        val toggleClicked = if (pinned == null) ImGui.invisibleButton(str.modeToggleId, modeBtnW, totalModeH)
-                            else { ImGui.dummy(modeBtnW, totalModeH); false }
-        val isModeHovered = pinned == null && ImGui.isItemHovered()
-        if (toggleClicked) {
-            if (isSrc) {
-                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "FX")
-                parametersState.setDeckSubTab(deckLabel, "FX")
-                llm.slop.liquidlsd.macro.FxMacroSync.syncFor(ctx.targetBankIdFor(tag), mixer)
-            } else {
-                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(deckLabel, "SRC")
-                parametersState.setDeckSubTab(deckLabel, "SRC")
-            }
-        }
-        if (isModeHovered) {
-            ImGui.setMouseCursor(ImGuiMouseCursor.Hand)
-        }
-        if (pinned == null) itemTooltip(str.toggleTip)
+        ImGui.dummy(modeBtnW, totalModeH)
 
-        val mouseY = ImGui.getMousePosY()
-        val midY = row1Y + ctrlH + (row2Y - (row1Y + ctrlH)) * 0.5f
-        val isSrcHovered = isModeHovered && (mouseY <= midY)
-        val isFxHovered = isModeHovered && (mouseY > midY)
-
-        if (showSrc) PerformanceColors.drawTogglePill(dl, startX, row1Y, modeBtnW, ctrlH, "SRC", isSrc, isSrcHovered, session)
-        if (showFx) PerformanceColors.drawTogglePill(dl, startX, row2Y, modeBtnW, ctrlH, "FX", isFx, isFxHovered, session)
+        if (showSrc) PerformanceColors.drawTogglePill(dl, startX, row1Y, modeBtnW, ctrlH, "SRC", isSrc, false, session)
+        if (showFx) PerformanceColors.drawTogglePill(dl, startX, row2Y, modeBtnW, ctrlH, "FX", isFx, false, session)
 
         if (showSrc) {
             ImGui.sameLine(0f, gap)
@@ -490,7 +464,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                 session, mixer, deckChain, targetBank, str.fxTitle, ctrlH,
                 maxW = targetRowW - modeBtnW - gap, deck = deck,
                 actions = deckFxActions.getOrPut(tag) { DeckFxActions() }.also {
-                    it.set(parametersState, ctx, mixer, deckLabel, tag, fxCanonicalBankId, targetBank, isFx, pinned != null)
+                    it.set(parametersState, deckLabel, fxCanonicalBankId)
                 }
             )
 
@@ -515,7 +489,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         row2Y: Float,
         ctrlH: Float,
         width: Float = 56f,
-        pinned: String? = null
+        pinned: String
     ) {
         val isDeckA = deckLabel.endsWith("A")
         val isDeckB = deckLabel.endsWith("B")

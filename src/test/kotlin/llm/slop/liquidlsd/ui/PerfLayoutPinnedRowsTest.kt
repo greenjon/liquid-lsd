@@ -1,68 +1,67 @@
 package llm.slop.liquidlsd.ui
 
 import llm.slop.liquidlsd.macro.MacroBank
+import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
-import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
 /**
- * Mode changes content, never geometry: the pinned deck halves (`deck.<tag>.src` / `.fx`) and Master
+ * Mode changes content, never geometry: the deck halves (`deck.<tag>.src` / `.fx`) and Master
  * `master.mix` / `master.fx` rows, the resolver's column layout across modes, plus assorted resolver edges.
  */
 class PerfLayoutPinnedRowsTest {
     private val pinnedIds = PerfRows.DECK_TAGS.flatMap { listOf("deck.$it.src", "deck.$it.fx") } + listOf("master.mix", "master.fx")
 
     @Test
-    fun pinnedRowsAreIgnoredByTheSharedDeckAndMasterToggles() {
+    fun everyDeckAndMasterRowShowsOneHalfAndIgnoresTheEditBayTabs() {
         val state = ParametersState().apply {
             activeDeckASubTab = "FX"; activeDeckBSubTab = "FX"; activeDeckBGSubTab = "FX"; activeDeckPVSubTab = "FX"; activeMixerSubTab = "FX"
         }
-        val ctx = PerformanceUiContext().apply {
-        }
-        for (id in pinnedIds) {
-            val row = PerfRows.CATALOG.getValue(id)
-            assertTrue(row.pinnedMode != null, id)
-            assertSame(row, PerfRows.withDeckRowMode(row, ctx, state), "$id retargeted by a shared toggle")
-        }
+        assertEquals(pinnedIds.toSet(), PerfRows.CATALOG.filterValues { it.pinnedMode != null }.keys)
+        val page = PerfPageDef("t", "T", rows = pinnedIds.take(PerfPageDef.ROWS).map(::RowPlacement))
+        assertEquals(page.rows.map { PerfRows.CATALOG.getValue(it.row) }, PerfRows.rowsForPage(page))
+        assertTrue(PerfRows.CATALOG.keys.none { it.endsWith(".srcfx") || it == "master" }, "toggle rows are gone")
+        assertTrue(state.activeMixerSubTab == "FX")
     }
 
     @Test
-    fun pinnedHalvesCoverTheirOwnBankAndHaveTheSameHeaderLayoutAsTheToggleRow() {
+    fun pinnedHalvesCoverTheirOwnBankAndHaveTheSameHeaderLayout() {
         for (tag in PerfRows.DECK_TAGS) {
-            val toggle = PerfRows.CATALOG.getValue("deck.$tag.srcfx")
             val src = PerfRows.CATALOG.getValue("deck.$tag.src")
             val fx = PerfRows.CATALOG.getValue("deck.$tag.fx")
-            assertEquals(toggle.bankId, src.bankId)
             assertNotEquals(src.bankId, fx.bankId)
-            assertEquals(listOf(toggle.knobOffset, toggle.hasExtraHeader, toggle.canExpand), listOf(src.knobOffset, src.hasExtraHeader, src.canExpand))
-            assertEquals(listOf(toggle.knobOffset, toggle.hasExtraHeader, toggle.canExpand), listOf(fx.knobOffset, fx.hasExtraHeader, fx.canExpand))
+            assertEquals(listOf(src.knobOffset, src.hasExtraHeader, src.canExpand), listOf(fx.knobOffset, fx.hasExtraHeader, fx.canExpand))
             assertEquals("SRC", src.pinnedMode)
             assertEquals("FX", fx.pinnedMode)
         }
         val mix = PerfRows.CATALOG.getValue("master.mix")
         val mfx = PerfRows.CATALOG.getValue("master.fx")
-        assertEquals(PerfRows.CATALOG.getValue("master").hasExtraHeader, mix.hasExtraHeader)
         assertEquals(mix.hasExtraHeader, mfx.hasExtraHeader)
         assertEquals("MIX", mix.pinnedMode)
         assertEquals("FX", mfx.pinnedMode)
     }
 
     @Test
-    fun theToggleRowSwitchesBankButKeepsItsPlacementAttributes() {
+    fun theEditBayTabPicksTheHalfButKeepsThePlacementAttributes() {
         val ctx = PerformanceUiContext()
-        val state = ParametersState().apply { activeDeckASubTab = "FX"; activeMixerSubTab = "FX" }
-        for (id in listOf("deck.A.srcfx", "master")) {
-            val base = PerfRows.CATALOG.getValue(id)
-            val fx = PerfRows.withDeckRowMode(base, ctx, state)
-            assertNotEquals(base.bankId, fx.bankId)
-            assertEquals(base.knobOffset, fx.knobOffset)
-            assertEquals(base.hasExtraHeader, fx.hasExtraHeader)
-            assertEquals(base.canExpand, fx.canExpand)
-            assertTrue(base.accent.contentEquals(fx.accent))
+        val state = ParametersState()
+        for ((moduleId, tag) in listOf(MacroEngine.DECK_A to "A", MacroEngine.MASTER to null)) {
+            fun row() = PerfRows.rowDescriptorForModule(moduleId, ctx, state) { it }
+            state.setDeckSubTab("Deck A", "SRC"); state.activeMixerSubTab = "CTRL"
+            val src = row()
+            if (tag != null) state.setDeckSubTab("Deck $tag", "FX") else state.activeMixerSubTab = "FX"
+            val fx = row()
+            assertNotEquals(src.bankId, fx.bankId)
+            assertEquals(if (tag != null) "SRC" else "MIX", src.pinnedMode)
+            assertEquals("FX", fx.pinnedMode)
+            assertEquals(src.knobOffset, fx.knobOffset)
+            assertEquals(src.hasExtraHeader, fx.hasExtraHeader)
+            assertEquals(src.canExpand, fx.canExpand)
+            assertTrue(src.accent.contentEquals(fx.accent))
         }
     }
 

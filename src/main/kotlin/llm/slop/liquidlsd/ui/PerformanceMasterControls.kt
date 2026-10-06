@@ -19,8 +19,8 @@ internal object PerformanceMasterControls {
     private val masterFxActions = MasterFxActions()
 
     /**
-     * [MIX] / [FX] knob-assign pills (see [PerformanceUiContext.isMasterRowFx]) stacked like a
-     * deck row's [SRC] / [FX], with the Master FX chain header beside [FX].
+     * [MIX] / [FX] pills stacked like a deck row's [SRC] / [FX]. A row shows the half named by
+     * [pinned] (the Master FX chain header beside [FX], or the levels badge beside [MIX]).
      */
     fun drawModeControls(
         session: SessionContext,
@@ -32,46 +32,23 @@ internal object PerformanceMasterControls {
         row2Y: Float,
         ctrlH: Float,
         rowW: Float,
-        pinned: String? = null
+        pinned: String
     ) {
         val gap = 4f
         val modeBtnW = 28f
-        // A pinned row shows one half only and neither reads nor writes the shared Master mode.
-        val isFx = if (pinned != null) pinned == "FX" else ctx.isMasterRowFx(parametersState)
+        // A row shows one half only: MIX or FX.
+        val isFx = pinned == "FX"
         val isMix = !isFx
         val showMix = pinned != "FX"
         val showFx = pinned != "MIX"
         val dl = ImGui.getWindowDrawList()
 
-        // Line 1: Shared [MIX] / [FX] toggle hitbox covering Row 1, gap, and Row 2
+        // The pill column keeps its footprint (layout stability); the pills only label the half this row shows.
         ImGui.setCursorScreenPos(startX, row1Y)
-        val totalModeH = (row2Y + ctrlH) - row1Y
-        ImGui.setNextItemAllowOverlap()
-        val toggleClicked = if (pinned == null) ImGui.invisibleButton("##perf_mode_toggle_mst", modeBtnW, totalModeH)
-                            else { ImGui.dummy(modeBtnW, totalModeH); false }
-        val isModeHovered = pinned == null && ImGui.isItemHovered()
-        if (toggleClicked) {
-            if (isMix) {
-                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "FX")
-                parametersState.activeMixerSubTab = "FX"
-                llm.slop.liquidlsd.macro.FxMacroSync.syncFor(MacroEngine.MASTER_FX, mixer)
-            } else {
-                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "CTRL")
-                parametersState.activeMixerSubTab = "CTRL"
-            }
-        }
-        if (isModeHovered) {
-            ImGui.setMouseCursor(ImGuiMouseCursor.Hand)
-        }
-        if (pinned == null) itemTooltip("Toggle Master knobs between Mix controls (MIX) and Master FX (FX).")
+        ImGui.dummy(modeBtnW, (row2Y + ctrlH) - row1Y)
 
-        val mouseY = ImGui.getMousePosY()
-        val midY = row1Y + ctrlH + (row2Y - (row1Y + ctrlH)) * 0.5f
-        val isMixHovered = isModeHovered && (mouseY <= midY)
-        val isFxHovered = isModeHovered && (mouseY > midY)
-
-        if (showMix) PerformanceColors.drawTogglePill(dl, startX, row1Y, modeBtnW, ctrlH, "MIX", isMix, isMixHovered, session)
-        if (showFx) PerformanceColors.drawTogglePill(dl, startX, row2Y, modeBtnW, ctrlH, "FX", isFx, isFxHovered, session)
+        if (showMix) PerformanceColors.drawTogglePill(dl, startX, row1Y, modeBtnW, ctrlH, "MIX", isMix, false, session)
+        if (showFx) PerformanceColors.drawTogglePill(dl, startX, row2Y, modeBtnW, ctrlH, "FX", isFx, false, session)
 
         if (showMix) drawMixBadgeAndReset(session, mixer, parametersState, ctx, startX + modeBtnW + gap, row1Y, ctrlH, rowW - modeBtnW - gap)
 
@@ -84,7 +61,7 @@ internal object PerformanceMasterControls {
             FxChainHeader.drawControls(
                 session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH,
                 maxW = rowW - modeBtnW - gap, deck = null,
-                actions = masterFxActions.also { it.set(parametersState, ctx, mixer, isFx, pinned != null) }
+                actions = masterFxActions.also { it.set(parametersState) }
             )
             ImGui.endGroup()
         }

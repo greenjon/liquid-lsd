@@ -43,7 +43,7 @@ data class PerfPageDef(
         fun idFromName(name: String): String = name.trim().lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-')
 
         /** The built-in page shown first. */
-        const val DEFAULT_ID = "decks"
+        const val DEFAULT_ID = "ab"
     }
 }
 
@@ -90,7 +90,7 @@ class PerfPageStore(
             saveProblems = { it.problems() + idProblems(it.id) },
             // A user page with a built-in's id replaces it in place; new user pages follow, in file-name order.
             arrange = { builtIn, user -> LinkedHashMap(builtIn).also { it.putAll(user) }.values.toList() },
-            fallback = { PerfPageDef("decks", "DECKS", rows = PerfRows.DECK_TAGS.map { RowPlacement("deck.$it.srcfx") }) }
+            fallback = { PerfPageDef("ab", "A/B", rows = listOf("deck.A.src", "deck.A.fx", "deck.B.src", "deck.B.fx").map { RowPlacement(it) }) }
         )
     )
 
@@ -102,7 +102,7 @@ class PerfPageStore(
 
     fun reload() = library.reload()
 
-    /** Every usable page, in strip order. Never empty: if nothing loads, a minimal DECKS page is synthesised. */
+    /** Every usable page, in strip order. Never empty: if nothing loads, a minimal A/B page is synthesised. */
     fun all(): List<PerfPageDef> = library.all()
 
     fun get(id: String): PerfPageDef? = all().firstOrNull { it.id == id }
@@ -132,7 +132,7 @@ class PerfPageStore(
             else listOf("page id '$id' must be lowercase letters, digits, '_' or '-'")
 
 
-        val BUILT_IN_NAMES = listOf("decks", "master", "deck-ab", "deck-bgpv", "mixer")
+        val BUILT_IN_NAMES = listOf("deck-ab", "deck-bgpv", "mixer", "master")
 
         /** Shared instance backed by the real `library/perform_pages/` directory. */
         val default: PerfPageStore by lazy { PerfPageStore() }

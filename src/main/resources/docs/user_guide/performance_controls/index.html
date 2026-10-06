@@ -2206,14 +2206,14 @@ for the FX Rack view that exposes these.</p>
 <li><strong>Parameter Cells (<code>FxParamCell</code>)</strong>: Drawn under Knobs 2–4 with the parameter's name and a modulation indicator dot. The current value is shown inside the knob face, and a <code>[⟲]</code> reset button (restores the authored default) sits to the left of the knob.</li>
 </ul>
 </li>
-<li><strong>Stable Layout</strong>: Knobs stay the same size and in the same place whichever mode a row is in (<code>[SRC]</code>, <code>[FX]</code> group, or Focus Mode), and switching one row never resizes the others. Knob names and effect/parameter names share the same line under each knob. Names too long for it end in <code>…</code>; hover the knob for the full name.<ul>
+<li><strong>Stable Layout</strong>: Knobs stay the same size and in the same place whichever mode a row is in (source, FX group, or Focus Mode), and switching one row never resizes the others. Knob names and effect/parameter names share the same line under each knob. Names too long for it end in <code>…</code>; hover the knob for the full name.<ul>
 <li><strong>Seamless Hardware MIDI Retargeting</strong>:</li>
 <li>Physical MIDI controllers mapped to the row's standard macro paths (<code>Macro/&lt;bankId&gt;/knob_1..4</code>) immediately control the focused slot's Metaknob and parameters without requiring any MIDI remapping or controller mode switching.</li>
 <li>Exiting Focus Mode restores Knob 1 to <code>SUPER</code> and Knobs 2–4 to <code>META</code>.</li>
 </ul>
 </li>
 <li><strong>Performance Matrix Tabs</strong>:<ul>
-<li>Deck FX chains are on each deck row (<code>[SRC|FX]</code>); Master FX is on the Master row (<code>[MIX|FX]</code>) on the <strong>MASTER</strong> tab.</li>
+<li>Deck FX chains are on each deck's FX row; Master FX is on the Master FX row, on the <strong>MIXER</strong> tab.</li>
 <li>The <strong>FX WET/DRY</strong> row in the <strong>MASTER</strong> tab has a <code>WET/DRY</code> title badge and a <strong>Resync</strong> button.</li>
 <li>The <strong>Transitions</strong> row includes a <code>[DICES]</code> die button to randomize transition parameters with undo support.</li>
 </ul>
@@ -2354,7 +2354,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 </tr>
 </tbody>
 </table>
-<p>Each row is pinned to one half (source or FX), so no <code>SRC</code>/<code>FX</code> switching is needed on the hardware. The DECKS page (one row per deck with SRC/FX toggles) is still on screen but no bank shows it. Which page each bank shows is the profile's <code>banks.pages</code>; you can point a bank at your own page (see <a href="#perform-pages">Perform Pages</a>).</p>
+<p>Each row shows one half (source or FX), so no <code>SRC</code>/<code>FX</code> switching is needed on the hardware. Which page each bank shows is the profile's <code>banks.pages</code>; you can point a bank at your own page (see <a href="#perform-pages">Perform Pages</a>).</p>
 <p><strong>An FX row</strong> has the chain's <strong>Super Knob</strong> on its first knob and the three slots' <strong>Metaknobs</strong> on the other three. <strong>Focusing</strong> a slot (shift + tap) hands the whole row to that effect: knob 1 becomes the slot's Metaknob and knobs 2-4 its parameters (more than three parameters make extra pages).</p>
 <p><a id="twister-gestures"></a></p>
 <h4 id="gestures">Gestures</h4>
@@ -2557,18 +2557,17 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <p>Like MIDI, OSC address mappings are stored in JSON profiles under <code>library/osc/&lt;profile_name&gt;.json</code>. Create, save, switch, and delete profiles from the OSC Controls tab to switch between different tablet layouts or venues.</p>
 <h2 id="perform-pages">Perform Pages</h2>
 <p>You manage pages in <strong>Preferences &gt; MIDI Controls &gt; Perform Pages</strong> (it is there even with MIDI turned off).</p>
-<p>The tab strip above the matrix (DECKS, MASTER) lists <em>pages</em>: each is four rows. You can add your own by putting a JSON file in <code>library/perform_pages/</code> (press Reload Pages in Preferences &gt; MIDI Controls, or restart the app, to pick it up):</p>
+<p>The tab strip above the matrix (A/B, BG/PV, MIXER, MASTER) lists <em>pages</em>: each is four rows. You can add your own by putting a JSON file in <code>library/perform_pages/</code> (press Reload Pages in Preferences &gt; MIDI Controls, or restart the app, to pick it up):</p>
 <pre><code class="language-json">{
   &quot;id&quot;: &quot;mine&quot;,
   &quot;name&quot;: &quot;MINE&quot;,
-  &quot;tooltip&quot;: &quot;Deck A, Master, Transitions and Clock &amp; Global&quot;,
+  &quot;tooltip&quot;: &quot;Deck A source, Deck A FX, Transitions and Clock &amp; Global&quot;,
   &quot;rows&quot;: [
-    { &quot;row&quot;: &quot;deck.A.srcfx&quot; }, { &quot;row&quot;: &quot;master&quot; }, { &quot;row&quot;: &quot;trans&quot; }, { &quot;row&quot;: &quot;global&quot; }
+    { &quot;row&quot;: &quot;deck.A.src&quot; }, { &quot;row&quot;: &quot;deck.A.fx&quot; }, { &quot;row&quot;: &quot;trans&quot; }, { &quot;row&quot;: &quot;global&quot; }
   ]
 }
 </code></pre>
-<p>A page needs exactly 4 rows. Row names: <code>deck.A.srcfx</code>, <code>deck.B.srcfx</code>, <code>deck.BG.srcfx</code>, <code>deck.PV.srcfx</code> (the usual deck row with its SRC/FX toggle), <code>master</code> (MIX/FX toggle), <code>trans</code>, <code>wetdry</code>, <code>global</code>.</p>
-<p>Pinned rows show just one half and have no toggle: <code>deck.A.src</code> and <code>deck.A.fx</code> (likewise <code>B</code>, <code>BG</code>, <code>PV</code>), <code>master.mix</code> and <code>master.fx</code>. They are not affected by the toggle rows, so a page of <code>deck.A.src</code>, <code>deck.A.fx</code>, <code>deck.B.src</code>, <code>deck.B.fx</code> shows both halves of both decks at once. A file whose <code>id</code> is <code>decks</code> or <code>master</code> replaces that built-in page. You can also manage pages in <strong>Preferences &gt; MIDI Controls &gt; Perform Pages</strong>: copy a built-in page to edit it, create a new page, rename it and pick each of its four rows from a list, or delete it again. Edits are saved at once. Each page shows its <strong>controller name</strong> (<code>perform.&lt;id&gt;</code>), the name a controller profile uses; it does not change when you rename the page. To get a different name, type one into <strong>Name for a copy</strong> and press <strong>Copy As New Page</strong>, then hide the original if you like. Untick <strong>Show in tab strip</strong> to hide a page's tab (a Twister bank that selects it still shows it, with a temporary tab while it is active); with more than five tabs they narrow to fit. Files with mistakes are skipped; the log says why. A controller profile can select your page with <code>perform.mine</code>.</p>
+<p>A page needs exactly 4 rows. Row names: <code>deck.A.src</code> and <code>deck.A.fx</code> (likewise <code>B</code>, <code>BG</code>, <code>PV</code>) for a deck's source row and FX row, <code>master.mix</code> and <code>master.fx</code> for Master's levels and Master FX, <code>trans</code>, <code>wetdry</code>, <code>global</code>. A page of <code>deck.A.src</code>, <code>deck.A.fx</code>, <code>deck.B.src</code>, <code>deck.B.fx</code> shows both halves of both decks at once. A file whose <code>id</code> is <code>ab</code>, <code>bgpv</code>, <code>mixer</code> or <code>master</code> replaces that built-in page. Pages saved by an earlier version that name <code>deck.&lt;tag&gt;.srcfx</code> or <code>master</code> are skipped (the log says why): replace those rows with the split ones above. You can also manage pages in <strong>Preferences &gt; MIDI Controls &gt; Perform Pages</strong>: copy a built-in page to edit it, create a new page, rename it and pick each of its four rows from a list, or delete it again. Edits are saved at once. Each page shows its <strong>controller name</strong> (<code>perform.&lt;id&gt;</code>), the name a controller profile uses; it does not change when you rename the page. To get a different name, type one into <strong>Name for a copy</strong> and press <strong>Copy As New Page</strong>, then hide the original if you like. Untick <strong>Show in tab strip</strong> to hide a page's tab (a Twister bank that selects it still shows it, with a temporary tab while it is active); with more than five tabs they narrow to fit. Files with mistakes are skipped; the log says why. A controller profile can select your page with <code>perform.mine</code>.</p>
 
 
 

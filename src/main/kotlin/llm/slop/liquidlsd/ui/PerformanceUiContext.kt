@@ -101,19 +101,14 @@ internal object PerformanceColors {
 
 internal class PerformanceUiContext {
     /**
-     * True when deck [tag]'s knobs drive its FX chain. The deck's Deep Edit sub-tab ([ParametersState.setDeckSubTab])
-     * is the one stored SRC/FX state: the row's [SRC|FX] pill, the bay's SRC/FX tabs and Browse all write it,
-     * so the row and the bay can't disagree.
+     * True when the Edit bay's tab for deck [tag] is FX ([ParametersState.setDeckSubTab]). Only the Edit bay
+     * reads it, to pick which deck row (SRC or FX) an open module shows; rows on Perform pages never do.
      */
-    fun isDeckRowFx(tag: String, parametersState: ParametersState?): Boolean =
+    fun isDeckBayFx(tag: String, parametersState: ParametersState?): Boolean =
         parametersState?.getActiveDeckSubTabByTag(tag) == "FX"
 
-    /**
-     * True when the Master row's knobs drive Master FX. Like [isDeckRowFx], the Mixer sub-tab
-     * ([ParametersState.activeMixerSubTab]) is the one stored state: the [MIX|FX] pill, the bay's TRANS/FX tabs
-     * and Browse all write it, so the row and the bay can't disagree.
-     */
-    fun isMasterRowFx(parametersState: ParametersState): Boolean =
+    /** True when the Edit bay's Mixer tab ([ParametersState.activeMixerSubTab]) is FX: the Master FX row. See [isDeckBayFx]. */
+    fun isMasterBayFx(parametersState: ParametersState): Boolean =
         parametersState.activeMixerSubTab == "FX"
 
     /** Set each frame by [PerformanceMatrixPanel.draw]; null in tests, where source swaps fall back to the unguarded path. */

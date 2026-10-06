@@ -2,9 +2,9 @@
   "version": 1,
   "id": "master",
   "name": "MASTER",
-  "tooltip": "Master ([MIX|FX]: composite alphas or Master FX chain), Transitions (crossfader + picker + queue),\nper-deck FX wet/dry, and Clock (tap tempo / resync / clock source).",
+  "tooltip": "Master MIX (deck levels and master level), Transitions (crossfader + picker + queue),\nper-deck FX wet/dry, and Clock (tap tempo / resync / clock source).\nTwister bank 4.",
   "rows": [
-    { "row": "master" },
+    { "row": "master.mix" },
     { "row": "trans" },
     { "row": "wetdry" },
     { "row": "global" }
