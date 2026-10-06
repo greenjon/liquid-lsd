@@ -247,7 +247,6 @@ object AppPreferencesStore {
                 props.getBoolean("showAudioCol")?.let { if (savedAudio == null) UITheme.audioEngineEnabled = it }
                 props.getProperty("col1Ratio")?.toFloatOrNull()?.let { UITheme.col1Ratio = it.coerceIn(0.10f, 0.70f) }
                 props.getProperty("col2Ratio")?.toFloatOrNull()?.let { UITheme.col2Ratio = it.coerceIn(0.10f, 0.70f) }
-                (props.getProperty("libraryRatio") ?: props.getProperty("assetBrowserRatio"))?.toFloatOrNull()?.let { UITheme.libraryRatio = it.coerceIn(0.10f, 0.90f) }
                 props.getProperty("renderResolutionPreset")?.let { saved ->
                     UITheme.renderResolutionPreset = try { UITheme.ResolutionPreset.valueOf(saved) } catch (e: Exception) { UITheme.ResolutionPreset.RES_1080P }
                 }
@@ -350,7 +349,6 @@ object AppPreferencesStore {
             props.setProperty("showAudioCol", UITheme.showAudioCol.toString())
             props.setProperty("col1Ratio", UITheme.col1Ratio.toString())
             props.setProperty("col2Ratio", UITheme.col2Ratio.toString())
-            props.setProperty("libraryRatio", UITheme.libraryRatio.toString())
             props.setProperty("renderResolutionPreset", UITheme.renderResolutionPreset.name)
             props.setProperty("customRenderWidth", UITheme.customRenderWidth.toString())
             props.setProperty("customRenderHeight", UITheme.customRenderHeight.toString())

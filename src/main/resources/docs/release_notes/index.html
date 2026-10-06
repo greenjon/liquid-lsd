@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-rows-are-a-fixed-height-the-library-fills-the-rest-uiperformancematrixpanelkt-uiuimanagerkt-uiperfrowgeometrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Rows Are a Fixed Height; the Library Fills the Rest (ui/PerformanceMatrixPanel.kt, ui/UIManager.kt, ui/PerfRowGeometry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-queues-tab-shows-all-five-queues-side-by-side-uibrowserqueuespanekt-uibrowserbrowserdockkt-uilibrarynavigationkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A Queues Tab Shows All Five Queues Side by Side (ui/browser/QueuesPane.kt, ui/browser/BrowserDock.kt, ui/LibraryNavigation.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#the-fx-wetdry-row-and-the-master-page-are-gone-clock-moves-to-mixer-uiperfrowskt-macromacroenginekt-resourcesperform_pages-controlcontrollerruntimekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5647,6 +5669,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#performance-rows-are-a-fixed-height-the-library-fills-the-rest-uiperformancematrixpanelkt-uiuimanagerkt-uiperfrowgeometrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Performance Rows Are a Fixed Height; the Library Fills the Rest (ui/PerformanceMatrixPanel.kt, ui/UIManager.kt, ui/PerfRowGeometry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#a-queues-tab-shows-all-five-queues-side-by-side-uibrowserqueuespanekt-uibrowserbrowserdockkt-uilibrarynavigationkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        A Queues Tab Shows All Five Queues Side by Side (ui/browser/QueuesPane.kt, ui/browser/BrowserDock.kt, ui/LibraryNavigation.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#the-fx-wetdry-row-and-the-master-page-are-gone-clock-moves-to-mixer-uiperfrowskt-macromacroenginekt-resourcesperform_pages-controlcontrollerruntimekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10061,6 +10105,20 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="performance-rows-are-a-fixed-height-the-library-fills-the-rest-uiperformancematrixpanelkt-uiuimanagerkt-uiperfrowgeometrykt">Performance Rows Are a Fixed Height; the Library Fills the Rest (<code>ui/PerformanceMatrixPanel.kt</code>, <code>ui/UIManager.kt</code>, <code>ui/PerfRowGeometry.kt</code>)</h3>
+<ul>
+<li><strong>Every Perform row is 74px</strong>, whatever the window or Library size. Knobs and wing controls no longer resize, the row grid no longer scrolls (click-drag scrolling is removed), and there is no compact/full control variant.</li>
+<li><strong>The Library takes the remaining window height</strong> below the four rows (a taller window gives a taller Library). The Library title-bar splitter, its double-click reset and the saved <code>libraryRatio</code> preference are gone; old preference files just ignore the key.</li>
+<li>Internal: <code>PerformanceMatrixPanel.ROW_H</code> / <code>PERFORM_TOP_H</code> replace <code>MIN_ROW_H</code> and <code>hiddenLibraryH</code>; <code>SplitterManager</code>, <code>UITheme.libraryRatio</code>, <code>applyDragScroll</code> and the <code>##perf_grid_drag_scroll</code> button deleted.</li>
+</ul>
+<h3 id="a-queues-tab-shows-all-five-queues-side-by-side-uibrowserqueuespanekt-uibrowserbrowserdockkt-uilibrarynavigationkt">A Queues Tab Shows All Five Queues Side by Side (<code>ui/browser/QueuesPane.kt</code>, <code>ui/browser/BrowserDock.kt</code>, <code>ui/LibraryNavigation.kt</code>)</h3>
+<ul>
+<li><strong>New <code>Queues</code> tab</strong> between Transitions and Macros: A/B, BG, A/B FX, BG FX and Transition queues, one column each, so you can watch and reorder them all without switching tabs. The Sources, FX and Transitions tabs no longer carry a queue column; their list gets the room (the info column is half the dock).</li>
+<li><strong>Adding stays where the items are</strong>: <code>Q</code> / <code>Shift+Q</code>, the toolbar buttons, the row menu and drag-and-drop still work from the other tabs; on the Queues tab the buttons explain this in their tooltip and the shortcuts do nothing.</li>
+<li><strong>Keyboard / MIDI navigation</strong>: on the Queues tab the cursor steps left to right through the five queues; the kind tabs step through tree and list only. Tab stepping now includes Queues.</li>
+<li>The preset queue title now reads "A/B Queue" (was "Queue").</li>
+<li>Internal: <code>LibraryViewMode.QUEUES</code>, <code>QueuesPane</code>; <code>BrowserPane.drawQueues</code> removed; <code>LibraryNavigation.panes()</code> per tab.</li>
+</ul>
 <h3 id="the-fx-wetdry-row-and-the-master-page-are-gone-clock-moves-to-mixer-uiperfrowskt-macromacroenginekt-resourcesperform_pages-controlcontrollerruntimekt">The FX Wet/Dry Row and the MASTER Page Are Gone; Clock Moves to MIXER (<code>ui/PerfRows.kt</code>, <code>macro/MacroEngine.kt</code>, <code>resources/perform_pages/</code>, <code>control/ControllerRuntime.kt</code>)</h3>
 <ul>
 <li><strong>Removed the per-deck FX Wet/Dry row</strong> (and its Resync button). Chain dry/wet is in the Edit bay; there is no Perform-side knob for it any more. Its <code>fxSends</code> macro bank is deleted, so MIDI/OSC mappings to those four knobs and banks saved from them no longer exist (old sessions just ignore it).</li>

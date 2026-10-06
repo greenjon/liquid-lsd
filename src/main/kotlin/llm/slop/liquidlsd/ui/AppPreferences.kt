@@ -54,7 +54,6 @@ data class AppPreferences(
     val showAudioCol: Boolean = true,
     val col1Ratio: Float = 0.30f,
     val col2Ratio: Float = 0.40f,
-    val libraryRatio: Float = 0.50f,
     val renderResolutionPreset: UITheme.ResolutionPreset = UITheme.ResolutionPreset.RES_1080P,
     val customRenderWidth: Int = 1920,
     val customRenderHeight: Int = 1080,

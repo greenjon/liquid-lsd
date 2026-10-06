@@ -64,7 +64,6 @@ class UIManager(
         }
     }
 
-    private val splitterManager = SplitterManager()
 
     private val parametersState: ParametersState = session.parametersState
 
@@ -481,7 +480,6 @@ class UIManager(
 
     private fun drawAssetManagementLayout(renderer: Renderer, displayWidth: Float, displayHeight: Float, menuBarH: Float, contentH: Float, noDecorate: Int) {
         val theme = session.uiTheme
-        val minRatio = 0.15f
 
         val style = ImGui.getStyle()
         val availHForMixer = (contentH - (style.getWindowPaddingY() * 2f)).coerceAtLeast(1f)
@@ -504,7 +502,8 @@ class UIManager(
 
         // Three views: Library (FULL), Edit (a module in Deep Edit -- no Library at all), Perform (HALF).
         val isEditView = LibraryPanel.isEditView(session)
-        val halfLibraryH = (contentH * theme.libraryRatio.coerceIn(minRatio, 0.85f)).coerceIn(libTitleBarH.coerceAtMost(contentH), contentH)
+        // The Perform rows are a fixed height; the Library is whatever window height they leave.
+        val halfLibraryH = (contentH - PerformanceMatrixPanel.PERFORM_TOP_H).coerceIn(libTitleBarH.coerceAtMost(contentH), contentH)
         val libraryH = when {
             theme.libraryMode == UITheme.LibraryMode.FULL -> contentH
             isEditView -> 0f
@@ -535,20 +534,19 @@ class UIManager(
                 ImGui.setNextWindowPos(0f, menuBarH)
                 ImGui.setNextWindowSize(libraryW.coerceAtLeast(1f), topH)
                 val perfFlags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar
-                // Tighter vertical padding than the default so four rows fit above a HALF Library at 1280x720.
-                ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, style.getWindowPaddingX(), 4f)
+                ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, style.getWindowPaddingX(), PerformanceMatrixPanel.HOST_PAD_Y)
                 val perfOpen = ImGui.begin("PerformanceMatrix", perfFlags)
                 ImGui.popStyleVar()
                 if (perfOpen) {
                     currentMixer?.let {
-                        performanceMatrixPanel.draw(session, it, parametersState, deckPresetController, hiddenLibraryH = if (isEditView) halfLibraryH else 0f)
+                        performanceMatrixPanel.draw(session, it, parametersState, deckPresetController)
                     }
                 }
                 ImGui.end()
             }
 
             if (!isEditView) {
-                drawLibraryDock(displayHeight, menuBarH, contentH, noDecorate, minRatio, libraryW, libraryH, libTitleBarH)
+                drawLibraryDock(menuBarH, contentH, noDecorate, libraryW, libraryH)
             }
         }
 
@@ -568,18 +566,15 @@ class UIManager(
 
     /**
      * Bottom-docked Library window (Perform and Library views; not drawn in Edit view): half/full
-     * toggle, drag-to-resize splitter, and spacebar shortcut (handled globally in
+     * toggle and spacebar shortcut (handled globally in
      * [processQueueKeyboardShortcuts]).
      */
     private fun drawLibraryDock(
-        displayHeight: Float,
         menuBarH: Float,
         contentH: Float,
         noDecorate: Int,
-        minRatio: Float,
         libraryW: Float,
-        libraryH: Float,
-        libTitleBarH: Float
+        libraryH: Float
     ) {
         val theme = session.uiTheme
         val libraryPosH = if (theme.libraryMode == UITheme.LibraryMode.FULL) menuBarH else (menuBarH + contentH - libraryH)
@@ -593,28 +588,6 @@ class UIManager(
                 session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, parametersState,
                 performanceMatrixPanel.dockBinding(session, currentMixer!!, parametersState)
             )
-
-            if (theme.libraryMode != UITheme.LibraryMode.FULL) {
-                val titleBarH = libTitleBarH
-                splitterManager.drawHorizontalSplitter(
-                    id = "##hsplit",
-                    posX = 0f,
-                    posY = libraryPosH,
-                    width = libraryW.coerceAtLeast(1f),
-                    height = titleBarH,
-                    displayHeight = displayHeight,
-                    drawList = ImGui.getWindowDrawList(),
-                    onDrag = { deltaY ->
-                        val deltaR = if (contentH > 0f) -deltaY / contentH else 0f
-                        theme.libraryRatio = (theme.libraryRatio + deltaR).coerceIn(minRatio, 0.85f)
-                        AppPreferencesStore.savePreferences()
-                    },
-                    onDoubleClick = {
-                        theme.libraryRatio = 0.50f
-                        AppPreferencesStore.savePreferences()
-                    }
-                )
-            }
         }
         ImGui.end()
         ImGui.popStyleVar()

@@ -5,7 +5,6 @@ import imgui.ImGui
 import imgui.flag.ImDrawFlags
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiKey
-import imgui.flag.ImGuiMouseCursor
 import imgui.flag.ImGuiStyleVar
 import imgui.type.ImString
 import llm.slop.liquidlsd.macro.MacroBank
@@ -51,11 +50,14 @@ class PerformanceMatrixPanel {
 
     // Canonical deck colors matching BrowserDeckButtons are in PerformanceColors.
     companion object {
-        /**
-         * Floor on grid row height: low enough that all four rows fit above a HALF Library in a
-         * 1280x720 display's ~688px window (~74px per row; knobs ~40-45px). Below this the grid scrolls.
-         */
-        private const val MIN_ROW_H = 68f
+        /** Fixed height of every grid row; the Library takes whatever window height the rows don't. */
+        const val ROW_H = 74f
+
+        /** Vertical window padding of the PerformanceMatrix host window (top and bottom each). */
+        const val HOST_PAD_Y = 4f
+
+        /** Height of the host window in Perform view: exactly [PerfPageDef.ROWS] rows plus padding. */
+        const val PERFORM_TOP_H = PerfPageDef.ROWS * ROW_H + 2f * HOST_PAD_Y
     }
 
     internal val ctx = PerformanceUiContext()
@@ -64,18 +66,11 @@ class PerformanceMatrixPanel {
 
     // -- Draw ---------------------------------------------------------------------
 
-    /**
-     * @param hiddenLibraryH height the HALF Library would take if it were on screen -- non-zero only
-     *   in Edit view, where the Library is hidden. Rows are sized from the Perform-view height
-     *   (window height minus this), so a row keeps the same knob size and control positions when it
-     *   opens in Deep Edit.
-     */
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
         mixer: Mixer,
         parametersState: ParametersState,
-        deckPresetController: DeckPresetController? = null,
-        hiddenLibraryH: Float = 0f
+        deckPresetController: DeckPresetController? = null
     ) {
         ctx.deckPresetController = deckPresetController
         val theme = session.uiTheme
@@ -92,8 +87,7 @@ class PerformanceMatrixPanel {
         dropStaleDockSelection(parametersState)
         val anyExpanded = parametersState.anyRackModuleExpanded()
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
-        // Only the Perform-view page's row *count* sizes rows -- never their modes (see PerfRowGeometry).
-        val baseRowH = ((availH - hiddenLibraryH).coerceAtLeast(4f) / PerfPageDef.ROWS).coerceAtLeast(MIN_ROW_H)
+        val baseRowH = ROW_H
         val gridH = if (!anyExpanded) availH else (visibleRows.size * baseRowH).coerceAtMost((availH - 160f).coerceAtLeast(160f))
         val bayH = (availH - gridH - (if (anyExpanded) ImGui.getStyle().getItemSpacingY() else 0f)).coerceAtLeast(0f)
 
@@ -307,36 +301,23 @@ class PerformanceMatrixPanel {
         // Widget/disclosure ids embed the page's position so two pages never share ImGui ids.
         val tabIdx = PerfPageStore.default.indexOf(theme.performancePageId).coerceAtLeast(0)
 
-        val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
         val gridW = ImGui.getContentRegionAvailX().coerceAtLeast(4f)
-        // Rows past MIN_ROW_H overflow and the ##rack_grid_area child scrolls (see the cursor
-        // advance at the end of this function).
         if (rowOffsets.size < rows.size + 1) rowOffsets = FloatArray(rows.size + 1)
         val rowTopOffsets = rowOffsets
         rowTopOffsets[0] = 0f
         for (i in rows.indices) rowTopOffsets[i + 1] = rowTopOffsets[i] + rowH
-        val gridTotalH = rowTopOffsets[rows.size]
 
         val gridStartX = ImGui.getCursorScreenPosX()
         val gridStartY = ImGui.getCursorScreenPosY()
         val dl = ImGui.getWindowDrawList()
-
-        // Grid-wide background hit area, submitted first with overlap allowed so every knob/button
-        // drawn later takes priority -- a click-drag on empty row space lands here and scrolls the
-        // grid (see applyDragScroll), and it also keeps the drag from moving the host window.
-        ImGui.setNextItemAllowOverlap()
-        ImGui.invisibleButton("##perf_grid_drag_scroll", gridW, gridTotalH)
-        applyDragScroll()
-        ImGui.setCursorScreenPos(gridStartX, gridStartY)
 
         val bodyLineH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() }
         val boxMarginY = PerfRowGeometry.BOX_MARGIN_Y
         val boxPad = PerfRowGeometry.BOX_PAD
         val pad = PerfRowGeometry.PAD
 
-        val isCompactRow = rowH < 95f
-        val ctrlH = if (isCompactRow) 21f else PerformanceColors.CTRL_H
-        val stackGap = if (isCompactRow) 2f else 3f
+        val ctrlH = 21f
+        val stackGap = 2f
 
         // Every row: a title badge spanning both control lines, then two stacked control lines,
         // then the knobs. Deck badges are a large A/B/BG/PV; MASTER-tab badges are wider for words.
@@ -481,7 +462,6 @@ class PerformanceMatrixPanel {
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
                     ImGui.invisibleButton(dropIdCaches[rowIdx.coerceIn(0, 7)].get(rowIdx, dropTag) { "##perf_deck_drop_${rowIdx}_$dropTag" }, deckBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
-                    applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                         if (payload != null) {
@@ -508,7 +488,6 @@ class PerformanceMatrixPanel {
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
                     ImGui.invisibleButton(dropIdCaches[rowIdx.coerceIn(0, 7)].get(rowIdx, "master") { "##perf_master_drop_${rowIdx}" }, masterTabBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
-                    applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                         if (payload != null) {
@@ -523,7 +502,6 @@ class PerformanceMatrixPanel {
                     ImGui.setCursorScreenPos(boxX1, boxTopY)
                     ImGui.setNextItemAllowOverlap()
                     ImGui.invisibleButton(dropIdCaches[rowIdx.coerceIn(0, 7)].get(rowIdx, "trans") { "##perf_trans_drop_${rowIdx}" }, masterTabBadgeW.coerceAtLeast(1f), (boxBottomY - boxTopY).coerceAtLeast(1f))
-                    applyDragScroll()
                     if (ImGui.beginDragDropTarget()) {
                         val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                         if (payload != null) {
@@ -765,11 +743,6 @@ class PerformanceMatrixPanel {
             }
         }
 
-        // Advance the ImGui cursor past the grid only when overflowing so the child window scrolls.
-        if (gridTotalH > availH + 0.5f) {
-            ImGui.setCursorScreenPos(ImGui.getCursorScreenPosX(), gridStartY + gridTotalH)
-            ImGui.dummy(0f, 0f)
-        }
     }
 
     /**
@@ -824,7 +797,6 @@ class PerformanceMatrixPanel {
             ImGui.setCursorScreenPos(x, y)
             ImGui.setNextItemAllowOverlap()
             ImGui.invisibleButton(badgeIdCaches[badgeSlot++ and 15].get(text, x.toInt(), y.toInt()) { "##title_badge_${text}_${x.toInt()}_${y.toInt()}" }, w.coerceAtLeast(1f), h.coerceAtLeast(1f))
-            applyDragScroll()
             itemTooltip(tooltip)
             badgeClicked = ImGui.isItemClicked(0)
         }
@@ -856,19 +828,6 @@ class PerformanceMatrixPanel {
                 parametersState, activeModuleId, rackId(tabIdx, rowIdx), badgeW, badgeH
             )
         }
-    }
-
-    /**
-     * Click-drag-to-scroll for the last submitted item: while it's held and dragged vertically,
-     * scrolls the current window (the ##rack_grid_area child) by the mouse delta. Called after the
-     * grid background hit area and the title-band drop zones, i.e. the row space outside the
-     * knobs and controls. No-op when the grid fits without scrolling.
-     */
-    private fun applyDragScroll() {
-        if (!ImGui.isItemActive() || ImGui.getScrollMaxY() <= 0f) return
-        ImGui.setMouseCursor(ImGuiMouseCursor.ResizeNS)
-        val dy = ImGui.getIO().mouseDelta.y
-        if (dy != 0f) ImGui.setScrollY(ImGui.getScrollY() - dy)
     }
 
     fun calculateMinWidth(session: llm.slop.liquidlsd.SessionContext): Float =

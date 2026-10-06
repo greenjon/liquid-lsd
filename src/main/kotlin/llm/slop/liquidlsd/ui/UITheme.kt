@@ -242,9 +242,6 @@ object UITheme {
         get() = settings.col2Ratio
         set(value) { settings = settings.copy(col2Ratio = value) }
 
-    var libraryRatio: Float
-        get() = settings.libraryRatio
-        set(value) { settings = settings.copy(libraryRatio = value) }
 
     var renderResolutionPreset: ResolutionPreset
         get() = settings.renderResolutionPreset

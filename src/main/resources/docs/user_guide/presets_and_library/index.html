@@ -1901,18 +1901,18 @@
 <h2 id="the-library-panel">The Library Panel</h2>
 <p>The Library panel spans the left and middle columns. That column has three views:</p>
 <ul>
-<li><strong>Perform</strong> — The Performance rows sit above the Library, which fills the lower half. This is the everyday view for playing a set.</li>
+<li><strong>Perform</strong> — The Performance rows sit above the Library, which fills the rest of the window. This is the everyday view for playing a set.</li>
 <li><strong>Edit</strong> — Open a row's <strong>Edit</strong> and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. The row's <strong>Browse</strong> tab is the same browser as the Library (same tabs, toolbar and queues), applying to that row; swap a deck's source or FX there or from the controls on the row itself. Press <strong>Esc</strong> or click the row's <strong>Collapse</strong> button to get back to Perform.</li>
 <li><strong>Library</strong> — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.</li>
 </ul>
 <p>Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, <code>Space</code>, <code>Ctrl+F</code> or <code>/</code> closes Edit (cancelling any armed Add Target or Learn) and brings the Library back.</p>
-<p>In Perform, drag the Library's title bar up or down to change the split. The height is remembered. Double-click the title bar to snap back to 50/50.</p>
+<p>The Performance rows have a fixed height, so the Library gets whatever window height they leave: a taller window means a taller Library.</p>
 <h3 id="library-view-mode-sources-fx-transitions-macros">Library View Mode (<code>[ Sources ]</code> / <code>[ FX ]</code> / <code>[ Transitions ]</code> / <code>[ Macros ]</code>)</h3>
 <p>Toggle between sources, FX, transitions and banks (macro banks and Perform pages) using the segmented mode button in the top-left of the Library menu bar. Sources, FX and Trans share one three-part browser:</p>
 <ul>
 <li><strong>Folder tree</strong> (left) — <strong>All</strong>, <strong>Favorites</strong> (FX), the kind's sections (Sources: stock sources and saved presets; FX: stock filters, saved single FX and saved chains; Trans: stock transitions and saved transitions), and a <strong>Playlists</strong> group with one entry per playlist. Each entry shows how many rows it holds. Click one to list it. A playlist is just another tree entry: select it to see and edit its rows.</li>
 <li><strong>List</strong> (middle) — The rows of the selected tree entry, with a search box on top (<code>Ctrl+F</code> or <code>/</code> focuses it) and a <strong><code>[+]</code></strong> button for the kind's "new" action.</li>
-<li><strong>Queues</strong> (right) — Sources: the BG Queue and the A/B Queue. FX: the <strong>A/B FX Queues</strong> described below. Trans: the Transition Queue, which the crossfader advances through automatically.</li>
+<li><strong>Queues tab</strong> — All five queues side by side: A/B, BG, A/B FX, BG FX and Transition (which the crossfader advances through automatically). Items get in from the other tabs (<code>Q</code>, <code>Shift+Q</code>, the toolbar buttons, the row menu or drag-and-drop); this tab is where you watch, reorder and play them.</li>
 </ul>
 <p>The mode buttons pick what the three parts show:</p>
 <ul>
@@ -1934,7 +1934,7 @@
 <li><strong>Click</strong> — Selects a single preset, clearing existing selections.</li>
 <li><strong>Ctrl+Click</strong> (or <strong>Cmd+Click</strong> on macOS) — Toggles selection of an individual item without affecting others.</li>
 <li><strong>Shift+Click</strong> — Extends selection from the anchor/lead item to the clicked item across all visible rows.</li>
-<li><strong>Batch Queueing</strong> — When multiple presets are selected, pressing <code>Q</code> or clicking <code>[ Q ]</code> enqueues all selected presets in order into the A/B Queue. Pressing <code>Shift+Q</code> or clicking <code>[ BGQ ]</code> enqueues them into the BG Queue. The buttons and hotkeys always act on the open tab: in the FX tab they feed the FX queues, and in the Trans tab <code>[ Q ]</code> feeds the transition queue (<code>[ BGQ ]</code> is greyed out there).</li>
+<li><strong>Batch Queueing</strong> — When multiple presets are selected, pressing <code>Q</code> or clicking <code>[ Q ]</code> enqueues all selected presets in order into the A/B Queue. Pressing <code>Shift+Q</code> or clicking <code>[ BGQ ]</code> enqueues them into the BG Queue. The buttons and hotkeys act on the tab you picked the item on: in the FX tab they feed the FX queues, and in the Trans tab <code>[ Q ]</code> feeds the transition queue (<code>[ BGQ ]</code> is greyed out there).</li>
 <li><strong>Batch Context Menu</strong> — Right-clicking with multiple items selected presents options like <strong>Add N Presets to Playlist</strong>, <strong>Add N Presets to Queue</strong>, and <strong>Delete N Presets...</strong>.</li>
 <li><strong>Multi-Item Drag &amp; Drop</strong> — Dragging any item from a multi-selection carries all selected presets simultaneously into Playlists or Queues.</li>
 <li><strong>Batch Deletion</strong> — Pressing <code>Delete</code> or selecting Delete from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.</li>
@@ -2028,7 +2028,7 @@
 <h3 id="fx-playlists-lsdfxplay">FX Playlists (<code>.lsdfxplay</code>)</h3>
 <p>FX playlists are entries under <strong>Playlists</strong> in the FX tree. Select one to edit it like a preset playlist: drag singles/chains in from the list to insert them, drag rows to reorder, and double-click an entry to apply it. Missing files show the same red <code>[!] (missing)</code> indicator as preset playlists.</p>
 <h3 id="ab-fx-queues-ab-and-bg">A/B FX Queues (A/B and BG)</h3>
-<p>In <code>[ FX ]</code> mode the queues part of the browser holds two independent <strong>live FX queues</strong> — volatile, RAM-only sequences of FX singles/chains you can improvise with mid-set:</p>
+<p>On the <strong>Queues</strong> tab the two FX columns are independent <strong>live FX queues</strong> — volatile, RAM-only sequences of FX singles/chains you can improvise with mid-set:</p>
 <ul>
 <li><strong><code>&lt;</code> / <code>&gt;</code></strong> — Step to the previous/next queued FX item and apply it.</li>
 <li><strong>🔁 Repeat</strong> — Cycle back to the start when the bottom of the queue is reached.</li>

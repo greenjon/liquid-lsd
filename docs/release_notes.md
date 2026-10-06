@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Performance Rows Are a Fixed Height; the Library Fills the Rest (`ui/PerformanceMatrixPanel.kt`, `ui/UIManager.kt`, `ui/PerfRowGeometry.kt`)
+- **Every Perform row is 74px**, whatever the window or Library size. Knobs and wing controls no longer resize, the row grid no longer scrolls (click-drag scrolling is removed), and there is no compact/full control variant.
+- **The Library takes the remaining window height** below the four rows (a taller window gives a taller Library). The Library title-bar splitter, its double-click reset and the saved `libraryRatio` preference are gone; old preference files just ignore the key.
+- Internal: `PerformanceMatrixPanel.ROW_H` / `PERFORM_TOP_H` replace `MIN_ROW_H` and `hiddenLibraryH`; `SplitterManager`, `UITheme.libraryRatio`, `applyDragScroll` and the `##perf_grid_drag_scroll` button deleted.
+
 ### A Queues Tab Shows All Five Queues Side by Side (`ui/browser/QueuesPane.kt`, `ui/browser/BrowserDock.kt`, `ui/LibraryNavigation.kt`)
 - **New `Queues` tab** between Transitions and Macros: A/B, BG, A/B FX, BG FX and Transition queues, one column each, so you can watch and reorder them all without switching tabs. The Sources, FX and Transitions tabs no longer carry a queue column; their list gets the room (the info column is half the dock).
 - **Adding stays where the items are**: `Q` / `Shift+Q`, the toolbar buttons, the row menu and drag-and-drop still work from the other tabs; on the Queues tab the buttons explain this in their tooltip and the shortcuts do nothing.
