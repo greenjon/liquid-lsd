@@ -35,6 +35,14 @@ object FxChainHeader {
     const val EXIT_BTN_W = 54f
     const val PAGE_TEXT_W = 34f
     const val DRYWET_W = 64f
+    private const val FOCUS_PILL_W = 26f
+    /** Gap between controls on a deck's line 2; SRC and FX halves share it so their buttons line up. */
+    const val LINE_GAP = 3f
+    /** Extra space left of the left arrow and right of the right arrow. */
+    const val ARROW_PAD = 6f
+
+    /** Width of each of the six equal cells (Save, ◀, ▶, 1, 2, 3) on a deck's line 2 of [width], after the kebab. */
+    fun cellW(width: Float): Float = ((width - MORE_BTN_W - 6 * LINE_GAP - 2 * ARROW_PAD) / 6f).coerceAtLeast(16f)
     fun saveBtnW(ctrlH: Float): Float = ctrlH
 
     /** Row-specific reactions to header clicks. One long-lived instance per row, so drawing allocates no closures. */
@@ -171,29 +179,7 @@ object FxChainHeader {
             // 4. Parameter page stepper [◀ P1/2 ▶] (if totalPages > 1)
             if (totalPages > 1) {
                 ImGui.sameLine()
-                if (ImGui.button(st.prevPage, ARROW_W, ctrlH)) {
-                    FxMacroSync.stepParamPage(bankId, mixer, -1)
-                }
-                itemTooltip("Previous parameter page.")
-
-                ImGui.sameLine()
-                session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                    val pageText = st.pageText.get(chain.focusParamPage, totalPages) { "P${chain.focusParamPage + 1}/$totalPages" }
-                    val curX = ImGui.getCursorScreenPosX()
-                    val curY = ImGui.getCursorScreenPosY()
-                    ImGui.dummy(PAGE_TEXT_W, ctrlH)
-                    val textSz = ImGui.calcTextSize(pageText)
-                    val textX = curX + (PAGE_TEXT_W - textSz.x) * 0.5f
-                    val textY = curY + (ctrlH - textSz.y) * 0.5f
-                    ImGui.getWindowDrawList().addText(textX, textY, TangoPalette.FX_PAGE_TEXT.u32(), pageText)
-                }
-                itemTooltip(st.pageTip.get(chain.focusParamPage, totalPages) { "Parameter page ${chain.focusParamPage + 1} of $totalPages." })
-
-                ImGui.sameLine()
-                if (ImGui.button(st.nextPage, ARROW_W, ctrlH)) {
-                    FxMacroSync.stepParamPage(bankId, mixer, 1)
-                }
-                itemTooltip("Next parameter page.")
+                drawPageStepper(session, mixer, chain, bankId, st, totalPages, ctrlH)
             }
 
             ImGui.sameLine()
@@ -205,14 +191,6 @@ object FxChainHeader {
             val isDeckAB = deck === mixer.deckA || deck === mixer.deckB
             val isDeckBG = deck === mixer.deckBG
             val showArrows = isDeckAB || isDeckBG
-
-            val isQueueEmpty = when {
-                isDeckAB -> FXQueueManager.queue.isEmpty()
-                isDeckBG -> FXBgQueueManager.queue.isEmpty()
-                else -> true
-            }
-
-            val emptyTooltip = if (isDeckBG) EMPTY_TIP_BG else EMPTY_TIP
 
             // 1. [⋮] More actions menu
             drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, st)
@@ -231,38 +209,7 @@ object FxChainHeader {
             // 4. [◀] and [▶] FX queue items (only if deck supports queues)
             if (showArrows) {
                 ImGui.sameLine()
-
-                if (isQueueEmpty) ImGui.beginDisabled(true)
-                if (ImGui.button(st.prevChain, ARROW_W, ctrlH)) {
-                    if (isDeckAB) {
-                        FXQueueManager.advancePrevious(session, mixer, explicitTargetDeck = deck)
-                    } else if (isDeckBG) {
-                        FXBgQueueManager.advancePrevious(session, mixer, explicitTargetDeck = deck)
-                    }
-                }
-                if (isQueueEmpty) {
-                    ImGui.endDisabled()
-                    itemTooltip(emptyTooltip, allowWhenDisabled = true)
-                } else {
-                    itemTooltip(if (isDeckAB) (if (deck === mixer.deckA) TIP_PREV_A else TIP_PREV_B) else TIP_PREV_BG)
-                }
-
-                ImGui.sameLine()
-
-                if (isQueueEmpty) ImGui.beginDisabled(true)
-                if (ImGui.button(st.nextChain, ARROW_W, ctrlH)) {
-                    if (isDeckAB) {
-                        FXQueueManager.advanceNext(session, mixer, explicitTargetDeck = deck)
-                    } else if (isDeckBG) {
-                        FXBgQueueManager.advanceNext(session, mixer, explicitTargetDeck = deck)
-                    }
-                }
-                if (isQueueEmpty) {
-                    ImGui.endDisabled()
-                    itemTooltip(emptyTooltip, allowWhenDisabled = true)
-                } else {
-                    itemTooltip(if (isDeckAB) (if (deck === mixer.deckA) TIP_NEXT_A else TIP_NEXT_B) else TIP_NEXT_BG)
-                }
+                drawQueueArrows(session, mixer, deck!!, isDeckAB, st, ctrlH, ARROW_W)
             }
 
             ImGui.sameLine()
@@ -274,6 +221,154 @@ object FxChainHeader {
         ImGui.popStyleVar()
     }
 
+    /**
+     * Line 1 of a deck FX half, [nameW] wide: the chain name (group mode) or the focused effect's name
+     * (focus mode). Both open the row's Browse content on click.
+     */
+    fun drawNameLine(
+        session: SessionContext,
+        mixer: Mixer,
+        chain: FxChain,
+        bankId: String,
+        nameW: Float,
+        ctrlH: Float,
+        actions: Actions
+    ) {
+        val st = stringsFor(bankId)
+        val focusedSlot = chain.focusedSlot
+        if (chain.isFocused() && focusedSlot != null) {
+            drawFocusedEffectButton(session, chain, st, focusedSlot, ctrlH, nameW, actions)
+        } else {
+            drawChainNameButton(
+                session, chain, st, ctrlH, nameW, chain.isDirty(), actions,
+                DockOutline.selects(session.parametersState, bankId, ParametersState.BrowseTarget.FxChain(null)), bankId
+            )
+        }
+    }
+
+    /**
+     * Line 2 of a deck FX half, stretched to exactly [width]: `[⋮]` then the remaining controls sharing the
+     * rest of the line equally -- group mode `[Save] [◀] [▶] [1] [2] [3]` (arrows only on Decks A, B, BG),
+     * focus mode `[Wet %] [◀ Px/y ▶] [1] [2] [3]` (stepper only with more than one parameter page).
+     */
+    fun drawControlLine(
+        session: SessionContext,
+        mixer: Mixer,
+        chain: FxChain,
+        bankId: String,
+        chainLabel: String,
+        ctrlH: Float,
+        width: Float,
+        deck: Deck?,
+        actions: Actions
+    ) {
+        val gap = 3f
+        val st = stringsFor(bankId)
+        ImGui.pushStyleVar(ImGuiStyleVar.ItemSpacing, gap, 0f)
+        drawMoreButton(session, mixer, chain, bankId, chainLabel, ctrlH, st)
+
+        val focusedSlot = chain.focusedSlot
+        if (chain.isFocused() && focusedSlot != null) {
+            val totalPages = chain.totalParamPages(focusedSlot)
+            val pillW = FOCUS_PILL_W
+            val pillsW = pillW * FxChain.SLOT_COUNT + gap * (FxChain.SLOT_COUNT - 1)
+            val stepperW = if (totalPages > 1) gap + ARROW_W * 2f + PAGE_TEXT_W + gap * 2f else 0f
+            val wetW = (width - MORE_BTN_W - gap * 2f - stepperW - pillsW).coerceAtLeast(DRYWET_W)
+
+            ImGui.sameLine()
+            drawFocusedDryWet(chain, st, focusedSlot, ctrlH, wetW)
+            if (totalPages > 1) {
+                ImGui.sameLine()
+                drawPageStepper(session, mixer, chain, bankId, st, totalPages, ctrlH)
+            }
+            ImGui.sameLine()
+            drawSlotPills(mixer, chain, bankId, st, ctrlH, focusedSlot, actions, pillW)
+        } else {
+            val isDeckAB = deck === mixer.deckA || deck === mixer.deckB
+            val isDeckBG = deck === mixer.deckBG
+            val showArrows = isDeckAB || isDeckBG
+            // Equal-width cells: Save, 2 arrow cells (left empty where the deck has no queue), 3 pills.
+            val cellW = cellW(width)
+
+            ImGui.sameLine()
+            drawSaveButton(session, chain, st, ctrlH, chain.isDirty(), cellW)
+            if (showArrows) {
+                ImGui.sameLine(0f, gap + ARROW_PAD)
+                drawQueueArrows(session, mixer, deck!!, isDeckAB, st, ctrlH, cellW)
+                ImGui.sameLine(0f, gap + ARROW_PAD)
+            } else {
+                ImGui.sameLine()
+                ImGui.dummy(cellW * 2f + gap + ARROW_PAD * 2f, ctrlH)
+                ImGui.sameLine()
+            }
+            drawSlotPills(mixer, chain, bankId, st, ctrlH, null, actions, cellW)
+        }
+        ImGui.popStyleVar()
+    }
+
+    private fun drawPageStepper(session: SessionContext, mixer: Mixer, chain: FxChain, bankId: String, st: Strings, totalPages: Int, ctrlH: Float) {
+        if (ImGui.button(st.prevPage, ARROW_W, ctrlH)) {
+            FxMacroSync.stepParamPage(bankId, mixer, -1)
+        }
+        itemTooltip("Previous parameter page.")
+
+        ImGui.sameLine()
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            val pageText = st.pageText.get(chain.focusParamPage, totalPages) { "P${chain.focusParamPage + 1}/$totalPages" }
+            val curX = ImGui.getCursorScreenPosX()
+            val curY = ImGui.getCursorScreenPosY()
+            ImGui.dummy(PAGE_TEXT_W, ctrlH)
+            val textSz = ImGui.calcTextSize(pageText)
+            val textX = curX + (PAGE_TEXT_W - textSz.x) * 0.5f
+            val textY = curY + (ctrlH - textSz.y) * 0.5f
+            ImGui.getWindowDrawList().addText(textX, textY, TangoPalette.FX_PAGE_TEXT.u32(), pageText)
+        }
+        itemTooltip(st.pageTip.get(chain.focusParamPage, totalPages) { "Parameter page ${chain.focusParamPage + 1} of $totalPages." })
+
+        ImGui.sameLine()
+        if (ImGui.button(st.nextPage, ARROW_W, ctrlH)) {
+            FxMacroSync.stepParamPage(bankId, mixer, 1)
+        }
+        itemTooltip("Next parameter page.")
+    }
+
+    private fun drawQueueArrows(session: SessionContext, mixer: Mixer, deck: Deck, isDeckAB: Boolean, st: Strings, ctrlH: Float, arrowW: Float) {
+        val isDeckBG = !isDeckAB
+        val isQueueEmpty = if (isDeckAB) FXQueueManager.queue.isEmpty() else FXBgQueueManager.queue.isEmpty()
+        val emptyTooltip = if (isDeckBG) EMPTY_TIP_BG else EMPTY_TIP
+        if (isQueueEmpty) ImGui.beginDisabled(true)
+        if (ImGui.button(st.prevChain, arrowW, ctrlH)) {
+            if (isDeckAB) {
+                FXQueueManager.advancePrevious(session, mixer, explicitTargetDeck = deck)
+            } else if (isDeckBG) {
+                FXBgQueueManager.advancePrevious(session, mixer, explicitTargetDeck = deck)
+            }
+        }
+        if (isQueueEmpty) {
+            ImGui.endDisabled()
+            itemTooltip(emptyTooltip, allowWhenDisabled = true)
+        } else {
+            itemTooltip(if (isDeckAB) (if (deck === mixer.deckA) TIP_PREV_A else TIP_PREV_B) else TIP_PREV_BG)
+        }
+
+        ImGui.sameLine()
+
+        if (isQueueEmpty) ImGui.beginDisabled(true)
+        if (ImGui.button(st.nextChain, arrowW, ctrlH)) {
+            if (isDeckAB) {
+                FXQueueManager.advanceNext(session, mixer, explicitTargetDeck = deck)
+            } else if (isDeckBG) {
+                FXBgQueueManager.advanceNext(session, mixer, explicitTargetDeck = deck)
+            }
+        }
+        if (isQueueEmpty) {
+            ImGui.endDisabled()
+            itemTooltip(emptyTooltip, allowWhenDisabled = true)
+        } else {
+            itemTooltip(if (isDeckAB) (if (deck === mixer.deckA) TIP_NEXT_A else TIP_NEXT_B) else TIP_NEXT_BG)
+        }
+    }
+
     private fun drawSlotPills(
         mixer: Mixer,
         chain: FxChain,
@@ -281,9 +376,9 @@ object FxChainHeader {
         st: Strings,
         ctrlH: Float,
         focusedSlot: Int?,
-        actions: Actions
+        actions: Actions,
+        pillW: Float = 20f
     ) {
-        val pillW = 20f
         for (i in 0 until FxChain.SLOT_COUNT) {
             if (i > 0) ImGui.sameLine()
             val isFocused = focusedSlot == i
@@ -316,10 +411,10 @@ object FxChainHeader {
         }
     }
 
-    private fun drawFocusedDryWet(chain: FxChain, st: Strings, slotIdx: Int, ctrlH: Float) {
+    private fun drawFocusedDryWet(chain: FxChain, st: Strings, slotIdx: Int, ctrlH: Float, width: Float = DRYWET_W) {
         val slot = chain.slots.getOrNull(slotIdx)
         ImGui.beginDisabled(slot == null)
-        ImGui.setNextItemWidth(DRYWET_W)
+        ImGui.setNextItemWidth(width)
         val pct = st.wet
         pct[0] = (slot?.dryWet?.baseValue ?: 1f) * 100f
         if (ImGui.sliderFloat(st.dryWet, pct, 0f, 100f, "Wet %.0f%%")) {
@@ -419,15 +514,14 @@ object FxChainHeader {
         }
     }
 
-    private fun drawSaveButton(session: SessionContext, chain: FxChain, st: Strings, ctrlH: Float, isDirty: Boolean) {
+    private fun drawSaveButton(session: SessionContext, chain: FxChain, st: Strings, ctrlH: Float, isDirty: Boolean, width: Float = saveBtnW(ctrlH)) {
         val canOverwrite = chain.sourceFile != null
         val saveCol = if (isDirty) TangoPalette.u32(TangoPalette.ALERT.dark) else TangoPalette.FX_SAVE_BG.u32()
         val inkCol = if (isDirty) TangoPalette.u32(TangoPalette.inkFor(TangoPalette.ALERT.dark)) else TangoPalette.FX_SAVE_INK.u32()
         ImGui.pushStyleColor(ImGuiCol.Button, saveCol)
         ImGui.pushStyleColor(ImGuiCol.Text, inkCol)
-        val saveW = saveBtnW(ctrlH)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button(st.save, saveW, ctrlH)) {
+            if (ImGui.button(st.save, width, ctrlH)) {
                 if (canOverwrite) {
                     val file = chain.sourceFile!!
                     val dto = chain.toFxChainDto(chain.name)

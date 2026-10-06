@@ -19,8 +19,8 @@ import java.io.File
  * - Left of the knobs:
  *   - Line 1: Transition picker button showing the active transition with a modified indicator (`*`)
  *     and TransitionQueue prev/status/next navigation.
- *   - Line 2: The crossfader line (Deck A/B snap badges, crossfader slider track, AUTO/FADING button,
- *     fade-time badge).
+ *   - Line 2: The crossfader line (Deck A/B snap badges, AUTO/FADING button, fade-time badge); the
+ *     crossfader itself is knob 1 and the mixer panel's slider.
  * - Right of the knobs: Randomize die button on Line 1, matching the deck rows.
  */
 internal object PerformanceTransitionsControls {
@@ -37,7 +37,6 @@ internal object PerformanceTransitionsControls {
     private val tipQStatus = TipCache()
     private val tipQPrev = TipCache()
     private val tipQNext = TipCache()
-    private val tipXfade = TipCache()
     private val tipSnapA = TipCache()
     private val tipSnapB = TipCache()
     private val tipAutoFade = TipCache()
@@ -314,8 +313,8 @@ internal object PerformanceTransitionsControls {
     }
 
     /**
-     * The crossfader line, fitted into [width] starting at [startX]: [A] snap badge, crossfader
-     * track, [B] snap badge, AUTO/FADING, fade-time badge. The track takes whatever width is left.
+     * The crossfader line, fitted into [width] starting at [startX]: [A] snap badge, [B] snap badge,
+     * AUTO/FADING, fade-time badge, in four equal cells.
      */
     private fun drawCrossfader(
         session: SessionContext,
@@ -336,7 +335,8 @@ internal object PerformanceTransitionsControls {
         ImGui.beginGroup()
 
         // 1. Deck A Snap Badge [ A ]
-        val badgeW = (headerH * 1.05f).coerceIn(24f, 32f)
+        // [A] [B] AUTO fade-time: four equal cells filling the line (the crossfader itself is knob 1 and the mixer panel's slider).
+        val badgeW = ((width - gap * 4f) / 4f).coerceAtLeast(24f)
         val rgbA = BrowserDeckButtons.colorA()
         val colorA = TangoPalette.u32(rgbA)
         val snapAKey = "Global/snapDeckA"
@@ -393,213 +393,13 @@ internal object PerformanceTransitionsControls {
 
         ImGui.sameLine(0f, gap)
 
-        // Fixed-width elements right of the track: [B] badge, AUTO, fade-time badge.
-        val autoBtnW = 52f
-        val speedBtnW = 44f
+        val autoBtnW = badgeW
+        val speedBtnW = badgeW
         val badgeBW = badgeW
-
-        // Crossfader track takes whatever width is left between the [A] and [B] badges.
-        val fixedRightW = gap + badgeBW + gap * 2f + autoBtnW + gap + speedBtnW
-        val crossfaderW = (width - badgeW - gap - fixedRightW).coerceAtLeast(40f)
-
-        // 2. Crossfader Slider Track
-        val lineStartX = badgeAX + badgeW + gap
-        val lineEndX = lineStartX + crossfaderW
-        val lineWidth = crossfaderW
-
-        val trackPadX = 2f
-        val trackW = lineWidth + trackPadX * 2f
-        ImGui.setCursorScreenPos(lineStartX - trackPadX, headerY)
-        ImGui.invisibleButton("##perf_crossfader_track", trackW, headerH)
-
-        if (ImGui.beginDragDropTarget()) {
-            val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
-            if (payload != null) {
-                val file = File(payload)
-                llm.slop.liquidlsd.presets.TransitionOps.applyItem(file)
-            }
-            ImGui.endDragDropTarget()
-        }
-
-        val isTrackHovered = ImGui.isItemHovered()
-        val isTrackActive = ImGui.isItemActive()
-        val isTrackClicked = ImGui.isItemClicked(0)
-        val paramKey = "Mixer/crossfade"
-        val isTarget = parametersState.midiLearnTarget?.let {
-            it is MidiLearnTarget.BaseValueSlider && it.paramKey == paramKey
-        } ?: false
-        val isMidiLearnXfader = parametersState.isMidiTargetLearning(paramKey)
-        val isOscLearnXfader = OscLearnState.isTargetLearning(paramKey)
-        val xfaderMidiMapping = session.midiMappingManager.getMappingForParameter(paramKey)
-
-        pushOpenDropdownPadding()
-        if (ImGui.beginPopupContextItem("perf_xfader_ctx")) {
-            pushOpenDropdownFont()
-            ImGui.textDisabled("Crossfader (Mixer/crossfade)")
-            ImGui.separator()
-            if (ImGui.menuItem("Reset to Center (0.0)")) {
-                mixer.onCrossfadeManualTakeover()
-                mixer.crossfade.set(0.0f)
-            }
-            if (ImGui.menuItem("Snap to Deck A (-1.0)")) {
-                mixer.onCrossfadeManualTakeover()
-                mixer.crossfade.set(-1.0f)
-            }
-            if (ImGui.menuItem("Snap to Deck B (+1.0)")) {
-                mixer.onCrossfadeManualTakeover()
-                mixer.crossfade.set(1.0f)
-            }
-            ImGui.separator()
-            if (isMidiLearnXfader) {
-                if (ImGui.menuItem("${Icons.ALERT} Cancel MIDI Learn")) {
-                    parametersState.midiLearnTarget = null
-                }
-            } else {
-                if (ImGui.menuItem("${Icons.SETTINGS} Learn MIDI (Crossfader)")) {
-                    parametersState.startMidiLearn(
-                        MidiLearnTarget.BaseValueSlider(
-                            paramKey = paramKey,
-                            label = "Crossfader",
-                            param = mixer.crossfade,
-                            min = -1.0f,
-                            max = 1.0f
-                        )
-                    )
-                }
-            }
-            if (xfaderMidiMapping != null) {
-                if (ImGui.menuItem("${Icons.TRASH} Clear MIDI Mapping")) {
-                    session.midiMappingManager.removeMapping(paramKey)
-                    session.midiMappingManager.saveActiveProfile()
-                }
-            }
-            if (isOscLearnXfader) {
-                if (ImGui.menuItem("${Icons.ALERT} Cancel OSC Learn")) {
-                    OscLearnState.cancelLearn()
-                }
-            } else {
-                if (ImGui.menuItem("${Icons.ACTIVITY} Learn OSC (Crossfader)")) {
-                    OscLearnState.startLearn(
-                        parameterPath = paramKey,
-                        minVal = -1.0f,
-                        maxVal = 1.0f,
-                        displayLabel = "Crossfader"
-                    )
-                }
-            }
-            val oscAddress = OscMappingManager.getAddressForParameter(paramKey)
-            if (oscAddress != null) {
-                if (ImGui.menuItem("${Icons.TRASH} Clear OSC Mapping ($oscAddress)")) {
-                    OscMappingManager.removeMapping(oscAddress)
-                    OscMappingManager.saveActiveProfile()
-                }
-            }
-            popOpenDropdownFont()
-            ImGui.endPopup()
-        }
-        popOpenDropdownPadding()
-
-        if (OscMapModeState.active) {
-            if (isTrackClicked) {
-                if (isOscLearnXfader) OscLearnState.cancelLearn()
-                else OscLearnState.startLearn(parameterPath = paramKey, minVal = -1.0f, maxVal = 1.0f, displayLabel = "Crossfader")
-            }
-        } else if (isTrackActive) {
-            mixer.onCrossfadeManualTakeover()
-            val mouseX = ImGui.getIO().mousePos.x
-            val pct = ((mouseX - lineStartX) / lineWidth).coerceIn(0f, 1f)
-            val newVal = -1.0f + pct * 2.0f
-            mixer.crossfade.set(newVal)
-        }
-
-        val io = ImGui.getIO()
-        if (isTrackHovered || isTrackActive) {
-            if (io.mouseWheel != 0f) {
-                mixer.onCrossfadeManualTakeover()
-                val shift = io.keyShift
-                val ctrl = io.keyCtrl
-                val delta = if (ctrl && shift) 0.1f else if (shift) 0.02f else 0.05f
-                val newVal = (mixer.crossfade.baseValue + io.mouseWheel * delta).coerceIn(-1.0f, 1.0f)
-                mixer.crossfade.set(newVal)
-                io.mouseWheel = 0f
-            }
-            if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) {
-                mixer.onCrossfadeManualTakeover()
-                mixer.crossfade.set(0.0f)
-            }
-        }
-
-        if (isTrackHovered && session.uiTheme.tooltipsEnabled) {
-            val mapping = session.midiMappingManager.getMappingForParameter(paramKey)
-            val midiText = midiSuffix(mapping)
-            itemTooltip(tipXfade.get(midiText) { "Crossfader$midiText\nDrag or scroll to blend. Middle-click to center.\nRight-click for MIDI/OSC Learn." })
-        }
-
-        // Render crossfader visual tracks & ticks
-        val rgbB = BrowserDeckButtons.colorB()
-        val colorB = TangoPalette.u32(rgbB)
-        val lineCol = TangoPalette.XF_LINE.u32()
-        dl.addLine(lineStartX, centerY, lineEndX, centerY, lineCol, 3f)
-
-        val markColFaint = TangoPalette.XF_MARK_FAINT.u32()
-        val markColCenter = TangoPalette.XF_MARK_CENTER.u32()
-        val markColEnds = TangoPalette.XF_MARK_ENDS.u32()
-
-        // Ends (-1.0, +1.0)
-        dl.addLine(lineStartX, centerY - 6f, lineStartX, centerY + 6f, markColEnds, 1.5f)
-        dl.addLine(lineEndX, centerY - 6f, lineEndX, centerY + 6f, markColEnds, 1.5f)
-
-        // Midway points (-0.5, +0.5)
-        val midLeftX = lineStartX + lineWidth * 0.25f
-        val midRightX = lineStartX + lineWidth * 0.75f
-        dl.addLine(midLeftX, centerY - 5f, midLeftX, centerY + 5f, markColFaint, 1f)
-        dl.addLine(midRightX, centerY - 5f, midRightX, centerY + 5f, markColFaint, 1f)
-
-        // Middle (0.0)
-        val centerX = lineStartX + lineWidth * 0.50f
-        dl.addLine(centerX, centerY - 8f, centerX, centerY + 8f, markColCenter, 1.5f)
-
-        // Active bipolar colored bar
-        val valPct = ((mixer.crossfade.baseValue - (-1f)) / 2f).coerceIn(0f, 1f)
-        val valHandleX = lineStartX + valPct * lineWidth
-        val barColor = if (mixer.crossfade.baseValue < 0f) colorA else colorB
-        if (kotlin.math.abs(valHandleX - centerX) > 0.5f) {
-            dl.addLine(centerX, centerY, valHandleX, centerY, barColor, 3f)
-        }
-
-        // Handle
-        val handleW = 6f
-        val handleH = 16f
-        val handleBgCol = if (isTrackActive) TangoPalette.XF_HANDLE_ACTIVE.u32() else TangoPalette.XF_HANDLE_IDLE.u32()
-        val handleBorderCol = TangoPalette.XF_HANDLE_BORDER.u32()
-        dl.addRectFilled(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
-        dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
-
-        // Hover / Active border
-        if (isTarget) {
-            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, TangoPalette.learnBorder(), 4f, 0, 1.5f)
-        } else if (isOscLearnXfader) {
-            TangoPalette.drawOscLearnPulseBorder(dl, lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, 4f, 1.5f)
-        } else if (isTrackHovered || isTrackActive) {
-            val borderCol = if (isTrackActive) TangoPalette.learnBorder() else TangoPalette.XF_HOVER_BORDER.u32()
-            dl.addRect(lineStartX - 3f, centerY - 9f, lineEndX + 3f, centerY + 9f, borderCol, 4f, 0, 1.5f)
-        }
-
-        // Dynamic modulated value indicator (Amber Gold dot)
-        val hasModulators = mixer.crossfade.modulators.any { !it.bypassed }
-        if (hasModulators || mixer.isAutoFading) {
-            val livePct = ((mixer.crossfade.value - (-1f)) / 2f).coerceIn(0f, 1f)
-            val liveX = lineStartX + livePct * lineWidth
-            val dotR = 4f
-            val curDotCol = TangoPalette.XF_LIVE_DOT.u32()
-            dl.addCircleFilled(liveX, centerY, dotR, curDotCol)
-            dl.addCircle(liveX, centerY, dotR + 0.5f, TangoPalette.XF_HANDLE_BORDER.u32(), 12, 1.0f)
-        }
-
-        ImGui.sameLine(0f, gap)
+        val colorB = TangoPalette.u32(BrowserDeckButtons.colorB())
 
         // 3. Deck B Snap Badge [ B ]
-        val badgeBX = lineEndX + gap
+        val badgeBX = badgeAX + badgeW + gap
         val badgeBY = headerY
         val snapBKey = "Global/snapDeckB"
         val isMidiLearnSnapB = session.parametersState.isMidiTargetLearning(snapBKey)

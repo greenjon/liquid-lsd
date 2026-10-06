@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#deck-rows-use-two-lines-and-a-two-tone-srcfx-badge-uiperformancematrixpanelkt-uiperformancedeckcontrolskt-uifxchainheaderkt-uitangopalettekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck Rows Use Two Lines and a Two-Tone SRC/FX Badge (ui/PerformanceMatrixPanel.kt, ui/PerformanceDeckControls.kt, ui/FxChainHeader.kt, ui/TangoPalette.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#f11-toggles-fullscreen-clean-mode-is-now-output-view-mainkt-uiwindowframecontrollerkt-uishortcutsshortcutmanagerkt-uiuithemekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5680,6 +5691,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#deck-rows-use-two-lines-and-a-two-tone-srcfx-badge-uiperformancematrixpanelkt-uiperformancedeckcontrolskt-uifxchainheaderkt-uitangopalettekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Deck Rows Use Two Lines and a Two-Tone SRC/FX Badge (ui/PerformanceMatrixPanel.kt, ui/PerformanceDeckControls.kt, ui/FxChainHeader.kt, ui/TangoPalette.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#f11-toggles-fullscreen-clean-mode-is-now-output-view-mainkt-uiwindowframecontrollerkt-uishortcutsshortcutmanagerkt-uiuithemekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10127,6 +10149,17 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="deck-rows-use-two-lines-and-a-two-tone-srcfx-badge-uiperformancematrixpanelkt-uiperformancedeckcontrolskt-uifxchainheaderkt-uitangopalettekt">Deck Rows Use Two Lines and a Two-Tone SRC/FX Badge (<code>ui/PerformanceMatrixPanel.kt</code>, <code>ui/PerformanceDeckControls.kt</code>, <code>ui/FxChainHeader.kt</code>, <code>ui/TangoPalette.kt</code>)</h3>
+<ul>
+<li><strong>The deck badge names its half.</strong> The <code>A</code> / <code>B</code> / <code>BG</code> / <code>PV</code> badge is now one rounded box with a caption strip under the letter: slate <code>SRC</code> or cyan <code>FX</code>. The separate <code>SRC</code> / <code>FX</code> pills are gone from deck rows, so you can tell a source row from an FX row at a glance.</li>
+<li><strong>Line 1 is one long name box</strong> across the whole left block: the generator or preset on a source row, the chain name (or the focused effect in Focus Mode) on an FX row. Click it to Browse, as before. The Edit gear sits at its right end; it used to sit under the badge.</li>
+<li><strong>Line 2 holds the small controls, stretched to fill the line</strong>: <code>⋮</code>, Save, queue <code>◀ ▶</code>, Eject (PV: <code>PREVIEW</code> instead of the arrows) on a source row; <code>⋮</code>, Save, <code>◀ ▶</code>, slot pills <code>1 2 3</code> on an FX row. In Focus Mode the FX line shows <code>⋮</code>, the effect's <code>Wet %</code> slider (now wider), the page stepper and the pills. Buttons are bigger targets than before.</li>
+<li><strong>Master rows match</strong>: the <code>M</code> badge carries a <code>MIX</code> / <code>FX</code> caption and the pills are gone, with the same two-line layout. The caption is white on a slate or deep-cyan strip, in the body font, so it reads at a glance.</li>
+<li><strong>The FX line is the grid; the source line follows it.</strong> Line 2 on every deck and Master row uses the same six equal cells after the <code>⋮</code>, with a little extra space left of <code>◀</code> and right of <code>▶</code>. On a source row Save, <code>◀</code> and <code>▶</code> are the same size and position as on the FX line, and Eject is right-aligned to the last cell. PV and Master FX have no queue, so their <code>◀ ▶</code> cells are left empty.</li>
+<li><strong>Removed the PV source row's green <code>PREVIEW</code> button</strong> (the Edit gear opens Deck PV already).</li>
+<li><strong>Removed the crossfader slider from the Transitions row.</strong> The crossfader is knob 1 there and the Mixer panel's slider; the row's line 2 is now four equal cells: <code>A</code>, <code>B</code> snap badges, <code>AUTO</code>, fade time. The slider's right-click MIDI/OSC Learn menu went with it (learn the knob or the Mixer slider instead).</li>
+<li>Internal: <code>FxChainHeader.drawNameLine</code> / <code>drawControlLine</code> split the deck FX header (the Master row still uses <code>drawControls</code>); the queue arrows and page stepper are shared helpers; <code>TangoPalette.TAG_SRC</code> / <code>TAG_FX</code>; <code>drawTitleBadge</code> takes an optional caption strip; <code>drawDeckRowLeftControls</code> takes the block width and <code>editW</code>.</li>
+</ul>
 <h3 id="f11-toggles-fullscreen-clean-mode-is-now-output-view-mainkt-uiwindowframecontrollerkt-uishortcutsshortcutmanagerkt-uiuithemekt"><code>F11</code> Toggles Fullscreen; "Clean Mode" Is Now "Output View" (<code>Main.kt</code>, <code>ui/WindowFrameController.kt</code>, <code>ui/shortcuts/ShortcutManager.kt</code>, <code>ui/UITheme.kt</code>)</h3>
 <ul>
 <li><strong><code>F11</code> makes the main window fullscreen</strong> on the monitor it mostly sits on, UI intact; press it again to restore the previous size and position. Frameless edge-resize and title-bar double-click are disabled while fullscreen. Rebindable in Preferences → Shortcuts ("Toggle Fullscreen").</li>

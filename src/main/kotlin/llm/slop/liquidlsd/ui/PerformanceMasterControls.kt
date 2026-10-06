@@ -32,37 +32,26 @@ internal object PerformanceMasterControls {
         row2Y: Float,
         ctrlH: Float,
         rowW: Float,
-        pinned: String
+        pinned: String,
+        editW: Float = 0f
     ) {
         val gap = 4f
-        val modeBtnW = 28f
-        // A row shows one half only: MIX or FX.
-        val isFx = pinned == "FX"
-        val isMix = !isFx
-        val showMix = pinned != "FX"
-        val showFx = pinned != "MIX"
-        val dl = ImGui.getWindowDrawList()
+        // A row shows one half only: MIX or FX (the title badge's caption names it). The gear is docked
+        // by the caller after line 1, so line 1 stops [editW] + gap short.
+        val nameW = rowW - if (editW > 0f) editW + gap else 0f
 
-        // The pill column keeps its footprint (layout stability); the pills only label the half this row shows.
-        ImGui.setCursorScreenPos(startX, row1Y)
-        ImGui.dummy(modeBtnW, (row2Y + ctrlH) - row1Y)
+        if (pinned != "FX") {
+            drawMixBadgeAndReset(session, mixer, parametersState, ctx, startX, row1Y, ctrlH, nameW)
+        } else {
+            val actions = masterFxActions.also { it.set(parametersState) }
+            ImGui.setCursorScreenPos(startX, row1Y)
+            ImGui.beginGroup()
+            FxChainHeader.drawNameLine(session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, nameW, ctrlH, actions)
+            ImGui.endGroup()
 
-        if (showMix) PerformanceColors.drawTogglePill(dl, startX, row1Y, modeBtnW, ctrlH, "MIX", isMix, false, session)
-        if (showFx) PerformanceColors.drawTogglePill(dl, startX, row2Y, modeBtnW, ctrlH, "FX", isFx, false, session)
-
-        if (showMix) drawMixBadgeAndReset(session, mixer, parametersState, ctx, startX + modeBtnW + gap, row1Y, ctrlH, rowW - modeBtnW - gap)
-
-        // Line 2: [FX] pill spacer + Master FX chain header
-        if (showFx) {
             ImGui.setCursorScreenPos(startX, row2Y)
             ImGui.beginGroup()
-            ImGui.dummy(modeBtnW, ctrlH)
-            ImGui.sameLine(0f, gap)
-            FxChainHeader.drawControls(
-                session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH,
-                maxW = rowW - modeBtnW - gap, deck = null,
-                actions = masterFxActions.also { it.set(parametersState) }
-            )
+            FxChainHeader.drawControlLine(session, mixer, mixer.masterFxChain, MacroEngine.MASTER_FX, "Master FX", ctrlH, rowW, null, actions)
             ImGui.endGroup()
         }
     }

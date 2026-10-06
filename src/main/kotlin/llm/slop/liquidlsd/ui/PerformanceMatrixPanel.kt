@@ -53,6 +53,9 @@ class PerformanceMatrixPanel {
         /** Fixed height of every grid row; the Library takes whatever window height the rows don't. */
         const val ROW_H = 74f
 
+        /** Height of the SRC / FX caption strip at the bottom of a deck row's title badge. */
+        const val CAPTION_STRIP_H = 19f
+
         /** Vertical window padding of the PerformanceMatrix host window (top and bottom each). */
         const val HOST_PAD_Y = 4f
 
@@ -334,6 +337,8 @@ class PerformanceMatrixPanel {
         val transRowW = maxOf(deckRow1W, (gridW * 0.38f).coerceAtMost(420f))
         val masterRowW = DeckRowMetrics.row1Width(ctrlH, deckComboW)
         val masterTabLeftW = masterTabBadgeW + 6f + transRowW
+        // Deck rows span the same block as Transitions, so the name box on line 1 is as long as the layout allows.
+        val deckBlockW = transRowW
         val masterRightW = 56f
 
         // Reserved unconditionally (not just on the tab that currently needs it) so the knob
@@ -542,13 +547,17 @@ class PerformanceMatrixPanel {
                 val badgeH = ((row2YFinal + ctrlH) - boxTopY) * 0.5f
                 val masterTabStartX = badgeX + masterTabBadgeW + 6f
                 if (isMasterRow) {
+                    val pinnedHalf = checkNotNull(descriptor.pinnedMode)
                     drawTitleBadge(
-                        session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "M", UITheme.FontLevel.H1,
-                        tooltip = "Master Unit\nConfigure Master parameters and FX"
+                        session, badgeX, badgeY, masterTabBadgeW, badgeH * 2f, descriptor.accent, "M", UITheme.FontLevel.H1,
+                        tooltip = "Master Unit\nConfigure Master parameters and FX",
+                        caption = pinnedHalf,
+                        captionTint = if (pinnedHalf == "FX") TangoPalette.TAG_FX else TangoPalette.TAG_SRC
                     )
-                    drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
+                    val editW = if (descriptor.canExpand) ctrlH else 0f
                     ImGui.pushID(rowIdx)
-                    if (!stripOn) PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, masterRowW, checkNotNull(descriptor.pinnedMode))
+                    if (!stripOn) PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, deckBlockW, pinnedHalf, editW)
+                    if (editW > 0f) drawEditGearAt(session, parametersState, activeModuleId, tabIdx, rowIdx, masterTabStartX + deckBlockW - editW, row1Y, editW, ctrlH)
                     if (descriptor.pinnedMode != "MIX") {
                         PerformanceMasterControls.drawBypassControls(session, mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                     }
@@ -583,19 +592,24 @@ class PerformanceMatrixPanel {
                     val deckTagIdx = deckTagIndex(deckTag)
                     val deckLabel = deckLabels[deckTagIdx]
 
+                    val pinnedHalf = checkNotNull(descriptor.pinnedMode)
                     drawTitleBadge(
-                        session, badgeX, badgeY, deckBadgeW, badgeH, descriptor.accent, deckTag, UITheme.FontLevel.H1,
-                        tooltip = deckBadgeTips[deckTagIdx]
+                        session, badgeX, badgeY, deckBadgeW, badgeH * 2f, descriptor.accent, deckTag, UITheme.FontLevel.H1,
+                        tooltip = deckBadgeTips[deckTagIdx],
+                        caption = pinnedHalf,
+                        captionTint = if (pinnedHalf == "FX") TangoPalette.TAG_FX else TangoPalette.TAG_SRC
                     )
-                    drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, deckBadgeW, badgeH)
 
                     val leftStartX = badgeX + deckBadgeW + 6f
+                    // The Edit gear docks at the end of line 1, after the name box (which gives up [ctrlH] + gap for it).
+                    val editW = if (descriptor.canExpand) ctrlH else 0f
                     // Per-slot ImGui id scope: the same deck may sit in two slots (or pages), so tag-based ids must not collide.
                     ImGui.pushID(rowIdx)
-                    if (!stripOn) deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckRow1W, checkNotNull(descriptor.pinnedMode))
+                    if (!stripOn) deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckBlockW, pinnedHalf, editW)
+                    if (editW > 0f) drawEditGearAt(session, parametersState, activeModuleId, tabIdx, rowIdx, leftStartX + deckBlockW - editW, row1Y, editW, ctrlH)
                     deckControls.drawDeckRowRightControls(
                         session, mixer, parametersState, deckLabel, targetDeck,
-                        boxX2 - pad - deckRightW, row1Y, row2YFinal, ctrlH, deckRightW, checkNotNull(descriptor.pinnedMode)
+                        boxX2 - pad - deckRightW, row1Y, row2YFinal, ctrlH, deckRightW, pinnedHalf
                     )
                     ImGui.popID()
                 }
@@ -778,20 +792,32 @@ class PerformanceMatrixPanel {
         text: String,
         level: UITheme.FontLevel,
         /** Only for rows without a drop target over the badge (it would otherwise cover that button). */
-        tooltip: String? = null
+        tooltip: String? = null,
+        /** Two-tone badge: a strip under the text naming the half this row shows, filled with [captionTint]. */
+        caption: String? = null,
+        captionTint: FloatArray? = null
     ) {
         val dl = ImGui.getWindowDrawList()
         val bg = TangoPalette.u32(accent, 0.14f)
         val border = TangoPalette.u32(accent, 0.85f)
         val cornerFlags = ImDrawFlags.RoundCornersTopLeft or ImDrawFlags.RoundCornersBottomRight
         dl.addRectFilled(x, y, x + w, y + h, bg, 8f, cornerFlags)
+        val captionH = if (caption != null && captionTint != null) CAPTION_STRIP_H else 0f
+        if (caption != null && captionTint != null) {
+            val stripTop = y + h - captionH
+            dl.addRectFilled(x, stripTop, x + w, y + h, TangoPalette.u32(captionTint, 0.95f), 8f, ImDrawFlags.RoundCornersBottomRight)
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                val csz = ImGui.calcTextSize(caption)
+                dl.addText(x + (w - csz.x) * 0.5f, stripTop + (captionH - csz.y) * 0.5f, TangoPalette.WHITE.u32(), caption)
+            }
+        }
         dl.addRect(x, y, x + w, y + h, border, 8f, cornerFlags, 1.5f)
         val font = session.uiTheme.fontFor(level)
         val size = if (level == UITheme.FontLevel.H1) UITheme.FONT_H1 else UITheme.FONT_H2
         val pushable = font != null && font.ptr != 0L
         if (pushable) ImGui.pushFont(font, size)
         val sz = ImGui.calcTextSize(text)
-        dl.addText(x + (w - sz.x) * 0.5f, y + (h - sz.y) * 0.5f, border, text)
+        dl.addText(x + (w - sz.x) * 0.5f, y + (h - captionH - sz.y) * 0.5f, border, text)
         if (pushable) ImGui.popFont()
         if (tooltip != null) {
             ImGui.setCursorScreenPos(x, y)
@@ -827,6 +853,24 @@ class PerformanceMatrixPanel {
             llm.slop.liquidlsd.ui.rack.RackUnit.drawChevronIcon(
                 parametersState, activeModuleId, rackId(tabIdx, rowIdx), badgeW, badgeH
             )
+        }
+    }
+
+    /** Icon-only EDIT toggle (a [w] x [h] button) docked at the end of a row's line 1. */
+    private fun drawEditGearAt(
+        session: llm.slop.liquidlsd.SessionContext,
+        parametersState: ParametersState,
+        activeModuleId: String,
+        tabIdx: Int,
+        rowIdx: Int,
+        x: Float,
+        y: Float,
+        w: Float,
+        h: Float
+    ) {
+        ImGui.setCursorScreenPos(x, y)
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            llm.slop.liquidlsd.ui.rack.RackUnit.drawChevronIcon(parametersState, activeModuleId, rackId(tabIdx, rowIdx), w, h)
         }
     }
 

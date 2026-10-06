@@ -242,10 +242,12 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
     }
 
     /**
-     * Controls to the left of the knobs for Deck rows (Deck A, B, BG, PV) in two stacked rows:
-     * - Row 1 (SRC): [SRC] knob-assign pill, kebab, generator/preset badge, Save,
-     *   play queue / bg queue navigation (or preview button for PV), eject button.
-     * - Row 2 (FX): [FX] knob-assign pill and dedicated FX chain controls.
+     * Controls to the left of the knobs for Deck rows (Deck A, B, BG, PV), two stacked lines that each
+     * span [rowW] and show one half ([pinned]: SRC or FX; the title badge's caption names it):
+     * - Line 1: the long name box -- generator/preset (SRC) or FX chain / focused effect (FX). It stops
+     *   [editW] + gap short so the caller can dock the Edit gear after it ([editW] = 0: no gear).
+     * - Line 2 (SRC): kebab, Save, queue navigation (or PREVIEW for PV), eject -- stretched to fill the line.
+     * - Line 2 (FX): see [FxChainHeader.drawControlLine].
      */
     fun drawDeckRowLeftControls(
         session: SessionContext,
@@ -259,7 +261,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         ctrlH: Float,
         comboW: Float,
         rowW: Float,
-        pinned: String
+        pinned: String,
+        editW: Float = 0f
     ) {
         val gap = DeckRowMetrics.GAP
         val isDeckA = deck === mixer.deckA
@@ -277,36 +280,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         str.ensureLabel(deckLabel)
         // A row shows one half only: SRC or FX.
         val isFx = pinned == "FX"
-        val isSrc = !isFx
         val showSrc = pinned != "FX"
         val showFx = pinned != "SRC"
-        val modeBtnW = DeckRowMetrics.MODE_PILL_W
-        val iconBtnW = DeckRowMetrics.iconBtnW(ctrlH)
-
-        // --- ROW 1 (SRC) -------------------------------------------------------------
-        ImGui.setCursorScreenPos(startX, row1Y)
-        ImGui.beginGroup()
-
-        // 1. The pill column keeps its footprint (layout stability); the pills only label the half this row shows.
-        val totalModeH = (row2Y + ctrlH) - row1Y
-        ImGui.dummy(modeBtnW, totalModeH)
-
-        if (showSrc) PerformanceColors.drawTogglePill(dl, startX, row1Y, modeBtnW, ctrlH, "SRC", isSrc, false, session)
-        if (showFx) PerformanceColors.drawTogglePill(dl, startX, row2Y, modeBtnW, ctrlH, "FX", isFx, false, session)
+        val nameW = rowW - if (editW > 0f) editW + gap else 0f
 
         if (showSrc) {
-            ImGui.sameLine(0f, gap)
-
-            // 2. [⋮] Kebab -- source operations (Browse, Save As, defaults)
-            if (ImGui.button(str.kebabId, DeckRowMetrics.KEBAB_W, ctrlH)) {
-                ImGui.openPopup(str.badgeCtxId)
-            }
-            itemTooltip("Source operations (Browse, Save As, defaults).")
-
-            ImGui.sameLine(0f, gap)
-
-            // 3. Generator/preset badge -- click to Browse stock generators + saved presets
-            val genBadgeW = DeckRowMetrics.genBadgeW(comboW)
             val activePreset = when {
                 isDeckA -> session.presetManager.activePresetA
                 isDeckB -> session.presetManager.activePresetB
@@ -315,6 +293,13 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             val isDirty = session.presetManager.isDeckDirty(deck, mixer)
             val isExternalVideo = deck.source is ExternalVideoSource
+
+            // --- LINE 1: generator/preset name box ---------------------------------------------
+            ImGui.setCursorScreenPos(startX, row1Y)
+            ImGui.beginGroup()
+
+            // Generator/preset badge -- click to Browse stock generators + saved presets
+            val genBadgeW = nameW
             str.updateBadge(deckLabel, deck.isEmpty, isExternalVideo, activePreset, isDirty, deck.source.displayName)
             val genName = str.genName
             val genBorderCol = TangoPalette.BADGE_BORDER.u32()
@@ -371,33 +356,47 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                 dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, hoverBorderCol, 4f, 0, 1.5f)
             }
             itemTooltip(str.genTip)
+            ImGui.endGroup()
 
-            ImGui.sameLine(0f, gap)
+            // --- LINE 2: the FX half's grid -- kebab, Save, prev/next (padded) -- then Eject right-aligned.
+            // Buttons are the same size and x as on the FX line; PV has no queue, so its prev/next cells stay empty.
+            ImGui.setCursorScreenPos(startX, row2Y)
+            ImGui.beginGroup()
+            val lineGap = FxChainHeader.LINE_GAP
+            val flexW = FxChainHeader.cellW(rowW)
 
-            // 4. Save button -- save-if-possible, else Save As modal
+            if (ImGui.button(str.kebabId, DeckRowMetrics.KEBAB_W, ctrlH)) {
+                ImGui.openPopup(str.badgeCtxId)
+            }
+            itemTooltip("Source operations (Browse, Save As, defaults).")
+
+            ImGui.sameLine(0f, lineGap)
+
+            // Save button -- save-if-possible, else Save As modal
             val saveBtnBg = when {
                 isDirty -> TangoPalette.u32(TangoPalette.ALERT.dark)
                 else -> TangoPalette.BUTTON_SOFT_BG.u32()
             }
             ImGui.pushStyleColor(ImGuiCol.Button, saveBtnBg)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button(str.saveId, iconBtnW, ctrlH)) {
+                if (ImGui.button(str.saveId, flexW, ctrlH)) {
                     ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = false)
                 }
             }
             ImGui.popStyleColor()
             itemTooltip(str.saveTip)
 
-            ImGui.sameLine(0f, gap)
+            ImGui.sameLine(0f, lineGap)
 
-            // 5. PlayQueue / BG Queue navigation (or preview indicator for PV) -- status text removed
-            val navBtnW = DeckRowMetrics.navBtnW(ctrlH)
+            // PlayQueue / BG Queue navigation (none on PV)
+            val navBtnW = flexW
+            if (!isDeckPV) ImGui.sameLine(0f, lineGap + FxChainHeader.ARROW_PAD)
             if (isDeckA || isDeckB) {
                 learnableNavButton(session, mixer, dl, "Global/queuePrev", "Mixer/queuePrev", "◀", str.qPrevId, str.qPrevCtxId,
                     navBtnW, ctrlH, "PlayQueue Prev", "Queue Prev", "Trigger Previous",
                     "Advance to previous item in PlayQueue.") { session.playQueueManager.triggerPrevious(mixer) }
 
-                ImGui.sameLine(0f, gap)
+                ImGui.sameLine(0f, lineGap)
 
                 learnableNavButton(session, mixer, dl, "Global/queueNext", "Mixer/queueNext", "▶", str.qNextId, str.qNextCtxId,
                     navBtnW, ctrlH, "PlayQueue Next", "Queue Next", "Trigger Next",
@@ -407,67 +406,46 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                     navBtnW, ctrlH, "BG Queue Prev", "BG Queue Prev", "Trigger Previous",
                     "Advance to previous item in BG Queue.") { session.bgQueueManager.triggerPrevious(mixer) }
 
-                ImGui.sameLine(0f, gap)
+                ImGui.sameLine(0f, lineGap)
 
                 learnableNavButton(session, mixer, dl, "Global/bgQueueNext", "Mixer/bgQueueNext", "▶", "▶##perf_bg_next", "perf_bg_next_ctx",
                     navBtnW, ctrlH, "BG Queue Next", "BG Queue Next", "Trigger Next",
                     "Advance to next item in BG Queue.") { session.bgQueueManager.triggerNext(mixer) }
-            } else {
-                // Deck PV indicator / focus button
-                val pvBadgeW = maxOf(DeckRowMetrics.queueNavW(ctrlH), DeckRowMetrics.PV_BADGE_W)
-                val pvBtnBg = TangoPalette.PREVIEW_BG.u32()
-                val pvBtnHov = TangoPalette.PREVIEW_HOVER.u32()
-                ImGui.pushStyleColor(ImGuiCol.Button, pvBtnBg)
-                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, pvBtnHov)
-                session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                    if (ImGui.button("PREVIEW##perf_pv_badge", pvBadgeW, ctrlH)) {
-                        parametersState.openFromMonitor(MacroEngine.DECK_PV, "Deck PV")
-                    }
-                }
-                ImGui.popStyleColor(2)
-                itemTooltip("Deck PV (Preview Deck)\nClick to open Deck PV in Edit.")
             }
 
-            ImGui.sameLine(0f, gap)
-
-            // 6. Eject Button [ EJECT ]
+            // Eject Button, right-aligned to the line's last cell
+            ImGui.setCursorScreenPos(startX + rowW - flexW, row2Y)
             val ejectBtnBg = TangoPalette.BUTTON_BG.u32()
             val ejectBtnHov = TangoPalette.EJECT_HOVER.u32()
             ImGui.pushStyleColor(ImGuiCol.Button, ejectBtnBg)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ejectBtnHov)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button(str.ejectId, iconBtnW, ctrlH)) {
+                if (ImGui.button(str.ejectId, flexW, ctrlH)) {
                     UIManager.triggerDeckEject(deck, isDeckA = isDeckA, isDeckPV = isDeckPV)
                 }
             }
             ImGui.popStyleColor(2)
             itemTooltip(str.ejectTip)
-
+            ImGui.endGroup()
         }
-        ImGui.endGroup()
 
-        // --- ROW 2 (FX) --------------------------------------------------------------
+        // --- FX half: chain name line, then the chain controls line ------------------------
         if (showFx) {
-            ImGui.setCursorScreenPos(startX, row2Y)
-            ImGui.beginGroup()
-
-            // 1. Spacing for [FX] pill (rendered and hit-tested with [SRC] in Row 1 above)
-            ImGui.dummy(modeBtnW, ctrlH)
-            ImGui.sameLine(0f, gap)
-
-            // 2. Dedicated FX chain controls
             val deckChain = deck.fxChain
             val targetBank = ctx.targetBankIdFor(tag)
             val fxCanonicalBankId = MacroEngine.deckBankIdFor(deck, mixer) ?: MacroEngine.DECK_A
-            val targetRowW = DeckRowMetrics.row1Width(ctrlH, comboW)
-            FxChainHeader.drawControls(
-                session, mixer, deckChain, targetBank, str.fxTitle, ctrlH,
-                maxW = targetRowW - modeBtnW - gap, deck = deck,
-                actions = deckFxActions.getOrPut(tag) { DeckFxActions() }.also {
-                    it.set(parametersState, deckLabel, fxCanonicalBankId)
-                }
-            )
+            val actions = deckFxActions.getOrPut(tag) { DeckFxActions() }.also {
+                it.set(parametersState, deckLabel, fxCanonicalBankId)
+            }
 
+            ImGui.setCursorScreenPos(startX, row1Y)
+            ImGui.beginGroup()
+            FxChainHeader.drawNameLine(session, mixer, deckChain, targetBank, nameW, ctrlH, actions)
+            ImGui.endGroup()
+
+            ImGui.setCursorScreenPos(startX, row2Y)
+            ImGui.beginGroup()
+            FxChainHeader.drawControlLine(session, mixer, deckChain, targetBank, str.fxTitle, ctrlH, rowW, deck, actions)
             ImGui.endGroup()
         }
     }

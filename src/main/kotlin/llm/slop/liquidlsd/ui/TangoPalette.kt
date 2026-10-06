@@ -82,6 +82,11 @@ object TangoPalette {
     val DANGER = SCARLET_RED  // bypassed / error / clipping
     val SYNC   = SYNC_CYAN    // MIDI learn / Ableton Link / focus mode
 
+    // Perform-row half tags (the caption strip under a row's letter badge), drawn with white text: SRC reads
+    // neutral slate, FX reads cyan (the hue the FX slot pills and focus mode use, deepened so white is legible on it).
+    val TAG_SRC = ALUMINIUM_2.normal
+    val TAG_FX  = floatArrayOf(SYNC_CYAN.normal[0] * 0.65f, SYNC_CYAN.normal[1] * 0.65f, SYNC_CYAN.normal[2] * 0.65f)
+
     // Neutrals
     val NEUTRAL_LIGHT = ALUMINIUM_1  // text, master/neutral accent
     val NEUTRAL_DARK  = ALUMINIUM_2  // panels, disabled text, idle button surfaces

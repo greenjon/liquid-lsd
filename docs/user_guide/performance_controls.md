@@ -119,6 +119,7 @@ final output after the crossfader. All five chains work the same way. Each chain
 Knob** and each slot its own **Metaknob** — see [Macro Controls & the Perform View](macros_and_rack.md)
 for the FX Rack view that exposes these.
 
+- **Deck row layout**: the deck badge (`A`, `B`, `BG`, `PV`) carries a caption, slate `SRC` or cyan `FX`, naming the half the row shows. Line 1 is the long name box (click to Browse) and the Edit gear; line 2 holds `⋮`, Save, queue `◀ ▶` and the slot pills on an FX row, or `⋮`, Save, `◀ ▶` and a right-aligned Eject on a source row (same button sizes on both).
 - **Chain Header Kebab (`⋮`)**:
   - **Save Chain As...**: Saves that chain's 3 slots (and its Super Knob state) into an
     `.lsdfxchain` file in `library/fx_chains/`.
