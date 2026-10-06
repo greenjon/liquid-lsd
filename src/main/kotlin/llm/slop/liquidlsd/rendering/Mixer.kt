@@ -59,6 +59,7 @@ class Mixer(
         val transId = if (!id.isNullOrBlank()) id else "linear_crossfade"
         val filter = llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.createTransition(transId)
         transitionFilter = filter
+        llm.slop.liquidlsd.macro.TransitionMacroSync.sync(this)
     }
 
     /**
@@ -73,6 +74,8 @@ class Mixer(
                 trans.parameters[key]?.applyDto(paramDto)
             }
         }
+        // setTransition synced before the preset's parameter values landed; refresh the knob positions.
+        llm.slop.liquidlsd.macro.TransitionMacroSync.sync(this)
     }
 
     fun resize(newWidth: Int, newHeight: Int) {

@@ -53,7 +53,7 @@ internal object PerformanceMacroStrip {
         var close = false
         val gap = 4f
         val dl = ImGui.getWindowDrawList()
-        val isFx = bankId in FxMacroSync.FX_BANK_IDS
+        val isFx = llm.slop.liquidlsd.macro.TransitionMacroSync.isSyncOwned(bankId)
         val learning = MacroLearnState.isControlLearning(control.id)
         ImGui.pushID(control.id)
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, 4f, ((ctrlH - ImGui.getFontSize()) * 0.5f).coerceAtLeast(0f))
@@ -81,7 +81,7 @@ internal object PerformanceMacroStrip {
         ImGui.setCursorScreenPos(cx, row1Y)
         ImGui.invisibleButton("##name", nameW, ctrlH)
         dl.addText(cx + 2f, TextFit.centeredY(row1Y, ctrlH, ImGui.getTextLineHeight()), ImGui.getColorU32(imgui.flag.ImGuiCol.Text), TextFit.ellipsize(name, nameW - 4f))
-        itemTooltip(if (isFx) "$name\nFX knobs follow the FX chain: they can't be renamed or given targets." else "$name\nDouble-click to rename.")
+        itemTooltip(if (isFx) "$name\nThis knob follows its ${if (bankId == MacroEngine.TRANS) "transition" else "FX chain"}: it can't be renamed or given targets." else "$name\nDouble-click to rename.")
         if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0) && !isFx) openRename(control)
         if (ImGui.beginPopup(RENAME_POPUP)) {
             ImGui.setNextItemWidth(160f)
@@ -147,7 +147,7 @@ internal object PerformanceMacroStrip {
         when {
             isFx -> {
                 val i = MacroEngine.getBank(bankId)?.knobs?.indexOf(control) ?: -1
-                val role = if (fxChain != null && i >= 0) FxMacroSummary.knobRole(fxChain, i, control) else "FX knob"
+                val role = if (bankId == MacroEngine.TRANS) (if (i == 0) "Crossfader" else "Transition parameter") else if (fxChain != null && i >= 0) FxMacroSummary.knobRole(fxChain, i, control) else "FX knob"
                 dl.addText(x + 2f, TextFit.centeredY(row2Y, ctrlH, ImGui.getTextLineHeight()), ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled),
                     TextFit.ellipsize("$role (fixed assignment)", w - 4f))
             }

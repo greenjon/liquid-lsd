@@ -26,7 +26,7 @@ object MacroUndoTracker {
     private var lastState: ParametersState? = null
     private var lastMixer: Mixer? = null
 
-    private val trackedIds get() = MacroEngine.CANONICAL_BANK_IDS.filter { it !in FxMacroSync.FX_BANK_IDS }
+    private val trackedIds get() = MacroEngine.CANONICAL_BANK_IDS.filter { !llm.slop.liquidlsd.macro.TransitionMacroSync.isSyncOwned(it) }
 
     private fun currentHash(): Int {
         var h = 1

@@ -763,7 +763,7 @@ class PerformanceMatrixPanel {
 
                 // If expanded and selected, draw compact Learn/Cancel button beneath the value readout
                 // (The Edit-view strip carries its own Learn/Cancel, so its row drops this one.)
-                if (isSelectedKnob && !stripOn && !llm.slop.liquidlsd.macro.FxMacroSync.isFxBank(row.bankId)) {
+                if (isSelectedKnob && !stripOn && !llm.slop.liquidlsd.macro.TransitionMacroSync.isSyncOwned(row.bankId)) {
                     val learn = nextOverhang(OVERHANG_LEARN)
                     learn.cellCenterX = cellCenterX; learn.btnY = learnBtnY
                     learn.bankId = row.bankId; learn.control = control

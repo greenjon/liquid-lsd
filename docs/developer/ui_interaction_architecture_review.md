@@ -138,7 +138,7 @@ So the previous bindings were lost, and nothing told the user. **Update (Oct 202
 
 ### 4.4 FX knobs are not user-bindable
 
-Deck and Master knobs are freely bindable. FX bank knobs (`DECK_*_FX`, `MASTER_FX`) are assigned by `FxMacroSync` to slot wet/dry and ISF auto-map, and the strip shows a read-only role line for them. This is intentional (FX knobs follow the chain), and the read-only line is the correct response. It only needs to look read-only, not like an empty editor.
+Deck and Master knobs are freely bindable. FX bank knobs (`DECK_*_FX`, `MASTER_FX`) are assigned by `FxMacroSync` to slot wet/dry and ISF auto-map, and the strip shows a read-only role line for them. This is intentional (FX knobs follow the chain), and the read-only line is the correct response. The Transitions knobs (`TRANS`) are owned by `TransitionMacroSync` the same way. It only needs to look read-only, not like an empty editor.
 
 ---
 

@@ -79,9 +79,9 @@ object MacroBindingEditor {
         noteTargetRange(info.binding, lo, hi, logarithmic)
         if (!ImGui.beginPopup(popupId)) return
         session.uiTheme.caption("${Icons.LOCK} ${info.controlName} [${info.badgeLabel}] -> ${info.binding.propertyName.ifEmpty { "base value" }}")
-        if (FxMacroSync.isFxBank(info.bankKey)) {
-            // FxMacroSync rewrites FX-bank bindings from the chain, so an edit here would be lost on the next sync.
-            session.uiTheme.caption("Driven by the FX chain. Edit the chain's Metaknob link instead.")
+        if (llm.slop.liquidlsd.macro.TransitionMacroSync.isSyncOwned(info.bankKey)) {
+            // FxMacroSync / TransitionMacroSync rewrite these bindings from the model, so an edit here would be lost on the next sync.
+            session.uiTheme.caption(llm.slop.liquidlsd.macro.TransitionMacroSync.ownerNote(info.bankKey))
             ImGui.endPopup()
             return
         }

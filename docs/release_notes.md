@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Transitions Row Knobs Follow the Transition (`macro/TransitionMacroSync.kt`, `rendering/Mixer.kt`, `macro/MacroLearnState.kt`)
+- **Knob 1 is the crossfader; knobs 2-4 are the active transition's first three float sliders** (authored order; selects, toggles and images are skipped; spare knobs show "—"). They re-map on every transition change, preset load and session restore.
+- **Read-only like the FX knobs**: Learn is refused and Properties / the slider popups say "Driven by the active transition". Dry/Wet stays in the Edit bay.
+- **The crossfader knob mirrors the crossfader both ways** rather than binding it, so the slider, auto-fade, snaps and MIDI/OSC mappings keep working; turning the knob counts as a manual takeover (disarms Auto-VJ, stops an auto-fade).
+- Internal: `TransitionMacroSync.sync/mirrorCrossfade` (called from `Mixer.setTransition`, `applyTransitionPreset`, `MacroEngine.tick`, `SessionSerializer`), `ISFFilter.floatParamNames`, `TransitionMacroSync.isSyncOwned/ownerNote` shared by the editors; the MIDI learn path treats TRANS knobs as soft-takeover.
+
 ### Master Knobs Say Level, Not Alpha (`macro/MacroEngine.kt`, `ui/PerformanceMasterControls.kt`)
 - **The Master row's default knob labels are now LEVEL A, LEVEL B, LEVEL BG and MASTER** (they still drive `levelA`, `levelB`, `levelBG`, `masterLevel`), and the row badge reads **Deck Levels & Master**. Banks already saved in a session keep their old labels until reset.
 

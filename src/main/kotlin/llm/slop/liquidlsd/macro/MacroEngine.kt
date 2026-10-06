@@ -426,6 +426,7 @@ object MacroEngine {
      */
     fun tick(mixer: Mixer) {
         lastMixer = mixer
+        TransitionMacroSync.mirrorCrossfade(mixer)
         if (bindingsDirty) {
             rebuildResolvedBindings(mixer)
         }

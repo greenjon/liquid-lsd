@@ -225,6 +225,10 @@ class ISFFilter(
     private val transitionParamBindings: Array<FilterParamBinding>
     private val cachedParams: Array<ModulatableParameter>
 
+    /** Names of the plain float inputs a transition exposes (no images, `progress`, selects or toggles), in authored order. */
+    val floatParamNames: List<String>
+        get() = transitionParamBindings.filter { it.type == "float" }.map { it.name }
+
     init {
         if (importedTextures.isNotEmpty()) {
             activeImportedTextures = importedTextures

@@ -284,6 +284,7 @@ object SessionSerializer {
             // Refresh FX row knob labels/bindings against the chains actually restored above. Not
             // forced: FxMacroSync's ownership rule leaves any knob the user retargeted untouched.
             llm.slop.liquidlsd.macro.FxMacroSync.syncAll(mixer)
+            llm.slop.liquidlsd.macro.TransitionMacroSync.sync(mixer)
 
             PresetManager.sessionState = PresetManager.sessionState.copy(unresolvedItems = allUnresolved.distinct())
             llm.slop.liquidlsd.midi.MidiMappingManager.invalidateBindings()
@@ -373,6 +374,7 @@ object SessionSerializer {
         // MacroBank registration above -- registering later would silently discard those bindings.
         // Only for fresh/empty sessions: a restored session's tuned bindings are never touched here.
         mixer.loadDefaultFxChains()
+        llm.slop.liquidlsd.macro.TransitionMacroSync.sync(mixer)
     }
 
     private fun loadInitialPreset(mixer: Mixer) {

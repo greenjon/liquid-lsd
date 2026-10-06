@@ -144,10 +144,10 @@ class MacroLearnStateTest {
         assertFalse(MacroLearnState.acceptsTarget(MacroEngine.DECK_A_FX, "Deck A/FX/slot1/mix"))
         assertFalse(MacroLearnState.acceptsTarget(MacroEngine.MASTER_FX, "Master/FX/slot1/mix"))
 
-        // Master and Transitions take only Mixer paths; FX Sends only per-deck FXChain paths.
+        // Master takes only Mixer paths; Transitions takes nothing (TransitionMacroSync owns it); FX Sends only per-deck FXChain paths.
         assertTrue(MacroLearnState.acceptsTarget(MacroEngine.MASTER, "Mixer/levelA"))
         assertFalse(MacroLearnState.acceptsTarget(MacroEngine.MASTER, "Deck A/fbZoom"))
-        assertTrue(MacroLearnState.acceptsTarget(MacroEngine.TRANS, "Mixer/levelA"))
+        assertFalse(MacroLearnState.acceptsTarget(MacroEngine.TRANS, "Mixer/levelA"))
         assertFalse(MacroLearnState.acceptsTarget(MacroEngine.TRANS, "Deck B/FX/slot1/mix"))
         assertTrue(MacroLearnState.acceptsTarget(MacroEngine.FX_SENDS, "Deck B/FXChain/DryWet"))
         assertFalse(MacroLearnState.acceptsTarget(MacroEngine.FX_SENDS, "Deck B/fbZoom"))

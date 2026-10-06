@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#transitions-row-knobs-follow-the-transition-macrotransitionmacrosynckt-renderingmixerkt-macromacrolearnstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transitions Row Knobs Follow the Transition (macro/TransitionMacroSync.kt, rendering/Mixer.kt, macro/MacroLearnState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#master-knobs-say-level-not-alpha-macromacroenginekt-uiperformancemastercontrolskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5614,6 +5625,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#transitions-row-knobs-follow-the-transition-macrotransitionmacrosynckt-renderingmixerkt-macromacrolearnstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transitions Row Knobs Follow the Transition (macro/TransitionMacroSync.kt, rendering/Mixer.kt, macro/MacroLearnState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#master-knobs-say-level-not-alpha-macromacroenginekt-uiperformancemastercontrolskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -9995,6 +10017,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="transitions-row-knobs-follow-the-transition-macrotransitionmacrosynckt-renderingmixerkt-macromacrolearnstatekt">Transitions Row Knobs Follow the Transition (<code>macro/TransitionMacroSync.kt</code>, <code>rendering/Mixer.kt</code>, <code>macro/MacroLearnState.kt</code>)</h3>
+<ul>
+<li><strong>Knob 1 is the crossfader; knobs 2-4 are the active transition's first three float sliders</strong> (authored order; selects, toggles and images are skipped; spare knobs show "—"). They re-map on every transition change, preset load and session restore.</li>
+<li><strong>Read-only like the FX knobs</strong>: Learn is refused and Properties / the slider popups say "Driven by the active transition". Dry/Wet stays in the Edit bay.</li>
+<li><strong>The crossfader knob mirrors the crossfader both ways</strong> rather than binding it, so the slider, auto-fade, snaps and MIDI/OSC mappings keep working; turning the knob counts as a manual takeover (disarms Auto-VJ, stops an auto-fade).</li>
+<li>Internal: <code>TransitionMacroSync.sync/mirrorCrossfade</code> (called from <code>Mixer.setTransition</code>, <code>applyTransitionPreset</code>, <code>MacroEngine.tick</code>, <code>SessionSerializer</code>), <code>ISFFilter.floatParamNames</code>, <code>TransitionMacroSync.isSyncOwned/ownerNote</code> shared by the editors; the MIDI learn path treats TRANS knobs as soft-takeover.</li>
+</ul>
 <h3 id="master-knobs-say-level-not-alpha-macromacroenginekt-uiperformancemastercontrolskt">Master Knobs Say Level, Not Alpha (<code>macro/MacroEngine.kt</code>, <code>ui/PerformanceMasterControls.kt</code>)</h3>
 <ul>
 <li><strong>The Master row's default knob labels are now LEVEL A, LEVEL B, LEVEL BG and MASTER</strong> (they still drive <code>levelA</code>, <code>levelB</code>, <code>levelBG</code>, <code>masterLevel</code>), and the row badge reads <strong>Deck Levels &amp; Master</strong>. Banks already saved in a session keep their old labels until reset.</li>
