@@ -31,35 +31,52 @@ import java.io.File
  */
 internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
 
-    fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
+    /**
+     * What a row's own Browse shows right now: the deck's sub-tab (SRC | FX) or Master's (TRANS | FX) picks the kind, and the
+     * dock selection supplies the slot while it is for this row. Null for a Master row on MIX (nothing to browse).
+     */
+    fun targetForRow(parametersState: ParametersState, moduleId: String): ParametersState.BrowseTarget? {
+        val remembered = parametersState.browseTargetFor(moduleId)
         val deckLabel = ctx.deckLabelForModuleId(moduleId)
-        if (deckLabel != null) {
-            drawDeckBrowse(session, mixer, parametersState, moduleId, deckLabel)
-        } else if (moduleId == MacroEngine.MASTER) {
-            drawMasterBrowse(session, mixer, parametersState)
+        return when {
+            deckLabel != null ->
+                if (parametersState.getActiveSubTab(deckLabel) == "FX") remembered as? ParametersState.BrowseTarget.FxChain ?: ParametersState.BrowseTarget.FxChain()
+                else ParametersState.BrowseTarget.Gen
+            moduleId == MacroEngine.MASTER -> when (parametersState.activeMixerSubTab) {
+                "TRANS" -> ParametersState.BrowseTarget.Transition
+                "FX" -> remembered as? ParametersState.BrowseTarget.FxChain ?: ParametersState.BrowseTarget.FxChain()
+                else -> null
+            }
+            else -> null
         }
     }
 
-    private fun drawDeckBrowse(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String, deckLabel: String) {
-        val deck = ctx.deckForLabel(mixer, deckLabel)
-        if (parametersState.getActiveSubTab(deckLabel) == "FX") {
-            drawFxChainBrowse(session, mixer, parametersState, moduleId, deck.fxChain)
-        } else {
-            drawGenBrowse(session, parametersState, mixer, deck, deckLabel)
+    fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
+        val target = targetForRow(parametersState, moduleId)
+        // MIX (CTRL) has no Browse target -- e.g. the user flipped the row's pill back to MIX while Browse was open. Fall back to Params.
+        val binding = target?.let { bindingFor(session, mixer, ParametersState.DockSelection(moduleId, it)) }
+        if (binding == null) { parametersState.openParams(moduleId); return }
+        drawDock(session, mixer, parametersState, binding)
+    }
+
+    /** The dock binding for [selection] -- the apply-target (with its Save / Clear buttons) for a deck source, an FX chain or slot, or the transition. */
+    fun bindingFor(session: SessionContext, mixer: Mixer, selection: ParametersState.DockSelection): DockBinding? {
+        val moduleId = selection.moduleId
+        val deckLabel = ctx.deckLabelForModuleId(moduleId)
+        return when (val t = selection.target) {
+            is ParametersState.BrowseTarget.Gen ->
+                deckLabel?.let { genBinding(session, mixer, ctx.deckForLabel(mixer, it), it) }
+            is ParametersState.BrowseTarget.Transition -> transitionBinding(mixer)
+            is ParametersState.BrowseTarget.FxChain -> when {
+                deckLabel != null -> fxBinding(session, ctx.deckForLabel(mixer, deckLabel).fxChain, deckLabel, t.slotIndex)
+                moduleId == MacroEngine.MASTER -> fxBinding(session, mixer.masterFxChain, "Master", t.slotIndex)
+                else -> null
+            }
         }
     }
 
-    private fun drawMasterBrowse(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
-        when (parametersState.activeMixerSubTab) {
-            "TRANS" -> drawTransitionBrowse(session, mixer, parametersState)
-            "FX" -> drawFxChainBrowse(session, mixer, parametersState, MacroEngine.MASTER, mixer.masterFxChain)
-            // MIX (CTRL) has no Browse target -- e.g. the user flipped the row's pill back to MIX
-            // while Browse was open. Nothing to show here, so fall back to Params.
-            else -> parametersState.openParams(MacroEngine.MASTER)
-        }
-    }
-
-    private fun drawGenBrowse(session: SessionContext, parametersState: ParametersState, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String) {
+    private fun genBinding(session: SessionContext, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String): DockBinding {
+        val parametersState = session.parametersState
         val applyId = { id: String -> DeckSourcePicker.applyPickedSourceId(session, parametersState, mixer, deck, deckLabel, id, ctx.deckPresetController) }
         val target = ApplyTarget(
             kind = BrowseKind.SRC,
@@ -73,7 +90,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             }
         )
         val actions = { drawGenBrowseSaveButton(session, mixer, deck, deckLabel) { drawExternalVideoMenu(deckLabel, applyId) } }
-        drawDock(session, mixer, parametersState, DockBinding(target, "$deckLabel source", actions))
+        return DockBinding(target, "$deckLabel source", actions)
     }
 
     /** The one dock the Library also draws, bound to this row's [binding]: tabs and toolbar, the chip line, the pane, then its shortcuts and popups. */
@@ -144,7 +161,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
         popOpenDropdownPadding()
     }
 
-    private fun drawTransitionBrowse(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
+    private fun transitionBinding(mixer: Mixer): DockBinding {
         val target = ApplyTarget(
             kind = BrowseKind.TRANS,
             contextKey = "transition",
@@ -159,17 +176,11 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 else TransitionOps.loadPreset(File(asset.path), undoable = true)
             }
         )
-        drawDock(session, mixer, parametersState, DockBinding(target, "Transition"))
-    }
-
-    /** [moduleId] is the canonical rack module (a deck, or MASTER) -- used only to look up the Chain/FX1/FX2/FX3 target chosen in the bay's tab row. */
-    private fun drawFxChainBrowse(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String, chain: FxChain) {
-        val target = parametersState.browseTargetFor(moduleId) as? ParametersState.BrowseTarget.FxChain
-        drawFxPane(session, mixer, parametersState, chain, ctx.deckLabelForModuleId(moduleId) ?: "Master", target?.slotIndex)
+        return DockBinding(target, "Transition")
     }
 
     /** The unified pane hosted for an FX slot (one effect) or, with [slotIndex] null, the whole chain. */
-    private fun drawFxPane(session: SessionContext, mixer: Mixer, parametersState: ParametersState, chain: FxChain, chainLabel: String, slotIndex: Int?) {
+    private fun fxBinding(session: SessionContext, chain: FxChain, chainLabel: String, slotIndex: Int?): DockBinding {
         val key = System.identityHashCode(chain)
         val target = if (slotIndex == null) {
             ApplyTarget(
@@ -200,6 +211,6 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 if (ImGui.button("${Icons.TRASH} ${if (slotIndex == null) "Clear Chain" else "Clear Slot ${slotIndex + 1}"}##browse_fx_clear")) target.clear?.invoke()
             }
         }
-        drawDock(session, mixer, parametersState, DockBinding(target, if (slotIndex == null) "$chainLabel FX chain" else "$chainLabel FX ${slotIndex + 1}", actions))
+        return DockBinding(target, if (slotIndex == null) "$chainLabel FX chain" else "$chainLabel FX ${slotIndex + 1}", actions)
     }
 }

@@ -20,7 +20,6 @@ import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.PlaylistManager
 import llm.slop.liquidlsd.ui.UIManager
-import llm.slop.liquidlsd.ui.UiClock
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownPadding
 import llm.slop.liquidlsd.ui.pushOpenDropdownFont
@@ -94,10 +93,9 @@ object BrowserPane {
     private val scopeMemory = ScopeMemory()
 
     private var hostedTarget: ApplyTarget? = null
-    private var hostedAtMs = 0L
 
-    /** The target of the pane drawn in the Edit bay within the last 300 ms, else null (Library or not on screen). The controller reads it to pick its context. */
-    fun hosted(): ApplyTarget? = hostedTarget?.takeIf { UiClock.nowMs() - hostedAtMs < 300L }
+    /** The target the pane was last drawn bound to, else null (plain Library, or the dock is not on screen). The controller reads it to pick its context. */
+    fun hosted(): ApplyTarget? = hostedTarget
 
     /** Applies the list row under the controller's cursor to the hosted target; false when there is none. */
     fun applyCursorRow(): Boolean {
@@ -178,7 +176,6 @@ object BrowserPane {
     internal fun noteHosting(target: ApplyTarget?) {
         if (target?.contextKey != hostedTarget?.contextKey) LibraryPanel.activeSelectionSource = null
         hostedTarget = target
-        if (target != null) hostedAtMs = UiClock.nowMs()
     }
 
     private fun drawTree(session: SessionContext, mixer: Mixer, catalog: BrowseCatalog, kind: BrowseKind) {

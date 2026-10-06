@@ -30,7 +30,7 @@ internal class DeckFxActions : FxChainHeader.Actions {
     }
 
     override fun openSlotBrowse(slotIdx: Int) {
-        parametersState.openFxChainBrowse(canonicalBankId, deckLabel, slotIndex = slotIdx)
+        parametersState.selectFxChain(canonicalBankId, deckLabel, slotIndex = slotIdx)
     }
 
     override fun focusSlot(slotIdx: Int?) {
@@ -42,7 +42,7 @@ internal class DeckFxActions : FxChainHeader.Actions {
     }
 
     override fun openChainBrowse() {
-        parametersState.openFxChainBrowse(canonicalBankId, deckLabel, slotIndex = null)
+        parametersState.selectFxChain(canonicalBankId, deckLabel, slotIndex = null)
     }
 }
 
@@ -60,7 +60,7 @@ internal class MasterFxActions : FxChainHeader.Actions {
     }
 
     override fun openSlotBrowse(slotIdx: Int) {
-        parametersState.openFxChainBrowse(MacroEngine.MASTER, deckLabel = null, slotIndex = slotIdx)
+        parametersState.selectFxChain(MacroEngine.MASTER, deckLabel = null, slotIndex = slotIdx)
     }
 
     override fun focusSlot(slotIdx: Int?) {
@@ -72,6 +72,6 @@ internal class MasterFxActions : FxChainHeader.Actions {
     }
 
     override fun openChainBrowse() {
-        parametersState.openFxChainBrowse(MacroEngine.MASTER, deckLabel = null, slotIndex = null)
+        parametersState.selectFxChain(MacroEngine.MASTER, deckLabel = null, slotIndex = null)
     }
 }

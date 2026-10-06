@@ -214,7 +214,7 @@ object LibraryPanel {
         FileSystemManager.scanAllTransitionPlaylists()
     }
 
-    fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, parametersState: ParametersState) {
+    fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, parametersState: ParametersState, binding: BrowserDock.DockBinding? = null) {
         checkAutoRefresh()
         val safeW = width.coerceAtLeast(80f)
 
@@ -246,8 +246,8 @@ object LibraryPanel {
             ImGui.endMenuBar()
         }
 
-        BrowserDock.libraryShown()
-        BrowserDock.drawBody(session, mixer, parametersState)
+        if (binding == null) BrowserDock.libraryShown()
+        BrowserDock.drawBody(session, mixer, parametersState, binding)
         BrowserDock.drawShortcuts(session, mixer)
         BrowserDock.drawPopups(session)
     }

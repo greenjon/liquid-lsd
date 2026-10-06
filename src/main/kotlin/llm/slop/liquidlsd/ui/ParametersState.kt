@@ -178,6 +178,32 @@ class ParametersState : MidiLearnSink {
         dockSelection = DockSelection(moduleId, target)
     }
 
+    /**
+     * Makes [target] on [moduleId] the dock's apply-target without expanding the row (Perform view). While a row is
+     * already open in the Edit bay the same click also shows that bay's Browse tab, as [openBrowse] does.
+     */
+    private fun selectDock(moduleId: String, target: BrowseTarget) {
+        if (anyRackModuleExpanded()) openBrowse(moduleId, target) else dockSelection = DockSelection(moduleId, target)
+    }
+
+    /** Row click on a deck's source badge: binds the dock to that deck's source. */
+    fun selectGen(canonicalModuleId: String, deckLabel: String) {
+        setDeckSubTab(deckLabel, "SRC")
+        selectDock(canonicalModuleId, BrowseTarget.Gen)
+    }
+
+    /** Row click on an FX chain's name or one of its slots ([slotIndex] null = the whole chain; [deckLabel] null = Master). */
+    fun selectFxChain(canonicalModuleId: String, deckLabel: String?, slotIndex: Int?) {
+        if (deckLabel != null) setDeckSubTab(deckLabel, "FX") else activeMixerSubTab = "FX"
+        selectDock(canonicalModuleId, BrowseTarget.FxChain(slotIndex))
+    }
+
+    /** Row click on the active transition's name. */
+    fun selectTransition() {
+        activeMixerSubTab = "TRANS"
+        selectDock(MacroEngine.MASTER, BrowseTarget.Transition)
+    }
+
     /** Flips an already-open module back to its Params (Deep Edit) content. */
     fun openParams(moduleId: String) {
         setDisclosure(moduleId, DisclosureLevel.DEEP_EDIT)

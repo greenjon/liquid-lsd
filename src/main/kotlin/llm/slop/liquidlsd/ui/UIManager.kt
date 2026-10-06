@@ -589,7 +589,10 @@ class UIManager(
         val flags = noDecorate or ImGuiWindowFlags.NoScrollbar or ImGuiWindowFlags.NoTitleBar or ImGuiWindowFlags.MenuBar
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 6.0f)
         if (ImGui.begin("Library", flags)) {
-            LibraryPanel.draw(session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, parametersState)
+            LibraryPanel.draw(
+                session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, parametersState,
+                performanceMatrixPanel.dockBinding(session, currentMixer!!, parametersState)
+            )
 
             if (theme.libraryMode != UITheme.LibraryMode.FULL) {
                 val titleBarH = libTitleBarH

@@ -1,7 +1,6 @@
 package llm.slop.liquidlsd.ui
 
 import llm.slop.liquidlsd.SessionContext
-import llm.slop.liquidlsd.ui.browser.BrowserDock
 import llm.slop.liquidlsd.ui.browser.BrowserPane
 
 /**
@@ -11,7 +10,7 @@ import llm.slop.liquidlsd.ui.browser.BrowserPane
  * - Library: the dock FULL, no rows (`maximized`).
  * - Edit: one focused row over the dock in the bay (`editing`).
  *
- * [dockBound] is true while the dock in the Edit bay shows a tab of the row's own kind, so a tap applies to the row.
+ * [dockBound] is true while the dock shows a tab of the selected target's kind (in any view), so a tap applies to the target.
  * [dockActive] is whether a dock is the surface the controller browses: Library FULL, or the Edit bay with its Browse tab up.
  */
 internal data class ViewState(val editing: Boolean, val maximized: Boolean, val dockBound: Boolean, val dockActive: Boolean) {
@@ -21,6 +20,7 @@ internal data class ViewState(val editing: Boolean, val maximized: Boolean, val 
 internal fun viewStateOf(session: SessionContext): ViewState {
     val maximized = session.uiTheme.libraryMode == UITheme.LibraryMode.FULL
     val editing = session.parametersState.anyRackModuleExpanded() && !maximized
-    val bound = editing && BrowserPane.hosted() != null
-    return ViewState(editing, maximized, bound, dockActive = maximized || (editing && BrowserDock.editHosted()))
+    val ps = session.parametersState
+    val browsing = editing && ps.rackModuleDisclosure.entries.any { it.value != ParametersState.DisclosureLevel.COLLAPSED && ps.sectionModeFor(it.key) == ParametersState.SectionMode.BROWSE }
+    return ViewState(editing, maximized, dockBound = BrowserPane.hosted() != null, dockActive = maximized || browsing)
 }

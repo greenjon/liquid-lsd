@@ -49,8 +49,6 @@ class NavigationSurfaceTest {
     @BeforeTest
     fun setUp() {
         session = SessionContext()
-        clock = nextEpoch.also { nextEpoch += 1_000_000L } // later than any picker stamp left by an earlier test
-        UiClock.nowMs = { clock }
         savedPage = UITheme.performancePageId
         savedMode = UITheme.libraryMode
         savedExpanded = UITheme.rackExpandedModules
@@ -64,15 +62,8 @@ class NavigationSurfaceTest {
         PerformSurface.lastTouchedKnob = null
     }
 
-    private var clock = 0L
-
-    private companion object {
-        var nextEpoch = 1_000_000L
-    }
-
     @AfterTest
     fun tearDown() {
-        UiClock.nowMs = { System.currentTimeMillis() }
         MacroLearnState.cancelLearn()
         PreferencesPanel.close()
         PerformSurface.lastTouchedKnob = null
@@ -154,7 +145,7 @@ class NavigationSurfaceTest {
         UITheme.libraryMode = UITheme.LibraryMode.FULL
         assertTrue(nav().browsing)
         UITheme.libraryMode = UITheme.LibraryMode.HALF
-        clock += 350
+        state.openParams(MacroEngine.DECK_A)
         assertFalse(nav().browsing) // Edit view without a picker list
     }
 
@@ -213,7 +204,6 @@ class NavigationSurfaceTest {
     // --- Unified pane hosted in the Edit bay ---
 
     private fun hostPane(applied: MutableList<String>, cleared: MutableList<String>) {
-        BrowserDock.noteEditShown()
         BrowserPane.noteHosting(
             ApplyTarget(
                 kind = BrowseKind.SRC, contextKey = "gen/Deck A", defaultScope = BrowseScope.All,
@@ -224,7 +214,6 @@ class NavigationSurfaceTest {
 
     private fun unhostPane() {
         BrowserPane.noteHosting(null)
-        BrowserDock.noteEditShown(0L)
         LibraryPanel.activeSelectionSource = null
         PresetListPanel.selectedAsset = null
     }
@@ -234,8 +223,6 @@ class NavigationSurfaceTest {
         val applied = mutableListOf<String>()
         try {
             state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
-            clock += 350
-            assertFalse(nav().browsing)
             hostPane(applied, mutableListOf())
             assertTrue(nav().browsing)
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
@@ -244,7 +231,7 @@ class NavigationSurfaceTest {
             assertEquals(listOf("stock-source://plasma"), applied)
             nav().browseAccept(true) // shift + tap does nothing in the bay
             assertEquals(1, applied.size)
-            clock += 350
+            state.openParams(MacroEngine.DECK_A)
             assertFalse(nav().browsing)
         } finally {
             unhostPane()

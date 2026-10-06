@@ -148,7 +148,7 @@ internal object PerformanceTransitionsControls {
         val modBadge = if (isTransModified) " *" else ""
 
         if (ImGui.button(tipPickerLabel.get(transName, modBadge) { "${Icons.SETTINGS} $transName$modBadge##perf_trans_picker_btn" }, transBtnW, headerH)) {
-            parametersState.openTransitionBrowse()
+            parametersState.selectTransition()
         }
         itemTooltip(tipPicker.get(transName, modBadge) { "Select ISF transition shader or blend mode.\nActive: $transName$modBadge" })
 

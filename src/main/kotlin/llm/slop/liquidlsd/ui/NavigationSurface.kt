@@ -173,8 +173,3 @@ internal class NavigationSurface(
 
 /** Whether the Esc key should run [NavigationSurface.back] this frame: pressed, and no text field has keyboard focus. */
 internal fun shouldHandleEscape(wantTextInput: Boolean, escPressed: Boolean): Boolean = escPressed && !wantTextInput
-
-/** Wall clock for the "is a picker on screen" windows; tests replace it to advance time without sleeping. */
-internal object UiClock {
-    @Volatile var nowMs: () -> Long = { System.currentTimeMillis() }
-}

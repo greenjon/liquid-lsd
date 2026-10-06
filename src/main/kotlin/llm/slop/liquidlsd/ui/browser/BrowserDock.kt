@@ -13,7 +13,6 @@ import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.LibraryPanel.LibraryViewMode
 import llm.slop.liquidlsd.ui.ParametersState
 import llm.slop.liquidlsd.ui.TangoPalette
-import llm.slop.liquidlsd.ui.UiClock
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.shortcuts.ShortcutManager
 
@@ -26,13 +25,7 @@ object BrowserDock {
     /** What the dock applies to while it is opened from an Edit row: the row's [target], a [label] for the chip, and row-specific buttons ([actions], e.g. Save, Clear Slot). */
     class DockBinding(val target: ApplyTarget, val label: String, val actions: (() -> Unit)? = null)
 
-    private var editShownAtMs = 0L
     private var syncedKey: String? = null
-
-    internal fun noteEditShown(atMs: Long = UiClock.nowMs()) { editShownAtMs = atMs }
-
-    /** True when the dock was drawn inside the Edit bay within the last 300 ms (bound or not). */
-    fun editHosted(): Boolean = UiClock.nowMs() - editShownAtMs < 300L
 
     /** The Library window is drawing the dock again, so the next Edit row re-selects its tab. */
     fun libraryShown() { syncedKey = null }
@@ -45,7 +38,6 @@ object BrowserDock {
 
     /** Opens on the tab of the row's kind whenever the row (or its slot) changes; a tab the user picks afterwards sticks until then. */
     private fun syncTab(binding: DockBinding) {
-        noteEditShown()
         if (binding.target.contextKey == syncedKey) return
         syncedKey = binding.target.contextKey
         LibraryNavigation.setViewMode(modeFor(binding.target.kind))
@@ -134,6 +126,7 @@ object BrowserDock {
             LibraryViewMode.TRANS -> BrowseKind.TRANS
             LibraryViewMode.MAPS -> null
         }
+        if (unifiedKind == null) BrowserPane.noteHosting(null) // the Maps tab has no apply-target
         if (LibraryPanel.viewMode == LibraryViewMode.MAPS) {
             // Banks and Pages take the whole panel: no playlists or queues.
             ImGui.beginChild("LibraryMaps", availW, contentH, true, outerFlags)

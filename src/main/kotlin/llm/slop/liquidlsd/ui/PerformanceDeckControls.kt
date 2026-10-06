@@ -359,7 +359,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             val canonicalBankId = MacroEngine.deckBankIdFor(deck, mixer) ?: MacroEngine.DECK_A
             if (ImGui.invisibleButton(str.badgeId, genBadgeW, ctrlH)) {
-                parametersState.openGenBrowse(canonicalBankId, deckLabel)
+                parametersState.selectGen(canonicalBankId, deckLabel)
             }
             val sourceId = GeneratorDefaults.sourceIdFor(deck.source)
             val hasUserDef = GeneratorDefaults.hasUserDefault(sourceId)
@@ -368,7 +368,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             if (ImGui.beginPopupContextItem(str.badgeCtxId)) {
                 pushOpenDropdownFont()
                 if (ImGui.menuItem("Browse...")) {
-                    parametersState.openGenBrowse(canonicalBankId, deckLabel)
+                    parametersState.selectGen(canonicalBankId, deckLabel)
                 }
                 if (!isExternalVideo && ImGui.menuItem("Save As...")) {
                     ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = true)

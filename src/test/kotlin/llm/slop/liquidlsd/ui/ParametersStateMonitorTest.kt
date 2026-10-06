@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import llm.slop.liquidlsd.macro.MacroEngine
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class ParametersStateMonitorTest {
@@ -60,6 +61,26 @@ class ParametersStateMonitorTest {
         assertTrue(state.browseTargetFor(MacroEngine.DECK_A) is ParametersState.BrowseTarget.Gen)
         state.clearDockSelection()
         assertEquals(null, state.dockSelection)
+    }
+
+    @Test
+    fun selectingARowSlotBindsTheDockWithoutExpandingTheRow() {
+        val state = ParametersState()
+        state.selectFxChain(MacroEngine.DECK_A, "Deck A", slotIndex = 2)
+        assertFalse(state.anyRackModuleExpanded())
+        assertEquals(ParametersState.DockSelection(MacroEngine.DECK_A, ParametersState.BrowseTarget.FxChain(2)), state.dockSelection)
+        assertEquals("FX", state.activeDeckASubTab)
+        state.selectTransition()
+        assertEquals(ParametersState.BrowseTarget.Transition, state.dockSelection?.target)
+        assertFalse(state.anyRackModuleExpanded())
+    }
+
+    @Test
+    fun selectingWhileARowIsOpenAlsoShowsItsBrowseTab() {
+        val state = ParametersState()
+        state.openParams(MacroEngine.DECK_A)
+        state.selectGen(MacroEngine.DECK_A, "Deck A")
+        assertEquals(ParametersState.SectionMode.BROWSE, state.sectionModeFor(MacroEngine.DECK_A))
     }
 
     @Test

@@ -16,7 +16,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  */
 internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
 
-    private val browseBay = PerformanceBrowseBay(ctx)
+    internal val browseBay = PerformanceBrowseBay(ctx)
 
     /**
      * The open Deep Edit that receives Ctrl+S/C/V and Delete -- the one last clicked, else the first
@@ -138,7 +138,10 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
                 if (moduleId == keyboardOwnerModuleId) handleDeepEditKeys(parametersState, mixer, fullSet = false)
                 browseBay.draw(session, mixer, parametersState, moduleId)
             }
-            ParametersState.SectionMode.PARAMS -> drawRackDeepEdit(session, mixer, parametersState, moduleId)
+            ParametersState.SectionMode.PARAMS -> {
+                llm.slop.liquidlsd.ui.browser.BrowserPane.noteHosting(null) // no dock on screen
+                drawRackDeepEdit(session, mixer, parametersState, moduleId)
+            }
         }
     }
 
