@@ -29,7 +29,7 @@ class PerformSurfaceTest {
     private val deckAChain = FxChain("Deck A FX")
     private val bankIds = listOf(
         MacroEngine.DECK_A, MacroEngine.DECK_B, MacroEngine.DECK_BG, MacroEngine.DECK_PV,
-        MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.FX_SENDS, MacroEngine.GLOBAL
+        MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.GLOBAL
     ) + FxMacroSync.FX_BANK_IDS
     private var savedPage = PerfPageDef.DEFAULT_ID
 
@@ -78,9 +78,9 @@ class PerformSurfaceTest {
     }
 
     @Test
-    fun masterTabIsMasterTransitionsFxSendsAndAKnoblessClockRow() {
-        val p = page("master")
-        assertEquals(listOf(MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.FX_SENDS, null),
+    fun mixerTabIsMasterMixMasterFxTransitionsAndAKnoblessClockRow() {
+        val p = page("mixer")
+        assertEquals(listOf(MacroEngine.MASTER, MacroEngine.MASTER_FX, MacroEngine.TRANS, null),
             listOf(0, 4, 8, 12).map { p.knobs[it]?.bankId })
         assertTrue((12..15).all { p.knobs[it] == null })
     }
@@ -203,14 +203,14 @@ class PerformSurfaceTest {
 
     @Test
     fun showPageSelectsTheMatrixTabAndIgnoresUnknownPages() {
-        surface().showPage(PerformSurface.PAGE_MASTER)
-        assertEquals("master", UITheme.performancePageId)
+        surface().showPage("perform.mixer")
+        assertEquals("mixer", UITheme.performancePageId)
         surface().showPage("perform.ab")
         assertEquals("ab", UITheme.performancePageId)
-        surface().showPage("master") // a bare page id works too
-        assertEquals("master", UITheme.performancePageId)
+        surface().showPage("mixer") // a bare page id works too
+        assertEquals("mixer", UITheme.performancePageId)
         surface().showPage("nonsense")
-        assertEquals("master", UITheme.performancePageId)
+        assertEquals("mixer", UITheme.performancePageId)
         assertNotNull(page())
     }
 
@@ -259,11 +259,10 @@ class PerformSurfaceTest {
 
     @Test
     fun masterRowsUseHueColoursOnTheHardware() {
-        val lights = surface().let { UITheme.performancePageId = "master"; it.knobLights() }
+        val lights = surface().let { UITheme.performancePageId = "mixer"; it.knobLights() }
         fun rgb(i: Int) = lights[i]!!.let { listOf(it.r, it.g, it.b) }
         assertEquals(PerformanceColors.LED_MASTER.toList(), rgb(0))
-        assertEquals(PerformanceColors.COLOR_TRANS.toList(), rgb(4))
-        assertEquals(PerformanceColors.COLOR_FX.toList(), rgb(8))
+        assertEquals(PerformanceColors.COLOR_TRANS.toList(), rgb(8))
         assertNull(lights[12])  // the Clock row has no knobs
     }
 
@@ -307,7 +306,7 @@ class PerformSurfaceTest {
         val candidatePages = listOf(
             pageOf("deck.A.src", "deck.A.fx", "deck.B.src", "deck.B.fx"),
             pageOf("deck.BG.src", "deck.BG.fx", "deck.PV.src", "deck.PV.fx"),
-            pageOf("master.mix", "master.fx", "trans", "wetdry"),
+            pageOf("master.mix", "master.fx", "trans", "global"),
         )
         for (page in candidatePages) {
             val values = PerfRows.rowsForPage(page).map { row ->
@@ -356,7 +355,7 @@ class PerformSurfaceTest {
         state.rackModuleDisclosure[MacroEngine.DECK_A] = ParametersState.DisclosureLevel.COLLAPSED
         assertEquals(uncachedRows(ab, pages), cache.rows(ab, ctx, state, { it }, pages))
 
-        val master = pages.first { it.id == "master" }
+        val master = pages.first { it.id == "mixer" }
         state.activeMixerSubTab = "FX"
         assertEquals(uncachedRows(master, pages), cache.rows(master, ctx, state, { it }, pages))
         state.activeMixerSubTab = "CTRL"

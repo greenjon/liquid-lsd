@@ -1848,7 +1848,7 @@ than offering targets.</p>
 </ul>
 <p>If you click a parameter outside that section, the banner says <em>"Cannot add target…"</em> and Add Target stays
 armed, so you can click the right one. If you move to another section while Add Target is armed, it
-is cancelled. That includes Edit's SRC/FX tabs and the side rail. Master and FX Sends knobs aren't
+is cancelled. That includes Edit's SRC/FX tabs and the side rail. Master knobs aren't
 limited this way, and Transitions knobs can't be learned (they follow the active transition).</p>
 <p>Each knob can hold up to <strong>4 targets</strong>, so one knob can drive several parameters (or modulator
 properties) simultaneously — with independent settings per target.</p>
@@ -2020,13 +2020,6 @@ toggled with <code>F4</code>; everything it did now lives in Edit, below.)</p>
 <td style="text-align: left;">Master MIX</td>
 <td style="text-align: left;">Master FX</td>
 <td style="text-align: left;">Transitions</td>
-<td style="text-align: left;">FX Wet/Dry</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>MASTER</strong></td>
-<td style="text-align: left;">Master MIX</td>
-<td style="text-align: left;">Transitions</td>
-<td style="text-align: left;">FX Wet/Dry</td>
 <td style="text-align: left;">Clock &amp; Global</td>
 </tr>
 </tbody>
@@ -2039,7 +2032,7 @@ Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).</p
 <li><strong>Master Rows Are Split Too</strong>: The <strong>Master MIX row</strong> (<code>[ MIX ]</code> pill) has the deck-levels badge, with the four knobs on the deck levels and the master level. The <strong>Master FX row</strong> (<code>[ FX ]</code> pill) has the Master FX chain header (<code>[◀] Name • [▶] [Save] [⋮]</code>) and its <code>[ BYPASS / FX ON ]</code> button, with the knobs on the Master FX Super Knob + 3 Metaknobs. The crossfader sits on the Transitions row.</li>
 <li>The Transitions row carries the transition picker (opens inline Browse — see below) and queue prev/next controls. Its four knobs are fixed: <strong>knob 1 is the crossfader</strong> (it follows auto-fades and the slider, and turning it takes over like the slider does), and <strong>knobs 2-4 are the active transition's first three sliders</strong>, relabelled whenever you change transition. Transitions with fewer than three sliders leave the spare knobs blank. These knobs cannot be re-learned; Dry/Wet stays in the Edit bay.</li>
 </ul>
-<p>Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) and starts with a title badge spanning both control lines: a large <strong>A</strong>, <strong>B</strong>, <strong>BG</strong> or <strong>PV</strong> on deck rows (the <code>[SRC]</code>/<code>[FX]</code> pills beside it show which the knobs control), and <strong>MASTER</strong>, <strong>TRANS</strong>, <strong>WET/DRY</strong> and <strong>CLOCK</strong> on the MASTER tab. No row has a header bar over its knobs, so MASTER-tab knobs are the same size as deck knobs.</p>
+<p>Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) and starts with a title badge spanning both control lines: a large <strong>A</strong>, <strong>B</strong>, <strong>BG</strong> or <strong>PV</strong> on deck rows (the <code>[SRC]</code>/<code>[FX]</code> pills beside it show which the knobs control), and <strong>MASTER</strong>, <strong>TRANS</strong> and <strong>CLOCK</strong> on the MIXER tab. No row has a header bar over its knobs, so MIXER-tab knobs are the same size as deck knobs.</p>
 <h3 id="performance-controls-side-wing-layout">Performance Controls &amp; Side-Wing Layout</h3>
 <p>To maximize vertical space in the matrix and keep the knobs comfortably clustered together:
 - <strong>Row Titles &amp; Side-Wing Controls</strong>: Row group titles (e.g. <code>DECK A</code>, <code>DECK A (FX)</code>) sit at the top-left of the row, level with the top of the knobs. The left- and right-wing controls sit below the title, with their bottom edge lined up with the bottom of the knobs, so short rows never push the controls up into the title. Every wing control (buttons, badges, generator/preset badge) is the same height.
@@ -2106,7 +2099,7 @@ Controls actively armed for MIDI learn display a pulsing cyan highlight border. 
 write to the <strong>same underlying <code>MacroEngine</code> banks</strong> — changes in one are immediately visible in the others.</p>
 <h3 id="the-modular-rack-edit">The Modular Rack: Edit</h3>
 <p>Every deep-editable row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Master, Transitions)
-has a small <strong><code>[EDIT]</code> button</strong> in its top-right corner (FX Wet/Dry is a dedicated 4-knob macro row with no button). Clicking it toggles that row
+has a small <strong><code>[EDIT]</code> button</strong> in its top-right corner (the Clock row has no knobs and no button). Clicking it toggles that row
 between two disclosure tiers, without leaving the Perform view:</p>
 <ol>
 <li><strong>Faceplate</strong> (collapsed, the default) — just the 4 knobs, exactly like the plain 4×4 matrix
@@ -2284,13 +2277,6 @@ with the parameter selected.</p>
 <td style="text-align: left;">4</td>
 <td style="text-align: left;"><code>master</code></td>
 <td style="text-align: left;">Level A, Level B, Master Level, Crossfader</td>
-</tr>
-<tr>
-<td style="text-align: left;"><strong>Master FX</strong></td>
-<td style="text-align: left;">FX Wet/Dry</td>
-<td style="text-align: left;">4</td>
-<td style="text-align: left;"><code>fxSends</code></td>
-<td style="text-align: left;">Deck A, B, BG, PV Insert FX Wet/Dry Levels</td>
 </tr>
 <tr>
 <td style="text-align: left;"></td>

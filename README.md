@@ -32,7 +32,7 @@ Liquid LSD is in active beta with a stable, production-ready core video and audi
 | **Presets & Library**      | **Operational** | Hierarchical preset system, `.lsdfx` slot presets, `.lsdfxchain` 3-slot chains, FX playlists (`.lsdfxplay`), live FX queues (A/B & BG), preset tags, instant tag search, drag-and-drop preset loading. |
 | **MIDI & Shortcuts**       | **Operational** | Multi-type MIDI engine, soft takeover, relative encoders, customizable keyboard shortcuts, real-time packet sniffer.                                                                                   |
 | **Video Export & Sharing** | **Operational** | Asynchronous PBO GPU video export, zero-copy Spout2/Syphon/PipeWire streaming, camera ingest, WebGL2 broadcast engine.                                                                                 |
-| **Perform View & Macros**  | **Operational** | Performance matrix (A/B, BG/PV, MIXER and MASTER tabs) with Edit, macro targets, curve editing, and FX slot editing on the rows. The 19" Modular Video Rack chassis UI this replaced has been fully removed.         |
+| **Perform View & Macros**  | **Operational** | Performance matrix (A/B, BG/PV and MIXER tabs) with Edit, macro targets, curve editing, and FX slot editing on the rows. The 19" Modular Video Rack chassis UI this replaced has been fully removed.         |
 
 ---
 

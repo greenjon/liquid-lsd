@@ -132,7 +132,7 @@ class PerfPageStore(
             else listOf("page id '$id' must be lowercase letters, digits, '_' or '-'")
 
 
-        val BUILT_IN_NAMES = listOf("deck-ab", "deck-bgpv", "mixer", "master")
+        val BUILT_IN_NAMES = listOf("deck-ab", "deck-bgpv", "mixer")
 
         /** Shared instance backed by the real `library/perform_pages/` directory. */
         val default: PerfPageStore by lazy { PerfPageStore() }

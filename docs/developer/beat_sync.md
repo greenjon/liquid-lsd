@@ -109,7 +109,7 @@ When incoming audio level drops below the analysis threshold (`localAudioEnergy 
 ### 4. Audio Engine Disabled / Internal Manual Clock Mode
 When the Audio Engine is disabled (`UITheme.audioEngineEnabled = false`):
 - **Suspended Audio Capture**: Live audio input capture, backend drivers, and audio-reactive CV signals (`audio_amp`, `audio_bass`, `audio_mid`, `audio_high`, `audio_flux_*`) are stopped to conserve CPU cycles.
-- **Clock Row & Preferences Telemetry**: Both the BPM readout and the 4-beat phase meter remain visible and interactive on the Performance MASTER tab's Clock row and within Preferences > Tempo & Sync, reflecting manual fixed clock mode with monotonic phase advance.
+- **Clock Row & Preferences Telemetry**: Both the BPM readout and the 4-beat phase meter remain visible and interactive on the Performance MIXER page's Clock row and within Preferences > Tempo & Sync, reflecting manual fixed clock mode with monotonic phase advance.
 
 ### 5. VJ Tap Tempo & Phase Synchronization
 The application features a real-time Tap Tempo system ([`TapTempoController.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/TapTempoController.kt)) enabling VJs to rhythmically tap in tempos via the Clock row's `[TAP]` button, global keyboard shortcut (`T`), or MIDI CC (`Mixer/tapTempo` or `Global/tapTempo`):

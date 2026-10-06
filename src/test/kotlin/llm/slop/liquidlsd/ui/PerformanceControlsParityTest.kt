@@ -118,16 +118,6 @@ class PerformanceControlsParityTest {
     }
 
     @Test
-    fun testFxSendsResetToDefault() {
-        val sendsBank = llm.slop.liquidlsd.macro.MacroEngine.getBank(llm.slop.liquidlsd.macro.MacroEngine.FX_SENDS) ?: llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(llm.slop.liquidlsd.macro.MacroEngine.FX_SENDS)
-        org.junit.jupiter.api.Assertions.assertNotNull(sendsBank)
-        sendsBank.knobs.forEach { it.value = 0.3f }
-
-        sendsBank.knobs.forEach { it.value = 1.0f }
-        sendsBank.knobs.forEach { assertEquals(1.0f, it.value) }
-    }
-
-    @Test
     fun testDeckRowModeKnobBankParity() {
         val deckTags = listOf("A", "B", "BG", "PV")
         val srcBankIds = listOf(

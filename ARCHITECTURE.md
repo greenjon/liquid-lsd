@@ -11,7 +11,6 @@ Liquid LSD is a Kotlin/JVM VJ application: OpenGL 3.3 core (LWJGL 3 + GLFW), Dea
 | Edit (row bay) | `PerformanceDeepEditBay`, `drawRackDeepEdit`, `ParametersState.rack*` |
 | Modulation column | `PropertiesPanel` |
 | Library tabs Sources / FX / Transitions / Macros | `LibraryViewMode.PRESETS / FX / TRANS / MAPS` |
-| per-deck wet/dry bank (row `W/D`) | `MacroEngine.FX_SENDS`, `PerformanceFxSendsControls` |
 | Level | `levelA/B/BG/PV`, `masterLevel` |
 | macro knob target | `MacroBinding`, `MacroLearnState`, `ProfileBindingEdit` |
 | Mixer column | `MixerPanel`, `MixerLayout` |
@@ -119,7 +118,7 @@ Other `presets/` pieces:
 
 Every deck (A, B, BG, PV) and Master owns one `FxChain` (`rendering/FxChain.kt`): 3 slots of `ISFFilter?`, chain `dryWet` and `enabled`, a `superKnob`, `slotSuperKnobLink[3]` (soft takeover when linking), `focusedSlot` / `focusParamPage` (Focus mode), dirty-by-structure, swap-dip gains. Rendered by the one `Renderer.renderFxChainPass` for decks and Master. **FX is session state, not part of a preset**: `DeckPresetDto` has no FX fields; `MixerDto` carries `masterFxChain`, `deckA/B/BG/PVFxChain` and their source paths. Saved forms: `.lsdfx` (slot), `.lsdfxchain` (chain), `.lsdfxplay` (playlist) via `models/FXPresetModels.kt`. Defaults for new chains: `Mixer.loadDefaultFxChains`, `ui/FxLinkDefaults` (Auto/Linked/Unlinked preference). DECISIONS §2, §4.
 
-`FxMacroSync` (`macro/`) is the only writer of the FX macro banks (`deckA_fx` … `masterFx`): group mode = Super Knob + 3 slot Metaknobs, focus mode = that slot's Metaknob + 3 parameters per page. Per-deck wet/dry is the `FX_SENDS` bank (one knob per deck's `fxChain.dryWet`), shown as the Perform `wetdry` row; "FX1/FX2 sends" and per-row alternative chains no longer exist.
+`FxMacroSync` (`macro/`) is the only writer of the FX macro banks (`deckA_fx` … `masterFx`): group mode = Super Knob + 3 slot Metaknobs, focus mode = that slot's Metaknob + 3 parameters per page. Per-deck chain dry/wet is edited in Edit only (the `FX_SENDS` bank and its Perform row were removed); "FX1/FX2 sends" and per-row alternative chains no longer exist.
 
 ## 6. Parameters, modulation, CV
 
@@ -131,7 +130,7 @@ Every deck (A, B, BG, PV) and Master owns one `FxChain` (`rendering/FxChain.kt`)
 
 `macro/`: `MacroModels.kt` (`MacroBank` → `MacroControl` (value, label, ≤N targets) → `MacroBinding` (parameter id, `PARAM_BASE_VALUE` or `MODULATOR_PROPERTY`, min/max/invert, `MacroCurveType`, `MacroLinkMode`, `modulatorId`)), `MacroCurve` (curve, inverse, travel window), `MacroEngine` (singleton; resident banks; `tick` evaluates a resolved-binding cache rebuilt when `bindingsDirty`; lock queries; mapping suspension), `FxMacroSync`, `MacroLearnState` (click-to-assign session, selection, status), `MacroBankSerializer` (bank in/out of `DeckPresetDto.macroBank`, deck-path remap, `.knobpreset.json` import/export), `MacroOscBridge` (`/macro/<bankId>/knob/<n>` in and feedback out).
 
-Canonical bank ids (`MacroEngine.CANONICAL_BANK_IDS`): `deckA|deckB|deckBG|deckPV`, `deckA_fx|…|deckPV_fx`, `masterTransition` (`TRANS`), `master`, `fxSends` (`FX_SENDS`), `masterFx` (`MASTER_FX`), `global` (`GLOBAL`, registered with 0 knobs). All other banks hold 4 knobs. Session persists banks in `SessionStateDto.deckMacroBanks`; a deck preset carries its own bank.
+Canonical bank ids (`MacroEngine.CANONICAL_BANK_IDS`): `deckA|deckB|deckBG|deckPV`, `deckA_fx|…|deckPV_fx`, `masterTransition` (`TRANS`), `master`, `masterFx` (`MASTER_FX`), `global` (`GLOBAL`, registered with 0 knobs). All other banks hold 4 knobs. Session persists banks in `SessionStateDto.deckMacroBanks`; a deck preset carries its own bank.
 
 Ownership order and locking (macro target > Metaknob link > direct edit/MIDI/OSC; mappings suspended, not overwritten): DECISIONS §5. `ModulatorPropertyAccessor`/`:mod/<id>/` ids: DECISIONS §5. UI side: `PerformanceMacroStrip` (Edit-row target strip), `MacroBindingEditor`, `MacroKnobWidget`, `MacroUndoTracker`.
 
@@ -157,7 +156,7 @@ MidiMappingManager.processGlobalMidiEvents                         OscMappingMan
   - Commands: `CommandRegistry` / `Command` (`CommandKind` TRIGGER/TOGGLE/MOMENTARY/SCALAR/RELATIVE); `KnobCommands` (`knob.<n>`, `.press`, `.press_alt`); `NavCommands` (`nav.button.<n>`, `controller.bank_next/prev`, chain link); `GlobalCommands`.
   - UI-side interfaces: `KnobSurface` ← `ui/PerformSurface` (the 16 visible Perform knobs) and `NavSurface` ← `ui/NavigationSurface` (side buttons, browse cursor, dirty-prompt answers).
   - Feedback: `KnobLightSource` → `ControllerFeedback` → `CcQueue` → `MidiSink`.
-- **Perform pages and banks**: Twister hardware banks name Perform pages (`perform.ab`, `perform.bgpv`, `perform.mixer`, `perform.master`); the UI page is the source of truth and `ControllerFeedback.syncActiveBank` sends a bank switch when the UI page changes.
+- **Perform pages and banks**: Twister hardware banks name Perform pages (`perform.ab`, `perform.bgpv`, `perform.mixer`; the profile's `wrapPages` makes the device's spare bank 4 loop back to bank 1); the UI page is the source of truth and `ControllerFeedback.syncActiveBank` sends a bank switch when the UI page changes.
 - **Touch console** (`input/`): `TouchConsoleController` (CapsLock latch; zones drive crossfade and levels), backends `LinuxEvdevTouchBackend`, `MacCocoaTouchBackend`, `NoOpTouchBackend` (other platforms), events through a lock-free queue drained on Thread 0. DECISIONS §10.
 - **Keyboard**: `ui/shortcuts/` (`ShortcutManager`, rebindable; `~/.liquidlsd/keybindings.json`); global hotkeys are handled in the GLFW key callback in `Main.kt`.
 
@@ -182,9 +181,9 @@ Deeper: `docs/developer/beat_sync.md` (stale on `ClockSource`), `docs/developer/
 - **Library**: `LibraryMode.FULL`.
 
 Perform surface:
-- **Pages**: `PerfPageStore` (built-ins `resources/perform_pages/{deck-ab,deck-bgpv,mixer,master}.json`, user pages `library/perform_pages/`) → `PerfPageDef` = exactly 4 `RowPlacement`s whose ids come from `PerfRows.CATALOG` (`deck.<tag>.src|fx`, `master.mix|fx`, `trans`, `wetdry`, `global`). The tab strip is drawn in `MenuBar` (`PerfTabStrip`); the active id is `UITheme.performancePageId`. `PerformPagesPanel` edits pages in Preferences.
+- **Pages**: `PerfPageStore` (built-ins `resources/perform_pages/{deck-ab,deck-bgpv,mixer}.json`, user pages `library/perform_pages/`) → `PerfPageDef` = exactly 4 `RowPlacement`s whose ids come from `PerfRows.CATALOG` (`deck.<tag>.src|fx`, `master.mix|fx`, `trans`, `wetdry`, `global`). The tab strip is drawn in `MenuBar` (`PerfTabStrip`); the active id is `UITheme.performancePageId`. `PerformPagesPanel` edits pages in Preferences.
 - **Rows**:
-  - `PerformanceMatrixPanel` orchestrates `PerformanceDeckControls`, `PerformanceMasterControls`, `PerformanceTransitionsControls`, `PerformanceFxSendsControls`, `PerformanceClockControls`, with shared state in `PerformanceUiContext`.
+  - `PerformanceMatrixPanel` orchestrates `PerformanceDeckControls`, `PerformanceMasterControls`, `PerformanceTransitionsControls`, `PerformanceClockControls`, with shared state in `PerformanceUiContext`.
   - FX header and cells: `FxChainHeader`, `FxSlotCell`, `FxParamCell`, `FXChainMacroStrip`.
   - Geometry never depends on row mode (`PerfRowGeometry`, `DeckRowMetrics`, `PerfKnobSpec` / `PerfKnobResolver`). Every deck and Master row shows one half (`pinnedMode`), so a row's meaning never depends on a mode; only the Edit bay's SRC/FX and MIX/FX tabs (`ParametersState`) choose which half an open module shows.
 - **Hardware view of the same grid**: `PerformSurface` and `NavigationSurface` (constructed in `UIManager.render`) resolve knobs with the same `PerfRows` + resolver the panel draws with.

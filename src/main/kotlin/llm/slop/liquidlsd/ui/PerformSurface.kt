@@ -174,7 +174,7 @@ internal class PerformSurface(
     }
 
     override fun showPage(pageId: String) {
-        // `perform.<id>` names a page; the legacy `perform.master` is the built-in's id.
+        // `perform.<id>` names a page; the page id is the built-in file's `id` (`ab`, `bgpv`, `mixer`).
         val id = pageId.removePrefix("perform.")
         if (PerfPageStore.default.get(id) != null) theme.performancePageId = id
     }
@@ -244,7 +244,6 @@ internal class PerformSurface(
     }
 
     companion object {
-        const val PAGE_MASTER = "perform.master"
 
         /** What a mouse middle-click does on these knobs (the matrix passes 0.5 as every macro's default). */
         const val LABEL_KNOB_DEFAULT = 0.5f

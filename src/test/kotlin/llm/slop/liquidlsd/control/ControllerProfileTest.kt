@@ -113,7 +113,8 @@ class ControllerProfileTest {
 
     @Test
     fun twisterBanksNamePerformPages() {
-        assertEquals(listOf("perform.ab", "perform.bgpv", "perform.mixer", "perform.master"), twister().profile.banks.pages)
+        assertEquals(listOf("perform.ab", "perform.bgpv", "perform.mixer"), twister().profile.banks.pages)
+        assertTrue(twister().profile.banks.wrapPages, "bank 4 has no page: it loops to bank 1")
         // Every named page must exist among the built-in pages.
         val known = llm.slop.liquidlsd.ui.PerfPageStore(java.io.File("does-not-exist")).all().map { "perform.${it.id}" }
         assertTrue(twister().profile.banks.pages.all { it in known })

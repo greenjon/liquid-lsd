@@ -38,11 +38,8 @@ object MacroEngine {
     const val DECK_PV_FX = "deckPV_fx"
     const val TRANS = "masterTransition"
     const val MASTER = "master"
-    // FX_SENDS holds one knob per deck's fxSendLevel (A/B/BG/PV); it has no natural path prefix to
-    // auto-route quick-bind into (each knob targets a different deck), so it's reachable only via
-    // the knob-first Learn flow. MASTER_FX is the Master FX chain's row, auto-bound by FxMacroSync
-    // to "Master/FX/..." exactly like the deck FX banks.
-    const val FX_SENDS = "fxSends"
+    // MASTER_FX is the Master FX chain's row, auto-bound by FxMacroSync to "Master/FX/..." exactly like
+    // the deck FX banks.
     const val MASTER_FX = "masterFx"
     // GLOBAL: free, non-section-scoped knobs (see MacroLearnState.sectionFor) -- one knob can drive
     // parameters on several decks at once. Currently 0 knobs: the Clock row's 4 knobs were removed for v1.0
@@ -54,7 +51,7 @@ object MacroEngine {
     val CANONICAL_BANK_IDS = listOf(
         DECK_A, DECK_B, DECK_BG, DECK_PV,
         DECK_A_FX, DECK_B_FX, DECK_BG_FX, DECK_PV_FX,
-        TRANS, MASTER, FX_SENDS, MASTER_FX, GLOBAL
+        TRANS, MASTER, MASTER_FX, GLOBAL
     )
 
     /** The canonical bank id for [deck] on [mixer], or null if not recognized. */
@@ -118,58 +115,6 @@ object MacroEngine {
                     bindings = mutableListOf(
                         MacroBinding(
                             parameterId = "Mixer/masterLevel",
-                            targetType = MacroTargetType.PARAM_BASE_VALUE,
-                            minVal = 0.0f,
-                            maxVal = 1.0f
-                        )
-                    )
-                )
-            )
-        )
-        FX_SENDS -> MacroBank(
-            knobs = listOf(
-                MacroControl(
-                    label = "Deck A",
-                    value = 1.0f,
-                    bindings = mutableListOf(
-                        MacroBinding(
-                            parameterId = "Deck A/FXChain/DryWet",
-                            targetType = MacroTargetType.PARAM_BASE_VALUE,
-                            minVal = 0.0f,
-                            maxVal = 1.0f
-                        )
-                    )
-                ),
-                MacroControl(
-                    label = "Deck B",
-                    value = 1.0f,
-                    bindings = mutableListOf(
-                        MacroBinding(
-                            parameterId = "Deck B/FXChain/DryWet",
-                            targetType = MacroTargetType.PARAM_BASE_VALUE,
-                            minVal = 0.0f,
-                            maxVal = 1.0f
-                        )
-                    )
-                ),
-                MacroControl(
-                    label = "Deck BG",
-                    value = 1.0f,
-                    bindings = mutableListOf(
-                        MacroBinding(
-                            parameterId = "Deck BG/FXChain/DryWet",
-                            targetType = MacroTargetType.PARAM_BASE_VALUE,
-                            minVal = 0.0f,
-                            maxVal = 1.0f
-                        )
-                    )
-                ),
-                MacroControl(
-                    label = "Deck PV",
-                    value = 1.0f,
-                    bindings = mutableListOf(
-                        MacroBinding(
-                            parameterId = "Deck PV/FXChain/DryWet",
                             targetType = MacroTargetType.PARAM_BASE_VALUE,
                             minVal = 0.0f,
                             maxVal = 1.0f
@@ -244,7 +189,6 @@ object MacroEngine {
         "Deck PV FX", "Deck PV/FX", DECK_PV_FX -> DECK_PV_FX
         "Master", "MST", MASTER -> MASTER
         "TRANS", "Transition", TRANS -> TRANS
-        "FX Sends", "FX_SENDS", FX_SENDS -> FX_SENDS
         "Master FX", "Master/FX", MASTER_FX -> MASTER_FX
         "Global", "GLB", GLOBAL -> GLOBAL
         else -> TRANS

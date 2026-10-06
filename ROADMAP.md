@@ -19,7 +19,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 
 | Milestone / Workstream | Target Area | Target | Status | Key Deliverables |
 | :--- | :--- | :---: | :---: | :--- |
-| **Performance Mode & Macros** | `ui/*`, `macro/*`, `presets/*` | **v1.0** | **OPERATIONAL** | Performance matrix (DECKS + MASTER tabs, `F4`) with Deep Edit, `MacroEngine`/`MacroBank` binding, curves, FX slot cells and focus mode on the deck/Master rows. Remaining macro-learn coverage bumped to v1.1 (Milestone 5). |
+| **Performance Mode & Macros** | `ui/*`, `macro/*`, `presets/*` | **v1.0** | **OPERATIONAL** | Performance matrix (A/B, BG/PV, MIXER pages, `F4`) with Deep Edit, `MacroEngine`/`MacroBank` binding, curves, FX slot cells and focus mode on the deck/Master rows. Remaining macro-learn coverage bumped to v1.1 (Milestone 5). |
 | **UI & UX Polish** | `ui/*` | **v1.0** | **ACTIVE** | Perform / Edit / Library views polished and verified at 1280×720. |
 | **Stability Testing** | all | **v1.0** | **ACTIVE** | Long sessions, load/swap under load, session restore, device hot-plug, 5 release platforms. |
 | **ISF Binding Audit** | `rendering/isf/*`, bundled shaders | **v1.0** | **ACTIVE** | Sensible Metaknob/auto-bind and default bindings verified for every bundled ISF. |

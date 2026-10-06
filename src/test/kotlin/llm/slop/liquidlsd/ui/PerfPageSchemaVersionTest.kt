@@ -8,7 +8,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class PerfPageSchemaVersionTest {
-    private val rows = """[{"row":"master.mix"},{"row":"trans"},{"row":"wetdry"},{"row":"global"}]"""
+    private val rows = """[{"row":"master.mix"},{"row":"trans"},{"row":"global"},{"row":"global"}]"""
 
     @Test
     fun missingVersionLoadsAsOneWithoutWarning() {

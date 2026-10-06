@@ -81,7 +81,7 @@ object MacroLearnState {
     /**
      * The Deep Edit (top tab, section) holding the only parameters [bankId]'s knobs may bind to:
      * Deck A SRC knobs -> Deck A SRC, Deck A FX knobs -> Deck A FX, Master FX knobs -> Master FX.
-     * Null for banks that aren't section-scoped (Master, Transitions, FX Sends, Global).
+     * Null for banks that aren't section-scoped (Master, Transitions, Global).
      */
     fun sectionFor(bankId: String?): Pair<String, String>? = when (bankId) {
         MacroEngine.DECK_A -> "Deck A" to "SRC"
@@ -104,7 +104,6 @@ object MacroLearnState {
         if (TransitionMacroSync.isTransBank(bankId)) return false
         when (bankId) {
             MacroEngine.MASTER -> return parameterId.startsWith("Mixer/")
-            MacroEngine.FX_SENDS -> return parameterId.contains("/FXChain/")
         }
         val (top, section) = sectionFor(bankId) ?: return true
         return when {
@@ -119,7 +118,6 @@ object MacroLearnState {
         in FxMacroSync.FX_BANK_IDS -> "an FX-chain knob (it follows the chain) -- edit the chain instead"
         MacroEngine.TRANS -> "a Transitions knob (it follows the active transition) -- change the transition instead"
         MacroEngine.MASTER -> "a Master knob -- click a Master parameter"
-        MacroEngine.FX_SENDS -> "an FX Send knob -- click a deck's FX Send"
         else -> "a ${sectionLabel(bankId)} knob -- click a ${sectionLabel(bankId)} parameter"
     }
 

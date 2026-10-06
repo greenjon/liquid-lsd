@@ -66,7 +66,9 @@ class ControllerRuntime(
     private fun enterBank(bank: Int, ctx: CommandContext) {
         if (trace) logger.info { "controller rx bank entered: ${bank + 1} (page ${compiled.profile.banks.pages.getOrNull(bank)})" }
         activeBank = bank
-        val page = compiled.profile.banks.pages.getOrNull(bank)
+        val banks = compiled.profile.banks
+        // A bank past the page list loops to the first page; ControllerFeedback.syncActiveBank then moves the device to that page's bank.
+        val page = banks.pages.getOrNull(bank) ?: banks.pages.firstOrNull()?.takeIf { banks.wrapPages }
         if (!page.isNullOrBlank()) ctx.knobSurface?.showPage(page)
     }
 
@@ -80,8 +82,10 @@ class ControllerRuntime(
         val pages = compiled.profile.banks.pages
         if (pages.isEmpty()) return
         val count = compiled.profile.banks.count.coerceIn(1, pages.size)
-        val target = Math.floorMod((activeBank ?: 0) + delta, count)
-        if (trace) logger.info { "controller bank step $delta: ${(activeBank ?: 0) + 1} -> ${target + 1}" }
+        // A device bank past the page list (no wrapPages) mirrors the last page, so step from there.
+        val from = (activeBank ?: 0).coerceAtMost(count - 1)
+        val target = Math.floorMod(from + delta, count)
+        if (trace) logger.info { "controller bank step $delta: ${from + 1} -> ${target + 1}" }
         pages.getOrNull(target)?.takeIf { it.isNotBlank() }?.let { ctx.knobSurface?.showPage(it) }
     }
 

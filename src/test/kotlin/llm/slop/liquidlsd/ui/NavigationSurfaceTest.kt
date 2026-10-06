@@ -40,7 +40,7 @@ class NavigationSurfaceTest {
     private val state get() = session.parametersState
     private val bankIds = listOf(
         MacroEngine.DECK_A, MacroEngine.DECK_B, MacroEngine.DECK_BG, MacroEngine.DECK_PV,
-        MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.FX_SENDS, MacroEngine.GLOBAL
+        MacroEngine.MASTER, MacroEngine.TRANS, MacroEngine.GLOBAL
     ) + FxMacroSync.FX_BANK_IDS
     private var savedPage = ""
     private var savedMode = UITheme.LibraryMode.HALF
@@ -455,8 +455,8 @@ class NavigationSurfaceTest {
 
     @Test
     fun pickerOpensTheTransitionListForTheTransitionsRow() {
-        UITheme.performancePageId = "master"
-        PerformSurface.lastTouchedKnob = 4 // Transitions row
+        UITheme.performancePageId = "mixer"
+        PerformSurface.lastTouchedKnob = 8 // Transitions row (row 3 of MIXER)
         nav().button(2, false)
         assertEquals(ParametersState.BrowseTarget.Transition, state.browseTargetFor(MacroEngine.MASTER))
         assertEquals("TRANS", state.activeMixerSubTab)
@@ -464,7 +464,7 @@ class NavigationSurfaceTest {
 
     @Test
     fun pickerIgnoresRowsWithoutAPicker() {
-        UITheme.performancePageId = "master"
+        UITheme.performancePageId = "mixer"
         PerformSurface.lastTouchedKnob = 12 // Clock & Global
         nav().button(2, false)
         assertFalse(state.anyRackModuleExpanded())

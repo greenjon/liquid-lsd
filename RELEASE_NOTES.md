@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### The FX Wet/Dry Row and the MASTER Page Are Gone; Clock Moves to MIXER (`ui/PerfRows.kt`, `macro/MacroEngine.kt`, `resources/perform_pages/`, `control/ControllerRuntime.kt`)
+- **Removed the per-deck FX Wet/Dry row** (and its Resync button). Chain dry/wet is in the Edit bay; there is no Perform-side knob for it any more. Its `fxSends` macro bank is deleted, so MIDI/OSC mappings to those four knobs and banks saved from them no longer exist (old sessions just ignore it).
+- **Three Perform pages now: A/B, BG/PV, MIXER.** MIXER is Master MIX, Master FX, Transitions and Clock & Global; the MASTER page is gone. A saved active page `master` falls back to the first page, and a user page that names `wetdry` is skipped with a log line.
+- **Twister: bank 4 loops back to bank 1.** The stock profile gets a new `banks.wrapPages` flag: entering a bank past the page list shows the first page and the app switches the device back to bank 1, so Next Bank on bank 3 wraps. The 6-button profile's bank-step button already wraps over the three pages, and now also steps on correctly from a spare bank 4.
+- Internal: `PerformanceFxSendsControls`, `MacroEngine.FX_SENDS`, the `FX_SENDS` session migration and `PerformSurface.PAGE_MASTER` removed; `ControllerRuntime.enterBank`/`stepBank` and `BankConfig.wrapPages`.
+
 ### Deck and Master Rows Show One Half; the SRC/FX and MIX/FX Toggle Rows Are Gone (`ui/PerfRows.kt`, `ui/PerformanceDeckControls.kt`, `ui/PerformanceMasterControls.kt`, `resources/perform_pages/`)
 - **Removed the `deck.<tag>.srcfx` and `master` rows, their SRC/FX and MIX/FX pill toggles, and the DECKS page.** Every deck and Master row is now a source row or an FX row (`deck.<tag>.src` / `.fx`, `master.mix` / `master.fx`), as the Twister pages already were. The pill column keeps its footprint, so row geometry is unchanged.
 - **Built-in pages are now A/B, BG/PV, MIXER, MASTER** (the Twister's four banks, in bank order). MASTER's first row is Master MIX (Master FX lives on MIXER). New pages start as Deck A and Deck B, source over FX. A saved page that names a removed row is skipped with a log line; a saved active page `decks` falls back to the first page.

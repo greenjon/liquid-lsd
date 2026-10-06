@@ -136,8 +136,8 @@ internal class PerformanceUiContext {
     }
 
     /**
-     * Focuses the Deep Edit tab (and Mixer/deck sub-tab) that belongs to [bankId]. GLOBAL and FX_SENDS
-     * have no tab, so they are left as a no-op.
+     * Focuses the Deep Edit tab (and Mixer/deck sub-tab) that belongs to [bankId]. GLOBAL
+     * has no tab, so they are left as a no-op.
      */
     fun focusDeepEditTab(parametersState: ParametersState, bankId: String) {
         when (bankId) {

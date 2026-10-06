@@ -46,7 +46,7 @@ A knob can only target parameters in **its own deck and section**:
 
 If you click a parameter outside that section, the banner says *"Cannot add target…"* and Add Target stays
 armed, so you can click the right one. If you move to another section while Add Target is armed, it
-is cancelled. That includes Edit's SRC/FX tabs and the side rail. Master and FX Sends knobs aren't
+is cancelled. That includes Edit's SRC/FX tabs and the side rail. Master knobs aren't
 limited this way, and Transitions knobs can't be learned (they follow the active transition).
 
 Each knob can hold up to **4 targets**, so one knob can drive several parameters (or modulator
@@ -211,8 +211,7 @@ Each tab shows up to 4 rows of 4 knobs, mapped to different banks:
 |:---|:---|:---|:---|:---|
 | **A/B** | Deck A source | Deck A FX | Deck B source | Deck B FX |
 | **BG/PV** | Deck BG source | Deck BG FX | Deck PV source | Deck PV FX |
-| **MIXER** | Master MIX | Master FX | Transitions | FX Wet/Dry |
-| **MASTER** | Master MIX | Transitions | FX Wet/Dry | Clock & Global |
+| **MIXER** | Master MIX | Master FX | Transitions | Clock & Global |
 
 Every deck and Master row shows one half (source or FX), so a knob never changes meaning under you.
 Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).
@@ -222,7 +221,7 @@ Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).
 - **Master Rows Are Split Too**: The **Master MIX row** (`[ MIX ]` pill) has the deck-levels badge, with the four knobs on the deck levels and the master level. The **Master FX row** (`[ FX ]` pill) has the Master FX chain header (`[◀] Name • [▶] [Save] [⋮]`) and its `[ BYPASS / FX ON ]` button, with the knobs on the Master FX Super Knob + 3 Metaknobs. The crossfader sits on the Transitions row.
 - The Transitions row carries the transition picker (opens inline Browse — see below) and queue prev/next controls. Its four knobs are fixed: **knob 1 is the crossfader** (it follows auto-fades and the slider, and turning it takes over like the slider does), and **knobs 2-4 are the active transition's first three sliders**, relabelled whenever you change transition. Transitions with fewer than three sliders leave the spare knobs blank. These knobs cannot be re-learned; Dry/Wet stays in the Edit bay.
 
-Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) and starts with a title badge spanning both control lines: a large **A**, **B**, **BG** or **PV** on deck rows (the `[SRC]`/`[FX]` pills beside it show which the knobs control), and **MASTER**, **TRANS**, **WET/DRY** and **CLOCK** on the MASTER tab. No row has a header bar over its knobs, so MASTER-tab knobs are the same size as deck knobs.
+Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) and starts with a title badge spanning both control lines: a large **A**, **B**, **BG** or **PV** on deck rows (the `[SRC]`/`[FX]` pills beside it show which the knobs control), and **MASTER**, **TRANS** and **CLOCK** on the MIXER tab. No row has a header bar over its knobs, so MIXER-tab knobs are the same size as deck knobs.
 
 ### Performance Controls & Side-Wing Layout
 
@@ -298,7 +297,7 @@ write to the **same underlying `MacroEngine` banks** — changes in one are imme
 ### The Modular Rack: Edit
 
 Every deep-editable row group in the 4×4 matrix (Deck A/B/BG/PV, the FX row, Master, Transitions)
-has a small **`[EDIT]` button** in its top-right corner (FX Wet/Dry is a dedicated 4-knob macro row with no button). Clicking it toggles that row
+has a small **`[EDIT]` button** in its top-right corner (the Clock row has no knobs and no button). Clicking it toggles that row
 between two disclosure tiers, without leaving the Perform view:
 
 1. **Faceplate** (collapsed, the default) — just the 4 knobs, exactly like the plain 4×4 matrix
@@ -420,7 +419,6 @@ There are 12 always-resident canonical macro banks (4 knobs each, conforming to 
 | | Deck PV FX | 4 | `deckPV_fx` | Super Knob + 3 Metaknobs |
 | **Mixer & Transitions**| Transitions | 4 | `trans` | Crossfade, Type, Speed, Next |
 | | Master | 4 | `master` | Level A, Level B, Master Level, Crossfader |
-| **Master FX** | FX Wet/Dry | 4 | `fxSends` | Deck A, B, BG, PV Insert FX Wet/Dry Levels |
 | | Master FX | 4 | `masterFx` | Super Knob + 3 Metaknobs |
 
 Deck generator banks initialize from their generator's default preset. Master, Transitions, and FX banks initialize with pre-mapped smart defaults. The five FX banks target their chain's `Deck A/FX/...` … `Master/FX/...` parameters and re-sync automatically whenever that chain's contents change (loading a chain, swapping a slot, restoring a session) — FX knobs are fixed (Super + 3 Metaknobs, or Metaknob + 3 parameters when focused) and can't be retargeted per knob; change what a Metaknob controls with its **Retarget** menu. Sessions saved with hand-retargeted FX knobs lose those targets on load. All 12 canonical banks are preserved in `last_session.json` and session files.

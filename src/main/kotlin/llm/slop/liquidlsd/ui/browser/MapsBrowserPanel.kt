@@ -42,8 +42,7 @@ object MapsBrowserPanel {
         BankTarget("Deck BG", MacroEngine.DECK_BG, "Deck BG"),
         BankTarget("Deck PV", MacroEngine.DECK_PV, "Deck PV"),
         BankTarget("Master", MacroEngine.MASTER, null),
-        BankTarget("Transition", MacroEngine.TRANS, null),
-        BankTarget("FX Sends", MacroEngine.FX_SENDS, null)
+        BankTarget("Transition", MacroEngine.TRANS, null)
     )
 
     private var cachedFiles: List<File> = emptyList()
@@ -63,7 +62,7 @@ object MapsBrowserPanel {
         session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.text("Macros") }
         ImGui.sameLine()
         if (ImGui.radioButton("Banks##maps_tab_banks", tab == Tab.BANKS)) tab = Tab.BANKS
-        itemTooltip("Saved macro knob banks: the knob layout and targets of a deck, Master, Transition or FX Sends row.")
+        itemTooltip("Saved macro knob banks: the knob layout and targets of a deck, Master or Transition row.")
         ImGui.sameLine()
         if (ImGui.radioButton("Pages##maps_tab_pages", tab == Tab.PAGES)) tab = Tab.PAGES
         itemTooltip("Perform pages: which rows the Perform view shows, and the controller bank that selects them.")
@@ -77,7 +76,7 @@ object MapsBrowserPanel {
 
     private fun drawBanks(session: SessionContext, mixer: Mixer) {
         if (ImGui.button("Save bank from...##maps_save_bank")) ImGui.openPopup("maps_save_bank_menu")
-        itemTooltip("Saves the knobs of a deck, Master, Transition or FX Sends row as a bank file you can apply later.")
+        itemTooltip("Saves the knobs of a deck, Master or Transition row as a bank file you can apply later.")
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("maps_save_bank_menu")) {
             pushOpenDropdownFont()

@@ -16,8 +16,7 @@
     "pages": [
       "perform.ab",
       "perform.bgpv",
-      "perform.mixer",
-      "perform.master"
+      "perform.mixer"
     ]
   },
   "inputs": [

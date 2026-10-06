@@ -14,8 +14,8 @@ class PerfPageStoreTest {
     @Test
     fun builtInPagesAreAllValidAndInTwisterBankOrder() {
         val pages = store().all()
-        assertEquals(listOf("ab", "bgpv", "mixer", "master"), pages.take(4).map { it.id })
-        assertEquals(listOf("master.mix", "trans", "wetdry", "global"), pages[3].rows.map { it.row })
+        assertEquals(listOf("ab", "bgpv", "mixer"), pages.take(3).map { it.id })
+        assertEquals(listOf("master.mix", "master.fx", "trans", "global"), pages[2].rows.map { it.row })
         assertTrue(pages.all { it.problems().isEmpty() })
     }
 
@@ -24,16 +24,16 @@ class PerfPageStoreTest {
         val pages = store().all().associateBy { it.id }
         assertEquals(listOf("deck.A.src", "deck.A.fx", "deck.B.src", "deck.B.fx"), pages.getValue("ab").rows.map { it.row })
         assertEquals(listOf("deck.BG.src", "deck.BG.fx", "deck.PV.src", "deck.PV.fx"), pages.getValue("bgpv").rows.map { it.row })
-        assertEquals(listOf("master.mix", "master.fx", "trans", "wetdry"), pages.getValue("mixer").rows.map { it.row })
+        assertEquals(listOf("master.mix", "master.fx", "trans", "global"), pages.getValue("mixer").rows.map { it.row })
     }
 
     @Test
     fun userPageOverridesBuiltInInPlaceAndNewPagesFollow() {
         val dir = createTempDirectory().toFile()
-        File(dir, "a.json").writeText("""{"id":"ab","name":"MY AB","rows":[{"row":"master.mix"},{"row":"trans"},{"row":"wetdry"},{"row":"global"}]}""")
+        File(dir, "a.json").writeText("""{"id":"ab","name":"MY AB","rows":[{"row":"master.mix"},{"row":"trans"},{"row":"global"},{"row":"global"}]}""")
         File(dir, "b.json").writeText("""{"id":"extra","name":"EXTRA","rows":[{"row":"deck.A.src"},{"row":"deck.A.fx"},{"row":"deck.B.src"},{"row":"global"}]}""")
         val pages = store(dir).all()
-        assertEquals(listOf("ab", "bgpv", "mixer", "master", "extra"), pages.map { it.id })
+        assertEquals(listOf("ab", "bgpv", "mixer", "extra"), pages.map { it.id })
         assertEquals("MY AB", pages[0].name)
     }
 
@@ -46,7 +46,7 @@ class PerfPageStoreTest {
         File(dir, "old.json").writeText("""{"id":"old","name":"O","rows":[{"row":"deck.A.srcfx"},{"row":"master"},{"row":"trans"},{"row":"global"}]}""")
         File(dir, "garbage.json").writeText("not json")
         val s = store(dir)
-        assertEquals(listOf("ab", "bgpv", "mixer", "master"), s.all().map { it.id })
+        assertEquals(listOf("ab", "bgpv", "mixer"), s.all().map { it.id })
         assertNull(s.get("short"))
         assertNull(s.get("old"))
     }
@@ -67,7 +67,7 @@ class PerfPageStoreTest {
         fun page(id: String, vararg rows: String) = PerfPageDef(id, id, rows = rows.map(::RowPlacement))
         val pages = listOf(
             page("p1", "deck.A.fx", "deck.A.src", "master.fx", "master.mix"),
-            page("p2", "deck.A.fx", "trans", "wetdry", "global"),
+            page("p2", "deck.A.fx", "trans", "global", "global"),
         )
         assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "p1"))
         assertEquals(PerfRows.CATALOG["deck.A.fx"], PerfRows.catalogRowForModule(MacroEngine.DECK_A_FX, "FX", pages, "p1"))
@@ -95,7 +95,7 @@ class PerfPageStoreTest {
         assertNull(store.copyBuiltInToUser("ab"))
         assertTrue(File(dir, "ab.json").exists())
         assertEquals(PerfPageStore.Source.USER_OVERRIDE, store.sourceOf("ab"))
-        assertEquals(listOf("ab", "bgpv", "mixer", "master"), store.all().map { it.id }.take(4))
+        assertEquals(listOf("ab", "bgpv", "mixer"), store.all().map { it.id }.take(3))
         assertTrue(store.copyBuiltInToUser("ab") != null)
         assertTrue(store.copyBuiltInToUser("nope") != null)
         assertTrue(store.deleteUser("ab"))
@@ -194,14 +194,14 @@ class PerfPageStoreTest {
         assertEquals(ab.rows, store.get("my-ab")!!.rows)
     }
 
-    private val goodPage = """{"id":"%s","name":"N","rows":[{"row":"master.mix"},{"row":"trans"},{"row":"wetdry"},{"row":"global"}]}"""
+    private val goodPage = """{"id":"%s","name":"N","rows":[{"row":"master.mix"},{"row":"trans"},{"row":"global"},{"row":"global"}]}"""
 
     @Test
     fun unreadableUserFileIsRejectedWithoutThrowing() {
         val dir = createTempDirectory().toFile()
         File(dir, "bad.json").mkdir()
         val s = store(dir)
-        assertEquals(listOf("ab", "bgpv", "mixer", "master"), s.all().map { it.id })
+        assertEquals(listOf("ab", "bgpv", "mixer"), s.all().map { it.id })
         assertEquals(listOf("bad.json"), s.rejected().map { it.file.name })
     }
 

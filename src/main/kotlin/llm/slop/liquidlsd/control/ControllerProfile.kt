@@ -15,10 +15,16 @@ enum class EncoderMode { ABSOLUTE, RELATIVE_BINARY_OFFSET, RELATIVE_SIGNED_BIT, 
  * logical input keeps one id across banks. [switch] describes the device's own bank buttons: the
  * CC is `switch.cc + bankIndex` and a non-zero value means "this bank is now active".
  * [pages] names the app page to show when a bank becomes active (index = 0-based bank, e.g.
- * `perform.decks`); banks beyond the list leave the app's page alone.
+ * `perform.ab`); banks beyond the list leave the app's page alone, or with [wrapPages] show the first page.
  */
 @Serializable
-data class BankConfig(val count: Int = 1, val switch: BankSwitchDef? = null, val pages: List<String> = emptyList())
+data class BankConfig(
+    val count: Int = 1,
+    val switch: BankSwitchDef? = null,
+    val pages: List<String> = emptyList(),
+    /** When true, a bank past the end of [pages] shows the first page (and the device is switched back to bank 1) instead of leaving the page alone. */
+    val wrapPages: Boolean = false
+)
 
 @Serializable
 data class BankSwitchDef(val channel: Int, val cc: Int = 0)

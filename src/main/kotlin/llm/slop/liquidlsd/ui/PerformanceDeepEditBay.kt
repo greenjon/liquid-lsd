@@ -61,14 +61,13 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         MacroEngine.DECK_PV_FX -> "DECK PV FX"
         MacroEngine.TRANS -> "TRANSITIONS"
         MacroEngine.MASTER -> "MASTER"
-        MacroEngine.FX_SENDS -> "FX WET/DRY"
         MacroEngine.MASTER_FX -> "MASTER FX"
         else -> moduleId
     }
 
     fun expandedDeepEditModuleIds(parametersState: ParametersState): List<String> =
         parametersState.rackModuleDisclosure.entries
-            .filter { it.value != ParametersState.DisclosureLevel.COLLAPSED && it.key != MacroEngine.FX_SENDS }
+            .filter { it.value != ParametersState.DisclosureLevel.COLLAPSED }
             .map { it.key }
 
     /**

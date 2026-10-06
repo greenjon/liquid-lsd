@@ -457,7 +457,7 @@ class PerformanceMatrixPanel {
             val isSpecialHeaderRow = descriptor.hasExtraHeader && (isTransRow || isMasterRow || isClockRow)
 
             // Fallback title for expanded custom rack modules
-            if (!isDeckRow && !isSpecialHeaderRow && descriptor.bankId != MacroEngine.FX_SENDS) {
+            if (!isDeckRow && !isSpecialHeaderRow) {
                 if (h1Pushable) ImGui.pushFont(h1Font, UITheme.FONT_H1)
                 dl.addText(boxX1 + pad, boxTopY + boxPad, borderCol, displayLabel)
                 if (h1Pushable) ImGui.popFont()
@@ -589,12 +589,6 @@ class PerformanceMatrixPanel {
                         tooltip = "Clock Unit\nConfigure tempo, BPM, and synchronization"
                     )
                     if (!stripOn) PerformanceClockControls.draw(session, masterTabStartX, row1Y, row2YFinal, ctrlH)
-                } else if (descriptor.bankId == MacroEngine.FX_SENDS) {
-                    drawTitleBadge(
-                        session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "W/D", UITheme.FontLevel.H2,
-                        tooltip = "FX Wet/Dry Unit\nConfigure per-deck FX wet/dry levels"
-                    )
-                    PerformanceFxSendsControls.drawRightControls(boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                 } else if (isDeckRow) {
                     val deckTag = when {
                         isDeckA -> "A"

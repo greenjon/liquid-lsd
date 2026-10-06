@@ -66,6 +66,7 @@ class ParametersStateMonitorTest {
     @Test
     fun selectingARowSlotBindsTheDockWithoutExpandingTheRow() {
         val state = ParametersState()
+        state.collapseAllRackModules() // a new state restores the persisted disclosure, which other tests may leave expanded
         state.selectFxChain(MacroEngine.DECK_A, "Deck A", slotIndex = 2)
         assertFalse(state.anyRackModuleExpanded())
         assertEquals(ParametersState.DockSelection(MacroEngine.DECK_A, ParametersState.BrowseTarget.FxChain(2)), state.dockSelection)

@@ -44,7 +44,7 @@ internal object PerfRows {
 
     /**
      * Every row a page can place, by stable id (persisted in page files): per deck `deck.<tag>.src` and `.fx`,
-     * Master `master.mix` and `master.fx`, Transitions, FX Wet/Dry and Clock & Global. Every deck and Master row
+     * Master `master.mix` and `master.fx`, Transitions and Clock & Global. Every deck and Master row
      * shows one half, so a row's meaning never depends on a mode.
      */
     val CATALOG: Map<String, RowDescriptor> = linkedMapOf<String, RowDescriptor>().apply {
@@ -55,7 +55,6 @@ internal object PerfRows {
         put("master.mix", RowDescriptor(MacroEngine.MASTER, 0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true, pinnedMode = "MIX"))
         put("master.fx", RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER (FX)", hasExtraHeader = true, pinnedMode = "FX"))
         put("trans",  RowDescriptor(MacroEngine.TRANS,    0, PerformanceColors.COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true))
-        put("wetdry", RowDescriptor(MacroEngine.FX_SENDS, 0, PerformanceColors.COLOR_FX,     "FX WET/DRY", hasExtraHeader = true, canExpand = false))
         put("global", RowDescriptor(MacroEngine.GLOBAL,   0, PerformanceColors.COLOR_GLOBAL, "CLOCK & GLOBAL", hasExtraHeader = true, canExpand = false))
     }
 
@@ -142,7 +141,6 @@ internal object PerfRows {
         val expandedModuleIds = parametersState.rackModuleDisclosure
             .filterValues { it != ParametersState.DisclosureLevel.COLLAPSED }
             .keys
-            .filter { it != MacroEngine.FX_SENDS }
         if (expandedModuleIds.isEmpty()) return rowsForPage(page)
 
         // Show the active macro row for each expanded module
@@ -189,7 +187,7 @@ internal object PerfRows {
             var n = 0
             var uncacheable = false
             for ((id, level) in parametersState.rackModuleDisclosure) {
-                if (level == ParametersState.DisclosureLevel.COLLAPSED || id == MacroEngine.FX_SENDS) continue
+                if (level == ParametersState.DisclosureLevel.COLLAPSED) continue
                 if (n == scratch.size) scratch = scratch.copyOf(n * 2)
                 scratch[n++] = id
                 if (usesLabel(id)) uncacheable = true

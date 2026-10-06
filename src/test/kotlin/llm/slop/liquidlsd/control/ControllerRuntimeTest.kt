@@ -166,8 +166,8 @@ class ControllerRuntimeTest {
         assertTrue(side3(2, 127))
         assertEquals(2, runtime.activeBank)
         assertEquals("page perform.mixer", surface.calls.last())
-        assertTrue(side3(3, 127))
-        assertEquals("page perform.master", surface.calls.last())
+        assertTrue(side3(3, 127))                // bank 4 has no page of its own: it loops to the first page
+        assertEquals("page perform.ab", surface.calls.last())
     }
 
     private fun side3(cc: Int, value: Int) = send(3, cc, value)
@@ -331,12 +331,15 @@ class ControllerRuntimeTest {
         side(12, true); side(12, false)                      // bank 1 right-middle: next -> bank 2
         assertEquals("page ${pages[1]}", surface.calls.last())
 
-        side(8 + 6 * 3 + 2, true)                            // bank 4: hold shift
-        side(8 + 6 * 3 + 4, true); side(8 + 6 * 3 + 4, false)
-        side(8 + 6 * 3 + 2, false)
-        assertEquals("page ${pages[2]}", surface.calls.last())   // bank 4 shifted: previous -> bank 3
+        side(8 + 6 * 2 + 2, true)                            // bank 3: hold shift
+        side(8 + 6 * 2 + 4, true); side(8 + 6 * 2 + 4, false)
+        side(8 + 6 * 2 + 2, false)
+        assertEquals("page ${pages[1]}", surface.calls.last())   // bank 3 shifted: previous -> bank 2
 
-        side(8 + 6 * 3 + 4, true); side(8 + 6 * 3 + 4, false) // bank 4 next wraps to bank 1
+        side(8 + 6 * 2 + 4, true); side(8 + 6 * 2 + 4, false) // bank 3 next wraps to bank 1 (3 pages on a 4-bank device)
+        assertEquals("page ${pages[0]}", surface.calls.last())
+
+        side(8 + 6 * 3 + 4, true); side(8 + 6 * 3 + 4, false) // bank 4 has no page: next steps on from the last page
         assertEquals("page ${pages[0]}", surface.calls.last())
     }
 
