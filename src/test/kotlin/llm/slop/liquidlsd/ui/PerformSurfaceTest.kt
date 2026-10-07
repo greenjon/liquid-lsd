@@ -327,6 +327,25 @@ class PerformSurfaceTest {
         assertEquals(MeterType.MONOPOLAR, lights[0]?.meterType)
     }
 
+    @Test
+    fun stepPairWalksThePairsAndWrapsOnlyInThePairView() {
+        val surface = surface()
+        assertFalse(surface.stepPair(1), "no pair focused: the bank change is left to the page logic")
+        assertFalse(surface.pairFocused)
+
+        state.focusPair("PV")
+        assertTrue(surface.pairFocused)
+        assertTrue(surface.stepPair(1))
+        assertEquals(PerfRows.PAIR_MASTER, state.focusedPair)
+        assertTrue(surface.stepPair(1))
+        assertEquals(PerfRows.PAIR_XF, state.focusedPair)
+        assertTrue(surface.stepPair(1))
+        assertEquals("A", state.focusedPair)
+        assertTrue(surface.stepPair(-1))
+        assertEquals(PerfRows.PAIR_XF, state.focusedPair)
+        state.leavePair()
+    }
+
     // --- Row-resolution cache ---
 
     private fun uncachedRows(page: PerfPageDef, pages: List<PerfPageDef>) =

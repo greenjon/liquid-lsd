@@ -240,7 +240,8 @@ class UIManager(
         if (session.uiTheme.midiEnabled) {
             session.midiMappingManager.controllers.updateFeedback(
                 performSurface,
-                activePageId = session.uiTheme.performancePageId
+                // In the pair view the device keeps whatever bank was pressed: the knobs follow the pair, not the page.
+                activePageId = session.uiTheme.performancePageId.takeUnless { performSurface.pairFocused }
             )
         }
 

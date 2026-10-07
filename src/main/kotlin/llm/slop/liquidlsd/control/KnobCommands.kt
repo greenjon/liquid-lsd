@@ -87,6 +87,8 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
             else if (isLiveRowKnob(knob, nav)) {
                 val surface = ctx.knobSurface ?: return
                 if (shifted) surface.secondary(knob) else surface.primary(knob)
+            } else if (shifted && SendTarget.forKnob(knob)?.let { it in nav.switchTargets } == true) {
+                SendTarget.forKnob(knob)?.let(nav::browseSwitch)
             } else SendTarget.forKnob(knob)?.takeIf { it in nav.sendTargets }?.let(nav::browseSend)
             return
         }

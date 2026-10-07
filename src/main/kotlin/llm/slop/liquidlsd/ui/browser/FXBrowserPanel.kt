@@ -19,6 +19,7 @@ import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
+import llm.slop.liquidlsd.ui.ToastOverlay
 import llm.slop.liquidlsd.ui.FileSystemManager
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.LibraryPanel
@@ -220,6 +221,25 @@ object FXBrowserPanel {
                 } else loadSingle(session, asset, deck.fxChain, slot)
             }
             AssetType.FX_CHAIN -> FxOps.loadChain(session, file, deck.fxChain)
+            else -> {}
+        }
+    }
+
+    /**
+     * The controller's tap on an FX row with nothing bound: applies like a double-click on the live deck, but a controller has no popup,
+     * so a single FX goes into the first vacant slot (the last slot when the chain is full). Undoable; toasts where it landed.
+     */
+    internal fun applyToDeckFromController(session: SessionContext, asset: AssetItem, deck: Deck, deckLabel: String) {
+        when (asset.type) {
+            AssetType.FX_STOCK, AssetType.FX_PRESET -> {
+                val slot = FxOps.firstVacantSlot(deck.fxChain) ?: (FxChain.SLOT_COUNT - 1)
+                loadSingle(session, asset, deck.fxChain, slot, undoable = true)
+                ToastOverlay.show("${asset.name} -> $deckLabel FX ${slot + 1}")
+            }
+            AssetType.FX_CHAIN -> {
+                FxOps.loadChain(session, File(asset.path), deck.fxChain, undoable = true)
+                ToastOverlay.show("${asset.name} -> $deckLabel FX chain")
+            }
             else -> {}
         }
     }

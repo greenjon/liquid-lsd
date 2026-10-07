@@ -33,6 +33,12 @@ interface NavSurface {
 
     /** A tap on a live send knob: send the cursor item to [target]. */
     fun browseSend(target: SendTarget) {}
+
+    /** The send knobs that a shifted tap turns into a plain switch to that destination (no item needed). */
+    val switchTargets: Set<SendTarget> get() = emptySet()
+
+    /** A shifted tap on a knob in [switchTargets]: go to [target]'s pair without sending anything. */
+    fun browseSwitch(target: SendTarget) {}
 }
 
 /**

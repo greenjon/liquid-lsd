@@ -16,7 +16,8 @@ import llm.slop.liquidlsd.ui.browser.BrowserPane
  *    With shift: enqueue to the BG queue, previous tab, previous list.
  *  - Pair view (the unified pane under the focused pair's two rows): left-top = back, right-top = next pane
  *    (tree > list > queues; shift: previous), shift + right-bottom = clear the slot or chain; the cursor is knob 16
- *    (tap = apply, and a tap on a tree row selects the scope and moves the cursor into the list).
+ *    (tap = apply, and a tap on a tree row selects the scope and moves the cursor into the list). Shift + tap on a send knob (9-13)
+ *    switches to that deck's (or Master's) pair without sending.
  *  - Dirty-deck modal up: back = Cancel, side 2 / knob tap = Save, side 3 / shift+tap = Discard (overrides every other context).
  *  - Perform / Edit view: back (the Esc stack), open the Library, open the picker of the row whose knob
  *    was touched last (an SRC row: its source; an FX row: the slot under the knob, or the chain list for knob 1;
@@ -157,6 +158,13 @@ internal class NavigationSurface(
     }
 
     override val sendTargets: Set<SendTarget> get() = if ((inLibraryView || inPicker) && !confirming) LibraryNavigation.sendTargets() else emptySet()
+
+    /** In the pair view every send knob (decks, Master) is also a quick switch to that pair. */
+    override val switchTargets: Set<SendTarget> get() = if (inPicker && !confirming) SendTarget.entries.toSet() else emptySet()
+
+    override fun browseSwitch(target: SendTarget) {
+        if (inPicker && !confirming) parametersState.focusPair(target.name)
+    }
 
     override fun browseSend(target: SendTarget) {
         if ((inLibraryView || inPicker) && !confirming) LibraryNavigation.send(target, session, mixer, parametersState)

@@ -1,5 +1,18 @@
 ## [Unreleased]
 
+### Controller FX Tap Applies; Browser Scope Is Remembered per Kind; Tooltips Mention the Pair View (`ui/browser/DockActions.kt`, `ui/browser/FXBrowserPanel.kt`, `ui/browser/ApplyTarget.kt`, `ui/browser/BrowserPane.kt`)
+- **Tapping an FX in the Library from a controller applies it to the live deck** like a double-click: a single effect goes into the first empty slot (the last slot when all are full, since a controller has no popup), a chain replaces the deck's chain. Ctrl+Z undoes it and a toast says where it landed. **Shift + tap** still adds it to the FX queue.
+- **The browser remembers your place per kind**: the folder, search and cursor you left in Sources, FX or Transitions now carry over between the Library and every deck, slot and transition (moving between pairs no longer resets them). Choosing a whole FX chain still starts in saved chains and gets its own memory, because it can only list chains.
+- **Tooltips** on the source badge, chain name, FX slot names, transition picker and the deck/Master monitors now say they open the pair view.
+
+### Shift + Tap on a Send Knob Switches Pairs (`control/KnobCommands.kt`, `control/NavSurface.kt`, `ui/NavigationSurface.kt`)
+- **In the pair view, Shift + tap on knob 9-12 (or 13 for Master) jumps to that deck's pair without sending anything**, and it works with nothing highlighted. A plain tap still sends the highlighted item.
+
+### Twister Bank Buttons Walk the Pairs in the Pair View (`control/ControllerRuntime.kt`, `control/KnobSurface.kt`, `ui/PerformSurface.kt`, `ui/UIManager.kt`)
+- **In the pair view a bank change moves to the next pair** (Deck A > B > BG > PV > Master > Transitions/Clock, wrapping) instead of changing the Perform page: a higher bank button is the next pair, a lower one the previous, and a bank-step button steps by one. You can reach every destination without the mouse or a send.
+- **The device keeps the bank you pressed** while a pair is focused (it is no longer pulled back to the page's bank); outside the pair view banks still pick the Perform page.
+- Internal: `KnobSurface.stepPair` / `pairFocused`.
+
 ### Pair Focus View: Browse a Deck's Source and FX Together (`ui/ParametersState.kt`, `ui/PerfRows.kt`, `ui/PerformanceDeepEditBay.kt`, `ui/PerformanceBrowseBay.kt`, `ui/PairKnobTouch.kt`, `ui/NavigationSurface.kt`, `ui/BackNavigation.kt`, `ui/ViewState.kt`, `control/NavSurface.kt`)
 - **Clicking a badge now focuses a pair of rows**: a deck's SRC badge, FX chain name or slot, the Master FX chain or slot, the transition name, a preview monitor, or the controller's picker button shows that pair's two rows (deck SRC + FX, Master MIX + FX, Transitions + Clock) with the Browse list below. Every other row hides (the deck monitors stay visible).
 - **The Browse list follows the half you touched**: click a row's slot, or turn a knob on it, and the list switches to that half (SRC to sources, an FX slot or chain to effects, the transition to transitions). Master MIX and Clock have nothing to browse.

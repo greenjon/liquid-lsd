@@ -65,7 +65,10 @@ class ControllerRuntime(
 
     private fun enterBank(bank: Int, ctx: CommandContext) {
         if (trace) logger.info { "controller rx bank entered: ${bank + 1} (page ${compiled.profile.banks.pages.getOrNull(bank)})" }
+        val previous = activeBank
         activeBank = bank
+        // In the pair view a bank press walks the pairs: a higher bank is the next pair, a lower one the previous (the same bank: next).
+        if (ctx.knobSurface?.stepPair(if (previous != null && bank < previous) -1 else 1) == true) return
         val banks = compiled.profile.banks
         // A bank past the page list loops to the first page; ControllerFeedback.syncActiveBank then moves the device to that page's bank.
         val page = banks.pages.getOrNull(bank) ?: banks.pages.firstOrNull()?.takeIf { banks.wrapPages }
@@ -79,6 +82,7 @@ class ControllerRuntime(
     private fun stepBank(ctx: CommandContext) {
         val delta = ctx.bankDelta
         ctx.bankDelta = 0
+        if (ctx.knobSurface?.stepPair(delta.coerceIn(-1, 1)) == true) return
         val pages = compiled.profile.banks.pages
         if (pages.isEmpty()) return
         val count = compiled.profile.banks.count.coerceIn(1, pages.size)

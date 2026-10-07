@@ -151,7 +151,7 @@ internal object PerformanceTransitionsControls {
             parametersState.selectTransition()
         }
         if (DockOutline.selects(parametersState, MacroEngine.TRANS, ParametersState.BrowseTarget.Transition)) DockOutline.drawAroundLastItem(MacroEngine.TRANS)
-        itemTooltip(tipPicker.get(transName, modBadge) { "Select ISF transition shader or blend mode.\nActive: $transName$modBadge" })
+        itemTooltip(tipPicker.get(transName, modBadge) { "Select ISF transition shader or blend mode (opens the Transitions and Clock rows over the browser).\nActive: $transName$modBadge" })
 
         if (ImGui.beginDragDropTarget()) {
             val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")

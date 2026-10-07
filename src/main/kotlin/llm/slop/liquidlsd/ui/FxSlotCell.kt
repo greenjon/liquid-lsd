@@ -139,11 +139,11 @@ object FxSlotCell {
         }
         val isThisSlotFocused = chain.focusedSlot == slotIndex
         itemTooltip(
-            if (fx == null) "Slot $slotNum is empty.\nClick this name to pick an effect, scroll it to step through the shortlist, or drop an effect here. Right-click for more."
+            if (fx == null) "Slot $slotNum is empty.\nClick this name to pick an effect (opens the pair view with the browser), scroll it to step through the shortlist, or drop an effect here. Right-click for more."
             else "${fx.displayName}${fx.categories.firstOrNull()?.let { "  ($it)" } ?: ""}\n" +
                  (if (isThisSlotFocused) "● FOCUSED: Knob 1 = Metaknob, Knobs 2-4 = Parameters.\n" else "") +
                  "Double-click this name to ${if (isThisSlotFocused) "exit Focus Mode" else "focus on this effect"}.\n" +
-                 "Click it to pick another effect, scroll it to step through the shortlist.\n" +
+                 "Click it to pick another effect (opens the pair view with the browser), scroll it to step through the shortlist.\n" +
                  "Drag it onto another slot's name to swap (Ctrl: copy). Right-click for more."
         )
         drawDragAndDrop(session, mixer, bankId, chain, slotIndex, fx?.displayName)

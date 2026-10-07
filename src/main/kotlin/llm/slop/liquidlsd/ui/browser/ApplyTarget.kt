@@ -39,9 +39,24 @@ class ApplyTarget(
     }
 }
 
-/** Scope bookkeeping of a pane that is hosted in more than one place: which scope each (context, kind) last used. */
+/**
+ * Scope bookkeeping of a pane that is hosted in more than one place: which scope each (context, kind) last used.
+ * Contexts are coarse on purpose (see [contextOf]): the scope, search and cursor you left in Sources, FX or Transitions follow you between
+ * the Library and every deck, slot and transition target, so moving between pairs does not reset your place.
+ */
 internal class ScopeMemory {
-    companion object { const val LIBRARY = "library" }
+    companion object {
+        const val LIBRARY = "library"
+        const val CHAINS = "chains"
+
+        /**
+         * The memory bucket a target uses. Everything shares the Library's (one scope per kind), except a whole-chain target: it
+         * only lists saved chains, so a scope that shows none (Stock filters, say) would leave it empty. It keeps its own bucket,
+         * starting at its default.
+         */
+        fun contextOf(target: ApplyTarget?): String =
+            if (target != null && target.kind == BrowseKind.FX && target.defaultScope == ApplyTarget.defaultFxScope(null)) CHAINS else LIBRARY
+    }
 
     private val last = HashMap<BrowseKind, String>()
     private val stash = HashMap<Pair<String, BrowseKind>, BrowseScope>()

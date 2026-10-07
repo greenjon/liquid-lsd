@@ -12,6 +12,8 @@ class KnobCommandsBrowseTest {
     private var session = 0
     private var live: Set<SendTarget> = emptySet()
     private var rowLive = false
+    private var switchable: Set<SendTarget> = emptySet()
+    private val switched = mutableListOf<SendTarget>()
     private val sent = mutableListOf<SendTarget>()
     private val primaries = mutableListOf<Int>()
     private val nav = object : NavSurface {
@@ -23,6 +25,8 @@ class KnobCommandsBrowseTest {
         override val browseLiveKnobs get() = if (this@KnobCommandsBrowseTest.rowLive) 4 else 0
         override val sendTargets get() = this@KnobCommandsBrowseTest.live
         override fun browseSend(target: SendTarget) { sent += target }
+        override val switchTargets get() = this@KnobCommandsBrowseTest.switchable
+        override fun browseSwitch(target: SendTarget) { switched += target }
     }
     private val surface = object : KnobSurface {
         override fun turn(knob: Int, delta: Float) {}
@@ -96,6 +100,18 @@ class KnobCommandsBrowseTest {
         tap(9); tap(10); tap(11); tap(12); tap(13)
         assertEquals(listOf(SendTarget.A, SendTarget.B, SendTarget.BG, SendTarget.PV, SendTarget.MASTER), sent)
         assertEquals(emptyList(), primaries)
+    }
+
+    @Test
+    fun shiftTapOnASwitchKnobSwitchesWithoutSendingEvenWithNothingToSend() {
+        switchable = SendTarget.entries.toSet()
+        tap(9, alt = true); tap(13, alt = true)
+        assertEquals(listOf(SendTarget.A, SendTarget.MASTER), switched)
+        assertEquals(emptyList(), sent)
+        live = SendTarget.entries.toSet()
+        tap(10) // a plain tap still sends
+        assertEquals(listOf(SendTarget.B), sent)
+        assertEquals(2, switched.size)
     }
 
     @Test

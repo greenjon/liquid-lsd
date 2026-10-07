@@ -173,6 +173,16 @@ internal class PerformSurface(
         else -> null
     }
 
+    override val pairFocused: Boolean get() = parametersState.focusedPair != null
+
+    override fun stepPair(delta: Int): Boolean {
+        val tag = parametersState.focusedPair ?: return false
+        val pairs = PerfRows.PAIRS
+        val from = pairs.indexOfFirst { it.tag == tag }.coerceAtLeast(0)
+        parametersState.focusPair(pairs[Math.floorMod(from + delta, pairs.size)].tag)
+        return true
+    }
+
     override fun showPage(pageId: String) {
         // `perform.<id>` names a page; the page id is the built-in file's `id` (`ab`, `bgpv`, `mixer`).
         val id = pageId.removePrefix("perform.")

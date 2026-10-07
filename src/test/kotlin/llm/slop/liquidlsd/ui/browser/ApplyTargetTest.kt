@@ -33,23 +33,32 @@ class ApplyTargetTest {
         assertEquals(BrowseScope.Folder(BrowseSection.STOCK), ApplyTarget.defaultFxScope(0))
     }
 
+    private fun target(kind: BrowseKind, scope: BrowseScope) =
+        ApplyTarget(kind, "ctx", scope, { true }, { false }, {})
+
     @Test
-    fun scopeMemoryRestoresEachContextsOwnScope() {
+    fun targetsShareTheLibrarysScopeExceptTheWholeChainTarget() {
+        val all = BrowseScope.All
+        val slot = target(BrowseKind.FX, ApplyTarget.defaultFxScope(0))
+        val chain = target(BrowseKind.FX, ApplyTarget.defaultFxScope(null))
+        assertEquals(ScopeMemory.LIBRARY, ScopeMemory.contextOf(null))
+        assertEquals(ScopeMemory.LIBRARY, ScopeMemory.contextOf(slot))
+        assertEquals(ScopeMemory.LIBRARY, ScopeMemory.contextOf(target(BrowseKind.SRC, all)))
+        assertEquals(ScopeMemory.CHAINS, ScopeMemory.contextOf(chain))
+    }
+
+    @Test
+    fun scopeMemoryKeepsTheScopeAcrossSharedContextsAndRestoresTheChainBucket() {
         val memory = ScopeMemory()
         val all = BrowseScope.All
         val stock = BrowseScope.Folder(BrowseSection.STOCK)
         val chains = BrowseScope.Folder(BrowseSection.CHAIN)
-        // Library first: nothing changes.
-        assertEquals(all to false, memory.enter(BrowseKind.FX, ScopeMemory.LIBRARY, all, all))
-        // Entering a slot target starts at its default and reports the move.
-        assertEquals(stock to true, memory.enter(BrowseKind.FX, "fxslot/1/0", all, stock))
-        // Staying put changes nothing, even if the user moved the scope meanwhile.
-        assertEquals(chains to false, memory.enter(BrowseKind.FX, "fxslot/1/0", chains, stock))
-        // Another target starts at its own default; coming back restores the stashed scope.
-        assertEquals(chains to true, memory.enter(BrowseKind.FX, "chain/1", chains, chains))
-        assertEquals(chains to true, memory.enter(BrowseKind.FX, "fxslot/1/0", chains, stock))
-        // Back in the Library the scope it left is restored.
-        assertEquals(all to true, memory.enter(BrowseKind.FX, ScopeMemory.LIBRARY, chains, all))
+        // Library, then a slot target: the same bucket, nothing moves.
+        assertEquals(stock to false, memory.enter(BrowseKind.FX, ScopeMemory.LIBRARY, stock, all))
+        // A whole-chain target has its own bucket and starts at its default...
+        assertEquals(chains to true, memory.enter(BrowseKind.FX, ScopeMemory.CHAINS, stock, chains))
+        // ...and coming back restores the scope it left.
+        assertEquals(stock to true, memory.enter(BrowseKind.FX, ScopeMemory.LIBRARY, chains, all))
     }
 
     @Test

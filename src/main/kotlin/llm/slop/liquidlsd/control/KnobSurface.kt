@@ -18,6 +18,15 @@ interface KnobSurface {
     /** Shows the named page (e.g. `perform.ab`) so the knobs and the screen agree. Unknown ids are ignored. */
     fun showPage(pageId: String)
 
+    /**
+     * Steps the focused pair view [delta] pairs (A > B > BG > PV > Master > XF, wrapping) and returns true; false when no pair
+     * is focused. A controller's bank change calls this first, so the banks walk the pairs instead of the Perform pages.
+     */
+    fun stepPair(delta: Int): Boolean = false
+
+    /** True while the pair view is up: the knobs follow the focused pair on any bank, so the device must not be pulled back to the page's bank. */
+    val pairFocused: Boolean get() = false
+
     /** Toggles Chain Link (all slots to/from the Super Knob) on the FX chain of the row touched last. */
     fun toggleChainLink() {}
 }

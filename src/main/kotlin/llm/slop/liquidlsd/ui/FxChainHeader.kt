@@ -464,8 +464,8 @@ object FxChainHeader {
             dl.addRect(curX, curY, curX + nameW, curY + ctrlH, hoverBorderCol, 4f, 0, 1.5f)
         }
         itemTooltip(st.focusedTip.get(slotName, focusedSlot) {
-            if (slot != null) "Focused Effect: ${slot.displayName} (Slot ${focusedSlot + 1})\nClick to browse/replace effect for this slot."
-            else "Slot ${focusedSlot + 1} is empty.\nClick to browse and load an effect."
+            if (slot != null) "Focused Effect: ${slot.displayName} (Slot ${focusedSlot + 1})\nClick to browse/replace the effect (opens this deck's source and FX rows over the browser)."
+            else "Slot ${focusedSlot + 1} is empty.\nClick to browse and load an effect (opens the pair view)."
         })
     }
 
@@ -499,7 +499,7 @@ object FxChainHeader {
         itemTooltip(st.chainTip.get(name, isDirty, sourceName) {
             "${name.ifBlank { "Untitled" }}${if (isDirty) " (Modified)" else ""}\n" +
             "Source: ${sourceName ?: "Unsaved"}\n" +
-            "Click to browse saved chains, or drop a .lsdfxchain here."
+            "Click to browse saved chains (opens the pair view), or drop a .lsdfxchain here."
         })
 
         // Drag & drop receiver for chain name button

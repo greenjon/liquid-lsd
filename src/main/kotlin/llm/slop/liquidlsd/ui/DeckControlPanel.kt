@@ -87,7 +87,7 @@ class DeckControlPanel(
 
         ImGui.setCursorScreenPos(dragBtnX, imgY)
         ImGui.invisibleButton("##drag_source_$label", dragBtnW, imgAvailH.coerceAtLeast(1f))
-        itemTooltip("Interactive monitor for $label. Click to open Edit, drag to route to another deck, or drop presets to load.")
+        itemTooltip("Interactive monitor for $label. Click to open $label's source and FX rows over the browser (Parameters opens the full editor), drag to route to another deck, or drop presets to load.")
         if (ImGui.isItemClicked(0)) {
             if (onSelect != null) onSelect(label) else openDeepEdit(label)
         }
@@ -240,7 +240,7 @@ class DeckControlPanel(
         if (ImGui.invisibleButton("##badge_btn_$label", badgeW, badgeH) || ImGui.isItemClicked(0)) {
             if (onSelect != null) onSelect(label) else openDeepEdit(label)
         }
-        itemTooltip("Open $label in Edit.")
+        itemTooltip("Open $label's source and FX rows over the browser.")
 
         // 2. Die Button (placed directly to the right of the badge in the lower-left row)
         if (session.uiTheme.randomizationEnabled) {

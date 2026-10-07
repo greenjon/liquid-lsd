@@ -29,7 +29,7 @@ internal object DockActions {
         }
     }
 
-    /** The controller's accept on a list row: applies to the bound target, else the Library behaviour (sources load, FX is queued, transitions apply). */
+    /** The controller's accept on a list row: applies to the bound target, else the Library behaviour (sources load to the inactive deck, FX applies to the live deck, transitions apply). */
     fun acceptCursorRow(session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
         if (BrowserPane.hosted() != null) {
             BrowserPane.applyCursorRow()
@@ -37,7 +37,9 @@ internal object DockActions {
         }
         when (LibraryPanel.navMode) {
             LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset?.let { LibraryNavigation.loadAssetToInactiveDeck(session, mixer, it, parametersState) }
-            LibraryViewMode.FX -> LibraryNavigation.enqueue(session, bg = false)
+            LibraryViewMode.FX -> FXBrowserPanel.selectedAsset?.let {
+                FXBrowserPanel.applyToDeckFromController(session, it, mixer.liveDeck, if (mixer.liveDeck === mixer.deckA) "Deck A" else "Deck B")
+            }
             LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset?.let { TransitionBrowserPanel.applyToMixer(session, mixer, it) }
             LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> Unit
         }

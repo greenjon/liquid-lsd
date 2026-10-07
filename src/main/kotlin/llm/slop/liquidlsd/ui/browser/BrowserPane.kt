@@ -118,7 +118,7 @@ object BrowserPane {
     fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, kind: BrowseKind, target: ApplyTarget? = null) {
         val catalog = BrowseCatalogs.get(kind)
         noteHosting(target)
-        val (scope, moved) = scopeMemory.enter(kind, target?.contextKey ?: ScopeMemory.LIBRARY, scopeOf(kind), target?.defaultScope ?: BrowseScope.All)
+        val (scope, moved) = scopeMemory.enter(kind, ScopeMemory.contextOf(target), scopeOf(kind), target?.defaultScope ?: BrowseScope.All)
         if (moved) {
             clearSelection(kind)
             treeCursors.remove(kind)
