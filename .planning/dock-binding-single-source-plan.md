@@ -42,6 +42,10 @@ The pill is a view of the row (which half is on screen), never an input to the b
 5. **Remove the pill flip as a *side effect of opening a browse*?** No. The flip is what puts the bound slot on screen in Perform (selecting FX slot 2 must show
    the FX half). Leave it; it is now covered by step 3's rule being consistent with it.
 
+## Decisions made
+
+- **Pill moves to the other half while Edit is on Browse -> clear the binding, bay falls back to Params** (option A, 2026-10-06). Same rule Perform already applies.
+
 ## Out of scope / separate
 
 - Perform with a bound dock is mouse-only on the Twister (`browsing` false). Needs a product decision: make `ViewState.dockActive` true for a bound Perform
