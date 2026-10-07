@@ -48,6 +48,12 @@ The pill is a view of the row (which half is on screen), never an input to the b
 - **Badge click** (`selectDock`): keep today's rule -- it binds the dock, and also moves the open Edit bay to that row in Browse when an Edit bay is already open (option B, 2026-10-06). No code change; state the rule in DECISIONS.md when step 5 lands.
 - **FX tap on a controller, nothing bound** (`browser/DockActions.kt`): tap applies, like the mouse double-click; Shift+tap enqueues (option B, 2026-10-06). Separate small change, not part of the binding refactor: the active deck, first vacant slot (last slot when full, no popup), and a chain replaces the chain. Update the user guide Picker/Library paragraphs when it lands.
 - **Bound Perform dock is controllable from the Twister** (option A, 2026-10-06; chosen over the v1.1 deferral I recommended). `ViewState.dockActive` becomes true for a bound Perform dock, so the browse knobs and side buttons work as in the Edit picker. Open design point before building: Perform's knob 16 is a row knob there, so decide what carries the cursor (a modal takeover while bound, or a different knob) -- ask before implementing. It touches the v1.0 feature freeze; confirm it is in scope.
+- **Scope/search/cursor memory** (`BrowserPane.noteHosting`, `ScopeMemory.enter`): remember per kind (Sources, FX, Transitions), not per context key (option B, 2026-10-06). Changing slot or deck keeps the kind's scope, search, tree cursor and list selection; a context's default scope applies only the first time that kind is entered. Separate change from the binding refactor.
+
+## Open before building
+
+- Knob 16 (Perform row knob) vs the browse cursor while a Perform dock is bound.
+- Is the bound-Perform-dock MIDI work in v1.0 scope (freeze of 2026-09-25)?
 
 ## Out of scope / separate
 
