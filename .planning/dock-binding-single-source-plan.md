@@ -1,3 +1,5 @@
+> **Largely superseded by `pair-focus-view-plan.md` (2026-10-06)**: the pair view removes the Edit bay's SRC|FX sub-tab and the mouse-only bound Perform dock. The decisions recorded below still apply where `pair-focus-view-plan.md` says so.
+
 # Dock binding: one source of truth (plan)
 
 2026-10-06. Follow-up to the Library/Browser/Edit lifecycle review. Already done and committed (f223f96, 7c04b19, 3cad2c6):
