@@ -49,11 +49,12 @@ The pill is a view of the row (which half is on screen), never an input to the b
 - **FX tap on a controller, nothing bound** (`browser/DockActions.kt`): tap applies, like the mouse double-click; Shift+tap enqueues (option B, 2026-10-06). Separate small change, not part of the binding refactor: the active deck, first vacant slot (last slot when full, no popup), and a chain replaces the chain. Update the user guide Picker/Library paragraphs when it lands.
 - **Bound Perform dock is controllable from the Twister** (option A, 2026-10-06; chosen over the v1.1 deferral I recommended). `ViewState.dockActive` becomes true for a bound Perform dock, so the browse knobs and side buttons work as in the Edit picker. Open design point before building: Perform's knob 16 is a row knob there, so decide what carries the cursor (a modal takeover while bound, or a different knob) -- ask before implementing. It touches the v1.0 feature freeze; confirm it is in scope.
 - **Scope/search/cursor memory** (`BrowserPane.noteHosting`, `ScopeMemory.enter`): remember per kind (Sources, FX, Transitions), not per context key (option B, 2026-10-06). Changing slot or deck keeps the kind's scope, search, tree cursor and list selection; a context's default scope applies only the first time that kind is entered. Separate change from the binding refactor.
+- **Direction (2026-10-06, supersedes the bound-Perform-dock decision above): merge the pair view with Edit.** Selecting a badge (or the pill) focuses that deck: its SRC row and its FX row stay (8 live knobs), the other decks' rows hide completely (their monitors stay visible), and the Browse list/bay is the Edit bay. Knob 16 is the browse cursor, knobs 9-12 send to A/B/BG/PV and 13 to Master FX, exactly the picker's layout with two live rows instead of one. A send from the picker moves focus to the destination deck. Pairs: SRC+FX per deck, Master+Master FX, XF+CLK. Exit is a button press or two (Esc / controller back). Trial and error is expected; v1.0 scope (the interface must stop confusing/annoying the owner first).
 
 ## Open before building
 
-- Knob 16 (Perform row knob) vs the browse cursor while a Perform dock is bound.
-- Is the bound-Perform-dock MIDI work in v1.0 scope (freeze of 2026-09-25)?
+- How much of the existing Edit bay / `PerformanceDeepEditBay` / `PerfRowGeometry` survives when Edit becomes a two-row pair view (agent survey in progress).
+- What the Perform view with all rows visible binds on a badge click once badges always enter focus (probably nothing: the mouse-only bound dock goes away).
 
 ## Out of scope / separate
 
