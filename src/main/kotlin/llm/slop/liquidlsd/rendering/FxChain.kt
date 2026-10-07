@@ -52,7 +52,7 @@ class FxChain(val label: String) {
     }
 
     fun totalParamPages(slotIndex: Int = focusedSlot ?: 0): Int {
-        val count = slots.getOrNull(slotIndex)?.parameters?.size ?: 0
+        val count = slots.getOrNull(slotIndex)?.focusParameters?.size ?: 0
         return if (count == 0) 1 else kotlin.math.ceil(count / 3.0).toInt().coerceAtLeast(1)
     }
 

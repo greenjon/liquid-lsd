@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.SmoothScroll
 import llm.slop.liquidlsd.ui.TangoPalette
 import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
@@ -77,9 +78,7 @@ object FXQueueActionsPanel {
                 if (isSelected && LibraryPanel.shouldReclaimFocus) {
                     ImGui.setKeyboardFocusHere()
                 }
-                if (isSelected && LibraryPanel.shouldScrollToSelection) {
-                    ImGui.setScrollHereY(0.5f)
-                }
+                if (isSelected) SmoothScroll.follow(LibraryPanel.shouldScrollToSelection)
 
                 val btnW = 28f
                 val availW = ImGui.getContentRegionAvailX()

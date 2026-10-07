@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.SmoothScroll
 import llm.slop.liquidlsd.rendering.liveDeck
 import imgui.ImGui
 import imgui.flag.ImGuiKey
@@ -140,9 +141,7 @@ object FXBrowserPanel {
 
         val itemW = (ImGui.getContentRegionAvailX() - btnW - 4f).coerceAtLeast(10f)
 
-        if (isSelected && LibraryPanel.shouldScrollToSelection) {
-            ImGui.setScrollHereY(0.5f)
-        }
+        if (isSelected) SmoothScroll.follow(LibraryPanel.shouldScrollToSelection)
 
         session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
             val text = "${if (target?.isApplied(asset) == true) "\u25CF " else ""}$icon ${asset.displayName}"

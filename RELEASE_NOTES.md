@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Browser Lists Glide to the Selection (`ui/SmoothScroll.kt`, `ui/browser/*`)
+- **Stepping through a browser list (knob 16, arrow keys) now eases the list toward the selected row** instead of snapping, which is easier on the eyes. A selection far outside the view (a list that has just opened) still jumps straight there.
+- Internal: the `setScrollHereY` calls in the browser panels are replaced by `SmoothScroll.follow`, called every frame for the selected row.
+
+### Focus Knobs Skip the Parameter the Metaknob Already Moves (`rendering/isf/ISFFilter.kt`, `macro/FxMacroSync.kt`, `rendering/FxChain.kt`, `ui/PerfKnobSpec.kt`, `ui/FXChainMacroStrip.kt`)
+- **In FX focus mode, knobs 2-4 no longer offer a parameter that knob 1 (the Metaknob) is already driving.** Previously the first parameter appeared twice, and its second knob did nothing. The parameter list and page count now leave out Metaknob-owned parameters, so every knob does something. Changing a parameter's Metaknob link updates the knobs straight away.
+- Internal: `ISFFilter.focusParameters` feeds `FxMacroSync.syncFocusMode`, `FxChain.totalParamPages` and `FxRowState.of`. Test fixtures that need all parameters pin the Metaknob to dry/wet.
+
 ### Metaknob-Owned Values Show a Lock; FX Browser Menu Loads Are Undoable (`ui/ParametersRenderer.kt`, `ui/ValueParamSection.kt`, `ui/browser/FXBrowserPanel.kt`)
 - **An effect parameter driven by its Metaknob link now shows it is locked**: the VAL cell gets the same highlight as a macro-bound value, its tooltip names the link, middle-click reset is ignored, and the VAL panel greys out its controls with a "Driven by its Metaknob link" note. Disable the link to edit by hand.
 - **"Load to <chain> / Slot n" in the FX browser's right-click menu can be undone with Ctrl+Z**, like every other way of loading an effect.

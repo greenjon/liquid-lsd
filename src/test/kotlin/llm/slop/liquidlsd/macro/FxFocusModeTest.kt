@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Shader
+import llm.slop.liquidlsd.rendering.isf.FxMetaBinding
 import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import llm.slop.liquidlsd.rendering.isf.ISFHeader
 import llm.slop.liquidlsd.rendering.isf.ISFInput
@@ -44,7 +45,31 @@ class FxFocusModeTest {
         }
         val header = ISFHeader(INPUTS = inputs)
         val shader = mockk<Shader>(relaxed = true)
-        return ISFFilter(id, id, header, shader)
+        // Pinned to dry/wet so every listed parameter reaches the focus knobs (a Metaknob-owned one is skipped).
+        return ISFFilter(id, id, header, shader).also { it.metaBinding = FxMetaBinding.DRY_WET_SAFETY_NET }
+    }
+
+    @Test
+    fun testFocusKnobsSkipTheParameterTheMetaknobOwns() {
+        val chain = FxChain("Deck A FX")
+        val filter = testFilterWithParams("owned", listOf("first", "second", "third", "fourth"))
+        filter.metaBinding = FxMetaBinding(targetParamName = "first", minVal = 0f, maxVal = 2f)
+        chain.slots[0] = filter
+        for (i in 0 until FxChain.SLOT_COUNT) chain.setSlotLinked(i, false)
+        chain.focusSlot(0)
+
+        assertEquals(listOf("second", "third", "fourth"), filter.focusParameters.map { it.key })
+        assertEquals(1, chain.totalParamPages(0))
+
+        FxMacroSync.syncChain(MacroEngine.DECK_A_FX, "Deck A", chain)
+        val bank = MacroEngine.getBank(MacroEngine.DECK_A_FX)!!
+        assertEquals("Deck A/FX/FX1/Meta", bank.knobs[0].bindings.single().parameterId)
+        assertEquals("SECOND", bank.knobs[1].label)
+        assertEquals("THIRD", bank.knobs[2].label)
+        assertEquals("FOURTH", bank.knobs[3].label)
+
+        filter.metaBinding = FxMetaBinding.DRY_WET_SAFETY_NET
+        assertEquals(4, filter.focusParameters.size)
     }
 
     @Test

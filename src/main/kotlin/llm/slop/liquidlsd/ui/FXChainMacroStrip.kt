@@ -266,16 +266,19 @@ object FXChainMacroStrip {
                         MetaLinkMode.BIPOLAR -> null
                     }
                     fx.setParamLink(input.NAME, nextMode, existingBinding?.invert ?: false)
+                    resyncMacroKnobs(chainPrefix, chain)
                     onPushUndo()
                 },
                 onSelectMode = { newMode ->
                     fx.setParamLink(input.NAME, newMode, existingBinding?.invert ?: false)
+                    resyncMacroKnobs(chainPrefix, chain)
                     onPushUndo()
                 },
                 onToggleInvert = {
                     val currMode = existingBinding?.linkMode ?: MetaLinkMode.FULL
                     val currInv = existingBinding?.invert ?: false
                     fx.setParamLink(input.NAME, currMode, !currInv)
+                    resyncMacroKnobs(chainPrefix, chain)
                     onPushUndo()
                 }
             )

@@ -10,6 +10,7 @@ import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.Shader
+import llm.slop.liquidlsd.rendering.isf.FxMetaBinding
 import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import llm.slop.liquidlsd.rendering.isf.ISFHeader
 import llm.slop.liquidlsd.rendering.isf.ISFInput
@@ -62,7 +63,8 @@ class PerformSurfaceTest {
         for (name in params) {
             inputs += ISFInput(NAME = name, TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(2.0f), DEFAULT = JsonPrimitive(1.0f))
         }
-        return ISFFilter(id, id, ISFHeader(INPUTS = inputs), mockk<Shader>(relaxed = true))
+        // Pinned to dry/wet so every listed parameter reaches the focus knobs (a Metaknob-owned one is skipped).
+        return ISFFilter(id, id, ISFHeader(INPUTS = inputs), mockk<Shader>(relaxed = true)).also { it.metaBinding = FxMetaBinding.DRY_WET_SAFETY_NET }
     }
 
     // --- Page resolution ---

@@ -161,7 +161,7 @@ object FxMacroSync {
         }
 
         // Knobs 1..3: Focused slot's parameters for active page
-        val paramEntries = slot?.parameters?.entries?.toList() ?: emptyList()
+        val paramEntries = slot?.focusParameters ?: emptyList()
         val page = chain.focusParamPage
         val startIndex = page * 3
 

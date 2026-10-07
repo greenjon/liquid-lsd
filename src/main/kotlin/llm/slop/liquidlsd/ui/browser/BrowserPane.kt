@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.SmoothScroll
 import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
@@ -227,7 +228,7 @@ object BrowserPane {
                 val boxMinY = min.y + 1f
                 val boxMaxY = max.y - 1f
                 dl.addRect(boxMinX, boxMinY, boxMaxX, boxMaxY, TangoPalette.u32(TangoPalette.SYNC.normal), 3f, 0, 1.5f)
-                if (LibraryPanel.shouldScrollToSelection) ImGui.setScrollHereY(0.5f)
+                SmoothScroll.follow(LibraryPanel.shouldScrollToSelection)
             }
             val playlist = node.scope as? BrowseScope.Playlist
             if (playlist != null) playlistContextMenu(session, mixer, kind, playlist)

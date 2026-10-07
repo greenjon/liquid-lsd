@@ -46,7 +46,8 @@
   "output": {
     "knobs": {
       "input": "knob",
-      "colorChannel": 1
+      "colorChannel": 1,
+      "brightnessChannel": 2
     }
   }
 }

@@ -59,7 +59,7 @@ internal data class FxRowState(
     companion object {
         fun of(chain: FxChain): FxRowState {
             val slot = chain.focusedSlot
-            val params = slot?.let { chain.slots.getOrNull(it) }?.parameters?.map { it.key to it.value } ?: emptyList()
+            val params = slot?.let { chain.slots.getOrNull(it) }?.focusParameters?.map { it.key to it.value } ?: emptyList()
             return FxRowState(slot, chain.focusParamPage, params)
         }
     }

@@ -86,6 +86,13 @@ class ISFFilter(
     override val dryWet = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
     override var enabled = true
 
+    /** Parameters offered on the focus-mode knobs: all of them in authored order, minus those an enabled Metaknob link owns (K0 already moves those). */
+    val focusParameters: List<Map.Entry<String, ModulatableParameter>>
+        get() {
+            val owned = metaBindings.filter { it.enabled }.mapNotNull { it.targetParamName }.toSet()
+            return parameters.entries.filter { it.key !in owned }
+        }
+
     /** The effect's single macro control — see [ISFAutoBindEngine] for how [metaBinding] gets resolved. */
     val metaKnob = ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f)
     val metaBindings = mutableListOf<FxMetaBinding>()

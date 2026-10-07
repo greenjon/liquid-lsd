@@ -174,7 +174,7 @@ A parameter's base value can be driven from several places. From strongest to we
   pickup), the same behavior used for hardware MIDI/OSC takeover elsewhere in the app.
 - **Focus Mode** (per slot) — focuses on an individual effect slot across the Performance Matrix FX rows.
   - **Knob 1**: The focused slot's Metaknob. The slot's **Dry/Wet** is the `Wet` slider in the chain header (middle-click resets to 100%).
-  - **Knobs 2–4**: Retargeted to the focused effect's top parameters on the active page, with parameter paging (`[◀ P1/N ▶]`) when more than 3 parameters exist.
+  - **Knobs 2–4**: Retargeted to the focused effect's top parameters on the active page, with parameter paging (`[◀ P1/N ▶]`) when more than 3 parameters exist. A parameter the Metaknob already drives is left out, since knob 1 moves it.
   - **Parameter Cells (`FxParamCell`)**: Display parameter values with a reset-to-default button (counter-clockwise arrow).
   - **Hardware MIDI**: Physical controllers mapped to `Macro/<bankId>/knob_1..4` keep their paths; in Focus Mode they control the focused slot's Metaknob and parameters. The layout is fixed per mode (Mixxx-style), so a mapped CC changes meaning when you toggle focus.
   - Click `[◀ CHAIN]` in the header, or the active slot pill, to return to standard Group Mode.
