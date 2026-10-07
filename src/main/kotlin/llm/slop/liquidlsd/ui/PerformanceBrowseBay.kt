@@ -31,32 +31,16 @@ import java.io.File
  */
 internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
 
-    /**
-     * What a row's own Browse shows right now: the deck's sub-tab (SRC | FX) or Master's (TRANS | FX) picks the kind, and the
-     * dock selection supplies the slot while it is for this row. Null for a Master row on MIX (nothing to browse).
-     */
-    fun targetForRow(parametersState: ParametersState, moduleId: String): ParametersState.BrowseTarget? {
-        val remembered = parametersState.browseTargetFor(moduleId)
-        val deckLabel = ctx.deckLabelForModuleId(moduleId)
-        return when {
-            deckLabel != null ->
-                if (parametersState.getActiveSubTab(deckLabel) == "FX") remembered as? ParametersState.BrowseTarget.FxChain ?: ParametersState.BrowseTarget.FxChain()
-                else ParametersState.BrowseTarget.Gen
-            moduleId == MacroEngine.MASTER -> when (parametersState.activeMixerSubTab) {
-                "TRANS" -> ParametersState.BrowseTarget.Transition
-                "FX" -> remembered as? ParametersState.BrowseTarget.FxChain ?: ParametersState.BrowseTarget.FxChain()
-                else -> null
-            }
-            else -> null
+    /** Draws the pair view's Browse list, bound to the half of [pair] last touched (see [ParametersState.pairBrowseTarget]). */
+    fun drawForPair(session: SessionContext, mixer: Mixer, parametersState: ParametersState, pair: PerfRows.PairDef) {
+        val target = parametersState.pairBrowseTarget(pair)
+        if (target == null) {
+            // Master MIX (nothing touched yet): nothing to browse, so show the plain Library list.
+            ImGui.textDisabled("Nothing to browse on the Master mix. Click a Master FX slot or chain name to browse effects.")
+            return
         }
-    }
-
-    fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
-        val target = targetForRow(parametersState, moduleId)
-        // MIX (CTRL) has no Browse target -- e.g. the user flipped the row's pill back to MIX while Browse was open. Fall back to Params.
-        // In the Edit bay, ending the binding (chip ✕, double-click commit) leaves Browse for Params; the row stays open.
-        val binding = target?.let { bindingFor(session, mixer, ParametersState.DockSelection(moduleId, it)) { parametersState.openParams(moduleId) } }
-        if (binding == null) { parametersState.openParams(moduleId); return }
+        val binding = bindingFor(session, mixer, ParametersState.DockSelection(pair.moduleId, target)) { parametersState.leavePair() }
+        if (binding == null) { ImGui.textDisabled("Nothing to browse here."); return }
         drawDock(session, mixer, parametersState, binding)
     }
 

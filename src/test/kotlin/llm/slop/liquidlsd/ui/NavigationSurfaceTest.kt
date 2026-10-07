@@ -55,6 +55,7 @@ class NavigationSurfaceTest {
         UITheme.performancePageId = "ab"
         UITheme.libraryMode = UITheme.LibraryMode.HALF
         state.rackModuleDisclosure.clear()
+        nav() // syncs the surface's pair sampling to this fresh session (it keeps state across instances)
         for (id in bankIds) MacroEngine.registerBank(id, MacroEngine.newBankFor(id))
         every { mixer.deckA.fxChain } returns deckAChain
         PreferencesPanel.close()
@@ -212,8 +213,7 @@ class NavigationSurfaceTest {
             FXBrowserPanel.selectedAsset = AssetItem("stock-fx://glow", "Glow", AssetType.FX_STOCK)
             every { mixer.masterFxChain } returns FxChain("Master FX")
             nav().browseSend(SendTarget.MASTER)
-            assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.rackModuleDisclosure[MacroEngine.MASTER])
-            assertEquals(ParametersState.SectionMode.BROWSE, state.rackSectionMode)
+            assertEquals(PerfRows.PAIR_MASTER, state.focusedPair)
             assertEquals("FX", state.activeMixerSubTab)
         } finally {
             unhostPane()
@@ -249,12 +249,10 @@ class NavigationSurfaceTest {
     }
 
     @Test
-    fun leavingTheEditBayDropsTheDockSelection() {
+    fun leavingThePairViewDropsTheDockSelection() {
         state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
-        assertTrue(nav().back()) // first back ends the binding: Browse -> Params, row stays open
-        assertTrue(state.anyRackModuleExpanded())
-        assertEquals(ParametersState.SectionMode.PARAMS, state.rackSectionMode)
-        assertTrue(nav().back()) // second back closes the row and drops the selection
+        assertTrue(nav().back()) // one back leaves the pair view and drops the selection
+        assertEquals(null, state.focusedPair)
         assertFalse(state.anyRackModuleExpanded())
         assertEquals(null, state.dockSelection)
     }
@@ -439,12 +437,9 @@ class NavigationSurfaceTest {
             state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
             hostPane(mutableListOf(), mutableListOf())
             nav().button(0, true)
-            assertTrue(state.anyRackModuleExpanded())
+            assertEquals("A", state.focusedPair)
             nav().button(0, false)
-            assertEquals(ParametersState.SectionMode.PARAMS, state.rackSectionMode)
-            assertTrue(state.anyRackModuleExpanded())
-            nav().button(0, false)
-            assertFalse(state.anyRackModuleExpanded())
+            assertEquals(null, state.focusedPair)
         } finally {
             unhostPane()
         }
@@ -460,10 +455,10 @@ class NavigationSurfaceTest {
 
     @Test
     fun pickerOpensTheSourceListOfALastTouchedSrcRow() {
-        PerformSurface.lastTouchedKnob = 5 // Deck B row, SRC
+        PerformSurface.lastTouchedKnob = 9 // Deck B SRC row (row 3 of the A/B page)
         nav().button(2, false)
-        assertEquals(ParametersState.BrowseTarget.Gen, state.browseTargetFor(MacroEngine.DECK_B))
-        assertEquals(ParametersState.SectionMode.BROWSE, state.rackSectionMode)
+        assertEquals(ParametersState.BrowseTarget.Gen, state.dockSelection?.target)
+        assertEquals("B", state.focusedPair)
         assertEquals("SRC", state.activeDeckBSubTab)
     }
 
@@ -472,13 +467,13 @@ class NavigationSurfaceTest {
         every { mixer.deckB.fxChain } returns FxChain("Deck B FX")
         PerformSurface.lastTouchedKnob = 14 // Deck B's FX row (row 3 of the A/B page), col 2 = slot index 1
         nav().button(2, false)
-        assertEquals(ParametersState.BrowseTarget.FxChain(1), state.browseTargetFor(MacroEngine.DECK_B))
+        assertEquals(ParametersState.BrowseTarget.FxChain(1), state.dockSelection?.target)
         assertEquals("FX", state.activeDeckBSubTab)
 
-        state.rackModuleDisclosure.clear()
+        state.leavePair()
         PerformSurface.lastTouchedKnob = 12 // col 0 in group mode = the chain list
         nav().button(2, false)
-        assertEquals(ParametersState.BrowseTarget.FxChain(null), state.browseTargetFor(MacroEngine.DECK_B))
+        assertEquals(ParametersState.BrowseTarget.FxChain(null), state.dockSelection?.target)
     }
 
     @Test
@@ -486,7 +481,7 @@ class NavigationSurfaceTest {
         UITheme.performancePageId = "mixer"
         PerformSurface.lastTouchedKnob = 8 // Transitions row (row 3 of MIXER)
         nav().button(2, false)
-        assertEquals(ParametersState.BrowseTarget.Transition, state.browseTargetFor(MacroEngine.MASTER))
+        assertEquals(ParametersState.BrowseTarget.Transition, state.dockSelection?.target)
         assertEquals("TRANS", state.activeMixerSubTab)
     }
 

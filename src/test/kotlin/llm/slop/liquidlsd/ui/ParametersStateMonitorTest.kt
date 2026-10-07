@@ -4,153 +4,115 @@ import llm.slop.liquidlsd.macro.MacroEngine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ParametersStateMonitorTest {
 
     @Test
-    fun openFromMonitor_whenCollapsed_opensParams() {
+    fun openFromMonitor_focusesTheDecksPair() {
         val state = ParametersState()
         state.collapseAllRackModules()
 
         state.openFromMonitor(MacroEngine.DECK_A, "Deck A")
 
-        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_A))
-        assertEquals(ParametersState.SectionMode.PARAMS, state.sectionModeFor(MacroEngine.DECK_A))
+        assertEquals("A", state.focusedPair)
+        assertFalse(state.anyRackModuleExpanded())
         assertEquals("Deck A", state.activeTopTab)
     }
 
     @Test
-    fun openFromMonitor_whenAlreadyInParams_staysInParams() {
+    fun openFromMonitor_switchesPairs_andDropsTheOldBinding() {
         val state = ParametersState()
-        state.openParams(MacroEngine.DECK_A)
-        assertEquals(ParametersState.SectionMode.PARAMS, state.sectionModeFor(MacroEngine.DECK_A))
+        state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", slotIndex = 2)
+        assertEquals("A", state.focusedPair)
 
         state.openFromMonitor(MacroEngine.DECK_B, "Deck B")
 
-        assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_A))
-        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
-        assertEquals(ParametersState.SectionMode.PARAMS, state.sectionModeFor(MacroEngine.DECK_B))
+        assertEquals("B", state.focusedPair)
+        assertNull(state.dockSelection)
         assertEquals("Deck B", state.activeTopTab)
     }
 
     @Test
-    fun openFromMonitor_whenInBrowseGen_switchesDeckAndStaysInGenBrowse() {
+    fun openFromMonitor_onMasterFocusesTheMasterPair() {
         val state = ParametersState()
-        state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
-        assertEquals(ParametersState.SectionMode.BROWSE, state.sectionModeFor(MacroEngine.DECK_A))
-        assertTrue(state.browseTargetFor(MacroEngine.DECK_A) is ParametersState.BrowseTarget.Gen)
-
-        state.openFromMonitor(MacroEngine.DECK_B, "Deck B")
-
-        assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_A))
-        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
-        assertEquals(ParametersState.SectionMode.BROWSE, state.sectionModeFor(MacroEngine.DECK_B))
-        assertTrue(state.browseTargetFor(MacroEngine.DECK_B) is ParametersState.BrowseTarget.Gen)
-        assertEquals("SRC", state.activeDeckBSubTab)
-        assertEquals("Deck B", state.activeTopTab)
+        state.openFromMonitor(MacroEngine.MASTER, "Mixer")
+        assertEquals(PerfRows.PAIR_MASTER, state.focusedPair)
     }
 
     @Test
     fun dockSelection_isSingleAndClearable() {
         val state = ParametersState()
-        assertEquals(null, state.dockSelection)
+        assertNull(state.dockSelection)
         state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", slotIndex = 1)
         state.openGenBrowse(MacroEngine.DECK_B, "Deck B")
         assertEquals(MacroEngine.DECK_B, state.dockSelection?.moduleId)
-        assertTrue(state.browseTargetFor(MacroEngine.DECK_A) is ParametersState.BrowseTarget.Gen)
+        assertEquals("B", state.focusedPair)
         state.clearDockSelection()
-        assertEquals(null, state.dockSelection)
+        assertNull(state.dockSelection)
     }
 
     @Test
-    fun selectingARowSlotBindsTheDockWithoutExpandingTheRow() {
+    fun selectingARowSlotFocusesItsPairAndBindsTheBrowse() {
         val state = ParametersState()
-        state.collapseAllRackModules() // a new state restores the persisted disclosure, which other tests may leave expanded
+        state.collapseAllRackModules()
         state.selectFxChain(MacroEngine.DECK_A, "Deck A", slotIndex = 2)
         assertFalse(state.anyRackModuleExpanded())
+        assertEquals("A", state.focusedPair)
         assertEquals(ParametersState.DockSelection(MacroEngine.DECK_A, ParametersState.BrowseTarget.FxChain(2)), state.dockSelection)
         assertEquals("FX", state.activeDeckASubTab)
         state.selectTransition()
+        assertEquals(PerfRows.PAIR_XF, state.focusedPair)
         assertEquals(ParametersState.BrowseTarget.Transition, state.dockSelection?.target)
+    }
+
+    @Test
+    fun selectingWhileARowIsOpenClosesItAndFocusesThePair() {
+        val state = ParametersState()
+        state.openParams(MacroEngine.DECK_A)
+        state.selectGen(MacroEngine.DECK_A, "Deck A")
+        assertEquals("A", state.focusedPair)
         assertFalse(state.anyRackModuleExpanded())
     }
 
     @Test
-    fun selectingWhileARowIsOpenAlsoShowsItsBrowseTab() {
+    fun pairBrowseTargetIsTheHalfLastTouchedElseTheFirstBrowsableHalf() {
         val state = ParametersState()
-        state.openParams(MacroEngine.DECK_A)
-        state.selectGen(MacroEngine.DECK_A, "Deck A")
-        assertEquals(ParametersState.SectionMode.BROWSE, state.sectionModeFor(MacroEngine.DECK_A))
-    }
-
-    @Test
-    fun editBayBrowseTabUsesTheSelectedSlotElseTheRowsHalf() {
-        val state = ParametersState()
+        val deckA = PerfRows.pairFor("A")!!
+        state.focusPair("A")
+        assertEquals(ParametersState.BrowseTarget.Gen, state.pairBrowseTarget(deckA))
         state.selectFxChain(MacroEngine.DECK_A, "Deck A", slotIndex = 1)
-        state.openParams(MacroEngine.DECK_A)
-        state.openBrowseTab(MacroEngine.DECK_A, "Deck A")
-        assertEquals(ParametersState.BrowseTarget.FxChain(1), state.browseTargetFor(MacroEngine.DECK_A))
-        state.setDeckSubTab("Deck A", "SRC")
-        state.openBrowseTab(MacroEngine.DECK_A, "Deck A")
-        assertEquals(ParametersState.BrowseTarget.Gen, state.browseTargetFor(MacroEngine.DECK_A))
-        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.COLLAPSED)
-        assertEquals(null, state.dockSelection)
+        assertEquals(ParametersState.BrowseTarget.FxChain(1), state.pairBrowseTarget(deckA))
+        state.focusPair(PerfRows.PAIR_MASTER)
+        assertNull(state.pairBrowseTarget(PerfRows.pairFor(PerfRows.PAIR_MASTER)!!)) // MIX has nothing to browse
+        state.focusPair(PerfRows.PAIR_XF)
+        assertEquals(ParametersState.BrowseTarget.Transition, state.pairBrowseTarget(PerfRows.pairFor(PerfRows.PAIR_XF)!!))
     }
 
     @Test
-    fun openFromMonitor_whenInBrowseFx_switchesDeckAndStaysInFxBrowse() {
+    fun paramsButtonOpensTheEditViewOnTheTouchedHalf() {
         val state = ParametersState()
-        state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", slotIndex = 2)
-        assertEquals(ParametersState.SectionMode.BROWSE, state.sectionModeFor(MacroEngine.DECK_A))
-        assertTrue(state.browseTargetFor(MacroEngine.DECK_A) is ParametersState.BrowseTarget.FxChain)
-
-        state.openFromMonitor(MacroEngine.DECK_B, "Deck B")
-
-        assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_A))
+        state.selectFxChain(MacroEngine.DECK_B, "Deck B", slotIndex = null)
+        state.openParamsForPair("B")
+        assertNull(state.focusedPair)
         assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
-        assertEquals(ParametersState.SectionMode.BROWSE, state.sectionModeFor(MacroEngine.DECK_B))
-        val targetB = state.browseTargetFor(MacroEngine.DECK_B)
-        assertTrue(targetB is ParametersState.BrowseTarget.FxChain)
-        assertEquals(2, targetB.slotIndex)
         assertEquals("FX", state.activeDeckBSubTab)
-        assertEquals("Deck B", state.activeTopTab)
     }
 
     @Test
     fun reproducingUserScenario_destickifiesDeckBays() {
         val state = ParametersState()
-
-        // 1. Open source browser on Deck A, then collapse
         state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
-        state.collapseAllRackModules()
-
-        // 2. Open fx browser on Deck B, then collapse
+        state.leavePair()
         state.openFxChainBrowse(MacroEngine.DECK_B, "Deck B", slotIndex = null)
-        state.collapseAllRackModules()
-
-        // 3. Open edit on Deck BG, then collapse
+        state.leavePair()
         state.openParams(MacroEngine.DECK_BG)
         state.collapseAllRackModules()
 
-        // All are collapsed
-        assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_A))
-        assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_B))
-        assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_BG))
-
-        // 4. Click monitor for A -> opens Editor (PARAMS)
-        state.openFromMonitor(MacroEngine.DECK_A, "Deck A")
-        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_A))
-        assertEquals(ParametersState.SectionMode.PARAMS, state.sectionModeFor(MacroEngine.DECK_A))
-
-        // 5. Click monitor for B -> stays in Editor (PARAMS)
-        state.openFromMonitor(MacroEngine.DECK_B, "Deck B")
-        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
-        assertEquals(ParametersState.SectionMode.PARAMS, state.sectionModeFor(MacroEngine.DECK_B))
-
-        // 6. Click monitor for BG -> stays in Editor (PARAMS)
-        state.openFromMonitor(MacroEngine.DECK_BG, "Deck BG")
-        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_BG))
-        assertEquals(ParametersState.SectionMode.PARAMS, state.sectionModeFor(MacroEngine.DECK_BG))
+        assertNull(state.focusedPair)
+        assertNull(state.dockSelection)
+        assertFalse(state.anyRackModuleExpanded())
+        assertTrue(state.rackModuleDisclosure.values.all { it == ParametersState.DisclosureLevel.COLLAPSED })
     }
 }

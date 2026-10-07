@@ -120,58 +120,50 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
      * [ParametersTabs.drawDeckGroupContent]/[ParametersTabs.drawMasterFxContent] and
      * [PropertiesPanel.draw] (see [drawRackDeepEdit]). Macro binding is edited in the Edit-row [PerformanceMacroStrip]
      * and the Properties editor; pressing Learn on a Tier-1 knob focuses this tab (see [focusDeepEditTab]). No title or Collapse button here: the
-     * row above already says which deck/section this is, and it has its own Collapse (as does Esc).
-     *
-     * A module that has any Browse target (every [deepEditModuleIds] member does) gets a tab row
-     * (Edit | SRC/TRANS | Chain | FX1-3, see [drawModeTabs]) above its content; clicking a row's generator badge/FX slot/FX
-     * chain name/transition name jumps straight into Browse (see [ParametersState.openBrowse]),
-     * bypassing the tabs, which are how you get back to Params or move between targets.
+     * row above already says which deck/section this is, and it has its own Collapse (as does Esc). Browsing lives in the
+     * pair view ([drawPairBay]), not here.
      */
     fun drawRackBayModule(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
-        if (moduleId in deepEditModuleIds) {
-            drawModeTabs(session, parametersState, moduleId, ctx.deckLabelForModuleId(moduleId))
-        }
-        when (parametersState.sectionModeFor(moduleId)) {
-            ParametersState.SectionMode.BROWSE -> {
-                // Browse picks push undo steps, and drawRackDeepEdit (which normally runs the keys) isn't drawn here.
-                if (moduleId == keyboardOwnerModuleId) handleDeepEditKeys(parametersState, mixer, fullSet = false)
-                browseBay.draw(session, mixer, parametersState, moduleId)
-            }
-            ParametersState.SectionMode.PARAMS -> {
-                llm.slop.liquidlsd.ui.browser.BrowserPane.noteHosting(null) // no dock on screen
-                drawRackDeepEdit(session, mixer, parametersState, moduleId)
-            }
-        }
+        llm.slop.liquidlsd.ui.browser.BrowserPane.noteHosting(null) // no dock on screen
+        if (moduleId in deepEditModuleIds) drawQueueRow(session, ctx.deckLabelForModuleId(moduleId))
+        drawRackDeepEdit(session, mixer, parametersState, moduleId)
     }
 
-    /**
-     * The bay's tab row: `Parameters | Browse`. Browse is the dock bound to the slot last clicked on the row (the row's SRC
-     * badge, chain name, FX cells or transition name are the slot selector; see [ParametersState.openBrowseTab]).
-     */
-    private fun drawModeTabs(session: SessionContext, parametersState: ParametersState, moduleId: String, deckLabel: String?) {
-        val inBrowse = parametersState.sectionModeFor(moduleId) == ParametersState.SectionMode.BROWSE
-        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            fun tab(label: String, tip: String, active: Boolean, onClick: () -> Unit) {
-                if (active) ButtonChrome.pushColor(ImGui.getColorU32(ImGuiCol.ButtonActive))
-                if (ButtonChrome.button("$label##bay_tab_${moduleId}_$label")) onClick()
-                if (active) ImGui.popStyleColor(3)
-                itemTooltip(tip)
+    /** The pair view below its two rows: a Back / Parameters button line, then the Browse list for the half last touched. */
+    fun drawPairBay(session: SessionContext, mixer: Mixer, parametersState: ParametersState, bayH: Float) {
+        val tag = parametersState.focusedPair ?: return
+        val pair = PerfRows.pairFor(tag) ?: return
+        if (ImGui.beginChild("##pair_bay_area", 0f, bayH, true)) {
+            // Browse picks push undo steps, and no Params editor is drawn here to run the keys.
+            handleDeepEditKeys(parametersState, mixer, fullSet = false)
+            session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
+                if (ButtonChrome.button("Back##pair_back")) parametersState.leavePair()
+                itemTooltip("Back to the Perform view (Esc).")
+                if (tag != PerfRows.PAIR_XF) {
+                    ImGui.sameLine()
+                    if (ButtonChrome.button("Parameters##pair_params")) parametersState.openParamsForPair(tag)
+                    itemTooltip("Edit parameters, modulation and properties for the half you last touched.")
+                }
             }
-            tab("Parameters", "Edit parameters, modulation and properties.", !inBrowse) { parametersState.openParams(moduleId) }
-            ImGui.sameLine()
-            tab("Browse", "Browse and apply sources, effects or transitions to this row. Click a slot on the row to choose what it applies to.", inBrowse) {
-                parametersState.openBrowseTab(moduleId, deckLabel)
-            }
-            if (!inBrowse) drawQueueNextUp(session, deckLabel)
+            ImGui.spacing()
+            ImGui.separator()
+            ImGui.spacing()
+            browseBay.drawForPair(session, mixer, parametersState, pair)
         }
+        ImGui.endChild()
+    }
+
+    /** Right-aligned queue line at the top of the Params editor, so the queue feeding this module stays visible. */
+    private fun drawQueueRow(session: SessionContext, deckLabel: String?) {
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) { drawQueueNextUp(session, deckLabel) }
         ImGui.spacing()
         ImGui.separator()
         ImGui.spacing()
     }
 
     /**
-     * Right-aligned, on the tab row of the Parameters editor: what the queue feeding this module plays next. The Library
-     * is off screen in Edit view; the Browse tabs show the queue columns themselves. Decks A/B and
+     * Right-aligned, at the top of the Parameters editor: what the queue feeding this module plays next. The Library
+     * is off screen in Edit view; the pair view's Browse shows the queue columns themselves. Decks A/B and
      * Master show the play queue, BG its own queue; PV has none.
      */
     private fun drawQueueNextUp(session: SessionContext, deckLabel: String?) {
@@ -197,7 +189,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         ImGui.setCursorPosX((ImGui.getWindowWidth() - ImGui.getStyle().windowPaddingX - ImGui.calcTextSize(fitted).x).coerceAtLeast(left))
         ImGui.alignTextToFramePadding()
         ImGui.textDisabled(fitted)
-        itemTooltip(text + "\nThe queue columns are in the Browse tabs; Esc returns to the Library.")
+        itemTooltip(text + "\nThe queue columns are in the pair view's Browse.")
     }
 
     fun deepEditParamsWidth(session: SessionContext, metrics: GridMetrics): Float {

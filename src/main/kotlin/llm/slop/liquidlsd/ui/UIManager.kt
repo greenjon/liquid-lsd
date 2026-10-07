@@ -501,7 +501,9 @@ class UIManager(
         }
 
         // Three views: Library (FULL), Edit (a module in Deep Edit -- no Library at all), Perform (HALF).
-        val isEditView = LibraryPanel.isEditView(session)
+        // The pair view and the full Library are different views: entering the Library by any route (menu, Ctrl+F, controller) leaves the pair.
+        if (theme.libraryMode == UITheme.LibraryMode.FULL && parametersState.focusedPair != null) parametersState.leavePair()
+        val isEditView = LibraryPanel.isEditView(session) || viewStateOf(session).pair
         // The Perform rows are a fixed height; the Library is whatever window height they leave.
         val halfLibraryH = (contentH - PerformanceMatrixPanel.PERFORM_TOP_H).coerceIn(libTitleBarH.coerceAtMost(contentH), contentH)
         val libraryH = when {
@@ -585,8 +587,7 @@ class UIManager(
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, ImGui.getStyle().getFramePaddingX(), 6.0f)
         if (ImGui.begin("Library", flags)) {
             LibraryPanel.draw(
-                session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, parametersState,
-                performanceMatrixPanel.dockBinding(session, currentMixer!!, parametersState)
+                session, libraryW.coerceAtLeast(1f), libraryH.coerceAtLeast(1f), currentMixer!!, parametersState
             )
         }
         ImGui.end()

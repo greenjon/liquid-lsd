@@ -200,15 +200,15 @@ internal class PerformSurface(
                 )
             })
         }
-        if (nav?.browsing == true) dimForBrowse(nav.browseRowLive, nav.sendTargets)
+        if (nav?.browsing == true) dimForBrowse(nav.browseLiveKnobs, nav.sendTargets)
         return lightBuffer
     }
 
-    /** While browsing only the cursor knob (white) and, with the browsed row on screen, knobs 1-4 (its colour) stay lit. */
-    private fun dimForBrowse(rowLive: Boolean, sendTargets: Set<SendTarget>) {
+    /** While browsing only the cursor knob (white) and, with the browsed rows on screen, the leading live knobs (their colour) stay lit. */
+    private fun dimForBrowse(liveKnobs: Int, sendTargets: Set<SendTarget>) {
         for (i in lightBuffer.indices) {
             if (i == KnobCommands.BROWSE_KNOB) lightBuffer[i] = KnobLight(0.5f, meterType = MeterType.ENDLESS)
-            else if (!(rowLive && i < KnobCommands.ROW_KNOBS)) lightBuffer[i] = SendTarget.forKnob(i)?.takeIf { it in sendTargets }?.let(::sendLight)
+            else if (i >= liveKnobs) lightBuffer[i] = SendTarget.forKnob(i)?.takeIf { it in sendTargets }?.let(::sendLight)
         }
     }
 

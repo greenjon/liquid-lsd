@@ -12,7 +12,7 @@ import llm.slop.liquidlsd.rendering.Mixer
  *      silently keeps running underneath.
  *   2. The Preferences window.
  *   3. FX focus mode (back to the chain's group mode).
- *   4. An Edit bay on Browse returns to Params.
+ *   4. The pair focus view closes (one press, back to Perform).
  *   5. Any Rack module above Tier 1 collapses back to Tier 1.
  */
 internal object BackNavigation {
@@ -28,7 +28,7 @@ internal object BackNavigation {
             return true
         }
         // Perform / Library FULL: Esc first drops the dock selection.
-        if (parametersState.dockSelection != null && !parametersState.anyRackModuleExpanded()) {
+        if (parametersState.dockSelection != null && parametersState.focusedPair == null && !parametersState.anyRackModuleExpanded()) {
             parametersState.clearDockSelection()
             return true
         }
@@ -39,10 +39,8 @@ internal object BackNavigation {
                 return true
             }
         }
-        // Edit bay on Browse: the first Esc ends the binding (back to Params, row stays open); the next one closes the row.
-        val openModule = parametersState.expandedRackModuleId()
-        if (openModule != null && parametersState.rackSectionMode == ParametersState.SectionMode.BROWSE) {
-            parametersState.openParams(openModule)
+        if (parametersState.focusedPair != null) {
+            parametersState.leavePair()
             return true
         }
         if (parametersState.anyRackModuleExpanded()) {

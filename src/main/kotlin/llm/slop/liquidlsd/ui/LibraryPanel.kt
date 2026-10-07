@@ -68,6 +68,7 @@ object LibraryPanel {
 
     /** Leaves Edit view so the Library is on screen: cancels any armed Learn (it pins its module open) and collapses Deep Edit. */
     fun show(session: SessionContext) {
+        session.parametersState.leavePair()
         if (!isEditView(session)) return
         if (llm.slop.liquidlsd.macro.MacroLearnState.isLearning()) llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
         session.parametersState.collapseAllRackModules()
@@ -80,7 +81,7 @@ object LibraryPanel {
 
     /** Library shortcut: from Edit view, brings the Library back (Perform view); otherwise toggles HALF <-> FULL. */
     fun cycleMode(session: SessionContext) {
-        if (isEditView(session)) {
+        if (isEditView(session) || session.parametersState.focusedPair != null) {
             show(session)
             return
         }

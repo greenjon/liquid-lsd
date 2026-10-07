@@ -207,8 +207,8 @@ internal object LibraryNavigation {
      * Sends the cursor item to [target] through the same paths as the context menu: a source or preset via [DeckOps] (dirty guard and undo),
      * a chain replacing all 3 slots, a single FX into the first vacant slot (the last slot when the chain is full: a controller has no popup).
      * Chain and slot loads are undoable like the deck loads. From Library FULL the send only loads, so the view, scope and cursor stay put and
-     * the next item can be sent straight away (FX sends toast where they landed). From the Edit bay's picker it also re-targets the bay to the
-     * target's row in Browse, so row one of the controller plays what was just loaded: the deck's SRC row for a source, its FX chain (the
+     * the next item can be sent straight away (FX sends toast where they landed). From the pair view it also moves the focus to the
+     * target's pair, bound to the loaded half, so the controller's rows play what was just loaded: the deck's SRC row for a source, its FX chain (the
      * landed slot for a single FX) for an effect, the Master FX chain for the master bus.
      */
     fun send(target: SendTarget, session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
@@ -217,7 +217,7 @@ internal object LibraryNavigation {
         val deckSlot = DeckSlot.entries.firstOrNull { it.name == target.name }
         val deckLabel = deckSlot?.label
         val bankId = deckSlot?.bankId ?: MacroEngine.MASTER
-        val retarget = parametersState.anyRackModuleExpanded()
+        val retarget = parametersState.focusedPair != null
         when (asset.type) {
             AssetType.SOURCE_STOCK -> {
                 val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(PresetListPanel.STOCK_PATH_PREFIX) } ?: return

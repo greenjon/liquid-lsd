@@ -1,3 +1,5 @@
+> **STALE (2026-10-06):** superseded by the pair focus view (`.planning/pair-focus-view-plan.md`); the Edit-bay Browse tab and bound Perform dock it describes are gone.
+
 # Handoff: delete the classic browser code (written 2026-10-04, after promotion)
 
 Read first: `.planning/unified-browser-step6-handoff.md` (project rules, pitfalls; its steps 1-2 are DONE), then this file. Rules: "done" = code + tests + DECISIONS.md + RELEASE_NOTES.md + docs/release_notes.md + user guide + docs/developer/ui.md + tooltips; `./gradlew test --offline` regenerates `src/main/resources/docs/` (commit those). No Claude co-author lines. The user commits themselves. Give a short recommendation before planning; ask before design decisions.

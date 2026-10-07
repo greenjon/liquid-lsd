@@ -6,7 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class NavCommandsTest {
-    private class FakeNav(override var browsing: Boolean, override var browseRowLive: Boolean = false) : NavSurface {
+    private class FakeNav(override var browsing: Boolean, override var browseLiveKnobs: Int = 0) : NavSurface {
         override val browseSession = 0
         val calls = ArrayList<String>()
         override fun button(index: Int, shifted: Boolean) { calls += "button $index${if (shifted) " shifted" else ""}" }
@@ -80,7 +80,7 @@ class NavCommandsTest {
 
     @Test
     fun rowOneStaysLiveWhileTheBrowsedRowIsOnScreen() {
-        val nav = FakeNav(browsing = true, browseRowLive = true)
+        val nav = FakeNav(browsing = true, browseLiveKnobs = 4)
         for (n in listOf(1, 4, 5, 15)) {
             registry.execute("knob.$n", CommandInput.Delta(0.01f), ctx(nav))
             press("knob.$n.press", ctx(nav))
@@ -88,5 +88,14 @@ class NavCommandsTest {
         press("knob.2.press_alt", ctx(nav))
         assertEquals(listOf("turn 0", "primary 0", "turn 3", "primary 3", "secondary 1"), knobs.calls)
         assertEquals(emptyList(), nav.calls)
+    }
+
+    @Test
+    fun rowsOneAndTwoStayLiveInThePairView() {
+        val nav = FakeNav(browsing = true, browseLiveKnobs = 8)
+        for (n in listOf(5, 8, 9, 15)) {
+            registry.execute("knob.$n", CommandInput.Delta(0.01f), ctx(nav))
+        }
+        assertEquals(listOf("turn 4", "turn 7"), knobs.calls)
     }
 }

@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#pair-focus-view-browse-a-decks-source-and-fx-together-uiparametersstatekt-uiperfrowskt-uiperformancedeepeditbaykt-uiperformancebrowsebaykt-uipairknobtouchkt-uinavigationsurfacekt-uibacknavigationkt-uiviewstatekt-controlnavsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pair Focus View: Browse a Deck's Source and FX Together (ui/ParametersState.kt, ui/PerfRows.kt, ui/PerformanceDeepEditBay.kt, ui/PerformanceBrowseBay.kt, ui/PairKnobTouch.kt, ui/NavigationSurface.kt, ui/BackNavigation.kt, ui/ViewState.kt, control/NavSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-browser-edit-lifecycle-consistent-exits-edit-bay-unbind-send-knobs-stay-in-the-library-uiparametersstatekt-uibacknavigationkt-uiperformancebrowsebaykt-uibrowserbrowserdockkt-uilibrarynavigationkt-uibrowserfxbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library / Browser / Edit Lifecycle: Consistent Exits, Edit-Bay Unbind, Send Knobs Stay in the Library (ui/ParametersState.kt, ui/BackNavigation.kt, ui/PerformanceBrowseBay.kt, ui/browser/BrowserDock.kt, ui/LibraryNavigation.kt, ui/browser/FXBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#bundled-isf-inputs-are-normalized-to-01-11-default_sources-default_filters-default_transitions-uivalueformatkt-renderingisfisfautobindenginekt-defaults" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5746,6 +5768,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#pair-focus-view-browse-a-decks-source-and-fx-together-uiparametersstatekt-uiperfrowskt-uiperformancedeepeditbaykt-uiperformancebrowsebaykt-uipairknobtouchkt-uinavigationsurfacekt-uibacknavigationkt-uiviewstatekt-controlnavsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pair Focus View: Browse a Deck's Source and FX Together (ui/ParametersState.kt, ui/PerfRows.kt, ui/PerformanceDeepEditBay.kt, ui/PerformanceBrowseBay.kt, ui/PairKnobTouch.kt, ui/NavigationSurface.kt, ui/BackNavigation.kt, ui/ViewState.kt, control/NavSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#library-browser-edit-lifecycle-consistent-exits-edit-bay-unbind-send-knobs-stay-in-the-library-uiparametersstatekt-uibacknavigationkt-uiperformancebrowsebaykt-uibrowserbrowserdockkt-uilibrarynavigationkt-uibrowserfxbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Library / Browser / Edit Lifecycle: Consistent Exits, Edit-Bay Unbind, Send Knobs Stay in the Library (ui/ParametersState.kt, ui/BackNavigation.kt, ui/PerformanceBrowseBay.kt, ui/browser/BrowserDock.kt, ui/LibraryNavigation.kt, ui/browser/FXBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#bundled-isf-inputs-are-normalized-to-01-11-default_sources-default_filters-default_transitions-uivalueformatkt-renderingisfisfautobindenginekt-defaults" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10259,6 +10303,23 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="pair-focus-view-browse-a-decks-source-and-fx-together-uiparametersstatekt-uiperfrowskt-uiperformancedeepeditbaykt-uiperformancebrowsebaykt-uipairknobtouchkt-uinavigationsurfacekt-uibacknavigationkt-uiviewstatekt-controlnavsurfacekt">Pair Focus View: Browse a Deck's Source and FX Together (<code>ui/ParametersState.kt</code>, <code>ui/PerfRows.kt</code>, <code>ui/PerformanceDeepEditBay.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>, <code>ui/PairKnobTouch.kt</code>, <code>ui/NavigationSurface.kt</code>, <code>ui/BackNavigation.kt</code>, <code>ui/ViewState.kt</code>, <code>control/NavSurface.kt</code>)</h3>
+<ul>
+<li><strong>Clicking a badge now focuses a pair of rows</strong>: a deck's SRC badge, FX chain name or slot, the Master FX chain or slot, the transition name, a preview monitor, or the controller's picker button shows that pair's two rows (deck SRC + FX, Master MIX + FX, Transitions + Clock) with the Browse list below. Every other row hides (the deck monitors stay visible).</li>
+<li><strong>The Browse list follows the half you touched</strong>: click a row's slot, or turn a knob on it, and the list switches to that half (SRC to sources, an FX slot or chain to effects, the transition to transitions). Master MIX and Clock have nothing to browse.</li>
+<li><strong>Back, Parameters, Esc</strong>: a <strong>Back</strong> button and one <strong>Esc</strong> (or the controller's back button) return to Perform. <strong>Parameters</strong> opens the full parameter editor on the half you touched. The editor no longer has a Browse tab; the row's EDIT gear still opens it directly.</li>
+<li><strong>Twister</strong>: knobs 1-8 are the pair's two rows (live while you browse), 9-12 send the highlighted item to A/B/BG/PV and 13 to Master FX, knob 16 is the cursor. A send moves the focus to the destination deck's pair.</li>
+<li><strong>No more bound Perform dock</strong>: the Library dock in Perform is always the plain Library; binding happens in the pair view. Entering the full Library leaves the pair view.</li>
+<li>Internal: <code>ParametersState.focusedPair</code>, <code>PerfRows.PAIRS</code>, <code>NavSurface.browseLiveKnobs</code> (replaces <code>browseRowLive</code>); <code>SectionMode</code>, <code>rackSectionMode</code>, <code>openBrowseTab</code>, <code>dropStaleDockSelection</code> and <code>ViewState.dockBound</code> removed.</li>
+</ul>
+<h3 id="library-browser-edit-lifecycle-consistent-exits-edit-bay-unbind-send-knobs-stay-in-the-library-uiparametersstatekt-uibacknavigationkt-uiperformancebrowsebaykt-uibrowserbrowserdockkt-uilibrarynavigationkt-uibrowserfxbrowserpanelkt">Library / Browser / Edit Lifecycle: Consistent Exits, Edit-Bay Unbind, Send Knobs Stay in the Library (<code>ui/ParametersState.kt</code>, <code>ui/BackNavigation.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>, <code>ui/browser/BrowserDock.kt</code>, <code>ui/LibraryNavigation.kt</code>, <code>ui/browser/FXBrowserPanel.kt</code>)</h3>
+<ul>
+<li><strong>Every way out of Edit ends the browse binding</strong>: Esc, the EDIT gear, Space, Ctrl+F, Menu &gt; Library, Close Edit and the controller's Library button used to leave the Perform dock bound and the bay on Browse. Now closing the last open bay always returns to an unbound Library and Params.</li>
+<li><strong>The pair view's chip has the unbind button</strong>: the X (and a double-click on a list row) leaves the pair view. Esc and the controller back button do the same in one press.</li>
+<li><strong>Clicking the slot you already have bound re-selects its tab</strong> after you wandered to another Library tab (the chip showed "paused" and nothing happened).</li>
+<li><strong>Twister send knobs from Library FULL only load</strong>: the view, scope and cursor stay put, so you can send several items in a row; FX sends toast where they landed. From the pair view a send moves the focus to the target's pair. FX chain and slot sends are now undoable (Ctrl+Z).</li>
+<li>Internal: <code>bindingFor(..., onEnd)</code> replaces <code>ownsSelection</code>; <code>ParametersState.dockSelectionEpoch</code>; <code>collapseAllRackModules</code> owns the end-of-Edit reset.</li>
+</ul>
 <h3 id="bundled-isf-inputs-are-normalized-to-01-11-default_sources-default_filters-default_transitions-uivalueformatkt-renderingisfisfautobindenginekt-defaults">Bundled ISF Inputs Are Normalized to 0..1 / -1..1 (<code>default_sources/*</code>, <code>default_filters/*</code>, <code>default_transitions/*</code>, <code>ui/ValueFormat.kt</code>, <code>rendering/isf/ISFAutoBindEngine.kt</code>, <code>defaults/*</code>)</h3>
 <ul>
 <li><strong>109 generator, FX and transition inputs that used raw ranges now span 0..1 or -1..1</strong> (Domain Warp Fluid: Warp 0-4, Swirl -3..3, Speed -2..2, Viscosity, Gloss, Hue Cycle Speed; the FX amounts, intensities, decays, speeds, twists and radii; the transition amounts). They read as 0 to 100 in the UI. The shaders remap to their original working units, so the visuals at equivalent settings are unchanged.</li>

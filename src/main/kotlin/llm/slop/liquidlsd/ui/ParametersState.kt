@@ -114,6 +114,7 @@ class ParametersState : MidiLearnSink {
      * Library back to HALF so the Edit view (which hides the Library) is actually on screen.
      */
     fun setDisclosure(moduleId: String, level: DisclosureLevel) {
+        if (level != DisclosureLevel.COLLAPSED) focusedPair = null
         rackModuleDisclosure[moduleId] = level
         // Closing a row's Edit bay ends its dock binding too (it would otherwise reappear bound in Perform).
         if (level == DisclosureLevel.COLLAPSED && dockSelection?.moduleId == moduleId) dockSelection = null
@@ -145,11 +146,10 @@ class ParametersState : MidiLearnSink {
         persistRackExpandedModules()
     }
 
-    /** When no module is expanded any more, drops the Edit-owned dock binding and resets the bay mode to Params. */
+    /** When no module is expanded any more, drops the dock binding (unless the pair view owns it). */
     private fun endEditIfClosed() {
-        if (anyRackModuleExpanded()) return
+        if (anyRackModuleExpanded() || focusedPair != null) return
         dockSelection = null
-        rackSectionMode = SectionMode.PARAMS
     }
 
     /** The module whose Edit bay is open, or null. */
@@ -158,10 +158,48 @@ class ParametersState : MidiLearnSink {
     /** True if any rack module is currently above Tier 1 (used by the Esc priority stack). */
     fun anyRackModuleExpanded(): Boolean = rackModuleDisclosure.values.any { it != DisclosureLevel.COLLAPSED }
 
-    // -- Browse content (the unified BrowserPane is hosted here) -----------------------------
+    // -- Pair focus view ---------------------------------------------------------------------
 
-    /** Whether an open rack module's bay shows its Params (Deep Edit) or Browse content. */
-    enum class SectionMode { PARAMS, BROWSE }
+    /**
+     * The focused pair's tag (a deck tag, [PerfRows.PAIR_MASTER] or [PerfRows.PAIR_XF]), or null. The pair view shows the
+     * pair's two rows over the Browse dock; it is mutually exclusive with a Params Edit module and is not persisted.
+     */
+    var focusedPair: String? = null
+        private set
+
+    /** Focuses [tag]'s pair. Closes any Params Edit module (the two focus kinds never coexist) and drops a FULL Library to HALF. */
+    fun focusPair(tag: String) {
+        if (PerfRows.pairFor(tag) == null) return
+        if (anyRackModuleExpanded()) collapseAllRackModules()
+        if (focusedPair != tag && dockSelection?.let { pairTagFor(it) } != tag) dockSelection = null
+        focusedPair = tag
+        if (UITheme.libraryMode == UITheme.LibraryMode.FULL) UITheme.libraryMode = UITheme.LibraryMode.HALF
+    }
+
+    /** The pair a dock selection belongs to: Transition is the XF pair's, everything else its row's module. */
+    private fun pairTagFor(selection: DockSelection): String? =
+        if (selection.target is BrowseTarget.Transition) PerfRows.PAIR_XF else PerfRows.pairForBank(selection.moduleId)?.tag
+
+    /**
+     * What the pair view's Browse is bound to: the slot last touched on one of [pair]'s rows, else its first browsable half
+     * (a deck's source, the transition). Null for Master with nothing touched -- MIX has nothing to browse.
+     */
+    internal fun pairBrowseTarget(pair: PerfRows.PairDef): BrowseTarget? {
+        dockSelection?.takeIf { pairTagFor(it) == pair.tag }?.let { return it.target }
+        return when (pair.tag) {
+            PerfRows.PAIR_XF -> BrowseTarget.Transition
+            PerfRows.PAIR_MASTER -> null
+            else -> BrowseTarget.Gen
+        }
+    }
+
+    /** Leaves the pair view (back to Perform). */
+    fun leavePair() {
+        focusedPair = null
+        dockSelection = null
+    }
+
+    // -- Browse content (the unified BrowserPane is hosted here) -----------------------------
 
     /** What a module's Browse content is showing. [FxChain.slotIndex] null means the whole-chain list. */
     sealed class BrowseTarget {
@@ -169,9 +207,6 @@ class ParametersState : MidiLearnSink {
         data class FxChain(val slotIndex: Int? = null) : BrowseTarget()
         object Transition : BrowseTarget()
     }
-
-    /** Active mode for the expanded rack bay (shared across modules, defaulting to PARAMS). */
-    var rackSectionMode: SectionMode = SectionMode.PARAMS
 
     /** The dock's one apply-target: which row ([moduleId]) and what on it ([target]) Browse is bound to. */
     data class DockSelection(val moduleId: String, val target: BrowseTarget)
@@ -188,29 +223,19 @@ class ParametersState : MidiLearnSink {
         dockSelection = null
     }
 
-    fun sectionModeFor(moduleId: String): SectionMode = rackSectionMode
-
-    fun browseTargetFor(moduleId: String): BrowseTarget =
-        dockSelection?.takeIf { it.moduleId == moduleId }?.target ?: BrowseTarget.Gen
-
-    /** Opens [moduleId]'s Deep Edit (solo, same as [setDisclosure]) showing Browse content for [target]. */
+    /**
+     * Binds the dock to [target] on [moduleId] and focuses that row's pair (the pair view shows the Browse list under it).
+     * Every badge, slot and transition-name click, picker and monitor entry point goes through here.
+     */
     fun openBrowse(moduleId: String, target: BrowseTarget) {
-        setDisclosure(moduleId, DisclosureLevel.DEEP_EDIT)
-        rackSectionMode = SectionMode.BROWSE
-        dockSelection = DockSelection(moduleId, target)
+        val selection = DockSelection(moduleId, target)
+        val tag = pairTagFor(selection) ?: return
+        focusPair(tag)
+        dockSelection = selection
         dockSelectionEpoch++
     }
 
-    /**
-     * Makes [target] on [moduleId] the dock's apply-target without expanding the row (Perform view). While a row is
-     * already open in the Edit bay the same click also shows that bay's Browse tab, as [openBrowse] does.
-     */
-    private fun selectDock(moduleId: String, target: BrowseTarget) {
-        if (anyRackModuleExpanded()) openBrowse(moduleId, target) else {
-            dockSelection = DockSelection(moduleId, target)
-            dockSelectionEpoch++
-        }
-    }
+    private fun selectDock(moduleId: String, target: BrowseTarget) = openBrowse(moduleId, target)
 
     /** Row click on a deck's source badge: binds the dock to that deck's source. */
     fun selectGen(canonicalModuleId: String, deckLabel: String) {
@@ -233,61 +258,28 @@ class ParametersState : MidiLearnSink {
     /** Flips an already-open module back to its Params (Deep Edit) content. */
     fun openParams(moduleId: String) {
         setDisclosure(moduleId, DisclosureLevel.DEEP_EDIT)
-        rackSectionMode = SectionMode.PARAMS
+    }
+
+    /** Focuses [moduleId]'s pair (and [deckLabel]) from a confidence monitor or preview monitor click. */
+    fun openFromMonitor(moduleId: String, deckLabel: String? = topTabForDeepEditModule(moduleId)) {
+        if (deckLabel != null) activeTopTab = deckLabel
+        PerfRows.pairForBank(moduleId)?.let { focusPair(it.tag) }
     }
 
     /**
-     * Focuses [moduleId] (and [deckLabel]) from a confidence monitor or preview monitor click.
-     *
-     * Context-aware behavior:
-     * - If the rack bay is currently collapsed, always opens the parameter Editor ([openParams]).
-     * - If the rack bay is already open, preserves the active mode: stays in [SectionMode.PARAMS]
-     *   if currently editing, or stays in [SectionMode.BROWSE] (carrying over the browse target type)
-     *   if currently browsing.
+     * Opens the Params Edit view for the pair [tag]'s half last touched (the pair view's "Parameters" button): a deck's
+     * SRC or FX, Master's CTRL (MIX) or FX, or the transition's own parameters. XF has no Params of its own besides the transition.
      */
-    fun openFromMonitor(moduleId: String, deckLabel: String? = topTabForDeepEditModule(moduleId)) {
-        if (deckLabel != null) {
-            activeTopTab = deckLabel
+    fun openParamsForPair(tag: String) {
+        val pair = PerfRows.pairFor(tag) ?: return
+        val target = pairBrowseTarget(pair)
+        val deckLabel = topTabForDeepEditModule(pair.moduleId)?.takeIf { pair.moduleId != MacroEngine.MASTER }
+        when {
+            target is BrowseTarget.Transition -> activeMixerSubTab = "TRANS"
+            deckLabel != null -> setDeckSubTab(deckLabel, if (target is BrowseTarget.FxChain) "FX" else "SRC")
+            else -> activeMixerSubTab = if (target is BrowseTarget.FxChain) "FX" else "CTRL"
         }
-        val currentlyExpanded = rackModuleDisclosure.entries.firstOrNull {
-            it.value != DisclosureLevel.COLLAPSED
-        }?.key
-
-        if (currentlyExpanded == null) {
-            // Bay was collapsed: always open the Editor (Deep Edit params)
-            openParams(moduleId)
-        } else {
-            // Bay was already open: keep the active mode
-            when (sectionModeFor(currentlyExpanded)) {
-                SectionMode.PARAMS -> openParams(moduleId)
-                SectionMode.BROWSE -> {
-                    val currentTarget = browseTargetFor(currentlyExpanded)
-                    if (deckLabel != null) {
-                        when (currentTarget) {
-                            is BrowseTarget.FxChain -> openFxChainBrowse(moduleId, deckLabel, currentTarget.slotIndex)
-                            else -> openGenBrowse(moduleId, deckLabel)
-                        }
-                    } else if (moduleId == MacroEngine.MASTER) {
-                        when (currentTarget) {
-                            is BrowseTarget.FxChain -> openFxChainBrowse(moduleId, null, currentTarget.slotIndex)
-                            else -> openTransitionBrowse()
-                        }
-                    } else {
-                        openBrowse(moduleId, currentTarget)
-                    }
-                }
-            }
-        }
-    }
-
-    /** The Edit bay's Browse tab: the slot last selected on this row, else what the row's SRC|FX (or Master TRANS|FX) half shows. */
-    fun openBrowseTab(moduleId: String, deckLabel: String?) {
-        val slot = (dockSelection?.takeIf { it.moduleId == moduleId }?.target as? BrowseTarget.FxChain)?.slotIndex
-        if (deckLabel != null) {
-            if (getActiveSubTab(deckLabel) == "FX") openFxChainBrowse(moduleId, deckLabel, slot) else openGenBrowse(moduleId, deckLabel)
-        } else {
-            if (activeMixerSubTab == "FX") openFxChainBrowse(MacroEngine.MASTER, null, slot) else openTransitionBrowse()
-        }
+        openParams(if (pair.moduleId == MacroEngine.TRANS) MacroEngine.MASTER else pair.moduleId)
     }
 
     /** Opens [deckLabel]'s source Browse -- the deck row's source badge, or its empty-deck launchpad. */

@@ -14,7 +14,7 @@ import llm.slop.liquidlsd.ui.browser.BrowserPane
  *  - Library view (Library FULL): back, next tab, next list; the cursor is knob 16. Tapping a send knob (9-12 = A, B, BG, PV;
  *    13 = master FX) sends the cursor item there and opens that row in the picker, so it also works in the picker.
  *    With shift: enqueue to the BG queue, previous tab, previous list.
- *  - Picker (the unified pane is hosted in the Edit row's Browse tab): left-top = back, right-top = next pane
+ *  - Pair view (the unified pane under the focused pair's two rows): left-top = back, right-top = next pane
  *    (tree > list > queues; shift: previous), shift + right-bottom = clear the slot or chain; the cursor is knob 16
  *    (tap = apply, and a tap on a tree row selects the scope and moves the cursor into the list).
  *  - Dirty-deck modal up: back = Cancel, side 2 / knob tap = Save, side 3 / shift+tap = Discard (overrides every other context).
@@ -33,16 +33,16 @@ internal class NavigationSurface(
 
     private val inLibraryView: Boolean get() = viewStateOf(session).maximized
 
-    /** The Edit bay's dock is up (bound to the row or on another tab). */
-    private val inPicker: Boolean get() = viewStateOf(session).let { it.editing && it.dockActive }
+    /** The pair view is up: its two rows over the Browse dock. */
+    private val inPicker: Boolean get() = viewStateOf(session).pair
 
     private val confirming: Boolean get() = deckConfirm?.deckConfirmPending == true
 
     /** While the dirty-deck modal is up, the cursor knob and the side buttons answer it (see [DeckConfirmChoice]). */
     override val browsing: Boolean get() = confirming || inLibraryView || inPicker
 
-    /** In the picker the row being filled is the only row on screen, so Twister row one drives it. */
-    override val browseRowLive: Boolean get() = inPicker && !confirming
+    /** In the pair view its two rows are the only rows on screen, so Twister rows one and two (knobs 1-8) drive them. */
+    override val browseLiveKnobs: Int get() = if (inPicker && !confirming) PAIR_LIVE_KNOBS else 0
 
     // The surface is rebuilt every frame, so the session counter lives in the companion; sampling on
     // construction and on read catches every inactive -> active edge.
@@ -52,13 +52,23 @@ internal class NavigationSurface(
 
     private fun sampleBrowsing() {
         val now = browsing
+        val pair = parametersState.focusedPair
         if (now && !wasBrowsing) session_++
+        // Entering, leaving or switching the pair drops partial cursor travel and the touched knob (it named a row of the old layout).
+        if (pair != lastPair) {
+            if (now) session_++
+            PerformSurface.lastTouchedKnob = null
+            lastPair = pair
+        }
         wasBrowsing = now
     }
 
     private companion object {
+        /** Two rows of four knobs. */
+        const val PAIR_LIVE_KNOBS = 8
         var session_ = 0
         var wasBrowsing = false
+        var lastPair: String? = null
     }
 
     override fun button(index: Int, shifted: Boolean) {

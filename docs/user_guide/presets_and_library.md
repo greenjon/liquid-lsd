@@ -52,7 +52,8 @@ The prompt above is for loads you start yourself. If Auto-VJ switches presets wh
 The Library panel spans the left and middle columns. That column has three views:
 
 - **Perform** — The Performance rows sit above the Library, which fills the rest of the window. This is the everyday view for playing a set.
-- **Edit** — Open a row's **Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. The row's **Browse** tab is the same browser as the Library (same tabs, toolbar and queues), applying to that row; swap a deck's source or FX there or from the controls on the row itself. Press **Esc** or click the row's **Collapse** button to get back to Perform.
+- **Edit** — Open a row's **Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Press **Esc** or click the row's **Collapse** button to get back to Perform.
+- **Pair view** — Click a deck's source badge, an FX chain name or slot, a preview monitor or the transition name and the Library goes away too: that deck's SRC and FX rows (or Master's, or Transitions and Clock) stay on screen with the same browser below (same tabs, toolbar and queues), applying to the half you last touched. Press **Esc** or **Back** to return to Perform; **Parameters** opens that half's full editor.
 - **Library** — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.
 
 Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Edit (cancelling any armed Add Target or Learn) and brings the Library back.
@@ -73,7 +74,7 @@ The mode buttons pick what the three parts show:
 - **`[ FX ]`**: stock ISF filters, saved single-slot FX presets (`.lsdfx`, in `library/fx/`) and saved 3-slot FX chains (`.lsdfxchain`, in `library/fx_chains/`); curated FX playlists (`.lsdfxplay`) live in `library/fx_playlists/`.
 - **`[ Transitions ]`**: stock ISF transition shaders and saved transition presets (`.lsdtrans`, in `library/transitions/`); setlists (`.lsdtransplay`) live in `library/transition_playlists/`.
 
-The same browser opens inside the Edit row's **Browse** tabs (source, Chain, FX1-3, transition); there a click applies the row to that deck, slot, chain or the mixer transition.
+The same browser opens under the pair view's two rows; there a click applies to that deck's source, slot, chain or the mixer transition.
 
 ### The Unified Sources Browser
 

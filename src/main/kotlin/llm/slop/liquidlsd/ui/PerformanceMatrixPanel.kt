@@ -10,7 +10,6 @@ import imgui.type.ImString
 import llm.slop.liquidlsd.macro.MacroBank
 import llm.slop.liquidlsd.macro.MacroControl
 import llm.slop.liquidlsd.macro.MacroEngine
-import llm.slop.liquidlsd.ui.browser.BrowserDock
 import llm.slop.liquidlsd.macro.MacroLearnState
 import llm.slop.liquidlsd.macro.MacroOscBridge
 import llm.slop.liquidlsd.rendering.Deck
@@ -28,10 +27,9 @@ import java.io.File
 /**
  * Performance Mode 4×4 Macro Knob Matrix (see docs/user_guide/macros_and_rack.md).
  *
- * Displays up to 16 knobs arranged in rows of 4 columns across 2 tabs ([DECKS] and [MASTER]),
- * mapped to canonical [MacroEngine] banks according to the active layout tab. Deck rows and the
- * Master row each carry their own knob-assign toggle ([SRC|FX] / [MIX|FX]), so there are no
- * standalone FX rows. Knob drag adjusts the underlying
+ * Displays up to 16 knobs arranged in rows of 4 columns, mapped to canonical [MacroEngine] banks by the active
+ * Perform page (pinned SRC, FX, MIX, Transitions and Clock rows, see [PerfRows.CATALOG]). While a pair is focused
+ * ([ParametersState.focusedPair]) the two rows of that pair replace the page. Knob drag adjusts the underlying
  * [llm.slop.liquidlsd.macro.MacroControl.value] directly, and right-click arms hardware MIDI
  * Learn for that knob (the pulsing cyan ring shows an armed knob; a repeat right-click cancels).
  * A selected knob also shows an inline "Learn" button to arm parameter-bind Learn -- pressing it
@@ -86,9 +84,8 @@ class PerformanceMatrixPanel {
         val pages = PerfPageStore.default.all()
         val page = pages.firstOrNull { it.id == theme.performancePageId } ?: pages.first()
         val visibleRows = visibleRowsForPage(page, pages, parametersState)
-        lastVisibleRows = visibleRows
-        dropStaleDockSelection(parametersState)
-        val anyExpanded = parametersState.anyRackModuleExpanded()
+        val pairView = parametersState.focusedPair != null
+        val anyExpanded = parametersState.anyRackModuleExpanded() || pairView
         val availH = ImGui.getContentRegionAvailY().coerceAtLeast(4f)
         val baseRowH = ROW_H
         val gridH = if (!anyExpanded) availH else (visibleRows.size * baseRowH).coerceAtMost((availH - 160f).coerceAtLeast(160f))
@@ -103,7 +100,10 @@ class PerformanceMatrixPanel {
         ImGui.endChild()
         ImGui.popStyleVar()
 
-        if (anyExpanded) {
+        if (pairView) {
+            PairKnobTouch.sync(ctx, parametersState, mixer, page.id)
+            deepEditBay.drawPairBay(session, mixer, parametersState, bayH)
+        } else if (anyExpanded) {
             deepEditBay.drawRackBay(session, mixer, parametersState, bayH)
         }
 
@@ -253,33 +253,6 @@ class PerformanceMatrixPanel {
     private fun visibleRowsForPage(page: PerfPageDef, pages: List<PerfPageDef>, parametersState: ParametersState): List<RowDescriptor> =
         rowsCache.rows(page, ctx, parametersState, rackLabelFor, pages)
 
-    private var lastVisibleRows: List<RowDescriptor> = emptyList()
-
-    /** The bank whose row shows what [selection] edits: the deck's source bank or FX bank, Master FX, or the Transitions row. */
-    private fun bankFor(selection: ParametersState.DockSelection): String? = when (selection.target) {
-        is ParametersState.BrowseTarget.Gen -> selection.moduleId
-        is ParametersState.BrowseTarget.Transition -> MacroEngine.TRANS
-        is ParametersState.BrowseTarget.FxChain -> when (selection.moduleId) {
-            MacroEngine.DECK_A -> MacroEngine.DECK_A_FX
-            MacroEngine.DECK_B -> MacroEngine.DECK_B_FX
-            MacroEngine.DECK_BG -> MacroEngine.DECK_BG_FX
-            MacroEngine.DECK_PV -> MacroEngine.DECK_PV_FX
-            else -> MacroEngine.MASTER_FX
-        }
-    }
-
-    /** The dock selection is a row's slot, so it ends when that row leaves the screen or flips to the other half (SRC|FX). */
-    private fun dropStaleDockSelection(parametersState: ParametersState) {
-        val sel = parametersState.dockSelection ?: return
-        val bank = bankFor(sel)
-        // In the Edit bay the Master row can stand in for Transitions, so either bank keeps a transition selection alive.
-        val shown = lastVisibleRows.any { it.bankId == bank || (bank == MacroEngine.TRANS && it.bankId == MacroEngine.MASTER) }
-        if (!shown) parametersState.clearDockSelection()
-    }
-
-    /** What the Library dock applies to: the selected row slot, or null for the plain Library. */
-    fun dockBinding(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState): BrowserDock.DockBinding? =
-        parametersState.dockSelection?.let { deepEditBay.browseBay.bindingFor(session, mixer, it) { parametersState.clearDockSelection() } }
 
     private val rowsCache = PerfRows.RowsCache()
     private val rackLabelFor: (String) -> String = { deepEditBay.rackModuleDisplayLabel(it) }

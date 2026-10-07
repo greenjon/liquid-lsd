@@ -20,7 +20,7 @@ class KnobCommandsBrowseTest {
         override fun button(index: Int, shifted: Boolean) {}
         override fun browseStep(steps: Int) { this@KnobCommandsBrowseTest.steps += steps }
         override fun browseAccept(shifted: Boolean) {}
-        override val browseRowLive get() = this@KnobCommandsBrowseTest.rowLive
+        override val browseLiveKnobs get() = if (this@KnobCommandsBrowseTest.rowLive) 4 else 0
         override val sendTargets get() = this@KnobCommandsBrowseTest.live
         override fun browseSend(target: SendTarget) { sent += target }
     }

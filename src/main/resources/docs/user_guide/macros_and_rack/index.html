@@ -764,10 +764,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#browse-picking-a-generator-fx-or-transition-without-leaving-the-row" class="md-nav__link">
+  <a href="#browse-picking-a-generator-fx-or-transition-in-the-pair-view" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Browse: picking a generator, FX or transition without leaving the row
+        Browse: picking a generator, FX or transition in the pair view
       
     </span>
   </a>
@@ -1702,10 +1702,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#browse-picking-a-generator-fx-or-transition-without-leaving-the-row" class="md-nav__link">
+  <a href="#browse-picking-a-generator-fx-or-transition-in-the-pair-view" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Browse: picking a generator, FX or transition without leaving the row
+        Browse: picking a generator, FX or transition in the pair view
       
     </span>
   </a>
@@ -2122,38 +2122,35 @@ between two disclosure tiers, without leaving the Perform view:</p>
 <li><strong>Modulation Editor</strong> on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.</li>
 </ol>
 <p>If the deck is <strong>empty</strong>, Edit shows the empty-deck card instead: <strong>Add Source</strong> (opens
-   Browse, see below, including external video), <strong>Load Preset</strong>, and <strong>Open Library Panel</strong>.</p>
-<h3 id="browse-picking-a-generator-fx-or-transition-without-leaving-the-row">Browse: picking a generator, FX or transition without leaving the row</h3>
+   the pair view's Browse, see below, including external video), <strong>Load Preset</strong>, and <strong>Open Library Panel</strong>.</p>
+<h3 id="browse-picking-a-generator-fx-or-transition-in-the-pair-view">Browse: picking a generator, FX or transition in the pair view</h3>
 <p>Clicking a generator/preset badge, an FX chain's name, an FX slot's name, or the active transition's
-name opens <strong>Browse</strong> in that row's bay — the same place Edit's parameter grid shows, with the
-other rows collapsed the same way. Nothing covers the mixer or the deck/master monitors; you keep
-watching the show while you pick.</p>
+name (or a preview monitor) opens the <strong>pair view</strong>: that deck's SRC and FX rows (Master's MIX and
+FX rows, or Transitions and Clock) stay on screen, every other row hides, and the Browse list fills
+the space below. Nothing covers the mixer or the deck/master monitors; you keep watching the show
+while you pick. <strong>Back</strong> or <strong>Esc</strong> returns to Perform; <strong>Parameters</strong> opens the full editor for the half you last touched.</p>
 <ul>
 <li><strong>Instant apply, list stays open</strong>: clicking an item in the list applies it immediately and the
   list doesn't close, so you can try several generators, effects, or chains back-to-back. <code>Ctrl+Z</code>
   undoes any one pick. Changing a deck's source while a named/dirty preset is loaded still prompts
   the usual confirmation before discarding it.</li>
-<li><strong>Tab row</strong>: the top of the bay has one row of tabs — <code>Edit | SRC | Chain | FX1 | FX2 | FX3</code> on a
-  deck, and <code>Edit | TRANS | Chain | FX1 | FX2 | FX3</code> on Master. <code>Edit</code> is the parameter grid; the
-  others browse that target. Pick a generator or effect, click <code>Edit</code> to tweak it, click the tab
-  again to pick the next one.</li>
+<li><strong>The half you touched picks the list</strong>: click a row's source badge, chain name, an effect cell or
+  the transition name, or turn a knob on that row, and Browse applies to that target (a deck's source,
+  a chain, one FX slot, the transition). Master's MIX row and the Clock row have nothing to browse.</li>
 <li><strong>Gen Browse lists generators and presets together</strong>: stock generator types and saved presets
   always appear in the same list — a preset is just a generator with its parameter values saved
   under a name. Saved-preset rows get a "⋮" menu for <strong>Rename / Edit Tags</strong>, <strong>Duplicate</strong>, and
   <strong>Delete</strong>, and a floppy-disk <strong>Save / Save As</strong> button sits above the list — the same save flow
   as the Mixer's Save button and <code>Ctrl+Shift+S</code> — so managing presets no longer requires the Library.</li>
-<li><strong>FX Chain Browse</strong> has <strong>Chain / FX1 / FX2 / FX3</strong> sub-tabs: <strong>Chain</strong> lists the saved
-  <code>.lsdfxchain</code> files; <strong>FX1</strong>–<strong>FX3</strong> are that chain's per-slot effect pickers (stock filters, ★
-  favorites, saved single-FX presets), each opening on its slot's usual folder.</li>
-<li><strong>The same browser as the Library</strong>: every Browse tab is the Library's own browser, with its
-  <strong>Sources / FX / Transitions / Macros</strong> tabs,
+<li><strong>FX Browse</strong> applies to either a whole chain (the saved <code>.lsdfxchain</code> files) or one slot's effect
+  (stock filters, ★ favorites, saved single-FX presets), each opening on its usual folder.</li>
+<li><strong>The same browser as the Library</strong>: it has the Library's own <strong>Sources / FX / Transitions / Macros</strong> tabs,
   folder tree, list and queue columns. The header line shows a chip such as "● Deck A · FX 1" (the
-  slot, chain or transition you are editing): on that tab a click applies the row, the row that is
+  slot, chain or transition you are editing): on that tab a click applies, the row that is
   applied shows a ●, and the list shows only what the target can take. Pick another tab and the chip
   greys out ("paused"): it is the plain Library again (double-click loads to the inactive deck).
-  The Edit row has just two tabs, <strong>Parameters</strong> and <strong>Browse</strong>; click a slot on the row (the source
-  badge, chain name, an effect cell or the transition name) to choose what Browse applies to. Each target remembers the folder you
-  last used there. Search with <code>Ctrl+F</code> or <code>/</code>. <strong>Clear Slot</strong> / <strong>Clear Chain</strong> empties the target,
+  Each target remembers the folder you last used there. Search with <code>Ctrl+F</code> or <code>/</code>. <strong>Clear Slot</strong> /
+  <strong>Clear Chain</strong> empties the target.
   The Sources tree also has an <strong>External video</strong> folder listing the live video streams running right now.</li>
 </ul>
 <p><strong>Keyboard shortcuts in Edit</strong>: <code>Ctrl+C</code> / <code>Ctrl+V</code> (copy/paste a cell or row), <code>Delete</code> /
@@ -2171,7 +2168,7 @@ Edit is open the Library is hidden completely (the <strong>Edit</strong> view �
 <a href="../your_workspace/">Your Workspace</a>).</p>
 <p>Click <strong><code>[EDIT]</code></strong> again (or press Esc) to fold back to the Faceplate.</p>
 <p><strong>Opening Edit from Confidence Monitors</strong>:
-In addition to the row's <code>[EDIT]</code> button, clicking any preview monitor in the Mixer column (Deck A, Deck B, Deck BG, Deck PV, or Main Output Master) will immediately open Edit focused directly on that module. This swaps the Edit bay from your current deck to the clicked deck without needing to scroll or find the row's button.</p>
+In addition to the row's <code>[EDIT]</code> button, clicking any preview monitor in the Mixer column (Deck A, Deck B, Deck BG, Deck PV, or Main Output Master) will immediately open the pair view on that deck (or Master). Use its <strong>Parameters</strong> button, or the row's <code>[EDIT]</code>, for the full editor.</p>
 <p><strong>One Edit at a time</strong>: opening a row's Edit collapses any other open one. To move
 between decks, use the Edit side rail (<strong>MIX / A / B / BG / PV</strong>) rather than opening
 rows side by side.</p>

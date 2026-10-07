@@ -11,10 +11,10 @@ interface NavSurface {
     val browsing: Boolean
 
     /**
-     * True while [browsing] and the row being filled is on screen (the picker): knobs 1-4 stay live on it, so a
-     * freshly loaded source or chain can be tweaked at once. Every other knob except the cursor is inert.
+     * How many leading knobs stay live while [browsing] (the pair view shows two rows: 8): the rows being filled are on screen,
+     * so a freshly loaded source or chain can be tweaked at once. Every other knob except the cursor and the sends is inert.
      */
-    val browseRowLive: Boolean get() = false
+    val browseLiveKnobs: Int get() = 0
 
     /** Increases every time [browsing] turns on, so consumers can drop per-session state (e.g. partial knob travel). */
     val browseSession: Int

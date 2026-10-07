@@ -1,10 +1,18 @@
 ## [Unreleased]
 
+### Pair Focus View: Browse a Deck's Source and FX Together (`ui/ParametersState.kt`, `ui/PerfRows.kt`, `ui/PerformanceDeepEditBay.kt`, `ui/PerformanceBrowseBay.kt`, `ui/PairKnobTouch.kt`, `ui/NavigationSurface.kt`, `ui/BackNavigation.kt`, `ui/ViewState.kt`, `control/NavSurface.kt`)
+- **Clicking a badge now focuses a pair of rows**: a deck's SRC badge, FX chain name or slot, the Master FX chain or slot, the transition name, a preview monitor, or the controller's picker button shows that pair's two rows (deck SRC + FX, Master MIX + FX, Transitions + Clock) with the Browse list below. Every other row hides (the deck monitors stay visible).
+- **The Browse list follows the half you touched**: click a row's slot, or turn a knob on it, and the list switches to that half (SRC to sources, an FX slot or chain to effects, the transition to transitions). Master MIX and Clock have nothing to browse.
+- **Back, Parameters, Esc**: a **Back** button and one **Esc** (or the controller's back button) return to Perform. **Parameters** opens the full parameter editor on the half you touched. The editor no longer has a Browse tab; the row's EDIT gear still opens it directly.
+- **Twister**: knobs 1-8 are the pair's two rows (live while you browse), 9-12 send the highlighted item to A/B/BG/PV and 13 to Master FX, knob 16 is the cursor. A send moves the focus to the destination deck's pair.
+- **No more bound Perform dock**: the Library dock in Perform is always the plain Library; binding happens in the pair view. Entering the full Library leaves the pair view.
+- Internal: `ParametersState.focusedPair`, `PerfRows.PAIRS`, `NavSurface.browseLiveKnobs` (replaces `browseRowLive`); `SectionMode`, `rackSectionMode`, `openBrowseTab`, `dropStaleDockSelection` and `ViewState.dockBound` removed.
+
 ### Library / Browser / Edit Lifecycle: Consistent Exits, Edit-Bay Unbind, Send Knobs Stay in the Library (`ui/ParametersState.kt`, `ui/BackNavigation.kt`, `ui/PerformanceBrowseBay.kt`, `ui/browser/BrowserDock.kt`, `ui/LibraryNavigation.kt`, `ui/browser/FXBrowserPanel.kt`)
 - **Every way out of Edit ends the browse binding**: Esc, the EDIT gear, Space, Ctrl+F, Menu > Library, Close Edit and the controller's Library button used to leave the Perform dock bound and the bay on Browse. Now closing the last open bay always returns to an unbound Library and Params.
-- **The Edit bay's chip has the unbind button**: the X (and a double-click on a list row) leaves Browse for Params with the row still open. Esc and the controller back button do the same on the first press, and close the row on the second.
+- **The pair view's chip has the unbind button**: the X (and a double-click on a list row) leaves the pair view. Esc and the controller back button do the same in one press.
 - **Clicking the slot you already have bound re-selects its tab** after you wandered to another Library tab (the chip showed "paused" and nothing happened).
-- **Twister send knobs from Library FULL only load**: the view, scope and cursor stay put, so you can send several items in a row; FX sends toast where they landed. From the Edit bay's picker a send still re-targets the bay to the target's row. FX chain and slot sends are now undoable (Ctrl+Z).
+- **Twister send knobs from Library FULL only load**: the view, scope and cursor stay put, so you can send several items in a row; FX sends toast where they landed. From the pair view a send moves the focus to the target's pair. FX chain and slot sends are now undoable (Ctrl+Z).
 - Internal: `bindingFor(..., onEnd)` replaces `ownsSelection`; `ParametersState.dockSelectionEpoch`; `collapseAllRackModules` owns the end-of-Edit reset.
 
 ### Bundled ISF Inputs Are Normalized to 0..1 / -1..1 (`default_sources/*`, `default_filters/*`, `default_transitions/*`, `ui/ValueFormat.kt`, `rendering/isf/ISFAutoBindEngine.kt`, `defaults/*`)

@@ -35,6 +35,9 @@ internal object PerfRows {
         DeckRowBanks("PV", MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX, PerformanceColors.COLOR_DECK_PV),
     )
 
+    const val PAIR_MASTER = "MASTER"
+    const val PAIR_XF = "XF"
+
     /** Deck tags in strip order; catalog ids are `deck.<tag>.src` / `.fx`. */
     val DECK_TAGS: List<String> = DECK_ROW_BANKS.map { it.tag }
 
@@ -57,6 +60,22 @@ internal object PerfRows {
         put("trans",  RowDescriptor(MacroEngine.TRANS,    0, PerformanceColors.COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true))
         put("global", RowDescriptor(MacroEngine.GLOBAL,   0, PerformanceColors.COLOR_GLOBAL, "CLOCK & GLOBAL", hasExtraHeader = true, canExpand = false))
     }
+
+    /** A focusable pair of rows: [tag] is what `ParametersState.focusedPair` holds, [moduleId] the canonical rack module the pair belongs to. */
+    data class PairDef(val tag: String, val moduleId: String, val rowIds: List<String>)
+
+    /** The pair-focus-view pairs: each deck's SRC+FX, Master MIX+FX, and Transitions+Clock (rows only, no Params). */
+    val PAIRS: List<PairDef> = DECK_ROW_BANKS.map { PairDef(it.tag, it.srcBankId, listOf("deck.${it.tag}.src", "deck.${it.tag}.fx")) } +
+        PairDef(PAIR_MASTER, MacroEngine.MASTER, listOf("master.mix", "master.fx")) +
+        PairDef(PAIR_XF, MacroEngine.TRANS, listOf("trans", "global"))
+
+    fun pairFor(tag: String): PairDef? = PAIRS.firstOrNull { it.tag == tag }
+
+    /** The pair whose row is [bankId] (a deck's source or FX bank, `MASTER`, `MASTER_FX`, `TRANS`, `GLOBAL`), or null. */
+    fun pairForBank(bankId: String): PairDef? = PAIRS.firstOrNull { pair -> pair.rowIds.any { CATALOG[it]?.bankId == bankId } }
+
+    /** [pair]'s two rows, resolved from the catalog. */
+    fun rowsForPair(pair: PairDef): List<RowDescriptor> = pair.rowIds.mapNotNull { CATALOG[it] }
 
     /** [page]'s rows, resolved from the catalog (unknown ids are skipped). */
     fun rowsForPage(page: PerfPageDef): List<RowDescriptor> = page.rows.mapNotNull { CATALOG[it.row] }
@@ -138,6 +157,7 @@ internal object PerfRows {
         labelFor: (String) -> String,
         pages: List<PerfPageDef> = listOf(page)
     ): List<RowDescriptor> {
+        parametersState.focusedPair?.let { tag -> pairFor(tag)?.let { return rowsForPair(it) } }
         val expandedModuleIds = parametersState.rackModuleDisclosure
             .filterValues { it != ParametersState.DisclosureLevel.COLLAPSED }
             .keys
@@ -168,6 +188,7 @@ internal object PerfRows {
         private var pages: List<PerfPageDef>? = null
         private var fxMask = -1
         private var mixerSub: String? = null
+        private var pairTag: String? = null
         private var expanded = arrayOfNulls<String>(4)
         private var expandedCount = -1
         private var scratch = arrayOfNulls<String>(4)
@@ -180,6 +201,15 @@ internal object PerfRows {
             labelFor: (String) -> String,
             pages: List<PerfPageDef> = listOf(page)
         ): List<RowDescriptor> {
+            parametersState.focusedPair?.let { tag ->
+                // A pair's rows come from the catalog alone, so the tag is the whole key.
+                if (pairTag != tag) {
+                    result = visibleRowsForPage(page, ctx, parametersState, labelFor, pages)
+                    pairTag = tag
+                }
+                return result
+            }
+
             var mask = 0
             for (i in DECK_ROW_BANKS.indices) if (ctx.isDeckBayFx(DECK_ROW_BANKS[i].tag, parametersState)) mask = mask or (1 shl i)
             if (ctx.isMasterBayFx(parametersState)) mask = mask or (1 shl DECK_ROW_BANKS.size)
@@ -194,13 +224,13 @@ internal object PerfRows {
             }
             if (uncacheable) return visibleRowsForPage(page, ctx, parametersState, labelFor, pages)
 
-            var same = this.page === page && this.pages === pages && fxMask == mask &&
+            var same = pairTag == null && this.page === page && this.pages === pages && fxMask == mask &&
                 mixerSub == parametersState.activeMixerSubTab && expandedCount == n
             if (same) for (i in 0 until n) if (expanded[i] != scratch[i]) { same = false; break }
             if (same) return result
 
             result = visibleRowsForPage(page, ctx, parametersState, labelFor, pages)
-            this.page = page; this.pages = pages; fxMask = mask
+            this.page = page; this.pages = pages; fxMask = mask; pairTag = null
             mixerSub = parametersState.activeMixerSubTab
             val t = expanded; expanded = scratch; scratch = t
             expandedCount = n

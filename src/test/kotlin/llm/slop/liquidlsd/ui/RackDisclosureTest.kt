@@ -113,27 +113,27 @@ class RackDisclosureTest {
     }
 
     @Test
-    fun collapsingEditEndsTheDockBindingAndBrowseMode() {
+    fun leavingThePairViewEndsTheDockBinding() {
         val state = ParametersState()
         state.openBrowse(MacroEngine.DECK_A, ParametersState.BrowseTarget.Gen)
+        assertEquals("A", state.focusedPair)
 
-        state.collapseAllRackModules()
+        state.leavePair()
 
         assertEquals(null, state.dockSelection)
-        assertEquals(ParametersState.SectionMode.PARAMS, state.rackSectionMode)
+        assertEquals(null, state.focusedPair)
     }
 
     @Test
-    fun collapsingAPinnedModuleKeepsTheBindingWhileEditIsStillOpen() {
+    fun collapsingAPinnedModuleKeepsItOpen() {
         val state = ParametersState()
         val deckAKnob = MacroEngine.getBank(MacroEngine.DECK_A)!!.knobs[0]
         MacroLearnState.startLearn(deckAKnob.id)
-        state.openBrowse(MacroEngine.DECK_A, ParametersState.BrowseTarget.Gen)
+        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
 
         state.collapseAllRackModules()
 
         assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_A))
-        assertEquals(ParametersState.BrowseTarget.Gen, state.dockSelection?.target)
     }
 
     @Test

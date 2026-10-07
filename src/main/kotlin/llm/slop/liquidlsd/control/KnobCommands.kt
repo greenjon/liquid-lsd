@@ -5,8 +5,8 @@ package llm.slop.liquidlsd.control
  *  - `knob.<n>` turns knob n. Turning while its switch is held is a fine adjustment.
  *  - `knob.<n>.press` is the switch: a tap (released without turning) runs the knob's primary action.
  *  - `knob.<n>.press_alt` is the same switch with shift held: a tap runs the secondary action.
- * While a browse context is active, knob 16 browses and the others are inert, except knobs 1-4 while the
- * browsed row is on screen ([NavSurface.browseRowLive]) and the tap of a send knob ([SendTarget], row three plus knob 13) in the Library or picker.
+ * While a browse context is active, knob 16 browses and the others are inert, except the leading knobs while the
+ * browsed rows are on screen ([NavSurface.browseLiveKnobs]) and the tap of a send knob ([SendTarget], row three plus knob 13) in the Library or picker.
  * Hold state lives here, not in the device, because the Twister sends identical turn messages whether
  * or not its switch is down. One instance serves all devices; the switch is expected to be held on
  * one device at a time.
@@ -69,8 +69,8 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         }
     }
 
-    /** Knobs 1-4 (row one) stay on the browsed row while it is on screen. */
-    private fun isLiveRowKnob(knob: Int, nav: NavSurface) = nav.browseRowLive && knob < ROW_KNOBS
+    /** The leading knobs stay on the browsed rows while they are on screen ([NavSurface.browseLiveKnobs]). */
+    private fun isLiveRowKnob(knob: Int, nav: NavSurface) = knob < nav.browseLiveKnobs
 
     private fun press(knob: Int, down: Boolean, shifted: Boolean, ctx: CommandContext) {
         if (down) {
@@ -99,8 +99,6 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         const val KNOB_COUNT = 16
         /** The browse cursor knob (0-based): 16, bottom right, the easiest to reach. */
         const val BROWSE_KNOB = KNOB_COUNT - 1
-        /** Knobs per row; row one is the one that stays live in the picker. */
-        const val ROW_KNOBS = 4
         /** How much a held switch scales a turn. */
         const val FINE_FACTOR = 0.1f
         /** Knob travel (fraction of range, before fine scaling) per browse cursor step: 1 encoder tick = 1 item. */
