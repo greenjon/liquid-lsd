@@ -46,6 +46,7 @@ The pill is a view of the row (which half is on screen), never an input to the b
 
 - **Pill moves to the other half while Edit is on Browse -> clear the binding, bay falls back to Params** (option A, 2026-10-06). Same rule Perform already applies.
 - **Badge click** (`selectDock`): keep today's rule -- it binds the dock, and also moves the open Edit bay to that row in Browse when an Edit bay is already open (option B, 2026-10-06). No code change; state the rule in DECISIONS.md when step 5 lands.
+- **FX tap on a controller, nothing bound** (`browser/DockActions.kt`): tap applies, like the mouse double-click; Shift+tap enqueues (option B, 2026-10-06). Separate small change, not part of the binding refactor: the active deck, first vacant slot (last slot when full, no popup), and a chain replaces the chain. Update the user guide Picker/Library paragraphs when it lands.
 
 ## Out of scope / separate
 
