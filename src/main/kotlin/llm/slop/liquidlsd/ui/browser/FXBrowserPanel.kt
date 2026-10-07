@@ -291,7 +291,7 @@ object FXBrowserPanel {
                         for (s in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
                             val slotNum = s + 1
                             if (ImGui.menuItem("Slot $slotNum")) {
-                                FxOps.setSlotFilter(chain, s, id)
+                                FxOps.setSlotFilter(chain, s, id, undoable = true)
                             }
                         }
                         ImGui.endMenu()
@@ -304,7 +304,7 @@ object FXBrowserPanel {
                         for (s in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
                             val slotNum = s + 1
                             if (ImGui.menuItem("Slot $slotNum")) {
-                                FxOps.loadSlot(session, file, chain, s)
+                                FxOps.loadSlot(session, file, chain, s, undoable = true)
                             }
                         }
                         ImGui.endMenu()

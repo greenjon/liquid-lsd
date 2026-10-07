@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Metaknob-Owned Values Show a Lock; FX Browser Menu Loads Are Undoable (`ui/ParametersRenderer.kt`, `ui/ValueParamSection.kt`, `ui/browser/FXBrowserPanel.kt`)
+- **An effect parameter driven by its Metaknob link now shows it is locked**: the VAL cell gets the same highlight as a macro-bound value, its tooltip names the link, middle-click reset is ignored, and the VAL panel greys out its controls with a "Driven by its Metaknob link" note. Disable the link to edit by hand.
+- **"Load to <chain> / Slot n" in the FX browser's right-click menu can be undone with Ctrl+Z**, like every other way of loading an effect.
+- Internal: `ModulatableParameter.metaDrivenBy` is read by the value cell and VAL section; the menu paths pass `undoable = true` to `FxOps`.
+
 ### Light Theme: First Contrast Pass (`ui/TangoPalette.kt`, `ui/CvTheme.kt`, and the panels that used white-alpha or pastel literals)
 - **Hover and press washes, grid cell stripes, header tints and locked-control captions that were white-on-dark now have light-theme versions** (icon buttons, link-mode chips, the parameter grid and its headers, slider captions), so they no longer vanish on a light panel.
 - **Status text (OK / warning / error) and the queue column headers use darker Tango shades on the light theme** (Broadcast, MIDI and Shortcuts preferences, save and popup warnings, rack titles, preset-list errors).

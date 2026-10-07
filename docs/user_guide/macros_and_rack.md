@@ -154,7 +154,7 @@ Mixer **CTRL**, **TRANS** and **FX** tabs).
 A parameter's base value can be driven from several places. From strongest to weakest:
 
 1. **A macro knob target** locks the value. Sliders are read-only, and any MIDI or OSC mapping on it is **suspended** (its row in Preferences shows "Suspended: driven by ...") and works again when you release the target.
-2. **An effect Metaknob link** (including the Super Knob, which moves linked Metaknobs) owns the effect parameter it is aimed at. A macro knob can't be added to that parameter ("driven by its Metaknob"), and an existing macro target on it is ignored while the link is enabled. Disable the Metaknob link (right-click the Metaknob) to use a macro knob there instead. MIDI and OSC mappings on it are suspended as well.
+2. **An effect Metaknob link** (including the Super Knob, which moves linked Metaknobs) owns the effect parameter it is aimed at. A macro knob can't be added to that parameter ("driven by its Metaknob"), and an existing macro target on it is ignored while the link is enabled. The parameter's VAL cell shows the same lock highlight as a macro target, and its VAL panel is read-only. Disable the Metaknob link (right-click the Metaknob) to use a macro knob there instead. MIDI and OSC mappings on it are suspended as well.
 3. **Direct edits, MIDI and OSC mappings** on an unlocked value: the last one to move wins.
 4. **Modulators (LFO, sequencer, audio)** never compete. They are always added on top of whatever value results from 1-3.
 

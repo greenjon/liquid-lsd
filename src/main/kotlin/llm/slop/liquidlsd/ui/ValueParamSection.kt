@@ -135,6 +135,12 @@ object ValueParamSection {
             val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
             val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findBaseBindingInfo(paramKey)
             val isMacroBound = macroInfo != null
+            val metaOwner = if (isMacroBound) null else param.metaDrivenBy
+            val isLocked = isMacroBound || metaOwner != null
+            if (metaOwner != null) {
+                session.uiTheme.caption("${Icons.LOCK} Driven by its $metaOwner link. Disable the link to edit by hand.")
+                ImGui.spacing()
+            }
 
             if (isMacroLearning) {
                 ButtonChrome.pushColor(ImGui.colorConvertFloat4ToU32(0.0f, 0.6f, 0.8f, 0.7f))
@@ -235,7 +241,7 @@ object ValueParamSection {
             )
         } else {
             // These special widgets write baseValue directly; a macro binding owns it and would overwrite the edit.
-            if (isMacroBound) ImGui.beginDisabled()
+            if (isLocked) ImGui.beginDisabled()
             if (isMaxPoints) {
                 session.uiTheme.caption("Point Count (GPU Performance):")
                 val currentPts = param.baseValue.roundToInt()
@@ -406,7 +412,7 @@ object ValueParamSection {
                 ImGui.separator()
                 ImGui.spacing()
             }
-            if (isMacroBound) ImGui.endDisabled()
+            if (isLocked) ImGui.endDisabled()
 
             val isSpecialValue = isMaxPoints || isBgStyle || isLobes || isRecipeSelect || isHueSweep || is3DMode
             val initialScale = if (isSpecialValue) 1f else ValueFormat.scaleFor(param.minClamp, param.maxClamp, param.isAngle)

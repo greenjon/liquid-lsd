@@ -337,6 +337,8 @@ object ParametersRenderer {
         val isMacroLearning = llm.slop.liquidlsd.macro.MacroLearnState.isLearning()
         val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findBaseBindingInfo(paramKey)
         val isMacroBound = macroInfo != null
+        val metaOwner = if (isMacroBound) null else param.metaDrivenBy
+        val isLocked = isMacroBound || metaOwner != null
 
         ImGui.setCursorScreenPos(valX, valY)
         ImGui.invisibleButton("##value_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
@@ -377,7 +379,7 @@ object ParametersRenderer {
                 param.modulators.clear()
                 param.modulators.addAll(updated)
                 if (!targetBypassed && paramKey == "Mixer/crossfade") mixer.onCrossfadeCvUnmuted()
-            } else if (isMiddleClicked && !isMacroBound) {
+            } else if (isMiddleClicked && !isLocked) {
                 onPushUndo()
                 param.reset()
             }
@@ -390,6 +392,9 @@ object ParametersRenderer {
                     val info = macroInfo!!
                     "Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nClick to select its macro and edit the target in the Modulation column."
                 }
+                metaOwner != null ->
+                    "Locked: Driven by its $metaOwner link.\nDisable the Metaknob link (right-click the Metaknob) to edit it by hand."
+
                 paramKey.endsWith("/Max Points") ->
                     "Base parameter value (non-modulatable).\nClick to configure in VAL panel. Middle-click to reset."
                 param.modulators.isNotEmpty() -> {
@@ -413,14 +418,14 @@ object ParametersRenderer {
         val bgCol = when {
             isMacroLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.5f, 0.7f, 0.25f * pulseAlpha)
             isOscLearningThis -> ImGui.colorConvertFloat4ToU32(TangoPalette.ALERT.normal[0], TangoPalette.ALERT.normal[1], TangoPalette.ALERT.normal[2], 0.25f * pulseAlpha)
-            isMacroBound   -> ImGui.colorConvertFloat4ToU32(0.1f, 0.4f, 0.6f, 0.4f)
+            isLocked       -> ImGui.colorConvertFloat4ToU32(0.1f, 0.4f, 0.6f, 0.4f)
             isValSelected  -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
             else           -> TangoPalette.CELL_WASH.u32()
         }
         val borderCol = when {
             isMacroLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
             isOscLearningThis -> TangoPalette.u32(TangoPalette.ALERT.normal, pulseAlpha)
-            isMacroBound   -> ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 0.9f)
+            isLocked       -> ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 0.9f)
             isValSelected  -> ImGui.colorConvertFloat4ToU32(0.3f, 0.7f, 1.0f, 1f)
             else           -> ImGui.colorConvertFloat4ToU32(0.2f, 0.2f, 0.2f, 1f)
         }
