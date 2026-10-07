@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#metaknob-owned-values-show-a-lock-fx-browser-menu-loads-are-undoable-uiparametersrendererkt-uivalueparamsectionkt-uibrowserfxbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metaknob-Owned Values Show a Lock; FX Browser Menu Loads Are Undoable (ui/ParametersRenderer.kt, ui/ValueParamSection.kt, ui/browser/FXBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#light-theme-first-contrast-pass-uitangopalettekt-uicvthemekt-and-the-panels-that-used-white-alpha-or-pastel-literals" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5812,6 +5823,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#metaknob-owned-values-show-a-lock-fx-browser-menu-loads-are-undoable-uiparametersrendererkt-uivalueparamsectionkt-uibrowserfxbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metaknob-Owned Values Show a Lock; FX Browser Menu Loads Are Undoable (ui/ParametersRenderer.kt, ui/ValueParamSection.kt, ui/browser/FXBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#light-theme-first-contrast-pass-uitangopalettekt-uicvthemekt-and-the-panels-that-used-white-alpha-or-pastel-literals" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10391,6 +10413,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="metaknob-owned-values-show-a-lock-fx-browser-menu-loads-are-undoable-uiparametersrendererkt-uivalueparamsectionkt-uibrowserfxbrowserpanelkt">Metaknob-Owned Values Show a Lock; FX Browser Menu Loads Are Undoable (<code>ui/ParametersRenderer.kt</code>, <code>ui/ValueParamSection.kt</code>, <code>ui/browser/FXBrowserPanel.kt</code>)</h3>
+<ul>
+<li><strong>An effect parameter driven by its Metaknob link now shows it is locked</strong>: the VAL cell gets the same highlight as a macro-bound value, its tooltip names the link, middle-click reset is ignored, and the VAL panel greys out its controls with a "Driven by its Metaknob link" note. Disable the link to edit by hand.</li>
+<li><strong>"Load to <chain> / Slot n" in the FX browser's right-click menu can be undone with Ctrl+Z</strong>, like every other way of loading an effect.</li>
+<li>Internal: <code>ModulatableParameter.metaDrivenBy</code> is read by the value cell and VAL section; the menu paths pass <code>undoable = true</code> to <code>FxOps</code>.</li>
+</ul>
 <h3 id="light-theme-first-contrast-pass-uitangopalettekt-uicvthemekt-and-the-panels-that-used-white-alpha-or-pastel-literals">Light Theme: First Contrast Pass (<code>ui/TangoPalette.kt</code>, <code>ui/CvTheme.kt</code>, and the panels that used white-alpha or pastel literals)</h3>
 <ul>
 <li><strong>Hover and press washes, grid cell stripes, header tints and locked-control captions that were white-on-dark now have light-theme versions</strong> (icon buttons, link-mode chips, the parameter grid and its headers, slider captions), so they no longer vanish on a light panel.</li>

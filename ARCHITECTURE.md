@@ -1,6 +1,6 @@
 # Liquid LSD — Architecture
 
-A map of the code as it is. For the *why* behind a rule, follow the `DECISIONS §n` links (`DECISIONS.md`, durable decisions only); for depth on a subsystem, follow the `docs/developer/` link at the end of its section. Verified against `src/main/kotlin/llm/slop/liquidlsd/` (291 files) on 2026-10-04.
+A map of the code as it is. For the *why* behind a rule, follow the `DECISIONS §n` links (`DECISIONS.md`, durable decisions only); for depth on a subsystem, follow the `docs/developer/` link at the end of its section. Verified against `src/main/kotlin/llm/slop/liquidlsd/` (299 files) on 2026-10-07.
 
 Liquid LSD is a Kotlin/JVM VJ application: OpenGL 3.3 core (LWJGL 3 + GLFW), Dear ImGui (`imgui-java`), JACK (JNAJack) with a Java Sound fallback for audio, Java Sound for MIDI. **Everything that draws is an ISF shader**: generators, FX filters and transitions. Only `blit`, `mixer` and `view2d` are hard-wired shaders (`src/main/resources/shaders/`).
 
@@ -8,7 +8,9 @@ Liquid LSD is a Kotlin/JVM VJ application: OpenGL 3.3 core (LWJGL 3 + GLFW), Dea
 
 | UI name | Code name |
 |---|---|
-| Edit (row bay) | `PerformanceDeepEditBay`, `drawRackDeepEdit`, `ParametersState.rack*` |
+| Edit (row bay, Params only) | `PerformanceDeepEditBay`, `drawRackDeepEdit`, `ParametersState.rack*` |
+| Pair view (a pair of rows over Browse) | `ParametersState.focusedPair` / `focusPair`, `PerfRows.PAIRS` / `visibleRowsForPage`, `PerformanceDeepEditBay.drawPairBay`, `PerformanceBrowseBay.drawForPair`, `PairKnobTouch` |
+| Browse dock | `BrowserDock`, `DockActions`, `DockOutline`, `ParametersState.dockSelection` |
 | Modulation column | `PropertiesPanel` |
 | Library tabs Sources / FX / Transitions / Macros | `LibraryViewMode.PRESETS / FX / TRANS / MAPS` |
 | Level | `levelA/B/BG/PV`, `masterLevel` |
@@ -156,7 +158,7 @@ MidiMappingManager.processGlobalMidiEvents                         OscMappingMan
   - Commands: `CommandRegistry` / `Command` (`CommandKind` TRIGGER/TOGGLE/MOMENTARY/SCALAR/RELATIVE); `KnobCommands` (`knob.<n>`, `.press`, `.press_alt`); `NavCommands` (`nav.button.<n>`, `controller.bank_next/prev`, chain link); `GlobalCommands`.
   - UI-side interfaces: `KnobSurface` ← `ui/PerformSurface` (the 16 visible Perform knobs) and `NavSurface` ← `ui/NavigationSurface` (side buttons, browse cursor, dirty-prompt answers).
   - Feedback: `KnobLightSource` → `ControllerFeedback` → `CcQueue` → `MidiSink`.
-- **Perform pages and banks**: Twister hardware banks name Perform pages (`perform.ab`, `perform.bgpv`, `perform.mixer`; the profile's `wrapPages` makes the device's spare bank 4 loop back to bank 1); the UI page is the source of truth and `ControllerFeedback.syncActiveBank` sends a bank switch when the UI page changes.
+- **Perform pages and banks**: Twister hardware banks name Perform pages (`perform.ab`, `perform.bgpv`, `perform.mixer`; the profile's `wrapPages` makes the device's spare bank 4 loop back to bank 1); the UI page is the source of truth and `ControllerFeedback.syncActiveBank` sends a bank switch when the UI page changes. **In the pair view** a bank change calls `KnobSurface.stepPair` (implemented by `PerformSurface`; walks A > B > BG > PV > Master > XF) instead of changing page, and `UIManager` passes a null `activePageId` to the controller manager while `performSurface.pairFocused`, so `syncActiveBank` is skipped. `NavSurface.browseLiveKnobs` (8) says how many knobs stay live on the pair's rows while browsing. A controller FX tap with nothing bound applies to the live deck (`FXBrowserPanel.applyToDeckFromController`, via `DockActions`; Shift + tap queues).
 - **Touch console** (`input/`): `TouchConsoleController` (CapsLock latch; zones drive crossfade and levels), backends `LinuxEvdevTouchBackend`, `MacCocoaTouchBackend`, `NoOpTouchBackend` (other platforms), events through a lock-free queue drained on Thread 0. DECISIONS §10.
 - **Keyboard**: `ui/shortcuts/` (`ShortcutManager`, rebindable; `~/.liquidlsd/keybindings.json`); global hotkeys are handled in the GLFW key callback in `Main.kt`.
 
@@ -172,33 +174,35 @@ Deeper: `docs/developer/beat_sync.md` (stale on `ClockSource`), `docs/developer/
 
 ## 10. UI
 
-`ui/UIManager` builds and drives everything each frame (`render`): MIDI drain → queue advances → ImGui frame → `MenuBar` → `drawLayout` → modals → `MacroUndoTracker.update` → `ToastOverlay`. Styling: `UITheme` (settings singleton over `AppPreferences`), `UIThemeStyler`, `TangoPalette` (sole colour source for Perform UI; `CvTheme` is separate).
+`ui/UIManager` builds and drives everything each frame (`render`): MIDI drain → queue advances → ImGui frame → `MenuBar` → `drawLayout` → modals → `MacroUndoTracker.update` → `ToastOverlay`. Styling: `UITheme` (settings singleton over `AppPreferences`), `UIThemeStyler`, `TangoPalette` (sole colour source for Perform UI; DECISIONS §8). Its `Role`s hold a dark value and a light value or ImGui slot, resolved with `role.u32()` against `TangoPalette.isLightTheme` (set in `UIThemeStyler.setupThemeColors`); the light-theme roles include `HOVER_OVERLAY`, `PRESS_OVERLAY`, `HEADER_TINT`, `CELL_WASH`, `HOVER_BORDER`, `TEXT_FAINT`, `TEXT_DIM`, `TEXT_OK`, `TEXT_WARN`, `TEXT_ERROR`, `QUEUE_AB_TEXT`, `QUEUE_BG_TEXT`. `ButtonChrome` draws the bevel on real buttons (tunables in its per-theme `Look`). `CvTheme` is still separate; it dims its colours by `CvTheme.LIGHT_THEME_SCALE` (0.62) in the light theme. The light theme has not been checked visually; remaining literals: `.planning/theme-color-audit.md`.
 
-**Three views** (no classic view, no Parameters/Properties panels, no modular rack with MULTI mode, no Preset Grid, no Column 3 MACROS tab):
+**Three views plus the pair view** (no classic view, no Parameters/Properties panels, no modular rack with MULTI mode, no Preset Grid, no Column 3 MACROS tab):
 
 - **Perform** (default): the `PerformanceMatrixPanel` knob rows over a half-height Library, with the Mixer column on the right. `LibraryMode` is `HALF` or `FULL`.
-- **Edit**: opening the bay on a row (`LibraryPanel.isEditView` = a module expanded and Library not FULL) hides the Library; the row expands into `PerformanceDeepEditBay`.
+- **Edit**: opening the bay on a row (`LibraryPanel.isEditView` = a module expanded and Library not FULL) hides the Library; the row expands into `PerformanceDeepEditBay` (Params only).
 - **Library**: `LibraryMode.FULL`.
+- **Pair view** (DECISIONS §7): clicking a deck SRC badge / FX chain or slot, a transition name, a preview monitor, or a controller picker/send focuses a pair of rows (`ParametersState.focusPair(tag)`; `focusedPair` holds the tag): a deck's SRC + FX, Master MIX + FX, or Transitions + Clock (`PerfRows.PAIRS`, `PairDef`). `PerfRows.visibleRowsForPage` swaps the pair's two rows in for the page rows, the Library is hidden, and `PerformanceDeepEditBay.drawPairBay` draws Back / Parameters over the Browse dock (`PerformanceBrowseBay.drawForPair`). It is exclusive with Edit (`focusPair` collapses open modules, `setDisclosure` clears the pair), is not persisted, and entering Library FULL leaves it (`leavePair`). `PairKnobTouch` records which half a live-knob touch bound (`openBrowse`).
+- **`ViewState`** (`viewStateOf(session)`, `ui/ViewState.kt`) is the single place the active view is derived (`editing`, `maximized`, `pair`, `dockActive`); layout, controller and macro strip read it rather than re-testing `libraryMode` / expanded modules.
 
 Perform surface:
-- **Pages**: `PerfPageStore` (built-ins `resources/perform_pages/{deck-ab,deck-bgpv,mixer}.json`, user pages `library/perform_pages/`) → `PerfPageDef` = exactly 4 `RowPlacement`s whose ids come from `PerfRows.CATALOG` (`deck.<tag>.src|fx`, `master.mix|fx`, `trans`, `wetdry`, `global`). The tab strip is drawn in `MenuBar` (`PerfTabStrip`); the active id is `UITheme.performancePageId`. `PerformPagesPanel` edits pages in Preferences.
+- **Pages**: `PerfPageStore` (built-ins `resources/perform_pages/{deck-ab,deck-bgpv,mixer}.json`, user pages `library/perform_pages/`) → `PerfPageDef` = exactly 4 `RowPlacement`s whose ids come from `PerfRows.CATALOG` (`deck.<tag>.src|fx`, `master.mix|fx`, `trans`, `global`). The tab strip is drawn in `MenuBar` (`PerfTabStrip`); the active id is `UITheme.performancePageId`. `PerformPagesPanel` edits pages in Preferences.
 - **Rows**:
   - `PerformanceMatrixPanel` orchestrates `PerformanceDeckControls`, `PerformanceMasterControls`, `PerformanceTransitionsControls`, `PerformanceClockControls`, with shared state in `PerformanceUiContext`.
   - FX header and cells: `FxChainHeader`, `FxSlotCell`, `FxParamCell`, `FXChainMacroStrip`.
-  - Geometry never depends on row mode (`PerfRowGeometry`, `DeckRowMetrics`, `PerfKnobSpec` / `PerfKnobResolver`). Every deck and Master row shows one half (`pinnedMode`), so a row's meaning never depends on a mode; only the Edit bay's SRC/FX and MIX/FX tabs (`ParametersState`) choose which half an open module shows.
+  - Geometry never depends on row mode (`PerfRowGeometry`, `DeckRowMetrics`, `PerfKnobSpec` / `PerfKnobResolver`). Every deck and Master row shows one half (`pinnedMode`), so a row's meaning never depends on a mode; only the Edit bay's SRC/FX and MIX/FX tabs (`ParametersState`, read via `PerformanceUiContext.isDeckBayFx` / `isMasterBayFx`) choose which half an open module shows.
 - **Hardware view of the same grid**: `PerformSurface` and `NavigationSurface` (constructed in `UIManager.render`) resolve knobs with the same `PerfRows` + resolver the panel draws with.
 
-Edit bay (`PerformanceDeepEditBay.kt`, one per open row; tab row `Edit | SRC/TRANS | Chain | FX1-3`):
-- **Edit** content:
-  - **Parameters** tab: `ParametersTabs` (side rail, deck/Master parameter rows), `ParametersRenderer` and `ParameterGridHeaders` (VAL / MIDI / LFO / SEQ / AUD columns).
-  - **Modulation** column: `PropertiesPanel` with the editors `Lfo1Section`, `Lfo2Section`, `SeqSection`, `AudioModulatorSection`, `MidiModulatorSection`, `ValueParamSection`.
-  - Macro target strip: `PerformanceMacroStrip` (the GLOBAL guest strip is dormant).
-- **Browse** content: `PerformanceBrowseBay` hosts `BrowserPane` through an `ApplyTarget`; a click applies via `DeckOps` / `FxOps` / `TransitionOps` with `undoable = true`.
-- State: `ParametersState` (selection, section mode PARAMS/BROWSE, per-module disclosure, undo stack, learn targets), `ParametersKeyboard`, `ParametersUndo`.
+Edit bay (`PerformanceDeepEditBay.drawRackDeepEdit`, one per open row; **Params only**: no Browse tab, no `SectionMode`). The tab row carries the SRC/FX or MIX/FX half tabs and the "Next Up" readout (`drawQueueNextUp`, `QueueNextUp`).
+- **Parameters**: `ParametersTabs` (side rail, deck/Master parameter rows), `ParametersRenderer` and `ParameterGridHeaders` (VAL / MIDI / LFO / SEQ / AUD columns).
+- **Modulation** column: `PropertiesPanel` with the editors `Lfo1Section`, `Lfo2Section`, `SeqSection`, `AudioModulatorSection`, `MidiModulatorSection`, `ValueParamSection`.
+- Macro target strip: `PerformanceMacroStrip` (the GLOBAL guest strip is dormant).
+- State: `ParametersState` (selection, per-module disclosure, `focusedPair`, `dockSelection`, undo stack, learn targets), `ParametersKeyboard`, `ParametersUndo`. The pair view runs `handleDeepEditKeys` (undo only).
 
 Library (`ui/LibraryPanel`, `LibraryNavigation`, `BackNavigation`), DECISIONS §7:
 - Tabs are `LibraryViewMode` PRESETS (Sources), FX, TRANS (Transitions), MAPS (Macros: Banks + Pages, `MapsBrowserPanel`).
 - Sources / FX / Transitions use the **unified `ui/browser/BrowserPane`**: `BrowseModel`, `BrowseCatalogs` → `BrowseCatalog` (tree, list, `SearchMatcher`), `BrowseFavorites`, `FxShortlist`.
+- **One dock, optional target** (DECISIONS §7): `BrowserDock` (tabs, toolbar, pane, shortcuts, popups) is drawn by `LibraryPanel` (plain) and by `PerformanceBrowseBay` in the pair view, where it is bound to an `ApplyTarget` (`ui/browser/ApplyTarget.kt`) while the selected tab's kind matches `ParametersState.dockSelection` (otherwise the chip greys and it is the plain Library). `DockActions` is the one tap / double-click / controller-accept path; `DockOutline` outlines the row control that is the current selection. `BrowserPane.hosted()` tells `NavigationSurface` whether the dock is bound.
+- **`ScopeMemory`** (`ApplyTarget.kt`) keeps scope, search and tree cursor **per kind**, shared by the Library and every target (`ScopeMemory.contextOf`); only a whole-chain FX target has its own bucket (saved chains).
 - Beside it: the queue panels (`QueueActionsPanel`, `BgQueueActionsPanel`, `FXQueueActionsPanel`, `FXBgQueueActionsPanel`, `TransitionQueuePanel`) and shared list/popup helpers (`PresetListPanel`, `FXBrowserPanel`, `TransitionBrowserPanel`, `PlaylistEdit`, `BrowserPopupHandler`).
 - The classic browser, `ShaderPickerPopup` and the playlist-editor panels are deleted (DECISIONS §12).
 - Filesystem access: `FileSystemManager` (managed roots, 1 s scan cache, `ensureDefaultLibrary`).
@@ -250,7 +254,7 @@ Deeper: `docs/developer/web_subsystem.md`.
 ## 14. Build, test, release
 
 - Gradle Kotlin DSL (`build.gradle.kts`): Kotlin 2.3.0, JVM toolchain 17, LWJGL 3.3.3, imgui-java 1.92.7.1, JNAJack 1.4.0, JNA 5.19.1, kotlinx.serialization/coroutines. `./gradlew run | compileKotlin | test | checkWebSync | syncWeb | packageZips | buildWebsite`. CLI (`cli/CliArgs`): `--version`, `--help`, `--smoke-test`, `--screenshot-ui`, `--screenshot-after-frames`, `--window`, `--no-audio`, `--ui-lab`.
-- Tests: `src/test/kotlin/llm/slop/liquidlsd/` (137 files) mirror the packages; `architecture/LayerDependencyTest` is the layering guard. See `.planning/codebase/TESTING.md`.
+- Tests: `src/test/kotlin/llm/slop/liquidlsd/` (144 files) mirror the packages; `architecture/LayerDependencyTest` is the layering guard. See `.planning/codebase/TESTING.md`.
 - CI/release/platforms: `.github/workflows/release.yml`, `smoke-test.yml`; DECISIONS §11. Docs site: `tools/SiteGenerator` (`buildWebsite`). Self-update check: `update/` (`UpdateChecker`, `SemVer`, `AppVersion`).
 
 ## Unverified
