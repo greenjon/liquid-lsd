@@ -113,6 +113,30 @@ class RackDisclosureTest {
     }
 
     @Test
+    fun collapsingEditEndsTheDockBindingAndBrowseMode() {
+        val state = ParametersState()
+        state.openBrowse(MacroEngine.DECK_A, ParametersState.BrowseTarget.Gen)
+
+        state.collapseAllRackModules()
+
+        assertEquals(null, state.dockSelection)
+        assertEquals(ParametersState.SectionMode.PARAMS, state.rackSectionMode)
+    }
+
+    @Test
+    fun collapsingAPinnedModuleKeepsTheBindingWhileEditIsStillOpen() {
+        val state = ParametersState()
+        val deckAKnob = MacroEngine.getBank(MacroEngine.DECK_A)!!.knobs[0]
+        MacroLearnState.startLearn(deckAKnob.id)
+        state.openBrowse(MacroEngine.DECK_A, ParametersState.BrowseTarget.Gen)
+
+        state.collapseAllRackModules()
+
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_A))
+        assertEquals(ParametersState.BrowseTarget.Gen, state.dockSelection?.target)
+    }
+
+    @Test
     fun masterModuleStaysPinnedWhileMasterFxKnobIsLearning() {
         // The Master row switches its knobs between MASTER and MASTER_FX ([MIX|FX]) under one
         // MASTER moduleId, so Learn armed on a Master FX knob pins the MASTER module.

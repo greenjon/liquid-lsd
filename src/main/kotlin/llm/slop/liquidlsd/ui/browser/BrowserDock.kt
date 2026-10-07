@@ -36,9 +36,10 @@ object BrowserDock {
     )
 
     private var syncedKey: String? = null
+    private var syncedEpoch: Int = -1
 
     /** The Library window is drawing the dock again, so the next Edit row re-selects its tab. */
-    fun libraryShown() { syncedKey = null }
+    fun libraryShown() { syncedKey = null; syncedEpoch = -1 }
 
     private fun modeFor(kind: BrowseKind) = when (kind) {
         BrowseKind.SRC -> LibraryViewMode.PRESETS
@@ -47,9 +48,10 @@ object BrowserDock {
     }
 
     /** Opens on the tab of the row's kind whenever the row (or its slot) changes; a tab the user picks afterwards sticks until then. */
-    private fun syncTab(binding: DockBinding) {
-        if (binding.target.contextKey == syncedKey) return
+    private fun syncTab(binding: DockBinding, epoch: Int) {
+        if (binding.target.contextKey == syncedKey && epoch == syncedEpoch) return
         syncedKey = binding.target.contextKey
+        syncedEpoch = epoch
         LibraryNavigation.setViewMode(modeFor(binding.target.kind))
     }
 
@@ -131,7 +133,7 @@ object BrowserDock {
 
     /** The pane (or the Macros list) of the selected tab, filling the remaining space. */
     fun drawBody(session: SessionContext, mixer: Mixer, parametersState: ParametersState, binding: DockBinding? = null) {
-        if (binding != null) syncTab(binding)
+        if (binding != null) syncTab(binding, parametersState.dockSelectionEpoch)
         val kind = when (LibraryPanel.viewMode) {
             LibraryViewMode.PRESETS -> BrowseKind.SRC
             LibraryViewMode.FX -> BrowseKind.FX

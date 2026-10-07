@@ -117,6 +117,7 @@ class ParametersState : MidiLearnSink {
         rackModuleDisclosure[moduleId] = level
         // Closing a row's Edit bay ends its dock binding too (it would otherwise reappear bound in Perform).
         if (level == DisclosureLevel.COLLAPSED && dockSelection?.moduleId == moduleId) dockSelection = null
+        if (level == DisclosureLevel.COLLAPSED) endEditIfClosed()
         if (level != DisclosureLevel.COLLAPSED) {
             topTabForDeepEditModule(moduleId)?.let { activeTopTab = it }
             for (key in rackModuleDisclosure.keys.toList()) {
@@ -129,14 +130,26 @@ class ParametersState : MidiLearnSink {
         persistRackExpandedModules()
     }
 
-    /** Collapses every rack module to Tier 1, except one currently pinned open by an active Learn. */
+    /**
+     * Collapses every rack module to Tier 1, except one currently pinned open by an active Learn.
+     * Once no Edit bay remains open the dock binding and Browse mode end with it, so every way of leaving Edit
+     * (Esc, EDIT gear, Space, Ctrl+F, menu, controller) lands in the same unbound Perform/Library state.
+     */
     fun collapseAllRackModules() {
         for (key in rackModuleDisclosure.keys.toList()) {
             if (!isLearnPinned(key)) {
                 rackModuleDisclosure[key] = DisclosureLevel.COLLAPSED
             }
         }
+        endEditIfClosed()
         persistRackExpandedModules()
+    }
+
+    /** When no module is expanded any more, drops the Edit-owned dock binding and resets the bay mode to Params. */
+    private fun endEditIfClosed() {
+        if (anyRackModuleExpanded()) return
+        dockSelection = null
+        rackSectionMode = SectionMode.PARAMS
     }
 
     /** True if any rack module is currently above Tier 1 (used by the Esc priority stack). */
@@ -164,6 +177,10 @@ class ParametersState : MidiLearnSink {
     var dockSelection: DockSelection? = null
         private set
 
+    /** Bumped by every explicit row selection, so re-clicking the already-bound slot still re-syncs a paused dock tab. */
+    var dockSelectionEpoch: Int = 0
+        private set
+
     fun clearDockSelection() {
         dockSelection = null
     }
@@ -178,6 +195,7 @@ class ParametersState : MidiLearnSink {
         setDisclosure(moduleId, DisclosureLevel.DEEP_EDIT)
         rackSectionMode = SectionMode.BROWSE
         dockSelection = DockSelection(moduleId, target)
+        dockSelectionEpoch++
     }
 
     /**
@@ -185,7 +203,10 @@ class ParametersState : MidiLearnSink {
      * already open in the Edit bay the same click also shows that bay's Browse tab, as [openBrowse] does.
      */
     private fun selectDock(moduleId: String, target: BrowseTarget) {
-        if (anyRackModuleExpanded()) openBrowse(moduleId, target) else dockSelection = DockSelection(moduleId, target)
+        if (anyRackModuleExpanded()) openBrowse(moduleId, target) else {
+            dockSelection = DockSelection(moduleId, target)
+            dockSelectionEpoch++
+        }
     }
 
     /** Row click on a deck's source badge: binds the dock to that deck's source. */
