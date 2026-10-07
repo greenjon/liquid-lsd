@@ -85,7 +85,7 @@ object PropertiesPanel {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
                 }
                 val btnW = (ImGui.calcTextSize(label).x + 18f * fontScale).coerceAtLeast(44f * fontScale)
-                if (ImGui.button(label, btnW, btnH)) {
+                if (ButtonChrome.button(label, btnW, btnH)) {
                     state.selectedCell = ParameterCellId(currentParamKey, targetCvId)
                 }
                 itemTooltip("Switch Modulation view to $label CV modulation for parameter")
@@ -130,7 +130,7 @@ object PropertiesPanel {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                 }
 
-                if (ImGui.button(btnText, liveBtnW, btnH)) {
+                if (ButtonChrome.button(btnText, liveBtnW, btnH)) {
                     val targetBypassed = !isMuted
                     val updated = param.modulators.map { mod ->
                         if (liveMods.any { it.id == mod.id }) mod.copy(bypassed = targetBypassed) else mod
@@ -230,12 +230,12 @@ object PropertiesPanel {
                 imgui.ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.72f, 0.45f, 1.00f, 0.6f)
                 imgui.ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.80f, 0.55f, 1.00f, 0.8f)
                 imgui.ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
-                if (imgui.ImGui.button("${Icons.REFRESH} Waiting for MIDI CC... (Click to Cancel)##midi_learn")) {
+                if (ButtonChrome.button("${Icons.REFRESH} Waiting for MIDI CC... (Click to Cancel)##midi_learn")) {
                     state.midiLearnTarget = null
                 }
                 imgui.ImGui.popStyleColor(3)
             } else {
-                if (imgui.ImGui.button("Learn MIDI Modulator##midi_learn")) {
+                if (ButtonChrome.button("Learn MIDI Modulator##midi_learn")) {
                     state.midiLearnTarget = MidiLearnTarget.GridCell(cell, param)
                     state.midiLearnStartTimeMs = System.currentTimeMillis()
                     if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
@@ -332,7 +332,7 @@ object PropertiesPanel {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.28f, 0.28f, 1f))
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, enableAudioInk[0], enableAudioInk[1], enableAudioInk[2], 1.0f)
-                    if (ImGui.button("${Icons.PLUS} Enable Audio Slot 2##enable_audio_2", ImGui.getContentRegionAvailX(), btnH)) {
+                    if (ButtonChrome.button("${Icons.PLUS} Enable Audio Slot 2##enable_audio_2", ImGui.getContentRegionAvailX(), btnH)) {
                         val newMod = existing.copy(id = java.util.UUID.randomUUID().toString(), bypassed = false, depth = 0.5f)
                         replaceModulator(state, param, newMod, mixer)
                     }

@@ -85,7 +85,7 @@ object AboutModal {
                         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.22f, 0.75f, 0.38f, 1.0f)
                         ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.10f, 0.50f, 0.25f, 1.0f)
                         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                            if (ImGui.button("${Icons.DOWNLOAD} View Update", 160f, 28f)) {
+                            if (ButtonChrome.button("${Icons.DOWNLOAD} View Update", 160f, 28f)) {
                                 UpdatePromptModal.request(lastRes.latestRelease, lastRes.currentVersion)
                                 ImGui.closeCurrentPopup()
                             }
@@ -98,7 +98,7 @@ object AboutModal {
                         }
                         ImGui.spacing()
                         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                            if (ImGui.button("${Icons.REFRESH} Check Again", 140f, 28f)) {
+                            if (ButtonChrome.button("${Icons.REFRESH} Check Again", 140f, 28f)) {
                                 UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
                             }
                         }
@@ -109,14 +109,14 @@ object AboutModal {
                         }
                         ImGui.spacing()
                         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                            if (ImGui.button("${Icons.REFRESH} Retry Check", 140f, 28f)) {
+                            if (ButtonChrome.button("${Icons.REFRESH} Retry Check", 140f, 28f)) {
                                 UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
                             }
                         }
                     }
                     UpdateCheckResult.Idle, UpdateCheckResult.Checking -> {
                         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                            if (ImGui.button("${Icons.REFRESH} Check for Updates", 170f, 28f)) {
+                            if (ButtonChrome.button("${Icons.REFRESH} Check for Updates", 170f, 28f)) {
                                 UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
                             }
                         }
@@ -129,13 +129,13 @@ object AboutModal {
             ImGui.spacing()
 
             // ── Links & Dismiss ──
-            if (ImGui.button("GitHub Repository", 160f, 30f)) {
+            if (ButtonChrome.button("GitHub Repository", 160f, 30f)) {
                 DocManager.openUrl("https://github.com/greenjon/liquid-lsd")
             }
             itemTooltip("Open the project repository on GitHub in your default browser.")
 
             ImGui.sameLine()
-            if (ImGui.button("Documentation", 140f, 30f)) {
+            if (ButtonChrome.button("Documentation", 140f, 30f)) {
                 DocManager.openDocumentation()
             }
 
@@ -145,7 +145,7 @@ object AboutModal {
             if (availX > closeBtnW) {
                 ImGui.setCursorPosX(ImGui.getCursorPosX() + (availX - closeBtnW))
             }
-            if (ImGui.button("Close", closeBtnW, 30f)) {
+            if (ButtonChrome.button("Close", closeBtnW, 30f)) {
                 ImGui.closeCurrentPopup()
             }
 

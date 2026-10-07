@@ -241,6 +241,7 @@ class PerformanceMatrixPanel {
         val dl = ImGui.getWindowDrawList()
         dl.addRectFilled(x, y, x + w, y + h, bg, 3f)
         if (hovered) dl.addRectFilled(x, y, x + w, y + h, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, if (ImGui.isMouseDown(0)) 0.25f else 0.12f), 3f)
+        ButtonChrome.bevel(x, y, x + w, y + h, hovered && ImGui.isMouseDown(0))
         val text = label.substringBefore("##")
         val ts = ImGui.calcTextSize(text)
         dl.addText(x + (w - ts.x) * 0.5f, y + (h - ts.y) * 0.5f, ImGui.getColorU32(ImGuiCol.Text), text)

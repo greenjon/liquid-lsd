@@ -81,7 +81,7 @@ internal object PerformanceTransitionsControls {
         ImGui.pushStyleColor(ImGuiCol.Button, randBtnBg)
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, randBtnHov)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.DICES}##perf_trans_rand", width, ctrlH)) {
+            if (ButtonChrome.button("${Icons.DICES}##perf_trans_rand", width, ctrlH)) {
                 ParametersUndo.pushUndoState(session.parametersState, mixer)
                 mixer.transitionFilter?.let { filter ->
                     filter.parameters.values.forEach { param ->
@@ -147,7 +147,7 @@ internal object PerformanceTransitionsControls {
         val isTransModified = isTransitionModified(mixer.transitionFilter)
         val modBadge = if (isTransModified) " *" else ""
 
-        if (ImGui.button(tipPickerLabel.get(transName, modBadge) { "${Icons.SETTINGS} $transName$modBadge##perf_trans_picker_btn" }, transBtnW, headerH)) {
+        if (ButtonChrome.button(tipPickerLabel.get(transName, modBadge) { "${Icons.SETTINGS} $transName$modBadge##perf_trans_picker_btn" }, transBtnW, headerH)) {
             parametersState.selectTransition()
         }
         if (DockOutline.selects(parametersState, MacroEngine.TRANS, ParametersState.BrowseTarget.Transition)) DockOutline.drawAroundLastItem(MacroEngine.TRANS)
@@ -180,7 +180,7 @@ internal object PerformanceTransitionsControls {
 
         val transPrevX = ImGui.getCursorScreenPosX()
         val transPrevY = ImGui.getCursorScreenPosY()
-        if (ImGui.button("<##perf_trans_q_prev", navBtnW, headerH)) {
+        if (ButtonChrome.button("<##perf_trans_q_prev", navBtnW, headerH)) {
             TransitionQueueManager.advancePrevious(mixer)
         }
         if (isMidiLearnTransQPrev) {
@@ -257,7 +257,7 @@ internal object PerformanceTransitionsControls {
 
         val transNextX = ImGui.getCursorScreenPosX()
         val transNextY = ImGui.getCursorScreenPosY()
-        if (ImGui.button(">##perf_trans_q_next", navBtnW, headerH)) {
+        if (ButtonChrome.button(">##perf_trans_q_next", navBtnW, headerH)) {
             TransitionQueueManager.advanceNext(mixer)
         }
         if (isMidiLearnTransQNext) {
@@ -474,7 +474,7 @@ internal object PerformanceTransitionsControls {
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.BUTTON_HOVER.u32())
         }
         val autoLabel = if (isAuto) "FADING##perf_autofade_btn" else "AUTO##perf_autofade_btn"
-        if (ImGui.button(autoLabel, autoBtnW, headerH)) {
+        if (ButtonChrome.button(autoLabel, autoBtnW, headerH)) {
             if (mixer.isAutoFading) {
                 mixer.onCrossfadeManualTakeover()
             } else {
@@ -542,7 +542,7 @@ internal object PerformanceTransitionsControls {
         ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.SPEED_BG.u32())
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.SPEED_HOVER.u32())
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            ImGui.button(tipSpeedBadge.get(speedStr) { "$speedStr##perf_speed_badge" }, speedBtnW, headerH)
+            ButtonChrome.button(tipSpeedBadge.get(speedStr) { "$speedStr##perf_speed_badge" }, speedBtnW, headerH)
         }
         ImGui.popStyleColor(2)
 

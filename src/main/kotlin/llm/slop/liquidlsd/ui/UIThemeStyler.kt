@@ -63,7 +63,7 @@ object UIThemeStyler {
 
                 style.setColor(ImGuiCol.Button, 0.24f, 0.24f, 0.23f, 1.00f) // #3E3D3A
                 style.setColor(ImGuiCol.ButtonHovered, aluminium2.normal[0], aluminium2.normal[1], aluminium2.normal[2], 1.00f) // #555753
-                style.setColor(ImGuiCol.ButtonActive, cyan.bright[0], cyan.bright[1], cyan.bright[2], 1.00f) // #34E2E2
+                style.setColor(ImGuiCol.ButtonActive, cyan.normal[0], cyan.normal[1], cyan.normal[2], 1.00f) // #06AFDF, white text stays readable
 
                 style.setColor(ImGuiCol.CheckMark, cyan.normal[0], cyan.normal[1], cyan.normal[2], 1.00f) // #06AFDF
                 style.setColor(ImGuiCol.SliderGrab, cyan.normal[0], cyan.normal[1], cyan.normal[2], 1.00f) // #06AFDF

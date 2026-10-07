@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiKey
@@ -83,10 +84,10 @@ object BrowserDock {
                 val (mode, label, w) = tab
                 if (i > 0) ImGui.sameLine(0f, 2f)
                 val active = LibraryPanel.viewMode == mode
-                ImGui.pushStyleColor(ImGuiCol.Button, if (active) activeCol else inactiveCol)
+                ButtonChrome.pushColor(if (active) activeCol else inactiveCol)
                 ImGui.pushStyleColor(ImGuiCol.Text, if (active) activeTextCol else inactiveTextCol)
-                if (ImGui.button(label, w, btnH)) LibraryNavigation.setViewMode(mode)
-                ImGui.popStyleColor(2)
+                if (ButtonChrome.button(label, w, btnH)) LibraryNavigation.setViewMode(mode)
+                ImGui.popStyleColor(4)
             }
         }
 
@@ -122,7 +123,7 @@ object BrowserDock {
             if (bound) binding.actions?.let { ImGui.sameLine(0f, 10f); it() }
             binding.onClose?.let { close ->
                 ImGui.sameLine(0f, 8f)
-                if (ImGui.button("${llm.slop.liquidlsd.ui.Icons.X}##dock_unbind", btnH, btnH)) close()
+                if (ButtonChrome.button("${llm.slop.liquidlsd.ui.Icons.X}##dock_unbind", btnH, btnH)) close()
                 itemTooltip("Stop applying to ${binding.label} and go back to the plain Library (Esc).")
             }
         }

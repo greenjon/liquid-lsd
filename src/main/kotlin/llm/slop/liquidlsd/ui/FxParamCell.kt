@@ -121,7 +121,7 @@ object FxParamCell {
         ImGui.pushStyleColor(ImGuiCol.ButtonActive, bgHover)
         ImGui.pushStyleColor(ImGuiCol.Text, text)
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 1f, 1f)
-        if (ImGui.button("$RESET_GLYPH##fxparam_reset_${bankId}_k$knobIndex", size, size)) {
+        if (ButtonChrome.button("$RESET_GLYPH##fxparam_reset_${bankId}_k$knobIndex", size, size)) {
             param.baseValue = param.defaultValue
             MacroEngine.getBank(bankId)?.knobs?.getOrNull(knobIndex - 1)?.let { control ->
                 val normVal = if (range > 0f) ((param.baseValue - param.minClamp) / range).coerceIn(0f, 1f) else 0f

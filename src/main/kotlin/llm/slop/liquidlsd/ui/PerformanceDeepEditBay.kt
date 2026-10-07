@@ -152,9 +152,9 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         val inBrowse = parametersState.sectionModeFor(moduleId) == ParametersState.SectionMode.BROWSE
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
             fun tab(label: String, tip: String, active: Boolean, onClick: () -> Unit) {
-                if (active) ImGui.pushStyleColor(ImGuiCol.Button, ImGui.getStyle().getColor(ImGuiCol.ButtonActive))
-                if (ImGui.button("$label##bay_tab_${moduleId}_$label")) onClick()
-                if (active) ImGui.popStyleColor()
+                if (active) ButtonChrome.pushColor(ImGui.getColorU32(ImGuiCol.ButtonActive))
+                if (ButtonChrome.button("$label##bay_tab_${moduleId}_$label")) onClick()
+                if (active) ImGui.popStyleColor(3)
                 itemTooltip(tip)
             }
             tab("Parameters", "Edit parameters, modulation and properties.", !inBrowse) { parametersState.openParams(moduleId) }

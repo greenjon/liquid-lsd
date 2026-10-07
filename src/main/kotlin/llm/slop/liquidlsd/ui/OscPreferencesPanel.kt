@@ -73,7 +73,7 @@ object OscPreferencesPanel {
 
         if (OscPreferences.enabled) {
             ImGui.sameLine(0f, 20f)
-            if (ImGui.button("${Icons.REFRESH} Restart Server##osc_restart")) {
+            if (ButtonChrome.button("${Icons.REFRESH} Restart Server##osc_restart")) {
                 OscEngine.stop()
                 OscEngine.start(OscPreferences.inboundPort, OscPreferences.outboundPort)
             }
@@ -110,13 +110,13 @@ object OscPreferencesPanel {
             OscPreferences.savePreferences()
         }
         ImGui.sameLine()
-        if (ImGui.button("${Icons.SAVE} Save##osc_save_profile")) {
+        if (ButtonChrome.button("${Icons.SAVE} Save##osc_save_profile")) {
             OscMappingManager.saveActiveProfile()
         }
         ImGui.sameLine()
         val canDelete = OscMappingManager.activeProfileName != "default"
         if (!canDelete) ImGui.beginDisabled()
-        if (ImGui.button("${Icons.TRASH} Delete##osc_delete_profile")) {
+        if (ButtonChrome.button("${Icons.TRASH} Delete##osc_delete_profile")) {
             OscMappingManager.deleteProfile(OscMappingManager.activeProfileName)
             OscPreferences.activeProfile = "default"
             OscPreferences.savePreferences()
@@ -127,7 +127,7 @@ object OscPreferencesPanel {
         ImGui.setNextItemWidth(140f)
         ImGui.inputTextWithHint("##osc_new_profile_name", "New Profile Name", newProfileInput)
         ImGui.sameLine()
-        if (ImGui.button("${Icons.PLUS} Create Profile##osc_create_profile")) {
+        if (ButtonChrome.button("${Icons.PLUS} Create Profile##osc_create_profile")) {
             val name = newProfileInput.get().trim()
             if (name.isNotEmpty()) {
                 val safeName = runCatching { sanitiseOscProfileName(name) }.getOrNull() ?: name.replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
@@ -194,16 +194,16 @@ object OscPreferencesPanel {
         ImGui.sameLine()
         if (OscLearnState.isLearning()) {
             val ink = TangoPalette.inkFor(floatArrayOf(0.72f, 0.45f, 1.00f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.72f, 0.45f, 1.00f, 0.6f)
+            ButtonChrome.pushColor(0.72f, 0.45f, 1.00f, 0.6f)
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
-            if (ImGui.button("Cancel##osc_learn_cancel")) {
+            if (ButtonChrome.button("Cancel##osc_learn_cancel")) {
                 OscLearnState.cancelLearn()
             }
-            ImGui.popStyleColor(2)
+            ImGui.popStyleColor(4)
         } else {
             val target = learnParamInput.get().trim()
             if (target.isEmpty()) ImGui.beginDisabled()
-            if (ImGui.button("${Icons.ACTIVITY} Start Learn##osc_learn_start")) {
+            if (ButtonChrome.button("${Icons.ACTIVITY} Start Learn##osc_learn_start")) {
                 OscLearnState.startLearn(target, displayLabel = OscMappingManager.formatDisplayPath(target))
             }
             if (target.isEmpty()) ImGui.endDisabled()
@@ -222,7 +222,7 @@ object OscPreferencesPanel {
         ImGui.setNextItemWidth(200f)
         ImGui.inputTextWithHint("##osc_filter_mappings", "Filter by address or path...", filterMappingInput)
         ImGui.sameLine()
-        if (ImGui.button("${Icons.TRASH} Clear All##osc_clear_all")) {
+        if (ButtonChrome.button("${Icons.TRASH} Clear All##osc_clear_all")) {
             OscMappingManager.clearAllMappings()
             OscMappingManager.saveActiveProfile()
         }
@@ -336,7 +336,7 @@ object OscPreferencesPanel {
                     }
 
                     ImGui.tableNextColumn()
-                    if (ImGui.button("${Icons.TRASH}##osc_del_$address")) {
+                    if (ButtonChrome.button("${Icons.TRASH}##osc_del_$address")) {
                         OscMappingManager.removeMapping(address)
                         OscMappingManager.saveActiveProfile()
                     }

@@ -88,7 +88,7 @@ object UpdatePromptModal {
             ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.10f, 0.50f, 0.25f, 1.0f)
 
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.DOWNLOAD} Download Update", 160f, 32f)) {
+                if (ButtonChrome.button("${Icons.DOWNLOAD} Download Update", 160f, 32f)) {
                     DocManager.openUrl(release.htmlUrl)
                     latestRelease = null
                     ImGui.closeCurrentPopup()
@@ -97,13 +97,13 @@ object UpdatePromptModal {
             ImGui.popStyleColor(3)
 
             ImGui.sameLine()
-            if (ImGui.button("Remind Later", 120f, 32f)) {
+            if (ButtonChrome.button("Remind Later", 120f, 32f)) {
                 latestRelease = null
                 ImGui.closeCurrentPopup()
             }
 
             ImGui.sameLine()
-            if (ImGui.button("Skip Version", 120f, 32f)) {
+            if (ButtonChrome.button("Skip Version", 120f, 32f)) {
                 session.uiTheme.ignoredUpdateVersion = release.tagName
                 AppPreferencesStore.savePreferences()
                 latestRelease = null

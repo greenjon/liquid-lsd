@@ -136,8 +136,8 @@ object ValueParamSection {
             val isMacroBound = macroInfo != null
 
             if (isMacroLearning) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.0f, 0.6f, 0.8f, 0.7f))
-                if (ImGui.button("${Icons.REFRESH} Add Base Value as Target of armed Macro Knob##bind_base_macro", ImGui.getContentRegionAvailX(), 26f)) {
+                ButtonChrome.pushColor(ImGui.colorConvertFloat4ToU32(0.0f, 0.6f, 0.8f, 0.7f))
+                if (ButtonChrome.button("${Icons.REFRESH} Add Base Value as Target of armed Macro Knob##bind_base_macro", ImGui.getContentRegionAvailX(), 26f)) {
                     llm.slop.liquidlsd.macro.MacroLearnState.bindTarget(
                         bank = llm.slop.liquidlsd.macro.MacroEngine.bankForParamPath(paramKey),
                         targetType = llm.slop.liquidlsd.macro.MacroTargetType.PARAM_BASE_VALUE,
@@ -146,7 +146,7 @@ object ValueParamSection {
                         maxVal = param.maxClamp
                     )
                 }
-                ImGui.popStyleColor()
+                ImGui.popStyleColor(3)
                 ImGui.spacing()
             }
 
@@ -264,7 +264,7 @@ object ValueParamSection {
                         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
                     }
 
-                    if (ImGui.button("$label##maxpts_pill_$preset", btnW, pillH)) {
+                    if (ButtonChrome.button("$label##maxpts_pill_$preset", btnW, pillH)) {
                         val newVal = preset.toFloat()
                         param.baseValue = newVal
                         param.baseMin = newVal
@@ -312,7 +312,7 @@ object ValueParamSection {
                         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
                     }
 
-                    if (ImGui.button("$label##lobe_pill_$petal", btnW, pillH)) {
+                    if (ButtonChrome.button("$label##lobe_pill_$petal", btnW, pillH)) {
                         val newVal = petal.toFloat()
                         param.baseValue = newVal
                         if (!param.randomizeBase) {
@@ -349,7 +349,7 @@ object ValueParamSection {
                 val canNext = count > 1 && currentIdx < count - 1
 
                 if (!canPrev) ImGui.beginDisabled()
-                if (ImGui.button("◀##recipe_prev", stepBtnW, stepBtnH)) {
+                if (ButtonChrome.button("◀##recipe_prev", stepBtnW, stepBtnH)) {
                     val prevIdx = (currentIdx - 1).coerceAtLeast(0)
                     val newVal = if (count > 1) prevIdx.toFloat() / (count - 1).toFloat() else 0f
                     param.baseValue = newVal
@@ -367,7 +367,7 @@ object ValueParamSection {
 
                 ImGui.sameLine()
                 if (!canNext) ImGui.beginDisabled()
-                if (ImGui.button("▶##recipe_next", stepBtnW, stepBtnH)) {
+                if (ButtonChrome.button("▶##recipe_next", stepBtnW, stepBtnH)) {
                     val nextIdx = (currentIdx + 1).coerceAtMost(count - 1)
                     val newVal = if (count > 1) nextIdx.toFloat() / (count - 1).toFloat() else 0f
                     param.baseValue = newVal
@@ -495,14 +495,14 @@ object ValueParamSection {
             val randomizeBaseActive = param.randomizeBase && !param.isRandomizeDisabled
             if (param.isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
-                ImGui.button("${Icons.DICES}  Randomize Initial Value", ImGui.getContentRegionAvailX(), btnH)
+                ButtonChrome.button("${Icons.DICES}  Randomize Initial Value", ImGui.getContentRegionAvailX(), btnH)
                 ImGui.popStyleColor()
                 itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 if (!randomizeBaseActive) {
                     ImGui.beginDisabled()
                 }
-                if (ImGui.button("${Icons.DICES}  Randomize Initial Value", ImGui.getContentRegionAvailX(), btnH)) {
+                if (ButtonChrome.button("${Icons.DICES}  Randomize Initial Value", ImGui.getContentRegionAvailX(), btnH)) {
                     param.randomizeBaseValue()
                 }
                 if (!randomizeBaseActive) {

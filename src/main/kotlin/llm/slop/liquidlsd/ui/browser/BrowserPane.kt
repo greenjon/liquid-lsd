@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiKey
@@ -180,7 +181,7 @@ object BrowserPane {
         ImGui.sameLine()
         ImGui.setCursorPosX((ImGui.getWindowContentRegionMaxX() - btnSize).coerceAtLeast(ImGui.getCursorPosX()))
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.PLUS}##browserNewPlaylist", btnSize, btnSize)) {
+            if (ButtonChrome.button("${Icons.PLUS}##browserNewPlaylist", btnSize, btnSize)) {
                 BrowserPopupHandler.pendingOpenNewPlaylistPopup = true
             }
         }
@@ -433,7 +434,7 @@ object BrowserPane {
         if (rightX > ImGui.getCursorPosX()) ImGui.setCursorPosX(rightX)
 
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.PLUS}##browser_new", btnSize, btnSize)) {
+            if (ButtonChrome.button("${Icons.PLUS}##browser_new", btnSize, btnSize)) {
                 when (kind) {
                     BrowseKind.SRC -> ImGui.openPopup("browser_new_preset_popup")
                     BrowseKind.FX -> ImGui.openPopup("create_new_fx_popup")
@@ -472,7 +473,7 @@ object BrowserPane {
 
         ImGui.sameLine()
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.MORE_VERTICAL}##browser_more", btnSize, btnSize)) ImGui.openPopup("browser_more_popup")
+            if (ButtonChrome.button("${Icons.MORE_VERTICAL}##browser_more", btnSize, btnSize)) ImGui.openPopup("browser_more_popup")
         }
         itemTooltip("More actions.")
         pushOpenDropdownPadding()

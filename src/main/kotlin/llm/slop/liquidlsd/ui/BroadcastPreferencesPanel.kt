@@ -51,7 +51,7 @@ object BroadcastPreferencesPanel {
         }
         ImGui.sameLine()
         val eyeLabel = if (showToken) "Hide" else "Show"
-        if (ImGui.button(eyeLabel)) {
+        if (ButtonChrome.button(eyeLabel)) {
             showToken = !showToken
         }
 
@@ -125,7 +125,7 @@ object BroadcastPreferencesPanel {
         if (isLive) {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.8f, 0.2f, 0.2f, 1f)
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.9f, 0.3f, 0.3f, 1f)
-            if (ImGui.button("${Icons.POWER} Disconnect Broadcast", 200f, 32f)) {
+            if (ButtonChrome.button("${Icons.POWER} Disconnect Broadcast", 200f, 32f)) {
                 llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
             }
             ImGui.popStyleColor(2)
@@ -138,7 +138,7 @@ object BroadcastPreferencesPanel {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.15f, 0.6f, 0.25f, 1f)
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.25f, 0.75f, 0.35f, 1f)
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, goLiveInk[0], goLiveInk[1], goLiveInk[2], 1.0f)
-            if (ImGui.button("${Icons.ZAP} Go Live (Connect)", 200f, 32f)) {
+            if (ButtonChrome.button("${Icons.ZAP} Go Live (Connect)", 200f, 32f)) {
                 if (mixer != null) {
                     llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
                 }
@@ -152,7 +152,7 @@ object BroadcastPreferencesPanel {
 
         if (state == llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED) {
             ImGui.sameLine()
-            if (ImGui.button("${Icons.REFRESH} Force Sync State", 160f, 32f)) {
+            if (ButtonChrome.button("${Icons.REFRESH} Force Sync State", 160f, 32f)) {
                 llm.slop.liquidlsd.broadcast.BroadcastEngine.forceSync()
             }
             itemTooltip("Re-send full state snapshot to relay immediately.")

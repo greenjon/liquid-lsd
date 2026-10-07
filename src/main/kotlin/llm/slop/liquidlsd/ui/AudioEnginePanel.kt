@@ -197,7 +197,7 @@ object AudioEnginePanel {
                 }
                 itemTooltip("Select the audio input capture device.")
                 ImGui.sameLine()
-                if (ImGui.button("${Icons.REFRESH}##refreshDevices")) {
+                if (ButtonChrome.button("${Icons.REFRESH}##refreshDevices")) {
                     audioEngine.refreshInputDevices()
                 }
                 itemTooltip("Rescan for newly connected audio input hardware.")
@@ -281,7 +281,7 @@ object AudioEnginePanel {
                 ImGui.textWrapped("${Icons.ALERT} Warning: Audio Engine is inactive. No audio signal received.")
                 ImGui.popStyleColor()
                 ImGui.spacing()
-                if (ImGui.button("${Icons.REFRESH} Retry Connection", 220f, 28f)) {
+                if (ButtonChrome.button("${Icons.REFRESH} Retry Connection", 220f, 28f)) {
                     Thread {
                         audioEngine.tryReconnect(force = true)
                     }.start()
@@ -291,7 +291,7 @@ object AudioEnginePanel {
                 ImGui.spacing()
                 // TODO: make this button less annoying
                 /*
-                if (ImGui.button("${Icons.REFRESH} Switch to JACK Audio", 220f, 28f)) {
+                if (ButtonChrome.button("${Icons.REFRESH} Switch to JACK Audio", 220f, 28f)) {
                     Thread {
                         audioEngine.tryReconnect(force = true)
                     }.start()
@@ -330,7 +330,7 @@ object AudioEnginePanel {
             theme.captionColored(0.7f, 0.75f, 0.8f, 1.0f, "(${currentClock.displayName} • $linkStatusText)")
 
             ImGui.spacing()
-            if (ImGui.button("${Icons.PREFERENCES} Configure Tempo & Link Deck ->", 260f, 30f)) {
+            if (ButtonChrome.button("${Icons.PREFERENCES} Configure Tempo & Link Deck ->", 260f, 30f)) {
                 PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
             }
             itemTooltip("Open master tempo deck to adjust BPM slider, tap tempo, beat tracking, or Ableton Link.")

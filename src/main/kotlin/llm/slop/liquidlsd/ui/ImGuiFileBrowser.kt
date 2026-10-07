@@ -161,7 +161,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
 
         visible.forEachIndexed { i, segment ->
             val name = segment.name.ifEmpty { segment.path } // root on Linux is ""
-            if (ImGui.button(name)) {
+            if (ButtonChrome.button(name)) {
                 navigateTo(segment)
             }
             if (i < visible.lastIndex) {
@@ -229,7 +229,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
         val confirmLabel = if (mode == Mode.SAVE) "Save" else "Open"
         val btnW = 90f
 
-        val doConfirm = ImGui.button(confirmLabel, btnW, 0f) || pendingDoubleClickConfirm
+        val doConfirm = ButtonChrome.button(confirmLabel, btnW, 0f) || pendingDoubleClickConfirm
         pendingDoubleClickConfirm = false
 
         if (doConfirm) {
@@ -257,7 +257,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
         }
 
         ImGui.sameLine()
-        if (ImGui.button("Cancel", btnW, 0f)) {
+        if (ButtonChrome.button("Cancel", btnW, 0f)) {
             ImGui.closeCurrentPopup()
         }
     }

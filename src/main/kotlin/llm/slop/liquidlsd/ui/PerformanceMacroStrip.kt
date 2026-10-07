@@ -102,7 +102,7 @@ internal object PerformanceMacroStrip {
             ImGui.setCursorScreenPos(cx, row1Y)
             val canLearn = control.bindings.size < MacroControl.MAX_BINDINGS_PER_CONTROL
             ImGui.beginDisabled(!canLearn && !learning)
-            if (ImGui.button(if (learning) "${Icons.X} Cancel##learn" else "Add Target##learn", learnW, ctrlH)) {
+            if (ButtonChrome.button(if (learning) "${Icons.X} Cancel##learn" else "Add Target##learn", learnW, ctrlH)) {
                 if (learning) MacroLearnState.cancelLearn() else onLearn()
             }
             ImGui.endDisabled()
@@ -117,11 +117,11 @@ internal object PerformanceMacroStrip {
             control.bindings.forEachIndexed { i, binding ->
                 ImGui.setCursorScreenPos(cx, row1Y)
                 val selected = i == selIdx
-                if (selected) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, TangoPalette.u32(TangoPalette.SYNC.normal, 0.55f))
+                if (selected) ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.SYNC.normal, 0.55f))
                 if (!binding.enabled) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled))
-                val clicked = ImGui.button(chipLabels[i] + chipIds[i], chipW, ctrlH)
+                val clicked = ButtonChrome.button(chipLabels[i] + chipIds[i], chipW, ctrlH)
                 if (!binding.enabled) ImGui.popStyleColor()
-                if (selected) ImGui.popStyleColor()
+                if (selected) ImGui.popStyleColor(3)
                 itemTooltip(targetLabel(binding) + "\nClick to edit and jump to it.")
                 if (clicked) {
                     MacroLearnState.selectBinding(control, i)
@@ -133,13 +133,13 @@ internal object PerformanceMacroStrip {
 
         if (!isFx) {
             ImGui.setCursorScreenPos(cx, row1Y)
-            if (ImGui.button("${Icons.MORE_VERTICAL}##menu", closeW, ctrlH)) ImGui.openPopup(MENU_POPUP)
+            if (ButtonChrome.button("${Icons.MORE_VERTICAL}##menu", closeW, ctrlH)) ImGui.openPopup(MENU_POPUP)
             itemTooltip("Rename this knob, or export / import the whole bank.")
             drawMenu(bankId, control)
         }
 
         ImGui.setCursorScreenPos(x + w - closeW, row1Y)
-        if (ImGui.button("${Icons.X}##close", closeW, ctrlH)) close = true
+        if (ButtonChrome.button("${Icons.X}##close", closeW, ctrlH)) close = true
         itemTooltip("Close the target strip and show the row's controls.")
 
         // -- Line 2 --

@@ -170,7 +170,7 @@ object VideoDisplayPreferencesPanel {
             AppPreferencesStore.savePreferences()
         }
         ImGui.sameLine()
-        if (ImGui.button("Reset to Default##RecDir")) {
+        if (ButtonChrome.button("Reset to Default##RecDir")) {
             session.uiTheme.recordingDirectory = ""
             AppPreferencesStore.savePreferences()
         }

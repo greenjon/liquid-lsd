@@ -307,7 +307,7 @@ object FxChainHeader {
     }
 
     private fun drawPageStepper(session: SessionContext, mixer: Mixer, chain: FxChain, bankId: String, st: Strings, totalPages: Int, ctrlH: Float) {
-        if (ImGui.button(st.prevPage, ARROW_W, ctrlH)) {
+        if (ButtonChrome.button(st.prevPage, ARROW_W, ctrlH)) {
             FxMacroSync.stepParamPage(bankId, mixer, -1)
         }
         itemTooltip("Previous parameter page.")
@@ -326,7 +326,7 @@ object FxChainHeader {
         itemTooltip(st.pageTip.get(chain.focusParamPage, totalPages) { "Parameter page ${chain.focusParamPage + 1} of $totalPages." })
 
         ImGui.sameLine()
-        if (ImGui.button(st.nextPage, ARROW_W, ctrlH)) {
+        if (ButtonChrome.button(st.nextPage, ARROW_W, ctrlH)) {
             FxMacroSync.stepParamPage(bankId, mixer, 1)
         }
         itemTooltip("Next parameter page.")
@@ -337,7 +337,7 @@ object FxChainHeader {
         val isQueueEmpty = if (isDeckAB) FXQueueManager.queue.isEmpty() else FXBgQueueManager.queue.isEmpty()
         val emptyTooltip = if (isDeckBG) EMPTY_TIP_BG else EMPTY_TIP
         if (isQueueEmpty) ImGui.beginDisabled(true)
-        if (ImGui.button(st.prevChain, arrowW, ctrlH)) {
+        if (ButtonChrome.button(st.prevChain, arrowW, ctrlH)) {
             if (isDeckAB) {
                 FXQueueManager.advancePrevious(session, mixer, explicitTargetDeck = deck)
             } else if (isDeckBG) {
@@ -354,7 +354,7 @@ object FxChainHeader {
         ImGui.sameLine()
 
         if (isQueueEmpty) ImGui.beginDisabled(true)
-        if (ImGui.button(st.nextChain, arrowW, ctrlH)) {
+        if (ButtonChrome.button(st.nextChain, arrowW, ctrlH)) {
             if (isDeckAB) {
                 FXQueueManager.advanceNext(session, mixer, explicitTargetDeck = deck)
             } else if (isDeckBG) {
@@ -392,12 +392,12 @@ object FxChainHeader {
                 else -> TangoPalette.FX_PILL_TEXT_EMPTY.u32()
             }
 
-            ImGui.pushStyleColor(ImGuiCol.Button, if (isFocused) activeCol else inactiveCol)
+            ButtonChrome.pushColor(if (isFocused) activeCol else inactiveCol)
             ImGui.pushStyleColor(ImGuiCol.Text, textCol)
-            if (ImGui.button(st.pillLabels[i], pillW, ctrlH)) {
+            if (ButtonChrome.button(st.pillLabels[i], pillW, ctrlH)) {
                 FxMacroSync.focusSlot(bankId, mixer, if (isFocused) null else i)
             }
-            ImGui.popStyleColor(2)
+            ImGui.popStyleColor(4)
 
             val slotName = slot?.displayName
             itemTooltip(st.pillTips[i].get(isFocused, slotName) {
@@ -488,7 +488,7 @@ object FxChainHeader {
         if (isDirty) {
             ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.FX_DIRTY_TEXT.u32())
         }
-        if (ImGui.button(fullLabel, nameW, ctrlH)) {
+        if (ButtonChrome.button(fullLabel, nameW, ctrlH)) {
             actions.openChainBrowse()
         }
         if (dockSelected) DockOutline.drawAroundLastItem(bankId)
@@ -518,10 +518,10 @@ object FxChainHeader {
         val canOverwrite = chain.sourceFile != null
         val saveCol = if (isDirty) TangoPalette.u32(TangoPalette.ALERT.dark) else TangoPalette.FX_SAVE_BG.u32()
         val inkCol = if (isDirty) TangoPalette.u32(TangoPalette.inkFor(TangoPalette.ALERT.dark)) else TangoPalette.FX_SAVE_INK.u32()
-        ImGui.pushStyleColor(ImGuiCol.Button, saveCol)
+        ButtonChrome.pushColor(saveCol)
         ImGui.pushStyleColor(ImGuiCol.Text, inkCol)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button(st.save, width, ctrlH)) {
+            if (ButtonChrome.button(st.save, width, ctrlH)) {
                 if (canOverwrite) {
                     val file = chain.sourceFile!!
                     val dto = chain.toFxChainDto(chain.name)
@@ -532,7 +532,7 @@ object FxChainHeader {
                 }
             }
         }
-        ImGui.popStyleColor(2)
+        ImGui.popStyleColor(4)
         val saveName = chain.sourceFile?.name
         itemTooltip(st.saveTip.get(saveName) { if (saveName != null) "Save changes to $saveName." else "Save as new FX chain (.lsdfxchain)." })
     }
@@ -547,7 +547,7 @@ object FxChainHeader {
         st: Strings
     ) {
         val menuId = st.menuId
-        if (ImGui.button(st.moreBtn, MORE_BTN_W, ctrlH)) {
+        if (ButtonChrome.button(st.moreBtn, MORE_BTN_W, ctrlH)) {
             ImGui.openPopup(menuId)
         }
         itemTooltip("Chain operations (Save As, New, Revert, Clear, Copy/Paste, Focus, Resync).")
@@ -633,10 +633,10 @@ object FxChainHeader {
 
         PerformanceColors.pushActiveToggleStyle(isActive)
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            if (ImGui.button("$label##bypass_$id", width, ctrlH)) {
+            if (ButtonChrome.button("$label##bypass_$id", width, ctrlH)) {
                 chain.enabled = !chain.enabled
             }
-        }
+            }
         PerformanceColors.popActiveToggleStyle()
         itemTooltip(if (isActive) "FX chain is active. Click to bypass." else "FX chain is bypassed. Click to enable.")
     }

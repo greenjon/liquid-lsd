@@ -117,7 +117,7 @@ object ShortcutsPreferencesPanel {
 
                 if (hasConflict) {
                     ImGui.sameLine()
-                    if (ImGui.button("Swap##swap_${action.id}")) {
+                    if (ButtonChrome.button("Swap##swap_${action.id}")) {
                         llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.swapBindings(action.id, conflicts.first().id)
                         buf.set(action.currentKey?.toDisplayString() ?: "None")
                     }
@@ -126,7 +126,7 @@ object ShortcutsPreferencesPanel {
 
                 if (action.isModified) {
                     ImGui.sameLine()
-                    if (ImGui.button("${Icons.REFRESH}##reset_${action.id}")) {
+                    if (ButtonChrome.button("${Icons.REFRESH}##reset_${action.id}")) {
                         llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.resetToDefault(action.id)
                         buf.set(action.defaultKey?.toDisplayString() ?: "None")
                     }
@@ -150,14 +150,14 @@ object ShortcutsPreferencesPanel {
         ImGui.inputTextWithHint("##shortcut_filter", "${Icons.SEARCH} Filter shortcuts by name or key...", shortcutsFilterBuf)
         if (shortcutsFilterBuf.get().isNotEmpty()) {
             ImGui.sameLine()
-            if (ImGui.button("${Icons.X}##clear_filter")) {
+            if (ButtonChrome.button("${Icons.X}##clear_filter")) {
                 shortcutsFilterBuf.set("")
             }
             itemTooltip("Clear search filter")
         }
 
         ImGui.sameLine()
-        if (ImGui.button("${Icons.REFRESH} Reset All Defaults")) {
+        if (ButtonChrome.button("${Icons.REFRESH} Reset All Defaults")) {
             llm.slop.liquidlsd.ui.shortcuts.ShortcutManager.resetAllToDefaults()
             actionInputBuffers.clear()
         }

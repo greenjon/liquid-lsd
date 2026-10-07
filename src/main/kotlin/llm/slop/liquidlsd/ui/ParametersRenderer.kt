@@ -997,7 +997,7 @@ object ParametersRenderer {
     fun drawDiceButton(session: llm.slop.liquidlsd.SessionContext, id: String, x: Float, y: Float, scale: Float, btnWidth: Float, btnHeight: Float): Boolean {
         if (!session.uiTheme.randomizationEnabled) return false
         ImGui.setCursorScreenPos(x, y)
-        return ImGui.button("${Icons.DICES}##$id", btnWidth, btnHeight)
+        return ButtonChrome.button("${Icons.DICES}##$id", btnWidth, btnHeight)
     }
 }
 

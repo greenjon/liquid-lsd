@@ -82,12 +82,12 @@ class PopupManager(
             ImGui.separator()
             ImGui.spacing()
 
-            if (ImGui.button("Exit", 120f, 0f)) {
+            if (ButtonChrome.button("Exit", 120f, 0f)) {
                 onTriggerExit()
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
-            if (ImGui.button("Cancel", 120f, 0f)) {
+            if (ButtonChrome.button("Cancel", 120f, 0f)) {
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()
@@ -118,7 +118,7 @@ class PopupManager(
             ImGui.separator()
             ImGui.spacing()
             
-            if (ImGui.button("OK", ImGui.getContentRegionAvailX(), 0f)) {
+            if (ButtonChrome.button("OK", ImGui.getContentRegionAvailX(), 0f)) {
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()
@@ -139,11 +139,11 @@ class PopupManager(
 
             // Mouse buttons and the controller (answerDeckConfirm) feed the same choice; it is applied here so closeCurrentPopup targets this modal.
             var choice = midiChoice
-            if (ImGui.button("Save", 80f, 0f)) choice = DeckConfirmChoice.SAVE
+            if (ButtonChrome.button("Save", 80f, 0f)) choice = DeckConfirmChoice.SAVE
             ImGui.sameLine()
-            if (ImGui.button("Discard", 80f, 0f)) choice = DeckConfirmChoice.DISCARD
+            if (ButtonChrome.button("Discard", 80f, 0f)) choice = DeckConfirmChoice.DISCARD
             ImGui.sameLine()
-            if (ImGui.button("Cancel", 80f, 0f)) choice = DeckConfirmChoice.CANCEL
+            if (ButtonChrome.button("Cancel", 80f, 0f)) choice = DeckConfirmChoice.CANCEL
             ImGui.textDisabled("Controller: side 2 or knob tap = Save, side 3 or shift+tap = Discard, back = Cancel")
             when (choice) {
                 DeckConfirmChoice.SAVE -> {
@@ -195,13 +195,13 @@ class PopupManager(
             ImGui.separator()
             ImGui.spacing()
 
-            if (ImGui.button("Restore Defaults", 130f, 0f)) {
+            if (ButtonChrome.button("Restore Defaults", 130f, 0f)) {
                 val res = FileSystemManager.restoreFactoryPresets()
                 lastRestoreMessage = "Restored ${res.presetsExtracted} preset(s) and ${res.playlistsExtracted} playlist(s)."
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
-            if (ImGui.button("Cancel", 80f, 0f)) {
+            if (ButtonChrome.button("Cancel", 80f, 0f)) {
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()

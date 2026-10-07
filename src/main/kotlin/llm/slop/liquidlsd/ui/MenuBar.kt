@@ -168,7 +168,7 @@ class MenuBar(
                         val recCol = TangoPalette.DANGER
                         ImGui.pushStyleColor(ImGuiCol.Button, recCol.normal[0], recCol.normal[1], recCol.normal[2], 1.0f)
                         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, recCol.light[0], recCol.light[1], recCol.light[2], 1.0f)
-                        if (ImGui.button("REC %02d:%02d (%.1fMB)".format(mins, secs, sizeMb))) {
+                        if (ButtonChrome.button("REC %02d:%02d (%.1fMB)".format(mins, secs, sizeMb))) {
                             llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
                         }
                         ImGui.popStyleColor(2)
@@ -195,7 +195,7 @@ class MenuBar(
                             ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 1.0f)
                             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
                             ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
-                            if (ImGui.button("${Icons.ACTIVITY} LIVE")) {
+                            if (ButtonChrome.button("${Icons.ACTIVITY} LIVE")) {
                                 llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
                             }
                             ImGui.popStyleColor(3)
@@ -207,7 +207,7 @@ class MenuBar(
                             ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 1.0f)
                             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
                             ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
-                            if (ImGui.button("${Icons.REFRESH} CONNECTING")) {
+                            if (ButtonChrome.button("${Icons.REFRESH} CONNECTING")) {
                                 llm.slop.liquidlsd.broadcast.BroadcastEngine.stopBroadcast()
                             }
                             ImGui.popStyleColor(3)
@@ -217,7 +217,7 @@ class MenuBar(
                             val c = TangoPalette.DANGER
                             ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 1.0f)
                             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
-                            if (ImGui.button("${Icons.ALERT} LIVE ERR")) {
+                            if (ButtonChrome.button("${Icons.ALERT} LIVE ERR")) {
                                 llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
                             }
                             ImGui.popStyleColor(2)
@@ -236,7 +236,7 @@ class MenuBar(
                         ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.SYNC.normal[0], TangoPalette.SYNC.normal[1], TangoPalette.SYNC.normal[2], 0.9f)
                         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.SYNC.bright[0], TangoPalette.SYNC.bright[1], TangoPalette.SYNC.bright[2], 1.0f)
                         ImGui.pushStyleColor(ImGuiCol.Text, scanInk[0], scanInk[1], scanInk[2], 1.0f)
-                        ImGui.button("${Icons.REFRESH} SCANNING ($progress%)")
+                        ButtonChrome.button("${Icons.REFRESH} SCANNING ($progress%)")
                         ImGui.popStyleColor(3)
                         itemTooltip("Scanning ISF Shaders ($progress% complete)\n${if (currentPath.isNotEmpty()) currentPath else "Indexing library..."}")
                     }
@@ -263,7 +263,7 @@ class MenuBar(
                             ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
                         }
 
-                        if (ImGui.button(label)) {
+                        if (ButtonChrome.button(label)) {
                             PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
                         }
                         ImGui.popStyleColor(3)
@@ -344,7 +344,7 @@ class MenuBar(
                 ImGui.pushStyleColor(ImGuiCol.Text, inactiveText)
             }
             session.uiTheme.withFont(UITheme.FontLevel.H3) {
-                if (ImGui.button("${page.name}##perf_tab_${page.id}", tabW, tabH)) {
+                if (ButtonChrome.button("${page.name}##perf_tab_${page.id}", tabW, tabH)) {
                     theme.performancePageId = page.id
                     AppPreferencesStore.savePreferences()
                 }
@@ -363,7 +363,7 @@ class MenuBar(
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.38f, 0.25f, 0.48f, 1f))
             ImGui.pushStyleColor(ImGuiCol.Text,          ImGui.colorConvertFloat4ToU32(0.95f, 0.85f, 1.0f, 1f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.DICES} ALL##perf_rand_all", 76f, tabH)) {
+                if (ButtonChrome.button("${Icons.DICES} ALL##perf_rand_all", 76f, tabH)) {
                     ParametersUndo.pushUndoState(parametersState, mixer)
                     mixer.randomizeAll()
                 }
@@ -525,7 +525,7 @@ class MenuBar(
                 ImGui.setCursorPosX(btnsStartX)
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                     // Minimize
-                    if (ImGui.button("${Icons.MINUS}##win_min", btnW, btnH)) {
+                    if (ButtonChrome.button("${Icons.MINUS}##win_min", btnW, btnH)) {
                         windowFrameController.minimize()
                     }
                     itemTooltip("Minimize")
@@ -535,7 +535,7 @@ class MenuBar(
                     // Maximize / Restore
                     val isMax = windowFrameController.isMaximized()
                     val maxIcon = if (isMax) Icons.COPY else Icons.SQUARE
-                    if (ImGui.button("$maxIcon##win_max", btnW, btnH)) {
+                    if (ButtonChrome.button("$maxIcon##win_max", btnW, btnH)) {
                         windowFrameController.toggleMaximize()
                     }
                     itemTooltip(if (isMax) "Restore" else "Maximize")
@@ -545,7 +545,7 @@ class MenuBar(
                     // Close
                     ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.85f, 0.15f, 0.15f, 1.0f)
                     ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.70f, 0.10f, 0.10f, 1.0f)
-                    if (ImGui.button("${Icons.X}##win_close", btnW, btnH)) {
+                    if (ButtonChrome.button("${Icons.X}##win_close", btnW, btnH)) {
                         onTriggerExitFlow()
                     }
                     ImGui.popStyleColor(2)

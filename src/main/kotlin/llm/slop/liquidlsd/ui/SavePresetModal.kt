@@ -123,7 +123,7 @@ object SavePresetModal {
         val btnLabel = if (showOverwriteWarning) "Overwrite" else confirmButtonLabel
         val btnW = 100f
 
-        if (ImGui.button("$btnLabel##confirmSavePreset", btnW, 0f)) {
+        if (ButtonChrome.button("$btnLabel##confirmSavePreset", btnW, 0f)) {
             if (currentName.isNotEmpty()) {
                 val dir = targetDirectory ?: FileSystemManager.getPresetsRoot()
                 val targetFile = File(dir, "$currentName.$fileExtension")
@@ -150,7 +150,7 @@ object SavePresetModal {
             }
         }
         ImGui.sameLine()
-        if (ImGui.button("Cancel##cancelSavePreset", btnW, 0f)) {
+        if (ButtonChrome.button("Cancel##cancelSavePreset", btnW, 0f)) {
             ImGui.closeCurrentPopup()
         }
 

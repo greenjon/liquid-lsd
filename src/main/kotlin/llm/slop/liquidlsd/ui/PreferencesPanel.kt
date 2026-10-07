@@ -120,7 +120,7 @@ object PreferencesPanel {
 
         val windowContentMaxX = ImGui.getWindowContentRegionMaxX()
         ImGui.sameLine(windowContentMaxX - closeBtnW)
-        if (ImGui.button(closeBtnText, closeBtnW, 0f)) {
+        if (ButtonChrome.button(closeBtnText, closeBtnW, 0f)) {
             close()
         }
         itemTooltip("Close Preferences and return to workspace (Esc)")
@@ -164,7 +164,7 @@ object PreferencesPanel {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text,          inactiveText)
                 }
 
-                if (ImGui.button(cat.label, sidebarW - 16f, btnH)) {
+                if (ButtonChrome.button(cat.label, sidebarW - 16f, btnH)) {
                     activeCategory = cat
                 }
                 ImGui.popStyleColor(4)
@@ -284,7 +284,7 @@ object PreferencesPanel {
                 val permCol = if (isLight) TangoPalette.ALERT.dark else floatArrayOf(1.0f, 0.6f, 0.1f)
                 ImGui.textColored(permCol[0], permCol[1], permCol[2], 1f, "${Icons.ALERT} Touchpad Status: Read/Write Permission Required")
                 ImGui.sameLine()
-                if (ImGui.button("Install Permissions (Polkit)")) {
+                if (ButtonChrome.button("Install Permissions (Polkit)")) {
                     controller.requestPermissionElevation()
                 }
                 itemTooltip("Runs pkexec to add a uaccess udev rule for your seat user without rebooting.")
@@ -321,7 +321,7 @@ object PreferencesPanel {
         ImGui.sameLine(0f, 15f)
         val checking = llm.slop.liquidlsd.update.UpdateChecker.isChecking
         val checkBtnLabel = if (checking) "${Icons.REFRESH} Checking..." else "${Icons.REFRESH} Check for Updates Now##preferences_check_now"
-        if (ImGui.button(checkBtnLabel, 180f, 0f)) {
+        if (ButtonChrome.button(checkBtnLabel, 180f, 0f)) {
             if (!checking) {
                 llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = true)
             }
@@ -336,7 +336,7 @@ object PreferencesPanel {
                 val updateAvailCol = if (isLight) TangoPalette.ACTIVE.dark else floatArrayOf(0.3f, 0.9f, 0.4f)
                 ImGui.textColored(updateAvailCol[0], updateAvailCol[1], updateAvailCol[2], 1.0f, "${Icons.DOWNLOAD} Update available: ${lastResult.latestRelease.tagName}")
                 ImGui.sameLine()
-                if (ImGui.button("View Update##preferences_update", 120f, 0f)) {
+                if (ButtonChrome.button("View Update##preferences_update", 120f, 0f)) {
                     UpdatePromptModal.request(lastResult.latestRelease, lastResult.currentVersion)
                 }
             }

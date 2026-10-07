@@ -133,13 +133,13 @@ class UiLabPanel {
                     for (div in divisions) {
                         val active = (sampleBeatVal == div)
                         if (active) {
-                            ImGui.pushStyleColor(ImGuiCol.Button, 0.2f, 0.6f, 0.9f, 1.0f)
+                            ButtonChrome.pushColor(0.2f, 0.6f, 0.9f, 1.0f)
                         }
-                        if (ImGui.button("1/$div", 50f, 24f)) {
+                        if (ButtonChrome.button("1/$div", 50f, 24f)) {
                             sampleBeatVal = div
                         }
                         if (active) {
-                            ImGui.popStyleColor()
+                            ImGui.popStyleColor(3)
                         }
                         ImGui.sameLine()
                     }
@@ -157,11 +157,11 @@ class UiLabPanel {
 
                     ImGui.spacing()
                     ImGui.text("Status Badges:")
-                    ImGui.button("${Icons.ZAP} AUDIO ONLINE", 130f, 24f)
+                    ButtonChrome.button("${Icons.ZAP} AUDIO ONLINE", 130f, 24f)
                     ImGui.sameLine()
-                    ImGui.button("${Icons.ACTIVITY} LINK SYNCED", 130f, 24f)
+                    ButtonChrome.button("${Icons.ACTIVITY} LINK SYNCED", 130f, 24f)
                     ImGui.sameLine()
-                    ImGui.button("${Icons.DISC} RECORDING", 120f, 24f)
+                    ButtonChrome.button("${Icons.DISC} RECORDING", 120f, 24f)
                 }
 
             }

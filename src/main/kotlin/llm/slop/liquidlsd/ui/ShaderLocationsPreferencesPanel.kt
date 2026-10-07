@@ -24,7 +24,7 @@ object ShaderLocationsPreferencesPanel {
         ImGui.setNextItemWidth(360f)
         ImGui.inputTextWithHint("##custom_folder_path", "Enter absolute path to folder...", customFolderPathBuf!!)
         ImGui.sameLine()
-        if (ImGui.button("Add Folder##add_isf_dir")) {
+        if (ButtonChrome.button("Add Folder##add_isf_dir")) {
             val pathStr = customFolderPathBuf!!.get().trim()
             if (pathStr.isNotBlank()) {
                 val added = llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.addCustomDirectory(pathStr)
@@ -42,7 +42,7 @@ object ShaderLocationsPreferencesPanel {
         itemTooltip("Add an arbitrary local directory containing ISF shaders.")
 
         ImGui.sameLine()
-        if (ImGui.button("Rescan Now##rescan_isf")) {
+        if (ButtonChrome.button("Rescan Now##rescan_isf")) {
             // Async scan so the render thread is never stalled by disk I/O.
             llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
                 llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
@@ -114,7 +114,7 @@ object ShaderLocationsPreferencesPanel {
                 if (resolved.config.type == llm.slop.liquidlsd.rendering.isf.DirectorySourceType.BUILT_IN) {
                     ImGui.textColored(0.5f, 0.5f, 0.5f, 1.0f, "Protected")
                 } else {
-                    if (ImGui.button("Remove##${resolved.config.path}")) {
+                    if (ButtonChrome.button("Remove##${resolved.config.path}")) {
                         llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.removeDirectory(resolved.config.path)
                         llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
                             llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()

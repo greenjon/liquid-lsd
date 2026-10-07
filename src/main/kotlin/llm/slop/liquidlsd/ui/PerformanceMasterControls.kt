@@ -146,7 +146,7 @@ internal object PerformanceMasterControls {
         ImGui.pushStyleColor(ImGuiCol.Button, resetBtnBg)
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, resetBtnHov)
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            if (ImGui.button("100%##perf_mix_reset_btn", resetBtnW, headerH)) {
+            if (ButtonChrome.button("100%##perf_mix_reset_btn", resetBtnW, headerH)) {
                 mixer.levelA.baseValue = 1.0f
                 mixer.levelB.baseValue = 1.0f
                 mixer.levelBG.baseValue = 1.0f

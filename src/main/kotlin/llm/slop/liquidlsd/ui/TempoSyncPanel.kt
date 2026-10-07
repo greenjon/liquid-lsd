@@ -137,7 +137,7 @@ object TempoSyncPanel {
             ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
         }
 
-        if (ImGui.button("$tapLabel##tempo_tap_btn", 110f, 32f)) {
+        if (ButtonChrome.button("$tapLabel##tempo_tap_btn", 110f, 32f)) {
             tapController.tap()
         }
         ImGui.popStyleColor(4)
@@ -146,7 +146,7 @@ object TempoSyncPanel {
         ImGui.sameLine(0f, 10f)
 
         // RESYNC Button (Resolume-style instant downbeat snap)
-        if (ImGui.button("RESYNC##tempo_resync_btn", 85f, 32f)) {
+        if (ButtonChrome.button("RESYNC##tempo_resync_btn", 85f, 32f)) {
             audioEngine.resyncDownbeat()
         }
         itemTooltip("Instantly aligns beat phase to 1.0 downbeat and zeros phase slew.")
@@ -154,7 +154,7 @@ object TempoSyncPanel {
         ImGui.sameLine(0f, 10f)
 
         // Half tempo (/2)
-        if (ImGui.button("/2##tempo_half_btn", 46f, 32f)) {
+        if (ButtonChrome.button("/2##tempo_half_btn", 46f, 32f)) {
             audioEngine.halveTempo()
             AppPreferencesStore.savePreferences()
         }
@@ -163,7 +163,7 @@ object TempoSyncPanel {
         ImGui.sameLine(0f, 6f)
 
         // Double tempo (*2)
-        if (ImGui.button("*2##tempo_double_btn", 46f, 32f)) {
+        if (ButtonChrome.button("*2##tempo_double_btn", 46f, 32f)) {
             audioEngine.doubleTempo()
             AppPreferencesStore.savePreferences()
         }
@@ -172,7 +172,7 @@ object TempoSyncPanel {
         ImGui.sameLine(0f, 10f)
 
         // Fine Pitch Nudge: [-0.5] and [+0.5]
-        if (ImGui.button("-0.5##tempo_nudge_down", 50f, 32f)) {
+        if (ButtonChrome.button("-0.5##tempo_nudge_down", 50f, 32f)) {
             audioEngine.nudgeTempo(-0.5f)
             AppPreferencesStore.savePreferences()
         }
@@ -180,7 +180,7 @@ object TempoSyncPanel {
 
         ImGui.sameLine(0f, 6f)
 
-        if (ImGui.button("+0.5##tempo_nudge_up", 50f, 32f)) {
+        if (ButtonChrome.button("+0.5##tempo_nudge_up", 50f, 32f)) {
             audioEngine.nudgeTempo(0.5f)
             AppPreferencesStore.savePreferences()
         }
@@ -223,7 +223,7 @@ object TempoSyncPanel {
         val presets = floatArrayOf(120.0f, 128.0f, 140.0f, 174.0f)
         for (p in presets) {
             ImGui.sameLine()
-            if (ImGui.button("${p.toInt()} BPM##preset_$p", 70f, 22f)) {
+            if (ButtonChrome.button("${p.toInt()} BPM##preset_$p", 70f, 22f)) {
                 audioEngine.setBpmDirectly(p)
                 AppPreferencesStore.savePreferences()
             }
@@ -321,21 +321,21 @@ object TempoSyncPanel {
             // Detection Presets
             theme.body("Presets:")
             ImGui.sameLine()
-            if (ImGui.button("High Accuracy##acc_btn")) {
+            if (ButtonChrome.button("High Accuracy##acc_btn")) {
                 audioEngine.beatDetector.applyPreset(BeatDetectionSettings.highAccuracy())
                 AppPreferencesStore.savePreferences()
             }
             itemTooltip("Tuned for precise tempo detection.")
 
             ImGui.sameLine()
-            if (ImGui.button("Balanced##bal_btn")) {
+            if (ButtonChrome.button("Balanced##bal_btn")) {
                 audioEngine.beatDetector.applyPreset(BeatDetectionSettings.balanced())
                 AppPreferencesStore.savePreferences()
             }
             itemTooltip("Balanced between tracking reactivity and stability.")
 
             ImGui.sameLine()
-            if (ImGui.button("Eco##eco_btn")) {
+            if (ButtonChrome.button("Eco##eco_btn")) {
                 audioEngine.beatDetector.applyPreset(BeatDetectionSettings.eco())
                 AppPreferencesStore.savePreferences()
             }

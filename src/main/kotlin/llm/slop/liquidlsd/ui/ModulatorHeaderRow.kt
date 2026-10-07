@@ -69,7 +69,7 @@ object ModulatorHeaderRow {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.8f, 0.2f, 0.2f, 1f)) // Red on hover
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.TRASH}##reset_bar_$idx", resetWidth, btnHeight)) {
+                if (ButtonChrome.button("${Icons.TRASH}##reset_bar_$idx", resetWidth, btnHeight)) {
                     onReset()
                     ImGui.popStyleColor(2)
                     if (isVirtual) {
@@ -105,7 +105,7 @@ object ModulatorHeaderRow {
 
         val powerIcon = if (bypassed) Icons.POWER_OFF else Icons.POWER
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("$powerIcon##bypass_bar_$idx", btnWidth, btnHeight)) {
+            if (ButtonChrome.button("$powerIcon##bypass_bar_$idx", btnWidth, btnHeight)) {
                 onReplace(existing.copy(bypassed = !bypassed))
             }
         }
@@ -118,13 +118,13 @@ object ModulatorHeaderRow {
             if (isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                    ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)
+                    ButtonChrome.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)
                 }
                 ImGui.popStyleColor()
                 itemTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                    if (ImGui.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
+                    if (ButtonChrome.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)) {
                         val randomized = existing
                             .randomizeDepth()
                             .randomizeDcOffset()

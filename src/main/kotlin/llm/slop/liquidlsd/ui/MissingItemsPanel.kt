@@ -27,7 +27,7 @@ class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBro
                 ImGui.textUnformatted(path)
                 if (!isDescriptor) {
                     ImGui.sameLine()
-                    if (ImGui.button("Locate...##$path")) {
+                    if (ButtonChrome.button("Locate...##$path")) {
                         browserOpenForItem = path
                         fileBrowser.open(ImGuiFileBrowser.Mode.LOAD, startDir = File("library"))
                     }
@@ -36,7 +36,7 @@ class MissingItemsPanel(private val fileBrowser: ImGuiFileBrowser = ImGuiFileBro
 
             ImGui.spacing()
             ImGui.separator()
-            if (ImGui.button("Dismiss All", 120f, 0f)) {
+            if (ButtonChrome.button("Dismiss All", 120f, 0f)) {
                 session.presetManager.sessionState = session.presetManager.sessionState.copy(unresolvedItems = emptyList())
                 ImGui.closeCurrentPopup()
             }

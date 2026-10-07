@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiFocusedFlags
@@ -41,13 +42,13 @@ object FXQueueActionsPanel {
         }
 
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("<##fxQueuePrev", navBtnW, 0f)) {
+            if (ButtonChrome.button("<##fxQueuePrev", navBtnW, 0f)) {
                 FXQueueManager.advancePrevious(session, mixer)
             }
             itemTooltip("Trigger previous item in A/B FX Queue.")
 
             ImGui.sameLine()
-            if (ImGui.button(">##fxQueueNext", navBtnW, 0f)) {
+            if (ButtonChrome.button(">##fxQueueNext", navBtnW, 0f)) {
                 FXQueueManager.advanceNext(session, mixer)
             }
             itemTooltip("Trigger next item in A/B FX Queue.")
@@ -59,13 +60,13 @@ object FXQueueActionsPanel {
             val repeatActive = FXQueueManager.isRepeatEnabled
             if (repeatActive) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
-                ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+                ButtonChrome.pushColor(0.1f, 0.4f, 0.3f, 1.0f)
             }
-            if (ImGui.button("${Icons.REPEAT}##fxRepeatQueue")) {
+            if (ButtonChrome.button("${Icons.REPEAT}##fxRepeatQueue")) {
                 FXQueueManager.isRepeatEnabled = !FXQueueManager.isRepeatEnabled
             }
             if (repeatActive) {
-                ImGui.popStyleColor(2)
+                ImGui.popStyleColor(4)
             }
             itemTooltip("Repeat Queue: cycle back to start when bottom is reached.")
 
@@ -73,28 +74,28 @@ object FXQueueActionsPanel {
             val shuffleActive = FXQueueManager.isShuffleEnabled
             if (shuffleActive) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
-                ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+                ButtonChrome.pushColor(0.1f, 0.4f, 0.3f, 1.0f)
             }
-            if (ImGui.button("${Icons.SHUFFLE}##fxShuffleQueue")) {
+            if (ButtonChrome.button("${Icons.SHUFFLE}##fxShuffleQueue")) {
                 FXQueueManager.isShuffleEnabled = !FXQueueManager.isShuffleEnabled
                 if (FXQueueManager.isShuffleEnabled) {
                     FXQueueManager.initializeShuffle()
                 }
             }
             if (shuffleActive) {
-                ImGui.popStyleColor(2)
+                ImGui.popStyleColor(4)
             }
             itemTooltip("Shuffle Queue: play FX presets/chains in random order.")
 
             ImGui.sameLine()
-            if (ImGui.button("Export##fxQueue")) {
+            if (ButtonChrome.button("Export##fxQueue")) {
                 BrowserPopupHandler.pendingOpenExportFxQueuePopup = true
             }
             itemTooltip("Export live FX queue as a new FX playlist.")
 
             ImGui.sameLine()
             val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
-            if (ImGui.button("Clear##fxQueue", clearBtnW, 0f)) {
+            if (ButtonChrome.button("Clear##fxQueue", clearBtnW, 0f)) {
                 FXQueueManager.clearQueue()
                 selectedIndex = -1
             }

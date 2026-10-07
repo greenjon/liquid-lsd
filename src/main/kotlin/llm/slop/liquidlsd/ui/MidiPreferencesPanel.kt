@@ -72,14 +72,14 @@ object MidiPreferencesPanel {
             val fits = ProfileBindingEdit.commandFits(compiled, registry, key, commandId)
             val known = registry.resolveId(commandId) != null
             if (!fits || !known) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.9f, 0.6f, 0.2f, 1f)
-            if (ImGui.button("$commandId##cmd")) { pickerKey = key; pickerFilter.set(""); ImGui.openPopup("command_picker") }
+            if (ButtonChrome.button("$commandId##cmd")) { pickerKey = key; pickerFilter.set(""); ImGui.openPopup("command_picker") }
             if (!fits || !known) {
                 ImGui.popStyleColor()
                 itemTooltip(if (!known) "Not a registered command." else "This command's kind does not fit this input, so it will do nothing.")
             }
             drawCommandPicker(key, registry, compiled, key) { chosen -> applyEdit(store, ProfileBindingEdit.set(profile, key, chosen)) }
             ImGui.sameLine()
-            if (ImGui.button("${Icons.TRASH}##del")) applyEdit(store, ProfileBindingEdit.remove(profile, key))
+            if (ButtonChrome.button("${Icons.TRASH}##del")) applyEdit(store, ProfileBindingEdit.remove(profile, key))
             ImGui.popID()
         }
 
@@ -97,14 +97,14 @@ object MidiPreferencesPanel {
             ImGui.combo("##add_input", addInput, inputs.toTypedArray())
             ImGui.sameLine()
             val addKey = ProfileBindingEdit.key(modifiers.getOrNull(addModifier.get())?.takeIf { addModifier.get() > 0 }?.let { listOf(it) } ?: emptyList(), inputs[addInput.get()])
-            if (ImGui.button((addCommand.ifEmpty { "Choose command..." }) + "##add_cmd")) {
+            if (ButtonChrome.button((addCommand.ifEmpty { "Choose command..." }) + "##add_cmd")) {
                 pickerKey = ADD_ROW; pickerFilter.set(""); ImGui.openPopup("command_picker")
             }
             drawCommandPicker(ADD_ROW, registry, compiled, addKey) { chosen -> addCommand = chosen; false }
             ImGui.sameLine()
             val exists = addKey in profile.bindings
             if (addCommand.isEmpty() || exists) ImGui.beginDisabled()
-            if (ImGui.button("${Icons.PLUS} Add##add_binding")) {
+            if (ButtonChrome.button("${Icons.PLUS} Add##add_binding")) {
                 if (applyEdit(store, ProfileBindingEdit.set(profile, addKey, addCommand))) addCommand = ""
             }
             if (addCommand.isEmpty() || exists) ImGui.endDisabled()
@@ -112,11 +112,11 @@ object MidiPreferencesPanel {
             ImGui.sameLine()
             val learning = (parametersState?.midiLearnTarget as? MidiLearnTarget.ProfileCommand)?.profileId == profile.id
             if (learning) {
-                if (ImGui.button("Cancel##learn_cancel")) parametersState?.midiLearnTarget = null
+                if (ButtonChrome.button("Cancel##learn_cancel")) parametersState?.midiLearnTarget = null
                 theme.captionColored(0.9f, 0.8f, 0.2f, 1f, "Move or press a control on the device...")
             } else {
                 if (addCommand.isEmpty() || parametersState == null) ImGui.beginDisabled()
-                if (ImGui.button("Learn##learn_binding")) {
+                if (ButtonChrome.button("Learn##learn_binding")) {
                     val mod = modifiers.getOrNull(addModifier.get())?.takeIf { addModifier.get() > 0 }
                     session.midiMappingManager.profileLearnMessage = null
                     parametersState?.startMidiLearn(MidiLearnTarget.ProfileCommand(profile.id, addCommand, listOfNotNull(mod)))
@@ -191,13 +191,13 @@ object MidiPreferencesPanel {
                 theme.captionColored(0.9f, 0.6f, 0.2f, 1.0f, "Maps unknown commands: ${unknown.joinToString(", ")}")
             }
             if (source == ControllerProfileStore.Source.BUILT_IN) {
-                if (ImGui.button("${Icons.COPY} Copy to User File##copy_${profile.id}")) {
+                if (ButtonChrome.button("${Icons.COPY} Copy to User File##copy_${profile.id}")) {
                     profileMessage = store.copyBuiltInToUser(profile.id)?: "Copied to library/controllers/${profile.id}.json"
                     changed()
                 }
                 itemTooltip("Writes an editable copy to library/controllers/. It replaces the built-in profile until you delete it.")
             } else {
-                if (ImGui.button("${Icons.TRASH} Delete User File##delete_${profile.id}")) {
+                if (ButtonChrome.button("${Icons.TRASH} Delete User File##delete_${profile.id}")) {
                     profileMessage = if (store.deleteUser(profile.id)) "Deleted user profile ${profile.id}" else "Could not delete ${profile.id}"
                     changed()
                 }
@@ -219,7 +219,7 @@ object MidiPreferencesPanel {
             for (problem in warning.problems) theme.captionColored(0.95f, 0.75f, 0.2f, 1.0f, "  - $problem")
         }
 
-        if (ImGui.button("${Icons.REFRESH} Reload Profiles##reload_controller_profiles")) {
+        if (ButtonChrome.button("${Icons.REFRESH} Reload Profiles##reload_controller_profiles")) {
             changed()
             profileMessage = "Reloaded controller profiles"
         }
@@ -255,7 +255,7 @@ object MidiPreferencesPanel {
             }
         }
         ImGui.sameLine(0f, 20f)
-        if (ImGui.button("${Icons.REFRESH} Rescan Controllers##midi_rescan")) {
+        if (ButtonChrome.button("${Icons.REFRESH} Rescan Controllers##midi_rescan")) {
             MidiEngine.scanForNewDevices()
         }
 
@@ -302,13 +302,13 @@ object MidiPreferencesPanel {
             AppPreferencesStore.savePreferences()
         }
         ImGui.sameLine()
-        if (ImGui.button("${Icons.SAVE} Save##midi_save_profile")) {
+        if (ButtonChrome.button("${Icons.SAVE} Save##midi_save_profile")) {
             session.midiMappingManager.saveActiveProfile()
         }
         ImGui.sameLine()
         val canDelete = session.midiMappingManager.activeProfileName != "default"
         if (!canDelete) ImGui.beginDisabled()
-        if (ImGui.button("${Icons.TRASH} Delete##midi_delete_profile")) {
+        if (ButtonChrome.button("${Icons.TRASH} Delete##midi_delete_profile")) {
             session.midiMappingManager.deleteProfile(session.midiMappingManager.activeProfileName)
             session.uiTheme.activeMidiProfile = "default"
             AppPreferencesStore.savePreferences()
@@ -319,7 +319,7 @@ object MidiPreferencesPanel {
         ImGui.setNextItemWidth(140f)
         ImGui.inputTextWithHint("##new_profile_name", "New Profile Name", newProfileInput)
         ImGui.sameLine()
-        if (ImGui.button("${Icons.PLUS} Create Profile##midi_create_profile")) {
+        if (ButtonChrome.button("${Icons.PLUS} Create Profile##midi_create_profile")) {
             val name = newProfileInput.get().trim()
             if (name.isNotEmpty()) {
                 val safeName = runCatching { sanitiseProfileName(name) }.getOrNull() ?: name.replace(Regex("[^a-zA-Z0-9_\\-]"), "_")
@@ -421,14 +421,14 @@ object MidiPreferencesPanel {
 
                     if (isLearning) {
                         val ink = TangoPalette.inkFor(TangoPalette.PLUM.light)
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, TangoPalette.u32(TangoPalette.PLUM.light, 0.6f))
+                        ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.PLUM.light, 0.6f))
                         ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
-                        if (ImGui.button("Cancel##cancel_$actionKey")) {
+                        if (ButtonChrome.button("Cancel##cancel_$actionKey")) {
                             parametersState.midiLearnTarget = null
                         }
-                        ImGui.popStyleColor(2)
+                        ImGui.popStyleColor(4)
                     } else {
-                        if (ImGui.button("Learn##learn_$actionKey")) {
+                        if (ButtonChrome.button("Learn##learn_$actionKey")) {
                             parametersState?.let { ps ->
                                 ps.midiLearnTarget = MidiLearnTarget.GlobalAction(actionKey)
                                 ps.midiLearnStartTimeMs = System.currentTimeMillis()
@@ -436,7 +436,7 @@ object MidiPreferencesPanel {
                         }
                     }
                     ImGui.sameLine()
-                    if (ImGui.button("Clear##clear_$actionKey")) {
+                    if (ButtonChrome.button("Clear##clear_$actionKey")) {
                         session.midiMappingManager.removeMapping(actionKey)
                         session.midiMappingManager.saveActiveProfile()
                     }
@@ -457,7 +457,7 @@ object MidiPreferencesPanel {
         ImGui.setNextItemWidth(200f)
         ImGui.inputTextWithHint("##filter_mappings", "Filter by path...", filterMappingInput)
         ImGui.sameLine()
-        if (ImGui.button("${Icons.TRASH} Clear All##midi_clear_all")) {
+        if (ButtonChrome.button("${Icons.TRASH} Clear All##midi_clear_all")) {
             session.midiMappingManager.clearAllMappings()
             session.midiMappingManager.saveActiveProfile()
         }
@@ -586,7 +586,7 @@ object MidiPreferencesPanel {
 
                     // Col 7: Actions (Delete)
                     ImGui.tableNextColumn()
-                    if (ImGui.button("${Icons.TRASH}##del_$paramPath")) {
+                    if (ButtonChrome.button("${Icons.TRASH}##del_$paramPath")) {
                         session.midiMappingManager.removeMapping(paramPath)
                         session.midiMappingManager.saveActiveProfile()
                     }

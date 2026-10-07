@@ -205,7 +205,7 @@ object FxSlotCell {
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 1f, 1f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             val icon = if (fx != null && !fx.enabled) Icons.POWER_OFF else Icons.POWER
-            if (ImGui.button("$icon##fxbypass_${bankId}_$slotIndex", size, size) && fx != null) {
+            if (ButtonChrome.button("$icon##fxbypass_${bankId}_$slotIndex", size, size) && fx != null) {
                 FxOps.setSlotEnabled(chain, slotIndex, !fx.enabled)
             }
         }
@@ -240,7 +240,7 @@ object FxSlotCell {
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 1f, 1f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             val icon = if (isLinked) Icons.LINK else Icons.UNLINK
-            if (ImGui.button("$icon##fxlink_${bankId}_$slotIndex", size, size)) {
+            if (ButtonChrome.button("$icon##fxlink_${bankId}_$slotIndex", size, size)) {
                 chain.setSlotLinked(slotIndex, !isLinked)
                 FxMacroSync.syncFor(bankId, mixer)
             }
@@ -277,7 +277,7 @@ object FxSlotCell {
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 1f, 1f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             val icon = if (noneLinked) Icons.UNLINK else Icons.LINK
-            if (ImGui.button("$icon##chainlink_$bankId", size, size)) {
+            if (ButtonChrome.button("$icon##chainlink_$bankId", size, size)) {
                 chain.toggleAllSlotsLinked()
                 FxMacroSync.syncFor(bankId, mixer)
             }

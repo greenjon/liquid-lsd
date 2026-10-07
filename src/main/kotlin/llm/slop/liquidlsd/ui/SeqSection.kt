@@ -108,7 +108,7 @@ object SeqSection {
         ImGui.popItemWidth()
 
         ImGui.sameLine(0f, 16f * fontScale)
-        if (ImGui.button("Reset to Step 0##seq_reset_${existing.id}")) {
+        if (ButtonChrome.button("Reset to Step 0##seq_reset_${existing.id}")) {
             val rawPos = when (existing.genUnit) {
                 GenUnit.TIME -> CVRegistry.getElapsedRealtimeSec() / existing.subdivision.toDouble().coerceAtLeast(0.001)
                 GenUnit.BEAT -> CVRegistry.getSynchronizedTotalBeats() / existing.subdivision.toDouble().coerceAtLeast(0.001)
@@ -133,14 +133,14 @@ object SeqSection {
                     if (idx > 0) ImGui.sameLine(0f, 4f * fontScale)
                     val isSelected = kotlin.math.abs(existing.subdivision - value) < 0.001f
                     if (isSelected) {
-                        ImGui.pushStyleColor(ImGuiCol.Button, themeColor)
+                        ButtonChrome.pushColor(themeColor)
                         ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
                     }
-                    if (ImGui.button("$label##seq_beat_preset_${existing.id}_$idx", 42f * fontScale, 0f)) {
+                    if (ButtonChrome.button("$label##seq_beat_preset_${existing.id}_$idx", 42f * fontScale, 0f)) {
                         onReplace(existing.copy(subdivision = value))
                     }
                     if (isSelected) {
-                        ImGui.popStyleColor(2)
+                        ImGui.popStyleColor(4)
                     }
                 }
                 ImGui.spacing()
@@ -235,21 +235,21 @@ object SeqSection {
             if (idx > 0) ImGui.sameLine(0f, 6f * fontScale)
             val isCurrent = existing.seqStepCount == count
             if (isCurrent) {
-                ImGui.pushStyleColor(ImGuiCol.Button, themeColor)
+                ButtonChrome.pushColor(themeColor)
                 ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
             }
-            if (ImGui.button("$count Steps##seq_len_${existing.id}_$count", 80f * fontScale, 0f)) {
+            if (ButtonChrome.button("$count Steps##seq_len_${existing.id}_$count", 80f * fontScale, 0f)) {
                 onReplace(existing.copy(seqStepCount = count))
             }
             if (isCurrent) {
-                ImGui.popStyleColor(2)
+                ImGui.popStyleColor(4)
             }
             val rows = count / 8
             itemTooltip("Set sequence length to $count steps ($rows ${if (rows == 1) "row" else "rows"} of 8)")
         }
 
         ImGui.sameLine(0f, 18f * fontScale)
-        if (ImGui.button("Clear (All 0)##seq_clear_${existing.id}")) {
+        if (ButtonChrome.button("Clear (All 0)##seq_clear_${existing.id}")) {
             onReplace(existing.copy(seqSteps = List(32) { 0.0f }))
         }
         itemTooltip("Reset all 32 step values to 0.0.")
@@ -410,24 +410,24 @@ object SeqSection {
 
         val isSmooth = existing.seqCurveSmooth
         if (!isSmooth) {
-            ImGui.pushStyleColor(ImGuiCol.Button, themeColor)
+            ButtonChrome.pushColor(themeColor)
             ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
         }
-        if (ImGui.button("Linear##seq_curve_lin_${existing.id}", 70f * fontScale, 0f)) {
+        if (ButtonChrome.button("Linear##seq_curve_lin_${existing.id}", 70f * fontScale, 0f)) {
             onReplace(existing.copy(seqCurveSmooth = false))
         }
-        if (!isSmooth) ImGui.popStyleColor(2)
+        if (!isSmooth) ImGui.popStyleColor(4)
         itemTooltip("Linear glide interpolation between steps.")
 
         ImGui.sameLine(0f, 6f * fontScale)
         if (isSmooth) {
-            ImGui.pushStyleColor(ImGuiCol.Button, themeColor)
+            ButtonChrome.pushColor(themeColor)
             ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
         }
-        if (ImGui.button("Smooth##seq_curve_smooth_${existing.id}", 70f * fontScale, 0f)) {
+        if (ButtonChrome.button("Smooth##seq_curve_smooth_${existing.id}", 70f * fontScale, 0f)) {
             onReplace(existing.copy(seqCurveSmooth = true))
         }
-        if (isSmooth) ImGui.popStyleColor(2)
+        if (isSmooth) ImGui.popStyleColor(4)
         itemTooltip("Smooth cosine / S-curve glide easing between steps.")
 
         ImGui.spacing()

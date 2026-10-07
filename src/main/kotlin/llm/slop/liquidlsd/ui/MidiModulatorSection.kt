@@ -49,12 +49,12 @@ object MidiModulatorSection {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, 0.72f, 0.45f, 1.00f, 0.6f)
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, 0.80f, 0.55f, 1.00f, 0.8f)
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
-                if (ImGui.button("${Icons.REFRESH} Waiting for MIDI Note/CC... (Click to Cancel)##midi_relearn")) {
+                if (ButtonChrome.button("${Icons.REFRESH} Waiting for MIDI Note/CC... (Click to Cancel)##midi_relearn")) {
                     state.midiLearnTarget = null
                 }
                 ImGui.popStyleColor(3)
             } else {
-                if (ImGui.button("Re-Learn MIDI Modulator##midi_relearn")) {
+                if (ButtonChrome.button("Re-Learn MIDI Modulator##midi_relearn")) {
                     state.midiLearnTarget = MidiLearnTarget.GridCell(cell, param)
                     state.midiLearnStartTimeMs = System.currentTimeMillis()
                     if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
@@ -63,7 +63,7 @@ object MidiModulatorSection {
                 }
                 itemTooltip("Adds a MIDI modulator to this parameter, saved in the preset; it adds on top of the value.\nFor a controller mapping that sets the value itself (saved in your controller profile), right-click the slider and choose Learn MIDI Mapping.")
                 ImGui.sameLine()
-                if (ImGui.button("Clear MIDI Modulator##midi_unbind")) {
+                if (ButtonChrome.button("Clear MIDI Modulator##midi_unbind")) {
                     onUnbind()
                 }
             }

@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiFocusedFlags
@@ -44,7 +45,7 @@ object TransitionQueuePanel {
         }
 
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("<##transQueuePrev", navBtnW, 0f)) {
+            if (ButtonChrome.button("<##transQueuePrev", navBtnW, 0f)) {
                 TransitionQueueManager.advancePrevious(mixer)
             }
             itemTooltip("Trigger previous transition in Transition Queue.")
@@ -54,18 +55,18 @@ object TransitionQueuePanel {
             val autoIcon = if (autoAdvanceActive) Icons.PAUSE else Icons.PLAY
             if (autoAdvanceActive) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green when active
-                ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+                ButtonChrome.pushColor(0.1f, 0.4f, 0.3f, 1.0f)
             }
-            if (ImGui.button("$autoIcon##transAutoAdvance", playPauseBtnW, 0f)) {
+            if (ButtonChrome.button("$autoIcon##transAutoAdvance", playPauseBtnW, 0f)) {
                 TransitionQueueManager.isAutoAdvanceEnabled = !TransitionQueueManager.isAutoAdvanceEnabled
             }
             if (autoAdvanceActive) {
-                ImGui.popStyleColor(2)
+                ImGui.popStyleColor(4)
             }
             itemTooltip("Auto-Advance: Automatically advance to the next transition preset when a crossfade triggers.")
 
             ImGui.sameLine()
-            if (ImGui.button(">##transQueueNext", navBtnW, 0f)) {
+            if (ButtonChrome.button(">##transQueueNext", navBtnW, 0f)) {
                 TransitionQueueManager.advanceNext(mixer)
             }
             itemTooltip("Trigger next transition in Transition Queue.")
@@ -77,13 +78,13 @@ object TransitionQueuePanel {
             val repeatActive = TransitionQueueManager.isRepeatEnabled
             if (repeatActive) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
-                ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+                ButtonChrome.pushColor(0.1f, 0.4f, 0.3f, 1.0f)
             }
-            if (ImGui.button("${Icons.REPEAT}##transRepeatQueue")) {
+            if (ButtonChrome.button("${Icons.REPEAT}##transRepeatQueue")) {
                 TransitionQueueManager.isRepeatEnabled = !TransitionQueueManager.isRepeatEnabled
             }
             if (repeatActive) {
-                ImGui.popStyleColor(2)
+                ImGui.popStyleColor(4)
             }
             itemTooltip("Repeat Queue: cycle back to start when bottom is reached.")
 
@@ -91,28 +92,28 @@ object TransitionQueuePanel {
             val shuffleActive = TransitionQueueManager.isShuffleEnabled
             if (shuffleActive) {
                 ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
-                ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
+                ButtonChrome.pushColor(0.1f, 0.4f, 0.3f, 1.0f)
             }
-            if (ImGui.button("${Icons.SHUFFLE}##transShuffleQueue")) {
+            if (ButtonChrome.button("${Icons.SHUFFLE}##transShuffleQueue")) {
                 TransitionQueueManager.isShuffleEnabled = !TransitionQueueManager.isShuffleEnabled
                 if (TransitionQueueManager.isShuffleEnabled) {
                     TransitionQueueManager.initializeShuffle()
                 }
             }
             if (shuffleActive) {
-                ImGui.popStyleColor(2)
+                ImGui.popStyleColor(4)
             }
             itemTooltip("Shuffle Queue: play transitions in random order.")
 
             ImGui.sameLine()
-            if (ImGui.button("Export##trans")) {
+            if (ButtonChrome.button("Export##trans")) {
                 BrowserPopupHandler.pendingOpenExportQueuePopup = true
             }
             itemTooltip("Export live transition queue as a new playlist.")
 
             ImGui.sameLine()
             val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
-            if (ImGui.button("Clear##transQueue", clearBtnW, 0f)) {
+            if (ButtonChrome.button("Clear##transQueue", clearBtnW, 0f)) {
                 TransitionQueueManager.clearQueue()
                 selectedIndex = -1
             }

@@ -146,7 +146,7 @@ object VideoExportModal {
         }
 
         ImGui.spacing()
-        if (ImGui.button("Cancel Export", 120f, 30f)) {
+        if (ButtonChrome.button("Cancel Export", 120f, 30f)) {
             OfflineRenderStudio.cancel()
         }
     }
@@ -159,7 +159,7 @@ object VideoExportModal {
         session.uiTheme.body("Audio Source File:")
         ImGui.inputText("##AudioInput", audioPath)
         ImGui.sameLine()
-        if (ImGui.button("Browse...##Audio")) {
+        if (ButtonChrome.button("Browse...##Audio")) {
             val startDir = File("library/audio").takeIf { it.exists() } ?: File(System.getProperty("user.home") ?: ".")
             audioBrowser.open(
                 mode = ImGuiFileBrowser.Mode.LOAD,
@@ -174,7 +174,7 @@ object VideoExportModal {
         session.uiTheme.body("Preset Snapshot (Optional):")
         ImGui.inputText("##PresetInput", presetPath)
         ImGui.sameLine()
-        if (ImGui.button("Browse...##Preset")) {
+        if (ButtonChrome.button("Browse...##Preset")) {
             val startDir = File("library/presets").takeIf { it.exists() } ?: File("library")
             presetBrowser.open(
                 mode = ImGuiFileBrowser.Mode.LOAD,
@@ -183,7 +183,7 @@ object VideoExportModal {
             )
         }
         ImGui.sameLine()
-        if (ImGui.button("Clear##Preset")) {
+        if (ButtonChrome.button("Clear##Preset")) {
             presetPath.set("")
         }
         session.uiTheme.caption("Leave blank to render current live session, or select a .lsd preset / .lsdplay playlist.")
@@ -193,7 +193,7 @@ object VideoExportModal {
         session.uiTheme.body("Destination Video File:")
         ImGui.inputText("##VideoOutput", outputPath)
         ImGui.sameLine()
-        if (ImGui.button("Browse...##Output")) {
+        if (ButtonChrome.button("Browse...##Output")) {
             val startDir = File(outputPath.get()).parentFile?.takeIf { it.exists() } ?: session.uiTheme.getDefaultVideosDirectory()
             val initialName = File(outputPath.get()).name.takeIf { it.isNotBlank() } ?: "liquid_lsd_export.mp4"
             outputBrowser.open(
@@ -241,7 +241,7 @@ object VideoExportModal {
         ImGui.spacing()
 
         ImGui.beginDisabled(awaitingPresetLoad)
-        val startClicked = ImGui.button("Start Export", 140f, 32f)
+        val startClicked = ButtonChrome.button("Start Export", 140f, 32f)
         ImGui.endDisabled()
         if (startClicked) {
             val audioFile = File(audioPath.get().trim())
@@ -300,7 +300,7 @@ object VideoExportModal {
         }
 
         ImGui.sameLine()
-        if (ImGui.button("Close", 100f, 32f)) {
+        if (ButtonChrome.button("Close", 100f, 32f)) {
             cancelPendingExport()
             isOpen = false
             ImGui.closeCurrentPopup()

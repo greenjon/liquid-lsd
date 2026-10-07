@@ -28,7 +28,6 @@ internal object PerformanceClockControls {
     private val LINK_NO_PEERS_INK = TangoPalette.inkFor(TangoPalette.LINK_NO_PEERS)
     private val TAP_FLASH_INK = TangoPalette.inkFor(TangoPalette.TAP_FLASH)
     private val TAP_COUNTING_INK = TangoPalette.inkFor(TangoPalette.TAP_COUNTING)
-    private val TAP_IDLE_INK = TangoPalette.inkFor(TangoPalette.ACTIVE_BLUE)
 
     private var linkPeers = -1
     private var linkLabel = ""
@@ -60,12 +59,12 @@ internal object PerformanceClockControls {
             for (i in SOURCES.indices) {
                 val source = SOURCES[i]
                 val isActive = currentClock == source
-                ImGui.pushStyleColor(ImGuiCol.Button, if (isActive) TangoPalette.u32(TangoPalette.ACTIVE_BLUE) else TangoPalette.CLOCK_IDLE_BG.u32())
-                if (ImGui.button(SOURCE_IDS[i], 50f, headerH)) {
+                ButtonChrome.pushColor(if (isActive) TangoPalette.u32(TangoPalette.ACTIVE_BLUE) else TangoPalette.CLOCK_IDLE_BG.u32())
+                if (ButtonChrome.button(SOURCE_IDS[i], 50f, headerH)) {
                     audioEngine.clockSource = source
                     AppPreferencesStore.savePreferences()
                 }
-                ImGui.popStyleColor()
+                ImGui.popStyleColor(3)
                 itemTooltip(SOURCE_TIPS[i])
                 ImGui.sameLine(0f, 2f)
             }
@@ -76,10 +75,10 @@ internal object PerformanceClockControls {
             ImGui.sameLine(0f, gap)
             val peers = AbletonLinkEngine.getNumPeers()
             if (peers > 0) {
-                ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.SYNC.normal))
+                ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.SYNC.normal))
             } else {
                 val linkInk = LINK_NO_PEERS_INK
-                ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.LINK_NO_PEERS))
+                ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.LINK_NO_PEERS))
                 ImGui.pushStyleColor(ImGuiCol.Text, linkInk[0], linkInk[1], linkInk[2], 1.0f)
             }
             if (peers != linkPeers) {
@@ -88,11 +87,11 @@ internal object PerformanceClockControls {
                 linkTip = "Ableton Link: $peers peer(s). Click to open Tempo & Sync preferences."
             }
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                if (ImGui.button(linkLabel, 56f, headerH)) {
+                if (ButtonChrome.button(linkLabel, 56f, headerH)) {
                     PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
                 }
             }
-            ImGui.popStyleColor(if (peers > 0) 1 else 2)
+            ImGui.popStyleColor(if (peers > 0) 3 else 4)
             itemTooltip(linkTip)
         }
 
@@ -104,11 +103,11 @@ internal object PerformanceClockControls {
             bpmLabel = "${"%.1f".format(tenths / 10.0)} BPM##perf_clock_bpm"
         }
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.PILL_BG.u32())
-            if (ImGui.button(bpmLabel, 96f, headerH)) {
+            ButtonChrome.pushColor(TangoPalette.PILL_BG.u32())
+            if (ButtonChrome.button(bpmLabel, 96f, headerH)) {
                 PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
             }
-            ImGui.popStyleColor()
+            ImGui.popStyleColor(3)
         }
         itemTooltip(BPM_TIPS[currentClock.ordinal])
 
@@ -140,34 +139,34 @@ internal object PerformanceClockControls {
         drawTapButton(session, headerH)
 
         ImGui.sameLine(0f, gap)
-        if (ImGui.button("RESYNC##perf_clock_resync", 64f, headerH)) {
+        if (ButtonChrome.button("RESYNC##perf_clock_resync", 64f, headerH)) {
             audioEngine.resyncDownbeat()
         }
         itemTooltip("Snap the beat phase to the downbeat now.")
 
         ImGui.sameLine(0f, gap)
-        if (ImGui.button("/2##perf_clock_half", 32f, headerH)) {
+        if (ButtonChrome.button("/2##perf_clock_half", 32f, headerH)) {
             audioEngine.halveTempo()
             AppPreferencesStore.savePreferences()
         }
         itemTooltip("Halve tempo (e.g. 140 -> 70 BPM).")
 
         ImGui.sameLine(0f, 2f)
-        if (ImGui.button("x2##perf_clock_double", 32f, headerH)) {
+        if (ButtonChrome.button("x2##perf_clock_double", 32f, headerH)) {
             audioEngine.doubleTempo()
             AppPreferencesStore.savePreferences()
         }
         itemTooltip("Double tempo (e.g. 70 -> 140 BPM).")
 
         ImGui.sameLine(0f, gap)
-        if (ImGui.button("-##perf_clock_nudge_down", 26f, headerH)) {
+        if (ButtonChrome.button("-##perf_clock_nudge_down", 26f, headerH)) {
             audioEngine.nudgeTempo(-0.5f)
             AppPreferencesStore.savePreferences()
         }
         itemTooltip("Nudge tempo down 0.5 BPM.")
 
         ImGui.sameLine(0f, 2f)
-        if (ImGui.button("+##perf_clock_nudge_up", 26f, headerH)) {
+        if (ButtonChrome.button("+##perf_clock_nudge_up", 26f, headerH)) {
             audioEngine.nudgeTempo(0.5f)
             AppPreferencesStore.savePreferences()
         }
@@ -193,25 +192,26 @@ internal object PerformanceClockControls {
             tapCountShown = tapCount
             tapLabel = (if (tapCount > 0) "TAP [$tapCount]" else "TAP") + "##perf_clock_tap"
         }
-        val btnCol = when {
-            tapFlash > 0.05f -> TangoPalette.u32(TangoPalette.TAP_FLASH)
-            tapCount > 0 -> TangoPalette.u32(TangoPalette.TAP_COUNTING, 0.9f)
-            else -> TangoPalette.u32(TangoPalette.ACTIVE_BLUE, 0.9f)
-        }
-        val tapInk = when {
-            tapFlash > 0.05f -> TAP_FLASH_INK
-            tapCount > 0 -> TAP_COUNTING_INK
-            else -> TAP_IDLE_INK
+        // Idle uses the theme's button states (grey, lighter on hover, accent while held). The flash and
+        // counting states override all three button colors together, so fill and ink can't disagree
+        // (overriding only Button let the hover color show through under the flash ink).
+        val tapState = when {
+            tapFlash > 0.05f -> TangoPalette.TAP_FLASH
+            tapCount > 0 -> TangoPalette.TAP_COUNTING
+            else -> null
         }
         val tapX = ImGui.getCursorScreenPosX()
         val tapY = ImGui.getCursorScreenPosY()
         val tapW = 64f
-        ImGui.pushStyleColor(ImGuiCol.Button, btnCol)
-        ImGui.pushStyleColor(ImGuiCol.Text, tapInk[0], tapInk[1], tapInk[2], 1.0f)
-        if (ImGui.button(tapLabel, tapW, headerH)) {
+        if (tapState != null) {
+            val ink = if (tapState === TangoPalette.TAP_FLASH) TAP_FLASH_INK else TAP_COUNTING_INK
+            ButtonChrome.pushColor(TangoPalette.u32(tapState), hoverShift = 0f)
+            ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
+        }
+        if (ButtonChrome.button(tapLabel, tapW, headerH)) {
             tapController.tap()
         }
-        ImGui.popStyleColor(2)
+        if (tapState != null) ImGui.popStyleColor(4)
         if (isMidiLearnTap) {
             ImGui.getWindowDrawList().addRect(tapX - 1f, tapY - 1f, tapX + tapW + 1f, tapY + headerH + 1f, TangoPalette.learnBorder(), 3f, 0, 1.5f)
         }

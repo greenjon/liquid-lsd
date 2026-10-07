@@ -184,7 +184,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
         val x = ImGui.getCursorScreenPosX()
         val y = ImGui.getCursorScreenPosY()
-        if (ImGui.button(btnId, navBtnW, ctrlH)) {
+        if (ButtonChrome.button(btnId, navBtnW, ctrlH)) {
             if (OscMapModeState.active) {
                 if (isOscLearn) OscLearnState.cancelLearn() else OscLearnState.startLearn(oscKey, 0f, 1f, oscName)
             } else {
@@ -365,7 +365,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             val lineGap = FxChainHeader.LINE_GAP
             val flexW = FxChainHeader.cellW(rowW)
 
-            if (ImGui.button(str.kebabId, DeckRowMetrics.KEBAB_W, ctrlH)) {
+            if (ButtonChrome.button(str.kebabId, DeckRowMetrics.KEBAB_W, ctrlH)) {
                 ImGui.openPopup(str.badgeCtxId)
             }
             itemTooltip("Source operations (Browse, Save As, defaults).")
@@ -377,13 +377,13 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                 isDirty -> TangoPalette.u32(TangoPalette.ALERT.dark)
                 else -> TangoPalette.BUTTON_SOFT_BG.u32()
             }
-            ImGui.pushStyleColor(ImGuiCol.Button, saveBtnBg)
+            ButtonChrome.pushColor(saveBtnBg)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button(str.saveId, flexW, ctrlH)) {
+                if (ButtonChrome.button(str.saveId, flexW, ctrlH)) {
                     ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = false)
                 }
             }
-            ImGui.popStyleColor()
+            ImGui.popStyleColor(3)
             itemTooltip(str.saveTip)
 
             ImGui.sameLine(0f, lineGap)
@@ -420,7 +420,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.pushStyleColor(ImGuiCol.Button, ejectBtnBg)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, ejectBtnHov)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button(str.ejectId, flexW, ctrlH)) {
+                if (ButtonChrome.button(str.ejectId, flexW, ctrlH)) {
                     UIManager.triggerDeckEject(deck, isDeckA = isDeckA, isDeckPV = isDeckPV)
                 }
             }
@@ -491,7 +491,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.pushStyleColor(ImGuiCol.Button, randBtnBg)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, randBtnHov)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button(str.randId, width, ctrlH)) {
+                if (ButtonChrome.button(str.randId, width, ctrlH)) {
                     ParametersUndo.pushUndoState(parametersState, mixer)
                     when {
                         isDeckA -> mixer.randomizeDeckA()

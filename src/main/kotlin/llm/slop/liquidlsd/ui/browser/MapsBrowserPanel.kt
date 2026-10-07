@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroBankSerializer
@@ -75,7 +76,7 @@ object MapsBrowserPanel {
     }
 
     private fun drawBanks(session: SessionContext, mixer: Mixer) {
-        if (ImGui.button("Save bank from...##maps_save_bank")) ImGui.openPopup("maps_save_bank_menu")
+        if (ButtonChrome.button("Save bank from...##maps_save_bank")) ImGui.openPopup("maps_save_bank_menu")
         itemTooltip("Saves the knobs of a deck, Master or Transition row as a bank file you can apply later.")
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("maps_save_bank_menu")) {

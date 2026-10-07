@@ -295,7 +295,7 @@ object LinkModeButton {
             ImGui.sameLine(0f, 4f)
             val invBtnW = 20f
             if (inverted) {
-                ImGui.pushStyleColor(ImGuiCol.Button, ImColor.rgba(0.12f, 0.35f, 0.45f, 0.9f))
+                ButtonChrome.pushColor(ImColor.rgba(0.12f, 0.35f, 0.45f, 0.9f))
                 ImGui.pushStyleColor(ImGuiCol.Text, ImColor.rgba(0.2f, 0.95f, 1.0f, 1.0f))
             } else {
                 ImGui.pushStyleColor(ImGuiCol.Text, ImColor.rgba(0.6f, 0.65f, 0.7f, 0.8f))
@@ -306,7 +306,7 @@ object LinkModeButton {
             }
 
             if (inverted) {
-                ImGui.popStyleColor(2)
+                ImGui.popStyleColor(4)
             } else {
                 ImGui.popStyleColor(1)
             }

@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiFocusedFlags
@@ -54,7 +55,7 @@ object QueueActionsPanel {
         }
 
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("<##queuePrev", navBtnW, 0f)) {
+            if (ButtonChrome.button("<##queuePrev", navBtnW, 0f)) {
                 session.playQueueManager.triggerPrevious(mixer)
             }
             itemTooltip("Trigger previous preset in A/B Queue (Mixer/queuePrev).")
@@ -62,7 +63,7 @@ object QueueActionsPanel {
             ImGui.sameLine()
             val autoVjActive = session.playQueueManager.isAutoVJEnabled
             val autoVjIcon = if (autoVjActive) Icons.PAUSE else Icons.PLAY
-            if (ImGui.button("$autoVjIcon##autoVj", playPauseBtnW, 0f)) {
+            if (ButtonChrome.button("$autoVjIcon##autoVj", playPauseBtnW, 0f)) {
                 val nextState = !session.playQueueManager.isAutoVJEnabled
                 session.playQueueManager.isAutoVJEnabled = nextState
                 if (nextState) {
@@ -72,7 +73,7 @@ object QueueActionsPanel {
             itemTooltip("Auto-VJ: Automatically cycle through queue presets at set intervals.")
 
             ImGui.sameLine()
-            if (ImGui.button(">##queueNext", navBtnW, 0f)) {
+            if (ButtonChrome.button(">##queueNext", navBtnW, 0f)) {
                 session.playQueueManager.triggerNext(mixer)
             }
             itemTooltip("Trigger next preset in A/B Queue (Mixer/queueNext).")
@@ -88,7 +89,7 @@ object QueueActionsPanel {
                 ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
                 ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
             }
-            if (ImGui.button("${Icons.REPEAT}##repeatQueue")) {
+            if (ButtonChrome.button("${Icons.REPEAT}##repeatQueue")) {
                 session.playQueueManager.isRepeatEnabled = !session.playQueueManager.isRepeatEnabled
             }
             if (repeatActive) {
@@ -104,7 +105,7 @@ object QueueActionsPanel {
                 ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
                 ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
             }
-            if (ImGui.button("${Icons.SHUFFLE}##shuffleQueue")) {
+            if (ButtonChrome.button("${Icons.SHUFFLE}##shuffleQueue")) {
                 session.playQueueManager.isShuffleEnabled = !session.playQueueManager.isShuffleEnabled
                 if (session.playQueueManager.isShuffleEnabled) {
                     session.playQueueManager.initializeShuffle()
@@ -116,7 +117,7 @@ object QueueActionsPanel {
             itemTooltip("Shuffle Queue: play presets in a random order.")
 
             ImGui.sameLine()
-            if (ImGui.button("Export")) {
+            if (ButtonChrome.button("Export")) {
                 ImGui.openPopup("ExportQueuePopup")
             }
             itemTooltip("Save current queue sequence as a new playlist.")
@@ -124,7 +125,7 @@ object QueueActionsPanel {
 
             ImGui.sameLine()
             val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
-            if (ImGui.button("Clear##queue", clearBtnW, 0f)) {
+            if (ButtonChrome.button("Clear##queue", clearBtnW, 0f)) {
                 session.playQueueManager.clearQueue()
                 selectedIndex = -1
             }

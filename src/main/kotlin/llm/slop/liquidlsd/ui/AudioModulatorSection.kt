@@ -67,7 +67,7 @@ object AudioModulatorSection {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
         }
-        if (ImGui.button("Continuous (RMS)##mode_cont_${existing.id}", btnW, btnH)) {
+        if (ButtonChrome.button("Continuous (RMS)##mode_cont_${existing.id}", btnW, btnH)) {
             if (isTransient) {
                 val newSource = RMS_SOURCES[currentBandIdx]
                 onReplace(existing.copy(sourceId = newSource))
@@ -91,7 +91,7 @@ object AudioModulatorSection {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
         }
-        if (ImGui.button("Transient (Flux)##mode_flux_${existing.id}", btnW, btnH)) {
+        if (ButtonChrome.button("Transient (Flux)##mode_flux_${existing.id}", btnW, btnH)) {
             if (!isTransient) {
                 val newSource = FLUX_SOURCES[currentBandIdx]
                 onReplace(existing.copy(sourceId = newSource))

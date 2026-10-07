@@ -52,13 +52,13 @@ object PerformPagesPanel {
             itemTooltip("Hidden pages leave the tab strip, but a controller bank that selects perform.${page.id} still shows it.")
             if (source == PerfPageStore.Source.BUILT_IN) {
                 for (placement in page.rows) theme.caption("  ${rowLabel(placement.row)}")
-                if (ImGui.button("${Icons.COPY} Copy to User File##copy")) {
+                if (ButtonChrome.button("${Icons.COPY} Copy to User File##copy")) {
                     message = store.copyBuiltInToUser(page.id) ?: "Copied to library/perform_pages/${page.id}.json"
                 }
                 itemTooltip("Writes an editable copy to library/perform_pages/. It replaces the built-in page until you delete it.")
             } else {
                 drawEditor(store, page)
-                if (ImGui.button("${Icons.TRASH} Delete User File##delete")) {
+                if (ButtonChrome.button("${Icons.TRASH} Delete User File##delete")) {
                     nameFields.remove(page.id)
                     message = if (store.deleteUser(page.id)) "Deleted user page ${page.id}" else "Could not delete ${page.id}"
                 }
@@ -86,7 +86,7 @@ object PerformPagesPanel {
         val id = PerfPageDef.idFromName(name)
         val canCreate = id.isNotEmpty() && store.get(id) == null
         if (!canCreate) ImGui.beginDisabled()
-        if (ImGui.button("${Icons.PLUS} New Page##new_page")) {
+        if (ButtonChrome.button("${Icons.PLUS} New Page##new_page")) {
             val page = PerfPageDef(id, name, rows = listOf("deck.A.src", "deck.A.fx", "deck.B.src", "deck.B.fx").map { RowPlacement(it) })
             problems = store.saveUser(page)
             message = if (problems.isEmpty()) "Created page $id" else null
@@ -95,7 +95,7 @@ object PerformPagesPanel {
         if (!canCreate) ImGui.endDisabled()
         itemTooltip("Creates a page with Deck A and Deck B (source over FX) to start from, then choose each row.", allowWhenDisabled = true)
         ImGui.sameLine()
-        if (ImGui.button("${Icons.REFRESH} Reload Pages##reload_pages")) {
+        if (ButtonChrome.button("${Icons.REFRESH} Reload Pages##reload_pages")) {
             store.reload()
             nameFields.clear()
             message = "Reloaded perform pages"
@@ -114,7 +114,7 @@ object PerformPagesPanel {
         val id = PerfPageDef.idFromName(name)
         val taken = id.isNotEmpty() && store.get(id) != null
         if (id.isEmpty() || taken) ImGui.beginDisabled()
-        if (ImGui.button("${Icons.COPY} Copy As New Page##dup")) {
+        if (ButtonChrome.button("${Icons.COPY} Copy As New Page##dup")) {
             problems = store.saveUser(page.copy(id = id, name = name))
             message = if (problems.isEmpty()) "Created page $id (controller name perform.$id)" else null
             if (problems.isEmpty()) field.set("")

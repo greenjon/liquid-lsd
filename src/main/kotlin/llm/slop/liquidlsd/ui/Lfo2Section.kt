@@ -63,7 +63,7 @@ object Lfo2Section {
 
         val powerIcon = if (lfo2Bypassed) Icons.POWER_OFF else Icons.POWER
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("$powerIcon##bypass_lfo2_$idx", btnWidth, btnHeight)) {
+            if (ButtonChrome.button("$powerIcon##bypass_lfo2_$idx", btnWidth, btnHeight)) {
                 val nextMode = if (lfo2Bypassed) llm.slop.liquidlsd.parameters.GeneratorModMode.AM else llm.slop.liquidlsd.parameters.GeneratorModMode.NONE
                 val nextDepth = if (lfo2Bypassed && existing.generatorModDepth == 0.0f) 1.0f else existing.generatorModDepth
                 onReplace(existing.copy(
@@ -83,13 +83,13 @@ object Lfo2Section {
             if (param.isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                    ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)
+                    ButtonChrome.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)
                 }
                 ImGui.popStyleColor()
                 itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                    if (ImGui.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
+                    if (ButtonChrome.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)) {
                         val randomized = existing
                             .randomizeGeneratorModDepth()
                             .randomizeModSubdivision()

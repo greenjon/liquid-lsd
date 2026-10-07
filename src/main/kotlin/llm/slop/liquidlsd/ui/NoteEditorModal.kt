@@ -99,7 +99,7 @@ object NoteEditorModal {
             ImGui.separator()
             ImGui.spacing()
 
-            if (ImGui.button("Save", 100f, 0f)) {
+            if (ButtonChrome.button("Save", 100f, 0f)) {
                 val text = textBuffer.get()
                 when (ctx) {
                     is NoteContext.Param  -> NotesManager.setParamNote(ctx.deckLabel, ctx.paramKey, text)
@@ -110,7 +110,7 @@ object NoteEditorModal {
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
-            if (ImGui.button("Cancel", 100f, 0f)) {
+            if (ButtonChrome.button("Cancel", 100f, 0f)) {
                 pendingContext = null
                 ImGui.closeCurrentPopup()
             }

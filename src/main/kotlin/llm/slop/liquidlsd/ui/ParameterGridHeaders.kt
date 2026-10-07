@@ -341,7 +341,7 @@ object ParameterGridHeaders {
                 ImGui.spacing()
                 ImGui.separator()
                 ImGui.spacing()
-                if (ImGui.button("Turn On Needed Columns", -1f, 28f)) {
+                if (ButtonChrome.button("Turn On Needed Columns", -1f, 28f)) {
                     if (deckDeps.usesMidi && !session.uiTheme.midiEnabled) {
                         session.uiTheme.midiEnabled = true
                         llm.slop.liquidlsd.midi.MidiEngine.scanForNewDevices()

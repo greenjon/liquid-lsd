@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.rack
 
+import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.macro.MacroLearnState
@@ -55,7 +56,7 @@ object RackUnit {
         val level = parametersState.disclosureFor(moduleId)
         val isExpanded = level != ParametersState.DisclosureLevel.COLLAPSED
         llm.slop.liquidlsd.ui.PerformanceColors.pushActiveToggleStyle(isExpanded)
-        if (ImGui.button("${llm.slop.liquidlsd.ui.Icons.SETTINGS}##rack_chevron_$idSuffix", w, h)) {
+        if (ButtonChrome.button("${llm.slop.liquidlsd.ui.Icons.SETTINGS}##rack_chevron_$idSuffix", w, h)) {
             if (isExpanded) {
                 parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.COLLAPSED)
             } else {

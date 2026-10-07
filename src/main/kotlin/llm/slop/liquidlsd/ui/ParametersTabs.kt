@@ -206,7 +206,7 @@ object ParametersTabs {
                 val btnW = (tw + 9f).coerceAtLeast(22f)
                 val subTabH = btnH ?: (ImGui.getTextLineHeight() + 8f).coerceAtLeast(26f)
 
-                if (ImGui.button(tab, btnW, subTabH)) {
+                if (ButtonChrome.button(tab, btnW, subTabH)) {
                     llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection(state.activeTopTab, tab)
                     when (state.activeTopTab) {
                         "Deck A" -> state.activeDeckASubTab = tab
@@ -350,7 +350,7 @@ object ParametersTabs {
         ImGui.sameLine()
         ImGui.setNextItemWidth((labelColW - 130f).coerceAtLeast(30f))
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            if (ImGui.button("$transName  ${Icons.CHEVRON_DOWN}##mixer_trans_selector", (labelColW - 130f).coerceAtLeast(30f), 0f)) {
+            if (ButtonChrome.button("$transName  ${Icons.CHEVRON_DOWN}##mixer_trans_selector", (labelColW - 130f).coerceAtLeast(30f), 0f)) {
                 state.openTransitionBrowse()
             }
         }
@@ -368,7 +368,7 @@ object ParametersTabs {
 
             ImGui.sameLine()
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.MORE_VERTICAL}##mixer_trans_kebab", 22f, 20f)) {
+                if (ButtonChrome.button("${Icons.MORE_VERTICAL}##mixer_trans_kebab", 22f, 20f)) {
                     ImGui.openPopup("MixerTransKebabPopup")
                 }
             }
@@ -504,7 +504,7 @@ object ParametersTabs {
         ImGui.textDisabled(chainDisplayName.uppercase() + if (chain.name.isNotEmpty()) " (${chain.name})" else "")
         ImGui.sameLine(labelColW - 24f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("${Icons.MORE_VERTICAL}##fx_chain_kebab_$chainPrefix", 22f, 20f)) {
+            if (ButtonChrome.button("${Icons.MORE_VERTICAL}##fx_chain_kebab_$chainPrefix", 22f, 20f)) {
                 ImGui.openPopup("FXChainKebabPopup_$chainPrefix")
             }
         }
@@ -597,7 +597,7 @@ object ParametersTabs {
             ImGui.sameLine()
             ImGui.setNextItemWidth((labelColW - 85f).coerceAtLeast(30f))
             session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-                if (ImGui.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$chainPrefix", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
+                if (ButtonChrome.button("$filterName  ${Icons.CHEVRON_DOWN}##fx${slotNum}_selector_$chainPrefix", (labelColW - 85f).coerceAtLeast(30f), 0f)) {
                     state.openFxChainBrowse(canonicalModuleId, deckLabel, i)
                 }
                 fx?.header?.DESCRIPTION?.takeIf { it.isNotBlank() }?.let { itemTooltip(it) }
@@ -607,7 +607,7 @@ object ParametersTabs {
 
             // Per-Slot Kebab Menu
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.MORE_VERTICAL}##fx_slot_kebab_${slotNum}_$chainPrefix", 22f, 20f)) {
+                if (ButtonChrome.button("${Icons.MORE_VERTICAL}##fx_slot_kebab_${slotNum}_$chainPrefix", 22f, 20f)) {
                     ImGui.openPopup("FXSlotKebabPopup_${slotNum}_$chainPrefix")
                 }
             }

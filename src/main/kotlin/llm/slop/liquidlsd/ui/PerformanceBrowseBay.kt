@@ -139,7 +139,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             ImGui.beginDisabled(true)
         }
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            if (ImGui.button("${Icons.SAVE}##browse_gen_save_$deckLabel", rowH, rowH)) {
+            if (ButtonChrome.button("${Icons.SAVE}##browse_gen_save_$deckLabel", rowH, rowH)) {
                 if (!isExternal) {
                     ImGui.openPopup("browse_gen_save_menu_$deckLabel")
                 }
@@ -213,7 +213,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
         }
         val actions = {
             session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-                if (ImGui.button("${Icons.TRASH} ${if (slotIndex == null) "Clear Chain" else "Clear Slot ${slotIndex + 1}"}##browse_fx_clear")) target.clear?.invoke()
+                if (ButtonChrome.button("${Icons.TRASH} ${if (slotIndex == null) "Clear Chain" else "Clear Slot ${slotIndex + 1}"}##browse_fx_clear")) target.clear?.invoke()
             }
         }
         return DockBinding(target, if (slotIndex == null) "$chainLabel · Chain" else "$chainLabel · FX ${slotIndex + 1}", actions)

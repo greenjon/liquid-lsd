@@ -107,7 +107,7 @@ object DeckSourcePicker {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.34f, 0.46f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.38f, 0.44f, 0.58f, 1f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.PLUS}  Add Source##launchpad_add_$deckLabel", buttonWidth, buttonHeight)) {
+                if (ButtonChrome.button("${Icons.PLUS}  Add Source##launchpad_add_$deckLabel", buttonWidth, buttonHeight)) {
                     val canonicalBankId = llm.slop.liquidlsd.macro.MacroEngine.deckBankIdFor(deck, mixer) ?: llm.slop.liquidlsd.macro.MacroEngine.DECK_A
                     state.openGenBrowse(canonicalBankId, deckLabel)
                 }
@@ -122,7 +122,7 @@ object DeckSourcePicker {
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.38f, 0.34f, 1f))
             ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.38f, 0.48f, 0.44f, 1f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.button("${Icons.FOLDER}  Load Preset##launchpad_load_$deckLabel", buttonWidth, buttonHeight)) {
+                if (ButtonChrome.button("${Icons.FOLDER}  Load Preset##launchpad_load_$deckLabel", buttonWidth, buttonHeight)) {
                     ImGui.openPopup("##launchpad_preset_popup_$deckLabel")
                 }
             }

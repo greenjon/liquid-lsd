@@ -206,7 +206,7 @@ object CustomRangeSlider {
             if (isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                    ImGui.button("${Icons.DICES}##rand_disabled", buttonSize, buttonSize)
+                    ButtonChrome.button("${Icons.DICES}##rand_disabled", buttonSize, buttonSize)
                 }
                 ImGui.popStyleColor()
                 itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
@@ -215,7 +215,7 @@ object CustomRangeSlider {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
                 }
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                    if (ImGui.button("${Icons.DICES}##rand_toggle", buttonSize, buttonSize)) {
+                    if (ButtonChrome.button("${Icons.DICES}##rand_toggle", buttonSize, buttonSize)) {
                         onRandomizableChanged(!effectiveIsRandomizable)
                     }
                 }
@@ -926,7 +926,7 @@ object CustomRangeSlider {
             if (isRandomizeDisabled) {
                 ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                    ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)
+                    ButtonChrome.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)
                 }
                 ImGui.popStyleColor()
                 itemTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
@@ -935,7 +935,7 @@ object CustomRangeSlider {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
                 }
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                    if (ImGui.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
+                    if (ButtonChrome.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {
                         onRandomizableChanged(!effectiveIsRandomizable)
                     }
                 }

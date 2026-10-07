@@ -226,7 +226,7 @@ object LibraryPanel {
                 // Maximize / Restore [□] / [❐]
                 val isFull = session.uiTheme.libraryMode == UITheme.LibraryMode.FULL
                 val maxIcon = if (isFull) Icons.COPY else Icons.SQUARE
-                if (ImGui.button("$maxIcon##lib_max", windowBtnW, btnH)) {
+                if (ButtonChrome.button("$maxIcon##lib_max", windowBtnW, btnH)) {
                     cycleMode(session)
                 }
                 itemTooltip(if (isFull) "Restore Library (Half size)" else "Maximize Library (Full size)")

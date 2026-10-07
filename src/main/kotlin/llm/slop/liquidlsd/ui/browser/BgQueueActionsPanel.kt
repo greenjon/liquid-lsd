@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiFocusedFlags
@@ -54,7 +55,7 @@ object BgQueueActionsPanel {
         }
 
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ImGui.button("<##bgQueuePrev", navBtnW, 0f)) {
+            if (ButtonChrome.button("<##bgQueuePrev", navBtnW, 0f)) {
                 BgQueueManager.triggerPrevious(mixer)
             }
             itemTooltip("Trigger previous preset in BG Queue (Mixer/bgQueuePrev).")
@@ -62,13 +63,13 @@ object BgQueueActionsPanel {
             ImGui.sameLine()
             val autoBgActive = BgQueueManager.isAutoBGEnabled
             val autoBgIcon = if (autoBgActive) Icons.PAUSE else Icons.PLAY
-            if (ImGui.button("$autoBgIcon##autoBg", playPauseBtnW, 0f)) {
+            if (ButtonChrome.button("$autoBgIcon##autoBg", playPauseBtnW, 0f)) {
                 BgQueueManager.isAutoBGEnabled = !BgQueueManager.isAutoBGEnabled
             }
             itemTooltip("Auto-BG: Automatically cycle through background presets with smooth dip-to-black transitions.")
 
             ImGui.sameLine()
-            if (ImGui.button(">##bgQueueNext", navBtnW, 0f)) {
+            if (ButtonChrome.button(">##bgQueueNext", navBtnW, 0f)) {
                 BgQueueManager.triggerNext(mixer)
             }
             itemTooltip("Trigger next preset in BG Queue (Mixer/bgQueueNext).")
@@ -84,7 +85,7 @@ object BgQueueActionsPanel {
                 ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
                 ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
             }
-            if (ImGui.button("${Icons.REPEAT}##repeatBgQueue")) {
+            if (ButtonChrome.button("${Icons.REPEAT}##repeatBgQueue")) {
                 BgQueueManager.isRepeatEnabled = !BgQueueManager.isRepeatEnabled
             }
             if (repeatActive) {
@@ -100,7 +101,7 @@ object BgQueueActionsPanel {
                 ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
                 ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
             }
-            if (ImGui.button("${Icons.SHUFFLE}##shuffleBgQueue")) {
+            if (ButtonChrome.button("${Icons.SHUFFLE}##shuffleBgQueue")) {
                 BgQueueManager.isShuffleEnabled = !BgQueueManager.isShuffleEnabled
                 if (BgQueueManager.isShuffleEnabled) {
                     BgQueueManager.initializeShuffle()
@@ -112,7 +113,7 @@ object BgQueueActionsPanel {
             itemTooltip("Shuffle BG Queue: play presets in a random order.")
 
             ImGui.sameLine()
-            if (ImGui.button("Export##bgQueueExport")) {
+            if (ButtonChrome.button("Export##bgQueueExport")) {
                 ImGui.openPopup("ExportBgQueuePopup")
             }
             itemTooltip("Save current background queue sequence as a new playlist.")
@@ -120,7 +121,7 @@ object BgQueueActionsPanel {
 
             ImGui.sameLine()
             val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
-            if (ImGui.button("Clear##bgQueue", clearBtnW, 0f)) {
+            if (ButtonChrome.button("Clear##bgQueue", clearBtnW, 0f)) {
                 BgQueueManager.clearQueue()
                 selectedIndex = -1
             }
