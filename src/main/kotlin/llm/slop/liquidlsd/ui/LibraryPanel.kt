@@ -134,9 +134,6 @@ object LibraryPanel {
             activeSelectionSource = SelectionSource.PRESETS
             QueueActionsPanel.selectedIndex = -1
             llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
-            if (asset.type != AssetType.SOURCE_STOCK && llm.slop.liquidlsd.ui.browser.BrowserPane.hosted() == null) {
-                auditionIfLocked(File(asset.path), session, mixer)
-            }
         }
     }
 
@@ -146,8 +143,6 @@ object LibraryPanel {
             activeSelectionSource = SelectionSource.QUEUE_AB
             PresetListPanel.selectedAsset = null
             llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.selectedIndex = -1
-            val file = session.playQueueManager.queue.getOrNull(index)
-            if (file != null) auditionIfLocked(file, session, mixer)
         }
     }
 
@@ -157,8 +152,6 @@ object LibraryPanel {
             activeSelectionSource = SelectionSource.QUEUE_BG
             PresetListPanel.selectedAsset = null
             QueueActionsPanel.selectedIndex = -1
-            val file = llm.slop.liquidlsd.presets.BgQueueManager.queue.getOrNull(index)
-            if (file != null) auditionIfLocked(file, session, mixer)
         }
     }
 
@@ -172,12 +165,6 @@ object LibraryPanel {
         llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
         FXQueueActionsPanel.selectedIndex = -1
         FXBgQueueActionsPanel.selectedIndex = -1
-    }
-
-    fun auditionIfLocked(file: File, session: SessionContext, mixer: Mixer) {
-        if (llm.slop.liquidlsd.ui.browser.BrowserActionToolbar.isAuditionLocked) {
-            BrowserDeckButtons.loadPresetToDeck(session, mixer, file, 4)
-        }
     }
 
     fun getOrLoadPlaylist(file: File): PlaylistManager.Playlist? {

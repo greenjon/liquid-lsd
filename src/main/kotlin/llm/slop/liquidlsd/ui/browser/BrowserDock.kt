@@ -90,24 +90,8 @@ object BrowserDock {
             }
         }
 
-        val totalToolbarW = BrowserActionToolbar.calculateToolbarWidth(btnH)
-        val windowBtnW = (btnH * 1.15f).coerceIn(20f, 32f)
-        val tabsEndX = x0 + TABS_W + 8f
-        // With a chip on the line the toolbar sits right after the tabs; without one it is centred.
-        val targetCenterX = if (binding != null) tabsEndX
-            else ((width - totalToolbarW) * 0.5f).coerceIn(120f, (width - totalToolbarW - windowBtnW - 8f).coerceAtLeast(120f)).coerceAtLeast(tabsEndX)
-        ImGui.setCursorPosX(targetCenterX)
-        ImGui.setCursorPosY(yOffset)
-        BrowserActionToolbar.draw(
-            session = session,
-            mixer = mixer,
-            parametersState = parametersState,
-            selectedFile = LibraryPanel.getActiveSelectedFile(session),
-            source = LibraryPanel.activeSelectionSource,
-            btnHeight = btnH
-        )
         if (binding != null) {
-            ImGui.sameLine(0f, 14f)
+            ImGui.setCursorPosX(x0 + TABS_W + 14f)
             ImGui.setCursorPosY(yOffset)
             drawChip(session, binding, boundTab(binding), btnH)
         }

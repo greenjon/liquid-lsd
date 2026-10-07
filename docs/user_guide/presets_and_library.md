@@ -89,7 +89,7 @@ Pick a section in the folder tree to show only stock sources or only saved prese
   - **Click** — Selects a single preset, clearing existing selections.
   - **Ctrl+Click** (or **Cmd+Click** on macOS) — Toggles selection of an individual item without affecting others.
   - **Shift+Click** — Extends selection from the anchor/lead item to the clicked item across all visible rows.
-  - **Batch Queueing** — When multiple presets are selected, pressing `Q` or clicking `[ Q ]` enqueues all selected presets in order into the A/B Queue. Pressing `Shift+Q` or clicking `[ BGQ ]` enqueues them into the BG Queue. The buttons and hotkeys act on the tab you picked the item on: in the FX tab they feed the FX queues, and in the Trans tab `[ Q ]` feeds the transition queue (`[ BGQ ]` is greyed out there).
+  - **Batch Queueing** — When multiple presets are selected, pressing `Q` (or the row menu's *Add to A/B Queue*) enqueues all selected presets in order into the A/B Queue. Pressing `Shift+Q` (or *Add to BG Queue*) enqueues them into the BG Queue. The hotkeys and row menu act on the tab you picked the item on: in the FX tab they feed the FX queues, and in the Trans tab `Q` feeds the transition queue (there is no background queue for transitions).
   - **Batch Context Menu** — Right-clicking with multiple items selected presents options like **Add N Presets to Playlist**, **Add N Presets to Queue**, and **Delete N Presets...**.
   - **Multi-Item Drag & Drop** — Dragging any item from a multi-selection carries all selected presets simultaneously into Playlists or Queues.
   - **Batch Deletion** — Pressing `Delete` or selecting Delete from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.
@@ -187,10 +187,6 @@ On the **Queues** tab the two FX columns are independent **live FX queues** — 
 - **Double-click** an item to jump straight to it. Pressing the MIDI controller's accept on a queue item does the same: it moves the queue position, fades to the loaded deck and advances the transition queue.
 
 The **A/B queue** applies to whichever of Deck A/B is currently dominant on the crossfader; the **BG queue** always applies to Deck BG.
-
-### Audition Latch
-
-Click **`[ Lock ]`** in the toolbar to enable audition mode. While latched, clicking any preset (or pressing `↑` / `↓`) immediately loads it into the preview deck (Deck PV) so you can see it without touching the live output. Click the lock again to return to normal selection.
 
 ---
 

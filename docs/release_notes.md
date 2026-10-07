@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Library Toolbar Removed: Q, BGQ and the Audition Lock Are Gone (`ui/browser/BrowserActionToolbar.kt` deleted, `ui/browser/BrowserDock.kt`, `ui/LibraryPanel.kt`)
+- **Removed the toolbar `Q` and `BGQ` buttons.** Queueing is still on `Q` / `Shift+Q` and in each row's `⋮` menu (*Add to A/B Queue*, *Add to BG Queue*).
+- **Removed the audition lock** and its auto-load-to-Deck-PV behaviour. Opening Browse from a row and one-clicking a source or FX chain already loads it at once. The Library header is now just the tabs (plus the binding chip when a row is bound).
+
 ### Deck Rows Use Two Lines and a Two-Tone SRC/FX Badge (`ui/PerformanceMatrixPanel.kt`, `ui/PerformanceDeckControls.kt`, `ui/FxChainHeader.kt`, `ui/TangoPalette.kt`)
 - **The deck badge names its half.** The `A` / `B` / `BG` / `PV` badge is now one rounded box with a caption strip under the letter: slate `SRC` or cyan `FX`. The separate `SRC` / `FX` pills are gone from deck rows, so you can tell a source row from an FX row at a glance.
 - **Line 1 is one long name box** across the whole left block: the generator or preset on a source row, the chain name (or the focused effect in Focus Mode) on an FX row. Click it to Browse, as before. The Edit gear sits at its right end; it used to sit under the badge.

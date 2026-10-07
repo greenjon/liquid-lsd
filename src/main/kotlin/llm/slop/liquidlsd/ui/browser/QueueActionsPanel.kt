@@ -180,7 +180,6 @@ object QueueActionsPanel {
                 LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.QUEUE_AB
                 PresetListPanel.selection.clear()
                 llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
-                LibraryPanel.auditionIfLocked(file, session, mixer)
             }
             val isRowHovered = ImGui.isItemHovered()
             if (ImGui.isItemClicked(1)) {

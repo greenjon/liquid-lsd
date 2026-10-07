@@ -657,17 +657,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#audition-latch" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Audition Latch
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -1707,17 +1696,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#audition-latch" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Audition Latch
-      
-    </span>
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -1934,7 +1912,7 @@
 <li><strong>Click</strong> — Selects a single preset, clearing existing selections.</li>
 <li><strong>Ctrl+Click</strong> (or <strong>Cmd+Click</strong> on macOS) — Toggles selection of an individual item without affecting others.</li>
 <li><strong>Shift+Click</strong> — Extends selection from the anchor/lead item to the clicked item across all visible rows.</li>
-<li><strong>Batch Queueing</strong> — When multiple presets are selected, pressing <code>Q</code> or clicking <code>[ Q ]</code> enqueues all selected presets in order into the A/B Queue. Pressing <code>Shift+Q</code> or clicking <code>[ BGQ ]</code> enqueues them into the BG Queue. The buttons and hotkeys act on the tab you picked the item on: in the FX tab they feed the FX queues, and in the Trans tab <code>[ Q ]</code> feeds the transition queue (<code>[ BGQ ]</code> is greyed out there).</li>
+<li><strong>Batch Queueing</strong> — When multiple presets are selected, pressing <code>Q</code> (or the row menu's <em>Add to A/B Queue</em>) enqueues all selected presets in order into the A/B Queue. Pressing <code>Shift+Q</code> (or <em>Add to BG Queue</em>) enqueues them into the BG Queue. The hotkeys and row menu act on the tab you picked the item on: in the FX tab they feed the FX queues, and in the Trans tab <code>Q</code> feeds the transition queue (there is no background queue for transitions).</li>
 <li><strong>Batch Context Menu</strong> — Right-clicking with multiple items selected presents options like <strong>Add N Presets to Playlist</strong>, <strong>Add N Presets to Queue</strong>, and <strong>Delete N Presets...</strong>.</li>
 <li><strong>Multi-Item Drag &amp; Drop</strong> — Dragging any item from a multi-selection carries all selected presets simultaneously into Playlists or Queues.</li>
 <li><strong>Batch Deletion</strong> — Pressing <code>Delete</code> or selecting Delete from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.</li>
@@ -2039,8 +2017,6 @@
 <li><strong>Double-click</strong> an item to jump straight to it. Pressing the MIDI controller's accept on a queue item does the same: it moves the queue position, fades to the loaded deck and advances the transition queue.</li>
 </ul>
 <p>The <strong>A/B queue</strong> applies to whichever of Deck A/B is currently dominant on the crossfader; the <strong>BG queue</strong> always applies to Deck BG.</p>
-<h3 id="audition-latch">Audition Latch</h3>
-<p>Click <strong><code>[ Lock ]</code></strong> in the toolbar to enable audition mode. While latched, clicking any preset (or pressing <code>↑</code> / <code>↓</code>) immediately loads it into the preview deck (Deck PV) so you can see it without touching the live output. Click the lock again to return to normal selection.</p>
 <hr />
 <h2 id="playlists-setlists">Playlists (Setlists)</h2>
 <p>Playlists are where you build your setlist; they appear under <strong>Playlists</strong> in the Sources folder tree. Playlists are <code>.lsdplay</code> files — simple ordered lists of presets.</p>

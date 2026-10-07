@@ -1060,10 +1060,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#8-librarypanelkt-browseractiontoolbarkt" class="md-nav__link">
+  <a href="#8-librarypanelkt-browserdockkt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8. LibraryPanel.kt &amp; BrowserActionToolbar.kt
+        8. LibraryPanel.kt &amp; BrowserDock.kt
       
     </span>
   </a>
@@ -1595,10 +1595,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#8-librarypanelkt-browseractiontoolbarkt" class="md-nav__link">
+  <a href="#8-librarypanelkt-browserdockkt" class="md-nav__link">
     <span class="md-ellipsis">
       
-        8. LibraryPanel.kt &amp; BrowserActionToolbar.kt
+        8. LibraryPanel.kt &amp; BrowserDock.kt
       
     </span>
   </a>
@@ -1883,15 +1883,14 @@
 <li>Contextual HUD status badges for recording (<code>REC mm:ss</code>, dropped frames counter), Web Broadcast (<code>LIVE</code>, <code>CONNECTING</code>, <code>LIVE ERR</code>), and Ableton Link (<code>LINK [peers]</code>) appear dynamically on the title bar only when active.</li>
 <li><strong>CSD &amp; Telemetry HUD Layout</strong>: In frameless mode, Client-Side Decorations (Minimize, Maximize/Restore, Close) are anchored directly to the title bar's right boundary (<code>contentRightX</code>), ensuring the Close button is flush with the right boundary across all display resolutions. Monospace telemetry stats (CPU%, DSP execution latency, FPS, Frame Time, and FBO live count/estimated VRAM) render in a unified right-side block positioned cleanly to the left of the window controls. Musical timing controls (clock source toggle, Link status, BPM display, 4-beat phase meter dots, tap tempo, resync, half/double tempo, and nudges) are consolidated on the Performance MASTER tab's Clock row and within Preferences &gt; Tempo &amp; Sync.</li>
 </ul>
-<h3 id="8-librarypanelkt-browseractiontoolbarkt">8. <code>LibraryPanel.kt</code> &amp; <code>BrowserActionToolbar.kt</code></h3>
+<h3 id="8-librarypanelkt-browserdockkt">8. <code>LibraryPanel.kt</code> &amp; <code>BrowserDock.kt</code></h3>
 <ul>
 <li><strong>Library layout</strong>: <code>LibraryPanel.draw</code> draws one full-width child. Sources, FX and Trans draw <code>BrowserPane.draw(session, mixer, parametersState, kind)</code> (folder tree 25%, list the rest); Queues draws <code>QueuesPane</code> (five child columns: <code>QueueActionsPanel</code>, <code>BgQueueActionsPanel</code>, <code>FXQueueActionsPanel</code>, <code>FXBgQueueActionsPanel</code>, <code>TransitionQueuePanel</code>); Maps draws <code>MapsBrowserPanel</code> in its own child. <code>FXBrowserPanel</code>, <code>PresetListPanel</code> and <code>TransitionBrowserPanel</code> only keep the shared row, menu and popup helpers (<code>drawRows</code>, <code>drawRow</code>, <code>applyToDeck</code>, ...). Playlists are tree scopes edited through <code>PlaylistEdit</code> (<code>PlaylistRows</code>, <code>PresetPlaylistEdit</code>, <code>TokenPlaylistEdit</code>); the three old playlist editor panels were deleted.</li>
 <li><strong>Unified pane in the Edit bay</strong>: <code>PerformanceBrowseBay</code> builds an <code>ApplyTarget</code> per tab (deck source, FX slot, Chain, transition) and calls <code>BrowserPane.draw(..., target)</code>. A target makes a click apply, filters the rows to what it <code>accepts</code>, marks the <code>isApplied</code> row and gives each <code>contextKey</code> its own scope (<code>ScopeMemory</code>). <code>BrowserPane.hosted()</code> (the target the dock was last drawn bound to) drives <code>NavigationSurface.inPicker</code>; <code>LibraryPanel.navMode</code> makes the shared cursor functions follow the hosted kind. Bay picks are undoable (<code>undoable = true</code> on the <code>FxOps</code>/<code>TransitionOps</code> calls; <code>undoSink</code> wired in <code>UIManager</code>). See DECISIONS.md.</li>
 <li><strong><code>[ Presets ]</code> / <code>[ FX ]</code> View Mode</strong>: <code>LibraryPanel</code>'s <code>LibraryViewMode</code> toggle picks the <code>BrowseKind</code> the pane shows. In <code>[ FX ]</code> mode the pane lists stock/single/chain rows (tree sections Stock filters / Saved single FX / Saved chains, <code>.lsdfxplay</code> curated sequences as playlist scopes), and its live queues (on the Queues tab) are <code>FXBgQueueActionsPanel.kt</code> / <code>FXQueueActionsPanel.kt</code> (volatile live FX queues backed by <code>FXBgQueueManager.kt</code> / <code>FXQueueManager.kt</code>) in place of the normal preset <code>BgQueueManager</code> / <code>PlayQueueManager</code> panels. Both single presets (<code>.lsdfx</code>) and 4-slot chains (<code>.lsdfxchain</code>) resolve deterministically through <code>FXItemApplier.kt</code> → <code>Deck.applyFxChain</code> rather than arbitrary vacant-slot allocation. See <code>docs/developer/preset_management.md</code> §8 for the manager-level architecture.</li>
 <li>A 8 px horizontal gap (<code>groupGap</code>) separates the two rounded group boxes, and the top edge of both boxes touches the bottom of the top toolbar menu bar.</li>
 <li><strong>Pane scrolling</strong>: the pane's parts (tree, list, each queue) are inner child windows with <code>NoScrollbar or NoScrollWithMouse</code> on the outer child; the title/search rows stay pinned while rows scroll in their own children (<code>##presets_scroll</code>, <code>##queue_items_scroll</code>, <code>##bg_queue_items_scroll</code>).</li>
-<li><strong>Proportional Action Buttons &amp; Balanced Padding (<code>BrowserActionToolbar.kt</code>, <code>LibraryPanel.kt</code>)</strong>: Action buttons (Quick Audition Lock, Deck Load A/B/BG/PV, and Queue Q/BGQ) and window controls use a compact height of ~22 px (<code>btnH = 22f * fontScale</code>) with width dynamically calculated as ~1.5x button height (<code>calculateButtonWidth(btnH)</code>). Library title bar vertical frame padding is scaled to 6.0 px (<code>libTitleBarH = 32f</code>), preserving the ~2.5 px bottom margin while adding sufficient top clearance to prevent button borders from clipping against the horizontal splitter line.</li>
-<li><strong>Accurate Lucide PUA Mappings</strong>: Audition latch toggle uses standard Lucide padlock codepoints (<code>Icons.LOCK = "\ue10b"</code>, <code>Icons.UNLOCK = "\ue10c"</code>).</li>
+<li><strong>Balanced Padding (<code>LibraryPanel.kt</code>)</strong>: Library title bar vertical frame padding is scaled to 6.0 px (<code>libTitleBarH = 32f</code>), preserving the ~2.5 px bottom margin while adding sufficient top clearance to prevent button borders from clipping against the horizontal splitter line.</li>
 </ul>
 <h3 id="9-tooltip-subsystem-ergonomic-positioning-tooltiphelperkt">9. Tooltip Subsystem &amp; Ergonomic Positioning (<code>TooltipHelper.kt</code>)</h3>
 <ul>

@@ -175,7 +175,6 @@ object BgQueueActionsPanel {
                 LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.QUEUE_BG
                 PresetListPanel.selection.clear()
                 QueueActionsPanel.clearSelection()
-                LibraryPanel.auditionIfLocked(file, session, mixer)
             }
             val isRowHovered = ImGui.isItemHovered()
             if (ImGui.isItemClicked(1)) {

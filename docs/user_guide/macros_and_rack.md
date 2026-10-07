@@ -344,7 +344,7 @@ watching the show while you pick.
   `.lsdfxchain` files; **FX1**–**FX3** are that chain's per-slot effect pickers (stock filters, ★
   favorites, saved single-FX presets), each opening on its slot's usual folder.
 - **The same browser as the Library**: every Browse tab is the Library's own browser, with its
-  **Sources / FX / Transitions / Macros** tabs, toolbar (audition lock, **Q**, **BGQ**, deck loads),
+  **Sources / FX / Transitions / Macros** tabs,
   folder tree, list and queue columns. The header line shows a chip such as "● Deck A · FX 1" (the
   slot, chain or transition you are editing): on that tab a click applies the row, the row that is
   applied shows a ●, and the list shows only what the target can take. Pick another tab and the chip

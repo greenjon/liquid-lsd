@@ -110,9 +110,6 @@ object PresetListPanel {
                 QueueActionsPanel.clearSelection()
                 llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
                 DockActions.tap(target, asset)
-                if (target == null && asset.type != AssetType.SOURCE_STOCK) {
-                    LibraryPanel.auditionIfLocked(File(asset.path), session, mixer)
-                }
             }
             if (hasIssues && !isSelected) {
                 ImGui.popStyleColor()
