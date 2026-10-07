@@ -498,7 +498,7 @@ object ValueParamSection {
             val btnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) { ImGui.getTextLineHeight() + 8f * fontScale }.coerceAtLeast(28f * fontScale)
             val randomizeBaseActive = param.randomizeBase && !param.isRandomizeDisabled
             if (param.isRandomizeDisabled) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_FAINT.u32())
                 ButtonChrome.button("${Icons.DICES}  Randomize Initial Value", ImGui.getContentRegionAvailX(), btnH)
                 ImGui.popStyleColor()
                 itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)

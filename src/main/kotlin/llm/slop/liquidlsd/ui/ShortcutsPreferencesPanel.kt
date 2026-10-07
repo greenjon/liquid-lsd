@@ -57,7 +57,7 @@ object ShortcutsPreferencesPanel {
 
                 if (hasConflict) {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.FrameBg, 0.5f, 0.2f, 0.05f, 0.8f)
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1.0f, 0.7f, 0.3f, 1.0f)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_WARN.u32())
                 }
 
                 ImGui.setNextItemWidth(140f)

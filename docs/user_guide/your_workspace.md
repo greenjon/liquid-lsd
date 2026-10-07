@@ -9,7 +9,7 @@ Liquid LSD has a lot going on, but it's organized around a handful of core ideas
 The Library panel spans the left and middle columns of the app. That column has three views:
 
 - **Perform** — The Performance rows sit above the Library, which fills the rest of the window. This is the everyday view for playing a set.
-- **Edit** — Open a row's **Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. The row's **Browse** tab is the same browser as the Library (same tabs, toolbar and queues), applying to that row; swap a deck's source or FX there or from the controls on the row itself. Press **Esc** or click the row's **Collapse** button to get back to Perform.
+- **Edit** — Open a row's **Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. To swap a deck's source or FX, click its source badge, chain name or slot (this opens the pair view, described in Presets & Library) or use the controls on the row itself. Press **Esc** or click the row's **Collapse** button to get back to Perform.
 - **Library** — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.
 
 Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Edit (cancelling any armed Add Target or Learn) and brings the Library back.

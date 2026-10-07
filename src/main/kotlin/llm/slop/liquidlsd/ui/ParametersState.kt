@@ -65,7 +65,7 @@ class ParametersState : MidiLearnSink {
 
     /**
      * Maps a Rack Unit's moduleId to the [MacroEngine] bank id(s) it owns. Deck and Master rows
-     * switch their knobs between banks ([SRC|FX] / [MIX|FX]) under one canonical moduleId, so those
+     * switch their knobs between banks (SRC / FX, MIX / FX) under one canonical moduleId, so those
      * own every bank they can show; any other module's moduleId is its own bank id.
      */
     private val rackModuleBankIds: Map<String, List<String>> = mapOf(
@@ -133,7 +133,7 @@ class ParametersState : MidiLearnSink {
 
     /**
      * Collapses every rack module to Tier 1, except one currently pinned open by an active Learn.
-     * Once no Edit bay remains open the dock binding and Browse mode end with it, so every way of leaving Edit
+     * Once no Edit bay remains open the dock binding ends with it, so every way of leaving Edit
      * (Esc, EDIT gear, Space, Ctrl+F, menu, controller) lands in the same unbound Perform/Library state.
      */
     fun collapseAllRackModules() {
@@ -162,7 +162,7 @@ class ParametersState : MidiLearnSink {
 
     /**
      * The focused pair's tag (a deck tag, [PerfRows.PAIR_MASTER] or [PerfRows.PAIR_XF]), or null. The pair view shows the
-     * pair's two rows over the Browse dock; it is mutually exclusive with a Params Edit module and is not persisted.
+     * pair's two rows over the Browse dock; it is mutually exclusive with a Params Edit module and, unlike that module, is not persisted.
      */
     var focusedPair: String? = null
         private set
@@ -201,7 +201,7 @@ class ParametersState : MidiLearnSink {
 
     // -- Browse content (the unified BrowserPane is hosted here) -----------------------------
 
-    /** What a module's Browse content is showing. [FxChain.slotIndex] null means the whole-chain list. */
+    /** What a pair view's Browse is showing. [FxChain.slotIndex] null means the whole-chain list. */
     sealed class BrowseTarget {
         object Gen : BrowseTarget()
         data class FxChain(val slotIndex: Int? = null) : BrowseTarget()
@@ -211,7 +211,7 @@ class ParametersState : MidiLearnSink {
     /** The dock's one apply-target: which row ([moduleId]) and what on it ([target]) Browse is bound to. */
     data class DockSelection(val moduleId: String, val target: BrowseTarget)
 
-    /** Single dock-level selection; null means the plain Library. Survives a Browse<->Params toggle. */
+    /** Single dock-level selection; null means the plain Library. Binding happens in the pair view; null is the plain Library. */
     var dockSelection: DockSelection? = null
         private set
 

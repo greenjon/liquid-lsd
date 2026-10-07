@@ -10,7 +10,7 @@ import llm.slop.liquidlsd.ui.LibraryPanel.LibraryViewMode
 import llm.slop.liquidlsd.ui.ParametersState
 
 /**
- * The one place that decides what picking a row does in the [BrowserDock]: a bound dock (an [ApplyTarget] from an Edit row) applies the
+ * The one place that decides what picking a row does in the [BrowserDock]: a bound dock (an [ApplyTarget] from the pair view) applies the
  * row to its target; an unbound dock (the Library) loads it. The list panels, the context menus and the controller all go through here.
  */
 internal object DockActions {

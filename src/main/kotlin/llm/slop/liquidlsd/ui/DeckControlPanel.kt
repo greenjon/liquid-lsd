@@ -227,7 +227,7 @@ class DeckControlPanel(
         }
 
         // 1. Badge Pill (Lower-Left Corner)
-        dl.addRectFilled(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
+        dl.addRectFilled(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, TangoPalette.PILL_BG.u32(), 4f)
         dl.addRect(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, themeCol, 4f, 0, 1.5f)
 
         val textX = badgeMinX + (badgeW - textW) * 0.5f

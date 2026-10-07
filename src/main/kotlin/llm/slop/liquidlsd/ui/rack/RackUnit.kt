@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.rack
 
+import llm.slop.liquidlsd.ui.TangoPalette
 import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
@@ -77,7 +78,7 @@ object RackUnit {
     fun drawLearnIndicator(): Boolean {
         val session = MacroLearnState.activeSession ?: return false
         val label = MacroLearnState.findControl(session.controlId)?.label?.ifEmpty { "Knob" } ?: "Knob"
-        ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(1f, 0.75f, 0.15f, 1f))
+        ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.TEXT_WARN.u32())
         ImGui.text("${llm.slop.liquidlsd.ui.Icons.REFRESH} Adding target: $label -- Esc to cancel")
         ImGui.popStyleColor()
         return true

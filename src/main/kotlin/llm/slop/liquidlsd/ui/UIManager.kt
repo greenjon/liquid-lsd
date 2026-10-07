@@ -200,7 +200,7 @@ class UIManager(
 
     private var devEditBrowseOpened = false
 
-    /** Dev aid for screenshots: `-Dlsd.editBrowse=gen|chain|fx1|fx2|fx3|trans` opens Deck A's (or Master's) Edit bay on that Browse tab once. */
+    /** Dev aid for screenshots: `-Dlsd.editBrowse=gen|chain|fx1|fx2|fx3|trans` opens Deck A's (or Master's) pair view on that Browse target once. */
     private fun openDevEditBrowse() {
         if (devEditBrowseOpened) return
         devEditBrowseOpened = true

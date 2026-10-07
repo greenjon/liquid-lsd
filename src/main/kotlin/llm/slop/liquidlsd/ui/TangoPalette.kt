@@ -214,6 +214,29 @@ object TangoPalette {
     val FX_LINK_IDLE_HOVER = Role(c(0.22f, 0.25f, 0.32f, 0.80f))
     val FX_LINK_IDLE_TEXT  = Role(c(0.55f, 0.58f, 0.65f, 0.80f))
 
+    // Overlays and text that were white-alpha (invisible on a light panel): the light theme uses black-alpha / the styled slots.
+    /** Hover wash over a transparent control (icon buttons, link-mode chips, row buttons). */
+    val HOVER_OVERLAY      = Role(c(1f, 1f, 1f, 0.10f), light = c(0f, 0f, 0f, 0.08f))
+    /** Pressed / active wash, one step stronger than [HOVER_OVERLAY]. */
+    val PRESS_OVERLAY      = Role(c(1f, 1f, 1f, 0.20f), light = c(0f, 0f, 0f, 0.16f))
+    /** Faint tint behind a grid column header. */
+    val HEADER_TINT        = Role(c(1f, 1f, 1f, 0.08f), light = c(0f, 0f, 0f, 0.06f))
+    /** Barely-there wash behind an idle parameter-grid cell or stripe. */
+    val CELL_WASH          = Role(c(1f, 1f, 1f, 0.03f), light = c(0f, 0f, 0f, 0.04f))
+    /** Outline of a hovered grid cell. */
+    val HOVER_BORDER       = Role(c(1f, 1f, 1f, 0.60f), light = c(0f, 0f, 0f, 0.60f))
+    /** Caption of a locked / disabled control (was white at 25% and 40%). */
+    val TEXT_FAINT         = Role(c(1f, 1f, 1f, 0.25f), lightSlot = ImGuiCol.TextDisabled)
+    val TEXT_DIM           = Role(c(1f, 1f, 1f, 0.40f), lightSlot = ImGuiCol.TextDisabled)
+
+    // Status text on a panel: bright pastels on dark, the Tango dark shades on light.
+    val TEXT_OK            = Role(c(0.35f, 0.90f, 0.40f, 1f), light = a(ACTIVE.dark))
+    val TEXT_WARN          = Role(c(0.95f, 0.80f, 0.30f, 1f), light = a(CHOCOLATE.dark))
+    val TEXT_ERROR         = Role(c(1f, 0.40f, 0.40f, 1f), light = a(DANGER.dark))
+    /** Queue column header captions: A/B (mint) and BG (pink). */
+    val QUEUE_AB_TEXT      = Role(c(0.4f, 1f, 0.8f, 1f), light = a(ACTIVE.dark))
+    val QUEUE_BG_TEXT      = Role(c(0.9f, 0.35f, 0.65f, 1f), light = a(PLUM.normal))
+
     /** [rgb] scaled by [k] (dimmed accent) with [alpha], packed to U32. */
     fun u32Scaled(rgb: FloatArray, k: Float, alpha: Float): Int =
         ImGui.colorConvertFloat4ToU32(rgb[0] * k, rgb[1] * k, rgb[2] * k, alpha)
@@ -233,7 +256,8 @@ object TangoPalette {
             FX_SAVE_BG, FX_SAVE_INK, FX_DIRTY_TEXT, WHITE, FX_PLACEHOLDER, FX_PARAM_NAME, FX_SLOT_NAME, FX_SLOT_NAME_EMPTY,
             FX_SLOT_NAME_OFF, FX_ARROW_IDLE, FX_BTN_IDLE_BG, FX_BTN_IDLE_HOVER, FX_BTN_IDLE_TEXT,
             FX_BTN_EMPTY_TEXT, FX_RESET_BG, FX_RESET_HOVER, FX_RESET_TEXT, FX_LINK_IDLE_BG, FX_LINK_IDLE_HOVER,
-            FX_LINK_IDLE_TEXT)
+            FX_LINK_IDLE_TEXT, HOVER_OVERLAY, PRESS_OVERLAY, HEADER_TINT, CELL_WASH, HOVER_BORDER, TEXT_FAINT, TEXT_DIM, TEXT_OK, TEXT_WARN, TEXT_ERROR,
+            QUEUE_AB_TEXT, QUEUE_BG_TEXT)
     }
 
     // -- Ink pairing -----------------------------------------------------------------------------

@@ -112,8 +112,8 @@ object BrowserPane {
     }
 
     /**
-     * Draws the pane. [target] is null in the Library (double-click loads) and set when the Edit bay hosts it (a click applies to
-     * the target, only rows it accepts are listed, and each target remembers its own scope).
+     * Draws the pane. [target] is null in the Library (double-click loads) and set when the pair view hosts it (a click applies to
+     * the target and only rows it accepts are listed).
      */
     fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, kind: BrowseKind, target: ApplyTarget? = null) {
         val catalog = BrowseCatalogs.get(kind)

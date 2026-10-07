@@ -71,7 +71,7 @@ object MidiPreferencesPanel {
             ImGui.sameLine(260f)
             val fits = ProfileBindingEdit.commandFits(compiled, registry, key, commandId)
             val known = registry.resolveId(commandId) != null
-            if (!fits || !known) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.9f, 0.6f, 0.2f, 1f)
+            if (!fits || !known) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_WARN.u32())
             if (ButtonChrome.button("$commandId##cmd")) { pickerKey = key; pickerFilter.set(""); ImGui.openPopup("command_picker") }
             if (!fits || !known) {
                 ImGui.popStyleColor()
@@ -150,7 +150,7 @@ object MidiPreferencesPanel {
                 ImGui.textDisabled(category)
                 for (command in commands) {
                     val fits = ProfileBindingEdit.commandFits(compiled, registry, key, command.id)
-                    if (!fits) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.5f, 0.5f, 0.5f, 1f)
+                    if (!fits) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled))
                     val clicked = selectableRow("${command.id}  -  ${command.description}##pick_${command.id}", false)
                     if (!fits) ImGui.popStyleColor()
                     if (clicked) { onChoose(command.id); pickerKey = null; ImGui.closeCurrentPopup() }

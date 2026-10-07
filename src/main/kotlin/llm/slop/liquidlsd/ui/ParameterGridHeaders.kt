@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
+import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.presets.analyzeDependencies
@@ -103,7 +104,7 @@ object ParameterGridHeaders {
         val valueColX = startX + labelColW + getColumnOffset(session, "value")
         val isValueHeaderHovered = mousePos.x >= valueColX && mousePos.x <= (valueColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
         if (isValueHeaderHovered) {
-            dl.addRectFilled(valueColX, startY, valueColX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
+            dl.addRectFilled(valueColX, startY, valueColX + CELL, startY + headerH, TangoPalette.HEADER_TINT.u32(), 3f)
         }
         
         var twValue = 0f
@@ -129,7 +130,7 @@ object ParameterGridHeaders {
             val midiColX = startX + labelColW + getColumnOffset(session, "midi")
             val isMidiHeaderHovered = mousePos.x >= midiColX && mousePos.x <= (midiColX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
             if (isMidiHeaderHovered) {
-                dl.addRectFilled(midiColX, startY, midiColX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
+                dl.addRectFilled(midiColX, startY, midiColX + CELL, startY + headerH, TangoPalette.HEADER_TINT.u32(), 3f)
             }
             
             var twMidi = 0f
@@ -157,7 +158,7 @@ object ParameterGridHeaders {
             val colX = startX + labelColW + getColumnOffset(session, cvId)
             val isCvHeaderHovered = mousePos.x >= colX && mousePos.x <= (colX + CELL) && mousePos.y >= startY && mousePos.y <= (startY + headerH)
             if (isCvHeaderHovered) {
-                dl.addRectFilled(colX, startY, colX + CELL, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
+                dl.addRectFilled(colX, startY, colX + CELL, startY + headerH, TangoPalette.HEADER_TINT.u32(), 3f)
             }
             
             var tw = 0f
@@ -204,7 +205,7 @@ object ParameterGridHeaders {
         val isKebabHovered = ImGui.isItemHovered()
 
         if (isKebabHovered || isPopupOpen) {
-            dl.addRectFilled(kebabX, startY, kebabX + kebabW, startY + headerH, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.08f), 3f)
+            dl.addRectFilled(kebabX, startY, kebabX + kebabW, startY + headerH, TangoPalette.HEADER_TINT.u32(), 3f)
         }
 
         if (isKebabClicked || (isKebabHovered && ImGui.isItemClicked(0))) {
@@ -213,9 +214,9 @@ object ParameterGridHeaders {
 
         // Draw vertical dots
         val dotCol = if (isKebabHovered || isPopupOpen) {
-            ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.95f)
+            ImGui.getColorU32(ImGuiCol.Text)
         } else {
-            ImGui.colorConvertFloat4ToU32(0.7f, 0.7f, 0.7f, 0.6f)
+            ImGui.getColorU32(ImGuiCol.TextDisabled)
         }
         val cx = kebabX + kebabW * 0.5f
         val cy = startY + headerH * 0.5f

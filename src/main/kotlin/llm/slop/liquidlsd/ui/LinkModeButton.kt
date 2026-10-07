@@ -169,8 +169,8 @@ object LinkModeButton {
         val pMaxY = pMinY + height
 
         ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1f, 1f, 1f, 0.12f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1f, 1f, 1f, 0.22f)
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.HOVER_OVERLAY.u32())
+        ImGui.pushStyleColor(ImGuiCol.ButtonActive, TangoPalette.PRESS_OVERLAY.u32())
 
         val clicked = ImGui.invisibleButton("btn_$id", width.coerceAtLeast(1f), height.coerceAtLeast(1f))
 
@@ -181,10 +181,10 @@ object LinkModeButton {
         val drawList = ImGui.getWindowDrawList()
 
         // Background frame
-        val bgCol = if (isActive) ImColor.rgba(1f, 1f, 1f, 0.2f)
-        else if (isHovered) ImColor.rgba(1f, 1f, 1f, 0.1f)
-        else if (isLinked) ImColor.rgba(0.12f, 0.18f, 0.24f, 0.85f)
-        else ImColor.rgba(0.10f, 0.11f, 0.12f, 0.7f)
+        val bgCol = if (isActive) TangoPalette.PRESS_OVERLAY.u32()
+        else if (isHovered) TangoPalette.HOVER_OVERLAY.u32()
+        else if (isLinked) TangoPalette.BADGE_BG.u32()
+        else TangoPalette.BUTTON_SOFT_BG.u32()
 
         val frameCol = if (isHovered) ImColor.rgba(0.2f, 0.85f, 1.0f, 0.8f)
         else if (isLinked) ImColor.rgba(0.2f, 0.75f, 0.95f, 0.45f)
@@ -204,7 +204,7 @@ object LinkModeButton {
         val midY = (startY + endY) * 0.5f
 
         // Subtle vertical 50% divider tick mark
-        val tickCol = if (isLinked) ImColor.rgba(1f, 1f, 1f, 0.18f) else ImColor.rgba(1f, 1f, 1f, 0.08f)
+        val tickCol = if (isLinked) TangoPalette.PRESS_OVERLAY.u32() else TangoPalette.HEADER_TINT.u32()
         drawList.addLine(midX, startY, midX, endY, tickCol, 1.0f)
 
         // Curve stroke color

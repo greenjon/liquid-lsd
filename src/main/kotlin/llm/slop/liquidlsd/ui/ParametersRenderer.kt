@@ -57,7 +57,7 @@ object ParametersRenderer {
 
         val dl = ImGui.getWindowDrawList()
         if (isEven) {
-            val stripeCol = ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
+            val stripeCol = TangoPalette.CELL_WASH.u32()
             dl.addRectFilled(gridStartX, rowScreenY, gridStartX + rowWidth, rowScreenY + CELL, stripeCol)
         }
 
@@ -212,7 +212,7 @@ object ParametersRenderer {
             pushOpenDropdownFont()
             if (session.uiTheme.randomizationEnabled) {
                 if (param.isRandomizeDisabled) {
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_DIM.u32())
                     ImGui.menuItem("Randomize row (Disabled)")
                     ImGui.popStyleColor()
                     itemTooltip(llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
@@ -415,7 +415,7 @@ object ParametersRenderer {
             isOscLearningThis -> ImGui.colorConvertFloat4ToU32(TangoPalette.ALERT.normal[0], TangoPalette.ALERT.normal[1], TangoPalette.ALERT.normal[2], 0.25f * pulseAlpha)
             isMacroBound   -> ImGui.colorConvertFloat4ToU32(0.1f, 0.4f, 0.6f, 0.4f)
             isValSelected  -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
-            else           -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
+            else           -> TangoPalette.CELL_WASH.u32()
         }
         val borderCol = when {
             isMacroLearning -> ImGui.colorConvertFloat4ToU32(0.0f, 0.95f, 1.0f, pulseAlpha)
@@ -573,7 +573,7 @@ object ParametersRenderer {
             isMidiTarget   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.4f, 0.5f, 1f)
             isMidiSelected -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
             hasMidiMod     -> ImGui.colorConvertFloat4ToU32(0.05f, 0.15f, 0.2f, 1f)
-            else           -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
+            else           -> TangoPalette.CELL_WASH.u32()
         }
         val borderCol = when {
             isMidiTarget   -> ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 1.0f, 1f)
@@ -606,9 +606,9 @@ object ParametersRenderer {
         } else {
             dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, bgCol, 3f)
             if (isCellHovered) {
-                dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.15f), 3f)
+                dl.addRectFilled(midiX, midiY, midiX + CELL, midiY + CELL, TangoPalette.HOVER_OVERLAY.u32(), 3f)
             }
-            val border = if (isCellHovered) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
+            val border = if (isCellHovered) TangoPalette.HOVER_BORDER.u32() else borderCol
             dl.addRect(midiX, midiY, midiX + CELL, midiY + CELL, border, 3f)
         }
     }
@@ -733,7 +733,7 @@ object ParametersRenderer {
             isTarget     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.4f, 0.5f, 1f)
             isSelected   -> ImGui.colorConvertFloat4ToU32(0.15f, 0.4f, 0.6f, 1f)
             hasModulator -> ImGui.colorConvertFloat4ToU32(0.05f, 0.15f, 0.2f, 1f)
-            else         -> ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.03f)
+            else         -> TangoPalette.CELL_WASH.u32()
         }
         val borderCol = when {
             isTarget     -> ImGui.colorConvertFloat4ToU32(0.0f, 0.8f, 1.0f, 1f)
@@ -766,9 +766,9 @@ object ParametersRenderer {
         } else {
             dl.addRectFilled(x, y, x + CELL, y + CELL, bgCol, 3f)
             if (isCellHovered) {
-                dl.addRectFilled(x, y, x + CELL, y + CELL, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.15f), 3f)
+                dl.addRectFilled(x, y, x + CELL, y + CELL, TangoPalette.HOVER_OVERLAY.u32(), 3f)
             }
-            val border = if (isCellHovered) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
+            val border = if (isCellHovered) TangoPalette.HOVER_BORDER.u32() else borderCol
             dl.addRect(x, y, x + CELL, y + CELL, border, 3f)
         }
     }
@@ -795,10 +795,10 @@ object ParametersRenderer {
         dl.addRectFilled(x, y, x + r * 2f, y + r * 2f, bgCol, 3f)
         
         if (isHovered) {
-            dl.addRectFilled(x, y, x + r * 2f, y + r * 2f, ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.15f), 3f)
+            dl.addRectFilled(x, y, x + r * 2f, y + r * 2f, TangoPalette.HOVER_OVERLAY.u32(), 3f)
         }
 
-        val border = if (isHovered) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 0.6f) else borderCol
+        val border = if (isHovered) TangoPalette.HOVER_BORDER.u32() else borderCol
         dl.addRect(x, y, x + r * 2f, y + r * 2f, border, 3f)
 
         val scaleFactor = r / 17.5f

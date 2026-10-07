@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.TangoPalette
 import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
@@ -89,7 +90,7 @@ object QueueActionsPanel {
             val label = "${index + 1}. ${file.nameWithoutExtension}${if (isActive) " ->" else ""}"
 
             if (isActive) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
+                ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.QUEUE_AB_TEXT.u32())
             }
 
             val popupId = "queue_item_menu_$index"

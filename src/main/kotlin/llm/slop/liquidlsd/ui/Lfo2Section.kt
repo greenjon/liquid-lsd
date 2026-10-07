@@ -81,7 +81,7 @@ object Lfo2Section {
         if (session.uiTheme.randomizationEnabled) {
             ImGui.sameLine(0f, 10f * fontScale)
             if (param.isRandomizeDisabled) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_FAINT.u32())
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                     ButtonChrome.button("${Icons.DICES}##rand_lfo2_$idx", btnWidth, btnHeight)
                 }

@@ -43,7 +43,7 @@ interface NavSurface {
 
 /**
  * Where a Library or picker knob tap sends the cursor item. Row three is the decks (knobs 9-12 = A, B, BG, PV) and knob 13,
- * first of row four, is the master bus (FX only); row one stays free for the row the send opens.
+ * first of row four, is the master bus (FX only); the sent-to pair's rows stay live.
  */
 enum class SendTarget(val knob: Int) {
     A(8), B(9), BG(10), PV(11), MASTER(12);

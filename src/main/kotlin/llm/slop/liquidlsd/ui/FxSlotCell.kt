@@ -21,7 +21,7 @@ import java.io.File
  *
  * - **◀ / ▶** (shown only while hovered), the mouse wheel over the name, or the right-click
  *   menu step through the [FxShortlist].
- * - **Name** click opens that row's Browse content on this slot (stock filters, ★ favorites, saved single FX).
+ * - **Name** click opens that row's pair view on this slot (stock filters, ★ favorites, saved single FX).
  * - **Drag** a cell onto another cell to swap them (reorder within a chain, or trade between
  *   chains); hold Ctrl while dropping to copy instead. Library items drop onto a cell too:
  *   stock filters and saved `.lsdfx` replace the slot, a `.lsdfxchain` replaces the chain.
@@ -62,7 +62,7 @@ object FxSlotCell {
     /**
      * Draws the cell for slot [slotIndex] of the chain behind FX bank [bankId] at ([x], [y]),
      * [w] wide. [chainLabel] is the chain's display name ("Deck A", "Master") for titles/tooltips;
-     * [onEditInDeepEdit] opens that row's Deep Edit; [onOpenBrowse] opens that row's Browse content
+     * [onEditInDeepEdit] opens that row's Deep Edit; [onOpenBrowse] opens that row's pair view
      * focused on this slot (replaces what used to be a modal shader picker).
      */
     fun draw(

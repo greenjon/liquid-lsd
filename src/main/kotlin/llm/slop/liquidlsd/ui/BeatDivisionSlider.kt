@@ -314,7 +314,7 @@ object BeatDivisionSlider {
             ImGui.setCursorScreenPos(randBtnX, row2Y)
             
             if (isRandomizeDisabled) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_FAINT.u32())
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                     ButtonChrome.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)
                 }
@@ -322,7 +322,7 @@ object BeatDivisionSlider {
                 itemTooltip(randomizeDisabledTooltip ?: llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP)
             } else {
                 if (!effectiveIsRandomizable) {
-                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.4f)
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_DIM.u32())
                 }
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                     if (ButtonChrome.button("${Icons.DICES}##rand_$label", buttonSize, buttonSize)) {

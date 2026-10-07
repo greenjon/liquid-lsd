@@ -70,10 +70,20 @@ object CvTheme {
         "audio_flux_high" to AUDIO_FLUX_HIGH
     )
 
+    /**
+     * The neon hues are tuned for dark panels; on the light theme they are scaled down (same hue) so graph strokes, cell borders
+     * and badges keep their contrast against a light background.
+     */
+    private const val LIGHT_THEME_SCALE = 0.62f
+
     fun getThemeColor(cvId: String, alpha: Float = 1f): Int {
-        val signal = byId[cvId] ?: UNKNOWN
-        return ImGui.colorConvertFloat4ToU32(signal.r, signal.g, signal.b, alpha)
+        val rgb = getThemeColorRGB(cvId)
+        return ImGui.colorConvertFloat4ToU32(rgb[0], rgb[1], rgb[2], alpha)
     }
 
-    fun getThemeColorRGB(cvId: String): FloatArray = (byId[cvId] ?: UNKNOWN).toFloatArray()
+    fun getThemeColorRGB(cvId: String): FloatArray {
+        val signal = byId[cvId] ?: UNKNOWN
+        val k = if (TangoPalette.isLightTheme) LIGHT_THEME_SCALE else 1f
+        return floatArrayOf(signal.r * k, signal.g * k, signal.b * k)
+    }
 }

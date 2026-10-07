@@ -22,11 +22,10 @@ import llm.slop.liquidlsd.ui.browser.BrowserDock.DockBinding
 import java.io.File
 
 /**
- * Inline "Browse" content for the Performance row bay: picking a deck's generator, a saved whole
+ * Browse content of the pair view: picking a deck's generator, a saved whole
  * FX chain, one FX chain slot's effect, or the active transition -- everything that used to be
- * the modal pickers that the unified [BrowserPane] replaced. Draws the same [BrowserDock] as the Library, bound to the row. Lives beside
- * [PerformanceDeepEditBay]'s Params content; the bay's tab row (Edit | SRC | Chain | FX1-3) picks which
- * one shows. Picking something applies it immediately (Ctrl+Z undoes it) and leaves the list open, so
+ * the modal pickers that the unified [BrowserPane] replaced. Draws the same [BrowserDock] as the Library, bound to the half last touched. Hosted by
+ * [PerformanceDeepEditBay.drawPairBay], never beside the Params editor. Picking something applies it immediately (Ctrl+Z undoes it) and leaves the list open, so
  * trying several generators/effects/chains in a row doesn't mean reopening anything.
  */
 internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {

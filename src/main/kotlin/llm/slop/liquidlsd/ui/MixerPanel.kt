@@ -102,7 +102,7 @@ class MixerPanel(
         val badgeMinY = badgeMaxY - badgeH
 
         // 1. Master Badge Pill [M]
-        dlMaster.addRectFilled(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, ImGui.colorConvertFloat4ToU32(0.08f, 0.08f, 0.08f, 0.80f), 4f)
+        dlMaster.addRectFilled(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, TangoPalette.PILL_BG.u32(), 4f)
         dlMaster.addRect(badgeMinX, badgeMinY, badgeMaxX, badgeMaxY, masterThemeCol, 4f, 0, 1.5f)
 
         val textX = badgeMinX + (badgeW - textW) * 0.5f
@@ -413,7 +413,7 @@ class MixerPanel(
         } else {
             if (isTrackActive) ImGui.colorConvertFloat4ToU32(0.8f, 0.8f, 0.8f, 1.0f) else ImGui.colorConvertFloat4ToU32(0.5f, 0.5f, 0.5f, 1.0f)
         }
-        val handleBorderCol = if (isLight) ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f) else ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f)
+        val handleBorderCol = TangoPalette.XF_HANDLE_BORDER.u32()
 
         dl.addRectFilled(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBgCol, 1f)
         dl.addRect(valHandleX - handleW / 2f, centerY - handleH / 2f, valHandleX + handleW / 2f, centerY + handleH / 2f, handleBorderCol, 1f)
@@ -465,7 +465,7 @@ class MixerPanel(
             val dotR = 4f
             val curDotCol = TangoPalette.u32(TangoPalette.ALERT.normal)
             dl.addCircleFilled(liveX, centerY, dotR, curDotCol)
-            dl.addCircle(liveX, centerY, dotR + 0.5f, ImGui.colorConvertFloat4ToU32(0.1f, 0.1f, 0.1f, 1.0f), 12, 1.0f)
+            dl.addCircle(liveX, centerY, dotR + 0.5f, TangoPalette.XF_HANDLE_BORDER.u32(), 12, 1.0f)
         }
     }
 }

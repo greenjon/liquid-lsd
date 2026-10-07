@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Light Theme: First Contrast Pass (`ui/TangoPalette.kt`, `ui/CvTheme.kt`, and the panels that used white-alpha or pastel literals)
+- **Hover and press washes, grid cell stripes, header tints and locked-control captions that were white-on-dark now have light-theme versions** (icon buttons, link-mode chips, the parameter grid and its headers, slider captions), so they no longer vanish on a light panel.
+- **Status text (OK / warning / error) and the queue column headers use darker Tango shades on the light theme** (Broadcast, MIDI and Shortcuts preferences, save and popup warnings, rack titles, preset-list errors).
+- **Modulation signal colours (value, MIDI, LFO, sequencer, audio) are darkened on the light theme** for contrast. The dark theme is unchanged.
+- Internal: new `TangoPalette` Roles (`HOVER_OVERLAY`, `PRESS_OVERLAY`, `HEADER_TINT`, `CELL_WASH`, `HOVER_BORDER`, `TEXT_FAINT`, `TEXT_DIM`, `TEXT_OK`, `TEXT_WARN`, `TEXT_ERROR`, `QUEUE_AB_TEXT`, `QUEUE_BG_TEXT`); `CvTheme.LIGHT_THEME_SCALE`. Remaining literals are listed in `.planning/theme-color-audit.md`.
+
 ### Controller FX Tap Applies; Browser Scope Is Remembered per Kind; Tooltips Mention the Pair View (`ui/browser/DockActions.kt`, `ui/browser/FXBrowserPanel.kt`, `ui/browser/ApplyTarget.kt`, `ui/browser/BrowserPane.kt`)
 - **Tapping an FX in the Library from a controller applies it to the live deck** like a double-click: a single effect goes into the first empty slot (the last slot when all are full, since a controller has no popup), a chain replaces the deck's chain. Ctrl+Z undoes it and a toast says where it landed. **Shift + tap** still adds it to the FX queue.
 - **The browser remembers your place per kind**: the folder, search and cursor you left in Sources, FX or Transitions now carry over between the Library and every deck, slot and transition (moving between pairs no longer resets them). Choosing a whole FX chain still starts in saved chains and gets its own memory, because it can only list chains.

@@ -20,7 +20,7 @@ import java.io.File
  *   `[⋮]  Chain Name •  [Save]  [◀] [▶]  [1] [2] [3]`   ...   `[BYPASS]`
  *
  * - **⋮ menu**: Save As, New, Revert, Clear, Copy / Paste chain, Resync knobs.
- * - **Name**: click opens that row's Browse content on the whole-chain list (search filter). Drops of .lsdfxchain load here.
+ * - **Name**: click opens that row's pair view on the whole-chain list (search filter). Drops of .lsdfxchain load here.
  * - **• (dirty dot)**: shows amber when the chain differs from its loaded baseline or has unsaved edits.
  * - **Save**: overwrites source file (or acts as Save As if untitled).
  * - **◀ / ▶**: on Deck A, B, and BG, steps through the respective live FX queue (A/B or BG) directly
@@ -47,9 +47,9 @@ object FxChainHeader {
 
     /** Row-specific reactions to header clicks. One long-lived instance per row, so drawing allocates no closures. */
     interface Actions {
-        /** Opens the row's Browse content targeted at FX slot [slotIdx]. */
+        /** Opens the row's pair view targeted at FX slot [slotIdx]. */
         fun openSlotBrowse(slotIdx: Int)
-        /** Opens the row's Browse content on the whole-chain list. */
+        /** Opens the row's pair view on the whole-chain list. */
         fun openChainBrowse()
     }
 
@@ -223,7 +223,7 @@ object FxChainHeader {
 
     /**
      * Line 1 of a deck FX half, [nameW] wide: the chain name (group mode) or the focused effect's name
-     * (focus mode). Both open the row's Browse content on click.
+     * (focus mode). Both open the row's pair view on click.
      */
     fun drawNameLine(
         session: SessionContext,

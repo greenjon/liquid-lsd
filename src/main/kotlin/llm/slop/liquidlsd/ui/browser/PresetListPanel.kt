@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.ui.TangoPalette
 import llm.slop.liquidlsd.rendering.ExternalVideoSource
 import imgui.ImGui
 import imgui.flag.ImGuiCol
@@ -93,7 +94,7 @@ object PresetListPanel {
             val itemW = (availW - btnW).coerceAtLeast(10f)
 
             if (hasIssues && !isSelected) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.95f, 0.40f, 0.40f, 1f)
+                ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.TEXT_ERROR.u32())
             }
             var itemClicked = false
             val infoText = infoFor?.invoke(asset) ?: ""

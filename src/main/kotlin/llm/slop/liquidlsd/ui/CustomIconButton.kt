@@ -21,8 +21,8 @@ object CustomIconButton {
 
         // Button background logic
         ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1f, 1f, 1f, 0.1f)
-        ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1f, 1f, 1f, 0.2f)
+        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.HOVER_OVERLAY.u32())
+        ImGui.pushStyleColor(ImGuiCol.ButtonActive, TangoPalette.PRESS_OVERLAY.u32())
 
         val clicked = ImGui.invisibleButton(id, width.coerceAtLeast(1f), height.coerceAtLeast(1f))
         
@@ -35,9 +35,9 @@ object CustomIconButton {
         
         // Draw background hover/active states manually if we used invisible button
         if (isActive) {
-            drawList.addRectFilled(pMinX, pMinY, pMaxX, pMaxY, ImColor.rgba(1f, 1f, 1f, 0.2f), ImGui.getStyle().frameRounding)
+            drawList.addRectFilled(pMinX, pMinY, pMaxX, pMaxY, TangoPalette.PRESS_OVERLAY.u32(), ImGui.getStyle().frameRounding)
         } else if (isHovered) {
-            drawList.addRectFilled(pMinX, pMinY, pMaxX, pMaxY, ImColor.rgba(1f, 1f, 1f, 0.1f), ImGui.getStyle().frameRounding)
+            drawList.addRectFilled(pMinX, pMinY, pMaxX, pMaxY, TangoPalette.HOVER_OVERLAY.u32(), ImGui.getStyle().frameRounding)
         }
 
         // Draw border if selected? Or just color the line? 

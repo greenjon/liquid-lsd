@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#light-theme-first-contrast-pass-uitangopalettekt-uicvthemekt-and-the-panels-that-used-white-alpha-or-pastel-literals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Light Theme: First Contrast Pass (ui/TangoPalette.kt, ui/CvTheme.kt, and the panels that used white-alpha or pastel literals)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#controller-fx-tap-applies-browser-scope-is-remembered-per-kind-tooltips-mention-the-pair-view-uibrowserdockactionskt-uibrowserfxbrowserpanelkt-uibrowserapplytargetkt-uibrowserbrowserpanekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5801,6 +5812,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#light-theme-first-contrast-pass-uitangopalettekt-uicvthemekt-and-the-panels-that-used-white-alpha-or-pastel-literals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Light Theme: First Contrast Pass (ui/TangoPalette.kt, ui/CvTheme.kt, and the panels that used white-alpha or pastel literals)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#controller-fx-tap-applies-browser-scope-is-remembered-per-kind-tooltips-mention-the-pair-view-uibrowserdockactionskt-uibrowserfxbrowserpanelkt-uibrowserapplytargetkt-uibrowserbrowserpanekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10369,6 +10391,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="light-theme-first-contrast-pass-uitangopalettekt-uicvthemekt-and-the-panels-that-used-white-alpha-or-pastel-literals">Light Theme: First Contrast Pass (<code>ui/TangoPalette.kt</code>, <code>ui/CvTheme.kt</code>, and the panels that used white-alpha or pastel literals)</h3>
+<ul>
+<li><strong>Hover and press washes, grid cell stripes, header tints and locked-control captions that were white-on-dark now have light-theme versions</strong> (icon buttons, link-mode chips, the parameter grid and its headers, slider captions), so they no longer vanish on a light panel.</li>
+<li><strong>Status text (OK / warning / error) and the queue column headers use darker Tango shades on the light theme</strong> (Broadcast, MIDI and Shortcuts preferences, save and popup warnings, rack titles, preset-list errors).</li>
+<li><strong>Modulation signal colours (value, MIDI, LFO, sequencer, audio) are darkened on the light theme</strong> for contrast. The dark theme is unchanged.</li>
+<li>Internal: new <code>TangoPalette</code> Roles (<code>HOVER_OVERLAY</code>, <code>PRESS_OVERLAY</code>, <code>HEADER_TINT</code>, <code>CELL_WASH</code>, <code>HOVER_BORDER</code>, <code>TEXT_FAINT</code>, <code>TEXT_DIM</code>, <code>TEXT_OK</code>, <code>TEXT_WARN</code>, <code>TEXT_ERROR</code>, <code>QUEUE_AB_TEXT</code>, <code>QUEUE_BG_TEXT</code>); <code>CvTheme.LIGHT_THEME_SCALE</code>. Remaining literals are listed in <code>.planning/theme-color-audit.md</code>.</li>
+</ul>
 <h3 id="controller-fx-tap-applies-browser-scope-is-remembered-per-kind-tooltips-mention-the-pair-view-uibrowserdockactionskt-uibrowserfxbrowserpanelkt-uibrowserapplytargetkt-uibrowserbrowserpanekt">Controller FX Tap Applies; Browser Scope Is Remembered per Kind; Tooltips Mention the Pair View (<code>ui/browser/DockActions.kt</code>, <code>ui/browser/FXBrowserPanel.kt</code>, <code>ui/browser/ApplyTarget.kt</code>, <code>ui/browser/BrowserPane.kt</code>)</h3>
 <ul>
 <li><strong>Tapping an FX in the Library from a controller applies it to the live deck</strong> like a double-click: a single effect goes into the first empty slot (the last slot when all are full, since a controller has no popup), a chain replaces the deck's chain. Ctrl+Z undoes it and a toast says where it landed. <strong>Shift + tap</strong> still adds it to the FX queue.</li>

@@ -6,7 +6,7 @@ Each deck runs one visual source at a time. Sources range from the built-in proc
 
 ## Picking a Source
 
-Click the source selector in the **SRC** tab of any deck to open Browse inline (see [Your Workspace](your_workspace.md) / [Macros & the Modular Rack](macros_and_rack.md)). You can search by name, tag, or author. Browse automatically filters to show only sources appropriate for what you're assigning — generators for the main source slot, effects for the FX slots, and transitions for the mixer. Picks apply immediately and the list stays open, so you can try several in a row.
+Click a deck's source badge to open its pair view with Browse (see [Your Workspace](your_workspace.md) / [Macros & the Modular Rack](macros_and_rack.md)). You can search by name, tag, or author. Browse automatically filters to show only sources appropriate for what you're assigning — generators for the main source slot, effects for the FX slots, and transitions for the mixer. Picks apply immediately and the list stays open, so you can try several in a row.
 
 To remove the current source, click **Detach** or **None**.
 

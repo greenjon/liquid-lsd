@@ -98,22 +98,22 @@ object BroadcastPreferencesPanel {
 
         when (state) {
             llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTED -> {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.2f, 0.9f, 0.2f, 1f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_OK.u32())
                 ImGui.text("${Icons.ACTIVITY} CONNECTED (LIVE)")
                 ImGui.popStyleColor()
             }
             llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.CONNECTING -> {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.9f, 0.8f, 0.2f, 1f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_WARN.u32())
                 ImGui.text("${Icons.REFRESH} CONNECTING...")
                 ImGui.popStyleColor()
             }
             llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.ERROR -> {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.95f, 0.3f, 0.3f, 1f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_ERROR.u32())
                 ImGui.text("${Icons.ALERT} ERROR: ${llm.slop.liquidlsd.broadcast.BroadcastEngine.lastError ?: "Connection failed"}")
                 ImGui.popStyleColor()
             }
             llm.slop.liquidlsd.broadcast.BroadcastEngine.ConnectionState.DISCONNECTED -> {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 0.6f, 0.6f, 0.6f, 1f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled))
                 ImGui.text("${Icons.POWER} OFFLINE (DISCONNECTED)")
                 ImGui.popStyleColor()
             }

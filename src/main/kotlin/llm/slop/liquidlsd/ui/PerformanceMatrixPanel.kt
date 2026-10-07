@@ -80,7 +80,7 @@ class PerformanceMatrixPanel {
 
         // Modular Rack: when a module is in Deep Edit, every other row is hidden from the grid and
         // the Deep-Edit bay below gets the rest of the height. The open row is exactly as tall as
-        // in Perform view; the selected knob's Learn button hangs below it, over the bay's toggle line.
+        // in Perform view; the selected knob's Learn button hangs below it, over the top of the bay.
         val pages = PerfPageStore.default.all()
         val page = pages.firstOrNull { it.id == theme.performancePageId } ?: pages.first()
         val visibleRows = visibleRowsForPage(page, pages, parametersState)
@@ -108,7 +108,7 @@ class PerformanceMatrixPanel {
         }
 
         // The selected knob's card + Learn button extend below the row, past the grid child's clip
-        // rect, so they're drawn here in the parent window, on top of the bay's toggle line.
+        // rect, so they're drawn here in the parent window, on top of the bay.
         if (overhangCount > 0) {
             val cx = ImGui.getCursorScreenPosX()
             val cy = ImGui.getCursorScreenPosY()

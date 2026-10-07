@@ -116,7 +116,7 @@ object ModulatorHeaderRow {
         if (session.uiTheme.randomizationEnabled) {
             ImGui.sameLine(0f, 9.5f)
             if (isRandomizeDisabled) {
-                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, 1f, 1f, 1f, 0.25f)
+                ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, TangoPalette.TEXT_FAINT.u32())
                 session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                     ButtonChrome.button("${Icons.DICES}##rand_bar_$idx", btnWidth, btnHeight)
                 }

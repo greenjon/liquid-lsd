@@ -110,7 +110,7 @@ class PopupManager(
             ImGui.textWrapped("You can still map parameters by clicking them, but you will need")
             ImGui.textWrapped("to plug in a MIDI hardware controller to send actual control values.")
             ImGui.spacing()
-            ImGui.pushStyleColor(ImGuiCol.Text, 1.0f, 0.6f, 0.0f, 1.0f)
+            ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.TEXT_WARN.u32())
             ImGui.textWrapped("A background watchdog is active. Plugging in a MIDI controller")
             ImGui.textWrapped("will automatically activate it within a few seconds.")
             ImGui.popStyleColor()

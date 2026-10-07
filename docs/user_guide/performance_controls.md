@@ -150,7 +150,7 @@ for the FX Rack view that exposes these.
     - **Link (top)**: links/unlinks that slot's Metaknob to the Super Knob.
   - **Chain Link (left of the Super Knob, knob 1)**: links or unlinks all three slots at once. Click links all unless they are all linked already, in which case it unlinks all; the icon shows a chain when every filled slot is linked, a dimmer chain when only some are, and a broken chain when none are. The Macro Strip has the same toggle by the `CHAIN MACRO` title. Where a new chain starts (linked or unlinked) is the **Default FX chain linking** preference.
     - **Bypass (bottom, power icon)**: turns just that effect on or off. Row-coloured when on, red when bypassed, dim when the slot is empty. In Focus Mode, only the focused slot's bypass is shown, next to knob 1.
-    - **Effect Name**: Truncated caption showing loaded filter. Click opens inline Browse on that slot's `FX1`/`FX2`/`FX3` sub-tab (Stock filters, ★ Favorites, and Saved `.lsdfx` presets). Browse opens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't open it.
+    - **Effect Name**: Truncated caption showing loaded filter. Click opens the pair view with Browse on that slot (Stock filters, ★ Favorites, and Saved `.lsdfx` presets). Browse opens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't open it.
     - **Drag & Drop**: Drag an effect name onto another slot's name to swap/reorder (hold `Ctrl` while dropping to duplicate). Accepts stock ISF filters and `.lsdfx` single presets from Library.
     - **Right-Click Context Menu**: Focus Mode, Previous/Next in Shortlist, Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Edit.
   - **Swap Gain Dip**:
@@ -166,7 +166,7 @@ for the FX Rack view that exposes these.
       - Or right-click a slot cell and select **Focus Mode (Edit Parameters)**.
     - **Header Controls in Focus Mode**:
       - `[⋮]`: Chain kebab menu remains accessible for Save As, Clear, etc.
-      - `[Focused Effect Name ▾]`: Displays the name of the focused effect; clicking opens inline FX Browse directly for that slot to audition or swap shaders.
+      - `[Focused Effect Name ▾]`: Displays the name of the focused effect; clicking opens the pair view's FX Browse directly for that slot to audition or swap shaders.
       - `[◀ P1/N ▶]`: Parameter page stepper; appears automatically whenever the focused shader exposes more than 3 parameters.
       - `[1] [2] [3]`: Slot focus pills with clean styling. The active slot pill is highlighted in blue accent. Click another slot pill to switch focus instantly, or click the active focused slot pill a second time (or press `Escape`) to exit Focus Mode back to the 3-slot chain view.
     - **4 Knobs in Focus Mode**:
@@ -281,7 +281,7 @@ To use the factory absolute mode instead, copy the profile to `library/controlle
 <a id="twister-layout"></a>
 #### What the knobs control
 
-**The 16 knobs are the 16 knobs on screen.** Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Switch a row between `SRC` and `FX`, or focus a slot, with the mouse or the Twister and the same encoders follow. In Edit the Twister follows the open module: knobs 1-4 control that module's 4 macro knobs (reflecting its active sub-tab, e.g. SRC or FX), while knobs 5-16 are inert. Edit itself (the full 3-column parameter matrix) is opened and edited with the mouse; the controller only opens inline Browse pickers.
+**The 16 knobs are the 16 knobs on screen.** Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Focus an FX slot, with the mouse or the Twister, and the same encoders follow. In Edit the Twister follows the open module: knobs 1-4 control that module's 4 macro knobs (reflecting its active sub-tab, e.g. SRC or FX), while knobs 5-16 are inert. Edit itself (the full 3-column parameter matrix) is opened and edited with the mouse; the controller only opens the pair view's pickers.
 
 The Twister's four hardware **banks** pick the page shown on screen. Press a bank button (or use Previous/Next Bank) and the matrix changes with it; clicking a tab on screen moves the encoders to that page too, so screen and hardware always agree.
 

@@ -167,7 +167,7 @@ internal object LibraryNavigation {
         when (LibraryPanel.activeSelectionSource) {
             SelectionSource.TREE -> unifiedKind()?.let {
                 BrowserPane.acceptTree(it)
-                // In the Edit bay a scope tap also moves the cursor into the list (fewer presses); the Library keeps tap-selects-only.
+                // In the pair view a scope tap also moves the cursor into the list (fewer presses); the Library keeps tap-selects-only.
                 if (BrowserPane.hosted() != null) LibraryPanel.activeSelectionSource = SelectionSource.PRESETS
             }
             SelectionSource.PRESETS -> DockActions.acceptCursorRow(session, mixer, parametersState)

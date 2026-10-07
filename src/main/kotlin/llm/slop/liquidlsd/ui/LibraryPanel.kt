@@ -49,7 +49,7 @@ object LibraryPanel {
 
     var viewMode: LibraryViewMode = System.getProperty("lsd.libraryTab")?.let { n -> LibraryViewMode.entries.firstOrNull { it.name.equals(n, true) } } ?: LibraryViewMode.PRESETS
 
-    /** The tab the controller and keyboard act on. The dock owns one selected tab wherever it is drawn (Library or Edit bay). */
+    /** The tab the controller and keyboard act on. The dock owns one selected tab wherever it is drawn (Library or pair view). */
     val navMode: LibraryViewMode get() = viewMode
     var activeSelectionSource: SelectionSource? = null
     var selectedPlaylistFile: File? = null
@@ -243,8 +243,8 @@ object LibraryPanel {
     }
 
     /**
-     * Clears the one-shot focus/scroll flags. Called by [UIManager] once the whole frame is drawn, not from [draw]: the Edit
-     * bay's picker lists are drawn while this panel is skipped, and the Library's own key shortcuts run after its lists.
+     * Clears the one-shot focus/scroll flags. Called by [UIManager] once the whole frame is drawn, not from [draw]: the pair
+     * view's Browse lists are drawn while this panel is skipped, and the Library's own key shortcuts run after its lists.
      */
     fun endFrame() {
         shouldReclaimFocus = false

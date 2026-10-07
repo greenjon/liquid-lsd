@@ -4,7 +4,7 @@ import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
 
 /**
- * What a [BrowserPane] hosted in the Edit bay applies to: one deck's source, one FX slot, a whole FX chain or the mixer transition.
+ * What a [BrowserPane] hosted in the pair view applies to: one deck's source, one FX slot, a whole FX chain or the mixer transition.
  * With a target a single click applies the row ([apply]) instead of the Library's double-click load, rows the target cannot take are
  * hidden ([accepts]), and the row that is already applied carries a marker ([isApplied]). [contextKey] names the target: when it
  * changes the pane restores the scope last used there (or [defaultScope]) and drops the list selection.
