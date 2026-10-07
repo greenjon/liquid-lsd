@@ -1888,7 +1888,7 @@
 <h3 id="library-view-mode-sources-fx-transitions-macros">Library View Mode (<code>[ Sources ]</code> / <code>[ FX ]</code> / <code>[ Transitions ]</code> / <code>[ Macros ]</code>)</h3>
 <p>Toggle between sources, FX, transitions and banks (macro banks and Perform pages) using the segmented mode button in the top-left of the Library menu bar. Sources, FX and Trans share one three-part browser:</p>
 <ul>
-<li><strong>Folder tree</strong> (left) — <strong>All</strong>, <strong>Favorites</strong> (FX), the kind's sections (Sources: stock sources and saved presets; FX: stock filters, saved single FX and saved chains; Trans: stock transitions and saved transitions), and a <strong>Playlists</strong> group with one entry per playlist. Each entry shows how many rows it holds. Click one to list it. A playlist is just another tree entry: select it to see and edit its rows.</li>
+<li><strong>Folder tree</strong> (left) — <strong>All</strong>, <strong>Favorites</strong> (FX), the kind's sections (Sources: stock sources, saved presets and live external video; FX: stock filters, saved single FX and saved chains; Trans: stock transitions and saved transitions), and a <strong>Playlists</strong> group with one entry per playlist. Each entry shows how many rows it holds. Click one to list it. A playlist is just another tree entry: select it to see and edit its rows.</li>
 <li><strong>List</strong> (middle) — The rows of the selected tree entry, with a search box on top (<code>Ctrl+F</code> or <code>/</code> focuses it) and a <strong><code>[+]</code></strong> button for the kind's "new" action.</li>
 <li><strong>Queues tab</strong> — All five queues side by side: A/B, BG, A/B FX, BG FX and Transition (which the crossfader advances through automatically). Items get in from the other tabs (<code>Q</code>, <code>Shift+Q</code>, the toolbar buttons, the row menu or drag-and-drop); this tab is where you watch, reorder and play them.</li>
 </ul>
@@ -1903,9 +1903,14 @@
 <p>The <code>[ Sources ]</code> list shows two kinds of row side by side, each marked with its own icon:</p>
 <ul>
 <li><strong>Stock Sources</strong> — The 8 bundled built-in visual sources: Mandala, Dynamic Spiral, Icosa H3, Domain Warp Fluid, Gyroid Hyperspace, Celestial Engine, Hyper Slice, and Chladni Cymatics (plus external video streams and any custom sources dropped into your configured shader directories). They load straight to a deck's source stage with their shader's default parameters; they can't be added to a playlist or queue.</li>
-<li><strong>Saved Presets (<code>.lsd</code>)</strong> — A full deck preset: the visual source plus every parameter value, modulation connection, and note.</li>
+<li>
+<p><strong>Saved Presets (<code>.lsd</code>)</strong> — A full deck preset: the visual source plus every parameter value, modulation connection, and note.</p>
+</li>
+<li>
+<p><strong>External Video</strong> — Live Spout, Syphon or PipeWire streams running right now, one row each in the <strong>External video</strong> folder (empty when none is active). Load one like a stock source; it appears and disappears as the stream starts and stops. Streams are not files, so they have no favorites, playlists or queues and cannot be saved as presets.</p>
+</li>
 </ul>
-<p>Pick a section in the folder tree to show only stock sources or only saved presets. Use <strong><code>[+]</code></strong> to eject a deck to blank so you can build a new preset on it (see <a href="#saving-a-preset">Saving a preset</a> below).</p>
+<p>Pick a section in the folder tree to show only stock sources, saved presets or live streams. Use <strong><code>[+]</code></strong> to eject a deck to blank so you can build a new preset on it (see <a href="#saving-a-preset">Saving a preset</a> below).</p>
 <ul>
 <li><strong>Search</strong> — Type to filter by name, tag, or (for stock sources) category. <code>Ctrl+F</code> or <code>/</code> jumps focus to the search box of the open tab (Sources, FX or Transitions) from anywhere in the app.</li>
 <li><strong>Multi-Selection (Shift-Click &amp; Ctrl/Cmd-Click)</strong>:</li>

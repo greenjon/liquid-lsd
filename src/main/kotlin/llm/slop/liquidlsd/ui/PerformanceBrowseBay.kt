@@ -102,13 +102,20 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             contextKey = "gen/$deckLabel",
             defaultScope = BrowseScope.All,
             accepts = { ApplyTarget.acceptsSource(it.type) },
-            isApplied = { it.type == AssetType.SOURCE_STOCK && it.path.removePrefix(BrowseCatalogs.STOCK_SOURCE_PREFIX) == deck.source.id },
+            isApplied = {
+                when (it.type) {
+                    AssetType.SOURCE_STOCK -> it.path.removePrefix(BrowseCatalogs.STOCK_SOURCE_PREFIX) == deck.source.id
+                    AssetType.SOURCE_EXTERNAL -> (deck.source as? llm.slop.liquidlsd.rendering.ExternalVideoSource)?.serverName == BrowseCatalogs.externalName(it)
+                    else -> false
+                }
+            },
             apply = { asset ->
                 if (asset.type == AssetType.SOURCE_STOCK) applyId(asset.path.removePrefix(BrowseCatalogs.STOCK_SOURCE_PREFIX))
+                else if (asset.type == AssetType.SOURCE_EXTERNAL) applyId("ext_video:${BrowseCatalogs.externalName(asset)}")
                 else DeckSlot.entries.firstOrNull { it.label == deckLabel }?.let { DeckOps.request(it, DeckChange.Preset(File(asset.path))) }
             }
         )
-        val actions = { drawGenBrowseSaveButton(session, mixer, deck, deckLabel) { drawExternalVideoMenu(deckLabel, applyId) } }
+        val actions = { drawGenBrowseSaveButton(session, mixer, deck, deckLabel) }
         return DockBinding(target, "$deckLabel · Source", actions)
     }
 
@@ -124,7 +131,7 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
 
     /** Floppy-disk Save/Save As -- same [DeckPresetController.handleSaveDeck] flow the Mixer's
      *  own Save button and Ctrl+Shift+S already use, just also reachable from this Browse list. */
-    private fun drawGenBrowseSaveButton(session: SessionContext, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String, extra: (() -> Unit)? = null) {
+    private fun drawGenBrowseSaveButton(session: SessionContext, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String) {
         val isDeckA = deckLabel == "Deck A"
         val isExternal = deck.source is llm.slop.liquidlsd.rendering.ExternalVideoSource
         val rowH = ImGui.getFrameHeight()
@@ -153,27 +160,6 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             if (ImGui.menuItem("Save As...")) {
                 ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = true)
             }
-            popOpenDropdownFont()
-            ImGui.endPopup()
-        }
-        popOpenDropdownPadding()
-        if (extra != null) {
-            ImGui.sameLine()
-            extra()
-        }
-    }
-
-    /** The unified pane lists saved and stock sources only; live external video feeds (the old picker's "External Sources") live in this menu. */
-    private fun drawExternalVideoMenu(deckLabel: String, apply: (String) -> Unit) {
-        val popupId = "browse_gen_ext_video_$deckLabel"
-        if (ImGui.button("External video...##$popupId")) ImGui.openPopup(popupId)
-        itemTooltip("Use a live external video stream as this deck's source.")
-        pushOpenDropdownPadding()
-        if (ImGui.beginPopup(popupId)) {
-            pushOpenDropdownFont()
-            val servers = llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.availableServers.value
-            if (servers.isEmpty()) ImGui.textDisabled("No external streams active")
-            servers.forEach { if (ImGui.menuItem(it)) apply("ext_video:$it") }
             popOpenDropdownFont()
             ImGui.endPopup()
         }

@@ -24,11 +24,11 @@ class BrowseCatalogTest {
         val entries = listOf(stock("blur"), saved("/lib/presets/a.lsd"))
         val withFavs = BrowseCatalog(BrowseKind.SRC, entries, favorites = emptySet())
         assertEquals(
-            listOf("All(2)", "Favorites(0)", "Stock sources(1)", "Saved presets(1)", "Playlists(0)"),
+            listOf("All(2)", "Favorites(0)", "Stock sources(1)", "Saved presets(1)", "External video(0)", "Playlists(0)"),
             labels(withFavs)
         )
         val noFavs = BrowseCatalog(BrowseKind.SRC, entries)
-        assertEquals(listOf("All(2)", "Stock sources(1)", "Saved presets(1)", "Playlists(0)"), labels(noFavs))
+        assertEquals(listOf("All(2)", "Stock sources(1)", "Saved presets(1)", "External video(0)", "Playlists(0)"), labels(noFavs))
     }
 
     @Test
@@ -61,7 +61,7 @@ class BrowseCatalogTest {
             )
         )
         assertEquals(
-            listOf("All(4)", "Stock sources(0)", "Saved presets(4)", " chill(1)", " rave(2)", "  deep(1)", "Playlists(0)"),
+            listOf("All(4)", "Stock sources(0)", "Saved presets(4)", " chill(1)", " rave(2)", "  deep(1)", "External video(0)", "Playlists(0)"),
             labels(c)
         )
         val rave = c.rows(BrowseScope.Folder(BrowseSection.SAVED, "rave")).map { it.asset.name }
@@ -169,12 +169,12 @@ class BrowseCatalogTest {
         assertEquals(
             listOf(
                 BrowseScope.All, BrowseScope.Folder(BrowseSection.STOCK), saved, BrowseScope.Folder(BrowseSection.SAVED, "a"),
-                BrowseScope.Folder(BrowseSection.SAVED, "a/b"), BrowseScope.Playlist("/p/set.lsdplaylist")
+                BrowseScope.Folder(BrowseSection.SAVED, "a/b"), BrowseScope.Folder(BrowseSection.LIVE), BrowseScope.Playlist("/p/set.lsdplaylist")
             ),
             all
         )
         assertEquals(
-            listOf(BrowseScope.All, BrowseScope.Folder(BrowseSection.STOCK), saved, BrowseScope.Playlist("/p/set.lsdplaylist")),
+            listOf(BrowseScope.All, BrowseScope.Folder(BrowseSection.STOCK), saved, BrowseScope.Folder(BrowseSection.LIVE), BrowseScope.Playlist("/p/set.lsdplaylist")),
             visibleSelectableScopes(tree, setOf(saved))
         )
     }
@@ -189,5 +189,14 @@ class BrowseCatalogTest {
         assertEquals(visible.first(), stepTreeCursor(visible, null, 1))
         assertEquals(visible.last(), stepTreeCursor(visible, BrowseScope.Playlist("/gone"), -1))
         assertEquals(null, stepTreeCursor(emptyList(), null, 1))
+    }
+
+    @Test
+    fun `live external rows list under their section but never go into playlists or favorites`() {
+        val live = BrowseEntry(AssetItem("ext-video://OBS", "OBS", AssetType.SOURCE_EXTERNAL), BrowseSection.LIVE, "ext-video://OBS")
+        val c = BrowseCatalog(BrowseKind.SRC, listOf(stock("blur"), live), favorites = emptySet())
+        assertEquals(listOf("OBS"), c.rows(BrowseScope.Folder(BrowseSection.LIVE)).map { it.asset.name })
+        assertEquals(1, c.tree().first { it.scope == BrowseScope.Folder(BrowseSection.LIVE) }.count)
+        assertFalse(c.canAddToPlaylist(live))
     }
 }

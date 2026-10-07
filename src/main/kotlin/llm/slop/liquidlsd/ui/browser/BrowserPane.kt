@@ -366,7 +366,7 @@ object BrowserPane {
                 val extras = { asset: AssetItem ->
                     val entry = entries.firstOrNull { it.asset.path == asset.path }
                     // FX stock rows already carry a Favorites item in their own menu.
-                    if (entry != null && kind != BrowseKind.FX) {
+                    if (entry != null && kind != BrowseKind.FX && entry.section != BrowseSection.LIVE) {
                         val fav = BrowseFavorites.isFavorite(kind, entry.key)
                         if (ImGui.menuItem(if (fav) "★ Remove from Favorites" else "☆ Add to Favorites")) {
                             BrowseFavorites.toggle(kind, entry.key)
@@ -405,7 +405,7 @@ object BrowserPane {
     }
 
     private fun isStock(asset: AssetItem): Boolean =
-        asset.type == AssetType.SOURCE_STOCK || asset.type == AssetType.FX_STOCK || asset.type == AssetType.TRANSITION_STOCK
+        asset.type == AssetType.SOURCE_STOCK || asset.type == AssetType.SOURCE_EXTERNAL || asset.type == AssetType.FX_STOCK || asset.type == AssetType.TRANSITION_STOCK
 
     /** The selected rows of the list, in list order. SRC supports multi-select; FX and Transitions keep a single selected row. */
     private fun selectedAssets(kind: BrowseKind, assets: List<AssetItem>): List<AssetItem> = when (kind) {

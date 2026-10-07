@@ -21,8 +21,8 @@ class ApplyTarget(
     val onCommit: (() -> Unit)? = null,
 ) {
     companion object {
-        /** A deck source takes stock generators and saved presets. */
-        fun acceptsSource(type: AssetType): Boolean = type == AssetType.SOURCE_STOCK || type == AssetType.PRESET
+        /** A deck source takes stock generators, live external streams and saved presets. */
+        fun acceptsSource(type: AssetType): Boolean = type == AssetType.SOURCE_STOCK || type == AssetType.SOURCE_EXTERNAL || type == AssetType.PRESET
 
         /** An FX slot takes one effect (stock or saved single), never a whole chain. */
         fun acceptsFxSlot(type: AssetType): Boolean = type == AssetType.FX_STOCK || type == AssetType.FX_PRESET

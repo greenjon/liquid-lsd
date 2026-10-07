@@ -5,6 +5,8 @@ import llm.slop.liquidlsd.models.FXChainDto
 import llm.slop.liquidlsd.models.FXPresetDto
 import llm.slop.liquidlsd.models.TransitionPresetDto
 import llm.slop.liquidlsd.presets.PlaylistParser
+import llm.slop.liquidlsd.rendering.ExternalVideoDiscovery
+import llm.slop.liquidlsd.rendering.ExternalVideoSource
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
 import llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry
@@ -20,6 +22,7 @@ import java.io.File
  */
 object BrowseCatalogs {
     const val STOCK_SOURCE_PREFIX = "stock-source://"
+    const val EXTERNAL_SOURCE_PREFIX = "ext-video://"
     const val STOCK_FX_PREFIX = "stock-fx://"
     const val STOCK_TRANS_PREFIX = "stock-trans://"
 
@@ -31,7 +34,7 @@ object BrowseCatalogs {
     fun get(kind: BrowseKind): BrowseCatalog {
         val playlistAssets = playlistAssets(kind)
         val inputs = when (kind) {
-            BrowseKind.SRC -> listOf(VisualSourceRegistry.availableSources.toList(), FileSystemManager.scanAllPresets(), playlistAssets)
+            BrowseKind.SRC -> listOf(VisualSourceRegistry.availableSources.toList(), FileSystemManager.scanAllPresets(), playlistAssets, ExternalVideoDiscovery.availableServers.value)
             BrowseKind.FX -> listOf(ISFFilterRegistry.availableFilters, FileSystemManager.scanAllFxPresets(), FileSystemManager.scanAllFxChains(), playlistAssets)
             BrowseKind.TRANS -> listOf(ISFTransitionRegistry.availableTransitions, FileSystemManager.scanAllTransitionPresets(), playlistAssets)
         } + BrowseFavorites.version(kind) + playlistAssets.map { File(it.path).lastModified() }
@@ -61,7 +64,7 @@ object BrowseCatalogs {
 
     private fun srcEntries(): List<BrowseEntry> {
         val root = FileSystemManager.getPresetsRoot()
-        val stock = VisualSourceRegistry.availableSources.sortedBy { it.displayName.lowercase() }.map {
+        val stock = VisualSourceRegistry.availableSources.filter { it !is ExternalVideoSource }.sortedBy { it.displayName.lowercase() }.map {
             BrowseEntry(
                 AssetItem(STOCK_SOURCE_PREFIX + it.id, it.displayName, AssetType.SOURCE_STOCK, tags = it.categories),
                 BrowseSection.STOCK, it.id, it.folderPath, it.categories, it.categories.joinToString(", ")
@@ -70,8 +73,17 @@ object BrowseCatalogs {
         val saved = FileSystemManager.scanAllPresets().map {
             BrowseEntry(it, BrowseSection.SAVED, it.path, BrowseCatalog.folderOf(File(it.path), root), it.tags, it.tags.joinToString(", "))
         }
-        return stock + saved
+        val live = ExternalVideoDiscovery.availableServers.value.map {
+            BrowseEntry(
+                AssetItem(EXTERNAL_SOURCE_PREFIX + it, it, AssetType.SOURCE_EXTERNAL, tags = listOf("Input", "Video")),
+                BrowseSection.LIVE, EXTERNAL_SOURCE_PREFIX + it, categories = listOf("Input", "Video"), info = "Live stream"
+            )
+        }
+        return stock + saved + live
     }
+
+    /** The stream name of an external-video row. */
+    fun externalName(asset: AssetItem): String = asset.path.removePrefix(EXTERNAL_SOURCE_PREFIX)
 
     private fun fxEntries(): List<BrowseEntry> {
         val stock = ISFFilterRegistry.availableFilters.sortedBy { it.displayName.lowercase() }.map {

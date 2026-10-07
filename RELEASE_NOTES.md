@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### External Video Streams Are Listed in the Source Browser (`ui/browser/BrowseCatalogs.kt`, `ui/browser/BrowseModel.kt`, `ui/browser/PresetListPanel.kt`, `ui/PerformanceBrowseBay.kt`, `ui/LibraryNavigation.kt`, `ui/AssetType.kt`)
+- **Live external video streams (Spout, Syphon, PipeWire) now appear in the SRC tree under an "External video" folder**, one row per stream running right now. Rows come and go as streams start and stop; there is no refresh button. Click one in the Edit bay's SRC tab to make it that deck's source, or use the usual double-click / `⋮` menu / send knobs in the Library.
+- **The `External video...` button beside Save is gone**, and so is the blank "External Video" stock row that loaded a source with no stream selected.
+- Live rows are not files: they have no favorites star, cannot go into playlists or queues, and cannot be deleted. The folder is always shown and is empty when no stream is active.
+- Internal: `AssetType.SOURCE_EXTERNAL`, `BrowseSection.LIVE`, `BrowseCatalogs.EXTERNAL_SOURCE_PREFIX` / `externalName`; the SRC catalog cache also watches `ExternalVideoDiscovery.availableServers`.
+
 ### Deck Rows Use Two Lines and a Two-Tone SRC/FX Badge (`ui/PerformanceMatrixPanel.kt`, `ui/PerformanceDeckControls.kt`, `ui/FxChainHeader.kt`, `ui/TangoPalette.kt`)
 - **The deck badge names its half.** The `A` / `B` / `BG` / `PV` badge is now one rounded box with a caption strip under the letter: slate `SRC` or cyan `FX`. The separate `SRC` / `FX` pills are gone from deck rows, so you can tell a source row from an FX row at a glance.
 - **Line 1 is one long name box** across the whole left block: the generator or preset on a source row, the chain name (or the focused effect in Focus Mode) on an FX row. Click it to Browse, as before. The Edit gear sits at its right end; it used to sit under the badge.

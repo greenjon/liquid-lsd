@@ -8,6 +8,8 @@ enum class AssetType {
     PLAYLIST,
     FOLDER,
     SOURCE_STOCK,
+    /** A live external video stream (Spout/Syphon/PipeWire); path is `ext-video://<stream name>`. Not a file, never saved. */
+    SOURCE_EXTERNAL,
     FX_STOCK,
     FX_PRESET,
     FX_CHAIN,

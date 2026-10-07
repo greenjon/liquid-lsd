@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### External Video Streams Are Listed in the Source Browser (`ui/browser/BrowseCatalogs.kt`, `ui/browser/BrowseModel.kt`, `ui/browser/PresetListPanel.kt`, `ui/PerformanceBrowseBay.kt`, `ui/LibraryNavigation.kt`, `ui/AssetType.kt`)
+- **Live external video streams (Spout, Syphon, PipeWire) now appear in the SRC tree under an "External video" folder**, one row per stream running right now. Rows come and go as streams start and stop; there is no refresh button. Click one in the Edit bay's SRC tab to make it that deck's source, or use the usual double-click / `⋮` menu / send knobs in the Library.
+- **The `External video...` button beside Save is gone**, and so is the blank "External Video" stock row that loaded a source with no stream selected.
+- Live rows are not files: they have no favorites star, cannot go into playlists or queues, and cannot be deleted. The folder is always shown and is empty when no stream is active.
+- Internal: `AssetType.SOURCE_EXTERNAL`, `BrowseSection.LIVE`, `BrowseCatalogs.EXTERNAL_SOURCE_PREFIX` / `externalName`; the SRC catalog cache also watches `ExternalVideoDiscovery.availableServers`.
+
 ### Library Toolbar Removed: Q, BGQ and the Audition Lock Are Gone (`ui/browser/BrowserActionToolbar.kt` deleted, `ui/browser/BrowserDock.kt`, `ui/LibraryPanel.kt`)
 - **Removed the toolbar `Q` and `BGQ` buttons.** Queueing is still on `Q` / `Shift+Q` and in each row's `⋮` menu (*Add to A/B Queue*, *Add to BG Queue*).
 - **Removed the audition lock** and its auto-load-to-Deck-PV behaviour. Opening Browse from a row and one-clicking a source or FX chain already loads it at once. The Library header is now just the tabs (plus the binding chip when a row is bound).

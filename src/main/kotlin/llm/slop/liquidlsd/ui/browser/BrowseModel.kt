@@ -12,7 +12,7 @@ enum class BrowseKind(
 }
 
 /** Where a row comes from, which is also the top level of the folder tree. */
-enum class BrowseSection { STOCK, SAVED, SINGLE, CHAIN }
+enum class BrowseSection { STOCK, SAVED, SINGLE, CHAIN, LIVE }
 
 /**
  * One browsable row. [key] identifies it for favorites and playlist membership: the shader id for stock rows, the file path for saved ones.
@@ -138,7 +138,8 @@ class BrowseCatalog(
     }
 
     /** Whether [entry] may be added to a playlist or queue-as-playlist (stock rows only for kinds that store stock ids). */
-    fun canAddToPlaylist(entry: BrowseEntry): Boolean = entry.section != BrowseSection.STOCK || kind.stockInPlaylists
+    fun canAddToPlaylist(entry: BrowseEntry): Boolean =
+        entry.section != BrowseSection.LIVE && (entry.section != BrowseSection.STOCK || kind.stockInPlaylists)
 
     /** The playlist token to store for [entry] (stock id or saved path). */
     fun playlistToken(entry: BrowseEntry): String = entry.key
@@ -151,7 +152,7 @@ class BrowseCatalog(
         // Saved names are stored bare ("my fx"), relative ("sub/my fx.lsdfx") or absolute; match by trailing path or file name.
         val norm = item.replace('\\', '/')
         return entries.firstOrNull { e ->
-            e.section != BrowseSection.STOCK && run {
+            e.section != BrowseSection.STOCK && e.section != BrowseSection.LIVE && run {
                 val p = e.key.replace('\\', '/')
                 val file = p.substringAfterLast('/')
                 p == norm || p.endsWith("/$norm") || file == norm || file.substringBeforeLast('.') == norm
@@ -183,6 +184,7 @@ class BrowseCatalog(
     companion object {
         fun sectionsFor(kind: BrowseKind): List<BrowseSection> = when (kind) {
             BrowseKind.FX -> listOf(BrowseSection.STOCK, BrowseSection.SINGLE, BrowseSection.CHAIN)
+            BrowseKind.SRC -> listOf(BrowseSection.STOCK, BrowseSection.SAVED, BrowseSection.LIVE)
             else -> listOf(BrowseSection.STOCK, BrowseSection.SAVED)
         }
 
@@ -198,6 +200,7 @@ class BrowseCatalog(
             }
             BrowseSection.SINGLE -> "Saved single FX"
             BrowseSection.CHAIN -> "Saved chains"
+            BrowseSection.LIVE -> "External video"
         }
 
         /** True when [folder] is [scopeFolder] or lies below it; an empty [scopeFolder] matches everything. */

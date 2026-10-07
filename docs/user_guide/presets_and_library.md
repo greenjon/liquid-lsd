@@ -63,7 +63,7 @@ The Performance rows have a fixed height, so the Library gets whatever window he
 
 Toggle between sources, FX, transitions and banks (macro banks and Perform pages) using the segmented mode button in the top-left of the Library menu bar. Sources, FX and Trans share one three-part browser:
 
-- **Folder tree** (left) — **All**, **Favorites** (FX), the kind's sections (Sources: stock sources and saved presets; FX: stock filters, saved single FX and saved chains; Trans: stock transitions and saved transitions), and a **Playlists** group with one entry per playlist. Each entry shows how many rows it holds. Click one to list it. A playlist is just another tree entry: select it to see and edit its rows.
+- **Folder tree** (left) — **All**, **Favorites** (FX), the kind's sections (Sources: stock sources, saved presets and live external video; FX: stock filters, saved single FX and saved chains; Trans: stock transitions and saved transitions), and a **Playlists** group with one entry per playlist. Each entry shows how many rows it holds. Click one to list it. A playlist is just another tree entry: select it to see and edit its rows.
 - **List** (middle) — The rows of the selected tree entry, with a search box on top (`Ctrl+F` or `/` focuses it) and a **`[+]`** button for the kind's "new" action.
 - **Queues tab** — All five queues side by side: A/B, BG, A/B FX, BG FX and Transition (which the crossfader advances through automatically). Items get in from the other tabs (`Q`, `Shift+Q`, the toolbar buttons, the row menu or drag-and-drop); this tab is where you watch, reorder and play them.
 
@@ -82,7 +82,9 @@ The `[ Sources ]` list shows two kinds of row side by side, each marked with its
 - **Stock Sources** — The 8 bundled built-in visual sources: Mandala, Dynamic Spiral, Icosa H3, Domain Warp Fluid, Gyroid Hyperspace, Celestial Engine, Hyper Slice, and Chladni Cymatics (plus external video streams and any custom sources dropped into your configured shader directories). They load straight to a deck's source stage with their shader's default parameters; they can't be added to a playlist or queue.
 - **Saved Presets (`.lsd`)** — A full deck preset: the visual source plus every parameter value, modulation connection, and note.
 
-Pick a section in the folder tree to show only stock sources or only saved presets. Use **`[+]`** to eject a deck to blank so you can build a new preset on it (see [Saving a preset](#saving-a-preset) below).
+- **External Video** — Live Spout, Syphon or PipeWire streams running right now, one row each in the **External video** folder (empty when none is active). Load one like a stock source; it appears and disappears as the stream starts and stops. Streams are not files, so they have no favorites, playlists or queues and cannot be saved as presets.
+
+Pick a section in the folder tree to show only stock sources, saved presets or live streams. Use **`[+]`** to eject a deck to blank so you can build a new preset on it (see [Saving a preset](#saving-a-preset) below).
 
 - **Search** — Type to filter by name, tag, or (for stock sources) category. `Ctrl+F` or `/` jumps focus to the search box of the open tab (Sources, FX or Transitions) from anywhere in the app.
 - **Multi-Selection (Shift-Click & Ctrl/Cmd-Click)**:

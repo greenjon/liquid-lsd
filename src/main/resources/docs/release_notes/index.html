@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#external-video-streams-are-listed-in-the-source-browser-uibrowserbrowsecatalogskt-uibrowserbrowsemodelkt-uibrowserpresetlistpanelkt-uiperformancebrowsebaykt-uilibrarynavigationkt-uiassettypekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External Video Streams Are Listed in the Source Browser (ui/browser/BrowseCatalogs.kt, ui/browser/BrowseModel.kt, ui/browser/PresetListPanel.kt, ui/PerformanceBrowseBay.kt, ui/LibraryNavigation.kt, ui/AssetType.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#library-toolbar-removed-q-bgq-and-the-audition-lock-are-gone-uibrowserbrowseractiontoolbarkt-deleted-uibrowserbrowserdockkt-uilibrarypanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5702,6 +5713,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#external-video-streams-are-listed-in-the-source-browser-uibrowserbrowsecatalogskt-uibrowserbrowsemodelkt-uibrowserpresetlistpanelkt-uiperformancebrowsebaykt-uilibrarynavigationkt-uiassettypekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        External Video Streams Are Listed in the Source Browser (ui/browser/BrowseCatalogs.kt, ui/browser/BrowseModel.kt, ui/browser/PresetListPanel.kt, ui/PerformanceBrowseBay.kt, ui/LibraryNavigation.kt, ui/AssetType.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#library-toolbar-removed-q-bgq-and-the-audition-lock-are-gone-uibrowserbrowseractiontoolbarkt-deleted-uibrowserbrowserdockkt-uilibrarypanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10171,6 +10193,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="external-video-streams-are-listed-in-the-source-browser-uibrowserbrowsecatalogskt-uibrowserbrowsemodelkt-uibrowserpresetlistpanelkt-uiperformancebrowsebaykt-uilibrarynavigationkt-uiassettypekt">External Video Streams Are Listed in the Source Browser (<code>ui/browser/BrowseCatalogs.kt</code>, <code>ui/browser/BrowseModel.kt</code>, <code>ui/browser/PresetListPanel.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>, <code>ui/LibraryNavigation.kt</code>, <code>ui/AssetType.kt</code>)</h3>
+<ul>
+<li><strong>Live external video streams (Spout, Syphon, PipeWire) now appear in the SRC tree under an "External video" folder</strong>, one row per stream running right now. Rows come and go as streams start and stop; there is no refresh button. Click one in the Edit bay's SRC tab to make it that deck's source, or use the usual double-click / <code>⋮</code> menu / send knobs in the Library.</li>
+<li><strong>The <code>External video...</code> button beside Save is gone</strong>, and so is the blank "External Video" stock row that loaded a source with no stream selected.</li>
+<li>Live rows are not files: they have no favorites star, cannot go into playlists or queues, and cannot be deleted. The folder is always shown and is empty when no stream is active.</li>
+<li>Internal: <code>AssetType.SOURCE_EXTERNAL</code>, <code>BrowseSection.LIVE</code>, <code>BrowseCatalogs.EXTERNAL_SOURCE_PREFIX</code> / <code>externalName</code>; the SRC catalog cache also watches <code>ExternalVideoDiscovery.availableServers</code>.</li>
+</ul>
 <h3 id="library-toolbar-removed-q-bgq-and-the-audition-lock-are-gone-uibrowserbrowseractiontoolbarkt-deleted-uibrowserbrowserdockkt-uilibrarypanelkt">Library Toolbar Removed: Q, BGQ and the Audition Lock Are Gone (<code>ui/browser/BrowserActionToolbar.kt</code> deleted, <code>ui/browser/BrowserDock.kt</code>, <code>ui/LibraryPanel.kt</code>)</h3>
 <ul>
 <li><strong>Removed the toolbar <code>Q</code> and <code>BGQ</code> buttons.</strong> Queueing is still on <code>Q</code> / <code>Shift+Q</code> and in each row's <code>⋮</code> menu (<em>Add to A/B Queue</em>, <em>Add to BG Queue</em>).</li>

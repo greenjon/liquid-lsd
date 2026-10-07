@@ -352,7 +352,7 @@ watching the show while you pick.
   The Edit row has just two tabs, **Parameters** and **Browse**; click a slot on the row (the source
   badge, chain name, an effect cell or the transition name) to choose what Browse applies to. Each target remembers the folder you
   last used there. Search with `Ctrl+F` or `/`. **Clear Slot** / **Clear Chain** empties the target,
-  and **External video...** (Sources) picks a live video stream.
+  The Sources tree also has an **External video** folder listing the live video streams running right now.
 
 **Keyboard shortcuts in Edit**: `Ctrl+C` / `Ctrl+V` (copy/paste a cell or row), `Delete` /
 `Backspace` (clear the cell's modulators, or reset the parameter), and `Ctrl+S` / `Shift+Ctrl+S`

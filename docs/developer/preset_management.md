@@ -48,7 +48,7 @@ var activePresetMtimePV: Long? = null
 
 ### External Video Streams Excluded from Presets (`ExternalVideoSource`)
 - **No Preset Persistence**: Decks whose active visual source is an `ExternalVideoSource` (Spout2 on Windows, Syphon on macOS, PipeWire on Linux) cannot be saved as `.lsd` presets.
-- **Rationale**: External video streams possess 0 procedural generator shader parameters, are ephemeral runtime inter-process handles, and can become dead "ghost" presets if saved. Direct live selection via the Universal Shader Picker ("External Sources" category) guarantees stream presence and connects immediately.
+- **Rationale**: External video streams possess 0 procedural generator shader parameters, are ephemeral runtime inter-process handles, and can become dead "ghost" presets if saved. Direct live selection from the "External video" folder of the SRC browser guarantees stream presence and connects immediately.
 - **UI & Controller Guards**: The Save icon buttons in `DeckControlPanel` and `PerformanceBrowseBay` (Gen Browse) are visibly disabled (`ImGui.beginDisabled`) with an explanatory hover tooltip (`External video streams (<source name>) cannot be saved as presets.`, powered by `allowWhenDisabled` in `TooltipHelper.kt`). Keyboard shortcuts (`Ctrl+S`/`Cmd+S`), `DeckPresetController.handleSaveDeck`, `DeckPresetController.saveDeckPreset`, and `PresetRepository.saveDeckPresetAsync` early-return immediately without action.
 - **Dirty Checking**: `PresetManager.isDeckDirty` unconditionally returns `false` for `ExternalVideoSource`, avoiding spurious unsaved changes prompts when switching sources or ejecting decks.
 

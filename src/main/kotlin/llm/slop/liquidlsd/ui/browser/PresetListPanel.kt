@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui.browser
 
+import llm.slop.liquidlsd.rendering.ExternalVideoSource
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiFocusedFlags
@@ -66,7 +67,8 @@ object PresetListPanel {
                 filtered.forEachIndexed { index, asset ->
             ImGui.pushID(index)
 
-            val isStock = asset.type == AssetType.SOURCE_STOCK
+            val isExternal = asset.type == AssetType.SOURCE_EXTERNAL
+            val isStock = asset.type == AssetType.SOURCE_STOCK || isExternal
             val deps = if (isStock) null else (asset.dependencies ?: FileSystemManager.getPresetDependencies(File(asset.path)))
             val issues = deps?.getIssues(session) ?: emptyList()
             val hasIssues = issues.isNotEmpty()
@@ -167,11 +169,13 @@ object PresetListPanel {
                 if (playlistRows != null) {
                     ImGui.setDragDropPayload(PAYLOAD_PLAYLIST_ITEM, playlistRows.indexOfRow(index) as Any)
                     ImGui.textUnformatted(asset.name)
+                } else if (isExternal) {
+                    ImGui.textUnformatted(asset.name)
                 } else if (isStock) {
                     ImGui.setDragDropPayload(PAYLOAD_STOCK_SOURCE, asset.path.removePrefix(STOCK_PATH_PREFIX) as Any)
                     ImGui.textUnformatted(asset.name)
                 } else {
-                    val inOrder = selection.getSelectedInOrder(filtered).filter { it.type != AssetType.SOURCE_STOCK }
+                    val inOrder = selection.getSelectedInOrder(filtered).filter { !(it.type == AssetType.SOURCE_STOCK || it.type == AssetType.SOURCE_EXTERNAL) }
                     val targets = if (inOrder.any { it.path == asset.path }) inOrder else listOf(asset)
                     val payload = targets.joinToString("\n") { it.path }
                     ImGui.setDragDropPayload("ASSET_ITEM", payload as Any)
@@ -198,7 +202,8 @@ object PresetListPanel {
                     ImGui.separator()
                 }
                 if (isStock) {
-                    val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(STOCK_PATH_PREFIX) }
+                    val source = if (isExternal) ExternalVideoSource(serverName = BrowseCatalogs.externalName(asset))
+                        else VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(STOCK_PATH_PREFIX) }
                     if (source != null) {
                         if (ImGui.menuItem("Load to Deck A")) {
                             UIManager.changeVisualSourceSafely(mixer, mixer.deckA, "Deck A", source, parametersState)
@@ -214,7 +219,7 @@ object PresetListPanel {
                         }
                     }
                 } else {
-                    val inOrder = selection.getSelectedInOrder(filtered).filter { it.type != AssetType.SOURCE_STOCK }
+                    val inOrder = selection.getSelectedInOrder(filtered).filter { !(it.type == AssetType.SOURCE_STOCK || it.type == AssetType.SOURCE_EXTERNAL) }
                     val targets = if (inOrder.any { it.path == asset.path }) inOrder else listOf(asset)
                     val count = targets.size
 

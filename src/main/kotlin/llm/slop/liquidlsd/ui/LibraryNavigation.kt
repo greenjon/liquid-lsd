@@ -1,5 +1,7 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.rendering.ExternalVideoSource
+import llm.slop.liquidlsd.ui.browser.BrowseCatalogs
 import llm.slop.liquidlsd.rendering.liveDeck
 import llm.slop.liquidlsd.rendering.inactiveDeck
 import llm.slop.liquidlsd.SessionContext
@@ -120,7 +122,7 @@ internal object LibraryNavigation {
         if (LibraryPanel.navMode == LibraryViewMode.QUEUES) return emptyList() // the queues are the destination, not a source
         if (LibraryPanel.activeSelectionSource == SelectionSource.PRESETS && LibraryPanel.navMode == LibraryViewMode.PRESETS) {
             return PresetListPanel.selection.getSelectedInOrder(PresetListPanel.filteredPresets)
-                .filter { it.type != AssetType.SOURCE_STOCK }
+                .filter { it.type != AssetType.SOURCE_STOCK && it.type != AssetType.SOURCE_EXTERNAL }
                 .map { File(it.path) }
         }
         val file = LibraryPanel.getActiveSelectedFile(session)
@@ -149,6 +151,8 @@ internal object LibraryNavigation {
         if (asset.type == AssetType.SOURCE_STOCK) {
             val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(PresetListPanel.STOCK_PATH_PREFIX) } ?: return
             UIManager.changeVisualSourceSafely(mixer, targetDeck, targetLabel, source, parametersState)
+        } else if (asset.type == AssetType.SOURCE_EXTERNAL) {
+            UIManager.changeVisualSourceSafely(mixer, targetDeck, targetLabel, ExternalVideoSource(serverName = BrowseCatalogs.externalName(asset)), parametersState)
         } else {
             UIManager.loadDeckPresetSafely(mixer, targetDeck, File(asset.path))
         }
@@ -181,7 +185,7 @@ internal object LibraryNavigation {
     private fun sendAsset(): AssetItem? {
         if (LibraryPanel.activeSelectionSource != SelectionSource.PRESETS) return null
         val asset = when (LibraryPanel.navMode) {
-            LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset?.takeIf { it.type == AssetType.PRESET || it.type == AssetType.SOURCE_STOCK }
+            LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset?.takeIf { it.type == AssetType.PRESET || it.type == AssetType.SOURCE_STOCK || it.type == AssetType.SOURCE_EXTERNAL }
             LibraryViewMode.FX -> FXBrowserPanel.selectedAsset?.takeIf { it.type in FX_TYPES }
             else -> null
         }
@@ -193,7 +197,7 @@ internal object LibraryNavigation {
     /** The knobs that are live for the cursor item: every deck for a source or preset, the decks and the master bus for an FX. */
     fun sendTargets(): Set<SendTarget> = when (sendAsset()?.type) {
         null -> emptySet()
-        AssetType.PRESET, AssetType.SOURCE_STOCK -> DECK_TARGETS
+        AssetType.PRESET, AssetType.SOURCE_STOCK, AssetType.SOURCE_EXTERNAL -> DECK_TARGETS
         else -> SendTarget.entries.toSet()
     }
 
@@ -215,6 +219,10 @@ internal object LibraryNavigation {
             AssetType.SOURCE_STOCK -> {
                 val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(PresetListPanel.STOCK_PATH_PREFIX) } ?: return
                 DeckOps.request(deckSlot ?: return, DeckChange.Source(source))
+                parametersState.openGenBrowse(bankId, deckLabel ?: return)
+            }
+            AssetType.SOURCE_EXTERNAL -> {
+                DeckOps.request(deckSlot ?: return, DeckChange.Source(ExternalVideoSource(serverName = BrowseCatalogs.externalName(asset))))
                 parametersState.openGenBrowse(bankId, deckLabel ?: return)
             }
             AssetType.PRESET -> {

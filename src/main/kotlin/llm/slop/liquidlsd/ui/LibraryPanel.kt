@@ -99,7 +99,7 @@ object LibraryPanel {
                     LibraryViewMode.FX -> FXBrowserPanel.selectedAsset?.let { File(it.path) }
                     LibraryViewMode.TRANS -> TransitionBrowserPanel.selectedAsset?.let { TransitionBrowserPanel.fileFor(it) }
                     LibraryViewMode.PRESETS -> PresetListPanel.selectedAsset
-                        ?.takeIf { it.type != AssetType.SOURCE_STOCK }
+                        ?.takeIf { it.type != AssetType.SOURCE_STOCK && it.type != AssetType.SOURCE_EXTERNAL }
                         ?.let { File(it.path) }
                     LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> null
                 }
