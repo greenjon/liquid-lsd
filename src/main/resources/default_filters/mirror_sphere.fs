@@ -48,9 +48,9 @@
             "NAME": "chromaFringe",
             "LABEL": "Chroma Fringe",
             "TYPE": "float",
-            "DEFAULT": 0.02,
+            "DEFAULT": 0.2,
             "MIN": 0.0,
-            "MAX": 0.1,
+            "MAX": 1.0,
             "IDENTITY": 0.0
         },
         {
@@ -64,6 +64,10 @@
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define chromaFringe_ (chromaFringe*0.1)
+
 
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
@@ -99,9 +103,9 @@ void main() {
         vec2 reflCoord = refl.xy * 0.5 + 0.5;
 
         // Chromatic dispersion across reflection
-        vec2 rCoord = abs(mod(reflCoord + refl.xy * chromaFringe, 2.0) - 1.0);
+        vec2 rCoord = abs(mod(reflCoord + refl.xy * chromaFringe_, 2.0) - 1.0);
         vec2 gCoord = abs(mod(reflCoord, 2.0) - 1.0);
-        vec2 bCoord = abs(mod(reflCoord - refl.xy * chromaFringe, 2.0) - 1.0);
+        vec2 bCoord = abs(mod(reflCoord - refl.xy * chromaFringe_, 2.0) - 1.0);
 
         float r = IMG_NORM_PIXEL(inputImage, rCoord).r;
         vec4 gPixel = IMG_NORM_PIXEL(inputImage, gCoord);

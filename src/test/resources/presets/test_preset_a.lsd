@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "name": "test_preset_a",
+  "visualSourceType": "mandala",
+  "parameters": {
+    "Petals": {"baseValue": 0.5, "baseMin": 0.0, "baseMax": 1.0, "randomizeBase": false, "modulators": []},
+    "L1": {"baseValue": 0.5, "baseMin": 0.0, "baseMax": 1.0, "randomizeBase": false, "modulators": []},
+    "L2": {"baseValue": 0.5, "baseMin": 0.0, "baseMax": 1.0, "randomizeBase": false, "modulators": []}
+  },
+  "feedbackParameters": {
+    "fbDecay": {"baseValue": 0.5, "baseMin": 0.0, "baseMax": 1.0, "randomizeBase": false, "modulators": []},
+    "fbKaleido": {"baseValue": 0.0, "baseMin": 0.0, "baseMax": 1.0, "randomizeBase": false, "modulators": []}
+  },
+  "globalAlpha": {"baseValue": 1.0, "baseMin": 0.0, "baseMax": 1.0, "randomizeBase": false, "modulators": []}
+}

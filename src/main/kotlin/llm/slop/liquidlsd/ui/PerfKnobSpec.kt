@@ -113,13 +113,9 @@ internal object PerfKnobResolver {
             control = control,
             under = UnderKnob.ParamCell(name, param),
             side = SideButtons.Reset(name, param),
-            valueOverlay = formatValue(param.baseValue),
+            valueOverlay = ValueFormat.knob(param.baseValue, param.minClamp, param.maxClamp),
             meterType = param.meterType
         )
     }
 
-    /** Integers as-is, everything else to 2 decimals -- short enough for the knob face. */
-    fun formatValue(v: Float): String =
-        if (v == v.toInt().toFloat() && kotlin.math.abs(v) < 1000f) v.toInt().toString()
-        else String.format(Locale.ROOT, "%.2f", v)
 }

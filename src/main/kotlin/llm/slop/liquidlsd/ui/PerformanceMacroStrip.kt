@@ -94,7 +94,7 @@ internal object PerformanceMacroStrip {
         }
         cx += nameW + gap
 
-        val valueText = "%.2f".format(control.value)
+        val valueText = ValueFormat.knob(control.value)
         dl.addText(cx, TextFit.centeredY(row1Y, ctrlH, ImGui.getTextLineHeight()), ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled), valueText)
         cx += valueW + gap
 

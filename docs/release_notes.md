@@ -1,5 +1,19 @@
 ## [Unreleased]
 
+### Bundled ISF Inputs Are Normalized to 0..1 / -1..1 (`default_sources/*`, `default_filters/*`, `default_transitions/*`, `ui/ValueFormat.kt`, `rendering/isf/ISFAutoBindEngine.kt`, `defaults/*`)
+- **109 generator, FX and transition inputs that used raw ranges now span 0..1 or -1..1** (Domain Warp Fluid: Warp 0-4, Swirl -3..3, Speed -2..2, Viscosity, Gloss, Hue Cycle Speed; the FX amounts, intensities, decays, speeds, twists and radii; the transition amounts). They read as 0 to 100 in the UI. The shaders remap to their original working units, so the visuals at equivalent settings are unchanged.
+- **Zoom (and the Celestial Engine / Chladni Scale) is centered**: 50 is 1x, with an exponential feel either side.
+- **Kept as-is**: enums and counts (palettes, modes, segments, symmetries, Max Points, pixel size, strobe Hz, frequency integers) and angles in +-180 degrees.
+- **More angles show in degrees**: the 0..2PI inputs (Hyper Slice 4D rotations, Spike Phase, wave phase) now span +-PI, and Halftone Screen Angle is +-180 degrees instead of 0..90.
+- **Breaking, deliberately**: saved presets and sessions that stored old-unit values for these inputs will clamp or look different. The shipped FX chains and transitions were converted; web broadcast shaders were re-synced.
+- Internal: `ISFAutoBindEngine.CURATED` Metaknob ranges converted to the new units.
+
+### Unit-Range Values Display as 0 to 100 (`ui/ValueFormat.kt`, `ui/CustomRangeSlider.kt`, `ui/ValueParamSection.kt`, `ui/SeqSection.kt`, `ui/MacroKnobWidget.kt`, `ui/MacroBindingEditor.kt`, `ui/FxParamCell.kt`, `ui/PerfKnobSpec.kt`)
+- **Anything that spans 0 to 1 or -1 to 1 now reads as 0 to 100 or -100 to 100**: parameter and LFO/Seq/MIDI value boxes, sequencer steps, macro knob faces and readouts, FX parameter cells and their tooltips, and the macro binding Min/Max fields. A decimal shows only when needed (`37`, `37.4`); typing `37.4` stores 0.374.
+- **Stored values are unchanged**: presets, MIDI, OSC and shader uniforms still use 0 to 1. Angles stay in degrees and parameters with their own units keep them. The OSC preferences panel stays raw on purpose.
+- Up/Down, Shift and Ctrl+Shift nudge steps are now 0.1 / 1 / 10 in the displayed units (the same underlying 0.001 / 0.01 / 0.1).
+- Internal: one `ValueFormat` helper (`scaleFor`, `format`, `knob`) replaces the scattered `%.2f` / `%.3f` formatters; sliders opt in with `ValueFormat.AUTO`.
+
 ### Queue Headers Are One Row of Icon Buttons (`ui/browser/QueueToolbar.kt`, `ui/browser/*QueueActionsPanel.kt`, `ui/browser/TransitionQueuePanel.kt`)
 - **Each Library queue column now has a small caption (A/B Queue, BG Queue, A/B FX Queue, BG FX Queue, Transition Queue) centered over a single row of equal-width icon buttons (a narrow column trims the gaps between them so the whole row always fits)**: `◀`, play/pause (preset and transition queues only), `▶`, Repeat, Shuffle, Export (download icon) and Clear (trash icon). The text "Export" and "Clear" buttons and the second button row are gone; hover any button for its tooltip.
 - **Queue columns alternate their background shade** so the five strips read as separate queues, and the order is now A/B, A/B FX, BG, BG FX, Transition.

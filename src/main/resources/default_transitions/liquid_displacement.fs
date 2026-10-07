@@ -28,9 +28,9 @@
         {
             "NAME": "viscosity",
             "TYPE": "float",
-            "MIN": 0.5,
-            "MAX": 3.0,
-            "DEFAULT": 1.2
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.28
         },
         {
             "NAME": "chromaticDispersion",
@@ -41,6 +41,10 @@
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define viscosity_ (0.5+viscosity*2.5)
+
 
 #define PI 3.14159265359
 
@@ -61,7 +65,7 @@ void main() {
     vec4 origB = IMG_NORM_PIXEL(endImage, uv);
 
     // Finite difference gradient for Deck A and Deck B
-    vec2 step = vec2(0.005 * viscosity);
+    vec2 step = vec2(0.005 * viscosity_);
     float lumaAx = luma(IMG_NORM_PIXEL(startImage, uv + vec2(step.x, 0.0))) - luma(IMG_NORM_PIXEL(startImage, uv - vec2(step.x, 0.0)));
     float lumaAy = luma(IMG_NORM_PIXEL(startImage, uv + vec2(0.0, step.y))) - luma(IMG_NORM_PIXEL(startImage, uv - vec2(0.0, step.y)));
     vec2 gradA = vec2(lumaAx, lumaAy);

@@ -25,9 +25,9 @@
             },
             "parameters": {
                 "facetScale": {
-                    "baseValue": 16.0,
-                    "baseMin": 3.0,
-                    "baseMax": 60.0,
+                    "baseValue": 0.22807,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -86,9 +86,9 @@
                     "modulators": []
                 },
                 "zoom": {
-                    "baseValue": 1.0,
-                    "baseMin": 0.1,
-                    "baseMax": 5.0,
+                    "baseValue": 0.5,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 }
@@ -105,9 +105,9 @@
             },
             "parameters": {
                 "amount": {
-                    "baseValue": 0.03,
+                    "baseValue": 0.3,
                     "baseMin": 0.0,
-                    "baseMax": 0.1,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },

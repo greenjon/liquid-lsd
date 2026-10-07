@@ -21,9 +21,9 @@
         {
             "NAME": "zoomFactor",
             "TYPE": "float",
-            "MIN": 1.0,
-            "MAX": 4.0,
-            "DEFAULT": 2.2
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.4
         },
         {
             "NAME": "motionBlur",
@@ -42,6 +42,10 @@
     ]
 }*/
 
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define zoomFactor_ (1.0+zoomFactor*3.0)
+
+
 #define PI 3.14159265359
 
 void main() {
@@ -49,8 +53,8 @@ void main() {
     float p = clamp(progress, 0.0, 1.0);
 
     // Zoom curves: Deck A rushes toward camera, Deck B swoops in from wide
-    float scaleA = 1.0 + (zoomFactor - 1.0) * pow(p, 1.5);
-    float scaleB = 1.0 / (1.0 + (zoomFactor - 1.0) * pow(1.0 - p, 1.5));
+    float scaleA = 1.0 + (zoomFactor_ - 1.0) * pow(p, 1.5);
+    float scaleB = 1.0 / (1.0 + (zoomFactor_ - 1.0) * pow(1.0 - p, 1.5));
 
     vec2 center = vec2(0.5);
     vec2 dir = uv - center;

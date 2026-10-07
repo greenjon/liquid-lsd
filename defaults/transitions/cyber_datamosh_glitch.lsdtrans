@@ -21,16 +21,16 @@
         "modulators": []
       },
       "rgbSplit": {
-        "baseValue": 0.08,
+        "baseValue": 0.4,
         "baseMin": 0.0,
-        "baseMax": 0.2,
+        "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
       },
       "packetLoss": {
-        "baseValue": 1.2,
+        "baseValue": 0.6,
         "baseMin": 0.0,
-        "baseMax": 2.0,
+        "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
       }

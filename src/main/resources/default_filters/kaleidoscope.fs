@@ -29,10 +29,10 @@
             "NAME": "zoom",
             "LABEL": "Zoom",
             "TYPE": "float",
-            "DEFAULT": 1.0,
-            "MIN": 0.1,
-            "MAX": 5.0,
-            "IDENTITY": 1.0
+            "DEFAULT": 0.5,
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "IDENTITY": 0.5
         },
         {
             "NAME": "centerX",
@@ -64,6 +64,10 @@
     ]
 }*/
 
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define zoom_ (zoom<0.5?pow(0.1,1.0-2.0*zoom):pow(5.0,2.0*zoom-1.0))
+
+
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
 
@@ -86,8 +90,8 @@ void main() {
     // Continuous triangle-wave angular reflection to avoid seam artifacts
     float fold = abs(mod(a, segAngle) - halfSeg);
 
-    // Apply zoom and origin displacement with zero-division safeguard
-    float safeZoom = max(zoom, 0.001);
+    // Apply zoom_ and origin displacement with zero-division safeguard
+    float safeZoom = max(zoom_, 0.001);
     float mappedR = (r / safeZoom) + originOffset;
 
     // Reconstruct Cartesian coordinates

@@ -45,17 +45,17 @@
             "NAME": "zoom",
             "LABEL": "Zoom",
             "TYPE": "float",
-            "DEFAULT": 1.0,
-            "MIN": 0.1,
-            "MAX": 5.0
+            "DEFAULT": 0.5,
+            "MIN": 0.0,
+            "MAX": 1.0
         },
         {
             "NAME": "separation",
             "LABEL": "Plane Separation",
             "TYPE": "float",
-            "DEFAULT": 0.0,
-            "MIN": -1.0,
-            "MAX": 2.0
+            "DEFAULT": 0.33333,
+            "MIN": 0.0,
+            "MAX": 1.0
         },
         {
             "NAME": "perspective",
@@ -91,6 +91,11 @@
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define zoom_ (zoom<0.5?pow(0.1,1.0-2.0*zoom):pow(5.0,2.0*zoom-1.0))
+#define separation_ (-1.0+separation*3.0)
+
 
 mat3 rotationMatrixX(float angle) {
     float c = cos(angle);
@@ -185,7 +190,7 @@ void main() {
         p2.x *= aspect;
 
         float fov = 0.5 + perspective * 1.0;
-        vec3 ray = normalize(vec3(p2 / max(0.01, zoom * fov), -1.0));
+        vec3 ray = normalize(vec3(p2 / max(0.01, zoom_ * fov), -1.0));
 
         mat3 rot = rotationMatrixY(yaw) * rotationMatrixX(pitch) * rotationMatrixZ(roll);
         vec3 p = rot * ray;
@@ -201,7 +206,7 @@ void main() {
 
         float px = max(0.001, p.x);
         vec2 proj = vec2(p.y, p.z) / px;
-        float cellScale = 1.0 + separation * 2.5;
+        float cellScale = 1.0 + separation_ * 2.5;
         vec2 pCell = proj * cellScale;
 
         float squareDist = max(abs(pCell.x), abs(pCell.y));
@@ -250,16 +255,16 @@ void main() {
     // Modes 0..2: Tri-Axial, Cube Cage, Hex-Planar
     vec2 ndc = (isf_FragNormCoord - vec2(0.5)) * 2.0;
 
-    // 1:1 Scale Normalization: at z=0, the quad spans [-1, 1] vertically at zoom=1.0, matching 2D flat mode exactly
-    float safeZoom = max(0.01, zoom);
+    // 1:1 Scale Normalization: at z=0, the quad spans [-1, 1] vertically at zoom_=1.0, matching 2D flat mode exactly
+    float safeZoom = max(0.01, zoom_);
     vec3 pZero = vec3((ndc.x * aspect) / safeZoom, ndc.y / safeZoom, 0.0);
 
     // Camera setup: smooth transition from Orthographic (persp=0) to Perspective (persp=1)
     // Camera must stay farther out than the furthest plane it can ever face, or that plane
     // clips out of view (ray origin ends up past it, t <= 0). Cube Cage planes sit at
-    // baseOffset(1.0) + separation, which can reach 3.0 at max separation (2.0) — beyond the
+    // baseOffset(1.0) + separation_, which can reach 3.0 at max separation_ (2.0) — beyond the
     // default 2.5 camera distance — so grow camDist to keep a safety margin in that case.
-    float camPlaneOffset = ((intMode == 2) ? 1.0 : 0.0) + separation;
+    float camPlaneOffset = ((intMode == 2) ? 1.0 : 0.0) + separation_;
     float camDist = max(2.5, camPlaneOffset + 0.75);
     vec3 roView, rdView;
     if (perspective < 0.001) {
@@ -288,7 +293,7 @@ void main() {
         if (i >= numPlanes) break;
 
         Plane pl;
-        getPlane(i, intMode, separation, pl);
+        getPlane(i, intMode, separation_, pl);
 
         float denom = dot(rd, pl.normal);
         if (abs(denom) < 1e-5) continue;

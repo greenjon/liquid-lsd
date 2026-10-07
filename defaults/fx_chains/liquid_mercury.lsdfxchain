@@ -26,30 +26,30 @@
             },
             "parameters": {
                 "refractAmount": {
-                    "baseValue": 0.08,
+                    "baseValue": 0.32,
                     "baseMin": 0.0,
-                    "baseMax": 0.25,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "smoothness": {
-                    "baseValue": 3.0,
-                    "baseMin": 0.5,
-                    "baseMax": 8.0,
+                    "baseValue": 0.33333,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "chromaDispersion": {
-                    "baseValue": 0.03,
+                    "baseValue": 0.3,
                     "baseMin": 0.0,
-                    "baseMax": 0.1,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "flowSpeed": {
-                    "baseValue": 0.5,
-                    "baseMin": -3.0,
-                    "baseMax": 3.0,
+                    "baseValue": 0.16667,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 }
@@ -73,22 +73,22 @@
                     "modulators": []
                 },
                 "curlScale": {
-                    "baseValue": 3.5,
-                    "baseMin": 0.5,
-                    "baseMax": 20.0,
+                    "baseValue": 0.15385,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "flowSpeed": {
-                    "baseValue": 0.4,
-                    "baseMin": -2.0,
-                    "baseMax": 2.0,
+                    "baseValue": 0.2,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "decay": {
-                    "baseValue": 0.95,
-                    "baseMin": 0.8,
+                    "baseValue": 0.75,
+                    "baseMin": 0.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
@@ -113,9 +113,9 @@
             },
             "parameters": {
                 "bloomIntensity": {
-                    "baseValue": 0.9,
+                    "baseValue": 0.3,
                     "baseMin": 0.0,
-                    "baseMax": 3.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -127,9 +127,9 @@
                     "modulators": []
                 },
                 "blurAmount": {
-                    "baseValue": 1.2,
-                    "baseMin": 0.1,
-                    "baseMax": 3.0,
+                    "baseValue": 0.37931,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 }

@@ -29,18 +29,23 @@
             "NAME": "rgbSplit",
             "TYPE": "float",
             "MIN": 0.0,
-            "MAX": 0.2,
-            "DEFAULT": 0.06
+            "MAX": 1.0,
+            "DEFAULT": 0.3
         },
         {
             "NAME": "packetLoss",
             "TYPE": "float",
             "MIN": 0.0,
-            "MAX": 2.0,
-            "DEFAULT": 1.0
+            "MAX": 1.0,
+            "DEFAULT": 0.5
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define rgbSplit_ (rgbSplit*0.2)
+#define packetLoss_ (packetLoss*2.0)
+
 
 #define PI 3.14159265359
 
@@ -56,7 +61,7 @@ void main() {
 
     // Glitch envelope peaking violently around crossfade midpoint
     float env = sin(p * PI);
-    float glitchPower = pow(env, 1.4) * packetLoss;
+    float glitchPower = pow(env, 1.4) * packetLoss_;
 
     // Discrete macroblock coordinates
     vec2 blockCoord = floor(uv * vec2(blockiness, blockiness * 0.5));
@@ -77,7 +82,7 @@ void main() {
     vec2 glitchUV = clamp(uv + offset, 0.0, 1.0);
 
     // Chromatic shear: R and B split in opposite directions along glitch vectors
-    float splitAmt = rgbSplit * glitchPower;
+    float splitAmt = rgbSplit_ * glitchPower;
     vec2 splitVec = vec2(splitAmt, 0.0);
 
     vec4 colA;

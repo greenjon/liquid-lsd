@@ -1208,6 +1208,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#bundled-isf-inputs-are-normalized-to-01-11-default_sources-default_filters-default_transitions-uivalueformatkt-renderingisfisfautobindenginekt-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bundled ISF Inputs Are Normalized to 0..1 / -1..1 (default_sources/*, default_filters/*, default_transitions/*, ui/ValueFormat.kt, rendering/isf/ISFAutoBindEngine.kt, defaults/*)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unit-range-values-display-as-0-to-100-uivalueformatkt-uicustomrangesliderkt-uivalueparamsectionkt-uiseqsectionkt-uimacroknobwidgetkt-uimacrobindingeditorkt-uifxparamcellkt-uiperfknobspeckt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit-Range Values Display as 0 to 100 (ui/ValueFormat.kt, ui/CustomRangeSlider.kt, ui/ValueParamSection.kt, ui/SeqSection.kt, ui/MacroKnobWidget.kt, ui/MacroBindingEditor.kt, ui/FxParamCell.kt, ui/PerfKnobSpec.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#queue-headers-are-one-row-of-icon-buttons-uibrowserqueuetoolbarkt-uibrowserqueueactionspanelkt-uibrowsertransitionqueuepanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5724,6 +5746,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#bundled-isf-inputs-are-normalized-to-01-11-default_sources-default_filters-default_transitions-uivalueformatkt-renderingisfisfautobindenginekt-defaults" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bundled ISF Inputs Are Normalized to 0..1 / -1..1 (default_sources/*, default_filters/*, default_transitions/*, ui/ValueFormat.kt, rendering/isf/ISFAutoBindEngine.kt, defaults/*)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#unit-range-values-display-as-0-to-100-uivalueformatkt-uicustomrangesliderkt-uivalueparamsectionkt-uiseqsectionkt-uimacroknobwidgetkt-uimacrobindingeditorkt-uifxparamcellkt-uiperfknobspeckt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Unit-Range Values Display as 0 to 100 (ui/ValueFormat.kt, ui/CustomRangeSlider.kt, ui/ValueParamSection.kt, ui/SeqSection.kt, ui/MacroKnobWidget.kt, ui/MacroBindingEditor.kt, ui/FxParamCell.kt, ui/PerfKnobSpec.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#queue-headers-are-one-row-of-icon-buttons-uibrowserqueuetoolbarkt-uibrowserqueueactionspanelkt-uibrowsertransitionqueuepanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10215,6 +10259,22 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="bundled-isf-inputs-are-normalized-to-01-11-default_sources-default_filters-default_transitions-uivalueformatkt-renderingisfisfautobindenginekt-defaults">Bundled ISF Inputs Are Normalized to 0..1 / -1..1 (<code>default_sources/*</code>, <code>default_filters/*</code>, <code>default_transitions/*</code>, <code>ui/ValueFormat.kt</code>, <code>rendering/isf/ISFAutoBindEngine.kt</code>, <code>defaults/*</code>)</h3>
+<ul>
+<li><strong>109 generator, FX and transition inputs that used raw ranges now span 0..1 or -1..1</strong> (Domain Warp Fluid: Warp 0-4, Swirl -3..3, Speed -2..2, Viscosity, Gloss, Hue Cycle Speed; the FX amounts, intensities, decays, speeds, twists and radii; the transition amounts). They read as 0 to 100 in the UI. The shaders remap to their original working units, so the visuals at equivalent settings are unchanged.</li>
+<li><strong>Zoom (and the Celestial Engine / Chladni Scale) is centered</strong>: 50 is 1x, with an exponential feel either side.</li>
+<li><strong>Kept as-is</strong>: enums and counts (palettes, modes, segments, symmetries, Max Points, pixel size, strobe Hz, frequency integers) and angles in +-180 degrees.</li>
+<li><strong>More angles show in degrees</strong>: the 0..2PI inputs (Hyper Slice 4D rotations, Spike Phase, wave phase) now span +-PI, and Halftone Screen Angle is +-180 degrees instead of 0..90.</li>
+<li><strong>Breaking, deliberately</strong>: saved presets and sessions that stored old-unit values for these inputs will clamp or look different. The shipped FX chains and transitions were converted; web broadcast shaders were re-synced.</li>
+<li>Internal: <code>ISFAutoBindEngine.CURATED</code> Metaknob ranges converted to the new units.</li>
+</ul>
+<h3 id="unit-range-values-display-as-0-to-100-uivalueformatkt-uicustomrangesliderkt-uivalueparamsectionkt-uiseqsectionkt-uimacroknobwidgetkt-uimacrobindingeditorkt-uifxparamcellkt-uiperfknobspeckt">Unit-Range Values Display as 0 to 100 (<code>ui/ValueFormat.kt</code>, <code>ui/CustomRangeSlider.kt</code>, <code>ui/ValueParamSection.kt</code>, <code>ui/SeqSection.kt</code>, <code>ui/MacroKnobWidget.kt</code>, <code>ui/MacroBindingEditor.kt</code>, <code>ui/FxParamCell.kt</code>, <code>ui/PerfKnobSpec.kt</code>)</h3>
+<ul>
+<li><strong>Anything that spans 0 to 1 or -1 to 1 now reads as 0 to 100 or -100 to 100</strong>: parameter and LFO/Seq/MIDI value boxes, sequencer steps, macro knob faces and readouts, FX parameter cells and their tooltips, and the macro binding Min/Max fields. A decimal shows only when needed (<code>37</code>, <code>37.4</code>); typing <code>37.4</code> stores 0.374.</li>
+<li><strong>Stored values are unchanged</strong>: presets, MIDI, OSC and shader uniforms still use 0 to 1. Angles stay in degrees and parameters with their own units keep them. The OSC preferences panel stays raw on purpose.</li>
+<li>Up/Down, Shift and Ctrl+Shift nudge steps are now 0.1 / 1 / 10 in the displayed units (the same underlying 0.001 / 0.01 / 0.1).</li>
+<li>Internal: one <code>ValueFormat</code> helper (<code>scaleFor</code>, <code>format</code>, <code>knob</code>) replaces the scattered <code>%.2f</code> / <code>%.3f</code> formatters; sliders opt in with <code>ValueFormat.AUTO</code>.</li>
+</ul>
 <h3 id="queue-headers-are-one-row-of-icon-buttons-uibrowserqueuetoolbarkt-uibrowserqueueactionspanelkt-uibrowsertransitionqueuepanelkt">Queue Headers Are One Row of Icon Buttons (<code>ui/browser/QueueToolbar.kt</code>, <code>ui/browser/*QueueActionsPanel.kt</code>, <code>ui/browser/TransitionQueuePanel.kt</code>)</h3>
 <ul>
 <li><strong>Each Library queue column now has a small caption (A/B Queue, BG Queue, A/B FX Queue, BG FX Queue, Transition Queue) centered over a single row of equal-width icon buttons (a narrow column trims the gaps between them so the whole row always fits)</strong>: <code>◀</code>, play/pause (preset and transition queues only), <code>▶</code>, Repeat, Shuffle, Export (download icon) and Clear (trash icon). The text "Export" and "Clear" buttons and the second button row are gone; hover any button for its tooltip.</li>

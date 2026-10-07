@@ -30,9 +30,9 @@
             "NAME": "curvature",
             "LABEL": "Barrel Curve",
             "TYPE": "float",
-            "DEFAULT": 0.15,
+            "DEFAULT": 0.25,
             "MIN": 0.0,
-            "MAX": 0.6,
+            "MAX": 1.0,
             "IDENTITY": 0.0
         },
         {
@@ -57,13 +57,18 @@
             "NAME": "brightnessBoost",
             "LABEL": "Phosphor Boost",
             "TYPE": "float",
-            "DEFAULT": 1.2,
-            "MIN": 0.8,
-            "MAX": 2.0,
-            "IDENTITY": 1.0
+            "DEFAULT": 0.33333,
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "IDENTITY": 0.16667
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define curvature_ (curvature*0.6)
+#define brightnessBoost_ (0.8+brightnessBoost*1.2)
+
 
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
@@ -72,7 +77,7 @@ void main() {
     vec2 uv = isf_FragNormCoord;
 
     // Fast path if completely disabled
-    if (scanlineIntensity <= 0.001 && curvature <= 0.001 && phosphorMask <= 0.001 && vignette <= 0.001) {
+    if (scanlineIntensity <= 0.001 && curvature_ <= 0.001 && phosphorMask <= 0.001 && vignette <= 0.001) {
         gl_FragColor = IMG_NORM_PIXEL(inputImage, uv);
         return;
     }
@@ -80,7 +85,7 @@ void main() {
     // 1. CRT Barrel Distortion
     vec2 p = uv - 0.5;
     float r2 = dot(p, p);
-    vec2 curvedUV = p * (1.0 + curvature * r2 * 1.5) + 0.5;
+    vec2 curvedUV = p * (1.0 + curvature_ * r2 * 1.5) + 0.5;
 
     // Bezel border clipping
     if (curvedUV.x < 0.0 || curvedUV.x > 1.0 || curvedUV.y < 0.0 || curvedUV.y > 1.0) {
@@ -114,6 +119,6 @@ void main() {
         color.rgb *= vigFactor;
     }
 
-    color.rgb *= brightnessBoost;
+    color.rgb *= brightnessBoost_;
     gl_FragColor = vec4(clamp(color.rgb, 0.0, 1.0), color.a);
 }

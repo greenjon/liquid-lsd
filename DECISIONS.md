@@ -46,6 +46,12 @@ Contents: 1 Foundations · 2 Rendering and shaders · 3 One path for every chang
 - **Curated stock set**: 8 generators (`mandala`, `dynamic_spiral`, `icosa_h3`, `domain_warp_fluid`, `gyroid_hyperspace`, `celestial_engine`, `hyper_slice`, `chladni_cymatics`) and 8 transitions ("Elite 8": `linear_crossfade`, `luminous_flash`, `film_burn`, `noise_dissolve`, `cyber_datamosh`, `kinetic_zoom`, `liquid_displacement`, `vortex_swirl`). The old blend-mode and wipe transitions were deliberately removed; do not re-add them as stock. Stock sources are bundled in the jar (`default_sources/`) and self-heal into `library/sources` if missing.
 - **Mandala is an ordinary `DynamicVisualSource`**, with no `if (source is Mandala)` special cases in serialization, UI or MIDI paths. Its old background parameters were extracted into the separate `Colors` generator; backgrounds come from Deck BG.
 
+## Bundled ISF Inputs Are Normalized: 0..1 or -1..1, Angles in Radians, Zoom Centered at 0.5 (`default_*/*.fs`, `ui/ValueFormat.kt`)
+- Continuous inputs of bundled generators, filters and transitions span exactly 0..1 or -1..1, so the UI shows them as 0..100 / -100..100 (`ValueFormat`). The shader remaps once to its working units with a `#define Name_ (...)` block after the header and uses `Name_` in the body; the input name never changes, so macro bindings, `GeneratorDefaults` and `ISFAutoBindEngine.CURATED` keep addressing it.
+- **Outside values are allowed only when defensible**: enums and counts (palette, mode, segments, symmetries, `MaxPoints`, `pixelSize`, strobe `rate` in Hz) and angles (range exactly +-PI so the app treats them as degrees; a periodic 0..2PI input is re-ranged to +-PI with no shader change).
+- **Zoom/Scale with a neutral 1.0** uses an exponential map: 0.5 is 1x, 0 and 1 reach the old min and max (`pow(min, 1-2v)` below, `pow(max, 2v-1)` above).
+- `ISFAutoBindEngine.CURATED` min/max values are in the normalized units. Shipped FX chains and transitions under `defaults/` store normalized values; older user presets are not migrated.
+
 ## Four decks and the compositing order
 - Decks are **A, B, BG, PV**. BG is composited under the crossfaded A/B foreground (`rgb = fg.rgb + bg.rgb * (1 - fg.a)`). PV is the preview deck and never affects master output.
 - **View pipeline**: 2D sources go through `view2d.frag` (zoom, Z-rotate, edge wrap Mirror/Repeat/Clamp/Border; Mirror is the default so zooming out never leaves a floating rectangle). The 3D projection modes apply only to 2D sources; native 3D generators (`is3D`) bypass them.

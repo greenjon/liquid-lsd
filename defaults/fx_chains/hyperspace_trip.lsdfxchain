@@ -39,9 +39,9 @@
                     "modulators": []
                 },
                 "zoom": {
-                    "baseValue": 1.0,
-                    "baseMin": 0.1,
-                    "baseMax": 5.0,
+                    "baseValue": 0.5,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -86,9 +86,9 @@
                     "modulators": []
                 },
                 "fbGain": {
-                    "baseValue": 0.95,
+                    "baseValue": 0.475,
                     "baseMin": 0.0,
-                    "baseMax": 2.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -147,9 +147,9 @@
                     "modulators": []
                 },
                 "cycleSpeed": {
-                    "baseValue": 0.08,
-                    "baseMin": -2.0,
-                    "baseMax": 2.0,
+                    "baseValue": 0.04,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },

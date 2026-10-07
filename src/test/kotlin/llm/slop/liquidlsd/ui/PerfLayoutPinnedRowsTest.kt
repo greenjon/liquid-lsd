@@ -101,14 +101,6 @@ class PerfLayoutPinnedRowsTest {
         assertEquals(UnderKnob.ParamCell("x", p), spec.under)
     }
 
-    @Test
-    fun formatValueHandlesNegativesAndRounding() {
-        assertEquals("-2", PerfKnobResolver.formatValue(-2f))
-        assertEquals("-0.50", PerfKnobResolver.formatValue(-0.5f))
-        assertEquals("0.13", PerfKnobResolver.formatValue(0.126f))
-        assertEquals("0", PerfKnobResolver.formatValue(0f))
-    }
-
     // --- Copy As New Page: stable ids ---
 
     @Test

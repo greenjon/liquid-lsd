@@ -11,16 +11,16 @@
         {
             "NAME": "twist",
             "TYPE": "float",
-            "MIN": -3.0,
-            "MAX": 3.0,
-            "DEFAULT": 0.8
+            "MIN": -1.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.26667
         },
         {
             "NAME": "radius",
             "TYPE": "float",
-            "MIN": 0.1,
-            "MAX": 2.5,
-            "DEFAULT": 0.85
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.3125
         },
         {
             "NAME": "dispersion",
@@ -53,6 +53,11 @@
     ]
 }*/
 
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define twist_ (twist*3.0)
+#define radius_ (0.1+radius*2.4)
+
+
 vec2 mirrorCoords(vec2 p) {
     vec2 m = mod(p, 2.0);
     return mix(m, 2.0 - m, step(1.0, m));
@@ -73,7 +78,7 @@ void main() {
     float dist = length(p);
 
     // Cubic Hermite smooth falloff towards vortex boundary
-    float maxR = max(radius, 0.001);
+    float maxR = max(radius_, 0.001);
     float weight = smoothstep(maxR, 0.0, dist);
 
     if (weight <= 0.0001) {
@@ -82,7 +87,7 @@ void main() {
     }
 
     // Accretion logarithmic spiral angle
-    float baseSwirl = twist * 5.0 * weight * weight * (1.0 + log(1.0 + weight * 2.5));
+    float baseSwirl = twist_ * 5.0 * weight * weight * (1.0 + log(1.0 + weight * 2.5));
 
     // Optional spiral arm ripple modulation
     if (spiralArms >= 0.5) {

@@ -21,16 +21,16 @@
         {
             "NAME": "rotations",
             "TYPE": "float",
-            "MIN": 0.5,
-            "MAX": 5.0,
-            "DEFAULT": 2.0
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.33333
         },
         {
             "NAME": "radius",
             "TYPE": "float",
-            "MIN": 0.3,
-            "MAX": 1.5,
-            "DEFAULT": 0.75
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.375
         },
         {
             "NAME": "chromatic",
@@ -41,6 +41,11 @@
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define rotations_ (0.5+rotations*4.5)
+#define radius_ (0.3+radius*1.2)
+
 
 #define PI 3.14159265359
 
@@ -63,11 +68,11 @@ void main() {
 
     // Dynamic swirl angle peaking at midpoint
     float midEnv = sin(p * PI);
-    float maxAngle = rotations * 2.0 * PI;
+    float maxAngle = rotations_ * 2.0 * PI;
     float angleA = (p) * maxAngle;
     float angleB = -(1.0 - p) * maxAngle;
 
-    float r = max(0.1, radius);
+    float r = max(0.1, radius_);
 
     // Swirl UVs
     vec2 uvA = swirl(uv, angleA, r);

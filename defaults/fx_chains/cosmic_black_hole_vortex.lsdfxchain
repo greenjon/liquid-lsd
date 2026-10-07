@@ -25,16 +25,16 @@
             },
             "parameters": {
                 "twist": {
-                    "baseValue": 1.2,
-                    "baseMin": -3.0,
-                    "baseMax": 3.0,
+                    "baseValue": 0.4,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "radius": {
-                    "baseValue": 0.9,
-                    "baseMin": 0.1,
-                    "baseMax": 2.5,
+                    "baseValue": 0.33333,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -65,23 +65,23 @@
             },
             "parameters": {
                 "refractAmount": {
-                    "baseValue": 0.12,
+                    "baseValue": 0.48,
                     "baseMin": 0.0,
-                    "baseMax": 0.25,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "smoothness": {
-                    "baseValue": 0.4,
-                    "baseMin": 0.05,
-                    "baseMax": 1.0,
+                    "baseValue": -0.01333,
+                    "baseMin": -0.06,
+                    "baseMax": 0.06667,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "chromaDispersion": {
-                    "baseValue": 0.35,
+                    "baseValue": 3.5,
                     "baseMin": 0.0,
-                    "baseMax": 1.0,
+                    "baseMax": 10.0,
                     "randomizeBase": false,
                     "modulators": []
                 }
@@ -98,9 +98,9 @@
             },
             "parameters": {
                 "depth": {
-                    "baseValue": 1.5,
-                    "baseMin": 0.1,
-                    "baseMax": 5.0,
+                    "baseValue": 0.28571,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },

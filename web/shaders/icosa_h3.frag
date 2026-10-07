@@ -15,7 +15,7 @@ precision highp float;
         { "NAME": "Morph", "LABEL": "Morph", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "StellationBoost", "LABEL": "Stellation Boost", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "SpikeMode", "LABEL": "Spike Mode", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "SpikePhase", "LABEL": "Spike Phase", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 6.2831853 },
+        { "NAME": "SpikePhase", "LABEL": "Spike Phase", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159, "MAX": 3.14159 },
         { "NAME": "SpikeSharpness", "LABEL": "Spike Sharpness", "TYPE": "float", "DEFAULT": 0.6, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "BlockerSize", "LABEL": "Blocker Size", "TYPE": "float", "DEFAULT": 0.4, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "SupportH", "LABEL": "Support H", "TYPE": "float", "DEFAULT": 0.0, "MIN": -1.0, "MAX": 1.0 },
@@ -23,18 +23,26 @@ precision highp float;
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "HueAnimSpeed", "LABEL": "Hue Anim Speed", "TYPE": "float", "DEFAULT": 0.0, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "Saturation", "LABEL": "Saturation", "TYPE": "float", "DEFAULT": 0.85, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 0.95, "MIN": 0.0, "MAX": 2.0 },
+        { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 0.475, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Opacity", "LABEL": "Opacity", "TYPE": "float", "DEFAULT": 0.75, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "EdgeThickness", "LABEL": "Edge Thickness", "TYPE": "float", "DEFAULT": 0.025, "MIN": 0.0, "MAX": 0.15 },
-        { "NAME": "EdgeBrightness", "LABEL": "Edge Brightness", "TYPE": "float", "DEFAULT": 1.2, "MIN": 0.0, "MAX": 2.0 },
-        { "NAME": "RimGlow", "LABEL": "Rim Glow", "TYPE": "float", "DEFAULT": 0.6, "MIN": 0.0, "MAX": 2.0 },
-        { "NAME": "Zoom", "LABEL": "Zoom", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.1, "MAX": 5.0 },
+        { "NAME": "EdgeThickness", "LABEL": "Edge Thickness", "TYPE": "float", "DEFAULT": 0.16667, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "EdgeBrightness", "LABEL": "Edge Brightness", "TYPE": "float", "DEFAULT": 0.6, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "RimGlow", "LABEL": "Rim Glow", "TYPE": "float", "DEFAULT": 0.3, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Zoom", "LABEL": "Zoom", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "RotateX", "LABEL": "Rotate X", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
         { "NAME": "RotateY", "LABEL": "Rotate Y", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
         { "NAME": "RotateZ", "LABEL": "Rotate Z", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 }
     ]
 }
 */
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define Brightness_ (Brightness*2.0)
+#define EdgeThickness_ (EdgeThickness*0.15)
+#define EdgeBrightness_ (EdgeBrightness*2.0)
+#define RimGlow_ (RimGlow*2.0)
+#define Zoom_ (Zoom<0.5?pow(0.1,1.0-2.0*Zoom):pow(5.0,2.0*Zoom-1.0))
+
 
 const float PI  = 3.14159265358979323846;
 const float PHI = 1.61803398874989484820;
@@ -208,7 +216,7 @@ void main(){
     vec2 uv = isf_FragNormCoord * 2.0 - 1.0;
     uv.x *= RENDERSIZE.x / RENDERSIZE.y;
 
-    float zoom = clamp(Zoom, 0.1, 5.0);
+    float zoom = clamp(Zoom_, 0.1, 5.0);
     vec3 ro = vec3(0.0, 0.0, -3.8 / zoom);
     vec3 rd = normalize(vec3(uv, 1.4));
     mat3 rot = rotateZ(RotateZ) * rotateY(RotateY) * rotateX(RotateX);
@@ -221,7 +229,7 @@ void main(){
     vec4 acc = vec4(0.0);
     float t = max(0.0, (3.8 - 3.0) / zoom);
     float opacity = clamp(Opacity, 0.0, 1.0);
-    float edgeThick = clamp(EdgeThickness, 0.0, 0.15);
+    float edgeThick = clamp(EdgeThickness_, 0.0, 0.15);
     int cm = int(clamp(ColorMode, 0.0, 4.0) + 0.5);
 
     for (int i = 0; i < 120; i++) {
@@ -233,7 +241,7 @@ void main(){
             vec3 n = getNormal(p);
             float diff = max(0.25, dot(n, lD));
             float spec = pow(max(0.0, dot(reflect(-lD, n), -rd)), 16.0) * 0.4;
-            float rim = pow(1.0 - max(0.0, dot(n, -rd)), 3.0) * RimGlow;
+            float rim = pow(1.0 - max(0.0, dot(n, -rd)), 3.0) * RimGlow_;
 
             vec3 col;
             if (cm == 0) {
@@ -261,12 +269,12 @@ void main(){
                 col = palette(fract(fres * 0.8 + hueEff + TIME * 0.05), palA, palB, palC, palD);
             }
 
-            col = adjustColor(col, Saturation, Brightness) * diff + vec3(spec);
-            col += rim * adjustColor(palette(fract(hueEff + 0.5), palA, palB, palC, palD), Saturation, Brightness);
+            col = adjustColor(col, Saturation, Brightness_) * diff + vec3(spec);
+            col += rim * adjustColor(palette(fract(hueEff + 0.5), palA, palB, palC, palD), Saturation, Brightness_);
 
             if (edgeThick > 0.001) {
                 float ef = 1.0 - smoothstep(0.0, edgeThick, edge);
-                col = mix(col, adjustColor(vec3(1.0) - col * 0.5, Saturation, Brightness * EdgeBrightness), ef);
+                col = mix(col, adjustColor(vec3(1.0) - col * 0.5, Saturation, Brightness_ * EdgeBrightness_), ef);
             }
 
             float w = (1.0 - acc.a) * opacity;
@@ -283,7 +291,7 @@ void main(){
     if (acc.a < 0.9) {
         float gE, gD, gF; vec3 gC;
         float gd = mapSDF(ro + rd * (3.8 / zoom), gE, gC, gF, gD);
-        acc.rgb += palette(hueEff, palA, palB, palC, palD) * exp(-max(0.0, gd) * 4.0) * 0.15 * Brightness * (1.0 - acc.a);
+        acc.rgb += palette(hueEff, palA, palB, palC, palD) * exp(-max(0.0, gd) * 4.0) * 0.15 * Brightness_ * (1.0 - acc.a);
     }
 
     gl_FragColor = vec4(acc.rgb, acc.a * uAlpha);

@@ -10,21 +10,32 @@
     ],
     "INPUTS": [
         { "NAME": "Symmetries", "LABEL": "Symmetries", "TYPE": "float", "DEFAULT": 6.0, "MIN": 3.0, "MAX": 24.0 },
-        { "NAME": "RingDensity", "LABEL": "Ring Density", "TYPE": "float", "DEFAULT": 12.0, "MIN": 2.0, "MAX": 40.0 },
-        { "NAME": "PhaseTwist", "LABEL": "Phase Twist", "TYPE": "float", "DEFAULT": 0.5, "MIN": -2.0, "MAX": 2.0 },
+        { "NAME": "RingDensity", "LABEL": "Ring Density", "TYPE": "float", "DEFAULT": 0.26316, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "PhaseTwist", "LABEL": "Phase Twist", "TYPE": "float", "DEFAULT": 0.25, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "MoireStrength", "LABEL": "Moiré Strength", "TYPE": "float", "DEFAULT": 0.6, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "FlowerFold", "LABEL": "Flower of Life Fold", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "PulseWave", "LABEL": "Pulse Wave", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 2.0 },
-        { "NAME": "Speed", "LABEL": "Speed", "TYPE": "float", "DEFAULT": 0.3, "MIN": -2.0, "MAX": 2.0 },
-        { "NAME": "LineWidth", "LABEL": "Line Width", "TYPE": "float", "DEFAULT": 0.35, "MIN": 0.05, "MAX": 1.0 },
-        { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 1.5, "MIN": 0.2, "MAX": 4.0 },
+        { "NAME": "PulseWave", "LABEL": "Pulse Wave", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Speed", "LABEL": "Speed", "TYPE": "float", "DEFAULT": 0.15, "MIN": -1.0, "MAX": 1.0 },
+        { "NAME": "LineWidth", "LABEL": "Line Width", "TYPE": "float", "DEFAULT": 0.31579, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 0.34211, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "ColorMode", "LABEL": "Color Mode", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "HueSweep", "LABEL": "Hue Sweep", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 2.0 },
-        { "NAME": "Scale", "LABEL": "Scale", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.1, "MAX": 3.0 }
+        { "NAME": "HueSweep", "LABEL": "Hue Sweep", "TYPE": "float", "DEFAULT": 0.25, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Scale", "LABEL": "Scale", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }
     ]
 }
 */
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define RingDensity_ (2.0+RingDensity*38.0)
+#define PhaseTwist_ (PhaseTwist*2.0)
+#define PulseWave_ (PulseWave*2.0)
+#define Speed_ (Speed*2.0)
+#define LineWidth_ (0.05+LineWidth*0.95)
+#define Glow_ (0.2+Glow*3.8)
+#define HueSweep_ (HueSweep*2.0)
+#define Scale_ (Scale<0.5?pow(0.1,1.0-2.0*Scale):pow(3.0,2.0*Scale-1.0))
+
 
 const float PI = 3.14159265358979323846;
 const float TWO_PI = 6.28318530717958647692;
@@ -37,17 +48,17 @@ vec3 hsv2rgb(vec3 c) {
 
 void main() {
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
-    vec2 p = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0) / max(Scale, 0.05);
+    vec2 p = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0) / max(Scale_, 0.05);
 
     float r = length(p);
     float angle = atan(p.y, p.x);
 
-    float t = TIME * Speed;
+    float t = TIME * Speed_;
     float sym = max(floor(Symmetries + 0.5), 2.0);
     float sector = TWO_PI / sym;
 
     // Phase twist rotation along radius
-    float twistedAngle = angle + r * PhaseTwist + t * 0.2;
+    float twistedAngle = angle + r * PhaseTwist_ + t * 0.2;
 
     // Fold angle into fundamental rotational wedge
     float foldedAngle = abs(mod(twistedAngle, sector) - sector * 0.5);
@@ -56,8 +67,8 @@ void main() {
     vec2 pFold = vec2(cos(foldedAngle), sin(foldedAngle)) * r;
 
     // 1. Concentric harmonic waves & moiré interference
-    float wave1 = sin(r * RingDensity - t * 3.0);
-    float wave2 = cos(r * RingDensity * (1.0 + MoireStrength * 0.5) + foldedAngle * sym);
+    float wave1 = sin(r * RingDensity_ - t * 3.0);
+    float wave2 = cos(r * RingDensity_ * (1.0 + MoireStrength * 0.5) + foldedAngle * sym);
     float moireField = abs(wave1 * wave2);
 
     // 2. Flower of Life geometric circles
@@ -70,7 +81,7 @@ void main() {
 
     // 3. Audio pulse shockwave ring
     float pulseDist = 100.0;
-    if (PulseWave > 0.01) {
+    if (PulseWave_ > 0.01) {
         float pulseR = fract(t * 0.5) * 1.5;
         pulseDist = abs(r - pulseR);
     }
@@ -80,13 +91,13 @@ void main() {
     geometricDist = min(geometricDist, pulseDist);
 
     // Gaussian glow intensity
-    float lineThickness = LineWidth * 0.02;
-    float intensity = exp(-pow(geometricDist / lineThickness, 1.5)) * Glow;
-    intensity += (0.05 / (geometricDist + 0.02)) * (Glow * 0.3);
+    float lineThickness = LineWidth_ * 0.02;
+    float intensity = exp(-pow(geometricDist / lineThickness, 1.5)) * Glow_;
+    intensity += (0.05 / (geometricDist + 0.02)) * (Glow_ * 0.3);
 
     // Color mapping
     int cMode = clamp(int(floor(ColorMode + 0.5)), 0, 3);
-    float colorCoord = fract(HueOffset + r * HueSweep + foldedAngle / TWO_PI);
+    float colorCoord = fract(HueOffset + r * HueSweep_ + foldedAngle / TWO_PI);
 
     vec3 col = vec3(0.0);
     if (cMode == 0) {
@@ -112,7 +123,7 @@ void main() {
     col *= intensity;
 
     // Center focal star halo
-    float centerGlow = exp(-r * 4.0) * (Glow * 0.5);
+    float centerGlow = exp(-r * 4.0) * (Glow_ * 0.5);
     col += vec3(centerGlow) * hsv2rgb(vec3(HueOffset, 0.5, 1.0));
 
     gl_FragColor = vec4(col, 1.0);

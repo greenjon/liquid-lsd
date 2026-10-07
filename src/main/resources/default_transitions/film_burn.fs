@@ -21,16 +21,16 @@
         {
             "NAME": "burnSpread",
             "TYPE": "float",
-            "MIN": 0.02,
-            "MAX": 0.3,
-            "DEFAULT": 0.12
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.35714
         },
         {
             "NAME": "glowIntensity",
             "TYPE": "float",
             "MIN": 0.0,
-            "MAX": 3.0,
-            "DEFAULT": 1.8
+            "MAX": 1.0,
+            "DEFAULT": 0.6
         },
         {
             "NAME": "tintMode",
@@ -41,6 +41,11 @@
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define burnSpread_ (0.02+burnSpread*0.28)
+#define glowIntensity_ (glowIntensity*3.0)
+
 
 // Fast 2D hash
 float hash(vec2 p) {
@@ -95,11 +100,11 @@ void main() {
     float diff = threshold - mappedP;
 
     // Base crossfade mix
-    float cut = smoothstep(0.0, burnSpread, diff);
+    float cut = smoothstep(0.0, burnSpread_, diff);
     vec4 baseColor = mix(colB, colA, cut);
 
     // Glowing ember ignition edge
-    float edge = 1.0 - smoothstep(0.0, burnSpread, abs(diff));
+    float edge = 1.0 - smoothstep(0.0, burnSpread_, abs(diff));
     edge = pow(edge, 1.8);
 
     vec3 emberColor;
@@ -114,6 +119,6 @@ void main() {
         emberColor = mix(vec3(0.1, 1.0, 0.2), vec3(0.8, 1.2, 0.9), edge * 0.7);
     }
 
-    vec3 finalRgb = baseColor.rgb + emberColor * edge * glowIntensity;
+    vec3 finalRgb = baseColor.rgb + emberColor * edge * glowIntensity_;
     gl_FragColor = vec4(finalRgb, mix(colA.a, colB.a, p));
 }

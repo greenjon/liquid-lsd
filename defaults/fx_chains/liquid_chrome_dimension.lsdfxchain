@@ -26,23 +26,23 @@
             },
             "parameters": {
                 "amplitude": {
-                    "baseValue": 0.04,
+                    "baseValue": 0.2,
                     "baseMin": 0.0,
-                    "baseMax": 0.2,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "frequency": {
-                    "baseValue": 8.0,
-                    "baseMin": 0.5,
-                    "baseMax": 50.0,
+                    "baseValue": 0.15152,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "speed": {
-                    "baseValue": 1.0,
-                    "baseMin": -5.0,
-                    "baseMax": 5.0,
+                    "baseValue": 0.2,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -80,9 +80,9 @@
                     "modulators": []
                 },
                 "chromaFringe": {
-                    "baseValue": 0.03,
+                    "baseValue": 0.3,
                     "baseMin": 0.0,
-                    "baseMax": 0.1,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -106,16 +106,16 @@
             },
             "parameters": {
                 "contrast": {
-                    "baseValue": 1.3,
+                    "baseValue": 0.43333,
                     "baseMin": 0.0,
-                    "baseMax": 3.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "saturation": {
-                    "baseValue": 1.2,
+                    "baseValue": 0.4,
                     "baseMin": 0.0,
-                    "baseMax": 3.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },

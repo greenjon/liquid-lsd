@@ -14,25 +14,25 @@
             "TYPE": "float",
             "DEFAULT": 0.0,
             "MIN": 0.0,
-            "MAX": 0.25,
+            "MAX": 1.0,
             "IDENTITY": 0.0
         },
         {
             "NAME": "smoothness",
             "LABEL": "Smoothness",
             "TYPE": "float",
-            "DEFAULT": 2.0,
-            "MIN": 0.5,
-            "MAX": 8.0,
-            "IDENTITY": 2.0
+            "DEFAULT": 0.2,
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "IDENTITY": 0.2
         },
         {
             "NAME": "chromaDispersion",
             "LABEL": "Prism Fringe",
             "TYPE": "float",
-            "DEFAULT": 0.02,
+            "DEFAULT": 0.2,
             "MIN": 0.0,
-            "MAX": 0.1,
+            "MAX": 1.0,
             "IDENTITY": 0.0
         },
         {
@@ -40,12 +40,19 @@
             "LABEL": "Flow Speed",
             "TYPE": "float",
             "DEFAULT": 0.0,
-            "MIN": -3.0,
-            "MAX": 3.0,
+            "MIN": -1.0,
+            "MAX": 1.0,
             "IDENTITY": 0.0
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define refractAmount_ (refractAmount*0.25)
+#define smoothness_ (0.5+smoothness*7.5)
+#define chromaDispersion_ (chromaDispersion*0.1)
+#define flowSpeed_ (flowSpeed*3.0)
+
 
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
@@ -58,18 +65,18 @@ float getLuma(vec2 coord) {
 void main() {
     vec2 uv = isf_FragNormCoord;
 
-    if (refractAmount <= 0.0001) {
+    if (refractAmount_ <= 0.0001) {
         gl_FragColor = IMG_NORM_PIXEL(inputImage, uv);
         return;
     }
 
     float aspect = RENDERSIZE.x / max(RENDERSIZE.y, 1.0);
-    vec2 texel = vec2(smoothness) / RENDERSIZE;
+    vec2 texel = vec2(smoothness_) / RENDERSIZE;
 
     // Optional dynamic flow offset
     vec2 flowOffset = vec2(0.0);
-    if (abs(flowSpeed) > 0.001) {
-        float t = TIME * flowSpeed * 0.5;
+    if (abs(flowSpeed_) > 0.001) {
+        float t = TIME * flowSpeed_ * 0.5;
         flowOffset = vec2(sin(uv.y * 5.0 + t), cos(uv.x * 5.0 + t)) * 0.02;
     }
 
@@ -87,12 +94,12 @@ void main() {
     // 2D surface normal displacement vector
     vec2 normalDir = vec2(-gx, -gy);
     normalDir.x /= aspect;
-    vec2 offset = normalDir * (refractAmount * 2.0);
+    vec2 offset = normalDir * (refractAmount_ * 2.0);
 
     // Multi-spectral chromatic dispersion
-    vec2 rCoord = abs(mod(uv + offset * (1.0 + chromaDispersion * 2.0), 2.0) - 1.0);
+    vec2 rCoord = abs(mod(uv + offset * (1.0 + chromaDispersion_ * 2.0), 2.0) - 1.0);
     vec2 gCoord = abs(mod(uv + offset, 2.0) - 1.0);
-    vec2 bCoord = abs(mod(uv + offset * (1.0 - chromaDispersion * 2.0), 2.0) - 1.0);
+    vec2 bCoord = abs(mod(uv + offset * (1.0 - chromaDispersion_ * 2.0), 2.0) - 1.0);
 
     float r = IMG_NORM_PIXEL(inputImage, rCoord).r;
     vec4 gPixel = IMG_NORM_PIXEL(inputImage, gCoord);

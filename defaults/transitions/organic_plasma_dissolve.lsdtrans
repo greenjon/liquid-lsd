@@ -14,23 +14,23 @@
     },
     "parameters": {
       "noiseScale": {
-        "baseValue": 7.0,
-        "baseMin": 2.0,
-        "baseMax": 20.0,
+        "baseValue": 0.27778,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
       },
       "softness": {
-        "baseValue": 0.12,
-        "baseMin": 0.01,
-        "baseMax": 0.4,
+        "baseValue": 0.28205,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
       },
       "chromaShift": {
-        "baseValue": 0.15,
+        "baseValue": 0.3,
         "baseMin": 0.0,
-        "baseMax": 0.5,
+        "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
       }

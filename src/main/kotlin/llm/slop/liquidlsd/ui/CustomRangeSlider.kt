@@ -5,6 +5,7 @@ import imgui.ImGui
 import kotlin.math.roundToInt
 
 object CustomRangeSlider {
+    private val DEFAULT_PARSE: (String) -> Float? = { it.toFloatOrNull() }
     private var draggingMin = false
     private var draggingMax = false
     private var activeSliderLabel: String? = null
@@ -65,15 +66,19 @@ object CustomRangeSlider {
         width: Float,
         defaultValue: Float? = null,
         onChanged: (Float) -> Unit,
-        formatValue: (Float) -> String = { "%.3f".format(it) },
-        parseValue: (String) -> Float? = { it.toFloatOrNull() },
+        formatValue: (Float) -> String = ValueFormat.AUTO,
+        parseValue: (String) -> Float? = DEFAULT_PARSE,
         readOnly: Boolean = false,
-        macroBindingInfo: llm.slop.liquidlsd.macro.MacroBindingInfo? = null
+        macroBindingInfo: llm.slop.liquidlsd.macro.MacroBindingInfo? = null,
+        displayScale: Float = 1f
     ) {
-        val buffer = textBuffers.getOrPut(key) { imgui.type.ImString(formatValue(currentValue), 32) }
+        val scale = displayScale
+        val shown = ValueFormat.resolve(formatValue, scale)
+        val parse: (String) -> Float? = if (scale != 1f && parseValue === DEFAULT_PARSE) { t -> t.toFloatOrNull()?.div(scale) } else parseValue
+        val buffer = textBuffers.getOrPut(key) { imgui.type.ImString(shown(currentValue), 32) }
         val active = textWidgetActive.getOrDefault(key, false)
         if (!active) {
-            buffer.set(formatValue(currentValue))
+            buffer.set(shown(currentValue))
         }
         ImGui.setCursorScreenPos(posX, posY)
         ImGui.pushItemWidth(width)
@@ -88,7 +93,7 @@ object CustomRangeSlider {
         callback.currentValue = currentValue
         callback.minLimit = minLimit
         callback.maxLimit = maxLimit
-        callback.formatValue = formatValue
+        callback.formatValue = shown
         callback.onChanged = onChanged
 
         val isBoundValue = isMacroBound
@@ -104,7 +109,7 @@ object CustomRangeSlider {
         }
 
         if (inputChanged && !isMacroBound) {
-            val parsed = parseValue(buffer.get())
+            val parsed = parse(buffer.get())
             if (parsed != null) {
                 val clamped = parsed.coerceIn(minLimit, maxLimit)
                 onChanged(clamped)
@@ -169,7 +174,7 @@ object CustomRangeSlider {
         isRandomizeDisabled: Boolean = false,
         themeColor: Int,
         idPrefix: String,
-        formatValue: (Float) -> String = { "%.3f".format(it) },
+        formatValue: (Float) -> String = ValueFormat.AUTO,
         onRandomizableChanged: (Boolean) -> Unit,
         onRandomizeNow: () -> Unit,
         onMinMaxChanged: (Float, Float) -> Unit,
@@ -259,8 +264,8 @@ object CustomRangeSlider {
 
             val minLock = minMaxLock(paramKey, modulatorId, "lfoMin")
             val maxLock = minMaxLock(paramKey, modulatorId, "lfoMax")
-            drawTextInput(session, "${idPrefix}_min", currentMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinMaxChanged(it, maxOf(it, currentMax)) }, formatValue, macroBindingInfo = minLock)
-            drawTextInput(session, "${idPrefix}_max", currentMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinMaxChanged(minOf(it, currentMin), it) }, formatValue, macroBindingInfo = maxLock)
+            drawTextInput(session, "${idPrefix}_min", currentMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinMaxChanged(it, maxOf(it, currentMax)) }, formatValue, macroBindingInfo = minLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
+            drawTextInput(session, "${idPrefix}_max", currentMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinMaxChanged(minOf(it, currentMin), it) }, formatValue, macroBindingInfo = maxLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
 
             renderInternalDualSlider(idPrefix + label + "_single", currentMin, currentMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinMaxChanged, locked = minLock ?: maxLock)
         } else {
@@ -293,8 +298,8 @@ object CustomRangeSlider {
             drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY, boxWidth, minLimit = minLimit, maxLimit = maxLimit, paramKey = paramKey, modulatorIndex = modulatorIndex, modulatorId = modulatorId, propertyName = "dcOffsetMax") { bindRangeBound("dcOffsetMax") }
 
             // Top: Min range
-            drawTextInput(session, "${idPrefix}_min_r_min", minRangeMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinRangeChanged(it, maxOf(it, minRangeMax)) }, formatValue, macroBindingInfo = dcMinLock)
-            drawTextInput(session, "${idPrefix}_min_r_max", minRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinRangeChanged(minOf(it, minRangeMin), it) }, formatValue, macroBindingInfo = dcMaxLock)
+            drawTextInput(session, "${idPrefix}_min_r_min", minRangeMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinRangeChanged(it, maxOf(it, minRangeMax)) }, formatValue, macroBindingInfo = dcMinLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
+            drawTextInput(session, "${idPrefix}_min_r_max", minRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinRangeChanged(minOf(it, minRangeMin), it) }, formatValue, macroBindingInfo = dcMaxLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
             renderInternalDualSlider(idPrefix + label + "_min_r", minRangeMin, minRangeMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinRangeChanged, locked = dcMinLock ?: dcMaxLock)
 
             // Labels for columns (Bottom row: depth randomization bounds)
@@ -303,8 +308,8 @@ object CustomRangeSlider {
             drawMinMaxBoundLabel(session, "Max Bound Range", isMacroLearning, textBoxesStartX + boxWidth + boxSpacing, labelY2, boxWidth, minLimit = minLimit, maxLimit = maxLimit, paramKey = paramKey, modulatorIndex = modulatorIndex, modulatorId = modulatorId, propertyName = "depthMax") { bindRangeBound("depthMax") }
 
             // Bottom: Max range
-            drawTextInput(session, "${idPrefix}_max_r_min", maxRangeMin, minLimit, maxLimit, textBoxesStartX, row2Y, boxWidth, null, { onMaxRangeChanged(it, maxOf(it, maxRangeMax)) }, formatValue, macroBindingInfo = depthMinLock)
-            drawTextInput(session, "${idPrefix}_max_r_max", maxRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, row2Y, boxWidth, null, { onMaxRangeChanged(minOf(it, maxRangeMin), it) }, formatValue, macroBindingInfo = depthMaxLock)
+            drawTextInput(session, "${idPrefix}_max_r_min", maxRangeMin, minLimit, maxLimit, textBoxesStartX, row2Y, boxWidth, null, { onMaxRangeChanged(it, maxOf(it, maxRangeMax)) }, formatValue, macroBindingInfo = depthMinLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
+            drawTextInput(session, "${idPrefix}_max_r_max", maxRangeMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, row2Y, boxWidth, null, { onMaxRangeChanged(minOf(it, maxRangeMin), it) }, formatValue, macroBindingInfo = depthMaxLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
             renderInternalDualSlider(idPrefix + label + "_max_r", maxRangeMin, maxRangeMax, minLimit, maxLimit, sliderStartX, row2Y, lineWidth, themeColor, onMaxRangeChanged, locked = depthMinLock ?: depthMaxLock)
 
             ImGui.setCursorPosY(ImGui.getCursorPosY() + buttonSize + 4f)
@@ -539,11 +544,11 @@ object CustomRangeSlider {
         minLimit: Float,
         maxLimit: Float,
         defaultValue: Float? = null,
-        formatValue: (Float) -> String = { "%.2f".format(it) },
+        formatValue: (Float) -> String = ValueFormat.AUTO,
         idPrefix: String = "",
         themeColor: Int = TangoPalette.u32(TangoPalette.SYNC.normal, 0.9f),
         isLogarithmic: Boolean = false,
-        parseValue: (String) -> Float? = { it.toFloatOrNull() },
+        parseValue: (String) -> Float? = DEFAULT_PARSE,
         showCurrentLabel: Boolean = true,
         customBoxWidth: Float? = null,
         onValueChanged: (Float) -> Unit,
@@ -593,7 +598,7 @@ object CustomRangeSlider {
         idPrefix: String = "",
         themeColor: Int = TangoPalette.u32(TangoPalette.SYNC.normal, 0.6f),
         isLogarithmic: Boolean = false,
-        parseValue: (String) -> Float? = { it.toFloatOrNull() },
+        parseValue: (String) -> Float? = DEFAULT_PARSE,
         showCurrentLabel: Boolean = true,
         customBoxWidth: Float? = null,
         readOnly: Boolean = false,
@@ -649,7 +654,7 @@ object CustomRangeSlider {
         idPrefix: String = "",
         themeColor: Int = TangoPalette.u32(TangoPalette.SYNC.normal, 0.6f),
         isLogarithmic: Boolean = false,
-        parseValue: (String) -> Float? = { it.toFloatOrNull() },
+        parseValue: (String) -> Float? = DEFAULT_PARSE,
         showCurrentLabel: Boolean = true,
         customBoxWidth: Float? = null,
         isRandomizeDisabled: Boolean = false,
@@ -658,8 +663,10 @@ object CustomRangeSlider {
         modulatorIndex: Int? = null,
         modulatorId: String? = null,
         propertyName: String? = null,
-        paramKey: String? = null
+        paramKey: String? = null,
+        displayScale: Float? = null
     ) {
+        val dispScale = displayScale ?: if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f
         val effectiveIsRandomizable = if (isRandomizeDisabled) false else ((isRandomizable && session.uiTheme.randomizationEnabled) || (!showControls && isRandomizable))
         val effectiveShowControls = showControls && session.uiTheme.randomizationEnabled
 
@@ -704,7 +711,7 @@ object CustomRangeSlider {
         val lineWidth = (lineEndX - lineStartX).coerceAtLeast(1f)
         
         val rangeSpan = maxLimit - minLimit
-        val labelFormatFunc = formatLabel ?: formatValue
+        val labelFormatFunc = formatLabel ?: ValueFormat.resolve(formatValue, dispScale)
 
         val toPct: (Float) -> Float = { v ->
             if (isLogarithmic) {
@@ -970,7 +977,8 @@ object CustomRangeSlider {
                 },
                 formatValue = formatValue,
                 parseValue = parseValue,
-                macroBindingInfo = macroInfo
+                macroBindingInfo = macroInfo,
+                displayScale = dispScale
             )
             drawTextInput(
                 session = session,
@@ -987,7 +995,8 @@ object CustomRangeSlider {
                 },
                 formatValue = formatValue,
                 parseValue = parseValue,
-                macroBindingInfo = macroInfo
+                macroBindingInfo = macroInfo,
+                displayScale = dispScale
             )
         } else {
             drawTextInput(
@@ -1006,7 +1015,8 @@ object CustomRangeSlider {
                 formatValue = formatValue,
                 parseValue = parseValue,
                 readOnly = readOnly,
-                macroBindingInfo = macroInfo
+                macroBindingInfo = macroInfo,
+                displayScale = dispScale
             )
         }
         

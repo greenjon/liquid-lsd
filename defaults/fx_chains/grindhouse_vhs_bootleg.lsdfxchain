@@ -86,9 +86,9 @@
                     "modulators": []
                 },
                 "curvature": {
-                    "baseValue": 0.2,
+                    "baseValue": 0.33333,
                     "baseMin": 0.0,
-                    "baseMax": 1.0,
+                    "baseMax": 1.66667,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -119,9 +119,9 @@
             },
             "parameters": {
                 "contrast": {
-                    "baseValue": 1.25,
+                    "baseValue": 0.41667,
                     "baseMin": 0.0,
-                    "baseMax": 3.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -133,9 +133,9 @@
                     "modulators": []
                 },
                 "saturation": {
-                    "baseValue": 0.9,
+                    "baseValue": 0.3,
                     "baseMin": 0.0,
-                    "baseMax": 3.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 }

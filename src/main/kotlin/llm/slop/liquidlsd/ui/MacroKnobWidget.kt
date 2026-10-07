@@ -116,8 +116,15 @@ object MacroKnobWidget {
         return llm.slop.liquidlsd.macro.MacroCurve.inverse(value, b).coerceIn(0f, 1f)
     }
 
-    fun formatDisplayValue(v: Float): String =
-        if (v == v.toInt().toFloat() && kotlin.math.abs(v) < 1000f) v.toInt().toString()
+    /** 100 when the displayed value is a unit fraction (unbound 0-1 knob, or a binding spanning 0..1 / -1..1), else 1. */
+    fun displayScale(bindings: List<llm.slop.liquidlsd.macro.MacroBinding>): Float {
+        val b = bindings.firstOrNull() ?: return ValueFormat.scaleFor(0f, 1f)
+        return ValueFormat.scaleFor(minOf(b.minVal, b.maxVal), maxOf(b.minVal, b.maxVal))
+    }
+
+    fun formatDisplayValue(v: Float, scale: Float = 1f): String =
+        if (scale != 1f) ValueFormat.trimmed(v * scale)
+        else if (v == v.toInt().toFloat() && kotlin.math.abs(v) < 1000f) v.toInt().toString()
         else String.format(Locale.ROOT, "%.2f", v)
 
     // -- Drag/interaction state (single active knob at a time, mirrors CustomRangeSlider) ----
@@ -244,7 +251,7 @@ object MacroKnobWidget {
                 isDragLocked = false
                 wantsCursorRelease = true
             }
-            val initialText = valueOverlay ?: formatDisplayValue(displayValue(value, bindings))
+            val initialText = valueOverlay ?: formatDisplayValue(displayValue(value, bindings), displayScale(bindings))
             editBuffer.set(initialText)
         }
 
@@ -433,7 +440,9 @@ object MacroKnobWidget {
 
             ImGui.setCursorScreenPos(inputX, inputY)
             ImGui.pushItemWidth(inputW)
-            if (editJustOpened) {
+            // The opening double-click is also a mouse click this frame; don't let it dismiss the editor.
+            val openedThisFrame = editJustOpened
+            if (openedThisFrame) {
                 ImGui.setKeyboardFocusHere()
                 editJustOpened = false
             }
@@ -444,14 +453,14 @@ object MacroKnobWidget {
 
             if (committed) {
                 val text = editBuffer.get().trim()
-                val parsed = text.toFloatOrNull()
+                val parsed = text.toFloatOrNull()?.div(displayScale(bindings))
                 if (parsed != null) {
                     val newNorm = knobValueFromTyped(parsed, bindings)
                     newValue = newNorm
                     onChanged(newValue)
                 }
                 editingKnobId = null
-            } else if (isEscape || (!isInputActive && !editJustOpened && ImGui.isMouseClicked(0))) {
+            } else if (isEscape || (!isInputActive && !openedThisFrame && ImGui.isMouseClicked(0))) {
                 editingKnobId = null
             }
             ImGui.popItemWidth()
@@ -463,7 +472,7 @@ object MacroKnobWidget {
                     dl.addText(cx - sz.x / 2f, cy + radius * 0.42f - sz.y / 2f, ovCol, valueOverlay)
                 }
             } else if (isHovered || isActive || alwaysShowReadout) {
-                val readout = formatDisplayValue(displayValue(newValue, bindings))
+                val readout = formatDisplayValue(displayValue(newValue, bindings), displayScale(bindings))
                 session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                     val sz = ImGui.calcTextSize(readout)
                     val ovCol = ImGui.colorConvertFloat4ToU32(0.92f, 0.94f, 0.97f, if (isActive) 0.95f else 0.70f)
@@ -475,7 +484,7 @@ object MacroKnobWidget {
         val learnTip = if (isLearning) " [ADDING TARGET... Click a parameter]" else ""
         val bindingLine = formatBindingSummary(bindings)
         controlTooltip {
-            header = "$label: ${"%.2f".format(displayValue(newValue, bindings))} (${(newValue * 100f).roundToInt()}%)$learnTip"
+            header = "$label: ${formatDisplayValue(displayValue(newValue, bindings), displayScale(bindings))}$learnTip"
             binding = bindingLine
             drag = "adjust"
             shiftDrag = "fine-tune"
@@ -499,7 +508,7 @@ object MacroKnobWidget {
      */
     private fun formatBindingSummary(bindings: List<llm.slop.liquidlsd.macro.MacroBinding>): String {
         val binding = bindings.firstOrNull() ?: return "No target – right-click for MIDI Learn"
-        return "Target: ${binding.parameterId} [${"%.2f".format(binding.minVal)} – ${"%.2f".format(binding.maxVal)}]"
+        return "Target: ${binding.parameterId} [${ValueFormat.format(binding.minVal, ValueFormat.scaleFor(minOf(binding.minVal, binding.maxVal), maxOf(binding.minVal, binding.maxVal)))} – ${ValueFormat.format(binding.maxVal, ValueFormat.scaleFor(minOf(binding.minVal, binding.maxVal), maxOf(binding.minVal, binding.maxVal)))}]"
     }
 }
 

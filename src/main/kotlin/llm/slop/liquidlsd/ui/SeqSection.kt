@@ -29,6 +29,7 @@ object SeqSection {
         var currentValue: Float = 0f
         var minLimit: Float = 0f
         var maxLimit: Float = 1f
+        var scale: Float = 1f
         var onChanged: (Float) -> Unit = {}
 
         override fun accept(data: ImGuiInputTextCallbackData) {
@@ -47,7 +48,7 @@ object SeqSection {
                 }
                 val dir = if (upPressed) 1f else -1f
                 val nextValue = (currentValue + dir * delta).coerceIn(minLimit, maxLimit)
-                val formatted = "%.3f".format(nextValue)
+                val formatted = ValueFormat.format(nextValue, scale)
                 data.deleteChars(0, data.buf.length)
                 data.insertChars(0, formatted)
                 data.cursorPos = formatted.length
@@ -86,6 +87,7 @@ object SeqSection {
         val isBipolar = param.minClamp < 0f
         val stepMinLimit = if (isBipolar) -1.0f else 0.0f
         val stepMaxLimit = 1.0f
+        val stepScale = ValueFormat.scaleFor(stepMinLimit, stepMaxLimit)
 
         // 1. Clock Unit & Reset Header
         session.uiTheme.body("Clock Unit:")
@@ -301,10 +303,10 @@ object SeqSection {
                 val key = "seq_step_${existing.id}_$stepIdx"
                 val curVal = if (stepIdx < existing.seqSteps.size) existing.seqSteps[stepIdx] else 0f
 
-                val buffer = textBuffers.getOrPut(key) { ImString("%.3f".format(curVal), 16) }
+                val buffer = textBuffers.getOrPut(key) { ImString(ValueFormat.format(curVal, stepScale), 16) }
                 val isFocused = textWidgetActive.getOrDefault(key, false)
                 if (!isFocused) {
-                    buffer.set("%.3f".format(curVal))
+                    buffer.set(ValueFormat.format(curVal, stepScale))
                 }
 
                 val posX = ImGui.getCursorScreenPosX()
@@ -322,6 +324,7 @@ object SeqSection {
                 callback.currentValue = curVal
                 callback.minLimit = stepMinLimit
                 callback.maxLimit = stepMaxLimit
+                callback.scale = stepScale
                 callback.onChanged = { newVal ->
                     val mutableSteps = existing.seqSteps.toMutableList()
                     while (mutableSteps.size <= stepIdx) mutableSteps.add(0f)
@@ -332,7 +335,7 @@ object SeqSection {
                 val flags = ImGuiInputTextFlags.CallbackHistory
                 val inputChanged = ImGui.inputText("##$key", buffer, flags, callback)
                 if (inputChanged) {
-                    val parsed = buffer.get().toFloatOrNull()
+                    val parsed = buffer.get().toFloatOrNull()?.div(stepScale)
                     if (parsed != null) {
                         val clamped = parsed.coerceIn(stepMinLimit, stepMaxLimit)
                         val mutableSteps = existing.seqSteps.toMutableList()
@@ -449,7 +452,7 @@ object SeqSection {
             isRandomizable = existing.randomizeDepth,
             isRandomizeDisabled = param.isRandomizeDisabled,
             randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
-            formatValue = { "%.3f".format(it) },
+            formatValue = ValueFormat.AUTO,
             onRandomizableChanged = { checked -> onReplace(existing.copy(randomizeDepth = checked)) },
             onRandomizeNow = { onReplace(existing.randomizeDepth()) },
             onRangeChanged = { min, max -> onReplace(existing.copy(depthMin = min, depthMax = max)) },

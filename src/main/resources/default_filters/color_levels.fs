@@ -21,28 +21,28 @@
             "NAME": "contrast",
             "LABEL": "Contrast",
             "TYPE": "float",
-            "DEFAULT": 1.0,
+            "DEFAULT": 0.33333,
             "MIN": 0.0,
-            "MAX": 3.0,
-            "IDENTITY": 1.0
+            "MAX": 1.0,
+            "IDENTITY": 0.33333
         },
         {
             "NAME": "saturation",
             "LABEL": "Saturation",
             "TYPE": "float",
-            "DEFAULT": 1.0,
+            "DEFAULT": 0.33333,
             "MIN": 0.0,
-            "MAX": 3.0,
-            "IDENTITY": 1.0
+            "MAX": 1.0,
+            "IDENTITY": 0.33333
         },
         {
             "NAME": "gamma",
             "LABEL": "Gamma",
             "TYPE": "float",
-            "DEFAULT": 1.0,
-            "MIN": 0.2,
-            "MAX": 3.0,
-            "IDENTITY": 1.0
+            "DEFAULT": 0.28571,
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "IDENTITY": 0.28571
         },
         {
             "NAME": "warmth",
@@ -73,6 +73,12 @@
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define contrast_ (contrast*3.0)
+#define saturation_ (saturation*3.0)
+#define gamma_ (0.2+gamma*2.8)
+
 
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
@@ -121,13 +127,13 @@ void main() {
 
     // Perceptual luminance operations preserve original hue without shifting
     float l = lab.x + brightness;
-    l = (l - 0.5) * contrast + 0.5;
-    l = pow(max(l, 0.0), 1.0 / max(gamma, 0.01));
+    l = (l - 0.5) * contrast_ + 0.5;
+    l = pow(max(l, 0.0), 1.0 / max(gamma_, 0.01));
     lab.x = clamp(l, 0.0, 1.0);
 
     // Saturation and chromatic balance
-    lab.y = lab.y * saturation + (tint * 0.1);
-    lab.z = lab.z * saturation + (warmth * 0.1);
+    lab.y = lab.y * saturation_ + (tint * 0.1);
+    lab.z = lab.z * saturation_ + (warmth * 0.1);
 
     vec3 rgb = oklabToSrgb(lab);
 

@@ -24,16 +24,16 @@
             },
             "parameters": {
                 "contrast": {
-                    "baseValue": 1.15,
+                    "baseValue": 0.38333,
                     "baseMin": 0.0,
-                    "baseMax": 3.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "saturation": {
-                    "baseValue": 1.05,
+                    "baseValue": 0.35,
                     "baseMin": 0.0,
-                    "baseMax": 3.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 }
@@ -57,9 +57,9 @@
                     "modulators": []
                 },
                 "curvature": {
-                    "baseValue": 0.05,
+                    "baseValue": 0.08333,
                     "baseMin": 0.0,
-                    "baseMax": 1.0,
+                    "baseMax": 1.66667,
                     "randomizeBase": false,
                     "modulators": []
                 }
@@ -76,9 +76,9 @@
             },
             "parameters": {
                 "bloomIntensity": {
-                    "baseValue": 0.6,
+                    "baseValue": 0.2,
                     "baseMin": 0.0,
-                    "baseMax": 3.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },

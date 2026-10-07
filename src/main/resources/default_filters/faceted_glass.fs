@@ -11,9 +11,9 @@
         {
             "NAME": "facetScale",
             "TYPE": "float",
-            "MIN": 3.0,
-            "MAX": 60.0,
-            "DEFAULT": 18.0
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.26316
         },
         {
             "NAME": "refraction",
@@ -46,6 +46,10 @@
     ]
 }*/
 
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define facetScale_ (3.0+facetScale*57.0)
+
+
 vec2 hash22(vec2 p) {
     vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
     p3 += dot(p3, p3.yzx + 33.33);
@@ -62,7 +66,7 @@ void main() {
     float aspect = RENDERSIZE.x / max(RENDERSIZE.y, 1.0);
     vec2 aspectUv = vec2(uv.x * aspect, uv.y);
 
-    vec2 st = aspectUv * facetScale;
+    vec2 st = aspectUv * facetScale_;
     vec2 iSt = floor(st);
     vec2 fSt = fract(st);
 
@@ -83,7 +87,7 @@ void main() {
                 d2 = d1;
                 d1 = dist;
                 minPointOffset = diff;
-                cellCenterWorld = (iSt + neighbor + pt) / facetScale;
+                cellCenterWorld = (iSt + neighbor + pt) / facetScale_;
             } else if (dist < d2) {
                 d2 = dist;
             }

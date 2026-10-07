@@ -11,15 +11,15 @@
         {
             "NAME": "dotScale",
             "TYPE": "float",
-            "MIN": 5.0,
-            "MAX": 150.0,
-            "DEFAULT": 45.0
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.27586
         },
         {
             "NAME": "screenAngle",
             "TYPE": "float",
-            "MIN": 0.0,
-            "MAX": 90.0,
+            "MIN": -3.14159,
+            "MAX": 3.14159,
             "DEFAULT": 0.0
         },
         {
@@ -32,9 +32,9 @@
         {
             "NAME": "smoothness",
             "TYPE": "float",
-            "MIN": 0.02,
-            "MAX": 0.8,
-            "DEFAULT": 0.15
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.16667
         },
         {
             "NAME": "paperTint",
@@ -52,6 +52,11 @@
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define dotScale_ (5.0+dotScale*145.0)
+#define smoothness_ (0.02+smoothness*0.78)
+
 
 #define PI 3.14159265358979323846
 
@@ -81,7 +86,7 @@ void main() {
     float aspect = RENDERSIZE.x / max(RENDERSIZE.y, 1.0);
     vec2 aspectCoord = vec2((uv.x - 0.5) * aspect, uv.y - 0.5);
 
-    float globalAngle = screenAngle * (PI / 180.0);
+    float globalAngle = screenAngle;
     vec3 outRgb;
 
     if (mode < 0.5) {
@@ -96,10 +101,10 @@ void main() {
         float m = clamp((1.0 - g - k) / denom, 0.0, 1.0);
         float y = clamp((1.0 - b - k) / denom, 0.0, 1.0);
 
-        float dotC = evaluateDot(aspectCoord, globalAngle + 15.0 * (PI / 180.0), dotScale, c, smoothness);
-        float dotM = evaluateDot(aspectCoord, globalAngle + 75.0 * (PI / 180.0), dotScale, m, smoothness);
-        float dotY = evaluateDot(aspectCoord, globalAngle + 0.0 * (PI / 180.0), dotScale, y, smoothness);
-        float dotK = evaluateDot(aspectCoord, globalAngle + 45.0 * (PI / 180.0), dotScale, k, smoothness);
+        float dotC = evaluateDot(aspectCoord, globalAngle + 15.0 * (PI / 180.0), dotScale_, c, smoothness_);
+        float dotM = evaluateDot(aspectCoord, globalAngle + 75.0 * (PI / 180.0), dotScale_, m, smoothness_);
+        float dotY = evaluateDot(aspectCoord, globalAngle + 0.0 * (PI / 180.0), dotScale_, y, smoothness_);
+        float dotK = evaluateDot(aspectCoord, globalAngle + 45.0 * (PI / 180.0), dotScale_, k, smoothness_);
 
         vec3 paper = mix(vec3(1.0), vec3(0.97, 0.95, 0.91), paperTint);
         vec3 inkC = vec3(0.0, 0.75, 0.95);
@@ -118,16 +123,16 @@ void main() {
         // Mode 1: Monochrome Dot Screen (Newsprint)
         float luma = dot(srcColor.rgb, vec3(0.2126, 0.7152, 0.0722));
         float coverage = 1.0 - clamp(luma, 0.0, 1.0);
-        float dotMono = evaluateDot(aspectCoord, globalAngle + 45.0 * (PI / 180.0), dotScale, coverage, smoothness);
+        float dotMono = evaluateDot(aspectCoord, globalAngle + 45.0 * (PI / 180.0), dotScale_, coverage, smoothness_);
 
         vec3 paper = mix(vec3(1.0), vec3(0.95, 0.93, 0.88), paperTint);
         vec3 ink = vec3(0.08, 0.08, 0.09);
         outRgb = mix(paper, ink, dotMono);
     } else {
         // Mode 2: RGB Dots (Color Video Monitor Screen)
-        float dotR = evaluateDot(aspectCoord, globalAngle + 0.0 * (PI / 180.0), dotScale, srcColor.r, smoothness);
-        float dotG = evaluateDot(aspectCoord, globalAngle + 60.0 * (PI / 180.0), dotScale, srcColor.g, smoothness);
-        float dotB = evaluateDot(aspectCoord, globalAngle + 120.0 * (PI / 180.0), dotScale, srcColor.b, smoothness);
+        float dotR = evaluateDot(aspectCoord, globalAngle + 0.0 * (PI / 180.0), dotScale_, srcColor.r, smoothness_);
+        float dotG = evaluateDot(aspectCoord, globalAngle + 60.0 * (PI / 180.0), dotScale_, srcColor.g, smoothness_);
+        float dotB = evaluateDot(aspectCoord, globalAngle + 120.0 * (PI / 180.0), dotScale_, srcColor.b, smoothness_);
         outRgb = vec3(dotR, dotG, dotB);
     }
 

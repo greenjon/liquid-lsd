@@ -40,8 +40,8 @@
             "LABEL": "Duty Cycle",
             "TYPE": "float",
             "DEFAULT": 0.5,
-            "MIN": 0.05,
-            "MAX": 0.95,
+            "MIN": 0.0,
+            "MAX": 1.0,
             "IDENTITY": 0.5
         }
     ],
@@ -53,6 +53,10 @@
         {}
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define dutyCycle_ (0.05+dutyCycle*0.9)
+
 
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
@@ -73,7 +77,7 @@ void main() {
 
         if (rate > 0.01) {
             float phase = fract(TIME * rate);
-            bool isFlash = (phase < dutyCycle);
+            bool isFlash = (phase < dutyCycle_);
 
             if (isFlash) {
                 int mode = int(floor(strobeMode + 0.5));

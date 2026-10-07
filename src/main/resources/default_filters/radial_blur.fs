@@ -39,22 +39,27 @@
             "NAME": "decay",
             "LABEL": "Decay",
             "TYPE": "float",
-            "DEFAULT": 0.95,
-            "MIN": 0.5,
+            "DEFAULT": 0.9,
+            "MIN": 0.0,
             "MAX": 1.0,
-            "IDENTITY": 0.95
+            "IDENTITY": 0.9
         },
         {
             "NAME": "exposure",
             "LABEL": "Exposure",
             "TYPE": "float",
-            "DEFAULT": 1.0,
-            "MIN": 0.1,
-            "MAX": 2.5,
-            "IDENTITY": 1.0
+            "DEFAULT": 0.375,
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "IDENTITY": 0.375
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define decay_ (0.5+decay*0.5)
+#define exposure_ (0.1+exposure*2.4)
+
 
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
@@ -96,10 +101,10 @@ void main() {
         vec4 tap = IMG_NORM_PIXEL(inputImage, sampleCoord);
         accum += tap * currentDecay;
         totalWeight += currentDecay;
-        currentDecay *= decay;
+        currentDecay *= decay_;
     }
 
-    vec4 finalColor = (accum / max(totalWeight, 0.0001)) * exposure;
+    vec4 finalColor = (accum / max(totalWeight, 0.0001)) * exposure_;
     finalColor.a = IMG_NORM_PIXEL(inputImage, uv).a;
 
     gl_FragColor = finalColor;

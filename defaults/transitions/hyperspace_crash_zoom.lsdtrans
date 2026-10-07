@@ -14,9 +14,9 @@
     },
     "parameters": {
       "zoomFactor": {
-        "baseValue": 2.8,
-        "baseMin": 1.0,
-        "baseMax": 4.0,
+        "baseValue": 0.6,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
       },

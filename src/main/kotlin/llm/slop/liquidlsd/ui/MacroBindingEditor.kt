@@ -289,14 +289,16 @@ object MacroBindingEditor {
     }
 
     private fun drawMinField(binding: MacroBinding, lo: Float, hi: Float, log: Boolean, compact: Boolean = false) {
-        minValBuf[0] = binding.minVal
-        if (ImGui.dragFloat(if (compact) "##min" else "Min##min", minValBuf, dragSpeed(lo, hi, binding.minVal, log), lo, hi, "%.3f")) binding.minVal = minValBuf[0]
+        val s = if (log) 1f else ValueFormat.scaleFor(lo, hi)
+        minValBuf[0] = binding.minVal * s
+        if (ImGui.dragFloat(if (compact) "##min" else "Min##min", minValBuf, dragSpeed(lo, hi, binding.minVal, log) * s, lo * s, hi * s, if (s == 1f) "%.3f" else "%.1f")) binding.minVal = minValBuf[0] / s
         itemTooltip("Output value when the macro is at 0.0. Ctrl+click to type a value.")
     }
 
     private fun drawMaxField(binding: MacroBinding, lo: Float, hi: Float, log: Boolean, compact: Boolean = false) {
-        maxValBuf[0] = binding.maxVal
-        if (ImGui.dragFloat(if (compact) "##max" else "Max##max", maxValBuf, dragSpeed(lo, hi, binding.maxVal, log), lo, hi, "%.3f")) binding.maxVal = maxValBuf[0]
+        val s = if (log) 1f else ValueFormat.scaleFor(lo, hi)
+        maxValBuf[0] = binding.maxVal * s
+        if (ImGui.dragFloat(if (compact) "##max" else "Max##max", maxValBuf, dragSpeed(lo, hi, binding.maxVal, log) * s, lo * s, hi * s, if (s == 1f) "%.3f" else "%.1f")) binding.maxVal = maxValBuf[0] / s
         itemTooltip("Output value when the macro is at 1.0. Ctrl+click to type a value.")
     }
 
@@ -352,7 +354,7 @@ object MacroBindingEditor {
             }
             if (ImGui.isItemHovered() || ImGui.isItemActive()) {
                 ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.ResizeEW)
-                itemTooltip("%.3f".format(value))
+                itemTooltip(ValueFormat.format(value, if (log) 1f else ValueFormat.scaleFor(lo, hi)))
             }
             dl.addRectFilled(x - HANDLE_W * 0.5f, y0 + 2f, x + HANDLE_W * 0.5f, y0 + barH - 2f, handleCol, 2f)
         }

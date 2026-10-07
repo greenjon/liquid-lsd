@@ -10,27 +10,38 @@
         "Geometric"
     ],
     "INPUTS": [
-        { "NAME": "SliceOffset", "LABEL": "Slice Offset W", "TYPE": "float", "DEFAULT": 0.0, "MIN": -1.5, "MAX": 1.5 },
-        { "NAME": "RotateXW", "LABEL": "Rotate XW (4D)", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 6.2831853 },
-        { "NAME": "RotateYW", "LABEL": "Rotate YW (4D)", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 6.2831853 },
-        { "NAME": "RotateZW", "LABEL": "Rotate ZW (4D)", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 6.2831853 },
+        { "NAME": "SliceOffset", "LABEL": "Slice Offset W", "TYPE": "float", "DEFAULT": 0.0, "MIN": -1.0, "MAX": 1.0 },
+        { "NAME": "RotateXW", "LABEL": "Rotate XW (4D)", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159, "MAX": 3.14159 },
+        { "NAME": "RotateYW", "LABEL": "Rotate YW (4D)", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159, "MAX": 3.14159 },
+        { "NAME": "RotateZW", "LABEL": "Rotate ZW (4D)", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159, "MAX": 3.14159 },
         { "NAME": "RotateX", "LABEL": "Rotate X", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
         { "NAME": "RotateY", "LABEL": "Rotate Y", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
         { "NAME": "RotateZ", "LABEL": "Rotate Z", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
         { "NAME": "Morph", "LABEL": "Polychoron Morph", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "SupportH", "LABEL": "Facet Support H", "TYPE": "float", "DEFAULT": 0.85, "MIN": 0.3, "MAX": 1.8 },
+        { "NAME": "SupportH", "LABEL": "Facet Support H", "TYPE": "float", "DEFAULT": 0.36667, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "ColorMethod", "LABEL": "Color Method", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 2.0 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Saturation", "LABEL": "Saturation", "TYPE": "float", "DEFAULT": 0.85, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 1.1, "MIN": 0.0, "MAX": 2.0 },
-        { "NAME": "Opacity", "LABEL": "Face Opacity", "TYPE": "float", "DEFAULT": 0.8, "MIN": 0.1, "MAX": 1.0 },
-        { "NAME": "EdgeThickness", "LABEL": "Edge Thickness", "TYPE": "float", "DEFAULT": 0.015, "MIN": 0.002, "MAX": 0.08 },
-        { "NAME": "EdgeBrightness", "LABEL": "Edge Brightness", "TYPE": "float", "DEFAULT": 1.5, "MIN": 0.0, "MAX": 3.0 },
-        { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.0, "MAX": 3.0 },
-        { "NAME": "Zoom", "LABEL": "Zoom", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.2, "MAX": 4.0 }
+        { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 0.55, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Opacity", "LABEL": "Face Opacity", "TYPE": "float", "DEFAULT": 0.77778, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "EdgeThickness", "LABEL": "Edge Thickness", "TYPE": "float", "DEFAULT": 0.16667, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "EdgeBrightness", "LABEL": "Edge Brightness", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 0.33333, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Zoom", "LABEL": "Zoom", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }
     ]
 }
 */
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define SliceOffset_ (SliceOffset*1.5)
+#define SupportH_ (0.3+SupportH*1.5)
+#define Brightness_ (Brightness*2.0)
+#define Opacity_ (0.1+Opacity*0.9)
+#define EdgeThickness_ (0.002+EdgeThickness*0.078)
+#define EdgeBrightness_ (EdgeBrightness*3.0)
+#define Glow_ (Glow*3.0)
+#define Zoom_ (Zoom<0.5?pow(0.2,1.0-2.0*Zoom):pow(4.0,2.0*Zoom-1.0))
+
 
 const float PI  = 3.14159265358979323846;
 const float PHI = 1.61803398874989484820;
@@ -95,14 +106,14 @@ const vec4 pole600 = vec4(0.0, 0.0, 0.0, 1.0);
 const vec4 pole120 = vec4(1.0, 0.0, 0.0, 0.0);
 
 float mapSDF(vec3 p3, out float outEdge, out vec4 outColorCoord) {
-    vec4 p4 = vec4(p3, SliceOffset);
+    vec4 p4 = vec4(p3, SliceOffset_);
     vec4 pRot = rotate4D(p4);
 
     float folds = 0.0;
     vec4 pFold = foldSpace4D(pRot, folds);
 
     vec4 genPole = slerp4D(pole600, pole120, clamp(Morph, 0.0, 1.0));
-    float dFacet = dot(pFold, genPole) - SupportH;
+    float dFacet = dot(pFold, genPole) - SupportH_;
 
     float m0 = dot(pFold, n0);
     float m1 = dot(pFold, n1);
@@ -110,7 +121,7 @@ float mapSDF(vec3 p3, out float outEdge, out vec4 outColorCoord) {
     float m3 = dot(pFold, n3);
     float minMirror = min(min(m0, m1), min(m2, m3));
 
-    outEdge = smoothstep(EdgeThickness, 0.0, minMirror);
+    outEdge = smoothstep(EdgeThickness_, 0.0, minMirror);
     outColorCoord = vec4(folds, minMirror, pRot.w, length(p3));
 
     return dFacet;
@@ -143,7 +154,7 @@ void main() {
 
     mat3 r3D = rotate3DMatrix();
 
-    float camDist = 3.0 / max(0.1, Zoom);
+    float camDist = 3.0 / max(0.1, Zoom_);
     vec3 ro = r3D * vec3(0.0, 0.0, camDist);
     vec3 rd = r3D * normalize(vec3(uv, -1.8));
 
@@ -186,9 +197,9 @@ void main() {
     }
 
     if (!hit) {
-        float glowAlpha = clamp(accumGlow * Glow, 0.0, 1.0);
+        float glowAlpha = clamp(accumGlow * Glow_, 0.0, 1.0);
         vec3 glowCol = palette(HueOffset, vec3(0.5), vec3(0.5), vec3(1.0), vec3(0.0, 0.33, 0.67));
-        glowCol = adjustColor(glowCol, Saturation, Brightness);
+        glowCol = adjustColor(glowCol, Saturation, Brightness_);
         gl_FragColor = vec4(glowCol * glowAlpha, 1.0);
         return;
     }
@@ -207,7 +218,7 @@ void main() {
 
     float hueVal = fract(HueOffset + colorMetric);
     vec3 baseCol = palette(hueVal, vec3(0.5, 0.5, 0.5), vec3(0.5, 0.5, 0.5), vec3(1.0, 1.0, 1.0), vec3(0.0, 0.333, 0.667));
-    baseCol = adjustColor(baseCol, Saturation, Brightness);
+    baseCol = adjustColor(baseCol, Saturation, Brightness_);
 
     vec3 lightDir = normalize(vec3(0.5, 0.8, 1.0));
     vec3 viewDir = -rd;
@@ -218,8 +229,8 @@ void main() {
     float fresnel = pow(1.0 - max(0.0, dot(normal, viewDir)), 3.0);
 
     vec3 shadedColor = baseCol * (0.25 + diff * 0.75) + vec3(spec) + baseCol * fresnel * 0.5;
-    shadedColor += vec3(1.0) * (hitEdge * EdgeBrightness);
-    shadedColor += baseCol * (accumGlow * Glow);
+    shadedColor += vec3(1.0) * (hitEdge * EdgeBrightness_);
+    shadedColor += baseCol * (accumGlow * Glow_);
 
-    gl_FragColor = vec4(shadedColor * Opacity, 1.0);
+    gl_FragColor = vec4(shadedColor * Opacity_, 1.0);
 }

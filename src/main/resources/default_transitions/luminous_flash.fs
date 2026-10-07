@@ -22,8 +22,8 @@
             "NAME": "intensity",
             "TYPE": "float",
             "MIN": 0.0,
-            "MAX": 2.0,
-            "DEFAULT": 1.0
+            "MAX": 1.0,
+            "DEFAULT": 0.5
         },
         {
             "NAME": "colorTemp",
@@ -35,12 +35,17 @@
         {
             "NAME": "spread",
             "TYPE": "float",
-            "MIN": 0.1,
+            "MIN": 0.0,
             "MAX": 1.0,
-            "DEFAULT": 0.4
+            "DEFAULT": 0.33333
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define intensity_ (intensity*2.0)
+#define spread_ (0.1+spread*0.9)
+
 
 #define PI 3.14159265359
 
@@ -57,8 +62,8 @@ void main() {
 
     // Midpoint flash envelope (Gaussian shape peaking at 0.5)
     float distMid = abs(p - 0.5);
-    float sigma = max(0.01, spread * 0.25);
-    float flashEnv = exp(-(distMid * distMid) / (2.0 * sigma * sigma)) * intensity;
+    float sigma = max(0.01, spread_ * 0.25);
+    float flashEnv = exp(-(distMid * distMid) / (2.0 * sigma * sigma)) * intensity_;
 
     // Flash tint based on colorTemp (-1 = icy cyan/blue strobe, 0 = pure white, 1 = warm tungsten/amber)
     vec3 flashTint = vec3(1.0);

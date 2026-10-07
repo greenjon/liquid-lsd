@@ -25,16 +25,16 @@
             },
             "parameters": {
                 "edgeStrength": {
-                    "baseValue": 2.5,
+                    "baseValue": 0.25,
                     "baseMin": 0.0,
-                    "baseMax": 5.0,
+                    "baseMax": 0.5,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "threshold": {
-                    "baseValue": 0.15,
+                    "baseValue": 0.3,
                     "baseMin": 0.0,
-                    "baseMax": 1.0,
+                    "baseMax": 2.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -65,16 +65,16 @@
             },
             "parameters": {
                 "dotScale": {
-                    "baseValue": 50.0,
-                    "baseMin": 5.0,
-                    "baseMax": 150.0,
+                    "baseValue": 0.31034,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "screenAngle": {
                     "baseValue": 0.0,
                     "baseMin": 0.0,
-                    "baseMax": 90.0,
+                    "baseMax": 1.5708,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -86,9 +86,9 @@
                     "modulators": []
                 },
                 "smoothness": {
-                    "baseValue": 0.15,
-                    "baseMin": 0.02,
-                    "baseMax": 0.8,
+                    "baseValue": 0.16667,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -134,8 +134,8 @@
                 },
                 "cycleSpeed": {
                     "baseValue": 0.0,
-                    "baseMin": -2.0,
-                    "baseMax": 2.0,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },

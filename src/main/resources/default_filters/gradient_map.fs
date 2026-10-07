@@ -31,8 +31,8 @@
             "LABEL": "Cycle Speed",
             "TYPE": "float",
             "DEFAULT": 0.0,
-            "MIN": -2.0,
-            "MAX": 2.0,
+            "MIN": -1.0,
+            "MAX": 1.0,
             "IDENTITY": 0.0
         },
         {
@@ -55,6 +55,10 @@
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define cycleSpeed_ (cycleSpeed*2.0)
+
 
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
@@ -123,7 +127,7 @@ void main() {
     float luma = dot(src.rgb, vec3(0.2126, 0.7152, 0.0722));
 
     // Dynamic phase cycle
-    float t = luma + cycleOffset + (cycleSpeed * TIME);
+    float t = luma + cycleOffset + (cycleSpeed_ * TIME);
 
     int mode = int(floor(palette + 0.5));
     vec3 gradRgb = sampleGradient(t, mode);

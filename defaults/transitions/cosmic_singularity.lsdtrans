@@ -14,16 +14,16 @@
     },
     "parameters": {
       "rotations": {
-        "baseValue": 2.5,
-        "baseMin": 0.5,
-        "baseMax": 5.0,
+        "baseValue": 0.44444,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
       },
       "radius": {
-        "baseValue": 0.85,
-        "baseMin": 0.3,
-        "baseMax": 1.5,
+        "baseValue": 0.45833,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
       },

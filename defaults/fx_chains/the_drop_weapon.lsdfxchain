@@ -33,16 +33,16 @@
                     "modulators": []
                 },
                 "decay": {
-                    "baseValue": 0.92,
-                    "baseMin": 0.5,
+                    "baseValue": 0.84,
+                    "baseMin": 0.0,
                     "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
                 "exposure": {
-                    "baseValue": 1.2,
-                    "baseMin": 0.1,
-                    "baseMax": 2.5,
+                    "baseValue": 0.45833,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -94,9 +94,9 @@
                     "modulators": []
                 },
                 "dutyCycle": {
-                    "baseValue": 0.25,
-                    "baseMin": 0.05,
-                    "baseMax": 0.95,
+                    "baseValue": 0.22222,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 }
@@ -113,9 +113,9 @@
             },
             "parameters": {
                 "amount": {
-                    "baseValue": 0.04,
+                    "baseValue": 0.4,
                     "baseMin": 0.0,
-                    "baseMax": 0.1,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },

@@ -87,9 +87,9 @@
                     "modulators": []
                 },
                 "curvature": {
-                    "baseValue": 0.06,
+                    "baseValue": 0.1,
                     "baseMin": 0.0,
-                    "baseMax": 0.6,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -108,9 +108,9 @@
                     "modulators": []
                 },
                 "brightnessBoost": {
-                    "baseValue": 1.1,
-                    "baseMin": 0.8,
-                    "baseMax": 2.0,
+                    "baseValue": 0.25,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 }
@@ -148,9 +148,9 @@
                     "modulators": []
                 },
                 "dutyCycle": {
-                    "baseValue": 0.12,
-                    "baseMin": 0.05,
-                    "baseMax": 0.95,
+                    "baseValue": 0.07778,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 }

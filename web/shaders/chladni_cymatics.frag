@@ -15,17 +15,24 @@ precision highp float;
         { "NAME": "FrequencyN", "LABEL": "Frequency N", "TYPE": "float", "DEFAULT": 5.0, "MIN": 1.0, "MAX": 16.0 },
         { "NAME": "FrequencyL", "LABEL": "Frequency L", "TYPE": "float", "DEFAULT": 2.0, "MIN": 0.0, "MAX": 12.0 },
         { "NAME": "PlateShape", "LABEL": "Plate Shape", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "NodeSharpness", "LABEL": "Node Sharpness", "TYPE": "float", "DEFAULT": 2.5, "MIN": 0.5, "MAX": 8.0 },
+        { "NAME": "NodeSharpness", "LABEL": "Node Sharpness", "TYPE": "float", "DEFAULT": 0.26667, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "SandAccumulation", "LABEL": "Sand Accumulation", "TYPE": "float", "DEFAULT": 0.7, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "VibrationSpeed", "LABEL": "Vibration Speed", "TYPE": "float", "DEFAULT": 0.3, "MIN": 0.0, "MAX": 2.0 },
+        { "NAME": "VibrationSpeed", "LABEL": "Vibration Speed", "TYPE": "float", "DEFAULT": 0.15, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "InvertMode", "LABEL": "Invert (Fluid Antinodes)", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 1.2, "MIN": 0.0, "MAX": 3.0 },
+        { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 0.4, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "PaletteMode", "LABEL": "Palette Mode", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "Scale", "LABEL": "Scale", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.2, "MAX": 4.0 }
+        { "NAME": "Scale", "LABEL": "Scale", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }
     ]
 }
 */
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define NodeSharpness_ (0.5+NodeSharpness*7.5)
+#define VibrationSpeed_ (VibrationSpeed*2.0)
+#define Glow_ (Glow*3.0)
+#define Scale_ (Scale<0.5?pow(0.2,1.0-2.0*Scale):pow(4.0,2.0*Scale-1.0))
+
 
 const float PI = 3.14159265358979323846;
 
@@ -44,10 +51,10 @@ vec3 hsv2rgb(vec3 c) {
 
 void main() {
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
-    vec2 p = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0) / max(Scale, 0.05);
+    vec2 p = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0) / max(Scale_, 0.05);
 
     // Vibration oscillation time phase
-    float osc = sin(TIME * VibrationSpeed * 6.28318) * 0.15;
+    float osc = sin(TIME * VibrationSpeed_ * 6.28318) * 0.15;
 
     // 1. Square plate standing wave calculation
     // w_sq = a * sin(n pi x) * sin(m pi y) - b * sin(m pi x) * sin(n pi y) + c * cos(l pi x) * cos(l pi y)
@@ -77,7 +84,7 @@ void main() {
 
     // Particle sand accumulation physics
     // Particles get thrown off antinodes and settle into nodes
-    float sandDensity = exp(-pow(nodeDist * NodeSharpness, 2.0));
+    float sandDensity = exp(-pow(nodeDist * NodeSharpness_, 2.0));
     
     // Add micro-granular sand noise
     float grain = hash(p * 250.0);
@@ -90,7 +97,7 @@ void main() {
     float visualSignal = mix(sandDensity, antinodeEnergy, InvertMode);
 
     // Acoustic glow envelope
-    float acousticGlow = exp(-nodeDist * 2.0) * (Glow * 0.3) * borderMask;
+    float acousticGlow = exp(-nodeDist * 2.0) * (Glow_ * 0.3) * borderMask;
 
     // Color mapping
     int cMode = clamp(int(floor(PaletteMode + 0.5)), 0, 3);

@@ -14,7 +14,7 @@
             "TYPE": "float",
             "DEFAULT": 0.0,
             "MIN": 0.0,
-            "MAX": 0.1,
+            "MAX": 1.0,
             "IDENTITY": 0.0
         },
         {
@@ -47,6 +47,10 @@
     ]
 }*/
 
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define amount_ (amount*0.1)
+
+
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
 
@@ -63,7 +67,7 @@ void main() {
     vec2 uv = isf_FragNormCoord;
 
     // Fast-path bypass when displacement is zero
-    if (amount <= 0.0001) {
+    if (amount_ <= 0.0001) {
         gl_FragColor = IMG_NORM_PIXEL(inputImage, uv);
         return;
     }
@@ -74,9 +78,9 @@ void main() {
         vec2 fromCenter = uv - vec2(0.5);
         float dist = length(fromCenter);
         // Quadratic distance weighting creates natural optical barrel fringing
-        offsetDir = fromCenter * (dist * amount * 2.0);
+        offsetDir = fromCenter * (dist * amount_ * 2.0);
     } else {
-        offsetDir = vec2(cos(angle), sin(angle)) * amount;
+        offsetDir = vec2(cos(angle), sin(angle)) * amount_;
     }
 
     if (dispersionMode < 0.5) {

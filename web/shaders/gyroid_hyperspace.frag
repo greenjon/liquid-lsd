@@ -13,22 +13,31 @@ precision highp float;
     ],
     "INPUTS": [
         { "NAME": "SurfaceType", "LABEL": "Surface Type", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 2.0 },
-        { "NAME": "WallThickness", "LABEL": "Wall Thickness", "TYPE": "float", "DEFAULT": 0.25, "MIN": 0.02, "MAX": 0.8 },
-        { "NAME": "Frequency", "LABEL": "Frequency", "TYPE": "float", "DEFAULT": 1.2, "MIN": 0.3, "MAX": 3.0 },
-        { "NAME": "FlightSpeed", "LABEL": "Flight Speed", "TYPE": "float", "DEFAULT": 0.5, "MIN": -2.0, "MAX": 2.0 },
+        { "NAME": "WallThickness", "LABEL": "Wall Thickness", "TYPE": "float", "DEFAULT": 0.29487, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Frequency", "LABEL": "Frequency", "TYPE": "float", "DEFAULT": 0.33333, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "FlightSpeed", "LABEL": "Flight Speed", "TYPE": "float", "DEFAULT": 0.25, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "WireframeMode", "LABEL": "Wireframe Mode", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "CoreGlow", "LABEL": "Core Glow", "TYPE": "float", "DEFAULT": 0.8, "MIN": 0.0, "MAX": 3.0 },
+        { "NAME": "CoreGlow", "LABEL": "Core Glow", "TYPE": "float", "DEFAULT": 0.26667, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "ColorMode", "LABEL": "Color Mode", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Saturation", "LABEL": "Saturation", "TYPE": "float", "DEFAULT": 0.85, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.0, "MAX": 2.0 },
-        { "NAME": "Zoom", "LABEL": "Zoom", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.1, "MAX": 5.0 },
+        { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Zoom", "LABEL": "Zoom", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "RotateX", "LABEL": "Rotate X", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
         { "NAME": "RotateY", "LABEL": "Rotate Y", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
         { "NAME": "RotateZ", "LABEL": "Rotate Z", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 }
     ]
 }
 */
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define WallThickness_ (0.02+WallThickness*0.78)
+#define Frequency_ (0.3+Frequency*2.7)
+#define FlightSpeed_ (FlightSpeed*2.0)
+#define CoreGlow_ (CoreGlow*3.0)
+#define Brightness_ (Brightness*2.0)
+#define Zoom_ (Zoom<0.5?pow(0.1,1.0-2.0*Zoom):pow(5.0,2.0*Zoom-1.0))
+
 
 const float PI = 3.14159265358979323846;
 
@@ -87,8 +96,8 @@ void main() {
     vec2 uv = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0);
 
     // Camera setup
-    float fov = 1.2 / max(Zoom, 0.05);
-    vec3 ro = vec3(0.0, 0.0, -2.5 + TIME * FlightSpeed);
+    float fov = 1.2 / max(Zoom_, 0.05);
+    vec3 ro = vec3(0.0, 0.0, -2.5 + TIME * FlightSpeed_);
     vec3 rd = normalize(vec3(uv * fov, 1.0));
 
     // Apply 3D rotation
@@ -105,10 +114,10 @@ void main() {
     // Sphere tracing
     for (int i = 0; i < 70; i++) {
         vec3 p = ro + rd * t;
-        float d = mapSDF(p, SurfaceType, Frequency, WallThickness, WireframeMode);
+        float d = mapSDF(p, SurfaceType, Frequency_, WallThickness_, WireframeMode);
         
         // Accumulate volumetric core glow around minimal surface boundaries
-        glow += exp(-abs(d) * 4.0) * (0.015 * CoreGlow);
+        glow += exp(-abs(d) * 4.0) * (0.015 * CoreGlow_);
 
         if (d < 0.001) {
             hitDist = t;
@@ -122,7 +131,7 @@ void main() {
     vec3 col = vec3(0.0);
 
     if (hitDist > 0.0) {
-        vec3 n = calcNormal(hitP, SurfaceType, Frequency, WallThickness, WireframeMode);
+        vec3 n = calcNormal(hitP, SurfaceType, Frequency_, WallThickness_, WireframeMode);
         vec3 viewDir = -rd;
         float fresnel = pow(1.0 - max(dot(n, viewDir), 0.0), 3.0);
         float diff = max(dot(n, normalize(vec3(0.5, 0.8, -0.3))), 0.0);
@@ -132,20 +141,20 @@ void main() {
 
         if (cMode == 0) {
             // Surface Normal Spectrum
-            surfaceCol = hsv2rgb(vec3(fract(HueOffset + (n.x * 0.3 + n.y * 0.3 + n.z * 0.3)), Saturation, Brightness));
+            surfaceCol = hsv2rgb(vec3(fract(HueOffset + (n.x * 0.3 + n.y * 0.3 + n.z * 0.3)), Saturation, Brightness_));
         } else if (cMode == 1) {
             // Distance Depth Gradient
             float depthHue = fract(HueOffset + hitDist * 0.08);
-            surfaceCol = hsv2rgb(vec3(depthHue, Saturation, Brightness));
+            surfaceCol = hsv2rgb(vec3(depthHue, Saturation, Brightness_));
         } else if (cMode == 2) {
             // Iridescent Fresnel
-            surfaceCol = hsv2rgb(vec3(fract(HueOffset + fresnel * 0.8), Saturation, Brightness * (1.0 + fresnel)));
+            surfaceCol = hsv2rgb(vec3(fract(HueOffset + fresnel * 0.8), Saturation, Brightness_ * (1.0 + fresnel)));
         } else {
             // Monochrome Cyber Gold
-            surfaceCol = vec3(1.0, 0.85, 0.4) * Brightness * (diff * 0.7 + 0.3);
+            surfaceCol = vec3(1.0, 0.85, 0.4) * Brightness_ * (diff * 0.7 + 0.3);
         }
 
-        col = surfaceCol * (0.3 + 0.7 * diff) + vec3(fresnel * 0.8 * Brightness);
+        col = surfaceCol * (0.3 + 0.7 * diff) + vec3(fresnel * 0.8 * Brightness_);
 
         // Distance atmospheric fog
         float fog = smoothstep(0.0, maxDist, hitDist);

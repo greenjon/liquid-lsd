@@ -178,7 +178,7 @@ object ParametersRenderer {
 
                 val fmtAbs: (Float) -> String = { v ->
                     if (param.isAngle) "${"%,.1f".format(v * 180f / PI.toFloat())}°"
-                    else "%.3f".format(v)
+                    else ValueFormat.format(v, ValueFormat.scaleFor(param.minClamp, param.maxClamp))
                 }
 
                 val description = descriptionOverride ?: when (sourceId) {

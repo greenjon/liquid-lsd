@@ -119,14 +119,14 @@ The sequencer outputs a stepped voltage pattern that advances with each beat or 
 
 ### The step grid
 
-Steps are laid out in rows of 8: 8 steps in one row, 16 in two, 32 in four. Click any cell to type a value (0.0 to 1.0), or hover and scroll to adjust. The active step is highlighted in bright green.
+Steps are laid out in rows of 8: 8 steps in one row, 16 in two, 32 in four. Click any cell to type a value (0 to 100), or hover and scroll to adjust. The active step is highlighted in bright green.
 
 **Keyboard editing shortcuts** (when a step is focused):
 
-- `Up` / `Down` — fine step (±0.001)
-- `Shift` + `Up` / `Down` — medium step (±0.01)
-- `Ctrl+Shift` + `Up` / `Down` — coarse step (±0.1)
-- Middle-click — reset to 0.0
+- `Up` / `Down` — fine step (±0.1)
+- `Shift` + `Up` / `Down` — medium step (±1)
+- `Ctrl+Shift` + `Up` / `Down` — coarse step (±10)
+- Middle-click — reset to 0
 - `Tab` / `Shift+Tab` — move between steps
 
 ### Timing
@@ -155,6 +155,10 @@ All outputs are clamped to the parameter's valid range automatically.
 ---
 
 ## Shortcuts & Power-User Tips
+
+### How values are shown
+
+Parameters, LFO and sequencer fields, and macro knobs whose range is 0 to 1 (or -1 to 1) display as **0 to 100** (or **-100 to 100**), with a decimal only when the value needs one (`37`, `37.4`). Type either form. Angles stay in degrees, and parameters with their own units (counts, Hz, seconds, BPM) keep them. This is display only: presets, MIDI and OSC still use the underlying 0 to 1 values.
 
 ### Adjusting values without clicking
 

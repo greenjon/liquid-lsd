@@ -206,7 +206,7 @@ class PerfRowLayoutTest {
 
     @Test
     fun fxFocusModeShowsFocusedSlotThenPagedParams() {
-        val params = (1..5).map { "p$it" to ModulatableParameter(baseValue = it.toFloat()) }
+        val params = (1..5).map { "p$it" to ModulatableParameter(baseValue = it.toFloat(), maxClamp = 10f) }
         val page0 = PerfKnobResolver.resolve(bank(), 0, FxRowState(1, 0, params))
         assertEquals(UnderKnob.SlotCell(1), page0[0].under)
         assertEquals(SideButtons.Bypass(1), page0[0].side)
@@ -226,13 +226,6 @@ class PerfRowLayoutTest {
         val specs = PerfKnobResolver.resolve(bank(), 4, null)
         assertEquals(listOf("M5", "M6", "M7", "M8"), specs.map { (it.under as UnderKnob.Label).text })
         assertEquals(listOf(4, 5, 6, 7), specs.map { it.knobIndex })
-    }
-
-    @Test
-    fun valuesFormatShortForTheKnobFace() {
-        assertEquals("3", PerfKnobResolver.formatValue(3f))
-        assertEquals("0.25", PerfKnobResolver.formatValue(0.25f))
-        assertEquals("1500.00", PerfKnobResolver.formatValue(1500f))
     }
 
     // -- Mode accessor ----------------------------------------------------------------------

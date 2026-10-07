@@ -12,10 +12,10 @@
             "NAME": "depth",
             "LABEL": "Depth",
             "TYPE": "float",
-            "DEFAULT": 1.0,
-            "MIN": 0.1,
-            "MAX": 5.0,
-            "IDENTITY": 1.0
+            "DEFAULT": 0.18367,
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "IDENTITY": 0.18367
         },
         {
             "NAME": "twist",
@@ -48,10 +48,10 @@
             "NAME": "zoom",
             "LABEL": "Zoom",
             "TYPE": "float",
-            "DEFAULT": 1.0,
-            "MIN": 0.1,
-            "MAX": 5.0,
-            "IDENTITY": 1.0
+            "DEFAULT": 0.5,
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "IDENTITY": 0.5
         },
         {
             "NAME": "symmetry",
@@ -74,6 +74,11 @@
     ]
 }*/
 
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define depth_ (0.1+depth*4.9)
+#define zoom_ (zoom<0.5?pow(0.1,1.0-2.0*zoom):pow(5.0,2.0*zoom-1.0))
+
+
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
 
@@ -92,17 +97,17 @@ void main() {
     float sym = max(floor(symmetry + 0.5), 1.0);
     float u = (a / 6.28318530718 + 0.5) * sym;
 
-    // Perspective depth projection with singularity protection
-    float safeZoom = max(zoom, 0.001);
+    // Perspective depth_ projection with singularity protection
+    float safeZoom = max(zoom_, 0.001);
     float scaledR = max(r / safeZoom, 0.0001);
-    float v = (1.0 / scaledR) * depth + (u * twist);
+    float v = (1.0 / scaledR) * depth_ + (u * twist);
 
     // Seamless mirror wrapping eliminates vertical/horizontal boundary seams
     vec2 tunnelCoord = abs(mod(vec2(u, v), 2.0) - 1.0);
 
     vec4 color = IMG_NORM_PIXEL(inputImage, tunnelCoord);
 
-    // Singularity depth fog attenuates pixel swimming at infinite distance center
+    // Singularity depth_ fog attenuates pixel swimming at infinite distance center
     if (depthFog > 0.001) {
         float fogFactor = smoothstep(0.0, 0.25 * depthFog, r);
         color.rgb *= fogFactor;

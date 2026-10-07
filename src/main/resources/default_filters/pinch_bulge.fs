@@ -21,10 +21,10 @@
             "NAME": "radius",
             "LABEL": "Radius",
             "TYPE": "float",
-            "DEFAULT": 0.5,
-            "MIN": 0.05,
-            "MAX": 1.5,
-            "IDENTITY": 0.5
+            "DEFAULT": 0.31034,
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "IDENTITY": 0.31034
         },
         {
             "NAME": "centerX",
@@ -47,6 +47,10 @@
     ]
 }*/
 
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define radius_ (0.05+radius*1.45)
+
+
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
 
@@ -64,7 +68,7 @@ void main() {
     p.x *= aspect;
 
     float r = length(p);
-    float safeRad = max(radius, 0.01);
+    float safeRad = max(radius_, 0.01);
 
     if (r < safeRad) {
         // Normalized distance within lens [0..1]

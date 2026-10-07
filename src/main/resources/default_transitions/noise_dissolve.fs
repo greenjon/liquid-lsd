@@ -21,26 +21,32 @@
         {
             "NAME": "noiseScale",
             "TYPE": "float",
-            "MIN": 2.0,
-            "MAX": 20.0,
-            "DEFAULT": 6.0
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.22222
         },
         {
             "NAME": "softness",
             "TYPE": "float",
-            "MIN": 0.01,
-            "MAX": 0.4,
-            "DEFAULT": 0.15
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.35897
         },
         {
             "NAME": "chromaShift",
             "TYPE": "float",
             "MIN": 0.0,
-            "MAX": 0.5,
-            "DEFAULT": 0.1
+            "MAX": 1.0,
+            "DEFAULT": 0.2
         }
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define noiseScale_ (2.0+noiseScale*18.0)
+#define softness_ (0.01+softness*0.39)
+#define chromaShift_ (chromaShift*0.5)
+
 
 float hash(vec2 p) {
     p = fract(p * vec2(213.12, 543.34));
@@ -77,16 +83,16 @@ void main() {
     float p = clamp(progress, 0.0, 1.0);
 
     // Domain-warped coordinates for organic fluid curl
-    vec2 q = vec2(fbm(uv * noiseScale), fbm(uv * noiseScale + vec2(5.2, 1.3)));
-    float pattern = fbm(uv * noiseScale + q * 1.5);
+    vec2 q = vec2(fbm(uv * noiseScale_), fbm(uv * noiseScale_ + vec2(5.2, 1.3)));
+    float pattern = fbm(uv * noiseScale_ + q * 1.5);
 
     // Map progress to seamlessly cover 0.0 to 1.0
-    float s = max(0.005, softness);
+    float s = max(0.005, softness_);
     float threshold = p * (1.0 + s * 2.0) - s;
     float alpha = smoothstep(threshold - s, threshold + s, pattern);
 
     // Subtle chromatic aberration on the threshold boundary
-    float edgeFactor = (1.0 - abs(alpha - 0.5) * 2.0) * chromaShift * 0.04;
+    float edgeFactor = (1.0 - abs(alpha - 0.5) * 2.0) * chromaShift_ * 0.04;
     vec4 colA;
     colA.r = IMG_NORM_PIXEL(startImage, uv + vec2(edgeFactor, 0.0)).r;
     colA.g = IMG_NORM_PIXEL(startImage, uv).g;

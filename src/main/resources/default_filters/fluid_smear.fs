@@ -21,28 +21,28 @@
             "NAME": "curlScale",
             "LABEL": "Curl Scale",
             "TYPE": "float",
-            "DEFAULT": 4.0,
-            "MIN": 0.5,
-            "MAX": 20.0,
-            "IDENTITY": 4.0
+            "DEFAULT": 0.17949,
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "IDENTITY": 0.17949
         },
         {
             "NAME": "flowSpeed",
             "LABEL": "Flow Speed",
             "TYPE": "float",
-            "DEFAULT": 0.5,
-            "MIN": -2.0,
-            "MAX": 2.0,
-            "IDENTITY": 0.5
+            "DEFAULT": 0.25,
+            "MIN": -1.0,
+            "MAX": 1.0,
+            "IDENTITY": 0.25
         },
         {
             "NAME": "decay",
             "LABEL": "Decay",
             "TYPE": "float",
-            "DEFAULT": 0.96,
-            "MIN": 0.8,
+            "DEFAULT": 0.8,
+            "MIN": 0.0,
             "MAX": 1.0,
-            "IDENTITY": 0.96
+            "IDENTITY": 0.8
         },
         {
             "NAME": "gravity",
@@ -63,6 +63,12 @@
         {}
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define curlScale_ (0.5+curlScale*19.5)
+#define flowSpeed_ (flowSpeed*2.0)
+#define decay_ (0.8+decay*0.2)
+
 
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
@@ -112,7 +118,7 @@ void main() {
         }
 
         float aspect = RENDERSIZE.x / max(RENDERSIZE.y, 1.0);
-        vec2 noiseCoord = uv * vec2(aspect, 1.0) * curlScale + (TIME * flowSpeed * 0.2);
+        vec2 noiseCoord = uv * vec2(aspect, 1.0) * curlScale_ + (TIME * flowSpeed_ * 0.2);
 
         // Calculate divergence-free curl flow velocity
         vec2 velocity = curlNoise(noiseCoord) * (smearAmount * 0.015);
@@ -121,7 +127,7 @@ void main() {
 
         // Sample previous fluid state along back-traced streamline with mirror wrapping
         vec2 backtraced = abs(mod(uv - velocity, 2.0) - 1.0);
-        vec4 advected = IMG_NORM_PIXEL(fluidPass, backtraced) * decay;
+        vec4 advected = IMG_NORM_PIXEL(fluidPass, backtraced) * decay_;
 
         // Advective blend with live frame
         float blendFactor = clamp(1.0 - smearAmount * 0.95, 0.05, 1.0);

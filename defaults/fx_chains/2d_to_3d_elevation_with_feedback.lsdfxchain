@@ -32,9 +32,9 @@
                     "modulators": []
                 },
                 "zoom": {
-                    "baseValue": 1.0,
-                    "baseMin": 0.1,
-                    "baseMax": 5.0,
+                    "baseValue": 0.5,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -46,9 +46,9 @@
                     "modulators": []
                 },
                 "separation": {
-                    "baseValue": 0.2,
-                    "baseMin": 0.0,
-                    "baseMax": 2.0,
+                    "baseValue": 0.4,
+                    "baseMin": 0.33333,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -79,9 +79,9 @@
                     "modulators": []
                 },
                 "fbGain": {
-                    "baseValue": 0.77,
+                    "baseValue": 0.385,
                     "baseMin": 0.0,
-                    "baseMax": 2.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -119,9 +119,9 @@
             },
             "parameters": {
                 "bloomIntensity": {
-                    "baseValue": 0.8,
+                    "baseValue": 0.26667,
                     "baseMin": 0.0,
-                    "baseMax": 3.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
@@ -133,9 +133,9 @@
                     "modulators": []
                 },
                 "blurAmount": {
-                    "baseValue": 1.0,
-                    "baseMin": 0.1,
-                    "baseMax": 3.0,
+                    "baseValue": 0.31034,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 }

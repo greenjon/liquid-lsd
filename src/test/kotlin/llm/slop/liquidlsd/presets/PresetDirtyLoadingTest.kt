@@ -31,6 +31,11 @@ class PresetDirtyLoadingTest {
         ignoreUnknownKeys = true
     }
 
+    /** Tracked fixture in src/test/resources, so tests don't depend on the user's local library/presets. */
+    private fun testPresetText(): String =
+        checkNotNull(javaClass.getResourceAsStream("/presets/test_preset_a.lsd")) { "missing test fixture" }
+            .bufferedReader().use { it.readText() }
+
     @BeforeTest
     fun setup() {
         mockkStatic("llm.slop.liquidlsd.models.PresetModelsKt")
@@ -81,8 +86,7 @@ class PresetDirtyLoadingTest {
 
     @Test
     fun testSanitizePresetDtoDoesNotModifyCleanPreset() {
-        val file = File("library/presets/test_preset_a.lsd")
-        val rawDto = json.decodeFromString<DeckPresetDto>(file.readText())
+        val rawDto = json.decodeFromString<DeckPresetDto>(testPresetText())
         val (cleanDto, _) = PresetMigrator.sanitizePresetDto(rawDto)
         val (_, wasMigrated) = PresetMigrator.sanitizePresetDto(cleanDto)
         assertFalse(wasMigrated, "Clean preset should not trigger migration")
@@ -124,9 +128,7 @@ class PresetDirtyLoadingTest {
         every { deckA.source } returns dynSource
         every { deckA.availableSources } returns mutableListOf(dynSource)
 
-        val file = File("library/presets/test_preset_a.lsd")
-        assertTrue(file.exists(), "test_preset_a.lsd must exist")
-        val presetDto = json.decodeFromString<DeckPresetDto>(file.readText())
+        val presetDto = json.decodeFromString<DeckPresetDto>(testPresetText())
 
         // Load preset through queue
         DeckOps.postLoaded(DeckSlot.A, presetDto)
@@ -153,8 +155,7 @@ class PresetDirtyLoadingTest {
         every { deckA.source } returns dynSource
         every { deckA.availableSources } returns mutableListOf(dynSource)
 
-        val file = File("library/presets/test_preset_a.lsd")
-        val presetDto = json.decodeFromString<DeckPresetDto>(file.readText())
+        val presetDto = json.decodeFromString<DeckPresetDto>(testPresetText())
 
         DeckOps.postLoaded(DeckSlot.A, presetDto)
         DeckOps.drainOnGlThread(mixer)

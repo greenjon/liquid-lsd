@@ -19,9 +19,9 @@
             "NAME": "fbGain",
             "LABEL": "Gain",
             "TYPE": "float",
-            "DEFAULT": 1.0,
+            "DEFAULT": 0.5,
             "MIN": 0.0,
-            "MAX": 2.0
+            "MAX": 1.0
         },
         {
             "NAME": "fbZoom",
@@ -89,6 +89,10 @@
         {}
     ]
 }*/
+
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define fbGain_ (fbGain*2.0)
+
 
 // RGB to HSV helper
 vec3 rgb2hsv(vec3 c) {
@@ -180,7 +184,7 @@ void main() {
         // Exact cubic decay curve mapping: invS = 1 - fbDecay, decayVal = invS^3
         float invS = 1.0 - clamp(fbDecay, 0.0, 1.0);
         float decayVal = invS * invS * invS;
-        historyColor.rgb *= fbGain * (1.0 - decayVal);
+        historyColor.rgb *= fbGain_ * (1.0 - decayVal);
         historyColor.a = clamp(historyColor.a - decayVal, 0.0, 1.0);
 
         // Apply hue shift to history

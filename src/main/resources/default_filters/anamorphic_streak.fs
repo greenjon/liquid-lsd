@@ -12,15 +12,15 @@
             "NAME": "streakIntensity",
             "TYPE": "float",
             "MIN": 0.0,
-            "MAX": 3.0,
-            "DEFAULT": 1.0
+            "MAX": 1.0,
+            "DEFAULT": 0.33333
         },
         {
             "NAME": "streakLength",
             "TYPE": "float",
-            "MIN": 0.05,
+            "MIN": 0.0,
             "MAX": 1.0,
-            "DEFAULT": 0.5
+            "DEFAULT": 0.47368
         },
         {
             "NAME": "threshold",
@@ -32,9 +32,9 @@
         {
             "NAME": "knee",
             "TYPE": "float",
-            "MIN": 0.01,
-            "MAX": 0.5,
-            "DEFAULT": 0.2
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "DEFAULT": 0.38776
         },
         {
             "NAME": "colorMode",
@@ -53,6 +53,12 @@
     ]
 }*/
 
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define streakIntensity_ (streakIntensity*3.0)
+#define streakLength_ (0.05+streakLength*0.95)
+#define knee_ (0.01+knee*0.49)
+
+
 // Screen-space triangular dither hash
 float hash12(vec2 p) {
     vec3 p3 = fract(vec3(p.xyx) * 0.1031);
@@ -60,7 +66,7 @@ float hash12(vec2 p) {
     return fract((p3.x + p3.y) * p3.z);
 }
 
-// Soft-knee highlight extractor
+// Soft-knee_ highlight extractor
 vec3 extractHighlight(vec3 col, float thresh, float kn) {
     float luma = dot(col, vec3(0.2126, 0.7152, 0.0722));
     float soft = clamp(luma - thresh + kn, 0.0, 2.0 * kn);
@@ -93,7 +99,7 @@ void main() {
 
     // 16-tap exponential blur along horizontal axis with chromatic fringe
     const int SAMPLES = 16;
-    float maxDist = streakLength * 0.6;
+    float maxDist = streakLength_ * 0.6;
 
     for (int i = -SAMPLES; i <= SAMPLES; i++) {
         if (i == 0) continue;
@@ -112,9 +118,9 @@ void main() {
         vec2 uvG = vec2(clamp(uv.x + offG, 0.0, 1.0), uv.y);
         vec2 uvB = vec2(clamp(uv.x + offB, 0.0, 1.0), uv.y);
 
-        vec3 tapR = extractHighlight(IMG_NORM_PIXEL(inputImage, uvR).rgb, threshold, knee);
-        vec3 tapG = extractHighlight(IMG_NORM_PIXEL(inputImage, uvG).rgb, threshold, knee);
-        vec3 tapB = extractHighlight(IMG_NORM_PIXEL(inputImage, uvB).rgb, threshold, knee);
+        vec3 tapR = extractHighlight(IMG_NORM_PIXEL(inputImage, uvR).rgb, threshold, knee_);
+        vec3 tapG = extractHighlight(IMG_NORM_PIXEL(inputImage, uvG).rgb, threshold, knee_);
+        vec3 tapB = extractHighlight(IMG_NORM_PIXEL(inputImage, uvB).rgb, threshold, knee_);
 
         float weight = exp(-abs(normDist) * 3.5);
         streak.r += tapR.r * weight;
@@ -123,7 +129,7 @@ void main() {
         totalWeight += weight;
     }
 
-    streak = (streak / max(totalWeight, 0.001)) * tint * streakIntensity * 3.5;
+    streak = (streak / max(totalWeight, 0.001)) * tint * streakIntensity_ * 3.5;
 
     // Optional cross-flare / starburst vertical streak
     if (crossFlare > 0.001) {
@@ -135,12 +141,12 @@ void main() {
             float normDist = pow(abs(fi) / float(SAMPLES), 1.6) * sign(fi);
             float offset = normDist * maxDist * 0.7 + (dither / max(RENDERSIZE.y, 1.0));
             vec2 vUv = vec2(uv.x, clamp(uv.y + offset, 0.0, 1.0));
-            vec3 tap = extractHighlight(IMG_NORM_PIXEL(inputImage, vUv).rgb, threshold, knee);
+            vec3 tap = extractHighlight(IMG_NORM_PIXEL(inputImage, vUv).rgb, threshold, knee_);
             float weight = exp(-abs(normDist) * 4.0);
             vStreak += tap * weight;
             vTotalWeight += weight;
         }
-        vStreak = (vStreak / max(vTotalWeight, 0.001)) * tint * streakIntensity * 2.5;
+        vStreak = (vStreak / max(vTotalWeight, 0.001)) * tint * streakIntensity_ * 2.5;
         streak = mix(streak, streak + vStreak * 0.7, clamp(crossFlare, 0.0, 1.0));
     }
 

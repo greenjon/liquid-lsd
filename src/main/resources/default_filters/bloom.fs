@@ -11,9 +11,9 @@
             "NAME": "bloomIntensity",
             "LABEL": "Intensity",
             "TYPE": "float",
-            "DEFAULT": 0.8,
+            "DEFAULT": 0.26667,
             "MIN": 0.0,
-            "MAX": 3.0
+            "MAX": 1.0
         },
         {
             "NAME": "threshold",
@@ -27,9 +27,9 @@
             "NAME": "blurAmount",
             "LABEL": "Blur Radius",
             "TYPE": "float",
-            "DEFAULT": 1.0,
-            "MIN": 0.1,
-            "MAX": 3.0
+            "DEFAULT": 0.31034,
+            "MIN": 0.0,
+            "MAX": 1.0
         }
     ],
     "PASSES": [
@@ -52,6 +52,11 @@
     ]
 }*/
 
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define bloomIntensity_ (bloomIntensity*3.0)
+#define blurAmount_ (0.1+blurAmount*2.9)
+
+
 void main() {
     if (PASSINDEX == 0) {
         // Bright pass isolation
@@ -64,7 +69,7 @@ void main() {
         }
     } else if (PASSINDEX == 1) {
         // Horizontal Gaussian blur
-        vec2 texelSize = vec2(blurAmount / RENDERSIZE.x, 0.0);
+        vec2 texelSize = vec2(blurAmount_ / RENDERSIZE.x, 0.0);
         vec4 sum = vec4(0.0);
         sum += IMG_NORM_PIXEL(threshPass, isf_FragNormCoord - texelSize * 2.0) * 0.12;
         sum += IMG_NORM_PIXEL(threshPass, isf_FragNormCoord - texelSize) * 0.25;
@@ -74,7 +79,7 @@ void main() {
         gl_FragColor = sum;
     } else if (PASSINDEX == 2) {
         // Vertical Gaussian blur
-        vec2 texelSize = vec2(0.0, blurAmount / RENDERSIZE.y);
+        vec2 texelSize = vec2(0.0, blurAmount_ / RENDERSIZE.y);
         vec4 sum = vec4(0.0);
         sum += IMG_NORM_PIXEL(blurHPass, isf_FragNormCoord - texelSize * 2.0) * 0.12;
         sum += IMG_NORM_PIXEL(blurHPass, isf_FragNormCoord - texelSize) * 0.25;
@@ -86,6 +91,6 @@ void main() {
         // Composite bloom pass with raw inputImage
         vec4 orig = IMG_NORM_PIXEL(inputImage, isf_FragNormCoord);
         vec4 bloom = IMG_NORM_PIXEL(blurVPass, isf_FragNormCoord);
-        gl_FragColor = orig + bloom * bloomIntensity;
+        gl_FragColor = orig + bloom * bloomIntensity_;
     }
 }

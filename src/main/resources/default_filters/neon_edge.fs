@@ -12,28 +12,28 @@
             "NAME": "edgeStrength",
             "LABEL": "Intensity",
             "TYPE": "float",
-            "DEFAULT": 2.0,
+            "DEFAULT": 0.2,
             "MIN": 0.0,
-            "MAX": 10.0,
+            "MAX": 1.0,
             "IDENTITY": 0.0
         },
         {
             "NAME": "threshold",
             "LABEL": "Threshold",
             "TYPE": "float",
-            "DEFAULT": 0.05,
+            "DEFAULT": 0.1,
             "MIN": 0.0,
-            "MAX": 0.5,
-            "IDENTITY": 0.05
+            "MAX": 1.0,
+            "IDENTITY": 0.1
         },
         {
             "NAME": "glowSpread",
             "LABEL": "Spread",
             "TYPE": "float",
-            "DEFAULT": 1.5,
-            "MIN": 0.5,
-            "MAX": 5.0,
-            "IDENTITY": 1.0
+            "DEFAULT": 0.22222,
+            "MIN": 0.0,
+            "MAX": 1.0,
+            "IDENTITY": 0.11111
         },
         {
             "NAME": "palette",
@@ -56,6 +56,12 @@
     ]
 }*/
 
+// Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
+#define edgeStrength_ (edgeStrength*10.0)
+#define threshold_ (threshold*0.5)
+#define glowSpread_ (0.5+glowSpread*4.5)
+
+
 // Liquid LSD Engine - Cleanroom ISF Shader
 // License: MIT License
 
@@ -71,12 +77,12 @@ float luma(vec3 c) {
 void main() {
     vec2 uv = isf_FragNormCoord;
 
-    if (edgeStrength <= 0.001 && backgroundBlend >= 0.999) {
+    if (edgeStrength_ <= 0.001 && backgroundBlend >= 0.999) {
         gl_FragColor = IMG_NORM_PIXEL(inputImage, uv);
         return;
     }
 
-    vec2 texel = (vec2(glowSpread) / RENDERSIZE);
+    vec2 texel = (vec2(glowSpread_) / RENDERSIZE);
 
     // 3x3 Sobel directional sampling
     float tl = luma(IMG_NORM_PIXEL(inputImage, uv + vec2(-texel.x,  texel.y)).rgb);
@@ -97,8 +103,8 @@ void main() {
     float magnitude = sqrt(gx * gx + gy * gy);
     float angle = atan(gy, gx); // [-PI, PI]
 
-    // High-pass edge threshold
-    float edgeFactor = smoothstep(threshold, threshold * 2.5 + 0.01, magnitude) * edgeStrength;
+    // High-pass edge threshold_
+    float edgeFactor = smoothstep(threshold_, threshold_ * 2.5 + 0.01, magnitude) * edgeStrength_;
 
     // Map edge angle to neon color palettes
     int palMode = int(floor(palette + 0.5));

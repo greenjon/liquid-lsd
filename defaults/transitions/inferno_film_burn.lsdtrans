@@ -14,16 +14,16 @@
     },
     "parameters": {
       "burnSpread": {
-        "baseValue": 0.15,
-        "baseMin": 0.02,
-        "baseMax": 0.3,
+        "baseValue": 0.46429,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
       },
       "glowIntensity": {
-        "baseValue": 2.2,
+        "baseValue": 0.73333,
         "baseMin": 0.0,
-        "baseMax": 3.0,
+        "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
       },

@@ -78,6 +78,7 @@ object ValueParamSection {
         val isRecipeSelect = paramKey.endsWith("/Geometry/Recipe") || paramKey.endsWith("/Recipe Select") || paramKey.endsWith("/Recipe")
         val isMaxPoints = paramKey.endsWith("/Max Points")
         val liveVal = param.value
+        val valueScale = ValueFormat.scaleFor(param.minClamp, param.maxClamp, param.isAngle)
         val liveLabel = when {
             is3DMode -> get3DModeLabel(liveVal)
             isMaxPoints -> "${liveVal.roundToInt()} points"
@@ -103,10 +104,10 @@ object ValueParamSection {
                 if (filtered.isNotEmpty()) {
                     val idx = (liveVal * (filtered.size - 1)).roundToInt().coerceIn(0, filtered.size - 1)
                     "Recipe ${idx + 1}/${filtered.size} [${filtered[idx].a}, ${filtered[idx].b}, ${filtered[idx].c}, ${filtered[idx].d}]"
-                } else "%.3f".format(liveVal)
+                } else ValueFormat.format(liveVal, valueScale)
             }
             param.isAngle -> "${"%.1f".format(liveVal * 180f / kotlin.math.PI.toFloat())}°"
-            else -> "%.3f".format(liveVal)
+            else -> ValueFormat.format(liveVal, valueScale)
         }
         session.uiTheme.h3("Live Modulated Value: $liveLabel")
         ImGui.spacing()
@@ -407,6 +408,8 @@ object ValueParamSection {
             }
             if (isMacroBound) ImGui.endDisabled()
 
+            val isSpecialValue = isMaxPoints || isBgStyle || isLobes || isRecipeSelect || isHueSweep || is3DMode
+            val initialScale = if (isSpecialValue) 1f else ValueFormat.scaleFor(param.minClamp, param.maxClamp, param.isAngle)
             val scale = if (param.isAngle) (180f / kotlin.math.PI.toFloat()) else 1f
             val invScale = if (param.isAngle) (kotlin.math.PI.toFloat() / 180f) else 1f
 
@@ -442,12 +445,13 @@ object ValueParamSection {
                                     val idx = (it * (filtered.size - 1)).roundToInt().coerceIn(0, filtered.size - 1)
                                     "Recipe ${idx + 1}/${filtered.size} [${filtered[idx].a}, ${filtered[idx].b}, ${filtered[idx].c}, ${filtered[idx].d}]"
                                 } else "No recipes"
-                            } else "%.3f".format(it)
+                            } else ValueFormat.format(it, initialScale)
                         }
                         param.isAngle -> "${"%.1f".format(it)}°"
-                        else -> "%.3f".format(it)
+                        else -> ValueFormat.format(it, initialScale)
                     }
                 },
+                displayScale = initialScale,
                 onRandomizableChanged = { checked ->
                     if (checked) {
                         val rMin = param.baseMin
@@ -529,7 +533,7 @@ object ValueParamSection {
             }
             session.uiTheme.caption("Static Initial Value: $label")
         } else {
-            val displayBase = if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else "%.3f".format(param.baseValue)
+            val displayBase = if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else ValueFormat.format(param.baseValue, ValueFormat.scaleFor(param.minClamp, param.maxClamp))
             session.uiTheme.caption("Static Initial Value: $displayBase")
         }
         val baseBarW = ImGui.getContentRegionAvailX()

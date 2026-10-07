@@ -81,9 +81,9 @@ object FxParamCell {
         ImGui.invisibleButton("##val_$idBase", w, h)
         itemTooltip(
             "$paramName\n" +
-            "Value: ${String.format(Locale.ROOT, "%.3f", param.baseValue)}\n" +
-            "Range: [${formatVal(param.minClamp)}, ${formatVal(param.maxClamp)}]\n" +
-            "Default: ${formatVal(param.defaultValue)}" +
+            "Value: ${formatVal(param.baseValue, param, precise = true)}\n" +
+            "Range: [${formatVal(param.minClamp, param)}, ${formatVal(param.maxClamp, param)}]\n" +
+            "Default: ${formatVal(param.defaultValue, param)}" +
             if (hasModulation) "\nModulated by active CV" else ""
         )
 
@@ -131,16 +131,15 @@ object FxParamCell {
         ImGui.popStyleVar()
         ImGui.popStyleColor(4)
         itemTooltip(
-            if (isModified) "Reset $paramName to default (${formatVal(param.defaultValue)})"
-            else "$paramName is at default (${formatVal(param.defaultValue)})"
+            if (isModified) "Reset $paramName to default (${formatVal(param.defaultValue, param)})"
+            else "$paramName is at default (${formatVal(param.defaultValue, param)})"
         )
     }
 
-    private fun formatVal(v: Float): String {
-        return if (v == v.toInt().toFloat() && kotlin.math.abs(v) < 1000f) {
-            v.toInt().toString()
-        } else {
-            String.format(Locale.ROOT, "%.2f", v)
-        }
+    private fun formatVal(v: Float, param: llm.slop.liquidlsd.parameters.ModulatableParameter, precise: Boolean = false): String {
+        val scale = ValueFormat.scaleFor(param.minClamp, param.maxClamp, param.isAngle)
+        return if (scale != 1f) ValueFormat.trimmed(v * scale)
+        else if (precise) String.format(Locale.ROOT, "%.3f", v)
+        else ValueFormat.knob(v, param.minClamp, param.maxClamp)
     }
 }

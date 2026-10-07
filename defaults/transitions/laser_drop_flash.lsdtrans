@@ -14,9 +14,9 @@
     },
     "parameters": {
       "intensity": {
-        "baseValue": 1.4,
+        "baseValue": 0.7,
         "baseMin": 0.0,
-        "baseMax": 2.0,
+        "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
       },
@@ -28,8 +28,8 @@
         "modulators": []
       },
       "spread": {
-        "baseValue": 0.35,
-        "baseMin": 0.1,
+        "baseValue": 0.27778,
+        "baseMin": 0.0,
         "baseMax": 1.0,
         "randomizeBase": false,
         "modulators": []
