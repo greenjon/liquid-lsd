@@ -36,104 +36,42 @@ object QueueActionsPanel {
     }
 
     fun draw(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer) {
-        val navBtnW = ImGui.calcTextSize(">").x + ImGui.getStyle().getFramePaddingX() * 2f
-        val playPauseBtnW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            ImGui.calcTextSize(Icons.PLAY).x.coerceAtLeast(ImGui.calcTextSize(Icons.PAUSE).x) + ImGui.getStyle().getFramePaddingX() * 2f
-        }
-        val itemSpacingX = ImGui.getStyle().getItemSpacingX()
-        val totalRightW = navBtnW * 2f + playPauseBtnW + itemSpacingX * 2f
-
-        // Title Bar: "Queue" on the left, "<", "[Play/Pause]", ">" buttons on the right
-        ImGui.alignTextToFramePadding()
-        session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("A/B Queue")
-        }
-        ImGui.sameLine()
-        val rightX = ImGui.getWindowContentRegionMaxX() - totalRightW
-        if (rightX > ImGui.getCursorPosX()) {
-            ImGui.setCursorPosX(rightX)
-        }
-
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ButtonChrome.button("<##queuePrev", navBtnW, 0f)) {
-                session.playQueueManager.triggerPrevious(mixer)
-            }
-            itemTooltip("Trigger previous preset in A/B Queue (Mixer/queuePrev).")
-
-            ImGui.sameLine()
-            val autoVjActive = session.playQueueManager.isAutoVJEnabled
-            val autoVjIcon = if (autoVjActive) Icons.PAUSE else Icons.PLAY
-            if (ButtonChrome.button("$autoVjIcon##autoVj", playPauseBtnW, 0f)) {
+        QueueToolbar.draw(session, QueueToolbar.Spec(
+            caption = "A/B Queue", id = "queue",
+            prevTooltip = "Trigger previous preset in A/B Queue (Mixer/queuePrev).",
+            onPrev = { session.playQueueManager.triggerPrevious(mixer) },
+            nextTooltip = "Trigger next preset in A/B Queue (Mixer/queueNext).",
+            onNext = { session.playQueueManager.triggerNext(mixer) },
+            auto = QueueToolbar.Auto(
+                active = session.playQueueManager.isAutoVJEnabled,
+                tooltip = "Auto-VJ: Automatically cycle through queue presets at set intervals.",
+            ) {
                 val nextState = !session.playQueueManager.isAutoVJEnabled
                 session.playQueueManager.isAutoVJEnabled = nextState
                 if (nextState) {
                     mixer.muteCrossfadeNonMidiCv()
                 }
-            }
-            itemTooltip("Auto-VJ: Automatically cycle through queue presets at set intervals.")
-
-            ImGui.sameLine()
-            if (ButtonChrome.button(">##queueNext", navBtnW, 0f)) {
-                session.playQueueManager.triggerNext(mixer)
-            }
-            itemTooltip("Trigger next preset in A/B Queue (Mixer/queueNext).")
-
-            ImGui.separator()
-            ImGui.spacing()
-
-            // Controls Row: Repeat, Shuffle, Export, Clear
-            val repeatActive = session.playQueueManager.isRepeatEnabled
-            if (repeatActive) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
-                ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
-                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
-                ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
-            }
-            if (ButtonChrome.button("${Icons.REPEAT}##repeatQueue")) {
+            },
+            repeat = QueueToolbar.Toggle(session.playQueueManager.isRepeatEnabled,
+                "Repeat Queue: cycle back to start when the bottom is reached.") {
                 session.playQueueManager.isRepeatEnabled = !session.playQueueManager.isRepeatEnabled
-            }
-            if (repeatActive) {
-                ImGui.popStyleColor(4)
-            }
-            itemTooltip("Repeat Queue: cycle back to start when the bottom is reached.")
-
-            ImGui.sameLine()
-            val shuffleActive = session.playQueueManager.isShuffleEnabled
-            if (shuffleActive) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green for active
-                ImGui.pushStyleColor(ImGuiCol.Button, 0.1f, 0.4f, 0.3f, 1.0f)
-                ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 0.15f, 0.5f, 0.4f, 1.0f)
-                ImGui.pushStyleColor(ImGuiCol.ButtonActive, 0.05f, 0.3f, 0.2f, 1.0f)
-            }
-            if (ButtonChrome.button("${Icons.SHUFFLE}##shuffleQueue")) {
+            },
+            shuffle = QueueToolbar.Toggle(session.playQueueManager.isShuffleEnabled,
+                "Shuffle Queue: play presets in a random order.") {
                 session.playQueueManager.isShuffleEnabled = !session.playQueueManager.isShuffleEnabled
                 if (session.playQueueManager.isShuffleEnabled) {
                     session.playQueueManager.initializeShuffle()
                 }
-            }
-            if (shuffleActive) {
-                ImGui.popStyleColor(4)
-            }
-            itemTooltip("Shuffle Queue: play presets in a random order.")
-
-            ImGui.sameLine()
-            if (ButtonChrome.button("Export")) {
-                ImGui.openPopup("ExportQueuePopup")
-            }
-            itemTooltip("Save current queue sequence as a new playlist.")
-            BrowserPopupHandler.drawExportQueuePopup(session)
-
-            ImGui.sameLine()
-            val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
-            if (ButtonChrome.button("Clear##queue", clearBtnW, 0f)) {
+            },
+            exportTooltip = "Export: save current queue sequence as a new playlist.",
+            onExport = { ImGui.openPopup("ExportQueuePopup") },
+            clearTooltip = "Clear: empty the play queue.",
+            onClear = {
                 session.playQueueManager.clearQueue()
                 selectedIndex = -1
-            }
-            itemTooltip("Empty the play queue.")
-        }
-
-        ImGui.separator()
-        ImGui.spacing()
+            },
+            trailing = { BrowserPopupHandler.drawExportQueuePopup(session) }
+        ))
         
         if (ImGui.beginChild("##queue_items_scroll", 0f, 0f, false)) {
             // Queue list

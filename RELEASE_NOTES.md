@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Queue Headers Are One Row of Icon Buttons (`ui/browser/QueueToolbar.kt`, `ui/browser/*QueueActionsPanel.kt`, `ui/browser/TransitionQueuePanel.kt`)
+- **Each Library queue column now has a small caption (A/B Queue, BG Queue, A/B FX Queue, BG FX Queue, Transition Queue) centered over a single row of equal-width icon buttons (a narrow column trims the gaps between them so the whole row always fits)**: `◀`, play/pause (preset and transition queues only), `▶`, Repeat, Shuffle, Export (download icon) and Clear (trash icon). The text "Export" and "Clear" buttons and the second button row are gone; hover any button for its tooltip.
+- **Queue columns alternate their background shade** so the five strips read as separate queues, and the order is now A/B, A/B FX, BG, BG FX, Transition.
+- Internal: the five copy-pasted headers are one `QueueToolbar.draw(session, Spec)`; the optional `Auto` spec is what makes the play/pause button appear.
+
 ### External Video Streams Are Listed in the Source Browser (`ui/browser/BrowseCatalogs.kt`, `ui/browser/BrowseModel.kt`, `ui/browser/PresetListPanel.kt`, `ui/PerformanceBrowseBay.kt`, `ui/LibraryNavigation.kt`, `ui/AssetType.kt`)
 - **Live external video streams (Spout, Syphon, PipeWire) now appear in the SRC tree under an "External video" folder**, one row per stream running right now. Rows come and go as streams start and stop; there is no refresh button. Click one in the Edit bay's SRC tab to make it that deck's source, or use the usual double-click / `⋮` menu / send knobs in the Library.
 - **The `External video...` button beside Save is gone**, and so is the blank "External Video" stock row that loaded a source with no stream selected.

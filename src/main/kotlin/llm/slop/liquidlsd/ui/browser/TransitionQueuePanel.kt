@@ -26,102 +26,36 @@ object TransitionQueuePanel {
     private val focusFollow = FocusFollow<Int>()
 
     fun draw(session: SessionContext, mixer: Mixer) {
-        val navBtnW = ImGui.calcTextSize(">").x + ImGui.getStyle().getFramePaddingX() * 2f
-        val playPauseBtnW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            ImGui.calcTextSize(Icons.PLAY).x.coerceAtLeast(ImGui.calcTextSize(Icons.PAUSE).x) + ImGui.getStyle().getFramePaddingX() * 2f
-        }
-        val itemSpacingX = ImGui.getStyle().getItemSpacingX()
-        val totalRightW = navBtnW * 2f + playPauseBtnW + itemSpacingX * 2f
-
-        // Title Bar: "Transition Queue" on the left, "<", "[Play/Pause]", ">" buttons on the right
-        ImGui.alignTextToFramePadding()
-        session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("Transition Queue")
-        }
-        ImGui.sameLine()
-        val rightX = ImGui.getWindowContentRegionMaxX() - totalRightW
-        if (rightX > ImGui.getCursorPosX()) {
-            ImGui.setCursorPosX(rightX)
-        }
-
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ButtonChrome.button("<##transQueuePrev", navBtnW, 0f)) {
-                TransitionQueueManager.advancePrevious(mixer)
-            }
-            itemTooltip("Trigger previous transition in Transition Queue.")
-
-            ImGui.sameLine()
-            val autoAdvanceActive = TransitionQueueManager.isAutoAdvanceEnabled
-            val autoIcon = if (autoAdvanceActive) Icons.PAUSE else Icons.PLAY
-            if (autoAdvanceActive) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f) // Mint green when active
-                ButtonChrome.pushColor(0.1f, 0.4f, 0.3f, 1.0f)
-            }
-            if (ButtonChrome.button("$autoIcon##transAutoAdvance", playPauseBtnW, 0f)) {
-                TransitionQueueManager.isAutoAdvanceEnabled = !TransitionQueueManager.isAutoAdvanceEnabled
-            }
-            if (autoAdvanceActive) {
-                ImGui.popStyleColor(4)
-            }
-            itemTooltip("Auto-Advance: Automatically advance to the next transition preset when a crossfade triggers.")
-
-            ImGui.sameLine()
-            if (ButtonChrome.button(">##transQueueNext", navBtnW, 0f)) {
-                TransitionQueueManager.advanceNext(mixer)
-            }
-            itemTooltip("Trigger next transition in Transition Queue.")
-
-            ImGui.separator()
-            ImGui.spacing()
-
-            // Controls Toolbar: Repeat, Shuffle, Export, Clear
-            val repeatActive = TransitionQueueManager.isRepeatEnabled
-            if (repeatActive) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
-                ButtonChrome.pushColor(0.1f, 0.4f, 0.3f, 1.0f)
-            }
-            if (ButtonChrome.button("${Icons.REPEAT}##transRepeatQueue")) {
+        QueueToolbar.draw(session, QueueToolbar.Spec(
+            caption = "Transition Queue", id = "transQueue",
+            prevTooltip = "Trigger previous transition in Transition Queue.",
+            onPrev = { TransitionQueueManager.advancePrevious(mixer) },
+            nextTooltip = "Trigger next transition in Transition Queue.",
+            onNext = { TransitionQueueManager.advanceNext(mixer) },
+            auto = QueueToolbar.Auto(
+                active = TransitionQueueManager.isAutoAdvanceEnabled,
+                tooltip = "Auto-Advance: Automatically advance to the next transition preset when a crossfade triggers.",
+                lit = TransitionQueueManager.isAutoAdvanceEnabled,
+            ) { TransitionQueueManager.isAutoAdvanceEnabled = !TransitionQueueManager.isAutoAdvanceEnabled },
+            repeat = QueueToolbar.Toggle(TransitionQueueManager.isRepeatEnabled,
+                "Repeat Queue: cycle back to start when bottom is reached.") {
                 TransitionQueueManager.isRepeatEnabled = !TransitionQueueManager.isRepeatEnabled
-            }
-            if (repeatActive) {
-                ImGui.popStyleColor(4)
-            }
-            itemTooltip("Repeat Queue: cycle back to start when bottom is reached.")
-
-            ImGui.sameLine()
-            val shuffleActive = TransitionQueueManager.isShuffleEnabled
-            if (shuffleActive) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
-                ButtonChrome.pushColor(0.1f, 0.4f, 0.3f, 1.0f)
-            }
-            if (ButtonChrome.button("${Icons.SHUFFLE}##transShuffleQueue")) {
+            },
+            shuffle = QueueToolbar.Toggle(TransitionQueueManager.isShuffleEnabled,
+                "Shuffle Queue: play transitions in random order.") {
                 TransitionQueueManager.isShuffleEnabled = !TransitionQueueManager.isShuffleEnabled
                 if (TransitionQueueManager.isShuffleEnabled) {
                     TransitionQueueManager.initializeShuffle()
                 }
-            }
-            if (shuffleActive) {
-                ImGui.popStyleColor(4)
-            }
-            itemTooltip("Shuffle Queue: play transitions in random order.")
-
-            ImGui.sameLine()
-            if (ButtonChrome.button("Export##trans")) {
-                BrowserPopupHandler.pendingOpenExportQueuePopup = true
-            }
-            itemTooltip("Export live transition queue as a new playlist.")
-
-            ImGui.sameLine()
-            val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
-            if (ButtonChrome.button("Clear##transQueue", clearBtnW, 0f)) {
+            },
+            exportTooltip = "Export: save live transition queue as a new playlist.",
+            onExport = { BrowserPopupHandler.pendingOpenExportQueuePopup = true },
+            clearTooltip = "Clear: empty the live transition queue.",
+            onClear = {
                 TransitionQueueManager.clearQueue()
                 selectedIndex = -1
             }
-            itemTooltip("Empty the live transition queue.")
-        }
-
-        ImGui.separator()
-        ImGui.spacing()
+        ))
 
         if (ImGui.beginChild("##trans_queue_items_scroll", 0f, 0f, false)) {
             var moveFrom = -1

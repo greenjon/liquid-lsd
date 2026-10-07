@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#queue-headers-are-one-row-of-icon-buttons-uibrowserqueuetoolbarkt-uibrowserqueueactionspanelkt-uibrowsertransitionqueuepanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Queue Headers Are One Row of Icon Buttons (ui/browser/QueueToolbar.kt, ui/browser/*QueueActionsPanel.kt, ui/browser/TransitionQueuePanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#external-video-streams-are-listed-in-the-source-browser-uibrowserbrowsecatalogskt-uibrowserbrowsemodelkt-uibrowserpresetlistpanelkt-uiperformancebrowsebaykt-uilibrarynavigationkt-uiassettypekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5713,6 +5724,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#queue-headers-are-one-row-of-icon-buttons-uibrowserqueuetoolbarkt-uibrowserqueueactionspanelkt-uibrowsertransitionqueuepanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Queue Headers Are One Row of Icon Buttons (ui/browser/QueueToolbar.kt, ui/browser/*QueueActionsPanel.kt, ui/browser/TransitionQueuePanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#external-video-streams-are-listed-in-the-source-browser-uibrowserbrowsecatalogskt-uibrowserbrowsemodelkt-uibrowserpresetlistpanelkt-uiperformancebrowsebaykt-uilibrarynavigationkt-uiassettypekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10193,6 +10215,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="queue-headers-are-one-row-of-icon-buttons-uibrowserqueuetoolbarkt-uibrowserqueueactionspanelkt-uibrowsertransitionqueuepanelkt">Queue Headers Are One Row of Icon Buttons (<code>ui/browser/QueueToolbar.kt</code>, <code>ui/browser/*QueueActionsPanel.kt</code>, <code>ui/browser/TransitionQueuePanel.kt</code>)</h3>
+<ul>
+<li><strong>Each Library queue column now has a small caption (A/B Queue, BG Queue, A/B FX Queue, BG FX Queue, Transition Queue) centered over a single row of equal-width icon buttons (a narrow column trims the gaps between them so the whole row always fits)</strong>: <code>◀</code>, play/pause (preset and transition queues only), <code>▶</code>, Repeat, Shuffle, Export (download icon) and Clear (trash icon). The text "Export" and "Clear" buttons and the second button row are gone; hover any button for its tooltip.</li>
+<li><strong>Queue columns alternate their background shade</strong> so the five strips read as separate queues, and the order is now A/B, A/B FX, BG, BG FX, Transition.</li>
+<li>Internal: the five copy-pasted headers are one <code>QueueToolbar.draw(session, Spec)</code>; the optional <code>Auto</code> spec is what makes the play/pause button appear.</li>
+</ul>
 <h3 id="external-video-streams-are-listed-in-the-source-browser-uibrowserbrowsecatalogskt-uibrowserbrowsemodelkt-uibrowserpresetlistpanelkt-uiperformancebrowsebaykt-uilibrarynavigationkt-uiassettypekt">External Video Streams Are Listed in the Source Browser (<code>ui/browser/BrowseCatalogs.kt</code>, <code>ui/browser/BrowseModel.kt</code>, <code>ui/browser/PresetListPanel.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>, <code>ui/LibraryNavigation.kt</code>, <code>ui/AssetType.kt</code>)</h3>
 <ul>
 <li><strong>Live external video streams (Spout, Syphon, PipeWire) now appear in the SRC tree under an "External video" folder</strong>, one row per stream running right now. Rows come and go as streams start and stop; there is no refresh button. Click one in the Edit bay's SRC tab to make it that deck's source, or use the usual double-click / <code>⋮</code> menu / send knobs in the Library.</li>

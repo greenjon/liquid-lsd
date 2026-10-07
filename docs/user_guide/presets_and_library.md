@@ -65,7 +65,7 @@ Toggle between sources, FX, transitions and banks (macro banks and Perform pages
 
 - **Folder tree** (left) — **All**, **Favorites** (FX), the kind's sections (Sources: stock sources, saved presets and live external video; FX: stock filters, saved single FX and saved chains; Trans: stock transitions and saved transitions), and a **Playlists** group with one entry per playlist. Each entry shows how many rows it holds. Click one to list it. A playlist is just another tree entry: select it to see and edit its rows.
 - **List** (middle) — The rows of the selected tree entry, with a search box on top (`Ctrl+F` or `/` focuses it) and a **`[+]`** button for the kind's "new" action.
-- **Queues tab** — All five queues side by side: A/B, BG, A/B FX, BG FX and Transition (which the crossfader advances through automatically). Items get in from the other tabs (`Q`, `Shift+Q`, the toolbar buttons, the row menu or drag-and-drop); this tab is where you watch, reorder and play them.
+- **Queues tab** — All five queues side by side: A/B, A/B FX, BG, BG FX and Transition, in that order (which the crossfader advances through automatically). Items get in from the other tabs (`Q`, `Shift+Q`, the toolbar buttons, the row menu or drag-and-drop); this tab is where you watch, reorder and play them.
 
 The mode buttons pick what the three parts show:
 
@@ -183,8 +183,8 @@ On the **Queues** tab the two FX columns are independent **live FX queues** — 
 - **`<` / `>`** — Step to the previous/next queued FX item and apply it.
 - **🔁 Repeat** — Cycle back to the start when the bottom of the queue is reached.
 - **🔀 Shuffle** — Play items in random order.
-- **Export** — Save the current live queue as a new `.lsdfxplay` playlist.
-- **Clear** — Empty the queue.
+- **⤓ Export** (download icon) — Save the current live queue as a new `.lsdfxplay` playlist.
+- **🗑 Clear** (trash icon) — Empty the queue.
 - **Drag-and-drop** — Reorder items within a queue, or drag a preset/chain from the list to append or insert it.
 - **Double-click** an item to jump straight to it. Pressing the MIDI controller's accept on a queue item does the same: it moves the queue position, fades to the loaded deck and advances the transition queue.
 
@@ -214,7 +214,7 @@ The play queue drives the main crossfader automatically, sequencing through pres
 - **Transport controls** — `<` (previous), `▶/⏸` (play/pause), `>` (next).
 - **Loop / Shuffle** — `🔁` for continuous looping, `🔀` for random order.
 - **Add to queue** — Select a preset in the browser and press `Q`, or right-click and choose **Add to Queue**.
-- **Export** — Save an improvised live queue as a permanent playlist file.
+- **Export / Clear** — The download icon saves an improvised live queue as a permanent playlist file; the trash icon empties the queue. Every queue column has the same header: a small caption naming the queue, then one row of icon buttons (hover for a tooltip).
 
 When the queue is playing, the crossfader moves automatically between decks as presets transition. Grabbing the crossfader manually immediately pauses Auto-VJ so you have direct control.
 

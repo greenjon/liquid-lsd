@@ -26,84 +26,31 @@ object FXQueueActionsPanel {
     private val focusFollow = FocusFollow<Int>()
 
     fun draw(session: SessionContext, mixer: Mixer) {
-        val navBtnW = ImGui.calcTextSize(">").x + ImGui.getStyle().getFramePaddingX() * 2f
-        val itemSpacingX = ImGui.getStyle().getItemSpacingX()
-        val totalRightW = navBtnW * 2f + itemSpacingX
-
-        // Title Bar: "A/B FX Queue" on the left, "<", ">" buttons on the right
-        ImGui.alignTextToFramePadding()
-        session.uiTheme.withFont(UITheme.FontLevel.H3) {
-            ImGui.text("A/B FX Queue")
-        }
-        ImGui.sameLine()
-        val rightX = ImGui.getWindowContentRegionMaxX() - totalRightW
-        if (rightX > ImGui.getCursorPosX()) {
-            ImGui.setCursorPosX(rightX)
-        }
-
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ButtonChrome.button("<##fxQueuePrev", navBtnW, 0f)) {
-                FXQueueManager.advancePrevious(session, mixer)
-            }
-            itemTooltip("Trigger previous item in A/B FX Queue.")
-
-            ImGui.sameLine()
-            if (ButtonChrome.button(">##fxQueueNext", navBtnW, 0f)) {
-                FXQueueManager.advanceNext(session, mixer)
-            }
-            itemTooltip("Trigger next item in A/B FX Queue.")
-
-            ImGui.separator()
-            ImGui.spacing()
-
-            // Controls Toolbar: Repeat, Shuffle, Export, Clear
-            val repeatActive = FXQueueManager.isRepeatEnabled
-            if (repeatActive) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
-                ButtonChrome.pushColor(0.1f, 0.4f, 0.3f, 1.0f)
-            }
-            if (ButtonChrome.button("${Icons.REPEAT}##fxRepeatQueue")) {
+        QueueToolbar.draw(session, QueueToolbar.Spec(
+            caption = "A/B FX Queue", id = "fxQueue",
+            prevTooltip = "Trigger previous item in A/B FX Queue.",
+            onPrev = { FXQueueManager.advancePrevious(session, mixer) },
+            nextTooltip = "Trigger next item in A/B FX Queue.",
+            onNext = { FXQueueManager.advanceNext(session, mixer) },
+            repeat = QueueToolbar.Toggle(FXQueueManager.isRepeatEnabled,
+                "Repeat Queue: cycle back to start when bottom is reached.") {
                 FXQueueManager.isRepeatEnabled = !FXQueueManager.isRepeatEnabled
-            }
-            if (repeatActive) {
-                ImGui.popStyleColor(4)
-            }
-            itemTooltip("Repeat Queue: cycle back to start when bottom is reached.")
-
-            ImGui.sameLine()
-            val shuffleActive = FXQueueManager.isShuffleEnabled
-            if (shuffleActive) {
-                ImGui.pushStyleColor(ImGuiCol.Text, 0.4f, 1.0f, 0.8f, 1.0f)
-                ButtonChrome.pushColor(0.1f, 0.4f, 0.3f, 1.0f)
-            }
-            if (ButtonChrome.button("${Icons.SHUFFLE}##fxShuffleQueue")) {
+            },
+            shuffle = QueueToolbar.Toggle(FXQueueManager.isShuffleEnabled,
+                "Shuffle Queue: play FX presets/chains in random order.") {
                 FXQueueManager.isShuffleEnabled = !FXQueueManager.isShuffleEnabled
                 if (FXQueueManager.isShuffleEnabled) {
                     FXQueueManager.initializeShuffle()
                 }
-            }
-            if (shuffleActive) {
-                ImGui.popStyleColor(4)
-            }
-            itemTooltip("Shuffle Queue: play FX presets/chains in random order.")
-
-            ImGui.sameLine()
-            if (ButtonChrome.button("Export##fxQueue")) {
-                BrowserPopupHandler.pendingOpenExportFxQueuePopup = true
-            }
-            itemTooltip("Export live FX queue as a new FX playlist.")
-
-            ImGui.sameLine()
-            val clearBtnW = ImGui.calcTextSize("Clear").x + ImGui.getStyle().getFramePaddingX() * 2f
-            if (ButtonChrome.button("Clear##fxQueue", clearBtnW, 0f)) {
+            },
+            exportTooltip = "Export: save live FX queue as a new FX playlist.",
+            onExport = { BrowserPopupHandler.pendingOpenExportFxQueuePopup = true },
+            clearTooltip = "Clear: empty the live FX queue.",
+            onClear = {
                 FXQueueManager.clearQueue()
                 selectedIndex = -1
             }
-            itemTooltip("Empty the live FX queue.")
-        }
-
-        ImGui.separator()
-        ImGui.spacing()
+        ))
 
         if (ImGui.beginChild("##fx_queue_items_scroll", 0f, 0f, false)) {
             var moveFrom = -1
