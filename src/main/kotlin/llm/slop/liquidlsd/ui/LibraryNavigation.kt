@@ -206,8 +206,10 @@ internal object LibraryNavigation {
     /**
      * Sends the cursor item to [target] through the same paths as the context menu: a source or preset via [DeckOps] (dirty guard and undo),
      * a chain replacing all 3 slots, a single FX into the first vacant slot (the last slot when the chain is full: a controller has no popup).
-     * Then opens the target's row in the Edit bay's Browse tab, so row one of the controller plays what was just loaded: the deck's SRC row for a
-     * source, its FX chain (the landed slot for a single FX) for an effect, the Master FX chain for the master bus.
+     * Chain and slot loads are undoable like the deck loads. From Library FULL the send only loads, so the view, scope and cursor stay put and
+     * the next item can be sent straight away (FX sends toast where they landed). From the Edit bay's picker it also re-targets the bay to the
+     * target's row in Browse, so row one of the controller plays what was just loaded: the deck's SRC row for a source, its FX chain (the
+     * landed slot for a single FX) for an effect, the Master FX chain for the master bus.
      */
     fun send(target: SendTarget, session: SessionContext, mixer: Mixer, parametersState: ParametersState) {
         val asset = sendAsset() ?: return
@@ -215,30 +217,33 @@ internal object LibraryNavigation {
         val deckSlot = DeckSlot.entries.firstOrNull { it.name == target.name }
         val deckLabel = deckSlot?.label
         val bankId = deckSlot?.bankId ?: MacroEngine.MASTER
+        val retarget = parametersState.anyRackModuleExpanded()
         when (asset.type) {
             AssetType.SOURCE_STOCK -> {
                 val source = VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(PresetListPanel.STOCK_PATH_PREFIX) } ?: return
                 DeckOps.request(deckSlot ?: return, DeckChange.Source(source))
-                parametersState.openGenBrowse(bankId, deckLabel ?: return)
+                if (retarget) parametersState.openGenBrowse(bankId, deckLabel ?: return)
             }
             AssetType.SOURCE_EXTERNAL -> {
                 DeckOps.request(deckSlot ?: return, DeckChange.Source(ExternalVideoSource(serverName = BrowseCatalogs.externalName(asset))))
-                parametersState.openGenBrowse(bankId, deckLabel ?: return)
+                if (retarget) parametersState.openGenBrowse(bankId, deckLabel ?: return)
             }
             AssetType.PRESET -> {
                 DeckOps.request(deckSlot ?: return, DeckChange.Preset(File(asset.path)))
-                parametersState.openGenBrowse(bankId, deckLabel ?: return)
+                if (retarget) parametersState.openGenBrowse(bankId, deckLabel ?: return)
             }
             AssetType.FX_CHAIN -> {
                 val chain = deckSlot?.deck(mixer)?.fxChain ?: mixer.masterFxChain
-                FxOps.loadChain(session, File(asset.path), chain)
-                parametersState.openFxChainBrowse(bankId, deckLabel, null)
+                FxOps.loadChain(session, File(asset.path), chain, undoable = true)
+                ToastOverlay.show("${asset.name} -> ${deckLabel ?: "Master"} FX chain")
+                if (retarget) parametersState.openFxChainBrowse(bankId, deckLabel, null)
             }
             else -> {
                 val chain = deckSlot?.deck(mixer)?.fxChain ?: mixer.masterFxChain
                 val slot = FxOps.firstVacantSlot(chain) ?: (FxChain.SLOT_COUNT - 1)
-                FXBrowserPanel.loadSingle(session, asset, chain, slot)
-                parametersState.openFxChainBrowse(bankId, deckLabel, slot)
+                FXBrowserPanel.loadSingle(session, asset, chain, slot, undoable = true)
+                ToastOverlay.show("${asset.name} -> ${deckLabel ?: "Master"} FX ${slot + 1}")
+                if (retarget) parametersState.openFxChainBrowse(bankId, deckLabel, slot)
             }
         }
     }

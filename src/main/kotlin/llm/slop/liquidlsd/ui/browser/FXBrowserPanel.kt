@@ -225,9 +225,9 @@ object FXBrowserPanel {
     }
 
     /** Puts a single stock or saved FX into [slot] of [chain]. */
-    internal fun loadSingle(session: SessionContext, asset: AssetItem, chain: FxChain, slot: Int) {
-        if (asset.type == AssetType.FX_STOCK) FxOps.setSlotFilter(chain, slot, asset.path.removePrefix(STOCK_PATH_PREFIX))
-        else FxOps.loadSlot(session, File(asset.path), chain, slot)
+    internal fun loadSingle(session: SessionContext, asset: AssetItem, chain: FxChain, slot: Int, undoable: Boolean = false) {
+        if (asset.type == AssetType.FX_STOCK) FxOps.setSlotFilter(chain, slot, asset.path.removePrefix(STOCK_PATH_PREFIX), undoable)
+        else FxOps.loadSlot(session, File(asset.path), chain, slot, undoable)
     }
 
     /** Asks which slot to overwrite when a double-clicked single FX finds the live deck's chain full. */

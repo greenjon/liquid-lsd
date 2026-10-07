@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Library / Browser / Edit Lifecycle: Consistent Exits, Edit-Bay Unbind, Send Knobs Stay in the Library (`ui/ParametersState.kt`, `ui/BackNavigation.kt`, `ui/PerformanceBrowseBay.kt`, `ui/browser/BrowserDock.kt`, `ui/LibraryNavigation.kt`, `ui/browser/FXBrowserPanel.kt`)
+- **Every way out of Edit ends the browse binding**: Esc, the EDIT gear, Space, Ctrl+F, Menu > Library, Close Edit and the controller's Library button used to leave the Perform dock bound and the bay on Browse. Now closing the last open bay always returns to an unbound Library and Params.
+- **The Edit bay's chip has the unbind button**: the X (and a double-click on a list row) leaves Browse for Params with the row still open. Esc and the controller back button do the same on the first press, and close the row on the second.
+- **Clicking the slot you already have bound re-selects its tab** after you wandered to another Library tab (the chip showed "paused" and nothing happened).
+- **Twister send knobs from Library FULL only load**: the view, scope and cursor stay put, so you can send several items in a row; FX sends toast where they landed. From the Edit bay's picker a send still re-targets the bay to the target's row. FX chain and slot sends are now undoable (Ctrl+Z).
+- Internal: `bindingFor(..., onEnd)` replaces `ownsSelection`; `ParametersState.dockSelectionEpoch`; `collapseAllRackModules` owns the end-of-Edit reset.
+
 ### Bundled ISF Inputs Are Normalized to 0..1 / -1..1 (`default_sources/*`, `default_filters/*`, `default_transitions/*`, `ui/ValueFormat.kt`, `rendering/isf/ISFAutoBindEngine.kt`, `defaults/*`)
 - **109 generator, FX and transition inputs that used raw ranges now span 0..1 or -1..1** (Domain Warp Fluid: Warp 0-4, Swirl -3..3, Speed -2..2, Viscosity, Gloss, Hue Cycle Speed; the FX amounts, intensities, decays, speeds, twists and radii; the transition amounts). They read as 0 to 100 in the UI. The shaders remap to their original working units, so the visuals at equivalent settings are unchanged.
 - **Zoom (and the Celestial Engine / Chladni Scale) is centered**: 50 is 1x, with an exponential feel either side.
