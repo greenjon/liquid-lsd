@@ -54,13 +54,14 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
     fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
         val target = targetForRow(parametersState, moduleId)
         // MIX (CTRL) has no Browse target -- e.g. the user flipped the row's pill back to MIX while Browse was open. Fall back to Params.
-        val binding = target?.let { bindingFor(session, mixer, ParametersState.DockSelection(moduleId, it)) }
+        // In the Edit bay, ending the binding (chip ✕, double-click commit) leaves Browse for Params; the row stays open.
+        val binding = target?.let { bindingFor(session, mixer, ParametersState.DockSelection(moduleId, it)) { parametersState.openParams(moduleId) } }
         if (binding == null) { parametersState.openParams(moduleId); return }
         drawDock(session, mixer, parametersState, binding)
     }
 
     /** The dock binding for [selection] -- the apply-target (with its Save / Clear buttons) for a deck source, an FX chain or slot, or the transition. */
-    fun bindingFor(session: SessionContext, mixer: Mixer, selection: ParametersState.DockSelection, ownsSelection: Boolean = false): DockBinding? {
+    fun bindingFor(session: SessionContext, mixer: Mixer, selection: ParametersState.DockSelection, onEnd: (() -> Unit)? = null): DockBinding? {
         val moduleId = selection.moduleId
         val deckLabel = ctx.deckLabelForModuleId(moduleId)
         val binding = when (val t = selection.target) {
@@ -75,15 +76,14 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
         }
         if (binding == null) return null
         val accent = if (selection.target is ParametersState.BrowseTarget.Transition) PerformanceColors.COLOR_TRANS else accentFor(moduleId)
-        if (!ownsSelection) return DockBinding(binding.target, binding.label, binding.actions, accent)
-        // The Library dock owns the selection: a double-click commits it, and the chip gets its close button.
-        val parametersState = session.parametersState
+        if (onEnd == null) return DockBinding(binding.target, binding.label, binding.actions, accent)
+        // The dock can end the binding ([onEnd]): a double-click commits it, and the chip gets its close button.
         val target = binding.target
         val committing = ApplyTarget(
             target.kind, target.contextKey, target.defaultScope, target.accepts, target.isApplied, target.apply, target.clear,
-            onCommit = { parametersState.clearDockSelection() }
+            onCommit = onEnd
         )
-        return DockBinding(committing, binding.label, binding.actions, accent, onClose = { parametersState.clearDockSelection() })
+        return DockBinding(committing, binding.label, binding.actions, accent, onClose = onEnd)
     }
 
     private fun accentFor(moduleId: String): FloatArray = when (moduleId) {

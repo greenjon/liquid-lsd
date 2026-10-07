@@ -229,7 +229,10 @@ class NavigationSurfaceTest {
     @Test
     fun leavingTheEditBayDropsTheDockSelection() {
         state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
-        assertTrue(nav().back()) // closes the row, not just the selection
+        assertTrue(nav().back()) // first back ends the binding: Browse -> Params, row stays open
+        assertTrue(state.anyRackModuleExpanded())
+        assertEquals(ParametersState.SectionMode.PARAMS, state.rackSectionMode)
+        assertTrue(nav().back()) // second back closes the row and drops the selection
         assertFalse(state.anyRackModuleExpanded())
         assertEquals(null, state.dockSelection)
     }
@@ -414,6 +417,9 @@ class NavigationSurfaceTest {
             state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
             hostPane(mutableListOf(), mutableListOf())
             nav().button(0, true)
+            assertTrue(state.anyRackModuleExpanded())
+            nav().button(0, false)
+            assertEquals(ParametersState.SectionMode.PARAMS, state.rackSectionMode)
             assertTrue(state.anyRackModuleExpanded())
             nav().button(0, false)
             assertFalse(state.anyRackModuleExpanded())

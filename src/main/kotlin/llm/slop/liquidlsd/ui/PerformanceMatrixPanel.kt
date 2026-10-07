@@ -279,7 +279,7 @@ class PerformanceMatrixPanel {
 
     /** What the Library dock applies to: the selected row slot, or null for the plain Library. */
     fun dockBinding(session: llm.slop.liquidlsd.SessionContext, mixer: Mixer, parametersState: ParametersState): BrowserDock.DockBinding? =
-        parametersState.dockSelection?.let { deepEditBay.browseBay.bindingFor(session, mixer, it, ownsSelection = true) }
+        parametersState.dockSelection?.let { deepEditBay.browseBay.bindingFor(session, mixer, it) { parametersState.clearDockSelection() } }
 
     private val rowsCache = PerfRows.RowsCache()
     private val rackLabelFor: (String) -> String = { deepEditBay.rackModuleDisplayLabel(it) }

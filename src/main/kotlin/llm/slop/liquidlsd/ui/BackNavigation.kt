@@ -12,7 +12,8 @@ import llm.slop.liquidlsd.rendering.Mixer
  *      silently keeps running underneath.
  *   2. The Preferences window.
  *   3. FX focus mode (back to the chain's group mode).
- *   4. Any Rack module above Tier 1 collapses back to Tier 1.
+ *   4. An Edit bay on Browse returns to Params.
+ *   5. Any Rack module above Tier 1 collapses back to Tier 1.
  */
 internal object BackNavigation {
     /** Undoes the innermost open thing. Returns true if something was undone. */
@@ -26,7 +27,7 @@ internal object BackNavigation {
             PreferencesPanel.close()
             return true
         }
-        // Perform / Library FULL: Esc first drops the dock selection (in the Edit bay the row owns the dock, so Esc closes the row).
+        // Perform / Library FULL: Esc first drops the dock selection.
         if (parametersState.dockSelection != null && !parametersState.anyRackModuleExpanded()) {
             parametersState.clearDockSelection()
             return true
@@ -37,6 +38,12 @@ internal object BackNavigation {
                 FxMacroSync.focusSlot(focusedBankId, mixer, null)
                 return true
             }
+        }
+        // Edit bay on Browse: the first Esc ends the binding (back to Params, row stays open); the next one closes the row.
+        val openModule = parametersState.expandedRackModuleId()
+        if (openModule != null && parametersState.rackSectionMode == ParametersState.SectionMode.BROWSE) {
+            parametersState.openParams(openModule)
+            return true
         }
         if (parametersState.anyRackModuleExpanded()) {
             parametersState.collapseAllRackModules()

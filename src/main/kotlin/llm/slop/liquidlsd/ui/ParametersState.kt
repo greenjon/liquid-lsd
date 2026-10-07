@@ -152,6 +152,9 @@ class ParametersState : MidiLearnSink {
         rackSectionMode = SectionMode.PARAMS
     }
 
+    /** The module whose Edit bay is open, or null. */
+    fun expandedRackModuleId(): String? = rackModuleDisclosure.entries.firstOrNull { it.value != DisclosureLevel.COLLAPSED }?.key
+
     /** True if any rack module is currently above Tier 1 (used by the Esc priority stack). */
     fun anyRackModuleExpanded(): Boolean = rackModuleDisclosure.values.any { it != DisclosureLevel.COLLAPSED }
 
