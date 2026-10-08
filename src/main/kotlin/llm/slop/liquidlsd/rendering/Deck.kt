@@ -99,7 +99,7 @@ class Deck(
     val availableSources = mutableListOf<VisualSource>()
 
     // 3D View parameters (universal for 2D visual sources)
-    val view3DMode = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 4f) // 0 = 2D Flat, 1 = Tri-Axial (90°), 2 = Cube Cage, 3 = Hex-Planar (60°), 4 = Tetra Kaleido
+    val view3DMode = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 4f) // legacy deck-level 3D mode; the live control is the 3d_elevation filter's mode3D: 0 = Tri-Axial, 1 = Hex-Planar, 2 = Cube Cage, 3 = Tetrahedral
     val viewZoom = ModulatableParameter(1.0f, minClamp = 0.1f, maxClamp = 5.0f)
     val viewRotateX = ModulatableParameter(0.0f, minClamp = -3.14159f, maxClamp = 3.14159f, meterType = llm.slop.liquidlsd.parameters.MeterType.ENDLESS, explicitIsAngle = true)
     val viewRotateY = ModulatableParameter(0.0f, minClamp = -3.14159f, maxClamp = 3.14159f, meterType = llm.slop.liquidlsd.parameters.MeterType.ENDLESS, explicitIsAngle = true)

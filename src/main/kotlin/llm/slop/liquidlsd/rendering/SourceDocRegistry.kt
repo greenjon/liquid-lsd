@@ -190,7 +190,7 @@ object SourceDocRegistry {
         "feedback/fbHueShift" to "Hue rotation applied to the feedback signal each frame. Accumulates over time.",
         "feedback/fbBlur" to "Gaussian blur radius applied to the feedback signal — softens the trail.",
         "feedback/fbChroma" to "Chromatic aberration applied to the feedback signal — RGB channel offset amount.",
-        "feedback/fbMode" to "Feedback blend mode: 0 = additive, 1 = screen, 2 = multiply.",
+        "feedback/fbMode" to "Feedback blend mode: 0 = max (keeps the brighter of live and trail), 1 = difference.",
 
         // Mixer
         "mixer/crossfade" to "Crossfade position between Deck A and Deck B.",
