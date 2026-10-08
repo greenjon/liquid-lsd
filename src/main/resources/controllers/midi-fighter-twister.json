@@ -80,7 +80,8 @@
   "output": {
     "knobs": {
       "input": "knob",
-      "colorChannel": 1
+      "colorChannel": 1,
+      "indicatorChannel": 5
     }
   }
 }

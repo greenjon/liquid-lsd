@@ -39,7 +39,7 @@ class ControllerManagerFeedbackTest {
     fun aConnectedControllerGetsAFullPushOnTheFirstUpdate() {
         manager.updateFeedback(source, nowMs = 0)
         assertEquals(1, opened.size)
-        assertEquals(128, opened[0].sent.size)
+        assertEquals(192, opened[0].sent.size)
         assertNotNull(manager.feedbackFor(twisterName))
     }
 
@@ -72,7 +72,7 @@ class ControllerManagerFeedbackTest {
         connected = listOf(twisterName)
         manager.updateFeedback(source, nowMs = 2 * ControllerManager.SCAN_INTERVAL_MS)
         assertEquals(2, opened.size)
-        assertEquals(128, opened[1].sent.size)
+        assertEquals(192, opened[1].sent.size)
     }
 
     @Test
@@ -82,7 +82,7 @@ class ControllerManagerFeedbackTest {
         manager.updateFeedback(source, nowMs = ControllerManager.SCAN_INTERVAL_MS)
         assertTrue(opened[0].closed)
         assertEquals(2, opened.size)
-        assertEquals(128, opened[1].sent.size)
+        assertEquals(192, opened[1].sent.size)
     }
 
     @Test
@@ -125,7 +125,7 @@ class ControllerManagerFeedbackTest {
     @Test
     fun onceTheRuntimeKnowsTheBankOnlyThatBankIsWritten() {
         manager.updateFeedback(source, nowMs = 0)
-        assertEquals(128, opened[0].sent.size)
+        assertEquals(192, opened[0].sent.size)
         opened[0].sent.clear()
 
         val ctx = CommandContext(io.mockk.mockk(relaxed = true))
@@ -136,7 +136,7 @@ class ControllerManagerFeedbackTest {
         assertEquals(1, manager.runtimeFor(twisterName)?.activeBank)
 
         manager.updateFeedback(source, nowMs = 16)
-        assertEquals(32, opened[0].sent.size)
+        assertEquals(48, opened[0].sent.size)
         assertTrue(opened[0].sent.all { it.second in 16..31 }, opened[0].sent.toString())
     }
 

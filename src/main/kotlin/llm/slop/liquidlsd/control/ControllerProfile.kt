@@ -100,6 +100,10 @@ data class KnobFeedbackDef(
     val input: String = "knob",
     val ringChannel: Int? = null,
     val colorChannel: Int? = null,
+    /** Channel for the ring brightness, the same CC again (null = no brightness feedback). The Twister takes 65..95 on channel 6. */
+    val indicatorChannel: Int? = null,
+    val indicatorBrightnessMin: Int = 65,
+    val indicatorBrightnessMax: Int = 95,
     val color: HueWheel = HueWheel()
 )
 
@@ -357,8 +361,11 @@ class CompiledController private constructor(
                     group == null -> problems += "output.knobs.input '${fb.input}' is not an input"
                     group.kind != InputKind.ENCODER -> problems += "output.knobs.input '${fb.input}' must be an ENCODER"
                 }
-                listOf("ringChannel" to fb.ringChannel, "colorChannel" to fb.colorChannel).forEach { (name, channel) ->
+                listOf("ringChannel" to fb.ringChannel, "colorChannel" to fb.colorChannel, "indicatorChannel" to fb.indicatorChannel).forEach { (name, channel) ->
                     if (channel != null && channel !in 0..15) problems += "output.knobs.$name $channel out of range 0..15"
+                }
+                if (fb.indicatorBrightnessMin !in 0..127 || fb.indicatorBrightnessMax !in fb.indicatorBrightnessMin..127) {
+                    problems += "output.knobs.indicatorBrightness values must be 0..127 with min <= max"
                 }
                 val c = fb.color
                 if (c.min !in 0..127 || c.max !in c.min..127 || c.off !in 0..127 || c.white !in 0..127) {

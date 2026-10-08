@@ -18,14 +18,18 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
         val ringChannel: Int,
         val ringCc: Int,
         val colorChannel: Int?,
-        val colorCc: Int
+        val colorCc: Int,
+        val indicatorChannel: Int?
     ) {
         var lastRing = -1
         var lastColor = -1
-        fun forget() { lastRing = -1; lastColor = -1 }
+        var lastBrightness = -1
+        fun forget() { lastRing = -1; lastColor = -1; lastBrightness = -1 }
     }
 
     private val wheel: HueWheel
+    private val brightnessMin: Int
+    private val brightnessMax: Int
     private val targets: List<Target>
     /** [targets] split by bank, so a frame only walks the active bank's. */
     private val targetsByBank: Array<Array<Target>>
@@ -35,6 +39,7 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
     // Per-knob ring/LED values computed at most once per update (several banks share a knob's light).
     private val ringValue: IntArray
     private val colorValue: IntArray
+    private val brightnessValue: IntArray
     private val valueStamp: IntArray
     private var stamp = 0
     private var lastActiveBank: Int? = null
@@ -44,13 +49,15 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
         val fb = compiled.profile.output.knobs
         val group = fb?.let { def -> compiled.profile.inputs.firstOrNull { it.id == def.input } }
         wheel = fb?.color ?: HueWheel()
+        brightnessMin = fb?.indicatorBrightnessMin ?: 0
+        brightnessMax = fb?.indicatorBrightnessMax ?: 0
         targets = if (fb == null || group == null) emptyList() else {
             val baseCcs = group.ccs.ifEmpty { (group.cc until group.cc + group.count).toList() }
             val banks = if (group.bankStride != 0) compiled.profile.banks.count.coerceAtLeast(1) else 1
             (0 until banks).flatMap { bank ->
                 baseCcs.mapIndexed { knob, baseCc ->
                     val cc = baseCc + bank * group.bankStride
-                    Target(bank, knob, fb.ringChannel ?: group.channel, cc, fb.colorChannel, cc)
+                    Target(bank, knob, fb.ringChannel ?: group.channel, cc, fb.colorChannel, cc, fb.indicatorChannel)
                 }
             }
         }
@@ -64,6 +71,7 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
         scratchLights = arrayOfNulls(knobSlots)
         ringValue = IntArray(knobSlots)
         colorValue = IntArray(knobSlots)
+        brightnessValue = IntArray(knobSlots)
         valueStamp = IntArray(knobSlots)
     }
 
@@ -129,11 +137,20 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
             val light = if (knob < lights.size) lights[knob] else null
             ringValue[knob] = ((light?.value ?: 0f).coerceIn(0f, 1f) * 127f).roundToInt()
             colorValue[knob] = if (light == null || !light.lit) wheel.off else wheel.valueFor(light.r, light.g, light.b)
+            val level = (light?.ringBrightness ?: 1f).coerceIn(0f, 1f)
+            brightnessValue[knob] = brightnessMin + (level * (brightnessMax - brightnessMin)).roundToInt()
         }
         val ring = ringValue[knob]
         if (ring != t.lastRing) {
             t.lastRing = ring
             sink.sendCc(t.ringChannel, t.ringCc, ring)
+        }
+        t.indicatorChannel?.let { channel ->
+            val brightness = brightnessValue[knob]
+            if (brightness != t.lastBrightness) {
+                t.lastBrightness = brightness
+                sink.sendCc(channel, t.ringCc, brightness)
+            }
         }
         val colorChannel = t.colorChannel ?: return
         val color = colorValue[knob]

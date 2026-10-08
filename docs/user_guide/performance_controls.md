@@ -340,6 +340,7 @@ The side buttons change meaning with the view:
 | **Pair view** | back to Perform | toggle Chain Link; **Shift +** tap tempo | next bank / page (**Shift +** prev) | step the pane (**Shift +** back) | nothing; **Shift +** clears the slot or chain | **cursor**: turn to move; tap applies |
 | **Library** | leave Library | toggle Chain Link; **Shift +** tap tempo | next bank / page (**Shift +** prev) | step the **tab** (**Shift +** prev) | step **pane** (**Shift +** prev) | **cursor**: turn to move, tap to load |
 
+- **Send-knob rings:** a send knob that can receive the highlighted item shows a full ring at half brightness in the target's colour; the others stay dark. Set the encoders' indicator to **Bar** in the Midi Fighter Utility to get a full ring (a Dot ring shows a single LED).
 - **Knob 16 ring:** in the Pair view and the Library the ring shows the cursor's place in its list (empty at the first row, full at the last); it is full when the list has no cursor yet or one row.
 - **Left-middle button:** Toggles Chain Link on the FX chain of the row you touched last. **Shift + left-middle** taps the BPM tempo (`clock.tap_tempo`).
 - **Right-top button:** Steps through hardware banks / Perform pages (**Shift + right-top** steps backward).

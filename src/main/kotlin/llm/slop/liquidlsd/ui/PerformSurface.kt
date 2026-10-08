@@ -231,7 +231,7 @@ internal class PerformSurface(
             SendTarget.PV -> PerformanceColors.COLOR_DECK_PV
             SendTarget.MASTER -> PerformanceColors.LED_MASTER
         }
-        return KnobLight(0.5f, c[0], c[1], c[2], meterType = MeterType.ENDLESS)
+        return KnobLight(1f, c[0], c[1], c[2], meterType = MeterType.ENDLESS, ringBrightness = SEND_RING_BRIGHTNESS)
     }
 
     private fun isLit(target: PageKnob): Boolean = when (val under = target.spec.under) {
@@ -257,6 +257,9 @@ internal class PerformSurface(
 
         /** What a mouse middle-click does on these knobs (the matrix passes 0.5 as every macro's default). */
         const val LABEL_KNOB_DEFAULT = 0.5f
+
+        /** A live send knob lights its whole ring at this brightness (a full ring, so it reads as different from a value). */
+        const val SEND_RING_BRIGHTNESS = 0.5f
 
         /** The knob (0-based) a controller touched last; the controller's "pick" button opens the picker of its row. */
         @Volatile var lastTouchedKnob: Int? = null

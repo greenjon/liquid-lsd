@@ -71,7 +71,7 @@ class ControllerFeedbackTest {
     fun firstUpdateWritesEveryRingAndLedOnEveryBankWhileTheBankIsUnknown() {
         feedback.update(lights(0 to blue))
         val sent = sink.drain()
-        assertEquals(64 * 2, sent.size)
+        assertEquals(64 * 3, sent.size)
         // Knob 1 on each of the four banks: ring on ch1 (0), LED on ch2 (1), CC = knob + 16 * bank.
         for (bank in 0..3) {
             assertTrue(Triple(0, bank * 16, 64) in sent, "ring bank $bank")
@@ -132,7 +132,7 @@ class ControllerFeedbackTest {
         sink.drain()
         feedback.resync()
         feedback.update(lights(0 to blue))
-        assertEquals(128, sink.drain().size)
+        assertEquals(192, sink.drain().size)
     }
 
     @Test
@@ -166,6 +166,19 @@ class ControllerFeedbackTest {
         assertEquals(listOf(Triple(2, 10, 64), Triple(3, 10, 1)), sink.drain())
     }
 
+    @Test
+    fun ringBrightnessGoesOutOnTheIndicatorChannelOnlyWhenItChanges() {
+        val profile = Json.decodeFromString<ControllerProfile>(
+            """{"id":"x","inputs":[{"id":"knob","kind":"ENCODER","channel":0,"cc":0,"count":1}],
+                "output":{"knobs":{"input":"knob","indicatorChannel":5}}}""").compile()
+        val fb = ControllerFeedback(profile, sink)
+        fb.update(lights(0 to KnobLight(1f, ringBrightness = 0.5f)))
+        assertEquals(listOf(Triple(0, 0, 127), Triple(5, 0, 80)), sink.drain(), "half of 65..95")
+        fb.update(lights(0 to KnobLight(1f, ringBrightness = 0.5f)))
+        assertEquals(emptyList(), sink.drain())
+        fb.update(lights(0 to null))
+        assertEquals(listOf(Triple(0, 0, 0), Triple(5, 0, 95)), sink.drain(), "no light = ring off, brightness back to full")
+    }
 
     // --- Active bank ---
 
@@ -173,7 +186,7 @@ class ControllerFeedbackTest {
     fun withAKnownBankOnlyThatBanksEncodersAreWritten() {
         feedback.update(lights(0 to blue), activeBank = 1)
         val sent = sink.drain()
-        assertEquals(16 * 2, sent.size)
+        assertEquals(16 * 3, sent.size)
         assertTrue(sent.all { it.second in 16..31 }, "bank 2 is CC 16..31: $sent")
         assertTrue(Triple(0, 16, 64) in sent)
         assertTrue(Triple(1, 16, 1) in sent)
@@ -188,12 +201,12 @@ class ControllerFeedbackTest {
 
         feedback.update(lights(0 to blue), activeBank = 2)
         val sent = sink.drain()
-        assertEquals(16 * 2, sent.size)
+        assertEquals(16 * 3, sent.size)
         assertTrue(sent.all { it.second in 32..47 }, sent.toString())
 
         // Switching back rewrites bank 1 again: the device may have shown its own colours meanwhile.
         feedback.update(lights(0 to blue), activeBank = 0)
-        assertEquals(16 * 2, sink.drain().size)
+        assertEquals(16 * 3, sink.drain().size)
     }
 
     @Test
@@ -223,9 +236,9 @@ class ControllerFeedbackTest {
     @Test
     fun learningTheBankAfterAnUnknownStartRewritesThatBank() {
         feedback.update(lights(0 to blue), activeBank = null)
-        assertEquals(128, sink.drain().size)
+        assertEquals(192, sink.drain().size)
         feedback.update(lights(0 to blue), activeBank = 3)
-        assertEquals(16 * 2, sink.drain().size)
+        assertEquals(16 * 3, sink.drain().size)
     }
 
     @Test
@@ -233,7 +246,7 @@ class ControllerFeedbackTest {
         // Checked with amidi on the hardware: CC 16 lights bank 2's knob 1 live, CC 0 does nothing visible.
         feedback.update(lights(0 to blue), activeBank = 1)
         val sent = sink.drain()
-        assertEquals(16 * 2, sent.size)
+        assertEquals(16 * 3, sent.size)
         assertTrue(Triple(0, 16, 64) in sent && Triple(1, 16, 1) in sent)
     }
 
