@@ -112,6 +112,31 @@ internal object LibraryNavigation {
         }
     }
 
+    /**
+     * Where the cursor sits in its list as 0..1 (first row to last), for the cursor knob's ring. Full (1) when there is
+     * no cursor yet or the list has at most one row.
+     */
+    fun cursorPosition(session: SessionContext): Float {
+        val source = LibraryPanel.activeSelectionSource ?: SelectionSource.PRESETS
+        val size = paneSize(source, session)
+        if (size <= 1) return 1f
+        val index = when (source) {
+            SelectionSource.TREE -> unifiedKind()?.let { BrowserPane.treeIndex(it) } ?: -1
+            SelectionSource.PRESETS -> when (LibraryPanel.navMode) {
+                LibraryViewMode.PRESETS -> PresetListPanel.filteredPresets.indexOfFirst { it.path == PresetListPanel.selectedAsset?.path }
+                LibraryViewMode.FX -> FXBrowserPanel.filteredRows.indexOfFirst { it.path == FXBrowserPanel.selectedAsset?.path }
+                LibraryViewMode.TRANS -> TransitionBrowserPanel.filteredRows.indexOfFirst { it.path == TransitionBrowserPanel.selectedAsset?.path }
+                LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> -1
+            }
+            SelectionSource.QUEUE_AB -> QueueActionsPanel.selectedIndex
+            SelectionSource.QUEUE_BG -> BgQueueActionsPanel.selectedIndex
+            SelectionSource.TRANSITION_QUEUE -> TransitionQueuePanel.selectedIndex
+            SelectionSource.FX_QUEUE_AB -> FXQueueActionsPanel.selectedIndex
+            SelectionSource.FX_QUEUE_BG -> FXBgQueueActionsPanel.selectedIndex
+        }
+        return if (index < 0) 1f else (index.toFloat() / (size - 1)).coerceIn(0f, 1f)
+    }
+
     fun step(steps: Int, session: SessionContext, mixer: Mixer) {
         val direction = if (steps > 0) 1 else -1
         repeat(abs(steps)) { LibraryPanel.navigateSelection(direction, session, mixer) }

@@ -317,10 +317,10 @@ class ControllerRuntimeTest {
             assertEquals("side.1", id(0)?.inputId)
             assertEquals("chainlink", id(1)?.inputId)
             assertEquals("shift", id(2)?.inputId)
-            assertEquals("side.2", id(3)?.inputId)
-            assertEquals("bankstep", id(4)?.inputId)
+            assertEquals("bankstep", id(3)?.inputId)
+            assertEquals("side.2", id(4)?.inputId)
             assertEquals("side.3", id(5)?.inputId)
-            assertEquals(bank, id(4)?.bank)
+            assertEquals(bank, id(3)?.bank)
         }
     }
 
@@ -329,18 +329,18 @@ class ControllerRuntimeTest {
         runtime = ControllerRuntime(sixButton, registry)
         val pages = sixButton.profile.banks.pages
 
-        side(12, true); side(12, false)                      // bank 1 right-middle: next -> bank 2
+        side(11, true); side(11, false)                      // bank 1 right-top: next -> bank 2
         assertEquals("page ${pages[1]}", surface.calls.last())
 
         side(8 + 6 * 2 + 2, true)                            // bank 3: hold shift
-        side(8 + 6 * 2 + 4, true); side(8 + 6 * 2 + 4, false)
+        side(8 + 6 * 2 + 3, true); side(8 + 6 * 2 + 3, false)
         side(8 + 6 * 2 + 2, false)
         assertEquals("page ${pages[1]}", surface.calls.last())   // bank 3 shifted: previous -> bank 2
 
-        side(8 + 6 * 2 + 4, true); side(8 + 6 * 2 + 4, false) // bank 3 next wraps to bank 1 (3 pages on a 4-bank device)
+        side(8 + 6 * 2 + 3, true); side(8 + 6 * 2 + 3, false) // bank 3 next wraps to bank 1 (3 pages on a 4-bank device)
         assertEquals("page ${pages[0]}", surface.calls.last())
 
-        side(8 + 6 * 3 + 4, true); side(8 + 6 * 3 + 4, false) // bank 4 has no page: next steps on from the last page
+        side(8 + 6 * 3 + 3, true); side(8 + 6 * 3 + 3, false) // bank 4 has no page: next steps on from the last page
         assertEquals("page ${pages[0]}", surface.calls.last())
     }
 

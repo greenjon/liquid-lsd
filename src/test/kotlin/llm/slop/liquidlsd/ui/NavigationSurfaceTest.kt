@@ -44,6 +44,7 @@ class NavigationSurfaceTest {
     ) + FxMacroSync.FX_BANK_IDS
     private var savedPage = ""
     private var savedMode = UITheme.LibraryMode.HALF
+    private var savedViewMode = LibraryPanel.viewMode
     private var savedExpanded: Map<String, String> = emptyMap()
 
     @BeforeTest
@@ -51,6 +52,7 @@ class NavigationSurfaceTest {
         session = SessionContext()
         savedPage = UITheme.performancePageId
         savedMode = UITheme.libraryMode
+        savedViewMode = LibraryPanel.viewMode
         savedExpanded = UITheme.rackExpandedModules
         UITheme.performancePageId = "ab"
         UITheme.libraryMode = UITheme.LibraryMode.HALF
@@ -70,6 +72,7 @@ class NavigationSurfaceTest {
         PerformSurface.lastTouchedKnob = null
         UITheme.performancePageId = savedPage
         UITheme.libraryMode = savedMode
+        LibraryNavigation.setViewMode(savedViewMode)
         UITheme.rackExpandedModules = savedExpanded
         for (id in bankIds) MacroEngine.unregisterBank(id)
     }
@@ -289,8 +292,10 @@ class NavigationSurfaceTest {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
             nav().browseStep(1)
             assertEquals(b, PresetListPanel.selectedAsset)
+            assertEquals(1f, nav().browsePosition) // last row of two
             nav().browseStep(-1)
             assertEquals(a, PresetListPanel.selectedAsset)
+            assertEquals(0f, nav().browsePosition)
         } finally {
             PresetListPanel.filteredPresets = emptyList()
             unhostPane()
@@ -422,13 +427,27 @@ class NavigationSurfaceTest {
     }
 
     @Test
-    fun shiftedPerformButtonsDoNothing() {
-        state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
-        nav().button(0, true)
-        nav().button(1, true)
-        nav().button(2, true)
+    fun shiftedPerformButtonsTogglesEditModeAndPairFocus() {
+        assertFalse(state.anyRackModuleExpanded())
+        nav().button(0, true) // Shift + Left-Top: toggle Edit mode
         assertTrue(state.anyRackModuleExpanded())
+        nav().button(0, true) // Shift + Left-Top again: collapse Edit mode
+        assertFalse(state.anyRackModuleExpanded())
+
+        nav().button(1, true) // Shift + Right-Middle opens the Library on the FX tab
+        assertEquals(UITheme.LibraryMode.FULL, UITheme.libraryMode)
+        assertEquals(LibraryPanel.LibraryViewMode.FX, LibraryPanel.viewMode)
+        nav().button(0, false)
         assertEquals(UITheme.LibraryMode.HALF, UITheme.libraryMode)
+
+        assertNull(state.focusedPair)
+        nav().button(2, true) // No knob touched yet: nothing to focus
+        assertNull(state.focusedPair)
+        PerformSurface.lastTouchedKnob = 0 // Deck A SRC row
+        nav().button(2, true) // Shift + Right-Bottom: focus Pair view
+        assertEquals("A", state.focusedPair)
+        nav().button(0, false) // Left-Top (Back) in Pair view: leaves Pair focus
+        assertNull(state.focusedPair)
     }
 
     @Test

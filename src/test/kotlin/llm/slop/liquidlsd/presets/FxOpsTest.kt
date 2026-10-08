@@ -86,6 +86,7 @@ class FxOpsTest {
 
     @Test
     fun anUndoableChainChangePushesARestoreAndAPlainOneDoesNot() {
+        FxOps.drainOnGlThread(mixer)
         val chain = FxChain("Deck A FX")
         chain.name = "Before"
         val restores = mutableListOf<() -> Unit>()

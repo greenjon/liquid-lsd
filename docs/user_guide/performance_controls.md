@@ -269,7 +269,7 @@ Do this once, in DJ TechTools' **Midi Fighter Utility**. The app ships a ready-m
 
 Then start Liquid LSD with the Twister plugged in and check **Preferences → MIDI Controls** → *Controller Profiles*: the Twister profile should be listed with your device. The log reports `Controller feedback on for ...` when the output port is opened; if it says `No MIDI output port found`, the app can read the Twister but cannot light it. While the app runs it overrides the ring and LED colours set in the Utility.
 
-**The app owns the banks.** The middle side buttons are plain `CC Hold` buttons, not the firmware's Previous/Next Bank. **Right-middle** steps to the next bank (wrapping), **Shift + right-middle** goes back; the app shows the bank's page and sends the bank change to the Twister, so the screen and the hardware agree. **Left-middle** toggles **Chain Link** on the FX chain of the row you touched last (a deck's source row counts as its FX chain; it also works while a slot is focused). Don't set the middle buttons to Previous/Next Bank: the side buttons send six CC numbers per bank and would misfire.
+**The app owns the banks.** The top and middle side buttons on the right are plain `CC Hold` buttons, not the firmware's Previous/Next Bank. **Right-top** steps to the next bank (wrapping), **Shift + right-top** goes back; the app shows the bank's page and sends the bank change to the Twister, so the screen and the hardware agree. **Right-middle** opens the Library (**Shift + right-middle** opens it on the FX tab). **Left-middle** toggles **Chain Link** on the FX chain of the row you touched last (**Shift + left-middle** taps tempo). Don't set the side buttons to Previous/Next Bank in the Utility: the side buttons send six CC numbers per bank and would misfire.
 
 If you set the Twister up by hand instead, use those same settings in the Utility.
 
@@ -332,17 +332,20 @@ Variations:
 <a id="twister-side-buttons"></a>
 #### Side buttons
 
-The three side buttons other than Shift change meaning with the view:
+The side buttons change meaning with the view:
 
-| View | Left-top | Right-top | Right-bottom | Knob 16 |
-|---|---|---|---|---|
-| **Perform** | back (same as Esc) | open the **Library** | open the **picker** for the row of the knob you touched last | normal knob |
-| **Pair view** | back to Perform | step the pane: folders, list, queues | nothing; **Shift +** it clears the slot or chain | **cursor** in the active pane: turn to move; tap applies the list row, or selects a folder and jumps to the list |
-| **Library** | leave the Library | step the **tab** (Sources, FX, Transitions) | step the **pane**: folder tree, list, BG queue, A/B queue | **cursor**: turn to move, tap to load |
+| View | Left-top | Left-middle | Right-top | Right-middle | Right-bottom | Knob 16 |
+|---|---|---|---|---|---|---|
+| **Perform** | back (`Esc`); **Shift +** toggles Edit mode | toggle Chain Link; **Shift +** tap tempo | next bank / page (**Shift +** prev) | open the **Library**; **Shift +** opens it on the FX tab | open the **picker**; **Shift +** toggles Pair view | normal knob |
+| **Pair view** | back to Perform | toggle Chain Link; **Shift +** tap tempo | next bank / page (**Shift +** prev) | step the pane (**Shift +** back) | nothing; **Shift +** clears the slot or chain | **cursor**: turn to move; tap applies |
+| **Library** | leave Library | toggle Chain Link; **Shift +** tap tempo | next bank / page (**Shift +** prev) | step the **tab** (**Shift +** prev) | step **pane** (**Shift +** prev) | **cursor**: turn to move, tap to load |
 
-- **Unsaved-changes prompt:** when loading would discard edits on a deck, the prompt takes over the controller: **left-top** = Cancel, **right-top** or **knob 16 tap** = Save, **right-bottom** or **Shift + tap** = Discard. Nothing else navigates until you answer.
+- **Knob 16 ring:** in the Pair view and the Library the ring shows the cursor's place in its list (empty at the first row, full at the last); it is full when the list has no cursor yet or one row.
+- **Left-middle button:** Toggles Chain Link on the FX chain of the row you touched last. **Shift + left-middle** taps the BPM tempo (`clock.tap_tempo`).
+- **Right-top button:** Steps through hardware banks / Perform pages (**Shift + right-top** steps backward).
+- **Unsaved-changes prompt:** when loading would discard edits on a deck, the prompt takes over the controller: **left-top** = Cancel, **right-middle** or **knob 16 tap** = Save, **right-bottom** or **Shift + tap** = Discard. Nothing else navigates until you answer.
 - **Picker:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knob 16 is the cursor. Knobs 9-15 do nothing (apart from the sends) while a picker is active (in the Library and picker, knobs 9-13 send the highlighted item, see below); knobs 1-8 keep controlling the two rows of the pair view (they light in their rows' colours), so you can tweak a freshly loaded source or chain without leaving it. Touching a knob of the other row points the browser at that half. To pick for another deck, send the item there with knobs 9-12 or go back with **left-top** first.
-- **Edit:** Left-top closes Edit (collapsing the module bay back to the Faceplate, same as Esc); right-bottom opens the pair view for the last-touched knob's row.
+- **Edit:** Left-top closes Edit (collapsing the module bay back to the Faceplate, same as Esc); **Shift + left-top** toggles Edit mode for the touched row. Right-bottom opens the pair view for the last-touched knob's row.
 - **Banks in the pair view:** pressing a bank button walks the pairs instead of changing the page: a higher bank is the next pair (Deck A, B, BG, PV, Master, Transitions/Clock, wrapping), a lower bank the previous one, so you can reach any deck's pair from the Twister alone.
 - **Quick switch:** in the pair view, **Shift + tap** on knob 9-12 (A, B, BG, PV) or 13 (Master) goes to that pair without sending anything.
 - **Send knobs (Library and picker):** tap a knob in row three to send the highlighted item to a deck: **knob 9 = Deck A, knob 10 = Deck B, knob 11 = Deck BG, knob 12 = Deck PV**; in the FX tab **knob 13 = Master FX**. A source or preset replaces the deck's content (with the usual unsaved-changes prompt), an FX chain replaces all three slots, and a single FX goes into the first empty slot (the last slot if all are full). From the Library the send only loads (you stay in the Library with your place kept, so you can send the next item straight away, and an FX send shows a toast with where it landed); Ctrl+Z undoes it. From the pair view the target's pair also takes over the screen, so **knobs 1-8 play what you just loaded** while knob 16 keeps browsing; send again to move to another deck. A knob glows in its target's colour while the highlighted item can go there. They work on the Sources and FX lists only. Back returns to Perform.

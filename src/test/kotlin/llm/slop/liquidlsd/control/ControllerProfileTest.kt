@@ -56,7 +56,7 @@ class ControllerProfileTest {
         // Measured: bank n (0-based) sends CC 8+6n..13+6n for left-top, left-middle, left-bottom, right-top, right-middle, right-bottom.
         for (bank in 0..3) {
             val base = 8 + 6 * bank
-            val ids = listOf("side.1", "chainlink", "shift", "side.2", "bankstep", "side.3")
+            val ids = listOf("side.1", "chainlink", "shift", "bankstep", "side.2", "side.3")
             ids.forEachIndexed { i, id ->
                 assertEquals(id, t.resolve(cc(3, base + i))?.inputId, "bank $bank button $i")
                 assertEquals(bank, t.resolve(cc(3, base + i))?.bank)

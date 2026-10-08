@@ -83,6 +83,9 @@ object BrowserPane {
     /** Number of rows the tree cursor can visit. */
     fun treeSize(kind: BrowseKind): Int = visibleScopes(kind).size
 
+    /** Row of the tree cursor among the visible rows, or -1. */
+    fun treeIndex(kind: BrowseKind): Int = visibleScopes(kind).indexOf(treeCursorOf(kind))
+
     /** Moves the tree cursor [delta] rows without selecting anything. */
     fun stepTree(kind: BrowseKind, delta: Int) {
         val next = stepTreeCursor(visibleScopes(kind), treeCursorOf(kind), delta) ?: return

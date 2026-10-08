@@ -42,6 +42,8 @@ internal class NavigationSurface(
     /** While the dirty-deck modal is up, the cursor knob and the side buttons answer it (see [DeckConfirmChoice]). */
     override val browsing: Boolean get() = confirming || inLibraryView || inPicker
 
+    override val browsePosition: Float get() = if (confirming) 1f else LibraryNavigation.cursorPosition(session)
+
     /** In the pair view its two rows are the only rows on screen, so Twister rows one and two (knobs 1-8) drive them. */
     override val browseLiveKnobs: Int get() = if (inPicker && !confirming) PAIR_LIVE_KNOBS else 0
 
@@ -109,11 +111,36 @@ internal class NavigationSurface(
     }
 
     private fun performButton(index: Int, shifted: Boolean) {
-        if (shifted) return
         when (index) {
-            0 -> back()
-            1 -> openLibrary()
-            2 -> openPicker()
+            0 -> if (shifted) toggleEditMode() else back()
+            1 -> { openLibrary(); if (shifted) LibraryNavigation.setViewMode(LibraryPanel.LibraryViewMode.FX) }
+            2 -> if (shifted) togglePairFocus() else openPicker()
+        }
+    }
+
+    /** Toggles Edit mode (Parameters Edit Bay) for the row touched last. */
+    private fun toggleEditMode() {
+        if (parametersState.anyRackModuleExpanded()) {
+            parametersState.collapseAllRackModules()
+            return
+        }
+        val knob = PerformSurface.lastTouchedKnob
+        val target = knob?.let { PerformPages.resolve(theme.performancePageId, ctx, parametersState, mixer).knobs.getOrNull(it) }
+        val bankId = target?.bankId ?: parametersState.focusedPair?.let { PerfRows.pairFor(it)?.moduleId } ?: MacroEngine.DECK_A
+        val moduleId = ctx.canonicalModuleId(bankId)
+        parametersState.openParams(moduleId)
+    }
+
+    /** Toggles Pair view focus for the row touched last. */
+    private fun togglePairFocus() {
+        val knob = PerformSurface.lastTouchedKnob
+        val target = knob?.let { PerformPages.resolve(theme.performancePageId, ctx, parametersState, mixer).knobs.getOrNull(it) }
+        val bankId = target?.bankId ?: return
+        val pairTag = PerfRows.pairForBank(bankId)?.tag ?: "A"
+        if (parametersState.focusedPair == pairTag && !inPicker) {
+            parametersState.leavePair()
+        } else {
+            parametersState.focusPair(pairTag)
         }
     }
 

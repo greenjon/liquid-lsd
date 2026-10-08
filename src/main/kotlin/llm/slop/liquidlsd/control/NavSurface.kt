@@ -19,6 +19,9 @@ interface NavSurface {
     /** Increases every time [browsing] turns on, so consumers can drop per-session state (e.g. partial knob travel). */
     val browseSession: Int
 
+    /** Where the browse cursor sits in its list, 0 (first row) to 1 (last): the cursor knob's ring. Full when unknown. */
+    val browsePosition: Float get() = 1f
+
     /** Side button [index] (0-based, in the order of the profile's `side` input), with shift held or not. */
     fun button(index: Int, shifted: Boolean)
 
