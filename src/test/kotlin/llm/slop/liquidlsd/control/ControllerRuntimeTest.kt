@@ -166,8 +166,9 @@ class ControllerRuntimeTest {
         assertTrue(side3(2, 127))
         assertEquals(2, runtime.activeBank)
         assertEquals("page perform.mixer", surface.calls.last())
-        assertTrue(side3(3, 127))                // bank 4 has no page of its own: it loops to the first page
-        assertEquals("page perform.ab", surface.calls.last())
+        assertTrue(side3(3, 127))                // bank 4 has no page of its own: the app's page stays
+        assertEquals(3, runtime.activeBank)
+        assertEquals("page perform.mixer", surface.calls.last())
     }
 
     private fun side3(cc: Int, value: Int) = send(3, cc, value)
@@ -215,7 +216,7 @@ class ControllerRuntimeTest {
 
     @Test
     fun shiftOnAnotherBankStillCountsAsShift() {
-        side(14, true)                         // shift on bank 2 (10 + 4)
+        side(16, true)                         // shift on bank 2 (10 + 6)
         switch(1, true); switch(1, false)
         assertEquals(listOf("secondary 1"), surface.calls)
     }
@@ -299,7 +300,7 @@ class ControllerRuntimeTest {
 
     // --- 6-button profile: all side buttons are CC buttons, bank step is an app command ---
 
-    private val sixButton = ControllerProfileStore(createTempDirectory("controllers").toFile()).get("midi-fighter-twister-6btn")!!
+    private val sixButton = shipped
 
     @Test
     fun sixButtonProfileLoadsAndNamesRegisteredCommands() {

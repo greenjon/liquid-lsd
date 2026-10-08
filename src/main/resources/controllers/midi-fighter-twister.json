@@ -2,13 +2,22 @@
   "version": 1,
   "id": "midi-fighter-twister",
   "name": "DJ TechTools Midi Fighter Twister",
-  "description": "16 encoders x 4 hardware banks. Encoder turns on ch1 (CC = knob + 16 * bank), encoder switches on ch2 with the same CC numbers, side buttons and bank switches on ch4. The 16 knobs control the Perform view's visible 4x4 knob grid: bank 1 shows Deck A and Deck B (each a pinned SRC row over a pinned FX row), bank 2 shows Deck BG and Deck PV the same way, bank 3 shows Master MIX, Master FX, Transitions and Clock & Global. Bank 4 has no page of its own: with `wrapPages` the app shows bank 1's page and switches the device back to bank 1, so Next Bank on bank 3 loops to bank 1. Pages are set by `banks.pages`; see library/perform_pages for adding your own. Rings show each knob's value and the LEDs take the row colour (dark for a bypassed or empty slot); the lights are written to the bank that is showing. Switch tap = primary action (FX slot bypass / reset to default); shift + tap = secondary (focus FX slot, leave focus, next parameter page); turn while holding the switch = fine. Side buttons navigate: in the Perform view the left-top button is back and the right-top opens the Library; in the Library view left-top is back, right-top steps the tab, right-bottom steps the list, knob 16 is the cursor (turn = step, tap = load or apply, shift + tap = add to the A/B queue), and shift + the side buttons add to the BG queue and step the tab and list backwards. In the Perform view right-bottom opens the picker of the last-touched knob's row; in a picker knob 16 is the cursor (knobs 1-4 keep driving the row being filled), right-top steps the category and shift + right-bottom clears the slot. Encoders must be set to relative in Midi Fighter Utility (\"ENC 3FH/41H\", binary offset: clockwise sends 65, counter-clockwise 63). For the factory absolute mode, use a copy of this profile with mode ABSOLUTE.",
-  "match": ["Midi Fighter Twister", "Twister"],
+  "description": "16 encoders x 4 hardware banks, driven by the app. Encoder turns on ch1 (CC = knob + 16 * bank), encoder switches on ch2 with the same CC numbers, all six side buttons on ch4 as plain CC buttons, six per bank (bank n, 0-based: 8+6n..13+6n, in the order left-top, left-middle, left-bottom, right-top, right-middle, right-bottom). The app owns the banks: right-middle steps to the next bank (shift + right-middle: previous), the app shows the bank's page and sends the bank change to the device, so the device's own Previous/Next Bank buttons must not be used. The 16 knobs control the Perform view's visible 4x4 knob grid: bank 1 shows Deck A and Deck B (each a pinned SRC row over a pinned FX row), bank 2 shows Deck BG and Deck PV the same way, bank 3 shows Master MIX, Master FX, Transitions and Clock & Global. Pages are set by `banks.pages`; see library/perform_pages for adding your own. Rings show each knob's value and the LEDs take the row colour (dark for a bypassed or empty slot); the lights are written to the bank that is showing. Switch tap = primary action (FX slot bypass / reset to default); shift + tap = secondary (focus FX slot, leave focus, next parameter page); turn while holding the switch = fine. Left-middle toggles Chain Link on the FX chain of the row you touched last. Left-top, right-top and right-bottom navigate (Perform view: left-top back, right-top opens the Library, right-bottom opens the picker of the last-touched knob's row; Library: left-top back, right-top steps the tab, right-bottom steps the list, knob 16 is the cursor: turn = step, tap = load or apply, shift + tap = add to the A/B queue; shift + the side buttons add to the BG queue and step backwards). Left-bottom is Shift. Load midi-fighter-twister.mfs into the Midi Fighter Utility to set the device up: all encoders relative (ENC 3FH/41H), all switches and side buttons CC Hold, every LED black in both states.",
+  "match": [
+    "Midi Fighter Twister",
+    "Twister"
+  ],
   "banks": {
     "count": 4,
-    "switch": { "channel": 3, "cc": 0 },
-    "pages": ["perform.ab", "perform.bgpv", "perform.mixer"],
-    "wrapPages": true
+    "switch": {
+      "channel": 3,
+      "cc": 0
+    },
+    "pages": [
+      "perform.ab",
+      "perform.bgpv",
+      "perform.mixer"
+    ]
   },
   "inputs": [
     {
@@ -19,35 +28,58 @@
       "count": 16,
       "bankStride": 16,
       "mode": "RELATIVE_BINARY_OFFSET",
-      "press": { "channel": 1 }
+      "press": {
+        "channel": 1
+      }
     },
     {
       "id": "shift",
       "kind": "MODIFIER",
       "channel": 3,
       "cc": 10,
-      "bankStride": 4
+      "bankStride": 6
     },
     {
       "id": "side",
       "kind": "BUTTON",
       "channel": 3,
-      "ccs": [8, 11, 13],
-      "bankStride": 4
+      "ccs": [
+        8,
+        11,
+        13
+      ],
+      "bankStride": 6
+    },
+    {
+      "id": "chainlink",
+      "kind": "BUTTON",
+      "channel": 3,
+      "cc": 9,
+      "bankStride": 6
+    },
+    {
+      "id": "bankstep",
+      "kind": "BUTTON",
+      "channel": 3,
+      "cc": 12,
+      "bankStride": 6
     }
   ],
+  "utilityFile": "midi-fighter-twister.mfs",
   "bindings": {
     "knob.*": "knob.{n}",
     "knob.*.press": "knob.{n}.press",
     "shift+knob.*.press": "knob.{n}.press_alt",
     "side.*": "nav.button.{n}",
-    "shift+side.*": "nav.button.{n}.alt"
+    "shift+side.*": "nav.button.{n}.alt",
+    "chainlink": "fx.chain_link_toggle",
+    "bankstep": "controller.bank_next",
+    "shift+bankstep": "controller.bank_prev"
   },
   "output": {
     "knobs": {
       "input": "knob",
-      "colorChannel": 1,
-      "brightnessChannel": 2
+      "colorChannel": 1
     }
   }
 }

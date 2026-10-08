@@ -300,8 +300,8 @@ Package `llm.slop.liquidlsd.control`; tests in `src/test/kotlin/.../control/` an
 - Bindings, modifiers, banks and encoder handling are live (6.5). Navigation/browse commands are live (6.7). Not implemented yet: response curves. See `.planning/midi-controller-plan.md`.
 
 ### 6.4 Built-in profile
-Banks select Perform pages (`banks.pages`: `ab`, `bgpv`, `mixer`, `master`). Side buttons `side.1..3` (CC 8, 11, 13) are the context-dependent navigation buttons; shift is CC 10.
-`midi-fighter-twister`: 64 encoders (CC 0..63 on ch1 = knob + 16 * bank), encoder switches on ch2 with the same CCs, 4 side buttons per bank on ch4 (CC 8, 10, 11, 13, +4 per bank), bank buttons on ch4 CC 0..3. Measured on hardware.
+Banks select Perform pages (`banks.pages`: `ab`, `bgpv`, `mixer`, `master`). Side buttons `side.1..3` (CC 8, 11, 13 on bank 1; +6 per bank) are the context-dependent navigation buttons; shift is CC 10.
+`midi-fighter-twister`: 64 encoders (CC 0..63 on ch1 = knob + 16 * bank), encoder switches on ch2 with the same CCs, 6 side buttons per bank on ch4 (CC 8+6n..13+6n: left-top, left-middle = chain link, left-bottom = shift, right-top, right-middle = bank step, right-bottom), all `CC Hold`; the app steps banks and sends the bank change (ch4 CC 0..3). The matching Utility settings ship as `resources/controllers/midi-fighter-twister.mfs`; the profile's optional `utilityFile` names it and Preferences > MIDI Controls > Controller Profiles saves a copy anywhere (`ControllerProfileStore.utilityFileBytes`; the last folder is the `utilitySettingsDirectory` preference). Measured on hardware.
 
 ### 6.5 Controller runtime and the Perform grid (phase 2)
 - `ControllerManager` creates one `ControllerRuntime` per device the first time it sends a message and its name matches a profile. `MidiMappingManager.processGlobalMidiEvents` offers each event to it before the legacy `Global/*` and parameter bindings; a runtime consumes an event only if the profile binds that input, and a learned mapping on the exact channel/CC takes precedence over the profile, except while `NavSurface.browsing` is true (the profile then gets the event first).

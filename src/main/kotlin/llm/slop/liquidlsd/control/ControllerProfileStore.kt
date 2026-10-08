@@ -73,8 +73,17 @@ class ControllerProfileStore(
     /** Deletes the user file for [id]; a built-in with that id becomes active again. */
     fun deleteUser(id: String): Boolean = library.deleteUser(id)
 
+    /**
+     * The bytes of the device-utility settings file [ControllerProfile.utilityFile] names, read from the
+     * bundled `/controllers/` resources; null if the profile names none or the resource is missing.
+     */
+    fun utilityFileBytes(profile: ControllerProfile): ByteArray? {
+        val name = profile.utilityFile?.takeIf { it.isNotBlank() && java.io.File(it).name == it } ?: return null
+        return ControllerProfileStore::class.java.getResourceAsStream("/controllers/$name")?.use { it.readBytes() }
+    }
+
     companion object {
-        val BUILT_IN_NAMES = listOf("midi-fighter-twister", "midi-fighter-twister-6btn")
+        val BUILT_IN_NAMES = listOf("midi-fighter-twister")
 
         /** Shared instance backed by the real `library/controllers/` directory. */
         val default: ControllerProfileStore by lazy { ControllerProfileStore() }

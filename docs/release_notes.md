@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Twister: One Profile, Ready-Made Utility Settings (`resources/controllers/midi-fighter-twister.json`, `midi-fighter-twister.mfs`, `control/ControllerProfileStore.kt`)
+- **The Twister now has a single built-in profile, the former six-button one**: the app steps the banks (right-middle, Shift + right-middle for back), left-middle toggles Chain Link, and all six side buttons are `CC Hold`. The firmware-bank "standard" profile and the separate `midi-fighter-twister-6btn` id are gone; a user profile copied from `-6btn` keeps working under its own name.
+- **New `midi-fighter-twister.mfs`**, saved from **Preferences → MIDI Controls → Controller Profiles → Save Utility Settings...** (the folder is remembered; **Open Folder** shows it): load it in the Midi Fighter Utility to set every encoder to relative, every button to `CC Hold` and every LED to black in both states. This also fixes unused knobs glowing the factory blue while browsing or editing.
+- Internal: profiles gain an optional `utilityFile`, read by `ControllerProfileStore.utilityFileBytes`; the folder is the `utilitySettingsDirectory` preference. `ControllerProfileStore.BUILT_IN_NAMES` has one entry; the runtime and profile tests use it for the side-button layout (six CCs per bank).
+
 ### Browser Lists Glide to the Selection (`ui/SmoothScroll.kt`, `ui/browser/*`)
 - **Stepping through a browser list (knob 16, arrow keys) now eases the list toward the selected row** instead of snapping, which is easier on the eyes. A selection far outside the view (a list that has just opened) still jumps straight there.
 - Internal: the `setScrollHereY` calls in the browser panels are replaced by `SmoothScroll.follow`, called every frame for the selected row.

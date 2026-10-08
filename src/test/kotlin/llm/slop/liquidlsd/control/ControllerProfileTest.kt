@@ -51,22 +51,30 @@ class ControllerProfileTest {
     }
 
     @Test
-    fun twisterSideButtonsShiftFourPerBank() {
+    fun twisterSideButtonsShiftSixPerBank() {
         val t = twister()
-        // Physical side buttons are CC 8, 10, 11, 13 in bank 1, each further bank adds 4.
-        // CC 10 is declared as the shift modifier; the other three are side.1..3.
-        assertEquals("side.1", t.resolve(cc(3, 8))?.inputId)
-        assertEquals(ResolvedInput("shift", InputKind.MODIFIER, 0), t.resolve(cc(3, 10))?.copy(step = 1f / 127f, accel = 1f))
-        assertEquals("side.2", t.resolve(cc(3, 11))?.inputId)
-        assertEquals("side.3", t.resolve(cc(3, 13))?.inputId)
-        // Bank 2: 12, 14, 15, 17. Bank 4: 20, 22, 23, 25.
-        assertEquals(1, t.resolve(cc(3, 12))?.bank)
-        assertEquals("shift", t.resolve(cc(3, 14))?.inputId)
-        assertEquals(1, t.resolve(cc(3, 14))?.bank)
-        assertEquals(ResolvedInput("side.3", InputKind.BUTTON, 3).inputId, t.resolve(cc(3, 25))?.inputId)
-        assertEquals(3, t.resolve(cc(3, 25))?.bank)
-        // 9 belongs to nothing.
-        assertNull(t.resolve(cc(3, 9)))
+        // Measured: bank n (0-based) sends CC 8+6n..13+6n for left-top, left-middle, left-bottom, right-top, right-middle, right-bottom.
+        for (bank in 0..3) {
+            val base = 8 + 6 * bank
+            val ids = listOf("side.1", "chainlink", "shift", "side.2", "bankstep", "side.3")
+            ids.forEachIndexed { i, id ->
+                assertEquals(id, t.resolve(cc(3, base + i))?.inputId, "bank $bank button $i")
+                assertEquals(bank, t.resolve(cc(3, base + i))?.bank)
+            }
+        }
+        assertNull(t.resolve(cc(3, 32)))
+    }
+
+    @Test
+    fun twisterShipsItsUtilitySettingsFile() {
+        val store = ControllerProfileStore(emptyUserDir())
+        val profile = store.get("midi-fighter-twister")!!.profile
+        assertEquals("midi-fighter-twister.mfs", profile.utilityFile)
+        assertTrue((store.utilityFileBytes(profile)?.size ?: 0) > 0)
+        // A name that tries to leave the resources folder, or a missing file, yields nothing.
+        assertNull(store.utilityFileBytes(profile.copy(utilityFile = "../logback.xml")))
+        assertNull(store.utilityFileBytes(profile.copy(utilityFile = "missing.mfs")))
+        assertNull(store.utilityFileBytes(profile.copy(utilityFile = null)))
     }
 
     @Test
@@ -114,7 +122,6 @@ class ControllerProfileTest {
     @Test
     fun twisterBanksNamePerformPages() {
         assertEquals(listOf("perform.ab", "perform.bgpv", "perform.mixer"), twister().profile.banks.pages)
-        assertTrue(twister().profile.banks.wrapPages, "bank 4 has no page: it loops to bank 1")
         // Every named page must exist among the built-in pages.
         val known = llm.slop.liquidlsd.ui.PerfPageStore(java.io.File("does-not-exist")).all().map { "perform.${it.id}" }
         assertTrue(twister().profile.banks.pages.all { it in known })

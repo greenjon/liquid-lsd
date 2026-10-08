@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-one-profile-ready-made-utility-settings-resourcescontrollersmidi-fighter-twisterjson-midi-fighter-twistermfs-controlcontrollerprofilestorekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister: One Profile, Ready-Made Utility Settings (resources/controllers/midi-fighter-twister.json, midi-fighter-twister.mfs, control/ControllerProfileStore.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#browser-lists-glide-to-the-selection-uismoothscrollkt-uibrowser" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5845,6 +5856,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-one-profile-ready-made-utility-settings-resourcescontrollersmidi-fighter-twisterjson-midi-fighter-twistermfs-controlcontrollerprofilestorekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister: One Profile, Ready-Made Utility Settings (resources/controllers/midi-fighter-twister.json, midi-fighter-twister.mfs, control/ControllerProfileStore.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#browser-lists-glide-to-the-selection-uismoothscrollkt-uibrowser" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10457,6 +10479,12 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="twister-one-profile-ready-made-utility-settings-resourcescontrollersmidi-fighter-twisterjson-midi-fighter-twistermfs-controlcontrollerprofilestorekt">Twister: One Profile, Ready-Made Utility Settings (<code>resources/controllers/midi-fighter-twister.json</code>, <code>midi-fighter-twister.mfs</code>, <code>control/ControllerProfileStore.kt</code>)</h3>
+<ul>
+<li><strong>The Twister now has a single built-in profile, the former six-button one</strong>: the app steps the banks (right-middle, Shift + right-middle for back), left-middle toggles Chain Link, and all six side buttons are <code>CC Hold</code>. The firmware-bank "standard" profile and the separate <code>midi-fighter-twister-6btn</code> id are gone; a user profile copied from <code>-6btn</code> keeps working under its own name.</li>
+<li><strong>New <code>midi-fighter-twister.mfs</code></strong>, saved from <strong>Preferences → MIDI Controls → Controller Profiles → Save Utility Settings...</strong> (the folder is remembered; <strong>Open Folder</strong> shows it): load it in the Midi Fighter Utility to set every encoder to relative, every button to <code>CC Hold</code> and every LED to black in both states. This also fixes unused knobs glowing the factory blue while browsing or editing.</li>
+<li>Internal: profiles gain an optional <code>utilityFile</code>, read by <code>ControllerProfileStore.utilityFileBytes</code>; the folder is the <code>utilitySettingsDirectory</code> preference. <code>ControllerProfileStore.BUILT_IN_NAMES</code> has one entry; the runtime and profile tests use it for the side-button layout (six CCs per bank).</li>
+</ul>
 <h3 id="browser-lists-glide-to-the-selection-uismoothscrollkt-uibrowser">Browser Lists Glide to the Selection (<code>ui/SmoothScroll.kt</code>, <code>ui/browser/*</code>)</h3>
 <ul>
 <li><strong>Stepping through a browser list (knob 16, arrow keys) now eases the list toward the selected row</strong> instead of snapping, which is easier on the eyes. A selection far outside the view (a list that has just opened) still jumps straight there.</li>

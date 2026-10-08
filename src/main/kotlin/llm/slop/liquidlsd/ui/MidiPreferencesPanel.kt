@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.ui
 
 import llm.slop.liquidlsd.midi.MidiLearnTarget
 import imgui.ImGui
+import java.io.File
 import imgui.type.ImBoolean
 import imgui.type.ImString
 import imgui.type.ImInt
@@ -32,6 +33,10 @@ import llm.slop.liquidlsd.midi.sanitiseProfileName
 object MidiPreferencesPanel {
 
     private var profileMessage: String? = null
+    private val utilityBrowser = ImGuiFileBrowser("##utilitySettingsBrowser")
+    /** The profile whose settings file the browser is saving, and the last folder it was saved to (for "Open folder"). */
+    private var utilityProfile: ControllerProfile? = null
+    private var utilitySavedTo: File? = null
 
     private const val RESET_DEBOUNCE_MS = 600L
     private var pendingResetAt = 0L
@@ -203,12 +208,33 @@ object MidiPreferencesPanel {
                 }
                 itemTooltip("Removes the user file. A built-in profile with the same id becomes active again.")
             }
+            if (store.utilityFileBytes(profile) != null) {
+                ImGui.sameLine()
+                if (ButtonChrome.button("${Icons.SAVE} Save Utility Settings...##utility_${profile.id}")) {
+                    utilityProfile = profile
+                    val remembered = theme.utilitySettingsDirectory.takeIf { it.isNotBlank() }?.let(::File)?.takeIf { it.isDirectory }
+                    utilityBrowser.open(
+                        mode = ImGuiFileBrowser.Mode.SAVE,
+                        startDir = remembered ?: File(System.getProperty("user.home") ?: "."),
+                        initialName = profile.utilityFile.orEmpty(),
+                        extensions = listOf("." + profile.utilityFile.orEmpty().substringAfterLast('.', "mfs"))
+                    )
+                }
+                itemTooltip("Saves the settings file for the device's own configuration tool (for the Twister: encoders relative, buttons CC Hold, LEDs black). Load it there, then send it to the device.")
+            }
             if (source != ControllerProfileStore.Source.BUILT_IN) {
                 drawBindingEditor(session, store, compiled, parametersState)
             }
             ImGui.spacing()
         }
         flushPendingReset(session)
+
+        utilityBrowser.draw { chosen -> saveUtilityFile(store, theme, chosen) }
+        utilitySavedTo?.let { saved ->
+            if (ButtonChrome.button("${Icons.FOLDER} Open Folder##utility_open")) {
+                try { java.awt.Desktop.getDesktop().open(saved.parentFile) } catch (e: Exception) { profileMessage = "Could not open ${saved.parentFile}" }
+            }
+        }
 
         for (rejected in store.rejected()) {
             theme.captionColored(0.95f, 0.35f, 0.3f, 1.0f, "${rejected.file.name} is not loaded:")
@@ -226,6 +252,20 @@ object MidiPreferencesPanel {
         itemTooltip("Re-reads library/controllers/*.json after you edit a file by hand.")
         profileMessage?.let { theme.caption(it) }
         theme.caption("Edit the JSON files in library/controllers/ with any text editor, then press Reload.")
+    }
+
+    private fun saveUtilityFile(store: ControllerProfileStore, theme: UITheme, chosen: File) {
+        val bytes = utilityProfile?.let(store::utilityFileBytes)
+        if (bytes == null) { profileMessage = "No settings file to save"; return }
+        try {
+            chosen.writeBytes(bytes)
+            utilitySavedTo = chosen
+            theme.utilitySettingsDirectory = chosen.parentFile?.absolutePath.orEmpty()
+            AppPreferencesStore.savePreferences()
+            profileMessage = "Saved ${chosen.absolutePath}"
+        } catch (e: Exception) {
+            profileMessage = "Could not save ${chosen.name}: ${e.message}"
+        }
     }
 
     private val newProfileInput = ImString(32)

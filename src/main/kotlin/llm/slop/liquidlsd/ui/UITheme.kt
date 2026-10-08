@@ -263,6 +263,10 @@ object UITheme {
         get() = settings.recordingDirectory
         set(value) { settings = settings.copy(recordingDirectory = value) }
 
+    var utilitySettingsDirectory: String
+        get() = settings.utilitySettingsDirectory
+        set(value) { settings = settings.copy(utilitySettingsDirectory = value) }
+
     var recordingIncludeAudio: Boolean
         get() = settings.recordingIncludeAudio
         set(value) { settings = settings.copy(recordingIncludeAudio = value) }

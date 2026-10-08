@@ -18,18 +18,14 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
         val ringChannel: Int,
         val ringCc: Int,
         val colorChannel: Int?,
-        val colorCc: Int,
-        val brightnessChannel: Int?
+        val colorCc: Int
     ) {
         var lastRing = -1
         var lastColor = -1
-        var lastBrightness = -1
-        fun forget() { lastRing = -1; lastColor = -1; lastBrightness = -1 }
+        fun forget() { lastRing = -1; lastColor = -1 }
     }
 
     private val wheel: HueWheel
-    private val brightnessOff: Int
-    private val brightnessOn: Int
     private val targets: List<Target>
     /** [targets] split by bank, so a frame only walks the active bank's. */
     private val targetsByBank: Array<Array<Target>>
@@ -48,15 +44,13 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
         val fb = compiled.profile.output.knobs
         val group = fb?.let { def -> compiled.profile.inputs.firstOrNull { it.id == def.input } }
         wheel = fb?.color ?: HueWheel()
-        brightnessOff = fb?.brightnessOff ?: 0
-        brightnessOn = fb?.brightnessOn ?: 0
         targets = if (fb == null || group == null) emptyList() else {
             val baseCcs = group.ccs.ifEmpty { (group.cc until group.cc + group.count).toList() }
             val banks = if (group.bankStride != 0) compiled.profile.banks.count.coerceAtLeast(1) else 1
             (0 until banks).flatMap { bank ->
                 baseCcs.mapIndexed { knob, baseCc ->
                     val cc = baseCc + bank * group.bankStride
-                    Target(bank, knob, fb.ringChannel ?: group.channel, cc, fb.colorChannel, cc, fb.brightnessChannel)
+                    Target(bank, knob, fb.ringChannel ?: group.channel, cc, fb.colorChannel, cc)
                 }
             }
         }
@@ -143,13 +137,6 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
         }
         val colorChannel = t.colorChannel ?: return
         val color = colorValue[knob]
-        t.brightnessChannel?.let { channel ->
-            val brightness = if (color == wheel.off) brightnessOff else brightnessOn
-            if (brightness != t.lastBrightness) {
-                t.lastBrightness = brightness
-                sink.sendCc(channel, t.colorCc, brightness)
-            }
-        }
         if (color != t.lastColor) {
             t.lastColor = color
             sink.sendCc(colorChannel, t.colorCc, color)

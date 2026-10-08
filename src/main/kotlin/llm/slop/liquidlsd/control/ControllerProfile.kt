@@ -93,19 +93,14 @@ data class HueWheel(
 /**
  * Ring and LED feedback for an encoder group ([input]): the ring (position indicator) is set by
  * sending the encoder's own CC back on [ringChannel] (default: the encoder's channel), and the RGB
- * LED by sending the same CC number on [colorChannel] (null = no colour feedback). Some LEDs cannot
- * be turned dark by a hue value (the Twister shows a dim blue for 0), so a dark LED can also be sent
- * as [brightnessOff] and a lit one as [brightnessOn] on [brightnessChannel] (null = not used).
+ * LED by sending the same CC number on [colorChannel] (null = no colour feedback).
  */
 @Serializable
 data class KnobFeedbackDef(
     val input: String = "knob",
     val ringChannel: Int? = null,
     val colorChannel: Int? = null,
-    val color: HueWheel = HueWheel(),
-    val brightnessChannel: Int? = null,
-    val brightnessOff: Int = 17,
-    val brightnessOn: Int = 47
+    val color: HueWheel = HueWheel()
 )
 
 /**
@@ -138,6 +133,8 @@ data class ControllerProfile(
     val bindings: Map<String, String> = emptyMap(),
     val bankBindings: Map<String, Map<String, String>> = emptyMap(),
     val output: OutputConfig = OutputConfig(),
+    /** File name of a bundled settings file for the device's own configuration tool (see [ControllerProfileStore.utilityFileBytes]), or null. */
+    val utilityFile: String? = null,
     /** Schema version of this file; a missing field means 1. Writers emit [CURRENT_SCHEMA_VERSION]. */
     val version: Int = 1
 ) {
@@ -360,7 +357,7 @@ class CompiledController private constructor(
                     group == null -> problems += "output.knobs.input '${fb.input}' is not an input"
                     group.kind != InputKind.ENCODER -> problems += "output.knobs.input '${fb.input}' must be an ENCODER"
                 }
-                listOf("ringChannel" to fb.ringChannel, "colorChannel" to fb.colorChannel, "brightnessChannel" to fb.brightnessChannel).forEach { (name, channel) ->
+                listOf("ringChannel" to fb.ringChannel, "colorChannel" to fb.colorChannel).forEach { (name, channel) ->
                     if (channel != null && channel !in 0..15) problems += "output.knobs.$name $channel out of range 0..15"
                 }
                 val c = fb.color

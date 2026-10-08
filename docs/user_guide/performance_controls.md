@@ -261,20 +261,17 @@ This section is in the order you will need it: [one-time setup](#twister-setup),
 <a id="twister-setup"></a>
 #### One-time setup in the Midi Fighter Utility
 
-Do this once, in DJ TechTools' **Midi Fighter Utility**, then send the settings to the Twister:
+Do this once, in DJ TechTools' **Midi Fighter Utility**. The app ships a ready-made settings file for it, `midi-fighter-twister.mfs`:
 
-1. **Encoders:** set every encoder on **all four bank tabs** (select all 16 on each tab) to MIDI type `Relative (ENC 3FH/41H)` (binary offset: clockwise sends 65, counter-clockwise 63) and movement *Direct* (the app does its own acceleration). Relative mode has no end stops, so a knob never gets stuck at 0 or 127. Encoders left on the factory `CC` setting manage their own rings.
-2. **Knob switches:** leave them on `CC Hold` (127 on press, 0 on release).
-3. **Side buttons:** the four corner buttons stay on `CC Hold`. Keep the left-middle and right-middle buttons as **Previous/Next Bank**: the app learns which bank you are on from them.
+1. In **Preferences → MIDI Controls → Controller Profiles**, press **Save Utility Settings...** on the Midi Fighter Twister profile and pick a folder (the app remembers it for next time). **Open Folder** then shows the saved file.
+2. In the Utility, load that file, then send the settings to the Twister.
+3. That is all. The file sets **every encoder on all four banks** to `Relative (ENC 3FH/41H)` (binary offset: clockwise sends 65, counter-clockwise 63; relative mode has no end stops, so a knob never gets stuck at 0 or 127), **every knob switch and all six side buttons** to `CC Hold`, and **every LED black** in both its on and off state, so a knob the app is not using stays dark instead of showing the factory blue.
 
 Then start Liquid LSD with the Twister plugged in and check **Preferences → MIDI Controls** → *Controller Profiles*: the Twister profile should be listed with your device. The log reports `Controller feedback on for ...` when the output port is opened; if it says `No MIDI output port found`, the app can read the Twister but cannot light it. While the app runs it overrides the ring and LED colours set in the Utility.
 
-<a id="twister-6btn"></a>
-**Optional: six side buttons (the `midi-fighter-twister-6btn` profile).** By default the two middle side buttons are the firmware's Previous/Next Bank buttons. If you set them to `CC Hold` instead and use this profile, the app steps the banks itself and one button is freed:
+**The app owns the banks.** The middle side buttons are plain `CC Hold` buttons, not the firmware's Previous/Next Bank. **Right-middle** steps to the next bank (wrapping), **Shift + right-middle** goes back; the app shows the bank's page and sends the bank change to the Twister, so the screen and the hardware agree. **Left-middle** toggles **Chain Link** on the FX chain of the row you touched last (a deck's source row counts as its FX chain; it also works while a slot is focused). Don't set the middle buttons to Previous/Next Bank: the side buttons send six CC numbers per bank and would misfire.
 
-1. In the Utility set **all six side buttons** to `CC Hold` (the middle ones included), then send the settings.
-2. In **Preferences → MIDI Controls → Controller Profiles**, copy `midi-fighter-twister-6btn` to your profiles. (Both built-in profiles match the Twister, and a profile of yours wins over a built-in.) Don't use the standard Twister profile with the middle buttons on `CC Hold`: the side buttons send different CC numbers on banks 2-4 and would misfire.
-3. **Right-middle** steps to the next bank (wrapping 4 → 1), **Shift + right-middle** goes back. The app shows the bank's page and sends the bank change to the Twister, so the screen and the hardware agree. **Left-middle** toggles **Chain Link** on the FX chain of the row you touched last (a deck's source row counts as its FX chain; it also works while a slot is focused). The other four buttons are unchanged.
+If you set the Twister up by hand instead, use those same settings in the Utility.
 
 To use the factory absolute mode instead, copy the profile to `library/controllers/` and set `"mode": "ABSOLUTE"` on the `knob` input (the app then tracks each change, and a knob can hit the end of its 0-127 range).
 
@@ -283,7 +280,7 @@ To use the factory absolute mode instead, copy the profile to `library/controlle
 
 **The 16 knobs are the 16 knobs on screen.** Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Focus an FX slot, with the mouse or the Twister, and the same encoders follow. In Edit the Twister follows the open module: knobs 1-4 control that module's 4 macro knobs (reflecting its active sub-tab, e.g. SRC or FX), while knobs 5-16 are inert. Edit itself (the full 3-column parameter matrix) is opened and edited with the mouse; the controller only opens the pair view's pickers.
 
-The Twister's four hardware **banks** pick the page shown on screen. Press a bank button (or use Previous/Next Bank) and the matrix changes with it; clicking a tab on screen moves the encoders to that page too, so screen and hardware always agree.
+The Twister's four hardware **banks** pick the page shown on screen. Press right-middle (Shift + right-middle goes back) and the matrix changes with it; clicking a tab on screen moves the encoders to that page too, so screen and hardware always agree.
 
 | Bank | Page | Knobs 1-4 | Knobs 5-8 | Knobs 9-12 | Knobs 13-16 |
 |---|---|---|---|---|---|
@@ -366,7 +363,8 @@ The Twister mirrors the screen. Each encoder's ring shows its knob's value, and 
 
 - **Nothing responds:** check *Enable MIDI Subsystem* in Preferences → MIDI Controls, and that the log shows the `matches MIDI device` line. Watch the Live MIDI Monitor to confirm the Twister's messages arrive.
 - **Knobs jump to the ends or stick:** the encoders are not in `Relative (ENC 3FH/41H)` mode on every bank (see setup).
-- **Wrong page, or rings and LEDs from the wrong bank:** the Previous/Next Bank buttons must keep their factory role; the app learns the current bank from them.
+- **Wrong page, or rings and LEDs from the wrong bank, or a side button doing the wrong thing:** the middle side buttons must be `CC Hold` (save and load the settings file, see setup); on the factory Previous/Next Bank setting the side buttons send different CC numbers.
+- **Unused knobs glow blue:** the LEDs' off colour in the Utility is not black. Save and load the settings file (see setup), or set every knob's on and off colours to black on all four banks.
 - **No lights at all:** the log says `No MIDI output port found`. Reconnect the device, or close other software holding the Twister's port.
 - **Rings lag or drop:** the app writes lights to the showing bank a few messages at a time (the Twister drops bursts), rewrites the whole bank just after you switch to it, and re-sends it shortly after you stop turning, because the Twister redraws its own stored colours after bank changes. If rings still lag, raise `output.minIntervalMs` (default 2) in a copy of the profile.
 - **See exactly what is sent:** set `"trace": true` in the profile's `output` section (or start the app with `LSD_MIDI_TRACE=1`). Every message sent to the device, every bank change and every encoder message is then logged.

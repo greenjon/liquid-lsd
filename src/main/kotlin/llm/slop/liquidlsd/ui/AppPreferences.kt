@@ -59,6 +59,8 @@ data class AppPreferences(
     val customRenderHeight: Int = 1080,
     val outputScaleMode: UITheme.OutputScaleMode = UITheme.OutputScaleMode.FIT,
     val recordingDirectory: String = "",
+    /** Folder last used to save a controller utility settings file (see [MidiPreferencesPanel]); blank = the home folder. */
+    val utilitySettingsDirectory: String = "",
     val recordingIncludeAudio: Boolean = true,
     val recordingBitrateMbps: Int = 12,
     val recordingFps: Int = 60,
