@@ -162,7 +162,7 @@ Parameters, LFO and sequencer fields, and macro knobs whose range is 0 to 1 (or 
 
 ### Stepped parameters
 
-Some parameters are really a list of choices (a mode, a palette, a segment count). Their knobs show a **tick mark for each choice** (none when there are more than 16), and the value always lands exactly on a choice: a knob, LFO, audio source, macro, MIDI or OSC sweep passes through the choices instead of between them. In an FX row's focus mode the knob shows the choice's name when it has one (for example a 3D mode), otherwise its number. Hover a stepped value for the number of choices.
+Some parameters are really a list of choices (a mode, a palette, a segment count). Their knobs show a **tick mark for each choice** (none when there are more than 16), and the value always lands exactly on a choice: a knob, LFO, audio source, macro, MIDI or OSC sweep passes through the choices instead of between them. In an FX row's focus mode the knob shows the choice's name when it has one (for example a 3D mode), otherwise its number. Hover a stepped value for the number of choices. In the **VAL** panel a stepped parameter with up to 16 choices gets a drop-down list of them (for example the 3D mode), and its live and starting values read as the choice name.
 
 ### Adjusting values without clicking
 

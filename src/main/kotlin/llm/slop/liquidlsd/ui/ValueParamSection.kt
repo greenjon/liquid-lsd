@@ -10,24 +10,6 @@ import kotlin.math.roundToInt
 
 private val MAX_POINTS_PRESETS = listOf(100, 250, 500, 750, 1000, 1500, 2000)
 
-val MODE_3D_LABELS = arrayOf(
-    "0: Tri-Axial (3 Planes Intersecting)",
-    "1: Hex-Planar (6 Planes Intersecting)",
-    "2: Cube Cage (6 Planes Cube)",
-    "3: Tetrahedral (Kaleidoscope)"
-)
-
-fun get3DModeLabel(mode: Float): String {
-    val idx = mode.roundToInt().coerceIn(0, 3)
-    return when (idx) {
-        0 -> "Tri-Axial (3 Planes Intersecting)"
-        1 -> "Hex-Planar (6 Planes Intersecting)"
-        2 -> "Cube Cage (6 Planes Cube)"
-        3 -> "Tetrahedral (Kaleidoscope)"
-        else -> "Tri-Axial (3 Planes Intersecting)"
-    }
-}
-
 object ValueParamSection {
     private val comboInt = ImInt()
     private val hueLabelsCache = HashMap<Int, Array<String>>()
@@ -71,7 +53,6 @@ object ValueParamSection {
         val mandala = source as? Mandala
 
         // Live value text readout
-        val is3DMode = paramKey.endsWith("/mode3D") || paramKey.endsWith("/3D Mode")
         val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep") || paramKey.endsWith("/Hue Sweep")
         val isLobes = paramKey.endsWith("/Geometry/Lobes") || paramKey.endsWith("/Lobes")
         val isRecipeSelect = paramKey.endsWith("/Geometry/Recipe") || paramKey.endsWith("/Recipe Select") || paramKey.endsWith("/Recipe")
@@ -79,7 +60,6 @@ object ValueParamSection {
         val liveVal = param.value
         val valueScale = ValueFormat.scaleFor(param.minClamp, param.maxClamp, param.isAngle)
         val liveLabel = when {
-            is3DMode -> get3DModeLabel(liveVal)
             isMaxPoints -> "${liveVal.roundToInt()} points"
             isHueSweep && mandala != null -> {
                 val petals = mandala.recipe.petals
@@ -97,6 +77,7 @@ object ValueParamSection {
                     "Recipe ${idx + 1}/${filtered.size} [${filtered[idx].a}, ${filtered[idx].b}, ${filtered[idx].c}, ${filtered[idx].d}]"
                 } else ValueFormat.format(liveVal, valueScale)
             }
+            param.steps != null -> DiscreteTicks.readout(param, liveVal) ?: ValueFormat.format(liveVal, valueScale)
             param.isAngle -> "${"%.1f".format(liveVal * 180f / kotlin.math.PI.toFloat())}°"
             else -> ValueFormat.format(liveVal, valueScale)
         }
@@ -232,6 +213,7 @@ object ValueParamSection {
             )
         } else {
             // These special widgets write baseValue directly; a macro binding owns it and would overwrite the edit.
+            val choices = DiscreteTicks.choices(param)
             if (isLocked) ImGui.beginDisabled()
             if (isMaxPoints) {
                 session.uiTheme.caption("Point Count (GPU Performance):")
@@ -382,21 +364,18 @@ object ValueParamSection {
                 }
                 ImGui.spacing()
                 ImGui.separator()
-            } else if (is3DMode) {
-                session.uiTheme.caption("3D Elevation Mode:")
-                val currentIdx = param.baseValue.roundToInt().coerceIn(0, MODE_3D_LABELS.size - 1)
-                comboInt.set(currentIdx)
+            } else if (choices != null) {
+                session.uiTheme.caption("Choice:")
+                comboInt.set(DiscreteTicks.stepIndex(param, param.baseValue) ?: 0)
                 ImGui.pushItemWidth(ImGui.getContentRegionAvailX() - 10f)
-                if (ImGui.combo("##mode3d_combo", comboInt, MODE_3D_LABELS)) {
-                    val nextIdx = comboInt.get().coerceIn(0, MODE_3D_LABELS.size - 1)
-                    val newVal = nextIdx.toFloat()
+                if (ImGui.combo("##step_choice_combo", comboInt, choices.toTypedArray())) {
+                    val newVal = DiscreteTicks.stepValue(param, comboInt.get())
                     param.baseValue = newVal
                     if (!param.randomizeBase) {
                         param.baseMin = newVal
                         param.baseMax = newVal
                     }
                 }
-                itemTooltip("Select 3D geometric elevation projection:\n0: Tri-Axial (3 planes intersecting at center)\n1: Hex-Planar (6 planes intersecting at 60°)\n2: Cube Cage (6 planes forming the faces of a cube)\n3: Tetrahedral (24-chamber kaleidoscope projection)")
                 ImGui.popItemWidth()
 
                 ImGui.spacing()
@@ -405,7 +384,7 @@ object ValueParamSection {
             }
             if (isLocked) ImGui.endDisabled()
 
-            val isSpecialValue = isMaxPoints || isLobes || isRecipeSelect || isHueSweep || is3DMode
+            val isSpecialValue = isMaxPoints || isLobes || isRecipeSelect || isHueSweep || param.steps != null
             val initialScale = if (isSpecialValue) 1f else ValueFormat.scaleFor(param.minClamp, param.maxClamp, param.isAngle)
             val scale = if (param.isAngle) (180f / kotlin.math.PI.toFloat()) else 1f
             val invScale = if (param.isAngle) (kotlin.math.PI.toFloat() / 180f) else 1f
@@ -436,6 +415,7 @@ object ValueParamSection {
                                 } else "No recipes"
                             } else ValueFormat.format(it, initialScale)
                         }
+                        param.steps != null -> DiscreteTicks.readout(param, it) ?: ValueFormat.format(it, initialScale)
                         param.isAngle -> "${"%.1f".format(it)}°"
                         else -> ValueFormat.format(it, initialScale)
                     }
@@ -513,6 +493,8 @@ object ValueParamSection {
             val options = mandala.getSymmetricHueCycles(petals)
             val idx = if (options.size > 1) (param.baseValue * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
             session.uiTheme.caption("Static Initial Value: ${options[idx]} cycles")
+        } else if (param.steps != null) {
+            session.uiTheme.caption("Static Initial Value: ${DiscreteTicks.readout(param, param.baseValue)}")
         } else {
             val displayBase = if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else ValueFormat.format(param.baseValue, ValueFormat.scaleFor(param.minClamp, param.maxClamp))
             session.uiTheme.caption("Static Initial Value: $displayBase")

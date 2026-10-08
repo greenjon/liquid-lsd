@@ -47,4 +47,28 @@ class DiscreteTicksTest {
         assertEquals(MacroKnobWidget.valueToAngleRadians(0f, MeterType.MONOPOLAR), discrete)
         assertTrue(discrete != MacroKnobWidget.valueToAngleRadians(0f, MeterType.ENDLESS))
     }
+
+    @Test
+    fun choicesUseLabelsElseStepNumbers() {
+        val labeled = ModulatableParameter(0f, minClamp = 0f, maxClamp = 2f, steps = 3, labels = listOf("a", "b", "c"))
+        assertEquals(listOf("a", "b", "c"), DiscreteTicks.choices(labeled))
+        val offset = ModulatableParameter(2f, minClamp = 2f, maxClamp = 5f, steps = 4)
+        assertEquals(listOf("2", "3", "4", "5"), DiscreteTicks.choices(offset))
+        val negative = ModulatableParameter(0f, minClamp = -1f, maxClamp = 1f, steps = 3)
+        assertEquals(listOf("-1", "0", "1"), DiscreteTicks.choices(negative))
+    }
+
+    @Test
+    fun noChoicesWhenContinuousOrTooMany() {
+        assertNull(DiscreteTicks.choices(ModulatableParameter(0f)))
+        assertNull(DiscreteTicks.choices(ModulatableParameter(0f, minClamp = 0f, maxClamp = 30f, steps = DiscreteTicks.MAX_TICKS + 1)))
+    }
+
+    @Test
+    fun stepValueInvertsStepIndex() {
+        val p = ModulatableParameter(0f, minClamp = 2f, maxClamp = 24f, steps = 23)
+        for (i in 0 until 23) assertEquals(i, DiscreteTicks.stepIndex(p, DiscreteTicks.stepValue(p, i)))
+        assertEquals(24f, DiscreteTicks.stepValue(p, 99))
+        assertEquals(2f, DiscreteTicks.stepValue(p, -3))
+    }
 }

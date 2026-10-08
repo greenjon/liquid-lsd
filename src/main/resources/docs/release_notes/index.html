@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#stepped-parameters-snap-to-their-choices-parametersmodulatableparameterkt-renderingisf-uidiscretetickskt-uiparametersrendererkt-uimacroknobwidgetkt-librarysources-default_filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stepped Parameters Snap to Their Choices (parameters/ModulatableParameter.kt, rendering/isf/*, ui/DiscreteTicks.kt, ui/ParametersRenderer.kt, ui/MacroKnobWidget.kt, library/sources/*, default_filters/*)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-one-profile-ready-made-utility-settings-resourcescontrollersmidi-fighter-twisterjson-midi-fighter-twistermfs-controlcontrollerprofilestorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5856,6 +5867,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#stepped-parameters-snap-to-their-choices-parametersmodulatableparameterkt-renderingisf-uidiscretetickskt-uiparametersrendererkt-uimacroknobwidgetkt-librarysources-default_filters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stepped Parameters Snap to Their Choices (parameters/ModulatableParameter.kt, rendering/isf/*, ui/DiscreteTicks.kt, ui/ParametersRenderer.kt, ui/MacroKnobWidget.kt, library/sources/*, default_filters/*)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-one-profile-ready-made-utility-settings-resourcescontrollersmidi-fighter-twisterjson-midi-fighter-twistermfs-controlcontrollerprofilestorekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10479,6 +10501,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="stepped-parameters-snap-to-their-choices-parametersmodulatableparameterkt-renderingisf-uidiscretetickskt-uiparametersrendererkt-uimacroknobwidgetkt-librarysources-default_filters">Stepped Parameters Snap to Their Choices (<code>parameters/ModulatableParameter.kt</code>, <code>rendering/isf/*</code>, <code>ui/DiscreteTicks.kt</code>, <code>ui/ParametersRenderer.kt</code>, <code>ui/MacroKnobWidget.kt</code>, <code>library/sources/*</code>, <code>default_filters/*</code>)</h3>
+<ul>
+<li><strong>Mode, palette and count parameters now snap to real choices.</strong> A knob, LFO, audio source, macro, MIDI or OSC move used to sweep these continuously while the shader saw the value rounded down (so 0.99 read as 0). They now land exactly on a choice, and rounding is to the nearest one. This covers the 3D mode and blend mode, the transition curve and tint modes, and about 25 mode, palette and count inputs across the stock effects and sources (Kaleidoscope segments, Polar Tunnel symmetry, Retro CRT scanlines, Dynamic Spiral max points, and so on). Saved values load unchanged and snap when used.</li>
+<li><strong>Stepped knobs show their choices</strong>: one tick per choice around the ring (none above 16), and the focus-mode value shows the choice's name where it has one. Hovering the value says how many choices there are. The Max Points tooltip no longer claims it cannot be modulated; it can, and it snaps.</li>
+<li><strong>The VAL panel gives every stepped parameter a choice list</strong> (for example the 3D mode, a palette or a blend mode), showing the choice names where the effect defines them, instead of a plain slider. The live value and the starting value read as the choice name or number too. Parameters with more than 16 choices (scanline count, Max Points) keep their slider.</li>
+<li>Internal: <code>ModulatableParameter</code> gains <code>steps</code>/<code>labels</code> and snaps in <code>evaluate()</code> (<code>baseValue</code> stays continuous). ISF <code>long</code>/<code>int</code>/<code>bool</code> inputs fill them from <code>VALUES</code>/<code>LABELS</code>; a new optional <code>"STEP"</code> header key marks a <code>float</code> input as discrete (see <code>docs/developer/rendering.md</code>). <code>ISFVisualSource.createParameters</code> now honours <code>VALUES</code>, <code>MIN</code>/<code>MAX</code> and an integer default for <code>long</code> inputs, and integer uniforms are rounded, not truncated. <code>MeterType.DISCRETE</code> is split from ENDLESS (bounded sweep plus ticks). The dead <code>Background/Style</code> branch in <code>ValueParamSection</code> is removed, and the hard-coded <code>mode3D</code> combo (<code>MODE_3D_LABELS</code>) is replaced by a generic chooser built from <code>DiscreteTicks.choices</code>. <code>web/shaders</code> re-synced for the annotated sources. <code>StockDiscreteInputsAuditTest</code> checks every stepped stock input.</li>
+</ul>
 <h3 id="twister-one-profile-ready-made-utility-settings-resourcescontrollersmidi-fighter-twisterjson-midi-fighter-twistermfs-controlcontrollerprofilestorekt">Twister: One Profile, Ready-Made Utility Settings (<code>resources/controllers/midi-fighter-twister.json</code>, <code>midi-fighter-twister.mfs</code>, <code>control/ControllerProfileStore.kt</code>)</h3>
 <ul>
 <li><strong>The Twister now has a single built-in profile, the former six-button one</strong>: the app steps the banks (right-middle, Shift + right-middle for back), left-middle toggles Chain Link, and all six side buttons are <code>CC Hold</code>. The firmware-bank "standard" profile and the separate <code>midi-fighter-twister-6btn</code> id are gone; a user profile copied from <code>-6btn</code> keeps working under its own name.</li>

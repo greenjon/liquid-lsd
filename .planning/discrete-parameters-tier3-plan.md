@@ -1,6 +1,6 @@
 # Discrete parameters, Tier 3 (v1.1, 2026-10-07)
 
-Status: PLAN, not started. Follows `.planning/discrete-parameters-plan.md` (Tier 1 + 2 shipped, commit c769b22).
+Status: IMPLEMENTED 2026-10-07 (pulled into v1.0 at the owner request; full tests green; not yet seen in the app). Follows `.planning/discrete-parameters-plan.md` (Tier 1 + 2 shipped, commit c769b22).
 
 ## Decision (owner, 2026-10-07)
 

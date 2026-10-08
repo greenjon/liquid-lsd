@@ -27,4 +27,18 @@ object DiscreteTicks {
         param.labels?.getOrNull(index)?.let { return it }
         return ValueFormat.trimmed(param.snap(v))
     }
+
+    /** Entries for a chooser combo (labels, else the step numbers) when [param] has 2..[MAX_TICKS] steps; null otherwise. */
+    fun choices(param: ModulatableParameter): List<String>? {
+        val n = param.steps ?: return null
+        if (n < 2 || n > MAX_TICKS) return null
+        return List(n) { i -> param.labels?.getOrNull(i) ?: ValueFormat.trimmed(stepValue(param, i)) }
+    }
+
+    /** The parameter value of step [index] (clamped to the step range). */
+    fun stepValue(param: ModulatableParameter, index: Int): Float {
+        val n = param.steps?.takeIf { it >= 2 } ?: return param.minClamp
+        val i = index.coerceIn(0, n - 1)
+        return param.minClamp + i * (param.maxClamp - param.minClamp) / (n - 1)
+    }
 }

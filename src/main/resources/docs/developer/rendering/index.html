@@ -1142,6 +1142,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#4-discrete-stepped-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Discrete (stepped) inputs
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1862,6 +1873,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#4-discrete-stepped-inputs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        4. Discrete (stepped) inputs
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2083,6 +2105,11 @@ This is the same domain-folded CSG technique as the old <code>icosa-v3</code> so
 <li><code>ISFParser.buildGLSLFragmentShader</code> automatically injects <code>uniform sampler2D &lt;name&gt;;</code> declarations for all declared imported textures.</li>
 <li><code>ISFTextureLoader</code> decodes image files into OpenGL 2D textures on Thread 0 via STBImage (<code>stbi_load</code>). During execution, pre-resolved texture units are bound with zero allocations per frame on the render thread.</li>
 </ul>
+<h3 id="4-discrete-stepped-inputs">4. Discrete (stepped) inputs</h3>
+<p>A parameter can declare a step set (<code>ModulatableParameter.steps</code> / <code>labels</code>); <code>evaluate()</code> snaps its result to the nearest step while <code>baseValue</code> stays continuous, so knobs, LFOs, audio, macros, MIDI and OSC all land on a valid value.
+- <code>long</code> / <code>int</code> inputs: steps come from <code>VALUES</code> (or the whole-number <code>MIN..MAX</code> span), labels from <code>LABELS</code> when there is one per step. <code>bool</code> has 2 steps.
+- <code>float</code> inputs that are really discrete take the optional Liquid LSD key <code>"STEP"</code> (for example <code>"MIN": 2, "MAX": 24, "STEP": 1</code>). The shader still receives a float uniform; other ISF hosts ignore the key. <code>(MAX-MIN)/STEP</code> must be a whole number, otherwise <code>STEP</code> is ignored and a warning is logged.
+- Integer uniforms are rounded, not truncated, before they reach the shader.</p>
 
 
 
