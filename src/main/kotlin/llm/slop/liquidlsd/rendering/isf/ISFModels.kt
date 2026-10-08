@@ -8,6 +8,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 
+private val logger = mu.KotlinLogging.logger {}
+
 enum class ShaderFormat {
     ISF,
     SHADERTOY,
@@ -25,8 +27,43 @@ data class ISFInput(
     val VALUES: List<JsonElement>? = null,
     val LABELS: List<String>? = null,
     /** Optional ISF-spec "neutral state" value (e.g. blur radius 0.0, opacity 1.0) used by [llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine]'s auto-bind heuristic. */
-    val IDENTITY: JsonElement? = null
-)
+    val IDENTITY: JsonElement? = null,
+    /**
+     * Liquid LSD extension (not in the ISF spec; other ISF hosts ignore it): marks a `float` input as discrete, with values
+     * MIN, MIN+STEP, ... MAX. The shader keeps receiving a float uniform.
+     */
+    val STEP: JsonElement? = null
+) {
+    /**
+     * Number of discrete values for a `long`/`int` input (VALUES count when present, else the whole-number MIN..MAX span),
+     * 2 for `bool`, or `(MAX-MIN)/STEP + 1` for a `float` with a [STEP]; null for continuous inputs or spans that are not whole.
+     */
+    fun discreteSteps(min: Float, max: Float): Int? = when (TYPE.lowercase()) {
+        "bool" -> 2
+        "long", "int" -> {
+            val byValues = VALUES?.size?.takeIf { it >= 2 }
+            val span = max - min
+            val bySpan = if (span >= 1f && span == Math.round(span).toFloat()) Math.round(span) + 1 else null
+            byValues ?: bySpan
+        }
+        "float" -> {
+            val step = (STEP as? JsonPrimitive)?.contentOrNull?.toFloatOrNull()
+            if (step == null) null
+            else {
+                val n = (max - min) / step
+                if (step > 0f && n >= 1f && kotlin.math.abs(n - Math.round(n)) < 1e-3f) Math.round(n) + 1
+                else {
+                    logger.warn { "ISF input '$NAME': STEP $step does not divide MIN..MAX ($min..$max) into whole steps; ignored" }
+                    null
+                }
+            }
+        }
+        else -> null
+    }
+
+    /** LABELS only when there is one per step. */
+    fun labelsFor(steps: Int?): List<String>? = LABELS?.takeIf { steps != null && it.size == steps }
+}
 
 @Serializable
 data class ISFPass(

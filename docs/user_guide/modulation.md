@@ -160,6 +160,10 @@ All outputs are clamped to the parameter's valid range automatically.
 
 Parameters, LFO and sequencer fields, and macro knobs whose range is 0 to 1 (or -1 to 1) display as **0 to 100** (or **-100 to 100**), with a decimal only when the value needs one (`37`, `37.4`). Type either form. Angles stay in degrees, and parameters with their own units (counts, Hz, seconds, BPM) keep them. This is display only: presets, MIDI and OSC still use the underlying 0 to 1 values.
 
+### Stepped parameters
+
+Some parameters are really a list of choices (a mode, a palette, a segment count). Their knobs show a **tick mark for each choice** (none when there are more than 16), and the value always lands exactly on a choice: a knob, LFO, audio source, macro, MIDI or OSC sweep passes through the choices instead of between them. In an FX row's focus mode the knob shows the choice's name when it has one (for example a 3D mode), otherwise its number. Hover a stepped value for the number of choices.
+
 ### Adjusting values without clicking
 
 Hover over any slider or number and scroll the mouse wheel:

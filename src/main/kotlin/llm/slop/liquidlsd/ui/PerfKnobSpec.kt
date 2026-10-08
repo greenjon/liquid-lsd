@@ -46,7 +46,9 @@ internal data class KnobSpec(
     val side: SideButtons,
     /** Drawn inside the knob face (focus mode's parameter values), keeping the strip for the name. */
     val valueOverlay: String? = null,
-    val meterType: MeterType = MeterType.MONOPOLAR
+    val meterType: MeterType = MeterType.MONOPOLAR,
+    /** Step count for a [MeterType.DISCRETE] knob (focus-mode parameter); drives the tick marks. */
+    val steps: Int? = null
 )
 
 /** The slice of an [FxChain]'s state the resolver needs -- a plain value so tests needn't build GL filters. */
@@ -75,7 +77,7 @@ internal object PerfKnobResolver {
             if (binding.linkMode == MacroLinkMode.BIPOLAR) return MeterType.BIPOLAR
             if (mixer != null) {
                 val param = ParameterResolver.findParameterByPath(mixer, binding.parameterId)
-                if (param != null && param.meterType != MeterType.MONOPOLAR) {
+                if (param != null && param.meterType != MeterType.MONOPOLAR && param.meterType != MeterType.DISCRETE) {
                     return param.meterType
                 }
             }
@@ -113,8 +115,10 @@ internal object PerfKnobResolver {
             control = control,
             under = UnderKnob.ParamCell(name, param),
             side = SideButtons.Reset(name, param),
-            valueOverlay = ValueFormat.knob(param.baseValue, param.minClamp, param.maxClamp),
-            meterType = param.meterType
+            valueOverlay = DiscreteTicks.readout(param, param.baseValue)
+                ?: ValueFormat.knob(param.baseValue, param.minClamp, param.maxClamp),
+            meterType = param.meterType,
+            steps = param.steps
         )
     }
 

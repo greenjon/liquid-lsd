@@ -76,7 +76,9 @@ object MacroKnobWidget {
      * For [MeterType.MONOPOLAR] and [MeterType.BIPOLAR], sweeps from -135 deg (value=0, fully counter-clockwise)
      * to +135 deg (value=1, fully clockwise), with 0 deg (straight up) at value=0.5.
      *
-     * For [MeterType.ENDLESS] and [MeterType.DISCRETE], 0 and 1 meet at 6 o'clock (straight down in screen space),
+     * [MeterType.DISCRETE] uses the same sweep as MONOPOLAR (it is a bounded set of choices, not an angle).
+     *
+     * For [MeterType.ENDLESS], 0 and 1 meet at 6 o'clock (straight down in screen space),
      * sweeping a full 360 deg clockwise circle.
      *
      * This is knob-space angle (0 = up); see [toScreenAngle] for the conversion applied when actually drawing.
@@ -84,12 +86,12 @@ object MacroKnobWidget {
     fun valueToAngleRadians(value: Float, meterType: MeterType = MeterType.MONOPOLAR): Float {
         val v = value.coerceIn(0f, 1f)
         return when (meterType) {
-            MeterType.ENDLESS, MeterType.DISCRETE -> {
+            MeterType.ENDLESS -> {
                 // In knob-space (where 0 = up / screen -PI/2):
                 // 6 o'clock straight down is screen +PI/2, which corresponds to knob angle +PI.
                 PI.toFloat() + v * (2f * PI.toFloat())
             }
-            MeterType.MONOPOLAR, MeterType.BIPOLAR -> {
+            MeterType.MONOPOLAR, MeterType.BIPOLAR, MeterType.DISCRETE -> {
                 -SWEEP_RADIANS + v * (2f * SWEEP_RADIANS)
             }
         }
@@ -202,6 +204,8 @@ object MacroKnobWidget {
         label: String,
         value: Float,
         meterType: MeterType = MeterType.MONOPOLAR,
+        /** Step count for a [MeterType.DISCRETE] knob; tick marks are drawn when 2..[DiscreteTicks.MAX_TICKS]. */
+        steps: Int? = null,
         diameter: Float = 56f,
         defaultValue: Float = 0.5f,
         pixelsForFullSweep: Float = 200f,
@@ -364,11 +368,11 @@ object MacroKnobWidget {
         val valAngle = toScreenAngle(valueToAngleRadians(newValue, meterType))
 
         when (meterType) {
-            MeterType.ENDLESS, MeterType.DISCRETE -> {
+            MeterType.ENDLESS -> {
                 // Continuous 360 circle meeting at 6 o'clock
                 dl.addCircle(cx, cy, radius, trackCol, 32, 3f)
             }
-            MeterType.MONOPOLAR -> {
+            MeterType.MONOPOLAR, MeterType.DISCRETE -> {
                 dl.pathArcTo(cx, cy, radius, minAngle, maxAngle, 32)
                 dl.pathStroke(trackCol, 0, 3f)
 
@@ -394,6 +398,13 @@ object MacroKnobWidget {
                     dl.pathArcTo(cx, cy, radius, valAngle, noonAngle, 16)
                     dl.pathStroke(fillCol, 0, 3f)
                 }
+            }
+        }
+
+        if (meterType == MeterType.DISCRETE) {
+            for (a in DiscreteTicks.angles(steps, minAngle, maxAngle)) {
+                dl.addLine(cx + (radius - 2.5f) * cos(a), cy + (radius - 2.5f) * sin(a),
+                    cx + (radius + 2.5f) * cos(a), cy + (radius + 2.5f) * sin(a), fillCol, 2f)
             }
         }
 

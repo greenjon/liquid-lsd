@@ -69,7 +69,8 @@
             "TYPE": "float",
             "DEFAULT": 0.0,
             "MIN": 0.0,
-            "MAX": 1.0
+            "MAX": 1.0,
+            "STEP": 1
         },
         {
             "NAME": "fbKaleido",
@@ -77,7 +78,8 @@
             "TYPE": "float",
             "DEFAULT": 1.0,
             "MIN": 1.0,
-            "MAX": 12.0
+            "MAX": 12.0,
+            "STEP": 1
         }
     ],
     "PASSES": [

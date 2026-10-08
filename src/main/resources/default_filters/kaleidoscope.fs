@@ -14,7 +14,8 @@
             "TYPE": "float",
             "DEFAULT": 6.0,
             "MIN": 2.0,
-            "MAX": 24.0
+            "MAX": 24.0,
+            "STEP": 1
         },
         {
             "NAME": "rotation",

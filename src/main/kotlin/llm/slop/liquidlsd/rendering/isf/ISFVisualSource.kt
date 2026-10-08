@@ -203,7 +203,7 @@ class ISFVisualSource(
 
         class LongInput(val name: String, val param: ModulatableParameter?) : ISFInputBinding() {
             override fun apply(shader: Shader) {
-                shader.setUniform(name, (param?.value ?: 0f).toInt())
+                shader.setUniform(name, Math.round(param?.value ?: 0f))
             }
         }
 
@@ -234,7 +234,7 @@ class ISFVisualSource(
         when (input.TYPE.lowercase()) {
             "float" -> ISFInputBinding.FloatInput(input.NAME, parameters[input.NAME])
             "bool" -> ISFInputBinding.BoolInput(input.NAME, parameters[input.NAME])
-            "long" -> ISFInputBinding.LongInput(input.NAME, parameters[input.NAME])
+            "long", "int" -> ISFInputBinding.LongInput(input.NAME, parameters[input.NAME])
             "color" -> ISFInputBinding.ColorInput(
                 input.NAME,
                 parameters["${input.NAME} R"],
@@ -452,14 +452,20 @@ class ISFVisualSource(
             val params = LinkedHashMap<String, ModulatableParameter>()
             header.INPUTS.forEach { input ->
                 when (input.TYPE.lowercase()) {
-                    "float", "long" -> {
-                        val default = (input.DEFAULT as? JsonPrimitive)?.floatOrNull ?: 0.5f
-                        val min = (input.MIN as? JsonPrimitive)?.floatOrNull ?: 0.0f
-                        val max = (input.MAX as? JsonPrimitive)?.floatOrNull ?: 1.0f
+                    "float", "long", "int" -> {
+                        val isInt = input.TYPE.lowercase() != "float"
+                        val values = input.VALUES?.mapNotNull { (it as? JsonPrimitive)?.floatOrNull }
+                        val default = (input.DEFAULT as? JsonPrimitive)?.floatOrNull ?: if (isInt) (values?.minOrNull() ?: 0f) else 0.5f
+                        val min = (input.MIN as? JsonPrimitive)?.floatOrNull ?: values?.minOrNull() ?: 0.0f
+                        val max = (input.MAX as? JsonPrimitive)?.floatOrNull ?: values?.maxOrNull() ?: 1.0f
+                        val steps = input.discreteSteps(min, max)
                         params[input.NAME] = ModulatableParameter(
                             baseValue = default,
                             minClamp = min,
-                            maxClamp = max
+                            maxClamp = max,
+                            steps = steps,
+                            meterType = ModulatableParameter.defaultMeter(min, steps),
+                            labels = input.labelsFor(steps)
                         )
                     }
                     "bool" -> {
@@ -467,7 +473,8 @@ class ISFVisualSource(
                         params[input.NAME] = ModulatableParameter(
                             baseValue = if (default) 1.0f else 0.0f,
                             minClamp = 0.0f,
-                            maxClamp = 1.0f
+                            maxClamp = 1.0f,
+                            steps = 2
                         )
                     }
                     "color" -> {

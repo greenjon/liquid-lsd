@@ -15,9 +15,9 @@ precision highp float;
         { "NAME": "Swirl", "LABEL": "Swirl", "TYPE": "float", "DEFAULT": 0.33333, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "Viscosity", "LABEL": "Viscosity", "TYPE": "float", "DEFAULT": 0.21053, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Speed", "LABEL": "Speed", "TYPE": "float", "DEFAULT": 0.175, "MIN": -1.0, "MAX": 1.0 },
-        { "NAME": "Detail", "LABEL": "Detail", "TYPE": "float", "DEFAULT": 4.0, "MIN": 1.0, "MAX": 5.0 },
+        { "NAME": "Detail", "LABEL": "Detail", "TYPE": "float", "DEFAULT": 4.0, "MIN": 1.0, "MAX": 5.0, "STEP": 1 },
         { "NAME": "Gloss", "LABEL": "Specular Gloss", "TYPE": "float", "DEFAULT": 0.46667, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "PaletteMode", "LABEL": "Palette Mode", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 4.0 },
+        { "NAME": "PaletteMode", "LABEL": "Palette Mode", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 4.0, "STEP": 1 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "HueCycleSpeed", "LABEL": "Hue Cycle Speed", "TYPE": "float", "DEFAULT": 0.1, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "Zoom", "LABEL": "Zoom", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }

@@ -1,6 +1,6 @@
 # Discrete parameters: snap, label, tick (plan, 2026-10-07)
 
-Status: PLAN, DECIDED 2026-10-07, not started. For a fresh agent to execute. Read `.planning/v1-polish-handoff.md` (working rules: both release-notes
+Status: Tier 1 + Tier 2 IMPLEMENTED 2026-10-07 (all 7 steps; full test suite green; not yet seen in the running app). Tier 3 is v1.1. Notes: source shaders ship from `library/sources/` (the build overlays it on `default_sources`), so edit there and run `./gradlew syncWeb`; left unstepped because the shaders blend them continuously: icosa_h3 SpikeMode, chladni PlateShape/InvertMode/FrequencyM/N/L, gyroid WireframeMode/SurfaceType. Original plan follows. Read `.planning/v1-polish-handoff.md` (working rules: both release-notes
 files, docs, tooltips, `./gradlew test`, then `git checkout -- src/main/resources/docs`; no Claude attribution; commit only when asked).
 
 ## Decisions (owner, 2026-10-07)

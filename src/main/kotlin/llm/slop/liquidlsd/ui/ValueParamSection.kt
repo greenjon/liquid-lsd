@@ -72,7 +72,6 @@ object ValueParamSection {
 
         // Live value text readout
         val is3DMode = paramKey.endsWith("/mode3D") || paramKey.endsWith("/3D Mode")
-        val isBgStyle = paramKey.endsWith("/Background/Style")
         val isHueSweep = paramKey.endsWith("/HueSweep") || paramKey.endsWith("/Color/HueSweep") || paramKey.endsWith("/Hue Sweep")
         val isLobes = paramKey.endsWith("/Geometry/Lobes") || paramKey.endsWith("/Lobes")
         val isRecipeSelect = paramKey.endsWith("/Geometry/Recipe") || paramKey.endsWith("/Recipe Select") || paramKey.endsWith("/Recipe")
@@ -87,14 +86,6 @@ object ValueParamSection {
                 val options = mandala.getSymmetricHueCycles(petals)
                 val idx = if (options.size > 1) (liveVal * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
                 "${options[idx]} cycles"
-            }
-            isBgStyle -> {
-                when (liveVal.roundToInt()) {
-                    0 -> "Off"
-                    1 -> "Solid Color"
-                    2 -> "Plasma"
-                    else -> "Off"
-                }
             }
             isLobes -> "${liveVal.roundToInt()} lobes"
             isRecipeSelect && mandala != null -> {
@@ -414,7 +405,7 @@ object ValueParamSection {
             }
             if (isLocked) ImGui.endDisabled()
 
-            val isSpecialValue = isMaxPoints || isBgStyle || isLobes || isRecipeSelect || isHueSweep || is3DMode
+            val isSpecialValue = isMaxPoints || isLobes || isRecipeSelect || isHueSweep || is3DMode
             val initialScale = if (isSpecialValue) 1f else ValueFormat.scaleFor(param.minClamp, param.maxClamp, param.isAngle)
             val scale = if (param.isAngle) (180f / kotlin.math.PI.toFloat()) else 1f
             val invScale = if (param.isAngle) (kotlin.math.PI.toFloat() / 180f) else 1f
@@ -433,14 +424,6 @@ object ValueParamSection {
                 formatValue = {
                     when {
                         isMaxPoints -> "${it.roundToInt()} pts"
-                        isBgStyle -> {
-                            when (it.roundToInt()) {
-                                0 -> "Off"
-                                1 -> "Solid Color"
-                                2 -> "Plasma"
-                                else -> "Off"
-                            }
-                        }
                         isLobes -> "${it.roundToInt()} lobes"
                         isRecipeSelect -> {
                             if (mandala != null) {
@@ -530,14 +513,6 @@ object ValueParamSection {
             val options = mandala.getSymmetricHueCycles(petals)
             val idx = if (options.size > 1) (param.baseValue * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
             session.uiTheme.caption("Static Initial Value: ${options[idx]} cycles")
-        } else if (isBgStyle) {
-            val label = when (param.baseValue.roundToInt()) {
-                0 -> "Off"
-                1 -> "Solid Color"
-                2 -> "Plasma"
-                else -> "Off"
-            }
-            session.uiTheme.caption("Static Initial Value: $label")
         } else {
             val displayBase = if (param.isAngle) "${"%.1f".format(param.baseValue * 180f / kotlin.math.PI.toFloat())}°" else ValueFormat.format(param.baseValue, ValueFormat.scaleFor(param.minClamp, param.maxClamp))
             session.uiTheme.caption("Static Initial Value: $displayBase")

@@ -22,7 +22,11 @@ class ModulatableParameter(
     randomizeBase: Boolean = false,
     val meterType: MeterType = if (minClamp < 0f) MeterType.BIPOLAR else MeterType.MONOPOLAR,
     val explicitIsAngle: Boolean = false,
-    val isRandomizeDisabled: Boolean = false
+    val isRandomizeDisabled: Boolean = false,
+    /** Number of discrete values spaced evenly over [minClamp]..[maxClamp]; null (or < 2) means continuous. */
+    val steps: Int? = null,
+    /** Optional display names for the steps, index 0 = [minClamp]. */
+    val labels: List<String>? = null
 ) {
     var randomizeBase: Boolean = if (isRandomizeDisabled) false else randomizeBase
         get() = if (isRandomizeDisabled) false else field
@@ -148,6 +152,27 @@ class ModulatableParameter(
         baseValue = if (baseMin == baseMax) baseMin else random.nextFloat() * (baseMax - baseMin) + baseMin
     }
 
+    companion object {
+        /** Meter for a parameter built from ISF data: [MeterType.DISCRETE] when it has a step set, else the usual polarity default. */
+        fun defaultMeter(minClamp: Float, steps: Int?): MeterType = when {
+            steps != null && steps >= 2 -> MeterType.DISCRETE
+            minClamp < 0f -> MeterType.BIPOLAR
+            else -> MeterType.MONOPOLAR
+        }
+    }
+
+    /**
+     * Rounds [v] to the nearest step when this parameter is stepped; otherwise returns it unchanged.
+     */
+    fun snap(v: Float): Float {
+        val n = steps ?: return v
+        if (n < 2) return v
+        val stepSize = (maxClamp - minClamp) / (n - 1)
+        if (stepSize <= 0f) return v
+        val index = Math.round((v - minClamp) / stepSize).coerceIn(0, n - 1)
+        return minClamp + index * stepSize
+    }
+
     /**
      * Calculates the final value by combining the base value with all active modulators.
      * Called once per frame prior to rendering.
@@ -165,7 +190,7 @@ class ModulatableParameter(
         }
 
         if (!hasActive) {
-            value = baseValue.coerceIn(minClamp, maxClamp)
+            value = snap(baseValue.coerceIn(minClamp, maxClamp))
             history.add(value)
             return value
         }
@@ -213,7 +238,7 @@ class ModulatableParameter(
         }
 
         // Clamp the final parameter output to configured clamp range
-        value = result.coerceIn(minClamp, maxClamp)
+        value = snap(result.coerceIn(minClamp, maxClamp))
         history.add(value)
         return value
     }
@@ -238,7 +263,9 @@ class ModulatableParameter(
             maxClamp = this.maxClamp,
             randomizeBase = this.randomizeBase,
             meterType = this.meterType,
-            explicitIsAngle = this.explicitIsAngle
+            explicitIsAngle = this.explicitIsAngle,
+            steps = this.steps,
+            labels = this.labels
         )
         copy.baseMin = this.baseMin
         copy.baseMax = this.baseMax

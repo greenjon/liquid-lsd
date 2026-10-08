@@ -657,6 +657,7 @@ class PerformanceMatrixPanel {
                     label = knobLabel,
                     value = control.value,
                     meterType = spec.meterType,
+                    steps = spec.steps,
                     diameter = diameter,
                     defaultValue = 0.5f,
                     pixelsForFullSweep = 200f,

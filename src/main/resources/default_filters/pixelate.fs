@@ -24,6 +24,7 @@
             "DEFAULT": 0.0,
             "MIN": 0.0,
             "MAX": 2.0,
+            "STEP": 1,
             "IDENTITY": 0.0
         },
         {

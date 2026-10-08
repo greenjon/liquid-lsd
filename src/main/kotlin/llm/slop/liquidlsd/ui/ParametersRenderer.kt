@@ -394,9 +394,6 @@ object ParametersRenderer {
                 }
                 metaOwner != null ->
                     "Locked: Driven by its $metaOwner link.\nDisable the Metaknob link (right-click the Metaknob) to edit it by hand."
-
-                paramKey.endsWith("/Max Points") ->
-                    "Base parameter value (non-modulatable).\nClick to configure in VAL panel. Middle-click to reset."
                 param.modulators.isNotEmpty() -> {
                     val allBypassed = param.modulators.all { it.bypassed }
                     val action = if (allBypassed) "unmute" else "mute"
@@ -407,7 +404,9 @@ object ParametersRenderer {
                 else ->
                     "Base parameter value.\nClick to configure bounds and default values. Middle-click to reset."
             }
-            showTooltip(tipText, (valX.toInt() shl 16) xor (valY.toInt() and 0xFFFF))
+            val stepsNote = param.steps?.takeIf { !isMacroLearning && !isMacroBound && metaOwner == null }
+                ?.let { "\n\nStepped: $it choices. Modulation snaps to the nearest one." } ?: ""
+            showTooltip(tipText + stepsNote, (valX.toInt() shl 16) xor (valY.toInt() and 0xFFFF))
         }
 
         val isOscLearningThis = OscLearnState.isTargetLearning(paramKey)
@@ -435,7 +434,7 @@ object ParametersRenderer {
             session = session,
             dl = dl, x = valX, y = valY, r = r,
             value = param.value, min = param.minClamp, max = param.maxClamp,
-            meterType = param.meterType,
+            meterType = param.meterType, steps = param.steps,
             baseValue = param.baseValue,
             baseMin = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMin else null,
             baseMax = if (session.uiTheme.randomizationEnabled && param.randomizeBase) param.baseMax else null,
@@ -448,7 +447,7 @@ object ParametersRenderer {
     /**
      * Outer ring showing where macro knobs drive [param]'s base value: the selected knob's min→max
      * travel in bright cyan with a live dot, other knobs of the selected knob's bank dimmed.
-     * Skipped for wrap-around (ENDLESS/DISCRETE) meters.
+     * Skipped for wrap-around (ENDLESS) meters.
      */
     private fun drawMacroRangeArcs(
         dl: ImDrawList, x: Float, y: Float, r: Float,
@@ -456,7 +455,7 @@ object ParametersRenderer {
         paramKey: String
     ) {
         val type = param.meterType
-        if (type == llm.slop.liquidlsd.parameters.MeterType.ENDLESS || type == llm.slop.liquidlsd.parameters.MeterType.DISCRETE) return
+        if (type == llm.slop.liquidlsd.parameters.MeterType.ENDLESS) return
         val selectedId = llm.slop.liquidlsd.macro.MacroLearnState.selectedControlId ?: return
         val infos = llm.slop.liquidlsd.macro.MacroEngine.baseBindingInfos(paramKey)
         if (infos.isEmpty()) return
@@ -601,7 +600,7 @@ object ParametersRenderer {
                 session = session,
                 dl = dl, x = midiX, y = midiY, r = r,
                 value = displayValue, min = param.minClamp, max = param.maxClamp,
-                meterType = param.meterType,
+                meterType = param.meterType, steps = param.steps,
                 baseValue = null, baseMin = null, baseMax = null,
                 color = cellColor,
                 bgCol = bgCol, borderCol = borderCol,
@@ -761,7 +760,7 @@ object ParametersRenderer {
                 session = session,
                 dl = dl, x = x, y = y, r = r,
                 value = displayValue, min = param.minClamp, max = param.maxClamp,
-                meterType = param.meterType,
+                meterType = param.meterType, steps = param.steps,
                 baseValue = null, baseMin = null, baseMax = null,
                 color = cellColor,
                 bgCol = bgCol, borderCol = borderCol,
@@ -792,7 +791,8 @@ object ParametersRenderer {
         bgCol: Int,
         borderCol: Int,
         isBypassed: Boolean = false,
-        isHovered: Boolean = false
+        isHovered: Boolean = false,
+        steps: Int? = null
     ) {
         val cx = x + r
         val cy = y + r
@@ -839,7 +839,7 @@ object ParametersRenderer {
         val normalized = if (range == 0f) 0.5f else ((value - min) / range).coerceIn(0f, 1f)
 
         when (meterType) {
-            llm.slop.liquidlsd.parameters.MeterType.ENDLESS, llm.slop.liquidlsd.parameters.MeterType.DISCRETE -> {
+            llm.slop.liquidlsd.parameters.MeterType.ENDLESS -> {
                 dl.addCircle(cx, cy, trackRadius, trackCol, 32, strokeWidth)
                 val angle = (PI / 2.0) + normalized * 2.0 * PI
                 val cosA = cos(angle).toFloat()
@@ -862,7 +862,7 @@ object ParametersRenderer {
                     dl.addLine(bInnerX, bInnerY, bOuterX, bOuterY, baseTickCol, baseTickStrokeWidth)
                 }
             }
-            llm.slop.liquidlsd.parameters.MeterType.MONOPOLAR -> {
+            llm.slop.liquidlsd.parameters.MeterType.MONOPOLAR, llm.slop.liquidlsd.parameters.MeterType.DISCRETE -> {
                 dl.pathArcTo(cx, cy, trackRadius, aMin, aMax, 32)
                 dl.pathStroke(trackCol, 0, strokeWidth)
 
@@ -951,6 +951,14 @@ object ParametersRenderer {
                         dl.pathStroke(rangeCol, 0, (2f * scaleFactor).coerceIn(1f, 4f))
                     }
                 }
+            }
+        }
+
+        if (meterType == llm.slop.liquidlsd.parameters.MeterType.DISCRETE) {
+            val tickIn = trackRadius - 2f * scaleFactor
+            val tickOut = trackRadius + 2f * scaleFactor
+            for (a in DiscreteTicks.angles(steps, aMin, aMax)) {
+                dl.addLine(cx + tickIn * cos(a), cy + tickIn * sin(a), cx + tickOut * cos(a), cy + tickOut * sin(a), trackCol, strokeWidth)
             }
         }
 

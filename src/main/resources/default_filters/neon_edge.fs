@@ -42,6 +42,7 @@
             "DEFAULT": 0.0,
             "MIN": 0.0,
             "MAX": 3.0,
+            "STEP": 1,
             "IDENTITY": 0.0
         },
         {

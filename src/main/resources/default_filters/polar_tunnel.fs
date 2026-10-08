@@ -60,6 +60,7 @@
             "DEFAULT": 1.0,
             "MIN": 1.0,
             "MAX": 8.0,
+            "STEP": 1,
             "IDENTITY": 1.0
         },
         {

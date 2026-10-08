@@ -11,7 +11,7 @@ precision highp float;
         "Liquid"
     ],
     "INPUTS": [
-        { "NAME": "MaxPoints", "LABEL": "Max Points", "TYPE": "float", "DEFAULT": 500.0, "MIN": 100.0, "MAX": 2000.0 },
+        { "NAME": "MaxPoints", "LABEL": "Max Points", "TYPE": "float", "DEFAULT": 500.0, "MIN": 100.0, "MAX": 2000.0, "STEP": 50 },
         { "NAME": "Scale", "LABEL": "Scale", "TYPE": "float", "DEFAULT": 0.47368, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Damping", "LABEL": "Damping", "TYPE": "float", "DEFAULT": 0.1984, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "WaveFreq", "LABEL": "Wave Freq", "TYPE": "float", "DEFAULT": 0.19192, "MIN": 0.0, "MAX": 1.0 },

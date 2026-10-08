@@ -223,3 +223,9 @@ Shaders are classified dynamically by parsing their ISF JSON header and inspecti
 - `ISFTextureLoader` decodes image files into OpenGL 2D textures on Thread 0 via STBImage (`stbi_load`). During execution, pre-resolved texture units are bound with zero allocations per frame on the render thread.
 
 
+
+### 4. Discrete (stepped) inputs
+A parameter can declare a step set (`ModulatableParameter.steps` / `labels`); `evaluate()` snaps its result to the nearest step while `baseValue` stays continuous, so knobs, LFOs, audio, macros, MIDI and OSC all land on a valid value.
+- `long` / `int` inputs: steps come from `VALUES` (or the whole-number `MIN..MAX` span), labels from `LABELS` when there is one per step. `bool` has 2 steps.
+- `float` inputs that are really discrete take the optional Liquid LSD key `"STEP"` (for example `"MIN": 2, "MAX": 24, "STEP": 1`). The shader still receives a float uniform; other ISF hosts ignore the key. `(MAX-MIN)/STEP` must be a whole number, otherwise `STEP` is ignored and a warning is logged.
+- Integer uniforms are rounded, not truncated, before they reach the shader.

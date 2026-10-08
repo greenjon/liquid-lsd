@@ -282,11 +282,15 @@ class ISFFilter(
             val maxVal = input.MAX?.toString()?.toFloatOrNull()
                 ?: valuesFloat?.maxOrNull()
                 ?: 1.0f
-            
+
+            val steps = input.discreteSteps(minVal, maxVal)
             parameters[input.NAME] = ModulatableParameter(
                 baseValue = defaultVal,
                 minClamp = minVal,
-                maxClamp = maxVal
+                maxClamp = maxVal,
+                steps = steps,
+                meterType = ModulatableParameter.defaultMeter(minVal, steps),
+                labels = input.labelsFor(steps)
             )
         }
 
@@ -370,7 +374,7 @@ class ISFFilter(
             val binding = filterParamBindings[i]
             when (binding.type) {
                 "float" -> shader.setUniform(binding.name, binding.param.value)
-                "long", "int" -> shader.setUniform(binding.name, binding.param.value.toInt())
+                "long", "int" -> shader.setUniform(binding.name, Math.round(binding.param.value))
                 "bool" -> shader.setUniform(binding.name, if (binding.param.value > 0.5f) 1 else 0)
                 "point2d" -> shader.setUniform(binding.name, binding.param.value, 0f) 
                 "color" -> shader.setUniform(binding.name, binding.param.value, binding.param.value, binding.param.value, 1.0f) 
@@ -514,7 +518,7 @@ class ISFFilter(
             val binding = transitionParamBindings[i]
             when (binding.type) {
                 "float" -> shader.setUniform(binding.name, binding.param.value)
-                "long", "int" -> shader.setUniform(binding.name, binding.param.value.toInt())
+                "long", "int" -> shader.setUniform(binding.name, Math.round(binding.param.value))
                 "bool" -> shader.setUniform(binding.name, if (binding.param.value > 0.5f) 1 else 0)
                 "point2d" -> shader.setUniform(binding.name, binding.param.value, 0f) 
                 "color" -> shader.setUniform(binding.name, binding.param.value, binding.param.value, binding.param.value, 1.0f) 

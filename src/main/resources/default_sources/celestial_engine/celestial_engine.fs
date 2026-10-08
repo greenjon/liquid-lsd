@@ -9,7 +9,7 @@
         "Optical"
     ],
     "INPUTS": [
-        { "NAME": "Symmetries", "LABEL": "Symmetries", "TYPE": "float", "DEFAULT": 6.0, "MIN": 3.0, "MAX": 24.0 },
+        { "NAME": "Symmetries", "LABEL": "Symmetries", "TYPE": "float", "DEFAULT": 6.0, "MIN": 3.0, "MAX": 24.0, "STEP": 1 },
         { "NAME": "RingDensity", "LABEL": "Ring Density", "TYPE": "float", "DEFAULT": 0.26316, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "PhaseTwist", "LABEL": "Phase Twist", "TYPE": "float", "DEFAULT": 0.25, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "MoireStrength", "LABEL": "Moiré Strength", "TYPE": "float", "DEFAULT": 0.6, "MIN": 0.0, "MAX": 1.0 },
@@ -18,7 +18,7 @@
         { "NAME": "Speed", "LABEL": "Speed", "TYPE": "float", "DEFAULT": 0.15, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "LineWidth", "LABEL": "Line Width", "TYPE": "float", "DEFAULT": 0.31579, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 0.34211, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "ColorMode", "LABEL": "Color Mode", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0 },
+        { "NAME": "ColorMode", "LABEL": "Color Mode", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "HueSweep", "LABEL": "Hue Sweep", "TYPE": "float", "DEFAULT": 0.25, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Scale", "LABEL": "Scale", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }
