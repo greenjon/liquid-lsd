@@ -78,6 +78,16 @@ function check(name, list, tags) {
   const finite = values(list);
   assert.ok(finite.every(Number.isFinite), `${name}: non-finite value at silence`);
 
+  if (tags.includes('ambient')) {
+    // Ambient presets stay calm: no kick/hat flux followers and no LFO faster than 8 beats.
+    for (const t of list) {
+      const mods = typeof t.dto === 'number' ? [] : t.dto.modulators ?? [];
+      for (const m of mods) {
+        assert.ok(!String(m.sourceId).startsWith('audio_flux'), `${name}: ambient but ${t.label} uses ${m.sourceId}`);
+        if (m.sourceId === 'lfo') assert.ok(m.genUnit !== 'BEAT' || m.subdivision >= 8, `${name}: ambient but ${t.label} has a ${m.subdivision}-beat LFO`);
+      }
+    }
+  }
   if (tags.includes('beat')) {
     const m = moved(list, sweepBeats(list, 0, 1, 1 / 16));
     assert.ok(m.length, `${name}: tagged beat but nothing moves within one beat`);

@@ -333,6 +333,90 @@ preset("web-mandala-heart", "mandala", {
 }, ["beat", "bar", "bass", "kick", "bass-gated"],
     "Bold four-lobed shape with heavy lines; arms thump on kicks and a fourth arm opens on loud bass.")
 
+
+# ---------------------------------------------------------------- batch 3: energy tiers
+# ambient: only slow LFOs (>= 8 beats) and amp/mid followers, no gates or flux; groove: beat + mid + bass;
+# hard: kick/hat flux, gates, sub-beat pulses. reactivity.test.mjs enforces the ambient rules.
+preset("web-ambient-cymatics", "chladni_cymatics", {
+    "FrequencyM": (4, lfo(64, 0.12)), "FrequencyN": (6, lfo(48, 0.12)), "FrequencyL": 3,
+    "PlateShape": (0.5, lfo(64, 0.3)), "NodeSharpness": 0.2, "SandAccumulation": 0.6,
+    "VibrationSpeed": (0.08, amp(0.2, 200, 1500)), "InvertMode": 0.0, "Glow": (0.35, amp(0.2, 200, 1500)),
+    "PaletteMode": 1.0, "HueOffset": (0.0, lfo(96, 1.0)), "Scale": 0.5,
+}, ["ambient", "bar", "amp"],
+    "A slowly morphing plate in soft colour; modes drift over 8-16 bars and loudness barely moves the glow.")
+
+preset("web-ambient-nebula", "celestial_engine", {
+    "Symmetries": 8, "RingDensity": (0.35, lfo(32, 0.15)), "PhaseTwist": (0.15, lfo(48, 0.4)),
+    "MoireStrength": (0.3, mid(0.25, 200, 1200)), "FlowerFold": (0.6, lfo(64, 0.2)), "PulseWave": 0.0,
+    "Speed": (0.06, amp(0.1, 200, 1500)), "LineWidth": 0.15, "Glow": (0.45, amp(0.15, 200, 1500)),
+    "ColorMode": 3.0, "HueOffset": (0.0, lfo(96, 1.0)), "HueSweep": 0.5, "Scale": 0.55,
+}, ["ambient", "bar", "mid", "amp"],
+    "A slow eight-fold bloom of thin lines; the glow breathes with the overall level, hue turns over 24 bars.")
+
+preset("web-ambient-tides", "domain_warp_fluid", {
+    "WarpStrength": (0.45, lfo(32, 0.2)), "Swirl": (0.2, lfo(48, 0.4)), "Viscosity": 0.5, "Speed": (0.05, amp(0.1, 200, 1500)),
+    "Detail": 3, "Gloss": (0.2, lfo(24, 0.1)), "PaletteMode": 4.0, "HueOffset": (0.0, lfo(96, 1.0)),
+    "HueCycleSpeed": 0.03, "Zoom": (0.4, lfo(64, 0.1)),
+}, ["ambient", "bar", "amp"],
+    "Slow rolling marble; swirl and warp ebb over eight to twelve bars. A good background.")
+
+preset("web-ambient-crystal", "icosa_h3", {
+    "Morph": (0.2, lfo(48, 0.3)), "StellationBoost": 0.0, "SpikeMode": 0.0, "SpikePhase": (0.0, lfo(64, 1.0)),
+    "SpikeSharpness": 0.5, "BlockerSize": 0.4, "ColorMode": 3.0, "HueOffset": (0.0, lfo(96, 1.0)),
+    "Saturation": 0.7, "Brightness": 0.7, "Opacity": 0.6, "EdgeThickness": 0.1, "EdgeBrightness": 0.4,
+    "RimGlow": (0.4, amp(0.2, 200, 1500)), "Zoom": 0.7, "RotateX": (0.0, lfo(96, 1.0)), "RotateY": (0.0, lfo(64, 1.0)),
+}, ["ambient", "bar", "amp"],
+    "A translucent crystal turning over 16 bars in muted colour; the rim glow follows the loudness.")
+
+preset("web-groove-mandala", "mandala", {
+    "Lobes": 9, "Recipe Select": (0.45, lfo(16, 0.2, wave="SQUARE")),
+    "L1": 0.45, "L2": (0.3, lfo(4, 0.25)), "L3": (0.25, mid(0.3)), "L4": (0.1, pulse(2, 0.15)),
+    "Thickness": (0.4, bass(0.3)), "Hue Offset": (0.3, lfo(32, 1.0)), "Hue Sweep": 0.5,
+    "Depth": (0.45, pulse(1, 0.2)),
+}, ["groove", "beat", "bar", "bass", "mid"],
+    "Nine lobes that sway every four beats, thicken with the bass and pulse softly on each beat.")
+
+preset("web-groove-prism", "hyper_slice", {
+    "SliceOffset": (0.0, lfo(12, 0.4, wave="TRIANGLE")), "RotateXW": (0.0, lfo(6, 0.6)), "RotateYW": (0.2, lfo(8, 0.4)),
+    "RotateZW": 0.0, "Morph": (0.4, bass(0.35)), "SupportH": 0.45, "ColorMethod": 2.0,
+    "HueOffset": (0.3, lfo(24, 1.0)), "Saturation": 0.85, "Brightness": (0.4, pulse(1, 0.1)), "Opacity": 0.6,
+    "EdgeThickness": 0.1, "EdgeBrightness": (0.25, pulse(1, 0.15)), "Glow": 0.08, "Zoom": (0.5, mid(0.1)),
+}, ["groove", "beat", "bar", "bass", "mid"],
+    "A 4D shape that sways to the beat; the bass morphs it and the edges tick on every beat.")
+
+preset("web-groove-spiral", "dynamic_spiral", {
+    "MaxPoints": 900, "Scale": (0.38, pulse(2, 0.08)), "Damping": 0.3, "WaveFreq": 0.25,
+    "WaveAmp": (0.1, mid(0.25)), "Shear": (0.3, lfo(8, 0.4)), "Speed": (0.35, lfo(32, 0.4)),
+    "DotSize": (0.3, kick(0.12, 220)), "Glow": 0.5, "HueOffset": (0.1, lfo(24, 1.0)),
+    "HueSweep": 0.2, "TrailDecay": 0.84,
+}, ["groove", "beat", "bar", "mid", "kick"],
+    "A mid-density spiral that shears every eight beats, swells on kicks and ripples with the mids.")
+
+preset("web-hard-cymatics", "chladni_cymatics", {
+    "FrequencyM": (5, kick(0.6, 120)), "FrequencyN": (5, lfo(4, 0.25, wave="SQUARE")), "FrequencyL": 2,
+    "PlateShape": (0.0, lfo(8, 0.5, wave="SQUARE")), "NodeSharpness": (0.6, hat(0.3)), "SandAccumulation": 0.8,
+    "VibrationSpeed": (0.25, bass(0.5)), "InvertMode": (0.0, gate("audio_bass", 0.6, 1.0, 5, 120)),
+    "Glow": (0.4, kick(0.5, 150)), "PaletteMode": 3.0, "HueOffset": (0.0, lfo(8, 1.0)), "Scale": 0.5,
+}, ["hard", "beat", "bar", "bass", "kick", "high", "bass-gated"],
+    "The plate snaps between shapes every two beats, flashes on kicks, and inverts on loud bass.")
+
+preset("web-hard-celestial", "celestial_engine", {
+    "Symmetries": (8, lfo(4, 0.3, wave="SQUARE")), "RingDensity": (0.4, kick(0.3, 150)),
+    "PhaseTwist": (0.3, lfo(4, 0.6)), "MoireStrength": (0.4, hat(0.5, 100)),
+    "FlowerFold": (0.4, lfo(8, 0.3)), "PulseWave": (0.0, gate("audio_bass", 0.5, 1.2, 5, 120)),
+    "Speed": (0.3, bass(0.5)), "LineWidth": (0.3, kick(0.4, 150)), "Glow": (0.4, pulse(0.5, 0.25)),
+    "ColorMode": 1.0, "HueOffset": (0.0, lfo(8, 1.0)), "HueSweep": 0.4, "Scale": (0.5, pulse(1, 0.12)),
+}, ["hard", "beat", "bass", "kick", "high", "bass-gated"],
+    "Symmetry jumps every two beats, rings and lines kick, shimmer on hats and a pulse wave on bass hits.")
+
+preset("web-hard-mandala", "mandala", {
+    "Lobes": (8, lfo(2, 0.25, wave="SQUARE")), "Recipe Select": (0.2, lfo(8, 0.3, wave="SQUARE")),
+    "L1": 0.5, "L2": (0.3, kick(0.4, 150)), "L3": (0.3, hat(0.3)), "L4": (0.0, gate("audio_bass", 0.5, 1.0, 5, 120)),
+    "Thickness": (0.35, kick(0.4, 150)), "Hue Offset": (0.0, lfo(8, 1.0)), "Hue Sweep": 1.0,
+    "Depth": (0.5, pulse(0.5, 0.3)),
+}, ["hard", "beat", "bass", "kick", "high", "bass-gated"],
+    "Lobe count flips every beat, lines punch on kicks, arms flicker on hats and a fourth arm slams in on bass.")
+
 # batch 2 chains
 chain("web-tunnel", ["tunnel", "beat", "bass"],
       slot("polar_tunnel", {"depth": (0.18, bass(0.3)), "twist": (0.0, lfo(32, 0.5)), "centerX": 0.5, "centerY": 0.5,
