@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 // Everything in the web catalog: sources, FX filters, transitions.
 const catalog = JSON.parse(fs.readFileSync(path.join(root, 'web', 'catalog.json'), 'utf8'));
-const list = Object.values(catalog).flat().map((e) => `web/${e.file}`);
+const list = [catalog.sources, catalog.filters, catalog.transitions].flat().map((e) => `web/${e.file}`);
 
 let resolveReport;
 const reported = new Promise((r) => { resolveReport = r; });

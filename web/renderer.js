@@ -1,9 +1,10 @@
 import { cvState, tick } from './dsp.js';
 import { powerState } from './ui.js';
-import { autopilotState, tickAutopilot, startAutopilot, handleRelayMessage } from './autopilot.js';
+import { autopilotState, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground } from './autopilot.js';
 import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
 import { lookupParam } from './isf.js';
 import { Library, DeckPipeline, MixerPipeline } from './graph.js';
+import { MandalaRecipes } from './mandala.js';
 
 async function loadText(url) {
   const res = await fetch(url);
@@ -81,7 +82,8 @@ async function init() {
     mandalaFragSrc,
     mixerFragSrc,
     crtFragSrc,
-    catalog
+    catalog,
+    mandalaTable
   ] = await Promise.all([
     loadText('shaders/blit.vert'),
     loadText('shaders/blit.frag'),
@@ -89,7 +91,8 @@ async function init() {
     loadText('shaders/mandala.frag'),
     loadText('shaders/mixer.frag'),
     loadText('shaders/crt_post.frag'),
-    loadText('catalog.json').then(JSON.parse)
+    loadText('catalog.json').then(JSON.parse),
+    loadText('mandala_recipes.json').then(JSON.parse)
   ]);
 
   const mandalaProgram = createProgram(gl, mandalaVertSrc, mandalaFragSrc);
@@ -164,25 +167,21 @@ async function init() {
 
   const evalCtx = makeEvalContext();
   function updateEvalContext() {
-    // Live broadcast: extrapolate the desktop's beat clock from its last message. Otherwise
-    // free-run at the estimated tempo (phase 4 makes that phase-locked).
-    const clock = autopilotState.isLiveBroadcast ? autopilotState.clock : null;
-    const bpm = clock ? clock.bpm : cvState.bpm;
-    const beats = clock
-      ? clock.beats + ((performance.now() - clock.at) / 1000) * (clock.bpm / 60.0)
-      : cvState.bpm * (elapsedTime / 60.0);
+    // Live broadcast: the desktop's beat clock (phase-locked flywheel). Standalone: the web's own
+    // beat detector (dsp.js) integrates tempo into total beats, so a tempo change never jumps the phase.
+    const live = autopilotState.isLiveBroadcast && autopilotState.clock.valid;
+    const bpm = live ? autopilotState.clock.bpm : cvState.bpm;
+    const beats = live ? autopilotState.clock.read(performance.now()) : cvState.totalBeats;
     evalCtx.time = elapsedTime;
     evalCtx.beats = beats;
     evalCtx.frame = frameCount;
     evalCtx.dt = frameDt;
     evalCtx.bpm = bpm;
-    // audio_flux_* is the bass-only onset trigger until phase 4 adds per-band flux
-    const onset = cvState.trigger_onset;
     evalCtx.cv = {
       audio_amp: cvState.audio_amp, audio_bass: cvState.audio_bass,
       audio_mid: cvState.audio_mid, audio_high: cvState.audio_high,
-      audio_flux_amp: cvState.audio_flux_amp ?? onset, audio_flux_bass: cvState.audio_flux_bass ?? onset,
-      audio_flux_mid: cvState.audio_flux_mid ?? onset, audio_flux_high: cvState.audio_flux_high ?? onset,
+      audio_flux_amp: cvState.audio_flux_amp, audio_flux_bass: cvState.audio_flux_bass,
+      audio_flux_mid: cvState.audio_flux_mid, audio_flux_high: cvState.audio_flux_high,
       beatSine: Math.sin(beats * 2 * Math.PI), bpm,
     };
   }
@@ -222,7 +221,7 @@ async function init() {
   const pipeBG = new DeckPipeline(ctx, curWidth, curHeight);
   const mixerPipe = new MixerPipeline(ctx, curWidth, curHeight);
 
-  window.LSD = { cvState, autopilotState, powerState, library: ctx.library, handleRelayMessage };
+  window.LSD = { cvState, autopilotState, powerState, library: ctx.library, handleRelayMessage, advanceForeground };
 
   function frameInfo() {
     return { time: elapsedTime, dt: frameDt, index: frameCount };
@@ -243,56 +242,36 @@ async function init() {
     return pipe.renderFx(deckData, frameInfo());
   }
 
+  // Clamp ranges of Mandala's parameters (library/sources/mandala/meta.json); ADD modulation
+  // scales by the range, so the evaluator needs them.
+  const MANDALA_SPECS = {
+    Lobes: { min: 3, max: 26, steps: null },
+  };
+  const UNIT_SPEC = { min: 0, max: 1, steps: null };
+  const mandalaRecipes = new MandalaRecipes(mandalaTable);
+
   function renderMandala(deckData, target) {
     target.bind();
     gl.disable(gl.BLEND);
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    const locs = mandalaLocs;
     gl.useProgram(mandalaProgram);
     gl.bindVertexArray(mandalaVAO);
-    const m = deckData.mandala;
-    if (m) {
-      // Live broadcast: the desktop sends the shader-ready uniforms (recipe, normalised arms).
-      for (const name of ['uL1', 'uL2', 'uL3', 'uL4', 'uA', 'uB', 'uC', 'uD',
-        'uThickness', 'uHueOffset', 'uHueSweep', 'uDepth', 'uMaxR']) {
-        gl.uniform1f(locs[name], m[name] ?? 0);
-      }
-      gl.uniform1f(locs.uAspectRatio, curWidth / curHeight);
-      gl.uniform1f(locs.uZoom,        evalP(deckData.viewZoom, 1.0));
-      gl.uniform1f(locs.uRotateZ,     evalP(deckData.viewRotateZ, 0.0));
-      gl.uniform1f(locs.uAlpha,       evalP(deckData.globalAlpha, 1.0));
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, MANDALA_POINTS * 2);
-      return;
+    // Live broadcast: the desktop sends the shader-ready uniforms. Autopilot: derive them from
+    // the preset's parameters exactly as Mandala.kt does (recipe table, normalised arms).
+    const bag = deckData.params ?? {};
+    const m = deckData.mandala
+      ?? mandalaRecipes.uniforms((name, fallback) => evalP(bag[name], fallback, MANDALA_SPECS[name] ?? UNIT_SPEC));
+    const locs = mandalaLocs;
+    for (const name of ['uL1', 'uL2', 'uL3', 'uL4', 'uA', 'uB', 'uC', 'uD',
+      'uThickness', 'uHueOffset', 'uHueSweep', 'uDepth', 'uMaxR']) {
+      gl.uniform1f(locs[name], m[name] ?? 0);
     }
-    const rawL1 = evalP(deckData.L1 ?? deckData.l1, 0.4);
-    const rawL2 = evalP(deckData.L2 ?? deckData.l2, 0.3);
-    const rawL3 = evalP(deckData.L3 ?? deckData.l3, 0.2);
-    const rawL4 = evalP(deckData.L4 ?? deckData.l4, 0.1);
-    const sumL = Math.abs(rawL1) + Math.abs(rawL2) + Math.abs(rawL3) + Math.abs(rawL4);
-    const targetRadius = 2.0;
-    const normScale = sumL > 1e-5 ? (targetRadius / sumL) : 0.0;
-
-    gl.uniform1f(locs.uL1, rawL1 * normScale);
-    gl.uniform1f(locs.uL2, rawL2 * normScale);
-    gl.uniform1f(locs.uL3, rawL3 * normScale);
-    gl.uniform1f(locs.uL4, rawL4 * normScale);
-    gl.uniform1f(locs.uA,  evalP(deckData.A ?? deckData.a ?? deckData.recipe?.a, 3.0));
-    gl.uniform1f(locs.uB,  evalP(deckData.B ?? deckData.b ?? deckData.recipe?.b, 4.0));
-    gl.uniform1f(locs.uC,  evalP(deckData.C ?? deckData.c ?? deckData.recipe?.c, 5.0));
-    gl.uniform1f(locs.uD,  evalP(deckData.D ?? deckData.d ?? deckData.recipe?.d, 7.0));
-
-    gl.uniform1f(locs.uMaxR, sumL > 1e-5 ? targetRadius : 0.001);
-    gl.uniform1f(locs.uThickness,      evalP(deckData.Thickness ?? deckData.thickness, 0.012));
-    gl.uniform1f(locs.uAspectRatio,    curWidth / curHeight);
-    gl.uniform1f(locs.uZoom,           evalP(deckData.viewZoom, 1.0));
-    gl.uniform1f(locs.uRotateZ,        evalP(deckData.viewRotateZ, 0.0));
-    gl.uniform1f(locs.uHueOffset,      evalP(deckData['Hue Offset'] ?? deckData.hueOffset, 0.0));
-    gl.uniform1f(locs.uHueSweep,       evalP(deckData['Hue Sweep'] ?? deckData.hueSweep, 0.3));
-    gl.uniform1f(locs.uAlpha,          1.0);
-    gl.uniform1f(locs.uDepth,          evalP(deckData.Depth ?? deckData.depth, 0.35));
-
+    gl.uniform1f(locs.uAspectRatio, curWidth / curHeight);
+    gl.uniform1f(locs.uZoom,        evalP(deckData.viewZoom, 1.0));
+    gl.uniform1f(locs.uRotateZ,     evalP(deckData.viewRotateZ, 0.0));
+    gl.uniform1f(locs.uAlpha,       evalP(deckData.globalAlpha, 1.0));
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, MANDALA_POINTS * 2);
   }
 

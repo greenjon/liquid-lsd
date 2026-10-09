@@ -214,5 +214,144 @@
       "file": "shaders/transitions/vortex_swirl.fs",
       "name": "Vortex Swirl"
     }
+  ],
+  "fxChains": [
+    {
+      "id": "2d_to_3d_elevation_with_feedback",
+      "file": "content/fxchains/2d_to_3d_elevation_with_feedback.lsdfxchain",
+      "name": "2D to 3D Elevation with Feedback"
+    },
+    {
+      "id": "cosmic_black_hole_vortex",
+      "file": "content/fxchains/cosmic_black_hole_vortex.lsdfxchain",
+      "name": "Cosmic Black Hole Vortex"
+    },
+    {
+      "id": "cyberpunk_1984",
+      "file": "content/fxchains/cyberpunk_1984.lsdfxchain",
+      "name": "Cyberpunk 1984"
+    },
+    {
+      "id": "digital_bitcrush_mosaic",
+      "file": "content/fxchains/digital_bitcrush_mosaic.lsdfxchain",
+      "name": "Digital Bitcrush Mosaic"
+    },
+    {
+      "id": "flir_predator_vision",
+      "file": "content/fxchains/flir_predator_vision.lsdfxchain",
+      "name": "FLIR Predator Vision"
+    },
+    {
+      "id": "grindhouse_vhs_bootleg",
+      "file": "content/fxchains/grindhouse_vhs_bootleg.lsdfxchain",
+      "name": "Grindhouse VHS Bootleg"
+    },
+    {
+      "id": "hyperspace_trip",
+      "file": "content/fxchains/hyperspace_trip.lsdfxchain",
+      "name": "Hyperspace Trip"
+    },
+    {
+      "id": "laser_concert_anamorphic",
+      "file": "content/fxchains/laser_concert_anamorphic.lsdfxchain",
+      "name": "Laser Concert Anamorphic"
+    },
+    {
+      "id": "liquid_chrome_dimension",
+      "file": "content/fxchains/liquid_chrome_dimension.lsdfxchain",
+      "name": "Liquid Chrome Dimension"
+    },
+    {
+      "id": "liquid_mercury",
+      "file": "content/fxchains/liquid_mercury.lsdfxchain",
+      "name": "Liquid Mercury"
+    },
+    {
+      "id": "neon_wireframe",
+      "file": "content/fxchains/neon_wireframe.lsdfxchain",
+      "name": "Neon Wireframe"
+    },
+    {
+      "id": "pop_art_comic_print",
+      "file": "content/fxchains/pop_art_comic_print.lsdfxchain",
+      "name": "Pop-Art Comic Print"
+    },
+    {
+      "id": "prismatic_crystal_kaleidoscope",
+      "file": "content/fxchains/prismatic_crystal_kaleidoscope.lsdfxchain",
+      "name": "Prismatic Crystal Kaleidoscope"
+    },
+    {
+      "id": "subtle_optical_warmth",
+      "file": "content/fxchains/subtle_optical_warmth.lsdfxchain",
+      "name": "Subtle Optical Warmth"
+    },
+    {
+      "id": "the_drop_weapon",
+      "file": "content/fxchains/the_drop_weapon.lsdfxchain",
+      "name": "The Drop Weapon"
+    },
+    {
+      "id": "web-trails",
+      "file": "fxchains/web-trails.lsdfxchain",
+      "name": "web-trails"
+    },
+    {
+      "id": "web-trails-chroma",
+      "file": "fxchains/web-trails-chroma.lsdfxchain",
+      "name": "web-trails-chroma"
+    },
+    {
+      "id": "web-trails-drift",
+      "file": "fxchains/web-trails-drift.lsdfxchain",
+      "name": "web-trails-drift"
+    },
+    {
+      "id": "wormhole_flight",
+      "file": "content/fxchains/wormhole_flight.lsdfxchain",
+      "name": "Wormhole Flight"
+    }
+  ],
+  "transitionPresets": [
+    {
+      "id": "cosmic_singularity",
+      "file": "content/transitions/cosmic_singularity.lsdtrans",
+      "name": "cosmic_singularity"
+    },
+    {
+      "id": "cyber_datamosh_glitch",
+      "file": "content/transitions/cyber_datamosh_glitch.lsdtrans",
+      "name": "cyber_datamosh_glitch"
+    },
+    {
+      "id": "hyperspace_crash_zoom",
+      "file": "content/transitions/hyperspace_crash_zoom.lsdtrans",
+      "name": "hyperspace_crash_zoom"
+    },
+    {
+      "id": "inferno_film_burn",
+      "file": "content/transitions/inferno_film_burn.lsdtrans",
+      "name": "inferno_film_burn"
+    },
+    {
+      "id": "laser_drop_flash",
+      "file": "content/transitions/laser_drop_flash.lsdtrans",
+      "name": "laser_drop_flash"
+    },
+    {
+      "id": "liquid_mercury_melt",
+      "file": "content/transitions/liquid_mercury_melt.lsdtrans",
+      "name": "liquid_mercury_melt"
+    },
+    {
+      "id": "organic_plasma_dissolve",
+      "file": "content/transitions/organic_plasma_dissolve.lsdtrans",
+      "name": "organic_plasma_dissolve"
+    },
+    {
+      "id": "pure_smooth_crossfade",
+      "file": "content/transitions/pure_smooth_crossfade.lsdtrans",
+      "name": "pure_smooth_crossfade"
+    }
   ]
 }

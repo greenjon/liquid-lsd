@@ -123,21 +123,7 @@ class Mandala(
         }
     }
 
-    fun getSymmetricHueCycles(petals: Int): List<Int> {
-        val p = petals.coerceAtLeast(1)
-        return symmetricHueCyclesCache.getOrPut(p) {
-            val options = mutableSetOf<Int>()
-            for (i in 1..p) {
-                if (p % i == 0) {
-                    options.add(i)
-                }
-            }
-            for (i in 1..4) {
-                options.add(p * i)
-            }
-            options.sorted()
-        }
-    }
+    fun getSymmetricHueCycles(petals: Int): List<Int> = symmetricHueCycles(petals)
 
     var minR: Float = 0f
         private set
@@ -147,19 +133,11 @@ class Mandala(
     override fun update() {
         super.update()
 
-        // 1. Resolve closest valid lobes
+        // 1+2. Resolve the closest valid lobe count, then the recipe selected within it
         val targetLobes = parameters["Lobes"]?.value?.roundToInt() ?: 3
-        val activeLobes = getClosestLobeCount(targetLobes)
-
-        // 2. Resolve recipe selection
-        val recipes = MandalaLibrary.recipesByPetals[activeLobes] ?: emptyList()
-        if (recipes.isNotEmpty()) {
-            val selectVal = parameters["Recipe Select"]?.value ?: 0.0f
-            val recipeIndex = (selectVal * (recipes.size - 1)).roundToInt().coerceIn(0, recipes.size - 1)
-            val targetRecipe = recipes[recipeIndex]
-            if (targetRecipe != recipe) {
-                recipe = targetRecipe
-            }
+        val targetRecipe = pickRecipe(targetLobes, parameters["Recipe Select"]?.value ?: 0.0f)
+        if (targetRecipe != null && targetRecipe != recipe) {
+            recipe = targetRecipe
         }
 
         // With sum-of-lengths normalization, the max possible reach is TARGET_RADIUS
@@ -173,20 +151,8 @@ class Mandala(
         minR = 0f // Stable base for depth/brightness effect
     }
 
-    private fun getClosestLobeCount(target: Int): Int {
-        val keys = MandalaLibrary.uniquePetals
-        if (keys.isEmpty()) return 3
-        return keys.minByOrNull { abs(it - target) } ?: 3
-    }
-
     /** The hue-cycle count the shader receives as `uHueSweep` (the Hue Sweep knob picks from the recipe's symmetric options). */
-    private fun hueSweepCycles(): Float {
-        val options  = getSymmetricHueCycles(recipe.petals)
-        val rawSweep = parameters["Hue Sweep"]?.value ?: 0f
-        val sweepIdx = if (options.size > 1)
-            (rawSweep * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
-        return options[sweepIdx].toFloat()
-    }
+    private fun hueSweepCycles(): Float = hueSweepCycles(recipe.petals, parameters["Hue Sweep"]?.value ?: 0f)
 
     override fun setupUniforms(shader: Shader) {
         val p = parameters
@@ -279,6 +245,50 @@ class Mandala(
     }
 
     companion object {
+        /** The petal count in the recipe library closest to [target] (ties go to the smaller). */
+        fun closestPetals(target: Int): Int {
+            val keys = MandalaLibrary.uniquePetals
+            if (keys.isEmpty()) return 3
+            return keys.minByOrNull { abs(it - target) } ?: 3
+        }
+
+        /**
+         * The recipe the Lobes and Recipe Select knobs choose: the closest petal count, then
+         * [select] (0..1) mapped across that count's recipes. Null if the library is empty.
+         * Mirrored by web/mandala.js; web/tools/mandala_vectors.json pins the two together.
+         */
+        fun pickRecipe(lobes: Int, select: Float): MandalaRatio? {
+            val recipes = MandalaLibrary.recipesByPetals[closestPetals(lobes)] ?: return null
+            if (recipes.isEmpty()) return null
+            val index = (select * (recipes.size - 1)).roundToInt().coerceIn(0, recipes.size - 1)
+            return recipes[index]
+        }
+
+        /** Hue-cycle counts a recipe with [petals] offers: its divisors plus 1x to 4x the petal count. */
+        fun symmetricHueCycles(petals: Int): List<Int> {
+            val p = petals.coerceAtLeast(1)
+            return symmetricHueCyclesCache.getOrPut(p) {
+                val options = mutableSetOf<Int>()
+                for (i in 1..p) {
+                    if (p % i == 0) {
+                        options.add(i)
+                    }
+                }
+                for (i in 1..4) {
+                    options.add(p * i)
+                }
+                options.sorted()
+            }
+        }
+
+        /** The `uHueSweep` value the Hue Sweep knob ([rawSweep], 0..1) picks from [symmetricHueCycles]. */
+        fun hueSweepCycles(petals: Int, rawSweep: Float): Float {
+            val options = symmetricHueCycles(petals)
+            val idx = if (options.size > 1)
+                (rawSweep * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
+            return options[idx].toFloat()
+        }
+
         private val symmetricHueCyclesCache = java.util.concurrent.ConcurrentHashMap<Int, List<Int>>()
         const val POINTS = 2048
         const val TARGET_RADIUS = 2.0f

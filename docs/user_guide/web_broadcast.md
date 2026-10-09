@@ -75,4 +75,4 @@ When no broadcaster is connected, the web player switches to **Autopilot** — r
 
 When a broadcaster connects, Autopilot smoothly hands off control to the live stream. When the broadcast ends, it picks up again automatically.
 
-The web presets and playlists used for Autopilot live in `web/presets/` and `web/playlists/`, separate from your desktop preset library.
+The web presets and playlists used for Autopilot live in `web/presets/` and `web/playlists/`, separate from your desktop preset library. Web presets are ordinary desktop `.lsd` files, so you can copy one across in either direction (a preset using only sources the web has). A playlist line can add an FX chain after a bar: `my-preset | my-chain`; the desktop's FX chains and transition presets ship with the web TV.

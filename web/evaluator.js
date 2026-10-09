@@ -1,7 +1,7 @@
 // evaluator.js
 // Port of the desktop modulation evaluator (ModulatableParameter.evaluate, cv/Evaluators.kt,
 // parameters/WaveformMath.kt). Desktop stays the source of truth: when those change, regenerate
-// web/tools/evaluator_vectors.json (see WebEvaluatorVectorsTest) and run `node --test web/tools`.
+// web/tools/evaluator_vectors.json (see WebEvaluatorVectorsTest) and run `node --test web/tools/*.test.mjs`.
 //
 // Parameters are ParameterDto-shaped objects ({baseValue, baseMin, baseMax, randomizeBase, modulators[]}),
 // modulators are ModulatorDto-shaped. A bare number is accepted as a parameter with no modulators.

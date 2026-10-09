@@ -1,36 +1,102 @@
 {
+  "version": 1,
   "name": "spiral_drift",
   "visualSourceType": "dynamic_spiral",
   "parameters": {
-    "MaxPoints": 500,
-    "Scale": 0.5,
-    "Damping": 0.2,
-    "WaveFreq": 0.2,
-    "WaveAmp": 0.0,
-    "Shear": 0.2,
-    "Speed": 0.5,
-    "DotSize": 0.18,
-    "Glow": 0.3,
-    "HueOffset": 0.33,
-    "HueSweep": 0.09,
-    "TrailDecay": 0.86
-  },
-  "fx": [
-    {
-      "id": "feedback",
-      "enabled": true,
-      "dryWet": 1.0,
-      "params": {
-        "fbDecay": 0.6893,
-        "fbGain": 0.485,
-        "fbZoom": 0.003,
-        "fbRotate": -0.005,
-        "fbHueShift": 0.0,
-        "fbBlur": 0.0,
-        "fbChroma": 0.0,
-        "fbMode": 0.0,
-        "fbKaleido": 1.0
-      }
+    "MaxPoints": {
+      "baseValue": 500,
+      "baseMin": 100.0,
+      "baseMax": 2000.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Scale": {
+      "baseValue": 0.5,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Damping": {
+      "baseValue": 0.2,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "WaveFreq": {
+      "baseValue": 0.2,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "WaveAmp": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Shear": {
+      "baseValue": 0.2,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Speed": {
+      "baseValue": 0.5,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "DotSize": {
+      "baseValue": 0.18,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Glow": {
+      "baseValue": 0.3,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueOffset": {
+      "baseValue": 0.33,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueSweep": {
+      "baseValue": 0.09,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "TrailDecay": {
+      "baseValue": 0.86,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
     }
-  ]
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web"
+  ],
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
 }

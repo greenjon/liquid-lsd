@@ -2,13 +2,17 @@
 // Real-time Web Audio analysis, beat detection, and CV output
 
 export const cvState = {
-  audio_amp:      0.0,   // broadband RMS, range 0..1
-  audio_bass:     0.0,   // low-frequency RMS (< 180 Hz), range 0..1
-  audio_mid:      0.0,   // mid-frequency RMS (~1 kHz), range 0..1
-  audio_high:     0.0,   // high-frequency RMS (> 5 kHz), range 0..1
-  beatPhase:      0.0,   // current position in beat cycle, range 0..1
-  beatSine:       0.0,   // sin wave locked to beat, range -1..1 (zero-centered bipolar)
-  trigger_onset:  0.0,   // 1.0 on beat onset frame, decays to 0 over ~100ms
+  // The audio_* signals are scaled exactly as the desktop's AudioEngine publishes them, so a
+  // preset's depths mean the same thing in both places.
+  audio_amp:      0.0,   // broadband RMS / 0.25, range 0..1
+  audio_bass:     0.0,   // low-frequency RMS (<= 150 Hz) / 0.25, range 0..1
+  audio_mid:      0.0,   // mid-frequency RMS (~1 kHz) / 0.25, range 0..1
+  audio_high:     0.0,   // high-frequency RMS (>= 5 kHz) / 0.25, range 0..1
+  audio_flux_amp:  0.0,  // weighted onset strength (2 bass + 0.8 mid + 0.3 high flux) / 0.1
+  audio_flux_bass: 0.0,  // half-wave rectified RMS growth since the last frame / 0.05
+  audio_flux_mid:  0.0,
+  audio_flux_high: 0.0,
+  totalBeats:     0.0,   // beats integrated at the estimated tempo (standalone clock)
   bpm:            120.0, // estimated BPM
   isLive:         false, // true once AudioContext is running and stream is connected
 };
@@ -28,6 +32,9 @@ let highBuf = null;
 
 let analysisReady = false;
 
+// ~11.6 ms of samples at 44.1 kHz: the same block length the desktop takes its RMS over
+const ANALYSER_FFT = 512;
+
 // RMS Helper
 function calcRms(analyser, buf) {
   analyser.getFloatTimeDomainData(buf);
@@ -46,28 +53,43 @@ function median(arr) {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
-// Peak follower state for amplitude normalization
-let peakAmp  = 0.01;
-let peakBass = 0.01;
-let peakMid  = 0.01;
-let peakHigh = 0.01;
-const PEAK_DECAY = 0.999;
+const AMP_SCALE = 0.25;
+const FLUX_BAND_SCALE = 0.05;
+const FLUX_AMP_SCALE = 0.1;
+const clamp01 = (v) => Math.max(0, Math.min(1, v));
+
+/**
+ * Turns this frame's band RMS values (and last frame's) into the desktop's CV signals
+ * (AudioEngine: fixed scales, half-wave rectified flux). Pure, so it is unit-tested in node.
+ */
+export function bandSignals(rms, prev) {
+  const bassFlux = Math.max(0, rms.bass - prev.bass);
+  const midFlux  = Math.max(0, rms.mid  - prev.mid);
+  const highFlux = Math.max(0, rms.high - prev.high);
+  const onsetStrength = bassFlux * 2.0 + midFlux * 0.8 + highFlux * 0.3;
+  return {
+    audio_amp:  clamp01(rms.amp  / AMP_SCALE),
+    audio_bass: clamp01(rms.bass / AMP_SCALE),
+    audio_mid:  clamp01(rms.mid  / AMP_SCALE),
+    audio_high: clamp01(rms.high / AMP_SCALE),
+    audio_flux_amp:  clamp01(onsetStrength / FLUX_AMP_SCALE),
+    audio_flux_bass: clamp01(bassFlux / FLUX_BAND_SCALE),
+    audio_flux_mid:  clamp01(midFlux  / FLUX_BAND_SCALE),
+    audio_flux_high: clamp01(highFlux / FLUX_BAND_SCALE),
+  };
+}
+
+const prevRms = { bass: 0, mid: 0, high: 0 };
 
 function updateAmplitudes() {
-  const rawAmp  = calcRms(broadbandAnalyser, broadBuf);
-  const rawBass = calcRms(bassAnalyser,      bassBuf);
-  const rawMid  = calcRms(midAnalyser,       midBuf);
-  const rawHigh = calcRms(highAnalyser,      highBuf);
-
-  peakAmp  = Math.max(peakAmp  * PEAK_DECAY, rawAmp, 0.001);
-  peakBass = Math.max(peakBass * PEAK_DECAY, rawBass, 0.001);
-  peakMid  = Math.max(peakMid  * PEAK_DECAY, rawMid, 0.001);
-  peakHigh = Math.max(peakHigh * PEAK_DECAY, rawHigh, 0.001);
-
-  cvState.audio_amp  = Math.min(rawAmp  / peakAmp,  1.0);
-  cvState.audio_bass = Math.min(rawBass / peakBass, 1.0);
-  cvState.audio_mid  = Math.min(rawMid  / peakMid,  1.0);
-  cvState.audio_high = Math.min(rawHigh / peakHigh, 1.0);
+  const rms = {
+    amp:  calcRms(broadbandAnalyser, broadBuf),
+    bass: calcRms(bassAnalyser,      bassBuf),
+    mid:  calcRms(midAnalyser,       midBuf),
+    high: calcRms(highAnalyser,      highBuf),
+  };
+  Object.assign(cvState, bandSignals(rms, prevRms));
+  prevRms.bass = rms.bass; prevRms.mid = rms.mid; prevRms.high = rms.high;
 }
 
 // Beat detection state
@@ -96,7 +118,6 @@ function updateBeat(dt) {
 
       const ioi = now - lastOnsetTime;
       lastOnsetTime = now;
-      cvState.trigger_onset = 1.0;
 
       // Update BPM estimate (ignore anomalous intervals)
       if (ioi > 0 && ioi < 3000) {
@@ -115,11 +136,7 @@ function updateBeat(dt) {
   // Advance beat clock using current BPM estimate (dt in seconds)
   totalBeats += (bpmEstimate / 60) * dt;
 
-  cvState.beatPhase = totalBeats % 1.0;
-  cvState.beatSine  = Math.sin(totalBeats * 2 * Math.PI);
-
-  // Decay onset trigger (~100ms decay)
-  cvState.trigger_onset *= 0.85;
+  cvState.totalBeats = totalBeats;
 }
 
 // Per-frame tick called from renderer.js rAF loop
@@ -152,17 +169,17 @@ export async function startAudio() {
 
     // Broadband Analyser
     broadbandAnalyser = audioCtx.createAnalyser();
-    broadbandAnalyser.fftSize = 2048;
+    broadbandAnalyser.fftSize = ANALYSER_FFT;
     broadbandAnalyser.smoothingTimeConstant = 0.8;
 
     // Bass Filter & Analyser
     const bassFilter = audioCtx.createBiquadFilter();
     bassFilter.type = 'lowpass';
-    bassFilter.frequency.value = 180;
+    bassFilter.frequency.value = 150;
     bassFilter.Q.value = 0.7;
 
     bassAnalyser = audioCtx.createAnalyser();
-    bassAnalyser.fftSize = 256;
+    bassAnalyser.fftSize = ANALYSER_FFT;
     bassAnalyser.smoothingTimeConstant = 0.85;
 
     // Mid Filter & Analyser
@@ -172,7 +189,7 @@ export async function startAudio() {
     midFilter.Q.value = 1.0;
 
     midAnalyser = audioCtx.createAnalyser();
-    midAnalyser.fftSize = 256;
+    midAnalyser.fftSize = ANALYSER_FFT;
     midAnalyser.smoothingTimeConstant = 0.85;
 
     // High Filter & Analyser
@@ -182,7 +199,7 @@ export async function startAudio() {
     highFilter.Q.value = 0.7;
 
     highAnalyser = audioCtx.createAnalyser();
-    highAnalyser.fftSize = 256;
+    highAnalyser.fftSize = ANALYSER_FFT;
     highAnalyser.smoothingTimeConstant = 0.85;
 
     gainNode = audioCtx.createGain();
@@ -235,7 +252,11 @@ export async function stopAudio() {
   cvState.audio_bass = 0.0;
   cvState.audio_mid = 0.0;
   cvState.audio_high = 0.0;
-  cvState.trigger_onset = 0.0;
+  cvState.audio_flux_amp = 0.0;
+  cvState.audio_flux_bass = 0.0;
+  cvState.audio_flux_mid = 0.0;
+  cvState.audio_flux_high = 0.0;
+  prevRms.bass = prevRms.mid = prevRms.high = 0;
 }
 
 // volume: 0.0 (muted) to 1.0 (full) — uses squared curve for perceptual linearity

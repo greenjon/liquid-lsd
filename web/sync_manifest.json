@@ -301,5 +301,32 @@
       "description": "JSON preset serialization schema & dead reckoning state sync",
       "last_synced_hash": "63f3315994815481415ba70ca54ca1f839066d3174a735b402ca5de65b174049"
     }
-  ]
+  ],
+  "content": [
+    {
+      "desktop_dir": "defaults/fx_chains",
+      "web_dir": "web/content/fxchains",
+      "ext": ".lsdfxchain",
+      "catalog_key": "fxChains",
+      "description": "Desktop FX chain presets (FXChainDto) the autopilot can apply to decks"
+    },
+    {
+      "desktop_dir": "defaults/transitions",
+      "web_dir": "web/content/transitions",
+      "ext": ".lsdtrans",
+      "catalog_key": "transitionPresets",
+      "description": "Desktop transition presets (a transition filter plus parameters)"
+    },
+    {
+      "web_dir": "web/fxchains",
+      "ext": ".lsdfxchain",
+      "catalog_key": "fxChains",
+      "web_only": true,
+      "description": "Web-authored FX chains (desktop FXChainDto format), named web-*"
+    }
+  ],
+  "mandala_recipes": {
+    "desktop": "src/main/kotlin/llm/slop/liquidlsd/rendering/MandalaLibrary.kt",
+    "web": "web/mandala_recipes.json"
+  }
 }

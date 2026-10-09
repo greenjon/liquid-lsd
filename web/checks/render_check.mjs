@@ -54,7 +54,19 @@ sources.push({ name: 'live_wrong_version_ignored', settleMs: 600, wire: [
 
 // Every shipped autopilot preset, loaded the way autopilot.js loads it.
 for (const f of fs.readdirSync(path.join(web, 'presets')).sort()) {
-  if (f.endsWith('.lsd')) sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: 'presets/' + f, settleMs: 2500 });
+  if (f.endsWith('.lsd')) sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: 'web-trails', settleMs: 2500 });
+}
+// Desktop-shipped Mandala presets, unmodified (Lobes / Recipe Select / the recipe table)
+for (const f of ['mandala-7', 'mandala-10']) {
+  sources.push({ name: 'desktop_' + f, preset: `/repo/defaults/presets/${f}.lsd`, settleMs: 1500 });
+}
+// Every FX chain and transition preset the catalog lists
+for (const c of catalog.fxChains) {
+  sources.push({ name: 'chain_' + c.id, deck: { source: 'domain_warp_fluid' }, chain: c.id, settleMs: 1100 });
+}
+for (const t of catalog.transitionPresets) {
+  sources.push({ name: 'transpreset_' + t.id, deck: { source: 'domain_warp_fluid' }, deckB: { source: 'chladni_cymatics' },
+    mixer: { balance: 0.5 }, transitionPreset: t.id, settleMs: 1100 });
 }
 
 let resolveReport;
@@ -66,6 +78,11 @@ const server = http.createServer((req, res) => {
     let b = ''; req.on('data', (c) => (b += c)); req.on('end', () => { res.end('ok'); resolveReport(JSON.parse(b)); });
   } else if (url.pathname === '/sources') {
     res.end(JSON.stringify(sources));
+  } else if (url.pathname.startsWith('/repo/')) {
+    // Desktop defaults (defaults/presets, ...) so desktop-format files can be rendered as-is
+    const p = path.normalize(path.join(path.resolve(web, '..'), decodeURIComponent(url.pathname.slice(6))));
+    if (!p.startsWith(path.resolve(web, '..') + path.sep) || !fs.existsSync(p)) { res.statusCode = 404; return res.end(); }
+    res.end(fs.readFileSync(p));
   } else {
     const p = path.normalize(path.join(web, url.pathname));
     if (!p.startsWith(web + path.sep) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) { res.statusCode = 404; return res.end(); }
@@ -95,6 +112,14 @@ for (const f of rep.frames || []) {
 const errs = [...new Set(rep.errors || [])].filter((e) => !/audio|stream|AudioContext|NotSupported|WebSocket/i.test(e));
 for (const e of errs) console.log('console error:', e.split('\n').slice(0, 6).join(' / '));
 if (errs.length) bad++;
+if (rep.autopilot) {
+  const a = rep.autopilot;
+  console.log('autopilot start   :', JSON.stringify(a.start));
+  console.log('autopilot advance :', JSON.stringify(a.advanced));
+  if (!a.start.deckA.source || a.start.deckA.fx0 !== 'feedback' || !a.advanced.deckB.source || !a.advanced.transition) {
+    console.log('AUTOPILOT did not load a preset with its pinned FX chain and a transition'); bad++;
+  }
+}
 if (rep.library) { console.log('library loaded:', rep.library.loaded.join(', ')); if (rep.library.failed.length) { console.log('library FAILED:', rep.library.failed.join(', ')); bad++; } }
 console.log(`PNGs in ${outDir}`);
 done(bad ? 1 : 0);

@@ -1,0 +1,131 @@
+{
+    "name": "Cosmic Black Hole Vortex",
+    "tags": [
+        "space",
+        "vortex",
+        "distortion",
+        "wormhole"
+    ],
+    "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    },
+    "slots": [
+        {
+            "filterId": "vortex_swirl",
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "twist": {
+                    "baseValue": 0.4,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "radius": {
+                    "baseValue": 0.33333,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "dispersion": {
+                    "baseValue": 0.45,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "spiralArms": {
+                    "baseValue": 0.0,
+                    "baseMin": 0.0,
+                    "baseMax": 12.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        },
+        {
+            "filterId": "luma_displace",
+            "dryWet": {
+                "baseValue": 0.85,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "refractAmount": {
+                    "baseValue": 0.48,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "smoothness": {
+                    "baseValue": -0.01333,
+                    "baseMin": -0.06,
+                    "baseMax": 0.06667,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "chromaDispersion": {
+                    "baseValue": 3.5,
+                    "baseMin": 0.0,
+                    "baseMax": 10.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        },
+        {
+            "filterId": "polar_tunnel",
+            "dryWet": {
+                "baseValue": 0.9,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "depth": {
+                    "baseValue": 0.28571,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "rotation": {
+                    "baseValue": 0.0,
+                    "baseMin": -3.14159,
+                    "baseMax": 3.14159,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "twist": {
+                    "baseValue": 0.5,
+                    "baseMin": -2.0,
+                    "baseMax": 2.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        }
+    ],
+    "superKnob": {
+        "baseValue": 0.5,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    }
+}

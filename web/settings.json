@@ -8,5 +8,13 @@
   "bgFadeDuration": 4.0,
   "bgPlaybackOrder": "sequential",
   "audioStreamUrl": "https://radio.spaz.org:8060/radio.ogg",
-  "fallbackBpm": 120.0
+  "fallbackBpm": 120.0,
+  "transitions": [
+    "pure_smooth_crossfade",
+    "organic_plasma_dissolve",
+    "cosmic_singularity",
+    "liquid_mercury_melt"
+  ],
+  "fxChains": [],
+  "fxPlaybackOrder": "sequential"
 }

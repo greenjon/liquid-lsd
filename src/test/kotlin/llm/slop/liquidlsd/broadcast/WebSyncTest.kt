@@ -122,4 +122,23 @@ class WebSyncTest {
             "Desktop-to-Web algorithmic drift detected:\n" + driftList.joinToString("\n\n")
         )
     }
+
+    @Test
+    fun testDesktopContentCopiesMatch() {
+        val json = Json.parseToJsonElement(manifestFile.readText()).jsonObject
+        val mismatches = mutableListOf<String>()
+        for (elem in json["content"]?.jsonArray ?: error("No 'content' array found in manifest")) {
+            val obj = elem.jsonObject
+            val desktopDir = obj["desktop_dir"]?.jsonPrimitive?.content ?: continue // web-authored directory
+            val webDir = File(projectRoot, obj["web_dir"]!!.jsonPrimitive.content)
+            val ext = obj["ext"]!!.jsonPrimitive.content
+            File(projectRoot, desktopDir).listFiles { f -> f.isFile && f.name.endsWith(ext) }?.forEach { src ->
+                val dst = File(webDir, src.name)
+                if (!dst.exists() || !dst.readBytes().contentEquals(src.readBytes())) {
+                    mismatches.add("[OUT OF SYNC] ${dst.relativeTo(projectRoot)} does not match ${src.relativeTo(projectRoot)}. Run './scripts/sync_web.py --apply'")
+                }
+            }
+        }
+        assertTrue(mismatches.isEmpty(), "Web content drift detected:\n" + mismatches.joinToString("\n"))
+    }
 }

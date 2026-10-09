@@ -3,7 +3,7 @@
 <title>LSD render check</title>
 <iframe id="app" src="../index.html?nolive" width="640" height="360" style="border:0"></iframe>
 <script type="module">
-import { normalizeDeckPreset } from '../renderer_utils.js';
+import { parseDeckPreset, parseFxChain, parseTransition } from '../preset.js';
 // Drives the real app in an iframe: powers it on, forces each source onto deck A, lets it
 // render, reads the canvas inside the app's own rAF and POSTs stats + PNGs to /report.
 const app = document.getElementById('app');
@@ -33,6 +33,16 @@ else {
     res({ png, glError, meanLuma: sum / (d.length / 4) / 3, litFraction: lit / (d.length / 4) });
   }));
   await sleep(2500); // warm-up
+  // The autopilot's own startup and advance, before any spec overrides the decks
+  const snap = () => {
+    const st = w.LSD.autopilotState;
+    return { deckA: { source: st.deckA?.source, fx0: st.deckA?.fx?.[0]?.id, params: Object.keys(st.deckA?.params ?? {}).length },
+      deckBG: { source: st.deckBG?.source, fx0: st.deckBG?.fx?.[0]?.id }, transition: st.mixer.transition };
+  };
+  const autopilot = { start: snap() };
+  await w.LSD.advanceForeground();
+  await sleep(3200); // let the 2.5 s crossfade finish: the autopilot owns mixer.balance until it does
+  autopilot.advanced = { ...snap(), deckB: { source: w.LSD.autopilotState.deckB?.source, fx0: w.LSD.autopilotState.deckB?.fx?.[0]?.id } };
   for (const spec of sources) {
     if (spec.wire) {
       // Replay wire-protocol messages through the same handler the WebSocket uses.
@@ -43,10 +53,14 @@ else {
       w.LSD.handleRelayMessage({ type: 'broadcaster_offline' });
       continue;
     }
+    const catalog = await (await fetch('/catalog.json')).json();
+    const content = async (list, id) => (await (await fetch('/' + list.find((e) => e.id === id).file)).json());
     let deck = spec.deck;
-    if (spec.preset) deck = normalizeDeckPreset(await (await fetch('../' + spec.preset)).json());
-    w.LSD.autopilotState.deckA = Object.assign({ feedback: {} }, deck);
-    w.LSD.autopilotState.deckB = spec.deckB ? Object.assign({ feedback: {} }, spec.deckB) : null;
+    if (spec.preset) deck = parseDeckPreset(await (await fetch(spec.preset)).json());
+    if (spec.chain) Object.assign(deck, parseFxChain(await content(catalog.fxChains, spec.chain)));
+    if (spec.transitionPreset) spec.mixer = { ...spec.mixer, ...parseTransition(await content(catalog.transitionPresets, spec.transitionPreset)) };
+    w.LSD.autopilotState.deckA = deck;
+    w.LSD.autopilotState.deckB = spec.deckB ?? null;
     w.LSD.autopilotState.deckBG = null;
     w.LSD.autopilotState.mixer = Object.assign({ mode: 0, balance: 0, alpha: 1 }, spec.mixer);
     await sleep(spec.settleMs ?? 1500);
@@ -54,7 +68,7 @@ else {
     frames.push({ name: spec.name, ...g });
   }
   const lib = w.LSD.library;
-  await post({ errors, frames, size: [app.width, app.height], library: { loaded: [...lib.programs.keys()], failed: [...lib.failed] } });
+  await post({ autopilot, errors, frames, size: [app.width, app.height], library: { loaded: [...lib.programs.keys()], failed: [...lib.failed] } });
 }
 document.title = 'done';
 </script>

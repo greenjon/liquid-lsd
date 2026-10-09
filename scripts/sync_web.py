@@ -95,9 +95,39 @@ def build_catalog(manifest: dict) -> dict:
             "file": web[len("web/"):],
             "name": entry.get("description", ""),
         })
+    for entry in manifest.get("content", []):
+        # Web-authored dirs sit beside the synced desktop copies; both feed one catalog list.
+        web_dir = PROJECT_ROOT / entry["web_dir"]
+        files = sorted(web_dir.glob("*" + entry["ext"])) if entry.get("web_only") \
+            else sorted((PROJECT_ROOT / entry["desktop_dir"]).glob("*" + entry["ext"]))
+        rel_dir = web_dir.relative_to(PROJECT_ROOT / "web")
+        catalog.setdefault(entry["catalog_key"], []).extend({
+            "id": f.stem,
+            "file": f"{rel_dir.as_posix()}/{f.name}",
+            "name": json.loads(f.read_text(encoding="utf-8")).get("name", f.stem),
+        } for f in files)
     for kind in catalog:
         catalog[kind].sort(key=lambda e: e["id"])
     return catalog
+
+
+MANDALA_ROW = re.compile(r'MandalaRatio\("[^"]*",\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(-?\d+),\s*(\d+)')
+
+
+def mandala_recipes_text(manifest: dict) -> str:
+    """The desktop recipe table as [a, b, c, d, petals] rows, in library order."""
+    src = (PROJECT_ROOT / manifest["mandala_recipes"]["desktop"]).read_text(encoding="utf-8")
+    rows = [[int(g) for g in m.groups()] for m in MANDALA_ROW.finditer(src)]
+    return json.dumps({"fields": ["a", "b", "c", "d", "petals"], "recipes": rows}, separators=(",", ":")) + "\n"
+
+
+def content_files(manifest: dict):
+    """(desktop path, web path) for every synced content file (copied verbatim)."""
+    for entry in manifest.get("content", []):
+        if entry.get("web_only"):
+            continue
+        for f in sorted((PROJECT_ROOT / entry["desktop_dir"]).glob("*" + entry["ext"])):
+            yield f, PROJECT_ROOT / entry["web_dir"] / f.name
 
 
 def catalog_text(manifest: dict) -> str:
@@ -198,6 +228,30 @@ def check_sync(manifest: dict) -> dict:
             "action": "Run './scripts/sync_web.py --apply' to regenerate web/catalog.json",
             "description": "ISF catalog (sources, filters, transitions)"})
 
+    # 1c. Check verbatim content copies and the Mandala recipe table
+    for src_path, dst_path in content_files(manifest):
+        results["total_checked"] += 1
+        rel = str(dst_path.relative_to(PROJECT_ROOT))
+        if dst_path.exists() and dst_path.read_bytes() == src_path.read_bytes():
+            results["in_sync"].append({"type": "shader", "source": str(src_path.relative_to(PROJECT_ROOT)),
+                                       "target": rel, "description": "content"})
+        else:
+            results["out_of_sync"].append({
+                "type": "shader", "mode": "auto_shader", "source": str(src_path.relative_to(PROJECT_ROOT)),
+                "target": rel, "reason": "Content copy missing or stale",
+                "action": f"Run './scripts/sync_web.py --apply' to update {rel}", "description": "Desktop content copy"})
+    results["total_checked"] += 1
+    mr = manifest["mandala_recipes"]
+    mr_path = PROJECT_ROOT / mr["web"]
+    if mr_path.exists() and mr_path.read_text(encoding="utf-8") == mandala_recipes_text(manifest):
+        results["in_sync"].append({"type": "shader", "source": mr["desktop"], "target": mr["web"], "description": "Mandala recipes"})
+    else:
+        results["out_of_sync"].append({
+            "type": "shader", "mode": "auto_shader", "source": mr["desktop"], "target": mr["web"],
+            "reason": "Mandala recipe table missing or stale",
+            "action": f"Run './scripts/sync_web.py --apply' to regenerate {mr['web']}",
+            "description": "Mandala recipe table (MandalaLibrary.kt)"})
+
     # 2. Check Monitored Sources (Kotlin/Math/Serializer logic)
     for src_entry in manifest.get("monitored_sources", []):
         results["total_checked"] += 1
@@ -269,6 +323,18 @@ def apply_sync(manifest: dict) -> list:
         if current_code != web_code:
             dst_path.write_text(web_code, encoding="utf-8")
             updated.append(dst_rel)
+
+    for src_path, dst_path in content_files(manifest):
+        dst_path.parent.mkdir(parents=True, exist_ok=True)
+        if not dst_path.exists() or dst_path.read_bytes() != src_path.read_bytes():
+            dst_path.write_bytes(src_path.read_bytes())
+            updated.append(str(dst_path.relative_to(PROJECT_ROOT)))
+
+    mr_path = PROJECT_ROOT / manifest["mandala_recipes"]["web"]
+    recipes = mandala_recipes_text(manifest)
+    if not mr_path.exists() or mr_path.read_text(encoding="utf-8") != recipes:
+        mr_path.write_text(recipes, encoding="utf-8")
+        updated.append(manifest["mandala_recipes"]["web"])
 
     catalog = catalog_text(manifest)
     if not CATALOG_PATH.exists() or CATALOG_PATH.read_text(encoding="utf-8") != catalog:

@@ -1,0 +1,146 @@
+{
+    "name": "Liquid Mercury",
+    "tags": [
+        "liquid",
+        "fluid",
+        "organic",
+        "marbling",
+        "ambient"
+    ],
+    "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    },
+    "slots": [
+        {
+            "filterId": "luma_displace",
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "refractAmount": {
+                    "baseValue": 0.32,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "smoothness": {
+                    "baseValue": 0.33333,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "chromaDispersion": {
+                    "baseValue": 0.3,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "flowSpeed": {
+                    "baseValue": 0.16667,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        },
+        {
+            "filterId": "fluid_smear",
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "smearAmount": {
+                    "baseValue": 0.6,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "curlScale": {
+                    "baseValue": 0.15385,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "flowSpeed": {
+                    "baseValue": 0.2,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "decay": {
+                    "baseValue": 0.75,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "gravity": {
+                    "baseValue": 0.05,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        },
+        {
+            "filterId": "bloom",
+            "dryWet": {
+                "baseValue": 0.85,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "bloomIntensity": {
+                    "baseValue": 0.3,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "threshold": {
+                    "baseValue": 0.45,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "blurAmount": {
+                    "baseValue": 0.37931,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        }
+    ],
+    "superKnob": {
+        "baseValue": 0.5,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    }
+}

@@ -1,27 +1,39 @@
 {
+  "version": 1,
   "name": "domain_flow",
   "visualSourceType": "domain_warp_fluid",
   "parameters": {
-    "WarpStrength": 0.5,
-    "Speed": 0.3,
-    "HueOffset": 0.7
-  },
-  "fx": [
-    {
-      "id": "feedback",
-      "enabled": true,
-      "dryWet": 1.0,
-      "params": {
-        "fbDecay": 0.7076,
-        "fbGain": 0.4875,
-        "fbZoom": 0.004,
-        "fbRotate": -0.006,
-        "fbHueShift": 0.001,
-        "fbBlur": 0.1,
-        "fbChroma": 0.2,
-        "fbMode": 0.0,
-        "fbKaleido": 2.0
-      }
+    "WarpStrength": {
+      "baseValue": 0.5,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Speed": {
+      "baseValue": 0.3,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueOffset": {
+      "baseValue": 0.7,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
     }
-  ]
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web"
+  ],
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
 }

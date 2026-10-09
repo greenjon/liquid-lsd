@@ -1,7 +1,8 @@
 // autopilot.js
 // 24/7 Dual-Queue Autopilot (Foreground A/B Auto-VJ + Background Auto-BG) + Live Relay Client
 
-import { normalizeDeckPreset } from './renderer_utils.js';
+import { parseDeckPreset, parseFxChain, parseTransition } from './preset.js';
+import { BeatFlywheel } from './beatclock.js';
 
 const RELAY_URL = 'wss://spaz.org/lsd-relay';
 
@@ -14,6 +15,11 @@ export const autopilotSettings = {
   fgHoldDuration: 45.0,
   fgFadeDuration: 2.5,
   fgPlaybackOrder: 'sequential',
+  // FX chain / transition preset ids (web/catalog.json) the autopilot rotates through; a
+  // playlist line `preset | chain` pins a chain to one preset. Empty = no FX / plain crossfade.
+  fxChains: [],
+  transitions: [],
+  fxPlaybackOrder: 'sequential',
   bgHoldDuration: 90.0,
   bgFadeDuration: 4.0,
   bgPlaybackOrder: 'sequential',
@@ -35,8 +41,8 @@ export const autopilotState = {
   bgAlpha: 1.0,
   masterAlpha: 1.0,
   isLiveBroadcast: false,
-  // Broadcaster's beat clock {beats, bpm, at}; `at` is performance.now() when it arrived.
-  clock: null
+  // Flywheel following the broadcaster's beat clock; `clock.read(performance.now())` is the beat position.
+  clock: new BeatFlywheel()
 };
 
 // Internal Playlist & State Machines
@@ -117,6 +123,57 @@ function getNextIndex(currentIdx, length, order) {
   return (currentIdx + 1) % length;
 }
 
+// Content catalog (web/catalog.json): FX chain and transition presets by id.
+let catalog = { fxChains: [], transitionPresets: [] };
+const contentCache = new Map();
+let fxIdx = -1;
+let transitionIdx = -1;
+
+async function fetchContent(list, id) {
+  const entry = list.find((e) => e.id === id);
+  if (!entry) { console.warn(`[autopilot] Unknown content id '${id}'`); return null; }
+  if (contentCache.has(entry.file)) return contentCache.get(entry.file);
+  try {
+    const res = await fetch(entry.file);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    contentCache.set(entry.file, data);
+    return data;
+  } catch (err) {
+    console.warn(`[autopilot] Failed to fetch '${entry.file}':`, err.message);
+    return null;
+  }
+}
+
+/**
+ * A playlist line `preset` or `preset | fxchain` -> deck state: the preset's source and
+ * parameters plus an FX chain (the pinned one, else the next in the settings rotation).
+ */
+async function buildDeck(line) {
+  const [presetName, pinned] = line.split('|').map((p) => p.trim());
+  const deck = parseDeckPreset(await fetchPreset(presetName));
+  let chainId = pinned;
+  if (!chainId && autopilotSettings.fxChains.length > 0) {
+    const n = autopilotSettings.fxChains.length;
+    fxIdx = getNextIndex(fxIdx, n, autopilotSettings.fxPlaybackOrder);
+    chainId = autopilotSettings.fxChains[fxIdx];
+  }
+  if (chainId && chainId !== 'none') {
+    const dto = await fetchContent(catalog.fxChains, chainId);
+    if (dto) Object.assign(deck, parseFxChain(dto));
+  }
+  return deck;
+}
+
+/** Picks the transition for the next foreground crossfade from the settings rotation. */
+async function pickTransition() {
+  const n = autopilotSettings.transitions.length;
+  if (n === 0) return { transition: 'linear_crossfade', transitionParams: {} };
+  transitionIdx = getNextIndex(transitionIdx, n, autopilotSettings.fxPlaybackOrder);
+  const dto = await fetchContent(catalog.transitionPresets, autopilotSettings.transitions[transitionIdx]);
+  return dto ? parseTransition(dto) : { transition: 'linear_crossfade', transitionParams: {} };
+}
+
 // -------------------------------------------------------
 // State machine updates
 // -------------------------------------------------------
@@ -186,12 +243,12 @@ export function tickAutopilot(dt) {
   }
 }
 
-async function advanceForeground() {
+export async function advanceForeground() {
   if (fgPlaylist.length === 0) return;
   fgPlaylistIdx = getNextIndex(fgPlaylistIdx, fgPlaylist.length, autopilotSettings.fgPlaybackOrder);
   const presetName = fgPlaylist[fgPlaylistIdx];
-  const rawData = await fetchPreset(presetName);
-  const normalized = normalizeDeckPreset(rawData);
+  const normalized = await buildDeck(presetName);
+  Object.assign(autopilotState.mixer, await pickTransition());
 
   // Crossfade target
   if (fgActiveDeck === 'A') {
@@ -217,8 +274,7 @@ async function startBgTransition() {
   if (bgPlaylist.length === 0) return;
   bgPlaylistIdx = getNextIndex(bgPlaylistIdx, bgPlaylist.length, autopilotSettings.bgPlaybackOrder);
   const presetName = bgPlaylist[bgPlaylistIdx];
-  const rawData = await fetchPreset(presetName);
-  pendingBgPreset = normalizeDeckPreset(rawData);
+  pendingBgPreset = await buildDeck(presetName);
 
   bgFadeTimer = 0.0;
   bgTransitionState = 'fade_out';
@@ -256,7 +312,7 @@ export function handleRelayMessage(msg) {
     case 'broadcaster_offline':
       if (autopilotState.isLiveBroadcast) {
         autopilotState.isLiveBroadcast = false;
-        autopilotState.clock = null;
+        autopilotState.clock.reset();
         console.log('[autopilot] Broadcaster offline — returning to autopilot');
         fgHoldTimer = 5.0;
         bgHoldTimer = 5.0;
@@ -296,7 +352,7 @@ function connectRelay() {
 
 function noteClock(clock) {
   if (clock && Number.isFinite(clock.beats) && Number.isFinite(clock.bpm)) {
-    autopilotState.clock = { beats: clock.beats, bpm: clock.bpm, at: performance.now() };
+    autopilotState.clock.anchor(clock.beats, clock.bpm, performance.now());
   }
 }
 
@@ -329,6 +385,14 @@ export async function startAutopilot() {
     console.warn('[autopilot] Could not load settings.json, using defaults.');
   }
 
+  // 1b. Load the content catalog (FX chain and transition presets)
+  try {
+    const res = await fetch('catalog.json');
+    if (res.ok) catalog = await res.json();
+  } catch (e) {
+    console.warn('[autopilot] Could not load catalog.json; no FX chains or transitions.');
+  }
+
   // 2. Load Foreground playlist
   fgPlaylist = await loadPlaylistFile(autopilotSettings.fgPlaylist);
   if (fgPlaylist.length === 0) {
@@ -347,9 +411,8 @@ export async function startAutopilot() {
     } catch (e) {}
   } else {
     fgPlaylistIdx = 0;
-    const firstFg = await fetchPreset(fgPlaylist[0]);
-    autopilotState.deckA = normalizeDeckPreset(firstFg);
-    autopilotState.deckB = normalizeDeckPreset(firstFg);
+    autopilotState.deckA = await buildDeck(fgPlaylist[0]);
+    autopilotState.deckB = await buildDeck(fgPlaylist[0]);
     autopilotState.mixer.balance = 0.0;
     fgActiveDeck = 'A';
     fgHoldTimer = autopilotSettings.fgHoldDuration;
@@ -359,8 +422,7 @@ export async function startAutopilot() {
   bgPlaylist = await loadPlaylistFile(autopilotSettings.bgPlaylist);
   if (bgPlaylist.length > 0) {
     bgPlaylistIdx = 0;
-    const firstBg = await fetchPreset(bgPlaylist[0]);
-    autopilotState.deckBG = normalizeDeckPreset(firstBg);
+    autopilotState.deckBG = await buildDeck(bgPlaylist[0]);
     autopilotState.bgAlpha = 1.0;
     bgHoldTimer = autopilotSettings.bgHoldDuration;
   }

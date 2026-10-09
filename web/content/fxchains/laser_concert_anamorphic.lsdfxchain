@@ -1,0 +1,145 @@
+{
+    "name": "Laser Concert Anamorphic",
+    "tags": [
+        "cinematic",
+        "anamorphic",
+        "optics",
+        "concert"
+    ],
+    "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    },
+    "slots": [
+        {
+            "filterId": "anamorphic_streak",
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "streakIntensity": {
+                    "baseValue": 0.4,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "streakLength": {
+                    "baseValue": 0.63158,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "threshold": {
+                    "baseValue": 0.6,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "knee": {
+                    "baseValue": 0.38776,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "colorMode": {
+                    "baseValue": 0.0,
+                    "baseMin": 0.0,
+                    "baseMax": 2.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "crossFlare": {
+                    "baseValue": 0.0,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        },
+        {
+            "filterId": "bloom",
+            "dryWet": {
+                "baseValue": 0.75,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "bloomIntensity": {
+                    "baseValue": 0.25,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "threshold": {
+                    "baseValue": 0.45,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "blurAmount": {
+                    "baseValue": 0.37931,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        },
+        {
+            "filterId": "color_levels",
+            "dryWet": {
+                "baseValue": 1.0,
+                "baseMin": 0.0,
+                "baseMax": 1.0,
+                "randomizeBase": false,
+                "modulators": []
+            },
+            "parameters": {
+                "contrast": {
+                    "baseValue": 0.43333,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "exposure": {
+                    "baseValue": 0.1,
+                    "baseMin": -2.0,
+                    "baseMax": 2.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                },
+                "saturation": {
+                    "baseValue": 0.38333,
+                    "baseMin": 0.0,
+                    "baseMax": 1.0,
+                    "randomizeBase": false,
+                    "modulators": []
+                }
+            }
+        }
+    ],
+    "superKnob": {
+        "baseValue": 0.5,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+    }
+}

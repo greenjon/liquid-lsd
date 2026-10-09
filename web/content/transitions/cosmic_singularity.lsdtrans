@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "name": "cosmic_singularity",
+  "tags": ["vortex", "swirl", "space", "cosmic"],
+  "slot": {
+    "filterId": "vortex_swirl",
+    "enabled": true,
+    "dryWet": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "parameters": {
+      "rotations": {
+        "baseValue": 0.44444,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "radius": {
+        "baseValue": 0.45833,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "chromatic": {
+        "baseValue": 0.5,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      }
+    }
+  }
+}

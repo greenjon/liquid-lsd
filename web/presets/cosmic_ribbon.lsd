@@ -1,39 +1,88 @@
 {
+  "version": 1,
   "name": "cosmic_ribbon",
   "visualSourceType": "mandala",
   "parameters": {
-    "L1": 0.45,
-    "L2": 0.25,
-    "L3": 0.2,
-    "L4": 0.1,
-    "a": 7,
-    "b": 11,
-    "c": 13,
-    "d": 5,
-    "Thickness": 0.014,
-    "Zoom": 0.65,
-    "Rotate Z": 0.0,
-    "Hue Offset": 0.15,
-    "Hue Sweep": 0.7,
-    "Depth": 0.5,
-    "Max R": 1.0
-  },
-  "fx": [
-    {
-      "id": "feedback",
-      "enabled": true,
-      "dryWet": 1.0,
-      "params": {
-        "fbDecay": 0.6316,
-        "fbGain": 0.475,
-        "fbZoom": 0.003,
-        "fbRotate": 0.015,
-        "fbHueShift": 0.003,
-        "fbBlur": 0.2,
-        "fbChroma": 0.0,
-        "fbMode": 0.0,
-        "fbKaleido": 4.0
-      }
+    "Lobes": {
+      "baseValue": 12,
+      "baseMin": 3,
+      "baseMax": 26,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Recipe Select": {
+      "baseValue": 0.6,
+      "baseMin": 0,
+      "baseMax": 1,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "L1": {
+      "baseValue": 0.45,
+      "baseMin": 0,
+      "baseMax": 1,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "L2": {
+      "baseValue": 0.25,
+      "baseMin": 0,
+      "baseMax": 1,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "L3": {
+      "baseValue": 0.2,
+      "baseMin": 0,
+      "baseMax": 1,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "L4": {
+      "baseValue": 0.1,
+      "baseMin": 0,
+      "baseMax": 1,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Thickness": {
+      "baseValue": 0.4,
+      "baseMin": 0,
+      "baseMax": 1,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Hue Offset": {
+      "baseValue": 0.15,
+      "baseMin": 0,
+      "baseMax": 1,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Hue Sweep": {
+      "baseValue": 0.7,
+      "baseMin": 0,
+      "baseMax": 1,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Depth": {
+      "baseValue": 0.5,
+      "baseMin": 0,
+      "baseMax": 1,
+      "randomizeBase": false,
+      "modulators": []
     }
-  ]
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web"
+  ],
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
 }
