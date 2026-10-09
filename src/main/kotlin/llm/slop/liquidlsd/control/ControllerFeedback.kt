@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.control
 
+import llm.slop.liquidlsd.parameters.MeterType
 import kotlin.math.roundToInt
 
 /**
@@ -10,6 +11,11 @@ import kotlin.math.roundToInt
  * the bank that is on screen (other banks fall back to their own stored colours), so lights go to the
  * *active* bank only: all banks while the active bank is still unknown, and the whole new bank
  * whenever it changes. Only changes are sent; the sink paces and coalesces what is sent.
+ *
+ * With [OutputConfig.native] the device is host-driven instead: no banks, no hue wheel and no ring
+ * brightness. Each knob gets its ring style (from the parameter's meter type) and an RGB LED colour
+ * as SysEx, sent only when they change and always before the ring position they apply to. Call
+ * [enterNativeMode] when the device connects and [leaveNativeMode] when it is let go.
  */
 class ControllerFeedback(private val compiled: CompiledController, private val sink: MidiSink) {
     private class Target(
@@ -24,9 +30,13 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
         var lastRing = -1
         var lastColor = -1
         var lastBrightness = -1
-        fun forget() { lastRing = -1; lastColor = -1; lastBrightness = -1 }
+        var lastStyle = -1
+        var lastRgb = -1
+        fun forget() { lastRing = -1; lastColor = -1; lastBrightness = -1; lastStyle = -1; lastRgb = -1 }
     }
 
+    private val native: NativeModeDef? = compiled.profile.output.native
+    private val nativeSysex: NativeSysex? = native?.let { NativeSysex.from(it) }
     private val wheel: HueWheel
     private val brightnessMin: Int
     private val brightnessMax: Int
@@ -129,9 +139,50 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
         for (t in active) send(t, lights)
     }
 
+    /** Switches the device into native mode (no-op without [OutputConfig.native]) and forgets what was sent, so the next [update] rewrites everything. */
+    fun enterNativeMode() {
+        val sysex = nativeSysex ?: return
+        sink.sendSysex(sysex.enter())
+        resync()
+    }
+
+    /** Returns the device to its stock behaviour (no-op without [OutputConfig.native]). */
+    fun leaveNativeMode() {
+        val sysex = nativeSysex ?: return
+        sink.sendSysex(sysex.leave())
+        resync()
+    }
+
+    private fun sendNative(t: Target, light: KnobLight?, native: NativeModeDef, sysex: NativeSysex) {
+        val style = native.styleFor(light?.meterType ?: MeterType.MONOPOLAR)
+        val styleKey = style.type.code or ((if (style.detent) 1 else 0) shl 1) or (style.detentColor.coerceIn(0, 127) shl 2)
+        if (styleKey != t.lastStyle) {
+            t.lastStyle = styleKey
+            sink.sendSysex(sysex.indicator(t.knob, style))
+        }
+        val lit = light != null && light.lit
+        val r = if (lit) (light!!.r.coerceIn(0f, 1f) * 127f).roundToInt() else 0
+        val g = if (lit) (light!!.g.coerceIn(0f, 1f) * 127f).roundToInt() else 0
+        val b = if (lit) (light!!.b.coerceIn(0f, 1f) * 127f).roundToInt() else 0
+        val rgb = (r shl 14) or (g shl 7) or b
+        if (rgb != t.lastRgb) {
+            t.lastRgb = rgb
+            sink.sendSysex(sysex.color(t.knob, r, g, b))
+        }
+        val ring = ((light?.value ?: 0f).coerceIn(0f, 1f) * 127f).roundToInt()
+        if (ring != t.lastRing) {
+            t.lastRing = ring
+            sink.sendCc(t.ringChannel, t.ringCc, ring)
+        }
+    }
+
     /** Sends [t]'s ring and LED, on the encoder's own (per-bank) CC numbers, if they changed. */
     private fun send(t: Target, lights: Array<KnobLight?>) {
         val knob = t.knob
+        if (native != null && nativeSysex != null) {
+            sendNative(t, if (knob < lights.size) lights[knob] else null, native, nativeSysex)
+            return
+        }
         if (valueStamp[knob] != stamp) {
             valueStamp[knob] = stamp
             val light = if (knob < lights.size) lights[knob] else null

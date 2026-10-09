@@ -61,6 +61,8 @@ data class AppPreferences(
     val recordingDirectory: String = "",
     /** Folder last used to save a controller utility settings file (see [MidiPreferencesPanel]); blank = the home folder. */
     val utilitySettingsDirectory: String = "",
+    /** Controller profile the user picked per device (device name without its port suffix -> profile id); absent = automatic. */
+    val controllerProfileChoices: Map<String, String> = emptyMap(),
     val recordingIncludeAudio: Boolean = true,
     val recordingBitrateMbps: Int = 12,
     val recordingFps: Int = 60,

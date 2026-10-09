@@ -7,6 +7,7 @@ import javax.sound.midi.MidiDevice
 import javax.sound.midi.MidiSystem
 import javax.sound.midi.Receiver
 import javax.sound.midi.ShortMessage
+import javax.sound.midi.SysexMessage
 
 /**
  * Opens a MIDI output port by device name, for controller feedback. [MidiEngine] only ever opens
@@ -57,7 +58,24 @@ object MidiOutputPorts {
             var maxSendNs = 0L
             var maxBacklog = 0
             while (!closed) {
-                val change = try { queue.take(250) } catch (e: InterruptedException) { break }
+                try { queue.awaitWork(250) } catch (e: InterruptedException) { break }
+                while (true) {
+                    val message = queue.pollSysex() ?: break
+                    val wait = minIntervalNs - (System.nanoTime() - lastSendNs)
+                    if (wait > 0) {
+                        try { Thread.sleep(wait / 1_000_000L, (wait % 1_000_000L).toInt()) } catch (e: InterruptedException) { break }
+                    }
+                    try {
+                        receiver.send(SysexMessage(message, message.size), -1)
+                    } catch (e: Throwable) {
+                        logger.warn { "MIDI output failed, dropping feedback port: ${e.message}" }
+                        failed = true
+                        break
+                    }
+                    lastSendNs = System.nanoTime()
+                }
+                if (failed) break
+                val change = queue.poll()
                 if (change != null) {
                     // Pace: never closer than the minimum interval to the previous message.
                     val wait = minIntervalNs - (System.nanoTime() - lastSendNs)
@@ -97,9 +115,20 @@ object MidiOutputPorts {
             queue.offer(channel.coerceIn(0, 15), cc.coerceIn(0, 127), value.coerceIn(0, 127))
         }
 
+        override fun sendSysex(bytes: ByteArray) {
+            if (failed || closed) return
+            queue.offerSysex(bytes.copyOf())
+        }
+
         override val isHealthy: Boolean get() = !failed && !closed && device.isOpen
 
         override fun close() {
+            // Let queued SysEx (e.g. leaving native mode) reach the device before the port goes away.
+            val deadline = System.currentTimeMillis() + SYSEX_FLUSH_MS
+            while (!failed && !closed && queue.sysexPending > 0 && System.currentTimeMillis() < deadline) {
+                try { Thread.sleep(5) } catch (_: InterruptedException) { break }
+            }
+            if (!failed) try { Thread.sleep(20) } catch (_: InterruptedException) {}
             closed = true
             writer.interrupt()
             try { receiver.close() } catch (_: Throwable) {}
@@ -108,4 +137,5 @@ object MidiOutputPorts {
     }
 
     private const val STATS_WINDOW_MS = 5000L
+    private const val SYSEX_FLUSH_MS = 300L
 }

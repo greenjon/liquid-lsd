@@ -87,7 +87,11 @@ class ControllerRuntime(
         if (pages.isEmpty()) return
         val count = compiled.profile.banks.count.coerceIn(1, pages.size)
         // A device bank past the page list (no wrapPages) mirrors the last page, so step from there.
-        val from = (activeBank ?: 0).coerceAtMost(count - 1)
+        // A virtual-bank device has no active bank: the page on screen is the position.
+        val from = if (compiled.profile.banks.virtual) {
+            val current = ctx.knobSurface?.currentPageId?.removePrefix("perform.")
+            pages.indexOfFirst { it.removePrefix("perform.") == current }.coerceIn(0, count - 1)
+        } else (activeBank ?: 0).coerceAtMost(count - 1)
         val target = Math.floorMod(from + delta, count)
         if (trace) logger.info { "controller bank step $delta: ${from + 1} -> ${target + 1}" }
         pages.getOrNull(target)?.takeIf { it.isNotBlank() }?.let { ctx.knobSurface?.showPage(it) }

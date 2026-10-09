@@ -12,6 +12,11 @@ class TracingSink(private val inner: MidiSink, private val name: String) : MidiS
         inner.sendCc(channel, cc, value)
     }
 
+    override fun sendSysex(bytes: ByteArray) {
+        logger.info { "feedback tx +${System.currentTimeMillis() - startMs}ms $name sysex=${bytes.joinToString(" ") { "%02X".format(it) }}" }
+        inner.sendSysex(bytes)
+    }
+
     override val isHealthy: Boolean get() = inner.isHealthy
 
     override fun close() {

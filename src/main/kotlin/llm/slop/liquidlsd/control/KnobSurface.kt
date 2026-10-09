@@ -24,6 +24,9 @@ interface KnobSurface {
      */
     fun stepPair(delta: Int): Boolean = false
 
+    /** The id of the page the knobs currently control (e.g. `ab`, optionally `perform.`-prefixed), or null if unknown. */
+    val currentPageId: String? get() = null
+
     /** True while the pair view is up: the knobs follow the focused pair on any bank, so the device must not be pulled back to the page's bank. */
     val pairFocused: Boolean get() = false
 

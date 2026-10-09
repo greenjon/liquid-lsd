@@ -207,6 +207,75 @@ class ControllerProfileTest {
         assertTrue(c.problems.any { "banks.pages" in it }, c.problems.toString())
     }
 
+    // --- Native mode ---
+
+    private val nativeKnobs = """"inputs":[{"id":"knob","kind":"ENCODER","channel":0,"cc":0,"count":16}]"""
+
+    @Test
+    fun nativeProfileWithVirtualBanksCompiles() {
+        val c = compile("""{"id":"x",$nativeKnobs,"banks":{"count":2,"pages":["a","b"],"virtual":true},
+            "output":{"knobs":{},"native":{}}}""")
+        assertEquals(emptyList(), c.problems)
+        val native = c.profile.output.native!!
+        assertEquals(IndicatorStyle(IndicatorType.BAR, detent = true), native.styleFor(llm.slop.liquidlsd.parameters.MeterType.BIPOLAR))
+        assertEquals(IndicatorType.DOT, native.styleFor(llm.slop.liquidlsd.parameters.MeterType.ENDLESS).type)
+    }
+
+    @Test
+    fun nativeNeedsKnobFeedbackAndValidHeader() {
+        val c = compile("""{"id":"x","output":{"native":{"header":"00 zz"}}}""")
+        assertTrue(c.problems.any { "output.native needs output.knobs" in it }, c.problems.toString())
+        assertTrue(c.problems.any { "output.native.header" in it }, c.problems.toString())
+    }
+
+    @Test
+    fun virtualBanksNeedPagesAndNoHardwareSwitch() {
+        val c = compile("""{"id":"x","banks":{"count":2,"virtual":true,"switch":{"channel":3}}}""")
+        assertTrue(c.problems.any { "banks.virtual needs banks.pages" in it }, c.problems.toString())
+        assertTrue(c.problems.any { "banks.virtual cannot have banks.switch" in it }, c.problems.toString())
+    }
+
+    @Test
+    fun virtualBanksRejectBankStride() {
+        val c = compile("""{"id":"x","banks":{"count":2,"pages":["a","b"],"virtual":true},
+            "inputs":[{"id":"knob","kind":"ENCODER","channel":0,"cc":0,"count":4,"bankStride":16}]}""")
+        assertTrue(c.problems.any { "bankStride 0" in it }, c.problems.toString())
+    }
+
+    @Test
+    fun nativeSysexBuilderFromDefUsesItsHeader() {
+        val sysex = NativeSysex.from(NativeModeDef(header = "00 01 79 05"))!!
+        assertEquals(NativeSysex().enter().toList(), sysex.enter().toList())
+    }
+
+    // --- XT firmware (native mode) built-in profile ---
+
+    private val store = ControllerProfileStore(createTempDirectory("controllers").toFile())
+    private fun xt() = store.get("midi-fighter-twister-xt")!!
+
+    @Test
+    fun xtProfileIsValidAndKnowsTheMeasuredNativeMessages() {
+        val x = xt()
+        assertEquals(emptyList(), x.problems)
+        assertEquals("knob.1", x.resolve(cc(0, 0))?.inputId)
+        assertEquals("knob.16", x.resolve(cc(0, 15))?.inputId)
+        assertEquals("knob.1.press", x.resolve(cc(1, 0))?.inputId)
+        val sides = (0..5).map { x.resolve(cc(2, it))?.inputId }
+        assertEquals(listOf("side.1", "chainlink", "shift", "bankstep", "side.2", "side.3"), sides)
+        assertEquals(null, x.resolve(cc(0, 0))?.bank, "no hardware banks")
+    }
+
+    @Test
+    fun deviceChoiceDecidesBetweenTheStockAndTheXtProfile() {
+        val name = "Midi Fighter Twister [hw:2,0,0]"
+        assertEquals("midi-fighter-twister", store.matchFor(name)?.profile?.id, "automatic keeps the stock profile")
+        assertEquals("midi-fighter-twister-xt", store.matchFor(name, "midi-fighter-twister-xt")?.profile?.id)
+        assertEquals("midi-fighter-twister", store.matchFor(name, "gone")?.profile?.id, "an unknown choice falls back")
+        store.preferredIdFor = { if (it == "Midi Fighter Twister") "midi-fighter-twister-xt" else null }
+        assertEquals("midi-fighter-twister-xt", store.matchFor("Midi Fighter Twister [hw:3,0,0]")?.profile?.id, "the port suffix does not matter")
+        assertEquals("Midi Fighter Twister", ControllerProfileStore.deviceKey(name))
+    }
+
     // --- Validation ---
 
     @Test

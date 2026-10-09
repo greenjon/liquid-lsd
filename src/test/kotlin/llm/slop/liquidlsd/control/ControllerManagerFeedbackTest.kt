@@ -145,4 +145,37 @@ class ControllerManagerFeedbackTest {
         manager.updateFeedback(source, nowMs = 0)
         assertEquals(listOf(2), intervals, "the shipped Twister profile paces at 2 ms")
     }
+
+    // --- Native mode lifecycle ---
+
+    private class SysexSink : MidiSink {
+        val log = ArrayList<String>()
+        var closed = false
+        override fun sendCc(channel: Int, cc: Int, value: Int) { log += "cc" }
+        override fun sendSysex(bytes: ByteArray) { log += bytes.joinToString(" ") { "%02X".format(it) } }
+        override fun close() { closed = true; log += "close" }
+    }
+
+    @Test
+    fun nativeDeviceIsEnteredOnConnectAndLeftBeforeClose() {
+        val dir = createTempDirectory("controllers").toFile()
+        java.io.File(dir, "native-test.json").writeText(
+            """{"id":"native-test","match":["Native Test"],
+                "inputs":[{"id":"knob","kind":"ENCODER","channel":0,"cc":0,"count":2}],
+                "output":{"knobs":{},"native":{}}}"""
+        )
+        val sinks = ArrayList<SysexSink>()
+        val nativeManager = ControllerManager(
+            registry, ControllerProfileStore(dir),
+            connectedDevices = { connected },
+            openSink = { _, _ -> SysexSink().also { sinks += it } },
+            installShutdownHooks = false
+        )
+        connected = listOf("Native Test")
+        nativeManager.updateFeedback(source, nowMs = 0)
+        assertEquals("F0 00 01 79 05 00 01 F7", sinks.single().log.first(), "enter comes before anything else")
+        nativeManager.reset()
+        assertEquals(listOf("F0 00 01 79 05 00 00 F7", "close"), sinks.single().log.takeLast(2), "leave is sent, then the port closes")
+        assertTrue(sinks.single().closed)
+    }
 }

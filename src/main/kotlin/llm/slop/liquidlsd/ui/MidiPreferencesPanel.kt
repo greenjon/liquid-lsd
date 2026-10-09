@@ -175,6 +175,8 @@ object MidiPreferencesPanel {
         theme.caption("Controller profiles map a device's knobs and buttons to commands. A device uses the first profile whose match text fits its name; your own profiles win over built-in ones.")
         val changed = { store.reload(); session.midiMappingManager.controllers.reset() }
 
+        for (deviceName in deviceNames) drawProfileChoice(session, store, deviceName)
+
         for (compiled in store.all()) {
             val profile = compiled.profile
             val source = store.sourceOf(profile.id)
@@ -252,6 +254,29 @@ object MidiPreferencesPanel {
         itemTooltip("Re-reads library/controllers/*.json after you edit a file by hand.")
         profileMessage?.let { theme.caption(it) }
         theme.caption("Edit the JSON files in library/controllers/ with any text editor, then press Reload.")
+    }
+
+    /** A "use profile" selector for a device that more than one profile fits (e.g. the stock and the XT-firmware Twister). */
+    private fun drawProfileChoice(session: llm.slop.liquidlsd.SessionContext, store: ControllerProfileStore, deviceName: String) {
+        val candidates = store.candidatesFor(deviceName)
+        if (candidates.size < 2) return
+        val theme = session.uiTheme
+        val key = ControllerProfileStore.deviceKey(deviceName)
+        val current = store.matchFor(deviceName)?.profile
+        ImGui.text(key)
+        ImGui.sameLine()
+        ImGui.setNextItemWidth(320f)
+        if (ImGui.beginCombo("Use profile##choice_$key", current?.name.orEmpty())) {
+            for (candidate in candidates) {
+                val profile = candidate.profile
+                if (ImGui.selectable(profile.name, profile.id == current?.id)) {
+                    theme.controllerProfileChoices = theme.controllerProfileChoices + (key to profile.id)
+                    session.midiMappingManager.controllers.reset()
+                }
+            }
+            ImGui.endCombo()
+        }
+        itemTooltip("Several profiles fit this device. Pick the XT-firmware profile only if the device runs the custom XT firmware; the app then puts it into native mode (ring styles, RGB LEDs) and returns it to normal when you quit.")
     }
 
     private fun saveUtilityFile(store: ControllerProfileStore, theme: UITheme, chosen: File) {

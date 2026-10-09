@@ -54,9 +54,20 @@ class ControllerProfileStore(
 
     fun sourceOf(id: String): Source? = library.sourceOf(id)?.let { Source.valueOf(it.name) }
 
-    /** The first profile (user profiles first) whose match strings fit [deviceName]. */
-    fun matchFor(deviceName: String): CompiledController? =
-        all().firstOrNull { it.profile.matches(deviceName) }
+    /**
+     * The profile id the user picked for a device (see [deviceKey]), or null for "automatic". Set once at startup
+     * from the app preferences; kept here so every caller of [matchFor] honours the choice.
+     */
+    @Volatile var preferredIdFor: (String) -> String? = { null }
+
+    /** The user's [preferredId] if it is loaded and fits [deviceName], otherwise the first profile (user profiles first) whose match strings fit. */
+    fun matchFor(deviceName: String, preferredId: String? = preferredIdFor(deviceKey(deviceName))): CompiledController? {
+        val fitting = all().filter { it.profile.matches(deviceName) }
+        return fitting.firstOrNull { it.profile.id == preferredId } ?: fitting.firstOrNull()
+    }
+
+    /** Every loaded profile that fits [deviceName], in match order. */
+    fun candidatesFor(deviceName: String): List<CompiledController> = all().filter { it.profile.matches(deviceName) }
 
     /**
      * Writes the built-in profile [id] to `<userDir>/<id>.json`; it then overrides the built-in.
@@ -83,7 +94,10 @@ class ControllerProfileStore(
     }
 
     companion object {
-        val BUILT_IN_NAMES = listOf("midi-fighter-twister")
+        /** A device name without the trailing port suffix (`[hw:2,0,0]`), which changes between plugs; the key of a profile choice. */
+        fun deviceKey(deviceName: String): String = deviceName.replace(Regex("\\s*\\[[^\\]]*]\\s*$"), "")
+
+        val BUILT_IN_NAMES = listOf("midi-fighter-twister", "midi-fighter-twister-xt")
 
         /** Shared instance backed by the real `library/controllers/` directory. */
         val default: ControllerProfileStore by lazy { ControllerProfileStore() }

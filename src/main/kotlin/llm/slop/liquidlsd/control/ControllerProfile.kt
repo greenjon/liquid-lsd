@@ -23,7 +23,12 @@ data class BankConfig(
     val switch: BankSwitchDef? = null,
     val pages: List<String> = emptyList(),
     /** When true, a bank past the end of [pages] shows the first page (and the device is switched back to bank 1) instead of leaving the page alone. */
-    val wrapPages: Boolean = false
+    val wrapPages: Boolean = false,
+    /**
+     * True when the device has no bank buttons and [pages] are the app's own pages (native mode): inputs have
+     * `bankStride` 0 and the active page, not a hardware bank, decides what the knobs control.
+     */
+    val virtual: Boolean = false
 )
 
 @Serializable
@@ -116,7 +121,9 @@ data class OutputConfig(
     val knobs: KnobFeedbackDef? = null,
     val minIntervalMs: Int = 2,
     /** Log every feedback message sent, every bank change and every encoder message at INFO (also enabled by env LSD_MIDI_TRACE=1). */
-    val trace: Boolean = false
+    val trace: Boolean = false,
+    /** Host-driven native mode (ring styles, RGB LEDs); null = the plain CC feedback. */
+    val native: NativeModeDef? = null
 )
 
 /**
@@ -297,6 +304,12 @@ class CompiledController private constructor(
             if (bankCount !in 1..16) problems += "banks.count must be 1..16 (was $bankCount)"
             if (profile.banks.pages.size > bankCount) problems += "banks.pages has more entries than banks.count"
 
+            if (profile.banks.virtual) {
+                if (profile.banks.pages.isEmpty()) problems += "banks.virtual needs banks.pages"
+                if (profile.banks.switch != null) problems += "banks.virtual cannot have banks.switch"
+                if (profile.inputs.any { it.bankStride != 0 }) problems += "banks.virtual inputs must have bankStride 0"
+            }
+
             fun claim(type: MidiMessageType, channel: Int, cc: Int, resolved: ResolvedInput) {
                 if (channel !in 0..15) { problems += "${resolved.inputId}: channel $channel out of range 0..15"; return }
                 if (cc !in 0..127) { problems += "${resolved.inputId}: cc $cc out of range 0..127"; return }
@@ -372,6 +385,14 @@ class CompiledController private constructor(
                     problems += "output.knobs.color values must be 0..127 with min <= max"
                 }
                 if (c.degreesPerStep == 0f) problems += "output.knobs.color.degreesPerStep must not be 0"
+            }
+
+            profile.output.native?.let { native ->
+                if (profile.output.knobs == null) problems += "output.native needs output.knobs"
+                if (native.headerBytes() == null) problems += "output.native.header must be hex bytes 00..7F (was '${native.header}')"
+                native.indicatorStyles.forEach { (meter, style) ->
+                    if (style.detentColor !in 0..127) problems += "output.native.indicatorStyles.$meter detentColor must be 0..127"
+                }
             }
 
             // Expands one binding map: wildcard keys first so explicit keys override them.

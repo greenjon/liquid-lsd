@@ -267,6 +267,10 @@ object UITheme {
         get() = settings.utilitySettingsDirectory
         set(value) { settings = settings.copy(utilitySettingsDirectory = value) }
 
+    var controllerProfileChoices: Map<String, String>
+        get() = settings.controllerProfileChoices
+        set(value) { settings = settings.copy(controllerProfileChoices = value) }
+
     var recordingIncludeAudio: Boolean
         get() = settings.recordingIncludeAudio
         set(value) { settings = settings.copy(recordingIncludeAudio = value) }
