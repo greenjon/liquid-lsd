@@ -105,6 +105,16 @@ A few keyboard shortcuts work anywhere in the app:
 | `Ctrl+R` | Start / stop recording |
 | `Ctrl+P` | Open Preferences |
 | `Ctrl+F` or `/` | Jump to the search box of the open Library tab |
+| `T` | Tap tempo |
+| `Ctrl+Shift+O` | Toggle OSC map mode (click any OSC-learnable control to map it) |
+| `Ctrl+-` / `Ctrl+=` | Make the Library preset names smaller / larger |
+| `Caps Lock` | Toggle the touch console controller |
+| `Q` / `Shift+Q` | Add the selected Library item to the A/B queue / BG queue |
+| `Up` / `Down` | Move the selection in the Library lists and queues |
+| `Delete` | Delete the selected user preset, or remove the selected queue item |
+| `Ctrl+C` / `Ctrl+V` | Copy / paste a modulation cell or row in Edit |
+
+Every shortcut except `Caps Lock` and `Space` can be rebound in **Preferences → Shortcuts**. Shortcuts are ignored while you are typing in a text field.
 
 ## Glossary
 
