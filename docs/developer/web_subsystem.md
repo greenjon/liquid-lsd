@@ -14,7 +14,7 @@ Liquid LSD's web subsystem enables zero-latency live visual streaming without vi
 │                                                              │
 │  Mixer / Deck Engine ──► WebPresetSerializer (JSON)          │
 │                               │                              │
-│                               ▼ (25 Hz Throttled)            │
+│                               ▼ (throttled, 5-60 Hz)         │
 │  BroadcastEngine-IO Thread ──► java.net.http.WebSocket       │
 └───────────────────────────────┬──────────────────────────────┘
                                 │ WSS: ?role=broadcast&key=<token>
@@ -24,7 +24,7 @@ Liquid LSD's web subsystem enables zero-latency live visual streaming without vi
 │                                                              │
 │  - Authentication & Role Verification                        │
 │  - Active Broadcaster Arbitration                            │
-│  - Full State Caching (`state_full`)                         │
+│  - Merged State Cache (late joiners get current state)       │
 │  - Low-Latency Fan-Out Distribution                          │
 └───────────────────────────────┬──────────────────────────────┘
                                 │ WSS: ?role=viewer
@@ -34,62 +34,66 @@ Liquid LSD's web subsystem enables zero-latency live visual streaming without vi
 │                                                              │
 │  - Autopilot Playlist Manager (autopilot.js)                 │
 │  - Web Audio DSP Graph & Beat Tracker (dsp.js)               │
-│  - Dead-Reckoning Extrapolation (renderer.js)                │
+│  - Beat-Clock Extrapolation (renderer.js)                    │
 │  - WebGL2 Multi-Pass Pipeline & CRT Post-Processing          │
 └──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 2. WebSocket Wire Protocol
+## 2. WebSocket Wire Protocol (v2)
 
-The relay server and browser clients communicate using compact JSON messages.
+The relay server and browser clients exchange compact JSON messages. Every `state_full` carries `"v": 2`; a client that speaks another version ignores it (and the deltas that follow, until a full snapshot of its version arrives). Values on the wire are the desktop's **evaluated** parameter values, rounded to 4 decimals, so the browser runs no modulators in live mode and matches the desktop exactly.
 
 ### Message Types
 
 #### 1. Full State Snapshot (`state_full`)
-Dispatched immediately when the broadcaster connects, when a new preset is loaded, or when a new viewer joins mid-session. Contains complete deck parameters, shader source selections, LFO states, and CV routing matrices.
+Sent when the broadcaster connects, when a preset or setlist changes, and by the relay to a viewer joining mid-session (built from the relay's merged state, not the broadcaster's last snapshot).
 
 ```json
 {
   "type": "state_full",
-  "timestamp": 1725234500123,
-  "deckA": {
-    "source": "mandala",
-    "params": {
-      "petals": 8.0,
-      "morph": 1.2,
-      "zoom": 1.05,
-      "rotSpeed": 0.4
+  "v": 2,
+  "clock": { "beats": 812.4, "bpm": 126.0 },
+  "preset": {
+    "deckA": {
+      "source": "dynamic_spiral",
+      "params": { "MaxPoints": 500.0, "Scale": 0.5, "HueOffset": 0.2 },
+      "viewZoom": 1.0, "viewRotateZ": 0.0, "globalAlpha": 1.0,
+      "fx": {
+        "0": { "id": "feedback", "dryWet": 1.0, "params": { "fbDecay": 0.65, "fbGain": 0.48 } },
+        "1": null,
+        "2": null
+      },
+      "fxDryWet": 1.0
+    },
+    "deckB": { "empty": true },
+    "deckBG": { "empty": true },
+    "mixer": {
+      "balance": 0.0, "alpha": 1.0, "levelA": 1.0, "levelB": 1.0, "levelBG": 1.0,
+      "transition": "linear_crossfade", "transitionParams": {},
+      "fx": { "0": null, "1": null, "2": null }, "fxDryWet": 1.0
     }
-  },
-  "deckB": {
-    "source": "dynamic_spiral",
-    "params": {
-      "coils": 12.0,
-      "decay": 0.96
-    }
-  },
-  "mixer": {
-    "crossfader": 0.5,
-    "blendMode": "ADD",
-    "masterGain": 1.0
   }
 }
 ```
 
+- **`params`** is keyed by the exact parameter name: the ISF input `NAME` the shader uniform uses (Mandala uses its own names, e.g. `Hue Offset`). The browser looks the name up in the source's ISF header.
+- **`fx`** is an object keyed `"0"`..`"2"`, not an array, so a delta can address one slot parameter. An empty slot is `null`. `dryWet` is the *effective* wet amount (zero for a disabled slot, scaled by the desktop's FX dip). `fxDryWet` is the effective chain wet. The master chain is `mixer.fx` / `mixer.fxDryWet`.
+- **`balance`** is the crossfader mapped to 0..1 (the transition's `progress`). `transition` is a transition id from `web/catalog.json`; unknown ids fall back to `linear_crossfade`.
+- **`mandala`** (Mandala decks only) holds the shader-ready uniforms (`uL1`..`uL4` already normalised, `uA`..`uD` from the selected recipe, `uThickness`, `uHueOffset`, `uHueSweep`, `uDepth`, `uMaxR`), because the browser has no recipe table.
+- **`empty: true`** marks an empty deck; a source the web cannot draw (external video) is sent with an id the catalog does not know and renders as nothing.
+
 #### 2. Throttled Delta Update (`state_delta`)
-Streamed at a configurable rate (default: 25 Hz) during live performance. Transmits only parameters and continuous signals that have changed beyond an epsilon threshold.
+Streamed at `BroadcastPreferences.targetFps` (5-60 Hz). `patch` is a recursive diff against the last state sent: only changed keys appear, and `null` means the key was removed or the slot emptied. An empty `patch` is a once-a-second heartbeat that only carries the clock.
 
 ```json
 {
   "type": "state_delta",
-  "timestamp": 1725234500163,
-  "integratedTime": 142.845,
-  "integratedShear": 12.302,
-  "crossfader": 0.52,
-  "deckA": {
-    "zoom": 1.08
+  "clock": { "beats": 812.9, "bpm": 126.0 },
+  "patch": {
+    "mixer": { "balance": 0.52 },
+    "deckA": { "fx": { "0": { "params": { "fbDecay": 0.7 } } } }
   }
 }
 ```
@@ -99,14 +103,14 @@ Dispatched by the relay server to all connected viewers when the desktop broadca
 - `broadcaster_online`: Viewers smoothly transition from Autopilot mode to the live broadcaster state, and the TV station badge flips to `SPAZ RADIO • LIVE`.
 - `broadcaster_offline`: Viewers smoothly fade back to local autonomous Autopilot playlist cycles.
 
+### Relay state (`server/state.js`)
+The relay keeps the broadcast state merged: each `state_full` replaces it, each `state_delta` is applied to it (a `null` deletes the key). A viewer that joins mid-session is sent a `state_full` built from it, with `clock.beats` advanced by the time since it was recorded, so it starts on the right beat. Messages of another protocol version are relayed but never cached. Tests: `cd server && npm test` (no `ws` needed).
+
 ---
 
-## 3. Dead-Reckoning & Continuous Phase Tracking
+## 3. Beat Clock
 
-To eliminate visual jitter and 60 FPS stutter caused by network packet quantization:
-1. The desktop broadcaster transmits continuous monotonically accumulating time variables (`integratedTime`, `integratedShear`).
-2. The client-side WebGL2 renderer (`renderer.js`) maintains local dead-reckoning integration: between delta updates, the renderer advances time variables locally using `performance.now()`.
-3. When incoming delta packets arrive, the local timeline gently soft-locks to the broadcaster's anchor time without discontinuous phase jumps.
+Every message carries `clock: {beats, bpm}`, the desktop's synchronised beat count and tempo at the moment of sending. The browser stores it with the local `performance.now()` at arrival and extrapolates (`beats + elapsed * bpm / 60`) for every `lfo`/`beatSine` modulator and any web-side evaluation, so in live mode it needs no beat detection of its own. Network latency (tens of milliseconds) is not compensated; the once-a-second heartbeat keeps drift from accumulating. Outside a live broadcast the client free-runs at the tempo estimated by `dsp.js` (phase-locked beat tracking is plan phase 4).
 
 ---
 

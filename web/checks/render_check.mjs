@@ -29,6 +29,29 @@ for (const t of catalog.transitions) {
 sources.push({ name: 'master_fx', deck: { source: 'domain_warp_fluid' },
   mixer: { balance: 0, fx: [{ id: 'invert', enabled: true, dryWet: 1, params: {} }, null, null] }, settleMs: 900 });
 
+// Live-broadcast replays: wire protocol v2 messages shaped like WebPresetSerializer output.
+const slot = (id, params, dryWet = 1) => ({ id, dryWet, params });
+const spiral = { source: 'dynamic_spiral', params: { Scale: 0.5, Speed: 0.5, Glow: 0.4, HueOffset: 0.2 },
+  viewZoom: 1, viewRotateZ: 0, globalAlpha: 1, fxDryWet: 1,
+  fx: { 0: slot('feedback', { fbDecay: 0.65, fbGain: 0.48, fbKaleido: 1 }), 1: null, 2: null } };
+const mandala = { source: 'mandala', params: {}, viewZoom: 1, viewRotateZ: 0.3, globalAlpha: 1, fxDryWet: 1,
+  fx: { 0: null, 1: null, 2: null },
+  mandala: { uL1: 0.8, uL2: 0.6, uL3: 0.4, uL4: 0.2, uA: 3, uB: 4, uC: 5, uD: 7, uThickness: 0.02,
+    uHueOffset: 0.1, uHueSweep: 3, uDepth: 0.35, uMaxR: 2 } };
+const clock = { beats: 8, bpm: 126 };
+const full = (deckA, deckB, mixer) => ({ type: 'state_full', v: 2, clock,
+  preset: { deckA, deckB, deckBG: { empty: true }, mixer: { balance: 0, alpha: 1, levelA: 1, levelB: 1, levelBG: 1,
+    transition: 'linear_crossfade', transitionParams: {}, fxDryWet: 1, fx: { 0: null, 1: null, 2: null }, ...mixer } } });
+sources.push({ name: 'live_spiral_fx', wire: [full(spiral, { empty: true })], settleMs: 1500 });
+sources.push({ name: 'live_mandala', wire: [full(mandala, { empty: true })], settleMs: 1200 });
+sources.push({ name: 'live_delta_fx_and_crossfade', settleMs: 1500, wire: [
+  full(spiral, mandala),
+  { type: 'state_delta', clock, patch: { mixer: { balance: 0.5, fx: { 0: slot('invert', {}) } },
+    deckA: { fx: { 0: { params: { fbDecay: 0.9 } } } } } },
+] });
+sources.push({ name: 'live_wrong_version_ignored', settleMs: 600, wire: [
+  { type: 'state_full', v: 1, preset: { deckA: { source: 'mandala' } } }] });
+
 // Every shipped autopilot preset, loaded the way autopilot.js loads it.
 for (const f of fs.readdirSync(path.join(web, 'presets')).sort()) {
   if (f.endsWith('.lsd')) sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: 'presets/' + f, settleMs: 2500 });

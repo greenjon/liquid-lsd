@@ -1,6 +1,6 @@
 import { cvState, tick } from './dsp.js';
 import { powerState } from './ui.js';
-import { autopilotState, tickAutopilot, startAutopilot } from './autopilot.js';
+import { autopilotState, tickAutopilot, startAutopilot, handleRelayMessage } from './autopilot.js';
 import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
 import { lookupParam } from './isf.js';
 import { Library, DeckPipeline, MixerPipeline } from './graph.js';
@@ -164,12 +164,18 @@ async function init() {
 
   const evalCtx = makeEvalContext();
   function updateEvalContext() {
-    const beats = cvState.bpm * (elapsedTime / 60.0);
+    // Live broadcast: extrapolate the desktop's beat clock from its last message. Otherwise
+    // free-run at the estimated tempo (phase 4 makes that phase-locked).
+    const clock = autopilotState.isLiveBroadcast ? autopilotState.clock : null;
+    const bpm = clock ? clock.bpm : cvState.bpm;
+    const beats = clock
+      ? clock.beats + ((performance.now() - clock.at) / 1000) * (clock.bpm / 60.0)
+      : cvState.bpm * (elapsedTime / 60.0);
     evalCtx.time = elapsedTime;
     evalCtx.beats = beats;
     evalCtx.frame = frameCount;
     evalCtx.dt = frameDt;
-    evalCtx.bpm = cvState.bpm;
+    evalCtx.bpm = bpm;
     // audio_flux_* is the bass-only onset trigger until phase 4 adds per-band flux
     const onset = cvState.trigger_onset;
     evalCtx.cv = {
@@ -177,7 +183,7 @@ async function init() {
       audio_mid: cvState.audio_mid, audio_high: cvState.audio_high,
       audio_flux_amp: cvState.audio_flux_amp ?? onset, audio_flux_bass: cvState.audio_flux_bass ?? onset,
       audio_flux_mid: cvState.audio_flux_mid ?? onset, audio_flux_high: cvState.audio_flux_high ?? onset,
-      beatSine: Math.sin(beats * 2 * Math.PI), bpm: cvState.bpm,
+      beatSine: Math.sin(beats * 2 * Math.PI), bpm,
     };
   }
   updateEvalContext();
@@ -216,7 +222,7 @@ async function init() {
   const pipeBG = new DeckPipeline(ctx, curWidth, curHeight);
   const mixerPipe = new MixerPipeline(ctx, curWidth, curHeight);
 
-  window.LSD = { cvState, autopilotState, powerState, library: ctx.library };
+  window.LSD = { cvState, autopilotState, powerState, library: ctx.library, handleRelayMessage };
 
   function frameInfo() {
     return { time: elapsedTime, dt: frameDt, index: frameCount };
@@ -225,9 +231,14 @@ async function init() {
   // Draws a deck's source (ISF via the graph, or mandala here) then runs its FX chain.
   // Returns the deck's final texture.
   function renderDeck(deckData, pipe) {
-    if (!deckData) return null;
+    if (!deckData || deckData.empty) {
+      if (!pipe.blank) { pipe.clean.clear(); pipe.blank = true; }
+      return pipe.clean.tex;
+    }
+    pipe.blank = false;
     const srcType = (deckData.source || 'mandala').toLowerCase();
-    if (!ctx.library.has('sources', srcType)) renderMandala(deckData, pipe.clean);
+    if (srcType === 'mandala') renderMandala(deckData, pipe.clean);
+    else if (!ctx.library.has('sources', srcType)) pipe.clean.clear(); // a source the web cannot draw
     else if (!pipe.renderSource(deckData, frameInfo())) return null; // still loading
     return pipe.renderFx(deckData, frameInfo());
   }
@@ -241,6 +252,20 @@ async function init() {
     const locs = mandalaLocs;
     gl.useProgram(mandalaProgram);
     gl.bindVertexArray(mandalaVAO);
+    const m = deckData.mandala;
+    if (m) {
+      // Live broadcast: the desktop sends the shader-ready uniforms (recipe, normalised arms).
+      for (const name of ['uL1', 'uL2', 'uL3', 'uL4', 'uA', 'uB', 'uC', 'uD',
+        'uThickness', 'uHueOffset', 'uHueSweep', 'uDepth', 'uMaxR']) {
+        gl.uniform1f(locs[name], m[name] ?? 0);
+      }
+      gl.uniform1f(locs.uAspectRatio, curWidth / curHeight);
+      gl.uniform1f(locs.uZoom,        evalP(deckData.viewZoom, 1.0));
+      gl.uniform1f(locs.uRotateZ,     evalP(deckData.viewRotateZ, 0.0));
+      gl.uniform1f(locs.uAlpha,       evalP(deckData.globalAlpha, 1.0));
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, MANDALA_POINTS * 2);
+      return;
+    }
     const rawL1 = evalP(deckData.L1 ?? deckData.l1, 0.4);
     const rawL2 = evalP(deckData.L2 ?? deckData.l2, 0.3);
     const rawL3 = evalP(deckData.L3 ?? deckData.l3, 0.2);
@@ -325,7 +350,7 @@ async function init() {
       const mix = autopilotState.mixer || {};
       finalTex = mixerPipe.render(
         mix, texA, texB, texBG ?? pipeBG.clean.tex,
-        autopilotState.deckBG ? (autopilotState.bgAlpha ?? 1.0) : 0.0,
+        (autopilotState.deckBG && !autopilotState.deckBG.empty) ? (autopilotState.bgAlpha ?? 1.0) : 0.0,
         (mix.alpha ?? 1.0) * autopilotState.masterAlpha,
         frameInfo());
     }

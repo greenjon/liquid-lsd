@@ -179,6 +179,15 @@ class Mandala(
         return keys.minByOrNull { abs(it - target) } ?: 3
     }
 
+    /** The hue-cycle count the shader receives as `uHueSweep` (the Hue Sweep knob picks from the recipe's symmetric options). */
+    private fun hueSweepCycles(): Float {
+        val options  = getSymmetricHueCycles(recipe.petals)
+        val rawSweep = parameters["Hue Sweep"]?.value ?: 0f
+        val sweepIdx = if (options.size > 1)
+            (rawSweep * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
+        return options[sweepIdx].toFloat()
+    }
+
     override fun setupUniforms(shader: Shader) {
         val p = parameters
 
@@ -198,14 +207,33 @@ class Mandala(
 
         shader.setUniform("uThickness",      (p["Thickness"]?.value ?: 0.5f)  * 0.035f)
 
-        val options  = getSymmetricHueCycles(recipe.petals)
-        val rawSweep = p["Hue Sweep"]?.value ?: 0f
-        val sweepIdx = if (options.size > 1)
-            (rawSweep * (options.size - 1)).roundToInt().coerceIn(0, options.size - 1) else 0
         shader.setUniform("uHueOffset", p["Hue Offset"]?.value ?: 0f)
-        shader.setUniform("uHueSweep",  options[sweepIdx].toFloat())
+        shader.setUniform("uHueSweep",  hueSweepCycles())
         shader.setUniform("uDepth",     p["Depth"]?.value ?: 0.35f)
         shader.setUniform("uMaxR",      maxR)
+    }
+
+    /**
+     * The shader-ready uniform values for the current recipe and parameters, keyed by uniform
+     * name. Allocates, so it is for the web broadcast (which sends them verbatim so the browser
+     * needs neither the recipe table nor this maths), not the render loop.
+     */
+    fun uniformSnapshot(): Map<String, Float> {
+        val p = parameters
+        val arms = computeNormalizedArmLengths(
+            p["L1"]?.value ?: 0f, p["L2"]?.value ?: 0f,
+            p["L3"]?.value ?: 0f, p["L4"]?.value ?: 0f
+        )
+        return linkedMapOf(
+            "uL1" to arms[0], "uL2" to arms[1], "uL3" to arms[2], "uL4" to arms[3],
+            "uA" to recipe.a.toFloat(), "uB" to recipe.b.toFloat(),
+            "uC" to recipe.c.toFloat(), "uD" to recipe.d.toFloat(),
+            "uThickness" to (p["Thickness"]?.value ?: 0.5f) * 0.035f,
+            "uHueOffset" to (p["Hue Offset"]?.value ?: 0f),
+            "uHueSweep" to hueSweepCycles(),
+            "uDepth" to (p["Depth"]?.value ?: 0.35f),
+            "uMaxR" to maxR
+        )
     }
 
     override fun drawTopology() {

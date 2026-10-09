@@ -63,6 +63,8 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 **Fullscreen:** Double-click the TV screen to expand to full-screen. Double-click again or press `Esc` to go back to the TV shell.
 
+**What viewers see.** Each deck's source and its parameters, the deck FX chains and the master FX chain, the transition and crossfader, the channel levels and the beat all go over the wire, so the web TV follows your mix closely. A few things stay desktop-only: external video sources (Spout, NDI, PipeWire, webcam) show as nothing, and anything the web player does not have (a custom shader you added to your own library) is skipped. Viewers join in the middle of a broadcast on the right beat.
+
 The viewer's browser also connects to a live audio stream and runs its own audio analysis, keeping the visuals reactive to music even when you're not broadcasting.
 
 ---

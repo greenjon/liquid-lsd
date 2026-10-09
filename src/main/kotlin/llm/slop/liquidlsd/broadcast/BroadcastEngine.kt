@@ -54,6 +54,8 @@ object BroadcastEngine {
     private val needsFullSync = AtomicBoolean(false)
     private var lastSentFull: JsonObject? = null
     private var lastTickTimeNanos: Long = 0L
+    private var lastSendTimeNanos: Long = 0L
+    private const val HEARTBEAT_NANOS = 1_000_000_000L
     @Volatile
     private var sendFuture: java.util.concurrent.CompletableFuture<WebSocket>? = null
 
@@ -284,12 +286,16 @@ object BroadcastEngine {
                 val msg = WebPresetSerializer.buildStateFullMessage(mixer)
                 sendTextAsync(ws, msg)
                 lastSentFull = currentFull
+                lastSendTimeNanos = now
             } else {
                 val patch = WebPresetSerializer.computeDeltaPatch(lastSentFull!!, currentFull)
-                if (patch != null) {
-                    val msg = WebPresetSerializer.buildStateDeltaMessage(patch)
+                // Every delta carries the beat clock; with nothing else to say, a once-a-second
+                // heartbeat keeps the browser's clock from drifting.
+                if (patch != null || now - lastSendTimeNanos >= HEARTBEAT_NANOS) {
+                    val msg = WebPresetSerializer.buildStateDeltaMessage(patch ?: JsonObject(emptyMap()))
                     sendTextAsync(ws, msg)
                     lastSentFull = currentFull
+                    lastSendTimeNanos = now
                 }
             }
         } catch (e: Exception) {

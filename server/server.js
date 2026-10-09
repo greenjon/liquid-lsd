@@ -15,6 +15,7 @@
 
 const { WebSocketServer, WebSocket } = require('ws');
 const { createServer }               = require('http');
+const { RelayState }                 = require('./state');
 
 const PORT            = parseInt(process.env.LSD_PORT  || '9004', 10);
 const HOST            = process.env.LSD_HOST           || '0.0.0.0';
@@ -44,7 +45,7 @@ const wss = new WebSocketServer({ server: httpServer });
 // State
 // -------------------------------------------------------
 let broadcaster  = null;   // single active broadcaster socket
-let currentState = null;   // last full state_full message string (for new viewers)
+const state      = new RelayState(); // merged broadcast state (for viewers joining mid-session)
 const viewers    = new Set();
 
 // -------------------------------------------------------
@@ -82,20 +83,19 @@ wss.on('connection', (ws, req) => {
     ws.on('message', (data) => {
       const str = data.toString();
       try {
-        const msg = JSON.parse(str);
-        // Cache full state so viewers joining mid-session get immediate state
-        if (msg.type === 'state_full') {
-          currentState = str;
+        // Keep the merged state current so viewers joining mid-session get it, not a stale snapshot
+        if (!state.ingest(JSON.parse(str))) {
+          console.warn('[relay] Ignored broadcaster message (wrong protocol version or no full state yet)');
         }
-        fanOut(str, ws);
       } catch {
-        fanOut(str, ws);
+        // Not JSON: nothing to merge; still relay it as before
       }
+      fanOut(str, ws);
     });
 
     ws.on('close', () => {
       broadcaster  = null;
-      currentState = null;
+      state.reset();
       console.log('[relay] Broadcaster disconnected');
       fanOut(JSON.stringify({ type: 'broadcaster_offline' }), ws);
     });
@@ -112,7 +112,7 @@ wss.on('connection', (ws, req) => {
   console.log(`[relay] Viewer connected (total: ${viewers.size})`);
 
   // Send current state immediately if broadcaster is active
-  ws.send(currentState || JSON.stringify({ type: 'broadcaster_offline' }));
+  ws.send(state.snapshotMessage() || JSON.stringify({ type: 'broadcaster_offline' }));
 
   ws.on('close', () => {
     viewers.delete(ws);

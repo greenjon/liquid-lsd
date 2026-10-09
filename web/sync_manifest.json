@@ -296,10 +296,10 @@
     },
     {
       "desktop": "src/main/kotlin/llm/slop/liquidlsd/broadcast/WebPresetSerializer.kt",
-      "web": "web/renderer.js",
+      "web": "web/graph.js",
       "mode": "manual_review",
       "description": "JSON preset serialization schema & dead reckoning state sync",
-      "last_synced_hash": "21f506d0c1992ee145a02aa4097a4a871dc2fa7b78a79c09d7f69b895cedd70d"
+      "last_synced_hash": "63f3315994815481415ba70ca54ca1f839066d3174a735b402ca5de65b174049"
     }
   ]
 }

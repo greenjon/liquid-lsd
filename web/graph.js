@@ -3,8 +3,9 @@
 // source drawn outside this graph (renderer.js), but its output is just a texture here.
 //
 // State shapes (see .planning/web-renderer-parity-plan.md; phase 3 will put these on the wire):
-//   deck:  { source, <ISF input NAME>: number|ParameterDto, viewZoom, viewRotateZ, globalAlpha,
-//            fx: [slot|null x3], fxDryWet, fxEnabled }
+//   deck:  { source, params: { <ISF input NAME>: number|ParameterDto }, viewZoom, viewRotateZ, globalAlpha,
+//            fx: [slot|null x3] (or {"0".. "2"} on the wire), fxDryWet, fxEnabled,
+//            empty?: true, mandala?: {shader-ready uniforms} }
 //   slot:  { id, enabled, dryWet, params: { <ISF input NAME>: number|ParameterDto } }
 //   mixer: { balance, transition, transitionParams, levelA, levelB, levelBG, master,
 //            fx: [slot|null x3], fxDryWet, fxEnabled }
@@ -151,7 +152,7 @@ export class DeckPipeline {
       : { zoom: ctx.scalar(deck.viewZoom, 1.0), rotateZ: ctx.scalar(deck.viewRotateZ, 0.0) };
     renderISF(ctx, prog, this.srcState, {
       targetFBO: this.clean.fbo, width: this.clean.w, height: this.clean.h,
-      params: evalParams(ctx, prog, deck),
+      params: evalParams(ctx, prog, deck.params ?? deck),
       frame: { ...frame, alpha: ctx.scalar(deck.globalAlpha, 1.0), view },
     });
     return true;
@@ -207,7 +208,9 @@ export class FxChainState {
     const { ctx } = this;
     const { gl } = ctx;
     const chainWet = chainEnabled === false ? 0 : ctx.scalar(chainDryWet, 1.0);
-    if (chainWet <= 0 || !Array.isArray(slots)) return cleanTex;
+    // `slots` is an array in preset files and an object keyed "0".."2" on the wire (so deltas can
+    // address a slot parameter); indexing works for both.
+    if (chainWet <= 0 || !slots || typeof slots !== 'object') return cleanTex;
 
     let input = cleanTex;
     let write = this.ping, read = this.pong;

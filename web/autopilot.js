@@ -5,6 +5,9 @@ import { normalizeDeckPreset } from './renderer_utils.js';
 
 const RELAY_URL = 'wss://spaz.org/lsd-relay';
 
+// Wire protocol version this client speaks; see docs/developer/web_subsystem.md.
+const PROTOCOL_VERSION = 2;
+
 export const autopilotSettings = {
   fgPlaylist: 'default.lsdplay',
   bgPlaylist: 'default_bg.lsdplay',
@@ -31,7 +34,9 @@ export const autopilotState = {
   },
   bgAlpha: 1.0,
   masterAlpha: 1.0,
-  isLiveBroadcast: false
+  isLiveBroadcast: false,
+  // Broadcaster's beat clock {beats, bpm, at}; `at` is performance.now() when it arrived.
+  clock: null
 };
 
 // Internal Playlist & State Machines
@@ -220,6 +225,46 @@ async function startBgTransition() {
   console.log(`[autopilot] Dipping to BG: ${presetName}`);
 }
 
+/** Applies one relay message (state_full / state_delta / broadcaster_offline) to the live state. */
+export function handleRelayMessage(msg) {
+  switch (msg.type) {
+    case 'state_full':
+      if (msg.v !== PROTOCOL_VERSION) {
+        console.warn(`[autopilot] Ignoring state_full with protocol v${msg.v}; this client speaks v${PROTOCOL_VERSION}`);
+        break;
+      }
+      autopilotState.isLiveBroadcast = true;
+      noteClock(msg.clock);
+      if (msg.preset) {
+        autopilotState.deckA = msg.preset.deckA || null;
+        autopilotState.deckB = msg.preset.deckB || null;
+        autopilotState.deckBG = msg.preset.deckBG || null;
+        // Replace, don't merge: keys absent from a full snapshot (e.g. a cleared FX slot) must go.
+        autopilotState.mixer = Object.assign({ balance: 0.0, alpha: 1.0 }, msg.preset.mixer);
+        autopilotState.bgAlpha = 1.0;
+      }
+      break;
+
+    case 'state_delta':
+      if (!autopilotState.isLiveBroadcast) break; // wait for a full snapshot of a known version
+      noteClock(msg.clock);
+      if (msg.patch) {
+        applyPatch(autopilotState, msg.patch);
+      }
+      break;
+
+    case 'broadcaster_offline':
+      if (autopilotState.isLiveBroadcast) {
+        autopilotState.isLiveBroadcast = false;
+        autopilotState.clock = null;
+        console.log('[autopilot] Broadcaster offline — returning to autopilot');
+        fgHoldTimer = 5.0;
+        bgHoldTimer = 5.0;
+      }
+      break;
+  }
+}
+
 // -------------------------------------------------------
 // Relay Client for Live Takeover
 // -------------------------------------------------------
@@ -241,38 +286,18 @@ function connectRelay() {
   ws.addEventListener('message', (event) => {
     let msg;
     try { msg = JSON.parse(event.data); } catch { return; }
-
-    switch (msg.type) {
-      case 'state_full':
-        autopilotState.isLiveBroadcast = true;
-        if (msg.preset) {
-          if (msg.preset.deckA) autopilotState.deckA = msg.preset.deckA;
-          if (msg.preset.deckB) autopilotState.deckB = msg.preset.deckB;
-          if (msg.preset.deckBG) autopilotState.deckBG = msg.preset.deckBG;
-          if (msg.preset.mixer) autopilotState.mixer = Object.assign(autopilotState.mixer, msg.preset.mixer);
-        }
-        break;
-
-      case 'state_delta':
-        if (msg.patch) {
-          applyPatch(autopilotState, msg.patch);
-        }
-        break;
-
-      case 'broadcaster_offline':
-        if (autopilotState.isLiveBroadcast) {
-          autopilotState.isLiveBroadcast = false;
-          console.log('[autopilot] Broadcaster offline — returning to autopilot');
-          fgHoldTimer = 5.0;
-          bgHoldTimer = 5.0;
-        }
-        break;
-    }
+    handleRelayMessage(msg);
   });
 
   ws.addEventListener('close', () => {
     setTimeout(connectRelay, 5000);
   });
+}
+
+function noteClock(clock) {
+  if (clock && Number.isFinite(clock.beats) && Number.isFinite(clock.bpm)) {
+    autopilotState.clock = { beats: clock.beats, bpm: clock.bpm, at: performance.now() };
+  }
 }
 
 function applyPatch(target, patch) {

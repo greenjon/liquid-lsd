@@ -34,6 +34,15 @@ else {
   }));
   await sleep(2500); // warm-up
   for (const spec of sources) {
+    if (spec.wire) {
+      // Replay wire-protocol messages through the same handler the WebSocket uses.
+      w.LSD.autopilotState.isLiveBroadcast = false;
+      for (const m of spec.wire) w.LSD.handleRelayMessage(m);
+      await sleep(spec.settleMs ?? 1500);
+      frames.push({ name: spec.name, ...(await grab()) });
+      w.LSD.handleRelayMessage({ type: 'broadcaster_offline' });
+      continue;
+    }
     let deck = spec.deck;
     if (spec.preset) deck = normalizeDeckPreset(await (await fetch('../' + spec.preset)).json());
     w.LSD.autopilotState.deckA = Object.assign({ feedback: {} }, deck);

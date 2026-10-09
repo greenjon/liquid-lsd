@@ -1,6 +1,6 @@
 # Web renderer parity plan
 
-Started 2026-10-08. Status: phases 0, 1, 2, 5 done; next 3 (wire protocol), 4, 6, 7. Target: **v1.0** (user decision 2026-10-08: the web client is part of v1; phases 0-3 and the preset pack are the release scope, 4-6 as time allows).
+Started 2026-10-08. Status: phases 0, 1, 2, 3, 5 done; next 4 (standalone beat/flux), 6 (autopilot real presets + mandala LUT), 7 (preset pack). Target: **v1.0** (user decision 2026-10-08: the web client is part of v1; phases 0-3 and the preset pack are the release scope, 4-6 as time allows).
 
 ## Goal and decisions (user)
 
@@ -51,8 +51,11 @@ Phases 1-2 done: `web/isf.js` (wrapper + `ISFProgram`/`ISFState`/`renderISF`: PA
 Deck/mixer state shape in `graph.js` header comment: deck `{source, <NAME>..., viewZoom, viewRotateZ, globalAlpha, fx:[{id,enabled,dryWet,params}x3], fxDryWet, fxEnabled}`, mixer `{balance, transition, transitionParams, levelA/B/BG, fx, fxDryWet, fxEnabled}`. Phase 3 should serialise exactly this.
 Still open from phase 2: (a) mandala parity (`Lobes`/`Recipe Select`, recipe table); (b) resolution scale / RGBA8 fallback untested (no float-less browser here); (c) `viewParameters` beyond zoom/rotZ (3D view modes) not read; (d) per-slot Metaknob/Super Knob are desktop-only and not modelled; (e) real GPU/Chrome/Safari unverified; (f) the `evaluator`'s `paramSpec` is applied to ISF inputs but fx `dryWet`/mixer scalars use no spec.
 
-### Phase 3 - Wire protocol v2 (M, ~2 days)
+### Phase 3 - Wire protocol v2 - DONE 2026-10-08 (see notes)
 Versioned schema `v:2` with catalog hash: per deck `source`, `params{NAME:v}` (exact ISF NAME, arrays for color/point), `fb`, `view`, `alpha`, `fx[3]{id,enabled,dryWet,params}` + chain dryWet/enabled; mixer `crossfade`, levels, `transition{id,params}`, master `fx[3]`; beat anchor `{beats,bpm,t}`. Unknown ids: skip slot / fall back, never throw. Fix delta `null` semantics. Relay: merge deltas server-side so late joiners get current state. Kotlin serializer tests; update `web_subsystem.md` (currently stale: shows `integratedTime`, fixed 25 Hz).
+
+Phase 3 done: `WebPresetSerializer` v2 (`PROTOCOL_VERSION`), shape documented in `docs/developer/web_subsystem.md` §2: deck `{source, params{NAME}, viewZoom, viewRotateZ, globalAlpha, fx{"0".."2"}, fxDryWet, mandala?, empty?}`, mixer `{balance, alpha, levelA/B/BG, transition, transitionParams, fx, fxDryWet}`, every message `clock{beats,bpm}` plus a 1 s empty-delta heartbeat. FX slots are an object keyed "0".."2" so deltas address single params. Mandala sends shader-ready uniforms (`Mandala.uniformSnapshot()`), so live mode needs no recipe table. Relay: `server/state.js` merges deltas and serves late joiners (clock advanced), `cd server && npm test`. Client: `handleRelayMessage` in `autopilot.js` (exported, replayed by `render_check`), version gate, `clock` extrapolated in `renderer.js` for `beats`/`bpm` in live mode. Dropped from the original plan: a catalog hash (unknown ids already warn once and are skipped). Not done: non-ISF desktop sources (external video) are sent as an unknown id and show nothing; `levelPV`/preview deck not sent; clock latency is not compensated (heartbeat bounds drift). Needs a real end-to-end test against a running relay + desktop broadcast (no `ws` module installed here, so only the handler and relay state were tested).
+Phase 4 now only needs: standalone beat phase-lock and per-band `audio_flux_*` in `dsp.js` (the live-mode beat clock is already done).
 
 ### Phase 4 - Beat/audio parity (S-M, ~2 days)
 Live: web runs a flywheel from the wire beat anchor (same BeatClock semantics, offset-smoothed for jitter); `dsp.js` beat detection only in standalone. Standalone: add real `audio_flux_*` (per-band spectral flux) to `dsp.js` instead of the bass-only onset alias. Expose `audio_amp/bass/mid/high` identically in both modes.
