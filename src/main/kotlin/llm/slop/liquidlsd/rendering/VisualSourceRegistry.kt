@@ -329,11 +329,7 @@ object VisualSourceRegistry {
 
             val parameters = LinkedHashMap<String, ModulatableParameter>()
             for (pMeta in meta.parameters) {
-                val meterType = try {
-                    MeterType.valueOf(pMeta.type)
-                } catch (e: Exception) {
-                    MeterType.MONOPOLAR
-                }
+                val meterType = pMeta.meterType()
                 val param = ModulatableParameter(
                     baseValue = pMeta.default,
                     minClamp = pMeta.min,

@@ -32,7 +32,7 @@ class ModulatableParameter(
         get() = if (isRandomizeDisabled) false else field
         set(value) { field = if (isRandomizeDisabled) false else value }
     val isAngle: Boolean
-        get() = explicitIsAngle || (minClamp in -3.15f..-3.13f && maxClamp in 3.13f..3.15f)
+        get() = explicitIsAngle || isPiRange(minClamp, maxClamp)
     val modulators = CopyOnWriteArrayList<CvModulator>()
 
     /**
@@ -153,6 +153,9 @@ class ModulatableParameter(
     }
 
     companion object {
+        /** True for a range of about -pi..pi (authors write 3.1, 3.14, 3.141, 3.142...): an angle in radians. */
+        fun isPiRange(min: Float, max: Float): Boolean = min in -3.2f..-3.1f && max in 3.1f..3.2f
+
         /** Meter for a parameter built from ISF data: [MeterType.DISCRETE] when it has a step set, else the usual polarity default. */
         fun defaultMeter(minClamp: Float, steps: Int?): MeterType = when {
             steps != null && steps >= 2 -> MeterType.DISCRETE

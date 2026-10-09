@@ -31,4 +31,16 @@ class ValueFormatTest {
         assertEquals("0.25", ValueFormat.knob(0.25f, 0f, 8f))
         assertEquals("1500.00", ValueFormat.knob(1500f, 0f, 2000f))
     }
+
+    @Test
+    fun piRangesShowAsDegrees() {
+        for (pi in listOf(3.1f, 3.14f, 3.141f, 3.142f, 3.14159f, 3.14159265f)) {
+            assertEquals(ValueFormat.DEGREES, ValueFormat.scaleFor(-pi, pi), "range +-$pi")
+        }
+        assertEquals("180", ValueFormat.knob(3.14159f, -3.14159f, 3.14159f))
+        assertEquals("-180", ValueFormat.knob(-3.14159f, -3.14159f, 3.14159f))
+        assertEquals("57.3", ValueFormat.format(1f, ValueFormat.DEGREES))
+        assertEquals(1f, ValueFormat.scaleFor(-6.28f, 6.28f), "other ranges are untouched")
+        assertEquals(1f, ValueFormat.scaleFor(-3.14159f, 3.14159f, true), "callers that convert angles themselves keep scale 1")
+    }
 }

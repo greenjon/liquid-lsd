@@ -107,6 +107,12 @@ object GeneratorDefaults {
         )
     )
 
+    /**
+     * The deck-agnostic path of [source]'s parameter [paramName]: `Deck/<displayName>/<param>`, the form a source
+     * registers its parameters under once a deck label is put in front (see `VisualSource.getParameterPaths`).
+     */
+    fun deckParamId(source: VisualSource, paramName: String): String = "Deck/${source.displayName}/$paramName"
+
     fun sourceIdFor(source: VisualSource): String = when (source) {
         is DynamicVisualSource -> source.id
         else -> source.id.ifEmpty { source.displayName.lowercase().replace(" ", "_") }
@@ -142,7 +148,7 @@ object GeneratorDefaults {
                 val param = spec?.paramName?.let { source.parameters[it] }
                 if (spec != null && param != null) {
                     val binding = MacroBinding(
-                        parameterId = "Deck/${spec.paramName}",
+                        parameterId = deckParamId(source, spec.paramName),
                         targetType = MacroTargetType.PARAM_BASE_VALUE,
                         minVal = param.minClamp,
                         maxVal = param.maxClamp,
@@ -212,7 +218,7 @@ object GeneratorDefaults {
                 val isExp = EXPONENTIAL_REGEX.containsMatchIn(paramName)
                 val curve = if (isExp) MacroCurveType.EXPONENTIAL else MacroCurveType.LINEAR
                 val binding = MacroBinding(
-                    parameterId = "Deck/$paramName",
+                    parameterId = deckParamId(source, paramName),
                     targetType = MacroTargetType.PARAM_BASE_VALUE,
                     minVal = param.minClamp,
                     maxVal = param.maxClamp,

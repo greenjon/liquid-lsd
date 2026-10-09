@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.ui
 
+import llm.slop.liquidlsd.parameters.ModulatableParameter
 import java.util.Locale
 import kotlin.math.abs
 
@@ -16,9 +17,15 @@ object ValueFormat {
 
     private const val PERCENT = 100f
 
-    /** 100 for unit-fraction ranges (0..1, -1..1, and trimmed variants like 0.001..0.999), else 1. */
-    fun scaleFor(min: Float, max: Float): Float =
-        if (min >= -1.001f && max <= 1.001f && max - min >= 0.99f) PERCENT else 1f
+    /** Radians to degrees: a -pi..pi range is shown as -180..180. */
+    const val DEGREES = (180.0 / Math.PI).toFloat()
+
+    /** 100 for unit-fraction ranges (0..1, -1..1, and trimmed variants like 0.001..0.999), 180/pi for -pi..pi angles, else 1. */
+    fun scaleFor(min: Float, max: Float): Float = when {
+        min >= -1.001f && max <= 1.001f && max - min >= 0.99f -> PERCENT
+        ModulatableParameter.isPiRange(min, max) -> DEGREES
+        else -> 1f
+    }
 
     fun scaleFor(min: Float, max: Float, isAngle: Boolean): Float = if (isAngle) 1f else scaleFor(min, max)
 

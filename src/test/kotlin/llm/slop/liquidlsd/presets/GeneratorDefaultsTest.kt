@@ -248,7 +248,7 @@ class GeneratorDefaultsTest {
                 val knob = bank.knobs[i]
                 assertTrue(knob.label.isNotBlank(), "Knob $i label should not be blank for $sourceId")
                 assertEquals(1, knob.bindings.size, "Knob $i should have 1 binding for $sourceId")
-                assertEquals("Deck/${expectedNames[i]}", knob.bindings[0].parameterId)
+                assertEquals(GeneratorDefaults.deckParamId(source, expectedNames[i]), knob.bindings[0].parameterId)
             }
         }
     }
@@ -269,7 +269,7 @@ class GeneratorDefaultsTest {
         val bank = resolved.macroBank!!
         assertEquals(4, bank.knobs.size)
 
-        val boundParams = bank.knobs.mapNotNull { it.bindings.firstOrNull()?.parameterId?.removePrefix("Deck/") }
+        val boundParams = bank.knobs.mapNotNull { it.bindings.firstOrNull()?.parameterId?.substringAfterLast('/') }
         // Should skip ColorMode and WireframeMode
         assertFalse(boundParams.contains("ColorMode"))
         assertFalse(boundParams.contains("WireframeMode"))

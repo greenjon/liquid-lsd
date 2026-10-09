@@ -137,7 +137,7 @@ object FxParamCell {
     }
 
     private fun formatVal(v: Float, param: llm.slop.liquidlsd.parameters.ModulatableParameter, precise: Boolean = false): String {
-        val scale = ValueFormat.scaleFor(param.minClamp, param.maxClamp, param.isAngle)
+        val scale = if (param.isAngle) ValueFormat.DEGREES else ValueFormat.scaleFor(param.minClamp, param.maxClamp)
         return if (scale != 1f) ValueFormat.trimmed(v * scale)
         else if (precise) String.format(Locale.ROOT, "%.3f", v)
         else ValueFormat.knob(v, param.minClamp, param.maxClamp)

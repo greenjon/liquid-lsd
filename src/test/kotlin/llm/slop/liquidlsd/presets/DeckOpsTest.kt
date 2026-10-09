@@ -280,7 +280,7 @@ class DeckOpsTest {
         DeckOps.postLoaded(DeckSlot.A, dto("legacy", bank = null))
         DeckOps.drainOnGlThread(mixer)
 
-        assertEquals(listOf("Deck A/zoom"), bank(DeckSlot.A).knobs[0].bindings.map { it.parameterId })
+        assertEquals(listOf("Deck A/gen/zoom"), bank(DeckSlot.A).knobs[0].bindings.map { it.parameterId })
     }
 
     @Test

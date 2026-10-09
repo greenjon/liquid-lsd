@@ -10,12 +10,17 @@ data class ParamMeta(
     val default: Float,
     val min: Float,
     val max: Float,
-    val type: String = "MONOPOLAR",
+    /** A [MeterType] name; absent means the usual default for the range (bipolar when [min] is negative). */
+    val type: String? = null,
     val defaultMin: Float? = null,
     val defaultMax: Float? = null,
     val isAngle: Boolean = false,
     val description: String = ""
-)
+) {
+    fun meterType(): MeterType =
+        type?.let { name -> MeterType.entries.firstOrNull { it.name == name } }
+            ?: ModulatableParameter.defaultMeter(min, null)
+}
 
 @Serializable
 data class SourceMeta(
