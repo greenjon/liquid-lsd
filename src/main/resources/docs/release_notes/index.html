@@ -1208,6 +1208,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-xt-firmware-native-mode-with-ring-styles-and-rgb-leds-controlnativemodekt-controlcontrollerfeedbackkt-controlcontrollermanagerkt-midimidioutputportskt-resourcescontrollersmidi-fighter-twister-xtjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister XT Firmware: Native Mode with Ring Styles and RGB LEDs (control/NativeMode.kt, control/ControllerFeedback.kt, control/ControllerManager.kt, midi/MidiOutputPorts.kt, resources/controllers/midi-fighter-twister-xt.json)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#source-knobs-control-the-video-after-a-source-switch-presetsgeneratordefaultskt-renderingdynamicvisualsourcekt-renderingvisualsourceregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source Knobs Control the Video After a Source Switch (presets/GeneratorDefaults.kt, rendering/DynamicVisualSource.kt, rendering/VisualSourceRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#angles-read-as-degrees-everywhere-uivalueformatkt-parametersmodulatableparameterkt-uifxparamcellkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Angles Read as Degrees Everywhere (ui/ValueFormat.kt, parameters/ModulatableParameter.kt, ui/FxParamCell.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stepped-parameters-snap-to-their-choices-parametersmodulatableparameterkt-renderingisf-uidiscretetickskt-uiparametersrendererkt-uimacroknobwidgetkt-librarysources-default_filters" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5867,6 +5900,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#twister-xt-firmware-native-mode-with-ring-styles-and-rgb-leds-controlnativemodekt-controlcontrollerfeedbackkt-controlcontrollermanagerkt-midimidioutputportskt-resourcescontrollersmidi-fighter-twister-xtjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Twister XT Firmware: Native Mode with Ring Styles and RGB LEDs (control/NativeMode.kt, control/ControllerFeedback.kt, control/ControllerManager.kt, midi/MidiOutputPorts.kt, resources/controllers/midi-fighter-twister-xt.json)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#source-knobs-control-the-video-after-a-source-switch-presetsgeneratordefaultskt-renderingdynamicvisualsourcekt-renderingvisualsourceregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source Knobs Control the Video After a Source Switch (presets/GeneratorDefaults.kt, rendering/DynamicVisualSource.kt, rendering/VisualSourceRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#angles-read-as-degrees-everywhere-uivalueformatkt-parametersmodulatableparameterkt-uifxparamcellkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Angles Read as Degrees Everywhere (ui/ValueFormat.kt, parameters/ModulatableParameter.kt, ui/FxParamCell.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stepped-parameters-snap-to-their-choices-parametersmodulatableparameterkt-renderingisf-uidiscretetickskt-uiparametersrendererkt-uimacroknobwidgetkt-librarysources-default_filters" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10501,6 +10567,24 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="twister-xt-firmware-native-mode-with-ring-styles-and-rgb-leds-controlnativemodekt-controlcontrollerfeedbackkt-controlcontrollermanagerkt-midimidioutputportskt-resourcescontrollersmidi-fighter-twister-xtjson">Twister XT Firmware: Native Mode with Ring Styles and RGB LEDs (<code>control/NativeMode.kt</code>, <code>control/ControllerFeedback.kt</code>, <code>control/ControllerManager.kt</code>, <code>midi/MidiOutputPorts.kt</code>, <code>resources/controllers/midi-fighter-twister-xt.json</code>)</h3>
+<ul>
+<li><strong>New optional profile, "Midi Fighter Twister (XT firmware, native mode)"</strong>, for a Twister flashed with the custom XT firmware. The app switches the device into native mode while it runs: <strong>each ring follows its parameter</strong> (a bar, a bar with a centre detent for -100..100 parameters, a dot for endless and stepped ones, updating live as pages, effects and sources change) and <strong>the switch LEDs show the true row colour</strong> instead of the nearest of 126 hues. There are no hardware banks: the bank-step button (right-top, Shift + right-top for back) walks the Perform pages, and the other side buttons keep their stock jobs.</li>
+<li><strong>Opt-in, and the stock profile is unchanged.</strong> Both profiles fit the same device name, so in <strong>Preferences → MIDI Controls → Controller Profiles</strong> a <strong>Use profile</strong> selector appears for a device that more than one profile fits; the choice is remembered per device and applies immediately. Automatic matching still picks the stock profile.</li>
+<li><strong>The device is released when the app lets go of it</strong>: on quit, unplug and profile change the app turns every switch LED black and returns the Twister to normal. After a crash the Twister stays in native mode until it is replugged. Native mode has no ring brightness, so the live send knobs in the Library and Pair view leave the ring off and the switch LED shows the target colour.</li>
+<li>Internal: <code>NativeSysex</code> builds the SysEx messages (one setting per message; the firmware misreads several in one); <code>MidiSink.sendSysex</code> and an ordered, never-coalesced SysEx FIFO in <code>CcQueue</code> are drained before control changes, and <code>DeviceSink.close</code> flushes them. Profiles gain <code>output.native</code> (SysEx header and a ring style per <code>MeterType</code>, editable in the JSON) and <code>banks.virtual</code> (the app's pages stand in for hardware banks); both are validated. <code>ControllerFeedback</code> sends the ring style and RGB colour only when they change, before the ring position. <code>KnobSurface.currentPageId</code> lets a virtual-bank profile step pages from the page on screen. The profile choice is <code>controllerProfileChoices</code> (device name without its <code>[hw:...]</code> suffix to profile id); <code>ControllerProfileStore.matchFor</code> honours it and <code>candidatesFor</code> lists the options.</li>
+</ul>
+<h3 id="source-knobs-control-the-video-after-a-source-switch-presetsgeneratordefaultskt-renderingdynamicvisualsourcekt-renderingvisualsourceregistrykt">Source Knobs Control the Video After a Source Switch (<code>presets/GeneratorDefaults.kt</code>, <code>rendering/DynamicVisualSource.kt</code>, <code>rendering/VisualSourceRegistry.kt</code>)</h3>
+<ul>
+<li><strong>The four default knobs of a generator now drive it.</strong> The default bindings pointed at a parameter path no parameter had (<code>Deck A/Speed</code> instead of <code>Deck A/&lt;source name&gt;/Speed</code>), so after loading or switching a source the knobs and rings moved but the picture did not, and bipolar parameters showed as unipolar on the knob. Both are fixed for newly loaded sources. A preset or session saved with the old binding paths keeps the dead knobs until you re-save the generator default or rebind the knob.</li>
+<li><strong>Custom (meta.json) source parameters with a negative minimum are now bipolar</strong> unless the file says otherwise; before, a missing <code>type</code> meant unipolar.</li>
+<li>Internal: <code>GeneratorDefaults.deckParamId</code> builds <code>Deck/&lt;displayName&gt;/&lt;param&gt;</code>; <code>ParamMeta.type</code> is nullable and <code>ParamMeta.meterType()</code> falls back to <code>ModulatableParameter.defaultMeter</code>.</li>
+</ul>
+<h3 id="angles-read-as-degrees-everywhere-uivalueformatkt-parametersmodulatableparameterkt-uifxparamcellkt">Angles Read as Degrees Everywhere (<code>ui/ValueFormat.kt</code>, <code>parameters/ModulatableParameter.kt</code>, <code>ui/FxParamCell.kt</code>)</h3>
+<ul>
+<li><strong>A -3.142..3.142 range now reads as -180..180</strong> on knob faces, macro binding readouts and range fields, the Min and Max fields of the binding editor, and the effect parameter cell (for example RGB Split's Angle). Typing a value uses degrees too. The ranges the app treats as an angle now cover any author's rounding of pi from 3.1 to 3.2 (3.14, 3.141, 3.142 and so on); the shader still receives radians.</li>
+<li>Internal: <code>ValueFormat.scaleFor(min, max)</code> returns <code>ValueFormat.DEGREES</code> for <code>ModulatableParameter.isPiRange</code>; code that converts angles itself still uses the three-argument form.</li>
+</ul>
 <h3 id="stepped-parameters-snap-to-their-choices-parametersmodulatableparameterkt-renderingisf-uidiscretetickskt-uiparametersrendererkt-uimacroknobwidgetkt-librarysources-default_filters">Stepped Parameters Snap to Their Choices (<code>parameters/ModulatableParameter.kt</code>, <code>rendering/isf/*</code>, <code>ui/DiscreteTicks.kt</code>, <code>ui/ParametersRenderer.kt</code>, <code>ui/MacroKnobWidget.kt</code>, <code>library/sources/*</code>, <code>default_filters/*</code>)</h3>
 <ul>
 <li><strong>Mode, palette and count parameters now snap to real choices.</strong> A knob, LFO, audio source, macro, MIDI or OSC move used to sweep these continuously while the shader saw the value rounded down (so 0.99 read as 0). They now land exactly on a choice, and rounding is to the nearest one. This covers the 3D mode and blend mode, the transition curve and tint modes, and about 25 mode, palette and count inputs across the stock effects and sources (Kaleidoscope segments, Polar Tunnel symmetry, Retro CRT scanlines, Dynamic Spiral max points, and so on). Saved values load unchanged and snap when used.</li>

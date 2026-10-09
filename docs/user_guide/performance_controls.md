@@ -256,7 +256,7 @@ All assignments are stored in JSON profiles under `library/midi/<profile_name>.j
 
 Some controllers are recognised automatically. When a device whose name contains `Twister` connects, the app loads the built-in **Midi Fighter Twister** profile and its 16 encoders drive the Performance Matrix with no learning at all. (The log line `Controller profile 'midi-fighter-twister' matches MIDI device: ...` confirms the match.)
 
-This section is in the order you will need it: [one-time setup](#twister-setup), [what the knobs control](#twister-layout), [gestures](#twister-gestures), [a first walkthrough](#twister-walkthrough), [the side buttons](#twister-side-buttons), [lights](#twister-lights), [troubleshooting](#twister-troubleshooting), and [your own profiles](#twister-own-profiles).
+This section is in the order you will need it: [one-time setup](#twister-setup), [what the knobs control](#twister-layout), [gestures](#twister-gestures), [a first walkthrough](#twister-walkthrough), [the side buttons](#twister-side-buttons), [lights](#twister-lights), [troubleshooting](#twister-troubleshooting), [the optional XT firmware mode](#twister-xt), and [your own profiles](#twister-own-profiles).
 
 <a id="twister-setup"></a>
 #### One-time setup in the Midi Fighter Utility
@@ -374,6 +374,20 @@ The Twister mirrors the screen. Each encoder's ring shows its knob's value, and 
 - **See exactly what is sent:** set `"trace": true` in the profile's `output` section (or start the app with `LSD_MIDI_TRACE=1`). Every message sent to the device, every bank change and every encoder message is then logged.
 - **A Twister knob drives something else, or the browse cursor won't move:** a learned mapping on that knob's channel/CC wins over the controller profile in the Perform view (while browsing, the profile wins). Clear the learned binding in the Learned Mappings list.
 - **The Twister profile isn't in the Learned Mappings bar:** that bar holds your learned mappings. The controller profile is chosen automatically from the device name and is listed under *Controller Profiles* in MIDI Controls.
+
+<a id="twister-xt"></a>
+#### Optional: XT firmware and native mode
+
+If you have flashed your Twister with the custom **XT firmware** (the `nativeMode` build from the Midi Fighter Twister Open Source project; flashing is done with DJ TechTools' tools and is entirely your choice), Liquid LSD can drive it in **native mode**:
+
+- Each ring follows its parameter: a bar, a bar with a centre detent for -100..100 parameters, and a dot for endless and stepped parameters. The style changes live as you change pages, effects and sources.
+- The switch LEDs show the exact row colour.
+- There are no hardware banks. **Right-top** steps through the Perform pages (**Shift + right-top** goes back); the other side buttons work as before. No Utility settings file is needed.
+- The Library and Pair view send knobs (9-13) leave the ring off and show the target in the switch LED colour, because native mode has no half-brightness.
+
+To use it: open **Preferences → MIDI Controls → Controller Profiles**, and in **Use profile** under the Twister choose *Midi Fighter Twister (XT firmware, native mode)*. Choose the stock profile again to go back. Both profiles fit the same device name, so the app never switches by itself, and a Twister on the stock firmware must keep using the stock profile.
+
+When the app quits, unplugs the Twister or you change the profile, the app turns the switch LEDs black and returns the device to normal. If the app crashes the Twister stays in native mode until you unplug and replug it.
 
 <a id="twister-own-profiles"></a>
 #### Your own profiles

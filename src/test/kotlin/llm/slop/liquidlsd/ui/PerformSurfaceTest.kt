@@ -249,6 +249,20 @@ class PerformSurfaceTest {
     }
 
     @Test
+    fun aFocusedBipolarParameterLightsAsBipolarAtCentre() {
+        val inputs = listOf(
+            ISFInput(NAME = "inputImage", TYPE = "image"),
+            ISFInput(NAME = "flowSpeed", TYPE = "float", MIN = JsonPrimitive(-1.0f), MAX = JsonPrimitive(1.0f), DEFAULT = JsonPrimitive(0.0f))
+        )
+        deckAChain.slots[0] = ISFFilter("luma", "luma", ISFHeader(INPUTS = inputs), mockk<Shader>(relaxed = true))
+            .also { it.metaBinding = FxMetaBinding.DRY_WET_SAFETY_NET }
+        FxMacroSync.focusSlot(MacroEngine.DECK_A_FX, mixer, 0)
+        val light = surface().knobLights()[5]!!
+        assertEquals(MeterType.BIPOLAR, light.meterType)
+        assertEquals(0.5f, light.value, 0.001f, "a parameter at zero sits at the ring centre")
+    }
+
+    @Test
     fun blankParameterPositionsOnAFocusedPageAreDark() {
         deckAChain.slots[0] = filter("glow", listOf("intensity"))      // one parameter: knobs 3 and 4 are blank
         FxMacroSync.focusSlot(MacroEngine.DECK_A_FX, mixer, 0)

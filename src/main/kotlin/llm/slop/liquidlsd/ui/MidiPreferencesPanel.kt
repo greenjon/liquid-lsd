@@ -271,6 +271,7 @@ object MidiPreferencesPanel {
                 val profile = candidate.profile
                 if (ImGui.selectable(profile.name, profile.id == current?.id)) {
                     theme.controllerProfileChoices = theme.controllerProfileChoices + (key to profile.id)
+                    AppPreferencesStore.savePreferences()
                     session.midiMappingManager.controllers.reset()
                 }
             }

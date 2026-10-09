@@ -30,6 +30,12 @@ Contents: 1 Foundations · 2 Rendering and shaders · 3 One path for every chang
 
 ---
 
+## Twister Native Mode Is Opt-In, Per Device, and Never Automatic (`control/NativeMode.kt`, `control/ControllerProfileStore.kt`)
+- The XT-firmware native mode (ring styles by parameter polarity, true RGB LEDs, app pages instead of hardware banks) is a second built-in profile, `midi-fighter-twister-xt`, chosen by the user per device. Both Twister profiles fit one device name and a stock-firmware Twister must not be put in native mode, so matching stays "first fit" (stock) unless the user picks otherwise. We do not probe the firmware.
+- The app owns the device only while it runs: it enters native mode on connect and releases it (LEDs black, then leave) on quit, unplug and profile change. We accept that a crash leaves the device in native mode until replugged, rather than adding a watchdog.
+- One setting per SysEx message, because the firmware misreads concatenated configs (verified on hardware). Ring styles are data in the profile, not code.
+- We do not redistribute the firmware (DJTT licence); the guide only describes the mode.
+
 ## UI Terminology Pass: One Name per Thing (`ui/*`, `docs/user_guide/*`)
 - **Edit** is the name of the parameter editor (the old "Deep Edit" is gone from menus, tooltips, shortcuts and docs). The Library's tabs are **Sources**, **FX**, **Transitions** and **Macros** (was Maps; inside it, Banks and Pages). Macro knobs have **targets**; **mapping** is only for hardware (MIDI/OSC) controls..
 - **Queues:** **A/B Queue** and **BG Queue** (FX: **A/B FX Queue**, **BG FX Queue**), plus **Transition Queue**. "Play Queue" and "Live Queue" are retired. Output menu: **Record Output** and **Render Video (Offline)...**. Deck levels are **Level**, not Alpha. The Edit view's right-hand column is **Modulation** (was Properties); its first tab is **Parameters**. The crossfader row badge is `XF`; the wet/dry row stays `W/D` (it is per-deck chain wet/dry, not a send).
@@ -48,7 +54,7 @@ Contents: 1 Foundations · 2 Rendering and shaders · 3 One path for every chang
 
 ## Bundled ISF Inputs Are Normalized: 0..1 or -1..1, Angles in Radians, Zoom Centered at 0.5 (`default_*/*.fs`, `ui/ValueFormat.kt`)
 - Continuous inputs of bundled generators, filters and transitions span exactly 0..1 or -1..1, so the UI shows them as 0..100 / -100..100 (`ValueFormat`). The shader remaps once to its working units with a `#define Name_ (...)` block after the header and uses `Name_` in the body; the input name never changes, so macro bindings, `GeneratorDefaults` and `ISFAutoBindEngine.CURATED` keep addressing it.
-- **Outside values are allowed only when defensible**: enums and counts (palette, mode, segments, symmetries, `MaxPoints`, `pixelSize`, strobe `rate` in Hz) and angles (range exactly +-PI so the app treats them as degrees; a periodic 0..2PI input is re-ranged to +-PI with no shader change).
+- **Outside values are allowed only when defensible**: enums and counts (palette, mode, segments, symmetries, `MaxPoints`, `pixelSize`, strobe `rate` in Hz) and angles (range +-PI, anywhere from 3.1 to 3.2, so the app treats them as degrees and shows -180..180; a periodic 0..2PI input is re-ranged to +-PI with no shader change).
 - **Zoom/Scale with a neutral 1.0** uses an exponential map: 0.5 is 1x, 0 and 1 reach the old min and max (`pow(min, 1-2v)` below, `pow(max, 2v-1)` above).
 - `ISFAutoBindEngine.CURATED` min/max values are in the normalized units. Shipped FX chains and transitions under `defaults/` store normalized values; older user presets are not migrated.
 

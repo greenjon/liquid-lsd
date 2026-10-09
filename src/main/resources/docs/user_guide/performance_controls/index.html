@@ -847,6 +847,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#optional-xt-firmware-and-native-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional: XT firmware and native mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#your-own-profiles" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1929,6 +1940,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#optional-xt-firmware-and-native-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional: XT firmware and native mode
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#your-own-profiles" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2286,7 +2308,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <p>All assignments are stored in JSON profiles under <code>library/midi/&lt;profile_name&gt;.json</code>. You can create, save, switch, and delete mapping profiles in the MIDI tab, allowing you to quickly switch between different hardware setups (e.g. home studio controller vs live gig setup).</p>
 <h3 id="controller-profiles-midi-fighter-twister">Controller Profiles: Midi Fighter Twister</h3>
 <p>Some controllers are recognised automatically. When a device whose name contains <code>Twister</code> connects, the app loads the built-in <strong>Midi Fighter Twister</strong> profile and its 16 encoders drive the Performance Matrix with no learning at all. (The log line <code>Controller profile 'midi-fighter-twister' matches MIDI device: ...</code> confirms the match.)</p>
-<p>This section is in the order you will need it: <a href="#twister-setup">one-time setup</a>, <a href="#twister-layout">what the knobs control</a>, <a href="#twister-gestures">gestures</a>, <a href="#twister-walkthrough">a first walkthrough</a>, <a href="#twister-side-buttons">the side buttons</a>, <a href="#twister-lights">lights</a>, <a href="#twister-troubleshooting">troubleshooting</a>, and <a href="#twister-own-profiles">your own profiles</a>.</p>
+<p>This section is in the order you will need it: <a href="#twister-setup">one-time setup</a>, <a href="#twister-layout">what the knobs control</a>, <a href="#twister-gestures">gestures</a>, <a href="#twister-walkthrough">a first walkthrough</a>, <a href="#twister-side-buttons">the side buttons</a>, <a href="#twister-lights">lights</a>, <a href="#twister-troubleshooting">troubleshooting</a>, <a href="#twister-xt">the optional XT firmware mode</a>, and <a href="#twister-own-profiles">your own profiles</a>.</p>
 <p><a id="twister-setup"></a></p>
 <h4 id="one-time-setup-in-the-midi-fighter-utility">One-time setup in the Midi Fighter Utility</h4>
 <p>Do this once, in DJ TechTools' <strong>Midi Fighter Utility</strong>. The app ships a ready-made settings file for it, <code>midi-fighter-twister.mfs</code>:</p>
@@ -2499,6 +2521,17 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <li><strong>A Twister knob drives something else, or the browse cursor won't move:</strong> a learned mapping on that knob's channel/CC wins over the controller profile in the Perform view (while browsing, the profile wins). Clear the learned binding in the Learned Mappings list.</li>
 <li><strong>The Twister profile isn't in the Learned Mappings bar:</strong> that bar holds your learned mappings. The controller profile is chosen automatically from the device name and is listed under <em>Controller Profiles</em> in MIDI Controls.</li>
 </ul>
+<p><a id="twister-xt"></a></p>
+<h4 id="optional-xt-firmware-and-native-mode">Optional: XT firmware and native mode</h4>
+<p>If you have flashed your Twister with the custom <strong>XT firmware</strong> (the <code>nativeMode</code> build from the Midi Fighter Twister Open Source project; flashing is done with DJ TechTools' tools and is entirely your choice), Liquid LSD can drive it in <strong>native mode</strong>:</p>
+<ul>
+<li>Each ring follows its parameter: a bar, a bar with a centre detent for -100..100 parameters, and a dot for endless and stepped parameters. The style changes live as you change pages, effects and sources.</li>
+<li>The switch LEDs show the exact row colour.</li>
+<li>There are no hardware banks. <strong>Right-top</strong> steps through the Perform pages (<strong>Shift + right-top</strong> goes back); the other side buttons work as before. No Utility settings file is needed.</li>
+<li>The Library and Pair view send knobs (9-13) leave the ring off and show the target in the switch LED colour, because native mode has no half-brightness.</li>
+</ul>
+<p>To use it: open <strong>Preferences → MIDI Controls → Controller Profiles</strong>, and in <strong>Use profile</strong> under the Twister choose <em>Midi Fighter Twister (XT firmware, native mode)</em>. Choose the stock profile again to go back. Both profiles fit the same device name, so the app never switches by itself, and a Twister on the stock firmware must keep using the stock profile.</p>
+<p>When the app quits, unplugs the Twister or you change the profile, the app turns the switch LEDs black and returns the device to normal. If the app crashes the Twister stays in native mode until you unplug and replug it.</p>
 <p><a id="twister-own-profiles"></a></p>
 <h4 id="your-own-profiles">Your own profiles</h4>
 <p>Profiles are JSON files: built-ins ship inside the app, and yours go in <code>library/controllers/*.json</code>. A file with the same <code>id</code> as a built-in replaces it, so copy a built-in's JSON and edit it. A file with a mistake is skipped; the reason is logged and shown in the <strong>Controller Profiles</strong> section of Preferences &gt; MIDI Controls. That section lists each profile and the device using it, and has <strong>Copy to User File</strong> (for built-ins), <strong>Delete User File</strong> (reverts to the built-in) and <strong>Reload Profiles</strong> (after you edit a file by hand).</p>

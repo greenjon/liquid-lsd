@@ -146,15 +146,20 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
         resync()
     }
 
-    /** Returns the device to its stock behaviour (no-op without [OutputConfig.native]). */
+    /**
+     * Returns the device to its stock behaviour (no-op without [OutputConfig.native]). The switch LEDs are set
+     * black first: the device keeps the last native colours until something repaints them.
+     */
     fun leaveNativeMode() {
         val sysex = nativeSysex ?: return
+        for (t in allTargets) sink.sendSysex(sysex.color(t.knob, 0, 0, 0))
         sink.sendSysex(sysex.leave())
         resync()
     }
 
     private fun sendNative(t: Target, light: KnobLight?, native: NativeModeDef, sysex: NativeSysex) {
-        val style = native.styleFor(light?.meterType ?: MeterType.MONOPOLAR)
+        val marker = light?.marker == true
+        val style = if (marker) IndicatorStyle(IndicatorType.BAR) else native.styleFor(light?.meterType ?: MeterType.MONOPOLAR)
         val styleKey = style.type.code or ((if (style.detent) 1 else 0) shl 1) or (style.detentColor.coerceIn(0, 127) shl 2)
         if (styleKey != t.lastStyle) {
             t.lastStyle = styleKey
@@ -169,7 +174,7 @@ class ControllerFeedback(private val compiled: CompiledController, private val s
             t.lastRgb = rgb
             sink.sendSysex(sysex.color(t.knob, r, g, b))
         }
-        val ring = ((light?.value ?: 0f).coerceIn(0f, 1f) * 127f).roundToInt()
+        val ring = if (marker) 0 else ((light?.value ?: 0f).coerceIn(0f, 1f) * 127f).roundToInt()
         if (ring != t.lastRing) {
             t.lastRing = ring
             sink.sendCc(t.ringChannel, t.ringCc, ring)

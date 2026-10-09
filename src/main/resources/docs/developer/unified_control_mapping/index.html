@@ -1421,6 +1421,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#611-native-mode-host-driven-devices-twister-xt-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.11 Native mode (host-driven devices, Twister XT firmware)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1910,6 +1921,17 @@
     <span class="md-ellipsis">
       
         6.10 Learn into a profile (phase 5, slice 3)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#611-native-mode-host-driven-devices-twister-xt-firmware" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        6.11 Native mode (host-driven devices, Twister XT firmware)
       
     </span>
   </a>
@@ -2722,6 +2744,16 @@
 <p><code>ProfileBindingEdit</code> holds the pure edits (<code>set</code>, <code>remove</code>, <code>key</code>, <code>fits</code>, <code>commandFits</code>); <code>CompiledController.inputKinds</code> lists every bindable input id with its kind. <code>MidiPreferencesPanel.drawBindingEditor</code> writes through <code>ControllerProfileStore.saveUser</code> and schedules <code>ControllerManager.reset()</code> 600 ms after the last successful edit. Only global <code>bindings</code> are editable; <code>bankBindings</code> and learn-into-profile (<code>MidiLearnTarget.ProfileCommand</code>) are open.</p>
 <h3 id="610-learn-into-a-profile-phase-5-slice-3">6.10 Learn into a profile (phase 5, slice 3)</h3>
 <p><code>MidiLearnTarget.ProfileCommand(profileId, commandId, modifiers)</code> is handled by <code>MidiMappingManager.learnIntoProfile</code>, which calls <code>ProfileBindingEdit.learn(compiled, event, commandId, modifiers)</code>: a resolved input gets a key (modifiers sorted + input id), an unresolved one gets a new <code>InputDef</code> (<code>&lt;type&gt;-&lt;channel&gt;-&lt;index&gt;</code>, kind guessed from the message). Result text goes to <code>profileLearnMessage</code>. Open: per-bank bindings.</p>
+<h3 id="611-native-mode-host-driven-devices-twister-xt-firmware">6.11 Native mode (host-driven devices, Twister XT firmware)</h3>
+<ul>
+<li>A profile with <code>output.native</code> is driven by the host: <code>ControllerManager</code> calls <code>ControllerFeedback.enterNativeMode()</code> when the output port opens and <code>leaveNativeMode()</code> (switch LEDs black, then the leave message) on disconnect, <code>reset()</code> and <code>shutdown()</code>; a JVM shutdown hook, installed once, calls <code>shutdown()</code> so quitting releases the device. A crash leaves the device in native mode until it is replugged.</li>
+<li><code>NativeSysex</code> builds <code>F0 &lt;header&gt; ...</code> messages: enter/leave (<code>00 01</code>/<code>00 00</code>), indicator config (<code>01 00 knob type detent detentColor</code>, type 0 dot / 1 bar) and switch colour (<code>01 01 knob r g b</code>, 7 bits each). <strong>One setting per message</strong>: hardware showed that concatenated configs are misparsed. Blended types look identical to plain ones and are not offered. The header and the ring style per <code>MeterType</code> live in the profile (<code>output.native</code>), so a tweak is a JSON edit.</li>
+<li>Messages: knob turn ch0 CC = knob (64 + delta), knob press ch1, side buttons ch2 CC 0-5 (left top/middle/bottom, right top/middle/bottom), ring position ch0 CC = knob. Hardware banks, ring brightness and animations do not exist.</li>
+<li><code>MidiSink.sendSysex</code> has a no-op default. <code>CcQueue</code> keeps SysEx in a separate FIFO that is never coalesced and is drained before control changes, so the mode switch always precedes the writes that depend on it; <code>DeviceSink.close</code> waits (up to 300 ms) for it to empty.</li>
+<li><code>ControllerFeedback</code> in native mode has one target per knob and sends the style when <code>KnobLight.meterType</code> changes and the colour when the RGB changes, both ahead of the ring CC; <code>resync()</code> forgets both. <code>banks.virtual</code> means the profile's <code>banks.pages</code> are the app's own pages: inputs need <code>bankStride</code> 0, there is no <code>banks.switch</code>, and <code>ControllerRuntime.stepBank</code> finds its position from <code>KnobSurface.currentPageId</code> because <code>activeBank</code> stays null.</li>
+<li>Two profiles can fit one device name (stock and XT). <code>ControllerProfileStore.matchFor(deviceName, preferredId)</code> takes the user's per-device choice (<code>controllerProfileChoices</code> preference, keyed by the device name without its <code>[hw:...]</code> port suffix) and falls back to the first match; the choice is made in the Controller Profiles section of the MIDI preferences, never automatically.</li>
+<li>The firmware licence (DJTT) forbids redistributing modified builds: the app never bundles the firmware, and the guide only describes the mode.</li>
+</ul>
 
 
 

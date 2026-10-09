@@ -77,7 +77,11 @@ class ControllerFeedbackNativeTest {
 
     @Test fun leaveSendsLeaveAndStockProfilesIgnoreNativeCalls() {
         feedback.leaveNativeMode()
-        assertEquals(listOf("sysex F0 00 01 79 05 00 00 F7"), sink.drain())
+        val log = sink.drain()
+        assertEquals(17, log.size)
+        assertEquals("sysex F0 00 01 79 05 01 01 00 00 00 00 F7", log.first(), "LEDs go black first")
+        assertEquals("sysex F0 00 01 79 05 01 01 0F 00 00 00 F7", log[15])
+        assertEquals("sysex F0 00 01 79 05 00 00 F7", log.last(), "then the device is released")
         val stockSink = RecordingSink()
         val stock = ControllerFeedback(
             Json.decodeFromString<ControllerProfile>("""{"id":"y","inputs":[{"id":"knob","kind":"ENCODER","channel":0,"cc":0,"count":2}],"output":{"knobs":{}}}""").compile(),
@@ -85,5 +89,12 @@ class ControllerFeedbackNativeTest {
         )
         stock.enterNativeMode(); stock.leaveNativeMode()
         assertTrue(stockSink.drain().isEmpty())
+    }
+
+    @Test fun markerLightLeavesTheRingOffAndKeepsItsColour() {
+        feedback.update(lights(2 to KnobLight(1f, 0f, 1f, 0f, meterType = MeterType.ENDLESS, ringBrightness = 0.5f, marker = true)))
+        val log = sink.drain()
+        assertTrue("sysex F0 00 01 79 05 01 01 02 00 7F 00 F7" in log, "the LED keeps the target colour")
+        assertTrue("cc 0/2=0" in log, "the ring stays empty")
     }
 }

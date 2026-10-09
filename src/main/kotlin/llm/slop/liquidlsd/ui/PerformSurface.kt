@@ -233,7 +233,7 @@ internal class PerformSurface(
             SendTarget.PV -> PerformanceColors.COLOR_DECK_PV
             SendTarget.MASTER -> PerformanceColors.LED_MASTER
         }
-        return KnobLight(1f, c[0], c[1], c[2], meterType = MeterType.ENDLESS, ringBrightness = SEND_RING_BRIGHTNESS)
+        return KnobLight(1f, c[0], c[1], c[2], meterType = MeterType.ENDLESS, ringBrightness = SEND_RING_BRIGHTNESS, marker = true)
     }
 
     private fun isLit(target: PageKnob): Boolean = when (val under = target.spec.under) {
