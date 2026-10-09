@@ -151,6 +151,8 @@ fun main(args: Array<String>) {
 
 
 
+    llm.slop.liquidlsd.control.ControllerProfileStore.default.preferredIdFor = { llm.slop.liquidlsd.ui.UITheme.controllerProfileChoices[it] }
+
     // Wire midi/ to the UI preference switch and controller-profile logging (midi/ must not import ui/ or control/).
     llm.slop.liquidlsd.midi.MidiEngine.install(
         enabled = { llm.slop.liquidlsd.ui.UITheme.midiEnabled },

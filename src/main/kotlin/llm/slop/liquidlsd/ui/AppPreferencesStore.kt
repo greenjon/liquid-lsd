@@ -258,6 +258,11 @@ object AppPreferencesStore {
                 }
                 props.getProperty("recordingDirectory")?.let { UITheme.recordingDirectory = it }
                 props.getProperty("utilitySettingsDirectory")?.let { UITheme.utilitySettingsDirectory = it }
+                props.getProperty("controllerProfileChoices")?.let { saved ->
+                    UITheme.controllerProfileChoices = try {
+                        kotlinx.serialization.json.Json.decodeFromString<Map<String, String>>(saved)
+                    } catch (e: Exception) { emptyMap() }
+                }
                 props.getBoolean("recordingIncludeAudio")?.let { UITheme.recordingIncludeAudio = it }
                 props.getProperty("recordingBitrateMbps")?.toIntOrNull()?.let { UITheme.recordingBitrateMbps = it }
                 props.getProperty("recordingFps")?.toIntOrNull()?.let { UITheme.recordingFps = it }
@@ -357,6 +362,7 @@ object AppPreferencesStore {
             props.setProperty("outputScaleMode", UITheme.outputScaleMode.name)
             props.setProperty("recordingDirectory", UITheme.recordingDirectory)
             props.setProperty("utilitySettingsDirectory", UITheme.utilitySettingsDirectory)
+            props.setProperty("controllerProfileChoices", kotlinx.serialization.json.Json.encodeToString(UITheme.controllerProfileChoices))
             props.setProperty("recordingIncludeAudio", UITheme.recordingIncludeAudio.toString())
             props.setProperty("recordingBitrateMbps", UITheme.recordingBitrateMbps.toString())
             props.setProperty("recordingFps", UITheme.recordingFps.toString())

@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "id": "midi-fighter-twister-xt",
+  "name": "Midi Fighter Twister (XT firmware, native mode)",
+  "description": "For a Twister running the custom XT firmware (nativeMode build). The app switches the device into native mode while it runs: ring style follows the parameter (bar, bar with centre detent for bipolar, dot for endless and stepped), switch LEDs are true RGB, and there are no hardware banks: the bank-step button (right-top, shift + right-top: previous) walks the Perform pages. Knob turns are on ch1 (CC = knob), knob presses on ch2, side buttons on ch3 as CC 0-5 (left-top, left-middle, left-bottom, right-top, right-middle, right-bottom). Left-middle toggles Chain Link (shift: tap tempo), left-bottom is Shift, left-top, right-middle and right-bottom navigate as in the stock profile. Ring brightness is not available in native mode. The device returns to normal when the app quits; after a crash, replug it. No Utility settings file is needed.",
+  "match": [
+    "Midi Fighter Twister",
+    "Twister"
+  ],
+  "banks": {
+    "count": 3,
+    "pages": [
+      "perform.ab",
+      "perform.bgpv",
+      "perform.mixer"
+    ],
+    "virtual": true
+  },
+  "inputs": [
+    {
+      "id": "knob",
+      "kind": "ENCODER",
+      "channel": 0,
+      "cc": 0,
+      "count": 16,
+      "mode": "RELATIVE_BINARY_OFFSET",
+      "press": {
+        "channel": 1
+      }
+    },
+    {
+      "id": "shift",
+      "kind": "MODIFIER",
+      "channel": 2,
+      "cc": 2
+    },
+    {
+      "id": "side",
+      "kind": "BUTTON",
+      "channel": 2,
+      "ccs": [
+        0,
+        4,
+        5
+      ]
+    },
+    {
+      "id": "chainlink",
+      "kind": "BUTTON",
+      "channel": 2,
+      "cc": 1
+    },
+    {
+      "id": "bankstep",
+      "kind": "BUTTON",
+      "channel": 2,
+      "cc": 3
+    }
+  ],
+  "bindings": {
+    "knob.*": "knob.{n}",
+    "knob.*.press": "knob.{n}.press",
+    "shift+knob.*.press": "knob.{n}.press_alt",
+    "side.*": "nav.button.{n}",
+    "shift+side.*": "nav.button.{n}.alt",
+    "chainlink": "fx.chain_link_toggle",
+    "shift+chainlink": "clock.tap_tempo",
+    "bankstep": "controller.bank_next",
+    "shift+bankstep": "controller.bank_prev"
+  },
+  "output": {
+    "knobs": {
+      "input": "knob"
+    },
+    "native": {}
+  }
+}

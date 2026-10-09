@@ -350,4 +350,37 @@ class ControllerRuntimeTest {
         side(9, true); side(9, false)
         assertEquals(listOf("chainlink"), surface.calls)
     }
+
+    // --- Virtual banks (native mode): the page on screen is the position ---
+
+    private class PagedSurface(var page: String?) : KnobSurface {
+        val shown = ArrayList<String>()
+        override fun turn(knob: Int, delta: Float) {}
+        override fun primary(knob: Int) {}
+        override fun secondary(knob: Int) {}
+        override fun showPage(pageId: String) { shown += pageId; page = pageId }
+        override val currentPageId: String? get() = page
+    }
+
+    @Test
+    fun virtualBankStepWalksFromTheCurrentPage() {
+        val profile = kotlinx.serialization.json.Json.decodeFromString<ControllerProfile>(
+            """{"id":"v","banks":{"count":3,"pages":["perform.ab","perform.bgpv","perform.mixer"],"virtual":true},
+                "inputs":[{"id":"shift","kind":"MODIFIER","channel":2,"cc":2},{"id":"bankstep","kind":"BUTTON","channel":2,"cc":3}],
+                "bindings":{"bankstep":"controller.bank_next","shift+bankstep":"controller.bank_prev"}}"""
+        ).compile()
+        assertEquals(emptyList(), profile.problems)
+        val paged = PagedSurface("bgpv")
+        val pctx = CommandContext(mockk<Mixer>(relaxed = true), knobSurface = paged, navSurface = nav)
+        val rt = ControllerRuntime(profile, registry)
+        fun press(cc: Int, down: Boolean) =
+            rt.handle(MidiEvent(2, MidiMessageType.CC, cc, if (down) 127 else 0, if (down) 1f else 0f, timestampMs = clock.also { clock += 100 }, deviceId = "d"), pctx)
+
+        press(3, true); press(3, false)
+        assertEquals(listOf("perform.mixer"), paged.shown, "next from bgpv")
+        press(3, true); press(3, false)
+        assertEquals("perform.ab", paged.shown.last(), "wraps")
+        press(2, true); press(3, true); press(3, false); press(2, false)
+        assertEquals("perform.mixer", paged.shown.last(), "shift = previous, wrapping back")
+    }
 }

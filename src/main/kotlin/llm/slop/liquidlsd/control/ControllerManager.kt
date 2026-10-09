@@ -16,7 +16,8 @@ class ControllerManager(
     private val registry: CommandRegistry,
     private val store: ControllerProfileStore = ControllerProfileStore.default,
     private val connectedDevices: () -> List<String> = { MidiEngine.getConnectedDeviceNames() },
-    private val openSink: (String, Int) -> MidiSink? = { name, intervalMs -> MidiOutputPorts.openFor(name, intervalMs) }
+    private val openSink: (String, Int) -> MidiSink? = { name, intervalMs -> MidiOutputPorts.openFor(name, intervalMs) },
+    private val installShutdownHooks: Boolean = true
 ) {
     private val logger = KotlinLogging.logger {}
     private val runtimes = HashMap<String, ControllerRuntime?>()
@@ -24,6 +25,7 @@ class ControllerManager(
     private val lastOpenAttemptMs = HashMap<String, Long>()
     private var lastScanMs = 0L
     private var hasScanned = false
+    private var shutdownHookInstalled = false
     private val lightBuffer = arrayOfNulls<KnobLight>(KnobCommands.KNOB_COUNT)
 
     /** Handles [event] via its device's profile; false if the device has no profile or the profile ignores the input. */
@@ -67,7 +69,7 @@ class ControllerManager(
         val connected = connectedDevices().toSet()
         val gone = feedbacks.filter { (name, fb) -> name !in connected || !fb.isHealthy }.keys.toList()
         for (name in gone) {
-            feedbacks.remove(name)?.close()
+            feedbacks.remove(name)?.let { it.leaveNativeMode(); it.close() }
             runtimes.remove(name)?.clearHeldState()   // a replugged device may be on any bank, with nothing held
             lastOpenAttemptMs.remove(name)
         }
@@ -85,7 +87,12 @@ class ControllerManager(
                 continue
             }
             val traced = if (TracingSink.enabled(compiled.profile)) TracingSink(sink, name) else sink
-            feedbacks[name] = ControllerFeedback(compiled, traced)
+            val feedback = ControllerFeedback(compiled, traced)
+            feedbacks[name] = feedback
+            if (compiled.profile.output.native != null) {
+                feedback.enterNativeMode()
+                installShutdownHook()
+            }
             logger.info { "Controller feedback on for $name (profile ${compiled.profile.id})" }
         }
     }
@@ -101,10 +108,23 @@ class ControllerManager(
         runtimes.values.forEach { it?.clearHeldState() }
         runtimes.clear()
         registry.clearHeldState()
-        feedbacks.values.forEach { it.close() }
-        feedbacks.clear()
+        shutdown()
         lastOpenAttemptMs.clear()
         hasScanned = false
+    }
+
+    /** Hands every device back to its stock behaviour and closes the feedback ports. */
+    fun shutdown() {
+        val open = feedbacks.values.toList()
+        feedbacks.clear()
+        open.forEach { it.leaveNativeMode(); it.close() }
+    }
+
+    /** A native-mode device stays in that mode until replugged, so leave it when the app quits. */
+    private fun installShutdownHook() {
+        if (shutdownHookInstalled || !installShutdownHooks) return
+        shutdownHookInstalled = true
+        Runtime.getRuntime().addShutdownHook(Thread({ shutdown() }, "controller-native-leave"))
     }
 
     companion object {
