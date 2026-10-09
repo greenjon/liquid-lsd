@@ -197,6 +197,14 @@ class UIManager(
     )
 
     private val performanceMatrixPanel = PerformanceMatrixPanel()
+    /** The hardware Clock knob: ring = tempo over the tracker's search range, LED = beat pulse, push = tap. */
+    private val clockKnob = ClockKnobFeed(
+        totalBeats = { session.cvRegistry.getSynchronizedTotalBeats() },
+        bpm = { session.audioEngine.getEstimatedBpm() },
+        bpmFloor = { session.audioEngine.beatDetector.settings.bpmSearchFloor.toFloat() },
+        bpmCeiling = { session.audioEngine.beatDetector.settings.bpmSearchCeiling.toFloat() },
+        tap = { session.tapTempoController.tap() }
+    )
 
     private var devEditBrowseOpened = false
 
@@ -227,7 +235,7 @@ class UIManager(
         // Drain all MIDI events queued by the MIDI receiver thread and dispatch MIDI-learn /
         // global actions (queue next/prev, bg-queue next/prev, tap tempo) / parameter bindings.
         val navSurface = NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx, popupManager)
-        val performSurface = PerformSurface(session.uiTheme, performanceMatrixPanel.ctx, parametersState, mixer, navSurface)
+        val performSurface = PerformSurface(session.uiTheme, performanceMatrixPanel.ctx, parametersState, mixer, navSurface, clockKnob)
         val (midiCcDelta, bgMidiCcDelta, transMidiCcDelta, fxMidiDelta, fxBgMidiDelta) = session.midiMappingManager.processGlobalMidiEvents(
             midiEnabled = session.uiTheme.midiEnabled,
             parametersState = parametersState,

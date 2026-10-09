@@ -15,6 +15,12 @@ interface KnobSurface {
     /** The knob's shifted tap action: focus an FX slot / leave focus, or step the parameter page. */
     fun secondary(knob: Int)
 
+    /**
+     * Called when the knob's switch goes down (outside browsing). Returns true if the knob acts on the press itself --
+     * the tempo knob taps here, since a tap on release would lag -- and then the release does nothing.
+     */
+    fun pressDown(knob: Int): Boolean = false
+
     /** Shows the named page (e.g. `perform.ab`) so the knobs and the screen agree. Unknown ids are ignored. */
     fun showPage(pageId: String)
 

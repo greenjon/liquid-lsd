@@ -12,7 +12,7 @@ import llm.slop.liquidlsd.link.AbletonLinkEngine
  * drawn by [PerformanceMatrixPanel]. Line 1: clock-source pills [MAN | AUDIO], Ableton Link
  * status, BPM readout, 4-beat bar dots. Line 2: tempo actions [TAP] [RESYNC] [/2] [x2] [-] [+].
  * Same actions as Preferences > Tempo & Sync ([TempoSyncPanel]) -- surfaced here because they're
- * pressed mid-set. The BPM itself is deliberately not a knob (one bump drifts the whole show).
+ * pressed mid-set. The BPM itself is deliberately not a knob (one bump drifts the whole show); the Twister's clock knob ([ClockKnobFeed]) only shows it and taps.
  */
 internal object PerformanceClockControls {
 

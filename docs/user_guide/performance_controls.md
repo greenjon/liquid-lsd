@@ -286,7 +286,7 @@ The Twister's four hardware **banks** pick the page shown on screen. Press right
 |---|---|---|---|---|---|
 | 1 | **A/B** | Deck A source | Deck A FX | Deck B source | Deck B FX |
 | 2 | **BG/PV** | Deck BG source | Deck BG FX | Deck PV source | Deck PV FX |
-| 3 | **MIXER** | Master MIX | Master FX | Transitions | Clock & Global |
+| 3 | **MIXER** | Master MIX | Master FX | Transitions | Clock (knob 13) |
 
 Each row shows one half (source or FX), so no `SRC`/`FX` switching is needed on the hardware. Which page each bank shows is the profile's `banks.pages`; you can point a bank at your own page (see [Perform Pages](#perform-pages)).
 
@@ -360,6 +360,7 @@ The side buttons change meaning with the view:
 The Twister mirrors the screen. Each encoder's ring shows its knob's value, and its LED takes the colour of the row it controls. A knob with nothing to control goes dark: an empty or bypassed FX slot, or a blank position on a focused effect's parameter page (its ring still shows the value).
 
 - LEDs can't show greys, so on the MIXER page the Master row is red (the screen keeps its greys) and Transitions stay cyan.
+- **The clock knob** (knob 13, the first knob of the Clock row on the MIXER page) is the beat light: its LED sits dim plum and flashes light plum on every beat and orange on beat 1 of the bar, and its ring shows the tempo across the beat tracker's BPM search range (Preferences → Tempo & Sync). **Push it to tap tempo** (the same as the TAP button); turning it does nothing. On the stock firmware the ring brightness pulses instead of the colour. While a Library or picker is browsing, the knob does its browse job instead.
 - On pages with a pinned FX row (A/B, BG/PV, MIXER) the FX row's LED is a shifted hue of its source row's, so the four LEDs of a bank differ.
 
 <a id="twister-troubleshooting"></a>

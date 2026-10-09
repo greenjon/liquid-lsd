@@ -64,7 +64,10 @@ internal object PerformPages {
         return PerformPage(knobs.toList())
     }
 
-    /** [resolve] into a caller-owned [knobs] array of [KnobCommands.KNOB_COUNT] (cleared first); rows come from [rowsCache] when given. */
+    /**
+     * [resolve] into a caller-owned [knobs] array of [KnobCommands.KNOB_COUNT] (cleared first); rows come from [rowsCache] when given.
+     * Returns the index of the Clock knob (first knob of the Global row, which has no macro knobs of its own), or -1 when the page has no Clock row.
+     */
     fun resolveInto(
         pageId: String,
         ctx: PerformanceUiContext,
@@ -72,7 +75,8 @@ internal object PerformPages {
         mixer: Mixer,
         rowsCache: PerfRows.RowsCache?,
         knobs: Array<PageKnob?>
-    ) {
+    ): Int {
+        var clockKnob = -1
         java.util.Arrays.fill(knobs, null)
         val pages = PerfPageStore.default.all()
         val page = pages.firstOrNull { it.id == pageId } ?: pages.first()
@@ -81,6 +85,7 @@ internal object PerformPages {
         val rowCount = minOf(rows.size, KnobCommands.KNOB_COUNT / COLS)
         for (rowIdx in 0 until rowCount) {
             val row = rows[rowIdx]
+            if (row.bankId == MacroEngine.GLOBAL) clockKnob = rowIdx * COLS
             val bank = MacroEngine.getBank(row.bankId) ?: MacroEngine.bankForParamPath(row.bankId)
             val isFxBank = row.bankId in FxMacroSync.FX_BANK_IDS
             val chain = if (isFxBank && row.hasExtraHeader) ctx.resolveFxChain(mixer, row.bankId) else null
@@ -88,6 +93,7 @@ internal object PerformPages {
                 knobs[rowIdx * COLS + spec.col] = PageKnob(row.bankId, spec, ledColor(row))
             }
         }
+        return clockKnob
     }
 
     private val IDENTITY: (String) -> String = { it }
@@ -102,19 +108,31 @@ internal class PerformSurface(
     private val ctx: PerformanceUiContext,
     private val parametersState: ParametersState,
     private val mixer: Mixer,
-    private val nav: NavSurface? = null
+    private val nav: NavSurface? = null,
+    private val clock: ClockKnobFeed? = null
 ) : KnobSurface, KnobLightSource {
 
     private val rowsCache = PerfRows.RowsCache()
     private val knobBuffer = arrayOfNulls<PageKnob>(KnobCommands.KNOB_COUNT)
     private val lightBuffer = ArrayList<KnobLight?>(KnobCommands.KNOB_COUNT)
+    /** The Clock knob of the page [knobBuffer] holds (-1 if none): it shows the tempo, taps on push and ignores turns. */
+    private var clockKnob = -1
 
     /** Fresh specs every call (chain state is live), but the page's rows come from the cache. Callers run on one thread at a time. */
     @Synchronized
     private fun knob(index: Int): PageKnob? {
         if (index !in knobBuffer.indices) return null
-        PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
+        clockKnob = PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
         return knobBuffer[index]
+    }
+
+    @Synchronized
+    override fun pressDown(knob: Int): Boolean {
+        if (clock == null || knob !in knobBuffer.indices) return false
+        clockKnob = PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
+        if (knob != clockKnob) return false
+        clock.tap()
+        return true
     }
 
     override fun turn(knob: Int, delta: Float) {
@@ -156,7 +174,7 @@ internal class PerformSurface(
      */
     @Synchronized
     override fun toggleChainLink() {
-        PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
+        clockKnob = PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
         val touched = lastTouchedKnob?.let { knobBuffer.getOrNull(it) }?.bankId
         val bankId = touched?.let { fxBankFor(it) } ?: knobBuffer.firstNotNullOfOrNull { it?.bankId?.let(::fxBankFor) } ?: return
         FxMacroSync.chainFor(bankId, mixer)?.toggleAllSlotsLinked()
@@ -197,7 +215,7 @@ internal class PerformSurface(
      */
     @Synchronized
     override fun knobLights(): List<KnobLight?> {
-        PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
+        clockKnob = PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
         // The returned list is reused on the next poll; the poller reads it before polling again.
         lightBuffer.clear()
         for (target in knobBuffer) {
@@ -212,6 +230,7 @@ internal class PerformSurface(
                 )
             })
         }
+        if (clock != null && clockKnob >= 0) lightBuffer[clockKnob] = clock.light()
         if (nav?.browsing == true) dimForBrowse(nav.browseLiveKnobs, nav.sendTargets, nav.browsePosition)
         return lightBuffer
     }

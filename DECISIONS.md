@@ -34,6 +34,10 @@ Contents: 1 Foundations · 2 Rendering and shaders · 3 One path for every chang
 - The XT-firmware native mode (ring styles by parameter polarity, true RGB LEDs, app pages instead of hardware banks) is a second built-in profile, `midi-fighter-twister-xt`, chosen by the user per device. Both Twister profiles fit one device name and a stock-firmware Twister must not be put in native mode, so matching stays "first fit" (stock) unless the user picks otherwise. We do not probe the firmware.
 - The app owns the device only while it runs: it enters native mode on connect and releases it (LEDs black, then leave) on quit, unplug and profile change. We accept that a crash leaves the device in native mode until replugged, rather than adding a watchdog.
 - One setting per SysEx message, because the firmware misreads concatenated configs (verified on hardware). Ring styles are data in the profile, not code.
+
+## The Twister Clock Knob Pulses, It Does Not Set the Tempo (`ui/ClockKnob.kt`, `ui/PerformSurface.kt`)
+- The first knob of the Clock row is a beat light and a tap button: the LED flashes on the beat (orange on the bar's first beat), the ring shows the tempo over the beat tracker's BPM search range, a push taps on switch-down and a turn is ignored. A knob that set the BPM would let one bump drift the whole show (see `PerformanceClockControls`), and the side-button tap sits where a hand can't reach it mid-set.
+- The pulse is two or three colour changes per beat rather than a fade: SysEx is never coalesced, so a fade would queue messages every frame. It is computed in the per-frame light fill from the pull-style beat phase, so there is no beat event and no timer. The flash is a fixed ~90 ms, not a share of the beat. Stock firmware pulses ring brightness (one coalesced CC) because it has only a hue per knob.
 - We do not redistribute the firmware (DJTT licence); the guide only describes the mode.
 
 ## UI Terminology Pass: One Name per Thing (`ui/*`, `docs/user_guide/*`)

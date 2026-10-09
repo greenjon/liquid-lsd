@@ -211,7 +211,7 @@ Each tab shows up to 4 rows of 4 knobs, mapped to different banks:
 |:---|:---|:---|:---|:---|
 | **A/B** | Deck A source | Deck A FX | Deck B source | Deck B FX |
 | **BG/PV** | Deck BG source | Deck BG FX | Deck PV source | Deck PV FX |
-| **MIXER** | Master MIX | Master FX | Transitions | Clock & Global |
+| **MIXER** | Master MIX | Master FX | Transitions | Clock (knob 13) |
 
 Every deck and Master row shows one half (source or FX), so a knob never changes meaning under you.
 Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).
@@ -264,6 +264,7 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
   - **4 beat dots**: bar phase; the downbeat is cyan.
   - **`[ TAP ]`**: tap tempo. Right-click for MIDI Learn. In Audio mode it nudges the detected tempo and phase.
   - **`[ RESYNC ]`**: snaps the beat phase to the downbeat.
+  - **Twister clock knob**: knob 13 on a Midi Fighter Twister pulses its LED on the beat (orange on the downbeat), shows the tempo on its ring and taps tempo when pushed. See [Rings and LEDs](performance_controls.md#twister-lights).
   - **`[ /2 ]` `[ x2 ]`**: halve or double the tempo.
   - **`[ - ]` `[ + ]`**: nudge the tempo by 0.5 BPM.
 

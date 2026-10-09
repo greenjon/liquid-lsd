@@ -14,6 +14,8 @@ package llm.slop.liquidlsd.control
 class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFactor: Float = FINE_FACTOR) {
     private val held = BooleanArray(knobCount)
     private val turnedWhileHeld = BooleanArray(knobCount)
+    /** The press already acted on switch-down ([KnobSurface.pressDown]); its release is ignored. */
+    private val pressHandled = BooleanArray(knobCount)
     private var browseAccum = 0f
     private var browseWasActive = false
     private var lastBrowseSession = 0
@@ -27,6 +29,7 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         registry.onClearHeldState {
             held.fill(false)
             turnedWhileHeld.fill(false)
+            pressHandled.fill(false)
             browseAccum = 0f
             browseWasActive = false
         }
@@ -76,6 +79,13 @@ class KnobCommands(private val knobCount: Int = KNOB_COUNT, private val fineFact
         if (down) {
             held[knob] = true
             turnedWhileHeld[knob] = false
+            val nav = ctx.navSurface
+            pressHandled[knob] = !(nav != null && nav.browsing) && ctx.knobSurface?.pressDown(knob) == true
+            return
+        }
+        if (pressHandled[knob]) {
+            pressHandled[knob] = false
+            held[knob] = false
             return
         }
         val wasHeld = held[knob]
