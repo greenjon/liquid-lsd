@@ -15,6 +15,15 @@
     "cosmic_singularity",
     "liquid_mercury_melt"
   ],
-  "fxChains": [],
+  "fxChains": [
+    "web-trails",
+    "web-kaleido",
+    "web-bloom",
+    "web-punch",
+    "web-glitch",
+    "web-trails-chroma",
+    "web-drop-strobe",
+    "web-trails-drift"
+  ],
   "fxPlaybackOrder": "sequential"
 }

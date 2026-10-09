@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "name": "web-drop-strobe",
+  "tags": [
+    "web",
+    "strobe",
+    "bass-gated",
+    "kick"
+  ],
+  "dryWet": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  },
+  "slots": [
+    {
+      "filterId": "video_strobe",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "rate": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 30.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_bass",
+              "operator": "ADD",
+              "depth": 1.0,
+              "dcOffset": -0.7,
+              "followerMode": "CUSTOM",
+              "attackMs": 5.0,
+              "decayMs": 120.0
+            }
+          ]
+        },
+        "strobeMode": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 3.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "dutyCycle": {
+          "baseValue": 0.5,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "freezeHold": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    {
+      "filterId": "color_levels",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "contrast": {
+          "baseValue": 0.33,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_flux_bass",
+              "operator": "ADD",
+              "depth": 0.2,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 4.0,
+              "decayMs": 150.0
+            }
+          ]
+        }
+      }
+    },
+    null
+  ]
+}

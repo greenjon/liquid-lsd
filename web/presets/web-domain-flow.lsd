@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "name": "domain_flow",
+  "name": "web-domain-flow",
   "visualSourceType": "domain_warp_fluid",
   "parameters": {
     "WarpStrength": {

@@ -292,6 +292,31 @@
       "name": "The Drop Weapon"
     },
     {
+      "id": "web-bloom",
+      "file": "fxchains/web-bloom.lsdfxchain",
+      "name": "web-bloom"
+    },
+    {
+      "id": "web-drop-strobe",
+      "file": "fxchains/web-drop-strobe.lsdfxchain",
+      "name": "web-drop-strobe"
+    },
+    {
+      "id": "web-glitch",
+      "file": "fxchains/web-glitch.lsdfxchain",
+      "name": "web-glitch"
+    },
+    {
+      "id": "web-kaleido",
+      "file": "fxchains/web-kaleido.lsdfxchain",
+      "name": "web-kaleido"
+    },
+    {
+      "id": "web-punch",
+      "file": "fxchains/web-punch.lsdfxchain",
+      "name": "web-punch"
+    },
+    {
       "id": "web-trails",
       "file": "fxchains/web-trails.lsdfxchain",
       "name": "web-trails"

@@ -1,7 +1,16 @@
-# Liquid LSD Web TV - Curated Foreground Playlist
-# `preset | fxchain` pins an FX chain (web/fxchains or a desktop chain id) to that preset.
-mandala_flow | web-trails-drift
-spiral_drift | web-trails
-cosmic_ribbon | web-trails
-hyperspace_slice | web-trails-chroma
-domain_flow | web-trails-drift
+# Liquid LSD Web TV - Foreground Playlist
+# FX chains rotate through settings.json "fxChains"; `preset | chain` pins one to a preset.
+web-beat-spiral
+web-mandala-flow
+web-kick-icosa
+web-cymatics-sub
+web-fluid-bassdrop
+web-bass-mandala
+web-celestial-pulse
+web-spiral-drift
+web-bar-hyperslice
+web-gyroid-flight
+web-cosmic-ribbon
+web-mandala-bloom
+web-spiral-storm
+web-hyperspace-slice

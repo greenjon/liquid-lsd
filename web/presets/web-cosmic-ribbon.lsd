@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "name": "cosmic_ribbon",
+  "name": "web-cosmic-ribbon",
   "visualSourceType": "mandala",
   "parameters": {
     "Lobes": {

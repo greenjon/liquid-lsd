@@ -53,21 +53,29 @@ sources.push({ name: 'live_wrong_version_ignored', settleMs: 600, wire: [
   { type: 'state_full', v: 1, preset: { deckA: { source: 'mandala' } } }] });
 
 // Every shipped autopilot preset, loaded the way autopilot.js loads it.
-for (const f of fs.readdirSync(path.join(web, 'presets')).sort()) {
-  if (f.endsWith('.lsd')) sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: 'web-trails', settleMs: 2500 });
-}
+// Each preset runs through a different web FX chain (the autopilot rotates them the same way)
+const webChains = catalog.fxChains.filter((c) => c.file.startsWith('fxchains/')).map((c) => c.id);
+fs.readdirSync(path.join(web, 'presets')).sort().filter((f) => f.endsWith('.lsd')).forEach((f, i) => {
+  sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: webChains[i % webChains.length], settleMs: 2500 });
+});
 // Desktop-shipped Mandala presets, unmodified (Lobes / Recipe Select / the recipe table)
 for (const f of ['mandala-7', 'mandala-10']) {
   sources.push({ name: 'desktop_' + f, preset: `/repo/defaults/presets/${f}.lsd`, settleMs: 1500 });
 }
 // Every FX chain and transition preset the catalog lists
 for (const c of catalog.fxChains) {
-  sources.push({ name: 'chain_' + c.id, deck: { source: 'domain_warp_fluid' }, chain: c.id, settleMs: 1100 });
+  sources.push({ name: 'chain_' + c.id, deck: { source: 'domain_warp_fluid' }, chain: c.id, settleMs: 2000 });
 }
 for (const t of catalog.transitionPresets) {
   sources.push({ name: 'transpreset_' + t.id, deck: { source: 'domain_warp_fluid' }, deckB: { source: 'chladni_cymatics' },
     mixer: { balance: 0.5 }, transitionPreset: t.id, settleMs: 1100 });
 }
+
+// Authoring aids: RC_EXTRA=file.json appends specs ({name, deck: {source, params}, chain?, settleMs?});
+// RC_ONLY=substr,substr keeps only specs whose name contains one of them (skips the library/autopilot asserts).
+if (process.env.RC_EXTRA) sources.push(...JSON.parse(fs.readFileSync(process.env.RC_EXTRA, 'utf8')));
+const only = process.env.RC_ONLY ? process.env.RC_ONLY.split(',') : null;
+if (only) sources.splice(0, sources.length, ...sources.filter((s) => only.some((o) => s.name.includes(o))));
 
 let resolveReport;
 const reported = new Promise((r) => { resolveReport = r; });

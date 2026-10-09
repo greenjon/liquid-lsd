@@ -1,73 +1,73 @@
 {
   "version": 1,
-  "name": "dark_spiral",
+  "name": "web-spiral-drift",
   "visualSourceType": "dynamic_spiral",
   "parameters": {
     "MaxPoints": {
-      "baseValue": 300,
+      "baseValue": 500,
       "baseMin": 100.0,
       "baseMax": 2000.0,
       "randomizeBase": false,
       "modulators": []
     },
     "Scale": {
-      "baseValue": 0.35,
+      "baseValue": 0.5,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "Damping": {
-      "baseValue": 0.36,
+      "baseValue": 0.2,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "WaveFreq": {
-      "baseValue": 0.1,
+      "baseValue": 0.2,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "WaveAmp": {
-      "baseValue": 0.05,
+      "baseValue": 0.0,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "Shear": {
-      "baseValue": 0.1,
+      "baseValue": 0.2,
       "baseMin": -1.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "Speed": {
-      "baseValue": 0.3,
+      "baseValue": 0.5,
       "baseMin": -1.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "DotSize": {
-      "baseValue": 0.1,
+      "baseValue": 0.18,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "Glow": {
-      "baseValue": 0.16,
+      "baseValue": 0.3,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "HueOffset": {
-      "baseValue": 0.05,
+      "baseValue": 0.33,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -81,7 +81,7 @@
       "modulators": []
     },
     "TrailDecay": {
-      "baseValue": 0.75,
+      "baseValue": 0.86,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,

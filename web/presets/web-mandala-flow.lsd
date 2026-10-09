@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "name": "mandala_flow",
+  "name": "web-mandala-flow",
   "visualSourceType": "mandala",
   "parameters": {
     "Lobes": {
