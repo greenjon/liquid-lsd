@@ -206,7 +206,9 @@ internal class PerformSurface(
     override fun showPage(pageId: String) {
         // `perform.<id>` names a page; the page id is the built-in file's `id` (`ab`, `bgpv`, `mixer`).
         val id = pageId.removePrefix("perform.")
-        if (PerfPageStore.default.get(id) != null) theme.performancePageId = id
+        if (PerfPageStore.default.get(id) == null) return
+        parametersState.leaveEditForPageChange()
+        theme.performancePageId = id
     }
 
     /**

@@ -457,7 +457,7 @@ Like MIDI, OSC address mappings are stored in JSON profiles under `library/osc/<
 
 You manage pages in **Preferences > MIDI Controls > Perform Pages** (it is there even with MIDI turned off).
 
-The tab strip above the matrix (A/B, BG/PV, MIXER) lists *pages*: each is four rows. You can add your own by putting a JSON file in `library/perform_pages/` (press Reload Pages in Preferences > MIDI Controls, or restart the app, to pick it up):
+The tab strip above the matrix (A/B, BG/PV, MIXER) lists *pages*: each is four rows. Clicking a tab closes Edit and the Pair view and shows that page's rows, including when you click the tab you are already on. You can add your own by putting a JSON file in `library/perform_pages/` (press Reload Pages in Preferences > MIDI Controls, or restart the app, to pick it up):
 
 ```json
 {

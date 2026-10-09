@@ -1208,6 +1208,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#page-tabs-close-edit-uiparametersstatekt-uimenubarkt-uiperformsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Page Tabs Close Edit (ui/ParametersState.kt, ui/MenuBar.kt, ui/PerformSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-clock-knob-beat-pulse-tempo-ring-push-to-tap-uiclockknobkt-uiperformsurfacekt-controlknobcommandskt-controlknobsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5911,6 +5922,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#page-tabs-close-edit-uiparametersstatekt-uimenubarkt-uiperformsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Page Tabs Close Edit (ui/ParametersState.kt, ui/MenuBar.kt, ui/PerformSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#twister-clock-knob-beat-pulse-tempo-ring-push-to-tap-uiclockknobkt-uiperformsurfacekt-controlknobcommandskt-controlknobsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10589,6 +10611,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="page-tabs-close-edit-uiparametersstatekt-uimenubarkt-uiperformsurfacekt">Page Tabs Close Edit (<code>ui/ParametersState.kt</code>, <code>ui/MenuBar.kt</code>, <code>ui/PerformSurface.kt</code>)</h3>
+<ul>
+<li><strong>Clicking a Perform page tab now closes Edit and the Pair view</strong>, then shows that page. Before, the tab changed but the Edit bay stayed open over the rows you asked for. Clicking the tab of the page you are already on closes Edit too, so the whole tab is a big "back to the rows" target. A Twister bank change (or any controller command that selects a page) does the same. A module held open by an active Learn stays open.</li>
+<li>Internal: <code>ParametersState.leaveEditForPageChange()</code> (collapse every rack module, then <code>leavePair()</code>); the tab click and <code>PerformSurface.showPage</code> call it before setting <code>performancePageId</code>.</li>
+</ul>
 <h3 id="twister-clock-knob-beat-pulse-tempo-ring-push-to-tap-uiclockknobkt-uiperformsurfacekt-controlknobcommandskt-controlknobsurfacekt">Twister Clock Knob: Beat Pulse, Tempo Ring, Push to Tap (<code>ui/ClockKnob.kt</code>, <code>ui/PerformSurface.kt</code>, <code>control/KnobCommands.kt</code>, <code>control/KnobSurface.kt</code>)</h3>
 <ul>
 <li><strong>The first knob of the Clock &amp; Global row (MIXER page, knob 13) is now the clock knob.</strong> Its <strong>LED pulses in time with the beat</strong>: a dim plum at rest, a short flash of light plum on beats 2-4 and an orange flash on beat 1 of the bar, so you can find the bar line at a glance. Its <strong>ring shows the tempo</strong> across the beat tracker's BPM search range (Preferences &gt; Tempo &amp; Sync), so it moves when you tap or the tracker retunes. <strong>Pushing the knob taps tempo</strong> (on the press, not the release, so the tap lands when you push); turning it does nothing, since the BPM is deliberately not a knob. The pulse follows whichever clock is running (manual, audio or Ableton Link) and only shows while the MIXER page is up.</li>

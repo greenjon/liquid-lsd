@@ -216,6 +216,16 @@ class PerformSurfaceTest {
         assertNotNull(page())
     }
 
+    @Test
+    fun showPageClosesEditAndPairFocus() {
+        state.rackModuleDisclosure[MacroEngine.DECK_A] = ParametersState.DisclosureLevel.DEEP_EDIT
+        surface().showPage("perform.mixer")
+        assertFalse(state.anyRackModuleExpanded())
+        state.focusPair("A")
+        surface().showPage("perform.mixer") // the page you are already on closes the view too
+        assertNull(state.focusedPair)
+    }
+
     // --- Lights (ring + LED feedback) ---
 
     @Test

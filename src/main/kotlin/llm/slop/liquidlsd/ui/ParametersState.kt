@@ -152,6 +152,15 @@ class ParametersState : MidiLearnSink {
         dockSelection = null
     }
 
+    /**
+     * Leaves Edit and the Pair focus view, as a Perform page tab click does: the tab asks for that page's rows, which both
+     * views replace. Clicking the active page's tab therefore closes Edit too. A Learn-pinned module stays open.
+     */
+    fun leaveEditForPageChange() {
+        collapseAllRackModules()
+        leavePair()
+    }
+
     /** The module whose Edit bay is open, or null. */
     fun expandedRackModuleId(): String? = rackModuleDisclosure.entries.firstOrNull { it.value != DisclosureLevel.COLLAPSED }?.key
 

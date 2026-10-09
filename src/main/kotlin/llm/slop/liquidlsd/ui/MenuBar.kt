@@ -345,6 +345,7 @@ class MenuBar(
             }
             session.uiTheme.withFont(UITheme.FontLevel.H3) {
                 if (ButtonChrome.button("${page.name}##perf_tab_${page.id}", tabW, tabH)) {
+                    session.parametersState.leaveEditForPageChange()
                     theme.performancePageId = page.id
                     AppPreferencesStore.savePreferences()
                 }

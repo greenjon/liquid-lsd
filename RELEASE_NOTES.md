@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Page Tabs Close Edit (`ui/ParametersState.kt`, `ui/MenuBar.kt`, `ui/PerformSurface.kt`)
+- **Clicking a Perform page tab now closes Edit and the Pair view**, then shows that page. Before, the tab changed but the Edit bay stayed open over the rows you asked for. Clicking the tab of the page you are already on closes Edit too, so the whole tab is a big "back to the rows" target. A Twister bank change (or any controller command that selects a page) does the same. A module held open by an active Learn stays open.
+- Internal: `ParametersState.leaveEditForPageChange()` (collapse every rack module, then `leavePair()`); the tab click and `PerformSurface.showPage` call it before setting `performancePageId`.
+
 ### Twister Clock Knob: Beat Pulse, Tempo Ring, Push to Tap (`ui/ClockKnob.kt`, `ui/PerformSurface.kt`, `control/KnobCommands.kt`, `control/KnobSurface.kt`)
 - **The first knob of the Clock & Global row (MIXER page, knob 13) is now the clock knob.** Its **LED pulses in time with the beat**: a dim plum at rest, a short flash of light plum on beats 2-4 and an orange flash on beat 1 of the bar, so you can find the bar line at a glance. Its **ring shows the tempo** across the beat tracker's BPM search range (Preferences > Tempo & Sync), so it moves when you tap or the tracker retunes. **Pushing the knob taps tempo** (on the press, not the release, so the tap lands when you push); turning it does nothing, since the BPM is deliberately not a knob. The pulse follows whichever clock is running (manual, audio or Ableton Link) and only shows while the MIXER page is up.
 - On the stock firmware, which has one hue per knob, the pulse is the ring brightness instead of a second colour. While the Twister is browsing the Library or a picker, the knob does its browse job instead.
