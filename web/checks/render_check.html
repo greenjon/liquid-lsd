@@ -29,21 +29,23 @@ else {
     const d = x.getImageData(0, 0, t.width, t.height).data;
     let sum = 0, lit = 0;
     for (let i = 0; i < d.length; i += 4) { const l = d[i] + d[i + 1] + d[i + 2]; sum += l; if (l > 30) lit++; }
-    res({ png, meanLuma: sum / (d.length / 4) / 3, litFraction: lit / (d.length / 4) });
+    const glError = c.getContext('webgl2').getError();
+    res({ png, glError, meanLuma: sum / (d.length / 4) / 3, litFraction: lit / (d.length / 4) });
   }));
   await sleep(2500); // warm-up
   for (const spec of sources) {
     let deck = spec.deck;
     if (spec.preset) deck = normalizeDeckPreset(await (await fetch('../' + spec.preset)).json());
     w.LSD.autopilotState.deckA = Object.assign({ feedback: {} }, deck);
-    w.LSD.autopilotState.deckB = null;
+    w.LSD.autopilotState.deckB = spec.deckB ? Object.assign({ feedback: {} }, spec.deckB) : null;
     w.LSD.autopilotState.deckBG = null;
-    w.LSD.autopilotState.mixer.balance = 0;
+    w.LSD.autopilotState.mixer = Object.assign({ mode: 0, balance: 0, alpha: 1 }, spec.mixer);
     await sleep(spec.settleMs ?? 1500);
     const g = await grab();
     frames.push({ name: spec.name, ...g });
   }
-  await post({ errors, frames, size: [app.width, app.height] });
+  const lib = w.LSD.library;
+  await post({ errors, frames, size: [app.width, app.height], library: { loaded: [...lib.programs.keys()], failed: [...lib.failed] } });
 }
 document.title = 'done';
 </script>

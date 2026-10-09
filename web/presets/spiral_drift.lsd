@@ -15,15 +15,22 @@
     "HueSweep": 0.09,
     "TrailDecay": 0.86
   },
-  "feedbackParameters": {
-    "decay": 0.03,
-    "gain": 0.97,
-    "zoom": 0.003,
-    "rotate": -0.005,
-    "hueShift": 0.0,
-    "blur": 0.0,
-    "chroma": 0.0,
-    "mode": 0.0,
-    "kaleido": 1.0
-  }
+  "fx": [
+    {
+      "id": "feedback",
+      "enabled": true,
+      "dryWet": 1.0,
+      "params": {
+        "fbDecay": 0.6893,
+        "fbGain": 0.485,
+        "fbZoom": 0.003,
+        "fbRotate": -0.005,
+        "fbHueShift": 0.0,
+        "fbBlur": 0.0,
+        "fbChroma": 0.0,
+        "fbMode": 0.0,
+        "fbKaleido": 1.0
+      }
+    }
+  ]
 }

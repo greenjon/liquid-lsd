@@ -1,0 +1,218 @@
+{
+  "sources": [
+    {
+      "id": "celestial_engine",
+      "file": "shaders/celestial_engine.frag",
+      "name": "Multi-symmetry sacred geometry, Flower of Life folding, and op-art moir\u00e9 fringes"
+    },
+    {
+      "id": "chladni_cymatics",
+      "file": "shaders/chladni_cymatics.frag",
+      "name": "Physical 2D acoustic plate resonance simulation (Chladni cymatics)"
+    },
+    {
+      "id": "domain_warp_fluid",
+      "file": "shaders/domain_warp_fluid.frag",
+      "name": "Domain-warped fluid simulation with curl noise and iridescent marbling"
+    },
+    {
+      "id": "dynamic_spiral",
+      "file": "shaders/dynamic_spiral.frag",
+      "name": "Dynamic logarithmic spiral visualizer"
+    },
+    {
+      "id": "gyroid_hyperspace",
+      "file": "shaders/gyroid_hyperspace.frag",
+      "name": "Raymarched Triply Periodic Minimal Surfaces (TPMS) with continuous morphing"
+    },
+    {
+      "id": "hyper_slice",
+      "file": "shaders/hyper_slice.frag",
+      "name": "Raymarched 3D cross-section MRI scan through 4D 120-cell and 600-cell polychora"
+    },
+    {
+      "id": "icosa_h3",
+      "file": "shaders/icosa_h3.frag",
+      "name": "Icosahedral H3 Coxeter raymarcher: duality morph crossfaded with spike/blocker stellation CSG"
+    }
+  ],
+  "filters": [
+    {
+      "id": "3d_elevation",
+      "file": "shaders/fx/3d_elevation.fs",
+      "name": "Elevates 2D visual sources into 3D space across Tri-Axial (3-Plane), Cube Cage (6-Plane), Hex-Planar (6-Plane), and Tetrahedral Kaleidoscope (24-Chamber) projections"
+    },
+    {
+      "id": "anamorphic_streak",
+      "file": "shaders/fx/anamorphic_streak.fs",
+      "name": "Cinematic anamorphic lens flare with horizontal exponential glare streaks, chromatic edge dispersion, highlight knee threshold, and starburst cross-flare"
+    },
+    {
+      "id": "bloom",
+      "file": "shaders/fx/bloom.fs",
+      "name": "Multi-pass bloom highlights and diffusion blur"
+    },
+    {
+      "id": "color_levels",
+      "file": "shaders/fx/color_levels.fs",
+      "name": "Mastering-grade perceptual color grading in Oklab color space with ACES filmic highlight compression and anti-banding dither"
+    },
+    {
+      "id": "directional_blur",
+      "file": "shaders/fx/directional_blur.fs",
+      "name": "Stochastic dithered directional motion blur with angle, exponential decay, and bidirectional streak diffusion"
+    },
+    {
+      "id": "faceted_glass",
+      "file": "shaders/fx/faceted_glass.fs",
+      "name": "Dynamic cellular Voronoi crystal gem facets with 3D prism refraction, surface normal glints, specular bevel highlights, and chromatic dispersion"
+    },
+    {
+      "id": "feedback",
+      "file": "shaders/fx/feedback.fs",
+      "name": "Full feedback loop with zoom, rotate, kaleidoscope, hue shift, chromatic aberration, blur, and mode blend"
+    },
+    {
+      "id": "fluid_smear",
+      "file": "shaders/fx/fluid_smear.fs",
+      "name": "Persistent 2-pass fluid curl-noise advection simulating organic liquid melting, ink diffusion, and viscous paint smearing"
+    },
+    {
+      "id": "gradient_map",
+      "file": "shaders/fx/gradient_map.fs",
+      "name": "Perceptual multi-stop gradient map and duotone colorizer with filmic palettes, cycling, and Oklab interpolation"
+    },
+    {
+      "id": "halftone",
+      "file": "shaders/fx/halftone.fs",
+      "name": "Authentic 4-plate CMYK lithographic screen angles with anti-aliased dot rosettes, monochrome halftone, and paper texture tinting"
+    },
+    {
+      "id": "invert",
+      "file": "shaders/fx/invert.fs",
+      "name": "Inverts colors"
+    },
+    {
+      "id": "kaleidoscope",
+      "file": "shaders/fx/kaleidoscope.fs",
+      "name": "Multi-axis polyhedral kaleidoscope with aspect-corrected polar folding and seamless reflection"
+    },
+    {
+      "id": "luma_displace",
+      "file": "shaders/fx/luma_displace.fs",
+      "name": "2D surface normal gradient refraction simulating liquid marbling, oily fluids, and melting glass with chromatic dispersion"
+    },
+    {
+      "id": "luma_key",
+      "file": "shaders/fx/luma_key.fs",
+      "name": "Luminance threshold keying"
+    },
+    {
+      "id": "mirror_sphere",
+      "file": "shaders/fx/mirror_sphere.fs",
+      "name": "Raytraced 3D chrome mirror sphere reflecting the visual environment with surface normals, Fresnel rim glow, and chromatic curvature"
+    },
+    {
+      "id": "neon_edge",
+      "file": "shaders/fx/neon_edge.fs",
+      "name": "Directional Sobel edge detection with angle-to-hue glowing neon color palettes and dark-stage or overlay compositing"
+    },
+    {
+      "id": "pinch_bulge",
+      "file": "shaders/fx/pinch_bulge.fs",
+      "name": "Aspect-preserving spherical lens deformation with smooth Hermite cubic falloff (Bulge / Magnify vs Pinch / Funnel)"
+    },
+    {
+      "id": "pixelate",
+      "file": "shaders/fx/pixelate.fs",
+      "name": "Aspect-preserving multi-lattice pixelation (Square, Diamond, Hexagonal Honeycomb) with optional retro color depth quantization"
+    },
+    {
+      "id": "polar_tunnel",
+      "file": "shaders/fx/polar_tunnel.fs",
+      "name": "Aspect-preserving infinite log-polar tunnel with spiral twist, azimuthal symmetry, and singularity depth fog"
+    },
+    {
+      "id": "radial_blur",
+      "file": "shaders/fx/radial_blur.fs",
+      "name": "Stochastic dithered radial zoom blur and explosive light shafts"
+    },
+    {
+      "id": "retro_crt",
+      "file": "shaders/fx/retro_crt.fs",
+      "name": "Authentic analog CRT monitor simulation with barrel tube curvature, RGB phosphor triad mask, and scanline rasterization"
+    },
+    {
+      "id": "rgb_split",
+      "file": "shaders/fx/rgb_split.fs",
+      "name": "Dual-mode chromatic aberration and RGB glitch with 3-tap channel split and 12-tap continuous spectral lens dispersion"
+    },
+    {
+      "id": "thermal_scanner",
+      "file": "shaders/fx/thermal_scanner.fs",
+      "name": "Tactical FLIR thermal camera and military night vision optics with heat bloom, sensor grain, and optic vignette"
+    },
+    {
+      "id": "vhs_glitch",
+      "file": "shaders/fx/vhs_glitch.fs",
+      "name": "Authentic magnetic VHS videotape degradation with tracking error jitter, bottom head-switching bar, Y/C chrominance delay, RF tape dropouts, and analog static"
+    },
+    {
+      "id": "video_strobe",
+      "file": "shaders/fx/video_strobe.fs",
+      "name": "Multi-mode rhythmic strobe and persistent freeze gate with beat flash modes and duty cycle modulation"
+    },
+    {
+      "id": "vortex_swirl",
+      "file": "shaders/fx/vortex_swirl.fs",
+      "name": "Logarithmic gravitational accretion vortex swirl with aspect-ratio preservation, cubic Hermite boundary falloff, and chromatic angular dispersion"
+    },
+    {
+      "id": "wave_displace",
+      "file": "shaders/fx/wave_displace.fs",
+      "name": "Dual-mode fluid wave displacement: Cartesian cross-waves and aspect-corrected concentric liquid droplet ripples with seamless mirror wrapping"
+    }
+  ],
+  "transitions": [
+    {
+      "id": "cyber_datamosh",
+      "file": "shaders/transitions/cyber_datamosh.fs",
+      "name": "Cyber Datamosh"
+    },
+    {
+      "id": "film_burn",
+      "file": "shaders/transitions/film_burn.fs",
+      "name": "Film Burn"
+    },
+    {
+      "id": "kinetic_zoom",
+      "file": "shaders/transitions/kinetic_zoom.fs",
+      "name": "Kinetic Zoom"
+    },
+    {
+      "id": "linear_crossfade",
+      "file": "shaders/transitions/linear_crossfade.fs",
+      "name": "Linear Crossfade"
+    },
+    {
+      "id": "liquid_displacement",
+      "file": "shaders/transitions/liquid_displacement.fs",
+      "name": "Liquid Displacement"
+    },
+    {
+      "id": "luminous_flash",
+      "file": "shaders/transitions/luminous_flash.fs",
+      "name": "Luminous Flash"
+    },
+    {
+      "id": "noise_dissolve",
+      "file": "shaders/transitions/noise_dissolve.fs",
+      "name": "Noise Dissolve"
+    },
+    {
+      "id": "vortex_swirl",
+      "file": "shaders/transitions/vortex_swirl.fs",
+      "name": "Vortex Swirl"
+    }
+  ]
+}

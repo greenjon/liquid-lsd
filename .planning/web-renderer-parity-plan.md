@@ -1,6 +1,6 @@
 # Web renderer parity plan
 
-Started 2026-10-08. Status: Phase 0 DONE (uncommitted), phase 1 partly built (`web/isf.js`). Target: **v1.0** (user decision 2026-10-08: the web client is part of v1; phases 0-3 and the preset pack are the release scope, 4-6 as time allows).
+Started 2026-10-08. Status: phases 0, 1, 2, 5 done; next 3 (wire protocol), 4, 6, 7. Target: **v1.0** (user decision 2026-10-08: the web client is part of v1; phases 0-3 and the preset pack are the release scope, 4-6 as time allows).
 
 ## Goal and decisions (user)
 
@@ -30,8 +30,8 @@ Live mode: desktop already evaluates modulators, so the web only needs a generic
 ## Phases
 
 ### Phase 0 - Prove and repair - DONE 2026-10-08, uncommitted
-- `web/tools/shader_check.mjs` (+ `.html`): headless Firefox compiles every shipped ISF source, filter and transition through `web/isf.js`. `node web/tools/shader_check.mjs`. Needs only `firefox` + node; no npm. Result: 42/42 compile (software GL).
-- `web/tools/render_check.mjs` (+ `.html`): drives the real app in an iframe, forces each source and every `web/presets/*.lsd` onto deck A, writes PNGs to `/tmp/lsd-render-check`, fails on console errors or blank frames. 15/15 render.
+- `web/checks/shader_check.mjs` (+ `.html`): headless Firefox compiles every shipped ISF source, filter and transition through `web/isf.js`. `node web/checks/shader_check.mjs`. Needs only `firefox` + node; no npm. Result: 42/42 compile (software GL).
+- `web/checks/render_check.mjs` (+ `.html`): drives the real app in an iframe, forces each source and every `web/presets/*.lsd` onto deck A, writes PNGs to `/tmp/lsd-render-check`, fails on console errors or blank frames. 15/15 render.
 - Repairs: `renderer.js` now renders every ISF source generically from its header (`ISF_SOURCES` list, `lookupParam`, `applyUniforms`); mandala is the only special case. Legacy `attractor_feedback/chladni/gyroid` programs and shaders deleted. Mixer rewired to the synced `mixer.frag` (`uTex1/uTexBG/uProgress/uLevel*`) with an inline cosine crossfade into `blendFBO` standing in for the ISF transition (phase 2). The spiral integrator hack is gone. `||` fallbacks replaced with `??` so an explicit 0 survives.
 - `sync_web.py` + `WebSyncTest.kt`: transpile now drops uniform initialisers (`uniform float x = 0.5;` is illegal in ES 3.00; it broke `mixer.frag`). `WebSyncTest` passes.
 - Desktop shader fix: `3d_elevation.fs` compared an int input to `0.5`; changed to `>= 1` (ES has no implicit int-to-float).
@@ -39,13 +39,17 @@ Live mode: desktop already evaluates modulators, so the web only needs a generic
 - Gotchas learned: `MaxPoints` is raw 100..2000, not normalised. Default feedback (gain .96) blows out `hyper_slice` to near-white; tune per preset. The web `blit.vert` already carries zoom/rotZ, so 2D view parity is nearly free in phase 2.
 - Not yet verified: real GPU, Chrome/Safari, mobile, and audio (render check runs with no audio and no relay).
 
-### Phase 1 - JS ISF loader (M, 2-3 days) - single-pass wrapper DONE in `web/isf.js`; PASSES/PERSISTENT/IMPORTED/image inputs still open
+### Phase 1 - JS ISF loader - DONE 2026-10-08 (IMPORTED and audio inputs deferred)
 Port `ISFParser.buildGLSLFragmentShader` to `web/isf.js`: header parse, uniform generation (float/long/bool/event/color/point2D/image), `isf_FragNormCoord`/`IMG_*` macros, `TIME/TIMEDELTA/FRAMEINDEX/RENDERSIZE/PASSINDEX`, `uAlpha`, ES 300 conversion (drop `#extension`, precision lines, `textureSize` macro, int/bool uniforms, implicit conversions). PASSES with `TARGET`, `PERSISTENT` ping-pong, `FLOAT`, `$WIDTH/$HEIGHT` expressions (port `DimExpr`). Skip `IMPORTED` and audio inputs for now.
 Sync change: ship ISF text untouched (`sync_web.py` copies, no transpile) plus a generated catalog `web/catalog.json` (id, kind, inputs with NAME/TYPE/MIN/MAX/DEFAULT/STEP). Update `WebSyncTest` and `checkWebSync` accordingly.
 
-### Phase 2 - Generic render graph (M-L, 3-5 days)
+### Phase 2 - Generic render graph - DONE 2026-10-08 except mandala parity and perf (see notes)
 Replace per-source branches with: source (ISF by id, uniforms from `params[NAME]`) -> view2d zoom/rotZ (non-3D only, `is3D` flag) -> feedback (existing `feedback.frag`, 9 fb params) -> deck FX chain (3 ISF filter slots, per-slot enabled/dryWet, chain dryWet) -> transition (ISF transition, progress=(crossfade+1)/2) -> `mixer.frag` (BG + levels) -> master FX (3 slots) -> CRT post. Honor `globalAlpha`. Mandala: stays special-cased, but it must reach desktop parity: port `Mandala.kt`'s uniform computation and the `MandalaLibrary.kt` recipe table (generate a JSON table at sync time) so `Lobes` + `Recipe Select` work; today the web only takes raw `L1..L4`/`a..d`. Resolution scale knob for raymarched sources (`icosa_h3`, `hyper_slice`, `gyroid_hyperspace`) and RGBA8 fallback when float targets are missing.
 Exit: all 8 sources, 27 filters, 8 transitions compile and run in Firefox.
+
+Phases 1-2 done: `web/isf.js` (wrapper + `ISFProgram`/`ISFState`/`renderISF`: PASSES, TARGET, PERSISTENT ping-pong, FLOAT as RGBA16F, dimension expressions, dummy texture bound for a pass's own target because WebGL forbids sampling the bound render target), `web/graph.js` (`Library` lazy catalog loader, `DeckPipeline`, `FxChainState` = port of `renderFxChainPass`, `MixerPipeline` = transition + composite + master FX), `web/catalog.json` generated by `sync_web.py`, filters/transitions synced to `web/shaders/fx|transitions`. Built-in feedback pass removed (the desktop no longer has one either; feedback is the `feedback` FX filter), presets migrated (`fbDecay = 1 - cbrt(oldDecay)`, `fbGain = oldGain/2`). Headless scripts moved to `web/checks/` (`node --test web/tools` runs only the evaluator test; note Node 22 needs the file path, not the directory). Verified: 42/42 shaders compile; every source, all 27 filters, all 8 transitions, master FX and all 7 presets render non-blank with no console or GL errors in headless Firefox (software GL).
+Deck/mixer state shape in `graph.js` header comment: deck `{source, <NAME>..., viewZoom, viewRotateZ, globalAlpha, fx:[{id,enabled,dryWet,params}x3], fxDryWet, fxEnabled}`, mixer `{balance, transition, transitionParams, levelA/B/BG, fx, fxDryWet, fxEnabled}`. Phase 3 should serialise exactly this.
+Still open from phase 2: (a) mandala parity (`Lobes`/`Recipe Select`, recipe table); (b) resolution scale / RGBA8 fallback untested (no float-less browser here); (c) `viewParameters` beyond zoom/rotZ (3D view modes) not read; (d) per-slot Metaknob/Super Knob are desktop-only and not modelled; (e) real GPU/Chrome/Safari unverified; (f) the `evaluator`'s `paramSpec` is applied to ISF inputs but fx `dryWet`/mixer scalars use no spec.
 
 ### Phase 3 - Wire protocol v2 (M, ~2 days)
 Versioned schema `v:2` with catalog hash: per deck `source`, `params{NAME:v}` (exact ISF NAME, arrays for color/point), `fb`, `view`, `alpha`, `fx[3]{id,enabled,dryWet,params}` + chain dryWet/enabled; mixer `crossfade`, levels, `transition{id,params}`, master `fx[3]`; beat anchor `{beats,bpm,t}`. Unknown ids: skip slot / fall back, never throw. Fix delta `null` semantics. Relay: merge deltas server-side so late joiners get current state. Kotlin serializer tests; update `web_subsystem.md` (currently stale: shows `integratedTime`, fixed 25 Hz).
@@ -53,8 +57,11 @@ Versioned schema `v:2` with catalog hash: per deck `source`, `params{NAME:v}` (e
 ### Phase 4 - Beat/audio parity (S-M, ~2 days)
 Live: web runs a flywheel from the wire beat anchor (same BeatClock semantics, offset-smoothed for jitter); `dsp.js` beat detection only in standalone. Standalone: add real `audio_flux_*` (per-band spectral flux) to `dsp.js` instead of the bass-only onset alias. Expose `audio_amp/bass/mid/high` identically in both modes.
 
-### Phase 5 - Evaluator port (M, ~2 days)
+### Phase 5 - Evaluator port - DONE 2026-10-08 (uncommitted; see notes below)
 Rewrite `evaluator.js` to desktop semantics: ADD range scaling, `(cv+1)/2` unipolar remap, `finalCv*depth+dcOffset`, clamp + snap, ADD/MUL/SCALE only, `calculateAdvancedLFO` (morph, hold), SINE/TRIANGLE/SQUARE/RANDOM, followers (attack/decay, `followerMode`), generator mod (AM/PM/ADD), `seq` incl. hold/curve smooth, `randomizeBase` resolved at load. Generate test vectors from Kotlin and run them in node (`node --test`, dev-only). Keep accepting nothing the desktop would reject.
+
+Done: `web/evaluator.js` rewritten (no `dsp.js` import, node-testable). `evaluateParameter(param, ctx, spec, fallback)`; ctx from `makeEvalContext()` (`time, beats, frame, dt, bpm, cv, followers`); spec from `paramSpec(isfInput)` (mirrors `ISFInput.discreteSteps`). `resolveBase` for `randomizeBase`, `validateModulator` for Phase 7 validation. Verification: `WebEvaluatorVectorsTest.kt` (Kotlin, simulated `TimeSource`) writes/guards `web/tools/evaluator_vectors.json` (~190 KB, 77 cases incl. RANDOM seeds, gen-mod, followers); `node --test web/tools/evaluator.test.mjs` passes 77/77.
+Findings: `beatPhase`/`sampleAndHold` are NOT registered in `CVRegistry`, so desktop `evaluate()` skips them - the port omits them. `ModulatorDto` has no LFO2/generator-mod fields, so presets cannot carry AM/PM today; the port supports them if present. The modulator-side `randomize*` ranges are not resolved on the web (stored values are used); only `randomizeBase`. `audio_flux_*` still aliases `trigger_onset` (Phase 4). Mandala params are evaluated without a clamp range (ADD scales as 0..1) - give them specs if mandala modulation matters.
 
 ### Phase 6 - Autopilot loads real presets (M, 2-3 days)
 Parse desktop `DeckPresetDto` (`ParameterDto`, `viewParameters`, `globalAlpha`) and `.lsdtrans`, FX from preset-independent playlist entries. `web/presets/` becomes real desktop-format `.lsd` files, so a preset authored once runs on both. Fix the `||`-zero bug by dropping that lookup style. Migrate the existing `web/presets/*.lsd` and `autopilot.js` fetch/normalize path; `normalizeDeckPreset` guesswork goes away.

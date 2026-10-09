@@ -71,6 +71,39 @@ def transpile_shader_to_webgl2(source_text: str) -> str:
     return text.strip() + "\n"
 
 
+CATALOG_PATH = PROJECT_ROOT / "web" / "catalog.json"
+
+
+def build_catalog(manifest: dict) -> dict:
+    """
+    Lists every ISF asset the web client can load, grouped by kind. Ids are file stems, the same
+    ids the desktop registries use. The web client fetches this instead of hard-coding source lists.
+    """
+    catalog = {"sources": [], "filters": [], "transitions": []}
+    for entry in manifest.get("shaders", []):
+        desktop, web = entry["desktop"], entry["web"]
+        if desktop.startswith("library/sources/") and desktop.endswith(".fs"):
+            kind = "sources"
+        elif web.startswith("web/shaders/fx/"):
+            kind = "filters"
+        elif web.startswith("web/shaders/transitions/"):
+            kind = "transitions"
+        else:
+            continue
+        catalog[kind].append({
+            "id": Path(web).stem,
+            "file": web[len("web/"):],
+            "name": entry.get("description", ""),
+        })
+    for kind in catalog:
+        catalog[kind].sort(key=lambda e: e["id"])
+    return catalog
+
+
+def catalog_text(manifest: dict) -> str:
+    return json.dumps(build_catalog(manifest), indent=2) + "\n"
+
+
 def load_manifest() -> dict:
     if not MANIFEST_PATH.exists():
         print(f"{COLOR_RED}Error: Manifest not found at {MANIFEST_PATH}{COLOR_RESET}", file=sys.stderr)
@@ -153,6 +186,18 @@ def check_sync(manifest: dict) -> dict:
                 "description": desc,
             })
 
+    # 1b. Check the generated ISF catalog
+    results["total_checked"] += 1
+    if CATALOG_PATH.exists() and CATALOG_PATH.read_text(encoding="utf-8") == catalog_text(manifest):
+        results["in_sync"].append({"type": "shader", "source": "web/sync_manifest.json",
+                                   "target": "web/catalog.json", "description": "ISF catalog"})
+    else:
+        results["out_of_sync"].append({
+            "type": "shader", "mode": "auto_shader", "source": "web/sync_manifest.json",
+            "target": "web/catalog.json", "reason": "Catalog missing or stale",
+            "action": "Run './scripts/sync_web.py --apply' to regenerate web/catalog.json",
+            "description": "ISF catalog (sources, filters, transitions)"})
+
     # 2. Check Monitored Sources (Kotlin/Math/Serializer logic)
     for src_entry in manifest.get("monitored_sources", []):
         results["total_checked"] += 1
@@ -224,6 +269,11 @@ def apply_sync(manifest: dict) -> list:
         if current_code != web_code:
             dst_path.write_text(web_code, encoding="utf-8")
             updated.append(dst_rel)
+
+    catalog = catalog_text(manifest)
+    if not CATALOG_PATH.exists() or CATALOG_PATH.read_text(encoding="utf-8") != catalog:
+        CATALOG_PATH.write_text(catalog, encoding="utf-8")
+        updated.append("web/catalog.json")
 
     return updated
 

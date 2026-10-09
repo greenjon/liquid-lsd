@@ -1,28 +1,9 @@
 import { cvState, tick } from './dsp.js';
 import { powerState } from './ui.js';
 import { autopilotState, tickAutopilot, startAutopilot } from './autopilot.js';
-import { evaluateParameter } from './evaluator.js';
-import { buildFragmentShader, parseHeader, applyUniforms } from './isf.js';
-
-// ISF sources rendered generically from their headers. Mandala is the one special case:
-// it is a vertex-displaced ribbon driven by a recipe table, not an ISF shader.
-const ISF_SOURCES = [
-  'dynamic_spiral', 'icosa_h3', 'hyper_slice', 'gyroid_hyperspace',
-  'chladni_cymatics', 'celestial_engine', 'domain_warp_fluid'
-];
-
-// Stand-in for the desktop's default transition (linear_crossfade, perceptual cosine curve).
-const CROSSFADE_FRAG = `#version 300 es
-precision highp float;
-in vec2 vTexCoord;
-out vec4 fragColor;
-uniform sampler2D uTexA;
-uniform sampler2D uTexB;
-uniform float uProgress;
-void main() {
-  float t = 0.5 - 0.5 * cos(clamp(uProgress, 0.0, 1.0) * 3.14159265359);
-  fragColor = mix(texture(uTexA, vTexCoord), texture(uTexB, vTexCoord), t);
-}`;
+import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
+import { lookupParam } from './isf.js';
+import { Library, DeckPipeline, MixerPipeline } from './graph.js';
 
 async function loadText(url) {
   const res = await fetch(url);
@@ -67,88 +48,6 @@ function getUniformLocations(gl, program, names) {
   return locs;
 }
 
-function createTexture(gl, width, height, internalFormat, format, type) {
-  const tex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, null);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  gl.bindTexture(gl.TEXTURE_2D, null);
-  return tex;
-}
-
-function createFramebuffer(gl, texture) {
-  const fbo = gl.createFramebuffer();
-  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-  const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-  if (status !== gl.FRAMEBUFFER_COMPLETE) {
-    console.error(`Framebuffer incomplete status: 0x${status.toString(16)}`);
-  }
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  return fbo;
-}
-
-function createDeck(gl, width, height, internalFormat, format, type) {
-  const texA = createTexture(gl, width, height, internalFormat, format, type);
-  const fboA = createFramebuffer(gl, texA);
-  const texB = createTexture(gl, width, height, internalFormat, format, type);
-  const fboB = createFramebuffer(gl, texB);
-  const cleanTex = createTexture(gl, width, height, internalFormat, format, type);
-  const cleanFBO = createFramebuffer(gl, cleanTex);
-
-  return {
-    width,
-    height,
-    texA, fboA, texB, fboB, cleanTex, cleanFBO,
-    readTex: texA, readFBO: fboA,
-    writeTex: texB, writeFBO: fboB,
-    swap() {
-      const tTex = this.readTex; const tFbo = this.readFBO;
-      this.readTex = this.writeTex; this.readFBO = this.writeFBO;
-      this.writeTex = tTex; this.writeFBO = tFbo;
-    },
-    resize(newW, newH) {
-      this.width = newW; this.height = newH;
-      for (const tex of [this.texA, this.texB, this.cleanTex]) {
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, newW, newH, 0, format, type, null);
-      }
-      gl.bindTexture(gl.TEXTURE_2D, null);
-    },
-    clear(r = 0, g = 0, b = 0, a = 0) {
-      for (const fbo of [this.fboA, this.fboB, this.cleanFBO]) {
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-        gl.clearColor(r, g, b, a);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-      }
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    }
-  };
-}
-
-function createSingleFBO(gl, width, height, internalFormat, format, type) {
-  const tex = createTexture(gl, width, height, internalFormat, format, type);
-  const fbo = createFramebuffer(gl, tex);
-  return {
-    width, height, tex, fbo,
-    resize(newW, newH) {
-      this.width = newW; this.height = newH;
-      gl.bindTexture(gl.TEXTURE_2D, this.tex);
-      gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, newW, newH, 0, format, type, null);
-      gl.bindTexture(gl.TEXTURE_2D, null);
-    },
-    clear(r = 0, g = 0, b = 0, a = 0) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, this.fbo);
-      gl.clearColor(r, g, b, a);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    }
-  };
-}
-
 async function init() {
   const canvas = document.getElementById('glCanvas');
   const gl = canvas.getContext('webgl2', {
@@ -165,80 +64,47 @@ async function init() {
   }
 
   const extFloat = gl.getExtension('EXT_color_buffer_float');
-  let internalFormat = gl.RGBA16F;
-  let format = gl.RGBA;
-  let type = gl.HALF_FLOAT;
+  const fmt = { internalFormat: gl.RGBA16F, format: gl.RGBA, type: gl.HALF_FLOAT };
 
   if (extFloat) {
     console.log('EXT_color_buffer_float supported: using RGBA16F render targets.');
   } else {
     console.warn('EXT_color_buffer_float not supported: falling back to RGBA8.');
-    internalFormat = gl.RGBA8;
-    type = gl.UNSIGNED_BYTE;
+    fmt.internalFormat = gl.RGBA8;
+    fmt.type = gl.UNSIGNED_BYTE;
   }
 
-  // Load all available shaders
   const [
     blitVertSrc,
     blitFragSrc,
     mandalaVertSrc,
     mandalaFragSrc,
-    feedbackFragSrc,
     mixerFragSrc,
     crtFragSrc,
-    ...isfSrcs
+    catalog
   ] = await Promise.all([
     loadText('shaders/blit.vert'),
     loadText('shaders/blit.frag'),
     loadText('shaders/mandala.vert'),
     loadText('shaders/mandala.frag'),
-    loadText('shaders/feedback.frag'),
     loadText('shaders/mixer.frag'),
     loadText('shaders/crt_post.frag'),
-    ...ISF_SOURCES.map((id) => loadText(`shaders/${id}.frag`))
+    loadText('catalog.json').then(JSON.parse)
   ]);
 
-  // Compile programs
-  const mandalaProgram     = createProgram(gl, mandalaVertSrc, mandalaFragSrc);
-  const feedbackProgram    = createProgram(gl, blitVertSrc, feedbackFragSrc);
-  const mixerProgram       = createProgram(gl, blitVertSrc, mixerFragSrc);
-  const blitProgram        = createProgram(gl, blitVertSrc, blitFragSrc);
-  const crtProgram         = createProgram(gl, blitVertSrc, crtFragSrc);
-  const crossfadeProgram   = createProgram(gl, blitVertSrc, CROSSFADE_FRAG);
-
-  // One program per ISF source. A source that fails to compile is skipped, not fatal.
-  const isfPrograms = {};
-  ISF_SOURCES.forEach((id, i) => {
-    try {
-      const header = parseHeader(isfSrcs[i]);
-      const prog = createProgram(gl, blitVertSrc, buildFragmentShader(isfSrcs[i], header));
-      isfPrograms[id] = { header, prog };
-    } catch (err) {
-      console.error(`ISF source ${id} unavailable:`, err);
-    }
-  });
+  const mandalaProgram = createProgram(gl, mandalaVertSrc, mandalaFragSrc);
+  const mixerProgram   = createProgram(gl, blitVertSrc, mixerFragSrc);
+  const blitProgram    = createProgram(gl, blitVertSrc, blitFragSrc);
+  const crtProgram     = createProgram(gl, blitVertSrc, crtFragSrc);
 
   const mandalaLocs = getUniformLocations(gl, mandalaProgram, [
     'uL1', 'uL2', 'uL3', 'uL4', 'uA', 'uB', 'uC', 'uD',
     'uMaxR',
     'uYaw', 'uPitch', 'uPersp',
     'uThickness', 'uGlobalScale', 'uGlobalRotation', 'uAspectRatio',
+    'uZoom', 'uRotateZ',
     'uHueOffset', 'uHueSweep', 'uAlpha', 'uDepth'
   ]);
-
-  const feedbackUniforms = getUniformLocations(gl, feedbackProgram, [
-    'uTextureLive', 'uTextureHistory',
-    'uDecay', 'uGain', 'uFbZoom', 'uRotate',
-    'uHueShift', 'uBlur', 'uChroma',
-    'uFeedbackMode', 'uKaleido'
-  ]);
-
-  const mixerUniforms = getUniformLocations(gl, mixerProgram, [
-    'uTex1', 'uTexBG', 'uProgress', 'uBgAlpha',
-    'uLevelA', 'uLevelB', 'uLevelBG', 'uMasterLevel'
-  ]);
-
-  const crossfadeUniforms = getUniformLocations(gl, crossfadeProgram, ['uTexA', 'uTexB', 'uProgress']);
 
   const crtUniforms = getUniformLocations(gl, crtProgram, [
     'uTexture', 'uResolution', 'uTime',
@@ -281,80 +147,97 @@ async function init() {
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 8, 0);
   gl.bindVertexArray(null);
 
-  // Initial sizing & FBO creation
+  // Initial sizing
   const dpr = window.devicePixelRatio || 1;
   let curWidth  = Math.max(1, Math.floor(window.innerWidth  * dpr));
   let curHeight = Math.max(1, Math.floor(window.innerHeight * dpr));
   canvas.width  = curWidth;
   canvas.height = curHeight;
 
-  const deckA     = createDeck(gl, curWidth, curHeight, internalFormat, format, type);
-  const deckB     = createDeck(gl, curWidth, curHeight, internalFormat, format, type);
-  const deckBG    = createDeck(gl, curWidth, curHeight, internalFormat, format, type);
-  const blendFBO  = createSingleFBO(gl, curWidth, curHeight, internalFormat, format, type);
-  const masterFBO = createSingleFBO(gl, curWidth, curHeight, internalFormat, format, type);
-
-  deckA.clear(0, 0, 0, 0);
-  deckB.clear(0, 0, 0, 0);
-  deckBG.clear(0, 0, 0, 1);
-  blendFBO.clear(0, 0, 0, 0);
-  masterFBO.clear(0, 0, 0, 1);
-
   // Start dual-queue autopilot
   await startAutopilot();
-
-  window.LSD = { cvState, autopilotState, powerState };
 
   let lastTime        = performance.now();
   let elapsedTime     = 0;
   let frameCount      = 0;
   let frameDt         = 0;
 
-  function evalP(paramObj, fallback = 0.0) {
-    return evaluateParameter(paramObj, elapsedTime, cvState.bpm * (elapsedTime / 60.0), frameCount, fallback);
+  const evalCtx = makeEvalContext();
+  function updateEvalContext() {
+    const beats = cvState.bpm * (elapsedTime / 60.0);
+    evalCtx.time = elapsedTime;
+    evalCtx.beats = beats;
+    evalCtx.frame = frameCount;
+    evalCtx.dt = frameDt;
+    evalCtx.bpm = cvState.bpm;
+    // audio_flux_* is the bass-only onset trigger until phase 4 adds per-band flux
+    const onset = cvState.trigger_onset;
+    evalCtx.cv = {
+      audio_amp: cvState.audio_amp, audio_bass: cvState.audio_bass,
+      audio_mid: cvState.audio_mid, audio_high: cvState.audio_high,
+      audio_flux_amp: cvState.audio_flux_amp ?? onset, audio_flux_bass: cvState.audio_flux_bass ?? onset,
+      audio_flux_mid: cvState.audio_flux_mid ?? onset, audio_flux_high: cvState.audio_flux_high ?? onset,
+      beatSine: Math.sin(beats * 2 * Math.PI), bpm: cvState.bpm,
+    };
+  }
+  updateEvalContext();
+
+  function evalP(paramObj, fallback = 0.0, spec) {
+    return evaluateParameter(paramObj, evalCtx, spec, fallback);
   }
 
-  // Looks an ISF input up in a deck's parameter bag. Presets key by NAME, LABEL, or camelCase
-  // of either; `!== undefined` keeps an explicit 0 from falling through to the default.
-  const camel = (k) => k.replace(/[\s-_]+([a-zA-Z0-9])/g, (_, c) => c.toUpperCase()).replace(/^[A-Z]/, (c) => c.toLowerCase());
-  function lookupParam(deckData, input) {
-    for (const k of [input.NAME, input.LABEL, camel(input.NAME), input.LABEL && camel(input.LABEL)]) {
-      if (k && deckData[k] !== undefined) return deckData[k];
+  // ISF input value: looks the NAME up in a parameter bag, then runs the modulation maths
+  // with the input's range as the spec.
+  function evalInput(bag, input) {
+    return evalP(lookupParam(bag, input), input.DEFAULT ?? 0.0, paramSpec(input) ?? undefined);
+  }
+
+  // 1x1 transparent texture bound in place of a pass target that is the current render target.
+  const dummyTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, dummyTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+
+  const ctx = {
+    gl, quadVAO, dummyTex, fmt,
+    hasFloat: !!extFloat,
+    library: new Library(gl, blitVertSrc, catalog),
+    input: evalInput,
+    scalar: (raw, fallback) => evalP(raw, fallback),
+    blit: { program: blitProgram, uTexture: gl.getUniformLocation(blitProgram, 'uTexture') },
+    mixerProg: {
+      program: mixerProgram,
+      ...Object.fromEntries(['uTex1', 'uTexBG', 'uProgress', 'uBgAlpha', 'uLevelA', 'uLevelB', 'uLevelBG', 'uMasterLevel']
+        .map((n) => [n, gl.getUniformLocation(mixerProgram, n)]))
     }
-    return undefined;
+  };
+
+  const pipeA  = new DeckPipeline(ctx, curWidth, curHeight);
+  const pipeB  = new DeckPipeline(ctx, curWidth, curHeight);
+  const pipeBG = new DeckPipeline(ctx, curWidth, curHeight);
+  const mixerPipe = new MixerPipeline(ctx, curWidth, curHeight);
+
+  window.LSD = { cvState, autopilotState, powerState, library: ctx.library };
+
+  function frameInfo() {
+    return { time: elapsedTime, dt: frameDt, index: frameCount };
   }
 
-  function renderVisualSource(deckData, targetFBO) {
-    if (!deckData) return;
+  // Draws a deck's source (ISF via the graph, or mandala here) then runs its FX chain.
+  // Returns the deck's final texture.
+  function renderDeck(deckData, pipe) {
+    if (!deckData) return null;
     const srcType = (deckData.source || 'mandala').toLowerCase();
-    const isf = isfPrograms[srcType];
+    if (!ctx.library.has('sources', srcType)) renderMandala(deckData, pipe.clean);
+    else if (!pipe.renderSource(deckData, frameInfo())) return null; // still loading
+    return pipe.renderFx(deckData, frameInfo());
+  }
 
-    gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
-    gl.viewport(0, 0, curWidth, curHeight);
+  function renderMandala(deckData, target) {
+    target.bind();
+    gl.disable(gl.BLEND);
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    if (isf) {
-      gl.useProgram(isf.prog);
-      gl.bindVertexArray(quadVAO);
-      const params = {};
-      for (const input of isf.header.INPUTS) {
-        const raw = lookupParam(deckData, input);
-        let v = evalP(raw, input.DEFAULT ?? 0.0);
-        if (typeof v === 'number') {
-          if (input.MIN !== undefined) v = Math.max(input.MIN, v);
-          if (input.MAX !== undefined) v = Math.min(input.MAX, v);
-        }
-        params[input.NAME] = v;
-      }
-      applyUniforms(gl, isf.prog, isf.header, params, {
-        width: curWidth, height: curHeight, time: elapsedTime, dt: frameDt, index: frameCount, alpha: 1.0
-      });
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      return;
-    }
-
-    // Mandala (also the fallback for unknown source ids)
     const locs = mandalaLocs;
     gl.useProgram(mandalaProgram);
     gl.bindVertexArray(mandalaVAO);
@@ -378,41 +261,14 @@ async function init() {
     gl.uniform1f(locs.uMaxR, sumL > 1e-5 ? targetRadius : 0.001);
     gl.uniform1f(locs.uThickness,      evalP(deckData.Thickness ?? deckData.thickness, 0.012));
     gl.uniform1f(locs.uAspectRatio,    curWidth / curHeight);
+    gl.uniform1f(locs.uZoom,           evalP(deckData.viewZoom, 1.0));
+    gl.uniform1f(locs.uRotateZ,        evalP(deckData.viewRotateZ, 0.0));
     gl.uniform1f(locs.uHueOffset,      evalP(deckData['Hue Offset'] ?? deckData.hueOffset, 0.0));
     gl.uniform1f(locs.uHueSweep,       evalP(deckData['Hue Sweep'] ?? deckData.hueSweep, 0.3));
     gl.uniform1f(locs.uAlpha,          1.0);
     gl.uniform1f(locs.uDepth,          evalP(deckData.Depth ?? deckData.depth, 0.35));
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, MANDALA_POINTS * 2);
-  }
-
-  function renderFeedbackPass(deck, deckData) {
-    gl.bindFramebuffer(gl.FRAMEBUFFER, deck.writeFBO);
-    gl.viewport(0, 0, curWidth, curHeight);
-    gl.useProgram(feedbackProgram);
-    gl.bindVertexArray(quadVAO);
-
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, deck.cleanTex);
-    gl.uniform1i(feedbackUniforms.uTextureLive, 0);
-
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, deck.readTex);
-    gl.uniform1i(feedbackUniforms.uTextureHistory, 1);
-
-    const fb = deckData?.feedback || {};
-    gl.uniform1f(feedbackUniforms.uDecay,        evalP(fb.decay ?? fb.fbDecay, 0.04));
-    gl.uniform1f(feedbackUniforms.uGain,         evalP(fb.gain ?? fb.fbGain, 0.96));
-    gl.uniform1f(feedbackUniforms.uFbZoom,       evalP(fb.zoom ?? fb.fbZoom, 0.005));
-    gl.uniform1f(feedbackUniforms.uRotate,       evalP(fb.rotate ?? fb.fbRotate, 0.008));
-    gl.uniform1f(feedbackUniforms.uHueShift,     evalP(fb.hueShift ?? fb.fbHueShift, 0.001));
-    gl.uniform1f(feedbackUniforms.uBlur,         evalP(fb.blur ?? fb.fbBlur, 0.0));
-    gl.uniform1f(feedbackUniforms.uChroma,       evalP(fb.chroma ?? fb.fbChroma, 0.0));
-    gl.uniform1f(feedbackUniforms.uFeedbackMode, evalP(fb.mode ?? fb.fbMode, 0.0));
-    gl.uniform1f(feedbackUniforms.uKaleido,      evalP(fb.kaleido ?? fb.fbKaleido, 1.0));
-
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    deck.swap();
   }
 
   function render(now) {
@@ -424,6 +280,7 @@ async function init() {
 
     // Tick DSP analysis and autopilot scheduler
     tick(dt);
+    updateEvalContext();
     tickAutopilot(dt);
 
     if (powerState.on) {
@@ -451,80 +308,26 @@ async function init() {
       canvas.height = targetH;
       curWidth  = targetW;
       curHeight = targetH;
-      deckA.resize(curWidth, curHeight);
-      deckB.resize(curWidth, curHeight);
-      deckBG.resize(curWidth, curHeight);
-      blendFBO.resize(curWidth, curHeight);
-      masterFBO.resize(curWidth, curHeight);
+      pipeA.resize(curWidth, curHeight);
+      pipeB.resize(curWidth, curHeight);
+      pipeBG.resize(curWidth, curHeight);
+      mixerPipe.resize(curWidth, curHeight);
     }
 
     gl.disable(gl.BLEND);
     gl.disable(gl.DEPTH_TEST);
 
+    let finalTex = null;
     if (powerState.on || powerState.warmupProgress > 0 || (powerState.shutdownProgress > 0.0 && powerState.shutdownProgress < 0.42)) {
-      // 1. Render Deck A
-      if (autopilotState.deckA) {
-        renderVisualSource(autopilotState.deckA, deckA.cleanFBO);
-        renderFeedbackPass(deckA, autopilotState.deckA);
-      }
-
-      // 2. Render Deck B
-      if (autopilotState.deckB) {
-        renderVisualSource(autopilotState.deckB, deckB.cleanFBO);
-        renderFeedbackPass(deckB, autopilotState.deckB);
-      }
-
-      // 3. Render Deck BG
-      if (autopilotState.deckBG) {
-        renderVisualSource(autopilotState.deckBG, deckBG.cleanFBO);
-        renderFeedbackPass(deckBG, autopilotState.deckBG);
-      } else {
-        gl.bindFramebuffer(gl.FRAMEBUFFER, deckBG.writeFBO);
-        gl.viewport(0, 0, curWidth, curHeight);
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        deckBG.swap();
-      }
-
+      const texA = renderDeck(autopilotState.deckA, pipeA) ?? pipeA.clean.tex;
+      const texB = renderDeck(autopilotState.deckB, pipeB) ?? pipeB.clean.tex;
+      const texBG = renderDeck(autopilotState.deckBG, pipeBG);
       const mix = autopilotState.mixer || {};
-      const progress = mix.balance ?? 0.0;
-
-      // 4a. Transition A -> B into blendFBO
-      gl.bindFramebuffer(gl.FRAMEBUFFER, blendFBO.fbo);
-      gl.viewport(0, 0, curWidth, curHeight);
-      gl.useProgram(crossfadeProgram);
-      gl.bindVertexArray(quadVAO);
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, deckA.readTex);
-      gl.uniform1i(crossfadeUniforms.uTexA, 0);
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, deckB.readTex);
-      gl.uniform1i(crossfadeUniforms.uTexB, 1);
-      gl.uniform1f(crossfadeUniforms.uProgress, progress);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-
-      // 4b. Composite over BG -> masterFBO
-      gl.bindFramebuffer(gl.FRAMEBUFFER, masterFBO.fbo);
-      gl.viewport(0, 0, curWidth, curHeight);
-      gl.useProgram(mixerProgram);
-      gl.bindVertexArray(quadVAO);
-
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, blendFBO.tex);
-      gl.uniform1i(mixerUniforms.uTex1, 0);
-
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, deckBG.readTex);
-      gl.uniform1i(mixerUniforms.uTexBG, 1);
-
-      gl.uniform1f(mixerUniforms.uProgress,    progress);
-      gl.uniform1f(mixerUniforms.uBgAlpha,     autopilotState.bgAlpha ?? 1.0);
-      gl.uniform1f(mixerUniforms.uLevelA,      1.0);
-      gl.uniform1f(mixerUniforms.uLevelB,      1.0);
-      gl.uniform1f(mixerUniforms.uLevelBG,     1.0);
-      gl.uniform1f(mixerUniforms.uMasterLevel, (mix.alpha ?? 1.0) * autopilotState.masterAlpha);
-
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      finalTex = mixerPipe.render(
+        mix, texA, texB, texBG ?? pipeBG.clean.tex,
+        autopilotState.deckBG ? (autopilotState.bgAlpha ?? 1.0) : 0.0,
+        (mix.alpha ?? 1.0) * autopilotState.masterAlpha,
+        frameInfo());
     }
 
     // 5. CRT Post-Processing -> Canvas Screen
@@ -534,7 +337,7 @@ async function init() {
     gl.bindVertexArray(quadVAO);
 
     gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, masterFBO.tex);
+    gl.bindTexture(gl.TEXTURE_2D, finalTex ?? mixerPipe.composite.tex);
     gl.uniform1i(crtUniforms.uTexture, 0);
 
     gl.uniform2f(crtUniforms.uResolution,          curWidth, curHeight);

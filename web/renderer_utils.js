@@ -19,7 +19,11 @@ export function normalizeDeckPreset(presetData) {
   const deck = {
     source: visualSourceType,
     recipe: presetData.recipe || {},
-    feedback: {}
+    feedback: {},
+    // Deck FX chain: [{id, enabled, dryWet, params:{NAME: value}} x3], see graph.js
+    fx: presetData.fx || [],
+    fxDryWet: presetData.fxDryWet,
+    fxEnabled: presetData.fxEnabled
   };
 
   // Feedback parameters

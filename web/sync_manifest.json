@@ -16,12 +16,6 @@
       "description": "Blit texture sampler fragment shader"
     },
     {
-      "desktop": "src/main/resources/shaders/feedback.frag",
-      "web": "web/shaders/feedback.frag",
-      "mode": "auto_shader",
-      "description": "Multi-pass ping-pong feedback loop shader"
-    },
-    {
       "desktop": "src/main/resources/shaders/mixer.frag",
       "web": "web/shaders/mixer.frag",
       "mode": "auto_shader",
@@ -80,6 +74,216 @@
       "web": "web/shaders/chladni_cymatics.frag",
       "mode": "auto_shader",
       "description": "Physical 2D acoustic plate resonance simulation (Chladni cymatics)"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/3d_elevation.fs",
+      "web": "web/shaders/fx/3d_elevation.fs",
+      "mode": "auto_shader",
+      "description": "Elevates 2D visual sources into 3D space across Tri-Axial (3-Plane), Cube Cage (6-Plane), Hex-Planar (6-Plane), and Tetrahedral Kaleidoscope (24-Chamber) projections"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/anamorphic_streak.fs",
+      "web": "web/shaders/fx/anamorphic_streak.fs",
+      "mode": "auto_shader",
+      "description": "Cinematic anamorphic lens flare with horizontal exponential glare streaks, chromatic edge dispersion, highlight knee threshold, and starburst cross-flare"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/bloom.fs",
+      "web": "web/shaders/fx/bloom.fs",
+      "mode": "auto_shader",
+      "description": "Multi-pass bloom highlights and diffusion blur"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/color_levels.fs",
+      "web": "web/shaders/fx/color_levels.fs",
+      "mode": "auto_shader",
+      "description": "Mastering-grade perceptual color grading in Oklab color space with ACES filmic highlight compression and anti-banding dither"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/directional_blur.fs",
+      "web": "web/shaders/fx/directional_blur.fs",
+      "mode": "auto_shader",
+      "description": "Stochastic dithered directional motion blur with angle, exponential decay, and bidirectional streak diffusion"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/faceted_glass.fs",
+      "web": "web/shaders/fx/faceted_glass.fs",
+      "mode": "auto_shader",
+      "description": "Dynamic cellular Voronoi crystal gem facets with 3D prism refraction, surface normal glints, specular bevel highlights, and chromatic dispersion"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/feedback.fs",
+      "web": "web/shaders/fx/feedback.fs",
+      "mode": "auto_shader",
+      "description": "Full feedback loop with zoom, rotate, kaleidoscope, hue shift, chromatic aberration, blur, and mode blend"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/fluid_smear.fs",
+      "web": "web/shaders/fx/fluid_smear.fs",
+      "mode": "auto_shader",
+      "description": "Persistent 2-pass fluid curl-noise advection simulating organic liquid melting, ink diffusion, and viscous paint smearing"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/gradient_map.fs",
+      "web": "web/shaders/fx/gradient_map.fs",
+      "mode": "auto_shader",
+      "description": "Perceptual multi-stop gradient map and duotone colorizer with filmic palettes, cycling, and Oklab interpolation"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/halftone.fs",
+      "web": "web/shaders/fx/halftone.fs",
+      "mode": "auto_shader",
+      "description": "Authentic 4-plate CMYK lithographic screen angles with anti-aliased dot rosettes, monochrome halftone, and paper texture tinting"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/invert.fs",
+      "web": "web/shaders/fx/invert.fs",
+      "mode": "auto_shader",
+      "description": "Inverts colors"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/kaleidoscope.fs",
+      "web": "web/shaders/fx/kaleidoscope.fs",
+      "mode": "auto_shader",
+      "description": "Multi-axis polyhedral kaleidoscope with aspect-corrected polar folding and seamless reflection"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/luma_displace.fs",
+      "web": "web/shaders/fx/luma_displace.fs",
+      "mode": "auto_shader",
+      "description": "2D surface normal gradient refraction simulating liquid marbling, oily fluids, and melting glass with chromatic dispersion"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/luma_key.fs",
+      "web": "web/shaders/fx/luma_key.fs",
+      "mode": "auto_shader",
+      "description": "Luminance threshold keying"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/mirror_sphere.fs",
+      "web": "web/shaders/fx/mirror_sphere.fs",
+      "mode": "auto_shader",
+      "description": "Raytraced 3D chrome mirror sphere reflecting the visual environment with surface normals, Fresnel rim glow, and chromatic curvature"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/neon_edge.fs",
+      "web": "web/shaders/fx/neon_edge.fs",
+      "mode": "auto_shader",
+      "description": "Directional Sobel edge detection with angle-to-hue glowing neon color palettes and dark-stage or overlay compositing"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/pinch_bulge.fs",
+      "web": "web/shaders/fx/pinch_bulge.fs",
+      "mode": "auto_shader",
+      "description": "Aspect-preserving spherical lens deformation with smooth Hermite cubic falloff (Bulge / Magnify vs Pinch / Funnel)"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/pixelate.fs",
+      "web": "web/shaders/fx/pixelate.fs",
+      "mode": "auto_shader",
+      "description": "Aspect-preserving multi-lattice pixelation (Square, Diamond, Hexagonal Honeycomb) with optional retro color depth quantization"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/polar_tunnel.fs",
+      "web": "web/shaders/fx/polar_tunnel.fs",
+      "mode": "auto_shader",
+      "description": "Aspect-preserving infinite log-polar tunnel with spiral twist, azimuthal symmetry, and singularity depth fog"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/radial_blur.fs",
+      "web": "web/shaders/fx/radial_blur.fs",
+      "mode": "auto_shader",
+      "description": "Stochastic dithered radial zoom blur and explosive light shafts"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/retro_crt.fs",
+      "web": "web/shaders/fx/retro_crt.fs",
+      "mode": "auto_shader",
+      "description": "Authentic analog CRT monitor simulation with barrel tube curvature, RGB phosphor triad mask, and scanline rasterization"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/rgb_split.fs",
+      "web": "web/shaders/fx/rgb_split.fs",
+      "mode": "auto_shader",
+      "description": "Dual-mode chromatic aberration and RGB glitch with 3-tap channel split and 12-tap continuous spectral lens dispersion"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/thermal_scanner.fs",
+      "web": "web/shaders/fx/thermal_scanner.fs",
+      "mode": "auto_shader",
+      "description": "Tactical FLIR thermal camera and military night vision optics with heat bloom, sensor grain, and optic vignette"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/vhs_glitch.fs",
+      "web": "web/shaders/fx/vhs_glitch.fs",
+      "mode": "auto_shader",
+      "description": "Authentic magnetic VHS videotape degradation with tracking error jitter, bottom head-switching bar, Y/C chrominance delay, RF tape dropouts, and analog static"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/video_strobe.fs",
+      "web": "web/shaders/fx/video_strobe.fs",
+      "mode": "auto_shader",
+      "description": "Multi-mode rhythmic strobe and persistent freeze gate with beat flash modes and duty cycle modulation"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/vortex_swirl.fs",
+      "web": "web/shaders/fx/vortex_swirl.fs",
+      "mode": "auto_shader",
+      "description": "Logarithmic gravitational accretion vortex swirl with aspect-ratio preservation, cubic Hermite boundary falloff, and chromatic angular dispersion"
+    },
+    {
+      "desktop": "src/main/resources/default_filters/wave_displace.fs",
+      "web": "web/shaders/fx/wave_displace.fs",
+      "mode": "auto_shader",
+      "description": "Dual-mode fluid wave displacement: Cartesian cross-waves and aspect-corrected concentric liquid droplet ripples with seamless mirror wrapping"
+    },
+    {
+      "desktop": "src/main/resources/default_transitions/cyber_datamosh.fs",
+      "web": "web/shaders/transitions/cyber_datamosh.fs",
+      "mode": "auto_shader",
+      "description": "Cyber Datamosh"
+    },
+    {
+      "desktop": "src/main/resources/default_transitions/film_burn.fs",
+      "web": "web/shaders/transitions/film_burn.fs",
+      "mode": "auto_shader",
+      "description": "Film Burn"
+    },
+    {
+      "desktop": "src/main/resources/default_transitions/kinetic_zoom.fs",
+      "web": "web/shaders/transitions/kinetic_zoom.fs",
+      "mode": "auto_shader",
+      "description": "Kinetic Zoom"
+    },
+    {
+      "desktop": "src/main/resources/default_transitions/linear_crossfade.fs",
+      "web": "web/shaders/transitions/linear_crossfade.fs",
+      "mode": "auto_shader",
+      "description": "Linear Crossfade"
+    },
+    {
+      "desktop": "src/main/resources/default_transitions/liquid_displacement.fs",
+      "web": "web/shaders/transitions/liquid_displacement.fs",
+      "mode": "auto_shader",
+      "description": "Liquid Displacement"
+    },
+    {
+      "desktop": "src/main/resources/default_transitions/luminous_flash.fs",
+      "web": "web/shaders/transitions/luminous_flash.fs",
+      "mode": "auto_shader",
+      "description": "Luminous Flash"
+    },
+    {
+      "desktop": "src/main/resources/default_transitions/noise_dissolve.fs",
+      "web": "web/shaders/transitions/noise_dissolve.fs",
+      "mode": "auto_shader",
+      "description": "Noise Dissolve"
+    },
+    {
+      "desktop": "src/main/resources/default_transitions/vortex_swirl.fs",
+      "web": "web/shaders/transitions/vortex_swirl.fs",
+      "mode": "auto_shader",
+      "description": "Vortex Swirl"
     }
   ],
   "monitored_sources": [

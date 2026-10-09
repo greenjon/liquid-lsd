@@ -3,7 +3,7 @@
 <title>LSD shader compile check</title>
 <script type="module">
 // Compiles every ISF shader the server lists through the real wrapper (../isf.js) and
-// POSTs the results to /report. Driven by tools/shader_check.mjs; also usable by hand.
+// POSTs the results to /report. Driven by checks/shader_check.mjs; also usable by hand.
 import { buildFragmentShader, parseHeader } from '../isf.js';
 
 const gl = document.createElement('canvas').getContext('webgl2');
