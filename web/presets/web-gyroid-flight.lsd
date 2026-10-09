@@ -116,21 +116,21 @@
       ]
     },
     "Saturation": {
-      "baseValue": 0.85,
+      "baseValue": 0.9,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "Brightness": {
-      "baseValue": 0.8,
+      "baseValue": 0.5,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "Zoom": {
-      "baseValue": 0.7,
+      "baseValue": 0.35,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,

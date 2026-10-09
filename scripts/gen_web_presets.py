@@ -171,11 +171,11 @@ preset("web-kick-icosa", "icosa_h3", {
     "Each kick pushes the morph and zoom; edges flash on the beat; stellation spikes erupt on bass drops.")
 
 preset("web-bar-hyperslice", "hyper_slice", {
-    "SliceOffset": (0.0, lfo(16, 0.9, wave="TRIANGLE")), "RotateXW": (0.0, lfo(8, 0.6)),
+    "SliceOffset": (0.0, lfo(16, 0.5, wave="TRIANGLE")), "RotateXW": (0.0, lfo(8, 0.6)),
     "RotateYW": (0.3, lfo(12, 0.4)), "RotateZW": 0.0, "Morph": (0.2, mid(0.5)),
     "SupportH": 0.37, "HueOffset": (0.55, lfo(32, 0.4)), "Saturation": 0.85,
-    "Brightness": (0.45, pulse(2, 0.15)), "Opacity": 0.78, "EdgeThickness": 0.17,
-    "EdgeBrightness": 0.5, "Glow": (0.18, pulse(1, 0.25)), "Zoom": 0.5,
+    "Brightness": (0.4, pulse(2, 0.12)), "Opacity": 0.6, "EdgeThickness": 0.1,
+    "EdgeBrightness": (0.25, pulse(1, 0.15)), "Glow": (0.08, pulse(1, 0.1)), "Zoom": 0.5,
 }, ["beat", "bar", "mid"],
     "The slice sweeps through the 4D shape over four bars while the 4D rotations run at 8 and 12 beats.")
 
@@ -183,8 +183,8 @@ preset("web-gyroid-flight", "gyroid_hyperspace", {
     "SurfaceType": 0.0, "WallThickness": (0.3, lfo(8, 0.2)),
     "Frequency": (0.5, lfo(16, 0.15)), "FlightSpeed": (0.25, amp(0.5)),
     "WireframeMode": 1.0, "CoreGlow": (0.45, kick(0.4)),
-    "ColorMode": 0.0, "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.85, "Brightness": 0.8,
-    "Zoom": 0.7, "RotateZ": (0.0, lfo(64, 1.0)),
+    "ColorMode": 0.0, "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.9, "Brightness": 0.5,
+    "Zoom": 0.35, "RotateZ": (0.0, lfo(64, 1.0)),
 }, ["beat", "bar", "amp", "kick"],
     "A wireframe lattice you fly through: flight speed follows overall loudness, the core flashes on kicks, the cell size drifts over four bars.")
 
@@ -272,10 +272,10 @@ preset("web-hyper-prism", "hyper_slice", {
     "A glassy hypercube-to-sphere with thick edges; hats flicker the edges and kicks punch the zoom.")
 
 preset("web-gyroid-solid", "gyroid_hyperspace", {
-    "SurfaceType": 1.0, "WallThickness": (0.45, bass(0.3)), "Frequency": (0.35, lfo(32, 0.2)),
+    "SurfaceType": 1.0, "WallThickness": (0.3, bass(0.3)), "Frequency": (0.4, lfo(32, 0.1)),
     "FlightSpeed": (0.15, amp(0.4)), "WireframeMode": 0.0, "CoreGlow": (0.5, kick(0.4)),
-    "ColorMode": 1.0, "HueOffset": (0.0, lfo(40, 1.0)), "Saturation": 0.9, "Brightness": 0.8,
-    "Zoom": 0.45, "RotateX": (0.0, lfo(48, 1.0)), "RotateZ": (0.0, lfo(64, 1.0)),
+    "ColorMode": 1.0, "HueOffset": (0.0, lfo(40, 1.0)), "Saturation": 0.95, "Brightness": 0.7,
+    "Zoom": 0.65, "RotateX": (0.0, lfo(48, 1.0)), "RotateZ": (0.0, lfo(64, 1.0)),
 }, ["beat", "bar", "bass", "amp", "kick"],
     "Thick-walled caves instead of a lattice; the walls swell with the bass and the core glows on kicks.")
 
@@ -296,11 +296,11 @@ preset("web-celestial-bloom", "celestial_engine", {
     "A dense twelve-fold flower turning backwards; pulse rings fire only when the bass is loud.")
 
 preset("web-fluid-lava", "domain_warp_fluid", {
-    "WarpStrength": (0.7, bass(0.2)), "Swirl": (-0.4, lfo(24, 0.4)), "Viscosity": 0.7, "Speed": (0.08, amp(0.3)),
-    "Detail": 2, "Gloss": (0.7, pulse(2, 0.2)), "PaletteMode": 3.0, "HueOffset": (0.0, lfo(48, 1.0)),
+    "WarpStrength": (0.6, bass(0.2)), "Swirl": (-0.4, lfo(24, 0.4)), "Viscosity": 0.7, "Speed": (0.08, amp(0.3)),
+    "Detail": 2, "Gloss": (0.3, pulse(2, 0.15)), "PaletteMode": 4.0, "HueOffset": (0.0, lfo(48, 1.0)),
     "HueCycleSpeed": 0.05, "Zoom": (0.35, kick(0.06, 250)),
 }, ["beat", "bar", "bass", "amp", "kick"],
-    "Slow thick lava in a warm palette; glossy highlights swell every other beat.")
+    "Slow thick marbling in a dark palette; glossy highlights swell every other beat.")
 
 preset("web-spiral-galaxy", "dynamic_spiral", {
     "MaxPoints": 2000, "Scale": (0.2, pulse(1, 0.04)), "Damping": 0.6, "WaveFreq": 0.1,

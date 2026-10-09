@@ -11,7 +11,7 @@
       "modulators": []
     },
     "WallThickness": {
-      "baseValue": 0.45,
+      "baseValue": 0.3,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -28,7 +28,7 @@
       ]
     },
     "Frequency": {
-      "baseValue": 0.35,
+      "baseValue": 0.4,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -36,7 +36,7 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.2,
+          "depth": 0.1,
           "dcOffset": 0.0,
           "waveform": "SINE",
           "genUnit": "BEAT",
@@ -114,21 +114,21 @@
       ]
     },
     "Saturation": {
-      "baseValue": 0.9,
+      "baseValue": 0.95,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "Brightness": {
-      "baseValue": 0.8,
+      "baseValue": 0.7,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "Zoom": {
-      "baseValue": 0.45,
+      "baseValue": 0.65,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,

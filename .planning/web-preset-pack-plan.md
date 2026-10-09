@@ -54,3 +54,9 @@ no-reactivity "ambient" chain, and a heavy "drop" chain. Keep the rotation in `s
 ## Open question for the user
 Real audio listen test is still missing (harness has no audio). Plan assumes by-eye + evaluator
 tests are enough per batch, with one real-music pass on the live site after batch 3 and 5.
+
+## Findings from batch 2 polish
+- `gyroid_hyperspace` flies through the volume and is genuinely empty (black) for ~25% of its cycle at any parameters; render_check resamples a dark preset frame up to 4 times. Wireframe mode shows normal-coloured walls, not a thin lattice; Zoom .35 gives structure, Zoom >= .5 is telephoto and fills with one flat colour.
+- `hyper_slice`: a SliceOffset swing of +/-.45 leaves the shape (blank at beat 0); keep depth <= .5. Edges + feedback white out fast, keep EdgeBrightness ~.25.
+- `domain_warp_fluid` PaletteMode 4 is the darkest/highest contrast; 1 and 3 wash out.
+- render_check flake was the autopilot's 45 s hold timer crossfading away mid-run; the harness now freezes it.

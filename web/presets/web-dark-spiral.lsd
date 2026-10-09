@@ -4,14 +4,14 @@
   "visualSourceType": "dynamic_spiral",
   "parameters": {
     "MaxPoints": {
-      "baseValue": 300,
+      "baseValue": 700,
       "baseMin": 100.0,
       "baseMax": 2000.0,
       "randomizeBase": false,
       "modulators": []
     },
     "Scale": {
-      "baseValue": 0.35,
+      "baseValue": 0.4,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -53,14 +53,14 @@
       "modulators": []
     },
     "DotSize": {
-      "baseValue": 0.1,
+      "baseValue": 0.28,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "Glow": {
-      "baseValue": 0.16,
+      "baseValue": 0.45,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,

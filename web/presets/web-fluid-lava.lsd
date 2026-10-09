@@ -4,7 +4,7 @@
   "visualSourceType": "domain_warp_fluid",
   "parameters": {
     "WarpStrength": {
-      "baseValue": 0.7,
+      "baseValue": 0.6,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -71,7 +71,7 @@
       "modulators": []
     },
     "Gloss": {
-      "baseValue": 0.7,
+      "baseValue": 0.3,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -79,7 +79,7 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.2,
+          "depth": 0.15,
           "dcOffset": 0.0,
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
@@ -90,7 +90,7 @@
       ]
     },
     "PaletteMode": {
-      "baseValue": 3.0,
+      "baseValue": 4.0,
       "baseMin": 0.0,
       "baseMax": 4.0,
       "randomizeBase": false,
@@ -149,7 +149,7 @@
     "amp",
     "kick"
   ],
-  "presetNotes": "Slow thick lava in a warm palette; glossy highlights swell every other beat.",
+  "presetNotes": "Slow thick marbling in a dark palette; glossy highlights swell every other beat.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

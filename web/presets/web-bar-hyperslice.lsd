@@ -12,7 +12,7 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.9,
+          "depth": 0.5,
           "dcOffset": 0.0,
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
@@ -118,7 +118,40 @@
       "modulators": []
     },
     "Brightness": {
-      "baseValue": 0.45,
+      "baseValue": 0.4,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.12,
+          "dcOffset": 0.0,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 2.0,
+          "slope": 0.0,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Opacity": {
+      "baseValue": 0.6,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "EdgeThickness": {
+      "baseValue": 0.1,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "EdgeBrightness": {
+      "baseValue": 0.25,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -130,35 +163,14 @@
           "dcOffset": 0.0,
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
-          "subdivision": 2.0,
+          "subdivision": 1.0,
           "slope": 0.0,
           "phaseOffset": 0.0
         }
       ]
     },
-    "Opacity": {
-      "baseValue": 0.78,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "EdgeThickness": {
-      "baseValue": 0.17,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "EdgeBrightness": {
-      "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
     "Glow": {
-      "baseValue": 0.18,
+      "baseValue": 0.08,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -166,7 +178,7 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.25,
+          "depth": 0.1,
           "dcOffset": 0.0,
           "waveform": "TRIANGLE",
           "genUnit": "BEAT",
