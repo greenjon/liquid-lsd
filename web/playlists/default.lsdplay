@@ -19,24 +19,32 @@ web-hyper-prism
 web-gyroid-solid
 web-cymatics-rings
 web-celestial-bloom
-web-fluid-lava
+web-fluid-lava | web-trails-drift
 web-spiral-galaxy
 web-spiral-sparks
 web-mandala-lace
 web-mandala-heart
-web-groove-mandala
+web-groove-mandala | web-kaleido
 web-groove-prism
 web-groove-spiral
-web-hard-cymatics
-web-hard-celestial
+web-hard-cymatics | web-glitch
+web-hard-celestial | web-drop-strobe
 web-hard-mandala
-web-hat-sparkle
+web-hat-sparkle | web-bloom
 web-hat-icosa
-web-mid-bloom
+web-mid-bloom | web-trails-drift
 web-mid-marble
 web-mid-lace
-web-build-drop-fluid
-web-build-drop-mandala
-web-build-drop-spiral
-web-kick-hyper
-web-kick-rings
+web-build-drop-fluid | web-build-drop
+web-build-drop-mandala | web-build-drop
+web-build-drop-spiral | web-build-drop
+web-kick-hyper | web-vortex
+web-kick-rings | web-punch
+web-gyroid-schwarz
+web-gyroid-kick
+web-gyroid-hat
+web-icosa-spiked
+web-icosa-glass
+web-icosa-build
+web-hyper-hard
+web-hyper-sweep

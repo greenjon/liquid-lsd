@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "name": "web-hyper-prism",
+  "name": "web-hyper-hard",
   "visualSourceType": "hyper_slice",
   "parameters": {
     "SliceOffset": {
@@ -12,11 +12,11 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.6,
+          "depth": 0.4,
           "dcOffset": 0.0,
-          "waveform": "SINE",
+          "waveform": "SQUARE",
           "genUnit": "BEAT",
-          "subdivision": 24.0,
+          "subdivision": 4.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
@@ -35,28 +35,26 @@
           "dcOffset": 0.0,
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 10.0,
+          "subdivision": 4.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
       ]
     },
     "RotateYW": {
-      "baseValue": 0.0,
+      "baseValue": 0.3,
       "baseMin": -3.14159,
       "baseMax": 3.14159,
       "randomizeBase": false,
       "modulators": [
         {
-          "sourceId": "lfo",
+          "sourceId": "audio_flux_bass",
           "operator": "ADD",
-          "depth": 0.8,
+          "depth": 0.6,
           "dcOffset": 0.0,
-          "waveform": "SINE",
-          "genUnit": "BEAT",
-          "subdivision": 14.0,
-          "slope": 0.5,
-          "phaseOffset": 0.0
+          "followerMode": "CUSTOM",
+          "attackMs": 4.0,
+          "decayMs": 150.0
         }
       ]
     },
@@ -65,39 +63,27 @@
       "baseMin": -3.14159,
       "baseMax": 3.14159,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "lfo",
-          "operator": "ADD",
-          "depth": 0.5,
-          "dcOffset": 0.0,
-          "waveform": "SINE",
-          "genUnit": "BEAT",
-          "subdivision": 18.0,
-          "slope": 0.5,
-          "phaseOffset": 0.0
-        }
-      ]
+      "modulators": []
     },
     "Morph": {
-      "baseValue": 0.7,
+      "baseValue": 0.0,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": [
         {
-          "sourceId": "audio_mid",
+          "sourceId": "audio_bass",
           "operator": "ADD",
-          "depth": 0.3,
-          "dcOffset": 0.0,
+          "depth": 1.0,
+          "dcOffset": -0.5,
           "followerMode": "CUSTOM",
-          "attackMs": 40.0,
-          "decayMs": 300.0
+          "attackMs": 5.0,
+          "decayMs": 150.0
         }
       ]
     },
     "SupportH": {
-      "baseValue": 0.5,
+      "baseValue": 0.4,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -123,7 +109,7 @@
           "dcOffset": 0.0,
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 32.0,
+          "subdivision": 8.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
@@ -144,21 +130,21 @@
       "modulators": []
     },
     "Opacity": {
-      "baseValue": 0.4,
+      "baseValue": 0.6,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "EdgeThickness": {
-      "baseValue": 0.25,
+      "baseValue": 0.12,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "EdgeBrightness": {
-      "baseValue": 0.5,
+      "baseValue": 0.25,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -166,23 +152,33 @@
         {
           "sourceId": "audio_flux_high",
           "operator": "ADD",
-          "depth": 0.3,
+          "depth": 0.5,
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 3.0,
-          "decayMs": 120.0
+          "decayMs": 100.0
         }
       ]
     },
     "Glow": {
-      "baseValue": 0.1,
+      "baseValue": 0.05,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": []
+      "modulators": [
+        {
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.15,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 4.0,
+          "decayMs": 150.0
+        }
+      ]
     },
     "Zoom": {
-      "baseValue": 0.55,
+      "baseValue": 0.45,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -194,7 +190,7 @@
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 4.0,
-          "decayMs": 200.0
+          "decayMs": 150.0
         }
       ]
     }
@@ -202,12 +198,14 @@
   "feedbackParameters": {},
   "tags": [
     "web",
+    "hard",
     "beat",
-    "bar",
-    "mid",
-    "kick"
+    "bass",
+    "kick",
+    "high",
+    "bass-gated"
   ],
-  "presetNotes": "A glassy hypercube-to-sphere with thick edges; hats flicker the edges and kicks punch the zoom.",
+  "presetNotes": "The slice flips every four beats, rotation kicks, edges flicker on hats and bass hits morph the whole shape.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

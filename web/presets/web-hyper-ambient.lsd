@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "name": "web-hyper-prism",
+  "name": "web-hyper-ambient",
   "visualSourceType": "hyper_slice",
   "parameters": {
     "SliceOffset": {
@@ -12,11 +12,11 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.6,
+          "depth": 0.4,
           "dcOffset": 0.0,
-          "waveform": "SINE",
+          "waveform": "TRIANGLE",
           "genUnit": "BEAT",
-          "subdivision": 24.0,
+          "subdivision": 64.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
@@ -31,18 +31,18 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.8,
+          "depth": 0.5,
           "dcOffset": 0.0,
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 10.0,
+          "subdivision": 48.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
       ]
     },
     "RotateYW": {
-      "baseValue": 0.0,
+      "baseValue": 0.2,
       "baseMin": -3.14159,
       "baseMax": 3.14159,
       "randomizeBase": false,
@@ -50,11 +50,11 @@
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.8,
+          "depth": 0.4,
           "dcOffset": 0.0,
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 14.0,
+          "subdivision": 64.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
@@ -65,34 +65,22 @@
       "baseMin": -3.14159,
       "baseMax": 3.14159,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "lfo",
-          "operator": "ADD",
-          "depth": 0.5,
-          "dcOffset": 0.0,
-          "waveform": "SINE",
-          "genUnit": "BEAT",
-          "subdivision": 18.0,
-          "slope": 0.5,
-          "phaseOffset": 0.0
-        }
-      ]
+      "modulators": []
     },
     "Morph": {
-      "baseValue": 0.7,
+      "baseValue": 0.5,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": [
         {
-          "sourceId": "audio_mid",
+          "sourceId": "audio_amp",
           "operator": "ADD",
-          "depth": 0.3,
+          "depth": 0.15,
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
-          "attackMs": 40.0,
-          "decayMs": 300.0
+          "attackMs": 200.0,
+          "decayMs": 1500.0
         }
       ]
     },
@@ -104,14 +92,14 @@
       "modulators": []
     },
     "ColorMethod": {
-      "baseValue": 1.0,
+      "baseValue": 2.0,
       "baseMin": 0.0,
       "baseMax": 2.0,
       "randomizeBase": false,
       "modulators": []
     },
     "HueOffset": {
-      "baseValue": 0.0,
+      "baseValue": 0.4,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -123,14 +111,14 @@
           "dcOffset": 0.0,
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 32.0,
+          "subdivision": 96.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
       ]
     },
     "Saturation": {
-      "baseValue": 0.9,
+      "baseValue": 0.7,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -144,70 +132,49 @@
       "modulators": []
     },
     "Opacity": {
-      "baseValue": 0.4,
+      "baseValue": 0.55,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "EdgeThickness": {
-      "baseValue": 0.25,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "EdgeBrightness": {
-      "baseValue": 0.5,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_flux_high",
-          "operator": "ADD",
-          "depth": 0.3,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 3.0,
-          "decayMs": 120.0
-        }
-      ]
-    },
-    "Glow": {
       "baseValue": 0.1,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
-    "Zoom": {
-      "baseValue": 0.55,
+    "EdgeBrightness": {
+      "baseValue": 0.25,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_flux_bass",
-          "operator": "ADD",
-          "depth": 0.12,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 4.0,
-          "decayMs": 200.0
-        }
-      ]
+      "modulators": []
+    },
+    "Glow": {
+      "baseValue": 0.08,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Zoom": {
+      "baseValue": 0.5,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
     }
   },
   "feedbackParameters": {},
   "tags": [
     "web",
-    "beat",
+    "ambient",
     "bar",
-    "mid",
-    "kick"
+    "amp"
   ],
-  "presetNotes": "A glassy hypercube-to-sphere with thick edges; hats flicker the edges and kicks punch the zoom.",
+  "presetNotes": "A 4D shape sliced slowly over 16 bars in muted colour; only loudness nudges its morph.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

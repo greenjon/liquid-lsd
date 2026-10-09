@@ -1,93 +1,45 @@
 {
   "version": 1,
-  "name": "web-hat-sparkle",
-  "visualSourceType": "dynamic_spiral",
+  "name": "web-gyroid-hat",
+  "visualSourceType": "gyroid_hyperspace",
   "parameters": {
-    "MaxPoints": {
-      "baseValue": 900,
-      "baseMin": 100.0,
-      "baseMax": 2000.0,
+    "SurfaceType": {
+      "baseValue": 2.0,
+      "baseMin": 0.0,
+      "baseMax": 2.0,
       "randomizeBase": false,
       "modulators": []
     },
-    "Scale": {
-      "baseValue": 0.4,
+    "WallThickness": {
+      "baseValue": 0.3,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
-    "Damping": {
-      "baseValue": 0.25,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "WaveFreq": {
-      "baseValue": 0.2,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "WaveAmp": {
-      "baseValue": 0.0,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "Shear": {
-      "baseValue": 0.2,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "Speed": {
-      "baseValue": 0.25,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "DotSize": {
-      "baseValue": 0.38,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_flux_high",
-          "operator": "ADD",
-          "depth": 0.25,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 3.0,
-          "decayMs": 140.0
-        }
-      ]
-    },
-    "Glow": {
+    "Frequency": {
       "baseValue": 0.5,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_flux_high",
-          "operator": "ADD",
-          "depth": 0.4,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 3.0,
-          "decayMs": 160.0
-        }
-      ]
+      "modulators": []
     },
-    "HueOffset": {
-      "baseValue": 0.0,
+    "FlightSpeed": {
+      "baseValue": 0.15,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "WireframeMode": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "CoreGlow": {
+      "baseValue": 0.3,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -99,32 +51,93 @@
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 3.0,
-          "decayMs": 200.0
+          "decayMs": 140.0
         }
       ]
     },
-    "HueSweep": {
-      "baseValue": 0.15,
+    "ColorMode": {
+      "baseValue": 3.0,
+      "baseMin": 0.0,
+      "baseMax": 3.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueOffset": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_high",
+          "operator": "ADD",
+          "depth": 0.4,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 3.0,
+          "decayMs": 250.0
+        }
+      ]
+    },
+    "Saturation": {
+      "baseValue": 0.9,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
-    "TrailDecay": {
-      "baseValue": 0.8,
+    "Brightness": {
+      "baseValue": 0.4,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_high",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 3.0,
+          "decayMs": 120.0
+        }
+      ]
+    },
+    "Zoom": {
+      "baseValue": 0.4,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
+    },
+    "RotateX": {
+      "baseValue": 0.0,
+      "baseMin": -3.14159265,
+      "baseMax": 3.14159265,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
     }
   },
   "feedbackParameters": {},
   "tags": [
     "web",
     "hat",
-    "high"
+    "high",
+    "bar"
   ],
-  "presetNotes": "A calm spiral that does nothing but sparkle: dots grow, glow and the colour jumps with every hi-hat.",
+  "presetNotes": "A steady wireframe flight that glints and shifts colour on the hi-hats.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

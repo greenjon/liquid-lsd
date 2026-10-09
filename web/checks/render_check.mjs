@@ -56,8 +56,11 @@ sources.push({ name: 'live_wrong_version_ignored', settleMs: 600, wire: [
 const webChains = catalog.fxChains.filter((c) => c.file.startsWith('fxchains/')).map((c) => c.id);
 // The chain is picked by a hash of the file name, so adding presets never changes another preset's chain.
 const hash = (str) => [...str].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+// `preset | chain` pins in the foreground playlist win over the hash, so the check shows what the autopilot shows.
+const pins = Object.fromEntries(fs.readFileSync(path.join(web, 'playlists', 'default.lsdplay'), 'utf8').split('\n')
+  .filter((l) => l.includes('|') && !l.startsWith('#')).map((l) => l.split('|').map((p) => p.trim())));
 fs.readdirSync(path.join(web, 'presets')).sort().filter((f) => f.endsWith('.lsd')).forEach((f) => {
-  sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: webChains[hash(f) % webChains.length], settleMs: 2500 });
+  sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: pins[f.replace('.lsd', '')] ?? webChains[hash(f) % webChains.length], settleMs: 2500 });
 });
 // Desktop-shipped Mandala presets, unmodified (Lobes / Recipe Select / the recipe table)
 for (const f of ['mandala-7', 'mandala-10']) {
@@ -103,7 +106,7 @@ await new Promise((r) => server.listen(0, '127.0.0.1', r));
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'lsd-ff-'));
 const ff = spawn('firefox', ['--headless', '--no-remote', '--profile', profile,
   `http://127.0.0.1:${server.address().port}/checks/render_check.html`], { stdio: 'ignore' });
-const timer = setTimeout(() => { console.error('timeout waiting for Firefox'); done(1); }, 240000);
+const timer = setTimeout(() => { console.error('timeout waiting for Firefox'); done(1); }, 600000);
 function done(code) {
   clearTimeout(timer); ff.kill('SIGKILL'); server.close();
   fs.rmSync(profile, { recursive: true, force: true }); process.exit(code);

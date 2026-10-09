@@ -271,8 +271,8 @@ preset("web-solid-icosa", "icosa_h3", {
 preset("web-hyper-prism", "hyper_slice", {
     "SliceOffset": (0.0, lfo(24, 0.6)), "RotateXW": (0.0, lfo(10, 0.8)), "RotateYW": (0.0, lfo(14, 0.8)),
     "RotateZW": (0.0, lfo(18, 0.5)), "Morph": (0.7, mid(0.3)), "SupportH": 0.5, "ColorMethod": 1.0,
-    "HueOffset": (0.0, lfo(32, 1.0)), "Saturation": 0.9, "Brightness": 0.5, "Opacity": 0.55,
-    "EdgeThickness": 0.3, "EdgeBrightness": (0.7, hat(0.3)), "Glow": 0.18, "Zoom": (0.55, kick(0.12, 200)),
+    "HueOffset": (0.0, lfo(32, 1.0)), "Saturation": 0.9, "Brightness": 0.4, "Opacity": 0.4,
+    "EdgeThickness": 0.25, "EdgeBrightness": (0.5, hat(0.3)), "Glow": 0.1, "Zoom": (0.55, kick(0.12, 200)),
 }, ["beat", "bar", "mid", "kick"],
     "A glassy hypercube-to-sphere with thick edges; hats flicker the edges and kicks punch the zoom.")
 
@@ -302,15 +302,15 @@ preset("web-celestial-bloom", "celestial_engine", {
 
 preset("web-fluid-lava", "domain_warp_fluid", {
     "WarpStrength": (0.6, bass(0.2)), "Swirl": (-0.4, lfo(24, 0.4)), "Viscosity": 0.7, "Speed": (0.08, amp(0.3)),
-    "Detail": 2, "Gloss": (0.3, pulse(2, 0.15)), "PaletteMode": 4.0, "HueOffset": (0.0, lfo(48, 1.0)),
+    "Detail": 2, "Gloss": (0.1, pulse(2, 0.1)), "PaletteMode": 4.0, "HueOffset": (0.0, lfo(48, 1.0)),
     "HueCycleSpeed": 0.05, "Zoom": (0.35, kick(0.06, 250)),
 }, ["beat", "bar", "bass", "amp", "kick"],
     "Slow thick marbling in a dark palette; glossy highlights swell every other beat.")
 
 preset("web-spiral-galaxy", "dynamic_spiral", {
     "MaxPoints": 2000, "Scale": (0.2, pulse(1, 0.04)), "Damping": 0.6, "WaveFreq": 0.1,
-    "WaveAmp": 0.0, "Shear": (0.5, lfo(48, 0.3)), "Speed": 0.15, "DotSize": (0.1, kick(0.1, 200)),
-    "Glow": 0.6, "HueOffset": (0.55, lfo(64, 1.0)), "HueSweep": 0.4, "TrailDecay": 0.92,
+    "WaveAmp": 0.0, "Shear": (0.5, lfo(48, 0.3)), "Speed": 0.15, "DotSize": (0.32, kick(0.1, 200)),
+    "Glow": 0.8, "HueOffset": (0.55, lfo(64, 1.0)), "HueSweep": 0.4, "TrailDecay": 0.92,
 }, ["beat", "bar", "kick"],
     "A fine, dense galaxy arm turning slowly; dots swell on each kick.")
 
@@ -427,8 +427,8 @@ preset("web-hard-mandala", "mandala", {
 # hat-/mid-/kick-driven presets use mostly that one signal; build presets ramp over a phrase (`ramp`) and
 # land a bass-gated drop. reactivity.test.mjs checks `build` (a parameter higher late in the phrase than early).
 preset("web-hat-sparkle", "dynamic_spiral", {
-    "MaxPoints": 600, "Scale": 0.4, "Damping": 0.25, "WaveFreq": 0.2, "WaveAmp": 0.0, "Shear": 0.2, "Speed": 0.25,
-    "DotSize": (0.15, hat(0.35, 140)), "Glow": (0.3, hat(0.5, 160)), "HueOffset": (0.0, hat(0.5, 200)),
+    "MaxPoints": 900, "Scale": 0.4, "Damping": 0.25, "WaveFreq": 0.2, "WaveAmp": 0.0, "Shear": 0.2, "Speed": 0.25,
+    "DotSize": (0.38, hat(0.25, 140)), "Glow": (0.5, hat(0.4, 160)), "HueOffset": (0.0, hat(0.5, 200)),
     "HueSweep": 0.15, "TrailDecay": 0.8,
 }, ["hat", "high"],
     "A calm spiral that does nothing but sparkle: dots grow, glow and the colour jumps with every hi-hat.")
@@ -502,6 +502,91 @@ preset("web-kick-rings", "celestial_engine", {
     "HueSweep": 0.3, "Scale": (0.5, kick(0.12, 180)),
 }, ["kick"],
     "Rings that expand, thicken and glow on every kick and settle back between them.")
+
+
+# ---------------------------------------------------------------- batch 5: fill the thinnest sources
+# (gyroid_hyperspace, icosa_h3, hyper_slice). Gyroid notes: it is a flight, so it is empty ~25% of the time
+# whatever the parameters; wireframe at Zoom ~.35 shows structure, Zoom >= .5 is telephoto.
+preset("web-gyroid-schwarz", "gyroid_hyperspace", {
+    "SurfaceType": 2.0, "WallThickness": (0.35, bass(0.25)), "Frequency": (0.4, lfo(32, 0.15)),
+    "FlightSpeed": (0.2, amp(0.4)), "WireframeMode": 0.0, "CoreGlow": (0.45, kick(0.4)),
+    "ColorMode": 2.0, "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.95, "Brightness": 0.7,
+    "Zoom": 0.6, "RotateY": (0.0, lfo(64, 1.0)),
+}, ["beat", "bar", "bass", "amp", "kick"],
+    "A different cave family (the third surface type) in banded colour; walls swell with bass, the core flashes on kicks.")
+
+preset("web-gyroid-ambient", "gyroid_hyperspace", {
+    "SurfaceType": 0.0, "WallThickness": (0.35, lfo(32, 0.15)), "Frequency": (0.45, lfo(64, 0.1)),
+    "FlightSpeed": (0.1, amp(0.15, 200, 1500)), "WireframeMode": 1.0, "CoreGlow": (0.4, amp(0.2, 200, 1500)),
+    "ColorMode": 1.0, "HueOffset": (0.0, lfo(96, 1.0)), "Saturation": 0.8, "Brightness": 0.45,
+    "Zoom": 0.35, "RotateZ": (0.0, lfo(96, 1.0)),
+}, ["ambient", "bar", "amp"],
+    "A slow drift through a wireframe maze in muted colour; only the overall level nudges speed and glow.")
+
+preset("web-gyroid-kick", "gyroid_hyperspace", {
+    "SurfaceType": 1.0, "WallThickness": 0.35, "Frequency": (0.5, lfo(16, 0.1)),
+    "FlightSpeed": (0.1, kick(0.6, 300)), "WireframeMode": 1.0, "CoreGlow": (0.4, kick(0.5, 180)),
+    "ColorMode": 0.0, "HueOffset": (0.0, lfo(24, 1.0)), "Saturation": 0.9, "Brightness": 0.5,
+    "Zoom": 0.35, "RotateZ": (0.0, lfo(32, 1.0)),
+}, ["hard", "beat", "bar", "kick"],
+    "The flight lurches forward on every kick and coasts in between; the core glows with each hit.")
+
+preset("web-gyroid-hat", "gyroid_hyperspace", {
+    "SurfaceType": 2.0, "WallThickness": 0.3, "Frequency": 0.5, "FlightSpeed": 0.15,
+    "WireframeMode": 1.0, "CoreGlow": (0.3, hat(0.5, 140)), "ColorMode": 3.0,
+    "HueOffset": (0.0, hat(0.4, 250)), "Saturation": 0.9, "Brightness": (0.4, hat(0.2, 120)),
+    "Zoom": 0.4, "RotateX": (0.0, lfo(64, 1.0)),
+}, ["hat", "high", "bar"],
+    "A steady wireframe flight that glints and shifts colour on the hi-hats.")
+
+preset("web-icosa-spiked", "icosa_h3", {
+    "Morph": (0.2, kick(0.6, 250)), "StellationBoost": (0.0, gate("audio_bass", 0.5, 1.5)), "SpikeMode": 1.0,
+    "SpikePhase": (0.0, lfo(4, 1.0)), "SpikeSharpness": 0.9, "BlockerSize": 0.45, "ColorMode": 1.0,
+    "HueOffset": (0.0, lfo(16, 1.0)), "Saturation": 0.9, "Brightness": 0.65, "Opacity": 0.85,
+    "EdgeThickness": 0.08, "EdgeBrightness": (0.3, pulse(0.5, 0.3)), "RimGlow": (0.35, hat(0.3)),
+    "Zoom": (0.7, kick(0.08, 150)), "RotateX": (0.0, lfo(16, 1.0)), "RotateY": (0.0, lfo(12, 1.0)),
+}, ["hard", "beat", "bar", "kick", "high", "bass-gated"],
+    "Needle-sharp spikes that spin on a four-beat cycle; kicks push the morph and bass hits blow up the stellation.")
+
+preset("web-icosa-glass", "icosa_h3", {
+    "Morph": (0.3, mid(0.4)), "StellationBoost": 0.0, "SpikeMode": 0.0, "SpikeSharpness": 0.5, "BlockerSize": 0.3,
+    "ColorMode": 4.0, "HueOffset": (0.0, lfo(32, 1.0)), "Saturation": 0.8, "Brightness": 0.6, "Opacity": 0.4,
+    "EdgeThickness": 0.2, "EdgeBrightness": (0.6, pulse(1, 0.2)), "RimGlow": (0.5, mid(0.3)),
+    "Zoom": 0.7, "RotateX": (0.0, lfo(24, 1.0)), "RotateY": (0.0, lfo(32, 1.0)),
+}, ["groove", "beat", "bar", "mid"],
+    "A see-through crystal with thick bright edges that tick on the beat; the mids morph it and light its rim.")
+
+preset("web-icosa-build", "icosa_h3", {
+    "Morph": (0.1, ramp(32, 0.7)), "StellationBoost": (0.0, gate("audio_bass", 0.6, 1.5)), "SpikeMode": 0.0,
+    "SpikeSharpness": 0.6, "BlockerSize": 0.4, "ColorMode": 0.0, "HueOffset": (0.0, ramp(32, 0.6)),
+    "Saturation": 0.85, "Brightness": 0.65, "Opacity": 0.75, "EdgeThickness": 0.12, "EdgeBrightness": (0.4, ramp(32, 0.4)),
+    "RimGlow": (0.2, ramp(32, 0.5)), "Zoom": 0.65, "RotateX": (0.0, lfo(32, 1.0)), "RotateY": (0.0, lfo(24, 1.0)),
+}, ["build", "bar", "bass", "bass-gated"],
+    "A crystal that morphs, brightens and shifts colour over an eight-bar phrase; bass hits throw spikes out of it.")
+
+preset("web-hyper-ambient", "hyper_slice", {
+    "SliceOffset": (0.0, lfo(64, 0.4, wave="TRIANGLE")), "RotateXW": (0.0, lfo(48, 0.5)), "RotateYW": (0.2, lfo(64, 0.4)),
+    "RotateZW": 0.0, "Morph": (0.5, amp(0.15, 200, 1500)), "SupportH": 0.5, "ColorMethod": 2.0,
+    "HueOffset": (0.4, lfo(96, 1.0)), "Saturation": 0.7, "Brightness": 0.4, "Opacity": 0.55,
+    "EdgeThickness": 0.1, "EdgeBrightness": 0.25, "Glow": 0.08, "Zoom": 0.5,
+}, ["ambient", "bar", "amp"],
+    "A 4D shape sliced slowly over 16 bars in muted colour; only loudness nudges its morph.")
+
+preset("web-hyper-hard", "hyper_slice", {
+    "SliceOffset": (0.0, lfo(4, 0.4, wave="SQUARE")), "RotateXW": (0.0, lfo(4, 0.8)), "RotateYW": (0.3, kick(0.6, 150)),
+    "RotateZW": 0.0, "Morph": (0.0, gate("audio_bass", 0.5, 1.0, 5, 150)), "SupportH": 0.4, "ColorMethod": 1.0,
+    "HueOffset": (0.0, lfo(8, 1.0)), "Saturation": 0.9, "Brightness": 0.4, "Opacity": 0.6,
+    "EdgeThickness": 0.12, "EdgeBrightness": (0.25, hat(0.5, 100)), "Glow": (0.05, kick(0.15, 150)), "Zoom": (0.45, kick(0.12, 150)),
+}, ["hard", "beat", "bass", "kick", "high", "bass-gated"],
+    "The slice flips every four beats, rotation kicks, edges flicker on hats and bass hits morph the whole shape.")
+
+preset("web-hyper-sweep", "hyper_slice", {
+    "SliceOffset": (0.0, lfo(8, 0.5, wave="TRIANGLE")), "RotateXW": (0.0, lfo(12, 0.6)), "RotateYW": (0.1, lfo(16, 0.5)),
+    "RotateZW": (0.0, lfo(20, 0.4)), "Morph": (0.3, mid(0.4)), "SupportH": 0.45, "ColorMethod": 0.0,
+    "HueOffset": (0.2, lfo(24, 1.0)), "Saturation": 0.85, "Brightness": (0.4, pulse(2, 0.1)), "Opacity": 0.6,
+    "EdgeThickness": 0.1, "EdgeBrightness": (0.25, pulse(1, 0.15)), "Glow": 0.08, "Zoom": 0.5,
+}, ["groove", "beat", "bar", "mid"],
+    "A quick two-bar sweep through the 4D shape with all three 4D rotations turning at different speeds.")
 
 # batch 2 chains
 chain("web-tunnel", ["tunnel", "beat", "bass"],

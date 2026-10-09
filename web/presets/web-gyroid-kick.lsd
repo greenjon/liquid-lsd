@@ -1,83 +1,67 @@
 {
   "version": 1,
-  "name": "web-spiral-galaxy",
-  "visualSourceType": "dynamic_spiral",
+  "name": "web-gyroid-kick",
+  "visualSourceType": "gyroid_hyperspace",
   "parameters": {
-    "MaxPoints": {
-      "baseValue": 2000,
-      "baseMin": 100.0,
-      "baseMax": 2000.0,
+    "SurfaceType": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 2.0,
       "randomizeBase": false,
       "modulators": []
     },
-    "Scale": {
-      "baseValue": 0.2,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "lfo",
-          "operator": "ADD",
-          "depth": 0.04,
-          "dcOffset": 0.0,
-          "waveform": "TRIANGLE",
-          "genUnit": "BEAT",
-          "subdivision": 1.0,
-          "slope": 0.0,
-          "phaseOffset": 0.0
-        }
-      ]
-    },
-    "Damping": {
-      "baseValue": 0.6,
+    "WallThickness": {
+      "baseValue": 0.35,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
-    "WaveFreq": {
-      "baseValue": 0.1,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "WaveAmp": {
-      "baseValue": 0.0,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "Shear": {
+    "Frequency": {
       "baseValue": 0.5,
-      "baseMin": -1.0,
+      "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": [
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.3,
+          "depth": 0.1,
           "dcOffset": 0.0,
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 48.0,
+          "subdivision": 16.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
       ]
     },
-    "Speed": {
-      "baseValue": 0.15,
+    "FlightSpeed": {
+      "baseValue": 0.1,
       "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.6,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 4.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "WireframeMode": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
-    "DotSize": {
-      "baseValue": 0.32,
+    "CoreGlow": {
+      "baseValue": 0.4,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -85,23 +69,23 @@
         {
           "sourceId": "audio_flux_bass",
           "operator": "ADD",
-          "depth": 0.1,
+          "depth": 0.5,
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 4.0,
-          "decayMs": 200.0
+          "decayMs": 180.0
         }
       ]
     },
-    "Glow": {
-      "baseValue": 0.8,
+    "ColorMode": {
+      "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
+      "baseMax": 3.0,
       "randomizeBase": false,
       "modulators": []
     },
     "HueOffset": {
-      "baseValue": 0.55,
+      "baseValue": 0.0,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -113,35 +97,62 @@
           "dcOffset": 0.0,
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 64.0,
+          "subdivision": 24.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
       ]
     },
-    "HueSweep": {
-      "baseValue": 0.4,
+    "Saturation": {
+      "baseValue": 0.9,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
-    "TrailDecay": {
-      "baseValue": 0.92,
+    "Brightness": {
+      "baseValue": 0.5,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
+    },
+    "Zoom": {
+      "baseValue": 0.35,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "RotateZ": {
+      "baseValue": 0.0,
+      "baseMin": -3.14159265,
+      "baseMax": 3.14159265,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
     }
   },
   "feedbackParameters": {},
   "tags": [
     "web",
+    "hard",
     "beat",
     "bar",
     "kick"
   ],
-  "presetNotes": "A fine, dense galaxy arm turning slowly; dots swell on each kick.",
+  "presetNotes": "The flight lurches forward on every kick and coasts in between; the core glows with each hit.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,

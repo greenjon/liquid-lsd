@@ -1,77 +1,36 @@
 {
   "version": 1,
-  "name": "web-fluid-lava",
-  "visualSourceType": "domain_warp_fluid",
+  "name": "web-gyroid-ambient",
+  "visualSourceType": "gyroid_hyperspace",
   "parameters": {
-    "WarpStrength": {
-      "baseValue": 0.6,
+    "SurfaceType": {
+      "baseValue": 0.0,
       "baseMin": 0.0,
-      "baseMax": 1.0,
+      "baseMax": 2.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_bass",
-          "operator": "ADD",
-          "depth": 0.2,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 20.0,
-          "decayMs": 300.0
-        }
-      ]
+      "modulators": []
     },
-    "Swirl": {
-      "baseValue": -0.4,
-      "baseMin": -1.0,
+    "WallThickness": {
+      "baseValue": 0.35,
+      "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": [
         {
           "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.4,
+          "depth": 0.15,
           "dcOffset": 0.0,
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 24.0,
+          "subdivision": 32.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
       ]
     },
-    "Viscosity": {
-      "baseValue": 0.7,
-      "baseMin": 0.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "Speed": {
-      "baseValue": 0.08,
-      "baseMin": -1.0,
-      "baseMax": 1.0,
-      "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_amp",
-          "operator": "ADD",
-          "depth": 0.3,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 30.0,
-          "decayMs": 400.0
-        }
-      ]
-    },
-    "Detail": {
-      "baseValue": 2,
-      "baseMin": 1.0,
-      "baseMax": 5.0,
-      "randomizeBase": false,
-      "modulators": []
-    },
-    "Gloss": {
-      "baseValue": 0.1,
+    "Frequency": {
+      "baseValue": 0.45,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -81,18 +40,59 @@
           "operator": "ADD",
           "depth": 0.1,
           "dcOffset": 0.0,
-          "waveform": "TRIANGLE",
+          "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 2.0,
-          "slope": 0.0,
+          "subdivision": 64.0,
+          "slope": 0.5,
           "phaseOffset": 0.0
         }
       ]
     },
-    "PaletteMode": {
-      "baseValue": 4.0,
+    "FlightSpeed": {
+      "baseValue": 0.1,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.15,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 200.0,
+          "decayMs": 1500.0
+        }
+      ]
+    },
+    "WireframeMode": {
+      "baseValue": 1.0,
       "baseMin": 0.0,
-      "baseMax": 4.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "CoreGlow": {
+      "baseValue": 0.4,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 200.0,
+          "decayMs": 1500.0
+        }
+      ]
+    },
+    "ColorMode": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 3.0,
       "randomizeBase": false,
       "modulators": []
     },
@@ -109,15 +109,22 @@
           "dcOffset": 0.0,
           "waveform": "SINE",
           "genUnit": "BEAT",
-          "subdivision": 48.0,
+          "subdivision": 96.0,
           "slope": 0.5,
           "phaseOffset": 0.0
         }
       ]
     },
-    "HueCycleSpeed": {
-      "baseValue": 0.05,
-      "baseMin": -1.0,
+    "Saturation": {
+      "baseValue": 0.8,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Brightness": {
+      "baseValue": 0.45,
+      "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
@@ -127,15 +134,24 @@
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
+      "modulators": []
+    },
+    "RotateZ": {
+      "baseValue": 0.0,
+      "baseMin": -3.14159265,
+      "baseMax": 3.14159265,
+      "randomizeBase": false,
       "modulators": [
         {
-          "sourceId": "audio_flux_bass",
+          "sourceId": "lfo",
           "operator": "ADD",
-          "depth": 0.06,
+          "depth": 1.0,
           "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 4.0,
-          "decayMs": 250.0
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 96.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
         }
       ]
     }
@@ -143,13 +159,11 @@
   "feedbackParameters": {},
   "tags": [
     "web",
-    "beat",
+    "ambient",
     "bar",
-    "bass",
-    "amp",
-    "kick"
+    "amp"
   ],
-  "presetNotes": "Slow thick marbling in a dark palette; glossy highlights swell every other beat.",
+  "presetNotes": "A slow drift through a wireframe maze in muted colour; only the overall level nudges speed and glow.",
   "globalAlpha": {
     "baseValue": 1.0,
     "baseMin": 0.0,
