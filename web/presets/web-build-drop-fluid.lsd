@@ -1,0 +1,174 @@
+{
+  "version": 1,
+  "name": "web-build-drop-fluid",
+  "visualSourceType": "domain_warp_fluid",
+  "parameters": {
+    "WarpStrength": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": -0.6,
+          "followerMode": "CUSTOM",
+          "attackMs": 15.0,
+          "decayMs": 250.0
+        }
+      ]
+    },
+    "Swirl": {
+      "baseValue": 0.1,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.7,
+          "dcOffset": 0.0,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 32.0,
+          "slope": 1.0,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Viscosity": {
+      "baseValue": 0.3,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Speed": {
+      "baseValue": 0.08,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.5,
+          "dcOffset": 0.0,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 32.0,
+          "slope": 1.0,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Detail": {
+      "baseValue": 3,
+      "baseMin": 1.0,
+      "baseMax": 5.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Gloss": {
+      "baseValue": 0.3,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 32.0,
+          "slope": 1.0,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "PaletteMode": {
+      "baseValue": 4.0,
+      "baseMin": 0.0,
+      "baseMax": 4.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueOffset": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "HueCycleSpeed": {
+      "baseValue": 0.05,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.4,
+          "dcOffset": 0.0,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 32.0,
+          "slope": 1.0,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Zoom": {
+      "baseValue": 0.4,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.08,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 4.0,
+          "decayMs": 200.0
+        }
+      ]
+    }
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web",
+    "build",
+    "bar",
+    "bass",
+    "kick",
+    "bass-gated"
+  ],
+  "presetNotes": "Calm marble that winds up over eight bars (faster, swirlier, glossier) and gets slammed open by bass hits.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}

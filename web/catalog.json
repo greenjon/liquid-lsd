@@ -297,6 +297,11 @@
       "name": "web-bloom"
     },
     {
+      "id": "web-build-drop",
+      "file": "fxchains/web-build-drop.lsdfxchain",
+      "name": "web-build-drop"
+    },
+    {
       "id": "web-drop-strobe",
       "file": "fxchains/web-drop-strobe.lsdfxchain",
       "name": "web-drop-strobe"

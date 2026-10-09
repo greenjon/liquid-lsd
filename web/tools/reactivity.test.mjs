@@ -88,6 +88,15 @@ function check(name, list, tags) {
       }
     }
   }
+  if (tags.includes('build')) {
+    // A build-up: some parameter is higher late in the phrase than early, at silence.
+    const early = values(list, { beats: 2 }), late = values(list, { beats: 30 });
+    assert.ok(late.some((v, i) => v - early[i] > 1e-3), `${name}: tagged build but nothing rises between beat 2 and beat 30`);
+  }
+  if (tags.includes('hat')) {
+    const m = moved(list, [values(list), values(list, { cv: { audio_flux_high: 1 } })]);
+    assert.ok(m.length, `${name}: tagged hat but nothing moves with audio_flux_high`);
+  }
   if (tags.includes('beat')) {
     const m = moved(list, sweepBeats(list, 0, 1, 1 / 16));
     assert.ok(m.length, `${name}: tagged beat but nothing moves within one beat`);

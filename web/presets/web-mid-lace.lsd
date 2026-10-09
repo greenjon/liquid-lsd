@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "name": "web-mid-lace",
+  "visualSourceType": "chladni_cymatics",
+  "parameters": {
+    "FrequencyM": {
+      "baseValue": 4,
+      "baseMin": 1.0,
+      "baseMax": 16.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "FrequencyN": {
+      "baseValue": 4,
+      "baseMin": 1.0,
+      "baseMax": 16.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.6,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 80.0,
+          "decayMs": 500.0
+        }
+      ]
+    },
+    "FrequencyL": {
+      "baseValue": 2,
+      "baseMin": 0.0,
+      "baseMax": 12.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "PlateShape": {
+      "baseValue": 0.2,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.4,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 40.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "NodeSharpness": {
+      "baseValue": 0.35,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "SandAccumulation": {
+      "baseValue": 0.6,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "VibrationSpeed": {
+      "baseValue": 0.1,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "InvertMode": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Glow": {
+      "baseValue": 0.3,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.5,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 40.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "PaletteMode": {
+      "baseValue": 2.0,
+      "baseMin": 0.0,
+      "baseMax": 3.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueOffset": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 80.0,
+          "decayMs": 800.0
+        }
+      ]
+    },
+    "Scale": {
+      "baseValue": 0.5,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    }
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web",
+    "mid"
+  ],
+  "presetNotes": "A plate whose pattern gets more complex as the mids get louder.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}

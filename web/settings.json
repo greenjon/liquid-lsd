@@ -25,7 +25,8 @@
     "web-drop-strobe",
     "web-trails-drift",
     "web-tunnel",
-    "web-vortex"
+    "web-vortex",
+    "web-build-drop"
   ],
   "fxPlaybackOrder": "sequential"
 }

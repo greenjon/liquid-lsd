@@ -73,6 +73,11 @@ def gate(source, threshold, depth, attack=15, decay=250):
     return audio(source, depth, attack, decay, dc=-threshold * depth)
 
 
+def ramp(beats, depth):
+    """Rises from 0 to depth over `beats` beats, then snaps back: a build-up that restarts every phrase."""
+    return lfo(beats, depth, wave="TRIANGLE", slope=1.0)
+
+
 def bass(depth, attack=20, decay=300): return audio("audio_bass", depth, attack, decay)
 def mid(depth, attack=40, decay=300): return audio("audio_mid", depth, attack, decay)
 def high(depth, attack=15, decay=140): return audio("audio_high", depth, attack, decay)
@@ -417,6 +422,87 @@ preset("web-hard-mandala", "mandala", {
 }, ["hard", "beat", "bass", "kick", "high", "bass-gated"],
     "Lobe count flips every beat, lines punch on kicks, arms flicker on hats and a fourth arm slams in on bass.")
 
+
+# ---------------------------------------------------------------- batch 4: one signal is the point
+# hat-/mid-/kick-driven presets use mostly that one signal; build presets ramp over a phrase (`ramp`) and
+# land a bass-gated drop. reactivity.test.mjs checks `build` (a parameter higher late in the phrase than early).
+preset("web-hat-sparkle", "dynamic_spiral", {
+    "MaxPoints": 600, "Scale": 0.4, "Damping": 0.25, "WaveFreq": 0.2, "WaveAmp": 0.0, "Shear": 0.2, "Speed": 0.25,
+    "DotSize": (0.15, hat(0.35, 140)), "Glow": (0.3, hat(0.5, 160)), "HueOffset": (0.0, hat(0.5, 200)),
+    "HueSweep": 0.15, "TrailDecay": 0.8,
+}, ["hat", "high"],
+    "A calm spiral that does nothing but sparkle: dots grow, glow and the colour jumps with every hi-hat.")
+
+preset("web-hat-icosa", "icosa_h3", {
+    "Morph": 0.15, "StellationBoost": 0.0, "SpikeMode": 0.0, "SpikeSharpness": 0.6, "BlockerSize": 0.4,
+    "ColorMode": 1.0, "HueOffset": 0.0, "HueAnimSpeed": 0.05, "Saturation": 0.85, "Brightness": 0.6, "Opacity": 0.7,
+    "EdgeThickness": (0.1, hat(0.3, 120)), "EdgeBrightness": (0.3, hat(0.6, 120)), "RimGlow": (0.2, hat(0.5, 160)),
+    "Zoom": 0.7, "RotateX": (0.0, lfo(96, 1.0)), "RotateY": (0.0, lfo(64, 1.0)),
+}, ["hat", "high"],
+    "A slowly turning crystal whose edges and rim flare on the hi-hats.")
+
+preset("web-mid-bloom", "celestial_engine", {
+    "Symmetries": 8, "RingDensity": (0.3, mid(0.3)), "PhaseTwist": (0.1, mid(0.6, 60, 400)),
+    "MoireStrength": (0.2, mid(0.6)), "FlowerFold": (0.35, mid(0.5)), "PulseWave": 0.0, "Speed": 0.12,
+    "LineWidth": 0.22, "Glow": (0.35, mid(0.3)), "ColorMode": 2.0, "HueOffset": (0.0, mid(0.4, 80, 600)),
+    "HueSweep": 0.4, "Scale": 0.55,
+}, ["mid"],
+    "A celestial flower that unfolds with the mids (vocals, synths, guitars) and rests when they drop out.")
+
+preset("web-mid-marble", "domain_warp_fluid", {
+    "WarpStrength": (0.35, mid(0.4)), "Swirl": (0.0, mid(0.8, 60, 500)), "Viscosity": 0.4, "Speed": 0.1,
+    "Detail": 3, "Gloss": (0.3, mid(0.3)), "PaletteMode": 0.0, "HueOffset": 0.0,
+    "HueCycleSpeed": (0.0, mid(0.5)), "Zoom": 0.5,
+}, ["mid"],
+    "Marbling that swirls and cycles colour only while the mids play.")
+
+preset("web-mid-lace", "chladni_cymatics", {
+    "FrequencyM": 4, "FrequencyN": (4, mid(0.6, 80, 500)), "FrequencyL": 2, "PlateShape": (0.2, mid(0.4)),
+    "NodeSharpness": 0.35, "SandAccumulation": 0.6, "VibrationSpeed": 0.1, "InvertMode": 0.0,
+    "Glow": (0.3, mid(0.5)), "PaletteMode": 2.0, "HueOffset": (0.0, mid(0.3, 80, 800)), "Scale": 0.5,
+}, ["mid"],
+    "A plate whose pattern gets more complex as the mids get louder.")
+
+preset("web-build-drop-fluid", "domain_warp_fluid", {
+    "WarpStrength": (0.0, gate("audio_bass", 0.6, 1.0)), "Swirl": (0.1, ramp(32, 0.7)),
+    "Viscosity": 0.3, "Speed": (0.08, ramp(32, 0.5)), "Detail": 3, "Gloss": (0.3, ramp(32, 0.3)),
+    "PaletteMode": 4.0, "HueOffset": (0.0, lfo(64, 1.0)), "HueCycleSpeed": (0.05, ramp(32, 0.4)),
+    "Zoom": (0.4, kick(0.08, 200)),
+}, ["build", "bar", "bass", "kick", "bass-gated"],
+    "Calm marble that winds up over eight bars (faster, swirlier, glossier) and gets slammed open by bass hits.")
+
+preset("web-build-drop-mandala", "mandala", {
+    "Lobes": 6, "Recipe Select": (0.3, lfo(32, 0.3, wave="SQUARE")),
+    "L1": 0.4, "L2": (0.2, ramp(32, 0.3)), "L3": (0.2, ramp(16, 0.3)), "L4": (0.0, gate("audio_bass", 0.6, 1.0)),
+    "Thickness": (0.15, ramp(32, 0.4)), "Hue Offset": (0.0, ramp(32, 0.5)), "Hue Sweep": (0.3, ramp(32, 0.6)),
+    "Depth": (0.3, ramp(32, 0.4)),
+}, ["build", "bar", "bass", "bass-gated"],
+    "Thin and quiet at the start of a phrase, thicker and busier every bar; the fourth arm only appears on bass hits.")
+
+preset("web-build-drop-spiral", "dynamic_spiral", {
+    "MaxPoints": 700, "Scale": (0.45, ramp(32, -0.15)), "Damping": 0.3, "WaveFreq": 0.2,
+    "WaveAmp": (0.0, gate("audio_bass", 0.6, 1.0)), "Shear": (0.1, ramp(32, 0.6)), "Speed": (0.2, ramp(32, 0.6)),
+    "DotSize": (0.2, ramp(32, 0.2), kick(0.15, 200)), "Glow": (0.4, ramp(32, 0.3)),
+    "HueOffset": (0.0, ramp(32, 0.8)), "HueSweep": 0.15, "TrailDecay": 0.8,
+}, ["build", "bar", "bass", "kick", "bass-gated"],
+    "A spiral that speeds up, shears and zooms through a phrase; the wave only breaks loose on loud bass.")
+
+preset("web-kick-hyper", "hyper_slice", {
+    "SliceOffset": 0.0, "RotateXW": (0.0, lfo(24, 0.5)), "RotateYW": (0.2, lfo(32, 0.4)), "RotateZW": 0.0,
+    "Morph": (0.15, kick(0.7, 300)), "SupportH": 0.4, "ColorMethod": 0.0, "HueOffset": (0.5, kick(0.15, 400)),
+    "Saturation": 0.85, "Brightness": 0.4, "Opacity": 0.6, "EdgeThickness": 0.1,
+    "EdgeBrightness": (0.25, kick(0.5, 200)), "Glow": (0.05, kick(0.15, 200)), "Zoom": (0.45, kick(0.12, 200)),
+}, ["kick"],
+    "A slowly rotating 4D shape that morphs, flashes and zooms only on kick drums.")
+
+preset("web-kick-rings", "celestial_engine", {
+    "Symmetries": 10, "RingDensity": (0.25, kick(0.4, 180)), "PhaseTwist": (0.2, kick(0.4, 250)),
+    "MoireStrength": 0.3, "FlowerFold": 0.5, "PulseWave": (0.0, kick(1.0, 250)), "Speed": 0.1,
+    "LineWidth": (0.2, kick(0.4, 180)), "Glow": (0.35, kick(0.4, 180)), "ColorMode": 0.0, "HueOffset": 0.0,
+    "HueSweep": 0.3, "Scale": (0.5, kick(0.12, 180)),
+}, ["kick"],
+    "Rings that expand, thicken and glow on every kick and settle back between them.")
+
 # batch 2 chains
 chain("web-tunnel", ["tunnel", "beat", "bass"],
       slot("polar_tunnel", {"depth": (0.18, bass(0.3)), "twist": (0.0, lfo(32, 0.5)), "centerX": 0.5, "centerY": 0.5,
@@ -425,5 +511,10 @@ chain("web-vortex", ["swirl", "kick", "beat"],
       slot("vortex_swirl", {"twist": (0.1, kick(0.5, 300)), "radius": (0.35, pulse(1, 0.15)), "dispersion": (0.2, hat(0.4)),
                             "spiralArms": 0.0, "centerX": 0.5, "centerY": 0.5}),
       FEEDBACK(0.5, 0.4, 0.002, 0.003))
+
+# batch 4 chain
+chain("web-build-drop", ["build", "bar", "bass-gated"],
+      slot("bloom", {"bloomIntensity": (0.1, ramp(32, 0.5)), "threshold": 0.5, "blurAmount": 0.35}),
+      slot("rgb_split", {"amount": (0.0, gate("audio_bass", 0.6, 0.6, 5, 150)), "angle": (0.0, lfo(16, 1.0))}))
 
 print("wrote presets and chains under", WEB)
