@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "name": "web-spiral-galaxy",
+  "visualSourceType": "dynamic_spiral",
+  "parameters": {
+    "MaxPoints": {
+      "baseValue": 2000,
+      "baseMin": 100.0,
+      "baseMax": 2000.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Scale": {
+      "baseValue": 0.2,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.04,
+          "dcOffset": 0.0,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 1.0,
+          "slope": 0.0,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Damping": {
+      "baseValue": 0.6,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "WaveFreq": {
+      "baseValue": 0.1,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "WaveAmp": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Shear": {
+      "baseValue": 0.5,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 48.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Speed": {
+      "baseValue": 0.15,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "DotSize": {
+      "baseValue": 0.1,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.1,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 4.0,
+          "decayMs": 200.0
+        }
+      ]
+    },
+    "Glow": {
+      "baseValue": 0.6,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueOffset": {
+      "baseValue": 0.55,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 64.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "HueSweep": {
+      "baseValue": 0.4,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "TrailDecay": {
+      "baseValue": 0.92,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    }
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web",
+    "beat",
+    "bar",
+    "kick"
+  ],
+  "presetNotes": "A fine, dense galaxy arm turning slowly; dots swell on each kick.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}

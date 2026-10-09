@@ -23,7 +23,9 @@
     "web-glitch",
     "web-trails-chroma",
     "web-drop-strobe",
-    "web-trails-drift"
+    "web-trails-drift",
+    "web-tunnel",
+    "web-vortex"
   ],
   "fxPlaybackOrder": "sequential"
 }

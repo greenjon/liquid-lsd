@@ -1,0 +1,223 @@
+{
+  "version": 1,
+  "name": "web-solid-icosa",
+  "visualSourceType": "icosa_h3",
+  "parameters": {
+    "Morph": {
+      "baseValue": 0.35,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "StellationBoost": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "SpikeMode": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "SpikePhase": {
+      "baseValue": 0.0,
+      "baseMin": -3.14159,
+      "baseMax": 3.14159,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 8.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "SpikeSharpness": {
+      "baseValue": 0.8,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "BlockerSize": {
+      "baseValue": 0.5,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "ColorMode": {
+      "baseValue": 2.0,
+      "baseMin": 0.0,
+      "baseMax": 4.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueOffset": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 48.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Saturation": {
+      "baseValue": 0.9,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Brightness": {
+      "baseValue": 0.75,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Opacity": {
+      "baseValue": 0.9,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "EdgeThickness": {
+      "baseValue": 0.05,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "EdgeBrightness": {
+      "baseValue": 0.3,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "RimGlow": {
+      "baseValue": 0.55,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.4,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 40.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "Zoom": {
+      "baseValue": 0.75,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.05,
+          "dcOffset": 0.0,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 2.0,
+          "slope": 0.0,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "RotateX": {
+      "baseValue": 0.0,
+      "baseMin": -3.14159265,
+      "baseMax": 3.14159265,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 40.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "RotateY": {
+      "baseValue": 0.0,
+      "baseMin": -3.14159265,
+      "baseMax": 3.14159265,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 56.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    }
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web",
+    "beat",
+    "bar",
+    "mid"
+  ],
+  "presetNotes": "A solid, spiky crystal in banded colour that tumbles slowly; the rim glows with the mids.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}

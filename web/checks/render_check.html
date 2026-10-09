@@ -53,6 +53,9 @@ else {
       w.LSD.handleRelayMessage({ type: 'broadcaster_offline' });
       continue;
     }
+    // Freeze the autopilot's hold/crossfade timers: after its 45 s hold it would crossfade away from the spec
+    // being rendered (a long run then shows black or the wrong deck). Wire specs reset this themselves.
+    w.LSD.autopilotState.isLiveBroadcast = true;
     const catalog = await (await fetch('/catalog.json')).json();
     const content = async (list, id) => (await (await fetch('/' + list.find((e) => e.id === id).file)).json());
     let deck = spec.deck;

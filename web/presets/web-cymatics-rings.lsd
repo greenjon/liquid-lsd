@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "name": "web-cymatics-rings",
+  "visualSourceType": "chladni_cymatics",
+  "parameters": {
+    "FrequencyM": {
+      "baseValue": 6,
+      "baseMin": 1.0,
+      "baseMax": 16.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "waveform": "SQUARE",
+          "genUnit": "BEAT",
+          "subdivision": 32.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "FrequencyN": {
+      "baseValue": 6,
+      "baseMin": 1.0,
+      "baseMax": 16.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 60.0,
+          "decayMs": 500.0
+        }
+      ]
+    },
+    "FrequencyL": {
+      "baseValue": 4,
+      "baseMin": 0.0,
+      "baseMax": 12.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "PlateShape": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "NodeSharpness": {
+      "baseValue": 0.5,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_high",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 3.0,
+          "decayMs": 120.0
+        }
+      ]
+    },
+    "SandAccumulation": {
+      "baseValue": 0.4,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "VibrationSpeed": {
+      "baseValue": 0.1,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 30.0,
+          "decayMs": 400.0
+        }
+      ]
+    },
+    "InvertMode": {
+      "baseValue": 1.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Glow": {
+      "baseValue": 0.5,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.4,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 4.0,
+          "decayMs": 200.0
+        }
+      ]
+    },
+    "PaletteMode": {
+      "baseValue": 2.0,
+      "baseMin": 0.0,
+      "baseMax": 3.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueOffset": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 30.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Scale": {
+      "baseValue": 0.55,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    }
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web",
+    "beat",
+    "bar",
+    "mid",
+    "high",
+    "kick"
+  ],
+  "presetNotes": "A round plate drawn as bright rings on dark; mids change the mode, hats sharpen the nodes.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}

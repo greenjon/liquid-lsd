@@ -332,6 +332,16 @@
       "name": "web-trails-drift"
     },
     {
+      "id": "web-tunnel",
+      "file": "fxchains/web-tunnel.lsdfxchain",
+      "name": "web-tunnel"
+    },
+    {
+      "id": "web-vortex",
+      "file": "fxchains/web-vortex.lsdfxchain",
+      "name": "web-vortex"
+    },
+    {
       "id": "wormhole_flight",
       "file": "content/fxchains/wormhole_flight.lsdfxchain",
       "name": "Wormhole Flight"

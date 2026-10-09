@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "name": "web-fluid-lava",
+  "visualSourceType": "domain_warp_fluid",
+  "parameters": {
+    "WarpStrength": {
+      "baseValue": 0.7,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 20.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "Swirl": {
+      "baseValue": -0.4,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.4,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 24.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Viscosity": {
+      "baseValue": 0.7,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Speed": {
+      "baseValue": 0.08,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 30.0,
+          "decayMs": 400.0
+        }
+      ]
+    },
+    "Detail": {
+      "baseValue": 2,
+      "baseMin": 1.0,
+      "baseMax": 5.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Gloss": {
+      "baseValue": 0.7,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 2.0,
+          "slope": 0.0,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "PaletteMode": {
+      "baseValue": 3.0,
+      "baseMin": 0.0,
+      "baseMax": 4.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueOffset": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 48.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "HueCycleSpeed": {
+      "baseValue": 0.05,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Zoom": {
+      "baseValue": 0.35,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.06,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 4.0,
+          "decayMs": 250.0
+        }
+      ]
+    }
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web",
+    "beat",
+    "bar",
+    "bass",
+    "amp",
+    "kick"
+  ],
+  "presetNotes": "Slow thick lava in a warm palette; glossy highlights swell every other beat.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}

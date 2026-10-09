@@ -1,0 +1,217 @@
+{
+  "version": 1,
+  "name": "web-celestial-bloom",
+  "visualSourceType": "celestial_engine",
+  "parameters": {
+    "Symmetries": {
+      "baseValue": 12,
+      "baseMin": 3.0,
+      "baseMax": 24.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "waveform": "SQUARE",
+          "genUnit": "BEAT",
+          "subdivision": 32.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "RingDensity": {
+      "baseValue": 0.55,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.15,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 12.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "PhaseTwist": {
+      "baseValue": -0.3,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.5,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 24.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "MoireStrength": {
+      "baseValue": 0.2,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.5,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 40.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "FlowerFold": {
+      "baseValue": 0.8,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.15,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "PulseWave": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": -0.5,
+          "followerMode": "CUSTOM",
+          "attackMs": 15.0,
+          "decayMs": 250.0
+        }
+      ]
+    },
+    "Speed": {
+      "baseValue": -0.1,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": -0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 30.0,
+          "decayMs": 400.0
+        }
+      ]
+    },
+    "LineWidth": {
+      "baseValue": 0.2,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Glow": {
+      "baseValue": 0.5,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.15,
+          "dcOffset": 0.0,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 1.0,
+          "slope": 0.0,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "ColorMode": {
+      "baseValue": 2.0,
+      "baseMin": 0.0,
+      "baseMax": 3.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueOffset": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 36.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "HueSweep": {
+      "baseValue": 0.6,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Scale": {
+      "baseValue": 0.6,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    }
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web",
+    "beat",
+    "bar",
+    "mid",
+    "amp",
+    "bass-gated"
+  ],
+  "presetNotes": "A dense twelve-fold flower turning backwards; pulse rings fire only when the bass is loud.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}

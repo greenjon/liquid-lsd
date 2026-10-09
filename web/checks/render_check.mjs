@@ -6,7 +6,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const web = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -53,10 +53,11 @@ sources.push({ name: 'live_wrong_version_ignored', settleMs: 600, wire: [
   { type: 'state_full', v: 1, preset: { deckA: { source: 'mandala' } } }] });
 
 // Every shipped autopilot preset, loaded the way autopilot.js loads it.
-// Each preset runs through a different web FX chain (the autopilot rotates them the same way)
 const webChains = catalog.fxChains.filter((c) => c.file.startsWith('fxchains/')).map((c) => c.id);
-fs.readdirSync(path.join(web, 'presets')).sort().filter((f) => f.endsWith('.lsd')).forEach((f, i) => {
-  sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: webChains[i % webChains.length], settleMs: 2500 });
+// The chain is picked by a hash of the file name, so adding presets never changes another preset's chain.
+const hash = (str) => [...str].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+fs.readdirSync(path.join(web, 'presets')).sort().filter((f) => f.endsWith('.lsd')).forEach((f) => {
+  sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: webChains[hash(f) % webChains.length], settleMs: 2500 });
 });
 // Desktop-shipped Mandala presets, unmodified (Lobes / Recipe Select / the recipe table)
 for (const f of ['mandala-7', 'mandala-10']) {
@@ -112,10 +113,13 @@ if (rep.fatal) console.error('FATAL:', rep.fatal);
 let bad = rep.fatal ? 1 : 0;
 for (const f of rep.frames || []) {
   fs.writeFileSync(path.join(outDir, f.name + '.png'), Buffer.from(f.png.split(',')[1], 'base64'));
-  const blank = f.meanLuma < 0.5 && f.litFraction < 0.002;
-  if (blank) bad++;
+  // Presets are also held to a brightness band (0-255 luma): near-black or washed-out frames are failures.
+  const preset = f.name.startsWith('preset_');
+  const blank = (f.meanLuma < 0.5 && f.litFraction < 0.002) || (preset && (f.meanLuma < 1 || f.litFraction < 0.01));
+  const washed = preset && f.meanLuma > 190;
+  if (blank || washed) bad++;
   if (f.glError) { bad++; console.log(`GL ERROR 0x${f.glError.toString(16)} after ${f.name}`); }
-  console.log(`${blank ? 'BLANK' : 'ok   '} ${f.name.padEnd(20)} luma=${f.meanLuma.toFixed(1)} lit=${(f.litFraction * 100).toFixed(1)}%`);
+  console.log(`${blank ? 'BLANK' : washed ? 'WASHED' : 'ok   '} ${f.name.padEnd(20)} luma=${f.meanLuma.toFixed(1)} lit=${(f.litFraction * 100).toFixed(1)}%`);
 }
 const errs = [...new Set(rep.errors || [])].filter((e) => !/audio|stream|AudioContext|NotSupported|WebSocket/i.test(e));
 for (const e of errs) console.log('console error:', e.split('\n').slice(0, 6).join(' / '));
@@ -130,4 +134,11 @@ if (rep.autopilot) {
 }
 if (rep.library) { console.log('library loaded:', rep.library.loaded.join(', ')); if (rep.library.failed.length) { console.log('library FAILED:', rep.library.failed.join(', ')); bad++; } }
 console.log(`PNGs in ${outDir}`);
+// Contact sheet of every preset frame (ImageMagick montage, optional) so duplicates and bad frames show at a glance.
+const shots = (rep.frames || []).filter((f) => f.name.startsWith('preset_')).map((f) => path.join(outDir, f.name + '.png'));
+if (shots.length) {
+  const sheet = path.join(outDir, 'contact_sheet.png');
+  const m = spawnSync('montage', ['-set', 'label', '%t', ...shots, '-tile', '6x', '-geometry', '320x180+4+4', '-background', '#111', sheet]);
+  console.log(m.status === 0 ? `contact sheet: ${sheet}` : 'contact sheet skipped (ImageMagick montage not available)');
+}
 done(bad ? 1 : 0);

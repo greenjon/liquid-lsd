@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "name": "web-mandala-lace",
+  "visualSourceType": "mandala",
+  "parameters": {
+    "Lobes": {
+      "baseValue": 18,
+      "baseMin": 3,
+      "baseMax": 26,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Recipe Select": {
+      "baseValue": 0.8,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "waveform": "SQUARE",
+          "genUnit": "BEAT",
+          "subdivision": 16.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "L1": {
+      "baseValue": 0.5,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "L2": {
+      "baseValue": 0.3,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 6.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "L3": {
+      "baseValue": 0.25,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 10.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "L4": {
+      "baseValue": 0.15,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.1,
+          "dcOffset": 0.0,
+          "waveform": "TRIANGLE",
+          "genUnit": "BEAT",
+          "subdivision": 1.0,
+          "slope": 0.0,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Thickness": {
+      "baseValue": 0.1,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 40.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "Hue Offset": {
+      "baseValue": 0.6,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 40.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Hue Sweep": {
+      "baseValue": 0.3,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Depth": {
+      "baseValue": 0.7,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 30.0,
+          "decayMs": 400.0
+        }
+      ]
+    }
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web",
+    "beat",
+    "bar",
+    "mid",
+    "amp"
+  ],
+  "presetNotes": "Fine eighteen-lobed lace in a cool palette; depth follows loudness.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}

@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "name": "web-spiral-sparks",
+  "visualSourceType": "dynamic_spiral",
+  "parameters": {
+    "MaxPoints": {
+      "baseValue": 300,
+      "baseMin": 100.0,
+      "baseMax": 2000.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Scale": {
+      "baseValue": 0.55,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.1,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 8.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Damping": {
+      "baseValue": 0.1,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "WaveFreq": {
+      "baseValue": 0.4,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "WaveAmp": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_high",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": -0.4,
+          "followerMode": "CUSTOM",
+          "attackMs": 3.0,
+          "decayMs": 200.0
+        }
+      ]
+    },
+    "Shear": {
+      "baseValue": -0.2,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.4,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 16.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Speed": {
+      "baseValue": 0.3,
+      "baseMin": -1.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 30.0,
+          "decayMs": 400.0
+        }
+      ]
+    },
+    "DotSize": {
+      "baseValue": 0.4,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_high",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 3.0,
+          "decayMs": 120.0
+        }
+      ]
+    },
+    "Glow": {
+      "baseValue": 0.55,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "HueOffset": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 24.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "HueSweep": {
+      "baseValue": 0.2,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "TrailDecay": {
+      "baseValue": 0.6,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    }
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web",
+    "beat",
+    "bar",
+    "amp",
+    "high"
+  ],
+  "presetNotes": "Few big dots with short trails; the wave only ripples through them when the hats are busy.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}

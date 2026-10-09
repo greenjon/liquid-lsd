@@ -252,4 +252,94 @@ chain("web-drop-strobe", ["strobe", "bass-gated", "kick"],
                             "dutyCycle": 0.5, "freezeHold": 0.0}),
       slot("color_levels", {"contrast": (0.33, kick(0.2, 150))}))
 
+
+# ---------------------------------------------------------------- batch 2: second look per source
+preset("web-solid-icosa", "icosa_h3", {
+    "Morph": (0.35, lfo(32, 0.3)), "StellationBoost": 0.0, "SpikeMode": 1.0,
+    "SpikePhase": (0.0, lfo(8, 1.0)), "SpikeSharpness": 0.8, "BlockerSize": 0.5,
+    "ColorMode": 2.0, "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.9, "Brightness": 0.75, "Opacity": 0.9,
+    "EdgeThickness": 0.05, "EdgeBrightness": 0.3, "RimGlow": (0.55, mid(0.4)),
+    "Zoom": (0.75, pulse(2, 0.05)), "RotateX": (0.0, lfo(40, 1.0)), "RotateY": (0.0, lfo(56, 1.0)),
+}, ["beat", "bar", "mid"],
+    "A solid, spiky crystal in banded colour that tumbles slowly; the rim glows with the mids.")
+
+preset("web-hyper-prism", "hyper_slice", {
+    "SliceOffset": (0.0, lfo(24, 0.6)), "RotateXW": (0.0, lfo(10, 0.8)), "RotateYW": (0.0, lfo(14, 0.8)),
+    "RotateZW": (0.0, lfo(18, 0.5)), "Morph": (0.7, mid(0.3)), "SupportH": 0.5, "ColorMethod": 1.0,
+    "HueOffset": (0.0, lfo(32, 1.0)), "Saturation": 0.9, "Brightness": 0.5, "Opacity": 0.55,
+    "EdgeThickness": 0.3, "EdgeBrightness": (0.7, hat(0.3)), "Glow": 0.18, "Zoom": (0.55, kick(0.12, 200)),
+}, ["beat", "bar", "mid", "kick"],
+    "A glassy hypercube-to-sphere with thick edges; hats flicker the edges and kicks punch the zoom.")
+
+preset("web-gyroid-solid", "gyroid_hyperspace", {
+    "SurfaceType": 1.0, "WallThickness": (0.45, bass(0.3)), "Frequency": (0.35, lfo(32, 0.2)),
+    "FlightSpeed": (0.15, amp(0.4)), "WireframeMode": 0.0, "CoreGlow": (0.5, kick(0.4)),
+    "ColorMode": 1.0, "HueOffset": (0.0, lfo(40, 1.0)), "Saturation": 0.9, "Brightness": 0.8,
+    "Zoom": 0.45, "RotateX": (0.0, lfo(48, 1.0)), "RotateZ": (0.0, lfo(64, 1.0)),
+}, ["beat", "bar", "bass", "amp", "kick"],
+    "Thick-walled caves instead of a lattice; the walls swell with the bass and the core glows on kicks.")
+
+preset("web-cymatics-rings", "chladni_cymatics", {
+    "FrequencyM": (6, lfo(32, 0.2, wave="SQUARE")), "FrequencyN": (6, mid(0.3, 60, 500)), "FrequencyL": 4,
+    "PlateShape": 1.0, "NodeSharpness": (0.5, hat(0.3)), "SandAccumulation": 0.4,
+    "VibrationSpeed": (0.1, amp(0.3)), "InvertMode": 1.0, "Glow": (0.5, kick(0.4, 200)),
+    "PaletteMode": 2.0, "HueOffset": (0.0, lfo(30, 1.0)), "Scale": 0.55,
+}, ["beat", "bar", "mid", "high", "kick"],
+    "A round plate drawn as bright rings on dark; mids change the mode, hats sharpen the nodes.")
+
+preset("web-celestial-bloom", "celestial_engine", {
+    "Symmetries": (12, lfo(32, 0.2, wave="SQUARE")), "RingDensity": (0.55, lfo(12, 0.15)),
+    "PhaseTwist": (-0.3, lfo(24, 0.5)), "MoireStrength": (0.2, mid(0.5)), "FlowerFold": (0.8, lfo(16, 0.15)),
+    "PulseWave": (0.0, gate("audio_bass", 0.5, 1.0)), "Speed": (-0.1, amp(-0.3)), "LineWidth": 0.2,
+    "Glow": (0.5, pulse(1, 0.15)), "ColorMode": 2.0, "HueOffset": (0.0, lfo(36, 1.0)), "HueSweep": 0.6, "Scale": 0.6,
+}, ["beat", "bar", "mid", "amp", "bass-gated"],
+    "A dense twelve-fold flower turning backwards; pulse rings fire only when the bass is loud.")
+
+preset("web-fluid-lava", "domain_warp_fluid", {
+    "WarpStrength": (0.7, bass(0.2)), "Swirl": (-0.4, lfo(24, 0.4)), "Viscosity": 0.7, "Speed": (0.08, amp(0.3)),
+    "Detail": 2, "Gloss": (0.7, pulse(2, 0.2)), "PaletteMode": 3.0, "HueOffset": (0.0, lfo(48, 1.0)),
+    "HueCycleSpeed": 0.05, "Zoom": (0.35, kick(0.06, 250)),
+}, ["beat", "bar", "bass", "amp", "kick"],
+    "Slow thick lava in a warm palette; glossy highlights swell every other beat.")
+
+preset("web-spiral-galaxy", "dynamic_spiral", {
+    "MaxPoints": 2000, "Scale": (0.2, pulse(1, 0.04)), "Damping": 0.6, "WaveFreq": 0.1,
+    "WaveAmp": 0.0, "Shear": (0.5, lfo(48, 0.3)), "Speed": 0.15, "DotSize": (0.1, kick(0.1, 200)),
+    "Glow": 0.6, "HueOffset": (0.55, lfo(64, 1.0)), "HueSweep": 0.4, "TrailDecay": 0.92,
+}, ["beat", "bar", "kick"],
+    "A fine, dense galaxy arm turning slowly; dots swell on each kick.")
+
+preset("web-spiral-sparks", "dynamic_spiral", {
+    "MaxPoints": 300, "Scale": (0.55, lfo(8, 0.1)), "Damping": 0.1, "WaveFreq": 0.4,
+    "WaveAmp": (0.0, gate("audio_flux_high", 0.4, 1.0, 3, 200)), "Shear": (-0.2, lfo(16, 0.4)),
+    "Speed": (0.3, amp(0.3)), "DotSize": (0.4, hat(0.3)), "Glow": 0.55,
+    "HueOffset": (0.0, lfo(24, 1.0)), "HueSweep": 0.2, "TrailDecay": 0.6,
+}, ["beat", "bar", "amp", "high"],
+    "Few big dots with short trails; the wave only ripples through them when the hats are busy.")
+
+preset("web-mandala-lace", "mandala", {
+    "Lobes": 18, "Recipe Select": (0.8, lfo(16, 0.2, wave="SQUARE")),
+    "L1": 0.5, "L2": (0.3, lfo(6, 0.2)), "L3": (0.25, lfo(10, 0.2)), "L4": (0.15, pulse(1, 0.1)),
+    "Thickness": (0.1, mid(0.2)), "Hue Offset": (0.6, lfo(40, 1.0)), "Hue Sweep": 0.3,
+    "Depth": (0.7, amp(0.3)),
+}, ["beat", "bar", "mid", "amp"],
+    "Fine eighteen-lobed lace in a cool palette; depth follows loudness.")
+
+preset("web-mandala-heart", "mandala", {
+    "Lobes": 4, "Recipe Select": (0.1, lfo(32, 0.3)),
+    "L1": 0.6, "L2": (0.4, kick(0.3, 250)), "L3": 0.3, "L4": (0.0, gate("audio_bass", 0.6, 1.0)),
+    "Thickness": (0.45, bass(0.3)), "Hue Offset": (0.0, lfo(24, 1.0)), "Hue Sweep": 0.9,
+    "Depth": 0.4,
+}, ["beat", "bar", "bass", "kick", "bass-gated"],
+    "Bold four-lobed shape with heavy lines; arms thump on kicks and a fourth arm opens on loud bass.")
+
+# batch 2 chains
+chain("web-tunnel", ["tunnel", "beat", "bass"],
+      slot("polar_tunnel", {"depth": (0.18, bass(0.3)), "twist": (0.0, lfo(32, 0.5)), "centerX": 0.5, "centerY": 0.5,
+                            "zoom": (0.5, pulse(1, 0.06)), "symmetry": 2.0, "depthFog": 0.4}))
+chain("web-vortex", ["swirl", "kick", "beat"],
+      slot("vortex_swirl", {"twist": (0.1, kick(0.5, 300)), "radius": (0.35, pulse(1, 0.15)), "dispersion": (0.2, hat(0.4)),
+                            "spiralArms": 0.0, "centerX": 0.5, "centerY": 0.5}),
+      FEEDBACK(0.5, 0.4, 0.002, 0.003))
+
 print("wrote presets and chains under", WEB)

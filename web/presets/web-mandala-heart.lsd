@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "name": "web-mandala-heart",
+  "visualSourceType": "mandala",
+  "parameters": {
+    "Lobes": {
+      "baseValue": 4,
+      "baseMin": 3,
+      "baseMax": 26,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Recipe Select": {
+      "baseValue": 0.1,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 32.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "L1": {
+      "baseValue": 0.6,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "L2": {
+      "baseValue": 0.4,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_flux_bass",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 4.0,
+          "decayMs": 250.0
+        }
+      ]
+    },
+    "L3": {
+      "baseValue": 0.3,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "L4": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": -0.6,
+          "followerMode": "CUSTOM",
+          "attackMs": 15.0,
+          "decayMs": 250.0
+        }
+      ]
+    },
+    "Thickness": {
+      "baseValue": 0.45,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 20.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "Hue Offset": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "lfo",
+          "operator": "ADD",
+          "depth": 1.0,
+          "dcOffset": 0.0,
+          "waveform": "SINE",
+          "genUnit": "BEAT",
+          "subdivision": 24.0,
+          "slope": 0.5,
+          "phaseOffset": 0.0
+        }
+      ]
+    },
+    "Hue Sweep": {
+      "baseValue": 0.9,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    },
+    "Depth": {
+      "baseValue": 0.4,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": []
+    }
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web",
+    "beat",
+    "bar",
+    "bass",
+    "kick",
+    "bass-gated"
+  ],
+  "presetNotes": "Bold four-lobed shape with heavy lines; arms thump on kicks and a fourth arm opens on loud bass.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}
