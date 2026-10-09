@@ -5,12 +5,12 @@ out vec4 fragColor;
 
 uniform sampler2D uTex1; // Transition output (blendFBO)
 uniform sampler2D uTexBG; // Deck BG layer
-uniform float uProgress = 0.5; // 0.0 = Deck A, 1.0 = Deck B (ISF transition mode)
-uniform float uBgAlpha = 1.0; // Background layer alpha multiplier
-uniform float uLevelA = 1.0; // Deck A channel level multiplier
-uniform float uLevelB = 1.0; // Deck B channel level multiplier
-uniform float uLevelBG = 1.0; // Deck BG channel level multiplier
-uniform float uMasterLevel = 1.0; // Master channel level multiplier
+uniform float uProgress; // 0.0 = Deck A, 1.0 = Deck B (ISF transition mode)
+uniform float uBgAlpha; // Background layer alpha multiplier
+uniform float uLevelA; // Deck A channel level multiplier
+uniform float uLevelB; // Deck B channel level multiplier
+uniform float uLevelBG; // Deck BG channel level multiplier
+uniform float uMasterLevel; // Master channel level multiplier
 
 vec4 sampleBlended(vec2 uv) {
     float fgLevel = mix(uLevelA, uLevelB, clamp(uProgress, 0.0, 1.0));

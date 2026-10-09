@@ -2,6 +2,27 @@ import { cvState, tick } from './dsp.js';
 import { powerState } from './ui.js';
 import { autopilotState, tickAutopilot, startAutopilot } from './autopilot.js';
 import { evaluateParameter } from './evaluator.js';
+import { buildFragmentShader, parseHeader, applyUniforms } from './isf.js';
+
+// ISF sources rendered generically from their headers. Mandala is the one special case:
+// it is a vertex-displaced ribbon driven by a recipe table, not an ISF shader.
+const ISF_SOURCES = [
+  'dynamic_spiral', 'icosa_h3', 'hyper_slice', 'gyroid_hyperspace',
+  'chladni_cymatics', 'celestial_engine', 'domain_warp_fluid'
+];
+
+// Stand-in for the desktop's default transition (linear_crossfade, perceptual cosine curve).
+const CROSSFADE_FRAG = `#version 300 es
+precision highp float;
+in vec2 vTexCoord;
+out vec4 fragColor;
+uniform sampler2D uTexA;
+uniform sampler2D uTexB;
+uniform float uProgress;
+void main() {
+  float t = 0.5 - 0.5 * cos(clamp(uProgress, 0.0, 1.0) * 3.14159265359);
+  fragColor = mix(texture(uTexA, vTexCoord), texture(uTexB, vTexCoord), t);
+}`;
 
 async function loadText(url) {
   const res = await fetch(url);
@@ -162,110 +183,48 @@ async function init() {
     blitFragSrc,
     mandalaVertSrc,
     mandalaFragSrc,
-    spiralFragSrc,
-    attractorFragSrc,
-    chladniFragSrc,
-    gyroidFragSrc,
-    hyperSliceFragSrc,
-    icosaH3FragSrc,
     feedbackFragSrc,
     mixerFragSrc,
-    crtFragSrc
+    crtFragSrc,
+    ...isfSrcs
   ] = await Promise.all([
     loadText('shaders/blit.vert'),
     loadText('shaders/blit.frag'),
     loadText('shaders/mandala.vert'),
     loadText('shaders/mandala.frag'),
-    loadText('shaders/dynamic_spiral.frag'),
-    loadText('shaders/attractor_feedback.frag'),
-    loadText('shaders/chladni.frag'),
-    loadText('shaders/gyroid.frag'),
-    loadText('shaders/hyper_slice.frag'),
-    loadText('shaders/icosa_h3.frag'),
     loadText('shaders/feedback.frag'),
     loadText('shaders/mixer.frag'),
-    loadText('shaders/crt_post.frag')
+    loadText('shaders/crt_post.frag'),
+    ...ISF_SOURCES.map((id) => loadText(`shaders/${id}.frag`))
   ]);
 
   // Compile programs
   const mandalaProgram     = createProgram(gl, mandalaVertSrc, mandalaFragSrc);
-  const spiralProgram      = createProgram(gl, blitVertSrc, spiralFragSrc);
-  const attractorProgram   = createProgram(gl, blitVertSrc, attractorFragSrc);
-  const chladniProgram     = createProgram(gl, blitVertSrc, chladniFragSrc);
-  const gyroidProgram      = createProgram(gl, blitVertSrc, gyroidFragSrc);
-  const hyperSliceProgram  = createProgram(gl, blitVertSrc, hyperSliceFragSrc);
-  const icosaH3Program     = createProgram(gl, blitVertSrc, icosaH3FragSrc);
   const feedbackProgram    = createProgram(gl, blitVertSrc, feedbackFragSrc);
   const mixerProgram       = createProgram(gl, blitVertSrc, mixerFragSrc);
   const blitProgram        = createProgram(gl, blitVertSrc, blitFragSrc);
   const crtProgram         = createProgram(gl, blitVertSrc, crtFragSrc);
+  const crossfadeProgram   = createProgram(gl, blitVertSrc, CROSSFADE_FRAG);
 
-  // Uniform locations lookup tables
-  const programs = {
-    mandala: {
-      prog: mandalaProgram,
-      locs: getUniformLocations(gl, mandalaProgram, [
-        'uL1', 'uL2', 'uL3', 'uL4', 'uA', 'uB', 'uC', 'uD',
-        'uMaxR',
-        'uYaw', 'uPitch', 'uPersp',
-        'uThickness', 'uGlobalScale', 'uGlobalRotation', 'uAspectRatio',
-        'uHueOffset', 'uHueSweep', 'uAlpha', 'uDepth'
-      ])
-    },
-    dynamic_spiral: {
-      prog: spiralProgram,
-      locs: getUniformLocations(gl, spiralProgram, [
-        'uResolution', 'uTime', 'uAlpha', 'src',
-        'uMaxPoints', 'uScale', 'uDamping', 'uWaveFreq', 'uWaveAmp',
-        'uShear', 'uSpeed', 'uDotSize', 'uGlow',
-        'uHueOffset', 'uHueSweep', 'uTrailDecay',
-        'uIntegratedTime', 'uIntegratedShear'
-      ])
-    },
-    attractor_feedback: {
-      prog: attractorProgram,
-      locs: getUniformLocations(gl, attractorProgram, [
-        'uPlaneScale', 'uColorShift', 'uPersistence',
-        'uScale0', 'uRotate0', 'uOffsetX0', 'uOffsetY0', 'uVarCoef0', 'uJacobian0',
-        'uScale1', 'uRotate1', 'uOffsetX1', 'uOffsetY1', 'uVarCoef1', 'uJacobian1',
-        'src'
-      ])
-    },
-    chladni: {
-      prog: chladniProgram,
-      locs: getUniformLocations(gl, chladniProgram, [
-        'uMode', 'uFrequencyN', 'uFrequencyM', 'uFrequencyL', 'uThickness', 'uWallWidth',
-        'uScale', 'uSpeed', 'uZoom', 'uColorShift', 'uRotateX', 'uRotateY', 'uRotateZ',
-        'uAlpha', 'uResolution', 'uGlow', 'uTime'
-      ])
-    },
-    gyroid: {
-      prog: gyroidProgram,
-      locs: getUniformLocations(gl, gyroidProgram, [
-        'uScaleX', 'uScaleY', 'uScaleZ', 'uThickness', 'uWallWidth', 'uSpeed', 'uZoom',
-        'uColorShift', 'uRotateX', 'uRotateY', 'uRotateZ', 'uAlpha', 'uResolution', 'uGlow', 'uTime'
-      ])
-    },
-    hyper_slice: {
-      prog: hyperSliceProgram,
-      locs: getUniformLocations(gl, hyperSliceProgram, [
-        'uSliceOffset', 'uRotateXW', 'uRotateYW', 'uRotateZW',
-        'uRotateX', 'uRotateY', 'uRotateZ', 'uMorph', 'uSupportH', 'uZoom',
-        'uColorMethod', 'uHueOffset', 'uSaturation', 'uBrightness', 'uOpacity',
-        'uEdgeThickness', 'uEdgeBrightness', 'uGlow', 'uAlpha', 'uResolution', 'uTime'
-      ])
-    },
-    icosa_h3: {
-      prog: icosaH3Program,
-      locs: getUniformLocations(gl, icosaH3Program, [
-        'uMorph', 'uStellationBoost', 'uSpikeMode', 'uSpikePhase', 'uSpikeSharpness',
-        'uBlockerSize', 'uSupportH', 'uColorMode', 'uHueOffset', 'uHueAnimSpeed',
-        'uSaturation', 'uBrightness', 'uOpacity', 'uEdgeThickness', 'uEdgeBrightness',
-        'uRimGlow', 'uZoom', 'uRotateX', 'uRotateY', 'uRotateZ',
-        'uAlpha', 'uResolution', 'uTime'
-      ])
+  // One program per ISF source. A source that fails to compile is skipped, not fatal.
+  const isfPrograms = {};
+  ISF_SOURCES.forEach((id, i) => {
+    try {
+      const header = parseHeader(isfSrcs[i]);
+      const prog = createProgram(gl, blitVertSrc, buildFragmentShader(isfSrcs[i], header));
+      isfPrograms[id] = { header, prog };
+    } catch (err) {
+      console.error(`ISF source ${id} unavailable:`, err);
     }
-  };
+  });
+
+  const mandalaLocs = getUniformLocations(gl, mandalaProgram, [
+    'uL1', 'uL2', 'uL3', 'uL4', 'uA', 'uB', 'uC', 'uD',
+    'uMaxR',
+    'uYaw', 'uPitch', 'uPersp',
+    'uThickness', 'uGlobalScale', 'uGlobalRotation', 'uAspectRatio',
+    'uHueOffset', 'uHueSweep', 'uAlpha', 'uDepth'
+  ]);
 
   const feedbackUniforms = getUniformLocations(gl, feedbackProgram, [
     'uTextureLive', 'uTextureHistory',
@@ -275,9 +234,11 @@ async function init() {
   ]);
 
   const mixerUniforms = getUniformLocations(gl, mixerProgram, [
-    'uTex1', 'uTex2', 'uTexBG',
-    'uMode', 'uBalance', 'uAlpha', 'uBgAlpha', 'uBloom'
+    'uTex1', 'uTexBG', 'uProgress', 'uBgAlpha',
+    'uLevelA', 'uLevelB', 'uLevelBG', 'uMasterLevel'
   ]);
+
+  const crossfadeUniforms = getUniformLocations(gl, crossfadeProgram, ['uTexA', 'uTexB', 'uProgress']);
 
   const crtUniforms = getUniformLocations(gl, crtProgram, [
     'uTexture', 'uResolution', 'uTime',
@@ -330,11 +291,13 @@ async function init() {
   const deckA     = createDeck(gl, curWidth, curHeight, internalFormat, format, type);
   const deckB     = createDeck(gl, curWidth, curHeight, internalFormat, format, type);
   const deckBG    = createDeck(gl, curWidth, curHeight, internalFormat, format, type);
+  const blendFBO  = createSingleFBO(gl, curWidth, curHeight, internalFormat, format, type);
   const masterFBO = createSingleFBO(gl, curWidth, curHeight, internalFormat, format, type);
 
   deckA.clear(0, 0, 0, 0);
   deckB.clear(0, 0, 0, 0);
   deckBG.clear(0, 0, 0, 1);
+  blendFBO.clear(0, 0, 0, 0);
   masterFBO.clear(0, 0, 0, 1);
 
   // Start dual-queue autopilot
@@ -345,188 +308,82 @@ async function init() {
   let lastTime        = performance.now();
   let elapsedTime     = 0;
   let frameCount      = 0;
-  let integratedTime  = 0;
-  let integratedShear = 0;
+  let frameDt         = 0;
 
   function evalP(paramObj, fallback = 0.0) {
     return evaluateParameter(paramObj, elapsedTime, cvState.bpm * (elapsedTime / 60.0), frameCount, fallback);
   }
 
-  function renderVisualSource(deckData, targetFBO, historyTex) {
+  // Looks an ISF input up in a deck's parameter bag. Presets key by NAME, LABEL, or camelCase
+  // of either; `!== undefined` keeps an explicit 0 from falling through to the default.
+  const camel = (k) => k.replace(/[\s-_]+([a-zA-Z0-9])/g, (_, c) => c.toUpperCase()).replace(/^[A-Z]/, (c) => c.toLowerCase());
+  function lookupParam(deckData, input) {
+    for (const k of [input.NAME, input.LABEL, camel(input.NAME), input.LABEL && camel(input.LABEL)]) {
+      if (k && deckData[k] !== undefined) return deckData[k];
+    }
+    return undefined;
+  }
+
+  function renderVisualSource(deckData, targetFBO) {
     if (!deckData) return;
     const srcType = (deckData.source || 'mandala').toLowerCase();
-    const progInfo = programs[srcType] || programs.mandala;
-    const locs = progInfo.locs;
+    const isf = isfPrograms[srcType];
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, targetFBO);
     gl.viewport(0, 0, curWidth, curHeight);
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
-    gl.useProgram(progInfo.prog);
-
-    if (srcType === 'mandala') {
-      gl.bindVertexArray(mandalaVAO);
-      const rawL1 = evalP(deckData.L1 || deckData.l1, 0.4);
-      const rawL2 = evalP(deckData.L2 || deckData.l2, 0.3);
-      const rawL3 = evalP(deckData.L3 || deckData.l3, 0.2);
-      const rawL4 = evalP(deckData.L4 || deckData.l4, 0.1);
-      const sumL = Math.abs(rawL1) + Math.abs(rawL2) + Math.abs(rawL3) + Math.abs(rawL4);
-      const targetRadius = 2.0;
-      const normScale = sumL > 1e-5 ? (targetRadius / sumL) : 0.0;
-
-      gl.uniform1f(locs.uL1, rawL1 * normScale);
-      gl.uniform1f(locs.uL2, rawL2 * normScale);
-      gl.uniform1f(locs.uL3, rawL3 * normScale);
-      gl.uniform1f(locs.uL4, rawL4 * normScale);
-      gl.uniform1f(locs.uA,  evalP(deckData.A || deckData.a || deckData.recipe?.a, 3.0));
-      gl.uniform1f(locs.uB,  evalP(deckData.B || deckData.b || deckData.recipe?.b, 4.0));
-      gl.uniform1f(locs.uC,  evalP(deckData.C || deckData.c || deckData.recipe?.c, 5.0));
-      gl.uniform1f(locs.uD,  evalP(deckData.D || deckData.d || deckData.recipe?.d, 7.0));
-
-      gl.uniform1f(locs.uMaxR, sumL > 1e-5 ? targetRadius : 0.001);
-      gl.uniform1f(locs.uThickness,      evalP(deckData.Thickness || deckData.thickness, 0.012));
-      gl.uniform1f(locs.uAspectRatio,    curWidth / curHeight);
-      gl.uniform1f(locs.uHueOffset,      evalP(deckData['Hue Offset'] || deckData.hueOffset, 0.0));
-      gl.uniform1f(locs.uHueSweep,       evalP(deckData['Hue Sweep'] || deckData.hueSweep, 0.3));
-      gl.uniform1f(locs.uAlpha,          1.0);
-      gl.uniform1f(locs.uDepth,          evalP(deckData.Depth || deckData.depth, 0.35));
-
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, MANDALA_POINTS * 2);
-    } else {
+    if (isf) {
+      gl.useProgram(isf.prog);
       gl.bindVertexArray(quadVAO);
-
-      if (srcType === 'dynamic_spiral') {
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, historyTex);
-        gl.uniform1i(locs.src, 0);
-
-        gl.uniform2f(locs.uResolution, curWidth, curHeight);
-        gl.uniform1f(locs.uTime,        elapsedTime);
-        gl.uniform1f(locs.uAlpha,       1.0);
-        gl.uniform1f(locs.uMaxPoints,   evalP(deckData['Max Points'] || deckData.maxPoints, 500.0));
-        gl.uniform1f(locs.uScale,       evalP(deckData.Scale || deckData.scale, 0.5));
-        gl.uniform1f(locs.uDamping,     evalP(deckData.Damping || deckData.damping, 100.0));
-        gl.uniform1f(locs.uWaveFreq,    evalP(deckData['Wave Freq'] || deckData.waveFreq, 0.2));
-        gl.uniform1f(locs.uWaveAmp,     evalP(deckData['Wave Amp'] || deckData.waveAmp, 0.0));
-        gl.uniform1f(locs.uShear,       evalP(deckData.Shear || deckData.shear, 0.1));
-        gl.uniform1f(locs.uSpeed,       evalP(deckData.Speed || deckData.speed, 0.5));
-        gl.uniform1f(locs.uDotSize,     evalP(deckData['Dot Size'] || deckData.dotSize, 0.01));
-        gl.uniform1f(locs.uGlow,        evalP(deckData.Glow || deckData.glow, 1.5));
-        gl.uniform1f(locs.uHueOffset,   evalP(deckData['Hue Offset'] || deckData.hueOffset, 0.33));
-        gl.uniform1f(locs.uHueSweep,    evalP(deckData['Hue Sweep'] || deckData.hueSweep, 0.01));
-        gl.uniform1f(locs.uTrailDecay,  evalP(deckData['Trail Decay'] || deckData.trailDecay, 0.85));
-        gl.uniform1f(locs.uIntegratedTime,  deckData.integratedTime !== undefined ? deckData.integratedTime : integratedTime);
-        gl.uniform1f(locs.uIntegratedShear, deckData.integratedShear !== undefined ? deckData.integratedShear : integratedShear);
-
-      } else if (srcType === 'attractor_feedback') {
-        gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, historyTex);
-        gl.uniform1i(locs.src, 0);
-
-        gl.uniform1f(locs.uPlaneScale,  evalP(deckData['Plane Scale'] || deckData.planeScale, 0.3));
-        gl.uniform1f(locs.uColorShift,  evalP(deckData['Color Shift'] || deckData.colorShift, 0.0));
-        gl.uniform1f(locs.uPersistence, evalP(deckData.Persistence || deckData.persistence, 0.95));
-        gl.uniform1f(locs.uScale0,      evalP(deckData['Scale 0'] || deckData.scale0, 0.9));
-        gl.uniform1f(locs.uRotate0,     evalP(deckData['Rotate 0'] || deckData.rotate0, 0.1));
-        gl.uniform1f(locs.uOffsetX0,    evalP(deckData['Offset X0'] || deckData.offsetX0, 0.0));
-        gl.uniform1f(locs.uOffsetY0,    evalP(deckData['Offset Y0'] || deckData.offsetY0, 0.0));
-        gl.uniform1f(locs.uVarCoef0,    evalP(deckData['Var Coef 0'] || deckData.varCoef0, 1.0));
-        gl.uniform1f(locs.uJacobian0,   evalP(deckData['Jacobian 0'] || deckData.jacobian0, 1.0));
-        gl.uniform1f(locs.uScale1,      evalP(deckData['Scale 1'] || deckData.scale1, 0.9));
-        gl.uniform1f(locs.uRotate1,     evalP(deckData['Rotate 1'] || deckData.rotate1, -0.1));
-        gl.uniform1f(locs.uOffsetX1,    evalP(deckData['Offset X1'] || deckData.offsetX1, 0.2));
-        gl.uniform1f(locs.uOffsetY1,    evalP(deckData['Offset Y1'] || deckData.offsetY1, 0.0));
-        gl.uniform1f(locs.uVarCoef1,    evalP(deckData['Var Coef 1'] || deckData.varCoef1, 1.0));
-        gl.uniform1f(locs.uJacobian1,   evalP(deckData['Jacobian 1'] || deckData.jacobian1, 1.0));
-
-      } else if (srcType === 'chladni') {
-        gl.uniform2f(locs.uResolution, curWidth, curHeight);
-        gl.uniform1f(locs.uTime,       elapsedTime);
-        gl.uniform1f(locs.uAlpha,      1.0);
-        gl.uniform1f(locs.uMode,       evalP(deckData.Mode || deckData.mode, 0.0));
-        gl.uniform1f(locs.uFrequencyN, evalP(deckData['Frequency N'] || deckData.frequencyN, 3.0));
-        gl.uniform1f(locs.uFrequencyM, evalP(deckData['Frequency M'] || deckData.frequencyM, 5.0));
-        gl.uniform1f(locs.uFrequencyL, evalP(deckData['Frequency L'] || deckData.frequencyL, 2.0));
-        gl.uniform1f(locs.uThickness,  evalP(deckData.Thickness || deckData.thickness, 0.05));
-        gl.uniform1f(locs.uWallWidth,  evalP(deckData['Wall Width'] || deckData.wallWidth, 1.0));
-        gl.uniform1f(locs.uScale,      evalP(deckData.Scale || deckData.scale, 2.0));
-        gl.uniform1f(locs.uSpeed,      evalP(deckData.Speed || deckData.speed, 0.5));
-        gl.uniform1f(locs.uZoom,       evalP(deckData.Zoom || deckData.zoom, 1.0));
-        gl.uniform1f(locs.uColorShift, evalP(deckData['Color Shift'] || deckData.colorShift, 0.0));
-        gl.uniform1f(locs.uRotateX,    evalP(deckData['Rotate X'] || deckData.rotateX, 0.0));
-        gl.uniform1f(locs.uRotateY,    evalP(deckData['Rotate Y'] || deckData.rotateY, 0.0));
-        gl.uniform1f(locs.uRotateZ,    evalP(deckData['Rotate Z'] || deckData.rotateZ, 0.0));
-        gl.uniform1f(locs.uGlow,       evalP(deckData.Glow || deckData.glow, 1.0));
-
-      } else if (srcType === 'gyroid') {
-        gl.uniform2f(locs.uResolution, curWidth, curHeight);
-        gl.uniform1f(locs.uTime,       elapsedTime);
-        gl.uniform1f(locs.uAlpha,      1.0);
-        gl.uniform1f(locs.uScaleX,     evalP(deckData['Scale X'] || deckData.scaleX, 2.0));
-        gl.uniform1f(locs.uScaleY,     evalP(deckData['Scale Y'] || deckData.scaleY, 2.0));
-        gl.uniform1f(locs.uScaleZ,     evalP(deckData['Scale Z'] || deckData.scaleZ, 2.0));
-        gl.uniform1f(locs.uThickness,  evalP(deckData.Thickness || deckData.thickness, 0.1));
-        gl.uniform1f(locs.uWallWidth,  evalP(deckData['Wall Width'] || deckData.wallWidth, 1.0));
-        gl.uniform1f(locs.uSpeed,      evalP(deckData.Speed || deckData.speed, 0.5));
-        gl.uniform1f(locs.uZoom,       evalP(deckData.Zoom || deckData.zoom, 1.0));
-        gl.uniform1f(locs.uColorShift, evalP(deckData['Color Shift'] || deckData.colorShift, 0.0));
-        gl.uniform1f(locs.uRotateX,    evalP(deckData['Rotate X'] || deckData.rotateX, 0.0));
-        gl.uniform1f(locs.uRotateY,    evalP(deckData['Rotate Y'] || deckData.rotateY, 0.0));
-        gl.uniform1f(locs.uRotateZ,    evalP(deckData['Rotate Z'] || deckData.rotateZ, 0.0));
-        gl.uniform1f(locs.uGlow,       evalP(deckData.Glow || deckData.glow, 1.0));
-
-      } else if (srcType === 'hyper_slice') {
-        gl.uniform2f(locs.uResolution,     curWidth, curHeight);
-        gl.uniform1f(locs.uTime,           elapsedTime);
-        gl.uniform1f(locs.uAlpha,          1.0);
-        gl.uniform1f(locs.uSliceOffset,    evalP(deckData['Slice Offset'] || deckData.sliceOffset, 0.0));
-        gl.uniform1f(locs.uRotateXW,       evalP(deckData['Rotate XW'] || deckData.rotateXW, 0.0));
-        gl.uniform1f(locs.uRotateYW,       evalP(deckData['Rotate YW'] || deckData.rotateYW, 0.0));
-        gl.uniform1f(locs.uRotateZW,       evalP(deckData['Rotate ZW'] || deckData.rotateZW, 0.0));
-        gl.uniform1f(locs.uRotateX,        evalP(deckData['Rotate X'] || deckData.rotateX, 0.0));
-        gl.uniform1f(locs.uRotateY,        evalP(deckData['Rotate Y'] || deckData.rotateY, 0.0));
-        gl.uniform1f(locs.uRotateZ,        evalP(deckData['Rotate Z'] || deckData.rotateZ, 0.0));
-        gl.uniform1f(locs.uMorph,          evalP(deckData.Morph || deckData.morph, 0.0));
-        gl.uniform1f(locs.uSupportH,       evalP(deckData['Support H'] || deckData.supportH, 0.8));
-        gl.uniform1f(locs.uZoom,           evalP(deckData.Zoom || deckData.zoom, 1.0));
-        gl.uniform1f(locs.uColorMethod,    evalP(deckData['Color Method'] || deckData.colorMethod, 0.0));
-        gl.uniform1f(locs.uHueOffset,      evalP(deckData['Hue Offset'] || deckData.hueOffset, 0.0));
-        gl.uniform1f(locs.uSaturation,     evalP(deckData.Saturation || deckData.saturation, 1.0));
-        gl.uniform1f(locs.uBrightness,     evalP(deckData.Brightness || deckData.brightness, 1.0));
-        gl.uniform1f(locs.uOpacity,        evalP(deckData.Opacity || deckData.opacity, 0.8));
-        gl.uniform1f(locs.uEdgeThickness,  evalP(deckData['Edge Thickness'] || deckData.edgeThickness, 0.02));
-        gl.uniform1f(locs.uEdgeBrightness, evalP(deckData['Edge Brightness'] || deckData.edgeBrightness, 1.0));
-        gl.uniform1f(locs.uGlow,           evalP(deckData.Glow || deckData.glow, 1.0));
-
-      } else if (srcType === 'icosa_h3') {
-        gl.uniform2f(locs.uResolution,       curWidth, curHeight);
-        gl.uniform1f(locs.uTime,             elapsedTime);
-        gl.uniform1f(locs.uAlpha,            1.0);
-        gl.uniform1f(locs.uMorph,            evalP(deckData.Morph || deckData.morph, 0.0));
-        gl.uniform1f(locs.uStellationBoost,  evalP(deckData['Stellation Boost'] || deckData.stellationBoost, 0.0));
-        gl.uniform1f(locs.uSpikeMode,        evalP(deckData['Spike Mode'] || deckData.spikeMode, 0.0));
-        gl.uniform1f(locs.uSpikePhase,       evalP(deckData['Spike Phase'] || deckData.spikePhase, 0.0));
-        gl.uniform1f(locs.uSpikeSharpness,   evalP(deckData['Spike Sharpness'] || deckData.spikeSharpness, 0.6));
-        gl.uniform1f(locs.uBlockerSize,      evalP(deckData['Blocker Size'] || deckData.blockerSize, 0.4));
-        gl.uniform1f(locs.uSupportH,         evalP(deckData['Support H'] || deckData.supportH, 0.0));
-        gl.uniform1f(locs.uColorMode,        evalP(deckData['Color Mode'] || deckData.colorMode, 0.0));
-        gl.uniform1f(locs.uHueOffset,        evalP(deckData['Hue Offset'] || deckData.hueOffset, 0.0));
-        gl.uniform1f(locs.uHueAnimSpeed,     evalP(deckData['Hue Anim Speed'] || deckData.hueAnimSpeed, 0.0));
-        gl.uniform1f(locs.uSaturation,       evalP(deckData.Saturation || deckData.saturation, 0.85));
-        gl.uniform1f(locs.uBrightness,       evalP(deckData.Brightness || deckData.brightness, 0.95));
-        gl.uniform1f(locs.uOpacity,          evalP(deckData.Opacity || deckData.opacity, 0.75));
-        gl.uniform1f(locs.uEdgeThickness,    evalP(deckData['Edge Thickness'] || deckData.edgeThickness, 0.025));
-        gl.uniform1f(locs.uEdgeBrightness,   evalP(deckData['Edge Brightness'] || deckData.edgeBrightness, 1.2));
-        gl.uniform1f(locs.uRimGlow,          evalP(deckData['Rim Glow'] || deckData.rimGlow, 0.6));
-        gl.uniform1f(locs.uZoom,             evalP(deckData.Zoom || deckData.zoom, 1.0));
-        gl.uniform1f(locs.uRotateX,          evalP(deckData['Rotate X'] || deckData.rotateX, 0.0));
-        gl.uniform1f(locs.uRotateY,          evalP(deckData['Rotate Y'] || deckData.rotateY, 0.0));
-        gl.uniform1f(locs.uRotateZ,          evalP(deckData['Rotate Z'] || deckData.rotateZ, 0.0));
+      const params = {};
+      for (const input of isf.header.INPUTS) {
+        const raw = lookupParam(deckData, input);
+        let v = evalP(raw, input.DEFAULT ?? 0.0);
+        if (typeof v === 'number') {
+          if (input.MIN !== undefined) v = Math.max(input.MIN, v);
+          if (input.MAX !== undefined) v = Math.min(input.MAX, v);
+        }
+        params[input.NAME] = v;
       }
-
+      applyUniforms(gl, isf.prog, isf.header, params, {
+        width: curWidth, height: curHeight, time: elapsedTime, dt: frameDt, index: frameCount, alpha: 1.0
+      });
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      return;
     }
+
+    // Mandala (also the fallback for unknown source ids)
+    const locs = mandalaLocs;
+    gl.useProgram(mandalaProgram);
+    gl.bindVertexArray(mandalaVAO);
+    const rawL1 = evalP(deckData.L1 ?? deckData.l1, 0.4);
+    const rawL2 = evalP(deckData.L2 ?? deckData.l2, 0.3);
+    const rawL3 = evalP(deckData.L3 ?? deckData.l3, 0.2);
+    const rawL4 = evalP(deckData.L4 ?? deckData.l4, 0.1);
+    const sumL = Math.abs(rawL1) + Math.abs(rawL2) + Math.abs(rawL3) + Math.abs(rawL4);
+    const targetRadius = 2.0;
+    const normScale = sumL > 1e-5 ? (targetRadius / sumL) : 0.0;
+
+    gl.uniform1f(locs.uL1, rawL1 * normScale);
+    gl.uniform1f(locs.uL2, rawL2 * normScale);
+    gl.uniform1f(locs.uL3, rawL3 * normScale);
+    gl.uniform1f(locs.uL4, rawL4 * normScale);
+    gl.uniform1f(locs.uA,  evalP(deckData.A ?? deckData.a ?? deckData.recipe?.a, 3.0));
+    gl.uniform1f(locs.uB,  evalP(deckData.B ?? deckData.b ?? deckData.recipe?.b, 4.0));
+    gl.uniform1f(locs.uC,  evalP(deckData.C ?? deckData.c ?? deckData.recipe?.c, 5.0));
+    gl.uniform1f(locs.uD,  evalP(deckData.D ?? deckData.d ?? deckData.recipe?.d, 7.0));
+
+    gl.uniform1f(locs.uMaxR, sumL > 1e-5 ? targetRadius : 0.001);
+    gl.uniform1f(locs.uThickness,      evalP(deckData.Thickness ?? deckData.thickness, 0.012));
+    gl.uniform1f(locs.uAspectRatio,    curWidth / curHeight);
+    gl.uniform1f(locs.uHueOffset,      evalP(deckData['Hue Offset'] ?? deckData.hueOffset, 0.0));
+    gl.uniform1f(locs.uHueSweep,       evalP(deckData['Hue Sweep'] ?? deckData.hueSweep, 0.3));
+    gl.uniform1f(locs.uAlpha,          1.0);
+    gl.uniform1f(locs.uDepth,          evalP(deckData.Depth ?? deckData.depth, 0.35));
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, MANDALA_POINTS * 2);
   }
 
   function renderFeedbackPass(deck, deckData) {
@@ -544,15 +401,15 @@ async function init() {
     gl.uniform1i(feedbackUniforms.uTextureHistory, 1);
 
     const fb = deckData?.feedback || {};
-    gl.uniform1f(feedbackUniforms.uDecay,        evalP(fb.decay || fb.fbDecay, 0.04));
-    gl.uniform1f(feedbackUniforms.uGain,         evalP(fb.gain || fb.fbGain, 0.96));
-    gl.uniform1f(feedbackUniforms.uFbZoom,       evalP(fb.zoom || fb.fbZoom, 0.005));
-    gl.uniform1f(feedbackUniforms.uRotate,       evalP(fb.rotate || fb.fbRotate, 0.008));
-    gl.uniform1f(feedbackUniforms.uHueShift,     evalP(fb.hueShift || fb.fbHueShift, 0.001));
-    gl.uniform1f(feedbackUniforms.uBlur,         evalP(fb.blur || fb.fbBlur, 0.0));
-    gl.uniform1f(feedbackUniforms.uChroma,       evalP(fb.chroma || fb.fbChroma, 0.0));
-    gl.uniform1f(feedbackUniforms.uFeedbackMode, evalP(fb.mode || fb.fbMode, 0.0));
-    gl.uniform1f(feedbackUniforms.uKaleido,      evalP(fb.kaleido || fb.fbKaleido, 1.0));
+    gl.uniform1f(feedbackUniforms.uDecay,        evalP(fb.decay ?? fb.fbDecay, 0.04));
+    gl.uniform1f(feedbackUniforms.uGain,         evalP(fb.gain ?? fb.fbGain, 0.96));
+    gl.uniform1f(feedbackUniforms.uFbZoom,       evalP(fb.zoom ?? fb.fbZoom, 0.005));
+    gl.uniform1f(feedbackUniforms.uRotate,       evalP(fb.rotate ?? fb.fbRotate, 0.008));
+    gl.uniform1f(feedbackUniforms.uHueShift,     evalP(fb.hueShift ?? fb.fbHueShift, 0.001));
+    gl.uniform1f(feedbackUniforms.uBlur,         evalP(fb.blur ?? fb.fbBlur, 0.0));
+    gl.uniform1f(feedbackUniforms.uChroma,       evalP(fb.chroma ?? fb.fbChroma, 0.0));
+    gl.uniform1f(feedbackUniforms.uFeedbackMode, evalP(fb.mode ?? fb.fbMode, 0.0));
+    gl.uniform1f(feedbackUniforms.uKaleido,      evalP(fb.kaleido ?? fb.fbKaleido, 1.0));
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     deck.swap();
@@ -562,6 +419,7 @@ async function init() {
     const dt = Math.min((now - lastTime) / 1000, 0.1);
     lastTime = now;
     elapsedTime += dt;
+    frameDt = dt;
     frameCount++;
 
     // Tick DSP analysis and autopilot scheduler
@@ -596,25 +454,8 @@ async function init() {
       deckA.resize(curWidth, curHeight);
       deckB.resize(curWidth, curHeight);
       deckBG.resize(curWidth, curHeight);
+      blendFBO.resize(curWidth, curHeight);
       masterFBO.resize(curWidth, curHeight);
-    }
-
-    // Dynamic spiral speed integration
-    const speedA = evalP(autopilotState.deckA?.speed || autopilotState.deckA?.Speed, 0.5);
-    const shearA = evalP(autopilotState.deckA?.shear || autopilotState.deckA?.Shear, 0.1);
-
-    if (autopilotState.deckA?.integratedTime !== undefined) {
-      integratedTime = autopilotState.deckA.integratedTime;
-      delete autopilotState.deckA.integratedTime;
-    } else {
-      integratedTime += dt * speedA;
-    }
-
-    if (autopilotState.deckA?.integratedShear !== undefined) {
-      integratedShear = autopilotState.deckA.integratedShear;
-      delete autopilotState.deckA.integratedShear;
-    } else {
-      integratedShear += dt * speedA * shearA;
     }
 
     gl.disable(gl.BLEND);
@@ -623,19 +464,19 @@ async function init() {
     if (powerState.on || powerState.warmupProgress > 0 || (powerState.shutdownProgress > 0.0 && powerState.shutdownProgress < 0.42)) {
       // 1. Render Deck A
       if (autopilotState.deckA) {
-        renderVisualSource(autopilotState.deckA, deckA.cleanFBO, deckA.readTex);
+        renderVisualSource(autopilotState.deckA, deckA.cleanFBO);
         renderFeedbackPass(deckA, autopilotState.deckA);
       }
 
       // 2. Render Deck B
       if (autopilotState.deckB) {
-        renderVisualSource(autopilotState.deckB, deckB.cleanFBO, deckB.readTex);
+        renderVisualSource(autopilotState.deckB, deckB.cleanFBO);
         renderFeedbackPass(deckB, autopilotState.deckB);
       }
 
       // 3. Render Deck BG
       if (autopilotState.deckBG) {
-        renderVisualSource(autopilotState.deckBG, deckBG.cleanFBO, deckBG.readTex);
+        renderVisualSource(autopilotState.deckBG, deckBG.cleanFBO);
         renderFeedbackPass(deckBG, autopilotState.deckBG);
       } else {
         gl.bindFramebuffer(gl.FRAMEBUFFER, deckBG.writeFBO);
@@ -645,30 +486,43 @@ async function init() {
         deckBG.swap();
       }
 
-      // 4. Mixer Pass -> masterFBO
+      const mix = autopilotState.mixer || {};
+      const progress = mix.balance ?? 0.0;
+
+      // 4a. Transition A -> B into blendFBO
+      gl.bindFramebuffer(gl.FRAMEBUFFER, blendFBO.fbo);
+      gl.viewport(0, 0, curWidth, curHeight);
+      gl.useProgram(crossfadeProgram);
+      gl.bindVertexArray(quadVAO);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, deckA.readTex);
+      gl.uniform1i(crossfadeUniforms.uTexA, 0);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, deckB.readTex);
+      gl.uniform1i(crossfadeUniforms.uTexB, 1);
+      gl.uniform1f(crossfadeUniforms.uProgress, progress);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+      // 4b. Composite over BG -> masterFBO
       gl.bindFramebuffer(gl.FRAMEBUFFER, masterFBO.fbo);
       gl.viewport(0, 0, curWidth, curHeight);
       gl.useProgram(mixerProgram);
       gl.bindVertexArray(quadVAO);
 
       gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, deckA.readTex);
+      gl.bindTexture(gl.TEXTURE_2D, blendFBO.tex);
       gl.uniform1i(mixerUniforms.uTex1, 0);
 
       gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, deckB.readTex);
-      gl.uniform1i(mixerUniforms.uTex2, 1);
-
-      gl.activeTexture(gl.TEXTURE2);
       gl.bindTexture(gl.TEXTURE_2D, deckBG.readTex);
-      gl.uniform1i(mixerUniforms.uTexBG, 2);
+      gl.uniform1i(mixerUniforms.uTexBG, 1);
 
-      const mix = autopilotState.mixer || {};
-      gl.uniform1i(mixerUniforms.uMode,    mix.mode ?? 0);
-      gl.uniform1f(mixerUniforms.uBalance, mix.balance ?? 0.0);
-      gl.uniform1f(mixerUniforms.uAlpha,   (mix.alpha ?? 1.0) * autopilotState.masterAlpha);
-      gl.uniform1f(mixerUniforms.uBgAlpha, autopilotState.bgAlpha ?? 1.0);
-      gl.uniform1f(mixerUniforms.uBloom,   mix.bloom ?? 0.0);
+      gl.uniform1f(mixerUniforms.uProgress,    progress);
+      gl.uniform1f(mixerUniforms.uBgAlpha,     autopilotState.bgAlpha ?? 1.0);
+      gl.uniform1f(mixerUniforms.uLevelA,      1.0);
+      gl.uniform1f(mixerUniforms.uLevelB,      1.0);
+      gl.uniform1f(mixerUniforms.uLevelBG,     1.0);
+      gl.uniform1f(mixerUniforms.uMasterLevel, (mix.alpha ?? 1.0) * autopilotState.masterAlpha);
 
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }

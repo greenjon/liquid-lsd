@@ -1,0 +1,49 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>LSD render check</title>
+<iframe id="app" src="../index.html?nolive" width="640" height="360" style="border:0"></iframe>
+<script type="module">
+import { normalizeDeckPreset } from '../renderer_utils.js';
+// Drives the real app in an iframe: powers it on, forces each source onto deck A, lets it
+// render, reads the canvas inside the app's own rAF and POSTs stats + PNGs to /report.
+const app = document.getElementById('app');
+const errors = [];
+const post = (o) => fetch('/report', { method: 'POST', body: JSON.stringify(o) });
+await new Promise((r) => app.addEventListener('load', r));
+const w = app.contentWindow;
+w.addEventListener('error', (e) => errors.push(String(e.message)));
+const origErr = w.console.error;
+w.console.error = (...a) => { errors.push(a.map(String).join(' ').slice(0, 1500)); origErr.apply(w.console, a); };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+for (let i = 0; i < 100 && !w.LSD; i++) await sleep(100);
+if (!w.LSD) { await post({ fatal: 'app never initialised', errors }); }
+else {
+  w.document.getElementById('powerSwitch').click();
+  const sources = await (await fetch('/sources')).json();
+  const frames = [];
+  const grab = () => new Promise((res) => w.requestAnimationFrame(() => {
+    const c = w.document.getElementById('glCanvas');
+    const png = c.toDataURL('image/png');
+    const t = document.createElement('canvas'); t.width = c.width; t.height = c.height;
+    const x = t.getContext('2d'); x.drawImage(c, 0, 0);
+    const d = x.getImageData(0, 0, t.width, t.height).data;
+    let sum = 0, lit = 0;
+    for (let i = 0; i < d.length; i += 4) { const l = d[i] + d[i + 1] + d[i + 2]; sum += l; if (l > 30) lit++; }
+    res({ png, meanLuma: sum / (d.length / 4) / 3, litFraction: lit / (d.length / 4) });
+  }));
+  await sleep(2500); // warm-up
+  for (const spec of sources) {
+    let deck = spec.deck;
+    if (spec.preset) deck = normalizeDeckPreset(await (await fetch('../' + spec.preset)).json());
+    w.LSD.autopilotState.deckA = Object.assign({ feedback: {} }, deck);
+    w.LSD.autopilotState.deckB = null;
+    w.LSD.autopilotState.deckBG = null;
+    w.LSD.autopilotState.mixer.balance = 0;
+    await sleep(spec.settleMs ?? 1500);
+    const g = await grab();
+    frames.push({ name: spec.name, ...g });
+  }
+  await post({ errors, frames, size: [app.width, app.height] });
+}
+document.title = 'done';
+</script>

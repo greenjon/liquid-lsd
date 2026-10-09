@@ -224,6 +224,8 @@ async function startBgTransition() {
 // Relay Client for Live Takeover
 // -------------------------------------------------------
 function connectRelay() {
+  // ?nolive keeps test runs (tools/render_check.mjs) from picking up a real broadcast.
+  if (new URLSearchParams(location.search).has('nolive')) return;
   let ws;
   try {
     ws = new WebSocket(RELAY_URL);

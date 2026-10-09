@@ -1,15 +1,10 @@
 {
-  "name": "attractor_flow",
-  "visualSourceType": "attractor_feedback",
+  "name": "domain_flow",
+  "visualSourceType": "domain_warp_fluid",
   "parameters": {
-    "Param A": 1.7,
-    "Param B": 1.5,
-    "Param C": 1.9,
-    "Param D": 0.7,
-    "Speed": 0.4,
-    "Zoom": 0.85,
-    "Hue Offset": 0.7,
-    "Hue Sweep": 0.5
+    "WarpStrength": 0.5,
+    "Speed": 0.3,
+    "HueOffset": 0.7
   },
   "feedbackParameters": {
     "decay": 0.025,

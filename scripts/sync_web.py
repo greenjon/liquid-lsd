@@ -42,7 +42,8 @@ def compute_sha256(filepath: Path) -> str:
 def transpile_shader_to_webgl2(source_text: str) -> str:
     """
     Transpiles a desktop GLSL shader (OpenGL 3.3 Core) to WebGL2 (GLSL ES 3.00).
-    Converts #version 330 core -> #version 300 es + precision highp float;
+    Converts #version 330 core -> #version 300 es + precision highp float; and drops uniform
+    initialisers, which ES 3.00 rejects.
     """
     # Normalize line endings to LF
     text = source_text.replace("\r\n", "\n")
@@ -61,6 +62,10 @@ def transpile_shader_to_webgl2(source_text: str) -> str:
         text = text.replace(
             "#version 300 es\n", "#version 300 es\nprecision highp float;\n"
         )
+
+    # GLSL ES 3.00 forbids initialisers on uniforms (`uniform float x = 0.5;`); the
+    # renderer sets every uniform explicitly, so the default is dropped.
+    text = re.sub(r"^(\s*uniform\s+[^;=\n]+?)\s*=\s*[^;\n]+;", r"\1;", text, flags=re.MULTILINE)
 
     # Ensure trailing newline
     return text.strip() + "\n"

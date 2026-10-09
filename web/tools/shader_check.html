@@ -1,0 +1,38 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>LSD shader compile check</title>
+<script type="module">
+// Compiles every ISF shader the server lists through the real wrapper (../isf.js) and
+// POSTs the results to /report. Driven by tools/shader_check.mjs; also usable by hand.
+import { buildFragmentShader, parseHeader } from '../isf.js';
+
+const gl = document.createElement('canvas').getContext('webgl2');
+const results = [];
+if (!gl) {
+  await fetch('/report', { method: 'POST', body: JSON.stringify({ fatal: 'no webgl2' }) });
+} else {
+  const files = await (await fetch('/list')).json();
+  const vert = await (await fetch('/web/shaders/blit.vert')).text();
+  const compile = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    const ok = gl.getShaderParameter(s, gl.COMPILE_STATUS);
+    return { ok, log: ok ? '' : gl.getShaderInfoLog(s) };
+  };
+  const vs = compile(gl.VERTEX_SHADER, vert);
+  for (const f of files) {
+    const raw = await (await fetch('/file?p=' + encodeURIComponent(f))).text();
+    let r;
+    try {
+      const wrapped = buildFragmentShader(raw, parseHeader(raw));
+      const fs = compile(gl.FRAGMENT_SHADER, wrapped);
+      r = { file: f, ok: fs.ok, log: fs.log };
+    } catch (e) { r = { file: f, ok: false, log: 'wrapper threw: ' + e }; }
+    results.push(r);
+  }
+  await fetch('/report', { method: 'POST', body: JSON.stringify({
+    renderer: gl.getParameter(gl.RENDERER), vertex: vs, results }) });
+}
+document.title = 'done';
+</script>

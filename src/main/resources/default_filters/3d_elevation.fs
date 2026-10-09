@@ -244,7 +244,7 @@ void main() {
         }
 
         vec3 rgb = texColor.rgb * atten * borderFade * lumFactor;
-        if (blendMode >= 0.5) {
+        if (blendMode >= 1) {
             rgb *= (1.0 + lum * 0.2);
         }
 
@@ -340,7 +340,7 @@ void main() {
             float atten = clamp(depthFactor, minDim, 1.0 + depthDim * 0.5);
 
             vec3 rgb = texColor.rgb * atten * borderFade * lumFactor;
-            if (blendMode >= 0.5) {
+            if (blendMode >= 1) {
                 rgb *= (1.0 + lum * 0.2);
             }
 
@@ -367,7 +367,7 @@ void main() {
 
     // Composite hits
     vec4 composite = vec4(0.0);
-    if (blendMode >= 0.5) {
+    if (blendMode >= 1) {
         // Additive luminous blending (matches original glBlendFunc(GL_ONE, GL_ONE))
         for (int i = 0; i < 6; i++) {
             if (i >= hitCount) break;

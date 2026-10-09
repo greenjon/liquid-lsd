@@ -1,13 +1,11 @@
 {
   "name": "ambient_bg",
-  "visualSourceType": "chladni",
+  "visualSourceType": "chladni_cymatics",
   "parameters": {
-    "M": 3.0,
-    "N": 5.0,
-    "Speed": 0.2,
-    "Zoom": 0.9,
-    "Hue Offset": 0.6,
-    "Hue Sweep": 0.15
+    "FrequencyM": 3,
+    "FrequencyN": 5,
+    "VibrationSpeed": 0.2,
+    "HueOffset": 0.6
   },
   "feedbackParameters": {
     "decay": 0.06,

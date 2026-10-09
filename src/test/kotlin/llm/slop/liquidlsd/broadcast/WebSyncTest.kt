@@ -40,6 +40,9 @@ class WebSyncTest {
             text = text.replace("#version 300 es\n", "#version 300 es\nprecision highp float;\n")
         }
 
+        // ES 3.00 forbids uniform initialisers; mirrors scripts/sync_web.py.
+        text = text.replace(Regex("^(\\s*uniform\\s+[^;=\\n]+?)\\s*=\\s*[^;\\n]+;", RegexOption.MULTILINE), "$1;")
+
         return text.trim() + "\n"
     }
 
