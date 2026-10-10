@@ -39,6 +39,12 @@
       "max": 100.0
     },
     {
+      "name": "Toe",
+      "default": 0.7,
+      "min": 0.0,
+      "max": 5.0
+    },
+    {
       "name": "Brightness",
       "default": 1.0,
       "min": 0.0,

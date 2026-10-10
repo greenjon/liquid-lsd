@@ -114,9 +114,9 @@ class FlameSpikeSource(
 
 /** GL resources and passes for one [FlameSpikeSource] instance. Created lazily on the render thread. */
 private class FlameEngine {
-    private val n = 512                      // state texture side -> n*n points
+    private val n = System.getProperty("flame.n", "512").toInt()   // state texture side -> n*n points (-Dflame.n=1024 -> 1M)
     private val burn = 16f                   // iterations before a point is drawn
-    private val density32 = System.getProperty("flame.density", "fp32") != "fp16"
+    private val density32 = System.getProperty("flame.density", "fp16") != "fp16"
 
     private var stateA = FBO(n, n, GL_RGBA32F)
     private var stateB = FBO(n, n, GL_RGBA32F)
@@ -157,7 +157,7 @@ private class FlameEngine {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glBindTexture(GL_TEXTURE_2D, 0)
-        logger.info { "Flame spike: ${n * n} points, density ${if (density32) "RGBA32F" else "RGBA16F"}" }
+        logger.warn { "Flame spike: ${n * n} points, density ${if (density32) "RGBA32F" else "RGBA16F"}" }
     }
 
     fun resetPoints() {
@@ -279,7 +279,7 @@ private class FlameEngine {
         queryUsed[prev] = false
         gpuSamples++
         if (++frames % 240 == 0 && gpuSamples > 0) {
-            logger.info { "Flame spike: gpu %.2f ms/frame avg over %d frames".format(gpuNsSum / 1e6 / gpuSamples, gpuSamples) }
+            logger.warn { "Flame spike (warn so it is never filtered): gpu %.2f ms/frame avg over %d frames".format(gpuNsSum / 1e6 / gpuSamples, gpuSamples) }
             gpuNsSum = 0; gpuSamples = 0
         }
     }

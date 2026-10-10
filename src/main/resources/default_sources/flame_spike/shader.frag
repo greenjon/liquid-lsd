@@ -8,11 +8,12 @@ uniform float uExposure;
 uniform float uBrightness;
 uniform float uGamma;
 uniform float uVibrancy;
+uniform float uToe;
 
 void main() {
     vec4 d = texture(uDensity, vTexCoord);
-    float a = d.a;
-    vec3 hue = d.rgb / max(a, 1e-6);
+    vec3 hue = d.rgb / max(d.a, 1e-6);
+    float a = max(d.a - uToe, 0.0);   // toe: drop isolated single hits
     float v = clamp(log(1.0 + a * uExposure) * uBrightness, 0.0, 1.0);
     float ig = 1.0 / uGamma;
     // Vibrancy blends per-channel gamma (saturating) with gamma on the density only (hue-preserving).
