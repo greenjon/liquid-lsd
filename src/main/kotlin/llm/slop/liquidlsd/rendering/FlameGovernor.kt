@@ -5,7 +5,7 @@ import kotlin.math.pow
 /**
  * Holds a flame deck's GPU time near a budget by scaling how many points it iterates and draws (cost is roughly
  * linear in points). Fed the measured GPU milliseconds of each finished frame; [scale] (0.05..1) multiplies the
- * `Points` parameter, so the user's setting stays the ceiling. Frame times on integrated GPUs swing several-fold at
+ * quality tier's point count, so the tier stays the ceiling. Frame times on integrated GPUs swing several-fold at
  * identical settings, so it works on a smoothed time and moves in small proportional steps, down faster than up.
  */
 class FlameGovernor {

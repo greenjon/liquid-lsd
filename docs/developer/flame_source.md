@@ -7,7 +7,7 @@ The Fractal Flame generator (`fractal_flame`, class `FlameSource`) is an evolvin
 1. A ping-pong RGBA32F **state texture** (512x512, one IFS point per texel: x, y, colour, age).
 2. **Iterate pass**: a fragment shader over the state texture picks an xform by weight, applies pre-affine, the weighted variation slots and the post-affine, blends the colour index, and reseeds diverged points.
 3. **Splat pass**: `GL_POINTS`, one vertex per point (state fetched with `texelFetch`), optional final xform, camera, then a Gaussian sprite additively blended into an fp16 density buffer that persists with `Decay`.
-4. The folder's `shader.frag` is the **tone-map pass** `Renderer` binds (log density, toe, gamma, vibrancy). The engine overrides `uExposure` with `Exposure * n / rows` so the `Points` fraction and the governor do not change brightness.
+4. The folder's `shader.frag` is the **tone-map pass** `Renderer` binds (log density, toe, gamma, vibrancy). The engine overrides `uExposure` with `Exposure * n / rows` so the tier's point fraction and the governor do not change brightness; it is also multiplied by `FlameQualityTier.passExposure` (4 / passes) so the pass count does not either.
 
 Cost is per point (about 3 ns each on the dev iGPU), not per pixel. The shared GLSL (`FlameEngine.COMMON`) holds the `vari()` switch (95 cases); ids are the variation numbers (the paper's 0-48, then the numbers of `.planning/flame-variations-spec.md`, 49-98) and index `FlameVariations.ALL`.
 
@@ -39,7 +39,7 @@ Every Random, Mutate and Breed candidate is run through the engine's own iterate
 
 ## Auto-governor (`FlameGovernor`)
 
-Fed the engine's GPU timestamp samples, it scales the iterated and drawn rows (`Points` stays the ceiling) to hold the `flameBudgetMs` preference (default 3 ms, 0 = off): smoothed time, proportional steps, shed fast and recover slowly.
+Fed the engine's GPU timestamp samples, it scales the iterated and drawn rows (the quality tier's point count stays the ceiling) to hold the `flameBudgetMs` preference (default 3 ms, 0 = off): smoothed time, proportional steps, shed fast and recover slowly.
 
 ## Tests
 

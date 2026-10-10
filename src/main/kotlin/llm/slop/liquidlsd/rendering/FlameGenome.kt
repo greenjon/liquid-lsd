@@ -103,10 +103,7 @@ object FlameGenome {
         m["Decay"] = param(0f, 0f, 0.98f)
         m["Sharpness"] = param(3f, 0.5f, 8f)
         m["Palette"] = param(0f, 0f, 1f)
-        // Quality (device-level in the plan; parameters for now, to be moved with the governor)
-        m["Points"] = param(1f, 0.05f, 1f)
-        m["Passes"] = param(4f, 1f, 16f)
-        m["Kernel"] = param(3f, 1f, 8f)
+        // Points / Passes / Kernel are a per-machine setting (FlameQualityTier), not parameters
         // Performance handles that move every xform at once
         // Lineage: strength of the next-state mutation (read by the sampler when it picks the next morph target)
         m["Mutation"] = param(0.25f, 0f, 1f)
@@ -150,7 +147,6 @@ object FlameGenome {
 
     private val CAMERA = listOf("Zoom", "Rotation", "CenterX", "CenterY", "FlipY")
     private val TONE = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay", "Sharpness", "Palette")
-    private val QUALITY = listOf("Points", "Passes", "Kernel")
     private val MODS = listOf("Spin", "Breathe", "Warp", "Drift", "Mutation")
 
     /** Xforms shown without being asked: the first [ALWAYS_SHOWN], plus any with weight > 0. */
@@ -183,7 +179,7 @@ object FlameGenome {
     fun editorTabs(params: Map<String, ModulatableParameter>, keep: String?): List<EditorTab> {
         val tabs = ArrayList<EditorTab>()
         tabs += EditorTab("Look", "Look", listOf(
-            EditorSection("Camera", CAMERA), EditorSection("Tone", TONE), EditorSection("Quality", QUALITY)
+            EditorSection("Camera", CAMERA), EditorSection("Tone", TONE)
         ))
         tabs += EditorTab("Mods", "Mods", listOf(EditorSection("Handles", MODS)))
         for (i in 0 until MAX_XF) if (isShown(params, i, keep)) tabs += xformTab(i, params)

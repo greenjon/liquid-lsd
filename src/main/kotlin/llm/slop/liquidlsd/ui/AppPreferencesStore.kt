@@ -170,6 +170,10 @@ object AppPreferencesStore {
                     UITheme.flameBudgetMs = it
                 }
 
+                props.getProperty("flameQuality")?.let { name ->
+                    llm.slop.liquidlsd.rendering.FlameQualityTier.entries.firstOrNull { it.name == name }?.let { UITheme.flameQuality = it }
+                }
+
                 val savedSequencer = props.getBoolean("sequencerEnabled")
                 if (savedSequencer != null) {
                     UITheme.sequencerEnabled = savedSequencer
@@ -341,6 +345,7 @@ object AppPreferencesStore {
             props.setProperty("sequencerEnabled", UITheme.sequencerEnabled.toString())
             props.setProperty("fxSwapFadeMs", UITheme.fxSwapFadeMs.toString())
             props.setProperty("flameBudgetMs", UITheme.flameBudgetMs.toString())
+            props.setProperty("flameQuality", UITheme.flameQuality.name)
             props.setProperty("midiEnabled", UITheme.midiEnabled.toString())
             props.setProperty("tooltipsEnabled", UITheme.tooltipsEnabled.toString())
             props.setProperty("maxFps", UITheme.maxFps.toString())

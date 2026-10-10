@@ -113,12 +113,13 @@ internal class FlameEngine {
         collectGpuTime()
         glQueryCounter(queries[queryIdx * 2], GL_TIMESTAMP)
 
-        val rows = ceil(v("Points", 1f).coerceIn(0.05f, 1f) * governor.scale * n).toInt().coerceIn(1, n)
+        val tier = llm.slop.liquidlsd.ui.UITheme.flameQuality
+        val rows = ceil(tier.points * governor.scale * n).toInt().coerceIn(1, n)
         val hasFinal = !FlameGenome.finalIsIdentity(genome)
         val decay = v("Decay", 0f)
-        val passes = v("Passes", 4f).toInt().coerceIn(1, 16)
+        val passes = tier.passes
         lastPasses = passes
-        lastKernel = v("Kernel", 3f)
+        lastKernel = tier.kernel
         val zoom = v("Zoom", 0.45f)
         val rot = v("Rotation", 0f)
         val aspect = target.width.toFloat() / target.height
@@ -177,7 +178,7 @@ internal class FlameEngine {
             splat.setUniform("uFlipY", if (v("FlipY", 0f) >= 0.5f) -1f else 1f)
             splat.setUniform("uCenter", v("CenterX", 0f), v("CenterY", 0f))
             splat.setUniform("uAspect", aspect)
-            splat.setUniform("uSize", v("Kernel", 3f))
+            splat.setUniform("uSize", tier.kernel)
             splat.setUniform("uSharp", v("Sharpness", 3f))
             splat.setUniform("uPalShift", v("Palette", 0f))
             glBindVertexArray(emptyVao)
@@ -194,9 +195,9 @@ internal class FlameEngine {
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, dens.texture)
         src.shader.setUniform("uDensity", 0)
-        // fewer points (the Points setting or the governor) mean proportionally fewer hits: keep the brightness. The toe
+        // fewer points (the quality tier or the governor) mean proportionally fewer hits: keep the brightness. The toe
         // is applied before exposure in the shader, so lone hits stay removed.
-        src.shader.setUniform("uExposure", v("Exposure", 2f) * n / rows.toFloat())
+        src.shader.setUniform("uExposure", v("Exposure", 2f) * n / rows.toFloat() * tier.passExposure)
         Geometry.drawFullscreenQuad()
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)

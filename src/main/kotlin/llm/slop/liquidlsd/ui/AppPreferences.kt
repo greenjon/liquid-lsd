@@ -33,6 +33,8 @@ data class AppPreferences(
     val fxSwapFadeMs: Int = 150,
     /** GPU time per Fractal Flame deck the auto-governor aims for, in ms (0 = off, full quality). */
     val flameBudgetMs: Float = 3f,
+    /** Fractal Flame cost tier (points ceiling, passes, sprite size); per machine, not per preset. */
+    val flameQuality: llm.slop.liquidlsd.rendering.FlameQualityTier = llm.slop.liquidlsd.rendering.FlameQualityTier.MEDIUM,
     val sequencerEnabled: Boolean = false,
     val midiEnabled: Boolean = false,
     val autoVjDirtyBehavior: UITheme.AutoVjDirtyBehavior = UITheme.AutoVjDirtyBehavior.AUTO_DISCARD,

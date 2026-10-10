@@ -233,13 +233,22 @@ object PreferencesPanel {
         if (ImGui.isItemDeactivatedAfterEdit()) AppPreferencesStore.savePreferences()
         itemTooltip("When an FX slot's effect is swapped (◀ ▶, picker, drop) or a chain is loaded, the slot or chain briefly fades out and back in instead of cutting hard. 0 = hard cut.")
 
+        val tiers = llm.slop.liquidlsd.rendering.FlameQualityTier.entries
+        val tierIdx = imgui.type.ImInt(session.uiTheme.flameQuality.ordinal)
+        ImGui.setNextItemWidth(200f)
+        if (ImGui.combo("Flame Quality", tierIdx, tiers.map { it.label }.toTypedArray())) {
+            session.uiTheme.flameQuality = tiers[tierIdx.get()]
+            AppPreferencesStore.savePreferences()
+        }
+        itemTooltip("How many points, drawing passes per frame and how big a sprite each Fractal Flame deck uses on this machine. Presets do not store it, so a flame looks the same, only smoother or rougher, on a slower or faster GPU. Low suits integrated graphics.")
+
         val flameBudget = floatArrayOf(session.uiTheme.flameBudgetMs)
         ImGui.setNextItemWidth(200f)
         if (ImGui.sliderFloat("Flame GPU Budget (ms)", flameBudget, 0f, UITheme.FLAME_BUDGET_MAX_MS, if (flameBudget[0] <= 0f) "off" else "%.1f ms")) {
             session.uiTheme.flameBudgetMs = flameBudget[0]
         }
         if (ImGui.isItemDeactivatedAfterEdit()) AppPreferencesStore.savePreferences()
-        itemTooltip("GPU time each Fractal Flame deck may use per frame. When a deck runs over, it draws fewer points (the deck's Points setting stays the ceiling) and wins them back when there is room, so a show holds its frame rate on any GPU. 0 = off: always use the Points setting.")
+        itemTooltip("GPU time each Fractal Flame deck may use per frame. When a deck runs over, it draws fewer points (the Flame Quality tier's point count stays the ceiling) and wins them back when there is room, so a show holds its frame rate on any GPU. 0 = off: always use the tier's full point count.")
 
         val seqEnabled = ImBoolean(session.uiTheme.sequencerEnabled)
         if (ImGui.checkbox("Enable Step Sequencer", seqEnabled)) {

@@ -130,6 +130,10 @@ object UITheme {
         get() = settings.flameBudgetMs
         set(value) { settings = settings.copy(flameBudgetMs = value.coerceIn(0f, FLAME_BUDGET_MAX_MS)) }
 
+    var flameQuality: llm.slop.liquidlsd.rendering.FlameQualityTier
+        get() = settings.flameQuality
+        set(value) { settings = settings.copy(flameQuality = value) }
+
     var sequencerEnabled: Boolean
         get() = settings.sequencerEnabled
         set(value) { settings = settings.copy(sequencerEnabled = value) }
