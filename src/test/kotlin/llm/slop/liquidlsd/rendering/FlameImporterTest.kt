@@ -9,15 +9,13 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class FlameImporterTest {
-    private val NO_FLIP = FlameImporter.Options(transposed = false, flipY = false)
-
     private val rings2 = """<flame name="r2" size="250 250" center="-0.5 0.25" scale="281.25" rotate="0.0">
   <xform weight="0.5" color="0.0" symmetry="0.0" coefs="1.0 0.0 0.0 1.0 0.0 -0.5" rings2="1.0" rings2_val="0.14"/>
   <xform weight="1.5" color="1.0" symmetry="-1.0" coefs="0.0 1.0 -1.0 0.0 0.2 0.0" post="2.0 0.0 0.0 2.0 0.0 0.0" sinusoidal="0.5" swirl="0.25" butterfly="1.0" butterfly_fx_priority="0"/>
   <palette count="256" format="RGB">${"FF8000".repeat(256)}</palette>
 </flame>"""
 
-    private fun one(xml: String, o: FlameImporter.Options = NO_FLIP) = FlameImporter.parse(xml, "t", o).single()
+    private fun one(xml: String, o: FlameImporter.Options = FlameImporter.Options()) = FlameImporter.parse(xml, "t", o).single()
     private fun Map<String, Float>.f(k: String) = getValue(k)
 
     @Test fun readsXformsVariationsAndCamera() {
@@ -56,15 +54,21 @@ class FlameImporterTest {
         assertEquals(2f, out[o + 15], 1e-5f)
     }
 
-    @Test fun flipYIsTheDefaultAndMirrorsCameraAndTranslations() {
-        val r = one(rings2, FlameImporter.Options())
-        assertEquals(-0.25f, r.values.f("CenterY")); assertEquals(-0.5f, r.values.f("CenterX"))
-        assertEquals(0.5f, r.values.f("X1 PreY"))        // -0.5 in the file
-        assertEquals(0.2f, r.values.f("X2 PreX"))
+    @Test fun imageYDownIsACameraFlagNotAMirroredGenome() {
+        val r = one(rings2)
+        assertEquals(1f, r.values.f("FlipY"))
+        assertEquals(0.25f, r.values.f("CenterY"))        // as in the file
+        assertEquals(-0.5f, r.values.f("X1 PreY"))        // translations untouched
+    }
+
+    @Test fun rotationSignIsAnOption() {
+        val xml = """<flame size="100 100" scale="50" rotate="30"/>"""
+        assertEquals(Math.toRadians(30.0).toFloat(), one(xml).values.f("Rotation"), 1e-5f)
+        assertEquals(-Math.toRadians(30.0).toFloat(), one(xml, FlameImporter.Options(flipRotation = true)).values.f("Rotation"), 1e-5f)
     }
 
     @Test fun transposedOptionReadsTheCoefficientsTheOtherWay() {
-        val r = one(rings2, FlameImporter.Options(transposed = true, flipY = false))
+        val r = one(rings2, FlameImporter.Options(transposed = true))
         val p = FlameGenome.buildParameters()
         for ((k, v) in r.values) p[k]?.set(v)
         p.values.forEach { it.evaluate() }
@@ -84,7 +88,7 @@ class FlameImporterTest {
     }
 
     @Test fun finalXformAndOutOfRangeParametersAreHandled() {
-        val r = one("""<flame size="100 100" scale="50"><xform weight="1" coefs="1 0 0 1 0 0" julian="1" julian_power="-20" julian_dist="0.55"/>
+        val r = one("""<flame size="100 100" scale="50"><xform weight="1" coefs="1 0 0 1 0 0" julian="1" julian_power="-40" julian_dist="0.55"/>
             <finalxform weight="1" coefs="0.5 0 0 0.5 0 0" linear="1"/></flame>""")
         assertTrue(r.notes.any { "julian".lowercase() in it.lowercase() && "clamped" in it })
         assertEquals(0.5f, r.values.f("XF PreScaleX"), 1e-5f)
@@ -122,5 +126,14 @@ class FlameImporterTest {
                 println("${f.name}: ${r.notes.joinToString(" | ")}")
             }
         }
+    }
+
+    @Test fun wildFlameRangesAreWideEnoughForTheSamples() {
+        val p = FlameGenome.buildParameters()
+        assertTrue(p.getValue("X1 PreX").maxClamp >= 3.2f)             // gnarlomalia translates by 3.14
+        assertTrue(p.getValue("CenterX").maxClamp >= 2.6f)
+        val julian = FlameVariations.NAMES.indexOf("juliaN")
+        assertEquals(-20f, FlameVariations.real(julian, 0, 0f))        // spirencor2 uses julian_power -20
+        assertTrue(FlameVariations.ALL[FlameVariations.NAMES.indexOf("rings2")].params[0].min <= 0.012f)
     }
 }

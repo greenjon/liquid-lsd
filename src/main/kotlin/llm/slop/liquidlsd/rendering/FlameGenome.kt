@@ -68,6 +68,11 @@ object FlameGenome {
 
     private const val COLOR_SPEED = 0.6f
 
+    // Ranges wide enough for flames found in the wild (the importer clamps to them); generated genomes stay well inside.
+    private const val SCALE_MAX = 4f        // pre/post scale and shear
+    private const val MOVE_MAX = 10f        // pre/post translation
+    private const val SLOT_WEIGHT_MAX = 4f  // variation weight, negative allowed
+
     /**
      * [morph] = takes part in deck morphing (randomizeBase): the morph controller keeps an A and a B value for it.
      * Its B value comes from [FlameSampler] (via [FlameSource.sampleMorphTarget]), not from the generic uniform draw
@@ -84,10 +89,11 @@ object FlameGenome {
 
     private fun global(m: LinkedHashMap<String, ModulatableParameter>) {
         // Camera
-        m["Zoom"] = param(0.45f, 0.05f, 4f)
+        m["Zoom"] = param(0.45f, 0.01f, 32f)
         m["Rotation"] = param(0f, -PI.toFloat(), PI.toFloat(), angle = true)
-        m["CenterX"] = param(0f, -2f, 2f)
-        m["CenterY"] = param(0f, -2f, 2f)
+        m["FlipY"] = ModulatableParameter(baseValue = 0f, minClamp = 0f, maxClamp = 1f, steps = 2, labels = listOf("Up", "Down"))   // image y axis: imported flames have it pointing down
+        m["CenterX"] = param(0f, -16f, 16f)
+        m["CenterY"] = param(0f, -16f, 16f)
         // Tone
         m["Exposure"] = param(2f, 0.01f, 100f)
         m["Brightness"] = param(1f, 0f, 4f)
@@ -120,21 +126,21 @@ object FlameGenome {
             m[k.speed] = param(COLOR_SPEED, 0f, 1f, morph = true)
         }
         m[k.preRot] = param(s?.rot ?: 0f, -PI.toFloat(), PI.toFloat(), angle = true, morph = true)
-        m[k.preSx] = param(s?.sx ?: if (isFinal) 1f else 0.6f, -2f, 2f, morph = true)
-        m[k.preSy] = param(s?.sy ?: if (isFinal) 1f else 0.6f, -2f, 2f, morph = true)
-        m[k.preShear] = param(s?.shear ?: 0f, -1f, 1f, morph = true)
-        m[k.preX] = param(s?.tx ?: 0f, -2f, 2f, morph = true)
-        m[k.preY] = param(s?.ty ?: 0f, -2f, 2f, morph = true)
+        m[k.preSx] = param(s?.sx ?: if (isFinal) 1f else 0.6f, -SCALE_MAX, SCALE_MAX, morph = true)
+        m[k.preSy] = param(s?.sy ?: if (isFinal) 1f else 0.6f, -SCALE_MAX, SCALE_MAX, morph = true)
+        m[k.preShear] = param(s?.shear ?: 0f, -SCALE_MAX, SCALE_MAX, morph = true)
+        m[k.preX] = param(s?.tx ?: 0f, -MOVE_MAX, MOVE_MAX, morph = true)
+        m[k.preY] = param(s?.ty ?: 0f, -MOVE_MAX, MOVE_MAX, morph = true)
         m[k.postRot] = param(0f, -PI.toFloat(), PI.toFloat(), angle = true, morph = true)
-        m[k.postSx] = param(1f, -2f, 2f, morph = true)
-        m[k.postSy] = param(1f, -2f, 2f, morph = true)
-        m[k.postShear] = param(0f, -1f, 1f, morph = true)
-        m[k.postX] = param(0f, -2f, 2f, morph = true)
-        m[k.postY] = param(0f, -2f, 2f, morph = true)
+        m[k.postSx] = param(1f, -SCALE_MAX, SCALE_MAX, morph = true)
+        m[k.postSy] = param(1f, -SCALE_MAX, SCALE_MAX, morph = true)
+        m[k.postShear] = param(0f, -SCALE_MAX, SCALE_MAX, morph = true)
+        m[k.postX] = param(0f, -MOVE_MAX, MOVE_MAX, morph = true)
+        m[k.postY] = param(0f, -MOVE_MAX, MOVE_MAX, morph = true)
         for (j in 0 until SLOTS) {
             val v = s?.v?.getOrNull(j)
             m[k.slotId[j]] = idParam(v?.first ?: 0)
-            m[k.slotWeight[j]] = param(v?.second ?: if (j == 0) 1f else 0f, 0f, 2f, morph = true)
+            m[k.slotWeight[j]] = param(v?.second ?: if (j == 0) 1f else 0f, -SLOT_WEIGHT_MAX, SLOT_WEIGHT_MAX, morph = true)
             // normalised variation parameters (see FlameVariations.real): 0.5 = the variation's default
             for (n in 0 until FlameVariations.PARAMS) m[k.slotParam[j][n]] = param(0.5f, 0f, 1f, morph = true)
         }
@@ -142,7 +148,7 @@ object FlameGenome {
 
     // ---- editor layout (names only; see StructuredEditor.kt) ------------------------------------------------------
 
-    private val CAMERA = listOf("Zoom", "Rotation", "CenterX", "CenterY")
+    private val CAMERA = listOf("Zoom", "Rotation", "CenterX", "CenterY", "FlipY")
     private val TONE = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay", "Sharpness", "Palette")
     private val QUALITY = listOf("Points", "Passes", "Kernel")
     private val MODS = listOf("Spin", "Breathe", "Warp", "Drift", "Mutation")
@@ -284,8 +290,8 @@ object FlameGenome {
         val idB = (morph.b(idP) + 0.5f).toInt().coerceIn(0, maxId)
         val wa = morph.a(wP); val wb = morph.b(wP)
         val delta = wP.value - (wa + (wb - wa) * t)
-        val wA = (wa + delta).coerceAtLeast(0f) * (1f - t)
-        val wB = (wb + delta).coerceAtLeast(0f) * t
+        val wA = (wa + delta) * (1f - t)
+        val wB = (wb + delta) * t
         if (idA == idB) {
             out[so] = idA.toFloat(); out[so + 1] = warped(idA, wA + wB, warp)
             out[so + 2] = 0f; out[so + 3] = 0f

@@ -158,6 +158,7 @@ internal class FlameEngine {
             splat.setUniform("uFrame", frameCounter)
             splat.setUniform("uZoom", zoom)
             splat.setUniform("uCos", cos(rot)); splat.setUniform("uSin", sin(rot))
+            splat.setUniform("uFlipY", if (v("FlipY", 0f) >= 0.5f) -1f else 1f)
             splat.setUniform("uCenter", v("CenterX", 0f), v("CenterY", 0f))
             splat.setUniform("uAspect", aspect)
             splat.setUniform("uSize", v("Kernel", 3f))
@@ -371,6 +372,7 @@ uniform float uBurn;
 uniform float uZoom;
 uniform float uCos;
 uniform float uSin;
+uniform float uFlipY;
 uniform vec2 uCenter;
 uniform float uAspect;
 uniform float uSize;
@@ -383,6 +385,7 @@ void main() {
     vec2 pos = uHasFinal != 0 ? applyXf(${FlameGenome.FINAL_INDEX}, s.xy) : s.xy;   // final xform: drawn position only
     vec2 p = pos - uCenter;
     p = vec2(uCos * p.x - uSin * p.y, uSin * p.x + uCos * p.y) * uZoom;
+    p.y *= uFlipY;   // flames from other programs have y pointing down
     p.x /= uAspect;
     bool ok = s.w >= uBurn && abs(p.x) < 2.0 && abs(p.y) < 2.0;
     gl_Position = ok ? vec4(p, 0.0, 1.0) : vec4(2.0, 2.0, 2.0, 1.0);

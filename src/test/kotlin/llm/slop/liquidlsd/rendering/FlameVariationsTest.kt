@@ -112,7 +112,7 @@ class FlameVariationsTest {
     @Test fun normalisedParametersMapMidpointToDefaultAndRoundTrip() {
         val ngon = FlameVariations.NAMES.indexOf("ngon")
         assertEquals(5f, FlameVariations.real(ngon, 1, 0.5f), 1e-6f)
-        assertEquals(3f, FlameVariations.real(ngon, 1, 0f), 1e-6f); assertEquals(12f, FlameVariations.real(ngon, 1, 1f), 1e-6f)
+        assertEquals(3f, FlameVariations.real(ngon, 1, 0f), 1e-6f); assertEquals(32f, FlameVariations.real(ngon, 1, 1f), 1e-6f)
         assertEquals(0f, FlameVariations.real(FlameVariations.NAMES.indexOf("linear"), 0, 0.7f))
         FlameVariations.ALL.forEachIndexed { id, vr ->
             vr.params.forEachIndexed { n, prm ->

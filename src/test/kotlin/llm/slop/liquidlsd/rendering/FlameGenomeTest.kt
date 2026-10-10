@@ -104,7 +104,7 @@ class FlameSlotParamPackingTest {
         FlameGenome.pack(p, out)
         val so = 16   // X1 slot 0
         assertEquals(2f, out[so + 4], 1e-5f)       // power default
-        assertEquals(12f, out[so + 5], 1e-5f)      // sides max
+        assertEquals(32f, out[so + 5], 1e-5f)      // sides max
         assertEquals(0f, out[so + 8], 0f)          // B params empty outside a morph
     }
 }

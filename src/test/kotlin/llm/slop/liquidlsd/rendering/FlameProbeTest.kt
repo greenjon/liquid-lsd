@@ -268,11 +268,9 @@ class FlameProbeTest {
         val file = java.io.File(System.getenv("FLAME_IMPORT_FILE") ?: return@withGl)
         val probe = FlameProbe()
         val cell = 250
-        val opts = listOf(
-            FlameImporter.Options(false, false), FlameImporter.Options(true, false),
-            FlameImporter.Options(false, true), FlameImporter.Options(true, true)
-        )
-        val img = java.awt.image.BufferedImage(cell * opts.size, cell, java.awt.image.BufferedImage.TYPE_INT_RGB)
+        val opts = listOf(false, true).flatMap { rot -> listOf(false, true).map { tr -> FlameImporter.Options(tr, rot) } }
+        // row 0: flipRotation off, row 1: on; columns: transposed off, on
+        val img = java.awt.image.BufferedImage(cell * 2, cell * 2, java.awt.image.BufferedImage.TYPE_INT_RGB)
         for ((k, o) in opts.withIndex()) {
             val imp = FlameImporter.parse(file.readText(), "x", o).first()
             val hits = IntArray(cell * cell)
@@ -285,14 +283,15 @@ class FlameProbeTest {
                     val dx = pts[i * 4] - (imp.values["CenterX"] ?: 0f); val dy = pts[i * 4 + 1] - (imp.values["CenterY"] ?: 0f)
                     val z = imp.values["Zoom"] ?: 0.45f
                     val x = ((kotlin.math.cos(rot) * dx - kotlin.math.sin(rot) * dy) * z * 0.5f + 0.5f) * cell
-                    val y = ((kotlin.math.sin(rot) * dx + kotlin.math.cos(rot) * dy) * z * 0.5f + 0.5f) * cell
+                    val flip = if ((imp.values["FlipY"] ?: 0f) >= 0.5f) -1f else 1f
+                    val y = (flip * (kotlin.math.sin(rot) * dx + kotlin.math.cos(rot) * dy) * z * 0.5f + 0.5f) * cell
                     if (x >= 0 && x < cell && y >= 0 && y < cell) hits[(cell - 1 - y.toInt()) * cell + x.toInt()]++
                 }
             }
             val max = hits.max().coerceAtLeast(1)
             for (j in hits.indices) {
                 val c = (kotlin.math.ln(1f + hits[j]) / kotlin.math.ln(1f + max) * 255).toInt()
-                img.setRGB(k * cell + j % cell, j / cell, (c shl 16) or (c shl 8) or c)
+                img.setRGB((k % 2) * cell + j % cell, (k / 2) * cell + j / cell, (c shl 16) or (c shl 8) or c)
             }
         }
         probe.dispose()

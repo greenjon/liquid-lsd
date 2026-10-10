@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.rendering
 
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.ln
 import kotlin.math.sqrt
@@ -32,6 +33,9 @@ object FlameSampler {
 
     /** Contractivity guard: |pre scale| stays below this so the attractor does not blow up. */
     private const val MAX_PRE_SCALE = 0.95f
+
+    /** Widest range that scales a Mutate jitter (the parameter ranges used to top out here). */
+    private const val JITTER_RANGE_CAP = 4f
 
     private fun gaussian(r: Random): Float {
         val u = r.nextFloat().coerceAtLeast(1e-6f)
@@ -71,10 +75,14 @@ object FlameSampler {
         for ((name, p) in params) {
             if (!p.randomizeBase || p.steps != null) continue
             if (name.startsWith("XF") || " Post" in name) continue
-            val range = p.maxClamp - p.minClamp
+            // jitter scales with the range, capped so the wide ranges that admit imported flames do not make drift wild
+            val range = minOf(p.maxClamp - p.minClamp, JITTER_RANGE_CAP)
             var v = from(name) + gaussian(random) * s * 0.2f * range
             v = if (p.isAngle) wrapAngle(v) else v.coerceIn(p.minClamp, p.maxClamp)
-            if (name.contains(" PreScale")) v = v.coerceIn(-MAX_PRE_SCALE, MAX_PRE_SCALE)
+            if (name.contains(" PreScale")) {   // keep contractive, but never shrink an already larger (imported) scale
+                val limit = maxOf(MAX_PRE_SCALE, abs(from(name)))
+                v = v.coerceIn(-limit, limit)
+            }
             out[name] = v
         }
 

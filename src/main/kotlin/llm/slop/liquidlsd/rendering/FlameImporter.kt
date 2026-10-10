@@ -21,11 +21,12 @@ import kotlin.math.sin
  */
 object FlameImporter {
     /**
-     * Conventions that cannot be derived from the files alone (see the verification notes in the handoff).
-     * [transposed]: `coefs="a b c d e f"` is read as x' = a x + b y + e, y' = c x + d y + f instead of x' = a x + c y + e,
-     * y' = b x + d y + f. [flipY]: the flame's y axis points down, so the camera and every y are mirrored. [flipY] is on by default: a reference render of rings2-1.flame puts the ring centre where only the mirrored camera does; [transposed] is off by convention and not settled (rotation-symmetric samples cannot tell).
+     * Conventions that cannot be derived from the files alone (see the handoff). [transposed]: `coefs="a b c d e f"` is
+     * read as x' = a x + b y + e, y' = c x + d y + f instead of x' = a x + c y + e, y' = b x + d y + f. [flipRotation]:
+     * the camera's `rotate` turns the other way. The image's y axis is taken to point down (the source's `FlipY`
+     * camera parameter is set), a reference render of rings2-1.flame having the ring centre where only that gives it.
      */
-    class Options(val transposed: Boolean = false, val flipY: Boolean = true)
+    class Options(val transposed: Boolean = false, val flipRotation: Boolean = false)
 
     class Imported(
         val name: String,
@@ -134,8 +135,9 @@ object FlameImporter {
         val scale = flame.num("scale", 0f)
         if (size != null && scale > 0f) put("Zoom", 2f * scale / size[1], "camera zoom")
         val center = flame.nums("center", 2)
-        if (center != null) { put("CenterX", center[0]); put("CenterY", if (opt.flipY) -center[1] else center[1]) }
-        put("Rotation", Math.toRadians((flame.num("rotate", 0f) * if (opt.flipY) -1 else 1).toDouble()).toFloat())
+        if (center != null) { put("CenterX", center[0]); put("CenterY", center[1]) }
+        put("FlipY", 1f)
+        put("Rotation", Math.toRadians((flame.num("rotate", 0f) * (if (opt.flipRotation) -1 else 1)).toDouble()).toFloat())
         notes += "tone settings (brightness, gamma, vibrancy, filter, background) and the 3D camera are not imported"
 
         return Imported(name, out, palette(children(flame, "palette").firstOrNull(), notes), notes)
@@ -147,9 +149,7 @@ object FlameImporter {
     private fun affine(c: FloatArray?, opt: Options): FloatArray? {
         c ?: return null
         val m = if (opt.transposed) floatArrayOf(c[0], c[1], c[2], c[3]) else floatArrayOf(c[0], c[2], c[1], c[3])
-        val flip = if (opt.flipY) -1f else 1f
-        // mirroring y: M' = F M F with F = diag(1, -1), t' = F t
-        return floatArrayOf(m[0], m[1] * flip, m[2] * flip, m[3], c[4], c[5] * flip)
+        return floatArrayOf(m[0], m[1], m[2], m[3], c[4], c[5])
     }
 
     /** QR-style split of M into R(rot) * [[sx, shear], [0, sy]] (the layout of [FlameGenome.pack]). */

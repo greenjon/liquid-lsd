@@ -54,8 +54,8 @@ object FlameQuality {
         val extent = max(wx, wy)
         val cx = (x0 + x1) / 2f; val cy = (y0 + y1) / 2f
         val half = max(wy / 2f, wx / 2f / ASPECT).coerceAtLeast(1e-3f)
-        val zoom = (FIT / half).coerceIn(0.05f, 4f)
-        fun result(v: Verdict, occupancy: Float = 0f) = Result(v, zoom, cx.coerceIn(-2f, 2f), cy.coerceIn(-2f, 2f), extent, occupancy)
+        val zoom = (FIT / half).coerceIn(0.01f, 32f)
+        fun result(v: Verdict, occupancy: Float = 0f) = Result(v, zoom, cx.coerceIn(-16f, 16f), cy.coerceIn(-16f, 16f), extent, occupancy)
 
         if (extent < MIN_EXTENT) return result(Verdict.COLLAPSED)
         if (extent > MAX_EXTENT) return result(Verdict.EXPLODED)
