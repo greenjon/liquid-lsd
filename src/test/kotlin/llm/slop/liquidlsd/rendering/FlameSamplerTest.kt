@@ -91,4 +91,42 @@ class FlameSamplerTest {
             }
         }
     }
+
+    // ---- breed ----
+
+    private val parentA: Map<String, Float> = params.mapValues { it.value.baseValue }
+    private val parentB: Map<String, Float> = FlameSampler.random(params, Random(99)).let { r -> params.mapValues { r[it.key] ?: it.value.baseValue } }
+
+    @Test fun breedWithoutMutationTakesWholeXformsFromOneParent() {
+        repeat(100) { seed ->
+            val child = FlameSampler.breed(params, { parentA[it]!! }, { parentB[it]!! }, 0f, Random(seed))
+            for (x in 0 until FlameGenome.MAX_XF) {
+                val names = params.keys.filter { it.startsWith("X${x + 1} ") && params[it]!!.randomizeBase }
+                val fromA = names.all { child[it] == parentA[it] }
+                val fromB = names.all { child[it] == parentB[it] }
+                assertTrue(fromA || fromB, "X${x + 1} mixes parents (seed $seed)")
+            }
+        }
+    }
+
+    @Test fun breedUsesBothParentsKeepsTwoXformsAndStaysInRange() {
+        var sawA = false; var sawB = false
+        repeat(200) { seed ->
+            val child = FlameSampler.breed(params, { parentA[it]!! }, { parentB[it]!! }, 0.5f, Random(seed))
+            assertTrue(activeXforms(child) >= 2, "seed $seed")
+            assertTrue(child.keys.none { it.startsWith("XF") })
+            child.forEach { (name, v) ->
+                val p = params[name]!!
+                assertTrue(v >= p.minClamp - 1e-5f && v <= p.maxClamp + 1e-5f, "$name=$v")
+            }
+            if (child[FlameGenome.weightKey(0)] != parentB[FlameGenome.weightKey(0)]) sawA = true
+            if (child[FlameGenome.weightKey(1)] != parentA[FlameGenome.weightKey(1)]) sawB = true
+        }
+        assertTrue(sawA && sawB)
+    }
+
+    @Test fun breedingIdenticalParentsAtZeroStrengthClones() {
+        val child = FlameSampler.breed(params, { parentA[it]!! }, { parentA[it]!! }, 0f, Random(3))
+        child.forEach { (n, v) -> assertEquals(parentA[n]!!, v, 1e-5f, n) }
+    }
 }

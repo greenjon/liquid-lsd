@@ -101,6 +101,39 @@ object FlameSampler {
         return out
     }
 
+    /**
+     * Crossover of two parents: xform slot i comes whole from A or from B (never mixed per parameter, so each xform
+     * stays coherent), at least two xforms stay active, then [mutate] jitters the child by [strength]. Final xform,
+     * camera, tone and modifiers are not part of the genome proposal, as for [random].
+     * @param a, b value of a parameter in each parent
+     * @return values for every morph-enabled xform parameter (mutated ones included)
+     */
+    fun breed(
+        params: Map<String, ModulatableParameter>,
+        a: (String) -> Float,
+        b: (String) -> Float,
+        strength: Float,
+        random: Random
+    ): Map<String, Float> {
+        val prefixes = Array(FlameGenome.MAX_XF) { "X${it + 1} " }
+        val names = Array(FlameGenome.MAX_XF) { x -> params.filter { (n, p) -> p.randomizeBase && n.startsWith(prefixes[x]) }.keys.toList() }
+        fun active(f: (String) -> Float, x: Int) = f(FlameGenome.weightKey(x)) > 0.05f
+        val fromB = BooleanArray(FlameGenome.MAX_XF) { random.nextBoolean() }
+        fun childActive() = (0 until FlameGenome.MAX_XF).count { active(if (fromB[it]) b else a, it) }
+        // too few active xforms: switch slots to whichever parent is active there until two are
+        for (x in 0 until FlameGenome.MAX_XF) {
+            if (childActive() >= 2) break
+            val here = if (fromB[x]) b else a
+            val other = if (fromB[x]) a else b
+            if (!active(here, x) && active(other, x)) fromB[x] = !fromB[x]
+        }
+        val child = HashMap<String, Float>()
+        for (x in 0 until FlameGenome.MAX_XF) for (n in names[x]) child[n] = (if (fromB[x]) b else a)(n)
+        val mutated = mutate(params, { child[it] ?: a(it) }, strength, random)
+        child.putAll(mutated)
+        return child
+    }
+
     /** Active xform count for [random]: 2..5, three being the most common. */
     private val COUNT_ODDS = floatArrayOf(0.25f, 0.4f, 0.25f, 0.1f)
 
