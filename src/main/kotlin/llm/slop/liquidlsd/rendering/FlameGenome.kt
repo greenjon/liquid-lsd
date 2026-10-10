@@ -84,7 +84,7 @@ object FlameGenome {
     /** Variation ids: never lerped by the morph (the engine cross-weights A's and B's slots instead). */
     private fun idParam(v: Int) = ModulatableParameter(
         baseValue = v.toFloat(), minClamp = 0f, maxClamp = (VARIATIONS.size - 1).toFloat(),
-        randomizeBase = true, steps = VARIATIONS.size, labels = VARIATIONS
+        randomizeBase = true, steps = VARIATIONS.size, labels = FlameVariations.LABELS
     )
 
     private fun global(m: LinkedHashMap<String, ModulatableParameter>) {

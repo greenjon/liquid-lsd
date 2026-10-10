@@ -39,13 +39,20 @@ object FlameImporter {
     )
 
     /** File name -> our variation id, where the file name differs from [FlameVariations.NAMES] (compared lower-case). */
-    private val ALIASES = mapOf("julian" to "juliaN", "juliascope" to "juliaScope", "radial_blur" to "radialBlur", "gaussian_blur" to "gaussian")
+    private val ALIASES = mapOf(
+        "julian" to "juliaN", "juliascope" to "juliaScope", "radial_blur" to "radialBlur", "gaussian_blur" to "gaussian",
+        "oscilloscope" to "oscope"
+    )
     private val ID_BY_FILE_NAME: Map<String, Int> = buildMap {
-        FlameVariations.NAMES.forEachIndexed { id, n -> put(n.lowercase(), id) }
-        for ((file, ours) in ALIASES) put(file, FlameVariations.NAMES.indexOf(ours))
+        FlameVariations.ALL.forEachIndexed { id, v -> if (v.supported) put(v.name.lowercase(), id) }
+        for ((file, ours) in ALIASES) FlameVariations.NAMES.indexOf(ours).let { if (FlameVariations.ALL[it].supported) put(file, it) }
     }
-    private val FILE_NAME_BY_ID: Array<String> = Array(FlameVariations.count()) { id ->
-        ALIASES.entries.firstOrNull { FlameVariations.NAMES[id] == it.value }?.key ?: FlameVariations.NAMES[id].lowercase()
+    /** Reserved ids (skipped for v1 or not built yet): a file that uses one gets it listed as unsupported. */
+    private val RESERVED: Set<String> = FlameVariations.ALL.filter { !it.supported }.map { it.name.lowercase() }.toSet()
+
+    /** The attribute-name prefixes a variation's parameters are read under: the aliases first, then its own lower-cased name. */
+    private val PREFIXES_BY_ID: Array<List<String>> = Array(FlameVariations.count()) { id ->
+        ALIASES.filterValues { it == FlameVariations.NAMES[id] }.keys.toList() + FlameVariations.NAMES[id].lowercase()
     }
 
     /** Attributes of an xform that are not variations (and the editor-metadata suffixes of the files we saw). */
@@ -182,9 +189,10 @@ object FlameImporter {
         for (i in 0 until attrs.length) {
             val n = attrs.item(i).nodeName
             val lower = n.lowercase()
-            if (lower in META || ID_BY_FILE_NAME.containsKey(lower) || META_SUFFIX.containsMatchIn(n)) continue
-            if (ID_BY_FILE_NAME.keys.any { lower.startsWith("${it}_") }) continue
             val v = attrs.item(i).nodeValue.trim().toFloatOrNull() ?: continue
+            if (lower in RESERVED) { if (v != 0f) unsupported += n; continue }
+            if (lower in META || ID_BY_FILE_NAME.containsKey(lower) || META_SUFFIX.containsMatchIn(n)) continue
+            if (ID_BY_FILE_NAME.keys.any { lower.startsWith("${it}_") } || RESERVED.any { lower.startsWith("${it}_") }) continue
             if (v != 0f && !n.contains('_')) unsupported += n
         }
         val top = found.sortedByDescending { abs(it.second) }.take(FlameGenome.SLOTS)
@@ -197,7 +205,7 @@ object FlameImporter {
                 var norm = 0.5f
                 if (v != null) {
                     val prm = FlameVariations.ALL[v.first].params.getOrNull(q)
-                    val raw = prm?.let { xf.attr("${FILE_NAME_BY_ID[v.first]}_${it.label.lowercase()}")?.trim()?.toFloatOrNull() }
+                    val raw = prm?.let { PREFIXES_BY_ID[v.first].firstNotNullOfOrNull { pre -> xf.attr("${pre}_${it.label.lowercase()}")?.trim()?.toFloatOrNull() } }
                     if (prm != null && raw != null) {
                         if (raw < prm.min || raw > prm.max) notes += "$who ${FlameVariations.NAMES[v.first]} ${prm.label} $raw outside ${prm.min}..${prm.max}, clamped"
                         norm = FlameVariations.normalised(v.first, q, raw)

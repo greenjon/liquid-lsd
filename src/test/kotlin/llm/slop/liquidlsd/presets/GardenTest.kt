@@ -72,11 +72,11 @@ class GardenTest {
         val dir = Files.createTempDirectory("flames").toFile()
         try {
             val src = dir.resolve("My Flame.flame")
-            src.writeText("""<flames><flame name="Alpha One" size="100 100" scale="50"><xform weight="1" coefs="0.5 0 0 0.5 0 0" sinusoidal="1" butterfly="1"/></flame><flame name="Beta" size="100 100" scale="50"/></flames>""")
+            src.writeText("""<flames><flame name="Alpha One" size="100 100" scale="50"><xform weight="1" coefs="0.5 0 0 0.5 0 0" sinusoidal="1" lazysusan="1"/></flame><flame name="Beta" size="100 100" scale="50"/></flames>""")
             val out = dir.resolve("out")
             val first = FlameImportOps.importFile(src, out)
             assertEquals(listOf("alpha-one.lsd", "beta.lsd"), first.files.map { it.name })
-            assertTrue(first.notes.any { "butterfly" in it })
+            assertTrue(first.notes.any { "lazysusan" in it })
             val dto = PresetManager.json.decodeFromString<DeckPresetDto>(first.files[0].readText())
             assertEquals("fractal_flame", dto.visualSourceType)
             assertEquals("alpha-one", dto.name)

@@ -1,12 +1,16 @@
 package llm.slop.liquidlsd.rendering
 
 import kotlin.math.PI
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.cosh
 import kotlin.math.exp
 import kotlin.math.floor
+import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.math.sinh
 import kotlin.math.sqrt
 import kotlin.math.tan
 import kotlin.test.Test
@@ -21,8 +25,12 @@ import kotlin.test.assertTrue
 class FlameVariationsTest {
     private val pi = PI
 
-    /** Mirror of `vari()` for the deterministic variations; p = parameters in real units, m = (a, b, d, e), t = (c, f). */
-    private fun v(name: String, x: Double, y: Double, p: DoubleArray = DoubleArray(4), m: DoubleArray = DoubleArray(4), t: DoubleArray = DoubleArray(2)): DoubleArray {
+    /**
+     * Mirror of `vari()`; p = parameters in real units, m = (a, b, d, e), t = (c, f). [w] is the weight: only the
+     * variations whose spec entry says "non-standard weight" use it (they return the finished output); every other
+     * mirror returns the unweighted value, which is the output for w = 1. [u] stands in for every random draw.
+     */
+    private fun v(name: String, x: Double, y: Double, p: DoubleArray = DoubleArray(4), m: DoubleArray = DoubleArray(4), t: DoubleArray = DoubleArray(2), w: Double = 1.0, u: Double = 0.5): DoubleArray {
         val r = sqrt(x * x + y * y); val th = atan2(x, y); val ph = atan2(y, x)
         return when (name) {
             "linear" -> doubleArrayOf(x, y)
@@ -82,27 +90,53 @@ class FlameVariationsTest {
             }
             "secant2" -> { val c = cos(r); doubleArrayOf(x, if (c < 0) 1 / c + 1 else 1 / c - 1) }   // weight 1
             "cross" -> { val k = sqrt(1 / ((x * x - y * y).pow(2) + 1e-10)); doubleArrayOf(k * x, k * y) }
+            "exp" -> doubleArrayOf(exp(x) * cos(y), exp(x) * sin(y))
+            "log" -> doubleArrayOf(0.5 * ln(x * x + y * y), ph)
+            "sin" -> doubleArrayOf(sin(x) * cosh(y), cos(x) * sinh(y))
+            "cos" -> doubleArrayOf(cos(x) * cosh(y), -sin(x) * sinh(y))
+            "tan" -> { val d = cos(2 * x) + cosh(2 * y); doubleArrayOf(sin(2 * x) / d, sinh(2 * y) / d) }
+            "sec" -> { val d = cos(2 * x) + cosh(2 * y); doubleArrayOf(2 * cos(x) * cosh(y) / d, 2 * sin(x) * sinh(y) / d) }
+            "csc" -> { val d = cosh(2 * y) - cos(2 * x); doubleArrayOf(2 * sin(x) * cosh(y) / d, -2 * cos(x) * sinh(y) / d) }
+            "cot" -> { val d = cosh(2 * y) - cos(2 * x); doubleArrayOf(sin(2 * x) / d, -sinh(2 * y) / d) }
+            "sinh" -> doubleArrayOf(sinh(x) * cos(y), cosh(x) * sin(y))
+            "cosh" -> doubleArrayOf(cosh(x) * cos(y), sinh(x) * sin(y))
+            "tanh" -> { val d = cos(2 * y) + cosh(2 * x); doubleArrayOf(sinh(2 * x) / d, sin(2 * y) / d) }
+            "sech" -> { val d = cos(2 * y) + cosh(2 * x); doubleArrayOf(2 * cosh(x) * cos(y) / d, -2 * sinh(x) * sin(y) / d) }
+            "csch" -> { val d = cosh(2 * x) - cos(2 * y); doubleArrayOf(2 * sinh(x) * cos(y) / d, -2 * cosh(x) * sin(y) / d) }
+            "coth" -> { val d = cosh(2 * x) - cos(2 * y); doubleArrayOf(sinh(2 * x) / d, sin(2 * y) / d) }   // +sin 2y: the original program, not the textbook
             else -> error("no mirror for $name")
         }
     }
 
-    private fun assertV(name: String, x: Double, y: Double, ex: Double, ey: Double, p: DoubleArray = DoubleArray(4), m: DoubleArray = DoubleArray(4), t: DoubleArray = DoubleArray(2)) {
-        val o = v(name, x, y, p, m, t)
-        assertEquals(ex, o[0], 1e-9, "$name x"); assertEquals(ey, o[1], 1e-9, "$name y")
+    private fun assertV(name: String, x: Double, y: Double, ex: Double, ey: Double, p: DoubleArray = DoubleArray(4), m: DoubleArray = DoubleArray(4), t: DoubleArray = DoubleArray(2), w: Double = 1.0, u: Double = 0.5, tol: Double = 1e-9) {
+        val o = v(name, x, y, p, m, t, w, u)
+        assertEquals(ex, o[0], tol, "$name x at ($x, $y)"); assertEquals(ey, o[1], tol, "$name y at ($x, $y)")
     }
 
-    @Test fun tableHasThePapersFortyNineVariationsWithUniqueNames() {
-        assertEquals(49, FlameVariations.count())
-        assertEquals(49, FlameVariations.NAMES.toSet().size)
+    /** A test pair of the spec, which gives its values to five decimals: tolerance 1e-4. */
+    private fun spec(name: String, x: Double, y: Double, ex: Double, ey: Double, p: DoubleArray = DoubleArray(4), w: Double = 1.0, u: Double = 0.5) =
+        assertV(name, x, y, ex, ey, p = p, w = w, u = u, tol = 1e-4)
+
+    private fun params(vararg v: Double) = DoubleArray(4).also { v.copyInto(it) }
+
+    @Test fun tableHasNinetyNineIdsWithUniqueNamesAndTheSkippedFourReserved() {
+        assertEquals(99, FlameVariations.count())
+        assertEquals(99, FlameVariations.NAMES.toSet().size)
         assertEquals("linear", FlameVariations.NAMES[0]); assertEquals("popcorn", FlameVariations.NAMES[17])
         assertEquals("pdj", FlameVariations.NAMES[24]); assertEquals("cross", FlameVariations.NAMES[48])
+        assertEquals("disc2", FlameVariations.NAMES[49]); assertEquals("waves2", FlameVariations.NAMES[81])
+        assertEquals("exp", FlameVariations.NAMES[82]); assertEquals("coth", FlameVariations.NAMES[95])
+        assertEquals("mobius", FlameVariations.NAMES[98])
+        for (id in listOf(50, 65, 67, 98)) assertTrue(!FlameVariations.ALL[id].supported, FlameVariations.NAMES[id])
         assertTrue(FlameVariations.ALL.all { it.params.size <= FlameVariations.PARAMS })
+        assertTrue(FlameVariations.ALL.all { it.supported || it.params.isEmpty() })
     }
 
     @Test fun glslCasesMatchTheTable() {
         val src = FlameEngine.COMMON
         val cases = Regex("""case (\d+):""").findAll(src).map { it.groupValues[1].toInt() }.toList()
-        assertEquals((0 until FlameVariations.count()).toList(), cases)
+        // reserved (unsupported) ids have no case and fall through to linear
+        assertEquals(FlameVariations.ALL.indices.filter { FlameVariations.ALL[it].supported }, cases)
         // the trailing comment on each case names the variation (first word), keeping ids and names in step
         Regex("""case (\d+):.*?//\s*(\w+)""").findAll(src).forEach {
             assertEquals(FlameVariations.NAMES[it.groupValues[1].toInt()], it.groupValues[2], "case ${it.groupValues[1]}")
@@ -164,5 +198,24 @@ class FlameVariationsTest {
         assertV("rectangles", 0.7, 0.3, 0.8, 0.2, p = doubleArrayOf(0.5, 0.5, 0.0, 0.0))   // floor(1.4) = 1 -> 3*0.5 - 0.7
         assertV("perspective", 1.0, 0.0, 1.0, 0.0, p = doubleArrayOf(0.4, 2.0, 0.0, 0.0)) // y = 0: dist/dist * (x, 0)
         assertV("blob", 0.0, 1.0, 1.0, 0.0, p = doubleArrayOf(1.0, 1.0, 5.0, 0.0))        // high = low = 1, theta 0: r * 1 * (cos 0, sin 0)
+    }
+
+    // ---- ids 82-95: trigonometric and hyperbolic (spec test pairs) ----
+
+    @Test fun trigonometricAndHyperbolicVariations() {
+        spec("exp", 0.0, 0.0, 1.0, 0.0); spec("exp", 0.0, pi / 2, 0.0, 1.0); spec("exp", 0.0, pi, -1.0, 0.0); spec("exp", 1.0, pi / 3, 1.35914, 2.35410)
+        spec("log", 1.0, 0.0, 0.0, 0.0); spec("log", Math.E, 0.0, 1.0, 0.0); spec("log", 0.0, 1.0, 0.0, 1.57080); spec("log", -1.0, 0.0, 0.0, 3.14159)
+        spec("sin", 0.0, 0.0, 0.0, 0.0); spec("sin", pi / 2, 0.0, 1.0, 0.0); spec("sin", 0.0, 1.0, 0.0, 1.17520); spec("sin", 1.0, 0.5, 0.94886, 0.28155)
+        spec("cos", 0.0, 0.0, 1.0, 0.0); spec("cos", pi, 0.0, -1.0, 0.0); spec("cos", 0.0, 1.0, 1.54308, 0.0); spec("cos", 1.0, 0.5, 0.60926, -0.43849)
+        spec("tan", 0.0, 0.0, 0.0, 0.0); spec("tan", pi / 4, 0.0, 1.0, 0.0); spec("tan", 0.0, 0.5, 0.0, 0.46212); spec("tan", 1.0, 0.5, 0.80688, 1.04283)
+        spec("sec", 0.0, 0.0, 1.0, 0.0); spec("sec", pi, 0.0, -1.0, 0.0); spec("sec", 0.0, 1.0, 0.64805, 0.0); spec("sec", 1.0, 0.5, 1.08127, 0.77819)
+        spec("csc", pi / 2, 0.0, 1.0, 0.0); spec("csc", -pi / 2, 0.0, -1.0, 0.0); spec("csc", 1.0, 0.5, 0.96861, -0.28741)
+        spec("cot", pi / 4, 0.0, 1.0, 0.0); spec("cot", pi / 2, 0.0, 0.0, 0.0); spec("cot", 1.0, 0.5, 0.46411, -0.59983)
+        spec("sinh", 0.0, 0.0, 0.0, 0.0); spec("sinh", 0.0, pi / 2, 0.0, 1.0); spec("sinh", 1.0, 0.0, 1.17520, 0.0); spec("sinh", 1.0, 0.5, 1.03134, 0.73979)
+        spec("cosh", 0.0, 0.0, 1.0, 0.0); spec("cosh", 0.0, pi, -1.0, 0.0); spec("cosh", 1.0, 0.0, 1.54308, 0.0); spec("cosh", 1.0, 0.5, 1.35418, 0.56342)
+        spec("tanh", 0.0, 0.0, 0.0, 0.0); spec("tanh", 0.0, pi / 4, 0.0, 1.0); spec("tanh", 0.5, 0.5, 0.56408, 0.40390)
+        spec("sech", 0.0, 0.0, 1.0, 0.0); spec("sech", 0.0, pi, -1.0, 0.0); spec("sech", 0.5, 0.5, 0.94998, -0.23983)
+        spec("csch", 0.0, pi / 2, 0.0, -1.0); spec("csch", 0.0, -pi / 2, 0.0, 1.0); spec("csch", 0.5, 0.5, 0.91207, -1.07823)
+        spec("coth", 0.0, pi / 4, 0.0, 1.0); spec("coth", 0.0, pi / 2, 0.0, 0.0); spec("coth", 0.5, 0.5, 1.17195, 0.83914)   // +sin 2y: not the textbook coth
     }
 }

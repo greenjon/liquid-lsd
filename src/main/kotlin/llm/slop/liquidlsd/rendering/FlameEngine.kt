@@ -235,6 +235,16 @@ uint pcg(uint v) {
 }
 float rnd() { gRng = pcg(gRng); return float(gRng) * (1.0 / 4294967296.0); }
 
+// Bad values: a division by zero, a log of a non-positive number and the like must give not-a-number (which the
+// iteration loop discards) on every driver, so the variations of ids 49+ go through these instead of / and log.
+float nan() { return uintBitsToFloat(0x7fc00000u); }
+float sdiv(float a, float b) { return b == 0.0 ? nan() : a / b; }
+vec2 sdiv(vec2 a, float b) { return b == 0.0 ? vec2(nan()) : a / b; }
+float slog(float a) { return a > 0.0 ? log(a) : nan(); }
+float ssqrt(float a) { return a >= 0.0 ? sqrt(a) : nan(); }
+float spow(float x, float e) { return e == 0.0 ? 1.0 : (x > 0.0 ? pow(x, e) : (e > 0.0 ? 0.0 : nan())); }
+float remT(float a, float b) { return b == 0.0 ? nan() : a - b * trunc(a / b); }   // remainder, sign follows a
+
 // Variation `id` of point p, already multiplied by its weight w. Formulas: Draves & Reckase, "The Fractal Flame
 // Algorithm", Appendix A (ids are the paper's numbers; keep in step with FlameVariations). P = the variation's
 // parameters, M = (a, b, d, e) and T = (c, f) of the pre-affine for the dependent variations. theta = atan(x/y),
@@ -244,7 +254,8 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
     float r = sqrt(r2);
     float th = atan(p.x, p.y);
     float ph = atan(p.y, p.x);
-    vec2 v = p;
+    float q = dot(p, p);   // the exact r^2 (r2 carries a guard against zero)
+    vec2 v = p;   // ids with no case below (the reserved ones) act as linear
     switch (id) {
         case 0:  v = p; break;                                                                  // linear
         case 1:  v = sin(p); break;                                                             // sinusoidal
@@ -310,6 +321,20 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
                    float t = s2 > 1e-30 ? log(s2) / log(10.0) + cos(a) : -30.0;
                    v = p.x * vec2(t, t - PI*sin(a)); break; }
         case 48: v = p / sqrt(pow(p.x*p.x - p.y*p.y, 2.0) + 1e-10); break;                                // cross
+        case 82: v = exp(p.x) * vec2(cos(p.y), sin(p.y)); break;                                // exp
+        case 83: v = vec2(0.5 * slog(q), ph); break;                                            // log
+        case 84: v = vec2(sin(p.x) * cosh(p.y), cos(p.x) * sinh(p.y)); break;                   // sin
+        case 85: v = vec2(cos(p.x) * cosh(p.y), -sin(p.x) * sinh(p.y)); break;                  // cos
+        case 86: { float d = cos(2.0*p.x) + cosh(2.0*p.y); v = sdiv(vec2(sin(2.0*p.x), sinh(2.0*p.y)), d); break; } // tan
+        case 87: { float d = cos(2.0*p.x) + cosh(2.0*p.y); v = sdiv(2.0 * vec2(cos(p.x) * cosh(p.y), sin(p.x) * sinh(p.y)), d); break; } // sec
+        case 88: { float d = cosh(2.0*p.y) - cos(2.0*p.x); v = sdiv(2.0 * vec2(sin(p.x) * cosh(p.y), -cos(p.x) * sinh(p.y)), d); break; } // csc
+        case 89: { float d = cosh(2.0*p.y) - cos(2.0*p.x); v = sdiv(vec2(sin(2.0*p.x), -sinh(2.0*p.y)), d); break; } // cot
+        case 90: v = vec2(sinh(p.x) * cos(p.y), cosh(p.x) * sin(p.y)); break;                   // sinh
+        case 91: v = vec2(cosh(p.x) * cos(p.y), sinh(p.x) * sin(p.y)); break;                   // cosh
+        case 92: { float d = cos(2.0*p.y) + cosh(2.0*p.x); v = sdiv(vec2(sinh(2.0*p.x), sin(2.0*p.y)), d); break; } // tanh
+        case 93: { float d = cos(2.0*p.y) + cosh(2.0*p.x); v = sdiv(2.0 * vec2(cosh(p.x) * cos(p.y), -sinh(p.x) * sin(p.y)), d); break; } // sech
+        case 94: { float d = cosh(2.0*p.x) - cos(2.0*p.y); v = sdiv(2.0 * vec2(sinh(p.x) * cos(p.y), -cosh(p.x) * sin(p.y)), d); break; } // csch
+        case 95: { float d = cosh(2.0*p.x) - cos(2.0*p.y); v = sdiv(vec2(sinh(2.0*p.x), sin(2.0*p.y)), d); break; } // coth: +sin 2y as in the original program, not the textbook -sin 2y
     }
     return w * v;
 }

@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 class FlameImporterTest {
     private val rings2 = """<flame name="r2" size="250 250" center="-0.5 0.25" scale="281.25" rotate="0.0">
   <xform weight="0.5" color="0.0" symmetry="0.0" coefs="1.0 0.0 0.0 1.0 0.0 -0.5" rings2="1.0" rings2_val="0.14"/>
-  <xform weight="1.5" color="1.0" symmetry="-1.0" coefs="0.0 1.0 -1.0 0.0 0.2 0.0" post="2.0 0.0 0.0 2.0 0.0 0.0" sinusoidal="0.5" swirl="0.25" butterfly="1.0" butterfly_fx_priority="0"/>
+  <xform weight="1.5" color="1.0" symmetry="-1.0" coefs="0.0 1.0 -1.0 0.0 0.2 0.0" post="2.0 0.0 0.0 2.0 0.0 0.0" sinusoidal="0.5" swirl="0.25" lazysusan="1.0" lazysusan_fx_priority="0"/>
   <palette count="256" format="RGB">${"FF8000".repeat(256)}</palette>
 </flame>"""
 
@@ -26,11 +26,11 @@ class FlameImporterTest {
         assertEquals(FlameVariations.NAMES.indexOf("rings2").toFloat(), r.values.f("X1 V1 Id"))
         // rings2_val 0.14 inside 0.02..2: normalised and back
         assertEquals(0.14f, FlameVariations.real(FlameVariations.NAMES.indexOf("rings2"), 0, r.values.f("X1 V1 A")), 1e-4f)
-        // strongest first: sinusoidal 0.5 then swirl 0.25; butterfly is unknown
+        // strongest first: sinusoidal 0.5 then swirl 0.25; lazysusan is unknown
         assertEquals(FlameVariations.NAMES.indexOf("sinusoidal").toFloat(), r.values.f("X2 V1 Id"))
         assertEquals(FlameVariations.NAMES.indexOf("swirl").toFloat(), r.values.f("X2 V2 Id"))
         assertEquals(0f, r.values.f("X2 V3 Weight"))
-        assertTrue(r.notes.any { "butterfly" in it && "unsupported" in it })
+        assertTrue(r.notes.any { "lazysusan" in it && "unsupported" in it })
         // camera: visible height = 250 / 281.25 units, Zoom = 2 * scale / height
         assertEquals(2f * 281.25f / 250f, r.values.f("Zoom"), 1e-4f)
         assertEquals(-0.5f, r.values.f("CenterX")); assertEquals(0.25f, r.values.f("CenterY"))

@@ -26,9 +26,14 @@ object FlameSampler {
             "perspective" to 0.7f, "juliaN" to 1f, "juliaScope" to 1f, "curl" to 1f, "rectangles" to 0.5f,
             "ngon" to 0.7f, "pie" to 0.4f, "radialBlur" to 0.4f, "tangent" to 0.3f, "cross" to 0.3f,
             "arch" to 0.3f, "square" to 0.3f, "noise" to 0.2f, "blur" to 0.2f, "gaussian" to 0.2f,
-            "rays" to 0.2f, "blade" to 0.3f, "secant2" to 0.2f, "twintrian" to 0.2f
+            "rays" to 0.2f, "blade" to 0.3f, "secant2" to 0.2f, "twintrian" to 0.2f,
+            "exp" to 0.3f, "log" to 0.3f, "sin" to 0.5f, "cos" to 0.5f, "tan" to 0.3f, "sec" to 0.2f, "csc" to 0.2f,
+            "cot" to 0.2f, "sinh" to 0.3f, "cosh" to 0.3f, "tanh" to 0.3f, "sech" to 0.2f, "csch" to 0.2f, "coth" to 0.2f
         )
-        FloatArray(FlameVariations.count()) { odds[FlameVariations.ALL[it].name] ?: error("no pool odds for ${FlameVariations.ALL[it].name}") }
+        FloatArray(FlameVariations.count()) {
+            val v = FlameVariations.ALL[it]
+            if (!v.supported) 0f else odds[v.name] ?: error("no pool odds for ${v.name}")
+        }
     }
 
     /** Contractivity guard: |pre scale| stays below this so the attractor does not blow up. */
