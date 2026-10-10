@@ -64,6 +64,19 @@ object StructuredEditorPanel {
         for (section in tab.sections) {
             val flags = if (section.collapsed) 0 else ImGuiTreeNodeFlags.DefaultOpen
             if (!ImGui.collapsingHeader("${section.title}##${tab.id}_${section.title}", flags)) continue
+            // Named choice for discrete-id params, above the ordinary row (which stays for macros and learn).
+            for (name in section.params) {
+                val p = source.parameters[name] ?: continue
+                val labels = p.labels ?: continue
+                val cur = p.baseValue.toInt().coerceIn(0, labels.size - 1)
+                ImGui.setNextItemWidth(labelColW)
+                if (ImGui.beginCombo("##choice_$name", labels[cur])) {
+                    labels.forEachIndexed { i, l ->
+                        if (ImGui.selectable(l, i == cur) && i != cur) { onPushUndo(); p.baseValue = i.toFloat() }
+                    }
+                    ImGui.endCombo()
+                }
+            }
             for (name in section.params) {
                 val param = source.parameters[name] ?: continue
                 ParametersRenderer.drawParamRow(
