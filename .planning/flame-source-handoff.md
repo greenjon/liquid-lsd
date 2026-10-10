@@ -59,6 +59,8 @@ Findings that forced merging phase 2 with the sampler: the morph only lerps `ran
 
 **To check (needs the app):** put Fractal Flame on a deck, raise the deck Rand (morph) so it sweeps A->B; Mutation 0 vs 1; do ids cross-fade (no sweeping through intermediate variations); does a born xform fade in; any blank/exploded genomes (the quality gate is still missing, so expect occasional duds at high Mutation).
 
+**Verified by the user (2026-10-09): morph + Mutate works and looks good.** Gotcha found while verifying: `applyDto` restores the saved `randomizeBase` flag, so a `last_session.json` or preset saved before the morph flags were turned on keeps the genome params pinned and the morph silently does nothing. Re-add the source (or delete the session file). Any future change to a param's default morph flag has the same problem for old saves.
+
 ## Next: phase 4 (editor hook; the ~170-row flat Edit list is unusable), then 3 (paper variations + unit checks; adds A/B variation params), then 5 (Random/Breed/Keep/Garden + quality gate)
 
 ## Targets (owner decision 2026-10-09)
