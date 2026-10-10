@@ -14,6 +14,10 @@ object StructuredEditorPanel {
     /** Selected tab per deck. UI state only: not saved, and it resets to the first tab when the id disappears. */
     private val selected = HashMap<String, String>()
 
+    /** Last Keep per deck (offspring name, when to stop showing it), as feedback next to the star. UI state only. */
+    private val kept = HashMap<String, Pair<String, Long>>()
+    private const val KEPT_SHOW_MS = 4000L
+
     /** Visible rows of a choice popup (ImGui's default is 8). */
     private const val POPUP_ITEMS = 32
 
@@ -61,6 +65,7 @@ object StructuredEditorPanel {
             ImGui.sameLine()
             if (ImGui.button(label)) editor.addEditorTab()?.let { selected[deckLabel] = it }
         }
+        drawKeepStar(deckLabel, mixer, h)
         ImGui.popStyleVar()
 
         var row = firstRow
@@ -91,5 +96,21 @@ object StructuredEditorPanel {
             }
         }
         ImGui.popID()
+    }
+
+    /** The star at the end of the tab strip: keeps what the deck is playing as a new Garden offspring. */
+    private fun drawKeepStar(deckLabel: String, mixer: Mixer, h: Float) {
+        val index = when (deckLabel) { "Deck A" -> 0; "Deck B" -> 1; "Deck BG" -> 2; "Deck PV" -> 3; else -> return }
+        val deck = listOf(mixer.deckA, mixer.deckB, mixer.deckBG, mixer.deckPV)[index]
+        ImGui.sameLine()
+        if (ButtonChrome.button("\u2605##keep", 26f, h)) {
+            val file = llm.slop.liquidlsd.presets.Garden.keep(deck, -1)
+            kept[deckLabel] = file.nameWithoutExtension to System.currentTimeMillis() + KEPT_SHOW_MS
+        }
+        itemTooltip("Keep: save what is playing as a new offspring in the Garden (library/presets/garden/).\nThe Pool and Breed strategies draw from the Garden.")
+        kept[deckLabel]?.let { (name, until) ->
+            if (System.currentTimeMillis() > until) kept.remove(deckLabel)
+            else { ImGui.sameLine(); ImGui.alignTextToFramePadding(); ImGui.textDisabled("kept $name") }
+        }
     }
 }

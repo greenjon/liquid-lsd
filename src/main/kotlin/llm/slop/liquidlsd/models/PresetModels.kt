@@ -236,7 +236,9 @@ data class DeckPresetDto(
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
     val paramNotes: Map<String, String> = emptyMap(), // Per-parameter notes keyed by paramKey
-    val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null
+    val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null,
+    /** How an evolving source picks its next morph target (SamplerStrategy name). Null = not saved: the deck keeps its current setting. */
+    val samplerStrategy: String? = null
 )
 
 @Serializable
@@ -506,7 +508,8 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         feedbackParameters = feedbackParamsMap,
         viewParameters = viewParamsMap,
         globalAlpha = source.globalAlpha.toDto(),
-        isEmpty = isEmpty
+        isEmpty = isEmpty,
+        samplerStrategy = morphController.strategy.takeIf { it != llm.slop.liquidlsd.rendering.SamplerStrategy.MUTATE }?.name
     )
 }
 
@@ -520,7 +523,10 @@ fun Deck.applyDto(dto: DeckPresetDto) {
         return
     }
     this.isEmpty = false
-    
+    dto.samplerStrategy?.let { name ->
+        llm.slop.liquidlsd.rendering.SamplerStrategy.entries.firstOrNull { it.name == name }?.let { morphController.strategy = it }
+    }
+
     // Select the active source by visualSourceType id
     val matchedSource = availableSources.firstOrNull { src ->
         when (src) {

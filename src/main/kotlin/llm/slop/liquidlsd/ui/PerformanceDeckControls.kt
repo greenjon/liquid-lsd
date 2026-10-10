@@ -15,6 +15,8 @@ import llm.slop.liquidlsd.presets.DeckSlot
 import llm.slop.liquidlsd.presets.GeneratorDefaults
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.ExternalVideoSource
+import llm.slop.liquidlsd.rendering.GenomeMorph
+import llm.slop.liquidlsd.rendering.SamplerStrategy
 import llm.slop.liquidlsd.rendering.Mixer
 
 /**
@@ -482,8 +484,13 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val str = stringsFor(tag)
         str.ensureLabel(deckLabel)
 
-        // Row 1: Randomize Die Button [ DICES ] (above BYPASS button; applies to both SRC and FX)
+        // Row 1: Randomize Die Button [ DICES ] (above BYPASS button; applies to both SRC and FX). On a genome source
+        // (Fractal Flame) the right part of the same footprint is the sampler-strategy picker.
         if (session.uiTheme.randomizationEnabled) {
+            val genome = deck.source is GenomeMorph
+            val pickW = if (genome) ctrlH else 0f
+            val gap = if (genome) DeckRowMetrics.GAP else 0f
+            val dieW = width - pickW - gap
             ImGui.setCursorScreenPos(startX, row1Y)
             ImGui.beginGroup()
             val randBtnBg = TangoPalette.RANDOM_BG.u32()
@@ -491,7 +498,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.pushStyleColor(ImGuiCol.Button, randBtnBg)
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, randBtnHov)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ButtonChrome.button(str.randId, width, ctrlH)) {
+                if (ButtonChrome.button(str.randId, dieW, ctrlH)) {
                     ParametersUndo.pushUndoState(parametersState, mixer)
                     when {
                         isDeckA -> mixer.randomizeDeckA()
@@ -503,6 +510,10 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             ImGui.popStyleColor(2)
             itemTooltip(str.randTip)
+            if (genome) {
+                ImGui.sameLine(0f, gap)
+                drawStrategyPicker(session, deck, tag, pickW, ctrlH)
+            }
             ImGui.endGroup()
         }
 
@@ -512,6 +523,32 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.beginGroup()
             FxChainHeader.drawBypassButton(session, deck.fxChain, tag, ctrlH, width)
             ImGui.endGroup()
+        }
+    }
+
+    private val STRATEGY_LETTER = mapOf(
+        SamplerStrategy.RANDOM to "R", SamplerStrategy.MUTATE to "M", SamplerStrategy.POOL to "P", SamplerStrategy.BREED to "B"
+    )
+    private val STRATEGY_HELP = mapOf(
+        SamplerStrategy.RANDOM to "Random: every new target is an unrelated new genome.",
+        SamplerStrategy.MUTATE to "Mutate: the next target drifts away from the current one (strength = the Mutation parameter).",
+        SamplerStrategy.POOL to "Pool: the next target is one of the kept offspring in the Garden.",
+        SamplerStrategy.BREED to "Breed: the next target is a cross of two Garden offspring, then mutated."
+    )
+
+    /** Small button that opens the list of next-target strategies of a genome source; the letter shows the current one. */
+    private fun drawStrategyPicker(session: SessionContext, deck: Deck, tag: String, w: Float, h: Float) {
+        val controller = deck.morphController
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ButtonChrome.button("${STRATEGY_LETTER[controller.strategy]}##strategy_$tag", w, h)) ImGui.openPopup("##strategy_pop_$tag")
+        }
+        itemTooltip("Next-target strategy: ${controller.strategy.name.lowercase()}.\n${STRATEGY_HELP[controller.strategy]}\nClick to change; the die and the Rand morph use it.")
+        if (ImGui.beginPopup("##strategy_pop_$tag")) {
+            for (st in SamplerStrategy.entries) {
+                if (ImGui.selectable("${STRATEGY_LETTER[st]}  ${st.name.lowercase().replaceFirstChar { it.uppercase() }}", st == controller.strategy)) controller.strategy = st
+                itemTooltip(STRATEGY_HELP.getValue(st))
+            }
+            ImGui.endPopup()
         }
     }
 }

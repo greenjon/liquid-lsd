@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.presets
 
 import java.nio.file.Files
 import kotlin.test.Test
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.models.ParameterDto
@@ -58,5 +59,12 @@ class GardenTest {
             dir.resolve("flame-0001.lsd").delete()
             assertTrue(Garden.pool("fractal_flame", dir).isEmpty())
         } finally { dir.deleteRecursively() }
+    }
+
+    @Test fun samplerStrategyFieldIsOptionalAndRoundTrips() {
+        val old = """{"name":"x","visualSourceType":"mandala","parameters":{},"feedbackParameters":{}}"""
+        assertEquals(null, PresetManager.json.decodeFromString<DeckPresetDto>(old).samplerStrategy)
+        val dto = DeckPresetDto(name = "x", visualSourceType = "fractal_flame", parameters = emptyMap(), feedbackParameters = emptyMap(), samplerStrategy = "BREED")
+        assertEquals("BREED", PresetManager.json.decodeFromString<DeckPresetDto>(PresetManager.json.encodeToString(dto)).samplerStrategy)
     }
 }
