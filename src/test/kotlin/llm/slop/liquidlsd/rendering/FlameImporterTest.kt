@@ -112,6 +112,7 @@ class FlameImporterTest {
         assertEquals(0.5f, dto.parameters.getValue("X1 Weight").baseValue)
         assertTrue(dto.parameters.getValue("X1 Weight").randomizeBase)
         assertTrue("imported" in dto.tags)
+        assertEquals(FlameImporter.IMPORT_DECAY, dto.parameters.getValue("Decay").baseValue)
         val pal = java.util.Base64.getDecoder().decode(dto.palette!!)
         assertEquals(768, pal.size)
         assertEquals(one(rings2).palette!!.toList(), pal.toList())

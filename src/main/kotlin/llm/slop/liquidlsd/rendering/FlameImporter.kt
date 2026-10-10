@@ -28,6 +28,8 @@ object FlameImporter {
      */
     class Options(val transposed: Boolean = false, val flipRotation: Boolean = false)
 
+    const val IMPORT_DECAY = 0.85f
+
     class Imported(
         val name: String,
         /** Values for the genome parameters (morph-enabled xform parameters, XF when a final xform exists) and the camera (Zoom, Rotation, CenterX, CenterY). */
@@ -146,6 +148,9 @@ object FlameImporter {
         put("FlipY", 1f)
         put("Rotation", Math.toRadians((flame.num("rotate", 0f) * (if (opt.flipRotation) -1 else 1)).toDouble()).toFloat())
         notes += "tone settings (brightness, gamma, vibrancy, filter, background) and the 3D camera are not imported"
+        // Flames assume millions of samples; trails (decay) fill in the gaps from the far fewer points drawn here.
+        put("Decay", IMPORT_DECAY)
+        notes += "Decay set to $IMPORT_DECAY to fill in with fewer points; lower it for crisper, trail-free frames"
 
         return Imported(name, out, palette(children(flame, "palette").firstOrNull(), notes), notes)
     }

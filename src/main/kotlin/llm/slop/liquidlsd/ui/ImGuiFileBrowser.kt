@@ -99,7 +99,7 @@ class ImGuiFileBrowser(private val id: String = "##fileBrowser") {
             0.5f, 0.5f
         )
 
-        val flags = ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove
+        val flags = ImGuiWindowFlags.NoResize or ImGuiWindowFlags.NoMove or ImGuiWindowFlags.NoSavedSettings
         if (!ImGui.beginPopupModal(title, flags)) return
 
         refreshListingIfNeeded()
