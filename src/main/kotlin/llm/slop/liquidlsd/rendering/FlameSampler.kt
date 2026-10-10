@@ -27,7 +27,8 @@ object FlameSampler {
             "ngon" to 0.7f, "pie" to 0.4f, "radialBlur" to 0.4f, "tangent" to 0.3f, "cross" to 0.3f,
             "arch" to 0.3f, "square" to 0.3f, "noise" to 0.2f, "blur" to 0.2f, "gaussian" to 0.2f,
             "rays" to 0.2f, "blade" to 0.3f, "secant2" to 0.2f, "twintrian" to 0.2f,
-            "exp" to 0.3f, "log" to 0.3f, "sin" to 0.5f, "cos" to 0.5f, "tan" to 0.3f, "sec" to 0.2f, "csc" to 0.2f,
+            "boarders" to 0.3f, "butterfly" to 0.5f, "edisc" to 0.4f, "elliptic" to 0.5f, "foci" to 0.4f, "loonie" to 0.4f,
+            "polar2" to 0.5f, "scry" to 0.2f, "exp" to 0.3f, "log" to 0.3f, "sin" to 0.5f, "cos" to 0.5f, "tan" to 0.3f, "sec" to 0.2f, "csc" to 0.2f,
             "cot" to 0.2f, "sinh" to 0.3f, "cosh" to 0.3f, "tanh" to 0.3f, "sech" to 0.2f, "csch" to 0.2f, "coth" to 0.2f
         )
         FloatArray(FlameVariations.count()) {

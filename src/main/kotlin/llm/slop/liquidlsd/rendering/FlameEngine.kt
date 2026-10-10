@@ -321,6 +321,22 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
                    float t = s2 > 1e-30 ? log(s2) / log(10.0) + cos(a) : -30.0;
                    v = p.x * vec2(t, t - PI*sin(a)); break; }
         case 48: v = p / sqrt(pow(p.x*p.x - p.y*p.y, 2.0) + 1e-10); break;                                // cross
+        case 56: { vec2 pr = roundEven(p), d = p - pr;                                           // boarders
+                   if (rnd() >= 0.75) v = 0.5 * d + pr;
+                   else if (abs(d.x) >= abs(d.y)) { float s = d.x >= 0.0 ? 1.0 : -1.0; v = vec2(0.5*d.x + pr.x + 0.25*s, 0.5*d.y + pr.y + 0.25*s*sdiv(d.y, d.x)); }
+                   else { float s = d.y >= 0.0 ? 1.0 : -1.0; v = vec2(0.5*d.x + pr.x + 0.25*s*sdiv(d.x, d.y), 0.5*d.y + pr.y + 0.25*s); }
+                   break; }
+        case 57: { float R = 1.3029400317 * sqrt(abs(p.x*p.y) / (p.x*p.x + 4.0*p.y*p.y + 1e-10)); v = vec2(R*p.x, 2.0*R*p.y); break; } // butterfly
+        case 61: { float T = q + 1.0, a = sqrt(max(T + 2.0*p.x, 0.0)), b = sqrt(max(T - 2.0*p.x, 0.0)), X = max(0.5*(a + b), 1.0); // edisc (X >= 1 and |x/X| <= 1 are clamped: float rounding hits them often)
+                   float a1 = log(X + sqrt(X - 1.0)), a2 = -acos(clamp(p.x / X, -1.0, 1.0)), sg = p.y > 0.0 ? -sin(a1) : sin(a1);
+                   v = (1.0 / 11.57034632) * vec2(cosh(a2) * cos(a1), sinh(a2) * sg); break; }
+        case 62: { float T = q + 1.0, X = 0.5*(sqrt(max(T + 2.0*p.x, 0.0)) + sqrt(max(T - 2.0*p.x, 0.0))); // elliptic
+                   float a = p.x / X, B = sqrt(max(0.0, 1.0 - a*a)), S = sqrt(max(0.0, X - 1.0)), l = log(X + S);
+                   v = (2.0 / PI) * vec2(atan(a, B), p.y > 0.0 ? l : -l); break; }
+        case 64: { float D = sdiv(1.0, cosh(p.x) - cos(p.y)); v = D * vec2(sinh(p.x), sin(p.y)); break; } // foci
+        case 66: { float v2 = w*w, R = q < v2 ? w * sqrt(sdiv(v2, q) - 1.0) : w; return R * p; } // loonie: v is also the radius, so the output is finished here
+        case 70: v = (1.0 / PI) * vec2(th, 0.5 * slog(q)); break;                               // polar2
+        case 72: { float rt = sqrt(q); return sdiv(p, rt * (q + sdiv(1.0, w + 1e-10))); }       // scry: v is not a plain output factor
         case 82: v = exp(p.x) * vec2(cos(p.y), sin(p.y)); break;                                // exp
         case 83: v = vec2(0.5 * slog(q), ph); break;                                            // log
         case 84: v = vec2(sin(p.x) * cosh(p.y), cos(p.x) * sinh(p.y)); break;                   // sin

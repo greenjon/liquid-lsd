@@ -54,9 +54,9 @@ object FlameVariations {
         v("arch"), v("tangent"), v("square"), v("rays"), v("blade"), v("secant2"), v("twintrian"), v("cross"),
         // 49-81
         na("disc2"), na("super_shape"), na("flower"), na("conic"), na("parabola"), na("bent2"), na("bipolar"),
-        na("boarders"), na("butterfly"), na("cell"), na("cpow"), na("curve"), na("edisc"), na("elliptic"),
-        na("escher"), na("foci"), na("lazysusan"), na("loonie"), na("pre_blur"), na("modulus"), na("oscope"),
-        na("polar2"), na("popcorn2"), na("scry"), na("separation"), na("split"), na("splits"), na("stripes"),
+        v("boarders"), v("butterfly"), na("cell"), na("cpow"), na("curve"), v("edisc"), v("elliptic"),
+        na("escher"), v("foci"), na("lazysusan"), v("loonie"), na("pre_blur"), na("modulus"), na("oscope"),
+        v("polar2"), na("popcorn2"), v("scry"), na("separation"), na("split"), na("splits"), na("stripes"),
         na("wedge"), na("wedge_julia"), na("wedge_sph"), na("whorl"), na("waves2"),
         // 82-95: trigonometric and hyperbolic
         v("exp"), v("log"), v("sin"), v("cos"), v("tan"), v("sec"), v("csc"), v("cot"),
@@ -73,7 +73,7 @@ object FlameVariations {
     /** Variations whose result differs from call to call (they use the shader's random numbers), so they cannot be unit-checked pointwise. */
     val RANDOM: Set<String> = setOf(
         "julia", "noise", "juliaN", "juliaScope", "blur", "gaussian", "radialBlur", "pie",
-        "arch", "square", "rays", "blade", "twintrian"
+        "arch", "square", "rays", "blade", "twintrian", "boarders"
     )
 
     fun count() = ALL.size

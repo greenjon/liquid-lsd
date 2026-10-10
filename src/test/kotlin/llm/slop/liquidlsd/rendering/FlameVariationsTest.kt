@@ -2,6 +2,9 @@ package llm.slop.liquidlsd.rendering
 
 import kotlin.math.PI
 import kotlin.math.abs
+import kotlin.math.acos
+import kotlin.math.round
+import kotlin.math.max
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.cosh
@@ -90,6 +93,27 @@ class FlameVariationsTest {
             }
             "secant2" -> { val c = cos(r); doubleArrayOf(x, if (c < 0) 1 / c + 1 else 1 / c - 1) }   // weight 1
             "cross" -> { val k = sqrt(1 / ((x * x - y * y).pow(2) + 1e-10)); doubleArrayOf(k * x, k * y) }
+            "boarders" -> {
+                val xr = round(x); val yr = round(y); val dx = x - xr; val dy = y - yr
+                if (u >= 0.75) doubleArrayOf(dx / 2 + xr, dy / 2 + yr)
+                else if (abs(dx) >= abs(dy)) { val s = if (dx >= 0) 1.0 else -1.0; doubleArrayOf(dx / 2 + xr + s / 4, dy / 2 + yr + s / 4 * dy / dx) }
+                else { val s = if (dy >= 0) 1.0 else -1.0; doubleArrayOf(dx / 2 + xr + s / 4 * dx / dy, dy / 2 + yr + s / 4) }
+            }
+            "butterfly" -> { val rr = 4 / sqrt(3 * pi) * sqrt(abs(x * y) / (x * x + 4 * y * y + 1e-10)); doubleArrayOf(rr * x, 2 * rr * y) }
+            "edisc" -> {
+                val t = x * x + y * y + 1; val a = sqrt(t + 2 * x); val b = sqrt(t - 2 * x); val xx = max((a + b) / 2, 1.0)
+                val a1 = ln(xx + sqrt(xx - 1)); val a2 = -acos((x / xx).coerceIn(-1.0, 1.0)); val sg = if (y > 0) -sin(a1) else sin(a1)
+                doubleArrayOf(cosh(a2) * cos(a1) / 11.57034632, sinh(a2) * sg / 11.57034632)
+            }
+            "elliptic" -> {
+                val t = x * x + y * y + 1; val xx = 0.5 * (sqrt(t + 2 * x) + sqrt(t - 2 * x)); val a = x / xx
+                val b = sqrt(max(0.0, 1 - a * a)); val s = sqrt(max(0.0, xx - 1)); val l = ln(xx + s)
+                doubleArrayOf(2 / pi * atan2(a, b), 2 / pi * (if (y > 0) l else -l))
+            }
+            "foci" -> { val d = 1 / (cosh(x) - cos(y)); doubleArrayOf(d * sinh(x), d * sin(y)) }
+            "loonie" -> { val q = x * x + y * y; val rr = if (q < w * w) w * sqrt(w * w / q - 1) else w; doubleArrayOf(rr * x, rr * y) }
+            "polar2" -> doubleArrayOf(th / pi, ln(r) / pi)
+            "scry" -> { val d = 1 / (r * (r * r + 1 / (w + 1e-10))); doubleArrayOf(d * x, d * y) }
             "exp" -> doubleArrayOf(exp(x) * cos(y), exp(x) * sin(y))
             "log" -> doubleArrayOf(0.5 * ln(x * x + y * y), ph)
             "sin" -> doubleArrayOf(sin(x) * cosh(y), cos(x) * sinh(y))
@@ -217,5 +241,30 @@ class FlameVariationsTest {
         spec("sech", 0.0, 0.0, 1.0, 0.0); spec("sech", 0.0, pi, -1.0, 0.0); spec("sech", 0.5, 0.5, 0.94998, -0.23983)
         spec("csch", 0.0, pi / 2, 0.0, -1.0); spec("csch", 0.0, -pi / 2, 0.0, 1.0); spec("csch", 0.5, 0.5, 0.91207, -1.07823)
         spec("coth", 0.0, pi / 4, 0.0, 1.0); spec("coth", 0.0, pi / 2, 0.0, 0.0); spec("coth", 0.5, 0.5, 1.17195, 0.83914)   // +sin 2y: not the textbook coth
+    }
+
+    // ---- batch 2: parameterless ----
+
+    @Test fun boardersInteriorAndBorderBranches() {
+        spec("boarders", 0.3, 0.2, 0.15, 0.1, u = 0.9)             // U >= 0.75: interior
+        spec("boarders", 0.3, 0.1, 0.4, 0.13333, u = 0.1)          // border, |dx| >= |dy|
+        spec("boarders", 0.1, 0.3, 0.13333, 0.4, u = 0.1)          // border, |dy| > |dx|
+        spec("boarders", 0.5, 0.5, 0.25, 0.25, u = 0.9)            // 0.5 rounds half-even to 0
+        spec("boarders", 1.5, 0.0, 1.75, 0.0, u = 0.9)             // 1.5 -> 2 (ties to even), dx = -0.5: -0.25 + 2
+    }
+
+    @Test fun butterflyElliptic() {
+        spec("butterfly", 0.0, 0.0, 0.0, 0.0); spec("butterfly", 1.0, 0.0, 0.0, 0.0); spec("butterfly", 2.0, 1.0, 1.30294, 1.30294); spec("butterfly", -1.0, -1.0, -0.58269, -1.16538)
+        spec("edisc", 0.0, 0.0, 0.21686, 0.0); spec("edisc", 1.0, 1.0, 0.07944, 0.06866); spec("edisc", 1.0, -1.0, 0.07944, -0.06866)
+        spec("elliptic", 0.0, 0.0, 0.0, 0.0); spec("elliptic", 0.0, 1.0, 0.0, 0.45941); spec("elliptic", 2.0, 1.0, 0.67701, 0.78342)
+        spec("elliptic", 2.0, -1.0, 0.67701, -0.78342); spec("elliptic", 2.0, 0.0, 1.0, -0.69940)   // y = 0 takes the negative branch
+    }
+
+    @Test fun fociLoonieScryPolar2() {
+        spec("foci", 0.0, pi / 2, 0.0, 1.0); spec("foci", 1.0, 0.0, 2.16395, 0.0); spec("foci", -1.0, 1.0, -1.17195, 0.83914)
+        spec("loonie", 2.0, 0.0, 2.0, 0.0); spec("loonie", 0.6, 0.0, 0.8, 0.0)
+        spec("loonie", 1.0, 0.0, 3.46410, 0.0, w = 2.0); spec("loonie", 3.0, 0.0, 6.0, 0.0, w = 2.0)
+        spec("scry", 1.0, 0.0, 0.5, 0.0); spec("scry", 0.0, 2.0, 0.0, 0.2); spec("scry", 1.0, 0.0, 0.66667, 0.0, w = 2.0)
+        spec("polar2", 0.0, 1.0, 0.0, 0.0); spec("polar2", 1.0, 0.0, 0.5, 0.0); spec("polar2", 0.0, Math.exp(pi), 0.0, 1.0); spec("polar2", -1.0, -1.0, -0.75, 0.11032)
     }
 }
