@@ -150,6 +150,13 @@ class Shader(vertexSource: String, fragmentSource: String) {
         glUniform4f(getUniformLocation(name), x, y, z, w)
     }
 
+    fun setUniform4fv(name: String, values: FloatArray) {
+        val location = getUniformLocation(name)
+        if (location != -1) {
+            glUniform4fv(location, values)
+        }
+    }
+
     fun setUniform3fv(name: String, values: FloatArray) {
         val location = getUniformLocation(name)
         if (location != -1) {

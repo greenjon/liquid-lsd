@@ -58,13 +58,17 @@ object VisualSourceRegistry {
         "gyroid_hyperspace",
         "celestial_engine",
         "hyper_slice",
-        "chladni_cymatics"
+        "chladni_cymatics",
+        "flame_spike"
     )
+
+    /** Default sources shipped as a meta.json + shader.frag (+ vert) folder rather than a single ISF file. */
+    private val FOLDER_STYLE_IDS = setOf("mandala", "flame_spike")
 
     internal fun ensureDefaultSources(sourcesDir: File) {
         val anyMissing = DEFAULT_SOURCE_IDS.any { id ->
             val folder = File(sourcesDir, id)
-            if (id == "mandala") {
+            if (id in FOLDER_STYLE_IDS) {
                 !File(folder, "meta.json").exists() || !File(folder, "shader.frag").exists()
             } else {
                 !File(folder, "$id.fs").exists()
@@ -77,8 +81,8 @@ object VisualSourceRegistry {
         logger.info { "Default sources missing or incomplete in ${sourcesDir.path}; extracting bundled defaults..." }
         for (sourceId in DEFAULT_SOURCE_IDS) {
             val targetFolder = File(sourcesDir, sourceId)
-            val sourceFiles = if (sourceId == "mandala") {
-                listOf("meta.json", "shader.frag", "shader.vert")
+            val sourceFiles = if (sourceId in FOLDER_STYLE_IDS) {
+                if (sourceId == "mandala") listOf("meta.json", "shader.frag", "shader.vert") else listOf("meta.json", "shader.frag")
             } else {
                 listOf("$sourceId.fs")
             }
@@ -358,6 +362,15 @@ object VisualSourceRegistry {
                     ownsShader = true,
                     recipe = initialRecipe,
                     categories = meta.categories.takeIf { it.isNotEmpty() } ?: listOf("Generator", "Geometric")
+                )
+            } else if (meta.id == "flame_spike") {
+                FlameSpikeSource(
+                    id = meta.id,
+                    displayName = meta.name,
+                    shader = shader,
+                    parameters = parameters,
+                    ownsShader = true,
+                    categories = meta.categories
                 )
             } else {
                 DynamicVisualSource(
