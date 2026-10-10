@@ -306,7 +306,7 @@ class Mixer(
         return list
     }
 
-    val morphControllerAll = DeckMorphController(::getAllMixerRandomizableParameters)
+    val morphControllerAll = DeckMorphController(paramsProvider = ::getAllMixerRandomizableParameters)
 
     override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {
         val list = mutableListOf<Pair<String, ModulatableParameter>>()

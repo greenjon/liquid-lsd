@@ -20,13 +20,13 @@ class FlameGenomeTest {
         assertTrue(names.none { '/' in it })
     }
 
-    @Test fun variationIdsAreDiscreteAndExcludedFromRandomize() {
+    @Test fun variationIdsAreDiscreteAndTakePartInTheMorph() {
         val p = params
         val ids = p.filterKeys { it.endsWith(" Id") }
         assertEquals((FlameGenome.MAX_XF + 1) * FlameGenome.SLOTS, ids.size)
         ids.values.forEach {
             assertEquals(FlameGenome.VARIATIONS.size, it.steps)
-            assertTrue(it.isRandomizeDisabled)
+            assertTrue(it.randomizeBase)
         }
     }
 
@@ -66,5 +66,30 @@ class FlameGenomeTest {
         // X1: V1 sinusoidal 0.7 -> 1.4; V3 is linear weight 0 (unchanged)
         assertEquals(1.4f, out[16 + 1], 1e-5f)
         assertEquals(0f, out[16 + 8 + 1], 1e-6f)
+    }
+
+    private class Lookup(val a: Map<llm.slop.liquidlsd.parameters.ModulatableParameter, Float>,
+                         val b: Map<llm.slop.liquidlsd.parameters.ModulatableParameter, Float>,
+                         override val t: Float) : FlameMorphLookup {
+        override fun a(p: llm.slop.liquidlsd.parameters.ModulatableParameter) = a[p] ?: p.baseValue
+        override fun b(p: llm.slop.liquidlsd.parameters.ModulatableParameter) = b[p] ?: p.baseValue
+    }
+
+    @Test fun morphCrossWeightsVariationSlotsByT() {
+        val p = params
+        val id = p["X1 V1 Id"]!!; val w = p["X1 V1 Weight"]!!
+        // A: sinusoidal(1) weight 0.7 (starter). B: spherical(2) weight 1.0
+        val look = { t: Float -> Lookup(mapOf(id to 1f, w to 0.7f), mapOf(id to 2f, w to 1.0f), t) }
+        val out = FloatArray(FlameGenome.PACKED_FLOATS)
+        w.baseValue = 0.7f + (1.0f - 0.7f) * 0.25f   // the controller lerps the base value; pack adds only the modulation on top
+        p.values.forEach { it.evaluate() }
+        FlameGenome.pack(p, out, look(0.25f))
+        assertEquals(1f, out[16]); assertEquals(0.7f * 0.75f, out[17], 1e-5f)
+        assertEquals(2f, out[18]); assertEquals(1.0f * 0.25f, out[19], 1e-5f)
+        // same id at both ends collapses to one entry with the lerped weight
+        w.baseValue = 0.6f; w.evaluate()
+        FlameGenome.pack(p, out, Lookup(mapOf(id to 1f, w to 0.2f), mapOf(id to 1f, w to 1.0f), 0.5f))
+        assertEquals(1f, out[16]); assertEquals(0.6f, out[17], 1e-5f)
+        assertEquals(0f, out[19])
     }
 }

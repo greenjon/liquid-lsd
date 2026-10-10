@@ -210,7 +210,7 @@ class Deck(
         return allParams
     }
 
-    val morphController = DeckMorphController(::getAllRandomizableParameters)
+    val morphController = DeckMorphController(sourceProvider = { source }, paramsProvider = ::getAllRandomizableParameters)
 
     /**
      * Retrieves the final output texture of the Deck (the active stage texture).

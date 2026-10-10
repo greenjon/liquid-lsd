@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.rendering
 
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import kotlin.random.Random
 
 /**
  * Fractal-flame generator (see .planning/flame-source-plan.md). The genome is the parameter map built by
@@ -21,7 +22,7 @@ class FlameSource(
     parameters = parameters,
     ownsShader = ownsShader,
     categories = categories
-) {
+), GenomeMorph {
     private var engine: FlameEngine? = null
     private val genome = FloatArray(FlameGenome.PACKED_FLOATS)
 
@@ -30,9 +31,50 @@ class FlameSource(
         for (name in TONE_UNIFORMS) shader.setUniform("u$name", parameters[name]?.value ?: 0f)
     }
 
+    // ---- deck morph (GenomeMorph) -------------------------------------------------------------------------------
+
+    private var morphA: DeckMorphSnapshot? = null
+    private var morphB: DeckMorphSnapshot? = null
+    private var morphT = 0f
+    private var morphSerial = 0
+    private var seenSerial = 0
+    private var morphLive = false
+
+    private val lookup = object : FlameMorphLookup {
+        override val t get() = morphT
+        override fun a(p: ModulatableParameter) = morphA?.parameters?.get(p)?.baseValue ?: p.baseValue
+        override fun b(p: ModulatableParameter) = morphB?.parameters?.get(p)?.baseValue ?: p.baseValue
+    }
+
+    override fun sampleMorphTarget(from: DeckMorphSnapshot, target: DeckMorphSnapshot, random: Random) {
+        val mutated = FlameSampler.mutate(
+            parameters,
+            from = { name -> parameters[name]?.let { from.parameters[it]?.baseValue ?: it.baseValue } ?: 0f },
+            strength = parameters["Mutation"]?.value ?: 0.25f,
+            random = random
+        )
+        for ((name, v) in mutated) {
+            val p = parameters[name] ?: continue
+            target.parameters[p]?.baseValue = v
+        }
+    }
+
+    override fun isDiscreteMorph(param: ModulatableParameter) = param.steps != null
+
+    override fun onMorphUpdate(a: DeckMorphSnapshot, b: DeckMorphSnapshot, t: Float) {
+        morphA = a; morphB = b; morphT = t; morphSerial++
+    }
+
+    /** The morph is live while the controller keeps updating; when it stops (Rand off) the snapshots go stale, so ignore them. */
+    override fun update() {
+        super.update()
+        morphLive = morphSerial != seenSerial
+        seenSerial = morphSerial
+    }
+
     override fun renderTopology(targetFBO: FBO) {
         val e = engine ?: FlameEngine().also { engine = it }
-        val xfCount = FlameGenome.pack(parameters, genome)
+        val xfCount = FlameGenome.pack(parameters, genome, if (morphLive) lookup else null)
         e.render(this, targetFBO, genome, xfCount)
     }
 

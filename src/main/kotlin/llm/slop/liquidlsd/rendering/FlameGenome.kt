@@ -43,6 +43,14 @@ object FlameGenome {
     }
     private val keys = Array(MAX_XF + 1) { XfKeys(it) }
 
+    /** Parameter names of xform [i] (0..MAX_XF-1, or [FINAL_INDEX]) for the sampler. */
+    internal fun slotIdKey(xf: Int, slot: Int) = keys[xf].slotId[slot]
+    internal fun slotWeightKey(xf: Int, slot: Int) = keys[xf].slotWeight[slot]
+    internal fun weightKey(xf: Int) = keys[xf].weight
+    internal fun xfParamNames(xf: Int): List<String> = with(keys[xf]) {
+        listOf(weight, color, speed, preRot, preSx, preSy, preShear, preX, preY) + slotId.toList() + slotWeight.toList()
+    }
+
     /** Starter flame: three xforms, two variations each. */
     private class Starter(
         val weight: Float, val color: Float, val rot: Float, val sx: Float, val sy: Float, val shear: Float,
@@ -57,13 +65,18 @@ object FlameGenome {
 
     private const val COLOR_SPEED = 0.6f
 
-    private fun param(v: Float, min: Float, max: Float, angle: Boolean = false) =
-        ModulatableParameter(baseValue = v, minClamp = min, maxClamp = max, explicitIsAngle = angle)
+    /**
+     * [morph] = takes part in deck morphing (randomizeBase): the morph controller keeps an A and a B value for it.
+     * Its B value comes from [FlameSampler] (via [FlameSource.sampleMorphTarget]), not from the generic uniform draw
+     * (baseMin == baseMax, so that draw is a no-op).
+     */
+    private fun param(v: Float, min: Float, max: Float, angle: Boolean = false, morph: Boolean = false) =
+        ModulatableParameter(baseValue = v, minClamp = min, maxClamp = max, explicitIsAngle = angle, randomizeBase = morph)
 
-    /** Variation ids are structural: generic per-parameter randomize would produce mush (see the plan's sampler hook). */
+    /** Variation ids: never lerped by the morph (the engine cross-weights A's and B's slots instead). */
     private fun idParam(v: Int) = ModulatableParameter(
         baseValue = v.toFloat(), minClamp = 0f, maxClamp = (VARIATIONS.size - 1).toFloat(),
-        isRandomizeDisabled = true, steps = VARIATIONS.size, labels = VARIATIONS
+        randomizeBase = true, steps = VARIATIONS.size, labels = VARIATIONS
     )
 
     private fun global(m: LinkedHashMap<String, ModulatableParameter>) {
@@ -86,6 +99,8 @@ object FlameGenome {
         m["Passes"] = param(4f, 1f, 16f)
         m["Kernel"] = param(3f, 1f, 8f)
         // Performance handles that move every xform at once
+        // Lineage: strength of the next-state mutation (read by the sampler when it picks the next morph target)
+        m["Mutation"] = param(0.25f, 0f, 1f)
         m["Spin"] = param(0f, -PI.toFloat(), PI.toFloat(), angle = true)
         m["Breathe"] = param(1f, 0.5f, 1.5f)
         m["Warp"] = param(1f, 0f, 3f)
@@ -97,26 +112,26 @@ object FlameGenome {
         val s = STARTER.getOrNull(i)
         val isFinal = i == FINAL_INDEX
         if (!isFinal) {
-            m[k.weight] = param(s?.weight ?: 0f, 0f, 2f)
-            m[k.color] = param(s?.color ?: 0f, 0f, 1f)
-            m[k.speed] = param(COLOR_SPEED, 0f, 1f)
+            m[k.weight] = param(s?.weight ?: 0f, 0f, 2f, morph = true)
+            m[k.color] = param(s?.color ?: 0f, 0f, 1f, morph = true)
+            m[k.speed] = param(COLOR_SPEED, 0f, 1f, morph = true)
         }
-        m[k.preRot] = param(s?.rot ?: 0f, -PI.toFloat(), PI.toFloat(), angle = true)
-        m[k.preSx] = param(s?.sx ?: if (isFinal) 1f else 0.6f, -2f, 2f)
-        m[k.preSy] = param(s?.sy ?: if (isFinal) 1f else 0.6f, -2f, 2f)
-        m[k.preShear] = param(s?.shear ?: 0f, -1f, 1f)
-        m[k.preX] = param(s?.tx ?: 0f, -2f, 2f)
-        m[k.preY] = param(s?.ty ?: 0f, -2f, 2f)
-        m[k.postRot] = param(0f, -PI.toFloat(), PI.toFloat(), angle = true)
-        m[k.postSx] = param(1f, -2f, 2f)
-        m[k.postSy] = param(1f, -2f, 2f)
-        m[k.postShear] = param(0f, -1f, 1f)
-        m[k.postX] = param(0f, -2f, 2f)
-        m[k.postY] = param(0f, -2f, 2f)
+        m[k.preRot] = param(s?.rot ?: 0f, -PI.toFloat(), PI.toFloat(), angle = true, morph = true)
+        m[k.preSx] = param(s?.sx ?: if (isFinal) 1f else 0.6f, -2f, 2f, morph = true)
+        m[k.preSy] = param(s?.sy ?: if (isFinal) 1f else 0.6f, -2f, 2f, morph = true)
+        m[k.preShear] = param(s?.shear ?: 0f, -1f, 1f, morph = true)
+        m[k.preX] = param(s?.tx ?: 0f, -2f, 2f, morph = true)
+        m[k.preY] = param(s?.ty ?: 0f, -2f, 2f, morph = true)
+        m[k.postRot] = param(0f, -PI.toFloat(), PI.toFloat(), angle = true, morph = true)
+        m[k.postSx] = param(1f, -2f, 2f, morph = true)
+        m[k.postSy] = param(1f, -2f, 2f, morph = true)
+        m[k.postShear] = param(0f, -1f, 1f, morph = true)
+        m[k.postX] = param(0f, -2f, 2f, morph = true)
+        m[k.postY] = param(0f, -2f, 2f, morph = true)
         for (j in 0 until SLOTS) {
             val v = s?.v?.getOrNull(j)
             m[k.slotId[j]] = idParam(v?.first ?: 0)
-            m[k.slotWeight[j]] = param(v?.second ?: if (j == 0) 1f else 0f, 0f, 2f)
+            m[k.slotWeight[j]] = param(v?.second ?: if (j == 0) 1f else 0f, 0f, 2f, morph = true)
         }
     }
 
@@ -140,7 +155,7 @@ object FlameGenome {
      * [preX, preY, postX, postY], [post a b c d], then per slot [id, weight, 0, 0].
      * @return number of active xforms (>= 1; an empty genome becomes one identity xform)
      */
-    fun pack(params: Map<String, ModulatableParameter>, out: FloatArray): Int {
+    fun pack(params: Map<String, ModulatableParameter>, out: FloatArray, morph: FlameMorphLookup? = null): Int {
         fun v(name: String, def: Float) = params[name]?.value ?: def
         val spin = v("Spin", 0f); val breathe = v("Breathe", 1f); val warp = v("Warp", 1f); val drift = v("Drift", 0f)
         var n = 0
@@ -148,7 +163,7 @@ object FlameGenome {
             val k = keys[i]
             val w = v(k.weight, 0f)
             if (w <= 1e-4f) continue
-            packXf(params, k, out, n * VEC4_PER_XF * 4, w, spin * (if (n % 2 == 0) 1f else -1f) * (1f + 0.3f * n), breathe, warp, drift)
+            packXf(params, k, out, n * VEC4_PER_XF * 4, w, spin * (if (n % 2 == 0) 1f else -1f) * (1f + 0.3f * n), breathe, warp, drift, morph)
             n++
         }
         if (n == 0) {
@@ -157,13 +172,13 @@ object FlameGenome {
             out[VEC4_PER_XF * 4 - SLOTS * 4 + 1] = 1f                            // slot 0 = linear, weight 1
             n = 1
         }
-        packXf(params, keys[FINAL_INDEX], out, FINAL_INDEX * VEC4_PER_XF * 4, 1f, 0f, 1f, 1f, 0f)
+        packXf(params, keys[FINAL_INDEX], out, FINAL_INDEX * VEC4_PER_XF * 4, 1f, 0f, 1f, 1f, 0f, morph)
         return n
     }
 
     private fun packXf(
         params: Map<String, ModulatableParameter>, k: XfKeys, out: FloatArray, o: Int,
-        weight: Float, spin: Float, breathe: Float, warp: Float, drift: Float
+        weight: Float, spin: Float, breathe: Float, warp: Float, drift: Float, morph: FlameMorphLookup?
     ) {
         fun v(name: String, def: Float) = params[name]?.value ?: def
         out[o] = weight
@@ -173,12 +188,42 @@ object FlameGenome {
         matrix(v(k.preRot, 0f) + spin, v(k.preSx, 1f) * breathe, v(k.preSy, 1f) * breathe, v(k.preShear, 0f), out, o + 4)
         out[o + 8] = v(k.preX, 0f); out[o + 9] = v(k.preY, 0f); out[o + 10] = v(k.postX, 0f); out[o + 11] = v(k.postY, 0f)
         matrix(v(k.postRot, 0f), v(k.postSx, 1f), v(k.postSy, 1f), v(k.postShear, 0f), out, o + 12)
-        for (j in 0 until SLOTS) {
-            val so = o + 16 + j * 4
-            val id = v(k.slotId[j], 0f).toInt().coerceIn(0, VARIATIONS.size - 1)
-            out[so] = id.toFloat()
-            out[so + 1] = v(k.slotWeight[j], 0f) * (if (id == 0) 1f else warp)
+        for (j in 0 until SLOTS) packSlot(params, k, j, out, o + 16 + j * 4, warp, morph)
+    }
+
+    private fun warped(id: Int, w: Float, warp: Float) = w * (if (id == 0) 1f else warp)
+
+    /**
+     * Slot vec4 = [idA, wA, idB, wB]. Without a morph, B is empty (weight 0). While morphing, A's slot is weighted
+     * (1-t) and B's t, so a variation id swap cross-fades instead of sweeping through the ids in between. Weight
+     * modulation (the evaluated value minus the plain A->B lerp) is added to both ends.
+     */
+    private fun packSlot(
+        params: Map<String, ModulatableParameter>, k: XfKeys, j: Int, out: FloatArray, so: Int,
+        warp: Float, morph: FlameMorphLookup?
+    ) {
+        val idP = params[k.slotId[j]]
+        val wP = params[k.slotWeight[j]]
+        val maxId = VARIATIONS.size - 1
+        if (morph == null || idP == null || wP == null) {
+            val id = (idP?.value ?: 0f).toInt().coerceIn(0, maxId)
+            out[so] = id.toFloat(); out[so + 1] = warped(id, wP?.value ?: 0f, warp)
             out[so + 2] = 0f; out[so + 3] = 0f
+            return
+        }
+        val t = morph.t.coerceIn(0f, 1f)
+        val idA = (morph.a(idP) + 0.5f).toInt().coerceIn(0, maxId)
+        val idB = (morph.b(idP) + 0.5f).toInt().coerceIn(0, maxId)
+        val wa = morph.a(wP); val wb = morph.b(wP)
+        val delta = wP.value - (wa + (wb - wa) * t)
+        val wA = (wa + delta).coerceAtLeast(0f) * (1f - t)
+        val wB = (wb + delta).coerceAtLeast(0f) * t
+        if (idA == idB) {
+            out[so] = idA.toFloat(); out[so + 1] = warped(idA, wA + wB, warp)
+            out[so + 2] = 0f; out[so + 3] = 0f
+        } else {
+            out[so] = idA.toFloat(); out[so + 1] = warped(idA, wA, warp)
+            out[so + 2] = idB.toFloat(); out[so + 3] = warped(idB, wB, warp)
         }
     }
 
@@ -192,6 +237,7 @@ object FlameGenome {
         var linear = 0f
         for (j in 0 until SLOTS) {
             val so = o + 16 + j * 4
+            if (!near(packed[so + 3], 0f)) return false
             if (near(packed[so + 1], 0f)) continue
             if (packed[so].toInt() != 0) return false
             linear += packed[so + 1]
@@ -199,4 +245,11 @@ object FlameGenome {
         if (!near(linear, 1f)) return false
         return true
     }
+}
+
+/** Read-only A/B view of the deck morph for [FlameGenome.pack]: raw base values at both ends and the position t. */
+interface FlameMorphLookup {
+    val t: Float
+    fun a(p: ModulatableParameter): Float
+    fun b(p: ModulatableParameter): Float
 }

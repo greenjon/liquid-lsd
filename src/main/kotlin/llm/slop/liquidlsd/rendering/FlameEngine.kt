@@ -249,8 +249,9 @@ vec2 applyXf(int k, vec2 p) {
     vec2 q = vec2(m.x * p.x + m.y * p.y + t.x, m.z * p.x + m.w * p.y + t.y);
     vec2 acc = vec2(0.0);
     for (int j = 0; j < ${FlameGenome.SLOTS}; j++) {
-        vec4 s = uXf[b + 4 + j];
+        vec4 s = uXf[b + 4 + j];   // (idA, wA, idB, wB): B is the morph target's slot, weight 0 outside a morph
         if (s.y != 0.0) acc += s.y * vari(int(s.x + 0.5), q);
+        if (s.w != 0.0) acc += s.w * vari(int(s.z + 0.5), q);
     }
     vec4 pm = uXf[b + 3];
     return vec2(pm.x * acc.x + pm.y * acc.y + t.z, pm.z * acc.x + pm.w * acc.y + t.w);

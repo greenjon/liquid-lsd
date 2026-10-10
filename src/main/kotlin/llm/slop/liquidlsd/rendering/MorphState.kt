@@ -129,9 +129,28 @@ object MorphMath {
  * Manages the continuous morphing state between two snapshots (S0 and S1)
  * driven by a 0.0 .. 1.0 parameter value, with flip-flop boundary latching.
  */
+/**
+ * Optional capability of a visual source that owns a structured parameter set (a genome): it picks its own next
+ * morph target instead of the generic per-parameter random draw, keeps discrete parameters out of the lerp, and
+ * receives the A/B snapshots so it can cross-fade structure (e.g. variation ids) that cannot be interpolated.
+ */
+interface GenomeMorph {
+    /** Overwrite the base values of [target] for this source's parameters, starting from [from] (the state being left). */
+    fun sampleMorphTarget(from: DeckMorphSnapshot, target: DeckMorphSnapshot, random: kotlin.random.Random)
+
+    /** True for parameters whose A/B values must not be lerped (the nearer end is used instead). */
+    fun isDiscreteMorph(param: ModulatableParameter): Boolean
+
+    /** Called after every morph update with the live snapshots (read-only) and the position [t] in 0..1. */
+    fun onMorphUpdate(a: DeckMorphSnapshot, b: DeckMorphSnapshot, t: Float)
+}
+
 class DeckMorphController(
+    private val sourceProvider: () -> Any? = { null },
     private val paramsProvider: () -> List<ModulatableParameter>
 ) {
+    private fun genome(): GenomeMorph? = sourceProvider() as? GenomeMorph
+
     val state0 = DeckMorphSnapshot()
     val state1 = DeckMorphSnapshot()
 
@@ -215,6 +234,8 @@ class DeckMorphController(
                 modSnap.copyFrom(randomized)
             }
         }
+        // The state being left is the other snapshot.
+        genome()?.sampleMorphTarget(if (target === state0) state1 else state0, target, random)
     }
 
     /**
@@ -272,6 +293,7 @@ class DeckMorphController(
         hasPrevV = true
 
         // Apply interpolation
+        val genome = genome()
         val params = paramsProvider()
         for (param in params) {
             var snap0 = state0.parameters[param]
@@ -288,6 +310,7 @@ class DeckMorphController(
             // 1. Interpolate base value if enabled
             if (param.randomizeBase) {
                 val lerpedBase = when {
+                    genome?.isDiscreteMorph(param) == true -> if (v < 0.5f) snap0.baseValue else snap1.baseValue
                     param.isAngle -> MorphMath.shortestPathLerpAngle(snap0.baseValue, snap1.baseValue, v)
                     param.meterType == MeterType.ENDLESS -> MorphMath.shortestPathLerpHue(snap0.baseValue, snap1.baseValue, v)
                     else -> MorphMath.lerp(snap0.baseValue, snap1.baseValue, v)
@@ -428,6 +451,7 @@ class DeckMorphController(
                 }
             }
         }
+        genome?.onMorphUpdate(state0, state1, v)
     }
 
     /**

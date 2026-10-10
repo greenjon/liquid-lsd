@@ -48,7 +48,18 @@ Gotchas already found: `DeckMorphController` lerps discrete params (read ids fro
 
 **To check (needs the app):** `rm -rf library/sources/flame_spike` (stale extracted spike folder, it will load as a broken source), then `./gradlew run`, add "Fractal Flame", look for shader compile errors in the log (the `switch`/`applyXf` GLSL moved into a shared string), confirm the starter looks like the old Genome 0, try X4..X6 weights, XF PostX, Points.
 
-## Next: phase 2 (morph cross-weighting), then 3 (paper variations + unit checks), 4 (editor hook; the 170-row flat Edit list is unusable until then)
+## Phase 2 + Mutate sampler (2026-10-09): implemented, NOT yet seen running
+Findings that forced merging phase 2 with the sampler: the morph only lerps `randomizeBase` params, B comes from a uniform per-param draw, and the source could not see A/B/t.
+- `MorphState.kt`: new optional `GenomeMorph` interface (`sampleMorphTarget`, `isDiscreteMorph`, `onMorphUpdate`). `DeckMorphController` takes `sourceProvider` (first ctor arg, defaulted so trailing-lambda callers still work); `Deck` passes `{ source }`. `sampleNewState` calls the source's sampler after the generic loop (from = the other snapshot); the lerp uses the nearer end for discrete params of a `GenomeMorph`; `update()` ends with `onMorphUpdate(state0, state1, v)`. Other sources are unaffected.
+- `FlameSampler.mutate` (pure, tested): gaussian jitter scaled by `Mutation` x 0.2 x range on xform params (XF and Post* untouched), Pre scales clamped to |0.95|, variation id swap odds 0.5 x Mutation per audible slot (weighted pool), xform birth/death odds 0.3 x Mutation (keeps >= 2 active).
+- `FlameGenome`: all xform params and ids are now `randomizeBase` (= morph-enabled; globals/camera/tone/modifiers stay pinned); new `Mutation` global (0.25). Slot vec4 is now `[idA, wA, idB, wB]` (no UBO needed: it still fits the plain uniform array); `pack(params, out, morph)` cross-weights A by (1-t) and B by t, adding weight modulation to both ends; same id at both ends collapses to one entry.
+- `FlameSource`: implements `GenomeMorph`; morph view is live only while the controller keeps calling `update` (serial counter checked in `update()`), so manual edits with Rand off are not shadowed by stale snapshots.
+- `meta.json` now lists the 6 tone-map inputs (manifest test needs non-empty params); the loader still builds genome params from code. `library/sources/fractal_flame/meta.json` (local extraction) was refreshed to match.
+- Tests: `FlameSamplerTest`, morph packing in `FlameGenomeTest`. Full suite passes.
+
+**To check (needs the app):** put Fractal Flame on a deck, raise the deck Rand (morph) so it sweeps A->B; Mutation 0 vs 1; do ids cross-fade (no sweeping through intermediate variations); does a born xform fade in; any blank/exploded genomes (the quality gate is still missing, so expect occasional duds at high Mutation).
+
+## Next: phase 4 (editor hook; the ~170-row flat Edit list is unusable), then 3 (paper variations + unit checks; adds A/B variation params), then 5 (Random/Breed/Keep/Garden + quality gate)
 
 ## Targets (owner decision 2026-10-09)
 Design and tune for **Tier L** (Intel Iris Xe iGPU + the web). **Tier H** (RTX A2000, arriving within days) comes later as quality presets on the same engine: see "Performance targets: two tiers" in the plan. When the A2000 arrives, re-run the spike measurements and record Tier H numbers here before designing Tier H options.
