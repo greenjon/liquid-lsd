@@ -443,7 +443,12 @@ object ParametersTabs {
                 ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
-            if (activeSource is DynamicVisualSource) {
+            if (activeSource is llm.slop.liquidlsd.rendering.StructuredEditorSource && activeSource is DynamicVisualSource) {
+                StructuredEditorPanel.draw(
+                    session, deckLabel, activeSource, activeSource, row, state, labelColW, mixer, gridStartX,
+                    getCvColumns, getColumnOffset, getCvColor, onPushUndo
+                )
+            } else if (activeSource is DynamicVisualSource) {
                 activeSource.parameters.forEach { (name, param) ->
                     ParametersRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 }

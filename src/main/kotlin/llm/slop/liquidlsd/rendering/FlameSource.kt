@@ -22,7 +22,7 @@ class FlameSource(
     parameters = parameters,
     ownsShader = ownsShader,
     categories = categories
-), GenomeMorph {
+), GenomeMorph, StructuredEditorSource {
     private var engine: FlameEngine? = null
     private val genome = FloatArray(FlameGenome.PACKED_FLOATS)
 
@@ -30,6 +30,14 @@ class FlameSource(
     override fun setupUniforms(shader: Shader) {
         for (name in TONE_UNIFORMS) shader.setUniform("u$name", parameters[name]?.value ?: 0f)
     }
+
+    override fun editorTabs(keep: String?) = FlameGenome.editorTabs(parameters, keep)
+
+    override fun addTabLabel(): String? =
+        FlameGenome.firstHiddenXform(parameters).takeIf { it >= 0 }?.let { "+ X${it + 1}" }
+
+    override fun addEditorTab(): String? =
+        FlameGenome.firstHiddenXform(parameters).takeIf { it >= 0 }?.let { FlameGenome.reveal(parameters, it) }
 
     // ---- deck morph (GenomeMorph) -------------------------------------------------------------------------------
 

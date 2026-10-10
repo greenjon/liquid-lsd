@@ -135,6 +135,56 @@ object FlameGenome {
         }
     }
 
+    // ---- editor layout (names only; see StructuredEditor.kt) ------------------------------------------------------
+
+    private val CAMERA = listOf("Zoom", "Rotation", "CenterX", "CenterY")
+    private val TONE = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay", "Sharpness", "Palette")
+    private val QUALITY = listOf("Points", "Passes", "Kernel")
+    private val MODS = listOf("Spin", "Breathe", "Warp", "Drift", "Mutation")
+
+    /** Xforms shown without being asked: the first [ALWAYS_SHOWN], plus any with weight > 0. */
+    const val ALWAYS_SHOWN = 2
+
+    fun tabId(xf: Int) = xfName(xf)
+
+    /** Tab for xform [i]: weight/colour, pre and post affine (post collapsed), then the variation slots. */
+    private fun xformTab(i: Int): EditorTab {
+        val k = keys[i]
+        val isFinal = i == FINAL_INDEX
+        val main = if (isFinal) emptyList() else listOf(k.weight, k.color, k.speed)
+        val sections = ArrayList<EditorSection>()
+        if (main.isNotEmpty()) sections += EditorSection("Weight / Colour", main)
+        sections += EditorSection("Pre-affine", listOf(k.preRot, k.preSx, k.preSy, k.preShear, k.preX, k.preY))
+        sections += EditorSection("Post-affine", listOf(k.postRot, k.postSx, k.postSy, k.postShear, k.postX, k.postY), collapsed = !isFinal)
+        for (j in 0 until SLOTS) sections += EditorSection("Variation ${j + 1}", listOf(k.slotId[j], k.slotWeight[j]))
+        return EditorTab(xfName(i), xfName(i), sections)
+    }
+
+    private fun isShown(params: Map<String, ModulatableParameter>, i: Int, keep: String?): Boolean =
+        i < ALWAYS_SHOWN || xfName(i) == keep || (params[keys[i].weight]?.baseValue ?: 0f) > 1e-4f
+
+    fun editorTabs(params: Map<String, ModulatableParameter>, keep: String?): List<EditorTab> {
+        val tabs = ArrayList<EditorTab>()
+        tabs += EditorTab("Look", "Look", listOf(
+            EditorSection("Camera", CAMERA), EditorSection("Tone", TONE), EditorSection("Quality", QUALITY)
+        ))
+        tabs += EditorTab("Mods", "Mods", listOf(EditorSection("Handles", MODS)))
+        for (i in 0 until MAX_XF) if (isShown(params, i, keep)) tabs += xformTab(i)
+        tabs += xformTab(FINAL_INDEX)
+        return tabs
+    }
+
+    /** First hidden xform, or -1 when all are shown. */
+    fun firstHiddenXform(params: Map<String, ModulatableParameter>): Int =
+        (0 until MAX_XF).firstOrNull { !isShown(params, it, null) } ?: -1
+
+    /** Reveals xform [i] by giving it a small weight and a linear slot. Returns its tab id. */
+    fun reveal(params: Map<String, ModulatableParameter>, i: Int): String {
+        params[keys[i].weight]?.baseValue = 0.5f
+        if ((params[keys[i].slotWeight[0]]?.baseValue ?: 0f) <= 0f) params[keys[i].slotWeight[0]]?.baseValue = 1f
+        return xfName(i)
+    }
+
     fun buildParameters(): LinkedHashMap<String, ModulatableParameter> {
         val m = LinkedHashMap<String, ModulatableParameter>()
         global(m)
