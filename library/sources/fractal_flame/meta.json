@@ -1,0 +1,17 @@
+{
+  "id": "fractal_flame",
+  "name": "Fractal Flame",
+  "description": "Chaos-game fractal flame. The genome parameters are built in code (FlameGenome); this file documents the tone-map shader inputs, which FlameSource reads by name.",
+  "categories": [
+    "Generator",
+    "Fractal"
+  ],
+  "parameters": [
+    { "name": "Exposure", "default": 2.0, "min": 0.01, "max": 100.0 },
+    { "name": "Brightness", "default": 1.0, "min": 0.0, "max": 4.0 },
+    { "name": "Gamma", "default": 2.2, "min": 1.0, "max": 4.0 },
+    { "name": "Vibrancy", "default": 0.7, "min": 0.0, "max": 1.0 },
+    { "name": "Toe", "default": 0.7, "min": 0.0, "max": 5.0 },
+    { "name": "Decay", "default": 0.0, "min": 0.0, "max": 0.98 }
+  ]
+}
