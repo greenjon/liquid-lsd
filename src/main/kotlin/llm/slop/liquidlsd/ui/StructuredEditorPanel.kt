@@ -65,7 +65,7 @@ object StructuredEditorPanel {
             ImGui.sameLine()
             if (ImGui.button(label)) editor.addEditorTab()?.let { selected[deckLabel] = it }
         }
-        drawKeepStar(deckLabel, mixer, h)
+        drawKeepStar(deckLabel, mixer, h, source)
         ImGui.popStyleVar()
 
         var row = firstRow
@@ -99,15 +99,19 @@ object StructuredEditorPanel {
     }
 
     /** The star at the end of the tab strip: keeps what the deck is playing as a new Garden offspring. */
-    private fun drawKeepStar(deckLabel: String, mixer: Mixer, h: Float) {
+    private fun drawKeepStar(deckLabel: String, mixer: Mixer, h: Float, source: DynamicVisualSource) {
         val index = when (deckLabel) { "Deck A" -> 0; "Deck B" -> 1; "Deck BG" -> 2; "Deck PV" -> 3; else -> return }
         val deck = listOf(mixer.deckA, mixer.deckB, mixer.deckBG, mixer.deckPV)[index]
         ImGui.sameLine()
         if (ButtonChrome.button("\u2605##keep", 26f, h)) {
-            val file = llm.slop.liquidlsd.presets.Garden.keep(deck, -1)
+            val lineage = (source as? llm.slop.liquidlsd.rendering.FlameSource)?.currentLineage()
+            val file = llm.slop.liquidlsd.presets.Garden.keep(deck, -1, lineage?.parents ?: emptyList(), lineage?.parentTags ?: emptyList())
             kept[deckLabel] = file.nameWithoutExtension to System.currentTimeMillis() + KEPT_SHOW_MS
         }
         itemTooltip("Keep: save what is playing as a new offspring in the Garden (library/presets/garden/).\nThe Pool and Breed strategies draw from the Garden.")
+        ImGui.sameLine()
+        if (ButtonChrome.button("Skip##veto", (ImGui.calcTextSize("Skip").x + 12f), h)) deck.morphController.vetoTarget()
+        itemTooltip("Veto: skip the genome this deck is morphing towards and pick another with the current strategy.\nThe view jumps to the new target at the current morph position.")
         kept[deckLabel]?.let { (name, until) ->
             if (System.currentTimeMillis() > until) kept.remove(deckLabel)
             else { ImGui.sameLine(); ImGui.alignTextToFramePadding(); ImGui.textDisabled("kept $name") }

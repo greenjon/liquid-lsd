@@ -85,11 +85,16 @@ data class ParameterSnapshot(
 class DeckMorphSnapshot {
     val parameters = mutableMapOf<ModulatableParameter, ParameterSnapshot>()
 
+    /** Opaque note a genome source attaches to the genome it sampled (its lineage); travels with promotion copies. */
+    var origin: Any? = null
+
     fun clear() {
         parameters.clear()
+        origin = null
     }
 
     fun copyFrom(other: DeckMorphSnapshot) {
+        origin = other.origin
         for ((param, otherSnap) in other.parameters) {
             var mySnap = parameters[param]
             if (mySnap == null) {
@@ -471,6 +476,16 @@ class DeckMorphController(
             }
         }
         genome?.onMorphUpdate(state0, state1, v)
+    }
+
+    /**
+     * Veto: throw away the state the morph is heading to and sample another one with the current strategy. The other
+     * end stays, so the next cycle starts from where it was; the live blend jumps to the new target at the current
+     * position (a deliberate skip, not a fade). No-op before the controller has been initialised.
+     */
+    fun vetoTarget(random: kotlin.random.Random = kotlin.random.Random.Default) {
+        if (!isInitialized) return
+        sampleNewState(if (latchTarget == BoundaryTarget.READY_FOR_ONE) state1 else state0, random)
     }
 
     /**

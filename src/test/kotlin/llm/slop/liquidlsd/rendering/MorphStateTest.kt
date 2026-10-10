@@ -298,4 +298,23 @@ class MorphStateTest {
         assertEquals(0.2f, controller.state1.parameters[param]!!.baseValue, 0.0001f)
         assertEquals(0.2f, param.baseValue, 0.0001f, "Expected seamless continuity at reverse ramp reset without jump cut")
     }
+
+    @Test
+    fun vetoResamplesOnlyTheTargetEnd() {
+        val p = ModulatableParameter(0.5f, randomizeBase = true).apply { baseMin = 0f; baseMax = 1f }
+        val c = DeckMorphController { listOf(p) }
+        c.vetoTarget()   // before initialisation: nothing happens, no crash
+        c.update(0.2f)
+        val a0 = c.state0.parameters[p]!!.baseValue
+        val b0 = c.state1.parameters[p]!!.baseValue
+        c.vetoTarget(kotlin.random.Random(1))
+        assertEquals(a0, c.state0.parameters[p]!!.baseValue)   // heading to state1: state0 stays
+        assertTrue(c.state1.parameters[p]!!.baseValue != b0)
+        // after the top boundary the target is state0
+        c.update(1.0f)
+        val a1 = c.state0.parameters[p]!!.baseValue; val b1 = c.state1.parameters[p]!!.baseValue
+        c.vetoTarget(kotlin.random.Random(2))
+        assertEquals(b1, c.state1.parameters[p]!!.baseValue)
+        assertTrue(c.state0.parameters[p]!!.baseValue != a1)
+    }
 }

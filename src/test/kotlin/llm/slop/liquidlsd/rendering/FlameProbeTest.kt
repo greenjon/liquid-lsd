@@ -151,6 +151,8 @@ class FlameProbeTest {
         val p = source.parameters
         fun matches(m: PoolMember) = p.filter { (n, q) -> q.randomizeBase && !n.startsWith("XF") }.all { (n, q) -> q.baseValue == m.values[n] }
         assertTrue(matches(a) || matches(b), "live genome is a kept offspring")
+        assertEquals(1, source.currentLineage().parents.size)
+        assertTrue(source.currentLineage().parents[0] in listOf("a", "b"))
         assertTrue(p["Zoom"]!!.baseValue == 0.8f || p["Zoom"]!!.baseValue == 1.3f, "offspring's own camera")
 
         controller.strategy = SamplerStrategy.BREED
@@ -158,7 +160,12 @@ class FlameProbeTest {
             controller.forceRandomize(Random(seed))
             val active = (0 until FlameGenome.MAX_XF).count { p[FlameGenome.weightKey(it)]!!.baseValue > 0.05f }
             assertTrue(active >= 2)
+            assertTrue(source.currentLineage().parents.all { it in listOf("a", "b") } && source.currentLineage().parents.isNotEmpty())
         }
+        // a random genome has no parents
+        controller.strategy = SamplerStrategy.MUTATE
+        controller.forceRandomize(Random(1))
+        assertTrue(source.currentLineage().parents.isEmpty())
         source.dispose()
     }
 

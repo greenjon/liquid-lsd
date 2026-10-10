@@ -6,6 +6,11 @@ import kotlin.random.Random
 
 private val logger = KotlinLogging.logger {}
 
+/** Where a genome came from: the kept offspring it was bred or drawn from (empty for random ones) and their tags. */
+class FlameLineage(val parents: List<String>, val parentTags: List<List<String>>) {
+    companion object { val NONE = FlameLineage(emptyList(), emptyList()) }
+}
+
 /**
  * Fractal-flame generator (see .planning/flame-source-plan.md). The genome is the parameter map built by
  * [FlameGenome]; [FlameEngine] iterates and splats points on the GPU, and the folder's shader.frag is the tone-map
@@ -72,6 +77,8 @@ class FlameSource(
         return probe
     }
 
+    private var liveOrigin = FlameLineage.NONE
+
     /** Kept offspring of this source; replaceable so tests need no files. */
     internal var poolProvider: () -> List<PoolMember> = { llm.slop.liquidlsd.presets.Garden.pool(id) }
 
@@ -97,6 +104,7 @@ class FlameSource(
         if (effective == SamplerStrategy.POOL) {
             val m = pool[random.nextInt(pool.size)]
             applyToTarget(target, genomeValues(member(m)))
+            target.origin = FlameLineage(listOf(m.name), listOf(m.tags)).also { if (fresh) liveOrigin = it }
             if (fresh) for (name in CAMERA) parameters[name]?.set(member(m)(name))
             return
         }
@@ -104,11 +112,14 @@ class FlameSource(
         val gate = gate()
         var chosen: Map<String, Float>? = null
         var verdict: FlameQuality.Result? = null
+        // a drift descends from whatever the state being left descended from; Random has no parents
+        var lineage = if (effective == SamplerStrategy.RANDOM || fresh) FlameLineage.NONE else (from.origin as? FlameLineage ?: FlameLineage.NONE)
         for (attempt in 0 until MAX_TRIES) {
             val candidate = when (effective) {
                 SamplerStrategy.RANDOM -> FlameSampler.random(parameters, random)
                 SamplerStrategy.BREED -> {
                     val a = pool[random.nextInt(pool.size)]; val b = pool[random.nextInt(pool.size)]
+                    lineage = FlameLineage(listOf(a.name, b.name).distinct(), listOf(a.tags, b.tags))
                     FlameSampler.breed(parameters, member(a), member(b), mutation, random)
                 }
                 else -> FlameSampler.mutate(parameters, ::fromValue, mutation, random)
@@ -123,11 +134,20 @@ class FlameSource(
             chosen = if (fresh) starterValues() else FlameSampler.mutate(parameters, ::fromValue, 0f, random)
         }
         applyToTarget(target, chosen)
+        target.origin = lineage
+        if (fresh) liveOrigin = lineage
         if (fresh) {   // framed on the attractor, or the starter's camera when the starter was the fallback
             for ((name, v) in listOf("Zoom" to verdict?.zoom, "CenterX" to verdict?.centerX, "CenterY" to verdict?.centerY)) {
                 parameters[name]?.let { it.set(v ?: it.defaultValue) }
             }
         }
+    }
+
+    /** Lineage of the genome showing now: that of the nearer morph end while a morph runs, else of the last randomize. */
+    fun currentLineage(): FlameLineage {
+        if (!morphLive) return liveOrigin
+        val end = if (morphT >= 0.5f) morphB else morphA
+        return end?.origin as? FlameLineage ?: FlameLineage.NONE
     }
 
     private fun applyToTarget(target: DeckMorphSnapshot, values: Map<String, Float>) {
