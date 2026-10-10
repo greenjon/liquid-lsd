@@ -43,20 +43,69 @@ Open: density buffer format. Spike compares RGBA16F vs RGBA32F (memory, bandwidt
 
 ## Genome as parameters
 
-Fixed capacity so the existing parameter system carries it:
+### Findings that shape the layout (checked in code 2026-10-09)
 
-- **Global:** camera (zoom, rotation, center x/y), brightness, gamma, vibrancy, decay, symmetry order, palette id/rotation/hue, background, point count, iterations per frame.
-- **Per xform** (up to 6, plus a final xform, so 7 slots; unused slots have weight 0):
-  - weight, color index, color speed, opacity
-  - **pre-affine** decomposed: rotation, scale x/y, shear, translate x/y
-  - **post-affine** decomposed the same way (identity by default)
-  - **K = 4 variation slots**: discrete variation id + weight, plus up to 2 shared variation parameters per slot (e.g. blob high/low, julia-n)
-- Rough count: ~15 per xform pre-variation + 4x(2..4) -> ~30 per xform, ~210 total. Too many for flat knobs, so Flame needs a **structured editor** (xform tabs) instead of a flat param list, with macros/Super Knob for performance. Params still live as `ModulatableParameter`s.
-- Why decomposed affine: interpolating raw matrices collapses the shape. Interpolating rotation/scale/shear gives the swirling morph, and gives audio a clean target (bass -> rotation of xform 2).
+- Params are `Map<String, ModulatableParameter>` (`VisualSource.kt`), insertion-ordered in `DynamicVisualSource`; presets key by plain name and **ignore unknown / default missing keys**, so adding 3D or post-affine params later does not break old presets. No count limit. Names must be unique after space-stripping, and must not contain `/` (macro paths).
+- `meta.json` cannot declare discrete params and `loadFromFolder` hard-codes `id == "mandala"`. `FlameSource` therefore **builds its parameter map in Kotlin** (constructor `steps`/`labels` for discrete ids) and needs a new registration branch (a stub `meta.json` folder, or a registry entry).
+- **`DeckMorphController` lerps discrete params like continuous ones** (no special case), so a variation id would sweep through every id in between. Confirms the plan: Flame must take ids from `stateA`/`stateB`, never from the interpolated value. Angle params are handled (`isAngle`), so mark rotations as angles to get shortest-path morphing.
+- **Per-parameter random is uniform in `baseMin..baseMax` with no grouping.** 200 independent uniform draws produce mush and divergent genomes. Flame needs a **genome-aware sampler** supplied by the source (see "Sampler hook" below). Generic randomize is disabled (`isRandomizeDisabled`) on structural params.
+- **Edit tab is a hard-wired flat loop** (`ParametersTabs.kt:447`, one `drawParamRow` per param, no paging). Needs a new optional `VisualSource` hook for a custom editor that still calls `drawParamRow` for chosen subsets (keeps modulator UI, learn, kebab).
+- **Perform knobs reach a source only through macros** (8 knobs x up to 4 bindings). Super Knob / Metaknob are FX-only. Curated defaults go in `GeneratorDefaults` (hand-curated tier).
+
+### Parameter layout (names are the keys; first draft)
+
+Capacity: 6 xforms (`X1`..`X6`) + final xform (`XF`). Unused xform = weight 0. 2D now; 3D additions are new keys later.
+
+- **Global (~30):**
+  - Camera: `Zoom`, `Rotation`(angle), `CenterX`, `CenterY`
+  - Tone: `Exposure`, `Brightness`, `Gamma`, `Vibrancy`, `Toe`, `Shoulder`, `Decay`, `Kernel`(splat size), `Background R/G/B`
+  - Color: `Palette`(discrete), `PaletteRot`, `PaletteHue`
+  - Structure: `Symmetry`(discrete), `Points`(discrete tiers), `Iterations`
+  - Lineage: `Mutation` (0..1; ordinary modulatable parameter read by the sampler when it picks the next B. Decided: no special input channel, so LFO/audio/MIDI/macros drive it. Acts on the next B, never the current state.)
+  - Lens (later): `Lens`(discrete), `LensAmount`
+  - 3D (later): `OrbitYaw`, `OrbitPitch`, `OrbitRoll`, `Perspective`, `FocusZ`, `Aperture`
+- **Global modifiers (performance handles, 4):** `Spin` (adds to every xform's rotation), `Breathe` (scales every xform), `Warp` (blends non-linear variation weights up vs linear), `Drift` (color-speed offset). One parameter moves all xforms, so a single macro binding does what would otherwise take 6+. This is how 8 macros x 4 bindings stays enough.
+- **Per xform (28):**
+  - `Weight`, `Color`, `ColorSpeed`, `Opacity` (4)
+  - Pre-affine: `PreRot`(angle), `PreScaleX`, `PreScaleY`, `PreShear`, `PreX`, `PreY` (6; negative scale allowed, so flips need no separate flag)
+  - Post-affine: same 6 as `PostRot` ... (identity default)
+  - **K = 3 variation slots** `V1`..`V3`: `Id`(discrete), `Weight`, `A`, `B` (shared variation parameters, 12). Typical genomes use 1-3 variations per xform; K=3 beats K=4 on shader cost.
+  - Example keys: `X2 PreRot`, `X2 V1 Id`, `XF V2 Weight`.
+- **3D later (+8 per xform):** `PreTiltA`, `PreTiltB`, `PreScaleZ`, `PreZ`, same for post. Added as new keys, old presets unaffected.
+- Total: ~30 + 4 + 7x28 = ~230 (2D), ~290 with 3D. Fine technically; the UI handles it (below).
+
+### Uploading the genome to the shader
+
+Continuous values are interpolated on the CPU by the morph controller as usual. Only the variation slots need A **and** B in the shader. Pack into a UBO (std140; GL 3.1+): continuous genome (current) + slot `(idA, wA, aA, bA, idB, wB, aB, bB)` per slot + `t`. ~7x(26 floats + 3x8) = about 350 floats, well under the 16 KB UBO minimum. Do not use plain uniforms (1024-component fragment minimum is tight once A/B are doubled).
+
+### Structured editor (needs the new hook)
+
+`VisualSource.drawEditor(...)` optional. Flame draws: **Global/Camera/Tone**, **Modifiers**, **Xform tabs** (X1..X6, XF), each with Weight/Color, Pre, Post and three variation slot rows (variation dropdown by name, weight, A/B shown only when the chosen variation has parameters). Each field is still a `drawParamRow`, so modulation, learn and the kebab work. Hide empty xforms behind "+ add xform".
+
+### Sampler hook (genome-aware randomize / mutate / breed)
+
+`VisualSource.sampleState(strategy, rng, parentA, parentB)` optional; generic sources fall back to today's per-parameter behavior.
+
+- **Random:** pick 2-5 active xforms; random affine with contractivity bias (mean spectral norm < 1, with a few expanding allowed); 1-3 variation slots per xform from a weighted pool (favor linear/sinusoidal/spherical/swirl-class, rare exotic); palette from library; weights normalized; camera framed to the attractor extent (estimated).
+- **Mutate:** gaussian jitter on continuous params scaled by range x strength; occasional variation id swap in a slot; occasional xform add (weight 0 -> small) or remove; palette neighbor swap.
+- **Breed:** whole-xform crossover (take xform i from A or B, not per parameter), globals from one parent or blended, then Mutate.
+- **Quality gate:** candidate B is rejected if a low-res test render (a few frames, hidden FBO, async readback) is blank, saturated, or collapsed to a point/line. Cheap CPU pre-check on affine contractivity first. Open: where the gate runs relative to the morph promote (one-frame delay is acceptable).
+
+### Palette
+
+Palette is not a `ModulatableParameter`. A `library/palettes` set of 256-color palettes; `Palette` param indexes it (discrete). Imported `.flame` palettes are added to the library by content hash; the preset embeds a copy (via a new optional `sourceData` field on `DeckPresetDto`) so presets stay portable. **Decided:** embed (portable presets; a missing palette would otherwise fail silently at a show). On load, a palette whose content hash is already in the library reuses it, otherwise it is added. `sourceData` is optional and old presets ignore it; ~1 KB per preset.
+
+### Default macros (curated in `GeneratorDefaults`)
+
+1 Zoom (+LensAmount) / 2 Spin (modifier) / 3 Warp (modifier) / 4 Breathe (modifier) / 5 Color (PaletteRot, Drift, PaletteHue) / 6 Glow (Exposure, Brightness, Vibrancy) / 7 Trails (Decay) / 8 Evolve (binds the global `Mutation` parameter).
+
+### Why decomposed affine
+
+Interpolating raw matrices collapses the shape. Interpolating rotation/scale/shear gives the swirling morph, and gives audio a clean target (bass -> rotation of xform 2).
 
 ### Morphing variation slots
 
-An id swap cannot be interpolated. During a morph the shader evaluates **both A's and B's variation slots** (2K per xform) and cross-weights them by morph t. Decided: `DeckMorphController` owns the states and exposes read-only `stateA`, `stateB`, `t`; Flame reads the discrete ids and slot weights from the raw states, not from the interpolated parameters (which the controller writes each frame). No separate Flame snapshot. Verify against the controller code in phase 2, including what happens when not morphing and when a new B is sampled.
+An id swap cannot be interpolated. During a morph the shader evaluates **both A's and B's variation slots** and cross-weights them by morph t: A's slot weight x (1-t), B's slot weight x t. `DeckMorphController` owns the states and exposes read-only `stateA`, `stateB`, `t`. Flame reads ids and slot weights from the raw states. No separate Flame snapshot. Verify in phase 2: behavior when not morphing, when a new B is sampled, and when the user edits a slot mid-morph (edit applies to A? B? decide).
 
 ## Variations (the paper's set first)
 
