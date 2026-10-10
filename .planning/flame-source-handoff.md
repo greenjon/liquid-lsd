@@ -3,7 +3,7 @@
 Plan: `.planning/flame-source-plan.md` (decisions, genome layout, phases). This file = current state + how to continue.
 Branch: `spike/flame-source` (plan itself is committed on `main`, e9a6c0a). Rules: clean-room (no flam3/Electric Sheep/Apophysis code), no "sheep" wording, no Co-Authored-By lines.
 
-## State (2026-10-09): phase 0 spike written, compiles, NOT yet seen running
+## State (2026-10-09): phase 0 spike DONE and gate PASSED (seen running by the user; results below)
 
 Files:
 - `src/main/kotlin/llm/slop/liquidlsd/rendering/FlameSpikeSource.kt`: `FlameSpikeSource` (extends `DynamicVisualSource`, overrides `renderTopology`) + private `FlameEngine` (all GL + inline GLSL).
@@ -30,3 +30,13 @@ Deviations from the plan, on purpose, for the spike: state is xy (no z yet); 2 v
 ## After the gate (plan phases 1+)
 Genome-as-parameters in Kotlin (no meta.json for params, discrete ids via `steps`), UBO upload, `drawEditor` hook, `sampleState` hook on `DeckMorphController`, then variations, sampler/Keep/Garden, importer, web.
 Gotchas already found: `DeckMorphController` lerps discrete params (read ids from stateA/stateB); per-param random is uniform (needs genome-aware sampler); Edit tab is a flat loop (`ParametersTabs.kt:447`); a param named `Zoom` collides with `uZoom` set by `Renderer` on the same shader (harmless: the engine reads the param directly).
+
+
+## Spike results (user's machine, 2026-10-09)
+- Look: convincing flame structure, feathered filaments, good colour. Genome 0 is the good one; genome 1 collapses to thin curves (needs tuning, irrelevant once genomes are generated).
+- fp16 == fp32 visually -> fp16 default. Isolated single hits were ugly -> `Toe` added. Decay 0.75-0.9 = best quality per point; exposure now normalised by (1-decay).
+- Perf (gpu timestamp log, Kernel 3, fp16): 262k pts x 16 passes = 15.2 ms; 1M pts x 16 = 35-47 ms. ~linear in splats (~2-3.6 ns each). Budget: ~0.5-1M splats/deck. Passes 1/4 and Kernel 1/3/5 images were reviewed but their timing lines were not pasted.
+- Gotchas learned: `Main` keeps a `GL_TIME_ELAPSED` query open around the whole frame (only one may be active), so per-source timing must use `glQueryCounter(GL_TIMESTAMP)`; `gradlew run` does not forward `-D` flags (use env vars `FLAME_N`, `FLAME_DENSITY`); extracted `library/sources/<id>/` files are never overwritten, so delete the folder after changing bundled spike resources; a param named `Zoom` collides with the renderer's `uZoom`.
+
+## Recommended next step: phase 1 on this branch
+Keep `FlameEngine` (it is the reusable part) and replace the hardcoded genome: genome-as-parameters built in Kotlin, UBO upload, quality tiers (points x passes presets + decay), then variations from the paper with unit checks. Remove `flame_spike`/`EXPERIMENTAL_SOURCE_IDS` when the real `FlameSource` registers properly.

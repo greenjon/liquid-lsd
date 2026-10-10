@@ -39,7 +39,7 @@ Started 2026-10-09. Status: PLAN, nothing built. Target: v1.1 (v1.0 feature free
 6. Points that diverge (NaN/inf/out of bounds) are reseeded in the iterate pass.
 7. Morph gets smoothness for free: points keep iterating and track the changing attractor.
 
-Open: density buffer format. Spike compares RGBA16F vs RGBA32F (memory, bandwidth, saturation). Desktop GL allows float blending; WebGL2 needs `EXT_float_blend` for 32F. Also whether hit weight in alpha is enough or separate buffers are needed, and the fill-rate cost of the kernel footprint.
+**Spike results (2026-10-09, user's GPU, see flame-source-handoff.md):** the approach works and looks like a real flame. Density format: **fp16 decided** (visually identical to fp32, half the bandwidth, no float-blend extension on web); decay bounds accumulation precision. Cost is roughly linear in splats (points x passes): ~3.6 ns/splat at 262k x 16 (15.2 ms), ~2.1-2.8 ns/splat at 1M x 16 (35-47 ms), Kernel 3. Plan for ~0.5-1M splats per deck (2-4 ms). **Decay is the main quality lever**: 0.75-0.9 fills fine filaments from few points, so quality tiers should prefer fewer points + decay over many points. A `Toe` threshold removes isolated-hit noise; exposure is normalised by (1-decay). Kernel: 1 = crisp hairlines, 3 = full, 5 = soft glow (a look knob, also a cost knob).
 
 ## Genome as parameters
 
