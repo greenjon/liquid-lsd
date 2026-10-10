@@ -130,16 +130,24 @@ object MorphMath {
  * driven by a 0.0 .. 1.0 parameter value, with flip-flop boundary latching.
  */
 /**
+ * How a genome source picks the next morph target: [RANDOM] an unrelated new genome, [MUTATE] a drift away from the
+ * state being left, [POOL] one of the kept offspring (Garden), [BREED] a crossover of two of them. Sources without a
+ * genome ignore it (they always randomize per parameter).
+ */
+enum class SamplerStrategy { RANDOM, MUTATE, POOL, BREED }
+
+/**
  * Optional capability of a visual source that owns a structured parameter set (a genome): it picks its own next
  * morph target instead of the generic per-parameter random draw, keeps discrete parameters out of the lerp, and
  * receives the A/B snapshots so it can cross-fade structure (e.g. variation ids) that cannot be interpolated.
  */
 interface GenomeMorph {
     /**
-     * Overwrite the base values of [target] for this source's parameters, starting from [from] (the state being left).
-     * [fresh] = an explicit "new random" request: build an unrelated genome instead of drifting away from [from].
+     * Overwrite the base values of [target] for this source's parameters, starting from [from] (the state being left),
+     * picking the genome the way [strategy] says. [fresh] = the target becomes the live state right now (an explicit
+     * randomize), so anything outside the morph, such as the camera, should be set for it too.
      */
-    fun sampleMorphTarget(from: DeckMorphSnapshot, target: DeckMorphSnapshot, random: kotlin.random.Random, fresh: Boolean = false)
+    fun sampleMorphTarget(from: DeckMorphSnapshot, target: DeckMorphSnapshot, random: kotlin.random.Random, strategy: SamplerStrategy, fresh: Boolean)
 
     /** True for parameters whose A/B values must not be lerped (the nearer end is used instead). */
     fun isDiscreteMorph(param: ModulatableParameter): Boolean
@@ -153,6 +161,9 @@ class DeckMorphController(
     private val paramsProvider: () -> List<ModulatableParameter>
 ) {
     private fun genome(): GenomeMorph? = sourceProvider() as? GenomeMorph
+
+    /** How genome sources pick the next target (see [SamplerStrategy]); the default keeps the drift behaviour. */
+    var strategy: SamplerStrategy = SamplerStrategy.MUTATE
 
     val state0 = DeckMorphSnapshot()
     val state1 = DeckMorphSnapshot()
@@ -203,7 +214,12 @@ class DeckMorphController(
     /**
      * Samples a randomized state into the target snapshot buffer using constrained bounds.
      */
-    fun sampleNewState(target: DeckMorphSnapshot, random: kotlin.random.Random = kotlin.random.Random.Default, fresh: Boolean = false) {
+    fun sampleNewState(
+        target: DeckMorphSnapshot,
+        random: kotlin.random.Random = kotlin.random.Random.Default,
+        fresh: Boolean = false,
+        strategy: SamplerStrategy = this.strategy
+    ) {
         val params = paramsProvider()
         for (param in params) {
             var paramSnap = target.parameters[param]
@@ -238,7 +254,7 @@ class DeckMorphController(
             }
         }
         // The state being left is the other snapshot.
-        genome()?.sampleMorphTarget(if (target === state0) state1 else state0, target, random, fresh)
+        genome()?.sampleMorphTarget(if (target === state0) state1 else state0, target, random, strategy, fresh)
     }
 
     /**
@@ -461,7 +477,9 @@ class DeckMorphController(
      * Forces an immediate randomization roll (e.g. on manual UI trigger).
      */
     fun forceRandomize(random: kotlin.random.Random = kotlin.random.Random.Default) {
-        sampleNewState(state0, random, fresh = true)   // a brand-new genome; B then drifts away from it
+        // A is a brand-new genome (a random one unless the strategy draws from the Garden); B follows the strategy
+        val startStrategy = if (strategy == SamplerStrategy.POOL || strategy == SamplerStrategy.BREED) strategy else SamplerStrategy.RANDOM
+        sampleNewState(state0, random, fresh = true, strategy = startStrategy)
         sampleNewState(state1, random)
         latchTarget = BoundaryTarget.READY_FOR_ONE
         isInitialized = true

@@ -129,6 +129,51 @@ class FlameProbeTest {
         probe.dispose(); source.dispose()
     }
 
+    private fun flameSource() = FlameSource(
+        "fractal_flame", "Fractal Flame",
+        Shader(FlameEngine.FULLSCREEN_VERT, "#version 330 core\nout vec4 o;\nvoid main(){o=vec4(1.0);}"),
+        FlameGenome.buildParameters(), ownsShader = true
+    )
+
+    private fun member(name: String, seed: Int, zoom: Float): PoolMember {
+        val r = FlameSampler.random(params, Random(seed))
+        return PoolMember(name, emptyList(), params.mapValues { r[it.key] ?: it.value.baseValue } + ("Zoom" to zoom))
+    }
+
+    @Test fun poolAndBreedStrategiesUseTheGarden() = withGl {
+        val source = flameSource()
+        val a = member("a", 1, 0.8f); val b = member("b", 2, 1.3f)
+        source.poolProvider = { listOf(a, b) }
+        val controller = DeckMorphController({ source }) { source.parameters.values.toList() }
+
+        controller.strategy = SamplerStrategy.POOL
+        controller.forceRandomize(Random(1))
+        val p = source.parameters
+        fun matches(m: PoolMember) = p.filter { (n, q) -> q.randomizeBase && !n.startsWith("XF") }.all { (n, q) -> q.baseValue == m.values[n] }
+        assertTrue(matches(a) || matches(b), "live genome is a kept offspring")
+        assertTrue(p["Zoom"]!!.baseValue == 0.8f || p["Zoom"]!!.baseValue == 1.3f, "offspring's own camera")
+
+        controller.strategy = SamplerStrategy.BREED
+        repeat(10) { seed ->
+            controller.forceRandomize(Random(seed))
+            val active = (0 until FlameGenome.MAX_XF).count { p[FlameGenome.weightKey(it)]!!.baseValue > 0.05f }
+            assertTrue(active >= 2)
+        }
+        source.dispose()
+    }
+
+    @Test fun emptyPoolFallsBackToRandomAndDefaultStrategyIsMutate() = withGl {
+        val source = flameSource()
+        source.poolProvider = { emptyList() }
+        val controller = DeckMorphController({ source }) { source.parameters.values.toList() }
+        assertEquals(SamplerStrategy.MUTATE, controller.strategy)
+        controller.strategy = SamplerStrategy.POOL
+        controller.forceRandomize(Random(4))
+        val active = (0 until FlameGenome.MAX_XF).count { source.parameters[FlameGenome.weightKey(it)]!!.baseValue > 0.05f }
+        assertTrue(active in 2..5)
+        source.dispose()
+    }
+
     @Test fun probeRestoresGlState() = withGl {
         val probe = FlameProbe()
         org.lwjgl.opengl.GL33.glViewport(3, 4, 50, 60)

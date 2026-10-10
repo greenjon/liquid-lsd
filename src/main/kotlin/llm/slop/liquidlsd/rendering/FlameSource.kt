@@ -72,39 +72,74 @@ class FlameSource(
         return probe
     }
 
+    /** Kept offspring of this source; replaceable so tests need no files. */
+    internal var poolProvider: () -> List<PoolMember> = { llm.slop.liquidlsd.presets.Garden.pool(id) }
+
     /**
-     * Proposes a new genome ([fresh]) or a drift away from [from], and keeps only a candidate that the quality gate
-     * accepts (blank, exploded, collapsed or fog-like ones are retried; when every try fails a fresh request falls
-     * back to the starter and a drift stays where it is). A fresh genome also frames the camera on its attractor,
-     * because the camera parameters are not part of the morph.
+     * Proposes a genome the way [strategy] says and keeps only a candidate that the quality gate accepts (blank,
+     * exploded, collapsed or fog-like ones are retried; when every try fails a fresh request falls back to the
+     * starter and a drift stays put). Pool picks are kept offspring and skip the gate; an empty pool (two for Breed
+     * means one parent bred with itself) falls back to Random when [fresh] and Mutate otherwise. When [fresh] the
+     * camera is set too, because it is not part of the morph: framed on the attractor, or the offspring's own.
      */
-    override fun sampleMorphTarget(from: DeckMorphSnapshot, target: DeckMorphSnapshot, random: Random, fresh: Boolean) {
+    override fun sampleMorphTarget(from: DeckMorphSnapshot, target: DeckMorphSnapshot, random: Random, strategy: SamplerStrategy, fresh: Boolean) {
         fun fromValue(name: String) = parameters[name]?.let { from.parameters[it]?.baseValue ?: it.baseValue } ?: 0f
-        val strength = parameters["Mutation"]?.value ?: 0.25f
+        val mutation = parameters["Mutation"]?.value ?: 0.25f
+        val pool = if (strategy == SamplerStrategy.POOL || strategy == SamplerStrategy.BREED) poolProvider() else emptyList()
+        val effective = when {
+            pool.isEmpty() && (strategy == SamplerStrategy.POOL || strategy == SamplerStrategy.BREED) ->
+                if (fresh) SamplerStrategy.RANDOM else SamplerStrategy.MUTATE
+            else -> strategy
+        }
+        fun member(p: PoolMember) = { name: String -> p.values[name] ?: parameters[name]?.defaultValue ?: 0f }
+
+        // a kept offspring is used as it is: its own camera, no gate
+        if (effective == SamplerStrategy.POOL) {
+            val m = pool[random.nextInt(pool.size)]
+            applyToTarget(target, genomeValues(member(m)))
+            if (fresh) for (name in CAMERA) parameters[name]?.set(member(m)(name))
+            return
+        }
+
         val gate = gate()
         var chosen: Map<String, Float>? = null
         var verdict: FlameQuality.Result? = null
         for (attempt in 0 until MAX_TRIES) {
-            val candidate = if (fresh) FlameSampler.random(parameters, random) else FlameSampler.mutate(parameters, ::fromValue, strength, random)
+            val candidate = when (effective) {
+                SamplerStrategy.RANDOM -> FlameSampler.random(parameters, random)
+                SamplerStrategy.BREED -> {
+                    val a = pool[random.nextInt(pool.size)]; val b = pool[random.nextInt(pool.size)]
+                    FlameSampler.breed(parameters, member(a), member(b), mutation, random)
+                }
+                else -> FlameSampler.mutate(parameters, ::fromValue, mutation, random)
+            }
             if (gate == null) { chosen = candidate; break }
             val result = gate.evaluate { name -> candidate[name] ?: fromValue(name) }
             if (result.ok) { chosen = candidate; verdict = result; break }
             logger.debug { "Flame candidate rejected (try ${attempt + 1}): $result" }
         }
         if (chosen == null) {
-            logger.info { "Flame: no candidate passed the quality gate in $MAX_TRIES tries (${if (fresh) "fresh" else "drift"})" }
+            logger.info { "Flame: no candidate passed the quality gate in $MAX_TRIES tries ($effective)" }
             chosen = if (fresh) starterValues() else FlameSampler.mutate(parameters, ::fromValue, 0f, random)
         }
-        for ((name, v) in chosen) {
-            val p = parameters[name] ?: continue
-            target.parameters[p]?.baseValue = v
-        }
+        applyToTarget(target, chosen)
         if (fresh) {   // framed on the attractor, or the starter's camera when the starter was the fallback
             for ((name, v) in listOf("Zoom" to verdict?.zoom, "CenterX" to verdict?.centerX, "CenterY" to verdict?.centerY)) {
                 parameters[name]?.let { it.set(v ?: it.defaultValue) }
             }
         }
     }
+
+    private fun applyToTarget(target: DeckMorphSnapshot, values: Map<String, Float>) {
+        for ((name, v) in values) {
+            val p = parameters[name] ?: continue
+            target.parameters[p]?.baseValue = v
+        }
+    }
+
+    /** The morph-enabled genome parameters (not the final xform) read through [value]. */
+    private fun genomeValues(value: (String) -> Float): Map<String, Float> =
+        parameters.filter { (name, p) -> p.randomizeBase && !name.startsWith("XF") }.mapValues { value(it.key) }
 
     /** Default values of the genome's morph-enabled parameters (the shipped starter flame). */
     private fun starterValues(): Map<String, Float> =
@@ -154,6 +189,7 @@ class FlameSource(
         const val SOURCE_ID = "fractal_flame"
         /** Candidates tried per request before falling back; each costs well under a millisecond on the GPU. */
         private const val MAX_TRIES = 8
+        private val CAMERA = listOf("Zoom", "CenterX", "CenterY")
         private val TONE_UNIFORMS = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay")
     }
 }
