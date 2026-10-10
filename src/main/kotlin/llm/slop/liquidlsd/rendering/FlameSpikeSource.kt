@@ -119,6 +119,7 @@ private fun spikeSetting(prop: String, def: String): String =
 /** GL resources and passes for one [FlameSpikeSource] instance. Created lazily on the render thread. */
 private class FlameEngine {
     private val n = spikeSetting("flame.n", "512").toInt()   // state texture side -> n*n points (FLAME_N=1024 -> 1M)
+    private val skip = spikeSetting("flame.skip", "")   // "splat" or "iterate": omit that pass to attribute cost
     private val burn = 16f                   // iterations before a point is drawn
     private val density32 = spikeSetting("flame.density", "fp16") != "fp16"
 
@@ -222,6 +223,7 @@ private class FlameEngine {
             // 2. iterate: stateA -> stateB
             stateB.bind()
             glDisable(GL_BLEND)
+            if (skip != "iterate") {
             iterate.bind()
             glActiveTexture(GL_TEXTURE0)
             glBindTexture(GL_TEXTURE_2D, stateA.texture)
@@ -232,6 +234,7 @@ private class FlameEngine {
             iterate.setUniform4fv("uXf", genome)
             Geometry.drawFullscreenQuad()
             val t = stateA; stateA = stateB; stateB = t
+            }
 
             // 3. splat the new positions additively
             dens.bind()
@@ -253,7 +256,7 @@ private class FlameEngine {
             splat.setUniform("uSharp", v("Sharpness", 3f))
             splat.setUniform("uPalShift", v("Palette", 0f))
             glBindVertexArray(emptyVao)
-            glDrawArrays(GL_POINTS, 0, n * n)
+            if (skip != "splat") glDrawArrays(GL_POINTS, 0, n * n)
             glBindVertexArray(0)
             glActiveTexture(GL_TEXTURE0)
         }
@@ -287,7 +290,7 @@ private class FlameEngine {
         queryUsed[prev] = false
         gpuSamples++
         if (++frames % 240 == 0 && gpuSamples > 0) {
-            logger.warn { "Flame spike: n=%d (%d pts) passes=%d kernel=%.1f %s: gpu %.2f ms/frame (avg of %d)".format(n, n * n, lastPasses, lastKernel, if (density32) "fp32" else "fp16", gpuNsSum / 1e6 / gpuSamples, gpuSamples) }
+            logger.warn { "Flame spike: n=%d (%d pts) passes=%d kernel=%.1f %s skip=%s: gpu %.2f ms/frame (avg of %d)".format(n, n * n, lastPasses, lastKernel, if (density32) "fp32" else "fp16", skip.ifEmpty { "none" }, gpuNsSum / 1e6 / gpuSamples, gpuSamples) }
             gpuNsSum = 0; gpuSamples = 0
         }
     }

@@ -35,7 +35,7 @@ Gotchas already found: `DeckMorphController` lerps discrete params (read ids fro
 ## Spike results (user's machine, 2026-10-09)
 - Look: convincing flame structure, feathered filaments, good colour. Genome 0 is the good one; genome 1 collapses to thin curves (needs tuning, irrelevant once genomes are generated).
 - fp16 == fp32 visually -> fp16 default. Isolated single hits were ugly -> `Toe` added. Decay 0.75-0.9 = best quality per point; exposure now normalised by (1-decay).
-- Perf (gpu timestamp log, Kernel 3, fp16): 262k pts x 16 passes = 15.2 ms; 1M pts x 16 = 35-47 ms. ~linear in splats (~2-3.6 ns each). Budget: ~0.5-1M splats/deck. Passes 1/4 and Kernel 1/3/5 images were reviewed but their timing lines were not pasted.
+- Perf (gpu timestamp log, Kernel 3, fp16): 262k pts x 16 passes = 15.2 ms; 1M pts x 16 = 35-47 ms. ~linear in splats (~2-3.6 ns each). 262k pts: passes 1 = ~2-5 ms, passes 4 = ~7 ms, passes 16 = 13-15 ms (sub-linear, noisy: GPU clocks / slider dragging). Kernel 1 = 6.9 ms, 3 = 6.9 ms, 5 = 8-9 ms at passes 4: sprite fill is NOT the bottleneck (suspect blend contention in dense regions). Corrected budget: ~0.25-0.5M splats/deck (2-3.5 ms). `FLAME_SKIP=splat|iterate` omits a pass to attribute cost (not yet measured).
 - Gotchas learned: `Main` keeps a `GL_TIME_ELAPSED` query open around the whole frame (only one may be active), so per-source timing must use `glQueryCounter(GL_TIMESTAMP)`; `gradlew run` does not forward `-D` flags (use env vars `FLAME_N`, `FLAME_DENSITY`); extracted `library/sources/<id>/` files are never overwritten, so delete the folder after changing bundled spike resources; a param named `Zoom` collides with the renderer's `uZoom`.
 
 ## Recommended next step: phase 1 on this branch
