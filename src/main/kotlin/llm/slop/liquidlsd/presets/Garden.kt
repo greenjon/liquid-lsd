@@ -53,6 +53,8 @@ object Garden {
         val name = nextName(folder, deck.source.displayName)
         val file = File(folder, "$name.lsd")
         PresetRepository.saveDeckPresetAsync(file, deck, name, lineageTags(childGeneration(parentTags), parents), deckIndex)
+        // the thumbnail is what the deck shows right now; skipped silently where there is no GL context
+        runCatching { GardenThumbnails.capture(deck.getOutputTexture(), deck.cleanFBO.width, deck.cleanFBO.height, file) }
         return file
     }
 

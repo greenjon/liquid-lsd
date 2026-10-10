@@ -199,6 +199,21 @@ class FlameProbeTest {
         }
     }
 
+    @Test fun gardenThumbnailIsDownscaledFromTheDeckTexture() = withGl {
+        val dir = java.nio.file.Files.createTempDirectory("thumb").toFile()
+        val fbo = FBO(320, 180)
+        try {
+            fbo.clear(1f, 0f, 0f, 1f)
+            val preset = java.io.File(dir, "flame-0001.lsd").also { it.writeText("{}") }
+            assertEquals(0, llm.slop.liquidlsd.presets.GardenThumbnails.textureFor(preset.path))
+            assertTrue(llm.slop.liquidlsd.presets.GardenThumbnails.capture(fbo.texture, 320, 180, preset))
+            val img = javax.imageio.ImageIO.read(java.io.File(dir, "flame-0001.png"))
+            assertEquals(256, img.width); assertEquals(144, img.height)
+            assertEquals(0xFF0000, img.getRGB(100, 70) and 0xFFFFFF)
+            assertTrue(llm.slop.liquidlsd.presets.GardenThumbnails.textureFor(preset.path) != 0)
+        } finally { fbo.dispose(); dir.deleteRecursively() }
+    }
+
     @Test fun probeRestoresGlState() = withGl {
         val probe = FlameProbe()
         org.lwjgl.opengl.GL33.glViewport(3, 4, 50, 60)

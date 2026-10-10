@@ -148,11 +148,15 @@ object PresetListPanel {
                             ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
                         }
                     }
-                } else if (asset.tags.isNotEmpty()) {
-                    showCustomTooltip(asset.path.hashCode()) {
-                        ImGui.textUnformatted(asset.name)
-                        ImGui.separator()
-                        ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
+                } else {
+                    val thumb = if (isStock) 0 else llm.slop.liquidlsd.presets.GardenThumbnails.textureFor(asset.path)
+                    if (asset.tags.isNotEmpty() || thumb != 0) {
+                        showCustomTooltip(asset.path.hashCode(), estimatedHeight = if (thumb != 0) 220f else 120f) {
+                            ImGui.textUnformatted(asset.name)
+                            ImGui.separator()
+                            if (thumb != 0) ImGui.image(thumb.toLong(), llm.slop.liquidlsd.presets.GardenThumbnails.WIDTH.toFloat(), llm.slop.liquidlsd.presets.GardenThumbnails.HEIGHT.toFloat())
+                            if (asset.tags.isNotEmpty()) ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
+                        }
                     }
                 }
             }
