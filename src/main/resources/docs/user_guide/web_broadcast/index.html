@@ -1426,12 +1426,13 @@ Each viewer's browser — renders the visuals locally using WebGL
 <p><strong>Power switch:</strong> Click it to turn the visualizer on. The browser requires this interaction to start Web Audio (standard browser security policy). Turning the TV on triggers a CRT warmup animation; turning it off plays a vintage beam-collapse animation.</p>
 <p><strong>Volume dial:</strong> Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.</p>
 <p><strong>Fullscreen:</strong> Double-click the TV screen to expand to full-screen. Double-click again or press <code>Esc</code> to go back to the TV shell.</p>
+<p><strong>What viewers see.</strong> Each deck's source and its parameters, the deck FX chains and the master FX chain, the transition and crossfader, the channel levels and the beat all go over the wire, so the web TV follows your mix closely. A few things stay desktop-only: external video sources (Spout, NDI, PipeWire, webcam) show as nothing, and anything the web player does not have (a custom shader you added to your own library) is skipped. Viewers join in the middle of a broadcast on the right beat.</p>
 <p>The viewer's browser also connects to a live audio stream and runs its own audio analysis, keeping the visuals reactive to music even when you're not broadcasting.</p>
 <hr />
 <h2 id="autopilot-mode">Autopilot mode</h2>
 <p>When no broadcaster is connected, the web player switches to <strong>Autopilot</strong> — running its own curated visual playlist against the live audio stream. It keeps the visualizer interesting and audio-reactive 24/7 without needing a human operator.</p>
 <p>When a broadcaster connects, Autopilot smoothly hands off control to the live stream. When the broadcast ends, it picks up again automatically.</p>
-<p>The web presets and playlists used for Autopilot live in <code>web/presets/</code> and <code>web/playlists/</code>, separate from your desktop preset library.</p>
+<p>The web presets and playlists used for Autopilot live in <code>web/presets/</code> and <code>web/playlists/</code>, separate from your desktop preset library. Web presets are ordinary desktop <code>.lsd</code> files, so you can copy one across in either direction (a preset using only sources the web has). A playlist line can add an FX chain after a bar: <code>my-preset | my-chain</code>; the desktop's FX chains and transition presets ship with the web TV.</p>
 
 
 

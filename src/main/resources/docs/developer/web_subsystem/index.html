@@ -899,15 +899,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-websocket-wire-protocol" class="md-nav__link">
+  <a href="#2-websocket-wire-protocol-v2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. WebSocket Wire Protocol
+        2. WebSocket Wire Protocol (v2)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2. WebSocket Wire Protocol">
+    <nav class="md-nav" aria-label="2. WebSocket Wire Protocol (v2)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -960,16 +960,27 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#relay-state-serverstatejs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relay state (server/state.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-dead-reckoning-continuous-phase-tracking" class="md-nav__link">
+  <a href="#3-beat-clock" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Dead-Reckoning &amp; Continuous Phase Tracking
+        3. Beat Clock
       
     </span>
   </a>
@@ -1408,15 +1419,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#2-websocket-wire-protocol" class="md-nav__link">
+  <a href="#2-websocket-wire-protocol-v2" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. WebSocket Wire Protocol
+        2. WebSocket Wire Protocol (v2)
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="2. WebSocket Wire Protocol">
+    <nav class="md-nav" aria-label="2. WebSocket Wire Protocol (v2)">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1469,16 +1480,27 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#relay-state-serverstatejs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Relay state (server/state.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#3-dead-reckoning-continuous-phase-tracking" class="md-nav__link">
+  <a href="#3-beat-clock" class="md-nav__link">
     <span class="md-ellipsis">
       
-        3. Dead-Reckoning &amp; Continuous Phase Tracking
+        3. Beat Clock
       
     </span>
   </a>
@@ -1584,7 +1606,7 @@
 │                                                              │
 │  Mixer / Deck Engine ──► WebPresetSerializer (JSON)          │
 │                               │                              │
-│                               ▼ (25 Hz Throttled)            │
+│                               ▼ (throttled, 5-60 Hz)         │
 │  BroadcastEngine-IO Thread ──► java.net.http.WebSocket       │
 └───────────────────────────────┬──────────────────────────────┘
                                 │ WSS: ?role=broadcast&amp;key=&lt;token&gt;
@@ -1594,7 +1616,7 @@
 │                                                              │
 │  - Authentication &amp; Role Verification                        │
 │  - Active Broadcaster Arbitration                            │
-│  - Full State Caching (`state_full`)                         │
+│  - Merged State Cache (late joiners get current state)       │
 │  - Low-Latency Fan-Out Distribution                          │
 └───────────────────────────────┬──────────────────────────────┘
                                 │ WSS: ?role=viewer
@@ -1604,52 +1626,57 @@
 │                                                              │
 │  - Autopilot Playlist Manager (autopilot.js)                 │
 │  - Web Audio DSP Graph &amp; Beat Tracker (dsp.js)               │
-│  - Dead-Reckoning Extrapolation (renderer.js)                │
+│  - Beat-Clock Extrapolation (renderer.js)                    │
 │  - WebGL2 Multi-Pass Pipeline &amp; CRT Post-Processing          │
 └──────────────────────────────────────────────────────────────┘
 </code></pre>
 <hr />
-<h2 id="2-websocket-wire-protocol">2. WebSocket Wire Protocol</h2>
-<p>The relay server and browser clients communicate using compact JSON messages.</p>
+<h2 id="2-websocket-wire-protocol-v2">2. WebSocket Wire Protocol (v2)</h2>
+<p>The relay server and browser clients exchange compact JSON messages. Every <code>state_full</code> carries <code>"v": 2</code>; a client that speaks another version ignores it (and the deltas that follow, until a full snapshot of its version arrives). Values on the wire are the desktop's <strong>evaluated</strong> parameter values, rounded to 4 decimals, so the browser runs no modulators in live mode and matches the desktop exactly.</p>
 <h3 id="message-types">Message Types</h3>
 <h4 id="1-full-state-snapshot-state_full">1. Full State Snapshot (<code>state_full</code>)</h4>
-<p>Dispatched immediately when the broadcaster connects, when a new preset is loaded, or when a new viewer joins mid-session. Contains complete deck parameters, shader source selections, LFO states, and CV routing matrices.</p>
+<p>Sent when the broadcaster connects, when a preset or setlist changes, and by the relay to a viewer joining mid-session (built from the relay's merged state, not the broadcaster's last snapshot).</p>
 <pre><code class="language-json">{
   &quot;type&quot;: &quot;state_full&quot;,
-  &quot;timestamp&quot;: 1725234500123,
-  &quot;deckA&quot;: {
-    &quot;source&quot;: &quot;mandala&quot;,
-    &quot;params&quot;: {
-      &quot;petals&quot;: 8.0,
-      &quot;morph&quot;: 1.2,
-      &quot;zoom&quot;: 1.05,
-      &quot;rotSpeed&quot;: 0.4
+  &quot;v&quot;: 2,
+  &quot;clock&quot;: { &quot;beats&quot;: 812.4, &quot;bpm&quot;: 126.0 },
+  &quot;preset&quot;: {
+    &quot;deckA&quot;: {
+      &quot;source&quot;: &quot;dynamic_spiral&quot;,
+      &quot;params&quot;: { &quot;MaxPoints&quot;: 500.0, &quot;Scale&quot;: 0.5, &quot;HueOffset&quot;: 0.2 },
+      &quot;viewZoom&quot;: 1.0, &quot;viewRotateZ&quot;: 0.0, &quot;globalAlpha&quot;: 1.0,
+      &quot;fx&quot;: {
+        &quot;0&quot;: { &quot;id&quot;: &quot;feedback&quot;, &quot;dryWet&quot;: 1.0, &quot;params&quot;: { &quot;fbDecay&quot;: 0.65, &quot;fbGain&quot;: 0.48 } },
+        &quot;1&quot;: null,
+        &quot;2&quot;: null
+      },
+      &quot;fxDryWet&quot;: 1.0
+    },
+    &quot;deckB&quot;: { &quot;empty&quot;: true },
+    &quot;deckBG&quot;: { &quot;empty&quot;: true },
+    &quot;mixer&quot;: {
+      &quot;balance&quot;: 0.0, &quot;alpha&quot;: 1.0, &quot;levelA&quot;: 1.0, &quot;levelB&quot;: 1.0, &quot;levelBG&quot;: 1.0,
+      &quot;transition&quot;: &quot;linear_crossfade&quot;, &quot;transitionParams&quot;: {},
+      &quot;fx&quot;: { &quot;0&quot;: null, &quot;1&quot;: null, &quot;2&quot;: null }, &quot;fxDryWet&quot;: 1.0
     }
-  },
-  &quot;deckB&quot;: {
-    &quot;source&quot;: &quot;dynamic_spiral&quot;,
-    &quot;params&quot;: {
-      &quot;coils&quot;: 12.0,
-      &quot;decay&quot;: 0.96
-    }
-  },
-  &quot;mixer&quot;: {
-    &quot;crossfader&quot;: 0.5,
-    &quot;blendMode&quot;: &quot;ADD&quot;,
-    &quot;masterGain&quot;: 1.0
   }
 }
 </code></pre>
+<ul>
+<li><strong><code>params</code></strong> is keyed by the exact parameter name: the ISF input <code>NAME</code> the shader uniform uses (Mandala uses its own names, e.g. <code>Hue Offset</code>). The browser looks the name up in the source's ISF header.</li>
+<li><strong><code>fx</code></strong> is an object keyed <code>"0"</code>..<code>"2"</code>, not an array, so a delta can address one slot parameter. An empty slot is <code>null</code>. <code>dryWet</code> is the <em>effective</em> wet amount (zero for a disabled slot, scaled by the desktop's FX dip). <code>fxDryWet</code> is the effective chain wet. The master chain is <code>mixer.fx</code> / <code>mixer.fxDryWet</code>.</li>
+<li><strong><code>balance</code></strong> is the crossfader mapped to 0..1 (the transition's <code>progress</code>). <code>transition</code> is a transition id from <code>web/catalog.json</code>; unknown ids fall back to <code>linear_crossfade</code>.</li>
+<li><strong><code>mandala</code></strong> (Mandala decks only) holds the shader-ready uniforms (<code>uL1</code>..<code>uL4</code> already normalised, <code>uA</code>..<code>uD</code> from the selected recipe, <code>uThickness</code>, <code>uHueOffset</code>, <code>uHueSweep</code>, <code>uDepth</code>, <code>uMaxR</code>), because the browser has no recipe table.</li>
+<li><strong><code>empty: true</code></strong> marks an empty deck; a source the web cannot draw (external video) is sent with an id the catalog does not know and renders as nothing.</li>
+</ul>
 <h4 id="2-throttled-delta-update-state_delta">2. Throttled Delta Update (<code>state_delta</code>)</h4>
-<p>Streamed at a configurable rate (default: 25 Hz) during live performance. Transmits only parameters and continuous signals that have changed beyond an epsilon threshold.</p>
+<p>Streamed at <code>BroadcastPreferences.targetFps</code> (5-60 Hz). <code>patch</code> is a recursive diff against the last state sent: only changed keys appear, and <code>null</code> means the key was removed or the slot emptied. An empty <code>patch</code> is a once-a-second heartbeat that only carries the clock.</p>
 <pre><code class="language-json">{
   &quot;type&quot;: &quot;state_delta&quot;,
-  &quot;timestamp&quot;: 1725234500163,
-  &quot;integratedTime&quot;: 142.845,
-  &quot;integratedShear&quot;: 12.302,
-  &quot;crossfader&quot;: 0.52,
-  &quot;deckA&quot;: {
-    &quot;zoom&quot;: 1.08
+  &quot;clock&quot;: { &quot;beats&quot;: 812.9, &quot;bpm&quot;: 126.0 },
+  &quot;patch&quot;: {
+    &quot;mixer&quot;: { &quot;balance&quot;: 0.52 },
+    &quot;deckA&quot;: { &quot;fx&quot;: { &quot;0&quot;: { &quot;params&quot;: { &quot;fbDecay&quot;: 0.7 } } } }
   }
 }
 </code></pre>
@@ -1657,12 +1684,11 @@
 <p>Dispatched by the relay server to all connected viewers when the desktop broadcaster connects or disconnects:
 - <code>broadcaster_online</code>: Viewers smoothly transition from Autopilot mode to the live broadcaster state, and the TV station badge flips to <code>SPAZ RADIO • LIVE</code>.
 - <code>broadcaster_offline</code>: Viewers smoothly fade back to local autonomous Autopilot playlist cycles.</p>
+<h3 id="relay-state-serverstatejs">Relay state (<code>server/state.js</code>)</h3>
+<p>The relay keeps the broadcast state merged: each <code>state_full</code> replaces it, each <code>state_delta</code> is applied to it (a <code>null</code> deletes the key). A viewer that joins mid-session is sent a <code>state_full</code> built from it, with <code>clock.beats</code> advanced by the time since it was recorded, so it starts on the right beat. Messages of another protocol version are relayed but never cached. Tests: <code>cd server &amp;&amp; npm test</code> (no <code>ws</code> needed).</p>
 <hr />
-<h2 id="3-dead-reckoning-continuous-phase-tracking">3. Dead-Reckoning &amp; Continuous Phase Tracking</h2>
-<p>To eliminate visual jitter and 60 FPS stutter caused by network packet quantization:
-1. The desktop broadcaster transmits continuous monotonically accumulating time variables (<code>integratedTime</code>, <code>integratedShear</code>).
-2. The client-side WebGL2 renderer (<code>renderer.js</code>) maintains local dead-reckoning integration: between delta updates, the renderer advances time variables locally using <code>performance.now()</code>.
-3. When incoming delta packets arrive, the local timeline gently soft-locks to the broadcaster's anchor time without discontinuous phase jumps.</p>
+<h2 id="3-beat-clock">3. Beat Clock</h2>
+<p>Every message carries <code>clock: {beats, bpm}</code>, the desktop's synchronised beat count and tempo at the moment of sending. The browser stores it with the local <code>performance.now()</code> at arrival and extrapolates (<code>beats + elapsed * bpm / 60</code>) for every <code>lfo</code>/<code>beatSine</code> modulator and any web-side evaluation, so in live mode it needs no beat detection of its own. Network latency (tens of milliseconds) is not compensated; the once-a-second heartbeat keeps drift from accumulating. Outside a live broadcast the client free-runs at the tempo estimated by <code>dsp.js</code> (phase-locked beat tracking is plan phase 4).</p>
 <hr />
 <h2 id="4-browser-side-web-audio-dsp-graph-dspjs">4. Browser-Side Web Audio DSP Graph (<code>dsp.js</code>)</h2>
 <p>In standalone web mode or Autopilot mode, the client performs real-time audio analysis on the Icecast stream (<code>https://radio.spaz.org:8060/radio.ogg</code>) via the Web Audio API:</p>
@@ -1694,6 +1720,13 @@ createMediaElementSource() ──► GainNode (Rotary Volume Dial: V²) ──�
   - <code>--check</code>: Compares actual files against manifest hashes and transpiled sources; fails with exit code 1 if drift exists.
   - <code>--apply</code>: Automatically transpiles desktop <code>#version 330 core</code> GLSL shaders to WebGL2 <code>#version 300 es</code> (<code>precision highp float;</code>).
   - <code>--mark-synced &lt;target&gt;</code>: Updates recorded hashes for verified manual Kotlin-to-JS algorithm ports.
+- <strong>Evaluator parity (<code>web/evaluator.js</code>)</strong>: a port of <code>ModulatableParameter.evaluate()</code>, <code>Evaluators.kt</code> and <code>WaveformMath.kt</code>. It is checked by value, not by hash: <code>WebEvaluatorVectorsTest</code> runs the real desktop evaluator under simulated time and writes <code>web/tools/evaluator_vectors.json</code> (and fails when that file is stale, so a desktop change cannot go unnoticed); <code>node --test web/tools/evaluator.test.mjs</code> replays the vectors through the JS port. After changing desktop modulation, regenerate with <code>UPDATE_WEB_VECTORS=1 ./gradlew test --tests '*WebEvaluatorVectorsTest*'</code>, then fix the port until the node test passes. <code>beatPhase</code> and <code>sampleAndHold</code> are no longer registered in <code>CVRegistry</code>, so the desktop skips them and the web does not implement them.
+- <strong>ISF assets and the catalog</strong>: <code>sync_web.py --apply</code> also copies <code>default_filters</code> and <code>default_transitions</code> into <code>web/shaders/fx/</code> and <code>web/shaders/transitions/</code> (same transpile: ES 3.00 header, uniform initialisers dropped) and regenerates <code>web/catalog.json</code>, the list of sources, filters and transitions the client can load. Ids are file stems, the same ids the desktop registries use. <code>--check</code> fails if the catalog is stale.
+- <strong>Content formats (<code>web/preset.js</code>, <code>web/mandala.js</code>)</strong>: the autopilot reads the desktop's own formats. <code>web/presets/*.lsd</code> are <code>DeckPresetDto</code> files (a preset carries no FX); <code>parseDeckPreset</code> keeps each <code>ParameterDto</code> for <code>evaluator.js</code> and resolves <code>randomizeBase</code> once at load. FX come from <code>.lsdfxchain</code> (<code>FXChainDto</code>) files in <code>web/content/fxchains/</code> (copied from <code>defaults/fx_chains</code>) and <code>web/fxchains/</code> (web-authored, <code>web-*</code>); transitions from <code>.lsdtrans</code> in <code>web/content/transitions/</code>. <code>web/catalog.json</code> lists all of them. A playlist line is <code>preset</code> or <code>preset | fxchain</code>; with no pin, <code>settings.json</code> <code>fxChains</code> rotates (empty = no FX) and <code>transitions</code> picks each crossfade's transition. Mandala is evaluated by <code>mandala.js</code>, a port of <code>Mandala.kt</code>'s recipe selection and uniforms over <code>web/mandala_recipes.json</code> (generated from <code>MandalaLibrary.kt</code>); <code>web/tools/mandala_vectors.json</code> pins the selection to the desktop. Validate authored content with <code>node --test web/tools/content.test.mjs</code> (<code>validate_content.mjs</code> checks ids, parameter names against the shader headers, ParameterDto fields and modulators).
+- <strong>Authoring web presets (<code>scripts/gen_web_presets.py</code>)</strong>: the <code>web-*</code> presets and chains are generated from short definitions (the generated files are the source of truth once committed; hand edits are fine). Recipes: <code>pulse(beats, depth)</code> is an envelope that peaks on the beat; <code>lfo(beats, depth, wave)</code> is a beat-synced LFO (period in beats; 16 = four bars); <code>kick</code>/<code>hat</code> follow <code>audio_flux_bass</code>/<code>audio_flux_high</code>; <code>bass</code>/<code>mid</code>/<code>high</code>/<code>amp</code> follow the band levels with attack/decay smoothing; <code>gate(source, threshold, depth)</code> stays silent until the signal passes the threshold. <strong>A gate only works on a parameter whose base is its minimum</strong> (0 = "off"): below the threshold the amount goes negative and clamps at the minimum, so on any other base the silent value dips below base. Parameters in the shaders are normalised 0..1 or -1..1, so ADD depths are fractions of the range (half the range on bipolar parameters); <code>lfo</code> on a unipolar parameter sweeps base..base+depth. Tag a preset with the behaviours it promises (<code>beat</code>, <code>bar</code>, <code>bass</code>, <code>kick</code>, <code>mid</code>, <code>high</code>, <code>amp</code>, <code>bass-gated</code>); <code>node --test web/tools/reactivity.test.mjs</code> verifies each tag is backed by a parameter that moves, <code>content.test.mjs</code> validates names and ranges, and <code>node web/checks/render_check.mjs</code> renders every preset (look at the PNGs: sources differ in how much they show at default settings; <code>hyper_slice</code> blows out under strong feedback, <code>gyroid_hyperspace</code> is black unless Brightness/Zoom are raised, a solid gyroid surface is mostly black). <code>RC_EXTRA=specs.json RC_ONLY=name</code> renders ad-hoc looks.
+- <strong>Render graph (<code>web/isf.js</code>, <code>web/graph.js</code>)</strong>: <code>isf.js</code> wraps ISF source into GLSL ES 3.00 (a port of <code>ISFParser.buildGLSLFragmentShader</code>) and runs multi-pass shaders (<code>PASSES</code>, <code>TARGET</code>, <code>PERSISTENT</code> ping-pong, <code>FLOAT</code>, <code>$WIDTH</code>/<code>$HEIGHT</code> expressions). <code>graph.js</code> is <code>Renderer.renderDeck</code>/<code>renderMixer</code>: deck source, 3-slot FX chain, transition, composite over BG, master FX chain. Assets compile lazily on first use (<code>Library</code>), and a not-yet-loaded effect is skipped for those frames. Mandala is the only source drawn outside the graph. <code>IMPORTED</code> assets and <code>audio</code>/<code>audioFFT</code> inputs are not supported (nothing bundled uses them).
+- <strong>Headless checks (<code>web/checks/</code>)</strong>: <code>node web/checks/shader_check.mjs</code> compiles every catalog shader in headless Firefox; <code>node web/checks/render_check.mjs [outDir]</code> drives the real app through every source, filter, transition and bundled preset, writes PNGs, and fails on blank frames, console errors or GL errors. Both need only <code>firefox</code> and <code>node</code>; software GL is fine.
+- <strong>Beat and audio parity (<code>web/beatclock.js</code>, <code>web/dsp.js</code>)</strong>: live mode runs <code>BeatFlywheel</code> on the wire clock (<code>getSynchronizedTotalBeats</code> semantics plus blending of each anchor against network jitter); standalone integrates the browser's tempo estimate into <code>cvState.totalBeats</code>. <code>dsp.js</code> publishes <code>audio_*</code> and <code>audio_flux_*</code> with the desktop's scaling (<code>AudioEngine</code>: RMS / 0.25, band flux / 0.05, amp flux = (2 bass + 0.8 mid + 0.3 high flux) / 0.1). Beat <em>detection</em> in <code>dsp.js</code> only runs from the radio stream, so it only matters standalone.
 - <strong>Continuous Integration</strong>: Gradle task <code>./gradlew checkWebSync</code> and JVM unit test <code>WebSyncTest.kt</code> guard against drift on every build.</p>
 <hr />
 <h2 id="6-relay-server-operations-serverserverjs">6. Relay Server Operations (<code>server/server.js</code>)</h2>

@@ -3,10 +3,10 @@
   "bgPlaylist": "default_bg.lsdplay",
   "fgHoldDuration": 45.0,
   "fgFadeDuration": 2.5,
-  "fgPlaybackOrder": "sequential",
+  "fgPlaybackOrder": "random",
   "bgHoldDuration": 90.0,
   "bgFadeDuration": 4.0,
-  "bgPlaybackOrder": "sequential",
+  "bgPlaybackOrder": "random",
   "audioStreamUrl": "https://radio.spaz.org:8060/radio.ogg",
   "fallbackBpm": 120.0,
   "transitions": [
@@ -28,5 +28,5 @@
     "web-vortex",
     "web-build-drop"
   ],
-  "fxPlaybackOrder": "sequential"
+  "fxPlaybackOrder": "random"
 }
