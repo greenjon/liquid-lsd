@@ -1,6 +1,8 @@
 package llm.slop.liquidlsd.ui.browser
 
 import llm.slop.liquidlsd.ui.SmoothScroll
+import llm.slop.liquidlsd.ui.ImGuiFileBrowser
+import llm.slop.liquidlsd.ui.ToastOverlay
 import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
@@ -484,10 +486,27 @@ object BrowserPane {
         if (ImGui.beginPopup("browser_more_popup")) {
             pushOpenDropdownFont()
             if (ImGui.menuItem("Restore Factory Presets")) FileSystemManager.restoreFactoryPresets()
+            if (ImGui.menuItem("Import Flame...")) flameImportBrowser.open(ImGuiFileBrowser.Mode.LOAD, File(".").canonicalFile, "", listOf(".flame"))
+            itemTooltip("Import a .flame genome (your own file) as Fractal Flame presets in library/presets/imported-flames/.\nVariations the generator does not have are skipped; the preset's notes list what was dropped.")
             popOpenDropdownFont()
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
+        flameImportBrowser.draw { file -> importFlame(file) }
+    }
+
+    private val importLogger = mu.KotlinLogging.logger {}
+    private val flameImportBrowser = ImGuiFileBrowser("##flameImportBrowser")
+
+    private fun importFlame(file: File) {
+        try {
+            val outcome = llm.slop.liquidlsd.presets.FlameImportOps.importFile(file)
+            ToastOverlay.show("Imported ${outcome.files.size} flame(s) to ${llm.slop.liquidlsd.presets.FlameImportOps.FOLDER}")
+            outcome.notes.forEach { importLogger.info { "Flame import: $it" } }
+        } catch (e: Exception) {
+            importLogger.warn(e) { "Flame import failed for ${file.name}" }
+            ToastOverlay.show("Could not import ${file.name}: ${e.message}")
+        }
     }
 
     /** Playlist editing context for the list, or null outside a playlist. Reordering is off while a search narrows the rows. */

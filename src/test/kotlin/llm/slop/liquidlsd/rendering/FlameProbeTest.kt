@@ -258,4 +258,44 @@ class FlameProbeTest {
         probe.dispose()
         javax.imageio.ImageIO.write(img, "png", java.io.File(path))
     }
+
+    /**
+     * Importer convention check, off by default: `FLAME_IMPORT_SHEET=/tmp/imp.png FLAME_IMPORT_FILE=temp-flames/x.flame` draws the
+     * flame under each coefficient-order / y-flip option (normal, transposed, flipY, both), +y up, to compare with a reference render.
+     */
+    @Test fun importerConventionSheet() = withGl {
+        val path = System.getenv("FLAME_IMPORT_SHEET") ?: return@withGl
+        val file = java.io.File(System.getenv("FLAME_IMPORT_FILE") ?: return@withGl)
+        val probe = FlameProbe()
+        val cell = 250
+        val opts = listOf(
+            FlameImporter.Options(false, false), FlameImporter.Options(true, false),
+            FlameImporter.Options(false, true), FlameImporter.Options(true, true)
+        )
+        val img = java.awt.image.BufferedImage(cell * opts.size, cell, java.awt.image.BufferedImage.TYPE_INT_RGB)
+        for ((k, o) in opts.withIndex()) {
+            val imp = FlameImporter.parse(file.readText(), "x", o).first()
+            val hits = IntArray(cell * cell)
+            repeat(30) {
+                probe.evaluate { imp.values[it] }
+                val pts = probe.lastPoints()
+                for (i in 0 until pts.size / 4) {
+                    if (pts[i * 4 + 3] < FlameProbe.ITERATIONS - 0.5f) continue
+                    val rot = imp.values["Rotation"] ?: 0f
+                    val dx = pts[i * 4] - (imp.values["CenterX"] ?: 0f); val dy = pts[i * 4 + 1] - (imp.values["CenterY"] ?: 0f)
+                    val z = imp.values["Zoom"] ?: 0.45f
+                    val x = ((kotlin.math.cos(rot) * dx - kotlin.math.sin(rot) * dy) * z * 0.5f + 0.5f) * cell
+                    val y = ((kotlin.math.sin(rot) * dx + kotlin.math.cos(rot) * dy) * z * 0.5f + 0.5f) * cell
+                    if (x >= 0 && x < cell && y >= 0 && y < cell) hits[(cell - 1 - y.toInt()) * cell + x.toInt()]++
+                }
+            }
+            val max = hits.max().coerceAtLeast(1)
+            for (j in hits.indices) {
+                val c = (kotlin.math.ln(1f + hits[j]) / kotlin.math.ln(1f + max) * 255).toInt()
+                img.setRGB(k * cell + j % cell, j / cell, (c shl 16) or (c shl 8) or c)
+            }
+        }
+        probe.dispose()
+        javax.imageio.ImageIO.write(img, "png", java.io.File(path))
+    }
 }

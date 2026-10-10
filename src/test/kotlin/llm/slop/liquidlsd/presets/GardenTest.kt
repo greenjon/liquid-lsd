@@ -67,4 +67,22 @@ class GardenTest {
         val dto = DeckPresetDto(name = "x", visualSourceType = "fractal_flame", parameters = emptyMap(), feedbackParameters = emptyMap(), samplerStrategy = "BREED")
         assertEquals("BREED", PresetManager.json.decodeFromString<DeckPresetDto>(PresetManager.json.encodeToString(dto)).samplerStrategy)
     }
+
+    @Test fun importingAFlameFileWritesLoadablePresetsAndNeverOverwrites() {
+        val dir = Files.createTempDirectory("flames").toFile()
+        try {
+            val src = dir.resolve("My Flame.flame")
+            src.writeText("""<flames><flame name="Alpha One" size="100 100" scale="50"><xform weight="1" coefs="0.5 0 0 0.5 0 0" sinusoidal="1" butterfly="1"/></flame><flame name="Beta" size="100 100" scale="50"/></flames>""")
+            val out = dir.resolve("out")
+            val first = FlameImportOps.importFile(src, out)
+            assertEquals(listOf("alpha-one.lsd", "beta.lsd"), first.files.map { it.name })
+            assertTrue(first.notes.any { "butterfly" in it })
+            val dto = PresetManager.json.decodeFromString<DeckPresetDto>(first.files[0].readText())
+            assertEquals("fractal_flame", dto.visualSourceType)
+            assertEquals("alpha-one", dto.name)
+            assertEquals(1f, dto.parameters.getValue("X1 Weight").baseValue)
+            val second = FlameImportOps.importFile(src, out)
+            assertEquals(listOf("alpha-one-2.lsd", "beta-2.lsd"), second.files.map { it.name })
+        } finally { dir.deleteRecursively() }
+    }
 }
