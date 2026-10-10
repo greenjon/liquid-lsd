@@ -58,15 +58,17 @@ object VisualSourceRegistry {
         "gyroid_hyperspace",
         "celestial_engine",
         "hyper_slice",
-        "chladni_cymatics",
-        "flame_spike"
+        "chladni_cymatics"
     )
+
+    /** Branch-only sources extracted like defaults but not part of the stock set (no curated macros, not asserted by tests). */
+    internal val EXPERIMENTAL_SOURCE_IDS = listOf("flame_spike")
 
     /** Default sources shipped as a meta.json + shader.frag (+ vert) folder rather than a single ISF file. */
     private val FOLDER_STYLE_IDS = setOf("mandala", "flame_spike")
 
     internal fun ensureDefaultSources(sourcesDir: File) {
-        val anyMissing = DEFAULT_SOURCE_IDS.any { id ->
+        val anyMissing = (DEFAULT_SOURCE_IDS + EXPERIMENTAL_SOURCE_IDS).any { id ->
             val folder = File(sourcesDir, id)
             if (id in FOLDER_STYLE_IDS) {
                 !File(folder, "meta.json").exists() || !File(folder, "shader.frag").exists()
@@ -79,7 +81,7 @@ object VisualSourceRegistry {
         }
 
         logger.info { "Default sources missing or incomplete in ${sourcesDir.path}; extracting bundled defaults..." }
-        for (sourceId in DEFAULT_SOURCE_IDS) {
+        for (sourceId in DEFAULT_SOURCE_IDS + EXPERIMENTAL_SOURCE_IDS) {
             val targetFolder = File(sourcesDir, sourceId)
             val sourceFiles = if (sourceId in FOLDER_STYLE_IDS) {
                 if (sourceId == "mandala") listOf("meta.json", "shader.frag", "shader.vert") else listOf("meta.json", "shader.frag")

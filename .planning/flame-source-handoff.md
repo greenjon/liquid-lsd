@@ -8,7 +8,7 @@ Branch: `spike/flame-source` (plan itself is committed on `main`, e9a6c0a). Rule
 Files:
 - `src/main/kotlin/llm/slop/liquidlsd/rendering/FlameSpikeSource.kt`: `FlameSpikeSource` (extends `DynamicVisualSource`, overrides `renderTopology`) + private `FlameEngine` (all GL + inline GLSL).
 - `src/main/resources/default_sources/flame_spike/{meta.json,shader.frag}`: parameters + the tone-map pass (this shader is the one `Renderer` binds).
-- `VisualSourceRegistry.kt`: `flame_spike` added to `DEFAULT_SOURCE_IDS`, `FOLDER_STYLE_IDS`, and a `loadFromFolder` branch.
+- `VisualSourceRegistry.kt`: `flame_spike` added to `EXPERIMENTAL_SOURCE_IDS` (NOT `DEFAULT_SOURCE_IDS`: stock-source tests assert every default is ISF or mandala, has curated macros, and exists in library/sources), `FOLDER_STYLE_IDS`, and a `loadFromFolder` branch.
 - `Shader.kt`: `setUniform4fv`.
 
 How the render works (all in `FlameEngine.render`): fade/clear 32F density FBO -> per pass: iterate fragment pass (state ping-pong, 512x512 RGBA32F = 262k points, xyz-less: x, y, colour, age) -> `GL_POINTS` splat (Gaussian from `gl_PointCoord`, additive, one-to-one blend) -> finally the deck's tone-map shader draws the density to the target. 12 variations hardcoded in GLSL `vari()`, 3 hardcoded genomes (param `Genome` 0..2), modifiers `Spin`/`Breathe`/`Warp`. GPU time is logged every 240 frames ("Flame spike: gpu X ms/frame").
