@@ -854,6 +854,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../developer/flame_source/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Fractal Flame Source
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../developer/ui/" class="md-nav__link">
         
   
@@ -1206,6 +1234,17 @@
   
     <nav class="md-nav" aria-label="[Unreleased]">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#fractal-flame-generator-with-an-evolving-garden-experimental-renderingflamesourcekt-flameenginekt-flamegenomekt-flamesamplerkt-presetsgardenkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fractal Flame Generator With an Evolving Garden (experimental) (rendering/FlameSource.kt, FlameEngine.kt, FlameGenome.kt, FlameSampler.kt, presets/Garden.kt)
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#web-tv-gets-a-web-preset-pack-that-reacts-to-the-beat-and-the-bass-webpresets-webfxchains-scriptsgen_web_presetspy" class="md-nav__link">
@@ -5988,6 +6027,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fractal-flame-generator-with-an-evolving-garden-experimental-renderingflamesourcekt-flameenginekt-flamegenomekt-flamesamplerkt-presetsgardenkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fractal Flame Generator With an Evolving Garden (experimental) (rendering/FlameSource.kt, FlameEngine.kt, FlameGenome.kt, FlameSampler.kt, presets/Garden.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-tv-gets-a-web-preset-pack-that-reacts-to-the-beat-and-the-bass-webpresets-webfxchains-scriptsgen_web_presetspy" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10743,6 +10793,15 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fractal-flame-generator-with-an-evolving-garden-experimental-renderingflamesourcekt-flameenginekt-flamegenomekt-flamesamplerkt-presetsgardenkt">Fractal Flame Generator With an Evolving Garden (experimental) (<code>rendering/FlameSource.kt</code>, <code>FlameEngine.kt</code>, <code>FlameGenome.kt</code>, <code>FlameSampler.kt</code>, <code>presets/Garden.kt</code>)</h3>
+<ul>
+<li><strong>New generator, Fractal Flame.</strong> Millions of points iterate through up to six transforms with the paper's 49 variations and are drawn as feathered, glowing filaments. Everything is a parameter, so modulators, macros and MIDI/OSC learn work on every xform, affine and variation. The Edit row's SRC sub-tab has tabs for Look, Mods, each xform and the final xform; the default macro knobs are Zoom, Spin, Warp and Breathe, and Spin, Breathe, Warp and Drift move every xform at once. Math follows Draves &amp; Reckase, "The Fractal Flame Algorithm" (clean-room, credited in the licenses page). Experimental: not in the stock generator set yet.</li>
+<li><strong>Evolving looks.</strong> The deck's die makes a brand-new random flame and frames the camera on it; blank, exploded, collapsed or fog-like candidates are rejected and re-rolled automatically. A new <strong>R / M / P / B</strong> button beside the die picks how the next morph target is chosen: Random, Mutate (default, strength = the <code>Mutation</code> parameter), Pool (a kept offspring) or Breed (a cross of two kept offspring, then mutated). It applies to the die and to the deck's Rand morph and is saved with the preset when not the default. Variation ids cross-fade during a morph instead of sweeping through every shape in between.</li>
+<li><strong>Keep, Skip and the Garden.</strong> The star at the end of the flame editor's tab strip keeps what is playing as an offspring preset in <code>library/presets/garden/</code> (tagged <code>garden</code>, <code>gen:N</code>, <code>parent:&lt;name&gt;</code>, with a preview image shown in the browser tooltip). <strong>Skip</strong> discards the target the morph is heading to and picks another.</li>
+<li><strong>Holds its frame rate.</strong> A new preference, <em>Flame GPU Budget (ms)</em> (General, default 3 ms per flame deck, 0 = off), lowers the point count when a deck runs over budget and restores it when there is room, keeping brightness unchanged. Fewer points (the <code>Points</code> setting too) no longer dim the picture.</li>
+<li>Not yet: <code>.flame</code> file import, the web player version, a thumbnail grid in the browser.</li>
+<li>Internal: see <code>docs/developer/flame_source.md</code>. New: <code>FlameProbe</code>/<code>FlameQuality</code> (quality gate on a hidden state texture), <code>FlameSampler.mutate/random/breed</code> (pure), <code>FlameGovernor</code>, <code>SamplerStrategy</code> on <code>DeckMorphController</code> with <code>GenomeMorph.sampleMorphTarget(..., strategy, fresh)</code> and <code>vetoTarget()</code>, <code>DeckMorphSnapshot.origin</code> (lineage), <code>Garden</code>/<code>GardenThumbnails</code>, optional <code>DeckPresetDto.samplerStrategy</code>, <code>AppPreferences.flameBudgetMs</code>. Tests: <code>FlameQualityTest</code>, <code>FlameSamplerTest</code>, <code>FlameGovernorTest</code>, <code>GardenTest</code>, <code>FlameProbeTest</code> (GL, run under xvfb).</li>
+</ul>
 <h3 id="web-tv-gets-a-web-preset-pack-that-reacts-to-the-beat-and-the-bass-webpresets-webfxchains-scriptsgen_web_presetspy">Web TV Gets a <code>web-*</code> Preset Pack That Reacts to the Beat and the Bass (<code>web/presets/</code>, <code>web/fxchains/</code>, <code>scripts/gen_web_presets.py</code>)</h3>
 <ul>
 <li><strong>Ten new audio-reactive presets and five new FX chains for the web TV.</strong> Presets pulse on the beat or on multiples of it (every beat, every half beat, every 2, 4 or 16 beats), swell on kick drums, follow the mids and hats, and, in some, a feature appears only when the bass is loud (Mandala's fourth arm, a spiral's twist, an icosahedron's spikes). All eight web sources are used. The five new chains (<code>web-kaleido</code>, <code>web-bloom</code>, <code>web-glitch</code>, <code>web-punch</code>, <code>web-drop-strobe</code>) react too (bloom swells with bass, glitch on hats and bass hits, radial blur on kicks, strobe on bass drops).</li>

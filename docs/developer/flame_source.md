@@ -1,0 +1,44 @@
+# Fractal Flame Source
+
+The Fractal Flame generator (`fractal_flame`, class `FlameSource`) is an evolving-genome source: a large parameter set, a GPU point renderer and a sampler that picks the next morph target. Math: Draves & Reckase, "The Fractal Flame Algorithm" (clean-room, paper only). Status: experimental, extracted like the stock sources but listed in `VisualSourceRegistry.EXPERIMENTAL_SOURCE_IDS`. Planning notes and measurements live in `.planning/flame-source-plan.md` and `.planning/flame-source-handoff.md`.
+
+## Rendering (`FlameEngine`, OpenGL 3.3 core)
+
+1. A ping-pong RGBA32F **state texture** (512x512, one IFS point per texel: x, y, colour, age).
+2. **Iterate pass**: a fragment shader over the state texture picks an xform by weight, applies pre-affine, the weighted variation slots and the post-affine, blends the colour index, and reseeds diverged points.
+3. **Splat pass**: `GL_POINTS`, one vertex per point (state fetched with `texelFetch`), optional final xform, camera, then a Gaussian sprite additively blended into an fp16 density buffer that persists with `Decay`.
+4. The folder's `shader.frag` is the **tone-map pass** `Renderer` binds (log density, toe, gamma, vibrancy). The engine overrides `uExposure` with `Exposure * n / rows` so the `Points` fraction and the governor do not change brightness.
+
+Cost is per point (about 3 ns each on the dev iGPU), not per pixel. The shared GLSL (`FlameEngine.COMMON`) holds the 49-case `vari()` switch; ids are the paper's variation numbers and index `FlameVariations.ALL`.
+
+## Genome as parameters (`FlameGenome`)
+
+Parameters are built in Kotlin (not `meta.json`): 19 globals, six xforms and a final xform (weight, colour, speed, pre/post affine, three variation slots of id, weight and four normalised parameters `A`..`D`). Names are the preset keys (`X2 PreRot`, `X2 V1 Id`). `pack()` writes the `uXf` uniform array: weight-0 xforms are compacted, `Spin/Breathe/Warp/Drift` are applied, and each slot is `[idA, wA, idB, wB]` plus A's and B's parameters so a morph cross-weights two variation ids instead of sweeping through the ids in between. `FlameVariations.real/normalised` map the stored 0..1 values onto each variation's own range with 0.5 as the default.
+
+## Morph and sampling
+
+`DeckMorphController` owns A and B. A source that implements `GenomeMorph` picks its own targets (`sampleMorphTarget(from, target, random, strategy, fresh)`), keeps discrete parameters out of the lerp (`isDiscreteMorph`) and receives the live A/B/t (`onMorphUpdate`). `SamplerStrategy { RANDOM, MUTATE, POOL, BREED }` is `DeckMorphController.strategy` (default MUTATE, persisted as optional `DeckPresetDto.samplerStrategy`, written only when not MUTATE; null on load leaves the deck's setting alone). `forceRandomize` makes A a fresh genome (Random, or the Garden strategy) and B follows the strategy; `vetoTarget()` resamples the end the morph is heading to. Each `DeckMorphSnapshot.origin` carries the genome's `FlameLineage` (parent names and tags) through promotions.
+
+`FlameSampler` is pure: `mutate` (gaussian jitter on xform parameters, id swaps, xform birth/death), `random` (2-5 xforms, contractive pre-affines, 1-3 distinct variations from a weighted pool) and `breed` (whole-xform crossover, at least two active, then mutate). Final xform, camera, tone and modifier parameters are never part of a proposal. Only xform parameters are morph-enabled (`randomizeBase`); changing a parameter's default morph flag does not affect old saves, because `applyDto` restores the saved flag.
+
+## Quality gate (`FlameProbe`, `FlameQuality`)
+
+Every Random, Mutate and Breed candidate is run through the engine's own iterate shader on a hidden 128x128 state texture (40 passes, one 256 KB readback; GL state is saved and restored) and judged by `FlameQuality.analyse`: diverged (points reseeded), collapsed, line (covariance), exploded (too big to frame) or fog (every grid cell hit with near-uniform counts). `FlameSource.sampleMorphTarget` retries up to 8 times, then falls back (starter for a fresh request, no change for a drift). The same analysis frames the camera for a fresh genome, since Zoom/CenterX/CenterY are not part of the morph. Thresholds are constants in `FlameQuality`; `FlameProbeTest` prints the rejection rates, and `FLAME_SHEET=/tmp/sheet.png xvfb-run ./gradlew test --tests '*FlameProbeTest.contactSheet'` writes a contact sheet of random genomes (red border = rejected). Kept Pool picks skip the gate.
+
+## Garden (`presets/Garden.kt`, `GardenThumbnails.kt`)
+
+`Garden.keep(deck, ...)` saves the live deck through `PresetRepository.saveDeckPresetAsync` to `library/presets/garden/<slug>-NNNN.lsd` with tags `garden`, `gen:N` (youngest parent + 1) and `parent:<name>`, and writes `<name>.png` (256x144, blitted from the deck's output texture). `Garden.pool(sourceId)` reads the folder back (cached by modification time) for the Pool and Breed strategies. The browser lists the folder as a subfolder of Saved presets; no new browse root exists. `PresetListPanel` shows a preset's sibling png in its hover tooltip.
+
+## Auto-governor (`FlameGovernor`)
+
+Fed the engine's GPU timestamp samples, it scales the iterated and drawn rows (`Points` stays the ceiling) to hold the `flameBudgetMs` preference (default 3 ms, 0 = off): smoothed time, proportional steps, shed fast and recover slowly.
+
+## Tests
+
+`FlameGenomeTest`, `FlameVariationsTest` (Kotlin mirror of the deterministic formulas against hand-derived pairs), `FlameSamplerTest`, `FlameQualityTest`, `FlameGovernorTest`, `FlameEditorLayoutTest`, `GardenTest`, and the GL tests `FlameShaderCompileTest` and `FlameProbeTest` (skipped without a GL context; run them under `xvfb-run`). GL tests that draw must share one context per JVM: `Geometry` caches its fullscreen-quad VAO.
+
+## Gotchas
+
+- Files in `library/sources/<id>/` are extracted once and never overwritten: delete the folder after changing a bundled source's resources.
+- A saved session or preset keeps each parameter's saved `randomizeBase` flag, so old saves do not pick up a changed morph default; re-add the source.
+- `gradlew run` does not forward `-D` flags; the engine's measuring switches are env vars (`FLAME_N`, `FLAME_DENSITY`, `FLAME_SKIP`).

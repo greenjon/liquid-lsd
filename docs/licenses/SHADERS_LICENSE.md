@@ -53,3 +53,9 @@ To preserve the right to commercially distribute or monetize Liquid LSD:
 | **Dynamic Spiral** | `library/sources/dynamic_spiral/dynamic_spiral.fs` | Liquid LSD Engine | MIT | Approved | Procedural phyllotaxis and logarithmic spiral generator with audio modulation. |
 | **Icosa H3** | `library/sources/icosa_h3/icosa_h3.fs` | Liquid LSD Engine | MIT | Approved | Raymarched hyperbolic icosahedral geometry. |
 | **Mandala** | `library/sources/mandala/mandala.fs` | Liquid LSD Engine | MIT | Approved | Procedural rotating kaleidoscopic mandala generator. |
+
+---
+
+## Algorithm Credits
+
+- **Fractal Flame** (`fractal_flame`): implemented from the published description in Scott Draves and Erik Reckase, "The Fractal Flame Algorithm" (2003, revised 2008): the iterated function system with non-linear variations, the log-density tone mapping and the 49 variation formulas of its Appendix A. No source code of flam3, Apophysis, Electric Sheep or any other flame renderer was read or copied (clean-room, the same approach as the beat tracker). No genome archive is bundled. Verify the exact authors, year and revision against the paper before citing it in a commercial release; a trademark search for the user-facing names is also still open.

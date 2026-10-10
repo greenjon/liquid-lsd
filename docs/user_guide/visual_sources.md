@@ -99,6 +99,34 @@ A physical 2D acoustic plate resonance simulation computing standing wave nodal 
 - **Invert Mode**: Swaps behavior from quiet nodal sand gathering (`0.0`) to kinetic fluid pooling in energetic antinodes (`1.0`).
 - **Palette Modes**: Obsidian & Gold Sand, Electric Cymatic Blue, Prismatic Spectrum, and Bioluminescent Emerald.
 
+### Fractal Flame (`fractal_flame`, experimental)
+
+A fractal-flame generator: millions of points are pushed through a handful of randomly chosen transforms (xforms), splatted into a density buffer and tone-mapped, which gives the feathered, glowing filaments the technique is known for. It is the one generator built around **evolving** a look rather than just tweaking it. The math follows Draves & Reckase, "The Fractal Flame Algorithm" (credited in the licenses page, under Algorithm Credits).
+
+**The genome.** A flame is up to six xforms (`X1`..`X6`) plus an optional final xform (`XF`). Each xform has a weight and colour, a *pre* and a *post* affine (rotate, scale, shear, move) and three variation slots. A variation is one of the paper's 49 shape functions (linear, sinusoidal, spherical, swirl, julia, blob, ...); slots with parameters show them under variation-specific names. Every field is an ordinary parameter, so modulators, macros and MIDI/OSC learn work on all of them.
+
+**Editing.** Open the deck's Edit row, SRC sub-tab. The tab strip has **Look** (camera, tone, quality), **Mods** (the performance handles below and `Mutation`), one tab per active xform and **XF**. `+ Xn` at the end reveals the next unused xform.
+
+- **Spin, Breathe, Warp, Drift** (Mods): one parameter moves every xform at once: Spin adds to every rotation, Breathe scales every xform, Warp blends the non-linear variations up against linear, Drift offsets colour speed. The default macro knobs are **ZOOM, SPIN, WARP, BREATHE**.
+- **Decay** keeps the density buffer between frames. 0 renders each frame clean; 0.75-0.9 fills in fine filaments from few points and leaves soft trails. Brightness is normalised, so changing Decay changes smoothness, not brightness. **Toe** removes isolated single-hit speckle; **Exposure**, **Brightness**, **Gamma**, **Vibrancy** shape the tone map, **Sharpness** and **Kernel** the size and softness of each splat.
+
+**Evolving a look.** The die beside the deck row makes a brand-new random genome and frames the camera on it. Blank, exploded, collapsed and fog-like candidates are rejected automatically and re-rolled. Next to the die, the **R / M / P / B** button picks how the *next* morph target is chosen, for the die and for the deck's Rand morph:
+
+| | Strategy | Next target |
+| :-- | :-- | :-- |
+| R | Random | an unrelated new genome |
+| M | Mutate (default) | a drift away from the current genome; the `Mutation` parameter (Mods tab) sets the strength, so it can be modulated or put on a macro |
+| P | Pool | one of your kept offspring (the Garden) |
+| B | Breed | a cross of two Garden offspring (whole xforms from one parent or the other), then mutated |
+
+Pool and Breed fall back to Random/Mutate while the Garden is empty. The choice is saved with the preset when it is not the default.
+
+**Keep, Skip and the Garden.** At the right end of the editor's tab strip, the star **keeps** what the deck is playing as a new *offspring*: a normal preset in `library/presets/garden/` (`fractal-flame-0001.lsd`, ...) tagged `garden`, `gen:N` and `parent:<name>` for the offspring it was bred from, with a small preview image beside it. Offspring show up in Browse under *Saved presets > garden*, hovering one shows its preview, and they can go into playlists and queues like any preset. **Skip** throws away the genome the morph is heading to and picks another with the current strategy (the picture jumps to the new target at the current morph position).
+
+**Quality and performance.** `Points`, `Passes` and `Kernel` (Look tab) trade detail for GPU time; cost is roughly proportional to points times passes. Under *Preferences > General*, **Flame GPU Budget (ms)** (default 3 ms per flame deck, 0 = off) lets the app lower the point count automatically when a deck runs over budget and win it back when there is room, with unchanged brightness, so a show holds its frame rate on integrated GPUs. `Points` stays the ceiling.
+
+Fractal Flame is experimental in this build: it is not part of the stock generator set yet, and the `.flame` file importer and the web player version are not done.
+
 ---
 
 ## Deck Transform & Source Parameters (SRC Tab)
