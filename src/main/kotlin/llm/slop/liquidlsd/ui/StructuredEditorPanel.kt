@@ -14,6 +14,9 @@ object StructuredEditorPanel {
     /** Selected tab per deck. UI state only: not saved, and it resets to the first tab when the id disappears. */
     private val selected = HashMap<String, String>()
 
+    /** Visible rows of a choice popup (ImGui's default is 8). */
+    private const val POPUP_ITEMS = 32
+
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
         deckLabel: String,
@@ -70,9 +73,11 @@ object StructuredEditorPanel {
                 val labels = p.labels ?: continue
                 val cur = p.baseValue.toInt().coerceIn(0, labels.size - 1)
                 ImGui.setNextItemWidth(labelColW)
+                // popup 4x the default 8-item height; entries alphabetical while the stored value stays the id
+                ImGui.setNextWindowSizeConstraints(0f, 0f, Float.MAX_VALUE, ImGui.getTextLineHeightWithSpacing() * POPUP_ITEMS)
                 if (ImGui.beginCombo("##choice_$name", labels[cur])) {
-                    labels.forEachIndexed { i, l ->
-                        if (ImGui.selectable(l, i == cur) && i != cur) { onPushUndo(); p.baseValue = i.toFloat() }
+                    for (i in labels.indices.sortedBy { labels[it].lowercase() }) {
+                        if (ImGui.selectable(labels[i], i == cur) && i != cur) { onPushUndo(); p.baseValue = i.toFloat() }
                     }
                     ImGui.endCombo()
                 }
