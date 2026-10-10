@@ -129,7 +129,9 @@ private class FlameEngine {
     private val palette: Int
     private val genome = FloatArray(16 * 4)
 
-    private val queries = IntArray(2) { glGenQueries() }
+    // Timestamp pairs, not GL_TIME_ELAPSED: Main already keeps a TIME_ELAPSED query open around the whole frame
+    // and only one may be active at a time.
+    private val queries = IntArray(4) { glGenQueries() }
     private val queryUsed = BooleanArray(2)
     private var queryIdx = 0
     private var frames = 0
@@ -183,7 +185,7 @@ private class FlameEngine {
         val dens = density!!
 
         collectGpuTime()
-        glBeginQuery(GL_TIME_ELAPSED, queries[queryIdx])
+        glQueryCounter(queries[queryIdx * 2], GL_TIMESTAMP)
 
         val numXf = src.buildGenome(genome)
         val decay = v("Decay", 0f)
@@ -262,7 +264,7 @@ private class FlameEngine {
     }
 
     private fun glEnd_query() {
-        glEndQuery(GL_TIME_ELAPSED)
+        glQueryCounter(queries[queryIdx * 2 + 1], GL_TIMESTAMP)
         queryUsed[queryIdx] = true
         queryIdx = 1 - queryIdx
     }
@@ -271,8 +273,9 @@ private class FlameEngine {
     private fun collectGpuTime() {
         val prev = queryIdx
         if (!queryUsed[prev]) return
-        if (glGetQueryObjecti(queries[prev], GL_QUERY_RESULT_AVAILABLE) == GL_FALSE) return
-        gpuNsSum += glGetQueryObjecti64(queries[prev], GL_QUERY_RESULT)
+        if (glGetQueryObjecti(queries[prev * 2 + 1], GL_QUERY_RESULT_AVAILABLE) == GL_FALSE) return
+        gpuNsSum += glGetQueryObjecti64(queries[prev * 2 + 1], GL_QUERY_RESULT) -
+            glGetQueryObjecti64(queries[prev * 2], GL_QUERY_RESULT)
         queryUsed[prev] = false
         gpuSamples++
         if (++frames % 240 == 0 && gpuSamples > 0) {
