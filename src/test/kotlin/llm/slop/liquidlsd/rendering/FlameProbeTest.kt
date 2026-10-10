@@ -199,6 +199,21 @@ class FlameProbeTest {
         }
     }
 
+    @Test fun keepRoundTripsTheWholeGenome() = withGl {
+        val source = flameSource()
+        source.parameters.getValue("Zoom").set(0.77f)
+        source.parameters.getValue("X2 PreRot").set(1.1f)
+        val deck = Deck(source, 64, 64, false)
+        val dir = java.nio.file.Files.createTempDirectory("keep").toFile()
+        try {
+            val file = llm.slop.liquidlsd.presets.Garden.keep(deck, -1, folder = dir)
+            for (i in 0 until 100) { if (file.exists()) break; Thread.sleep(50) }
+            val dto = llm.slop.liquidlsd.presets.PresetManager.json.decodeFromString<llm.slop.liquidlsd.models.DeckPresetDto>(file.readText())
+            assertEquals(source.parameters.size, dto.parameters.size)
+            assertEquals(0.77f, dto.parameters.getValue("Zoom").baseValue)
+        } finally { dir.deleteRecursively(); deck.dispose(); source.dispose() }
+    }
+
     @Test fun gardenThumbnailIsDownscaledFromTheDeckTexture() = withGl {
         val dir = java.nio.file.Files.createTempDirectory("thumb").toFile()
         val fbo = FBO(320, 180)

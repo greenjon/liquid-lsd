@@ -1,6 +1,7 @@
 package llm.slop.liquidlsd.presets
 
 import java.nio.file.Files
+import llm.slop.liquidlsd.models.toDto
 import kotlin.test.Test
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -66,6 +67,13 @@ class GardenTest {
         assertEquals(null, PresetManager.json.decodeFromString<DeckPresetDto>(old).samplerStrategy)
         val dto = DeckPresetDto(name = "x", visualSourceType = "fractal_flame", parameters = emptyMap(), feedbackParameters = emptyMap(), samplerStrategy = "BREED")
         assertEquals("BREED", PresetManager.json.decodeFromString<DeckPresetDto>(PresetManager.json.encodeToString(dto)).samplerStrategy)
+    }
+
+    @Test fun loadingSanitizerKeepsTheCodeBuiltGenome() {
+        val params = llm.slop.liquidlsd.rendering.FlameGenome.buildParameters().mapValues { it.value.toDto() }
+        val dto = DeckPresetDto(name = "x", visualSourceType = "fractal_flame", parameters = params, feedbackParameters = emptyMap())
+        val (clean, _) = PresetMigrator.sanitizePresetDto(dto)
+        assertEquals(params.keys, clean.parameters.keys)
     }
 
     @Test fun paletteFieldIsOptionalAndRoundTrips() {

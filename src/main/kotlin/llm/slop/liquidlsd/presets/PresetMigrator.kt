@@ -36,7 +36,10 @@ object PresetMigrator {
         val metaFile = File(LIBRARY_ROOT, "sources/${dto.visualSourceType}/meta.json")
         val sanitizedParams = LinkedHashMap<String, ParameterDto>()
 
-        if (metaFile.exists()) {
+        // The flame genome is built in code: meta.json lists only the tone-map inputs, so pruning to it would strip the genome
+        if (dto.visualSourceType == llm.slop.liquidlsd.rendering.FlameSource.SOURCE_ID) {
+            sanitizedParams.putAll(dto.parameters)
+        } else if (metaFile.exists()) {
             try {
                 val meta = json.decodeFromString<SourceMeta>(metaFile.readText())
                 val expectedNames = meta.parameters.map { it.name }.toSet()
