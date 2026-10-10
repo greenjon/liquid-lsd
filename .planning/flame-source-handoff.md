@@ -19,7 +19,7 @@ Deviations from the plan, on purpose, for the spike: state is xy (no z yet); 2 v
 
 1. `./gradlew run`, put "Flame Spike" on a deck (it is extracted to `library/sources/flame_spike/` on first start). Look for shader compile errors in the log (engine shaders compile on first render).
 2. Does it look like a flame? Tune the three genomes if they collapse/blank. Try Genome 0..2, Spin, Breathe, Warp, Kernel, Sharpness, Exposure, Decay, Passes.
-3. Perf gate: read the gpu ms/frame log at Passes 1/4/16, with 1-2 decks. fp16 is now the default (user saw no visual difference at spike densities); `-Dflame.density=fp32` to compare; `-Dflame.n=1024` for 1M points density formats (JVM arg; check how the run task passes jvmArgs).
+3. Perf gate: read the gpu ms/frame log at Passes 1/4/16, with 1-2 decks. fp16 is now the default (user saw no visual difference at spike densities); `FLAME_DENSITY=fp32` (env var; `-D` is NOT forwarded by `gradlew run`) to compare; `FLAME_N=1024 ./gradlew run` for 1M points density formats (JVM arg; check how the run task passes jvmArgs).
 4. Variation formulas are written from memory of the paper's definitions: verify against the paper before phase 3 (unit-check list in plan).
 
 ## Spike gate questions (answer in the plan's "Risks" section when known)

@@ -9,11 +9,13 @@ uniform float uBrightness;
 uniform float uGamma;
 uniform float uVibrancy;
 uniform float uToe;
+uniform float uDecay;
 
 void main() {
     vec4 d = texture(uDensity, vTexCoord);
     vec3 hue = d.rgb / max(d.a, 1e-6);
-    float a = max(d.a - uToe, 0.0);   // toe: drop isolated single hits
+    // Steady-state density under decay d is ~1/(1-d); normalise so Decay changes smoothness, not brightness.
+    float a = max(d.a * (1.0 - uDecay) - uToe, 0.0);   // toe: drop isolated single hits
     float v = clamp(log(1.0 + a * uExposure) * uBrightness, 0.0, 1.0);
     float ig = 1.0 / uGamma;
     // Vibrancy blends per-channel gamma (saturating) with gamma on the density only (hue-preserving).

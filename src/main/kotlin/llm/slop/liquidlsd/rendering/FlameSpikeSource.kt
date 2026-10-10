@@ -112,11 +112,15 @@ class FlameSpikeSource(
     }
 }
 
+/** Spike tunables: JVM property, or its upper-case env var (`gradlew run` does not forward -D to the app JVM). */
+private fun spikeSetting(prop: String, def: String): String =
+    System.getProperty(prop) ?: System.getenv(prop.uppercase().replace('.', '_')) ?: def
+
 /** GL resources and passes for one [FlameSpikeSource] instance. Created lazily on the render thread. */
 private class FlameEngine {
-    private val n = System.getProperty("flame.n", "512").toInt()   // state texture side -> n*n points (-Dflame.n=1024 -> 1M)
+    private val n = spikeSetting("flame.n", "512").toInt()   // state texture side -> n*n points (FLAME_N=1024 -> 1M)
     private val burn = 16f                   // iterations before a point is drawn
-    private val density32 = System.getProperty("flame.density", "fp16") != "fp16"
+    private val density32 = spikeSetting("flame.density", "fp16") != "fp16"
 
     private var stateA = FBO(n, n, GL_RGBA32F)
     private var stateB = FBO(n, n, GL_RGBA32F)
@@ -138,6 +142,8 @@ private class FlameEngine {
     private var gpuNsSum = 0L
     private var gpuSamples = 0
     private var frameCounter = 0
+    private var lastPasses = 0
+    private var lastKernel = 0f
 
     init {
         resetPoints()
@@ -190,6 +196,8 @@ private class FlameEngine {
         val numXf = src.buildGenome(genome)
         val decay = v("Decay", 0f)
         val passes = v("Passes", 4f).toInt().coerceIn(1, 16)
+        lastPasses = passes
+        lastKernel = v("Kernel", 3f)
         val zoom = v("Zoom", 0.45f)
         val rot = v("Rotation", 0f)
         val aspect = target.width.toFloat() / target.height
@@ -279,7 +287,7 @@ private class FlameEngine {
         queryUsed[prev] = false
         gpuSamples++
         if (++frames % 240 == 0 && gpuSamples > 0) {
-            logger.warn { "Flame spike (warn so it is never filtered): gpu %.2f ms/frame avg over %d frames".format(gpuNsSum / 1e6 / gpuSamples, gpuSamples) }
+            logger.warn { "Flame spike: n=%d (%d pts) passes=%d kernel=%.1f %s: gpu %.2f ms/frame (avg of %d)".format(n, n * n, lastPasses, lastKernel, if (density32) "fp32" else "fp16", gpuNsSum / 1e6 / gpuSamples, gpuSamples) }
             gpuNsSum = 0; gpuSamples = 0
         }
     }
