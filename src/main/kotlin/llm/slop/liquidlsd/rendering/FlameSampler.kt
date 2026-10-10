@@ -28,7 +28,11 @@ object FlameSampler {
             "arch" to 0.3f, "square" to 0.3f, "noise" to 0.2f, "blur" to 0.2f, "gaussian" to 0.2f,
             "rays" to 0.2f, "blade" to 0.3f, "secant2" to 0.2f, "twintrian" to 0.2f,
             "boarders" to 0.3f, "butterfly" to 0.5f, "edisc" to 0.4f, "elliptic" to 0.5f, "foci" to 0.4f, "loonie" to 0.4f,
-            "polar2" to 0.5f, "scry" to 0.2f, "exp" to 0.3f, "log" to 0.3f, "sin" to 0.5f, "cos" to 0.5f, "tan" to 0.3f, "sec" to 0.2f, "csc" to 0.2f,
+            "polar2" to 0.5f, "disc2" to 0.4f, "flower" to 0.3f, "conic" to 0.2f, "parabola" to 0.3f, "bent2" to 0.4f,
+            "bipolar" to 0.4f, "cell" to 0.3f, "cpow" to 0.3f, "curve" to 0.5f, "escher" to 0.5f, "modulus" to 0.1f,
+            "oscope" to 0.3f, "popcorn2" to 0.5f, "separation" to 0.4f, "split" to 0.2f, "splits" to 0.4f,
+            "stripes" to 0.4f, "wedge" to 0.5f, "wedge_julia" to 0.4f, "wedge_sph" to 0.4f, "whorl" to 0.3f,
+            "waves2" to 0.6f, "auger" to 0.4f, "flux" to 0.3f, "scry" to 0.2f, "exp" to 0.3f, "log" to 0.3f, "sin" to 0.5f, "cos" to 0.5f, "tan" to 0.3f, "sec" to 0.2f, "csc" to 0.2f,
             "cot" to 0.2f, "sinh" to 0.3f, "cosh" to 0.3f, "tanh" to 0.3f, "sech" to 0.2f, "csch" to 0.2f, "coth" to 0.2f
         )
         FloatArray(FlameVariations.count()) {

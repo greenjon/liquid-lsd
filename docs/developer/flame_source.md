@@ -9,7 +9,11 @@ The Fractal Flame generator (`fractal_flame`, class `FlameSource`) is an evolvin
 3. **Splat pass**: `GL_POINTS`, one vertex per point (state fetched with `texelFetch`), optional final xform, camera, then a Gaussian sprite additively blended into an fp16 density buffer that persists with `Decay`.
 4. The folder's `shader.frag` is the **tone-map pass** `Renderer` binds (log density, toe, gamma, vibrancy). The engine overrides `uExposure` with `Exposure * n / rows` so the `Points` fraction and the governor do not change brightness.
 
-Cost is per point (about 3 ns each on the dev iGPU), not per pixel. The shared GLSL (`FlameEngine.COMMON`) holds the 49-case `vari()` switch; ids are the paper's variation numbers and index `FlameVariations.ALL`.
+Cost is per point (about 3 ns each on the dev iGPU), not per pixel. The shared GLSL (`FlameEngine.COMMON`) holds the `vari()` switch (95 cases); ids are the variation numbers (the paper's 0-48, then the numbers of `.planning/flame-variations-spec.md`, 49-98) and index `FlameVariations.ALL`.
+
+**Reserved ids.** The table is index-addressed, so a variation that is not built keeps its id as a placeholder (`Variation.supported = false`): 50 super_shape, 65 lazysusan, 67 pre_blur and 98 mobius are skipped for v1 (more parameters than a slot's four, or they alter the point rather than add to the output). A placeholder has no `case` (the switch falls through to linear), the id knob labels it "(unsupported)", the sampler gives it odds 0 and the importer lists its name in the preset notes when a file uses it with a non-zero weight. `FlameVariationsTest.glslCasesMatchTheTable` compares the case labels with the supported ids and the trailing `// name` comment with the table.
+
+**Conventions for ids 49+.** Divisions, logs, square roots and powers that can see a bad input go through `sdiv`, `slog`, `ssqrt`, `spow` and `remT`, which return NaN, so the iteration loop discards the point on every driver instead of using a driver-dependent value. The loop's bad-value test is `abs(x) < 1e4` (the spec's 1e10 would let huge points through to be drawn off-screen), NaN included. `r2` carries a +1e-9 guard, so variations that scale the point by 1/r (flower, conic, scry) return (0,0) at the exact origin rather than NaN, a deviation the spec allows; those that do not multiply by the point (log, polar2, escher, cpow) use the exact r² and give NaN there. A variation with a "non-standard weight" (loonie, scry, whorl, flux) returns its finished output from its case instead of being multiplied by the weight again. edisc clamps X >= 1 and |x/X| <= 1 because single-precision rounding hits those bad values far more often than double. Parameter ranges are the spec's generator ranges, mirrored around the default when the default sits on an edge (so min < default < max always holds), and disc2's twist spans +-2 pi because the spec defines it beyond +-2 pi. The importer reads a parameter from `<name>_<label lower-cased>` and also under any alias prefix (`oscilloscope_*` for oscope).
 
 ## Genome as parameters (`FlameGenome`)
 
@@ -39,7 +43,7 @@ Fed the engine's GPU timestamp samples, it scales the iterated and drawn rows (`
 
 ## Tests
 
-`FlameGenomeTest`, `FlameVariationsTest` (Kotlin mirror of the deterministic formulas against hand-derived pairs), `FlameSamplerTest`, `FlameQualityTest`, `FlameGovernorTest`, `FlameEditorLayoutTest`, `GardenTest`, and the GL tests `FlameShaderCompileTest` and `FlameProbeTest` (skipped without a GL context; run them under `xvfb-run`). GL tests that draw must share one context per JVM: `Geometry` caches its fullscreen-quad VAO.
+`FlameGenomeTest`, `FlameVariationsTest` (Kotlin mirror of the deterministic formulas against hand-derived pairs and every deterministic pair of the spec), `FlameShaderValuesTest` (GL: the real `vari()` on spec pairs), `FlameSamplerTest`, `FlameQualityTest`, `FlameGovernorTest`, `FlameEditorLayoutTest`, `GardenTest`, and the GL tests `FlameShaderCompileTest` and `FlameProbeTest` (skipped without a GL context; run them under `xvfb-run`). GL tests that draw must share one context per JVM: `Geometry` caches its fullscreen-quad VAO.
 
 ## Gotchas
 

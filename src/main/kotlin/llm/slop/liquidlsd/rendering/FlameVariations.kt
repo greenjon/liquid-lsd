@@ -52,17 +52,45 @@ object FlameVariations {
         v("curl", p("c1", -2f, 1f, 2f), p("c2", -2f, 0f, 2f)),
         v("rectangles", p("X", 0.05f, 0.5f, 2f), p("Y", 0.05f, 0.5f, 2f)),
         v("arch"), v("tangent"), v("square"), v("rays"), v("blade"), v("secant2"), v("twintrian"), v("cross"),
-        // 49-81
-        na("disc2"), na("super_shape"), na("flower"), na("conic"), na("parabola"), na("bent2"), na("bipolar"),
-        v("boarders"), v("butterfly"), na("cell"), na("cpow"), na("curve"), v("edisc"), v("elliptic"),
-        na("escher"), v("foci"), na("lazysusan"), v("loonie"), na("pre_blur"), na("modulus"), na("oscope"),
-        v("polar2"), na("popcorn2"), v("scry"), na("separation"), na("split"), na("splits"), na("stripes"),
-        na("wedge"), na("wedge_julia"), na("wedge_sph"), na("whorl"), na("waves2"),
-        // 82-95: trigonometric and hyperbolic
+        // 49-81 (the spec's order; 50 and 65 are skipped for v1)
+        v("disc2", p("Rot", -0.5f, 0f, 0.5f), p("Twist", -2 * PIf, 0f, 2 * PIf)),
+        na("super_shape"),
+        v("flower", p("Petals", -4f, 0f, 4f), p("Holes", -1f, 0f, 1f)),
+        v("conic", p("Eccentricity", 0f, 1f, 2f), p("Holes", -1f, 0f, 1f)),
+        v("parabola", p("Height", -1.5f, 0f, 1.5f), p("Width", -1.5f, 0f, 1.5f)),
+        v("bent2", p("X", -1.5f, 1f, 1.5f), p("Y", -1.5f, 1f, 1.5f)),
+        v("bipolar", p("Shift", -1f, 0f, 1f)),
+        v("boarders"), v("butterfly"),
+        v("cell", p("Size", 0.5f, 1f, 2.5f)),
+        v("cpow", p("R", 0f, 1f, 3f), p("I", -0.5f, 0f, 0.5f), p("Power", 0f, 1f, 6f)),
+        v("curve", p("XAmp", -2.5f, 0f, 2.5f), p("YAmp", -2f, 0f, 2f), p("XLength", 0f, 1f, 3f), p("YLength", 0f, 1f, 3f)),
+        v("edisc"), v("elliptic"),
+        v("escher", p("Beta", -PIf, 0f, PIf)),
+        v("foci"),
+        na("lazysusan"),
+        v("loonie"),
+        na("pre_blur"),
+        v("modulus", p("X", -1f, 0f, 1f), p("Y", -1f, 0f, 1f)),
+        v("oscope", p("Separation", 0f, 1f, 2f), p("Frequency", 0f, PIf, 2 * PIf), p("Amplitude", 0f, 1f, 3f), p("Damping", -1f, 0f, 1f)),
+        v("polar2"),
+        v("popcorn2", p("X", -0.2f, 0f, 0.2f), p("Y", -0.2f, 0f, 0.2f), p("C", -5f, 0f, 5f)),
+        v("scry"),
+        v("separation", p("X", -2f, 0f, 2f), p("XInside", -1f, 0f, 1f), p("Y", -2f, 0f, 2f), p("YInside", -1f, 0f, 1f)),
+        v("split", p("XSize", -2f, 0f, 2f), p("YSize", -2f, 0f, 2f)),
+        v("splits", p("X", -1f, 0f, 1f), p("Y", -1f, 0f, 1f)),
+        v("stripes", p("Space", -1f, 0f, 1f), p("Warp", -5f, 0f, 5f)),
+        v("wedge", p("Angle", -PIf, 0f, PIf), p("Hole", -0.25f, 0f, 0.25f), p("Count", 0f, 1f, 5f), p("Swirl", -1f, 0f, 1f)),
+        v("wedge_julia", p("Power", 0f, 1f, 6f), p("Dist", -2f, 0f, 2f), p("Count", 0f, 1f, 3f), p("Angle", -PIf, 0f, PIf)),
+        v("wedge_sph", p("Angle", -PIf, 0f, PIf), p("Hole", -0.25f, 0f, 0.25f), p("Count", 0f, 1f, 5f), p("Swirl", -1f, 0f, 1f)),
+        v("whorl", p("Inside", -1f, 0f, 1f), p("Outside", -1f, 0f, 1f)),
+        v("waves2", p("ScaleX", -1.5f, 0f, 1.5f), p("ScaleY", -1.5f, 0f, 1.5f), p("FreqX", -4f, 0f, 4f), p("FreqY", -4f, 0f, 4f)),
+        // 82-95: exp, log, trigonometric and hyperbolic
         v("exp"), v("log"), v("sin"), v("cos"), v("tan"), v("sec"), v("csc"), v("cot"),
         v("sinh"), v("cosh"), v("tanh"), v("sech"), v("csch"), v("coth"),
-        // 96-98
-        na("auger"), na("flux"), na("mobius")
+        // 96-98 (98 is skipped for v1)
+        v("auger", p("Freq", 0f, 1f, 5f), p("Weight", 0f, 0.5f, 1f), p("Sym", -1f, 0f, 1f), p("Scale", 0f, 1f, 2f)),
+        v("flux", p("Spread", -1f, 0f, 1f)),
+        na("mobius")
     )
 
     val NAMES: List<String> = ALL.map { it.name }
@@ -73,7 +101,7 @@ object FlameVariations {
     /** Variations whose result differs from call to call (they use the shader's random numbers), so they cannot be unit-checked pointwise. */
     val RANDOM: Set<String> = setOf(
         "julia", "noise", "juliaN", "juliaScope", "blur", "gaussian", "radialBlur", "pie",
-        "arch", "square", "rays", "blade", "twintrian", "boarders"
+        "arch", "square", "rays", "blade", "twintrian", "boarders", "flower", "conic", "parabola", "cpow", "wedge_julia"
     )
 
     fun count() = ALL.size

@@ -114,6 +114,81 @@ class FlameVariationsTest {
             "loonie" -> { val q = x * x + y * y; val rr = if (q < w * w) w * sqrt(w * w / q - 1) else w; doubleArrayOf(rr * x, rr * y) }
             "polar2" -> doubleArrayOf(th / pi, ln(r) / pi)
             "scry" -> { val d = 1 / (r * (r * r + 1 / (w + 1e-10))); doubleArrayOf(d * x, d * y) }
+            "disc2" -> {
+                val tw = p[1]; var sn = sin(tw); var c = cos(tw) - 1
+                if (tw > 2 * pi) { val k = 1 + tw - 2 * pi; sn *= k; c *= k } else if (tw < -2 * pi) { val k = 1 + tw + 2 * pi; sn *= k; c *= k }
+                val t = pi * p[0] * (x + y); val rr = th / pi
+                doubleArrayOf(rr * (sin(t) + c), rr * (cos(t) + sn))
+            }
+            "flower" -> { val k = (u - p[1]) * cos(p[0] * ph) / r; doubleArrayOf(k * x, k * y) }
+            "conic" -> { val k = (u - p[1]) * p[0] / (1 + p[0] * x / r) / r; doubleArrayOf(k * x, k * y) }
+            "parabola" -> doubleArrayOf(p[0] * sin(r).pow(2) * u, p[1] * cos(r) * u)
+            "bent2" -> doubleArrayOf(if (x < 0) p[0] * x else x, if (y < 0) p[1] * y else y)
+            "bipolar" -> {
+                val t = x * x + y * y + 1; var ps = 0.5 * atan2(2 * y, x * x + y * y - 1) - pi / 2 * p[0]
+                if (ps > pi / 2 + 1e-6) ps = -pi / 2 + (ps + pi / 2) % pi else if (ps < -pi / 2 - 1e-6) ps = pi / 2 - (pi / 2 - ps) % pi
+                doubleArrayOf(ln((t + 2 * x) / (t - 2 * x)) / (2 * pi), 2 / pi * ps)
+            }
+            "cell" -> {
+                val s = p[0]; val fi = floor(x / s); val fj = floor(y / s); val dx = x - fi * s; val dy = y - fj * s
+                val ii = if (fi >= 0) 2 * fi else -(2 * fi + 1); val jj = if (fj >= 0) 2 * fj else -(2 * fj + 1)
+                doubleArrayOf(dx + ii * s, -(dy + jj * s))
+            }
+            "cpow" -> {
+                val pw = p[2]; val k = floor(pw * u); val l = 0.5 * ln(x * x + y * y); val mu = p[0] / pw; val nu = p[1] / pw
+                val al = mu * ph + nu * l + 2 * pi * k / pw; val mm = exp(mu * l - nu * ph); doubleArrayOf(mm * cos(al), mm * sin(al))
+            }
+            "curve" -> {
+                val lx = max(p[2] * p[2], 1e-20); val ly = max(p[3] * p[3], 1e-20)
+                doubleArrayOf(x + p[0] * exp(-y * y / lx), y + p[1] * exp(-x * x / ly))
+            }
+            "escher" -> {
+                val l = 0.5 * ln(x * x + y * y); val mu = 0.5 * (1 + cos(p[0])); val nu = 0.5 * sin(p[0])
+                val al = mu * ph + nu * l; val mm = exp(mu * l - nu * ph); doubleArrayOf(mm * cos(al), mm * sin(al))
+            }
+            "modulus" -> {
+                fun axis(a: Double, m: Double) = if (a > m) -m + (a + m) % (2 * m) else if (a < -m) m - (m - a) % (2 * m) else a
+                doubleArrayOf(axis(x, p[0]), axis(y, p[1]))
+            }
+            "oscope" -> {
+                val c = p[2] * cos(2 * pi * p[1] * x)
+                val t = (if (p[3] == 0.0) c else c * exp(-abs(x) * p[3])) + p[0]
+                doubleArrayOf(x, if (abs(y) <= t) -y else y)
+            }
+            "popcorn2" -> doubleArrayOf(x + p[0] * sin(tan(p[2] * y)), y + p[1] * sin(tan(p[2] * x)))
+            "separation" -> {
+                fun axis(a: Double, s: Double, i: Double) = if (a > 0) sqrt(a * a + s * s) - i * a else -(sqrt(a * a + s * s) + i * a)
+                doubleArrayOf(axis(x, p[0], p[1]), axis(y, p[2], p[3]))
+            }
+            "split" -> doubleArrayOf(if (cos(pi * y * p[1]) >= 0) x else -x, if (cos(pi * x * p[0]) >= 0) y else -y)
+            "splits" -> doubleArrayOf(if (x >= 0) x + p[0] else x - p[0], if (y >= 0) y + p[1] else y - p[1])
+            "stripes" -> { val xr = floor(x + 0.5); val d = x - xr; doubleArrayOf(d * (1 - p[0]) + xr, y + d * d * p[1]) }
+            "wedge" -> {
+                val al = ph + p[3] * r; val k = floor((p[2] * al + pi) / (2 * pi)); val f = 1 - p[0] * p[2] / (2 * pi); val a2 = al * f + k * p[0]
+                doubleArrayOf((r + p[1]) * cos(a2), (r + p[1]) * sin(a2))
+            }
+            "wedge_julia" -> {
+                val pw = p[0]; val j = (abs(pw) * u).toLong().toDouble(); val al = (ph + 2 * pi * j) / pw
+                val k = floor((p[2] * al + pi) / (2 * pi)); val f = 1 - p[3] * p[2] / (2 * pi); val a2 = al * f + k * p[3]
+                val rr = (x * x + y * y).pow(p[1] / (2 * pw)); doubleArrayOf(rr * cos(a2), rr * sin(a2))
+            }
+            "wedge_sph" -> {
+                val q = 1 / (r + 1e-10); val al = ph + p[3] * q; val k = floor((p[2] * al + pi) / (2 * pi))
+                val f = 1 - p[0] * p[2] / (2 * pi); val a2 = al * f + k * p[0]
+                doubleArrayOf((q + p[1]) * cos(a2), (q + p[1]) * sin(a2))
+            }
+            "whorl" -> { val al = if (r < w) ph + p[0] / (w - r) else ph + p[1] / (w - r); doubleArrayOf(w * r * cos(al), w * r * sin(al)) }
+            "waves2" -> doubleArrayOf(x + p[0] * sin(y * p[2]), y + p[1] * sin(x * p[3]))
+            "auger" -> {
+                val sn = sin(p[0] * x); val un = sin(p[0] * y)
+                val dy = y + p[1] * (p[3] * sn / 2 + abs(y) * sn); val dx = x + p[1] * (p[3] * un / 2 + abs(x) * un)
+                doubleArrayOf(x + p[2] * (dx - x), dy)
+            }
+            "flux" -> {
+                val ap = x + w; val am = x - w
+                val rr = w * (2 + p[0]) * ((y * y + ap * ap) / (y * y + am * am)).pow(0.25); val al = 0.5 * (atan2(y, am) - atan2(y, ap))
+                doubleArrayOf(rr * cos(al), rr * sin(al))
+            }
             "exp" -> doubleArrayOf(exp(x) * cos(y), exp(x) * sin(y))
             "log" -> doubleArrayOf(0.5 * ln(x * x + y * y), ph)
             "sin" -> doubleArrayOf(sin(x) * cosh(y), cos(x) * sinh(y))
@@ -266,5 +341,95 @@ class FlameVariationsTest {
         spec("loonie", 1.0, 0.0, 3.46410, 0.0, w = 2.0); spec("loonie", 3.0, 0.0, 6.0, 0.0, w = 2.0)
         spec("scry", 1.0, 0.0, 0.5, 0.0); spec("scry", 0.0, 2.0, 0.0, 0.2); spec("scry", 1.0, 0.0, 0.66667, 0.0, w = 2.0)
         spec("polar2", 0.0, 1.0, 0.0, 0.0); spec("polar2", 1.0, 0.0, 0.5, 0.0); spec("polar2", 0.0, Math.exp(pi), 0.0, 1.0); spec("polar2", -1.0, -1.0, -0.75, 0.11032)
+    }
+
+    // ---- batch 3: parametric (spec test pairs; `params` lists the parameters in table order) ----
+
+    @Test fun disc2() {
+        spec("disc2", 1.0, 0.0, 0.0, 0.5, params(0.0, 0.0)); spec("disc2", 0.0, 1.0, 0.0, 0.0, params(0.0, 0.0))
+        spec("disc2", 0.5, 0.5, 0.0, -0.25, params(1.0, 0.0)); spec("disc2", 1.0, 0.0, -1.0, 0.5, params(0.0, pi))
+        spec("disc2", 1.0, 0.0, -4.14159, 0.5, params(0.0, 3 * pi))   // beyond 2 pi the output is scaled by 1 + twist - 2 pi
+    }
+
+    @Test fun flowerConicParabolaWithAFixedDraw() {
+        // flower: radius |U - holes| |cos(petals phi)|, direction kept for petals = 0
+        for (uu in listOf(0.0, 0.25, 0.5, 1.0)) {
+            val o = v("flower", 3.0, 4.0, params(0.0, 0.0), u = uu)
+            assertEquals(uu, sqrt(o[0] * o[0] + o[1] * o[1]), 1e-9); assertEquals(0.6 * uu, o[0], 1e-9); assertEquals(0.8 * uu, o[1], 1e-9)
+            val h = v("flower", 3.0, 4.0, params(2.0, 0.3), u = uu)
+            assertTrue(sqrt(h[0] * h[0] + h[1] * h[1]) <= 0.7 + 1e-9)   // max(|1 - holes|, |holes|)
+        }
+        spec("conic", 1.0, 0.0, 0.5, 0.0, params(1.0, 0.0), u = 1.0)   // U e / (1 + e cos phi) at phi = 0
+        spec("parabola", pi / 2, 0.0, 0.7, 0.0, params(1.0, 1.0), u = 0.7)   // sin^2(pi/2) U, cos(pi/2) U ~ 6e-17
+    }
+
+    @Test fun bent2Bipolar() {
+        val b = params(2.0, 0.5)
+        spec("bent2", 1.0, 2.0, 1.0, 2.0, b); spec("bent2", -1.0, -2.0, -2.0, -1.0, b); spec("bent2", -3.0, 4.0, -6.0, 4.0, b)
+        val d = params(0.0)
+        spec("bipolar", 0.0, 0.0, 0.0, 1.0, d); spec("bipolar", 0.0, 1.0, 0.0, 0.5, d); spec("bipolar", 0.5, 0.0, 0.34970, 1.0, d)
+        spec("bipolar", 1.0, 1.0, 0.25615, 0.35242, d); spec("bipolar", 0.0, 1.0, 0.0, 0.0, params(0.5))
+    }
+
+    @Test fun cellCpowCurve() {
+        spec("cell", 0.5, 0.5, 0.5, -0.5, params(1.0)); spec("cell", 1.5, 0.5, 2.5, -0.5, params(1.0)); spec("cell", -0.5, 0.5, 1.5, -0.5, params(1.0))
+        spec("cell", 3.0, -1.0, 5.0, -3.0, params(2.0)); spec("cell", -0.2, 0.7, 0.8, -1.2, params(0.5))
+        val one = params(1.0, 0.0, 1.0)   // r = 1, i = 0, power = 1: one branch, the identity
+        spec("cpow", 1.0, 2.0, 1.0, 2.0, one); spec("cpow", -3.0, 4.0, -3.0, 4.0, one)
+        spec("curve", 1.0, 2.0, 1.0, 2.0, params(0.0, 0.0, 1.0, 1.0))
+        val c = params(1.0, 2.0, 1.0, 1.0)
+        spec("curve", 0.0, 0.0, 1.0, 2.0, c); spec("curve", 1.0, 0.0, 2.0, 0.73576, c)
+        spec("curve", 0.5, 1.0, 2.05760, 0.63212, params(2.0, -1.0, 2.0, 0.5))
+    }
+
+    @Test fun escherModulusOscilloscope() {
+        for ((px, py) in listOf(1.0 to 0.0, 0.0 to 2.0, -3.0 to 4.0)) spec("escher", px, py, px, py, params(0.0))
+        spec("escher", 1.0, 0.0, 1.0, 0.0, params(pi / 2)); spec("escher", 0.0, 1.0, 0.32240, 0.32240, params(pi / 2))
+        spec("escher", Math.E, 0.0, 1.44689, 0.79044, params(pi / 2)); spec("escher", 0.0, 1.0, 1.0, 0.0, params(pi))
+        val m = params(1.0, 1.0)
+        spec("modulus", 0.5, 0.5, 0.5, 0.5, m); spec("modulus", 1.5, 0.0, -0.5, 0.0, m); spec("modulus", -1.5, 0.0, 0.5, 0.0, m)
+        spec("modulus", 1.2, -5.0, 0.2, -1.0, params(0.5, 2.0))
+        val o = params(1.0, pi, 1.0, 0.0)   // separation, frequency, amplitude, damping
+        spec("oscope", 0.0, 0.5, 0.0, -0.5, o); spec("oscope", 0.0, 2.5, 0.0, 2.5, o)
+        spec("oscope", 0.3, 0.1, 0.3, -0.1, params(0.0, 0.5, 2.0, 1.0))   // t = 0.87088
+    }
+
+    @Test fun popcorn2SeparationSplitSplitsStripes() {
+        spec("popcorn2", 0.7, -0.2, 0.7, -0.2, params(0.0, 0.0, 0.0))
+        val pc = params(0.5, 0.5, 1.0)
+        spec("popcorn2", 0.0, 0.0, 0.0, 0.0, pc); spec("popcorn2", pi / 4, 0.0, 0.78540, 0.42074, pc)
+        spec("popcorn2", 0.2, 0.3, 0.51600, 0.40258, params(0.5, 0.25, 2.0))
+        val none = params(0.0, 0.0, 0.0, 0.0)
+        spec("separation", 1.0, 1.0, 1.0, 1.0, none); spec("separation", -1.0, -2.0, -1.0, -2.0, none)
+        spec("separation", 0.0, 0.0, -1.0, -1.0, params(1.0, 0.0, 1.0, 0.0)); spec("separation", 1.0, 1.0, 1.41421, 1.41421, params(1.0, 0.0, 1.0, 0.0))
+        spec("separation", 2.0, -2.0, 1.23607, -1.0, params(1.0, 0.5, 0.0, 0.5))
+        spec("split", 1.5, -2.5, 1.5, -2.5, params(0.0, 0.0)); spec("split", 1.0, 2.0, 1.0, -2.0, params(1.0, 1.0))
+        val sp = params(1.0, 2.0)
+        spec("splits", 0.0, 0.0, 1.0, 2.0, sp); spec("splits", 3.0, 4.0, 4.0, 6.0, sp); spec("splits", -3.0, -4.0, -4.0, -6.0, sp)
+        spec("stripes", 0.7, -1.3, 0.7, -1.3, params(0.0, 0.0)); spec("stripes", 0.2, 1.0, 0.16, 1.04, params(0.2, 1.0)); spec("stripes", 0.3, 2.0, 0.0, 2.0, params(1.0, 0.0))
+    }
+
+    @Test fun wedgeFamily() {
+        val d = params(0.0, 0.0, 1.0, 0.0)   // angle, hole, count, swirl
+        spec("wedge", 1.0, 0.0, 1.0, 0.0, d); spec("wedge", 0.0, 2.0, 0.0, 2.0, d)
+        spec("wedge", 2.0, 0.0, 2.5, 0.0, params(0.0, 0.5, 1.0, 0.0)); spec("wedge", 1.0, 0.0, 0.54030, 0.84147, params(0.0, 0.0, 1.0, 1.0))
+        spec("wedge", 0.0, 2.0, -1.41421, 1.41421, params(pi / 2, 0.0, 2.0, 0.0))
+        // wedge_julia with power 1 has one branch and, at dist 1, count 2, angle pi/2, equals that wedge
+        spec("wedge_julia", 0.0, 2.0, -1.41421, 1.41421, params(1.0, 1.0, 2.0, pi / 2))
+        spec("wedge_sph", 2.0, 0.0, 0.5, 0.0, d); spec("wedge_sph", 0.0, 1.0, 0.0, 1.0, d); spec("wedge_sph", 2.0, 0.0, 1.0, 0.0, params(0.0, 0.5, 1.0, 0.0))
+    }
+
+    @Test fun whorlWaves2AugerFlux() {
+        // Spec 80 lists (1,0) -> (1,0) for the defaults, but there r = v and outside = 0, which its own edge-case text
+        // says is 0/0 = not-a-number; the equations and that text are followed, the pair is not.
+        assertTrue(v("whorl", 1.0, 0.0, params(0.0, 0.0), w = 1.0).all { it.isNaN() })
+        spec("whorl", 0.0, 2.0, 0.0, 2.0, params(0.0, 0.0), w = 1.0)
+        spec("whorl", 0.5, 0.0, -0.20807, 0.45465, params(1.0, 2.0), w = 1.0); spec("whorl", 2.0, 0.0, -0.83229, -1.81859, params(1.0, 2.0), w = 1.0)
+        spec("waves2", 0.4, -0.9, 0.4, -0.9, params(0.0, 0.0, 0.0, 0.0)); spec("waves2", 0.0, 0.5, 1.0, 0.5, params(1.0, 2.0, pi, pi / 2))
+        val a = params(1.0, 0.5, 0.0, 1.0)   // freq, weight, sym, scale
+        spec("auger", 0.0, 0.0, 0.0, 0.0, a); spec("auger", pi / 2, 0.0, 1.57080, 0.25, a)
+        spec("auger", 0.3, 0.4, 0.3, 0.65409, params(2.0, 0.5, 0.0, 1.0)); spec("auger", 1.0, 2.0, 1.68197, 3.05184, params(1.0, 0.5, 1.0, 1.0))
+        val f = params(0.0)
+        spec("flux", 0.0, 1.0, 1.41421, 1.41421, f, w = 1.0); spec("flux", 0.0, 0.0, 0.0, 2.0, f, w = 1.0); spec("flux", 1.0, 1.0, 3.14461, 5.08808, f, w = 2.0)
     }
 }

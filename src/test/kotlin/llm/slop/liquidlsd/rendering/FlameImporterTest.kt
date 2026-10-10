@@ -136,4 +136,43 @@ class FlameImporterTest {
         assertEquals(-20f, FlameVariations.real(julian, 0, 0f))        // spirencor2 uses julian_power -20
         assertTrue(FlameVariations.ALL[FlameVariations.NAMES.indexOf("rings2")].params[0].min <= 0.012f)
     }
+
+    private fun xform(attrs: String) = one("""<flame name="n" size="100 100" scale="50"><xform weight="1" coefs="1 0 0 1 0 0" $attrs/></flame>""")
+
+    @Test fun readsTheNewVariationsAndTheirParametersByTheirFileNames() {
+        val r = xform("""curve="1.0" curve_xamp="1.5" curve_ylength="2" wedge_julia="0.5" wedge_julia_power="3" """)
+        val curve = FlameVariations.NAMES.indexOf("curve")
+        assertEquals(curve.toFloat(), r.values.f("X1 V1 Id"))
+        assertEquals(1.5f, FlameVariations.real(curve, 0, r.values.f("X1 V1 A")), 1e-4f)
+        assertEquals(2f, FlameVariations.real(curve, 3, r.values.f("X1 V1 D")), 1e-4f)
+        assertEquals(FlameVariations.NAMES.indexOf("wedge_julia").toFloat(), r.values.f("X1 V2 Id"))
+        assertEquals(3f, FlameVariations.real(FlameVariations.NAMES.indexOf("wedge_julia"), 0, r.values.f("X1 V2 A")), 1e-4f)
+        assertTrue(r.notes.none { "unsupported" in it })
+    }
+
+    @Test fun oscilloscopeIsReadUnderBothSpellings() {
+        val osc = FlameVariations.NAMES.indexOf("oscope")
+        for (attrs in listOf("""oscope="1" oscope_frequency="2" """, """oscilloscope="1" oscilloscope_frequency="2" """)) {
+            val r = xform(attrs)
+            assertEquals(osc.toFloat(), r.values.f("X1 V1 Id"), attrs)
+            assertEquals(2f, FlameVariations.real(osc, 1, r.values.f("X1 V1 B")), 1e-4f, attrs)
+        }
+    }
+
+    @Test fun aParameterOutsideTheRangeIsClampedWithANote() {
+        val r = xform("""cell="1" cell_size="10" """)
+        assertEquals(2.5f, FlameVariations.real(FlameVariations.NAMES.indexOf("cell"), 0, r.values.f("X1 V1 A")), 1e-4f)
+        assertTrue(r.notes.any { "cell" in it && "clamped" in it })
+    }
+
+    @Test fun theFourSkippedVariationsAreReportedAndNeverMapped() {
+        val r = xform("""sinusoidal="1" super_shape="1" super_shape_m="4" lazysusan="0.5" pre_blur="0.1" mobius="1" mobius_re_a="1" Re_A="1" """)
+        assertEquals(FlameVariations.NAMES.indexOf("sinusoidal").toFloat(), r.values.f("X1 V1 Id"))
+        assertEquals(0f, r.values.f("X1 V2 Weight"))
+        val note = r.notes.single { "unsupported" in it }
+        for (n in listOf("super_shape", "lazysusan", "pre_blur", "mobius")) assertTrue(n in note, note)
+        assertFalse("super_shape_m" in note || "mobius_re_a" in note || "Re_A" in note, note)
+        // a skipped variation with weight 0 is not a use
+        assertTrue(xform("""sinusoidal="1" mobius="0" """).notes.none { "unsupported" in it })
+    }
 }

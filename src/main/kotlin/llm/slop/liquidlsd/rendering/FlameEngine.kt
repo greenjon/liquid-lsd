@@ -244,6 +244,13 @@ float slog(float a) { return a > 0.0 ? log(a) : nan(); }
 float ssqrt(float a) { return a >= 0.0 ? sqrt(a) : nan(); }
 float spow(float x, float e) { return e == 0.0 ? 1.0 : (x > 0.0 ? pow(x, e) : (e > 0.0 ? 0.0 : nan())); }
 float remT(float a, float b) { return b == 0.0 ? nan() : a - b * trunc(a / b); }   // remainder, sign follows a
+float modAxis(float x, float m) {   // modulus: fold x into [-m, m]
+    float W = 2.0 * m;
+    if (x > m) return -m + remT(x + m, W);
+    if (x < -m) return m - remT(m - x, W);
+    return x;
+}
+float sepAxis(float x, float s, float i) { float a = sqrt(x*x + s*s); return x > 0.0 ? a - i*x : -(a + i*x); }   // separation
 
 // Variation `id` of point p, already multiplied by its weight w. Formulas: Draves & Reckase, "The Fractal Flame
 // Algorithm", Appendix A (ids are the paper's numbers; keep in step with FlameVariations). P = the variation's
@@ -321,22 +328,64 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
                    float t = s2 > 1e-30 ? log(s2) / log(10.0) + cos(a) : -30.0;
                    v = p.x * vec2(t, t - PI*sin(a)); break; }
         case 48: v = p / sqrt(pow(p.x*p.x - p.y*p.y, 2.0) + 1e-10); break;                                // cross
+        case 49: { float tw = P.y, s = sin(tw), c = cos(tw) - 1.0;                              // disc2: rot, twist
+                   if (tw > 2.0*PI) { float k = 1.0 + tw - 2.0*PI; s *= k; c *= k; }
+                   else if (tw < -2.0*PI) { float k = 1.0 + tw + 2.0*PI; s *= k; c *= k; }
+                   float t = PI * P.x * (p.x + p.y), R = th / PI; v = R * vec2(sin(t) + c, cos(t) + s); break; }
+        case 51: { float k = (rnd() - P.y) * cos(P.x * ph) / r; v = k * p; break; }             // flower: petals, holes
+        case 52: { float e = P.x, k = sdiv((rnd() - P.y) * e, (1.0 + e * p.x / r) * r); v = k * p; break; } // conic: eccentricity, holes
+        case 53: { float s = sin(r); v = vec2(P.x * s * s * rnd(), P.y * cos(r) * rnd()); break; } // parabola: height, width
+        case 54: v = vec2(p.x < 0.0 ? P.x * p.x : p.x, p.y < 0.0 ? P.y * p.y : p.y); break;     // bent2: x, y
+        case 55: { float T = q + 1.0, ps = 0.5 * atan(2.0*p.y, q - 1.0) - 0.5*PI*P.x;           // bipolar: shift (the 1e-6 keeps psi = pi/2 exactly on the axis from flipping to -pi/2)
+                   if (ps > 0.5*PI + 1e-6) ps = -0.5*PI + remT(ps + 0.5*PI, PI);
+                   else if (ps < -0.5*PI - 1e-6) ps = 0.5*PI - remT(0.5*PI - ps, PI);
+                   v = vec2(slog(sdiv(T + 2.0*p.x, T - 2.0*p.x)) / (2.0*PI), (2.0/PI) * ps); break; }
         case 56: { vec2 pr = roundEven(p), d = p - pr;                                           // boarders
                    if (rnd() >= 0.75) v = 0.5 * d + pr;
                    else if (abs(d.x) >= abs(d.y)) { float s = d.x >= 0.0 ? 1.0 : -1.0; v = vec2(0.5*d.x + pr.x + 0.25*s, 0.5*d.y + pr.y + 0.25*s*sdiv(d.y, d.x)); }
                    else { float s = d.y >= 0.0 ? 1.0 : -1.0; v = vec2(0.5*d.x + pr.x + 0.25*s*sdiv(d.x, d.y), 0.5*d.y + pr.y + 0.25*s); }
                    break; }
         case 57: { float R = 1.3029400317 * sqrt(abs(p.x*p.y) / (p.x*p.x + 4.0*p.y*p.y + 1e-10)); v = vec2(R*p.x, 2.0*R*p.y); break; } // butterfly
+        case 58: { float s = P.x, fi = floor(sdiv(p.x, s)), fj = floor(sdiv(p.y, s));           // cell: size
+                   float dx = p.x - fi*s, dy = p.y - fj*s;
+                   float ii = fi >= 0.0 ? 2.0*fi : -(2.0*fi + 1.0), jj = fj >= 0.0 ? 2.0*fj : -(2.0*fj + 1.0);
+                   v = vec2(dx + ii*s, -(dy + jj*s)); break; }
+        case 59: { float pw = P.z, k = floor(pw * rnd()), L = 0.5 * slog(q);                    // cpow: r, i, power
+                   float mu = sdiv(P.x, pw), nu = sdiv(P.y, pw), al = mu*ph + nu*L + sdiv(2.0*PI*k, pw);
+                   v = exp(mu*L - nu*ph) * vec2(cos(al), sin(al)); break; }
+        case 60: { float lx = max(P.z*P.z, 1e-20), ly = max(P.w*P.w, 1e-20);                    // curve: xamp, yamp, xlength, ylength
+                   v = vec2(p.x + P.x * exp(-p.y*p.y / lx), p.y + P.y * exp(-p.x*p.x / ly)); break; }
         case 61: { float T = q + 1.0, a = sqrt(max(T + 2.0*p.x, 0.0)), b = sqrt(max(T - 2.0*p.x, 0.0)), X = max(0.5*(a + b), 1.0); // edisc (X >= 1 and |x/X| <= 1 are clamped: float rounding hits them often)
                    float a1 = log(X + sqrt(X - 1.0)), a2 = -acos(clamp(p.x / X, -1.0, 1.0)), sg = p.y > 0.0 ? -sin(a1) : sin(a1);
                    v = (1.0 / 11.57034632) * vec2(cosh(a2) * cos(a1), sinh(a2) * sg); break; }
         case 62: { float T = q + 1.0, X = 0.5*(sqrt(max(T + 2.0*p.x, 0.0)) + sqrt(max(T - 2.0*p.x, 0.0))); // elliptic
                    float a = p.x / X, B = sqrt(max(0.0, 1.0 - a*a)), S = sqrt(max(0.0, X - 1.0)), l = log(X + S);
                    v = (2.0 / PI) * vec2(atan(a, B), p.y > 0.0 ? l : -l); break; }
+        case 63: { float L = 0.5 * slog(q), mu = 0.5 * (1.0 + cos(P.x)), nu = 0.5 * sin(P.x);   // escher: beta
+                   float al = mu*ph + nu*L; v = exp(mu*L - nu*ph) * vec2(cos(al), sin(al)); break; }
         case 64: { float D = sdiv(1.0, cosh(p.x) - cos(p.y)); v = D * vec2(sinh(p.x), sin(p.y)); break; } // foci
         case 66: { float v2 = w*w, R = q < v2 ? w * sqrt(sdiv(v2, q) - 1.0) : w; return R * p; } // loonie: v is also the radius, so the output is finished here
+        case 68: v = vec2(modAxis(p.x, P.x), modAxis(p.y, P.y)); break;                         // modulus: x, y
+        case 69: { float c = P.z * cos(2.0*PI * P.y * p.x);                                     // oscope: separation, frequency, amplitude, damping
+                   float t = (P.w == 0.0 ? c : c * exp(-abs(p.x) * P.w)) + P.x;
+                   v = vec2(p.x, abs(p.y) <= t ? -p.y : p.y); break; }
         case 70: v = (1.0 / PI) * vec2(th, 0.5 * slog(q)); break;                               // polar2
+        case 71: v = vec2(p.x + P.x * sin(tan(P.z * p.y)), p.y + P.y * sin(tan(P.z * p.x))); break; // popcorn2: x, y, c
         case 72: { float rt = sqrt(q); return sdiv(p, rt * (q + sdiv(1.0, w + 1e-10))); }       // scry: v is not a plain output factor
+        case 73: v = vec2(sepAxis(p.x, P.x, P.y), sepAxis(p.y, P.z, P.w)); break;               // separation: x, xinside, y, yinside
+        case 74: v = vec2(cos(PI*p.y*P.y) >= 0.0 ? p.x : -p.x, cos(PI*p.x*P.x) >= 0.0 ? p.y : -p.y); break; // split: xsize, ysize (each axis flips the other)
+        case 75: v = vec2(p.x >= 0.0 ? p.x + P.x : p.x - P.x, p.y >= 0.0 ? p.y + P.y : p.y - P.y); break; // splits: x, y
+        case 76: { float xr = floor(p.x + 0.5), d = p.x - xr; v = vec2(d * (1.0 - P.x) + xr, p.y + d*d*P.y); break; } // stripes: space, warp
+        case 77: { float al = ph + P.w*r, k = floor((P.z*al + PI) / (2.0*PI)), F = 1.0 - P.x*P.z / (2.0*PI), a2 = al*F + k*P.x; // wedge: angle, hole, count, swirl
+                   v = (r + P.y) * vec2(cos(a2), sin(a2)); break; }
+        case 78: { float pw = P.x, j = trunc(abs(pw) * rnd()), al = sdiv(ph + 2.0*PI*j, pw);   // wedge_julia: power, dist, count, angle
+                   float k = floor((P.z*al + PI) / (2.0*PI)), F = 1.0 - P.w*P.z / (2.0*PI), a2 = al*F + k*P.w;
+                   v = spow(q, sdiv(P.y, 2.0*pw)) * vec2(cos(a2), sin(a2)); break; }
+        case 79: { float Q = 1.0 / (sqrt(q) + 1e-10), al = ph + P.w*Q;                          // wedge_sph: angle, hole, count, swirl
+                   float k = floor((P.z*al + PI) / (2.0*PI)), F = 1.0 - P.x*P.z / (2.0*PI), a2 = al*F + k*P.x;
+                   v = (Q + P.y) * vec2(cos(a2), sin(a2)); break; }
+        case 80: { float al = ph + sdiv(r < w ? P.x : P.y, w - r); return w*r * vec2(cos(al), sin(al)); } // whorl: inside, outside; v is also the switching radius
+        case 81: v = vec2(p.x + P.x * sin(p.y * P.z), p.y + P.y * sin(p.x * P.w)); break;       // waves2: scalex, scaley, freqx, freqy
         case 82: v = exp(p.x) * vec2(cos(p.y), sin(p.y)); break;                                // exp
         case 83: v = vec2(0.5 * slog(q), ph); break;                                            // log
         case 84: v = vec2(sin(p.x) * cosh(p.y), cos(p.x) * sinh(p.y)); break;                   // sin
@@ -351,6 +400,12 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
         case 93: { float d = cos(2.0*p.y) + cosh(2.0*p.x); v = sdiv(2.0 * vec2(cosh(p.x) * cos(p.y), -sinh(p.x) * sin(p.y)), d); break; } // sech
         case 94: { float d = cosh(2.0*p.x) - cos(2.0*p.y); v = sdiv(2.0 * vec2(sinh(p.x) * cos(p.y), -cosh(p.x) * sin(p.y)), d); break; } // csch
         case 95: { float d = cosh(2.0*p.x) - cos(2.0*p.y); v = sdiv(vec2(sinh(2.0*p.x), sin(2.0*p.y)), d); break; } // coth: +sin 2y as in the original program, not the textbook -sin 2y
+        case 96: { float s = sin(P.x * p.x), u = sin(P.x * p.y);                                // auger: freq, weight, sym, scale
+                   float dy = p.y + P.y * (P.w*s*0.5 + abs(p.y)*s), dx = p.x + P.y * (P.w*u*0.5 + abs(p.x)*u);
+                   v = vec2(p.x + P.z * (dx - p.x), dy); break; }
+        case 97: { float ap = p.x + w, am = p.x - w, y2 = p.y*p.y;                              // flux: spread; v also places the two foci
+                   float R = w * (2.0 + P.x) * spow(sdiv(y2 + ap*ap, y2 + am*am), 0.25), al = 0.5 * (atan(p.y, am) - atan(p.y, ap));
+                   return R * vec2(cos(al), sin(al)); }
     }
     return w * v;
 }
