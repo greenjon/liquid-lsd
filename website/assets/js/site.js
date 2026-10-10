@@ -11,7 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const navLinks = document.querySelector('.nav-links');
   if (mobileToggle && navLinks) {
     mobileToggle.addEventListener('click', () => {
-      navLinks.classList.toggle('open');
+      const open = navLinks.classList.toggle('open');
+      mobileToggle.setAttribute('aria-expanded', String(open));
     });
   }
 
@@ -96,4 +97,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     pre.appendChild(copyBtn);
   });
+
+  // 6. Highlight the download for the visitor's OS
+  const ua = navigator.userAgent;
+  const os = /Windows/.test(ua) ? 'windows' : /Mac/.test(ua) ? 'macos' : /Linux|X11/.test(ua) ? 'linux' : null;
+  if (os) {
+    document.querySelectorAll('.download-tile[data-os="' + os + '"]').forEach(t => t.classList.add('recommended'));
+  }
+
+  // 7. Show the latest release number (falls back to the static text if GitHub is unreachable)
+  const versionEls = document.querySelectorAll('[data-version]');
+  if (versionEls.length) {
+    fetch('https://api.github.com/repos/greenjon/liquid-lsd/releases/latest')
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(rel => versionEls.forEach(el => { el.textContent = rel.tag_name; }))
+      .catch(() => {});
+  }
 });

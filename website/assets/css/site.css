@@ -1121,3 +1121,32 @@ pre:hover .copy-btn {
     align-items: flex-start;
   }
 }
+
+/* Download tiles + GitHub callout */
+.download-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 24px 0;
+}
+.download-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 16px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.15));
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  text-align: center;
+}
+.download-tile span { opacity: 0.7; font-size: 0.9em; }
+.download-tile:hover, .download-tile:focus-visible { border-color: var(--accent-cyan, #22d3ee); }
+.download-tile.recommended { border-color: var(--accent-cyan, #22d3ee); box-shadow: 0 0 0 1px var(--accent-cyan, #22d3ee); }
+.github-callout {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.github-callout h3 { margin-bottom: 6px; }
+.github-callout .btn { margin: 12px 8px 0 0; }

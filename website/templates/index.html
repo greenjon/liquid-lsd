@@ -3,8 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Liquid LSD — Real-Time Audio-Reactive Visualizer & Synthesizer</title>
-  <meta name="description" content="Liquid LSD: High-performance real-time audio-reactive graphics workstation built with Kotlin, OpenGL, and low-latency DSP.">
+  <title>Liquid LSD — Audio-Reactive Visuals for Live Performance</title>
+  <meta name="description" content="Liquid LSD is free, open-source VJ software. Layer generative visuals and shaders, drive them from live audio, and perform with MIDI controllers. Linux, macOS and Windows.">
+  <link rel="canonical" href="{{SITE_URL}}/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Liquid LSD — Audio-Reactive Visuals for Live Performance">
+  <meta property="og:description" content="Free, open-source VJ software for Linux, macOS and Windows.">
+  <meta property="og:url" content="{{SITE_URL}}/">
+  <meta property="og:image" content="{{SITE_URL}}/assets/images/og.png">
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="assets/css/site.css">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon.png">
   <link rel="icon" type="image/svg+xml" href="assets/images/logo.svg">
@@ -19,16 +26,15 @@
       </a>
       <nav class="nav-links">
         <a href="#features">Features</a>
-        <a href="#media">Showcase</a>
         <a href="docs/index.html">Documentation</a>
-        <a href="#download" class="btn btn-sm btn-primary">Download v{{VERSION}}</a>
+        <a href="#download" class="btn btn-sm btn-primary">Download</a>
         <a href="{{GITHUB_URL}}" target="_blank" rel="noopener" class="nav-icon-link" title="GitHub Repository">
           <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
             <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
           </svg>
         </a>
       </nav>
-      <button class="mobile-toggle" aria-label="Toggle Navigation">
+      <button class="mobile-toggle" aria-label="Toggle Navigation" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -38,211 +44,160 @@
   <section class="hero-section">
     <div class="container hero-inner">
       <div class="hero-badge">
-        <span class="badge-dot"></span> Release v{{VERSION}} &bull; Real-time Visualizer
+        <span class="badge-dot"></span> Free &bull; Open source &bull; <span data-version>0.9 pre-release</span>
       </div>
       <h1 class="hero-title">
         Liquid <span class="gradient-text">LSD</span>
       </h1>
       <p class="hero-tagline">
-        High-performance real-time audio-reactive graphics workstation. Powered by Kotlin, LWJGL/OpenGL 3.3+, and zero-allocation low-latency audio DSP.
+        Visuals that move with your music. Layer generative shaders, shape them with your hands, and perform live &mdash; on Linux, macOS and Windows.
       </p>
 
       <div class="hero-actions">
         <a href="#download" class="btn btn-primary btn-lg">
           <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Download App
+          Download
         </a>
-        <a href="docs/index.html" class="btn btn-secondary btn-lg">
-          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
-          Browse Docs
-        </a>
+        <a href="docs/" class="btn btn-secondary btn-lg">Read the Docs</a>
         <a href="{{GITHUB_URL}}" target="_blank" rel="noopener" class="btn btn-outline btn-lg">
-          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
           GitHub
         </a>
       </div>
 
       <div class="tech-pills">
-        <span class="tech-pill">OpenGL 3.3 Core</span>
-        <span class="tech-pill">JACK & PipeWire Low-Latency</span>
-        <span class="tech-pill">Zero-Alloc Audio Thread</span>
-        <span class="tech-pill">Dear ImGui</span>
+        <span class="tech-pill">4 decks</span>
+        <span class="tech-pill">ISF shaders</span>
+        <span class="tech-pill">MIDI &amp; OSC control</span>
+        <span class="tech-pill">Ableton Link</span>
         <span class="tech-pill">Linux &bull; macOS &bull; Windows</span>
       </div>
     </div>
   </section>
 
-  <!-- Showcase / Media Section -->
-  <section id="media" class="media-section">
-    <div class="container">
-      <div class="section-heading text-center">
-        <span class="section-sub">Visual Showcase</span>
-        <h2 class="section-title">Experience the Visuals</h2>
-        <p class="section-desc">Real-time parametric patterns, feedback loops, and audio-driven morphing.</p>
-      </div>
-
-      <!-- Video Showcase Container -->
-      <div class="video-container-card">
-        <div class="video-frame-wrapper">
-          <!-- When your video tutorial is ready, replace this container or insert an iframe/video -->
-          <div class="video-placeholder">
-            <div class="video-placeholder-content">
-              <div class="play-icon-glow">
-                <svg viewBox="0 0 24 24" width="36" height="36" fill="currentColor">
-                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                </svg>
-              </div>
-              <h3>Video Tutorial & Demo</h3>
-              <p>Walkthrough of audio reactive routing, mandala parameters, and preset morphing.</p>
-              <span class="badge badge-subtle">Video coming soon</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Screenshot Gallery Grid -->
-      <div class="screenshot-grid">
-        <div class="screenshot-card" data-full="assets/images/screenshot_mandala.svg">
-          <img src="assets/images/screenshot_mandala.svg" alt="Mandala Visualizer in Action" class="screenshot-img">
-          <div class="screenshot-overlay">
-            <h4>Mandala Visualizer</h4>
-            <p>Harmonic frequency-reactive symmetry layers</p>
-          </div>
-        </div>
-
-        <div class="screenshot-card" data-full="assets/images/screenshot_dsp.svg">
-          <img src="assets/images/screenshot_dsp.svg" alt="Real-Time Audio DSP & FFT Spectrum" class="screenshot-img">
-          <div class="screenshot-overlay">
-            <h4>Audio Engine & DSP</h4>
-            <p>Zero-allocation sub-millisecond FFT analysis</p>
-          </div>
-        </div>
-
-        <div class="screenshot-card" data-full="assets/images/screenshot_modulation.svg">
-          <img src="assets/images/screenshot_modulation.svg" alt="Modulation Matrix & Preset Control" class="screenshot-img">
-          <div class="screenshot-overlay">
-            <h4>Modulation Matrix</h4>
-            <p>Dynamic CV routing and MIDI parameter binding</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Grid Section -->
+  <!-- Features -->
   <section id="features" class="features-section">
     <div class="container">
       <div class="section-heading text-center">
-        <span class="section-sub">Engine Capabilities</span>
-        <h2 class="section-title">Built for Performance & Live Sets</h2>
+        <span class="section-sub">What it does</span>
+        <h2 class="section-title">Built for Live Sets</h2>
       </div>
 
       <div class="features-grid">
         <div class="feature-card">
-          <div class="feature-icon">⚡</div>
-          <h3>Zero-Allocation Audio Thread</h3>
-          <p>Strict real-time audio pipeline avoiding garbage collector pauses. Lock-free ringbuffers transfer spectrum metrics seamlessly to the render loop.</p>
+          <div class="feature-icon" aria-hidden="true">🎚️</div>
+          <h3>Four decks, one mix</h3>
+          <p>Run visuals on decks A, B and a background layer, audition the next look on a preview deck, and blend them with a crossfader.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon">🌀</div>
-          <h3>Parametric Mandala & Feedback</h3>
-          <p>Multi-layered geometric synthesis, polar coordinate mapping, and audio-driven harmonic pulse modulation.</p>
+          <div class="feature-icon" aria-hidden="true">🌀</div>
+          <h3>Generators and shaders</h3>
+          <p>Start from built-in generators like mandalas, spirals and gyroids, or load your own ISF shaders, including ones from Shadertoy and GLSLSandbox.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon">🎛️</div>
-          <h3>Modulation & MIDI Binding</h3>
-          <p>Flexible control-voltage (CV) style matrix allowing audio frequency bands, LFOs, and hardware MIDI knobs to control any visual parameter.</p>
+          <div class="feature-icon" aria-hidden="true">🎧</div>
+          <h3>Reacts to your audio</h3>
+          <p>Bass, mids and highs, plus beat tracking, drive any parameter. Sync tempo with Ableton Link or tap it in.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon">🖥️</div>
-          <h3>Cross-Platform LWJGL & ImGui</h3>
-          <p>Smooth 60+ FPS desktop interface engineered for Linux (x64 / ARM64), macOS (Intel & Apple Silicon), and Windows.</p>
+          <div class="feature-icon" aria-hidden="true">✨</div>
+          <h3>Effects and transitions</h3>
+          <p>Stack effect chains on each deck and on the master output, then move between looks with saved transitions.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon">📁</div>
-          <h3>Preset Queues & Playlists</h3>
-          <p>Save and recall visual states instantly. Crossfade morphing between presets for seamless live VJ performance transitions.</p>
+          <div class="feature-icon" aria-hidden="true">🎛️</div>
+          <h3>Play it with hardware</h3>
+          <p>A 4&times;4 macro knob matrix maps to MIDI controllers (with native Midi Fighter Twister support), OSC and TouchOSC. Learn a control with one click.</p>
         </div>
 
         <div class="feature-card">
-          <div class="feature-icon">📊</div>
-          <h3>Live Telemetry & Diagnostics</h3>
-          <p>Real-time frame time graphs, GC pause trackers, audio xrun counters, and OpenGL pipeline debuggers.</p>
+          <div class="feature-icon" aria-hidden="true">📁</div>
+          <h3>Presets, playlists and queues</h3>
+          <p>Save any look, build playlists and setlists, and let an auto-VJ queue keep the visuals going between your own moves.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" aria-hidden="true">📺</div>
+          <h3>Send it anywhere</h3>
+          <p>Share video with other apps through Spout, Syphon or PipeWire, record your set, or broadcast to a browser-based visualizer.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon" aria-hidden="true">🆓</div>
+          <h3>Free and open</h3>
+          <p>Released under the GPL-3.0. No account, no subscription, no Java install needed.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Documentation Section -->
+  <!-- Download -->
+  <section id="download" class="download-section">
+    <div class="container">
+      <div class="download-card">
+        <div class="download-content">
+          <div class="hero-badge">Latest build: <span data-version>v0.9</span></div>
+          <h2>Get Liquid LSD</h2>
+          <p>Pick your system. Each download is a ready-to-run bundle &mdash; unzip it and launch. Liquid LSD is a 0.9 pre-release: usable and moving fast, with rough edges.</p>
+
+          <div class="download-grid">
+            <a class="download-tile" data-os="windows" href="{{GITHUB_URL}}/releases/latest/download/liquid-lsd-windows-x64.zip"><strong>Windows</strong><span>64-bit</span></a>
+            <a class="download-tile" data-os="macos" href="{{GITHUB_URL}}/releases/latest/download/liquid-lsd-macos-arm64.zip"><strong>macOS</strong><span>Apple Silicon</span></a>
+            <a class="download-tile" data-os="macos" href="{{GITHUB_URL}}/releases/latest/download/liquid-lsd-macos-x64.zip"><strong>macOS</strong><span>Intel</span></a>
+            <a class="download-tile" data-os="linux" href="{{GITHUB_URL}}/releases/latest/download/liquid-lsd-linux-x64.zip"><strong>Linux</strong><span>x64</span></a>
+            <a class="download-tile" data-os="linux" href="{{GITHUB_URL}}/releases/latest/download/liquid-lsd-linux-arm64.zip"><strong>Linux</strong><span>ARM64</span></a>
+          </div>
+
+          <div class="github-callout">
+            <h3>Want more than the latest build?</h3>
+            <p>Browse the source code, build it yourself, report a bug, or grab an earlier version on GitHub.</p>
+            <a href="{{GITHUB_URL}}" target="_blank" rel="noopener" class="btn btn-outline btn-lg">
+              <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+              Liquid LSD on GitHub
+            </a>
+            <a href="{{GITHUB_URL}}/releases" target="_blank" rel="noopener" class="btn btn-secondary btn-lg">All releases</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Docs -->
   <section id="docs" class="docs-section">
     <div class="container">
       <div class="section-heading">
-        <span class="section-sub">Comprehensive Manuals</span>
-        <h2 class="section-title">Viewable & Downloadable Docs</h2>
-        <p class="section-desc">Browse complete online guides or download the full archive for offline usage during live performances.</p>
+        <span class="section-sub">Learn it</span>
+        <h2 class="section-title">Documentation</h2>
       </div>
 
       <div class="docs-preview-grid">
         <div class="doc-box">
           <h3>🚀 Getting Started</h3>
-          <p>Installation, audio setup (JACK / PipeWire), first launch, and basic control shortcuts.</p>
-          <a href="docs/getting_started.html" class="doc-link">Read Getting Started &rarr;</a>
+          <p>Install, route your audio in, and make your first visuals.</p>
+          <a href="docs/getting_started/" class="doc-link">Get started &rarr;</a>
         </div>
-
         <div class="doc-box">
-          <h3>📖 User Guide</h3>
-          <p>Detailed breakdown of visual sources, modulation routing, MIDI controllers, and preset management.</p>
-          <a href="docs/user_guide/concepts.html" class="doc-link">Explore User Guide &rarr;</a>
+          <h3>🖥️ Your Workspace</h3>
+          <p>A tour of the decks, the mixer and the Perform, Edit and Library views.</p>
+          <a href="docs/user_guide/your_workspace/" class="doc-link">Tour the workspace &rarr;</a>
         </div>
-
         <div class="doc-box">
-          <h3>⚙️ Developer Reference</h3>
-          <p>Architecture specifications, audio DSP pipeline, OpenGL rendering loop, and low-latency rules.</p>
-          <a href="docs/developer/architecture.html" class="doc-link">Read Developer Reference &rarr;</a>
+          <h3>🎛️ Performing</h3>
+          <p>Macro knobs, MIDI and OSC mapping, and playing a live set.</p>
+          <a href="docs/user_guide/macros_and_rack/" class="doc-link">Learn to perform &rarr;</a>
         </div>
-
         <div class="doc-box">
-          <h3>📋 Release Notes</h3>
-          <p>Changelog, bug fixes, and feature additions across all released versions.</p>
-          <a href="docs/release_notes.html" class="doc-link">View Changelog &rarr;</a>
-        </div>
-      </div>
-
-      <div class="docs-download-bar">
-        <div class="docs-download-info">
-          <h4>Need offline documentation?</h4>
-          <p>Download the complete manual bundle as a standalone archive.</p>
-        </div>
-        <a href="docs.zip" download class="btn btn-secondary">
-          <svg class="icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Download Docs Archive (docs.zip)
-        </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Download & Release Section -->
-  <section id="download" class="download-section">
-    <div class="container">
-      <div class="download-card">
-        <div class="download-content">
-          <div class="hero-badge">Latest Stable: v{{VERSION}}</div>
-          <h2>Get Liquid LSD</h2>
-          <p>Available for Linux, macOS (Intel & Apple Silicon), and Windows. Download pre-packaged bundles with embedded runtime from GitHub Releases.</p>
-          
-          <div class="download-buttons">
-            <a href="{{LATEST_RELEASE_URL}}" target="_blank" rel="noopener" class="btn btn-primary btn-lg">
-              <svg class="icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              GitHub Releases (v{{VERSION}})
-            </a>
-            <a href="{{GITHUB_URL}}" target="_blank" rel="noopener" class="btn btn-outline btn-lg">
-              Source Code on GitHub
-            </a>
-          </div>
+          <h3>📖 Full User Guide</h3>
+          <p>Sources, modulation, presets, recording and more.</p>
+          <a href="docs/" class="doc-link">Browse the docs &rarr;</a>
         </div>
       </div>
     </div>
@@ -253,42 +208,30 @@
     <div class="container footer-inner">
       <div class="footer-col">
         <div class="brand">
-          <img src="assets/images/logo.svg" alt="Liquid LSD Logo" class="brand-logo" width="24" height="24">
+          <img src="assets/images/logo.svg" alt="" class="brand-logo" width="24" height="24">
           <span class="brand-text">Liquid <span class="accent-text">LSD</span></span>
         </div>
-        <p class="footer-tagline">Real-Time Audio-Reactive Visualizer by <a href="https://greenjon.com" class="site-link">greenjon.com</a>.</p>
+        <p class="footer-tagline">Audio-reactive visuals for live performance, by <a href="https://greenjon.com" class="site-link">greenjon.com</a>.</p>
       </div>
 
       <div class="footer-col footer-nav">
-        <h4>Navigation</h4>
-        <a href="index.html">Home</a>
-        <a href="docs/index.html">Documentation</a>
-        <a href="docs/getting_started.html">Getting Started</a>
-        <a href="docs/release_notes.html">Release Notes</a>
+        <h4>Site</h4>
+        <a href="#features">Features</a>
+        <a href="#download">Download</a>
+        <a href="docs/">Documentation</a>
       </div>
 
       <div class="footer-col footer-links">
-        <h4>Links</h4>
-        <a href="{{GITHUB_URL}}" target="_blank" rel="noopener">GitHub Project</a>
-        <a href="{{LATEST_RELEASE_URL}}" target="_blank" rel="noopener">Latest Release</a>
-        <a href="docs.zip" download>Download Docs (.zip)</a>
-        <a href="https://greenjon.com">greenjon.com</a>
+        <h4>Project</h4>
+        <a href="{{GITHUB_URL}}" target="_blank" rel="noopener">Source code</a>
+        <a href="{{GITHUB_URL}}/releases" target="_blank" rel="noopener">All releases</a>
+        <a href="{{GITHUB_URL}}/issues" target="_blank" rel="noopener">Report a bug</a>
       </div>
     </div>
     <div class="container footer-bottom">
-      <p>&copy; <span id="year">2026</span> greenjon.com &bull; Released under open source license.</p>
+      <p>&copy; <span id="year">2026</span> greenjon.com &bull; Released under the <a href="{{GITHUB_URL}}/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0 license</a>.</p>
     </div>
   </footer>
-
-  <!-- Lightbox Modal for Screenshots -->
-  <div id="lightbox-modal" class="lightbox-modal" aria-hidden="true">
-    <div class="lightbox-backdrop"></div>
-    <div class="lightbox-dialog">
-      <button class="lightbox-close" aria-label="Close dialog">&times;</button>
-      <img id="lightbox-img" src="" alt="Expanded preview">
-      <div id="lightbox-caption" class="lightbox-caption"></div>
-    </div>
-  </div>
 
   <script src="assets/js/site.js"></script>
 </body>
