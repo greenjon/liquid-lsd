@@ -52,22 +52,38 @@ internal class FlameEngine {
     init {
         resetPoints()
         palette = glGenTextures()
-        val px = FloatArray(256 * 4)
-        for (i in 0 until 256) {
-            val t = i / 255f
-            px[i * 4] = 0.5f + 0.5f * cos((2.0 * PI * (t + 0.00)).toFloat())
-            px[i * 4 + 1] = 0.5f + 0.5f * cos((2.0 * PI * (t + 0.33)).toFloat())
-            px[i * 4 + 2] = 0.5f + 0.5f * cos((2.0 * PI * (t + 0.67)).toFloat())
-            px[i * 4 + 3] = 1f
-        }
         glBindTexture(GL_TEXTURE_2D, palette)
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 1, 0, GL_RGBA, GL_FLOAT, px)
+        uploadPalette(null)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glBindTexture(GL_TEXTURE_2D, 0)
         logger.warn { "Flame: ${n * n} points, density ${if (density32) "RGBA32F" else "RGBA16F"}" }
+    }
+
+    /** Replaces the colour palette: 768 bytes of RGB, or null for the procedural default. */
+    fun setPalette(rgb: ByteArray?) {
+        glBindTexture(GL_TEXTURE_2D, palette)
+        uploadPalette(rgb)
+        glBindTexture(GL_TEXTURE_2D, 0)
+    }
+
+    /** Uploads into the currently bound palette texture. */
+    private fun uploadPalette(rgb: ByteArray?) {
+        val px = FloatArray(256 * 4)
+        for (i in 0 until 256) {
+            if (rgb != null && rgb.size >= 768) {
+                for (c in 0 until 3) px[i * 4 + c] = (rgb[i * 3 + c].toInt() and 0xFF) / 255f
+            } else {
+                val t = i / 255f
+                px[i * 4] = 0.5f + 0.5f * cos((2.0 * PI * (t + 0.00)).toFloat())
+                px[i * 4 + 1] = 0.5f + 0.5f * cos((2.0 * PI * (t + 0.33)).toFloat())
+                px[i * 4 + 2] = 0.5f + 0.5f * cos((2.0 * PI * (t + 0.67)).toFloat())
+            }
+            px[i * 4 + 3] = 1f
+        }
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 256, 1, 0, GL_RGBA, GL_FLOAT, px)
     }
 
     fun resetPoints() {

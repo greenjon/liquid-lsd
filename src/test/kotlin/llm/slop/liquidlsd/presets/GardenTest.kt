@@ -68,6 +68,13 @@ class GardenTest {
         assertEquals("BREED", PresetManager.json.decodeFromString<DeckPresetDto>(PresetManager.json.encodeToString(dto)).samplerStrategy)
     }
 
+    @Test fun paletteFieldIsOptionalAndRoundTrips() {
+        val old = """{"name":"x","visualSourceType":"fractal_flame","parameters":{},"feedbackParameters":{}}"""
+        assertEquals(null, PresetManager.json.decodeFromString<DeckPresetDto>(old).palette)
+        val dto = DeckPresetDto(name = "x", visualSourceType = "fractal_flame", parameters = emptyMap(), feedbackParameters = emptyMap(), palette = "AQID")
+        assertEquals("AQID", PresetManager.json.decodeFromString<DeckPresetDto>(PresetManager.json.encodeToString(dto)).palette)
+    }
+
     @Test fun importingAFlameFileWritesLoadablePresetsAndNeverOverwrites() {
         val dir = Files.createTempDirectory("flames").toFile()
         try {

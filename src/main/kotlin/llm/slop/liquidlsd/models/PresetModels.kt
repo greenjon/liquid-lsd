@@ -238,7 +238,9 @@ data class DeckPresetDto(
     val paramNotes: Map<String, String> = emptyMap(), // Per-parameter notes keyed by paramKey
     val macroBank: llm.slop.liquidlsd.macro.MacroBank? = null,
     /** How an evolving source picks its next morph target (SamplerStrategy name). Null = not saved: the deck keeps its current setting. */
-    val samplerStrategy: String? = null
+    val samplerStrategy: String? = null,
+    /** Custom 256-colour palette of a Fractal Flame source, base64 of 768 RGB bytes. Null = the procedural default. */
+    val palette: String? = null
 )
 
 @Serializable
@@ -509,7 +511,8 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         viewParameters = viewParamsMap,
         globalAlpha = source.globalAlpha.toDto(),
         isEmpty = isEmpty,
-        samplerStrategy = morphController.strategy.takeIf { it != llm.slop.liquidlsd.rendering.SamplerStrategy.MUTATE }?.name
+        samplerStrategy = morphController.strategy.takeIf { it != llm.slop.liquidlsd.rendering.SamplerStrategy.MUTATE }?.name,
+        palette = (source as? llm.slop.liquidlsd.rendering.FlameSource)?.customPalette?.let { java.util.Base64.getEncoder().encodeToString(it) }
     )
 }
 
@@ -549,6 +552,9 @@ fun Deck.applyDto(dto: DeckPresetDto) {
         }
         dynObj.update()
     }
+    // A clone starts without a palette, but a preset without one must also not keep a previous deck's.
+    (source as? llm.slop.liquidlsd.rendering.FlameSource)?.customPalette =
+        dto.palette?.let { runCatching { java.util.Base64.getDecoder().decode(it) }.getOrNull() }
 
     // Reset view parameters to baseline defaults before applying
     view3DMode.reset()

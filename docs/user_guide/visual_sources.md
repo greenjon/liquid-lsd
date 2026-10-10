@@ -125,9 +125,9 @@ Pool and Breed fall back to Random/Mutate while the Garden is empty. The choice 
 
 **Quality and performance.** `Points`, `Passes` and `Kernel` (Look tab) trade detail for GPU time; cost is roughly proportional to points times passes. Under *Preferences > General*, **Flame GPU Budget (ms)** (default 3 ms per flame deck, 0 = off) lets the app lower the point count automatically when a deck runs over budget and win it back when there is room, with unchanged brightness, so a show holds its frame rate on integrated GPUs. `Points` stays the ceiling.
 
-**Importing `.flame` files.** In the Sources browser, the `...` menu has **Import Flame...**. Pick a flame genome (your own file) and every flame in it becomes a Fractal Flame preset in `library/presets/imported-flames/`. Xforms, affines, the final xform, up to three variations per xform and the camera come across. Variations Fractal Flame does not have (super_shape, lazysusan, pre_blur and mobius are the ones skipped for now), values beyond a parameter's range, the tone settings, any 3D camera and the palette do not; the preset's notes say what was dropped. Imported flames are a starting point: tune Exposure, Decay and Toe to taste, and breed or mutate them like any other.
+**Importing `.flame` files.** In the Sources browser, the `...` menu has **Import Flame...**. Pick a flame genome (your own file) and every flame in it becomes a Fractal Flame preset in `library/presets/imported-flames/`. Xforms, affines, the final xform, up to three variations per xform and the camera come across. Variations Fractal Flame does not have (super_shape, lazysusan, pre_blur and mobius are the ones skipped for now), values beyond a parameter's range, the tone settings, and any 3D camera do not (the palette does come across and is saved inside the preset, so it stays portable); the preset's notes say what was dropped. Imported flames are a starting point: tune Exposure, Decay and Toe to taste, and breed or mutate them like any other.
 
-Fractal Flame is experimental in this build: it is not part of the stock generator set yet, and palette import and the web player version are not done.
+Fractal Flame is experimental in this build: it is not part of the stock generator set yet, and the web player version is not done.
 
 ---
 

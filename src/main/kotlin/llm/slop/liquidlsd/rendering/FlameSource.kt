@@ -179,10 +179,22 @@ class FlameSource(
     }
 
     override fun renderTopology(targetFBO: FBO) {
-        val e = engine ?: FlameEngine().also { engine = it }
+        val e = engine ?: FlameEngine().also { engine = it; paletteDirty = true }
+        if (paletteDirty) {
+            e.setPalette(customPalette)
+            paletteDirty = false
+        }
         val xfCount = FlameGenome.pack(parameters, genome, if (morphLive) lookup else null)
         e.render(this, targetFBO, genome, xfCount)
     }
+
+    /** Imported 768-byte RGB palette; null = the procedural default. Saved with the preset. */
+    var customPalette: ByteArray? = null
+        set(value) {
+            field = value?.takeIf { it.size >= 768 }?.copyOf(768)
+            paletteDirty = true
+        }
+    private var paletteDirty = true
 
     override fun clear() {
         super.clear()

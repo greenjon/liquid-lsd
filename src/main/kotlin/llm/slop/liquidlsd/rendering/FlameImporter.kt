@@ -32,7 +32,7 @@ object FlameImporter {
         val name: String,
         /** Values for the genome parameters (morph-enabled xform parameters, XF when a final xform exists) and the camera (Zoom, Rotation, CenterX, CenterY). */
         val values: Map<String, Float>,
-        /** 256 RGB triples (768 bytes) or null when the file has no readable palette. Not applied yet: the source's palette is procedural. */
+        /** 256 RGB triples (768 bytes) or null when the file has no readable palette. Embedded in the preset by toPresetDto: the source's palette is procedural. */
         val palette: ByteArray?,
         /** Human-readable notes on what was dropped, clamped or assumed. */
         val notes: List<String>
@@ -231,7 +231,7 @@ object FlameImporter {
         return x
     }
 
-    /** A saved-preset body for the imported flame (the palette is not carried yet). Missing deck sections load as defaults. */
+    /** A saved-preset body for the imported flame (the palette is embedded as base64). Missing deck sections load as defaults. */
     fun toPresetDto(imported: Imported, presetName: String = imported.name): DeckPresetDto {
         val params = FlameGenome.buildParameters()
         for ((k, v) in imported.values) params[k]?.set(v)
@@ -241,7 +241,8 @@ object FlameImporter {
             visualSourceType = FlameSource.SOURCE_ID,
             parameters = params.mapValues { it.value.toDto() },
             feedbackParameters = emptyMap(),
-            presetNotes = imported.notes.joinToString("\n")
+            presetNotes = imported.notes.joinToString("\n"),
+            palette = imported.palette?.let { java.util.Base64.getEncoder().encodeToString(it) }
         )
     }
 }
