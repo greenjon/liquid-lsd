@@ -63,5 +63,12 @@ Findings that forced merging phase 2 with the sampler: the morph only lerps `ran
 
 ## Next: phase 4 (editor hook; the ~170-row flat Edit list is unusable), then 3 (paper variations + unit checks; adds A/B variation params), then 5 (Random/Breed/Keep/Garden + quality gate)
 
+### Phase 4 starting points (not yet explored beyond the plan)
+- Plan section "Structured editor (needs the new hook)": optional `VisualSource.drawEditor(...)`; each field still goes through `ParametersRenderer.drawParamRow` so modulation, learn and the kebab keep working. Layout: Global/Camera/Tone, Modifiers, xform tabs X1..X6 + XF (Weight/Color, Pre, Post, three variation slot rows with a name dropdown), "+ add xform" hiding empty xforms.
+- The flat loop is `ui/ParametersTabs.kt` (~line 447, one `drawParamRow` per param). Per the user's memory notes, the old Parameters/Properties classic view is being removed and the Edit row now has a Params-only bay (pair focus view, `PerformanceBrowseBay.kt`), so **first check which UI the user actually edits params in** before choosing where to hook. Use an Explore agent for that, then give a short recommendation before building.
+- Variation id params are discrete (`steps`/`labels` set), so the dropdown can use `labels`; ids must not be shown as a lerping slider.
+- Morph flags: genome params are `randomizeBase` (see gotcha above); the editor must not change that.
+- Also consider a flame-owned morph/"Evolve" control (the plan's macro 8 binds `Mutation`); today morphing is driven by the deck randomize button or a modulator on `rand Deck X`.
+
 ## Targets (owner decision 2026-10-09)
 Design and tune for **Tier L** (Intel Iris Xe iGPU + the web). **Tier H** (RTX A2000, arriving within days) comes later as quality presets on the same engine: see "Performance targets: two tiers" in the plan. When the A2000 arrives, re-run the spike measurements and record Tier H numbers here before designing Tier H options.
