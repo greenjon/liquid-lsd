@@ -6,7 +6,7 @@ Branch: `spike/flame-source` (plan itself is committed on `main`, e9a6c0a). Rule
 ## State (2026-10-09): phase 0 spike DONE and gate PASSED (seen running by the user; results below)
 
 Files:
-- `src/main/kotlin/llm/slop/liquidlsd/rendering/FlameSpikeSource.kt`: `FlameSpikeSource` (extends `DynamicVisualSource`, overrides `renderTopology`) + private `FlameEngine` (all GL + inline GLSL).
+- (historical, now `FlameSource.kt` + `FlameEngine.kt`) `FlameSpikeSource` (extends `DynamicVisualSource`, overrides `renderTopology`) + private `FlameEngine` (all GL + inline GLSL).
 - `src/main/resources/default_sources/flame_spike/{meta.json,shader.frag}`: parameters + the tone-map pass (this shader is the one `Renderer` binds).
 - `VisualSourceRegistry.kt`: `flame_spike` added to `EXPERIMENTAL_SOURCE_IDS` (NOT `DEFAULT_SOURCE_IDS`: stock-source tests assert every default is ISF or mandala, has curated macros, and exists in library/sources), `FOLDER_STYLE_IDS`, and a `loadFromFolder` branch.
 - `Shader.kt`: `setUniform4fv`.
@@ -39,8 +39,16 @@ Gotchas already found: `DeckMorphController` lerps discrete params (read ids fro
 - **Cost attribution (262k pts, Kernel 3, Intel Iris Xe TGL GT2 = integrated, shared memory, clocks vary with load, so noisy):** iterate-only (skip=splat): ~1.0 ms @4 passes, ~4 ms @16 = ~0.25 ms/pass. Splat with every point culled by the burn-in test (skip=iterate): ~1.4-2.9 ms @4, ~5-8 ms @16 = ~0.35-0.5 ms/pass, so even the vertex stage alone (262k texelFetch vertices) is expensive. Full: ~7 ms @4, 13-15 ms @16. Same-session no-skip baseline, two Flame instances (both decks) active: identical settings (passes 4, Kernel 3) logged 2.3, 3.0, 4.2, 5.9 and 9.3 ms, i.e. a **4x swing with no parameter change** (iGPU clocks + contention), so any fixed budget is unreliable on this hardware and the `Points` auto-governor is effectively required, not optional. Conclusion: no single dominant stage; per-point cost is ~3 ns total (iterate ~1, vertex ~1.5, raster/blend the rest) and is independent of sprite size up to Kernel 3 (point-setup-limited, not fill-limited). **Point count is the cost; sprite size is free to Kernel 3.** This machine is a worst case; a discrete GPU should be several times faster.
 - Gotchas learned: `Main` keeps a `GL_TIME_ELAPSED` query open around the whole frame (only one may be active), so per-source timing must use `glQueryCounter(GL_TIMESTAMP)`; `gradlew run` does not forward `-D` flags (use env vars `FLAME_N`, `FLAME_DENSITY`); extracted `library/sources/<id>/` files are never overwritten, so delete the folder after changing bundled spike resources; a param named `Zoom` collides with the renderer's `uZoom`.
 
-## Recommended next step: phase 1 on this branch
-Keep `FlameEngine` (it is the reusable part) and replace the hardcoded genome: genome-as-parameters built in Kotlin, UBO upload, quality tiers (points x passes presets + decay), then variations from the paper with unit checks. Remove `flame_spike`/`EXPERIMENTAL_SOURCE_IDS` when the real `FlameSource` registers properly.
+## Phase 1 (2026-10-09): genome-as-parameters, implemented, NOT yet seen running
+- `FlameGenome.kt`: parameter layout (19 globals, X1..X6 with weight/colour/speed + pre/post affine + 3 variation slots, and a final xform `XF`), built in Kotlin; `pack()` writes the `uXf` uniform array (compacts weight>0 xforms, applies Spin/Breathe/Warp/Drift); `finalIsIdentity()` lets the splat pass skip the final xform.
+- `FlameSource.kt` (id `fractal_flame`, label "Fractal Flame") + `FlameEngine.kt` (the old spike engine, shared GLSL `COMMON` for iterate and splat, new `Points` param = fraction of state rows iterated and drawn). `FlameSpikeSource`, `flame_spike` and the `Genome` param are gone; registry branch is by `FlameSource.SOURCE_ID`, still under `EXPERIMENTAL_SOURCE_IDS`.
+- `FlameGenomeTest` covers names, discrete ids, packing, compaction, Warp. Full `./gradlew test` passes.
+- Deferred from the layout on purpose: variation `A`/`B` params (phase 3, when variations use them; new keys do not break presets), per-xform `Opacity`, UBO (plain uniform array is enough until phase 2 needs A and B slots), 3D keys.
+- Quality knobs `Points`/`Passes`/`Kernel` are still ordinary params; they should move to a device setting with the governor.
+
+**To check (needs the app):** `rm -rf library/sources/flame_spike` (stale extracted spike folder, it will load as a broken source), then `./gradlew run`, add "Fractal Flame", look for shader compile errors in the log (the `switch`/`applyXf` GLSL moved into a shared string), confirm the starter looks like the old Genome 0, try X4..X6 weights, XF PostX, Points.
+
+## Next: phase 2 (morph cross-weighting), then 3 (paper variations + unit checks), 4 (editor hook; the 170-row flat Edit list is unusable until then)
 
 ## Targets (owner decision 2026-10-09)
 Design and tune for **Tier L** (Intel Iris Xe iGPU + the web). **Tier H** (RTX A2000, arriving within days) comes later as quality presets on the same engine: see "Performance targets: two tiers" in the plan. When the A2000 arrives, re-run the spike measurements and record Tier H numbers here before designing Tier H options.

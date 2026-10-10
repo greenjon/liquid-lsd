@@ -62,10 +62,10 @@ object VisualSourceRegistry {
     )
 
     /** Branch-only sources extracted like defaults but not part of the stock set (no curated macros, not asserted by tests). */
-    internal val EXPERIMENTAL_SOURCE_IDS = listOf("flame_spike")
+    internal val EXPERIMENTAL_SOURCE_IDS = listOf(FlameSource.SOURCE_ID)
 
     /** Default sources shipped as a meta.json + shader.frag (+ vert) folder rather than a single ISF file. */
-    private val FOLDER_STYLE_IDS = setOf("mandala", "flame_spike")
+    private val FOLDER_STYLE_IDS = setOf("mandala", FlameSource.SOURCE_ID)
 
     internal fun ensureDefaultSources(sourcesDir: File) {
         val anyMissing = (DEFAULT_SOURCE_IDS + EXPERIMENTAL_SOURCE_IDS).any { id ->
@@ -365,12 +365,12 @@ object VisualSourceRegistry {
                     recipe = initialRecipe,
                     categories = meta.categories.takeIf { it.isNotEmpty() } ?: listOf("Generator", "Geometric")
                 )
-            } else if (meta.id == "flame_spike") {
-                FlameSpikeSource(
+            } else if (meta.id == FlameSource.SOURCE_ID) {
+                FlameSource(
                     id = meta.id,
                     displayName = meta.name,
                     shader = shader,
-                    parameters = parameters,
+                    parameters = FlameGenome.buildParameters(),
                     ownsShader = true,
                     categories = meta.categories
                 )

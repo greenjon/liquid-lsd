@@ -1,123 +1,26 @@
 package llm.slop.liquidlsd.rendering
 
-import llm.slop.liquidlsd.parameters.ModulatableParameter
 import mu.KotlinLogging
 import org.lwjgl.opengl.GL33.*
 import kotlin.math.PI
+import kotlin.math.ceil
 import kotlin.math.cos
 import kotlin.math.sin
 
 private val logger = KotlinLogging.logger {}
 
 /**
- * THROWAWAY SPIKE for the fractal-flame source (see .planning/flame-source-plan.md, phase 0).
- *
- * A chaos-game renderer on OpenGL 3.3 core, no compute:
- *  1. a ping-pong RGBA32F state texture holds one IFS point per texel (x, y, colour index, age);
- *  2. an iterate pass advances every point one step (xform picked by per-point hash);
- *  3. a splat pass draws one GL_POINT per texel with a Gaussian kernel, additively, into a float density buffer;
- *  4. the deck's tone-map shader (resources/default_sources/flame_spike/shader.frag) turns density into colour.
- * The genome is hardcoded here; the real source will build it from parameters. Math follows the public
- * fractal-flame paper (Draves & Reckase); no flam3 / Electric Sheep / Apophysis code was consulted.
+ * Tunables for measuring: JVM property, or its upper-case env var (`gradlew run` does not forward -D to the app JVM).
+ * Math follows the public fractal-flame paper (Draves & Reckase); no flam3 / Electric Sheep / Apophysis code was consulted.
  */
-class FlameSpikeSource(
-    id: String,
-    displayName: String,
-    shader: Shader,
-    parameters: LinkedHashMap<String, ModulatableParameter>,
-    ownsShader: Boolean,
-    categories: List<String> = emptyList()
-) : DynamicVisualSource(
-    id = id,
-    displayName = displayName,
-    shader = shader,
-    parameters = parameters,
-    ownsShader = ownsShader,
-    categories = categories
-) {
-    private var engine: FlameEngine? = null
-
-    override fun renderTopology(targetFBO: FBO) {
-        val e = engine ?: FlameEngine().also { engine = it }
-        e.render(this, targetFBO)
-    }
-
-    override fun clear() {
-        super.clear()
-        engine?.resetPoints()
-    }
-
-    override fun dispose() {
-        engine?.dispose()
-        engine = null
-        super.dispose()
-    }
-
-    override fun clone(): FlameSpikeSource {
-        val clonedParams = LinkedHashMap<String, ModulatableParameter>()
-        parameters.forEach { (name, param) -> clonedParams[name] = param.clone() }
-        return FlameSpikeSource(id, displayName, shader, clonedParams, ownsShader = false, categories = categories).also {
-            it.globalAlpha.set(globalAlpha.baseValue)
-        }
-    }
-
-    // ---- hardcoded genomes -------------------------------------------------------------------------------------
-
-    private class Xf(
-        val weight: Float, val color: Float, val speed: Float,
-        val rot: Float, val sx: Float, val sy: Float, val shear: Float, val tx: Float, val ty: Float,
-        val v: List<Pair<Int, Float>>
-    )
-
-    companion object {
-        /** Variation ids shared with the GLSL `vari()` below. */
-        private val GENOMES: List<List<Xf>> = listOf(
-            listOf(
-                Xf(1.0f, 0.00f, 0.6f, 0.35f, 0.65f, 0.65f, 0.0f, 0.45f, 0.10f, listOf(1 to 0.7f, 3 to 0.5f)),
-                Xf(1.0f, 0.45f, 0.6f, -1.0f, 0.60f, 0.60f, 0.0f, -0.35f, 0.40f, listOf(2 to 0.35f, 0 to 0.65f)),
-                Xf(0.8f, 1.00f, 0.6f, 2.10f, 0.55f, 0.50f, 0.2f, 0.00f, -0.55f, listOf(4 to 0.4f, 1 to 0.6f))
-            ),
-            listOf(
-                Xf(1.0f, 0.00f, 0.5f, 0.90f, 0.70f, 0.70f, 0.0f, 0.20f, 0.20f, listOf(6 to 0.8f, 0 to 0.2f)),
-                Xf(1.0f, 0.50f, 0.5f, -0.4f, 0.55f, 0.55f, 0.0f, -0.50f, 0.00f, listOf(7 to 0.5f, 3 to 0.5f)),
-                Xf(0.6f, 1.00f, 0.5f, 3.00f, 0.60f, 0.60f, 0.0f, 0.00f, -0.40f, listOf(8 to 0.4f, 1 to 0.6f))
-            ),
-            listOf(
-                Xf(1.0f, 0.00f, 0.5f, 0.20f, 0.60f, 0.60f, 0.0f, 0.40f, 0.00f, listOf(9 to 0.5f, 0 to 0.5f)),
-                Xf(1.0f, 0.40f, 0.5f, 1.30f, 0.70f, 0.70f, 0.0f, -0.30f, 0.30f, listOf(11 to 0.6f, 1 to 0.4f)),
-                Xf(1.0f, 0.80f, 0.5f, -2.2f, 0.55f, 0.55f, 0.0f, 0.00f, -0.50f, listOf(10 to 0.3f, 5 to 0.3f))
-            )
-        )
-    }
-
-    /** Pack the chosen genome, with Spin / Breathe / Warp modifiers applied, into `uXf` (4 vec4 per xform). */
-    internal fun buildGenome(out: FloatArray): Int {
-        val genome = GENOMES[(parameters["Genome"]?.value ?: 0f).toInt().coerceIn(0, GENOMES.size - 1)]
-        val spin = parameters["Spin"]?.value ?: 0f
-        val breathe = parameters["Breathe"]?.value ?: 1f
-        val warp = parameters["Warp"]?.value ?: 1f
-        genome.forEachIndexed { i, x ->
-            val rot = x.rot + spin * (if (i % 2 == 0) 1f else -1f) * (1f + 0.3f * i)
-            val c = cos(rot); val s = sin(rot)
-            val sx = x.sx * breathe; val sy = x.sy * breathe
-            val o = i * 16
-            out[o] = x.weight; out[o + 1] = x.color; out[o + 2] = x.speed; out[o + 3] = 0f
-            out[o + 4] = c * sx; out[o + 5] = c * x.shear - s * sy; out[o + 6] = s * sx; out[o + 7] = s * x.shear + c * sy
-            out[o + 8] = x.tx; out[o + 9] = x.ty; out[o + 10] = 0f; out[o + 11] = 0f
-            val v0 = x.v[0]; val v1 = x.v[1]
-            out[o + 12] = v0.first.toFloat(); out[o + 13] = v0.second * (if (v0.first == 0) 1f else warp)
-            out[o + 14] = v1.first.toFloat(); out[o + 15] = v1.second * (if (v1.first == 0) 1f else warp)
-        }
-        return genome.size
-    }
-}
-
-/** Spike tunables: JVM property, or its upper-case env var (`gradlew run` does not forward -D to the app JVM). */
 private fun spikeSetting(prop: String, def: String): String =
     System.getProperty(prop) ?: System.getenv(prop.uppercase().replace('.', '_')) ?: def
 
-/** GL resources and passes for one [FlameSpikeSource] instance. Created lazily on the render thread. */
-private class FlameEngine {
+/**
+ * GL resources and passes for one [FlameSource] instance: a ping-pong RGBA32F state texture (one IFS point per
+ * texel), an iterate pass, a GL_POINTS splat pass into a float density buffer, then the source's tone-map shader.
+ *  Created lazily on the render thread. */
+internal class FlameEngine {
     private val n = spikeSetting("flame.n", "512").toInt()   // state texture side -> n*n points (FLAME_N=1024 -> 1M)
     private val skip = spikeSetting("flame.skip", "")   // "splat" or "iterate": omit that pass to attribute cost
     private val burn = 16f                   // iterations before a point is drawn
@@ -132,7 +35,6 @@ private class FlameEngine {
     private val fill = Shader(FULLSCREEN_VERT, "#version 330 core\nout vec4 o;\nvoid main(){o=vec4(0.0);}")
     private val emptyVao = glGenVertexArrays()
     private val palette: Int
-    private val genome = FloatArray(16 * 4)
 
     // Timestamp pairs, not GL_TIME_ELAPSED: Main already keeps a TIME_ELAPSED query open around the whole frame
     // and only one may be active at a time.
@@ -164,7 +66,7 @@ private class FlameEngine {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glBindTexture(GL_TEXTURE_2D, 0)
-        logger.warn { "Flame spike: ${n * n} points, density ${if (density32) "RGBA32F" else "RGBA16F"}" }
+        logger.warn { "Flame: ${n * n} points, density ${if (density32) "RGBA32F" else "RGBA16F"}" }
     }
 
     fun resetPoints() {
@@ -181,7 +83,7 @@ private class FlameEngine {
         glBindTexture(GL_TEXTURE_2D, 0)
     }
 
-    fun render(src: FlameSpikeSource, target: FBO) {
+    fun render(src: FlameSource, target: FBO, genome: FloatArray, numXf: Int) {
         val p = src.parameters
         fun v(name: String, def: Float) = p[name]?.value ?: def
 
@@ -194,7 +96,8 @@ private class FlameEngine {
         collectGpuTime()
         glQueryCounter(queries[queryIdx * 2], GL_TIMESTAMP)
 
-        val numXf = src.buildGenome(genome)
+        val rows = ceil(v("Points", 1f).coerceIn(0.05f, 1f) * n).toInt().coerceIn(1, n)
+        val hasFinal = !FlameGenome.finalIsIdentity(genome)
         val decay = v("Decay", 0f)
         val passes = v("Passes", 4f).toInt().coerceIn(1, 16)
         lastPasses = passes
@@ -222,6 +125,7 @@ private class FlameEngine {
         for (pass in 0 until passes) {
             // 2. iterate: stateA -> stateB
             stateB.bind()
+            glViewport(0, 0, n, rows)   // Points: only the first `rows` rows are iterated and drawn
             glDisable(GL_BLEND)
             if (skip != "iterate") {
             iterate.bind()
@@ -247,6 +151,8 @@ private class FlameEngine {
             glBindTexture(GL_TEXTURE_2D, palette)
             splat.setUniform("uPal", 1)
             splat.setUniform("uN", n)
+            splat.setUniform("uHasFinal", if (hasFinal) 1 else 0)
+            if (hasFinal) splat.setUniform4fv("uXf", genome)
             splat.setUniform("uBurn", burn)
             splat.setUniform("uZoom", zoom)
             splat.setUniform("uCos", cos(rot)); splat.setUniform("uSin", sin(rot))
@@ -256,7 +162,7 @@ private class FlameEngine {
             splat.setUniform("uSharp", v("Sharpness", 3f))
             splat.setUniform("uPalShift", v("Palette", 0f))
             glBindVertexArray(emptyVao)
-            if (skip != "splat") glDrawArrays(GL_POINTS, 0, n * n)
+            if (skip != "splat") glDrawArrays(GL_POINTS, 0, rows * n)
             glBindVertexArray(0)
             glActiveTexture(GL_TEXTURE0)
         }
@@ -290,7 +196,7 @@ private class FlameEngine {
         queryUsed[prev] = false
         gpuSamples++
         if (++frames % 240 == 0 && gpuSamples > 0) {
-            logger.warn { "Flame spike: n=%d (%d pts) passes=%d kernel=%.1f %s skip=%s: gpu %.2f ms/frame (avg of %d)".format(n, n * n, lastPasses, lastKernel, if (density32) "fp32" else "fp16", skip.ifEmpty { "none" }, gpuNsSum / 1e6 / gpuSamples, gpuSamples) }
+            logger.warn { "Flame: n=%d (%d pts) passes=%d kernel=%.1f %s skip=%s: gpu %.2f ms/frame (avg of %d)".format(n, n * n, lastPasses, lastKernel, if (density32) "fp32" else "fp16", skip.ifEmpty { "none" }, gpuNsSum / 1e6 / gpuSamples, gpuSamples) }
             gpuNsSum = 0; gpuSamples = 0
         }
     }
@@ -309,21 +215,10 @@ layout(location = 0) in vec2 aPosition;
 void main() { gl_Position = vec4(aPosition, 0.0, 1.0); }
 """
 
-        const val ITERATE_FRAG = """#version 330 core
-out vec4 o;
-uniform sampler2D uState;
-uniform int uN;
-uniform int uFrame;
-uniform int uNumXf;
-uniform vec4 uXf[16];   // per xform: (weight,color,speed,_) (a,b,c,d) (tx,ty,_,_) (id0,w0,id1,w1)
+        /** Shared by the iterate and splat shaders: the packed genome (see [FlameGenome.pack]) and the variation set. */
+        const val COMMON = """
+uniform vec4 uXf[${FlameGenome.MAX_XF + 1}*${FlameGenome.VEC4_PER_XF}];
 const float PI = 3.14159265;
-
-uint pcg(uint v) {
-    uint s = v * 747796405u + 2891336453u;
-    uint w = ((s >> ((s >> 28u) + 4u)) ^ s) * 277803737u;
-    return (w >> 22u) ^ w;
-}
-float rnd(inout uint st) { st = pcg(st); return float(st) * (1.0 / 4294967296.0); }
 
 vec2 vari(int id, vec2 p) {
     float r2 = dot(p, p) + 1e-9;
@@ -346,6 +241,36 @@ vec2 vari(int id, vec2 p) {
     return p;
 }
 
+// pre-affine -> weighted variation slots -> post-affine, for packed xform k
+vec2 applyXf(int k, vec2 p) {
+    int b = k * ${FlameGenome.VEC4_PER_XF};
+    vec4 m = uXf[b + 1];
+    vec4 t = uXf[b + 2];
+    vec2 q = vec2(m.x * p.x + m.y * p.y + t.x, m.z * p.x + m.w * p.y + t.y);
+    vec2 acc = vec2(0.0);
+    for (int j = 0; j < ${FlameGenome.SLOTS}; j++) {
+        vec4 s = uXf[b + 4 + j];
+        if (s.y != 0.0) acc += s.y * vari(int(s.x + 0.5), q);
+    }
+    vec4 pm = uXf[b + 3];
+    return vec2(pm.x * acc.x + pm.y * acc.y + t.z, pm.z * acc.x + pm.w * acc.y + t.w);
+}
+"""
+
+        const val ITERATE_FRAG = """#version 330 core
+out vec4 o;
+uniform sampler2D uState;
+uniform int uN;
+uniform int uFrame;
+uniform int uNumXf;
+""" + COMMON + """
+uint pcg(uint v) {
+    uint s = v * 747796405u + 2891336453u;
+    uint w = ((s >> ((s >> 28u) + 4u)) ^ s) * 277803737u;
+    return (w >> 22u) ^ w;
+}
+float rnd(inout uint st) { st = pcg(st); return float(st) * (1.0 / 4294967296.0); }
+
 void main() {
     ivec2 c = ivec2(gl_FragCoord.xy);
     vec4 s = texelFetch(uState, c, 0);
@@ -357,29 +282,25 @@ void main() {
     }
 
     float tot = 0.0;
-    for (int i = 0; i < uNumXf; i++) tot += uXf[i * 4].x;
+    for (int i = 0; i < uNumXf; i++) tot += uXf[i * ${FlameGenome.VEC4_PER_XF}].x;
     float r = rnd(st) * tot;
     int k = uNumXf - 1;
     float acc = 0.0;
     for (int i = 0; i < uNumXf; i++) {
-        acc += uXf[i * 4].x;
+        acc += uXf[i * ${FlameGenome.VEC4_PER_XF}].x;
         if (r < acc) { k = i; break; }
     }
 
-    vec4 info = uXf[k * 4];
-    vec4 m = uXf[k * 4 + 1];
-    vec4 t = uXf[k * 4 + 2];
-    vec4 vs = uXf[k * 4 + 3];
-    vec2 q = vec2(m.x * s.x + m.y * s.y + t.x, m.z * s.x + m.w * s.y + t.y);
-    vec2 res = vs.y * vari(int(vs.x + 0.5), q) + vs.w * vari(int(vs.z + 0.5), q);
+    vec4 info = uXf[k * ${FlameGenome.VEC4_PER_XF}];
     float col = mix(s.z, info.y, info.z);
-    o = vec4(res, col, min(s.w + 1.0, 1.0e6));
+    o = vec4(applyXf(k, s.xy), col, min(s.w + 1.0, 1.0e6));
 }
 """
 
         const val SPLAT_VERT = """#version 330 core
 uniform sampler2D uState;
 uniform int uN;
+uniform int uHasFinal;
 uniform float uBurn;
 uniform float uZoom;
 uniform float uCos;
@@ -388,10 +309,11 @@ uniform vec2 uCenter;
 uniform float uAspect;
 uniform float uSize;
 out float vCol;
-
+""" + COMMON + """
 void main() {
     vec4 s = texelFetch(uState, ivec2(gl_VertexID % uN, gl_VertexID / uN), 0);
-    vec2 p = s.xy - uCenter;
+    vec2 pos = uHasFinal != 0 ? applyXf(${FlameGenome.FINAL_INDEX}, s.xy) : s.xy;   // final xform: drawn position only
+    vec2 p = pos - uCenter;
     p = vec2(uCos * p.x - uSin * p.y, uSin * p.x + uCos * p.y) * uZoom;
     p.x /= uAspect;
     bool ok = s.w >= uBurn && abs(p.x) < 2.0 && abs(p.y) < 2.0;

@@ -1,0 +1,10 @@
+{
+  "id": "fractal_flame",
+  "name": "Fractal Flame",
+  "description": "Chaos-game fractal flame. Parameters are built in code (FlameGenome); this folder supplies the tone-map shader.",
+  "categories": [
+    "Generator",
+    "Fractal"
+  ],
+  "parameters": []
+}

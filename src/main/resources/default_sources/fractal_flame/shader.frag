@@ -1,5 +1,5 @@
 #version 330 core
-// Flame spike tone-map pass: density buffer (rgb = weighted palette color, a = hit weight) -> display color.
+// Fractal Flame tone-map pass: density buffer (rgb = weighted palette color, a = hit weight) -> display color.
 in vec2 vTexCoord;
 out vec4 FragColor;
 
