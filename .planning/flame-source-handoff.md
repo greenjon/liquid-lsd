@@ -105,6 +105,9 @@ Design and tune for **Tier L** (Intel Iris Xe iGPU + the web). **Tier H** (RTX A
 - Quality knobs `Points`/`Passes`/`Kernel` are still ordinary params (plan wanted a device setting); only the budget is a device setting so far.
 - Check: with two flame decks on the iGPU the log shows the scale dropping to hold ~3 ms and the image stays equally bright; budget 0 restores the old behaviour.
 
+## Default macros (2026-10-10): committed. The model is 4 knobs per generator row, not the plan's 8
+`GeneratorDefaults.CURATED_KNOBS["fractal_flame"]` = ZOOM, SPIN, WARP, BREATHE (global handles; one binding moves every xform). Colour/Glow/Trails/Evolve from the plan's list have no knob; reachable via the Edit row or extra bindings if wanted. Test: `FlameProbeTest.curatedMacrosBindTheGlobalHandles`.
+
 ## NEXT: phase 5 as a multi-part plan (agreed 2026-10-10; start here in a fresh session)
 Phases 0-4 and 3 (variations) are done and committed on `spike/flame-source`. Do the slices in order; each is useful alone and should be committed + tested before the next. Write a short recommendation before each slice (user preference), and update this file as slices land.
 1. **DONE 2026-10-10 (see above)** Quality gate + Random sampler (first: Mutate at high strength already yields duds; Random/Breed would worsen it). CPU pre-check (xform contractivity), then a low-res hidden-FBO test render with async readback rejecting blank / saturated / collapsed-to-point-or-line candidates. Random: 2-5 active xforms, contractivity-biased affines, 1-3 variations per xform from `FlameSampler.POOL`, camera framed to the attractor. Open: where the gate runs relative to the morph promote (one-frame delay is acceptable).

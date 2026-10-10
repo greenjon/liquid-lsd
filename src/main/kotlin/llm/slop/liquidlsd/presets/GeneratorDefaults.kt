@@ -104,6 +104,13 @@ object GeneratorDefaults {
             KnobSpec("FrequencyN", "FREQ N", MacroCurveType.EXPONENTIAL),
             KnobSpec("VibrationSpeed", "SPEED", MacroCurveType.EXPONENTIAL),
             KnobSpec("NodeSharpness", "NODES")
+        ),
+        // Fractal Flame: the global handles that move every xform at once (one binding does what 6+ would otherwise)
+        "fractal_flame" to listOf(
+            KnobSpec("Zoom", "ZOOM"),
+            KnobSpec("Spin", "SPIN"),
+            KnobSpec("Warp", "WARP"),
+            KnobSpec("Breathe", "BREATHE")
         )
     )
 

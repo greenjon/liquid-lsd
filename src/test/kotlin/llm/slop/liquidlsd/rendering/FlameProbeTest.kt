@@ -181,6 +181,24 @@ class FlameProbeTest {
         source.dispose()
     }
 
+    @Test fun curatedMacrosBindTheGlobalHandles() = withGl {
+        val source = flameSource()
+        val saved = llm.slop.liquidlsd.presets.GeneratorDefaults.storageDir
+        llm.slop.liquidlsd.presets.GeneratorDefaults.storageDir = java.nio.file.Files.createTempDirectory("gd").toFile()   // no user override
+        try {
+            val knobs = llm.slop.liquidlsd.presets.GeneratorDefaults.resolve(source).macroBank!!.knobs
+            assertEquals(listOf("ZOOM", "SPIN", "WARP", "BREATHE"), knobs.map { it.label })
+            assertEquals(
+                listOf("Zoom", "Spin", "Warp", "Breathe").map { "Deck/Fractal Flame/$it" },
+                knobs.map { it.bindings.single().parameterId }
+            )
+        } finally {
+            llm.slop.liquidlsd.presets.GeneratorDefaults.storageDir.deleteRecursively()
+            llm.slop.liquidlsd.presets.GeneratorDefaults.storageDir = saved
+            source.dispose()
+        }
+    }
+
     @Test fun probeRestoresGlState() = withGl {
         val probe = FlameProbe()
         org.lwjgl.opengl.GL33.glViewport(3, 4, 50, 60)
