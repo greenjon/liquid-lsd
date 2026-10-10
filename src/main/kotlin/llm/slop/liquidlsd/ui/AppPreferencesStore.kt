@@ -166,6 +166,9 @@ object AppPreferencesStore {
                 props.getProperty("fxSwapFadeMs")?.toIntOrNull()?.let {
                     UITheme.fxSwapFadeMs = it
                 }
+                props.getProperty("flameBudgetMs")?.toFloatOrNull()?.let {
+                    UITheme.flameBudgetMs = it
+                }
 
                 val savedSequencer = props.getBoolean("sequencerEnabled")
                 if (savedSequencer != null) {
@@ -337,6 +340,7 @@ object AppPreferencesStore {
             props.setProperty("randomizationEnabled", UITheme.randomizationEnabled.toString())
             props.setProperty("sequencerEnabled", UITheme.sequencerEnabled.toString())
             props.setProperty("fxSwapFadeMs", UITheme.fxSwapFadeMs.toString())
+            props.setProperty("flameBudgetMs", UITheme.flameBudgetMs.toString())
             props.setProperty("midiEnabled", UITheme.midiEnabled.toString())
             props.setProperty("tooltipsEnabled", UITheme.tooltipsEnabled.toString())
             props.setProperty("maxFps", UITheme.maxFps.toString())

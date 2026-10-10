@@ -233,6 +233,14 @@ object PreferencesPanel {
         if (ImGui.isItemDeactivatedAfterEdit()) AppPreferencesStore.savePreferences()
         itemTooltip("When an FX slot's effect is swapped (◀ ▶, picker, drop) or a chain is loaded, the slot or chain briefly fades out and back in instead of cutting hard. 0 = hard cut.")
 
+        val flameBudget = floatArrayOf(session.uiTheme.flameBudgetMs)
+        ImGui.setNextItemWidth(200f)
+        if (ImGui.sliderFloat("Flame GPU Budget (ms)", flameBudget, 0f, UITheme.FLAME_BUDGET_MAX_MS, if (flameBudget[0] <= 0f) "off" else "%.1f ms")) {
+            session.uiTheme.flameBudgetMs = flameBudget[0]
+        }
+        if (ImGui.isItemDeactivatedAfterEdit()) AppPreferencesStore.savePreferences()
+        itemTooltip("GPU time each Fractal Flame deck may use per frame. When a deck runs over, it draws fewer points (the deck's Points setting stays the ceiling) and wins them back when there is room, so a show holds its frame rate on any GPU. 0 = off: always use the Points setting.")
+
         val seqEnabled = ImBoolean(session.uiTheme.sequencerEnabled)
         if (ImGui.checkbox("Enable Step Sequencer", seqEnabled)) {
             val nextVal = seqEnabled.get()

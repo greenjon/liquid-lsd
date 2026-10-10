@@ -76,6 +76,7 @@ object UITheme {
     /** Clearly bigger than [FONT_BODY] so tooltip text stands out from the body copy behind it. */
     const val FONT_TOOLTIP = FONT_BODY + 4f
     const val FX_SWAP_FADE_MAX_MS = 1000
+    const val FLAME_BUDGET_MAX_MS = 16f
 
     const val BASE_FONT_PX = 14f
     const val BASE_SIZE    = 14.25f
@@ -123,6 +124,11 @@ object UITheme {
     var fxSwapFadeMs: Int
         get() = settings.fxSwapFadeMs
         set(value) { settings = settings.copy(fxSwapFadeMs = value.coerceIn(0, FX_SWAP_FADE_MAX_MS)) }
+
+    /** Fractal Flame auto-governor budget per deck in ms (0 = off). See FlameGovernor. */
+    var flameBudgetMs: Float
+        get() = settings.flameBudgetMs
+        set(value) { settings = settings.copy(flameBudgetMs = value.coerceIn(0f, FLAME_BUDGET_MAX_MS)) }
 
     var sequencerEnabled: Boolean
         get() = settings.sequencerEnabled

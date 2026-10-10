@@ -31,6 +31,8 @@ data class AppPreferences(
     val outputViewEnabled: Boolean = false,
     val randomizationEnabled: Boolean = false,
     val fxSwapFadeMs: Int = 150,
+    /** GPU time per Fractal Flame deck the auto-governor aims for, in ms (0 = off, full quality). */
+    val flameBudgetMs: Float = 3f,
     val sequencerEnabled: Boolean = false,
     val midiEnabled: Boolean = false,
     val autoVjDirtyBehavior: UITheme.AutoVjDirtyBehavior = UITheme.AutoVjDirtyBehavior.AUTO_DISCARD,

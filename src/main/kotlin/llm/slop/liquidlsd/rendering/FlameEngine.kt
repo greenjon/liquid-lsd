@@ -47,6 +47,7 @@ internal class FlameEngine {
     private var frameCounter = 0
     private var lastPasses = 0
     private var lastKernel = 0f
+    private val governor = FlameGovernor()
 
     init {
         resetPoints()
@@ -96,7 +97,7 @@ internal class FlameEngine {
         collectGpuTime()
         glQueryCounter(queries[queryIdx * 2], GL_TIMESTAMP)
 
-        val rows = ceil(v("Points", 1f).coerceIn(0.05f, 1f) * n).toInt().coerceIn(1, n)
+        val rows = ceil(v("Points", 1f).coerceIn(0.05f, 1f) * governor.scale * n).toInt().coerceIn(1, n)
         val hasFinal = !FlameGenome.finalIsIdentity(genome)
         val decay = v("Decay", 0f)
         val passes = v("Passes", 4f).toInt().coerceIn(1, 16)
@@ -176,6 +177,9 @@ internal class FlameEngine {
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, dens.texture)
         src.shader.setUniform("uDensity", 0)
+        // fewer points (the Points setting or the governor) mean proportionally fewer hits: keep the brightness. The toe
+        // is applied before exposure in the shader, so lone hits stay removed.
+        src.shader.setUniform("uExposure", v("Exposure", 2f) * n / rows.toFloat())
         Geometry.drawFullscreenQuad()
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -192,12 +196,13 @@ internal class FlameEngine {
         val prev = queryIdx
         if (!queryUsed[prev]) return
         if (glGetQueryObjecti(queries[prev * 2 + 1], GL_QUERY_RESULT_AVAILABLE) == GL_FALSE) return
-        gpuNsSum += glGetQueryObjecti64(queries[prev * 2 + 1], GL_QUERY_RESULT) -
-            glGetQueryObjecti64(queries[prev * 2], GL_QUERY_RESULT)
+        val ns = glGetQueryObjecti64(queries[prev * 2 + 1], GL_QUERY_RESULT) - glGetQueryObjecti64(queries[prev * 2], GL_QUERY_RESULT)
+        gpuNsSum += ns
+        governor.feed(ns / 1e6f, llm.slop.liquidlsd.ui.UITheme.flameBudgetMs)
         queryUsed[prev] = false
         gpuSamples++
         if (++frames % 240 == 0 && gpuSamples > 0) {
-            logger.warn { "Flame: n=%d (%d pts) passes=%d kernel=%.1f %s skip=%s: gpu %.2f ms/frame (avg of %d)".format(n, n * n, lastPasses, lastKernel, if (density32) "fp32" else "fp16", skip.ifEmpty { "none" }, gpuNsSum / 1e6 / gpuSamples, gpuSamples) }
+            logger.warn { "Flame: n=%d (%d pts) passes=%d kernel=%.1f %s skip=%s: gpu %.2f ms/frame (avg of %d), governor scale %.2f".format(n, n * n, lastPasses, lastKernel, if (density32) "fp32" else "fp16", skip.ifEmpty { "none" }, gpuNsSum / 1e6 / gpuSamples, gpuSamples, governor.scale) }
             gpuNsSum = 0; gpuSamples = 0
         }
     }
