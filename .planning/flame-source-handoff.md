@@ -41,3 +41,6 @@ Gotchas already found: `DeckMorphController` lerps discrete params (read ids fro
 
 ## Recommended next step: phase 1 on this branch
 Keep `FlameEngine` (it is the reusable part) and replace the hardcoded genome: genome-as-parameters built in Kotlin, UBO upload, quality tiers (points x passes presets + decay), then variations from the paper with unit checks. Remove `flame_spike`/`EXPERIMENTAL_SOURCE_IDS` when the real `FlameSource` registers properly.
+
+## Targets (owner decision 2026-10-09)
+Design and tune for **Tier L** (Intel Iris Xe iGPU + the web). **Tier H** (RTX A2000, arriving within days) comes later as quality presets on the same engine: see "Performance targets: two tiers" in the plan. When the A2000 arrives, re-run the spike measurements and record Tier H numbers here before designing Tier H options.

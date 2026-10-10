@@ -107,6 +107,18 @@ Interpolating raw matrices collapses the shape. Interpolating rotation/scale/she
 
 An id swap cannot be interpolated. During a morph the shader evaluates **both A's and B's variation slots** and cross-weights them by morph t: A's slot weight x (1-t), B's slot weight x t. `DeckMorphController` owns the states and exposes read-only `stateA`, `stateB`, `t`. Flame reads ids and slot weights from the raw states. No separate Flame snapshot. Verify in phase 2: behavior when not morphing, when a new B is sampled, and when the user edits a slot mid-morph (edit applies to A? B? decide).
 
+## Performance targets: two tiers (decided 2026-10-09)
+
+- **Tier L (the design target for now):** low-power GPUs. Includes the dev machine (Intel Iris Xe, gen 11/12 iGPU, measured above) and **the web player** (WebGL2 on arbitrary user hardware; supporting as many users as possible is a stated priority). Everything in this plan is designed, tuned and judged at Tier L first. Budget: roughly 2 ms per deck at median with the auto-governor holding the frame budget (timing on the iGPU swung 2.3-9.3 ms at identical settings).
+- **Tier H (later, in parallel once available):** discrete GPU. The owner is getting an **RTX A2000 within days**; if the flames are good enough for live shows, Tier H spends far more GPU: many more points and passes, larger kernels, supersampling, the density-estimation filter, 3D camera + depth of field, higher internal resolution, optional fp32 density. First action when the card arrives: **repeat the spike measurements** (`FLAME_N=1024/2048`, passes, kernel, `FLAME_SKIP`) and record Tier H numbers in the handoff.
+
+Design rules so the tiers do not fork the project:
+1. **Same engine, same genome, different quality settings.** Tier H is a set of quality presets (and a few capability-gated extras), not a second renderer. A genome made on the A2000 must still render recognisably on an iGPU and on the web.
+2. **Quality lives in an app/device setting (plus the governor), not in the preset.** `Points`, `Passes`, `Kernel` (cost knobs), `Supersample`, `Density format` are per-machine. Look parameters (`Decay`, `Exposure`, `Toe`, camera, palette) stay in the preset. Caveat to handle: fewer points need more decay to look filled; exposure is already normalised by (1-decay), and the quality preset may need to nudge effective decay or exposure so a preset keeps its brightness across tiers.
+3. **Capability gating, not assumptions.** The app is OpenGL 3.3 core and WebGL2 is the web floor, so Tier L uses only those. Anything beyond (e.g. compute-shader accumulation, GL 4.3+) is an optional Tier H extra behind a capability check with a fallback to the common path. Decide later whether the app ever requests a higher GL version; do not depend on it.
+4. **Web is Tier L, and is the strictest.** Needs fp16 blend (`EXT_color_buffer_half_float` / float-blend availability to be checked per browser), a lower default `Points`, and the governor on by default.
+5. The auto-governor is shared by both tiers: Tier H simply has a higher ceiling.
+
 ## Variations (the paper's set first)
 
 Implement the variations defined in the paper (linear, sinusoidal, spherical, swirl, horseshoe, polar, handkerchief, heart, disc, spiral, hyperbolic, diamond, ex, julia, bent, waves, fisheye, popcorn, exponential, power, cosine, rings, fan, blob, pdj, fan2, rings2, eyefish, bubble, cylinder, perspective, noise, julian, juliascope, blur, gaussian blur, radial blur, pie, ngon, curl, rectangles, arch, tangent, square, rays, blade, secant, twintrian, cross). Verify the list against the paper itself, not from memory, before step 4.
