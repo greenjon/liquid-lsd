@@ -135,8 +135,11 @@ object MorphMath {
  * receives the A/B snapshots so it can cross-fade structure (e.g. variation ids) that cannot be interpolated.
  */
 interface GenomeMorph {
-    /** Overwrite the base values of [target] for this source's parameters, starting from [from] (the state being left). */
-    fun sampleMorphTarget(from: DeckMorphSnapshot, target: DeckMorphSnapshot, random: kotlin.random.Random)
+    /**
+     * Overwrite the base values of [target] for this source's parameters, starting from [from] (the state being left).
+     * [fresh] = an explicit "new random" request: build an unrelated genome instead of drifting away from [from].
+     */
+    fun sampleMorphTarget(from: DeckMorphSnapshot, target: DeckMorphSnapshot, random: kotlin.random.Random, fresh: Boolean = false)
 
     /** True for parameters whose A/B values must not be lerped (the nearer end is used instead). */
     fun isDiscreteMorph(param: ModulatableParameter): Boolean
@@ -200,7 +203,7 @@ class DeckMorphController(
     /**
      * Samples a randomized state into the target snapshot buffer using constrained bounds.
      */
-    fun sampleNewState(target: DeckMorphSnapshot, random: kotlin.random.Random = kotlin.random.Random.Default) {
+    fun sampleNewState(target: DeckMorphSnapshot, random: kotlin.random.Random = kotlin.random.Random.Default, fresh: Boolean = false) {
         val params = paramsProvider()
         for (param in params) {
             var paramSnap = target.parameters[param]
@@ -235,7 +238,7 @@ class DeckMorphController(
             }
         }
         // The state being left is the other snapshot.
-        genome()?.sampleMorphTarget(if (target === state0) state1 else state0, target, random)
+        genome()?.sampleMorphTarget(if (target === state0) state1 else state0, target, random, fresh)
     }
 
     /**
@@ -458,7 +461,7 @@ class DeckMorphController(
      * Forces an immediate randomization roll (e.g. on manual UI trigger).
      */
     fun forceRandomize(random: kotlin.random.Random = kotlin.random.Random.Default) {
-        sampleNewState(state0, random)
+        sampleNewState(state0, random, fresh = true)   // a brand-new genome; B then drifts away from it
         sampleNewState(state1, random)
         latchTarget = BoundaryTarget.READY_FOR_ONE
         isInitialized = true

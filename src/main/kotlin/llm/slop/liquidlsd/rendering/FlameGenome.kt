@@ -32,7 +32,7 @@ object FlameGenome {
     private fun key(xf: Int, field: String) = "${xfName(xf)} $field"
 
     /** Pre-built keys so the per-frame pack does not allocate strings. */
-    private class XfKeys(i: Int) {
+    internal class XfKeys(i: Int) {
         val weight = key(i, "Weight"); val color = key(i, "Color"); val speed = key(i, "ColorSpeed")
         val preRot = key(i, "PreRot"); val preSx = key(i, "PreScaleX"); val preSy = key(i, "PreScaleY")
         val preShear = key(i, "PreShear"); val preX = key(i, "PreX"); val preY = key(i, "PreY")
@@ -45,6 +45,7 @@ object FlameGenome {
     private val keys = Array(MAX_XF + 1) { XfKeys(it) }
 
     /** Parameter names of xform [i] (0..MAX_XF-1, or [FINAL_INDEX]) for the sampler. */
+    internal fun keysFor(xf: Int): XfKeys = keys[xf]
     internal fun slotIdKey(xf: Int, slot: Int) = keys[xf].slotId[slot]
     internal fun slotWeightKey(xf: Int, slot: Int) = keys[xf].slotWeight[slot]
     internal fun slotParamKey(xf: Int, slot: Int, n: Int) = keys[xf].slotParam[slot][n]

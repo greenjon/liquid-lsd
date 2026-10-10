@@ -1,7 +1,10 @@
 package llm.slop.liquidlsd.rendering
 
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import mu.KotlinLogging
 import kotlin.random.Random
+
+private val logger = KotlinLogging.logger {}
 
 /**
  * Fractal-flame generator (see .planning/flame-source-plan.md). The genome is the parameter map built by
@@ -54,18 +57,58 @@ class FlameSource(
         override fun b(p: ModulatableParameter) = morphB?.parameters?.get(p)?.baseValue ?: p.baseValue
     }
 
-    override fun sampleMorphTarget(from: DeckMorphSnapshot, target: DeckMorphSnapshot, random: Random) {
-        val mutated = FlameSampler.mutate(
-            parameters,
-            from = { name -> parameters[name]?.let { from.parameters[it]?.baseValue ?: it.baseValue } ?: 0f },
-            strength = parameters["Mutation"]?.value ?: 0.25f,
-            random = random
-        )
-        for ((name, v) in mutated) {
+    /** Lazily created on the render thread; null where there is no GL context (then candidates go ungated). */
+    private var probe: FlameProbe? = null
+    private var probeFailed = false
+
+    private fun gate(): FlameProbe? {
+        if (probe == null && !probeFailed) {
+            probe = try { FlameProbe() } catch (e: Throwable) {
+                probeFailed = true
+                logger.warn(e) { "Flame quality gate unavailable; candidates are used ungated" }
+                null
+            }
+        }
+        return probe
+    }
+
+    /**
+     * Proposes a new genome ([fresh]) or a drift away from [from], and keeps only a candidate that the quality gate
+     * accepts (blank, exploded, collapsed or fog-like ones are retried; when every try fails a fresh request falls
+     * back to the starter and a drift stays where it is). A fresh genome also frames the camera on its attractor,
+     * because the camera parameters are not part of the morph.
+     */
+    override fun sampleMorphTarget(from: DeckMorphSnapshot, target: DeckMorphSnapshot, random: Random, fresh: Boolean) {
+        fun fromValue(name: String) = parameters[name]?.let { from.parameters[it]?.baseValue ?: it.baseValue } ?: 0f
+        val strength = parameters["Mutation"]?.value ?: 0.25f
+        val gate = gate()
+        var chosen: Map<String, Float>? = null
+        var verdict: FlameQuality.Result? = null
+        for (attempt in 0 until MAX_TRIES) {
+            val candidate = if (fresh) FlameSampler.random(parameters, random) else FlameSampler.mutate(parameters, ::fromValue, strength, random)
+            if (gate == null) { chosen = candidate; break }
+            val result = gate.evaluate { name -> candidate[name] ?: fromValue(name) }
+            if (result.ok) { chosen = candidate; verdict = result; break }
+            logger.debug { "Flame candidate rejected (try ${attempt + 1}): $result" }
+        }
+        if (chosen == null) {
+            logger.info { "Flame: no candidate passed the quality gate in $MAX_TRIES tries (${if (fresh) "fresh" else "drift"})" }
+            chosen = if (fresh) starterValues() else FlameSampler.mutate(parameters, ::fromValue, 0f, random)
+        }
+        for ((name, v) in chosen) {
             val p = parameters[name] ?: continue
             target.parameters[p]?.baseValue = v
         }
+        if (fresh) {   // framed on the attractor, or the starter's camera when the starter was the fallback
+            for ((name, v) in listOf("Zoom" to verdict?.zoom, "CenterX" to verdict?.centerX, "CenterY" to verdict?.centerY)) {
+                parameters[name]?.let { it.set(v ?: it.defaultValue) }
+            }
+        }
     }
+
+    /** Default values of the genome's morph-enabled parameters (the shipped starter flame). */
+    private fun starterValues(): Map<String, Float> =
+        parameters.filter { (name, p) -> p.randomizeBase && !name.startsWith("XF") }.mapValues { it.value.defaultValue }
 
     override fun isDiscreteMorph(param: ModulatableParameter) = param.steps != null
 
@@ -94,6 +137,8 @@ class FlameSource(
     override fun dispose() {
         engine?.dispose()
         engine = null
+        probe?.dispose()
+        probe = null
         super.dispose()
     }
 
@@ -107,6 +152,8 @@ class FlameSource(
 
     companion object {
         const val SOURCE_ID = "fractal_flame"
+        /** Candidates tried per request before falling back; each costs well under a millisecond on the GPU. */
+        private const val MAX_TRIES = 8
         private val TONE_UNIFORMS = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay")
     }
 }

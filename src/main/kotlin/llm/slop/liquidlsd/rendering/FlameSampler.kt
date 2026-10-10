@@ -10,7 +10,8 @@ import kotlin.random.Random
 /**
  * Genome-aware "next state" for the flame source: Mutate(A), the drift of a lineage. Generic per-parameter
  * randomize draws every value uniformly, which gives mush and divergent genomes; this perturbs the state being
- * left instead, keeping xforms contractive. Random and Breed come later (plan phase 5).
+ * left instead, keeping xforms contractive. [random] builds a fresh genome; Breed comes later (plan phase 5). Both
+ * only propose: FlameSource runs every candidate through the quality gate ([FlameQuality]) before using it.
  */
 object FlameSampler {
     /** Pick odds per variation id (index = id): favours the well-behaved ones, rare for the exotic, noisy or unstable ones. */
@@ -96,6 +97,67 @@ object FlameSampler {
             val active = (0 until FlameGenome.MAX_XF).count { cur(FlameGenome.weightKey(it)) > 0.05f }
             if (cur(FlameGenome.weightKey(x)) < 0.05f) birth(x, out, random)
             else if (active > 2) out[FlameGenome.weightKey(x)] = 0f
+        }
+        return out
+    }
+
+    /** Active xform count for [random]: 2..5, three being the most common. */
+    private val COUNT_ODDS = floatArrayOf(0.25f, 0.4f, 0.25f, 0.1f)
+
+    /**
+     * A fresh genome: 2-5 active xforms with contractive pre-affines, mostly identity post-affines, 1-3 distinct
+     * variations per xform from the weighted pool (slot weights sum to 1) and colours spread over the palette.
+     * Unused xforms get weight 0 and are otherwise left alone. The final xform, camera and tone parameters are not
+     * part of the genome proposal. Contractivity is only a bias here, since the variations can expand freely:
+     * the quality gate decides.
+     * @return values for the morph-enabled xform parameters (variation ids as whole numbers)
+     */
+    fun random(params: Map<String, ModulatableParameter>, random: Random): Map<String, Float> {
+        val r = random
+        val out = HashMap<String, Float>()
+        fun range(lo: Float, hi: Float) = lo + (hi - lo) * r.nextFloat()
+        fun set(name: String, v: Float) {
+            val p = params[name] ?: return
+            out[name] = if (p.isAngle) wrapAngle(v) else v.coerceIn(p.minClamp, p.maxClamp)
+        }
+
+        var pick = r.nextFloat() * COUNT_ODDS.sum()
+        var count = 2
+        for (i in COUNT_ODDS.indices) { pick -= COUNT_ODDS[i]; if (pick < 0f) { count = i + 2; break } }
+        val colourOffset = r.nextFloat()
+
+        for (x in 0 until FlameGenome.MAX_XF) {
+            if (x >= count) { set(FlameGenome.weightKey(x), 0f); continue }
+            val k = FlameGenome.keysFor(x)
+            set(k.weight, range(0.4f, 1f))
+            set(k.color, (colourOffset + (x + range(0f, 0.5f)) / count) % 1f)
+            set(k.speed, range(0.3f, 0.8f))
+
+            val scale = range(0.35f, 0.85f)
+            set(k.preRot, range(-PI.toFloat(), PI.toFloat()))
+            set(k.preSx, (scale * range(0.85f, 1.15f)).coerceAtMost(MAX_PRE_SCALE) * (if (r.nextFloat() < 0.2f) -1f else 1f))
+            set(k.preSy, (scale * range(0.85f, 1.15f)).coerceAtMost(MAX_PRE_SCALE))
+            set(k.preShear, if (r.nextFloat() < 0.3f) range(-0.3f, 0.3f) else 0f)
+            set(k.preX, range(-0.8f, 0.8f)); set(k.preY, range(-0.8f, 0.8f))
+
+            val post = r.nextFloat() < 0.2f
+            set(k.postRot, if (post) range(-1f, 1f) else 0f)
+            set(k.postSx, 1f); set(k.postSy, 1f); set(k.postShear, 0f)
+            set(k.postX, if (post) range(-0.3f, 0.3f) else 0f); set(k.postY, if (post) range(-0.3f, 0.3f) else 0f)
+
+            val n = r.nextFloat().let { if (it < 0.45f) 1 else if (it < 0.85f) 2 else 3 }
+            val ids = LinkedHashSet<Int>()
+            while (ids.size < n) ids.add(pickVariation(r))
+            val raw = FloatArray(n) { range(0.3f, 1f) }
+            val sum = raw.sum()
+            for (j in 0 until FlameGenome.SLOTS) {
+                val id = ids.elementAtOrNull(j)
+                set(k.slotId[j], (id ?: 0).toFloat())
+                set(k.slotWeight[j], if (id != null) raw[j] / sum else 0f)
+                for (q in 0 until FlameVariations.PARAMS) {
+                    set(k.slotParam[j][q], if (id != null) (0.5f + gaussian(r) * 0.15f) else 0.5f)
+                }
+            }
         }
         return out
     }

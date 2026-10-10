@@ -49,4 +49,46 @@ class FlameSamplerTest {
         }
         assertTrue(swapped && born)
     }
+
+    // ---- random ----
+
+    private fun activeXforms(out: Map<String, Float>) =
+        (0 until FlameGenome.MAX_XF).count { (out[FlameGenome.weightKey(it)] ?: 0f) > 0.05f }
+
+    @Test fun randomIsDeterministicPerSeedAndStaysInRange() {
+        assertEquals(FlameSampler.random(params, Random(5)), FlameSampler.random(params, Random(5)))
+        repeat(300) { seed ->
+            FlameSampler.random(params, Random(seed)).forEach { (name, v) ->
+                val p = params[name]!!
+                assertTrue(v >= p.minClamp - 1e-5f && v <= p.maxClamp + 1e-5f, "$name=$v")
+                if (" PreScale" in name) assertTrue(abs(v) <= 0.95f + 1e-5f, "$name=$v")
+            }
+        }
+    }
+
+    @Test fun randomPicksTwoToFiveXformsAndLeavesFinalAndGlobalsAlone() {
+        val counts = HashSet<Int>()
+        repeat(300) { seed ->
+            val out = FlameSampler.random(params, Random(seed))
+            counts += activeXforms(out)
+            assertTrue(out.keys.none { it.startsWith("XF") })
+            assertTrue(out.keys.all { it.startsWith("X") }, "only xform parameters: ${out.keys.filterNot { it.startsWith("X") }}")
+        }
+        assertEquals(setOf(2, 3, 4, 5), counts)
+    }
+
+    @Test fun randomSlotsAreDistinctValidAndNormalised() {
+        repeat(300) { seed ->
+            val out = FlameSampler.random(params, Random(seed))
+            for (x in 0 until FlameGenome.MAX_XF) {
+                if ((out[FlameGenome.weightKey(x)] ?: 0f) <= 0.05f) continue
+                val used = (0 until FlameGenome.SLOTS).filter { (out[FlameGenome.slotWeightKey(x, it)] ?: 0f) > 0f }
+                assertTrue(used.isNotEmpty() && used == (0 until used.size).toList(), "slots fill from the front")
+                assertEquals(1f, used.sumOf { (out[FlameGenome.slotWeightKey(x, it)] ?: 0f).toDouble() }.toFloat(), 1e-4f)
+                val ids = used.map { out[FlameGenome.slotIdKey(x, it)]!!.toInt() }
+                assertEquals(ids.size, ids.toSet().size)
+                ids.forEach { assertTrue(it in 0 until FlameVariations.count()) }
+            }
+        }
+    }
 }
