@@ -305,10 +305,11 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
         case 43: v = vec2(rnd() - 0.5, rnd() - 0.5); break;                                     // square
         case 44: v = w * tan(rnd()*PI*w) / r2 * vec2(cos(p.x), sin(p.y)); break;                // rays
         case 45: { float a = rnd()*r*w; v = p.x * vec2(cos(a) + sin(a), cos(a) - sin(a)); break; } // blade
-        case 46: v = vec2(p.x, 1.0 / (w * cos(w*r))); break;                                    // secant
-        case 47: { float a = rnd()*r*w, t = log(max(sin(a)*sin(a) + cos(a), 1e-6)) / log(10.0); // twintrian
+        case 46: { float c = cos(w*r); v = vec2(p.x, c < 0.0 ? 1.0/c + 1.0 : 1.0/c - 1.0); break; } // secant2
+        case 47: { float a = rnd()*r*w, s2 = sin(a)*sin(a);                                         // twintrian
+                   float t = s2 > 1e-30 ? log(s2) / log(10.0) + cos(a) : -30.0;
                    v = p.x * vec2(t, t - PI*sin(a)); break; }
-        case 48: v = p / (abs(p.x*p.x - p.y*p.y) + 1e-9); break;                                // cross
+        case 48: v = p / sqrt(pow(p.x*p.x - p.y*p.y, 2.0) + 1e-10); break;                                // cross
     }
     return w * v;
 }

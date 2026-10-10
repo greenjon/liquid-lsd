@@ -44,7 +44,7 @@ object FlameVariations {
         v("ngon", p("Power", 0.5f, 2f, 4f), p("Sides", 3f, 5f, 32f), p("Corners", 0f, 1f, 4f), p("Circle", 0f, 1f, 4f)),
         v("curl", p("c1", -2f, 1f, 2f), p("c2", -2f, 0f, 2f)),
         v("rectangles", p("X", 0.05f, 0.5f, 2f), p("Y", 0.05f, 0.5f, 2f)),
-        v("arch"), v("tangent"), v("square"), v("rays"), v("blade"), v("secant"), v("twintrian"), v("cross")
+        v("arch"), v("tangent"), v("square"), v("rays"), v("blade"), v("secant2"), v("twintrian"), v("cross")
     )
 
     val NAMES: List<String> = ALL.map { it.name }

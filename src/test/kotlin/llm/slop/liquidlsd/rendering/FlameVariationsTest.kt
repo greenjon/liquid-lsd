@@ -80,8 +80,8 @@ class FlameVariationsTest {
                 val t3 = ph - p2 * floor(ph / p2); val t4 = if (t3 > p2 / 2) t3 else t3 - p2
                 val k = (p[2] * (1 / cos(t4) - 1) + p[3]) / r.pow(p[0]); doubleArrayOf(k * x, k * y)
             }
-            "secant" -> doubleArrayOf(x, 1 / (1 * cos(1 * r)))   // weight 1
-            "cross" -> { val k = sqrt(1 / ((x * x - y * y).pow(2))); doubleArrayOf(k * x, k * y) }
+            "secant2" -> { val c = cos(r); doubleArrayOf(x, if (c < 0) 1 / c + 1 else 1 / c - 1) }   // weight 1
+            "cross" -> { val k = sqrt(1 / ((x * x - y * y).pow(2) + 1e-10)); doubleArrayOf(k * x, k * y) }
             else -> error("no mirror for $name")
         }
     }
@@ -141,6 +141,9 @@ class FlameVariationsTest {
         assertV("heart", 0.0, 1.0, 0.0, -1.0)                       // theta 0, r 1 -> (sin 0, -cos 0)
         assertV("hyperbolic", 0.0, 2.0, 0.0, 2.0)                   // (sin 0 / 2, 2 cos 0)
         assertV("diamond", 0.0, 1.0, 0.0, sin(1.0))                 // (sin 0 cos 1, cos 0 sin 1)
+        assertV("secant2", 0.0, 0.0, 0.0, 0.0)                       // the +/-1 shift closes the gap at y = 0
+        assertV("secant2", 1.0, 0.0, 1.0, 1 / cos(1.0) - 1)
+        assertV("secant2", PI, 0.0, PI, 0.0)                         // cos r < 0 takes the +1 branch
         assertV("cross", 3.0, 1.0, 3.0 / 8.0, 1.0 / 8.0)            // 1/|9-1| * (3, 1)
     }
 
