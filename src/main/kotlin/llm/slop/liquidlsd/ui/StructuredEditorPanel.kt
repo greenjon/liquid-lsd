@@ -80,7 +80,7 @@ object StructuredEditorPanel {
             for (name in section.params) {
                 val param = source.parameters[name] ?: continue
                 ParametersRenderer.drawParamRow(
-                    session, name.removePrefix("${tab.id} "), "$deckLabel/${source.displayName}/$name", param, state,
+                    session, section.rowLabels[name] ?: name.removePrefix("${tab.id} "), "$deckLabel/${source.displayName}/$name", param, state,
                     labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo
                 )
             }

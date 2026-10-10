@@ -14,7 +14,16 @@ class FlameEditorLayoutTest {
         repeat(FlameGenome.MAX_XF) { p["X${it + 1} Weight"]!!.baseValue = 1f }
         val listed = FlameGenome.editorTabs(p, null).flatMap { t -> t.sections.flatMap { it.params } }
         assertEquals(listed.size, listed.toSet().size)
-        assertEquals(p.keys.toSet(), listed.toSet())
+        // only the variation parameters the chosen variation uses are listed (the starter uses parameterless ones)
+        assertEquals(p.keys.filterNot { Regex(""" V\d [ABCD]$""").containsMatchIn(it) }.toSet(), listed.toSet())
+    }
+
+    @Test fun parametricVariationListsItsOwnParametersWithLabels() {
+        val p = FlameGenome.buildParameters()
+        p["X1 V1 Id"]!!.baseValue = FlameVariations.NAMES.indexOf("ngon").toFloat()
+        val sec = FlameGenome.editorTabs(p, "X1").first { it.id == "X1" }.sections.first { it.title == "Variation 1" }
+        assertEquals(listOf("X1 V1 Id", "X1 V1 Weight", "X1 V1 A", "X1 V1 B", "X1 V1 C", "X1 V1 D"), sec.params)
+        assertEquals("Sides", sec.rowLabels["X1 V1 B"])
     }
 
     @Test fun emptyXformsHideAndRevealInOrder() {

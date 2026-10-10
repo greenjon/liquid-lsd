@@ -65,6 +65,12 @@ Findings that forced merging phase 2 with the sampler: the morph only lerps `ran
 Source params are edited in the Edit row's SRC sub-tab (`ParametersTabs.drawDeckGroupContent`); that flat loop is live, not legacy. New: `rendering/StructuredEditor.kt` (`StructuredEditorSource`: UI-free tab/section layout, `editorTabs(keep)`, add-tab), implemented by `FlameSource` via `FlameGenome.editorTabs`; `ui/StructuredEditorPanel.kt` draws tab buttons + collapsing sections, every field still a `drawParamRow`. Tabs: Look, Mods, X1..Xn (first 2 + any weight>0; "+ Xn" reveals the next), XF. Variation Id rows are normal discrete rows (no name dropdown yet). Morph flags untouched. Tests: `FlameEditorLayoutTest`.
 **To check (app):** tab strip look/spacing, zebra rows across sections, selection per deck, "+ Xn", Post-affine collapsed by default, collapsing-header IDs when two decks show flames.
 
+## Phase 3 (2026-10-09/10): 49 paper variations, implemented, shaders compile (Mesa), NOT yet seen running
+- `FlameVariations.kt`: table of all 49 (ids = paper numbers), 4 normalised params `A`..`D` per slot (0.5 = default, `real()`/`normalised()`). `FlameGenome`: slot = 3 vec4 (`[idA,wA,idB,wB]`, A params, B params), `VEC4_PER_XF` 13, plain uniform array (364 components, no UBO needed). `FlameEngine.COMMON`: `vari(id,p,w,P,M,T)` returns the weighted result; global `gRng`/`rnd()` shared by iterate and splat (splat now has `uFrame`). Dependent variations read the pre-affine via M=(a,b,d,e), T=(c,f). Editor lists only the used params with variation-specific labels (`EditorSection.rowLabels`). Sampler pool covers all 49 (exotic/noisy ones rare). DECISIONS.md entry added.
+- Tests: `FlameVariationsTest` (mirror + hand pairs + GLSL case/table check), `FlameShaderCompileTest` (GL context; works under xvfb), `FlameGenomeTest` slot-param packing. Full suite passes.
+- **To check (app):** each variation on its own (set X1 V1 Id, others off) for NaN/blank/explosion; the noisy ones (blur, gaussian, noise) at low weight; paper typos to re-check if a look seems wrong (`rings`/`fan` c is the pre-affine translation X, `waves` uses b/e).
+- Not done: web port of the variation set; `Warp` only scales non-linear ids by id!=0 (unchanged).
+
 ## (done above) phase 4 was: (editor hook; the ~170-row flat Edit list is unusable), then 3 (paper variations + unit checks; adds A/B variation params), then 5 (Random/Breed/Keep/Garden + quality gate)
 
 ### Phase 4 starting points (not yet explored beyond the plan)

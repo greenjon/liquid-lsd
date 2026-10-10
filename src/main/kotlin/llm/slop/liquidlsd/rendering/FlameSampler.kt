@@ -13,8 +13,21 @@ import kotlin.random.Random
  * left instead, keeping xforms contractive. Random and Breed come later (plan phase 5).
  */
 object FlameSampler {
-    /** Pick odds per variation id (index = id): favours the well-behaved ones, rare for the exotic ones. */
-    private val POOL = floatArrayOf(3f, 3f, 2f, 3f, 1f, 1f, 1.5f, 1f, 1f, 1f, 1f, 1f)
+    /** Pick odds per variation id (index = id): favours the well-behaved ones, rare for the exotic, noisy or unstable ones. */
+    private val POOL: FloatArray = run {
+        val odds = mapOf(
+            "linear" to 3f, "sinusoidal" to 3f, "spherical" to 2f, "swirl" to 3f, "horseshoe" to 1f, "polar" to 1f,
+            "handkerchief" to 1.5f, "heart" to 1f, "disc" to 1f, "spiral" to 1f, "hyperbolic" to 1f, "diamond" to 1f,
+            "ex" to 1f, "julia" to 1.5f, "bent" to 1f, "waves" to 1f, "fisheye" to 0.7f, "popcorn" to 1f,
+            "exponential" to 0.5f, "power" to 0.7f, "cosine" to 0.7f, "rings" to 1f, "fan" to 1f, "blob" to 1f,
+            "pdj" to 1f, "fan2" to 0.7f, "rings2" to 0.7f, "eyefish" to 0.7f, "bubble" to 1f, "cylinder" to 1f,
+            "perspective" to 0.7f, "juliaN" to 1f, "juliaScope" to 1f, "curl" to 1f, "rectangles" to 0.5f,
+            "ngon" to 0.7f, "pie" to 0.4f, "radialBlur" to 0.4f, "tangent" to 0.3f, "cross" to 0.3f,
+            "arch" to 0.3f, "square" to 0.3f, "noise" to 0.2f, "blur" to 0.2f, "gaussian" to 0.2f,
+            "rays" to 0.2f, "blade" to 0.3f, "secant" to 0.2f, "twintrian" to 0.2f
+        )
+        FloatArray(FlameVariations.count()) { odds[FlameVariations.ALL[it].name] ?: error("no pool odds for ${FlameVariations.ALL[it].name}") }
+    }
 
     /** Contractivity guard: |pre scale| stays below this so the attractor does not blow up. */
     private const val MAX_PRE_SCALE = 0.95f

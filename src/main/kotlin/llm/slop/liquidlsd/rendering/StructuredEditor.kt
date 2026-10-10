@@ -1,7 +1,13 @@
 package llm.slop.liquidlsd.rendering
 
-/** A titled run of parameter names inside an editor tab. [collapsed] = starts closed. */
-class EditorSection(val title: String, val params: List<String>, val collapsed: Boolean = false)
+/**
+ * A titled run of parameter names inside an editor tab. [collapsed] = starts closed. [rowLabels] overrides the row
+ * label of a parameter (by full name) where the default (the name minus the tab prefix) is not descriptive.
+ */
+class EditorSection(
+    val title: String, val params: List<String>, val collapsed: Boolean = false,
+    val rowLabels: Map<String, String> = emptyMap()
+)
 
 /** One tab of a structured source editor; [id] is stable, [label] is what the tab button shows. */
 class EditorTab(val id: String, val label: String, val sections: List<EditorSection>)

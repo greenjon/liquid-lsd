@@ -65,7 +65,7 @@ class FlameGenomeTest {
         pack(p, out)
         // X1: V1 sinusoidal 0.7 -> 1.4; V3 is linear weight 0 (unchanged)
         assertEquals(1.4f, out[16 + 1], 1e-5f)
-        assertEquals(0f, out[16 + 8 + 1], 1e-6f)
+        assertEquals(0f, out[16 + 2 * FlameGenome.VEC4_PER_SLOT * 4 + 1], 1e-6f)
     }
 
     private class Lookup(val a: Map<llm.slop.liquidlsd.parameters.ModulatableParameter, Float>,
@@ -91,5 +91,20 @@ class FlameGenomeTest {
         FlameGenome.pack(p, out, Lookup(mapOf(id to 1f, w to 0.2f), mapOf(id to 1f, w to 1.0f), 0.5f))
         assertEquals(1f, out[16]); assertEquals(0.6f, out[17], 1e-5f)
         assertEquals(0f, out[19])
+    }
+}
+
+class FlameSlotParamPackingTest {
+    @Test fun slotParametersArePackedInTheVariationsOwnUnits() {
+        val p = FlameGenome.buildParameters()
+        p["X1 V1 Id"]!!.baseValue = FlameVariations.NAMES.indexOf("ngon").toFloat()
+        p["X1 V1 B"]!!.baseValue = 1f        // sides at its max
+        p.values.forEach { it.evaluate() }
+        val out = FloatArray(FlameGenome.PACKED_FLOATS)
+        FlameGenome.pack(p, out)
+        val so = 16   // X1 slot 0
+        assertEquals(2f, out[so + 4], 1e-5f)       // power default
+        assertEquals(12f, out[so + 5], 1e-5f)      // sides max
+        assertEquals(0f, out[so + 8], 0f)          // B params empty outside a morph
     }
 }

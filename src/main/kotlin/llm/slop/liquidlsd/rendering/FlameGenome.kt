@@ -17,15 +17,15 @@ object FlameGenome {
     const val SLOTS = 3
     /** Index of the final xform in the packed array (after the [MAX_XF] regular slots). */
     const val FINAL_INDEX = MAX_XF
+    /** vec4s per variation slot: [idA, wA, idB, wB], A's four parameters, B's four parameters. */
+    const val VEC4_PER_SLOT = 3
     /** vec4s per xform in the `uXf` uniform: info, preMatrix, translations, postMatrix, then [SLOTS] variation slots. */
-    const val VEC4_PER_XF = 4 + SLOTS
+    const val VEC4_PER_XF = 4 + SLOTS * VEC4_PER_SLOT
     const val PACKED_FLOATS = (MAX_XF + 1) * VEC4_PER_XF * 4
 
     /** Variation names; the index is the id used by the GLSL `vari()` switch. Keep in step with [FlameEngine]. */
-    val VARIATIONS = listOf(
-        "linear", "sinusoidal", "spherical", "swirl", "horseshoe", "polar",
-        "handkerchief", "heart", "disc", "spiral", "hyperbolic", "diamond"
-    )
+    val VARIATIONS = FlameVariations.NAMES
+    private val PARAM_LETTERS = listOf("A", "B", "C", "D")
 
     private fun xfName(i: Int) = if (i == FINAL_INDEX) "XF" else "X${i + 1}"
     private fun slotKey(xf: Int, slot: Int, field: String) = "${xfName(xf)} V${slot + 1} $field"
@@ -40,12 +40,14 @@ object FlameGenome {
         val postShear = key(i, "PostShear"); val postX = key(i, "PostX"); val postY = key(i, "PostY")
         val slotId = Array(SLOTS) { slotKey(i, it, "Id") }
         val slotWeight = Array(SLOTS) { slotKey(i, it, "Weight") }
+        val slotParam = Array(SLOTS) { j -> Array(FlameVariations.PARAMS) { slotKey(i, j, PARAM_LETTERS[it]) } }
     }
     private val keys = Array(MAX_XF + 1) { XfKeys(it) }
 
     /** Parameter names of xform [i] (0..MAX_XF-1, or [FINAL_INDEX]) for the sampler. */
     internal fun slotIdKey(xf: Int, slot: Int) = keys[xf].slotId[slot]
     internal fun slotWeightKey(xf: Int, slot: Int) = keys[xf].slotWeight[slot]
+    internal fun slotParamKey(xf: Int, slot: Int, n: Int) = keys[xf].slotParam[slot][n]
     internal fun weightKey(xf: Int) = keys[xf].weight
     internal fun xfParamNames(xf: Int): List<String> = with(keys[xf]) {
         listOf(weight, color, speed, preRot, preSx, preSy, preShear, preX, preY) + slotId.toList() + slotWeight.toList()
@@ -132,6 +134,8 @@ object FlameGenome {
             val v = s?.v?.getOrNull(j)
             m[k.slotId[j]] = idParam(v?.first ?: 0)
             m[k.slotWeight[j]] = param(v?.second ?: if (j == 0) 1f else 0f, 0f, 2f, morph = true)
+            // normalised variation parameters (see FlameVariations.real): 0.5 = the variation's default
+            for (n in 0 until FlameVariations.PARAMS) m[k.slotParam[j][n]] = param(0.5f, 0f, 1f, morph = true)
         }
     }
 
@@ -148,7 +152,7 @@ object FlameGenome {
     fun tabId(xf: Int) = xfName(xf)
 
     /** Tab for xform [i]: weight/colour, pre and post affine (post collapsed), then the variation slots. */
-    private fun xformTab(i: Int): EditorTab {
+    private fun xformTab(i: Int, params: Map<String, ModulatableParameter>): EditorTab {
         val k = keys[i]
         val isFinal = i == FINAL_INDEX
         val main = if (isFinal) emptyList() else listOf(k.weight, k.color, k.speed)
@@ -156,7 +160,13 @@ object FlameGenome {
         if (main.isNotEmpty()) sections += EditorSection("Weight / Colour", main)
         sections += EditorSection("Pre-affine", listOf(k.preRot, k.preSx, k.preSy, k.preShear, k.preX, k.preY))
         sections += EditorSection("Post-affine", listOf(k.postRot, k.postSx, k.postSy, k.postShear, k.postX, k.postY), collapsed = !isFinal)
-        for (j in 0 until SLOTS) sections += EditorSection("Variation ${j + 1}", listOf(k.slotId[j], k.slotWeight[j]))
+        for (j in 0 until SLOTS) {
+            val id = (params[k.slotId[j]]?.baseValue ?: 0f).toInt().coerceIn(0, VARIATIONS.size - 1)
+            val used = FlameVariations.ALL[id].params
+            val rows = listOf(k.slotId[j], k.slotWeight[j]) + used.indices.map { k.slotParam[j][it] }
+            val labels = used.indices.associate { k.slotParam[j][it] to used[it].label }
+            sections += EditorSection("Variation ${j + 1}", rows, rowLabels = labels)
+        }
         return EditorTab(xfName(i), xfName(i), sections)
     }
 
@@ -169,8 +179,8 @@ object FlameGenome {
             EditorSection("Camera", CAMERA), EditorSection("Tone", TONE), EditorSection("Quality", QUALITY)
         ))
         tabs += EditorTab("Mods", "Mods", listOf(EditorSection("Handles", MODS)))
-        for (i in 0 until MAX_XF) if (isShown(params, i, keep)) tabs += xformTab(i)
-        tabs += xformTab(FINAL_INDEX)
+        for (i in 0 until MAX_XF) if (isShown(params, i, keep)) tabs += xformTab(i, params)
+        tabs += xformTab(FINAL_INDEX, params)
         return tabs
     }
 
@@ -202,7 +212,8 @@ object FlameGenome {
      * Packs the current (modulated) genome for the shader. Active xforms (weight > 0) are compacted to the front;
      * the final xform always goes at [FINAL_INDEX]. Spin / Breathe / Warp / Drift are applied here.
      * Layout per xform, 4 floats per vec4: [weight, colour, colourSpeed, 0], [pre a b c d],
-     * [preX, preY, postX, postY], [post a b c d], then per slot [id, weight, 0, 0].
+     * [preX, preY, postX, postY], [post a b c d], then per slot [idA, wA, idB, wB], [A's p1..p4], [B's p1..p4]
+     * (parameters in the variation's own units, see [FlameVariations.real]).
      * @return number of active xforms (>= 1; an empty genome becomes one identity xform)
      */
     fun pack(params: Map<String, ModulatableParameter>, out: FloatArray, morph: FlameMorphLookup? = null): Int {
@@ -219,7 +230,7 @@ object FlameGenome {
         if (n == 0) {
             java.util.Arrays.fill(out, 0, VEC4_PER_XF * 4, 0f)
             out[0] = 1f; out[4] = 1f; out[7] = 1f; out[12] = 1f; out[15] = 1f   // weight 1, identity pre and post
-            out[VEC4_PER_XF * 4 - SLOTS * 4 + 1] = 1f                            // slot 0 = linear, weight 1
+            out[16 + 1] = 1f                                                      // slot 0 = linear, weight 1
             n = 1
         }
         packXf(params, keys[FINAL_INDEX], out, FINAL_INDEX * VEC4_PER_XF * 4, 1f, 0f, 1f, 1f, 0f, morph)
@@ -238,13 +249,13 @@ object FlameGenome {
         matrix(v(k.preRot, 0f) + spin, v(k.preSx, 1f) * breathe, v(k.preSy, 1f) * breathe, v(k.preShear, 0f), out, o + 4)
         out[o + 8] = v(k.preX, 0f); out[o + 9] = v(k.preY, 0f); out[o + 10] = v(k.postX, 0f); out[o + 11] = v(k.postY, 0f)
         matrix(v(k.postRot, 0f), v(k.postSx, 1f), v(k.postSy, 1f), v(k.postShear, 0f), out, o + 12)
-        for (j in 0 until SLOTS) packSlot(params, k, j, out, o + 16 + j * 4, warp, morph)
+        for (j in 0 until SLOTS) packSlot(params, k, j, out, o + 16 + j * VEC4_PER_SLOT * 4, warp, morph)
     }
 
     private fun warped(id: Int, w: Float, warp: Float) = w * (if (id == 0) 1f else warp)
 
     /**
-     * Slot vec4 = [idA, wA, idB, wB]. Without a morph, B is empty (weight 0). While morphing, A's slot is weighted
+     * Slot vec4s = [idA, wA, idB, wB], [A's params], [B's params]. Without a morph, B is empty (weight 0). While morphing, A's slot is weighted
      * (1-t) and B's t, so a variation id swap cross-fades instead of sweeping through the ids in between. Weight
      * modulation (the evaluated value minus the plain A->B lerp) is added to both ends.
      */
@@ -255,10 +266,16 @@ object FlameGenome {
         val idP = params[k.slotId[j]]
         val wP = params[k.slotWeight[j]]
         val maxId = VARIATIONS.size - 1
+        fun value(n: Int) = params[k.slotParam[j][n]]?.value ?: 0.5f
+        fun writeParams(o: Int, id: Int, norm: (Int) -> Float) {
+            for (n in 0 until FlameVariations.PARAMS) out[o + n] = FlameVariations.real(id, n, norm(n))
+        }
         if (morph == null || idP == null || wP == null) {
             val id = (idP?.value ?: 0f).toInt().coerceIn(0, maxId)
             out[so] = id.toFloat(); out[so + 1] = warped(id, wP?.value ?: 0f, warp)
             out[so + 2] = 0f; out[so + 3] = 0f
+            writeParams(so + 4, id, ::value)
+            java.util.Arrays.fill(out, so + 8, so + 12, 0f)
             return
         }
         val t = morph.t.coerceIn(0f, 1f)
@@ -271,9 +288,19 @@ object FlameGenome {
         if (idA == idB) {
             out[so] = idA.toFloat(); out[so + 1] = warped(idA, wA + wB, warp)
             out[so + 2] = 0f; out[so + 3] = 0f
+            writeParams(so + 4, idA, ::value)
+            java.util.Arrays.fill(out, so + 8, so + 12, 0f)
         } else {
             out[so] = idA.toFloat(); out[so + 1] = warped(idA, wA, warp)
             out[so + 2] = idB.toFloat(); out[so + 3] = warped(idB, wB, warp)
+            // each end keeps its own parameters; modulation (value minus the plain A->B lerp) rides on both
+            fun end(side: (ModulatableParameter) -> Float, n: Int): Float {
+                val pp = params[k.slotParam[j][n]] ?: return 0.5f
+                val pa = morph.a(pp); val pb = morph.b(pp)
+                return side(pp) + (pp.value - (pa + (pb - pa) * t))
+            }
+            writeParams(so + 4, idA) { end(morph::a, it) }
+            writeParams(so + 8, idB) { end(morph::b, it) }
         }
     }
 
@@ -286,7 +313,7 @@ object FlameGenome {
         for (i in 8..11) if (!near(packed[o + i], 0f)) return false
         var linear = 0f
         for (j in 0 until SLOTS) {
-            val so = o + 16 + j * 4
+            val so = o + 16 + j * VEC4_PER_SLOT * 4
             if (!near(packed[so + 3], 0f)) return false
             if (near(packed[so + 1], 0f)) continue
             if (packed[so].toInt() != 0) return false

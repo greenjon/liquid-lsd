@@ -154,6 +154,7 @@ internal class FlameEngine {
             splat.setUniform("uHasFinal", if (hasFinal) 1 else 0)
             if (hasFinal) splat.setUniform4fv("uXf", genome)
             splat.setUniform("uBurn", burn)
+            splat.setUniform("uFrame", frameCounter)
             splat.setUniform("uZoom", zoom)
             splat.setUniform("uCos", cos(rot)); splat.setUniform("uSin", sin(rot))
             splat.setUniform("uCenter", v("CenterX", 0f), v("CenterY", 0f))
@@ -209,7 +210,7 @@ internal class FlameEngine {
         queries.forEach { glDeleteQueries(it) }
     }
 
-    private companion object {
+    companion object {
         const val FULLSCREEN_VERT = """#version 330 core
 layout(location = 0) in vec2 aPosition;
 void main() { gl_Position = vec4(aPosition, 0.0, 1.0); }
@@ -220,25 +221,90 @@ void main() { gl_Position = vec4(aPosition, 0.0, 1.0); }
 uniform vec4 uXf[${FlameGenome.MAX_XF + 1}*${FlameGenome.VEC4_PER_XF}];
 const float PI = 3.14159265;
 
-vec2 vari(int id, vec2 p) {
+uint gRng;   // per-invocation random state; seed it before calling applyXf
+uint pcg(uint v) {
+    uint s = v * 747796405u + 2891336453u;
+    uint w = ((s >> ((s >> 28u) + 4u)) ^ s) * 277803737u;
+    return (w >> 22u) ^ w;
+}
+float rnd() { gRng = pcg(gRng); return float(gRng) * (1.0 / 4294967296.0); }
+
+// Variation `id` of point p, already multiplied by its weight w. Formulas: Draves & Reckase, "The Fractal Flame
+// Algorithm", Appendix A (ids are the paper's numbers; keep in step with FlameVariations). P = the variation's
+// parameters, M = (a, b, d, e) and T = (c, f) of the pre-affine for the dependent variations. theta = atan(x/y),
+// phi = atan(y/x) (atan2 forms).
+vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
     float r2 = dot(p, p) + 1e-9;
     float r = sqrt(r2);
     float th = atan(p.x, p.y);
+    float ph = atan(p.y, p.x);
+    vec2 v = p;
     switch (id) {
-        case 0:  return p;                                                              // linear
-        case 1:  return sin(p);                                                         // sinusoidal
-        case 2:  return p / r2;                                                         // spherical
-        case 3:  { float s = sin(r2), c = cos(r2); return vec2(p.x*s - p.y*c, p.x*c + p.y*s); } // swirl
-        case 4:  return vec2((p.x - p.y) * (p.x + p.y), 2.0 * p.x * p.y) / r;           // horseshoe
-        case 5:  return vec2(th / PI, r - 1.0);                                         // polar
-        case 6:  return r * vec2(sin(th + r), cos(th - r));                             // handkerchief
-        case 7:  return r * vec2(sin(th * r), -cos(th * r));                            // heart
-        case 8:  return (th / PI) * vec2(sin(PI * r), cos(PI * r));                     // disc
-        case 9:  return vec2(cos(th) + sin(r), sin(th) - cos(r)) / r;                   // spiral
-        case 10: return vec2(sin(th) / r, r * cos(th));                                 // hyperbolic
-        case 11: return vec2(sin(th) * cos(r), cos(th) * sin(r));                       // diamond
+        case 0:  v = p; break;                                                                  // linear
+        case 1:  v = sin(p); break;                                                             // sinusoidal
+        case 2:  v = p / r2; break;                                                             // spherical
+        case 3:  { float s = sin(r2), c = cos(r2); v = vec2(p.x*s - p.y*c, p.x*c + p.y*s); break; } // swirl
+        case 4:  v = vec2((p.x - p.y) * (p.x + p.y), 2.0 * p.x * p.y) / r; break;               // horseshoe
+        case 5:  v = vec2(th / PI, r - 1.0); break;                                             // polar
+        case 6:  v = r * vec2(sin(th + r), cos(th - r)); break;                                 // handkerchief
+        case 7:  v = r * vec2(sin(th * r), -cos(th * r)); break;                                // heart
+        case 8:  v = (th / PI) * vec2(sin(PI * r), cos(PI * r)); break;                         // disc
+        case 9:  v = vec2(cos(th) + sin(r), sin(th) - cos(r)) / r; break;                       // spiral
+        case 10: v = vec2(sin(th) / r, r * cos(th)); break;                                     // hyperbolic
+        case 11: v = vec2(sin(th) * cos(r), cos(th) * sin(r)); break;                           // diamond
+        case 12: { float a = sin(th + r), b = cos(th - r); a = a*a*a; b = b*b*b; v = r * vec2(a + b, a - b); break; } // ex
+        case 13: { float om = rnd() < 0.5 ? 0.0 : PI; v = sqrt(r) * vec2(cos(th*0.5 + om), sin(th*0.5 + om)); break; } // julia
+        case 14: v = vec2(p.x < 0.0 ? 2.0*p.x : p.x, p.y < 0.0 ? 0.5*p.y : p.y); break;        // bent
+        case 15: v = vec2(p.x + M.y * sin(p.y / max(T.x*T.x, 1e-4)), p.y + M.w * sin(p.x / max(T.y*T.y, 1e-4))); break; // waves (b, c, e, f)
+        case 16: v = 2.0 / (r + 1.0) * vec2(p.y, p.x); break;                                   // fisheye
+        case 17: v = vec2(p.x + T.x * sin(tan(3.0*p.y)), p.y + T.y * sin(tan(3.0*p.x))); break; // popcorn (c, f)
+        case 18: v = exp(p.x - 1.0) * vec2(cos(PI*p.y), sin(PI*p.y)); break;                    // exponential
+        case 19: v = pow(r, sin(th)) * vec2(cos(th), sin(th)); break;                           // power
+        case 20: v = vec2(cos(PI*p.x) * cosh(p.y), -sin(PI*p.x) * sinh(p.y)); break;           // cosine
+        case 21: { float c2 = max(T.x*T.x, 1e-4); v = (mod(r + c2, 2.0*c2) - c2 + r*(1.0 - c2)) * vec2(cos(th), sin(th)); break; } // rings (c)
+        case 22: { float c2 = max(T.x*T.x, 1e-4), t = PI*c2, a = mod(th + T.y, t) > 0.5*t ? th - 0.5*t : th + 0.5*t; v = r * vec2(cos(a), sin(a)); break; } // fan (c, f)
+        case 23: v = r * (P.y + (P.x - P.y) * 0.5 * (sin(P.z*th) + 1.0)) * vec2(cos(th), sin(th)); break; // blob: high, low, waves
+        case 24: v = vec2(sin(P.x*p.y) - cos(P.y*p.x), sin(P.z*p.x) - cos(P.w*p.y)); break;     // pdj
+        case 25: { float p1 = PI*P.x*P.x, p2 = P.y;                                             // fan2
+                   float t = th + p2 - p1 * trunc(2.0*th*p2 / p1);
+                   float a = t > 0.5*p1 ? th - 0.5*p1 : th + 0.5*p1;
+                   v = r * vec2(sin(a), cos(a)); break; }
+        case 26: { float q = P.x*P.x;                                                           // rings2
+                   float t = r - 2.0*q*trunc((r + q) / (2.0*q)) + r*(1.0 - q);
+                   v = t * vec2(sin(th), cos(th)); break; }
+        case 27: v = 2.0 / (r + 1.0) * p; break;                                                // eyefish
+        case 28: v = 4.0 / (r2 + 4.0) * p; break;                                               // bubble
+        case 29: v = vec2(sin(p.x), p.y); break;                                                // cylinder
+        case 30: v = P.y / (P.y - p.y*sin(P.x)) * vec2(p.x, p.y*cos(P.x)); break;               // perspective: angle, dist
+        case 31: { float a = 2.0*PI*rnd(); v = rnd() * vec2(p.x*cos(a), p.y*sin(a)); break; }   // noise
+        case 32: { float p3 = trunc(abs(P.x)*rnd()), t = (ph + 2.0*PI*p3) / P.x;               // juliaN: power, dist
+                   v = pow(r, P.y / P.x) * vec2(cos(t), sin(t)); break; }
+        case 33: { float lam = rnd() < 0.5 ? -1.0 : 1.0, p3 = trunc(abs(P.x)*rnd()), t = (lam*ph + 2.0*PI*p3) / P.x; // juliaScope
+                   v = pow(r, P.y / P.x) * vec2(cos(t), sin(t)); break; }
+        case 34: { float a = 2.0*PI*rnd(); v = rnd() * vec2(cos(a), sin(a)); break; }           // blur
+        case 35: { float g = rnd() + rnd() + rnd() + rnd() - 2.0, a = 2.0*PI*rnd(); v = g * vec2(cos(a), sin(a)); break; } // gaussian
+        case 36: { float p1 = P.x*PI*0.5;                                                       // radialBlur: angle
+                   float t1 = w * (rnd() + rnd() + rnd() + rnd() - 2.0), t2 = ph + t1*sin(p1), t3 = t1*cos(p1) - 1.0;
+                   v = vec2(r*cos(t2) + t3*p.x, r*sin(t2) + t3*p.y) / w; break; }
+        case 37: { float t1 = trunc(rnd()*P.x + 0.5), t2 = P.y + 2.0*PI/P.x * (t1 + rnd()*P.z); // pie: slices, rotation, thickness
+                   v = rnd() * vec2(cos(t2), sin(t2)); break; }
+        case 38: { float p2 = 2.0*PI/P.y;                                                       // ngon: power, sides, corners, circle
+                   float t3 = ph - p2*floor(ph/p2), t4 = t3 > 0.5*p2 ? t3 : t3 - p2;
+                   v = (P.z*(1.0/cos(t4) - 1.0) + P.w) / pow(r, P.x) * p; break; }
+        case 39: { float t1 = 1.0 + P.x*p.x + P.y*(p.x*p.x - p.y*p.y), t2 = P.x*p.y + 2.0*P.y*p.x*p.y; // curl: c1, c2
+                   v = vec2(p.x*t1 + p.y*t2, p.y*t1 - p.x*t2) / (t1*t1 + t2*t2 + 1e-9); break; }
+        case 40: v = vec2((2.0*floor(p.x/P.x) + 1.0)*P.x - p.x, (2.0*floor(p.y/P.y) + 1.0)*P.y - p.y); break; // rectangles: x, y
+        case 41: { float a = rnd()*PI*w; v = vec2(sin(a), sin(a)*sin(a)/cos(a)); break; }       // arch
+        case 42: v = vec2(sin(p.x)/cos(p.y), tan(p.y)); break;                                  // tangent
+        case 43: v = vec2(rnd() - 0.5, rnd() - 0.5); break;                                     // square
+        case 44: v = w * tan(rnd()*PI*w) / r2 * vec2(cos(p.x), sin(p.y)); break;                // rays
+        case 45: { float a = rnd()*r*w; v = p.x * vec2(cos(a) + sin(a), cos(a) - sin(a)); break; } // blade
+        case 46: v = vec2(p.x, 1.0 / (w * cos(w*r))); break;                                    // secant
+        case 47: { float a = rnd()*r*w, t = log(max(sin(a)*sin(a) + cos(a), 1e-6)) / log(10.0); // twintrian
+                   v = p.x * vec2(t, t - PI*sin(a)); break; }
+        case 48: v = p / (abs(p.x*p.x - p.y*p.y) + 1e-9); break;                                // cross
     }
-    return p;
+    return w * v;
 }
 
 // pre-affine -> weighted variation slots -> post-affine, for packed xform k
@@ -249,9 +315,10 @@ vec2 applyXf(int k, vec2 p) {
     vec2 q = vec2(m.x * p.x + m.y * p.y + t.x, m.z * p.x + m.w * p.y + t.y);
     vec2 acc = vec2(0.0);
     for (int j = 0; j < ${FlameGenome.SLOTS}; j++) {
-        vec4 s = uXf[b + 4 + j];   // (idA, wA, idB, wB): B is the morph target's slot, weight 0 outside a morph
-        if (s.y != 0.0) acc += s.y * vari(int(s.x + 0.5), q);
-        if (s.w != 0.0) acc += s.w * vari(int(s.z + 0.5), q);
+        int sb = b + 4 + j * ${FlameGenome.VEC4_PER_SLOT};
+        vec4 s = uXf[sb];   // (idA, wA, idB, wB): B is the morph target's slot, weight 0 outside a morph
+        if (s.y != 0.0) acc += vari(int(s.x + 0.5), q, s.y, uXf[sb + 1], m, t.xy);
+        if (s.w != 0.0) acc += vari(int(s.z + 0.5), q, s.w, uXf[sb + 2], m, t.xy);
     }
     vec4 pm = uXf[b + 3];
     return vec2(pm.x * acc.x + pm.y * acc.y + t.z, pm.z * acc.x + pm.w * acc.y + t.w);
@@ -265,26 +332,19 @@ uniform int uN;
 uniform int uFrame;
 uniform int uNumXf;
 """ + COMMON + """
-uint pcg(uint v) {
-    uint s = v * 747796405u + 2891336453u;
-    uint w = ((s >> ((s >> 28u) + 4u)) ^ s) * 277803737u;
-    return (w >> 22u) ^ w;
-}
-float rnd(inout uint st) { st = pcg(st); return float(st) * (1.0 / 4294967296.0); }
-
 void main() {
     ivec2 c = ivec2(gl_FragCoord.xy);
     vec4 s = texelFetch(uState, c, 0);
-    uint st = pcg(uint(c.x + c.y * uN) ^ (uint(uFrame) * 2654435761u));
+    gRng = pcg(uint(c.x + c.y * uN) ^ (uint(uFrame) * 2654435761u));
 
     // reseed diverged / non-finite points
     if (!(abs(s.x) < 1.0e4 && abs(s.y) < 1.0e4)) {
-        s = vec4(rnd(st) * 2.0 - 1.0, rnd(st) * 2.0 - 1.0, rnd(st), 0.0);
+        s = vec4(rnd() * 2.0 - 1.0, rnd() * 2.0 - 1.0, rnd(), 0.0);
     }
 
     float tot = 0.0;
     for (int i = 0; i < uNumXf; i++) tot += uXf[i * ${FlameGenome.VEC4_PER_XF}].x;
-    float r = rnd(st) * tot;
+    float r = rnd() * tot;
     int k = uNumXf - 1;
     float acc = 0.0;
     for (int i = 0; i < uNumXf; i++) {
@@ -309,9 +369,11 @@ uniform float uSin;
 uniform vec2 uCenter;
 uniform float uAspect;
 uniform float uSize;
+uniform int uFrame;
 out float vCol;
 """ + COMMON + """
 void main() {
+    gRng = pcg(uint(gl_VertexID) ^ (uint(uFrame) * 2654435761u));
     vec4 s = texelFetch(uState, ivec2(gl_VertexID % uN, gl_VertexID / uN), 0);
     vec2 pos = uHasFinal != 0 ? applyXf(${FlameGenome.FINAL_INDEX}, s.xy) : s.xy;   // final xform: drawn position only
     vec2 p = pos - uCenter;
