@@ -46,6 +46,7 @@ nav:
     - Media Export & Recording Pipeline: developer/export_pipeline.md
     - Web Subsystem & Broadcast Protocol: developer/web_subsystem.md
     - Fractal Flame Source: developer/flame_source.md
+    - Clean-Room Provenance: developer/clean_room_provenance.md
     - UI Architecture & ImGui: developer/ui.md
     - ImGui Upgrade & Modernization: developer/imgui_upgrade_guide.md
     - Preset & Queue Management: developer/preset_management.md
