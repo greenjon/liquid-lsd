@@ -89,11 +89,14 @@ object FlameGenome {
 
     private fun global(m: LinkedHashMap<String, ModulatableParameter>) {
         // Camera
-        m["Zoom"] = param(0.45f, 0.01f, 32f)
+        // Zoom and the centre belong to the genome: every sampled target carries its own framing and the morph drifts it
+        m["Zoom"] = param(0.45f, 0.01f, 32f, morph = true)
+        // performance zoom on top of the framing (the ZOOM knob); not morphed, so it is never overwritten
+        m["Magnify"] = param(1f, 0.25f, 4f)
         m["Rotation"] = param(0f, -PI.toFloat(), PI.toFloat(), angle = true)
         m["FlipY"] = ModulatableParameter(baseValue = 0f, minClamp = 0f, maxClamp = 1f, steps = 2, labels = listOf("Up", "Down"))   // image y axis: imported flames have it pointing down
-        m["CenterX"] = param(0f, -16f, 16f)
-        m["CenterY"] = param(0f, -16f, 16f)
+        m["CenterX"] = param(0f, -16f, 16f, morph = true)
+        m["CenterY"] = param(0f, -16f, 16f, morph = true)
         // Tone
         m["Exposure"] = param(2f, 0.01f, 100f)
         m["Brightness"] = param(1f, 0f, 4f)
@@ -149,7 +152,10 @@ object FlameGenome {
 
     // ---- editor layout (names only; see StructuredEditor.kt) ------------------------------------------------------
 
-    private val CAMERA = listOf("Zoom", "Rotation", "CenterX", "CenterY", "FlipY")
+    /** The camera parameters that morph with the genome (each sampled target brings its own framing). */
+    val MORPH_CAMERA = listOf("Zoom", "CenterX", "CenterY")
+
+    private val CAMERA = listOf("Zoom", "Magnify", "Rotation", "CenterX", "CenterY", "FlipY")
     private val TONE = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay", "Sharpness", "Softness", "Smooth", "Palette")
     private val MODS = listOf("Spin", "Breathe", "Warp", "Drift", "Mutation")
 

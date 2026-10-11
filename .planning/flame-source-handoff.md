@@ -3,6 +3,8 @@
 Plan: `.planning/flame-source-plan.md` (decisions, genome layout, phases). This file = current state + how to continue.
 Branch: `spike/flame-source` (plan itself is committed on `main`, e9a6c0a). Rules: clean-room (no flam3/Electric Sheep/Apophysis code), no "sheep" wording, no Co-Authored-By lines.
 
+## Step 4 follow-ups (2026-10-10, uncommitted, tests pass, unseen in app)
+Done: Keep saves the nearer morph end (`FlameSource.nearerEndValues`, swap-and-restore in `Garden.keep`); Pool/Breed weighting (`GenomePool.pick`: newest 2x, starred 3x, `Garden.favoritePaths`); camera morph (Zoom/CenterX/CenterY are morph params, every target carries framing, `mutate` skips them; old saves keep them pinned until re-added); ZOOM knob now drives new pinned `Magnify` (engine zoom = Zoom x Magnify). Evolve macro done: curated knobs are now ZOOM (Magnify), SPIN, WARP, EVOLVE (Mutation); BREATHE dropped (user decision). Camera lerp is linear (not log) in Zoom.
 ## START HERE (2026-10-10, later): density-estimation blur IMPLEMENTED (`Smooth` param), uncommitted, NOT yet seen in the app
 `Smooth` (0-1, 0 = off, imports 0.5): tone-map shader `estimate()` mixes mip levels 5..0 by `smoothstep(0, 3*Smooth, a*(1-Decay)*uNorm)`; engine generates mips only while Smooth > 0; `uNorm` = the exposure normalisation. Threshold constant 3 is a guess: tune on rings2-1 (should join dots) and blob-2 (must stay sharp), check gpu-ms. Docs/release notes done. library/sources/fractal_flame is tracked: re-copied from resources. The rest of this section is the original task text.
 ## START HERE (2026-10-10, end of session): was: density-estimation blur in the tone-map pass
@@ -117,7 +119,7 @@ Design and tune for **Tier L** (Intel Iris Xe iGPU + the web). **Tier H** (RTX A
 - Check: with two flame decks on the iGPU the log shows the scale dropping to hold ~3 ms and the image stays equally bright; budget 0 restores the old behaviour.
 
 ## Default macros (2026-10-10): committed. The model is 4 knobs per generator row, not the plan's 8
-`GeneratorDefaults.CURATED_KNOBS["fractal_flame"]` = ZOOM, SPIN, WARP, BREATHE (global handles; one binding moves every xform). Colour/Glow/Trails/Evolve from the plan's list have no knob; reachable via the Edit row or extra bindings if wanted. Test: `FlameProbeTest.curatedMacrosBindTheGlobalHandles`.
+`GeneratorDefaults.CURATED_KNOBS["fractal_flame"]` = ZOOM (Magnify), SPIN, WARP, EVOLVE (Mutation; BREATHE was dropped 2026-10-10) (global handles; one binding moves every xform). Colour/Glow/Trails/Evolve from the plan's list have no knob; reachable via the Edit row or extra bindings if wanted. Test: `FlameProbeTest.curatedMacrosBindTheGlobalHandles`.
 
 ## Docs (2026-10-10): committed
 User guide section in `docs/user_guide/visual_sources.md`, new `docs/developer/flame_source.md` (+ mkdocs nav), credit in `docs/licenses/SHADERS_LICENSE.md` ("Algorithm Credits"), release-notes entry at the top of [Unreleased] in BOTH `RELEASE_NOTES.md` and `docs/release_notes.md` (the two files differ in other entries, so edit each, do not copy one over the other). `./gradlew test` regenerates the tracked `src/main/resources/docs/` html: commit it with doc changes. Update these when later slices land (state-B save, quality device setting, importer, web). Paper authors/year/revision and a trademark search are still unverified.

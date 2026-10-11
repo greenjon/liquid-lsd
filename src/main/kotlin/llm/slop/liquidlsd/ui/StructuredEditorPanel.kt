@@ -108,7 +108,7 @@ object StructuredEditorPanel {
             val file = llm.slop.liquidlsd.presets.Garden.keep(deck, -1, lineage?.parents ?: emptyList(), lineage?.parentTags ?: emptyList())
             kept[deckLabel] = file.nameWithoutExtension to System.currentTimeMillis() + KEPT_SHOW_MS
         }
-        itemTooltip("Keep: save what is playing as a new offspring in the Garden (library/presets/garden/).\nThe Pool and Breed strategies draw from the Garden.")
+        itemTooltip("Keep: save what is playing as a new offspring in the Garden (library/presets/garden/); mid-morph, the nearer end.\nThe Pool and Breed strategies draw from the Garden.")
         ImGui.sameLine()
         if (ButtonChrome.button("Skip##veto", (ImGui.calcTextSize("Skip").x + 12f), h)) deck.morphController.vetoTarget()
         itemTooltip("Veto: skip the genome this deck is morphing towards and pick another with the current strategy.\nThe view jumps to the new target at the current morph position.")

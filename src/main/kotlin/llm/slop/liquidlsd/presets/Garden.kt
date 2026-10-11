@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.presets
 import kotlinx.serialization.decodeFromString
 import llm.slop.liquidlsd.models.DeckPresetDto
 import llm.slop.liquidlsd.rendering.Deck
+import llm.slop.liquidlsd.rendering.FlameSource
 import llm.slop.liquidlsd.rendering.PoolMember
 import mu.KotlinLogging
 import java.io.File
@@ -52,11 +53,25 @@ object Garden {
     fun keep(deck: Deck, deckIndex: Int = -1, parents: List<String> = emptyList(), parentTags: List<List<String>> = emptyList(), folder: File = File(FOLDER)): File {
         val name = nextName(folder, deck.source.displayName)
         val file = File(folder, "$name.lsd")
-        PresetRepository.saveDeckPresetAsync(file, deck, name, lineageTags(childGeneration(parentTags), parents), deckIndex)
-        // the thumbnail is what the deck shows right now; skipped silently where there is no GL context
+        // mid-morph the live values are a blend: save the nearer end instead. The DTO is built synchronously inside
+        // saveDeckPresetAsync, so the live values only need to be swapped for that call.
+        val end = (deck.source as? FlameSource)?.nearerEndValues()
+        val live = end?.mapValues { it.key.baseValue }
+        try {
+            end?.forEach { (p, v) -> p.baseValue = v }
+            PresetRepository.saveDeckPresetAsync(file, deck, name, lineageTags(childGeneration(parentTags), parents), deckIndex)
+        } finally {
+            live?.forEach { (p, v) -> p.baseValue = v }
+        }
+        // the thumbnail is what the deck shows right now (mid-morph that is the blend, not the saved end); skipped silently where there is no GL context
         runCatching { GardenThumbnails.capture(deck.getOutputTexture(), deck.cleanFBO.width, deck.cleanFBO.height, file) }
         return file
     }
+
+    /** Absolute paths of the presets starred in the Sources browser, for weighting the Pool draws. */
+    fun favoritePaths(): Set<String> =
+        llm.slop.liquidlsd.ui.browser.BrowseFavorites.keys(llm.slop.liquidlsd.ui.browser.BrowseKind.SRC)
+            .mapTo(HashSet()) { File(it).absoluteFile.normalize().path }
 
     private class Cached(val modified: Long, val member: PoolMember?)
     private val cache = HashMap<String, Cached>()
@@ -79,7 +94,7 @@ object Garden {
             val member = try {
                 val dto = PresetManager.json.decodeFromString<DeckPresetDto>(f.readText())
                 if (dto.visualSourceType != sourceId) null
-                else PoolMember(f.nameWithoutExtension, dto.tags, dto.parameters.mapValues { it.value.baseValue })
+                else PoolMember(f.nameWithoutExtension, dto.tags, dto.parameters.mapValues { it.value.baseValue }, f.absolutePath, modified)
             } catch (e: Exception) {
                 logger.debug(e) { "Skipping unreadable garden file ${f.name}" }
                 null

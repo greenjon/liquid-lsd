@@ -81,6 +81,7 @@ class FlameSource(
 
     /** Kept offspring of this source; replaceable so tests need no files. */
     internal var poolProvider: () -> List<PoolMember> = { llm.slop.liquidlsd.presets.Garden.pool(id) }
+    internal var favoritesProvider: () -> Set<String> = { llm.slop.liquidlsd.presets.Garden.favoritePaths() }
 
     /**
      * Proposes a genome the way [strategy] says and keeps only a candidate that the quality gate accepts (blank,
@@ -93,6 +94,7 @@ class FlameSource(
         fun fromValue(name: String) = parameters[name]?.let { from.parameters[it]?.baseValue ?: it.baseValue } ?: 0f
         val mutation = parameters["Mutation"]?.value ?: 0.25f
         val pool = if (strategy == SamplerStrategy.POOL || strategy == SamplerStrategy.BREED) poolProvider() else emptyList()
+        val favorites = if (pool.size > 1) favoritesProvider() else emptySet()
         val effective = when {
             pool.isEmpty() && (strategy == SamplerStrategy.POOL || strategy == SamplerStrategy.BREED) ->
                 if (fresh) SamplerStrategy.RANDOM else SamplerStrategy.MUTATE
@@ -102,10 +104,10 @@ class FlameSource(
 
         // a kept offspring is used as it is: its own camera, no gate
         if (effective == SamplerStrategy.POOL) {
-            val m = pool[random.nextInt(pool.size)]
+            val m = GenomePool.pick(pool, favorites, random)
             applyToTarget(target, genomeValues(member(m)))
             target.origin = FlameLineage(listOf(m.name), listOf(m.tags)).also { if (fresh) liveOrigin = it }
-            if (fresh) for (name in CAMERA) parameters[name]?.set(member(m)(name))
+            if (fresh) for (name in FlameGenome.MORPH_CAMERA) parameters[name]?.set(member(m)(name))
             return
         }
 
@@ -118,7 +120,7 @@ class FlameSource(
             val candidate = when (effective) {
                 SamplerStrategy.RANDOM -> FlameSampler.random(parameters, random)
                 SamplerStrategy.BREED -> {
-                    val a = pool[random.nextInt(pool.size)]; val b = pool[random.nextInt(pool.size)]
+                    val a = GenomePool.pick(pool, favorites, random); val b = GenomePool.pick(pool, favorites, random)
                     lineage = FlameLineage(listOf(a.name, b.name).distinct(), listOf(a.tags, b.tags))
                     FlameSampler.breed(parameters, member(a), member(b), mutation, random)
                 }
@@ -133,13 +135,21 @@ class FlameSource(
             logger.info { "Flame: no candidate passed the quality gate in $MAX_TRIES tries ($effective)" }
             chosen = if (fresh) starterValues() else FlameSampler.mutate(parameters, ::fromValue, 0f, random)
         }
-        applyToTarget(target, chosen)
-        target.origin = lineage
-        if (fresh) liveOrigin = lineage
-        if (fresh) {   // framed on the attractor, or the starter's camera when the starter was the fallback
-            for ((name, v) in listOf("Zoom" to verdict?.zoom, "CenterX" to verdict?.centerX, "CenterY" to verdict?.centerY)) {
-                parameters[name]?.let { it.set(v ?: it.defaultValue) }
+        // the target brings its own framing, so the morph drifts the camera along with the genome: framed on the
+        // candidate's attractor, else the starter's camera (fresh) or the state being left (a drift that stayed put)
+        val camera = FlameGenome.MORPH_CAMERA.associateWith { name ->
+            when {
+                verdict != null -> when (name) { "Zoom" -> verdict.zoom; "CenterX" -> verdict.centerX; else -> verdict.centerY }
+                fresh -> parameters[name]?.defaultValue ?: 0f
+                else -> fromValue(name)
             }
+        }
+        applyToTarget(target, chosen + camera)
+        target.origin = lineage
+        if (fresh) {
+            liveOrigin = lineage
+            // a deck whose camera params predate the morph flag (old saves) still gets the framing on randomize
+            for ((name, v) in camera) parameters[name]?.set(v)
         }
     }
 
@@ -148,6 +158,18 @@ class FlameSource(
         if (!morphLive) return liveOrigin
         val end = if (morphT >= 0.5f) morphB else morphA
         return end?.origin as? FlameLineage ?: FlameLineage.NONE
+    }
+
+    /**
+     * The base values of the nearer morph end, for the morphed (genome) parameters, or null when no morph is running.
+     * Keeping the blend itself would save a genome that never existed as such (variation ids sit at the nearer end
+     * while their weights cross-fade); the nearer end is a genome the sampler produced, and its lineage is the one
+     * [currentLineage] reports.
+     */
+    fun nearerEndValues(): Map<ModulatableParameter, Float>? {
+        if (!morphLive) return null
+        val end = (if (morphT >= 0.5f) morphB else morphA) ?: return null
+        return parameters.values.filter { it.randomizeBase }.mapNotNull { p -> end.parameters[p]?.let { p to it.baseValue } }.toMap()
     }
 
     private fun applyToTarget(target: DeckMorphSnapshot, values: Map<String, Float>) {
@@ -221,7 +243,6 @@ class FlameSource(
         const val SOURCE_ID = "fractal_flame"
         /** Candidates tried per request before falling back; each costs well under a millisecond on the GPU. */
         private const val MAX_TRIES = 8
-        private val CAMERA = listOf("Zoom", "CenterX", "CenterY")
         private val TONE_UNIFORMS = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay", "Smooth")
     }
 }

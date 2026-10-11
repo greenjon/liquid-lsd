@@ -187,9 +187,9 @@ class FlameProbeTest {
         llm.slop.liquidlsd.presets.GeneratorDefaults.storageDir = java.nio.file.Files.createTempDirectory("gd").toFile()   // no user override
         try {
             val knobs = llm.slop.liquidlsd.presets.GeneratorDefaults.resolve(source).macroBank!!.knobs
-            assertEquals(listOf("ZOOM", "SPIN", "WARP", "BREATHE"), knobs.map { it.label })
+            assertEquals(listOf("ZOOM", "SPIN", "WARP", "EVOLVE"), knobs.map { it.label })
             assertEquals(
-                listOf("Zoom", "Spin", "Warp", "Breathe").map { "Deck/Fractal Flame/$it" },
+                listOf("Magnify", "Spin", "Warp", "Mutation").map { "Deck/Fractal Flame/$it" },
                 knobs.map { it.bindings.single().parameterId }
             )
         } finally {
@@ -207,10 +207,54 @@ class FlameProbeTest {
         val dir = java.nio.file.Files.createTempDirectory("keep").toFile()
         try {
             val file = llm.slop.liquidlsd.presets.Garden.keep(deck, -1, folder = dir)
-            for (i in 0 until 100) { if (file.exists()) break; Thread.sleep(50) }
-            val dto = llm.slop.liquidlsd.presets.PresetManager.json.decodeFromString<llm.slop.liquidlsd.models.DeckPresetDto>(file.readText())
+            val dto = readWhenComplete(file)
             assertEquals(source.parameters.size, dto.parameters.size)
             assertEquals(0.77f, dto.parameters.getValue("Zoom").baseValue)
+        } finally { dir.deleteRecursively(); deck.dispose(); source.dispose() }
+    }
+
+    /** The save is asynchronous: wait until the file parses (it can exist half-written). */
+    private fun readWhenComplete(file: java.io.File): llm.slop.liquidlsd.models.DeckPresetDto {
+        var last: Exception? = null
+        for (i in 0 until 100) {
+            try { return llm.slop.liquidlsd.presets.PresetManager.json.decodeFromString(file.readText()) } catch (e: Exception) { last = e; Thread.sleep(50) }
+        }
+        throw last!!
+    }
+
+    @Test fun driftTargetsCarryTheirOwnCamera() = withGl {
+        val source = flameSource()
+        val controller = DeckMorphController({ source }) { source.parameters.values.toList() }
+        val p = source.parameters
+        val moved = (0 until 8).count { seed ->
+            controller.forceRandomize(Random(seed))
+            val a = controller.state0.parameters[p.getValue("Zoom")]!!.baseValue
+            val b = controller.state1.parameters[p.getValue("Zoom")]!!.baseValue
+            assertEquals(a, p.getValue("Zoom").baseValue)   // the live camera is A's
+            a != b
+        }
+        assertTrue(moved >= 5, "B is framed on its own attractor, so the camera drifts: $moved of 8")
+        source.dispose()
+    }
+
+    @Test fun keepSavesTheNearerMorphEndNotTheBlend() = withGl {
+        val deck = Deck(flameSource(), 64, 64, false)   // the deck works on its own copy of the source
+        val source = deck.source as FlameSource
+        val controller = deck.morphController
+        val dir = java.nio.file.Files.createTempDirectory("keepend").toFile()
+        try {
+            val zoom = source.parameters.getValue("Zoom")
+            assertEquals(null, source.nearerEndValues())   // no morph running
+            controller.forceRandomize(Random(3))
+            controller.update(0.8f); source.update()
+            val b = controller.state1.parameters.getValue(zoom).baseValue
+            val blend = zoom.baseValue
+            assertTrue(blend != b)
+            assertEquals(b, source.nearerEndValues()!!.getValue(zoom))
+            val file = llm.slop.liquidlsd.presets.Garden.keep(deck, -1, folder = dir)
+            assertEquals(blend, zoom.baseValue, "live values are restored")
+            val saved = readWhenComplete(file).parameters.getValue("Zoom").baseValue
+            assertEquals(b, saved)
         } finally { dir.deleteRecursively(); deck.dispose(); source.dispose() }
     }
 

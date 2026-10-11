@@ -84,7 +84,7 @@ object FlameSampler {
         // 1. gaussian jitter on continuous xform parameters (final xform and post-affine stay as they are)
         for ((name, p) in params) {
             if (!p.randomizeBase || p.steps != null) continue
-            if (name.startsWith("XF") || " Post" in name) continue
+            if (name.startsWith("XF") || " Post" in name || name in FlameGenome.MORPH_CAMERA) continue   // the camera is framed per candidate, not jittered
             // jitter scales with the range, capped so the wide ranges that admit imported flames do not make drift wild
             val range = minOf(p.maxClamp - p.minClamp, JITTER_RANGE_CAP)
             var v = from(name) + gaussian(random) * s * 0.2f * range

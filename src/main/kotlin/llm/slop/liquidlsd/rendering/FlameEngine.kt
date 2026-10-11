@@ -124,7 +124,7 @@ internal class FlameEngine {
         val passes = tier.passes
         lastPasses = passes
         lastSoftness = v("Softness", 3f)
-        val zoom = v("Zoom", 0.45f)
+        val zoom = v("Zoom", 0.45f) * v("Magnify", 1f)
         val rot = v("Rotation", 0f)
         val aspect = target.width.toFloat() / target.height
 
