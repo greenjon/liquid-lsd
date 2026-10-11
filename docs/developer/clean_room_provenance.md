@@ -21,20 +21,30 @@ commercial release.
 
 | Component | Source of the maths | Method | Evidence in the repo | To confirm |
 |---|---|---|---|---|
-| Beat tracker (`BeatTrackerEngine`) | BTrack (Adam Stark) and the Dan Ellis causal dynamic-programming beat tracker; the code header says "inspired by" | Implemented from the published algorithms, not ported | `DECISIONS.md` (beat clock), `docs/developer/beat_sync.md`, `audio_dsp.md` | Exact papers to cite (Stark, Davies and Plumbley, DAFx 2009; Ellis 2007), and that BTrack's reference source was not consulted |
+| Beat tracker (`BeatTrackerEngine`) | BTrack (Adam Stark) and the Dan Ellis causal dynamic-programming beat tracker; the code header says "inspired by" | Implemented from the published algorithms, not ported | `DECISIONS.md` (beat clock), `docs/developer/beat_sync.md`, `audio_dsp.md` | Owner's account: built solely from the white paper. Name the paper(s) to cite (BTrack: Stark, Davies and Plumbley, DAFx 2009; Ellis 2007) |
 | Flame variations 0-48 (49) | Draves and Reckase, "The Fractal Flame Algorithm" (2003, rev. 2008), Appendix A | Implemented from the paper's formulas, quirks followed as written | `DECISIONS.md` "Fractal Flame Variations Come From the Published Paper Only", commit `87c1980`, `FlameVariationsTest` | See the three amended entries below |
-| Flame variations 46, 47, 48 (`secant2`, `twintrian`, `cross`) | The paper, then amended | Commit `a7cba2b` changed them to "follow flam3" (`secant2` +/-1 shift, `twintrian` log of sin^2 alone with a -30 fallback, `cross` sqrt(s^2 + 1e-10)) | `a7cba2b` | **What the amendments were derived from.** If anything but the paper or our own reasoning, revert to the paper as written and re-derive by black box |
-| Flame variations 49-97 (46 built; 50, 65, 67 and 98 reserved) | A written mathematical specification, `.planning/flame-variations-spec.md` (equations, defaults, edge cases, test pairs) | Owner's account: a two-party clean room. One party wrote the spec from the original programs; a second implementer saw only the spec (`.planning/flame-variations-agent-prompt.md` forbids any other source) | Commits `a7cba2b` (spec), `18ad6d4`, `7c7582a`, `de8e555` (implementation) | **Who wrote the spec, from what material, when, and a statement that the implementer saw nothing else.** The spec itself says "the original code" and "the original random-flame generator", so its author did look at code: the spec side is not clean, the implementation side is. `SHADERS_LICENSE.md` already carries this caveat |
-| Variations still to add (`pre_blur`, `nblur`, `hemisphere`, `pre_curl`, ...) | Black-box observation only | The protocol below | none yet | n/a |
+| Flame variations 46, 47, 48 (`secant2`, `twintrian`, `cross`) | The paper, then amended | Commit `a7cba2b` changed them to "follow flam3" (`secant2` +/-1 shift, `twintrian` log of sin^2 alone with a -30 fallback, `cross` sqrt(s^2 + 1e-10)) | `a7cba2b` | **Unknown** (owner does not know). Treat as unclean until re-derived: revert to the paper as written and re-derive by black box, or document the basis |
+| Flame variations 49-97 (46 built; 50, 65, 67 and 98 reserved) | A written mathematical specification, `.planning/flame-variations-spec.md` (equations, defaults, edge cases, test pairs) | Owner's account (2026-10-11): one AI read the original program's code and wrote a description; a second AI read only that description and wrote our maths; then several rounds of importing real `.flame` files and `.png` renders checked that our output matched. `.planning/flame-variations-agent-prompt.md` forbids the implementer any other source | Commits `a7cba2b` (spec), `18ad6d4`, `7c7582a`, `de8e555` (implementation) | **The first AI's original description file** (the committed spec is its audited form per commit `a7cba2b`; the original was not found in the repo, `/tmp` or the home folder), and which program's code it read. Keep it, or record that it is gone. The spec itself says "the original code" and "the original random-flame generator", so its author did look at code: the spec side is not clean, the implementation side is. `SHADERS_LICENSE.md` already carries this caveat |
+| Variations still to add (`pre_blur`, `nblur`, `hemisphere`, `pre_curl`, ...) | Black-box observation only | The protocol below, with the kit in `tools/blackbox/` | see the black-box log | n/a |
 | `.flame` importer | Attribute names from the paper and from sample files the user supplies | No third-party parser was read | `FlameImporter`, `docs/developer/flame_source.md` | n/a |
 | Variation statistics and curated library | Counts from public flame collections; our own search generates the shipped flames | Tallies only; no genome is shipped (the Electric Sheep archive has non-commercial terms for some genomes) | `FlameStats`, `FlameCurator` | Datasets used are listed in `.planning` notes, not in the build |
 
 Built variations: 95 of the 99 ids (the paper's 49 and 46 from the spec). The four reserved ids are `super_shape`,
 `lazysusan`, `pre_blur` and `mobius`.
 
+## Black-box log
+
+| Variation | Observer | Implementer | Observed with | Evidence | Status |
+|---|---|---|---|---|---|
+| `hemisphere` (first one) | owner, rendering the kit's probe flames | the assistant, from `table.csv` only | to record: program and version | `tools/blackbox/`, table to be added | kit built 2026-10-11, waiting for the renders |
+
+The assistant that implements may have seen flame-program formulas in its general training. The rule is therefore that it
+derives each formula from the observed table alone and lets the table decide; a formula that does not fit the table is
+wrong whatever it remembers.
+
 ## Black-box protocol for new variations
 
-1. **Pick the variation from the statistics, not from a source.** Name, rank and parameter names are facts about files.
+1. **Pick the variation from the statistics, not from a source.** Name, rank and parameter names are facts about files. `tools/blackbox/make_probes.py` builds the probe flames; see its README.
 2. **Observer** (a person, or an agent that writes no implementation code): run the other program as a user would. Build a
    flame with one xform, identity pre-affine, weight 1, only the variation under study, and (if the program allows) a
    final xform of identity. Record **only** what the program shows or exports by design:
