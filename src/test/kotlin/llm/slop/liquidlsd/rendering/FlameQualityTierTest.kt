@@ -22,6 +22,13 @@ class FlameQualityTierTest {
         assertTrue(t.all { it.points in 0.05f..1f && it.passes in 1..16 })
     }
 
+    @Test fun softnessIsALookParameterWithTodaysSizeAsDefault() {
+        val p = FlameGenome.buildParameters().getValue("Softness")
+        assertEquals(3f, p.baseValue)
+        assertEquals(1f, p.minClamp)
+        assertEquals(10f, p.maxClamp)
+    }
+
     @Test fun qualityIsNotAGenomeParameter() {
         val names = FlameGenome.buildParameters().keys
         assertFalse(listOf("Points", "Passes", "Kernel").any { it in names })

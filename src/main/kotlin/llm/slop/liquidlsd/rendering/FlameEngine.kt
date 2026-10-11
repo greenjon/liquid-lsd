@@ -46,7 +46,7 @@ internal class FlameEngine {
     private var gpuSamples = 0
     private var frameCounter = 0
     private var lastPasses = 0
-    private var lastKernel = 0f
+    private var lastSoftness = 0f
     private val governor = FlameGovernor()
 
     init {
@@ -119,7 +119,7 @@ internal class FlameEngine {
         val decay = v("Decay", 0f)
         val passes = tier.passes
         lastPasses = passes
-        lastKernel = tier.kernel
+        lastSoftness = v("Softness", 3f)
         val zoom = v("Zoom", 0.45f)
         val rot = v("Rotation", 0f)
         val aspect = target.width.toFloat() / target.height
@@ -178,7 +178,7 @@ internal class FlameEngine {
             splat.setUniform("uFlipY", if (v("FlipY", 0f) >= 0.5f) -1f else 1f)
             splat.setUniform("uCenter", v("CenterX", 0f), v("CenterY", 0f))
             splat.setUniform("uAspect", aspect)
-            splat.setUniform("uSize", tier.kernel)
+            splat.setUniform("uSize", lastSoftness)
             splat.setUniform("uSharp", v("Sharpness", 3f))
             splat.setUniform("uPalShift", v("Palette", 0f))
             glBindVertexArray(emptyVao)
@@ -197,7 +197,7 @@ internal class FlameEngine {
         src.shader.setUniform("uDensity", 0)
         // fewer points (the quality tier or the governor) mean proportionally fewer hits: keep the brightness. The toe
         // is applied before exposure in the shader, so lone hits stay removed.
-        src.shader.setUniform("uExposure", v("Exposure", 2f) * n / rows.toFloat() * tier.passExposure)
+        src.shader.setUniform("uExposure", v("Exposure", 2f) * n / rows.toFloat() * tier.passExposure * (3f / lastSoftness) * (3f / lastSoftness))
         Geometry.drawFullscreenQuad()
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -220,7 +220,7 @@ internal class FlameEngine {
         queryUsed[prev] = false
         gpuSamples++
         if (++frames % 240 == 0 && gpuSamples > 0) {
-            logger.warn { "Flame: n=%d (%d pts) passes=%d kernel=%.1f %s skip=%s: gpu %.2f ms/frame (avg of %d), governor scale %.2f".format(n, n * n, lastPasses, lastKernel, if (density32) "fp32" else "fp16", skip.ifEmpty { "none" }, gpuNsSum / 1e6 / gpuSamples, gpuSamples, governor.scale) }
+            logger.warn { "Flame: n=%d (%d pts) passes=%d softness=%.1f %s skip=%s: gpu %.2f ms/frame (avg of %d), governor scale %.2f".format(n, n * n, lastPasses, lastSoftness, if (density32) "fp32" else "fp16", skip.ifEmpty { "none" }, gpuNsSum / 1e6 / gpuSamples, gpuSamples, governor.scale) }
             gpuNsSum = 0; gpuSamples = 0
         }
     }

@@ -113,6 +113,9 @@ class FlameImporterTest {
         assertTrue(dto.parameters.getValue("X1 Weight").randomizeBase)
         assertTrue("imported" in dto.tags)
         assertEquals(FlameImporter.IMPORT_DECAY, dto.parameters.getValue("Decay").baseValue)
+        assertEquals(0f, dto.parameters.getValue("Toe").baseValue)
+        // rings2 is 250 px with filter 0.75: a sprite about twice that radius wide at 1080 px deck height
+        assertEquals(2f * 0.75f * 1080f / 250f, dto.parameters.getValue("Softness").baseValue, 1e-3f)
         val pal = java.util.Base64.getDecoder().decode(dto.palette!!)
         assertEquals(768, pal.size)
         assertEquals(one(rings2).palette!!.toList(), pal.toList())

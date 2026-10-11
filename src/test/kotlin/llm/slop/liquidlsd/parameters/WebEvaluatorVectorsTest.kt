@@ -6,6 +6,8 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.put
 import llm.slop.liquidlsd.cv.AudioFollowerTracker
 import llm.slop.liquidlsd.cv.CVRegistry
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Golden vectors for web/evaluator.js: real [ModulatableParameter.evaluate] results under simulated time.
@@ -257,7 +260,21 @@ class WebEvaluatorVectorsTest {
         if (System.getenv("UPDATE_WEB_VECTORS") == "1" || !file.exists()) {
             file.writeText(text)
         } else {
-            assertEquals(file.readText(), text, "web/tools/evaluator_vectors.json is stale; regenerate with UPDATE_WEB_VECTORS=1")
+            val stale = "web/tools/evaluator_vectors.json is stale; regenerate with UPDATE_WEB_VECTORS=1"
+            if (file.readText() != text) {
+                // Math.sin/cos may differ in the last bit between interpreted and JIT-compiled code, so compare numbers with a tolerance
+                val committed = Json.parseToJsonElement(file.readText())
+                val current = Json.parseToJsonElement(text)
+                assertTrue(closeEnough(committed, current), stale)
+            }
         }
+    }
+
+    private fun closeEnough(a: JsonElement, b: JsonElement): Boolean = when {
+        a is JsonObject && b is JsonObject -> a.keys == b.keys && a.keys.all { closeEnough(a.getValue(it), b.getValue(it)) }
+        a is JsonArray && b is JsonArray -> a.size == b.size && a.indices.all { closeEnough(a[it], b[it]) }
+        a is JsonPrimitive && b is JsonPrimitive && !a.isString && a.doubleOrNull != null && b.doubleOrNull != null ->
+            kotlin.math.abs(a.double - b.double) <= 1e-6 * maxOf(1.0, kotlin.math.abs(a.double))
+        else -> a == b
     }
 }

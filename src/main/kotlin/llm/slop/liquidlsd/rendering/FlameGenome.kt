@@ -102,8 +102,10 @@ object FlameGenome {
         m["Toe"] = param(0.7f, 0f, 5f)
         m["Decay"] = param(0f, 0f, 0.98f)
         m["Sharpness"] = param(3f, 0.5f, 8f)
+        // sprite size in pixels; bigger smooths sparse flames (exposure is normalised, so brightness holds)
+        m["Softness"] = param(3f, 1f, 10f)
         m["Palette"] = param(0f, 0f, 1f)
-        // Points / Passes / Kernel are a per-machine setting (FlameQualityTier), not parameters
+        // Points and Passes are a per-machine setting (FlameQualityTier), not parameters
         // Performance handles that move every xform at once
         // Lineage: strength of the next-state mutation (read by the sampler when it picks the next morph target)
         m["Mutation"] = param(0.25f, 0f, 1f)
@@ -146,7 +148,7 @@ object FlameGenome {
     // ---- editor layout (names only; see StructuredEditor.kt) ------------------------------------------------------
 
     private val CAMERA = listOf("Zoom", "Rotation", "CenterX", "CenterY", "FlipY")
-    private val TONE = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay", "Sharpness", "Palette")
+    private val TONE = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay", "Sharpness", "Softness", "Palette")
     private val MODS = listOf("Spin", "Breathe", "Warp", "Drift", "Mutation")
 
     /** Xforms shown without being asked: the first [ALWAYS_SHOWN], plus any with weight > 0. */

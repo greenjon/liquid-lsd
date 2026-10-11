@@ -29,6 +29,8 @@ object FlameImporter {
     class Options(val transposed: Boolean = false, val flipRotation: Boolean = false)
 
     const val IMPORT_DECAY = 0.85f
+    /** Deck height the original's smoothing filter is scaled to when picking a sprite size. */
+    const val IMPORT_DECK_HEIGHT = 1080f
 
     class Imported(
         val name: String,
@@ -150,7 +152,12 @@ object FlameImporter {
         notes += "tone settings (brightness, gamma, vibrancy, filter, background) and the 3D camera are not imported"
         // Flames assume millions of samples; trails (decay) fill in the gaps from the far fewer points drawn here.
         put("Decay", IMPORT_DECAY)
-        notes += "Decay set to $IMPORT_DECAY to fill in with fewer points; lower it for crisper, trail-free frames"
+        // the toe drops pixels below an absolute density; the originals have none, and sparse flames sit under it
+        put("Toe", 0f)
+        // the original smooths with a filter of `filter` pixels at its own size; at deck height that is a sprite about twice the radius wide
+        val filterRadius = flame.num("filter", 0.75f)
+        if (size != null) put("Softness", (2f * filterRadius * IMPORT_DECK_HEIGHT / size[1]).coerceIn(3f, 10f), "sprite softness")
+        notes += "Decay set to $IMPORT_DECAY and Toe to 0 to fill in with fewer points; lower Decay for crisper, trail-free frames, raise Toe to drop speckle"
 
         return Imported(name, out, palette(children(flame, "palette").firstOrNull(), notes), notes)
     }
