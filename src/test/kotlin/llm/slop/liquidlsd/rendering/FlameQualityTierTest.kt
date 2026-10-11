@@ -24,9 +24,9 @@ class FlameQualityTierTest {
 
     @Test fun softnessIsALookParameterWithTodaysSizeAsDefault() {
         val p = FlameGenome.buildParameters().getValue("Softness")
-        assertEquals(3f, p.baseValue)
-        assertEquals(1f, p.minClamp)
-        assertEquals(10f, p.maxClamp)
+        assertEquals(3f, FlameUnits.real("Softness", p.baseValue), 1e-5f)
+        assertEquals(1f, FlameUnits.of("Softness")!!.realMin)
+        assertEquals(10f, FlameUnits.of("Softness")!!.realMax)
     }
 
     @Test fun qualityIsNotAGenomeParameter() {

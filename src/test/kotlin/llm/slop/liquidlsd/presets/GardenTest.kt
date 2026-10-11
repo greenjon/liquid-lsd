@@ -95,7 +95,7 @@ class GardenTest {
             val dto = PresetManager.json.decodeFromString<DeckPresetDto>(first.files[0].readText())
             assertEquals("fractal_flame", dto.visualSourceType)
             assertEquals("alpha-one", dto.name)
-            assertEquals(1f, dto.parameters.getValue("X1 Weight").baseValue)
+            assertEquals(1f, llm.slop.liquidlsd.rendering.FlameUnits.real("X1 Weight", dto.parameters.getValue("X1 Weight").baseValue))
             val second = FlameImportOps.importFile(src, out)
             assertEquals(listOf("alpha-one-2.lsd", "beta-2.lsd"), second.files.map { it.name })
         } finally { dir.deleteRecursively() }

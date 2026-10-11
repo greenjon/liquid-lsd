@@ -16,7 +16,8 @@ class FlameImporterTest {
 </flame>"""
 
     private fun one(xml: String, o: FlameImporter.Options = FlameImporter.Options()) = FlameImporter.parse(xml, "t", o).single()
-    private fun Map<String, Float>.f(k: String) = getValue(k)
+    /** The imported value in real units (the map holds the normalised, stored values). */
+    private fun Map<String, Float>.f(k: String) = FlameUnits.real(k, getValue(k))
 
     @Test fun readsXformsVariationsAndCamera() {
         val r = one(rings2)
@@ -109,13 +110,13 @@ class FlameImporterTest {
     @Test fun presetDtoCarriesTheGenomeWithMorphFlags() {
         val dto = FlameImporter.toPresetDto(one(rings2))
         assertEquals("fractal_flame", dto.visualSourceType)
-        assertEquals(0.5f, dto.parameters.getValue("X1 Weight").baseValue)
+        assertEquals(0.5f, FlameUnits.real("X1 Weight", dto.parameters.getValue("X1 Weight").baseValue))
         assertTrue(dto.parameters.getValue("X1 Weight").randomizeBase)
         assertTrue("imported" in dto.tags)
-        assertEquals(FlameImporter.IMPORT_DECAY, dto.parameters.getValue("Decay").baseValue)
-        assertEquals(0f, dto.parameters.getValue("Toe").baseValue)
+        assertEquals(FlameImporter.IMPORT_DECAY, FlameUnits.real("Decay", dto.parameters.getValue("Decay").baseValue), 1e-5f)
+        assertEquals(0f, FlameUnits.real("Toe", dto.parameters.getValue("Toe").baseValue))
         // rings2 is 250 px with filter 0.75: a sprite about twice that radius wide at 1080 px deck height
-        assertEquals(2f * 0.75f * 1080f / 250f, dto.parameters.getValue("Softness").baseValue, 1e-3f)
+        assertEquals(2f * 0.75f * 1080f / 250f, FlameUnits.real("Softness", dto.parameters.getValue("Softness").baseValue), 1e-3f)
         val pal = java.util.Base64.getDecoder().decode(dto.palette!!)
         assertEquals(768, pal.size)
         assertEquals(one(rings2).palette!!.toList(), pal.toList())
@@ -137,8 +138,8 @@ class FlameImporterTest {
 
     @Test fun wildFlameRangesAreWideEnoughForTheSamples() {
         val p = FlameGenome.buildParameters()
-        assertTrue(p.getValue("X1 PreX").maxClamp >= 3.2f)             // gnarlomalia translates by 3.14
-        assertTrue(p.getValue("CenterX").maxClamp >= 2.6f)
+        assertTrue(FlameUnits.of("X1 PreX")!!.realMax >= 3.2f)             // gnarlomalia translates by 3.14
+        assertTrue(FlameUnits.of("CenterX")!!.realMax >= 2.6f)
         val julian = FlameVariations.NAMES.indexOf("juliaN")
         assertEquals(-20f, FlameVariations.real(julian, 0, 0f))        // spirencor2 uses julian_power -20
         assertTrue(FlameVariations.ALL[FlameVariations.NAMES.indexOf("rings2")].params[0].min <= 0.012f)

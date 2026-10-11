@@ -123,7 +123,7 @@ class FlameProbeTest {
             // the live genome is what the gate accepted (or the starter), so it passes again
             val r = probe.evaluate { p[it]?.baseValue }
             assertTrue(r.ok, "seed $seed: $r")
-            assertEquals(r.zoom, p["Zoom"]!!.baseValue, 0.02f * r.zoom + 0.05f)
+            assertEquals(r.zoom, FlameUnits.real("Zoom", p["Zoom"]!!.baseValue), 0.02f * r.zoom + 0.05f)
         }
         assertTrue(zooms.size > 5, "camera follows the genome: $zooms")
         probe.dispose(); source.dispose()

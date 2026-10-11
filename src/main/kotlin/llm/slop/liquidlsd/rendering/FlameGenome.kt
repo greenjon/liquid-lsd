@@ -68,10 +68,7 @@ object FlameGenome {
 
     private const val COLOR_SPEED = 0.6f
 
-    // Ranges wide enough for flames found in the wild (the importer clamps to them); generated genomes stay well inside.
-    private const val SCALE_MAX = 4f        // pre/post scale and shear
-    private const val MOVE_MAX = 10f        // pre/post translation
-    private const val SLOT_WEIGHT_MAX = 4f  // variation weight, negative allowed
+    // Ranges wide enough for flames found in the wild (the importer clamps to them) live in FlameUnits; generated genomes stay well inside.
 
     /**
      * [morph] = takes part in deck morphing (randomizeBase): the morph controller keeps an A and a B value for it.
@@ -80,6 +77,12 @@ object FlameGenome {
      */
     private fun param(v: Float, min: Float, max: Float, angle: Boolean = false, morph: Boolean = false) =
         ModulatableParameter(baseValue = v, minClamp = min, maxClamp = max, explicitIsAngle = angle, randomizeBase = morph)
+
+    /** A parameter stored in the normalised units of [FlameUnits.of] (0..1 / -1..1), created from its real-unit default. */
+    private fun unitParam(name: String, real: Float, morph: Boolean = false): ModulatableParameter {
+        val u = FlameUnits.of(name) ?: error("no unit map for $name")
+        return ModulatableParameter(baseValue = u.stored(real), minClamp = u.storedMin, maxClamp = u.storedMax, randomizeBase = morph)
+    }
 
     /** Variation ids: never lerped by the morph (the engine cross-weights A's and B's slots instead). */
     private fun idParam(v: Int) = ModulatableParameter(
@@ -90,23 +93,23 @@ object FlameGenome {
     private fun global(m: LinkedHashMap<String, ModulatableParameter>) {
         // Camera
         // Zoom and the centre belong to the genome: every sampled target carries its own framing and the morph drifts it
-        m["Zoom"] = param(0.45f, 0.01f, 32f, morph = true)
+        m["Zoom"] = unitParam("Zoom", 0.45f, morph = true)
         // performance zoom on top of the framing (the ZOOM knob); not morphed, so it is never overwritten
-        m["Magnify"] = param(1f, 0.25f, 4f)
+        m["Magnify"] = unitParam("Magnify", 1f)
         m["Rotation"] = param(0f, -PI.toFloat(), PI.toFloat(), angle = true)
         m["FlipY"] = ModulatableParameter(baseValue = 0f, minClamp = 0f, maxClamp = 1f, steps = 2, labels = listOf("Up", "Down"))   // image y axis: imported flames have it pointing down
-        m["CenterX"] = param(0f, -16f, 16f, morph = true)
-        m["CenterY"] = param(0f, -16f, 16f, morph = true)
+        m["CenterX"] = unitParam("CenterX", 0f, morph = true)
+        m["CenterY"] = unitParam("CenterY", 0f, morph = true)
         // Tone
-        m["Exposure"] = param(2f, 0.01f, 100f)
-        m["Brightness"] = param(1f, 0f, 4f)
-        m["Gamma"] = param(2.2f, 1f, 4f)
+        m["Exposure"] = unitParam("Exposure", 2f)
+        m["Brightness"] = unitParam("Brightness", 1f)
+        m["Gamma"] = unitParam("Gamma", 2.2f)
         m["Vibrancy"] = param(0.7f, 0f, 1f)
-        m["Toe"] = param(0.7f, 0f, 5f)
-        m["Decay"] = param(0f, 0f, 0.98f)
-        m["Sharpness"] = param(3f, 0.5f, 8f)
+        m["Toe"] = unitParam("Toe", 0.7f)
+        m["Decay"] = unitParam("Decay", 0f)
+        m["Sharpness"] = unitParam("Sharpness", 3f)
         // sprite size in pixels; bigger smooths sparse flames (exposure is normalised, so brightness holds)
-        m["Softness"] = param(3f, 1f, 10f)
+        m["Softness"] = unitParam("Softness", 3f)
         // density-estimation blur strength: blurs sparse regions towards coarser mip levels, dense ones stay sharp (0 = off)
         m["Smooth"] = param(0f, 0f, 1f)
         m["Palette"] = param(0f, 0f, 1f)
@@ -115,9 +118,9 @@ object FlameGenome {
         // Lineage: strength of the next-state mutation (read by the sampler when it picks the next morph target)
         m["Mutation"] = param(0.25f, 0f, 1f)
         m["Spin"] = param(0f, -PI.toFloat(), PI.toFloat(), angle = true)
-        m["Breathe"] = param(1f, 0.5f, 1.5f)
-        m["Warp"] = param(1f, 0f, 3f)
-        m["Drift"] = param(0f, -0.5f, 0.5f)
+        m["Breathe"] = unitParam("Breathe", 1f)
+        m["Warp"] = unitParam("Warp", 1f)
+        m["Drift"] = unitParam("Drift", 0f)
     }
 
     private fun xform(m: LinkedHashMap<String, ModulatableParameter>, i: Int) {
@@ -125,26 +128,26 @@ object FlameGenome {
         val s = STARTER.getOrNull(i)
         val isFinal = i == FINAL_INDEX
         if (!isFinal) {
-            m[k.weight] = param(s?.weight ?: 0f, 0f, 2f, morph = true)
+            m[k.weight] = unitParam(k.weight, s?.weight ?: 0f, morph = true)
             m[k.color] = param(s?.color ?: 0f, 0f, 1f, morph = true)
             m[k.speed] = param(COLOR_SPEED, 0f, 1f, morph = true)
         }
         m[k.preRot] = param(s?.rot ?: 0f, -PI.toFloat(), PI.toFloat(), angle = true, morph = true)
-        m[k.preSx] = param(s?.sx ?: if (isFinal) 1f else 0.6f, -SCALE_MAX, SCALE_MAX, morph = true)
-        m[k.preSy] = param(s?.sy ?: if (isFinal) 1f else 0.6f, -SCALE_MAX, SCALE_MAX, morph = true)
-        m[k.preShear] = param(s?.shear ?: 0f, -SCALE_MAX, SCALE_MAX, morph = true)
-        m[k.preX] = param(s?.tx ?: 0f, -MOVE_MAX, MOVE_MAX, morph = true)
-        m[k.preY] = param(s?.ty ?: 0f, -MOVE_MAX, MOVE_MAX, morph = true)
+        m[k.preSx] = unitParam(k.preSx, s?.sx ?: if (isFinal) 1f else 0.6f, morph = true)
+        m[k.preSy] = unitParam(k.preSy, s?.sy ?: if (isFinal) 1f else 0.6f, morph = true)
+        m[k.preShear] = unitParam(k.preShear, s?.shear ?: 0f, morph = true)
+        m[k.preX] = unitParam(k.preX, s?.tx ?: 0f, morph = true)
+        m[k.preY] = unitParam(k.preY, s?.ty ?: 0f, morph = true)
         m[k.postRot] = param(0f, -PI.toFloat(), PI.toFloat(), angle = true, morph = true)
-        m[k.postSx] = param(1f, -SCALE_MAX, SCALE_MAX, morph = true)
-        m[k.postSy] = param(1f, -SCALE_MAX, SCALE_MAX, morph = true)
-        m[k.postShear] = param(0f, -SCALE_MAX, SCALE_MAX, morph = true)
-        m[k.postX] = param(0f, -MOVE_MAX, MOVE_MAX, morph = true)
-        m[k.postY] = param(0f, -MOVE_MAX, MOVE_MAX, morph = true)
+        m[k.postSx] = unitParam(k.postSx, 1f, morph = true)
+        m[k.postSy] = unitParam(k.postSy, 1f, morph = true)
+        m[k.postShear] = unitParam(k.postShear, 0f, morph = true)
+        m[k.postX] = unitParam(k.postX, 0f, morph = true)
+        m[k.postY] = unitParam(k.postY, 0f, morph = true)
         for (j in 0 until SLOTS) {
             val v = s?.v?.getOrNull(j)
             m[k.slotId[j]] = idParam(v?.first ?: 0)
-            m[k.slotWeight[j]] = param(v?.second ?: if (j == 0) 1f else 0f, -SLOT_WEIGHT_MAX, SLOT_WEIGHT_MAX, morph = true)
+            m[k.slotWeight[j]] = unitParam(k.slotWeight[j], v?.second ?: if (j == 0) 1f else 0f, morph = true)
             // normalised variation parameters (see FlameVariations.real): 0.5 = the variation's default
             for (n in 0 until FlameVariations.PARAMS) m[k.slotParam[j][n]] = param(0.5f, 0f, 1f, morph = true)
         }
@@ -203,8 +206,8 @@ object FlameGenome {
 
     /** Reveals xform [i] by giving it a small weight and a linear slot. Returns its tab id. */
     fun reveal(params: Map<String, ModulatableParameter>, i: Int): String {
-        params[keys[i].weight]?.baseValue = 0.5f
-        if ((params[keys[i].slotWeight[0]]?.baseValue ?: 0f) <= 0f) params[keys[i].slotWeight[0]]?.baseValue = 1f
+        params[keys[i].weight]?.baseValue = FlameUnits.stored(keys[i].weight, 0.5f)
+        if ((params[keys[i].slotWeight[0]]?.baseValue ?: 0f) <= 0f) params[keys[i].slotWeight[0]]?.baseValue = FlameUnits.stored(keys[i].slotWeight[0], 1f)
         return xfName(i)
     }
 
@@ -230,7 +233,7 @@ object FlameGenome {
      * @return number of active xforms (>= 1; an empty genome becomes one identity xform)
      */
     fun pack(params: Map<String, ModulatableParameter>, out: FloatArray, morph: FlameMorphLookup? = null): Int {
-        fun v(name: String, def: Float) = params[name]?.value ?: def
+        fun v(name: String, def: Float) = params[name]?.let { FlameUnits.real(name, it.value) } ?: def
         val spin = v("Spin", 0f); val breathe = v("Breathe", 1f); val warp = v("Warp", 1f); val drift = v("Drift", 0f)
         var n = 0
         for (i in 0 until MAX_XF) {
@@ -254,7 +257,7 @@ object FlameGenome {
         params: Map<String, ModulatableParameter>, k: XfKeys, out: FloatArray, o: Int,
         weight: Float, spin: Float, breathe: Float, warp: Float, drift: Float, morph: FlameMorphLookup?
     ) {
-        fun v(name: String, def: Float) = params[name]?.value ?: def
+        fun v(name: String, def: Float) = params[name]?.let { FlameUnits.real(name, it.value) } ?: def
         out[o] = weight
         out[o + 1] = v(k.color, 0f)
         out[o + 2] = (v(k.speed, COLOR_SPEED) + drift).coerceIn(0f, 1f)
@@ -285,7 +288,7 @@ object FlameGenome {
         }
         if (morph == null || idP == null || wP == null) {
             val id = (idP?.value ?: 0f).toInt().coerceIn(0, maxId)
-            out[so] = id.toFloat(); out[so + 1] = warped(id, wP?.value ?: 0f, warp)
+            out[so] = id.toFloat(); out[so + 1] = warped(id, wP?.let { FlameUnits.real(k.slotWeight[j], it.value) } ?: 0f, warp)
             out[so + 2] = 0f; out[so + 3] = 0f
             writeParams(so + 4, id, ::value)
             java.util.Arrays.fill(out, so + 8, so + 12, 0f)
@@ -294,8 +297,9 @@ object FlameGenome {
         val t = morph.t.coerceIn(0f, 1f)
         val idA = (morph.a(idP) + 0.5f).toInt().coerceIn(0, maxId)
         val idB = (morph.b(idP) + 0.5f).toInt().coerceIn(0, maxId)
-        val wa = morph.a(wP); val wb = morph.b(wP)
-        val delta = wP.value - (wa + (wb - wa) * t)
+        val wk = k.slotWeight[j]
+        val wa = FlameUnits.real(wk, morph.a(wP)); val wb = FlameUnits.real(wk, morph.b(wP))
+        val delta = FlameUnits.real(wk, wP.value) - (wa + (wb - wa) * t)
         val wA = (wa + delta) * (1f - t)
         val wB = (wb + delta) * t
         if (idA == idB) {

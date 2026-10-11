@@ -36,7 +36,7 @@ class FlameSource(
 
     /** Only the tone-map pass reads uniforms here; the ~170 genome parameters go to the engine as a packed array. */
     override fun setupUniforms(shader: Shader) {
-        for (name in TONE_UNIFORMS) shader.setUniform("u$name", parameters[name]?.value ?: 0f)
+        for (name in TONE_UNIFORMS) shader.setUniform("u$name", parameters[name]?.let { FlameUnits.real(name, it.value) } ?: 0f)
     }
 
     override fun editorTabs(keep: String?) = FlameGenome.editorTabs(parameters, keep)
@@ -139,7 +139,7 @@ class FlameSource(
         // candidate's attractor, else the starter's camera (fresh) or the state being left (a drift that stayed put)
         val camera = FlameGenome.MORPH_CAMERA.associateWith { name ->
             when {
-                verdict != null -> when (name) { "Zoom" -> verdict.zoom; "CenterX" -> verdict.centerX; else -> verdict.centerY }
+                verdict != null -> FlameUnits.stored(name, when (name) { "Zoom" -> verdict.zoom; "CenterX" -> verdict.centerX; else -> verdict.centerY })
                 fresh -> parameters[name]?.defaultValue ?: 0f
                 else -> fromValue(name)
             }

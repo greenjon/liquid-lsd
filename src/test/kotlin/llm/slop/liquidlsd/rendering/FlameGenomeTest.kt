@@ -60,7 +60,7 @@ class FlameGenomeTest {
 
     @Test fun warpScalesOnlyNonlinearSlots() {
         val p = params
-        p["Warp"]!!.baseValue = 2f
+        p["Warp"]!!.baseValue = FlameUnits.stored("Warp", 2f)
         val out = FloatArray(FlameGenome.PACKED_FLOATS)
         pack(p, out)
         // X1: V1 sinusoidal 0.7 -> 1.4; V3 is linear weight 0 (unchanged)
@@ -79,16 +79,17 @@ class FlameGenomeTest {
         val p = params
         val id = p["X1 V1 Id"]!!; val w = p["X1 V1 Weight"]!!
         // A: sinusoidal(1) weight 0.7 (starter). B: spherical(2) weight 1.0
-        val look = { t: Float -> Lookup(mapOf(id to 1f, w to 0.7f), mapOf(id to 2f, w to 1.0f), t) }
+        val s = { r: Float -> FlameUnits.stored("X1 V1 Weight", r) }   // weights are stored normalised
+        val look = { t: Float -> Lookup(mapOf(id to 1f, w to s(0.7f)), mapOf(id to 2f, w to s(1.0f)), t) }
         val out = FloatArray(FlameGenome.PACKED_FLOATS)
-        w.baseValue = 0.7f + (1.0f - 0.7f) * 0.25f   // the controller lerps the base value; pack adds only the modulation on top
+        w.baseValue = s(0.7f + (1.0f - 0.7f) * 0.25f)   // the controller lerps the base value; pack adds only the modulation on top
         p.values.forEach { it.evaluate() }
         FlameGenome.pack(p, out, look(0.25f))
         assertEquals(1f, out[16]); assertEquals(0.7f * 0.75f, out[17], 1e-5f)
         assertEquals(2f, out[18]); assertEquals(1.0f * 0.25f, out[19], 1e-5f)
         // same id at both ends collapses to one entry with the lerped weight
-        w.baseValue = 0.6f; w.evaluate()
-        FlameGenome.pack(p, out, Lookup(mapOf(id to 1f, w to 0.2f), mapOf(id to 1f, w to 1.0f), 0.5f))
+        w.baseValue = s(0.6f); w.evaluate()
+        FlameGenome.pack(p, out, Lookup(mapOf(id to 1f, w to s(0.2f)), mapOf(id to 1f, w to s(1.0f)), 0.5f))
         assertEquals(1f, out[16]); assertEquals(0.6f, out[17], 1e-5f)
         assertEquals(0f, out[19])
     }

@@ -107,7 +107,7 @@ object GeneratorDefaults {
         ),
         // Fractal Flame: the global handles that move every xform at once (one binding does what 6+ would otherwise)
         "fractal_flame" to listOf(
-            KnobSpec("Magnify", "ZOOM", MacroCurveType.EXPONENTIAL),   // not Zoom: that one morphs with the genome
+            KnobSpec("Magnify", "ZOOM"),   // not Zoom: that one morphs with the genome (stored 0..1, 0.5 = 1x, exponential already)
             KnobSpec("Spin", "SPIN"),
             KnobSpec("Warp", "WARP"),
             KnobSpec("Mutation", "EVOLVE")   // how far the next target drifts from the current genome

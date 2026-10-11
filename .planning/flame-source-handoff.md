@@ -3,6 +3,9 @@
 Plan: `.planning/flame-source-plan.md` (decisions, genome layout, phases). This file = current state + how to continue.
 Branch: `spike/flame-source` (plan itself is committed on `main`, e9a6c0a). Rules: clean-room (no flam3/Electric Sheep/Apophysis code), no "sheep" wording, no Co-Authored-By lines.
 
+## Normalised units (2026-10-10, committed with the next commit)
+All continuous flame params are stored 0..1 / -1..1 (angles rad) via `FlameUnits`; old flame presets/Garden/imports are broken by design. `FlameUnitsTest` guards new params. Code works in real units at the boundaries (see docs/developer/flame_source.md).
+
 ## Step 4 follow-ups (2026-10-10, uncommitted, tests pass, unseen in app)
 Done: Keep saves the nearer morph end (`FlameSource.nearerEndValues`, swap-and-restore in `Garden.keep`); Pool/Breed weighting (`GenomePool.pick`: newest 2x, starred 3x, `Garden.favoritePaths`); camera morph (Zoom/CenterX/CenterY are morph params, every target carries framing, `mutate` skips them; old saves keep them pinned until re-added); ZOOM knob now drives new pinned `Magnify` (engine zoom = Zoom x Magnify). Evolve macro done: curated knobs are now ZOOM (Magnify), SPIN, WARP, EVOLVE (Mutation); BREATHE dropped (user decision). Camera lerp is linear (not log) in Zoom.
 ## START HERE (2026-10-10, later): density-estimation blur IMPLEMENTED (`Smooth` param), uncommitted, NOT yet seen in the app

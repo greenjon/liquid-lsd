@@ -105,9 +105,10 @@ object FlameImporter {
         val out = HashMap<String, Float>()
         fun put(key: String, v: Float, what: String = key) {
             val p = params[key] ?: return
-            val c = if (p.isAngle) wrap(v) else v.coerceIn(p.minClamp, p.maxClamp)
+            // v is in real units; the preset stores the normalised value (FlameUnits)
+            val c = if (p.isAngle) wrap(v) else v.coerceIn(FlameUnits.realMin(key, p.minClamp), FlameUnits.realMax(key, p.maxClamp))
             if (!p.isAngle && abs(c - v) > 1e-4f) notes += "$what $v out of range, clamped to $c"
-            out[key] = c
+            out[key] = FlameUnits.stored(key, c)
         }
 
         val xforms = children(flame, "xform")

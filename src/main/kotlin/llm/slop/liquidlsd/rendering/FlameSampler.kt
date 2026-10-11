@@ -77,6 +77,15 @@ object FlameSampler {
         from: (String) -> Float,
         strength: Float,
         random: Random
+    ): Map<String, Float> =
+        mutateReal(params, { FlameUnits.real(it, from(it)) }, strength, random).mapValues { FlameUnits.stored(it.key, it.value) }
+
+    /** [mutate] in the real units of [FlameUnits]: [from] and the result are not normalised. */
+    private fun mutateReal(
+        params: Map<String, ModulatableParameter>,
+        from: (String) -> Float,
+        strength: Float,
+        random: Random
     ): Map<String, Float> {
         val s = strength.coerceIn(0f, 1f)
         val out = HashMap<String, Float>()
@@ -86,9 +95,10 @@ object FlameSampler {
             if (!p.randomizeBase || p.steps != null) continue
             if (name.startsWith("XF") || " Post" in name || name in FlameGenome.MORPH_CAMERA) continue   // the camera is framed per candidate, not jittered
             // jitter scales with the range, capped so the wide ranges that admit imported flames do not make drift wild
-            val range = minOf(p.maxClamp - p.minClamp, JITTER_RANGE_CAP)
+            val lo = FlameUnits.realMin(name, p.minClamp); val hi = FlameUnits.realMax(name, p.maxClamp)
+            val range = minOf(hi - lo, JITTER_RANGE_CAP)
             var v = from(name) + gaussian(random) * s * 0.2f * range
-            v = if (p.isAngle) wrapAngle(v) else v.coerceIn(p.minClamp, p.maxClamp)
+            v = if (p.isAngle) wrapAngle(v) else v.coerceIn(lo, hi)
             if (name.contains(" PreScale")) {   // keep contractive, but never shrink an already larger (imported) scale
                 val limit = maxOf(MAX_PRE_SCALE, abs(from(name)))
                 v = v.coerceIn(-limit, limit)
@@ -135,7 +145,7 @@ object FlameSampler {
     ): Map<String, Float> {
         val prefixes = Array(FlameGenome.MAX_XF) { "X${it + 1} " }
         val names = Array(FlameGenome.MAX_XF) { x -> params.filter { (n, p) -> p.randomizeBase && n.startsWith(prefixes[x]) }.keys.toList() }
-        fun active(f: (String) -> Float, x: Int) = f(FlameGenome.weightKey(x)) > 0.05f
+        fun active(f: (String) -> Float, x: Int) = FlameUnits.real(FlameGenome.weightKey(x), f(FlameGenome.weightKey(x))) > 0.05f
         val fromB = BooleanArray(FlameGenome.MAX_XF) { random.nextBoolean() }
         fun childActive() = (0 until FlameGenome.MAX_XF).count { active(if (fromB[it]) b else a, it) }
         // too few active xforms: switch slots to whichever parent is active there until two are
@@ -169,7 +179,7 @@ object FlameSampler {
         fun range(lo: Float, hi: Float) = lo + (hi - lo) * r.nextFloat()
         fun set(name: String, v: Float) {
             val p = params[name] ?: return
-            out[name] = if (p.isAngle) wrapAngle(v) else v.coerceIn(p.minClamp, p.maxClamp)
+            out[name] = if (p.isAngle) wrapAngle(v) else FlameUnits.stored(name, v.coerceIn(FlameUnits.realMin(name, p.minClamp), FlameUnits.realMax(name, p.maxClamp)))
         }
 
         var pick = r.nextFloat() * COUNT_ODDS.sum()

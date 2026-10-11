@@ -81,10 +81,10 @@ class FlameSamplerTest {
         repeat(300) { seed ->
             val out = FlameSampler.random(params, Random(seed))
             for (x in 0 until FlameGenome.MAX_XF) {
-                if ((out[FlameGenome.weightKey(x)] ?: 0f) <= 0.05f) continue
-                val used = (0 until FlameGenome.SLOTS).filter { (out[FlameGenome.slotWeightKey(x, it)] ?: 0f) > 0f }
+                if (FlameUnits.real(FlameGenome.weightKey(x), out[FlameGenome.weightKey(x)] ?: 0f) <= 0.05f) continue
+                val used = (0 until FlameGenome.SLOTS).filter { FlameUnits.real(FlameGenome.slotWeightKey(x, it), out[FlameGenome.slotWeightKey(x, it)] ?: 0f) > 0f }
                 assertTrue(used.isNotEmpty() && used == (0 until used.size).toList(), "slots fill from the front")
-                assertEquals(1f, used.sumOf { (out[FlameGenome.slotWeightKey(x, it)] ?: 0f).toDouble() }.toFloat(), 1e-4f)
+                assertEquals(1f, used.sumOf { FlameUnits.real(FlameGenome.slotWeightKey(x, it), out[FlameGenome.slotWeightKey(x, it)] ?: 0f).toDouble() }.toFloat(), 1e-4f)
                 val ids = used.map { out[FlameGenome.slotIdKey(x, it)]!!.toInt() }
                 assertEquals(ids.size, ids.toSet().size)
                 ids.forEach { assertTrue(it in 0 until FlameVariations.count()) }

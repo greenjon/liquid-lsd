@@ -102,7 +102,7 @@ internal class FlameEngine {
 
     fun render(src: FlameSource, target: FBO, genome: FloatArray, numXf: Int) {
         val p = src.parameters
-        fun v(name: String, def: Float) = p[name]?.value ?: def
+        fun v(name: String, def: Float) = p[name]?.let { FlameUnits.real(name, it.value) } ?: def
 
         if (density == null || density!!.width != target.width || density!!.height != target.height) {
             density?.dispose()
