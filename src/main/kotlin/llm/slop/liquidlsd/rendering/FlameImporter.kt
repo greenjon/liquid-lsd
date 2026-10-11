@@ -60,6 +60,15 @@ object FlameImporter {
         ALIASES.filterValues { it == FlameVariations.NAMES[id] }.keys.toList() + FlameVariations.NAMES[id].lowercase()
     }
 
+    /** Our variation id for the attribute name [file] (case-insensitive), or null when we have none; see [isReserved]. */
+    internal fun variationIdForFileName(file: String): Int? = ID_BY_FILE_NAME[file.lowercase()]
+    /** The attribute name flame files use for variation [id] (the file-side alias where there is one). */
+    internal fun fileNameFor(id: Int): String = PREFIXES_BY_ID[id].first()
+    /** True for a variation we know the name of but have no shader case for yet. */
+    internal fun isReserved(file: String): Boolean = file.lowercase() in RESERVED
+    /** True for xform attributes that are not variations or their parameters. */
+    internal fun isMeta(attr: String): Boolean = attr.lowercase() in META || META_SUFFIX.containsMatchIn(attr)
+
     /** Attributes of an xform that are not variations (and the editor-metadata suffixes of the files we saw). */
     private val META = setOf(
         "weight", "color", "symmetry", "coefs", "post", "opacity", "name", "chaos", "plotmode", "animate", "color_speed",

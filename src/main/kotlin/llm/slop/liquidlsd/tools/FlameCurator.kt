@@ -137,6 +137,17 @@ object FlameCurator {
         val archive = HashMap<Int, MutableList<Elite>>()
         val counts = LinkedHashMap<String, Int>()
         fun count(k: String) { counts[k] = (counts[k] ?: 0) + 1 }
+        // per variation: proposals that used it, and how many of those survived every filter (written as variation-survival.csv)
+        val tried = IntArray(FlameVariations.count()); val survived = IntArray(FlameVariations.count())
+        fun used(values: Map<String, Float>): Set<Int> = buildSet {
+            for (x in 0 until FlameGenome.MAX_XF) {
+                if (FlameUnits.real(FlameGenome.weightKey(x), values[FlameGenome.weightKey(x)] ?: defaults[FlameGenome.weightKey(x)]!!) <= 0.05f) continue
+                for (j in 0 until FlameGenome.SLOTS) {
+                    val id = (values[FlameGenome.slotIdKey(x, j)] ?: defaults[FlameGenome.slotIdKey(x, j)]!!).toInt()
+                    if (FlameUnits.real(FlameGenome.slotWeightKey(x, j), values[FlameGenome.slotWeightKey(x, j)] ?: defaults[FlameGenome.slotWeightKey(x, j)]!!) > 0.05f) add(id)
+                }
+            }
+        }
         val started = System.nanoTime()
         var named = 0
         var lastReport = started
@@ -172,6 +183,8 @@ object FlameCurator {
                 if (rnd.nextFloat() < 0.3f) extras = mapOf("Palette" to ((extras["Palette"] ?: 0f) + 0.2f * (rnd.nextFloat() - 0.5f) + 1f) % 1f)
             }
 
+            val ids = used(values)
+            for (id in ids) tried.getOrNull(id)?.let { tried[id]++ }
             // 2. numbers only
             val via = FlameViability.check { values[it] ?: defaults[it] ?: 0f }
             if (!via.ok) { count("viability"); continue }
@@ -207,8 +220,12 @@ object FlameCurator {
             }
             list += Elite("curated-%04d".format(++named), framed, extras, score, m, img, cell)
             count("accepted")
+            for (id in ids) survived.getOrNull(id)?.let { survived[id]++ }
         }
         report(cfg.candidates, archive, counts, started)
+        cfg.out.mkdirs()
+        File(cfg.out, "variation-survival.csv").writeText("variation,tried,accepted\n" + (0 until FlameVariations.count()).filter { tried[it] > 0 }
+            .joinToString("\n") { "${FlameImporter.fileNameFor(it)},${tried[it]},${survived[it]}" } + "\n")
         write(cfg, archive.values.flatten().sortedByDescending { it.score }, params)
         probe.dispose(); fbo.dispose(); src.dispose()
     }
