@@ -222,6 +222,6 @@ class FlameSource(
         /** Candidates tried per request before falling back; each costs well under a millisecond on the GPU. */
         private const val MAX_TRIES = 8
         private val CAMERA = listOf("Zoom", "CenterX", "CenterY")
-        private val TONE_UNIFORMS = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay")
+        private val TONE_UNIFORMS = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay", "Smooth")
     }
 }

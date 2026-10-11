@@ -107,6 +107,10 @@ internal class FlameEngine {
         if (density == null || density!!.width != target.width || density!!.height != target.height) {
             density?.dispose()
             density = FBO(target.width, target.height, if (density32) GL_RGBA32F else GL_RGBA16F)
+            // mip chain for the density-estimation blur (only generated while Smooth > 0)
+            glBindTexture(GL_TEXTURE_2D, density!!.texture)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+            glBindTexture(GL_TEXTURE_2D, 0)
         }
         val dens = density!!
 
@@ -194,10 +198,15 @@ internal class FlameEngine {
         src.shader.bind()
         glActiveTexture(GL_TEXTURE0)
         glBindTexture(GL_TEXTURE_2D, dens.texture)
+        val smooth = v("Smooth", 0f)
+        if (smooth > 0.001f) glGenerateMipmap(GL_TEXTURE_2D)
         src.shader.setUniform("uDensity", 0)
         // fewer points (the quality tier or the governor) mean proportionally fewer hits: keep the brightness. The toe
         // is applied before exposure in the shader, so lone hits stay removed.
-        src.shader.setUniform("uExposure", v("Exposure", 2f) * n / rows.toFloat() * tier.passExposure * (3f / lastSoftness) * (3f / lastSoftness))
+        val norm = n / rows.toFloat() * tier.passExposure * (3f / lastSoftness) * (3f / lastSoftness)
+        src.shader.setUniform("uExposure", v("Exposure", 2f) * norm)
+        // the blur judges sparsity on the same normalised scale, so quality tier, governor and Softness do not shift it
+        src.shader.setUniform("uNorm", norm)
         Geometry.drawFullscreenQuad()
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)

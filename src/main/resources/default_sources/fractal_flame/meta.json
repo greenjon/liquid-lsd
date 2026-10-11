@@ -12,6 +12,7 @@
     { "name": "Gamma", "default": 2.2, "min": 1.0, "max": 4.0 },
     { "name": "Vibrancy", "default": 0.7, "min": 0.0, "max": 1.0 },
     { "name": "Toe", "default": 0.7, "min": 0.0, "max": 5.0 },
-    { "name": "Decay", "default": 0.0, "min": 0.0, "max": 0.98 }
+    { "name": "Decay", "default": 0.0, "min": 0.0, "max": 0.98 },
+    { "name": "Smooth", "default": 0.0, "min": 0.0, "max": 1.0 }
   ]
 }

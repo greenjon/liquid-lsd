@@ -104,6 +104,8 @@ object FlameGenome {
         m["Sharpness"] = param(3f, 0.5f, 8f)
         // sprite size in pixels; bigger smooths sparse flames (exposure is normalised, so brightness holds)
         m["Softness"] = param(3f, 1f, 10f)
+        // density-estimation blur strength: blurs sparse regions towards coarser mip levels, dense ones stay sharp (0 = off)
+        m["Smooth"] = param(0f, 0f, 1f)
         m["Palette"] = param(0f, 0f, 1f)
         // Points and Passes are a per-machine setting (FlameQualityTier), not parameters
         // Performance handles that move every xform at once
@@ -148,7 +150,7 @@ object FlameGenome {
     // ---- editor layout (names only; see StructuredEditor.kt) ------------------------------------------------------
 
     private val CAMERA = listOf("Zoom", "Rotation", "CenterX", "CenterY", "FlipY")
-    private val TONE = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay", "Sharpness", "Softness", "Palette")
+    private val TONE = listOf("Exposure", "Brightness", "Gamma", "Vibrancy", "Toe", "Decay", "Sharpness", "Softness", "Smooth", "Palette")
     private val MODS = listOf("Spin", "Breathe", "Warp", "Drift", "Mutation")
 
     /** Xforms shown without being asked: the first [ALWAYS_SHOWN], plus any with weight > 0. */

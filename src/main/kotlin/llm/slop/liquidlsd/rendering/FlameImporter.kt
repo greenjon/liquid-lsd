@@ -29,6 +29,7 @@ object FlameImporter {
     class Options(val transposed: Boolean = false, val flipRotation: Boolean = false)
 
     const val IMPORT_DECAY = 0.85f
+    const val IMPORT_SMOOTH = 0.5f
     /** Deck height the original's smoothing filter is scaled to when picking a sprite size. */
     const val IMPORT_DECK_HEIGHT = 1080f
 
@@ -154,6 +155,8 @@ object FlameImporter {
         put("Decay", IMPORT_DECAY)
         // the toe drops pixels below an absolute density; the originals have none, and sparse flames sit under it
         put("Toe", 0f)
+        // sparse imports also get the density-estimation blur (sparse regions blur, dense ones stay sharp)
+        put("Smooth", IMPORT_SMOOTH)
         // the original smooths with a filter of `filter` pixels at its own size; at deck height that is a sprite about twice the radius wide
         val filterRadius = flame.num("filter", 0.75f)
         if (size != null) put("Softness", (2f * filterRadius * IMPORT_DECK_HEIGHT / size[1]).coerceIn(3f, 10f), "sprite softness")
