@@ -775,6 +775,14 @@ val captureResponsiveApp = tasks.register<JavaExec>("captureResponsiveApp") {
     )
 }
 
+val curateFlames = tasks.register<JavaExec>("curateFlames") {
+    group = "tools"
+    description = "Searches for interesting Fractal Flame genomes offline (needs a GL context). Pass options with -Pargs=\"--candidates 20000 --out build/curated-flames\"."
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("llm.slop.liquidlsd.tools.FlameCurator")
+    args = (project.findProperty("args") as String? ?: "").split(" ").filter { it.isNotBlank() }
+}
+
 val captureUiLab = tasks.register<JavaExec>("captureUiLab") {
     group = "verification"
     description = "Captures isolated UI Lab component gallery screenshot."
