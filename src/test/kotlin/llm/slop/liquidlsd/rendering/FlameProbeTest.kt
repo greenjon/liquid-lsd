@@ -169,6 +169,24 @@ class FlameProbeTest {
         source.dispose()
     }
 
+    @Test fun seedsAreBredButNeverPlayedAsTheyAre() = withGl {
+        val source = flameSource()
+        val seed = member("seed", 1, 0.8f).let { PoolMember(it.name, listOf("garden", llm.slop.liquidlsd.presets.Garden.SEED_TAG), it.values) }
+        val keeper = member("keeper", 2, 1.3f)
+        source.poolProvider = { listOf(seed, keeper) }
+        val controller = DeckMorphController({ source }) { source.parameters.values.toList() }
+        controller.strategy = SamplerStrategy.POOL
+        repeat(20) { controller.forceRandomize(Random(it)); assertEquals(listOf("keeper"), source.currentLineage().parents) }
+        // only seeds in the pool: Pool has nothing to play and falls back to Random, Breed still has parents
+        source.poolProvider = { listOf(seed) }
+        controller.forceRandomize(Random(3))
+        assertTrue(source.currentLineage().parents.isEmpty())
+        controller.strategy = SamplerStrategy.BREED
+        controller.forceRandomize(Random(3))
+        assertEquals(listOf("seed"), source.currentLineage().parents)
+        source.dispose()
+    }
+
     @Test fun emptyPoolFallsBackToRandomAndDefaultStrategyIsMutate() = withGl {
         val source = flameSource()
         source.poolProvider = { emptyList() }

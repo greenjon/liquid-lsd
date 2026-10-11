@@ -94,9 +94,11 @@ class FlameSource(
         fun fromValue(name: String) = parameters[name]?.let { from.parameters[it]?.baseValue ?: it.baseValue } ?: 0f
         val mutation = parameters["Mutation"]?.value ?: 0.25f
         val pool = if (strategy == SamplerStrategy.POOL || strategy == SamplerStrategy.BREED) poolProvider() else emptyList()
+        // seeds are breeding stock: Breed draws them, Pool never plays them as they are
+        val playable = pool.filter { llm.slop.liquidlsd.presets.Garden.SEED_TAG !in it.tags }
         val favorites = if (pool.size > 1) favoritesProvider() else emptySet()
         val effective = when {
-            pool.isEmpty() && (strategy == SamplerStrategy.POOL || strategy == SamplerStrategy.BREED) ->
+            (if (strategy == SamplerStrategy.POOL) playable else pool).isEmpty() && (strategy == SamplerStrategy.POOL || strategy == SamplerStrategy.BREED) ->
                 if (fresh) SamplerStrategy.RANDOM else SamplerStrategy.MUTATE
             else -> strategy
         }
@@ -104,7 +106,7 @@ class FlameSource(
 
         // a kept offspring is used as it is: its own camera, no gate
         if (effective == SamplerStrategy.POOL) {
-            val m = GenomePool.pick(pool, favorites, random)
+            val m = GenomePool.pick(playable, favorites, random)
             applyToTarget(target, genomeValues(member(m)))
             target.origin = FlameLineage(listOf(m.name), listOf(m.tags)).also { if (fresh) liveOrigin = it }
             if (fresh) for (name in FlameGenome.MORPH_CAMERA) parameters[name]?.set(member(m)(name))

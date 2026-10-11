@@ -24,7 +24,8 @@ import kotlin.math.ln
  *
  * Run from the repo root (it needs a GL 3.3 context):
  *   ./gradlew curateFlames -Pargs="--candidates 20000 --out build/curated-flames"
- *   ./gradlew curateFlames -Pargs="--prune build/curated-flames rejected.txt"
+ *   ./gradlew curateFlames -Pargs="--apply build/curated-flames decisions.txt"       (deletes rejects, tags seeds)
+ *   ./gradlew curateFlames -Pargs="--seed-dir build/curated-flames --out build/curated-2"   (next round from your picks)
  */
 object FlameCurator {
     private const val W = 512
@@ -37,13 +38,18 @@ object FlameCurator {
 
     private class Config(
         var candidates: Int = 20000, var out: File = File("build/curated-flames"), var seed: Long = 1L,
-        var perCell: Int = 2, var minScore: Float = 0.35f, var minutes: Float = 0f
+        var perCell: Int = 2, var minScore: Float = 0.35f, var minutes: Float = 0f, var seedDir: File? = null
     )
 
     private class Elite(val name: String, val values: Map<String, Float>, val extras: Map<String, Float>, val score: Float, val metrics: FlameAesthetics.Metrics, val image: BufferedImage, val cell: Int)
 
+    /** A flame loaded from [Config.seedDir]: only ever a parent, never rewritten. */
+    private class Seed(val values: Map<String, Float>, val extras: Map<String, Float>)
+
     @JvmStatic fun main(args: Array<String>) {
         if (args.firstOrNull() == "--prune") { prune(File(args[1]), File(args[2])); return }
+        if (args.firstOrNull() == "--sheet") { rewriteSheet(File(args[1])); return }
+        if (args.firstOrNull() == "--apply") { apply(File(args[1]), File(args[2])); return }
         val cfg = Config()
         var i = 0
         while (i < args.size) {
@@ -54,6 +60,7 @@ object FlameCurator {
                 "--per-cell" -> cfg.perCell = args[++i].toInt()
                 "--min-score" -> cfg.minScore = args[++i].toFloat()
                 "--minutes" -> cfg.minutes = args[++i].toFloat()
+                "--seed-dir" -> cfg.seedDir = File(args[++i])
                 else -> error("unknown argument ${args[i]}")
             }
             i++
@@ -115,6 +122,18 @@ object FlameCurator {
             return up to img
         }
 
+        // the user's picks from an earlier sheet: parents for most proposals, so the search follows their taste
+        val seeds = cfg.seedDir?.let { dir ->
+            require(dir.absoluteFile != cfg.out.absoluteFile) { "--seed-dir must differ from --out" }
+            dir.listFiles { f -> f.extension == "lsd" }.orEmpty().sortedBy { it.name }.mapNotNull { f ->
+                runCatching {
+                    val dto = PresetManager.json.decodeFromString<DeckPresetDto>(f.readText())
+                    Seed(genomeNames.associateWith { dto.parameters[it]?.baseValue ?: defaults[it]!! }, mapOf("Palette" to (dto.parameters["Palette"]?.baseValue ?: 0f)))
+                }.getOrNull()
+            }
+        }.orEmpty()
+        if (cfg.seedDir != null) println("Seeded from ${seeds.size} presets in ${cfg.seedDir}")
+
         val archive = HashMap<Int, MutableList<Elite>>()
         val counts = LinkedHashMap<String, Int>()
         fun count(k: String) { counts[k] = (counts[k] ?: 0) + 1 }
@@ -129,21 +148,26 @@ object FlameCurator {
 
             // 1. propose: fresh random, or mutate / breed elites already in the archive
             val parents = archive.values.flatten()
+            // with seeds, most parents are seeds (the second parent of a breed may come from either pool)
+            fun pickParent(preferSeed: Boolean): Pair<Map<String, Float>, Map<String, Float>> =
+                if (seeds.isNotEmpty() && (preferSeed && rnd.nextFloat() < 0.7f || parents.isEmpty())) seeds[rnd.nextInt(seeds.size)].let { it.values to it.extras }
+                else parents[rnd.nextInt(parents.size)].let { it.values to it.extras }
             val values: Map<String, Float>
             var extras: Map<String, Float>
-            if (parents.size < 30 || rnd.nextFloat() < 0.25f) {
+            val fresh = if (seeds.isEmpty()) 0.25f else 0.08f
+            if (seeds.isEmpty() && parents.size < 30 || rnd.nextFloat() < fresh) {
                 values = defaults + FlameSampler.random(params, rnd)
                 extras = mapOf("Palette" to rnd.nextFloat())
             } else {
-                val a = parents[rnd.nextInt(parents.size)]
+                val (av, ae) = pickParent(true)
                 val strength = 0.1f + 0.5f * rnd.nextFloat()
                 if (rnd.nextBoolean()) {
-                    values = a.values + FlameSampler.mutate(params, { a.values[it] ?: defaults[it]!! }, strength, rnd)
-                    extras = a.extras
+                    values = av + FlameSampler.mutate(params, { av[it] ?: defaults[it]!! }, strength, rnd)
+                    extras = ae
                 } else {
-                    val b = parents[rnd.nextInt(parents.size)]
-                    values = defaults + FlameSampler.breed(params, { a.values[it] ?: defaults[it]!! }, { b.values[it] ?: defaults[it]!! }, strength, rnd)
-                    extras = if (rnd.nextBoolean()) a.extras else b.extras
+                    val (bv, be) = pickParent(false)
+                    values = defaults + FlameSampler.breed(params, { av[it] ?: defaults[it]!! }, { bv[it] ?: defaults[it]!! }, strength, rnd)
+                    extras = if (rnd.nextBoolean()) ae else be
                 }
                 if (rnd.nextFloat() < 0.3f) extras = mapOf("Palette" to ((extras["Palette"] ?: 0f) + 0.2f * (rnd.nextFloat() - 0.5f) + 1f) % 1f)
             }
@@ -214,7 +238,6 @@ object FlameCurator {
 
     private fun write(cfg: Config, elites: List<Elite>, params: Map<String, llm.slop.liquidlsd.parameters.ModulatableParameter>) {
         cfg.out.mkdirs()
-        val sb = StringBuilder(SHEET_HEAD)
         val csv = StringBuilder("name,score,cell,coverage,entropy,edgeFine,edgeCoarse,colourSpread,dominantHue,symmetry,flat,meanLuma\n")
         for (e in elites) {
             for ((n, p) in params) p.baseValue = p.defaultValue
@@ -228,38 +251,72 @@ object FlameCurator {
             )
             File(cfg.out, e.name + ".lsd").writeText(PresetManager.json.encodeToString(dto))
             ImageIO.write(thumbnail(e.image), "png", File(cfg.out, e.name + ".png"))
-            sb.append("<figure data-name=\"${e.name}\"><img src=\"${e.name}.png\" loading=\"lazy\"><figcaption>${e.name} ${"%.2f".format(e.score)}</figcaption></figure>\n")
             val m = e.metrics
             csv.append("%s,%.3f,%d,%.3f,%.3f,%.4f,%.4f,%.3f,%d,%.3f,%.3f,%.3f\n".format(e.name, e.score, e.cell, m.coverage, m.entropy, m.edgeFine, m.edgeCoarse, m.colourSpread, m.dominantHue, m.symmetry, m.flat, m.meanLuma))
         }
-        sb.append(SHEET_TAIL)
-        File(cfg.out, "sheet.html").writeText(sb.toString())
+        File(cfg.out, "sheet.html").writeText(sheetHtml(elites.map { it.name to it.score }))
         File(cfg.out, "metrics.csv").writeText(csv.toString())
-        println("Wrote ${elites.size} flames to ${cfg.out}. Open sheet.html, click the ones to REJECT, press Download, then:")
-        println("  ./gradlew curateFlames -Pargs=\"--prune ${cfg.out} <downloaded rejected.txt>\"")
+        println("Wrote ${elites.size} flames to ${cfg.out}. Open sheet.html: click a flame to cycle keeper > seed (breeding stock) > reject, press Download, then:")
+        println("  ./gradlew curateFlames -Pargs=\"--apply ${cfg.out} <downloaded decisions.txt>\"")
     }
 
-    /** Deletes the presets and thumbnails named (one per line) in [rejected] from [dir]. */
-    private fun prune(dir: File, rejected: File) {
+    private fun sheetHtml(items: List<Pair<String, Float>>): String {
+        val sb = StringBuilder(SHEET_HEAD)
+        for ((name, score) in items) sb.append("<figure data-name=\"$name\"><img src=\"$name.png\" loading=\"lazy\"><figcaption>$name ${"%.2f".format(score)}</figcaption></figure>\n")
+        return sb.append(SHEET_TAIL).toString()
+    }
+
+    /** Rebuilds `sheet.html` in [dir] from its `metrics.csv` (for a sheet written by an older curator); flames whose files are gone are left out. */
+    private fun rewriteSheet(dir: File) {
+        val items = File(dir, "metrics.csv").readLines().drop(1).map { it.split(",") }
+            .filter { File(dir, it[0] + ".png").isFile }.map { it[0] to it[1].toFloat() }
+        File(dir, "sheet.html").writeText(sheetHtml(items))
+        println("Rewrote sheet.html with ${items.size} flames.")
+    }
+
+    /** Decisions file lines: `name reject` (delete) and `name seed` (tag as breeding stock); a bare `name` is a reject, the format of the older rejected.txt. */
+    private fun decisions(file: File): List<Pair<String, String>> =
+        file.readLines().map { it.trim().split(Regex("\\s+")) }
+            .filter { it.isNotEmpty() && Regex("curated-\\d+").matches(it[0]) }
+            .map { it[0] to (it.getOrNull(1) ?: "reject") }
+
+    /** Deletes the presets and thumbnails of the rejected flames named in [decisionsFile]. */
+    private fun prune(dir: File, decisionsFile: File) {
         var n = 0
-        for (name in rejected.readLines().map { it.trim() }.filter { Regex("curated-\\d+").matches(it) }) {
+        for ((name, what) in decisions(decisionsFile)) if (what == "reject")
             for (ext in listOf("lsd", "png")) if (File(dir, "$name.$ext").delete()) n++
-        }
         println("Removed $n files.")
+    }
+
+    /** [prune], then tags the seeds with `seed` so the Pool strategy never plays them (Breed still draws them). */
+    private fun apply(dir: File, decisionsFile: File) {
+        prune(dir, decisionsFile)
+        var tagged = 0
+        for ((name, what) in decisions(decisionsFile)) if (what == "seed") {
+            val f = File(dir, "$name.lsd")
+            if (!f.isFile) continue
+            val dto = PresetManager.json.decodeFromString<DeckPresetDto>(f.readText())
+            if (llm.slop.liquidlsd.presets.Garden.SEED_TAG in dto.tags) continue
+            f.writeText(PresetManager.json.encodeToString(dto.copy(tags = dto.tags + llm.slop.liquidlsd.presets.Garden.SEED_TAG)))
+            tagged++
+        }
+        println("Tagged $tagged seeds.")
     }
 
     private const val SHEET_HEAD = """<!doctype html><meta charset="utf-8"><title>Flame contact sheet</title>
 <style>body{background:#111;color:#ccc;font:12px sans-serif;margin:0}#bar{position:sticky;top:0;background:#222;padding:8px;z-index:2}
 main{display:flex;flex-wrap:wrap;gap:6px;padding:8px}figure{margin:0;width:256px;cursor:pointer;border:3px solid transparent}
-figure.rej{border-color:#d33;opacity:.35}img{display:block;width:256px;height:144px}figcaption{padding:2px}</style>
-<div id="bar"><b id="n"></b> rejected &nbsp; <button onclick="dl()">Download rejected.txt</button> &nbsp; click a flame to toggle reject (kept in this browser)</div><main>
+figure.rej{border-color:#d33;opacity:.35}figure.seed{border-color:#39f}img{display:block;width:256px;height:144px}figcaption{padding:2px}</style>
+<div id="bar"><b id="n"></b> &nbsp; <button onclick="dl()">Download decisions.txt</button> &nbsp; click a flame: keeper (none) &rarr; <span style="color:#39f">seed</span> (breeding stock) &rarr; <span style="color:#d33">reject</span> (kept in this browser)</div><main>
 """
     private const val SHEET_TAIL = """</main><script>
-const key='flameRejects:'+location.pathname;let rej=new Set(JSON.parse(localStorage.getItem(key)||'[]'));
+const key='flameDecisions:'+location.pathname;let dec=JSON.parse(localStorage.getItem(key)||'{}');
+if(!Object.keys(dec).length){for(const n of JSON.parse(localStorage.getItem('flameRejects:'+location.pathname)||'[]'))dec[n]='reject'}   // marks from the reject-only sheet
 const figs=[...document.querySelectorAll('figure')];
-function upd(){figs.forEach(f=>f.classList.toggle('rej',rej.has(f.dataset.name)));document.getElementById('n').textContent=rej.size+' / '+figs.length;localStorage.setItem(key,JSON.stringify([...rej]))}
-figs.forEach(f=>f.onclick=()=>{rej.has(f.dataset.name)?rej.delete(f.dataset.name):rej.add(f.dataset.name);upd()});
-function dl(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([[...rej].join('\n')+'\n']));a.download='rejected.txt';a.click()}
+function upd(){figs.forEach(f=>{const d=dec[f.dataset.name];f.classList.toggle('seed',d==='seed');f.classList.toggle('rej',d==='reject')});
+const c=v=>Object.values(dec).filter(x=>x===v).length;document.getElementById('n').textContent=c('seed')+' seeds, '+c('reject')+' rejected / '+figs.length;localStorage.setItem(key,JSON.stringify(dec))}
+figs.forEach(f=>f.onclick=()=>{const n=f.dataset.name,d=dec[n];if(!d)dec[n]='seed';else if(d==='seed')dec[n]='reject';else delete dec[n];upd()});
+function dl(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([Object.entries(dec).map(e=>e[0]+' '+e[1]).join('\n')+'\n']));a.download='decisions.txt';a.click()}
 upd()</script>
 """
 }

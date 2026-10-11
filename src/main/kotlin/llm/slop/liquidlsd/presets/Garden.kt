@@ -17,6 +17,8 @@ object Garden {
     private val logger = KotlinLogging.logger {}
     const val FOLDER = "library/presets/garden"
     const val TAG = "garden"
+    /** Breeding stock only: structure worth inheriting, not worth playing. Pool skips these; Breed draws them. */
+    const val SEED_TAG = "seed"
     private const val GEN_PREFIX = "gen:"
     private const val PARENT_PREFIX = "parent:"
 
