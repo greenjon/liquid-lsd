@@ -1,0 +1,54 @@
+# Flame variations by black box + curated library: handoff (read this first in a fresh session)
+
+Branch `feature/flame-curator` (8 commits ahead of `main`, local only, not pushed or merged). Rules: clean-room (see
+`docs/developer/clean_room_provenance.md`, the ledger and protocol), no "sheep" wording, **no Co-Authored-By lines**.
+Memory: `project_flame_curator.md`. Related: `.planning/flame-source-handoff.md`, `.planning/flame-source-plan.md`.
+
+## What exists
+
+- **Curator** (`tools/FlameCurator.kt`, `FlameViability`, `FlameAesthetics`): `./gradlew curateFlames -Pargs="--candidates N --minutes M --out DIR"`;
+  `--apply DIR decisions.txt`, `--seed-dir`, `--sheet DIR`. Seeds carry tag `seed` (Pool skips, Breed uses). Output sheet = `sheet.html`
+  (click: keeper > seed > reject). **The user has not reviewed the 442-flame run in `build/curated-flames` yet** (re-run after new variations is cheaper
+  than reviewing twice; ask).
+- **flameStats** (`tools/FlameStats.kt`): variation usage across folders. Data cloned to `~/flame-data/` (electric_sheep_genomes 9.3k distinct,
+  FRACTALLOOT 1.4k JWildfire; JWildfire repo only 34). Results in `build/flame-stats/{stats.md,variations.csv}`. The curator writes
+  `variation-survival.csv` for the second signal (`--survival`). No third dataset found.
+- **Black-box kit** (`tools/blackbox/`, README there): `make_probes.py` (dot-cloud probe flames behind a final xform, binary-coded, groups of 63 because
+  JWildfire crashes above 100 xforms, DOT 0.0003), `extract_points.py` (calibrates axes from dots, writes `table.csv`), `run_probes.py flam3|jwildfire VARIATION`
+  (headless renderers: `flam3-render`, and `java -cp ~/Apps/j-wildfire-9.00/lib/j-wildfire.jar org.jwildfire.cli.FlameRenderer`), `sweep.py PROGRAM LIST`,
+  `selftest.py`. `./gradlew compareVariation -Pargs="name table.csv [--p a,b,c,d]"` or `--batch FILE` / `--list` runs our real shader on a table
+  (verdicts MATCH, MATCH-AS-SET, DIFFERENT, NO-DATA; DIFFERENT with a few bad points of 100+ is usually collisions, boundary or far-point noise).
+- **Done by observation** (ledger rows exist): `blob`, `ngon`, `perspective`, `fan2` corrected to flam3; `hemisphere` added as id 99 (JWildfire 9.00).
+  Ids now 100, 96 built, 4 reserved (`super_shape`, `lazysusan`, `pre_blur`, `mobius`).
+
+## Next steps (my order)
+
+1. **Translation-aware probe** (small, unblocks testing): variations that read the xform's own coefficients (`waves`, `modulus`, `rings`, `fan`, `popcorn`)
+   give NO-DATA or degenerate results because the probe's final xform has zero translation. Idea: final xform coefs `1 0 0 1 tx ty`, so the program sees
+   input p + t with c = tx, f = ty; compare against ours at x_in = p + t with the harness passing t (the harness in `FlameVariationCompare` currently
+   passes zeros for the xform coefficients).
+2. **Pre/post variation structure and `pre_blur`** (54% of JWildfire flames use it; the biggest gap). `pre_` variations act on the point before the other
+   variations of the xform, `post_` after. Needs engine design (slots or a flag) and a black-box table; check how a pre variation interacts in the probe
+   (a final xform holding only pre_X). Then `pre_curl`, `pre_crop`/`post_crop`.
+3. Remaining deterministic gaps by usage in the JWildfire set: `nblur` (random), `line`, `scry2`, `epispiral`, `glynnia`, `ecollide`, `bswirl`,
+   `sphericaln`, `julian2`, `bubble2`, `voron`, `shredlin` (see `stats.md` "Missing from our set"). `linear3d`/`blur3d`/`spherical3d` are 3D twins of ours.
+   Random variations need statistics in `extract_points.py` (a dot becomes a cloud; compare centre, spread, shape).
+4. Re-run `curateFlames` with the larger set, compare `variation-survival.csv`, then the user's review.
+
+## Gotchas learned
+
+- Background runs are killed at ~10 minutes whatever `timeout` says: run long things in 580 s slices (`timeout 580 python3 ...`); `sweep.py` skips finished tables.
+- Never `pkill -f "<text that is in your own command line>"`: it kills your own shell (exit 144). Select by `ps -eo pid,args | awk` on the exact argv.
+- Dots clouds must stay tiny (DOT 0.0003): bigger clouds biased strongly bending variations (`swirl`) by 0.1.
+- A non-injective variation collides dots (`cosine`, `hyperbolic`...): the decode then assigns a blob to the wrong input; the compare tool's set-level check covers it.
+- `run_probes.py` copies each flame to a temp dir for JWildfire (it writes the PNG next to the flame).
+- `generateDocs` regenerates tracked html under `src/main/resources/docs`; this repo commits it with the markdown change.
+- The assistant that implements may remember other programs' formulas; derive each formula from the observed table alone (ledger rule).
+
+## Open items only the owner can settle (recorded in the ledger)
+
+- Where the first AI's code description is (the committed spec `.planning/flame-variations-spec.md` is its audited form), and which program it read.
+- What the `a7cba2b` amendments of `secant2`, `twintrian`, `cross` were based on (unknown). Observation: `cross` and `secant2` match flam3's tables
+  except at collisions; `twintrian` is random and still unchecked.
+- Name the beat-tracker white paper(s) to cite (BTrack, Stark, Davies and Plumbley 2009; Ellis 2007?).
+- Trademark search for Fractal Flame / Garden / Breed; legal review of the ledger before selling.
