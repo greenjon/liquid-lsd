@@ -312,7 +312,7 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
         case 19: v = pow(r, sin(th)) * vec2(cos(th), sin(th)); break;                           // power
         case 20: v = vec2(cos(PI*p.x) * cosh(p.y), -sin(PI*p.x) * sinh(p.y)); break;           // cosine
         case 21: { float c2 = max(T.x*T.x, 1e-4); v = (mod(r + c2, 2.0*c2) - c2 + r*(1.0 - c2)) * vec2(cos(th), sin(th)); break; } // rings (c)
-        case 22: { float c2 = max(T.x*T.x, 1e-4), t = PI*c2, a = mod(th + T.y, t) > 0.5*t ? th - 0.5*t : th + 0.5*t; v = r * vec2(cos(a), sin(a)); break; } // fan (c, f)
+        case 22: { float c2 = max(T.x*T.x, 1e-4), t = PI*c2, a = (th + T.y) - t*trunc((th + T.y)/t) > 0.5*t ? th - 0.5*t : th + 0.5*t; v = r * vec2(cos(a), sin(a)); break; } // fan (c, f): observed, the remainder keeps the sign of its dividend
         case 23: v = r * (P.y + (P.x - P.y) * 0.5 * (sin(P.z*th) + 1.0)) * vec2(sin(th), cos(th)); break; // blob: high, low, waves (direction of the input; observed, see clean_room_provenance)
         case 24: v = vec2(sin(P.x*p.y) - cos(P.y*p.x), sin(P.z*p.x) - cos(P.w*p.y)); break;     // pdj
         case 25: { float p1 = PI*P.x*P.x, p2 = P.y;                                             // fan2

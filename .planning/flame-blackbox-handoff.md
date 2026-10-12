@@ -23,10 +23,7 @@ Memory: `project_flame_curator.md`. Related: `.planning/flame-source-handoff.md`
 
 ## Next steps (my order)
 
-1. **Translation-aware probe** (small, unblocks testing): variations that read the xform's own coefficients (`waves`, `modulus`, `rings`, `fan`, `popcorn`)
-   give NO-DATA or degenerate results because the probe's final xform has zero translation. Idea: final xform coefs `1 0 0 1 tx ty`, so the program sees
-   input p + t with c = tx, f = ty; compare against ours at x_in = p + t with the harness passing t (the harness in `FlameVariationCompare` currently
-   passes zeros for the xform coefficients).
+1. ~~Translation-aware probe~~ DONE 2026-10-12 (`--translate tx,ty`, compare reads `probes.json`). Result: `fan` corrected (remainder keeps the dividend's sign); `rings`, `waves` match; `modulus` matches as a set (params 0.8,0.6); `popcorn` 10 of 171 points off by up to 0.04 near the poles of tan (float vs double, not the formula). Only translation is probed, so `waves` b/e and any variation reading the affine part (a, b, d, e) remain unchecked. Not yet run with JWildfire, and uncommitted.
 2. **Pre/post variation structure and `pre_blur`** (54% of JWildfire flames use it; the biggest gap). `pre_` variations act on the point before the other
    variations of the xform, `post_` after. Needs engine design (slots or a flag) and a black-box table; check how a pre variation interacts in the probe
    (a final xform holding only pre_X). Then `pre_curl`, `pre_crop`/`post_crop`.

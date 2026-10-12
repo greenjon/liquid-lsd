@@ -59,7 +59,7 @@ class FlameVariationsTest {
             "rings" -> { val c2 = t[0] * t[0]; val k = ((r + c2) - 2 * c2 * floor((r + c2) / (2 * c2))) - c2 + r * (1 - c2); doubleArrayOf(k * cos(th), k * sin(th)) }
             "fan" -> {
                 val c2 = t[0] * t[0]; val tt = pi * c2
-                val md = (th + t[1]) - tt * floor((th + t[1]) / tt)
+                val md = (th + t[1]) - tt * (((th + t[1]) / tt)).let { if (it < 0) kotlin.math.ceil(it) else floor(it) }   // observed: the remainder keeps the sign of its dividend
                 val a = if (md > tt / 2) th - tt / 2 else th + tt / 2
                 doubleArrayOf(r * cos(a), r * sin(a))
             }
@@ -289,6 +289,7 @@ class FlameVariationsTest {
         assertV("waves", 0.0, 0.5, 0.2 * sin(0.5 / 0.25), 0.5, m = doubleArrayOf(1.0, 0.2, 0.0, 0.9), t = doubleArrayOf(0.5, 1.0))
         // rings: ((r + c^2) mod 2c^2 - c^2 + r (1 - c^2)) (cos, sin) ; c = 1 -> c^2 = 1: (r+1) mod 2 - 1 + 0
         assertV("rings", 0.0, 0.5, 0.5, 0.0, t = doubleArrayOf(1.0, 0.0))
+        assertV("fan", -1.0, -0.5, -0.0792563339, -1.1152212487, t = doubleArrayOf(0.5, 0.3))   // observed (flam3, translation 0.5, 0.3): a negative angle keeps the dividend sign in the remainder
     }
 
     @Test fun parametricVariationsAtKnownPoints() {

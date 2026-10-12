@@ -26,3 +26,12 @@ These scripts are neutral: they read no flame program and contain no variation f
 For a variation with parameters, repeat step 1 with `--param` values (the default, and a few others) into separate folders.
 For a random variation, a dot becomes a cloud: compare the cloud's centre, spread and shape across the grid instead of a
 point table (add statistics to `extract_points.py` when the first one comes up).
+
+## Variations that read the transform's own coefficients
+
+`waves`, `modulus`, `rings`, `fan` and `popcorn` use the xform's translation (c, f). Add `--translate tx,ty` to
+`make_probes.py` or `run_probes.py` (for example `0.5,0.3`): the final xform then shifts each dot by (tx, ty) before the variation
+and carries c = tx, f = ty. The table's input columns stay the dot positions; `probes.json` records the translation and
+`compareVariation` reads it from beside the table, so the shader sees input + t with the same c and f. Only translation is
+probed (the affine part stays the identity), so `waves` is checked with b = 0, e = 1 only. A variation with parameters
+that default to 0 (`modulus`) needs `--param` values as well, and the same values as `--p` for the compare.

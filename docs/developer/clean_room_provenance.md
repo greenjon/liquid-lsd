@@ -37,6 +37,7 @@ Built variations: 96 of the 100 ids (the paper's 49, 46 from the spec, and `hemi
 | Variation | Observer | Implementer | Observed with | Evidence | Status |
 |---|---|---|---|---|---|
 | `hemisphere` (id 99, the first black-box variation) | automated: `run_probes.py jwildfire` driving `org.jwildfire.cli.FlameRenderer` | the assistant, from `table.csv` only | JWildfire 9.00 | table in `build/blackbox/jwildfire/hemisphere/`, pairs in the two variation tests | done 2026-10-12: the output is the input scaled by 1/sqrt(r^2 + 1), 88 of 91 clean points within 0.02 |
+| `fan` (id 22, correction) | `run_probes.py flam3 fan --translate 0.5,0.3` | the assistant, fitting hypotheses to the observed table | flam3 3.1.1 | table in `build/blackbox/flam3t/fan/`, pair in `FlameVariationsTest` | done 2026-10-12: the wrap `(angle + f) mod (pi c^2)` is a remainder that keeps the sign of its dividend (ours floored); 189 of 189 points fit, 159 before |
 | `blob`, `ngon`, `perspective`, `fan2` (corrections to ids 23, 38, 30, 25) | `run_probes.py flam3` with flam3 3.1.1 (`flam3-render`); the sweep compared every deterministic variation | the assistant, fitting hypotheses to the observed tables | flam3 3.1.1 (Fedora package), probe kit at 100 px per unit | tables in `build/blackbox/flam3/`, pairs in `FlameVariationsTest` and `FlameShaderValuesTest` | done 2026-10-11 |
 
 What the observations changed (each fits its table at 98 to 100% of points):
@@ -45,7 +46,7 @@ What the observations changed (each fits its table at 98 to 100% of points):
 - **`perspective`:** the angle parameter is a fraction of pi/2 (the importer already passed the file value through).
 - **`fan2`:** the wrapped quantity is the angle plus `p2` modulo `p1`; observed at five parameter settings.
 
-These four came from the paper as written (ids 0-48). The sweep also showed 50 variations matching outright, 13 more matching as a set (dots decoded to the wrong input where outputs collide), and 11 flagged with only a handful of mismatches each; those are boundary points (`rectangles` at y = 0), far points where a dot's tiny size is amplified (`swirl`), and branch cuts (`log` at the negative x axis), not formula differences. `waves` and `modulus` returned no data (they depend on the transform's own coefficients) and need a probe with a known translation.
+These four came from the paper as written (ids 0-48). The sweep also showed 50 variations matching outright, 13 more matching as a set (dots decoded to the wrong input where outputs collide), and 11 flagged with only a handful of mismatches each; those are boundary points (`rectangles` at y = 0), far points where a dot's tiny size is amplified (`swirl`), and branch cuts (`log` at the negative x axis), not formula differences. `waves` and `modulus` returned no data (they depend on the transform's own coefficients); the probe now takes a known translation (`--translate`), and with it `rings`, `waves`, `modulus` (as a set) and `popcorn` match, `fan` was corrected.
 
 The assistant that implements may have seen flame-program formulas in its general training. The rule is therefore that it
 derives each formula from the observed table alone and lets the table decide; a formula that does not fit the table is

@@ -8,7 +8,7 @@ every probe point, with no formula, code or parameter dump of the other program 
 
 Which dot is which is decoded from a binary code: bit image j holds only the dots whose (index + 1) has bit j set.
 
-Usage: make_probes.py VARIATION [--param name=value ...] [--out DIR]
+Usage: make_probes.py VARIATION [--param name=value ...] [--translate tx,ty] [--out DIR]
 Needs only the standard library. Does not read or run any flame program.
 """
 import argparse, json, math, os
@@ -46,9 +46,11 @@ def dot(px, py):
     return f'   <xform weight="1" color="0" color_speed="1" coefs="{DOT} 0 0 {DOT} {e:.9f} {f:.9f}" linear="1"/>\n'
 
 
-def final_xform(var, params):
+def final_xform(var, params, translate=(0.0, 0.0)):
+    # translation only: the variation sees the dot plus (tx, ty) and, for variations that read the xform's own
+    # coefficients, c = tx and f = ty
     attrs = f'{var}="1" ' + " ".join(f'{k}="{v}"' for k, v in params.items())
-    return f'   <finalxform color="0" color_speed="0" coefs="1 0 0 1 0 0" {attrs.strip()}/>\n'
+    return f'   <finalxform color="0" color_speed="0" coefs="1 0 0 1 {translate[0]} {translate[1]}" {attrs.strip()}/>\n'
 
 
 def identity_final():
@@ -59,13 +61,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("variation")
     ap.add_argument("--param", action="append", default=[], help="name=value, the full attribute name, e.g. julian_power=3")
+    ap.add_argument("--translate", default="0,0", help="tx,ty: translation of the final xform (for variations that read the xform's own coefficients)")
     ap.add_argument("--out", default=None)
     a = ap.parse_args()
     params = dict(p.split("=", 1) for p in a.param)
     out = a.out or f"probes_{a.variation}"
     os.makedirs(out, exist_ok=True)
-    final = final_xform(a.variation, params)
-    meta = {"variation": a.variation, "params": params, "size": SIZE, "scale": SCALE, "sets": {}}
+    translate = tuple(float(v) for v in a.translate.split(","))
+    final = final_xform(a.variation, params, translate)
+    meta = {"variation": a.variation, "params": params, "translate": list(translate), "size": SIZE, "scale": SCALE, "sets": {}}
 
     def write(fname, text):
         with open(os.path.join(out, fname + ".flame"), "w") as f:

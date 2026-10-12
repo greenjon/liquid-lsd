@@ -5,7 +5,7 @@ The program is run as a user would, on the probe flames, and only its rendered i
 Programs: flam3 (flam3-render on the PATH), jwildfire (java -cp $JWILDFIRE_JAR org.jwildfire.cli.FlameRenderer;
 JWILDFIRE_JAR defaults to ~/Apps/j-wildfire-9.00/lib/j-wildfire.jar).
 
-Usage: run_probes.py PROGRAM VARIATION [--param name=value ...] [--out DIR] [--jobs N]
+Usage: run_probes.py PROGRAM VARIATION [--param name=value ...] [--translate tx,ty] [--out DIR] [--jobs N]
 """
 import argparse, os, shutil, subprocess, sys, tempfile
 from concurrent.futures import ThreadPoolExecutor
@@ -40,12 +40,15 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("program", choices=sorted(RENDERERS)); ap.add_argument("variation")
     ap.add_argument("--param", action="append", default=[])
+    ap.add_argument("--translate", default=None, help="tx,ty of the final xform, recorded in probes.json")
     ap.add_argument("--out", default=None); ap.add_argument("--jobs", type=int, default=3)
     a = ap.parse_args()
     out = a.out or f"build/blackbox/{a.program}/{a.variation}"
     cmd = [sys.executable, os.path.join(here, "make_probes.py"), a.variation, "--out", out]
     for p in a.param:
         cmd += ["--param", p]
+    if a.translate:
+        cmd += ["--translate", a.translate]
     subprocess.check_call(cmd, stdout=subprocess.DEVNULL)
     flames = sorted(f for f in os.listdir(out) if f.startswith("probe_") and f.endswith(".flame") and "fill" not in f)
     images = os.path.join(out, "images")

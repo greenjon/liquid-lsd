@@ -21,12 +21,17 @@ import kotlin.math.hypot
  *   ./gradlew compareVariation -Pargs="secant2 build/blackbox/secant2/table.csv [--p 1,0,0,0] [--w 1]"
  */
 object FlameVariationCompare {
-    private const val HARNESS_HEAD = "#version 330 core\nout vec4 o;\nuniform vec4 uIn;   // x, y, weight, id\nuniform vec4 uP;\n"
-    private const val HARNESS_MAIN = "\nvoid main() { gRng = 1u; o = vec4(vari(int(uIn.w + 0.5), uIn.xy, uIn.z, uP, vec4(0.0), vec2(0.0)), 0.0, 1.0); }\n"
+    private const val HARNESS_HEAD = "#version 330 core\nout vec4 o;\nuniform vec4 uIn;   // x, y, weight, id\nuniform vec4 uP;\nuniform vec2 uT;  \n"
+    private const val HARNESS_MAIN = "\nvoid main() { gRng = 1u; o = vec4(vari(int(uIn.w + 0.5), uIn.xy, uIn.z, uP, vec4(1.0, 0.0, 0.0, 1.0), uT), 0.0, 1.0); }\n"
     private const val VERT = "#version 330 core\nvoid main() { vec2 q = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2); gl_Position = vec4(q * 2.0 - 1.0, 0.0, 1.0); }"
     private const val TOLERANCE = 0.02   // two probe pixels (1 pixel = 0.01 units), allowing for centroid and half-pixel error
 
-    private class Job(val name: String, val table: File, val params: List<Float>?, val weight: Float)
+    private class Job(val name: String, val table: File, val params: List<Float>?, val weight: Float) {
+        /** Translation of the probe's final xform, read from probes.json beside the table (zero when absent). */
+        val translate: Pair<Float, Float> = File(table.absoluteFile.parentFile, "probes.json").takeIf { it.isFile }
+            ?.let { Regex("\"translate\": \\[([^,\\]]+), ([^\\]]+)\\]").find(it.readText()) }
+            ?.let { it.groupValues[1].trim().toFloat() to it.groupValues[2].trim().toFloat() } ?: (0f to 0f)
+    }
 
     private fun idOf(name: String) = FlameImporter.variationIdForFileName(name) ?: FlameVariations.NAMES.indexOf(name).takeIf { it >= 0 && FlameVariations.ALL[it].supported }
         ?: error("no supported variation called $name")
@@ -77,7 +82,7 @@ object FlameVariationCompare {
             val id = idOf(job.name)
             val params = job.params ?: FlameVariations.ALL[id].params.map { it.default }
             val weight = job.weight
-            println("${FlameVariations.NAMES[id]} (id $id), parameters $params, weight $weight")
+            println("${FlameVariations.NAMES[id]} (id $id), parameters $params, weight $weight, translate ${job.translate}")
             val rows = ArrayList<Row>()
             var unseen = 0
             val predicted = ArrayList<DoubleArray>()   // our output at every input point of the table, for the set-level check below
@@ -85,7 +90,8 @@ object FlameVariationCompare {
                 val c = line.split(",")
                 if (c.size < 4 || c[2].isBlank()) continue
                 fbo.bind(); shader.bind()
-                shader.setUniform("uIn", c[2].toFloat(), c[3].toFloat(), weight, id.toFloat())
+                shader.setUniform("uT", job.translate.first, job.translate.second)
+                shader.setUniform("uIn", c[2].toFloat() + job.translate.first, c[3].toFloat() + job.translate.second, weight, id.toFloat())
                 val p = FloatArray(4) { params.getOrNull(it) ?: 0f }
                 shader.setUniform("uP", p[0], p[1], p[2], p[3])
                 glBindVertexArray(vao); glDrawArrays(GL_TRIANGLES, 0, 3)
@@ -98,7 +104,8 @@ object FlameVariationCompare {
                 if (c[4].isBlank() || c.getOrElse(8) { "" }.isNotBlank()) { unseen++; continue }   // no clean dot for this point
                 val xi = c[2].toDouble(); val yi = c[3].toDouble()
                 fbo.bind(); shader.bind()
-                shader.setUniform("uIn", xi.toFloat(), yi.toFloat(), weight, id.toFloat())
+                shader.setUniform("uT", job.translate.first, job.translate.second)
+                shader.setUniform("uIn", xi.toFloat() + job.translate.first, yi.toFloat() + job.translate.second, weight, id.toFloat())
                 val p = FloatArray(4) { params.getOrNull(it) ?: 0f }
                 shader.setUniform("uP", p[0], p[1], p[2], p[3])
                 glBindVertexArray(vao); glDrawArrays(GL_TRIANGLES, 0, 3)
