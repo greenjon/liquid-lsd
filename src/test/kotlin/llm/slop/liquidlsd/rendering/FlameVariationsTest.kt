@@ -63,11 +63,11 @@ class FlameVariationsTest {
                 val a = if (md > tt / 2) th - tt / 2 else th + tt / 2
                 doubleArrayOf(r * cos(a), r * sin(a))
             }
-            "blob" -> { val k = r * (p[1] + (p[0] - p[1]) / 2 * (sin(p[2] * th) + 1)); doubleArrayOf(k * cos(th), k * sin(th)) }
+            "blob" -> { val k = r * (p[1] + (p[0] - p[1]) / 2 * (sin(p[2] * th) + 1)); doubleArrayOf(k * sin(th), k * cos(th)) }
             "pdj" -> doubleArrayOf(sin(p[0] * y) - cos(p[1] * x), sin(p[2] * x) - cos(p[3] * y))
             "fan2" -> {
                 val p1 = pi * p[0] * p[0]; val p2 = p[1]
-                val tt = th + p2 - p1 * (2 * th * p2 / p1).let { if (it < 0) kotlin.math.ceil(it) else floor(it) }
+                val tt = th + p2 - p1 * (((th + p2) / p1)).let { if (it < 0) kotlin.math.ceil(it) else floor(it) }   // observed: the angle plus p2 wraps modulo p1
                 val a = if (tt > p1 / 2) th - p1 / 2 else th + p1 / 2
                 doubleArrayOf(r * sin(a), r * cos(a))
             }
@@ -79,7 +79,7 @@ class FlameVariationsTest {
             "eyefish" -> doubleArrayOf(2 / (r + 1) * x, 2 / (r + 1) * y)
             "bubble" -> doubleArrayOf(4 / (r * r + 4) * x, 4 / (r * r + 4) * y)
             "cylinder" -> doubleArrayOf(sin(x), y)
-            "perspective" -> { val k = p[1] / (p[1] - y * sin(p[0])); doubleArrayOf(k * x, k * y * cos(p[0])) }
+            "perspective" -> { val a = p[0] * pi / 2; val k = p[1] / (p[1] - y * sin(a)); doubleArrayOf(k * x, k * y * cos(a)) }
             "curl" -> {
                 val t1 = 1 + p[0] * x + p[1] * (x * x - y * y); val t2 = p[0] * y + 2 * p[1] * x * y; val d = t1 * t1 + t2 * t2
                 doubleArrayOf((x * t1 + y * t2) / d, (y * t1 - x * t2) / d)
@@ -88,7 +88,7 @@ class FlameVariationsTest {
             "tangent" -> doubleArrayOf(sin(x) / cos(y), tan(y))
             "ngon" -> {
                 val p2 = 2 * pi / p[1]
-                val t3 = ph - p2 * floor(ph / p2); val t4 = if (t3 > p2 / 2) t3 else t3 - p2
+                val t3 = ph - p2 * floor(ph / p2); val t4 = if (t3 > p2 / 2) t3 - p2 else t3
                 val k = (p[2] * (1 / cos(t4) - 1) + p[3]) / r.pow(p[0]); doubleArrayOf(k * x, k * y)
             }
             "secant2" -> { val c = cos(r); doubleArrayOf(x, if (c < 0) 1 / c + 1 else 1 / c - 1) }   // weight 1
@@ -296,7 +296,17 @@ class FlameVariationsTest {
         assertV("rectangles", 0.3, 0.3, 0.2, 0.2, p = doubleArrayOf(0.5, 0.5, 0.0, 0.0))   // (2*0+1)*0.5 - 0.3
         assertV("rectangles", 0.7, 0.3, 0.8, 0.2, p = doubleArrayOf(0.5, 0.5, 0.0, 0.0))   // floor(1.4) = 1 -> 3*0.5 - 0.7
         assertV("perspective", 1.0, 0.0, 1.0, 0.0, p = doubleArrayOf(0.4, 2.0, 0.0, 0.0)) // y = 0: dist/dist * (x, 0)
-        assertV("blob", 0.0, 1.0, 1.0, 0.0, p = doubleArrayOf(1.0, 1.0, 5.0, 0.0))        // high = low = 1, theta 0: r * 1 * (cos 0, sin 0)
+        assertV("blob", 0.0, 1.0, 0.0, 1.0, p = doubleArrayOf(1.0, 1.0, 5.0, 0.0))        // high = low = 1: the output points along the input
+        // black-box pairs (flam3 observed with the probe kit; see docs/developer/clean_room_provenance.md): the exact formula values at observed points
+        assertV("blob", 4.0, 0.0, 4.0, 0.0, p = doubleArrayOf(1.0, 0.2, 5.0, 0.0))
+        assertV("blob", -3.46, 2.0, -3.2763507367, 1.8938443565, p = doubleArrayOf(1.0, 0.2, 5.0, 0.0))
+        assertV("perspective", 0.0, 4.0, 0.0, -3.8042260652, p = doubleArrayOf(0.6, 2.0, 0.0, 0.0))
+        assertV("perspective", 1.6, 1.6, 4.5353221655, 2.6657954832, p = doubleArrayOf(0.6, 2.0, 0.0, 0.0))
+        assertV("fan2", 1.0, 2.0, 0.1585126678, 2.2304424974, p = doubleArrayOf(0.5, 0.3, 0.0, 0.0))
+        assertV("fan2", -2.0, 1.0, -0.2273256645, 2.2244826460, p = doubleArrayOf(0.8, 0.2, 0.0, 0.0))
+        assertV("fan2", 2.0, 1.6, 2.4600525568, 0.7128403873, p = doubleArrayOf(0.5, 0.0, 0.0, 0.0))
+        assertV("ngon", 0.25, 0.0, 4.0, 0.0, p = doubleArrayOf(2.0, 5.0, 1.0, 1.0))
+        assertV("ngon", 0.0, 0.5, 0.0, 2.1029244484, p = doubleArrayOf(2.0, 5.0, 1.0, 1.0))
     }
 
     // ---- ids 82-95: trigonometric and hyperbolic (spec test pairs) ----

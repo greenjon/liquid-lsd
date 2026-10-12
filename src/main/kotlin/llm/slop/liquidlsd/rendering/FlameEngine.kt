@@ -313,10 +313,10 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
         case 20: v = vec2(cos(PI*p.x) * cosh(p.y), -sin(PI*p.x) * sinh(p.y)); break;           // cosine
         case 21: { float c2 = max(T.x*T.x, 1e-4); v = (mod(r + c2, 2.0*c2) - c2 + r*(1.0 - c2)) * vec2(cos(th), sin(th)); break; } // rings (c)
         case 22: { float c2 = max(T.x*T.x, 1e-4), t = PI*c2, a = mod(th + T.y, t) > 0.5*t ? th - 0.5*t : th + 0.5*t; v = r * vec2(cos(a), sin(a)); break; } // fan (c, f)
-        case 23: v = r * (P.y + (P.x - P.y) * 0.5 * (sin(P.z*th) + 1.0)) * vec2(cos(th), sin(th)); break; // blob: high, low, waves
+        case 23: v = r * (P.y + (P.x - P.y) * 0.5 * (sin(P.z*th) + 1.0)) * vec2(sin(th), cos(th)); break; // blob: high, low, waves (direction of the input; observed, see clean_room_provenance)
         case 24: v = vec2(sin(P.x*p.y) - cos(P.y*p.x), sin(P.z*p.x) - cos(P.w*p.y)); break;     // pdj
         case 25: { float p1 = PI*P.x*P.x, p2 = P.y;                                             // fan2
-                   float t = th + p2 - p1 * trunc(2.0*th*p2 / p1);
+                   float t = th + p2 - p1 * trunc((th + p2) / p1);   // observed: the angle plus p2 wraps modulo p1
                    float a = t > 0.5*p1 ? th - 0.5*p1 : th + 0.5*p1;
                    v = r * vec2(sin(a), cos(a)); break; }
         case 26: { float q = P.x*P.x;                                                           // rings2
@@ -325,7 +325,7 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
         case 27: v = 2.0 / (r + 1.0) * p; break;                                                // eyefish
         case 28: v = 4.0 / (r2 + 4.0) * p; break;                                               // bubble
         case 29: v = vec2(sin(p.x), p.y); break;                                                // cylinder
-        case 30: v = P.y / (P.y - p.y*sin(P.x)) * vec2(p.x, p.y*cos(P.x)); break;               // perspective: angle, dist
+        case 30: { float a = P.x*PI*0.5; v = P.y / (P.y - p.y*sin(a)) * vec2(p.x, p.y*cos(a)); break; } // perspective: angle (a fraction of pi/2, observed), dist
         case 31: { float a = 2.0*PI*rnd(); v = rnd() * vec2(p.x*cos(a), p.y*sin(a)); break; }   // noise
         case 32: { float p3 = trunc(abs(P.x)*rnd()), t = (ph + 2.0*PI*p3) / P.x;               // juliaN: power, dist
                    v = pow(r, P.y / P.x) * vec2(cos(t), sin(t)); break; }
@@ -339,7 +339,7 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
         case 37: { float t1 = trunc(rnd()*P.x + 0.5), t2 = P.y + 2.0*PI/P.x * (t1 + rnd()*P.z); // pie: slices, rotation, thickness
                    v = rnd() * vec2(cos(t2), sin(t2)); break; }
         case 38: { float p2 = 2.0*PI/P.y;                                                       // ngon: power, sides, corners, circle
-                   float t3 = ph - p2*floor(ph/p2), t4 = t3 > 0.5*p2 ? t3 : t3 - p2;
+                   float t3 = ph - p2*floor(ph/p2), t4 = t3 > 0.5*p2 ? t3 - p2 : t3;   // observed: the wrap goes the other way from the paper
                    v = (P.z*(1.0/cos(t4) - 1.0) + P.w) / pow(r, P.x) * p; break; }
         case 39: { float t1 = 1.0 + P.x*p.x + P.y*(p.x*p.x - p.y*p.y), t2 = P.x*p.y + 2.0*P.y*p.x*p.y; // curl: c1, c2
                    v = vec2(p.x*t1 + p.y*t2, p.y*t1 - p.x*t2) / (t1*t1 + t2*t2 + 1e-9); break; }

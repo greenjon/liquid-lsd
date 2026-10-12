@@ -28,17 +28,17 @@ with tempfile.TemporaryDirectory() as tmp:
         Image.fromarray((im * 255).astype(np.uint8)).save(os.path.join(imgs, name + ".png"))
 
     draw("probe_calibrate", meta["calibration"], lambda x, y: (x, y))
-    for s in ("grid", "ring"):
-        pts = meta["sets"][s]
-        draw(f"probe_{s}_all", pts, toy)
-        for j in range(meta["sets"][s + "_bits"]):
-            draw(f"probe_{s}_bit{j}", [p for i, p in enumerate(pts) if ((i + 1) >> j) & 1], toy)
+    for g in meta["groups"]:
+        chunk = meta["sets"][g["set"]][g["start"]:g["start"] + g["count"]]
+        draw(f"probe_{g['tag']}_all", chunk, toy)
+        for j in range(g["bits"]):
+            draw(f"probe_{g['tag']}_bit{j}", [p for i, p in enumerate(chunk) if ((i + 1) >> j) & 1], toy)
     out = os.path.join(tmp, "t.csv")
     subprocess.check_call([sys.executable, os.path.join(here, "extract_points.py"), probes, imgs, "--out", out])
     worst = 0.0; seen = 0; unseen = 0
     for line in open(out).read().splitlines()[1:]:
         s, idx, xi, yi, xo, yo, *_ = line.split(",")
-        if not xo: unseen += 1; continue
+        if not xo or not xi: unseen += 1; continue
         ex, ey = toy(float(xi), float(yi))
         worst = max(worst, abs(ex - float(xo)), abs(ey - float(yo))); seen += 1
     print(f"decoded {seen} points, {unseen} not seen, worst error {worst:.4f} units")

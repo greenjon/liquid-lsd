@@ -23,6 +23,11 @@ class FlameShaderValuesTest {
     private fun c(name: String, x: Double, y: Double, ex: Double, ey: Double, vararg p: Double, w: Double = 1.0) = Case(name, x, y, ex, ey, p.toList(), w)
 
     private val cases = listOf(
+        // observed with flam3 (black-box probe kit): blob, perspective and ngon, whose paper forms differed from the program
+        c("blob", 4.0, 0.0, 4.0, 0.0, 1.0, 0.2, 5.0), c("blob", -3.46, 2.0, -3.27635, 1.89384, 1.0, 0.2, 5.0),
+        c("perspective", 0.0, 4.0, 0.0, -3.80423, 0.6, 2.0), c("perspective", 1.6, 1.6, 4.53532, 2.66580, 0.6, 2.0),
+        c("fan2", 1.0, 2.0, 0.15851, 2.23044, 0.5, 0.3), c("fan2", -2.0, 1.0, -0.22733, 2.22448, 0.8, 0.2), c("fan2", 2.0, 1.6, 2.46005, 0.71284, 0.5, 0.0),
+        c("ngon", 0.25, 0.0, 4.0, 0.0, 2.0, 5.0, 1.0, 1.0), c("ngon", 0.0, 0.5, 0.0, 2.10292, 2.0, 5.0, 1.0, 1.0),
         c("disc2", 1.0, 0.0, 0.0, 0.5, 0.0, 0.0), c("disc2", 0.5, 0.5, 0.0, -0.25, 1.0, 0.0), c("disc2", 1.0, 0.0, -1.0, 0.5, 0.0, pi),
         c("disc2", 1.0, 0.0, -4.14159, 0.5, 0.0, 3 * pi),
         c("bent2", -3.0, 4.0, -6.0, 4.0, 2.0, 0.5), c("bent2", -1.0, -2.0, -2.0, -1.0, 2.0, 0.5),

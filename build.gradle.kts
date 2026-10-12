@@ -783,6 +783,14 @@ val flameStats = tasks.register<JavaExec>("flameStats") {
     args = (project.findProperty("args") as String? ?: "").split(" ").filter { it.isNotBlank() }
 }
 
+val compareVariation = tasks.register<JavaExec>("compareVariation") {
+    group = "tools"
+    description = "Compares our shader's variation with an observed table. -Pargs=\"name table.csv [--p a,b,c,d] [--w 1]\""
+    classpath = sourceSets["main"].runtimeClasspath
+    mainClass.set("llm.slop.liquidlsd.tools.FlameVariationCompare")
+    args = (project.findProperty("args") as String? ?: "").split(" ").filter { it.isNotBlank() }
+}
+
 val curateFlames = tasks.register<JavaExec>("curateFlames") {
     group = "tools"
     description = "Searches for interesting Fractal Flame genomes offline (needs a GL context). Pass options with -Pargs=\"--candidates 20000 --out build/curated-flames\"."

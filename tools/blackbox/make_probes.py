@@ -15,7 +15,8 @@ import argparse, json, math, os
 
 SIZE = 1000          # image is SIZE x SIZE pixels
 SCALE = 100          # pixels per unit; with SIZE this shows +-5 units
-DOT = 0.003          # dot contraction ratio: dots are ~0.006 units wide, about one pixel
+GROUP = 63          # most dots in one flame
+DOT = 0.0003         # dot contraction ratio: a dot cloud is at most ~0.0015 units wide, well under a pixel
 PALETTE = "ff" * 3 * 256   # every colour white, so any hit shows as white
 
 
@@ -30,7 +31,7 @@ def ring_points():
             for a in range(0, 360, 30) for r in (0.1, 0.25, 0.5, 1.0, 2.0, 4.0)]
 
 
-def flame(name, xforms, final, quality=150):
+def flame(name, xforms, final, quality=40):
     head = (f'<flame name="{name}" size="{SIZE} {SIZE}" center="0 0" scale="{SCALE}" rotate="0" supersample="1" '
             f'filter="0.2" quality="{quality}" passes="1" temporal_samples="1" background="0 0 0" brightness="5" '
             f'gamma="1" vibrancy="1" highlight_power="-1" gamma_threshold="0" estimator_radius="0" '
@@ -70,14 +71,19 @@ def main():
         with open(os.path.join(out, fname + ".flame"), "w") as f:
             f.write(text)
 
+    # points are split into groups of at most GROUP so no flame has more than 63 dot xforms (one program stops at 100)
+    meta["groups"] = []
     for set_name, pts in (("grid", grid_points()), ("ring", ring_points())):
         meta["sets"][set_name] = pts
-        bits = max(1, (len(pts)).bit_length())
-        write(f"probe_{set_name}_all", flame(f"{a.variation}_{set_name}_all", [dot(*p) for p in pts], final))
-        for j in range(bits):
-            sel = [p for i, p in enumerate(pts) if ((i + 1) >> j) & 1]
-            write(f"probe_{set_name}_bit{j}", flame(f"{a.variation}_{set_name}_bit{j}", [dot(*p) for p in sel], final))
-        meta["sets"][set_name + "_bits"] = bits
+        for g, start in enumerate(range(0, len(pts), GROUP)):
+            chunk = pts[start:start + GROUP]
+            tag = f"{set_name}{g}"
+            bits = len(chunk).bit_length()          # codes 1..len(chunk)
+            meta["groups"].append({"tag": tag, "set": set_name, "start": start, "count": len(chunk), "bits": bits})
+            write(f"probe_{tag}_all", flame(f"{a.variation}_{tag}_all", [dot(*p) for p in chunk], final))
+            for j in range(bits):
+                sel = [p for i, p in enumerate(chunk) if ((i + 1) >> j) & 1]
+                write(f"probe_{tag}_bit{j}", flame(f"{a.variation}_{tag}_bit{j}", [dot(*p) for p in sel], final))
 
     # calibration: three known dots through a plain linear final xform, so the image's axes and scale are measured
     cal = [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (-2.0, 3.0)]
