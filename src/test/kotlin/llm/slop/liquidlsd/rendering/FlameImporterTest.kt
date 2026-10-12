@@ -183,4 +183,11 @@ class FlameImporterTest {
         // a skipped variation with weight 0 is not a use
         assertTrue(xform("""sinusoidal="1" mobius="0" """).notes.none { "unsupported" in it })
     }
+
+    @Test fun unknownPreAndPostVariationsAreReportedButTheirParametersAreNot() {
+        val r = xform("""sinusoidal="1" pre_blur="0.1" pre_curl="0.5" pre_curl_c1="0.2" post_crop="1" post_crop_left="-1" post_ztranslate_wf="0" """)
+        val note = r.notes.single { "unsupported" in it }
+        assertTrue("pre_curl" in note && "post_crop" in note, note)
+        assertFalse("pre_curl_c1" in note || "post_crop_left" in note || "pre_blur" in note || "post_ztranslate_wf" in note, note)
+    }
 }

@@ -69,6 +69,9 @@ object FlameImporter {
     /** True for xform attributes that are not variations or their parameters. */
     internal fun isMeta(attr: String): Boolean = attr.lowercase() in META || META_SUFFIX.containsMatchIn(attr)
 
+    /** `pre_curl`, `post_crop`: a stage variation we do not have. Their parameters carry a further underscore (`pre_curl_c1`) and stay unreported. */
+    private val PRE_POST_NAME = Regex("(pre|post)_[a-z0-9]+")
+
     /** Attributes of an xform that are not variations (and the editor-metadata suffixes of the files we saw). */
     private val META = setOf(
         "weight", "color", "symmetry", "coefs", "post", "opacity", "name", "chaos", "plotmode", "animate", "color_speed",
@@ -218,7 +221,7 @@ object FlameImporter {
             if (lower in RESERVED) { if (v != 0f) unsupported += n; continue }
             if (lower in META || ID_BY_FILE_NAME.containsKey(lower) || META_SUFFIX.containsMatchIn(n)) continue
             if (ID_BY_FILE_NAME.keys.any { lower.startsWith("${it}_") } || RESERVED.any { lower.startsWith("${it}_") }) continue
-            if (v != 0f && !n.contains('_')) unsupported += n
+            if (v != 0f && (!n.contains('_') || PRE_POST_NAME.matches(lower))) unsupported += n
         }
         val top = found.sortedByDescending { abs(it.second) }.take(FlameGenome.SLOTS)
         if (found.size > top.size) notes += "$who: ${found.size} variations, kept the strongest ${top.size}"
