@@ -14,7 +14,7 @@ import kotlin.math.sin
  */
 object FlameGenome {
     const val MAX_XF = 6
-    const val SLOTS = 3
+    const val SLOTS = 4
     /** Index of the final xform in the packed array (after the [MAX_XF] regular slots). */
     const val FINAL_INDEX = MAX_XF
     /** vec4s per variation slot: [idA, wA, idB, wB], A's four parameters, B's four parameters. */

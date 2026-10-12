@@ -19,14 +19,12 @@ Memory: `project_flame_curator.md`. Related: `.planning/flame-source-handoff.md`
   `selftest.py`. `./gradlew compareVariation -Pargs="name table.csv [--p a,b,c,d]"` or `--batch FILE` / `--list` runs our real shader on a table
   (verdicts MATCH, MATCH-AS-SET, DIFFERENT, NO-DATA; DIFFERENT with a few bad points of 100+ is usually collisions, boundary or far-point noise).
 - **Done by observation** (ledger rows exist): `blob`, `ngon`, `perspective`, `fan2` corrected to flam3; `hemisphere` added as id 99 (JWildfire 9.00).
-  Ids now 100, 96 built, 4 reserved (`super_shape`, `lazysusan`, `pre_blur`, `mobius`).
+  Ids now 100, 97 built (`pre_blur` added as a pre-stage variation), 3 reserved (`super_shape`, `lazysusan`, `mobius`). `tools/blackbox/cloud_stats.py` observes random variations (cumulative share of hits by radius from many very low quality renders).
 
 ## Next steps (my order)
 
 1. ~~Translation-aware probe~~ DONE 2026-10-12 (`--translate tx,ty`, compare reads `probes.json`). Result: `fan` corrected (remainder keeps the dividend's sign); `rings`, `waves` match; `modulus` matches as a set (params 0.8,0.6); `popcorn` 10 of 171 points off by up to 0.04 near the poles of tan (float vs double, not the formula). Only translation is probed, so `waves` b/e and any variation reading the affine part (a, b, d, e) remain unchecked. Not yet run with JWildfire, and uncommitted.
-2. **Pre/post variation structure and `pre_blur`** (54% of JWildfire flames use it; the biggest gap). `pre_` variations act on the point before the other
-   variations of the xform, `post_` after. Needs engine design (slots or a flag) and a black-box table; check how a pre variation interacts in the probe
-   (a final xform holding only pre_X). Then `pre_curl`, `pre_crop`/`post_crop`.
+2. ~~Pre stage and `pre_blur`~~ DONE 2026-10-12 (4 slots, `Variation.pre`, `isPre` in the shader, `FlamePreStageTest`; ledger row written). Not built: the post stage (semantics observed: `post_X` at weight w gives `w * X(sum of the regular variations)`), `pre_curl`, `pre_crop`/`post_crop` (their parameters need probing; `cloud_stats.py` handles random variations). Other `pre_*`/`post_*` names in files are still dropped silently by the importer (it only reports names without an underscore): consider reporting them.
 3. Remaining deterministic gaps by usage in the JWildfire set: `nblur` (random), `line`, `scry2`, `epispiral`, `glynnia`, `ecollide`, `bswirl`,
    `sphericaln`, `julian2`, `bubble2`, `voron`, `shredlin` (see `stats.md` "Missing from our set"). `linear3d`/`blur3d`/`spherical3d` are 3D twins of ours.
    Random variations need statistics in `extract_points.py` (a dot becomes a cloud; compare centre, spread, shape).

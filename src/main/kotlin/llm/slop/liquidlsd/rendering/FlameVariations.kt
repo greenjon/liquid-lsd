@@ -18,7 +18,7 @@ object FlameVariations {
     class Param(val label: String, val min: Float, val default: Float, val max: Float)
 
     /** [supported] false = a reserved id with no shader case: the importer reports its name as unsupported, the sampler never picks it. */
-    class Variation(val name: String, val params: List<Param> = emptyList(), val supported: Boolean = true)
+    class Variation(val name: String, val params: List<Param> = emptyList(), val supported: Boolean = true, val pre: Boolean = false)
 
     private fun p(label: String, min: Float, def: Float, max: Float) = Param(label, min, def, max)
     private fun v(name: String, vararg params: Param) = Variation(name, params.toList())
@@ -27,7 +27,7 @@ object FlameVariations {
 
     /**
      * Index = variation number. Keep in step with the `case` labels in [FlameEngine]. Ids the shader has no case for
-     * stay in the table as [na] placeholders so that every later id keeps its number: 50, 65, 67 and 98 are skipped
+     * stay in the table as [na] placeholders so that every later id keeps its number: 50, 65 and 98 are skipped
      * for v1 (more parameters than a slot holds, or they alter the point instead of adding to the output).
      */
     val ALL: List<Variation> = listOf(
@@ -69,7 +69,7 @@ object FlameVariations {
         v("foci"),
         na("lazysusan"),
         v("loonie"),
-        na("pre_blur"),
+        Variation("pre_blur", pre = true),
         v("modulus", p("X", -1f, 0f, 1f), p("Y", -1f, 0f, 1f)),
         v("oscope", p("Separation", 0f, 1f, 2f), p("Frequency", 0f, PIf, 2 * PIf), p("Amplitude", 0f, 1f, 3f), p("Damping", -1f, 0f, 1f)),
         v("polar2"),

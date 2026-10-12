@@ -35,3 +35,12 @@ and carries c = tx, f = ty. The table's input columns stay the dot positions; `p
 `compareVariation` reads it from beside the table, so the shader sees input + t with the same c and f. Only translation is
 probed (the affine part stays the identity), so `waves` is checked with b = 0, e = 1 only. A variation with parameters
 that default to 0 (`modulus`) needs `--param` values as well, and the same values as `--p` for the compare.
+
+## Random variations and pre/post stages
+
+`cloud_stats.py PROGRAM X Y ATTR=VALUE ... [--quality 0.001 --renders 100]` puts one dot through a final xform with the given
+attributes, renders it many times at very low quality (so every pixel stays in the linear regime) and prints the cumulative
+share of hits by radius, the centroid and (with the images kept in `--out`) the data for an angular check. Pair a pre-stage
+variation with a regular one (`linear=1`): an xform with only pre variations draws nothing. For structure (does `pre_X` run
+before `Y`, how does the weight scale), use `run_probes.py` with the regular variation as the name and the pre or post one as
+`--param pre_X=1`.

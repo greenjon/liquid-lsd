@@ -1476,7 +1476,7 @@ commercial release.</p>
 <td><strong>The first AI's original description file</strong> (the committed spec is its audited form per commit <code>a7cba2b</code>; the original was not found in the repo, <code>/tmp</code> or the home folder), and which program's code it read. Keep it, or record that it is gone. The spec itself says "the original code" and "the original random-flame generator", so its author did look at code: the spec side is not clean, the implementation side is. <code>SHADERS_LICENSE.md</code> already carries this caveat</td>
 </tr>
 <tr>
-<td>Variations still to add (<code>pre_blur</code>, <code>nblur</code>, <code>hemisphere</code>, <code>pre_curl</code>, ...)</td>
+<td>Variations still to add (<code>nblur</code>, <code>pre_curl</code>, ...)</td>
 <td>Black-box observation only</td>
 <td>The protocol below, with the kit in <code>tools/blackbox/</code></td>
 <td>see the black-box log</td>
@@ -1498,8 +1498,8 @@ commercial release.</p>
 </tr>
 </tbody>
 </table>
-<p>Built variations: 96 of the 100 ids (the paper's 49, 46 from the spec, and <code>hemisphere</code> by black box). The four reserved ids are <code>super_shape</code>,
-<code>lazysusan</code>, <code>pre_blur</code> and <code>mobius</code>.</p>
+<p>Built variations: 97 of the 100 ids (the paper's 49, 46 from the spec, and <code>hemisphere</code> and <code>pre_blur</code> by black box). The three reserved ids are <code>super_shape</code>,
+<code>lazysusan</code> and <code>mobius</code>.</p>
 <h2 id="black-box-log">Black-box log</h2>
 <table>
 <thead>
@@ -1522,6 +1522,22 @@ commercial release.</p>
 <td>done 2026-10-12: the output is the input scaled by 1/sqrt(r^2 + 1), 88 of 91 clean points within 0.02</td>
 </tr>
 <tr>
+<td><code>pre_blur</code> (id 67) and the pre stage</td>
+<td><code>run_probes.py jwildfire</code> on <code>pre_spherical</code> (+ a regular variation) for the structure; <code>cloud_stats.py jwildfire</code> (100 low-quality renders of one dot) for the cloud</td>
+<td>the assistant, from the observed numbers only</td>
+<td>JWildfire 9.00</td>
+<td><code>build/blackbox/jw_pre/</code>, <code>build/blackbox/cloud_w*</code>; <code>FlamePreStageTest</code></td>
+<td>done 2026-10-12: a pre variation replaces the point before the others (<code>sinusoidal</code> + <code>pre_spherical</code> = sin(spherical(p)); weight 0.5 gives 0.5 * spherical(p); 0 of 93 off); <code>post_spherical</code> at weight 0.5 gave 0.5 * spherical(sum of the others) (1 of 64 off; no post stage built yet); <code>pre_blur</code> keeps the point and adds a random direction at a distance with a bell-shaped magnitude, scale linear in w (w 0.5 and 1 curves coincide), isotropic (8 sectors within 6%), the cloud centred on the point; the shader uses 1.25 * (sum of four uniforms - 2), fitting the cumulative share within 0.02</td>
+</tr>
+<tr>
+<td><code>fan</code> (id 22, correction)</td>
+<td><code>run_probes.py flam3 fan --translate 0.5,0.3</code></td>
+<td>the assistant, fitting hypotheses to the observed table</td>
+<td>flam3 3.1.1</td>
+<td>table in <code>build/blackbox/flam3t/fan/</code>, pair in <code>FlameVariationsTest</code></td>
+<td>done 2026-10-12: the wrap <code>(angle + f) mod (pi c^2)</code> is a remainder that keeps the sign of its dividend (ours floored); 189 of 189 points fit, 159 before</td>
+</tr>
+<tr>
 <td><code>blob</code>, <code>ngon</code>, <code>perspective</code>, <code>fan2</code> (corrections to ids 23, 38, 30, 25)</td>
 <td><code>run_probes.py flam3</code> with flam3 3.1.1 (<code>flam3-render</code>); the sweep compared every deterministic variation</td>
 <td>the assistant, fitting hypotheses to the observed tables</td>
@@ -1536,7 +1552,7 @@ commercial release.</p>
 - <strong><code>ngon</code>:</strong> the angle wrap is <code>t &gt; half ? t - p2 : t</code>; ours had the branches the other way round.
 - <strong><code>perspective</code>:</strong> the angle parameter is a fraction of pi/2 (the importer already passed the file value through).
 - <strong><code>fan2</code>:</strong> the wrapped quantity is the angle plus <code>p2</code> modulo <code>p1</code>; observed at five parameter settings.</p>
-<p>These four came from the paper as written (ids 0-48). The sweep also showed 50 variations matching outright, 13 more matching as a set (dots decoded to the wrong input where outputs collide), and 11 flagged with only a handful of mismatches each; those are boundary points (<code>rectangles</code> at y = 0), far points where a dot's tiny size is amplified (<code>swirl</code>), and branch cuts (<code>log</code> at the negative x axis), not formula differences. <code>waves</code> and <code>modulus</code> returned no data (they depend on the transform's own coefficients) and need a probe with a known translation.</p>
+<p>These four came from the paper as written (ids 0-48). The sweep also showed 50 variations matching outright, 13 more matching as a set (dots decoded to the wrong input where outputs collide), and 11 flagged with only a handful of mismatches each; those are boundary points (<code>rectangles</code> at y = 0), far points where a dot's tiny size is amplified (<code>swirl</code>), and branch cuts (<code>log</code> at the negative x axis), not formula differences. <code>waves</code> and <code>modulus</code> returned no data (they depend on the transform's own coefficients); the probe now takes a known translation (<code>--translate</code>), and with it <code>rings</code>, <code>waves</code>, <code>modulus</code> (as a set) and <code>popcorn</code> match, <code>fan</code> was corrected.</p>
 <p>The assistant that implements may have seen flame-program formulas in its general training. The rule is therefore that it
 derives each formula from the observed table alone and lets the table decide; a formula that does not fit the table is
 wrong whatever it remembers.</p>

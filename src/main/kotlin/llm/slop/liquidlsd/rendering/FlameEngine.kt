@@ -391,6 +391,7 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
                    float al = mu*ph + nu*L; v = exp(mu*L - nu*ph) * vec2(cos(al), sin(al)); break; }
         case 64: { float D = sdiv(1.0, cosh(p.x) - cos(p.y)); v = D * vec2(sinh(p.x), sin(p.y)); break; } // foci
         case 66: { float v2 = w*w, R = q < v2 ? w * sqrt(sdiv(v2, q) - 1.0) : w; return R * p; } // loonie: v is also the radius, so the output is finished here
+        case 67: { float g = 1.25 * (rnd() + rnd() + rnd() + rnd() - 2.0), a = 2.0*PI*rnd(); return p + w * g * vec2(cos(a), sin(a)); } // pre_blur: observed, adds a random direction at a bell-shaped distance (sigma ~0.73 w); the point stays
         case 68: v = vec2(modAxis(p.x, P.x), modAxis(p.y, P.y)); break;                         // modulus: x, y
         case 69: { float c = P.z * cos(2.0*PI * P.y * p.x);                                     // oscope: separation, frequency, amplitude, damping
                    float t = (P.w == 0.0 ? c : c * exp(-abs(p.x) * P.w)) + P.x;
@@ -437,18 +438,27 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
     return w * v;
 }
 
-// pre-affine -> weighted variation slots -> post-affine, for packed xform k
+// pre-stage ids (FlameVariations.Variation.pre): they act on the point before the other variations
+bool isPre(int id) { return id == 67; }
+
+// pre-affine -> pre variations -> weighted variation slots -> post-affine, for packed xform k
 vec2 applyXf(int k, vec2 p) {
     int b = k * ${FlameGenome.VEC4_PER_XF};
     vec4 m = uXf[b + 1];
     vec4 t = uXf[b + 2];
     vec2 q = vec2(m.x * p.x + m.y * p.y + t.x, m.z * p.x + m.w * p.y + t.y);
+    for (int j = 0; j < ${FlameGenome.SLOTS}; j++) {   // pre stage: each pre variation replaces the point, in slot order
+        int sb = b + 4 + j * ${FlameGenome.VEC4_PER_SLOT};
+        vec4 s = uXf[sb];   // (idA, wA, idB, wB): B is the morph target's slot, weight 0 outside a morph
+        if (s.y != 0.0 && isPre(int(s.x + 0.5))) q = vari(int(s.x + 0.5), q, s.y, uXf[sb + 1], m, t.xy);
+        if (s.w != 0.0 && isPre(int(s.z + 0.5))) q = vari(int(s.z + 0.5), q, s.w, uXf[sb + 2], m, t.xy);
+    }
     vec2 acc = vec2(0.0);
     for (int j = 0; j < ${FlameGenome.SLOTS}; j++) {
         int sb = b + 4 + j * ${FlameGenome.VEC4_PER_SLOT};
-        vec4 s = uXf[sb];   // (idA, wA, idB, wB): B is the morph target's slot, weight 0 outside a morph
-        if (s.y != 0.0) acc += vari(int(s.x + 0.5), q, s.y, uXf[sb + 1], m, t.xy);
-        if (s.w != 0.0) acc += vari(int(s.z + 0.5), q, s.w, uXf[sb + 2], m, t.xy);
+        vec4 s = uXf[sb];
+        if (s.y != 0.0 && !isPre(int(s.x + 0.5))) acc += vari(int(s.x + 0.5), q, s.y, uXf[sb + 1], m, t.xy);
+        if (s.w != 0.0 && !isPre(int(s.z + 0.5))) acc += vari(int(s.z + 0.5), q, s.w, uXf[sb + 2], m, t.xy);
     }
     vec4 pm = uXf[b + 3];
     return vec2(pm.x * acc.x + pm.y * acc.y + t.z, pm.z * acc.x + pm.w * acc.y + t.w);

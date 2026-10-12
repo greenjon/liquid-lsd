@@ -173,12 +173,12 @@ class FlameImporterTest {
         assertTrue(r.notes.any { "cell" in it && "clamped" in it })
     }
 
-    @Test fun theFourSkippedVariationsAreReportedAndNeverMapped() {
-        val r = xform("""sinusoidal="1" super_shape="1" super_shape_m="4" lazysusan="0.5" pre_blur="0.1" mobius="1" mobius_re_a="1" Re_A="1" """)
+    @Test fun theThreeSkippedVariationsAreReportedAndNeverMapped() {
+        val r = xform("""sinusoidal="1" super_shape="1" super_shape_m="4" lazysusan="0.5" mobius="1" mobius_re_a="1" Re_A="1" """)
         assertEquals(FlameVariations.NAMES.indexOf("sinusoidal").toFloat(), r.values.f("X1 V1 Id"))
         assertEquals(0f, r.values.f("X1 V2 Weight"))
         val note = r.notes.single { "unsupported" in it }
-        for (n in listOf("super_shape", "lazysusan", "pre_blur", "mobius")) assertTrue(n in note, note)
+        for (n in listOf("super_shape", "lazysusan", "mobius")) assertTrue(n in note, note)
         assertFalse("super_shape_m" in note || "mobius_re_a" in note || "Re_A" in note, note)
         // a skipped variation with weight 0 is not a use
         assertTrue(xform("""sinusoidal="1" mobius="0" """).notes.none { "unsupported" in it })

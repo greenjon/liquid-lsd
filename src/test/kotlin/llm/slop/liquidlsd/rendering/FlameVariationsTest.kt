@@ -219,7 +219,7 @@ class FlameVariationsTest {
 
     private fun params(vararg v: Double) = DoubleArray(4).also { v.copyInto(it) }
 
-    @Test fun tableHasNinetyNineIdsWithUniqueNamesAndTheSkippedFourReserved() {
+    @Test fun tableHasNinetyNineIdsWithUniqueNamesAndTheSkippedThreeReserved() {
         assertEquals(100, FlameVariations.count())
         assertEquals(100, FlameVariations.NAMES.toSet().size)
         assertEquals("linear", FlameVariations.NAMES[0]); assertEquals("popcorn", FlameVariations.NAMES[17])
@@ -227,7 +227,7 @@ class FlameVariationsTest {
         assertEquals("disc2", FlameVariations.NAMES[49]); assertEquals("waves2", FlameVariations.NAMES[81])
         assertEquals("exp", FlameVariations.NAMES[82]); assertEquals("coth", FlameVariations.NAMES[95])
         assertEquals("mobius", FlameVariations.NAMES[98])
-        for (id in listOf(50, 65, 67, 98)) assertTrue(!FlameVariations.ALL[id].supported, FlameVariations.NAMES[id])
+        for (id in listOf(50, 65, 98)) assertTrue(!FlameVariations.ALL[id].supported, FlameVariations.NAMES[id])
         assertTrue(FlameVariations.ALL.all { it.params.size <= FlameVariations.PARAMS })
         assertTrue(FlameVariations.ALL.all { it.supported || it.params.isEmpty() })
     }
@@ -241,6 +241,13 @@ class FlameVariationsTest {
         Regex("""case (\d+):.*?//\s*(\w+)""").findAll(src).forEach {
             assertEquals(FlameVariations.NAMES[it.groupValues[1].toInt()], it.groupValues[2], "case ${it.groupValues[1]}")
         }
+    }
+
+    @Test fun theShadersPreStageIdsAreTheTablesPreVariations() {
+        val inShader = Regex("""bool isPre\(int id\) \{ return (.*?); \}""").find(FlameEngine.COMMON)!!.groupValues[1]
+            .split("||").map { it.trim().removePrefix("id == ").toInt() }
+        assertEquals(FlameVariations.ALL.indices.filter { FlameVariations.ALL[it].pre }, inShader)
+        assertTrue(FlameVariations.ALL.filter { it.pre }.all { it.supported })
     }
 
     @Test fun normalisedParametersMapMidpointToDefaultAndRoundTrip() {
