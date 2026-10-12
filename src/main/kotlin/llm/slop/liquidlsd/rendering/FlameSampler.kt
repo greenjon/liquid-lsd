@@ -15,7 +15,7 @@ import kotlin.random.Random
  * only propose: FlameSource runs every candidate through the quality gate ([FlameQuality]) before using it.
  */
 object FlameSampler {
-    /** Pick odds per variation id (index = id): favours the well-behaved ones, rare for the exotic, noisy or unstable ones. */
+    /** Pick odds per variation id (index = id): favours the well-behaved ones, rare for the exotic, noisy or unstable ones. 0 = never picked (pre_blur draws nothing without a regular variation beside it).  */
     private val POOL: FloatArray = run {
         val odds = mapOf(
             "linear" to 3f, "sinusoidal" to 3f, "spherical" to 2f, "swirl" to 3f, "horseshoe" to 1f, "polar" to 1f,
@@ -27,7 +27,7 @@ object FlameSampler {
             "ngon" to 0.7f, "pie" to 0.4f, "radialBlur" to 0.4f, "tangent" to 0.3f, "cross" to 0.3f,
             "arch" to 0.3f, "square" to 0.3f, "noise" to 0.2f, "blur" to 0.2f, "gaussian" to 0.2f,
             "rays" to 0.2f, "blade" to 0.3f, "secant2" to 0.2f, "twintrian" to 0.2f,
-            "boarders" to 0.3f, "butterfly" to 0.5f, "edisc" to 0.4f, "elliptic" to 0.5f, "foci" to 0.4f, "loonie" to 0.4f, "pre_blur" to 0.3f,
+            "boarders" to 0.3f, "butterfly" to 0.5f, "edisc" to 0.4f, "elliptic" to 0.5f, "foci" to 0.4f, "loonie" to 0.4f, "pre_blur" to 0f,
             "polar2" to 0.5f, "disc2" to 0.4f, "flower" to 0.3f, "conic" to 0.2f, "parabola" to 0.3f, "bent2" to 0.4f,
             "bipolar" to 0.4f, "cell" to 0.3f, "cpow" to 0.3f, "curve" to 0.5f, "escher" to 0.5f, "modulus" to 0.1f,
             "oscope" to 0.3f, "popcorn2" to 0.5f, "separation" to 0.4f, "split" to 0.2f, "splits" to 0.4f,
