@@ -90,7 +90,9 @@ object FlameVariations {
         // 96-98 (98 is skipped for v1)
         v("auger", p("Freq", 0f, 1f, 5f), p("Weight", 0f, 0.5f, 1f), p("Sym", -1f, 0f, 1f), p("Scale", 0f, 1f, 2f)),
         v("flux", p("Spread", -1f, 0f, 1f)),
-        na("mobius")
+        na("mobius"),
+        // 99 on: added from black-box observation of another program (docs/developer/clean_room_provenance.md)
+        v("hemisphere")
     )
 
     val NAMES: List<String> = ALL.map { it.name }

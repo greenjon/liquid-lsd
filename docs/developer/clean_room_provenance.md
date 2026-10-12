@@ -29,14 +29,14 @@ commercial release.
 | `.flame` importer | Attribute names from the paper and from sample files the user supplies | No third-party parser was read | `FlameImporter`, `docs/developer/flame_source.md` | n/a |
 | Variation statistics and curated library | Counts from public flame collections; our own search generates the shipped flames | Tallies only; no genome is shipped (the Electric Sheep archive has non-commercial terms for some genomes) | `FlameStats`, `FlameCurator` | Datasets used are listed in `.planning` notes, not in the build |
 
-Built variations: 95 of the 99 ids (the paper's 49 and 46 from the spec). The four reserved ids are `super_shape`,
+Built variations: 96 of the 100 ids (the paper's 49, 46 from the spec, and `hemisphere` by black box). The four reserved ids are `super_shape`,
 `lazysusan`, `pre_blur` and `mobius`.
 
 ## Black-box log
 
 | Variation | Observer | Implementer | Observed with | Evidence | Status |
 |---|---|---|---|---|---|
-| `hemisphere` (first one) | automated: `run_probes.py` driving the command-line renderers | the assistant, from `table.csv` only | JWildfire 9.00 (not run yet) | `tools/blackbox/` | kit built 2026-10-11, JWildfire table still to take |
+| `hemisphere` (id 99, the first black-box variation) | automated: `run_probes.py jwildfire` driving `org.jwildfire.cli.FlameRenderer` | the assistant, from `table.csv` only | JWildfire 9.00 | table in `build/blackbox/jwildfire/hemisphere/`, pairs in the two variation tests | done 2026-10-12: the output is the input scaled by 1/sqrt(r^2 + 1), 88 of 91 clean points within 0.02 |
 | `blob`, `ngon`, `perspective`, `fan2` (corrections to ids 23, 38, 30, 25) | `run_probes.py flam3` with flam3 3.1.1 (`flam3-render`); the sweep compared every deterministic variation | the assistant, fitting hypotheses to the observed tables | flam3 3.1.1 (Fedora package), probe kit at 100 px per unit | tables in `build/blackbox/flam3/`, pairs in `FlameVariationsTest` and `FlameShaderValuesTest` | done 2026-10-11 |
 
 What the observations changed (each fits its table at 98 to 100% of points):

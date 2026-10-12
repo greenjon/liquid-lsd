@@ -91,6 +91,7 @@ class FlameVariationsTest {
                 val t3 = ph - p2 * floor(ph / p2); val t4 = if (t3 > p2 / 2) t3 - p2 else t3
                 val k = (p[2] * (1 / cos(t4) - 1) + p[3]) / r.pow(p[0]); doubleArrayOf(k * x, k * y)
             }
+            "hemisphere" -> { val k = 1 / sqrt(x * x + y * y + 1); doubleArrayOf(k * x, k * y) }
             "secant2" -> { val c = cos(r); doubleArrayOf(x, if (c < 0) 1 / c + 1 else 1 / c - 1) }   // weight 1
             "cross" -> { val k = sqrt(1 / ((x * x - y * y).pow(2) + 1e-10)); doubleArrayOf(k * x, k * y) }
             "boarders" -> {
@@ -219,8 +220,8 @@ class FlameVariationsTest {
     private fun params(vararg v: Double) = DoubleArray(4).also { v.copyInto(it) }
 
     @Test fun tableHasNinetyNineIdsWithUniqueNamesAndTheSkippedFourReserved() {
-        assertEquals(99, FlameVariations.count())
-        assertEquals(99, FlameVariations.NAMES.toSet().size)
+        assertEquals(100, FlameVariations.count())
+        assertEquals(100, FlameVariations.NAMES.toSet().size)
         assertEquals("linear", FlameVariations.NAMES[0]); assertEquals("popcorn", FlameVariations.NAMES[17])
         assertEquals("pdj", FlameVariations.NAMES[24]); assertEquals("cross", FlameVariations.NAMES[48])
         assertEquals("disc2", FlameVariations.NAMES[49]); assertEquals("waves2", FlameVariations.NAMES[81])
@@ -302,6 +303,9 @@ class FlameVariationsTest {
         assertV("blob", -3.46, 2.0, -3.2763507367, 1.8938443565, p = doubleArrayOf(1.0, 0.2, 5.0, 0.0))
         assertV("perspective", 0.0, 4.0, 0.0, -3.8042260652, p = doubleArrayOf(0.6, 2.0, 0.0, 0.0))
         assertV("perspective", 1.6, 1.6, 4.5353221655, 2.6657954832, p = doubleArrayOf(0.6, 2.0, 0.0, 0.0))
+        assertV("hemisphere", 1.0, 0.0, 0.7071067812, 0.0)       // observed with JWildfire 9.00: the point scaled by 1/sqrt(r^2 + 1)
+        assertV("hemisphere", 0.5, 0.5, 0.4082482905, 0.4082482905)
+        assertV("hemisphere", -3.0, 4.0, -0.5883484054, 0.7844645406)
         assertV("fan2", 1.0, 2.0, 0.1585126678, 2.2304424974, p = doubleArrayOf(0.5, 0.3, 0.0, 0.0))
         assertV("fan2", -2.0, 1.0, -0.2273256645, 2.2244826460, p = doubleArrayOf(0.8, 0.2, 0.0, 0.0))
         assertV("fan2", 2.0, 1.6, 2.4600525568, 0.7128403873, p = doubleArrayOf(0.5, 0.0, 0.0, 0.0))

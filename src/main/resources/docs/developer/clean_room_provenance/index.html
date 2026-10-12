@@ -1498,7 +1498,7 @@ commercial release.</p>
 </tr>
 </tbody>
 </table>
-<p>Built variations: 95 of the 99 ids (the paper's 49 and 46 from the spec). The four reserved ids are <code>super_shape</code>,
+<p>Built variations: 96 of the 100 ids (the paper's 49, 46 from the spec, and <code>hemisphere</code> by black box). The four reserved ids are <code>super_shape</code>,
 <code>lazysusan</code>, <code>pre_blur</code> and <code>mobius</code>.</p>
 <h2 id="black-box-log">Black-box log</h2>
 <table>
@@ -1514,12 +1514,12 @@ commercial release.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>hemisphere</code> (first one)</td>
-<td>automated: <code>run_probes.py</code> driving the command-line renderers</td>
+<td><code>hemisphere</code> (id 99, the first black-box variation)</td>
+<td>automated: <code>run_probes.py jwildfire</code> driving <code>org.jwildfire.cli.FlameRenderer</code></td>
 <td>the assistant, from <code>table.csv</code> only</td>
-<td>JWildfire 9.00 (not run yet)</td>
-<td><code>tools/blackbox/</code></td>
-<td>kit built 2026-10-11, JWildfire table still to take</td>
+<td>JWildfire 9.00</td>
+<td>table in <code>build/blackbox/jwildfire/hemisphere/</code>, pairs in the two variation tests</td>
+<td>done 2026-10-12: the output is the input scaled by 1/sqrt(r^2 + 1), 88 of 91 clean points within 0.02</td>
 </tr>
 <tr>
 <td><code>blob</code>, <code>ngon</code>, <code>perspective</code>, <code>fan2</code> (corrections to ids 23, 38, 30, 25)</td>

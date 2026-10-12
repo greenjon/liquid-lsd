@@ -33,7 +33,7 @@ object FlameSampler {
             "oscope" to 0.3f, "popcorn2" to 0.5f, "separation" to 0.4f, "split" to 0.2f, "splits" to 0.4f,
             "stripes" to 0.4f, "wedge" to 0.5f, "wedge_julia" to 0.4f, "wedge_sph" to 0.4f, "whorl" to 0.3f,
             "waves2" to 0.6f, "auger" to 0.4f, "flux" to 0.3f, "scry" to 0.2f, "exp" to 0.3f, "log" to 0.3f, "sin" to 0.5f, "cos" to 0.5f, "tan" to 0.3f, "sec" to 0.2f, "csc" to 0.2f,
-            "cot" to 0.2f, "sinh" to 0.3f, "cosh" to 0.3f, "tanh" to 0.3f, "sech" to 0.2f, "csch" to 0.2f, "coth" to 0.2f
+            "cot" to 0.2f, "sinh" to 0.3f, "cosh" to 0.3f, "tanh" to 0.3f, "sech" to 0.2f, "csch" to 0.2f, "coth" to 0.2f, "hemisphere" to 0.6f
         )
         FloatArray(FlameVariations.count()) {
             val v = FlameVariations.ALL[it]

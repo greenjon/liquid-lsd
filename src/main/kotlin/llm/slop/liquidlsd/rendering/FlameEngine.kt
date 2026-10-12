@@ -432,6 +432,7 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
         case 97: { float ap = p.x + w, am = p.x - w, y2 = p.y*p.y;                              // flux: spread; v also places the two foci
                    float R = w * (2.0 + P.x) * spow(sdiv(y2 + ap*ap, y2 + am*am), 0.25), al = 0.5 * (atan(p.y, am) - atan(p.y, ap));
                    return R * vec2(cos(al), sin(al)); }
+        case 99: v = p * inversesqrt(q + 1.0); break;                                           // hemisphere: observed, the point scaled by 1/sqrt(r^2 + 1)
     }
     return w * v;
 }
