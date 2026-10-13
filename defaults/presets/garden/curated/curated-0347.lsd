@@ -1,0 +1,2049 @@
+{
+    "name": "curated-0347",
+    "tags": [
+        "curated",
+        "flame"
+    ],
+    "visualSourceType": "fractal_flame",
+    "parameters": {
+        "Zoom": {
+            "baseValue": 0.38411096,
+            "baseMin": 0.41330314,
+            "baseMax": 0.41330314,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "Magnify": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Rotation": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "FlipY": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "CenterX": {
+            "baseValue": 0.013812065,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "CenterY": {
+            "baseValue": -0.026852489,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "Exposure": {
+            "baseValue": 0.5752575,
+            "baseMin": 0.5752575,
+            "baseMax": 0.5752575,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Brightness": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Gamma": {
+            "baseValue": 0.4,
+            "baseMin": 0.4,
+            "baseMax": 0.4,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Vibrancy": {
+            "baseValue": 0.7,
+            "baseMin": 0.7,
+            "baseMax": 0.7,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Toe": {
+            "baseValue": 0.14,
+            "baseMin": 0.14,
+            "baseMax": 0.14,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Decay": {
+            "baseValue": 0.86734694,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Sharpness": {
+            "baseValue": 0.33333334,
+            "baseMin": 0.33333334,
+            "baseMax": 0.33333334,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Softness": {
+            "baseValue": 0.22222222,
+            "baseMin": 0.22222222,
+            "baseMax": 0.22222222,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Smooth": {
+            "baseValue": 0.3,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Palette": {
+            "baseValue": 0.29150176,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Mutation": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Spin": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Breathe": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Warp": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "Drift": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": false,
+            "modulators": []
+        },
+        "X1 Weight": {
+            "baseValue": 0.33092427,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 Color": {
+            "baseValue": 0.39766505,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 ColorSpeed": {
+            "baseValue": 0.30087113,
+            "baseMin": 0.6,
+            "baseMax": 0.6,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PreRot": {
+            "baseValue": 2.922608,
+            "baseMin": 0.35,
+            "baseMax": 0.35,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PreScaleX": {
+            "baseValue": 0.014380455,
+            "baseMin": 0.16250002,
+            "baseMax": 0.16250002,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PreScaleY": {
+            "baseValue": 0.23749995,
+            "baseMin": 0.16250002,
+            "baseMax": 0.16250002,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PreShear": {
+            "baseValue": -0.20797801,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PreX": {
+            "baseValue": 0.12766433,
+            "baseMin": 0.044999957,
+            "baseMax": 0.044999957,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PreY": {
+            "baseValue": -0.061971784,
+            "baseMin": 0.00999999,
+            "baseMax": 0.00999999,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PostRot": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PostScaleX": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PostScaleY": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PostShear": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PostX": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 PostY": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V1 Id": {
+            "baseValue": 48.0,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V1 Weight": {
+            "baseValue": 0.37533486,
+            "baseMin": 0.17499995,
+            "baseMax": 0.17499995,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V1 A": {
+            "baseValue": 0.523897,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V1 B": {
+            "baseValue": 0.33045515,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V1 C": {
+            "baseValue": 0.31216308,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V1 D": {
+            "baseValue": 0.5928635,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V2 Id": {
+            "baseValue": 23.0,
+            "baseMin": 3.0,
+            "baseMax": 3.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V2 Weight": {
+            "baseValue": 0.2723415,
+            "baseMin": 0.125,
+            "baseMax": 0.125,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V2 A": {
+            "baseValue": 0.34193462,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V2 B": {
+            "baseValue": 0.13334866,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V2 C": {
+            "baseValue": 0.8180023,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V2 D": {
+            "baseValue": 0.6021354,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V3 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V3 Weight": {
+            "baseValue": 0.08477461,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V3 A": {
+            "baseValue": 0.24807456,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V3 B": {
+            "baseValue": 0.489195,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V3 C": {
+            "baseValue": 0.66547096,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V3 D": {
+            "baseValue": 0.36666477,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V4 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V4 Weight": {
+            "baseValue": -0.30981338,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V4 A": {
+            "baseValue": 0.4480016,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V4 B": {
+            "baseValue": 0.7221281,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V4 C": {
+            "baseValue": 0.6481243,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X1 V4 D": {
+            "baseValue": 0.500337,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 Weight": {
+            "baseValue": 0.49232984,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 Color": {
+            "baseValue": 0.36473763,
+            "baseMin": 0.45,
+            "baseMax": 0.45,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 ColorSpeed": {
+            "baseValue": 0.36570853,
+            "baseMin": 0.6,
+            "baseMax": 0.6,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PreRot": {
+            "baseValue": -2.7961686,
+            "baseMin": -1.0,
+            "baseMax": -1.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PreScaleX": {
+            "baseValue": 0.20572281,
+            "baseMin": 0.14999998,
+            "baseMax": 0.14999998,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PreScaleY": {
+            "baseValue": 0.093557715,
+            "baseMin": 0.14999998,
+            "baseMax": 0.14999998,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PreShear": {
+            "baseValue": -0.08215666,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PreX": {
+            "baseValue": -0.027736962,
+            "baseMin": -0.035000026,
+            "baseMax": -0.035000026,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PreY": {
+            "baseValue": -0.04031056,
+            "baseMin": 0.03999996,
+            "baseMax": 0.03999996,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PostRot": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PostScaleX": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PostScaleY": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PostShear": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PostX": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 PostY": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V1 Id": {
+            "baseValue": 3.0,
+            "baseMin": 2.0,
+            "baseMax": 2.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V1 Weight": {
+            "baseValue": 0.23112059,
+            "baseMin": 0.087499976,
+            "baseMax": 0.087499976,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V1 A": {
+            "baseValue": 0.6626475,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V1 B": {
+            "baseValue": 0.75666577,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V1 C": {
+            "baseValue": 0.33835575,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V1 D": {
+            "baseValue": 0.4768734,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V2 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V2 Weight": {
+            "baseValue": 0.0055646896,
+            "baseMin": 0.16250002,
+            "baseMax": 0.16250002,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V2 A": {
+            "baseValue": 0.5468167,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V2 B": {
+            "baseValue": 0.48251733,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V2 C": {
+            "baseValue": 0.4867625,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V2 D": {
+            "baseValue": 0.428502,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V3 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V3 Weight": {
+            "baseValue": 0.039842725,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V3 A": {
+            "baseValue": 0.4053333,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V3 B": {
+            "baseValue": 0.62675285,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V3 C": {
+            "baseValue": 0.533723,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V3 D": {
+            "baseValue": 0.6398982,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V4 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V4 Weight": {
+            "baseValue": 0.18906021,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V4 A": {
+            "baseValue": 0.5332092,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V4 B": {
+            "baseValue": 0.44123966,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V4 C": {
+            "baseValue": 0.4519513,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X2 V4 D": {
+            "baseValue": 0.5369841,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 Weight": {
+            "baseValue": 0.30883342,
+            "baseMin": 0.4,
+            "baseMax": 0.4,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 Color": {
+            "baseValue": 0.38468197,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 ColorSpeed": {
+            "baseValue": 0.7535655,
+            "baseMin": 0.6,
+            "baseMax": 0.6,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PreRot": {
+            "baseValue": -1.8281457,
+            "baseMin": 2.1,
+            "baseMax": 2.1,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PreScaleX": {
+            "baseValue": 0.23075604,
+            "baseMin": 0.13750005,
+            "baseMax": 0.13750005,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PreScaleY": {
+            "baseValue": 0.073295236,
+            "baseMin": 0.125,
+            "baseMax": 0.125,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PreShear": {
+            "baseValue": 0.079018235,
+            "baseMin": 0.049999952,
+            "baseMax": 0.049999952,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PreX": {
+            "baseValue": -0.04278052,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PreY": {
+            "baseValue": 0.030123115,
+            "baseMin": -0.055000007,
+            "baseMax": -0.055000007,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PostRot": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PostScaleX": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PostScaleY": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PostShear": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PostX": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 PostY": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V1 Id": {
+            "baseValue": 23.0,
+            "baseMin": 4.0,
+            "baseMax": 4.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V1 Weight": {
+            "baseValue": 0.3113109,
+            "baseMin": 0.100000024,
+            "baseMax": 0.100000024,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V1 A": {
+            "baseValue": 0.23760766,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V1 B": {
+            "baseValue": 0.4865539,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V1 C": {
+            "baseValue": 0.2688282,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V1 D": {
+            "baseValue": 0.47026718,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V2 Id": {
+            "baseValue": 0.0,
+            "baseMin": 1.0,
+            "baseMax": 1.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V2 Weight": {
+            "baseValue": -0.025959253,
+            "baseMin": 0.14999998,
+            "baseMax": 0.14999998,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V2 A": {
+            "baseValue": 0.4354076,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V2 B": {
+            "baseValue": 0.6216836,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V2 C": {
+            "baseValue": 0.5115268,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V2 D": {
+            "baseValue": 0.48274583,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V3 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V3 Weight": {
+            "baseValue": -0.06367993,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V3 A": {
+            "baseValue": 0.49894136,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V3 B": {
+            "baseValue": 0.51432,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V3 C": {
+            "baseValue": 0.43876463,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V3 D": {
+            "baseValue": 0.3711558,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V4 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V4 Weight": {
+            "baseValue": 0.07557452,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V4 A": {
+            "baseValue": 0.50287384,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V4 B": {
+            "baseValue": 0.5247828,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V4 C": {
+            "baseValue": 0.48330316,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X3 V4 D": {
+            "baseValue": 0.57707405,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 Weight": {
+            "baseValue": 0.27299705,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 Color": {
+            "baseValue": 0.004920708,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 ColorSpeed": {
+            "baseValue": 0.55957687,
+            "baseMin": 0.6,
+            "baseMax": 0.6,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PreRot": {
+            "baseValue": 0.061360717,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PreScaleX": {
+            "baseValue": 0.04057765,
+            "baseMin": 0.14999998,
+            "baseMax": 0.14999998,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PreScaleY": {
+            "baseValue": 0.21095407,
+            "baseMin": 0.14999998,
+            "baseMax": 0.14999998,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PreShear": {
+            "baseValue": 0.07748306,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PreX": {
+            "baseValue": -0.04919225,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PreY": {
+            "baseValue": 0.14174879,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PostRot": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PostScaleX": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PostScaleY": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PostShear": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PostX": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 PostY": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V1 Id": {
+            "baseValue": 14.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V1 Weight": {
+            "baseValue": 0.053369164,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V1 A": {
+            "baseValue": 0.6473324,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V1 B": {
+            "baseValue": 0.635934,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V1 C": {
+            "baseValue": 0.2789666,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V1 D": {
+            "baseValue": 0.46267155,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V2 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V2 Weight": {
+            "baseValue": -0.13261718,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V2 A": {
+            "baseValue": 0.549318,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V2 B": {
+            "baseValue": 0.73709375,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V2 C": {
+            "baseValue": 0.2311212,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V2 D": {
+            "baseValue": 0.7649296,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V3 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V3 Weight": {
+            "baseValue": -0.26622272,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V3 A": {
+            "baseValue": 0.44930404,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V3 B": {
+            "baseValue": 0.4091575,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V3 C": {
+            "baseValue": 0.6035217,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V3 D": {
+            "baseValue": 0.83180654,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V4 Id": {
+            "baseValue": 1.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V4 Weight": {
+            "baseValue": 0.17825866,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V4 A": {
+            "baseValue": 0.3548795,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V4 B": {
+            "baseValue": 0.79078615,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V4 C": {
+            "baseValue": 0.67047703,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X4 V4 D": {
+            "baseValue": 0.74859166,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 Weight": {
+            "baseValue": 0.2620772,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 Color": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 ColorSpeed": {
+            "baseValue": 0.7110335,
+            "baseMin": 0.6,
+            "baseMax": 0.6,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PreRot": {
+            "baseValue": 0.6831064,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PreScaleX": {
+            "baseValue": 0.06793296,
+            "baseMin": 0.14999998,
+            "baseMax": 0.14999998,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PreScaleY": {
+            "baseValue": 0.06316006,
+            "baseMin": 0.14999998,
+            "baseMax": 0.14999998,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PreShear": {
+            "baseValue": -0.015267372,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PreX": {
+            "baseValue": 0.012715578,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PreY": {
+            "baseValue": 0.12242973,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PostRot": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PostScaleX": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PostScaleY": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PostShear": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PostX": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 PostY": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V1 Id": {
+            "baseValue": 10.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V1 Weight": {
+            "baseValue": 0.19966102,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V1 A": {
+            "baseValue": 0.620443,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V1 B": {
+            "baseValue": 0.3470776,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V1 C": {
+            "baseValue": 0.31123236,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V1 D": {
+            "baseValue": 0.19574624,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V2 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V2 Weight": {
+            "baseValue": -0.1397512,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V2 A": {
+            "baseValue": 0.37223378,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V2 B": {
+            "baseValue": 0.60561866,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V2 C": {
+            "baseValue": 0.54944956,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V2 D": {
+            "baseValue": 0.63261074,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V3 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V3 Weight": {
+            "baseValue": -0.096990705,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V3 A": {
+            "baseValue": 0.8108526,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V3 B": {
+            "baseValue": 0.16316487,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V3 C": {
+            "baseValue": 0.10410994,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V3 D": {
+            "baseValue": 0.50711334,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V4 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V4 Weight": {
+            "baseValue": 0.05050981,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V4 A": {
+            "baseValue": 0.62228686,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V4 B": {
+            "baseValue": 0.66618,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V4 C": {
+            "baseValue": 0.5266144,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X5 V4 D": {
+            "baseValue": 0.11176526,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 Weight": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 Color": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 ColorSpeed": {
+            "baseValue": 0.56364435,
+            "baseMin": 0.6,
+            "baseMax": 0.6,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PreRot": {
+            "baseValue": -0.26623318,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PreScaleX": {
+            "baseValue": 0.12484145,
+            "baseMin": 0.14999998,
+            "baseMax": 0.14999998,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PreScaleY": {
+            "baseValue": 0.18007529,
+            "baseMin": 0.14999998,
+            "baseMax": 0.14999998,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PreShear": {
+            "baseValue": -0.013437271,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PreX": {
+            "baseValue": 0.0030840635,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PreY": {
+            "baseValue": 0.0077489614,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PostRot": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PostScaleX": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PostScaleY": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PostShear": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PostX": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 PostY": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V1 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V1 Weight": {
+            "baseValue": 0.3321011,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V1 A": {
+            "baseValue": 0.43440574,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V1 B": {
+            "baseValue": 0.52082545,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V1 C": {
+            "baseValue": 0.43441638,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V1 D": {
+            "baseValue": 0.4579782,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V2 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V2 Weight": {
+            "baseValue": 0.15682828,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V2 A": {
+            "baseValue": 0.61098355,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V2 B": {
+            "baseValue": 0.5933237,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V2 C": {
+            "baseValue": 0.43584704,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V2 D": {
+            "baseValue": 0.43534103,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V3 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V3 Weight": {
+            "baseValue": 0.07878494,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V3 A": {
+            "baseValue": 0.34665126,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V3 B": {
+            "baseValue": 0.6254323,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V3 C": {
+            "baseValue": 0.5031891,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V3 D": {
+            "baseValue": 0.59891874,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V4 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V4 Weight": {
+            "baseValue": -0.003956318,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V4 A": {
+            "baseValue": 0.43269485,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V4 B": {
+            "baseValue": 0.5011777,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V4 C": {
+            "baseValue": 0.42127362,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "X6 V4 D": {
+            "baseValue": 0.4848605,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PreRot": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PreScaleX": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PreScaleY": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PreShear": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PreX": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PreY": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PostRot": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PostScaleX": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PostScaleY": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PostShear": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PostX": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF PostY": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V1 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V1 Weight": {
+            "baseValue": 0.25,
+            "baseMin": 0.25,
+            "baseMax": 0.25,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V1 A": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V1 B": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V1 C": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V1 D": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V2 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V2 Weight": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V2 A": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V2 B": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V2 C": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V2 D": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V3 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V3 Weight": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V3 A": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V3 B": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V3 C": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V3 D": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V4 Id": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V4 Weight": {
+            "baseValue": 0.0,
+            "baseMin": 0.0,
+            "baseMax": 0.0,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V4 A": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V4 B": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V4 C": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        },
+        "XF V4 D": {
+            "baseValue": 0.5,
+            "baseMin": 0.5,
+            "baseMax": 0.5,
+            "randomizeBase": true,
+            "modulators": []
+        }
+    },
+    "feedbackParameters": {},
+    "presetNotes": "score 0.92"
+}

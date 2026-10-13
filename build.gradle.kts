@@ -281,6 +281,15 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
             f.copyTo(File(presetsOut, f.name), overwrite = true)
             presetLines.add(f.name)
         }
+        // the curated Garden flames (defaults/presets/garden/**): .lsd presets and their thumbnails, keeping their sub-folders
+        val gardenIn = File(presetsIn, "garden")
+        if (gardenIn.exists()) {
+            gardenIn.walkTopDown().filter { it.isFile && it.extension.lowercase() in setOf("lsd", "png") }.sortedBy { it.path }.forEach { f ->
+                val rel = f.relativeTo(presetsIn).path.replace(File.separatorChar, '/')
+                File(presetsOut, rel).also { it.parentFile.mkdirs() }.let { f.copyTo(it, overwrite = true) }
+                presetLines.add(rel)
+            }
+        }
         presetManifest.writeText(presetLines.joinToString("\n"))
 
         val playlistsIn = File(inBase, "playlists")

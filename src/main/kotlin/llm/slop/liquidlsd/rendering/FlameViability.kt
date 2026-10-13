@@ -17,6 +17,8 @@ object FlameViability {
     private const val ACTIVE = 0.05f
     /** A pre-affine whose area scale is below this has flattened to a line or point. */
     private const val MIN_DET = 0.01f
+    /** Two-xform flames were rejected 7 times in 9 in the owner's second contact-sheet review (2026-10-12). */
+    private const val MIN_XFORMS = 3
 
     class Result(val ok: Boolean, val reason: String, val balance: Float, val activeXforms: Int) {
         override fun toString() = if (ok) "OK balance=%.2f".format(balance) else "REJECT $reason"
@@ -27,7 +29,7 @@ object FlameViability {
         fun real(name: String) = FlameUnits.real(name, stored(name))
         val weights = FloatArray(FlameGenome.MAX_XF) { real(FlameGenome.weightKey(it)) }
         val active = (0 until FlameGenome.MAX_XF).filter { weights[it] > ACTIVE }
-        if (active.size < 2) return Result(false, "fewer than two active xforms", 0f, active.size)
+        if (active.size < MIN_XFORMS) return Result(false, "fewer than $MIN_XFORMS active xforms", 0f, active.size)
 
         val total = active.sumOf { weights[it].toDouble() }.toFloat()
         val maxShare = active.maxOf { weights[it] } / total
