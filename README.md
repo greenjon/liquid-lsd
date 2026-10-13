@@ -4,7 +4,7 @@ Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ per
 
 ---
 
-## What It Does
+## Features
 
 - **4-Deck Visual Engine**: Independent visual decks for live output (**Deck A** and **Deck B**), a background compositor layer (**Deck BG**), and an offline audition deck (**Deck PV**) for previewing and tweaking presets live without affecting stage output.
 - **100% ISF 2.0 Shader Pipeline**: Native Interactive Shader Format (ISF 2.0) engine for visual generators, filters, and transitions. Includes an automated compatibility bridge for importing Shadertoy (`mainImage`) and GLSLSandbox shaders without code edits.
@@ -107,47 +107,39 @@ Liquid LSD is a real-time procedural visual synthesizer and low-latency audio DS
 
 ---
 
-## Build
+## Building from Source
 
-On Linux/macOS:
+You need JDK 17 or newer. From the repository root:
 
 ```bash
 ./gradlew build
 ```
 
-On Windows:
+On Windows, use `gradlew.bat` in place of `./gradlew`. To run only the tests:
 
-```powershell
-.\gradlew.bat build
+```bash
+./gradlew test
 ```
 
 *(If the Gradle daemon encounters local socket issues, add `--no-daemon` to the command.)*
 
 ---
 
-## Run
+## Running
 
-Launch the application:
-
-On Linux/macOS:
+Start the application from the repository root:
 
 ```bash
 ./gradlew run
 ```
 
-On Windows:
-
-```powershell
-.\gradlew.bat run
-```
-
-**Linux Audio Tip**: For optimal performance and zero-latency inter-app routing on Linux, launch PipeWire/JACK prior to starting Liquid LSD:
+**Linux Audio Tip**: For low-latency audio and routing between applications on Linux, make sure PipeWire's JACK layer or a JACK daemon is running before you start Liquid LSD. On PipeWire you can wrap the launch:
 
 ```bash
-jack_lsp
-jack_connect <source> <destination>
-pw-link
+pw-jack ./gradlew run
 ```
+
+`jack_lsp` lists the available JACK ports and `jack_connect <source> <destination>` patches them.
 
 ---
 
@@ -165,7 +157,7 @@ Output binary:
 build/libs/liquid-lsd-desktop-1.0-SNAPSHOT-all.jar
 ```
 
-Platform distribution ZIP tasks are available in `build.gradle.kts` (`zipLinux`, `zipLinuxArm`, `zipMacArm`, `zipMacIntel`, `zipWindows`).
+Per-platform distribution ZIP tasks are available in `build.gradle.kts` (`zipLinux`, `zipLinuxArm`, `zipMacArm`, `zipMacIntel`, `zipWindows`).
 
 ---
 
@@ -181,7 +173,7 @@ This compiles guides from `docs/` and `RELEASE_NOTES.md` into `./greenjon/docs/`
 
 ---
 
-## Project Map
+## Project Layout
 
 ```text
 src/main/kotlin/llm/slop/liquidlsd/
@@ -206,6 +198,7 @@ src/main/resources/
   shaders/               Built-in GLSL shaders & ISF transitions
   presets/               Bundled default preset data
   fonts/                 Bundled Inter, JetBrains Mono, & Lucide fonts
+  docs/                  Generated user-guide pages bundled into the app
   logback.xml            Logging configuration
 
 library/                 User-loadable dynamic assets

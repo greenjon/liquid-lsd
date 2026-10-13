@@ -75,6 +75,30 @@ wrong whatever it remembers.
 
 The reverse-engineering tools (decompilers, memory inspection) are not part of this protocol.
 
+## Replaced third-party contribution (2026-07-06 commits)
+
+A contributor (Lawrence Norton, 15 commits on `codex/*` branches, 2026-07-06; no license grant on file) added path
+confinement, a scan cache, JACK failure reporting, process timeouts, MIDI profile filename checks, a mixer layout
+calculator, a shared playlist parser, a GL debug callback, tests and planning docs. About 500 source/test lines and 450
+doc lines survived to HEAD. The history still contains the commits; this section covers the working tree.
+
+| Step | Who | What they saw | Output |
+|---|---|---|---|
+| Spec | the assistant (spec writer) | the surviving attributed hunks and their callers | `.planning/lawrence-rewrite-spec.md`: behavior, interfaces, test obligations |
+| Source rewrite, pass 1 | a second assistant (implementer) | the spec, callers, and unmasked `PlaylistParser`, `GLDebug`, `MixerLayout` outside the attributed hunks | new bodies in those three files |
+| Source rewrite, pass 2 | the implementer | masked copies (attributed hunks replaced by markers); also saw the first 60 lines and function index of `FileSystemManager.kt`, lines 446, 458 and 548-551 of `Main.kt`, and the `SessionSerializer` call site (line 203) | new hunks spliced by line range |
+| README | the spec writer | the masked README, then the diff after splicing | headings and prose rewritten; commands and code fences are facts |
+| Docs | n/a | n/a | `.planning/codebase/*`, `.planning/STATE.md`, the debug note and the quick-task folder deleted |
+| Tests | the implementer | masked copies of the five test files with attributed hunks (`MidiMappingManagerTest`, `SessionStateTest`, `FileSystemManagerTest`, `PlayQueueManagerTest`, `MixerLayoutTest`) | replacement hunks written from the spec's test obligations; `./gradlew test` green. `MidiEngineQueueTest` (3 lines) and `BgQueueManagerTest` (1 line) left as imports/braces only |
+
+Residue that still blames to the contributor (accepted): imports, braces, blank lines, code fences and commands in the
+README, and lines whose text is fixed by an interface other code calls (`clearScanCache()`, `tryReconnect(force)`,
+`midiProfileFile`, the `lastJackFailure` fields, the `MixerPanel` argument list built from ImGui getters). About 280 lines remain by `git blame -w -M -C`, none of them logic beyond one-line calls. Candidates to
+rename if a stricter line is wanted: `ScanCacheEntry` and the `GLDebug` callback text decode.
+
+**To confirm:** a written grant or a statement from the contributor about their commits; they were AI-assisted
+(`codex/*` branch names), so the copyright position of that output is unclear either way.
+
 ## Credits and notices
 
 - Credit Draves and Reckase and the beat-tracking authors in the shipped credits (`docs/licenses/SHADERS_LICENSE.md` has
