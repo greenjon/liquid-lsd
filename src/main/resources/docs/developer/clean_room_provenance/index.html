@@ -1520,7 +1520,7 @@ commercial release.</p>
 </tr>
 </tbody>
 </table>
-<p>Built variations: 97 of the 100 ids (the paper's 49, 46 from the spec, and <code>hemisphere</code> and <code>pre_blur</code> by black box). The three reserved ids are <code>super_shape</code>,
+<p>Built variations: 98 of the 101 ids (the paper's 49, 46 from the spec, and <code>hemisphere</code>, <code>pre_blur</code> and <code>plusrecip</code> by black box). The three reserved ids are <code>super_shape</code>,
 <code>lazysusan</code> and <code>mobius</code>.</p>
 <h2 id="black-box-log">Black-box log</h2>
 <table>
@@ -1542,6 +1542,22 @@ commercial release.</p>
 <td>JWildfire 9.00</td>
 <td>table in <code>build/blackbox/jwildfire/hemisphere/</code>, pairs in the two variation tests</td>
 <td>done 2026-10-12: the output is the input scaled by 1/sqrt(r^2 + 1), 88 of 91 clean points within 0.02</td>
+</tr>
+<tr>
+<td><code>plusrecip</code> (id 100)</td>
+<td>automated: <code>run_probes.py jwildfire plusrecip</code></td>
+<td>the assistant, fitting hypotheses to <code>table.csv</code> only</td>
+<td>JWildfire 9.00</td>
+<td>table in <code>tools/blackbox/build/blackbox/jwildfire/plusrecip/</code>, pairs in the two variation tests</td>
+<td>done 2026-10-13: with (u, t) the real and imaginary parts of sqrt(4 - z^2), z = x + iy, the output is (sign(x) (x + t), y +/- u), the sign of the second term being that of x*y; 141 of 147 clean points fit within 0.02 (the other six lie on y = 0, where the sign depends on which side of the axis a dot's pixels fall). A parameter may exist that the probe did not vary: only the default was observed</td>
+</tr>
+<tr>
+<td><code>inversion</code> (importer alias)</td>
+<td><code>run_probes.py jwildfire inversion</code></td>
+<td>the assistant, from <code>table.csv</code> only</td>
+<td>JWildfire 9.00</td>
+<td><code>tools/blackbox/build/blackbox/jwildfire/inversion/</code>; <code>FlameImporterTest</code></td>
+<td>done 2026-10-13: every clean point (157) is the input divided by x^2 + y^2 within 0.007, which is our <code>spherical</code>, so the importer reads <code>inversion</code> as <code>spherical</code>. No new variation. <code>linear3D</code> and <code>spherical3D</code> are read as <code>linear</code> and <code>spherical</code> (3D twins, z not modelled; not observed, the import notes say so)</td>
 </tr>
 <tr>
 <td><code>pre_blur</code> (id 67) and the pre stage</td>
@@ -1646,15 +1662,15 @@ doc lines survived to HEAD. The history still contains the commits; this section
 </tr>
 <tr>
 <td>Tests</td>
-<td>TO FILL</td>
-<td>masked copies</td>
-<td>TO FILL</td>
+<td>the implementer</td>
+<td>masked copies of the five test files with attributed hunks (<code>MidiMappingManagerTest</code>, <code>SessionStateTest</code>, <code>FileSystemManagerTest</code>, <code>PlayQueueManagerTest</code>, <code>MixerLayoutTest</code>)</td>
+<td>replacement hunks written from the spec's test obligations; <code>./gradlew test</code> green. <code>MidiEngineQueueTest</code> (3 lines) and <code>BgQueueManagerTest</code> (1 line) left as imports/braces only</td>
 </tr>
 </tbody>
 </table>
 <p>Residue that still blames to the contributor (accepted): imports, braces, blank lines, code fences and commands in the
 README, and lines whose text is fixed by an interface other code calls (<code>clearScanCache()</code>, <code>tryReconnect(force)</code>,
-<code>midiProfileFile</code>, the <code>lastJackFailure</code> fields, the <code>MixerPanel</code> argument list built from ImGui getters). Candidates to
+<code>midiProfileFile</code>, the <code>lastJackFailure</code> fields, the <code>MixerPanel</code> argument list built from ImGui getters). About 280 lines remain by <code>git blame -w -M -C</code>, none of them logic beyond one-line calls. Candidates to
 rename if a stricter line is wanted: <code>ScanCacheEntry</code> and the <code>GLDebug</code> callback text decode.</p>
 <p><strong>To confirm:</strong> a written grant or a statement from the contributor about their commits; they were AI-assisted
 (<code>codex/*</code> branch names), so the copyright position of that output is unclear either way.</p>

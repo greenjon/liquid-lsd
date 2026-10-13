@@ -46,7 +46,9 @@ object FlameImporter {
     /** File name -> our variation id, where the file name differs from [FlameVariations.NAMES] (compared lower-case). */
     private val ALIASES = mapOf(
         "julian" to "juliaN", "juliascope" to "juliaScope", "radial_blur" to "radialBlur", "gaussian_blur" to "gaussian",
-        "oscilloscope" to "oscope"
+        "oscilloscope" to "oscope",
+        // observed to equal spherical (black box, JWildfire 9.00); the 3D twins are read as their 2D twins (z is not modelled)
+        "inversion" to "spherical", "spherical3d" to "spherical", "linear3d" to "linear"
     )
     private val ID_BY_FILE_NAME: Map<String, Int> = buildMap {
         FlameVariations.ALL.forEachIndexed { id, v -> if (v.supported) put(v.name.lowercase(), id) }
@@ -73,6 +75,9 @@ object FlameImporter {
     private val PRE_POST_NAME = Regex("(pre|post)_[a-z0-9]+")
 
     /** Attributes of an xform that are not variations (and the editor-metadata suffixes of the files we saw). */
+    /** File names read as their 2D twin: an approximation, so the import says so. */
+    private val TWIN_3D = setOf("linear3d", "spherical3d")
+
     private val META = setOf(
         "weight", "color", "symmetry", "coefs", "post", "opacity", "name", "chaos", "plotmode", "animate", "color_speed",
         "color_type", "material", "material_speed", "mirror_pre_post_translations", "yzcoefs", "zxcoefs", "ypostcoefs",
@@ -206,13 +211,15 @@ object FlameImporter {
         put: (String, Float, String) -> Unit, notes: MutableList<String>, unsupported: MutableSet<String>
     ) {
         val found = ArrayList<Pair<Int, Float>>()
+        val twins = ArrayList<String>()
         val attrs = xf.attributes
         for (i in 0 until attrs.length) {
             val n = attrs.item(i).nodeName
             val id = ID_BY_FILE_NAME[n.lowercase()] ?: continue
             val w = xf.num(n, 0f)
-            if (w != 0f) found += id to w
+            if (w != 0f) { found += id to w; if (n.lowercase() in TWIN_3D) twins += n }
         }
+        if (twins.isNotEmpty()) notes += "$who: ${twins.joinToString()} read as the 2D twin (z is not modelled)"
         // anything numeric that is neither ours, a parameter of ours, nor editor metadata is a variation we do not have
         for (i in 0 until attrs.length) {
             val n = attrs.item(i).nodeName

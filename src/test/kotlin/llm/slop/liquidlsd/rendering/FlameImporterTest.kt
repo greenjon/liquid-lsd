@@ -190,4 +190,16 @@ class FlameImporterTest {
         assertTrue("pre_curl" in note && "post_crop" in note, note)
         assertFalse("pre_curl_c1" in note || "post_crop_left" in note || "pre_blur" in note || "post_ztranslate_wf" in note, note)
     }
+
+    @Test fun observedAndTwinNamesMapToOurVariations() {
+        val id = { n: String -> FlameVariations.NAMES.indexOf(n).toFloat() }
+        // inversion was observed to equal spherical; plusrecip is its own variation (id 100)
+        assertEquals(id("spherical"), xform("""inversion="1" """).values.f("X1 V1 Id"))
+        assertEquals(id("plusrecip"), xform("""plusrecip="1" """).values.f("X1 V1 Id"))
+        // the 3D twins read as the 2D ones, and the import says so
+        val r = xform("""linear3D="1" spherical3D="0.5" """)
+        assertEquals(id("linear"), r.values.f("X1 V1 Id")); assertEquals(id("spherical"), r.values.f("X1 V2 Id"))
+        assertTrue(r.notes.any { "2D twin" in it && "linear3D" in it })
+        assertTrue(r.notes.none { "unsupported" in it })
+    }
 }

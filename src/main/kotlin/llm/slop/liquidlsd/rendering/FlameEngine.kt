@@ -434,6 +434,11 @@ vec2 vari(int id, vec2 p, float w, vec4 P, vec4 M, vec2 T) {
                    float R = w * (2.0 + P.x) * spow(sdiv(y2 + ap*ap, y2 + am*am), 0.25), al = 0.5 * (atan(p.y, am) - atan(p.y, ap));
                    return R * vec2(cos(al), sin(al)); }
         case 99: v = p * inversesqrt(q + 1.0); break;                                           // hemisphere: observed, the point scaled by 1/sqrt(r^2 + 1)
+        case 100: { float A = 4.0 - p.x*p.x + p.y*p.y, B = 2.0*abs(p.x*p.y), Rr = length(vec2(A, B));   // plusrecip: observed; (u, t) = the parts of sqrt(4 - z^2), z = x + iy
+                    float u, t;
+                    if (A >= 0.0) { u = sqrt(0.5*(Rr + A)); t = u > 0.0 ? B/(2.0*u) : 0.0; }
+                    else          { t = sqrt(0.5*(Rr - A)); u = t > 0.0 ? B/(2.0*t) : 0.0; }
+                    v = vec2((p.x < 0.0 ? -1.0 : 1.0) * (p.x + t), p.y + (p.x*p.y < 0.0 ? -u : u)); break; }
     }
     return w * v;
 }

@@ -10,6 +10,7 @@ import kotlin.math.cos
 import kotlin.math.cosh
 import kotlin.math.exp
 import kotlin.math.floor
+import kotlin.math.hypot
 import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.math.sin
@@ -92,6 +93,12 @@ class FlameVariationsTest {
                 val k = (p[2] * (1 / cos(t4) - 1) + p[3]) / r.pow(p[0]); doubleArrayOf(k * x, k * y)
             }
             "hemisphere" -> { val k = 1 / sqrt(x * x + y * y + 1); doubleArrayOf(k * x, k * y) }
+            "plusrecip" -> {   // observed with JWildfire 9.00: (u, t) = the parts of sqrt(4 - z^2); x keeps its side, y goes up or down with the sign of x*y
+                val a = 4 - x * x + y * y; val b = 2 * abs(x * y); val rr = hypot(a, b)
+                val u: Double; val t: Double
+                if (a >= 0) { u = sqrt((rr + a) / 2); t = if (u > 0) b / (2 * u) else 0.0 } else { t = sqrt((rr - a) / 2); u = if (t > 0) b / (2 * t) else 0.0 }
+                doubleArrayOf((if (x < 0) -1.0 else 1.0) * (x + t), y + (if (x * y < 0) -u else u))
+            }
             "secant2" -> { val c = cos(r); doubleArrayOf(x, if (c < 0) 1 / c + 1 else 1 / c - 1) }   // weight 1
             "cross" -> { val k = sqrt(1 / ((x * x - y * y).pow(2) + 1e-10)); doubleArrayOf(k * x, k * y) }
             "boarders" -> {
@@ -219,14 +226,15 @@ class FlameVariationsTest {
 
     private fun params(vararg v: Double) = DoubleArray(4).also { v.copyInto(it) }
 
-    @Test fun tableHasNinetyNineIdsWithUniqueNamesAndTheSkippedThreeReserved() {
-        assertEquals(100, FlameVariations.count())
-        assertEquals(100, FlameVariations.NAMES.toSet().size)
+    @Test fun tableHasHundredAndOneIdsWithUniqueNamesAndTheSkippedThreeReserved() {
+        assertEquals(101, FlameVariations.count())
+        assertEquals(101, FlameVariations.NAMES.toSet().size)
         assertEquals("linear", FlameVariations.NAMES[0]); assertEquals("popcorn", FlameVariations.NAMES[17])
         assertEquals("pdj", FlameVariations.NAMES[24]); assertEquals("cross", FlameVariations.NAMES[48])
         assertEquals("disc2", FlameVariations.NAMES[49]); assertEquals("waves2", FlameVariations.NAMES[81])
         assertEquals("exp", FlameVariations.NAMES[82]); assertEquals("coth", FlameVariations.NAMES[95])
         assertEquals("mobius", FlameVariations.NAMES[98])
+        assertEquals("hemisphere", FlameVariations.NAMES[99]); assertEquals("plusrecip", FlameVariations.NAMES[100])
         for (id in listOf(50, 65, 98)) assertTrue(!FlameVariations.ALL[id].supported, FlameVariations.NAMES[id])
         assertTrue(FlameVariations.ALL.all { it.params.size <= FlameVariations.PARAMS })
         assertTrue(FlameVariations.ALL.all { it.supported || it.params.isEmpty() })
@@ -314,6 +322,11 @@ class FlameVariationsTest {
         assertV("hemisphere", 1.0, 0.0, 0.7071067812, 0.0)       // observed with JWildfire 9.00: the point scaled by 1/sqrt(r^2 + 1)
         assertV("hemisphere", 0.5, 0.5, 0.4082482905, 0.4082482905)
         assertV("hemisphere", -3.0, 4.0, -0.5883484054, 0.7844645406)
+        assertV("plusrecip", 0.4, -0.4, 0.4799361785, -2.4015968107)    // observed with JWildfire 9.00 (render 0.480, -2.403)
+        assertV("plusrecip", -0.4, -0.4, 0.3200638215, 1.6015968107)    // (0.320, 1.602)
+        assertV("plusrecip", -0.4, 0.4, 0.3200638215, -1.6015968107)    // (0.320, -1.602)
+        assertV("plusrecip", 2.0, -1.6, 3.4719053898, -3.7740527769)    // (3.472, -3.775)
+        assertV("plusrecip", -2.0, -2.0, 0.4276972445, 0.5440392990)    // (0.427, 0.545)
         assertV("fan2", 1.0, 2.0, 0.1585126678, 2.2304424974, p = doubleArrayOf(0.5, 0.3, 0.0, 0.0))
         assertV("fan2", -2.0, 1.0, -0.2273256645, 2.2244826460, p = doubleArrayOf(0.8, 0.2, 0.0, 0.0))
         assertV("fan2", 2.0, 1.6, 2.4600525568, 0.7128403873, p = doubleArrayOf(0.5, 0.0, 0.0, 0.0))
