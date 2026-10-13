@@ -119,12 +119,11 @@ object PresetManager {
         }
     }
 
-    internal data class RestoredQueueState(
+    data class RestoredQueueState(
         val files: List<File>,
         val activeIndex: Int,
         val unresolvedPaths: List<String> = emptyList()
     )
-
     fun isDeckDirty(deck: Deck, mixer: Mixer): Boolean = DeckOps.isDirty(deck, mixer)
 
     /**

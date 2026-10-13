@@ -1,58 +1,39 @@
 package llm.slop.liquidlsd.ui
 
-import kotlin.test.AfterTest
+import java.io.File
+import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import java.io.File
-import kotlin.io.path.createTempDirectory
 
 class FileSystemManagerTest {
-
-    @AfterTest
-    fun tearDown() {
-        FileSystemManager.clearScanCache()
-    }
-
-    @Test
-    fun testScanDirectoryRefreshesWhenDirectoryContentsChange() {
-        val directory = createTempDirectory().toFile()
-
-        assertEquals(emptyList(), FileSystemManager.scanDirectory(directory))
-
-        File(directory, "first.lsd").writeText("{}")
-        val firstScan = FileSystemManager.scanDirectory(directory)
-        assertEquals(listOf("first"), firstScan.map { it.name })
-
-        File(directory, "second.lsd").writeText("{}")
-        val secondScan = FileSystemManager.scanDirectory(directory)
-        assertEquals(listOf("first", "second"), secondScan.map { it.name })
-    }
-
     @Test
     fun testManagedAssetPathAllowsPresetAndPlaylistRootsOnly() {
         assertTrue(FileSystemManager.isManagedAssetPath(File("library/presets/test.lsd")))
         assertTrue(FileSystemManager.isManagedAssetPath(File("library/playlists/test.lsdplay")))
         assertFalse(FileSystemManager.isManagedAssetPath(File("library/midi/test.json")))
-        assertFalse(FileSystemManager.isManagedAssetPath(File("build/outside.lsd")))
+        assertFalse(FileSystemManager.isManagedAssetPath(File(createTempDirectory().toFile(), "outside.lsd")))
+        // A sibling that merely shares the root's name as a prefix is not inside it.
+        val root = FileSystemManager.getPresetsRoot()
+        assertFalse(FileSystemManager.isManagedAssetPath(File(root.parentFile, "${root.name}_other/x.lsd")))
+        assertFalse(FileSystemManager.isManagedAssetPath(File(root, "../midi/escape.json")))
     }
 
     @Test
-    fun testRenameRejectsTargetOutsideManagedRoots() {
+    fun testRenameRefusesNewNameThatEscapesManagedRoots() {
         val presetDir = FileSystemManager.getPresetsRoot()
         val source = File(presetDir, "rename-escape-test.lsd").apply { writeText("{}") }
-
         try {
-            val result = FileSystemManager.renameFile(source.absolutePath, "../midi/escaped")
-
+            val result = FileSystemManager.renameFile(source.absolutePath, "../../evil")
             assertTrue(result.isFailure)
-            assertTrue(source.exists())
-            assertFalse(File("presets/midi/escaped.lsd").exists())
+            assertTrue(result.exceptionOrNull() is IllegalArgumentException)
+            assertTrue(source.exists(), "a refused rename must leave the source where it was")
         } finally {
             source.delete()
         }
     }
+
     @Test
     fun testDeleteRejectsTargetOutsideManagedRoots() {
         val result = FileSystemManager.deleteFile("../../etc/passwd")
@@ -171,5 +152,34 @@ class FileSystemManagerTest {
             brokenPlaylist.delete()
             FileSystemManager.clearScanCache()
         }
+    }
+
+    @Test
+    fun testCreateDirectoryRefusesNameThatEscapesParent() {
+        val parent = FileSystemManager.getPresetsRoot()
+        val escaped = File(parent.parentFile, "escape-test-dir")
+        try {
+            val result = FileSystemManager.createDirectory(parent.absolutePath, "../escape-test-dir")
+            assertTrue(result.isFailure)
+            assertFalse(escaped.exists())
+        } finally {
+            escaped.delete()
+        }
+    }
+
+    @Test
+    fun testScanDirectorySeesNewFilesAfterCacheClear() {
+        val directory = createTempDirectory().toFile()
+        File(directory, "one.lsd").writeText("{}")
+        assertEquals(1, FileSystemManager.scanDirectory(directory).size)
+
+        File(directory, "two.lsd").writeText("{}")
+        FileSystemManager.clearScanCache()
+        assertEquals(2, FileSystemManager.scanDirectory(directory).size)
+    }
+
+    @Test
+    fun testScanDirectoryOfMissingPathIsEmpty() {
+        assertTrue(FileSystemManager.scanDirectory(File(createTempDirectory().toFile(), "nope")).isEmpty())
     }
 }

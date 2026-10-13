@@ -19,7 +19,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 import java.io.File
-import kotlin.io.path.createTempDirectory
 
 class SessionStateTest {
     private val json = Json {
@@ -195,36 +194,54 @@ class SessionStateTest {
         assertTrue(decoded.deckMacroBanks.isEmpty())
     }
 
-    @Test
-    fun testRestoredQueueRebasesActiveIndexAfterFilteringMissingFiles() {
-        val tempDir = createTempDirectory().toFile()
-        val activeFile = File(tempDir, "active.lsd").apply { writeText("{}") }
-        val nextFile = File(tempDir, "next.lsd").apply { writeText("{}") }
-        val missingFile = File(tempDir, "missing.lsd")
+    private fun tempPreset(prefix: String): File =
+        File.createTempFile(prefix, ".lsd").apply { writeText("{}"); deleteOnExit() }
 
+    private fun absent(name: String): String = File(System.getProperty("java.io.tmpdir"), "$name-absent.lsd").absolutePath
+
+    @Test
+    fun testRestoredQueueMissingActiveFallsToNextSurvivor() {
+        val first = tempPreset("first")
+        val third = tempPreset("third")
         val restored = PresetManager.resolveRestoredQueue(
-            listOf(missingFile.absolutePath, activeFile.absolutePath, nextFile.absolutePath),
+            listOf(first.absolutePath, absent("second"), third.absolutePath),
             activeIndex = 1
         )
+        assertEquals(listOf(first.absoluteFile, third.absoluteFile), restored.files.map { it.absoluteFile })
+        assertEquals(1, restored.activeIndex)
+        assertEquals(listOf(absent("second")), restored.unresolvedPaths)
+    }
 
-        assertEquals(listOf(activeFile.absoluteFile, nextFile.absoluteFile), restored.files.map { it.absoluteFile })
+    @Test
+    fun testRestoredQueueMissingActiveWithNoLaterSurvivorUsesFirst() {
+        val first = tempPreset("first")
+        val restored = PresetManager.resolveRestoredQueue(
+            listOf(first.absolutePath, absent("second"), absent("third")),
+            activeIndex = 1
+        )
+        assertEquals(listOf(first.absoluteFile), restored.files.map { it.absoluteFile })
         assertEquals(0, restored.activeIndex)
     }
 
     @Test
-    fun testRestoredQueueMovesToNextSurvivingItemWhenActiveFileIsMissing() {
-        val tempDir = createTempDirectory().toFile()
-        val previousFile = File(tempDir, "previous.lsd").apply { writeText("{}") }
-        val nextFile = File(tempDir, "next.lsd").apply { writeText("{}") }
-        val missingActiveFile = File(tempDir, "active.lsd")
-
+    fun testRestoredQueueMissingFirstItemShiftsActiveIndex() {
+        val second = tempPreset("second")
+        val third = tempPreset("third")
         val restored = PresetManager.resolveRestoredQueue(
-            listOf(previousFile.absolutePath, missingActiveFile.absolutePath, nextFile.absolutePath),
+            listOf(absent("first"), second.absolutePath, third.absolutePath),
             activeIndex = 1
         )
+        assertEquals(listOf(second.absoluteFile, third.absoluteFile), restored.files.map { it.absoluteFile })
+        assertEquals(0, restored.activeIndex)
+    }
 
-        assertEquals(listOf(previousFile.absoluteFile, nextFile.absoluteFile), restored.files.map { it.absoluteFile })
-        assertEquals(1, restored.activeIndex)
+    @Test
+    fun testRestoredQueueAllMissingIsEmpty() {
+        val paths = listOf(absent("a"), absent("b"))
+        val restored = PresetManager.resolveRestoredQueue(paths, activeIndex = 0)
+        assertTrue(restored.files.isEmpty())
+        assertEquals(-1, restored.activeIndex)
+        assertEquals(paths, restored.unresolvedPaths)
     }
 
     @Test

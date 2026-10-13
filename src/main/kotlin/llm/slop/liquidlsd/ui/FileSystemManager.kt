@@ -35,14 +35,14 @@ object FileSystemManager {
     private const val TRANSITION_PLAYLISTS_ROOT = "library/transition_playlists"
     private const val GENERATOR_DEFAULTS_ROOT = "library/generator_defaults"
     private const val ISF_OVERRIDES_ROOT = "library/isf_overrides"
-    private const val SCAN_CACHE_TTL_MS = 1_000L
+    private const val SCAN_CACHE_TTL_MS = 2_000L
 
+    /** A scanned listing, the directory signature it was built from, and when it was stored. */
     private data class ScanCacheEntry(
         val signature: String,
         val cachedAtMs: Long,
         val items: List<AssetItem>
     )
-
     private val scanCache = ConcurrentHashMap<String, ScanCacheEntry>()
     private data class PresetMeta(
         val lastMod: Long,
@@ -50,12 +50,12 @@ object FileSystemManager {
         val dependencies: llm.slop.liquidlsd.presets.PresetDependencies
     )
     private val presetMetaCache = ConcurrentHashMap<String, PresetMeta>()
-    
     private val executor = Executors.newSingleThreadScheduledExecutor { r ->
         Thread(r, "FileSystemScanner").apply { isDaemon = true }
     }
     private val pendingScanFutures = ConcurrentHashMap<String, ScheduledFuture<*>>()
 
+    /** Drops every cached listing and preset-meta entry; called after any successful mutation. */
     internal fun clearScanCache() {
         scanCache.clear()
         presetMetaCache.clear()
@@ -79,7 +79,6 @@ object FileSystemManager {
         presetMetaCache[path] = PresetMeta(lastMod, tags, deps)
         return tags to deps
     }
-
     internal fun getPresetTags(file: File): List<String> = getPresetMeta(file).first
     internal fun getPresetDependencies(file: File): llm.slop.liquidlsd.presets.PresetDependencies = getPresetMeta(file).second
 
@@ -87,8 +86,8 @@ object FileSystemManager {
         if (!directory.exists() || !directory.isDirectory) return ""
         val childrenSig = directory.listFiles()
             ?.sortedBy { it.name }
-            ?.joinToString("|") { file ->
-                "${file.name}:${file.isDirectory}:${file.length()}:${file.lastModified()}"
+            ?.joinToString("|") { child ->
+                "${child.name}:${child.isDirectory}:${child.length()}:${child.lastModified()}"
             } ?: ""
         return "${directory.lastModified()}:$childrenSig"
     }
@@ -109,19 +108,15 @@ object FileSystemManager {
         ).map { it.canonicalFile.toPath() }
     }
 
+    /** True when [file], with symlinks and `..` resolved, is a managed root or lies beneath one. */
     internal fun isManagedAssetPath(file: File): Boolean {
-        val candidate = file.canonicalFile.toPath()
-        return managedRootPaths().any { root -> candidate == root || candidate.startsWith(root) }
+        val target = file.canonicalFile.toPath()
+        return managedRootPaths().any { target.startsWith(it) }
     }
 
-    private fun requireManagedAssetPath(file: File): Result<Unit>? {
-        return if (isManagedAssetPath(file)) {
-            null
-        } else {
-            Result.failure(IllegalArgumentException("Path is outside managed asset roots: ${file.path}"))
-        }
-    }
-    
+    private fun managedPathViolation(file: File): IllegalArgumentException? =
+        if (isManagedAssetPath(file)) null
+        else IllegalArgumentException("Path is outside the managed asset roots: ${file.path}")
     fun scanAllPresets(): List<AssetItem> {
         val root = getPresetsRoot()
         if (!root.exists() || !root.isDirectory) return emptyList()
@@ -401,8 +396,8 @@ object FileSystemManager {
             return emptyList()
         }
 
-        val cacheKey = directory.canonicalPath
-        val signature = directorySignature(directory)
+        val cacheKey = "DIR_${directory.canonicalPath}"
+        val signature = getDirectorySignature(directory)
         val now = System.currentTimeMillis()
         val cached = scanCache[cacheKey]
         if (cached != null && cached.signature == signature) {
@@ -480,7 +475,6 @@ object FileSystemManager {
         }
         return items.sortedWith(compareBy({ it.type != AssetType.FOLDER }, { it.name }))
     }
-
     private fun triggerAsyncScan(directory: File, cacheKey: String) {
         pendingScanFutures[cacheKey]?.cancel(false)
         val future = executor.schedule({
@@ -646,10 +640,10 @@ object FileSystemManager {
             if (!oldFile.exists()) {
                 return Result.failure(IllegalArgumentException("File does not exist: $oldPath"))
             }
-            requireManagedAssetPath(oldFile)?.let { return it.map { oldPath } }
+            managedPathViolation(oldFile)?.let { return Result.failure(it) }
             
             val newFile = File(oldFile.parent, "$newName.${oldFile.extension}")
-            requireManagedAssetPath(newFile)?.let { return it.map { newFile.absolutePath } }
+            managedPathViolation(newFile)?.let { return Result.failure(it) }
             if (newFile.exists()) {
                 return Result.failure(IllegalArgumentException("File already exists: ${newFile.name}"))
             }
@@ -676,7 +670,7 @@ object FileSystemManager {
             if (!sourceFile.exists()) {
                 return Result.failure(IllegalArgumentException("Source file does not exist"))
             }
-            requireManagedAssetPath(sourceFile)?.let { return it.map { sourcePath } }
+            managedPathViolation(sourceFile)?.let { return Result.failure(it) }
             
             val baseName = sourceFile.nameWithoutExtension
             val extension = sourceFile.extension
@@ -692,7 +686,7 @@ object FileSystemManager {
                 targetFile = File(sourceFile.parent, copyName)
                 copyIndex++
             } while (targetFile.exists())
-            requireManagedAssetPath(targetFile)?.let { return it.map { targetFile.absolutePath } }
+            managedPathViolation(targetFile)?.let { return Result.failure(it) }
             
             Files.copy(sourceFile.toPath(), targetFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES)
             clearScanCache()
@@ -715,15 +709,15 @@ object FileSystemManager {
             if (!sourceFile.exists()) {
                 return Result.failure(IllegalArgumentException("Source file does not exist"))
             }
-            requireManagedAssetPath(sourceFile)?.let { return it.map { sourcePath } }
+            managedPathViolation(sourceFile)?.let { return Result.failure(it) }
             
             if (!targetDir.exists() || !targetDir.isDirectory) {
                 return Result.failure(IllegalArgumentException("Target directory does not exist"))
             }
-            requireManagedAssetPath(targetDir)?.let { return it.map { targetDirectory } }
+            managedPathViolation(targetDir)?.let { return Result.failure(it) }
             
             val targetFile = File(targetDir, sourceFile.name)
-            requireManagedAssetPath(targetFile)?.let { return it.map { targetFile.absolutePath } }
+            managedPathViolation(targetFile)?.let { return Result.failure(it) }
             if (targetFile.exists()) {
                 return Result.failure(IllegalArgumentException("File already exists in target directory"))
             }
@@ -747,7 +741,7 @@ object FileSystemManager {
             if (!file.exists()) {
                 return Result.failure(IllegalArgumentException("File does not exist"))
             }
-            requireManagedAssetPath(file)?.let { return it }
+            managedPathViolation(file)?.let { return Result.failure(it) }
             
             if (file.delete()) {
                 clearScanCache()
@@ -771,10 +765,10 @@ object FileSystemManager {
             if (!parentDir.exists() || !parentDir.isDirectory) {
                 return Result.failure(IllegalArgumentException("Parent directory does not exist"))
             }
-            requireManagedAssetPath(parentDir)?.let { return it.map { parentPath } }
+            managedPathViolation(parentDir)?.let { return Result.failure(it) }
             
             val newDir = File(parentDir, name)
-            requireManagedAssetPath(newDir)?.let { return it.map { newDir.absolutePath } }
+            managedPathViolation(newDir)?.let { return Result.failure(it) }
             if (newDir.exists()) {
                 return Result.failure(IllegalArgumentException("Directory already exists"))
             }

@@ -316,20 +316,14 @@ class PlayQueueManagerTest {
 
     @Test
     fun testSharedPlaylistParserResolvesJsonItemsWithPresetExtensions() {
-        val tempDir = createTempDirectory().toFile()
-        val patchFile = File(tempDir, "testPatch.lsd").apply { writeText("{}") }
-        val playlistContent = """
-            {
-              "version": 1,
-              "name": "Test",
-              "items": ["testPatch"]
-            }
-        """.trimIndent()
+        val root = createTempDirectory().toFile()
+        val alpha = File(root, "alpha.lsd").apply { writeText("{}") }
+        val upper = File(root, "Upper.LSD").apply { writeText("{}") }
+        val jsonList = """{"name":"mix","items":["alpha","Upper.LSD","nowhere"]}"""
 
-        val items = PlaylistParser.parseItems(playlistContent)
-        val resolved = PlaylistParser.resolveItems(items, listOf(tempDir))
-
-        assertEquals(listOf(patchFile.absoluteFile), resolved.map { it.absoluteFile })
+        val resolved = PlaylistParser.resolveItems(PlaylistParser.parseItems(jsonList), listOf(root))
+        assertEquals(listOf(alpha, upper), resolved)
+        assertEquals(null, PlaylistParser.resolveItem("nowhere", listOf(root)))
     }
 
     @Test

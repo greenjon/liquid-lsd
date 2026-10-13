@@ -1,142 +1,93 @@
 package llm.slop.liquidlsd.ui
-
+import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+private const val PADDING_X = 8f
+
 class MixerLayoutTest {
-    @Test
-    fun usesFullAvailableWidthWithoutUnconditionalScrollbarReservation() {
-        val layout = MixerLayoutCalculator.calculate(
-            windowWidth = 576f,
-            availableHeight = 1048f,
-            windowPaddingX = 8f,
-            scrollbarWidth = 14f,
-            textLineHeightWithSpacing = 22f,
-            frameHeightWithSpacing = 25f,
-            itemSpacingY = 4f
-        )
+    private fun layout(width: Float, height: Float, aspect: Float = 9f / 16f) = MixerLayoutCalculator.calculate(
+        windowWidth = width,
+        availableHeight = height,
+        windowPaddingX = PADDING_X,
+        scrollbarWidth = 14f,
+        textLineHeightWithSpacing = 20f,
+        frameHeightWithSpacing = 24f,
+        itemSpacingY = 4f,
+        aspectRatio = aspect,
+    )
 
-        assertEquals(560f, layout.contentWidth)
-        assertTrue(layout.masterHeight > 0f)
-        assertTrue(layout.deckChildHeight > 0f)
-        assertTrue(layout.deckPVHeight > 0f)
+    private fun maxWidth(height: Float, aspect: Float = 9f / 16f) = MixerLayoutCalculator.calculateMaxAllowedWindowWidth(
+        availableHeight = height,
+        windowPaddingX = PADDING_X,
+        textLineHeightWithSpacing = 20f,
+        frameHeightWithSpacing = 24f,
+        itemSpacingY = 4f,
+        aspectRatio = aspect,
+    )
+
+    @Test
+    fun wideTallPaneUsesFullContentWidth() {
+        val result = layout(width = 600f, height = 4000f)
+        assertEquals(584f, result.contentWidth)
+        assertEquals(result.contentWidth, result.renderWidth)
+        assertEquals(0f, result.offsetX)
     }
 
     @Test
-    fun shrinksPreviewsWhenPaneHeightIsTight() {
-        val roomy = MixerLayoutCalculator.calculate(
-            windowWidth = 576f,
-            availableHeight = 1048f,
-            windowPaddingX = 8f,
-            scrollbarWidth = 14f,
-            textLineHeightWithSpacing = 22f,
-            frameHeightWithSpacing = 25f,
-            itemSpacingY = 4f
-        )
-        val tight = MixerLayoutCalculator.calculate(
-            windowWidth = 576f,
-            availableHeight = 684f,
-            windowPaddingX = 8f,
-            scrollbarWidth = 14f,
-            textLineHeightWithSpacing = 22f,
-            frameHeightWithSpacing = 25f,
-            itemSpacingY = 4f
-        )
-
-        assertTrue(tight.renderWidth < roomy.renderWidth)
-        assertTrue(tight.masterHeight < roomy.masterHeight)
-        assertTrue(tight.deckChildHeight < roomy.deckChildHeight)
-        assertTrue(tight.deckPVHeight < roomy.deckPVHeight)
+    fun tightHeightShrinksAndCentresPreviews() {
+        val result = layout(width = 1200f, height = 500f)
+        assertTrue(result.renderWidth < result.contentWidth)
+        assertTrue(result.offsetX > 0f)
+        assertEquals((result.contentWidth - result.renderWidth) / 2f, result.offsetX, 0.001f)
+        // The window width that fits this height solves back to the same render width.
+        val fitted = layout(width = maxWidth(500f), height = 500f)
+        assertEquals(result.renderWidth, fitted.renderWidth, 0.01f)
     }
 
     @Test
-    fun clampsToMinimumHeightsOnExtremelySmallScreens() {
-        val tiny = MixerLayoutCalculator.calculate(
-            windowWidth = 576f,
-            availableHeight = 300f,
-            windowPaddingX = 8f,
-            scrollbarWidth = 14f,
-            textLineHeightWithSpacing = 22f,
-            frameHeightWithSpacing = 25f,
-            itemSpacingY = 4f
-        )
-
-        assertEquals(120f, tiny.masterHeight)
-        assertEquals(80f, tiny.deckChildHeight)
-        assertEquals(80f, tiny.deckPVHeight)
+    fun tinyScreenKeepsMinimumHeights() {
+        for (height in listOf(0f, 1f, 50f)) {
+            val result = layout(width = 20f, height = height)
+            assertTrue(result.masterHeight >= 120f)
+            assertTrue(result.deckChildHeight >= 80f)
+            assertTrue(result.deckPVHeight >= 80f)
+        }
     }
 
     @Test
-    fun testDynamicAspectRatios() {
-        // 4:3 aspect ratio (aspect = 1200 / 1600 = 0.75f)
-        val layout4x3 = MixerLayoutCalculator.calculate(
-            windowWidth = 800f,
-            availableHeight = 1600f,
-            windowPaddingX = 8f,
-            scrollbarWidth = 14f,
-            textLineHeightWithSpacing = 22f,
-            frameHeightWithSpacing = 25f,
-            itemSpacingY = 4f,
-            aspectRatio = 0.75f
-        )
-        assertEquals(layout4x3.renderWidth * 0.75f, layout4x3.masterHeight, 0.1f)
-        assertTrue(layout4x3.deckChildHeight > 0f)
-
-        // 1:1 aspect ratio (aspect = 1.0f)
-        val layoutSquare = MixerLayoutCalculator.calculate(
-            windowWidth = 800f,
-            availableHeight = 1600f,
-            windowPaddingX = 8f,
-            scrollbarWidth = 14f,
-            textLineHeightWithSpacing = 22f,
-            frameHeightWithSpacing = 25f,
-            itemSpacingY = 4f,
-            aspectRatio = 1.0f
-        )
-        assertEquals(layoutSquare.renderWidth * 1.0f, layoutSquare.masterHeight, 0.1f)
-        assertTrue(layoutSquare.deckChildHeight > 0f)
+    fun masterHeightFollowsAspectRatio() {
+        for (aspect in listOf(9f / 16f, 3f / 4f, 1f, 16f / 9f)) {
+            val result = layout(width = 1000f, height = 5000f, aspect = aspect)
+            assertEquals(result.renderWidth * aspect, result.masterHeight, 0.01f)
+        }
     }
 
     @Test
-    fun testMaxAllowedWindowWidthMatchesLayoutCapacity() {
-        val windowPaddingX = 8f
-        val maxAllowedW = MixerLayoutCalculator.calculateMaxAllowedWindowWidth(
-            availableHeight = 1048f,
-            windowPaddingX = windowPaddingX,
-            textLineHeightWithSpacing = 22f,
-            frameHeightWithSpacing = 25f,
-            itemSpacingY = 4f,
-            aspectRatio = 9f / 16f
-        )
+    fun aspectRatioIsClamped() {
+        val tooFlat = layout(width = 1000f, height = 5000f, aspect = 0.01f)
+        val flat = layout(width = 1000f, height = 5000f, aspect = 0.2f)
+        assertEquals(flat.masterHeight, tooFlat.masterHeight, 0.01f)
+        val tooTall = layout(width = 400f, height = 50000f, aspect = 40f)
+        val tall = layout(width = 400f, height = 50000f, aspect = 5f)
+        assertEquals(tall.masterHeight, tooTall.masterHeight, 0.01f)
+    }
 
-        // At exact maxAllowedWidth, renderWidth must equal contentWidth and offsetX must be 0
-        val exactLayout = MixerLayoutCalculator.calculate(
-            windowWidth = maxAllowedW,
-            availableHeight = 1048f,
-            windowPaddingX = windowPaddingX,
-            scrollbarWidth = 14f,
-            textLineHeightWithSpacing = 22f,
-            frameHeightWithSpacing = 25f,
-            itemSpacingY = 4f,
-            aspectRatio = 9f / 16f
-        )
-        assertEquals(maxAllowedW - (windowPaddingX * 2f), exactLayout.contentWidth, 0.01f)
-        assertEquals(exactLayout.contentWidth, exactLayout.renderWidth, 0.01f)
-        assertEquals(0f, exactLayout.offsetX, 0.01f)
+    @Test
+    fun maxWindowWidthFillsAvailableHeight() {
+        val aspect = 9f / 16f
+        val availableHeight = 700f
+        val result = layout(width = maxWidth(availableHeight), height = availableHeight)
+        // Previews stack as master + two deck rows, minus the 8 px gutter per unit of aspect.
+        val previews = 2f * aspect * result.renderWidth - 8f * aspect
+        // Chrome for these inputs: bar 36, below master 13, below bar 17, row gap 10, rounding 4.
+        val stacked = previews + 36f + 13f + 17f + 10f + 4f
+        assertTrue(abs(stacked - availableHeight) <= 1f, "stacked $stacked vs available $availableHeight")
+    }
 
-        // If windowWidth exceeds maxAllowedW, renderWidth stays capped at maxAllowedContentWidth and offsetX > 0
-        val oversizedLayout = MixerLayoutCalculator.calculate(
-            windowWidth = maxAllowedW + 200f,
-            availableHeight = 1048f,
-            windowPaddingX = windowPaddingX,
-            scrollbarWidth = 14f,
-            textLineHeightWithSpacing = 22f,
-            frameHeightWithSpacing = 25f,
-            itemSpacingY = 4f,
-            aspectRatio = 9f / 16f
-        )
-        assertEquals(exactLayout.renderWidth, oversizedLayout.renderWidth, 0.01f)
-        assertEquals(100f, oversizedLayout.offsetX, 0.01f)
+    @Test
+    fun noHeightMeansUnboundedWidth() {
+        assertEquals(Float.MAX_VALUE, maxWidth(0f))
     }
 }

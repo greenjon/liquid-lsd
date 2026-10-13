@@ -988,6 +988,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#replaced-third-party-contribution-2026-07-06-commits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replaced third-party contribution (2026-07-06 commits)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#credits-and-notices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1391,6 +1402,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#replaced-third-party-contribution-2026-07-06-commits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replaced third-party contribution (2026-07-06 commits)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#credits-and-notices" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1577,6 +1599,65 @@ wrong whatever it remembers.</p>
    implementer was unsure the rules allowed is recorded and the item is dropped or redone.</li>
 </ol>
 <p>The reverse-engineering tools (decompilers, memory inspection) are not part of this protocol.</p>
+<h2 id="replaced-third-party-contribution-2026-07-06-commits">Replaced third-party contribution (2026-07-06 commits)</h2>
+<p>A contributor (Lawrence Norton, 15 commits on <code>codex/*</code> branches, 2026-07-06; no license grant on file) added path
+confinement, a scan cache, JACK failure reporting, process timeouts, MIDI profile filename checks, a mixer layout
+calculator, a shared playlist parser, a GL debug callback, tests and planning docs. About 500 source/test lines and 450
+doc lines survived to HEAD. The history still contains the commits; this section covers the working tree.</p>
+<table>
+<thead>
+<tr>
+<th>Step</th>
+<th>Who</th>
+<th>What they saw</th>
+<th>Output</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Spec</td>
+<td>the assistant (spec writer)</td>
+<td>the surviving attributed hunks and their callers</td>
+<td><code>.planning/lawrence-rewrite-spec.md</code>: behavior, interfaces, test obligations</td>
+</tr>
+<tr>
+<td>Source rewrite, pass 1</td>
+<td>a second assistant (implementer)</td>
+<td>the spec, callers, and unmasked <code>PlaylistParser</code>, <code>GLDebug</code>, <code>MixerLayout</code> outside the attributed hunks</td>
+<td>new bodies in those three files</td>
+</tr>
+<tr>
+<td>Source rewrite, pass 2</td>
+<td>the implementer</td>
+<td>masked copies (attributed hunks replaced by markers); also saw the first 60 lines and function index of <code>FileSystemManager.kt</code>, lines 446, 458 and 548-551 of <code>Main.kt</code>, and the <code>SessionSerializer</code> call site (line 203)</td>
+<td>new hunks spliced by line range</td>
+</tr>
+<tr>
+<td>README</td>
+<td>the spec writer</td>
+<td>the masked README, then the diff after splicing</td>
+<td>headings and prose rewritten; commands and code fences are facts</td>
+</tr>
+<tr>
+<td>Docs</td>
+<td>n/a</td>
+<td>n/a</td>
+<td><code>.planning/codebase/*</code>, <code>.planning/STATE.md</code>, the debug note and the quick-task folder deleted</td>
+</tr>
+<tr>
+<td>Tests</td>
+<td>TO FILL</td>
+<td>masked copies</td>
+<td>TO FILL</td>
+</tr>
+</tbody>
+</table>
+<p>Residue that still blames to the contributor (accepted): imports, braces, blank lines, code fences and commands in the
+README, and lines whose text is fixed by an interface other code calls (<code>clearScanCache()</code>, <code>tryReconnect(force)</code>,
+<code>midiProfileFile</code>, the <code>lastJackFailure</code> fields, the <code>MixerPanel</code> argument list built from ImGui getters). Candidates to
+rename if a stricter line is wanted: <code>ScanCacheEntry</code> and the <code>GLDebug</code> callback text decode.</p>
+<p><strong>To confirm:</strong> a written grant or a statement from the contributor about their commits; they were AI-assisted
+(<code>codex/*</code> branch names), so the copyright position of that output is unclear either way.</p>
 <h2 id="credits-and-notices">Credits and notices</h2>
 <ul>
 <li>Credit Draves and Reckase and the beat-tracking authors in the shipped credits (<code>docs/licenses/SHADERS_LICENSE.md</code> has

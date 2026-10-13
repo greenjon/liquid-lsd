@@ -1,15 +1,14 @@
 package llm.slop.liquidlsd.midi
 
+import io.mockk.unmockkAll
+import java.io.File
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
-import java.io.File
-import kotlin.io.path.createTempDirectory
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class MidiMappingManagerTest {
-
     // --- MIDI Engine Events & Types ---
 
     @Test
@@ -56,11 +55,18 @@ class MidiMappingManagerTest {
         assertFailsWith<IllegalArgumentException> { sanitiseProfileName(" ../ ") }
         assertFailsWith<IllegalArgumentException> { sanitiseProfileName("Live Set 01") }
         assertEquals("Live_Set_01", sanitiseProfileName("Live_Set_01"))
+        assertEquals("my-profile_2", sanitiseProfileName("  my-profile_2 "))
+        for (bad in listOf("a/b", "a\\b", "a\u0000b", "..", "", "   ", "my.profile")) {
+            assertFailsWith<IllegalArgumentException>("accepted '$bad'") { sanitiseProfileName(bad) }
+        }
     }
 
     @Test
-    fun testMidiProfileFileStaysUnderMidiDirectory() {
-        val midiDir = createTempDirectory().toFile()
+    fun testProfileFileStaysInsideMidiDir() {
+        val midiDir = File("build/tmp/midi-profile-test")
+        val ok = midiProfileFile(midiDir, "ok")
+        assertEquals("ok.json", ok.name)
+        assertTrue(ok.canonicalFile.toPath().startsWith(midiDir.canonicalFile.toPath()))
         val throws = runCatching { midiProfileFile(midiDir, "../outside") }.isFailure
         assertTrue(throws)
     }
@@ -89,7 +95,7 @@ class MidiMappingManagerTest {
         try {
             preferencesFile.writeText("activeMidiProfile=test_profile\n")
             llm.slop.liquidlsd.ui.AppPreferencesStore.loadPreferences()
-
+            assertEquals("test_profile", llm.slop.liquidlsd.ui.UITheme.activeMidiProfile)
             MidiMappingManager.loadProfile(llm.slop.liquidlsd.ui.UITheme.activeMidiProfile)
 
             assertEquals("test_profile", MidiMappingManager.activeProfileName)
@@ -110,6 +116,14 @@ class MidiMappingManagerTest {
 
             llm.slop.liquidlsd.ui.AppPreferencesStore.loadPreferences()
         }
+    }
+
+    @Test
+    fun testUnsafeProfileNameIsNeverActivated() {
+        MidiMappingManager.loadProfile("../escape")
+        assertEquals("default", MidiMappingManager.activeProfileName)
+        MidiMappingManager.loadProfile("a/b")
+        assertEquals("default", MidiMappingManager.activeProfileName)
     }
 
     // --- Rotary Encoders & Delta Decoding ---

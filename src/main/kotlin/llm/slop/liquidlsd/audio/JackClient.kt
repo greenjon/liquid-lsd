@@ -11,11 +11,8 @@ import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
-enum class JackStartFailure {
-    NATIVE_LIBRARY_MISSING,
-    CONNECTION_FAILED
-}
-
+/** Why a JACK start attempt failed, so the UI can say more than "not connected". */
+enum class JackStartFailure { NATIVE_LIBRARY_MISSING, CONNECTION_FAILED }
 /**
  * Handles initialization, callback registration, and port connections
  * for the JACK Audio Connection Kit.
@@ -71,8 +68,8 @@ class JackClient(
      */
     fun start(): Boolean {
         try {
-            lastStartFailure = null
-            lastStartFailureMessage = null
+        lastStartFailure = null
+        lastStartFailureMessage = null
             logger.info { "Starting JACK Audio client..." }
             val jack = Jack.getInstance()
             
@@ -121,27 +118,16 @@ class JackClient(
             autoConnectInput()
             return true
         } catch (e: Throwable) {
-            lastStartFailure = classifyStartFailure(e)
+            val nativeMissing = e is UnsatisfiedLinkError ||
+                e.message?.contains("native library", ignoreCase = true) == true
+            lastStartFailure = if (nativeMissing) JackStartFailure.NATIVE_LIBRARY_MISSING else JackStartFailure.CONNECTION_FAILED
             lastStartFailureMessage = e.message
-            val summary = if (lastStartFailure == JackStartFailure.NATIVE_LIBRARY_MISSING) {
-                "JACK native library is not available"
-            } else {
-                "Could not connect to JACK server"
-            }
-            logger.warn { "$summary: ${e.message}. Running in silent / fallback mode." }
+            val cause = if (nativeMissing) "native library not available" else "could not connect to server"
+            logger.warn { "JACK unavailable ($cause: ${e.message}); running in silent/fallback mode" }
             client = null
             inputPortL = null
             inputPortR = null
             return false
-        }
-    }
-
-    private fun classifyStartFailure(error: Throwable): JackStartFailure {
-        val message = error.message.orEmpty()
-        return if (error is UnsatisfiedLinkError || message.contains("native library", ignoreCase = true)) {
-            JackStartFailure.NATIVE_LIBRARY_MISSING
-        } else {
-            JackStartFailure.CONNECTION_FAILED
         }
     }
 

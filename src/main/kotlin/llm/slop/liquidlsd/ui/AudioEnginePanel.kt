@@ -60,7 +60,6 @@ object AudioEnginePanel {
     private var lastMeterTimeNs = System.nanoTime()
 
     private data class CvSignalDef(val id: String, val title: String, val colorU32: Int)
-
     private val beatSineSignal = CvSignalDef("beatSine", "Beat Sine (Oscillator)", CvTheme.getThemeColor("beatSine"))
 
     private val rmsSignals = arrayOf(

@@ -324,7 +324,6 @@ object AudioEngine {
         automaticReconnectEnabled = true
         startClient()
     }
-
     enum class AudioBackendMode { AUTO, JACK_ONLY, JAVASOUND_ONLY }
 
     @Volatile
@@ -416,7 +415,8 @@ object AudioEngine {
             } else {
                 jackClient?.stop()
                 jackClient = null
-                automaticReconnectEnabled = false
+                // Retrying cannot help when the native library itself is missing.
+                if (lastJackFailure == JackStartFailure.NATIVE_LIBRARY_MISSING) automaticReconnectEnabled = false
                 val reason = when (lastJackFailure) {
                     JackStartFailure.NATIVE_LIBRARY_MISSING -> "native library is missing"
                     JackStartFailure.CONNECTION_FAILED -> "server connection failed"
@@ -451,10 +451,8 @@ object AudioEngine {
      */
     fun tryReconnect(force: Boolean = false) {
         if (jackClient?.isConnected == true) return
-        if (!force && !automaticReconnectEnabled) return
-        if (force) {
-            automaticReconnectEnabled = true
-        }
+        if (force) automaticReconnectEnabled = true
+        if (!automaticReconnectEnabled) return
         logger.info { "Watchdog attempting JACK reconnection..." }
         stop()
         try {

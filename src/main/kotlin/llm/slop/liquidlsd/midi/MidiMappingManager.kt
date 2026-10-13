@@ -21,9 +21,6 @@ import mu.KotlinLogging
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 
-private val safeProfileCharacter = Regex("[^A-Za-z0-9._-]")
-private val repeatedUnderscores = Regex("_+")
-
 private val fxMacroSyncBankIds = llm.slop.liquidlsd.macro.FxMacroSync.FX_BANK_IDS.toSet() + llm.slop.liquidlsd.macro.MacroEngine.TRANS
 private val macroKnobPathPattern = Regex("""^Macro/([^/]+)/knob_([1-4])$""")
 
@@ -44,19 +41,18 @@ internal fun sanitiseProfileName(name: String): String {
     return trimmed
 }
 
+/** Resolves a profile name to its `.json` file, refusing anything that would land outside [midiDir]. */
 internal fun midiProfileFile(midiDir: File, profileName: String): File {
     val safeName = sanitiseProfileName(profileName)
     val file = File(midiDir, "$safeName.json")
-    val rootPath = midiDir.canonicalFile.toPath()
-    val filePath = file.canonicalFile.toPath()
-
-    require(filePath.startsWith(rootPath)) {
+    val base = midiDir.canonicalFile.toPath()
+    if (!file.canonicalFile.toPath().startsWith(base)) {
+        throw IllegalArgumentException(
         "MIDI profile path escapes library/midi: $profileName"
+        )
     }
-
     return file
 }
-
 @Serializable
 enum class MidiInputType {
     CONTINUOUS_CC,        // Standard absolute pot/fader (0..127)

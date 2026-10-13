@@ -1,14 +1,15 @@
 package llm.slop.liquidlsd.ui
 
-/**
- * Single source of truth for the per-deck-tile geometry that [DeckControlPanel] actually draws
- * (image inset, toolbar-row height), so [MixerLayoutCalculator] can reserve exactly what will be
- * rendered instead of a second, independently-drifting estimate.
- */
+import kotlin.math.max
+import kotlin.math.min
+
+/** Fixed measurements shared by the deck tiles of the mixer pane. */
 object DeckTileMetrics {
+    /** Gap in pixels between a tile's border and its preview image. */
     const val IMAGE_INSET = 3f
 
-    /** Height of any toolbar rows above a deck preview (now 0f since toolbars were removed). */
+    /** Height reserved under a tile's image for toolbars; the toolbars are gone, so none. */
+    @Suppress("UNUSED_PARAMETER")
     fun bottomBarHeight(frameHeight: Float = 0f, textLineHeight: Float = 0f, itemSpacingY: Float = 0f): Float = 0f
 }
 
@@ -18,45 +19,40 @@ data class MixerLayout(
     val offsetX: Float,
     val masterHeight: Float,
     val deckChildHeight: Float,
-    val deckPVHeight: Float = deckChildHeight
+    val deckPVHeight: Float = deckChildHeight,
 )
 
+/**
+ * Solves the mixer pane's sizes. Top to bottom the pane stacks a master preview, a controls bar and
+ * two rows of two deck tiles; every preview height follows the output aspect ratio (height / width).
+ */
 object MixerLayoutCalculator {
-    private const val TWO_DECK_PADDING = 8f
+    private const val TILE_GUTTER = 8f
     private const val MIN_MASTER_HEIGHT = 120f
-    private const val MIN_DECK_CHILD_HEIGHT = 80f
+    private const val MIN_DECK_HEIGHT = 80f
+    private const val MIN_ASPECT = 0.2f
+    private const val MAX_ASPECT = 5f
 
-    fun calculateMaxAllowedWindowWidth(
-        availableHeight: Float,
-        windowPaddingX: Float,
-        textLineHeightWithSpacing: Float,
-        frameHeightWithSpacing: Float,
-        itemSpacingY: Float,
-        aspectRatio: Float = 9f / 16f,
-        randomizationEnabled: Boolean = true
-    ): Float {
-        val aspect = aspectRatio.coerceIn(0.2f, 5.0f)
-        val masterControlsH = (frameHeightWithSpacing + 12f).coerceAtLeast(34f)
-        val presetNameExtraHeight = deckPreviewNonImageHeight(frameHeightWithSpacing, textLineHeightWithSpacing, itemSpacingY)
+    private fun clampAspect(aspectRatio: Float) = aspectRatio.coerceIn(MIN_ASPECT, MAX_ASPECT)
 
-        val verticalChrome = estimateVerticalChrome(
-            masterControlsH = masterControlsH,
-            presetNameExtraHeight = presetNameExtraHeight,
-            itemSpacingY = itemSpacingY
-        )
-        val availableForPreviews = (availableHeight - verticalChrome).coerceAtLeast(0f)
-
-        // Sum of aspect preview heights: master (1.0 * aspect) + Row 1 (0.5 * aspect) + Row 2 (0.5 * aspect) = 2.0 * aspect
-        val aspectMultiplier = 2.0f * aspect
-        val aspectOffset = 8f * aspect
-        val maxAllowedContentWidth = if (availableForPreviews > 0f && aspectMultiplier > 0f) {
-            (availableForPreviews + aspectOffset) / aspectMultiplier
-        } else {
-            Float.MAX_VALUE
-        }
-        return maxAllowedContentWidth + (windowPaddingX * 2f)
+    /** Everything in the pane that is not preview image: bar, separators, spacings and the row gap. */
+    private fun verticalChrome(frameHeightWithSpacing: Float, itemSpacingY: Float): Float {
+        val controlsBar = max(frameHeightWithSpacing + 12f, 34f)
+        val belowMaster = 3f * itemSpacingY + 1f
+        val belowBar = 4f * itemSpacingY + 1f
+        val rowGap = itemSpacingY + 6f
+        val perTileExtra = 2f * DeckTileMetrics.bottomBarHeight()
+        return controlsBar + belowMaster + belowBar + rowGap + perTileExtra + itemSpacingY
     }
 
+    /** Widest content the height allows, or [Float.MAX_VALUE] when no height is left for previews. */
+    private fun maxContentWidth(availableHeight: Float, frameHeightWithSpacing: Float, itemSpacingY: Float, aspect: Float): Float {
+        val previewHeight = availableHeight - verticalChrome(frameHeightWithSpacing, itemSpacingY)
+        if (previewHeight <= 0f) return Float.MAX_VALUE
+        return (previewHeight + TILE_GUTTER * aspect) / (2f * aspect)
+    }
+
+    @Suppress("UNUSED_PARAMETER")
     fun calculate(
         windowWidth: Float,
         availableHeight: Float,
@@ -66,74 +62,39 @@ object MixerLayoutCalculator {
         frameHeightWithSpacing: Float,
         itemSpacingY: Float,
         aspectRatio: Float = 9f / 16f,
-        randomizationEnabled: Boolean = true
+        randomizationEnabled: Boolean = true,
     ): MixerLayout {
-        val aspect = aspectRatio.coerceIn(0.2f, 5.0f)
-        val contentWidth = (windowWidth - (windowPaddingX * 2f)).coerceAtLeast(1f)
+        val aspect = clampAspect(aspectRatio)
+        val contentWidth = max(windowWidth - 2f * windowPaddingX, 1f)
+        val limit = maxContentWidth(availableHeight, frameHeightWithSpacing, itemSpacingY, aspect)
+        val renderWidth = max(min(contentWidth, limit), 1f)
+        val offsetX = max((contentWidth - renderWidth) / 2f, 0f)
 
-        val masterControlsH = (frameHeightWithSpacing + 12f).coerceAtLeast(34f)
-        val presetNameExtraHeight = deckPreviewNonImageHeight(frameHeightWithSpacing, textLineHeightWithSpacing, itemSpacingY)
-
-        val verticalChrome = estimateVerticalChrome(
-            masterControlsH = masterControlsH,
-            presetNameExtraHeight = presetNameExtraHeight,
-            itemSpacingY = itemSpacingY
-        )
-        val availableForPreviews = (availableHeight - verticalChrome).coerceAtLeast(0f)
-
-        val aspectMultiplier = 2.0f * aspect
-        val aspectOffset = 8f * aspect
-        val maxAllowedWidth = if (availableForPreviews > 0f && aspectMultiplier > 0f) {
-            (availableForPreviews + aspectOffset) / aspectMultiplier
-        } else {
-            contentWidth
-        }
-
-        val renderWidth = contentWidth.coerceAtMost(maxAllowedWidth).coerceAtLeast(1f)
-        val offsetX = ((contentWidth - renderWidth) * 0.5f).coerceAtLeast(0f)
-
-        val halfWidth = ((renderWidth - TWO_DECK_PADDING) * 0.5f).coerceAtLeast(1f)
-        val imageWidth = (halfWidth - (DeckTileMetrics.IMAGE_INSET * 2f)).coerceAtLeast(1f)
-        val desiredMasterHeight = renderWidth * aspect
-        val desiredDeckChildHeight = (imageWidth * aspect) + presetNameExtraHeight
-
+        val tileWidth = max((renderWidth - TILE_GUTTER) / 2f, 1f)
+        val imageWidth = max(tileWidth - 2f * DeckTileMetrics.IMAGE_INSET, 1f)
+        val deckHeight = max(imageWidth * aspect + DeckTileMetrics.bottomBarHeight(), MIN_DECK_HEIGHT)
         return MixerLayout(
             contentWidth = contentWidth,
             renderWidth = renderWidth,
             offsetX = offsetX,
-            masterHeight = desiredMasterHeight.coerceAtLeast(MIN_MASTER_HEIGHT),
-            deckChildHeight = desiredDeckChildHeight.coerceAtLeast(MIN_DECK_CHILD_HEIGHT),
-            deckPVHeight = desiredDeckChildHeight.coerceAtLeast(MIN_DECK_CHILD_HEIGHT)
+            masterHeight = max(renderWidth * aspect, MIN_MASTER_HEIGHT),
+            deckChildHeight = deckHeight,
+            deckPVHeight = deckHeight,
         )
     }
 
-    /**
-     * Mirrors DeckControlPanel's real `naturalH` non-image portion (toolbar bar via
-     * [DeckTileMetrics.bottomBarHeight], plus its extra +6f visual buffer) so the width-solving
-     * math reserves exactly what's actually drawn instead of a separate, drifting guess.
-     * `getFrameHeightWithSpacing`/`getTextLineHeightWithSpacing` already bake in one itemSpacingY,
-     * so it's subtracted back out to recover the raw values DeckControlPanel queries directly.
-     */
-    private fun deckPreviewNonImageHeight(frameHeightWithSpacing: Float, textLineHeightWithSpacing: Float, itemSpacingY: Float): Float {
-        return 0f
-    }
-
-    /**
-     * Reconstructs the real non-preview vertical overhead in [MixerPanel.draw] (master controls, the two spacing+separator+spacing bands, and the inter-row gap) instead of
-     * blind multipliers.
-     */
-    private fun estimateVerticalChrome(
-        masterControlsH: Float,
-        presetNameExtraHeight: Float,
-        itemSpacingY: Float
+    @Suppress("UNUSED_PARAMETER")
+    fun calculateMaxAllowedWindowWidth(
+        availableHeight: Float,
+        windowPaddingX: Float,
+        textLineHeightWithSpacing: Float,
+        frameHeightWithSpacing: Float,
+        itemSpacingY: Float,
+        aspectRatio: Float = 9f / 16f,
+        randomizationEnabled: Boolean = true,
     ): Float {
-        // spacing() + separator() + spacing() after the master image.
-        val postMasterSeparatorH = itemSpacingY * 3f + 1f
-        // Same triple after the master-controls child, plus the item-spacing the child itself consumes.
-        val postControlsSeparatorH = itemSpacingY * 4f + 1f
-        // Gap between deck row 1 and row 2 (matches MixerPanel's row2Y calculation exactly).
-        val rowGap = itemSpacingY + 6f
-        val roundingBuffer = itemSpacingY
-        return masterControlsH + postMasterSeparatorH + postControlsSeparatorH + rowGap + (presetNameExtraHeight * 2f) + roundingBuffer
+        val aspect = clampAspect(aspectRatio)
+        val content = maxContentWidth(availableHeight, frameHeightWithSpacing, itemSpacingY, aspect)
+        return if (content == Float.MAX_VALUE) content else content + 2f * windowPaddingX
     }
 }

@@ -2,65 +2,43 @@ package llm.slop.liquidlsd.rendering
 
 import mu.KotlinLogging
 import org.lwjgl.opengl.GL
-import org.lwjgl.opengl.GL33.*
-import org.lwjgl.opengl.GL43.GL_DEBUG_SEVERITY_NOTIFICATION
-import org.lwjgl.opengl.GL43.glDebugMessageCallback
+import org.lwjgl.opengl.GL11.GL_NO_ERROR
+import org.lwjgl.opengl.GL11.glGetError
+import org.lwjgl.opengl.GL43.*
 import org.lwjgl.opengl.GLDebugMessageCallback
+import org.lwjgl.opengl.KHRDebug
 import org.lwjgl.system.MemoryUtil
 
 private val logger = KotlinLogging.logger {}
 
+/** OpenGL diagnostics: driver debug-message logging plus a manual glGetError checkpoint. */
 object GLDebug {
     private var debugCallback: GLDebugMessageCallback? = null
 
-    /**
-     * Check for OpenGL errors and log them
-     */
-    fun checkErrors(context: String = "") {
-        var error = glGetError()
-        var hasError = false
-        while (error != GL_NO_ERROR) {
-            hasError = true
-            val errorString = when (error) {
-                GL_INVALID_ENUM -> "GL_INVALID_ENUM"
-                GL_INVALID_VALUE -> "GL_INVALID_VALUE"
-                GL_INVALID_OPERATION -> "GL_INVALID_OPERATION"
-                GL_OUT_OF_MEMORY -> "GL_OUT_OF_MEMORY"
-                GL_INVALID_FRAMEBUFFER_OPERATION -> "GL_INVALID_FRAMEBUFFER_OPERATION"
-                else -> "UNKNOWN_ERROR (0x${error.toString(16)})"
+    fun setupDebugCallback() {
+        val caps = GL.getCapabilities()
+        if (!caps.GL_KHR_debug && !caps.OpenGL43) {
+            logger.info { "GL debug callback not supported by this context" }
+            return
+        }
+        val callback = GLDebugMessageCallback.create { source, type, id, severity, length, message, _ ->
+            if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) return@create
+            val text = MemoryUtil.memUTF8(message, length)
+            logger.warn {
+                "GL debug id=0x${Integer.toHexString(id)} source=0x${Integer.toHexString(source)} " +
+                    "type=0x${Integer.toHexString(type)} severity=0x${Integer.toHexString(severity)}: $text"
             }
-            logger.error { "OpenGL Error in '$context': $errorString" }
-            error = glGetError()
         }
-        if (!hasError && context.isNotEmpty()) {
-            logger.trace { "✓ No GL errors in: $context" }
-        }
+        debugCallback = callback
+        if (caps.OpenGL43) glDebugMessageCallback(callback, 0L) else KHRDebug.glDebugMessageCallback(callback, 0L)
     }
 
-    /**
-     * Setup GL debug message callback if supported by context
-     */
-    fun setupDebugCallback() {
-        try {
-            if (!GL.getCapabilities().GL_KHR_debug && !GL.getCapabilities().OpenGL43) {
-                logger.info { "OpenGL Debug Message Callback not supported by this context" }
-                return
-            }
-
-            debugCallback = GLDebugMessageCallback.create { source, type, id, severity, length, message, _ ->
-                if (severity == GL_DEBUG_SEVERITY_NOTIFICATION) {
-                    return@create
-                }
-
-                val text = MemoryUtil.memUTF8(message, length)
-                logger.warn {
-                    "OpenGL debug message: id=0x${id.toString(16)}, source=$source, type=$type, severity=$severity, message=$text"
-                }
-            }
-            glDebugMessageCallback(debugCallback, 0L)
-            logger.info { "OpenGL Debug Message Callback enabled successfully" }
-        } catch (e: Exception) {
-            logger.warn { "Failed to enable OpenGL Debug Message Callback: ${e.message}" }
+    /** Drains the GL error queue, logging each error with [label] as the checkpoint name. */
+    fun checkErrors(label: String) {
+        while (true) {
+            val error = glGetError()
+            if (error == GL_NO_ERROR) break
+            logger.error { "GL error 0x${Integer.toHexString(error)} after: $label" }
         }
     }
 

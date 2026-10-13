@@ -708,7 +708,7 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.rendering.GLResourceTracker.assertNoLeaks()
 
     // Dispose window
-    GLDebug.disposeDebugCallback()
+    llm.slop.liquidlsd.rendering.GLDebug.disposeDebugCallback()
     glfwDestroyWindow(window)
     glfwTerminate()
     glfwSetErrorCallback(null)?.free()

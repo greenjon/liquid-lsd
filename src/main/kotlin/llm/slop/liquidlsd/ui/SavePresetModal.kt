@@ -76,14 +76,14 @@ object SavePresetModal {
             pendingOpen = false
         }
 
-        val displayW = ImGui.getIO().displaySizeX
-        val displayH = ImGui.getIO().displaySizeY
+        val io = ImGui.getIO()
+        val displayW = io.displaySizeX
         val saveW = 420f.coerceAtMost((displayW - 48f).coerceAtLeast(260f))
 
         ImGui.setNextWindowSize(saveW, 0f, ImGuiCond.Appearing)
         ImGui.setNextWindowPos(
-            displayW * 0.5f,
-            displayH * 0.5f,
+            io.displaySizeX * 0.5f,
+            io.displaySizeY * 0.5f,
             ImGuiCond.Appearing,
             0.5f, 0.5f
         )

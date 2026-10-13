@@ -11,7 +11,8 @@ import java.util.concurrent.TimeUnit
  */
 object SystemAudioVolume {
     private val logger = KotlinLogging.logger {}
-    private const val PROCESS_TIMEOUT_SECONDS = 2L
+    private const val PROCESS_TIMEOUT_MS = 2_000L
+    private const val DESTROY_GRACE_MS = 250L
     
     val isSupported: Boolean
     private val os: OS
@@ -46,18 +47,13 @@ object SystemAudioVolume {
     private var isQuerying = false
     private var consecutiveErrors = 0
 
-    private fun waitForProcess(process: Process): Boolean {
-        if (process.waitFor(PROCESS_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-            return true
-        }
-
+    /** Waits for [process] up to the time limit; on timeout ends it (forcibly after a short grace) and returns false. */
+    private fun awaitProcess(process: Process): Boolean {
+        if (process.waitFor(PROCESS_TIMEOUT_MS, TimeUnit.MILLISECONDS)) return true
         process.destroy()
-        if (!process.waitFor(250, TimeUnit.MILLISECONDS)) {
-            process.destroyForcibly()
-        }
+        if (!process.waitFor(DESTROY_GRACE_MS, TimeUnit.MILLISECONDS)) process.destroyForcibly()
         return false
     }
-
     fun updateSystemVolume(volume: Float) {
         if (!isSupported) return
         systemInputVolume = volume.coerceIn(0f, 1f)
@@ -74,8 +70,8 @@ object SystemAudioVolume {
                 }
                 pb.redirectErrorStream(true)
                 process = pb.start()
-                if (!waitForProcess(process)) {
-                    logger.warn { "Timed out setting system volume" }
+                if (!awaitProcess(process)) {
+                    logger.warn { "timed out setting system volume" }
                 }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to set system volume" }
@@ -103,8 +99,8 @@ object SystemAudioVolume {
                 }
                 pb.redirectErrorStream(true)
                 process = pb.start()
-                if (!waitForProcess(process)) {
-                    logger.warn { "Timed out querying system volume" }
+                if (!awaitProcess(process)) {
+                    logger.warn { "timed out querying system volume" }
                     consecutiveErrors++
                     return@execute
                 }
