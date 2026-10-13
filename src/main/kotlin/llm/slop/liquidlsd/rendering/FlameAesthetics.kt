@@ -182,12 +182,13 @@ object FlameAesthetics {
         val parts = floatArrayOf(
             band(m.coverage, 0.04f, 0.1f, 0.45f, 0.75f),
             band(m.entropy, 0.25f, 0.45f, 0.8f, 0.95f),
-            band(m.edgeFine, 0.004f, 0.015f, 0.08f, 0.2f),
-            band(m.edgeCoarse, 0.002f, 0.008f, 0.06f, 0.15f),
+            band(m.edgeFine, 0.004f, 0.015f, 0.12f, 0.25f),
+            band(m.edgeCoarse, 0.002f, 0.008f, 0.12f, 0.25f),   // busy, detailed flames were kept in the owner's first review (2026-10-12)
             band(m.colourSpread, 0.0f, 0.2f, 0.7f, 0.95f),   // a full rainbow is as muddy as a single colour
             band(m.dominantShare, -1f, -0.5f, 0.7f, 0.97f),
             band(m.meanLuma, 0.02f, 0.06f, 0.3f, 0.6f),
-            band(m.flat, -1f, -0.5f, 0.3f, 0.8f),
+            band(m.flat, -1f, -0.5f, 0.15f, 0.6f),            // flat, low-detail images were rejected most
+            band(m.symmetry, -1f, -0.5f, 0.55f, 0.9f),        // so were the strongly symmetric ones
             band(m.clipped, -1f, -0.5f, 0.05f, 0.4f)
         )
         var logSum = 0.0
