@@ -178,7 +178,7 @@ object FXChainMacroStrip {
                         }
                         ImGui.separator()
                         ImGui.textDisabled("Retarget Metaknob To…")
-                        drawRebindMenuItems(fx) { change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, change) }
+                        drawRebindMenuItems(fx) { change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, change = change) }
                     },
                     descriptionOverride = fx.header.DESCRIPTION?.takeIf { it.isNotBlank() },
                     rowStartX = rowStartX
@@ -335,7 +335,7 @@ object FXChainMacroStrip {
             pushOpenDropdownFont()
             ImGui.textDisabled("Retarget Metaknob")
             ImGui.separator()
-            drawRebindMenuItems(fx) { change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, change) }
+            drawRebindMenuItems(fx) { change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, change = change) }
             popOpenDropdownFont()
             ImGui.endPopup()
         }

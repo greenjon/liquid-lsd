@@ -2,7 +2,6 @@ package llm.slop.liquidlsd.ui
 
 import imgui.ImGui
 import imgui.type.ImBoolean
-import imgui.type.ImInt
 import llm.slop.liquidlsd.macro.*
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 
@@ -17,14 +16,9 @@ import llm.slop.liquidlsd.parameters.ModulatableParameter
 object MacroBindingEditor {
     // Scratch buffers allocated once as fields (imgui_memory_management guidelines).
     private val enabledBuf = ImBoolean()
-    private val curveBuf = ImInt()
-    private val minValBuf = FloatArray(1)
-    private val maxValBuf = FloatArray(1)
-    private val stepCountBuf = IntArray(1)
     private val curves = arrayOf("Linear", "Exponential", "Logarithmic", "S-Curve", "Step")
 
-    private const val BAR_H = 18f
-    private const val HANDLE_W = 8f
+    private const val BAR_H = BindingEditorParts.BAR_H
 
     /**
      * Full layout for a wide host (Properties). Returns true if the user asked to delete the binding;
@@ -273,98 +267,28 @@ object MacroBindingEditor {
     }
 
     private fun drawCurveCombo(binding: MacroBinding) {
-        curveBuf.set(binding.curve.ordinal)
-        if (ImGui.combo("##curve", curveBuf, curves)) {
-            binding.curve = MacroCurveType.entries.getOrElse(curveBuf.get()) { MacroCurveType.LINEAR }
+        BindingEditorParts.curveCombo(curves, binding.curve.ordinal)?.let {
+            binding.curve = MacroCurveType.entries.getOrElse(it) { MacroCurveType.LINEAR }
         }
-        itemTooltip("Response curve shaping.")
     }
 
     private fun drawStepCount(binding: MacroBinding) {
-        stepCountBuf[0] = binding.stepCount
-        if (ImGui.dragInt("##steps", stepCountBuf, 1f, 2, 64)) {
-            binding.stepCount = stepCountBuf[0].coerceIn(2, 64)
-        }
-        itemTooltip("Number of quantized steps across the travel range.")
+        BindingEditorParts.stepCount(binding.stepCount)?.let { binding.stepCount = it }
     }
 
     private fun drawMinField(binding: MacroBinding, lo: Float, hi: Float, log: Boolean, compact: Boolean = false) {
-        val s = if (log) 1f else ValueFormat.scaleFor(lo, hi)
-        minValBuf[0] = binding.minVal * s
-        if (ImGui.dragFloat(if (compact) "##min" else "Min##min", minValBuf, dragSpeed(lo, hi, binding.minVal, log) * s, lo * s, hi * s, if (s == 1f) "%.3f" else "%.1f")) binding.minVal = minValBuf[0] / s
-        itemTooltip("Output value when the macro is at 0.0. Ctrl+click to type a value.")
+        BindingEditorParts.minField(binding.minVal, lo, hi, log, compact)?.let { binding.minVal = it }
     }
 
     private fun drawMaxField(binding: MacroBinding, lo: Float, hi: Float, log: Boolean, compact: Boolean = false) {
-        val s = if (log) 1f else ValueFormat.scaleFor(lo, hi)
-        maxValBuf[0] = binding.maxVal * s
-        if (ImGui.dragFloat(if (compact) "##max" else "Max##max", maxValBuf, dragSpeed(lo, hi, binding.maxVal, log) * s, lo * s, hi * s, if (s == 1f) "%.3f" else "%.1f")) binding.maxVal = maxValBuf[0] / s
-        itemTooltip("Output value when the macro is at 1.0. Ctrl+click to type a value.")
+        BindingEditorParts.maxField(binding.maxVal, lo, hi, log, compact)?.let { binding.maxVal = it }
     }
 
-    /** Drag speed scaled to the target's real range (proportional to the value on a log range). */
-    private fun dragSpeed(lo: Float, hi: Float, value: Float, log: Boolean): Float =
-        if (log) (kotlin.math.abs(value) * 0.01f).coerceAtLeast(lo * 0.01f) else ((hi - lo) * 0.002f).coerceAtLeast(1e-5f)
-
-    /** Rounds to ~3 significant digits so dragged handles land on tidy values at any magnitude. */
-    private fun roundSig(v: Float): Float {
-        if (v == 0f || v.isNaN() || v.isInfinite()) return v
-        val mag = Math.floor(Math.log10(kotlin.math.abs(v).toDouble())).toInt()
-        val step = Math.pow(10.0, (mag - 2).toDouble())
-        return (Math.round(v / step) * step).toFloat()
-    }
-
-    /**
-     * Track spanning [lo]..[hi] with a filled min→max segment, two draggable handles and a dot at the
-     * binding's current mapped output [live].
-     */
+    /** Track with a filled min->max segment, two draggable handles and a dot at the binding's live mapped output. */
     private fun drawRangeBar(binding: MacroBinding, lo: Float, hi: Float, live: Float, width: Float, log: Boolean, barH: Float = BAR_H) {
-        val span = (hi - lo).coerceAtLeast(1e-6f)
-        val logLo = if (log) Math.log10(lo.toDouble()) else 0.0
-        val logSpan = if (log) (Math.log10(hi.toDouble()) - logLo).coerceAtLeast(1e-6) else 1.0
-        fun pctOf(v: Float): Float = if (log) ((Math.log10(v.toDouble().coerceAtLeast(lo.toDouble())) - logLo) / logSpan).toFloat() else (v - lo) / span
-        fun valueAt(p: Float): Float = if (log) Math.pow(10.0, logLo + p * logSpan).toFloat() else lo + p * span
-        val usable = (width - HANDLE_W).coerceAtLeast(20f)
-        val x0 = ImGui.getCursorScreenPosX() + HANDLE_W * 0.5f
-        val y0 = ImGui.getCursorScreenPosY()
-        val localX = ImGui.getCursorPosX()
-        val localY = ImGui.getCursorPosY()
-        val cy = y0 + barH * 0.5f
-        val dl = ImGui.getWindowDrawList()
-
-        fun xOf(v: Float) = x0 + pctOf(v).coerceIn(0f, 1f) * usable
-
-        val active = binding.enabled
-        val trackCol = ImGui.colorConvertFloat4ToU32(0.12f, 0.14f, 0.18f, 1f)
-        val segCol = if (active) ImGui.colorConvertFloat4ToU32(0.2f, 0.6f, 0.85f, 0.8f)
-                     else ImGui.colorConvertFloat4ToU32(0.4f, 0.4f, 0.4f, 0.6f)
-        val handleCol = ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.95f, 1f)
-        val dotCol = ImGui.colorConvertFloat4ToU32(1f, 0.85f, 0.2f, 1f)
-
-        dl.addRectFilled(x0, cy - 3f, x0 + usable, cy + 3f, trackCol, 3f)
-        val xa = xOf(binding.minVal)
-        val xb = xOf(binding.maxVal)
-        dl.addRectFilled(minOf(xa, xb), cy - 3f, maxOf(xa, xb), cy + 3f, segCol, 3f)
-
-        fun handle(id: String, value: Float, x: Float, set: (Float) -> Unit) {
-            ImGui.setCursorScreenPos(x - HANDLE_W * 0.5f, y0)
-            ImGui.invisibleButton(id, HANDLE_W, barH)
-            if (ImGui.isItemActive()) {
-                set(roundSig(valueAt(((ImGui.getMousePosX() - x0) / usable).coerceIn(0f, 1f))).coerceIn(lo, hi))
-            }
-            if (ImGui.isItemHovered() || ImGui.isItemActive()) {
-                ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.ResizeEW)
-                itemTooltip(ValueFormat.format(value, if (log) 1f else ValueFormat.scaleFor(lo, hi)))
-            }
-            dl.addRectFilled(x - HANDLE_W * 0.5f, y0 + 2f, x + HANDLE_W * 0.5f, y0 + barH - 2f, handleCol, 2f)
-        }
-        handle("##min_h", binding.minVal, xa) { binding.minVal = it }
-        handle("##max_h", binding.maxVal, xb) { binding.maxVal = it }
-
-        if (active) dl.addCircleFilled(xOf(live), cy, 3.5f, dotCol)
-
-        // Resume layout below the bar.
-        ImGui.setCursorPos(localX, localY + barH + 2f)
-        ImGui.dummy(width, 0f)
+        BindingEditorParts.rangeBar(
+            binding.minVal, binding.maxVal, lo, hi, live, width, log, binding.enabled,
+            setMin = { binding.minVal = it }, setMax = { binding.maxVal = it }, barH = barH
+        )
     }
 }
