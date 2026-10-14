@@ -35,7 +35,7 @@ object FXChainMacroStrip {
      * [llm.slop.liquidlsd.rendering.isf.ISFFilter.metaKnob]'s base value every frame), and
      * unlinking must restore it. [chainPrefix] is "$chainLabel/FX" (e.g. "Deck A/FX", "Master/FX").
      */
-    private fun resyncMacroKnobs(chainPrefix: String, chain: FxChain) {
+    internal fun resyncMacroKnobs(chainPrefix: String, chain: FxChain) {
         val chainLabel = chainPrefix.removeSuffix("/FX")
         val bankId = llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel(chainPrefix)
         llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, chainLabel, chain)
@@ -178,7 +178,7 @@ object FXChainMacroStrip {
                         }
                         ImGui.separator()
                         ImGui.textDisabled("Retarget Metaknob To…")
-                        drawRebindMenuItems(fx)
+                        drawRebindMenuItems(fx) { change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, change) }
                     },
                     descriptionOverride = fx.header.DESCRIPTION?.takeIf { it.isNotBlank() },
                     rowStartX = rowStartX
@@ -214,7 +214,7 @@ object FXChainMacroStrip {
                 )
                 ImGui.endGroup()
                 itemTooltip("${fx.displayName}'s macro control (targets ${fx.metaBinding.targetParamName ?: "Dry/Wet"}). Right-click to retarget or save defaults, or map hardware MIDI/OSC.")
-                drawRebindContextMenu(fx, chainPrefix, i)
+                drawRebindContextMenu(fx, chainPrefix, chain, state, i)
             }
         }
         ImGui.setCursorPosX(rowStartX)
@@ -265,21 +265,15 @@ object FXChainMacroStrip {
                         MetaLinkMode.TRIANGLE -> MetaLinkMode.BIPOLAR
                         MetaLinkMode.BIPOLAR -> null
                     }
-                    fx.setParamLink(input.NAME, nextMode, existingBinding?.invert ?: false)
-                    resyncMacroKnobs(chainPrefix, chain)
-                    onPushUndo()
+                    FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(input.NAME, nextMode, existingBinding?.invert ?: false) }
                 },
                 onSelectMode = { newMode ->
-                    fx.setParamLink(input.NAME, newMode, existingBinding?.invert ?: false)
-                    resyncMacroKnobs(chainPrefix, chain)
-                    onPushUndo()
+                    FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(input.NAME, newMode, existingBinding?.invert ?: false) }
                 },
                 onToggleInvert = {
                     val currMode = existingBinding?.linkMode ?: MetaLinkMode.FULL
                     val currInv = existingBinding?.invert ?: false
-                    fx.setParamLink(input.NAME, currMode, !currInv)
-                    resyncMacroKnobs(chainPrefix, chain)
-                    onPushUndo()
+                    FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(input.NAME, currMode, !currInv) }
                 }
             )
             ImGui.sameLine(0f, 6f)
@@ -301,19 +295,19 @@ object FXChainMacroStrip {
     }
 
     /** Menu items to rebind a slot's Metaknob to a different parameter (or the safety-net Dry/Wet); shared by both the compact-mode right-click popup and the grid-mode row menu. */
-    internal fun drawRebindMenuItems(fx: llm.slop.liquidlsd.rendering.isf.ISFFilter) {
+    internal fun drawRebindMenuItems(fx: llm.slop.liquidlsd.rendering.isf.ISFFilter, edit: ((llm.slop.liquidlsd.rendering.isf.ISFFilter) -> Unit) -> Unit) {
         val floatInputs = fx.header.INPUTS.filter { it.TYPE.equals("float", ignoreCase = true) }
         for (input in floatInputs) {
             val param = fx.parameters[input.NAME] ?: continue
             val isCurrent = fx.metaBinding.targetParamName == input.NAME
             if (ImGui.menuItem(input.LABEL ?: input.NAME, "", isCurrent)) {
-                fx.rebindMetaKnob(FxMetaBinding(input.NAME, param.minClamp, param.maxClamp, MetaCurve.LINEAR), persistOverride = false)
+                edit { it.rebindMetaKnob(FxMetaBinding(input.NAME, param.minClamp, param.maxClamp, MetaCurve.LINEAR), persistOverride = false) }
             }
         }
         ImGui.separator()
         val isDryWet = fx.metaBinding.targetParamName == null
         if (ImGui.menuItem("Target Dry/Wet (safety net)", "", isDryWet)) {
-            fx.rebindMetaKnob(FxMetaBinding.DRY_WET_SAFETY_NET, persistOverride = false)
+            edit { it.rebindMetaKnob(FxMetaBinding.DRY_WET_SAFETY_NET, persistOverride = false) }
         }
         if (fx.contentHash != null) {
             ImGui.separator()
@@ -323,23 +317,25 @@ object FXChainMacroStrip {
             if (ISFAutoBindEngine.hasFilterDefault(fx) && ImGui.menuItem("Reset to Factory Default")) {
                 ISFAutoBindEngine.deleteFilterDefault(fx)
                 val defaultDto = ISFAutoBindEngine.resolveDefault(fx)
-                fx.applyMetaBindingsFromPreset(ISFAutoBindEngine.resolveBindings(fx))
-                defaultDto.parameters.forEach { (name, value) ->
-                    fx.parameters[name]?.baseValue = value
+                edit { f ->
+                    f.applyMetaBindingsFromPreset(ISFAutoBindEngine.resolveBindings(f))
+                    defaultDto.parameters.forEach { (name, value) ->
+                        f.parameters[name]?.baseValue = value
+                    }
                 }
             }
         }
     }
 
     /** Right-click on a slot's compact-mode Metaknob to quickly rebind it to a different parameter. */
-    private fun drawRebindContextMenu(fx: llm.slop.liquidlsd.rendering.isf.ISFFilter, chainPrefix: String, slotIndex: Int) {
+    private fun drawRebindContextMenu(fx: llm.slop.liquidlsd.rendering.isf.ISFFilter, chainPrefix: String, chain: FxChain, state: ParametersState, slotIndex: Int) {
         val popupId = "fx_meta_rebind_${chainPrefix}_$slotIndex"
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem(popupId)) {
             pushOpenDropdownFont()
             ImGui.textDisabled("Retarget Metaknob")
             ImGui.separator()
-            drawRebindMenuItems(fx)
+            drawRebindMenuItems(fx) { change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, change) }
             popOpenDropdownFont()
             ImGui.endPopup()
         }

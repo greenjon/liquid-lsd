@@ -674,34 +674,27 @@ object ParametersTabs {
                             ImGui.separator()
                             ImGui.textDisabled("Metaknob Link")
                             if (ImGui.menuItem("Unlinked", "", existingBinding == null)) {
-                                fx.setParamLink(name, null)
-                                onPushUndo()
+                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, null) }
                             }
                             if (ImGui.menuItem("Full Range (0%–100%)", "", existingBinding?.linkMode == MetaLinkMode.FULL)) {
-                                fx.setParamLink(name, MetaLinkMode.FULL, existingBinding?.invert ?: false)
-                                onPushUndo()
+                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, MetaLinkMode.FULL, existingBinding?.invert ?: false) }
                             }
                             if (ImGui.menuItem("First Half (0%–50%)", "", existingBinding?.linkMode == MetaLinkMode.FIRST_HALF)) {
-                                fx.setParamLink(name, MetaLinkMode.FIRST_HALF, existingBinding?.invert ?: false)
-                                onPushUndo()
+                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, MetaLinkMode.FIRST_HALF, existingBinding?.invert ?: false) }
                             }
                             if (ImGui.menuItem("Second Half (50%–100%)", "", existingBinding?.linkMode == MetaLinkMode.SECOND_HALF)) {
-                                fx.setParamLink(name, MetaLinkMode.SECOND_HALF, existingBinding?.invert ?: false)
-                                onPushUndo()
+                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, MetaLinkMode.SECOND_HALF, existingBinding?.invert ?: false) }
                             }
                             if (ImGui.menuItem("Triangle Peak (0%–100%–0%)", "", existingBinding?.linkMode == MetaLinkMode.TRIANGLE)) {
-                                fx.setParamLink(name, MetaLinkMode.TRIANGLE, existingBinding?.invert ?: false)
-                                onPushUndo()
+                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, MetaLinkMode.TRIANGLE, existingBinding?.invert ?: false) }
                             }
                             if (ImGui.menuItem("Bipolar (Center-0)", "", existingBinding?.linkMode == MetaLinkMode.BIPOLAR)) {
-                                fx.setParamLink(name, MetaLinkMode.BIPOLAR, existingBinding?.invert ?: false)
-                                onPushUndo()
+                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, MetaLinkMode.BIPOLAR, existingBinding?.invert ?: false) }
                             }
                             ImGui.separator()
                             if (ImGui.menuItem("Invert Direction", "", existingBinding?.invert == true)) {
                                 val currMode = existingBinding?.linkMode ?: MetaLinkMode.FULL
-                                fx.setParamLink(name, currMode, !(existingBinding?.invert ?: false))
-                                onPushUndo()
+                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, currMode, !(existingBinding?.invert ?: false)) }
                             }
                         },
                         descriptionOverride = descWithLink
