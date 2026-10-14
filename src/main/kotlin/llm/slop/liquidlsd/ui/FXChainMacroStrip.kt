@@ -242,7 +242,9 @@ object FXChainMacroStrip {
             state.toggleFxFocus(chainPrefix, slotIndex)
         }
 
-        val topInputs = fx.header.INPUTS.filter { !it.TYPE.equals("image", ignoreCase = true) }.take(3)
+        // First knob page, in the slot's knob order. Metaknob-linked parameters stay listed here (this view is where their link buttons live).
+        val nonImage = fx.header.INPUTS.filter { !it.TYPE.equals("image", ignoreCase = true) }
+        val topInputs = (fx.knobLayout?.mapNotNull { n -> nonImage.find { it.NAME == n } } ?: nonImage).take(3)
         if (topInputs.isEmpty()) {
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("(No adjustable parameters)") }
             return
