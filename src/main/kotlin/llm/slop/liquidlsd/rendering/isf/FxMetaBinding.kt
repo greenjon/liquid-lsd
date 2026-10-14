@@ -1,6 +1,11 @@
 package llm.slop.liquidlsd.rendering.isf
 
 import kotlinx.serialization.Serializable
+import llm.slop.liquidlsd.macro.MacroBinding
+import llm.slop.liquidlsd.macro.MacroCurve
+import llm.slop.liquidlsd.macro.MacroCurveType
+import llm.slop.liquidlsd.macro.MacroLinkMode
+import llm.slop.liquidlsd.macro.MacroTargetType
 
 /**
  * Response curve applied to the 0..1 Metaknob position before it's mapped onto
@@ -10,7 +15,10 @@ import kotlinx.serialization.Serializable
  */
 enum class MetaCurve {
     LINEAR,
-    EXPONENTIAL
+    EXPONENTIAL,
+    LOGARITHMIC,
+    S_CURVE,
+    STEP
 }
 
 /**
@@ -31,6 +39,22 @@ enum class MetaLinkMode {
     BIPOLAR
 }
 
+private fun MetaCurve.toMacro(): MacroCurveType = when (this) {
+    MetaCurve.LINEAR -> MacroCurveType.LINEAR
+    MetaCurve.EXPONENTIAL -> MacroCurveType.EXPONENTIAL
+    MetaCurve.LOGARITHMIC -> MacroCurveType.LOGARITHMIC
+    MetaCurve.S_CURVE -> MacroCurveType.S_CURVE
+    MetaCurve.STEP -> MacroCurveType.STEP
+}
+
+private fun MetaLinkMode.toMacro(): MacroLinkMode = when (this) {
+    MetaLinkMode.FULL -> MacroLinkMode.FULL
+    MetaLinkMode.FIRST_HALF -> MacroLinkMode.FIRST_HALF
+    MetaLinkMode.SECOND_HALF -> MacroLinkMode.SECOND_HALF
+    MetaLinkMode.TRIANGLE -> MacroLinkMode.TRIANGLE
+    MetaLinkMode.BIPOLAR -> MacroLinkMode.BIPOLAR
+}
+
 /**
  * Resolved binding between an [ISFFilter]'s 0..1 Metaknob and one of its underlying
  * uniform parameters (or, when [targetParamName] is null, the filter's own [ISFFilter.dryWet]
@@ -43,47 +67,39 @@ data class FxMetaBinding(
     val curve: MetaCurve = MetaCurve.LINEAR,
     val invert: Boolean = false,
     val linkMode: MetaLinkMode = MetaLinkMode.FULL,
-    val enabled: Boolean = true
+    val enabled: Boolean = true,
+    /** Number of positions for [MetaCurve.STEP]; ignored by the other curves. */
+    val stepCount: Int = 8
 ) {
-    /** Maps a 0..1 Metaknob position onto this binding's target range, applying link windowing, curve, and direction. */
+    /**
+     * Maps a 0..1 Metaknob position onto this binding's target range, applying link windowing, curve, and direction.
+     * Shares [MacroCurve]'s math with macro bindings so a source row and an FX slot respond identically.
+     */
     fun mapKnobToTarget(knob01: Float): Float {
-        val k = if (knob01.isNaN()) 0f else knob01.coerceIn(0f, 1f)
-        val w = when (linkMode) {
-            MetaLinkMode.FULL -> k
-            MetaLinkMode.FIRST_HALF -> if (k <= 0.5f) k * 2f else 1f
-            MetaLinkMode.SECOND_HALF -> if (k < 0.5f) 0f else (k - 0.5f) * 2f
-            MetaLinkMode.TRIANGLE -> if (k <= 0.5f) k * 2f else (1f - k) * 2f
-            MetaLinkMode.BIPOLAR -> kotlin.math.abs(k - 0.5f) * 2f
-        }
-        val shaped = when (curve) {
-            MetaCurve.LINEAR -> w
-            MetaCurve.EXPONENTIAL -> w * w
-        }
-        val (lo, hi) = if (invert) maxVal to minVal else minVal to maxVal
-        return lo + (hi - lo) * shaped
+        val shaped = MacroCurve.shape(MacroCurve.window(knob01, linkMode.toMacro()), curve.toMacro(), stepCount)
+        val t = if (invert) 1f - shaped else shaped
+        return minVal + t * (maxVal - minVal)
     }
 
     /**
      * Inverse of [mapKnobToTarget]: the Metaknob position that reproduces [targetValue].
-     * Used once at filter-load time so a freshly-bound Metaknob starts at the position matching
+     * Used at filter-load and reset time (not per frame) so a freshly-bound Metaknob starts at the position matching
      * the target uniform's own authored default, instead of silently overwriting it with knob=0.
+     * Exact for LINEAR, EXPONENTIAL and LOGARITHMIC with FULL; best effort for the piecewise link modes, STEP and S_CURVE.
      */
-    fun knobForTarget(targetValue: Float): Float {
-        val (lo, hi) = if (invert) maxVal to minVal else minVal to maxVal
-        if (hi == lo) return 0f
-        val t = ((targetValue - lo) / (hi - lo)).coerceIn(0f, 1f)
-        val shaped = when (curve) {
-            MetaCurve.LINEAR -> t
-            MetaCurve.EXPONENTIAL -> kotlin.math.sqrt(t)
-        }
-        return when (linkMode) {
-            MetaLinkMode.FULL -> shaped
-            MetaLinkMode.FIRST_HALF -> shaped * 0.5f
-            MetaLinkMode.SECOND_HALF -> 0.5f + shaped * 0.5f
-            MetaLinkMode.TRIANGLE -> shaped * 0.5f
-            MetaLinkMode.BIPOLAR -> 0.5f + shaped * 0.5f
-        }
-    }
+    fun knobForTarget(targetValue: Float): Float = MacroCurve.inverse(
+        targetValue,
+        MacroBinding(
+            parameterId = "",
+            targetType = MacroTargetType.PARAM_BASE_VALUE,
+            minVal = minVal,
+            maxVal = maxVal,
+            curve = curve.toMacro(),
+            inverted = invert,
+            linkMode = linkMode.toMacro(),
+            stepCount = stepCount
+        )
+    )
 
     companion object {
         /** The "safety net" binding: no float parameter was a viable macro target, drive dry/wet directly instead. */
@@ -100,7 +116,8 @@ data class FxMetaBindingDto(
     val curve: String = MetaCurve.LINEAR.name,
     val invert: Boolean = false,
     val linkMode: String = MetaLinkMode.FULL.name,
-    val enabled: Boolean = true
+    val enabled: Boolean = true,
+    val stepCount: Int = 8
 )
 
 fun FxMetaBinding.toDto(): FxMetaBindingDto = FxMetaBindingDto(
@@ -110,7 +127,8 @@ fun FxMetaBinding.toDto(): FxMetaBindingDto = FxMetaBindingDto(
     curve = curve.name,
     invert = invert,
     linkMode = linkMode.name,
-    enabled = enabled
+    enabled = enabled,
+    stepCount = stepCount
 )
 
 fun FxMetaBindingDto.toBinding(): FxMetaBinding = FxMetaBinding(
@@ -120,5 +138,6 @@ fun FxMetaBindingDto.toBinding(): FxMetaBinding = FxMetaBinding(
     curve = runCatching { MetaCurve.valueOf(curve) }.getOrDefault(MetaCurve.LINEAR),
     invert = invert,
     linkMode = runCatching { MetaLinkMode.valueOf(linkMode) }.getOrDefault(MetaLinkMode.FULL),
-    enabled = enabled
+    enabled = enabled,
+    stepCount = stepCount
 )

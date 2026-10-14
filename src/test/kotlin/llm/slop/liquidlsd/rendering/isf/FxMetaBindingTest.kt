@@ -130,3 +130,43 @@ class FxMetaBindingTest {
         assertEquals(MetaLinkMode.TRIANGLE, restoredFilter.getBindingForParam("resonance")?.linkMode)
     }
 }
+
+class FxMetaBindingCurveParityTest {
+    @Test
+    fun metaBindingMatchesMacroBindingForEveryCurveLinkModeAndInvert() {
+        for (curve in MetaCurve.entries) for (mode in MetaLinkMode.entries) for (inv in listOf(false, true)) {
+            val meta = FxMetaBinding("p", -2f, 6f, curve, inv, mode, stepCount = 5)
+            val macro = llm.slop.liquidlsd.macro.MacroBinding(
+                parameterId = "p", targetType = llm.slop.liquidlsd.macro.MacroTargetType.PARAM_BASE_VALUE,
+                minVal = -2f, maxVal = 6f,
+                curve = llm.slop.liquidlsd.macro.MacroCurveType.valueOf(curve.name), inverted = inv,
+                linkMode = llm.slop.liquidlsd.macro.MacroLinkMode.valueOf(mode.name), stepCount = 5
+            )
+            var k = 0f
+            while (k <= 1.0001f) {
+                assertEquals(llm.slop.liquidlsd.macro.MacroCurve.mapToRange(k, macro), meta.mapKnobToTarget(k), 1e-5f, "$curve $mode inv=$inv k=$k")
+                k += 0.05f
+            }
+        }
+    }
+
+    @Test
+    fun knobForTargetInvertsExactCurvesWithFullLink() {
+        for (curve in listOf(MetaCurve.LINEAR, MetaCurve.EXPONENTIAL, MetaCurve.LOGARITHMIC, MetaCurve.S_CURVE)) for (inv in listOf(false, true)) {
+            val b = FxMetaBinding("p", 0f, 10f, curve, inv)
+            for (k in listOf(0f, 0.2f, 0.5f, 0.9f, 1f)) {
+                assertEquals(k, b.knobForTarget(b.mapKnobToTarget(k)), 1e-3f, "$curve inv=$inv k=$k")
+            }
+        }
+    }
+
+    @Test
+    fun dtoRoundTripsNewCurvesAndStepCountAndOldDtosStillLoad() {
+        val b = FxMetaBinding("p", 0f, 1f, MetaCurve.STEP, true, MetaLinkMode.TRIANGLE, stepCount = 3)
+        assertEquals(b, b.toDto().toBinding())
+        val old = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+            .decodeFromString(FxMetaBindingDto.serializer(), """{"targetParamName":"p","curve":"EXPONENTIAL"}""")
+        assertEquals(8, old.toBinding().stepCount)
+        assertEquals(MetaCurve.EXPONENTIAL, old.toBinding().curve)
+    }
+}
