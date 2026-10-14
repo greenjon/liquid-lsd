@@ -18,12 +18,11 @@ object FxMetaEdit {
         if (!mouseDown) activeGesture = null
     }
 
-    private fun owned(bindings: List<FxMetaBinding>): Set<String> =
-        bindings.filter { it.enabled }.mapNotNullTo(HashSet()) { it.targetParamName }
+    private fun focusNames(fx: ISFFilter): List<String> = fx.focusParameters.map { it.key }
 
     /**
-     * Applies [change] to [fx]. When it changed [ISFFilter.metaBindings], hands [pushUndo] a restore for the old list.
-     * [resync] runs only when the set of parameters the Metaknob owns changed, since only that moves the focus knobs.
+     * Applies [change] to [fx]. When it changed [ISFFilter.metaBindings] or [ISFFilter.knobLayout], hands [pushUndo] a
+     * restore for both. [resync] runs only when [ISFFilter.focusParameters] changed, since only that moves the focus knobs.
      *
      * [gesture] groups the many changes of one drag into a single undo step: while the same non-null key stays active, only the
      * first change pushes an undo (its restore holds the state from before the drag). Returns whether anything changed;
@@ -37,17 +36,20 @@ object FxMetaEdit {
         change: (ISFFilter) -> Unit
     ): Boolean {
         val before: List<FxMetaBinding> = fx.metaBindings.toList()
+        val beforeLayout = fx.knobLayout
+        val beforeFocus = focusNames(fx)
         change(fx)
-        if (fx.metaBindings == before) return false
+        if (fx.metaBindings == before && fx.knobLayout == beforeLayout) return false
         if (gesture == null || gesture != activeGesture) {
             pushUndo {
                 fx.metaBindings.clear()
                 fx.metaBindings.addAll(before)
+                fx.applyKnobLayoutFromPreset(beforeLayout)
                 resync()
             }
             activeGesture = gesture
         }
-        if (owned(before) != owned(fx.metaBindings)) resync()
+        if (focusNames(fx) != beforeFocus) resync()
         return true
     }
 
@@ -70,5 +72,37 @@ object FxMetaEdit {
     /** Removes the binding for [target] (null = the Dry/Wet safety net). */
     fun remove(fx: ISFFilter, target: String?) {
         fx.metaBindings.removeAll { it.targetParamName == target }
+    }
+
+    // -- Knob layout (the order of parameters on focus knobs 2-4 and later pages) --------------------------------------
+
+    /** The parameter names on the focus knobs right now, in knob order (page = index / 3). */
+    fun shownKnobs(fx: ISFFilter): List<String> = fx.focusParameters.map { it.key }
+
+    /** Parameters not on any knob, in authored order. */
+    fun hiddenKnobs(fx: ISFFilter): List<String> = (fx.parameters.keys - shownKnobs(fx).toSet()).toList()
+
+    /** Moves the parameter at knob position [from] by [delta] places (clamped). The first edit makes the default order explicit. */
+    fun moveKnob(fx: ISFFilter, from: Int, delta: Int) {
+        val list = shownKnobs(fx).toMutableList()
+        val to = (from + delta).coerceIn(0, list.lastIndex.coerceAtLeast(0))
+        if (from !in list.indices || to == from) return
+        list.add(to, list.removeAt(from))
+        fx.applyKnobLayoutFromPreset(list)
+    }
+
+    /** Takes [name] off the knobs. */
+    fun hideKnob(fx: ISFFilter, name: String) {
+        fx.applyKnobLayoutFromPreset(shownKnobs(fx) - name)
+    }
+
+    /** Puts a hidden parameter back at the end of the knob order. */
+    fun showKnob(fx: ISFFilter, name: String) {
+        if (name in fx.parameters) fx.applyKnobLayoutFromPreset(shownKnobs(fx) + name)
+    }
+
+    /** Back to authored order (minus Metaknob-owned parameters). */
+    fun resetKnobs(fx: ISFFilter) {
+        fx.applyKnobLayoutFromPreset(null)
     }
 }

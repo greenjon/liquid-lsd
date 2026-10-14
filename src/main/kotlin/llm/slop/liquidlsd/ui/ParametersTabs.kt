@@ -522,6 +522,48 @@ object ParametersTabs {
         ImGui.treePop()
     }
 
+    /**
+     * Collapsible "Knobs" list under a slot header: the parameters in focus-knob order (knobs 2-4, three per page) with
+     * move up / down and hide, and a Hidden list to bring them back. A parameter the Metaknob owns is marked: its knob is locked.
+     */
+    private fun drawKnobLayout(state: ParametersState, chainPrefix: String, chain: FxChain, fx: llm.slop.liquidlsd.rendering.isf.ISFFilter, slotNum: Int) {
+        val edit = FxMetaBindingEditor.editFor(state, chainPrefix, chain, fx)
+        val id = "$chainPrefix/FX$slotNum"
+        val shown = FxMetaEdit.shownKnobs(fx)
+        if (!ImGui.treeNodeEx("Knobs (${shown.size})##knobs_$id", imgui.flag.ImGuiTreeNodeFlags.SpanAvailWidth)) return
+        itemTooltip("Which parameters ${fx.displayName} puts on focus-mode knobs 2-4, three per page. Reorder or hide them; the order is saved with the slot.")
+        fun label(n: String) = fx.header.INPUTS.find { it.NAME == n }?.LABEL ?: n
+        for ((i, name) in shown.withIndex()) {
+            if (i % 3 == 0) ImGui.textDisabled("Page ${i / 3 + 1}")
+            val owned = fx.metaBindings.any { it.enabled && it.targetParamName == name }
+            ImGui.text("K${2 + i % 3}  ${label(name)}")
+            if (owned) {
+                ImGui.sameLine(); ImGui.textDisabled(Icons.LOCK)
+                itemTooltip("The Metaknob drives this parameter, so its knob does nothing while the link is enabled.")
+            }
+            ImGui.sameLine(0f, 12f)
+            if (ImGui.smallButton("${Icons.CHEVRON_UP}##kup_${id}_$name")) edit.run(null) { FxMetaEdit.moveKnob(it, i, -1) }
+            itemTooltip("Move up")
+            ImGui.sameLine()
+            if (ImGui.smallButton("${Icons.CHEVRON_DOWN}##kdn_${id}_$name")) edit.run(null) { FxMetaEdit.moveKnob(it, i, 1) }
+            itemTooltip("Move down")
+            ImGui.sameLine()
+            if (ImGui.smallButton("${Icons.X}##khide_${id}_$name")) edit.run(null) { FxMetaEdit.hideKnob(it, name) }
+            itemTooltip("Take off the knobs")
+        }
+        val hidden = FxMetaEdit.hiddenKnobs(fx)
+        if (hidden.isNotEmpty()) {
+            ImGui.textDisabled("Hidden")
+            for (name in hidden) {
+                ImGui.text(label(name))
+                ImGui.sameLine(0f, 12f)
+                if (ImGui.smallButton("Show##kshow_${id}_$name")) edit.run(null) { FxMetaEdit.showKnob(it, name) }
+            }
+        }
+        if (fx.knobLayout != null && ImGui.smallButton("Reset order##kreset_$id")) edit.run(null) { FxMetaEdit.resetKnobs(it) }
+        ImGui.treePop()
+    }
+
     fun drawFxChainContent(
         session: llm.slop.liquidlsd.SessionContext,
         chain: FxChain,
@@ -693,6 +735,7 @@ object ParametersTabs {
 
             if (fx != null && !isCollapsed) {
                 drawMetaLinks(state, chainPrefix, chain, fx, slotNum, labelColW)
+                drawKnobLayout(state, chainPrefix, chain, fx, slotNum)
                 ParametersRenderer.drawParamRow(session, "Dry/Wet", "$chainPrefix/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
                 fx.parameters.forEach { (name, param) ->

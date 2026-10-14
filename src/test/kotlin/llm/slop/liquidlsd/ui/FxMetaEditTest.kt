@@ -101,3 +101,48 @@ class FxMetaEditGestureTest {
         assertEquals(1, resyncs, "a disabled binding owned nothing, so removing it changes nothing")
     }
 }
+
+class FxKnobLayoutEditTest {
+    private fun filter(): ISFFilter {
+        val header = ISFHeader(INPUTS = listOf(
+            ISFInput(NAME = "inputImage", TYPE = "image"),
+            ISFInput(NAME = "a", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(1.0f), DEFAULT = JsonPrimitive(0.0f)),
+            ISFInput(NAME = "b", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(1.0f), DEFAULT = JsonPrimitive(0.0f)),
+            ISFInput(NAME = "c", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(1.0f), DEFAULT = JsonPrimitive(0.0f))
+        ))
+        val f = ISFFilter("f", "F", header, mockk<Shader>(relaxed = true))
+        f.applyMetaBindingsFromPreset(listOf(FxMetaBinding("a", 0f, 1f)))
+        return f
+    }
+
+    @Test
+    fun moveHideShowResetEditTheOrderAndResyncOnlyWhenTheKnobsChange() {
+        val fx = filter()
+        var resyncs = 0
+        val undo = mutableListOf<() -> Unit>()
+        fun edit(c: (ISFFilter) -> Unit) = FxMetaEdit.apply(fx, { undo += it }, { resyncs++ }, change = c)
+
+        assertEquals(listOf("b", "c"), FxMetaEdit.shownKnobs(fx))
+        assertTrue(edit { FxMetaEdit.moveKnob(it, 0, 1) })
+        assertEquals(listOf("c", "b"), FxMetaEdit.shownKnobs(fx))
+        assertEquals(1, resyncs)
+
+        assertFalse(edit { FxMetaEdit.moveKnob(it, 1, 1) }, "moving the last one down is a no-op")
+
+        assertTrue(edit { FxMetaEdit.hideKnob(it, "c") })
+        assertEquals(listOf("b"), FxMetaEdit.shownKnobs(fx))
+        assertEquals(listOf("a", "c"), FxMetaEdit.hiddenKnobs(fx), "a is hidden by the Metaknob link, c by the user")
+
+        assertTrue(edit { FxMetaEdit.showKnob(it, "a") })
+        assertEquals(listOf("b", "a"), FxMetaEdit.shownKnobs(fx))
+
+        undo.last().invoke()
+        assertEquals(listOf("b"), FxMetaEdit.shownKnobs(fx))
+        undo.first().invoke()
+        assertEquals(null, fx.knobLayout, "undoing the first edit restores the default (no explicit layout)")
+
+        assertTrue(edit { FxMetaEdit.moveKnob(it, 0, 1) })
+        assertTrue(edit { FxMetaEdit.resetKnobs(it) })
+        assertEquals(listOf("b", "c"), FxMetaEdit.shownKnobs(fx))
+    }
+}
