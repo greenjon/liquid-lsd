@@ -17,7 +17,9 @@ private val logger = KotlinLogging.logger {}
 data class FxDefaultDto(
     val version: Int = 2,
     val metaBindings: List<FxMetaBindingDto>,
-    val parameters: Map<String, Float> = emptyMap()
+    val parameters: Map<String, Float> = emptyMap(),
+    /** Focus-knob parameter order for the slot (see [ISFFilter.knobLayout]); null = authored order. */
+    val knobLayout: List<String>? = null
 )
 
 /**
@@ -179,7 +181,8 @@ object ISFAutoBindEngine {
         val dto = FxDefaultDto(
             version = 2,
             metaBindings = filter.metaBindings.map { it.toDto() },
-            parameters = filter.parameters.mapValues { it.value.baseValue }
+            parameters = filter.parameters.mapValues { it.value.baseValue },
+            knobLayout = filter.knobLayout
         )
         try {
             if (!overridesDir.exists()) overridesDir.mkdirs()

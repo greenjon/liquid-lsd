@@ -254,7 +254,9 @@ data class FXSlotDto(
     // binding they were saved with until explicitly re-saved.
     val metaKnob: ParameterDto? = null,
     val metaBinding: llm.slop.liquidlsd.rendering.isf.FxMetaBindingDto? = null,
-    val metaBindings: List<llm.slop.liquidlsd.rendering.isf.FxMetaBindingDto>? = null
+    val metaBindings: List<llm.slop.liquidlsd.rendering.isf.FxMetaBindingDto>? = null,
+    // Order of the parameters on the focus-mode knobs; null = authored order. Baked at save time like the bindings.
+    val knobLayout: List<String>? = null
 )
 
 @Serializable

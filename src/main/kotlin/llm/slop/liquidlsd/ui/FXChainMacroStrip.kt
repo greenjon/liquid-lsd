@@ -319,6 +319,7 @@ object FXChainMacroStrip {
                 val defaultDto = ISFAutoBindEngine.resolveDefault(fx)
                 edit { f ->
                     f.applyMetaBindingsFromPreset(ISFAutoBindEngine.resolveBindings(f))
+                    f.applyKnobLayoutFromPreset(defaultDto.knobLayout)
                     defaultDto.parameters.forEach { (name, value) ->
                         f.parameters[name]?.baseValue = value
                     }

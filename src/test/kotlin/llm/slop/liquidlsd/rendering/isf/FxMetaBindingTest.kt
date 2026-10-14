@@ -170,3 +170,73 @@ class FxMetaBindingCurveParityTest {
         assertEquals(MetaCurve.EXPONENTIAL, old.toBinding().curve)
     }
 }
+
+class FxKnobLayoutTest {
+    private fun filter(): ISFFilter {
+        val header = ISFHeader(INPUTS = listOf(
+            ISFInput(NAME = "inputImage", TYPE = "image"),
+            ISFInput(NAME = "a", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(1.0f), DEFAULT = JsonPrimitive(0.0f)),
+            ISFInput(NAME = "b", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(1.0f), DEFAULT = JsonPrimitive(0.0f)),
+            ISFInput(NAME = "c", TYPE = "float", MIN = JsonPrimitive(0.0f), MAX = JsonPrimitive(1.0f), DEFAULT = JsonPrimitive(0.0f))
+        ))
+        val f = ISFFilter("f", "F", header, mockk<Shader>(relaxed = true))
+        f.applyMetaBindingsFromPreset(listOf(FxMetaBinding("a", 0f, 1f)))
+        return f
+    }
+
+    private fun names(f: ISFFilter) = f.focusParameters.map { it.key }
+
+    @Test
+    fun withoutALayoutTheKnobsShowAuthoredOrderMinusWhatTheMetaknobOwns() {
+        assertEquals(listOf("b", "c"), names(filter()))
+    }
+
+    @Test
+    fun aLayoutIsExactlyWhatTheKnobsShowIncludingOwnedParameters() {
+        val f = filter()
+        f.applyKnobLayoutFromPreset(listOf("c", "a"))
+        assertEquals(listOf("c", "a"), names(f))
+    }
+
+    @Test
+    fun staleAndDuplicateNamesAreDroppedAndNullRestoresTheDefault() {
+        val f = filter()
+        f.applyKnobLayoutFromPreset(listOf("c", "gone", "c", "b"))
+        assertEquals(listOf("c", "b"), f.knobLayout)
+        f.applyKnobLayoutFromPreset(null)
+        assertEquals(listOf("b", "c"), names(f))
+    }
+
+    @Test
+    fun theCacheFollowsLinkChanges() {
+        val f = filter()
+        assertEquals(listOf("b", "c"), names(f))
+        f.setParamLink("b", MetaLinkMode.FULL)
+        assertEquals(listOf("c"), names(f))
+    }
+
+    @Test
+    fun slotDtoCarriesTheLayoutAndOldDtosHaveNone() {
+        val chain = FxChain("c")
+        val f = filter()
+        f.applyKnobLayoutFromPreset(listOf("b", "c"))
+        chain.slots[0] = f
+        val dto = chain.toFxSlotDto(0)!!
+        assertEquals(listOf("b", "c"), dto.knobLayout)
+        val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true; encodeDefaults = true }
+        val round = json.decodeFromString(llm.slop.liquidlsd.models.FXSlotDto.serializer(), json.encodeToString(llm.slop.liquidlsd.models.FXSlotDto.serializer(), dto))
+        assertEquals(listOf("b", "c"), round.knobLayout)
+        val oldJson = kotlinx.serialization.json.JsonObject(
+            json.parseToJsonElement(json.encodeToString(llm.slop.liquidlsd.models.FXSlotDto.serializer(), dto)).let { it as kotlinx.serialization.json.JsonObject }
+                .filterKeys { it != "knobLayout" }
+        ).toString()
+        assertEquals(null, json.decodeFromString(llm.slop.liquidlsd.models.FXSlotDto.serializer(), oldJson).knobLayout)
+    }
+
+    @Test
+    fun cloneKeepsTheLayout() {
+        val f = filter()
+        f.applyKnobLayoutFromPreset(listOf("c"))
+        assertEquals(listOf("c"), f.clone().knobLayout)
+    }
+}

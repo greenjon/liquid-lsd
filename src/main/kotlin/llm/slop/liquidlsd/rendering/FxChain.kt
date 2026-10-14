@@ -344,7 +344,8 @@ class FxChain(val label: String) {
             parameters = fx.parameters.mapValues { p -> p.value.toDto() },
             metaKnob = fx.metaKnob.toDto(),
             metaBinding = fx.metaBinding.toDto(),
-            metaBindings = fx.metaBindings.map { it.toDto() }
+            metaBindings = fx.metaBindings.map { it.toDto() },
+            knobLayout = fx.knobLayout
         )
     }
 
@@ -369,6 +370,7 @@ class FxChain(val label: String) {
                     dto.metaBinding?.let { filter.applyMetaBindingFromPreset(it.toBinding()) }
                 }
                 dto.metaKnob?.let { filter.metaKnob.applyDto(it) }
+                filter.applyKnobLayoutFromPreset(dto.knobLayout)
                 slots[slotIndex] = filter
             }
         }

@@ -86,12 +86,42 @@ class ISFFilter(
     override val dryWet = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
     override var enabled = true
 
-    /** Parameters offered on the focus-mode knobs: all of them in authored order, minus those an enabled Metaknob link owns (K0 already moves those). */
+    /**
+     * Optional per-slot order of the parameters offered on the focus-mode knobs (names; hidden ones are simply absent).
+     * Null = authored order. Set it through [applyKnobLayoutFromPreset] so stale names are dropped.
+     */
+    var knobLayout: List<String>? = null
+        private set
+
+    private var focusCache: List<Map.Entry<String, ModulatableParameter>> = emptyList()
+    private var focusCacheKey = 0
+
+    /**
+     * Parameters offered on the focus-mode knobs. Without a [knobLayout]: all of them in authored order, minus those an
+     * enabled Metaknob link owns (K0 already moves those). With a layout: exactly the layout, in its order -- the user
+     * chose it, so a parameter the Metaknob owns can be listed too (its knob is then locked, see MacroEngine.tick).
+     * Cached; recomputed when the layout or the links change.
+     */
     val focusParameters: List<Map.Entry<String, ModulatableParameter>>
         get() {
-            val owned = metaBindings.filter { it.enabled }.mapNotNull { it.targetParamName }.toSet()
-            return parameters.entries.filter { it.key !in owned }
+            val key = 31 * (knobLayout?.hashCode() ?: 0) + 17 * metaBindings.hashCode() + parameters.size
+            if (key != focusCacheKey || focusCache.isEmpty() && parameters.isNotEmpty()) {
+                val layout = knobLayout
+                focusCache = if (layout != null) {
+                    layout.mapNotNull { n -> parameters[n]?.let { java.util.AbstractMap.SimpleImmutableEntry(n, it) } }
+                } else {
+                    val owned = metaBindings.filter { it.enabled }.mapNotNull { it.targetParamName }.toSet()
+                    parameters.entries.filter { it.key !in owned }
+                }
+                focusCacheKey = key
+            }
+            return focusCache
         }
+
+    /** Sets (or with null clears) the focus-knob layout, dropping names this shader does not have and duplicates. */
+    fun applyKnobLayoutFromPreset(names: List<String>?) {
+        knobLayout = names?.filter { it in parameters }?.distinct()
+    }
 
     /** The effect's single macro control — see [ISFAutoBindEngine] for how [metaBinding] gets resolved. */
     val metaKnob = ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f)
@@ -310,6 +340,7 @@ class ISFFilter(
             parameters[name]?.baseValue = value
         }
         applyMetaBindingsFromPreset(defaultDto.metaBindings.map { it.toBinding() })
+        applyKnobLayoutFromPreset(defaultDto.knobLayout)
         // Start the Metaknob at the position that reproduces the target's own authored default,
         // so loading a filter never silently overwrites its default via knob=0 on the first update().
         metaKnob.set(metaBinding.knobForTarget(currentMetaTargetValue()))
@@ -613,6 +644,7 @@ class ISFFilter(
         copy.metaBindings.clear()
         copy.metaBindings.addAll(this.metaBindings.map { it.copy() })
         copy.metaKnob.baseValue = this.metaKnob.baseValue
+        copy.applyKnobLayoutFromPreset(this.knobLayout)
         return copy
     }
 
