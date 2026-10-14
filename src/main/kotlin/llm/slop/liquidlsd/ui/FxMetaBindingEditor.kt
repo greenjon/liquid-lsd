@@ -198,6 +198,18 @@ object FxMetaBindingEditor {
         ImGui.popID()
     }
 
+    /** [Edit] for hosts that know the FX bank id and mixer (the Edit-row strip) instead of a chain prefix. */
+    fun editFor(state: ParametersState, bankId: String, mixer: llm.slop.liquidlsd.rendering.Mixer, fx: ISFFilter): Edit =
+        Edit { gesture, change ->
+            FxMetaEdit.apply(
+                fx,
+                pushUndo = { restore -> state.pushUndoState(ParametersUndoSnapshot(emptyMap(), restore)) },
+                resync = { llm.slop.liquidlsd.macro.FxMacroSync.syncFor(bankId, mixer) },
+                gesture = gesture,
+                change = change
+            )
+        }
+
     /** Builds the [Edit] callback for the Parameters-undo / FX-bank wiring of [FxMetaEdit.apply]. */
     fun editFor(state: ParametersState, chainPrefix: String, chain: llm.slop.liquidlsd.rendering.FxChain, fx: ISFFilter): Edit =
         Edit { gesture, change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, gesture, change) }

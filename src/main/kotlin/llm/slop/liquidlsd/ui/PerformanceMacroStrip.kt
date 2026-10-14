@@ -7,6 +7,9 @@ import llm.slop.liquidlsd.macro.*
 import llm.slop.liquidlsd.parameters.ParameterResolver
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.rendering.isf.FxMetaBinding
+import llm.slop.liquidlsd.rendering.isf.ISFFilter
+import llm.slop.liquidlsd.rendering.isf.MetaLinkMode
 
 /**
  * Edit-row binding strip: replaces the *content* of a row's two left control lines (never its geometry)
@@ -14,7 +17,9 @@ import llm.slop.liquidlsd.rendering.Mixer
  *
  * Line 1: [GLB tag] name (double-click renames), live value, Learn/Cancel, binding chips 1-4, close.
  * Line 2: the selected binding in [MacroBindingEditor.drawLine], or a hint when there are none.
- * FX banks have hard-assigned knobs: line 2 describes the knob's role instead and nothing is editable.
+ * FX banks have hard-assigned knobs. A slot's Metaknob (see [metaSlotFor]) gets the same strip over the slot's own
+ * [FxMetaBinding] list, edited through [FxMetaBindingEditor]; the other FX knobs (Super Knob, focus-mode parameters)
+ * show their role read-only on line 2.
  */
 internal object PerformanceMacroStrip {
     private val renameBuf = ImString(64)
@@ -27,6 +32,10 @@ internal object PerformanceMacroStrip {
     private var browserBankId: String? = null
     private var browserDeckLabel: String? = null
     private const val HINT = "Click Add Target, then a parameter or property below"
+    private const val ADD_META_POPUP = "fx_meta_add_target"
+    private const val MAX_META_CHIPS = 8
+    /** Selected binding chip per Metaknob control id. */
+    private val metaSel = HashMap<String, Int>()
     private val chipLabels = Array(MacroControl.MAX_BINDINGS_PER_CONTROL) { "${it + 1}" }
     private val chipIds = Array(MacroControl.MAX_BINDINGS_PER_CONTROL) { "##chip$it" }
 
@@ -54,6 +63,8 @@ internal object PerformanceMacroStrip {
         val gap = 4f
         val dl = ImGui.getWindowDrawList()
         val isFx = llm.slop.liquidlsd.macro.TransitionMacroSync.isSyncOwned(bankId)
+        val metaFx: ISFFilter? = if (isFx && fxChain != null) metaSlotFor(bankId, fxChain, control)?.let { fxChain.slots.getOrNull(it) } else null
+        val metaCount = metaFx?.metaBindings?.size?.coerceAtMost(MAX_META_CHIPS) ?: 0
         val learning = MacroLearnState.isControlLearning(control.id)
         ImGui.pushID(control.id)
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FramePadding, 4f, ((ctrlH - ImGui.getFontSize()) * 0.5f).coerceAtLeast(0f))
@@ -72,9 +83,9 @@ internal object PerformanceMacroStrip {
         val closeW = ctrlH
         val learnW = 76f
         val chipW = ctrlH
-        val chipsW = if (isFx) 0f else (chipW + 2f) * MacroControl.MAX_BINDINGS_PER_CONTROL
+        val chipsW = if (metaFx != null) (chipW + 2f) * metaCount else if (isFx) 0f else (chipW + 2f) * MacroControl.MAX_BINDINGS_PER_CONTROL
         val valueW = 38f
-        val rightW = closeW + gap + (if (isFx) 0f else learnW + gap + chipsW + gap + closeW + gap)
+        val rightW = closeW + gap + (if (metaFx != null) learnW + gap + chipsW + gap else if (isFx) 0f else learnW + gap + chipsW + gap + closeW + gap)
         val nameW = (x + w - cx - rightW - valueW - gap * 2).coerceAtLeast(40f)
 
         val name = control.label.ifEmpty { "Knob" }
@@ -97,6 +108,10 @@ internal object PerformanceMacroStrip {
         val valueText = ValueFormat.knob(control.value)
         dl.addText(cx, TextFit.centeredY(row1Y, ctrlH, ImGui.getTextLineHeight()), ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled), valueText)
         cx += valueW + gap
+
+        if (metaFx != null && fxChain != null) {
+            cx = drawMetaChips(parametersState, mixer, bankId, control, metaFx, cx, row1Y, learnW, chipW, ctrlH, gap)
+        }
 
         if (!isFx) {
             ImGui.setCursorScreenPos(cx, row1Y)
@@ -145,6 +160,7 @@ internal object PerformanceMacroStrip {
         // -- Line 2 --
         val bindings = control.bindings
         when {
+            metaFx != null -> drawMetaLine(parametersState, mixer, bankId, control, metaFx, x, row2Y, w, ctrlH)
             isFx -> {
                 val i = MacroEngine.getBank(bankId)?.knobs?.indexOf(control) ?: -1
                 val role = if (bankId == MacroEngine.TRANS) (if (i == 0) "Crossfader" else "Transition parameter") else if (fxChain != null && i >= 0) FxMacroSummary.knobRole(fxChain, i, control) else "FX knob"
@@ -170,6 +186,91 @@ internal object PerformanceMacroStrip {
         ImGui.popID()
         return close
     }
+
+    /** Slot index whose Metaknob [control] is in an FX bank, or null (Super Knob, focus-mode parameter knob, not FX). */
+    internal fun metaSlotFor(bankId: String, chain: FxChain, control: MacroControl): Int? {
+        if (bankId == MacroEngine.TRANS) return null
+        val i = MacroEngine.getBank(bankId)?.knobs?.indexOf(control) ?: return null
+        val focused = chain.focusedSlot
+        val slot = if (focused == null) i - 1 else if (i == 0) focused else return null
+        return slot.takeIf { it in 0 until FxChain.SLOT_COUNT && chain.slots.getOrNull(it) != null }
+    }
+
+    private fun fxTargetLabel(fx: ISFFilter, binding: FxMetaBinding): String =
+        binding.targetParamName?.let { n -> fx.header.INPUTS.find { it.NAME == n }?.LABEL ?: n } ?: "Dry/Wet"
+
+    private fun selectedMeta(control: MacroControl, fx: ISFFilter): Int =
+        (metaSel[control.id] ?: 0).coerceIn(0, (fx.metaBindings.size - 1).coerceAtLeast(0))
+
+    /** Line 1 right part for a slot Metaknob: Add Target (pick from the unlinked parameters) and one chip per link. Returns the new x. */
+    private fun drawMetaChips(
+        state: ParametersState, mixer: Mixer, bankId: String, control: MacroControl, fx: ISFFilter,
+        startX: Float, y: Float, addW: Float, chipW: Float, h: Float, gap: Float
+    ): Float {
+        var cx = startX
+        ImGui.setCursorScreenPos(cx, y)
+        if (ButtonChrome.button("Add Target##meta_add", addW, h)) ImGui.openPopup(ADD_META_POPUP)
+        itemTooltip("Link another parameter of ${fx.displayName} to this Metaknob.")
+        pushOpenDropdownPadding()
+        if (ImGui.beginPopup(ADD_META_POPUP)) {
+            pushOpenDropdownFont()
+            val linked = fx.metaBindings.mapTo(HashSet()) { it.targetParamName }
+            var any = false
+            for (input in fx.header.INPUTS) {
+                if (!input.TYPE.equals("float", ignoreCase = true) || input.NAME in linked || fx.parameters[input.NAME] == null) continue
+                any = true
+                if (ImGui.menuItem(input.LABEL ?: input.NAME)) {
+                    metaSel[control.id] = fx.metaBindings.size
+                    metaEdit(state, bankId, mixer, fx).run(null) { it.setParamLink(input.NAME, MetaLinkMode.FULL) }
+                }
+            }
+            if (null !in linked) {
+                any = true
+                if (ImGui.menuItem("Dry/Wet")) {
+                    metaSel[control.id] = fx.metaBindings.size
+                    metaEdit(state, bankId, mixer, fx).run(null) { it.metaBindings.add(FxMetaBinding.DRY_WET_SAFETY_NET) }
+                }
+            }
+            if (!any) ImGui.textDisabled("Every parameter is linked")
+            popOpenDropdownFont()
+            ImGui.endPopup()
+        }
+        popOpenDropdownPadding()
+        cx += addW + gap
+
+        val sel = selectedMeta(control, fx)
+        for (i in 0 until minOf(fx.metaBindings.size, MAX_META_CHIPS)) {
+            val b = fx.metaBindings[i]
+            ImGui.setCursorScreenPos(cx, y)
+            val selected = i == sel
+            if (selected) ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.SYNC.normal, 0.55f))
+            if (!b.enabled) ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled))
+            val clicked = ButtonChrome.button("${i + 1}##meta_chip$i", chipW, h)
+            if (!b.enabled) ImGui.popStyleColor()
+            if (selected) ImGui.popStyleColor(3)
+            itemTooltip(fxTargetLabel(fx, b) + "\nClick to edit.")
+            if (clicked) metaSel[control.id] = i
+            cx += chipW + 2f
+        }
+        return cx
+    }
+
+    /** Line 2 for a slot Metaknob: the selected link in [FxMetaBindingEditor.drawLine], or a hint when nothing is linked. */
+    private fun drawMetaLine(
+        state: ParametersState, mixer: Mixer, bankId: String, control: MacroControl, fx: ISFFilter,
+        x: Float, y: Float, w: Float, h: Float
+    ) {
+        if (fx.metaBindings.isEmpty()) {
+            ImGui.getWindowDrawList().addText(x + 2f, TextFit.centeredY(y, h, ImGui.getTextLineHeight()), ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled),
+                TextFit.ellipsize("Nothing linked: click Add Target to choose a parameter", w - 4f))
+            return
+        }
+        val binding = fx.metaBindings[selectedMeta(control, fx)]
+        FxMetaBindingEditor.drawLine(fx, binding, fxTargetLabel(fx, binding), x, y, w, h, metaEdit(state, bankId, mixer, fx))
+    }
+
+    private fun metaEdit(state: ParametersState, bankId: String, mixer: Mixer, fx: ISFFilter): FxMetaBindingEditor.Edit =
+        FxMetaBindingEditor.editFor(state, bankId, mixer, fx)
 
     private fun targetLabel(binding: MacroBinding): String =
         if (binding.targetType == MacroTargetType.PARAM_BASE_VALUE) binding.parameterId
