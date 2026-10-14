@@ -177,7 +177,7 @@ object FXChainMacroStrip {
                             state.toggleFxFocus(chainPrefix, i)
                         }
                         ImGui.separator()
-                        ImGui.textDisabled("Retarget Metaknob To…")
+                        ImGui.textDisabled("Replace all links with…")
                         drawRebindMenuItems(fx) { change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, change = change) }
                     },
                     descriptionOverride = fx.header.DESCRIPTION?.takeIf { it.isNotBlank() },
@@ -213,7 +213,7 @@ object FXChainMacroStrip {
                     onValueChanged = { fx.metaKnob.set(it); onPushUndo() }
                 )
                 ImGui.endGroup()
-                itemTooltip("${fx.displayName}'s macro control (targets ${fx.metaBinding.targetParamName ?: "Dry/Wet"}). Right-click to retarget or save defaults, or map hardware MIDI/OSC.")
+                itemTooltip("${fx.displayName}'s macro control (targets ${fx.metaBinding.targetParamName ?: "Dry/Wet"}). Right-click to replace its links or save defaults, or map hardware MIDI/OSC.")
                 drawRebindContextMenu(fx, chainPrefix, chain, state, i)
             }
         }
@@ -333,7 +333,7 @@ object FXChainMacroStrip {
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem(popupId)) {
             pushOpenDropdownFont()
-            ImGui.textDisabled("Retarget Metaknob")
+            ImGui.textDisabled("Replace all links with…")
             ImGui.separator()
             drawRebindMenuItems(fx) { change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, change = change) }
             popOpenDropdownFont()

@@ -486,6 +486,42 @@ object ParametersTabs {
         ImGui.unindent(PARAM_INDENT)
     }
 
+    /**
+     * Collapsible list of a slot's Metaknob links under its header: one [FxMetaBindingEditor] block per link plus an
+     * "Add link" menu of the parameters not linked yet. The Edit-row strip edits the same list; this is the mouse-first copy.
+     */
+    private fun drawMetaLinks(state: ParametersState, chainPrefix: String, chain: FxChain, fx: llm.slop.liquidlsd.rendering.isf.ISFFilter, slotNum: Int, width: Float) {
+        val edit = FxMetaBindingEditor.editFor(state, chainPrefix, chain, fx)
+        val id = "$chainPrefix/FX$slotNum"
+        if (!ImGui.treeNodeEx("Metaknob links (${fx.metaBindings.size})##metalinks_$id", imgui.flag.ImGuiTreeNodeFlags.SpanAvailWidth)) return
+        itemTooltip("What ${fx.displayName}'s Metaknob drives: each link has its own range, response curve and zone of the knob's travel.")
+        for (binding in fx.metaBindings.toList()) {
+            ImGui.textDisabled(binding.targetParamName?.let { n -> fx.header.INPUTS.find { it.NAME == n }?.LABEL ?: n } ?: "Dry/Wet")
+            FxMetaBindingEditor.drawFull(fx, binding, width, edit)
+        }
+        if (ImGui.smallButton("Add link##metaadd_$id")) ImGui.openPopup("metaadd_pop_$id")
+        pushOpenDropdownPadding()
+        if (ImGui.beginPopup("metaadd_pop_$id")) {
+            pushOpenDropdownFont()
+            val linked = fx.metaBindings.mapTo(HashSet()) { it.targetParamName }
+            var any = false
+            for (input in fx.header.INPUTS) {
+                if (!input.TYPE.equals("float", ignoreCase = true) || input.NAME in linked || fx.parameters[input.NAME] == null) continue
+                any = true
+                if (ImGui.menuItem(input.LABEL ?: input.NAME)) edit.run(null) { it.setParamLink(input.NAME, MetaLinkMode.FULL) }
+            }
+            if (null !in linked) {
+                any = true
+                if (ImGui.menuItem("Dry/Wet")) edit.run(null) { it.metaBindings.add(llm.slop.liquidlsd.rendering.isf.FxMetaBinding.DRY_WET_SAFETY_NET) }
+            }
+            if (!any) ImGui.textDisabled("Every parameter is linked")
+            popOpenDropdownFont()
+            ImGui.endPopup()
+        }
+        popOpenDropdownPadding()
+        ImGui.treePop()
+    }
+
     fun drawFxChainContent(
         session: llm.slop.liquidlsd.SessionContext,
         chain: FxChain,
@@ -656,6 +692,7 @@ object ParametersTabs {
             popOpenDropdownPadding()
 
             if (fx != null && !isCollapsed) {
+                drawMetaLinks(state, chainPrefix, chain, fx, slotNum, labelColW)
                 ParametersRenderer.drawParamRow(session, "Dry/Wet", "$chainPrefix/FX$slotNum/DryWet", fx.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
                 fx.parameters.forEach { (name, param) ->
