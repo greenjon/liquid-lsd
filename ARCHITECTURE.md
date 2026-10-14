@@ -120,7 +120,7 @@ Other `presets/` pieces:
 
 Every deck (A, B, BG, PV) and Master owns one `FxChain` (`rendering/FxChain.kt`): 3 slots of `ISFFilter?`, chain `dryWet` and `enabled`, a `superKnob`, `slotSuperKnobLink[3]` (soft takeover when linking), `focusedSlot` / `focusParamPage` (Focus mode), dirty-by-structure, swap-dip gains. Rendered by the one `Renderer.renderFxChainPass` for decks and Master. **FX is session state, not part of a preset**: `DeckPresetDto` has no FX fields; `MixerDto` carries `masterFxChain`, `deckA/B/BG/PVFxChain` and their source paths. Saved forms: `.lsdfx` (slot), `.lsdfxchain` (chain), `.lsdfxplay` (playlist) via `models/FXPresetModels.kt`. Defaults for new chains: `Mixer.loadDefaultFxChains`, `ui/FxLinkDefaults` (Auto/Linked/Unlinked preference). DECISIONS §2, §4.
 
-`FxMacroSync` (`macro/`) is the only writer of the FX macro banks (`deckA_fx` … `masterFx`): group mode = Super Knob + 3 slot Metaknobs, focus mode = that slot's Metaknob + 3 parameters per page. Per-deck chain dry/wet is edited in Edit only (the `FX_SENDS` bank and its Perform row were removed); "FX1/FX2 sends" and per-row alternative chains no longer exist.
+`FxMacroSync` (`macro/`) is the only writer of the FX macro banks (`deckA_fx` … `masterFx`): group mode = Super Knob + 3 slot Metaknobs, focus mode = that slot's Metaknob + 3 parameters per page, taken from `ISFFilter.focusParameters` (the slot's `knobLayout`, else authored order minus Metaknob-owned parameters). Links and knob order are edited only through `ui/FxMetaEdit`. Per-deck chain dry/wet is edited in Edit only (the `FX_SENDS` bank and its Perform row were removed); "FX1/FX2 sends" and per-row alternative chains no longer exist.
 
 ## 6. Parameters, modulation, CV
 

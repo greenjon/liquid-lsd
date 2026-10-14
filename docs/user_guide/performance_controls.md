@@ -171,7 +171,7 @@ for the FX Rack view that exposes these.
       - `[1] [2] [3]`: Slot focus pills with clean styling. The active slot pill is highlighted in blue accent. Click another slot pill to switch focus instantly, or click the active focused slot pill a second time (or press `Escape`) to exit Focus Mode back to the 3-slot chain view.
     - **4 Knobs in Focus Mode**:
       - **Knob 1 (`META`)**: The focused slot's Metaknob (`$chainLabel/FX/FX<slot>/Meta`). Its Dry/Wet is the `Wet` slider in the chain header. The focused slot's `FxSlotCell` is drawn underneath so shortlist stepping (hover `◀ ▶` or mouse wheel) and picker access remain directly below the knob, with the slot's bypass button to its left.
-      - **Knobs 2–4 (`Top Parameters`)**: Dynamically retargeted to the focused shader's top parameters on the active page (e.g. `SPEED`, `INTENSITY`, `COLOR`).
+      - **Knobs 2–4 (`Top Parameters`)**: Dynamically retargeted to the focused shader's parameters on the active page, in the slot's knob order (set in the Edit bay's **Knobs** list; the effect's own order by default) (e.g. `SPEED`, `INTENSITY`, `COLOR`).
       - **Parameter Cells (`FxParamCell`)**: Drawn under Knobs 2–4 with the parameter's name and a modulation indicator dot. The current value is shown inside the knob face, and a `[⟲]` reset button (restores the authored default) sits to the left of the knob.
   - **Stable Layout**: Knobs stay the same size and in the same place whichever mode a row is in (source, FX group, or Focus Mode), and switching one row never resizes the others. Knob names and effect/parameter names share the same line under each knob. Names too long for it end in `…`; hover the knob for the full name.
     - **Seamless Hardware MIDI Retargeting**:

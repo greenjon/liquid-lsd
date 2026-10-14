@@ -1264,6 +1264,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-metaknob-links-and-focus-knobs-get-a-real-editor-uifxmetabindingeditorkt-uifxmetaeditkt-uibindingeditorpartskt-renderingisffxmetabindingkt-renderingisfisffilterkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Metaknob Links and Focus Knobs Get a Real Editor (ui/FxMetaBindingEditor.kt, ui/FxMetaEdit.kt, ui/BindingEditorParts.kt, rendering/isf/FxMetaBinding.kt, rendering/isf/ISFFilter.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fractal-flame-generator-with-an-evolving-garden-experimental-renderingflamesourcekt-flameenginekt-flamegenomekt-flamesamplerkt-presetsgardenkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6055,6 +6066,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#fx-metaknob-links-and-focus-knobs-get-a-real-editor-uifxmetabindingeditorkt-uifxmetaeditkt-uibindingeditorpartskt-renderingisffxmetabindingkt-renderingisfisffilterkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX Metaknob Links and Focus Knobs Get a Real Editor (ui/FxMetaBindingEditor.kt, ui/FxMetaEdit.kt, ui/BindingEditorParts.kt, rendering/isf/FxMetaBinding.kt, rendering/isf/ISFFilter.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fractal-flame-generator-with-an-evolving-garden-experimental-renderingflamesourcekt-flameenginekt-flamegenomekt-flamesamplerkt-presetsgardenkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10821,6 +10843,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="fx-metaknob-links-and-focus-knobs-get-a-real-editor-uifxmetabindingeditorkt-uifxmetaeditkt-uibindingeditorpartskt-renderingisffxmetabindingkt-renderingisfisffilterkt">FX Metaknob Links and Focus Knobs Get a Real Editor (<code>ui/FxMetaBindingEditor.kt</code>, <code>ui/FxMetaEdit.kt</code>, <code>ui/BindingEditorParts.kt</code>, <code>rendering/isf/FxMetaBinding.kt</code>, <code>rendering/isf/ISFFilter.kt</code>)</h3>
+<ul>
+<li><strong>Edit what an effect's Metaknob drives, the same way you edit a source row's macro targets.</strong> In the Edit view, select a slot's Metaknob: the row strip shows one chip per linked parameter, <strong>Add Target</strong> (a menu of the parameters not linked yet, plus Dry/Wet) and the selected link's editor line: enable, link mode, response curve, step count, range bar, Min/Max and delete. The Edit bay shows the same editor for every link in a collapsible <strong>Metaknob links</strong> block under each slot header. Before, the only control was a right-click menu with link mode and invert.</li>
+<li><strong>All five response curves.</strong> Metaknob links now offer Linear, Exponential, Logarithmic, S-Curve and Step (with a step count), the same as macro targets, and use the same math. Existing links behave exactly as before.</li>
+<li><strong>Choose which parameters sit on the focus knobs.</strong> A collapsible <strong>Knobs</strong> block under each slot header lists the parameters in focus-mode knob order (knobs 2-4, three per page). Move them up or down, take them off the knobs, bring them back, or reset to the effect's own order. The order is saved with the slot and chain, and with <strong>Save as Default</strong>. A parameter the Metaknob drives shows a lock: its knob does nothing while the link is enabled. Without a custom order nothing changes (the effect's own order, minus what the Metaknob drives).</li>
+<li><strong>Fixed: focus knobs could go stale after changing a link.</strong> The Metaknob Link menu, the link buttons, <em>Replace all links with...</em> (formerly <em>Retarget Metaknob</em>) and <em>Reset to Factory Default</em> changed the links without updating knobs 2-4 or the page count, and their undo did not restore the links. They now update the knobs at once and Ctrl+Z puts the links (and the knob order) back. Dragging a range handle is one undo step.</li>
+<li>Internal: <code>FxMetaEdit</code> is the single entry point for editing a slot's links and knob order (mutate, push a restore, re-sync <code>FxMacroSync</code> only when <code>focusParameters</code> changed). <code>FxMetaBinding</code> gained <code>stepCount</code> and delegates its transfer math to <code>MacroCurve</code>; <code>FXSlotDto.knobLayout</code> and <code>FxDefaultDto.knobLayout</code> are optional, so older presets load unchanged.</li>
+</ul>
 <h3 id="fractal-flame-generator-with-an-evolving-garden-experimental-renderingflamesourcekt-flameenginekt-flamegenomekt-flamesamplerkt-presetsgardenkt">Fractal Flame Generator With an Evolving Garden (experimental) (<code>rendering/FlameSource.kt</code>, <code>FlameEngine.kt</code>, <code>FlameGenome.kt</code>, <code>FlameSampler.kt</code>, <code>presets/Garden.kt</code>)</h3>
 <ul>
 <li><strong>New generator, Fractal Flame.</strong> Millions of points iterate through up to six transforms with 98 variations (the paper's 49, 46 more, hemisphere and plusrecip, from exp, log and the trigonometric and hyperbolic family to wedge, curve, bipolar and flux) and are drawn as feathered, glowing filaments. Everything is a parameter, so modulators, macros and MIDI/OSC learn work on every xform, affine and variation. The Edit row's SRC sub-tab has tabs for Look, Mods, each xform and the final xform; the default macro knobs are Zoom, Spin, Warp and Breathe, and Spin, Breathe, Warp and Drift move every xform at once. Math follows Draves &amp; Reckase, "The Fractal Flame Algorithm" (clean-room, credited in the licenses page). Experimental: not in the stock generator set yet.</li>

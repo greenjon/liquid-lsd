@@ -27,11 +27,11 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **v1.1** | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
 | **Session Scratchpad** | `notes/*`, `ui/*` | **v1.1** | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
 | **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **v1.1** | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
-| **FX Metaknob Multi-Parameter Linking** | `rendering/isf/*`, `rendering/FxChain.kt` | **v1.1** | **IDEA** | One Metaknob driving several shader parameters with per-target link modes. |
+| **FX Metaknob Multi-Parameter Linking** | `rendering/isf/*`, `rendering/FxChain.kt`, `ui/FxMetaBindingEditor.kt` | **v1.0** | **DONE** | Several links per Metaknob with link modes and all five curves, edited in the Edit-row strip and Edit bay, plus a per-slot knob order for the focus knobs. |
 | **Macro-Learn Coverage Completion** | `ui/*`, `macro/*` | **v1.1** | **PENDING** | Click-to-learn for randomization bound rows, per-step grid, and dropdowns (shared combo wrapper). Bumped from v1.0. |
-| **Automated Screen Capture & UI Lab** | `export/*`, `ui/*`, `Main.kt` | **v1.1** | **PARTIAL** | GPU PBO readback done; headless `--screenshot-ui` runner and `--ui-lab` gallery pending. Bumped from v1.0. |
+| **Automated Screen Capture & UI Lab** | `export/*`, `ui/*`, `Main.kt` | **v1.0** | **DONE** | GPU PBO readback, headless `--screenshot-ui` runner and `--ui-lab` gallery (`./gradlew captureUiLab`). |
 | **Localization** | `ui/*` | **v1.1** | **PENDING** | All user-facing text moved to string tables; translation support with locale selection. |
-| **Expanded FX Chain View** | `ui/PerformanceMatrixPanel.kt`, `ui/FxSlotCell.kt`, `macro/FxMacroSync.kt` | **v1.1** | **SHELVED** | Mixxx-style 3-sub-row chain editing on the Performance matrix (all 3 slots' dry/wet + top params visible). Notes: `.planning/fx-chain-expanded-view-notes.md`. |
+| **Expanded FX Chain View** | `ui/PerformanceMatrixPanel.kt`, `ui/FxSlotCell.kt`, `macro/FxMacroSync.kt` | **Compost (v1.2)** | **SHELVED** | Mixxx-style 3-sub-row chain editing on the Performance matrix. Decided 2026-10-13: no milestone. Notes: `.planning/fx-chain-expanded-view-notes.md`. |
 
 ---
 
@@ -112,7 +112,7 @@ Enhancing the built-in Mandala procedural visual generator for live stage recall
 
 ### Milestone 4: FX Metaknob Multi-Parameter Linking
 > **Reference**: Mixxx-style parameter link modes (Full/1st Half/2nd Half/Triangle/Bipolar/Invert), proposed 2026-09-22 alongside the macro link modes feature that ships this same transfer-function math for `MacroBinding`.
-> **Status**: Idea / Not Scoped
+> **Status**: Done (2026-10-14). The open questions below were settled: bindings are per-slot and baked into presets, the auto-bind default stays single-target, and editing uses the same editor as macro targets (`FxMetaBindingEditor`).
 
 Extend each ISF FX slot's single Metaknob (`ISFFilter.metaBinding`, `rendering/isf/FxMetaBinding.kt`) from driving exactly one uniform to driving **multiple** shader parameters simultaneously, each with its own link mode/curve/range — e.g. one Metaknob opening Cutoff on the first half and peaking Resonance in a triangle around center. This is a materially bigger lift than the macro-side version because today's Metaknob binding is auto-resolved by `ISFAutoBindEngine` (163 lines) to exactly one target (with dry/wet as the last-resort safety net), and that single-binding assumption threads through `FxChain` DTO serialization, `FXChainMacroStrip` UI, and `ParametersTabs` context menus.
 
@@ -159,7 +159,7 @@ Automating crisp, deterministic UI screenshot capture for documentation assets a
 
 ### Milestone 8: Expanded FX Chain View (Mixxx-style)
 > **Reference**: [`.planning/fx-chain-expanded-view-notes.md`](.planning/fx-chain-expanded-view-notes.md)
-> **Status**: Idea / Shelved 2026-09-25
+> **Status**: Compost (v1.2) / Shelved 2026-09-25, decided 2026-10-13
 
 When editing an FX chain on the Performance matrix, show 3 sub-rows (one per slot, each with dry/wet + top 3 params, per-slot paging) instead of the single row + focus mode, so the whole chain is visible and ~12 parameters are reachable by mouse. Hardware keeps today's focus semantics: the focused sub-row is the `Macro/<bank>/knob_N` target, the others bind directly to their params.
 

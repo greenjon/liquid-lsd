@@ -174,12 +174,30 @@ A parameter's base value can be driven from several places. From strongest to we
   pickup), the same behavior used for hardware MIDI/OSC takeover elsewhere in the app.
 - **Focus Mode** (per slot) — focuses on an individual effect slot across the Performance Matrix FX rows.
   - **Knob 1**: The focused slot's Metaknob. The slot's **Dry/Wet** is the `Wet` slider in the chain header (middle-click resets to 100%).
-  - **Knobs 2–4**: Retargeted to the focused effect's top parameters on the active page, with parameter paging (`[◀ P1/N ▶]`) when more than 3 parameters exist. A parameter the Metaknob already drives is left out, since knob 1 moves it.
+  - **Knobs 2–4**: Retargeted to the focused effect's top parameters on the active page, with parameter paging (`[◀ P1/N ▶]`) when more than 3 parameters exist. A parameter the Metaknob already drives is left out, since knob 1 moves it, unless you set the slot's own knob order (see *Editing a Metaknob's links and knob order* below).
   - **Parameter Cells (`FxParamCell`)**: Display parameter values with a reset-to-default button (counter-clockwise arrow).
   - **Hardware MIDI**: Physical controllers mapped to `Macro/<bankId>/knob_1..4` keep their paths; in Focus Mode they control the focused slot's Metaknob and parameters. The layout is fixed per mode (Mixxx-style), so a mapped CC changes meaning when you toggle focus.
   - Click `[◀ CHAIN]` in the header, or the active slot pill, to return to standard Group Mode.
-- **Right-click a Metaknob** to retarget it to a different parameter, to the Dry/Wet safety net, or
-  to reset it back to the auto-mapped default.
+- **Right-click a Metaknob** to replace all its links with a single parameter (or the Dry/Wet safety net),
+  save the current links as the effect's default, or reset to the auto-mapped default.
+
+#### Editing a Metaknob's links and knob order
+
+A Metaknob can drive several parameters at once, each with its own response.
+
+- **In the Edit view**, select a slot's Metaknob. The row strip shows one numbered chip per link, **Add Target**
+  (pick from the parameters that aren't linked yet, or Dry/Wet) and the selected link's controls: the enable
+  checkbox, link mode (full range, first half, second half, triangle, bipolar, invert), response curve
+  (linear, exponential, logarithmic, S-curve, step with a step count), a range bar with draggable handles, Min and
+  Max, and delete. Right-click the link-mode button for the full list.
+- **In the Edit bay**, each slot has a **Metaknob links** block with the same controls for every link and an
+  **Add link** menu.
+- **Knobs** (also in the Edit bay) lists the parameters on focus-mode knobs 2-4, three per page. Move a parameter
+  up or down, take it off the knobs, bring it back from *Hidden*, or **Reset order**. A lock beside a parameter
+  means the Metaknob drives it, so its knob does nothing while the link is enabled.
+- Links and knob order are saved with the slot and chain. Changing them in one chain never changes another
+  chain or the stock effect; **Save as Default** makes your links and order the starting point for new copies of
+  that effect. Ctrl+Z undoes a change, and a drag on a range handle is a single step.
 
 ### Hardware control note
 
