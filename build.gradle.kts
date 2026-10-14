@@ -146,6 +146,15 @@ tasks.withType<JavaExec> {
     }
 }
 
+// Render on the NVIDIA GPU (PRIME offload) when running from Gradle on Linux. Skip with -PnoNvidia.
+tasks.named<JavaExec>("run") {
+    if (System.getProperty("os.name").lowercase().contains("linux") && !project.hasProperty("noNvidia")) {
+        environment("__NV_PRIME_RENDER_OFFLOAD", "1")
+        environment("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
+        environment("__VK_LAYER_NV_optimus", "NVIDIA_only")
+    }
+}
+
 val generateDocs = tasks.register("generateDocs") {
     group = "documentation"
     description = "Generates HTML documentation using mkdocs if available."
