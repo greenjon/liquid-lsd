@@ -29,7 +29,9 @@ data class AssetItem(
     val isValid: Boolean = true,
     val errorMessage: String? = null,
     val tags: List<String> = emptyList(),
-    val dependencies: llm.slop.liquidlsd.presets.PresetDependencies? = null
+    val dependencies: llm.slop.liquidlsd.presets.PresetDependencies? = null,
+    /** Author-declared GPU cost of a stock ISF shader (0 = undeclared, 3 = heavy); the browser badges 3. */
+    val gpuCost: Int = 0
 ) {
     val displayName: String
         get() = if (isValid) name else "[!] $name"

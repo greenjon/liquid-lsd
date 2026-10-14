@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Heavy Shaders Get a GPU-Cost Warning in the Browser (`rendering/isf/ISFModels.kt`, `ui/browser/PresetListPanel.kt`, `ui/browser/FXBrowserPanel.kt`)
+- **A warning triangle marks GPU-intensive stock shaders.** Generators and effects whose author declared them heavy show a butter-coloured triangle at the right edge of their browser row, and the tooltip says "GPU-intensive: may run slowly on integrated graphics." Nothing is hidden or blocked; the badge only tells you what to expect. The raymarchers Icosa H3, Hyper Slice and Gyroid Hyperspace are tagged heavy.
+- **New optional ISF header key `LSD_COST`** (1 light, 2 medium, 3 heavy). Other ISF hosts ignore it, so shaders stay portable. Only 3 shows a badge; values outside 0-3 are clamped. Your own shaders in the stock folders can use it too.
+- Internal: `ISFHeader.LSD_COST` / `gpuCost`, `AssetItem.gpuCost`, `PresetListPanel.drawCostBadge`. Tagged in `library/sources/` and its `default_sources` copy. Transition rows and saved presets do not badge yet. Test: `StockGpuCostAuditTest`.
+
 ### FX Metaknob Links and Focus Knobs Get a Real Editor (`ui/FxMetaBindingEditor.kt`, `ui/FxMetaEdit.kt`, `ui/BindingEditorParts.kt`, `rendering/isf/FxMetaBinding.kt`, `rendering/isf/ISFFilter.kt`)
 - **Edit what an effect's Metaknob drives, the same way you edit a source row's macro targets.** In the Edit view, select a slot's Metaknob: the row strip shows one chip per linked parameter, **Add Target** (a menu of the parameters not linked yet, plus Dry/Wet) and the selected link's editor line: enable, link mode, response curve, step count, range bar, Min/Max and delete. The Edit bay shows the same editor for every link in a collapsible **Metaknob links** block under each slot header. Before, the only control was a right-click menu with link mode and invert.
 - **All five response curves.** Metaknob links now offer Linear, Exponential, Logarithmic, S-Curve and Step (with a step count), the same as macro targets, and use the same math. Existing links behave exactly as before.

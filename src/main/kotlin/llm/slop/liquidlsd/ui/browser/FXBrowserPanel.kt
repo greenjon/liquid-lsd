@@ -148,10 +148,12 @@ object FXBrowserPanel {
             selectableRow("${if (info.isNotEmpty()) PresetListPanel.nameForInfo(text, itemW) else text}##fx_browser_$index", isSelected, itemW)
         }
         PresetListPanel.drawInfoColumn(info, itemW)
+        PresetListPanel.drawCostBadge(asset.gpuCost, itemW)
         val isRowHovered = ImGui.isItemHovered()
         itemTooltip(
             when (asset.type) {
-                AssetType.FX_STOCK -> "Stock ISF filter — load only, not saveable to a playlist or queue."
+                AssetType.FX_STOCK -> "Stock ISF filter — load only, not saveable to a playlist or queue." +
+                    if (asset.gpuCost >= PresetListPanel.GPU_COST_HEAVY) "\n${PresetListPanel.GPU_COST_TIP}" else ""
                 AssetType.FX_CHAIN -> "Saved 3-slot FX chain (.lsdfxchain) — replaces all 3 slots of the target chain."
                 else -> "Saved single FX preset (.lsdfx) — loads into one FX slot."
             }

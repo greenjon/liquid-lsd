@@ -9,6 +9,7 @@ import llm.slop.liquidlsd.rendering.ExternalVideoDiscovery
 import llm.slop.liquidlsd.rendering.ExternalVideoSource
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
+import llm.slop.liquidlsd.rendering.isf.ISFVisualSource
 import llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
@@ -66,7 +67,7 @@ object BrowseCatalogs {
         val root = FileSystemManager.getPresetsRoot()
         val stock = VisualSourceRegistry.availableSources.filter { it !is ExternalVideoSource }.sortedBy { it.displayName.lowercase() }.map {
             BrowseEntry(
-                AssetItem(STOCK_SOURCE_PREFIX + it.id, it.displayName, AssetType.SOURCE_STOCK, tags = it.categories),
+                AssetItem(STOCK_SOURCE_PREFIX + it.id, it.displayName, AssetType.SOURCE_STOCK, tags = it.categories, gpuCost = (it as? ISFVisualSource)?.header?.gpuCost ?: 0),
                 BrowseSection.STOCK, it.id, it.folderPath, it.categories, it.categories.joinToString(", ")
             )
         }
@@ -88,7 +89,7 @@ object BrowseCatalogs {
     private fun fxEntries(): List<BrowseEntry> {
         val stock = ISFFilterRegistry.availableFilters.sortedBy { it.displayName.lowercase() }.map {
             BrowseEntry(
-                AssetItem(STOCK_FX_PREFIX + it.id, it.displayName, AssetType.FX_STOCK),
+                AssetItem(STOCK_FX_PREFIX + it.id, it.displayName, AssetType.FX_STOCK, gpuCost = it.header.gpuCost),
                 BrowseSection.STOCK, it.id, it.folderPath, it.categories, it.categories.joinToString(", ")
             )
         }

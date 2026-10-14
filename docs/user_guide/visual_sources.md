@@ -193,6 +193,16 @@ Drop `.fs` (and optional `.vs`) shader files into the right folder:
 
 The app reads the ISF JSON header inside each shader file, automatically sets up parameter sliders in the Cell Config panel, and exposes those parameters to the CV modulation matrix. No configuration required.
 
+### Marking a shader as GPU-intensive
+
+Heavy shaders (raymarchers, fractal folds with many iterations) can run slowly on integrated graphics. To warn users, add an optional `LSD_COST` key to the ISF header: `1` light, `2` medium, `3` heavy.
+
+```json
+"LSD_COST": 3,
+```
+
+Shaders declared `3` show a warning triangle in the browser, and their tooltip says they may run slowly on integrated graphics. Other ISF programs ignore the key. If a shader is slow, lowering iteration or step-count parameters helps more than anything else.
+
 ### Standard ISF search paths
 
 Liquid LSD also scans these locations at startup:

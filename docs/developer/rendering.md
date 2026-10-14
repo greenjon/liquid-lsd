@@ -229,3 +229,6 @@ A parameter can declare a step set (`ModulatableParameter.steps` / `labels`); `e
 - `long` / `int` inputs: steps come from `VALUES` (or the whole-number `MIN..MAX` span), labels from `LABELS` when there is one per step. `bool` has 2 steps.
 - `float` inputs that are really discrete take the optional Liquid LSD key `"STEP"` (for example `"MIN": 2, "MAX": 24, "STEP": 1`). The shader still receives a float uniform; other ISF hosts ignore the key. `(MAX-MIN)/STEP` must be a whole number, otherwise `STEP` is ignored and a warning is logged.
 - Integer uniforms are rounded, not truncated, before they reach the shader.
+
+### 5. GPU cost tag (`LSD_COST`)
+`ISFHeader.LSD_COST` (optional Liquid LSD key, 1-3) is the author's declaration of how heavy a shader is; `ISFHeader.gpuCost` clamps it to 0-3 (0 = undeclared). The stock browser catalogs (`BrowseCatalogs`) copy it into `AssetItem.gpuCost` for stock generators and filters, and `PresetListPanel.drawCostBadge` draws a warning triangle for cost 3 (`GPU_COST_HEAVY`), with `GPU_COST_TIP` in the tooltip. It is static metadata, not a measurement. Bundled sources live in `library/sources/` (the build copies them over `default_sources`), so tag both copies. `StockGpuCostAuditTest` checks range and the heavy set.

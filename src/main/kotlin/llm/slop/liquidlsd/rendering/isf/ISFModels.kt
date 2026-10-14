@@ -88,8 +88,13 @@ data class ISFHeader(
     val PASSES: List<ISFPass> = emptyList(),
     val IMPORTED: JsonElement? = null,
     val is3D: Boolean = false,
-    val feedback: Boolean = false
+    val feedback: Boolean = false,
+    /** Optional LiquidLSD extension: author-declared GPU cost, 1 (light) to 3 (heavy). Unknown to other ISF hosts, which ignore it. */
+    val LSD_COST: Int? = null
 ) {
+    /** [LSD_COST] clamped to 0..3; 0 means undeclared. */
+    val gpuCost: Int get() = (LSD_COST ?: 0).coerceIn(0, 3)
+
     /**
      * Parses declared static imported asset images (LUTs, noise maps, audio textures)
      * from IMPORTED, supporting both JSON Object and JSON Array specifications.

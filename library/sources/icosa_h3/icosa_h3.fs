@@ -2,6 +2,7 @@
 {
     "DESCRIPTION": "Icosahedral H3 Coxeter raymarcher: continuous Icosahedron/Dodecahedron duality morph crossfaded with an independent spike-and-blocker stellation CSG, with facet-family aware coloring.",
     "CREDIT": "Liquid LSD",
+    "LSD_COST": 3,
     "ISFVSN": "2.0",
     "is3D": true,
     "CATEGORIES": [

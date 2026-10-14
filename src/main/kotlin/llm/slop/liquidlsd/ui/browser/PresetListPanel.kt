@@ -117,6 +117,7 @@ object PresetListPanel {
                 ImGui.popStyleColor()
             }
             drawInfoColumn(infoText, itemW)
+            drawCostBadge(asset.gpuCost, itemW)
             val isRowHovered = ImGui.isItemHovered()
             if (ImGui.isItemClicked(1)) {
                 if (!selection.isSelected(asset)) {
@@ -150,10 +151,12 @@ object PresetListPanel {
                     }
                 } else {
                     val thumb = if (isStock) 0 else llm.slop.liquidlsd.presets.GardenThumbnails.textureFor(asset.path)
-                    if (asset.tags.isNotEmpty() || thumb != 0) {
-                        showCustomTooltip(asset.path.hashCode(), estimatedHeight = if (thumb != 0) 220f else 120f) {
+                    val heavy = asset.gpuCost >= GPU_COST_HEAVY
+                    if (asset.tags.isNotEmpty() || thumb != 0 || heavy) {
+                        showCustomTooltip(asset.path.hashCode(), estimatedHeight = if (thumb != 0) 220f else if (heavy) 140f else 120f) {
                             ImGui.textUnformatted(asset.name)
                             ImGui.separator()
+                            if (heavy) ImGui.textColored(TangoPalette.u32(TangoPalette.ALERT.normal), GPU_COST_TIP)
                             if (thumb != 0) ImGui.image(thumb.toLong(), llm.slop.liquidlsd.presets.GardenThumbnails.WIDTH.toFloat(), llm.slop.liquidlsd.presets.GardenThumbnails.HEIGHT.toFloat())
                             if (asset.tags.isNotEmpty()) ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
                         }
@@ -318,6 +321,18 @@ object PresetListPanel {
         val y = ImGui.getItemRectMinY() + (ImGui.getItemRectSizeY() - ImGui.getTextLineHeight()) * 0.5f
         ImGui.getWindowDrawList().addText(x, y, ImGui.getColorU32(ImGuiCol.TextDisabled), elide(info, itemW - nameColW - 6f))
     }
+
+    /** Draws the heavy-shader badge at the row's right edge for [gpuCost] 3. Call right after the row selectable. */
+    internal fun drawCostBadge(gpuCost: Int, itemW: Float) {
+        if (gpuCost < GPU_COST_HEAVY) return
+        val w = ImGui.calcTextSize(Icons.ALERT).x
+        val x = ImGui.getItemRectMinX() + itemW - w - 6f
+        val y = ImGui.getItemRectMinY() + (ImGui.getItemRectSizeY() - ImGui.getTextLineHeight()) * 0.5f
+        ImGui.getWindowDrawList().addText(x, y, TangoPalette.u32(TangoPalette.ALERT.normal), Icons.ALERT)
+    }
+
+    const val GPU_COST_HEAVY = 3
+    const val GPU_COST_TIP = "GPU-intensive: may run slowly on integrated graphics."
 
     /** Name text shortened so it stays clear of the info column. */
     internal fun nameForInfo(label: String, itemW: Float): String = elide(label, itemW * INFO_COLUMN_START - 12f)
