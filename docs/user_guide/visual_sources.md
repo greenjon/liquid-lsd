@@ -273,7 +273,7 @@ Interference of two to eight travelling circular waves from orbiting sources.
 
 ### Harmonograph (`harmonograph`)
 
-Oscilloscope and harmonograph curves: a damped Lissajous figure drawn as a glowing phosphor line with a fading trail. This is the heaviest of the light generators; lower Quality first on integrated graphics.
+Oscilloscope and harmonograph curves: a damped Lissajous figure drawn as a glowing phosphor line with a fading trail. Lower Quality first on integrated graphics.
 
 - **Ratio X:Y, Detune**: The frequency ratio and a small offset that makes the figure slowly rotate and open up.
 - **Phase Drift, Damping, Trail Length, Rotation**: How the curve evolves.

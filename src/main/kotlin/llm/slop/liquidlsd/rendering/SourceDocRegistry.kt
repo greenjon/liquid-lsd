@@ -47,7 +47,7 @@ object SourceDocRegistry {
         "cyclic_ca" to "Cyclic cellular automaton (Belousov-Zhabotinsky look) on a persistent 256 x 256 grid: noise organises itself into rotating spirals and waves. Spirals take a few seconds to form.",
         "metaballs" to "2D metaballs: 4 to 12 balls on Lissajous orbits merge as shaded blobs, iso-line contours, neon outlines or a gooey two-tone.",
         "wave_ripples" to "Interference of 2 to 8 travelling circular waves from orbiting sources, as a shaded height field, contours, neon crests or a thin-film ramp.",
-        "harmonograph" to "Oscilloscope and harmonograph curves: damped Lissajous figures drawn as a glowing phosphor line with a fading trail. This is the heaviest of the light generators.",
+        "harmonograph" to "Oscilloscope and harmonograph curves: damped Lissajous figures drawn as a glowing phosphor line with a fading trail.",
         "aurora_ribbons" to "Aurora borealis: 3 to 6 layered curtains with exponential glow over a faint starfield, with an optional mountain silhouette or water reflection.",
         "isometric_voxels" to "Q*bert-style isometric cube field whose column heights follow a ripple, noise or diagonal-sweep wave, with face shading.",
         "halftone_matrix" to "Procedural halftone and LED matrix: a moving pattern drawn as round dots, square LED pixels, line screens or a CMYK-style colour halftone.",

@@ -13,13 +13,13 @@ precision highp float;
         { "NAME": "MaxPoints", "LABEL": "Balls", "TYPE": "float", "DEFAULT": 7.0, "MIN": 4.0, "MAX": 12.0, "STEP": 1 },
         { "NAME": "ColorMethod", "LABEL": "Style", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
         { "NAME": "PaletteMode", "LABEL": "Palette", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
-        { "NAME": "BallSize", "LABEL": "Ball Size", "TYPE": "float", "DEFAULT": 0.45, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "BallSize", "LABEL": "Ball Size", "TYPE": "float", "DEFAULT": 0.6, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "SizeVariance", "LABEL": "Size Variance", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "OrbitSpeed", "LABEL": "Orbit Speed", "TYPE": "float", "DEFAULT": 0.4, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "OrbitSpread", "LABEL": "Orbit Spread", "TYPE": "float", "DEFAULT": 0.6, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "Merge", "LABEL": "Merge", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Merge", "LABEL": "Merge", "TYPE": "float", "DEFAULT": 0.6, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Softness", "LABEL": "Softness", "TYPE": "float", "DEFAULT": 0.3, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "Quality", "LABEL": "Quality", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Quality", "LABEL": "Quality", "TYPE": "float", "DEFAULT": 0.3, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Saturation", "LABEL": "Saturation", "TYPE": "float", "DEFAULT": 0.85, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }
@@ -144,8 +144,13 @@ void main() {
             vec3 col;
             if (style == 0) {
                 // shaded blobs: height ~ sqrt(f - thr), normal from its gradient (rim tilts away)
+                // dome height h(u) = sqrt(u / (1 + 0.35 u)): vertical at the rim, monotonic and flat
+                // on top, so the pole of the field (a sharp peak at each ball centre) shows no cone
                 float u = max(f - thr, 0.0);
-                vec2 sl = g / (2.0 * sqrt(u) + 0.15 * thr) * ravg * 0.9;
+                float su = sqrt(u) + 0.05;
+                float k1 = 1.0 + 0.35 * u;
+                float dh = 0.5 / (su * k1 * sqrt(k1));
+                vec2 sl = g * dh * ravg * 1.1 / (1.0 + 0.03 * (f / thr) * (f / thr));   // flat top, no visible edge
                 vec3 nrm = normalize(vec3(-sl, 1.0));
                 vec3 L = normalize(vec3(-0.45, 0.6, 0.65));
                 float dif = max(dot(nrm, L), 0.0);

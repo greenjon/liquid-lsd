@@ -23,6 +23,10 @@ precision highp float;
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Saturation", "LABEL": "Saturation", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }
+    ],
+    "PASSES": [
+        { "TARGET": "curveLUT", "WIDTH": "65", "HEIGHT": "2", "FLOAT": true },
+        { }
     ]
 }
 */
@@ -39,6 +43,7 @@ precision highp float;
 
 const float TAU = 6.28318530717958647692;
 const int MAXSEG = 64;
+const int CHUNK = 8;
 
 // Frequency ratio presets X:Y.
 vec2 ratioOf(int k) {
@@ -102,12 +107,36 @@ void main() {
                    mod(0.5 * f.x * head, TAU), mod(0.5 * f.y * head, TAU));
     vec4 ph = vec4(0.0, 1.5708 + mod(drift, TAU), 1.3 + mod(0.7 * drift, TAU), 0.4 - mod(0.45 * drift, TAU));
 
+    const float SCALE = 0.44;
+
+    // Pass 0: the curve vertices are the same for every pixel, so evaluate them once into a
+    // 65 x 1 float strip instead of once per pixel per segment.
+    if (PASSINDEX == 0) {
+        int vi = int(gl_FragCoord.x);
+        if (gl_FragCoord.y < 1.0) {
+            vec2 v = SCALE * curve(float(vi) / float(n), f, span, Damping_, hp, ph);
+            gl_FragColor = vec4(v, 0.0, 1.0);
+        } else {
+            // row 1: bounding box (min xy, max xy) of the 9 vertices of chunk vi (8 segments)
+            vec2 lo = vec2(1e4);
+            vec2 hi = vec2(-1e4);
+            for (int j = 0; j <= CHUNK; j++) {
+                int k = vi * CHUNK + j;
+                if (k > n) break;
+                vec2 v = SCALE * curve(float(k) / float(n), f, span, Damping_, hp, ph);
+                lo = min(lo, v);
+                hi = max(hi, v);
+            }
+            gl_FragColor = vec4(lo, hi);
+        }
+        return;
+    }
+
     // pixel in curve space (height = 1, curve scaled to fit)
     vec2 p = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0);
     float cr = cos(Rotation_);
     float sr = sin(Rotation_);
     p = vec2(cr * p.x + sr * p.y, -sr * p.x + cr * p.y);
-    const float SCALE = 0.44;
 
     float w = LineWidth_;
     float g = w * (1.5 + 2.5 * Glow_);       // glow radius
@@ -119,31 +148,38 @@ void main() {
     float glowSum = 0.0;
     float glowAge = 0.0;
 
-    vec2 a = SCALE * curve(0.0, f, span, Damping_, hp, ph);
-    for (int i = 0; i < MAXSEG; i++) {
-        if (i >= n) break;
-        float u1 = float(i + 1) * invN;
-        vec2 b = SCALE * curve(u1, f, span, Damping_, hp, ph);
-        vec2 ab = b - a;
-        vec2 ap = p - a;
-        float l2 = dot(ab, ab);
-        float h = clamp(dot(ap, ab) / max(l2, 1e-10), 0.0, 1.0);
-        vec2 dv = ap - ab * h;
-        float d2 = dot(dv, dv);
-        float cut = 1.0 - d2 * rCut2;                      // glow reaches 6 radii, then is cut
-        if (cut <= 0.0) { a = b; continue; }
-        float len = sqrt(l2);
-        float uu = (float(i) + h) * invN;
-        float fade = 0.06 + 0.94 * uu * uu;                  // trail-fade age gradient
-        // phosphor dwell: slow parts of the beam (turning points) burn brighter
-        float dwell = clamp(sqrt(refLen) * inversesqrt(len + 1e-4), 1.0, 2.5);
-        float c = exp(-d2 / (w * w)) * fade * dwell;
-        if (c > core) { core = c; coreAge = uu; }
-        // glow: length-weighted so segment joints are not double counted
-        float gk = g * g / (d2 + g * g) * len * 24.0 * invN * 8.0 * fade * cut;
-        glowSum += gk;
-        glowAge += gk * uu;
-        a = b;
+    for (int ci = 0; ci < MAXSEG / CHUNK; ci++) {
+        if (ci * CHUNK >= n) break;
+        // Skip a whole chunk of 8 segments when the pixel is outside its glow radius.
+        vec4 bb = texelFetch(curveLUT, ivec2(ci, 1), 0);
+        vec2 dq = max(max(bb.xy - p, p - bb.zw), vec2(0.0));
+        if (dot(dq, dq) * rCut2 >= 1.0) continue;
+        vec2 a = texelFetch(curveLUT, ivec2(ci * CHUNK, 0), 0).xy;
+        for (int k = 0; k < CHUNK; k++) {
+            int i = ci * CHUNK + k;
+            if (i >= n) break;
+            vec2 b = texelFetch(curveLUT, ivec2(i + 1, 0), 0).xy;
+            vec2 ab = b - a;
+            vec2 ap = p - a;
+            float l2 = dot(ab, ab);
+            float h = clamp(dot(ap, ab) / max(l2, 1e-10), 0.0, 1.0);
+            vec2 dv = ap - ab * h;
+            float d2 = dot(dv, dv);
+            float cut = 1.0 - d2 * rCut2;                      // glow reaches 6 radii, then is cut
+            if (cut <= 0.0) { a = b; continue; }
+            float len = sqrt(l2);
+            float uu = (float(i) + h) * invN;
+            float fade = 0.06 + 0.94 * uu * uu;                  // trail-fade age gradient
+            // phosphor dwell: slow parts of the beam (turning points) burn brighter
+            float dwell = clamp(sqrt(refLen) * inversesqrt(len + 1e-4), 1.0, 2.5);
+            float c = exp(-d2 / (w * w)) * fade * dwell;
+            if (c > core) { core = c; coreAge = uu; }
+            // glow: length-weighted so segment joints are not double counted
+            float gk = g * g / (d2 + g * g) * len * 24.0 * invN * 8.0 * fade * cut;
+            glowSum += gk;
+            glowAge += gk * uu;
+            a = b;
+        }
     }
     glowAge = glowAge / max(glowSum, 1e-5);
 
