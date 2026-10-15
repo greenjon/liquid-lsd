@@ -1579,11 +1579,235 @@
 <td style="text-align: left;">Approved</td>
 <td style="text-align: left;">Procedural rotating kaleidoscopic mandala generator.</td>
 </tr>
+<tr>
+<td style="text-align: left;"><strong>Mandelbox</strong></td>
+<td style="text-align: left;"><code>library/sources/mandelbox/mandelbox.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Raymarched Mandelbox (box fold, sphere fold, scale) with a running-derivative distance estimate and orbit-trap colouring, derived from the defining mathematics; no third-party shader code. GPU-heavy (<code>LSD_COST</code> 3).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>KIFS</strong></td>
+<td style="text-align: left;"><code>library/sources/kifs/kifs.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Raymarched kaleidoscopic IFS fractal (Menger, Sierpinski, octahedral, mixed) with per-iteration rotation, orbit-trap colouring and self-similar flight; textbook IFS mathematics, no third-party shader code. GPU-heavy (<code>LSD_COST</code> 3).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Mandelbulb</strong></td>
+<td style="text-align: left;"><code>library/sources/mandelbulb/mandelbulb.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Raymarched Mandelbulb from the published triplex power map and distance estimate; own implementation, no third-party shader code. GPU-heavy (<code>LSD_COST</code> 3).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Pseudo Kleinian</strong></td>
+<td style="text-align: left;"><code>library/sources/pseudo_kleinian/pseudo_kleinian.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Raymarched Kleinian-style fractal: periodic mirror fold plus capped sphere inversion with a distance estimate derived from the mathematics of reflection and inversion groups; no third-party shader code. GPU-heavy (<code>LSD_COST</code> 3).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Apollonian</strong></td>
+<td style="text-align: left;"><code>library/sources/apollonian/apollonian.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Raymarched Apollonian-style sphere gasket: lattice wrap plus capped sphere inversion with a distance estimate derived from the mathematics of sphere packings; no third-party shader code. GPU-heavy (<code>LSD_COST</code> 3).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Escape Time</strong></td>
+<td style="text-align: left;"><code>library/sources/escape_time/escape_time.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">2D escape-time fractals (Julia, Burning Ship Julia, relaxed Newton on z^3 - 1, Mandelbrot) from the defining iterations, with smooth escape-count and orbit-trap colouring; no third-party shader code. GPU-heavy (<code>LSD_COST</code> 3).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Nebula Volume</strong></td>
+<td style="text-align: left;"><code>library/sources/nebula_volume/nebula_volume.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Raymarched emission/absorption volume through domain-warped ridged value-noise fbm with a light march and starfield; standard volume-rendering mathematics, own hash, no third-party shader code. GPU-heavy (<code>LSD_COST</code> 3).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Reaction Diffusion</strong></td>
+<td style="text-align: left;"><code>library/sources/reaction_diffusion/reaction_diffusion.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Gray-Scott reaction-diffusion on a persistent 512 x 512 float grid (4 sub-steps per frame) from the published equations; own seeding and relief rendering, no third-party shader code. <code>LSD_COST</code> 2 (no badge).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Fluid Ink</strong></td>
+<td style="text-align: left;"><code>library/sources/fluid_ink/fluid_ink.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Stable-fluids ink on a persistent 384 x 384 float grid (semi-Lagrangian advection, Jacobi pressure projection, vorticity confinement) from the published method; own emitters, noise and rendering, no third-party shader code. <code>LSD_COST</code> 2 (no badge).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Lenia</strong></td>
+<td style="text-align: left;"><code>library/sources/lenia/lenia.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Single-channel Lenia continuous cellular automaton on a persistent 256 x 256 float grid from the published kernel and growth formulas; own seeding and rendering, no third-party shader code. <code>LSD_COST</code> 2 (no badge).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Quasicrystal</strong></td>
+<td style="text-align: left;"><code>library/sources/quasicrystal/quasicrystal.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Sum of 5 to 8 rotated cosine gratings with drifting phases (quasi-periodic interference), cosine palettes.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Thin Film</strong></td>
+<td style="text-align: left;"><code>library/sources/thin_film/thin_film.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Thin-film interference colours from a flowing domain-warped noise height field, with a specular sheen.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Tunnel Scenes</strong></td>
+<td style="text-align: left;"><code>library/sources/tunnel_scenes/tunnel_scenes.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Analytic ray-plane and ray-cylinder tunnel scenes (grid, Truchet, polygonal wormhole) with no ray marching.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Video Feedback</strong></td>
+<td style="text-align: left;"><code>library/sources/video_feedback/video_feedback.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Video-feedback loop on a persistent 512 x 512 frame with zoom, rotation, drift, decay and seed shapes.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Hyperbolic Tiling</strong></td>
+<td style="text-align: left;"><code>library/sources/hyperbolic_tiling/hyperbolic_tiling.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Poincare-disk {P,Q} tiling by Coxeter-triangle mirror folds and circle inversion.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Cyclic CA</strong></td>
+<td style="text-align: left;"><code>library/sources/cyclic_ca/cyclic_ca.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Cyclic cellular automaton on a persistent 256 x 256 grid (Moore, von Neumann and extended neighbourhoods).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Metaballs</strong></td>
+<td style="text-align: left;"><code>library/sources/metaballs/metaballs.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">2D metaball field from 4 to 12 orbiting balls with shaded, contour, neon and two-tone styles.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Wave Ripples</strong></td>
+<td style="text-align: left;"><code>library/sources/wave_ripples/wave_ripples.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Interference of 2 to 8 travelling circular waves from orbiting sources.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Harmonograph</strong></td>
+<td style="text-align: left;"><code>library/sources/harmonograph/harmonograph.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Damped Lissajous / harmonograph curve drawn as segment-distance glow.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Aurora Ribbons</strong></td>
+<td style="text-align: left;"><code>library/sources/aurora_ribbons/aurora_ribbons.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Layered aurora curtains over a starfield, with mountain and water-reflection options.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Isometric Voxels</strong></td>
+<td style="text-align: left;"><code>library/sources/isometric_voxels/isometric_voxels.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Isometric cube field with analytic per-layer occlusion.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Halftone Matrix</strong></td>
+<td style="text-align: left;"><code>library/sources/halftone_matrix/halftone_matrix.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Procedural halftone, LED-matrix, line-screen and CMYK-screen dot generator.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Kali Set</strong></td>
+<td style="text-align: left;"><code>library/sources/kali_set/kali_set.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">2D inversion-fold (Kali family) fractal with orbit-trap colouring.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Girih Stars</strong></td>
+<td style="text-align: left;"><code>library/sources/girih_stars/girih_stars.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Girih / Hankin strapwork on square, hexagonal and 4.8.8 lattices via wallpaper-group folding.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Glitch Blocks</strong></td>
+<td style="text-align: left;"><code>library/sources/glitch_blocks/glitch_blocks.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Procedural glitch generator (block displacement, tearing, RGB split, posterise).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Voronoi Cells</strong></td>
+<td style="text-align: left;"><code>library/sources/voronoi_cells/voronoi_cells.fs</code></td>
+<td style="text-align: left;">Liquid LSD Engine (Cleanroom)</td>
+<td style="text-align: left;">MIT</td>
+<td style="text-align: left;">Approved</td>
+<td style="text-align: left;">Animated Worley / Voronoi cells with F1 and F2 shading styles.</td>
+</tr>
 </tbody>
 </table>
 <hr />
 <h2 id="algorithm-credits">Algorithm Credits</h2>
 <ul>
+<li><strong>Mandelbox</strong> (<code>mandelbox</code>): the construction (box fold, sphere fold and scale applied to a point and iterated) was introduced by Tom Lowe (known as Tglad), around 2010. Only the published definition is used; the shader was written from the mathematics and no code of his or anyone else's was used.</li>
+<li><strong>Mandelbulb</strong> (<code>mandelbulb</code>): the triplex power map in spherical coordinates is due to Daniel White and Paul Nylander (2009). Only the published formulas are used; no shader code was copied.</li>
+<li><strong>Orbit traps</strong> (<code>escape_time</code>, <code>mandelbox</code>, <code>mandelbulb</code>, <code>kifs</code>, <code>pseudo_kleinian</code>, <code>apollonian</code>): the colouring idea of recording an orbit's closest approach to a chosen set is due to J. C. Hart.</li>
+<li><strong>Apollonian and Kleinian structures</strong> (<code>apollonian</code>, <code>pseudo_kleinian</code>): the sphere packings of Apollonius of Perga and F. Soddy, and the reflection and inversion groups of Poincare and Klein, are textbook mathematics; the shaders were derived from them directly.</li>
+<li><strong>KIFS</strong> (<code>kifs</code>): iterated function systems (Menger sponge, Sierpinski tetrahedron) are textbook mathematics; no third-party shader code was used.</li>
+<li><strong>Reaction Diffusion</strong> (<code>reaction_diffusion</code>): the Gray-Scott model is due to P. Gray and S. K. Scott, and the pattern map to John E. Pearson (1993). Only the published equations and the commonly published (feed, kill) regimes are used; no shader code was copied.</li>
+<li><strong>Fluid Ink</strong> (<code>fluid_ink</code>): the stable-fluids method is due to Jos Stam (1999); vorticity confinement to Fedkiw, Stam and Jensen (2001). Only the published method is used; no shader code was copied.</li>
+<li><strong>Lenia</strong> (<code>lenia</code>): the continuous cellular automaton is due to Bert Wang-Chak Chan (2019). Only the published kernel and growth formulas are used; no code was copied.</li>
+<li><strong>Quasicrystals</strong> (<code>quasicrystal</code>): the sum of cosine plane waves with 5-fold or higher rotational symmetry as a model of quasi-periodic order is due to de Bruijn (1981) and the physics of quasicrystals (Shechtman 1984). Only the mathematics is used.</li>
+<li><strong>Thin-film interference</strong> (<code>thin_film</code>): the optical path difference 2 n d cos(theta) is textbook optics.</li>
+<li><strong>Hyperbolic tilings</strong> (<code>hyperbolic_tiling</code>): Coxeter reflection groups and the Poincare disk model are textbook mathematics; no code was copied.</li>
+<li><strong>Cyclic cellular automata</strong> (<code>cyclic_ca</code>): the cyclic CA is due to David Griffeath and colleagues (1990s), and the Hodgepodge machine to Gerhardt and Schuster (1989). Only the published rules are used.</li>
+<li><strong>Metaballs</strong> (<code>metaballs</code>): the blobby-objects field model is due to Jim Blinn (1982).</li>
+<li><strong>Cellular noise</strong> (<code>voronoi_cells</code>): Steven Worley (1996). Only the published definition is used.</li>
+<li><strong>Kali set</strong> (<code>kali_set</code>): named after the Kali (Kaliset) inversion-fold iteration of the demoscene; only the mathematical definition z -&gt; |z|/(z.z) - c was used.</li>
+<li><strong>Girih and Hankin strapwork</strong> (<code>girih_stars</code>): Hankin's polygons-in-contact method (described by Kaplan and others); only the geometric construction is used.</li>
 <li><strong>Fractal Flame</strong> (<code>fractal_flame</code>): implemented from the published description in Scott Draves and Erik Reckase, "The Fractal Flame Algorithm" (2003, revised 2008): the iterated function system with non-linear variations, the log-density tone mapping and the 49 variation formulas of its Appendix A. The 46 further variations (ids 49-97 apart from the four not built) were implemented from a written mathematical specification (<code>.planning/flame-variations-spec.md</code>), not from any flame renderer's source. How that specification was produced is recorded, with its open items, in <code>docs/developer/clean_room_provenance.md</code>; check it before relying on this paragraph for a release. No source code of flam3, Apophysis, Electric Sheep or any other flame renderer was read or copied (clean-room, the same approach as the beat tracker). No genome archive is bundled. Verify the exact authors, year and revision against the paper before citing it in a commercial release; a trademark search for the user-facing names is also still open.</li>
 </ul>
 

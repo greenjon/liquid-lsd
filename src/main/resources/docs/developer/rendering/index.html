@@ -998,6 +998,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#heavy-fractal-raymarchers-mandelbox-kifs-mandelbulb-pseudo_kleinian-apollonian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heavy Fractal Raymarchers (mandelbox, kifs, mandelbulb, pseudo_kleinian, apollonian)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#video-recording-deterministic-offline-studio" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1147,6 +1158,17 @@
     <span class="md-ellipsis">
       
         4. Discrete (stepped) inputs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-gpu-cost-tag-lsd_cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. GPU cost tag (LSD_COST)
       
     </span>
   </a>
@@ -1785,6 +1807,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#heavy-fractal-raymarchers-mandelbox-kifs-mandelbulb-pseudo_kleinian-apollonian" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Heavy Fractal Raymarchers (mandelbox, kifs, mandelbulb, pseudo_kleinian, apollonian)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#video-recording-deterministic-offline-studio" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1934,6 +1967,17 @@
     <span class="md-ellipsis">
       
         4. Discrete (stepped) inputs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#5-gpu-cost-tag-lsd_cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        5. GPU cost tag (LSD_COST)
       
     </span>
   </a>
@@ -2102,6 +2146,109 @@ This is the same domain-folded CSG technique as the old <code>icosa-v3</code> so
 <li><strong>Front-to-Back Transparency</strong>: Steps through transparent outer faces (<code>Opacity</code> 0.6–0.8) to accumulate color and reveal inner self-intersecting facets without depth sorting.</li>
 </ul>
 <hr />
+<h2 id="heavy-fractal-raymarchers-mandelbox-kifs-mandelbulb-pseudo_kleinian-apollonian">Heavy Fractal Raymarchers (<code>mandelbox</code>, <code>kifs</code>, <code>mandelbulb</code>, <code>pseudo_kleinian</code>, <code>apollonian</code>)</h2>
+<p>Five stock ISF generators (<a href="file:///home/gj/projects/liquid-lsd/library/sources"><code>library/sources/&lt;id&gt;/&lt;id&gt;.fs</code></a>, identical copy in <code>src/main/resources/default_sources/</code>) share one structure with <code>icosa_h3</code> and <code>gyroid_hyperspace</code>: a distance-estimated raymarch, <code>LSD_COST</code> 3, <code>is3D</code> with their own <code>Zoom</code>/<code>RotateX/Y/Z</code>, orbit-trap palettes selected by <code>ColorMode</code>, a tetrahedral-difference normal, a small AO tap set and a signed <code>FlightSpeed</code>. There is no include mechanism, so each file inlines its helpers. They target an NVIDIA RTX A2000 as the floor and are desktop only: GLSL 3.30 core, no <code>web/sync_manifest.json</code> entry. Per-source derivations and known issues are in <code>.planning/heavy-sources-notes/&lt;id&gt;.md</code>.</p>
+<p>Every one exposes a normalised <code>Quality</code> input that remaps to live loop counts under constant caps (<code>for (i = 0; i &lt; MAX; i++) { if (i &gt;= n) break; }</code>), so Quality trades fidelity for speed during a set.</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Algorithm</th>
+<th>Constant caps</th>
+<th>Default Quality: steps / iterations / AO taps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mandelbox</code></td>
+<td>Box fold + sphere fold + scale, running-derivative DE (<code>z &lt;- s * sphereFold(boxFold(z)) + c</code>, <code>DE = norm(z) / dr</code>)</td>
+<td>march 128, fold 12, AO 4</td>
+<td>0.5: 88 / 9 / 2 (range 48-128 / 6-12 / 0-4)</td>
+</tr>
+<tr>
+<td><code>kifs</code></td>
+<td>Fold into a fundamental domain, scale about the IFS fixed vertex, per-iteration rotation, base-shape SDF / s^n; four constructions via <code>SurfaceType</code></td>
+<td>march 112, fold 12, AO 4</td>
+<td>0.5: 80 / 9 / 2 (range 48-112 / 5-12 / 0-4)</td>
+</tr>
+<tr>
+<td><code>mandelbulb</code></td>
+<td>Triplex power map <code>z^n + c</code> in spherical coordinates, DE <code>0.5 log(r) r / dr</code>; analytic bounding sphere skips misses</td>
+<td>march 80, iter 10, AO 4</td>
+<td>0.5: 64 / 8 / 3 (range 48-80 / 6-10 / 2-4)</td>
+</tr>
+<tr>
+<td><code>pseudo_kleinian</code></td>
+<td>Periodic triangle-wave slab fold, sphere inversion scale capped at <code>kmax</code>, offset, DE <code>(norm(p) - core) / dr</code></td>
+<td>march 120, iter 12, AO 4</td>
+<td>0.33: 72 / 8 / 2 (range 48-120 / 6-12 / 1-4)</td>
+</tr>
+<tr>
+<td><code>apollonian</code></td>
+<td>Cell wrap, optional y twist, capped sphere inversion, same DE form</td>
+<td>march 120, iter 12, AO 4</td>
+<td>0.08: 54 / 6 / 1 (range 48-120 / 6-12 / 1-4)</td>
+</tr>
+</tbody>
+</table>
+<p><code>escape_time</code> (2D, below) is a sixth heavy generator in the same registry but is not a raymarcher.</p>
+<p>Worst case per pixel is steps x iterations estimator passes (for example 88 x 9 = 792 for the Mandelbox default, 1536 at Quality 1); rays that miss or hit early cost far less. No shader uses textures, float buffers or extra passes.</p>
+<p><strong>Measured cost</strong> (RTX A2000 Laptop GPU via PRIME offload, <code>GL_RENDERER</code> confirmed, 1920x1080, hidden GL 3.3 context, offscreen RGBA8, glFinish-timed average of several frames; indicative only, GPU clocks not locked, single deck, no compositing):</p>
+<table>
+<thead>
+<tr>
+<th>Source</th>
+<th>Default</th>
+<th>Quality 1</th>
+<th>Quality 0</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mandelbox</code></td>
+<td>7.7 ms</td>
+<td>8.4 ms</td>
+<td>5.0 ms</td>
+<td>closest-camera, Zoom 1, Quality 1 corners 14 to 42 ms</td>
+</tr>
+<tr>
+<td><code>kifs</code></td>
+<td>4.8 ms</td>
+<td>5.7 ms</td>
+<td>2.1 ms</td>
+<td>corners not searched</td>
+</tr>
+<tr>
+<td><code>mandelbulb</code></td>
+<td>5.2 ms</td>
+<td>5.7 ms</td>
+<td>4.5 ms</td>
+<td>corners not searched</td>
+</tr>
+<tr>
+<td><code>pseudo_kleinian</code></td>
+<td>about 11.2 ms</td>
+<td>14.8 ms</td>
+<td>8.1 ms</td>
+<td>everything-max corner 27.7 ms</td>
+</tr>
+<tr>
+<td><code>apollonian</code></td>
+<td>8.7 ms</td>
+<td>27.3 ms</td>
+<td>7.8 ms</td>
+<td>the earlier default 0.25 cost 15.5 ms; lowered to 0.08 for two-deck headroom</td>
+</tr>
+</tbody>
+</table>
+<p><strong><code>escape_time</code></strong> (<code>library/sources/escape_time/escape_time.fs</code>): 2D escape-time iteration <code>z &lt;- z^p + k</code> (Julia, Burning Ship Julia with <code>abs</code> before the power, Mandelbrot with <code>z0 = 0</code>) or relaxed Newton on <code>z^3 - 1</code>. Iteration cap <code>Detail</code> 48 to 400 under a constant <code>MAX_IT</code>; escape radius 256 for smooth colouring <code>n + 1 - log(log|z|)/log(p)</code>; Newton stops within 1e-5 of a root. <code>Detail</code> above 0.75 adds 2x2 supersampling. It supplies its own <code>Zoom</code> (0.3x to 3000x), <code>CenterX/Y</code> and <code>Rotation</code>; fp32 limits useful magnification to about 1e3 to 1e4. Measured on the RTX A2000 Laptop GPU at 1080p: Julia 0.4 ms, Newton 0.9 ms, Mandelbrot 1.5 ms at the default Detail, Julia at Detail 1 (with antialiasing) 1.2 ms; interior-heavy deep views cost far more because every pixel runs the full cap.</p>
+<p>Defaults sit inside a 60 fps budget on one deck; two heavy decks plus a crossfade is the case to watch. Zooming in until every pixel hits, or an extreme parameter set, is what pushes a source toward 30 fps. The stock audit (<code>StockGpuCostAuditTest</code>) asserts all five carry <code>LSD_COST</code> 3; it does not measure frame time.</p>
+<p><strong>Volume and simulation generators</strong> (<code>nebula_volume</code>, <code>reaction_diffusion</code>, <code>fluid_ink</code>, <code>lenia</code>). <code>nebula_volume</code> is a raymarched emission/absorption volume (<code>LSD_COST</code> 3, <code>is3D</code>, own camera): domain-warped ridged value-noise fbm with a 0 to 4 tap light march, interleaved-gradient-noise jitter and empty-space leaping, caps 72 view steps, 4 light taps and 5 octaves (default about 28 steps, 2 taps, 2 octaves). The other three are the first stock generators to use <code>PASSES</code>: persistent <code>FLOAT</code> ping-pong grids of fixed size, so cost does not depend on output resolution. Each sim sub-step is its own pass with its own persistent target (<code>rdA..rdD</code>, <code>lnA..lnD</code>, <code>prs1..prs4</code>), because two passes sharing one target would share one slot and <code>resizePassFBOs</code> would allocate it twice. A persistent target reads the most recently written buffer, so chained targets see the same frame's output. Buffers are zeroed on allocation and on resize, so each sim re-seeds itself when its state is empty and never relies on <code>FRAMEINDEX</code>. <code>reaction_diffusion</code> is 512 x 512 with 4 sub-steps per frame (Gray-Scott, 9-point Laplacian, <code>Du*dt</code> capped at 1.2), <code>fluid_ink</code> is 384 x 384 with an RK2 semi-Lagrangian velocity pass, 4 Jacobi pressure passes (warm-started across frames) and a dye pass, and <code>lenia</code> is 256 x 256 with 4 steps per frame and a 27 x 27 tap window at most. Steps are per frame, not <code>TIMEDELTA</code>-scaled, so the simulations run faster at higher frame rates. The three sims are declared <code>LSD_COST</code> 2 and show no badge. Measured on the RTX A2000 Laptop GPU at 1080p, default settings: <code>reaction_diffusion</code> about 0.5 ms, <code>fluid_ink</code> about 0.7 ms, <code>lenia</code> about 2 ms, <code>nebula_volume</code> about 17 ms (Quality 1, Detail 4, Lighting 1 about 68 ms). Known limitation: <code>lenia</code> does not reproduce the published gliding creatures; it makes bubbles, rings and stripes.</p>
+<p><strong>Light generators</strong> (<code>quasicrystal</code>, <code>thin_film</code>, <code>tunnel_scenes</code>, <code>video_feedback</code>, <code>hyperbolic_tiling</code>). These target integrated graphics and carry no <code>LSD_COST</code> tag: the absence of the browser triangle is the signal. All are 2D, so the deck View zoom and rotate apply. Four are single pass with no texture reads and a constant-bound loop (<code>quasicrystal</code> 8 gratings, <code>thin_film</code> 4 octaves, <code>tunnel_scenes</code> 3 layers, <code>hyperbolic_tiling</code> 16 folds) with a Quality input that lowers the cap. <code>video_feedback</code> is the only multipass one: a persistent 512 x 512 RGBA8 state pass plus a bilinear display pass, re-seeding itself when the buffer is empty. Measured on an Intel UHD (TGL GT1) at 1080p, one deck, defaults: about 3 to 4 ms for the single-pass sources (<code>thin_film</code> about 6 ms, <code>tunnel_scenes</code> wormhole about 5 ms) and 2 to 4 ms for <code>video_feedback</code>. All five are also web sources (<code>web/sync_manifest.json</code>), transpiled to GLSL ES 3.00 by <code>syncWeb</code>. Time-driven phases are wrapped (<code>mod(TIME*speed, period)</code>) so they stay precise in long sessions.</p>
+<p><strong>More light generators</strong> (<code>cyclic_ca</code>, <code>metaballs</code>, <code>wave_ripples</code>, <code>harmonograph</code>, <code>aurora_ribbons</code>, <code>isometric_voxels</code>, <code>halftone_matrix</code>, <code>kali_set</code>, <code>girih_stars</code>, <code>glitch_blocks</code>, <code>voronoi_cells</code>). Same rules as above: no <code>LSD_COST</code>, web sources, a Quality input. Only <code>cyclic_ca</code> is multipass: four chained persistent 256 x 256 RGBA8 sub-step passes plus a display pass, reseeding when the grid is empty (never <code>FRAMEINDEX</code>), with the generation rate derived from <code>TIMEDELTA</code> and capped at 4 per frame. Measured at 1080p on the Intel UHD (TGL GT1) when the GPU was otherwise idle, roughly 2x the figures in the first batch because the machine was running slower: <code>cyclic_ca</code> 4 to 5 ms, <code>voronoi_cells</code> 7 to 9, <code>glitch_blocks</code> 6 to 9, <code>kali_set</code> 10, <code>girih_stars</code> 9 to 12, <code>isometric_voxels</code> 10 to 14, <code>wave_ripples</code> 10 to 16, <code>aurora_ribbons</code> 14 to 20, <code>halftone_matrix</code> 7 to 17; <code>metaballs</code> and <code>harmonograph</code> were 19 to 27 and 22 to 26 before optimisation. <code>harmonograph</code> now evaluates its 65 curve vertices once into a 65 x 2 float strip (pass 0; row 1 holds a bounding box per chunk of 8 segments) and the display pass skips chunks outside the glow radius (about 7 ms average). <code>metaballs</code> uses a monotonic dome height with a flat-top attenuation for its shading and a default Quality of 0.3 (single sample, about 11 ms); Quality of 0.5 or more turns on 2 x 2 antialiasing, which quadruples the field evaluations.</p>
+<p><strong>Stock registration touchpoints</strong> for a new stock source: <code>VisualSourceRegistry.DEFAULT_SOURCE_IDS</code>, <code>GeneratorDefaults.CURATED_KNOBS</code> + <code>GeneratorDefaultsTest.stockInputNames</code>, <code>SourceDocRegistry</code> (description plus <code>"&lt;id&gt;/&lt;Param&gt;"</code> tooltips), the <code>StockGpuCostAuditTest</code> heavy allowlist, <code>Source3DModeTest</code>, the licence and provenance rows, and the user-guide pages. Both <code>.fs</code> trees must be identical (<code>diff -rq library/sources src/main/resources/default_sources</code>).</p>
+<hr />
 <h2 id="video-recording-deterministic-offline-studio">Video Recording &amp; Deterministic Offline Studio</h2>
 <p>Liquid LSD includes both a zero-lag live capture pipeline and a sample-accurate offline rendering studio in the <code>llm.slop.liquidlsd.export</code> package.</p>
 <h3 id="1-zero-copy-dma-readback-pboreadbackpipeline">1. Zero-Copy DMA Readback (<code>PboReadbackPipeline</code>)</h3>
@@ -2166,6 +2313,8 @@ This is the same domain-folded CSG technique as the old <code>icosa-v3</code> so
 - <code>long</code> / <code>int</code> inputs: steps come from <code>VALUES</code> (or the whole-number <code>MIN..MAX</code> span), labels from <code>LABELS</code> when there is one per step. <code>bool</code> has 2 steps.
 - <code>float</code> inputs that are really discrete take the optional Liquid LSD key <code>"STEP"</code> (for example <code>"MIN": 2, "MAX": 24, "STEP": 1</code>). The shader still receives a float uniform; other ISF hosts ignore the key. <code>(MAX-MIN)/STEP</code> must be a whole number, otherwise <code>STEP</code> is ignored and a warning is logged.
 - Integer uniforms are rounded, not truncated, before they reach the shader.</p>
+<h3 id="5-gpu-cost-tag-lsd_cost">5. GPU cost tag (<code>LSD_COST</code>)</h3>
+<p><code>ISFHeader.LSD_COST</code> (optional Liquid LSD key, 1-3) is the author's declaration of how heavy a shader is; <code>ISFHeader.gpuCost</code> clamps it to 0-3 (0 = undeclared). The stock browser catalogs (<code>BrowseCatalogs</code>) copy it into <code>AssetItem.gpuCost</code> for stock generators and filters, and <code>PresetListPanel.drawCostBadge</code> draws a warning triangle for cost 3 (<code>GPU_COST_HEAVY</code>), with <code>GPU_COST_TIP</code> in the tooltip. It is static metadata, not a measurement. Bundled sources live in <code>library/sources/</code> (the build copies them over <code>default_sources</code>), so tag both copies. <code>StockGpuCostAuditTest</code> checks range and the heavy set.</p>
 
 
 

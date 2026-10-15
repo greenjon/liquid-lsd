@@ -1512,6 +1512,188 @@ commercial release.</p>
 <td>n/a</td>
 </tr>
 <tr>
+<td>Mandelbox source (<code>mandelbox</code>)</td>
+<td>Defining mathematics: box fold, sphere fold (min and max radius), scale, running-derivative distance estimate, orbit traps</td>
+<td>Own derivation from the definition; no third-party shader or Fragmentarium code read or recalled; the removed earlier <code>mandelbox</code> (<code>fc1ad3f</code>) not used. The author assistant may have seen community shaders in training</td>
+<td><code>library/sources/mandelbox/mandelbox.fs</code>, <code>.planning/heavy-sources-notes/mandelbox.md</code></td>
+<td>n/a (owner to accept the clean-room statement)</td>
+</tr>
+<tr>
+<td>KIFS source (<code>kifs</code>)</td>
+<td>Defining mathematics of iterated function systems: Menger sponge, Sierpinski tetrahedron and octahedron constructions, reflection-group fundamental-domain folding, similarity-scaled distance estimate, orbit traps</td>
+<td>Written from the mathematics (folds, scale and offset about the IFS fixed vertex, base-shape distance divided by s^n); no Shadertoy, Fragmentarium or other shader source and no earlier removed <code>kifs</code> code read or recalled. The author assistant may have seen similar shaders in training</td>
+<td><code>library/sources/kifs/kifs.fs</code>, <code>.planning/heavy-sources-notes/kifs.md</code></td>
+<td>n/a (owner to accept the clean-room statement)</td>
+</tr>
+<tr>
+<td>Mandelbulb source (<code>mandelbulb</code>)</td>
+<td>Triplex power map z^n + c in spherical coordinates (White and Nylander) and the running-derivative distance estimate 0.5 log(r) r / dr, from the published mathematics; orbit-trap and smooth-escape colouring are textbook</td>
+<td>Own derivation and implementation; no third-party shader source read or copied; the removed earlier <code>mandelbulb</code> (<code>fc1ad3f</code>) not used. The author assistant may have seen community Mandelbulb shaders in training</td>
+<td><code>library/sources/mandelbulb/mandelbulb.fs</code>, <code>.planning/heavy-sources-notes/mandelbulb.md</code></td>
+<td>n/a (owner to accept the clean-room statement)</td>
+</tr>
+<tr>
+<td>Pseudo Kleinian source (<code>pseudo_kleinian</code>)</td>
+<td>Textbook mathematics: reflection groups and sphere inversion (Kleinian groups), the Lipschitz distance estimate, orbit traps (Hart)</td>
+<td>Derived by the assistant from the mathematics and tuned by rendering (headless GL, 2026-10-14); no Shadertoy, Fragmentarium or other shader source read; the removed earlier <code>pseudo_kleinian</code> (<code>fc1ad3f</code>) not used. The author assistant may have seen similar shaders in training; the form (periodic triangle fold, scale-capped inversion, core-sphere distance estimate) was chosen by experiment</td>
+<td><code>library/sources/pseudo_kleinian/pseudo_kleinian.fs</code>, <code>.planning/heavy-sources-notes/pseudo_kleinian.md</code></td>
+<td>n/a (owner to accept the clean-room statement)</td>
+</tr>
+<tr>
+<td>Apollonian source (<code>apollonian</code>)</td>
+<td>Textbook mathematics: Apollonian sphere packings and inversion groups, lattice translation, Lipschitz distance estimate, orbit traps (Hart)</td>
+<td>Derived by the assistant from the mathematics and tuned by rendering (headless GL, 2026-10-14); no Shadertoy, Fragmentarium or other shader source read. The author assistant may have seen similar shaders in training; the form was chosen by experiment</td>
+<td><code>library/sources/apollonian/apollonian.fs</code>, <code>.planning/heavy-sources-notes/apollonian.md</code></td>
+<td>n/a (owner to accept the clean-room statement)</td>
+</tr>
+<tr>
+<td>Escape Time source (<code>escape_time</code>)</td>
+<td>Textbook mathematics: the quadratic and power iteration z^p + c (Julia, Mandelbrot), the Burning Ship variant (absolute value before squaring, Michelitsch and Rossler), Newton's method on z^3 - 1 with a complex relaxation factor, the smooth escape-count formula and orbit traps (Hart)</td>
+<td>Derived by the assistant from the definitions and tuned by rendering (headless GL, 2026-10-14); no Shadertoy, Fragmentarium or other shader source read or recalled</td>
+<td><code>library/sources/escape_time/escape_time.fs</code>, <code>.planning/heavy-sources-notes/escape_time.md</code></td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Nebula Volume source (<code>nebula_volume</code>)</td>
+<td>Standard emission-absorption volume rendering (Beer-Lambert transmittance, front-to-back accumulation), fractional Brownian motion of value noise, domain warping, ridged noise</td>
+<td>Own implementation with our own integer hash; no Shadertoy, Fragmentarium or other shader source read or recalled. The author assistant may have seen community nebula shaders in training</td>
+<td><code>library/sources/nebula_volume/nebula_volume.fs</code>, <code>.planning/heavy-sources-notes/nebula_volume.md</code></td>
+<td>n/a (owner to accept the clean-room statement)</td>
+</tr>
+<tr>
+<td>Reaction Diffusion source (<code>reaction_diffusion</code>)</td>
+<td>Gray-Scott equations (Pearson 1993) with the standard 9-point Laplacian; commonly published (feed, kill) regimes</td>
+<td>Written from the equations; seed noise and relief lighting are our own; no third-party shader source read</td>
+<td><code>library/sources/reaction_diffusion/reaction_diffusion.fs</code>, <code>.planning/heavy-sources-notes/reaction_diffusion.md</code></td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Fluid Ink source (<code>fluid_ink</code>)</td>
+<td>Stable fluids (Stam 1999): semi-Lagrangian advection, Jacobi pressure projection; vorticity confinement (Fedkiw, Stam and Jensen 2001)</td>
+<td>Written from the papers; emitters, curl noise and ink rendering are our own; no third-party shader source read</td>
+<td><code>library/sources/fluid_ink/fluid_ink.fs</code>, <code>.planning/heavy-sources-notes/fluid_ink.md</code></td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Lenia source (<code>lenia</code>)</td>
+<td>Lenia (Chan 2019): kernel K(r) = exp(4 - 1/(r(1-r))), Gaussian growth mapping, Euler update</td>
+<td>Written from the paper's formulas; seeding and rendering are our own; no third-party code read</td>
+<td><code>library/sources/lenia/lenia.fs</code>, <code>.planning/heavy-sources-notes/lenia.md</code></td>
+<td>n/a</td>
+</tr>
+<tr>
+<td>Quasicrystal source (<code>quasicrystal</code>)</td>
+<td>Sum of N rotated cosine plane waves (de Bruijn's multigrid / cut-and-project picture), cosine palettes (textbook)</td>
+<td>Written by the assistant from the mathematics; no third-party shader code read</td>
+<td><code>library/sources/quasicrystal/quasicrystal.fs</code>, <code>.planning/light-sources-notes/quasicrystal.md</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Thin Film source (<code>thin_film</code>)</td>
+<td>Thin-film interference: optical path 2 n d cos(theta_t), per-wavelength phase for R/G/B, Snell refraction; value-noise fbm and domain warping (textbook)</td>
+<td>Own implementation with our own integer hash; no third-party shader code read</td>
+<td><code>library/sources/thin_film/thin_film.fs</code>, <code>.planning/light-sources-notes/thin_film.md</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Tunnel Scenes source (<code>tunnel_scenes</code>)</td>
+<td>Analytic ray-plane and ray-cylinder intersection, Truchet tiling, polar mapping (textbook)</td>
+<td>Written from the mathematics; no third-party shader code read</td>
+<td><code>library/sources/tunnel_scenes/tunnel_scenes.fs</code>, <code>.planning/light-sources-notes/tunnel_scenes.md</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Video Feedback source (<code>video_feedback</code>)</td>
+<td>Inverse-warp resampling of the previous frame, Rodrigues rotation of colour about the grey axis, exponential decay, screen blend (textbook)</td>
+<td>Written from the definitions; no third-party shader code read</td>
+<td><code>library/sources/video_feedback/video_feedback.fs</code>, <code>.planning/light-sources-notes/video_feedback.md</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Hyperbolic Tiling source (<code>hyperbolic_tiling</code>)</td>
+<td>Coxeter (2,P,Q) triangle group, reflection folds and circle inversion in the Poincare disk, hyperbolic distance, Mobius translation</td>
+<td>Derived from the mathematics; no third-party shader code read</td>
+<td><code>library/sources/hyperbolic_tiling/hyperbolic_tiling.fs</code>, <code>.planning/light-sources-notes/hyperbolic_tiling.md</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Cyclic CA source (<code>cyclic_ca</code>)</td>
+<td>Cyclic cellular automaton rule (cell advances when enough neighbours are one state ahead), toroidal grid, cosine palettes</td>
+<td>Written from the rule definition; no third-party shader code read</td>
+<td><code>library/sources/cyclic_ca/cyclic_ca.fs</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Metaballs source (<code>metaballs</code>)</td>
+<td>Summed inverse-square field with threshold, finite-difference shading, iso-contours (Blinn 1982)</td>
+<td>Written from the definition; no third-party shader code read</td>
+<td><code>library/sources/metaballs/metaballs.fs</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Wave Ripples source (<code>wave_ripples</code>)</td>
+<td>Superposition of radial waves cos(kr - wt) with distance falloff, Lissajous source paths</td>
+<td>Written from the mathematics; no third-party shader code read</td>
+<td><code>library/sources/wave_ripples/wave_ripples.fs</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Harmonograph source (<code>harmonograph</code>)</td>
+<td>Damped sinusoid sums per axis, point-to-segment distance glow</td>
+<td>Written from the mathematics; no third-party shader code read</td>
+<td><code>library/sources/harmonograph/harmonograph.fs</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Aurora Ribbons source (<code>aurora_ribbons</code>)</td>
+<td>Displaced sheet density with exponential height falloff, hash-based starfield, value-noise fbm</td>
+<td>Own implementation; no third-party shader code read</td>
+<td><code>library/sources/aurora_ribbons/aurora_ribbons.fs</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Isometric Voxels source (<code>isometric_voxels</code>)</td>
+<td>Isometric projection and per-layer analytic occlusion for height-field columns</td>
+<td>Derived from the projection geometry; no third-party shader code read</td>
+<td><code>library/sources/isometric_voxels/isometric_voxels.fs</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Halftone Matrix source (<code>halftone_matrix</code>)</td>
+<td>Rotated-grid halftone (screen angles 15, 75, 0 degrees for CMY), dot-size from a scalar field</td>
+<td>Written from the standard halftone definition; no third-party shader code read</td>
+<td><code>library/sources/halftone_matrix/halftone_matrix.fs</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Kali Set source (<code>kali_set</code>)</td>
+<td>Iteration z -&gt;</td>
+<td>z</td>
+<td>/(z.z) - c with orbit traps (Hart)</td>
+<td>Derived from the iteration's definition; no third-party shader code read</td>
+</tr>
+<tr>
+<td>Girih Stars source (<code>girih_stars</code>)</td>
+<td>Wallpaper-group fundamental-domain folding (p4m, p6m, 4.8.8), Hankin contact-angle construction</td>
+<td>Derived from the group definitions and the published construction; no third-party shader code read</td>
+<td><code>library/sources/girih_stars/girih_stars.fs</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Glitch Blocks source (<code>glitch_blocks</code>)</td>
+<td>Hashed block displacement, scanline offset, channel split, posterise (integer hash)</td>
+<td>Our own construction; no third-party shader code read</td>
+<td><code>library/sources/glitch_blocks/glitch_blocks.fs</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Voronoi Cells source (<code>voronoi_cells</code>)</td>
+<td>Worley cellular noise: 3x3 neighbourhood feature points, F1 and F2 (Worley 1996)</td>
+<td>Written from the published definition; no third-party shader code read</td>
+<td><code>library/sources/voronoi_cells/voronoi_cells.fs</code></td>
+<td></td>
+</tr>
+<tr>
 <td>Variation statistics and curated library</td>
 <td>Counts from public flame collections; our own search generates the shipped flames</td>
 <td>Tallies only; no genome is shipped (the Electric Sheep archive has non-commercial terms for some genomes)</td>
