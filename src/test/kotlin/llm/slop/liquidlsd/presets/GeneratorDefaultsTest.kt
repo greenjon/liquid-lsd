@@ -242,7 +242,18 @@ class GeneratorDefaultsTest {
             "thin_film" to listOf("FlowSpeed", "Scale", "FilmThickness", "Turbulence"),
             "tunnel_scenes" to listOf("Speed", "Twist", "Glow", "Sway"),
             "video_feedback" to listOf("Zoom", "Rotation", "HueShift", "Decay"),
-            "hyperbolic_tiling" to listOf("Speed", "Drift", "EdgeWidth", "Glow")
+            "hyperbolic_tiling" to listOf("Speed", "Drift", "EdgeWidth", "Glow"),
+            "cyclic_ca" to listOf("States", "Threshold", "Speed", "Density"),
+            "metaballs" to listOf("BallSize", "OrbitSpeed", "Merge", "Softness"),
+            "wave_ripples" to listOf("Wavelength", "WaveSpeed", "OrbitSpeed", "Falloff"),
+            "harmonograph" to listOf("Detune", "DriftSpeed", "Damping", "Glow"),
+            "aurora_ribbons" to listOf("CurtainHeight", "WaveAmp", "WaveSpeed", "Shimmer"),
+            "isometric_voxels" to listOf("CellSize", "MaxHeight", "Speed", "Frequency"),
+            "halftone_matrix" to listOf("Density", "Sharpness", "PatternSpeed", "PatternScale"),
+            "kali_set" to listOf("OrbitRadius", "Speed", "Zoom", "Twist"),
+            "girih_stars" to listOf("Angle", "Sweep", "Speed", "Interlace"),
+            "glitch_blocks" to listOf("Intensity", "BlockSize", "Rate", "Tear"),
+            "voronoi_cells" to listOf("CellScale", "Jitter", "Speed", "EdgeGlow")
         )
 
         for (sourceId in VisualSourceRegistry.DEFAULT_SOURCE_IDS) {

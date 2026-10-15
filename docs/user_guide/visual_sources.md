@@ -14,7 +14,7 @@ To remove the current source, click **Detach** or **None**.
 
 ## Built-In Generators
 
-Liquid LSD includes a curated suite of 23 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, and a set of light generators that run comfortably on integrated graphics.
+Liquid LSD includes a curated suite of 34 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, and a set of light generators that run comfortably on integrated graphics.
 
 The raymarchers (Icosa-H3, Gyroid Hyperspace, 4D Hyper-Slice, Nebula Volume and the fractals below) show a warning triangle in the browser: they are GPU-intensive and can run slowly on integrated graphics. The fractals are tuned for a mid-range discrete GPU (an RTX A2000 or better); every one has a **Quality** knob, and lowering it is the first thing to try if a deck stutters.
 
@@ -247,6 +247,91 @@ A Poincare-disk {P,Q} tiling built by mirror folds, in the manner of Escher's Ci
 - **Edge Width, Glow, Subdivision Lines**: Edge styling.
 - **Color Mode, Outside Disk**: Tile colouring and what fills outside the disk.
 - **Quality**: Cap on fold iterations.
+
+### Cyclic CA (`cyclic_ca`)
+
+A cyclic cellular automaton (a Belousov-Zhabotinsky look) on a persistent 256 x 256 grid. Noise organises itself into rotating spirals and waves; allow a few seconds for the spirals to form.
+
+- **States, Threshold, Neighbourhood**: How many cyclic states, how many neighbours one state ahead make a cell advance, and which cells count as neighbours. Few states with a low threshold make clean spirals; many states or a high threshold can freeze into static noise.
+- **Speed, Seed Density, Reseed**: Generations per second, how much of the grid starts non-zero, and a latch that restarts from fresh noise.
+
+### Metaballs (`metaballs`)
+
+Four to twelve balls on Lissajous orbits merge into one field.
+
+- **Balls, Ball Size, Size Variance**: How many, how big, and how different in size.
+- **Style**: Shaded blobs, iso-line contours, neon outlines or a gooey two-tone.
+- **Orbit Speed, Orbit Spread, Merge, Softness**: Motion and how readily the balls fuse.
+
+### Wave Ripples (`wave_ripples`)
+
+Interference of two to eight travelling circular waves from orbiting sources.
+
+- **Sources, Layout**: How many sources, arranged on Lissajous paths, one ring or two counter-rotating rings.
+- **Wavelength, Wave Speed, Orbit Speed, Falloff**: The wave and how the sources move.
+- **Style**: Shaded height field, banded contours, neon crests or a thin-film ramp.
+
+### Harmonograph (`harmonograph`)
+
+Oscilloscope and harmonograph curves: a damped Lissajous figure drawn as a glowing phosphor line with a fading trail. This is the heaviest of the light generators; lower Quality first on integrated graphics.
+
+- **Ratio X:Y, Detune**: The frequency ratio and a small offset that makes the figure slowly rotate and open up.
+- **Phase Drift, Damping, Trail Length, Rotation**: How the curve evolves.
+- **Line Width, Glow**: Line look.
+- **Quality**: Number of line segments, 16 to 64.
+
+### Aurora Ribbons (`aurora_ribbons`)
+
+Aurora borealis: three to six layered curtains over a faint starfield.
+
+- **Ribbons, Curtain Height, Wave Amplitude, Wave Speed, Shimmer**: Shape and motion of the curtains.
+- **Sky Darkness, Horizon**: The sky, and whether it is sky only, a mountain silhouette or a water reflection.
+- **Quality**: Noise octaves, 1 to 4.
+
+### Isometric Voxels (`isometric_voxels`)
+
+A Q*bert-style isometric cube field with face shading.
+
+- **Wave**: Height pattern: ripple, noise or diagonal sweep.
+- **Cell Size, Max Height, Wave Speed, Wave Scale**: Cube size and the height wave.
+- **Edge Width, Face Contrast**: Line thickness and the shading difference between faces.
+
+### Halftone Matrix (`halftone_matrix`)
+
+A moving pattern drawn as a grid of dots.
+
+- **Pattern, Dot Style**: Plasma, radial pulse, diagonal bands or noise, drawn as round dots, square LED pixels, line screens or a CMYK-style colour halftone.
+- **Grid Density, Dot Sharpness, Pattern Speed, Pattern Scale, Grid Rotation, Contrast**: The grid and the pattern.
+
+### Kali Set (`kali_set`)
+
+A Kali-family inversion-fold fractal in the plane (z becomes |z| / (z . z) minus c), coloured by orbit traps, with the constant c orbiting.
+
+- **Orbit Radius, Orbit Speed**: How far and how fast c moves; it changes the whole shape.
+- **Iterations, Quality, Twist Per Step, Trap Type, Trap Scale**: Detail, per-step rotation and the colouring trap.
+- **Zoom, Centre Drift**: View.
+
+### Girih Stars (`girih_stars`)
+
+Islamic star-and-polygon strapwork.
+
+- **Star Points**: 4, 6 or 8 points per star; this also picks the square, hexagonal or 4.8.8 lattice.
+- **Style**: Woven bands, thin lines, or coloured regions.
+- **Tile Scale, Contact Angle, Angle Sweep, Morph Speed, Line Width, Interlace, Glow**: Geometry and animation.
+
+### Glitch Blocks (`glitch_blocks`)
+
+A glitch and datamosh look with no image input: block displacement, scanline offsets, tearing, RGB split, posterise and dropouts over a test pattern.
+
+- **Base Pattern**: Gradient bars, test-card bars, diagonal stripes or noise.
+- **Glitch Intensity, Block Size, Glitch Rate, Tear Amount, Channel Split, Crush**: The corruption. Changing Glitch Rate reshuffles the sequence.
+
+### Voronoi Cells (`voronoi_cells`)
+
+Animated Worley cells.
+
+- **Style, Metric**: Flat cells, cracked-glass edges, distance rings or a faceted gem, with a Euclidean, Manhattan or Chebyshev distance.
+- **Cell Scale, Jitter, Speed, Edge Width, Edge Glow**: The cells.
 - **Relief, Zoom, Color Mode**: Embossed lighting, magnification, four colourings.
 
 ### Fractal Flame (`fractal_flame`, experimental)

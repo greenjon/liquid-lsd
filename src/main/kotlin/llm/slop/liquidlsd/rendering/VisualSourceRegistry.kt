@@ -73,7 +73,18 @@ object VisualSourceRegistry {
         "thin_film",
         "tunnel_scenes",
         "video_feedback",
-        "hyperbolic_tiling"
+        "hyperbolic_tiling",
+        "cyclic_ca",
+        "metaballs",
+        "wave_ripples",
+        "harmonograph",
+        "aurora_ribbons",
+        "isometric_voxels",
+        "halftone_matrix",
+        "kali_set",
+        "girih_stars",
+        "glitch_blocks",
+        "voronoi_cells"
     )
 
     /** Branch-only sources extracted like defaults but not part of the stock set (no curated macros, not asserted by tests). */

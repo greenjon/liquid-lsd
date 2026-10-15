@@ -11,7 +11,7 @@ class BundledIsfRangesTest {
         "colorMode", "palette", "mode", "segments", "pixelSize", "latticeMode", "colorDepth", "symmetry",
         "scanlineCount", "strobeMode", "rate", "spiralArms", "fbKaleido", "blockiness",
         "Symmetries", "ColorMode", "FrequencyM", "FrequencyN", "FrequencyL", "PaletteMode", "Detail",
-        "MaxPoints", "SurfaceType", "ColorMethod", "FractalType", "SeedShape", "P", "Q", "Outside"
+        "MaxPoints", "SurfaceType", "ColorMethod", "FractalType", "SeedShape", "P", "Q", "Outside", "Neighborhood", "RatioPreset", "Ribbons"
     )
     private val inputRegex = Regex("""\{[^{}]*"TYPE"\s*:\s*"float"[^{}]*\}""")
     private fun num(obj: String, key: String) =

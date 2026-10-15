@@ -68,6 +68,17 @@ To preserve the right to commercially distribute or monetize Liquid LSD:
 | **Tunnel Scenes** | `library/sources/tunnel_scenes/tunnel_scenes.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Analytic ray-plane and ray-cylinder tunnel scenes (grid, Truchet, polygonal wormhole) with no ray marching. |
 | **Video Feedback** | `library/sources/video_feedback/video_feedback.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Video-feedback loop on a persistent 512 x 512 frame with zoom, rotation, drift, decay and seed shapes. |
 | **Hyperbolic Tiling** | `library/sources/hyperbolic_tiling/hyperbolic_tiling.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Poincare-disk {P,Q} tiling by Coxeter-triangle mirror folds and circle inversion. |
+| **Cyclic CA** | `library/sources/cyclic_ca/cyclic_ca.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Cyclic cellular automaton on a persistent 256 x 256 grid (Moore, von Neumann and extended neighbourhoods). |
+| **Metaballs** | `library/sources/metaballs/metaballs.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | 2D metaball field from 4 to 12 orbiting balls with shaded, contour, neon and two-tone styles. |
+| **Wave Ripples** | `library/sources/wave_ripples/wave_ripples.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Interference of 2 to 8 travelling circular waves from orbiting sources. |
+| **Harmonograph** | `library/sources/harmonograph/harmonograph.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Damped Lissajous / harmonograph curve drawn as segment-distance glow. |
+| **Aurora Ribbons** | `library/sources/aurora_ribbons/aurora_ribbons.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Layered aurora curtains over a starfield, with mountain and water-reflection options. |
+| **Isometric Voxels** | `library/sources/isometric_voxels/isometric_voxels.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Isometric cube field with analytic per-layer occlusion. |
+| **Halftone Matrix** | `library/sources/halftone_matrix/halftone_matrix.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Procedural halftone, LED-matrix, line-screen and CMYK-screen dot generator. |
+| **Kali Set** | `library/sources/kali_set/kali_set.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | 2D inversion-fold (Kali family) fractal with orbit-trap colouring. |
+| **Girih Stars** | `library/sources/girih_stars/girih_stars.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Girih / Hankin strapwork on square, hexagonal and 4.8.8 lattices via wallpaper-group folding. |
+| **Glitch Blocks** | `library/sources/glitch_blocks/glitch_blocks.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Procedural glitch generator (block displacement, tearing, RGB split, posterise). |
+| **Voronoi Cells** | `library/sources/voronoi_cells/voronoi_cells.fs` | Liquid LSD Engine (Cleanroom) | MIT | Approved | Animated Worley / Voronoi cells with F1 and F2 shading styles. |
 
 ---
 
@@ -84,4 +95,9 @@ To preserve the right to commercially distribute or monetize Liquid LSD:
 - **Quasicrystals** (`quasicrystal`): the sum of cosine plane waves with 5-fold or higher rotational symmetry as a model of quasi-periodic order is due to de Bruijn (1981) and the physics of quasicrystals (Shechtman 1984). Only the mathematics is used.
 - **Thin-film interference** (`thin_film`): the optical path difference 2 n d cos(theta) is textbook optics.
 - **Hyperbolic tilings** (`hyperbolic_tiling`): Coxeter reflection groups and the Poincare disk model are textbook mathematics; no code was copied.
+- **Cyclic cellular automata** (`cyclic_ca`): the cyclic CA is due to David Griffeath and colleagues (1990s), and the Hodgepodge machine to Gerhardt and Schuster (1989). Only the published rules are used.
+- **Metaballs** (`metaballs`): the blobby-objects field model is due to Jim Blinn (1982).
+- **Cellular noise** (`voronoi_cells`): Steven Worley (1996). Only the published definition is used.
+- **Kali set** (`kali_set`): named after the Kali (Kaliset) inversion-fold iteration of the demoscene; only the mathematical definition z -> |z|/(z.z) - c was used.
+- **Girih and Hankin strapwork** (`girih_stars`): Hankin's polygons-in-contact method (described by Kaplan and others); only the geometric construction is used.
 - **Fractal Flame** (`fractal_flame`): implemented from the published description in Scott Draves and Erik Reckase, "The Fractal Flame Algorithm" (2003, revised 2008): the iterated function system with non-linear variations, the log-density tone mapping and the 49 variation formulas of its Appendix A. The 46 further variations (ids 49-97 apart from the four not built) were implemented from a written mathematical specification (`.planning/flame-variations-spec.md`), not from any flame renderer's source. How that specification was produced is recorded, with its open items, in `docs/developer/clean_room_provenance.md`; check it before relying on this paragraph for a release. No source code of flam3, Apophysis, Electric Sheep or any other flame renderer was read or copied (clean-room, the same approach as the beat tracker). No genome archive is bundled. Verify the exact authors, year and revision against the paper before citing it in a commercial release; a trademark search for the user-facing names is also still open.

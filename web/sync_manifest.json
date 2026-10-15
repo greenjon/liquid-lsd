@@ -314,6 +314,72 @@
       "web": "web/shaders/hyperbolic_tiling.frag",
       "mode": "auto_shader",
       "description": "Poincare-disk hyperbolic {P,Q} tiling"
+    },
+    {
+      "desktop": "library/sources/cyclic_ca/cyclic_ca.fs",
+      "web": "web/shaders/cyclic_ca.frag",
+      "mode": "auto_shader",
+      "description": "Cyclic CA generator"
+    },
+    {
+      "desktop": "library/sources/metaballs/metaballs.fs",
+      "web": "web/shaders/metaballs.frag",
+      "mode": "auto_shader",
+      "description": "Metaballs generator"
+    },
+    {
+      "desktop": "library/sources/wave_ripples/wave_ripples.fs",
+      "web": "web/shaders/wave_ripples.frag",
+      "mode": "auto_shader",
+      "description": "Wave Ripples generator"
+    },
+    {
+      "desktop": "library/sources/harmonograph/harmonograph.fs",
+      "web": "web/shaders/harmonograph.frag",
+      "mode": "auto_shader",
+      "description": "Harmonograph generator"
+    },
+    {
+      "desktop": "library/sources/aurora_ribbons/aurora_ribbons.fs",
+      "web": "web/shaders/aurora_ribbons.frag",
+      "mode": "auto_shader",
+      "description": "Aurora Ribbons generator"
+    },
+    {
+      "desktop": "library/sources/isometric_voxels/isometric_voxels.fs",
+      "web": "web/shaders/isometric_voxels.frag",
+      "mode": "auto_shader",
+      "description": "Isometric Voxels generator"
+    },
+    {
+      "desktop": "library/sources/halftone_matrix/halftone_matrix.fs",
+      "web": "web/shaders/halftone_matrix.frag",
+      "mode": "auto_shader",
+      "description": "Halftone Matrix generator"
+    },
+    {
+      "desktop": "library/sources/kali_set/kali_set.fs",
+      "web": "web/shaders/kali_set.frag",
+      "mode": "auto_shader",
+      "description": "Kali Set generator"
+    },
+    {
+      "desktop": "library/sources/girih_stars/girih_stars.fs",
+      "web": "web/shaders/girih_stars.frag",
+      "mode": "auto_shader",
+      "description": "Girih Stars generator"
+    },
+    {
+      "desktop": "library/sources/glitch_blocks/glitch_blocks.fs",
+      "web": "web/shaders/glitch_blocks.frag",
+      "mode": "auto_shader",
+      "description": "Glitch Blocks generator"
+    },
+    {
+      "desktop": "library/sources/voronoi_cells/voronoi_cells.fs",
+      "web": "web/shaders/voronoi_cells.frag",
+      "mode": "auto_shader",
+      "description": "Voronoi Cells generator"
     }
   ],
   "monitored_sources": [

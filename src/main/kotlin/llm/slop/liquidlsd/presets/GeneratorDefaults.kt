@@ -195,6 +195,72 @@ object GeneratorDefaults {
             KnobSpec("EdgeWidth", "EDGE"),
             KnobSpec("Glow", "GLOW")
         ),
+        "cyclic_ca" to listOf(
+            KnobSpec("States", "STATES"),
+            KnobSpec("Threshold", "THRESH"),
+            KnobSpec("Speed", "SPEED"),
+            KnobSpec("Density", "SEED")
+        ),
+        "metaballs" to listOf(
+            KnobSpec("BallSize", "SIZE"),
+            KnobSpec("OrbitSpeed", "ORBIT"),
+            KnobSpec("Merge", "MERGE"),
+            KnobSpec("Softness", "SOFT")
+        ),
+        "wave_ripples" to listOf(
+            KnobSpec("Wavelength", "WAVE"),
+            KnobSpec("WaveSpeed", "SPEED"),
+            KnobSpec("OrbitSpeed", "ORBIT"),
+            KnobSpec("Falloff", "FALL")
+        ),
+        "harmonograph" to listOf(
+            KnobSpec("Detune", "DETUNE"),
+            KnobSpec("DriftSpeed", "DRIFT"),
+            KnobSpec("Damping", "DAMP"),
+            KnobSpec("Glow", "GLOW")
+        ),
+        "aurora_ribbons" to listOf(
+            KnobSpec("CurtainHeight", "HEIGHT"),
+            KnobSpec("WaveAmp", "AMP"),
+            KnobSpec("WaveSpeed", "SPEED"),
+            KnobSpec("Shimmer", "SHIMMER")
+        ),
+        "isometric_voxels" to listOf(
+            KnobSpec("CellSize", "CELL"),
+            KnobSpec("MaxHeight", "HEIGHT"),
+            KnobSpec("Speed", "SPEED"),
+            KnobSpec("Frequency", "SCALE")
+        ),
+        "halftone_matrix" to listOf(
+            KnobSpec("Density", "DENSITY"),
+            KnobSpec("Sharpness", "SHARP"),
+            KnobSpec("PatternSpeed", "SPEED"),
+            KnobSpec("PatternScale", "SCALE")
+        ),
+        "kali_set" to listOf(
+            KnobSpec("OrbitRadius", "RADIUS"),
+            KnobSpec("Speed", "SPEED"),
+            KnobSpec("Zoom", "ZOOM"),
+            KnobSpec("Twist", "TWIST")
+        ),
+        "girih_stars" to listOf(
+            KnobSpec("Angle", "ANGLE"),
+            KnobSpec("Sweep", "SWEEP"),
+            KnobSpec("Speed", "SPEED"),
+            KnobSpec("Interlace", "WEAVE")
+        ),
+        "glitch_blocks" to listOf(
+            KnobSpec("Intensity", "GLITCH"),
+            KnobSpec("BlockSize", "BLOCK"),
+            KnobSpec("Rate", "RATE"),
+            KnobSpec("Tear", "TEAR")
+        ),
+        "voronoi_cells" to listOf(
+            KnobSpec("CellScale", "SCALE"),
+            KnobSpec("Jitter", "JITTER"),
+            KnobSpec("Speed", "SPEED"),
+            KnobSpec("EdgeGlow", "GLOW")
+        ),
         // Fractal Flame: the global handles that move every xform at once (one binding does what 6+ would otherwise)
         "fractal_flame" to listOf(
             KnobSpec("Magnify", "ZOOM"),   // not Zoom: that one morphs with the genome (stored 0..1, 0.5 = 1x, exponential already)
