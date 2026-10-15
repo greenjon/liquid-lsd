@@ -1,6 +1,6 @@
 # MIDI phase 5: controller profile UI (plan)
 
-Written 2026-10-02 after a recon pass. Nothing is built yet. Read `.planning/midi-controller-handoff.md` first (architecture map,
+Written 2026-10-02 after a recon pass. **Status 2026-10-14: slice 1 is DONE and committed; the binding editor and learn-into-profile are also done; the remaining items under "Later slices" are v1.1 (feature freeze).** Read `.planning/midi-controller-handoff.md` first (architecture map,
 gotchas, definition of done). Phases 1-4 and the phase 3 leftovers are done and committed.
 
 ## Goal
@@ -36,7 +36,12 @@ the built-in), reload after editing, and see validation problems. Later: edit bi
 - Tests: `ControllerProfileTest` has store tests (override by id, user preferred, broken user file skipped, missing dir) using an
   injectable `userDir` and `builtInNames`. No tests for store writes, reload or UI.
 
-## Slice 1 (recommended first)
+## Slice 1 (DONE)
+
+Implemented: store writes (`copyBuiltInToUser`, `saveUser`, `deleteUser`, `reload`, `rejected()`, `warnings()`), tests in `ControllerProfileTest`,
+`MidiPreferencesPanel.drawControllerProfiles`, legacy bar retitled "Learned Mappings". Beyond the plan: per-device profile choice persists
+(`controllerProfileChoices` preference, `matchFor(deviceName, preferredId)`), `saveUser` refuses to overwrite a newer-schema file.
+The text below is the original plan, kept for reference.
 
 1. **Store writes** in `ControllerProfileStore`:
    - `copyBuiltInToUser(id)`: writes `library/controllers/<id>.json` (it overrides the built-in by id with no extra work); refuses if a
@@ -55,17 +60,16 @@ the built-in), reload after editing, and see validation problems. Later: edit bi
 3. Done = code + tests + both release-notes files (`RELEASE_NOTES.md`, `docs/release_notes.md`) + `DECISIONS.md` entry (newest first) +
    user guide controller section + tooltips, then `./gradlew generateDocs --offline -q`; suite `./gradlew test --offline -q`.
 
-## Later slices (not started)
+## Later slices
 
-- In-app binding editor: a table of binding key -> command with a command picker from `CommandRegistry.all()`; `saveUser` on change.
-- Learn into profile: new `MidiLearnTarget.ProfileCommand(profileId, commandId, modifiers)`; a branch in `processGlobalMidiEvents` that
-  does `compiled.resolve(event)`, writes `bindings[key]`, saves. For inputs a profile does not define (new device) the captured
-  channel/type/cc becomes a new `InputDef`. Learn already swallows the event before `controllers.handle`, which is what is wanted.
-- Optional manual per-device profile choice (needs a persisted setting; today matching is automatic only).
-- Bind the unbound `fx.queue_next/prev` and `fx.bg_queue_next/prev` commands (no free Twister input; see DECISIONS.md).
-- Perform-pages phase 4 (page editing) is paired with this phase; see `.planning/perform-pages-plan.md`.
+- ~~In-app binding editor~~ DONE (`b24c060`, `control/ProfileBindingEdit.kt`): global bindings only, with kind check and validated saves.
+- ~~Learn into profile~~ DONE (`9aeb5ed`, `MidiLearnTarget.ProfileCommand`, `MidiMappingManager.learnIntoProfile`). Documented in both release-notes files and the user guide.
+- ~~Optional manual per-device profile choice~~ done (see Slice 1).
+- Still open (v1.1): per-bank bindings in the editor (JSON only today).
+- Still open (v1.1): bind the unbound `fx.queue_next/prev` and `fx.bg_queue_next/prev` commands (no free Twister input; see DECISIONS.md).
+- Still open (v1.1): perform-pages phase 4 (page editing); see `.planning/perform-pages-plan.md`.
 
 ## Open questions for the user
 
-- Should the section also allow choosing a profile per device manually, or is automatic matching enough for v1.0?
+- ~~Manual per-device choice?~~ Resolved: implemented and persisted.
 - Copy-to-user: keep the same `id` (overrides the built-in) or offer a new id/name? The recommendation is the same id for slice 1.

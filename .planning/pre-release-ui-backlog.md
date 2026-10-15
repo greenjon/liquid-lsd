@@ -71,7 +71,7 @@ D7 first, alone. Then, grouped by shared code: 13 + 20 + 5 (lock and precedence 
 
 ## Not covered here
 
-- MIDI controller phase 5, the profile UI: `.planning/midi-controller-handoff.md`.
+- ~~MIDI controller phase 5, the profile UI~~: slice 1 done (2026-10-14); later slices are v1.1. See `.planning/midi-phase5-profile-ui-plan.md`.
 - FX chain expanded view (shelved): `.planning/fx-chain-expanded-view-notes.md`.
 
 ## Unified browser step 7 (2026-10-04)

@@ -38,7 +38,7 @@ Still literals, listed in `.planning/theme-color-audit.md`: `DropdownStyleHelper
 - **Hardware**: Twister checks beyond the above. The owner reported once that Shift + tap on a send knob "seemed strange" and later said it was fine; if it is intermittent it will reveal itself.
 
 ### D. Other open items outside the backlog file
-- MIDI controller **phase 5, the profile UI**: `.planning/midi-phase5-profile-ui-plan.md`, `.planning/midi-controller-handoff.md`.
+- ~~MIDI controller **phase 5, the profile UI**~~: slice 1 done and documented (2026-10-14); later slices are v1.1 (`.planning/midi-phase5-profile-ui-plan.md`).
 - Chain Link **Part B** (free a Twister button): see `.planning/midi-controller-handoff.md`.
 - FX queue transport commands (`fx.queue_next/prev`, `fx.bg_queue_next/prev`) have no free button in the built-in profile.
 - **Every-ISF binding audit** (v1.0 scope item) and **CvTheme / slider colour literals** from the Tango palette work.
