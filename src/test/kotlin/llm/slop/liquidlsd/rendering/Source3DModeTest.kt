@@ -17,7 +17,13 @@ class Source3DModeTest {
     }
 
     private val expected3DSources = setOf(
-        "icosa_h3"
+        "icosa_h3",
+        "mandelbox",
+        "kifs",
+        "mandelbulb",
+        "pseudo_kleinian",
+        "apollonian",
+        "nebula_volume"
     )
 
     private val expected2DSources = setOf(

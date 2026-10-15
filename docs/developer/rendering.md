@@ -162,6 +162,44 @@ This is the same domain-folded CSG technique as the old `icosa-v3` source (evalu
 
 ---
 
+## Heavy Fractal Raymarchers (`mandelbox`, `kifs`, `mandelbulb`, `pseudo_kleinian`, `apollonian`)
+
+Five stock ISF generators ([`library/sources/<id>/<id>.fs`](file:///home/gj/projects/liquid-lsd/library/sources), identical copy in `src/main/resources/default_sources/`) share one structure with `icosa_h3` and `gyroid_hyperspace`: a distance-estimated raymarch, `LSD_COST` 3, `is3D` with their own `Zoom`/`RotateX/Y/Z`, orbit-trap palettes selected by `ColorMode`, a tetrahedral-difference normal, a small AO tap set and a signed `FlightSpeed`. There is no include mechanism, so each file inlines its helpers. They target an NVIDIA RTX A2000 as the floor and are desktop only: GLSL 3.30 core, no `web/sync_manifest.json` entry. Per-source derivations and known issues are in `.planning/heavy-sources-notes/<id>.md`.
+
+Every one exposes a normalised `Quality` input that remaps to live loop counts under constant caps (`for (i = 0; i < MAX; i++) { if (i >= n) break; }`), so Quality trades fidelity for speed during a set.
+
+| Source | Algorithm | Constant caps | Default Quality: steps / iterations / AO taps |
+|---|---|---|---|
+| `mandelbox` | Box fold + sphere fold + scale, running-derivative DE (`z <- s * sphereFold(boxFold(z)) + c`, `DE = norm(z) / dr`) | march 128, fold 12, AO 4 | 0.5: 88 / 9 / 2 (range 48-128 / 6-12 / 0-4) |
+| `kifs` | Fold into a fundamental domain, scale about the IFS fixed vertex, per-iteration rotation, base-shape SDF / s^n; four constructions via `SurfaceType` | march 112, fold 12, AO 4 | 0.5: 80 / 9 / 2 (range 48-112 / 5-12 / 0-4) |
+| `mandelbulb` | Triplex power map `z^n + c` in spherical coordinates, DE `0.5 log(r) r / dr`; analytic bounding sphere skips misses | march 80, iter 10, AO 4 | 0.5: 64 / 8 / 3 (range 48-80 / 6-10 / 2-4) |
+| `pseudo_kleinian` | Periodic triangle-wave slab fold, sphere inversion scale capped at `kmax`, offset, DE `(norm(p) - core) / dr` | march 120, iter 12, AO 4 | 0.33: 72 / 8 / 2 (range 48-120 / 6-12 / 1-4) |
+| `apollonian` | Cell wrap, optional y twist, capped sphere inversion, same DE form | march 120, iter 12, AO 4 | 0.08: 54 / 6 / 1 (range 48-120 / 6-12 / 1-4) |
+
+`escape_time` (2D, below) is a sixth heavy generator in the same registry but is not a raymarcher.
+
+Worst case per pixel is steps x iterations estimator passes (for example 88 x 9 = 792 for the Mandelbox default, 1536 at Quality 1); rays that miss or hit early cost far less. No shader uses textures, float buffers or extra passes.
+
+**Measured cost** (RTX A2000 Laptop GPU via PRIME offload, `GL_RENDERER` confirmed, 1920x1080, hidden GL 3.3 context, offscreen RGBA8, glFinish-timed average of several frames; indicative only, GPU clocks not locked, single deck, no compositing):
+
+| Source | Default | Quality 1 | Quality 0 | Notes |
+|---|---|---|---|---|
+| `mandelbox` | 7.7 ms | 8.4 ms | 5.0 ms | closest-camera, Zoom 1, Quality 1 corners 14 to 42 ms |
+| `kifs` | 4.8 ms | 5.7 ms | 2.1 ms | corners not searched |
+| `mandelbulb` | 5.2 ms | 5.7 ms | 4.5 ms | corners not searched |
+| `pseudo_kleinian` | about 11.2 ms | 14.8 ms | 8.1 ms | everything-max corner 27.7 ms |
+| `apollonian` | 8.7 ms | 27.3 ms | 7.8 ms | the earlier default 0.25 cost 15.5 ms; lowered to 0.08 for two-deck headroom |
+
+**`escape_time`** (`library/sources/escape_time/escape_time.fs`): 2D escape-time iteration `z <- z^p + k` (Julia, Burning Ship Julia with `abs` before the power, Mandelbrot with `z0 = 0`) or relaxed Newton on `z^3 - 1`. Iteration cap `Detail` 48 to 400 under a constant `MAX_IT`; escape radius 256 for smooth colouring `n + 1 - log(log|z|)/log(p)`; Newton stops within 1e-5 of a root. `Detail` above 0.75 adds 2x2 supersampling. It supplies its own `Zoom` (0.3x to 3000x), `CenterX/Y` and `Rotation`; fp32 limits useful magnification to about 1e3 to 1e4. Measured on the RTX A2000 Laptop GPU at 1080p: Julia 0.4 ms, Newton 0.9 ms, Mandelbrot 1.5 ms at the default Detail, Julia at Detail 1 (with antialiasing) 1.2 ms; interior-heavy deep views cost far more because every pixel runs the full cap.
+
+Defaults sit inside a 60 fps budget on one deck; two heavy decks plus a crossfade is the case to watch. Zooming in until every pixel hits, or an extreme parameter set, is what pushes a source toward 30 fps. The stock audit (`StockGpuCostAuditTest`) asserts all five carry `LSD_COST` 3; it does not measure frame time.
+
+**Volume and simulation generators** (`nebula_volume`, `reaction_diffusion`, `fluid_ink`, `lenia`). `nebula_volume` is a raymarched emission/absorption volume (`LSD_COST` 3, `is3D`, own camera): domain-warped ridged value-noise fbm with a 0 to 4 tap light march, interleaved-gradient-noise jitter and empty-space leaping, caps 72 view steps, 4 light taps and 5 octaves (default about 28 steps, 2 taps, 2 octaves). The other three are the first stock generators to use `PASSES`: persistent `FLOAT` ping-pong grids of fixed size, so cost does not depend on output resolution. Each sim sub-step is its own pass with its own persistent target (`rdA..rdD`, `lnA..lnD`, `prs1..prs4`), because two passes sharing one target would share one slot and `resizePassFBOs` would allocate it twice. A persistent target reads the most recently written buffer, so chained targets see the same frame's output. Buffers are zeroed on allocation and on resize, so each sim re-seeds itself when its state is empty and never relies on `FRAMEINDEX`. `reaction_diffusion` is 512 x 512 with 4 sub-steps per frame (Gray-Scott, 9-point Laplacian, `Du*dt` capped at 1.2), `fluid_ink` is 384 x 384 with an RK2 semi-Lagrangian velocity pass, 4 Jacobi pressure passes (warm-started across frames) and a dye pass, and `lenia` is 256 x 256 with 4 steps per frame and a 27 x 27 tap window at most. Steps are per frame, not `TIMEDELTA`-scaled, so the simulations run faster at higher frame rates. The three sims are declared `LSD_COST` 2 and show no badge. Measured on the RTX A2000 Laptop GPU at 1080p, default settings: `reaction_diffusion` about 0.5 ms, `fluid_ink` about 0.7 ms, `lenia` about 2 ms, `nebula_volume` about 17 ms (Quality 1, Detail 4, Lighting 1 about 68 ms). Known limitation: `lenia` does not reproduce the published gliding creatures; it makes bubbles, rings and stripes.
+
+**Stock registration touchpoints** for a new stock source: `VisualSourceRegistry.DEFAULT_SOURCE_IDS`, `GeneratorDefaults.CURATED_KNOBS` + `GeneratorDefaultsTest.stockInputNames`, `SourceDocRegistry` (description plus `"<id>/<Param>"` tooltips), the `StockGpuCostAuditTest` heavy allowlist, `Source3DModeTest`, the licence and provenance rows, and the user-guide pages. Both `.fs` trees must be identical (`diff -rq library/sources src/main/resources/default_sources`).
+
+---
+
 ## Video Recording & Deterministic Offline Studio
 
 Liquid LSD includes both a zero-lag live capture pipeline and a sample-accurate offline rendering studio in the `llm.slop.liquidlsd.export` package.

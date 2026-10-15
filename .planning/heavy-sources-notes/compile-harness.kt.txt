@@ -1,0 +1,37 @@
+package llm.slop.liquidlsd.rendering.isf
+
+import llm.slop.liquidlsd.rendering.Shader
+import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.lwjgl.glfw.GLFW.*
+import org.lwjgl.opengl.GL
+import java.io.File
+import kotlin.test.Test
+
+/** Scratch: compiles the heavy-source batch on a hidden GL 3.3 context (skipped without one). */
+class HeavySourcesScratchCompileTest {
+    @Test fun compile() {
+        val hasGlfw = try { glfwInit() } catch (e: Throwable) { false }
+        assumeTrue(hasGlfw, "GLFW unavailable")
+        glfwDefaultWindowHints()
+        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3)
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE)
+        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE)
+        val window = glfwCreateWindow(64, 64, "t", 0L, 0L)
+        assumeTrue(window != 0L, "No GL context")
+        try {
+            glfwMakeContextCurrent(window)
+            GL.createCapabilities()
+            val ids = (System.getenv("HEAVY_IDS") ?: "").split(",").filter { it.isNotBlank() }
+            for (id in ids) {
+                val src = File("library/sources/$id/$id.fs").readText()
+                val header = ISFParser.parseHeader(src)!!
+                val frag = ISFParser.buildGLSLFragmentShader(src, header)
+                val vert = File("src/main/resources/shaders/blit.vert").readText()
+                Shader(vert, frag).dispose()
+                println("COMPILED OK: $id")
+            }
+        } finally { glfwDestroyWindow(window) }
+    }
+}

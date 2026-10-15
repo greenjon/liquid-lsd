@@ -227,7 +227,17 @@ class GeneratorDefaultsTest {
             "gyroid_hyperspace" to listOf("FlightSpeed", "WallThickness", "Frequency", "CoreGlow"),
             "celestial_engine" to listOf("Speed", "Symmetries", "PhaseTwist", "Glow"),
             "hyper_slice" to listOf("SliceOffset", "RotateXW", "Morph", "Zoom"),
-            "chladni_cymatics" to listOf("FrequencyM", "FrequencyN", "VibrationSpeed", "NodeSharpness")
+            "chladni_cymatics" to listOf("FrequencyM", "FrequencyN", "VibrationSpeed", "NodeSharpness"),
+            "mandelbox" to listOf("Scale", "FoldLimit", "MinRadius", "FlightSpeed"),
+            "kifs" to listOf("SurfaceType", "Scale", "TwistY", "MorphSpeed"),
+            "mandelbulb" to listOf("Power", "PowerSwing", "JuliaMix", "FlightSpeed"),
+            "pseudo_kleinian" to listOf("SlabSize", "InversionRadius", "CoreSize", "FlightSpeed"),
+            "apollonian" to listOf("CellSize", "InversionRadius", "Twist", "FlightSpeed"),
+            "escape_time" to listOf("JuliaAngle", "JuliaRadius", "Power", "MorphSpeed"),
+            "nebula_volume" to listOf("Density", "Coverage", "Turbulence", "FlightSpeed"),
+            "reaction_diffusion" to listOf("Regime", "Diffusion", "SimSpeed", "Relief"),
+            "fluid_ink" to listOf("Force", "Swirl", "Turbulence", "DyeFade"),
+            "lenia" to listOf("GrowthCenter", "GrowthWidth", "Radius", "SimSpeed")
         )
 
         for (sourceId in VisualSourceRegistry.DEFAULT_SOURCE_IDS) {

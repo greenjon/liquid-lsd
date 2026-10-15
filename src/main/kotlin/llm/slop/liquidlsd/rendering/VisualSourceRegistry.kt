@@ -58,7 +58,17 @@ object VisualSourceRegistry {
         "gyroid_hyperspace",
         "celestial_engine",
         "hyper_slice",
-        "chladni_cymatics"
+        "chladni_cymatics",
+        "mandelbox",
+        "kifs",
+        "mandelbulb",
+        "pseudo_kleinian",
+        "apollonian",
+        "escape_time",
+        "nebula_volume",
+        "reaction_diffusion",
+        "fluid_ink",
+        "lenia"
     )
 
     /** Branch-only sources extracted like defaults but not part of the stock set (no curated macros, not asserted by tests). */

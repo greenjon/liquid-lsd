@@ -1,0 +1,89 @@
+package llm.slop.liquidlsd.rendering.isf
+
+import llm.slop.liquidlsd.rendering.Shader
+import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.lwjgl.glfw.GLFW.*
+import org.lwjgl.opengl.GL
+import org.lwjgl.opengl.GL33.*
+import java.awt.image.BufferedImage
+import java.io.File
+import javax.imageio.ImageIO
+import kotlin.test.Test
+
+/** Scratch: renders a (possibly multipass/persistent) ISF source for N frames and dumps PNGs to /tmp/heavy. */
+class HeavySourcesScratchRenderTest {
+    private class Tex(val w: Int, val h: Int, val float: Boolean) {
+        val tex = glGenTextures(); val fbo = glGenFramebuffers()
+        init {
+            glBindTexture(GL_TEXTURE_2D, tex)
+            glTexImage2D(GL_TEXTURE_2D, 0, if (float) GL_RGBA32F else GL_RGBA8, w, h, 0, GL_RGBA, if (float) GL_FLOAT else GL_UNSIGNED_BYTE, 0L)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+            glBindFramebuffer(GL_FRAMEBUFFER, fbo)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0)
+            glClearColor(0f, 0f, 0f, 0f); glClear(GL_COLOR_BUFFER_BIT)
+        }
+    }
+
+    @Test fun render() {
+        val hasGlfw = try { glfwInit() } catch (e: Throwable) { false }
+        assumeTrue(hasGlfw)
+        val id = System.getenv("HEAVY_ID"); assumeTrue(id != null)
+        glfwDefaultWindowHints(); glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3)
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE)
+        val window = glfwCreateWindow(64, 64, "t", 0L, 0L); assumeTrue(window != 0L)
+        glfwMakeContextCurrent(window); GL.createCapabilities()
+        println("GL_RENDERER " + glGetString(GL_RENDERER))
+        val src = File("library/sources/$id/$id.fs").readText()
+        val header = ISFParser.parseHeader(src)!!
+        val vert = "#version 330 core\nlayout(location=0) in vec2 aPosition; layout(location=1) in vec2 aTexCoord; out vec2 vTexCoord;\n" +
+            "void main(){ vec2 p = vec2((gl_VertexID<<1)&2, gl_VertexID&2); vTexCoord=p; gl_Position=vec4(p*2.0-1.0,0.0,1.0);}\n"
+        val sh = Shader(vert, ISFParser.buildGLSLFragmentShader(src, header))
+        val W = (System.getenv("HEAVY_W") ?: "480").toInt(); val H = (System.getenv("HEAVY_H") ?: "270").toInt()
+        val dumpAt = (System.getenv("HEAVY_DUMP") ?: "1").split(",").map { it.toInt() }.toSet()
+        val frames = dumpAt.max()
+        val over = (System.getenv("HEAVY_OVER") ?: "").split(",").filter { it.contains("=") }.associate { it.split("=").let { p -> p[0] to p[1].toFloat() } }
+        val outDir = File("/tmp/heavy").also { it.mkdirs() }
+        val passes = header.PASSES ?: emptyList()
+        fun dim(e: String?, base: Int): Int = e?.toIntOrNull() ?: base
+        // persistent: front (write) / back (read-latest) as in ISFVisualSource.PingPongSlot
+        val front = HashMap<String, Tex>(); val back = HashMap<String, Tex>()
+        for (p in passes) { val t = p.TARGET ?: continue
+            val w = dim(p.WIDTH, W); val h = dim(p.HEIGHT, H)
+            front[t] = Tex(w, h, p.FLOAT); back[t] = Tex(w, h, p.FLOAT) }
+        val final = Tex(W, H, false)
+        glBindVertexArray(glGenVertexArrays())
+        val buf = java.nio.ByteBuffer.allocateDirect(W * H * 4)
+        for (frame in 1..frames) {
+            glUseProgram(sh.programId)
+            for (i in header.INPUTS) sh.setUniform(i.NAME, over[i.NAME] ?: i.DEFAULT?.toString()?.toFloatOrNull() ?: 0f)
+            sh.setUniform("TIME", frame / 60f + (over["TIME"] ?: 3f)); sh.setUniform("TIMEDELTA", 1f / 60f); sh.setUniform("FRAMEINDEX", frame - 1)
+            val t0 = System.nanoTime()
+            val list = if (passes.isEmpty()) listOf(null) else passes
+            for ((pi, p) in list.withIndex()) {
+                val last = pi == list.size - 1
+                val tgt = if (last) final else front[p!!.TARGET]
+                val rw = if (last) W else tgt!!.w; val rh = if (last) H else tgt!!.h
+                glBindFramebuffer(GL_FRAMEBUFFER, tgt!!.fbo); glViewport(0, 0, rw, rh)
+                sh.setUniform("PASSINDEX", pi); sh.setUniform("RENDERSIZE", rw.toFloat(), rh.toFloat())
+                var unit = 0
+                for ((name, b) in back) { glActiveTexture(GL_TEXTURE0 + unit); glBindTexture(GL_TEXTURE_2D, b.tex); sh.setUniform(name, unit); unit++ }
+                glDrawArrays(GL_TRIANGLES, 0, 3)
+                if (!last && p!!.TARGET != null) { val f = front[p.TARGET]!!; front[p.TARGET!!] = back[p.TARGET]!!; back[p.TARGET!!] = f }
+            }
+            glFinish(); val ms = (System.nanoTime() - t0) / 1e6
+            if (frame in dumpAt) {
+                glBindFramebuffer(GL_FRAMEBUFFER, final.fbo); glReadPixels(0, 0, W, H, GL_RGBA, GL_UNSIGNED_BYTE, buf)
+                val img = BufferedImage(W, H, BufferedImage.TYPE_INT_RGB); var sum = 0L; var mx = 0
+                for (y in 0 until H) for (x in 0 until W) { val o = ((H - 1 - y) * W + x) * 4
+                    val r = buf.get(o).toInt() and 255; val g = buf.get(o + 1).toInt() and 255; val b = buf.get(o + 2).toInt() and 255
+                    img.setRGB(x, y, (r shl 16) or (g shl 8) or b); sum += r + g + b; mx = maxOf(mx, r, g, b) }
+                val tag = System.getenv("HEAVY_TAG") ?: "d"
+                ImageIO.write(img, "png", File(outDir, "${id}_${tag}_f$frame.png"))
+                println("FRAME $frame $id ms=$ms mean=${sum / (W * H * 3.0)} max=$mx err=${glGetError()}")
+            }
+        }
+        glfwDestroyWindow(window)
+    }
+}

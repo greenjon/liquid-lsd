@@ -105,6 +105,66 @@ object GeneratorDefaults {
             KnobSpec("VibrationSpeed", "SPEED", MacroCurveType.EXPONENTIAL),
             KnobSpec("NodeSharpness", "NODES")
         ),
+        "mandelbox" to listOf(
+            KnobSpec("Scale", "SCALE"),
+            KnobSpec("FoldLimit", "FOLD"),
+            KnobSpec("MinRadius", "RADIUS"),
+            KnobSpec("FlightSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
+        ),
+        "kifs" to listOf(
+            KnobSpec("SurfaceType", "TYPE"),
+            KnobSpec("Scale", "SCALE"),
+            KnobSpec("TwistY", "TWIST"),
+            KnobSpec("MorphSpeed", "MORPH", MacroCurveType.EXPONENTIAL)
+        ),
+        "mandelbulb" to listOf(
+            KnobSpec("Power", "POWER"),
+            KnobSpec("PowerSwing", "SWING"),
+            KnobSpec("JuliaMix", "JULIA"),
+            KnobSpec("FlightSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
+        ),
+        "pseudo_kleinian" to listOf(
+            KnobSpec("SlabSize", "SLAB"),
+            KnobSpec("InversionRadius", "INVERT"),
+            KnobSpec("CoreSize", "CORE"),
+            KnobSpec("FlightSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
+        ),
+        "apollonian" to listOf(
+            KnobSpec("CellSize", "CELL"),
+            KnobSpec("InversionRadius", "INVERT"),
+            KnobSpec("Twist", "TWIST"),
+            KnobSpec("FlightSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
+        ),
+        "escape_time" to listOf(
+            KnobSpec("JuliaAngle", "ANGLE"),
+            KnobSpec("JuliaRadius", "RADIUS"),
+            KnobSpec("Power", "POWER"),
+            KnobSpec("MorphSpeed", "MORPH", MacroCurveType.EXPONENTIAL)
+        ),
+        "nebula_volume" to listOf(
+            KnobSpec("Density", "DENSITY"),
+            KnobSpec("Coverage", "COVER"),
+            KnobSpec("Turbulence", "TURB"),
+            KnobSpec("FlightSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
+        ),
+        "reaction_diffusion" to listOf(
+            KnobSpec("Regime", "REGIME"),
+            KnobSpec("Diffusion", "DIFFUSE"),
+            KnobSpec("SimSpeed", "SPEED", MacroCurveType.EXPONENTIAL),
+            KnobSpec("Relief", "RELIEF")
+        ),
+        "fluid_ink" to listOf(
+            KnobSpec("Force", "FORCE"),
+            KnobSpec("Swirl", "SWIRL"),
+            KnobSpec("Turbulence", "TURB"),
+            KnobSpec("DyeFade", "FADE")
+        ),
+        "lenia" to listOf(
+            KnobSpec("GrowthCenter", "CENTER"),
+            KnobSpec("GrowthWidth", "WIDTH"),
+            KnobSpec("Radius", "RADIUS"),
+            KnobSpec("SimSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
+        ),
         // Fractal Flame: the global handles that move every xform at once (one binding does what 6+ would otherwise)
         "fractal_flame" to listOf(
             KnobSpec("Magnify", "ZOOM"),   // not Zoom: that one morphs with the genome (stored 0..1, 0.5 = 1x, exponential already)

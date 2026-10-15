@@ -24,7 +24,11 @@ class StockGpuCostAuditTest {
 
     @Test
     fun `heavy raymarchers are tagged heavy`() {
-        val heavy = setOf("icosa_h3", "hyper_slice", "gyroid_hyperspace")
+        val heavy = setOf(
+            "icosa_h3", "hyper_slice", "gyroid_hyperspace",
+            "mandelbox", "kifs", "mandelbulb", "pseudo_kleinian", "apollonian", "escape_time",
+            "nebula_volume"
+        )
         val found = shaders().filter { it.nameWithoutExtension in heavy }
         assertEquals(heavy, found.map { it.nameWithoutExtension }.toSet())
         for (file in found) assertEquals(3, ISFParser.parseHeader(file.readText())?.gpuCost, file.name)

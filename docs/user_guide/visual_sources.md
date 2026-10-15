@@ -14,7 +14,9 @@ To remove the current source, click **Detach** or **None**.
 
 ## Built-In Generators
 
-Liquid LSD includes a curated suite of 8 built-in procedural generators spanning harmonic geometry, 3D raymarching, 4D polytopes, organic fluid dynamics, and acoustic wavefields.
+Liquid LSD includes a curated suite of 18 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, and acoustic wavefields.
+
+The raymarchers (Icosa-H3, Gyroid Hyperspace, 4D Hyper-Slice, Nebula Volume and the fractals below) show a warning triangle in the browser: they are GPU-intensive and can run slowly on integrated graphics. The fractals are tuned for a mid-range discrete GPU (an RTX A2000 or better); every one has a **Quality** knob, and lowering it is the first thing to try if a deck stutters.
 
 ### Mandala (`mandala`)
 
@@ -98,6 +100,105 @@ A physical 2D acoustic plate resonance simulation computing standing wave nodal 
 - **Sand Accumulation & Node Sharpness**: Simulates sand grains migrating away from kinetic antinodes and gathering along quiet nodal lines.
 - **Invert Mode**: Swaps behavior from quiet nodal sand gathering (`0.0`) to kinetic fluid pooling in energetic antinodes (`1.0`).
 - **Palette Modes**: Obsidian & Gold Sand, Electric Cymatic Blue, Prismatic Spectrum, and Bioluminescent Emerald.
+
+### Mandelbox (`mandelbox`)
+
+A raymarched Mandelbox: space is repeatedly folded into a box, inverted in a sphere and scaled, producing cathedral-like chambers. The camera glides in and out and stays outside the solid.
+
+- **Scale**: The fold scale. Right of centre gives the classic box, left of centre the inverted variants. It jumps at the centre, so avoid automating across it.
+- **Fold Limit, Min Radius, Max Radius**: Box-fold size and the two sphere-fold radii; they reshape the chambers.
+- **Quality**: Ray-march steps, fold iterations and ambient-occlusion taps together.
+- **Flight Speed, Glow**: Signed in-and-out camera motion, and a halo from near-miss rays.
+- **Color Mode**: Orbit trap (origin), orbit trap (planes), sphere-fold fraction, normal spectrum, depth.
+
+### KIFS (`kifs`)
+
+A kaleidoscopic iterated-function-system fractal: repeated folds, a scale and an offset toward a fixed vertex, with a rotation added at every iteration.
+
+- **Fractal Type**: Menger-like, Sierpinski tetrahedron, octahedral, or a mixed construction.
+- **Scale, Offset**: Look controls on the construction; away from the centre it stops tiling exactly.
+- **Twist X/Y/Z, Morph Speed**: Per-iteration rotation, and a time-driven rotation that continuously reshapes the form.
+- **Flight Speed**: Endless self-similar dolly toward the fixed vertex; negative flies outward.
+- **Quality, Glow, Color Mode**: Detail versus speed, a grazing-ray halo, and five colourings.
+
+### Mandelbulb (`mandelbulb`)
+
+A raymarched Mandelbulb, the 3D analogue of the Mandelbrot set built on a power map in spherical coordinates, with a turntable camera.
+
+- **Power**: Exponent from 2 to 16 (default 8). Non-integer values show a cut seam.
+- **Power Swing**: A slow automatic oscillation of the power; 0 keeps it fixed.
+- **Julia Mix**: Blends toward a Julia set.
+- **Bailout**: Escape radius; higher keeps more of the set at higher cost.
+- **Quality, Flight Speed, Glow, Color Mode**: Detail versus speed, turntable speed (signed), halo, five colourings.
+
+### Pseudo Kleinian (`pseudo_kleinian`)
+
+A fly-through of a Kleinian-style structure: a periodic mirror fold followed by repeated sphere inversion, with the camera travelling down an open channel.
+
+- **Slab Size, Inversion Radius, Inversion Strength**: Spacing of the repeating structure, and how the inversion carves and magnifies it.
+- **Offset X/Y/Z**: Shifts that reshape the channels and walls.
+- **Core Size**: Wall thickness. Near the maximum the channel can fill in and the frame goes flat.
+- **Quality, Flight Speed, Color Mode**: Detail versus speed, signed fly-through speed, four colourings.
+
+### Apollonian (`apollonian`)
+
+A fly-through of an Apollonian-style sphere gasket: space is tiled into cells and inverted in a sphere, packing smaller and smaller spheres into the gaps.
+
+- **Cell Size, Inversion Radius, Inversion Strength**: Lattice spacing and the inversion that sets how the spheres touch. Very small radii collapse the gasket to flat walls.
+- **Twist**: Per-iteration rotation that bends the lattice into spiralling forms.
+- **Core Size**: Sphere thickness.
+- **Quality**: Defaults low (0.08) for two-deck headroom; raise it for finer small spheres.
+- **Flight Speed, Color Mode**: Signed fly-through speed, four colourings.
+
+### Escape Time (`escape_time`)
+
+High-iteration 2D escape-time fractals with smooth colouring and orbit traps.
+
+- **Fractal Type**: 0 = Julia set, 1 = Burning Ship Julia, 2 = relaxed Newton on z^3 - 1 (one colour family per root), 3 = Mandelbrot.
+- **Julia Radius, Julia Angle, Morph Speed**: Position of the Julia constant and how fast it orbits the origin, which morphs the set. In Newton they set the relaxation of the step. Mandelbrot ignores them.
+- **Power**: Exponent of the iteration (2 to 5); fractional values show a seam.
+- **Detail**: Iteration cap (48 to 400). Above 0.75 it also turns on 2x2 antialiasing, which costs four times as much.
+- **Zoom, Center X/Y, Rotation**: Own camera, magnifying 0.3x to 3000x. fp32 breaks down at the top of the range (the image goes blocky); deep zoom is not supported.
+- **Color Mode, Color Cycle, Trap Glow**: Smooth escape count, orbit trap, final angle or monochrome; hue cycling speed and trap glow strength.
+
+### Nebula Volume (`nebula_volume`)
+
+A volumetric nebula: the camera flies through glowing gas filaments that are lit by a drifting inner light and shadow themselves, with a starfield behind.
+
+- **Density, Coverage, Scale, Turbulence**: Gas opacity, how much of the volume is filled, the size of the structures and the warp that twists them.
+- **Detail**: Noise octaves, 1 to 5.
+- **Quality, Lighting**: View-ray steps and self-shadowing taps (0 to 4). These are the cost knobs; lower them first if a deck stutters. The defaults are light, and Detail 4 with Quality and Lighting at maximum is very heavy.
+- **Flight Speed, Drift**: Signed camera flight and the speed at which the gas evolves.
+- **Glow, Color Mode**: Emission brightness and four colourings.
+
+### Reaction Diffusion (`reaction_diffusion`)
+
+A Gray-Scott chemical simulation on a persistent 512 x 512 grid that grows maze, worm, coral, spot and splitting-cell patterns, lit as relief. The grid is fixed, so it costs the same at any output size and does not show a heavy-shader triangle.
+
+- **Regime, Feed Trim, Kill Trim**: Position along the feed/kill path through the pattern types, and fine trims. After a change the pattern needs a few seconds to re-form.
+- **Diffusion**: Scale of the pattern.
+- **Sim Speed**: Time step per frame, so the pattern evolves faster at higher frame rates.
+- **Reseed**: Crossing the middle seeds the grid again once. An empty grid, for example after a resize, seeds itself.
+- **Relief, Zoom, Color Mode**: Embossed lighting, magnification of the grid, four colourings.
+
+### Fluid Ink (`fluid_ink`)
+
+Ink in a persistent stable-fluids simulation (384 x 384): orbiting emitters stir and dye an incompressible flow that forms shear layers and curls.
+
+- **Emitters, Stir Force, Swirl, Turbulence**: How many emitters (1 to 4), how hard they push, curl preservation and noise forcing.
+- **Viscosity, Dye Fade**: Flow damping and how quickly the ink fades.
+- **Projection**: How completely the flow is made incompressible; 1 is the proper setting.
+- **Sim Speed**: Time step per frame. 0 freezes the simulation.
+- **Color Mode**: Four colourings of the ink.
+
+### Lenia (`lenia`)
+
+A continuous cellular automaton on a persistent 256 x 256 grid. A smooth ring kernel and a bell-shaped growth rule produce soft blobs, rings and stripes. This version does not reliably produce the gliding creatures of the published Lenia; expect living textures rather than travelling organisms.
+
+- **Growth Center, Growth Width**: The growth rule. Narrow widths at a high centre can kill the pattern; reseed if the field goes dark.
+- **Kernel Radius**: Neighbourhood size, 5 to 13 cells; larger is bigger structures and costs more.
+- **Sim Speed, Seed Density, Reseed**: Time step per frame, amount of seed material and a latch that reseeds when crossed.
+- **Relief, Zoom, Color Mode**: Embossed lighting, magnification, four colourings.
 
 ### Fractal Flame (`fractal_flame`, experimental)
 
@@ -201,7 +302,7 @@ Heavy shaders (raymarchers, fractal folds with many iterations) can run slowly o
 "LSD_COST": 3,
 ```
 
-Shaders declared `3` show a warning triangle in the browser, and their tooltip says they may run slowly on integrated graphics. Other ISF programs ignore the key. If a shader is slow, lowering iteration or step-count parameters helps more than anything else.
+Shaders declared `3` show a warning triangle in the browser, and their tooltip says they may run slowly on integrated graphics. The bundled raymarchers and fractals are all declared `3`. Other ISF programs ignore the key. If a shader is slow, lowering iteration or step-count parameters helps more than anything else.
 
 ### Standard ISF search paths
 
