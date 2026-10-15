@@ -68,7 +68,12 @@ object VisualSourceRegistry {
         "nebula_volume",
         "reaction_diffusion",
         "fluid_ink",
-        "lenia"
+        "lenia",
+        "quasicrystal",
+        "thin_film",
+        "tunnel_scenes",
+        "video_feedback",
+        "hyperbolic_tiling"
     )
 
     /** Branch-only sources extracted like defaults but not part of the stock set (no curated macros, not asserted by tests). */

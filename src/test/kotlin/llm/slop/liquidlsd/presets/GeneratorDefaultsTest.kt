@@ -237,7 +237,12 @@ class GeneratorDefaultsTest {
             "nebula_volume" to listOf("Density", "Coverage", "Turbulence", "FlightSpeed"),
             "reaction_diffusion" to listOf("Regime", "Diffusion", "SimSpeed", "Relief"),
             "fluid_ink" to listOf("Force", "Swirl", "Turbulence", "DyeFade"),
-            "lenia" to listOf("GrowthCenter", "GrowthWidth", "Radius", "SimSpeed")
+            "lenia" to listOf("GrowthCenter", "GrowthWidth", "Radius", "SimSpeed"),
+            "quasicrystal" to listOf("Frequency", "Sharpness", "SpinSpeed", "DriftSpeed"),
+            "thin_film" to listOf("FlowSpeed", "Scale", "FilmThickness", "Turbulence"),
+            "tunnel_scenes" to listOf("Speed", "Twist", "Glow", "Sway"),
+            "video_feedback" to listOf("Zoom", "Rotation", "HueShift", "Decay"),
+            "hyperbolic_tiling" to listOf("Speed", "Drift", "EdgeWidth", "Glow")
         )
 
         for (sourceId in VisualSourceRegistry.DEFAULT_SOURCE_IDS) {

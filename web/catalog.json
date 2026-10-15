@@ -31,9 +31,34 @@
       "name": "Raymarched 3D cross-section MRI scan through 4D 120-cell and 600-cell polychora"
     },
     {
+      "id": "hyperbolic_tiling",
+      "file": "shaders/hyperbolic_tiling.frag",
+      "name": "Poincare-disk hyperbolic {P,Q} tiling"
+    },
+    {
       "id": "icosa_h3",
       "file": "shaders/icosa_h3.frag",
       "name": "Icosahedral H3 Coxeter raymarcher: duality morph crossfaded with spike/blocker stellation CSG"
+    },
+    {
+      "id": "quasicrystal",
+      "file": "shaders/quasicrystal.frag",
+      "name": "Quasicrystal interference: 5 to 8 rotated cosine gratings"
+    },
+    {
+      "id": "thin_film",
+      "file": "shaders/thin_film.frag",
+      "name": "Thin-film oil-slick iridescence"
+    },
+    {
+      "id": "tunnel_scenes",
+      "file": "shaders/tunnel_scenes.frag",
+      "name": "Analytic grid, Truchet and polygonal tunnels"
+    },
+    {
+      "id": "video_feedback",
+      "file": "shaders/video_feedback.frag",
+      "name": "Persistent video-feedback loop generator"
     }
   ],
   "filters": [

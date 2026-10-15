@@ -284,6 +284,36 @@
       "web": "web/shaders/transitions/vortex_swirl.fs",
       "mode": "auto_shader",
       "description": "Vortex Swirl"
+    },
+    {
+      "desktop": "library/sources/quasicrystal/quasicrystal.fs",
+      "web": "web/shaders/quasicrystal.frag",
+      "mode": "auto_shader",
+      "description": "Quasicrystal interference: 5 to 8 rotated cosine gratings"
+    },
+    {
+      "desktop": "library/sources/thin_film/thin_film.fs",
+      "web": "web/shaders/thin_film.frag",
+      "mode": "auto_shader",
+      "description": "Thin-film oil-slick iridescence"
+    },
+    {
+      "desktop": "library/sources/tunnel_scenes/tunnel_scenes.fs",
+      "web": "web/shaders/tunnel_scenes.frag",
+      "mode": "auto_shader",
+      "description": "Analytic grid, Truchet and polygonal tunnels"
+    },
+    {
+      "desktop": "library/sources/video_feedback/video_feedback.fs",
+      "web": "web/shaders/video_feedback.frag",
+      "mode": "auto_shader",
+      "description": "Persistent video-feedback loop generator"
+    },
+    {
+      "desktop": "library/sources/hyperbolic_tiling/hyperbolic_tiling.fs",
+      "web": "web/shaders/hyperbolic_tiling.frag",
+      "mode": "auto_shader",
+      "description": "Poincare-disk hyperbolic {P,Q} tiling"
     }
   ],
   "monitored_sources": [

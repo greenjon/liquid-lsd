@@ -165,6 +165,36 @@ object GeneratorDefaults {
             KnobSpec("Radius", "RADIUS"),
             KnobSpec("SimSpeed", "SPEED", MacroCurveType.EXPONENTIAL)
         ),
+        "quasicrystal" to listOf(
+            KnobSpec("Frequency", "FREQ"),
+            KnobSpec("Sharpness", "SHARP"),
+            KnobSpec("SpinSpeed", "SPIN"),
+            KnobSpec("DriftSpeed", "DRIFT")
+        ),
+        "thin_film" to listOf(
+            KnobSpec("FlowSpeed", "FLOW"),
+            KnobSpec("Scale", "SCALE"),
+            KnobSpec("FilmThickness", "FILM"),
+            KnobSpec("Turbulence", "TURB")
+        ),
+        "tunnel_scenes" to listOf(
+            KnobSpec("Speed", "SPEED"),
+            KnobSpec("Twist", "TWIST"),
+            KnobSpec("Glow", "GLOW"),
+            KnobSpec("Sway", "SWAY")
+        ),
+        "video_feedback" to listOf(
+            KnobSpec("Zoom", "ZOOM"),
+            KnobSpec("Rotation", "ROT"),
+            KnobSpec("HueShift", "HUE"),
+            KnobSpec("Decay", "DECAY")
+        ),
+        "hyperbolic_tiling" to listOf(
+            KnobSpec("Speed", "SPEED"),
+            KnobSpec("Drift", "DRIFT"),
+            KnobSpec("EdgeWidth", "EDGE"),
+            KnobSpec("Glow", "GLOW")
+        ),
         // Fractal Flame: the global handles that move every xform at once (one binding does what 6+ would otherwise)
         "fractal_flame" to listOf(
             KnobSpec("Magnify", "ZOOM"),   // not Zoom: that one morphs with the genome (stored 0..1, 0.5 = 1x, exponential already)

@@ -14,7 +14,7 @@ To remove the current source, click **Detach** or **None**.
 
 ## Built-In Generators
 
-Liquid LSD includes a curated suite of 18 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, and acoustic wavefields.
+Liquid LSD includes a curated suite of 23 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, and a set of light generators that run comfortably on integrated graphics.
 
 The raymarchers (Icosa-H3, Gyroid Hyperspace, 4D Hyper-Slice, Nebula Volume and the fractals below) show a warning triangle in the browser: they are GPU-intensive and can run slowly on integrated graphics. The fractals are tuned for a mid-range discrete GPU (an RTX A2000 or better); every one has a **Quality** knob, and lowering it is the first thing to try if a deck stutters.
 
@@ -198,6 +198,55 @@ A continuous cellular automaton on a persistent 256 x 256 grid. A smooth ring ke
 - **Growth Center, Growth Width**: The growth rule. Narrow widths at a high centre can kill the pattern; reseed if the field goes dark.
 - **Kernel Radius**: Neighbourhood size, 5 to 13 cells; larger is bigger structures and costs more.
 - **Sim Speed, Seed Density, Reseed**: Time step per frame, amount of seed material and a latch that reseeds when crossed.
+
+### Quasicrystal (`quasicrystal`)
+
+Five to eight rotated cosine gratings with drifting phases add up to Penrose-like quasi-periodic patterns. Light enough for integrated graphics, like the other generators in this group (no GPU-intensive triangle).
+
+- **Gratings**: How many gratings, 5 to 8. Six gives a plain hexagonal lattice rather than a quasi-periodic one.
+- **Style, Palette**: Smooth, banded, two-tone or neon-line rendering, and four cosine palettes.
+- **Frequency, Bands, Sharpness**: Detail scale, number of contour bands and edge hardness.
+- **Rotation, Spin Speed, Drift Speed**: Static rotation, continuous spin and phase drift. Negative speeds reverse.
+- **Quality**: From half up, 2 x 2 supersampling.
+
+### Thin Film (`thin_film`)
+
+Oil-slick iridescence. A slowly flowing, domain-warped noise field is read as the thickness of a thin film and coloured by interference, with a shift by view angle and a specular sheen.
+
+- **Flow Speed, Scale, Turbulence**: How fast, how large and how marbled the flow is.
+- **Film Thickness, Thickness Range, Contrast**: Where in the colour sequence the film sits, how much it varies, and how strongly the relief bends the colours.
+- **Sheen**: Strength of the highlight.
+- **Quality**: Noise octaves, 1 to 4.
+
+### Tunnel Scenes (`tunnel_scenes`)
+
+Three analytic tunnel flythroughs with no ray marching.
+
+- **Scene**: A synthwave grid floor and ceiling with a horizon sun, a Truchet-tiled tunnel, or an N-sided wormhole.
+- **Sides**: Number of sides of the wormhole, 3 to 12.
+- **Speed, Twist, Camera Sway**: Forward speed (negative reverses), spiral twist, and camera drift.
+- **Glow, Fog, Line Width**: Line glow, distance fade and line thickness.
+- **Quality**: Layer count and antialiasing width.
+
+### Video Feedback (`video_feedback`)
+
+Classic video feedback as a generator. A small persistent frame is re-sampled each frame with zoom, rotation and drift, decayed, hue-shifted and re-fed with moving seed shapes, giving endless tunnels, spirals and trails.
+
+- **Zoom, Rotation, Hue Shift**: Per-second change applied to the previous frame; negative values reverse.
+- **Decay**: How quickly trails fade.
+- **Seed Shape, Seed Size, Drift**: The shape fed into the loop (ring, polygon, spinning line, soft blob), its size, and the wandering of the whole image.
+- **Quality**: Blur taps in the loop.
+- The buffer is square, so on a widescreen output about half of its height is visible.
+
+### Hyperbolic Tiling (`hyperbolic_tiling`)
+
+A Poincare-disk {P,Q} tiling built by mirror folds, in the manner of Escher's Circle Limit prints, with edge glow and a drifting view.
+
+- **Tile Sides P, Tiles Per Vertex Q**: The tiling, 3 to 10 each. If the pair is not hyperbolic, Q is raised to the nearest valid value (3,3 shows 3,7).
+- **Speed, Drift, Spin**: View movement across the disk and rotation of the tiling.
+- **Edge Width, Glow, Subdivision Lines**: Edge styling.
+- **Color Mode, Outside Disk**: Tile colouring and what fills outside the disk.
+- **Quality**: Cap on fold iterations.
 - **Relief, Zoom, Color Mode**: Embossed lighting, magnification, four colourings.
 
 ### Fractal Flame (`fractal_flame`, experimental)
