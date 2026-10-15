@@ -4,6 +4,7 @@ precision highp float;
 {
     "DESCRIPTION": "Raymarched 3D cross-section MRI scan through 4D 120-cell and 600-cell polychora via H4 Coxeter domain folding with 4D hyper-rotations and Wythoff facet morphing.",
     "CREDIT": "Liquid LSD",
+    "LSD_COST": 3,
     "ISFVSN": "2.0",
     "is3D": true,
     "CATEGORIES": [

@@ -4,6 +4,7 @@ precision highp float;
 {
     "DESCRIPTION": "Raymarched Triply Periodic Minimal Surfaces (TPMS) with continuous morphing between Gyroid, Schwarz P, and Neovius minimal surfaces, volumetric internal glow, and 3D camera flight.",
     "CREDIT": "Liquid LSD",
+    "LSD_COST": 3,
     "ISFVSN": "2.0",
     "is3D": true,
     "CATEGORIES": [
