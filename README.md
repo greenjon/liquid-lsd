@@ -8,7 +8,7 @@ Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ per
 
 - **4-Deck Visual Engine**: Independent visual decks for live output (**Deck A** and **Deck B**), a background compositor layer (**Deck BG**), and an offline audition deck (**Deck PV**) for previewing and tweaking presets live without affecting stage output.
 - **100% ISF 2.0 Shader Pipeline**: Native Interactive Shader Format (ISF 2.0) engine for visual generators, filters, and transitions. Includes an automated compatibility bridge for importing Shadertoy (`mainImage`) and GLSLSandbox shaders without code edits.
-- **Multi-Slot Deck & Master FX Chains**: 4-slot serial ISF FX chains per deck plus a 4-slot serial Master FX post-processing stage (bloom, CRT glitch, color correction, spatial distortion) operating across the final composite output.
+- **Multi-Slot Deck & Master FX Chains**: 3-slot serial ISF FX chains per deck plus a 3-slot serial Master FX post-processing stage (bloom, CRT glitch, color correction, spatial distortion) operating across the final composite output.
 - **Modular Transitions & Setlist Queue**: ISF transition engine (Deck A $\leftrightarrow$ Deck B), custom transition presets (`.lsdtrans`), setlists (`.lsdtransplay`), auto-advance transition queue, and VJ crossfader controls.
 - **Low-Latency Audio & Beat Sync**: Real-time audio analysis via JACK / PipeWire-JACK (Linux) or cross-platform Java Sound fallback (macOS/Windows/Linux). Features an Adam Stark-based beat tracking engine with a continuous phase generator and Ableton Link network clock sync.
 - **Hierarchical CV Modulation Matrix**: Route real-time audio amplitude bands (Bass/Mid/High), onset triggers, beat clock phases, LFOs, and sample-and-hold generators to any visual parameter.
@@ -16,7 +16,7 @@ Liquid LSD is an open-source, real-time procedural visual synthesizer and VJ per
 - **Hardware & MIDI Control**: Multi-type MIDI engine (Notes, CC, Pitch Bend, Soft Takeover, Relative Rotary Encoders), centralized `ShortcutManager` for keyboard shortcuts, preset tagging & search, and 3-tier hierarchical set notes (`NotesManager`).
 - **Stage Interoperability & Recording**: Zero-copy GPU video streaming (Spout2 on Windows, Syphon on macOS, PipeWire DMA-BUF on Linux), video device/OBS ingest, high-performance asynchronous GPU PBO video export/recording pipeline (`PboReadbackPipeline`), and WebGL2 live web broadcast relay.
 - **FX Playlists & A/B FX Queues**: Unified FX browser (ISF stock filters, saved `.lsdfx` singles, saved `.lsdfxchain` 3-slot chains) with deterministic apply, curated FX playlists (`.lsdfxplay`), and volatile live FX queues for A/B and BG with shuffle, repeat, and history back-stepping.
-- **Perform View & Macro Controls**: The main view is a 4×4 macro knob matrix spanning per-deck banks (Deck A/B/BG/PV, their FX, Transitions, Master, and free Global knobs) with color-coded rows and two tabs (Decks, Master — with a tap-tempo/resync Clock row), plus Edit for every parameter and modulator. Knob bindings and response curves are edited in Mixer column's MACROS view.
+- **Perform View & Macro Controls**: The main view is a 4×4 macro knob matrix spanning per-deck banks (Deck A/B/BG/PV, their FX, Transitions, Master, and a tap-tempo/resync Clock row) with color-coded rows and three pages (A/B, BG/PV, MIXER), plus Edit for every parameter and modulator. Knob targets and response curves are edited in each row's Edit.
 
 ---
 
@@ -207,7 +207,7 @@ library/                 User-loadable dynamic assets
   transitions/           ISF transition filters & .lsdtrans presets
   transition_playlists/  .lsdtransplay transition setlists
   fx/                    .lsdfx single-slot FX presets
-  fx_chains/             .lsdfxchain 4-slot FX chain presets
+  fx_chains/             .lsdfxchain 3-slot FX chain presets
 
 docs/                    MkDocs documentation sources
 ```

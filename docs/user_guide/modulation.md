@@ -6,7 +6,7 @@ Modulation is how you make your visuals react to music, touch, MIDI, oscillators
 
 ## The CV Grid
 
-The CV grid is the middle column of **Edit** (open a row's chevron in the Perform view, or click a deck monitor in the Mixer). It's a matrix:
+The CV grid is the middle column of **Edit** (open a row's chevron in the Perform view, or click a deck monitor in the Mixer and press **Parameters**). It's a matrix:
 
 - **Rows** = visual parameters (Lobes, Zoom, Hue, Feedback Decay, etc.)
 - **Columns** = modulation sources (manual value, MIDI, LFO, Sequencer, Audio)

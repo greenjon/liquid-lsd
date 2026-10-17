@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Output Monitor Choice (`ui/OutputMonitors.kt`, `ui/MenuBar.kt`, `Main.kt`)
+- **New Output → Output Monitor menu** picks which screen the secondary output window fills. **Automatic** keeps the old behaviour (the first monitor that is not primary); naming a monitor fixes setups where that guess is wrong, notably Wayland, where the output could jump to the laptop screen instead of the projector. The choice is saved by monitor name and the output reopens at once if it is already running.
+- Internal: `outputMonitorName` in `AppPreferences` and `AppPreferencesStore`; `OutputMonitors` lists and resolves GLFW monitors.
+
 ### Eleven More Light Generators (`library/sources/{cyclic_ca,metaballs,wave_ripples,harmonograph,aurora_ribbons,isometric_voxels,halftone_matrix,kali_set,girih_stars,glitch_blocks,voronoi_cells}/`)
 - **Eleven more generators for integrated graphics, on desktop and web.** **Cyclic CA** (self-organising spirals), **Metaballs**, **Wave Ripples** (interference of orbiting wave sources), **Harmonograph** (a glowing oscilloscope curve), **Aurora Ribbons**, **Isometric Voxels** (a Q*bert-style cube field), **Halftone Matrix** (dots, LED pixels and CMYK screens), **Kali Set** (an inversion-fold fractal), **Girih Stars** (Islamic strapwork), **Glitch Blocks** and **Voronoi Cells**. None carries the GPU-intensive triangle.
 - **Costs on an Intel UHD at 1080p range from about 4 to 20 ms.** Aurora Ribbons and Halftone Matrix are the heaviest; lower their Quality first. Harmonograph evaluates its curve once into a small lookup strip and skips segments far from each pixel, and Metaballs has smooth glossy shading with a cheaper default Quality. Cyclic CA needs a few seconds to form its spirals, and Glitch Blocks reshuffles its sequence when you change Glitch Rate.

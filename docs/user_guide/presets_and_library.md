@@ -49,7 +49,7 @@ The prompt above is for loads you start yourself. If Auto-VJ switches presets wh
 
 ## The Library Panel
 
-The Library panel spans the left and middle columns. That column has three views:
+The Library panel spans the left and middle columns. That column has four views:
 
 - **Perform** — The Performance rows sit above the Library, which fills the rest of the window. This is the everyday view for playing a set.
 - **Edit** — Open a row's **Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Press **Esc** or click the row's **Collapse** button to get back to Perform.

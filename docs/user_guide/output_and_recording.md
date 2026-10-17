@@ -12,6 +12,8 @@ To make the whole window fullscreen with the normal UI still showing, press **`F
 
 For a second display or projector, use **Preferences → Video & Display** to configure a secondary output window you can drag to the projector screen and go fullscreen there independently.
 
+**Choosing the output screen:** the **Output → Secondary Output Window** item fills one monitor. By default (**Output → Output Monitor → Automatic**) that is the first monitor that is not the system's primary one. If the video lands on the wrong screen, which can happen on Wayland where there is no true primary monitor, pick your projector under **Output → Output Monitor**. The choice is remembered by monitor name.
+
 **Output scaling:**
 - If your shaders are demanding and your GPU is struggling (especially on a laptop), lower the internal render resolution in **Preferences → Video & Display**. Dropping from 1080p to 720p or 540p cuts GPU load significantly while the output still fills the screen.
 - Use **Fit / Fill / Stretch** to handle non-standard aspect ratios — useful for LED walls or vintage 4:3 projectors.

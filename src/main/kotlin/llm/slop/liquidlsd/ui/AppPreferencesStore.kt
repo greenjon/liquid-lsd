@@ -263,6 +263,7 @@ object AppPreferencesStore {
                 props.getProperty("outputScaleMode")?.let { saved ->
                     UITheme.outputScaleMode = try { UITheme.OutputScaleMode.valueOf(saved) } catch (e: Exception) { UITheme.OutputScaleMode.FIT }
                 }
+                props.getProperty("outputMonitorName")?.let { UITheme.outputMonitorName = it }
                 props.getProperty("recordingDirectory")?.let { UITheme.recordingDirectory = it }
                 props.getProperty("utilitySettingsDirectory")?.let { UITheme.utilitySettingsDirectory = it }
                 props.getProperty("controllerProfileChoices")?.let { saved ->
@@ -369,6 +370,7 @@ object AppPreferencesStore {
             props.setProperty("customRenderWidth", UITheme.customRenderWidth.toString())
             props.setProperty("customRenderHeight", UITheme.customRenderHeight.toString())
             props.setProperty("outputScaleMode", UITheme.outputScaleMode.name)
+            props.setProperty("outputMonitorName", UITheme.outputMonitorName)
             props.setProperty("recordingDirectory", UITheme.recordingDirectory)
             props.setProperty("utilitySettingsDirectory", UITheme.utilitySettingsDirectory)
             props.setProperty("controllerProfileChoices", kotlinx.serialization.json.Json.encodeToString(UITheme.controllerProfileChoices))

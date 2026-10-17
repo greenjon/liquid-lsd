@@ -63,6 +63,8 @@ data class AppPreferences(
     val customRenderHeight: Int = 1080,
     val outputScaleMode: UITheme.OutputScaleMode = UITheme.OutputScaleMode.FIT,
     val recordingDirectory: String = "",
+    /** GLFW name of the monitor the secondary output window fills (see [OutputMonitors]); blank = automatic. */
+    val outputMonitorName: String = "",
     /** Folder last used to save a controller utility settings file (see [MidiPreferencesPanel]); blank = the home folder. */
     val utilitySettingsDirectory: String = "",
     /** Controller profile the user picked per device (device name without its port suffix -> profile id); absent = automatic. */

@@ -118,6 +118,28 @@ class MenuBar(
                         }
                         itemTooltip("Toggle secondary / external video output window (e.g. for projector or OBS window capture).")
 
+                        if (ImGui.beginMenu("Output Monitor")) {
+                            val chosen = session.uiTheme.outputMonitorName
+                            val monitors = OutputMonitors.list()
+                            var picked: String? = null
+                            if (ImGui.menuItem("Automatic", "", chosen.isBlank())) picked = ""
+                            itemTooltip("Use the first monitor that is not the system's primary one.")
+                            for (m in monitors) {
+                                val label = "${m.name}  (${m.width}x${m.height})"
+                                if (ImGui.menuItem(label, "", chosen == m.name)) picked = m.name
+                            }
+                            itemTooltip("Which screen the secondary output window fills. If the video lands on the wrong screen, pick the projector here.")
+                            if (picked != null && picked != chosen) {
+                                session.uiTheme.outputMonitorName = picked
+                                if (isOutOpen) {
+                                    // Reopen on the newly chosen monitor.
+                                    onToggleOutputWindow()
+                                    onToggleOutputWindow()
+                                }
+                            }
+                            ImGui.endMenu()
+                        }
+
                         if (ImGui.menuItem("Record Output (REC)", "Ctrl+R", isRec)) {
                             if (isRec) {
                                 llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()

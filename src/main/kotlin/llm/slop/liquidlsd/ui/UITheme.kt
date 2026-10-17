@@ -269,6 +269,9 @@ object UITheme {
         get() = settings.outputScaleMode
         set(value) { settings = settings.copy(outputScaleMode = value) }
 
+    var outputMonitorName: String
+        get() = settings.outputMonitorName
+        set(value) { settings = settings.copy(outputMonitorName = value) }
     var recordingDirectory: String
         get() = settings.recordingDirectory
         set(value) { settings = settings.copy(recordingDirectory = value) }

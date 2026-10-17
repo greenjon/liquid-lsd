@@ -1,29 +1,33 @@
 /* Liquid LSD — Static Site & Documentation Stylesheet */
 :root {
-  --bg-primary: #0a0d14;
-  --bg-surface: #121722;
-  --bg-card: #181f2e;
-  --bg-card-hover: #222b3d;
-  --border-color: #263044;
-  --border-focus: #00d2ff;
-  
-  --text-main: #f1f5f9;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-  
-  --accent-cyan: #00d2ff;
-  --accent-cyan-glow: rgba(0, 210, 255, 0.25);
-  --accent-purple: #a855f7;
-  --accent-green: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-rose: #f43f5e;
+  /* Palette borrowed from mutantfest.org: forest green, periwinkle violet, lavender cards */
+  --bg-page: #365d33;
+  --bg-primary: #7a66ff;
+  --bg-surface: #d5dbee;
+  --bg-card: #e3eafd;
+  --bg-card-hover: #eef2ff;
+  --border-color: #7a66ff;
+  --border-focus: #d9742d;
 
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif;
+  --text-main: #360b00;
+  --text-muted: #4a2a20;
+  --text-dim: #6b4a40;
+
+  --accent-cyan: #4a76ff;
+  --accent-cyan-glow: rgba(74, 118, 255, 0.25);
+  --accent-purple: #7a66ff;
+  --accent-green: #9bf3d1;
+  --accent-amber: #fcb900;
+  --accent-rose: #cc2753;
+  --accent-orange: #d9742d;
+  --ink: #360b00;
+
+  --font-sans: "Roboto", -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Helvetica, Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+
+  --radius-sm: 999px;
+  --radius-md: 28px;
+  --radius-lg: 40px;
   --container-max: 1200px;
 }
 
@@ -1150,3 +1154,82 @@ pre:hover .copy-btn {
 }
 .github-callout h3 { margin-bottom: 6px; }
 .github-callout .btn { margin: 12px 8px 0 0; }
+
+
+/* ---- mutantfest-style theme: green page, one violet column, lavender rounded cards ---- */
+body { background: var(--bg-page); color: var(--text-main); }
+.site-header, .hero-section, .features-section, .media-section, .download-section, .docs-section, .site-footer {
+  max-width: 1240px;
+  margin-left: auto;
+  margin-right: auto;
+  background: var(--bg-primary);
+  border: 0;
+  color: #fff;
+}
+.site-header {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-radius: 0 0 40px 40px;
+}
+.site-footer { border-radius: 40px 40px 0 0; margin-top: 1.5rem; }
+.site-header a, .site-footer a, .brand-text, .hero-title, .hero-tagline,
+.section-title, .section-heading p, .site-footer p, .site-footer h4 { color: #fff; }
+.site-header a:hover, .site-footer a:hover { color: var(--accent-green); }
+.accent-text, .gradient-text {
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  color: var(--accent-green);
+}
+.hero-section { padding-bottom: 2rem; }
+.hero-title { font-weight: 900; }
+.brand-text, .hero-title, .section-title { text-transform: uppercase; letter-spacing: 0.02em; }
+
+.btn { border: 4px solid var(--bg-card); font-weight: 700; box-shadow: none; }
+.btn:hover { transform: translateY(-2px); }
+.btn-primary { background: var(--accent-orange); color: var(--ink) !important; }
+.btn-primary:hover { background: #ec8640; }
+.btn-secondary { background: var(--bg-card); color: var(--ink) !important; }
+.btn-outline { background: transparent; color: #fff !important; border-color: #fff; }
+.btn-outline:hover { background: rgba(255, 255, 255, 0.15); }
+
+.feature-card, .doc-box, .download-card, .video-container-card {
+  background: var(--bg-card);
+  color: var(--ink);
+  border: 6px solid var(--bg-primary);
+  outline: 0;
+  box-shadow: none;
+}
+.feature-card h3, .doc-box h3, .download-content h2, .download-content h3 { color: var(--ink); }
+.feature-card h3, .doc-box h3, .download-content h2 { color: var(--accent-cyan); }
+.feature-card p, .doc-box p, .download-content p { color: var(--ink); }
+.feature-card:hover, .doc-box:hover { background: var(--bg-card-hover); }
+.feature-card a, .doc-box a, .download-card a:not(.btn):not(.download-tile) { color: var(--accent-cyan); font-weight: 700; }
+
+.download-tile {
+  background: var(--bg-surface);
+  color: var(--ink);
+  border: 4px solid var(--bg-primary);
+  box-shadow: none;
+}
+.download-tile:hover, .download-tile:focus-visible { border-color: var(--accent-orange); }
+.download-tile.recommended { background: var(--accent-orange); border-color: var(--ink); box-shadow: none; }
+.download-tile.recommended span { opacity: 1; }
+.github-callout { border-top: 4px solid var(--bg-surface); }
+.github-callout .btn-outline { color: var(--ink) !important; border-color: var(--bg-primary); }
+.github-callout .btn-secondary { background: var(--bg-primary); color: #fff !important; border-color: var(--bg-primary); }
+
+.hero-badge, .tech-pill, .section-sub {
+  background: var(--bg-card);
+  color: var(--ink);
+  border: 3px solid var(--bg-surface);
+  font-weight: 700;
+}
+.tech-pill:nth-child(even) { background: var(--accent-green); }
+.section-sub { display: inline-block; padding: 0.1rem 0.9rem; border-radius: 999px; }
+.badge-dot { background: var(--accent-orange); box-shadow: none; }
+.hero-section, .features-section, .media-section, .download-section, .docs-section { border-bottom: 0; }
+.site-header .nav-links a:not(.btn) { color: #fff; font-weight: 500; }
+.site-header .nav-links a:not(.btn):hover { color: var(--accent-green); }
+.site-footer .footer-inner a { color: #fff; text-decoration: underline; }
+.site-header .nav-icon-link, .site-header .nav-icon-link svg { color: #fff; fill: #fff; }
+.site-footer a { color: #fff; }

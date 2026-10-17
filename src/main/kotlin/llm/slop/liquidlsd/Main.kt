@@ -8,6 +8,7 @@ import llm.slop.liquidlsd.rendering.Renderer
 import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.OutputMonitors
 import llm.slop.liquidlsd.ui.UIManager
 import llm.slop.liquidlsd.audio.AudioEngine
 import llm.slop.liquidlsd.ui.UITheme
@@ -274,7 +275,7 @@ fun main(args: Array<String>) {
         session = session,
         onToggleOutputWindow = {
             if (secondaryWindow == 0L) {
-                secondaryWindow = createSecondaryWindow(window)
+                secondaryWindow = createSecondaryWindow(window, session.uiTheme.outputMonitorName)
             } else {
                 destroySecondaryWindow(secondaryWindow)
                 secondaryWindow = 0L
@@ -351,9 +352,9 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.audio.MidiJackWatchdog.start()
 
     // Auto-detect and open secondary window on startup ONLY if an external monitor is found
-    val initialExternalMonitor = getExternalMonitor()
+    val initialExternalMonitor = getExternalMonitor(session.uiTheme.outputMonitorName)
     if (initialExternalMonitor != null) {
-        secondaryWindow = createSecondaryWindow(window)
+        secondaryWindow = createSecondaryWindow(window, session.uiTheme.outputMonitorName)
     }
 
     // Setup key callback chaining to allow configurable shortcuts via ShortcutManager
@@ -732,19 +733,15 @@ private fun getGlfwErrorDescription(): String {
     }
 }
 
-private fun getExternalMonitor(): Long? {
-    val monitors = glfwGetMonitors() ?: return null
-    val primary = glfwGetPrimaryMonitor()
-    for (i in 0 until monitors.limit()) {
-        val m = monitors.get(i)
-        if (m != primary) {
-            return m
-        }
+private fun getExternalMonitor(preferredName: String): Long? {
+    val monitors = OutputMonitors.list()
+    monitors.forEachIndexed { i, m ->
+        logger.info { "Monitor $i: '${m.name}' ${m.width}x${m.height}${if (m.isPrimary) " (GLFW primary)" else ""}" }
     }
-    return null
+    return OutputMonitors.resolve(preferredName)?.handle
 }
 
-private fun createSecondaryWindow(primaryWindow: Long): Long {
+private fun createSecondaryWindow(primaryWindow: Long, preferredMonitorName: String): Long {
     // Save current window hints, then reset them to default
     glfwDefaultWindowHints()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3)
@@ -756,7 +753,7 @@ private fun createSecondaryWindow(primaryWindow: Long): Long {
     glfwWindowHintString(GLFW_X11_INSTANCE_NAME, "liquid-lsd")
     glfwWindowHintString(GLFW_WAYLAND_APP_ID, "liquid-lsd")
 
-    val externalMonitor = getExternalMonitor()
+    val externalMonitor = getExternalMonitor(preferredMonitorName)
     if (externalMonitor != null) {
         val mode = glfwGetVideoMode(externalMonitor) ?: return 0L
         glfwWindowHint(GLFW_AUTO_ICONIFY, GLFW_FALSE)
