@@ -66,3 +66,4 @@ Midi Fighter Twister - User Guide*.pdf
 
 # Sample flame files for developing the importer (not for the repo)
 temp-flames/
+tour/*.wav

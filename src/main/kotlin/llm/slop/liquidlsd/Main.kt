@@ -134,6 +134,7 @@ fun main(args: Array<String>) {
         UITheme.maxFps = 60
         UITheme.flameBudgetMs = 0f
         UITheme.lockCursorOnKnobDrag = false
+        UITheme.manualLoadDirtyBehavior = UITheme.ManualLoadDirtyBehavior.DISCARD // a dirty-deck prompt would block the scripted UI
         UITheme.checkUpdatesOnStartup = false
         val script = llm.slop.liquidlsd.tour.TourScript.parse(java.io.File(cliArgs.tourScript!!).readText())
         llm.slop.liquidlsd.utils.DeterministicRandom.seed(script.seed)
