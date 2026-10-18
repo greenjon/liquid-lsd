@@ -19,15 +19,19 @@ private val logger = KotlinLogging.logger {}
  * [beginFrame] -> (app render + UI, with [injectInput]/[drawOverlay] hooks inside UIManager) -> [endFrame]
  * (sync read of FBO 0, hash, pipe to ffmpeg). Nothing here reads wall-clock time except the timing statistics.
  */
-class TourRunner(private val script: TourScript, private val outFile: File, dump: String? = null, private val scriptDir: File = File(".")) {
+class TourRunner(
+    private val script: TourScript,
+    private val outFile: File,
+    dump: String? = null,
+    private val scriptDir: File = File("."),
+    private val options: TourOptions = TourOptions()
+) {
     /** Set by Main once the mixer exists (scripted deck actions need it). */
     var mixer: llm.slop.liquidlsd.rendering.Mixer? = null
     /** Set by UIManager with the tour: scripted view actions (focus pair, Params, tabs) go through it. */
     var parametersState: llm.slop.liquidlsd.ui.ParametersState? = null
     private var audio: TourAudioFeeder? = null
     companion object {
-        const val FPS = 60
-        private const val DT = 1.0 / FPS
         private const val CLICK_HOLD_SEC = 0.12
         private const val RIPPLE_SEC = 0.45
         private const val HIGHLIGHT_LINGER_SEC = 0.9
@@ -47,7 +51,9 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         const val WARMUP_FRAMES = 10
     }
 
-    val totalFrames = (script.length * FPS).toInt()
+    private val fps = options.fps
+    private val DT = 1.0 / fps
+    val totalFrames = (script.length * fps).toInt()
     var frame = 0
         private set
     val isDone get() = frame >= totalFrames
@@ -84,8 +90,8 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
 
     val cues: List<Cue> by lazy {
         val captioned = steps.filter { it.caption != null }
-        captioned.withIndex().filter { it.value.caption!!.isNotBlank() }.map { (i, s) ->
-            Cue(s.t, captioned.getOrNull(i + 1)?.t ?: script.length, s.caption!!)
+        captioned.withIndex().filter { it.value.caption!!.isNotBlank() && it.value.t < script.length }.map { (i, s) ->
+            Cue(s.t, minOf(captioned.getOrNull(i + 1)?.t ?: script.length, script.length), s.caption!!)
         }
     }
 
@@ -98,6 +104,10 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     private var startNs = 0L
     private var maxFrameMs = 0.0
     private var awaitNs = 0L
+    private var readNs = 0L
+    private var hashNs = 0L
+    private var pushNs = 0L
+    private var appNs = 0L
     private var maxBass = 0f
     private var maxFft = 0f
     private val fftProbe = FloatArray(512)
@@ -134,7 +144,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         llm.slop.liquidlsd.audio.AudioEngine.resetForOfflineFeed(script.bpm.toFloat(), TimeSource.getTimeNanos())
         script.audio?.let { name ->
             val f = File(name).let { if (it.isAbsolute) it else File(scriptDir, name) }
-            audio = TourAudioFeeder(f, TimeSource.getTimeNanos())
+            audio = TourAudioFeeder(f, TimeSource.getTimeNanos(), fps)
         }
         startNs = System.nanoTime()
         lastFrameNs = startNs
@@ -449,13 +459,41 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         }
         val cx = tx.coerceIn(12f, sw - 12f - w)
         val cy = ty.coerceIn(12f, sh - 12f - h)
-        if (boxX.isNaN()) { boxX = cx; boxY = cy } else { boxX += (cx - boxX) * 0.2f; boxY += (cy - boxY) * 0.2f }
+        // Glide: 20% of the way per 1/60 s, whatever the frame rate.
+        val k = 1f - Math.pow(0.8, DT * 60.0).toFloat()
+        if (boxX.isNaN()) { boxX = cx; boxY = cy } else { boxX += (cx - boxX) * k; boxY += (cy - boxY) * k }
         val dl = ImGui.getForegroundDrawList()
         dl.addRectFilled(boxX, boxY, boxX + w, boxY + h, 0xFF1C1A18.toInt(), 8f)
         dl.addRect(boxX, boxY, boxX + w, boxY + h, 0xFF3C9CFF.toInt(), 8f, 0, 2f)
         for ((i, line) in captionLines.withIndex()) {
             dl.addText(font, CAPTION_SIZE.toInt(), boxX + CAPTION_PAD_X, boxY + CAPTION_PAD_Y + i * lineH, 0xFFFFFFFF.toInt(), line)
         }
+    }
+
+    private var outW = 0
+    private var outH = 0
+    private var downFbo = 0
+    private var downTex = 0
+
+    private fun createDownscaleTarget() {
+        downTex = org.lwjgl.opengl.GL11.glGenTextures()
+        org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, downTex)
+        org.lwjgl.opengl.GL11.glTexImage2D(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, 0, org.lwjgl.opengl.GL11.GL_RGBA8, outW, outH, 0, org.lwjgl.opengl.GL11.GL_RGBA, org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE, 0L)
+        org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, 0)
+        downFbo = org.lwjgl.opengl.GL30.glGenFramebuffers()
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER, downFbo)
+        org.lwjgl.opengl.GL30.glFramebufferTexture2D(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER, org.lwjgl.opengl.GL30.GL_COLOR_ATTACHMENT0, org.lwjgl.opengl.GL11.GL_TEXTURE_2D, downTex, 0)
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER, 0)
+    }
+
+    /** With a scale below 1, blits the window (FBO 0) into the small target with linear filtering; returns the FBO to read. */
+    private fun downscaleToFbo(): Int {
+        if (downFbo == 0) return 0
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_READ_FRAMEBUFFER, 0)
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_DRAW_FRAMEBUFFER, downFbo)
+        org.lwjgl.opengl.GL30.glBlitFramebuffer(0, 0, frameW, frameH, 0, 0, outW, outH, org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT, org.lwjgl.opengl.GL11.GL_LINEAR)
+        org.lwjgl.opengl.GL30.glBindFramebuffer(org.lwjgl.opengl.GL30.GL_FRAMEBUFFER, 0)
+        return downFbo
     }
 
     /** Reads FBO 0 after the UI has been drawn and before the buffer swap. */
@@ -468,24 +506,42 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         if (pipe == null) {
             frameW = fbW
             frameH = fbH
+            // Even dimensions for yuv420p.
+            outW = (Math.round(fbW * options.scale) / 2 * 2).coerceAtLeast(2)
+            outH = (Math.round(fbH * options.scale) / 2 * 2).coerceAtLeast(2)
+            if (outW != fbW || outH != fbH) createDownscaleTarget()
             outFile.absoluteFile.parentFile?.mkdirs()
+            val encoder = when (options.encoder) {
+                "nvenc" -> "h264_nvenc"
+                "x264" -> null
+                else -> options.encoder // any ffmpeg encoder name
+            }
             val p = FFmpegProcessPipe(
-                VideoExportConfig(outFile, fbW, fbH, FPS, VideoCodec.H264, crf = 18, audioFile = script.audio?.let { n -> File(n).let { f -> if (f.isAbsolute) f else File(scriptDir, n) } }, forceSoftwareEncoder = true, padAudioToVideo = true)
+                VideoExportConfig(
+                    outFile, outW, outH, fps, VideoCodec.H264, crf = if (encoder == "h264_nvenc") 23 else 18,
+                    audioFile = script.audio?.let { n -> File(n).let { f -> if (f.isAbsolute) f else File(scriptDir, n) } },
+                    forceSoftwareEncoder = true, padAudioToVideo = true, encoder = encoder
+                )
             )
             check(p.start()) { "Failed to start ffmpeg: ${p.getRecentErrorLines(4)}" }
             pipe = p
-            pbo = PboReadbackPipeline(fbW, fbH)
-            logger.info { "Tour: capturing ${fbW}x$fbH, $totalFrames frames -> ${outFile.absolutePath}" }
+            pbo = PboReadbackPipeline(outW, outH)
+            println("TOUR_OUT ${outW}x$outH @ $fps fps, encoder ${encoder ?: "libx264"}, hashes ${if (options.hashes) "on" else "off"}, $totalFrames frames -> ${outFile.absolutePath}")
         }
         check(fbW == frameW && fbH == frameH) { "Tour: framebuffer size changed mid-render (${frameW}x$frameH -> ${fbW}x$fbH)" }
         maxBass = maxOf(maxBass, llm.slop.liquidlsd.cv.CVRegistry.get("audio_bass"))
         llm.slop.liquidlsd.audio.AudioEngine.copyAudioTextureData(fftProbe, waveProbe)
         for (v in fftProbe) if (v > maxFft) maxFft = v
-        val buf = pbo!!.readFrameSync(0)
-        digest.reset()
-        digest.update(buf)
-        buf.rewind()
-        hashes.append(frame).append(' ').append(digest.digest().joinToString("") { "%02x".format(it) }).append('\n')
+        val r0 = System.nanoTime()
+        appNs += r0 - lastFrameNs
+        val buf = pbo!!.readFrameSync(downscaleToFbo())
+        val r1 = System.nanoTime()
+        if (options.hashes) {
+            digest.reset()
+            digest.update(buf)
+            buf.rewind()
+            hashes.append(frame).append(' ').append(digest.digest().joinToString("") { "%02x".format(it) }).append('\n')
+        }
         dumpFrames?.let { d ->
             if (frame in d.first) {
                 val bytes = ByteArray(buf.remaining())
@@ -494,8 +550,10 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
                 File(d.second, "frame_$frame.rgba").writeBytes(bytes)
             }
         }
+        val r2 = System.nanoTime()
         pipe!!.pushFrame(buf)
         val n = System.nanoTime()
+        readNs += r1 - r0; hashNs += r2 - r1; pushNs += n - r2
         maxFrameMs = maxOf(maxFrameMs, (n - lastFrameNs) / 1e6)
         lastFrameNs = n
         frame++
@@ -506,13 +564,16 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         val ok = pipe?.finish() ?: false
         pbo?.dispose()
         val totalMs = (System.nanoTime() - startNs) / 1e6
-        File(outFile.path + ".hashes").writeText(hashes.toString())
+        if (options.hashes) File(outFile.path + ".hashes").writeText(hashes.toString())
+        if (downFbo != 0) { org.lwjgl.opengl.GL30.glDeleteFramebuffers(downFbo); org.lwjgl.opengl.GL11.glDeleteTextures(downTex) }
         val base = outFile.path.substringBeforeLast('.')
         writeVtt(File("$base.vtt"))
         writeSidecars(base)
         File("$base.keys").writeText(WidgetRegistry.keys().sorted().joinToString("\n", postfix = "\n"))
         val avg = totalMs / frame.coerceAtLeast(1)
         println(String.format(Locale.ROOT, "TOUR_DONE frames=%d total_ms=%.0f avg_ms=%.2f max_ms=%.1f ffmpeg_ok=%b await_ms=%.1f audio_bass_max=%.3f fft_max=%.3f", frame, totalMs, avg, maxFrameMs, ok, awaitNs / 1e6, maxBass, maxFft))
+        val n = frame.coerceAtLeast(1) * 1e6
+        println(String.format(Locale.ROOT, "TOUR_TIMING per frame ms: app+ui=%.2f readback=%.2f hash=%.2f encode_push=%.2f", appNs / n, readNs / n, hashNs / n, pushNs / n))
     }
 
     private fun ts(sec: Double): String {

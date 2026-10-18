@@ -20,7 +20,8 @@ data class CliArgs(
     val tourOut: String? = null,
     val tourHidden: Boolean = false,
     /** Debug: "<dir>:70,81" dumps those frames as raw RGBA for diffing determinism failures. */
-    val tourDump: String? = null
+    val tourDump: String? = null,
+    val tourOptions: llm.slop.liquidlsd.tour.TourOptions = llm.slop.liquidlsd.tour.TourOptions()
 ) {
     val tourMode: Boolean get() = tourScript != null
 
@@ -41,6 +42,8 @@ data class CliArgs(
             var tourOut: String? = null
             var tourHidden = false
             var tourDump: String? = null
+            var tourOptions = llm.slop.liquidlsd.tour.TourOptions()
+            var tourHashes = false
 
             var i = 0
             while (i < args.size) {
@@ -59,6 +62,11 @@ data class CliArgs(
                     arg.startsWith("--tour-out=") -> tourOut = arg.substringAfter("=").trim().ifEmpty { null }
                     arg == "--tour-hidden" -> tourHidden = true
                     arg.startsWith("--tour-dump=") -> tourDump = arg.substringAfter("=").trim().ifEmpty { null }
+                    arg == "--tour-draft" -> tourOptions = llm.slop.liquidlsd.tour.TourOptions.DRAFT
+                    arg.startsWith("--tour-fps=") -> arg.substringAfter("=").trim().toIntOrNull()?.let { tourOptions = tourOptions.copy(fps = it.coerceIn(10, 120)) }
+                    arg.startsWith("--tour-scale=") -> arg.substringAfter("=").trim().toFloatOrNull()?.let { tourOptions = tourOptions.copy(scale = it.coerceIn(0.1f, 1f)) }
+                    arg.startsWith("--tour-encoder=") -> tourOptions = tourOptions.copy(encoder = arg.substringAfter("=").trim().lowercase())
+                    arg == "--tour-hashes" -> tourHashes = true
                     arg == "--no-audio" -> {
                         noAudio = true
                     }
@@ -131,7 +139,8 @@ data class CliArgs(
                 tourScript = tourScript,
                 tourOut = tourOut,
                 tourHidden = tourHidden,
-                tourDump = tourDump
+                tourDump = tourDump,
+                tourOptions = if (tourHashes) tourOptions.copy(hashes = true) else tourOptions
             )
         }
 
@@ -148,9 +157,14 @@ Options:
   --screenshot-after-frames=<N> Number of frames to render before capture (default: 5)
   --window=<W>x<H>|maximized    Override startup window dimensions (e.g. 1920x1080 or maximized)
   --no-audio                    Bypass JACK and JavaSound audio engine initialization
-  --tour=<script.json>          Deterministic scripted tour render (fixed 60 fps clock, no audio/MIDI/OSC, nothing saved)
+  --tour=<script.json>          Deterministic scripted tour render (fixed simulated clock, no audio/MIDI/OSC, nothing saved)
   --tour-out=<file.mp4>         Output video for --tour (a .vtt caption file is written next to it)
   --tour-hidden                 Create the tour window hidden (experimental)
+  --tour-draft                  Fast preview: 30 fps, half size, NVENC, no frame hashes (same as the four options below)
+  --tour-fps=<n>                Simulated frame rate (default 60)
+  --tour-scale=<f>              Output size as a fraction of the 1920x1080 window, downscaled on the GPU (default 1)
+  --tour-encoder=x264|nvenc     Encoder (default x264: reproducible; nvenc: NVIDIA GPU, much faster)
+  --tour-hashes                 Write per-frame SHA-256 hashes (<out>.hashes) for determinism checks
   --ui-lab                      Launch isolated UI component gallery sandbox
 """.trimIndent())
         }

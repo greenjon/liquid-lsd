@@ -4,9 +4,12 @@ A deterministic, scripted render of the real UI for the walkthrough video, chapt
 
 ```
 ./gradlew run --args="--tour=scripts/tour_phase3_test.json --tour-out=/tmp/t/raw.mp4 --no-audio [--tour-hidden] [--tour-dump=<dir>:70,81]"
-scripts/render_tour.sh <script.json> <out-dir> [--tour-hidden]   # hero.mp4/.webm, poster, .vtt, captions.json, chapters.json, clips/
-scripts/tour_determinism_check.sh <script.json> --tour-hidden    # renders twice, compares per-frame SHA-256
+scripts/render_tour.sh --draft tour/tour.json tour/draft --tour-hidden   # while writing: ~2 min for the 5 min tour
+scripts/render_tour.sh [--webm] tour/tour.json tour/out --tour-hidden     # final: hero.mp4 (+ .webm), poster, .vtt, captions.json, chapters.json, clips/
+scripts/tour_determinism_check.sh <script.json> --tour-hidden [--tour-draft]   # renders twice, compares per-frame SHA-256
 ```
+
+Render settings come from the command line, not the script: `--tour-fps=<n>` (default 60), `--tour-scale=<f>` (the UI is always laid out at 1920x1080; the frame is shrunk on the GPU before readback, so targets never move), `--tour-encoder=x264|nvenc` (default x264), `--tour-hashes` (per-frame SHA-256, about 5 ms a frame at 1080p). `--tour-draft` = 30 fps, scale 0.5, NVENC, no hashes. On the dev laptop (RTX A2000) a final frame costs about 20 ms (app and UI about 6, hash 5, x264 4, readback 3) and a draft frame about 11 ms, at half the frame count. Drafts are deterministic too (raw and NVENC-encoded frames, checked on this machine). `TOUR_GL` names the GPU the app rendered on and `TOUR_TIMING` gives the per-frame breakdown. VP9 has no hardware encoder here, so `--webm` is opt-in and slow.
 
 Tour mode isolates itself: preferences are not read or written, MIDI/OSC/Link/watchers/live audio are off, `imgui.ini` is not used, real GLFW input is ignored, randomness comes from `DeterministicRandom(seed)`. Library contents are part of the input: pin a small curated library for the final render.
 

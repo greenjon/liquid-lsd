@@ -8,7 +8,7 @@ shift
 cd "$(dirname "$0")/.."
 OUT="$(mktemp -d)"
 for run in a b; do
-  ./gradlew run -q --args="--tour=$SCRIPT --tour-out=$OUT/$run.mp4 --no-audio $*" 2>&1 | grep -E "TOUR_DONE|TOUR_WARN|Exception|ERROR" || true
+  ./gradlew run -q --args="--tour=$SCRIPT --tour-out=$OUT/$run.mp4 --no-audio --tour-hashes $*" 2>&1 | grep -E "TOUR_DONE|TOUR_WARN|Exception|ERROR" || true
 done
 if cmp -s "$OUT/a.mp4.hashes" "$OUT/b.mp4.hashes"; then
   echo "DETERMINISTIC (raw frames): $(wc -l < "$OUT/a.mp4.hashes") frames identical (outputs in $OUT)"

@@ -38,7 +38,8 @@ data class VideoExportConfig(
     val audioFile: File? = null,
     val superSamplingFactor: Int = 1, // 1x = standard, 2x, 4x, 8x = motion blur accumulation
     val forceSoftwareEncoder: Boolean = false, // deterministic output: never pick a hardware encoder
-    val padAudioToVideo: Boolean = false // tour: keep the video length even when the audio track is shorter
+    val padAudioToVideo: Boolean = false, // tour: keep the video length even when the audio track is shorter
+    val encoder: String? = null // explicit ffmpeg encoder name; overrides the automatic choice
 )
 
 /**
@@ -149,7 +150,7 @@ class FFmpegProcessPipe(
     fun start(): Boolean {
         if (isRunning.get()) return true
 
-        val chosenEncoder = if (config.forceSoftwareEncoder) getBestSoftwareEncoder(config.codec) else getBestEncoder(config.codec)
+        val chosenEncoder = config.encoder ?: if (config.forceSoftwareEncoder) getBestSoftwareEncoder(config.codec) else getBestEncoder(config.codec)
         if (startWithEncoder(chosenEncoder)) {
             // Verify process didn't immediately exit due to missing GPU/driver
             Thread.sleep(50)

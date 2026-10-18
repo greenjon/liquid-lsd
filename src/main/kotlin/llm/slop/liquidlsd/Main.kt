@@ -131,7 +131,7 @@ fun main(args: Array<String>) {
         UITheme.startupBehavior = UITheme.StartupBehavior.EMPTY
         UITheme.midiEnabled = false
         UITheme.audioEngineEnabled = false
-        UITheme.maxFps = 60
+        UITheme.maxFps = cliArgs.tourOptions.fps
         UITheme.flameBudgetMs = 0f
         UITheme.lockCursorOnKnobDrag = false
         UITheme.manualLoadDirtyBehavior = UITheme.ManualLoadDirtyBehavior.DISCARD // a dirty-deck prompt would block the scripted UI
@@ -141,7 +141,7 @@ fun main(args: Array<String>) {
         llm.slop.liquidlsd.ui.FileSystemManager.synchronousScans = true
         llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.setAutoReloadEnabled(false)
         val scriptFile = java.io.File(cliArgs.tourScript!!).absoluteFile
-        llm.slop.liquidlsd.tour.TourRunner(script, java.io.File(cliArgs.tourOut ?: "tour.mp4"), cliArgs.tourDump, scriptFile.parentFile)
+        llm.slop.liquidlsd.tour.TourRunner(script, java.io.File(cliArgs.tourOut ?: "tour.mp4"), cliArgs.tourDump, scriptFile.parentFile, cliArgs.tourOptions)
     } else null
 
     if (cliArgs.helpRequested) {
@@ -282,6 +282,7 @@ fun main(args: Array<String>) {
 
     logger.info { "OpenGL Version: ${glGetString(GL_VERSION)}" }
     logger.info { "OpenGL Renderer: ${glGetString(GL_RENDERER)}" }
+    if (tour != null) println("TOUR_GL ${glGetString(GL_RENDERER)}") // which GPU renders matters for speed and for the hashes
 
     // Initialize Session Context
     val session = llm.slop.liquidlsd.SessionContext()

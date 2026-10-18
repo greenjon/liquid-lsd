@@ -113,7 +113,7 @@ class Renderer {
         source.shader.setUniform("FRAMEINDEX",   frameIdx)
         source.shader.setUniform("iFrame",       frameIdx)
         source.shader.setUniform("u_frame",      frameIdx)
-        val fps = if (TimeSource.isSimulated) 60.0f else try { imgui.ImGui.getIO().framerate } catch (_: Exception) { 60.0f }
+        val fps = if (TimeSource.isSimulated) (1.0 / TimeSource.getDeltaTimeSec()).toFloat() else try { imgui.ImGui.getIO().framerate } catch (_: Exception) { 60.0f }
         source.shader.setUniform("iFrameRate",   if (fps > 0f) fps else 60.0f)
 
         // Date derivation (zero allocation)

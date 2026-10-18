@@ -7,11 +7,11 @@ import java.nio.FloatBuffer
 
 /**
  * Feeds a decoded audio file to the analyzer in lockstep with the frame clock instead of the live callback.
- * At frame N every complete 512-sample block whose end is <= N * sampleRate / 60 has been processed, in order,
+ * At frame N every complete 512-sample block whose end is <= N * sampleRate / fps has been processed, in order,
  * so the result depends only on the file and the frame number (causal: no sample past the frame time is seen).
  * Past the end of the file, silence keeps the beat flywheel and envelopes running.
  */
-class TourAudioFeeder(file: File, private val originNs: Long) {
+class TourAudioFeeder(file: File, private val originNs: Long, private val fps: Int) {
     private val decoded = AudioDecoder.decodeAudioFile(file)
     private val sampleRate = decoded.sampleRate
     private val block = FloatArray(BLOCK)
@@ -19,7 +19,7 @@ class TourAudioFeeder(file: File, private val originNs: Long) {
     private var cursor = 0L
 
     fun feed(frame: Long) {
-        val target = frame * sampleRate.toLong() / FPS
+        val target = frame * sampleRate.toLong() / fps
         val samples = decoded.samples
         while (cursor + BLOCK <= target) {
             for (i in 0 until BLOCK) {
@@ -36,6 +36,5 @@ class TourAudioFeeder(file: File, private val originNs: Long) {
 
     companion object {
         const val BLOCK = 512
-        private const val FPS = 60L
     }
 }
