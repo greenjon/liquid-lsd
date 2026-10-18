@@ -24,7 +24,20 @@ matters; show adding/removing slots from the Super Knob. Draft mode for fast ite
    single click loads (vs. double-click / drag) in the bound Browse; verify determinism of click-triggered loads
    (handoff gap 7: only lightly tested, so run `tour_determinism_check.sh` on it).
 
-## Chapter roadmap
+## Decision (2026-10-18): overview + deep-dive videos
+One overview (6-7 min is fine, no hard limit) plus separate deep dives, each on the user-guide page it explains;
+the interactive tour page indexes chapters across all videos. Every video is its own deterministic script, so a UI
+change re-renders only the affected video.
+Lineup: 1 Overview (current tour, trimmed: Edit-view detail and some Super Knob detail move to deep dives; end with
+"where to go next"); 2 Modulation (LFO, Audio, Step; split into three if long); 3 FX chains (order, Super Knob /
+Metaknob, focus mode, master FX); 4 Mixing and transitions (crossfader, transitions, AUTO/fade time, clock);
+5 Library and presets (browse, save, queues, pair focus); 6 Hardware (MIDI learn, Twister, OSC; filmed insert or
+graphic for the Twister); 7 Output (second display, recording, web broadcast).
+Tooling: `tours/` with one script per video (move `tour/tour.json` to `tours/overview.json`); batch rendering in
+`render_tour.sh`; cross-video references (`{ch:<video>/<chapter>}` -> "the Modulation video", a link on the web);
+maybe a shared setup include later.
+
+## Chapter roadmap (overview; most items below move to the deep dives per the decision above)
 Current tour (about 5:10): 1 The window, 2 Decks and sources, 3 Knobs and crossfaders, 4 FX chains, 5 Edit view,
 6 Library and themes (also closes with the GPL line).
 
