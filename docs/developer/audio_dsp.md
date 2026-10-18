@@ -120,6 +120,17 @@ Beat detection and continuous modulation signal generation are handled by [`Beat
 
 ---
 
+## Shader Audio Texture Spectrum (`SpectrumAnalyzer.kt`)
+
+Row 0 of the 512x2 `audioFFT` / `iChannel0` texture (`AudioTexture.kt`) comes from [`SpectrumAnalyzer.kt`](file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/SpectrumAnalyzer.kt), not from the beat tracker (whose FFT is only run by an unused entry point). `AudioEngine.processAudio` pushes each block's mixed mono samples into it after the waveform tap.
+- **Transform:** newest 1024 samples, Hann window, radix-2 FFT, 512 linear bins (0 Hz to Nyquist; bin spacing sampleRate/1024).
+- **Scaling:** magnitude normalised so a full-scale sine is 1.0, then dB mapped -80..0 dB onto 0..1.
+- **Smoothing:** instant attack, one-pole release with a 0.08 s time constant computed from the block length, so it does not depend on the buffer size.
+- **Threading:** zero allocation; written on the audio thread into a double buffer and published by a volatile index; `copyAudioTextureData` copies on the render thread. No clock or random input, so a fixed feed gives identical output (tour renders rely on this); `resetForOfflineFeed` resets it.
+- **Cost:** about 19 microseconds per 512-frame block (measured on the dev machine).
+
+---
+
 ## Audio Hardware Discovery & UI Caching
 
 Querying audio devices via `AudioSystem.getMixerInfo()` and `AudioSystem.getMixer()` in Java Sound invokes native ALSA/OS audio layer introspection. Probing mixers inside the real-time ImGui render loop creates native memory allocations and file descriptor pressure that can lead to memory exhaustion (OOM).

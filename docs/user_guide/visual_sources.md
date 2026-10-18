@@ -428,6 +428,10 @@ Drop `.fs` (and optional `.vs`) shader files into the right folder:
 
 The app reads the ISF JSON header inside each shader file, automatically sets up parameter sliders in the Cell Config panel, and exposes those parameters to the CV modulation matrix. No configuration required.
 
+### Audio in your shaders
+
+Shaders can read the live audio through the `audioFFT` sampler (Shadertoy-style `iChannel0` is the same texture), a 512x2 single-channel texture. Row 0 (`y = 0.25`) is the spectrum: 512 bins from 0 Hz to half the sample rate, 0 to 1 on a decibel scale (full scale is 1, -80 dB is 0), with a quick decay so bars fall smoothly. Row 1 (`y = 0.75`) is the waveform, centred on 0.5. Example: `float level = texture(audioFFT, vec2(pow(uv.x, 2.0), 0.25)).r;` gives a bar height with more resolution at the low end.
+
 ### Marking a shader as GPU-intensive
 
 Heavy shaders (raymarchers, fractal folds with many iterations) can run slowly on integrated graphics. To warn users, add an optional `LSD_COST` key to the ISF header: `1` light, `2` medium, `3` heavy.

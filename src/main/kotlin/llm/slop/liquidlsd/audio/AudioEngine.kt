@@ -165,6 +165,7 @@ object AudioEngine {
     private val midBuffer   = FloatArray(16384)
     private val highBuffer  = FloatArray(16384)
     private val waveformHistory = llm.slop.liquidlsd.cv.CvHistoryBuffer(512)
+    private val spectrum = SpectrumAnalyzer()
 
     // ── Flywheel state ──────────────────────────────────────────────────────
     private var totalSamplesProcessed = 0L
@@ -210,6 +211,7 @@ object AudioEngine {
      */
     internal fun resetForOfflineFeed(bpm: Float, startTimeNs: Long) {
         lowPass.reset(); midPass.reset(); highPass.reset()
+        spectrum.reset()
         beatDetector.reset()
         totalSamplesProcessed = 0L
         totalBeats = 0.0
@@ -589,6 +591,7 @@ object AudioEngine {
         for (i in 0 until waveFrames) {
             waveformHistory.add(mixedBuffer[i])
         }
+        spectrum.process(mixedBuffer, safeFrames, sampleRate)
 
         // 4. RMS amplitudes per band
         val amp  = extractor.calculateRms(mixedBuffer, safeFrames)
@@ -712,7 +715,7 @@ object AudioEngine {
      * Thread-safe and zero-allocation for use by AudioTexture on Thread 0.
      */
     fun copyAudioTextureData(fftTarget: FloatArray, waveformTarget: FloatArray) {
-        beatDetector.engine.copyMagSpectrum(fftTarget)
+        spectrum.copyTo(fftTarget)
         waveformHistory.copyTo(waveformTarget)
     }
 

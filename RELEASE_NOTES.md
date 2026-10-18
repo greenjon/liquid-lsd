@@ -1,5 +1,11 @@
 ## [Unreleased]
 
+### Audio FFT Texture Now Live (`audio/SpectrumAnalyzer.kt`, `audio/AudioEngine.kt`)
+- **The `audioFFT` / `iChannel0` spectrum row was always zero and now carries the live spectrum.** Row 0 had been fed from the beat tracker's FFT, which the live audio path never ran, so every shader reading it saw silence (the waveform row 1 was unaffected). No bundled source uses the row, so it went unnoticed; third-party Shadertoy-style ISF that read it now react to audio.
+- **Contract:** 512 linear-frequency bins from 0 Hz to half the sample rate (bin spacing sampleRate/1024), Hann-windowed 1024-sample mono mix after input gain and channel routing. A full-scale sine reads 1.0; magnitude is mapped from -80 dB..0 dB onto 0..1. Attack is instant and release is a 0.08 s decay.
+- **Cost:** about 19 microseconds per 512-frame block on the dev machine (one 1024-point FFT plus 512 logs), no allocation. Beat detection is untouched: it never sees this FFT.
+- Internal: new `SpectrumAnalyzer` (double-buffered, written on the audio thread, read by `AudioTexture`); `AudioEngine.copyAudioTextureData` reads it and `resetForOfflineFeed` resets it, so tour renders stay bit-identical. `BeatTrackerEngine.copyMagSpectrum` is no longer used by the texture. Tests in `SpectrumAnalyzerTest`.
+
 ### Update Icon Instead of Popup (`ui/MenuBar.kt`, `ui/UIManager.kt`)
 - **A new version no longer opens a popup at startup.** When the startup check finds one, a download icon appears in the menu bar; hover it for the current and latest version, click it for the same Download / Remind Later / Skip Version dialog as before. Skip Version hides the icon for that release.
 - Internal: `UIManager` no longer calls `UpdatePromptModal.request`; `MenuBar` reads `UpdateChecker.lastResult`.
