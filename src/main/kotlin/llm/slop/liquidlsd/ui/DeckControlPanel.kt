@@ -289,48 +289,40 @@ class DeckControlPanel(
         // 3. Vertical Level / Alpha Fader (directly above the badge on the left)
         val stripMinX = badgeMinX + (badgeW - stripW) * 0.5f
 
+        val levelPath = when (label) {
+            "Deck A" -> "Mixer/levelA"
+            "Deck B" -> "Mixer/levelB"
+            "Deck BG" -> "Mixer/levelBG"
+            else -> "Mixer/levelPV"
+        }
+        val levelParam = when (label) {
+            "Deck A" -> mixer.levelA
+            "Deck B" -> mixer.levelB
+            "Deck BG" -> mixer.levelBG
+            else -> mixer.levelPV
+        }
         ImGui.setCursorScreenPos(stripMinX, stripMinY)
         ImGui.invisibleButton("##fader_$label", stripW, stripH)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "deck_fader_" + label.removePrefix("Deck ") }
         val isFaderHovered = ImGui.isItemHovered()
         val isFaderActive = ImGui.isItemActive()
 
         if (isFaderActive) {
             val mouseY = ImGui.getIO().mousePos.y
             val pct = ((stripMaxY - mouseY) / stripH).coerceIn(0f, 1f)
-            when (label) {
-                "Deck A" -> mixer.levelA.baseValue = pct
-                "Deck B" -> mixer.levelB.baseValue = pct
-                "Deck BG" -> mixer.levelBG.baseValue = pct
-                else -> mixer.levelPV.baseValue = pct
-            }
+            mixer.setLevelByUser(levelPath, pct)
         }
 
         val io = ImGui.getIO()
         if (isFaderHovered || isFaderActive) {
             if (io.mouseWheel != 0f) {
                 val delta = if (io.keyShift) 0.01f else 0.05f
-                val current = when (label) {
-                    "Deck A" -> mixer.levelA.value
-                    "Deck B" -> mixer.levelB.value
-                    "Deck BG" -> mixer.levelBG.value
-                    else -> mixer.levelPV.value
-                }
-                val newLevel = (current + io.mouseWheel * delta).coerceIn(0f, 1f)
-                when (label) {
-                    "Deck A" -> mixer.levelA.baseValue = newLevel
-                    "Deck B" -> mixer.levelB.baseValue = newLevel
-                    "Deck BG" -> mixer.levelBG.baseValue = newLevel
-                    else -> mixer.levelPV.baseValue = newLevel
-                }
+                val newLevel = (levelParam.baseValue + io.mouseWheel * delta).coerceIn(0f, 1f)
+                mixer.setLevelByUser(levelPath, newLevel)
                 io.mouseWheel = 0f
             }
             if (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) { // Middle-click reset to 100%
-                when (label) {
-                    "Deck A" -> mixer.levelA.baseValue = 1.0f
-                    "Deck B" -> mixer.levelB.baseValue = 1.0f
-                    "Deck BG" -> mixer.levelBG.baseValue = 1.0f
-                    else -> mixer.levelPV.baseValue = 1.0f
-                }
+                mixer.setLevelByUser(levelPath, 1.0f)
             }
             val desc = if (label == "Deck PV") "Preview Dimmer" else "Channel Level"
             showTooltip("$label $desc\nDrag or scroll to adjust. Middle-click to reset (100%).")
@@ -343,12 +335,7 @@ class DeckControlPanel(
         dl.addRect(stripMinX, stripMinY, stripMinX + stripW, stripMaxY, faderBorder, 3f, 0, 1.0f)
 
         // Draw Filled Level Bar (bottom up) with live level
-        val liveLevel = when (label) {
-            "Deck A" -> mixer.levelA.value
-            "Deck B" -> mixer.levelB.value
-            "Deck BG" -> mixer.levelBG.value
-            else -> mixer.levelPV.value
-        }
+        val liveLevel = levelParam.value
         val fillH = stripH * liveLevel
         val fillTop = stripMaxY - fillH
         if (fillH > 1f) {
@@ -356,8 +343,11 @@ class DeckControlPanel(
         }
 
         // Draw Alpha Handle Indicator line
+        // The handle sits at the base value (what a drag sets); when modulation moves the live level away, the
+        // fill shows the live level and the handle shows where the fader itself is.
+        val baseY = stripMaxY - stripH * levelParam.baseValue.coerceIn(0f, 1f)
         val handleCol = if (isFaderActive) ImGui.colorConvertFloat4ToU32(1f, 1f, 1f, 1f) else ImGui.colorConvertFloat4ToU32(0.9f, 0.9f, 0.9f, 0.85f)
-        dl.addLine(stripMinX, fillTop, stripMinX + stripW, fillTop, handleCol, 2f)
+        dl.addLine(stripMinX - 1f, baseY, stripMinX + stripW + 1f, baseY, handleCol, 2f)
 
         ImGui.endChild()
         ImGui.popStyleVar()

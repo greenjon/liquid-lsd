@@ -118,18 +118,18 @@ internal object PerformanceMasterControls {
             }
             ImGui.separator()
             if (ImGui.menuItem("Reset Deck Levels to 100%")) {
-                mixer.levelA.baseValue = 1.0f
-                mixer.levelB.baseValue = 1.0f
-                mixer.levelBG.baseValue = 1.0f
+                mixer.setLevelByUser("Mixer/levelA", 1.0f)
+                mixer.setLevelByUser("Mixer/levelB", 1.0f)
+                mixer.setLevelByUser("Mixer/levelBG", 1.0f)
             }
             if (ImGui.menuItem("Reset Master Level to 100%")) {
-                mixer.masterLevel.baseValue = 1.0f
+                mixer.setLevelByUser("Mixer/masterLevel", 1.0f)
             }
             if (ImGui.menuItem("Reset All (Deck & Master Levels) to 100%")) {
-                mixer.levelA.baseValue = 1.0f
-                mixer.levelB.baseValue = 1.0f
-                mixer.levelBG.baseValue = 1.0f
-                mixer.masterLevel.baseValue = 1.0f
+                mixer.setLevelByUser("Mixer/levelA", 1.0f)
+                mixer.setLevelByUser("Mixer/levelB", 1.0f)
+                mixer.setLevelByUser("Mixer/levelBG", 1.0f)
+                mixer.setLevelByUser("Mixer/masterLevel", 1.0f)
             }
             popOpenDropdownFont()
             ImGui.endPopup()
@@ -147,10 +147,10 @@ internal object PerformanceMasterControls {
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, resetBtnHov)
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             if (ButtonChrome.button("100%##perf_mix_reset_btn", resetBtnW, headerH)) {
-                mixer.levelA.baseValue = 1.0f
-                mixer.levelB.baseValue = 1.0f
-                mixer.levelBG.baseValue = 1.0f
-                mixer.masterLevel.baseValue = 1.0f
+                mixer.setLevelByUser("Mixer/levelA", 1.0f)
+                mixer.setLevelByUser("Mixer/levelB", 1.0f)
+                mixer.setLevelByUser("Mixer/levelBG", 1.0f)
+                mixer.setLevelByUser("Mixer/masterLevel", 1.0f)
             }
         }
         ImGui.popStyleColor(2)
@@ -162,18 +162,18 @@ internal object PerformanceMasterControls {
             ImGui.textDisabled("Reset Levels")
             ImGui.separator()
             if (ImGui.menuItem("Reset All to 100%")) {
-                mixer.levelA.baseValue = 1.0f
-                mixer.levelB.baseValue = 1.0f
-                mixer.levelBG.baseValue = 1.0f
-                mixer.masterLevel.baseValue = 1.0f
+                mixer.setLevelByUser("Mixer/levelA", 1.0f)
+                mixer.setLevelByUser("Mixer/levelB", 1.0f)
+                mixer.setLevelByUser("Mixer/levelBG", 1.0f)
+                mixer.setLevelByUser("Mixer/masterLevel", 1.0f)
             }
             if (ImGui.menuItem("Reset Deck Levels Only")) {
-                mixer.levelA.baseValue = 1.0f
-                mixer.levelB.baseValue = 1.0f
-                mixer.levelBG.baseValue = 1.0f
+                mixer.setLevelByUser("Mixer/levelA", 1.0f)
+                mixer.setLevelByUser("Mixer/levelB", 1.0f)
+                mixer.setLevelByUser("Mixer/levelBG", 1.0f)
             }
             if (ImGui.menuItem("Reset Master Level Only")) {
-                mixer.masterLevel.baseValue = 1.0f
+                mixer.setLevelByUser("Mixer/masterLevel", 1.0f)
             }
             popOpenDropdownFont()
             ImGui.endPopup()

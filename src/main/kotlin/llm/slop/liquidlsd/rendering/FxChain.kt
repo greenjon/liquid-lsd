@@ -5,6 +5,7 @@ import llm.slop.liquidlsd.models.FXSlotDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import llm.slop.liquidlsd.parameters.SoftTakeover
 import llm.slop.liquidlsd.rendering.isf.ISFFilter
 import llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry
 import llm.slop.liquidlsd.rendering.isf.toBinding
@@ -290,10 +291,7 @@ class FxChain(val label: String) {
             if (!hasTakenOver[i]) {
                 if (!superMoved) continue
                 val current = slot.metaKnob.value
-                val crossed = (lastSuperKnobValue <= current && superValue >= current) ||
-                    (lastSuperKnobValue >= current && superValue <= current)
-                val closeEnough = kotlin.math.abs(superValue - current) <= TAKEOVER_TOLERANCE
-                if (!crossed && !closeEnough) continue
+                if (!SoftTakeover.caught(lastSuperKnobValue, superValue, current, TAKEOVER_TOLERANCE)) continue
                 hasTakenOver[i] = true
             }
             slot.metaKnob.baseValue = superValue

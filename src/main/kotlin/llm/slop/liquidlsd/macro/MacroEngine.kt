@@ -378,10 +378,14 @@ object MacroEngine {
         val bindings = resolvedBindings
         for (i in 0 until bindings.size) {
             val rb = bindings[i]
+            if (mirrorLevelFader(rb)) continue
             val mapped = MacroCurve.mapToRange(rb.control.value, rb.binding)
             when (rb.binding.targetType) {
                 // A Metaknob link owns the parameter (see ModulatableParameter.metaDrivenBy); skip so the two don't fight.
-                MacroTargetType.PARAM_BASE_VALUE -> if (rb.param.metaDrivenBy == null) rb.param.baseValue = mapped
+                MacroTargetType.PARAM_BASE_VALUE -> if (rb.param.metaDrivenBy == null) {
+                    rb.param.baseValue = mapped
+                    recordLevelMirror(rb)
+                }
                 MacroTargetType.MODULATOR_PROPERTY -> {
                     // Re-fetched every tick rather than cached at rebuild time: UI edits to a
                     // modulator (any slider drag/waveform-preset click) replace the CvModulator
@@ -426,6 +430,38 @@ object MacroEngine {
                 }
             }
         }
+    }
+
+    // Per level-fader target: the knob value and the base value as of the last tick, to tell which side moved since.
+    private class LevelMirrorState(var knob: Float, var base: Float)
+    private val levelMirror = java.util.IdentityHashMap<ModulatableParameter, LevelMirrorState>()
+
+    /**
+     * Two-way "last mover wins" for a knob bound to a mixer level fader (the crossfader's mirror, for the faders).
+     * If something else wrote the fader since the last tick (deck-tile slider, reset, touch console) and the knob
+     * itself didn't move, the knob follows the fader instead of overwriting it. Returns true when it consumed
+     * the binding this tick; false when the normal knob-drives-target write should run.
+     */
+    private fun mirrorLevelFader(rb: ResolvedBinding): Boolean {
+        val b = rb.binding
+        if (b.targetType != MacroTargetType.PARAM_BASE_VALUE || !b.parameterId.startsWith("Mixer/") || b.unitInstanceId != null) return false
+        if (!b.parameterId.let { it.startsWith("Mixer/level") || it == "Mixer/masterLevel" }) return false
+        if (b.linkMode != MacroLinkMode.FULL || b.curve != MacroCurveType.LINEAR) return false
+        val state = levelMirror[rb.param] ?: return false.also { levelMirror[rb.param] = LevelMirrorState(rb.control.value, rb.param.baseValue) }
+        val knobMoved = rb.control.value != state.knob
+        val baseMoved = rb.param.baseValue != state.base
+        if (baseMoved && !knobMoved) {
+            rb.control.value = MacroCurve.inverse(rb.param.baseValue, b).coerceIn(0f, 1f)
+            state.knob = rb.control.value
+            state.base = rb.param.baseValue
+            return true
+        }
+        return false
+    }
+
+    /** Records both sides after the normal write, so the next tick can tell who moved. */
+    private fun recordLevelMirror(rb: ResolvedBinding) {
+        levelMirror[rb.param]?.let { it.knob = rb.control.value; it.base = rb.param.baseValue }
     }
 
     private fun syncLinkedFxChainKnobValues(bankId: String, chain: FxChain) {

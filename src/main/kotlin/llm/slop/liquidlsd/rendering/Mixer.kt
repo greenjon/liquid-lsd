@@ -177,6 +177,33 @@ class Mixer(
     val levelPV = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
     val masterLevel = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
 
+    /** The level faders (deck alphas, preview dimmer, master) by parameter path. */
+    private fun levelFor(path: String): ModulatableParameter? = when (path) {
+        "Mixer/levelA" -> levelA
+        "Mixer/levelB" -> levelB
+        "Mixer/levelBG" -> levelBG
+        "Mixer/levelPV" -> levelPV
+        "Mixer/masterLevel" -> masterLevel
+        else -> null
+    }
+
+    /**
+     * A person moved a level fader in the UI (slider, wheel, reset). Like [onCrossfadeManualTakeover]: the manual
+     * value wins over non-MIDI modulation, and MIDI/OSC soft-takeover mappings on the fader must pick it up
+     * again rather than jump. A macro knob bound to the fader follows via [MacroEngine]'s level mirror.
+     */
+    fun setLevelByUser(path: String, value: Float) {
+        val param = levelFor(path) ?: return
+        param.baseValue = value
+        if (param.modulators.any { !it.sourceId.startsWith("midi_cc_") && !it.bypassed }) {
+            val updated = param.modulators.map { if (!it.sourceId.startsWith("midi_cc_")) it.copy(bypassed = true) else it }
+            param.modulators.clear()
+            param.modulators.addAll(updated)
+        }
+        llm.slop.liquidlsd.midi.MidiMappingManager.rearmTakeover(path)
+        llm.slop.liquidlsd.osc.OscMappingManager.rearmTakeoverForPath(path)
+    }
+
     @Volatile override var targetCrossfade = -1.0f
     override var isAutoFading = false
     override val crossfadeBase: Float get() = crossfade.baseValue

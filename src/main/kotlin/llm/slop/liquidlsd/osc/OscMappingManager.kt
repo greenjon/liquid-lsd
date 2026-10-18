@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.osc
 
 import llm.slop.liquidlsd.macro.MacroOscBridge
 import llm.slop.liquidlsd.parameters.ParameterResolver
+import llm.slop.liquidlsd.parameters.SoftTakeover
 import llm.slop.liquidlsd.rendering.Mixer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -179,6 +180,13 @@ object OscMappingManager {
         resetRuntimeState()
     }
 
+    /** Re-arms soft takeover for every mapping whose target is [path]: software moved it, so the controller must pick it up again. */
+    fun rearmTakeoverForPath(path: String) {
+        activeProfile.mappings.forEach { (address, mapping) ->
+            if (mapping.parameterPath == path) hasTakenOver.remove(address)
+        }
+    }
+
     private fun resetRuntimeState() {
         hasTakenOver.clear()
         lastPhysicalScaled.clear()
@@ -293,10 +301,8 @@ object OscMappingManager {
             val alreadyTakenOver = hasTakenOver[key] ?: false
             if (!alreadyTakenOver) {
                 val currentVal = getter() ?: 0f
-                val tolerance = (mapping.maxVal - mapping.minVal) * 0.04f
-                val crossed = prevPhys != null && ((prevPhys - currentVal) * (scaledTarget - currentVal) <= 0f)
-                val closeEnough = kotlin.math.abs(scaledTarget - currentVal) <= tolerance
-                if (crossed || closeEnough) hasTakenOver[key] = true
+                val tolerance = (mapping.maxVal - mapping.minVal) * SoftTakeover.TOLERANCE_FRACTION
+                if (SoftTakeover.caught(prevPhys, scaledTarget, currentVal, tolerance)) hasTakenOver[key] = true
             }
         } else {
             hasTakenOver[key] = true

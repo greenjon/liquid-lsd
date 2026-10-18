@@ -13,6 +13,7 @@ import llm.slop.liquidlsd.parameters.CvModulator
 import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.parameters.ModulationOperator
 import llm.slop.liquidlsd.parameters.ParameterResolver
+import llm.slop.liquidlsd.parameters.SoftTakeover
 import llm.slop.liquidlsd.rendering.Mixer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -358,6 +359,11 @@ object MidiMappingManager {
     @Volatile
     private var bindingsDirty = true
 
+    /** Re-arms soft takeover for the mapping on [path]: software moved the target, so the hardware must pick it up again. */
+    fun rearmTakeover(path: String) {
+        hasTakenOver.remove(path)
+    }
+
     fun invalidateBindings() {
         bindingsDirty = true
         hasTakenOver.clear()
@@ -555,11 +561,8 @@ object MidiMappingManager {
                         val alreadyTakenOver = hasTakenOver[b.path] ?: false
                         if (!alreadyTakenOver) {
                             val currentVal = b.getCurrentValue()
-                            val tolerance = (b.maxVal - b.minVal) * 0.04f
-                            // Crossed or within tolerance
-                            val crossed = prevPhys != null && ((prevPhys - currentVal) * (scaledTarget - currentVal) <= 0f)
-                            val closeEnough = kotlin.math.abs(scaledTarget - currentVal) <= tolerance
-                            if (crossed || closeEnough) {
+                            val tolerance = (b.maxVal - b.minVal) * SoftTakeover.TOLERANCE_FRACTION
+                            if (SoftTakeover.caught(prevPhys, scaledTarget, currentVal, tolerance)) {
                                 hasTakenOver[b.path] = true
                             }
                         }
