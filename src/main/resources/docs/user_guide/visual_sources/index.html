@@ -904,6 +904,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#audio-in-your-shaders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio in your shaders
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#marking-a-shader-as-gpu-intensive" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2290,6 +2301,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#audio-in-your-shaders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio in your shaders
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#marking-a-shader-as-gpu-intensive" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2751,6 +2773,8 @@
 <li><strong>Mixer transitions</strong> → <code>library/transitions/</code></li>
 </ul>
 <p>The app reads the ISF JSON header inside each shader file, automatically sets up parameter sliders in the Cell Config panel, and exposes those parameters to the CV modulation matrix. No configuration required.</p>
+<h3 id="audio-in-your-shaders">Audio in your shaders</h3>
+<p>Shaders can read the live audio through the <code>audioFFT</code> sampler (Shadertoy-style <code>iChannel0</code> is the same texture), a 512x2 single-channel texture. Row 0 (<code>y = 0.25</code>) is the spectrum: 512 bins from 0 Hz to half the sample rate, 0 to 1 on a decibel scale (full scale is 1, -80 dB is 0), with a quick decay so bars fall smoothly. Row 1 (<code>y = 0.75</code>) is the waveform, centred on 0.5. Example: <code>float level = texture(audioFFT, vec2(pow(uv.x, 2.0), 0.25)).r;</code> gives a bar height with more resolution at the low end.</p>
 <h3 id="marking-a-shader-as-gpu-intensive">Marking a shader as GPU-intensive</h3>
 <p>Heavy shaders (raymarchers, fractal folds with many iterations) can run slowly on integrated graphics. To warn users, add an optional <code>LSD_COST</code> key to the ISF header: <code>1</code> light, <code>2</code> medium, <code>3</code> heavy.</p>
 <pre><code class="language-json">&quot;LSD_COST&quot;: 3,

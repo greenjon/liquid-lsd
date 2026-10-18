@@ -55,7 +55,6 @@ class BeatTrackerEngine(
 
     private val fftReal = FloatArray(fftSize)
     private val fftImag = FloatArray(fftSize)
-    private val magSpectrum = FloatArray(halfFft + 1)
     private val prevMagSpectrum = FloatArray(halfFft + 1)
     private val prevPhase = FloatArray(halfFft + 1)
     private val prevPrevPhase = FloatArray(halfFft + 1)
@@ -243,7 +242,6 @@ class BeatTrackerEngine(
         highHistory.fill(0f)
         cumulativeScore.fill(0f)
         prevMagSpectrum.fill(0f)
-        magSpectrum.fill(0f)
         prevPhase.fill(0f)
         prevPrevPhase.fill(0f)
     }
@@ -335,7 +333,6 @@ class BeatTrackerEngine(
             val mag = sqrt(r * r + im * im)
             val phase = atan2(im, r)
 
-            magSpectrum[k] = mag
 
             val rawPredictedPhase = 2.0f * prevPhase[k] - prevPrevPhase[k]
             val pi = Math.PI.toFloat()
@@ -362,14 +359,6 @@ class BeatTrackerEngine(
         }
 
         return sumDifference
-    }
-
-    /**
-     * Thread-safe, allocation-free snapshot of current FFT magnitude spectrum.
-     */
-    fun copyMagSpectrum(target: FloatArray) {
-        val count = minOf(target.size, magSpectrum.size)
-        System.arraycopy(magSpectrum, 0, target, 0, count)
     }
 
     /**

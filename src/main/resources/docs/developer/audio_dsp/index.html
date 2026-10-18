@@ -898,6 +898,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#shader-audio-texture-spectrum-spectrumanalyzerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shader Audio Texture Spectrum (SpectrumAnalyzer.kt)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#audio-hardware-discovery-ui-caching" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1653,6 +1664,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#shader-audio-texture-spectrum-spectrumanalyzerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Shader Audio Texture Spectrum (SpectrumAnalyzer.kt)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#audio-hardware-discovery-ui-caching" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1826,6 +1848,14 @@ $$y[n] = b_0 x[n] + b_1 x[n-1] + b_2 x[n-2] - a_1 y[n-1] - a_2 y[n-2]$$</p>
 - <strong>Decoupled Periodic Tempo Estimation</strong>: Autocorrelation search across multi-second history is decoupled from the per-block rate via <code>tempoEstimationIntervalBlocks</code> (default 4 blocks / ~46 ms, ~21.5 Hz), reducing CPU iterations by 75% to prevent real-time XRUNs while preserving instantaneous onset reactivity.
 - <strong>Causal Dynamic Programming Recurrence</strong>: Evaluates causal DP beat score recurrence on every audio frame using pre-tabulated logarithm tables (<code>logTauTable</code>).
 - <strong>Continuous Phase &amp; Cosine Generator</strong>: Outputs continuous normalized phase $\phi(t) \in [0.0, 1.0)$ and locked cosine modulation signal $\cos(2\pi \phi(t))$ via zero-allocation queries (<code>getPhase</code>, <code>getCosine</code>, <code>getPhaseAndCosine</code>, <code>getPhaseAndCosinePacked</code>).</p>
+<hr />
+<h2 id="shader-audio-texture-spectrum-spectrumanalyzerkt">Shader Audio Texture Spectrum (<code>SpectrumAnalyzer.kt</code>)</h2>
+<p>Row 0 of the 512x2 <code>audioFFT</code> / <code>iChannel0</code> texture (<code>AudioTexture.kt</code>) comes from <a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/audio/SpectrumAnalyzer.kt"><code>SpectrumAnalyzer.kt</code></a>, not from the beat tracker (which keeps no display spectrum). <code>AudioEngine.processAudio</code> pushes each block's mixed mono samples into it after the waveform tap.
+- <strong>Transform:</strong> newest 1024 samples, Hann window, radix-2 FFT, 512 linear bins (0 Hz to Nyquist; bin spacing sampleRate/1024).
+- <strong>Scaling:</strong> magnitude normalised so a full-scale sine is 1.0, then dB mapped -80..0 dB onto 0..1.
+- <strong>Smoothing:</strong> instant attack, one-pole release with a 0.08 s time constant computed from the block length, so it does not depend on the buffer size.
+- <strong>Threading:</strong> zero allocation; written on the audio thread into a double buffer and published by a volatile index; <code>copyAudioTextureData</code> copies on the render thread. No clock or random input, so a fixed feed gives identical output (tour renders rely on this); <code>resetForOfflineFeed</code> resets it.
+- <strong>Cost:</strong> about 19 microseconds per 512-frame block (measured on the dev machine).</p>
 <hr />
 <h2 id="audio-hardware-discovery-ui-caching">Audio Hardware Discovery &amp; UI Caching</h2>
 <p>Querying audio devices via <code>AudioSystem.getMixerInfo()</code> and <code>AudioSystem.getMixer()</code> in Java Sound invokes native ALSA/OS audio layer introspection. Probing mixers inside the real-time ImGui render loop creates native memory allocations and file descriptor pressure that can lead to memory exhaustion (OOM).</p>

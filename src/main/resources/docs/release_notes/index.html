@@ -1264,6 +1264,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-fft-texture-now-live-audiospectrumanalyzerkt-audioaudioenginekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio FFT Texture Now Live (audio/SpectrumAnalyzer.kt, audio/AudioEngine.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#update-icon-instead-of-popup-uimenubarkt-uiuimanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6154,6 +6165,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#audio-fft-texture-now-live-audiospectrumanalyzerkt-audioaudioenginekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Audio FFT Texture Now Live (audio/SpectrumAnalyzer.kt, audio/AudioEngine.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#update-icon-instead-of-popup-uimenubarkt-uiuimanagerkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11019,6 +11041,13 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="audio-fft-texture-now-live-audiospectrumanalyzerkt-audioaudioenginekt">Audio FFT Texture Now Live (<code>audio/SpectrumAnalyzer.kt</code>, <code>audio/AudioEngine.kt</code>)</h3>
+<ul>
+<li><strong>The <code>audioFFT</code> / <code>iChannel0</code> spectrum row was always zero and now carries the live spectrum.</strong> Row 0 had been fed from the beat tracker's FFT, which the live audio path never ran, so every shader reading it saw silence (the waveform row 1 was unaffected). No bundled source uses the row, so it went unnoticed; third-party Shadertoy-style ISF that read it now react to audio.</li>
+<li><strong>Contract:</strong> 512 linear-frequency bins from 0 Hz to half the sample rate (bin spacing sampleRate/1024), Hann-windowed 1024-sample mono mix after input gain and channel routing. A full-scale sine reads 1.0; magnitude is mapped from -80 dB..0 dB onto 0..1. Attack is instant and release is a 0.08 s decay.</li>
+<li><strong>Cost:</strong> about 19 microseconds per 512-frame block on the dev machine (one 1024-point FFT plus 512 logs), no allocation. Beat detection is untouched: it never sees this FFT.</li>
+<li>Internal: new <code>SpectrumAnalyzer</code> (double-buffered, written on the audio thread, read by <code>AudioTexture</code>); <code>AudioEngine.copyAudioTextureData</code> reads it and <code>resetForOfflineFeed</code> resets it, so tour renders stay bit-identical. The unused <code>BeatTrackerEngine.copyMagSpectrum</code> and its <code>magSpectrum</code> buffer were removed (beat results unchanged). Tests in <code>SpectrumAnalyzerTest</code>.</li>
+</ul>
 <h3 id="update-icon-instead-of-popup-uimenubarkt-uiuimanagerkt">Update Icon Instead of Popup (<code>ui/MenuBar.kt</code>, <code>ui/UIManager.kt</code>)</h3>
 <ul>
 <li><strong>A new version no longer opens a popup at startup.</strong> When the startup check finds one, a download icon appears in the menu bar; hover it for the current and latest version, click it for the same Download / Remind Later / Skip Version dialog as before. Skip Version hides the icon for that release.</li>

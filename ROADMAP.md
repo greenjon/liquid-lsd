@@ -194,7 +194,7 @@ When editing an FX chain on the Performance matrix, show 3 sub-rows (one per slo
 - [x] Modular FX slots per deck (originally 2 — Slot 1: Color/Degradation, Slot 2: Spatial/Distortion — since expanded to 4, `Deck.FX_SLOT_COUNT`).
 - [x] ISF transition engine in Mixer with bundled transitions (`wipe`, `glitch`, `radial`, `luma_wipe`, `zoom_fade`).
 - [x] Multi-pass generator and filter FBO rendering with persistent history buffers and imported texture assets.
-- [x] Real-time audio FFT magnitude and waveform texture (`audioFFT` / `iChannel0` 512x2 `GL_R32F`).
+- [x] Real-time audio FFT magnitude and waveform texture (`audioFFT` / `iChannel0` 512x2 `GL_R32F`). The spectrum row was silent until the dedicated `SpectrumAnalyzer` (1024-point Hann FFT, dB-mapped) replaced the beat tracker feed.
 
 ### Phase 4: Stage Interoperability & Video Sharing
 - [x] Zero-copy GPU texture sharing outputs: **Spout2** (Windows), **Syphon** (macOS), and **PipeWire DMA-BUF** (Linux).
