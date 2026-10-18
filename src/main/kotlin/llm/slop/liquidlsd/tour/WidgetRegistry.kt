@@ -15,11 +15,16 @@ object WidgetRegistry {
     }
 
     private val rects = HashMap<String, Rect>()
+    private val seenFrame = HashMap<String, Int>()
+
+    /** Advanced by the tour once per frame; a rect not re-noted in the previous frame is stale (its widget is no longer drawn). */
+    var frame = 0
 
     /** Stores the rectangle of the most recently submitted ImGui item under [key]. */
     fun noteLastItem(key: String) {
         if (!enabled) return
         rects[key] = Rect(ImGui.getItemRectMinX(), ImGui.getItemRectMinY(), ImGui.getItemRectMaxX(), ImGui.getItemRectMaxY())
+        seenFrame[key] = frame
     }
 
     /** [noteLastItem] with a lazily built key: nothing is allocated outside tour mode. */
@@ -28,6 +33,9 @@ object WidgetRegistry {
     }
 
     fun find(key: String): Rect? = rects[key]
+
+    /** True when [key] was drawn in the frame before [frame] (steps start before this frame's UI is drawn). */
+    fun isCurrent(key: String): Boolean = (seenFrame[key] ?: Int.MIN_VALUE) >= frame - 1
 
     fun keys(): Set<String> = rects.keys
 }

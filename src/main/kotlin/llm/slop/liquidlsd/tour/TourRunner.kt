@@ -31,7 +31,13 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         private const val CLICK_HOLD_SEC = 0.12
         private const val RIPPLE_SEC = 0.45
         private const val HIGHLIGHT_LINGER_SEC = 0.9
-        private const val CAPTION_SIZE = 30f
+        private const val CAPTION_SIZE = 25f
+        private const val CAPTION_WRAP = 540f
+        private const val CAPTION_PAD_X = 16f
+        private const val CAPTION_PAD_Y = 11f
+        /** Reading pace for the caption lint (characters per second; a caption also gets at least [MIN_CAPTION_SEC]). */
+        private const val READ_CPS = 14.0
+        private const val MIN_CAPTION_SEC = 2.5
 
         /**
          * Uncaptured frames rendered before frame 0 so ImGui layout, fonts and first-use lazy init settle.
@@ -41,7 +47,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         const val WARMUP_FRAMES = 10
     }
 
-    val totalFrames = (script.durationSec * FPS).toInt()
+    val totalFrames = (script.length * FPS).toInt()
     var frame = 0
         private set
     val isDone get() = frame >= totalFrames
@@ -66,6 +72,22 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     private var highlight: WidgetRegistry.Rect? = null
     private var highlightFrom = 0.0
     private var caption: String? = null
+    private var captionLines: List<String> = emptyList()
+    private var captionPos = "below"
+    /** What the caption box sits beside: the last move's target rect (or its point). Drags and clicks leave it alone. */
+    private var anchor = WidgetRegistry.Rect(960f, 540f, 960f, 540f)
+    private var boxX = Float.NaN
+    private var boxY = 0f
+
+    /** A caption cue: [text] from [start] until the next captioned step ("" clears) or the tour end. */
+    class Cue(val start: Double, val end: Double, val text: String)
+
+    val cues: List<Cue> by lazy {
+        val captioned = steps.filter { it.caption != null }
+        captioned.withIndex().filter { it.value.caption!!.isNotBlank() }.map { (i, s) ->
+            Cue(s.t, captioned.getOrNull(i + 1)?.t ?: script.length, s.caption!!)
+        }
+    }
 
     private var pipe: FFmpegProcessPipe? = null
     private var pbo: PboReadbackPipeline? = null
@@ -96,6 +118,11 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     fun begin() {
         TimeSource.setSimulatedTime(0.0, DT)
         WidgetRegistry.enabled = true
+        UITheme.tooltipsEnabled = script.tooltips
+        for (c in cues) {
+            val need = maxOf(MIN_CAPTION_SEC, c.text.length / READ_CPS)
+            if (c.end - c.start < need - 1e-6) warnTour(String.format(Locale.ROOT, "Tour t=%.2f: caption shown %.1f s, needs about %.1f s to read: \"%s\"", c.start, c.end - c.start, need, c.text))
+        }
         startNs = System.nanoTime()
         lastFrameNs = startNs
     }
@@ -117,6 +144,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     fun beginFrame() {
         val t = now
         TimeSource.setSimulatedTime((warm + frame) * DT, DT)
+        WidgetRegistry.frame = warm + frame
         if (warming) return
         val a0 = System.nanoTime()
         llm.slop.liquidlsd.presets.PresetManager.awaitIo() // loads requested by last frame's UI have queued their results
@@ -124,7 +152,11 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         audio?.feed(frame.toLong())
         while (nextStep < steps.size && steps[nextStep].t <= t + 1e-9) {
             val st = steps[nextStep++]
-            if (st.caption != null) caption = st.caption.takeIf { it.isNotBlank() }
+            if (st.caption != null) {
+                caption = st.caption.takeIf { it.isNotBlank() }
+                captionPos = st.captionPos ?: "below"
+                captionLines = emptyList() // re-wrapped on the UI thread with the caption font
+            }
             startStep(st, t)
         }
         if (moving) {
@@ -144,6 +176,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
                 warnTour("Tour t=${step.t}: target '${step.target}' not registered (known: ${WidgetRegistry.keys().size} widgets)")
                 return null
             }
+            if (!WidgetRegistry.isCurrent(step.target)) warnTour("Tour t=${step.t}: target '${step.target}' is not on screen now (last drawn earlier; wrong page or view?)")
             return r.centerX to r.centerY
         }
         if (step.x != null && step.y != null) return step.x to step.y
@@ -154,6 +187,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         when (step.action) {
             "move" -> resolve(step)?.let { (x, y) ->
                 highlight = step.target?.let { WidgetRegistry.find(it) }
+                anchor = highlight ?: WidgetRegistry.Rect(x, y, x, y)
                 highlightFrom = t
                 moveFromX = curX; moveFromY = curY; moveToX = x; moveToY = y
                 moveStart = t; moveDur = (step.durationSec ?: 0.6).coerceAtLeast(DT); moving = true
@@ -171,7 +205,8 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
                 rippleStart = t; rippleX = curX; rippleY = curY
             }
             "set_page" -> step.target?.let { UITheme.performancePageId = it }
-            "hold" -> {}
+            "hold", "chapter" -> {}
+            "tooltips" -> UITheme.tooltipsEnabled = (step.value ?: 1f) >= 0.5f
             "load_source" -> deckAction(step) { slot, mx ->
                 val id = step.target ?: return@deckAction
                 val src = llm.slop.liquidlsd.rendering.VisualSourceRegistry.availableSources.firstOrNull { it.id == id }
@@ -215,6 +250,12 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
                     warnTour("Tour t=${step.t}: cannot load FX chain '${f.path}': ${e.message}")
                 }
             }
+            "fx_swap" -> fxChain(step)?.let { c ->
+                val a = slotIndex(step) ?: return@let
+                val b = step.slot2
+                if (b == null || b !in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT || b == a) warnTour("Tour t=${step.t}: fx_swap needs a different slot2")
+                else llm.slop.liquidlsd.presets.FxOps.swapSlots(c, a, c, b)
+            }
             "fx_clear" -> fxChain(step)?.let { llm.slop.liquidlsd.presets.FxOps.clearChain(it) }
             "fx_link" -> fxChain(step)?.let { c ->
                 val slot = slotIndex(step) ?: return@let
@@ -228,10 +269,13 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
                 else p.set(step.value ?: 0f)
             }
             // Super Knob and slot Metaknob are separate on purpose: the Super Knob drives linked slots' Metaknobs by soft-takeover.
-            "super_knob" -> fxChain(step)?.superKnob?.set(step.value ?: 0f)
+            // The FX row's macro knobs drive these through bindings every frame, so set the knob (as a hand on it would);
+            // a linked slot's knob is unbound and mirrors its Metaknob, so that one is set directly.
+            "super_knob" -> fxChain(step)?.let { c -> fxKnob(c, 0)?.value = step.value ?: 0f }
             "meta_knob" -> fxChain(step)?.let { c ->
                 val slot = slotIndex(step) ?: return@let
-                c.slots[slot]?.metaKnob?.set(step.value ?: 0f) ?: warnTour("Tour t=${step.t}: ${step.deck} slot $slot is empty")
+                val fx = c.slots[slot] ?: run { warnTour("Tour t=${step.t}: ${step.deck} slot $slot is empty"); return@let }
+                if (c.slotSuperKnobLink[slot]) fx.metaKnob.set(step.value ?: 0f) else fxKnob(c, slot + 1)?.value = step.value ?: 0f
             }
             "transition" -> llm.slop.liquidlsd.presets.TransitionOps.setStock(step.target)
             "transition_preset" -> {
@@ -267,6 +311,11 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
             else -> warnTour("Tour: unknown action '${step.action}'")
         }
     }
+
+    /** Knob [index] of [chain]'s FX row bank (group mode: 0 = Super Knob, 1-3 = slot Metaknobs). */
+    private fun fxKnob(chain: llm.slop.liquidlsd.rendering.FxChain, index: Int) =
+        mixer?.let { llm.slop.liquidlsd.macro.FxMacroSync.bankIdFor(chain, it) }
+            ?.let { llm.slop.liquidlsd.macro.MacroEngine.getBank(it) }?.knobs?.getOrNull(index)
 
     /** Deck A/B/BG/PV or MASTER -> its FX chain. */
     private fun fxChain(step: TourStep): llm.slop.liquidlsd.rendering.FxChain? {
@@ -336,18 +385,77 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         if (script.burnCaptions) drawCaption()
     }
 
-    /** Burned-in caption bar (script.burnCaptions): centred near the bottom, drawn over everything incl. the cursor. */
+    /** Greedy word wrap at [maxW] pixels for [font] at [size]. */
+    private fun wrap(text: String, font: imgui.ImFont, size: Float, maxW: Float): List<String> {
+        val out = ArrayList<String>()
+        for (para in text.split('\n')) {
+            var line = ""
+            for (word in para.split(' ')) {
+                val cand = if (line.isEmpty()) word else "$line $word"
+                if (line.isNotEmpty() && textW(font, size, cand) > maxW) { out += line; line = word } else line = cand
+            }
+            out += line
+        }
+        return out
+    }
+
+    private fun textW(font: imgui.ImFont, size: Float, text: String): Float {
+        ImGui.pushFont(font, size)
+        val w = ImGui.calcTextSize(text).x
+        ImGui.popFont()
+        return w
+    }
+
+    /**
+     * Burned-in caption (script.burnCaptions). "cursor": an opaque box beside the cursor, below-right like a tooltip, flipping
+     * left/up near the screen edges and gliding (fixed per-frame easing, so still deterministic). "bottom": a centred bar.
+     */
     private fun drawCaption() {
-        val text = caption ?: return
+        val text = caption ?: run { boxX = Float.NaN; return }
+        val font = UITheme.fontFor(UITheme.FontLevel.H3) ?: ImGui.getFont()
+        if (captionLines.isEmpty()) captionLines = wrap(text, font, CAPTION_SIZE, CAPTION_WRAP)
+        val lineH = CAPTION_SIZE * 1.3f
+        val textW = captionLines.maxOf { textW(font, CAPTION_SIZE, it) }
+        val w = textW + CAPTION_PAD_X * 2
+        val h = lineH * captionLines.size + CAPTION_PAD_Y * 2 - (lineH - CAPTION_SIZE)
+        val sw = ImGui.getIO().displaySizeX
+        val sh = ImGui.getIO().displaySizeY
+        var tx: Float
+        var ty: Float
+        if (script.captionStyle == "bottom") {
+            tx = (sw - w) * 0.5f
+            ty = sh - h - 40f
+        } else {
+            // Beside the anchor (last move target). Below/above: left edge just left of its centre. Left/right: vertically
+            // centred on it. Flip when it does not fit. A point anchor (x,y move) leaves room for the cursor arrow.
+            val a = anchor
+            val point = a.maxX - a.minX < 1f
+            val belowY = a.maxY + if (point) 36f else 12f
+            val aboveY = a.minY - 12f - h
+            val rightX = a.maxX + if (point) 34f else 14f
+            val leftX = a.minX - 14f - w
+            when (captionPos) {
+                "left", "right" -> {
+                    val wantRight = captionPos == "right"
+                    tx = if (wantRight && rightX + w <= sw - 12f || !wantRight && leftX < 12f) rightX else leftX
+                    ty = a.centerY - h * 0.5f
+                }
+                else -> {
+                    val wantAbove = captionPos == "above"
+                    tx = a.centerX - 24f
+                    ty = if (wantAbove && aboveY >= 12f || !wantAbove && belowY + h > sh - 12f) aboveY else belowY
+                }
+            }
+        }
+        val cx = tx.coerceIn(12f, sw - 12f - w)
+        val cy = ty.coerceIn(12f, sh - 12f - h)
+        if (boxX.isNaN()) { boxX = cx; boxY = cy } else { boxX += (cx - boxX) * 0.2f; boxY += (cy - boxY) * 0.2f }
         val dl = ImGui.getForegroundDrawList()
-        val font = ImGui.getFont()
-        val sz = ImGui.calcTextSize(text).x * CAPTION_SIZE / ImGui.getFontSize()
-        val w = ImGui.getIO().displaySizeX
-        val h = ImGui.getIO().displaySizeY
-        val x = (w - sz) * 0.5f
-        val y = h - 90f
-        dl.addRectFilled(x - 22f, y - 12f, x + sz + 22f, y + CAPTION_SIZE + 12f, 0xCC101010.toInt(), 10f)
-        dl.addText(font, CAPTION_SIZE.toInt(), x, y, 0xFFFFFFFF.toInt(), text)
+        dl.addRectFilled(boxX, boxY, boxX + w, boxY + h, 0xFF1C1A18.toInt(), 8f)
+        dl.addRect(boxX, boxY, boxX + w, boxY + h, 0xFF3C9CFF.toInt(), 8f, 0, 2f)
+        for ((i, line) in captionLines.withIndex()) {
+            dl.addText(font, CAPTION_SIZE.toInt(), boxX + CAPTION_PAD_X, boxY + CAPTION_PAD_Y + i * lineH, 0xFFFFFFFF.toInt(), line)
+        }
     }
 
     /** Reads FBO 0 after the UI has been drawn and before the buffer swap. */
@@ -421,23 +529,21 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         append('"')
     }
 
-    private fun chapterAt(t: Double): TourChapter? = script.chapters.sortedBy { it.t }.lastOrNull { it.t <= t + 1e-9 }
+    private fun chapterAt(t: Double): TourChapter? = script.allChapters.lastOrNull { it.t <= t + 1e-9 }
 
     /**
      * `<base>.chapters.json` (id, title, start, end, clip length), `<base>.captions.json` (index, start, end, chapter, text for the
      * interactive page and transcript) and `<base>.ffmeta` (ffmpeg chapter metadata, merged by scripts/render_tour.sh).
      */
     private fun writeSidecars(base: String) {
-        val chapters = script.chapters.sortedBy { it.t }
-        fun endOf(i: Int) = chapters[i].endSec ?: chapters.getOrNull(i + 1)?.t ?: script.durationSec
+        val chapters = script.allChapters
+        fun endOf(i: Int) = chapters[i].endSec ?: chapters.getOrNull(i + 1)?.t ?: script.length
         fun num(d: Double) = String.format(Locale.ROOT, "%.3f", d)
         File("$base.chapters.json").writeText(chapters.withIndex().joinToString(",\n", "[\n", "\n]\n") { (i, c) ->
             "  {\"id\":${jsonStr(c.id)},\"title\":${jsonStr(c.title)},\"start\":${num(c.t)},\"end\":${num(endOf(i))},\"clip\":${num(c.clipSec ?: (endOf(i) - c.t))}}"
         })
-        val cues = steps.filter { !it.caption.isNullOrBlank() }
         File("$base.captions.json").writeText(cues.withIndex().joinToString(",\n", "[\n", "\n]\n") { (i, c) ->
-            val end = cues.getOrNull(i + 1)?.t ?: script.durationSec
-            "  {\"index\":${i + 1},\"start\":${num(c.t)},\"end\":${num(end)},\"chapter\":${jsonStr(chapterAt(c.t)?.id ?: "")},\"text\":${jsonStr(c.caption!!)}}"
+            "  {\"index\":${i + 1},\"start\":${num(c.start)},\"end\":${num(c.end)},\"chapter\":${jsonStr(chapterAt(c.start)?.id ?: "")},\"text\":${jsonStr(c.text)}}"
         })
         File("$base.ffmeta").writeText(buildString {
             append(";FFMETADATA1\n")
@@ -449,12 +555,8 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     }
 
     private fun writeVtt(file: File) {
-        val cues = steps.filter { !it.caption.isNullOrBlank() }
         val sb = StringBuilder("WEBVTT\n\n")
-        for ((i, c) in cues.withIndex()) {
-            val end = cues.getOrNull(i + 1)?.t ?: script.durationSec
-            sb.append(ts(c.t)).append(" --> ").append(ts(end)).append('\n').append(c.caption).append("\n\n")
-        }
+        for (c in cues) sb.append(ts(c.start)).append(" --> ").append(ts(c.end)).append('\n').append(c.text).append("\n\n")
         file.writeText(sb.toString())
     }
 }

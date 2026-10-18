@@ -284,6 +284,7 @@ object FxSlotCell {
                 chain.toggleAllSlotsLinked()
                 FxMacroSync.syncFor(bankId, mixer)
             }
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxchainlink_$bankId" }
         }
         ImGui.popStyleVar()
         ImGui.popStyleColor(3)

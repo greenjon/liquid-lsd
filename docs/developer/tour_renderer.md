@@ -11,29 +11,39 @@ scripts/tour_determinism_check.sh <script.json> --tour-hidden    # renders twice
 Tour mode isolates itself: preferences are not read or written, MIDI/OSC/Link/watchers/live audio are off, `imgui.ini` is not used, real GLFW input is ignored, randomness comes from `DeterministicRandom(seed)`. Library contents are part of the input: pin a small curated library for the final render.
 
 ## Script format (`tour/TourScript.kt`)
-Top level: `durationSec`, `seed`, `audio` (file fed to the analyzer by frame clock and muxed), `bpm` (manual beat clock), `burnCaptions` (draw captions into the video; the `.vtt` is always written), `chapters` (`{t, id, title, endSec?, clipSec?}`), `steps`.
-A step starts at `t` seconds. `caption` on any step becomes a cue lasting until the next captioned step.
+Top level: `durationSec` (optional: defaults to the last step's end plus `tailSec`), `seed`, `audio` (file fed to the analyzer by frame clock and muxed), `bpm` (manual beat clock), `burnCaptions` (draw captions into the video; the `.vtt` is always written), `captionStyle` (`cursor`, the default, or `bottom`), `tooltips` (ImGui hover tooltips, off by default so they never collide with the caption box), `chapters` (`{t, id, title, endSec?, clipSec?}`, or use `chapter` steps), `steps`.
+
+Timing: a step starts at absolute `t` seconds, or `dt` seconds after the previous step (`dt` alone is the easiest to edit: inserting a step shifts everything after it).
+Captions: `caption` on any step becomes a cue lasting until the next captioned step (`""` clears). `{ch:<id>}` in a caption becomes "Ch. N at m:ss". With `captionStyle: cursor` the caption is an opaque box beside the last `move` target, below it by default; `captionPos` (`above`, `left`, `right`) on the captioned step keeps it clear of what the step shows. The box stays put during drags and clicks.
+
+Checks printed as `TOUR_WARN`: a caption shown for less than its reading time (14 characters per second, at least 2.5 s), a target that was not drawn in the previous frame (wrong page or view, or a move on the same frame as a page switch: wait about 0.4 s), unknown ids.
 
 | Action | Fields |
 |---|---|
 | `move` | `target` (widget key) or `x,y`; `durationSec`. Also draws a highlight ring on the target. |
 | `click` / `drag` | click at the cursor; drag presses, travels `dx,dy` over `durationSec`, releases (aim with a `move` first) |
 | `hold` | caption only |
+| `chapter` | `target` = id, `title`, `clipSec` |
+| `tooltips` | `value` 0 or 1 |
 | `set_page` | `target` = `ab`, `bgpv`, `mixer` |
 | `library_mode`, `theme`, `preferences`, `preferences_close` | `FULL`/`HALF`; `light`/`dark`; category name |
 | `open_params`, `open_params_pair`, `focus_pair`, `close_focus` | module id / pair tag |
 | `load_source`, `load_preset` | `deck` A/B/BG/PV, `target` = source id / `.lsd` path |
 | `set_param`, `bind_modulator` | `deck`, `param`, `value`; modulator `target` = CV source id, `unit` BEAT/TIME |
 | `fx_filter`, `fx_enable`, `fx_link`, `fx_param`, `meta_knob` | `deck` (A/B/BG/PV/MASTER), `slot` 0-2, `target`/`value`/`param` |
-| `fx_chain`, `fx_clear`, `fx_dry_wet`, `super_knob` | `deck`, `.lsdfxchain` path / `value` |
+| `fx_swap` | `deck`, `slot`, `slot2` (a real drag of one slot cell onto another does the same through the UI) |
+| `fx_chain`, `fx_clear`, `fx_dry_wet`, `super_knob` | `deck`, `.lsdfxchain` path / `value`. `super_knob` and `meta_knob` set the FX row's macro knob, as a hand would; soft takeover still applies |
 | `transition`, `transition_preset`, `crossfade` | stock id, `.lsdtrans` path, `value` -1..1 |
 
 Unknown targets print `TOUR_WARN` and are skipped; treat any warning as a script bug.
 
 ## Widget keys (`tour/WidgetRegistry.kt`)
-Call sites do `WidgetRegistry.note { key }` right after the ImGui item (free outside tour mode). Keys: `perf_tab_<page>`, `perf_<page>_r<row>_c<col>` (knobs), `perf_gen_badge_<tag>`, `perf_src_more_/save_/eject_/rand_<tag>`, `rack_chevron_<id>`, `crossfader_track`, `fxcell_<bank>_<slot>`, `fxbypass_`/`fxlink_<bank>_<slot>`, `fxchain_name_<bank>`, `fxpill_<bank>_<slot>`, `browser_tab_<mode>`, `browser_search`, `prefs_cat_<category>`, `ui_theme`, `edit_side_<tab>`, `macro_name_<bank>_<label>`. `<out>.keys` lists every key seen during a render, handy when authoring. Custom-drawn items without an ImGui item (deck title badges, knob strip labels) need `x,y` or a new explicit rect. Do not key on `##title_badge_*_x_y` (coordinates in the id).
+Call sites do `WidgetRegistry.note { key }` right after the ImGui item (free outside tour mode). Keys: `perf_tab_<page>`, `perf_<page>_r<row>_c<col>` (knobs), `perf_gen_badge_<tag>`, `perf_src_more_/save_/eject_/rand_<tag>`, `rack_chevron_<id>`, `crossfader_track`, `fxcell_<bank>_<slot>`, `fxbypass_`/`fxlink_<bank>_<slot>`, `fxchain_name_<bank>`, `fxpill_<bank>_<slot>`, `fxchainlink_<bank>`, `browser_tab_<mode>`, `browser_search`, `prefs_cat_<category>`, `ui_theme`, `edit_side_<tab>`, `macro_name_<bank>_<label>`. `<out>.keys` lists every key seen during a render, handy when authoring. Custom-drawn items without an ImGui item (deck title badges, knob strip labels) need `x,y` or a new explicit rect. Do not key on `##title_badge_*_x_y` (coordinates in the id).
 
 ## Outputs next to `--tour-out`
 `.hashes` (per frame), `.vtt`, `.captions.json` (index/start/end/chapter/text for the web page and transcript), `.chapters.json`, `.ffmeta` (ffmpeg chapters). `render_tour.sh` derives the rest.
 
 Known leftovers: wall-clock use in `FileSystemManager`, DeckOps autosave names, `PlaylistManager`, `PerformanceStats`, `TouchConsoleController` (no pixel effect so far); other GPUs/compositors unverified.
+
+## The walkthrough
+`tour/tour.json` is the walkthrough itself (six chapters, about 5 minutes). Its soundtrack `tour/beat.wav` is a generated placeholder (`scripts/make_tour_beat.sh`, not committed) until the licensed track arrives; the script only names the file, so swapping it changes nothing else.
