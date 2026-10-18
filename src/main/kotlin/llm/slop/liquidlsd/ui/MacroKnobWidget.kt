@@ -234,6 +234,7 @@ object MacroKnobWidget {
         val cy = startY + radius
 
         ImGui.invisibleButton("##macro_knob_$id", diameter, diameter)
+        if (llm.slop.liquidlsd.tour.WidgetRegistry.enabled) llm.slop.liquidlsd.tour.WidgetRegistry.noteLastItem(id)
         val isHovered = ImGui.isItemHovered()
         val isActivated = ImGui.isItemActivated()
         val isActive = ImGui.isItemActive()

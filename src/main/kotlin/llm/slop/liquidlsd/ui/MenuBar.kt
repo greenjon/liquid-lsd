@@ -351,6 +351,7 @@ class MenuBar(
                 }
             }
             // A narrowed tab clips its name, so the tooltip always carries it.
+            if (llm.slop.liquidlsd.tour.WidgetRegistry.enabled) llm.slop.liquidlsd.tour.WidgetRegistry.noteLastItem("perf_tab_${page.id}")
             itemTooltip(if (page.tooltip.isBlank()) page.name else "${page.name}\n${page.tooltip}")
             ImGui.popStyleColor(3)
         }
@@ -379,9 +380,11 @@ class MenuBar(
      * custom window control buttons (Minimize, Maximize/Restore, Close) when running in frameless mode.
      */
     private fun drawPerformanceStatsAndControls(session: llm.slop.liquidlsd.SessionContext) {
-        val fps        = PerformanceStats.fps
-        val ftMs       = PerformanceStats.frameTimeMs
-        val cpuFrac    = PerformanceStats.processCpuFraction   // -1 if unavailable
+        // Tour renders pin the wall-clock telemetry so frames are reproducible.
+        val pinned     = llm.slop.liquidlsd.tour.WidgetRegistry.enabled
+        val fps        = if (pinned) 60f else PerformanceStats.fps
+        val ftMs       = if (pinned) 16.7f else PerformanceStats.frameTimeMs
+        val cpuFrac    = if (pinned) -1.0 else PerformanceStats.processCpuFraction   // -1 if unavailable
         val audioActive = session.audioEngine.isActive()
         val audioLatency = PerformanceStats.audioCallbackMs
         val isAudioDisabled = !session.uiTheme.audioEngineEnabled

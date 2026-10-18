@@ -14,8 +14,16 @@ data class CliArgs(
     val uiLab: Boolean = false,
     val helpRequested: Boolean = false,
     val versionRequested: Boolean = false,
-    val smokeTestRequested: Boolean = false
+    val smokeTestRequested: Boolean = false,
+    /** Deterministic tour render: script JSON path (see tour/TourRunner). Implies the isolation set in [tourMode]. */
+    val tourScript: String? = null,
+    val tourOut: String? = null,
+    val tourHidden: Boolean = false,
+    /** Debug: "<dir>:70,81" dumps those frames as raw RGBA for diffing determinism failures. */
+    val tourDump: String? = null
 ) {
+    val tourMode: Boolean get() = tourScript != null
+
     companion object {
         fun parse(args: Array<String>): CliArgs {
             var screenshotUi: String? = null
@@ -29,6 +37,10 @@ data class CliArgs(
             var helpRequested = false
             var versionRequested = false
             var smokeTestRequested = false
+            var tourScript: String? = null
+            var tourOut: String? = null
+            var tourHidden = false
+            var tourDump: String? = null
 
             var i = 0
             while (i < args.size) {
@@ -43,6 +55,10 @@ data class CliArgs(
                     arg == "--smoke-test" -> {
                         smokeTestRequested = true
                     }
+                    arg.startsWith("--tour=") -> tourScript = arg.substringAfter("=").trim().ifEmpty { null }
+                    arg.startsWith("--tour-out=") -> tourOut = arg.substringAfter("=").trim().ifEmpty { null }
+                    arg == "--tour-hidden" -> tourHidden = true
+                    arg.startsWith("--tour-dump=") -> tourDump = arg.substringAfter("=").trim().ifEmpty { null }
                     arg == "--no-audio" -> {
                         noAudio = true
                     }
@@ -111,7 +127,11 @@ data class CliArgs(
                 uiLab = uiLab,
                 helpRequested = helpRequested,
                 versionRequested = versionRequested,
-                smokeTestRequested = smokeTestRequested
+                smokeTestRequested = smokeTestRequested,
+                tourScript = tourScript,
+                tourOut = tourOut,
+                tourHidden = tourHidden,
+                tourDump = tourDump
             )
         }
 
@@ -128,6 +148,9 @@ Options:
   --screenshot-after-frames=<N> Number of frames to render before capture (default: 5)
   --window=<W>x<H>|maximized    Override startup window dimensions (e.g. 1920x1080 or maximized)
   --no-audio                    Bypass JACK and JavaSound audio engine initialization
+  --tour=<script.json>          Deterministic scripted tour render (fixed 60 fps clock, no audio/MIDI/OSC, nothing saved)
+  --tour-out=<file.mp4>         Output video for --tour (a .vtt caption file is written next to it)
+  --tour-hidden                 Create the tour window hidden (experimental)
   --ui-lab                      Launch isolated UI component gallery sandbox
 """.trimIndent())
         }

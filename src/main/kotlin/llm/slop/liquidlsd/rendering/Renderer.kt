@@ -119,7 +119,7 @@ class Renderer {
         source.shader.setUniform("iFrameRate",   if (fps > 0f) fps else 60.0f)
 
         // Date derivation (zero allocation)
-        val epochMs = System.currentTimeMillis()
+        val epochMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
         val epochSec = epochMs / 1000L
         val secondsSinceMidnight = (epochSec % 86400L).toFloat() + ((epochMs % 1000L) / 1000f)
         val daysSinceEpoch = (epochSec / 86400L).toInt()

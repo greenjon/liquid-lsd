@@ -36,7 +36,8 @@ data class VideoExportConfig(
     val crf: Int = 18, // 18 is visually near-lossless for x264/x265
     val bitrateMbps: Int = 15,
     val audioFile: File? = null,
-    val superSamplingFactor: Int = 1 // 1x = standard, 2x, 4x, 8x = motion blur accumulation
+    val superSamplingFactor: Int = 1, // 1x = standard, 2x, 4x, 8x = motion blur accumulation
+    val forceSoftwareEncoder: Boolean = false // deterministic output: never pick a hardware encoder
 )
 
 /**
@@ -110,6 +111,17 @@ class FFmpegProcessPipe(
             }
         }
 
+        /** First working CPU encoder (never NVENC/QSV/...): libx264, then libopenh264, then mpeg4. Fedora's ffmpeg ships without libx264. */
+        fun getBestSoftwareEncoder(codec: VideoCodec): String {
+            val available = workingEncoders
+            val candidates = when (codec) {
+                VideoCodec.H264 -> listOf("libx264", "libopenh264", "mpeg4")
+                VideoCodec.H265 -> listOf("libx265")
+                VideoCodec.PRORES -> listOf("prores_ks", "prores", "prores_aw")
+            }
+            return candidates.firstOrNull { it in available } ?: codec.ffmpegCodecName
+        }
+
         fun getBestEncoder(codec: VideoCodec): String {
             val available = workingEncoders
             if (available.isEmpty()) return codec.ffmpegCodecName // fallback to default
@@ -136,7 +148,7 @@ class FFmpegProcessPipe(
     fun start(): Boolean {
         if (isRunning.get()) return true
 
-        val chosenEncoder = getBestEncoder(config.codec)
+        val chosenEncoder = if (config.forceSoftwareEncoder) getBestSoftwareEncoder(config.codec) else getBestEncoder(config.codec)
         if (startWithEncoder(chosenEncoder)) {
             // Verify process didn't immediately exit due to missing GPU/driver
             Thread.sleep(50)

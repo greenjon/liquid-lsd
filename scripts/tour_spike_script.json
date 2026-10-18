@@ -1,0 +1,8 @@
+{"durationSec":5.0,"steps":[
+{"t":0.5,"action":"hold","caption":"Perform view"},
+{"t":0.8,"action":"move","target":"perf_tab_bgpv","durationSec":0.8,"caption":"Switch to the BG/PV page"},
+{"t":1.7,"action":"click"},
+{"t":2.4,"action":"move","target":"perf_0_r0_c0","durationSec":0.8,"caption":"Aim at a knob"},
+{"t":3.4,"action":"move","target":"perf_tab_ab","durationSec":0.7},
+{"t":4.2,"action":"click"}
+]}

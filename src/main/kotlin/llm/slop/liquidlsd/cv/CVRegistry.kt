@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Manages registration of CV sources, stores their history, and handles high-precision sync.
  */
 object CVRegistry {
-    private val startTimeNs = System.nanoTime()
+    private var startTimeNs = System.nanoTime()
 
     @Volatile private var currentFrameIndex: Long = 0L
 
@@ -106,6 +106,20 @@ object CVRegistry {
         sources[source.id] = source
         histories[source.id] = CvHistoryBuffer(600)
         rebuildActiveSources()
+    }
+
+    /**
+     * Re-seeds every wall-clock-derived timestamp from [llm.slop.liquidlsd.utils.TimeSource] so a simulated
+     * run (tour render) starts at elapsed 0 / beat 0 regardless of when the process launched.
+     */
+    fun resetClocksFromTimeSource() {
+        val now = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
+        startTimeNs = now
+        anchorTimeNs = now
+        lastRenderTimeNs = now
+        anchorBeats = 0.0
+        lastRenderBeats = 0.0
+        currentFrameIndex = 0L
     }
 
     fun updateBeatAnchor(beats: Double, bpm: Float, timeNs: Long) {

@@ -38,6 +38,17 @@ object TimeSource {
     }
 
     /**
+     * Wall-clock epoch milliseconds (DATE / iDate uniforms). Simulated runs get a fixed epoch plus
+     * the simulated time so renders do not depend on the day they were made.
+     */
+    fun getEpochMillis(): Long {
+        return if (isSimulated) SIMULATED_EPOCH_MS + (simulatedTimeSec * 1000.0).toLong() else System.currentTimeMillis()
+    }
+
+    /** 2026-01-01T12:00:00Z */
+    private const val SIMULATED_EPOCH_MS = 1_767_268_800_000L
+
+    /**
      * Current frame delta time in seconds.
      */
     fun getDeltaTimeSec(): Double {
