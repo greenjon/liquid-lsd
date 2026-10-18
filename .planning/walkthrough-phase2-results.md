@@ -29,3 +29,5 @@ code shows BeatTrackerEngine.magSpectrum is only written by computeComplexSpectr
 ## Open
 - Unit test suite: see final report (WebEvaluatorVectorsTest failed once in a full run and passed regenerated with identical output; re-verify).
 - Not exercised: FxOps/TransitionOps scripted actions, shuffle queues, second theme, hidden window with real content, other machines/GPUs.
+
+- Hidden window (`--tour-hidden`) with s3: identical raw + encoded, 22 ms/frame (visible 28 ms). `./gradlew test` green on the final tree (one earlier full run failed WebEvaluatorVectorsTest; regenerated vectors were byte-identical, did not reproduce).
