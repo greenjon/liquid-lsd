@@ -323,6 +323,7 @@ class MixerPanel(
         val trackH = maxOf(badgeH, 18f)
         ImGui.setCursorScreenPos(lineStartX - trackPadX, centerY - trackH * 0.5f)
         ImGui.invisibleButton("##crossfader_slider_track", trackW, trackH)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "crossfader_track" }
 
         if (ImGui.beginDragDropTarget()) {
             val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")

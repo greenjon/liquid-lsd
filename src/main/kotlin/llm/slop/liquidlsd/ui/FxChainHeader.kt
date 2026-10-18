@@ -397,6 +397,7 @@ object FxChainHeader {
             if (ButtonChrome.button(st.pillLabels[i], pillW, ctrlH)) {
                 FxMacroSync.focusSlot(bankId, mixer, if (isFocused) null else i)
             }
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxpill_${bankId}_$i" }
             ImGui.popStyleColor(4)
 
             val slotName = slot?.displayName
@@ -491,6 +492,7 @@ object FxChainHeader {
         if (ButtonChrome.button(fullLabel, nameW, ctrlH)) {
             actions.openChainBrowse()
         }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxchain_name_$bankId" }
         if (dockSelected) DockOutline.drawAroundLastItem(bankId)
         if (isDirty) {
             ImGui.popStyleColor()

@@ -167,6 +167,7 @@ object PreferencesPanel {
                 if (ButtonChrome.button(cat.label, sidebarW - 16f, btnH)) {
                     activeCategory = cat
                 }
+                llm.slop.liquidlsd.tour.WidgetRegistry.note { "prefs_cat_" + cat.name.lowercase() }
                 ImGui.popStyleColor(4)
                 ImGui.spacing()
             }
@@ -436,7 +437,9 @@ object PreferencesPanel {
         val currentThemeIdx = imgui.type.ImInt(session.uiTheme.theme.ordinal)
         val themeComboW = (ImGui.getContentRegionAvailX() * 0.33f * 0.5f).coerceAtLeast(80f)
         ImGui.setNextItemWidth(themeComboW)
-        if (ImGui.combo("##ui_theme", currentThemeIdx, themeNames)) {
+        val themeChanged = ImGui.combo("##ui_theme", currentThemeIdx, themeNames)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "ui_theme" }
+        if (themeChanged) {
             val nextTheme = themes[currentThemeIdx.get()]
             session.uiTheme.theme = nextTheme
             AppPreferencesStore.savePreferences()

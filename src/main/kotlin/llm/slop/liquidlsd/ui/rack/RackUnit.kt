@@ -47,6 +47,7 @@ object RackUnit {
         itemTooltip(
             if (isExpanded) "Edit is active. Click to close." else "Click to open the parameter editor."
         )
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "rack_chevron_$idSuffix" }
     }
 
     /**
@@ -68,6 +69,7 @@ object RackUnit {
         itemTooltip(
             if (isExpanded) "Edit is active. Click to close." else "Click to open the parameter editor."
         )
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "rack_chevron_$idSuffix" }
     }
 
     /**

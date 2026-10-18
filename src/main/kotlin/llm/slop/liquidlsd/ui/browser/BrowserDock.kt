@@ -89,6 +89,7 @@ object BrowserDock {
                 ButtonChrome.pushColor(if (active) activeCol else inactiveCol)
                 ImGui.pushStyleColor(ImGuiCol.Text, if (active) activeTextCol else inactiveTextCol)
                 if (ButtonChrome.button(label, w, btnH)) LibraryNavigation.setViewMode(mode)
+                llm.slop.liquidlsd.tour.WidgetRegistry.note { "browser_tab_" + mode.name.lowercase() }
                 ImGui.popStyleColor(4)
             }
         }

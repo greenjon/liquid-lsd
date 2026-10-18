@@ -22,12 +22,16 @@ private val logger = KotlinLogging.logger {}
 class TourRunner(private val script: TourScript, private val outFile: File, dump: String? = null, private val scriptDir: File = File(".")) {
     /** Set by Main once the mixer exists (scripted deck actions need it). */
     var mixer: llm.slop.liquidlsd.rendering.Mixer? = null
+    /** Set by UIManager with the tour: scripted view actions (focus pair, Params, tabs) go through it. */
+    var parametersState: llm.slop.liquidlsd.ui.ParametersState? = null
     private var audio: TourAudioFeeder? = null
     companion object {
         const val FPS = 60
         private const val DT = 1.0 / FPS
         private const val CLICK_HOLD_SEC = 0.12
         private const val RIPPLE_SEC = 0.45
+        private const val HIGHLIGHT_LINGER_SEC = 0.9
+        private const val CAPTION_SIZE = 30f
 
         /**
          * Uncaptured frames rendered before frame 0 so ImGui layout, fonts and first-use lazy init settle.
@@ -59,6 +63,9 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     private var rippleX = 0f
     private var rippleY = 0f
     private var mouseDown = false
+    private var highlight: WidgetRegistry.Rect? = null
+    private var highlightFrom = 0.0
+    private var caption: String? = null
 
     private var pipe: FFmpegProcessPipe? = null
     private var pbo: PboReadbackPipeline? = null
@@ -115,7 +122,11 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         llm.slop.liquidlsd.presets.PresetManager.awaitIo() // loads requested by last frame's UI have queued their results
         awaitNs += System.nanoTime() - a0
         audio?.feed(frame.toLong())
-        while (nextStep < steps.size && steps[nextStep].t <= t + 1e-9) startStep(steps[nextStep++], t)
+        while (nextStep < steps.size && steps[nextStep].t <= t + 1e-9) {
+            val st = steps[nextStep++]
+            if (st.caption != null) caption = st.caption.takeIf { it.isNotBlank() }
+            startStep(st, t)
+        }
         if (moving) {
             val k = ((t - moveStart) / moveDur).coerceIn(0.0, 1.0)
             val e = (k * k * (3 - 2 * k)).toFloat()
@@ -142,8 +153,18 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     private fun startStep(step: TourStep, t: Double) {
         when (step.action) {
             "move" -> resolve(step)?.let { (x, y) ->
+                highlight = step.target?.let { WidgetRegistry.find(it) }
+                highlightFrom = t
                 moveFromX = curX; moveFromY = curY; moveToX = x; moveToY = y
                 moveStart = t; moveDur = (step.durationSec ?: 0.6).coerceAtLeast(DT); moving = true
+            }
+            "drag" -> {
+                // Press at the cursor, drag by (dx, dy) over durationSec, release. Move to the knob first with a "move" step.
+                val dur = (step.durationSec ?: 0.8).coerceAtLeast(DT)
+                moveFromX = curX; moveFromY = curY; moveToX = curX + (step.dx ?: 0f); moveToY = curY + (step.dy ?: 0f)
+                moveStart = t; moveDur = dur; moving = true
+                pressUntil = t + dur + DT
+                rippleStart = t; rippleX = curX; rippleY = curY
             }
             "click" -> {
                 pressUntil = t + (step.durationSec ?: CLICK_HOLD_SEC)
@@ -177,8 +198,88 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
                     )
                 )
             }
+            "fx_filter" -> fxChain(step)?.let { c ->
+                val slot = slotIndex(step) ?: return@let
+                llm.slop.liquidlsd.presets.FxOps.setSlotFilter(c, slot, step.target?.takeIf { it.isNotBlank() })
+            }
+            "fx_enable" -> fxChain(step)?.let { c ->
+                val slot = slotIndex(step) ?: return@let
+                llm.slop.liquidlsd.presets.FxOps.setSlotEnabled(c, slot, (step.value ?: 1f) >= 0.5f)
+            }
+            "fx_chain" -> fxChain(step)?.let { c ->
+                val f = File(step.target ?: return@let).let { if (it.isAbsolute) it else File(scriptDir, it.path).takeIf { x -> x.exists() } ?: it }
+                try {
+                    val dto = llm.slop.liquidlsd.presets.PresetManager.json.decodeFromString<llm.slop.liquidlsd.models.FXChainDto>(f.readText())
+                    llm.slop.liquidlsd.presets.FxOps.applyChain(c, dto, source = f, isBaseline = true)
+                } catch (e: Exception) {
+                    warnTour("Tour t=${step.t}: cannot load FX chain '${f.path}': ${e.message}")
+                }
+            }
+            "fx_clear" -> fxChain(step)?.let { llm.slop.liquidlsd.presets.FxOps.clearChain(it) }
+            "fx_link" -> fxChain(step)?.let { c ->
+                val slot = slotIndex(step) ?: return@let
+                c.setSlotLinked(slot, (step.value ?: 1f) >= 0.5f)
+            }
+            "fx_dry_wet" -> fxChain(step)?.dryWet?.set(step.value ?: 1f)
+            "fx_param" -> fxChain(step)?.let { c ->
+                val slot = slotIndex(step) ?: return@let
+                val p = c.slots[slot]?.parameters?.get(step.param)
+                if (p == null) warnTour("Tour t=${step.t}: ${step.deck} slot $slot has no parameter '${step.param}'")
+                else p.set(step.value ?: 0f)
+            }
+            // Super Knob and slot Metaknob are separate on purpose: the Super Knob drives linked slots' Metaknobs by soft-takeover.
+            "super_knob" -> fxChain(step)?.superKnob?.set(step.value ?: 0f)
+            "meta_knob" -> fxChain(step)?.let { c ->
+                val slot = slotIndex(step) ?: return@let
+                c.slots[slot]?.metaKnob?.set(step.value ?: 0f) ?: warnTour("Tour t=${step.t}: ${step.deck} slot $slot is empty")
+            }
+            "transition" -> llm.slop.liquidlsd.presets.TransitionOps.setStock(step.target)
+            "transition_preset" -> {
+                val f = File(step.target ?: return).let { if (it.isAbsolute) it else File(scriptDir, it.path).takeIf { x -> x.exists() } ?: it }
+                llm.slop.liquidlsd.presets.TransitionOps.loadPreset(f)
+                llm.slop.liquidlsd.presets.PresetManager.awaitIo()
+            }
+            "library_mode" -> when (step.target?.uppercase()) {
+                "FULL" -> UITheme.libraryMode = UITheme.LibraryMode.FULL
+                "HALF" -> UITheme.libraryMode = UITheme.LibraryMode.HALF
+                else -> warnTour("Tour t=${step.t}: library_mode wants FULL or HALF")
+            }
+            "open_params" -> parametersState?.openParams(step.target ?: return)
+            "open_params_pair" -> parametersState?.openParamsForPair(step.target ?: return)
+            "focus_pair" -> parametersState?.focusPair(step.target ?: return)
+            "close_focus" -> parametersState?.let { it.leavePair(); it.collapseAllRackModules() }
+            "preferences" -> {
+                val cat = step.target?.let { n -> llm.slop.liquidlsd.ui.PreferencesPanel.Category.entries.firstOrNull { it.name.equals(n, true) } }
+                if (step.target != null && cat == null) warnTour("Tour t=${step.t}: unknown preferences category '${step.target}'")
+                else llm.slop.liquidlsd.ui.PreferencesPanel.open(cat)
+            }
+            "preferences_close" -> llm.slop.liquidlsd.ui.PreferencesPanel.close()
+            "theme" -> when (step.target?.lowercase()) {
+                "light" -> UITheme.theme = UITheme.Theme.ORANGE_SUNSHINE
+                "dark" -> UITheme.theme = UITheme.Theme.GREY_ACID
+                else -> warnTour("Tour t=${step.t}: theme wants light or dark")
+            }
+            "crossfade" -> mixer?.crossfade?.set(step.value ?: -1f)
             else -> warnTour("Tour: unknown action '${step.action}'")
         }
+    }
+
+    /** Deck A/B/BG/PV or MASTER -> its FX chain. */
+    private fun fxChain(step: TourStep): llm.slop.liquidlsd.rendering.FxChain? {
+        val mx = mixer ?: return null
+        if (step.deck.equals("MASTER", true)) return mx.masterFxChain
+        val slot = llm.slop.liquidlsd.presets.DeckSlot.entries.firstOrNull { it.name.equals(step.deck, true) }
+        if (slot == null) { warnTour("Tour t=${step.t}: bad deck '${step.deck}' (A, B, BG, PV or MASTER)"); return null }
+        return slot.deck(mx).fxChain
+    }
+
+    private fun slotIndex(step: TourStep): Int? {
+        val i = step.slot
+        if (i == null || i !in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
+            warnTour("Tour t=${step.t}: ${step.action} needs slot 0..${llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT - 1}, got $i")
+            return null
+        }
+        return i
     }
 
     private fun warnTour(msg: String) {
@@ -213,11 +314,36 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
             val a = ((1f - k) * 255).toInt()
             dl.addCircle(rippleX, rippleY, 6f + 30f * k, (a shl 24) or 0x00FFFFFF, 32, 3f)
         }
+        highlight?.let { r ->
+            // Ring from the start of the approach until the cursor has been there a moment, then it fades.
+            val endAt = highlightFrom + moveDur + HIGHLIGHT_LINGER_SEC
+            if (t < endAt) {
+                val fade = ((endAt - t) / HIGHLIGHT_LINGER_SEC).coerceIn(0.0, 1.0).toFloat()
+                val pulse = 0.5f + 0.5f * kotlin.math.sin((t * 6.0).toFloat())
+                val a = (fade * (170 + 70 * pulse)).toInt().coerceIn(0, 255)
+                dl.addRect(r.minX - 4f, r.minY - 4f, r.maxX + 4f, r.maxY + 4f, (a shl 24) or 0x003C9CFF, 6f, 0, 3f)
+            }
+        }
         val x = curX
         val y = curY
         val fill = if (mouseDown) 0xFF3C9CFF.toInt() else 0xFFFFFFFF.toInt()
         dl.addTriangleFilled(x, y, x, y + 21f, x + 15f, y + 15f, fill)
         dl.addTriangle(x, y, x, y + 21f, x + 15f, y + 15f, 0xFF000000.toInt(), 1.5f)
+        if (script.burnCaptions) drawCaption()
+    }
+
+    /** Burned-in caption bar (script.burnCaptions): centred near the bottom, drawn over everything incl. the cursor. */
+    private fun drawCaption() {
+        val text = caption ?: return
+        val dl = ImGui.getForegroundDrawList()
+        val font = ImGui.getFont()
+        val sz = ImGui.calcTextSize(text).x * CAPTION_SIZE / ImGui.getFontSize()
+        val w = ImGui.getIO().displaySizeX
+        val h = ImGui.getIO().displaySizeY
+        val x = (w - sz) * 0.5f
+        val y = h - 90f
+        dl.addRectFilled(x - 22f, y - 12f, x + sz + 22f, y + CAPTION_SIZE + 12f, 0xCC101010.toInt(), 10f)
+        dl.addText(font, CAPTION_SIZE.toInt(), x, y, 0xFFFFFFFF.toInt(), text)
     }
 
     /** Reads FBO 0 after the UI has been drawn and before the buffer swap. */
@@ -269,7 +395,9 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         pbo?.dispose()
         val totalMs = (System.nanoTime() - startNs) / 1e6
         File(outFile.path + ".hashes").writeText(hashes.toString())
-        writeVtt(File(outFile.path.substringBeforeLast('.') + ".vtt"))
+        val base = outFile.path.substringBeforeLast('.')
+        writeVtt(File("$base.vtt"))
+        writeSidecars(base)
         val avg = totalMs / frame.coerceAtLeast(1)
         println(String.format(Locale.ROOT, "TOUR_DONE frames=%d total_ms=%.0f avg_ms=%.2f max_ms=%.1f ffmpeg_ok=%b await_ms=%.1f audio_bass_max=%.3f fft_max=%.3f", frame, totalMs, avg, maxFrameMs, ok, awaitNs / 1e6, maxBass, maxFft))
     }
@@ -277,6 +405,42 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     private fun ts(sec: Double): String {
         val ms = Math.round(sec * 1000)
         return String.format(Locale.ROOT, "%02d:%02d:%02d.%03d", ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, ms % 1000)
+    }
+
+    private fun jsonStr(v: String) = buildString {
+        append('"')
+        for (c in v) when (c) {
+            '"' -> append("\\\""); '\\' -> append("\\\\"); '\n' -> append("\\n")
+            else -> if (c < ' ') append(String.format("\\u%04x", c.code)) else append(c)
+        }
+        append('"')
+    }
+
+    private fun chapterAt(t: Double): TourChapter? = script.chapters.sortedBy { it.t }.lastOrNull { it.t <= t + 1e-9 }
+
+    /**
+     * `<base>.chapters.json` (id, title, start, end, clip length), `<base>.captions.json` (index, start, end, chapter, text for the
+     * interactive page and transcript) and `<base>.ffmeta` (ffmpeg chapter metadata, merged by scripts/render_tour.sh).
+     */
+    private fun writeSidecars(base: String) {
+        val chapters = script.chapters.sortedBy { it.t }
+        fun endOf(i: Int) = chapters[i].endSec ?: chapters.getOrNull(i + 1)?.t ?: script.durationSec
+        fun num(d: Double) = String.format(Locale.ROOT, "%.3f", d)
+        File("$base.chapters.json").writeText(chapters.withIndex().joinToString(",\n", "[\n", "\n]\n") { (i, c) ->
+            "  {\"id\":${jsonStr(c.id)},\"title\":${jsonStr(c.title)},\"start\":${num(c.t)},\"end\":${num(endOf(i))},\"clip\":${num(c.clipSec ?: (endOf(i) - c.t))}}"
+        })
+        val cues = steps.filter { !it.caption.isNullOrBlank() }
+        File("$base.captions.json").writeText(cues.withIndex().joinToString(",\n", "[\n", "\n]\n") { (i, c) ->
+            val end = cues.getOrNull(i + 1)?.t ?: script.durationSec
+            "  {\"index\":${i + 1},\"start\":${num(c.t)},\"end\":${num(end)},\"chapter\":${jsonStr(chapterAt(c.t)?.id ?: "")},\"text\":${jsonStr(c.caption!!)}}"
+        })
+        File("$base.ffmeta").writeText(buildString {
+            append(";FFMETADATA1\n")
+            for ((i, c) in chapters.withIndex()) {
+                append("[CHAPTER]\nTIMEBASE=1/1000\nSTART=").append(Math.round(c.t * 1000)).append("\nEND=").append(Math.round(endOf(i) * 1000))
+                    .append("\ntitle=").append(c.title.replace("\\", "\\\\").replace("=", "\\=").replace(";", "\\;").replace("#", "\\#").replace("\n", " ")).append("\n")
+            }
+        })
     }
 
     private fun writeVtt(file: File) {

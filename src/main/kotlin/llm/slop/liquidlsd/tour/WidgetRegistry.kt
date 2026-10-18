@@ -22,6 +22,11 @@ object WidgetRegistry {
         rects[key] = Rect(ImGui.getItemRectMinX(), ImGui.getItemRectMinY(), ImGui.getItemRectMaxX(), ImGui.getItemRectMaxY())
     }
 
+    /** [noteLastItem] with a lazily built key: nothing is allocated outside tour mode. */
+    inline fun note(key: () -> String) {
+        if (enabled) noteLastItem(key())
+    }
+
     fun find(key: String): Rect? = rects[key]
 
     fun keys(): Set<String> = rects.keys

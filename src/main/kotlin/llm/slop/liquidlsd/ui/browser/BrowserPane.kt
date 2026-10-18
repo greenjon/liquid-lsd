@@ -336,6 +336,7 @@ object BrowserPane {
         if (searchFocusRequests.remove(kind)) ImGui.setKeyboardFocusHere()
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
             ImGui.inputTextWithHint("##browserPaneSearch", "Search name, tags, folder...", search)
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "browser_search" }
         }
         if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
             search.set("")

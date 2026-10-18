@@ -220,6 +220,10 @@ class UIManager(
 
     /** Set only in tour mode: injects synthetic input and draws the cursor overlay. */
     var tour: llm.slop.liquidlsd.tour.TourRunner? = null
+        set(value) {
+            field = value
+            value?.parametersState = parametersState
+        }
 
     fun render(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
         currentMixer = mixer

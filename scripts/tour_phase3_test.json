@@ -1,0 +1,17 @@
+{"durationSec":9.0,"seed":3,"burnCaptions":true,
+"chapters":[{"t":0.0,"id":"intro","title":"Intro"},{"t":4.5,"id":"fx","title":"FX and transitions"}],
+"steps":[
+{"t":0.2,"action":"load_source","deck":"A","target":"kifs","caption":"Load a source"},
+{"t":0.4,"action":"load_source","deck":"B","target":"mandala"},
+{"t":1.0,"action":"move","target":"perf_gen_badge_A","durationSec":0.8,"caption":"Deck A source badge"},
+{"t":2.2,"action":"fx_filter","deck":"A","slot":0,"target":"bloom","caption":"Put an effect in slot 1"},
+{"t":2.6,"action":"super_knob","deck":"A","value":0.7},
+{"t":3.0,"action":"transition","target":"linear_crossfade"},
+{"t":3.2,"action":"move","target":"crossfader_track","durationSec":0.8,"caption":"Crossfader"},
+{"t":4.0,"action":"drag","dx":120,"dy":0,"durationSec":1.0},
+{"t":5.0,"action":"library_mode","target":"FULL"},
+{"t":5.5,"action":"move","target":"browser_tab_fx","durationSec":0.7,"caption":"Library tabs"},
+{"t":6.5,"action":"theme","target":"light"},
+{"t":7.0,"action":"preferences","target":"general"},
+{"t":7.8,"action":"move","target":"ui_theme","durationSec":0.6}
+]}

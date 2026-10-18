@@ -322,6 +322,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             if (ImGui.invisibleButton(str.badgeId, genBadgeW, ctrlH)) {
                 parametersState.selectGen(canonicalBankId, deckLabel)
             }
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { str.badgeId.removePrefix("##") }
             if (DockOutline.selects(parametersState, canonicalBankId, ParametersState.BrowseTarget.Gen)) DockOutline.drawAroundLastItem(canonicalBankId)
             val sourceId = GeneratorDefaults.sourceIdFor(deck.source)
             val hasUserDef = GeneratorDefaults.hasUserDefault(sourceId)
@@ -371,6 +372,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                 ImGui.openPopup(str.badgeCtxId)
             }
             itemTooltip("Source operations (Browse, Save As, defaults).")
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { str.kebabId.substringAfter("##") }
 
             ImGui.sameLine(0f, lineGap)
 
@@ -387,6 +389,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             ImGui.popStyleColor(3)
             itemTooltip(str.saveTip)
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { str.saveId.substringAfter("##") }
 
             ImGui.sameLine(0f, lineGap)
 
@@ -428,6 +431,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             ImGui.popStyleColor(2)
             itemTooltip(str.ejectTip)
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { str.ejectId.substringAfter("##") }
             ImGui.endGroup()
         }
 
@@ -510,6 +514,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             ImGui.popStyleColor(2)
             itemTooltip(str.randTip)
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { str.randId.substringAfter("##") }
             if (genome) {
                 ImGui.sameLine(0f, gap)
                 drawStrategyPicker(session, deck, tag, pickW, ctrlH)

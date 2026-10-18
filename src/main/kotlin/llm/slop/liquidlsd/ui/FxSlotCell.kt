@@ -102,6 +102,7 @@ object FxSlotCell {
         val nameW = (w - arrowW * 2f).coerceAtLeast(8f)
         ImGui.setCursorScreenPos(nameX, y)
         val released = ImGui.invisibleButton("##name_$idBase", nameW, h)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { idBase }
         val nameHovered = ImGui.isItemHovered()
         // Opening Browse on press would cancel any drag and swallow the second click of a
         // double-click (which instead toggles Focus Mode), so it opens on a drag-free release,
@@ -208,6 +209,7 @@ object FxSlotCell {
             if (ButtonChrome.button("$icon##fxbypass_${bankId}_$slotIndex", size, size) && fx != null) {
                 FxOps.setSlotEnabled(chain, slotIndex, !fx.enabled)
             }
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxbypass_${bankId}_$slotIndex" }
         }
         ImGui.popStyleVar()
         ImGui.popStyleColor(4)
@@ -244,6 +246,7 @@ object FxSlotCell {
                 chain.setSlotLinked(slotIndex, !isLinked)
                 FxMacroSync.syncFor(bankId, mixer)
             }
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxlink_${bankId}_$slotIndex" }
         }
         ImGui.popStyleVar()
         ImGui.popStyleColor(3)
