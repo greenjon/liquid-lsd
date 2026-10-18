@@ -467,6 +467,15 @@ fun main(args: Array<String>) {
     val sw = IntArray(1)
     val sh = IntArray(1)
 
+    if (tour != null) {
+        // Real pointer/keyboard input must never reach ImGui during a tour (the synthetic cursor is the only input).
+        glfwSetScrollCallback(window, null)
+        glfwSetCursorPosCallback(window, null)
+        glfwSetCursorEnterCallback(window, null)
+        glfwSetMouseButtonCallback(window, null)
+        glfwSetKeyCallback(window, null)
+        glfwSetCharCallback(window, null)
+    }
     tour?.begin()
     while (!glfwWindowShouldClose(window)) {
         val frameStartTime = glfwGetTime()
