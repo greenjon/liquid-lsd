@@ -262,7 +262,7 @@ class ISFVisualSource(
         shader.setUniform("FRAMEINDEX", frameIndex++)
         
         // Derive DATE components via epoch arithmetic — zero allocation (no LocalDateTime/LocalTime objects)
-        val epochMs = System.currentTimeMillis()
+        val epochMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
         val epochSec = epochMs / 1000L
         val secondsSinceMidnight = (epochSec % 86400L).toFloat() + ((epochMs % 1000L) / 1000f)
         // Gregorian calendar from epoch seconds (proleptic, valid well past 2100)

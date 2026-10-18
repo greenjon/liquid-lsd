@@ -107,7 +107,7 @@ data class CvModulator(
 
     val lfoMinMaxMode: Boolean = false,
 
-    val id: String = UUID.randomUUID().toString()
+    val id: String = llm.slop.liquidlsd.utils.DeterministicRandom.uuid()
 ) {
     fun getLfoMin(): Float = dcOffset - depth
     fun getLfoMax(): Float = dcOffset + depth
@@ -129,7 +129,7 @@ data class CvModulator(
                (sourceId == "lfo" && genUnit == GenUnit.BEAT)
     }
 
-    fun randomizeActiveValues(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeActiveValues(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         val (newDepth, newDcOffset) = if (lfoMinMaxMode) {
             val rMin = if (randomizeDcOffset) {
                 if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
@@ -256,7 +256,7 @@ data class CvModulator(
         )
     }
 
-    fun randomizeDepth(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeDepth(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeDepth) return this
         if (lfoMinMaxMode) {
             val rMin = dcOffset - depth
@@ -267,7 +267,7 @@ data class CvModulator(
         return this.copy(depth = newDepth)
     }
 
-    fun randomizeDcOffset(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeDcOffset(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeDcOffset) return this
         if (lfoMinMaxMode) {
             val rMax = dcOffset + depth
@@ -278,7 +278,7 @@ data class CvModulator(
         return this.copy(dcOffset = newDcOffset)
     }
 
-    fun randomizeSubdivision(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeSubdivision(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeSubdivision) return this
         val newSubdiv = if (subdivisionMin == subdivisionMax) {
             subdivisionMin
@@ -298,31 +298,31 @@ data class CvModulator(
         return this.copy(subdivision = newSubdiv)
     }
 
-    fun randomizePhaseOffset(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizePhaseOffset(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizePhaseOffset) return this
         val newPhase = if (phaseOffsetMin == phaseOffsetMax) phaseOffsetMin else random.nextFloat() * (phaseOffsetMax - phaseOffsetMin) + phaseOffsetMin
         return this.copy(phaseOffset = newPhase)
     }
 
-    fun randomizeSlope(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeSlope(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeSlope) return this
         val newSlope = if (slopeMin == slopeMax) slopeMin else random.nextFloat() * (slopeMax - slopeMin) + slopeMin
         return this.copy(slope = newSlope)
     }
 
-    fun randomizeMorph(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeMorph(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeMorph) return this
         val newMorph = if (morphMin == morphMax) morphMin else random.nextFloat() * (morphMax - morphMin) + morphMin
         return this.copy(morph = newMorph)
     }
 
-    fun randomizeHold(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeHold(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeHold) return this
         val newHold = if (holdMin == holdMax) holdMin else random.nextFloat() * (holdMax - holdMin) + holdMin
         return this.copy(hold = newHold)
     }
 
-    fun randomizeModSubdivision(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeModSubdivision(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeModSubdivision) return this
         val newSubdiv = if (modSubdivisionMin == modSubdivisionMax) {
             modSubdivisionMin
@@ -342,43 +342,43 @@ data class CvModulator(
         return this.copy(modSubdivision = newSubdiv)
     }
 
-    fun randomizeModPhaseOffset(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeModPhaseOffset(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeModPhaseOffset) return this
         val newPhase = if (modPhaseOffsetMin == modPhaseOffsetMax) modPhaseOffsetMin else random.nextFloat() * (modPhaseOffsetMax - modPhaseOffsetMin) + modPhaseOffsetMin
         return this.copy(modPhaseOffset = newPhase)
     }
 
-    fun randomizeModSlope(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeModSlope(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeModSlope) return this
         val newSlope = if (modSlopeMin == modSlopeMax) modSlopeMin else random.nextFloat() * (modSlopeMax - modSlopeMin) + modSlopeMin
         return this.copy(modSlope = newSlope)
     }
 
-    fun randomizeModMorph(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeModMorph(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeModMorph) return this
         val newMorph = if (modMorphMin == modMorphMax) modMorphMin else random.nextFloat() * (modMorphMax - modMorphMin) + modMorphMin
         return this.copy(modMorph = newMorph)
     }
 
-    fun randomizeModHold(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeModHold(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeModHold) return this
         val newHold = if (modHoldMin == modHoldMax) modHoldMin else random.nextFloat() * (modHoldMax - modHoldMin) + modHoldMin
         return this.copy(modHold = newHold)
     }
 
-    fun randomizeGeneratorModDepth(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeGeneratorModDepth(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeGeneratorModDepth) return this
         val newDepth = if (generatorModDepthMin == generatorModDepthMax) generatorModDepthMin else random.nextFloat() * (generatorModDepthMax - generatorModDepthMin) + generatorModDepthMin
         return this.copy(generatorModDepth = newDepth)
     }
 
-    fun randomizeAttackMs(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeAttackMs(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeAttackMs) return this
         val newAttack = if (attackMsMin == attackMsMax) attackMsMin else random.nextFloat() * (attackMsMax - attackMsMin) + attackMsMin
         return this.copy(attackMs = newAttack)
     }
 
-    fun randomizeDecayMs(random: kotlin.random.Random = kotlin.random.Random.Default): CvModulator {
+    fun randomizeDecayMs(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeDecayMs) return this
         val newDecay = if (decayMsMin == decayMsMax) decayMsMin else random.nextFloat() * (decayMsMax - decayMsMin) + decayMsMin
         return this.copy(decayMs = newDecay)

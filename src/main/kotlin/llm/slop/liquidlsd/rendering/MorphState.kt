@@ -221,7 +221,7 @@ class DeckMorphController(
      */
     fun sampleNewState(
         target: DeckMorphSnapshot,
-        random: kotlin.random.Random = kotlin.random.Random.Default,
+        random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng,
         fresh: Boolean = false,
         strategy: SamplerStrategy = this.strategy
     ) {
@@ -483,7 +483,7 @@ class DeckMorphController(
      * end stays, so the next cycle starts from where it was; the live blend jumps to the new target at the current
      * position (a deliberate skip, not a fade). No-op before the controller has been initialised.
      */
-    fun vetoTarget(random: kotlin.random.Random = kotlin.random.Random.Default) {
+    fun vetoTarget(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng) {
         if (!isInitialized) return
         sampleNewState(if (latchTarget == BoundaryTarget.READY_FOR_ONE) state1 else state0, random)
     }
@@ -491,7 +491,7 @@ class DeckMorphController(
     /**
      * Forces an immediate randomization roll (e.g. on manual UI trigger).
      */
-    fun forceRandomize(random: kotlin.random.Random = kotlin.random.Random.Default) {
+    fun forceRandomize(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng) {
         // A is a brand-new genome (a random one unless the strategy draws from the Garden); B follows the strategy
         val startStrategy = if (strategy == SamplerStrategy.POOL || strategy == SamplerStrategy.BREED) strategy else SamplerStrategy.RANDOM
         sampleNewState(state0, random, fresh = true, strategy = startStrategy)

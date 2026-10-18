@@ -1264,6 +1264,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#update-icon-instead-of-popup-uimenubarkt-uiuimanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Icon Instead of Popup (ui/MenuBar.kt, ui/UIManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-monitor-choice-uioutputmonitorskt-uimenubarkt-mainkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Monitor Choice (ui/OutputMonitors.kt, ui/MenuBar.kt, Main.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#eleven-more-light-generators-librarysourcescyclic_cametaballswave_ripplesharmonographaurora_ribbonsisometric_voxelshalftone_matrixkali_setgirih_starsglitch_blocksvoronoi_cells" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6132,6 +6154,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#update-icon-instead-of-popup-uimenubarkt-uiuimanagerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update Icon Instead of Popup (ui/MenuBar.kt, ui/UIManager.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#output-monitor-choice-uioutputmonitorskt-uimenubarkt-mainkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Output Monitor Choice (ui/OutputMonitors.kt, ui/MenuBar.kt, Main.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#eleven-more-light-generators-librarysourcescyclic_cametaballswave_ripplesharmonographaurora_ribbonsisometric_voxelshalftone_matrixkali_setgirih_starsglitch_blocksvoronoi_cells" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -10975,6 +11019,16 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="update-icon-instead-of-popup-uimenubarkt-uiuimanagerkt">Update Icon Instead of Popup (<code>ui/MenuBar.kt</code>, <code>ui/UIManager.kt</code>)</h3>
+<ul>
+<li><strong>A new version no longer opens a popup at startup.</strong> When the startup check finds one, a download icon appears in the menu bar; hover it for the current and latest version, click it for the same Download / Remind Later / Skip Version dialog as before. Skip Version hides the icon for that release.</li>
+<li>Internal: <code>UIManager</code> no longer calls <code>UpdatePromptModal.request</code>; <code>MenuBar</code> reads <code>UpdateChecker.lastResult</code>.</li>
+</ul>
+<h3 id="output-monitor-choice-uioutputmonitorskt-uimenubarkt-mainkt">Output Monitor Choice (<code>ui/OutputMonitors.kt</code>, <code>ui/MenuBar.kt</code>, <code>Main.kt</code>)</h3>
+<ul>
+<li><strong>New Output → Output Monitor menu</strong> picks which screen the secondary output window fills. <strong>Automatic</strong> keeps the old behaviour (the first monitor that is not primary); naming a monitor fixes setups where that guess is wrong, notably Wayland, where the output could jump to the laptop screen instead of the projector. The choice is saved by monitor name and the output reopens at once if it is already running.</li>
+<li>Internal: <code>outputMonitorName</code> in <code>AppPreferences</code> and <code>AppPreferencesStore</code>; <code>OutputMonitors</code> lists and resolves GLFW monitors.</li>
+</ul>
 <h3 id="eleven-more-light-generators-librarysourcescyclic_cametaballswave_ripplesharmonographaurora_ribbonsisometric_voxelshalftone_matrixkali_setgirih_starsglitch_blocksvoronoi_cells">Eleven More Light Generators (<code>library/sources/{cyclic_ca,metaballs,wave_ripples,harmonograph,aurora_ribbons,isometric_voxels,halftone_matrix,kali_set,girih_stars,glitch_blocks,voronoi_cells}/</code>)</h3>
 <ul>
 <li><strong>Eleven more generators for integrated graphics, on desktop and web.</strong> <strong>Cyclic CA</strong> (self-organising spirals), <strong>Metaballs</strong>, <strong>Wave Ripples</strong> (interference of orbiting wave sources), <strong>Harmonograph</strong> (a glowing oscilloscope curve), <strong>Aurora Ribbons</strong>, <strong>Isometric Voxels</strong> (a Q<em>bert-style cube field), </em><em>Halftone Matrix</em><em> (dots, LED pixels and CMYK screens), </em><em>Kali Set</em><em> (an inversion-fold fractal), </em><em>Girih Stars</em><em> (Islamic strapwork), </em><em>Glitch Blocks</em><em> and </em><em>Voronoi Cells</em>*. None carries the GPU-intensive triangle.</li>

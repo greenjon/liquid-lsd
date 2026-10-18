@@ -25,7 +25,7 @@ object MacroLearnState {
 
     data class LearnSession(
         val controlId: String,
-        val startTimeMs: Long = System.currentTimeMillis()
+        val startTimeMs: Long = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
     )
 
     var activeSession: LearnSession? = null
@@ -38,13 +38,13 @@ object MacroLearnState {
     /** Sets a temporary status message; `ui/ToastOverlay` shows it (pulled from [getActiveStatus] each frame). */
     fun setStatus(message: String, durationMs: Long = 4000L) {
         statusBanner = message
-        statusBannerExpiryMs = System.currentTimeMillis() + durationMs
+        statusBannerExpiryMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() + durationMs
     }
 
     /** Returns the current active status message if not expired. */
     fun getActiveStatus(): String? {
         val banner = statusBanner ?: return null
-        if (System.currentTimeMillis() > statusBannerExpiryMs) {
+        if (llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() > statusBannerExpiryMs) {
             statusBanner = null
             return null
         }
@@ -60,14 +60,14 @@ object MacroLearnState {
     /** Arms Learn Mode for the given control ID. */
     fun startLearn(controlId: String) {
         selectedControlId = controlId
-        activeSession = LearnSession(controlId, System.currentTimeMillis())
+        activeSession = LearnSession(controlId, llm.slop.liquidlsd.utils.TimeSource.getEpochMillis())
         setStatus("ADD TARGET: Click any parameter slider or modulator property.")
     }
 
     /** Restarts the Learn timeout for the armed session, e.g. when a GLOBAL Learn finally reaches an Edit view. */
     fun restartLearnTimeout() {
         val session = activeSession ?: return
-        activeSession = session.copy(startTimeMs = System.currentTimeMillis())
+        activeSession = session.copy(startTimeMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis())
     }
 
     /** Cancels any active Learn Mode session. */
@@ -145,7 +145,7 @@ object MacroLearnState {
     /** Returns true if Learn Mode is currently active, checking timeout. */
     fun isLearning(): Boolean {
         val session = activeSession ?: return false
-        if (System.currentTimeMillis() - session.startTimeMs > TIMEOUT_MS) {
+        if (llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() - session.startTimeMs > TIMEOUT_MS) {
             activeSession = null
             setStatus("Add Target timed out.", 3000L)
             return false

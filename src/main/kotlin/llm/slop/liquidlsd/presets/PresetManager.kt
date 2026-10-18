@@ -21,6 +21,11 @@ object PresetManager {
         Thread(runnable, "PresetManager-IO").apply { isDaemon = true }
     }
 
+    /** Blocks until every task already submitted to the preset IO thread (loads, saves) has finished. Tour renders use it as a barrier. */
+    fun awaitIo() {
+        presetIoExecutor.submit {}.get()
+    }
+
     internal val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true

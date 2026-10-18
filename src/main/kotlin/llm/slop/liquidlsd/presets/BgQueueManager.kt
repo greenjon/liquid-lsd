@@ -273,7 +273,7 @@ object BgQueueManager {
             }
             val unplayed = queue.indices.filter { it !in playedIndices }
             if (unplayed.isNotEmpty()) {
-                val nextIdx = unplayed.random()
+                val nextIdx = unplayed.random(llm.slop.liquidlsd.utils.DeterministicRandom.rng)
                 playIndex(nextIdx, mixer)
             }
             return
@@ -305,7 +305,7 @@ object BgQueueManager {
                     if (playedIndices.size >= queue.size && isRepeatEnabled) playedIndices.clear()
                     val unplayed = queue.indices.filter { it !in playedIndices }
                     if (unplayed.isNotEmpty()) {
-                        val i = unplayed.random()
+                        val i = unplayed.random(llm.slop.liquidlsd.utils.DeterministicRandom.rng)
                         playedIndices.add(i)
                         playbackHistory.add(i)
                         activeIndex = i

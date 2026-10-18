@@ -130,6 +130,8 @@ class UIManager(
         ImGui.createContext()
         val io = ImGui.getIO()
         io.addConfigFlags(ImGuiConfigFlags.NavEnableKeyboard)
+        // Tour renders must not inherit (or leave behind) window layout from imgui.ini.
+        if (AppPreferencesStore.persistenceDisabled) io.iniFilename = null
 
         // Load semantic fonts before the GL3 backend initialises so the atlas
         // is ready for the backend to upload on its first render call.
@@ -216,6 +218,9 @@ class UIManager(
         }
     }
 
+    /** Set only in tour mode: injects synthetic input and draws the cursor overlay. */
+    var tour: llm.slop.liquidlsd.tour.TourRunner? = null
+
     fun render(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
         currentMixer = mixer
         openDevEditBrowse()
@@ -281,6 +286,7 @@ class UIManager(
 
         imguiGlfw.newFrame()
         imguiGl3.newFrame()
+        tour?.injectInput()
         for (i in 0..4) {
             if (pendingMousePress[i]) {
                 ImGui.getIO().setMouseDown(i, true)
@@ -335,6 +341,7 @@ class UIManager(
         handleKnobCursorLocking()
         LibraryPanel.endFrame()
 
+        tour?.drawOverlay()
         ImGui.render()
         imguiGl3.renderDrawData(ImGui.getDrawData())
     }

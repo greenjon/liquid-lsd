@@ -680,7 +680,7 @@ class PerformanceMatrixPanel {
                                 parametersState.midiLearnTarget = null
                             } else {
                                 parametersState.midiLearnTarget = MidiLearnTarget.MacroTarget(midiPath, knobLabel)
-                                parametersState.midiLearnStartTimeMs = System.currentTimeMillis()
+                                parametersState.midiLearnStartTimeMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
                                 if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
                                     PopupManager.globalPendingMidiWarning = true
                                 }

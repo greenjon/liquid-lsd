@@ -437,7 +437,7 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     seqHoldMax = seqHoldMax,
     randomizeSeqHold = randomizeSeqHold,
     seqCurveSmooth = seqCurveSmooth,
-    id = id ?: java.util.UUID.randomUUID().toString()
+    id = id ?: llm.slop.liquidlsd.utils.DeterministicRandom.uuid()
 )
 
 @Suppress("DEPRECATION")

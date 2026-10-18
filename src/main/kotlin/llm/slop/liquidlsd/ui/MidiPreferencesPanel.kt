@@ -50,7 +50,7 @@ object MidiPreferencesPanel {
 
     /** Runtimes keep the old compiled profile, so reset them, but not on every edit (reset drops bank and modifier state). */
     private fun flushPendingReset(session: llm.slop.liquidlsd.SessionContext) {
-        if (pendingResetAt != 0L && System.currentTimeMillis() >= pendingResetAt) {
+        if (pendingResetAt != 0L && llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() >= pendingResetAt) {
             pendingResetAt = 0L
             session.midiMappingManager.controllers.reset()
         }
@@ -59,7 +59,7 @@ object MidiPreferencesPanel {
     private fun applyEdit(store: ControllerProfileStore, edited: ControllerProfile): Boolean {
         val problems = store.saveUser(edited)
         editorProblems = problems
-        if (problems.isEmpty()) pendingResetAt = System.currentTimeMillis() + RESET_DEBOUNCE_MS
+        if (problems.isEmpty()) pendingResetAt = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() + RESET_DEBOUNCE_MS
         return problems.isEmpty()
     }
 
@@ -497,7 +497,7 @@ object MidiPreferencesPanel {
                         if (ButtonChrome.button("Learn##learn_$actionKey")) {
                             parametersState?.let { ps ->
                                 ps.midiLearnTarget = MidiLearnTarget.GlobalAction(actionKey)
-                                ps.midiLearnStartTimeMs = System.currentTimeMillis()
+                                ps.midiLearnStartTimeMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
                             }
                         }
                     }

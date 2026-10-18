@@ -699,7 +699,7 @@ class ISFFilter(
     }
 
     private fun setUniformDate(shader: Shader) {
-        val epochMs = System.currentTimeMillis()
+        val epochMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
         val epochSec = epochMs / 1000L
         val secondsSinceMidnight = (epochSec % 86400L).toFloat() + ((epochMs % 1000L) / 1000f)
         val daysSinceEpoch = (epochSec / 86400L).toInt()

@@ -87,7 +87,7 @@ internal object PerformanceTransitionsControls {
                     filter.parameters.values.forEach { param ->
                         val min = param.minClamp
                         val max = param.maxClamp
-                        param.baseValue = (min + Math.random().toFloat() * (max - min)).coerceIn(min, max)
+                        param.baseValue = (min + llm.slop.liquidlsd.utils.DeterministicRandom.rng.nextFloat() * (max - min)).coerceIn(min, max)
                     }
                 }
             }

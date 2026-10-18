@@ -38,7 +38,11 @@ object AppPreferencesStore {
         return raw.toBooleanStrictOrNull() ?: raw.toBoolean()
     }
 
+    /** Tour renders neither read nor write the user's preferences file (determinism, no side effects). */
+    @Volatile var persistenceDisabled = false
+
     fun loadPreferences() {
+        if (persistenceDisabled) return
         try {
             val fileToRead = when {
                 preferencesFile.exists() -> preferencesFile
@@ -312,6 +316,7 @@ object AppPreferencesStore {
     fun saveSettings() = savePreferences()
 
     fun savePreferences() {
+        if (persistenceDisabled) return
         try {
             val props = Properties()
             val fileToRead = if (preferencesFile.exists()) preferencesFile else if (legacySettingsFile.exists()) legacySettingsFile else null

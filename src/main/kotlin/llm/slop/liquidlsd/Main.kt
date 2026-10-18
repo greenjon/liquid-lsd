@@ -124,7 +124,24 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.utils.NativeLibraryLoader.prepareImGuiNatives()
 
     val cliArgs = llm.slop.liquidlsd.cli.CliArgs.parse(args)
+    // Tour renders must not read or write user preferences (determinism, no side effects): flag before UITheme initialises.
+    if (cliArgs.tourMode) AppPreferencesStore.persistenceDisabled = true
     llm.slop.liquidlsd.ui.FxLinkDefaults.install()
+    val tour: llm.slop.liquidlsd.tour.TourRunner? = if (cliArgs.tourMode) {
+        UITheme.startupBehavior = UITheme.StartupBehavior.EMPTY
+        UITheme.midiEnabled = false
+        UITheme.audioEngineEnabled = false
+        UITheme.maxFps = 60
+        UITheme.flameBudgetMs = 0f
+        UITheme.lockCursorOnKnobDrag = false
+        UITheme.checkUpdatesOnStartup = false
+        val script = llm.slop.liquidlsd.tour.TourScript.parse(java.io.File(cliArgs.tourScript!!).readText())
+        llm.slop.liquidlsd.utils.DeterministicRandom.seed(script.seed)
+        llm.slop.liquidlsd.ui.FileSystemManager.synchronousScans = true
+        llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.setAutoReloadEnabled(false)
+        val scriptFile = java.io.File(cliArgs.tourScript!!).absoluteFile
+        llm.slop.liquidlsd.tour.TourRunner(script, java.io.File(cliArgs.tourOut ?: "tour.mp4"), cliArgs.tourDump, scriptFile.parentFile)
+    } else null
 
     if (cliArgs.helpRequested) {
         llm.slop.liquidlsd.cli.CliArgs.printHelp(getAppVersion())
@@ -201,8 +218,9 @@ fun main(args: Array<String>) {
     glfwWindowHint(GLFW_DECORATED, if (isFrameless) GLFW_FALSE else GLFW_TRUE)
 
     // Create window
-    val initialWinW = cliArgs.windowWidth ?: 1920
-    val initialWinH = cliArgs.windowHeight ?: 1080
+    val initialWinW = if (tour != null) 1920 else cliArgs.windowWidth ?: 1920
+    val initialWinH = if (tour != null) 1080 else cliArgs.windowHeight ?: 1080
+    if (cliArgs.tourHidden) glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE)
     val window = glfwCreateWindow(initialWinW, initialWinH, "Liquid LSD - Libre Shader Decks", 0, 0)
     if (window == 0L) {
         val errorDesc = getGlfwErrorDescription()
@@ -246,7 +264,7 @@ fun main(args: Array<String>) {
     logger.info { "Display content scale detected: ${startupScale}x → UI fixed at 95% (Cap 12, Body 14, H3 15, H2 18, H1 22 px), PresetName=${UITheme.presetNameScalePercent}%" }
 
     glfwMakeContextCurrent(window)
-    glfwSwapInterval(1) // Enable vsync
+    glfwSwapInterval(if (tour != null) 0 else 1) // vsync (off for deterministic tour renders)
 
     // Initialize OpenGL
     GL.createCapabilities()
@@ -259,7 +277,7 @@ fun main(args: Array<String>) {
     llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll(async = false)
     llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
     llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
-    llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.startPolling()
+    if (tour == null) llm.slop.liquidlsd.rendering.ExternalVideoDiscovery.startPolling()
 
     logger.info { "OpenGL Version: ${glGetString(GL_VERSION)}" }
     logger.info { "OpenGL Renderer: ${glGetString(GL_RENDERER)}" }
@@ -315,6 +333,7 @@ fun main(args: Array<String>) {
     // Create Mixer
     val mixer = Mixer(deckA, deckB, deckBG, deckPV, initialWidth, initialHeight)
     SessionSerializer.startEmpty(mixer)
+    tour?.mixer = mixer
     if (UITheme.startupBehavior != UITheme.StartupBehavior.EMPTY) {
         SessionSerializer.loadSession(mixer)
     }
@@ -344,15 +363,15 @@ fun main(args: Array<String>) {
     logger.info { "GL state configured" }
 
     // Start Audio engine if enabled
-    if (UITheme.audioEngineEnabled && !cliArgs.noAudio) {
+    if (UITheme.audioEngineEnabled && !cliArgs.noAudio && tour == null) {
         AudioEngine.start()
     }
 
     // Start background watchdogs for MIDI and JACK
-    llm.slop.liquidlsd.audio.MidiJackWatchdog.start()
+    if (tour == null) llm.slop.liquidlsd.audio.MidiJackWatchdog.start()
 
     // Auto-detect and open secondary window on startup ONLY if an external monitor is found
-    val initialExternalMonitor = getExternalMonitor(session.uiTheme.outputMonitorName)
+    val initialExternalMonitor = if (tour == null) getExternalMonitor(session.uiTheme.outputMonitorName) else null
     if (initialExternalMonitor != null) {
         secondaryWindow = createSecondaryWindow(window, session.uiTheme.outputMonitorName)
     }
@@ -428,12 +447,12 @@ fun main(args: Array<String>) {
     }
 
     // Start broadcast relay if autoConnect is enabled and configured
-    if (llm.slop.liquidlsd.broadcast.BroadcastPreferences.autoConnect && llm.slop.liquidlsd.broadcast.BroadcastPreferences.isConfigured) {
+    if (tour == null && llm.slop.liquidlsd.broadcast.BroadcastPreferences.autoConnect && llm.slop.liquidlsd.broadcast.BroadcastPreferences.isConfigured) {
         llm.slop.liquidlsd.broadcast.BroadcastEngine.startBroadcast(mixer)
     }
 
     // Start the OSC UDP server if enabled in preferences
-    if (llm.slop.liquidlsd.osc.OscPreferences.enabled) {
+    if (tour == null && llm.slop.liquidlsd.osc.OscPreferences.enabled) {
         llm.slop.liquidlsd.osc.OscEngine.start(llm.slop.liquidlsd.osc.OscPreferences.inboundPort, llm.slop.liquidlsd.osc.OscPreferences.outboundPort)
     }
 
@@ -449,9 +468,23 @@ fun main(args: Array<String>) {
     val sw = IntArray(1)
     val sh = IntArray(1)
 
+    if (tour != null) {
+        // Real pointer/keyboard input must never reach ImGui during a tour (the synthetic cursor is the only input).
+        glfwSetScrollCallback(window, null)
+        glfwSetCursorPosCallback(window, null)
+        glfwSetCursorEnterCallback(window, null)
+        glfwSetMouseButtonCallback(window, null)
+        glfwSetKeyCallback(window, null)
+        glfwSetCharCallback(window, null)
+    }
+    tour?.begin()
     while (!glfwWindowShouldClose(window)) {
         val frameStartTime = glfwGetTime()
         glfwPollEvents()
+        if (tour != null) {
+            if (tour.isDone) break
+            tour.beginFrame()
+        }
         session.touchConsoleController.processPendingEvents()
 
         // Query window and framebuffer dimensions
@@ -582,7 +615,9 @@ fun main(args: Array<String>) {
             }
 
             // === UI PHASE ===
+            uiManager.tour = tour
             uiManager.render(mixer, renderer, winW.toFloat(), winH.toFloat())
+            tour?.endFrame(fbW, fbH)
 
             // Automated UI Screenshot Capture
             if (cliArgs.screenshotUi != null && frameCount == cliArgs.screenshotAfterFrames) {
@@ -637,6 +672,8 @@ fun main(args: Array<String>) {
             glfwMakeContextCurrent(window)
         }
 
+        if (tour != null) continue // tour renders run as fast as the GPU allows; time is simulated
+
         // Cap frame rate to session.uiTheme.maxFps
         val targetFrameTime = 1.0 / session.uiTheme.maxFps
         val elapsed = glfwGetTime() - frameStartTime
@@ -672,11 +709,12 @@ fun main(args: Array<String>) {
 
     // Cleanup
     logger.info { "Shutting down..." }
+    tour?.finish()
     AppPreferencesStore.savePreferences()
     llm.slop.liquidlsd.broadcast.BroadcastEngine.shutdown()
     llm.slop.liquidlsd.export.RealtimeRecorder.stopRecording()
     llm.slop.liquidlsd.rendering.TextureStreamerManager.shutdown()
-    SessionSerializer.saveSession(mixer)
+    if (tour == null) SessionSerializer.saveSession(mixer)
     llm.slop.liquidlsd.audio.MidiJackWatchdog.stop()
     AudioEngine.stop()
     llm.slop.liquidlsd.midi.MidiEngine.close()

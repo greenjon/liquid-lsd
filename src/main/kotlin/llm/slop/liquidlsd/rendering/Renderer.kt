@@ -15,8 +15,6 @@ class Renderer {
     val blitShader: Shader
     private val view2DShader: Shader
     val audioTexture: AudioTexture = AudioTexture()
-    private var renderFrameIndex: Int = 0
-    private var lastRenderTime: Float = 0f
 
     private var isDisposed = false
 
@@ -86,9 +84,9 @@ class Renderer {
         val widthF = targetFBO.width.toFloat()
         val heightF = targetFBO.height.toFloat()
         val currentTime = TimeSource.getTimeSec().toFloat()
-        val deltaTime = if (lastRenderTime > 0f) currentTime - lastRenderTime else 0.01666f
-        lastRenderTime = currentTime
-        val frameIdx = renderFrameIndex++
+        val deltaTime = if (source.renderLastTime > 0f) currentTime - source.renderLastTime else 0.01666f
+        source.renderLastTime = currentTime
+        val frameIdx = source.renderFrameIndex++
 
         // Dimensions & Aspect
         source.shader.setUniform("uAlpha",       source.globalAlpha.value)
@@ -115,11 +113,11 @@ class Renderer {
         source.shader.setUniform("FRAMEINDEX",   frameIdx)
         source.shader.setUniform("iFrame",       frameIdx)
         source.shader.setUniform("u_frame",      frameIdx)
-        val fps = try { imgui.ImGui.getIO().framerate } catch (_: Exception) { 60.0f }
+        val fps = if (TimeSource.isSimulated) 60.0f else try { imgui.ImGui.getIO().framerate } catch (_: Exception) { 60.0f }
         source.shader.setUniform("iFrameRate",   if (fps > 0f) fps else 60.0f)
 
         // Date derivation (zero allocation)
-        val epochMs = System.currentTimeMillis()
+        val epochMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
         val epochSec = epochMs / 1000L
         val secondsSinceMidnight = (epochSec % 86400L).toFloat() + ((epochMs % 1000L) / 1000f)
         val daysSinceEpoch = (epochSec / 86400L).toInt()

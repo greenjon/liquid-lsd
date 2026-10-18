@@ -243,6 +243,7 @@ class BeatTrackerEngine(
         highHistory.fill(0f)
         cumulativeScore.fill(0f)
         prevMagSpectrum.fill(0f)
+        magSpectrum.fill(0f)
         prevPhase.fill(0f)
         prevPrevPhase.fill(0f)
     }

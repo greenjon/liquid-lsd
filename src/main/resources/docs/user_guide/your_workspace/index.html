@@ -451,6 +451,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#themes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Themes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-mixer-right-panel" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1424,6 +1435,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#themes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Themes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#the-mixer-right-panel" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1488,10 +1510,11 @@
 <p>Liquid LSD has a lot going on, but it's organized around a handful of core ideas. Once those click, everything else makes sense.</p>
 <hr />
 <h2 id="the-library-what-it-controls">The Library &amp; What It Controls</h2>
-<p>The Library panel spans the left and middle columns of the app. That column has three views:</p>
+<p>The Library panel spans the left and middle columns of the app. That column has four views:</p>
 <ul>
 <li><strong>Perform</strong> — The Performance rows sit above the Library, which fills the rest of the window. This is the everyday view for playing a set.</li>
 <li><strong>Edit</strong> — Open a row's <strong>Edit</strong> and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. To swap a deck's source or FX, click its source badge, chain name or slot (this opens the pair view, described in Presets &amp; Library) or use the controls on the row itself. Press <strong>Esc</strong> or click the row's <strong>Collapse</strong> button to get back to Perform.</li>
+<li><strong>Pair view</strong> — Click a deck's source badge, an FX chain name or slot, a preview monitor or the transition name and the Library goes away too: that deck's SRC and FX rows stay on screen with the browser below. Press <strong>Esc</strong> or <strong>Back</strong> to return to Perform. See Presets &amp; Library.</li>
 <li><strong>Library</strong> — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.</li>
 </ul>
 <p>Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, <code>Space</code>, <code>Ctrl+F</code> or <code>/</code> closes Edit (cancelling any armed Add Target or Learn) and brings the Library back.</p>
@@ -1526,10 +1549,9 @@
 <hr />
 <h2 id="the-performance-panel-left-middle">The Performance Panel (Left &amp; Middle)</h2>
 <p>The top of the left and middle columns is the <strong>Perform view</strong>: a 4×4 grid of macro knobs,
-one row per deck or section, with tabs across the top (A/B, BG/PV, MIXER and
-MASTER). Click a deck row's generator badge to change its visual source.</p>
+one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Click a deck row's generator badge to change its visual source.</p>
 <p>For full control, open a row's <strong>Edit</strong> (the chevron on the row, or click a deck monitor in
-the Mixer). Edit has three columns:</p>
+the Mixer and press <strong>Parameters</strong>). Edit has three columns:</p>
 <ul>
 <li><strong>Side rail</strong> — <code>[MIX] [A] [B] [BG] [PV]</code> to jump between channels.</li>
 <li><strong>Parameter grid</strong> — every row is a visual parameter (like "Lobes", "Zoom", or "Hue") and each
@@ -1541,6 +1563,9 @@ the Mixer). Edit has three columns:</p>
 </ul>
 <p>See <a href="../macros_and_rack/">Macro Controls &amp; the Perform View</a> for the knobs and Edit in detail.</p>
 <hr />
+<h2 id="themes">Themes</h2>
+<p>Liquid LSD has two color themes: <strong>Grey Acid</strong> (dark, the default) and <strong>Orange Sunshine</strong> (light). Switch between them in <strong>Preferences → General → Theme</strong> (<code>Ctrl+P</code>); the choice is remembered between sessions.</p>
+<hr />
 <h2 id="the-mixer-right-panel">The Mixer (Right Panel)</h2>
 <p>The right panel shows:
 - Live previews of each deck
@@ -1548,7 +1573,7 @@ the Mixer). Edit has three columns:</p>
 - Level controls for each deck
 - Master output monitor
 - Blend mode selector</p>
-<p>Clicking a deck monitor opens that deck in Edit; clicking the master monitor opens the Master (<strong>MIX</strong>) Edit.</p>
+<p>Clicking a deck monitor opens that deck's pair view (its SRC and FX rows plus the browser); clicking the master monitor does the same for Master. Press <strong>Parameters</strong> there for the full Edit.</p>
 <p>Macro knobs are edited in the Performance rows' Edit view, where each knob gets a target strip for choosing what it controls. See <a href="../macros_and_rack/">Macro Controls &amp; the Perform View</a>.</p>
 <hr />
 <h2 id="the-library">The Library</h2>

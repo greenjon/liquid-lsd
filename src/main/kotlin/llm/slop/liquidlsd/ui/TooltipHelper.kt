@@ -295,7 +295,7 @@ fun itemTooltip(text: String, delayMs: Long = TooltipHelper.DEFAULT_HOVER_DELAY_
     val minY = ImGui.getItemRectMinY().toInt()
     val key = (minX shl 16) xor (minY and 0xFFFF) xor text.hashCode()
 
-    if (!TooltipHelper.shouldShowTooltip(key, delayMs, ImGui.getFrameCount(), System.currentTimeMillis())) return
+    if (!TooltipHelper.shouldShowTooltip(key, delayMs, ImGui.getFrameCount(), llm.slop.liquidlsd.utils.TimeSource.getEpochMillis())) return
 
     pushTooltipStyles()
     val padX = TooltipHelper.TOOLTIP_WINDOW_PADDING_X
@@ -337,7 +337,7 @@ inline fun itemTooltip(
     val minY = ImGui.getItemRectMinY().toInt()
     val key = (minX shl 16) xor (minY and 0xFFFF)
 
-    if (!TooltipHelper.shouldShowTooltip(key, delayMs, ImGui.getFrameCount(), System.currentTimeMillis())) return
+    if (!TooltipHelper.shouldShowTooltip(key, delayMs, ImGui.getFrameCount(), llm.slop.liquidlsd.utils.TimeSource.getEpochMillis())) return
 
     val cached = TooltipHelper.getCachedCustomSize(key)
     val width = cached?.first ?: estimatedWidth
@@ -362,7 +362,7 @@ inline fun itemTooltip(
  */
 fun showTooltip(text: String, key: Int = text.hashCode(), delayMs: Long = TooltipHelper.DEFAULT_HOVER_DELAY_MS) {
     if (!UITheme.tooltipsEnabled) return
-    if (!TooltipHelper.shouldShowTooltip(key, delayMs, ImGui.getFrameCount(), System.currentTimeMillis())) return
+    if (!TooltipHelper.shouldShowTooltip(key, delayMs, ImGui.getFrameCount(), llm.slop.liquidlsd.utils.TimeSource.getEpochMillis())) return
 
     pushTooltipStyles()
     val padX = TooltipHelper.TOOLTIP_WINDOW_PADDING_X
@@ -394,7 +394,7 @@ inline fun showCustomTooltip(
     block: () -> Unit
 ) {
     if (!UITheme.tooltipsEnabled) return
-    if (!TooltipHelper.shouldShowTooltip(key, delayMs, ImGui.getFrameCount(), System.currentTimeMillis())) return
+    if (!TooltipHelper.shouldShowTooltip(key, delayMs, ImGui.getFrameCount(), llm.slop.liquidlsd.utils.TimeSource.getEpochMillis())) return
 
     val cached = TooltipHelper.getCachedCustomSize(key)
     val width = cached?.first ?: estimatedWidth

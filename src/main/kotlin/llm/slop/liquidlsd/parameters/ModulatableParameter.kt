@@ -147,7 +147,7 @@ class ModulatableParameter(
     /**
      * Randomizes the static baseValue within the [baseMin, baseMax] range.
      */
-    fun randomizeBaseValue(random: kotlin.random.Random = kotlin.random.Random.Default) {
+    fun randomizeBaseValue(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng) {
         if (isRandomizeDisabled || !randomizeBase) return
         baseValue = if (baseMin == baseMax) baseMin else random.nextFloat() * (baseMax - baseMin) + baseMin
     }
@@ -274,7 +274,7 @@ class ModulatableParameter(
         copy.baseMax = this.baseMax
         copy.scopeTimebases.putAll(this.scopeTimebases)
         copy.modulatorFilter = this.modulatorFilter
-        copy.modulators.addAll(this.modulators.map { it.copy(id = java.util.UUID.randomUUID().toString()) })
+        copy.modulators.addAll(this.modulators.map { it.copy(id = llm.slop.liquidlsd.utils.DeterministicRandom.uuid()) })
         @Suppress("DEPRECATION")
         copy.mappedMidiId = this.mappedMidiId
         @Suppress("DEPRECATION")

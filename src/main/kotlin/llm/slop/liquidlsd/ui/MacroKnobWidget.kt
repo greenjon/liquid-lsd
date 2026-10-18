@@ -234,6 +234,7 @@ object MacroKnobWidget {
         val cy = startY + radius
 
         ImGui.invisibleButton("##macro_knob_$id", diameter, diameter)
+        if (llm.slop.liquidlsd.tour.WidgetRegistry.enabled) llm.slop.liquidlsd.tour.WidgetRegistry.noteLastItem(id)
         val isHovered = ImGui.isItemHovered()
         val isActivated = ImGui.isItemActivated()
         val isActive = ImGui.isItemActive()
@@ -421,7 +422,7 @@ object MacroKnobWidget {
         }
 
         val pulseAlpha = if (isLearning) {
-            (sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+            (sin(llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() * 0.008) * 0.35 + 0.65).toFloat()
         } else 1.0f
 
         val borderCol = when {

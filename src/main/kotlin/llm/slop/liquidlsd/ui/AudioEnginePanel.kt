@@ -57,7 +57,7 @@ object AudioEnginePanel {
     private var peakHoldR = 0f
     private var peakHoldTimeL = 0L
     private var peakHoldTimeR = 0L
-    private var lastMeterTimeNs = System.nanoTime()
+    private var lastMeterTimeNs = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
 
     private data class CvSignalDef(val id: String, val title: String, val colorU32: Int)
     private val beatSineSignal = CvSignalDef("beatSine", "Beat Sine (Oscillator)", CvTheme.getThemeColor("beatSine"))
@@ -398,7 +398,7 @@ object AudioEnginePanel {
      */
     fun drawStereoVuMeter(session: llm.slop.liquidlsd.SessionContext, customWidth: Float = -1f) {
         val audioEngine = session.audioEngine
-        val currentTime = System.nanoTime()
+        val currentTime = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
         val dt = ((currentTime - lastMeterTimeNs).coerceIn(1_000_000L, 100_000_000L) / 1_000_000_000.0).toFloat()
         lastMeterTimeNs = currentTime
 

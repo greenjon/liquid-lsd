@@ -50,7 +50,7 @@ object MapsBrowserPanel {
     private var cachedAtMs = 0L
 
     private fun bankFiles(force: Boolean = false): List<File> {
-        val now = System.currentTimeMillis()
+        val now = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
         if (force || now - cachedAtMs > 1000L) {
             cachedFiles = bankDir.listFiles { f -> f.isFile && f.name.endsWith(SUFFIX) }?.sortedBy { it.name.lowercase() } ?: emptyList()
             cachedAtMs = now

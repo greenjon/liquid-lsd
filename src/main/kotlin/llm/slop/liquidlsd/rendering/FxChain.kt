@@ -270,7 +270,7 @@ class FxChain(val label: String) {
     }
 
     fun update() {
-        val now = System.nanoTime()
+        val now = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
         if (lastFadeNanos != 0L && isFading) {
             advanceFade(((now - lastFadeNanos) / 1_000_000_000.0).toFloat().coerceIn(0f, 0.25f))
         }
@@ -393,7 +393,7 @@ class FxChain(val label: String) {
     private var cachedIsDirty = false
 
     fun isDirty(): Boolean {
-        val now = System.currentTimeMillis()
+        val now = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
         if (now - lastDirtyCheckTimeMs >= 250) {
             lastDirtyCheckTimeMs = now
             cachedIsDirty = computeIsDirty()
@@ -416,7 +416,7 @@ class FxChain(val label: String) {
         sourceFile = file
         baselineDto = toFxChainDto(name)
         cachedIsDirty = false
-        lastDirtyCheckTimeMs = System.currentTimeMillis()
+        lastDirtyCheckTimeMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
     }
 
     fun applyFxChain(dto: FXChainDto, source: java.io.File? = null, isBaseline: Boolean = false) {

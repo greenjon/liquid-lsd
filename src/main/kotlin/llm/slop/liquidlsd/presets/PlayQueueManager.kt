@@ -301,7 +301,7 @@ object PlayQueueManager {
                     }
                     val freshUnplayed = queue.indices.filter { it !in playedIndices }
                     if (freshUnplayed.isNotEmpty()) {
-                        nextIndex = freshUnplayed.random()
+                        nextIndex = freshUnplayed.random(llm.slop.liquidlsd.utils.DeterministicRandom.rng)
                     } else if (queue.isNotEmpty()) {
                         nextIndex = 0
                     }
@@ -310,7 +310,7 @@ object PlayQueueManager {
                     return -1
                 }
             } else {
-                nextIndex = unplayed.random()
+                nextIndex = unplayed.random(llm.slop.liquidlsd.utils.DeterministicRandom.rng)
             }
 
             if (nextIndex != -1) {

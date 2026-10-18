@@ -203,6 +203,26 @@ object AudioEngine {
     private var localOnsetMean = 0f // fast adaptive mean for onset threshold
 
     fun getEstimatedBpm(): Float = estimatedBpm
+
+    /**
+     * Returns every piece of analysis state to its start-up value and pins the clock to MANUAL at [bpm],
+     * so a deterministic offline feed (tour renders) starts from the same place on every run. Never called live.
+     */
+    internal fun resetForOfflineFeed(bpm: Float, startTimeNs: Long) {
+        lowPass.reset(); midPass.reset(); highPass.reset()
+        beatDetector.reset()
+        totalSamplesProcessed = 0L
+        totalBeats = 0.0
+        phaseSlewBuffer = 0.0
+        prevBass = 0f; prevMid = 0f; prevHigh = 0f
+        localOnsetMean = 0f
+        currentState = SignalState.SILENT
+        lastSignalTime = 0L
+        clockSource = ClockSource.MANUAL
+        manualBpm = bpm
+        estimatedBpm = bpm
+        CVRegistry.resetBeatAnchor(0.0, bpm, startTimeNs)
+    }
     fun isActive(): Boolean = (jackClient?.isConnected == true) || (javaSoundClient?.isConnected == true)
     fun isJackConnected(): Boolean = jackClient?.isConnected == true
 

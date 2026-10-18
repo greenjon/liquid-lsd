@@ -257,7 +257,7 @@ abstract class QueueEngine(protected val queueLabel: String) {
                     }
                     val freshUnplayed = queue.indices.filter { it !in playedIndices }
                     if (freshUnplayed.isNotEmpty()) {
-                        nextIndex = freshUnplayed.random()
+                        nextIndex = freshUnplayed.random(llm.slop.liquidlsd.utils.DeterministicRandom.rng)
                     } else if (queue.isNotEmpty()) {
                         nextIndex = 0
                     }
@@ -266,7 +266,7 @@ abstract class QueueEngine(protected val queueLabel: String) {
                     return null
                 }
             } else {
-                nextIndex = unplayed.random()
+                nextIndex = unplayed.random(llm.slop.liquidlsd.utils.DeterministicRandom.rng)
             }
 
             if (nextIndex != -1) {
