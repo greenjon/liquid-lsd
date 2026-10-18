@@ -69,6 +69,10 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     private var startNs = 0L
     private var maxFrameMs = 0.0
     private var awaitNs = 0L
+    private var maxBass = 0f
+    private var maxFft = 0f
+    private val fftProbe = FloatArray(512)
+    private val waveProbe = FloatArray(512)
     private var lastFrameNs = 0L
 
     /** Debug aid: --tour-dump=<dir>:70,81 writes those frames as raw RGBA (bottom-up) for diffing determinism failures. */
@@ -236,6 +240,9 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
             logger.info { "Tour: capturing ${fbW}x$fbH, $totalFrames frames -> ${outFile.absolutePath}" }
         }
         check(fbW == frameW && fbH == frameH) { "Tour: framebuffer size changed mid-render (${frameW}x$frameH -> ${fbW}x$fbH)" }
+        maxBass = maxOf(maxBass, llm.slop.liquidlsd.cv.CVRegistry.get("audio_bass"))
+        llm.slop.liquidlsd.audio.AudioEngine.copyAudioTextureData(fftProbe, waveProbe)
+        for (v in fftProbe) if (v > maxFft) maxFft = v
         val buf = pbo!!.readFrameSync(0)
         digest.reset()
         digest.update(buf)
@@ -264,7 +271,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         File(outFile.path + ".hashes").writeText(hashes.toString())
         writeVtt(File(outFile.path.substringBeforeLast('.') + ".vtt"))
         val avg = totalMs / frame.coerceAtLeast(1)
-        println(String.format(Locale.ROOT, "TOUR_DONE frames=%d total_ms=%.0f avg_ms=%.2f max_ms=%.1f ffmpeg_ok=%b await_ms=%.1f", frame, totalMs, avg, maxFrameMs, ok, awaitNs / 1e6))
+        println(String.format(Locale.ROOT, "TOUR_DONE frames=%d total_ms=%.0f avg_ms=%.2f max_ms=%.1f ffmpeg_ok=%b await_ms=%.1f audio_bass_max=%.3f fft_max=%.3f", frame, totalMs, avg, maxFrameMs, ok, awaitNs / 1e6, maxBass, maxFft))
     }
 
     private fun ts(sec: Double): String {

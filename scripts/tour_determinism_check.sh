@@ -11,7 +11,11 @@ for run in a b; do
   ./gradlew run -q --args="--tour=$SCRIPT --tour-out=$OUT/$run.mp4 --no-audio $*" 2>&1 | grep -E "TOUR_DONE|TOUR_WARN|Exception|ERROR" || true
 done
 if cmp -s "$OUT/a.mp4.hashes" "$OUT/b.mp4.hashes"; then
-  echo "DETERMINISTIC: $(wc -l < "$OUT/a.mp4.hashes") frames identical (outputs in $OUT)"
+  echo "DETERMINISTIC (raw frames): $(wc -l < "$OUT/a.mp4.hashes") frames identical (outputs in $OUT)"
+  # Encoded output: compare decoded video frames (audio muxing/container timestamps are not part of the contract).
+  ffmpeg -v error -i "$OUT/a.mp4" -map 0:v -f framemd5 "$OUT/a.md5" -y
+  ffmpeg -v error -i "$OUT/b.mp4" -map 0:v -f framemd5 "$OUT/b.md5" -y
+  if cmp -s "$OUT/a.md5" "$OUT/b.md5"; then echo "ENCODED video frames identical"; else echo "ENCODED video frames DIFFER"; fi
   exit 0
 fi
 echo "DIFFERS. First differing frame:"
