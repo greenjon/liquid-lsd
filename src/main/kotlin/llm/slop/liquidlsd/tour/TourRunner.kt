@@ -244,7 +244,11 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
                 "HALF" -> UITheme.libraryMode = UITheme.LibraryMode.HALF
                 else -> warnTour("Tour t=${step.t}: library_mode wants FULL or HALF")
             }
-            "open_params" -> parametersState?.openParams(step.target ?: return)
+            "open_params" -> {
+                val id = step.target ?: return
+                if (llm.slop.liquidlsd.ui.PerfRows.CATALOG.values.none { it.bankId == id }) warnTour("Tour t=${step.t}: open_params: unknown module '$id' (e.g. deckA, deckA_fx, master)")
+                else parametersState?.openParams(id)
+            }
             "open_params_pair" -> parametersState?.openParamsForPair(step.target ?: return)
             "focus_pair" -> parametersState?.focusPair(step.target ?: return)
             "close_focus" -> parametersState?.let { it.leavePair(); it.collapseAllRackModules() }
@@ -398,6 +402,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         val base = outFile.path.substringBeforeLast('.')
         writeVtt(File("$base.vtt"))
         writeSidecars(base)
+        File("$base.keys").writeText(WidgetRegistry.keys().sorted().joinToString("\n", postfix = "\n"))
         val avg = totalMs / frame.coerceAtLeast(1)
         println(String.format(Locale.ROOT, "TOUR_DONE frames=%d total_ms=%.0f avg_ms=%.2f max_ms=%.1f ffmpeg_ok=%b await_ms=%.1f audio_bass_max=%.3f fft_max=%.3f", frame, totalMs, avg, maxFrameMs, ok, awaitNs / 1e6, maxBass, maxFft))
     }

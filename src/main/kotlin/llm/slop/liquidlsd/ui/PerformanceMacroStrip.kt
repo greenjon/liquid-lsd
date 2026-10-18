@@ -91,6 +91,7 @@ internal object PerformanceMacroStrip {
         val name = control.label.ifEmpty { "Knob" }
         ImGui.setCursorScreenPos(cx, row1Y)
         ImGui.invisibleButton("##name", nameW, ctrlH)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "macro_name_${bankId}_${control.label}" }
         dl.addText(cx + 2f, TextFit.centeredY(row1Y, ctrlH, ImGui.getTextLineHeight()), ImGui.getColorU32(imgui.flag.ImGuiCol.Text), TextFit.ellipsize(name, nameW - 4f))
         itemTooltip(if (isFx) "$name\nThis knob follows its ${if (bankId == MacroEngine.TRANS) "transition" else "FX chain"}: it can't be renamed or given targets." else "$name\nDouble-click to rename.")
         if (ImGui.isItemHovered() && ImGui.isMouseDoubleClicked(0) && !isFx) openRename(control)

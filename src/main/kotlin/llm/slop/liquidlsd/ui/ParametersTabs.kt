@@ -84,6 +84,7 @@ object ParametersTabs {
             if (ImGui.invisibleButton("##perf_deep_side_$shortLabel", buttonWidth.coerceAtLeast(1f), buttonHeight.coerceAtLeast(1f))) {
                 onSelectSection(fullTab)
             }
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "edit_side_$shortLabel" }
             val isHovered = ImGui.isItemHovered()
             val isItemActive = ImGui.isItemActive()
 
