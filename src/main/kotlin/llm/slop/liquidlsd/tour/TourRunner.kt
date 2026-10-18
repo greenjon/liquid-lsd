@@ -195,6 +195,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     fun injectInput() {
         val io = ImGui.getIO()
         io.deltaTime = DT.toFloat()
+        io.addFocusEvent(true) // OS focus changes (compositor timing) must not clear hover state
         io.addMousePosEvent(curX, curY)
         io.addMouseButtonEvent(0, mouseDown)
     }

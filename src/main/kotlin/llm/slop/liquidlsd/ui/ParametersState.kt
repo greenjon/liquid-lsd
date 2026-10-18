@@ -333,7 +333,7 @@ class ParametersState : MidiLearnSink {
         set(value) {
             field = value
             if (value != null) {
-                midiLearnStartTimeMs = System.currentTimeMillis()
+                midiLearnStartTimeMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
             }
         }
 
@@ -343,7 +343,7 @@ class ParametersState : MidiLearnSink {
 
     fun isMidiTargetLearning(fullPath: String): Boolean {
         val target = midiLearnTarget ?: return false
-        if (System.currentTimeMillis() - midiLearnStartTimeMs > 15000L) {
+        if (llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() - midiLearnStartTimeMs > 15000L) {
             midiLearnTarget = null
             return false
         }

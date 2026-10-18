@@ -34,7 +34,7 @@ object TangoPalette {
      * own `sin()` copy.
      */
     fun drawOscLearnPulseBorder(dl: ImDrawList, x1: Float, y1: Float, x2: Float, y2: Float, rounding: Float = 3f, thickness: Float = 1.5f) {
-        val pulseAlpha = (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+        val pulseAlpha = (kotlin.math.sin(llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() * 0.008) * 0.35 + 0.65).toFloat()
         dl.addRect(x1, y1, x2, y2, u32(ALERT.normal, pulseAlpha), rounding, 0, thickness)
     }
 

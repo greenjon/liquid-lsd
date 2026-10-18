@@ -181,7 +181,7 @@ object LibraryPanel {
     }
 
     private fun checkAutoRefresh() {
-        val now = System.currentTimeMillis()
+        val now = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
         if (now - lastAutoRefreshTimeMs > 500L) {
             val root = FileSystemManager.getPresetsRoot()
             val sig = FileSystemManager.getRecursiveDirectorySignature(root)
@@ -194,7 +194,7 @@ object LibraryPanel {
     fun refreshAssets() {
         val root = FileSystemManager.getPresetsRoot()
         lastKnownSignature = FileSystemManager.getRecursiveDirectorySignature(root)
-        lastAutoRefreshTimeMs = System.currentTimeMillis()
+        lastAutoRefreshTimeMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
         FileSystemManager.scanAllPresets()
         FileSystemManager.scanAllPlaylists()
         FileSystemManager.scanAllFxPresets()

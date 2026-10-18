@@ -56,7 +56,7 @@ object MidiModulatorSection {
             } else {
                 if (ButtonChrome.button("Re-Learn MIDI Modulator##midi_relearn")) {
                     state.midiLearnTarget = MidiLearnTarget.GridCell(cell, param)
-                    state.midiLearnStartTimeMs = System.currentTimeMillis()
+                    state.midiLearnStartTimeMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
                     if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
                         PopupManager.globalPendingMidiWarning = true
                     }

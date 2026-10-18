@@ -422,7 +422,7 @@ object MacroKnobWidget {
         }
 
         val pulseAlpha = if (isLearning) {
-            (sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+            (sin(llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() * 0.008) * 0.35 + 0.65).toFloat()
         } else 1.0f
 
         val borderCol = when {

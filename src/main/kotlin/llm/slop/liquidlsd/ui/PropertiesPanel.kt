@@ -237,7 +237,7 @@ object PropertiesPanel {
             } else {
                 if (ButtonChrome.button("Learn MIDI Modulator##midi_learn")) {
                     state.midiLearnTarget = MidiLearnTarget.GridCell(cell, param)
-                    state.midiLearnStartTimeMs = System.currentTimeMillis()
+                    state.midiLearnStartTimeMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
                     if (llm.slop.liquidlsd.midi.MidiEngine.getActiveDeviceCount() == 0) {
                         PopupManager.globalPendingMidiWarning = true
                     }

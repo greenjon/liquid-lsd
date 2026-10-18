@@ -18,11 +18,11 @@ object ToastOverlay {
 
     fun show(text: String, durationMs: Long = 5000L) {
         message = text
-        expiryMs = System.currentTimeMillis() + durationMs
+        expiryMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() + durationMs
     }
 
     /** The message still on screen, or null once it has expired. */
-    fun active(nowMs: Long = System.currentTimeMillis()): String? {
+    fun active(nowMs: Long = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()): String? {
         val text = message ?: return null
         if (nowMs > expiryMs) { message = null; return null }
         return text

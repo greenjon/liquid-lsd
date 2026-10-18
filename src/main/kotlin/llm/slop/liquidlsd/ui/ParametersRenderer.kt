@@ -411,7 +411,7 @@ object ParametersRenderer {
 
         val isOscLearningThis = OscLearnState.isTargetLearning(paramKey)
         val pulseAlpha = if (isMacroLearning || isOscLearningThis) {
-            (kotlin.math.sin(System.currentTimeMillis() * 0.008) * 0.35 + 0.65).toFloat()
+            (kotlin.math.sin(llm.slop.liquidlsd.utils.TimeSource.getEpochMillis() * 0.008) * 0.35 + 0.65).toFloat()
         } else 1.0f
 
         val bgCol = when {

@@ -135,6 +135,8 @@ class UIManager(
         ImGui.createContext()
         val io = ImGui.getIO()
         io.addConfigFlags(ImGuiConfigFlags.NavEnableKeyboard)
+        // Tour renders must not inherit (or leave behind) window layout from imgui.ini.
+        if (AppPreferencesStore.persistenceDisabled) io.iniFilename = null
 
         // Load semantic fonts before the GL3 backend initialises so the atlas
         // is ready for the backend to upload on its first render call.
