@@ -96,13 +96,8 @@ class UIManager(
     init {
         if (session.uiTheme.checkUpdatesOnStartup && !llm.slop.liquidlsd.update.UpdateChecker.hasCheckedOnStartup) {
             llm.slop.liquidlsd.update.UpdateChecker.hasCheckedOnStartup = true
-            llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = false) { result ->
-                if (result is llm.slop.liquidlsd.update.UpdateCheckResult.UpdateAvailable) {
-                    if (result.latestRelease.tagName != session.uiTheme.ignoredUpdateVersion) {
-                        UpdatePromptModal.request(result.latestRelease, result.currentVersion)
-                    }
-                }
-            }
+            // No popup: an available update surfaces as the menu-bar icon (MenuBar), which opens UpdatePromptModal.
+            llm.slop.liquidlsd.update.UpdateChecker.checkForUpdatesAsync(isManualCheck = false)
         }
     }
 

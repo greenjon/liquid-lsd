@@ -205,7 +205,7 @@ Browsing lives in the **pair view**, not in the Edit bay. The Edit bay is Params
   - `File`: Preset creation (`New Preset`), `Preferences...` (`Ctrl+P` / `Cmd+P`), and `Exit`.
   - `View`: Preferences dismissal, Edit collapse, and Library mode (`Full` / `Half`).
   - `Output`: `Secondary Output Window`, `Output Monitor` (Automatic or a named monitor, `OutputMonitors`), `Record Output (REC)`, `Web Broadcast`, and `Render Video (Offline)...`.
-  - `Help`: `Documentation`, update checker, and `Show Tooltips` toggle.
+  - `Help`: `Documentation`, update checker (an available update shows as a download icon in the menu bar, opening `UpdatePromptModal`), and `Show Tooltips` toggle.
   - Contextual HUD status badges for recording (`REC mm:ss`, dropped frames counter), Web Broadcast (`LIVE`, `CONNECTING`, `LIVE ERR`), and Ableton Link (`LINK [peers]`) appear dynamically on the title bar only when active.
   - **CSD & Telemetry HUD Layout**: In frameless mode, Client-Side Decorations (Minimize, Maximize/Restore, Close) are anchored directly to the title bar's right boundary (`contentRightX`), ensuring the Close button is flush with the right boundary across all display resolutions. Monospace telemetry stats (CPU%, DSP execution latency, FPS, Frame Time, and FBO live count/estimated VRAM) render in a unified right-side block positioned cleanly to the left of the window controls. Musical timing controls (clock source toggle, Link status, BPM display, 4-beat phase meter dots, tap tempo, resync, half/double tempo, and nudges) are consolidated on the Performance MASTER tab's Clock row and within Preferences > Tempo & Sync.
 

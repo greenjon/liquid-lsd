@@ -297,6 +297,23 @@ class MenuBar(
                         itemTooltip(linkTip)
                     }
 
+                    // ── Update-available icon (hidden once that version is skipped) ──
+                    val updateResult = llm.slop.liquidlsd.update.UpdateChecker.lastResult
+                    if (updateResult is llm.slop.liquidlsd.update.UpdateCheckResult.UpdateAvailable &&
+                        updateResult.latestRelease.tagName != session.uiTheme.ignoredUpdateVersion
+                    ) {
+                        val c = TangoPalette.ACTIVE
+                        val ink = TangoPalette.inkFor(c.dark, c.normal)
+                        ImGui.pushStyleColor(ImGuiCol.Button, c.dark[0], c.dark[1], c.dark[2], 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.ButtonHovered, c.normal[0], c.normal[1], c.normal[2], 1.0f)
+                        ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
+                        if (ButtonChrome.button(Icons.DOWNLOAD)) {
+                            UpdatePromptModal.request(updateResult.latestRelease, updateResult.currentVersion)
+                        }
+                        ImGui.popStyleColor(3)
+                        itemTooltip("Update available\nCurrent: ${updateResult.currentVersion}\nLatest: ${updateResult.latestRelease.tagName}\nClick for details.")
+                    }
+
                     if (ImGui.beginMenu("Help")) {
                         if (ImGui.menuItem("Documentation")) {
                             DocManager.openDocumentation()

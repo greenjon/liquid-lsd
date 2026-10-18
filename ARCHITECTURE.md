@@ -211,7 +211,7 @@ Mixer column: `MixerPanel`, `DeckControlPanel`, `DeckMonitorGrid` (A | B over BG
 
 Other UI:
 - `PreferencesPanel` and its pages: `AudioEnginePanel`, `MidiPreferencesPanel`, `OscPreferencesPanel`, `BroadcastPreferencesPanel`, `ShaderLocationsPreferencesPanel`, `ShortcutsPreferencesPanel`, `VideoDisplayPreferencesPanel`, `TempoSyncPanel`, `PerformPagesPanel`.
-- `PopupManager` (exit, dirty-deck prompts); modals `SavePresetModal`, `VideoExportModal`, `NoteEditorModal`, `UpdatePromptModal`, `AboutModal`, `MissingItemsPanel`.
+- `PopupManager` (exit, dirty-deck prompts); modals `SavePresetModal`, `VideoExportModal`, `NoteEditorModal`, `UpdatePromptModal` (opened from the menu-bar update icon), `AboutModal`, `MissingItemsPanel`.
 - `ToastOverlay`, `TooltipHelper`, `UiLabPanel` (`--ui-lab`), `WindowFrameController` (client-side decorations).
 - Minimum window 1280×720 (`glfwSetWindowSizeLimits`).
 

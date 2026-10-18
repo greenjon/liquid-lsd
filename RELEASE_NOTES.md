@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Update Icon Instead of Popup (`ui/MenuBar.kt`, `ui/UIManager.kt`)
+- **A new version no longer opens a popup at startup.** When the startup check finds one, a download icon appears in the menu bar; hover it for the current and latest version, click it for the same Download / Remind Later / Skip Version dialog as before. Skip Version hides the icon for that release.
+- Internal: `UIManager` no longer calls `UpdatePromptModal.request`; `MenuBar` reads `UpdateChecker.lastResult`.
+
 ### Output Monitor Choice (`ui/OutputMonitors.kt`, `ui/MenuBar.kt`, `Main.kt`)
 - **New Output → Output Monitor menu** picks which screen the secondary output window fills. **Automatic** keeps the old behaviour (the first monitor that is not primary); naming a monitor fixes setups where that guess is wrong, notably Wayland, where the output could jump to the laptop screen instead of the projector. The choice is saved by monitor name and the output reopens at once if it is already running.
 - Internal: `outputMonitorName` in `AppPreferences` and `AppPreferencesStore`; `OutputMonitors` lists and resolves GLFW monitors.
