@@ -401,7 +401,7 @@ object FileSystemManager {
         val now = System.currentTimeMillis()
         val cached = scanCache[cacheKey]
         if (cached != null && cached.signature == signature) {
-            if (now - cached.cachedAtMs <= SCAN_CACHE_TTL_MS) {
+            if (synchronousScans || now - cached.cachedAtMs <= SCAN_CACHE_TTL_MS) {
                 return cached.items
             }
             triggerAsyncScan(directory, cacheKey)
@@ -475,11 +475,14 @@ object FileSystemManager {
         }
         return items.sortedWith(compareBy({ it.type != AssetType.FOLDER }, { it.name }))
     }
+    /** Tour renders run the follow-up scan inline so listings are complete on the frame that asked (no background timing). */
+    @Volatile var synchronousScans = false
+
     private fun triggerAsyncScan(directory: File, cacheKey: String) {
         pendingScanFutures[cacheKey]?.cancel(false)
-        val future = executor.schedule({
+        val task = Runnable {
             try {
-                if (!directory.exists() || !directory.isDirectory) return@schedule
+                if (!directory.exists() || !directory.isDirectory) return@Runnable
                 
                 val currentSignature = directorySignature(directory)
                 val items = mutableListOf<AssetItem>()
@@ -564,8 +567,9 @@ object FileSystemManager {
             } finally {
                 pendingScanFutures.remove(cacheKey)
             }
-        }, 100, TimeUnit.MILLISECONDS)
-        pendingScanFutures[cacheKey] = future
+        }
+        if (synchronousScans) { task.run(); return }
+        pendingScanFutures[cacheKey] = executor.schedule(task, 100, TimeUnit.MILLISECONDS)
     }
     
     /**

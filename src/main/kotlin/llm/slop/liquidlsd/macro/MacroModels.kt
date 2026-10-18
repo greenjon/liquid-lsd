@@ -83,7 +83,7 @@ data class MacroBinding(
 /** One Macro Knob, read passively via [value]. */
 @Serializable
 data class MacroControl(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String = llm.slop.liquidlsd.utils.DeterministicRandom.uuid(),
     var label: String = "",
     // Normalized position [0.0..1.0].
     var value: Float = 0.0f,

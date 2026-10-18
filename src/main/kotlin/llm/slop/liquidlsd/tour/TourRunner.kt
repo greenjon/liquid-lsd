@@ -19,7 +19,10 @@ private val logger = KotlinLogging.logger {}
  * [beginFrame] -> (app render + UI, with [injectInput]/[drawOverlay] hooks inside UIManager) -> [endFrame]
  * (sync read of FBO 0, hash, pipe to ffmpeg). Nothing here reads wall-clock time except the timing statistics.
  */
-class TourRunner(private val script: TourScript, private val outFile: File, dump: String? = null) {
+class TourRunner(private val script: TourScript, private val outFile: File, dump: String? = null, private val scriptDir: File = File(".")) {
+    /** Set by Main once the mixer exists (scripted deck actions need it). */
+    var mixer: llm.slop.liquidlsd.rendering.Mixer? = null
+    private var audio: TourAudioFeeder? = null
     companion object {
         const val FPS = 60
         private const val DT = 1.0 / FPS
@@ -27,11 +30,11 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         private const val RIPPLE_SEC = 0.45
 
         /**
-         * Uncaptured frames rendered (with a real-time pause each) before frame 0 so background scanners
-         * (library/preset listings) settle; without this their completion lands on a different frame every run.
-         * Heuristic only: scripted actions that trigger async loads still need a join/drain barrier.
+         * Uncaptured frames rendered before frame 0 so ImGui layout, fonts and first-use lazy init settle.
+         * Background work is not waited for by sleeping: listing scans run inline (FileSystemManager.synchronousScans),
+         * file watchers are off, and [PresetManager.awaitIo] is a barrier before every frame.
          */
-        const val WARMUP_FRAMES = 90
+        const val WARMUP_FRAMES = 10
     }
 
     val totalFrames = (script.durationSec * FPS).toInt()
@@ -65,6 +68,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     private val hashes = StringBuilder()
     private var startNs = 0L
     private var maxFrameMs = 0.0
+    private var awaitNs = 0L
     private var lastFrameNs = 0L
 
     /** Debug aid: --tour-dump=<dir>:70,81 writes those frames as raw RGBA (bottom-up) for diffing determinism failures. */
@@ -80,8 +84,20 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
 
     fun begin() {
         TimeSource.setSimulatedTime(0.0, DT)
-        llm.slop.liquidlsd.cv.CVRegistry.resetClocksFromTimeSource()
         WidgetRegistry.enabled = true
+        startNs = System.nanoTime()
+        lastFrameNs = startNs
+    }
+
+    /** Called when the warm-up ends: clocks, beat anchor and analyzer state restart so script time 0 is frame 0. */
+    private fun startCapture() {
+        TimeSource.setSimulatedTime(WARMUP_FRAMES * DT, DT)
+        llm.slop.liquidlsd.cv.CVRegistry.resetClocksFromTimeSource()
+        llm.slop.liquidlsd.audio.AudioEngine.resetForOfflineFeed(script.bpm.toFloat(), TimeSource.getTimeNanos())
+        script.audio?.let { name ->
+            val f = File(name).let { if (it.isAbsolute) it else File(scriptDir, name) }
+            audio = TourAudioFeeder(f, TimeSource.getTimeNanos())
+        }
         startNs = System.nanoTime()
         lastFrameNs = startNs
     }
@@ -91,6 +107,10 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         val t = now
         TimeSource.setSimulatedTime((warm + frame) * DT, DT)
         if (warming) return
+        val a0 = System.nanoTime()
+        llm.slop.liquidlsd.presets.PresetManager.awaitIo() // loads requested by last frame's UI have queued their results
+        awaitNs += System.nanoTime() - a0
+        audio?.feed(frame.toLong())
         while (nextStep < steps.size && steps[nextStep].t <= t + 1e-9) startStep(steps[nextStep++], t)
         if (moving) {
             val k = ((t - moveStart) / moveDur).coerceIn(0.0, 1.0)
@@ -106,7 +126,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         if (step.target != null) {
             val r = WidgetRegistry.find(step.target)
             if (r == null) {
-                logger.warn { "Tour t=${step.t}: target '${step.target}' not registered (known: ${WidgetRegistry.keys().size} widgets)" }
+                warnTour("Tour t=${step.t}: target '${step.target}' not registered (known: ${WidgetRegistry.keys().size} widgets)")
                 return null
             }
             return r.centerX to r.centerY
@@ -127,8 +147,48 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
             }
             "set_page" -> step.target?.let { UITheme.performancePageId = it }
             "hold" -> {}
-            else -> logger.warn { "Tour: unknown action '${step.action}'" }
+            "load_source" -> deckAction(step) { slot, mx ->
+                val id = step.target ?: return@deckAction
+                val src = llm.slop.liquidlsd.rendering.VisualSourceRegistry.availableSources.firstOrNull { it.id == id }
+                if (src == null) warnTour("Tour t=${step.t}: unknown source '$id'")
+                else llm.slop.liquidlsd.presets.DeckOps.request(slot, llm.slop.liquidlsd.presets.DeckChange.Source(src))
+            }
+            "load_preset" -> deckAction(step) { slot, _ ->
+                val f = File(step.target ?: return@deckAction).let { if (it.isAbsolute) it else File(scriptDir, it.path).takeIf { x -> x.exists() } ?: it }
+                llm.slop.liquidlsd.presets.DeckOps.request(slot, llm.slop.liquidlsd.presets.DeckChange.Preset(f))
+            }
+            "set_param" -> deckAction(step) { slot, mx ->
+                val p = slot.deck(mx).source.parameters[step.param]
+                if (p == null) warnTour("Tour t=${step.t}: deck ${step.deck} has no parameter '${step.param}'")
+                else p.set(step.value ?: 0f)
+            }
+            "bind_modulator" -> deckAction(step) { slot, mx ->
+                val p = slot.deck(mx).source.parameters[step.param]
+                if (p == null) warnTour("Tour t=${step.t}: deck ${step.deck} has no parameter '${step.param}'")
+                else p.modulators.add(
+                    llm.slop.liquidlsd.parameters.CvModulator(
+                        sourceId = step.target ?: "lfo",
+                        depth = step.value ?: 0.3f,
+                        genUnit = if (step.unit.equals("BEAT", true)) llm.slop.liquidlsd.parameters.GenUnit.BEAT else llm.slop.liquidlsd.parameters.GenUnit.TIME
+                    )
+                )
+            }
+            else -> warnTour("Tour: unknown action '${step.action}'")
         }
+    }
+
+    private fun warnTour(msg: String) {
+        logger.warn { msg }
+        println("TOUR_WARN $msg")
+    }
+
+    private fun deckAction(step: TourStep, block: (llm.slop.liquidlsd.presets.DeckSlot, llm.slop.liquidlsd.rendering.Mixer) -> Unit) {
+        val mx = mixer ?: return
+        val slot = llm.slop.liquidlsd.presets.DeckSlot.entries.firstOrNull { it.name.equals(step.deck, true) }
+        if (slot == null) { warnTour("Tour t=${step.t}: bad deck '${step.deck}'"); return }
+        block(slot, mx)
+        // Join the preset IO thread so the result is queued; Main drains DeckOps/FxOps/TransitionOps later this same frame.
+        llm.slop.liquidlsd.presets.PresetManager.awaitIo()
     }
 
     /** Called by UIManager between imguiGlfw.newFrame() and ImGui.newFrame(). */
@@ -159,8 +219,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
     fun endFrame(fbW: Int, fbH: Int) {
         if (warming) {
             warm++
-            Thread.sleep(20)
-            if (!warming) startNs = System.nanoTime().also { lastFrameNs = it }
+            if (!warming) startCapture()
             return
         }
         if (pipe == null) {
@@ -168,7 +227,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
             frameH = fbH
             outFile.absoluteFile.parentFile?.mkdirs()
             val p = FFmpegProcessPipe(
-                VideoExportConfig(outFile, fbW, fbH, FPS, VideoCodec.H264, crf = 18, audioFile = null, forceSoftwareEncoder = true)
+                VideoExportConfig(outFile, fbW, fbH, FPS, VideoCodec.H264, crf = 18, audioFile = script.audio?.let { n -> File(n).let { f -> if (f.isAbsolute) f else File(scriptDir, n) } }, forceSoftwareEncoder = true, padAudioToVideo = true)
             )
             check(p.start()) { "Failed to start ffmpeg: ${p.getRecentErrorLines(4)}" }
             pipe = p
@@ -204,7 +263,7 @@ class TourRunner(private val script: TourScript, private val outFile: File, dump
         File(outFile.path + ".hashes").writeText(hashes.toString())
         writeVtt(File(outFile.path.substringBeforeLast('.') + ".vtt"))
         val avg = totalMs / frame.coerceAtLeast(1)
-        println(String.format(Locale.ROOT, "TOUR_DONE frames=%d total_ms=%.0f avg_ms=%.2f max_ms=%.1f ffmpeg_ok=%b", frame, totalMs, avg, maxFrameMs, ok))
+        println(String.format(Locale.ROOT, "TOUR_DONE frames=%d total_ms=%.0f avg_ms=%.2f max_ms=%.1f ffmpeg_ok=%b await_ms=%.1f", frame, totalMs, avg, maxFrameMs, ok, awaitNs / 1e6))
     }
 
     private fun ts(sec: Double): String {

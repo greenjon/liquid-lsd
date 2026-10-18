@@ -333,7 +333,7 @@ object PropertiesPanel {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, enableAudioInk[0], enableAudioInk[1], enableAudioInk[2], 1.0f)
                     if (ButtonChrome.button("${Icons.PLUS} Enable Audio Slot 2##enable_audio_2", ImGui.getContentRegionAvailX(), btnH)) {
-                        val newMod = existing.copy(id = java.util.UUID.randomUUID().toString(), bypassed = false, depth = 0.5f)
+                        val newMod = existing.copy(id = llm.slop.liquidlsd.utils.DeterministicRandom.uuid(), bypassed = false, depth = 0.5f)
                         replaceModulator(state, param, newMod, mixer)
                     }
                     itemTooltip("Enable a second concurrent audio-reactive modulator on this parameter.")

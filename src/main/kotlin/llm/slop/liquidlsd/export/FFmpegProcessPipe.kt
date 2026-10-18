@@ -37,7 +37,8 @@ data class VideoExportConfig(
     val bitrateMbps: Int = 15,
     val audioFile: File? = null,
     val superSamplingFactor: Int = 1, // 1x = standard, 2x, 4x, 8x = motion blur accumulation
-    val forceSoftwareEncoder: Boolean = false // deterministic output: never pick a hardware encoder
+    val forceSoftwareEncoder: Boolean = false, // deterministic output: never pick a hardware encoder
+    val padAudioToVideo: Boolean = false // tour: keep the video length even when the audio track is shorter
 )
 
 /**
@@ -224,6 +225,7 @@ class FFmpegProcessPipe(
         }
 
         if (config.audioFile != null && config.audioFile.exists()) {
+            if (config.padAudioToVideo) cmd.addAll(listOf("-af", "apad"))
             cmd.addAll(listOf("-c:a", "aac", "-b:a", "320k", "-shortest"))
         }
 

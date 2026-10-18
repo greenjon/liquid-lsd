@@ -135,7 +135,11 @@ fun main(args: Array<String>) {
         UITheme.lockCursorOnKnobDrag = false
         UITheme.checkUpdatesOnStartup = false
         val script = llm.slop.liquidlsd.tour.TourScript.parse(java.io.File(cliArgs.tourScript!!).readText())
-        llm.slop.liquidlsd.tour.TourRunner(script, java.io.File(cliArgs.tourOut ?: "tour.mp4"), cliArgs.tourDump)
+        llm.slop.liquidlsd.utils.DeterministicRandom.seed(script.seed)
+        llm.slop.liquidlsd.ui.FileSystemManager.synchronousScans = true
+        llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.setAutoReloadEnabled(false)
+        val scriptFile = java.io.File(cliArgs.tourScript!!).absoluteFile
+        llm.slop.liquidlsd.tour.TourRunner(script, java.io.File(cliArgs.tourOut ?: "tour.mp4"), cliArgs.tourDump, scriptFile.parentFile)
     } else null
 
     if (cliArgs.helpRequested) {
@@ -328,6 +332,7 @@ fun main(args: Array<String>) {
     // Create Mixer
     val mixer = Mixer(deckA, deckB, deckBG, deckPV, initialWidth, initialHeight)
     SessionSerializer.startEmpty(mixer)
+    tour?.mixer = mixer
     if (UITheme.startupBehavior != UITheme.StartupBehavior.EMPTY) {
         SessionSerializer.loadSession(mixer)
     }
