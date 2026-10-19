@@ -1,0 +1,7 @@
+/* Chapter clips inserted into user-guide pages by scripts/build_website.py */
+.tour-clips { margin: 1.5rem 0; padding: 1rem 1.25rem; border: 1px solid var(--md-default-fg-color--lightest); border-radius: .5rem; }
+.tour-clips-head { margin: 0 0 .75rem; }
+.tour-clips-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 1rem; }
+.tour-clips figure { margin: 0; }
+.tour-clips video { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: .35rem; display: block; }
+.tour-clips figcaption { font-size: .8rem; margin-top: .25rem; }

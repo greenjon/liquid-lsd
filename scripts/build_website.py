@@ -29,7 +29,38 @@ STAGE_DROP = ("developer", "archive", "licenses", "release_notes.md")
 
 
 
-def stage_docs(stage: Path) -> None:
+def clip_block(video: dict, chapters: list, rel: str) -> str:
+    """HTML for the chapter clips of one tour video, inserted into the docs page it explains."""
+    cards = "\n".join(
+        f'<figure><video controls muted loop playsinline preload="metadata" src="{rel}tour/media/{video["id"]}/{c["id"]}.mp4"></video>'
+        f'<figcaption><a href="{rel}tour/#{video["id"]}/{c["id"]}">{html.escape(c["title"])}</a></figcaption></figure>'
+        for c in chapters
+    )
+    return (f'<div class="tour-clips">\n<p class="tour-clips-head">Watch: <strong>{html.escape(video["title"])}</strong> '
+            f'&mdash; <a href="{rel}tour/">open the guided tour</a></p>\n<div class="tour-clips-grid">\n{cards}\n</div>\n</div>\n')
+
+
+def inject_clips(stage: Path, tours: Path) -> None:
+    """After the intro paragraph of each page, add the clips of the videos that explain it."""
+    by_page: dict[str, list[str]] = {}
+    for v in json.loads((ROOT / "website/data/tour.json").read_text()):
+        chap = tours / v["id"] / "chapters.json"
+        if not chap.exists():
+            continue
+        page = v["docs"].removeprefix("docs/").rstrip("/") + ".md"
+        chapters = [c for c in json.loads(chap.read_text()) if (tours / v["id"] / "clips" / f'{c["id"]}.mp4').exists()]
+        if chapters and (stage / page).exists():
+            rel = "../" * (len(Path(page).parts) + 1)
+            by_page.setdefault(page, []).append(clip_block(v, chapters, rel))
+    for page, blocks in by_page.items():
+        f = stage / page
+        text = f.read_text()
+        m = re.search(r"^# [^\n]*\n\n.+?\n\n", text, flags=re.S | re.M)
+        at = m.end() if m else 0
+        f.write_text(text[:at] + "\n".join(blocks) + "\n" + text[at:])
+
+
+def stage_docs(stage: Path, tours: Path) -> None:
     shutil.copytree(ROOT / "docs", stage, ignore=shutil.ignore_patterns(*STAGE_DROP))
     index = stage / "index.md"
     text = index.read_text()
@@ -37,18 +68,22 @@ def stage_docs(stage: Path) -> None:
     text = re.sub(r"## Developer Reference.*", "", text, flags=re.S).rstrip()
     text = text.rstrip("-").rstrip() + "\n"
     index.write_text(text)
+    inject_clips(stage, tours)
+    (stage / "assets").mkdir(exist_ok=True)
+    shutil.copy(ROOT / "website/assets/css/docs-clips.css", stage / "assets/docs-clips.css")
 
 
-def build_docs(out: Path) -> None:
+def build_docs(out: Path, tours: Path) -> None:
     cfg = yaml.load((ROOT / "mkdocs.yml").read_text(), Loader=yaml.SafeLoader)
     cfg["nav"] = [e for e in cfg["nav"] if not any(k in PUBLIC_NAV_DROP for k in e)]
     cfg.pop("exclude_docs", None)
     cfg["site_url"] = f"{SITE_URL}/docs/"
     cfg["repo_url"] = GITHUB_URL
+    cfg["extra_css"] = ["assets/docs-clips.css"]
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         stage = tmp / "docs"
-        stage_docs(stage)
+        stage_docs(stage, tours)
         cfg["docs_dir"] = str(stage)
         cfg["site_dir"] = str(out / "docs")
         conf = tmp / "mkdocs.yml"
@@ -150,9 +185,10 @@ def main() -> int:
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
-    build_docs(out)
+    tours = Path(args.tours).resolve() if args.tours else default_tours_dir()
+    build_docs(out, tours)
     build_landing(out)
-    n = build_tour(out, Path(args.tours).resolve() if args.tours else default_tours_dir())
+    n = build_tour(out, tours)
     if n:
         (out / "sitemap.xml").write_text((out / "sitemap.xml").read_text().replace(
             "</urlset>", f"  <url><loc>{SITE_URL}/tour/</loc><lastmod>{date.today()}</lastmod></url>\n</urlset>"))

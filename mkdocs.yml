@@ -35,6 +35,7 @@ nav:
     - Output & Recording: user_guide/output_and_recording.md
     - Performance Controls: user_guide/performance_controls.md
     - Macro Controls & the Perform View: user_guide/macros_and_rack.md
+    - Hardware Control: user_guide/hardware.md
     - Web Broadcast: user_guide/web_broadcast.md
     - Command Line Usage & Startup Options: user_guide/cli_usage.md
   - Developer Reference:
