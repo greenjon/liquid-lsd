@@ -113,4 +113,44 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(rel => versionEls.forEach(el => { el.textContent = rel.tag_name; }))
       .catch(() => {});
   }
+
+  // 4. Click-to-load video players (poster only until clicked)
+  document.querySelectorAll('.video-facade').forEach((el) => {
+    el.querySelector('button').addEventListener('click', () => {
+      const v = document.createElement('video');
+      v.controls = true;
+      v.autoplay = true;
+      v.playsInline = true;
+      v.src = el.dataset.src;
+      const t = document.createElement('track');
+      t.kind = 'captions';
+      t.label = 'English';
+      t.srclang = 'en';
+      t.src = el.dataset.vtt;
+      t.default = true;
+      v.appendChild(t);
+      el.replaceChildren(v);
+      el.classList.add('loaded');
+    });
+  });
+
+  // 5. Muted preview loops: play only while on screen; posters only on phones, reduced motion or data saver
+  const loops = document.querySelectorAll('video[data-loop]');
+  const conn = navigator.connection || {};
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+    window.matchMedia('(max-width: 700px)').matches || conn.saveData;
+  if (loops.length && !still && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        const v = e.target;
+        if (e.isIntersecting) {
+          if (!v.getAttribute('src')) v.src = v.dataset.src;
+          v.play().catch(() => {});
+        } else {
+          v.pause();
+        }
+      });
+    }, { threshold: 0.4 });
+    loops.forEach((v) => io.observe(v));
+  }
 });

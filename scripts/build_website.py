@@ -92,11 +92,35 @@ def build_docs(out: Path, tours: Path) -> None:
         subprocess.run(["mkdocs", "build", "-q", "-f", str(conf)], check=True)
 
 
-def build_landing(out: Path) -> None:
-    html = (ROOT / "website/templates/index.html").read_text()
-    html = html.replace("{{GITHUB_URL}}", GITHUB_URL).replace("{{SITE_URL}}", SITE_URL)
-    (out / "index.html").write_text(html)
-    shutil.copytree(ROOT / "website/assets", out / "assets")
+def landing_section(steps: list, hero: dict | None) -> str:
+    cfg = json.loads((ROOT / "website/data/landing.json").read_text())
+    by_slug = {st["slug"]: st for st in steps}
+    cards = []
+    for f in cfg["featured"]:
+        st = by_slug.get(f["slug"])
+        if not st:
+            continue
+        cards.append(
+            f'<a class="action-card" href="tour/#{st["slug"]}">'
+            f'<video muted loop playsinline preload="none" data-loop data-src="tour/{st["clip"]}" poster="tour/{st["poster"]}"></video>'
+            f'<span class="action-card-body"><strong>{html.escape(st["title"])}</strong>{html.escape(f["blurb"])}</span></a>')
+    if not cards:
+        return ""
+    player = f'<div class="action-player">{facade(hero, "", "Watch the overview")}</div>' if hero else ""
+    return (
+        '<section id="in-action" class="features-section action-section"><div class="container">'
+        '<div class="section-heading text-center"><span class="section-sub">The real app</span>'
+        '<h2 class="section-title">See it in action</h2></div>'
+        f'{player}<div class="action-grid">{"".join(cards)}</div>'
+        f'<p class="text-center action-cta"><a href="tour/" class="btn btn-primary btn-lg">Take the full tour ({len(steps)} chapters)</a></p>'
+        '</div></section>')
+
+
+def build_landing(out: Path, section: str) -> None:
+    page = (ROOT / "website/templates/index.html").read_text()
+    page = page.replace("{{GITHUB_URL}}", GITHUB_URL).replace("{{SITE_URL}}", SITE_URL).replace("{{TOUR_SECTION}}", section)
+    (out / "index.html").write_text(page)
+    shutil.copytree(ROOT / "website/assets", out / "assets", dirs_exist_ok=True)
     for name in ("404.html", "robots.txt"):
         src = ROOT / "website/static" / name
         if src.exists():
@@ -126,11 +150,46 @@ def make_poster(clip: Path, dst: Path, dur: float) -> None:
                     "-frames:v", "1", "-vf", "scale=800:-2", "-q:v", "4", str(dst)], check=True)
 
 
-def build_tour(out: Path, tours: Path) -> int:
+def web_encode(src: Path) -> Path:
+    """1080p30 H.264 web copy of a hero video, cached in tours/web-cache (the encode takes a while)."""
+    cache = ROOT / "tours/web-cache"
+    cache.mkdir(parents=True, exist_ok=True)
+    st = src.stat()
+    dst = cache / f"{src.parent.name}-{st.st_size}-{int(st.st_mtime)}.mp4"
+    if not dst.exists():
+        tmp = dst.with_suffix(".part.mp4")
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-map", "0:v", "-map", "0:a?",
+                        "-vf", "fps=30,scale='min(1920,iw)':-2", "-c:v", "libx264", "-crf", "26", "-preset", "medium",
+                        "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(tmp)], check=True)
+        tmp.rename(dst)
+    return dst
+
+
+def copy_hero(out: Path, tours: Path, video: str) -> dict | None:
+    src = tours / video / "hero.mp4"
+    if not src.exists():
+        return None
+    media = out / "tour/media" / video
+    media.mkdir(parents=True, exist_ok=True)
+    shutil.copy(web_encode(src), media / f"{video}.mp4")
+    shutil.copy(tours / video / "poster.jpg", media / f"{video}.jpg")
+    shutil.copy(tours / video / "hero.vtt", media / f"{video}.vtt")
+    return {"src": f"tour/media/{video}/{video}.mp4", "poster": f"tour/media/{video}/{video}.jpg",
+            "vtt": f"tour/media/{video}/{video}.vtt"}
+
+
+def facade(hero: dict, prefix: str, label: str) -> str:
+    """Click-to-load video player: only a poster until clicked, so the page stays light."""
+    return (f'<div class="video-facade" data-src="{prefix}{hero["src"]}" data-vtt="{prefix}{hero["vtt"]}" '
+            f'style="background-image:url({prefix}{hero["poster"]})">'
+            f'<button type="button" class="video-facade-play" aria-label="{html.escape(label)}"><span>&#9654;</span> {html.escape(label)}</button></div>')
+
+
+def build_tour(out: Path, tours: Path, hero: dict | None) -> list:
     """Interactive tour page at /tour/, generated from each video's chapters.json + captions.json.
 
     Only the silent chapter clips are published (small); hero videos are not copied.
-    Returns the number of chapters (0 = no rendered tours found, page skipped).
+    Returns the steps (empty = no rendered tours found, page skipped).
     """
     meta = json.loads((ROOT / "website/data/tour.json").read_text())
     steps, nav, transcript = [], [], []
@@ -170,15 +229,19 @@ def build_tour(out: Path, tours: Path) -> int:
             )
             transcript.append(f'        <h4 id="t-{slug.replace("/", "-")}">{i + 1:02d} · {html.escape(ch["title"])}</h4>\n        <ol>\n{rows}\n        </ol>')
     if not steps:
-        return 0
+        return []
     page = (ROOT / "website/templates/tour.html").read_text()
+    full = ""
+    if hero:
+        full = ('<details class="tour-full"><summary>Watch the full overview</summary>'
+                + facade(hero, "../", "Play the full overview") + "</details>")
     data = json.dumps(steps).replace("</", "<\\/")
     for k, val in {"{{NAV}}": "\n".join(nav), "{{TRANSCRIPT}}": "\n".join(transcript), "{{DATA}}": data,
-                   "{{COUNT}}": f"{len(steps):02d}", "{{GITHUB_URL}}": GITHUB_URL, "{{SITE_URL}}": SITE_URL}.items():
+                   "{{COUNT}}": f"{len(steps):02d}", "{{FULL}}": full, "{{GITHUB_URL}}": GITHUB_URL, "{{SITE_URL}}": SITE_URL}.items():
         page = page.replace(k, val)
     (out / "tour").mkdir(exist_ok=True)
     (out / "tour/index.html").write_text(page)
-    return len(steps)
+    return steps
 
 
 def default_tours_dir() -> Path:
@@ -197,8 +260,11 @@ def main() -> int:
     out.mkdir(parents=True)
     tours = Path(args.tours).resolve() if args.tours else default_tours_dir()
     build_docs(out, tours)
-    build_landing(out)
-    n = build_tour(out, tours)
+    hero_video = json.loads((ROOT / "website/data/landing.json").read_text())["hero"]
+    hero = copy_hero(out, tours, hero_video)
+    steps = build_tour(out, tours, hero)
+    n = len(steps)
+    build_landing(out, landing_section(steps, hero))
     if n:
         (out / "sitemap.xml").write_text((out / "sitemap.xml").read_text().replace(
             "</urlset>", f"  <url><loc>{SITE_URL}/tour/</loc><lastmod>{date.today()}</lastmod></url>\n</urlset>"))

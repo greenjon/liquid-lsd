@@ -1,0 +1,9 @@
+{
+  "hero": "overview",
+  "featured": [
+    {"slug": "overview/decks",   "blurb": "Four decks, each with its own source and effects, mixed with a crossfader."},
+    {"slug": "modulation/lfo",   "blurb": "Put an LFO on any parameter and watch it move."},
+    {"slug": "fx_chains/build",  "blurb": "Stack three effects per deck and shape them with a single knob."},
+    {"slug": "hardware/twister", "blurb": "Plug in a Midi Fighter Twister and its 16 knobs are the 16 on screen."}
+  ]
+}
