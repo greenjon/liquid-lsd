@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the greenjon.com site into ./greenjon (gitignored; deploy by FTP).
+"""Build the Liquid LSD site into ./greenjon (gitignored; published by scripts/publish_site.sh).
 
 Landing page: website/templates/index.html + website/assets.
 Docs:         user guide only, built with MkDocs Material from docs/ into greenjon/docs/.
@@ -22,7 +22,8 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 GITHUB_URL = "https://github.com/greenjon/liquid-lsd"
-SITE_URL = "https://greenjon.com"
+SITE_HOST = "liquid-lsd.greenjon.com"
+SITE_URL = f"https://{SITE_HOST}"
 PUBLIC_NAV_DROP = ("Developer Reference", "Operations & Tuning", "Release Notes")
 STAGE_DROP = ("developer", "archive", "licenses", "release_notes.md")
 
@@ -99,7 +100,9 @@ def build_landing(out: Path) -> None:
     for name in ("404.html", "robots.txt"):
         src = ROOT / "website/static" / name
         if src.exists():
-            shutil.copy(src, out / name)
+            (out / name).write_text(src.read_text().replace("{{SITE_URL}}", SITE_URL))
+    (out / "CNAME").write_text(SITE_HOST + "\n")  # GitHub Pages custom domain
+    (out / ".nojekyll").write_text("")
     pages = [f"{SITE_URL}/"] + [
         f"{SITE_URL}/docs/{p.parent.relative_to(out / 'docs')}/".replace("/./", "/")
         for p in sorted((out / "docs").rglob("index.html"))
@@ -193,7 +196,7 @@ def main() -> int:
         (out / "sitemap.xml").write_text((out / "sitemap.xml").read_text().replace(
             "</urlset>", f"  <url><loc>{SITE_URL}/tour/</loc><lastmod>{date.today()}</lastmod></url>\n</urlset>"))
     print(f"Tour page: {n} chapters.")
-    print(f"Site built in {out} - upload its contents to the greenjon.com web root.")
+    print(f"Site built in {out}. Publish with scripts/publish_site.sh.")
     return 0
 
 
