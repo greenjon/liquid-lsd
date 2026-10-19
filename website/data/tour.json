@@ -1,0 +1,9 @@
+[
+  {"id": "overview",   "title": "Overview",           "summary": "The window, decks, knobs, FX, Edit and the Library in six minutes.", "docs": "docs/user_guide/your_workspace/"},
+  {"id": "modulation", "title": "Modulation",         "summary": "LFOs, audio, step sequencers and how they combine.",                "docs": "docs/user_guide/modulation/"},
+  {"id": "fx_chains",  "title": "FX chains",          "summary": "Build, order and save effect chains; metaknobs and focus mode.",     "docs": "docs/user_guide/performance_controls/"},
+  {"id": "mixing",     "title": "Mixing",             "summary": "Levels, the crossfader, transitions and the clock.",                 "docs": "docs/user_guide/performance_controls/"},
+  {"id": "library",    "title": "Library and presets","summary": "Browse, load, save, queue and pair.",                                "docs": "docs/user_guide/presets_and_library/"},
+  {"id": "hardware",   "title": "Hardware control",   "summary": "MIDI learn, the Midi Fighter Twister and OSC.",                      "docs": "docs/user_guide/hardware/"},
+  {"id": "output",     "title": "Output and recording","summary": "Second screens, resolution, recording and web broadcast.",           "docs": "docs/user_guide/output_and_recording/"}
+]

@@ -8,6 +8,8 @@ Docs:         user guide only, built with MkDocs Material from docs/ into greenj
 Usage: python3 scripts/build_website.py [--out DIR]
 """
 import argparse
+import html
+import json
 import re
 import shutil
 import subprocess
@@ -76,15 +78,85 @@ def build_landing(out: Path) -> None:
     )
 
 
+def fmt_time(t: float) -> str:
+    return f"{int(t) // 60}:{int(t) % 60:02d}"
+
+
+def build_tour(out: Path, tours: Path) -> int:
+    """Interactive tour page at /tour/, generated from each video's chapters.json + captions.json.
+
+    Only the silent chapter clips are published (small); hero videos are not copied.
+    Returns the number of chapters (0 = no rendered tours found, page skipped).
+    """
+    meta = json.loads((ROOT / "website/data/tour.json").read_text())
+    steps, nav, transcript = [], [], []
+    for v in meta:
+        src = tours / v["id"]
+        if not (src / "chapters.json").exists():
+            print(f"tour: skipping {v['id']} (no render in {tours})")
+            continue
+        chapters = json.loads((src / "chapters.json").read_text())
+        captions = json.loads((src / "captions.json").read_text())
+        nav.append(f'        <h3>{html.escape(v["title"])}</h3>')
+        transcript.append(f'      <h3>{html.escape(v["title"])}</h3>')
+        for ch in chapters:
+            clip = src / "clips" / f'{ch["id"]}.mp4'
+            if not clip.exists():
+                continue
+            dst = out / "tour/media" / v["id"] / clip.name
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(clip, dst)
+            dur = min(ch["clip"], ch["end"] - ch["start"], 20.0)
+            caps = [
+                {"start": round(c["start"] - ch["start"], 2), "end": round(c["end"] - ch["start"], 2),
+                 "text": c["text"], "inClip": c["start"] - ch["start"] < dur}
+                for c in captions if c["chapter"] == ch["id"]
+            ]
+            i = len(steps)
+            slug = f'{v["id"]}/{ch["id"]}'
+            steps.append({"slug": slug, "vtitle": v["title"], "title": ch["title"], "docs": v["docs"],
+                          "clip": f'media/{v["id"]}/{clip.name}', "dur": round(dur, 2), "captions": caps})
+            nav.append(f'        <a href="#{slug}" data-step="{i}"><span class="n">{i + 1:02d}</span>{html.escape(ch["title"])}</a>')
+            rows = "\n".join(
+                f'          <li data-step="{i}" data-line="{k}" class="{"" if c["inClip"] else "late"}">'
+                f'<time>{fmt_time(c["start"])}</time><span>{html.escape(c["text"])}'
+                f'{"" if c["inClip"] else " <em>full video</em>"}</span></li>'
+                for k, c in enumerate(caps)
+            )
+            transcript.append(f'        <h4 id="t-{slug.replace("/", "-")}">{i + 1:02d} · {html.escape(ch["title"])}</h4>\n        <ol>\n{rows}\n        </ol>')
+    if not steps:
+        return 0
+    page = (ROOT / "website/templates/tour.html").read_text()
+    data = json.dumps(steps).replace("</", "<\\/")
+    for k, val in {"{{NAV}}": "\n".join(nav), "{{TRANSCRIPT}}": "\n".join(transcript), "{{DATA}}": data,
+                   "{{COUNT}}": f"{len(steps):02d}", "{{GITHUB_URL}}": GITHUB_URL, "{{SITE_URL}}": SITE_URL}.items():
+        page = page.replace(k, val)
+    (out / "tour").mkdir(exist_ok=True)
+    (out / "tour/index.html").write_text(page)
+    return len(steps)
+
+
+def default_tours_dir() -> Path:
+    final = ROOT / "tours/out"
+    return final if (final / "overview/chapters.json").exists() else ROOT / "tours/draft"
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "greenjon"))
-    out = Path(ap.parse_args().out).resolve()
+    ap.add_argument("--tours", default=None, help="rendered tour root (default: tours/out, else tours/draft)")
+    args = ap.parse_args()
+    out = Path(args.out).resolve()
     if out.exists():
         shutil.rmtree(out)
     out.mkdir(parents=True)
     build_docs(out)
     build_landing(out)
+    n = build_tour(out, Path(args.tours).resolve() if args.tours else default_tours_dir())
+    if n:
+        (out / "sitemap.xml").write_text((out / "sitemap.xml").read_text().replace(
+            "</urlset>", f"  <url><loc>{SITE_URL}/tour/</loc><lastmod>{date.today()}</lastmod></url>\n</urlset>"))
+    print(f"Tour page: {n} chapters.")
     print(f"Site built in {out} - upload its contents to the greenjon.com web root.")
     return 0
 
