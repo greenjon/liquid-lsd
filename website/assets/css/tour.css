@@ -7,14 +7,16 @@
 .tour-bar { display: flex; align-items: center; gap: .75rem; margin-bottom: .75rem; }
 .tour-counter { font-family: var(--font-mono); font-weight: 700; color: var(--accent-orange); }
 .tour-chapter { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.tour-controls button { background: var(--bg-primary); color: #fff; border: 0; border-radius: var(--radius-sm); width: 2.25rem; height: 2.25rem; margin-left: .25rem; cursor: pointer; font-size: .8rem; }
+.tour-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .5rem 1rem; margin: 0 0 .75rem; }
+.tour-controls button { background: var(--bg-primary); color: #fff; border: 0; border-radius: var(--radius-sm); width: 2.5rem; height: 2.5rem; cursor: pointer; font-size: .8rem; }
 .tour-controls button:hover, .tour-controls button:focus-visible { background: var(--accent-orange); outline: none; }
-.tour-video-wrap { aspect-ratio: 16 / 9; background: #000; border-radius: 16px; overflow: hidden; }
+.tour-video-wrap { width: min(100%, calc((100vh - 18rem) * 16 / 9)); min-width: 20rem; margin: 0 auto; aspect-ratio: 16 / 9; background: #000; border-radius: 16px; overflow: hidden; }
 .tour-video-wrap video { width: 100%; height: 100%; display: block; cursor: pointer; }
 .tour-progress { height: 4px; background: var(--bg-surface); border-radius: 2px; margin-top: .6rem; overflow: hidden; }
 .tour-progress div { height: 100%; width: 0; background: var(--accent-orange); }
 .tour-caption { min-height: 3.2em; margin: .75rem 0 .25rem; font-size: 1.05rem; }
-.tour-auto { font-size: .9rem; color: var(--text-muted); }
+.tour-auto, .tour-speed { font-size: .9rem; color: var(--text-muted); display: inline-flex; align-items: center; gap: .4rem; }
+.tour-speed select { font: inherit; padding: .2rem .4rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--ink); }
 .tour-links { margin-top: .5rem; font-size: .95rem; }
 .tour-nav { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem; max-height: calc(100vh - 7rem); overflow-y: auto; position: sticky; top: 5rem; }
 .tour-nav h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-dim); margin: .9rem 0 .3rem; }

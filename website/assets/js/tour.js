@@ -10,6 +10,7 @@
   const fill = $('tour-progress-fill');
   const pauseBtn = $('tour-pause');
   const auto = $('tour-autoplay');
+  const speed = $('tour-speed');
   const links = $('tour-links');
   const navItems = Array.from(document.querySelectorAll('.tour-nav [data-step]'));
   const lines = Array.from(document.querySelectorAll('.tour-transcript [data-line]'));
@@ -25,6 +26,7 @@
     if (changed) {
       video.poster = s.poster;
       video.src = s.clip;
+      video.defaultPlaybackRate = video.playbackRate = Number(speed.value);
       video.loop = !auto.checked;
       video.play().catch(() => {});
       counter.textContent = pad(i + 1) + ' / ' + pad(steps.length);
@@ -89,10 +91,11 @@
   video.addEventListener('click', togglePause);
   video.addEventListener('timeupdate', tick);
   video.addEventListener('ended', () => { if (auto.checked && cur < steps.length - 1) select(cur + 1); });
+  speed.addEventListener('change', () => { video.defaultPlaybackRate = video.playbackRate = Number(speed.value); });
   auto.addEventListener('change', () => { video.loop = !auto.checked; });
   window.addEventListener('hashchange', () => select(fromHash(), { hash: false }));
   document.addEventListener('keydown', (e) => {
-    if (e.target.closest('input, textarea') || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.target.closest('input, textarea, select') || e.altKey || e.ctrlKey || e.metaKey) return;
     if (e.key === 'ArrowRight') { select(cur + 1); e.preventDefault(); }
     else if (e.key === 'ArrowLeft') { select(cur - 1); e.preventDefault(); }
     else if (e.key === ' ' && !e.target.closest('button, a')) { togglePause(); e.preventDefault(); }

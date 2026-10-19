@@ -45,18 +45,26 @@
         <div class="tour-bar">
           <span class="tour-counter" id="tour-counter">01 / {{COUNT}}</span>
           <span class="tour-chapter" id="tour-chapter"></span>
-          <span class="tour-controls">
-            <button type="button" id="tour-prev" aria-label="Previous chapter">&#9664;</button>
-            <button type="button" id="tour-pause" aria-label="Pause">&#10074;&#10074;</button>
-            <button type="button" id="tour-next" aria-label="Next chapter">&#9654;</button>
-          </span>
+        </div>
+        <div class="tour-controls">
+          <button type="button" id="tour-prev" aria-label="Previous chapter">&#9664;</button>
+          <button type="button" id="tour-pause" aria-label="Pause">&#10074;&#10074;</button>
+          <button type="button" id="tour-next" aria-label="Next chapter">&#9654;</button>
+          <label class="tour-auto" title="Advance to the next chapter when a clip ends"><input type="checkbox" id="tour-autoplay" checked> Play through</label>
+          <label class="tour-speed">Speed
+            <select id="tour-speed">
+              <option value="0.5">0.5&times;</option><option value="0.75">0.75&times;</option>
+              <option value="1" selected>1&times;</option><option value="1.25">1.25&times;</option>
+              <option value="1.5">1.5&times;</option><option value="1.75">1.75&times;</option>
+              <option value="2">2&times;</option>
+            </select>
+          </label>
         </div>
         <div class="tour-video-wrap">
           <video id="tour-video" muted playsinline loop preload="metadata"></video>
         </div>
         <div class="tour-progress"><div id="tour-progress-fill"></div></div>
         <p class="tour-caption" id="tour-caption" aria-live="polite"></p>
-        <label class="tour-auto"><input type="checkbox" id="tour-autoplay"> Play through (advance when a clip ends)</label>
         <p class="tour-links" id="tour-links"></p>
       </section>
 
