@@ -70,3 +70,49 @@ palette-driven), so the LFO is on Zoom. Not covered (candidates for later or for
 Parameters, randomize dice, copy/paste cells, middle-click mute, MIDI column, macro strip / click-to-learn.
 Mechanics: new `type`/`key`/`scroll` actions, `ox`/`oy` for combo items; Escape in Edit collapses the rack, so close
 combos by picking an item and popups by clicking empty space.
+
+## Remaining deep dives (2026-10-18): first drafts, awaiting review
+All five rendered as drafts (`render_tour.sh --draft <script> tours/draft/<name> --tour-hidden`), no `TOUR_WARN`, frames
+checked. Every load, swap, fade and setting is done by clicking the real UI, except the setup lines at t=0.
+- **FX chains** (`tours/fx_chains.json`, about 4:45, six chapters): building a chain from empty (click a slot, click an
+  effect in the bound Browse; deck A starts with `fx_new` so the name reads Untitled), mouse wheel shortlist, order and
+  swap by drag, slot power and chain BYPASS, Metaknob, Super Knob with soft pickup, slot link and chain link, focus mode
+  (pill, Metaknob on knob 1, parameters on 2-4, page arrows, Wet slider, switching and leaving), saved chains from the
+  chain name (Hyperspace Trip, Cyberpunk 1984), Save/menu, master FX (Invert in a master slot stays on through the
+  crossfade). Source is Voronoi Cells: the only one in a probe of eight where Kaleidoscope, Polar Tunnel and their swap
+  all read clearly (icosa_h3 went black when swapped).
+- **Mixing and transitions** (`tours/mixing.json`, about 3:50): levels (LEVEL A fade, preview fader mirrors the knob,
+  LEVEL BG brings BG in around icosa_h3, MASTER blackout), crossfader slider and XFADE knob, A/B hard cuts, transition
+  picker (Vortex Swirl, Film Burn; Luminous Flash's flare did not read in sampled frames), knobs 2-4 as transition
+  settings, AUTO and fade time (wheel to 3.0 s; a 20 px drag on the badge only moved it 0.1 s), clock (/2 and x2 with a
+  Beat LFO on deck A's Morph so the change shows, TAP x4 at 120 BPM, nudge, RESYNC, MAN/AUDIO). The transition die is
+  only drawn with randomization on, so it is not shown.
+- **Library and presets** (`tours/library.json`, about 2:50): Space for the full Library, tabs, folders, search (typed,
+  then cleared with Ctrl+A, Backspace), double-click loads into the off-air deck, drag a row onto the PV preview, source
+  badge = per-deck list, star for unsaved changes, Save opens the Save Preset dialog (cancelled on screen, captioned
+  as such: a real save would write into `library/presets/`), queues (search "mandala", select, Q three times, Queues tab,
+  the deck row's next arrow loads and fades), pair view from a preview click, Parameters, Back.
+- **Hardware** (`tours/hardware.json`, about 2:00): right-click learn ring on a knob and cancel, buttons learn too,
+  Twister = the 16 on-screen knobs with pages following the side button (on-screen only), Preferences MIDI Controls
+  (Perform Pages), OSC Controls (server, ports, Learn, profiles).
+- **Output** (`tours/output.json`, about 2:00): Output View (new `output_view` action; F is a GLFW callback the tour
+  ignores), Output menu (Secondary Output Window, Output Monitor; hovered, not clicked), Video & Display (resolution,
+  scaling, Live Video Sharing, recording settings), Record Output and Render Video (hovered), Web Broadcast panel.
+Open questions for the review:
+1. **Library contents are part of every video.** Saved presets on screen are dev leftovers (`3d spiral test`,
+   `mandala-7`, `[!]` badges, `web-*` presets, the `feedback, probably too much of it` and `fx_chain` chains). The
+   Library and FX videos need a curated library for the final render; tour mode still reads `library/` relative to the
+   working directory, so that means either a clean checkout or a `--library` override (not built).
+2. **Hardware video**: MIDI and OSC are off in tour mode, so the MIDI panel shows "Enable MIDI Subsystem" unticked and no
+   sniffer or mapping table, and OSC says the server is stopped. Options: accept (captions say "with MIDI on, this panel
+   also shows..."), a tour-only fake device list, or a filmed insert. The Twister itself still needs a filmed insert or
+   graphic (chapter 2 is captioned to sit over one).
+3. **Output video** shows the recording folder default `/home/<user>/Videos/liquid-lsd` (a caption box covers it in the
+   draft by luck; a fixed tour value would be safer).
+4. Cross-video references are still plain text ("the Modulation video", "the user guide's Output page"); the
+   `{ch:<video>/<chapter>}` syntax is not built.
+5. Overview trim (Edit-view and Super Knob detail now covered by the FX video) not done yet.
+Mechanics learned: a second drag on the same control needs a `move` back onto it first (a drag ends where the cursor
+stopped, and a press off the control grabs nothing); ImGui sliders jump to the click point, so aim with `ox`; with a menu
+open, moving across the menu bar switches menus, so enter the menu straight down before moving sideways; the Save Preset
+modal ignores Escape.

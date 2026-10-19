@@ -1,4 +1,4 @@
-{"seed":7,"audio":"beat.wav","bpm":120,"burnCaptions":true,"captionStyle":"cursor","tailSec":4,
+{"seed":7,"audio":"beat.wav","bpm":120,"burnCaptions":false,"captionStyle":"cursor","tailSec":4,
 "steps":[
 {"t":0.0,"action":"chapter","target":"grid","title":"The modulation grid","clipSec":16},
 {"t":0.2,"action":"load_source","deck":"A","target":"mandala"},
