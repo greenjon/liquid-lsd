@@ -91,6 +91,7 @@ internal object PerformanceTransitionsControls {
                     }
                 }
             }
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_trans_rand" }
         }
         ImGui.popStyleColor(2)
         itemTooltip("Randomize transition parameters.\nClick to randomize with undo support.")
@@ -150,6 +151,7 @@ internal object PerformanceTransitionsControls {
         if (ButtonChrome.button(tipPickerLabel.get(transName, modBadge) { "${Icons.SETTINGS} $transName$modBadge##perf_trans_picker_btn" }, transBtnW, headerH)) {
             parametersState.selectTransition()
         }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_trans_picker" }
         if (DockOutline.selects(parametersState, MacroEngine.TRANS, ParametersState.BrowseTarget.Transition)) DockOutline.drawAroundLastItem(MacroEngine.TRANS)
         itemTooltip(tipPicker.get(transName, modBadge) { "Select ISF transition shader or blend mode (opens the Transitions and Clock rows over the browser).\nActive: $transName$modBadge" })
 
@@ -353,6 +355,7 @@ internal object PerformanceTransitionsControls {
             dl.addText(badgeAX + (badgeW - textSz.x) * 0.5f, badgeAY + (headerH - textSz.y) * 0.5f, colorA, "A")
         }
         ImGui.invisibleButton("##perf_crossfade_deck_a", badgeW, headerH)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_snap_A" }
         if (ImGui.isItemHovered()) {
             ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
         }
@@ -415,6 +418,7 @@ internal object PerformanceTransitionsControls {
             dl.addText(badgeBX + (badgeBW - textSz.x) * 0.5f, badgeBY + (headerH - textSz.y) * 0.5f, colorB, "B")
         }
         ImGui.invisibleButton("##perf_crossfade_deck_b", badgeBW, headerH)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_snap_B" }
         if (ImGui.isItemHovered()) {
             ImGui.setMouseCursor(imgui.flag.ImGuiMouseCursor.Hand)
         }
@@ -484,6 +488,7 @@ internal object PerformanceTransitionsControls {
                 mixer.muteCrossfadeNonMidiCv()
             }
         }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_autofade" }
         ImGui.popStyleColor(if (isAuto) 3 else 2)
         if (isMidiLearnAutoFade) {
             dl.addRect(autoX - 1f, autoY - 1f, autoX + autoBtnW + 1f, autoY + headerH + 1f, TangoPalette.learnBorder(), 3f, 0, 1.5f)
@@ -543,6 +548,7 @@ internal object PerformanceTransitionsControls {
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.SPEED_HOVER.u32())
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             ButtonChrome.button(tipSpeedBadge.get(speedStr) { "$speedStr##perf_speed_badge" }, speedBtnW, headerH)
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_fade_time" }
         }
         ImGui.popStyleColor(2)
 

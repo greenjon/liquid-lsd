@@ -57,7 +57,7 @@ object FxChainHeader {
      * Per-bank widget ids and cached strings. ImGui ids are built once per bank; texts are rebuilt only when
      * the values they are made from change. The draw path is single-threaded, so the scratch array is shared safely.
      */
-    private class Strings(bankId: String) {
+    private class Strings(val bankId: String) {
         val menuId = "##fx_chain_more_$bankId"
         val moreBtn = "${Icons.MORE_VERTICAL}##more_btn_$bankId"
         val prevPage = "◀##focus_prev_page_$bankId"
@@ -310,6 +310,7 @@ object FxChainHeader {
         if (ButtonChrome.button(st.prevPage, ARROW_W, ctrlH)) {
             FxMacroSync.stepParamPage(bankId, mixer, -1)
         }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxpage_prev_$bankId" }
         itemTooltip("Previous parameter page.")
 
         ImGui.sameLine()
@@ -329,6 +330,7 @@ object FxChainHeader {
         if (ButtonChrome.button(st.nextPage, ARROW_W, ctrlH)) {
             FxMacroSync.stepParamPage(bankId, mixer, 1)
         }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxpage_next_$bankId" }
         itemTooltip("Next parameter page.")
     }
 
@@ -421,6 +423,7 @@ object FxChainHeader {
         if (ImGui.sliderFloat(st.dryWet, pct, 0f, 100f, "Wet %.0f%%")) {
             slot?.dryWet?.baseValue = (pct[0] / 100f).coerceIn(0f, 1f)
         }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxwet_" + st.bankId }
         // Middle-click resets to fully wet, matching the level faders.
         if (ImGui.isItemHovered() && ImGui.isMouseClicked(2)) slot?.dryWet?.baseValue = 1f
         ImGui.endDisabled()
@@ -460,6 +463,7 @@ object FxChainHeader {
         if (ImGui.invisibleButton(st.focusedEffectIds[focusedSlot], nameW, ctrlH)) {
             actions.openSlotBrowse(focusedSlot)
         }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxfocus_name_" + st.bankId }
         if (ImGui.isItemHovered()) {
             val hoverBorderCol = TangoPalette.BADGE_HOVER_BORDER.u32()
             dl.addRect(curX, curY, curX + nameW, curY + ctrlH, hoverBorderCol, 4f, 0, 1.5f)
@@ -534,6 +538,7 @@ object FxChainHeader {
                 }
             }
         }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxchain_save_" + st.bankId }
         ImGui.popStyleColor(4)
         val saveName = chain.sourceFile?.name
         itemTooltip(st.saveTip.get(saveName) { if (saveName != null) "Save changes to $saveName." else "Save as new FX chain (.lsdfxchain)." })
@@ -552,6 +557,7 @@ object FxChainHeader {
         if (ButtonChrome.button(st.moreBtn, MORE_BTN_W, ctrlH)) {
             ImGui.openPopup(menuId)
         }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxchain_more_$bankId" }
         itemTooltip("Chain operations (Save As, New, Revert, Clear, Copy/Paste, Focus, Resync).")
 
         pushOpenDropdownPadding()

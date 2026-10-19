@@ -99,7 +99,10 @@ class PopupManager(
             displayW * 0.5f, displayH * 0.5f,
             ImGuiCond.Appearing, 0.5f, 0.5f
         )
-        
+        // Auto-resize alone shrinks wrapped text to a one-word-wide column; fix the width, let the height fit.
+        val w = 460f.coerceAtMost((displayW - 48f).coerceAtLeast(260f))
+        ImGui.setNextWindowSizeConstraints(w, 0f, w, Float.MAX_VALUE)
+
         val flags = ImGuiWindowFlags.AlwaysAutoResize or
                     ImGuiWindowFlags.NoMove            or
                     ImGuiWindowFlags.NoCollapse

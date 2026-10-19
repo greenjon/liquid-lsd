@@ -310,7 +310,8 @@ class UIManager(
                 popupManager.pendingOpenExitPopup = false
             }
             if (popupManager.pendingOpenMidiWarningPopup || PopupManager.globalPendingMidiWarning) {
-                ImGui.openPopup("No MIDI Devices Connected##midi_warning")
+                // Tour renders switch MIDI off on purpose and stand in for a connected controller, so they skip the warning.
+                if (!llm.slop.liquidlsd.tour.WidgetRegistry.enabled) ImGui.openPopup("No MIDI Devices Connected##midi_warning")
                 popupManager.pendingOpenMidiWarningPopup = false
                 PopupManager.globalPendingMidiWarning = false
             }

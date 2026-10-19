@@ -73,8 +73,16 @@ object ButtonChrome {
 
     fun button(label: String, width: Float, height: Float): Boolean = ImGui.button(label, width, height).also { afterItem(); noteTour(label) }
 
-    /** Tour key `btn_<visible label>` (the part before `##`); the last one drawn wins when labels repeat. */
-    private fun noteTour(label: String) = llm.slop.liquidlsd.tour.WidgetRegistry.note { "btn_" + label.substringBefore("##") }
+    /**
+     * Tour keys: `btn_<visible label>` (the part before `##`; the last one drawn wins when labels repeat) and, for a label
+     * with an id, `btnid_<id after ##>`, which stays put when the visible text changes.
+     */
+    private fun noteTour(label: String) {
+        if (!llm.slop.liquidlsd.tour.WidgetRegistry.enabled) return
+        llm.slop.liquidlsd.tour.WidgetRegistry.noteLastItem("btn_" + label.substringBefore("##"))
+        val id = label.substringAfter("##", "")
+        if (id.isNotEmpty()) llm.slop.liquidlsd.tour.WidgetRegistry.noteLastItem("btnid_$id")
+    }
 
     /** Bevel the last submitted item (call right after an `ImGui.button(...)` that isn't [button]). Uses its active state for the inset look. */
     fun afterItem() {

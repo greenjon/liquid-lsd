@@ -77,6 +77,8 @@ class TourRunner(
     private var rippleX = 0f
     private var rippleY = 0f
     private var mouseDown = false
+    private var rightPressUntil = -1.0
+    private var rightDown = false
     /** Keyboard and wheel input still to deliver, one entry per frame (type, key, scroll). */
     private val inputQueue = ArrayDeque<(imgui.ImGuiIO) -> Unit>()
     private var highlight: WidgetRegistry.Rect? = null
@@ -181,6 +183,7 @@ class TourRunner(
             if (k >= 1.0) moving = false
         }
         mouseDown = t < pressUntil
+        rightDown = t < rightPressUntil
     }
 
     private fun resolve(step: TourStep): Pair<Float, Float>? {
@@ -207,9 +210,11 @@ class TourRunner(
                 moveStart = t; moveDur = (step.durationSec ?: 0.6).coerceAtLeast(DT); moving = true
             }
             "drag" -> {
-                // Press at the cursor, drag by (dx, dy) over durationSec, release. Move to the knob first with a "move" step.
+                // Press at the cursor, drag by (dx, dy) (or onto target / x,y) over durationSec, release. Move to the knob first with a "move" step.
                 val dur = (step.durationSec ?: 0.8).coerceAtLeast(DT)
-                moveFromX = curX; moveFromY = curY; moveToX = curX + (step.dx ?: 0f); moveToY = curY + (step.dy ?: 0f)
+                val dest = if (step.target != null || (step.x != null && step.y != null)) resolve(step) else null
+                moveFromX = curX; moveFromY = curY
+                moveToX = dest?.first ?: (curX + (step.dx ?: 0f)); moveToY = dest?.second ?: (curY + (step.dy ?: 0f))
                 moveStart = t; moveDur = dur; moving = true
                 pressUntil = t + dur + DT
                 rippleStart = t; rippleX = curX; rippleY = curY
@@ -224,15 +229,29 @@ class TourRunner(
                 }
                 pressKey(imgui.flag.ImGuiKey.Enter)
             }
-            "key" -> when (step.target?.lowercase()) {
-                "enter" -> pressKey(imgui.flag.ImGuiKey.Enter)
-                "escape" -> pressKey(imgui.flag.ImGuiKey.Escape)
-                "tab" -> pressKey(imgui.flag.ImGuiKey.Tab)
-                else -> warnTour("Tour t=${step.t}: key wants enter, escape or tab")
+            "key" -> {
+                // [ctrl+][shift+]<enter|escape|tab|space|backspace|a-z>, e.g. "q", "shift+q", "ctrl+z".
+                val parts = step.target.orEmpty().lowercase().split('+')
+                val name = parts.last()
+                val key = when {
+                    name == "enter" -> imgui.flag.ImGuiKey.Enter
+                    name == "escape" -> imgui.flag.ImGuiKey.Escape
+                    name == "tab" -> imgui.flag.ImGuiKey.Tab
+                    name == "space" -> imgui.flag.ImGuiKey.Space
+                    name == "backspace" -> imgui.flag.ImGuiKey.Backspace
+                    name.length == 1 && name[0] in 'a'..'z' -> imgui.flag.ImGuiKey.A + (name[0] - 'a')
+                    else -> null
+                }
+                if (key == null) warnTour("Tour t=${step.t}: key wants [ctrl+][shift+] enter, escape, tab, space, backspace or a letter")
+                else pressKey(key, ctrl = "ctrl" in parts.dropLast(1), shift = "shift" in parts.dropLast(1))
             }
             "scroll" -> { val v = step.value ?: 1f; inputQueue.add { it.addMouseWheelEvent(0f, v) } }
             "click" -> {
                 pressUntil = t + (step.durationSec ?: CLICK_HOLD_SEC)
+                rippleStart = t; rippleX = curX; rippleY = curY
+            }
+            "rclick" -> {
+                rightPressUntil = t + (step.durationSec ?: CLICK_HOLD_SEC)
                 rippleStart = t; rippleX = curX; rippleY = curY
             }
             "set_page" -> step.target?.let { UITheme.performancePageId = it }
@@ -289,6 +308,7 @@ class TourRunner(
                 else llm.slop.liquidlsd.presets.FxOps.swapSlots(c, a, c, b)
             }
             "fx_clear" -> fxChain(step)?.let { llm.slop.liquidlsd.presets.FxOps.clearChain(it) }
+            "fx_new" -> fxChain(step)?.let { llm.slop.liquidlsd.presets.FxOps.newChain(it) }
             "fx_link" -> fxChain(step)?.let { c ->
                 val slot = slotIndex(step) ?: return@let
                 c.setSlotLinked(slot, (step.value ?: 1f) >= 0.5f)
@@ -334,6 +354,8 @@ class TourRunner(
                 else llm.slop.liquidlsd.ui.PreferencesPanel.open(cat)
             }
             "preferences_close" -> llm.slop.liquidlsd.ui.PreferencesPanel.close()
+            // F / Esc are GLFW key callbacks, which tour mode ignores, so Output View has its own action.
+            "output_view" -> UITheme.outputViewEnabled = (step.value ?: 1f) >= 0.5f
             "theme" -> when (step.target?.lowercase()) {
                 "light" -> UITheme.theme = UITheme.Theme.ORANGE_SUNSHINE
                 "dark" -> UITheme.theme = UITheme.Theme.GREY_ACID
@@ -381,9 +403,13 @@ class TourRunner(
         llm.slop.liquidlsd.presets.PresetManager.awaitIo()
     }
 
-    private fun pressKey(key: Int) {
-        inputQueue.add { it.addKeyEvent(key, true) }
-        inputQueue.add { it.addKeyEvent(key, false) }
+    private fun pressKey(key: Int, ctrl: Boolean = false, shift: Boolean = false) {
+        fun mods(down: Boolean, io: imgui.ImGuiIO) {
+            if (ctrl) { io.addKeyEvent(imgui.flag.ImGuiKey.ImGuiMod_Ctrl, down); io.addKeyEvent(imgui.flag.ImGuiKey.LeftCtrl, down) }
+            if (shift) { io.addKeyEvent(imgui.flag.ImGuiKey.ImGuiMod_Shift, down); io.addKeyEvent(imgui.flag.ImGuiKey.LeftShift, down) }
+        }
+        inputQueue.add { mods(true, it); it.addKeyEvent(key, true) }
+        inputQueue.add { it.addKeyEvent(key, false); mods(false, it) }
     }
 
     /** Called by UIManager between imguiGlfw.newFrame() and ImGui.newFrame(). */
@@ -393,6 +419,7 @@ class TourRunner(
         io.addFocusEvent(true) // OS focus changes (compositor timing) must not clear hover state
         io.addMousePosEvent(curX, curY)
         io.addMouseButtonEvent(0, mouseDown)
+        io.addMouseButtonEvent(1, rightDown)
         inputQueue.removeFirstOrNull()?.invoke(io)
     }
 

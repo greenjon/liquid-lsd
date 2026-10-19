@@ -32,6 +32,7 @@ object BroadcastPreferences {
     }
 
     fun loadPreferences() {
+        if (llm.slop.liquidlsd.ui.AppPreferencesStore.persistenceDisabled) return // tour renders: see AppPreferencesStore
         val fileToRead = when {
             preferencesFile.exists() -> preferencesFile
             legacySettingsFile.exists() -> legacySettingsFile
@@ -55,6 +56,7 @@ object BroadcastPreferences {
     }
 
     fun savePreferences() {
+        if (llm.slop.liquidlsd.ui.AppPreferencesStore.persistenceDisabled) return
         try {
             val props = Properties()
             val fileToRead = if (preferencesFile.exists()) preferencesFile else if (legacySettingsFile.exists()) legacySettingsFile else null

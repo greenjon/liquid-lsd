@@ -29,6 +29,7 @@ object OscPreferences {
     }
 
     fun loadPreferences() {
+        if (llm.slop.liquidlsd.ui.AppPreferencesStore.persistenceDisabled) return // tour renders: see AppPreferencesStore
         if (!preferencesFile.exists()) return
         try {
             val props = Properties()
@@ -44,6 +45,7 @@ object OscPreferences {
     }
 
     fun savePreferences() {
+        if (llm.slop.liquidlsd.ui.AppPreferencesStore.persistenceDisabled) return
         try {
             val props = Properties()
             if (preferencesFile.exists()) preferencesFile.inputStream().use { props.load(it) }
