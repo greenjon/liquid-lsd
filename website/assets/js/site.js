@@ -153,4 +153,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0.4 });
     loops.forEach((v) => io.observe(v));
   }
+
+  // 6. Header fades out 3 s after scrolling stops (never at the top of the page); scrolling brings it back
+  const header = document.querySelector('.site-header');
+  if (header) {
+    let fadeTimer = null;
+    const scheduleFade = () => {
+      clearTimeout(fadeTimer);
+      if (window.scrollY <= 0) return;
+      fadeTimer = setTimeout(() => {
+        const busy = header.matches(':hover') || header.contains(document.activeElement) ||
+          (navLinks && navLinks.classList.contains('open'));
+        if (busy) { scheduleFade(); return; }
+        header.classList.add('header-hidden');
+      }, 3000);
+    };
+    window.addEventListener('scroll', () => {
+      header.classList.remove('header-hidden');
+      scheduleFade();
+    }, { passive: true });
+    scheduleFade();
+  }
 });

@@ -1253,3 +1253,8 @@ body { background: var(--bg-page); color: var(--text-main); }
 .action-cta { margin-top: 2.5rem; }
 .tour-full { margin: 0 0 1.5rem; max-width: 1400px; }
 .tour-full summary { color: #fff; font-weight: 700; cursor: pointer; margin-bottom: .75rem; }
+
+/* Header fades out while idle (see site.js) */
+.site-header { transition: opacity .4s ease; }
+.site-header.header-hidden { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .site-header { transition: none; } }
