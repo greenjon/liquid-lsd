@@ -60,3 +60,5 @@ One script per video in `tours/`: `overview.json` (six chapters, about 6 minutes
 
 ## Publishing the site
 `scripts/publish_site.sh` builds the site and pushes it to `greenjon/liquid-lsd-site` (cloned next to this repo on first run); that repo's Actions workflow (`website/deploy/pages.yml`) deploys it to GitHub Pages at `liquid-lsd.greenjon.com` (`SITE_HOST` in `build_website.py`; the build writes `CNAME` and `.nojekyll`). The tour media only ever lives in the site repo, so run `scripts/publish_site.sh --squash` now and then to reset its history to one commit. Pass `--tours tours/out` (or leave the default) to choose which render is published; check that you are not publishing draft renders.
+
+Each chapter also gets a `.jpg` thumbnail (a frame a few seconds into its clip, made with ffmpeg at site build time), used as the `poster` on the tour page and the docs clips.

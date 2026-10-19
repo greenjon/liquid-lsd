@@ -33,7 +33,7 @@ STAGE_DROP = ("developer", "archive", "licenses", "release_notes.md")
 def clip_block(video: dict, chapters: list, rel: str) -> str:
     """HTML for the chapter clips of one tour video, inserted into the docs page it explains."""
     cards = "\n".join(
-        f'<figure><video controls muted loop playsinline preload="metadata" src="{rel}tour/media/{video["id"]}/{c["id"]}.mp4"></video>'
+        f'<figure><video controls muted loop playsinline preload="none" poster="{rel}tour/media/{video["id"]}/{c["id"]}.jpg" src="{rel}tour/media/{video["id"]}/{c["id"]}.mp4"></video>'
         f'<figcaption><a href="{rel}tour/#{video["id"]}/{c["id"]}">{html.escape(c["title"])}</a></figcaption></figure>'
         for c in chapters
     )
@@ -120,6 +120,12 @@ def fmt_time(t: float) -> str:
     return f"{int(t) // 60}:{int(t) % 60:02d}"
 
 
+def make_poster(clip: Path, dst: Path, dur: float) -> None:
+    """Thumbnail for a chapter clip: a frame a few seconds in, when the UI has settled."""
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", f"{min(4.0, dur / 2):.2f}", "-i", str(clip),
+                    "-frames:v", "1", "-vf", "scale=800:-2", "-q:v", "4", str(dst)], check=True)
+
+
 def build_tour(out: Path, tours: Path) -> int:
     """Interactive tour page at /tour/, generated from each video's chapters.json + captions.json.
 
@@ -145,6 +151,7 @@ def build_tour(out: Path, tours: Path) -> int:
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(clip, dst)
             dur = min(ch["clip"], ch["end"] - ch["start"], 20.0)
+            make_poster(clip, dst.with_suffix(".jpg"), dur)
             caps = [
                 {"start": round(c["start"] - ch["start"], 2), "end": round(c["end"] - ch["start"], 2),
                  "text": c["text"], "inClip": c["start"] - ch["start"] < dur}
@@ -153,7 +160,7 @@ def build_tour(out: Path, tours: Path) -> int:
             i = len(steps)
             slug = f'{v["id"]}/{ch["id"]}'
             steps.append({"slug": slug, "vtitle": v["title"], "title": ch["title"], "docs": v["docs"],
-                          "clip": f'media/{v["id"]}/{clip.name}', "dur": round(dur, 2), "captions": caps})
+                          "clip": f'media/{v["id"]}/{clip.name}', "poster": f'media/{v["id"]}/{ch["id"]}.jpg', "dur": round(dur, 2), "captions": caps})
             nav.append(f'        <a href="#{slug}" data-step="{i}"><span class="n">{i + 1:02d}</span>{html.escape(ch["title"])}</a>')
             rows = "\n".join(
                 f'          <li data-step="{i}" data-line="{k}" class="{"" if c["inClip"] else "late"}">'

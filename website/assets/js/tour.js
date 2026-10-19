@@ -23,6 +23,7 @@
     const changed = i !== cur;
     cur = i;
     if (changed) {
+      video.poster = s.poster;
       video.src = s.clip;
       video.loop = !auto.checked;
       video.play().catch(() => {});
