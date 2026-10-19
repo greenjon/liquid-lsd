@@ -1,6 +1,7 @@
 #!/bin/bash
 # Renders a tour script and derives the website/video outputs from it.
 # Usage: scripts/render_tour.sh [--draft] [--webm] <script.json> <out-dir> [extra app args, e.g. --tour-hidden]
+#        scripts/render_tour.sh [--draft] [--webm] --all <out-root> [extra app args]   # every tours/*.json into <out-root>/<name>/
 #   --draft  fast preview while writing the script: 30 fps, 960x540, NVENC (NVIDIA GPU), no frame hashes.
 #   --webm   also encode hero.webm (VP9 on the CPU: slow, several minutes per minute of video).
 # Outputs in <out-dir>: hero.mp4 (chapters embedded), poster.jpg, hero.vtt, captions.json, chapters.json,
@@ -15,6 +16,19 @@ while [ $# -gt 0 ]; do
     *) break ;;
   esac
 done
+if [ "${1:-}" = "--all" ]; then
+  ROOT="${2:?usage: $0 [--draft] [--webm] --all <out-root> [extra args]}"
+  shift 2
+  FLAGS=()
+  [ "$DRAFT" = 1 ] && FLAGS+=(--draft)
+  [ "$WEBM" = 1 ] && FLAGS+=(--webm)
+  for s in "$(dirname "$0")"/../tours/*.json; do
+    name="$(basename "$s" .json)"
+    echo "== $name"
+    "$0" "${FLAGS[@]}" "$s" "$ROOT/$name" "$@"
+  done
+  exit 0
+fi
 SCRIPT="${1:?usage: $0 [--draft] [--webm] <script.json> <out-dir> [extra args]}"
 OUT="${2:?usage: $0 [--draft] [--webm] <script.json> <out-dir> [extra args]}"
 shift 2

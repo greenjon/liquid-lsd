@@ -51,6 +51,10 @@ object PresetListPanel {
         }
     var filteredPresets: List<AssetItem> = emptyList()
 
+    /** Tour widget key of a list row: `browser_row_<kind>_<stock id or file name without extension>`. */
+    internal fun tourRowKey(kind: BrowseKind, asset: AssetItem): String =
+        "browser_row_${kind.name.lowercase()}_" + asset.path.substringAfterLast('/').substringBeforeLast('.')
+
     /**
      * The row loop of the list, shared by the unified [BrowserPane]. [favoriteKeys] (stock id or
      * file path) get a star; [infoFor] is drawn as a muted second column; [contextExtras] adds items at the top of each row's context menu.
@@ -102,6 +106,7 @@ object PresetListPanel {
                 if (selectableRow("$shown##row", isSelected, itemW)) {
                     itemClicked = true
                 }
+                llm.slop.liquidlsd.tour.WidgetRegistry.note { tourRowKey(BrowseKind.SRC, asset) }
             }
             val io = ImGui.getIO()
             if (itemClicked) {

@@ -79,6 +79,7 @@ object TransitionBrowserPanel {
             val text = "${if (target?.isApplied(asset) == true) "\u25CF " else ""}$icon ${asset.displayName}"
             selectableRow("${if (info.isNotEmpty()) PresetListPanel.nameForInfo(text, itemW) else text}##trans_browser_$index", isSelected, itemW)
         }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { PresetListPanel.tourRowKey(BrowseKind.TRANS, asset) }
         PresetListPanel.drawInfoColumn(info, itemW)
         val isRowHovered = ImGui.isItemHovered()
         itemTooltip(

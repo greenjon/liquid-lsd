@@ -1,6 +1,6 @@
 # Walkthrough tour: review feedback and chapter roadmap
 
-Script: `tour/tour.json`. Draft render: `scripts/render_tour.sh --draft tour/tour.json tour/draft --tour-hidden` (~2 min).
+Scripts: `tours/<video>.json` (only `overview.json` so far). Draft render: `scripts/render_tour.sh --draft --all tours/draft --tour-hidden` (about 5 min for the overview).
 Format and checks: `docs/developer/tour_renderer.md`.
 
 ## Feedback round 1 (2026-10-17): DONE in 01ff803 / 77db25e
@@ -9,7 +9,11 @@ with "Ch. N at m:ss" references; knobs turn with up/down AND left/right; show bo
 Transitions row XFADE knob); every deck plus the master has a 3-slot FX chain; explain left-to-right flow and why order
 matters; show adding/removing slots from the Super Knob. Draft mode for fast iteration (30 fps, 960x540, NVENC).
 
-## Feedback round 2 (2026-10-18): OPEN, not applied yet (user has more feedback coming; apply as one batch)
+## Feedback round 2 (2026-10-18): APPLIED 2026-10-18 (no more round 2 feedback coming)
+Notes: Ch. 1 now starts deck A on Icosa H3 (draws only part of the frame) with its FX chain bypassed, raises BG
+(Aurora ribbons, FX cleared) with the BG preview fader so it shows around A; Ch. 2 clicks BYPASS to turn A's chain on.
+Preview faders were dead (Mixer macro overwrote them); user fixed that in 90faa25. Source scan for BG show-through:
+with no FX on A, icosa_h3 and mandala let BG through clearly; through A's tunnel chain only icosa_h3 does.
 1. **Ch. 1, four decks: say what each is for.** Roughly: A and B are mixed together by the crossfader. BG is the
    "background": it appears behind A and B. PV is for previewing; it is never shown to the audience.
    (Current caption only says "a preview of each of the four decks: A, B, BG and PV". Check wording against the user
@@ -33,8 +37,7 @@ Lineup: 1 Overview (current tour, trimmed: Edit-view detail and some Super Knob 
 Metaknob, focus mode, master FX); 4 Mixing and transitions (crossfader, transitions, AUTO/fade time, clock);
 5 Library and presets (browse, save, queues, pair focus); 6 Hardware (MIDI learn, Twister, OSC; filmed insert or
 graphic for the Twister); 7 Output (second display, recording, web broadcast).
-Tooling: `tours/` with one script per video (move `tour/tour.json` to `tours/overview.json`); batch rendering in
-`render_tour.sh`; cross-video references (`{ch:<video>/<chapter>}` -> "the Modulation video", a link on the web);
+Tooling: DONE `tours/` with one script per video, `render_tour.sh --all`. OPEN: cross-video references (`{ch:<video>/<chapter>}` -> "the Modulation video", a link on the web);
 maybe a shared setup include later.
 
 ## Chapter roadmap (overview; most items below move to the deep dives per the decision above)

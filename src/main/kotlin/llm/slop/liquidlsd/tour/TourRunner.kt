@@ -251,6 +251,7 @@ class TourRunner(
                 val slot = slotIndex(step) ?: return@let
                 llm.slop.liquidlsd.presets.FxOps.setSlotEnabled(c, slot, (step.value ?: 1f) >= 0.5f)
             }
+            "fx_chain_enable" -> fxChain(step)?.let { it.enabled = (step.value ?: 1f) >= 0.5f }
             "fx_chain" -> fxChain(step)?.let { c ->
                 val f = File(step.target ?: return@let).let { if (it.isAbsolute) it else File(scriptDir, it.path).takeIf { x -> x.exists() } ?: it }
                 try {

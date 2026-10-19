@@ -4,8 +4,9 @@ A deterministic, scripted render of the real UI for the walkthrough video, chapt
 
 ```
 ./gradlew run --args="--tour=scripts/tour_phase3_test.json --tour-out=/tmp/t/raw.mp4 --no-audio [--tour-hidden] [--tour-dump=<dir>:70,81]"
-scripts/render_tour.sh --draft tour/tour.json tour/draft --tour-hidden   # while writing: ~2 min for the 5 min tour
-scripts/render_tour.sh [--webm] tour/tour.json tour/out --tour-hidden     # final: hero.mp4 (+ .webm), poster, .vtt, captions.json, chapters.json, clips/
+scripts/render_tour.sh --draft tours/overview.json tours/draft/overview --tour-hidden   # while writing: a few minutes for the 5 min overview
+scripts/render_tour.sh [--webm] tours/overview.json tours/out/overview --tour-hidden     # final: hero.mp4 (+ .webm), poster, .vtt, captions.json, chapters.json, clips/
+scripts/render_tour.sh [--draft] --all tours/out --tour-hidden                           # every tours/*.json into tours/out/<name>/
 scripts/tour_determinism_check.sh <script.json> --tour-hidden [--tour-draft]   # renders twice, compares per-frame SHA-256
 ```
 
@@ -34,6 +35,7 @@ Checks printed as `TOUR_WARN`: a caption shown for less than its reading time (1
 | `load_source`, `load_preset` | `deck` A/B/BG/PV, `target` = source id / `.lsd` path |
 | `set_param`, `bind_modulator` | `deck`, `param`, `value`; modulator `target` = CV source id, `unit` BEAT/TIME |
 | `fx_filter`, `fx_enable`, `fx_link`, `fx_param`, `meta_knob` | `deck` (A/B/BG/PV/MASTER), `slot` 0-2, `target`/`value`/`param` |
+| `fx_chain_enable` | `deck`, `value` 0 or 1: the chain's BYPASS switch (0 = bypassed) |
 | `fx_swap` | `deck`, `slot`, `slot2` (a real drag of one slot cell onto another does the same through the UI) |
 | `fx_chain`, `fx_clear`, `fx_dry_wet`, `super_knob` | `deck`, `.lsdfxchain` path / `value`. `super_knob` and `meta_knob` set the FX row's macro knob, as a hand would; soft takeover still applies |
 | `transition`, `transition_preset`, `crossfade` | stock id, `.lsdtrans` path, `value` -1..1 |
@@ -41,12 +43,12 @@ Checks printed as `TOUR_WARN`: a caption shown for less than its reading time (1
 Unknown targets print `TOUR_WARN` and are skipped; treat any warning as a script bug.
 
 ## Widget keys (`tour/WidgetRegistry.kt`)
-Call sites do `WidgetRegistry.note { key }` right after the ImGui item (free outside tour mode). Keys: `perf_tab_<page>`, `perf_<page>_r<row>_c<col>` (knobs), `perf_gen_badge_<tag>`, `perf_src_more_/save_/eject_/rand_<tag>`, `rack_chevron_<id>`, `crossfader_track`, `fxcell_<bank>_<slot>`, `fxbypass_`/`fxlink_<bank>_<slot>`, `fxchain_name_<bank>`, `fxpill_<bank>_<slot>`, `fxchainlink_<bank>`, `browser_tab_<mode>`, `browser_search`, `prefs_cat_<category>`, `ui_theme`, `edit_side_<tab>`, `macro_name_<bank>_<label>`. `<out>.keys` lists every key seen during a render, handy when authoring. Custom-drawn items without an ImGui item (deck title badges, knob strip labels) need `x,y` or a new explicit rect. Do not key on `##title_badge_*_x_y` (coordinates in the id).
+Call sites do `WidgetRegistry.note { key }` right after the ImGui item (free outside tour mode). Keys: `perf_tab_<page>`, `perf_<page>_r<row>_c<col>` (knobs), `perf_gen_badge_<tag>`, `perf_src_more_/save_/eject_/rand_<tag>`, `rack_chevron_<id>`, `crossfader_track`, `fxcell_<bank>_<slot>`, `fxbypass_`/`fxlink_<bank>_<slot>`, `fxchain_name_<bank>`, `fxpill_<bank>_<slot>`, `fxchainlink_<bank>`, `fxchain_bypass_<A|B|BG|PV|MST>` (chain BYPASS), `browser_tab_<mode>`, `browser_search`, `browser_row_<src|fx|trans>_<stock id or file name without extension>` (list rows; only rows scrolled into view are clickable), `deck_fader_<A|B|BG|PV>` (preview faders), `prefs_cat_<category>`, `ui_theme`, `edit_side_<tab>`, `macro_name_<bank>_<label>`. `<out>.keys` lists every key seen during a render, handy when authoring. Custom-drawn items without an ImGui item (deck title badges, knob strip labels) need `x,y` or a new explicit rect. Do not key on `##title_badge_*_x_y` (coordinates in the id).
 
 ## Outputs next to `--tour-out`
 `.hashes` (per frame), `.vtt`, `.captions.json` (index/start/end/chapter/text for the web page and transcript), `.chapters.json`, `.ffmeta` (ffmpeg chapters). `render_tour.sh` derives the rest.
 
 Known leftovers: wall-clock use in `FileSystemManager`, DeckOps autosave names, `PlaylistManager`, `PerformanceStats`, `TouchConsoleController` (no pixel effect so far); other GPUs/compositors unverified.
 
-## The walkthrough
-`tour/tour.json` is the walkthrough itself (six chapters, about 5 minutes). Its soundtrack `tour/beat.wav` is a generated placeholder (`scripts/make_tour_beat.sh`, not committed) until the licensed track arrives; the script only names the file, so swapping it changes nothing else.
+## The walkthrough videos
+One script per video in `tours/`: `overview.json` (six chapters, about 5 minutes) now, deep dives (Modulation, FX chains, Mixing and transitions, Library and presets, Hardware, Output) to follow, each embedded on its user-guide page. A UI change re-renders only the videos it touches. In a deck's bound Browse (click the source name) a single click on a row loads it, so scripts show loads with `move` + `click` on `browser_row_*` keys instead of `load_source`. Their soundtrack `tours/beat.wav` is a generated placeholder (`scripts/make_tour_beat.sh`, not committed) until the licensed track arrives; the script only names the file, so swapping it changes nothing else.

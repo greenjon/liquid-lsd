@@ -638,6 +638,7 @@ object FxChainHeader {
             if (ButtonChrome.button("$label##bypass_$id", width, ctrlH)) {
                 chain.enabled = !chain.enabled
             }
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxchain_bypass_$id" }
             }
         PerformanceColors.popActiveToggleStyle()
         itemTooltip(if (isActive) "FX chain is active. Click to bypass." else "FX chain is bypassed. Click to enable.")
