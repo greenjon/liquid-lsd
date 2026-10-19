@@ -33,6 +33,8 @@ class TourRunner(
     private var audio: TourAudioFeeder? = null
     companion object {
         private const val CLICK_HOLD_SEC = 0.12
+        /** Frames between typed characters (about 12 per second at 60 fps). */
+        private const val TYPE_GAP_FRAMES = 4
         private const val RIPPLE_SEC = 0.45
         private const val HIGHLIGHT_LINGER_SEC = 0.9
         private const val CAPTION_SIZE = 25f
@@ -75,6 +77,8 @@ class TourRunner(
     private var rippleX = 0f
     private var rippleY = 0f
     private var mouseDown = false
+    /** Keyboard and wheel input still to deliver, one entry per frame (type, key, scroll). */
+    private val inputQueue = ArrayDeque<(imgui.ImGuiIO) -> Unit>()
     private var highlight: WidgetRegistry.Rect? = null
     private var highlightFrom = 0.0
     private var caption: String? = null
@@ -187,7 +191,7 @@ class TourRunner(
                 return null
             }
             if (!WidgetRegistry.isCurrent(step.target)) warnTour("Tour t=${step.t}: target '${step.target}' is not on screen now (last drawn earlier; wrong page or view?)")
-            return r.centerX to r.centerY
+            return r.centerX + (step.ox ?: 0f) to r.centerY + (step.oy ?: 0f)
         }
         if (step.x != null && step.y != null) return step.x to step.y
         return null
@@ -210,6 +214,23 @@ class TourRunner(
                 pressUntil = t + dur + DT
                 rippleStart = t; rippleX = curX; rippleY = curY
             }
+            "type" -> {
+                // Replace the focused field's text (Ctrl+A, then the characters), then Enter.
+                inputQueue.add { it.addKeyEvent(imgui.flag.ImGuiKey.ImGuiMod_Ctrl, true); it.addKeyEvent(imgui.flag.ImGuiKey.LeftCtrl, true); it.addKeyEvent(imgui.flag.ImGuiKey.A, true) }
+                inputQueue.add { it.addKeyEvent(imgui.flag.ImGuiKey.A, false); it.addKeyEvent(imgui.flag.ImGuiKey.LeftCtrl, false); it.addKeyEvent(imgui.flag.ImGuiKey.ImGuiMod_Ctrl, false) }
+                for (c in step.target.orEmpty()) {
+                    inputQueue.add { it.addInputCharacter(c.code) }
+                    repeat(TYPE_GAP_FRAMES) { inputQueue.add { } }
+                }
+                pressKey(imgui.flag.ImGuiKey.Enter)
+            }
+            "key" -> when (step.target?.lowercase()) {
+                "enter" -> pressKey(imgui.flag.ImGuiKey.Enter)
+                "escape" -> pressKey(imgui.flag.ImGuiKey.Escape)
+                "tab" -> pressKey(imgui.flag.ImGuiKey.Tab)
+                else -> warnTour("Tour t=${step.t}: key wants enter, escape or tab")
+            }
+            "scroll" -> { val v = step.value ?: 1f; inputQueue.add { it.addMouseWheelEvent(0f, v) } }
             "click" -> {
                 pressUntil = t + (step.durationSec ?: CLICK_HOLD_SEC)
                 rippleStart = t; rippleX = curX; rippleY = curY
@@ -360,6 +381,11 @@ class TourRunner(
         llm.slop.liquidlsd.presets.PresetManager.awaitIo()
     }
 
+    private fun pressKey(key: Int) {
+        inputQueue.add { it.addKeyEvent(key, true) }
+        inputQueue.add { it.addKeyEvent(key, false) }
+    }
+
     /** Called by UIManager between imguiGlfw.newFrame() and ImGui.newFrame(). */
     fun injectInput() {
         val io = ImGui.getIO()
@@ -367,6 +393,7 @@ class TourRunner(
         io.addFocusEvent(true) // OS focus changes (compositor timing) must not clear hover state
         io.addMousePosEvent(curX, curY)
         io.addMouseButtonEvent(0, mouseDown)
+        inputQueue.removeFirstOrNull()?.invoke(io)
     }
 
     /** Called by UIManager just before ImGui.render(): synthetic cursor + click ripple in the foreground draw list. */

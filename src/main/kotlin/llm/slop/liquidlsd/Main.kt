@@ -138,6 +138,8 @@ fun main(args: Array<String>) {
         UITheme.checkUpdatesOnStartup = false
         val script = llm.slop.liquidlsd.tour.TourScript.parse(java.io.File(cliArgs.tourScript!!).readText())
         llm.slop.liquidlsd.utils.DeterministicRandom.seed(script.seed)
+        // A script with a soundtrack shows the AUD column; the live audio engine never starts in tour mode.
+        UITheme.audioEngineEnabled = script.audio != null
         llm.slop.liquidlsd.ui.FileSystemManager.synchronousScans = true
         llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.setAutoReloadEnabled(false)
         val scriptFile = java.io.File(cliArgs.tourScript!!).absoluteFile

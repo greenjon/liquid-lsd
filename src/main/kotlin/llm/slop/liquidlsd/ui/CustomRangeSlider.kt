@@ -70,7 +70,8 @@ object CustomRangeSlider {
         parseValue: (String) -> Float? = DEFAULT_PARSE,
         readOnly: Boolean = false,
         macroBindingInfo: llm.slop.liquidlsd.macro.MacroBindingInfo? = null,
-        displayScale: Float = 1f
+        displayScale: Float = 1f,
+        tourKey: String? = null
     ) {
         val scale = displayScale
         val shown = ValueFormat.resolve(formatValue, scale)
@@ -103,6 +104,7 @@ object CustomRangeSlider {
         }
 
         val inputChanged = ImGui.inputText("##input_$key", buffer, flags, callback)
+        if (tourKey != null) llm.slop.liquidlsd.tour.WidgetRegistry.note { tourKey }
 
         if (isBoundValue) {
             ImGui.popStyleColor(2)
@@ -264,8 +266,8 @@ object CustomRangeSlider {
 
             val minLock = minMaxLock(paramKey, modulatorId, "lfoMin")
             val maxLock = minMaxLock(paramKey, modulatorId, "lfoMax")
-            drawTextInput(session, "${idPrefix}_min", currentMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinMaxChanged(it, maxOf(it, currentMax)) }, formatValue, macroBindingInfo = minLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
-            drawTextInput(session, "${idPrefix}_max", currentMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinMaxChanged(minOf(it, currentMin), it) }, formatValue, macroBindingInfo = maxLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f)
+            drawTextInput(session, "${idPrefix}_min", currentMin, minLimit, maxLimit, textBoxesStartX, startY, boxWidth, null, { onMinMaxChanged(it, maxOf(it, currentMax)) }, formatValue, macroBindingInfo = minLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f, tourKey = "range_${label}_min")
+            drawTextInput(session, "${idPrefix}_max", currentMax, minLimit, maxLimit, textBoxesStartX + boxWidth + boxSpacing, startY, boxWidth, null, { onMinMaxChanged(minOf(it, currentMin), it) }, formatValue, macroBindingInfo = maxLock, displayScale = if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f, tourKey = "range_${label}_max")
 
             renderInternalDualSlider(idPrefix + label + "_single", currentMin, currentMax, minLimit, maxLimit, sliderStartX, startY, lineWidth, themeColor, onMinMaxChanged, locked = minLock ?: maxLock)
         } else {
@@ -965,6 +967,7 @@ object CustomRangeSlider {
             drawTextInput(
                 session = session,
                 key = "${idPrefix}_${label}_min",
+                tourKey = "slider_${label}_min",
                 currentValue = currentMin,
                 minLimit = minLimit,
                 maxLimit = maxLimit,
@@ -983,6 +986,7 @@ object CustomRangeSlider {
             drawTextInput(
                 session = session,
                 key = "${idPrefix}_${label}_max",
+                tourKey = "slider_${label}_max",
                 currentValue = currentMax,
                 minLimit = minLimit,
                 maxLimit = maxLimit,
@@ -1002,6 +1006,7 @@ object CustomRangeSlider {
             drawTextInput(
                 session = session,
                 key = "${idPrefix}_${label}_value",
+                tourKey = "slider_${label}_value",
                 currentValue = currentValue,
                 minLimit = minLimit,
                 maxLimit = maxLimit,
@@ -1032,6 +1037,7 @@ object CustomRangeSlider {
         val trackH = buttonSize
         ImGui.setCursorScreenPos(lineStartX - trackPadX, row2Y)
         ImGui.invisibleButton("##track_${idPrefix}_$label", trackW, trackH)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "slider_${label}_track" }
         val isTrackHovered = ImGui.isItemHovered()
         val isTrackItemActive = ImGui.isItemActive()
         val isTrackActivated = ImGui.isItemActivated()

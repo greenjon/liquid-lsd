@@ -69,9 +69,12 @@ object ButtonChrome {
     }
 
     /** Drop-in for `ImGui.button`: the same button plus the bevel. Prefer this for every opaque button. */
-    fun button(label: String): Boolean = ImGui.button(label).also { afterItem() }
+    fun button(label: String): Boolean = ImGui.button(label).also { afterItem(); noteTour(label) }
 
-    fun button(label: String, width: Float, height: Float): Boolean = ImGui.button(label, width, height).also { afterItem() }
+    fun button(label: String, width: Float, height: Float): Boolean = ImGui.button(label, width, height).also { afterItem(); noteTour(label) }
+
+    /** Tour key `btn_<visible label>` (the part before `##`); the last one drawn wins when labels repeat. */
+    private fun noteTour(label: String) = llm.slop.liquidlsd.tour.WidgetRegistry.note { "btn_" + label.substringBefore("##") }
 
     /** Bevel the last submitted item (call right after an `ImGui.button(...)` that isn't [button]). Uses its active state for the inset look. */
     fun afterItem() {

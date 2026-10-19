@@ -85,6 +85,7 @@ object ParametersRenderer {
 
         ImGui.setCursorPosY(rowY)
         ImGui.invisibleButton("row_label_btn_$paramKey", textBtnW, CELL.coerceAtLeast(1f))
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "cv_${paramKey}_label" }
         val isLabelHovered = ImGui.isItemHovered()
 
         val popupId = "row_menu_$paramKey"
@@ -342,6 +343,7 @@ object ParametersRenderer {
 
         ImGui.setCursorScreenPos(valX, valY)
         ImGui.invisibleButton("##value_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "cv_${paramKey}_val" }
         val isValHovered = ImGui.isItemHovered()
         if (ImGui.isItemClicked(0)) {
             if (isMacroLearning) {
@@ -520,6 +522,7 @@ object ParametersRenderer {
 
         ImGui.setCursorScreenPos(midiX, midiY)
         ImGui.invisibleButton("##midi_cell", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "cv_${paramKey}_midi" }
         val isCellHovered = ImGui.isItemHovered()
         if (isCellHovered && session.uiTheme.tooltipsEnabled) {
             val details = if (hasMidiMod || isMidiBypassed) {
@@ -653,6 +656,7 @@ object ParametersRenderer {
 
         ImGui.setCursorScreenPos(x, y)
         ImGui.invisibleButton("##cell_$cvId", CELL.coerceAtLeast(1f), CELL.coerceAtLeast(1f))
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "cv_${paramKey}_$cvId" }
         val isCellHovered = ImGui.isItemHovered()
 
         if (isCellHovered && session.uiTheme.tooltipsEnabled) {

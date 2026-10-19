@@ -202,6 +202,7 @@ object ParameterGridHeaders {
 
         ImGui.setCursorScreenPos(kebabX, startY)
         val isKebabClicked = ImGui.invisibleButton("##parameters_columns_kebab_btn", kebabW, headerH)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "grid_cols_kebab" }
         val isKebabHovered = ImGui.isItemHovered()
 
         if (isKebabHovered || isPopupOpen) {
@@ -267,7 +268,9 @@ object ParameterGridHeaders {
 
             // 1. MIDI
             val midiVal = imgui.type.ImBoolean(session.uiTheme.midiEnabled)
-            if (ImGui.checkbox("MIDI Column##grid_col_kebab", midiVal)) {
+            val midiToggled = ImGui.checkbox("MIDI Column##grid_col_kebab", midiVal)
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "grid_col_midi" }
+            if (midiToggled) {
                 val nextVal = midiVal.get()
                 session.uiTheme.midiEnabled = nextVal
                 AppPreferencesStore.savePreferences()
@@ -288,7 +291,9 @@ object ParameterGridHeaders {
 
             // 2. LFO
             val lfoVal = imgui.type.ImBoolean(session.uiTheme.showLfoCol)
-            if (ImGui.checkbox("LFO Column##grid_col_kebab", lfoVal)) {
+            val lfoToggled = ImGui.checkbox("LFO Column##grid_col_kebab", lfoVal)
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "grid_col_lfo" }
+            if (lfoToggled) {
                 session.uiTheme.showLfoCol = lfoVal.get()
                 AppPreferencesStore.savePreferences()
             }
@@ -303,7 +308,9 @@ object ParameterGridHeaders {
 
             // 3. SEQ
             val seqVal = imgui.type.ImBoolean(session.uiTheme.sequencerEnabled)
-            if (ImGui.checkbox("Step Sequencer (SEQ)##grid_col_kebab", seqVal)) {
+            val seqToggled = ImGui.checkbox("Step Sequencer (SEQ)##grid_col_kebab", seqVal)
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "grid_col_seq" }
+            if (seqToggled) {
                 session.uiTheme.sequencerEnabled = seqVal.get()
                 AppPreferencesStore.savePreferences()
             }
@@ -318,7 +325,9 @@ object ParameterGridHeaders {
 
             // 4. AUD
             val audioVal = imgui.type.ImBoolean(session.uiTheme.audioEngineEnabled)
-            if (ImGui.checkbox("Audio Engine (AUD)##grid_col_kebab", audioVal)) {
+            val audioToggled = ImGui.checkbox("Audio Engine (AUD)##grid_col_kebab", audioVal)
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "grid_col_audio" }
+            if (audioToggled) {
                 val nextVal = audioVal.get()
                 session.uiTheme.audioEngineEnabled = nextVal
                 AppPreferencesStore.savePreferences()

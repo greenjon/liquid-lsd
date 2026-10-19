@@ -18,6 +18,8 @@ import java.util.Locale
  * fx_swap (slot, slot2), fx_chain (target = .lsdfxchain), fx_clear, fx_dry_wet (value), fx_param (slot, param, value),
  * super_knob (value), meta_knob (slot, value).
  * Mixer: transition (target = stock id), transition_preset (target = .lsdtrans), crossfade (value -1..1).
+ * Input: type (target = text: selects the focused field's text, types it, then Enter), key (target = enter|escape|tab),
+ * scroll (value = wheel notches at the cursor, + = up).
  * Captions: shown until the next step with a caption ("" clears). `{ch:<id>}` becomes "Ch. N at m:ss". With captionStyle
  * "cursor" the box sits below the cursor (flips when it does not fit); a step's captionPos (above/left/right) keeps it clear of
  * whatever that step is showing.
@@ -51,6 +53,9 @@ data class TourStep(
     val title: String? = null,
     /** chapter: silent loop length for the website. */
     val clipSec: Double? = null,
+    /** move: pixel offset from the target's centre (e.g. an item in a combo's open list). */
+    val ox: Float? = null,
+    val oy: Float? = null,
     /** Caption box side relative to the cursor from this caption on: below (default), above, left, right. */
     val captionPos: String? = null
 )

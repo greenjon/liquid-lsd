@@ -108,6 +108,7 @@ object ModulatorHeaderRow {
             if (ButtonChrome.button("$powerIcon##bypass_bar_$idx", btnWidth, btnHeight)) {
                 onReplace(existing.copy(bypassed = !bypassed))
             }
+            llm.slop.liquidlsd.tour.WidgetRegistry.note { "mod_power_$idx" }
         }
         itemTooltip(if (bypassed) "Unmute modulator (Enable)" else "Mute modulator (Bypass)")
         ImGui.popStyleColor(4)
@@ -146,7 +147,9 @@ object ModulatorHeaderRow {
             ModulationOperator.SCALE -> 2
         })
         ImGui.pushItemWidth(95f)
-        if (ImGui.combo("##op", operatorIndex, operatorLabels)) {
+        val opChanged = ImGui.combo("##op", operatorIndex, operatorLabels)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "mod_op_$idx" }
+        if (opChanged) {
             val newOp = when (operatorIndex.get()) {
                 0 -> ModulationOperator.ADD
                 1 -> ModulationOperator.MUL

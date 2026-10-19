@@ -121,7 +121,9 @@ object Lfo1Section {
                 unitIdx.set(existing.genUnit.ordinal)
                 if (bypassed) ImGui.popStyleVar()
                 ImGui.pushItemWidth(110f * fontScale)
-                if (ImGui.combo("##unit", unitIdx, unitLabels)) {
+                val unitChanged = ImGui.combo("##unit", unitIdx, unitLabels)
+                llm.slop.liquidlsd.tour.WidgetRegistry.note { "lfo_unit" }
+                if (unitChanged) {
                     val selectedUnit = GenUnit.entries[unitIdx.get()]
                     val adjustedSubdiv = when (selectedUnit) {
                         GenUnit.FRAME -> existing.subdivision.coerceIn(1f, CvModulator.MAX_FRAME_SUBDIVISION.toFloat()).toInt().toFloat()

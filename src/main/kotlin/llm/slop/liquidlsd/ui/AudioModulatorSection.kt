@@ -107,7 +107,9 @@ object AudioModulatorSection {
         ImGui.sameLine(0f, 8f * fontScale)
         ImGui.pushItemWidth(180f * fontScale)
         val bandIdxWrapper = ImInt(currentBandIdx)
-        if (ImGui.combo("##band_${existing.id}", bandIdxWrapper, BAND_LABELS)) {
+        val bandChanged = ImGui.combo("##band_${existing.id}", bandIdxWrapper, BAND_LABELS)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "aud_band" }
+        if (bandChanged) {
             val selectedIdx = bandIdxWrapper.get().coerceIn(0, 3)
             val newSource = if (isTransient) FLUX_SOURCES[selectedIdx] else RMS_SOURCES[selectedIdx]
             onReplace(existing.copy(sourceId = newSource))
@@ -127,7 +129,9 @@ object AudioModulatorSection {
         val modeIdxWrapper = ImInt(currentModeIdx)
 
         ImGui.pushItemWidth(180f * fontScale)
-        if (ImGui.combo("##follower_mode_${existing.id}", modeIdxWrapper, modeLabels)) {
+        val profileChanged = ImGui.combo("##follower_mode_${existing.id}", modeIdxWrapper, modeLabels)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "aud_profile" }
+        if (profileChanged) {
             val selectedMode = modes[modeIdxWrapper.get()]
             if (selectedMode == AudioFollowerMode.CUSTOM) {
                 val curAtt = if (existing.attackMs > 0f || existing.decayMs > 0f) existing.attackMs else existing.followerMode.defaultAttackMs

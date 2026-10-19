@@ -25,6 +25,7 @@ object CustomIconButton {
         ImGui.pushStyleColor(ImGuiCol.ButtonActive, TangoPalette.PRESS_OVERLAY.u32())
 
         val clicked = ImGui.invisibleButton(id, width.coerceAtLeast(1f), height.coerceAtLeast(1f))
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "wave_" + id.removePrefix("##") }
         
         ImGui.popStyleColor(3)
         

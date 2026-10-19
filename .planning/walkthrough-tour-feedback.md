@@ -1,6 +1,6 @@
 # Walkthrough tour: review feedback and chapter roadmap
 
-Scripts: `tours/<video>.json` (only `overview.json` so far). Draft render: `scripts/render_tour.sh --draft --all tours/draft --tour-hidden` (about 5 min for the overview).
+Scripts: `tours/<video>.json` (`overview.json`, `modulation.json`). Draft render: `scripts/render_tour.sh --draft --all tours/draft --tour-hidden` (about 5 min for the overview).
 Format and checks: `docs/developer/tour_renderer.md`.
 
 ## Feedback round 1 (2026-10-17): DONE in 01ff803 / 77db25e
@@ -59,3 +59,14 @@ Still to add, from the storyboard in `walkthrough-video-plan.md` (order to be de
 - **Close**: themes (exists), download link, GPL-3.0 (exists).
 
 Captions: avoid generator counts; "three pages A/B, BG/PV, MIXER"; re-read the user guide before writing each chapter.
+
+## Modulation deep dive (2026-10-18): first draft, awaiting review
+`tours/modulation.json`, about 3:50, five chapters: grid (Edit via the gear, rows/VAL/columns, SEQ turned on from the
+grid menu), LFO on Zoom (power, shapes, range typed, Time to Beat, Beat Div, cell knob), audio on Gain (Bass, Transient,
+Punchy, range 0-40), step sequencer on Lobes (8 steps, typed values, LOBES knob steps, BEAT clock, Step Hold/Glide),
+muting and combining (power mutes, ADD/MUL/SCALE, base value, same grid everywhere, saved with the preset).
+Choices: deck A = Mandala with FX cleared. Rotate Z and Hue Offset barely show on Mandala (rotationally symmetric,
+palette-driven), so the LFO is on Zoom. Not covered (candidates for later or for the macro video): LFO 2, Advanced
+Parameters, randomize dice, copy/paste cells, middle-click mute, MIDI column, macro strip / click-to-learn.
+Mechanics: new `type`/`key`/`scroll` actions, `ox`/`oy` for combo items; Escape in Edit collapses the rack, so close
+combos by picking an item and popups by clicking empty space.

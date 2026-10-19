@@ -98,7 +98,9 @@ object SeqSection {
         unitIdxWrapper.set(currentUnitIdx)
 
         ImGui.pushItemWidth(110f * fontScale)
-        if (ImGui.combo("##seq_unit_${existing.id}", unitIdxWrapper, unitLabels)) {
+        val seqUnitChanged = ImGui.combo("##seq_unit_${existing.id}", unitIdxWrapper, unitLabels)
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "seq_unit" }
+        if (seqUnitChanged) {
             val nextUnit = units[unitIdxWrapper.get()]
             val defaultSubdiv = when (nextUnit) {
                 GenUnit.BEAT -> 0.25f // 1/16th beat default
@@ -334,6 +336,7 @@ object SeqSection {
 
                 val flags = ImGuiInputTextFlags.CallbackHistory
                 val inputChanged = ImGui.inputText("##$key", buffer, flags, callback)
+                llm.slop.liquidlsd.tour.WidgetRegistry.note { "seq_step_$stepIdx" }
                 if (inputChanged) {
                     val parsed = buffer.get().toFloatOrNull()?.div(stepScale)
                     if (parsed != null) {
