@@ -70,3 +70,4 @@ tours/*.wav
 tours/out/
 tours/draft/
 tours/web-cache/
+.claude/
