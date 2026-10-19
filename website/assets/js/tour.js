@@ -8,7 +8,11 @@
   const chapter = $('tour-chapter');
   const caption = $('tour-caption');
   const fill = $('tour-progress-fill');
+  const player = $('tour-player');
+  const overlay = $('tour-overlay');
+  const scrub = $('tour-scrub');
   const pauseBtn = $('tour-pause');
+  const fullBtn = $('tour-full-btn');
   const auto = $('tour-autoplay');
   const speed = $('tour-speed');
   const links = $('tour-links');
@@ -46,7 +50,6 @@
         if (on && opts && opts.scroll) el.scrollIntoView({ block: 'nearest' });
       });
       if (!opts || opts.hash !== false) history.replaceState(null, '', '#' + s.slug);
-      pauseBtn.innerHTML = '&#10074;&#10074;';
     }
   }
 
@@ -54,7 +57,9 @@
     if (cur < 0) return;
     const s = steps[cur];
     const t = video.currentTime;
-    fill.style.width = (s.dur ? Math.min(100, (t / s.dur) * 100) : 0) + '%';
+    const pct = video.duration ? Math.min(100, (t / video.duration) * 100) : 0;
+    fill.style.width = pct + '%';
+    scrub.setAttribute('aria-valuenow', String(Math.round(pct)));
     let active = -1;
     s.captions.forEach((c, k) => { if (t >= c.start && t < c.end) active = k; });
     caption.textContent = active >= 0 ? s.captions[active].text : '';
@@ -84,11 +89,66 @@
   $('tour-prev').addEventListener('click', () => select(cur - 1));
   $('tour-next').addEventListener('click', () => select(cur + 1));
   function togglePause() {
-    if (video.paused) { video.play(); pauseBtn.innerHTML = '&#10074;&#10074;'; }
-    else { video.pause(); pauseBtn.innerHTML = '&#9654;'; }
+    if (video.paused) video.play().catch(() => {}); else video.pause();
   }
+  function syncPlayIcon() {
+    pauseBtn.classList.toggle('is-playing', !video.paused);
+    pauseBtn.setAttribute('aria-label', video.paused ? 'Play' : 'Pause');
+  }
+  video.addEventListener('play', syncPlayIcon);
+  video.addEventListener('pause', syncPlayIcon);
   pauseBtn.addEventListener('click', togglePause);
-  video.addEventListener('click', togglePause);
+
+  // Controls overlay (YouTube-style): shown on cursor movement over the video, hidden 5 s after the
+  // cursor stops, and at once when it leaves. Also shown for 5 s on load. A tap shows them on touch screens.
+  const HIDE_MS = 5000;
+  let hideTimer = null;
+  let busy = false; // speed menu open
+  function hideControls() {
+    clearTimeout(hideTimer);
+    player.classList.add('controls-hidden');
+  }
+  function showControls() {
+    player.classList.remove('controls-hidden');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      if (busy || overlay.matches(':hover')) {
+        showControls();
+      } else {
+        hideControls();
+      }
+    }, HIDE_MS);
+  }
+  player.addEventListener('pointermove', (e) => { if (e.pointerType !== 'touch') showControls(); });
+  player.addEventListener('pointerenter', (e) => { if (e.pointerType !== 'touch') showControls(); });
+  player.addEventListener('pointerleave', (e) => { if (e.pointerType !== 'touch' && !busy && !document.fullscreenElement) hideControls(); });
+  speed.addEventListener('focus', () => { busy = true; });
+  speed.addEventListener('blur', () => { busy = false; });
+  speed.addEventListener('change', () => speed.blur());
+  let touchWasHidden = false;
+  video.addEventListener('pointerdown', (e) => { touchWasHidden = e.pointerType === 'touch' && player.classList.contains('controls-hidden'); });
+  video.addEventListener('click', () => {
+    if (touchWasHidden) { touchWasHidden = false; showControls(); return; }
+    togglePause();
+  });
+
+  // Seek bar: click or drag within the current clip
+  function seekTo(e) {
+    const r = scrub.getBoundingClientRect();
+    const f = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    if (video.duration) video.currentTime = f * video.duration;
+    tick();
+  }
+  scrub.addEventListener('pointerdown', (e) => { scrub.setPointerCapture(e.pointerId); scrub.dataset.drag = '1'; seekTo(e); });
+  scrub.addEventListener('pointermove', (e) => { if (scrub.dataset.drag) seekTo(e); });
+  scrub.addEventListener('pointerup', () => { delete scrub.dataset.drag; });
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (player.requestFullscreen) player.requestFullscreen();
+  }
+  fullBtn.addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', showControls);
   video.addEventListener('timeupdate', tick);
   video.addEventListener('ended', () => { if (auto.checked && cur < steps.length - 1) select(cur + 1); });
   speed.addEventListener('change', () => { video.defaultPlaybackRate = video.playbackRate = Number(speed.value); });
@@ -99,8 +159,12 @@
     if (e.key === 'ArrowRight') { select(cur + 1); e.preventDefault(); }
     else if (e.key === 'ArrowLeft') { select(cur - 1); e.preventDefault(); }
     else if (e.key === ' ' && !e.target.closest('button, a')) { togglePause(); e.preventDefault(); }
+    else if (e.key === 'k') { togglePause(); }
+    else if (e.key === 'f') { toggleFullscreen(); }
   });
 
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { video.removeAttribute('loop'); video.autoplay = false; }
   select(fromHash(), { scroll: true, hash: false });
+  syncPlayIcon();
+  showControls();
 })();

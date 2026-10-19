@@ -42,30 +42,46 @@
 
     <div class="tour-layout">
       <section class="tour-stage" aria-label="Tour player">
-        <div class="tour-bar">
-          <span class="tour-counter" id="tour-counter">01 / {{COUNT}}</span>
-          <span class="tour-chapter" id="tour-chapter"></span>
+        <div class="tour-video-wrap" id="tour-player">
+          <video id="tour-video" muted playsinline preload="metadata"></video>
+          <div class="tour-overlay" id="tour-overlay">
+            <div class="tour-scrub" id="tour-scrub" role="slider" aria-label="Seek within this clip" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="tour-scrub-fill" id="tour-progress-fill"></div>
+            </div>
+            <div class="tour-controls">
+              <button type="button" id="tour-pause" aria-label="Play">
+                <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>
+                <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h4v15H6zM14 4.5h4v15h-4z"/></svg>
+              </button>
+              <button type="button" id="tour-prev" aria-label="Previous chapter">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2.5v14H6zM20 5v14L9.5 12z"/></svg>
+              </button>
+              <button type="button" id="tour-next" aria-label="Next chapter">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 5H18v14h-2.5zM4 5l10.5 7L4 19z"/></svg>
+              </button>
+              <span class="tour-spacer"></span>
+              <label class="tour-auto" title="Play the next chapter when this one ends"><span>Autoplay next</span>
+                <input type="checkbox" id="tour-autoplay" checked><span class="tour-switch" aria-hidden="true"></span>
+              </label>
+              <label class="tour-speed"><span class="sr-only">Speed</span>
+                <select id="tour-speed" aria-label="Playback speed">
+                  <option value="0.5">0.5&times;</option><option value="0.75">0.75&times;</option>
+                  <option value="1" selected>1&times;</option><option value="1.25">1.25&times;</option>
+                  <option value="1.5">1.5&times;</option><option value="1.75">1.75&times;</option>
+                  <option value="2">2&times;</option>
+                </select>
+              </label>
+              <button type="button" id="tour-full-btn" aria-label="Fullscreen">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v2H6v4H4zM14 4h6v6h-2V6h-4zM4 14h2v4h4v2H4zM18 14h2v6h-6v-2h4z"/></svg>
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="tour-controls">
-          <button type="button" id="tour-prev" aria-label="Previous chapter">&#9664;</button>
-          <button type="button" id="tour-pause" aria-label="Pause">&#10074;&#10074;</button>
-          <button type="button" id="tour-next" aria-label="Next chapter">&#9654;</button>
-          <label class="tour-auto" title="Advance to the next chapter when a clip ends"><input type="checkbox" id="tour-autoplay" checked> Play through</label>
-          <label class="tour-speed">Speed
-            <select id="tour-speed">
-              <option value="0.5">0.5&times;</option><option value="0.75">0.75&times;</option>
-              <option value="1" selected>1&times;</option><option value="1.25">1.25&times;</option>
-              <option value="1.5">1.5&times;</option><option value="1.75">1.75&times;</option>
-              <option value="2">2&times;</option>
-            </select>
-          </label>
+        <div class="tour-info">
+          <div class="tour-heading"><span class="tour-counter" id="tour-counter">01 / {{COUNT}}</span><span class="tour-chapter" id="tour-chapter"></span></div>
+          <p class="tour-caption" id="tour-caption" aria-live="polite"></p>
+          <p class="tour-links" id="tour-links"></p>
         </div>
-        <div class="tour-video-wrap">
-          <video id="tour-video" muted playsinline loop preload="metadata"></video>
-        </div>
-        <div class="tour-progress"><div id="tour-progress-fill"></div></div>
-        <p class="tour-caption" id="tour-caption" aria-live="polite"></p>
-        <p class="tour-links" id="tour-links"></p>
       </section>
 
       <nav class="tour-nav" aria-label="Chapters">
