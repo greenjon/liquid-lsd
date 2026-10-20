@@ -1,6 +1,6 @@
 {"seed":7,"audio":"beat.wav","bpm":120,"burnCaptions":false,"captionStyle":"cursor","tailSec":4,
 "steps":[
-{"t":0.0,"action":"chapter","target":"browse","title":"Browsing the Library","clipSec":18},
+{"t":0.0,"action":"chapter","target":"browse","minimap":"A,B,BG,PV","title":"Browsing the Library","clipSec":18},
 {"t":0.2,"action":"load_source","deck":"A","target":"voronoi_cells"},
 {"t":0.2,"action":"load_source","deck":"B","target":"mandala"},
 {"dt":0.1,"action":"fx_clear","deck":"A"},
@@ -20,7 +20,7 @@
 {"dt":1.5,"action":"move","x":330,"y":700,"durationSec":0.6},
 {"dt":0.8,"action":"key","target":"space","caption":""},
 
-{"dt":1.0,"action":"chapter","target":"load","title":"Loading onto a deck","clipSec":18},
+{"dt":1.0,"action":"chapter","target":"load","minimap":"A,B,BG,PV","title":"Loading onto a deck","clipSec":18},
 {"dt":0.0,"action":"move","target":"browser_row_src_harmonograph","durationSec":1.6,"caption":"Double-click a source to load it into the deck that is not on air."},
 {"dt":5.0,"action":"click"},
 {"dt":0.18,"action":"click"},
@@ -30,7 +30,7 @@
 {"dt":5.0,"action":"move","target":"perf_gen_badge_A","durationSec":1.4,"caption":"Clicking a deck's source name opens the same list for that deck alone: one click loads."},
 {"dt":7.0,"action":"hold","caption":""},
 
-{"dt":0.5,"action":"chapter","target":"save","title":"Saving presets","clipSec":16},
+{"dt":0.5,"action":"chapter","target":"save","minimap":"A","title":"Saving presets","clipSec":16},
 {"dt":0.0,"action":"move","target":"perf_0_r0_c0","durationSec":1.4,"caption":"Change something on deck A..."},
 {"dt":2.5,"action":"drag","dx":60,"durationSec":2.0},
 {"dt":3.0,"action":"move","target":"perf_gen_badge_A","durationSec":1.2,"caption":"...and a star after its name marks unsaved changes."},
@@ -41,7 +41,7 @@
 {"dt":1.5,"action":"click"},
 {"dt":4.5,"action":"hold","caption":""},
 
-{"dt":0.5,"action":"chapter","target":"queues","title":"Queues","clipSec":18},
+{"dt":0.5,"action":"chapter","target":"queues","minimap":"A,B,BG,fx,trans","title":"Queues","clipSec":18},
 {"dt":0.0,"action":"move","target":"browser_search","durationSec":1.4,"caption":"A queue lines up saved presets for your set. Search for some first."},
 {"dt":2.5,"action":"click"},
 {"dt":0.5,"action":"type","target":"mandala"},
@@ -62,7 +62,7 @@
 {"dt":6.0,"action":"move","target":"browser_tab_presets","durationSec":1.2},
 {"dt":1.5,"action":"click","caption":""},
 
-{"dt":1.0,"action":"chapter","target":"pair","title":"The pair view","clipSec":16},
+{"dt":1.0,"action":"chapter","target":"pair","minimap":"A","title":"The pair view","clipSec":16},
 {"dt":0.0,"action":"move","x":1700,"y":683,"durationSec":1.6,"caption":"Click a deck's preview to open its pair view."},
 {"dt":4.0,"action":"click"},
 {"dt":2.0,"action":"move","x":260,"y":110,"durationSec":1.4,"caption":"Deck B's source and FX rows stay on top, with the browser below for that deck."},

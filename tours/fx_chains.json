@@ -1,6 +1,6 @@
 {"seed":7,"audio":"beat.wav","bpm":120,"burnCaptions":false,"captionStyle":"cursor","tailSec":4,
 "steps":[
-{"t":0.0,"action":"chapter","target":"build","title":"Building a chain","clipSec":18},
+{"t":0.0,"action":"chapter","target":"build","minimap":"A.fx","title":"Building a chain","clipSec":18},
 {"t":0.2,"action":"load_source","deck":"A","target":"voronoi_cells"},
 {"t":0.2,"action":"load_source","deck":"B","target":"mandala"},
 {"dt":0.1,"action":"fx_new","deck":"A"},
@@ -28,7 +28,7 @@
 {"dt":2.0,"action":"scroll","value":1,"caption":"The wheel steps through your favourite effects, or the slot's category."},
 {"dt":5.5,"action":"hold","caption":""},
 
-{"dt":0.5,"action":"chapter","target":"order","title":"Order and bypass","clipSec":18},
+{"dt":0.5,"action":"chapter","target":"order","minimap":"A.fx","title":"Order and bypass","clipSec":18},
 {"dt":0.0,"action":"move","target":"fxcell_deckA_fx_0","durationSec":1.4,"caption":"The picture flows through the slots from left to right."},
 {"dt":4.5,"action":"move","target":"fxcell_deckA_fx_0","durationSec":0.4,"caption":"Drag a slot onto another to swap them. Now the tunnel is drawn first and then folded."},
 {"dt":1.0,"action":"drag","dx":125,"durationSec":2.0},
@@ -41,7 +41,7 @@
 {"dt":4.5,"action":"click"},
 {"dt":3.0,"action":"click"},
 
-{"dt":3.0,"action":"chapter","target":"knobs","title":"Metaknobs and the Super Knob","clipSec":20},
+{"dt":3.0,"action":"chapter","target":"knobs","minimap":"A.fx","title":"Metaknobs and the Super Knob","clipSec":20},
 {"dt":0.0,"action":"move","target":"perf_0_r1_c1","durationSec":1.4,"caption":"The knob above each slot is that effect's Metaknob: one knob tuned to drive its main parameters."},
 {"dt":6.5,"action":"drag","dx":70,"durationSec":2.5},
 {"dt":3.5,"action":"move","target":"perf_0_r1_c1","durationSec":0.5},
@@ -59,7 +59,7 @@
 {"dt":2.5,"action":"move","target":"rack_chevron_0_1","durationSec":1.4,"caption":"The gear opens the chain in the Edit view, where you choose what each Metaknob drives."},
 {"dt":7.0,"action":"hold","caption":""},
 
-{"dt":0.5,"action":"chapter","target":"focus","title":"Focus mode","clipSec":20},
+{"dt":0.5,"action":"chapter","target":"focus","minimap":"A.fx","title":"Focus mode","clipSec":20},
 {"dt":0.0,"action":"move","target":"fxpill_deckA_fx_0","durationSec":1.4,"caption":"To work on one effect, click its number. This is focus mode."},
 {"dt":4.5,"action":"click"},
 {"dt":1.5,"action":"move","target":"perf_0_r1_c0","durationSec":1.4,"caption":"Now the first knob is Kaleidoscope's Metaknob..."},
@@ -77,7 +77,7 @@
 {"dt":2.5,"action":"click"},
 {"dt":3.0,"action":"hold","caption":""},
 
-{"dt":0.5,"action":"chapter","target":"chains","title":"Saved chains","clipSec":16},
+{"dt":0.5,"action":"chapter","target":"chains","minimap":"fx,PV.fx","title":"Saved chains","clipSec":16},
 {"dt":0.0,"action":"move","target":"fxchain_name_deckA_fx","durationSec":1.4,"caption":"A whole chain can be saved and loaded. Click the chain name to list saved chains."},
 {"dt":5.5,"action":"click"},
 {"dt":1.8,"action":"move","target":"browser_row_fx_hyperspace_trip","durationSec":1.6,"caption":"Click one to load all three slots at once."},
@@ -89,7 +89,7 @@
 {"dt":6.5,"action":"move","target":"fxchain_more_deckA_fx","durationSec":1.2,"caption":"The menu has Save As, Clear, and Copy and Paste between decks."},
 {"dt":5.5,"action":"hold","caption":"A deck's FX chain is separate from its presets: loading a preset keeps the chain."},
 
-{"dt":6.0,"action":"chapter","target":"master","title":"Master FX","clipSec":16},
+{"dt":6.0,"action":"chapter","target":"master","minimap":"master","title":"Master FX","clipSec":16},
 {"dt":0.0,"action":"set_page","target":"mixer"},
 {"dt":0.4,"action":"move","target":"fxcell_masterFx_0","durationSec":1.6,"caption":"The MIXER page has the master FX chain. It works on the final mix, after the crossfader."},
 {"dt":7.0,"action":"move","target":"fxcell_masterFx_2","durationSec":1.2,"caption":"Load something bold into a master slot, like Invert..."},

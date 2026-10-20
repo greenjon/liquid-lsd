@@ -116,3 +116,12 @@ Mechanics learned: a second drag on the same control needs a `move` back onto it
 stopped, and a press off the control grabs nothing); ImGui sliders jump to the click point, so aim with `ox`; with a menu
 open, moving across the menu bar switches menus, so enter the menu straight down before moving sideways; the Save Preset
 modal ignores Escape.
+
+## Pipeline intro (2026-10-19): BUILT, awaiting review
+New first overview chapter `pipeline` ("How it fits together", about 2 minutes): live schematic of the pipeline, then
+generator / effect / transition / master parameters, then the diagram shrinks into a corner mini-map. Every chapter of
+every video now starts with the mini-map lighting its part of the pipeline (`minimap` on chapter steps). Plan,
+storyboard and decisions in `.planning/pipeline-intro-plan.md`; actions in `docs/developer/tour_renderer.md`.
+Ch. 1's own setup steps were removed (the intro leaves the same state). To review: pacing, caption placement, the
+mini-map corner (bottom-left, over the Library list), and trimming Ch. 1's deck-purpose captions now that the intro
+covers them.

@@ -14,28 +14,28 @@ precision highp float;
             "TYPE": "image"
         },
         {
-            "NAME": "progress",
+            "NAME": "progress", "LABEL": "Progress",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.0
         },
         {
-            "NAME": "noiseScale",
+            "NAME": "noiseScale", "LABEL": "Noise Scale",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.22222
         },
         {
-            "NAME": "softness",
+            "NAME": "softness", "LABEL": "Softness",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.35897
         },
         {
-            "NAME": "chromaShift",
+            "NAME": "chromaShift", "LABEL": "Chroma Shift",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,

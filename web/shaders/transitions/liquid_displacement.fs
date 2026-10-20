@@ -14,28 +14,28 @@ precision highp float;
             "TYPE": "image"
         },
         {
-            "NAME": "progress",
+            "NAME": "progress", "LABEL": "Progress",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.0
         },
         {
-            "NAME": "warpStrength",
+            "NAME": "warpStrength", "LABEL": "Warp Strength",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.35
         },
         {
-            "NAME": "viscosity",
+            "NAME": "viscosity", "LABEL": "Viscosity",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.28
         },
         {
-            "NAME": "chromaticDispersion",
+            "NAME": "chromaticDispersion", "LABEL": "Chromatic Dispersion",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,

@@ -12,28 +12,28 @@
             "TYPE": "image"
         },
         {
-            "NAME": "progress",
+            "NAME": "progress", "LABEL": "Progress",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.0
         },
         {
-            "NAME": "blockiness",
+            "NAME": "blockiness", "LABEL": "Blockiness",
             "TYPE": "float",
             "MIN": 8.0,
             "MAX": 64.0,
             "DEFAULT": 28.0
         },
         {
-            "NAME": "rgbSplit",
+            "NAME": "rgbSplit", "LABEL": "RGB Split",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.3
         },
         {
-            "NAME": "packetLoss",
+            "NAME": "packetLoss", "LABEL": "Packet Loss",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,

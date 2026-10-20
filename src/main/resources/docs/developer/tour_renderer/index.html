@@ -539,6 +539,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../user_guide/hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../user_guide/web_broadcast/" class="md-nav__link">
         
   
@@ -1252,6 +1280,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pipeline-diagram-tourpipelinediagramkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pipeline diagram (tour/PipelineDiagram.kt)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#widget-keys-tourwidgetregistrykt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1278,6 +1317,39 @@
     <span class="md-ellipsis">
       
         The walkthrough videos
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-website-tour-page" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The website tour page
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#publishing-the-site" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Publishing the site
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#landing-page-and-the-overview-video" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Landing page and the overview video
       
     </span>
   </a>
@@ -1312,7 +1384,7 @@ scripts/tour_determinism_check.sh &lt;script.json&gt; --tour-hidden [--tour-draf
 <p>Render settings come from the command line, not the script: <code>--tour-fps=&lt;n&gt;</code> (default 60), <code>--tour-scale=&lt;f&gt;</code> (the UI is always laid out at 1920x1080; the frame is shrunk on the GPU before readback, so targets never move), <code>--tour-encoder=x264|nvenc</code> (default x264), <code>--tour-hashes</code> (per-frame SHA-256, about 5 ms a frame at 1080p). <code>--tour-draft</code> = 30 fps, scale 0.5, NVENC, no hashes. On the dev laptop (RTX A2000) a final frame costs about 20 ms (app and UI about 6, hash 5, x264 4, readback 3) and a draft frame about 11 ms, at half the frame count. Drafts are deterministic too (raw and NVENC-encoded frames, checked on this machine). <code>TOUR_GL</code> names the GPU the app rendered on and <code>TOUR_TIMING</code> gives the per-frame breakdown. VP9 has no hardware encoder here, so <code>--webm</code> is opt-in and slow.</p>
 <p>Tour mode isolates itself: preferences are not read or written, MIDI/OSC/Link/watchers/live audio are off (a script with <code>audio</code> still shows the AUD column), <code>imgui.ini</code> is not used, real GLFW input is ignored, randomness comes from <code>DeterministicRandom(seed)</code>. Library contents are part of the input: pin a small curated library for the final render.</p>
 <h2 id="script-format-tourtourscriptkt">Script format (<code>tour/TourScript.kt</code>)</h2>
-<p>Top level: <code>durationSec</code> (optional: defaults to the last step's end plus <code>tailSec</code>), <code>seed</code>, <code>audio</code> (file fed to the analyzer by frame clock and muxed), <code>bpm</code> (manual beat clock), <code>burnCaptions</code> (draw captions into the video; the <code>.vtt</code> is always written), <code>captionStyle</code> (<code>cursor</code>, the default, or <code>bottom</code>), <code>tooltips</code> (ImGui hover tooltips, off by default so they never collide with the caption box), <code>chapters</code> (<code>{t, id, title, endSec?, clipSec?}</code>, or use <code>chapter</code> steps), <code>steps</code>.</p>
+<p>Top level: <code>durationSec</code> (optional: defaults to the last step's end plus <code>tailSec</code>), <code>seed</code>, <code>audio</code> (file fed to the analyzer by frame clock and muxed), <code>bpm</code> (manual beat clock), <code>burnCaptions</code> (draw captions into the video; the <code>.vtt</code> is always written; the tour page shows captions as text under the player, so only <code>overview.json</code>, whose full video is published, should burn them in, and its chapter clips will carry them until the render pipeline can make clips from a caption-free pass), <code>captionStyle</code> (<code>cursor</code>, the default, or <code>bottom</code>), <code>tooltips</code> (ImGui hover tooltips, off by default so they never collide with the caption box), <code>chapters</code> (<code>{t, id, title, endSec?, clipSec?}</code>, or use <code>chapter</code> steps), <code>steps</code>.</p>
 <p>Timing: a step starts at absolute <code>t</code> seconds, or <code>dt</code> seconds after the previous step (<code>dt</code> alone is the easiest to edit: inserting a step shifts everything after it).
 Captions: <code>caption</code> on any step becomes a cue lasting until the next captioned step (<code>""</code> clears). <code>{ch:&lt;id&gt;}</code> in a caption becomes "Ch. N at m:ss". With <code>captionStyle: cursor</code> the caption is an opaque box beside the last <code>move</code> target, below it by default; <code>captionPos</code> (<code>above</code>, <code>left</code>, <code>right</code>) on the captioned step keeps it clear of what the step shows. The box stays put during drags and clicks.</p>
 <p>Checks printed as <code>TOUR_WARN</code>: a caption shown for less than its reading time (14 characters per second, at least 2.5 s), a target that was not drawn in the previous frame (wrong page or view, or a move on the same frame as a page switch: wait about 0.4 s), unknown ids.</p>
@@ -1388,9 +1460,48 @@ Captions: <code>caption</code> on any step becomes a cue lasting until the next 
 <td><code>transition</code>, <code>transition_preset</code>, <code>crossfade</code></td>
 <td>stock id, <code>.lsdtrans</code> path, <code>value</code> -1..1</td>
 </tr>
+<tr>
+<td><code>trans_param</code></td>
+<td><code>param</code> (ISF NAME), <code>value</code>: turns the Transitions row knob bound to it (knobs 2-4 drive the first three float parameters every tick), else sets it</td>
+</tr>
+<tr>
+<td><code>deck_level</code></td>
+<td><code>deck</code> A/B/BG/PV, <code>value</code> 0..1: as a hand on the deck's level fader (<code>Mixer.setLevelByUser</code>)</td>
+</tr>
+<tr>
+<td><code>pipe</code></td>
+<td><code>target</code> <code>show</code> (opaque backdrop, empty diagram), <code>hide</code>, <code>reveal</code> (the diagram shrinks into the mini-map over <code>durationSec</code> while the UI fades in)</td>
+</tr>
+<tr>
+<td><code>pipe_add</code></td>
+<td><code>target</code> = comma list of groups <code>decks</code>, <code>fx</code>, <code>trans</code>, <code>bg</code>, <code>master</code>, <code>pv</code>; fade and slide in over <code>durationSec</code></td>
+</tr>
+<tr>
+<td><code>pipe_focus</code></td>
+<td><code>target</code> = node, chain (<code>A.fx</code> .. <code>PV.fx</code>, <code>master</code>) or <code>all</code>; the camera eases there over <code>durationSec</code> and dims the rest</td>
+</tr>
+<tr>
+<td><code>pipe_params</code></td>
+<td><code>target</code> = node, <code>params</code> = list of ISF NAMEs: boxes with the parameter's label and live value bar, wired into the node (empty list clears)</td>
+</tr>
+<tr>
+<td><code>pipe_controls</code></td>
+<td><code>target</code> = a shown parameter: the fan of control icons (knob, audio, LFO, sequencer, MIDI/OSC) wired into it; <code>value</code> 0 hides, 2 flashes the wires</td>
+</tr>
+<tr>
+<td><code>pipe_tag</code></td>
+<td><code>target</code> = node, <code>title</code> = chip text beside its title; <code>value</code> 0 removes</td>
+</tr>
+<tr>
+<td><code>pipe_minimap</code></td>
+<td><code>target</code> = comma list of nodes or groups to light (<code>all</code>, a group, a node, <code>A.fx</code> for a chain); <code>durationSec</code> (default 2.5); <code>x,y</code> moves the corner (default bottom-left)</td>
+</tr>
 </tbody>
 </table>
+<p><code>set_param</code>, <code>fx_param</code>, <code>trans_param</code>, <code>crossfade</code> and <code>meta_knob</code> take <code>durationSec</code> to ease from the current value. <code>fx_param</code> warns when the slot's Metaknob owns the parameter (its value would be overwritten); turn <code>meta_knob</code> instead. A <code>chapter</code> step's <code>minimap</code> shows the pipeline mini-map at the chapter start with those nodes lit; every chapter of every video has one, so a clip watched on its own still shows where it sits in the pipeline.</p>
 <p>Unknown targets print <code>TOUR_WARN</code> and are skipped; treat any warning as a script bug.</p>
+<h2 id="pipeline-diagram-tourpipelinediagramkt">Pipeline diagram (<code>tour/PipelineDiagram.kt</code>)</h2>
+<p>A live schematic drawn on the foreground draw list, under the cursor and caption, in a 1920x1080 design space. Nodes: decks <code>A</code>, <code>B</code>, <code>BG</code>, <code>PV</code>; FX slots <code>A.fx1</code> .. <code>PV.fx3</code> and <code>master.fx1</code> .. <code>master.fx3</code>; <code>trans</code>, <code>behind</code> (the A/B mix over BG) and <code>out</code>. Each box shows the real texture at that point: deck source (<code>cleanFBO</code>), each FX slot's output (<code>rendering/FxSlotTaps</code>: a 384x216 copy per rendered slot, made only while the diagram is up; an empty or bypassed slot shows its input), the transition (<code>blendFBO</code>), the composite (<code>masterCompositeFBO</code>) and the output (<code>masterFBO</code>), over a checkerboard so transparency shows. A camera (screen = p * s + o) eases between the overview, a focused node and the mini-map. <code>move</code> targets: <code>pipe:&lt;node&gt;</code>, <code>pipe:A.fx</code> / <code>pipe:master</code> (a chain), <code>pipe:param:&lt;NAME&gt;</code>, <code>pipe:control:&lt;0-4&gt;</code>; they resolve where the camera is heading, so move after a focus has settled. The intro using it is the first chapter of <code>tours/overview.json</code> (<code>pipeline</code>); plan and storyboard in <code>.planning/pipeline-intro-plan.md</code>.</p>
 <h2 id="widget-keys-tourwidgetregistrykt">Widget keys (<code>tour/WidgetRegistry.kt</code>)</h2>
 <p>Call sites do <code>WidgetRegistry.note { key }</code> right after the ImGui item (free outside tour mode). Keys: <code>perf_tab_&lt;page&gt;</code>, <code>perf_&lt;page&gt;_r&lt;row&gt;_c&lt;col&gt;</code> (knobs), <code>perf_gen_badge_&lt;tag&gt;</code>, <code>perf_src_more_/save_/eject_/rand_&lt;tag&gt;</code>, <code>rack_chevron_&lt;id&gt;</code>, <code>crossfader_track</code>, <code>fxcell_&lt;bank&gt;_&lt;slot&gt;</code>, <code>fxbypass_</code>/<code>fxlink_&lt;bank&gt;_&lt;slot&gt;</code>, <code>fxchain_name_&lt;bank&gt;</code>, <code>fxpill_&lt;bank&gt;_&lt;slot&gt;</code>, <code>fxchainlink_&lt;bank&gt;</code>, <code>fxchain_bypass_&lt;A|B|BG|PV|MST&gt;</code> (chain BYPASS), <code>fxchain_save_&lt;bank&gt;</code>, <code>fxchain_more_&lt;bank&gt;</code> (chain Save and menu), focus mode <code>fxwet_&lt;bank&gt;</code> (Wet slider), <code>fxpage_prev_/next_&lt;bank&gt;</code>, <code>fxfocus_name_&lt;bank&gt;</code>, Transitions row <code>perf_trans_picker</code>, <code>perf_snap_A/B</code>, <code>perf_autofade</code>, <code>perf_fade_time</code>, <code>perf_trans_rand</code> (only with randomization on), <code>browser_tab_&lt;mode&gt;</code>, <code>browser_search</code>, <code>browser_row_&lt;src|fx|trans&gt;_&lt;stock id or file name without extension&gt;</code> (list rows; only rows scrolled into view are clickable), <code>deck_fader_&lt;A|B|BG|PV&gt;</code> (preview faders), <code>prefs_cat_&lt;category&gt;</code>, <code>ui_theme</code>, <code>edit_side_&lt;tab&gt;</code>, <code>macro_name_&lt;bank&gt;_&lt;label&gt;</code>.
 Edit grid: <code>cv_&lt;param path&gt;_&lt;label|val|midi|lfo|seq|audio&gt;</code> (param path as in <code>&lt;out&gt;.keys</code>, e.g. <code>cv_Deck A/View/Zoom_lfo</code>), <code>grid_cols_kebab</code>, <code>grid_col_&lt;midi|lfo|seq|audio&gt;</code>. Modulator panel: <code>mod_power_&lt;n&gt;</code>, <code>mod_op_&lt;n&gt;</code>, <code>wave_lfo1_&lt;sine|tri|square|random|left|center|right&gt;</code>, <code>lfo_unit</code>, <code>aud_band</code>, <code>aud_profile</code>, <code>seq_unit</code>, <code>seq_step_&lt;i&gt;</code>, <code>range_&lt;label&gt;_&lt;min|max&gt;</code> and <code>slider_&lt;label&gt;_&lt;value|min|max|track&gt;</code> (by the slider's label), and <code>btn_&lt;visible label&gt;</code> for every <code>ButtonChrome.button</code> (last drawn wins when labels repeat), plus <code>btnid_&lt;id after ##&gt;</code> when the label has an id (stays put when the text changes, e.g. <code>btnid_perf_clock_tap</code>, <code>btnid_perf_q_next_B</code>, <code>btnid_cancelSavePreset</code>). <code>&lt;out&gt;.keys</code> lists every key seen during a render, handy when authoring. Custom-drawn items without an ImGui item (deck title badges, knob strip labels) need <code>x,y</code> or a new explicit rect. Do not key on <code>##title_badge_*_x_y</code> (coordinates in the id).</p>
@@ -1398,7 +1509,14 @@ Edit grid: <code>cv_&lt;param path&gt;_&lt;label|val|midi|lfo|seq|audio&gt;</cod
 <p><code>.hashes</code> (per frame), <code>.vtt</code>, <code>.captions.json</code> (index/start/end/chapter/text for the web page and transcript), <code>.chapters.json</code>, <code>.ffmeta</code> (ffmpeg chapters). <code>render_tour.sh</code> derives the rest.</p>
 <p>Known leftovers: wall-clock use in <code>FileSystemManager</code>, DeckOps autosave names, <code>PlaylistManager</code>, <code>PerformanceStats</code>, <code>TouchConsoleController</code> (no pixel effect so far); other GPUs/compositors unverified.</p>
 <h2 id="the-walkthrough-videos">The walkthrough videos</h2>
-<p>One script per video in <code>tours/</code>: <code>overview.json</code> (six chapters, about 6 minutes), <code>modulation.json</code> (grid, LFO, audio, step sequencer, muting; about 4 minutes), and first drafts of <code>fx_chains.json</code> (about 4.8 minutes), <code>mixing.json</code> (3.8), <code>library.json</code> (2.8), <code>hardware.json</code> (2), <code>output.json</code> (2), each to be embedded on its user-guide page. A UI change re-renders only the videos it touches. In a deck's bound Browse (click the source name) a single click on a row loads it, so scripts show loads with <code>move</code> + <code>click</code> on <code>browser_row_*</code> keys instead of <code>load_source</code>. Things tour mode cannot show: MIDI and OSC are off, so their Preferences panels show the disabled state and nothing arrives (the learn ring and panels are what the Hardware video shows); a menu or modal opened by a click is real (avoid items that open windows or write files, close Save dialogs with <code>btnid_cancelSavePreset</code>); Output View is <code>output_view</code>, not the F key (GLFW key callbacks are ignored). Their soundtrack <code>tours/beat.wav</code> is a generated placeholder (<code>scripts/make_tour_beat.sh</code>, not committed) until the licensed track arrives; the script only names the file, so swapping it changes nothing else.</p>
+<p>One script per video in <code>tours/</code>: <code>overview.json</code> (seven chapters, about 8 minutes, opening with the pipeline diagram), <code>modulation.json</code> (grid, LFO, audio, step sequencer, muting; about 4 minutes), and first drafts of <code>fx_chains.json</code> (about 4.8 minutes), <code>mixing.json</code> (3.8), <code>library.json</code> (2.8), <code>hardware.json</code> (2), <code>output.json</code> (2), each to be embedded on its user-guide page. A UI change re-renders only the videos it touches. In a deck's bound Browse (click the source name) a single click on a row loads it, so scripts show loads with <code>move</code> + <code>click</code> on <code>browser_row_*</code> keys instead of <code>load_source</code>. Things tour mode cannot show: MIDI and OSC are off, so their Preferences panels show the disabled state and nothing arrives (the learn ring and panels are what the Hardware video shows); a menu or modal opened by a click is real (avoid items that open windows or write files, close Save dialogs with <code>btnid_cancelSavePreset</code>); Output View is <code>output_view</code>, not the F key (GLFW key callbacks are ignored). Their soundtrack <code>tours/beat.wav</code> is a generated placeholder (<code>scripts/make_tour_beat.sh</code>, not committed) until the licensed track arrives; the script only names the file, so swapping it changes nothing else.</p>
+<h2 id="the-website-tour-page">The website tour page</h2>
+<p><code>scripts/build_website.py</code> generates <code>/tour/</code> from the rendered videos (<code>--tours DIR</code>; default <code>tours/out</code> if it holds a render, else <code>tours/draft</code>). Video order, titles, summaries and the docs page each video links to live in <code>website/data/tour.json</code>. For every chapter it copies <code>clips/&lt;id&gt;.mp4</code> to <code>tour/media/&lt;video&gt;/</code> and reads <code>chapters.json</code> + <code>captions.json</code>. It writes the chapter list and the full "Every caption" transcript as static HTML (readable without JS, indexable) and embeds the data as JSON for <code>website/assets/js/tour.js</code>: looping clip with YouTube-style overlay controls (play, prev, next bottom-left; Autoplay next, speed 0.5x-2x and fullscreen bottom-right; a draggable seek line above them; hidden 5 s after the cursor stops moving and at once when it leaves, back on any movement), <code>NN / total</code> counter and chapter title below the video with the current caption under it, keys arrows/space/k/f, Autoplay next on by default (a clip plays once and the next chapter starts), captions synced to the clip, click a transcript line to seek, deep links <code>#&lt;video&gt;/&lt;chapter&gt;</code>. Clips start at the chapter start, so a caption later than the clip length is marked "full video". The site header (<code>site.js</code>) fades out 3 s after scrolling stops when the page is not at the top, and any scroll brings it back; it stays while hovered, focused or with the mobile menu open. Hero videos are not published; re-render a video and rebuild the site and the page follows. Videos with no render are skipped. The same build inserts each video's chapter clips (click-to-play, linked back to the tour) after the intro paragraph of the user-guide page named in <code>tour.json</code> (<code>inject_clips</code>); the repo's <code>docs/</code> and the in-app copy stay free of media, so they never show broken video. <code>docs/user_guide/hardware.md</code> is the Hardware video's page; it links into the existing MIDI/Twister/OSC sections of <code>performance_controls.md</code> rather than repeating them.</p>
+<h2 id="publishing-the-site">Publishing the site</h2>
+<p><code>scripts/publish_site.sh</code> builds the site and pushes it to <code>greenjon/liquid-lsd-site</code> (cloned next to this repo on first run); that repo's Actions workflow (<code>website/deploy/pages.yml</code>) deploys it to GitHub Pages at <code>liquid-lsd.greenjon.com</code> (<code>SITE_HOST</code> in <code>build_website.py</code>; the build writes <code>CNAME</code> and <code>.nojekyll</code>). The tour media only ever lives in the site repo, so run <code>scripts/publish_site.sh --squash</code> now and then to reset its history to one commit. Pass <code>--tours tours/out</code> (or leave the default) to choose which render is published; check that you are not publishing draft renders.</p>
+<p>Each chapter also gets a <code>.jpg</code> thumbnail (a frame a few seconds into its clip, made with ffmpeg at site build time), used as the <code>poster</code> on the tour page and the docs clips.</p>
+<h2 id="landing-page-and-the-overview-video">Landing page and the overview video</h2>
+<p><code>website/data/landing.json</code> names the hero video (<code>overview</code>) and the four featured chapters shown as "See it in action" cards on the landing page (<code>slug</code> = <code>&lt;video&gt;/&lt;chapter&gt;</code>, plus a one-line blurb). The cards are muted loops that play only while on screen; phones, reduced motion and data saver get thumbnails only. The hero video is the only full-length file published: the build re-encodes its <code>hero.mp4</code> to 1080p30 H.264 (CRF 26, cached in the gitignored <code>tours/web-cache/</code>, about 28 MB for the 6-minute draft) and copies it with its poster and <code>.vtt</code> captions to <code>tour/media/&lt;video&gt;/</code>. It loads on click (<code>.video-facade</code>) on both the landing page and the tour page.</p>
 
 
 

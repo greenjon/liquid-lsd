@@ -12,28 +12,28 @@
             "TYPE": "image"
         },
         {
-            "NAME": "progress",
+            "NAME": "progress", "LABEL": "Progress",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.0
         },
         {
-            "NAME": "burnSpread",
+            "NAME": "burnSpread", "LABEL": "Burn Spread",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.35714
         },
         {
-            "NAME": "glowIntensity",
+            "NAME": "glowIntensity", "LABEL": "Glow Intensity",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.6
         },
         {
-            "NAME": "tintMode",
+            "NAME": "tintMode", "LABEL": "Tint Mode",
             "TYPE": "long",
             "VALUES": [0, 1, 2],
             "LABELS": ["Fiery Ember", "Electric Violet", "Acid Green"],

@@ -12,28 +12,28 @@
             "TYPE": "image"
         },
         {
-            "NAME": "progress",
+            "NAME": "progress", "LABEL": "Progress",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.0
         },
         {
-            "NAME": "rotations",
+            "NAME": "rotations", "LABEL": "Rotations",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.33333
         },
         {
-            "NAME": "radius",
+            "NAME": "radius", "LABEL": "Radius",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.375
         },
         {
-            "NAME": "chromatic",
+            "NAME": "chromatic", "LABEL": "Chromatic",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,

@@ -1,6 +1,6 @@
 {"seed":7,"audio":"beat.wav","bpm":120,"burnCaptions":false,"captionStyle":"cursor","tailSec":4,
 "steps":[
-{"t":0.0,"action":"chapter","target":"screen","title":"Output View and a second screen","clipSec":16},
+{"t":0.0,"action":"chapter","target":"screen","minimap":"out","title":"Output View and a second screen","clipSec":16},
 {"t":0.2,"action":"load_source","deck":"A","target":"voronoi_cells"},
 {"t":0.2,"action":"load_source","deck":"B","target":"mandala"},
 {"dt":0.1,"action":"crossfade","value":-1},
@@ -16,7 +16,7 @@
 {"dt":7.0,"action":"move","x":560,"y":59,"durationSec":0.8,"captionPos":"right","caption":"Output Monitor picks which screen, if it lands on the wrong one."},
 {"dt":5.5,"action":"key","target":"escape","caption":""},
 
-{"dt":0.5,"action":"chapter","target":"video","title":"Resolution and sharing","clipSec":16},
+{"dt":0.5,"action":"chapter","target":"video","minimap":"out","title":"Resolution and sharing","clipSec":16},
 {"dt":0.0,"action":"preferences","target":"video_display"},
 {"dt":0.4,"action":"move","x":330,"y":106,"durationSec":1.4,"caption":"Preferences, under Video & Display, sets the render resolution. Lower it if a laptop struggles."},
 {"dt":7.0,"action":"move","x":330,"y":158,"durationSec":1.0,"caption":"Display Scaling fits the output to screens with other shapes."},
@@ -24,7 +24,7 @@
 {"dt":6.5,"action":"move","x":300,"y":332,"durationSec":1.0,"caption":"Tick a row to share it. It uses Spout on Windows, Syphon on macOS and PipeWire on Linux."},
 {"dt":7.0,"action":"hold","caption":""},
 
-{"dt":0.5,"action":"chapter","target":"record","title":"Recording","clipSec":16},
+{"dt":0.5,"action":"chapter","target":"record","minimap":"out","title":"Recording","clipSec":16},
 {"dt":0.0,"action":"move","x":245,"y":427,"durationSec":1.4,"caption":"Recording settings are just below: the folder, the quality, and whether to include the audio."},
 {"dt":6.5,"action":"preferences_close"},
 {"dt":0.3,"action":"move","x":417,"y":14,"durationSec":1.0,"caption":"To record your set, press Ctrl+R or use Output, Record Output."},
@@ -35,7 +35,7 @@
 {"dt":5.5,"action":"move","x":560,"y":96,"durationSec":0.8,"captionPos":"right","caption":"Render Video renders offline, frame by frame, from an audio file: slower than real time, at any resolution."},
 {"dt":8.0,"action":"key","target":"escape","caption":""},
 
-{"dt":0.5,"action":"chapter","target":"broadcast","title":"Web broadcast","clipSec":16},
+{"dt":0.5,"action":"chapter","target":"broadcast","minimap":"out","title":"Web broadcast","clipSec":16},
 {"dt":0.0,"action":"preferences","target":"broadcast"},
 {"dt":0.4,"action":"move","x":450,"y":105,"durationSec":1.4,"caption":"Web Broadcast is experimental: it streams your show to a web page, where each viewer's browser draws it."},
 {"dt":7.5,"action":"move","x":448,"y":143,"durationSec":1.2,"caption":"It needs a relay server and a broadcaster token. Enter both here."},

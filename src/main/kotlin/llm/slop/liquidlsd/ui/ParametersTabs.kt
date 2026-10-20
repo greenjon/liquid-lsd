@@ -393,7 +393,8 @@ object ParametersTabs {
             ParametersRenderer.drawParamRow(session, "Dry/Wet", "Mixer/Transition/DryWet", trans.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
             trans.parameters.forEach { (name, param) ->
-                ParametersRenderer.drawParamRow(session, name, "Mixer/Transition/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                val label = trans.header.INPUTS.find { it.NAME == name }?.LABEL ?: name
+                ParametersRenderer.drawParamRow(session, label, "Mixer/Transition/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
         } else {
             ImGui.spacing()

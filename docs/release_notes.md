@@ -1,5 +1,15 @@
 ## [Unreleased]
 
+### Tour Renderer: Live Pipeline Diagram (`tour/PipelineDiagram.kt`, `tour/TourRunner.kt`, `rendering/FxSlotTaps.kt`)
+- **The walkthrough now opens with a live schematic of the video pipeline** before it shows any UI: decks, their FX chains, the transition, BG behind, master FX and the audience, with PV apart. Every box shows the real video at that point, each FX slot included, and the camera then zooms in on a generator, an effect and a transition to show their parameters (with live value bars) and the ways to control them. The diagram shrinks into a corner mini-map that comes back at the start of every chapter of every walkthrough video, lighting the part being discussed. Developer tooling only; nothing changes in the app.
+- Internal: new script actions `pipe`, `pipe_add`, `pipe_focus`, `pipe_params`, `pipe_controls`, `pipe_tag`, `pipe_minimap`, `trans_param` and `deck_level`; `durationSec` eases `set_param`, `fx_param`, `trans_param`, `crossfade` and `meta_knob`; `move` aims at `pipe:<node>`; a chapter's `minimap` lights nodes at its start; `fx_param` warns when the slot's Metaknob owns the parameter. `FxSlotTaps` copies each rendered FX slot into a 384x216 texture, only while the diagram is up. The intro is the first chapter of `tours/overview.json`; plan in `.planning/pipeline-intro-plan.md`.
+
+### Transition Parameter Names (`default_transitions/*.fs`, `ui/ParametersTabs.kt`)
+- **The eight stock transitions' parameters now have readable names** in the Edit view's transition rows ("Burn Spread" instead of "burnSpread", "RGB Split" instead of "rgbSplit"), as effect parameters already did: the rows now show an ISF input's `LABEL` when it has one. Behaviour, parameter paths and existing mappings are unchanged.
+
+### User Guide: Live Video Input and Three FX Slots (`docs/user_guide/visual_sources.md`, `docs/user_guide/your_workspace.md`)
+- **New "Live Video Input" section** on showing Spout, Syphon or PipeWire streams on a deck. The guide no longer describes four FX slots and a separate feedback loop: each deck has three slots, Feedback is an effect that can go in any of them, and the signal flow now includes Master FX and how BG shows through.
+
 ### Level Faders: Slider, Knob, MIDI and Modulation No Longer Fight (`rendering/Mixer.kt`, `macro/MacroEngine.kt`, `parameters/SoftTakeover.kt`, `ui/DeckControlPanel.kt`)
 - **The deck-tile level faders (A, B, BG, PV) now behave like the crossfader.** Dragging a fader no longer snaps back when a Performance knob is bound to it: the knob follows the fader instead, and whichever moved last wins. A manual drag, wheel step or reset also mutes non-MIDI modulation on that fader and makes any MIDI/OSC mapping on it in Soft Takeover mode pick it up again instead of jumping.
 - **The fader handle now marks the fader's own value** (what a drag sets); the filled bar still shows the live level after modulation, so the two can differ while a modulator is active. The wheel steps from the fader's own value, not the modulated one.

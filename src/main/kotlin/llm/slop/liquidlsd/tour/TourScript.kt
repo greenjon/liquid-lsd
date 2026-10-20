@@ -9,7 +9,7 @@ import java.util.Locale
  * [TourScript.parse] resolves every step to an absolute [t].
  * Actions: move (ease cursor to target/x,y over durationSec), click (press at the cursor, release after durationSec),
  * set_page (UITheme.performancePageId = target), hold (caption only), drag (press, travel dx/dy over durationSec, release),
- * chapter (target = id, title; starts a chapter here), tooltips (value 0|1: ImGui hover tooltips, off by default),
+ * chapter (target = id, title, minimap = nodes to light in the pipeline mini-map; starts a chapter here), tooltips (value 0|1: ImGui hover tooltips, off by default),
  * library_mode (FULL|HALF), open_params / open_params_pair / focus_pair (target = module id / pair tag), close_focus,
  * preferences (target = category name, blank = last) / preferences_close, theme (light|dark),
  * load_source (deck, target = source id), load_preset (deck, target = .lsd path),
@@ -17,7 +17,13 @@ import java.util.Locale
  * FX (deck = A/B/BG/PV/MASTER): fx_filter (slot, target = ISF filter id, blank clears), fx_enable / fx_link (slot, value 0|1),
  * fx_swap (slot, slot2), fx_chain (target = .lsdfxchain), fx_clear, fx_dry_wet (value), fx_param (slot, param, value),
  * super_knob (value), meta_knob (slot, value).
- * Mixer: transition (target = stock id), transition_preset (target = .lsdtrans), crossfade (value -1..1).
+ * Mixer: transition (target = stock id), transition_preset (target = .lsdtrans), crossfade (value -1..1),
+ * trans_param (param, value), deck_level (deck, value 0..1, as a hand on the deck's level fader).
+ * set_param / fx_param / trans_param / crossfade / meta_knob with durationSec ease from the current value instead of jumping.
+ * Pipeline diagram ([PipelineDiagram]): pipe (show|hide|reveal), pipe_add (target = groups), pipe_focus (node, chain A.fx..PV.fx or master, or all),
+ * pipe_params (target = node, params), pipe_controls (target = param, value 1 show / 0 hide / 2 flash),
+ * pipe_tag (target = node, title, value 0 removes), pipe_minimap (target = nodes or groups to light, x,y corner).
+ * `move` can aim at `pipe:<node>`, `pipe:param:<name>`, `pipe:control:<n>` and a chain (`pipe:A.fx`, `pipe:master`).
  * Input: type (target = text: selects the focused field's text, types it, then Enter), key (target = enter|escape|tab),
  * scroll (value = wheel notches at the cursor, + = up).
  * Captions: shown until the next step with a caption ("" clears). `{ch:<id>}` becomes "Ch. N at m:ss". With captionStyle
@@ -57,7 +63,11 @@ data class TourStep(
     val ox: Float? = null,
     val oy: Float? = null,
     /** Caption box side relative to the cursor from this caption on: below (default), above, left, right. */
-    val captionPos: String? = null
+    val captionPos: String? = null,
+    /** pipe_params: parameter names (ISF NAME) to show beside the node, in order. */
+    val params: List<String>? = null,
+    /** chapter: pipeline mini-map at the chapter start, lighting these nodes or groups (`all` for everything). */
+    val minimap: String? = null
 )
 
 /** A named range of the tour. Ends at the next chapter's start (or the tour end) unless [endSec] is set; [clipSec] caps its silent loop. */

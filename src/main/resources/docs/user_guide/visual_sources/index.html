@@ -446,6 +446,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#live-video-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live Video Input
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#built-in-generators" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -859,10 +870,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#effect-slots-fx1fx4" class="md-nav__link">
+  <a href="#effect-slots-fx1fx3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Effect Slots (FX1–FX4)
+        Effect Slots (FX1–FX3)
       
     </span>
   </a>
@@ -870,10 +881,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#feedback-loop" class="md-nav__link">
+  <a href="#feedback" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Feedback Loop
+        Feedback
       
     </span>
   </a>
@@ -960,17 +971,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#external-video-input" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        External Video Input
-      
-    </span>
-  </a>
   
 </li>
       
@@ -1110,6 +1110,34 @@
     
   
     Macro Controls & the Perform View
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Control
   
 
     
@@ -1843,6 +1871,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#live-video-input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Live Video Input
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#built-in-generators" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2256,10 +2295,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#effect-slots-fx1fx4" class="md-nav__link">
+  <a href="#effect-slots-fx1fx3" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Effect Slots (FX1–FX4)
+        Effect Slots (FX1–FX3)
       
     </span>
   </a>
@@ -2267,10 +2306,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#feedback-loop" class="md-nav__link">
+  <a href="#feedback" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Feedback Loop
+        Feedback
       
     </span>
   </a>
@@ -2360,17 +2399,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#external-video-input" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        External Video Input
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2389,11 +2417,21 @@
 
 
 <h1 id="visual-sources">Visual Sources</h1>
-<p>Each deck runs one visual source at a time. Sources range from the built-in procedural generators to ISF shaders you drop in from the internet or write yourself. On top of the source, each deck has four effect slots and a feedback loop for building up trails and texture.</p>
+<p>Each deck runs one visual source at a time. Sources range from the built-in procedural generators to ISF shaders you drop in from the internet or write yourself. On top of the source, each deck has a chain of three effect slots.</p>
 <hr />
 <h2 id="picking-a-source">Picking a Source</h2>
 <p>Click a deck's source badge to open its pair view with Browse (see <a href="../your_workspace/">Your Workspace</a> / <a href="../macros_and_rack/">Macros &amp; the Modular Rack</a>). You can search by name, tag, or author. Browse automatically filters to show only sources appropriate for what you're assigning — generators for the main source slot, effects for the FX slots, and transitions for the mixer. Picks apply immediately and the list stays open, so you can try several in a row.</p>
 <p>To remove the current source, click <strong>Detach</strong> or <strong>None</strong>.</p>
+<hr />
+<h2 id="live-video-input">Live Video Input</h2>
+<p>Besides generating its own video, a deck can show live video from another app or device. Liquid LSD receives the same GPU-sharing protocols it <a href="../output_and_recording/#sending-video-to-other-apps-spout-syphon-pipewire">sends</a>:</p>
+<ul>
+<li><strong>Windows:</strong> Spout senders</li>
+<li><strong>macOS:</strong> Syphon servers</li>
+<li><strong>Linux:</strong> PipeWire video streams</li>
+</ul>
+<p>Every stream running right now is listed in Browse under <strong>External video</strong> (see <a href="../presets_and_library/">Presets &amp; Library</a>). The list refreshes every couple of seconds, so a stream appears shortly after its app starts sending and disappears when it stops. Load one like any other source. A live stream has a single <strong>Gain</strong> parameter in place of a generator's parameter list, and the deck's FX chain, levels and transitions work on it exactly as they do on a generator.</p>
+<p>Streams are not files, so they cannot be saved as presets, added to playlists or queued.</p>
 <hr />
 <h2 id="built-in-generators">Built-In Generators</h2>
 <p>Liquid LSD includes a curated suite of 34 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, and a set of light generators that run comfortably on integrated graphics.</p>
@@ -2740,18 +2778,13 @@
 <p>For <strong>native 3D sources</strong> (e.g. Gyroid, Hyper-Mesh, Icosahedron), the shader handles camera transforms internally, so the deck-level 2D Zoom/Rotate Z sliders are automatically omitted in favor of the generator's internal camera rotation (<code>Rotate X</code>, <code>Rotate Y</code>, <code>Rotate Z</code>) and zoom controls.</p>
 <p>To elevate any flat 2D source into 3D geometry (Tri-Axial, Cube Cage, Hex-Planar, or Tetrahedral Kaleidoscope), select the <strong>3D Elevation</strong> filter in any FX slot under the <strong>FX</strong> tab.</p>
 <hr />
-<h2 id="effect-slots-fx1fx4">Effect Slots (FX1–FX4)</h2>
-<p>Each deck has four chained post-processing slots that run after the source and before the feedback loop:</p>
-<ul>
-<li><strong>FX Slot 1</strong> — Typically used for color processing: grading, inversion, posterization, luma keying, degradation.</li>
-<li><strong>FX Slot 2</strong> — Typically used for spatial effects: bloom, chromatic aberration, digital glitch, plane elevation.</li>
-<li><strong>FX Slot 3 &amp; FX Slot 4</strong> — Additional chained slots for stacking further processing.</li>
-</ul>
-<p>The order is intentional but not enforced — you can put anything in any slot. Each slot has an independent bypass toggle and a Dry/Wet blend knob. Bypassed slots add zero overhead.</p>
+<h2 id="effect-slots-fx1fx3">Effect Slots (FX1–FX3)</h2>
+<p>Each deck has a chain of three effect slots that run after the source, left to right: FX1 feeds FX2, which feeds FX3. Master FX is a fourth chain of three slots, applied to the final mix (see <a href="../performance_controls/">Performance Controls</a>).</p>
+<p>Any effect can go in any slot, but order matters: a blur before a kaleidoscope looks different from a kaleidoscope before a blur. Each slot has its own bypass toggle and Dry/Wet blend knob, and bypassed slots add zero overhead.</p>
 <hr />
-<h2 id="feedback-loop">Feedback Loop</h2>
-<p>Each deck has an internal feedback loop that feeds the current frame back into the next render. This is what creates the liquid trails, echo tunnels, and smeared colour effects that give Liquid LSD its name.</p>
-<p>The feedback controls live in the <strong>FBK</strong> tab of each deck:</p>
+<h2 id="feedback">Feedback</h2>
+<p>Feedback is an effect like any other: put <strong>Feedback</strong> in any slot to feed each frame back into the next render. This is what creates the liquid trails, echo tunnels, and smeared colour effects that give Liquid LSD its name. Where it sits in the chain decides what gets trailed: the effects before it are fed back with the image, the effects after it process the trails.</p>
+<p>Its main parameters:</p>
 <ul>
 <li><strong>Decay</strong> — How quickly the trail fades. Higher values = longer trails.</li>
 <li><strong>Gain</strong> — Amplifies the feedback signal. Push it high for glowing, blooming trails.</li>
@@ -2759,7 +2792,9 @@
 <li><strong>Rotate</strong> — Rotates the feedback frame each cycle. Combine with Zoom for spiral tunnels.</li>
 <li><strong>Hue Shift</strong> — Rotates the hue of the feedback frame each cycle.</li>
 <li><strong>Blur</strong> — Softens the feedback trail.</li>
-<li><strong>Chroma Offset</strong> — Separates RGB channels in the feedback trail for prismatic fringing.</li>
+<li><strong>Chromatic Aberration</strong> — Separates RGB channels in the feedback trail for prismatic fringing.</li>
+<li><strong>Kaleidoscope Segments</strong> — Mirrors the feedback frame into segments each cycle.</li>
+<li><strong>Blend Mode</strong> — How the fed-back frame combines with the new one.</li>
 </ul>
 <p>Feedback is one of the most expressive parts of the system. It rewards experimentation.</p>
 <hr />
@@ -2808,16 +2843,6 @@
 <p>Go to <strong>Preferences → Shader Locations</strong> to add any folder at runtime — handy for USB drives or git repos full of shaders. The status column shows whether each folder is active, missing (e.g. a USB stick that's not plugged in), or unreadable. Hit <strong>Rescan Now</strong> to pick up new files without restarting.</p>
 <h3 id="live-coding">Live coding</h3>
 <p>If you're writing or tweaking shaders while the app is running, just save your file — Liquid LSD detects the change and recompiles in the background. If the shader has a syntax error, the current frame keeps running while the error is logged. No interruptions on stage.</p>
-<hr />
-<h2 id="external-video-input">External Video Input</h2>
-<p>You can also use a live video feed from another app as a deck source. External video streams appear directly inside Browse alongside procedural generators:</p>
-<ul>
-<li><strong>macOS:</strong> Syphon servers</li>
-<li><strong>Windows:</strong> Spout2 senders</li>
-<li><strong>Linux:</strong> PipeWire video nodes (webcams, OBS virtual cameras, desktop capture, etc.)</li>
-</ul>
-<p>Click the source selector button in the deck header (e.g. <code>[Mandala ▾]</code>), select the <strong>External Sources</strong> category pill (positioned immediately beside <strong>All</strong>), and click your stream (highlighted in emerald green with a live activity icon). Once selected, the deck header button directly displays the name of the active stream (e.g. <code>[OBS-Camera ▾]</code>).</p>
-<p>The incoming video runs through the full deck pipeline — you get 3D transforms, dual effect slots, audio-reactive modulation, and the feedback loop, all applied to the external feed.</p>
 
 
 

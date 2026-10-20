@@ -404,6 +404,7 @@ class Renderer {
             }
 
             writeFBO.unbind()
+            FxSlotTaps.capture(chain, slotIndex, writeFBO, width, height)
             slotInputTex = writeFBO.texture
 
             // Swap scratch buffers for the next slot

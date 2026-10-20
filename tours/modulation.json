@@ -1,6 +1,6 @@
 {"seed":7,"audio":"beat.wav","bpm":120,"burnCaptions":false,"captionStyle":"cursor","tailSec":4,
 "steps":[
-{"t":0.0,"action":"chapter","target":"grid","title":"The modulation grid","clipSec":16},
+{"t":0.0,"action":"chapter","target":"grid","minimap":"all","title":"The modulation grid","clipSec":16},
 {"t":0.2,"action":"load_source","deck":"A","target":"mandala"},
 {"dt":0.1,"action":"fx_clear","deck":"A"},
 {"t":1.5,"action":"move","x":1480,"y":280,"durationSec":1.6,"caption":"Modulation makes parameters move on their own: with an LFO, the music, or a step pattern."},
@@ -16,7 +16,7 @@
 {"dt":1.5,"action":"move","x":700,"y":900,"durationSec":1.0},
 {"dt":1.2,"action":"click"},
 
-{"dt":1.5,"action":"chapter","target":"lfo","title":"LFO","clipSec":20},
+{"dt":1.5,"action":"chapter","target":"lfo","minimap":"all","title":"LFO","clipSec":20},
 {"dt":0.0,"action":"move","target":"cv_Deck A/View/Zoom_lfo","durationSec":1.6,"caption":"Start with an LFO on Zoom. Click its LFO cell."},
 {"dt":4.5,"action":"click"},
 {"dt":1.0,"action":"move","target":"mod_power_0","durationSec":1.6,"caption":"The LFO panel opens on the right. A new LFO starts switched off."},
@@ -37,7 +37,7 @@
 {"dt":1.5,"action":"move","x":520,"y":457,"durationSec":1.2,"caption":"Beat Div sets how many beats one full swing takes."},
 {"dt":5.0,"action":"move","target":"cv_Deck A/View/Zoom_lfo","durationSec":1.4,"caption":"Back in the grid, the cell's small knob shows the LFO's live value."},
 
-{"dt":6.0,"action":"chapter","target":"audio","title":"Audio","clipSec":20},
+{"dt":6.0,"action":"chapter","target":"audio","minimap":"all","title":"Audio","clipSec":20},
 {"dt":0.0,"action":"move","target":"cv_Deck A/Mandala/Gain_audio","durationSec":1.6,"caption":"Now make Gain flash with the kick drum. Click its AUD cell."},
 {"dt":5.0,"action":"click"},
 {"dt":1.0,"action":"move","target":"mod_power_0","durationSec":1.4,"caption":"Switch it on. The graph now follows the music."},
@@ -60,7 +60,7 @@
 {"dt":0.3,"action":"type","target":"40"},
 {"dt":4.0,"action":"hold","caption":""},
 
-{"dt":0.5,"action":"chapter","target":"seq","title":"Step sequencer","clipSec":20},
+{"dt":0.5,"action":"chapter","target":"seq","minimap":"all","title":"Step sequencer","clipSec":20},
 {"dt":0.0,"action":"move","target":"cv_Deck A/Mandala/Lobes_seq","durationSec":1.6,"caption":"The step sequencer plays a pattern of values. Put one on Lobes."},
 {"dt":5.0,"action":"click"},
 {"dt":1.0,"action":"move","target":"mod_power_0","durationSec":1.2,"caption":"Switch it on."},
@@ -87,7 +87,7 @@
 {"dt":4.0,"action":"move","target":"btn_Smooth","durationSec":1.4,"caption":"Step Hold and Glide Curve shape the move from one step to the next: a jump or a slide."},
 {"dt":7.0,"action":"hold","caption":""},
 
-{"dt":0.5,"action":"chapter","target":"combine","title":"Muting and combining","clipSec":16},
+{"dt":0.5,"action":"chapter","target":"combine","minimap":"all","title":"Muting and combining","clipSec":16},
 {"dt":0.0,"action":"move","target":"mod_power_0","durationSec":1.4,"caption":"The power button mutes a modulator and keeps its settings."},
 {"dt":2.5,"action":"click"},
 {"dt":3.0,"action":"click"},

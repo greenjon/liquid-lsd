@@ -90,6 +90,11 @@ class TourRunner(
     private var anchor = WidgetRegistry.Rect(960f, 540f, 960f, 540f)
     private var boxX = Float.NaN
     private var boxY = 0f
+    private val diagram = PipelineDiagram()
+
+    /** A parameter easing from [from] to [to] over [dur] seconds from [start] (set_param / fx_param / trans_param with durationSec). */
+    private class Ramp(val apply: (Float) -> Unit, val from: Float, val to: Float, val start: Double, val dur: Double)
+    private val ramps = ArrayList<Ramp>()
 
     /** A caption cue: [text] from [start] until the next captioned step ("" clears) or the tour end. */
     class Cue(val start: Double, val end: Double, val text: String)
@@ -175,6 +180,16 @@ class TourRunner(
             }
             startStep(st, t)
         }
+        if (ramps.isNotEmpty()) {
+            val it = ramps.iterator()
+            while (it.hasNext()) {
+                val r = it.next()
+                val k = ((t - r.start) / r.dur).coerceIn(0.0, 1.0)
+                val e = (k * k * (3 - 2 * k)).toFloat()
+                r.apply(r.from + (r.to - r.from) * e)
+                if (k >= 1.0) it.remove()
+            }
+        }
         if (moving) {
             val k = ((t - moveStart) / moveDur).coerceIn(0.0, 1.0)
             val e = (k * k * (3 - 2 * k)).toFloat()
@@ -187,6 +202,11 @@ class TourRunner(
     }
 
     private fun resolve(step: TourStep): Pair<Float, Float>? {
+        if (step.target?.startsWith("pipe:") == true) {
+            val r = diagram.targetRect(step.target.removePrefix("pipe:"))
+            if (r == null) { warnTour("Tour t=${step.t}: '${step.target}' is not in the pipeline diagram (shown? params/controls up?)"); return null }
+            return r.centerX + (step.ox ?: 0f) to r.centerY + (step.oy ?: 0f)
+        }
         if (step.target != null) {
             val r = WidgetRegistry.find(step.target)
             if (r == null) {
@@ -203,7 +223,7 @@ class TourRunner(
     private fun startStep(step: TourStep, t: Double) {
         when (step.action) {
             "move" -> resolve(step)?.let { (x, y) ->
-                highlight = step.target?.let { WidgetRegistry.find(it) }
+                highlight = step.target?.let { if (it.startsWith("pipe:")) diagram.targetRect(it.removePrefix("pipe:")) else WidgetRegistry.find(it) }
                 anchor = highlight ?: WidgetRegistry.Rect(x, y, x, y)
                 highlightFrom = t
                 moveFromX = curX; moveFromY = curY; moveToX = x; moveToY = y
@@ -255,7 +275,10 @@ class TourRunner(
                 rippleStart = t; rippleX = curX; rippleY = curY
             }
             "set_page" -> step.target?.let { UITheme.performancePageId = it }
-            "hold", "chapter" -> {}
+            "hold" -> {}
+            "chapter" -> step.minimap?.let { lit ->
+                diagram.handle(step.copy(action = "pipe_minimap", target = lit, durationSec = null), t)?.let { warnTour("Tour t=${step.t}: chapter minimap: $it") }
+            }
             "tooltips" -> UITheme.tooltipsEnabled = (step.value ?: 1f) >= 0.5f
             "load_source" -> deckAction(step) { slot, mx ->
                 val id = step.target ?: return@deckAction
@@ -270,7 +293,7 @@ class TourRunner(
             "set_param" -> deckAction(step) { slot, mx ->
                 val p = slot.deck(mx).source.parameters[step.param]
                 if (p == null) warnTour("Tour t=${step.t}: deck ${step.deck} has no parameter '${step.param}'")
-                else p.set(step.value ?: 0f)
+                else setOrRamp(step, p.baseValue) { p.set(it) }
             }
             "bind_modulator" -> deckAction(step) { slot, mx ->
                 val p = slot.deck(mx).source.parameters[step.param]
@@ -318,7 +341,8 @@ class TourRunner(
                 val slot = slotIndex(step) ?: return@let
                 val p = c.slots[slot]?.parameters?.get(step.param)
                 if (p == null) warnTour("Tour t=${step.t}: ${step.deck} slot $slot has no parameter '${step.param}'")
-                else p.set(step.value ?: 0f)
+                else if (p.metaDrivenBy != null) warnTour("Tour t=${step.t}: ${step.deck} slot $slot '${step.param}' follows the slot's Metaknob; turn it with meta_knob")
+                else setOrRamp(step, p.baseValue) { p.set(it) }
             }
             // Super Knob and slot Metaknob are separate on purpose: the Super Knob drives linked slots' Metaknobs by soft-takeover.
             // The FX row's macro knobs drive these through bindings every frame, so set the knob (as a hand on it would);
@@ -327,7 +351,8 @@ class TourRunner(
             "meta_knob" -> fxChain(step)?.let { c ->
                 val slot = slotIndex(step) ?: return@let
                 val fx = c.slots[slot] ?: run { warnTour("Tour t=${step.t}: ${step.deck} slot $slot is empty"); return@let }
-                if (c.slotSuperKnobLink[slot]) fx.metaKnob.set(step.value ?: 0f) else fxKnob(c, slot + 1)?.value = step.value ?: 0f
+                if (c.slotSuperKnobLink[slot]) setOrRamp(step, fx.metaKnob.baseValue) { fx.metaKnob.set(it) }
+                else fxKnob(c, slot + 1)?.let { k -> setOrRamp(step, k.value) { k.value = it } }
             }
             "transition" -> llm.slop.liquidlsd.presets.TransitionOps.setStock(step.target)
             "transition_preset" -> {
@@ -361,9 +386,34 @@ class TourRunner(
                 "dark" -> UITheme.theme = UITheme.Theme.GREY_ACID
                 else -> warnTour("Tour t=${step.t}: theme wants light or dark")
             }
-            "crossfade" -> mixer?.crossfade?.set(step.value ?: -1f)
+            "crossfade" -> mixer?.crossfade?.let { cf -> setOrRamp(step.copy(value = step.value ?: -1f), cf.baseValue) { cf.set(it) } }
+            "trans_param" -> mixer?.let { mx ->
+                val name = step.param
+                val p = name?.let { mx.transitionFilter?.parameters?.get(it) }
+                if (p == null) { warnTour("Tour t=${step.t}: the transition has no parameter '$name'"); return }
+                // Knobs 2-4 of the Transitions row drive the first three float parameters every tick, so turn the knob, as a hand would.
+                val knob = llm.slop.liquidlsd.macro.MacroEngine.getBank(llm.slop.liquidlsd.macro.MacroEngine.TRANS)?.knobs
+                    ?.firstOrNull { k -> k.bindings.any { it.parameterId == "Mixer/Transition/$name" } }
+                val range = p.maxClamp - p.minClamp
+                if (knob != null && range > 0f) setOrRamp(step, p.baseValue) { v -> knob.value = ((v - p.minClamp) / range).coerceIn(0f, 1f) }
+                else setOrRamp(step, p.baseValue) { p.set(it) }
+            }
+            "deck_level" -> mixer?.let { mx ->
+                val path = when (step.deck?.uppercase()) { "A" -> "Mixer/levelA"; "B" -> "Mixer/levelB"; "BG" -> "Mixer/levelBG"; "PV" -> "Mixer/levelPV"; else -> null }
+                if (path == null) warnTour("Tour t=${step.t}: deck_level wants deck A, B, BG or PV")
+                else mx.setLevelByUser(path, (step.value ?: 1f).coerceIn(0f, 1f))
+            }
+            "pipe", "pipe_add", "pipe_focus", "pipe_params", "pipe_controls", "pipe_tag", "pipe_minimap" ->
+                diagram.handle(step, t)?.let { warnTour("Tour t=${step.t}: $it") }
             else -> warnTour("Tour: unknown action '${step.action}'")
         }
+    }
+
+    /** Sets a parameter now, or with durationSec eases it there from [current] (the last ramp on a parameter wins). */
+    private fun setOrRamp(step: TourStep, current: Float, apply: (Float) -> Unit) {
+        val to = step.value ?: 0f
+        val dur = step.durationSec ?: 0.0
+        if (dur <= 0.0) apply(to) else ramps += Ramp(apply, current, to, step.t, dur)
     }
 
     /** Knob [index] of [chain]'s FX row bank (group mode: 0 = Super Knob, 1-3 = slot Metaknobs). */
@@ -425,8 +475,9 @@ class TourRunner(
 
     /** Called by UIManager just before ImGui.render(): synthetic cursor + click ripple in the foreground draw list. */
     fun drawOverlay() {
-        val dl = ImGui.getForegroundDrawList()
         val t = now
+        diagram.draw(t, mixer)
+        val dl = ImGui.getForegroundDrawList()
         if (rippleStart >= 0 && t - rippleStart < RIPPLE_SEC) {
             val k = ((t - rippleStart) / RIPPLE_SEC).toFloat()
             val a = ((1f - k) * 255).toInt()
@@ -618,6 +669,7 @@ class TourRunner(
         TimeSource.clearSimulatedTime()
         val ok = pipe?.finish() ?: false
         pbo?.dispose()
+        llm.slop.liquidlsd.rendering.FxSlotTaps.dispose()
         val totalMs = (System.nanoTime() - startNs) / 1e6
         if (options.hashes) File(outFile.path + ".hashes").writeText(hashes.toString())
         if (downFbo != 0) { org.lwjgl.opengl.GL30.glDeleteFramebuffers(downFbo); org.lwjgl.opengl.GL11.glDeleteTextures(downTex) }

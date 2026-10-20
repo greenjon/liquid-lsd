@@ -541,6 +541,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../user_guide/hardware/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Hardware Control
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../user_guide/web_broadcast/" class="md-nav__link">
         
   
@@ -1262,6 +1290,39 @@
   
     <nav class="md-nav" aria-label="[Unreleased]">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#tour-renderer-live-pipeline-diagram-tourpipelinediagramkt-tourtourrunnerkt-renderingfxslottapskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tour Renderer: Live Pipeline Diagram (tour/PipelineDiagram.kt, tour/TourRunner.kt, rendering/FxSlotTaps.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transition-parameter-names-default_transitionsfs-uiparameterstabskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transition Parameter Names (default_transitions/*.fs, ui/ParametersTabs.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user-guide-live-video-input-and-three-fx-slots-docsuser_guidevisual_sourcesmd-docsuser_guideyour_workspacemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User Guide: Live Video Input and Three FX Slots (docs/user_guide/visual_sources.md, docs/user_guide/your_workspace.md)
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#level-faders-slider-knob-midi-and-modulation-no-longer-fight-renderingmixerkt-macromacroenginekt-parameterssofttakeoverkt-uideckcontrolpanelkt" class="md-nav__link">
@@ -6198,6 +6259,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#tour-renderer-live-pipeline-diagram-tourpipelinediagramkt-tourtourrunnerkt-renderingfxslottapskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tour Renderer: Live Pipeline Diagram (tour/PipelineDiagram.kt, tour/TourRunner.kt, rendering/FxSlotTaps.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#transition-parameter-names-default_transitionsfs-uiparameterstabskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transition Parameter Names (default_transitions/*.fs, ui/ParametersTabs.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#user-guide-live-video-input-and-three-fx-slots-docsuser_guidevisual_sourcesmd-docsuser_guideyour_workspacemd" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        User Guide: Live Video Input and Three FX Slots (docs/user_guide/visual_sources.md, docs/user_guide/your_workspace.md)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#level-faders-slider-knob-midi-and-modulation-no-longer-fight-renderingmixerkt-macromacroenginekt-parameterssofttakeoverkt-uideckcontrolpanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11107,6 +11201,19 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="tour-renderer-live-pipeline-diagram-tourpipelinediagramkt-tourtourrunnerkt-renderingfxslottapskt">Tour Renderer: Live Pipeline Diagram (<code>tour/PipelineDiagram.kt</code>, <code>tour/TourRunner.kt</code>, <code>rendering/FxSlotTaps.kt</code>)</h3>
+<ul>
+<li><strong>The walkthrough now opens with a live schematic of the video pipeline</strong> before it shows any UI: decks, their FX chains, the transition, BG behind, master FX and the audience, with PV apart. Every box shows the real video at that point, each FX slot included, and the camera then zooms in on a generator, an effect and a transition to show their parameters (with live value bars) and the ways to control them. The diagram shrinks into a corner mini-map that comes back at the start of every chapter of every walkthrough video, lighting the part being discussed. Developer tooling only; nothing changes in the app.</li>
+<li>Internal: new script actions <code>pipe</code>, <code>pipe_add</code>, <code>pipe_focus</code>, <code>pipe_params</code>, <code>pipe_controls</code>, <code>pipe_tag</code>, <code>pipe_minimap</code>, <code>trans_param</code> and <code>deck_level</code>; <code>durationSec</code> eases <code>set_param</code>, <code>fx_param</code>, <code>trans_param</code>, <code>crossfade</code> and <code>meta_knob</code>; <code>move</code> aims at <code>pipe:&lt;node&gt;</code>; a chapter's <code>minimap</code> lights nodes at its start; <code>fx_param</code> warns when the slot's Metaknob owns the parameter. <code>FxSlotTaps</code> copies each rendered FX slot into a 384x216 texture, only while the diagram is up. The intro is the first chapter of <code>tours/overview.json</code>; plan in <code>.planning/pipeline-intro-plan.md</code>.</li>
+</ul>
+<h3 id="transition-parameter-names-default_transitionsfs-uiparameterstabskt">Transition Parameter Names (<code>default_transitions/*.fs</code>, <code>ui/ParametersTabs.kt</code>)</h3>
+<ul>
+<li><strong>The eight stock transitions' parameters now have readable names</strong> in the Edit view's transition rows ("Burn Spread" instead of "burnSpread", "RGB Split" instead of "rgbSplit"), as effect parameters already did: the rows now show an ISF input's <code>LABEL</code> when it has one. Behaviour, parameter paths and existing mappings are unchanged.</li>
+</ul>
+<h3 id="user-guide-live-video-input-and-three-fx-slots-docsuser_guidevisual_sourcesmd-docsuser_guideyour_workspacemd">User Guide: Live Video Input and Three FX Slots (<code>docs/user_guide/visual_sources.md</code>, <code>docs/user_guide/your_workspace.md</code>)</h3>
+<ul>
+<li><strong>New "Live Video Input" section</strong> on showing Spout, Syphon or PipeWire streams on a deck. The guide no longer describes four FX slots and a separate feedback loop: each deck has three slots, Feedback is an effect that can go in any of them, and the signal flow now includes Master FX and how BG shows through.</li>
+</ul>
 <h3 id="level-faders-slider-knob-midi-and-modulation-no-longer-fight-renderingmixerkt-macromacroenginekt-parameterssofttakeoverkt-uideckcontrolpanelkt">Level Faders: Slider, Knob, MIDI and Modulation No Longer Fight (<code>rendering/Mixer.kt</code>, <code>macro/MacroEngine.kt</code>, <code>parameters/SoftTakeover.kt</code>, <code>ui/DeckControlPanel.kt</code>)</h3>
 <ul>
 <li><strong>The deck-tile level faders (A, B, BG, PV) now behave like the crossfader.</strong> Dragging a fader no longer snaps back when a Performance knob is bound to it: the knob follows the fader instead, and whichever moved last wins. A manual drag, wheel step or reset also mutes non-MIDI modulation on that fader and makes any MIDI/OSC mapping on it in Soft Takeover mode pick it up again instead of jumping.</li>

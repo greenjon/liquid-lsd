@@ -12,14 +12,14 @@
             "TYPE": "image"
         },
         {
-            "NAME": "progress",
+            "NAME": "progress", "LABEL": "Progress",
             "TYPE": "float",
             "MIN": 0.0,
             "MAX": 1.0,
             "DEFAULT": 0.0
         },
         {
-            "NAME": "curveMode",
+            "NAME": "curveMode", "LABEL": "Curve",
             "TYPE": "long",
             "VALUES": [0, 1, 2],
             "LABELS": ["Perceptual Cosine", "Linear", "Equal Power"],
