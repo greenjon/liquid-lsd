@@ -24,6 +24,10 @@ ROOT = Path(__file__).resolve().parent.parent
 GITHUB_URL = "https://github.com/greenjon/liquid-lsd"
 SITE_HOST = "liquid-lsd.greenjon.com"
 SITE_URL = f"https://{SITE_HOST}"
+# Videos and their posters are served from here, not GitHub Pages (bandwidth and repo size); the build writes them to
+# <out>/tour/media/ and scripts/publish_site.sh rsyncs that folder to the server. Captions (.vtt) stay on the site:
+# browsers refuse cross-origin caption tracks.
+MEDIA_URL = "https://www.spaz.org/~gj/liquid-lsd-files"
 PUBLIC_NAV_DROP = ("Developer Reference", "Operations & Tuning", "Release Notes")
 STAGE_DROP = ("developer", "archive", "licenses", "release_notes.md")
 
@@ -33,7 +37,7 @@ STAGE_DROP = ("developer", "archive", "licenses", "release_notes.md")
 def clip_block(video: dict, chapters: list, rel: str) -> str:
     """HTML for the chapter clips of one tour video, inserted into the docs page it explains."""
     cards = "\n".join(
-        f'<figure><video controls muted loop playsinline preload="none" poster="{rel}tour/media/{video["id"]}/{c["id"]}.jpg" src="{rel}tour/media/{video["id"]}/{c["id"]}.mp4"></video>'
+        f'<figure><video controls muted loop playsinline preload="none" poster="{MEDIA_URL}/{video["id"]}/{c["id"]}.jpg" src="{MEDIA_URL}/{video["id"]}/{c["id"]}.mp4"></video>'
         f'<figcaption><a href="{rel}tour/#{video["id"]}/{c["id"]}">{html.escape(c["title"])}</a></figcaption></figure>'
         for c in chapters
     )
@@ -102,7 +106,7 @@ def landing_section(steps: list, hero: dict | None) -> str:
             continue
         cards.append(
             f'<a class="action-card" href="tour/#{st["slug"]}">'
-            f'<video muted loop playsinline preload="none" data-loop data-src="tour/{st["loop"]}" poster="tour/{st["poster"]}"></video>'
+            f'<video muted loop playsinline preload="none" data-loop data-src="{st["loop"]}" poster="{st["poster"]}"></video>'
             f'<span class="action-card-body"><strong>{html.escape(st["title"])}</strong>{html.escape(f["blurb"])}</span></a>')
     if not cards:
         return ""
@@ -173,15 +177,16 @@ def copy_hero(out: Path, tours: Path, video: str) -> dict | None:
     media.mkdir(parents=True, exist_ok=True)
     shutil.copy(web_encode(src), media / f"{video}.mp4")
     shutil.copy(tours / video / "poster.jpg", media / f"{video}.jpg")
-    shutil.copy(tours / video / "hero.vtt", media / f"{video}.vtt")
-    return {"src": f"tour/media/{video}/{video}.mp4", "poster": f"tour/media/{video}/{video}.jpg",
-            "vtt": f"tour/media/{video}/{video}.vtt"}
+    (out / "tour/captions").mkdir(parents=True, exist_ok=True)
+    shutil.copy(tours / video / "hero.vtt", out / "tour/captions" / f"{video}.vtt")
+    return {"src": f"{MEDIA_URL}/{video}/{video}.mp4", "poster": f"{MEDIA_URL}/{video}/{video}.jpg",
+            "vtt": f"tour/captions/{video}.vtt"}
 
 
 def facade(hero: dict, prefix: str, label: str) -> str:
-    """Click-to-load video player: only a poster until clicked, so the page stays light."""
-    return (f'<div class="video-facade" data-src="{prefix}{hero["src"]}" data-vtt="{prefix}{hero["vtt"]}" '
-            f'style="background-image:url({prefix}{hero["poster"]})">'
+    """Click-to-load video player: only a poster until clicked, so the page stays light. [prefix] reaches the site root (captions)."""
+    return (f'<div class="video-facade" data-src="{hero["src"]}" data-vtt="{prefix}{hero["vtt"]}" '
+            f'style="background-image:url({hero["poster"]})">'
             f'<button type="button" class="video-facade-play" aria-label="{html.escape(label)}"><span>&#9654;</span> {html.escape(label)}</button></div>')
 
 
@@ -215,11 +220,11 @@ def build_tour(out: Path, tours: Path, hero: dict | None) -> list:
             dur = ch["end"] - ch["start"]
             make_poster(clip, dst.with_suffix(".jpg"), dur)
             loop = src / "loops" / f'{ch["id"]}.mp4'
-            loop_rel = f'media/{v["id"]}/{clip.name}'
+            loop_rel = f'{MEDIA_URL}/{v["id"]}/{clip.name}'
             if loop.exists() and f'{v["id"]}/{ch["id"]}' in featured:  # only the landing cards play loops
                 (out / "tour/media" / v["id"] / "loops").mkdir(exist_ok=True)
                 shutil.copy(loop, out / "tour/media" / v["id"] / "loops" / loop.name)
-                loop_rel = f'media/{v["id"]}/loops/{loop.name}'
+                loop_rel = f'{MEDIA_URL}/{v["id"]}/loops/{loop.name}'
             caps = [
                 {"start": round(c["start"] - ch["start"], 2), "end": round(c["end"] - ch["start"], 2), "text": c["text"]}
                 for c in captions if c["chapter"] == ch["id"]
@@ -227,7 +232,7 @@ def build_tour(out: Path, tours: Path, hero: dict | None) -> list:
             i = len(steps)
             slug = f'{v["id"]}/{ch["id"]}'
             steps.append({"slug": slug, "vtitle": v["title"], "title": ch["title"], "docs": v["docs"],
-                          "clip": f'media/{v["id"]}/{clip.name}', "loop": loop_rel, "poster": f'media/{v["id"]}/{ch["id"]}.jpg', "dur": round(dur, 2), "captions": caps})
+                          "clip": f'{MEDIA_URL}/{v["id"]}/{clip.name}', "loop": loop_rel, "poster": f'{MEDIA_URL}/{v["id"]}/{ch["id"]}.jpg', "dur": round(dur, 2), "captions": caps})
             nav.append(f'        <a href="#{slug}" data-step="{i}"><span class="n">{i + 1:02d}</span>{html.escape(ch["title"])}</a>')
             rows = "\n".join(
                 f'          <li data-step="{i}" data-line="{k}">'
@@ -257,10 +262,13 @@ def default_tours_dir() -> Path:
 
 
 def main() -> int:
+    global MEDIA_URL
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "greenjon"))
     ap.add_argument("--tours", default=None, help="rendered tour root (default: tours/out, else tours/draft)")
+    ap.add_argument("--media-url", default=MEDIA_URL, help="where <out>/tour/media/ is served (a file:// URL previews locally)")
     args = ap.parse_args()
+    MEDIA_URL = args.media_url.rstrip("/")
     out = Path(args.out).resolve()
     if out.exists():
         shutil.rmtree(out)
@@ -276,7 +284,7 @@ def main() -> int:
         (out / "sitemap.xml").write_text((out / "sitemap.xml").read_text().replace(
             "</urlset>", f"  <url><loc>{SITE_URL}/tour/</loc><lastmod>{date.today()}</lastmod></url>\n</urlset>"))
     print(f"Tour page: {n} chapters.")
-    print(f"Site built in {out}. Publish with scripts/publish_site.sh.")
+    print(f"Site built in {out}; media in {out / 'tour/media'} for {MEDIA_URL}. Publish with scripts/publish_site.sh.")
     return 0
 
 
