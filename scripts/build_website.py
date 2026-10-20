@@ -102,7 +102,7 @@ def landing_section(steps: list, hero: dict | None) -> str:
             continue
         cards.append(
             f'<a class="action-card" href="tour/#{st["slug"]}">'
-            f'<video muted loop playsinline preload="none" data-loop data-src="tour/{st["clip"]}" poster="tour/{st["poster"]}"></video>'
+            f'<video muted loop playsinline preload="none" data-loop data-src="tour/{st["loop"]}" poster="tour/{st["poster"]}"></video>'
             f'<span class="action-card-body"><strong>{html.escape(st["title"])}</strong>{html.escape(f["blurb"])}</span></a>')
     if not cards:
         return ""
@@ -159,7 +159,7 @@ def web_encode(src: Path) -> Path:
     if not dst.exists():
         tmp = dst.with_suffix(".part.mp4")
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-map", "0:v", "-map", "0:a?",
-                        "-vf", "fps=30,scale='min(1920,iw)':-2", "-c:v", "libx264", "-crf", "26", "-preset", "medium",
+                        "-vf", "fps=30,scale='min(1920,iw)':-2", "-c:v", "libx264", "-crf", "30", "-preset", "slow",
                         "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", "-movflags", "+faststart", str(tmp)], check=True)
         tmp.rename(dst)
     return dst
@@ -188,10 +188,13 @@ def facade(hero: dict, prefix: str, label: str) -> str:
 def build_tour(out: Path, tours: Path, hero: dict | None) -> list:
     """Interactive tour page at /tour/, generated from each video's chapters.json + captions.json.
 
-    Only the silent chapter clips are published (small); hero videos are not copied.
+    Each chapter plays as a whole (silent clips/<id>.mp4); the landing cards use the short loops/<id>.mp4 (only those
+    are copied).
+    Hero videos are not copied (the overview's web copy is, for "Watch the full overview").
     Returns the steps (empty = no rendered tours found, page skipped).
     """
     meta = json.loads((ROOT / "website/data/tour.json").read_text())
+    featured = {f["slug"] for f in json.loads((ROOT / "website/data/landing.json").read_text())["featured"]}
     steps, nav, transcript = [], [], []
     for v in meta:
         src = tours / v["id"]
@@ -209,22 +212,26 @@ def build_tour(out: Path, tours: Path, hero: dict | None) -> list:
             dst = out / "tour/media" / v["id"] / clip.name
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(clip, dst)
-            dur = min(ch["clip"], ch["end"] - ch["start"], 20.0)
+            dur = ch["end"] - ch["start"]
             make_poster(clip, dst.with_suffix(".jpg"), dur)
+            loop = src / "loops" / f'{ch["id"]}.mp4'
+            loop_rel = f'media/{v["id"]}/{clip.name}'
+            if loop.exists() and f'{v["id"]}/{ch["id"]}' in featured:  # only the landing cards play loops
+                (out / "tour/media" / v["id"] / "loops").mkdir(exist_ok=True)
+                shutil.copy(loop, out / "tour/media" / v["id"] / "loops" / loop.name)
+                loop_rel = f'media/{v["id"]}/loops/{loop.name}'
             caps = [
-                {"start": round(c["start"] - ch["start"], 2), "end": round(c["end"] - ch["start"], 2),
-                 "text": c["text"], "inClip": c["start"] - ch["start"] < dur}
+                {"start": round(c["start"] - ch["start"], 2), "end": round(c["end"] - ch["start"], 2), "text": c["text"]}
                 for c in captions if c["chapter"] == ch["id"]
             ]
             i = len(steps)
             slug = f'{v["id"]}/{ch["id"]}'
             steps.append({"slug": slug, "vtitle": v["title"], "title": ch["title"], "docs": v["docs"],
-                          "clip": f'media/{v["id"]}/{clip.name}', "poster": f'media/{v["id"]}/{ch["id"]}.jpg', "dur": round(dur, 2), "captions": caps})
+                          "clip": f'media/{v["id"]}/{clip.name}', "loop": loop_rel, "poster": f'media/{v["id"]}/{ch["id"]}.jpg', "dur": round(dur, 2), "captions": caps})
             nav.append(f'        <a href="#{slug}" data-step="{i}"><span class="n">{i + 1:02d}</span>{html.escape(ch["title"])}</a>')
             rows = "\n".join(
-                f'          <li data-step="{i}" data-line="{k}" class="{"" if c["inClip"] else "late"}">'
-                f'<time>{fmt_time(c["start"])}</time><span>{html.escape(c["text"])}'
-                f'{"" if c["inClip"] else " <em>full video</em>"}</span></li>'
+                f'          <li data-step="{i}" data-line="{k}">'
+                f'<time>{fmt_time(c["start"])}</time><span>{html.escape(c["text"])}</span></li>'
                 for k, c in enumerate(caps)
             )
             transcript.append(f'        <h4 id="t-{slug.replace("/", "-")}">{i + 1:02d} · {html.escape(ch["title"])}</h4>\n        <ol>\n{rows}\n        </ol>')

@@ -67,6 +67,7 @@ data class CliArgs(
                     arg.startsWith("--tour-scale=") -> arg.substringAfter("=").trim().toFloatOrNull()?.let { tourOptions = tourOptions.copy(scale = it.coerceIn(0.1f, 1f)) }
                     arg.startsWith("--tour-encoder=") -> tourOptions = tourOptions.copy(encoder = arg.substringAfter("=").trim().lowercase())
                     arg == "--tour-hashes" -> tourHashes = true
+                    arg == "--tour-no-hashes" -> tourOptions = tourOptions.copy(hashes = false)
                     arg == "--no-audio" -> {
                         noAudio = true
                     }
@@ -165,6 +166,7 @@ Options:
   --tour-scale=<f>              Output size as a fraction of the 1920x1080 window, downscaled on the GPU (default 1)
   --tour-encoder=x264|nvenc     Encoder (default x264: reproducible; nvenc: NVIDIA GPU, much faster)
   --tour-hashes                 Write per-frame SHA-256 hashes (<out>.hashes) for determinism checks
+  --tour-no-hashes              Skip the per-frame hashes (faster final renders)
   --ui-lab                      Launch isolated UI component gallery sandbox
 """.trimIndent())
         }

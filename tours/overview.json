@@ -96,7 +96,7 @@
 {"dt":0.0,"action":"move","x":960,"y":540,"durationSec":1.5},
 {"dt":1.0,"action":"deck_level","deck":"BG","value":0},
 {"dt":0.0,"action":"fx_chain_enable","deck":"A","value":0},
-{"dt":3.0,"action":"hold","caption":""},
+{"dt":4.1,"action":"hold","caption":""},
 {"dt":0.0,"action":"chapter","target":"window","title":"The window","clipSec":16},
 {"dt":1.5,"action":"move","x":1480,"y":280,"durationSec":1.6,"caption":"The big screen on the right is the master output: what your audience sees."},
 {"dt":6.0,"action":"move","x":1480,"y":800,"durationSec":1.6,"caption":"Below it, a preview of each of the four decks: A, B, BG and PV."},

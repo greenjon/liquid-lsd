@@ -70,7 +70,7 @@
 {"dt":1.5,"action":"click"},
 {"dt":5.0,"action":"hold","caption":"Click AUTO while it fades to stop it where it is."},
 
-{"dt":4.5,"action":"chapter","target":"clock","minimap":"all","title":"The clock","clipSec":18},
+{"dt":5.05,"action":"chapter","target":"clock","minimap":"all","title":"The clock","clipSec":18},
 {"dt":0.0,"action":"move","target":"btnid_perf_clock_bpm","durationSec":1.6,"caption":"The last row is the clock. Everything set to follow the beat runs on its tempo."},
 {"dt":6.0,"action":"move","x":1180,"y":280,"durationSec":1.4,"caption":"Here an LFO set to Beat morphs deck A's shape in time with the music."},
 {"dt":6.0,"action":"move","target":"btnid_perf_clock_half","durationSec":1.4,"caption":"Halve the tempo, and the morph slows down with it."},

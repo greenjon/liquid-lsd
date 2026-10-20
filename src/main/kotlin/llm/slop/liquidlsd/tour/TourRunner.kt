@@ -44,6 +44,11 @@ class TourRunner(
         /** Reading pace for the caption lint (characters per second; a caption also gets at least [MIN_CAPTION_SEC]). */
         private const val READ_CPS = 14.0
         private const val MIN_CAPTION_SEC = 2.5
+        /** A chapter's (and the video's) last caption stays up at least this long, so it can be read before autoplay moves on. */
+        private const val LAST_CAPTION_SEC = 5.0
+        /** Synthetic cursor arrow size in pixels (the tip is at the cursor position). */
+        private const val CURSOR_H = 34f
+        private const val CURSOR_W = 24f
 
         /**
          * Uncaptured frames rendered before frame 0 so ImGui layout, fonts and first-use lazy init settle.
@@ -143,6 +148,16 @@ class TourRunner(
         for (c in cues) {
             val need = maxOf(MIN_CAPTION_SEC, c.text.length / READ_CPS)
             if (c.end - c.start < need - 1e-6) warnTour(String.format(Locale.ROOT, "Tour t=%.2f: caption shown %.1f s, needs about %.1f s to read: \"%s\"", c.start, c.end - c.start, need, c.text))
+        }
+        // The last caption of each chapter must stay up LAST_CAPTION_SEC before the chapter ends: the website plays chapters one
+        // after another, so the next one would cut it off.
+        val chapters = script.allChapters
+        for ((i, ch) in chapters.withIndex()) {
+            val end = ch.endSec ?: chapters.getOrNull(i + 1)?.t ?: script.length
+            val last = cues.lastOrNull { it.start >= ch.t - 1e-9 && it.start < end } ?: continue
+            val need = maxOf(LAST_CAPTION_SEC, last.text.length / READ_CPS)
+            val shown = minOf(last.end, end) - last.start
+            if (shown < need - 1e-6) warnTour(String.format(Locale.ROOT, "Tour chapter '%s': last caption shown %.1f s before the chapter ends, needs %.1f s (add %.1f s): \"%s\"", ch.id, shown, need, need - shown, last.text))
         }
         startNs = System.nanoTime()
         lastFrameNs = startNs
@@ -496,8 +511,8 @@ class TourRunner(
         val x = curX
         val y = curY
         val fill = if (mouseDown) 0xFF3C9CFF.toInt() else 0xFFFFFFFF.toInt()
-        dl.addTriangleFilled(x, y, x, y + 21f, x + 15f, y + 15f, fill)
-        dl.addTriangle(x, y, x, y + 21f, x + 15f, y + 15f, 0xFF000000.toInt(), 1.5f)
+        dl.addTriangleFilled(x, y, x, y + CURSOR_H, x + CURSOR_W, y + CURSOR_W, fill)
+        dl.addTriangle(x, y, x, y + CURSOR_H, x + CURSOR_W, y + CURSOR_W, 0xFF000000.toInt(), 2f)
         if (script.burnCaptions) drawCaption()
     }
 
@@ -546,9 +561,9 @@ class TourRunner(
             // centred on it. Flip when it does not fit. A point anchor (x,y move) leaves room for the cursor arrow.
             val a = anchor
             val point = a.maxX - a.minX < 1f
-            val belowY = a.maxY + if (point) 36f else 12f
+            val belowY = a.maxY + if (point) CURSOR_H + 14f else 12f
             val aboveY = a.minY - 12f - h
-            val rightX = a.maxX + if (point) 34f else 14f
+            val rightX = a.maxX + if (point) CURSOR_W + 18f else 14f
             val leftX = a.minX - 14f - w
             when (captionPos) {
                 "left", "right" -> {

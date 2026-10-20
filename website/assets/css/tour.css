@@ -56,7 +56,6 @@
 .tour-transcript li:hover { background: var(--bg-card-hover); }
 .tour-transcript li.now { background: var(--accent-green); }
 .tour-transcript time { font-family: var(--font-mono); color: var(--text-dim); flex: none; }
-.tour-transcript .late em { color: var(--text-dim); font-size: .8rem; margin-left: .4rem; }
 @media (max-width: 900px) {
   .tour-layout { grid-template-columns: 1fr; }
   .tour-stage, .tour-nav { position: static; max-height: none; }

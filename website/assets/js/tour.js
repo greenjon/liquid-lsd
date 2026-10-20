@@ -1,4 +1,4 @@
-// Guided tour player: one looping clip per chapter, captions synced to the clip.
+// Guided tour player: one clip per chapter (the whole chapter), captions synced to the clip.
 (function () {
   'use strict';
   const steps = JSON.parse(document.getElementById('tour-data').textContent);
@@ -82,7 +82,7 @@
     const i = Number(el.dataset.step);
     select(i);
     const c = steps[i].captions[Number(el.dataset.line)];
-    if (c && c.inClip) video.currentTime = c.start;
+    if (c) video.currentTime = c.start;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }));
 
