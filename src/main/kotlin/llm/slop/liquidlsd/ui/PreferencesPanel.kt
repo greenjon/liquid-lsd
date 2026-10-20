@@ -36,6 +36,14 @@ object PreferencesPanel {
         BROADCAST("Web Broadcast")
     }
 
+    /** Web Broadcast needs a relay server few users run, so it is hidden until Advanced is on, or a relay is already configured. */
+    private fun isVisible(cat: Category, session: llm.slop.liquidlsd.SessionContext): Boolean =
+        cat != Category.BROADCAST || session.uiTheme.showAdvancedPreferences ||
+            llm.slop.liquidlsd.broadcast.BroadcastPreferences.isConfigured || activeCategory == Category.BROADCAST
+
+    private fun visibleCategories(session: llm.slop.liquidlsd.SessionContext) =
+        Category.values().filter { isVisible(it, session) }
+
     var isOpen: Boolean = false
         private set
 
@@ -131,7 +139,7 @@ object PreferencesPanel {
 
         // ── Main Body (Sidebar + Content) ────────────────────────────────
         val sidebarW = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            Category.values().maxOf { ImGui.calcTextSize(it.label).x } + 36f
+            visibleCategories(session).maxOf { ImGui.calcTextSize(it.label).x } + 36f
         }.coerceAtLeast(150f)
 
         val btnH = session.uiTheme.withFont(UITheme.FontLevel.BODY) {
@@ -144,7 +152,7 @@ object PreferencesPanel {
 
         // Left Sidebar Child
         if (ImGui.beginChild("##preferences_sidebar", sidebarW, availH, true)) {
-            Category.values().forEach { cat ->
+            visibleCategories(session).forEach { cat ->
                 val selected = activeCategory == cat
                 if (selected) {
                     val activeCol = if (isLight) TangoPalette.u32(TangoPalette.ORANGE.normal) else ImGui.colorConvertFloat4ToU32(0.2f, 0.5f, 0.8f, 1f)
@@ -274,6 +282,13 @@ object PreferencesPanel {
             }
         }
         itemTooltip("Removes OS window borders to integrate navigation, telemetry, and window controls into a unified top bar.\nDisable if using a tiling window manager (e.g. i3/sway) that manages decorations natively.")
+
+        val advancedEnabled = ImBoolean(session.uiTheme.showAdvancedPreferences)
+        if (ImGui.checkbox("Show Advanced Preferences", advancedEnabled)) {
+            session.uiTheme.showAdvancedPreferences = advancedEnabled.get()
+            AppPreferencesStore.savePreferences()
+        }
+        itemTooltip("Shows the Web Broadcast tab, for streaming to a relay server you run yourself.")
 
         val trackpadEnabled = ImBoolean(session.uiTheme.trackpadConsoleEnabled)
         if (ImGui.checkbox("Enable CapsLock Trackpad Console", trackpadEnabled)) {

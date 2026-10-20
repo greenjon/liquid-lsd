@@ -1292,6 +1292,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#web-broadcast-hidden-behind-advanced-relay-requires-a-token-uipreferencespanelkt-serverserverjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web Broadcast Hidden Behind Advanced; Relay Requires a Token (ui/PreferencesPanel.kt, server/server.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tour-renderer-live-pipeline-diagram-tourpipelinediagramkt-tourtourrunnerkt-renderingfxslottapskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6259,6 +6270,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#web-broadcast-hidden-behind-advanced-relay-requires-a-token-uipreferencespanelkt-serverserverjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web Broadcast Hidden Behind Advanced; Relay Requires a Token (ui/PreferencesPanel.kt, server/server.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tour-renderer-live-pipeline-diagram-tourpipelinediagramkt-tourtourrunnerkt-renderingfxslottapskt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11201,6 +11223,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="web-broadcast-hidden-behind-advanced-relay-requires-a-token-uipreferencespanelkt-serverserverjs">Web Broadcast Hidden Behind Advanced; Relay Requires a Token (<code>ui/PreferencesPanel.kt</code>, <code>server/server.js</code>)</h3>
+<ul>
+<li><strong>The Web Broadcast preferences tab is now hidden by default.</strong> Turn on <em>Show Advanced Preferences</em> in General to show it; it also shows when a relay URL and token are already saved.</li>
+<li><strong>The relay server no longer has a default token.</strong> It exits at startup unless <code>LSD_TOKEN</code> (or <code>lsd_relay_token</code> in rc.conf) is set, since the old default was in the public repo. If you ever ran a relay without setting one, change its token.</li>
+</ul>
 <h3 id="tour-renderer-live-pipeline-diagram-tourpipelinediagramkt-tourtourrunnerkt-renderingfxslottapskt">Tour Renderer: Live Pipeline Diagram (<code>tour/PipelineDiagram.kt</code>, <code>tour/TourRunner.kt</code>, <code>rendering/FxSlotTaps.kt</code>)</h3>
 <ul>
 <li><strong>The walkthrough now opens with a live schematic of the video pipeline</strong> before it shows any UI: decks, their FX chains, the transition, BG behind, master FX and the audience, with PV apart. Every box shows the real video at that point, each FX slot included, and the camera then zooms in on a generator, an effect and a transition to show their parameters (with live value bars) and the ways to control them. The diagram shrinks into a corner mini-map that comes back at the start of every chapter of every walkthrough video, lighting the part being discussed. Developer tooling only; nothing changes in the app.</li>

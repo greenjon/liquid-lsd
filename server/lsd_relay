@@ -10,7 +10,7 @@
 # Optional rc.conf overrides:
 #   lsd_relay_port="9004"
 #   lsd_relay_host="127.1.0.1"
-#   lsd_relay_token="lsd25"
+#   lsd_relay_token="<private secret>"   (required: the relay refuses to start without it)
 #   lsd_relay_dir="/www/spaz/htdocs/lsd-relay"
 #   lsd_relay_user="www"
 #   lsd_relay_logfile="/var/log/lsd_relay.log"
@@ -25,7 +25,6 @@ desc="Liquid LSD WebSocket Relay"
 : ${lsd_relay_enable:="NO"}
 : ${lsd_relay_port:="9004"}
 : ${lsd_relay_host:="127.1.0.1"}
-: ${lsd_relay_token:="lsd25"}
 : ${lsd_relay_dir:="/www/spaz/htdocs/lsd-relay"}
 : ${lsd_relay_user:="www"}
 : ${lsd_relay_logfile:="/var/log/lsd_relay.log"}

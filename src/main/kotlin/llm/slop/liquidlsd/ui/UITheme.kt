@@ -116,6 +116,10 @@ object UITheme {
         get() = settings.outputViewEnabled
         set(value) { settings = settings.copy(outputViewEnabled = value) }
 
+    var showAdvancedPreferences: Boolean
+        get() = settings.showAdvancedPreferences
+        set(value) { settings = settings.copy(showAdvancedPreferences = value) }
+
     var randomizationEnabled: Boolean
         get() = settings.randomizationEnabled
         set(value) { settings = settings.copy(randomizationEnabled = value) }

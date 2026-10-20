@@ -1819,7 +1819,7 @@ createMediaElementSource() ──► GainNode (Rotary Volume Dial: V²) ──�
 <ul>
 <li><code>LSD_PORT</code>: Port to listen on (default: <code>9004</code>).</li>
 <li><code>LSD_HOST</code>: Host interface to bind to (default: <code>0.0.0.0</code>).</li>
-<li><code>LSD_TOKEN</code>: Broadcaster authorization secret (default: <code>lsd25</code>).</li>
+<li><code>LSD_TOKEN</code>: Broadcaster authorization secret. <strong>Required</strong>: the relay exits at startup without it, so no shared default can let a stranger broadcast.</li>
 </ul>
 <h3 id="cli-management">CLI Management</h3>
 <pre><code class="language-bash"># Run standalone

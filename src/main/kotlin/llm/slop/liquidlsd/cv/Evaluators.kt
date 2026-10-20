@@ -51,6 +51,30 @@ private fun calculateRandomWaveform(
 
 fun evaluateModulator(modulator: CvModulator): Float = evaluateModulatorAtOffset(modulator, 0.0)
 
+/**
+ * Fractional step position of a sequencer modulator: the integer part is the (unwrapped) step index,
+ * the fractional part is progress through the step. Shared by the evaluator and the editor playhead.
+ */
+fun seqCyclePosition(modulator: CvModulator, timeOffsetSec: Double = 0.0): Double = when (modulator.genUnit) {
+    GenUnit.TIME -> {
+        val seconds = CVRegistry.getElapsedRealtimeSec() + timeOffsetSec
+        val period = modulator.subdivision.toDouble().coerceAtLeast(0.001)
+        (seconds / period) + modulator.phaseOffset
+    }
+    GenUnit.BEAT -> {
+        val bpmVal = CVRegistry.get("bpm").toDouble().coerceIn(20.0, 300.0)
+        val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (bpmVal / 60.0)
+        val stepDiv = modulator.subdivision.toDouble().coerceAtLeast(0.001)
+        (beats / stepDiv) + modulator.phaseOffset
+    }
+    GenUnit.FRAME -> {
+        val fps = CVRegistry.getTargetFps().toDouble()
+        val frameCount = CVRegistry.getRenderFrameCount().toDouble() + timeOffsetSec * fps
+        val framePeriod = modulator.subdivision.toDouble().coerceAtLeast(1.0)
+        (frameCount / framePeriod) + modulator.phaseOffset
+    }
+}
+
 fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Float {
     return when (modulator.sourceId) {
         "beatPhase" -> {
@@ -187,25 +211,7 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
             if (!UITheme.sequencerEnabled) return 0.0f
             val stepCount = modulator.seqStepCount.coerceIn(1, 32)
             val steps = modulator.seqSteps
-            val cyclePosition: Double = when (modulator.genUnit) {
-                GenUnit.TIME -> {
-                    val seconds = CVRegistry.getElapsedRealtimeSec() + timeOffsetSec
-                    val period = modulator.subdivision.toDouble().coerceAtLeast(0.001)
-                    (seconds / period) + modulator.phaseOffset
-                }
-                GenUnit.BEAT -> {
-                    val bpmVal = CVRegistry.get("bpm").toDouble().coerceIn(20.0, 300.0)
-                    val beats = CVRegistry.getSynchronizedTotalBeats() + timeOffsetSec * (bpmVal / 60.0)
-                    val stepDiv = modulator.subdivision.toDouble().coerceAtLeast(0.001)
-                    (beats / stepDiv) + modulator.phaseOffset
-                }
-                GenUnit.FRAME -> {
-                    val fps = CVRegistry.getTargetFps().toDouble()
-                    val frameCount = CVRegistry.getRenderFrameCount().toDouble() + timeOffsetSec * fps
-                    val framePeriod = modulator.subdivision.toDouble().coerceAtLeast(1.0)
-                    (frameCount / framePeriod) + modulator.phaseOffset
-                }
-            }
+            val cyclePosition = seqCyclePosition(modulator, timeOffsetSec)
 
             val stepIndexRaw = kotlin.math.floor(cyclePosition).toLong()
             val curStep = Math.floorMod(stepIndexRaw, stepCount.toLong()).toInt()

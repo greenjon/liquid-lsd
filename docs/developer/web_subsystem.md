@@ -169,7 +169,7 @@ The relay server is a zero-dependency Node.js service using `ws`.
 ### Environment Variables
 - `LSD_PORT`: Port to listen on (default: `9004`).
 - `LSD_HOST`: Host interface to bind to (default: `0.0.0.0`).
-- `LSD_TOKEN`: Broadcaster authorization secret (default: `lsd25`).
+- `LSD_TOKEN`: Broadcaster authorization secret. **Required**: the relay exits at startup without it, so no shared default can let a stranger broadcast.
 
 ### CLI Management
 ```bash

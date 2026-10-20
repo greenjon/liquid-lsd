@@ -19,7 +19,12 @@ const { RelayState }                 = require('./state');
 
 const PORT            = parseInt(process.env.LSD_PORT  || '9004', 10);
 const HOST            = process.env.LSD_HOST           || '0.0.0.0';
-const BROADCAST_TOKEN = process.env.LSD_TOKEN          || 'lsd25';
+const BROADCAST_TOKEN = process.env.LSD_TOKEN;
+
+if (!BROADCAST_TOKEN) {
+  console.error('[relay] LSD_TOKEN is not set. Set it to a private secret, e.g. LSD_TOKEN=$(openssl rand -hex 16) node server.js');
+  process.exit(1);
+}
 
 // -------------------------------------------------------
 // HTTP server (health check + WebSocket upgrade target)
@@ -145,5 +150,5 @@ function fanOut(message, except) {
 httpServer.listen(PORT, HOST, () => {
   console.log(`[relay] Listening on ${HOST}:${PORT}`);
   console.log(`[relay] Health: http://${HOST}:${PORT}/health`);
-  console.log(`[relay] Token: ${BROADCAST_TOKEN === 'changeme' ? 'WARNING: using default token!' : 'set'}`);
+  console.log(`[relay] Token: set`);
 });

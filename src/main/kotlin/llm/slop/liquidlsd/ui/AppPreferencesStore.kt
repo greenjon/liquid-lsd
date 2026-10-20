@@ -167,6 +167,8 @@ object AppPreferencesStore {
                     logger.info { "Loaded randomizationEnabled from settings file: ${UITheme.randomizationEnabled}" }
                 }
 
+                props.getBoolean("showAdvancedPreferences")?.let { UITheme.showAdvancedPreferences = it }
+
                 props.getProperty("fxSwapFadeMs")?.toIntOrNull()?.let {
                     UITheme.fxSwapFadeMs = it
                 }
@@ -348,6 +350,7 @@ object AppPreferencesStore {
             props.setProperty("backgroundVideoEnabled", UITheme.backgroundVideoEnabled.toString())
             props.setProperty("outputViewEnabled", UITheme.outputViewEnabled.toString())
             props.setProperty("randomizationEnabled", UITheme.randomizationEnabled.toString())
+            props.setProperty("showAdvancedPreferences", UITheme.showAdvancedPreferences.toString())
             props.setProperty("sequencerEnabled", UITheme.sequencerEnabled.toString())
             props.setProperty("fxSwapFadeMs", UITheme.fxSwapFadeMs.toString())
             props.setProperty("flameBudgetMs", UITheme.flameBudgetMs.toString())

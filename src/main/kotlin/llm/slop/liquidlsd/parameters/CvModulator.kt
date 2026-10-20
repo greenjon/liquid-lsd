@@ -278,6 +278,12 @@ data class CvModulator(
         return this.copy(dcOffset = newDcOffset)
     }
 
+    fun randomizeSeqHold(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
+        if (!randomizeSeqHold) return this
+        val newHold = if (seqHoldMin == seqHoldMax) seqHoldMin else random.nextFloat() * (seqHoldMax - seqHoldMin) + seqHoldMin
+        return this.copy(seqHold = newHold)
+    }
+
     fun randomizeSubdivision(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
         if (!randomizeSubdivision) return this
         val newSubdiv = if (subdivisionMin == subdivisionMax) {

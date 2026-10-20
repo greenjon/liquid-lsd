@@ -26,7 +26,7 @@ The relay server caches the current visual state so new viewers who join mid-sho
 
 ## Setting it up
 
-Open **Preferences** (`Ctrl+P` / `Cmd+P`) and go to the **Web Broadcast** tab:
+Open **Preferences** (`Ctrl+P` / `Cmd+P`). The **Web Broadcast** tab is hidden until you turn on **General → Show Advanced Preferences** (it also appears if a relay is already configured). Then open the tab:
 
 | Setting | What it does |
 |---------|-------------|

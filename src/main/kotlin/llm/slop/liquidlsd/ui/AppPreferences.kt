@@ -30,6 +30,8 @@ data class AppPreferences(
     val backgroundVideoEnabled: Boolean = false,
     val outputViewEnabled: Boolean = false,
     val randomizationEnabled: Boolean = false,
+    /** Shows the Web Broadcast preferences tab (a relay server is something few users run). */
+    val showAdvancedPreferences: Boolean = false,
     val fxSwapFadeMs: Int = 150,
     /** GPU time per Fractal Flame deck the auto-governor aims for, in ms (0 = off, full quality). */
     val flameBudgetMs: Float = 3f,
