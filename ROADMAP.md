@@ -45,6 +45,7 @@ The feature set is frozen for v1.0. What remains is finishing and hardening, not
 - [ ] **Stability Testing**: long-running sessions, preset/chain/queue load and swap under load, session restore, device hot-plug (audio, MIDI, video ingest), across the 5 release platforms.
 - [ ] **ISF Binding Audit**: check the Metaknob/auto-bind result (`ISFAutoBindEngine`, curated overrides) and default parameter bindings for **every** bundled ISF generator, filter and transition, so each one does something sensible out of the box.
 - [ ] **Two Polished Themes**: dial in two of the `UITheme.Theme` palettes as the supported v1.0 themes (which two is TBD).
+- [ ] **Linux Camera Input**: webcams appear under External video (PipeWire lists them as video nodes) but have never connected in testing. Suspect: `ExternalVideoDiscovery` names streams by `node.description`, and `PipeWireReceiverImpl` passes that as `target.object`, which PipeWire matches against `node.name` or `object.serial`. Until fixed, the user guide and the walkthrough do not mention cameras.
 
 ---
 

@@ -1,6 +1,6 @@
 # Visual Sources
 
-Each deck runs one visual source at a time. Sources range from the built-in procedural generators to ISF shaders you drop in from the internet or write yourself. On top of the source, each deck has four effect slots and a feedback loop for building up trails and texture.
+Each deck runs one visual source at a time. Sources range from the built-in procedural generators to ISF shaders you drop in from the internet or write yourself. On top of the source, each deck has a chain of three effect slots.
 
 ---
 
@@ -9,6 +9,20 @@ Each deck runs one visual source at a time. Sources range from the built-in proc
 Click a deck's source badge to open its pair view with Browse (see [Your Workspace](your_workspace.md) / [Macros & the Modular Rack](macros_and_rack.md)). You can search by name, tag, or author. Browse automatically filters to show only sources appropriate for what you're assigning — generators for the main source slot, effects for the FX slots, and transitions for the mixer. Picks apply immediately and the list stays open, so you can try several in a row.
 
 To remove the current source, click **Detach** or **None**.
+
+---
+
+## Live Video Input
+
+Besides generating its own video, a deck can show live video from another app or device. Liquid LSD receives the same GPU-sharing protocols it [sends](output_and_recording.md#sending-video-to-other-apps-spout-syphon-pipewire):
+
+- **Windows:** Spout senders
+- **macOS:** Syphon servers
+- **Linux:** PipeWire video streams
+
+Every stream running right now is listed in Browse under **External video** (see [Presets & Library](presets_and_library.md)). The list refreshes every couple of seconds, so a stream appears shortly after its app starts sending and disappears when it stops. Load one like any other source. A live stream has a single **Gain** parameter in place of a generator's parameter list, and the deck's FX chain, levels and transitions work on it exactly as they do on a generator.
+
+Streams are not files, so they cannot be saved as presets, added to playlists or queued.
 
 ---
 
@@ -384,23 +398,19 @@ To elevate any flat 2D source into 3D geometry (Tri-Axial, Cube Cage, Hex-Planar
 
 ---
 
-## Effect Slots (FX1–FX4)
+## Effect Slots (FX1–FX3)
 
-Each deck has four chained post-processing slots that run after the source and before the feedback loop:
+Each deck has a chain of three effect slots that run after the source, left to right: FX1 feeds FX2, which feeds FX3. Master FX is a fourth chain of three slots, applied to the final mix (see [Performance Controls](performance_controls.md)).
 
-- **FX Slot 1** — Typically used for color processing: grading, inversion, posterization, luma keying, degradation.
-- **FX Slot 2** — Typically used for spatial effects: bloom, chromatic aberration, digital glitch, plane elevation.
-- **FX Slot 3 & FX Slot 4** — Additional chained slots for stacking further processing.
-
-The order is intentional but not enforced — you can put anything in any slot. Each slot has an independent bypass toggle and a Dry/Wet blend knob. Bypassed slots add zero overhead.
+Any effect can go in any slot, but order matters: a blur before a kaleidoscope looks different from a kaleidoscope before a blur. Each slot has its own bypass toggle and Dry/Wet blend knob, and bypassed slots add zero overhead.
 
 ---
 
-## Feedback Loop
+## Feedback
 
-Each deck has an internal feedback loop that feeds the current frame back into the next render. This is what creates the liquid trails, echo tunnels, and smeared colour effects that give Liquid LSD its name.
+Feedback is an effect like any other: put **Feedback** in any slot to feed each frame back into the next render. This is what creates the liquid trails, echo tunnels, and smeared colour effects that give Liquid LSD its name. Where it sits in the chain decides what gets trailed: the effects before it are fed back with the image, the effects after it process the trails.
 
-The feedback controls live in the **FBK** tab of each deck:
+Its main parameters:
 
 - **Decay** — How quickly the trail fades. Higher values = longer trails.
 - **Gain** — Amplifies the feedback signal. Push it high for glowing, blooming trails.
@@ -408,7 +418,9 @@ The feedback controls live in the **FBK** tab of each deck:
 - **Rotate** — Rotates the feedback frame each cycle. Combine with Zoom for spiral tunnels.
 - **Hue Shift** — Rotates the hue of the feedback frame each cycle.
 - **Blur** — Softens the feedback trail.
-- **Chroma Offset** — Separates RGB channels in the feedback trail for prismatic fringing.
+- **Chromatic Aberration** — Separates RGB channels in the feedback trail for prismatic fringing.
+- **Kaleidoscope Segments** — Mirrors the feedback frame into segments each cycle.
+- **Blend Mode** — How the fed-back frame combines with the new one.
 
 Feedback is one of the most expressive parts of the system. It rewards experimentation.
 
@@ -459,17 +471,3 @@ Go to **Preferences → Shader Locations** to add any folder at runtime — hand
 ### Live coding
 
 If you're writing or tweaking shaders while the app is running, just save your file — Liquid LSD detects the change and recompiles in the background. If the shader has a syntax error, the current frame keeps running while the error is logged. No interruptions on stage.
-
----
-
-## External Video Input
-
-You can also use a live video feed from another app as a deck source. External video streams appear directly inside Browse alongside procedural generators:
-
-- **macOS:** Syphon servers
-- **Windows:** Spout2 senders
-- **Linux:** PipeWire video nodes (webcams, OBS virtual cameras, desktop capture, etc.)
-
-Click the source selector button in the deck header (e.g. `[Mandala ▾]`), select the **External Sources** category pill (positioned immediately beside **All**), and click your stream (highlighted in emerald green with a live activity icon). Once selected, the deck header button directly displays the name of the active stream (e.g. `[OBS-Camera ▾]`).
-
-The incoming video runs through the full deck pipeline — you get 3D transforms, dual effect slots, audio-reactive modulation, and the feedback loop, all applied to the external feed.

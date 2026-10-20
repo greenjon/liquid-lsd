@@ -31,7 +31,7 @@ Liquid LSD uses four independent rendering decks — think of them like channels
 
 - **Deck PV (Preview)** — A fully independent audition deck that *never* outputs to the master. Use it to quietly load and preview a preset on your monitor before pushing it live. It runs the complete visual and modulation chain, so what you see is exactly what you'll get.
 
-Each deck is completely independent — its own visual source, its own effects chain, its own feedback loop, and its own modulation.
+Each deck is completely independent — its own visual source, its own 3-slot effects chain, and its own modulation.
 
 ---
 
@@ -42,9 +42,10 @@ Here's how audio becomes visuals:
 1. **Audio in** → The DSP engine analyses your track in real time, splitting it into frequency bands and tracking the beat.
 2. **CV modulation** → Those audio signals become control voltages that can drive any visual parameter.
 3. **Visual generators** → Each deck runs a visual source (Mandala, a shader, external video, etc.) using those CV signals to shape what renders.
-4. **FX & Feedback** → Each deck has two post-processing effect slots and an internal feedback loop that layers and trails the image over time.
-5. **Mixer** → Deck A and B blend together through a crossfader and blend modes, sitting over the BG layer.
-6. **Output** → The master output goes to your screen, projector, or other apps.
+4. **FX chain** → Each deck runs its source through a chain of three effect slots, left to right. Feedback (the trails that layer the image over time) is one of the effects you can put in a slot.
+5. **Mixer** → Deck A and B blend together through the crossfader and the current transition. Deck BG fills in behind them, wherever their mix is transparent.
+6. **Master FX** → The mixed image runs through a final chain of three effect slots.
+7. **Output** → The master output goes to your screen, projector, or other apps.
 
 ---
 
