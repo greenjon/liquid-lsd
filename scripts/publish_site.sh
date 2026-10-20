@@ -23,12 +23,25 @@ done
 if [ ! -d "$SITE_REPO/.git" ]; then
   git clone https://github.com/greenjon/liquid-lsd-site.git "$SITE_REPO"
 fi
+# The connection can be flaky: retry until it goes through. A stalled transfer is noticed (rsync --timeout, SSH
+# keepalives) and restarted; rsync --partial resumes the file it was on, and -c skips files already there.
+retry() {
+  local n=1
+  until "$@"; do
+    [ "$n" -ge 100 ] && { echo "giving up after $n tries: $*" >&2; return 1; }
+    echo "$(date +%T) attempt $n failed, retrying in 60 s: $1 ..." >&2
+    n=$((n + 1)); sleep 60
+  done
+}
+export RSYNC_RSH="ssh -o ServerAliveInterval=15 -o ServerAliveCountMax=4 -o BatchMode=yes"
+export GIT_SSH_COMMAND="$RSYNC_RSH"
+
 BUILD="$(mktemp -d)"
 trap 'rm -rf "$BUILD"' EXIT
 python3 "$ROOT/scripts/build_website.py" --out "$BUILD/site" "${TOURS[@]}"
 
 # Media first, so the pages never link to a video that is not there yet.
-rsync -rlc --delete --partial --info=stats1,progress2 --chmod=D755,F644 "$BUILD/site/tour/media/" "$MEDIA_SSH"
+retry rsync -rlc --delete --partial --timeout=120 --info=stats1,progress2 --chmod=D755,F644 "$BUILD/site/tour/media/" "$MEDIA_SSH"
 rsync -a --delete --exclude=.git --exclude=.github --exclude=/tour/media/ "$BUILD/site/" "$SITE_REPO/"
 mkdir -p "$SITE_REPO/.github/workflows"
 cp "$ROOT/website/deploy/pages.yml" "$SITE_REPO/.github/workflows/pages.yml"
@@ -39,10 +52,10 @@ if [ "$SQUASH" = 1 ]; then
   git add -A
   git commit -q -m "Site $(date +%F)"
   git branch -M main
-  git push --force origin main
+  retry git push --force origin main
 else
   git add -A
   if git diff --cached --quiet; then echo "Site unchanged."; exit 0; fi
   git commit -q -m "Site $(date +%F)"
-  git push origin main
+  retry git push origin main
 fi
