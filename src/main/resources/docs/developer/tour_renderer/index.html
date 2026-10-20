@@ -1356,6 +1356,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#which-videos-are-stale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Which videos are stale
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1517,6 +1528,8 @@ Edit grid: <code>cv_&lt;param path&gt;_&lt;label|val|midi|lfo|seq|audio&gt;</cod
 <p>Each chapter also gets a <code>.jpg</code> thumbnail (a frame a few seconds into its clip, made with ffmpeg at site build time), used as the <code>poster</code> on the tour page and the docs clips.</p>
 <h2 id="landing-page-and-the-overview-video">Landing page and the overview video</h2>
 <p><code>website/data/landing.json</code> names the hero video (<code>overview</code>) and the four featured chapters shown as "See it in action" cards on the landing page (<code>slug</code> = <code>&lt;video&gt;/&lt;chapter&gt;</code>, plus a one-line blurb). The cards are muted loops that play only while on screen; phones, reduced motion and data saver get thumbnails only. The hero video is the only full-length file published: the build re-encodes its <code>hero.mp4</code> to 1080p30 H.264 (CRF 30, slow preset, cached in the gitignored <code>tours/web-cache/</code>, about 28 MB for the 6-minute draft) and copies it with its poster and <code>.vtt</code> captions to <code>tour/media/&lt;video&gt;/</code>. It loads on click (<code>.video-facade</code>) on both the landing page and the tour page.</p>
+<h2 id="which-videos-are-stale">Which videos are stale</h2>
+<p><code>scripts/render_tour.sh</code> stamps <code>&lt;out&gt;/&lt;tour&gt;/rendered_at.json</code> (commit, dirty-tree and draft flags). <code>scripts/tour_staleness.py</code> compares each stamp with <code>HEAD</code> and lists the tours to re-render: it maps the widget keys a script aims at (<code>target</code> fields) to the Kotlin files that register them, then reports commits since the render that touched those files, the script itself or the tour renderer (<code>tour/</code>). Other commits under <code>ui/</code>, <code>rendering/</code>, shaders or <code>defaults/</code> are counted as "maybe" because colors and layout change a video without touching a key. <code>-v</code> lists the commits and any keys it could not map (dynamic or very generic labels such as <code>btn_Randomize</code> are not tracked); <code>--names</code> prints only the stale tour names; <code>--out</code> points at a different render root. Videos rendered before stamping existed fall back to the video file's date. Weekly: run it, then <code>render_tour.sh</code> on the names it prints.</p>
 
 
 

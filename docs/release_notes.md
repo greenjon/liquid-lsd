@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Tour Staleness Report (`scripts/tour_staleness.py`, `scripts/render_tour.sh`)
+- **New `scripts/tour_staleness.py` lists which walkthrough videos need re-rendering**, from git instead of a hand-kept list. Each render now stamps its commit in `rendered_at.json`; the script maps a tour's widget keys to source files and reports commits since then that touched them, the tour script or the renderer. Developer tooling only; see `docs/developer/tour_renderer.md`.
+
 ### Step Sequencer: Bar Editor, Pattern Tools, Phase and Offset (`ui/SeqSection.kt`, `parameters/SeqPatterns.kt`, `cv/Evaluators.kt`)
 - **The step grid of 32 text boxes is now a bar graph.** Click and drag to paint a pattern (values snap to 5%, `Shift` for free), scroll over a bar to nudge it, double-click to type a value, right- or middle-click to reset. Rows hold up to 16 steps; the playing step is outlined.
 - **New pattern toolbar:** Randomize, Invert, Shift < / >, Copy / Paste (shared between sequencers, includes length), Fill... (Ramp Up/Down, Triangle, Alternate, Pulse, All On), Euclid... and Clear.

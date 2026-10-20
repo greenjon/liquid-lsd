@@ -56,4 +56,7 @@ python3 -I "$(dirname "$0")/tour_cuts.py" "$OUT" "$DRAFT" "$WEBM"
 if [ "$WEBM" = 1 ]; then
   ffmpeg -v error -y -i "$OUT/raw.mp4" -c:v libvpx-vp9 -crf 32 -b:v 0 -row-mt 1 -deadline good -cpu-used 4 -c:a libopus "$OUT/hero.webm"
 fi
+# Stamp the commit this render was built from; scripts/tour_staleness.py compares it with HEAD.
+DIRTY=false; [ -n "$(git status --porcelain --untracked-files=no)" ] && DIRTY=true
+printf '{"commit":"%s","dirty":%s,"draft":%s,"date":"%s"}\n' "$(git rev-parse HEAD)" "$DIRTY" "$([ "$DRAFT" = 1 ] && echo true || echo false)" "$(date -Is)" > "$OUT/rendered_at.json"
 echo "Tour outputs in $OUT (total $(( $(date +%s) - START )) s)"
