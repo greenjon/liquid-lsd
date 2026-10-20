@@ -1292,6 +1292,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#step-sequencer-bar-editor-pattern-tools-phase-and-offset-uiseqsectionkt-parametersseqpatternskt-cvevaluatorskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step Sequencer: Bar Editor, Pattern Tools, Phase and Offset (ui/SeqSection.kt, parameters/SeqPatterns.kt, cv/Evaluators.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-broadcast-hidden-behind-advanced-relay-requires-a-token-uipreferencespanelkt-serverserverjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6270,6 +6281,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#step-sequencer-bar-editor-pattern-tools-phase-and-offset-uiseqsectionkt-parametersseqpatternskt-cvevaluatorskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step Sequencer: Bar Editor, Pattern Tools, Phase and Offset (ui/SeqSection.kt, parameters/SeqPatterns.kt, cv/Evaluators.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#web-broadcast-hidden-behind-advanced-relay-requires-a-token-uipreferencespanelkt-serverserverjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11223,6 +11245,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="step-sequencer-bar-editor-pattern-tools-phase-and-offset-uiseqsectionkt-parametersseqpatternskt-cvevaluatorskt">Step Sequencer: Bar Editor, Pattern Tools, Phase and Offset (<code>ui/SeqSection.kt</code>, <code>parameters/SeqPatterns.kt</code>, <code>cv/Evaluators.kt</code>)</h3>
+<ul>
+<li><strong>The step grid of 32 text boxes is now a bar graph.</strong> Click and drag to paint a pattern (values snap to 5%, <code>Shift</code> for free), scroll over a bar to nudge it, double-click to type a value, right- or middle-click to reset. Rows hold up to 16 steps; the playing step is outlined.</li>
+<li><strong>New pattern toolbar:</strong> Randomize, Invert, Shift &lt; / &gt;, Copy / Paste (shared between sequencers, includes length), Fill... (Ramp Up/Down, Triangle, Alternate, Pulse, All On), Euclid... and Clear.</li>
+<li><strong>Length is a 1-32 slider</strong> instead of 8/16/32 buttons, so odd lengths work; steps past the end are kept. <strong>New Phase slider</strong> (with randomize) replaces the hidden value "Reset to Step 0" used to overwrite; the button is now "Sync to Step 1". <strong>New Offset slider</strong> beside Depth. <strong>Step Hold</strong> gets a randomize toggle and reads "100% (stepped)" / "0% (full glide)"; Glide Curve greys out when nothing glides.</li>
+<li>Changing Clock Unit now converts the step duration instead of resetting it, and no longer leaves the old unit's randomize range behind.</li>
+<li>Internal: playhead and evaluator share <code>seqCyclePosition</code>; pattern operations are pure functions in <code>SeqPatterns</code> (tests in <code>SeqPatternsTest</code>); <code>CvModulator.randomizeSeqHold</code>. The tour widget key <code>seq_step_&lt;i&gt;</code> is now <code>seq_bars_&lt;row&gt;</code>, and <code>tours/modulation.json</code> paints the pattern by dragging. The web evaluator is unchanged (the evaluator edit was a pure extraction; <code>sync_manifest.json</code> re-marked).</li>
+</ul>
 <h3 id="web-broadcast-hidden-behind-advanced-relay-requires-a-token-uipreferencespanelkt-serverserverjs">Web Broadcast Hidden Behind Advanced; Relay Requires a Token (<code>ui/PreferencesPanel.kt</code>, <code>server/server.js</code>)</h3>
 <ul>
 <li><strong>The Web Broadcast preferences tab is now hidden by default.</strong> Turn on <em>Show Advanced Preferences</em> in General to show it; it also shows when a relay URL and token are already saved.</li>

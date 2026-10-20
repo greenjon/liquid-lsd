@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Step Sequencer: Bar Editor, Pattern Tools, Phase and Offset (`ui/SeqSection.kt`, `parameters/SeqPatterns.kt`, `cv/Evaluators.kt`)
+- **The step grid of 32 text boxes is now a bar graph.** Click and drag to paint a pattern (values snap to 5%, `Shift` for free), scroll over a bar to nudge it, double-click to type a value, right- or middle-click to reset. Rows hold up to 16 steps; the playing step is outlined.
+- **New pattern toolbar:** Randomize, Invert, Shift < / >, Copy / Paste (shared between sequencers, includes length), Fill... (Ramp Up/Down, Triangle, Alternate, Pulse, All On), Euclid... and Clear.
+- **Length is a 1-32 slider** instead of 8/16/32 buttons, so odd lengths work; steps past the end are kept. **New Phase slider** (with randomize) replaces the hidden value "Reset to Step 0" used to overwrite; the button is now "Sync to Step 1". **New Offset slider** beside Depth. **Step Hold** gets a randomize toggle and reads "100% (stepped)" / "0% (full glide)"; Glide Curve greys out when nothing glides.
+- Changing Clock Unit now converts the step duration instead of resetting it, and no longer leaves the old unit's randomize range behind.
+- Internal: playhead and evaluator share `seqCyclePosition`; pattern operations are pure functions in `SeqPatterns` (tests in `SeqPatternsTest`); `CvModulator.randomizeSeqHold`. The tour widget key `seq_step_<i>` is now `seq_bars_<row>`, and `tours/modulation.json` paints the pattern by dragging. The web evaluator is unchanged (the evaluator edit was a pure extraction; `sync_manifest.json` re-marked).
+
 ### Web Broadcast Hidden Behind Advanced; Relay Requires a Token (`ui/PreferencesPanel.kt`, `server/server.js`)
 - **The Web Broadcast preferences tab is now hidden by default.** Turn on *Show Advanced Preferences* in General to show it; it also shows when a relay URL and token are already saved.
 - **The relay server no longer has a default token.** It exits at startup unless `LSD_TOKEN` (or `lsd_relay_token` in rc.conf) is set, since the old default was in the public repo. If you ever ran a relay without setting one, change its token.

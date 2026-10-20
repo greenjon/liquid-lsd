@@ -117,17 +117,27 @@ The sequencer outputs a stepped voltage pattern that advances with each beat or 
 
 > **Note:** The sequencer is disabled by default. Enable it in **Preferences → General** (under Features, "Enable Step Sequencer"), or toggle it directly from the **⋮** kebab menu left of Edit's **VAL** column header.
 
-### The step grid
+### The step editor
 
-Steps are laid out in rows of 8: 8 steps in one row, 16 in two, 32 in four. Click any cell to type a value (0 to 100), or hover and scroll to adjust. The active step is highlighted in bright green.
+Each step is a bar. Bars sit in rows of up to 16, so a 32-step pattern is two rows. The step playing now is outlined, and every fourth step is numbered.
 
-**Keyboard editing shortcuts** (when a step is focused):
+- **Paint** — click and drag across the bars to draw a pattern. Values snap to 5%; hold `Shift` to paint freely. A fast drag fills the steps in between.
+- **Nudge** — hover a bar and scroll: ±5 per notch, `Shift` for ±1, `Ctrl` for ±20.
+- **Type a value** — double-click a bar, type a number (0 to 100, or -100 to 100 for a bipolar parameter) and press Enter.
+- **Reset** — right-click or middle-click a bar to set it to 0.
 
-- `Up` / `Down` — fine step (±0.1)
-- `Shift` + `Up` / `Down` — medium step (±1)
-- `Ctrl+Shift` + `Up` / `Down` — coarse step (±10)
-- Middle-click — reset to 0
-- `Tab` / `Shift+Tab` — move between steps
+**Length** is a 1 to 32 slider, so odd lengths such as 5 or 7 work. Steps past the end are kept, so lengthening again brings them back. **Phase** starts the pattern part-way through, and **Sync to Step 1** restarts it now.
+
+### Pattern tools
+
+The row above the bars edits the active steps:
+
+- **Randomize** — random values. **Invert** — flip every step.
+- **Shift <** / **Shift >** — rotate the pattern one step earlier or later.
+- **Copy** / **Paste** — copy a pattern (with its length) from one sequencer to another.
+- **Fill...** — Ramp Up, Ramp Down, Triangle, Alternate, Pulse or All On.
+- **Euclid...** — spread N hits evenly across the pattern, the classic euclidean rhythm.
+- **Clear** — reset all 32 steps to 0.
 
 ### Timing
 
@@ -135,10 +145,16 @@ Steps are laid out in rows of 8: 8 steps in one row, 16 in two, 32 in four. Clic
 - **Time** — Wall clock seconds per step (0.01s to 5.0s).
 - **Frame** — Advances every N render frames (1 to 120).
 
+Changing the clock unit keeps the same step duration where it can.
+
 ### Glide
 
-- **Step Hold** slider — At 100% the value jumps instantly and holds flat for the full step. At 0% it glides smoothly from one step to the next over the whole duration. In between you get a hold then glide.
-- **Glide Curve** — Linear is a straight ramp; Smooth is an S-curve with gentle acceleration and deceleration.
+- **Step Hold** slider — At 100% the value jumps instantly and holds flat for the full step. At 0% it glides smoothly from one step to the next over the whole duration. In between you get a hold then glide. It has a dice to randomize within a range, like the other sliders.
+- **Glide Curve** — Linear is a straight ramp; Smooth is an S-curve with gentle acceleration and deceleration. Greyed out while Step Hold is 100%, since nothing glides.
+
+### Depth and Offset
+
+**Depth** scales the pattern and **Offset** shifts it up or down before it is applied to the parameter. Both can be randomized.
 
 ---
 
