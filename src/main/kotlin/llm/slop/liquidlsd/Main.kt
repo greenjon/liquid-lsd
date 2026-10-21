@@ -482,8 +482,16 @@ fun main(args: Array<String>) {
         glfwSetCharCallback(window, null)
     }
     tour?.begin()
+    // Periodic autosave so a killed process (Ctrl-C in the terminal, crash) loses at most a minute of changes.
+    val autosaveIntervalSec = 60.0
+    var lastAutosave = glfwGetTime()
     while (!glfwWindowShouldClose(window)) {
         val frameStartTime = glfwGetTime()
+        if (tour == null && frameStartTime - lastAutosave >= autosaveIntervalSec) {
+            lastAutosave = frameStartTime
+            AppPreferencesStore.savePreferences()
+            SessionSerializer.saveSession(mixer)
+        }
         glfwPollEvents()
         if (tour != null) {
             if (tour.isDone) break
