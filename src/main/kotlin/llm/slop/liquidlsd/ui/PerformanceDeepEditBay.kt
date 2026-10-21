@@ -276,7 +276,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         if (ownsKeyboard) handleDeepEditKeys(parametersState, mixer, fullSet = true)
 
         // 3-Column Layout:
-        // Left Column: 5-channel side rail (MIX, A, B, BG, PV)
+        // Left Column: 6-entry side rail (CTRL, MIX, A, B, BG, PV)
         // Middle Column: Parameter grid with column headers & section subtabs
         // Right Column: Properties CV detail editor
         val sideTabWidth = ParametersTabs.calculateLeftTabsWidth(session)
@@ -293,7 +293,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         val propsW = (totalAvailW - sideTabWidth - gap - paramsW - gap).coerceAtLeast(280f)
         val headerH = ParameterGridHeaders.calculateHeaderHeight(session)
 
-        // 1. Left column: 5-channel side tabs (MIX, A, B, BG, PV)
+        // 1. Left column: side tabs (CTRL, MIX, A, B, BG, PV)
         val rowTopY = ImGui.getCursorScreenPosY()
         val sideTabsX0 = ImGui.getCursorScreenPosX()
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)

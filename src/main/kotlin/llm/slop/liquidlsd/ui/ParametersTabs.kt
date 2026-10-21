@@ -40,8 +40,8 @@ object ParametersTabs {
     }
 
     /**
-     * Renders the 5-channel vertical side rail for Performance Mode's Deep Edit:
-     * [MIX], [A], [B], [BG], [PV].
+     * Renders the vertical side rail for Performance Mode's Deep Edit:
+     * [CTRL], [MIX], [A], [B], [BG], [PV].
      */
     fun drawPerformanceDeepEditSideTabs(
         session: llm.slop.liquidlsd.SessionContext,
@@ -58,8 +58,10 @@ object ParametersTabs {
         val deckBGEmpty = mixer?.deckBG?.isEmpty == true
         val deckPVEmpty = mixer?.deckPV?.isEmpty == true
 
+        // CTRL and MIX are both the "Mixer" top tab; they differ by [ParametersState.activeMixerSubTab] (CTRL vs FX/TRANS).
         val tabs = listOf(
-            Triple("MIX", "Mixer",   "Mixer controls (CTRL), Master FX (FX), and Crossfader/Transitions (TRANS)."),
+            Triple("CTRL", "Mixer",  "Control: queue & clock triggers, and morph triggers."),
+            Triple("MIX", "Mixer",   "Master FX (FX) and Crossfader/Transitions (TRANS)."),
             Triple("A",   "Deck A",  if (deckAEmpty) "Deck A [EMPTY] — Click to assign a source or preset." else "Deck A: Visual source (SRC) and insert FX (FX)."),
             Triple("B",   "Deck B",  if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B: Visual source (SRC) and insert FX (FX)."),
             Triple("BG",  "Deck BG", if (deckBGEmpty) "Deck BG [EMPTY] — Click to assign a source or preset." else "Deck BG: Visual source (SRC) and insert FX (FX)."),
@@ -70,7 +72,8 @@ object ParametersTabs {
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 0f, 4f)
         tabs.forEach { (shortLabel, fullTab, tooltipText) ->
-            val isActive = state.activeTopTab == fullTab
+            val isActive = state.activeTopTab == fullTab &&
+                (fullTab != "Mixer" || (state.activeMixerSubTab == "CTRL") == (shortLabel == "CTRL"))
             val activeCol = getDeckColor(fullTab, 1f)
             val bgCol = if (isActive) activeCol else ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f)
             val hoverCol = if (isActive) activeCol else ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.22f, 1f)
@@ -82,6 +85,9 @@ object ParametersTabs {
             val pMaxY = pMinY + buttonHeight
 
             if (ImGui.invisibleButton("##perf_deep_side_$shortLabel", buttonWidth.coerceAtLeast(1f), buttonHeight.coerceAtLeast(1f))) {
+                if (fullTab == "Mixer") {
+                    state.activeMixerSubTab = if (shortLabel == "CTRL") "CTRL" else state.lastMixerChainTab
+                }
                 onSelectSection(fullTab)
             }
             llm.slop.liquidlsd.tour.WidgetRegistry.note { "edit_side_$shortLabel" }
@@ -160,11 +166,12 @@ object ParametersTabs {
         return activeSubTab
     }
     /**
-     * Renders the parameter section subtabs (e.g. [SRC], [FX], [View] for Decks or [CTRL], [TRANS], [FX] for Mixer) above the first parameter name.
+     * Renders the parameter section subtabs (e.g. [SRC], [FX], [View] for Decks or [CTRL] alone, or [FX], [TRANS] for Mixer) above the first parameter name.
      */
     fun drawSectionTabs(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer, btnH: Float? = null) {
         val tabs = if (state.activeTopTab == "Mixer") {
-            listOf("CTRL", "FX", "TRANS")
+            // CTRL is its own side tab (single horizontal tab, kept so the row doesn't jump); MIX holds FX and TRANS.
+            if (state.activeMixerSubTab == "CTRL") listOf("CTRL") else listOf("FX", "TRANS")
         } else {
             val deck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
@@ -220,8 +227,8 @@ object ParametersTabs {
                 val tooltip = when (tab) {
                     "SRC" -> "Source: Parameters for active visual source, zoom, and rotation."
                     "FX" -> if (state.activeTopTab == "Mixer") "Master FX: a chain of 3 serial ISF effect slots on the master output." else "FX: this deck's chain of 3 serial ISF effect slots."
-                    "CTRL" -> "Control: Master controls, channel levels, queue & clock triggers, and morph triggers."
-                    "TRANS" -> "Transition: Transition shader selection, bypass, dry/wet, and dynamic parameters."
+                    "CTRL" -> "Control: queue & clock triggers and morph triggers."
+                    "TRANS" -> "Transition: master level, crossfade and fade speed, transition shader selection, bypass, dry/wet, and dynamic parameters."
                     else -> "$tab parameters"
                 }
                 itemTooltip(tooltip)
@@ -311,8 +318,6 @@ object ParametersTabs {
         onPushUndo: () -> Unit
     ) {
         var row = 0
-        ParametersRenderer.drawParamRow(session, "master level", "Mixer/masterLevel", mixer.masterLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
         ParametersRenderer.drawParamRow(session, "queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         ParametersRenderer.drawParamRow(session, "queue next", "Mixer/queueNext", mixer.queueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         ParametersRenderer.drawParamRow(session, "bg queue prev", "Mixer/bgQueuePrev", mixer.bgQueuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
@@ -344,10 +349,11 @@ object ParametersTabs {
         var row = 0
         val trans = mixer.transitionFilter
         val transName = trans?.displayName ?: "Linear Crossfade"
-        // The crossfader and its auto-fade time lead the tab: they are what the transition shader and its parameters act on.
+        // The master level, crossfader and its auto-fade time lead the tab: the output stage the transition shader and its parameters act on.
         val crossfadeRow = {
-            ParametersRenderer.drawParamRow(session, "fade speed", "Mixer/xfadeSpeed", mixer.xfadeSpeed, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "master level", "Mixer/masterLevel", mixer.masterLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             ParametersRenderer.drawParamRow(session, "crossfade", "Mixer/crossfade", mixer.crossfade, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "fade speed", "Mixer/xfadeSpeed", mixer.xfadeSpeed, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         }
 
         ImGui.textDisabled("TRANSITION SHADER")

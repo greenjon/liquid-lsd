@@ -405,6 +405,14 @@ class ParametersState : MidiLearnSink {
     var activeDeckBGSubTab: String = "SRC"
     var activeDeckPVSubTab: String = "SRC"
     var activeMixerSubTab: String = "CTRL"
+        set(value) {
+            field = value
+            if (value != "CTRL") lastMixerChainTab = value
+        }
+
+    /** The Mixer sub-tab (FX or TRANS) the MIX side tab returns to after a visit to the CTRL side tab. */
+    var lastMixerChainTab: String = "FX"
+        private set
 
     fun setDeckSubTab(deckLabel: String, tab: String) {
         when (deckLabel) {

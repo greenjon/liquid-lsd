@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Edit Side Rail: CTRL Is Its Own Tab (`ui/ParametersTabs.kt`, `ui/ParametersState.kt`)
+- **The Edit side rail is now `CTRL  MIX  A  B  BG  PV`.** The queue, clock and morph triggers moved out of the MIX tab onto a new first **CTRL** tab, which keeps a single `CTRL` section tab so the layout does not jump. **MIX** now holds `FX` and `TRANS`, and returns to whichever you last used. **Master level** moved to the top of **TRANS**, ahead of crossfade and fade speed (which swapped places, so the order is master level, crossfade, fade speed). Every parameter is still modulatable; macro bindings follow their parameter to its new tab.
+
 ### Transitions Row Matches the FX Rows (`ui/PerformanceTransitionsControls.kt`, `ui/PerformanceMatrixPanel.kt`)
 - **The Transitions row is laid out like a deck FX row.** Line 1 is the transition picker with the Edit gear at its end (the gear no longer sits under the XF badge). Line 2 is `[⋮] [Save] [◀] [▶] [A] [B] [AUTO] [time]` in equal cells. **Save** stores the current transition as a `.lsdtrans` preset and turns amber when it differs from its defaults; the **⋮** menu has Save As, Browse Transitions. The queue position (`3/12`) moved into the ◀ ▶ tooltips.
 - **The MIXER page now runs Transitions, Master FX, Master MIX, Clock.** Transitions moves to the top row (Twister bank 3 knobs 1-4) since it is the row you perform with; Master MIX drops to the third row (knobs 9-12). A saved copy of the MIXER page in `library/perform_pages/` keeps its old order until you delete it.

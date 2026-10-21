@@ -30,7 +30,7 @@ object MacroBindingNav {
         return when {
             deckModule != null -> NavTarget(deckModule, top, if (rest.startsWith("FX/")) "FX" else "SRC")
             top == "Master" && rest.startsWith("FX/") -> NavTarget(MacroEngine.MASTER, "Mixer", "FX")
-            top == "Mixer" -> NavTarget(MacroEngine.MASTER, "Mixer", if (rest.startsWith("Transition/") || rest == "crossfade" || rest == "xfadeSpeed") "TRANS" else "CTRL")
+            top == "Mixer" -> NavTarget(MacroEngine.MASTER, "Mixer", if (rest.startsWith("Transition/") || rest == "crossfade" || rest == "xfadeSpeed" || rest == "masterLevel") "TRANS" else "CTRL")
             else -> null
         }
     }

@@ -331,8 +331,9 @@ between two disclosure tiers, without leaving the Perform view:
      allowing instant 1-click navigation between all major sections of the app without closing Edit.
      Selecting a side tab switches both the parameter editor below and the top macro row above.
    - **Parameter Grid** in the center: displays the full **VAL / MIDI / LFO / SEQ / AUD** parameter grid
-     with section subtabs across the top. All 5 sections feature a uniform 3-tab layout with **`FX` in the center**:
-     - **`MIX`**: `[ CTRL ]  [ FX ]  [ TRANS ]` (Master controls, the Master FX chain's 3 ISF slots, and Transitions)
+     with section subtabs across the top. Each side tab has its own section tabs:
+     - **`CTRL`**: `[ CTRL ]` (queue and clock triggers, morph triggers)
+     - **`MIX`**: `[ FX ]  [ TRANS ]` (the Master FX chain's 3 ISF slots, and Transitions, led by master level, crossfade and fade speed)
      - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]` (visual generator with Gain/Zoom/Rotate Z, and the insert FX chain)
      Switching between `SRC`/`CTRL` and `FX` in Edit shows the matching row (source or FX) above the editor, so its on-screen macro knobs follow: visual source controls or insert/master FX macros (`Super Knob + 3 Metaknobs`).
    - **Modulation Editor** on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.
