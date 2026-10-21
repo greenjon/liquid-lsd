@@ -58,13 +58,20 @@ object TransitionOps {
         }
     }
 
-    /** Applies an already-decoded transition preset. */
-    fun applyPreset(dto: TransitionPresetDto, undoable: Boolean = false) {
+    /** Applies an already-decoded transition preset ([source]: the `.lsdtrans` it was read from, see [presetSourceFile]). */
+    fun applyPreset(dto: TransitionPresetDto, undoable: Boolean = false, source: File? = null) {
         pending.offer { mixer ->
             if (undoable) pushUndo(mixer)
             mixer.applyTransitionPreset(dto)
+            presetSource = source?.let { f -> mixer.transitionFilter?.let { it to f } }
         }
     }
+
+    /** The transition filter instance a saved preset was applied to, with its file. Every change makes a new instance, so a stale entry never matches. */
+    @Volatile private var presetSource: Pair<Any, File>? = null
+
+    /** The saved transition preset the mixer's transition was loaded from, or null for a stock transition or one changed since. */
+    fun presetSourceFile(mixer: Mixer): File? = presetSource?.takeIf { it.first === mixer.transitionFilter }?.second
 
     /**
      * Reads the `.lsdtrans` [file] off-thread and queues it. A missing or unreadable file shows a
@@ -75,7 +82,7 @@ object TransitionOps {
         CompletableFuture.runAsync({
             try {
                 if (!file.exists()) throw java.io.FileNotFoundException(file.absolutePath)
-                applyPreset(PresetManager.json.decodeFromString<TransitionPresetDto>(file.readText()), undoable)
+                applyPreset(PresetManager.json.decodeFromString<TransitionPresetDto>(file.readText()), undoable, source = file)
                 logger.info { "Queued transition preset from ${file.name}" }
             } catch (e: Exception) {
                 logger.error(e) { "Failed to load transition preset ${file.absolutePath}, falling back to stock transition" }

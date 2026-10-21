@@ -224,9 +224,23 @@ object FxOps {
     /** Loads a saved single-FX file (.lsdfx) into [slotIndex], leaving the other slots alone. */
     fun loadSlot(session: SessionContext, file: File, chain: FxChain, slotIndex: Int, undoable: Boolean = false) {
         session.presetRepository.loadFxPresetAsync(file)
-            .thenAccept { dto -> applySlot(chain, slotIndex, dto.slot, undoable) }
+            .thenAccept { dto ->
+                postSlotChange(chain, slotIndex, undoable) { c ->
+                    c.applyFxSlot(slotIndex, dto.slot)
+                    c.slots[slotIndex]?.let { slotSources[it] = file }
+                }
+            }
             .exceptionally { e -> reportFailure("Could not load FX preset ${file.name}", e) }
     }
+
+    /**
+     * The saved `.lsdfx` each slot's effect was loaded from, keyed by the effect instance: any later change to the slot puts a new
+     * instance there (so the entry no longer matches), and a swap or move carries its origin along. Weak, so cleared effects drop out.
+     */
+    private val slotSources: MutableMap<Any, File> = java.util.Collections.synchronizedMap(java.util.WeakHashMap())
+
+    /** The saved FX preset [chain]'s [slotIndex] was loaded from, or null for a stock effect, an empty slot or a slot changed since. */
+    fun slotSourceFile(chain: FxChain, slotIndex: Int): File? = chain.slots.getOrNull(slotIndex)?.let { slotSources[it] }
 
     /** Applies an already-loaded slot DTO (e.g. from the clipboard) to [slotIndex]. */
     fun applySlot(chain: FxChain, slotIndex: Int, dto: llm.slop.liquidlsd.models.FXSlotDto, undoable: Boolean = false) =
