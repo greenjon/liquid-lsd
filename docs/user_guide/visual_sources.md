@@ -135,6 +135,7 @@ A kaleidoscopic iterated-function-system fractal: repeated folds, a scale and an
 - **Flight Speed**: Endless self-similar dolly toward the fixed vertex; negative flies outward. Defaults to 0 (holds still).
 - **Rotate X/Y/Z**: Turn the camera rig around the whole object; these never animate on their own.
 - **Quality, Glow, Color Mode**: Detail versus speed, a grazing-ray halo, and five colourings.
+- **Color Spread**: Folding makes every copy of a detail identical, so this shifts hue by fold depth, position in space and facing direction to bring in more colours. 0 is the plain ramp; the gold ramp ignores it.
 
 ### Mandelbulb (`mandelbulb`)
 

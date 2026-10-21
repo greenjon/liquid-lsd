@@ -1292,6 +1292,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#kifs-color-spread-librarysourceskifskifsfs-renderingsourcedocregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KIFS Color Spread (library/sources/kifs/kifs.fs, rendering/SourceDocRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#lenia-recovers-from-extinction-librarysourceslenialeniafs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6435,6 +6446,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#kifs-color-spread-librarysourceskifskifsfs-renderingsourcedocregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KIFS Color Spread (library/sources/kifs/kifs.fs, rendering/SourceDocRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#lenia-recovers-from-extinction-librarysourceslenialeniafs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11553,6 +11575,10 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="kifs-color-spread-librarysourceskifskifsfs-renderingsourcedocregistrykt">KIFS Color Spread (<code>library/sources/kifs/kifs.fs</code>, <code>rendering/SourceDocRegistry.kt</code>)</h3>
+<ul>
+<li><strong>New Color Spread knob (default 0.5).</strong> KIFS used to show about two colours, because the folds make every copy of a detail identical and the ramp only looked at the orbit trap. Color Spread shifts the hue by three things the folds do not erase: the fold level the orbit came closest at, the point's position in space, and the way the surface faces. Raise it for a wider spread of colours, 0 gives the old plain ramp, and the gold ramp ignores it. Existing KIFS looks gain the default spread.</li>
+</ul>
 <h3 id="lenia-recovers-from-extinction-librarysourceslenialeniafs">Lenia Recovers From Extinction (<code>library/sources/lenia/lenia.fs</code>)</h3>
 <ul>
 <li><strong>Lenia no longer stays black after Growth Center is pushed too high.</strong> Above about 90 the growth peak sits above anything the field reaches, every cell decays to zero, and an empty grid can never grow again, so lowering Growth Center did nothing. The shader now checks a coarse lattice of cells each step and, when the whole grid is empty, reseeds it. Turning Growth Center back down brings the creatures back.</li>

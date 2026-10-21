@@ -230,6 +230,8 @@ object SourceDocRegistry {
         "kifs/FlightSpeed" to "Speed of the endless dolly toward the fractal's fixed vertex. Negative values fly outward; 0 holds still.",
         "kifs/Flight Speed" to "Speed of the endless dolly toward the fractal's fixed vertex. Negative values fly outward; 0 holds still.",
         "kifs/Glow" to "Soft halo around the surface, taken from near-miss ray steps.",
+        "kifs/ColorSpread" to "How far hue wanders across the surface. The folds make every copy of a detail identical, so this shifts hue by fold depth, position in space and facing direction. 0 is the plain ramp; ignored by the gold ramp.",
+        "kifs/Color Spread" to "How far hue wanders across the surface. The folds make every copy of a detail identical, so this shifts hue by fold depth, position in space and facing direction. 0 is the plain ramp; ignored by the gold ramp.",
         "kifs/ColorMode" to "Colouring: 0 = point orbit trap, 1 = axis-plane trap, 2 = iteration-of-minimum trap, 3 = normal spectrum, 4 = gold ramp.",
         "kifs/Color Mode" to "Colouring: 0 = point orbit trap, 1 = axis-plane trap, 2 = iteration-of-minimum trap, 3 = normal spectrum, 4 = gold ramp.",
         "kifs/HueOffset" to "Rotates the base hue of the palette.",

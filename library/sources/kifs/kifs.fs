@@ -21,6 +21,7 @@
         { "NAME": "FlightSpeed", "LABEL": "Flight Speed", "TYPE": "float", "DEFAULT": 0.0, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 0.4, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "ColorMode", "LABEL": "Color Mode", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 4.0, "STEP": 1 },
+        { "NAME": "ColorSpread", "LABEL": "Color Spread", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.58, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Saturation", "LABEL": "Saturation", "TYPE": "float", "DEFAULT": 0.75, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
@@ -271,7 +272,15 @@ void main() {
         else if (cMode == 2) tv = clamp(trap.z / float(max(gIter, 1)), 0.0, 1.0);
         else if (cMode == 3) tv = clamp(dot(n, vec3(0.4, 0.5, 0.3)) + 0.5, 0.0, 1.0);
         else tv = clamp(sqrt(max(trap.x, 0.0)) * 0.35, 0.0, 1.0);
-        vec3 base = palette(tv, HueOffset, Saturation, cMode) * Brightness_;
+        // Folding makes every copy of a detail read the same, so shift the hue by things the folds do not erase: which
+        // fold level the orbit came closest at, where the point sits in the world, and which way the surface faces.
+        float spreadShift = 0.0;
+        if (cMode != 4) {
+            spreadShift = ColorSpread * (0.5 * trap.z / float(max(gIter, 1))
+                                         + 0.35 * dot(p, vec3(0.45, 0.7, 0.35))
+                                         + 0.2 * dot(n, vec3(0.6, -0.3, 0.5)));
+        }
+        vec3 base = palette(tv, HueOffset + spreadShift, Saturation, cMode) * Brightness_;
 
         vec3 ldir = normalize(vec3(0.6, 0.8, -0.4));
         vec3 ldir2 = normalize(vec3(-0.7, -0.2, 0.5));
