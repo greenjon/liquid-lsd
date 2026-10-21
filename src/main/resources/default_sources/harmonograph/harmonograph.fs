@@ -1,6 +1,6 @@
 /*
 {
-    "DESCRIPTION": "Oscilloscope and harmonograph curves: Lissajous figures from two damped sinusoids per axis, drawn as a glowing phosphor line with a fading trail. Preset frequency ratios, fine detune, signed phase drift, damping, line width, glow and trail length.",
+    "DESCRIPTION": "Oscilloscope and harmonograph curves: Lissajous figures from two damped sinusoids per axis, drawn as a glowing phosphor line that winds many times into a dense, spiralling rosette. Preset frequency ratios, detune, signed phase drift, damping spiral, line width, glow and trail length.",
     "CREDIT": "Liquid LSD",
     "ISFVSN": "2.0",
     "CATEGORIES": [
@@ -10,20 +10,20 @@
     "INPUTS": [
         { "NAME": "RatioPreset", "LABEL": "Ratio X:Y", "TYPE": "float", "DEFAULT": 2.0, "MIN": 0.0, "MAX": 7.0, "STEP": 1 },
         { "NAME": "PaletteMode", "LABEL": "Palette", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
-        { "NAME": "Detune", "LABEL": "Detune", "TYPE": "float", "DEFAULT": 0.1, "MIN": -1.0, "MAX": 1.0 },
+        { "NAME": "Detune", "LABEL": "Detune", "TYPE": "float", "DEFAULT": 0.25, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "DriftSpeed", "LABEL": "Phase Drift", "TYPE": "float", "DEFAULT": 0.3, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "Damping", "LABEL": "Damping", "TYPE": "float", "DEFAULT": 0.3, "MIN": 0.0, "MAX": 1.0 },
-        { "NAME": "LineWidth", "LABEL": "Line Width", "TYPE": "float", "DEFAULT": 0.3, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "LineWidth", "LABEL": "Line Width", "TYPE": "float", "DEFAULT": 0.2, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Trail", "LABEL": "Trail Length", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Rotation", "LABEL": "Rotation", "TYPE": "float", "DEFAULT": 0.0, "MIN": -1.0, "MAX": 1.0 },
-        { "NAME": "Quality", "LABEL": "Quality", "TYPE": "float", "DEFAULT": 0.6, "MIN": 0.0, "MAX": 1.0 },
+        { "NAME": "Quality", "LABEL": "Quality", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Saturation", "LABEL": "Saturation", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Brightness", "LABEL": "Brightness", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 }
     ],
     "PASSES": [
-        { "TARGET": "curveLUT", "WIDTH": "65", "HEIGHT": "2", "FLOAT": true },
+        { "TARGET": "curveLUT", "WIDTH": "129", "HEIGHT": "2", "FLOAT": true },
         { }
     ]
 }
@@ -32,15 +32,15 @@
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define Detune_ (Detune*0.08)
 #define DriftSpeed_ (DriftSpeed*1.5)
-#define Damping_ (Damping*4.0)
+#define Damping_ (Damping*6.0)
 #define LineWidth_ (0.0015+LineWidth*0.012)
 #define Glow_ (Glow*2.0)
-#define Trail_ (0.75+Trail*3.0)
+#define Trail_ (2.0+16.0*Trail*Trail)   // trail length in periods of the fastest axis
 #define Rotation_ (Rotation*3.14159265)
 #define Brightness_ (Brightness*2.0)
 
 const float TAU = 6.28318530717958647692;
-const int MAXSEG = 64;
+const int MAXSEG = 128;
 const int CHUNK = 8;
 
 // Frequency ratio presets X:Y.
@@ -89,8 +89,8 @@ vec2 curve(float u, vec2 f, float span, float damp, vec4 hp, vec4 ph) {
 void main() {
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
     int pmode = clamp(int(floor(PaletteMode + 0.5)), 0, 3);
-    int n = int(floor(mix(16.0, 64.0, clamp(Quality, 0.0, 1.0)) + 0.5));
-    n = clamp(n, 16, MAXSEG);
+    int n = int(floor(mix(48.0, 128.0, clamp(Quality, 0.0, 1.0)) + 0.5));
+    n = clamp(n, 48, MAXSEG);
 
     // frequencies normalised so the fastest axis runs at 1 rad per unit time
     vec2 r = ratioOf(clamp(int(floor(RatioPreset + 0.5)), 0, 7));
@@ -99,7 +99,7 @@ void main() {
     float span = TAU * Trail_ / max(f.x, f.y);
 
     // head phases (wrapped per term) and signed phase drift
-    float head = TIME * 0.8;
+    float head = TIME * 0.3;
     float drift = TIME * DriftSpeed_;
     vec4 hp = vec4(mod(f.x * head, TAU), mod(f.y * head, TAU),
                    mod(0.5 * f.x * head, TAU), mod(0.5 * f.y * head, TAU));
@@ -108,7 +108,7 @@ void main() {
     const float SCALE = 0.44;
 
     // Pass 0: the curve vertices are the same for every pixel, so evaluate them once into a
-    // 65 x 1 float strip instead of once per pixel per segment.
+    // 129 x 1 float strip instead of once per pixel per segment.
     if (PASSINDEX == 0) {
         int vi = int(gl_FragCoord.x);
         if (gl_FragCoord.y < 1.0) {
@@ -140,7 +140,7 @@ void main() {
     float g = w * (1.5 + 2.5 * Glow_);       // glow radius
     float invN = 1.0 / float(n);
     float rCut2 = 1.0 / (36.0 * g * g);
-    float refLen = SCALE * 0.05 * 64.0 * invN * 4.0;   // typical segment length
+    float refLen = SCALE * span * 0.5 * invN;           // typical segment length
     float core = 0.0;
     float coreAge = 0.0;
     float glowSum = 0.0;
@@ -173,7 +173,7 @@ void main() {
             float c = exp(-d2 / (w * w)) * fade * dwell;
             if (c > core) { core = c; coreAge = uu; }
             // glow: length-weighted so segment joints are not double counted
-            float gk = g * g / (d2 + g * g) * len * 24.0 * invN * 8.0 * fade * cut;
+            float gk = g * g / (d2 + g * g) * len * 4.0 * fade * cut;
             glowSum += gk;
             glowAge += gk * uu;
             a = b;

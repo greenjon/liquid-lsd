@@ -602,7 +602,7 @@ object SourceDocRegistry {
         "harmonograph/Trail" to "How much of the curve's history is drawn.",
         "harmonograph/Trail Length" to "How much of the curve's history is drawn.",
         "harmonograph/Rotation" to "Rotation of the whole figure.",
-        "harmonograph/Quality" to "Number of line segments, 16 to 64. Higher is smoother and costs more.",
+        "harmonograph/Quality" to "Number of line segments, 48 to 128. Higher is smoother and costs more.",
         "harmonograph/HueOffset" to "Rotates the base hue of the palette.",
         "harmonograph/Hue Offset" to "Rotates the base hue of the palette.",
         "harmonograph/Saturation" to "Colour saturation.",

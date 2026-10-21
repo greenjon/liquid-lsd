@@ -287,12 +287,12 @@ Interference of two to eight travelling circular waves from orbiting sources.
 
 ### Harmonograph (`harmonograph`)
 
-Oscilloscope and harmonograph curves: a damped Lissajous figure drawn as a glowing phosphor line with a fading trail. Lower Quality first on integrated graphics.
+Oscilloscope and harmonograph curves: a damped Lissajous figure drawn as a glowing phosphor line that winds several times into a dense, spiralling rosette. Lower Quality first on integrated graphics.
 
 - **Ratio X:Y, Detune**: The frequency ratio and a small offset that makes the figure slowly rotate and open up.
-- **Phase Drift, Damping, Trail Length, Rotation**: How the curve evolves.
+- **Phase Drift, Damping, Trail Length, Rotation**: How the curve evolves. Trail Length runs from 2 to 18 windings; Damping shrinks the older windings inward into a spiral.
 - **Line Width, Glow**: Line look.
-- **Quality**: Number of line segments, 16 to 64.
+- **Quality**: Number of line segments, 48 to 128.
 
 ### Aurora Ribbons (`aurora_ribbons`)
 
