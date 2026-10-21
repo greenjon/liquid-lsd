@@ -386,16 +386,15 @@ class PerformSurfaceTest {
         assertEquals(uncachedRows(ab, pages), first)
         assertTrue(first === cache.rows(ab, ctx, state, { it }, pages), "unchanged inputs reuse the list")
 
-        // Opening Deck A in the Edit bay shows the row for the bay's tab: SRC, then FX.
+        // Opening Deck A in the Edit bay shows its pair, SRC then FX, whichever tab the bay is on.
         state.rackModuleDisclosure[MacroEngine.DECK_A] = ParametersState.DisclosureLevel.DEEP_EDIT
         state.setDeckSubTab("Deck A", "SRC")
         val src = cache.rows(ab, ctx, state, { it }, pages)
-        assertEquals(MacroEngine.DECK_A, src.single().bankId)
+        assertEquals(listOf(MacroEngine.DECK_A, MacroEngine.DECK_A_FX), src.map { it.bankId })
         state.setDeckSubTab("Deck A", "FX")
         val fx = cache.rows(ab, ctx, state, { it }, pages)
-        assertTrue(fx !== src)
         assertEquals(uncachedRows(ab, pages), fx)
-        assertEquals(MacroEngine.DECK_A_FX, fx.single().bankId)
+        assertEquals(listOf(MacroEngine.DECK_A, MacroEngine.DECK_A_FX), fx.map { it.bankId })
         state.setDeckSubTab("Deck A", "SRC")
         state.rackModuleDisclosure[MacroEngine.DECK_A] = ParametersState.DisclosureLevel.COLLAPSED
         assertEquals(uncachedRows(ab, pages), cache.rows(ab, ctx, state, { it }, pages))
@@ -427,7 +426,7 @@ class PerformSurfaceTest {
         state.rackModuleDisclosure[MacroEngine.DECK_B] = ParametersState.DisclosureLevel.DEEP_EDIT
         val open = cache.rows(ab, ctx, state, { it }, pages)
         assertEquals(uncachedRows(ab, pages), open)
-        assertEquals(1, open.size)
+        assertEquals(2, open.size)
         state.rackModuleDisclosure[MacroEngine.DECK_B] = ParametersState.DisclosureLevel.COLLAPSED
         assertEquals(4, cache.rows(ab, ctx, state, { it }, pages).size)
 
@@ -444,18 +443,19 @@ class PerformSurfaceTest {
     }
 
     @Test
-    fun surfaceRetargetsKnobsWhenTheEditBayTabFlipsDespiteTheCache() {
+    fun surfaceShowsBothHalvesInEditAndKeepsThemWhenTheBayTabFlips() {
         state.rackModuleDisclosure[MacroEngine.DECK_A] = ParametersState.DisclosureLevel.DEEP_EDIT
         state.setDeckSubTab("Deck A", "SRC")
         val s = surface()
         assertEquals(MacroEngine.DECK_A, page().knobs[0]!!.bankId)
+        assertEquals(MacroEngine.DECK_A_FX, page().knobs[4]!!.bankId)
         s.turn(0, 0.1f)
         state.setDeckSubTab("Deck A", "FX")
         FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
-        assertEquals(MacroEngine.DECK_A_FX, page().knobs[0]!!.bankId)
-        val fxControl = page().knobs[0]!!.control
+        assertEquals(MacroEngine.DECK_A, page().knobs[0]!!.bankId)
+        val fxControl = page().knobs[4]!!.control
         val before = fxControl.value
-        s.turn(0, 0.2f)
+        s.turn(4, 0.2f)
         assertEquals((before + 0.2f).coerceIn(0f, 1f), fxControl.value)
     }
 }

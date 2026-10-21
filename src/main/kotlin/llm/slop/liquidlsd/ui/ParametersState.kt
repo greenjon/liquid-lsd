@@ -291,19 +291,52 @@ class ParametersState : MidiLearnSink {
             else -> null to null
         }
         if (deckLabel != null && tab != null) setDeckSubTab(deckLabel, tab)
-        // Always open the canonical module (never `deckA_fx`): the tab is just a sub-tab of it, so a later click on the
-        // other half's Edit button sees the same open module and closes it.
-        val canonical = when (moduleId) {
-            MacroEngine.DECK_A_FX -> MacroEngine.DECK_A
-            MacroEngine.DECK_B_FX -> MacroEngine.DECK_B
-            MacroEngine.DECK_BG_FX -> MacroEngine.DECK_BG
-            MacroEngine.DECK_PV_FX -> MacroEngine.DECK_PV
-            MacroEngine.MASTER_FX -> { activeMixerSubTab = "FX"; MacroEngine.MASTER }
-            MacroEngine.TRANS -> { activeMixerSubTab = "TRANS"; MacroEngine.MASTER }
-            MacroEngine.MASTER -> { activeMixerSubTab = "CTRL"; moduleId }
-            else -> moduleId
+        // Always open the canonical module (never `deckA_fx`): the tab is just a sub-tab of it.
+        val canonical = canonicalModuleForRow(moduleId)
+        when (moduleId) {
+            MacroEngine.MASTER_FX -> activeMixerSubTab = "FX"
+            MacroEngine.TRANS -> activeMixerSubTab = "TRANS"
+            MacroEngine.MASTER -> activeMixerSubTab = "CTRL"
         }
         openParams(canonical)
+    }
+
+    /** The rack module a row's Edit belongs to: a deck's FX row opens the deck, Master's FX and Transitions rows open Master. */
+    fun canonicalModuleForRow(rowBankId: String): String = when (rowBankId) {
+        MacroEngine.DECK_A_FX -> MacroEngine.DECK_A
+        MacroEngine.DECK_B_FX -> MacroEngine.DECK_B
+        MacroEngine.DECK_BG_FX -> MacroEngine.DECK_BG
+        MacroEngine.DECK_PV_FX -> MacroEngine.DECK_PV
+        MacroEngine.MASTER_FX, MacroEngine.TRANS -> MacroEngine.MASTER
+        else -> rowBankId
+    }
+
+    /** True when the Edit bay is open on exactly the half that [rowBankId]'s row shows (its module is open and its tab is selected). */
+    fun isRowEditActive(rowBankId: String): Boolean {
+        if (disclosureFor(canonicalModuleForRow(rowBankId)) == DisclosureLevel.COLLAPSED) return false
+        return when (rowBankId) {
+            MacroEngine.DECK_A -> activeDeckASubTab != "FX"
+            MacroEngine.DECK_B -> activeDeckBSubTab != "FX"
+            MacroEngine.DECK_BG -> activeDeckBGSubTab != "FX"
+            MacroEngine.DECK_PV -> activeDeckPVSubTab != "FX"
+            MacroEngine.DECK_A_FX -> activeDeckASubTab == "FX"
+            MacroEngine.DECK_B_FX -> activeDeckBSubTab == "FX"
+            MacroEngine.DECK_BG_FX -> activeDeckBGSubTab == "FX"
+            MacroEngine.DECK_PV_FX -> activeDeckPVSubTab == "FX"
+            MacroEngine.MASTER -> activeMixerSubTab == "CTRL"
+            MacroEngine.MASTER_FX -> activeMixerSubTab == "FX"
+            MacroEngine.TRANS -> activeMixerSubTab == "TRANS"
+            else -> true
+        }
+    }
+
+    /**
+     * A row's Edit gear: closes Edit when the bay is on this row's half, otherwise opens it there. With both rows of a
+     * pair on screen, the other row's gear moves the bay to that half instead of closing it.
+     */
+    fun toggleRowEdit(rowBankId: String) {
+        if (isRowEditActive(rowBankId)) setDisclosure(canonicalModuleForRow(rowBankId), DisclosureLevel.COLLAPSED)
+        else openParamsFromRow(rowBankId)
     }
 
     /** Flips an already-open module back to its Params (Deep Edit) content. */

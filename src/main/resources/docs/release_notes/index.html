@@ -1292,6 +1292,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#edit-shows-two-rows-uiperfrowskt-uiparametersstatekt-uirackrackunitkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit Shows Two Rows (ui/PerfRows.kt, ui/ParametersState.kt, ui/rack/RackUnit.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#edit-side-rail-ctrl-is-its-own-tab-uiparameterstabskt-uiparametersstatekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6369,6 +6380,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#edit-shows-two-rows-uiperfrowskt-uiparametersstatekt-uirackrackunitkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit Shows Two Rows (ui/PerfRows.kt, ui/ParametersState.kt, ui/rack/RackUnit.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#edit-side-rail-ctrl-is-its-own-tab-uiparameterstabskt-uiparametersstatekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11421,6 +11443,10 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="edit-shows-two-rows-uiperfrowskt-uiparametersstatekt-uirackrackunitkt">Edit Shows Two Rows (<code>ui/PerfRows.kt</code>, <code>ui/ParametersState.kt</code>, <code>ui/rack/RackUnit.kt</code>)</h3>
+<ul>
+<li><strong>Edit now keeps the open unit's pair of rows on screen</strong>, as Browse does: a deck's SRC and FX rows, Master's Transitions and FX rows on the MIX side tab, and Master's MIX and FX rows on the CTRL side tab. Switching between SRC and FX (or FX and TRANS) no longer swaps the row, so nothing redraws. The lit gear marks the row the editor is on; clicking the other row's gear moves the editor to it, and clicking the lit one closes Edit. The editor bay is one row (74 px) shorter than before.</li>
+</ul>
 <h3 id="edit-side-rail-ctrl-is-its-own-tab-uiparameterstabskt-uiparametersstatekt">Edit Side Rail: CTRL Is Its Own Tab (<code>ui/ParametersTabs.kt</code>, <code>ui/ParametersState.kt</code>)</h3>
 <ul>
 <li><strong>The Edit side rail is now <code>CTRL  MIX  A  B  BG  PV</code>.</strong> The queue, clock and morph triggers moved out of the MIX tab onto a new first <strong>CTRL</strong> tab, which keeps a single <code>CTRL</code> section tab so the layout does not jump. <strong>MIX</strong> now holds <code>FX</code> and <code>TRANS</code>, and returns to whichever you last used. <strong>Master level</strong> moved to the top of <strong>TRANS</strong>, ahead of crossfade and fade speed (which swapped places, so the order is master level, crossfade, fade speed). Every parameter is still modulatable; macro bindings follow their parameter to its new tab.</li>

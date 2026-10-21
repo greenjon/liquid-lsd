@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiStyleVar
 import llm.slop.liquidlsd.macro.MacroEngine
+import llm.slop.liquidlsd.presets.DeckScope
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
@@ -34,7 +35,7 @@ class DeckControlPanel(
         panelW: Float,
         previewH: Float,
         isDeckA: Boolean,
-        onUtilityAction: (Int, Deck, Deck) -> Unit,
+        onUtilityAction: (Int, DeckScope, Deck, Deck) -> Unit,
         onSaveDeck: ((Deck, Boolean, Boolean) -> Unit)? = null,
         onEjectDeck: ((Deck, Boolean, Boolean) -> Unit)? = null,
         // Macros-tab mode: true = this tile is the deck being edited (pulsing frame), false = dimmed.
@@ -136,7 +137,7 @@ class DeckControlPanel(
                     else -> mixer.deckPV
                 }
                 if (fromDeck !== toDeck) {
-                    onUtilityAction(0, fromDeck, toDeck)
+                    onUtilityAction(0, DeckScope.BOTH, fromDeck, toDeck)
                 }
             }
             val payloadMonitorRight = ImGui.acceptDragDropPayload<String>("MONITOR_DRAG_RIGHT")
@@ -158,14 +159,13 @@ class DeckControlPanel(
                     "BG" -> mixer.deckBG
                     else -> mixer.deckPV
                 }
-                if (ImGui.menuItem("Move")) {
-                    onUtilityAction(0, fromDeck, deck)
-                }
-                if (ImGui.menuItem("Copy")) {
-                    onUtilityAction(1, fromDeck, deck)
-                }
-                if (ImGui.menuItem("Swap")) {
-                    onUtilityAction(2, fromDeck, deck)
+                for ((mode, verb) in listOf(0 to "Move", 1 to "Copy", 2 to "Swap")) {
+                    if (ImGui.beginMenu(verb)) {
+                        for (scope in listOf(DeckScope.BOTH, DeckScope.SOURCE, DeckScope.FX)) {
+                            if (ImGui.menuItem(scope.label)) onUtilityAction(mode, scope, fromDeck, deck)
+                        }
+                        ImGui.endMenu()
+                    }
                 }
             }
             popOpenDropdownFont()

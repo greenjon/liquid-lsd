@@ -7,7 +7,7 @@ import llm.slop.liquidlsd.SessionContext
  *
  * - Perform: rows + a HALF dock (`editing` and `maximized` both false).
  * - Library: the dock FULL, no rows (`maximized`).
- * - Edit: one focused row over the Params editor in the bay (`editing`).
+ * - Edit: the open module's pair of rows over the Params editor in the bay (`editing`).
  *
  * Pair view ([pair]): the focused deck/Master/XF pair's two rows over the Browse dock; always [dockActive], never with [editing].
  *

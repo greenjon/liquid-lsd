@@ -129,7 +129,7 @@ Every shortcut except `Caps Lock` and `Space` can be rebound in **Preferences �
 |------|---------|
 | **Source** | A stock ISF shader or an external video input. External video can't be saved as a preset. |
 | **Preset** | A Source you configured, named and saved. |
-| **Edit** | The parameter editor for one row: parameter grid, modulators and Modulation. |
+| **Edit** | The parameter editor, with the open unit's two rows above it (a deck's source and FX, Master's Transitions and FX): parameter grid, modulators and Modulation. |
 | **Bank** | A saved set of macro knob targets (Library → Macros → Banks). Perform pages (Library → Macros → Pages) are saved row layouts. |
 | **A/B Queue / BG Queue** | The auto-VJ queues feeding Decks A/B and the Background deck. FX and Transitions have their own queues. |
 | **Level** | A deck's or the Master's output opacity. |

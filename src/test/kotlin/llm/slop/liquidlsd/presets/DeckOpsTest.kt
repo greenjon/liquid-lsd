@@ -276,6 +276,28 @@ class DeckOpsTest {
     }
 
     @Test
+    fun scopeDecidesWhetherSourceFxOrBothTravel() {
+        val fxA = llm.slop.liquidlsd.models.FXChainDto(name = "chain_a")
+        every { a.deck.toFxChainDto(any(), any()) } returns fxA
+        every { a.deck.fxSlots } returns arrayOfNulls(3)
+
+        DeckOps.request(DeckSlot.B, DeckChange.CopyFrom(DeckSlot.A, DeckScope.FX))
+        DeckOps.drainOnGlThread(mixer)
+        io.mockk.verify(exactly = 1) { b.deck.applyFxChain(fxA) }
+        assertEquals("other_gen", b.current.id, "FX-only copy leaves the source")
+
+        DeckOps.request(DeckSlot.B, DeckChange.CopyFrom(DeckSlot.A, DeckScope.SOURCE))
+        DeckOps.drainOnGlThread(mixer)
+        io.mockk.verify(exactly = 1) { b.deck.applyFxChain(any()) }
+        assertEquals("old_gen", b.current.id)
+
+        DeckOps.request(DeckSlot.B, DeckChange.MoveFrom(DeckSlot.A))
+        DeckOps.drainOnGlThread(mixer)
+        io.mockk.verify(exactly = 2) { b.deck.applyFxChain(fxA) }
+        io.mockk.verify(exactly = 1) { a.deck.clearFxSlot(0) }
+    }
+
+    @Test
     fun presetWithNoBankGetsTheGeneratorDefaultKnobs() {
         DeckOps.postLoaded(DeckSlot.A, dto("legacy", bank = null))
         DeckOps.drainOnGlThread(mixer)

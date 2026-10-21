@@ -5,6 +5,7 @@ import llm.slop.liquidlsd.macro.MacroBank
 import llm.slop.liquidlsd.macro.MacroBankSerializer
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.models.DeckPresetDto
+import llm.slop.liquidlsd.models.FXChainDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.notes.NotesManager
@@ -26,9 +27,16 @@ sealed interface DeckChange {
     data class Source(val source: VisualSource, val force: Boolean = false) : DeckChange
     data class Preset(val file: File) : DeckChange
     object Eject : DeckChange
-    data class CopyFrom(val from: DeckSlot) : DeckChange
-    data class MoveFrom(val from: DeckSlot) : DeckChange
-    data class SwapWith(val other: DeckSlot) : DeckChange
+    data class CopyFrom(val from: DeckSlot, val scope: DeckScope = DeckScope.BOTH) : DeckChange
+    data class MoveFrom(val from: DeckSlot, val scope: DeckScope = DeckScope.BOTH) : DeckChange
+    data class SwapWith(val other: DeckSlot, val scope: DeckScope = DeckScope.BOTH) : DeckChange
+}
+
+/** What a copy, move or swap carries: the source with its knobs, the deck's FX chain, or both. */
+enum class DeckScope(val label: String, val source: Boolean, val fx: Boolean) {
+    SOURCE("Source", true, false),
+    FX("FX", false, true),
+    BOTH("Source + FX", true, true)
 }
 
 /** Who asked: [MANUAL] follows the manual-load dirty preference and pushes undo; [QUEUE] (A/B, BG and FX queue advances, AutoVJ, session restore) follows the AutoVJ one and doesn't. */
@@ -276,19 +284,19 @@ object DeckOps {
                 null
             }
             is DeckChange.CopyFrom -> {
-                put(slot, snapshot(change.from, mixer), mixer)
+                put(slot, snapshot(change.from, mixer), change.scope, mixer)
                 "${change.from.label}'s knobs"
             }
             is DeckChange.MoveFrom -> {
-                put(slot, snapshot(change.from, mixer), mixer)
-                clear(change.from, mixer)
+                put(slot, snapshot(change.from, mixer), change.scope, mixer)
+                clear(change.from, change.scope, mixer)
                 "${change.from.label}'s knobs"
             }
             is DeckChange.SwapWith -> {
                 val mine = snapshot(slot, mixer)
                 val theirs = snapshot(change.other, mixer)
-                put(slot, theirs, mixer)
-                put(change.other, mine, mixer)
+                put(slot, theirs, change.scope, mixer)
+                put(change.other, mine, change.scope, mixer)
                 "${change.other.label}'s knobs"
             }
         }
@@ -306,20 +314,25 @@ object DeckOps {
         MacroEngine.getBank(slot.bankId) ?: MacroEngine.newBankFor(slot.bankId).also { MacroEngine.registerBank(slot.bankId, it) }
 
     /** What a copy, move or swap carries from one deck to another. */
-    private class Snapshot(val dto: DeckPresetDto, val name: String?, val bank: MacroBank?, val empty: Boolean, val mtime: Long?)
+    private class Snapshot(val dto: DeckPresetDto, val name: String?, val bank: MacroBank?, val empty: Boolean, val mtime: Long?, val fx: FXChainDto)
 
     private fun snapshot(slot: DeckSlot, mixer: Mixer): Snapshot {
         val deck = slot.deck(mixer)
         val name = PresetManager.activePreset(slot)
         val dto = if (deck.isEmpty) PresetManager.emptyDeckDto(deck, mixer) else deck.toDto(name ?: deck.source.displayName)
         val bank = MacroEngine.getBank(slot.bankId)?.let { MacroBankSerializer.snapshotForPreset(it) }
-        return Snapshot(dto, name, bank, deck.isEmpty, PresetManager.mtime(slot))
+        return Snapshot(dto, name, bank, deck.isEmpty, PresetManager.mtime(slot), deck.toFxChainDto())
     }
 
-    private fun put(slot: DeckSlot, snap: Snapshot, mixer: Mixer) {
-        slot.deck(mixer).applyDto(snap.dto)
+    private fun put(slot: DeckSlot, snap: Snapshot, scope: DeckScope, mixer: Mixer) {
+        val deck = slot.deck(mixer)
+        if (scope.fx) deck.applyFxChain(snap.fx)
+        if (!scope.source) return
+        deck.applyDto(snap.dto)
         // The bank's bindings are remapped from the source deck's path to this one (fixes Copy/Move/Swap leaving stale knobs).
-        MacroBankSerializer.installBankForDeck(snap.bank, bankFor(slot), slot.label)
+        // A source-only change leaves the chain behind, so bindings aimed at it stay behind too.
+        val bank = if (scope.fx) snap.bank else snap.bank?.let { withoutFxBindings(it) }
+        MacroBankSerializer.installBankForDeck(bank, bankFor(slot), slot.label)
         if (snap.empty) {
             PresetManager.clearActive(slot)
             PresetManager.setMtime(slot, null)
@@ -329,8 +342,20 @@ object DeckOps {
         }
     }
 
-    private fun clear(slot: DeckSlot, mixer: Mixer) {
+    private fun withoutFxBindings(bank: MacroBank) = MacroBank(
+        knobs = bank.knobs.map { k -> k.copy(bindings = k.bindings.filterNot { isFxPath(it.parameterId) }.toMutableList()) }
+    )
+
+    /** Deck paths look like "Deck A/FX/..." and "Deck A/FXChain/DryWet". */
+    private fun isFxPath(path: String): Boolean = path.substringAfter('/', "").substringBefore('/').let { it == "FX" || it == "FXChain" }
+
+    private fun clear(slot: DeckSlot, scope: DeckScope, mixer: Mixer) {
         val deck = slot.deck(mixer)
+        if (scope.fx) {
+            for (i in deck.fxSlots.indices) deck.clearFxSlot(i)
+            deck.fxChain.reset()
+        }
+        if (!scope.source) return
         deck.applyDto(PresetManager.emptyDeckDto(deck, mixer))
         MacroBankSerializer.installBankForDeck(null, bankFor(slot), slot.label)
         PresetManager.clearActive(slot)

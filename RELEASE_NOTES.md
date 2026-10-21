@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Edit Shows Two Rows (`ui/PerfRows.kt`, `ui/ParametersState.kt`, `ui/rack/RackUnit.kt`)
+- **Edit now keeps the open unit's pair of rows on screen**, as Browse does: a deck's SRC and FX rows, Master's Transitions and FX rows on the MIX side tab, and Master's MIX and FX rows on the CTRL side tab. Switching between SRC and FX (or FX and TRANS) no longer swaps the row, so nothing redraws. The lit gear marks the row the editor is on; clicking the other row's gear moves the editor to it, and clicking the lit one closes Edit. The editor bay is one row (74 px) shorter than before.
+
 ### Edit Side Rail: CTRL Is Its Own Tab (`ui/ParametersTabs.kt`, `ui/ParametersState.kt`)
 - **The Edit side rail is now `CTRL  MIX  A  B  BG  PV`.** The queue, clock and morph triggers moved out of the MIX tab onto a new first **CTRL** tab, which keeps a single `CTRL` section tab so the layout does not jump. **MIX** now holds `FX` and `TRANS`, and returns to whichever you last used. **Master level** moved to the top of **TRANS**, ahead of crossfade and fade speed (which swapped places, so the order is master level, crossfade, fade speed). Every parameter is still modulatable; macro bindings follow their parameter to its new tab.
 

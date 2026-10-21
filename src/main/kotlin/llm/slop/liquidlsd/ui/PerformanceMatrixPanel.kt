@@ -531,7 +531,7 @@ class PerformanceMatrixPanel {
                     val editW = if (descriptor.canExpand) ctrlH else 0f
                     ImGui.pushID(rowIdx)
                     if (!stripOn) PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, deckBlockW, pinnedHalf, editW)
-                    if (editW > 0f) drawEditGearAt(session, parametersState, activeModuleId, tabIdx, rowIdx, masterTabStartX + deckBlockW - editW, row1Y, editW, ctrlH)
+                    if (editW > 0f) drawEditGearAt(session, parametersState, descriptor.bankId, tabIdx, rowIdx, masterTabStartX + deckBlockW - editW, row1Y, editW, ctrlH)
                     if (descriptor.pinnedMode != "MIX") {
                         PerformanceMasterControls.drawBypassControls(session, mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                     }
@@ -546,7 +546,7 @@ class PerformanceMatrixPanel {
                     val editW = if (descriptor.canExpand) ctrlH else 0f
                     ImGui.pushID(rowIdx)
                     if (!stripOn) PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, transRowW, editW)
-                    if (editW > 0f) drawEditGearAt(session, parametersState, activeModuleId, tabIdx, rowIdx, masterTabStartX + deckBlockW - editW, row1Y, editW, ctrlH)
+                    if (editW > 0f) drawEditGearAt(session, parametersState, descriptor.bankId, tabIdx, rowIdx, masterTabStartX + deckBlockW - editW, row1Y, editW, ctrlH)
                     ImGui.popID()
                     PerformanceTransitionsControls.drawRightControls(session, mixer, boxX2 - pad - masterRightW, row1Y, ctrlH, masterRightW)
                 } else if (isClockRow) {
@@ -585,7 +585,7 @@ class PerformanceMatrixPanel {
                     // Per-slot ImGui id scope: the same deck may sit in two slots (or pages), so tag-based ids must not collide.
                     ImGui.pushID(rowIdx)
                     if (!stripOn) deckControls.drawDeckRowLeftControls(session, mixer, parametersState, deckLabel, targetDeck, leftStartX, row1Y, row2YFinal, ctrlH, deckComboW, deckBlockW, pinnedHalf, editW)
-                    if (editW > 0f) drawEditGearAt(session, parametersState, activeModuleId, tabIdx, rowIdx, leftStartX + deckBlockW - editW, row1Y, editW, ctrlH)
+                    if (editW > 0f) drawEditGearAt(session, parametersState, descriptor.bankId, tabIdx, rowIdx, leftStartX + deckBlockW - editW, row1Y, editW, ctrlH)
                     deckControls.drawDeckRowRightControls(
                         session, mixer, parametersState, deckLabel, targetDeck,
                         boxX2 - pad - deckRightW, row1Y, row2YFinal, ctrlH, deckRightW, pinnedHalf
@@ -831,7 +831,7 @@ class PerformanceMatrixPanel {
         ImGui.setCursorScreenPos(badgeX + gearShiftX, badgeY + badgeH)
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             llm.slop.liquidlsd.ui.rack.RackUnit.drawChevronIcon(
-                parametersState, activeModuleId, rackId(tabIdx, rowIdx), badgeW, badgeH
+                parametersState, descriptor.bankId, rackId(tabIdx, rowIdx), badgeW, badgeH
             )
         }
     }

@@ -335,7 +335,7 @@ between two disclosure tiers, without leaving the Perform view:
      - **`CTRL`**: `[ CTRL ]` (queue and clock triggers, morph triggers)
      - **`MIX`**: `[ FX ]  [ TRANS ]` (the Master FX chain's 3 ISF slots, and Transitions, led by master level, crossfade and fade speed)
      - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]` (visual generator with Gain/Zoom/Rotate Z, and the insert FX chain)
-     Switching between `SRC`/`CTRL` and `FX` in Edit shows the matching row (source or FX) above the editor, so its on-screen macro knobs follow: visual source controls or insert/master FX macros (`Super Knob + 3 Metaknobs`).
+     Edit shows the open unit's two rows above the editor, as the Pair view does: a deck's source and FX rows, Master's Transitions and FX rows (`MIX` side tab), or Master's MIX and FX rows (`CTRL` side tab). The rows stay put when you switch tabs; the **gear** that is lit marks the row the editor is on, and clicking the other row's gear moves the editor there (click the lit one to close Edit). Both rows' macro knobs stay live.
    - **Modulation Editor** on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected.
 
    If the deck is **empty**, Edit shows the empty-deck card instead: **Add Source** (opens

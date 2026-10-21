@@ -179,10 +179,10 @@ class UIManager(
 
     private val deckControlPanel = DeckControlPanel(parametersState)
 
-    private val deckUtilityAction = { mode: Int, from: Deck, to: Deck ->
+    private val deckUtilityAction = { mode: Int, scope: llm.slop.liquidlsd.presets.DeckScope, from: Deck, to: Deck ->
         val mixer = currentMixer
         if (mixer != null) {
-            deckPresetController.handleUtilityAction(mixer, mode, from, to)
+            deckPresetController.handleUtilityAction(mixer, mode, scope, from, to)
         }
     }
 

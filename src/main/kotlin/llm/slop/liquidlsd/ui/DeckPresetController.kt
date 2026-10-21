@@ -5,6 +5,7 @@ import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.presets.DeckChange
 import llm.slop.liquidlsd.presets.DeckOps
+import llm.slop.liquidlsd.presets.DeckScope
 import llm.slop.liquidlsd.presets.DeckSlot
 import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
@@ -32,13 +33,13 @@ class DeckPresetController(
         session.presetRepository.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex)
     }
 
-    fun handleUtilityAction(mixer: Mixer, mode: Int, from: Deck, to: Deck) {
+    fun handleUtilityAction(mixer: Mixer, mode: Int, scope: DeckScope, from: Deck, to: Deck) {
         val toSlot = DeckSlot.of(to, mixer) ?: return
         val fromSlot = DeckSlot.of(from, mixer) ?: return
         DeckOps.request(toSlot, when (mode) {
-            0 -> DeckChange.MoveFrom(fromSlot)
-            1 -> DeckChange.CopyFrom(fromSlot)
-            else -> DeckChange.SwapWith(fromSlot)
+            0 -> DeckChange.MoveFrom(fromSlot, scope)
+            1 -> DeckChange.CopyFrom(fromSlot, scope)
+            else -> DeckChange.SwapWith(fromSlot, scope)
         })
     }
 

@@ -52,34 +52,6 @@ class PerfPageStoreTest {
     }
 
     @Test
-    fun focusLookupScansActivePageThenFollowingPagesWrapping() {
-        val pages = store().all()
-        assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "ab"))
-        // From MIXER the scan wraps past MASTER to A/B and finds the pinned SRC row.
-        assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "mixer"))
-        // Deck BG from the last page wraps all the way round to BG/PV.
-        assertEquals(PerfRows.CATALOG["deck.BG.src"], PerfRows.catalogRowForModule("deckBG", "SRC", pages.filter { it.id in setOf("mixer", "bgpv") }, "mixer"))
-        assertEquals(PerfRows.CATALOG["master.mix"], PerfRows.catalogRowForModule("Mixer", "MIX", pages, "ab"))
-    }
-
-    @Test
-    fun focusLookupMatchesTheTargetHalfAndSkipsOtherPinnedRows() {
-        fun page(id: String, vararg rows: String) = PerfPageDef(id, id, rows = rows.map(::RowPlacement))
-        val pages = listOf(
-            page("p1", "deck.A.fx", "deck.A.src", "master.fx", "master.mix"),
-            page("p2", "deck.A.fx", "trans", "global", "global"),
-        )
-        assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "p1"))
-        assertEquals(PerfRows.CATALOG["deck.A.fx"], PerfRows.catalogRowForModule(MacroEngine.DECK_A_FX, "FX", pages, "p1"))
-        assertEquals(PerfRows.CATALOG["master.mix"], PerfRows.catalogRowForModule("Mixer", "MIX", pages, "p1"))
-        // Active page p2 first: its FX row wins for the FX half; the SRC half is found on the next page.
-        assertEquals(PerfRows.CATALOG["deck.A.fx"], PerfRows.catalogRowForModule("deckA", "FX", pages, "p2"))
-        assertEquals(PerfRows.CATALOG["deck.A.src"], PerfRows.catalogRowForModule("deckA", "SRC", pages, "p2"))
-        // Nothing places Deck B anywhere.
-        assertNull(PerfRows.catalogRowForModule("deckB", "SRC", pages, "p1"))
-    }
-
-    @Test
     fun pagesMayUsePinnedRows() {
         val page = PerfPageDef("x", "X", rows = listOf("deck.A.src", "deck.A.fx", "master.mix", "master.fx").map(::RowPlacement))
         assertTrue(page.problems().isEmpty())

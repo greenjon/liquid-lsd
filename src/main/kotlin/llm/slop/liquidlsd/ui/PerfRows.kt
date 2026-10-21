@@ -81,39 +81,15 @@ internal object PerfRows {
     fun rowsForPage(page: PerfPageDef): List<RowDescriptor> = page.rows.mapNotNull { CATALOG[it.row] }
 
     /**
-     * The catalog row that Deep Edit on [moduleId] should show: the first placement that covers the module and
-     * its [half] (`SRC`/`FX` for a deck, `MIX`/`FX` for Master), scanning the active page top to bottom and then
-     * the following pages, wrapping from last to first.
-     * Null when no page places it (the caller falls back to [rowDescriptorForModule]).
+     * The two rows Edit shows for an open [moduleId], in the order Browse shows them: a deck's SRC + FX, Master's
+     * MIX + FX on the CTRL side tab and Transitions + FX on the MIX side tab (FX/TRANS). The bay's tab only picks
+     * which of the two the editor is on, so switching tabs never changes the rows. Null for modules without a pair.
      */
-    fun catalogRowForModule(moduleId: String, half: String, pages: List<PerfPageDef>, activePageId: String): RowDescriptor? {
-        if (pages.isEmpty()) return null
-        val start = pages.indexOfFirst { it.id == activePageId }.coerceAtLeast(0)
-        for (offset in pages.indices) {
-            val page = pages[(start + offset) % pages.size]
-            for (placement in page.rows) {
-                val row = CATALOG[placement.row] ?: continue
-                val deck = deckForBank(row.bankId)
-                val covers = when {
-                    deck != null -> moduleId == deck.srcBankId || moduleId == deck.fxBankId
-                    row.bankId == MacroEngine.MASTER || row.bankId == MacroEngine.MASTER_FX ->
-                        moduleId == MacroEngine.MASTER || moduleId == MacroEngine.MASTER_FX || moduleId == "Mixer"
-                    else -> false
-                }
-                if (covers && row.pinnedMode == half) return row
-            }
-        }
-        return null
-    }
-
-    /** `FX` when the Edit bay's tab for [moduleId] is the FX half of its deck / Master, else `SRC` (decks) or `MIX` (Master). */
-    private fun halfFor(moduleId: String, ctx: PerformanceUiContext, parametersState: ParametersState): String? {
-        deckForBank(moduleId)?.let {
-            return if (ctx.isDeckBayFx(it.tag, parametersState)) "FX" else "SRC"
-        }
+    private fun editPairFor(moduleId: String, parametersState: ParametersState): List<RowDescriptor>? {
+        deckForBank(moduleId)?.let { return listOfNotNull(CATALOG["deck.${it.tag}.src"], CATALOG["deck.${it.tag}.fx"]) }
         if (moduleId == MacroEngine.MASTER || moduleId == MacroEngine.MASTER_FX || moduleId == "Mixer") {
-            if (parametersState.activeMixerSubTab == "TRANS") return null // Transitions has no page variant; use the fallback
-            return if (ctx.isMasterBayFx(parametersState)) "FX" else "MIX"
+            val first = if (parametersState.activeMixerSubTab == "CTRL") "master.mix" else "trans"
+            return listOfNotNull(CATALOG[first], CATALOG["master.fx"])
         }
         return null
     }
@@ -146,8 +122,8 @@ internal object PerfRows {
     }
 
     /**
-     * When any module is in Deep Edit, returns the macro row(s) corresponding to the expanded module(s)
-     * (reflecting active subtab e.g. SRC vs FX), decoupling the row from the active page.
+     * When any module is in Deep Edit, returns the pair of macro rows for each expanded module
+     * (see [editPairFor]), decoupling the rows from the active page.
      * When all modules are collapsed, returns the active page's 4 rows.
      */
     fun visibleRowsForPage(
@@ -163,10 +139,9 @@ internal object PerfRows {
             .keys
         if (expandedModuleIds.isEmpty()) return rowsForPage(page)
 
-        // Show the active macro row for each expanded module
-        return expandedModuleIds.map { id ->
-            val half = halfFor(id, ctx, parametersState)
-            half?.let { catalogRowForModule(id, it, pages, page.id) } ?: rowDescriptorForModule(id, ctx, parametersState, labelFor)
+        // Show each expanded module's pair of rows (a module without one shows its single fallback row)
+        return expandedModuleIds.flatMap { id ->
+            editPairFor(id, parametersState) ?: listOf(rowDescriptorForModule(id, ctx, parametersState, labelFor))
         }
     }
 
