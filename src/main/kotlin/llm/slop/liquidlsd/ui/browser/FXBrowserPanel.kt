@@ -144,7 +144,7 @@ object FXBrowserPanel {
         val availW = ImGui.getContentRegionAvailX()
         val itemW = (availW - btnW - 4f - LoadedMarks.GUTTER_W).coerceAtLeast(10f)
         if (target?.isApplied(asset) == true) LoadedMarks.drawBoundFill(availW - btnW - 4f, DROPDOWN_ROW_HEIGHT)
-        LoadedMarks.drawGutter(marks, DROPDOWN_ROW_HEIGHT)
+        val gutter = LoadedMarks.beginGutter()
 
         if (isSelected) SmoothScroll.follow(LibraryPanel.shouldScrollToSelection)
 
@@ -153,6 +153,7 @@ object FXBrowserPanel {
             selectableRow("${if (info.isNotEmpty()) PresetListPanel.nameForInfo(text, itemW) else text}##fx_browser_$index", isSelected, itemW)
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { PresetListPanel.tourRowKey(BrowseKind.FX, asset) }
+        LoadedMarks.drawGutter(gutter, marks, DROPDOWN_ROW_HEIGHT)
         PresetListPanel.drawInfoColumn(info, itemW)
         PresetListPanel.drawCostBadge(asset.gpuCost, itemW)
         val isRowHovered = ImGui.isItemHovered()

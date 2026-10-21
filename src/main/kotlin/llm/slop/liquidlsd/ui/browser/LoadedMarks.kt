@@ -83,13 +83,25 @@ internal object LoadedMarks {
     }
 
     /**
-     * Draws the row's chips in the gutter starting at the cursor, then leaves the cursor [GUTTER_W] further right on the same
-     * line. If they do not all fit they collapse into one neutral "×n" chip; the hover text always lists every holder.
-     * Call before the row's selectable.
+     * Reserves the row's gutter: returns its screen origin and leaves the cursor [GUTTER_W] further right on the same line.
+     * Call before the row's selectable, then [drawGutter] right after it.
      */
-    fun drawGutter(marks: List<Mark>, rowH: Float) {
-        val x0 = ImGui.getCursorScreenPosX()
-        val y0 = ImGui.getCursorScreenPosY()
+    fun beginGutter(): Gutter {
+        val g = Gutter(ImGui.getCursorScreenPosX(), ImGui.getCursorScreenPosY())
+        ImGui.setCursorScreenPos(g.x + GUTTER_W, g.y)
+        return g
+    }
+
+    class Gutter(val x: Float, val y: Float)
+
+    /**
+     * Draws the row's chips in the reserved [gutter]. If they do not all fit they collapse into one neutral "×n" chip; the hover
+     * text always lists every holder. Drawn after the selectable on purpose: it highlights the whole row width, gutter included,
+     * and would paint over chips drawn first.
+     */
+    fun drawGutter(gutter: Gutter, marks: List<Mark>, rowH: Float) {
+        val x0 = gutter.x
+        val y0 = gutter.y
         val dl = ImGui.getWindowDrawList()
         val chipH = ImGui.getTextLineHeight() + 2f
         val top = y0 + (rowH - chipH) * 0.5f
@@ -104,7 +116,6 @@ internal object LoadedMarks {
             x += w + CHIP_GAP
         }
         if (marks.isNotEmpty() && ImGui.isWindowHovered() && ImGui.isMouseHoveringRect(x0, y0, x0 + GUTTER_W, y0 + rowH)) ImGui.setTooltip(tooltip(marks))
-        ImGui.setCursorScreenPos(x0 + GUTTER_W, y0)
     }
 
     /** The tint behind a row that is loaded on the bound target; drawn before the selectable so the row's own states sit on top. */

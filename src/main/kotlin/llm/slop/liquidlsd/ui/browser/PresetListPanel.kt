@@ -98,7 +98,7 @@ object PresetListPanel {
             val itemW = (availW - btnW - LoadedMarks.GUTTER_W).coerceAtLeast(10f)
 
             if (target?.isApplied(asset) == true) LoadedMarks.drawBoundFill(availW - btnW, DROPDOWN_ROW_HEIGHT)
-            LoadedMarks.drawGutter(loaded.marksFor(asset), DROPDOWN_ROW_HEIGHT)
+            val gutter = LoadedMarks.beginGutter()
             if (hasIssues && !isSelected) {
                 ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.TEXT_ERROR.u32())
             }
@@ -111,6 +111,7 @@ object PresetListPanel {
                 }
                 llm.slop.liquidlsd.tour.WidgetRegistry.note { tourRowKey(BrowseKind.SRC, asset) }
             }
+            LoadedMarks.drawGutter(gutter, loaded.marksFor(asset), DROPDOWN_ROW_HEIGHT)
             val io = ImGui.getIO()
             if (itemClicked) {
                 val isCtrl = io.keyCtrl || io.keySuper
