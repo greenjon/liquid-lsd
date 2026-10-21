@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Monitor Drag Moves the FX Chain Too (`presets/DeckOps.kt`, `ui/DeckControlPanel.kt`)
+- **Dragging one monitor onto another now carries the deck's FX chain along with the source**, for Move, Copy and Swap. Before, only the source and its knobs travelled and each deck kept its own chain. Dropping a monitor on another opens one menu of nine choices, in groups of three: **Move**, **Copy** and **Swap**, each for **Source**, **FX** or **Source + FX**. (The old right-drag path never fired and the left-drag direct Move was dead code; both are gone.) A Source-only change leaves macro knob bindings aimed at the FX chain behind (the target deck's knobs lose them); an FX-only change leaves the knobs alone. Still not undoable. (`DeckScope`; `DeckChange.CopyFrom/MoveFrom/SwapWith` take a scope.)
+
 ### Edit Shows Two Rows (`ui/PerfRows.kt`, `ui/ParametersState.kt`, `ui/rack/RackUnit.kt`)
 - **Edit now keeps the open unit's pair of rows on screen**, as Browse does: a deck's SRC and FX rows, Master's Transitions and FX rows on the MIX side tab, and Master's MIX and FX rows on the CTRL side tab. Switching between SRC and FX (or FX and TRANS) no longer swaps the row, so nothing redraws. The lit gear marks the row the editor is on; clicking the other row's gear moves the editor to it, and clicking the lit one closes Edit. The editor bay is one row (74 px) shorter than before.
 

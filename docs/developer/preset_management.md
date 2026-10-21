@@ -91,7 +91,7 @@ When `triggerNext()` is called:
 - **Auto-VJ Mid-Session Arming**: Turning Auto-VJ ON while presets are playing manually arms the system for the next advance trigger without causing immediate jump cuts.
 
 ### Deck Changes: `DeckOps` (`presets/DeckOps.kt`)
-Every change to what a deck holds goes through `DeckOps.request(slot, change, origin)`; see the `DeckOps` entry in `DECISIONS.md` for the rationale. `DeckChange` is `Source`, `Preset`, `Eject`, `CopyFrom`, `MoveFrom` or `SwapWith`; `LoadOrigin` is `MANUAL` or `QUEUE`.
+Every change to what a deck holds goes through `DeckOps.request(slot, change, origin)`; see the `DeckOps` entry in `DECISIONS.md` for the rationale. `DeckChange` is `Source`, `Preset`, `Eject`, `CopyFrom`, `MoveFrom` or `SwapWith` (each takes a `DeckScope`: `SOURCE`, `FX` or `BOTH`, default `BOTH`; the deck FX chain is not in `DeckPresetDto`, so it travels as an `FXChainDto` snapshot); `LoadOrigin` is `MANUAL` or `QUEUE`.
 - **Request time (calling thread)**: drop a no-op `Source` change, run the dirty guard, then either queue the change or read the preset on `presetIoExecutor` and queue the result.
 - **Dirty guard**: a clean deck proceeds. `MANUAL` uses `UITheme.manualLoadDirtyBehavior` (`PROMPT` calls `DeckOps.prompt`, wired to `PopupManager.requestDeckConfirm`; `DISCARD`; `AUTO_SAVE`). `QUEUE` uses `UITheme.autoVjDirtyBehavior` (`SKIP` drops the load, `AUTO_SAVE`, `AUTO_DISCARD`).
 - **Ordering**: each accepted request is stamped with a per-slot sequence number (after the dirty prompt, before the async preset read). The drain skips an op older than the last one applied to that slot and reports it to `onResult(false)`, so a slow preset read never overwrites a newer generator pick.

@@ -13,7 +13,7 @@ import java.io.File
 class DeckControlPanel(
     private val parametersState: ParametersState
 ) {
-    private var pendingRightDragFrom: String? = null
+    private var pendingDragFrom: String? = null
 
     /** Focuses [deckLabel] and opens its bay via context-aware monitor click (monitor and badge clicks). */
     private fun openDeepEdit(deckLabel: String) {
@@ -102,13 +102,7 @@ class DeckControlPanel(
 
         if (ImGui.beginDragDropSource()) {
             ImGui.setDragDropPayload("MONITOR_DRAG", deckPayloadName)
-            ImGui.text("Move $label")
-            ImGui.endDragDropSource()
-        }
-
-        if (ImGui.beginDragDropSource(128)) { // 128 = ImGuiDragDropFlags.SourceButtonMouseButtonRight
-            ImGui.setDragDropPayload("MONITOR_DRAG_RIGHT", deckPayloadName)
-            ImGui.text("Copy/Move/Swap $label")
+            ImGui.text("Move/Copy/Swap $label")
             ImGui.endDragDropSource()
         }
         
@@ -127,22 +121,8 @@ class DeckControlPanel(
                 }
             }
             val payloadMonitor = ImGui.acceptDragDropPayload<String>("MONITOR_DRAG")
-            if (payloadMonitor != null) {
-                val fromName = payloadMonitor
-                val toDeck = deck
-                val fromDeck = when (fromName) {
-                    "A" -> mixer.deckA
-                    "B" -> mixer.deckB
-                    "BG" -> mixer.deckBG
-                    else -> mixer.deckPV
-                }
-                if (fromDeck !== toDeck) {
-                    onUtilityAction(0, DeckScope.BOTH, fromDeck, toDeck)
-                }
-            }
-            val payloadMonitorRight = ImGui.acceptDragDropPayload<String>("MONITOR_DRAG_RIGHT")
-            if (payloadMonitorRight != null) {
-                pendingRightDragFrom = payloadMonitorRight
+            if (payloadMonitor != null && payloadMonitor != deckPayloadName) {
+                pendingDragFrom = payloadMonitor
                 ImGui.openPopup("monitor_drag_menu_$label")
             }
             ImGui.endDragDropTarget()
@@ -151,7 +131,7 @@ class DeckControlPanel(
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("monitor_drag_menu_$label")) {
             pushOpenDropdownFont()
-            val fromName = pendingRightDragFrom
+            val fromName = pendingDragFrom
             if (fromName != null) {
                 val fromDeck = when (fromName) {
                     "A" -> mixer.deckA
@@ -160,11 +140,11 @@ class DeckControlPanel(
                     else -> mixer.deckPV
                 }
                 for ((mode, verb) in listOf(0 to "Move", 1 to "Copy", 2 to "Swap")) {
-                    if (ImGui.beginMenu(verb)) {
-                        for (scope in listOf(DeckScope.BOTH, DeckScope.SOURCE, DeckScope.FX)) {
-                            if (ImGui.menuItem(scope.label)) onUtilityAction(mode, scope, fromDeck, deck)
+                    if (mode > 0) ImGui.separator()
+                    for (scope in listOf(DeckScope.SOURCE, DeckScope.FX, DeckScope.BOTH)) {
+                        if (ImGui.menuItem("$verb ${scope.label}")) {
+                            onUtilityAction(mode, scope, fromDeck, deck)
                         }
-                        ImGui.endMenu()
                     }
                 }
             }
