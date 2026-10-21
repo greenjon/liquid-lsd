@@ -5,9 +5,8 @@ import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.parameters.ParameterResolver
-import llm.slop.liquidlsd.presets.QueueNextUp
-import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
+import llm.slop.liquidlsd.ui.browser.BrowserDock
 
 /**
  * Modular Rack Deep Edit bay (Tier 2/3):
@@ -99,6 +98,8 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         if (expandedModules.isEmpty()) return
 
         if (ImGui.beginChild("##rack_bay_area", 0f, bayH, true)) {
+            // One header for the bay, about the module the keyboard follows (a Learn-pinned second module shares it).
+            drawEditHeader(session, mixer, parametersState, keyboardOwnerModuleId?.takeIf { it in expandedModules } ?: expandedModules.first())
             for ((idx, moduleId) in expandedModules.withIndex()) {
                 if (idx > 0) {
                     ImGui.spacing(); ImGui.separator(); ImGui.spacing()
@@ -119,77 +120,65 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
      * The Deep Edit tier: the full parameter/CV editor, reusing
      * [ParametersTabs.drawDeckGroupContent]/[ParametersTabs.drawMasterFxContent] and
      * [PropertiesPanel.draw] (see [drawRackDeepEdit]). Macro binding is edited in the Edit-row [PerformanceMacroStrip]
-     * and the Properties editor; pressing Learn on a Tier-1 knob focuses this tab (see [focusDeepEditTab]). No title or Collapse button here: the
-     * row above already says which deck/section this is, and it has its own Collapse (as does Esc). Browsing lives in the
-     * pair view ([drawPairBay]), not here.
+     * and the Properties editor; pressing Learn on a Tier-1 knob focuses this tab (see [focusDeepEditTab]). The bay's [BayHeader] above
+     * it (drawn once by [drawRackBay]) has Back and the Browse|Params toggle; browsing lives in the pair view ([drawPairBay]), not here.
      */
     fun drawRackBayModule(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
         llm.slop.liquidlsd.ui.browser.BrowserPane.noteHosting(null) // no dock on screen
-        if (moduleId in deepEditModuleIds) drawQueueRow(session, ctx.deckLabelForModuleId(moduleId))
         drawRackDeepEdit(session, mixer, parametersState, moduleId)
     }
 
-    /** The pair view below its two rows: a Back / Parameters button line, then the Browse list for the half last touched. */
+    /**
+     * The Edit view's header line: the same [BayHeader] as the pair view, with Params lit. The chip names the half Edit is on, which
+     * is what Browse switches to (with its row buttons, e.g. Save); Master's MIX has nothing to browse, so Browse opens the Master pair on its FX chain.
+     */
+    private fun drawEditHeader(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
+        val binding = parametersState.browseSelectionForEdit(moduleId)?.let { browseBay.bindingFor(session, mixer, it) }
+        val chip = if (binding != null) {
+            BayHeader.Chip(binding.label, binding.accent, "Editing ${binding.label}. Browse shows its list in this place.", binding.actions)
+        } else {
+            BayHeader.Chip("Master · Mix", PerformanceColors.COLOR_MASTER, "Editing the Master mix. Browse shows the Master FX list in this place.")
+        }
+        val toggle = if (moduleId in deepEditModuleIds) ({ parametersState.openBrowseFromEdit(moduleId) }) else null
+        BayHeader.draw(
+            session, parametersState, mixer, browsing = false, chip = chip, queueDeck = ctx.deckLabelForModuleId(moduleId),
+            onToggle = toggle,
+            toggleTooltip = if (binding != null) "Browse the list for ${binding.label}: a click applies a row." else "Browse the Master FX list: a click applies a row.",
+            toggleUnavailable = "This module has no list to browse."
+        )
+    }
+
+    /** The pair view below its two rows: the [BayHeader] line (Back, Browse|Params, the target chip), then the Browse list for the half last touched. */
     fun drawPairBay(session: SessionContext, mixer: Mixer, parametersState: ParametersState, bayH: Float) {
         val tag = parametersState.focusedPair ?: return
         val pair = PerfRows.pairFor(tag) ?: return
         if (ImGui.beginChild("##pair_bay_area", 0f, bayH, true)) {
             // Browse picks push undo steps, and no Params editor is drawn here to run the keys.
             handleDeepEditKeys(parametersState, mixer, fullSet = false)
-            session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-                if (ButtonChrome.button("Back##pair_back")) parametersState.leavePair()
-                itemTooltip("Back to the Perform view (Esc).")
-                if (tag != PerfRows.PAIR_XF) {
-                    ImGui.sameLine()
-                    if (ButtonChrome.button("Parameters##pair_params")) parametersState.openParamsForPair(tag)
-                    itemTooltip("Edit parameters, modulation and properties for the half you last touched.")
-                }
+            val binding = browseBay.pairBinding(session, mixer, parametersState, pair)
+            // Before the header, so its chip already shows the tab a new target opens on.
+            binding?.let { BrowserDock.syncTab(it, parametersState.dockSelectionEpoch) }
+            val chip = if (binding != null) {
+                val paused = !BrowserDock.isBoundTab(binding)
+                BayHeader.Chip(
+                    binding.label, binding.accent,
+                    if (paused) "Pick the ${binding.target.kind.name.lowercase()} tab to apply to ${binding.label} again."
+                    else "A click on a row applies it to ${binding.label} (Ctrl+Z undoes it). A double-click applies it and goes back to Perform.",
+                    binding.actions, paused
+                )
+            } else {
+                BayHeader.Chip(tag, null, "Nothing to browse here.")
             }
-            ImGui.spacing()
-            ImGui.separator()
-            ImGui.spacing()
-            browseBay.drawForPair(session, mixer, parametersState, pair)
+            val half = if (tag == PerfRows.PAIR_XF) "the transition" else binding?.label ?: "this pair"
+            BayHeader.draw(
+                session, parametersState, mixer, browsing = true, chip = chip,
+                queueDeck = llm.slop.liquidlsd.presets.DeckSlot.entries.firstOrNull { it.name == tag }?.label,
+                onToggle = { parametersState.openParamsForPair(tag) },
+                toggleTooltip = "Edit the parameters, modulation and properties of $half."
+            )
+            browseBay.drawForPair(session, mixer, parametersState, binding)
         }
         ImGui.endChild()
-    }
-
-    /** Right-aligned queue line at the top of the Params editor, so the queue feeding this module stays visible. */
-    private fun drawQueueRow(session: SessionContext, deckLabel: String?) {
-        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) { drawQueueNextUp(session, deckLabel) }
-        ImGui.spacing()
-        ImGui.separator()
-        ImGui.spacing()
-    }
-
-    /**
-     * Right-aligned, at the top of the Parameters editor: what the queue feeding this module plays next. The Library
-     * is off screen in Edit view; the pair view's Browse shows the queue columns themselves. Decks A/B and
-     * Master show the play queue, BG its own queue; PV has none.
-     */
-    private fun drawQueueNextUp(session: SessionContext, deckLabel: String?) {
-        val text = when {
-            deckLabel == "Deck BG" -> session.bgQueueManager.let {
-                QueueNextUp.describe(it.queue, it.activeIndex, it.isShuffleEnabled, it.isRepeatEnabled)
-            }
-            deckLabel == "Deck PV" -> return
-            else -> session.playQueueManager.let {
-                val staged = when {
-                    it.stagedDeckA -> "A"
-                    it.stagedDeckB -> "B"
-                    else -> null
-                }
-                QueueNextUp.describe(it.queue, it.activeIndex, it.isShuffleEnabled, it.isRepeatEnabled, staged)
-            }
-        }
-        val left = ImGui.getCursorPosX() + ImGui.getStyle().itemSpacingX
-        val avail = ImGui.getWindowWidth() - left - ImGui.getStyle().windowPaddingX
-        if (avail < 60f) return
-        val fitted = TextFit.ellipsize(text, avail)
-        ImGui.sameLine()
-        ImGui.setCursorPosX((ImGui.getWindowWidth() - ImGui.getStyle().windowPaddingX - ImGui.calcTextSize(fitted).x).coerceAtLeast(left))
-        ImGui.alignTextToFramePadding()
-        ImGui.textDisabled(fitted)
-        itemTooltip(text + "\nThe queue columns are in the pair view's Browse.")
     }
 
     fun deepEditParamsWidth(session: SessionContext, metrics: GridMetrics): Float {
@@ -237,7 +226,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
      * [ParametersState.activeTopTab] and [ParametersState.selectedCell]/[ParametersState.selectedParam]
      * are shared globals read by the drawers above, so they're saved, temporarily pointed at this
      * module's own state ([ParametersState.rackSelectedCell]), and restored afterward -- this keeps
-     * two simultaneously open Deep Edits (Multi mode) from fighting over one shared selection.
+     * a Learn-pinned second Deep Edit from fighting the open one over one shared selection.
      */
     fun drawRackDeepEdit(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
         val deckLabel = ctx.deckLabelForModuleId(moduleId)
@@ -366,7 +355,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         parametersState.rackSelectedCell[moduleId] = parametersState.selectedCell
         parametersState.selectedCell = savedCell
         parametersState.selectedParam = savedParam
-        // Keep the focus on whichever open Deep Edit the user last picked (Multi mode can show several);
+        // Keep the focus on whichever open Deep Edit the user last picked (a Learn pin can keep a second one open);
         // only claim it for this module if the focus doesn't point at any open Deep Edit.
         val savedModule = parametersState.deepEditModuleForTopTab(savedTopTab)
         val savedIsOpen = savedModule != null && parametersState.disclosureFor(savedModule) != ParametersState.DisclosureLevel.COLLAPSED

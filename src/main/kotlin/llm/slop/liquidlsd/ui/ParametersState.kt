@@ -124,7 +124,7 @@ class ParametersState : MidiLearnSink {
      * Library back to HALF so the Edit view (which hides the Library) is actually on screen.
      */
     fun setDisclosure(moduleId: String, level: DisclosureLevel) {
-        if (level != DisclosureLevel.COLLAPSED) focusedPair = null
+        if (level != DisclosureLevel.COLLAPSED) { focusedPair = null; libraryReturn = null }
         rackModuleDisclosure[moduleId] = level
         // Closing a row's Edit bay ends its dock binding too (it would otherwise reappear bound in Perform).
         if (level == DisclosureLevel.COLLAPSED && dockSelection?.moduleId == moduleId) dockSelection = null
@@ -169,6 +169,7 @@ class ParametersState : MidiLearnSink {
     fun leaveEditForPageChange() {
         collapseAllRackModules()
         leavePair()
+        libraryReturn = null
     }
 
     /** The module whose Edit bay is open, or null. */
@@ -184,11 +185,16 @@ class ParametersState : MidiLearnSink {
      * pair's two rows over the Browse dock; it is mutually exclusive with a Params Edit module and, unlike that module, is not persisted.
      */
     var focusedPair: String? = null
-        private set
+        private set(value) {
+            // A dirty-deck answer belongs to one pair-view session: leaving or switching the pair asks again.
+            if (value != field) dirtyAnsweredTag = null
+            field = value
+        }
 
     /** Focuses [tag]'s pair. Closes any Params Edit module (the two focus kinds never coexist) and drops a FULL Library to HALF. */
     fun focusPair(tag: String) {
         if (PerfRows.pairFor(tag) == null) return
+        libraryReturn = null
         if (anyRackModuleExpanded()) collapseAllRackModules()
         if (focusedPair != tag && dockSelection?.let { pairTagFor(it) } != tag) dockSelection = null
         focusedPair = tag
@@ -212,10 +218,75 @@ class ParametersState : MidiLearnSink {
         }
     }
 
+    /**
+     * What the pair view's Browse shows for [pair]: [pairBrowseTarget], or for Master with nothing touched its FX chain (MIX has
+     * nothing to browse, and the chain is what a Master pick changes).
+     */
+    internal fun pairDockTarget(pair: PerfRows.PairDef): BrowseTarget? =
+        pairBrowseTarget(pair) ?: if (pair.tag == PerfRows.PAIR_MASTER) BrowseTarget.FxChain(null) else null
+
     /** Leaves the pair view (back to Perform). */
     fun leavePair() {
         focusedPair = null
         dockSelection = null
+    }
+
+    // -- Dirty-deck prompt, once per pair view -----------------------------------------------
+
+    /** The deck tag whose unsaved-changes prompt was answered (Save or Discard) in the current pair view, or null. */
+    private var dirtyAnsweredTag: String? = null
+
+    /**
+     * True when a load to deck [deckTag] may skip the unsaved-changes prompt: the prompt was already answered for that deck in
+     * this pair view, so trying several sources in a row asks once. Ctrl+Z still undoes each load.
+     */
+    fun skipsDirtyPrompt(deckTag: String): Boolean = dirtyAnsweredTag == deckTag && focusedPair == deckTag
+
+    /** Records that the prompt for [deckTag] was answered with Save or Discard; only counts while that deck's pair is focused. */
+    fun noteDirtyPromptAnswered(deckTag: String) {
+        if (focusedPair == deckTag) dirtyAnsweredTag = deckTag
+    }
+
+    // -- Way back from the Library ------------------------------------------------------------
+
+    /** Where Esc returns to after the Library replaced a pair view or an Edit module; see [rememberLibraryReturn]. */
+    sealed class LibraryReturn {
+        data class Pair(val tag: String, val selection: DockSelection?) : LibraryReturn()
+        data class Edit(val moduleId: String, val selection: DockSelection?) : LibraryReturn()
+    }
+
+    /** Set when the Library replaced a pair view or an Edit module; cleared once used, or when a pair or Edit module is opened another way. */
+    var libraryReturn: LibraryReturn? = null
+        private set
+
+    /**
+     * Called just before the Library (Space, Ctrl+F, `/`, the menu, the controller) closes the pair view or the Edit module:
+     * remembers it, with the slot Browse was bound to, so Esc/back from the Library goes back there instead of to plain Perform.
+     */
+    fun rememberLibraryReturn() {
+        val pair = focusedPair
+        val module = expandedRackModuleId()
+        when {
+            pair != null -> libraryReturn = LibraryReturn.Pair(pair, dockSelection)
+            module != null -> libraryReturn = LibraryReturn.Edit(module, dockSelection)
+        }
+    }
+
+    /** Re-opens the pair view or Edit module the Library replaced (see [rememberLibraryReturn]). Returns false when there is none. */
+    fun restoreLibraryReturn(): Boolean {
+        val back = libraryReturn ?: return false
+        libraryReturn = null
+        when (back) {
+            is LibraryReturn.Pair -> {
+                focusPair(back.tag)
+                back.selection?.let { dockSelection = it; dockSelectionEpoch++ }
+            }
+            is LibraryReturn.Edit -> {
+                openParams(back.moduleId)
+                back.selection?.let { dockSelection = it }
+            }
+        }
+        return true
     }
 
     // -- Browse content (the unified BrowserPane is hosted here) -----------------------------
@@ -234,7 +305,10 @@ class ParametersState : MidiLearnSink {
     var dockSelection: DockSelection? = null
         private set
 
-    /** Bumped by every explicit row selection, so re-clicking the already-bound slot still re-syncs a paused dock tab. */
+    /**
+     * Bumped by every explicit selection (row click, picker, send, the header's Browse button), so re-clicking the already-bound
+     * slot still re-syncs a paused dock tab. A controller knob touch retargets without bumping it, so it never pulls the user off a tab.
+     */
     var dockSelectionEpoch: Int = 0
         private set
 
@@ -244,14 +318,39 @@ class ParametersState : MidiLearnSink {
 
     /**
      * Binds the dock to [target] on [moduleId] and focuses that row's pair (the pair view shows the Browse list under it).
-     * Every badge, slot and transition-name click, picker and monitor entry point goes through here.
+     * Every badge, slot and transition-name click, picker and monitor entry point goes through here. [retab] false (a knob
+     * touch) leaves the dock's tab alone unless the target itself changed (see [dockSelectionEpoch]).
      */
-    fun openBrowse(moduleId: String, target: BrowseTarget) {
+    fun openBrowse(moduleId: String, target: BrowseTarget, retab: Boolean = true) {
         val selection = DockSelection(moduleId, target)
         val tag = pairTagFor(selection) ?: return
         focusPair(tag)
         dockSelection = selection
-        dockSelectionEpoch++
+        if (retab) dockSelectionEpoch++
+    }
+
+    /**
+     * What the Edit header's Browse button binds for [moduleId]: the pair and half Edit is on (a deck's source or FX chain,
+     * Master FX, the transition), keeping the FX slot last browsed there. Null for Master's MIX half, which has nothing to browse.
+     */
+    internal fun browseSelectionForEdit(moduleId: String): DockSelection? {
+        val deckLabel = topTabForDeepEditModule(moduleId)?.takeIf { moduleId != MacroEngine.MASTER }
+        val target = when {
+            deckLabel != null -> if (getActiveSubTab(deckLabel) == "FX") BrowseTarget.FxChain(null) else BrowseTarget.Gen
+            moduleId != MacroEngine.MASTER -> return null
+            activeMixerSubTab == "FX" -> BrowseTarget.FxChain(null)
+            activeMixerSubTab == "TRANS" -> BrowseTarget.Transition
+            else -> return null
+        }
+        val kept = dockSelection?.takeIf { it.moduleId == moduleId && it.target is BrowseTarget.FxChain && target is BrowseTarget.FxChain }
+        return kept ?: DockSelection(moduleId, target)
+    }
+
+    /** The Edit header's Browse button: switches to the pair view on the pair and half [moduleId]'s Edit is on (see [browseSelectionForEdit]). */
+    fun openBrowseFromEdit(moduleId: String) {
+        val selection = browseSelectionForEdit(moduleId)
+        if (selection != null) openBrowse(selection.moduleId, selection.target)
+        else PerfRows.pairForBank(moduleId)?.let { focusPair(it.tag) }
     }
 
     private fun selectDock(moduleId: String, target: BrowseTarget) = openBrowse(moduleId, target)
@@ -351,7 +450,7 @@ class ParametersState : MidiLearnSink {
     }
 
     /**
-     * Opens the Params Edit view for the pair [tag]'s half last touched (the pair view's "Parameters" button): a deck's
+     * Opens the Params Edit view for the pair [tag]'s half last touched (the bay header's Params button): a deck's
      * SRC or FX, Master's CTRL (MIX) or FX, or the transition's own parameters. XF has no Params of its own besides the transition.
      */
     fun openParamsForPair(tag: String) {

@@ -24,15 +24,16 @@ import llm.slop.liquidlsd.ui.shortcuts.ShortcutManager
  * window draws it unbound; see `.planning/library-browser-unification-plan.md`.
  */
 object BrowserDock {
-    /** What the dock applies to while it is opened from an Edit row: the row's [target], a [label] for the chip, and row-specific buttons ([actions], e.g. Save, Clear Slot). */
+    /**
+     * What the dock applies to in the pair view: the half's [target], a [label] for the chip, and row-specific buttons ([actions], e.g.
+     * Save, Clear Slot). The chip and the buttons sit on the bay's header line ([llm.slop.liquidlsd.ui.BayHeader]), not in the dock.
+     */
     class DockBinding(
         val target: ApplyTarget,
         val label: String,
         val actions: (() -> Unit)? = null,
         /** The row's colour: tints the chip and the pane border while bound. */
-        val accent: FloatArray? = null,
-        /** Non-null when the dock owns the selection (Library dock): the chip shows a close button that runs it. */
-        val onClose: (() -> Unit)? = null
+        val accent: FloatArray? = null
     )
 
     private var syncedKey: String? = null
@@ -47,17 +48,18 @@ object BrowserDock {
         BrowseKind.TRANS -> LibraryViewMode.TRANS
     }
 
-    /** Opens on the tab of the row's kind whenever the row (or its slot) changes; a tab the user picks afterwards sticks until then. */
-    private fun syncTab(binding: DockBinding, epoch: Int) {
+    /**
+     * Opens on the tab of the row's kind whenever the target (the row, or its slot) changes or an explicit selection bumps [epoch]
+     * ([ParametersState.dockSelectionEpoch]; controller knob touches don't); a tab the user picks afterwards sticks until then.
+     */
+    fun syncTab(binding: DockBinding, epoch: Int) {
         if (binding.target.contextKey == syncedKey && epoch == syncedEpoch) return
         syncedKey = binding.target.contextKey
         syncedEpoch = epoch
         LibraryNavigation.setViewMode(modeFor(binding.target.kind))
     }
 
-    private const val TABS_W = 64f + 54f + 82f + 62f + 54f + 4 * 2f
-
-    /** Tab strip `Sources | FX | Transitions | Queues | Macros` followed by the centred action toolbar. Leaves the cursor after the toolbar. */
+    /** Tab strip `Sources | FX | Transitions | Queues | Macros`. Leaves the cursor after the last tab. */
     fun drawHeader(
         session: SessionContext,
         mixer: Mixer,
@@ -65,8 +67,7 @@ object BrowserDock {
         width: Float,
         btnH: Float,
         yOffset: Float,
-        x0: Float = 8f,
-        binding: DockBinding? = null
+        x0: Float = 8f
     ) {
         ImGui.setCursorPosX(x0)
         ImGui.setCursorPosY(yOffset)
@@ -93,43 +94,16 @@ object BrowserDock {
                 ImGui.popStyleColor(4)
             }
         }
-
-        if (binding != null) {
-            ImGui.setCursorPosX(x0 + TABS_W + 14f)
-            ImGui.setCursorPosY(yOffset)
-            drawChip(session, binding, boundTab(binding), btnH)
-        }
     }
 
     /** True while the selected tab is the kind the target edits; any other tab is the plain Library, with the binding paused. */
-    private fun boundTab(binding: DockBinding): Boolean = viewKind() == binding.target.kind
+    fun isBoundTab(binding: DockBinding): Boolean = viewKind() == binding.target.kind
 
     private fun viewKind(): BrowseKind? = when (LibraryPanel.viewMode) {
         LibraryViewMode.PRESETS -> BrowseKind.SRC
         LibraryViewMode.FX -> BrowseKind.FX
         LibraryViewMode.TRANS -> BrowseKind.TRANS
         LibraryViewMode.MAPS, LibraryViewMode.QUEUES -> null
-    }
-
-    /** The chip on the header line: `● Deck A · FX 1  [row buttons]  ✕`. Greyed (no buttons) while a tab of another kind is up, so the binding reads as paused, not gone. */
-    private fun drawChip(session: SessionContext, binding: DockBinding, bound: Boolean, btnH: Float) {
-        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            val dot = if (bound && binding.accent != null) TangoPalette.u32(binding.accent) else ImGui.getColorU32(ImGuiCol.TextDisabled)
-            ImGui.alignTextToFramePadding()
-            val cx = ImGui.getCursorScreenPosX()
-            val cy = ImGui.getCursorScreenPosY() + ImGui.getFrameHeight() * 0.5f
-            ImGui.getWindowDrawList().addCircleFilled(cx + 5f, cy, 4f, dot)
-            ImGui.dummy(14f, 0f)
-            ImGui.sameLine(0f, 0f)
-            if (bound) ImGui.text(binding.label) else ImGui.textDisabled("${binding.label} (paused)")
-            itemTooltip(if (bound) "A click applies to ${binding.label}. Double-click applies and ends the binding." else "Pick the ${binding.target.kind.name.lowercase()} tab to apply to ${binding.label} again.")
-            if (bound) binding.actions?.let { ImGui.sameLine(0f, 10f); it() }
-            binding.onClose?.let { close ->
-                ImGui.sameLine(0f, 8f)
-                if (ButtonChrome.button("${llm.slop.liquidlsd.ui.Icons.X}##dock_unbind", btnH, btnH)) close()
-                itemTooltip("Stop applying to ${binding.label} and go back to the plain Library (Esc).")
-            }
-        }
     }
 
     /** The pane (or the Macros list) of the selected tab, filling the remaining space. */

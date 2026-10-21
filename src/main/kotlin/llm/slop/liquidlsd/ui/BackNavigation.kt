@@ -14,6 +14,8 @@ import llm.slop.liquidlsd.rendering.Mixer
  *   3. FX focus mode (back to the chain's group mode).
  *   4. The pair focus view closes (one press, back to Perform).
  *   5. Any Rack module above Tier 1 collapses back to Tier 1.
+ *   6. The Library (Space, Ctrl+F, `/`, menu or controller) that replaced a pair view or an Edit module goes back to it
+ *      ([ParametersState.restoreLibraryReturn]); otherwise a FULL Library drops to HALF ([NavigationSurface.back]).
  */
 internal object BackNavigation {
     /** Undoes the innermost open thing. Returns true if something was undone. */
@@ -47,6 +49,6 @@ internal object BackNavigation {
             parametersState.collapseAllRackModules()
             return true
         }
-        return false
+        return parametersState.restoreLibraryReturn()
     }
 }

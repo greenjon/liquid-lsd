@@ -66,8 +66,12 @@ object LibraryPanel {
      */
     fun isEditView(session: SessionContext): Boolean = viewStateOf(session).editing
 
-    /** Leaves Edit view so the Library is on screen: cancels any armed Learn (it pins its module open) and collapses Deep Edit. */
+    /**
+     * Leaves Edit view (or the pair view) so the Library is on screen: cancels any armed Learn (it pins its module open) and collapses
+     * Deep Edit. What it left is remembered, so Esc/back from the Library returns there ([ParametersState.rememberLibraryReturn]).
+     */
     fun show(session: SessionContext) {
+        if (session.parametersState.focusedPair != null || isEditView(session)) session.parametersState.rememberLibraryReturn()
         session.parametersState.leavePair()
         if (!isEditView(session)) return
         if (llm.slop.liquidlsd.macro.MacroLearnState.isLearning()) llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
@@ -214,7 +218,7 @@ object LibraryPanel {
             val bottomSpacing = 2.5f
             val yOffset = (menuBarH - btnH - bottomSpacing).coerceAtLeast(0f)
 
-            BrowserDock.drawHeader(session, mixer, parametersState, safeW, btnH, yOffset, binding = binding)
+            BrowserDock.drawHeader(session, mixer, parametersState, safeW, btnH, yOffset)
 
             // Right-aligned Maximize / Restore button
             val windowBtnW = (btnH * 1.15f).coerceIn(20f, 32f)
