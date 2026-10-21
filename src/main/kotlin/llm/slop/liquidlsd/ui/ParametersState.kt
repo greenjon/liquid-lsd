@@ -394,8 +394,8 @@ class ParametersState : MidiLearnSink {
         val canonical = canonicalModuleForRow(moduleId)
         when (moduleId) {
             MacroEngine.MASTER_FX -> activeMixerSubTab = "FX"
-            MacroEngine.TRANS -> activeMixerSubTab = "TRANS"
-            MacroEngine.MASTER -> activeMixerSubTab = "CTRL"
+            // Master MIX lands on the MIX side tab's TRANS (master level, crossfade), not CTRL's queue/tempo triggers.
+            MacroEngine.TRANS, MacroEngine.MASTER -> activeMixerSubTab = "TRANS"
         }
         openParams(canonical)
     }
@@ -422,7 +422,7 @@ class ParametersState : MidiLearnSink {
             MacroEngine.DECK_B_FX -> activeDeckBSubTab == "FX"
             MacroEngine.DECK_BG_FX -> activeDeckBGSubTab == "FX"
             MacroEngine.DECK_PV_FX -> activeDeckPVSubTab == "FX"
-            MacroEngine.MASTER -> activeMixerSubTab == "CTRL"
+            MacroEngine.MASTER -> activeMixerSubTab != "FX" // its Edit lands on TRANS; CTRL shows its row too
             MacroEngine.MASTER_FX -> activeMixerSubTab == "FX"
             MacroEngine.TRANS -> activeMixerSubTab == "TRANS"
             else -> true
@@ -451,7 +451,7 @@ class ParametersState : MidiLearnSink {
 
     /**
      * Opens the Params Edit view for the pair [tag]'s half last touched (the bay header's Params button): a deck's
-     * SRC or FX, Master's CTRL (MIX) or FX, or the transition's own parameters. XF has no Params of its own besides the transition.
+     * SRC or FX, Master's MIX side tab (TRANS: master level, crossfade) or FX, or the transition's own parameters. XF has no Params of its own besides the transition.
      */
     fun openParamsForPair(tag: String) {
         val pair = PerfRows.pairFor(tag) ?: return
@@ -460,7 +460,7 @@ class ParametersState : MidiLearnSink {
         when {
             target is BrowseTarget.Transition -> activeMixerSubTab = "TRANS"
             deckLabel != null -> setDeckSubTab(deckLabel, if (target is BrowseTarget.FxChain) "FX" else "SRC")
-            else -> activeMixerSubTab = if (target is BrowseTarget.FxChain) "FX" else "CTRL"
+            else -> activeMixerSubTab = if (target is BrowseTarget.FxChain) "FX" else "TRANS"
         }
         openParams(if (pair.moduleId == MacroEngine.TRANS) MacroEngine.MASTER else pair.moduleId)
     }

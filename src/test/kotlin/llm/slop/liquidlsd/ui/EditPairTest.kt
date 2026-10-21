@@ -40,6 +40,7 @@ class EditPairTest {
     fun masterPairsMixWithFxOnCtrlAndTransitionsWithFxOtherwise() {
         val state = ParametersState()
         state.openParamsFromRow(MacroEngine.MASTER)
+        state.activeMixerSubTab = "CTRL"
         assertEquals(listOf(MacroEngine.MASTER, MacroEngine.MASTER_FX), banks(state))
         state.activeMixerSubTab = "TRANS"
         assertEquals(listOf(MacroEngine.TRANS, MacroEngine.MASTER_FX), banks(state))
@@ -61,6 +62,16 @@ class EditPairTest {
         assertTrue(state.anyRackModuleExpanded())
 
         state.toggleRowEdit(MacroEngine.DECK_A_FX)
+        assertFalse(state.anyRackModuleExpanded())
+    }
+
+    @Test
+    fun masterMixRowLandsOnMixNotCtrl() {
+        val state = ParametersState()
+        state.openParamsFromRow(MacroEngine.MASTER)
+        assertEquals("TRANS", state.activeMixerSubTab)
+        assertTrue(state.isRowEditActive(MacroEngine.MASTER))
+        state.toggleRowEdit(MacroEngine.MASTER)
         assertFalse(state.anyRackModuleExpanded())
     }
 

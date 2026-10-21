@@ -298,7 +298,7 @@ object FXChainMacroStrip {
             ImGui.beginGroup()
             CustomRangeSlider.drawCompactSlider(
                 session = session,
-                label = input.LABEL ?: input.NAME,
+                label = ParamLabels.of(fx.header, input.NAME),
                 currentValue = param.baseValue,
                 minLimit = param.minClamp,
                 maxLimit = param.maxClamp,
@@ -307,7 +307,7 @@ object FXChainMacroStrip {
                 onValueChanged = { param.set(it); onPushUndo() }
             )
             ImGui.endGroup()
-            itemTooltip("${fx.displayName}'s own ${input.LABEL ?: input.NAME} parameter (Focus Mode). Right-click to map hardware MIDI/OSC.")
+            itemTooltip("${fx.displayName}'s own ${ParamLabels.of(fx.header, input.NAME)} parameter (Focus Mode). Right-click to map hardware MIDI/OSC.")
         }
         ImGui.setCursorPosX(rowStartX)
     }
@@ -318,7 +318,7 @@ object FXChainMacroStrip {
         for (input in floatInputs) {
             val param = fx.parameters[input.NAME] ?: continue
             val isCurrent = fx.metaBinding.targetParamName == input.NAME
-            if (ImGui.menuItem(input.LABEL ?: input.NAME, "", isCurrent)) {
+            if (ImGui.menuItem(ParamLabels.of(fx.header, input.NAME), "", isCurrent)) {
                 edit { it.rebindMetaKnob(FxMetaBinding(input.NAME, param.minClamp, param.maxClamp, MetaCurve.LINEAR), persistOverride = false) }
             }
         }

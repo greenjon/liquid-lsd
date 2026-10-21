@@ -4,6 +4,7 @@ import imgui.ImGui
 import imgui.flag.ImGuiCol
 import llm.slop.liquidlsd.SessionContext
 import llm.slop.liquidlsd.macro.MacroEngine
+import llm.slop.liquidlsd.midi.ParameterCellId
 import llm.slop.liquidlsd.parameters.ParameterResolver
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.browser.BrowserDock
@@ -181,6 +182,19 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         ImGui.endChild()
     }
 
+    /**
+     * Keeps Properties from opening empty: with nothing selected, or the selection on a row this tab doesn't show
+     * (another SRC/FX/CTRL tab, a collapsed slot), selects the first knob-bound row the grid just drew, else its first row.
+     * A pending MIDI Learn keeps its row.
+     */
+    private fun preselectParam(parametersState: ParametersState) {
+        val scan = ParametersRenderer.RowScan
+        val selectedKey = parametersState.selectedCell?.paramKey
+        if (selectedKey != null && (selectedKey in scan.keys || parametersState.midiLearnTarget != null)) return
+        val (key, param) = scan.firstBound ?: scan.first ?: return
+        parametersState.select(ParameterCellId(key, "value"), param)
+    }
+
     fun deepEditParamsWidth(session: SessionContext, metrics: GridMetrics): Float {
         val lastCol = rackVisibleColumns(session).last()
         val maxGridW = rackColumnOffset(session, lastCol, metrics) + metrics.cell + metrics.cellPad * 0.5f
@@ -314,6 +328,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
 
             ParameterGridHeaders.drawColumnHeaders(session, labelColW, parametersState, mixer, metrics, headerH)
 
+            ParametersRenderer.RowScan.begin()
             if (deck != null) {
                 ParametersTabs.drawDeckGroupContent(session, deckLabel, deck, parametersState, labelColW, mixer, gridStartX, cvColumnsFn, columnOffsetFn, colorFn, onPushUndo)
             } else if (isMasterFx) {
@@ -321,6 +336,8 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
             } else if (isMixerModule) {
                 ParametersTabs.drawMixerGroupContent(session, mixer, parametersState, labelColW, gridStartX, cvColumnsFn, columnOffsetFn, colorFn, onPushUndo)
             }
+            ParametersRenderer.RowScan.end()
+            preselectParam(parametersState)
 
             contentBottomY = ImGui.getCursorScreenPosY()
             ImGui.dummy(0f, 0f)

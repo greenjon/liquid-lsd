@@ -23,6 +23,32 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 object ParametersRenderer {
+
+    /**
+     * The rows [drawParamRow] drew since [RowScan.begin]: the Edit bay reads it after the grid to pre-select a
+     * parameter (the first knob-bound row, else the first row) so Properties never opens empty.
+     */
+    object RowScan {
+        private var active = false
+        val keys = HashSet<String>()
+        var first: Pair<String, ModulatableParameter>? = null
+            private set
+        var firstBound: Pair<String, ModulatableParameter>? = null
+            private set
+
+        fun begin() {
+            active = true; keys.clear(); first = null; firstBound = null
+        }
+
+        fun end() { active = false }
+
+        internal fun note(paramKey: String, param: ModulatableParameter, knobBound: Boolean) {
+            if (!active) return
+            keys.add(paramKey)
+            if (first == null) first = paramKey to param
+            if (knobBound && firstBound == null) firstBound = paramKey to param
+        }
+    }
     
     fun drawParamRow(session: llm.slop.liquidlsd.SessionContext, label: String,
         paramKey: String,
@@ -56,6 +82,7 @@ object ParametersRenderer {
         val metaInfo = if (isMacroBound || param.metaDrivenBy == null) null else llm.slop.liquidlsd.macro.MacroEngine.metaKnobBindingInfo(paramKey)
         val isMetaDriven = !isMacroBound && param.metaDrivenBy != null
         val oscMappedAddress = OscMappingManager.getAddressForParameter(paramKey)
+        RowScan.note(paramKey, param, isMacroBound)
 
         val dl = ImGui.getWindowDrawList()
         if (isEven) {

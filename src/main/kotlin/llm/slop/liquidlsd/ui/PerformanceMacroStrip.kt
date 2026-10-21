@@ -198,7 +198,7 @@ internal object PerformanceMacroStrip {
     }
 
     private fun fxTargetLabel(fx: ISFFilter, binding: FxMetaBinding): String =
-        binding.targetParamName?.let { n -> fx.header.INPUTS.find { it.NAME == n }?.LABEL ?: n } ?: "Dry/Wet"
+        binding.targetParamName?.let { ParamLabels.of(fx.header, it) } ?: "Dry/Wet"
 
     private fun selectedMeta(control: MacroControl, fx: ISFFilter): Int =
         (metaSel[control.id] ?: 0).coerceIn(0, (fx.metaBindings.size - 1).coerceAtLeast(0))
@@ -220,7 +220,7 @@ internal object PerformanceMacroStrip {
             for (input in fx.header.INPUTS) {
                 if (!input.TYPE.equals("float", ignoreCase = true) || input.NAME in linked || fx.parameters[input.NAME] == null) continue
                 any = true
-                if (ImGui.menuItem(input.LABEL ?: input.NAME)) {
+                if (ImGui.menuItem(ParamLabels.of(fx.header, input.NAME))) {
                     metaSel[control.id] = fx.metaBindings.size
                     metaEdit(state, bankId, mixer, fx).run(null) { it.setParamLink(input.NAME, MetaLinkMode.FULL) }
                 }
