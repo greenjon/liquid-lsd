@@ -180,7 +180,10 @@ object AppPreferencesStore {
                     llm.slop.liquidlsd.rendering.FlameQualityTier.entries.firstOrNull { it.name == name }?.let { UITheme.flameQuality = it }
                 }
 
-                val savedSequencer = props.getBoolean("sequencerEnabled")
+                // The sequencer became on-by-default once it grew into a real tool. Settings files written
+                // before that hold a saved `false` that was only the old default, so turn it on once.
+                val seqMigrated = props.getBoolean("sequencerDefaultedOn") == true
+                val savedSequencer = if (seqMigrated) props.getBoolean("sequencerEnabled") else true
                 if (savedSequencer != null) {
                     UITheme.sequencerEnabled = savedSequencer
                     logger.info { "Loaded sequencerEnabled from settings file: ${UITheme.sequencerEnabled}" }
@@ -352,6 +355,7 @@ object AppPreferencesStore {
             props.setProperty("randomizationEnabled", UITheme.randomizationEnabled.toString())
             props.setProperty("showAdvancedPreferences", UITheme.showAdvancedPreferences.toString())
             props.setProperty("sequencerEnabled", UITheme.sequencerEnabled.toString())
+            props.setProperty("sequencerDefaultedOn", "true")
             props.setProperty("fxSwapFadeMs", UITheme.fxSwapFadeMs.toString())
             props.setProperty("flameBudgetMs", UITheme.flameBudgetMs.toString())
             props.setProperty("flameQuality", UITheme.flameQuality.name)

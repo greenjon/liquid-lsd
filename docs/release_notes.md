@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Step Sequencer On by Default; Pattern Edits Undoable (`ui/AppPreferences.kt`, `ui/AppPreferencesStore.kt`, `ui/SeqSection.kt`)
+- **The step sequencer is now enabled by default**, so its column and SEQ tab are there from the start. Turn it off in Preferences -> General if you don't want it. Settings saved before this change held the old default, so the first launch after updating turns it on once (`sequencerDefaultedOn` in the settings file); after that your choice sticks.
+- **Ctrl+Z now undoes sequencer edits.** A paint drag, a toolbar action (Randomize, Fill, Paste...) or a slider drag on the SEQ panel is one undo step.
+
+### Wider Default Modulation Range (`ui/ParametersRenderer.kt`, `ui/PropertiesPanel.kt`)
+- **New LFO and Audio modulators now start at -100% to 100%** (depth 1.0) instead of -50% to 50%. Existing modulators and presets are unchanged.
+- **New modulators default to Clock Unit = Beat with an interval of 1 beat** (was Time). This applies to the LFO and the Step Sequencer (`CvModulator.genUnit`). Saved presets keep their stored unit; the web evaluator test vectors were regenerated.
+- **The LFO now has the same one-click Beat Presets row as the Step Sequencer** (1/8 to 16 beats) above its Beat Div slider. The pill drawing is shared (`ui/BeatPresetPills.kt`).
+
 ### Tour Staleness Report (`scripts/tour_staleness.py`, `scripts/render_tour.sh`)
 - **New `scripts/tour_staleness.py` lists which walkthrough videos need re-rendering**, from git instead of a hand-kept list. Each render now stamps its commit in `rendered_at.json`; the script maps a tour's widget keys to source files and reports commits since then that touched them, the tour script or the renderer. Developer tooling only; see `docs/developer/tour_renderer.md`.
 

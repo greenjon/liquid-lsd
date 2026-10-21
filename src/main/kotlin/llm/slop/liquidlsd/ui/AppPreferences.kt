@@ -37,7 +37,7 @@ data class AppPreferences(
     val flameBudgetMs: Float = 3f,
     /** Fractal Flame cost tier (points ceiling, passes, sprite size); per machine, not per preset. */
     val flameQuality: llm.slop.liquidlsd.rendering.FlameQualityTier = llm.slop.liquidlsd.rendering.FlameQualityTier.MEDIUM,
-    val sequencerEnabled: Boolean = false,
+    val sequencerEnabled: Boolean = true,
     val midiEnabled: Boolean = false,
     val autoVjDirtyBehavior: UITheme.AutoVjDirtyBehavior = UITheme.AutoVjDirtyBehavior.AUTO_DISCARD,
     val manualLoadDirtyBehavior: UITheme.ManualLoadDirtyBehavior = UITheme.ManualLoadDirtyBehavior.PROMPT,

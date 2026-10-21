@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Step Sequencer On by Default; Pattern Edits Undoable (`ui/AppPreferences.kt`, `ui/AppPreferencesStore.kt`, `ui/SeqSection.kt`)
+- **The step sequencer is now enabled by default**, so its column and SEQ tab are there from the start. Turn it off in Preferences -> General if you don't want it. Settings saved before this change held the old default, so the first launch after updating turns it on once (`sequencerDefaultedOn` in the settings file); after that your choice sticks.
+- **Ctrl+Z now undoes sequencer edits.** A paint drag, a toolbar action (Randomize, Fill, Paste...) or a slider drag on the SEQ panel is one undo step.
+
 ### Tour Staleness Report (`scripts/tour_staleness.py`, `scripts/render_tour.sh`)
 - **New `scripts/tour_staleness.py` lists which walkthrough videos need re-rendering**, from git instead of a hand-kept list. Each render now stamps its commit in `rendered_at.json`; the script maps a tour's widget keys to source files and reports commits since then that touched them, the tour script or the renderer. Developer tooling only; see `docs/developer/tour_renderer.md`.
 

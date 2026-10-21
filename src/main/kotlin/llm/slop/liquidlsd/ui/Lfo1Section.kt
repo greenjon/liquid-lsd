@@ -229,6 +229,11 @@ object Lfo1Section {
             val currentMaxIdx = subdivisionOptions.indexOfFirst { it == existing.subdivisionMax }.coerceAtLeast(0)
             val currentActiveIdx = subdivisionOptions.indexOfFirst { it == existing.subdivision }.coerceAtLeast(0)
             
+            BeatPresetPills.draw(session, existing.id, themeColor, existing.subdivision, BeatPresetPills.LFO_PRESETS) { value ->
+                onReplace(existing.copy(subdivision = value, subdivisionMin = value, subdivisionMax = value, randomizeSubdivision = false))
+            }
+            ImGui.spacing()
+
             BeatDivisionSlider.drawBeatDivisionSlider(session, idPrefix = existing.id,
                 label = if (isGen) "LFO 1 Beat Div" else "Beat Div",
                 themeColor = themeColor,

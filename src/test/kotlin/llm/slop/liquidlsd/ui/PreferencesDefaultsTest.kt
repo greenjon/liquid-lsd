@@ -63,7 +63,7 @@ class PreferencesDefaultsTest {
     @Test
     fun testAppPreferencesDefaultValues() {
         val defaultPreferences = AppPreferences()
-        assertFalse(defaultPreferences.sequencerEnabled, "Sequencer should be disabled by default")
+        assertTrue(defaultPreferences.sequencerEnabled, "Sequencer should be enabled by default")
         assertFalse(defaultPreferences.randomizationEnabled, "Randomization should be disabled by default")
         assertFalse(defaultPreferences.midiEnabled, "MIDI should be disabled by default")
         assertTrue(defaultPreferences.lockCursorOnKnobDrag, "Lock cursor on knob drag should be enabled by default")
@@ -114,6 +114,22 @@ class PreferencesDefaultsTest {
         assertFalse(UITheme.randomizationEnabled)
         assertFalse(UITheme.midiEnabled)
         assertTrue(UITheme.lockCursorOnKnobDrag)
+    }
+
+    @Test
+    fun testOldSavedSequencerOffIsTurnedOnOnceThenRespected() {
+        // Written before the sequencer became on-by-default: the saved false was just the old default.
+        preferencesFile.writeText("sequencerEnabled=false\n")
+        UITheme.sequencerEnabled = false
+        AppPreferencesStore.loadPreferences()
+        assertTrue(UITheme.sequencerEnabled, "Pre-migration false is turned on")
+
+        // After a save the marker is present, so a deliberate off sticks.
+        UITheme.sequencerEnabled = false
+        AppPreferencesStore.savePreferences()
+        UITheme.sequencerEnabled = true
+        AppPreferencesStore.loadPreferences()
+        assertFalse(UITheme.sequencerEnabled, "Choice made after migration is respected")
     }
 
     @Test

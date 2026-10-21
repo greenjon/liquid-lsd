@@ -27,10 +27,6 @@ object SeqSection {
     private const val BAR_HEIGHT = 64f
     private const val MAX_PER_ROW = 16
 
-    private val BEAT_PRESETS = listOf(
-        "1/16" to 0.0625f, "1/8" to 0.125f, "1/4" to 0.25f, "1/2" to 0.5f,
-        "1" to 1.0f, "2" to 2.0f, "4" to 4.0f
-    )
     private val unitLabels = GenUnit.entries.map { it.name }.toTypedArray()
     private val unitIdxWrapper = ImInt()
 
@@ -42,6 +38,8 @@ object SeqSection {
     // Painting state: previous painted step/value so fast drags fill the gap between frames.
     private var lastPaintIdx = -1
     private var lastPaintVal = 0f
+
+    private var undoGestureOpen = false
 
     // Numeric entry popup (double-click a bar).
     private var editStep = -1
@@ -78,8 +76,15 @@ object SeqSection {
         paramKey: String,
         modulatorIndex: Int,
         themeColor: Int,
+        pushUndo: () -> Unit,
         onReplace: (CvModulator) -> Unit
     ) {
+        // One undo step per gesture: snapshot just before the first change, then not again until the mouse is released.
+        if (!ImGui.isMouseDown(0)) undoGestureOpen = false
+        val onReplace: (CvModulator) -> Unit = { m ->
+            if (!undoGestureOpen) { pushUndo(); undoGestureOpen = true }
+            onReplace(m)
+        }
         val isBipolar = param.minClamp < 0f
         val stepMin = if (isBipolar) -1.0f else 0.0f
         val stepCount = existing.seqStepCount.coerceIn(1, SeqPatterns.MAX_STEPS)
@@ -143,19 +148,8 @@ object SeqSection {
 
         val (lo, hi) = intervalLimits(existing.genUnit)
         if (existing.genUnit == GenUnit.BEAT) {
-            session.uiTheme.body("Beat Presets:")
-            ImGui.sameLine(0f, 8f * FONT_SCALE)
-            BEAT_PRESETS.forEachIndexed { idx, (label, value) ->
-                if (idx > 0) ImGui.sameLine(0f, 4f * FONT_SCALE)
-                val selected = abs(existing.subdivision - value) < 0.001f
-                if (selected) {
-                    ButtonChrome.pushColor(themeColor)
-                    ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
-                }
-                if (ButtonChrome.button("$label##seq_beat_preset_${id}_$idx", 42f * FONT_SCALE, 0f)) {
-                    onReplace(existing.copy(subdivision = value, subdivisionMin = value, subdivisionMax = value))
-                }
-                if (selected) ImGui.popStyleColor(4)
+            BeatPresetPills.draw(session, id, themeColor, existing.subdivision, BeatPresetPills.SEQ_PRESETS) { value ->
+                onReplace(existing.copy(subdivision = value, subdivisionMin = value, subdivisionMax = value))
             }
             ImGui.spacing()
         }

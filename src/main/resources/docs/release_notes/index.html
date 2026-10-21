@@ -1292,6 +1292,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#step-sequencer-on-by-default-pattern-edits-undoable-uiapppreferenceskt-uiapppreferencesstorekt-uiseqsectionkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step Sequencer On by Default; Pattern Edits Undoable (ui/AppPreferences.kt, ui/AppPreferencesStore.kt, ui/SeqSection.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wider-default-modulation-range-uiparametersrendererkt-uipropertiespanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wider Default Modulation Range (ui/ParametersRenderer.kt, ui/PropertiesPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tour-staleness-report-scriptstour_stalenesspy-scriptsrender_toursh" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6292,6 +6314,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#step-sequencer-on-by-default-pattern-edits-undoable-uiapppreferenceskt-uiapppreferencesstorekt-uiseqsectionkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step Sequencer On by Default; Pattern Edits Undoable (ui/AppPreferences.kt, ui/AppPreferencesStore.kt, ui/SeqSection.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wider-default-modulation-range-uiparametersrendererkt-uipropertiespanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Wider Default Modulation Range (ui/ParametersRenderer.kt, ui/PropertiesPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#tour-staleness-report-scriptstour_stalenesspy-scriptsrender_toursh" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11267,6 +11311,17 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="step-sequencer-on-by-default-pattern-edits-undoable-uiapppreferenceskt-uiapppreferencesstorekt-uiseqsectionkt">Step Sequencer On by Default; Pattern Edits Undoable (<code>ui/AppPreferences.kt</code>, <code>ui/AppPreferencesStore.kt</code>, <code>ui/SeqSection.kt</code>)</h3>
+<ul>
+<li><strong>The step sequencer is now enabled by default</strong>, so its column and SEQ tab are there from the start. Turn it off in Preferences -&gt; General if you don't want it. Settings saved before this change held the old default, so the first launch after updating turns it on once (<code>sequencerDefaultedOn</code> in the settings file); after that your choice sticks.</li>
+<li><strong>Ctrl+Z now undoes sequencer edits.</strong> A paint drag, a toolbar action (Randomize, Fill, Paste...) or a slider drag on the SEQ panel is one undo step.</li>
+</ul>
+<h3 id="wider-default-modulation-range-uiparametersrendererkt-uipropertiespanelkt">Wider Default Modulation Range (<code>ui/ParametersRenderer.kt</code>, <code>ui/PropertiesPanel.kt</code>)</h3>
+<ul>
+<li><strong>New LFO and Audio modulators now start at -100% to 100%</strong> (depth 1.0) instead of -50% to 50%. Existing modulators and presets are unchanged.</li>
+<li><strong>New modulators default to Clock Unit = Beat with an interval of 1 beat</strong> (was Time). This applies to the LFO and the Step Sequencer (<code>CvModulator.genUnit</code>). Saved presets keep their stored unit; the web evaluator test vectors were regenerated.</li>
+<li><strong>The LFO now has the same one-click Beat Presets row as the Step Sequencer</strong> (1/8 to 16 beats) above its Beat Div slider. The pill drawing is shared (<code>ui/BeatPresetPills.kt</code>).</li>
+</ul>
 <h3 id="tour-staleness-report-scriptstour_stalenesspy-scriptsrender_toursh">Tour Staleness Report (<code>scripts/tour_staleness.py</code>, <code>scripts/render_tour.sh</code>)</h3>
 <ul>
 <li><strong>New <code>scripts/tour_staleness.py</code> lists which walkthrough videos need re-rendering</strong>, from git instead of a hand-kept list. Each render now stamps its commit in <code>rendered_at.json</code>; the script maps a tour's widget keys to source files and reports commits since then that touched them, the tour script or the renderer. Developer tooling only; see <code>docs/developer/tour_renderer.md</code>.</li>

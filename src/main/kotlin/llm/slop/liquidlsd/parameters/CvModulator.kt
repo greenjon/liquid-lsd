@@ -16,7 +16,7 @@ data class CvModulator(
     var slope: Float = 0.5f,
     // LFO speed bounds setting
     val lfoSpeedMode: LfoSpeedMode = LfoSpeedMode.FAST,
-    val genUnit: GenUnit = GenUnit.TIME,
+    val genUnit: GenUnit = GenUnit.BEAT,
 
     // Range fields
     var depthMin: Float = depth,
@@ -55,7 +55,7 @@ data class CvModulator(
     var modSubdivision: Float = 1.0f,
     var modPhaseOffset: Float = 0.0f,
     var modSlope: Float = 0.5f,
-    val modGenUnit: GenUnit = GenUnit.TIME,
+    val modGenUnit: GenUnit = GenUnit.BEAT,
     val generatorModMode: GeneratorModMode = GeneratorModMode.NONE,
     var generatorModDepth: Float = 1.0f,
 

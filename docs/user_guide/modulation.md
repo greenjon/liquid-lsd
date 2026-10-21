@@ -115,7 +115,7 @@ LFO 2 modulates LFO 1 to add movement and complexity:
 
 The sequencer outputs a stepped voltage pattern that advances with each beat or at a set interval — good for geometric shifts, colour steps, and rhythmic stutter effects.
 
-> **Note:** The sequencer is disabled by default. Enable it in **Preferences → General** (under Features, "Enable Step Sequencer"), or toggle it directly from the **⋮** kebab menu left of Edit's **VAL** column header.
+> **Note:** The sequencer is on by default. If you don't use it, turn it off in **Preferences → General** (under Features, "Enable Step Sequencer"), or from the **⋮** kebab menu left of Edit's **VAL** column header, to hide its column and tab.
 
 ### The step editor
 

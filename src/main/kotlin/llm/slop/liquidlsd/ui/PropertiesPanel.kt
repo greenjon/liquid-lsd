@@ -32,15 +32,15 @@ object PropertiesPanel {
         virtualModulators.clear()
         if (cvId == "audio") {
             if (activeMods.isEmpty()) {
-                virtualModulators.add(CvModulator(id = "virtual_audio_1", sourceId = "audio_amp", depth = 0.5f, bypassed = true))
-                virtualModulators.add(CvModulator(id = "virtual_audio_2", sourceId = "audio_flux_bass", depth = 0.5f, bypassed = true))
+                virtualModulators.add(CvModulator(id = "virtual_audio_1", sourceId = "audio_amp", depth = 1.0f, bypassed = true))
+                virtualModulators.add(CvModulator(id = "virtual_audio_2", sourceId = "audio_flux_bass", depth = 1.0f, bypassed = true))
             } else if (activeMods.size == 1) {
                 val fallbackSource = if (activeMods[0].sourceId.startsWith("audio_flux_")) "audio_amp" else "audio_flux_bass"
-                virtualModulators.add(CvModulator(id = "virtual_audio_2", sourceId = fallbackSource, depth = 0.5f, bypassed = true))
+                virtualModulators.add(CvModulator(id = "virtual_audio_2", sourceId = fallbackSource, depth = 1.0f, bypassed = true))
             }
         } else {
             if (activeMods.isEmpty()) {
-                val defaultDepth = if (cvId == "seq") 1.0f else 0.5f
+                val defaultDepth = 1.0f
                 virtualModulators.add(CvModulator(id = "virtual_$cvId", sourceId = cvId, depth = defaultDepth, bypassed = true))
             }
         }
@@ -333,7 +333,7 @@ object PropertiesPanel {
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
                     ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, enableAudioInk[0], enableAudioInk[1], enableAudioInk[2], 1.0f)
                     if (ButtonChrome.button("${Icons.PLUS} Enable Audio Slot 2##enable_audio_2", ImGui.getContentRegionAvailX(), btnH)) {
-                        val newMod = existing.copy(id = llm.slop.liquidlsd.utils.DeterministicRandom.uuid(), bypassed = false, depth = 0.5f)
+                        val newMod = existing.copy(id = llm.slop.liquidlsd.utils.DeterministicRandom.uuid(), bypassed = false, depth = 1.0f)
                         replaceModulator(state, param, newMod, mixer)
                     }
                     itemTooltip("Enable a second concurrent audio-reactive modulator on this parameter.")
@@ -459,6 +459,7 @@ object PropertiesPanel {
                                 paramKey = cell.paramKey,
                                 modulatorIndex = globalModIndex,
                                 themeColor = currentThemeColor,
+                                pushUndo = { ParametersUndo.pushUndoState(state, mixer) },
                                 onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
                             )
                         }
