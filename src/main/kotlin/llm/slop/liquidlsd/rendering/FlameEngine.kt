@@ -229,7 +229,7 @@ internal class FlameEngine {
         queryUsed[prev] = false
         gpuSamples++
         if (++frames % 240 == 0 && gpuSamples > 0) {
-            logger.warn { "Flame: n=%d (%d pts) passes=%d softness=%.1f %s skip=%s: gpu %.2f ms/frame (avg of %d), governor scale %.2f".format(n, n * n, lastPasses, lastSoftness, if (density32) "fp32" else "fp16", skip.ifEmpty { "none" }, gpuNsSum / 1e6 / gpuSamples, gpuSamples, governor.scale) }
+            logger.debug { "Flame: n=%d (%d pts) passes=%d softness=%.1f %s skip=%s: gpu %.2f ms/frame (avg of %d), governor scale %.2f".format(n, n * n, lastPasses, lastSoftness, if (density32) "fp32" else "fp16", skip.ifEmpty { "none" }, gpuNsSum / 1e6 / gpuSamples, gpuSamples, governor.scale) }
             gpuNsSum = 0; gpuSamples = 0
         }
     }
