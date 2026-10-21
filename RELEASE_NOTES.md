@@ -1,7 +1,7 @@
 ## [Unreleased]
 
 ### KIFS Color Spread (`library/sources/kifs/kifs.fs`, `rendering/SourceDocRegistry.kt`)
-- **New Color Spread knob (default 0.5).** KIFS used to show about two colours, because the folds make every copy of a detail identical and the ramp only looked at the orbit trap. Color Spread shifts the hue by three things the folds do not erase: the fold level the orbit came closest at, the point's position in space, and the way the surface faces. Raise it for a wider spread of colours, 0 gives the old plain ramp, and the gold ramp ignores it. Existing KIFS looks gain the default spread.
+- **New Color Spread knob (default 1, with Saturation and Brightness now also defaulting to 1).** KIFS used to show about two colours, because the folds make every copy of a detail identical and the ramp only looked at the orbit trap. Color Spread shifts the hue by three things the folds do not erase: the fold level the orbit came closest at, the point's position in space, and the way the surface faces. Raise it for a wider spread of colours, 0 gives the old plain ramp, and the gold ramp ignores it. New KIFS decks start bright and fully spread; saved looks keep their own values.
 
 ### Lenia Recovers From Extinction (`library/sources/lenia/lenia.fs`)
 - **Lenia no longer stays black after Growth Center is pushed too high.** Above about 90 the growth peak sits above anything the field reaches, every cell decays to zero, and an empty grid can never grow again, so lowering Growth Center did nothing. The shader now checks a coarse lattice of cells each step and, when the whole grid is empty, reseeds it. Turning Growth Center back down brings the creatures back.
