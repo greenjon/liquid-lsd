@@ -9,7 +9,7 @@ Header: `LSD_COST` 3, `is3D` true, CREDIT "Liquid LSD", CATEGORIES Generator / 3
 | SurfaceType ("Fractal Type", STEP 1) | 0..3 | 0 | 0 Menger-like (box + sorted fold, scale 3), 1 Sierpinski tetrahedron (plane folds, scale 2), 2 octahedral (sorted fold toward vertex (k,0,0), scale 2), 3 mixed (Menger step on even iterations, Sierpinski step on odd, box base, scale 2). Reuses the allowlisted name `SurfaceType`. |
 | Scale | 0..1 | 0.5 | Multiplier on the nominal scale, exponential, 0.5 = 1x, range 0.67x..1.5x. Clamped to >= 1.2. |
 | Offset | 0..1 | 0.5 | Multiplier on the fold offset k (the IFS fixed vertex distance), 0.5 = 1x, 0.67x..1.5x. |
-| TwistX / TwistY / TwistZ | -1..1 | 0.1 / 0.15 / 0 | Rotation applied before every fold iteration, +-0.6 rad per axis. |
+| TwistX / TwistY / TwistZ | -1..1 | 0.1 / 0.15 / 0 | Rotation applied before every fold iteration except the first (object orientation fixed), +-0.6 rad per axis. |
 | MorphSpeed | -1..1 | 0.2 | Adds a time-driven rotation (up to 0.3 rad/s, axis weights 1, 0.7, 0.43) to the per-iteration rotation. |
 | FlightSpeed | -1..1 | 0.15 | Dolly toward the fractal's fixed vertex, `0.5 * FlightSpeed` scale-periods per second (one period = distance divided by the scale). Signed. |
 | Glow | 0..1 | 0.4 | Step-count halo around grazing rays. |

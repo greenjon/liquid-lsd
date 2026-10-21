@@ -17,8 +17,8 @@
         { "NAME": "TwistX", "LABEL": "Twist X", "TYPE": "float", "DEFAULT": 0.1, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "TwistY", "LABEL": "Twist Y", "TYPE": "float", "DEFAULT": 0.15, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "TwistZ", "LABEL": "Twist Z", "TYPE": "float", "DEFAULT": 0.0, "MIN": -1.0, "MAX": 1.0 },
-        { "NAME": "MorphSpeed", "LABEL": "Morph Speed", "TYPE": "float", "DEFAULT": 0.2, "MIN": -1.0, "MAX": 1.0 },
-        { "NAME": "FlightSpeed", "LABEL": "Flight Speed", "TYPE": "float", "DEFAULT": 0.15, "MIN": -1.0, "MAX": 1.0 },
+        { "NAME": "MorphSpeed", "LABEL": "Morph Speed", "TYPE": "float", "DEFAULT": 0.0, "MIN": -1.0, "MAX": 1.0 },
+        { "NAME": "FlightSpeed", "LABEL": "Flight Speed", "TYPE": "float", "DEFAULT": 0.0, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "Glow", "LABEL": "Glow", "TYPE": "float", "DEFAULT": 0.4, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "ColorMode", "LABEL": "Color Mode", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 4.0, "STEP": 1 },
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.58, "MIN": 0.0, "MAX": 1.0 },
@@ -98,7 +98,7 @@ float map(vec3 p) {
     p = clamp(p, vec3(-1e3), vec3(1e3));
     for (int i = 0; i < MAX_FOLDS; i++) {
         if (i >= gIter) break;
-        p = gRot * p;
+        if (i > 0) p = gRot * p;  // first level stays axis-aligned so Twist/Morph reshape the inside without turning the object
         int t = gType;
         if (t == 3) t = ((i - 2 * (i / 2)) == 0) ? 0 : 1;
         float zlim = 0.0;
@@ -193,22 +193,29 @@ void main() {
     gScale = max(nominal * ScaleMul_, 1.2);
     gOff = clamp(OffsetMul_, 0.3, 2.0);
 
-    // Per-iteration rotation: static twist plus a slow time-driven morph.
+    // Per-level rotation (skipped on the first level, see map()): static twist plus a slow time-driven morph.
     float m = TIME * MorphSpeed_;
     gRot = rotZ(TwistZ_ + m * 0.43) * rotY(TwistY_ + m * 0.7) * rotX(TwistX_ + m);
 
-    // Camera starts outside the fractal, centred on it; flight dollies toward the fixed vertex fp by powers of the scale.
-    vec3 fp = (gType == 2) ? vec3(gOff, 0.0, 0.0) : vec3(gOff);
-    vec3 dir = (gType == 2) ? normalize(vec3(1.0, 0.45, 0.3)) : normalize(vec3(1.0, 0.8, 1.15));
+    // Camera starts outside the fractal looking straight at a face (a cube face for Menger/mixed, a triangular face for the
+    // tetrahedron and octahedron). Flight dollies toward fp, a vertex of that face, by powers of the scale, so the path stays
+    // outside the shape.
+    vec3 fp;
+    vec3 face;     // unit direction from the centre to the camera
+    float d0;
+    if (gType == 2) { fp = vec3(gOff, 0.0, 0.0); face = normalize(vec3(1.0)); d0 = 2.4; }
+    else if (gType == 1) { fp = gOff * vec3(1.0, -1.0, -1.0); face = -normalize(vec3(1.0)); d0 = 4.0; }
+    else { fp = vec3(gOff); face = vec3(0.0, 0.0, 1.0); d0 = 2.9; }
+    vec3 ro0 = face * d0 * max(gOff, 1.0);
     float u = TIME * FlightSpeed_;
-    float dist = 2.8 * pow(gScale, -fract(u));
+    float flightK = pow(gScale, -fract(u));
     // The view direction is fixed (it looks at the origin from the nominal start), so the dolly toward fp is self-similar.
-    vec3 fwd = normalize(-(fp + dir * 2.8));
+    vec3 fwd = -face;
     vec3 rgt = normalize(cross(fwd, vec3(0.0, 1.0, 0.0)));
     vec3 upv = cross(rgt, fwd);
     float fov = 1.1 / max(Zoom_, 0.05);
     vec3 rd = normalize(rgt * uv.x * fov + upv * uv.y * fov + fwd);
-    vec3 ro = fp + dir * dist;
+    vec3 ro = fp + (ro0 - fp) * flightK;
 
     // User rotation of the whole camera rig about the origin (keeps the dolly self-similar).
     mat3 rot = rotZ(RotateZ) * rotY(RotateY) * rotX(RotateX);

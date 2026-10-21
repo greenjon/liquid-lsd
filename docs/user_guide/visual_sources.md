@@ -131,8 +131,9 @@ A kaleidoscopic iterated-function-system fractal: repeated folds, a scale and an
 
 - **Fractal Type**: Menger-like, Sierpinski tetrahedron, octahedral, or a mixed construction.
 - **Scale, Offset**: Look controls on the construction; away from the centre it stops tiling exactly.
-- **Twist X/Y/Z, Morph Speed**: Per-iteration rotation, and a time-driven rotation that continuously reshapes the form.
-- **Flight Speed**: Endless self-similar dolly toward the fixed vertex; negative flies outward.
+- **Twist X/Y/Z, Morph Speed**: Rotation applied to each nested level of the fractal except the outermost, so the object stays in place while its inner geometry twists (safe to modulate with an LFO). Morph Speed adds a time-driven rotation to the same twist. Morph Speed defaults to 0, so nothing moves until you raise it.
+- **Flight Speed**: Endless self-similar dolly toward the fixed vertex; negative flies outward. Defaults to 0 (holds still).
+- **Rotate X/Y/Z**: Turn the camera rig around the whole object; these never animate on their own.
 - **Quality, Glow, Color Mode**: Detail versus speed, a grazing-ray halo, and five colourings.
 
 ### Mandelbulb (`mandelbulb`)
