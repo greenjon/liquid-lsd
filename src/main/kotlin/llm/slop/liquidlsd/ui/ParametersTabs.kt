@@ -34,9 +34,10 @@ object ParametersTabs {
         return session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 14f }.coerceAtLeast(30f)
     }
 
+    /** Side-rail tab width: square, widened to fit the longest label ("CTRL") so no label spills past the rail. */
     fun calculateLeftTabsWidth(session: llm.slop.liquidlsd.SessionContext): Float {
-        // Keep the same height, but make them a square
-        return calculateLeftTabsHeight(session)
+        val widest = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.calcTextSize("CTRL").x }
+        return maxOf(calculateLeftTabsHeight(session), widest + 12f)
     }
 
     /**
@@ -68,7 +69,7 @@ object ParametersTabs {
             Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV: Visual source (SRC) and insert FX (FX).")
         )
         val buttonWidth = calculateLeftTabsWidth(session)
-        val buttonHeight = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 14f }.coerceAtLeast(30f)
+        val buttonHeight = calculateLeftTabsHeight(session)
 
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 0f, 4f)
         tabs.forEach { (shortLabel, fullTab, tooltipText) ->
@@ -403,7 +404,7 @@ object ParametersTabs {
             ParametersRenderer.drawParamRow(session, "Dry/Wet", "Mixer/Transition/DryWet", trans.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
             trans.parameters.forEach { (name, param) ->
-                val label = trans.header.INPUTS.find { it.NAME == name }?.LABEL ?: name
+                val label = ParamLabels.of(trans.header, name)
                 ParametersRenderer.drawParamRow(session, label, "Mixer/Transition/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
         } else {
@@ -462,8 +463,9 @@ object ParametersTabs {
                     getCvColumns, getColumnOffset, getCvColor, onPushUndo
                 )
             } else if (activeSource is DynamicVisualSource) {
+                val header = (activeSource as? llm.slop.liquidlsd.rendering.isf.ISFVisualSource)?.header
                 activeSource.parameters.forEach { (name, param) ->
-                    ParametersRenderer.drawParamRow(session, name, "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                    ParametersRenderer.drawParamRow(session, ParamLabels.of(header, name), "$deckLabel/${activeSource.displayName}/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
                 }
             }
         }
@@ -509,7 +511,7 @@ object ParametersTabs {
         if (!ImGui.treeNodeEx("Metaknob links (${fx.metaBindings.size})##metalinks_$id", imgui.flag.ImGuiTreeNodeFlags.SpanAvailWidth)) return
         itemTooltip("What ${fx.displayName}'s Metaknob drives: each link has its own range, response curve and zone of the knob's travel.")
         for (binding in fx.metaBindings.toList()) {
-            ImGui.textDisabled(binding.targetParamName?.let { n -> fx.header.INPUTS.find { it.NAME == n }?.LABEL ?: n } ?: "Dry/Wet")
+            ImGui.textDisabled(binding.targetParamName?.let { ParamLabels.of(fx.header, it) } ?: "Dry/Wet")
             FxMetaBindingEditor.drawFull(fx, binding, width, edit)
         }
         if (ImGui.smallButton("Add link##metaadd_$id")) ImGui.openPopup("metaadd_pop_$id")
@@ -521,7 +523,7 @@ object ParametersTabs {
             for (input in fx.header.INPUTS) {
                 if (!input.TYPE.equals("float", ignoreCase = true) || input.NAME in linked || fx.parameters[input.NAME] == null) continue
                 any = true
-                if (ImGui.menuItem(input.LABEL ?: input.NAME)) edit.run(null) { it.setParamLink(input.NAME, MetaLinkMode.FULL) }
+                if (ImGui.menuItem(ParamLabels.of(fx.header, input.NAME))) edit.run(null) { it.setParamLink(input.NAME, MetaLinkMode.FULL) }
             }
             if (null !in linked) {
                 any = true
@@ -545,7 +547,7 @@ object ParametersTabs {
         val shown = FxMetaEdit.shownKnobs(fx)
         if (!ImGui.treeNodeEx("Knobs (${shown.size})##knobs_$id", imgui.flag.ImGuiTreeNodeFlags.SpanAvailWidth)) return
         itemTooltip("Which parameters ${fx.displayName} puts on focus-mode knobs 2-4, three per page. Reorder or hide them; the order is saved with the slot.")
-        fun label(n: String) = fx.header.INPUTS.find { it.NAME == n }?.LABEL ?: n
+        fun label(n: String) = ParamLabels.of(fx.header, n)
         for ((i, name) in shown.withIndex()) {
             if (i % 3 == 0) ImGui.textDisabled("Page ${i / 3 + 1}")
             val owned = fx.metaBindings.any { it.enabled && it.targetParamName == name }
@@ -775,7 +777,7 @@ object ParametersTabs {
                     } else inputLabel
 
                     ParametersRenderer.drawParamRow(
-                        session, name, "$chainPrefix/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++,
+                        session, ParamLabels.of(fx.header, name), "$chainPrefix/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++,
                         getCvColumns, getColumnOffset, getCvColor, onPushUndo,
                         extraMenuItems = {
                             ImGui.separator()
