@@ -15,8 +15,8 @@ class DeckControlPanel(
 ) {
     private var pendingDragFrom: String? = null
 
-    /** Focuses [deckLabel] and opens its bay via context-aware monitor click (monitor and badge clicks). */
-    private fun openDeepEdit(deckLabel: String) {
+    /** Monitor and badge clicks: focuses [deckLabel]'s pair view (its source and FX rows over the Browse list). */
+    private fun focusDeckPair(deckLabel: String) {
         val moduleId = when (deckLabel) {
             "Deck A" -> MacroEngine.DECK_A
             "Deck B" -> MacroEngine.DECK_B
@@ -88,9 +88,9 @@ class DeckControlPanel(
 
         ImGui.setCursorScreenPos(dragBtnX, imgY)
         ImGui.invisibleButton("##drag_source_$label", dragBtnW, imgAvailH.coerceAtLeast(1f))
-        itemTooltip("Interactive monitor for $label. Click to open $label's source and FX rows over the browser (Parameters opens the full editor), drag to route to another deck, or drop presets to load.")
+        itemTooltip("Interactive monitor for $label. Click to open $label's source and FX rows over the browser (Params there opens the full editor), drag to route to another deck, or drop presets to load.")
         if (ImGui.isItemClicked(0)) {
-            if (onSelect != null) onSelect(label) else openDeepEdit(label)
+            if (onSelect != null) onSelect(label) else focusDeckPair(label)
         }
         
         val deckPayloadName = when (label) {
@@ -218,7 +218,7 @@ class DeckControlPanel(
 
         ImGui.setCursorScreenPos(badgeMinX, badgeMinY)
         if (ImGui.invisibleButton("##badge_btn_$label", badgeW, badgeH) || ImGui.isItemClicked(0)) {
-            if (onSelect != null) onSelect(label) else openDeepEdit(label)
+            if (onSelect != null) onSelect(label) else focusDeckPair(label)
         }
         itemTooltip("Open $label's source and FX rows over the browser.")
 

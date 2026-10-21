@@ -14,10 +14,10 @@ import llm.slop.liquidlsd.ui.browser.BrowserPane
  *  - Library view (Library FULL): back, next tab, next list; the cursor is knob 16. Tapping a send knob (9-12 = A, B, BG, PV;
  *    13 = master FX) sends the cursor item there and opens that row in the picker, so it also works in the picker.
  *    With shift: enqueue to the BG queue, previous tab, previous list.
- *  - Pair view (the unified pane under the focused pair's two rows): left-top = back, right-top = next pane
- *    (tree > list > queues; shift: previous), shift + right-bottom = clear the slot or chain; the cursor is knob 16
- *    (tap = apply, and a tap on a tree row selects the scope and moves the cursor into the list). Shift + tap on a send knob (9-13)
- *    switches to that deck's (or Master's) pair without sending.
+ *  - Pair view (the unified pane under the focused pair's two rows): side 1 = back, side 2 = next tab (shift: previous),
+ *    side 3 = next pane (tree > list), shift + side 3 = clear the slot or chain; the cursor is knob 16
+ *    (tap = apply, shift + tap = enqueue as in the Library, and a tap on a tree row selects the scope and moves the cursor into the
+ *    list). Shift + tap on a send knob (9-13) switches to that deck's (or Master's) pair without sending.
  *  - Dirty-deck modal up: back = Cancel, side 2 / knob tap = Save, side 3 / shift+tap = Discard (overrides every other context).
  *  - Perform / Edit view: back (the Esc stack), open the Library, open the picker of the row whose knob
  *    was touched last (an SRC row: its source; an FX row: the slot under the knob, or the chain list for knob 1;
@@ -92,12 +92,11 @@ internal class NavigationSurface(
     }
 
     private fun pickerButton(index: Int, shifted: Boolean) {
-        // The unified pane is in the bay: side 2 steps its panes (tree > list > queues), shift + side 3 clears the slot or chain.
-        val hosted = BrowserPane.hosted()
+        // Like the Library: side 2 steps the tab (shift: back a tab), side 3 the panes (tree > list); shift + side 3 clears the slot or chain instead.
         when (index) {
             0 -> if (!shifted) back()
-            1 -> LibraryNavigation.stepPane(if (shifted) -1 else 1, session, mixer)
-            2 -> if (shifted) hosted?.clear?.invoke()
+            1 -> LibraryNavigation.stepTab(if (shifted) -1 else 1)
+            2 -> if (shifted) BrowserPane.hosted()?.clear?.invoke() else LibraryNavigation.stepPane(1, session, mixer)
         }
     }
 
@@ -207,11 +206,7 @@ internal class NavigationSurface(
             deckConfirm?.answerDeckConfirm(if (shifted) DeckConfirmChoice.DISCARD else DeckConfirmChoice.SAVE)
             return
         }
-        if (inPicker) {
-            if (!shifted) LibraryNavigation.accept(session, mixer, parametersState)
-            return
-        }
-        if (!inLibraryView) return
+        if (!inLibraryView && !inPicker) return
         if (shifted) LibraryNavigation.enqueue(session, bg = false) else LibraryNavigation.accept(session, mixer, parametersState)
     }
 }

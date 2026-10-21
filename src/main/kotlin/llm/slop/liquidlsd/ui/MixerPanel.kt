@@ -113,9 +113,11 @@ class MixerPanel(
 
         ImGui.setCursorScreenPos(badgeMinX, badgeMinY)
         if (ImGui.invisibleButton("##badge_btn_master", badgeW, badgeH) || ImGui.isItemClicked(0)) {
-            parametersState.activeTopTab = "Mixer"
+            // Like the deck badges: the Master pair view (MIX and FX rows over the Browse list, on the Master FX chain).
+            parametersState.openFromMonitor(MacroEngine.MASTER, "Mixer")
         }
-        itemTooltip("Master output. Click to focus Parameters Mix tab.")
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "mixer_master_badge" }
+        itemTooltip("Master output. Click to open the Master mix and FX rows over the browser.")
 
         // 2. [🎲 ALL] Button (to the left of [M])
         if (session.uiTheme.randomizationEnabled) {

@@ -32,7 +32,8 @@ internal object PairKnobTouch {
             PerfRows.DECK_TAGS.any { PerfRows.CATALOG["deck.$it.src"]?.bankId == row.bankId } -> ParametersState.BrowseTarget.Gen
             else -> return
         }
-        parametersState.openBrowse(ctx.canonicalModuleId(row.bankId), browse)
+        // No retab: a knob touch only moves the tab when the target changes, so it never pulls the user off Queues or Macros.
+        parametersState.openBrowse(ctx.canonicalModuleId(row.bankId), browse, retab = false)
     }
 
     private const val COLS = 4

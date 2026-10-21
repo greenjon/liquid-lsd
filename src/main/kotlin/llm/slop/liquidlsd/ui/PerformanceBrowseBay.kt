@@ -30,16 +30,22 @@ import java.io.File
  */
 internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
 
-    /** Draws the pair view's Browse list, bound to the half of [pair] last touched (see [ParametersState.pairBrowseTarget]). */
-    fun drawForPair(session: SessionContext, mixer: Mixer, parametersState: ParametersState, pair: PerfRows.PairDef) {
-        val target = parametersState.pairBrowseTarget(pair)
-        if (target == null) {
-            // Master MIX (nothing touched yet): nothing to browse, so show the plain Library list.
-            ImGui.textDisabled("Nothing to browse on the Master mix. Click a Master FX slot or chain name to browse effects.")
+    /**
+     * The pair view's binding: the half of [pair] last touched ([ParametersState.pairDockTarget]; Master with nothing touched browses
+     * its FX chain). A double-click on a row applies it and leaves the pair view, back to Perform.
+     */
+    fun pairBinding(session: SessionContext, mixer: Mixer, parametersState: ParametersState, pair: PerfRows.PairDef): DockBinding? {
+        val target = parametersState.pairDockTarget(pair) ?: return null
+        return bindingFor(session, mixer, ParametersState.DockSelection(pair.moduleId, target)) { parametersState.leavePair() }
+    }
+
+    /** Draws the pair view's Browse list for [binding] (see [pairBinding]); with no binding there is no target, so no list is hosted. */
+    fun drawForPair(session: SessionContext, mixer: Mixer, parametersState: ParametersState, binding: DockBinding?) {
+        if (binding == null) {
+            llm.slop.liquidlsd.ui.browser.BrowserPane.noteHosting(null) // nothing hosted: the controller must not act on an older target
+            ImGui.textDisabled("Nothing to browse here.")
             return
         }
-        val binding = bindingFor(session, mixer, ParametersState.DockSelection(pair.moduleId, target)) { parametersState.leavePair() }
-        if (binding == null) { ImGui.textDisabled("Nothing to browse here."); return }
         drawDock(session, mixer, parametersState, binding)
     }
 
@@ -60,13 +66,13 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
         if (binding == null) return null
         val accent = if (selection.target is ParametersState.BrowseTarget.Transition) PerformanceColors.COLOR_TRANS else accentFor(moduleId)
         if (onEnd == null) return DockBinding(binding.target, binding.label, binding.actions, accent)
-        // The dock can end the binding ([onEnd]): a double-click commits it, and the chip gets its close button.
+        // The dock can end the binding ([onEnd]): a double-click applies (on its first click) and then commits, leaving the pair view.
         val target = binding.target
         val committing = ApplyTarget(
             target.kind, target.contextKey, target.defaultScope, target.accepts, target.isApplied, target.apply, target.clear,
             onCommit = onEnd
         )
-        return DockBinding(committing, binding.label, binding.actions, accent, onClose = onEnd)
+        return DockBinding(committing, binding.label, binding.actions, accent)
     }
 
     private fun accentFor(moduleId: String): FloatArray = when (moduleId) {
@@ -80,14 +86,18 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
     private fun genBinding(session: SessionContext, mixer: Mixer, deck: llm.slop.liquidlsd.rendering.Deck, deckLabel: String): DockBinding {
         val parametersState = session.parametersState
         val applyId = { id: String -> DeckSourcePicker.applyPickedSourceId(session, parametersState, mixer, deck, deckLabel, id, ctx.deckPresetController) }
+        val slot = DeckSlot.entries.firstOrNull { it.label == deckLabel }
         val target = ApplyTarget(
             kind = BrowseKind.SRC,
             contextKey = "gen/$deckLabel",
             defaultScope = BrowseScope.All,
             accepts = { ApplyTarget.acceptsSource(it.type) },
+            // Like the Library's loaded marks: a deck holding a saved preset marks that preset's row, not its generator's stock row.
             isApplied = {
+                val presetName = slot?.let { s -> session.presetManager.activePreset(s) }
                 when (it.type) {
-                    AssetType.SOURCE_STOCK -> it.path.removePrefix(BrowseCatalogs.STOCK_SOURCE_PREFIX) == deck.source.id
+                    AssetType.PRESET -> presetName != null && presetName == File(it.path).nameWithoutExtension
+                    AssetType.SOURCE_STOCK -> presetName == null && it.path.removePrefix(BrowseCatalogs.STOCK_SOURCE_PREFIX) == deck.source.id
                     AssetType.SOURCE_EXTERNAL -> (deck.source as? llm.slop.liquidlsd.rendering.ExternalVideoSource)?.serverName == BrowseCatalogs.externalName(it)
                     else -> false
                 }
@@ -95,17 +105,17 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             apply = { asset ->
                 if (asset.type == AssetType.SOURCE_STOCK) applyId(asset.path.removePrefix(BrowseCatalogs.STOCK_SOURCE_PREFIX))
                 else if (asset.type == AssetType.SOURCE_EXTERNAL) applyId("ext_video:${BrowseCatalogs.externalName(asset)}")
-                else DeckSlot.entries.firstOrNull { it.label == deckLabel }?.let { DeckOps.request(it, DeckChange.Preset(File(asset.path))) }
+                else slot?.let { DeckOps.request(it, DeckChange.Preset(File(asset.path))) }
             }
         )
         val actions = { drawGenBrowseSaveButton(session, mixer, deck, deckLabel) }
         return DockBinding(target, "$deckLabel · Source", actions)
     }
 
-    /** The one dock the Library also draws, bound to this row's [binding]: tabs and toolbar, the chip line, the pane, then its shortcuts and popups. */
+    /** The one dock the Library also draws, bound to this row's [binding]: the tab strip, the pane, then its shortcuts and popups. The chip is on the bay's header line. */
     private fun drawDock(session: SessionContext, mixer: Mixer, parametersState: ParametersState, binding: DockBinding) {
         val btnH = 21f
-        BrowserDock.drawHeader(session, mixer, parametersState, ImGui.getWindowWidth(), btnH, ImGui.getCursorPosY(), ImGui.getCursorPosX(), binding)
+        BrowserDock.drawHeader(session, mixer, parametersState, ImGui.getWindowWidth(), btnH, ImGui.getCursorPosY(), ImGui.getCursorPosX())
         ImGui.spacing()
         BrowserDock.drawBody(session, mixer, parametersState, binding)
         BrowserDock.drawShortcuts(session, mixer)
@@ -155,9 +165,15 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             contextKey = "transition",
             defaultScope = BrowseScope.All,
             accepts = { ApplyTarget.acceptsTransition(it.type) },
+            // A saved transition marks its own row, not its shader's stock row.
             isApplied = {
-                it.type == AssetType.TRANSITION_STOCK &&
-                    it.path.removePrefix(BrowseCatalogs.STOCK_TRANS_PREFIX) == (mixer.transitionFilter?.id ?: "linear_crossfade")
+                val preset = TransitionOps.presetSourceFile(mixer)
+                when (it.type) {
+                    AssetType.TRANSITION_PRESET -> preset != null && preset.absolutePath == File(it.path).absolutePath
+                    AssetType.TRANSITION_STOCK -> preset == null &&
+                        it.path.removePrefix(BrowseCatalogs.STOCK_TRANS_PREFIX) == (mixer.transitionFilter?.id ?: "linear_crossfade")
+                    else -> false
+                }
             },
             apply = { asset ->
                 if (asset.type == AssetType.TRANSITION_STOCK) TransitionOps.setStock(asset.path.removePrefix(BrowseCatalogs.STOCK_TRANS_PREFIX), undoable = true)
@@ -186,7 +202,15 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
                 contextKey = "fxslot/$key/$slotIndex",
                 defaultScope = ApplyTarget.defaultFxScope(slotIndex),
                 accepts = { ApplyTarget.acceptsFxSlot(it.type) },
-                isApplied = { it.type == AssetType.FX_STOCK && chain.slots[slotIndex]?.id == it.path.removePrefix(BrowseCatalogs.STOCK_FX_PREFIX) },
+                // A saved effect marks its own row, not its shader's stock row.
+                isApplied = {
+                    val preset = FxOps.slotSourceFile(chain, slotIndex)
+                    when (it.type) {
+                        AssetType.FX_PRESET -> preset != null && preset.absolutePath == File(it.path).absolutePath
+                        AssetType.FX_STOCK -> preset == null && chain.slots[slotIndex]?.id == it.path.removePrefix(BrowseCatalogs.STOCK_FX_PREFIX)
+                        else -> false
+                    }
+                },
                 apply = { asset ->
                     if (asset.type == AssetType.FX_STOCK) FxOps.setSlotFilter(chain, slotIndex, asset.path.removePrefix(BrowseCatalogs.STOCK_FX_PREFIX), undoable = true)
                     else FxOps.loadSlot(session, File(asset.path), chain, slotIndex, undoable = true)
@@ -195,9 +219,11 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             )
         }
         val actions = {
+            val rowH = ImGui.getFrameHeight()
             session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-                if (ButtonChrome.button("${Icons.TRASH} ${if (slotIndex == null) "Clear Chain" else "Clear Slot ${slotIndex + 1}"}##browse_fx_clear")) target.clear?.invoke()
+                if (ButtonChrome.button("${Icons.TRASH} ${if (slotIndex == null) "Clear Chain" else "Clear Slot ${slotIndex + 1}"}##browse_fx_clear", 0f, rowH)) target.clear?.invoke()
             }
+            itemTooltip(if (slotIndex == null) "Empty all ${FxChain.SLOT_COUNT} slots of the $chainLabel FX chain (Ctrl+Z undoes it)." else "Empty $chainLabel FX slot ${slotIndex + 1} (Ctrl+Z undoes it).")
         }
         return DockBinding(target, if (slotIndex == null) "$chainLabel · Chain" else "$chainLabel · FX ${slotIndex + 1}", actions)
     }

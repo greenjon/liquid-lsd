@@ -108,7 +108,12 @@ class UIManager(
         DeckOps.mixerProvider = { currentMixer }
         DeckOps.prompt = { slot, proceed, cancel ->
             val mixer = currentMixer
-            if (mixer == null) proceed() else popupManager.requestDeckConfirm(slot.deck(mixer), slot.label, proceed, cancel)
+            when {
+                mixer == null -> proceed()
+                // Trying sources one after another in a deck's pair view asks once; Ctrl+Z still undoes each load.
+                parametersState.skipsDirtyPrompt(slot.name) -> proceed()
+                else -> popupManager.requestDeckConfirm(slot.deck(mixer), slot.label, { parametersState.noteDirtyPromptAnswered(slot.name); proceed() }, cancel)
+            }
         }
         DeckOps.undoSink = { restore -> currentMixer?.let { ParametersUndo.pushUndoState(parametersState, it, restore) } }
         llm.slop.liquidlsd.presets.FxOps.undoSink = DeckOps.undoSink
