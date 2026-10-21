@@ -53,6 +53,7 @@ The Library panel spans the left and middle columns. That column has four views:
 
 - **Perform** — The Performance rows sit above the Library, which fills the rest of the window. This is the everyday view for playing a set.
 - **Edit** — Open a row's **Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Press **Esc** or click the row's **Collapse** button to get back to Perform.
+- **Loaded markers** — Rows in the Sources, FX and Transitions lists carry small colored badges to the left of the name: `A` / `B` / `BG` / `PV` for the deck holding a source, preset or external stream, `A2` / `BG3` / `M1` for the deck and slot of a stock effect (`M` = Master FX), `B` for a deck's saved FX chain, and `M` for the current stock transition. Too many to fit collapses to `×3`; hover the badges to read them out. Saved single effects and saved transitions are not marked. They appear in the Library and in the Browse bay.
 - **Pair view** — Click a deck's source badge, an FX chain name or slot, a preview monitor or the transition name and the Library goes away too: that deck's SRC and FX rows (or Master's, or Transitions and Clock) stay on screen with the same browser below (same tabs, toolbar and queues), applying to the half you last touched. Press **Esc** or **Back** to return to Perform; **Parameters** opens that half's full editor.
 - **Library** — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.
 

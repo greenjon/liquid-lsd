@@ -29,6 +29,7 @@ import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
 import llm.slop.liquidlsd.ui.popOpenDropdownPadding
 import llm.slop.liquidlsd.ui.pushOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
+import llm.slop.liquidlsd.ui.DROPDOWN_ROW_HEIGHT
 import llm.slop.liquidlsd.ui.selectableRow
 import mu.KotlinLogging
 import java.io.File
@@ -70,7 +71,8 @@ object PresetListPanel {
         playlistRows: PlaylistRows? = null,
         target: ApplyTarget? = null
     ) {
-                filtered.forEachIndexed { index, asset ->
+        val loaded = LoadedMarks.snapshot(mixer, session.presetManager)
+        filtered.forEachIndexed { index, asset ->
             ImGui.pushID(index)
 
             val isExternal = asset.type == AssetType.SOURCE_EXTERNAL
@@ -81,8 +83,7 @@ object PresetListPanel {
 
             val icon = if (isStock) Icons.SQUARE else Icons.DISC
             val star = if (favoriteKeys != null && (if (isStock) asset.path.removePrefix(STOCK_PATH_PREFIX) else asset.path) in favoriteKeys) "\u2605 " else ""
-            val applied = if (target?.isApplied(asset) == true) "\u25CF " else ""
-            val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else "$applied$star$icon ${asset.displayName}"
+            val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else "$star$icon ${asset.displayName}"
             val isSelected = selection.isSelected(asset)
 
             val popupId = "preset_context_menu_$index"
@@ -94,8 +95,10 @@ object PresetListPanel {
 
             val btnW = 28f
             val availW = ImGui.getContentRegionAvailX()
-            val itemW = (availW - btnW).coerceAtLeast(10f)
+            val itemW = (availW - btnW - LoadedMarks.GUTTER_W).coerceAtLeast(10f)
 
+            if (target?.isApplied(asset) == true) LoadedMarks.drawBoundFill(availW - btnW, DROPDOWN_ROW_HEIGHT)
+            LoadedMarks.drawGutter(loaded.marksFor(asset), DROPDOWN_ROW_HEIGHT)
             if (hasIssues && !isSelected) {
                 ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.TEXT_ERROR.u32())
             }

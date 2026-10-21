@@ -31,6 +31,7 @@ import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
 import llm.slop.liquidlsd.ui.popOpenDropdownPadding
 import llm.slop.liquidlsd.ui.pushOpenDropdownFont
 import llm.slop.liquidlsd.ui.popOpenDropdownFont
+import llm.slop.liquidlsd.ui.DROPDOWN_ROW_HEIGHT
 import llm.slop.liquidlsd.ui.selectableRow
 import mu.KotlinLogging
 import java.io.File
@@ -118,9 +119,10 @@ object FXBrowserPanel {
         infoFor: ((AssetItem) -> String)? = null, contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null,
         target: ApplyTarget? = null
     ) {
+        val loaded = LoadedMarks.fxSnapshot(mixer)
         rows.forEachIndexed { index, asset ->
             ImGui.pushID(index)
-            drawRow(session, mixer, asset, index, 20f, infoFor?.invoke(asset) ?: "", contextExtras, playlistRows, target)
+            drawRow(session, mixer, asset, index, 20f, infoFor?.invoke(asset) ?: "", contextExtras, playlistRows, target, loaded.marksFor(asset))
             ImGui.popID()
         }
         playlistRows?.finish()
@@ -129,7 +131,7 @@ object FXBrowserPanel {
     private fun drawRow(
         session: SessionContext, mixer: Mixer, asset: AssetItem, index: Int, btnW: Float,
         info: String = "", contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null,
-        target: ApplyTarget? = null
+        target: ApplyTarget? = null, marks: List<LoadedMarks.Mark> = emptyList()
     ) {
         val icon = when (asset.type) {
             AssetType.FX_STOCK -> if (FxShortlist.isFavorite(asset.path.removePrefix(STOCK_PATH_PREFIX))) "\u2605" else Icons.SQUARE
@@ -139,12 +141,15 @@ object FXBrowserPanel {
         val isSelected = selectedAsset?.path == asset.path
         val popupId = "fx_browser_context_$index"
 
-        val itemW = (ImGui.getContentRegionAvailX() - btnW - 4f).coerceAtLeast(10f)
+        val availW = ImGui.getContentRegionAvailX()
+        val itemW = (availW - btnW - 4f - LoadedMarks.GUTTER_W).coerceAtLeast(10f)
+        if (target?.isApplied(asset) == true) LoadedMarks.drawBoundFill(availW - btnW - 4f, DROPDOWN_ROW_HEIGHT)
+        LoadedMarks.drawGutter(marks, DROPDOWN_ROW_HEIGHT)
 
         if (isSelected) SmoothScroll.follow(LibraryPanel.shouldScrollToSelection)
 
         session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
-            val text = "${if (target?.isApplied(asset) == true) "\u25CF " else ""}$icon ${asset.displayName}"
+            val text = "$icon ${asset.displayName}"
             selectableRow("${if (info.isNotEmpty()) PresetListPanel.nameForInfo(text, itemW) else text}##fx_browser_$index", isSelected, itemW)
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { PresetListPanel.tourRowKey(BrowseKind.FX, asset) }

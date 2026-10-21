@@ -366,7 +366,7 @@ while you pick. **Back** or **Esc** returns to Perform; **Parameters** opens the
 - **The same browser as the Library**: it has the Library's own **Sources / FX / Transitions / Macros** tabs,
   folder tree, list and queue columns. The header line shows a chip such as "● Deck A · FX 1" (the
   slot, chain or transition you are editing): on that tab a click applies, the row that is
-  applied shows a ●, and the list shows only what the target can take. Pick another tab and the chip
+  applied is tinted across the whole row, and the list shows only what the target can take. Pick another tab and the chip
   greys out ("paused"): it is the plain Library again (double-click loads to the inactive deck).
   Each target remembers the folder you last used there. Search with `Ctrl+F` or `/`. **Clear Slot** /
   **Clear Chain** empties the target.
