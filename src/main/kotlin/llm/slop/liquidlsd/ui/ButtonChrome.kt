@@ -68,6 +68,23 @@ object ButtonChrome {
         return (col and (0xFF shl 24)) or (ch(16) shl 16) or (ch(8) shl 8) or ch(0)
     }
 
+    /**
+     * A toggle / segmented-choice button. When [selected] it is lit with [themeColor] (hover lightens and
+     * press darkens it, like [pushColor]) and its label gets whichever ink reads on the brightest state;
+     * otherwise it is a plain button in the theme's own colors. Returns true on click. [width] / [height]
+     * of 0 mean auto, as for ImGui.button.
+     */
+    fun toggleButton(label: String, selected: Boolean, themeColor: Int, width: Float = 0f, height: Float = 0f): Boolean {
+        if (!selected) return button(label, width, height)
+        fun rgb(c: Int) = floatArrayOf((c and 0xFF) / 255f, ((c shr 8) and 0xFF) / 255f, ((c shr 16) and 0xFF) / 255f)
+        val ink = TangoPalette.inkFor(rgb(themeColor), rgb(shift(themeColor, hoverShift)))
+        pushColor(themeColor)
+        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
+        val clicked = button(label, width, height)
+        ImGui.popStyleColor(4)
+        return clicked
+    }
+
     /** Drop-in for `ImGui.button`: the same button plus the bevel. Prefer this for every opaque button. */
     fun button(label: String): Boolean = ImGui.button(label).also { afterItem(); noteTour(label) }
 

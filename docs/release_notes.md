@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Toggle Buttons Share One Helper (`ui/ButtonChrome.kt`)
+- **Selected toggle and pill buttons now use `ButtonChrome.toggleButton`**: the Audio Continuous/Transient pair, the sequencer's Glide Curve, the beat-preset pills, and the Max Points and Lobes pills. A selected button now lightens on hover and darkens on press like other lit buttons (the old ones stayed flat), unselected ones use the theme's own button color instead of fixed greys, and the label ink is chosen to read on the fill instead of always black.
+
 ### Step Sequencer On by Default; Pattern Edits Undoable (`ui/AppPreferences.kt`, `ui/AppPreferencesStore.kt`, `ui/SeqSection.kt`)
 - **The step sequencer is now enabled by default**, so its column and SEQ tab are there from the start. Turn it off in Preferences -> General if you don't want it. Settings saved before this change held the old default, so the first launch after updating turns it on once (`sequencerDefaultedOn` in the settings file); after that your choice sticks.
 - **Ctrl+Z now undoes sequencer edits.** A paint drag, a toolbar action (Randomize, Fill, Paste...) or a slider drag on the SEQ panel is one undo step.

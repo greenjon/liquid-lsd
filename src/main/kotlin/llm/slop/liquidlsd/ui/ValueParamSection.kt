@@ -237,23 +237,13 @@ object ValueParamSection {
                     }
 
                     val isActive = (currentPts == preset)
-                    if (isActive) {
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, themeColor)
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
-                    }
-
-                    if (ButtonChrome.button("$label##maxpts_pill_$preset", btnW, pillH)) {
+                    if (ButtonChrome.toggleButton("$label##maxpts_pill_$preset", isActive, themeColor, btnW, pillH)) {
                         val newVal = preset.toFloat()
                         param.baseValue = newVal
                         param.baseMin = newVal
                         param.baseMax = newVal
                     }
 
-                    if (isActive) {
-                        ImGui.popStyleColor(4)
-                    }
 
                     startLine = false
                 }
@@ -285,14 +275,7 @@ object ValueParamSection {
                     }
 
                     val isActive = (currentLobe == petal)
-                    if (isActive) {
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, themeColor)
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
-                        ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
-                    }
-
-                    if (ButtonChrome.button("$label##lobe_pill_$petal", btnW, pillH)) {
+                    if (ButtonChrome.toggleButton("$label##lobe_pill_$petal", isActive, themeColor, btnW, pillH)) {
                         val newVal = petal.toFloat()
                         param.baseValue = newVal
                         if (!param.randomizeBase) {
@@ -301,9 +284,6 @@ object ValueParamSection {
                         }
                     }
 
-                    if (isActive) {
-                        ImGui.popStyleColor(4)
-                    }
 
                     startLine = false
                 }

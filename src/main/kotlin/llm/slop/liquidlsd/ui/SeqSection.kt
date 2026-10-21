@@ -490,14 +490,9 @@ object SeqSection {
         )) {
             if (smooth) ImGui.sameLine(0f, 6f * FONT_SCALE)
             val selected = existing.seqCurveSmooth == smooth
-            if (selected) {
-                ButtonChrome.pushColor(themeColor)
-                ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
-            }
-            if (ButtonChrome.button("$label##seq_curve_${id}_$label", 70f * FONT_SCALE, 0f)) {
+            if (ButtonChrome.toggleButton("$label##seq_curve_${id}_$label", selected, themeColor, 70f * FONT_SCALE, 0f)) {
                 onReplace(existing.copy(seqCurveSmooth = smooth))
             }
-            if (selected) ImGui.popStyleColor(4)
             itemTooltip(tip)
         }
         if (!gliding) ImGui.endDisabled()

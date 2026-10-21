@@ -54,51 +54,18 @@ object AudioModulatorSection {
         val btnW = 125f * fontScale
         val btnH = ImGui.getFrameHeight()
 
-        // Continuous Button
-        val isContActive = !isTransient
-        if (isContActive) {
-            val ink = TangoPalette.inkFor(CvTheme.getThemeColorRGB(existing.sourceId))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, themeColor)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
-        } else {
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
-        }
-        if (ButtonChrome.button("Continuous (RMS)##mode_cont_${existing.id}", btnW, btnH)) {
-            if (isTransient) {
-                val newSource = RMS_SOURCES[currentBandIdx]
-                onReplace(existing.copy(sourceId = newSource))
-            }
+        // Continuous / Transient toggle pair
+        if (ButtonChrome.toggleButton("Continuous (RMS)##mode_cont_${existing.id}", !isTransient, themeColor, btnW, btnH) && isTransient) {
+            onReplace(existing.copy(sourceId = RMS_SOURCES[currentBandIdx]))
         }
         itemTooltip("Continuous Envelope: Tracks continuous volume and sustained body of audio frequencies.")
-        ImGui.popStyleColor(if (isContActive) 4 else 3)
 
         ImGui.sameLine(0f, 4f * fontScale)
 
-        // Transient Button
-        val isFluxActive = isTransient
-        if (isFluxActive) {
-            val ink = TangoPalette.inkFor(CvTheme.getThemeColorRGB(existing.sourceId))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, themeColor)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, themeColor)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, themeColor)
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
-        } else {
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button, ImGui.colorConvertFloat4ToU32(0.15f, 0.15f, 0.15f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.25f, 0.25f, 0.25f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive, ImGui.colorConvertFloat4ToU32(0.35f, 0.35f, 0.35f, 1f))
-        }
-        if (ButtonChrome.button("Transient (Flux)##mode_flux_${existing.id}", btnW, btnH)) {
-            if (!isTransient) {
-                val newSource = FLUX_SOURCES[currentBandIdx]
-                onReplace(existing.copy(sourceId = newSource))
-            }
+        if (ButtonChrome.toggleButton("Transient (Flux)##mode_flux_${existing.id}", isTransient, themeColor, btnW, btnH) && !isTransient) {
+            onReplace(existing.copy(sourceId = FLUX_SOURCES[currentBandIdx]))
         }
         itemTooltip("Transient Trigger: Tracks sudden onsets, drum strikes, and energy growth (Spectral Flux).")
-        ImGui.popStyleColor(if (isFluxActive) 4 else 3)
 
         ImGui.spacing()
 

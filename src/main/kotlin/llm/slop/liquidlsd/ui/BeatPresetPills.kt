@@ -33,12 +33,7 @@ object BeatPresetPills {
         presets.forEachIndexed { idx, (label, value) ->
             if (idx > 0) ImGui.sameLine(0f, 4f * FONT_SCALE)
             val selected = abs(current - value) < 0.001f
-            if (selected) {
-                ButtonChrome.pushColor(themeColor)
-                ImGui.pushStyleColor(ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0f, 0f, 0f, 1f))
-            }
-            if (ButtonChrome.button("$label##beat_preset_${idPrefix}_$idx", 42f * FONT_SCALE, 0f)) onPick(value)
-            if (selected) ImGui.popStyleColor(4)
+            if (ButtonChrome.toggleButton("$label##beat_preset_${idPrefix}_$idx", selected, themeColor, 42f * FONT_SCALE, 0f)) onPick(value)
         }
     }
 }

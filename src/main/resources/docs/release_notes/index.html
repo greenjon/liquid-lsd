@@ -1292,6 +1292,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#toggle-buttons-share-one-helper-uibuttonchromekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toggle Buttons Share One Helper (ui/ButtonChrome.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#step-sequencer-on-by-default-pattern-edits-undoable-uiapppreferenceskt-uiapppreferencesstorekt-uiseqsectionkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6314,6 +6325,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#toggle-buttons-share-one-helper-uibuttonchromekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Toggle Buttons Share One Helper (ui/ButtonChrome.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#step-sequencer-on-by-default-pattern-edits-undoable-uiapppreferenceskt-uiapppreferencesstorekt-uiseqsectionkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11311,6 +11333,10 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="toggle-buttons-share-one-helper-uibuttonchromekt">Toggle Buttons Share One Helper (<code>ui/ButtonChrome.kt</code>)</h3>
+<ul>
+<li><strong>Selected toggle and pill buttons now use <code>ButtonChrome.toggleButton</code></strong>: the Audio Continuous/Transient pair, the sequencer's Glide Curve, the beat-preset pills, and the Max Points and Lobes pills. A selected button now lightens on hover and darkens on press like other lit buttons (the old ones stayed flat), unselected ones use the theme's own button color instead of fixed greys, and the label ink is chosen to read on the fill instead of always black.</li>
+</ul>
 <h3 id="step-sequencer-on-by-default-pattern-edits-undoable-uiapppreferenceskt-uiapppreferencesstorekt-uiseqsectionkt">Step Sequencer On by Default; Pattern Edits Undoable (<code>ui/AppPreferences.kt</code>, <code>ui/AppPreferencesStore.kt</code>, <code>ui/SeqSection.kt</code>)</h3>
 <ul>
 <li><strong>The step sequencer is now enabled by default</strong>, so its column and SEQ tab are there from the start. Turn it off in Preferences -&gt; General if you don't want it. Settings saved before this change held the old default, so the first launch after updating turns it on once (<code>sequencerDefaultedOn</code> in the settings file); after that your choice sticks.</li>
