@@ -38,5 +38,8 @@ void main() {
     // Vibrancy blends per-channel gamma (saturating) with gamma on the density only (hue-preserving).
     vec3 perChannel = pow(clamp(hue * v, 0.0, 1.0), vec3(ig));
     vec3 hueKeep = hue * pow(v, ig);
-    FragColor = vec4(mix(perChannel, hueKeep, uVibrancy), 1.0);
+    // Premultiplied output (the mixer composites fg.rgb + bg * (1 - fg.a)): coverage follows the brightest channel, so
+    // black is transparent and the BG deck shows through wherever the flame is dark.
+    vec3 rgb = mix(perChannel, hueKeep, uVibrancy);
+    FragColor = vec4(rgb, max(rgb.r, max(rgb.g, rgb.b)));
 }
