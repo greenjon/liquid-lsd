@@ -336,6 +336,46 @@ class NavigationSurfaceTest {
     }
 
     @Test
+    fun pickerSideTwoStepsTheTabLikeTheLibrary() {
+        try {
+            state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
+            hostPane(mutableListOf(), mutableListOf())
+            LibraryNavigation.setViewMode(LibraryPanel.LibraryViewMode.PRESETS)
+            nav().button(1, false)
+            assertEquals(LibraryPanel.LibraryViewMode.FX, LibraryPanel.viewMode)
+            nav().button(1, true)
+            assertEquals(LibraryPanel.LibraryViewMode.PRESETS, LibraryPanel.viewMode)
+            assertEquals("A", state.focusedPair, "stepping tabs stays in the pair view")
+        } finally {
+            unhostPane()
+        }
+    }
+
+    @Test
+    fun libraryOpenedFromEditReturnsThereOnBack() {
+        state.setDisclosure(MacroEngine.DECK_B, ParametersState.DisclosureLevel.DEEP_EDIT)
+        nav().button(1, false) // opens the Library FULL, closing Edit
+        assertFalse(state.anyRackModuleExpanded())
+        assertEquals(UITheme.LibraryMode.FULL, UITheme.libraryMode)
+        assertTrue(nav().back())
+        assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_B))
+        assertEquals(UITheme.LibraryMode.HALF, UITheme.libraryMode)
+        assertTrue(nav().back()) // closes Edit
+        assertFalse(nav().back(), "the way back is used once")
+    }
+
+    @Test
+    fun libraryOpenedFromThePairViewReturnsToThePairAndItsSlot() {
+        state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", 1)
+        LibraryPanel.show(session)
+        UITheme.libraryMode = UITheme.LibraryMode.FULL
+        assertNull(state.focusedPair)
+        assertTrue(nav().back())
+        assertEquals("A", state.focusedPair)
+        assertEquals(ParametersState.BrowseTarget.FxChain(1), state.dockSelection?.target)
+    }
+
+    @Test
     fun tappingATreeRowInTheBayMovesTheCursorIntoTheList() {
         try {
             state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
