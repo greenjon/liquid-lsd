@@ -288,6 +288,10 @@ object MacroEngine {
     fun metaOwnerOf(parameterId: String): String? =
         lastMixer?.let { ParameterResolver.findParameterByPath(it, parameterId) }?.metaDrivenBy
 
+    /** The macro knob driving the Metaknob that owns [paramKey]'s base value (sibling `Meta` path), or null if the Metaknob isn't macro-bound. */
+    fun metaKnobBindingInfo(paramKey: String): MacroBindingInfo? =
+        findBaseBindingInfo(paramKey.substringBeforeLast('/') + "/Meta")
+
     fun isMappingTargetLocked(mappingPath: String): Boolean {
         if (!mappingPath.contains(":mod/")) return findBaseBindingInfo(mappingPath) != null
         val base = mappingPath.substringBefore(":mod/")

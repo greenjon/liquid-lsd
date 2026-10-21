@@ -42,6 +42,12 @@ class ModulatableParameter(
      */
     @Volatile
     var metaDrivenBy: String? = null
+
+    /** The link and Metaknob behind [metaDrivenBy], so an edit of this value can be run backwards onto the knob (see KnobDrive). */
+    @Volatile
+    var metaDrivenBinding: llm.slop.liquidlsd.rendering.isf.FxMetaBinding? = null
+    @Volatile
+    var metaDrivenKnob: ModulatableParameter? = null
     val history = CvHistoryBuffer(historySize)
 
     /**

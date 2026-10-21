@@ -666,7 +666,8 @@ object CustomRangeSlider {
         modulatorId: String? = null,
         propertyName: String? = null,
         paramKey: String? = null,
-        displayScale: Float? = null
+        displayScale: Float? = null,
+        driveThroughKnob: Boolean = false
     ) {
         val dispScale = displayScale ?: if (formatValue === ValueFormat.AUTO) ValueFormat.scaleFor(minLimit, maxLimit) else 1f
         val effectiveIsRandomizable = if (isRandomizeDisabled) false else ((isRandomizable && session.uiTheme.randomizationEnabled) || (!showControls && isRandomizable))
@@ -767,7 +768,8 @@ object CustomRangeSlider {
             }
         }
         
-        val macroInfo = if (paramKey != null) {
+        // driveThroughKnob: the caller routes edits onto the driving knob (KnobDrive), so the slider stays editable.
+        val macroInfo = if (paramKey != null && !driveThroughKnob) {
             llm.slop.liquidlsd.macro.MacroEngine.lockingBindingInfo(paramKey, modulatorId, propertyName)
         } else null
         val isMacroBound = macroInfo != null

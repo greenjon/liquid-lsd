@@ -1292,6 +1292,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#locked-values-are-linked-to-their-knob-both-ways-macroknobdrivekt-uivalueparamsectionkt-uicustomrangesliderkt-uiparametersrendererkt-renderingisfisffilterkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locked Values Are Linked to Their Knob Both Ways (macro/KnobDrive.kt, ui/ValueParamSection.kt, ui/CustomRangeSlider.kt, ui/ParametersRenderer.kt, rendering/isf/ISFFilter.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#browser-rows-show-what-is-loaded-where-uibrowserloadedmarkskt-uibrowserpresetlistpanelkt-fxbrowserpanelkt-transitionbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Browser Rows Show What Is Loaded Where (ui/browser/LoadedMarks.kt, ui/browser/PresetListPanel.kt, FXBrowserPanel.kt, TransitionBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#monitor-drag-moves-the-fx-chain-too-presetsdeckopskt-uideckcontrolpanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6391,6 +6413,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#locked-values-are-linked-to-their-knob-both-ways-macroknobdrivekt-uivalueparamsectionkt-uicustomrangesliderkt-uiparametersrendererkt-renderingisfisffilterkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Locked Values Are Linked to Their Knob Both Ways (macro/KnobDrive.kt, ui/ValueParamSection.kt, ui/CustomRangeSlider.kt, ui/ParametersRenderer.kt, rendering/isf/ISFFilter.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#browser-rows-show-what-is-loaded-where-uibrowserloadedmarkskt-uibrowserpresetlistpanelkt-fxbrowserpanelkt-transitionbrowserpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Browser Rows Show What Is Loaded Where (ui/browser/LoadedMarks.kt, ui/browser/PresetListPanel.kt, FXBrowserPanel.kt, TransitionBrowserPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#monitor-drag-moves-the-fx-chain-too-presetsdeckopskt-uideckcontrolpanelkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11465,6 +11509,16 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="locked-values-are-linked-to-their-knob-both-ways-macroknobdrivekt-uivalueparamsectionkt-uicustomrangesliderkt-uiparametersrendererkt-renderingisfisffilterkt">Locked Values Are Linked to Their Knob Both Ways (<code>macro/KnobDrive.kt</code>, <code>ui/ValueParamSection.kt</code>, <code>ui/CustomRangeSlider.kt</code>, <code>ui/ParametersRenderer.kt</code>, <code>rendering/isf/ISFFilter.kt</code>)</h3>
+<ul>
+<li><strong>Editing the Value of a knob-driven parameter now moves the knob.</strong> Before, a parameter driven by a macro knob or an effect Metaknob had a read-only Value in Edit, and the knob moved the Value one way only. Now dragging, scrolling or typing in <strong>Initial Range</strong> runs the edit backwards through the link's curve and sets the knob, and the parameter follows in the same frame. A Metaknob that is itself on a macro knob passes the edit up to that macro knob. Other targets of the same knob move with it. Stepped and S-curve links land on the nearest position, and a typed value outside the link's range stops at the knob's end. The Max Points, Lobes, Recipe and Choice widgets are still locked, as is the Value cell in the parameter grid (click only).</li>
+<li><strong>Metaknob-driven parameters now look driven.</strong> They get the cyan accent bar, tint and label of a macro target, plus the <code>[K1]</code> badge when the Metaknob sits on a macro knob. Their tooltips name the Metaknob and its knob (<code>Locked: Driven by its Metaknob [K1] link</code>), and the Edit caption reads <code>Linked to its Metaknob [K1]. Editing the value moves the knob.</code> Randomize is off for a linked Value. (<code>ModulatableParameter.metaDrivenBinding</code> and <code>metaDrivenKnob</code> are refreshed by the filter each frame.)</li>
+</ul>
+<h3 id="browser-rows-show-what-is-loaded-where-uibrowserloadedmarkskt-uibrowserpresetlistpanelkt-fxbrowserpanelkt-transitionbrowserpanelkt">Browser Rows Show What Is Loaded Where (<code>ui/browser/LoadedMarks.kt</code>, <code>ui/browser/PresetListPanel.kt</code>, <code>FXBrowserPanel.kt</code>, <code>TransitionBrowserPanel.kt</code>)</h3>
+<ul>
+<li><strong>Every row in the Sources, FX and Transitions lists now carries colored badges</strong> in a fixed gutter to the left of the name, in the Library and in the Browse bay alike. Sources show the deck (<code>A</code>, <code>B</code>, <code>BG</code>, <code>PV</code>): a generator, saved preset or external stream loaded on two decks shows both, and a deck running a saved preset marks that preset's row only, not the generator underneath it. Stock effects show deck and slot (<code>A2</code>, <code>BG3</code>, <code>M1</code> for Master FX), saved FX chains show the deck (<code>B</code>), and the current stock transition shows <code>M</code>. When the badges do not fit (an effect used in several slots, say) they collapse into one gray <code>×n</code> chip; hover the gutter for the full list. Saved single effects (<code>.lsdfx</code>) and saved transitions (<code>.lsdtrans</code>) are not tracked per slot, so they carry no badge.</li>
+<li>The old "●" prefix is gone: in the Browse bay the row applied to the bound deck, slot or transition is now tinted across the whole row.</li>
+</ul>
 <h3 id="monitor-drag-moves-the-fx-chain-too-presetsdeckopskt-uideckcontrolpanelkt">Monitor Drag Moves the FX Chain Too (<code>presets/DeckOps.kt</code>, <code>ui/DeckControlPanel.kt</code>)</h3>
 <ul>
 <li><strong>Dragging one monitor onto another now carries the deck's FX chain along with the source</strong>, for Move, Copy and Swap. Before, only the source and its knobs travelled and each deck kept its own chain. Dropping a monitor on another opens one menu of nine choices, in groups of three: <strong>Move</strong>, <strong>Copy</strong> and <strong>Swap</strong>, each for <strong>Source</strong>, <strong>FX</strong> or <strong>Source + FX</strong>. (The old right-drag path never fired and the left-drag direct Move was dead code; both are gone.) A Source-only change leaves macro knob bindings aimed at the FX chain behind (the target deck's knobs lose them); an FX-only change leaves the knobs alone. Still not undoable. (<code>DeckScope</code>; <code>DeckChange.CopyFrom/MoveFrom/SwapWith</code> take a scope.)</li>
@@ -11629,6 +11683,7 @@
 <li><strong>Evolving looks.</strong> The deck's die makes a brand-new random flame and frames the camera on it; blank, exploded, collapsed or fog-like candidates are rejected and re-rolled automatically. A new <strong>R / M / P / B</strong> button beside the die picks how the next morph target is chosen: Random, Mutate (default, strength = the <code>Mutation</code> parameter), Pool (a kept offspring) or Breed (a cross of two kept offspring, then mutated). It applies to the die and to the deck's Rand morph and is saved with the preset when not the default. Variation ids cross-fade during a morph instead of sweeping through every shape in between.</li>
 <li><strong>Keep, Skip and the Garden.</strong> The star at the end of the flame editor's tab strip keeps what is playing as an offspring preset in <code>library/presets/garden/</code> (tagged <code>garden</code>, <code>gen:N</code>, <code>parent:&lt;name&gt;</code>, with a preview image shown in the browser tooltip). <strong>Skip</strong> discards the target the morph is heading to and picks another. Drifting flames now carry their own framing: Zoom and centre morph along with the genome, and the ZOOM knob drives a new <strong>Magnify</strong> multiplier instead. Keep saves the nearer morph end rather than a mid-morph blend, and Pool/Breed favour newer offspring and starred presets. The default macro knobs are now ZOOM, SPIN, WARP and EVOLVE (Mutation); Breathe moved off its knob. <strong>Breaking:</strong> every flame control is now stored and shown normalised (0-100, -100-100, angles -180-180; zoom-like controls have 50 = unchanged), so flame presets saved before this change, including Garden offspring and imported flames, load with different values and should be re-imported or re-made.</li>
 <li><strong>Holds its frame rate.</strong> A new preference, <em>Flame GPU Budget (ms)</em> (General, default 3 ms per flame deck, 0 = off), lowers the point count when a deck runs over budget and restores it when there is room, keeping brightness unchanged. Fewer points no longer dim the picture. <strong>Flame Quality</strong> (Low / Medium / High, General) replaces the per-flame <code>Points</code>, <code>Passes</code> and <code>Kernel</code> parameters: it is a per-machine setting, not stored in presets, and brightness is kept across tiers (saved values for the old parameters are ignored).</li>
+<li><strong>Flames are transparent where they are black.</strong> The tone-map pass now writes premultiplied alpha that follows the brightest channel, so the BG deck (and anything under a flame deck) shows through the dark areas instead of being covered by an opaque black frame.</li>
 <li><strong>The Garden starts stocked.</strong> About 150 curated Fractal Flame presets (with thumbnails) are installed into <code>library/presets/garden/curated</code> on first run, so Pool and Breed have material from the first launch. <em>Restore Factory Presets</em> re-adds any you delete; your own files are never overwritten.</li>
 <li><strong>Import <code>.flame</code> files.</strong> The Sources browser's <code>...</code> menu has <em>Import Flame...</em>: pick a flame genome you own (a file with one or several flames) and each becomes a Fractal Flame preset in <code>library/presets/imported-flames/</code>. Xform weights, colours, affines (pre and post), final xform, up to four variations per xform (including <code>pre_blur</code>, which acts on the point before the others) with their parameters, and the camera (zoom, centre, rotation) carry over. What cannot is listed in the preset's notes and the log: variations the generator does not have (it now reads <code>inversion</code> as spherical and <code>linear3D</code>/<code>spherical3D</code> as their flat twins, with a note), extra variations or xforms beyond three and six, values outside the parameter ranges (clamped), the tone settings, 3D camera. The flame's 256-colour palette is kept and saved inside the preset (optional <code>DeckPresetDto.palette</code>), so presets stay portable and the <code>Palette</code> parameter shifts it. Flames from other programs have the image's y axis pointing down, so imports set the new <strong>FlipY</strong> camera parameter (also in the Look tab's camera section; it is the camera mirrored, not a mirrored genome). The reading of the affine coefficients and of the camera rotation was checked against reference renders of two flames. To make room for flames found in the wild, parameter ranges grew: translations to +-10, scales and shears to +-4, variation weights -4..4 (negative allowed), camera zoom 0.01-32, camera centre +-16, Julia-N/Julia-Scope power -20..20, and larger Blob waves, N-gon sides and Pie slices. A new <strong>Softness</strong> look parameter (point size, 1-10, default 3) smooths sparse flames, and imports set it from the original's smoothing filter. A new <strong>Smooth</strong> look parameter (0-1, default 0) is a density-estimation blur: sparse regions blur towards a coarser version of the image while dense ones stay sharp; imports start at 0.5. Imports start with Decay 0.85 and Toe 0 to fill in with far fewer points than the originals used. Mutate keeps its old jitter size and never shrinks an imported flame's larger scales.</li>
 <li>Not yet: palette import, the web player version, a thumbnail grid in the browser.</li>

@@ -109,8 +109,11 @@ object ValueParamSection {
             val isMacroBound = macroInfo != null
             val metaOwner = if (isMacroBound) null else param.metaDrivenBy
             val isLocked = isMacroBound || metaOwner != null
-            if (metaOwner != null) {
-                session.uiTheme.caption("${Icons.LOCK} Driven by its $metaOwner link. Disable the link to edit by hand.")
+            if (macroInfo != null) {
+                session.uiTheme.caption("${Icons.LINK} Linked to ${macroInfo.controlName} [${macroInfo.badgeLabel}]. Editing the value moves the knob.")
+                ImGui.spacing()
+            } else if (metaOwner != null) {
+                session.uiTheme.caption("${Icons.LINK} Linked to its $metaOwner${llm.slop.liquidlsd.macro.MacroEngine.metaKnobBindingInfo(paramKey)?.let { " [${it.badgeLabel}]" } ?: ""}. Editing the value moves the knob.")
                 ImGui.spacing()
             }
 
@@ -376,7 +379,7 @@ object ValueParamSection {
                 minLimit = param.minClamp * scale,
                 maxLimit = param.maxClamp * scale,
                 defaultValue = param.defaultValue * scale,
-                isRandomizable = param.randomizeBase,
+                isRandomizable = param.randomizeBase && !isLocked,
                 showControls = true,
                 isRandomizeDisabled = param.isRandomizeDisabled,
                 randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
@@ -433,11 +436,14 @@ object ValueParamSection {
                 },
                 onValueChanged = { newVal ->
                     val radianVal = newVal * invScale
-                    param.baseValue = radianVal
-                    param.baseMin = radianVal
-                    param.baseMax = radianVal
+                    if (!(isLocked && llm.slop.liquidlsd.macro.KnobDrive.setViaKnob(paramKey, param, radianVal))) {
+                        param.baseValue = radianVal
+                        param.baseMin = radianVal
+                        param.baseMax = radianVal
+                    }
                 },
-                paramKey = paramKey
+                paramKey = paramKey,
+                driveThroughKnob = isLocked
             )
         }
 

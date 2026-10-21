@@ -53,6 +53,8 @@ object ParametersRenderer {
 
         val macroInfo = llm.slop.liquidlsd.macro.MacroEngine.findBaseBindingInfo(paramKey)
         val isMacroBound = macroInfo != null
+        val metaInfo = if (isMacroBound || param.metaDrivenBy == null) null else llm.slop.liquidlsd.macro.MacroEngine.metaKnobBindingInfo(paramKey)
+        val isMetaDriven = !isMacroBound && param.metaDrivenBy != null
         val oscMappedAddress = OscMappingManager.getAddressForParameter(paramKey)
 
         val dl = ImGui.getWindowDrawList()
@@ -62,7 +64,7 @@ object ParametersRenderer {
         }
 
         // Draw Electric Cyan accent bar on left edge and subtle tint across the row if bound to a macro
-        if (isMacroBound) {
+        if (isMacroBound || isMetaDriven) {
             val cyanAccent = ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.9f)
             val cyanTint = ImGui.colorConvertFloat4ToU32(0.0f, 0.85f, 1.0f, 0.06f)
             dl.addRectFilled(gridStartX, rowScreenY, gridStartX + rowWidth, rowScreenY + CELL, cyanTint)
@@ -123,8 +125,8 @@ object ParametersRenderer {
         ImGui.setCursorPosY(rowY + (CELL - textH) * 0.5f)
         
         // Render label (with badges for macro-bound and/or OSC-mapped)
-        if (isMacroBound) {
-            val badge = "[${macroInfo!!.badgeLabel}]"
+        if (isMacroBound || metaInfo != null) {
+            val badge = "[${(macroInfo ?: metaInfo)!!.badgeLabel}]"
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
                 ImGui.textColored(0.0f, 0.85f, 1.0f, 1.0f, badge)
             }
@@ -136,7 +138,7 @@ object ParametersRenderer {
             }
             ImGui.sameLine(0f, 4f)
         }
-        if (isMacroBound) {
+        if (isMacroBound || isMetaDriven) {
             session.uiTheme.tooltipColored(0.2f, 0.85f, 1.0f, 1.0f, label)
         } else {
             session.uiTheme.tooltip(label)
@@ -151,6 +153,11 @@ object ParametersRenderer {
                     ImGui.text("${Icons.LOCK} Target of ${info.controlName} [${info.badgeLabel}]")
                     ImGui.popStyleColor()
                     ImGui.textDisabled("Click row or VAL cell to edit the target.")
+                    ImGui.separator()
+                } else if (isMetaDriven) {
+                    ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.2f, 0.85f, 1.0f, 1.0f))
+                    ImGui.text("${Icons.LOCK} Driven by its ${param.metaDrivenBy}" + (metaInfo?.let { " [${it.badgeLabel}]" } ?: ""))
+                    ImGui.popStyleColor()
                     ImGui.separator()
                 }
                 if (oscMappedAddress != null) {
@@ -395,7 +402,9 @@ object ParametersRenderer {
                     "Locked: Driven by ${info.controlName} [${info.badgeLabel}].\nClick to select its macro and edit the target in the Modulation column."
                 }
                 metaOwner != null ->
-                    "Locked: Driven by its $metaOwner link.\nDisable the Metaknob link (right-click the Metaknob) to edit it by hand."
+                    "Locked: Driven by its $metaOwner" +
+                        (llm.slop.liquidlsd.macro.MacroEngine.metaKnobBindingInfo(paramKey)?.let { " [${it.badgeLabel}]" } ?: "") +
+                        " link.\nEdit the Value in the Edit view to move the knob, or disable the link (right-click the Metaknob) to edit it by hand."
                 param.modulators.isNotEmpty() -> {
                     val allBypassed = param.modulators.all { it.bypassed }
                     val action = if (allBypassed) "unmute" else "mute"
