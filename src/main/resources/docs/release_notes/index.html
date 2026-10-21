@@ -1292,6 +1292,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#lenia-recovers-from-extinction-librarysourceslenialeniafs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lenia Recovers From Extinction (library/sources/lenia/lenia.fs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kifs-holds-still-by-default-librarysourceskifskifsfs-renderingsourcedocregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KIFS Holds Still by Default (library/sources/kifs/kifs.fs, rendering/SourceDocRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#locked-values-are-linked-to-their-knob-both-ways-macroknobdrivekt-uivalueparamsectionkt-uicustomrangesliderkt-uiparametersrendererkt-renderingisfisffilterkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6413,6 +6435,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#lenia-recovers-from-extinction-librarysourceslenialeniafs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lenia Recovers From Extinction (library/sources/lenia/lenia.fs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#kifs-holds-still-by-default-librarysourceskifskifsfs-renderingsourcedocregistrykt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KIFS Holds Still by Default (library/sources/kifs/kifs.fs, rendering/SourceDocRegistry.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#locked-values-are-linked-to-their-knob-both-ways-macroknobdrivekt-uivalueparamsectionkt-uicustomrangesliderkt-uiparametersrendererkt-renderingisfisffilterkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11509,6 +11553,14 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="lenia-recovers-from-extinction-librarysourceslenialeniafs">Lenia Recovers From Extinction (<code>library/sources/lenia/lenia.fs</code>)</h3>
+<ul>
+<li><strong>Lenia no longer stays black after Growth Center is pushed too high.</strong> Above about 90 the growth peak sits above anything the field reaches, every cell decays to zero, and an empty grid can never grow again, so lowering Growth Center did nothing. The shader now checks a coarse lattice of cells each step and, when the whole grid is empty, reseeds it. Turning Growth Center back down brings the creatures back.</li>
+</ul>
+<h3 id="kifs-holds-still-by-default-librarysourceskifskifsfs-renderingsourcedocregistrykt">KIFS Holds Still by Default (<code>library/sources/kifs/kifs.fs</code>, <code>rendering/SourceDocRegistry.kt</code>)</h3>
+<ul>
+<li><strong>KIFS now starts static.</strong> Morph Speed and Flight Speed default to 0, so the object no longer reshapes or drifts until you raise them. Before, the defaults (0.2 and 0.15) kept it moving even with Rotate X/Y/Z at 0. <strong>Twist and Morph no longer turn the object.</strong> The per-level rotation now skips the outermost level, so the overall shape stays in place while the nested geometry inside twists, and an LFO on Twist reshapes the interior without spinning it. Rotate X/Y/Z is the only control that turns the whole object. <strong>The zero position now faces the shape.</strong> The camera looks straight at a face (a cube face for Menger and Mixed, a triangular face for Sierpinski and Octahedral) instead of down a corner. With Flight Speed raised, the dolly dives toward a corner of that face. Saved KIFS looks with non-zero Twist or Morph will look different, and every KIFS look is framed face-on now. Presets and decks that saved their own values are unchanged.</li>
+</ul>
 <h3 id="locked-values-are-linked-to-their-knob-both-ways-macroknobdrivekt-uivalueparamsectionkt-uicustomrangesliderkt-uiparametersrendererkt-renderingisfisffilterkt">Locked Values Are Linked to Their Knob Both Ways (<code>macro/KnobDrive.kt</code>, <code>ui/ValueParamSection.kt</code>, <code>ui/CustomRangeSlider.kt</code>, <code>ui/ParametersRenderer.kt</code>, <code>rendering/isf/ISFFilter.kt</code>)</h3>
 <ul>
 <li><strong>Editing the Value of a knob-driven parameter now moves the knob.</strong> Before, a parameter driven by a macro knob or an effect Metaknob had a read-only Value in Edit, and the knob moved the Value one way only. Now dragging, scrolling or typing in <strong>Initial Range</strong> runs the edit backwards through the link's curve and sets the knob, and the parameter follows in the same frame. A Metaknob that is itself on a macro knob passes the edit up to that macro knob. Other targets of the same knob move with it. Stepped and S-curve links land on the nearest position, and a typed value outside the link's range stops at the knob's end. The Max Points, Lobes, Recipe and Choice widgets are still locked, as is the Value cell in the parameter grid (click only).</li>

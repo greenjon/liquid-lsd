@@ -2525,8 +2525,9 @@
 <ul>
 <li><strong>Fractal Type</strong>: Menger-like, Sierpinski tetrahedron, octahedral, or a mixed construction.</li>
 <li><strong>Scale, Offset</strong>: Look controls on the construction; away from the centre it stops tiling exactly.</li>
-<li><strong>Twist X/Y/Z, Morph Speed</strong>: Per-iteration rotation, and a time-driven rotation that continuously reshapes the form.</li>
-<li><strong>Flight Speed</strong>: Endless self-similar dolly toward the fixed vertex; negative flies outward.</li>
+<li><strong>Twist X/Y/Z, Morph Speed</strong>: Rotation applied to each nested level of the fractal except the outermost, so the object stays in place while its inner geometry twists (safe to modulate with an LFO). Morph Speed adds a time-driven rotation to the same twist. Morph Speed defaults to 0, so nothing moves until you raise it.</li>
+<li><strong>Flight Speed</strong>: Endless self-similar dolly toward the fixed vertex; negative flies outward. Defaults to 0 (holds still).</li>
+<li><strong>Rotate X/Y/Z</strong>: Turn the camera rig around the whole object; these never animate on their own.</li>
 <li><strong>Quality, Glow, Color Mode</strong>: Detail versus speed, a grazing-ray halo, and five colourings.</li>
 </ul>
 <h3 id="mandelbulb-mandelbulb">Mandelbulb (<code>mandelbulb</code>)</h3>
