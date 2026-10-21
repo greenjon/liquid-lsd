@@ -2579,10 +2579,10 @@
 <h3 id="reaction-diffusion-reaction_diffusion">Reaction Diffusion (<code>reaction_diffusion</code>)</h3>
 <p>A Gray-Scott chemical simulation on a persistent 512 x 512 grid that grows maze, worm, coral, spot and splitting-cell patterns, lit as relief. The grid is fixed, so it costs the same at any output size and does not show a heavy-shader triangle.</p>
 <ul>
-<li><strong>Regime, Feed Trim, Kill Trim</strong>: Position along the feed/kill path through the pattern types, and fine trims. After a change the pattern needs a few seconds to re-form.</li>
+<li><strong>Regime, Feed Trim, Kill Trim</strong>: Position along the feed/kill path through the pattern types, and fine trims. The kill rate is kept inside the band where patterns exist, so extreme trims flatten out instead of going black. After a change the pattern needs a few seconds to re-form.</li>
 <li><strong>Diffusion</strong>: Scale of the pattern.</li>
 <li><strong>Sim Speed</strong>: Time step per frame, so the pattern evolves faster at higher frame rates.</li>
-<li><strong>Reseed</strong>: Crossing the middle seeds the grid again once. An empty grid, for example after a resize, seeds itself.</li>
+<li><strong>Reseed</strong>: Crossing the middle seeds the grid again once. An empty grid, for example after a resize or when the chemistry dies out, seeds itself.</li>
 <li><strong>Relief, Zoom, Color Mode</strong>: Embossed lighting, magnification of the grid, four colourings.</li>
 </ul>
 <h3 id="fluid-ink-fluid_ink">Fluid Ink (<code>fluid_ink</code>)</h3>

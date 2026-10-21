@@ -1303,6 +1303,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#reaction-diffusion-stays-out-of-the-black-librarysourcesreaction_diffusionreaction_diffusionfs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reaction Diffusion Stays Out of the Black (library/sources/reaction_diffusion/reaction_diffusion.fs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#lenia-recovers-from-extinction-librarysourceslenialeniafs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6457,6 +6468,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#reaction-diffusion-stays-out-of-the-black-librarysourcesreaction_diffusionreaction_diffusionfs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reaction Diffusion Stays Out of the Black (library/sources/reaction_diffusion/reaction_diffusion.fs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#lenia-recovers-from-extinction-librarysourceslenialeniafs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11578,6 +11600,10 @@
 <h3 id="kifs-color-spread-librarysourceskifskifsfs-renderingsourcedocregistrykt">KIFS Color Spread (<code>library/sources/kifs/kifs.fs</code>, <code>rendering/SourceDocRegistry.kt</code>)</h3>
 <ul>
 <li><strong>New Color Spread knob (default 1, with Saturation and Brightness now also defaulting to 1).</strong> KIFS used to show about two colours, because the folds make every copy of a detail identical and the ramp only looked at the orbit trap. Color Spread shifts the hue by three things the folds do not erase: the fold level the orbit came closest at, the point's position in space, and the way the surface faces. Raise it for a wider spread of colours, 0 gives the old plain ramp, and the gold ramp ignores it. New KIFS decks start bright and fully spread; saved looks keep their own values.</li>
+</ul>
+<h3 id="reaction-diffusion-stays-out-of-the-black-librarysourcesreaction_diffusionreaction_diffusionfs">Reaction Diffusion Stays Out of the Black (<code>library/sources/reaction_diffusion/reaction_diffusion.fs</code>)</h3>
+<ul>
+<li><strong>Reaction Diffusion no longer goes black when Regime, Feed Trim or Kill Trim are pushed.</strong> The chemistry dies out for good when the kill rate is too high for the feed rate, and the end of the Regime sweep sat in that dead zone. Kill is now kept inside the band where patterns exist (measured with a CPU port of the sim), which also stops the flat, flooded grid at the other edge; the Regime path was moved to stay inside it, and the trims are a little narrower. If the grid does go empty anyway (for example from a Diffusion change), it now reseeds itself.</li>
 </ul>
 <h3 id="lenia-recovers-from-extinction-librarysourceslenialeniafs">Lenia Recovers From Extinction (<code>library/sources/lenia/lenia.fs</code>)</h3>
 <ul>
