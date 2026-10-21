@@ -15,7 +15,7 @@ class PerfPageStoreTest {
     fun builtInPagesAreAllValidAndInTwisterBankOrder() {
         val pages = store().all()
         assertEquals(listOf("ab", "bgpv", "mixer"), pages.take(3).map { it.id })
-        assertEquals(listOf("master.mix", "master.fx", "trans", "global"), pages[2].rows.map { it.row })
+        assertEquals(listOf("trans", "master.fx", "master.mix", "global"), pages[2].rows.map { it.row })
         assertTrue(pages.all { it.problems().isEmpty() })
     }
 
@@ -24,7 +24,7 @@ class PerfPageStoreTest {
         val pages = store().all().associateBy { it.id }
         assertEquals(listOf("deck.A.src", "deck.A.fx", "deck.B.src", "deck.B.fx"), pages.getValue("ab").rows.map { it.row })
         assertEquals(listOf("deck.BG.src", "deck.BG.fx", "deck.PV.src", "deck.PV.fx"), pages.getValue("bgpv").rows.map { it.row })
-        assertEquals(listOf("master.mix", "master.fx", "trans", "global"), pages.getValue("mixer").rows.map { it.row })
+        assertEquals(listOf("trans", "master.fx", "master.mix", "global"), pages.getValue("mixer").rows.map { it.row })
     }
 
     @Test

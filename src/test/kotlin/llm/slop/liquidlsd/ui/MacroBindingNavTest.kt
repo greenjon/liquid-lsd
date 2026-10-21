@@ -23,7 +23,7 @@ class MacroBindingNavTest {
 
     @Test
     fun mixerParamsOpenMasterOnMatchingSubTab() {
-        assertEquals(MacroBindingNav.NavTarget(MacroEngine.MASTER, "Mixer", "CTRL"), nav("Mixer/crossfade"))
+        assertEquals(MacroBindingNav.NavTarget(MacroEngine.MASTER, "Mixer", "TRANS"), nav("Mixer/crossfade"))
         assertEquals(MacroBindingNav.NavTarget(MacroEngine.MASTER, "Mixer", "TRANS"), nav("Mixer/Transition/DryWet"))
         assertEquals(MacroBindingNav.NavTarget(MacroEngine.MASTER, "Mixer", "FX"), nav("Master/FX/DryWet"))
     }

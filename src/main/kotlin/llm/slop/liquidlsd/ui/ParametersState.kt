@@ -21,8 +21,18 @@ class ParametersState : MidiLearnSink {
     /** Tracks the height of subgroup panels for background drawing. */
     val subgroupHeight = mutableMapOf<String, Float>()
 
-    /** Tracks which FX slot accordion sections are collapsed, keyed by "$deckLabel/FX$slotNum". */
-    val fxSlotCollapsed = mutableMapOf<String, Boolean>()
+    /**
+     * The one expanded FX slot per chain (accordion), keyed by chain prefix; value is the 0-based slot index.
+     * Absent = default to the first filled slot; [NO_SLOT_EXPANDED] = every slot collapsed.
+     */
+    val fxExpandedSlot = mutableMapOf<String, Int>()
+
+    /** Chain prefixes whose CHAIN MACRO section (Super Knob + Metaknob rows) is collapsed in the Edit FX tab. */
+    val fxMacroCollapsed = mutableSetOf<String>()
+
+    companion object {
+        const val NO_SLOT_EXPANDED = -1
+    }
 
     // -- Modular Rack disclosure state (docs/user_guide/macros_and_rack.md) --------------------
 
@@ -262,6 +272,38 @@ class ParametersState : MidiLearnSink {
     fun selectTransition() {
         activeMixerSubTab = "TRANS"
         selectDock(MacroEngine.MASTER, BrowseTarget.Transition)
+    }
+
+    /**
+     * Row Edit toggle: opens Params for [moduleId] as drawn by its row -- a deck's SRC row passes the deck id and its FX row
+     * the `_fx` id -- landing on that half's tab rather than whichever the deck was last left on.
+     */
+    fun openParamsFromRow(moduleId: String) {
+        val (deckLabel, tab) = when (moduleId) {
+            MacroEngine.DECK_A -> "Deck A" to "SRC"
+            MacroEngine.DECK_B -> "Deck B" to "SRC"
+            MacroEngine.DECK_BG -> "Deck BG" to "SRC"
+            MacroEngine.DECK_PV -> "Deck PV" to "SRC"
+            MacroEngine.DECK_A_FX -> "Deck A" to "FX"
+            MacroEngine.DECK_B_FX -> "Deck B" to "FX"
+            MacroEngine.DECK_BG_FX -> "Deck BG" to "FX"
+            MacroEngine.DECK_PV_FX -> "Deck PV" to "FX"
+            else -> null to null
+        }
+        if (deckLabel != null && tab != null) setDeckSubTab(deckLabel, tab)
+        // Always open the canonical module (never `deckA_fx`): the tab is just a sub-tab of it, so a later click on the
+        // other half's Edit button sees the same open module and closes it.
+        val canonical = when (moduleId) {
+            MacroEngine.DECK_A_FX -> MacroEngine.DECK_A
+            MacroEngine.DECK_B_FX -> MacroEngine.DECK_B
+            MacroEngine.DECK_BG_FX -> MacroEngine.DECK_BG
+            MacroEngine.DECK_PV_FX -> MacroEngine.DECK_PV
+            MacroEngine.MASTER_FX -> { activeMixerSubTab = "FX"; MacroEngine.MASTER }
+            MacroEngine.TRANS -> { activeMixerSubTab = "TRANS"; MacroEngine.MASTER }
+            MacroEngine.MASTER -> { activeMixerSubTab = "CTRL"; moduleId }
+            else -> moduleId
+        }
+        openParams(canonical)
     }
 
     /** Flips an already-open module back to its Params (Deep Edit) content. */

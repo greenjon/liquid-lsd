@@ -68,6 +68,18 @@ object FXChainMacroStrip {
         onPushUndo: () -> Unit
     ): Int {
         val rowStartX = ImGui.getCursorPosX()
+        // Only the grid (Edit FX tab) form collapses; the compact Edit-row strip keeps its fixed layout.
+        val collapsible = grid != null
+        val collapsed = collapsible && chainPrefix in state.fxMacroCollapsed
+        if (collapsible) {
+            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (ImGui.smallButton("${if (collapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##fx_macro_collapse_$chainPrefix")) {
+                    if (collapsed) state.fxMacroCollapsed.remove(chainPrefix) else state.fxMacroCollapsed.add(chainPrefix)
+                }
+            }
+            itemTooltip(if (collapsed) "Show the Super Knob and Metaknobs." else "Hide the Super Knob and Metaknobs.")
+            ImGui.sameLine()
+        }
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("CHAIN MACRO") }
         ImGui.sameLine()
         val allLinked = chain.areAllSlotsLinked()
@@ -85,6 +97,10 @@ object FXChainMacroStrip {
             else "Link every FX slot to the Super Knob (soft-takeover: no jumps until the Super Knob crosses each Metaknob's value)."
         )
         ImGui.spacing()
+        if (collapsed) {
+            ImGui.setCursorPosX(rowStartX)
+            return startRow
+        }
 
         var row = startRow
         if (grid != null) {

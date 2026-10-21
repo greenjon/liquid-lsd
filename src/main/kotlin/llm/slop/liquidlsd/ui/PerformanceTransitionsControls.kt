@@ -46,6 +46,10 @@ internal object PerformanceTransitionsControls {
     private val AUTOFADE_INK = TangoPalette.inkFor(TangoPalette.AUTOFADE_ACTIVE, TangoPalette.AUTOFADE_HOVER)
 
 
+    /**
+     * Laid out like a deck FX half: line 1 the transition picker (the Edit gear docks after it, [editW] + gap),
+     * line 2 `[⋮] [Save] [◀] [▶] [A] [B] [AUTO] [time]` as equal cells.
+     */
     fun draw(
         session: SessionContext,
         mixer: Mixer,
@@ -54,10 +58,67 @@ internal object PerformanceTransitionsControls {
         row1Y: Float,
         row2Y: Float,
         ctrlH: Float,
-        width: Float
+        width: Float,
+        editW: Float = 0f
     ) {
-        drawTransitionPickerAndQueue(session, mixer, parametersState, startX, row1Y, ctrlH, width)
-        drawCrossfader(session, mixer, parametersState, startX, row2Y, ctrlH, width)
+        val gap = FxChainHeader.LINE_GAP
+        val pad = FxChainHeader.ARROW_PAD
+        val moreW = FxChainHeader.MORE_BTN_W
+        // Gaps on line 2: kebab|Save, Save|◀ (+pad), ◀|▶, ▶|A (+pad), A|B, B|AUTO, AUTO|time.
+        val cell = ((width - moreW - 7 * gap - 2 * pad) / 7f).coerceAtLeast(16f)
+
+        val pickerW = width - if (editW > 0f) editW + DeckRowMetrics.GAP else 0f
+        drawTransitionPicker(session, mixer, parametersState, startX, row1Y, ctrlH, pickerW)
+
+        ImGui.setCursorScreenPos(startX, row2Y)
+        ImGui.beginGroup()
+        ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, gap, 0f)
+        drawMoreButton(session, mixer, parametersState, ctrlH)
+        ImGui.sameLine()
+        drawSaveButton(session, mixer, ctrlH, cell)
+        ImGui.sameLine(0f, gap + pad)
+        drawQueueArrows(session, mixer, ctrlH, cell)
+        ImGui.popStyleVar()
+        ImGui.endGroup()
+
+        val crossfaderX = startX + moreW + gap + cell + gap + pad + cell * 2f + gap + gap + pad
+        drawCrossfader(session, mixer, parametersState, crossfaderX, row2Y, ctrlH, cell, gap)
+    }
+
+    private fun drawMoreButton(session: SessionContext, mixer: Mixer, parametersState: ParametersState, ctrlH: Float) {
+        if (ButtonChrome.button("${Icons.MORE_VERTICAL}##perf_trans_more", FxChainHeader.MORE_BTN_W, ctrlH)) {
+            ImGui.openPopup("##perf_trans_more_menu")
+        }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_trans_more" }
+        itemTooltip("Transition operations (Save As, Browse, Edit).")
+        pushOpenDropdownPadding()
+        if (ImGui.beginPopup("##perf_trans_more_menu")) {
+            pushOpenDropdownFont()
+            ImGui.textDisabled("Transition")
+            ImGui.separator()
+            if (ImGui.menuItem("Save As…")) TransitionSave.requestSaveCurrent(session, mixer)
+            if (ImGui.menuItem("Browse Transitions")) parametersState.selectTransition()
+            popOpenDropdownFont()
+            ImGui.endPopup()
+        }
+        popOpenDropdownPadding()
+    }
+
+    /** Same look as the FX chain's Save (amber when the transition differs from its defaults); transitions are always saved as a new preset. */
+    private fun drawSaveButton(session: SessionContext, mixer: Mixer, ctrlH: Float, width: Float) {
+        val isDirty = isTransitionModified(mixer.transitionFilter)
+        val saveCol = if (isDirty) TangoPalette.u32(TangoPalette.ALERT.dark) else TangoPalette.FX_SAVE_BG.u32()
+        val inkCol = if (isDirty) TangoPalette.u32(TangoPalette.inkFor(TangoPalette.ALERT.dark)) else TangoPalette.FX_SAVE_INK.u32()
+        ButtonChrome.pushColor(saveCol)
+        ImGui.pushStyleColor(ImGuiCol.Text, inkCol)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ButtonChrome.button("${Icons.SAVE}##perf_trans_save", width, ctrlH)) {
+                TransitionSave.requestSaveCurrent(session, mixer)
+            }
+        }
+        llm.slop.liquidlsd.tour.WidgetRegistry.note { "perf_trans_save" }
+        ImGui.popStyleColor(4)
+        itemTooltip("Save this transition (shader, dry/wet and parameters) as a new .lsdtrans preset.")
     }
 
     /**
@@ -121,7 +182,7 @@ internal object PerformanceTransitionsControls {
         return false
     }
 
-    private fun drawTransitionPickerAndQueue(
+    private fun drawTransitionPicker(
         session: SessionContext,
         mixer: Mixer,
         parametersState: ParametersState,
@@ -130,18 +191,10 @@ internal object PerformanceTransitionsControls {
         headerH: Float,
         width: Float
     ) {
-        val gap = 4f
-        val dl = ImGui.getWindowDrawList()
-
         ImGui.setCursorScreenPos(startX, headerY)
         ImGui.beginGroup()
 
-        // Transition Queue nav: Prev + Count + Next.
-        val navBtnW = (headerH * 0.9f).coerceIn(22f, 28f)
-        val qTextW = 46f
-
-        // Transition Picker button takes the rest of the line.
-        val transBtnW = (width - gap - navBtnW - 2f - qTextW - 2f - navBtnW).coerceAtLeast(60f)
+        val transBtnW = width.coerceAtLeast(60f)
 
         // 1. Transition Picker Button [ Settings Icon + Name * ]
         val transName = mixer.transitionFilter?.displayName ?: "Default Blend"
@@ -164,9 +217,12 @@ internal object PerformanceTransitionsControls {
             ImGui.endDragDropTarget()
         }
 
-        ImGui.sameLine(0f, gap)
+        ImGui.endGroup()
+    }
 
-        // 2. Transition Queue Navigation [ < ] [ N/Total ] [ > ]
+    /** `[◀] [▶]` through the transition queue, [navBtnW] each. The position in the queue is in the tooltips. */
+    private fun drawQueueArrows(session: SessionContext, mixer: Mixer, headerH: Float, navBtnW: Float) {
+        val dl = ImGui.getWindowDrawList()
         val transQ = TransitionQueueManager.queue
         val transQIdx = TransitionQueueManager.activeIndex
         val transCountStr = tipQCount.get(transQIdx, transQ.size) {
@@ -182,7 +238,7 @@ internal object PerformanceTransitionsControls {
 
         val transPrevX = ImGui.getCursorScreenPosX()
         val transPrevY = ImGui.getCursorScreenPosY()
-        if (ButtonChrome.button("<##perf_trans_q_prev", navBtnW, headerH)) {
+        if (ButtonChrome.button("◀##perf_trans_q_prev", navBtnW, headerH)) {
             TransitionQueueManager.advancePrevious(mixer)
         }
         if (isMidiLearnTransQPrev) {
@@ -232,23 +288,9 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip(tipQPrev.get(transQPrevMidiText) { "Advance to previous transition in Transition Queue.$transQPrevMidiText\nRight-click for MIDI/OSC Learn." })
+        itemTooltip(tipQPrev.get(transQPrevMidiText, transCountStr) { "Previous transition in the Transition Queue ($transCountStr).$transQPrevMidiText\nRight-click for MIDI/OSC Learn." })
 
-        ImGui.sameLine(0f, 2f)
-
-        val transCurX = ImGui.getCursorScreenPosX()
-        val transCurY = ImGui.getCursorScreenPosY()
-        val genBgCol = TangoPalette.CELL_BG.u32()
-        val genTextCol = TangoPalette.CELL_TEXT.u32()
-        dl.addRectFilled(transCurX, transCurY, transCurX + qTextW, transCurY + headerH, genBgCol, 3f)
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            val sz = ImGui.calcTextSize(transCountStr)
-            dl.addText(transCurX + (qTextW - sz.x) * 0.5f, transCurY + (headerH - sz.y) * 0.5f, genTextCol, transCountStr)
-        }
-        ImGui.invisibleButton("##perf_trans_q_idx", qTextW, headerH)
-        itemTooltip(tipQStatus.get(transCountStr) { "Transition Queue status: $transCountStr" })
-
-        ImGui.sameLine(0f, 2f)
+        ImGui.sameLine()
 
         val transQNextKey = "Global/transQueueNext"
         val transQNextOscKey = "Mixer/transQueueNext"
@@ -259,7 +301,7 @@ internal object PerformanceTransitionsControls {
 
         val transNextX = ImGui.getCursorScreenPosX()
         val transNextY = ImGui.getCursorScreenPosY()
-        if (ButtonChrome.button(">##perf_trans_q_next", navBtnW, headerH)) {
+        if (ButtonChrome.button("▶##perf_trans_q_next", navBtnW, headerH)) {
             TransitionQueueManager.advanceNext(mixer)
         }
         if (isMidiLearnTransQNext) {
@@ -309,9 +351,8 @@ internal object PerformanceTransitionsControls {
             ImGui.endPopup()
         }
         popOpenDropdownPadding()
-        itemTooltip(tipQNext.get(transQNextMidiText) { "Advance to next transition in Transition Queue.$transQNextMidiText\nRight-click for MIDI/OSC Learn." })
+        itemTooltip(tipQNext.get(transQNextMidiText, transCountStr) { "Next transition in the Transition Queue ($transCountStr).$transQNextMidiText\nRight-click for MIDI/OSC Learn." })
 
-        ImGui.endGroup()
     }
 
     /**
@@ -325,9 +366,9 @@ internal object PerformanceTransitionsControls {
         startX: Float,
         headerY: Float,
         headerH: Float,
-        width: Float
+        badgeW: Float,
+        gap: Float
     ) {
-        val gap = 4f
         val dl = ImGui.getWindowDrawList()
         val centerY = headerY + headerH * 0.5f
 
@@ -338,7 +379,6 @@ internal object PerformanceTransitionsControls {
 
         // 1. Deck A Snap Badge [ A ]
         // [A] [B] AUTO fade-time: four equal cells filling the line (the crossfader itself is knob 1 and the mixer panel's slider).
-        val badgeW = ((width - gap * 4f) / 4f).coerceAtLeast(24f)
         val rgbA = BrowserDeckButtons.colorA()
         val colorA = TangoPalette.u32(rgbA)
         val snapAKey = "Global/snapDeckA"
@@ -457,7 +497,7 @@ internal object PerformanceTransitionsControls {
         popOpenDropdownPadding()
         itemTooltip(tipSnapB.get(snapBMidiText) { "Deck B (Click to snap crossfader to Deck B)$snapBMidiText\nRight-click for MIDI Learn." })
 
-        ImGui.sameLine(0f, gap * 2f)
+        ImGui.sameLine(0f, gap)
 
         // 4. Auto-Fade Button [ AUTO ]
         val autoFadeKey = "Global/autoFade"

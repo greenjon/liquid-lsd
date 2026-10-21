@@ -404,6 +404,8 @@ Each deck has a chain of three effect slots that run after the source, left to r
 
 Any effect can go in any slot, but order matters: a blur before a kaleidoscope looks different from a kaleidoscope before a blur. Each slot has its own bypass toggle and Dry/Wet blend knob, and bypassed slots add zero overhead.
 
+In the Edit bay's **FX** tab the slots form an accordion: one slot's parameters are open at a time, and opening another collapses the first. Collapsed slots still show their effect and Dry/Wet percentage, and the chain Wet/Dry stays at the top. The **Chain Macro** section (Super Knob and Metaknobs) has its own chevron, so you can fold it away when you're editing slot parameters.
+
 ---
 
 ## Feedback

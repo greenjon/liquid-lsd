@@ -80,9 +80,9 @@ class PerformSurfaceTest {
     }
 
     @Test
-    fun mixerTabIsMasterMixMasterFxTransitionsAndAKnoblessClockRow() {
+    fun mixerTabIsTransitionsMasterFxMasterMixAndAKnoblessClockRow() {
         val p = page("mixer")
-        assertEquals(listOf(MacroEngine.MASTER, MacroEngine.MASTER_FX, MacroEngine.TRANS, null),
+        assertEquals(listOf(MacroEngine.TRANS, MacroEngine.MASTER_FX, MacroEngine.MASTER, null),
             listOf(0, 4, 8, 12).map { p.knobs[it]?.bankId })
         assertTrue((12..15).all { p.knobs[it] == null })
     }
@@ -287,8 +287,8 @@ class PerformSurfaceTest {
     fun masterRowsUseHueColoursOnTheHardware() {
         val lights = surface().let { UITheme.performancePageId = "mixer"; it.knobLights() }
         fun rgb(i: Int) = lights[i]!!.let { listOf(it.r, it.g, it.b) }
-        assertEquals(PerformanceColors.LED_MASTER.toList(), rgb(0))
-        assertEquals(PerformanceColors.COLOR_TRANS.toList(), rgb(8))
+        assertEquals(PerformanceColors.COLOR_TRANS.toList(), rgb(0))
+        assertEquals(PerformanceColors.LED_MASTER.toList(), rgb(8))
         assertNull(lights[12])  // the Clock row has no knobs
     }
 
@@ -332,7 +332,7 @@ class PerformSurfaceTest {
         val candidatePages = listOf(
             pageOf("deck.A.src", "deck.A.fx", "deck.B.src", "deck.B.fx"),
             pageOf("deck.BG.src", "deck.BG.fx", "deck.PV.src", "deck.PV.fx"),
-            pageOf("master.mix", "master.fx", "trans", "global"),
+            pageOf("trans", "master.fx", "master.mix", "global"),
         )
         for (page in candidatePages) {
             val values = PerfRows.rowsForPage(page).map { row ->

@@ -538,11 +538,16 @@ class PerformanceMatrixPanel {
                     ImGui.popID()
                 } else if (isTransRow) {
                     drawTitleBadge(
-                        session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "XF", UITheme.FontLevel.H1,
-                        tooltip = "Transitions Unit\nCrossfader (XF): configure the video crossfade and transition shaders"
+                        session, badgeX, badgeY, masterTabBadgeW, badgeH * 2f, descriptor.accent, "M", UITheme.FontLevel.H1,
+                        tooltip = "Master: Transitions\nCrossfader, auto-fade and transition shader.",
+                        caption = "TRAN",
+                        captionTint = TangoPalette.TAG_SRC
                     )
-                    drawEditGearInBadge(session, parametersState, descriptor, activeModuleId, tabIdx, rowIdx, badgeX, badgeY, masterTabBadgeW, badgeH)
-                    if (!stripOn) PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, transRowW)
+                    val editW = if (descriptor.canExpand) ctrlH else 0f
+                    ImGui.pushID(rowIdx)
+                    if (!stripOn) PerformanceTransitionsControls.draw(session, mixer, parametersState, masterTabStartX, row1Y, row2YFinal, ctrlH, transRowW, editW)
+                    if (editW > 0f) drawEditGearAt(session, parametersState, activeModuleId, tabIdx, rowIdx, masterTabStartX + deckBlockW - editW, row1Y, editW, ctrlH)
+                    ImGui.popID()
                     PerformanceTransitionsControls.drawRightControls(session, mixer, boxX2 - pad - masterRightW, row1Y, ctrlH, masterRightW)
                 } else if (isClockRow) {
                     drawTitleBadge(

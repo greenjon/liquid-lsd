@@ -498,7 +498,7 @@ class NavigationSurfaceTest {
     @Test
     fun pickerOpensTheTransitionListForTheTransitionsRow() {
         UITheme.performancePageId = "mixer"
-        PerformSurface.lastTouchedKnob = 8 // Transitions row (row 3 of MIXER)
+        PerformSurface.lastTouchedKnob = 0 // Transitions row (row 1 of MIXER)
         nav().button(2, false)
         assertEquals(ParametersState.BrowseTarget.Transition, state.dockSelection?.target)
         assertEquals("TRANS", state.activeMixerSubTab)

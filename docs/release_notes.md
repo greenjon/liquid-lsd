@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Transitions Row Matches the FX Rows (`ui/PerformanceTransitionsControls.kt`, `ui/PerformanceMatrixPanel.kt`)
+- **The Transitions row is laid out like a deck FX row.** Line 1 is the transition picker with the Edit gear at its end (the gear no longer sits under the XF badge). Line 2 is `[⋮] [Save] [◀] [▶] [A] [B] [AUTO] [time]` in equal cells. **Save** stores the current transition as a `.lsdtrans` preset and turns amber when it differs from its defaults; the **⋮** menu has Save As, Browse Transitions. The queue position (`3/12`) moved into the ◀ ▶ tooltips.
+- **The MIXER page now runs Transitions, Master FX, Master MIX, Clock.** Transitions moves to the top row (Twister bank 3 knobs 1-4) since it is the row you perform with; Master MIX drops to the third row (knobs 9-12). A saved copy of the MIXER page in `library/perform_pages/` keeps its old order until you delete it.
+
+### Edit FX Tab: Slots Are an Accordion (`ui/ParametersTabs.kt`, `ui/ParametersState.kt`)
+- **Only one FX slot is expanded at a time** in a chain's Edit FX tab, so a long effect no longer pushes the other slots off screen. Opening a slot collapses the others; collapsed slots show their Dry/Wet percentage on the header. The first filled slot is open by default. Chain Wet/Dry stays at the top, and the **CHAIN MACRO** section (Super Knob and Metaknob rows) has its own chevron to collapse it; Link all stays on its header. (`ParametersState.fxExpandedSlot` replaces `fxSlotCollapsed`; `fxMacroCollapsed` holds the macro section's state.)
+
 ### Step Sequencer: Glide Trace, Ghost Steps, Auto-Randomize, Snap, Keyboard, Undo Everywhere (`ui/SeqSection.kt`, `ui/ModulatorUndo.kt`, `parameters/SeqPatterns.kt`, `rendering/MorphState.kt`)
 - **The bars now draw the output line and a live dot.** A white trace shows what the sequencer will really output: flat steps at 100% Step Hold, linear or S-curve slides below it, so Step Hold and Glide Curve are visible instead of guessed. A dot rides it at the current position.
 - **Steps past the length show ghosted** after the last playing step, so it is clear they are kept. Patterns shorter than 8 steps now keep 8-step-wide cells instead of stretching to fill the panel.

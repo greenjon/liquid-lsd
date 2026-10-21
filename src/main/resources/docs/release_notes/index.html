@@ -1292,6 +1292,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#transitions-row-matches-the-fx-rows-uiperformancetransitionscontrolskt-uiperformancematrixpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transitions Row Matches the FX Rows (ui/PerformanceTransitionsControls.kt, ui/PerformanceMatrixPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edit-fx-tab-slots-are-an-accordion-uiparameterstabskt-uiparametersstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit FX Tab: Slots Are an Accordion (ui/ParametersTabs.kt, ui/ParametersState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#step-sequencer-glide-trace-ghost-steps-auto-randomize-snap-keyboard-undo-everywhere-uiseqsectionkt-uimodulatorundokt-parametersseqpatternskt-renderingmorphstatekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6336,6 +6358,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#transitions-row-matches-the-fx-rows-uiperformancetransitionscontrolskt-uiperformancematrixpanelkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transitions Row Matches the FX Rows (ui/PerformanceTransitionsControls.kt, ui/PerformanceMatrixPanel.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#edit-fx-tab-slots-are-an-accordion-uiparameterstabskt-uiparametersstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Edit FX Tab: Slots Are an Accordion (ui/ParametersTabs.kt, ui/ParametersState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#step-sequencer-glide-trace-ghost-steps-auto-randomize-snap-keyboard-undo-everywhere-uiseqsectionkt-uimodulatorundokt-parametersseqpatternskt-renderingmorphstatekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11355,6 +11399,15 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="transitions-row-matches-the-fx-rows-uiperformancetransitionscontrolskt-uiperformancematrixpanelkt">Transitions Row Matches the FX Rows (<code>ui/PerformanceTransitionsControls.kt</code>, <code>ui/PerformanceMatrixPanel.kt</code>)</h3>
+<ul>
+<li><strong>The Transitions row is laid out like a deck FX row.</strong> Line 1 is the transition picker with the Edit gear at its end (the gear no longer sits under the XF badge). Line 2 is <code>[⋮] [Save] [◀] [▶] [A] [B] [AUTO] [time]</code> in equal cells. <strong>Save</strong> stores the current transition as a <code>.lsdtrans</code> preset and turns amber when it differs from its defaults; the <strong>⋮</strong> menu has Save As, Browse Transitions. The queue position (<code>3/12</code>) moved into the ◀ ▶ tooltips.</li>
+<li><strong>The MIXER page now runs Transitions, Master FX, Master MIX, Clock.</strong> Transitions moves to the top row (Twister bank 3 knobs 1-4) since it is the row you perform with; Master MIX drops to the third row (knobs 9-12). A saved copy of the MIXER page in <code>library/perform_pages/</code> keeps its old order until you delete it.</li>
+</ul>
+<h3 id="edit-fx-tab-slots-are-an-accordion-uiparameterstabskt-uiparametersstatekt">Edit FX Tab: Slots Are an Accordion (<code>ui/ParametersTabs.kt</code>, <code>ui/ParametersState.kt</code>)</h3>
+<ul>
+<li><strong>Only one FX slot is expanded at a time</strong> in a chain's Edit FX tab, so a long effect no longer pushes the other slots off screen. Opening a slot collapses the others; collapsed slots show their Dry/Wet percentage on the header. The first filled slot is open by default. Chain Wet/Dry stays at the top, and the <strong>CHAIN MACRO</strong> section (Super Knob and Metaknob rows) has its own chevron to collapse it; Link all stays on its header. (<code>ParametersState.fxExpandedSlot</code> replaces <code>fxSlotCollapsed</code>; <code>fxMacroCollapsed</code> holds the macro section's state.)</li>
+</ul>
 <h3 id="step-sequencer-glide-trace-ghost-steps-auto-randomize-snap-keyboard-undo-everywhere-uiseqsectionkt-uimodulatorundokt-parametersseqpatternskt-renderingmorphstatekt">Step Sequencer: Glide Trace, Ghost Steps, Auto-Randomize, Snap, Keyboard, Undo Everywhere (<code>ui/SeqSection.kt</code>, <code>ui/ModulatorUndo.kt</code>, <code>parameters/SeqPatterns.kt</code>, <code>rendering/MorphState.kt</code>)</h3>
 <ul>
 <li><strong>The bars now draw the output line and a live dot.</strong> A white trace shows what the sequencer will really output: flat steps at 100% Step Hold, linear or S-curve slides below it, so Step Hold and Glide Curve are visible instead of guessed. A dot rides it at the current position.</li>

@@ -40,7 +40,7 @@ object RackUnit {
             if (isExpanded) {
                 parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.COLLAPSED)
             } else {
-                parametersState.openParams(moduleId)
+                parametersState.openParamsFromRow(moduleId)
             }
         }
         llm.slop.liquidlsd.ui.PerformanceColors.popActiveToggleStyle()
@@ -62,7 +62,7 @@ object RackUnit {
             if (isExpanded) {
                 parametersState.setDisclosure(moduleId, ParametersState.DisclosureLevel.COLLAPSED)
             } else {
-                parametersState.openParams(moduleId)
+                parametersState.openParamsFromRow(moduleId)
             }
         }
         llm.slop.liquidlsd.ui.PerformanceColors.popActiveToggleStyle()

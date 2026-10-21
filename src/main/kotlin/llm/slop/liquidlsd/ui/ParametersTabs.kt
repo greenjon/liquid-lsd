@@ -311,9 +311,7 @@ object ParametersTabs {
         onPushUndo: () -> Unit
     ) {
         var row = 0
-        ParametersRenderer.drawParamRow(session, "crossfade", "Mixer/crossfade", mixer.crossfade, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         ParametersRenderer.drawParamRow(session, "master level", "Mixer/masterLevel", mixer.masterLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "fade speed", "Mixer/xfadeSpeed", mixer.xfadeSpeed, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
         ParametersRenderer.drawParamRow(session, "queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         ParametersRenderer.drawParamRow(session, "queue next", "Mixer/queueNext", mixer.queueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
@@ -346,6 +344,11 @@ object ParametersTabs {
         var row = 0
         val trans = mixer.transitionFilter
         val transName = trans?.displayName ?: "Linear Crossfade"
+        // The crossfader and its auto-fade time lead the tab: they are what the transition shader and its parameters act on.
+        val crossfadeRow = {
+            ParametersRenderer.drawParamRow(session, "fade speed", "Mixer/xfadeSpeed", mixer.xfadeSpeed, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "crossfade", "Mixer/crossfade", mixer.crossfade, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        }
 
         ImGui.textDisabled("TRANSITION SHADER")
         ImGui.sameLine()
@@ -390,6 +393,7 @@ object ParametersTabs {
             }
             popOpenDropdownPadding()
 
+            crossfadeRow()
             ParametersRenderer.drawParamRow(session, "Dry/Wet", "Mixer/Transition/DryWet", trans.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
             trans.parameters.forEach { (name, param) ->
@@ -397,6 +401,7 @@ object ParametersTabs {
                 ParametersRenderer.drawParamRow(session, label, "Mixer/Transition/$name", param, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             }
         } else {
+            crossfadeRow()
             ImGui.spacing()
             ImGui.textDisabled("No transition filter active. Defaulting to linear crossfade.")
         }
@@ -586,7 +591,16 @@ object ParametersTabs {
         val rowStartX = ImGui.getCursorPosX()
         val canonicalModuleId = state.deepEditModuleForTopTab(deckLabel ?: "Mixer") ?: llm.slop.liquidlsd.macro.MacroEngine.MASTER
 
-        ImGui.textDisabled(chainDisplayName.uppercase() + if (chain.name.isNotEmpty()) " (${chain.name})" else "")
+        // Clip the title so it stops short of the kebab instead of running underneath it.
+        val fullTitle = chain.name.ifEmpty { chainDisplayName.uppercase() }
+        var title = fullTitle
+        val titleMaxW = labelColW - 24f - ImGui.getStyle().itemSpacingX
+        if (ImGui.calcTextSize(title).x > titleMaxW) {
+            while (title.length > 1 && ImGui.calcTextSize("$title…").x > titleMaxW) title = title.dropLast(1)
+            title = title.trimEnd() + "…"
+        }
+        ImGui.textDisabled(title.replace("%", "%%"))
+        if (title != fullTitle) itemTooltip(fullTitle)
         ImGui.sameLine(labelColW - 24f)
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ButtonChrome.button("${Icons.MORE_VERTICAL}##fx_chain_kebab_$chainPrefix", 22f, 20f)) {
@@ -662,20 +676,20 @@ object ParametersTabs {
         ImGui.separator()
         ImGui.spacing()
 
-        // --- Per-Slot Controls for Chain ---
+        // --- Per-Slot Controls for Chain (accordion: one slot open at a time) ---
+        val expandedSlot = state.fxExpandedSlot[chainPrefix] ?: chain.slots.indexOfFirst { it != null }
         for (i in chain.slots.indices) {
             val slotNum = i + 1
             val fx = chain.slots[i]
             val filterName = fx?.displayName ?: "None"
-            val collapseKey = "$chainPrefix/FX$slotNum"
-            val isCollapsed = state.fxSlotCollapsed[collapseKey] == true
+            val isCollapsed = expandedSlot != i
 
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
                 if (ImGui.smallButton("${if (isCollapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##fx${slotNum}_collapse_$chainPrefix")) {
-                    state.fxSlotCollapsed[collapseKey] = !isCollapsed
+                    state.fxExpandedSlot[chainPrefix] = if (isCollapsed) i else ParametersState.NO_SLOT_EXPANDED
                 }
             }
-            itemTooltip(if (isCollapsed) "Expand Slot $slotNum." else "Collapse Slot $slotNum.")
+            itemTooltip(if (isCollapsed) "Expand Slot $slotNum (collapses the others)." else "Collapse Slot $slotNum.")
             ImGui.sameLine()
 
             ImGui.textDisabled("Slot $slotNum")
@@ -688,6 +702,11 @@ object ParametersTabs {
                 fx?.header?.DESCRIPTION?.takeIf { it.isNotBlank() }?.let { itemTooltip(it) }
             }
 
+            if (isCollapsed && fx != null) {
+                ImGui.sameLine()
+                ImGui.textDisabled("${(fx.dryWet.baseValue * 100f).roundToInt()}%%") // textDisabled takes a printf format
+                itemTooltip("Slot $slotNum Dry/Wet")
+            }
             ImGui.sameLine()
 
             // Per-Slot Kebab Menu

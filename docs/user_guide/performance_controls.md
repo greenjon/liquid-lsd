@@ -286,7 +286,7 @@ The Twister's hardware **banks** pick the page shown on screen (three pages: A/B
 |---|---|---|---|---|---|
 | 1 | **A/B** | Deck A source | Deck A FX | Deck B source | Deck B FX |
 | 2 | **BG/PV** | Deck BG source | Deck BG FX | Deck PV source | Deck PV FX |
-| 3 | **MIXER** | Master MIX | Master FX | Transitions | Clock (knob 13) |
+| 3 | **MIXER** | Transitions | Master FX | Master MIX | Clock (knob 13) |
 
 Each row shows one half (source or FX), so no `SRC`/`FX` switching is needed on the hardware. Which page each bank shows is the profile's `banks.pages`; you can point a bank at your own page (see [Perform Pages](#perform-pages)).
 

@@ -242,9 +242,6 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
     fun drawRackDeepEdit(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
         val deckLabel = ctx.deckLabelForModuleId(moduleId)
         val isMasterFx = moduleId == MacroEngine.MASTER_FX
-        if (deckLabel != null && moduleId.endsWith("_fx")) {
-            parametersState.setDeckSubTab(deckLabel, "FX")
-        }
         // Transitions and Master both live under the "Mixer" top tab
         // (CTRL: crossfade/master level/queue nav/tap tempo; FX: master FX; TRANS: transition shader + dry/wet +
         // its own parameters) -- reuse that set of subtabs verbatim rather than reimplementing.
