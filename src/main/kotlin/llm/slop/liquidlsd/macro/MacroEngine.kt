@@ -320,6 +320,8 @@ object MacroEngine {
     private var resolvedBindings: Array<ResolvedBinding> = emptyArray()
 
     private fun rebuildResolvedBindings(mixer: Mixer) {
+        // A slot reload replaces the filter instance behind an unchanged path; a stale cached parameter would swallow the knob.
+        llm.slop.liquidlsd.parameters.ParameterResolver.clearCache()
         val list = ArrayList<ResolvedBinding>()
         val snapshot = synchronized(lock) { banks.values.toTypedArray() }
         for (bank in snapshot) {
