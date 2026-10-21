@@ -191,10 +191,10 @@ A volumetric nebula: the camera flies through glowing gas filaments that are lit
 
 A Gray-Scott chemical simulation on a persistent 512 x 512 grid that grows maze, worm, coral, spot and splitting-cell patterns, lit as relief. The grid is fixed, so it costs the same at any output size and does not show a heavy-shader triangle.
 
-- **Regime, Feed Trim, Kill Trim**: Position along the feed/kill path through the pattern types, and fine trims. After a change the pattern needs a few seconds to re-form.
+- **Regime, Feed Trim, Kill Trim**: Position along the feed/kill path through the pattern types, and fine trims. The kill rate is kept inside the band where patterns exist, so extreme trims flatten out instead of going black. After a change the pattern needs a few seconds to re-form.
 - **Diffusion**: Scale of the pattern.
 - **Sim Speed**: Time step per frame, so the pattern evolves faster at higher frame rates.
-- **Reseed**: Crossing the middle seeds the grid again once. An empty grid, for example after a resize, seeds itself.
+- **Reseed**: Crossing the middle seeds the grid again once. An empty grid, for example after a resize or when the chemistry dies out, seeds itself.
 - **Relief, Zoom, Color Mode**: Embossed lighting, magnification of the grid, four colourings.
 
 ### Fluid Ink (`fluid_ink`)

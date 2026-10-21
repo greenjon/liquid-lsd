@@ -79,14 +79,28 @@ vec2 regimeFK(float r) {
     return mix(a, b, smoothstep(0.0, 1.0, s - min(floor(s), 3.0)));
 }
 
-vec4 simStep(sampler2D prev) {
+// Patterns live in a band around the curve k = sqrt(F)/2 - F (measured with a CPU port of this sim): about 0.003
+// above it V dies out for good (black screen), about 0.0075 below it V floods the whole grid (flat, no pattern).
+float killBand(float f) { return 0.5 * sqrt(f) - f; }
+
+vec4 simStep(sampler2D prev, bool detectExtinction) {
     vec2 px = 1.0 / RENDERSIZE;
     vec2 uv = gl_FragCoord.xy * px;
     vec4 c = texture(prev, uv);
 
     // Reseed latch: crossing the 0.5 threshold re-seeds once, with a new salt each time.
     float armed = step(0.5, Reseed);
-    if (c.a < 0.5 || (armed > 0.5 && c.b < 0.5)) {
+    // Extinction: if V has decayed to zero everywhere it can never come back, so the picture stays black.
+    // A coarse 24x24 lattice (about 21 cells apart, finer than a spot) detects it; the first pass reseeds
+    // and the other three pass the fresh seed along.
+    float alive = 1.0;
+    if (detectExtinction) {
+        alive = 0.0;
+        for (int j = 0; j < 24; j++)
+            for (int i = 0; i < 24; i++)
+                alive = max(alive, texture(prev, (vec2(float(i), float(j)) + 0.5) * (1.0 / 24.0)).g);
+    }
+    if (c.a < 0.5 || alive < 0.002 || (armed > 0.5 && c.b < 0.5)) {
         float salt = float(FRAMEINDEX) * 0.013 + TIME;
         vec4 s = seedState(uv, salt);
         s.b = armed;
@@ -104,8 +118,9 @@ vec4 simStep(sampler2D prev) {
            + texture(prev, fract(uv + vec2( px.x,  px.y))) * 0.05
            - c;
 
-    vec2 fk = regimeFK(Regime) + vec2(Feed * 0.012, Kill * 0.008);
-    fk = clamp(fk, vec2(0.005, 0.03), vec2(0.1, 0.075));
+    vec2 fk = regimeFK(Regime) + vec2(Feed * 0.010, Kill * 0.006);
+    fk.x = clamp(fk.x, 0.014, 0.075);
+    fk.y = clamp(fk.y, killBand(fk.x) - 0.0065, killBand(fk.x) + 0.003);
     float u = c.r, v = c.g;
     float uvv = u * v * v;
     float dt = min(0.5 + SimSpeed * 0.5, 1.2 / Diffusion_);   // Du*dt*1.6 < 2 keeps the explicit step stable
@@ -125,10 +140,10 @@ vec3 hsv2rgb(vec3 c) {
 }
 
 void main() {
-    if (PASSINDEX == 0) { gl_FragColor = simStep(rdD); return; }
-    if (PASSINDEX == 1) { gl_FragColor = simStep(rdA); return; }
-    if (PASSINDEX == 2) { gl_FragColor = simStep(rdB); return; }
-    if (PASSINDEX == 3) { gl_FragColor = simStep(rdC); return; }
+    if (PASSINDEX == 0) { gl_FragColor = simStep(rdD, true); return; }
+    if (PASSINDEX == 1) { gl_FragColor = simStep(rdA, false); return; }
+    if (PASSINDEX == 2) { gl_FragColor = simStep(rdB, false); return; }
+    if (PASSINDEX == 3) { gl_FragColor = simStep(rdC, false); return; }
 
     // Display pass: sample the latest state (rdD was written last), tiled, with relief lighting.
     float aspect = RENDERSIZE.x / RENDERSIZE.y;

@@ -3,6 +3,9 @@
 ### KIFS Color Spread (`library/sources/kifs/kifs.fs`, `rendering/SourceDocRegistry.kt`)
 - **New Color Spread knob (default 1, with Saturation and Brightness now also defaulting to 1).** KIFS used to show about two colours, because the folds make every copy of a detail identical and the ramp only looked at the orbit trap. Color Spread shifts the hue by three things the folds do not erase: the fold level the orbit came closest at, the point's position in space, and the way the surface faces. Raise it for a wider spread of colours, 0 gives the old plain ramp, and the gold ramp ignores it. New KIFS decks start bright and fully spread; saved looks keep their own values.
 
+### Reaction Diffusion Stays Out of the Black (`library/sources/reaction_diffusion/reaction_diffusion.fs`)
+- **Reaction Diffusion no longer goes black when Regime, Feed Trim or Kill Trim are pushed.** The chemistry dies out for good when the kill rate is too high for the feed rate, and the end of the Regime sweep sat in that dead zone. Kill is now kept inside the band where patterns exist (measured with a CPU port of the sim), which also stops the flat, flooded grid at the other edge; the Regime path was moved to stay inside it, and the trims are a little narrower. If the grid does go empty anyway (for example from a Diffusion change), it now reseeds itself.
+
 ### Lenia Recovers From Extinction (`library/sources/lenia/lenia.fs`)
 - **Lenia no longer stays black after Growth Center is pushed too high.** Above about 90 the growth peak sits above anything the field reaches, every cell decays to zero, and an empty grid can never grow again, so lowering Growth Center did nothing. The shader now checks a coarse lattice of cells each step and, when the whole grid is empty, reseeds it. Turning Growth Center back down brings the creatures back.
 
