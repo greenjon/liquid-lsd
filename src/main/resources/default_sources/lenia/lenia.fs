@@ -48,6 +48,7 @@
 //   A'    = clamp(A + dt G(U), 0, 1)
 // Four chained passes (lnA <- lnD, lnB <- lnA, lnC <- lnB, lnD <- lnC) = 4 steps per frame, dt = 0.05..0.1 each.
 // Cost: up to a 27x27 tap window per pixel per pass (R <= 13), ~2900 taps/pixel/frame on a 65k-pixel grid.
+// An empty grid (extinction at high Growth Center) is detected and reseeded automatically.
 // State layout: R = A, G = reseed latch, B unused, A = 1 once seeded (all-zero means "empty", e.g. after a resize).
 // Steps are per frame, not TIMEDELTA-scaled.
 
@@ -79,7 +80,15 @@ vec4 simStep(sampler2D prev) {
     vec4 c = texture(prev, uv);
 
     float armed = step(0.5, Reseed);
-    if (c.a < 0.5 || (armed > 0.5 && c.g < 0.5)) {
+    // Extinction: with the growth peak above anything the field reaches, every cell decays to exactly 0 and
+    // U = 0 can never grow again, so the picture stays black even after Growth Center comes back down.
+    // A coarse 16x16 lattice (16 cells apart, finer than any creature) detects an empty grid; every pixel
+    // sees the same lattice, so the whole grid reseeds together.
+    float alive = 0.0;
+    for (int j = 0; j < 16; j++)
+        for (int i = 0; i < 16; i++)
+            alive = max(alive, texture(prev, (vec2(float(i), float(j)) * 16.0 + 8.0) * px).r);
+    if (c.a < 0.5 || alive < 0.002 || (armed > 0.5 && c.g < 0.5)) {
         float salt = fract(float(FRAMEINDEX) * 0.0137 + TIME * 0.31);
         return vec4(seedA(gl_FragCoord.xy, salt), armed, 0.0, 1.0);
     }
