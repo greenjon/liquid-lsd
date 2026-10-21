@@ -1292,6 +1292,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#step-sequencer-glide-trace-ghost-steps-auto-randomize-snap-keyboard-undo-everywhere-uiseqsectionkt-uimodulatorundokt-parametersseqpatternskt-renderingmorphstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step Sequencer: Glide Trace, Ghost Steps, Auto-Randomize, Snap, Keyboard, Undo Everywhere (ui/SeqSection.kt, ui/ModulatorUndo.kt, parameters/SeqPatterns.kt, rendering/MorphState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#toggle-buttons-share-one-helper-uibuttonchromekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6325,6 +6336,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#step-sequencer-glide-trace-ghost-steps-auto-randomize-snap-keyboard-undo-everywhere-uiseqsectionkt-uimodulatorundokt-parametersseqpatternskt-renderingmorphstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step Sequencer: Glide Trace, Ghost Steps, Auto-Randomize, Snap, Keyboard, Undo Everywhere (ui/SeqSection.kt, ui/ModulatorUndo.kt, parameters/SeqPatterns.kt, rendering/MorphState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#toggle-buttons-share-one-helper-uibuttonchromekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11333,6 +11355,15 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="step-sequencer-glide-trace-ghost-steps-auto-randomize-snap-keyboard-undo-everywhere-uiseqsectionkt-uimodulatorundokt-parametersseqpatternskt-renderingmorphstatekt">Step Sequencer: Glide Trace, Ghost Steps, Auto-Randomize, Snap, Keyboard, Undo Everywhere (<code>ui/SeqSection.kt</code>, <code>ui/ModulatorUndo.kt</code>, <code>parameters/SeqPatterns.kt</code>, <code>rendering/MorphState.kt</code>)</h3>
+<ul>
+<li><strong>The bars now draw the output line and a live dot.</strong> A white trace shows what the sequencer will really output: flat steps at 100% Step Hold, linear or S-curve slides below it, so Step Hold and Glide Curve are visible instead of guessed. A dot rides it at the current position.</li>
+<li><strong>Steps past the length show ghosted</strong> after the last playing step, so it is clear they are kept. Patterns shorter than 8 steps now keep 8-step-wide cells instead of stretching to fill the panel.</li>
+<li><strong>New Auto toggle</strong> (shown when randomization is enabled): preset and deck randomization also re-roll the pattern, and the deck's morph slides between patterns. Step Hold's randomize range now takes part in deck morphs too (it did nothing there before).</li>
+<li><strong>Snap menu</strong> (Off, 5%, 10%, 12.5%, 25%) for painting and nudging; <strong>keyboard editing</strong> (click a bar, then arrows, Delete, Enter while the pointer is over the bars); <strong>Euclid</strong> gets a Rotate slider and a hit preview; bars dim while the modulator is bypassed.</li>
+<li><strong>Ctrl+Z now covers the LFO, Audio and MIDI CC panels as well</strong> (one step per drag), not just the sequencer.</li>
+<li>Internal: <code>SeqPatterns.glide</code> is the one glide formula for the evaluator and the editor trace (output unchanged; <code>Evaluators.kt</code> re-marked in <code>sync_manifest.json</code>, web vectors regenerated for the new <code>randomizeSeqSteps</code> field); <code>CvModulator.randomizeSeqSteps</code>; <code>ModulatorSnapshot</code> carries <code>seqHold</code> and <code>seqSteps</code>; <code>ModulatorUndo</code> replaces the sequencer-only undo wrapper.</li>
+</ul>
 <h3 id="toggle-buttons-share-one-helper-uibuttonchromekt">Toggle Buttons Share One Helper (<code>ui/ButtonChrome.kt</code>)</h3>
 <ul>
 <li><strong>Selected toggle and pill buttons now use <code>ButtonChrome.toggleButton</code></strong>: the Audio Continuous/Transient pair, the sequencer's Glide Curve, the beat-preset pills, and the Max Points and Lobes pills. A selected button now lightens on hover and darkens on press like other lit buttons (the old ones stayed flat), unselected ones use the theme's own button color instead of fixed greys, and the label ink is chosen to read on the fill instead of always black.</li>

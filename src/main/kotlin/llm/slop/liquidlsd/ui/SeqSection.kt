@@ -3,6 +3,7 @@ package llm.slop.liquidlsd.ui
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiInputTextFlags
+import imgui.flag.ImGuiKey
 import imgui.type.ImInt
 import imgui.type.ImString
 import llm.slop.liquidlsd.SessionContext
@@ -26,6 +27,7 @@ object SeqSection {
     private const val FONT_SCALE = 0.95f
     private const val BAR_HEIGHT = 64f
     private const val MAX_PER_ROW = 16
+    private const val MIN_PER_ROW = 8
 
     private val unitLabels = GenUnit.entries.map { it.name }.toTypedArray()
     private val unitIdxWrapper = ImInt()
@@ -34,12 +36,20 @@ object SeqSection {
     private var clipboard: Pair<List<Float>, Int>? = null
 
     private val euclidHits = intArrayOf(3)
+    private val euclidRotation = intArrayOf(0)
+
+    private val SNAP_LABELS = listOf("Off" to 0f, "5%" to 0.05f, "10%" to 0.1f, "12.5%" to 0.125f, "25%" to 0.25f)
+
+    /** Paint/nudge grid in step-value units (0 = free). A view preference, not saved with the pattern. */
+    private var snapStep = SeqPatterns.SNAP
+
+    // Keyboard selection: which step of which sequencer the arrow keys act on.
+    private var selectedStep = -1
+    private var selectedFor = ""
 
     // Painting state: previous painted step/value so fast drags fill the gap between frames.
     private var lastPaintIdx = -1
     private var lastPaintVal = 0f
-
-    private var undoGestureOpen = false
 
     // Numeric entry popup (double-click a bar).
     private var editStep = -1
@@ -76,15 +86,8 @@ object SeqSection {
         paramKey: String,
         modulatorIndex: Int,
         themeColor: Int,
-        pushUndo: () -> Unit,
         onReplace: (CvModulator) -> Unit
     ) {
-        // One undo step per gesture: snapshot just before the first change, then not again until the mouse is released.
-        if (!ImGui.isMouseDown(0)) undoGestureOpen = false
-        val onReplace: (CvModulator) -> Unit = { m ->
-            if (!undoGestureOpen) { pushUndo(); undoGestureOpen = true }
-            onReplace(m)
-        }
         val isBipolar = param.minClamp < 0f
         val stepMin = if (isBipolar) -1.0f else 0.0f
         val stepCount = existing.seqStepCount.coerceIn(1, SeqPatterns.MAX_STEPS)
@@ -92,11 +95,13 @@ object SeqSection {
         drawTiming(session, param, existing, paramKey, modulatorIndex, themeColor, onReplace)
         drawLengthAndPhase(session, param, existing, paramKey, modulatorIndex, themeColor, stepCount, onReplace)
         ImGui.spacing()
-        drawToolbar(existing, stepCount, isBipolar, onReplace)
+        drawToolbar(session, param, existing, stepCount, isBipolar, themeColor, onReplace)
         ImGui.spacing()
 
-        val activeStep = Math.floorMod(floor(seqCyclePosition(existing)).toLong(), stepCount.toLong()).toInt()
-        drawStepBars(existing, stepCount, stepMin, activeStep, themeColor, onReplace)
+        val cyclePos = seqCyclePosition(existing)
+        val activeStep = Math.floorMod(floor(cyclePos).toLong(), stepCount.toLong()).toInt()
+        val stepFrac = (cyclePos - floor(cyclePos)).toFloat()
+        drawStepBars(existing, stepCount, stepMin, activeStep, stepFrac, themeColor, onReplace)
         ImGui.spacing()
 
         drawGlide(session, param, existing, paramKey, modulatorIndex, themeColor, onReplace)
@@ -248,7 +253,10 @@ object SeqSection {
 
     // ── Pattern toolbar ─────────────────────────────────────────────────────────────────────
 
-    private fun drawToolbar(existing: CvModulator, stepCount: Int, bipolar: Boolean, onReplace: (CvModulator) -> Unit) {
+    private fun drawToolbar(
+        session: SessionContext, param: ModulatableParameter, existing: CvModulator,
+        stepCount: Int, bipolar: Boolean, themeColor: Int, onReplace: (CvModulator) -> Unit
+    ) {
         val id = existing.id
         val gap = 6f * FONT_SCALE
         val padX = ImGui.getStyle().framePaddingX
@@ -269,6 +277,13 @@ object SeqSection {
 
         if (button("Randomize", "Fill the active steps with random values.")) {
             edit(SeqPatterns.randomize(steps, stepCount, bipolar))
+        }
+        if (session.uiTheme.randomizationEnabled && !param.isRandomizeDisabled) {
+            place(ImGui.calcTextSize("Auto").x + padX * 2)
+            if (ButtonChrome.toggleButton("Auto##seq_auto_$id", existing.randomizeSeqSteps, themeColor)) {
+                onReplace(existing.copy(randomizeSeqSteps = !existing.randomizeSeqSteps))
+            }
+            itemTooltip("When on, randomizing a preset or deck also re-rolls this pattern (and morphs between patterns).")
         }
         if (button("Invert", "Flip every active step (1 - value, or negate when bipolar).")) {
             edit(SeqPatterns.invert(steps, stepCount, bipolar))
@@ -298,26 +313,51 @@ object SeqSection {
 
         if (button("Euclid...", "Spread N hits evenly across the pattern (classic euclidean rhythm).")) {
             euclidHits[0] = euclidHits[0].coerceIn(0, stepCount)
+            euclidRotation[0] = euclidRotation[0].coerceIn(0, stepCount - 1)
             ImGui.openPopup("seq_euclid_$id")
         }
         if (ImGui.beginPopup("seq_euclid_$id")) {
             ImGui.pushItemWidth(160f)
             ImGui.sliderInt("Hits##seq_euclid_hits_$id", euclidHits, 0, stepCount)
+            ImGui.sliderInt("Rotate##seq_euclid_rot_$id", euclidRotation, 0, maxOf(0, stepCount - 1))
             ImGui.popItemWidth()
+            val pattern = SeqPatterns.euclid(steps, stepCount, euclidHits[0], euclidRotation[0])
+            val dl = ImGui.getWindowDrawList()
+            val px = ImGui.getCursorScreenPosX()
+            val py = ImGui.getCursorScreenPosY()
+            val cell = 12f
+            for (i in 0 until stepCount) {
+                val x = px + i * (cell + 2f)
+                val col = if (pattern[i] > 0.5f) themeColor else withAlpha(ImGui.getColorU32(ImGuiCol.Text), 0.2f)
+                dl.addRectFilled(x, py, x + cell, py + cell, col, 2f)
+            }
+            ImGui.dummy(stepCount * (cell + 2f), cell + 2f)
             if (ButtonChrome.button("Apply##seq_euclid_apply_$id")) {
-                edit(SeqPatterns.euclid(steps, stepCount, euclidHits[0]))
+                edit(pattern)
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()
         }
 
         if (button("Clear", "Reset all 32 step values to 0.")) edit(List(SeqPatterns.MAX_STEPS) { 0.0f })
+
+        place(92f * FONT_SCALE + padX * 2)
+        ImGui.pushItemWidth(92f * FONT_SCALE)
+        val snapLabel = SNAP_LABELS.firstOrNull { abs(it.second - snapStep) < 1e-4f }?.first ?: "Custom"
+        if (ImGui.beginCombo("##seq_snap_$id", "Snap: $snapLabel")) {
+            for ((label, v) in SNAP_LABELS) {
+                if (ImGui.selectable(label, abs(v - snapStep) < 1e-4f)) snapStep = v
+            }
+            ImGui.endCombo()
+        }
+        ImGui.popItemWidth()
+        itemTooltip("Grid that painting and nudging snap to. Hold Shift while painting to ignore it.")
     }
 
     // ── Bar-graph step editor ───────────────────────────────────────────────────────────────
 
     private fun drawStepBars(
-        existing: CvModulator, count: Int, stepMin: Float, activeStep: Int, themeColor: Int,
+        existing: CvModulator, count: Int, stepMin: Float, activeStep: Int, stepFrac: Float, themeColor: Int,
         onReplace: (CvModulator) -> Unit
     ) {
         val id = existing.id
@@ -331,93 +371,149 @@ object SeqSection {
 
         val dl = ImGui.getWindowDrawList()
         val io = ImGui.getIO()
-        val perRow = minOf(count, MAX_PER_ROW)
-        val rows = (count + perRow - 1) / perRow
+        val dim = if (existing.bypassed) 0.4f else 1f
+        val perRow = minOf(count, MAX_PER_ROW).coerceAtLeast(MIN_PER_ROW)
+        // Steps past the length that still hold data are drawn ghosted so shortening is visibly reversible.
+        val lastData = (SeqPatterns.MAX_STEPS - 1 downTo 0).firstOrNull { working[it] != 0f } ?: -1
+        val slots = maxOf(count, lastData + 1)
+        val rows = (slots + perRow - 1) / perRow
         val availW = ImGui.getContentRegionAvailX()
         val cellW = availW / perRow
         val h = BAR_HEIGHT
         val bgCol = ImGui.getColorU32(ImGuiCol.FrameBg)
         val bgAltCol = ImGui.getColorU32(ImGuiCol.FrameBgHovered)
         val textCol = ImGui.getColorU32(ImGuiCol.Text)
+        fun yFor(y0: Float, v: Float): Float =
+            if (bipolar) y0 + h / 2f - v.coerceIn(-1f, 1f) * (h / 2f) else y0 + h - v.coerceIn(0f, 1f) * h
+
+        val editorX0 = ImGui.getCursorScreenPosX()
+        val editorY0 = ImGui.getCursorScreenPosY()
 
         for (row in 0 until rows) {
             val x0 = ImGui.getCursorScreenPosX()
             val y0 = ImGui.getCursorScreenPosY()
             val first = row * perRow
-            val last = minOf(count, first + perRow) - 1
-            val rowW = cellW * (last - first + 1)
+            val lastSlot = minOf(slots, first + perRow) - 1
+            val last = minOf(count, first + perRow) - 1 // last playable step in this row (< first if none)
+            var hovered = false
+            var mouseIdx = first
 
-            ImGui.invisibleButton("##seq_bars_${id}_$row", rowW, h)
-            llm.slop.liquidlsd.tour.WidgetRegistry.note { "seq_bars_$row" }
-            val hovered = ImGui.isItemHovered()
-            val dragging = ImGui.isItemActive() && ImGui.isMouseDown(0)
-            val mouseIdx = (first + floor((io.mousePosX - x0) / cellW).toInt()).coerceIn(first, last)
+            if (last >= first) {
+                val rowW = cellW * (last - first + 1)
+                ImGui.invisibleButton("##seq_bars_${id}_$row", rowW, h)
+                llm.slop.liquidlsd.tour.WidgetRegistry.note { "seq_bars_$row" }
+                hovered = ImGui.isItemHovered()
+                val dragging = ImGui.isItemActive() && ImGui.isMouseDown(0)
+                mouseIdx = (first + floor((io.mousePosX - x0) / cellW).toInt()).coerceIn(first, last)
 
-            if (dragging) {
-                val t = ((io.mousePosY - y0) / h).coerceIn(0f, 1f)
-                var v = if (bipolar) 1f - 2f * t else 1f - t
-                if (!io.keyShift) v = SeqPatterns.snap(v, stepMin, 1f)
-                if (lastPaintIdx in 0 until count && abs(mouseIdx - lastPaintIdx) > 1) {
-                    val span = abs(mouseIdx - lastPaintIdx)
-                    val dir = if (mouseIdx > lastPaintIdx) 1 else -1
-                    for (k in 1 until span) {
-                        setStep(lastPaintIdx + dir * k, lastPaintVal + (v - lastPaintVal) * k / span)
+                if (dragging) {
+                    val t = ((io.mousePosY - y0) / h).coerceIn(0f, 1f)
+                    var v = if (bipolar) 1f - 2f * t else 1f - t
+                    if (!io.keyShift) v = SeqPatterns.snap(v, stepMin, 1f, snapStep)
+                    if (lastPaintIdx in 0 until count && abs(mouseIdx - lastPaintIdx) > 1) {
+                        val span = abs(mouseIdx - lastPaintIdx)
+                        val dir = if (mouseIdx > lastPaintIdx) 1 else -1
+                        for (k in 1 until span) {
+                            setStep(lastPaintIdx + dir * k, lastPaintVal + (v - lastPaintVal) * k / span)
+                        }
                     }
+                    setStep(mouseIdx, v)
+                    lastPaintIdx = mouseIdx
+                    lastPaintVal = v
+                    selectedStep = mouseIdx
+                    selectedFor = id
                 }
-                setStep(mouseIdx, v)
-                lastPaintIdx = mouseIdx
-                lastPaintVal = v
+
+                if (hovered && !dragging) {
+                    if (ImGui.isMouseClicked(1) || ImGui.isMouseClicked(2)) setStep(mouseIdx, 0f)
+                    if (ImGui.isMouseDoubleClicked(0)) openStepEditor(id, mouseIdx, working[mouseIdx], scale)
+                    if (io.mouseWheel != 0f) {
+                        val d = if (io.keyShift) 0.01f else if (io.keyCtrl) 0.2f else if (snapStep > 0f) snapStep else 0.05f
+                        setStep(mouseIdx, (working[mouseIdx] + io.mouseWheel * d).coerceIn(stepMin, 1f))
+                        io.mouseWheel = 0f
+                    }
+                    showTooltip(
+                        "Step ${mouseIdx + 1}: ${ValueFormat.format(working[mouseIdx], scale)}\n" +
+                            "Click/drag to paint (Shift = no snap). Wheel to nudge.\n" +
+                            "Arrow keys edit the selected step. Double-click to type. Right-click to reset."
+                    )
+                }
+            } else {
+                ImGui.dummy(availW, h)
             }
 
-            if (hovered && !dragging) {
-                if (ImGui.isMouseClicked(1) || ImGui.isMouseClicked(2)) setStep(mouseIdx, 0f)
-                if (ImGui.isMouseDoubleClicked(0)) {
-                    editStep = mouseIdx
-                    editFocusPending = true
-                    editBuf.set(ValueFormat.format(working[mouseIdx], scale))
-                    ImGui.openPopup("seq_edit_$id")
-                }
-                if (io.mouseWheel != 0f) {
-                    val d = if (io.keyShift) 0.01f else if (io.keyCtrl) 0.2f else 0.05f
-                    setStep(mouseIdx, (working[mouseIdx] + io.mouseWheel * d).coerceIn(stepMin, 1f))
-                    io.mouseWheel = 0f
-                }
-                showTooltip(
-                    "Step ${mouseIdx + 1}: ${ValueFormat.format(working[mouseIdx], scale)}\n" +
-                        "Click/drag to paint (Shift = no snap). Wheel to nudge.\n" +
-                        "Double-click to type. Right-click to reset."
-                )
-            }
-
-            for (idx in first..last) {
+            for (idx in first..lastSlot) {
                 val x = x0 + (idx - first) * cellW
-                val isActive = idx == activeStep
+                val ghost = idx >= count
+                val isActive = !ghost && idx == activeStep
                 val groupAlt = (idx / 4) % 2 == 1
-                dl.addRectFilled(x + 1f, y0, x + cellW - 1f, y0 + h, if (groupAlt) bgAltCol else bgCol, 2f)
+                dl.addRectFilled(x + 1f, y0, x + cellW - 1f, y0 + h, withAlpha(if (groupAlt) bgAltCol else bgCol, if (ghost) 0.35f else dim), 2f)
 
                 val v = working[idx].coerceIn(stepMin, 1f)
                 val base = if (bipolar) y0 + h / 2f else y0 + h
-                val top = if (bipolar) y0 + h / 2f - v * (h / 2f) else y0 + h - v * h
-                val barCol = withAlpha(themeColor, if (isActive) 1f else 0.62f)
+                val top = yFor(y0, v)
+                val barCol = if (ghost) withAlpha(textCol, 0.18f) else withAlpha(themeColor, (if (isActive) 1f else 0.62f) * dim)
                 if (abs(top - base) < 2f) {
                     dl.addRectFilled(x + 2f, base - 1f, x + cellW - 2f, base + 1f, barCol)
                 } else {
                     dl.addRectFilled(x + 2f, minOf(top, base), x + cellW - 2f, maxOf(top, base), barCol, 1.5f)
                 }
-                if (bipolar) dl.addLine(x + 1f, base, x + cellW - 1f, base, withAlpha(textCol, 0.25f))
+                if (bipolar) dl.addLine(x + 1f, base, x + cellW - 1f, base, withAlpha(textCol, 0.25f * dim))
                 if (idx % 4 == 0 && cellW >= 22f) {
-                    dl.addText(x + 4f, y0 + 2f, withAlpha(textCol, 0.45f), (idx + 1).toString())
+                    dl.addText(x + 4f, y0 + 2f, withAlpha(textCol, (if (ghost) 0.25f else 0.45f) * dim), (idx + 1).toString())
                 }
                 if (isActive) {
-                    dl.addRect(x + 0.5f, y0 - 1f, x + cellW - 0.5f, y0 + h + 1f, themeColor, 2f, 0, 2.0f)
+                    dl.addRect(x + 0.5f, y0 - 1f, x + cellW - 0.5f, y0 + h + 1f, withAlpha(themeColor, dim), 2f, 0, 2.0f)
+                } else if (!ghost && selectedFor == id && idx == selectedStep) {
+                    dl.addRect(x + 1.5f, y0 + 0.5f, x + cellW - 1.5f, y0 + h - 0.5f, withAlpha(textCol, 0.9f * dim), 2f, 0, 1.5f)
                 } else if (hovered && idx == mouseIdx) {
-                    dl.addRect(x + 1f, y0, x + cellW - 1f, y0 + h, withAlpha(textCol, 0.35f), 2f, 0, 1.0f)
+                    dl.addRect(x + 1f, y0, x + cellW - 1f, y0 + h, withAlpha(textCol, 0.35f * dim), 2f, 0, 1.0f)
+                }
+            }
+
+            // Glide trace: the line the output actually follows (flat steps when Hold is 100%).
+            if (last >= first) {
+                val traceCol = withAlpha(textCol, 0.85f * dim)
+                val samples = if (existing.seqHold >= 0.999f) 1 else 12
+                var px = Float.NaN
+                var py = 0f
+                for (idx in first..last) {
+                    val cur = working[idx]
+                    val next = working[(idx + 1) % count]
+                    for (k in 0..samples) {
+                        val f = k / samples.toFloat()
+                        val x = x0 + (idx - first + f) * cellW
+                        val y = yFor(y0, SeqPatterns.glide(cur, next, f, existing.seqHold, existing.seqCurveSmooth))
+                        if (!px.isNaN()) dl.addLine(px, py, x, y, traceCol, 1.5f)
+                        px = x
+                        py = y
+                    }
+                }
+                if (activeStep in first..last) {
+                    val cur = working[activeStep]
+                    val next = working[(activeStep + 1) % count]
+                    val mx = x0 + (activeStep - first + stepFrac) * cellW
+                    val my = yFor(y0, SeqPatterns.glide(cur, next, stepFrac, existing.seqHold, existing.seqCurveSmooth))
+                    dl.addCircleFilled(mx, my, 4f, withAlpha(themeColor, dim))
+                    dl.addCircle(mx, my, 4f, withAlpha(textCol, dim), 12, 1.5f)
                 }
             }
             ImGui.dummy(0f, 3f)
         }
 
-        if (!ImGui.isMouseDown(0)) lastPaintIdx = -1
+        // Keyboard editing of the selected step while the pointer is over the editor.
+        val editorY1 = ImGui.getCursorScreenPosY()
+        if (selectedFor == id && selectedStep in 0 until count && !io.wantTextInput &&
+            ImGui.isMouseHoveringRect(editorX0, editorY0, editorX0 + availW, editorY1)
+        ) {
+            val nudge = if (io.keyShift) 0.01f else if (snapStep > 0f) snapStep else 0.05f
+            if (ImGui.isKeyPressed(ImGuiKey.LeftArrow)) selectedStep = (selectedStep - 1).coerceAtLeast(0)
+            if (ImGui.isKeyPressed(ImGuiKey.RightArrow)) selectedStep = (selectedStep + 1).coerceAtMost(count - 1)
+            if (ImGui.isKeyPressed(ImGuiKey.UpArrow)) setStep(selectedStep, (working[selectedStep] + nudge).coerceIn(stepMin, 1f))
+            if (ImGui.isKeyPressed(ImGuiKey.DownArrow)) setStep(selectedStep, (working[selectedStep] - nudge).coerceIn(stepMin, 1f))
+            if (ImGui.isKeyPressed(ImGuiKey.Delete) || ImGui.isKeyPressed(ImGuiKey.Backspace)) setStep(selectedStep, 0f)
+            if (ImGui.isKeyPressed(ImGuiKey.Enter)) openStepEditor(id, selectedStep, working[selectedStep], scale)
+        }
 
         if (ImGui.beginPopup("seq_edit_$id")) {
             if (editFocusPending) { ImGui.setKeyboardFocusHere(); editFocusPending = false }
@@ -433,7 +529,15 @@ object SeqSection {
             ImGui.endPopup()
         }
 
+        if (!ImGui.isMouseDown(0)) lastPaintIdx = -1
         if (dirty) onReplace(existing.copy(seqSteps = working))
+    }
+
+    private fun openStepEditor(id: String, step: Int, value: Float, scale: Float) {
+        editStep = step
+        editFocusPending = true
+        editBuf.set(ValueFormat.format(value, scale))
+        ImGui.openPopup("seq_edit_$id")
     }
 
     // ── Glide + output scaling ──────────────────────────────────────────────────────────────

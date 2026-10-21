@@ -221,20 +221,7 @@ fun evaluateModulatorAtOffset(modulator: CvModulator, timeOffsetSec: Double): Fl
             val nextVal = if (nextStep < steps.size) steps[nextStep] else 0f
 
             val stepFrac = (cyclePosition - kotlin.math.floor(cyclePosition)).toFloat().coerceIn(0f, 1f)
-            val hold = modulator.seqHold.coerceIn(0f, 1f)
-
-            if (hold >= 0.999f || stepFrac < hold) {
-                curVal
-            } else {
-                val glideDuration = 1.0f - hold
-                val t = ((stepFrac - hold) / glideDuration).coerceIn(0f, 1f)
-                val u = if (modulator.seqCurveSmooth) {
-                    0.5f - 0.5f * kotlin.math.cos(t * Math.PI.toFloat())
-                } else {
-                    t
-                }
-                curVal + (nextVal - curVal) * u
-            }
+            llm.slop.liquidlsd.parameters.SeqPatterns.glide(curVal, nextVal, stepFrac, modulator.seqHold, modulator.seqCurveSmooth)
         }
         else -> {
             val rawVal = CVRegistry.get(modulator.sourceId)

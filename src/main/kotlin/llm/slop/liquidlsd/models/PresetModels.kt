@@ -67,6 +67,7 @@ data class ModulatorDto(
     val seqHoldMax: Float = 1.0f,
     val randomizeSeqHold: Boolean = false,
     val seqCurveSmooth: Boolean = false,
+    val randomizeSeqSteps: Boolean = false,
 
     val id: String? = null
 ) {
@@ -113,7 +114,8 @@ data class ModulatorDto(
         val isDcRandom = (randomizeDcOffset && dcOffsetMin != dcOffsetMax) || dcOffsetMin != other.dcOffsetMin || dcOffsetMax != other.dcOffsetMax
         if (!isDcRandom && dcOffset != other.dcOffset) return false
 
-        if (seqSteps != other.seqSteps) return false
+        if (randomizeSeqSteps != other.randomizeSeqSteps) return false
+        if (!randomizeSeqSteps && seqSteps != other.seqSteps) return false
         if (seqStepCount != other.seqStepCount) return false
         if (seqHoldMin != other.seqHoldMin) return false
         if (seqHoldMax != other.seqHoldMax) return false
@@ -164,7 +166,8 @@ data class ModulatorDto(
         val isDcRandom = randomizeDcOffset && dcOffsetMin != dcOffsetMax
         if (!isDcRandom) result = 31 * result + dcOffset.hashCode()
 
-        result = 31 * result + seqSteps.hashCode()
+        result = 31 * result + randomizeSeqSteps.hashCode()
+        if (!randomizeSeqSteps) result = 31 * result + seqSteps.hashCode()
         result = 31 * result + seqStepCount.hashCode()
         result = 31 * result + seqHoldMin.hashCode()
         result = 31 * result + seqHoldMax.hashCode()
@@ -382,6 +385,7 @@ fun CvModulator.toDto(): ModulatorDto = ModulatorDto(
     seqHoldMax = seqHoldMax,
     randomizeSeqHold = randomizeSeqHold,
     seqCurveSmooth = seqCurveSmooth,
+    randomizeSeqSteps = randomizeSeqSteps,
     id = id
 )
 
@@ -437,6 +441,7 @@ fun ModulatorDto.toDomain(): CvModulator = CvModulator(
     seqHoldMax = seqHoldMax,
     randomizeSeqHold = randomizeSeqHold,
     seqCurveSmooth = seqCurveSmooth,
+    randomizeSeqSteps = randomizeSeqSteps,
     id = id ?: llm.slop.liquidlsd.utils.DeterministicRandom.uuid()
 )
 

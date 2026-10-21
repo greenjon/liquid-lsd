@@ -27,8 +27,24 @@ object SeqPatterns {
         return out
     }
 
-    fun snap(v: Float, lo: Float, hi: Float): Float =
-        ((v / SNAP).roundToInt() * SNAP).coerceIn(lo, hi).let { if (abs(it) < 1e-4f) 0f else it }
+    /** Rounds [v] to the nearest multiple of [step] (no rounding when [step] <= 0) within lo..hi. */
+    fun snap(v: Float, lo: Float, hi: Float, step: Float = SNAP): Float {
+        val r = if (step > 0f) (v / step).roundToInt() * step else v
+        return r.coerceIn(lo, hi).let { if (abs(it) < 1e-4f) 0f else it }
+    }
+
+    /**
+     * Sequencer output inside a step: holds [cur] for the first [hold] of the step, then glides to [next]
+     * (cosine-eased when [smooth]). [frac] is progress through the step, 0..1. Shared by the evaluator and
+     * the editor's glide trace.
+     */
+    fun glide(cur: Float, next: Float, frac: Float, hold: Float, smooth: Boolean): Float {
+        val h = hold.coerceIn(0f, 1f)
+        if (h >= 0.999f || frac < h) return cur
+        val t = ((frac - h) / (1.0f - h)).coerceIn(0f, 1f)
+        val u = if (smooth) 0.5f - 0.5f * kotlin.math.cos(t * Math.PI.toFloat()) else t
+        return cur + (next - cur) * u
+    }
 
     private fun apply(steps: List<Float>, values: List<Float>): List<Float> {
         val out = padded(steps)
@@ -76,10 +92,10 @@ object SeqPatterns {
         return apply(steps, values)
     }
 
-    /** Euclidean rhythm: [hits] evenly distributed over [count] steps (hit = 1, rest = 0). */
-    fun euclid(steps: List<Float>, count: Int, hits: Int): List<Float> {
+    /** Euclidean rhythm: [hits] evenly distributed over [count] steps (hit = 1, rest = 0), rotated [rotation] steps later. */
+    fun euclid(steps: List<Float>, count: Int, hits: Int, rotation: Int = 0): List<Float> {
         val n = count.coerceIn(1, MAX_STEPS)
         val h = hits.coerceIn(0, n)
-        return apply(steps, (0 until n).map { i -> if ((i * h) % n < h) 1f else 0f })
+        return apply(steps, (0 until n).map { i -> val j = Math.floorMod(i - rotation, n); if ((j * h) % n < h) 1f else 0f })
     }
 }

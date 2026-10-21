@@ -30,6 +30,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **FX Metaknob Multi-Parameter Linking** | `rendering/isf/*`, `rendering/FxChain.kt`, `ui/FxMetaBindingEditor.kt` | **v1.0** | **DONE** | Several links per Metaknob with link modes and all five curves, edited in the Edit-row strip and Edit bay, plus a per-slot knob order for the focus knobs. |
 | **Macro-Learn Coverage Completion** | `ui/*`, `macro/*` | **v1.1** | **PENDING** | Click-to-learn for randomization bound rows, per-step grid, and dropdowns (shared combo wrapper). Bumped from v1.0. |
 | **Automated Screen Capture & UI Lab** | `export/*`, `ui/*`, `Main.kt` | **v1.0** | **DONE** | GPU PBO readback, headless `--screenshot-ui` runner and `--ui-lab` gallery (`./gradlew captureUiLab`). |
+| **Step Sequencer v2** | `ui/SeqSection.kt`, `cv/Evaluators.kt`, `web/evaluator.js` | **v1.1** | **PENDING** | Playback direction (reverse, ping-pong, random), swing, per-step probability/ties/skip, per-step length multipliers, saved named patterns. |
 | **Localization** | `ui/*` | **v1.1** | **PENDING** | All user-facing text moved to string tables; translation support with locale selection. |
 | **Expanded FX Chain View** | `ui/PerformanceMatrixPanel.kt`, `ui/FxSlotCell.kt`, `macro/FxMacroSync.kt` | **Compost (v1.2)** | **SHELVED** | Mixxx-style 3-sub-row chain editing on the Performance matrix. Decided 2026-10-13: no milestone. Notes: `.planning/fx-chain-expanded-view-notes.md`. |
 
@@ -132,7 +133,7 @@ Extend each ISF FX slot's single Metaknob (`ISFFilter.metaBinding`, `rendering/i
 Click-to-learn already works for number boxes, Seq, LFO and Audio controls. Remaining:
 
 - [ ] Randomization bound rows.
-- [ ] Per-step sequencer grid.
+- [ ] Per-step sequencer bars (each step's value learnable, in the bar editor).
 - [ ] Dropdown/select controls (`ImGui.combo()`) — needs a shared combo wrapper first (see Phase 7 notes in the archive).
 
 ---
@@ -169,6 +170,19 @@ When editing an FX chain on the Performance matrix, show 3 sub-rows (one per slo
 - [ ] **If it earns its keep, Option B**: expand in place with the other rows collapsed to 22px strips (needs FxParamCell dropped to keep ~44px knobs at 1280×720, crossfader relocated when expanding Master FX).
 
 **Deciding question:** big win for mouse-driven play; mostly a larger display of focus mode for 4-knob-controller play.
+
+---
+
+### Milestone 9: Step Sequencer v2
+> **Status**: Parked (2026-10-20). The v1.0 sequencer is a bar editor with pattern tools, glide trace, snap and undo (see release notes); these are the features deliberately left out.
+
+- [ ] Playback direction: forward, reverse, ping-pong, random.
+- [ ] Swing (delay every other step by a fraction of the step).
+- [ ] Per-step probability, ties and skips.
+- [ ] Per-step length multipliers (a step that lasts 2x or 0.5x).
+- [ ] Saved named patterns: a pattern library next to the in-memory Copy/Paste clipboard, shared across presets.
+- [ ] Per-step macro/MIDI/OSC learn (tracked under Milestone 5).
+- [ ] Every evaluator change here must be mirrored in `web/evaluator.js` (`scripts/sync_web.py`).
 
 ---
 

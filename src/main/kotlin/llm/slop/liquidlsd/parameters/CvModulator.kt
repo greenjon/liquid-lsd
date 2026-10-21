@@ -97,13 +97,15 @@ data class CvModulator(
     val randomizeDecayMs: Boolean = false,
 
     // Step Sequencer fields
-    val seqSteps: List<Float> = List(32) { 0.0f },
+    var seqSteps: List<Float> = List(32) { 0.0f },
     val seqStepCount: Int = 16,
     var seqHold: Float = 1.0f,
     val seqHoldMin: Float = seqHold,
     val seqHoldMax: Float = seqHold,
     val randomizeSeqHold: Boolean = false,
     val seqCurveSmooth: Boolean = false,
+    /** When true, global/deck randomization re-rolls the whole step pattern too. */
+    val randomizeSeqSteps: Boolean = false,
 
     val lfoMinMaxMode: Boolean = false,
 
@@ -129,7 +131,10 @@ data class CvModulator(
                (sourceId == "lfo" && genUnit == GenUnit.BEAT)
     }
 
-    fun randomizeActiveValues(random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng): CvModulator {
+    fun randomizeActiveValues(
+        random: kotlin.random.Random = llm.slop.liquidlsd.utils.DeterministicRandom.rng,
+        seqBipolar: Boolean = seqSteps.any { it < 0f }
+    ): CvModulator {
         val (newDepth, newDcOffset) = if (lfoMinMaxMode) {
             val rMin = if (randomizeDcOffset) {
                 if (dcOffsetMin == dcOffsetMax) dcOffsetMin else random.nextFloat() * (dcOffsetMax - dcOffsetMin) + dcOffsetMin
@@ -236,6 +241,8 @@ data class CvModulator(
             if (seqHoldMin == seqHoldMax) seqHoldMin else random.nextFloat() * (seqHoldMax - seqHoldMin) + seqHoldMin
         } else seqHold
 
+        val newSeqSteps = if (randomizeSeqSteps) SeqPatterns.randomize(seqSteps, seqStepCount, seqBipolar, random) else seqSteps
+
         return this.copy(
             depth = newDepth,
             dcOffset = newDcOffset,
@@ -252,7 +259,8 @@ data class CvModulator(
             generatorModDepth = newModDepth,
             attackMs = newAttackMs,
             decayMs = newDecayMs,
-            seqHold = newSeqHold
+            seqHold = newSeqHold,
+            seqSteps = newSeqSteps
         )
     }
 

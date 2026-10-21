@@ -119,25 +119,27 @@ The sequencer outputs a stepped voltage pattern that advances with each beat or 
 
 ### The step editor
 
-Each step is a bar. Bars sit in rows of up to 16, so a 32-step pattern is two rows. The step playing now is outlined, and every fourth step is numbered.
+Each step is a bar. Bars sit in rows of up to 16, so a 32-step pattern is two rows. The step playing now is outlined, and every fourth step is numbered. A white line traces the output as it will actually move: flat steps when Step Hold is 100%, slides when it is lower. A dot rides the line at the current position.
 
-- **Paint** — click and drag across the bars to draw a pattern. Values snap to 5%; hold `Shift` to paint freely. A fast drag fills the steps in between.
-- **Nudge** — hover a bar and scroll: ±5 per notch, `Shift` for ±1, `Ctrl` for ±20.
+- **Paint** — click and drag across the bars to draw a pattern. Values snap to the **Snap** grid (5% by default; pick Off, 10%, 12.5% or 25% in the toolbar), and holding `Shift` paints freely. A fast drag fills the steps in between.
+- **Nudge** — hover a bar and scroll, by one Snap step per notch (`Shift` for 1%, `Ctrl` for 20%).
+- **Keyboard** — clicking a bar selects it (thin outline). While the pointer is over the bars, `Left` / `Right` move the selection, `Up` / `Down` nudge it (`Shift` for 1%), `Delete` or `Backspace` resets it, and `Enter` opens the number box.
 - **Type a value** — double-click a bar, type a number (0 to 100, or -100 to 100 for a bipolar parameter) and press Enter.
 - **Reset** — right-click or middle-click a bar to set it to 0.
 
-**Length** is a 1 to 32 slider, so odd lengths such as 5 or 7 work. Steps past the end are kept, so lengthening again brings them back. **Phase** starts the pattern part-way through, and **Sync to Step 1** restarts it now.
+**Length** is a 1 to 32 slider, so odd lengths such as 5 or 7 work. Steps past the end are kept and shown ghosted after the last playing step, so lengthening again brings them back. **Phase** starts the pattern part-way through, and **Sync to Step 1** restarts it now.
 
 ### Pattern tools
 
 The row above the bars edits the active steps:
 
-- **Randomize** — random values. **Invert** — flip every step.
+- **Randomize** — random values. **Auto** (when randomization is enabled) — also re-roll the pattern whenever a preset or deck is randomized; the deck morph then slides between patterns. **Invert** — flip every step.
 - **Shift <** / **Shift >** — rotate the pattern one step earlier or later.
 - **Copy** / **Paste** — copy a pattern (with its length) from one sequencer to another.
 - **Fill...** — Ramp Up, Ramp Down, Triangle, Alternate, Pulse or All On.
-- **Euclid...** — spread N hits evenly across the pattern, the classic euclidean rhythm.
+- **Euclid...** — spread N hits evenly across the pattern, the classic euclidean rhythm, with a Rotate control and a preview before you apply.
 - **Clear** — reset all 32 steps to 0.
+- **Snap** — the grid painting and nudging snap to.
 
 ### Timing
 

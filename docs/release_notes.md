@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### Step Sequencer: Glide Trace, Ghost Steps, Auto-Randomize, Snap, Keyboard, Undo Everywhere (`ui/SeqSection.kt`, `ui/ModulatorUndo.kt`, `parameters/SeqPatterns.kt`, `rendering/MorphState.kt`)
+- **The bars now draw the output line and a live dot.** A white trace shows what the sequencer will really output: flat steps at 100% Step Hold, linear or S-curve slides below it, so Step Hold and Glide Curve are visible instead of guessed. A dot rides it at the current position.
+- **Steps past the length show ghosted** after the last playing step, so it is clear they are kept. Patterns shorter than 8 steps now keep 8-step-wide cells instead of stretching to fill the panel.
+- **New Auto toggle** (shown when randomization is enabled): preset and deck randomization also re-roll the pattern, and the deck's morph slides between patterns. Step Hold's randomize range now takes part in deck morphs too (it did nothing there before).
+- **Snap menu** (Off, 5%, 10%, 12.5%, 25%) for painting and nudging; **keyboard editing** (click a bar, then arrows, Delete, Enter while the pointer is over the bars); **Euclid** gets a Rotate slider and a hit preview; bars dim while the modulator is bypassed.
+- **Ctrl+Z now covers the LFO, Audio and MIDI CC panels as well** (one step per drag), not just the sequencer.
+- Internal: `SeqPatterns.glide` is the one glide formula for the evaluator and the editor trace (output unchanged; `Evaluators.kt` re-marked in `sync_manifest.json`, web vectors regenerated for the new `randomizeSeqSteps` field); `CvModulator.randomizeSeqSteps`; `ModulatorSnapshot` carries `seqHold` and `seqSteps`; `ModulatorUndo` replaces the sequencer-only undo wrapper.
+
 ### Toggle Buttons Share One Helper (`ui/ButtonChrome.kt`)
 - **Selected toggle and pill buttons now use `ButtonChrome.toggleButton`**: the Audio Continuous/Transient pair, the sequencer's Glide Curve, the beat-preset pills, and the Max Points and Lobes pills. A selected button now lightens on hover and darkens on press like other lit buttons (the old ones stayed flat), unselected ones use the theme's own button color instead of fixed greys, and the label ink is chosen to read on the fill instead of always black.
 

@@ -25,7 +25,9 @@ data class ModulatorSnapshot(
     var modHold: Float = 0f,
     var generatorModDepth: Float = 0f,
     var attackMs: Float = 0f,
-    var decayMs: Float = 0f
+    var decayMs: Float = 0f,
+    var seqHold: Float = 1f,
+    var seqSteps: List<Float> = emptyList()
 ) {
     fun copyFrom(mod: CvModulator) {
         depth = mod.depth
@@ -43,6 +45,8 @@ data class ModulatorSnapshot(
         generatorModDepth = mod.generatorModDepth
         attackMs = mod.attackMs
         decayMs = mod.decayMs
+        seqHold = mod.seqHold
+        seqSteps = mod.seqSteps
     }
 
     fun copyFrom(other: ModulatorSnapshot) {
@@ -61,6 +65,8 @@ data class ModulatorSnapshot(
         generatorModDepth = other.generatorModDepth
         attackMs = other.attackMs
         decayMs = other.decayMs
+        seqHold = other.seqHold
+        seqSteps = other.seqSteps
     }
 }
 
@@ -254,7 +260,7 @@ class DeckMorphController(
             for (i in 0 until modCount) {
                 val mod = param.modulators[i]
                 val modSnap = paramSnap.modulators[i]
-                val randomized = mod.randomizeActiveValues(random)
+                val randomized = mod.randomizeActiveValues(random, seqBipolar = param.minClamp < 0f)
                 modSnap.copyFrom(randomized)
             }
         }
@@ -473,6 +479,20 @@ class DeckMorphController(
                     m0.decayMs = mod.decayMs
                     m1.decayMs = mod.decayMs
                 }
+
+                if (mod.randomizeSeqHold) {
+                    mod.seqHold = MorphMath.lerp(m0.seqHold, m1.seqHold, v)
+                } else {
+                    m0.seqHold = mod.seqHold
+                    m1.seqHold = mod.seqHold
+                }
+
+                if (mod.randomizeSeqSteps && m0.seqSteps.size == m1.seqSteps.size) {
+                    mod.seqSteps = List(m0.seqSteps.size) { MorphMath.lerp(m0.seqSteps[it], m1.seqSteps[it], v) }
+                } else if (!mod.randomizeSeqSteps) {
+                    m0.seqSteps = mod.seqSteps
+                    m1.seqSteps = mod.seqSteps
+                }
             }
         }
         genome?.onMorphUpdate(state0, state1, v)
@@ -530,6 +550,8 @@ class DeckMorphController(
                 if (mod.randomizeGeneratorModDepth) mod.generatorModDepth = m0.generatorModDepth else { m0.generatorModDepth = mod.generatorModDepth; m1?.generatorModDepth = mod.generatorModDepth }
                 if (mod.randomizeAttackMs) mod.attackMs = m0.attackMs else { m0.attackMs = mod.attackMs; m1?.attackMs = mod.attackMs }
                 if (mod.randomizeDecayMs) mod.decayMs = m0.decayMs else { m0.decayMs = mod.decayMs; m1?.decayMs = mod.decayMs }
+                if (mod.randomizeSeqHold) mod.seqHold = m0.seqHold else { m0.seqHold = mod.seqHold; m1?.seqHold = mod.seqHold }
+                if (mod.randomizeSeqSteps) mod.seqSteps = m0.seqSteps else { m0.seqSteps = mod.seqSteps; m1?.seqSteps = mod.seqSteps }
             }
         }
     }

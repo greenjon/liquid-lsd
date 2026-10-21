@@ -220,7 +220,7 @@ object ParametersRenderer {
                 } else {
                     if (ImGui.menuItem("Randomize row")) {
                         onPushUndo()
-                        val randomized = param.modulators.map { it.randomizeActiveValues() }
+                        val randomized = param.modulators.map { it.randomizeActiveValues(seqBipolar = param.minClamp < 0f) }
                         param.modulators.clear()
                         param.modulators.addAll(randomized)
                         param.randomizeBaseValue()

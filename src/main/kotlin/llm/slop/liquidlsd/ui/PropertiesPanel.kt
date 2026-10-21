@@ -362,6 +362,12 @@ object PropertiesPanel {
                 val isHeaderOpen = if (isMultiBand) ImGui.collapsingHeader(headerTitle, defaultOpen) else true
                 if (isHeaderOpen) {
                     ImGui.indent(10f)
+                    ModulatorUndo.frame()
+                    val undoableReplace = { newMod: CvModulator ->
+                        ModulatorUndo.beforeChange { ParametersUndo.pushUndoState(state, mixer) }
+                        replaceModulator(state, param, newMod, mixer)
+                    }
+
                     ModulatorHeaderRow.draw(
                         session = session,
                         existing = existing,
@@ -372,7 +378,7 @@ object PropertiesPanel {
                         hasAdvanced = hasAdvanced,
                         isRandomizeDisabled = param.isRandomizeDisabled,
                         randomizeDisabledTooltip = llm.slop.liquidlsd.rendering.Mixer.FORBIDDEN_RANDOMIZE_TOOLTIP,
-                        onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) },
+                        onReplace = undoableReplace,
                         onReset = {
                             if (cvId == "audio") {
                                 param.modulators.remove(existing)
@@ -431,7 +437,7 @@ object PropertiesPanel {
                                 paramKey = cell.paramKey,
                                 modulatorIndex = globalModIndex,
                                 themeColor = currentThemeColor,
-                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                                onReplace = undoableReplace
                             )
                         }
                         existing.sourceId.startsWith("midi_cc_") -> {
@@ -443,7 +449,7 @@ object PropertiesPanel {
                                 param = param,
                                 existing = existing,
                                 themeColor = currentThemeColor,
-                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) },
+                                onReplace = undoableReplace,
                                 onUnbind = {
                                     ParametersUndo.pushUndoState(state, mixer)
                                     param.modulators.removeAll { it.sourceId.startsWith("midi_cc_") }
@@ -459,8 +465,7 @@ object PropertiesPanel {
                                 paramKey = cell.paramKey,
                                 modulatorIndex = globalModIndex,
                                 themeColor = currentThemeColor,
-                                pushUndo = { ParametersUndo.pushUndoState(state, mixer) },
-                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                                onReplace = undoableReplace
                             )
                         }
                         else -> {
@@ -476,7 +481,7 @@ object PropertiesPanel {
                                 isGen = isGen,
                                 hasAdvanced = hasAdvanced,
                                 themeColor = currentThemeColor,
-                                onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                                onReplace = undoableReplace
                             )
 
                             // Draw LFO 2 / secondary generator modulator controls
@@ -488,7 +493,7 @@ object PropertiesPanel {
                                     paramKey = cell.paramKey,
                                     idx = globalModIndex,
                                     themeColor = currentThemeColor,
-                                    onReplace = { newMod -> replaceModulator(state, param, newMod, mixer) }
+                                    onReplace = undoableReplace
                                 )
                             }
                         }

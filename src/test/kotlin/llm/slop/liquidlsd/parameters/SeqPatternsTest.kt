@@ -54,4 +54,34 @@ class SeqPatternsTest {
     @Test fun paddedFillsToThirtyTwo() {
         assertEquals(32, SeqPatterns.padded(emptyList()).size)
     }
+
+    @Test fun glideHoldsThenSlides() {
+        assertEquals(0.2f, SeqPatterns.glide(0.2f, 0.8f, 0.4f, 0.5f, false))
+        assertEquals(0.5f, SeqPatterns.glide(0.2f, 0.8f, 0.75f, 0.5f, false), 1e-5f)
+        assertEquals(0.8f, SeqPatterns.glide(0.2f, 0.8f, 1.0f, 0.5f, true), 1e-5f)
+        assertEquals(0.2f, SeqPatterns.glide(0.2f, 0.8f, 0.99f, 1.0f, false)) // fully held: never glides
+    }
+
+    @Test fun snapUsesGivenGridAndFreeWhenZero() {
+        assertEquals(0.25f, SeqPatterns.snap(0.27f, 0f, 1f, 0.25f))
+        assertEquals(0.27f, SeqPatterns.snap(0.27f, 0f, 1f, 0f))
+        assertEquals(0f, SeqPatterns.snap(-0.3f, 0f, 1f, 0.05f))
+    }
+
+    @Test fun euclidRotationShiftsHitsLater() {
+        val plain = SeqPatterns.euclid(base, 8, 3).take(8)
+        val rotated = SeqPatterns.euclid(base, 8, 3, 1).take(8)
+        assertEquals(plain.takeLast(1) + plain.take(7), rotated)
+    }
+
+    @Test fun modulatorRandomizeOnlyRollsPatternWhenFlagged() {
+        val steps = List(32) { 0.5f }
+        val off = CvModulator(sourceId = "seq", seqSteps = steps).randomizeActiveValues(Random(3))
+        assertEquals(steps, off.seqSteps)
+        val on = CvModulator(sourceId = "seq", seqSteps = steps, seqStepCount = 8, randomizeSeqSteps = true)
+            .randomizeActiveValues(Random(3), seqBipolar = false)
+        assertTrue(on.seqSteps.take(8).any { it != 0.5f })
+        assertEquals(0.5f, on.seqSteps[20]) // beyond the length is untouched
+        assertTrue(on.seqSteps.all { it in 0f..1f })
+    }
 }
