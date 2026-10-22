@@ -31,7 +31,7 @@ Checks printed as `TOUR_WARN`: a caption shown for less than its reading time (1
 | `chapter` | `target` = id, `title`, `clipSec` |
 | `tooltips` | `value` 0 or 1 |
 | `set_page` | `target` = `ab`, `bgpv`, `mixer` |
-| `library_mode`, `theme`, `preferences`, `preferences_close`, `output_view` | `FULL`/`HALF`; `light`/`dark`; category name; `value` 1 = Output View on (the F key), 0 = off |
+| `library_mode`, `theme`, `preferences`, `preferences_close`, `output_view`, `randomization` | `FULL`/`HALF`; `light`/`dark`; category name; `value` 1 = Output View on (the F key), 0 = off; `value` 1/0 = randomization on/off (shows the Clock row's randomize buttons) |
 | `open_params`, `open_params_pair`, `focus_pair`, `close_focus` | module id / pair tag |
 | `load_source`, `load_preset` | `deck` A/B/BG/PV, `target` = source id / `.lsd` path |
 | `set_param`, `bind_modulator` | `deck`, `param`, `value`; modulator `target` = CV source id, `unit` BEAT/TIME |

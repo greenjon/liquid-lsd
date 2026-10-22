@@ -13,7 +13,7 @@ The CV grid is the middle column of **Edit** (click a row's gear in the Perform 
 
 Click any cell at the intersection of a parameter and a source type to configure that connection. Active cells show an animated readout knob so you can see the live signal at a glance.
 
-The side rail on the left (`[CTRL] [MIX] [A] [B] [BG] [PV]`) switches between the master controls, the master mixer and the decks; the section tabs above the grid switch between a deck's source (`SRC`) and its `FX` chain, or the Mixer's `FX` / `TRANS` (`CTRL` has a single `CTRL` tab). The selected cell's details appear in the Modulation column on the right.
+The side rail on the left (`[MST] [OUT] [A] [B] [BG] [PV]`) switches between the master levels and clock controls, the output stage and the decks; the section tabs above the grid switch between a deck's source (`SRC`) and its `FX` chain, the output stage's `FX` / `TRANS`, or the MST tab's `LEVELS` / `CTRL`. The selected cell's details appear in the Modulation column on the right.
 
 ### Columns
 

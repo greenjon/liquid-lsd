@@ -10,7 +10,7 @@ The Library panel spans the left and middle columns of the app. That column has 
 
 - **Perform** — The Performance rows sit above the Library, which fills the rest of the window. This is the everyday view for playing a set.
 - **Edit** — Click a row's **gear** and the Library goes away completely. That row's pair of rows and its parameters fill the column, so you have room to fine-tune presets and FX. Its header line has **Back** and a **Browse | Params** switch: Browse shows the list for the same deck and half. Press **Esc**, **Back** or the lit gear to get back to Perform.
-- **Pair view** — Picking for a deck whose rows are not on the current page (for example clicking the BG monitor from the A/B page) brings that deck's SRC and FX rows on screen with the browser below, and the Library goes away. Its header line matches Edit's. Press **Esc** or **Back** to return to Perform. See [Presets & Library](presets_and_library.md).
+- **Pair view** — Picking for a deck (or for Transitions / Master FX) whose rows are not on the current page (for example clicking the BG monitor from the A/B page) brings that pair's two rows on screen with the browser below, and the Library goes away. Its header line matches Edit's. Press **Esc** or **Back** to return to Perform. See [Presets & Library](presets_and_library.md).
 - **Library** — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.
 
 Clicking a source name, FX chain name, FX slot or the transition name on a Perform row doesn't change the view: the Library below starts applying to that slot (its name shows on the Library's tab line), until you press **Esc**, its **✕**, or click the slot again. See [Presets & Library](presets_and_library.md#picking-for-a-slot-the-library-applies-in-place).
@@ -58,7 +58,7 @@ one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Cl
 
 For full control, open a row's **Edit** (the gear on the row, or **Params** in the pair view's header). Edit has three columns:
 
-- **Side rail** — `[CTRL] [MIX] [A] [B] [BG] [PV]` to jump between channels.
+- **Side rail** — `[MST] [OUT] [A] [B] [BG] [PV]` to jump between channels. **MST** is the Master MST row and the Clock row (deck levels, queue triggers); **OUT** is the output stage (Transitions and Master FX).
 - **Parameter grid** — every row is a visual parameter (like "Lobes", "Zoom", or "Cell scale", shown with the shader's own label) and each
   column is a modulation source (manual value, MIDI, LFO, sequencer, audio). Click a cell to
   configure that connection. See [Modulation](modulation.md) for the full guide.
@@ -86,7 +86,7 @@ The right panel shows:
 - Master output monitor
 - Blend mode selector
 
-Clicking a deck monitor points the Library at that deck's source; clicking the master monitor (or its **M** badge) points it at the Master FX chain. When the current page doesn't show those rows, the pair view brings them on screen instead. Use a row's gear for the full Edit.
+Clicking a deck monitor points the Library at that deck's source; clicking the master monitor (or its **M** badge) points it at the Master FX chain (or at the transition, if you touched that last). When the current page doesn't show those rows, the pair view brings them on screen instead. Use a row's gear for the full Edit.
 
 Macro knobs are edited in the Performance rows' Edit view, where each knob gets a target strip for choosing what it controls. See [Macro Controls & the Perform View](macros_and_rack.md).
 
@@ -138,7 +138,8 @@ Every shortcut except `Caps Lock` and `Space` can be rebound in **Preferences �
 | **Bank** | A saved set of macro knob targets (Library → Macros → Banks). Perform pages (Library → Macros → Pages) are saved row layouts. |
 | **A/B Queue / BG Queue** | The auto-VJ queues feeding Decks A/B and the Background deck. FX and Transitions have their own queues. |
 | **Level** | A deck's or the Master's output opacity. |
-| **XF** | Crossfader row: the crossfade and transition shader. |
+| **MST** | The Master row's pill: deck levels and the master level. (It was called MIX before.) |
+| **OUT** | Edit's output-stage tab: Transitions and Master FX. |
 | **W/D** | Per-deck FX chain wet/dry. |
 | **Mapping** | A hardware (MIDI/OSC) control tied to a parameter. A macro knob's **targets** are the parameters it drives (no hardware involved). |
 | **Bypass / Mute** | Bypass turns off an FX chain or shader; Mute turns off a modulator. |

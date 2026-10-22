@@ -95,8 +95,8 @@ Getting from "I want to change this effect" to the right control involves up to 
 
 1. Row pill: `[SRC]` vs `[FX]`
 2. Bay tab: `Edit | SRC | Chain | FX1 | FX2 | FX3` (derived from `sectionModeFor` / `browseTargetFor`)
-3. Side rail: `MIX | A | B | BG | PV`
-4. Parameter grid sub-tab: `SRC` vs `FX` (Mixer: `FX | TRANS`; the CTRL side tab has the single `CTRL`)
+3. Side rail: `MST | OUT | A | B | BG | PV` (as of 2026-10-21; it was `CTRL | MIX | A | ...`)
+4. Parameter grid sub-tab: `SRC` vs `FX` (Mixer: `FX | TRANS` on OUT, `LEVELS | CTRL` on MST)
 5. Library menu: `Sources | FX | Trans`
 
 Layer 5 is a separate view (Library) and not part of the Edit hierarchy, so the real nesting is four. Layers 1 and 4 are the two halves of the §3.2 bug. The bay tab row mixes two meanings: `Edit` opens the parameter grid, and the other tabs open pickers. This is acceptable, because the tab row says which, but is worth labelling more clearly (see §6.2).

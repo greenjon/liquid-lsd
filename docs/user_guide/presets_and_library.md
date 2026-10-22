@@ -53,7 +53,7 @@ The Library panel spans the left and middle columns. That column has four views:
 
 - **Perform** — The Performance rows sit above the Library, which fills the rest of the window. This is the everyday view for playing a set.
 - **Edit** — Click a row's **gear** and the Library goes away completely. That row's pair of rows and its parameters fill the column, so you have room to fine-tune presets and FX. Press **Esc**, **Back** or the lit gear to get back to Perform.
-- **Pair view** — When you pick something for a deck whose rows are not on the current page (for example clicking the BG monitor while the A/B page is up), the Library goes away too: that deck's SRC and FX rows (or Master's, or Transitions and Clock) stay on screen with the same browser below. Press **Esc** or **Back** to return to Perform.
+- **Pair view** — When you pick something for a deck whose rows are not on the current page (for example clicking the BG monitor while the A/B page is up), the Library goes away too: that deck's SRC and FX rows (or, for Transitions and Master FX, the Master pair's two rows) stay on screen with the same browser below. Press **Esc** or **Back** to return to Perform.
 - **Library** — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.
 
 Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit or the pair view, `Space`, `Ctrl+F` or `/` closes them (cancelling any armed Add Target or Learn) and brings the Library back; **Esc** from there returns to the Edit or pair view you left, with the same slot.
@@ -72,7 +72,7 @@ Click a source name, an FX chain name, an FX slot or the transition name on a Pe
 - `Space` (or maximizing the Library) pauses the binding while the Library fills the column; `Space` again or **Esc** brings it back. `Ctrl+F` or `/` keeps it and just jumps to the search box.
 - On a deck with unsaved changes the first pick asks Save / Discard / Cancel; your answer is reused while that deck stays bound.
 
-The pair view works the same way, with its header line instead of the tab line: **Back**, a **Browse | Params** switch (Params opens the full editor for the half you last touched; Edit's own header has the same switch to come back), the target and its buttons, and what the queue plays next. Edit and the pair view keep this line in the same place, so switching between them moves nothing. Master's pair starts on the Master FX chain.
+The pair view works the same way, with its header line instead of the tab line: **Back**, a **Browse | Params** switch (Params opens the full editor for the half you last touched; Edit's own header has the same switch to come back), the target and its buttons, and what the queue plays next. Edit and the pair view keep this line in the same place, so switching between them moves nothing. The Master pair (Transitions + Master FX) starts on the Master FX chain, or on the transition if you touched that last.
 
 ### Library View Mode (`[ Sources ]` / `[ FX ]` / `[ Transitions ]` / `[ Macros ]`)
 

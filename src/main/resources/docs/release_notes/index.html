@@ -1292,6 +1292,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#pairs-follow-the-twister-page-uiperfrowskt-uiparametersstatekt-uiperformancedeepeditbaykt-uinavigationsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pairs Follow the Twister Page (ui/PerfRows.kt, ui/ParametersState.kt, ui/PerformanceDeepEditBay.kt, ui/NavigationSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#master-levels-editor-and-clock-triggers-uiparameterstabskt-uiperformanceclocktriggerskt-uiperformanceclockcontrolskt-uiparametersstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Master Levels Editor and Clock Triggers (ui/ParametersTabs.kt, ui/PerformanceClockTriggers.kt, ui/PerformanceClockControls.kt, ui/ParametersState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#slots-bind-the-library-in-place-uiparametersstatekt-uilibrarypanelkt-uibacknavigationkt-uipairknobtouchkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6512,6 +6534,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#pairs-follow-the-twister-page-uiperfrowskt-uiparametersstatekt-uiperformancedeepeditbaykt-uinavigationsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Pairs Follow the Twister Page (ui/PerfRows.kt, ui/ParametersState.kt, ui/PerformanceDeepEditBay.kt, ui/NavigationSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#master-levels-editor-and-clock-triggers-uiparameterstabskt-uiperformanceclocktriggerskt-uiperformanceclockcontrolskt-uiparametersstatekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Master Levels Editor and Clock Triggers (ui/ParametersTabs.kt, ui/PerformanceClockTriggers.kt, ui/PerformanceClockControls.kt, ui/ParametersState.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#slots-bind-the-library-in-place-uiparametersstatekt-uilibrarypanelkt-uibacknavigationkt-uipairknobtouchkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11707,6 +11751,21 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="pairs-follow-the-twister-page-uiperfrowskt-uiparametersstatekt-uiperformancedeepeditbaykt-uinavigationsurfacekt">Pairs Follow the Twister Page (<code>ui/PerfRows.kt</code>, <code>ui/ParametersState.kt</code>, <code>ui/PerformanceDeepEditBay.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
+<ul>
+<li><strong>A pair is now the two rows that share a half of a Twister page, in Browse and in Edit.</strong> On the MIXER page that makes Transitions + Master FX one pair and Master MST + Clock the other. Before, Browse paired Master MIX with Master FX and Transitions with Clock, so half of each pair had nothing to browse.</li>
+<li><strong>The Master pair is Transitions + Master FX</strong>, and both halves browse: the Master FX chain and the transition. It opens on the half you touched last (the Master FX chain at first). The Master badge and the main monitor open it, in place when the page shows those rows. The old Transitions + Clock pair is gone.</li>
+<li><strong>Master MST + Clock have nothing to browse</strong>, so they are not a pair view; they only pair in Edit (see below). On that Edit tab the Browse button is greyed with a tooltip saying so.</li>
+<li><strong>The Twister's pair walk is Deck A, B, BG, PV, Master</strong>; knob 13 (send and quick switch) is the Master pair.</li>
+<li><strong>The Master MIX row's pill is now <code>MST</code></strong>, to match the Edit rail.</li>
+</ul>
+<h3 id="master-levels-editor-and-clock-triggers-uiparameterstabskt-uiperformanceclocktriggerskt-uiperformanceclockcontrolskt-uiparametersstatekt">Master Levels Editor and Clock Triggers (<code>ui/ParametersTabs.kt</code>, <code>ui/PerformanceClockTriggers.kt</code>, <code>ui/PerformanceClockControls.kt</code>, <code>ui/ParametersState.kt</code>)</h3>
+<ul>
+<li><strong>Edit's side rail is now <code>MST OUT A B BG PV</code>.</strong> <code>MST</code> has two sections, <code>LEVELS</code> and <code>CTRL</code>, and shows the Master MST row with the Clock row. <code>OUT</code> (the former <code>MIX</code>) has <code>FX</code> and <code>TRANS</code> and shows Transitions with Master FX.</li>
+<li><strong>LEVELS edits every deck's level and alpha, and the master level, in one grid.</strong> Alpha is the deck source's Gain, the same parameter as on the deck's SRC tab; an empty deck shows only its level. The master level moved here from TRANS, which now starts with Crossfade. Bindings, presets and macros are unchanged.</li>
+<li><strong>The Master MST row's gear opens MST &gt; LEVELS</strong>, the Master FX gear opens OUT &gt; FX and the Transitions gear OUT &gt; TRANS. The gear stays lit on the row the editor is on.</li>
+<li><strong>The Clock row has queue buttons</strong>: a <code>◀ ▶</code> pair each for the A/B, BG and Transition queues. With randomization on, a second line has <code>A B BG PV ALL</code> randomize buttons (undo with Ctrl+Z). They are the same triggers as MST &gt; CTRL, so right-click Learn MIDI / OSC works from either place. They are left out on a window too narrow for them.</li>
+</ul>
 <h3 id="slots-bind-the-library-in-place-uiparametersstatekt-uilibrarypanelkt-uibacknavigationkt-uipairknobtouchkt">Slots Bind the Library In Place (<code>ui/ParametersState.kt</code>, <code>ui/LibraryPanel.kt</code>, <code>ui/BackNavigation.kt</code>, <code>ui/PairKnobTouch.kt</code>)</h3>
 <ul>
 <li><strong>Clicking a source name, an FX chain name, an FX slot or the transition name now works right in the Perform view.</strong> Nothing moves: the Library below starts applying to that slot, and the slot's name and buttons (Save, Clear Slot) show on the Library's tab line with a ✕. The slot is outlined on its row and the list's border takes the row's colour. A click on a row applies it (Ctrl+Z undoes it); a double-click applies it and goes back to the plain Library. Esc, the ✕, or clicking the slot again stop without applying. Changing page stops too.</li>
@@ -11749,7 +11808,6 @@
 <li><strong>Edit shows readable parameter names.</strong> Grid rows and Metaknob lists use the shader's own label, or split names like <code>CellScale</code> into "Cell scale". Presets, MIDI and OSC mappings are unchanged.</li>
 <li><strong>Properties is never empty in Edit.</strong> Opening a deck or Master, or switching tabs, selects the first knob-assigned parameter (or the first row).</li>
 <li><strong>Knob captions use the readable name too.</strong> Source and effect knobs that were labelled with a cut-off raw name ("TRACKINGJ") now carry the whole readable name ("TRACKING JITTER"), shortened with "..." only when the caption is too narrow; focus-mode effect knobs show "Tracking jitter". Looks and presets saved before keep the old stored caption until their knobs are rebuilt.</li>
-<li><strong>The Master MIX row's gear opens master level and crossfade</strong> (the MIX side tab's TRANS) instead of the CTRL tab's queue and tap-tempo triggers.</li>
 <li><strong>Fixed clipping:</strong> the side rail no longer cuts off "CTRL", the TRANS tab's transition selector fits its name, and the Min/Max fields in the macro and Metaknob binding editors no longer cut off "Max". CTRL and TRANS labels are in sentence case ("Queue prev", "Master level").</li>
 </ul>
 <h3 id="kifs-color-spread-librarysourceskifskifsfs-renderingsourcedocregistrykt">KIFS Color Spread (<code>library/sources/kifs/kifs.fs</code>, <code>rendering/SourceDocRegistry.kt</code>)</h3>
@@ -11784,16 +11842,16 @@
 </ul>
 <h3 id="edit-shows-two-rows-uiperfrowskt-uiparametersstatekt-uirackrackunitkt">Edit Shows Two Rows (<code>ui/PerfRows.kt</code>, <code>ui/ParametersState.kt</code>, <code>ui/rack/RackUnit.kt</code>)</h3>
 <ul>
-<li><strong>Edit now keeps the open unit's pair of rows on screen</strong>, as Browse does: a deck's SRC and FX rows, Master's Transitions and FX rows on the MIX side tab, and Master's MIX and FX rows on the CTRL side tab. Switching between SRC and FX (or FX and TRANS) no longer swaps the row, so nothing redraws. The lit gear marks the row the editor is on; clicking the other row's gear moves the editor to it, and clicking the lit one closes Edit. The editor bay is one row (74 px) shorter than before.</li>
+<li><strong>Edit now keeps the open unit's pair of rows on screen</strong>, as Browse does: a deck's SRC and FX rows, Master's Transitions and FX rows on the OUT side tab, and Master's MST and Clock rows on the MST side tab. Switching between SRC and FX (or FX and TRANS) no longer swaps the row, so nothing redraws. The lit gear marks the row the editor is on; clicking the other row's gear moves the editor to it, and clicking the lit one closes Edit. The editor bay is one row (74 px) shorter than before.</li>
 </ul>
 <h3 id="edit-side-rail-ctrl-is-its-own-tab-uiparameterstabskt-uiparametersstatekt">Edit Side Rail: CTRL Is Its Own Tab (<code>ui/ParametersTabs.kt</code>, <code>ui/ParametersState.kt</code>)</h3>
 <ul>
-<li><strong>The Edit side rail is now <code>CTRL  MIX  A  B  BG  PV</code>.</strong> The queue, clock and morph triggers moved out of the MIX tab onto a new first <strong>CTRL</strong> tab, which keeps a single <code>CTRL</code> section tab so the layout does not jump. <strong>MIX</strong> now holds <code>FX</code> and <code>TRANS</code>, and returns to whichever you last used. <strong>Master level</strong> moved to the top of <strong>TRANS</strong>, ahead of crossfade and fade speed (which swapped places, so the order is master level, crossfade, fade speed). Every parameter is still modulatable; macro bindings follow their parameter to its new tab.</li>
+<li><strong>The Edit side rail is now <code>MST  OUT  A  B  BG  PV</code>.</strong> The queue, clock and morph triggers moved out of the output tab onto a new first <strong>MST</strong> tab (section <code>CTRL</code>, beside <code>LEVELS</code>). <strong>OUT</strong> holds <code>FX</code> and <code>TRANS</code>, and returns to whichever you last used. <strong>Master level</strong> moved to the top of <strong>MST &gt; LEVELS</strong>, so TRANS starts with crossfade and fade speed. Every parameter is still modulatable; macro bindings follow their parameter to its new tab.</li>
 </ul>
 <h3 id="transitions-row-matches-the-fx-rows-uiperformancetransitionscontrolskt-uiperformancematrixpanelkt">Transitions Row Matches the FX Rows (<code>ui/PerformanceTransitionsControls.kt</code>, <code>ui/PerformanceMatrixPanel.kt</code>)</h3>
 <ul>
 <li><strong>The Transitions row is laid out like a deck FX row.</strong> Line 1 is the transition picker with the Edit gear at its end (the gear no longer sits under the XF badge). Line 2 is <code>[⋮] [Save] [◀] [▶] [A] [B] [AUTO] [time]</code> in equal cells. <strong>Save</strong> stores the current transition as a <code>.lsdtrans</code> preset and turns amber when it differs from its defaults; the <strong>⋮</strong> menu has Save As, Browse Transitions. The queue position (<code>3/12</code>) moved into the ◀ ▶ tooltips.</li>
-<li><strong>The MIXER page now runs Transitions, Master FX, Master MIX, Clock.</strong> Transitions moves to the top row (Twister bank 3 knobs 1-4) since it is the row you perform with; Master MIX drops to the third row (knobs 9-12). A saved copy of the MIXER page in <code>library/perform_pages/</code> keeps its old order until you delete it.</li>
+<li><strong>The MIXER page now runs Transitions, Master FX, Master MST, Clock.</strong> Transitions moves to the top row (Twister bank 3 knobs 1-4) since it is the row you perform with; Master MST drops to the third row (knobs 9-12). A saved copy of the MIXER page in <code>library/perform_pages/</code> keeps its old order until you delete it.</li>
 </ul>
 <h3 id="edit-fx-tab-slots-are-an-accordion-uiparameterstabskt-uiparametersstatekt">Edit FX Tab: Slots Are an Accordion (<code>ui/ParametersTabs.kt</code>, <code>ui/ParametersState.kt</code>)</h3>
 <ul>
@@ -12079,8 +12137,8 @@
 </ul>
 <h3 id="pair-focus-view-browse-a-decks-source-and-fx-together-uiparametersstatekt-uiperfrowskt-uiperformancedeepeditbaykt-uiperformancebrowsebaykt-uipairknobtouchkt-uinavigationsurfacekt-uibacknavigationkt-uiviewstatekt-controlnavsurfacekt">Pair Focus View: Browse a Deck's Source and FX Together (<code>ui/ParametersState.kt</code>, <code>ui/PerfRows.kt</code>, <code>ui/PerformanceDeepEditBay.kt</code>, <code>ui/PerformanceBrowseBay.kt</code>, <code>ui/PairKnobTouch.kt</code>, <code>ui/NavigationSurface.kt</code>, <code>ui/BackNavigation.kt</code>, <code>ui/ViewState.kt</code>, <code>control/NavSurface.kt</code>)</h3>
 <ul>
-<li><strong>Clicking a badge now focuses a pair of rows</strong>: a deck's SRC badge, FX chain name or slot, the Master FX chain or slot, the transition name, a preview monitor, or the controller's picker button shows that pair's two rows (deck SRC + FX, Master MIX + FX, Transitions + Clock) with the Browse list below. Every other row hides (the deck monitors stay visible).</li>
-<li><strong>The Browse list follows the half you touched</strong>: click a row's slot, or turn a knob on it, and the list switches to that half (SRC to sources, an FX slot or chain to effects, the transition to transitions). Master MIX and Clock have nothing to browse.</li>
+<li><strong>Clicking a badge now focuses a pair of rows</strong>: a deck's SRC badge, FX chain name or slot, the Master FX chain or slot, the transition name, a preview monitor, or the controller's picker button shows that pair's two rows (deck SRC + FX, Transitions + Master FX) with the Browse list below. Every other row hides (the deck monitors stay visible).</li>
+<li><strong>The Browse list follows the half you touched</strong>: click a row's slot, or turn a knob on it, and the list switches to that half (SRC to sources, an FX slot or chain to effects, the transition to transitions). Master MST and Clock have nothing to browse.</li>
 <li><strong>Back, Parameters, Esc</strong>: a <strong>Back</strong> button and one <strong>Esc</strong> (or the controller's back button) return to Perform. <strong>Parameters</strong> opens the full parameter editor on the half you touched. The editor no longer has a Browse tab; the row's EDIT gear still opens it directly.</li>
 <li><strong>Twister</strong>: knobs 1-8 are the pair's two rows (live while you browse), 9-12 send the highlighted item to A/B/BG/PV and 13 to Master FX, knob 16 is the cursor. A send moves the focus to the destination deck's pair.</li>
 <li><strong>No more bound Perform dock</strong>: the Library dock in Perform is always the plain Library; binding happens in the pair view. Entering the full Library leaves the pair view.</li>
@@ -12133,7 +12191,7 @@
 <li><strong>The deck badge names its half.</strong> The <code>A</code> / <code>B</code> / <code>BG</code> / <code>PV</code> badge is now one rounded box with a caption strip under the letter: slate <code>SRC</code> or cyan <code>FX</code>. The separate <code>SRC</code> / <code>FX</code> pills are gone from deck rows, so you can tell a source row from an FX row at a glance.</li>
 <li><strong>Line 1 is one long name box</strong> across the whole left block: the generator or preset on a source row, the chain name (or the focused effect in Focus Mode) on an FX row. Click it to Browse, as before. The Edit gear sits at its right end; it used to sit under the badge.</li>
 <li><strong>Line 2 holds the small controls, stretched to fill the line</strong>: <code>⋮</code>, Save, queue <code>◀ ▶</code>, Eject (PV: <code>PREVIEW</code> instead of the arrows) on a source row; <code>⋮</code>, Save, <code>◀ ▶</code>, slot pills <code>1 2 3</code> on an FX row. In Focus Mode the FX line shows <code>⋮</code>, the effect's <code>Wet %</code> slider (now wider), the page stepper and the pills. Buttons are bigger targets than before.</li>
-<li><strong>Master rows match</strong>: the <code>M</code> badge carries a <code>MIX</code> / <code>FX</code> caption and the pills are gone, with the same two-line layout. The caption is white on a slate or deep-cyan strip, in the body font, so it reads at a glance.</li>
+<li><strong>Master rows match</strong>: the <code>M</code> badge carries an <code>MST</code> / <code>FX</code> caption and the pills are gone, with the same two-line layout. The caption is white on a slate or deep-cyan strip, in the body font, so it reads at a glance.</li>
 <li><strong>The FX line is the grid; the source line follows it.</strong> Line 2 on every deck and Master row uses the same six equal cells after the <code>⋮</code>, with a little extra space left of <code>◀</code> and right of <code>▶</code>. On a source row Save, <code>◀</code> and <code>▶</code> are the same size and position as on the FX line, and Eject is right-aligned to the last cell. PV and Master FX have no queue, so their <code>◀ ▶</code> cells are left empty.</li>
 <li><strong>Removed the PV source row's green <code>PREVIEW</code> button</strong> (the Edit gear opens Deck PV already).</li>
 <li><strong>Removed the crossfader slider from the Transitions row.</strong> The crossfader is knob 1 there and the Mixer panel's slider; the row's line 2 is now four equal cells: <code>A</code>, <code>B</code> snap badges, <code>AUTO</code>, fade time. The slider's right-click MIDI/OSC Learn menu went with it (learn the knob or the Mixer slider instead).</li>
@@ -12162,7 +12220,7 @@
 <h3 id="the-fx-wetdry-row-and-the-master-page-are-gone-clock-moves-to-mixer-uiperfrowskt-macromacroenginekt-resourcesperform_pages-controlcontrollerruntimekt">The FX Wet/Dry Row and the MASTER Page Are Gone; Clock Moves to MIXER (<code>ui/PerfRows.kt</code>, <code>macro/MacroEngine.kt</code>, <code>resources/perform_pages/</code>, <code>control/ControllerRuntime.kt</code>)</h3>
 <ul>
 <li><strong>Removed the per-deck FX Wet/Dry row</strong> (and its Resync button). Chain dry/wet is in the Edit bay; there is no Perform-side knob for it any more. Its <code>fxSends</code> macro bank is deleted, so MIDI/OSC mappings to those four knobs and banks saved from them no longer exist (old sessions just ignore it).</li>
-<li><strong>Three Perform pages now: A/B, BG/PV, MIXER.</strong> MIXER is Master MIX, Master FX, Transitions and Clock &amp; Global; the MASTER page is gone. A saved active page <code>master</code> falls back to the first page, and a user page that names <code>wetdry</code> is skipped with a log line.</li>
+<li><strong>Three Perform pages now: A/B, BG/PV, MIXER.</strong> MIXER is Master MST, Master FX, Transitions and Clock &amp; Global; the MASTER page is gone. A saved active page <code>master</code> falls back to the first page, and a user page that names <code>wetdry</code> is skipped with a log line.</li>
 <li><strong>Twister: bank 4 loops back to bank 1.</strong> The stock profile gets a new <code>banks.wrapPages</code> flag: entering a bank past the page list shows the first page and the app switches the device back to bank 1, so Next Bank on bank 3 wraps. The 6-button profile's bank-step button already wraps over the three pages, and now also steps on correctly from a spare bank 4.</li>
 <li>Internal: <code>PerformanceFxSendsControls</code>, <code>MacroEngine.FX_SENDS</code>, the <code>FX_SENDS</code> session migration and <code>PerformSurface.PAGE_MASTER</code> removed; <code>ControllerRuntime.enterBank</code>/<code>stepBank</code> and <code>BankConfig.wrapPages</code>.</li>
 </ul>

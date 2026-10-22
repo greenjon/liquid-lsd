@@ -146,8 +146,8 @@ Edit and the macro strip always point at the same deck and section:
 - Opening a deck's Edit anywhere (its row's `[EDIT]`, the side rail, the **SRC / FX** tabs)
   focuses that deck and section.
 
-The same applies to the other decks and Master (**MST**, **TRANS** and **MST FX** match Edit's
-Mixer **CTRL**, **TRANS** and **FX** tabs).
+The same applies to the other decks and Master (the Master MST row opens Edit's **MST** side tab,
+the Transitions and Master FX rows its **OUT** side tab).
 
 ### Who wins when several things drive the same value
 
@@ -229,14 +229,14 @@ Each tab shows up to 4 rows of 4 knobs, mapped to different banks:
 |:---|:---|:---|:---|:---|
 | **A/B** | Deck A source | Deck A FX | Deck B source | Deck B FX |
 | **BG/PV** | Deck BG source | Deck BG FX | Deck PV source | Deck PV FX |
-| **MIXER** | Transitions | Master FX | Master MIX | Clock (knob 13) |
+| **MIXER** | Transitions | Master FX | Master MST | Clock (knob 13) |
 
 Every deck and Master row shows one half (source or FX), so a knob never changes meaning under you.
 Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).
 
 - **Per-Deck Insert FX & Flexible Routing**: Every deck (A, B, BG, PV) now owns its own dedicated 3-slot `FxChain` running post-generator and pre-crossfader, completely decoupled from other decks.
 - **Deck Rows Are Split into a Source Row and an FX Row**: Each deck has a **source row** (`[ SRC ]` pill, kebab, generator/preset badge, Save, queue navigation, eject; its knobs are the source's macros) and an **FX row** (`[ FX ]` pill, kebab, chain name, Save, queue navigation, slot pills `1 2 3`; its knobs are the chain's Super Knob and three Metaknobs). The right wing of the FX row has the `[ BYPASS / FX ON ]` button. The source row's right wing has the randomize die (Source and FX).
-- **Master Rows Are Split Too**: The **Master MIX row** (`[ MIX ]` pill) has the deck-levels badge, with the four knobs on the deck levels and the master level. The **Master FX row** (`[ FX ]` pill) has the Master FX chain header (`[◀] Name • [▶] [Save] [⋮]`) and its `[ BYPASS / FX ON ]` button, with the knobs on the Master FX Super Knob + 3 Metaknobs. The crossfader sits on the Transitions row.
+- **Master Rows Are Split Too**: The **Master MST row** (`[ MST ]` pill) has the deck-levels badge, with the four knobs on the deck levels and the master level. The **Master FX row** (`[ FX ]` pill) has the Master FX chain header (`[◀] Name • [▶] [Save] [⋮]`) and its `[ BYPASS / FX ON ]` button, with the knobs on the Master FX Super Knob + 3 Metaknobs. The crossfader sits on the Transitions row.
 - The Transitions row has the transition picker on line 1 (click it to pick from the Library below — see below; the Edit gear sits at its end), and line 2 is laid out like an FX row: `[⋮]` menu, `[Save]` (saves the transition as a preset), queue `[◀] [▶]`, then the crossfader cells below. Its four knobs are fixed: **knob 1 is the crossfader** (it follows auto-fades and the slider, and turning it takes over like the slider does), and **knobs 2-4 are the active transition's first three sliders**, relabelled whenever you change transition. Transitions with fewer than three sliders leave the spare knobs blank. Line 2 ends with `A` / `B` snap buttons, `AUTO` and the fade time; there is no crossfader slider on the row (use knob 1 or the Mixer panel's slider). These knobs cannot be re-learned; Dry/Wet stays in the Edit bay.
 
 Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) and starts with a title badge spanning both control lines: a large **A**, **B**, **BG** or **PV** on deck rows (the `[SRC]`/`[FX]` pills beside it show which the knobs control), and **MASTER**, **TRANS** and **CLOCK** on the MIXER tab. No row has a header bar over its knobs, so MIXER-tab knobs are the same size as deck knobs.
@@ -273,8 +273,8 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
   - **Drag-and-Drop**: Dropping a deck preset (`.patch`, `.lsd`, `.json`) loads the visual preset; dropping a `.lsdfxchain` loads that FX chain onto the deck.
 - **Whole-Rig Randomize (`[ ALL 🎲 ]`)**: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking `mixer.randomizeAll()` across all decks simultaneously.
 - **Master FX row**: Left wing: the `FX`-captioned `M` badge, the chain name box and the chain controls line, as on a deck FX row; right wing: Master FX `[ BYPASS / FX ON ]`. Dropping a `.lsdfxchain` onto the `MASTER` badge loads it into Master FX.
-- **Level faders on the deck tiles** (the thin strip beside each preview badge) share their value with the Master MIX knobs: move the fader and the knob follows, turn the knob and the fader follows, last mover wins. A fader drag also mutes non-MIDI modulation on it and makes a Soft Takeover MIDI/OSC mapping on it pick up again instead of jumping. The handle line marks the fader's own value; the filled bar is the live level after modulation.
-- **Master MIX row**: The `M` badge carries a `MIX` caption. Line 1 is the `Deck Levels & Master` box (click to inspect in Edit, right-click for level resets) and a `100%` reset button; its gear opens Edit on the MIX side tab's TRANS section (master level and crossfade), so Edit shows the Transitions and Master FX rows, as that side tab always does; the knobs are the Deck A / B / BG and Master levels. The crossfader is not here: it lives on the Transitions row (knob 1) and the Mixer panel.
+- **Level faders on the deck tiles** (the thin strip beside each preview badge) share their value with the Master MST knobs: move the fader and the knob follows, turn the knob and the fader follows, last mover wins. A fader drag also mutes non-MIDI modulation on it and makes a Soft Takeover MIDI/OSC mapping on it pick up again instead of jumping. The handle line marks the fader's own value; the filled bar is the live level after modulation.
+- **Master MST row**: The `M` badge carries an `MST` caption. Line 1 is the `Deck Levels & Master` box (click to edit the levels, right-click for level resets) and a `100%` reset button; its gear opens Edit on the MST side tab's LEVELS section (the master level, then each deck's level and alpha), which shows this row together with the Clock row; the knobs are the Deck A / B / BG and Master levels. The crossfader is not here: it lives on the Transitions row (knob 1) and the Mixer panel.
 - **Transitions (Row 2 in MASTER)**: Left wing features a Transition Picker button displaying the active transition with modified indicator (`*`) — click it to pick from the transition list in the Library below — and Transition Queue stepping controls (`<`, `N/Total`, `>`); right wing hosts the transition randomize die button (`🎲`) on Row 1 (matching the deck rows). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the picker button.
 - **Clock & Global (Row 4 in MASTER)**: The two lines beside the `CLOCK` badge have the tempo controls from Preferences > Tempo & Sync, placed here for use mid-set:
   - **`[ MAN ]` / `[ AUDIO ]`**: clock source (manual tempo or the audio beat tracker).
@@ -286,6 +286,8 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
   - **Twister clock knob**: knob 13 on a Midi Fighter Twister pulses its LED on the beat (orange on the downbeat), shows the tempo on its ring and taps tempo when pushed. See [Rings and LEDs](performance_controls.md#twister-lights).
   - **`[ /2 ]` `[ x2 ]`**: halve or double the tempo.
   - **`[ - ]` `[ + ]`**: nudge the tempo by 0.5 BPM.
+  - **Queue triggers (`QUEUE`)**: right of the tempo controls, a `[◀] [▶]` pair for each queue (**A/B**, **BG**, **TRN** for the transition queue) steps that queue. They are the same triggers as the queue rows of Edit's MST › CTRL tab: right-click a button for MIDI or OSC Learn, and a mapping made there shows on the CTRL row and the other way round.
+  - **Randomize triggers (`RAND`)**: while randomization is enabled (Preferences), a second line has `[A] [B] [BG] [PV] [ALL]` buttons that randomize that deck (or everything), with the same Learn menu and Ctrl+Z undo as the decks' dice. On a window too narrow for them, they are the first thing to go.
 
   The BPM is deliberately not a knob, since one bump would shift the whole show. The row has no macro knobs; a configurable row of free "global" knobs that can target any parameter is planned for a later release.
 
@@ -327,7 +329,7 @@ between two disclosure tiers, without leaving the Perform view:
 2. **Edit** — click `[EDIT]` to open the comprehensive Edit bay below the top macro row.
    The `[EDIT]` button turns green with black text while active.
    The bay is arranged into a 3-column layout:
-   - **Side Rail** on the left: color-coded buttons (`[CTRL]`, `[MIX]`, `[A]`, `[B]`, `[BG]`, `[PV]`)
+   - **Side Rail** on the left: color-coded buttons (`[MST]`, `[OUT]`, `[A]`, `[B]`, `[BG]`, `[PV]`)
      allowing instant 1-click navigation between all major sections of the app without closing Edit.
      Selecting a side tab switches both the parameter editor below and the top macro row above.
    - **Parameter Grid** in the center: displays the full **VAL / MIDI / LFO / SEQ / AUD** parameter grid
@@ -335,10 +337,10 @@ between two disclosure tiers, without leaving the Perform view:
      (`CellScale` reads "Cell scale"). Above the grid sits the same header line as the pair view: **Back**, a
      **Browse | Params** switch (Browse shows the list for this deck and half in the pair view), the module's name and
      what the queue plays next. Each side tab has its own section tabs:
-     - **`CTRL`**: `[ CTRL ]` (queue and clock triggers, morph triggers)
-     - **`MIX`**: `[ FX ]  [ TRANS ]` (the Master FX chain's 3 ISF slots, and Transitions, led by master level, crossfade and fade speed)
+     - **`MST`**: `[ LEVELS ]  [ CTRL ]` (the master level, then each deck's level and alpha; and the queue and randomize triggers, which are also on the Clock row)
+     - **`OUT`**: `[ FX ]  [ TRANS ]` (the Master FX chain's 3 ISF slots, and Transitions, led by crossfade and fade speed)
      - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]` (visual generator with Gain/Zoom/Rotate Z, and the insert FX chain)
-     Edit shows the open unit's two rows above the editor, as the Pair view does: a deck's source and FX rows, Master's Transitions and FX rows (`MIX` side tab), or Master's MIX and FX rows (`CTRL` side tab). The rows stay put when you switch tabs; the **gear** that is lit marks the row the editor is on, and clicking the other row's gear moves the editor there (click the lit one to close Edit). Both rows' macro knobs stay live.
+     Edit shows the open unit's two rows above the editor, as the Pair view does: a deck's source and FX rows, Master's Transitions and Master FX rows (`OUT` side tab), or Master's MST and the Clock row (`MST` side tab): in each case the two rows that share a half of a Twister page. The rows stay put when you switch sections; the **gear** that is lit marks the row the editor is on, and clicking the other row's gear moves the editor there (click the lit one to close Edit). Both rows' macro knobs stay live.
    - **Modulation Editor** on the right: side-by-side per-parameter CV detail editor (LFO period/phase/morph/hold/slew, MIDI, SEQ, AUD, curves, and modulators) of whichever cell is selected. Opening Edit or switching tabs selects the first knob-assigned parameter (or the first row), so it is never empty.
 
    If the deck is **empty**, Edit shows the empty-deck card instead: **Add Source** (opens
@@ -350,7 +352,7 @@ Clicking a generator/preset badge, an FX chain's name, an FX slot's name, or the
 name (or a preview monitor) points the **Library below** at that slot: nothing moves, the slot is outlined
 on its row, and its name shows on the Library's tab line with a **✕**. **Esc**, the ✕, or clicking the slot
 again stops. When the current page doesn't show that row (say, the BG monitor from the A/B page), the **pair
-view** opens instead: that deck's SRC and FX rows (Master's MIX and FX rows, or Transitions and Clock) stay on
+view** opens instead: that deck's SRC and FX rows (or Transitions and Master FX) stay on
 screen, every other row hides, and the Browse list fills the space below. Nothing covers the mixer or the
 deck/master monitors; you keep watching the show while you pick. The pair view's header line has **Back**
 (or **Esc**) to return to Perform and a **Browse | Params** switch that opens the full editor for the half you last touched.
@@ -362,8 +364,8 @@ deck/master monitors; you keep watching the show while you pick. The pair view's
   for the next picks on that deck.
 - **The half you touched picks the list**: click a row's source badge, chain name, an effect cell or
   the transition name, or turn a knob on that row, and Browse applies to that target (a deck's source,
-  a chain, one FX slot, the transition). Master's MIX row and the Clock row have nothing to browse; a Master
-  pair with nothing touched browses the Master FX chain.
+  a chain, one FX slot, the transition). the Master MST row and the Clock row have nothing to browse (they are not a pair); the Master
+  pair (Transitions + Master FX) with nothing touched browses the Master FX chain. On Edit's MST side tab the Browse button is disabled.
 - **Gen Browse lists generators and presets together**: stock generator types and saved presets
   always appear in the same list — a preset is just a generator with its parameter values saved
   under a name. Saved-preset rows get a "⋮" menu (also on right-click) that starts with **Apply to <deck>**,
@@ -402,7 +404,7 @@ Click **`[EDIT]`** again (or press Esc) to fold back to the Faceplate.
 Clicking any preview monitor in the Mixer column (Deck A, Deck B, Deck BG, Deck PV, or Main Output Master) points the Library at that deck's source (or the Master FX chain), or opens the pair view when the page doesn't show those rows. For the full editor use the row's gear, or **Params** in the pair view's header.
 
 **One Edit at a time**: opening a row's Edit collapses any other open one. To move
-between decks, use the Edit side rail (**CTRL / MIX / A / B / BG / PV**) rather than opening
+between decks, use the Edit side rail (**MST / OUT / A / B / BG / PV**) rather than opening
 rows side by side.
 
 **Esc** collapses every expanded row back to the Faceplate — unless a Learn is currently

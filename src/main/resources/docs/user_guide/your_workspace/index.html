@@ -1542,7 +1542,7 @@
 <ul>
 <li><strong>Perform</strong> — The Performance rows sit above the Library, which fills the rest of the window. This is the everyday view for playing a set.</li>
 <li><strong>Edit</strong> — Click a row's <strong>gear</strong> and the Library goes away completely. That row's pair of rows and its parameters fill the column, so you have room to fine-tune presets and FX. Its header line has <strong>Back</strong> and a <strong>Browse | Params</strong> switch: Browse shows the list for the same deck and half. Press <strong>Esc</strong>, <strong>Back</strong> or the lit gear to get back to Perform.</li>
-<li><strong>Pair view</strong> — Picking for a deck whose rows are not on the current page (for example clicking the BG monitor from the A/B page) brings that deck's SRC and FX rows on screen with the browser below, and the Library goes away. Its header line matches Edit's. Press <strong>Esc</strong> or <strong>Back</strong> to return to Perform. See <a href="../presets_and_library/">Presets &amp; Library</a>.</li>
+<li><strong>Pair view</strong> — Picking for a deck (or for Transitions / Master FX) whose rows are not on the current page (for example clicking the BG monitor from the A/B page) brings that pair's two rows on screen with the browser below, and the Library goes away. Its header line matches Edit's. Press <strong>Esc</strong> or <strong>Back</strong> to return to Perform. See <a href="../presets_and_library/">Presets &amp; Library</a>.</li>
 <li><strong>Library</strong> — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.</li>
 </ul>
 <p>Clicking a source name, FX chain name, FX slot or the transition name on a Perform row doesn't change the view: the Library below starts applying to that slot (its name shows on the Library's tab line), until you press <strong>Esc</strong>, its <strong>✕</strong>, or click the slot again. See <a href="../presets_and_library/#picking-for-a-slot-the-library-applies-in-place">Presets &amp; Library</a>.</p>
@@ -1582,7 +1582,7 @@
 one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Click a deck row's source name to change its visual source in the Library below.</p>
 <p>For full control, open a row's <strong>Edit</strong> (the gear on the row, or <strong>Params</strong> in the pair view's header). Edit has three columns:</p>
 <ul>
-<li><strong>Side rail</strong> — <code>[CTRL] [MIX] [A] [B] [BG] [PV]</code> to jump between channels.</li>
+<li><strong>Side rail</strong> — <code>[MST] [OUT] [A] [B] [BG] [PV]</code> to jump between channels. <strong>MST</strong> is the Master MST row and the Clock row (deck levels, queue triggers); <strong>OUT</strong> is the output stage (Transitions and Master FX).</li>
 <li><strong>Parameter grid</strong> — every row is a visual parameter (like "Lobes", "Zoom", or "Cell scale", shown with the shader's own label) and each
   column is a modulation source (manual value, MIDI, LFO, sequencer, audio). Click a cell to
   configure that connection. See <a href="../modulation/">Modulation</a> for the full guide.</li>
@@ -1603,7 +1603,7 @@ one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Cl
 - Level controls for each deck
 - Master output monitor
 - Blend mode selector</p>
-<p>Clicking a deck monitor points the Library at that deck's source; clicking the master monitor (or its <strong>M</strong> badge) points it at the Master FX chain. When the current page doesn't show those rows, the pair view brings them on screen instead. Use a row's gear for the full Edit.</p>
+<p>Clicking a deck monitor points the Library at that deck's source; clicking the master monitor (or its <strong>M</strong> badge) points it at the Master FX chain (or at the transition, if you touched that last). When the current page doesn't show those rows, the pair view brings them on screen instead. Use a row's gear for the full Edit.</p>
 <p>Macro knobs are edited in the Performance rows' Edit view, where each knob gets a target strip for choosing what it controls. See <a href="../macros_and_rack/">Macro Controls &amp; the Perform View</a>.</p>
 <hr />
 <h2 id="the-library">The Library</h2>
@@ -1740,8 +1740,12 @@ one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Cl
 <td>A deck's or the Master's output opacity.</td>
 </tr>
 <tr>
-<td><strong>XF</strong></td>
-<td>Crossfader row: the crossfade and transition shader.</td>
+<td><strong>MST</strong></td>
+<td>The Master row's pill: deck levels and the master level. (It was called MIX before.)</td>
+</tr>
+<tr>
+<td><strong>OUT</strong></td>
+<td>Edit's output-stage tab: Transitions and Master FX.</td>
 </tr>
 <tr>
 <td><strong>W/D</strong></td>
