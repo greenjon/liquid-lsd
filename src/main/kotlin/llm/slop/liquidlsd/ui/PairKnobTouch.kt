@@ -5,9 +5,10 @@ import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.rendering.Mixer
 
 /**
- * In the pair view, touching one of the live knobs (1-4 the first row, 5-8 the second) points the Browse list at that half:
- * a source row browses sources, an FX row browses the slot under the knob (the chain for the row's name knob), Transitions the
- * transition. A half with nothing to browse (Master MIX, Clock) leaves the binding alone.
+ * With a bound dock (the pair view, or the Perform dock bound in place), touching one of the live knobs (1-4 the first row, 5-8 the
+ * second) points the Browse list at that half: a source row browses sources, an FX row browses the slot under the knob (the chain for
+ * the row's name knob), Transitions the transition. A half with nothing to browse (Master MIX, Clock) leaves the binding alone.
+ * Called every frame outside Edit, so a touch made while nothing was bound never retargets a binding made later.
  */
 internal object PairKnobTouch {
     private var seen: Int? = null
@@ -17,23 +18,27 @@ internal object PairKnobTouch {
         val knob = PerformSurface.lastTouchedKnob
         if (knob == seen) return
         seen = knob
-        val tag = parametersState.focusedPair ?: return
+        val tag = parametersState.focusedPair
+        if (tag == null && !parametersState.boundInPlace) return
         if (knob == null || knob >= 2 * COLS) return
-        val pair = PerfRows.pairFor(tag) ?: return
-        val row = PerfRows.CATALOG[pair.rowIds.getOrNull(knob / COLS) ?: return] ?: return
         val target = PerformPages.resolve(pageId, ctx, parametersState, mixer).knobs.getOrNull(knob)
+        // The pair view's rows are the pair's; bound in place they are the page's, which the resolved knob names.
+        val bankId = if (tag != null) {
+            val pair = PerfRows.pairFor(tag) ?: return
+            PerfRows.CATALOG[pair.rowIds.getOrNull(knob / COLS) ?: return]?.bankId ?: return
+        } else target?.bankId ?: return
         val browse = when {
-            row.bankId in FxMacroSync.FX_BANK_IDS -> {
-                val chain = FxMacroSync.chainFor(row.bankId, mixer)
+            bankId in FxMacroSync.FX_BANK_IDS -> {
+                val chain = FxMacroSync.chainFor(bankId, mixer)
                 val slot = (target?.spec?.under as? UnderKnob.SlotCell)?.slotIndex ?: chain?.focusedSlot
                 ParametersState.BrowseTarget.FxChain(slot)
             }
-            row.bankId == MacroEngine.TRANS -> ParametersState.BrowseTarget.Transition
-            PerfRows.DECK_TAGS.any { PerfRows.CATALOG["deck.$it.src"]?.bankId == row.bankId } -> ParametersState.BrowseTarget.Gen
+            bankId == MacroEngine.TRANS -> ParametersState.BrowseTarget.Transition
+            PerfRows.DECK_TAGS.any { PerfRows.CATALOG["deck.$it.src"]?.bankId == bankId } -> ParametersState.BrowseTarget.Gen
             else -> return
         }
         // No retab: a knob touch only moves the tab when the target changes, so it never pulls the user off Queues or Macros.
-        parametersState.openBrowse(ctx.canonicalModuleId(row.bankId), browse, retab = false)
+        parametersState.openBrowse(ctx.canonicalModuleId(bankId), browse, retab = false)
     }
 
     private const val COLS = 4

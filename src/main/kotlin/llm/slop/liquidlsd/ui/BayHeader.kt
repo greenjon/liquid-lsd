@@ -72,8 +72,12 @@ internal object BayHeader {
         ImGui.popStyleColor(4)
     }
 
-    /** `● label [row buttons]`. Greyed, without its buttons, while [Chip.paused], so the binding reads as paused, not gone. */
-    private fun drawChip(chip: Chip, lineH: Float) {
+    /**
+     * `● label [row buttons]`. Greyed, without its buttons, while [Chip.paused], so the binding reads as paused, not gone. Also drawn on
+     * the Perform dock's tab line while it is bound in place ([LibraryPanel.draw]), so the two places look the same; [showActions] false
+     * leaves the row buttons out where the line has no room for them.
+     */
+    fun drawChip(chip: Chip, lineH: Float, showActions: Boolean = true) {
         ImGui.beginGroup()
         val dot = if (!chip.paused && chip.accent != null) TangoPalette.u32(chip.accent) else ImGui.getColorU32(ImGuiCol.TextDisabled)
         val cx = ImGui.getCursorScreenPosX()
@@ -85,7 +89,7 @@ internal object BayHeader {
         if (chip.paused) ImGui.textDisabled("${chip.label} (paused)") else ImGui.text(chip.label)
         ImGui.endGroup()
         itemTooltip(chip.tooltip)
-        if (!chip.paused) chip.actions?.let { ImGui.sameLine(0f, 10f); it() }
+        if (!chip.paused && showActions) chip.actions?.let { ImGui.sameLine(0f, 10f); it() }
     }
 
     /**

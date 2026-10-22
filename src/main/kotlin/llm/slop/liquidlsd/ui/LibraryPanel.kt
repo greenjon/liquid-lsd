@@ -83,13 +83,20 @@ object LibraryPanel {
         LibraryNavigation.unifiedKind()?.let { llm.slop.liquidlsd.ui.browser.BrowserPane.focusSearch(it) }
     }
 
-    /** Library shortcut: from Edit view, brings the Library back (Perform view); otherwise toggles HALF <-> FULL. */
+    /**
+     * Library shortcut: from Edit view, brings the Library back (Perform view); otherwise toggles HALF <-> FULL. FULL ends an in-place
+     * binding of the Perform dock ([ParametersState.libraryWentFull]); going back to HALF binds it again.
+     */
     fun cycleMode(session: SessionContext) {
         if (isEditView(session) || session.parametersState.focusedPair != null) {
             show(session)
             return
         }
-        session.uiTheme.libraryMode = if (session.uiTheme.libraryMode == UITheme.LibraryMode.FULL) UITheme.LibraryMode.HALF else UITheme.LibraryMode.FULL
+        val full = session.uiTheme.libraryMode == UITheme.LibraryMode.FULL
+        if (!full || !session.parametersState.restoreBoundReturn()) {
+            session.uiTheme.libraryMode = if (full) UITheme.LibraryMode.HALF else UITheme.LibraryMode.FULL
+        }
+        if (!full) session.parametersState.libraryWentFull()
         AppPreferencesStore.savePreferences()
     }
 
@@ -211,6 +218,8 @@ object LibraryPanel {
     fun draw(session: SessionContext, width: Float, height: Float, mixer: Mixer, parametersState: ParametersState, binding: BrowserDock.DockBinding? = null) {
         checkAutoRefresh()
         val safeW = width.coerceAtLeast(80f)
+        // Before the tab line, so its chip already shows the tab a new target opens on.
+        binding?.let { BrowserDock.syncTab(it, parametersState.dockSelectionEpoch) }
 
         if (ImGui.beginMenuBar()) {
             val menuBarH = ImGui.getFrameHeight()
@@ -220,8 +229,10 @@ object LibraryPanel {
 
             BrowserDock.drawHeader(session, mixer, parametersState, safeW, btnH, yOffset)
 
-            // Right-aligned Maximize / Restore button
             val windowBtnW = (btnH * 1.15f).coerceIn(20f, 32f)
+            if (binding != null) drawBoundChip(session, parametersState, binding, btnH, yOffset, safeW - windowBtnW - 16f)
+
+            // Right-aligned Maximize / Restore button
             val rightX = (safeW - windowBtnW - 8f).coerceAtLeast(ImGui.getCursorPosX() + 8f)
             ImGui.sameLine(0f, 0f)
             ImGui.setCursorPosX(rightX)
@@ -245,6 +256,39 @@ object LibraryPanel {
         BrowserDock.drawShortcuts(session, mixer)
         BrowserDock.drawPopups(session)
     }
+
+    /**
+     * The Perform dock bound in place: after the tabs, the pair view's target chip ([BayHeader.drawChip]) with its row buttons, then a
+     * ✕ that unbinds. On the tab line rather than a line of its own, so binding never moves the list. The row buttons are left out
+     * when the line has no room for them before [maxX].
+     */
+    private fun drawBoundChip(session: SessionContext, parametersState: ParametersState, binding: BrowserDock.DockBinding, btnH: Float, yOffset: Float, maxX: Float) {
+        val paused = !BrowserDock.isBoundTab(binding)
+        val chip = BayHeader.Chip(
+            binding.label, binding.accent,
+            if (paused) "Pick the ${binding.target.kind.name.lowercase()} tab to apply to ${binding.label} again."
+            else "A click on a row applies it to ${binding.label} (Ctrl+Z undoes it). A double-click applies it and goes back to the plain " +
+                "Library; so do Esc, ${Icons.X} and clicking the slot on its row again, without applying.",
+            binding.actions, paused
+        )
+        ImGui.sameLine(0f, 14f)
+        ImGui.setCursorPosY(yOffset)
+        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
+            // Frames as tall as the tabs, so the row buttons line up with them.
+            ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().framePaddingX, ((btnH - ImGui.getFontSize()) * 0.5f).coerceAtLeast(0f))
+            val labelW = 14f + ImGui.calcTextSize(binding.label).x
+            val room = maxX - ImGui.getCursorPosX() - btnH - 8f
+            BayHeader.drawChip(chip, btnH, showActions = room >= labelW + ROW_BUTTONS_RESERVE)
+            ImGui.sameLine(0f, 8f)
+            ImGui.setCursorPosY(yOffset)
+            if (ButtonChrome.button("${Icons.X}##dock_unbind", btnH, btnH)) parametersState.clearDockSelection()
+            itemTooltip("Stop applying to ${binding.label}: the list goes back to the plain Library (Esc).")
+            ImGui.popStyleVar()
+        }
+    }
+
+    /** Width kept free for a bound chip's row buttons (Save, Clear Slot) before they are shown. */
+    private const val ROW_BUTTONS_RESERVE = 130f
 
     /**
      * Clears the one-shot focus/scroll flags. Called by [UIManager] once the whole frame is drawn, not from [draw]: the pair

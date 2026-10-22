@@ -35,7 +35,7 @@ class PairFocusTest {
 
     @Test
     fun focusPairAndParamsEditAreMutuallyExclusive() {
-        val state = ParametersState()
+        val state = offPage()
         state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
         state.focusPair("B")
         assertEquals("B", state.focusedPair)
@@ -48,14 +48,14 @@ class PairFocusTest {
 
     @Test
     fun unknownPairIsIgnored() {
-        val state = ParametersState()
+        val state = offPage()
         state.focusPair("nope")
         assertNull(state.focusedPair)
     }
 
     @Test
     fun backLeavesThePairInOnePress() {
-        val state = ParametersState()
+        val state = offPage()
         state.focusPair("MASTER")
         assertTrue(BackNavigation.back(state, null))
         assertNull(state.focusedPair)
@@ -64,7 +64,7 @@ class PairFocusTest {
 
     @Test
     fun masterWithNothingTouchedBrowsesItsFxChain() {
-        val state = ParametersState()
+        val state = offPage()
         val master = PerfRows.pairFor("MASTER")!!
         assertNull(state.pairBrowseTarget(master))
         assertEquals(ParametersState.BrowseTarget.FxChain(null), state.pairDockTarget(master))
@@ -75,7 +75,7 @@ class PairFocusTest {
 
     @Test
     fun browseFromEditGoesToTheSamePairAndHalfKeepingTheSlot() {
-        val state = ParametersState()
+        val state = offPage()
         state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", 2)
         state.openParamsForPair("A")
         assertEquals("FX", state.activeDeckASubTab)
@@ -102,7 +102,7 @@ class PairFocusTest {
 
     @Test
     fun knobTouchRetargetDoesNotBumpTheTabEpoch() {
-        val state = ParametersState()
+        val state = offPage()
         state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
         val epoch = state.dockSelectionEpoch
         state.openBrowse(MacroEngine.DECK_A, ParametersState.BrowseTarget.FxChain(0), retab = false)
@@ -114,7 +114,7 @@ class PairFocusTest {
 
     @Test
     fun dirtyPromptIsAskedOncePerPairView() {
-        val state = ParametersState()
+        val state = offPage()
         state.focusPair("A")
         assertFalse(state.skipsDirtyPrompt("A"))
         state.noteDirtyPromptAnswered("A")
@@ -134,7 +134,7 @@ class PairFocusTest {
 
     @Test
     fun libraryReturnIsClearedByOpeningAnotherFocus() {
-        val state = ParametersState()
+        val state = offPage()
         state.focusPair("BG")
         state.rememberLibraryReturn()
         state.leavePair()
@@ -153,7 +153,7 @@ class PairFocusTest {
 
     @Test
     fun rowsCacheFollowsPairSwitches() {
-        val state = ParametersState()
+        val state = offPage()
         val ctx = PerformanceUiContext()
         val pages = PerfPageStore.default.all()
         val page = pages.first()

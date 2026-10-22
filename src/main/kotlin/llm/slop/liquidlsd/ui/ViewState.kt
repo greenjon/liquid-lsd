@@ -10,10 +10,18 @@ import llm.slop.liquidlsd.SessionContext
  * - Edit: the open module's pair of rows over the Params editor in the bay (`editing`).
  *
  * Pair view ([pair]): the focused deck/Master/XF pair's two rows over the Browse dock; always [dockActive], never with [editing].
+ * Bound in place ([bound]): Perform with its HALF dock bound to a slot of a row on the page ([ParametersState.boundInPlace]); same
+ * layout as Perform.
  *
- * [dockActive] is whether a dock is the surface the controller browses: Library FULL, or the pair view.
+ * [dockActive] is whether a dock is the surface the controller browses: Library FULL, the pair view, or the Perform dock bound in place.
  */
-internal data class ViewState(val editing: Boolean, val maximized: Boolean, val dockActive: Boolean, val pair: Boolean = false) {
+internal data class ViewState(
+    val editing: Boolean,
+    val maximized: Boolean,
+    val dockActive: Boolean,
+    val pair: Boolean = false,
+    val bound: Boolean = false
+) {
     val rowsShown: Boolean get() = !maximized
 }
 
@@ -22,5 +30,6 @@ internal fun viewStateOf(session: SessionContext): ViewState {
     val editing = session.parametersState.anyRackModuleExpanded() && !maximized
     val ps = session.parametersState
     val pair = ps.focusedPair != null && !maximized
-    return ViewState(editing, maximized, dockActive = maximized || pair, pair = pair)
+    val bound = ps.boundInPlace && !maximized
+    return ViewState(editing, maximized, dockActive = maximized || pair || bound, pair = pair, bound = bound)
 }

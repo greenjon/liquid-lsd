@@ -345,7 +345,7 @@ class NavigationSurfaceTest {
             assertEquals(LibraryPanel.LibraryViewMode.FX, LibraryPanel.viewMode)
             nav().button(1, true)
             assertEquals(LibraryPanel.LibraryViewMode.PRESETS, LibraryPanel.viewMode)
-            assertEquals("A", state.focusedPair, "stepping tabs stays in the pair view")
+            assertTrue(state.boundInPlace, "stepping tabs keeps the in-place binding")
         } finally {
             unhostPane()
         }
@@ -366,6 +366,7 @@ class NavigationSurfaceTest {
 
     @Test
     fun libraryOpenedFromThePairViewReturnsToThePairAndItsSlot() {
+        state.pageHasRow = { false } // deck A off the page: the pair view
         state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", 1)
         LibraryPanel.show(session)
         UITheme.libraryMode = UITheme.LibraryMode.FULL
@@ -496,9 +497,9 @@ class NavigationSurfaceTest {
             state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
             hostPane(mutableListOf(), mutableListOf())
             nav().button(0, true)
-            assertEquals("A", state.focusedPair)
+            assertTrue(state.boundInPlace)
             nav().button(0, false)
-            assertEquals(null, state.focusedPair)
+            assertNull(state.dockSelection)
         } finally {
             unhostPane()
         }
@@ -517,8 +518,34 @@ class NavigationSurfaceTest {
         PerformSurface.lastTouchedKnob = 9 // Deck B SRC row (row 3 of the A/B page)
         nav().button(2, false)
         assertEquals(ParametersState.BrowseTarget.Gen, state.dockSelection?.target)
-        assertEquals("B", state.focusedPair)
+        assertNull(state.focusedPair, "deck B is on the A/B page: bound in place")
+        assertTrue(state.boundInPlace)
         assertEquals("SRC", state.activeDeckBSubTab)
+    }
+
+    @Test
+    fun theBoundPerformDockIsBrowsedLikeThePairView() {
+        state.openGenBrowse(MacroEngine.DECK_B, "Deck B")
+        assertTrue(nav().browsing)
+        assertEquals(8, nav().browseLiveKnobs)
+        assertEquals(SendTarget.entries.toSet(), nav().switchTargets)
+        nav().browseSwitch(SendTarget.A)
+        assertEquals(ParametersState.DockSelection(MacroEngine.DECK_A, ParametersState.BrowseTarget.Gen), state.dockSelection)
+        assertNull(state.focusedPair)
+        nav().browseSwitch(SendTarget.BG)
+        assertEquals("BG", state.focusedPair, "BG is not on the A/B page: its pair view")
+    }
+
+    @Test
+    fun libraryFullFromTheBoundPerformDockReturnsToTheBinding() {
+        state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", 2)
+        LibraryPanel.cycleMode(session) // Space
+        assertEquals(UITheme.LibraryMode.FULL, UITheme.libraryMode)
+        assertNull(state.dockSelection)
+        assertTrue(nav().back())
+        assertEquals(UITheme.LibraryMode.HALF, UITheme.libraryMode)
+        assertTrue(state.boundInPlace)
+        assertEquals(ParametersState.BrowseTarget.FxChain(2), state.dockSelection?.target)
     }
 
     @Test
