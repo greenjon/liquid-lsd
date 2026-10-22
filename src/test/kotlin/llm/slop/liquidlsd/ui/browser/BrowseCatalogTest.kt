@@ -114,7 +114,7 @@ class BrowseCatalogTest {
         assertFalse(c.isReorderable(BrowseScope.All))
         assertEquals(listOf("two"), c.rows(scope, "two").map { it.asset.name })
         // Playlist rows appear as children of the Playlists header.
-        assertEquals(listOf("Playlists(1)", " rave(4)"), labels(c).takeLast(2))
+        assertEquals(listOf("Playlists(4)", " rave(4)"), labels(c).takeLast(2)) // the header counts its playlists' items
     }
 
     @Test
@@ -198,5 +198,36 @@ class BrowseCatalogTest {
         assertEquals(listOf("OBS"), c.rows(BrowseScope.Folder(BrowseSection.LIVE)).map { it.asset.name })
         assertEquals(1, c.tree().first { it.scope == BrowseScope.Folder(BrowseSection.LIVE) }.count)
         assertFalse(c.canAddToPlaylist(live))
+    }
+
+    @Test
+    fun `recent folder lists resolvable keys newest first and counts what a target accepts`() {
+        val c = BrowseCatalog(
+            BrowseKind.SRC, listOf(stock("blur"), saved("/p/a.lsd"), saved("/p/b.lsd")),
+            recent = listOf("/p/b.lsd", "/p/gone.lsd", "blur")
+        )
+        assertEquals(listOf("b", "blur"), c.rows(BrowseScope.Recent).map { it.asset.name })
+        assertEquals(2, c.tree().first { it.scope == BrowseScope.Recent }.count)
+        assertEquals(1, c.tree { it.section == BrowseSection.STOCK }.first { it.scope == BrowseScope.Recent }.count)
+        assertTrue(BrowseCatalog(BrowseKind.SRC, emptyList()).tree().none { it.scope == BrowseScope.Recent })
+    }
+
+    @Test
+    fun `playlists header counts the items of its playlists`() {
+        val c = BrowseCatalog(
+            BrowseKind.SRC, listOf(saved("/p/a.lsd")),
+            listOf(BrowsePlaylist("one", "/pl/one.lsdplay", listOf("/p/a.lsd")), BrowsePlaylist("two", "/pl/two.lsdplay", listOf("/p/a.lsd", "/p/a.lsd")))
+        )
+        assertEquals(3, c.tree().first { it.scope == BrowseScope.PlaylistsHeader }.count)
+    }
+
+    @Test
+    fun `prettyName turns snake_case into words and leaves other names alone`() {
+        assertEquals("Hyperspace crash zoom", BrowseCatalog.prettyName("hyperspace_crash_zoom"))
+        assertEquals("My preset", BrowseCatalog.prettyName("my__preset_"))
+        assertEquals("Chladni cymatics", BrowseCatalog.prettyName("Chladni cymatics"))
+        assertEquals("Already Spaced_name", BrowseCatalog.prettyName("Already Spaced_name"))
+        assertEquals("plain", BrowseCatalog.prettyName("plain"))
+        assertEquals("_", BrowseCatalog.prettyName("_"))
     }
 }

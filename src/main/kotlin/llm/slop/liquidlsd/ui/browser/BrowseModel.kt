@@ -35,6 +35,9 @@ sealed interface BrowseScope {
     data object All : BrowseScope
     data object Favorites : BrowseScope
 
+    /** The items loaded or applied most recently, newest first. */
+    data object Recent : BrowseScope
+
     /** A section, optionally narrowed to a subfolder ([folder] "" means the whole section including subfolders). */
     data class Folder(val section: BrowseSection, val folder: String = "") : BrowseScope
 
@@ -80,13 +83,15 @@ fun stepTreeCursor(visible: List<BrowseScope>, current: BrowseScope?, delta: Int
  * a favorites store) the favorite keys. Pure and UI-free so the tree, filtering and playlist rules can be unit tested;
  * the panel builds a new catalog when its upstream lists change.
  *
- * [favorites] is null when the kind has no favorites store, in which case the tree has no Favorites folder.
+ * [favorites] is null when the kind has no favorites store, in which case the tree has no Favorites folder. [recent] (entry keys,
+ * newest first) is null when the kind keeps no history, in which case the tree has no Recent folder.
  */
 class BrowseCatalog(
     val kind: BrowseKind,
     private val entries: List<BrowseEntry>,
     private val playlists: List<BrowsePlaylist> = emptyList(),
-    private val favorites: Set<String>? = null
+    private val favorites: Set<String>? = null,
+    private val recent: List<String>? = null
 ) {
     private val byPath: Map<String, BrowsePlaylist> = playlists.associateBy { it.path }
 
@@ -101,16 +106,21 @@ class BrowseCatalog(
         if (favorites != null) {
             nodes += BrowseNode(BrowseScope.Favorites, "Favorites", 0, shown.count { it.key in favorites })
         }
+        if (recent != null) {
+            nodes += BrowseNode(BrowseScope.Recent, "Recent", 0, recentEntries().count { accepts == null || accepts(it) })
+        }
         for (section in sectionsFor(kind)) {
             val inSection = shown.filter { it.section == section }
             nodes += BrowseNode(BrowseScope.Folder(section), sectionLabel(kind, section), 0, inSection.size)
             nodes += folderNodes(section, inSection)
         }
-        nodes += BrowseNode(BrowseScope.PlaylistsHeader, "Playlists", 0, playlists.size)
-        playlists.forEach { pl ->
+        // Every count means items: each playlist counts its items and the header their total, like a section counts its folders' rows.
+        val playlistNodes = playlists.map { pl ->
             val count = if (accepts == null) pl.items.size else pl.items.count { item -> resolve(item)?.let(accepts) == true }
-            nodes += BrowseNode(BrowseScope.Playlist(pl.path), pl.name, 1, count)
+            BrowseNode(BrowseScope.Playlist(pl.path), pl.name, 1, count)
         }
+        nodes += BrowseNode(BrowseScope.PlaylistsHeader, "Playlists", 0, playlistNodes.sumOf { it.count })
+        nodes += playlistNodes
         return nodes
     }
 
@@ -120,11 +130,18 @@ class BrowseCatalog(
         val base = when (scope) {
             BrowseScope.All -> entries
             BrowseScope.Favorites -> entries.filter { favorites != null && it.key in favorites }
+            BrowseScope.Recent -> recentEntries()
             is BrowseScope.Folder -> entries.filter { it.section == scope.section && inFolder(it.folder, scope.folder) }
             is BrowseScope.Playlist -> byPath[scope.path]?.items?.mapNotNull { resolve(it) } ?: emptyList()
             BrowseScope.PlaylistsHeader -> emptyList()
         }
         return base.filter { matches(tokens, it) }
+    }
+
+    /** The recent keys that still resolve to an entry, newest first. */
+    private fun recentEntries(): List<BrowseEntry> {
+        val byKey = entries.associateBy { it.key }
+        return recent.orEmpty().mapNotNull { byKey[it] }
     }
 
     /** The entries of a playlist scope index-aligned with the playlist file: null where an item resolves to nothing. Empty for other scopes. */
@@ -201,6 +218,16 @@ class BrowseCatalog(
             BrowseSection.SINGLE -> "Saved single FX"
             BrowseSection.CHAIN -> "Saved chains"
             BrowseSection.LIVE -> "External video"
+        }
+
+        /**
+         * The name a row shows: a saved file name written in snake_case (`hyperspace_crash_zoom`) reads as words
+         * (`Hyperspace crash zoom`). Names that already contain a space, or no underscore, are left alone; the file keeps its name.
+         */
+        fun prettyName(name: String): String {
+            if ('_' !in name || ' ' in name) return name
+            val words = name.split('_').filter { it.isNotEmpty() }.joinToString(" ")
+            return words.replaceFirstChar { it.uppercaseChar() }.ifEmpty { name }
         }
 
         /** True when [folder] is [scopeFolder] or lies below it; an empty [scopeFolder] matches everything. */

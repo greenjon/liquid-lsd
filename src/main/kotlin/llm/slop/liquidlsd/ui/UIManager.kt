@@ -372,7 +372,8 @@ class UIManager(
         var keyDelta = 0
         // Esc takes the same path as the controller's back button ([NavigationSurface.back]; see DECISIONS.md).
         // Guarded so it never fires while a text/search input has keyboard focus.
-        if (shouldHandleEscape(ImGui.getIO().wantTextInput, ImGui.isKeyPressed(imgui.flag.ImGuiKey.Escape, false))) {
+        // A Library modal (Rename, Delete, ...) answers Esc itself.
+        if (!ModalKeys.ownsEscape() && shouldHandleEscape(ImGui.getIO().wantTextInput, ImGui.isKeyPressed(imgui.flag.ImGuiKey.Escape, false))) {
             val mixer = currentMixer
             if (mixer != null) NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx).back()
             else BackNavigation.back(parametersState, null)

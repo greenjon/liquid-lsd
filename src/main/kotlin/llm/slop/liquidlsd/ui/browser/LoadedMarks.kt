@@ -71,9 +71,10 @@ internal object LoadedMarks {
     })
 
     /** Width of the badge gutter every row reserves, loaded or not, so names never shift. */
-    const val GUTTER_W = 46f
+    const val GUTTER_W = 54f
     private const val CHIP_GAP = 2f
     private const val PAD_X = 3f
+    private const val CHIP_PAD = 2f
 
     private fun color(slot: DeckSlot): FloatArray = when (slot) {
         DeckSlot.A -> TangoPalette.DECK_A.normal
@@ -94,28 +95,59 @@ internal object LoadedMarks {
 
     class Gutter(val x: Float, val y: Float)
 
+    /** How the gutter shows a row's marks: labelled chips, narrow colour bars (one per holder), or one count chip. */
+    enum class GutterStyle { CHIPS, BARS, COUNT }
+
+    /** The first style that fits [marks] in the gutter, given each chip label's width ([labelW]). */
+    fun gutterStyle(marks: List<Mark>, labelW: (String) -> Float): GutterStyle {
+        val chips = marks.sumOf { (labelW(it.tag) + CHIP_PAD * 2).toDouble() }.toFloat() + CHIP_GAP * (marks.size - 1) + PAD_X
+        if (chips <= GUTTER_W) return GutterStyle.CHIPS
+        val bars = marks.size * BAR_W + CHIP_GAP * (marks.size - 1) + PAD_X
+        return if (bars <= GUTTER_W) GutterStyle.BARS else GutterStyle.COUNT
+    }
+
+    private const val BAR_W = 7f
+
+    /** Dark or white ink, whichever reads on a chip of [rgb]. */
+    private fun inkOn(rgb: FloatArray): Int {
+        val luma = 0.299f * rgb[0] + 0.587f * rgb[1] + 0.114f * rgb[2]
+        return if (luma > 0.55f) TangoPalette.u32(floatArrayOf(0.08f, 0.08f, 0.08f)) else TangoPalette.u32(floatArrayOf(1f, 1f, 1f))
+    }
+
     /**
-     * Draws the row's chips in the reserved [gutter]. If they do not all fit they collapse into one neutral "×n" chip; the hover
-     * text always lists every holder. Drawn after the selectable on purpose: it highlights the whole row width, gutter included,
-     * and would paint over chips drawn first.
+     * Draws the row's marks in the reserved [gutter]: one labelled chip per holder in its colour; when those do not fit, one narrow
+     * colour bar per holder; when even those do not fit (an effect in many slots), one count chip in the first holder's colour.
+     * The hover text always lists every holder. Drawn after the selectable on purpose: it highlights the whole row width, gutter
+     * included, and would paint over marks drawn first.
      */
     fun drawGutter(gutter: Gutter, marks: List<Mark>, rowH: Float) {
+        if (marks.isEmpty()) return
         val x0 = gutter.x
         val y0 = gutter.y
         val dl = ImGui.getWindowDrawList()
         val chipH = ImGui.getTextLineHeight() + 2f
         val top = y0 + (rowH - chipH) * 0.5f
-        val widths = marks.map { ImGui.calcTextSize(it.tag).x + 6f }
-        val fits = widths.sum() + CHIP_GAP * (marks.size - 1) + PAD_X <= GUTTER_W
-        val shown = if (fits) marks else if (marks.isEmpty()) marks else listOf(Mark("\u00D7${marks.size}", TangoPalette.TEXT_DIM.dark, ""))
         var x = x0 + PAD_X
-        for (m in shown) {
-            val w = ImGui.calcTextSize(m.tag).x + 6f
-            dl.addRectFilled(x, top, x + w, top + chipH, TangoPalette.u32(m.rgb, 0.85f), 3f)
-            dl.addText(x + 3f, top + 1f, TangoPalette.u32(floatArrayOf(1f, 1f, 1f, 1f)), m.tag)
-            x += w + CHIP_GAP
+        when (gutterStyle(marks) { ImGui.calcTextSize(it).x }) {
+            GutterStyle.CHIPS -> for (m in marks) {
+                val w = ImGui.calcTextSize(m.tag).x + CHIP_PAD * 2
+                dl.addRectFilled(x, top, x + w, top + chipH, TangoPalette.u32(m.rgb), 3f)
+                dl.addText(x + CHIP_PAD, top + 1f, inkOn(m.rgb), m.tag)
+                x += w + CHIP_GAP
+            }
+            GutterStyle.BARS -> for (m in marks) {
+                dl.addRectFilled(x, top, x + BAR_W, top + chipH, TangoPalette.u32(m.rgb), 2f)
+                x += BAR_W + CHIP_GAP
+            }
+            GutterStyle.COUNT -> {
+                val rgb = marks.first().rgb
+                val text = "×${marks.size}"
+                val w = ImGui.calcTextSize(text).x + CHIP_PAD * 2
+                dl.addRectFilled(x, top, x + w, top + chipH, TangoPalette.u32(rgb), 3f)
+                dl.addText(x + CHIP_PAD, top + 1f, inkOn(rgb), text)
+            }
         }
-        if (marks.isNotEmpty() && ImGui.isWindowHovered() && ImGui.isMouseHoveringRect(x0, y0, x0 + GUTTER_W, y0 + rowH)) ImGui.setTooltip(tooltip(marks))
+        if (ImGui.isWindowHovered() && ImGui.isMouseHoveringRect(x0, y0, x0 + GUTTER_W, y0 + rowH)) ImGui.setTooltip(tooltip(marks))
     }
 
     /** The tint behind a row that is loaded on the bound target; drawn before the selectable so the row's own states sit on top. */

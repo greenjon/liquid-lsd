@@ -456,7 +456,7 @@ class PerformanceMatrixPanel {
                         }
                         val stockSourcePayload = ImGui.acceptDragDropPayload<String>(PresetListPanel.PAYLOAD_STOCK_SOURCE)
                         if (stockSourcePayload != null) {
-                            VisualSourceRegistry.availableSources.find { it.id == stockSourcePayload }?.let { source ->
+                            PresetListPanel.sourceForPayload(stockSourcePayload)?.let { source ->
                                 val deckLabel = deckLabels[deckTagIndex(dropTag)]
                                 UIManager.changeVisualSourceSafely(mixer, targetDeck, deckLabel, source, parametersState)
                             }

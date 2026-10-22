@@ -212,6 +212,12 @@ abstract class QueueEngine(protected val queueLabel: String) {
         logger.info { "Removed item from $queueLabel at index $index: ${removed.name}" }
     }
 
+    /** Removes every entry of [file] (a deleted asset) from the queue. */
+    fun removeFileFromQueue(file: File) {
+        val target = file.absolutePath
+        for (i in queue.indices.reversed()) if (queue[i].absolutePath == target) removeFromQueue(i)
+    }
+
     fun moveItem(fromIndex: Int, toIndex: Int) {
         if (fromIndex !in queue.indices || toIndex !in queue.indices || fromIndex == toIndex) return
         val item = queue.removeAt(fromIndex)

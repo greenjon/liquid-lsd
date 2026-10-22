@@ -29,6 +29,17 @@ object PlaylistItems {
         return items.filterIndexed { i, _ -> i !in drop }
     }
 
+    /**
+     * Whether playlist [token] names the saved file at [path]: tokens are stored bare ("my fx"), relative ("sub/my fx.lsdfx") or
+     * absolute, matched the way the browser resolves them (see [BrowseCatalog]).
+     */
+    fun tokenNamesFile(token: String, path: String): Boolean {
+        val norm = token.replace('\\', '/')
+        val p = path.replace('\\', '/')
+        val file = p.substringAfterLast('/')
+        return p == norm || p.endsWith("/$norm") || file == norm || file.substringBeforeLast('.') == norm
+    }
+
     /** The playlist token for a dragged file path: a stock transition's bundled `.fs` becomes its shader id, anything else is kept. */
     fun tokenForPayload(kind: BrowseKind, path: String): String =
         if (kind == BrowseKind.TRANS && path.endsWith(".fs", ignoreCase = true)) File(path).nameWithoutExtension else path
@@ -68,6 +79,14 @@ class TokenPlaylistEdit(private val kind: BrowseKind, private val file: File, pr
     override fun move(from: Int, to: Int) = save(PlaylistItems.move(items, from, to))
     override fun insertPaths(paths: List<String>, at: Int) = save(PlaylistItems.insert(items, paths.map { PlaylistItems.tokenForPayload(kind, it) }, at))
     override fun remove(indices: Collection<Int>) = save(PlaylistItems.remove(items, indices))
+
+    /** Drops every item naming the saved file at [path]; true when something was removed. */
+    fun removeFile(path: String): Boolean {
+        val drop = items.indices.filter { PlaylistItems.tokenNamesFile(items[it], path) }
+        if (drop.isEmpty()) return false
+        remove(drop)
+        return true
+    }
 
     private fun save(updated: List<String>) {
         try {
