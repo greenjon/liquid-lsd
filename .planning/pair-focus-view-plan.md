@@ -1,6 +1,6 @@
 # Pair focus view (plan)
 
-2026-10-06. Replaces most of `dock-binding-single-source-plan.md` (kept for the decisions it records). Not started. v1.0 scope: the owner's bar is
+2026-10-06. Replaces most of `dock-binding-single-source-plan.md` (kept for the decisions it records). **Status (2026-10-21): implemented, then narrowed**: since `browse-edit-ux-review-plan.md` Wave 2, a row-slot click binds the Perform dock in place when the row is on the current page; the pair view opens only for rows off the page (and for Browse from Edit). Its "Back / Parameters" line is now the shared `BayHeader` (`Back`, `Browse | Params`). Current behaviour: DECISIONS.md section 7. v1.0 scope: the owner's bar is
 "the interface no longer confuses or annoys me".
 
 ## Design

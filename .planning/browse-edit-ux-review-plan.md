@@ -1,5 +1,14 @@
 # Browse / Library / Edit UX review: implementation plan (2026-10-21)
 
+## Status (2026-10-21)
+All waves done on main: 1C merged in `bed8f0c`, 1B in `6f18645`, 1A in `4a823d3`, Wave 2 in `ebb996f` (plus `25f5d08` Esc-closes-popup fix, `805dd15` chip font), Wave 3 docs after it.
+Open:
+- **Owner decision**: the Master MIX gear lands on MIX › TRANS, so Edit swaps the Master MIX row for the Transitions row (Edit rows follow the side tab), and LEVEL A/B/BG have no Edit rows (DECISIONS §7, Edit bay tabs entry).
+- Perform knob captions for unlabelled FX parameters are still truncated uppercase raw names (e.g. "TRACKINGJ"); `ParamLabels` is only used in the Edit grid and Metaknob lists.
+- Tours need updating for in-place binding and the renamed header targets: `tours/library.json` (chapter "pair": caption "Deck B's source and FX rows stay on top"; `btn_Parameters` / `btn_Back` are now `btnid_bay_params` / `btnid_bay_back`; the source-name click near line 30), `tours/fx_chains.json` (chapter "chains"), `tours/overview.json` (~line 127).
+- Ctrl+F (or `/`) while the Perform dock is bound in place ends the binding without remembering it (`LibraryPanel.show` → `leavePair`); Space/maximize remember it. Decide whether Ctrl+F should keep it.
+- Not verified on Twister hardware, nor at 1280x720.
+
 The owner approved every item of the 2026-10-21 review ("do it all"). Screens were captured with a tour script
 (`--tour=... --tour-hidden --tour-fps=10 --tour-no-hashes`, then `ffmpeg -ss T -frames:v 1`), at 1920x1080, plus one
 `--screenshot-ui --window=1280x720` shot of Perform.
