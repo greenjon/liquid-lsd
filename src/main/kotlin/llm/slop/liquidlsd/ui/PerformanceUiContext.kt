@@ -167,7 +167,7 @@ internal class PerformanceUiContext {
             }
             MacroEngine.MASTER -> {
                 parametersState.activeTopTab = "Mixer"
-                parametersState.activeMixerSubTab = "CTRL"
+                parametersState.activeMixerSubTab = "LEVELS"
             }
             MacroEngine.TRANS -> {
                 parametersState.activeTopTab = "Mixer"

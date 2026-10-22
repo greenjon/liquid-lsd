@@ -32,7 +32,7 @@ internal object PerformPages {
             MacroEngine.GLOBAL -> PerformanceColors.LED_GLOBAL
             else -> row.accent
         }
-        // A pinned FX row sits beside its deck's (or Master's) SRC/MIX row on one page; a hue shift tells them apart on the LEDs.
+        // A pinned FX row sits beside its deck's (or Master's) SRC/MST row on one page; a hue shift tells them apart on the LEDs.
         if (row.pinnedMode != "FX") return base
         val shift = if (row.bankId == MacroEngine.MASTER_FX) -FX_HUE_SHIFT else FX_HUE_SHIFT
         return rotateHue(base, shift)

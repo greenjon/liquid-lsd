@@ -30,9 +30,16 @@ object MacroBindingNav {
         return when {
             deckModule != null -> NavTarget(deckModule, top, if (rest.startsWith("FX/")) "FX" else "SRC")
             top == "Master" && rest.startsWith("FX/") -> NavTarget(MacroEngine.MASTER, "Mixer", "FX")
-            top == "Mixer" -> NavTarget(MacroEngine.MASTER, "Mixer", if (rest.startsWith("Transition/") || rest == "crossfade" || rest == "xfadeSpeed" || rest == "masterLevel") "TRANS" else "CTRL")
+            top == "Mixer" -> NavTarget(MacroEngine.MASTER, "Mixer", mixerSectionFor(rest))
             else -> null
         }
+    }
+
+    /** The Mixer section a `Mixer/<rest>` path is shown on: the transition and crossfader on OUT > TRANS, the levels on MST > LEVELS, the triggers on MST > CTRL. */
+    private fun mixerSectionFor(rest: String): String = when {
+        rest.startsWith("Transition/") || rest == "crossfade" || rest == "xfadeSpeed" -> "TRANS"
+        rest.startsWith("level") || rest == "masterLevel" -> "LEVELS"
+        else -> "CTRL"
     }
 
     /** Opens [nav]'s Deep Edit tab and selects [binding]'s target cell there. */

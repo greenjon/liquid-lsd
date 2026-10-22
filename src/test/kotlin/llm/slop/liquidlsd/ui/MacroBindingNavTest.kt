@@ -26,6 +26,9 @@ class MacroBindingNavTest {
         assertEquals(MacroBindingNav.NavTarget(MacroEngine.MASTER, "Mixer", "TRANS"), nav("Mixer/crossfade"))
         assertEquals(MacroBindingNav.NavTarget(MacroEngine.MASTER, "Mixer", "TRANS"), nav("Mixer/Transition/DryWet"))
         assertEquals(MacroBindingNav.NavTarget(MacroEngine.MASTER, "Mixer", "FX"), nav("Master/FX/DryWet"))
+        assertEquals(MacroBindingNav.NavTarget(MacroEngine.MASTER, "Mixer", "LEVELS"), nav("Mixer/masterLevel"))
+        assertEquals(MacroBindingNav.NavTarget(MacroEngine.MASTER, "Mixer", "LEVELS"), nav("Mixer/levelBG"))
+        assertEquals(MacroBindingNav.NavTarget(MacroEngine.MASTER, "Mixer", "CTRL"), nav("Mixer/queueNext"))
     }
 
     @Test

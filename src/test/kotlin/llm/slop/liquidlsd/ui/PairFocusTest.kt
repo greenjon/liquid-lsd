@@ -23,14 +23,28 @@ class PairFocusTest {
     }
 
     @Test
-    fun pairTableCoversEveryDeckMasterAndXf() {
-        assertEquals(listOf("A", "B", "BG", "PV", "MASTER", "XF"), PerfRows.PAIRS.map { it.tag })
+    fun pairTableCoversEveryDeckAndTheMasterPair() {
+        assertEquals(listOf("A", "B", "BG", "PV", "MASTER"), PerfRows.PAIRS.map { it.tag })
         assertEquals(listOf("deck.A.src", "deck.A.fx"), PerfRows.pairFor("A")!!.rowIds)
-        assertEquals(listOf("master.mix", "master.fx"), PerfRows.pairFor("MASTER")!!.rowIds)
-        assertEquals(listOf("trans", "global"), PerfRows.pairFor("XF")!!.rowIds)
+        assertEquals(listOf("trans", "master.fx"), PerfRows.pairFor("MASTER")!!.rowIds)
+        assertNull(PerfRows.pairFor("XF"))
         assertTrue(PerfRows.PAIRS.all { p -> p.rowIds.all { it in PerfRows.CATALOG } })
         assertEquals("A", PerfRows.pairForBank(MacroEngine.DECK_A_FX)?.tag)
-        assertEquals("XF", PerfRows.pairForBank(MacroEngine.GLOBAL)?.tag)
+        assertEquals("MASTER", PerfRows.pairForBank(MacroEngine.TRANS)?.tag)
+        assertEquals("MASTER", PerfRows.pairForBank(MacroEngine.MASTER_FX)?.tag)
+        // Master MST + Clock share the other half of the MIXER page but have nothing to browse: no pair-view pair.
+        assertNull(PerfRows.pairForBank(MacroEngine.MASTER))
+        assertNull(PerfRows.pairForBank(MacroEngine.GLOBAL))
+        assertEquals("MASTER", PerfRows.pairForModule(MacroEngine.MASTER)?.tag, "the Master module (dock selections, Edit) is the Master pair")
+    }
+
+    @Test
+    fun everyPairIsAHalfOfATwisterPage() {
+        // The rule: a pair is the two rows that share a half (knobs 1-8 or 9-16) of a Perform page.
+        val halves = PerfPageStore.default.all().flatMap { it.rows.map { r -> r.row }.chunked(2) }
+        for (pair in PerfRows.PAIRS) assertTrue(pair.rowIds in halves, "${pair.tag} is a half of a page")
+        // And Edit's MST pair (master.mix + global) is the other half of the MIXER page.
+        assertTrue(listOf("master.mix", "global") in halves)
     }
 
     @Test
@@ -63,14 +77,18 @@ class PairFocusTest {
     }
 
     @Test
-    fun masterWithNothingTouchedBrowsesItsFxChain() {
+    fun masterWithNothingTouchedBrowsesItsFxChainThenTheHalfLastTouched() {
         val state = offPage()
         val master = PerfRows.pairFor("MASTER")!!
-        assertNull(state.pairBrowseTarget(master))
-        assertEquals(ParametersState.BrowseTarget.FxChain(null), state.pairDockTarget(master))
+        assertEquals(ParametersState.BrowseTarget.FxChain(null), state.pairBrowseTarget(master))
         state.openFxChainBrowse(MacroEngine.MASTER, null, 2)
-        assertEquals(ParametersState.BrowseTarget.FxChain(2), state.pairDockTarget(master))
-        assertEquals(ParametersState.BrowseTarget.Gen, state.pairDockTarget(PerfRows.pairFor("B")!!))
+        assertEquals(ParametersState.BrowseTarget.FxChain(2), state.pairBrowseTarget(master))
+        state.leavePair()
+        assertEquals(ParametersState.BrowseTarget.FxChain(null), state.pairBrowseTarget(master))
+        state.openTransitionBrowse()
+        state.leavePair()
+        assertEquals(ParametersState.BrowseTarget.Transition, state.pairBrowseTarget(master), "the OUT tab's last half is the default")
+        assertEquals(ParametersState.BrowseTarget.Gen, state.pairBrowseTarget(PerfRows.pairFor("B")!!))
     }
 
     @Test
@@ -90,14 +108,16 @@ class PairFocusTest {
 
         state.openParamsFromRow(MacroEngine.TRANS)
         state.openBrowseFromEdit(MacroEngine.MASTER)
-        assertEquals("XF", state.focusedPair)
+        assertEquals("MASTER", state.focusedPair)
         assertEquals(ParametersState.BrowseTarget.Transition, state.dockSelection?.target)
 
         state.openParams(MacroEngine.MASTER)
         state.activeMixerSubTab = "CTRL"
-        assertNull(state.browseSelectionForEdit(MacroEngine.MASTER), "MIX has nothing to browse")
-        state.openBrowseFromEdit(MacroEngine.MASTER)
-        assertEquals("MASTER", state.focusedPair)
+        assertNull(state.browseSelectionForEdit(MacroEngine.MASTER), "MST has nothing to browse")
+        state.activeMixerSubTab = "LEVELS"
+        assertNull(state.browseSelectionForEdit(MacroEngine.MASTER), "MST has nothing to browse")
+        state.activeMixerSubTab = "FX"
+        assertEquals(ParametersState.BrowseTarget.FxChain(null), state.browseSelectionForEdit(MacroEngine.MASTER)?.target)
     }
 
     @Test
@@ -165,8 +185,8 @@ class PairFocusTest {
         assertEquals(listOf(MacroEngine.DECK_A, MacroEngine.DECK_A_FX), a.map { it.bankId })
         assertSame(a, cache.rows(page, ctx, state, { it }, pages))
 
-        state.focusPair("XF")
-        assertEquals(listOf(MacroEngine.TRANS, MacroEngine.GLOBAL), cache.rows(page, ctx, state, { it }, pages).map { it.bankId })
+        state.focusPair("MASTER")
+        assertEquals(listOf(MacroEngine.TRANS, MacroEngine.MASTER_FX), cache.rows(page, ctx, state, { it }, pages).map { it.bankId })
 
         state.leavePair()
         assertEquals(pagerows.map { it.bankId }, cache.rows(page, ctx, state, { it }, pages).map { it.bankId })

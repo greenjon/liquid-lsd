@@ -34,15 +34,15 @@ object ParametersTabs {
         return session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.getTextLineHeight() + 14f }.coerceAtLeast(30f)
     }
 
-    /** Side-rail tab width: square, widened to fit the longest label ("CTRL") so no label spills past the rail. */
+    /** Side-rail tab width: square, widened to fit the longest label ("MST") so no label spills past the rail. */
     fun calculateLeftTabsWidth(session: llm.slop.liquidlsd.SessionContext): Float {
-        val widest = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.calcTextSize("CTRL").x }
+        val widest = session.uiTheme.withFont(UITheme.FontLevel.H3) { ImGui.calcTextSize("MST").x }
         return maxOf(calculateLeftTabsHeight(session), widest + 12f)
     }
 
     /**
      * Renders the vertical side rail for Performance Mode's Deep Edit:
-     * [CTRL], [MIX], [A], [B], [BG], [PV].
+     * [MST], [OUT], [A], [B], [BG], [PV].
      */
     fun drawPerformanceDeepEditSideTabs(
         session: llm.slop.liquidlsd.SessionContext,
@@ -59,10 +59,10 @@ object ParametersTabs {
         val deckBGEmpty = mixer?.deckBG?.isEmpty == true
         val deckPVEmpty = mixer?.deckPV?.isEmpty == true
 
-        // CTRL and MIX are both the "Mixer" top tab; they differ by [ParametersState.activeMixerSubTab] (CTRL vs FX/TRANS).
+        // MST and OUT are both the "Mixer" top tab; they differ by [ParametersState.activeMixerSubTab] (LEVELS/CTRL vs FX/TRANS).
         val tabs = listOf(
-            Triple("CTRL", "Mixer",  "Control: queue & clock triggers, and morph triggers."),
-            Triple("MIX", "Mixer",   "Master FX (FX) and Crossfader/Transitions (TRANS)."),
+            Triple("MST", "Mixer",   "Master: deck levels and alphas, master level (LEVELS), and queue, clock and randomize triggers (CTRL). Shown with the Clock row."),
+            Triple("OUT", "Mixer",   "Output stage: Master FX (FX) and Crossfader/Transitions (TRANS)."),
             Triple("A",   "Deck A",  if (deckAEmpty) "Deck A [EMPTY] — Click to assign a source or preset." else "Deck A: Visual source (SRC) and insert FX (FX)."),
             Triple("B",   "Deck B",  if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B: Visual source (SRC) and insert FX (FX)."),
             Triple("BG",  "Deck BG", if (deckBGEmpty) "Deck BG [EMPTY] — Click to assign a source or preset." else "Deck BG: Visual source (SRC) and insert FX (FX)."),
@@ -74,7 +74,7 @@ object ParametersTabs {
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.ItemSpacing, 0f, 4f)
         tabs.forEach { (shortLabel, fullTab, tooltipText) ->
             val isActive = state.activeTopTab == fullTab &&
-                (fullTab != "Mixer" || (state.activeMixerSubTab == "CTRL") == (shortLabel == "CTRL"))
+                (fullTab != "Mixer" || ParametersState.isMstSubTab(state.activeMixerSubTab) == (shortLabel == "MST"))
             val activeCol = getDeckColor(fullTab, 1f)
             val bgCol = if (isActive) activeCol else ImGui.colorConvertFloat4ToU32(0.12f, 0.12f, 0.12f, 1f)
             val hoverCol = if (isActive) activeCol else ImGui.colorConvertFloat4ToU32(0.22f, 0.22f, 0.22f, 1f)
@@ -87,7 +87,7 @@ object ParametersTabs {
 
             if (ImGui.invisibleButton("##perf_deep_side_$shortLabel", buttonWidth.coerceAtLeast(1f), buttonHeight.coerceAtLeast(1f))) {
                 if (fullTab == "Mixer") {
-                    state.activeMixerSubTab = if (shortLabel == "CTRL") "CTRL" else state.lastMixerChainTab
+                    state.activeMixerSubTab = if (shortLabel == "MST") state.lastMstTab else state.lastMixerChainTab
                 }
                 onSelectSection(fullTab)
             }
@@ -167,12 +167,12 @@ object ParametersTabs {
         return activeSubTab
     }
     /**
-     * Renders the parameter section subtabs (e.g. [SRC], [FX], [View] for Decks or [CTRL] alone, or [FX], [TRANS] for Mixer) above the first parameter name.
+     * Renders the parameter section subtabs (e.g. [SRC], [FX], [View] for Decks, [LEVELS], [CTRL] for the Mixer's MST side tab or [FX], [TRANS] for its OUT side tab) above the first parameter name.
      */
     fun drawSectionTabs(session: llm.slop.liquidlsd.SessionContext, state: ParametersState, mixer: Mixer, btnH: Float? = null) {
         val tabs = if (state.activeTopTab == "Mixer") {
-            // CTRL is its own side tab (single horizontal tab, kept so the row doesn't jump); MIX holds FX and TRANS.
-            if (state.activeMixerSubTab == "CTRL") listOf("CTRL") else listOf("FX", "TRANS")
+            // The MST side tab holds LEVELS and CTRL; the OUT side tab holds FX and TRANS.
+            if (ParametersState.isMstSubTab(state.activeMixerSubTab)) listOf("LEVELS", "CTRL") else listOf("FX", "TRANS")
         } else {
             val deck = when (state.activeTopTab) {
                 "Deck A" -> mixer.deckA
@@ -228,8 +228,9 @@ object ParametersTabs {
                 val tooltip = when (tab) {
                     "SRC" -> "Source: Parameters for active visual source, zoom, and rotation."
                     "FX" -> if (state.activeTopTab == "Mixer") "Master FX: a chain of 3 serial ISF effect slots on the master output." else "FX: this deck's chain of 3 serial ISF effect slots."
-                    "CTRL" -> "Control: queue & clock triggers and morph triggers."
-                    "TRANS" -> "Transition: master level, crossfade and fade speed, transition shader selection, bypass, dry/wet, and dynamic parameters."
+                    "LEVELS" -> "Levels: the master level, and each deck's level and alpha."
+                    "CTRL" -> "Control: queue and randomize triggers. The same triggers are on the Clock row in Perform."
+                    "TRANS" -> "Transition: crossfade and fade speed, transition shader selection, bypass, dry/wet, and dynamic parameters."
                     else -> "$tab parameters"
                 }
                 itemTooltip(tooltip)
@@ -294,6 +295,10 @@ object ParametersTabs {
         getCvColor: (String, Float) -> Int,
         onPushUndo: () -> Unit
     ) {
+        drawSubGroupContent(session, "Mixer", "LEVELS", state) {
+            drawMixerLevelsTab(session, mixer, state, labelColW, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        }
+
         drawSubGroupContent(session, "Mixer", "CTRL", state) {
             drawMixerCtrlTab(session, mixer, state, labelColW, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         }
@@ -306,6 +311,43 @@ object ParametersTabs {
             drawMixerTransTab(session, mixer, state, labelColW, gridStartX, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         }
     }
+
+    /**
+     * MST > LEVELS: the master level, then each deck's level (the mixer fader, `Mixer/level<Deck>`) and alpha (its source's Gain, the
+     * same parameter and path as the deck's SRC tab). An empty deck has no source to carry an alpha, so only its level shows.
+     */
+    private fun drawMixerLevelsTab(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        state: ParametersState,
+        labelColW: Float,
+        gridStartX: Float,
+        getCvColumns: () -> List<String>,
+        getColumnOffset: (String) -> Float,
+        getCvColor: (String, Float) -> Int,
+        onPushUndo: () -> Unit
+    ) {
+        var row = 0
+        ParametersRenderer.drawParamRow(session, "Master level", "Mixer/masterLevel", mixer.masterLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        for (i in MIXER_LEVEL_DECKS.indices) {
+            val deckLabel = MIXER_LEVEL_DECKS[i]
+            val deck = when (i) { 0 -> mixer.deckA; 1 -> mixer.deckB; 2 -> mixer.deckBG; else -> mixer.deckPV }
+            val level = when (i) { 0 -> mixer.levelA; 1 -> mixer.levelB; 2 -> mixer.levelBG; else -> mixer.levelPV }
+            ParametersRenderer.drawParamRow(session, MIXER_LEVEL_LABELS[i], MIXER_LEVEL_PATHS[i], level, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            if (deck.isEmpty) continue
+            val source = deck.source
+            ParametersRenderer.drawParamRow(session, MIXER_ALPHA_LABELS[i], gainPathFor(deckLabel, source), source.globalAlpha, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        }
+    }
+
+    private val MIXER_LEVEL_DECKS = arrayOf("Deck A", "Deck B", "Deck BG", "Deck PV")
+    private val MIXER_LEVEL_LABELS = arrayOf("Level A", "Level B", "Level BG", "Level PV")
+    private val MIXER_ALPHA_LABELS = arrayOf("Alpha A", "Alpha B", "Alpha BG", "Alpha PV")
+    private val MIXER_LEVEL_PATHS = arrayOf("Mixer/levelA", "Mixer/levelB", "Mixer/levelBG", "Mixer/levelPV")
+
+    /** The path of a deck source's Gain (global alpha) parameter: what the deck's SRC tab lists, so bindings and presets keep working. */
+    private fun gainPathFor(deckLabel: String, source: llm.slop.liquidlsd.rendering.VisualSource): String =
+        if (source is llm.slop.liquidlsd.rendering.ExternalVideoSource) "$deckLabel/External Video/Gain" else "$deckLabel/${source.displayName}/Gain"
 
     private fun drawMixerCtrlTab(
         session: llm.slop.liquidlsd.SessionContext,
@@ -350,9 +392,8 @@ object ParametersTabs {
         var row = 0
         val trans = mixer.transitionFilter
         val transName = trans?.displayName ?: "Linear Crossfade"
-        // The master level, crossfader and its auto-fade time lead the tab: the output stage the transition shader and its parameters act on.
+        // The crossfader and its auto-fade time lead the tab: the output stage the transition shader and its parameters act on.
         val crossfadeRow = {
-            ParametersRenderer.drawParamRow(session, "Master level", "Mixer/masterLevel", mixer.masterLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             ParametersRenderer.drawParamRow(session, "Crossfade", "Mixer/crossfade", mixer.crossfade, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
             ParametersRenderer.drawParamRow(session, "Fade speed", "Mixer/xfadeSpeed", mixer.xfadeSpeed, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         }
@@ -446,11 +487,7 @@ object ParametersTabs {
 
         drawSubGroupContent(session, deckLabel, "SRC", state) {
             var row = 0
-            val gainPath = if (activeSource is llm.slop.liquidlsd.rendering.ExternalVideoSource) {
-                "$deckLabel/External Video/Gain"
-            } else {
-                "$deckLabel/${activeSource.displayName}/Gain"
-            }
+            val gainPath = gainPathFor(deckLabel, activeSource)
             ParametersRenderer.drawParamRow(session, "Gain", gainPath, activeSource.globalAlpha, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
             if (!activeSource.is3D) {

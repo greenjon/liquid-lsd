@@ -41,7 +41,7 @@ class PerfLayoutPinnedRowsTest {
         val mix = PerfRows.CATALOG.getValue("master.mix")
         val mfx = PerfRows.CATALOG.getValue("master.fx")
         assertEquals(mix.hasExtraHeader, mfx.hasExtraHeader)
-        assertEquals("MIX", mix.pinnedMode)
+        assertEquals("MST", mix.pinnedMode)
         assertEquals("FX", mfx.pinnedMode)
     }
 
@@ -51,12 +51,12 @@ class PerfLayoutPinnedRowsTest {
         val state = ParametersState()
         for ((moduleId, tag) in listOf(MacroEngine.DECK_A to "A", MacroEngine.MASTER to null)) {
             fun row() = PerfRows.rowDescriptorForModule(moduleId, ctx, state) { it }
-            state.setDeckSubTab("Deck A", "SRC"); state.activeMixerSubTab = "CTRL"
+            state.setDeckSubTab("Deck A", "SRC"); state.activeMixerSubTab = "LEVELS"
             val src = row()
             if (tag != null) state.setDeckSubTab("Deck $tag", "FX") else state.activeMixerSubTab = "FX"
             val fx = row()
             assertNotEquals(src.bankId, fx.bankId)
-            assertEquals(if (tag != null) "SRC" else "MIX", src.pinnedMode)
+            assertEquals(if (tag != null) "SRC" else "MST", src.pinnedMode)
             assertEquals("FX", fx.pinnedMode)
             assertEquals(src.knobOffset, fx.knobOffset)
             assertEquals(src.hasExtraHeader, fx.hasExtraHeader)

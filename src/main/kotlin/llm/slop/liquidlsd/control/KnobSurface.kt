@@ -25,7 +25,7 @@ interface KnobSurface {
     fun showPage(pageId: String)
 
     /**
-     * Steps the focused pair view [delta] pairs (A > B > BG > PV > Master > XF, wrapping) and returns true; false when no pair
+     * Steps the focused pair view [delta] pairs (A > B > BG > PV > Master, wrapping; Master MST + Clock have no pair) and returns true; false when no pair
      * is focused. A controller's bank change calls this first, so the banks walk the pairs instead of the Perform pages.
      */
     fun stepPair(delta: Int): Boolean = false

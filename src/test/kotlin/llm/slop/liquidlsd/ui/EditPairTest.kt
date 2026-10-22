@@ -4,7 +4,7 @@ import llm.slop.liquidlsd.macro.MacroEngine
 import java.io.File
 import kotlin.test.*
 
-/** Edit shows the open module's pair of rows (like Browse); the bay's tab picks the active half, not the rows. */
+/** Edit shows the open module's pair of rows (the two that share a Twister page half); the bay's section tab picks the active half, not the rows. */
 class EditPairTest {
     private val preferencesFile = File("lsd-preferences.properties")
     private val backupFile = File("lsd-preferences.properties.editpairtest.bak")
@@ -37,11 +37,13 @@ class EditPairTest {
     }
 
     @Test
-    fun masterPairsMixWithFxOnCtrlAndTransitionsWithFxOtherwise() {
+    fun masterPairsMstWithClockOnTheMstTabAndTransitionsWithFxOnOut() {
         val state = ParametersState()
         state.openParamsFromRow(MacroEngine.MASTER)
         state.activeMixerSubTab = "CTRL"
-        assertEquals(listOf(MacroEngine.MASTER, MacroEngine.MASTER_FX), banks(state))
+        assertEquals(listOf(MacroEngine.MASTER, MacroEngine.GLOBAL), banks(state))
+        state.activeMixerSubTab = "LEVELS"
+        assertEquals(listOf(MacroEngine.MASTER, MacroEngine.GLOBAL), banks(state))
         state.activeMixerSubTab = "TRANS"
         assertEquals(listOf(MacroEngine.TRANS, MacroEngine.MASTER_FX), banks(state))
         state.activeMixerSubTab = "FX"
@@ -66,13 +68,45 @@ class EditPairTest {
     }
 
     @Test
-    fun masterMixRowLandsOnMixNotCtrl() {
+    fun masterMstRowLandsOnLevelsAndItsGearIsLitOnBothMstSections() {
         val state = ParametersState()
+        state.activeMixerSubTab = "TRANS"
         state.openParamsFromRow(MacroEngine.MASTER)
-        assertEquals("TRANS", state.activeMixerSubTab)
+        assertEquals("LEVELS", state.activeMixerSubTab)
+        assertTrue(state.isRowEditActive(MacroEngine.MASTER))
+        assertFalse(state.isRowEditActive(MacroEngine.TRANS))
+        assertFalse(state.isRowEditActive(MacroEngine.MASTER_FX))
+        state.activeMixerSubTab = "CTRL"
         assertTrue(state.isRowEditActive(MacroEngine.MASTER))
         state.toggleRowEdit(MacroEngine.MASTER)
         assertFalse(state.anyRackModuleExpanded())
+    }
+
+    @Test
+    fun theOutGearsMoveTheBayToTheirSectionAndLeaveTheMstRowUnlit() {
+        val state = ParametersState()
+        state.openParamsFromRow(MacroEngine.MASTER)
+        state.toggleRowEdit(MacroEngine.TRANS)
+        assertEquals("TRANS", state.activeMixerSubTab)
+        assertFalse(state.isRowEditActive(MacroEngine.MASTER))
+        state.toggleRowEdit(MacroEngine.MASTER_FX)
+        assertEquals("FX", state.activeMixerSubTab)
+        state.toggleRowEdit(MacroEngine.MASTER)
+        assertEquals("LEVELS", state.activeMixerSubTab)
+        assertTrue(state.isRowEditActive(MacroEngine.MASTER))
+    }
+
+    @Test
+    fun mixerSectionsRememberTheirSideTabAndUnknownValuesFallBackToLevels() {
+        val state = ParametersState()
+        assertEquals("LEVELS", state.activeMixerSubTab)
+        state.activeMixerSubTab = "CTRL"
+        state.activeMixerSubTab = "TRANS"
+        assertEquals("CTRL", state.lastMstTab)
+        assertEquals("TRANS", state.lastMixerChainTab)
+        state.activeMixerSubTab = "MIX" // an old or foreign value must not strand the bay on a section that does not exist
+        assertEquals("LEVELS", state.activeMixerSubTab)
+        assertTrue(ParametersState.isMstSubTab(state.activeMixerSubTab))
     }
 
     @Test

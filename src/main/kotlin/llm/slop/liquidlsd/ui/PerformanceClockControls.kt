@@ -39,9 +39,18 @@ internal object PerformanceClockControls {
     private var tapMapping: Any? = null
     private var tapTip = ""
 
+    /**
+     * Width reserved for the tempo controls (line 1 with the Link button showing is the widest: 2 source pills, Link, BPM, bar dots), so the
+     * trigger buttons ([PerformanceClockTriggers]) start at the same x whether or not Link is on.
+     */
+    const val TEMPO_BLOCK_W = 340f
+
+    /** [rightX] is the row's content right edge: the queue and randomize triggers fill what the tempo controls leave. */
     fun draw(
         session: SessionContext,
+        mixer: llm.slop.liquidlsd.rendering.Mixer,
         startX: Float,
+        rightX: Float,
         headerY: Float,
         row2Y: Float,
         headerH: Float
@@ -173,6 +182,9 @@ internal object PerformanceClockControls {
         itemTooltip("Nudge tempo up 0.5 BPM.")
 
         ImGui.endGroup()
+
+        // 6. Queue and randomize triggers, right of the tempo controls (the MST > CTRL rows' triggers, one click away).
+        PerformanceClockTriggers.draw(session, mixer, startX + TEMPO_BLOCK_W + PerformanceClockTriggers.LEFT_GAP, rightX, headerY, row2Y, headerH)
     }
 
     /** [TAP] button: flashes on tap cadence; right-click for MIDI Learn on "Global/tapTempo". */

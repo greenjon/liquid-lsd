@@ -32,6 +32,12 @@ class ParametersState : MidiLearnSink {
 
     companion object {
         const val NO_SLOT_EXPANDED = -1
+
+        /** Every value [activeMixerSubTab] can hold: MST side tab (LEVELS, CTRL) then OUT side tab (FX, TRANS). */
+        val MIXER_SUB_TABS: List<String> = listOf("LEVELS", "CTRL", "FX", "TRANS")
+
+        /** True for the MST side tab's sections (Master levels and Clock rows); false for the OUT side tab's (Transitions and Master FX). */
+        fun isMstSubTab(tab: String): Boolean = tab == "LEVELS" || tab == "CTRL"
     }
 
     // -- Modular Rack disclosure state (docs/user_guide/macros_and_rack.md) --------------------
@@ -181,7 +187,7 @@ class ParametersState : MidiLearnSink {
     // -- Pair focus view ---------------------------------------------------------------------
 
     /**
-     * The focused pair's tag (a deck tag, [PerfRows.PAIR_MASTER] or [PerfRows.PAIR_XF]), or null. The pair view shows the
+     * The focused pair's tag (a deck tag or [PerfRows.PAIR_MASTER]), or null. The pair view shows the
      * pair's two rows over the Browse dock; it is mutually exclusive with a Params Edit module and, unlike that module, is not persisted.
      */
     var focusedPair: String? = null
@@ -202,29 +208,21 @@ class ParametersState : MidiLearnSink {
         if (UITheme.libraryMode == UITheme.LibraryMode.FULL) UITheme.libraryMode = UITheme.LibraryMode.HALF
     }
 
-    /** The pair a dock selection belongs to: Transition is the XF pair's, everything else its row's module. */
+    /** The pair a dock selection belongs to: Transition is the Master pair's, everything else its row's module ([PerfRows.pairForModule]). */
     private fun pairTagFor(selection: DockSelection): String? =
-        if (selection.target is BrowseTarget.Transition) PerfRows.PAIR_XF else PerfRows.pairForBank(selection.moduleId)?.tag
+        if (selection.target is BrowseTarget.Transition) PerfRows.PAIR_MASTER else PerfRows.pairForModule(selection.moduleId)?.tag
 
     /**
-     * What the pair view's Browse is bound to: the slot last touched on one of [pair]'s rows, else its first browsable half
-     * (a deck's source, the transition). Null for Master with nothing touched -- MIX has nothing to browse.
+     * What the pair view's Browse is bound to: the slot last touched on one of [pair]'s rows, else its default half: a deck's source,
+     * and for the Master pair the half Edit's OUT tab last showed ([lastMixerChainTab]: the Master FX chain until the transition is touched).
      */
-    internal fun pairBrowseTarget(pair: PerfRows.PairDef): BrowseTarget? {
+    internal fun pairBrowseTarget(pair: PerfRows.PairDef): BrowseTarget {
         dockSelection?.takeIf { pairTagFor(it) == pair.tag }?.let { return it.target }
         return when (pair.tag) {
-            PerfRows.PAIR_XF -> BrowseTarget.Transition
-            PerfRows.PAIR_MASTER -> null
+            PerfRows.PAIR_MASTER -> if (lastMixerChainTab == "TRANS") BrowseTarget.Transition else BrowseTarget.FxChain(null)
             else -> BrowseTarget.Gen
         }
     }
-
-    /**
-     * What the pair view's Browse shows for [pair]: [pairBrowseTarget], or for Master with nothing touched its FX chain (MIX has
-     * nothing to browse, and the chain is what a Master pick changes).
-     */
-    internal fun pairDockTarget(pair: PerfRows.PairDef): BrowseTarget? =
-        pairBrowseTarget(pair) ?: if (pair.tag == PerfRows.PAIR_MASTER) BrowseTarget.FxChain(null) else null
 
     /** Leaves the pair view (back to Perform). */
     fun leavePair() {
@@ -255,7 +253,7 @@ class ParametersState : MidiLearnSink {
         is BrowseTarget.Gen -> selection.moduleId
         is BrowseTarget.Transition -> MacroEngine.TRANS
         // A pair's second row is its FX row (a deck's chain, Master FX).
-        is BrowseTarget.FxChain -> PerfRows.pairForBank(selection.moduleId)?.rowIds?.getOrNull(1)?.let { PerfRows.CATALOG[it]?.bankId }
+        is BrowseTarget.FxChain -> PerfRows.pairForModule(selection.moduleId)?.rowIds?.getOrNull(1)?.let { PerfRows.CATALOG[it]?.bankId }
     }
 
     /** True when [selection] binds the Perform dock in place: Perform (no pair, no Edit module) with the slot's row on the current page. */
@@ -280,13 +278,12 @@ class ParametersState : MidiLearnSink {
 
     /**
      * A shifted send-knob tap while a dock is bound (`NavSurface.browseSwitch`): moves the binding to [tag]'s pair (a deck's source,
-     * or the half last touched there; Master's FX chain), in place when its row is on the page, else in the pair view.
+     * or the half last touched there; Master's FX chain or transition), in place when its row is on the page, else in the pair view.
      */
     fun switchBrowseTo(tag: String) {
         val pair = PerfRows.pairFor(tag) ?: return
         if (focusedPair != null) { focusPair(tag); return }
-        val target = pairDockTarget(pair) ?: return
-        openBrowse(if (target is BrowseTarget.Transition) MacroEngine.MASTER else pair.moduleId, target)
+        openBrowse(pair.moduleId, pairBrowseTarget(pair))
     }
 
     // -- Dirty-deck prompt, once per bind session ---------------------------------------------
@@ -417,7 +414,7 @@ class ParametersState : MidiLearnSink {
 
     /**
      * What the Edit header's Browse button binds for [moduleId]: the pair and half Edit is on (a deck's source or FX chain,
-     * Master FX, the transition), keeping the FX slot last browsed there. Null for Master's MIX half, which has nothing to browse.
+     * Master FX, the transition), keeping the FX slot last browsed there. Null on the MST side tab (Master levels and Clock), which has nothing to browse.
      */
     internal fun browseSelectionForEdit(moduleId: String): DockSelection? {
         val deckLabel = topTabForDeepEditModule(moduleId)?.takeIf { moduleId != MacroEngine.MASTER }
@@ -426,7 +423,7 @@ class ParametersState : MidiLearnSink {
             moduleId != MacroEngine.MASTER -> return null
             activeMixerSubTab == "FX" -> BrowseTarget.FxChain(null)
             activeMixerSubTab == "TRANS" -> BrowseTarget.Transition
-            else -> return null
+            else -> return null // LEVELS / CTRL
         }
         val kept = dockSelection?.takeIf { it.moduleId == moduleId && it.target is BrowseTarget.FxChain && target is BrowseTarget.FxChain }
         return kept ?: DockSelection(moduleId, target)
@@ -436,7 +433,7 @@ class ParametersState : MidiLearnSink {
     fun openBrowseFromEdit(moduleId: String) {
         val selection = browseSelectionForEdit(moduleId)
         if (selection != null) openBrowse(selection.moduleId, selection.target)
-        else PerfRows.pairForBank(moduleId)?.let { focusPair(it.tag) }
+        else PerfRows.pairForModule(moduleId)?.takeIf { it.tag != PerfRows.PAIR_MASTER }?.let { focusPair(it.tag) }
     }
 
     /** A row-slot click: binds the dock to it, except that clicking the slot the Perform dock is already bound to in place unbinds it. */
@@ -484,8 +481,9 @@ class ParametersState : MidiLearnSink {
         val canonical = canonicalModuleForRow(moduleId)
         when (moduleId) {
             MacroEngine.MASTER_FX -> activeMixerSubTab = "FX"
-            // Master MIX lands on the MIX side tab's TRANS (master level, crossfade), not CTRL's queue/tempo triggers.
-            MacroEngine.TRANS, MacroEngine.MASTER -> activeMixerSubTab = "TRANS"
+            MacroEngine.TRANS -> activeMixerSubTab = "TRANS"
+            // Master MST lands on the MST side tab's LEVELS (deck levels and alphas, master level), not CTRL's queue/tempo triggers.
+            MacroEngine.MASTER -> activeMixerSubTab = "LEVELS"
         }
         openParams(canonical)
     }
@@ -512,7 +510,7 @@ class ParametersState : MidiLearnSink {
             MacroEngine.DECK_B_FX -> activeDeckBSubTab == "FX"
             MacroEngine.DECK_BG_FX -> activeDeckBGSubTab == "FX"
             MacroEngine.DECK_PV_FX -> activeDeckPVSubTab == "FX"
-            MacroEngine.MASTER -> activeMixerSubTab != "FX" // its Edit lands on TRANS; CTRL shows its row too
+            MacroEngine.MASTER -> isMstSubTab(activeMixerSubTab) // the MST side tab (LEVELS and CTRL both show its row)
             MacroEngine.MASTER_FX -> activeMixerSubTab == "FX"
             MacroEngine.TRANS -> activeMixerSubTab == "TRANS"
             else -> true
@@ -534,20 +532,18 @@ class ParametersState : MidiLearnSink {
     }
 
     /**
-     * A confidence or preview monitor click (or the Master badge): browses [moduleId]'s pair on its default half ([pairDockTarget]: the
+     * A confidence or preview monitor click (or the Master badge): browses [moduleId]'s pair on its default half ([pairBrowseTarget]: the
      * half last touched, a deck's source, Master's FX chain) -- in place when that row is on the page, else in the pair view.
      */
     fun openFromMonitor(moduleId: String, deckLabel: String? = topTabForDeepEditModule(moduleId)) {
         if (deckLabel != null) activeTopTab = deckLabel
-        val pair = PerfRows.pairForBank(moduleId) ?: return
-        val target = pairDockTarget(pair)
-        if (target == null) { focusPair(pair.tag); return }
-        openBrowse(if (target is BrowseTarget.Transition) MacroEngine.MASTER else pair.moduleId, target)
+        val pair = PerfRows.pairForModule(moduleId) ?: return
+        openBrowse(pair.moduleId, pairBrowseTarget(pair))
     }
 
     /**
      * Opens the Params Edit view for the pair [tag]'s half last touched (the bay header's Params button): a deck's
-     * SRC or FX, Master's MIX side tab (TRANS: master level, crossfade) or FX, or the transition's own parameters. XF has no Params of its own besides the transition.
+     * SRC or FX, or the Master pair's Master FX or transition (the OUT side tab).
      */
     fun openParamsForPair(tag: String) {
         val pair = PerfRows.pairFor(tag) ?: return
@@ -556,9 +552,9 @@ class ParametersState : MidiLearnSink {
         when {
             target is BrowseTarget.Transition -> activeMixerSubTab = "TRANS"
             deckLabel != null -> setDeckSubTab(deckLabel, if (target is BrowseTarget.FxChain) "FX" else "SRC")
-            else -> activeMixerSubTab = if (target is BrowseTarget.FxChain) "FX" else "TRANS"
+            else -> activeMixerSubTab = "FX"
         }
-        openParams(if (pair.moduleId == MacroEngine.TRANS) MacroEngine.MASTER else pair.moduleId)
+        openParams(pair.moduleId)
     }
 
     /** Opens [deckLabel]'s source Browse -- the deck row's source badge, or its empty-deck launchpad. */
@@ -632,14 +628,23 @@ class ParametersState : MidiLearnSink {
     var activeDeckBSubTab: String = "SRC"
     var activeDeckBGSubTab: String = "SRC"
     var activeDeckPVSubTab: String = "SRC"
-    var activeMixerSubTab: String = "CTRL"
+    /**
+     * The Edit bay's Mixer section tab: `LEVELS` or `CTRL` on the MST side tab, `FX` or `TRANS` on the OUT side tab. Anything else
+     * (an older saved value, a tour script) falls back to `LEVELS`, so the bay never lands on a section that does not exist.
+     */
+    var activeMixerSubTab: String = "LEVELS"
         set(value) {
-            field = value
-            if (value != "CTRL") lastMixerChainTab = value
+            val tab = if (value in MIXER_SUB_TABS) value else "LEVELS"
+            field = tab
+            if (isMstSubTab(tab)) lastMstTab = tab else lastMixerChainTab = tab
         }
 
-    /** The Mixer sub-tab (FX or TRANS) the MIX side tab returns to after a visit to the CTRL side tab. */
+    /** The OUT side tab's section (FX or TRANS) it returns to after a visit to the MST side tab. */
     var lastMixerChainTab: String = "FX"
+        private set
+
+    /** The MST side tab's section (LEVELS or CTRL) it returns to after a visit to the OUT side tab. */
+    var lastMstTab: String = "LEVELS"
         private set
 
     fun setDeckSubTab(deckLabel: String, tab: String) {

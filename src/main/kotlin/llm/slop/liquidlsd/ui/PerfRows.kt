@@ -16,7 +16,7 @@ internal data class RowDescriptor(
     val hasExtraHeader: Boolean = false,
     /** When false, the modular rack disclosure chevron and collapse controls are omitted. */
     val canExpand: Boolean = true,
-    /** Non-null for a deck row (`SRC` / `FX`) or a Master row (`MIX` / `FX`): the one half it shows. */
+    /** Non-null for a deck row (`SRC` / `FX`) or a Master row (`MST` / `FX`): the one half it shows. */
     val pinnedMode: String? = null
 )
 
@@ -35,8 +35,8 @@ internal object PerfRows {
         DeckRowBanks("PV", MacroEngine.DECK_PV, MacroEngine.DECK_PV_FX, PerformanceColors.COLOR_DECK_PV),
     )
 
+    /** The Master pair's tag: Transitions + Master FX, the two browsable rows that share a Twister page half (MIXER keys 1-8). */
     const val PAIR_MASTER = "MASTER"
-    const val PAIR_XF = "XF"
 
     /** Deck tags in strip order; catalog ids are `deck.<tag>.src` / `.fx`. */
     val DECK_TAGS: List<String> = DECK_ROW_BANKS.map { it.tag }
@@ -47,7 +47,7 @@ internal object PerfRows {
 
     /**
      * Every row a page can place, by stable id (persisted in page files): per deck `deck.<tag>.src` and `.fx`,
-     * Master `master.mix` and `master.fx`, Transitions and Clock & Global. Every deck and Master row
+     * Master `master.mix` (pill MST) and `master.fx`, Transitions and Clock & Global. Every deck and Master row
      * shows one half, so a row's meaning never depends on a mode.
      */
     val CATALOG: Map<String, RowDescriptor> = linkedMapOf<String, RowDescriptor>().apply {
@@ -55,7 +55,7 @@ internal object PerfRows {
             put("deck.${d.tag}.src", RowDescriptor(d.srcBankId, 0, d.accent, "DECK ${d.tag}", hasExtraHeader = true, pinnedMode = "SRC"))
             put("deck.${d.tag}.fx", RowDescriptor(d.fxBankId, 0, d.accent, "DECK ${d.tag} (FX)", hasExtraHeader = true, pinnedMode = "FX"))
         }
-        put("master.mix", RowDescriptor(MacroEngine.MASTER, 0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true, pinnedMode = "MIX"))
+        put("master.mix", RowDescriptor(MacroEngine.MASTER, 0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true, pinnedMode = "MST"))
         put("master.fx", RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER (FX)", hasExtraHeader = true, pinnedMode = "FX"))
         put("trans",  RowDescriptor(MacroEngine.TRANS,    0, PerformanceColors.COLOR_TRANS,  "TRANSITIONS", hasExtraHeader = true))
         put("global", RowDescriptor(MacroEngine.GLOBAL,   0, PerformanceColors.COLOR_GLOBAL, "CLOCK & GLOBAL", hasExtraHeader = true, canExpand = false))
@@ -64,15 +64,25 @@ internal object PerfRows {
     /** A focusable pair of rows: [tag] is what `ParametersState.focusedPair` holds, [moduleId] the canonical rack module the pair belongs to. */
     data class PairDef(val tag: String, val moduleId: String, val rowIds: List<String>)
 
-    /** The pair-focus-view pairs: each deck's SRC+FX, Master MIX+FX, and Transitions+Clock (rows only, no Params). */
+    /**
+     * The browsable pairs, each the two rows that share a half of a Twister page: a deck's SRC+FX, and Master's Transitions+Master FX
+     * (the MIXER page's keys 1-8). The other MIXER half, Master MST + Clock, has nothing to browse, so it is no pair-view pair; it exists
+     * only as Edit's pair on the MST side tab (see [editPairFor]).
+     */
     val PAIRS: List<PairDef> = DECK_ROW_BANKS.map { PairDef(it.tag, it.srcBankId, listOf("deck.${it.tag}.src", "deck.${it.tag}.fx")) } +
-        PairDef(PAIR_MASTER, MacroEngine.MASTER, listOf("master.mix", "master.fx")) +
-        PairDef(PAIR_XF, MacroEngine.TRANS, listOf("trans", "global"))
+        PairDef(PAIR_MASTER, MacroEngine.MASTER, listOf("trans", "master.fx"))
 
     fun pairFor(tag: String): PairDef? = PAIRS.firstOrNull { it.tag == tag }
 
-    /** The pair whose row is [bankId] (a deck's source or FX bank, `MASTER`, `MASTER_FX`, `TRANS`, `GLOBAL`), or null. */
+    /** The pair whose row is [bankId] (a deck's source or FX bank, `MASTER_FX`, `TRANS`), or null (Master MST and Clock have no pair). */
     fun pairForBank(bankId: String): PairDef? = PAIRS.firstOrNull { pair -> pair.rowIds.any { CATALOG[it]?.bankId == bankId } }
+
+    /**
+     * The pair a rack module id belongs to: [pairForBank], except that the Master module (`MASTER`, which also owns the Transitions
+     * and Master FX rows) is the Master pair. Dock selections and Edit modules name rows by module id, so they resolve through here.
+     */
+    fun pairForModule(moduleId: String): PairDef? =
+        if (moduleId == MacroEngine.MASTER) pairFor(PAIR_MASTER) else pairForBank(moduleId)
 
     /** [pair]'s two rows, resolved from the catalog. */
     fun rowsForPair(pair: PairDef): List<RowDescriptor> = pair.rowIds.mapNotNull { CATALOG[it] }
@@ -81,15 +91,15 @@ internal object PerfRows {
     fun rowsForPage(page: PerfPageDef): List<RowDescriptor> = page.rows.mapNotNull { CATALOG[it.row] }
 
     /**
-     * The two rows Edit shows for an open [moduleId], in the order Browse shows them: a deck's SRC + FX, Master's
-     * MIX + FX on the CTRL side tab and Transitions + FX on the MIX side tab (FX/TRANS). The bay's tab only picks
-     * which of the two the editor is on, so switching tabs never changes the rows. Null for modules without a pair.
+     * The two rows Edit shows for an open [moduleId], in the order the Twister page pairs them: a deck's SRC + FX, Master's
+     * MST + Clock on the MST side tab (LEVELS/CTRL) and Transitions + Master FX on the OUT side tab (FX/TRANS). The bay's section
+     * tab only picks which of the two the editor is on, so switching sections never changes the rows. Null for modules without a pair.
      */
-    private fun editPairFor(moduleId: String, parametersState: ParametersState): List<RowDescriptor>? {
+    internal fun editPairFor(moduleId: String, parametersState: ParametersState): List<RowDescriptor>? {
         deckForBank(moduleId)?.let { return listOfNotNull(CATALOG["deck.${it.tag}.src"], CATALOG["deck.${it.tag}.fx"]) }
         if (moduleId == MacroEngine.MASTER || moduleId == MacroEngine.MASTER_FX || moduleId == "Mixer") {
-            val first = if (parametersState.activeMixerSubTab == "CTRL") "master.mix" else "trans"
-            return listOfNotNull(CATALOG[first], CATALOG["master.fx"])
+            return if (ParametersState.isMstSubTab(parametersState.activeMixerSubTab)) listOfNotNull(CATALOG["master.mix"], CATALOG["global"])
+            else listOfNotNull(CATALOG["trans"], CATALOG["master.fx"])
         }
         return null
     }
@@ -114,7 +124,7 @@ internal object PerfRows {
                 when {
                     parametersState.activeMixerSubTab == "TRANS" -> RowDescriptor(MacroEngine.TRANS, 0, PerformanceColors.COLOR_TRANS, "TRANSITIONS", hasExtraHeader = true)
                     ctx.isMasterBayFx(parametersState) -> RowDescriptor(MacroEngine.MASTER_FX, 0, PerformanceColors.COLOR_MASTER, "MASTER (FX)", hasExtraHeader = true, pinnedMode = "FX")
-                    else -> RowDescriptor(MacroEngine.MASTER, 0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true, pinnedMode = "MIX")
+                    else -> RowDescriptor(MacroEngine.MASTER, 0, PerformanceColors.COLOR_MASTER, "MASTER", hasExtraHeader = true, pinnedMode = "MST")
                 }
             }
             else -> RowDescriptor(moduleId, 0, PerformanceColors.COLOR_MASTER, labelFor(moduleId), hasExtraHeader = true)

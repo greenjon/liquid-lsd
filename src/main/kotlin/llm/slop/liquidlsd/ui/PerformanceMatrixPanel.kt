@@ -28,7 +28,7 @@ import java.io.File
  * Performance Mode 4×4 Macro Knob Matrix (see docs/user_guide/macros_and_rack.md).
  *
  * Displays up to 16 knobs arranged in rows of 4 columns, mapped to canonical [MacroEngine] banks by the active
- * Perform page (pinned SRC, FX, MIX, Transitions and Clock rows, see [PerfRows.CATALOG]). While a pair is focused
+ * Perform page (pinned SRC, FX, MST, Transitions and Clock rows, see [PerfRows.CATALOG]). While a pair is focused
  * ([ParametersState.focusedPair]) the two rows of that pair replace the page. Knob drag adjusts the underlying
  * [llm.slop.liquidlsd.macro.MacroControl.value] directly, and right-click arms hardware MIDI
  * Learn for that knob (the pulsing cyan ring shows an armed knob; a repeat right-click cancels).
@@ -39,7 +39,7 @@ import java.io.File
  * The active page (see [PerfPageStore]) is persisted via [UITheme.performancePageId] / [AppPreferences.performancePageId].
  *
  * Knob sizing and every position on a row come from [PerfRowGeometry] (window size + fonts only),
- * and what each knob shows from [PerfKnobResolver] -- so a row's mode (SRC/FX, MIX/FX, FX focus)
+ * and what each knob shows from [PerfKnobResolver] -- so a row's mode (SRC/FX, MST/FX, FX focus)
  * changes content, never knob size or position. See docs/developer/ui.md.
  *
  * Each row of 4 knobs is enclosed in a rounded, accent-colored box with a title badge on its left.
@@ -280,7 +280,7 @@ class PerformanceMatrixPanel {
      *
      * Every position comes from one [PerfRowGeometry] built from the window size and fonts only --
      * never from a row's mode or bank -- and what each knob shows comes from [PerfKnobResolver].
-     * So toggling SRC/FX, MIX/FX or FX focus on any row changes content, never knob size or position.
+     * So toggling SRC/FX, MST/FX or FX focus on any row changes content, never knob size or position.
      */
     private fun drawMatrix(
         session: llm.slop.liquidlsd.SessionContext,
@@ -319,7 +319,7 @@ class PerformanceMatrixPanel {
         val deckRow1W = DeckRowMetrics.row1Width(PerformanceColors.CTRL_H, deckComboW)
         val deckLeftW = deckBadgeW + 6f + deckRow1W
         val deckRightW = 56f
-        // MASTER tab: Master ([MIX] over [FX] + chain header), Transitions (picker +
+        // MASTER tab: Master ([MST] over [FX] + chain header), Transitions (picker +
         // queue nav over crossfader), FX Wet/Dry (badge only), Clock (source/BPM/beat over tempo actions).
         // Uniform 42px title badge width across both DECKS and MASTER tabs.
         val masterTabBadgeW = 42f
@@ -547,7 +547,7 @@ class PerformanceMatrixPanel {
                     ImGui.pushID(rowIdx)
                     if (!stripOn) PerformanceMasterControls.drawModeControls(session, mixer, parametersState, ctx, masterTabStartX, row1Y, row2YFinal, ctrlH, deckBlockW, pinnedHalf, editW)
                     if (editW > 0f) drawEditGearAt(session, parametersState, descriptor.bankId, tabIdx, rowIdx, masterTabStartX + deckBlockW - editW, row1Y, editW, ctrlH)
-                    if (descriptor.pinnedMode != "MIX") {
+                    if (descriptor.pinnedMode != "MST") {
                         PerformanceMasterControls.drawBypassControls(session, mixer, boxX2 - pad - masterRightW, row2YFinal, ctrlH, masterRightW)
                     }
                     ImGui.popID()
@@ -569,7 +569,7 @@ class PerformanceMatrixPanel {
                         session, badgeX, badgeY, masterTabBadgeW, badgeH, descriptor.accent, "CLK", UITheme.FontLevel.H2,
                         tooltip = "Clock Unit\nConfigure tempo, BPM, and synchronization"
                     )
-                    if (!stripOn) PerformanceClockControls.draw(session, masterTabStartX, row1Y, row2YFinal, ctrlH)
+                    if (!stripOn) PerformanceClockControls.draw(session, mixer, masterTabStartX, boxX2 - pad, row1Y, row2YFinal, ctrlH)
                 } else if (isDeckRow) {
                     val deckTag = when {
                         isDeckA -> "A"

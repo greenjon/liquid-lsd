@@ -31,11 +31,11 @@ import java.io.File
 internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
 
     /**
-     * The pair view's binding: the half of [pair] last touched ([ParametersState.pairDockTarget]; Master with nothing touched browses
-     * its FX chain). A double-click on a row applies it and leaves the pair view, back to Perform.
+     * The pair view's binding: the half of [pair] last touched ([ParametersState.pairBrowseTarget]; the Master pair with nothing touched
+     * browses its FX chain). A double-click on a row applies it and leaves the pair view, back to Perform.
      */
     fun pairBinding(session: SessionContext, mixer: Mixer, parametersState: ParametersState, pair: PerfRows.PairDef): DockBinding? {
-        val target = parametersState.pairDockTarget(pair) ?: return null
+        val target = parametersState.pairBrowseTarget(pair)
         return bindingFor(session, mixer, ParametersState.DockSelection(pair.moduleId, target)) { parametersState.leavePair() }
     }
 

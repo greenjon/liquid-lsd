@@ -63,7 +63,7 @@ class ParametersStateMonitorTest {
         assertEquals(ParametersState.DockSelection(MacroEngine.DECK_A, ParametersState.BrowseTarget.FxChain(2)), state.dockSelection)
         assertEquals("FX", state.activeDeckASubTab)
         state.selectTransition()
-        assertEquals(PerfRows.PAIR_XF, state.focusedPair)
+        assertEquals(PerfRows.PAIR_MASTER, state.focusedPair)
         assertEquals(ParametersState.BrowseTarget.Transition, state.dockSelection?.target)
     }
 
@@ -85,9 +85,7 @@ class ParametersStateMonitorTest {
         state.selectFxChain(MacroEngine.DECK_A, "Deck A", slotIndex = 1)
         assertEquals(ParametersState.BrowseTarget.FxChain(1), state.pairBrowseTarget(deckA))
         state.focusPair(PerfRows.PAIR_MASTER)
-        assertNull(state.pairBrowseTarget(PerfRows.pairFor(PerfRows.PAIR_MASTER)!!)) // MIX has nothing to browse
-        state.focusPair(PerfRows.PAIR_XF)
-        assertEquals(ParametersState.BrowseTarget.Transition, state.pairBrowseTarget(PerfRows.pairFor(PerfRows.PAIR_XF)!!))
+        assertEquals(ParametersState.BrowseTarget.FxChain(null), state.pairBrowseTarget(PerfRows.pairFor(PerfRows.PAIR_MASTER)!!)) // the Master FX chain until the transition is touched
     }
 
     @Test

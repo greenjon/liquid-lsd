@@ -211,6 +211,9 @@ class RackDisclosureTest {
     fun mixerSubTabsSupportCenteredFx() {
         val state = ParametersState()
         state.activeTopTab = "Mixer"
+        assertEquals("LEVELS", state.activeMixerSubTab)
+
+        state.setDeckSubTab("Mixer", "CTRL")
         assertEquals("CTRL", state.activeMixerSubTab)
 
         state.setDeckSubTab("Mixer", "FX")
@@ -249,7 +252,7 @@ class RackDisclosureTest {
         state.setDisclosure(MacroEngine.DECK_A, ParametersState.DisclosureLevel.DEEP_EDIT)
         assertEquals(ParametersState.DisclosureLevel.DEEP_EDIT, state.disclosureFor(MacroEngine.DECK_A))
 
-        // Clicking MIX on side rail collapses Deck A and expands Mixer
+        // Clicking MST on side rail collapses Deck A and expands Mixer
         state.activeTopTab = "Mixer"
         state.setDisclosure(MacroEngine.MASTER, ParametersState.DisclosureLevel.DEEP_EDIT)
         assertEquals(ParametersState.DisclosureLevel.COLLAPSED, state.disclosureFor(MacroEngine.DECK_A))

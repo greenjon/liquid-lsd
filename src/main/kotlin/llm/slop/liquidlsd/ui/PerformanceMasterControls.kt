@@ -10,7 +10,7 @@ import llm.slop.liquidlsd.rendering.Mixer
 /**
  * Master row controls, laid out like a deck row (the MASTER title badge is drawn by
  * [PerformanceMatrixPanel]):
- * - Left of the knobs, two stacked lines: [MIX] knob-assign pill + Mix levels badge (with click
+ * - Left of the knobs, two stacked lines: [MST] knob-assign pill + Mix levels badge (with click
  *   to inspect in Deep Edit, right-click to reset levels) over the [FX] knob-assign pill + Master FX
  *   chain header.
  * - Right of the knobs: Master FX bypass.
@@ -19,8 +19,8 @@ internal object PerformanceMasterControls {
     private val masterFxActions = MasterFxActions()
 
     /**
-     * [MIX] / [FX] pills stacked like a deck row's [SRC] / [FX]. A row shows the half named by
-     * [pinned] (the Master FX chain header beside [FX], or the levels badge beside [MIX]).
+     * [MST] / [FX] pills stacked like a deck row's [SRC] / [FX]. A row shows the half named by
+     * [pinned] (the Master FX chain header beside [FX], or the levels badge beside [MST]).
      */
     fun drawModeControls(
         session: SessionContext,
@@ -36,7 +36,7 @@ internal object PerformanceMasterControls {
         editW: Float = 0f
     ) {
         val gap = 4f
-        // A row shows one half only: MIX or FX (the title badge's caption names it). The gear is docked
+        // A row shows one half only: MST or FX (the title badge's caption names it). The gear is docked
         // by the caller after line 1, so line 1 stops [editW] + gap short.
         val nameW = rowW - if (editW > 0f) editW + gap else 0f
 
@@ -62,6 +62,14 @@ internal object PerformanceMasterControls {
         ImGui.beginGroup()
         FxChainHeader.drawBypassButton(session, mixer.masterFxChain, "MST", ctrlH, width - 4f)
         ImGui.endGroup()
+    }
+
+    /** Opens Edit on the MST side tab's LEVELS: the levels the badge shows. */
+    private fun openLevelsEdit(parametersState: ParametersState, ctx: PerformanceUiContext) {
+        llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "LEVELS")
+        parametersState.activeMixerSubTab = "LEVELS"
+        parametersState.setDisclosure("master", ParametersState.DisclosureLevel.DEEP_EDIT)
+        ctx.focusDeepEditTab(parametersState, MacroEngine.MASTER)
     }
 
     private fun drawMixBadgeAndReset(
@@ -97,25 +105,15 @@ internal object PerformanceMasterControls {
         }
 
         ImGui.setCursorScreenPos(curX, curY)
-        if (ImGui.invisibleButton("##perf_mix_badge", badgeW, headerH)) {
-            llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "CTRL")
-            parametersState.activeMixerSubTab = "CTRL"
-            parametersState.setDisclosure("master", ParametersState.DisclosureLevel.DEEP_EDIT)
-            ctx.focusDeepEditTab(parametersState, MacroEngine.MASTER)
-        }
-        itemTooltip("Composite mix levels: Deck A, Deck B, Deck BG levels and Master output level.\nClick to inspect in Edit. Right-click to reset levels.")
+        if (ImGui.invisibleButton("##perf_mix_badge", badgeW, headerH)) openLevelsEdit(parametersState, ctx)
+        itemTooltip("Composite mix levels: Deck A, Deck B, Deck BG levels and Master output level.\nClick to edit them (MST > LEVELS). Right-click to reset levels.")
 
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem("perf_mix_badge_ctx")) {
             pushOpenDropdownFont()
             ImGui.textDisabled("Master Mix Levels")
             ImGui.separator()
-            if (ImGui.menuItem("Inspect in Edit")) {
-                llm.slop.liquidlsd.macro.MacroLearnState.onNavigateSection("Mixer", "CTRL")
-                parametersState.activeMixerSubTab = "CTRL"
-                parametersState.setDisclosure("master", ParametersState.DisclosureLevel.DEEP_EDIT)
-                ctx.focusDeepEditTab(parametersState, MacroEngine.MASTER)
-            }
+            if (ImGui.menuItem("Inspect in Edit")) openLevelsEdit(parametersState, ctx)
             ImGui.separator()
             if (ImGui.menuItem("Reset Deck Levels to 100%")) {
                 mixer.setLevelByUser("Mixer/levelA", 1.0f)

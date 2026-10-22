@@ -38,6 +38,9 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
 
         /** Canonical module ids that have a Deep Edit editor. */
         val deepEditModuleIds = setOf(MacroEngine.DECK_A, MacroEngine.DECK_B, MacroEngine.DECK_BG, MacroEngine.DECK_PV, MacroEngine.MASTER)
+
+        /** Browse's tooltip on the MST side tab, where it is disabled. */
+        const val MST_NOTHING_TO_BROWSE = "Nothing to browse here: Master levels and Clock have no list."
     }
 
     /**
@@ -131,21 +134,22 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
 
     /**
      * The Edit view's header line: the same [BayHeader] as the pair view, with Params lit. The chip names the half Edit is on, which
-     * is what Browse switches to (with its row buttons, e.g. Save); Master's MIX has nothing to browse, so Browse opens the Master pair on its FX chain.
+     * is what Browse switches to (with its row buttons, e.g. Save). Master's MST side tab (levels, Clock) has nothing to browse, so its Browse is disabled.
      */
     private fun drawEditHeader(session: SessionContext, mixer: Mixer, parametersState: ParametersState, moduleId: String) {
         val binding = parametersState.browseSelectionForEdit(moduleId)?.let { browseBay.bindingFor(session, mixer, it) }
         val chip = if (binding != null) {
             BayHeader.Chip(binding.label, binding.accent, "Editing ${binding.label}. Browse shows its list in this place.", binding.actions)
         } else {
-            BayHeader.Chip("Master · Mix", PerformanceColors.COLOR_MASTER, "Editing the Master mix. Browse shows the Master FX list in this place.")
+            val section = if (parametersState.activeMixerSubTab == "CTRL") "Control" else "Levels"
+            BayHeader.Chip("Master · $section", PerformanceColors.COLOR_MASTER, "Editing the Master $section and the Clock row. They have no list to browse.")
         }
-        val toggle = if (moduleId in deepEditModuleIds) ({ parametersState.openBrowseFromEdit(moduleId) }) else null
+        val toggle = if (binding != null && moduleId in deepEditModuleIds) ({ parametersState.openBrowseFromEdit(moduleId) }) else null
         BayHeader.draw(
             session, parametersState, mixer, browsing = false, chip = chip, queueDeck = ctx.deckLabelForModuleId(moduleId),
             onToggle = toggle,
-            toggleTooltip = if (binding != null) "Browse the list for ${binding.label}: a click applies a row." else "Browse the Master FX list: a click applies a row.",
-            toggleUnavailable = "This module has no list to browse."
+            toggleTooltip = if (binding != null) "Browse the list for ${binding.label}: a click applies a row." else MST_NOTHING_TO_BROWSE,
+            toggleUnavailable = if (moduleId == MacroEngine.MASTER) MST_NOTHING_TO_BROWSE else "This module has no list to browse."
         )
     }
 
@@ -170,7 +174,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
             } else {
                 BayHeader.Chip(tag, null, "Nothing to browse here.")
             }
-            val half = if (tag == PerfRows.PAIR_XF) "the transition" else binding?.label ?: "this pair"
+            val half = binding?.label ?: "this pair"
             BayHeader.draw(
                 session, parametersState, mixer, browsing = true, chip = chip,
                 queueDeck = llm.slop.liquidlsd.presets.DeckSlot.entries.firstOrNull { it.name == tag }?.label,
@@ -279,7 +283,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         if (ownsKeyboard) handleDeepEditKeys(parametersState, mixer, fullSet = true)
 
         // 3-Column Layout:
-        // Left Column: 6-entry side rail (CTRL, MIX, A, B, BG, PV)
+        // Left Column: 6-entry side rail (MST, OUT, A, B, BG, PV)
         // Middle Column: Parameter grid with column headers & section subtabs
         // Right Column: Properties CV detail editor
         val sideTabWidth = ParametersTabs.calculateLeftTabsWidth(session)
@@ -296,7 +300,7 @@ internal class PerformanceDeepEditBay(private val ctx: PerformanceUiContext) {
         val propsW = (totalAvailW - sideTabWidth - gap - paramsW - gap).coerceAtLeast(280f)
         val headerH = ParameterGridHeaders.calculateHeaderHeight(session)
 
-        // 1. Left column: side tabs (CTRL, MIX, A, B, BG, PV)
+        // 1. Left column: side tabs (MST, OUT, A, B, BG, PV)
         val rowTopY = ImGui.getCursorScreenPosY()
         val sideTabsX0 = ImGui.getCursorScreenPosX()
         ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.WindowPadding, 0f, 0f)

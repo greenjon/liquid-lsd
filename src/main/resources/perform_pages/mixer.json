@@ -2,7 +2,7 @@
   "version": 1,
   "id": "mixer",
   "name": "MIXER",
-  "tooltip": "Transitions, Master FX, Master MIX and Clock & Global (tap tempo / resync / clock source), each pinned.\nTwister bank 3; knob 13 pulses on the beat and taps tempo when pushed.",
+  "tooltip": "Transitions + Master FX, then Master MST (deck levels, master level) + Clock & Global (tap tempo, resync, clock source, queue and randomize triggers), each pinned.\nTwister bank 3; knob 13 pulses on the beat and taps tempo when pushed.",
   "rows": [
     {
       "row": "trans"

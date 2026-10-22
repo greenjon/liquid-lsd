@@ -67,7 +67,7 @@ class BoundInPlaceTest {
         assertEquals("BG", state.focusedPair)
         assertFalse(state.boundInPlace)
         state.selectTransition()
-        assertEquals(PerfRows.PAIR_XF, state.focusedPair, "the Transitions row is not on the A/B page either")
+        assertEquals(PerfRows.PAIR_MASTER, state.focusedPair, "the Transitions row is not on the A/B page either")
     }
 
     @Test

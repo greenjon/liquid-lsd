@@ -139,7 +139,8 @@ internal class NavigationSurface(
         val knob = PerformSurface.lastTouchedKnob
         val target = knob?.let { PerformPages.resolve(theme.performancePageId, ctx, parametersState, mixer).knobs.getOrNull(it) }
         val bankId = target?.bankId ?: return
-        val pairTag = PerfRows.pairForBank(bankId)?.tag ?: "A"
+        // Master MST and Clock have no pair to browse (the Master pair is Transitions + Master FX): nothing to focus.
+        val pairTag = PerfRows.pairForBank(bankId)?.tag ?: return
         if (parametersState.focusedPair == pairTag && !inPicker) {
             parametersState.leavePair()
         } else {

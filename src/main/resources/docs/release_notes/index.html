@@ -11748,6 +11748,7 @@
 <ul>
 <li><strong>Edit shows readable parameter names.</strong> Grid rows and Metaknob lists use the shader's own label, or split names like <code>CellScale</code> into "Cell scale". Presets, MIDI and OSC mappings are unchanged.</li>
 <li><strong>Properties is never empty in Edit.</strong> Opening a deck or Master, or switching tabs, selects the first knob-assigned parameter (or the first row).</li>
+<li><strong>Knob captions use the readable name too.</strong> Source and effect knobs that were labelled with a cut-off raw name ("TRACKINGJ") now carry the whole readable name ("TRACKING JITTER"), shortened with "..." only when the caption is too narrow; focus-mode effect knobs show "Tracking jitter". Looks and presets saved before keep the old stored caption until their knobs are rebuilt.</li>
 <li><strong>The Master MIX row's gear opens master level and crossfade</strong> (the MIX side tab's TRANS) instead of the CTRL tab's queue and tap-tempo triggers.</li>
 <li><strong>Fixed clipping:</strong> the side rail no longer cuts off "CTRL", the TRANS tab's transition selector fits its name, and the Min/Max fields in the macro and Metaknob binding editors no longer cut off "Max". CTRL and TRANS labels are in sentence case ("Queue prev", "Master level").</li>
 </ul>

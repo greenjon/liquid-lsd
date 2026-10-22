@@ -362,13 +362,11 @@ class PerformSurfaceTest {
         state.focusPair("PV")
         assertTrue(surface.pairFocused)
         assertTrue(surface.stepPair(1))
-        assertEquals(PerfRows.PAIR_MASTER, state.focusedPair)
-        assertTrue(surface.stepPair(1))
-        assertEquals(PerfRows.PAIR_XF, state.focusedPair)
+        assertEquals(PerfRows.PAIR_MASTER, state.focusedPair, "Master MST + Clock is no pair: the walk goes from PV to Master")
         assertTrue(surface.stepPair(1))
         assertEquals("A", state.focusedPair)
         assertTrue(surface.stepPair(-1))
-        assertEquals(PerfRows.PAIR_XF, state.focusedPair)
+        assertEquals(PerfRows.PAIR_MASTER, state.focusedPair)
         state.leavePair()
     }
 
