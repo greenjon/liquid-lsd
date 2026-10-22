@@ -65,7 +65,7 @@ object FXChainMacroStrip {
         }
         itemTooltip(if (collapsed) "Show the Super Knob and Metaknobs." else "Hide the Super Knob and Metaknobs.")
         ImGui.sameLine()
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("CHAIN MACRO") }
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("SUPER KNOB & METAKNOBS") }
         ImGui.sameLine()
         val allLinked = chain.areAllSlotsLinked()
         val linkLabel = when {

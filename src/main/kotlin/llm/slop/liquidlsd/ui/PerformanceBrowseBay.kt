@@ -225,6 +225,6 @@ internal class PerformanceBrowseBay(private val ctx: PerformanceUiContext) {
             }
             itemTooltip(if (slotIndex == null) "Empty all ${FxChain.SLOT_COUNT} slots of the $chainLabel FX chain (Ctrl+Z undoes it)." else "Empty $chainLabel FX slot ${slotIndex + 1} (Ctrl+Z undoes it).")
         }
-        return DockBinding(target, if (slotIndex == null) "$chainLabel · Chain" else "$chainLabel · FX ${slotIndex + 1}", actions)
+        return DockBinding(target, if (slotIndex == null) "$chainLabel · Chain" else "$chainLabel · Slot ${slotIndex + 1}", actions)
     }
 }

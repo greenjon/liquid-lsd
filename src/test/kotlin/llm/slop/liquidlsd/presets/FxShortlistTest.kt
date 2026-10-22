@@ -80,4 +80,23 @@ class FxShortlistTest {
     fun testNextWithEmptyCandidatesReturnsNull() {
         assertNull(FxShortlist.next("color_invert", 1, emptyList(), emptyList()))
     }
+
+    @Test
+    fun steppingOffEitherEndOfACategoryLandsInTheFavorites() {
+        val favs = listOf("distort_pinch", "blur_box")
+        // Color: Hue, Invert, Sepia -- none starred. Inside the category the arrows walk it as before.
+        assertEquals("color_sepia", FxShortlist.next("color_invert", 1, filters, favs))
+        // Off the end: first favorite; off the start: last favorite. From there on the favorites wrap.
+        assertEquals("distort_pinch", FxShortlist.next("color_sepia", 1, filters, favs))
+        assertEquals("blur_box", FxShortlist.next("color_hue", -1, filters, favs))
+        assertEquals("blur_box", FxShortlist.next("distort_pinch", 1, filters, favs))
+    }
+
+    @Test
+    fun positionNamesTheListTheArrowsWalk() {
+        val favs = listOf("distort_pinch", "blur_box")
+        assertEquals("★ 2/2", FxShortlist.position("blur_box", filters, favs))
+        assertEquals("Color 2/3", FxShortlist.position("color_invert", filters, favs))
+        assertNull(FxShortlist.position("missing", filters, favs))
+    }
 }

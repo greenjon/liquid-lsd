@@ -47,12 +47,29 @@ class FxChainDirtyAndSteppingTest {
         assertEquals(file, chain.sourceFile)
         assertEquals(baselineDto, chain.baselineDto)
 
-        // 3. Tweak parameter or superknob -> should NOT mark chain dirty
-        filter0.dryWet.baseValue = 0.42f
-        filter0.dryWet.evaluate()
+        // 3. Super Knob and Metaknob positions are performance moves, not edits
         chain.superKnob.baseValue = 0.85f
-        chain.superKnob.evaluate()
-        assertFalse(chain.computeIsDirty(), "Parameter and Superknob tweaks should not mark chain dirty")
+        filter0.metaKnob.baseValue = 0.3f
+        assertFalse(chain.computeIsDirty(), "Super Knob and Metaknob moves should not mark chain dirty")
+
+        // A parameter edit does, and putting it back (within rounding) is clean again
+        val wet = filter0.dryWet.baseValue
+        filter0.dryWet.baseValue = 0.42f
+        assertTrue(chain.computeIsDirty(), "Editing a slot's Dry/Wet should mark chain dirty")
+        filter0.dryWet.baseValue = wet + 1e-6f
+        assertFalse(chain.computeIsDirty(), "A rounding-error difference is not an edit")
+
+        // A value the Metaknob drives follows the Metaknob, so it doesn't count
+        val driven = filter0.metaBindings.firstOrNull { it.enabled }?.targetParamName
+        if (driven != null) {
+            filter0.parameters[driven]!!.baseValue = 0.77f
+            assertFalse(chain.computeIsDirty(), "A Metaknob-driven value should not mark chain dirty")
+        }
+
+        // Unlinking a slot from the Super Knob is an edit
+        chain.setSlotLinked(0, !chain.slotSuperKnobLink[0])
+        assertTrue(chain.computeIsDirty(), "Changing a Super Knob link should mark chain dirty")
+        chain.setSlotLinked(0, !chain.slotSuperKnobLink[0])
 
         // 4. Add filter -> dirty
         chain.slots[1] = testFilter("invert")
@@ -147,26 +164,12 @@ class FxChainDirtyAndSteppingTest {
     }
 
     @Test
-    fun testFolderSteppingLogic(@TempDir tempDir: Path) {
-        val fileA = tempDir.resolve("chain_a.lsdfxchain").toFile().apply { writeText("{}") }
-        val fileB = tempDir.resolve("chain_b.lsdfxchain").toFile().apply { writeText("{}") }
-        val fileC = tempDir.resolve("chain_c.lsdfxchain").toFile().apply { writeText("{}") }
+    fun loadedTagsTravelBackOutSoOverwritingAFileKeepsThem() {
+        val chain = FxChain("Test Chain")
+        chain.applyFxChain(FXChainDto(name = "Warm", tags = listOf("live", "soft")), isBaseline = true)
+        assertEquals(listOf("live", "soft"), chain.toFxChainDto().tags)
 
-        val files = listOf(fileA, fileB, fileC).sortedBy { it.name.lowercase() }
-
-        // Step forward from A -> B -> C -> A
-        fun nextIndex(curr: File?, dir: Int): Int {
-            val idx = files.indexOfFirst { it.absolutePath == curr?.absolutePath }
-            return if (idx < 0) (if (dir >= 0) 0 else files.lastIndex) else Math.floorMod(idx + dir, files.size)
-        }
-
-        assertEquals(1, nextIndex(fileA, 1)) // B
-        assertEquals(2, nextIndex(fileB, 1)) // C
-        assertEquals(0, nextIndex(fileC, 1)) // A (wraparound)
-
-        // Step backward from A -> C -> B
-        assertEquals(2, nextIndex(fileA, -1)) // C (wraparound)
-        assertEquals(1, nextIndex(fileC, -1)) // B
-        assertEquals(0, nextIndex(fileB, -1)) // A
+        chain.reset()
+        assertEquals(emptyList(), chain.toFxChainDto().tags)
     }
 }

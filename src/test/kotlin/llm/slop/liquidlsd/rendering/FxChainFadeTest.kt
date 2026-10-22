@@ -132,4 +132,17 @@ class FxChainFadeTest {
         filter.dryWet.evaluate()
         assertEquals(0.75f, chain.effectiveSlotWet(0))
     }
+
+    @Test
+    fun aSlotThatSatOutAFrameIsReportedAsResumed() {
+        val chain = FxChain("Test")
+        chain.update()
+        assertTrue(chain.noteSlotRendered(0), "first render ever")
+        chain.update()
+        assertFalse(chain.noteSlotRendered(0), "rendered last frame")
+        assertFalse(chain.noteSlotRendered(0), "a second render in the same frame")
+        chain.update()
+        chain.update()
+        assertTrue(chain.noteSlotRendered(0), "skipped a frame")
+    }
 }

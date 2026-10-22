@@ -121,7 +121,7 @@
 {"dt":7.0,"action":"chapter","target":"decks","minimap":"A,B,BG,PV","title":"Decks and sources","clipSec":16},
 {"dt":0.0,"action":"move","x":30,"y":68,"durationSec":1.8,"caption":"Every deck has two rows. The top row, SRC, is its source: the shader that draws the picture."},
 {"dt":7.0,"action":"move","x":30,"y":142,"durationSec":1.2,"caption":"The row below is the deck's FX chain. Here it is switched off."},
-{"dt":5.0,"action":"move","target":"fxchain_bypass_A","durationSec":1.6,"caption":"BYPASS turns the whole chain on or off. Click it, and the picture runs through the effects."},
+{"dt":5.0,"action":"move","target":"fxchain_on_A","durationSec":1.6,"caption":"FX ON turns the whole chain on or off. Click it, and the picture runs through the effects."},
 {"dt":3.0,"action":"click"},
 {"dt":4.5,"action":"hold","caption":"More on FX in {ch:fx}. Sources first."},
 {"dt":3.5,"action":"move","target":"perf_gen_badge_A","durationSec":1.6,"caption":"Click the source name to browse sources and presets for that deck."},

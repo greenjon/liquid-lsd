@@ -60,7 +60,7 @@ internal object PerformanceMasterControls {
     fun drawBypassControls(session: SessionContext, mixer: Mixer, startX: Float, startY: Float, ctrlH: Float, width: Float) {
         ImGui.setCursorScreenPos(startX, startY)
         ImGui.beginGroup()
-        FxChainHeader.drawBypassButton(session, mixer.masterFxChain, "MST", ctrlH, width - 4f)
+        FxChainHeader.drawFxOnButton(session, mixer.masterFxChain, "MST", ctrlH, width - 4f)
         ImGui.endGroup()
     }
 

@@ -49,7 +49,8 @@ object FxOps {
 
     /**
      * Receives a restore action just before an `undoable` change is applied (wired in `UIManager` to Ctrl+Z). Only changes the UI
-     * asks to be undoable push one (bay picks and clears); queues, macros and session restore never do.
+     * asks to be undoable push one (picks, clears, pastes, drops, swaps, resets); queues, shortlist stepping, macros and session
+     * restore never do.
      */
     var undoSink: (((() -> Unit)) -> Unit)? = null
 
@@ -57,6 +58,16 @@ object FxOps {
     private fun pushSlotUndo(chain: FxChain, slotIndex: Int) {
         val dto = chain.toFxSlotDto(slotIndex)
         undoSink?.invoke { if (dto != null) applySlot(chain, slotIndex, dto) else clearSlot(chain, slotIndex) }
+    }
+
+    /** Hands [undoSink] one restore putting back both slots of a swap. */
+    private fun pushSwapUndo(chainA: FxChain, a: Int, chainB: FxChain, b: Int) {
+        val dtoA = chainA.toFxSlotDto(a)
+        val dtoB = chainB.toFxSlotDto(b)
+        undoSink?.invoke {
+            if (dtoA != null) applySlot(chainA, a, dtoA) else clearSlot(chainA, a)
+            if (dtoB != null) applySlot(chainB, b, dtoB) else clearSlot(chainB, b)
+        }
     }
 
     /** Hands [undoSink] a restore for the whole chain: its DTO, the file it came from and its dirty baseline. */
@@ -122,25 +133,35 @@ object FxOps {
     fun applyChain(chain: FxChain, dto: FXChainDto, source: File? = null, isBaseline: Boolean = false, undoable: Boolean = false) =
         postChainChange(chain, undoable) { it.applyFxChain(dto, source, isBaseline) }
 
-    /** Empties all of [chain]'s slots. */
+    /** Empties all of [chain]'s slots and makes it a new, unsaved "Untitled" chain (so a later Save can't overwrite the old file). */
     fun clearChain(chain: FxChain, undoable: Boolean = false) = postChainChange(chain, undoable) { c ->
         for (i in 0 until FxChain.SLOT_COUNT) c.clearFxSlot(i)
-        c.baselineDto = null
-        c.sourceFile = null
-    }
-
-    /** Empties all slots and resets name to Untitled. */
-    fun newChain(chain: FxChain) = postChainChange(chain) { c ->
-        for (i in 0 until FxChain.SLOT_COUNT) c.clearFxSlot(i)
         c.name = "Untitled"
-        c.sourceFile = null
+        c.tags = emptyList()
         c.baselineDto = null
+        c.sourceFile = null
     }
 
     /** Reverts [chain] to its loaded baseline DTO, if any. */
-    fun revertChain(chain: FxChain) = postChainChange(chain) { c ->
+    fun revertChain(chain: FxChain, undoable: Boolean = false) = postChainChange(chain, undoable) { c ->
         c.baselineDto?.let { baseline ->
             c.applyFxChain(baseline, c.sourceFile, isBaseline = true)
+        }
+    }
+
+    /**
+     * Saves [chain] to [file] as [name] with [tags] and marks it clean against exactly what was written. The chain takes
+     * the saved name and tags. A failed write puts back the previous file and baseline, so the unsaved marker returns.
+     */
+    fun saveChain(session: SessionContext, chain: FxChain, file: File, name: String = chain.name, tags: List<String> = chain.tags) {
+        val prevSource = chain.sourceFile
+        val prevBaseline = chain.baselineDto
+        chain.name = name
+        chain.tags = tags
+        val dto = chain.toFxChainDto(name, tags)
+        chain.markClean(file)
+        session.presetRepository.saveFxChainAsync(file, name, dto, tags).thenAccept { ok ->
+            if (!ok) post { chain.sourceFile = prevSource; chain.baselineDto = prevBaseline }
         }
     }
 
@@ -178,16 +199,24 @@ object FxOps {
      * steps queued behind one dip each advance from the previous step's result.
      */
     fun stepSlot(chain: FxChain, slotIndex: Int, dir: Int) = postSlotChange(chain, slotIndex) { c ->
-        val candidates = ISFFilterRegistry.availableFilters.map { FxShortlist.Candidate(it.id, it.displayName, it.categories) }
-        val nextId = FxShortlist.next(c.slots[slotIndex]?.id, dir, candidates)
+        val nextId = FxShortlist.next(c.slots[slotIndex]?.id, dir, shortlistCandidates())
         if (nextId != null && nextId != c.slots[slotIndex]?.id) replaceWithStock(c, slotIndex, nextId)
     }
+
+    /** Where slot [slotIndex]'s effect sits in the list ◀ / ▶ step through (see [FxShortlist.position]). */
+    fun shortlistPosition(chain: FxChain, slotIndex: Int): String? =
+        chain.slots.getOrNull(slotIndex)?.let { FxShortlist.position(it.id, shortlistCandidates()) }
+
+    private fun shortlistCandidates() = ISFFilterRegistry.availableFilters.map { FxShortlist.Candidate(it.id, it.displayName, it.categories) }
 
     /** Clears [slotIndex]. */
     fun clearSlot(chain: FxChain, slotIndex: Int, undoable: Boolean = false) = postSlotChange(chain, slotIndex, undoable) { it.clearFxSlot(slotIndex) }
 
     /** Resets [slotIndex]'s effect to its authored defaults, keeping the effect loaded. */
-    fun resetSlot(chain: FxChain, slotIndex: Int) = postInstant(chain) { it.slots[slotIndex]?.reset() }
+    fun resetSlot(chain: FxChain, slotIndex: Int, undoable: Boolean = false) = postInstant(chain) { c ->
+        if (undoable) pushSlotUndo(c, slotIndex)
+        c.slots[slotIndex]?.reset()
+    }
 
     /** Turns slot [slotIndex] on or off (instantly -- this is a performance kill switch). */
     fun setSlotEnabled(chain: FxChain, slotIndex: Int, enabled: Boolean) = postInstant(chain) { c ->
@@ -198,21 +227,24 @@ object FxOps {
      * Swaps slot [a] of [chainA] with slot [b] of [chainB]; within one chain this is a reorder.
      * With [copy], slot [a]'s effect is duplicated into [b] instead and [a] is left alone.
      */
-    fun swapSlots(chainA: FxChain, a: Int, chainB: FxChain, b: Int, copy: Boolean = false) = post { mixer ->
+    fun swapSlots(chainA: FxChain, a: Int, chainB: FxChain, b: Int, copy: Boolean = false, undoable: Boolean = false) = post { mixer ->
         if (copy) {
             val dto = chainA.toFxSlotDto(a) ?: return@post
             chainB.scheduleSlotChange(b, fadeSec()) {
+                if (undoable) pushSlotUndo(chainB, b)
                 chainB.applyFxSlot(b, dto)
                 resync(chainB, mixer)
             }
         } else if (chainA === chainB) {
             chainA.scheduleChainChange(fadeSec()) {
+                if (undoable) pushSwapUndo(chainA, a, chainB, b)
                 chainA.swapSlotWith(a, chainA, b)
                 resync(chainA, mixer)
             }
         } else {
             // Across chains there's no single dip that covers both, so swap instantly and fade
             // both slots back in from silence.
+            if (undoable) pushSwapUndo(chainA, a, chainB, b)
             chainA.swapSlotWith(a, chainB, b)
             chainA.startFadeIn(a, fadeSec() / 2f)
             chainB.startFadeIn(b, fadeSec() / 2f)
@@ -251,10 +283,10 @@ object FxOps {
      * [slot], or to the first vacant slot when [slot] is null.
      * @return false when nothing was applied (unknown extension, or no slot named and the chain is full).
      */
-    fun dropAsset(session: SessionContext, file: File, chain: FxChain, slot: Int? = null): Boolean {
+    fun dropAsset(session: SessionContext, file: File, chain: FxChain, slot: Int? = null, undoable: Boolean = false): Boolean {
         when (file.extension.lowercase()) {
-            "lsdfxchain" -> loadChain(session, file, chain)
-            "lsdfx" -> loadSlot(session, file, chain, slot ?: firstVacantSlot(chain) ?: return false)
+            "lsdfxchain" -> loadChain(session, file, chain, undoable)
+            "lsdfx" -> loadSlot(session, file, chain, slot ?: firstVacantSlot(chain) ?: return false, undoable)
             else -> return false
         }
         return true

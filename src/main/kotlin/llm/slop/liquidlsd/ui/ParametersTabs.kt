@@ -652,53 +652,19 @@ object ParametersTabs {
         ImGui.textDisabled(title.replace("%", "%%"))
         if (title != fullTitle) itemTooltip(fullTitle)
         ImGui.sameLine(labelColW - 24f)
+        val chainMenuId = "FXChainKebabPopup_$chainPrefix"
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ButtonChrome.button("${Icons.MORE_VERTICAL}##fx_chain_kebab_$chainPrefix", 22f, 20f)) {
-                ImGui.openPopup("FXChainKebabPopup_$chainPrefix")
+                ImGui.openPopup(chainMenuId)
             }
         }
-        itemTooltip("$chainDisplayName Options (Save Chain, Copy, Paste, Clear)")
+        itemTooltip("Chain operations (Focus, Save As, Revert, Clear, Copy/Paste).")
+        llm.slop.liquidlsd.macro.FxMacroSync.bankIdFor(chain, mixer)?.let { bankId ->
+            FxChainHeader.drawChainMenu(session, mixer, chain, bankId, llm.slop.liquidlsd.macro.FxMacroSync.labelFor(bankId) ?: chainDisplayName, chainMenuId)
+        }
 
         ImGui.setCursorPosX(rowStartX)
-        ParametersRenderer.drawParamRow(session, "Chain Wet/Dry", "$chainPrefix/DryWet", chain.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-
-        pushOpenDropdownPadding()
-        if (ImGui.beginPopup("FXChainKebabPopup_$chainPrefix")) {
-            pushOpenDropdownFont()
-            if (ImGui.menuItem("Save Chain As...")) {
-                val defaultChainName = chain.name.ifEmpty { chainPrefix.replace('/', '_').lowercase() }
-                SavePresetModal.request(
-                    title = "Save FX Chain As",
-                    confirmLabel = "Save",
-                    defaultName = defaultChainName,
-                    targetDir = FileSystemManager.getFxChainsRoot(),
-                    extension = "lsdfxchain"
-                ) { name, tags ->
-                    val file = java.io.File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
-                    // Capture at confirm time (the user may keep editing while the modal is open), and
-                    // clear the dirty dot against exactly what was saved.
-                    session.presetRepository.saveFxChainAsync(file, name, chain.toFxChainDto(name, tags), tags)
-                    chain.markClean(file)
-                }
-            }
-            if (ImGui.menuItem("Copy Chain")) {
-                llm.slop.liquidlsd.models.ClipboardManager.copyFxChain(chain.toFxChainDto(chain.name.ifEmpty { chainPrefix }))
-            }
-            val canPasteChain = llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard != null
-            if (ImGui.menuItem("Paste Chain", "", false, canPasteChain)) {
-                llm.slop.liquidlsd.models.ClipboardManager.fxChainClipboard?.let {
-                    llm.slop.liquidlsd.presets.FxOps.applyChain(chain, it)
-                    onPushUndo()
-                }
-            }
-            if (ImGui.menuItem("Clear Chain Slots")) {
-                llm.slop.liquidlsd.presets.FxOps.clearChain(chain)
-                onPushUndo()
-            }
-            popOpenDropdownFont()
-            ImGui.endPopup()
-        }
-        popOpenDropdownPadding()
+        ParametersRenderer.drawParamRow(session, "Chain Dry/Wet", "$chainPrefix/DryWet", chain.dryWet, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
         // Drag and Drop Target for Chain
         if (ImGui.beginDragDropTarget()) {
@@ -706,8 +672,7 @@ object ParametersTabs {
             if (payload != null) {
                 val file = java.io.File(payload)
                 if (file.exists() && file.extension.lowercase() == "lsdfxchain") {
-                    llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, chain)
-                    onPushUndo()
+                    llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, chain, undoable = true)
                 }
             }
             ImGui.endDragDropTarget()
@@ -791,13 +756,11 @@ object ParametersTabs {
                 val canPasteSlot = llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard != null
                 if (ImGui.menuItem("Paste Slot", "", false, canPasteSlot)) {
                     llm.slop.liquidlsd.models.ClipboardManager.fxSlotClipboard?.let {
-                        llm.slop.liquidlsd.presets.FxOps.applySlot(chain, i, it)
-                        onPushUndo()
+                        llm.slop.liquidlsd.presets.FxOps.applySlot(chain, i, it, undoable = true)
                     }
                 }
                 if (ImGui.menuItem("Clear Slot", "", false, hasFx)) {
-                    llm.slop.liquidlsd.presets.FxOps.clearSlot(chain, i)
-                    onPushUndo()
+                    llm.slop.liquidlsd.presets.FxOps.clearSlot(chain, i, undoable = true)
                 }
                 popOpenDropdownFont()
                 ImGui.endPopup()
@@ -838,11 +801,10 @@ object ParametersTabs {
                 val payload = ImGui.acceptDragDropPayload<String>("ASSET_ITEM")
                 if (payload != null) {
                     val file = java.io.File(payload)
-                    if (file.exists() && llm.slop.liquidlsd.presets.FxOps.dropAsset(session, file, chain, i)) onPushUndo()
+                    if (file.exists()) llm.slop.liquidlsd.presets.FxOps.dropAsset(session, file, chain, i, undoable = true)
                 }
                 ImGui.acceptDragDropPayload<String>(llm.slop.liquidlsd.ui.FxSlotCell.PAYLOAD_STOCK_FILTER)?.let { filterId ->
-                    llm.slop.liquidlsd.presets.FxOps.setSlotFilter(chain, i, filterId)
-                    onPushUndo()
+                    llm.slop.liquidlsd.presets.FxOps.setSlotFilter(chain, i, filterId, undoable = true)
                 }
                 ImGui.endDragDropTarget()
             }

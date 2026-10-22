@@ -90,19 +90,22 @@ object PresetRepository {
         }, PresetManager.presetIoExecutor)
     }
 
-    fun saveFxChainAsync(file: File, name: String, chainDto: FXChainDto, tags: List<String> = emptyList()) {
-        CompletableFuture.runAsync({
+    /** Writes [chainDto] to [file]; completes with false (after telling the user) when the write failed. */
+    fun saveFxChainAsync(file: File, name: String, chainDto: FXChainDto, tags: List<String> = emptyList()): CompletableFuture<Boolean> =
+        CompletableFuture.supplyAsync({
             try {
                 logger.info { "Saving FX chain to ${file.absolutePath}..." }
                 val dto = chainDto.copy(name = name, tags = tags)
                 file.parentFile?.mkdirs()
                 file.writeText(PresetManager.json.encodeToString(dto))
                 logger.info { "FX chain saved successfully to ${file.name}" }
+                true
             } catch (e: Exception) {
                 logger.error(e) { "Failed to save FX chain to ${file.absolutePath}" }
+                llm.slop.liquidlsd.ui.ToastOverlay.show("Could not save FX chain ${file.name} (see log)")
+                false
             }
         }, PresetManager.presetIoExecutor)
-    }
 
     fun loadFxChainAsync(file: File): CompletableFuture<FXChainDto> {
         return CompletableFuture.supplyAsync({

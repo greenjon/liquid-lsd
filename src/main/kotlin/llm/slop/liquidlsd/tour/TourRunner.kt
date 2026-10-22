@@ -346,7 +346,6 @@ class TourRunner(
                 else llm.slop.liquidlsd.presets.FxOps.swapSlots(c, a, c, b)
             }
             "fx_clear" -> fxChain(step)?.let { llm.slop.liquidlsd.presets.FxOps.clearChain(it) }
-            "fx_new" -> fxChain(step)?.let { llm.slop.liquidlsd.presets.FxOps.newChain(it) }
             "fx_link" -> fxChain(step)?.let { c ->
                 val slot = slotIndex(step) ?: return@let
                 c.setSlotLinked(slot, (step.value ?: 1f) >= 0.5f)

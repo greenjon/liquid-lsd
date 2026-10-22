@@ -10,7 +10,6 @@ import llm.slop.liquidlsd.macro.FxMacroSync
 import llm.slop.liquidlsd.macro.MacroControl
 import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.parameters.MeterType
-import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.presets.FxOps
 import llm.slop.liquidlsd.rendering.Mixer
 
@@ -148,8 +147,8 @@ internal class PerformSurface(
         val target = knob(knob) ?: return
         when (val under = target.spec.under) {
             is UnderKnob.SlotCell -> toggleBypass(target.bankId, under.slotIndex)
-            is UnderKnob.ParamCell -> under.param?.let { resetParameter(target.control, it) }
-            // The Super Knob (the FX row's Chain Link knob) ignores a tap: resetting it would move every linked slot at once.
+            is UnderKnob.ParamCell -> under.param?.let { FxMacroSync.resetFocusParam(target.control, it) }
+            // The Super Knob (knob 1 of an FX row in group mode) ignores a tap: resetting it would move every linked slot at once.
             is UnderKnob.Label -> if (target.spec.side !is SideButtons.ChainLink) target.control.value = LABEL_KNOB_DEFAULT
         }
     }
@@ -172,7 +171,7 @@ internal class PerformSurface(
     }
 
     /**
-     * Chain Link for the row touched last: an FX row's own chain, a deck row's FX chain, Master's FX chain.
+     * Link All for the row touched last: an FX row's own chain, a deck row's FX chain, Master's FX chain.
      * With nothing touched yet, the first FX row on the page.
      */
     @Synchronized
@@ -294,11 +293,6 @@ internal class PerformSurface(
     }
 
     /** Same as the focus-mode reset button: the parameter returns to its default and the knob follows. */
-    private fun resetParameter(control: MacroControl, param: ModulatableParameter) {
-        param.baseValue = param.defaultValue
-        val range = param.maxClamp - param.minClamp
-        control.value = if (range > 0f) ((param.baseValue - param.minClamp) / range).coerceIn(0f, 1f) else 0f
-    }
 
     companion object {
 

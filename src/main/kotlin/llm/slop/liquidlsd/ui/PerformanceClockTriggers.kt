@@ -96,8 +96,8 @@ internal object PerformanceClockTriggers {
             if (on) m.muteCrossfadeNonMidiCv()
         }),
         QueueGroup("A/B FX", arrayOf(
-            nav("Mixer/fxQueuePrev", "◀", "A/B FX Queue Prev", "Previous chain in the A/B FX queue.", { it.fxQueuePrev }) { s, m -> FXQueueManager.advancePrevious(s, m) },
-            nav("Mixer/fxQueueNext", "▶", "A/B FX Queue Next", "Next chain in the A/B FX queue.", { it.fxQueueNext }) { s, m -> FXQueueManager.advanceNext(s, m) }
+            nav("Mixer/fxQueuePrev", "◀", "A/B FX Queue Prev", "Previous item in the A/B FX queue, applied to whichever of Deck A/B the crossfader favours.", { it.fxQueuePrev }) { s, m -> FXQueueManager.advancePrevious(s, m) },
+            nav("Mixer/fxQueueNext", "▶", "A/B FX Queue Next", "Next item in the A/B FX queue, applied to whichever of Deck A/B the crossfader favours.", { it.fxQueueNext }) { s, m -> FXQueueManager.advanceNext(s, m) }
         )),
         QueueGroup("BG", arrayOf(
             nav("Mixer/bgQueuePrev", "◀", "BG Queue Prev", "Previous item in the BG queue.", { it.bgQueuePrev }) { s, m -> s.bgQueueManager.advanceBy(-1, m) },
@@ -105,8 +105,8 @@ internal object PerformanceClockTriggers {
         ), AutoToggle("perf_clock_auto_bg", "Auto-BG is running: click to pause the BG queue.", "Auto-BG is paused: click to cycle through the BG queue with dip-to-black transitions.",
             { it.bgQueueManager.isAutoBGEnabled }) { s, _ -> s.bgQueueManager.isAutoBGEnabled = !s.bgQueueManager.isAutoBGEnabled }),
         QueueGroup("BG FX", arrayOf(
-            nav("Mixer/fxBgQueuePrev", "◀", "BG FX Queue Prev", "Previous chain in the BG FX queue.", { it.fxBgQueuePrev }) { s, m -> FXBgQueueManager.advancePrevious(s, m) },
-            nav("Mixer/fxBgQueueNext", "▶", "BG FX Queue Next", "Next chain in the BG FX queue.", { it.fxBgQueueNext }) { s, m -> FXBgQueueManager.advanceNext(s, m) }
+            nav("Mixer/fxBgQueuePrev", "◀", "BG FX Queue Prev", "Previous item in the BG FX queue, applied to Deck BG.", { it.fxBgQueuePrev }) { s, m -> FXBgQueueManager.advancePrevious(s, m) },
+            nav("Mixer/fxBgQueueNext", "▶", "BG FX Queue Next", "Next item in the BG FX queue, applied to Deck BG.", { it.fxBgQueueNext }) { s, m -> FXBgQueueManager.advanceNext(s, m) }
         )),
         QueueGroup("TRN", arrayOf(
             nav("Mixer/transQueuePrev", "◀", "Transition Queue Prev", "Previous transition in the Transition queue.", { it.transQueuePrev }) { _, m -> TransitionQueueManager.advancePrevious(m) },

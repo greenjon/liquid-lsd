@@ -101,7 +101,6 @@ object FxParamCell {
      * left-side button stack (mirroring [FxSlotCell.drawBypassButton]'s slot).
      */
     fun drawResetButton(bankId: String, knobIndex: Int, paramName: String, param: ModulatableParameter, x: Float, y: Float, size: Float) {
-        val range = param.maxClamp - param.minClamp
         val isModified = kotlin.math.abs(param.baseValue - param.defaultValue) > 0.001f
         ImGui.setCursorScreenPos(x, y)
         val (bg, bgHover, text) = when {
@@ -122,11 +121,8 @@ object FxParamCell {
         ImGui.pushStyleColor(ImGuiCol.Text, text)
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 1f, 1f)
         if (ButtonChrome.button("$RESET_GLYPH##fxparam_reset_${bankId}_k$knobIndex", size, size)) {
-            param.baseValue = param.defaultValue
-            MacroEngine.getBank(bankId)?.knobs?.getOrNull(knobIndex - 1)?.let { control ->
-                val normVal = if (range > 0f) ((param.baseValue - param.minClamp) / range).coerceIn(0f, 1f) else 0f
-                control.value = normVal
-            }
+            val control = MacroEngine.getBank(bankId)?.knobs?.getOrNull(knobIndex - 1)
+            if (control != null) llm.slop.liquidlsd.macro.FxMacroSync.resetFocusParam(control, param) else param.baseValue = param.defaultValue
         }
         ImGui.popStyleVar()
         ImGui.popStyleColor(4)

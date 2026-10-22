@@ -214,6 +214,37 @@ class PerformSurfaceTest {
     }
 
     @Test
+    fun resettingAnExponentialFocusParameterLandsOnItsDefaultThroughTheKnobCurve() {
+        val trails = filter("trails", listOf("speed"))
+        deckAChain.slots[0] = trails
+        FxMacroSync.focusSlot(MacroEngine.DECK_A_FX, mixer, 0)
+
+        val param = trails.parameters["speed"]!!
+        param.baseValue = 2.0f
+        val control = page().knobs[5]!!.control
+        val binding = control.bindings.single()
+        assertEquals(llm.slop.liquidlsd.macro.MacroCurveType.EXPONENTIAL, binding.curve)
+
+        surface().primary(5)
+        // What the next MacroEngine tick writes from the knob must be the default, not the linear position squared.
+        assertEquals(param.defaultValue, llm.slop.liquidlsd.macro.MacroCurve.mapToRange(control.value, binding), 1e-5f)
+        assertEquals(param.defaultValue, param.baseValue, 1e-5f)
+    }
+
+    @Test
+    fun replacingTheFocusedEffectPullsThePageBackOntoItsLastPage() {
+        deckAChain.slots[0] = filter("big", (1..7).map { "p$it" })   // 3 pages
+        FxMacroSync.focusSlot(MacroEngine.DECK_A_FX, mixer, 0)
+        FxMacroSync.stepParamPage(MacroEngine.DECK_A_FX, mixer, -1)
+        assertEquals(2, deckAChain.focusParamPage)
+
+        deckAChain.slots[0] = filter("small", listOf("a", "b", "c", "d"))   // 2 pages
+        FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
+        assertEquals(1, deckAChain.focusParamPage)
+        assertEquals("D", page().knobs[5]!!.control.label)
+    }
+
+    @Test
     fun showPageSelectsTheMatrixTabAndIgnoresUnknownPages() {
         surface().showPage("perform.mixer")
         assertEquals("mixer", UITheme.performancePageId)

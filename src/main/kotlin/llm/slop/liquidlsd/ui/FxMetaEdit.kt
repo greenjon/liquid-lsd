@@ -22,7 +22,8 @@ object FxMetaEdit {
 
     /**
      * Applies [change] to [fx]. When it changed [ISFFilter.metaBindings] or [ISFFilter.knobLayout], hands [pushUndo] a
-     * restore for both. [resync] runs only when [ISFFilter.focusParameters] changed, since only that moves the focus knobs.
+     * restore for both. [resync] runs only when [ISFFilter.focusParameters] or [ISFFilter.hasMetaTarget] changed, since only
+     * those move the focus knobs or relabel the Metaknob knob.
      *
      * [gesture] groups the many changes of one drag into a single undo step: while the same non-null key stays active, only the
      * first change pushes an undo (its restore holds the state from before the drag). Returns whether anything changed;
@@ -38,6 +39,7 @@ object FxMetaEdit {
         val before: List<FxMetaBinding> = fx.metaBindings.toList()
         val beforeLayout = fx.knobLayout
         val beforeFocus = focusNames(fx)
+        val beforeHasTarget = fx.hasMetaTarget
         change(fx)
         if (fx.metaBindings == before && fx.knobLayout == beforeLayout) return false
         if (gesture == null || gesture != activeGesture) {
@@ -49,7 +51,7 @@ object FxMetaEdit {
             }
             activeGesture = gesture
         }
-        if (focusNames(fx) != beforeFocus) resync()
+        if (focusNames(fx) != beforeFocus || fx.hasMetaTarget != beforeHasTarget) resync()
         return true
     }
 

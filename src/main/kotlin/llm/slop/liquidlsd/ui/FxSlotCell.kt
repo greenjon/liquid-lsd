@@ -19,8 +19,8 @@ import java.io.File
  *
  *   `Effect Name`  (hovered: `[◀] Effect Name [▶]`)
  *
- * - **◀ / ▶** (shown only while hovered), the mouse wheel over the name, or the right-click
- *   menu step through the [FxShortlist].
+ * - **◀ / ▶** (shown only while hovered), Ctrl + mouse wheel over the name, or the right-click
+ *   menu step through the [FxShortlist]; the name's tooltip shows where in it the effect sits.
  * - **Name** click opens that row's pair view on this slot (stock filters, ★ favorites, saved single FX).
  * - **Drag** a cell onto another cell to swap them (reorder within a chain, or trade between
  *   chains); hold Ctrl while dropping to copy instead. Library items drop onto a cell too:
@@ -129,7 +129,8 @@ object FxSlotCell {
         if (ImGui.isItemClicked(ImGuiMouseButton.Right)) {
             ImGui.openPopup("##menu_$idBase")
         }
-        if (nameHovered) {
+        // Ctrl + wheel steps the effect; a plain wheel is left to the window, so scrolling past a live slot never swaps it.
+        if (nameHovered && ImGui.getIO().keyCtrl) {
             val io = ImGui.getIO()
             if (io.mouseWheel != 0f) {
                 wheelAccum += io.mouseWheel
@@ -139,14 +140,18 @@ object FxSlotCell {
             }
         }
         val isThisSlotFocused = chain.focusedSlot == slotIndex
-        itemTooltip(
-            if (fx == null) "Slot $slotNum is empty.\nClick this name to pick an effect in the list below (click again to stop), scroll it to step through the shortlist, or drop an effect here. Right-click for more."
-            else "${fx.displayName}${fx.categories.firstOrNull()?.let { "  ($it)" } ?: ""}\n" +
-                 (if (isThisSlotFocused) "● FOCUSED: Knob 1 = Metaknob, Knobs 2-4 = Parameters.\n" else "") +
-                 "Double-click this name to ${if (isThisSlotFocused) "exit Focus Mode" else "focus on this effect"}.\n" +
-                 "Click it to pick another effect in the list below (click again to stop), scroll it to step through the shortlist.\n" +
-                 "Drag it onto another slot's name to swap (Ctrl: copy). Right-click for more."
-        )
+        if (nameHovered) {
+            itemTooltip(
+                if (fx == null) "Slot $slotNum is empty.\nClick this name to pick an effect in the list below (click again to stop), Ctrl + scroll it to step through the shortlist, or drop an effect here. Right-click for more."
+                else "${fx.displayName}${fx.categories.firstOrNull()?.let { "  ($it)" } ?: ""}\n" +
+                     (FxOps.shortlistPosition(chain, slotIndex)?.let { "Shortlist: $it\n" } ?: "") +
+                     (if (!fx.hasMetaTarget) "Its Metaknob has no targets, so its knob does nothing (add one in Edit).\n" else "") +
+                     (if (isThisSlotFocused) "● FOCUSED: Knob 1 = Metaknob, Knobs 2-4 = Parameters.\n" else "") +
+                     "Double-click this name to ${if (isThisSlotFocused) "exit Focus Mode" else "focus on this effect"}.\n" +
+                     "Click it to pick another effect in the list below (click again to stop), Ctrl + scroll it to step through the shortlist.\n" +
+                     "Drag it onto another slot's name to swap (Ctrl: copy). Right-click for more."
+            )
+        }
         drawDragAndDrop(session, mixer, bankId, chain, slotIndex, fx?.displayName)
 
         val nameText = fx?.displayName ?: "— empty —"
@@ -224,10 +229,11 @@ object FxSlotCell {
 
     /**
      * Square Super Knob link toggle for slot [slotIndex] of the chain behind [bankId], drawn at
-     * ([x], [y]) above the slot's [drawBypassButton]. [slotLabel] names the slot in the tooltip.
+     * ([x], [y]) above the slot's [drawBypassButton].
      */
-    fun drawLinkButton(session: SessionContext, mixer: Mixer, bankId: String, slotIndex: Int, slotLabel: String, x: Float, y: Float, size: Float) {
+    fun drawLinkButton(session: SessionContext, mixer: Mixer, bankId: String, slotIndex: Int, x: Float, y: Float, size: Float) {
         val chain = FxMacroSync.chainFor(bankId, mixer) ?: return
+        val slotLabel = chain.slots[slotIndex]?.displayName ?: "empty"
         val isLinked = chain.slotSuperKnobLink.getOrNull(slotIndex) == true
         val awaiting = isLinked && chain.isAwaitingPickup(slotIndex)
         ImGui.setCursorScreenPos(x, y)
@@ -332,14 +338,14 @@ object FxSlotCell {
             val sourceSlot = payload.substringAfter('|').toIntOrNull()
             val sourceChain = FxMacroSync.chainFor(sourceBankId, mixer)
             if (sourceChain != null && sourceSlot != null) {
-                FxOps.swapSlots(sourceChain, sourceSlot, chain, slotIndex, copy = ImGui.getIO().keyCtrl)
+                FxOps.swapSlots(sourceChain, sourceSlot, chain, slotIndex, copy = ImGui.getIO().keyCtrl, undoable = true)
             }
         }
         ImGui.acceptDragDropPayload<String>(PAYLOAD_STOCK_FILTER)?.let { filterId ->
-            FxOps.setSlotFilter(chain, slotIndex, filterId)
+            FxOps.setSlotFilter(chain, slotIndex, filterId, undoable = true)
         }
         ImGui.acceptDragDropPayload<String>("ASSET_ITEM")?.let { path ->
-            FxOps.dropAsset(session, File(path), chain, slotIndex)
+            FxOps.dropAsset(session, File(path), chain, slotIndex, undoable = true)
         }
         ImGui.endDragDropTarget()
     }
@@ -394,13 +400,13 @@ object FxSlotCell {
             chain.toFxSlotDto(slotIndex)?.let { ClipboardManager.copyFxSlot(it) }
         }
         if (ImGui.menuItem("Paste Slot", "", false, ClipboardManager.fxSlotClipboard != null)) {
-            ClipboardManager.fxSlotClipboard?.let { FxOps.applySlot(chain, slotIndex, it) }
+            ClipboardManager.fxSlotClipboard?.let { FxOps.applySlot(chain, slotIndex, it, undoable = true) }
         }
         if (ImGui.menuItem("Reset Parameters", "", false, fx != null)) {
-            FxOps.resetSlot(chain, slotIndex)
+            FxOps.resetSlot(chain, slotIndex, undoable = true)
         }
         if (ImGui.menuItem("Clear Slot", "", false, fx != null)) {
-            FxOps.clearSlot(chain, slotIndex)
+            FxOps.clearSlot(chain, slotIndex, undoable = true)
         }
         if (fx != null) {
             ImGui.separator()

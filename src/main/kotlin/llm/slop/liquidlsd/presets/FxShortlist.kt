@@ -14,7 +14,7 @@ import java.io.File
  * Stepping rule ([next]): while the current effect is a favorite (or the slot is empty and
  * favorites exist), step through the favorites in the order they were starred. Otherwise step
  * through the current effect's own category, alphabetically -- so ◀ / ▶ is useful before the
- * user has starred anything.
+ * user has starred anything -- and off its end into the favorites. [position] names the list.
  *
  * Persisted as a JSON id list in `library/fx_shortlist.json` so it travels with the library.
  */
@@ -81,30 +81,51 @@ object FxShortlist {
         }
     }
 
+    /** The list ◀ / ▶ walk from [currentId], named for the cell tooltip: "★" for the favorites, else the category. */
+    private class StepList(val name: String, val ids: List<String>, val isFavorites: Boolean)
+
+    private fun stepList(currentId: String?, available: List<Candidate>, favs: List<String>): StepList {
+        val byId = available.associateBy { it.id }
+        return when {
+            favs.isNotEmpty() && (currentId == null || currentId in favs) -> StepList(FAVORITES, favs, isFavorites = true)
+            currentId != null && byId[currentId] != null -> {
+                val category = byId.getValue(currentId).categories.firstOrNull()
+                StepList(
+                    category ?: ALL,
+                    available.filter { category == null || category in it.categories }.sortedBy { it.displayName.lowercase() }.map { it.id },
+                    isFavorites = false
+                )
+            }
+            else -> StepList(ALL, available.sortedBy { it.displayName.lowercase() }.map { it.id }, isFavorites = false)
+        }
+    }
+
     /**
-     * The filter id to step to from [currentId] in direction [dir] (+1 / -1), wrapping around, or
-     * null if there is nothing to step to. [available] is every loaded stock filter.
+     * The filter id to step to from [currentId] in direction [dir] (+1 / -1), or null if there is nothing to step to.
+     * [available] is every loaded stock filter. The favorites wrap around; stepping off either end of a category lands
+     * in the favorites when there are any (first or last, by direction), so the arrows always lead back to them.
      */
     fun next(currentId: String?, dir: Int, available: List<Candidate>, favoriteIds: List<String> = favorites()): String? {
         if (available.isEmpty()) return null
-        val byId = available.associateBy { it.id }
-        val favs = favoriteIds.filter { it in byId }
-        val list: List<String> = when {
-            favs.isNotEmpty() && (currentId == null || currentId in favs) -> favs
-            currentId != null && byId[currentId] != null -> {
-                val category = byId.getValue(currentId).categories.firstOrNull()
-                available.filter { category == null || category in it.categories }
-                    .sortedBy { it.displayName.lowercase() }
-                    .map { it.id }
-            }
-            else -> available.sortedBy { it.displayName.lowercase() }.map { it.id }
-        }
-        if (list.isEmpty()) return null
-        val idx = list.indexOf(currentId)
-        val nextIdx = when {
-            idx < 0 -> if (dir >= 0) 0 else list.lastIndex
-            else -> Math.floorMod(idx + dir, list.size)
-        }
-        return list[nextIdx]
+        val known = available.mapTo(HashSet()) { it.id }
+        val favs = favoriteIds.filter { it in known }
+        val list = stepList(currentId, available, favs)
+        if (list.ids.isEmpty()) return null
+        val idx = list.ids.indexOf(currentId)
+        if (idx < 0) return if (dir >= 0) list.ids.first() else list.ids.last()
+        val to = idx + dir
+        if (to !in list.ids.indices && !list.isFavorites && favs.isNotEmpty()) return if (dir >= 0) favs.first() else favs.last()
+        return list.ids[Math.floorMod(to, list.ids.size)]
     }
+
+    /** Where [currentId] sits in the list ◀ / ▶ walk, e.g. "★ 3/8" or "Blur 4/12", or null when it isn't in one. */
+    fun position(currentId: String?, available: List<Candidate>, favoriteIds: List<String> = favorites()): String? {
+        val known = available.mapTo(HashSet()) { it.id }
+        val list = stepList(currentId, available, favoriteIds.filter { it in known })
+        val idx = list.ids.indexOf(currentId).takeIf { it >= 0 } ?: return null
+        return "${list.name} ${idx + 1}/${list.ids.size}"
+    }
+
+    private const val FAVORITES = "★"
+    private const val ALL = "All effects"
 }

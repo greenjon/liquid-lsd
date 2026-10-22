@@ -346,14 +346,16 @@ object DeckOps {
         knobs = bank.knobs.map { k -> k.copy(bindings = k.bindings.filterNot { isFxPath(it.parameterId) }.toMutableList()) }
     )
 
-    /** Deck paths look like "Deck A/FX/..." and "Deck A/FXChain/DryWet". */
-    private fun isFxPath(path: String): Boolean = path.substringAfter('/', "").substringBefore('/').let { it == "FX" || it == "FXChain" }
+    /** Deck FX paths look like "Deck A/FX/...". */
+    private fun isFxPath(path: String): Boolean = path.substringAfter('/', "").substringBefore('/') == "FX"
 
     private fun clear(slot: DeckSlot, scope: DeckScope, mixer: Mixer) {
         val deck = slot.deck(mixer)
         if (scope.fx) {
             for (i in deck.fxSlots.indices) deck.clearFxSlot(i)
             deck.fxChain.reset()
+            // reset() puts the Super Knob links back to the default, so the FX row's knob bindings must follow.
+            llm.slop.liquidlsd.macro.FxMacroSync.bankIdFor(deck.fxChain, mixer)?.let { llm.slop.liquidlsd.macro.FxMacroSync.syncFor(it, mixer) }
         }
         if (!scope.source) return
         deck.applyDto(PresetManager.emptyDeckDto(deck, mixer))

@@ -93,18 +93,7 @@ object FXBrowserPanel {
             ImGui.separator()
             for ((chainLabel, chain) in chains) {
                 if (ImGui.menuItem(chainLabel)) {
-                    SavePresetModal.request(
-                        title = "Save FX Chain As",
-                        confirmLabel = "Save",
-                        defaultName = "fx_chain",
-                        targetDir = FileSystemManager.getFxChainsRoot(),
-                        extension = "lsdfxchain"
-                    ) { name, tags ->
-                        val file = File(FileSystemManager.getFxChainsRoot(), "$name.lsdfxchain")
-                        // Captured at confirm time, not when the menu opened; clears the chain's dirty dot.
-                        session.presetRepository.saveFxChainAsync(file, name, chain.toFxChainDto(name, tags), tags)
-                        chain.markClean(file)
-                    }
+                    llm.slop.liquidlsd.ui.FxChainHeader.openSaveAsModal(session, chain)
                 }
             }
             popOpenDropdownFont()
@@ -234,7 +223,7 @@ object FXBrowserPanel {
                     openOverwritePopup = true
                 } else loadSingle(session, asset, deck.fxChain, slot)
             }
-            AssetType.FX_CHAIN -> FxOps.loadChain(session, file, deck.fxChain)
+            AssetType.FX_CHAIN -> FxOps.loadChain(session, file, deck.fxChain, undoable = true)
             else -> {}
         }
     }
@@ -247,8 +236,8 @@ object FXBrowserPanel {
         when (asset.type) {
             AssetType.FX_STOCK, AssetType.FX_PRESET -> {
                 val slot = FxOps.firstVacantSlot(deck.fxChain) ?: (FxChain.SLOT_COUNT - 1)
-                loadSingle(session, asset, deck.fxChain, slot, undoable = true)
-                ToastOverlay.show("${asset.name} -> $deckLabel FX ${slot + 1}")
+                loadSingle(session, asset, deck.fxChain, slot)
+                ToastOverlay.show("${asset.name} -> $deckLabel FX slot ${slot + 1}")
             }
             AssetType.FX_CHAIN -> {
                 FxOps.loadChain(session, File(asset.path), deck.fxChain, undoable = true)
@@ -258,10 +247,10 @@ object FXBrowserPanel {
         }
     }
 
-    /** Puts a single stock or saved FX into [slot] of [chain]. */
-    internal fun loadSingle(session: SessionContext, asset: AssetItem, chain: FxChain, slot: Int, undoable: Boolean = false) {
-        if (asset.type == AssetType.FX_STOCK) FxOps.setSlotFilter(chain, slot, asset.path.removePrefix(STOCK_PATH_PREFIX), undoable)
-        else FxOps.loadSlot(session, File(asset.path), chain, slot, undoable)
+    /** Puts a single stock or saved FX into [slot] of [chain] (undoable). */
+    internal fun loadSingle(session: SessionContext, asset: AssetItem, chain: FxChain, slot: Int) {
+        if (asset.type == AssetType.FX_STOCK) FxOps.setSlotFilter(chain, slot, asset.path.removePrefix(STOCK_PATH_PREFIX), undoable = true)
+        else FxOps.loadSlot(session, File(asset.path), chain, slot, undoable = true)
     }
 
     /** Asks which slot to overwrite when a double-clicked single FX finds the live deck's chain full. */
@@ -310,7 +299,7 @@ object FXBrowserPanel {
             AssetType.FX_CHAIN -> {
                 for ((chainLabel, chain) in chains) {
                     if (ImGui.menuItem("Load to $chainLabel")) {
-                        FxOps.loadChain(session, file, chain)
+                        FxOps.loadChain(session, file, chain, undoable = true)
                         BrowseRecents.note(asset)
                     }
                 }

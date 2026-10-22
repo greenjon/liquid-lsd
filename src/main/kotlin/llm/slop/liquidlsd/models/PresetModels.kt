@@ -295,7 +295,9 @@ data class MixerDto(
     val deckBGFxChain: FXChainDto? = null,
     val deckBGFxChainSource: String? = null,
     val deckPVFxChain: FXChainDto? = null,
-    val deckPVFxChainSource: String? = null
+    val deckPVFxChainSource: String? = null,
+    /** FX chains switched off (FX ON dark) when the session was saved: "Master", "Deck A", ... A session-only state, not in chain files. */
+    val bypassedFxChains: List<String> = emptyList()
 )
 
 @Serializable

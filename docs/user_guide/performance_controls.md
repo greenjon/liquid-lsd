@@ -120,45 +120,49 @@ Knob** and each slot its own **Metaknob** — see [Macro Controls & the Perform 
 for how they work and where to edit them.
 
 - **Deck row layout**: the deck badge (`A`, `B`, `BG`, `PV`) carries a caption, slate `SRC` or cyan `FX`, naming the half the row shows. Line 1 is the long name box (click to Browse) and the Edit gear; line 2 holds `⋮`, Save, queue `◀ ▶` and the slot pills on an FX row, or `⋮`, Save, `◀ ▶` and a right-aligned Eject on a source row (same button sizes on both).
-- **Chain Header Kebab (`⋮`)**:
-  - **Save Chain As...**: Saves that chain's 3 slots (and its Super Knob state) into an
-    `.lsdfxchain` file in `library/fx_chains/`.
-  - **Copy Chain / Paste Chain**: Copies or pastes one chain's 3 slots between any decks and Master FX.
-  - **Clear Chain Slots**: Disposes and empties that chain's 3 slots.
+- **Chain menu (`⋮`)**: the same menu on the FX row and on the chain's Edit tab.
+  - **Focus Slot… / Exit Focus Mode**.
+  - **Save As…**: Saves the chain's 3 slots, Dry/Wet, Super Knob and links into an `.lsdfxchain` file, in the
+    folder the chain came from (`library/fx_chains/` for a new chain).
+  - **Revert to Saved**: Puts the chain back the way its file has it.
+  - **Clear All Slots**: Empties all 3 slots and starts a new **Untitled** chain.
+  - **Copy Chain / Paste Chain**: Copies or pastes one chain between any decks and Master FX.
+  - Revert, Clear and Paste can be undone with **Ctrl+Z**.
 - **Per-Slot Kebab (`⋮`)**:
   - **Save Slot Preset As...**: Saves the slot's filter ID, dry/wet, Metaknob position/target,
     and parameters into an `.lsdfx` file in `library/fx/`.
   - **Copy Slot / Paste Slot**: Copies or pastes individual slot configurations across slots or chains.
   - **Clear Slot**: Clears the slot filter and resets parameters.
 - **Drag-and-Drop Targets**: Drag `.lsdfxchain` onto a chain header, or `.lsdfx` onto a slot, to
-  instantly load/swap effects.
+  instantly load/swap effects. A `.lsdfxchain` dropped onto a slot replaces the whole chain. Ctrl+Z undoes a drop.
 - **Library Browser**: The `[ FX ]` Library view's right-click menus can load stock filters, saved
   singles, and saved chains into any deck or **Master FX**.
 - **FX is separate from presets**: Loading or saving a deck preset (`.lsd`) never touches that
   deck's FX chain. FX chains are saved with your session and restored on the next launch.
 - **Performance Matrix FX Controls**:
-  - **Shared Chain Header (`[◀] Name • [▶] [Save] [⋮] ... [BYPASS]`)**:
+  - **Shared Chain Header (`Name •` on line 1, `[⋮] [Save] [◀] [▶] [1] [2] [3]` on line 2, `[FX ON]` on the right)**:
     - **`◀` / `▶` (Decks A, B, BG)**: On Decks A, B, and BG, steps through the respective live FX queue (A/B or BG) directly on that deck, advancing the queue while targeting the clicked deck. Rendered disabled when the FX queue is empty. Omitted on Deck PV and Master FX, allowing the chain name button to expand while keeping row width perfectly aligned.
-    - **Chain Name Button**: Displays current chain name with `•` dirty indicator when modified from baseline. Clicking binds the Library dock below to this chain (the **Chain** list: no row is expanded, and the name gets a coloured outline; **✕** or `Esc` lets go), with live text search over saved `.lsdfxchain` files. Accepts `.lsdfxchain` drag-and-drop.
+    - **Chain Name Button**: Displays current chain name with `•` when it differs from its file: a slot, parameter, Dry/Wet, link or Metaknob target changed. Turning the Super Knob or a Metaknob (and what the Metaknobs drive) is performing, not editing, so it doesn't count. When the chain's own Dry/Wet (set on its Edit tab) is below 100% the name shows it, e.g. `Wet 40%`, and at 0% the name is dimmed: the effects are not visible. Clicking binds the Library dock below to this chain (the **Chain** list: no row is expanded, and the name gets a coloured outline; **✕** or `Esc` lets go), with live text search over saved `.lsdfxchain` files. Accepts `.lsdfxchain` drag-and-drop.
     - **`[Save]`**: Overwrites the loaded chain file with current state, or triggers Save As if untitled.
-    - **`[⋮]` Menu**: Save As..., New Chain, Revert to Saved (undoes tweaks back to clean loaded state), Clear All Slots, and Copy/Paste Chain.
-    - **`[BYPASS]`**: Top-level kill switch to immediately bypass or re-enable the entire FX chain.
+    - **`[⋮]` Menu**: the chain menu above (Focus, Save As, Revert to Saved, Clear All Slots, Copy/Paste Chain).
+    - **`[FX ON]`**: Turns the whole chain on or off at once. Lit while the chain is on, dark while it is bypassed, like each slot's power button. Saved with your session, not in chain files.
   - **FX Slot Cells (`Effect Name`)**:
     - Drawn under each of knobs 2–4 on Deck rows in `[FX]` mode and the Master row in `[FX]` mode. The cell is just the effect name, so names get the full cell width.
-    - **`◀` / `▶` (on hover), Mouse Wheel, or Right-Click → Previous/Next in Shortlist**: Steps to previous/next effect in the **FX Shortlist** (favorited ★ effects, or the current effect's category alphabetically). The arrows only appear at the cell's edges while the mouse is over it.
+    - **`◀` / `▶` (on hover), Ctrl + Mouse Wheel, or Right-Click → Previous/Next in Shortlist**: Steps to previous/next effect in the **FX Shortlist**. From a favorited ★ effect (or an empty slot) it walks your favorites; from any other effect it walks that effect's category alphabetically, and stepping off either end of the category lands in your favorites. The effect name's tooltip shows which list you are in and where, e.g. `★ 3/8` or `Blur 4/12`. The arrows only appear at the cell's edges while the mouse is over it. A plain mouse wheel scrolls as usual and never swaps a live effect.
   - **Slot Side Buttons (left of each slot knob)**: two stacked buttons.
     - **Link (top)**: links/unlinks that slot's Metaknob to the Super Knob. A linked slot's knob still moves its Metaknob; the Super Knob picks the slot up again when it reaches it.
-  - **Chain Link (left of the Super Knob, knob 1)**: links or unlinks all three slots at once. Click links all unless they are all linked already, in which case it unlinks all; the icon shows a chain when every filled slot is linked, a dimmer chain when only some are, and a broken chain when none are. The Macro Strip has the same toggle by the `CHAIN MACRO` title. Where a new chain starts (linked or unlinked) is the **Default FX chain linking** preference; how linked slots follow is **Super Knob response** (Relative or Pickup, see [Macro Controls](macros_and_rack.md)). In Pickup mode a slot still waiting for the Super Knob shows an amber link button, and on the Twister its LED blinks amber.
+  - **Link All (left of the Super Knob, knob 1)**: links or unlinks all three slots at once. Click links all unless they are all linked already, in which case it unlinks all; the icon shows a chain when every filled slot is linked, a dimmer chain when only some are, and a broken chain when none are. The Edit tab has the same toggle by the `SUPER KNOB & METAKNOBS` title. Where a new chain starts (linked or unlinked) is the **Default FX chain linking** preference; how linked slots follow is **Super Knob response** (Relative or Pickup, see [Macro Controls](macros_and_rack.md)). In Pickup mode a slot still waiting for the Super Knob shows an amber link button, and on the Twister its LED blinks amber.
     - **Bypass (bottom, power icon)**: turns just that effect on or off. Row-coloured when on, red when bypassed, dim when the slot is empty. In Focus Mode, only the focused slot's bypass is shown, next to knob 1.
     - **Effect Name**: Truncated caption showing loaded filter. Click points the Library below at that slot (Stock filters, ★ Favorites, and Saved `.lsdfx` presets); click it again to stop. This happens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't trigger it.
-    - **Drag & Drop**: Drag an effect name onto another slot's name to swap/reorder (hold `Ctrl` while dropping to duplicate). Only the effects move: each slot keeps its own Super Knob link setting. Accepts stock ISF filters and `.lsdfx` single presets from Library.
+    - **Drag & Drop**: Drag an effect name onto another slot's name to swap/reorder (hold `Ctrl` while dropping to duplicate). Only the effects move: each slot keeps its own Super Knob link setting. Accepts stock ISF filters and `.lsdfx` single presets from Library; a `.lsdfxchain` replaces the whole chain.
     - **Right-Click Context Menu**: Focus Mode, Previous/Next in Shortlist, Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Edit.
+    - **Undo**: Ctrl+Z undoes a drag swap or copy, a drop, Paste Slot, Reset Parameters and Clear Slot. Stepping through the shortlist is not undone step by step.
   - **Swap Gain Dip**:
     - Replacing an effect or loading a chain applies a smooth audio/visual gain dip (fade out -> swap -> fade in) instead of a hard cut.
     - Duration is customizable in Preferences (`FX Swap Fade (ms)`, 0–1000 ms, default 150 ms; 0 = immediate hard cut).
   - **Knob Labeling**:
-    - Knob 1 controls the chain's `SUPER` knob.
-    - Knobs 2–4 display `META` (or the target parameter name when custom-routed), while the effect name itself is clearly displayed in the slot cell below.
+    - Knob 1 controls the chain's `SUPER` knob. Middle-clicking it does nothing (centring it would move every linked slot at once).
+    - Knobs 2–4 display `META`, while the effect name itself is clearly displayed in the slot cell below. A slot whose Metaknob has no targets shows `NO TARGET`, since turning that knob does nothing; add a target on the slot's Edit tab.
   - **Focus Mode (Traktor / Mixxx style)**:
     - **Entering Focus Mode**:
       - Click any slot pill (`[1]`, `[2]`, or `[3]`) in the FX row header.
@@ -170,9 +174,9 @@ for how they work and where to edit them.
       - `[◀ P1/N ▶]`: Parameter page stepper; appears automatically whenever the focused shader exposes more than 3 parameters.
       - `[1] [2] [3]`: Slot focus pills with clean styling. The active slot pill is highlighted in blue accent. Click another slot pill to switch focus instantly, or click the active focused slot pill a second time (or press `Escape`) to exit Focus Mode back to the 3-slot chain view.
     - **4 Knobs in Focus Mode**:
-      - **Knob 1 (`META`)**: The focused slot's Metaknob (`$chainLabel/FX/FX<slot>/Meta`). Its Dry/Wet is the `Wet` slider in the chain header. The focused slot's `FxSlotCell` is drawn underneath so shortlist stepping (hover `◀ ▶` or mouse wheel) and picker access remain directly below the knob, with the slot's bypass button to its left.
+      - **Knob 1 (`META`)**: The focused slot's Metaknob (`$chainLabel/FX/FX<slot>/Meta`). Its Dry/Wet is the `Wet` slider in the chain header. The focused slot's `FxSlotCell` is drawn underneath so shortlist stepping (hover `◀ ▶` or Ctrl + mouse wheel) and picker access remain directly below the knob, with the slot's bypass button to its left.
       - **Knobs 2–4 (`Top Parameters`)**: Dynamically retargeted to the focused shader's parameters on the active page, in the slot's knob order (set in the Edit bay's **Knobs** list; the effect's own order by default) (e.g. `SPEED`, `INTENSITY`, `COLOR`).
-      - **Parameter Cells (`FxParamCell`)**: Drawn under Knobs 2–4 with the parameter's name and a modulation indicator dot. The current value is shown inside the knob face, and a `[⟲]` reset button (restores the authored default) sits to the left of the knob.
+      - **Parameter Cells (`FxParamCell`)**: Drawn under Knobs 2–4 with the parameter's name and a modulation indicator dot. The current value is shown inside the knob face, and a `[⟲]` reset button (restores the authored default) sits to the left of the knob. Middle-clicking the knob does the same. Replacing the effect with one that has fewer parameter pages moves the page back to the last one.
   - **Stable Layout**: Knobs stay the same size and in the same place whichever mode a row is in (source, FX group, or Focus Mode), and switching one row never resizes the others. Knob names and effect/parameter names share the same line under each knob. Names too long for it end in `…`; hover the knob for the full name.
     - **Seamless Hardware MIDI Retargeting**:
       - Physical MIDI controllers mapped to the row's standard macro paths (`Macro/<bankId>/knob_1..4`) immediately control the focused slot's Metaknob and parameters without requiring any MIDI remapping or controller mode switching.
@@ -269,7 +273,7 @@ Do this once, in DJ TechTools' **Midi Fighter Utility**. The app ships a ready-m
 
 Then start Liquid LSD with the Twister plugged in and check **Preferences → MIDI Controls** → *Controller Profiles*: the Twister profile should be listed with your device. The log reports `Controller feedback on for ...` when the output port is opened; if it says `No MIDI output port found`, the app can read the Twister but cannot light it. While the app runs it overrides the ring and LED colours set in the Utility.
 
-**The app owns the banks.** The top and middle side buttons on the right are plain `CC Hold` buttons, not the firmware's Previous/Next Bank. **Right-top** steps to the next bank (wrapping), **Shift + right-top** goes back; the app shows the bank's page and sends the bank change to the Twister, so the screen and the hardware agree. **Right-middle** opens the Library (**Shift + right-middle** opens it on the FX tab). **Left-middle** toggles **Chain Link** on the FX chain of the row you touched last (**Shift + left-middle** taps tempo). Don't set the side buttons to Previous/Next Bank in the Utility: the side buttons send six CC numbers per bank and would misfire.
+**The app owns the banks.** The top and middle side buttons on the right are plain `CC Hold` buttons, not the firmware's Previous/Next Bank. **Right-top** steps to the next bank (wrapping), **Shift + right-top** goes back; the app shows the bank's page and sends the bank change to the Twister, so the screen and the hardware agree. **Right-middle** opens the Library (**Shift + right-middle** opens it on the FX tab). **Left-middle** toggles **Link All** on the FX chain of the row you touched last (**Shift + left-middle** taps tempo). Don't set the side buttons to Previous/Next Bank in the Utility: the side buttons send six CC numbers per bank and would misfire.
 
 If you set the Twister up by hand instead, use those same settings in the Utility.
 
@@ -303,7 +307,7 @@ Each row shows one half (source or FX), so no `SRC`/`FX` switching is needed on 
 | **Shift + tap** | - | focus that slot | next parameter page |
 | **Shift + tap on knob 1 of a focused row** | - | leave focus | - |
 | **Tap on knob 1 (Super Knob) of an FX row** | - | nothing (so a stray tap never moves every linked slot) | - |
-| **Shift + tap on knob 1 (Super Knob) of an FX row** | - | Chain Link: link or unlink all three slots | - |
+| **Shift + tap on knob 1 (Super Knob) of an FX row** | - | Link All: link or unlink all three slots | - |
 
 - **Shift** is the bottom button on the Twister's left side (the same physical button on every bank).
 - **Fast turns accelerate** up to 4×; slow turns stay exact.
@@ -337,13 +341,13 @@ The side buttons change meaning with the view:
 
 | View | Left-top | Left-middle | Right-top | Right-middle | Right-bottom | Knob 16 |
 |---|---|---|---|---|---|---|
-| **Perform** | back (`Esc`); **Shift +** toggles Edit mode | toggle Chain Link; **Shift +** tap tempo | next bank / page (**Shift +** prev) | open the **Library**; **Shift +** opens it on the FX tab | **browse** the touched row's slot; **Shift +** toggles Pair view | normal knob |
-| **Browsing a slot** (bound Library or Pair view) | stop browsing | toggle Chain Link; **Shift +** tap tempo | next bank / page, which stops browsing (**Shift +** prev); in the Pair view, the next pair | step the **tab** (**Shift +** prev) | step the **pane**; **Shift +** clears the slot or chain | **cursor**: turn to move; tap applies, **Shift +** tap queues |
-| **Library** | leave Library | toggle Chain Link; **Shift +** tap tempo | next bank / page (**Shift +** prev) | step the **tab** (**Shift +** prev) | step **pane** (**Shift +** prev) | **cursor**: turn to move, tap to load |
+| **Perform** | back (`Esc`); **Shift +** toggles Edit mode | toggle Link All; **Shift +** tap tempo | next bank / page (**Shift +** prev) | open the **Library**; **Shift +** opens it on the FX tab | **browse** the touched row's slot; **Shift +** toggles Pair view | normal knob |
+| **Browsing a slot** (bound Library or Pair view) | stop browsing | toggle Link All; **Shift +** tap tempo | next bank / page, which stops browsing (**Shift +** prev); in the Pair view, the next pair | step the **tab** (**Shift +** prev) | step the **pane**; **Shift +** clears the slot or chain | **cursor**: turn to move; tap applies, **Shift +** tap queues |
+| **Library** | leave Library | toggle Link All; **Shift +** tap tempo | next bank / page (**Shift +** prev) | step the **tab** (**Shift +** prev) | step **pane** (**Shift +** prev) | **cursor**: turn to move, tap to load |
 
 - **Send-knob rings:** a send knob that can receive the highlighted item shows a full ring at half brightness in the target's colour; the others stay dark. Set the encoders' indicator to **Bar** in the Midi Fighter Utility to get a full ring (a Dot ring shows a single LED).
 - **Knob 16 ring:** while browsing a slot and in the Library the ring shows the cursor's place in its list (empty at the first row, full at the last); it is full when the list has no cursor yet or one row.
-- **Left-middle button:** Toggles Chain Link on the FX chain of the row you touched last. **Shift + left-middle** taps the BPM tempo (`clock.tap_tempo`).
+- **Left-middle button:** Toggles Link All on the FX chain of the row you touched last. **Shift + left-middle** taps the BPM tempo (`clock.tap_tempo`).
 - **Right-top button:** Steps through hardware banks / Perform pages (**Shift + right-top** steps backward).
 - **Unsaved-changes prompt:** when loading would discard edits on a deck, the prompt takes over the controller: **left-top** = Cancel, **right-middle** or **knob 16 tap** = Save, **right-bottom** or **Shift + tap** = Discard. Nothing else navigates until you answer.
 - **Browsing a slot:** moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. When the row is on the current page the Library below simply starts applying to its slot; otherwise the Pair view opens. Knob 16 is the cursor. Knobs 9-15 do nothing (apart from the sends) while browsing (knobs 9-13 send the highlighted item, see below); knobs 1-8 keep controlling the first two rows on screen (the page's, or the pair view's two rows; they light in their rows' colours), so you can tweak a freshly loaded source or chain without stopping. Touching one of them points the browser at that row's slot. Touching a knob does not change the tab unless it moves the target, so it won't pull you off Queues or Macros. To pick for another deck, send the item there with knobs 9-12, use the quick switch, or stop with **left-top** first.

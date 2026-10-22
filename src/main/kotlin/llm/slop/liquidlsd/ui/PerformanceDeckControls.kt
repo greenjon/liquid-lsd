@@ -55,14 +55,14 @@ internal object DeckRowMetrics {
     /**
      * Line 1 (SRC) width: pill, kebab, generator/preset badge, save, queue nav or PV's PREVIEW
      * badge (whichever is wider), and eject.
-     * (Randomize die button is placed in the right wing above the BYPASS button.)
+     * (Randomize die button is placed in the right wing above the FX ON button.)
      */
     fun row1Width(ctrlH: Float, comboW: Float): Float =
         MODE_PILL_W + GAP + KEBAB_W + GAP + genBadgeW(comboW) + GAP + iconBtnW(ctrlH) +
             GAP + maxOf(queueNavW(ctrlH), PV_BADGE_W) +
             GAP + iconBtnW(ctrlH)
 
-    @Deprecated("Randomize die is now placed above the BYPASS button in the right wing.", ReplaceWith("row1Width(ctrlH, comboW)"))
+    @Deprecated("Randomize die is now placed above the FX ON button in the right wing.", ReplaceWith("row1Width(ctrlH, comboW)"))
     fun row1Width(ctrlH: Float, comboW: Float, randomization: Boolean): Float = row1Width(ctrlH, comboW)
 }
 
@@ -71,7 +71,7 @@ internal object DeckRowMetrics {
  * - Left controls, two stacked rows:
  *   Row 1 (SRC): [SRC] knob-assign pill, kebab, generator/preset badge, Save, queue navigation, eject;
  *   Row 2 (FX): [FX] knob-assign pill, kebab, chain name, Save, queue navigation, [1][2][3] slot pills.
- * - Right controls: Row 1 randomize die button (applies to both SRC and FX); Row 2 FX bypass button.
+ * - Right controls: Row 1 randomize die button (applies to both SRC and FX); Row 2 the FX ON button.
  */
 internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
     private val deckFxActions = HashMap<String, DeckFxActions>()
@@ -458,9 +458,9 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
 
     /**
      * Deck controls placed to the right of the knobs for Deck rows:
-     * - Row 1 (above BYPASS): Randomize die button, randomizing modulators & base values across
+     * - Row 1 (above FX ON): Randomize die button, randomizing modulators & base values across
      *   both Visual Source and Insert FX.
-     * - Row 2: Deck FX chain bypass button.
+     * - Row 2: the deck FX chain's FX ON button.
      */
     fun drawDeckRowRightControls(
         session: SessionContext,
@@ -488,7 +488,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         val str = stringsFor(tag)
         str.ensureLabel(deckLabel)
 
-        // Row 1: Randomize Die Button [ DICES ] (above BYPASS button; applies to both SRC and FX). On a genome source
+        // Row 1: Randomize Die Button [ DICES ] (above FX ON button; applies to both SRC and FX). On a genome source
         // (Fractal Flame) the right part of the same footprint is the sampler-strategy picker.
         if (session.uiTheme.randomizationEnabled) {
             val genome = deck.source is GenomeMorph
@@ -522,11 +522,11 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ImGui.endGroup()
         }
 
-        // Row 2: FX chain bypass button (a pinned SRC row has no FX half)
+        // Row 2: the FX chain's FX ON button (a pinned SRC row has no FX half)
         if (pinned != "SRC") {
             ImGui.setCursorScreenPos(startX, row2Y)
             ImGui.beginGroup()
-            FxChainHeader.drawBypassButton(session, deck.fxChain, tag, ctrlH, width)
+            FxChainHeader.drawFxOnButton(session, deck.fxChain, tag, ctrlH, width)
             ImGui.endGroup()
         }
     }

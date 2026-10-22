@@ -27,7 +27,7 @@ class ParametersState : MidiLearnSink {
      */
     val fxExpandedSlot = mutableMapOf<String, Int>()
 
-    /** Chain prefixes whose CHAIN MACRO section (Super Knob + Metaknob rows) is collapsed in the Edit FX tab. */
+    /** Chain prefixes whose SUPER KNOB & METAKNOBS section (Super Knob + Metaknob rows) is collapsed in the Edit FX tab. */
     val fxMacroCollapsed = mutableSetOf<String>()
 
     companion object {

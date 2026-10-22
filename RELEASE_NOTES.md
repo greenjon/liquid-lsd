@@ -1,5 +1,28 @@
 ## [Unreleased]
 
+### FX Polish (`ui/FxChainHeader.kt`, `ui/FxSlotCell.kt`, `rendering/FxChain.kt`, `presets/FxShortlist.kt`, `presets/FxOps.kt`, `presets/SessionSerializer.kt`, `rendering/Renderer.kt`, `ui/FXChainMacroStrip.kt`)
+- **`BYPASS` is now `FX ON`.** The chain switch was lit while the chain was *on*, under a label that said the opposite. It now reads `FX ON` (lit = on), like each slot's power button, and whether it is on is saved with your session.
+- **The unsaved `•` now means what it says.** It lights up for any change the chain file stores: a slot, a parameter, a Dry/Wet, a link or a Metaknob target. Turning the Super Knob or a Metaknob is still performing, not editing, so it doesn't count. **Revert to Saved** now undoes parameter tweaks too.
+- **One chain menu.** The FX row's `⋮` and the chain's Edit tab show the same menu: Focus, Save As, Revert to Saved, Clear All Slots, Copy / Paste Chain. *New Chain* is gone: **Clear All Slots** empties the chain and starts a new Untitled one. Save As starts in the folder the chain came from.
+- **Ctrl+Z undoes every FX change**, wherever you make it: dragging slots to swap or copy, drops, Paste, Reset Parameters, Clear, Revert and Library loads. Stepping through the shortlist and FX queue steps are not undone step by step.
+- **The shortlist arrows show where you are.** The slot name's tooltip says which list ◀ ▶ walk and your place in it (`★ 3/8`, `Blur 4/12`). Stepping off either end of an effect's category now lands in your favorites.
+- **The mouse wheel no longer swaps a live effect by accident.** Hold Ctrl to step a slot with the wheel; a plain wheel scrolls as usual.
+- **Middle-click:** on the Super Knob it does nothing (centring it moved every linked slot), and on a focused parameter's knob it restores that parameter's default, like its ⟲ button.
+- **A turned-down chain says so.** When a chain's own Dry/Wet (set on its Edit tab) is below 100%, its name shows it (`Wet 40%`), and at 0% the name is dimmed.
+- **A Metaknob with no targets says so:** its knob reads `NO TARGET` instead of `META`, and the slot's tooltip explains.
+- **Feedback and trail effects start clean when they come back.** A slot that was bypassed, at 0% wet or in a switched-off chain no longer flashes the picture it held when it stopped.
+- **One name per thing:** the Edit block is **SUPER KNOB & METAKNOBS**, the link-all toggle is **Link All** (also on the Twister), slots are **Slot 1-3**, and the chain's level is **Chain Dry/Wet**. The duplicate `Deck X/FXChain/DryWet` parameter path is gone; MIDI / OSC mappings to it need relearning on `Deck X/FX/DryWet`.
+- **Tooltips on the FX queue arrows** say which deck the item goes to, and that Decks A and B share one A/B queue position.
+
+### FX Chain Fixes (`rendering/FxChain.kt`, `presets/FxOps.kt`, `presets/SessionSerializer.kt`, `presets/PresetRepository.kt`, `rendering/Deck.kt`, `rendering/Mixer.kt`, `macro/FxMacroSync.kt`, `ui/FxParamCell.kt`, `ui/ParametersTabs.kt`)
+- **FX chains no longer all show as unsaved at launch.** A chain restored from your session is compared with the file it came from, so the amber `•` and Save only light up when it really differs; the starting chains are clean too, and Revert to Saved works on them.
+- **Saving over a chain file keeps its tags.** Save used to write the file back with no tags. Save As also starts from the chain's tags, and the chain takes the name you saved it as.
+- **A failed chain save tells you.** A write error (disk full, no permission) now shows a message and the chain stays marked unsaved, instead of looking saved.
+- **Eject and empty presets leave the FX chain alone.** Ejecting a deck used to reset its FX chain's parameters, Super Knob and links and blank its name while keeping the effects, so a later Save wrote the reset values over the chain file. Clearing a deck's FX on purpose (Clear with FX) now also refreshes the FX row's knobs.
+- **Resetting a focused parameter lands on its default.** On rate/speed/decay-type parameters (the exponential focus knobs) the ⟲ button and the Twister tap used to leave the parameter at a different value; a parameter the Metaknob drives now resets by moving the Metaknob.
+- **Ctrl+Z undoes FX changes made in Edit.** Paste Chain, Clear Chain Slots, Paste Slot, Clear Slot and drops onto a chain or slot in the Edit bay can now be undone; before, Ctrl+Z skipped them.
+- **The focus parameter page follows the effect.** Replacing the focused effect with one that has fewer parameters (or hiding knobs) used to leave the row on a page that no longer exists, with knobs 2-4 blank.
+
 ### Linked FX Knobs Work, Relative Super Knob, Metaknob Fixes (`macro/MacroEngine.kt`, `rendering/FxChain.kt`, `rendering/isf/ISFFilter.kt`, `ui/FXChainMacroStrip.kt`, `ui/FxLinkDefaults.kt`, `ui/LinkModeButton.kt`, `ui/FxSlotCell.kt`)
 - **A linked slot's knob now moves its Metaknob.** Before, turning knob 2-4 on a slot linked to the Super Knob did nothing and snapped back, and in Focus Mode a linked slot's knob 1 was dead. Turning it now moves just that Metaknob; the Super Knob carries on from there (Relative) or picks it up again when it reaches it (Pickup).
 - **The Super Knob no longer yanks a Metaknob you set by hand.** Moving a linked Metaknob any other way (its Edit row, MIDI, or editing a parameter it drives) is treated the same as turning its knob.

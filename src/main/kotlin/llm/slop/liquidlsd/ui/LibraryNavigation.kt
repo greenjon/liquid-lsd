@@ -268,8 +268,8 @@ internal object LibraryNavigation {
             else -> {
                 val chain = deckSlot?.deck(mixer)?.fxChain ?: mixer.masterFxChain
                 val slot = FxOps.firstVacantSlot(chain) ?: (FxChain.SLOT_COUNT - 1)
-                FXBrowserPanel.loadSingle(session, asset, chain, slot, undoable = true)
-                ToastOverlay.show("${asset.name} -> ${deckLabel ?: "Master"} FX ${slot + 1}")
+                FXBrowserPanel.loadSingle(session, asset, chain, slot)
+                ToastOverlay.show("${asset.name} -> ${deckLabel ?: "Master"} FX slot ${slot + 1}")
                 if (retarget) parametersState.openFxChainBrowse(bankId, deckLabel, slot)
             }
         }

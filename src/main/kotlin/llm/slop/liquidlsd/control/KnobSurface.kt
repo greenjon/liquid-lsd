@@ -36,6 +36,6 @@ interface KnobSurface {
     /** True while the pair view is up: the knobs follow the focused pair on any bank, so the device must not be pulled back to the page's bank. */
     val pairFocused: Boolean get() = false
 
-    /** Toggles Chain Link (all slots to/from the Super Knob) on the FX chain of the row touched last. */
+    /** Toggles Link All (all slots to/from the Super Knob) on the FX chain of the row touched last. */
     fun toggleChainLink() {}
 }

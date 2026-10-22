@@ -37,8 +37,6 @@ class Deck(
     // Per-deck dedicated FX chain (3 serial slots, Super Knob, dry/wet, bypass)
     val fxChain = FxChain("Deck FX")
 
-    val fxSendLevel: ModulatableParameter get() = fxChain.dryWet
-
     // Inner scratch pair for slot-to-slot progression within the active chain:
     var fxPingFBO = FBO(width, height)
     var fxPongFBO = FBO(width, height)
@@ -138,10 +136,9 @@ class Deck(
         this.source = availableSources.first()
     }
 
+    /** Empties the deck's source side. The FX chain is left alone: FX is separate from presets (Eject, empty presets). */
     fun reset() {
         isEmpty = true
-        fxChain.reset()
-        fxSendLevel.reset()
         availableSources.forEach { src ->
             src.parameters.values.forEach { it.reset() }
             src.globalAlpha.reset()
@@ -186,7 +183,7 @@ class Deck(
         allParams.addAll(this.source.parameters.values)
         allParams.add(this.source.globalAlpha)
         
-        allParams.add(fxSendLevel)
+        allParams.add(fxChain.dryWet)
 
         allParams.add(this.view3DMode)
         allParams.add(this.viewZoom)
@@ -275,7 +272,6 @@ class Deck(
 
         // This deck's dedicated FX chain parameters
         list.addAll(fxChain.getParameterPaths("$prefix/FX"))
-        list.add("$prefix/FXChain/DryWet" to fxSendLevel)
 
         // Add Deck's View parameters
         list.add("$prefix/View/3DMode" to view3DMode)

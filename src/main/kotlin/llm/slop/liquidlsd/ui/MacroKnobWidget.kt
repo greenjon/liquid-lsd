@@ -225,6 +225,8 @@ object MacroKnobWidget {
         oscAddress: String? = null,
         onSelect: () -> Unit = {},
         onToggleLearn: () -> Unit = {},
+        /** Replaces the middle-click reset to [defaultValue] (e.g. a parameter's own default, or nothing at all). */
+        onReset: (() -> Unit)? = null,
         onChanged: (Float) -> Unit
     ) {
         val radius = diameter / 2f
@@ -327,7 +329,9 @@ object MacroKnobWidget {
             io.mouseWheel = 0f
         }
 
-        if (isHovered && (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) && editingKnobId != id) {
+        if (isHovered && (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) && editingKnobId != id && onReset != null) {
+            onReset()
+        } else if (isHovered && (ImGui.isMouseClicked(2) || ImGui.isItemClicked(2)) && editingKnobId != id) {
             val resetTarget = if (meterType == MeterType.BIPOLAR && defaultValue == 0f) 0.5f else defaultValue
             newValue = resetTarget.coerceIn(0f, 1f)
         }

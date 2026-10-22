@@ -59,6 +59,9 @@ class PerformanceMatrixPanel {
 
         /** Height of the host window in Perform view: exactly [PerfPageDef.ROWS] rows plus padding. */
         const val PERFORM_TOP_H = PerfPageDef.ROWS * ROW_H + 2f * HOST_PAD_Y
+
+        /** A knob's middle-click that does nothing (the Super Knob's). */
+        private val NO_RESET: () -> Unit = {}
     }
 
     internal val ctx = PerformanceUiContext()
@@ -462,7 +465,7 @@ class PerformanceMatrixPanel {
                             val file = File(payload)
                             if (file.exists() && file.extension.lowercase() in listOf("lsdfx", "lsdfxchain")) {
                                 // A single FX takes the first vacant slot; a full chain needs a slot named (drop on the slot instead).
-                                if (!llm.slop.liquidlsd.presets.FxOps.dropAsset(session, file, targetDeck.fxChain)) {
+                                if (!llm.slop.liquidlsd.presets.FxOps.dropAsset(session, file, targetDeck.fxChain, undoable = true)) {
                                     llm.slop.liquidlsd.ui.ToastOverlay.show("${deckLabels[deckTagIndex(dropTag)]} FX slots are full. Drop the effect onto a slot to replace it.")
                                 }
                             } else if (file.exists() && file.extension.lowercase() in listOf("patch", "lsd", "json")) {
@@ -487,7 +490,7 @@ class PerformanceMatrixPanel {
                         if (payload != null) {
                             val file = File(payload)
                             if (file.exists() && file.extension.lowercase() == "lsdfxchain") {
-                                llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, mixer.masterFxChain)
+                                llm.slop.liquidlsd.presets.FxOps.loadChain(session, file, mixer.masterFxChain, undoable = true)
                             }
                         }
                         ImGui.endDragDropTarget()
@@ -641,7 +644,7 @@ class PerformanceMatrixPanel {
                     SideButtons.ChainLink ->
                         FxSlotCell.drawChainLinkButton(session, mixer, row.bankId, sideBtnX, rowTopY + geo.sideBtnY(0, 1), sideBtnSize)
                     is SideButtons.LinkAndBypass -> {
-                        FxSlotCell.drawLinkButton(session, mixer, row.bankId, side.slotIndex, control.label, sideBtnX, rowTopY + geo.sideBtnY(0, 2), sideBtnSize)
+                        FxSlotCell.drawLinkButton(session, mixer, row.bankId, side.slotIndex, sideBtnX, rowTopY + geo.sideBtnY(0, 2), sideBtnSize)
                         FxSlotCell.drawBypassButton(session, mixer, row.bankId, side.slotIndex, sideBtnX, rowTopY + geo.sideBtnY(1, 2), sideBtnSize, row.accent)
                     }
                     is SideButtons.Bypass ->
@@ -706,6 +709,12 @@ class PerformanceMatrixPanel {
                                 }
                             }
                         }
+                    },
+                    // The Super Knob ignores it (centring it would move every linked slot at once, as on the Twister);
+                    // a focused parameter goes back to its own default, like its ⟲ button.
+                    onReset = when (val under = spec.under) {
+                        is UnderKnob.ParamCell -> under.param?.let { p -> { llm.slop.liquidlsd.macro.FxMacroSync.resetFocusParam(control, p) } }
+                        else -> if (spec.side is SideButtons.ChainLink) NO_RESET else null
                     },
                     onChanged = { newVal -> control.value = newVal }
                 )

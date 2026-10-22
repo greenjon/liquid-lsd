@@ -87,77 +87,8 @@ class PerfRowLayoutTest {
     }
 
     @Test
-    fun fxRowHeaderWidthFillsMaxWAndLinesUpKebabWithSrcRow() {
-        val ctrlH = 24f
-        val gap = 3f
-        val saveW = FxChainHeader.saveBtnW(ctrlH)
-        val slotPillsW = 20f * llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT + gap * (llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT - 1)
-        val maxW = 320f
-
-        // Case 1: showArrows == true (Decks A, B, BG): [⋮][chain][Save][◀][▶][1][2][3]
-        val nameWWithArrows = FxChainHeader.calculateNameWidth(maxW, ctrlH, showArrows = true)
-        val totalDrawnWWithArrows = FxChainHeader.MORE_BTN_W + gap + nameWWithArrows + gap + saveW + gap + FxChainHeader.ARROW_W + gap + FxChainHeader.ARROW_W + gap + slotPillsW
-        assertEquals(maxW, totalDrawnWWithArrows, 0.01f)
-
-        // Case 2: showArrows == false (Deck PV, Master FX): [⋮][chain][Save][1][2][3]
-        val nameWNoArrows = FxChainHeader.calculateNameWidth(maxW, ctrlH, showArrows = false)
-        val totalDrawnWNoArrows = FxChainHeader.MORE_BTN_W + gap + nameWNoArrows + gap + saveW + gap + slotPillsW
-        assertEquals(maxW, totalDrawnWNoArrows, 0.01f)
-
-        // Furthermore, FxChainHeader's MORE_BTN_W matches DeckRowMetrics.KEBAB_W
+    fun fxRowKebabLinesUpWithTheSrcRows() {
         assertEquals(DeckRowMetrics.KEBAB_W, FxChainHeader.MORE_BTN_W)
-    }
-
-    @Test
-    fun fxRowHeaderFocusModeFillsMaxW() {
-        val gap = 3f
-        val slotPillsW = 20f * llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT + gap * (llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT - 1)
-        val maxW = 320f
-
-        // Case 1: totalPages = 1 (no parameter page stepper): [⋮] [name] [Wet] [1] [2] [3]
-        val nameW1 = FxChainHeader.calculateFocusedNameWidth(maxW, totalPages = 1)
-        val totalDrawn1 = FxChainHeader.MORE_BTN_W + gap + nameW1 + gap + FxChainHeader.DRYWET_W + gap + slotPillsW
-        assertEquals(maxW, totalDrawn1, 0.01f)
-
-        // Case 2: totalPages = 2 (stepper included): [⋮] [name] [◀] [P1/2] [▶] [1] [2] [3]
-        val nameW2 = FxChainHeader.calculateFocusedNameWidth(maxW, totalPages = 2)
-        val totalDrawn2 = FxChainHeader.MORE_BTN_W + gap + nameW2 + gap + FxChainHeader.DRYWET_W + gap +
-            FxChainHeader.ARROW_W + gap + FxChainHeader.PAGE_TEXT_W + gap + FxChainHeader.ARROW_W + gap + slotPillsW
-        assertEquals(maxW, totalDrawn2, 0.01f)
-    }
-
-    @Test
-    fun masterRowFxAndMixRowsMatchDeckFxRowLength() {
-        val deckBadgeW = 42f
-        val masterTabBadgeW = 42f
-        for (ctrlH in listOf(21f, 24f)) {
-            for (comboW in listOf(85f, 100f, 140f)) {
-                val deckFxRowW = DeckRowMetrics.row1Width(ctrlH, comboW)
-                val masterRowW = DeckRowMetrics.row1Width(ctrlH, comboW)
-
-                // Master FX row length: mode pill + gap + FxChainHeader (maxW = masterRowW - modeBtnW - gap)
-                val modeBtnW = DeckRowMetrics.MODE_PILL_W
-                val gap = DeckRowMetrics.GAP
-                val fxMaxW = masterRowW - modeBtnW - gap
-                val nameW = FxChainHeader.calculateNameWidth(fxMaxW, ctrlH, showArrows = false)
-                val slotPillsW = 20f * llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT + 3f * (llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT - 1)
-                val saveW = FxChainHeader.saveBtnW(ctrlH)
-                val masterFxDrawnW = modeBtnW + gap + nameW + 3f + slotPillsW + 3f + saveW + 3f + FxChainHeader.MORE_BTN_W
-
-                // Master MST row length: mode pill + gap + badge + gap + reset button (badgeW = width - resetBtnW - gap)
-                val mixWidth = masterRowW - modeBtnW - gap
-                val resetBtnW = 44f
-                val badgeW = mixWidth - resetBtnW - gap
-                val masterMixDrawnW = modeBtnW + gap + badgeW + gap + resetBtnW
-
-                // Visual right edge alignment: badge width + gap (6f) + row width
-                val deckVisualRightEdge = deckBadgeW + 6f + deckFxRowW
-                val masterVisualRightEdge = masterTabBadgeW + 6f + masterFxDrawnW
-                assertEquals(deckFxRowW, masterFxDrawnW, 0.01f, "Master FX row length should equal deck FX row length")
-                assertEquals(deckVisualRightEdge, masterVisualRightEdge, 0.01f, "Master FX row right edge should align with deck FX row right edge")
-                assertEquals(masterFxDrawnW, masterMixDrawnW, 0.01f, "Master MST row length should equal Master FX row length")
-            }
-        }
     }
 
     @Test

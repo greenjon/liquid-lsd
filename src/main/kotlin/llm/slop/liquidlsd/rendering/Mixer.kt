@@ -139,32 +139,29 @@ class Mixer(
      * chain on each deck. Reads from the user's library first, falling back to the bundled copy.
      */
     fun loadDefaultFxChains() {
-        fun loadChain(fileName: String): FXChainDto? {
+        // Loaded as their own baseline (and from their library file when there is one), so a fresh chain is clean.
+        fun loadChain(fileName: String, chain: FxChain) {
             val file = java.io.File(llm.slop.liquidlsd.ui.FileSystemManager.getFxChainsRoot(), fileName)
             if (file.exists()) {
-                return try {
-                    chainJson.decodeFromString<FXChainDto>(file.readText())
+                try {
+                    chain.applyFxChain(chainJson.decodeFromString<FXChainDto>(file.readText()), file, isBaseline = true)
                 } catch (e: Exception) {
-                    null
                 }
+                return
             }
-            val stream = Mixer::class.java.classLoader.getResourceAsStream("default_fx_chains/$fileName")
-            if (stream != null) {
-                return try {
-                    val text = stream.bufferedReader().use { it.readText() }
-                    chainJson.decodeFromString<FXChainDto>(text)
-                } catch (e: Exception) {
-                    null
-                }
+            val stream = Mixer::class.java.classLoader.getResourceAsStream("default_fx_chains/$fileName") ?: return
+            try {
+                val text = stream.bufferedReader().use { it.readText() }
+                chain.applyFxChain(chainJson.decodeFromString<FXChainDto>(text), isBaseline = true)
+            } catch (e: Exception) {
             }
-            return null
         }
 
-        loadChain("subtle_optical_warmth.lsdfxchain")?.let { masterFxChain.applyFxChain(it) }
-        loadChain("liquid_mercury.lsdfxchain")?.let { deckA.fxChain.applyFxChain(it) }
-        loadChain("liquid_chrome_dimension.lsdfxchain")?.let { deckB.fxChain.applyFxChain(it) }
-        loadChain("hyperspace_trip.lsdfxchain")?.let { deckBG.fxChain.applyFxChain(it) }
-        loadChain("prismatic_crystal_kaleidoscope.lsdfxchain")?.let { deckPV.fxChain.applyFxChain(it) }
+        loadChain("subtle_optical_warmth.lsdfxchain", masterFxChain)
+        loadChain("liquid_mercury.lsdfxchain", deckA.fxChain)
+        loadChain("liquid_chrome_dimension.lsdfxchain", deckB.fxChain)
+        loadChain("hyperspace_trip.lsdfxchain", deckBG.fxChain)
+        loadChain("prismatic_crystal_kaleidoscope.lsdfxchain", deckPV.fxChain)
 
         llm.slop.liquidlsd.macro.FxMacroSync.syncAll(this)
     }

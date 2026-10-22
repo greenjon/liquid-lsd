@@ -2,6 +2,7 @@ package llm.slop.liquidlsd.rendering
 
 import llm.slop.liquidlsd.models.FXChainDto
 import llm.slop.liquidlsd.models.FXSlotDto
+import llm.slop.liquidlsd.models.ParameterDto
 import llm.slop.liquidlsd.models.applyDto
 import llm.slop.liquidlsd.models.toDto
 import llm.slop.liquidlsd.parameters.ModulatableParameter
@@ -16,7 +17,7 @@ import llm.slop.liquidlsd.rendering.isf.toDto
  * with its own chain-level [dryWet] blend and [enabled] bypass toggle.
  * Each deck owns one ([Deck.fxChain]), and so does the master bus ([Mixer.masterFxChain]).
  *
- * [superKnob] is a Traktor/Mixxx-style "chain macro": when a slot is linked
+ * [superKnob] is a Traktor/Mixxx-style chain macro: when a slot is linked
  * ([slotSuperKnobLink]), moving the Super Knob drives that slot's own [ISFFilter.metaKnob].
  * How it drives it is [superKnobMode] (see [propagateSuperKnob]); neither mode ever yanks a
  * Metaknob to wherever the Super Knob currently sits when a slot is linked, loaded or hand-set.
@@ -24,6 +25,8 @@ import llm.slop.liquidlsd.rendering.isf.toDto
 class FxChain(val label: String) {
 
     var name: String = ""
+    /** Tags of the chain file this came from, written back on Save so overwriting a file keeps them. */
+    var tags: List<String> = emptyList()
     val slots = arrayOfNulls<ISFFilter>(SLOT_COUNT)
     val dryWet = ModulatableParameter(1.0f, minClamp = 0.0f, maxClamp = 1.0f)
     var enabled: Boolean = true
@@ -33,7 +36,7 @@ class FxChain(val label: String) {
 
     // -- Focus Mode (Traktor / Mixxx style) ---------------------------------------------------
     /**
-     * Focused slot index (0 until [SLOT_COUNT]), or null if the chain is in standard Group/Chain mode.
+     * Focused slot index (0 until [SLOT_COUNT]), or null if the chain is in Group mode.
      * In Focus Mode, Knob 1 maps to this slot's Metaknob, and Knobs 2-4 map to its top parameters.
      */
     var focusedSlot: Int? = null
@@ -53,6 +56,11 @@ class FxChain(val label: String) {
     fun totalParamPages(slotIndex: Int = focusedSlot ?: 0): Int {
         val count = slots.getOrNull(slotIndex)?.focusParameters?.size ?: 0
         return if (count == 0) 1 else kotlin.math.ceil(count / 3.0).toInt().coerceAtLeast(1)
+    }
+
+    /** Pulls [focusParamPage] back onto the focused slot's last page after its effect or knob layout changed. */
+    fun clampParamPage() {
+        focusParamPage = focusParamPage.coerceIn(0, totalParamPages() - 1)
     }
 
     fun stepParamPage(dir: Int) {
@@ -278,7 +286,20 @@ class FxChain(val label: String) {
         other.armSlotTakeover(b)
     }
 
+    // A slot that sat out frames (bypassed, at 0% wet, its chain off, or its deck not drawn) still holds the feedback/trail
+    // buffers from when it stopped; drawn as they are, they flash that old picture. Frames are counted in [update].
+    private var updateCount = 0L
+    private val lastRenderedUpdate = LongArray(SLOT_COUNT) { Long.MIN_VALUE }
+
+    /** Notes that slot [slotIndex] renders this frame; true when it did not render last frame, so its history is stale. */
+    fun noteSlotRendered(slotIndex: Int): Boolean {
+        val resumed = lastRenderedUpdate[slotIndex] < updateCount - 1
+        lastRenderedUpdate[slotIndex] = updateCount
+        return resumed
+    }
+
     fun update() {
+        updateCount++
         val now = llm.slop.liquidlsd.utils.TimeSource.getTimeNanos()
         if (lastFadeNanos != 0L && isFading) {
             advanceFade(((now - lastFadeNanos) / 1_000_000_000.0).toFloat().coerceIn(0f, 0.25f))
@@ -348,6 +369,7 @@ class FxChain(val label: String) {
         focusedSlot = null
         focusParamPage = 0
         name = ""
+        tags = emptyList()
         for (i in 0 until SLOT_COUNT) { slotPending[i] = null; resetSlotFade(i) }
         chainPending = null
         chainPhase = FADE_IDLE
@@ -437,15 +459,54 @@ class FxChain(val label: String) {
         return cachedIsDirty
     }
 
+    /**
+     * True when the chain differs from its baseline in anything a chain file stores, except the positions a performance moves:
+     * the Super Knob, each Metaknob, and the values the Metaknobs drive. Their modulators, links and targets still count.
+     * Floats compare with a small tolerance, since a knob placed on a value and mapped back can land a rounding error away.
+     */
     fun computeIsDirty(): Boolean {
         val base = baselineDto ?: return slots.any { it != null && it.id.isNotBlank() }
-        val maxSlots = maxOf(slots.size, base.slots.size)
-        for (i in 0 until maxSlots) {
-            val currentId = slots.getOrNull(i)?.id?.takeIf { it.isNotBlank() }
-            val baseId = base.slots.getOrNull(i)?.filterId?.takeIf { it.isNotBlank() }
-            if (currentId != baseId) return true
+        val current = toFxChainDto()
+        if (!sameParam(current.dryWet, base.dryWet)) return true
+        if (!sameParam(current.superKnob, base.superKnob, ignoreValue = true)) return true
+        if (linkFlags(current) != linkFlags(base)) return true
+        for (i in 0 until SLOT_COUNT) {
+            if (!sameSlot(current.slots.getOrNull(i), base.slots.getOrNull(i))) return true
         }
         return false
+    }
+
+    private fun linkFlags(dto: FXChainDto): List<Boolean> = List(SLOT_COUNT) { dto.slotSuperKnobLink?.getOrNull(it) ?: defaultLinked() }
+
+    private fun sameSlot(a: FXSlotDto?, b: FXSlotDto?): Boolean {
+        val aId = a?.filterId?.takeIf { it.isNotBlank() }
+        val bId = b?.filterId?.takeIf { it.isNotBlank() }
+        if (aId != bId) return false
+        if (a == null || b == null || aId == null) return true
+        if (a.enabled != b.enabled || a.knobLayout != b.knobLayout) return false
+        val links = metaLinks(a)
+        if (links != metaLinks(b)) return false
+        if (!sameParam(a.metaKnob, b.metaKnob, ignoreValue = true)) return false
+        // What an enabled Metaknob target drives follows the Metaknob, so only its modulators etc. count (null = Dry/Wet).
+        val owned = links.filter { it.enabled }.map { it.targetParamName }.toSet()
+        if (!sameParam(a.dryWet, b.dryWet, ignoreValue = null in owned)) return false
+        // Parameters on one side only (a shader that gained or lost an input since saving) have nothing to compare against.
+        for ((name, p) in a.parameters) {
+            val q = b.parameters[name] ?: continue
+            if (!sameParam(p, q, ignoreValue = name in owned)) return false
+        }
+        return true
+    }
+
+    /** A slot's Metaknob targets; files from before multi-targets have only the single [FXSlotDto.metaBinding]. */
+    private fun metaLinks(dto: FXSlotDto) = dto.metaBindings ?: listOfNotNull(dto.metaBinding)
+
+    private fun sameParam(a: ParameterDto?, b: ParameterDto?, ignoreValue: Boolean = false): Boolean {
+        if (a == null || b == null) return a == b
+        if (a.copy(baseValue = 0f) != b.copy(baseValue = 0f)) return false
+        if (ignoreValue) return true
+        val scale = maxOf(1f, kotlin.math.abs(a.baseValue), kotlin.math.abs(b.baseValue))
+        return kotlin.math.abs(a.baseValue - b.baseValue) <= DIRTY_TOLERANCE * scale
     }
 
     fun markClean(file: java.io.File? = sourceFile) {
@@ -457,6 +518,7 @@ class FxChain(val label: String) {
 
     fun applyFxChain(dto: FXChainDto, source: java.io.File? = null, isBaseline: Boolean = false) {
         name = dto.name
+        tags = dto.tags
         sourceFile = source
         baselineDto = if (isBaseline) dto else null
         cachedIsDirty = false
@@ -479,7 +541,7 @@ class FxChain(val label: String) {
         }
     }
 
-    fun toFxChainDto(chainName: String = name, tags: List<String> = emptyList()): FXChainDto {
+    fun toFxChainDto(chainName: String = name, tags: List<String> = this.tags): FXChainDto {
         val slotsList = (0 until SLOT_COUNT).map { toFxSlotDto(it) }
         return FXChainDto(
             name = chainName.ifBlank { "fx_chain" },
@@ -510,6 +572,8 @@ class FxChain(val label: String) {
             else -> m0 + (1f - m0) * (s - s0) / (1f - s0)
         }.coerceIn(0f, 1f)
         private const val TAKEOVER_TOLERANCE = 0.04f
+        /** Relative float tolerance of [computeIsDirty]. */
+        private const val DIRTY_TOLERANCE = 1e-4f
         private const val FADE_IDLE = 0
         private const val FADE_OUT = 1
         private const val FADE_IN = 2

@@ -63,7 +63,8 @@ object SessionSerializer {
                 deckBGFxChain = mixer.deckBG.fxChain.toFxChainDto(),
                 deckBGFxChainSource = mixer.deckBG.fxChain.sourceFile?.let { serializeSessionPath(it) },
                 deckPVFxChain = mixer.deckPV.fxChain.toFxChainDto(),
-                deckPVFxChainSource = mixer.deckPV.fxChain.sourceFile?.let { serializeSessionPath(it) }
+                deckPVFxChainSource = mixer.deckPV.fxChain.sourceFile?.let { serializeSessionPath(it) },
+                bypassedFxChains = sessionFxChains(mixer).filter { !it.second.enabled }.map { it.first }
             )
 
             val session = SessionStateDto(
@@ -152,11 +153,12 @@ object SessionSerializer {
             val pvDto = session.deckPV ?: PresetManager.emptyDeckDto(mixer.deckPV, mixer)
             mixer.deckPV.applyDto(pvDto)
 
-            mDto.masterFxChain?.let { mixer.masterFxChain.applyFxChain(it, mDto.masterFxChainSource?.let { p -> resolveSessionPath(p) }, isBaseline = false) }
-            mDto.deckAFxChain?.let { mixer.deckA.fxChain.applyFxChain(it, mDto.deckAFxChainSource?.let { p -> resolveSessionPath(p) }, isBaseline = false) }
-            mDto.deckBFxChain?.let { mixer.deckB.fxChain.applyFxChain(it, mDto.deckBFxChainSource?.let { p -> resolveSessionPath(p) }, isBaseline = false) }
-            mDto.deckBGFxChain?.let { mixer.deckBG.fxChain.applyFxChain(it, mDto.deckBGFxChainSource?.let { p -> resolveSessionPath(p) }, isBaseline = false) }
-            mDto.deckPVFxChain?.let { mixer.deckPV.fxChain.applyFxChain(it, mDto.deckPVFxChainSource?.let { p -> resolveSessionPath(p) }, isBaseline = false) }
+            mDto.masterFxChain?.let { restoreFxChain(mixer.masterFxChain, it, mDto.masterFxChainSource) }
+            mDto.deckAFxChain?.let { restoreFxChain(mixer.deckA.fxChain, it, mDto.deckAFxChainSource) }
+            mDto.deckBFxChain?.let { restoreFxChain(mixer.deckB.fxChain, it, mDto.deckBFxChainSource) }
+            mDto.deckBGFxChain?.let { restoreFxChain(mixer.deckBG.fxChain, it, mDto.deckBGFxChainSource) }
+            mDto.deckPVFxChain?.let { restoreFxChain(mixer.deckPV.fxChain, it, mDto.deckPVFxChainSource) }
+            for ((name, chain) in sessionFxChains(mixer)) chain.enabled = name !in mDto.bypassedFxChains
 
             mDto.xfadeSpeed?.let { mixer.xfadeSpeed.applyDto(it) }
             mDto.queueNext?.let { mixer.queueNext.applyDto(it) }
@@ -294,6 +296,24 @@ object SessionSerializer {
             "\${LIBRARY}" + file.absolutePath.substring(rootPath.length).replace('\\', '/')
         } else {
             file.absolutePath.replace('\\', '/')
+        }
+    }
+
+    /** Every FX chain with the name [MixerDto.bypassedFxChains] stores it under. */
+    private fun sessionFxChains(mixer: Mixer) = listOf(
+        "Master" to mixer.masterFxChain, "Deck A" to mixer.deckA.fxChain, "Deck B" to mixer.deckB.fxChain,
+        "Deck BG" to mixer.deckBG.fxChain, "Deck PV" to mixer.deckPV.fxChain
+    )
+
+    /**
+     * Restores a session's FX chain. The chain's baseline is the file it came from as that file is now, so a chain the
+     * session holds unchanged is clean on launch and one edited before quitting still shows unsaved. No file, no baseline.
+     */
+    private fun restoreFxChain(chain: llm.slop.liquidlsd.rendering.FxChain, dto: FXChainDto, sourcePath: String?) {
+        val source = sourcePath?.let { resolveSessionPath(it) }
+        chain.applyFxChain(dto, source, isBaseline = false)
+        chain.baselineDto = source?.let { f ->
+            runCatching { PresetManager.json.decodeFromString<FXChainDto>(f.readText()) }.getOrNull()
         }
     }
 

@@ -173,6 +173,10 @@ class ISFFilter(
         metaBindings.addAll(bindings)
     }
 
+    /** False when the Metaknob drives nothing: no enabled target that this shader has. */
+    val hasMetaTarget: Boolean
+        get() = metaBindings.any { it.enabled && !isMissingTarget(it) }
+
     /** True when [binding] names a parameter this shader does not have (renamed input, or a preset made for another shader). */
     fun isMissingTarget(binding: FxMetaBinding): Boolean =
         binding.targetParamName != null && binding.targetParamName !in parameters
@@ -687,6 +691,11 @@ class ISFFilter(
         // has no relation to metaBinding's target range, so resetting to it would misrepresent the
         // target's true authored default and get immediately re-applied by the next update().
         placeMetaKnobAtTarget()
+        clearHistory()
+    }
+
+    /** Forgets every earlier frame (feedback/trail buffers, FRAMEINDEX) so the next render starts from black. GL thread only. */
+    fun clearHistory() {
         frameIndex = 0
         for (slot in persistentSlots) {
             slot?.let {

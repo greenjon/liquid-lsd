@@ -136,7 +136,8 @@ Macro Knobs sit at the top of the MIDI/OSC input hierarchy:
 ## FX chains in Edit
 
 Each deck and Master has its own **independent FX chain**. A deck's **FX** tab in Edit (and **OUT > FX** for
-Master) starts with the **CHAIN MACRO** block: the chain's Super Knob, then one row per slot Metaknob with its
+Master) starts with the chain's **Dry/Wet** row and its `⋮` chain menu (the same menu as on the FX row), then the
+**SUPER KNOB & METAKNOBS** block: the chain's Super Knob, then one row per slot Metaknob with its
 Super Knob **Link** checkbox. These are full parameter rows, so they take modulators and right-click MIDI / OSC
 Learn like any other. Below it, each slot has its parameters, its **Metaknob targets** and its **Knobs** order.
 
@@ -184,7 +185,7 @@ A parameter's base value can be driven from several places. From strongest to we
     knob lets go of the Super Knob until it reaches the slot again. While a slot waits, its link
     button is amber and the Edit-row strip says "waiting for pickup".
 - **Focus Mode** (per slot) — hands the chain's knobs to one effect slot. Focusing from the Perform row, the
-  Twister or the Metaknob row's menu in Edit is the same thing: the knobs follow, and Edit's CHAIN MACRO block
+  Twister or the Metaknob row's menu in Edit is the same thing: the knobs follow, and Edit's SUPER KNOB & METAKNOBS block
   shows which parameters knobs 2-4 hold, with page arrows and **Group Mode** to leave.
   - **Knob 1**: The focused slot's Metaknob, linked or not. The slot's **Dry/Wet** is the `Wet` slider in the chain header (middle-click resets to 100%).
   - **Knobs 2–4**: Retargeted to the focused effect's top parameters on the active page, with parameter paging (`[◀ P1/N ▶]`) when more than 3 parameters exist. A parameter the Metaknob already drives is left out, since knob 1 moves it, unless you set the slot's own knob order (see *Editing a Metaknob's targets and knob order* below). Time-like parameters (names with a word such as rate, speed, frequency, decay or feedback, e.g. `fbDecay`) respond exponentially, so the slow end gets more of the knob's travel.
@@ -247,8 +248,8 @@ Every deck and Master row shows one half (source or FX), so a knob never changes
 Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).
 
 - **Per-Deck Insert FX & Flexible Routing**: Every deck (A, B, BG, PV) now owns its own dedicated 3-slot `FxChain` running post-generator and pre-crossfader, completely decoupled from other decks.
-- **Deck Rows Are Split into a Source Row and an FX Row**: Each deck has a **source row** (`[ SRC ]` pill, kebab, generator/preset badge, Save, queue navigation, eject; its knobs are the source's macros) and an **FX row** (`[ FX ]` pill, kebab, chain name, Save, queue navigation, slot pills `1 2 3`; its knobs are the chain's Super Knob and three Metaknobs). The right wing of the FX row has the `[ BYPASS / FX ON ]` button. The source row's right wing has the randomize die (Source and FX).
-- **Master Rows Are Split Too**: The **Master MST row** (`[ MST ]` pill) has the deck-levels badge, with the four knobs on the deck levels and the master level. The **Master FX row** (`[ FX ]` pill) has the Master FX chain header (`[◀] Name • [▶] [Save] [⋮]`) and its `[ BYPASS / FX ON ]` button, with the knobs on the Master FX Super Knob + 3 Metaknobs. The crossfader sits on the Transitions row.
+- **Deck Rows Are Split into a Source Row and an FX Row**: Each deck has a **source row** (`[ SRC ]` pill, kebab, generator/preset badge, Save, queue navigation, eject; its knobs are the source's macros) and an **FX row** (`[ FX ]` pill, kebab, chain name, Save, queue navigation, slot pills `1 2 3`; its knobs are the chain's Super Knob and three Metaknobs). The right wing of the FX row has the `[ FX ON ]` button. The source row's right wing has the randomize die (Source and FX).
+- **Master Rows Are Split Too**: The **Master MST row** (`[ MST ]` pill) has the deck-levels badge, with the four knobs on the deck levels and the master level. The **Master FX row** (`[ FX ]` pill) has the Master FX chain header (the chain name, then `[⋮] [Save] [1] [2] [3]`) and its `[ FX ON ]` button, with the knobs on the Master FX Super Knob + 3 Metaknobs. The crossfader sits on the Transitions row.
 - The Transitions row has the transition picker on line 1 (click it to pick from the Library below — see below; the Edit gear sits at its end), and line 2 is laid out like an FX row: `[⋮]` menu, `[Save]` (saves the transition as a preset), queue `[◀] [▶]`, then the crossfader cells below. Its four knobs are fixed: **knob 1 is the crossfader** (it follows auto-fades and the slider, and turning it takes over like the slider does), and **knobs 2-4 are the active transition's first three sliders**, relabelled whenever you change transition. Transitions with fewer than three sliders leave the spare knobs blank. Line 2 ends with `A` / `B` snap buttons, `AUTO` and the fade time; there is no crossfader slider on the row (use knob 1 or the Mixer panel's slider). These knobs cannot be re-learned; Dry/Wet stays in the Edit bay.
 
 Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) and starts with a title badge spanning both control lines: a large **A**, **B**, **BG** or **PV** on deck rows (the `[SRC]`/`[FX]` pills beside it show which the knobs control), and **MASTER**, **TRANS** and **CLOCK** on the MIXER tab. No row has a header bar over its knobs, so MIXER-tab knobs are the same size as deck knobs.
@@ -263,7 +264,7 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
     - **Row 1 (SRC)**:
       - **`[ SRC ]` Pill**: Labels the source row, whose 4 on-screen macro knobs are the deck's Visual Generator.
       - **Generator / Preset Badge**: One control, not two -- a preset is just a generator with its parameter values saved under a name. Shows the active preset's name (with a dirty marker `*`) or, if nothing's been saved, the generator's own name. Click it and the Library below lists stock generator types and saved presets together, applying to this deck (click again to stop); right-click for source defaults.
-      - **Eject Button (`⏏`)**: Resets the deck to defaults with dirty-state safety guard.
+      - **Eject Button (`⏏`)**: Resets the deck's source to defaults with dirty-state safety guard. The deck's FX chain is left as it is.
       - **Queue Navigation**: Deck A and Deck B connect to `PlayQueueManager` (`< N/Total >`), Deck BG connects to `BgQueueManager` (`< N/Total >`), and Deck PV features a quick Preview focus button.
       - **Save Button**: Saves current visual source and parameters as a preset.
       - **Kebab Menu (`⋮`)**: Source operations (Browse, Save As, defaults).
@@ -280,11 +281,11 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
     - **Double-Click Direct Numeric Entry**: Double-click any macro knob face to open an inline text entry box. Type exact numerical values (e.g. `0.25`, `-1.5`, `42`) and press `Enter` to commit, or `Escape` to cancel. The typed value is what the parameter receives, so the knob's curve, invert and zone are taken into account (the readout shows the same value). For stepped or half-range bindings the knob snaps to the nearest position that gets closest.
     - **In-Face Readouts**: Hovering or dragging over a targetless or group-mode knob displays a subtle real-time value readout in the center of the knob face.
   - **Right Wing**:
-    - **Randomize Die Button (`🎲`)**: Instantly randomizes that deck's modulators & base values across both Visual Source and Insert FX with undo support (when randomization is enabled). Positioned on Row 1 directly above the BYPASS button.
-    - **`[ BYPASS / FX ON ]`**: Dedicated insert FX kill switch, positioned on Row 2 aligned with the FX row.
+    - **Randomize Die Button (`🎲`)**: Instantly randomizes that deck's modulators & base values across both Visual Source and Insert FX with undo support (when randomization is enabled). Positioned on Row 1 directly above the FX ON button.
+    - **`[ FX ON ]`**: Turns the deck's FX chain on or off; lit while on. Positioned on Row 2 aligned with the FX row.
   - **Drag-and-Drop**: Dropping a deck preset (`.patch`, `.lsd`, `.json`) loads the visual preset; dropping a `.lsdfxchain` loads that FX chain onto the deck.
 - **Whole-Rig Randomize (`[ ALL 🎲 ]`)**: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking `mixer.randomizeAll()` across all decks simultaneously.
-- **Master FX row**: Left wing: the `FX`-captioned `M` badge, the chain name box and the chain controls line, as on a deck FX row; right wing: Master FX `[ BYPASS / FX ON ]`. Dropping a `.lsdfxchain` onto the `MASTER` badge loads it into Master FX.
+- **Master FX row**: Left wing: the `FX`-captioned `M` badge, the chain name box and the chain controls line, as on a deck FX row; right wing: Master FX `[ FX ON ]`. Dropping a `.lsdfxchain` onto the `MASTER` badge loads it into Master FX.
 - **Level faders on the deck tiles** (the thin strip beside each preview badge) share their value with the Master MST knobs: move the fader and the knob follows, turn the knob and the fader follows, last mover wins. A fader drag also mutes non-MIDI modulation on it and makes a Soft Takeover MIDI/OSC mapping on it pick up again instead of jumping. The handle line marks the fader's own value; the filled bar is the live level after modulation.
 - **Master MST row**: The `M` badge carries an `MST` caption. Line 1 is the `Deck Levels & Master` box (click to edit the levels, right-click for level resets) and a `100%` reset button; its gear opens Edit on the MST side tab's LEVELS section (the master level, then each deck's level and alpha), which shows this row together with the Clock row; the knobs are the Deck A / B / BG and Master levels. The crossfader is not here: it lives on the Transitions row (knob 1) and the Mixer panel.
 - **Transitions (Row 2 in MASTER)**: Left wing features a Transition Picker button displaying the active transition with modified indicator (`*`) — click it to pick from the transition list in the Library below — and Transition Queue stepping controls (`<`, `N/Total`, `>`); right wing hosts the transition randomize die button (`🎲`) on Row 1 (matching the deck rows). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the picker button.
@@ -490,7 +491,7 @@ When swapping visual sources on any deck (via the generator badge or launchpad),
 
 A slot's Metaknob targets, knob order and parameter values can be saved as the effect's own default:
 - Tweaking parameters or targets during performance is purely temporary and does **not** silently overwrite defaults on disk.
-- **Right-click a Metaknob row** in Edit's CHAIN MACRO block:
+- **Right-click a Metaknob row** in Edit's SUPER KNOB & METAKNOBS block:
   - `Save as Default for <Filter>` saves this slot's Metaknob targets, knob order and parameter values into `library/isf_overrides/<contentHash>.json`. New copies of the effect start from it; slots already in chains keep their own.
   - When a saved default exists, `Remove Saved Default for <Filter>` deletes it, so new copies go back to the curated/auto-mapped targets, and resets this slot to them too.
 - Targets themselves are edited in the slot's **Metaknob targets** block or on the Edit-row strip.

@@ -402,7 +402,7 @@ To elevate any flat 2D source into 3D geometry (Tri-Axial, Cube Cage, Hex-Planar
 
 ---
 
-## Effect Slots (FX1–FX3)
+## Effect Slots (1–3)
 
 Each deck has a chain of three effect slots that run after the source, left to right: FX1 feeds FX2, which feeds FX3. Master FX is a fourth chain of three slots, applied to the final mix (see [Performance Controls](performance_controls.md)).
 

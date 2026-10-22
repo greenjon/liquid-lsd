@@ -1,5 +1,6 @@
 package llm.slop.liquidlsd.macro
 
+import llm.slop.liquidlsd.parameters.ModulatableParameter
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
 
@@ -50,10 +51,10 @@ object FxMacroSync {
         else -> null
     }
 
-    /** The FX bank id owning [chain] (identity match), or null if it isn't one of [mixer]'s chains. */
     /** True for banks whose knobs/bindings are owned by [FxMacroSync] (read-only everywhere else). */
     fun isFxBank(bankId: String?): Boolean = bankId in FX_BANK_IDS
 
+    /** The FX bank id owning [chain] (identity match), or null if it isn't one of [mixer]'s chains. */
     fun bankIdFor(chain: FxChain, mixer: Mixer): String? = FX_BANK_IDS.firstOrNull { chainFor(it, mixer) === chain }
 
     /** Re-syncs [bankId]'s knobs to its chain. No-op for non-FX bank ids. */
@@ -77,6 +78,30 @@ object FxMacroSync {
         syncFor(bankId, mixer)
     }
 
+    /**
+     * Puts focus-mode parameter [param] back to its authored default and turns [control] (its knob) to match through the
+     * knob's own curve, so the next tick doesn't re-map the knob onto a different value. A parameter a Metaknob link owns
+     * locks its knob, so the Metaknob (and whatever knob drives it) moves instead.
+     */
+    fun resetFocusParam(control: MacroControl, param: ModulatableParameter) {
+        val default = param.defaultValue
+        val binding = control.bindings.firstOrNull()
+        val metaBinding = param.metaDrivenBinding
+        val meta = param.metaDrivenKnob
+        if (param.metaDrivenBy != null && metaBinding != null && meta != null) {
+            val k = metaBinding.knobForTarget(default).coerceIn(0f, 1f)
+            val metaPath = binding?.parameterId?.substringBeforeLast('/')?.plus("/Meta")
+            if (metaPath == null || !KnobDrive.setViaKnob(metaPath, meta, k)) meta.set(k)
+            return
+        }
+        if (binding == null) {
+            param.baseValue = default
+            return
+        }
+        control.value = MacroCurve.inverse(default, binding).coerceIn(0f, 1f)
+        param.baseValue = MacroCurve.mapToRange(control.value, binding)
+    }
+
     /** Re-syncs every FX bank. */
     fun syncAll(mixer: Mixer) {
         for (bankId in FX_BANK_IDS) syncFor(bankId, mixer)
@@ -94,6 +119,7 @@ object FxMacroSync {
 
         val focused = chain.focusedSlot
         if (focused != null && focused in 0 until FxChain.SLOT_COUNT) {
+            chain.clampParamPage()
             syncFocusMode(macroBank, chainLabel, chain, focused)
         } else {
             syncGroupMode(macroBank, chainLabel, chain)
@@ -119,7 +145,7 @@ object FxMacroSync {
         for (slotIdx in 0 until FxChain.SLOT_COUNT) {
             val knobIndex = slotIdx + 1
             val slot = chain.slots.getOrNull(slotIdx)
-            val label = "META"
+            val label = metaLabel(slot)
             if (chain.slotSuperKnobLink.getOrNull(slotIdx) == true) {
                 // Linked slots are driven by the Super Knob's soft-takeover propagation
                 // (FxChain.propagateSuperKnob) -- a MacroBinding here would race it for the same
@@ -149,12 +175,12 @@ object FxMacroSync {
         // Knob 0: Focused slot's Metaknob (its Dry/Wet is on the chain header). A slot linked to the
         // Super Knob is driven by FxChain's propagation, so its knob is an unbound two-way mirror (see group mode).
         if (chain.slotSuperKnobLink.getOrNull(slotIdx) == true) {
-            macroBank.knobs.getOrNull(0)?.let { it.bindings.clear(); it.label = "META" }
+            macroBank.knobs.getOrNull(0)?.let { it.bindings.clear(); it.label = metaLabel(slot) }
         } else {
             syncKnob(
                 macroBank = macroBank,
                 knobIndex = 0,
-                defaultLabel = "META",
+                defaultLabel = metaLabel(slot),
                 targetPath = "$chainLabel/FX/FX$slotNum/Meta",
                 initialValue = slot?.metaKnob?.baseValue ?: 0f
             )
@@ -194,6 +220,10 @@ object FxMacroSync {
             }
         }
     }
+
+    /** A Metaknob knob's label; one whose Metaknob has no targets says so, since turning it does nothing. */
+    private fun metaLabel(slot: llm.slop.liquidlsd.rendering.isf.ISFFilter?): String =
+        if (slot != null && !slot.hasMetaTarget) "NO TARGET" else "META"
 
     private fun clearKnob(macroBank: MacroBank, knobIndex: Int) {
         val control = macroBank.knobs.getOrNull(knobIndex) ?: return

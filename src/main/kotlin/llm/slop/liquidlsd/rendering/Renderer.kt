@@ -380,6 +380,7 @@ class Renderer {
             val dryWet = chain.effectiveSlotWet(slotIndex)
             if (dryWet <= 0.0f) continue
             val slot = chain.slots[slotIndex] ?: continue
+            if (chain.noteSlotRendered(slotIndex)) slot.clearHistory()
 
             writeFBO.bind()
             glViewport(0, 0, width, height)
