@@ -200,11 +200,25 @@ Metaknob targets are float inputs only (Add Target lists `TYPE == "float"`). Let
 
 Saving a shader file while the app runs should recompile it and swap it into every deck, FX slot and transition using it, without a restart. Today a new file is picked up by Rescan Now, but a shader that's already loaded keeps its first version until restart (the file watcher only refreshes `ISFLibraryRegistry`, which nothing reads). In 1.0, a source that fails to compile shows a red checkerboard and an ⚠ with its first compiler error in Browse.
 
-- [ ] Shared-shader ownership: decks, FX slots and transitions share a master's `Shader`, so a reload has to replace the program in place (a mutable holder, or a shader generation the instances re-fetch), not dispose it under them.
-- [ ] Wire `ISFFileWatcher` changes to a GL-thread reload of just the changed file (sources, filters, transitions).
-- [ ] Inputs added, removed or retyped by the edit: keep values and bindings by name, drop the rest, and say so.
-- [ ] A failed recompile keeps the last good version running (the old docs promised this) and surfaces the error in the UI, not only the log.
-- [ ] Removed files: what a deck playing a deleted source does.
+Build it in stages. Stage 1 covers the common case, an edit to the GLSL body only; stage 2 adds input changes; until stage 2 lands, an edit that changes the inputs is deferred (stage 3).
+
+**Stage 1: reload with an unchanged input set**
+- [ ] Shared-shader ownership: decks, FX slots and transitions share a master's `Shader`, so a reload has to replace the program in place (a mutable `programId` with `Shader.reload(vert, frag)` that links a new program, swaps it and deletes the old one; clear `uniformLocationCache` on swap), not dispose it under them. Clones then pick the new program up with no change.
+- [ ] Wire `ISFFileWatcher` changes to a GL-thread reload of just the changed file (sources, filters, transitions). The watcher callback must report the changed path; queue the request and drain it at the top of the render loop, since GL calls can't run on the watcher thread. Extract the shader-building part of `loadFromISFFile` and its filter and transition counterparts into helpers shared by load and reload.
+- [ ] A failed recompile keeps the last good version running (the old docs promised this) and surfaces the error in the UI (toast or the Browse ⚠), not only the log. A later successful save clears `compileErrors`.
+- [ ] Tests: successful swap, failed compile keeping the old program.
+
+**Stage 2: input changes**
+- [ ] Inputs added, removed or retyped by the edit: keep values and bindings by name, drop the rest, and say so. Each live clone needs a "rebind to new header" step (cloned parameters, input bindings, persistent buffers and pass FBOs; multipass and feedback shaders rebuild their per-pass targets if the pass list changed). Decide how saved presets and macro bindings that reference dropped inputs behave.
+- [ ] Tests: a retyped input keeps its value by name; a dropped input is reported.
+
+**Stage 3: fallback until stage 2 lands**
+- [ ] An edit that changes the inputs is not applied to live decks; mark the source "needs reload on next load" and say so in the UI.
+
+**Open decision**
+- [ ] Removed files: what a deck playing a deleted source does. Leading option: keep the last program running, mark the source as missing in Browse, drop it from the catalog.
+
+**Done means:** release notes in both files, user guide and developer docs, tooltips.
 
 ---
 
