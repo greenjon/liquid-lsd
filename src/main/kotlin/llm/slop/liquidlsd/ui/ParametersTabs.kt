@@ -319,20 +319,20 @@ object ParametersTabs {
         onPushUndo: () -> Unit
     ) {
         var row = 0
-        ParametersRenderer.drawParamRow(session, "queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "queue next", "Mixer/queueNext", mixer.queueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "bg queue prev", "Mixer/bgQueuePrev", mixer.bgQueuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "bg queue next", "Mixer/bgQueueNext", mixer.bgQueueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "trans queue prev", "Mixer/transQueuePrev", mixer.transQueuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "trans queue next", "Mixer/transQueueNext", mixer.transQueueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        ParametersRenderer.drawParamRow(session, "tap tempo", "Mixer/tapTempo", mixer.tapTempo, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "Queue prev", "Mixer/queuePrev", mixer.queuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "Queue next", "Mixer/queueNext", mixer.queueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "BG queue prev", "Mixer/bgQueuePrev", mixer.bgQueuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "BG queue next", "Mixer/bgQueueNext", mixer.bgQueueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "Trans queue prev", "Mixer/transQueuePrev", mixer.transQueuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "Trans queue next", "Mixer/transQueueNext", mixer.transQueueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "Tap tempo", "Mixer/tapTempo", mixer.tapTempo, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
         if (session.uiTheme.randomizationEnabled) {
-            ParametersRenderer.drawParamRow(session, "rand Deck A", "Mixer/randDeckA", mixer.randDeckA, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            ParametersRenderer.drawParamRow(session, "rand Deck B", "Mixer/randDeckB", mixer.randDeckB, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            ParametersRenderer.drawParamRow(session, "rand Deck BG", "Mixer/randDeckBG", mixer.randDeckBG, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            ParametersRenderer.drawParamRow(session, "rand Deck PV", "Mixer/randDeckPV", mixer.randDeckPV, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            ParametersRenderer.drawParamRow(session, "rand All", "Mixer/randAll", mixer.randAll, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "Randomize deck A", "Mixer/randDeckA", mixer.randDeckA, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "Randomize deck B", "Mixer/randDeckB", mixer.randDeckB, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "Randomize deck BG", "Mixer/randDeckBG", mixer.randDeckBG, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "Randomize deck PV", "Mixer/randDeckPV", mixer.randDeckPV, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "Randomize all", "Mixer/randAll", mixer.randAll, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         }
     }
 
@@ -352,20 +352,20 @@ object ParametersTabs {
         val transName = trans?.displayName ?: "Linear Crossfade"
         // The master level, crossfader and its auto-fade time lead the tab: the output stage the transition shader and its parameters act on.
         val crossfadeRow = {
-            ParametersRenderer.drawParamRow(session, "master level", "Mixer/masterLevel", mixer.masterLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            ParametersRenderer.drawParamRow(session, "crossfade", "Mixer/crossfade", mixer.crossfade, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            ParametersRenderer.drawParamRow(session, "fade speed", "Mixer/xfadeSpeed", mixer.xfadeSpeed, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "Master level", "Mixer/masterLevel", mixer.masterLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "Crossfade", "Mixer/crossfade", mixer.crossfade, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "Fade speed", "Mixer/xfadeSpeed", mixer.xfadeSpeed, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         }
 
-        ImGui.textDisabled("TRANSITION SHADER")
-        ImGui.sameLine()
-        ImGui.setNextItemWidth((labelColW - 130f).coerceAtLeast(30f))
+        // The selector spans the label column, less the bypass checkbox and kebab beside it, so the shader's name fits.
+        val selectorW = (labelColW - 2f * ImGui.getFrameHeight() - 2f * ImGui.getStyle().itemSpacingX).coerceAtLeast(30f)
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            if (ButtonChrome.button("$transName  ${Icons.CHEVRON_DOWN}##mixer_trans_selector", (labelColW - 130f).coerceAtLeast(30f), 0f)) {
+            val shown = TextFit.ellipsize(transName, selectorW - ImGui.calcTextSize("  ${Icons.CHEVRON_DOWN}").x - 2f * ImGui.getStyle().framePaddingX)
+            if (ButtonChrome.button("$shown  ${Icons.CHEVRON_DOWN}##mixer_trans_selector", selectorW, 0f)) {
                 state.openTransitionBrowse()
             }
         }
-        itemTooltip("Select active ISF Transition Shader for Deck A/B crossfader.")
+        itemTooltip("Transition shader: $transName. Click to browse transitions for the Deck A/B crossfader.")
 
         if (trans != null) {
             ImGui.sameLine()

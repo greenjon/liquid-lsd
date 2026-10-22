@@ -121,7 +121,7 @@ object FxMetaBindingEditor {
 
         drawBar(fx, binding, lo, hi, width, edit, gesture)
 
-        val fieldW = (width - 40f) * 0.5f
+        val fieldW = BindingEditorParts.minMaxFieldWidth(width, 6f)
         ImGui.setNextItemWidth(fieldW)
         drawMin(binding, lo, hi, edit, gesture, compact = false)
         ImGui.sameLine(0f, 6f)
