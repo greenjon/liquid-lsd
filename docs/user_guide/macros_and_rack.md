@@ -278,16 +278,14 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
 - **Transitions (Row 2 in MASTER)**: Left wing features a Transition Picker button displaying the active transition with modified indicator (`*`) — click it to pick from the transition list in the Library below — and Transition Queue stepping controls (`<`, `N/Total`, `>`); right wing hosts the transition randomize die button (`🎲`) on Row 1 (matching the deck rows). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the picker button.
 - **Clock & Global (Row 4 in MASTER)**: The two lines beside the `CLOCK` badge have the tempo controls from Preferences > Tempo & Sync, placed here for use mid-set:
   - **`[ MAN ]` / `[ AUDIO ]`**: clock source (manual tempo or the audio beat tracker).
-  - **`[ LINK n ]`**: shown while Ableton Link is on, with the peer count. Click it to open Tempo & Sync preferences.
-  - **BPM readout**: click it to open Tempo & Sync preferences.
-  - **4 beat dots**: bar phase; the downbeat is cyan.
+  - **`[ LINK n ]`**: the third button of the top line, with the peer count while Ableton Link is on and dim while it is off. Click it to open Tempo & Sync preferences.
+  - **BPM readout**: click it to open Tempo & Sync preferences. The **4 beat dots** under it show the bar phase; the downbeat is cyan.
   - **`[ TAP ]`**: tap tempo. Right-click for MIDI Learn. In Audio mode it nudges the detected tempo and phase.
-  - **`[ RESYNC ]`**: snaps the beat phase to the downbeat.
+  - **`[ SNAP ]`**: snaps the beat phase to the downbeat.
   - **Twister clock knob**: knob 13 on a Midi Fighter Twister pulses its LED on the beat (orange on the downbeat), shows the tempo on its ring and taps tempo when pushed. See [Rings and LEDs](performance_controls.md#twister-lights).
-  - **`[ /2 ]` `[ x2 ]`**: halve or double the tempo.
-  - **`[ - ]` `[ + ]`**: nudge the tempo by 0.5 BPM.
-  - **Queue triggers (`QUEUE`)**: right of the tempo controls, a `[◀] [▶]` pair for each queue (**A/B**, **BG**, **TRN** for the transition queue) steps that queue. They are the same triggers as the queue rows of Edit's MST › CTRL tab: right-click a button for MIDI or OSC Learn, and a mapping made there shows on the CTRL row and the other way round.
-  - **Randomize triggers (`RAND`)**: while randomization is enabled (Preferences), a second line has `[A] [B] [BG] [PV] [ALL]` buttons that randomize that deck (or everything), with the same Learn menu and Ctrl+Z undo as the decks' dice. On a window too narrow for them, they are the first thing to go.
+  - **`[ - ][ + ]`**: nudge the tempo by 0.5 BPM. The pair takes the space of one button, so MAN, AUDIO, LINK, TAP, SNAP and the pair make a tidy 3 x 2 grid.
+  - **Queue triggers (`QUEUE`)**: right of the tempo controls, captions `A/B`, `A/B FX`, `BG`, `BG FX` and `TRN` over each queue's buttons: `[◀] [▶]`, with a play / pause button beside the caption on the A/B, BG and TRN queues (it toggles that queue's auto-advance and is lit while it runs; the FX queues have none). They are the same triggers as the queue rows of Edit's MST › CTRL tab: right-click a button for MIDI or OSC Learn, and a mapping made there shows on the CTRL row and the other way round.
+  - **Randomize triggers (`RAND`)**: while randomization is enabled (Preferences), at the right edge, `[A] [B] [ALL]` over `[BG] [PV]` randomize that deck (or everything), with the same Learn menu and Ctrl+Z undo as the decks' dice. On a window too narrow for them, they are the first thing to go.
 
   The BPM is deliberately not a knob, since one bump would shift the whole show. The row has no macro knobs; a configurable row of free "global" knobs that can target any parameter is planned for a later release.
 

@@ -287,6 +287,10 @@ class PresetDirtyLoadingTest {
         every { mixer.bgQueuePrev } returns bgQueuePrevParam
         every { mixer.transQueueNext } returns transQueueNextParam
         every { mixer.transQueuePrev } returns transQueuePrevParam
+        every { mixer.fxQueueNext } returns ModulatableParameter(0.8f, minClamp = 0f, maxClamp = 1f)
+        every { mixer.fxQueuePrev } returns ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
+        every { mixer.fxBgQueueNext } returns ModulatableParameter(0.8f, minClamp = 0f, maxClamp = 1f)
+        every { mixer.fxBgQueuePrev } returns ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f)
         every { mixer.tapTempo } returns tapTempoParam
         every { mixer.syncQueueTriggerPrevValues() } answers { callOriginal() }
         every { mixer.pollQueueAdvance() } answers { callOriginal() }

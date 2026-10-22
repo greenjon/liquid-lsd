@@ -279,6 +279,20 @@ class Mixer(
         }
     }
 
+    /** FX queue transport. The FX queues have no auto-advance, so only a MIDI CC drives these besides a click. */
+    val fxQueuePrev = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
+        modulatorFilter = { mod -> mod.sourceId.startsWith("midi_cc_") }
+    }
+    val fxQueueNext = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
+        modulatorFilter = { mod -> mod.sourceId.startsWith("midi_cc_") }
+    }
+    val fxBgQueuePrev = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
+        modulatorFilter = { mod -> mod.sourceId.startsWith("midi_cc_") }
+    }
+    val fxBgQueueNext = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f).apply {
+        modulatorFilter = { mod -> mod.sourceId.startsWith("midi_cc_") }
+    }
+
     val tapTempo = ModulatableParameter(0.0f, minClamp = 0f, maxClamp = 1f, isRandomizeDisabled = true).apply {
         modulatorFilter = { mod -> mod.sourceId.startsWith("midi_cc_") }
     }
@@ -309,6 +323,10 @@ class Mixer(
     private var prevBgQueuePrevVal = 0.0f
     private var prevBgQueueNextVal = 0.0f
     private var prevTransQueuePrevVal = 0.0f
+    private var prevFxQueuePrevVal = 0.0f
+    private var prevFxQueueNextVal = 0.0f
+    private var prevFxBgQueuePrevVal = 0.0f
+    private var prevFxBgQueueNextVal = 0.0f
     private var prevTransQueueNextVal = 0.0f
     private var prevTapTempoVal = 0.0f
     private var lastUpdateTimeNs: Long = System.nanoTime()
@@ -351,6 +369,10 @@ class Mixer(
         list.add("$prefix/bgQueueNext" to bgQueueNext)
         list.add("$prefix/transQueuePrev" to transQueuePrev)
         list.add("$prefix/transQueueNext" to transQueueNext)
+        list.add("$prefix/fxQueuePrev" to fxQueuePrev)
+        list.add("$prefix/fxQueueNext" to fxQueueNext)
+        list.add("$prefix/fxBgQueuePrev" to fxBgQueuePrev)
+        list.add("$prefix/fxBgQueueNext" to fxBgQueueNext)
         list.add("$prefix/tapTempo" to tapTempo)
         list.add("$prefix/randDeckA" to randDeckA)
         list.add("$prefix/randDeckB" to randDeckB)
@@ -449,6 +471,10 @@ class Mixer(
         bgQueueNext.evaluate()
         transQueuePrev.evaluate()
         transQueueNext.evaluate()
+        fxQueuePrev.evaluate()
+        fxQueueNext.evaluate()
+        fxBgQueuePrev.evaluate()
+        fxBgQueueNext.evaluate()
         tapTempo.evaluate()
         randDeckA.evaluate()
         randDeckB.evaluate()
@@ -557,6 +583,34 @@ class Mixer(
         return delta
     }
 
+    /** Rising-edge poll of the A/B FX queue pair: +1 next, -1 prev, 0 none. */
+    fun pollFxQueueAdvance(): Int {
+        val nextVal = fxQueueNext.value
+        val prevVal = fxQueuePrev.value
+        var delta = 0
+        if (prevFxQueueNextVal < 0.5f && nextVal >= 0.5f) delta += 1
+        if (prevFxQueuePrevVal < 0.5f && prevVal >= 0.5f) delta -= 1
+        prevFxQueueNextVal = nextVal
+        prevFxQueuePrevVal = prevVal
+        if (fxQueueNext.baseValue != 0f) fxQueueNext.baseValue = 0f
+        if (fxQueuePrev.baseValue != 0f) fxQueuePrev.baseValue = 0f
+        return delta
+    }
+
+    /** Rising-edge poll of the BG FX queue pair: +1 next, -1 prev, 0 none. */
+    fun pollFxBgQueueAdvance(): Int {
+        val nextVal = fxBgQueueNext.value
+        val prevVal = fxBgQueuePrev.value
+        var delta = 0
+        if (prevFxBgQueueNextVal < 0.5f && nextVal >= 0.5f) delta += 1
+        if (prevFxBgQueuePrevVal < 0.5f && prevVal >= 0.5f) delta -= 1
+        prevFxBgQueueNextVal = nextVal
+        prevFxBgQueuePrevVal = prevVal
+        if (fxBgQueueNext.baseValue != 0f) fxBgQueueNext.baseValue = 0f
+        if (fxBgQueuePrev.baseValue != 0f) fxBgQueuePrev.baseValue = 0f
+        return delta
+    }
+
     /**
      * Evaluates if the tapTempo parameter crossed the 0.5 threshold on a rising edge since last frame.
      * Returns true if triggered.
@@ -580,6 +634,10 @@ class Mixer(
         bgQueuePrev.evaluate()
         transQueueNext.evaluate()
         transQueuePrev.evaluate()
+        fxQueueNext.evaluate()
+        fxQueuePrev.evaluate()
+        fxBgQueueNext.evaluate()
+        fxBgQueuePrev.evaluate()
         tapTempo.evaluate()
         prevQueueNextVal = queueNext.value
         prevQueuePrevVal = queuePrev.value
@@ -587,6 +645,10 @@ class Mixer(
         prevBgQueuePrevVal = bgQueuePrev.value
         prevTransQueueNextVal = transQueueNext.value
         prevTransQueuePrevVal = transQueuePrev.value
+        prevFxQueueNextVal = fxQueueNext.value
+        prevFxQueuePrevVal = fxQueuePrev.value
+        prevFxBgQueueNextVal = fxBgQueueNext.value
+        prevFxBgQueuePrevVal = fxBgQueuePrev.value
         prevTapTempoVal = tapTempo.value
     }
 

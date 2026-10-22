@@ -9,8 +9,9 @@ import llm.slop.liquidlsd.link.AbletonLinkEngine
 
 /**
  * Clock row (Performance MASTER tab) controls left of the knobs, beside the CLOCK title badge
- * drawn by [PerformanceMatrixPanel]. Line 1: clock-source pills [MAN | AUDIO], Ableton Link
- * status, BPM readout, 4-beat bar dots. Line 2: tempo actions [TAP] [RESYNC] [/2] [x2] [-] [+].
+ * drawn by [PerformanceMatrixPanel]. A 3 x 2 grid of equal buttons:
+ * [MAN] [AUDIO] [LINK] over [TAP] [SNAP] [-|+] (Ableton Link status, always in its cell, dim while off), then the BPM readout with the
+ * 4-beat bar dots under it.
  * Same actions as Preferences > Tempo & Sync ([TempoSyncPanel]) -- surfaced here because they're
  * pressed mid-set. The BPM itself is deliberately not a knob (one bump drifts the whole show); the Twister's clock knob ([ClockKnobFeed]) only shows it and taps.
  */
@@ -39,11 +40,13 @@ internal object PerformanceClockControls {
     private var tapMapping: Any? = null
     private var tapTip = ""
 
-    /**
-     * Width reserved for the tempo controls (line 1 with the Link button showing is the widest: 2 source pills, Link, BPM, bar dots), so the
-     * trigger buttons ([PerformanceClockTriggers]) start at the same x whether or not Link is on.
-     */
-    const val TEMPO_BLOCK_W = 340f
+    /** Width of every button in the 3 x 2 grid (MAN, AUDIO, LINK over TAP, SNAP, [-][+]). */
+    private const val CELL_W = 48f
+    private const val CELL_GAP = 2f
+    private const val BPM_W = 96f
+
+    /** Width of the tempo controls: the 3 x 2 button grid, then the BPM readout with the beat dots under it. */
+    const val TEMPO_BLOCK_W = 3 * CELL_W + 2 * CELL_GAP + 8f + BPM_W
 
     /** [rightX] is the row's content right edge: the queue and randomize triggers fill what the tempo controls leave. */
     fun draw(
@@ -55,57 +58,82 @@ internal object PerformanceClockControls {
         row2Y: Float,
         headerH: Float
     ) {
-        val gap = 4f
         val audioEngine = session.audioEngine
         val currentClock = audioEngine.clockSource
         val dl = ImGui.getWindowDrawList()
+        val step = CELL_W + CELL_GAP
 
+        // Line 1: clock-source pills [MAN] [AUDIO], then the Ableton Link status.
         ImGui.setCursorScreenPos(startX, headerY)
-        ImGui.beginGroup()
-
-        // 1. Clock source pills [MAN] [AUDIO]
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
             for (i in SOURCES.indices) {
+                if (i > 0) ImGui.sameLine(0f, CELL_GAP)
                 val source = SOURCES[i]
                 val isActive = currentClock == source
                 ButtonChrome.pushColor(if (isActive) TangoPalette.u32(TangoPalette.ACTIVE_BLUE) else TangoPalette.CLOCK_IDLE_BG.u32())
-                if (ButtonChrome.button(SOURCE_IDS[i], 50f, headerH)) {
+                if (ButtonChrome.button(SOURCE_IDS[i], CELL_W, headerH)) {
                     audioEngine.clockSource = source
                     AppPreferencesStore.savePreferences()
                 }
                 ImGui.popStyleColor(3)
                 itemTooltip(SOURCE_TIPS[i])
-                ImGui.sameLine(0f, 2f)
             }
         }
 
-        // 2. Ableton Link status (only while enabled) -- click opens Tempo & Sync preferences.
-        if (AbletonLinkEngine.isEnabled) {
-            ImGui.sameLine(0f, gap)
-            val peers = AbletonLinkEngine.getNumPeers()
-            if (peers > 0) {
-                ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.SYNC.normal))
-            } else {
-                val linkInk = LINK_NO_PEERS_INK
+        // Link: always in its grid cell so the grid stays tidy; dim while Link is off. Click opens Tempo & Sync preferences.
+        ImGui.setCursorScreenPos(startX + 2 * step, headerY)
+        val linkOn = AbletonLinkEngine.isEnabled
+        val peers = if (linkOn) AbletonLinkEngine.getNumPeers() else -1
+        val linkInk = LINK_NO_PEERS_INK
+        when {
+            peers > 0 -> ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.SYNC.normal))
+            linkOn -> {
                 ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.LINK_NO_PEERS))
                 ImGui.pushStyleColor(ImGuiCol.Text, linkInk[0], linkInk[1], linkInk[2], 1.0f)
             }
-            if (peers != linkPeers) {
-                linkPeers = peers
-                linkLabel = "LINK $peers##perf_clock_link"
-                linkTip = "Ableton Link: $peers peer(s). Click to open Tempo & Sync preferences."
+            else -> ButtonChrome.pushColor(TangoPalette.CLOCK_IDLE_BG.u32())
+        }
+        if (peers != linkPeers) {
+            linkPeers = peers
+            linkLabel = (if (peers >= 0) "LINK $peers" else "LINK") + "##perf_clock_link"
+            linkTip = if (linkOn) "Ableton Link: $peers peer(s). Click to open Tempo & Sync preferences."
+                      else "Ableton Link is off. Click to open Tempo & Sync preferences."
+        }
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            if (ButtonChrome.button(linkLabel, CELL_W, headerH)) PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
+        }
+        ImGui.popStyleColor(if (peers == 0) 4 else 3)
+        itemTooltip(linkTip)
+
+        // Line 2: [TAP] [SNAP] [-][+] (the nudge pair shares one cell).
+        ImGui.setCursorScreenPos(startX, row2Y)
+        drawTapButton(session, headerH, CELL_W)
+
+        ImGui.setCursorScreenPos(startX + step, row2Y)
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            if (ButtonChrome.button("SNAP##perf_clock_resync", CELL_W, headerH)) audioEngine.resyncDownbeat()
+        }
+        itemTooltip("Snap the beat phase to the downbeat now.")
+
+        val nudgeW = (CELL_W - CELL_GAP) / 2f
+        ImGui.setCursorScreenPos(startX + 2 * step, row2Y)
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            if (ButtonChrome.button("-##perf_clock_nudge_down", nudgeW, headerH)) {
+                audioEngine.nudgeTempo(-0.5f)
+                AppPreferencesStore.savePreferences()
             }
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                if (ButtonChrome.button(linkLabel, 56f, headerH)) {
-                    PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
-                }
+            itemTooltip("Nudge tempo down 0.5 BPM.")
+            ImGui.sameLine(0f, CELL_GAP)
+            if (ButtonChrome.button("+##perf_clock_nudge_up", nudgeW, headerH)) {
+                audioEngine.nudgeTempo(0.5f)
+                AppPreferencesStore.savePreferences()
             }
-            ImGui.popStyleColor(if (peers > 0) 3 else 4)
-            itemTooltip(linkTip)
+            itemTooltip("Nudge tempo up 0.5 BPM.")
         }
 
-        // 3. BPM readout -- click opens Tempo & Sync preferences.
-        ImGui.sameLine(0f, gap * 2f)
+        // BPM readout (line 1, click opens Tempo & Sync preferences) with the 4-beat bar dots under it.
+        val bpmX = startX + 3 * CELL_W + 2 * CELL_GAP + 8f
+        ImGui.setCursorScreenPos(bpmX, headerY)
         val tenths = Math.round(audioEngine.getEstimatedBpm() * 10f)
         if (tenths != bpmTenths) {
             bpmTenths = tenths
@@ -113,21 +141,18 @@ internal object PerformanceClockControls {
         }
         session.uiTheme.withFont(UITheme.FontLevel.H3) {
             ButtonChrome.pushColor(TangoPalette.PILL_BG.u32())
-            if (ButtonChrome.button(bpmLabel, 96f, headerH)) {
-                PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
-            }
+            if (ButtonChrome.button(bpmLabel, BPM_W, headerH)) PreferencesPanel.open(PreferencesPanel.Category.TEMPO_SYNC)
             ImGui.popStyleColor(3)
         }
         itemTooltip(BPM_TIPS[currentClock.ordinal])
 
-        // 4. 4-beat bar dots
-        ImGui.sameLine(0f, gap * 2f)
         val totalBeats = session.cvRegistry.getSynchronizedTotalBeats()
         val currentBeat = (((totalBeats.toLong() % 4) + 4) % 4).toInt()
         val dotR = 5f
         val dotGap = 7f
-        val dotsX = ImGui.getCursorScreenPosX()
-        val dotsCy = headerY + headerH / 2f
+        val dotsW = dotR * 2f * 4f + dotGap * 3f
+        val dotsX = bpmX + (BPM_W - dotsW) / 2f
+        val dotsCy = row2Y + headerH / 2f
         for (i in 0..3) {
             val cx = dotsX + dotR + i * (dotR * 2f + dotGap)
             if (i == currentBeat) {
@@ -137,58 +162,16 @@ internal object PerformanceClockControls {
                 dl.addCircle(cx, dotsCy, dotR, TangoPalette.BEAT_IDLE_RING.u32(), 0, 1.2f)
             }
         }
-        ImGui.dummy(dotR * 2f * 4f + dotGap * 3f, headerH)
+        ImGui.setCursorScreenPos(dotsX, row2Y)
+        ImGui.dummy(dotsW, headerH)
         itemTooltip("4/4 bar phase. Downbeat is cyan.")
 
-        ImGui.endGroup()
-
-        // 5. Tempo actions (second line)
-        ImGui.setCursorScreenPos(startX, row2Y)
-        ImGui.beginGroup()
-        drawTapButton(session, headerH)
-
-        ImGui.sameLine(0f, gap)
-        if (ButtonChrome.button("RESYNC##perf_clock_resync", 64f, headerH)) {
-            audioEngine.resyncDownbeat()
-        }
-        itemTooltip("Snap the beat phase to the downbeat now.")
-
-        ImGui.sameLine(0f, gap)
-        if (ButtonChrome.button("/2##perf_clock_half", 32f, headerH)) {
-            audioEngine.halveTempo()
-            AppPreferencesStore.savePreferences()
-        }
-        itemTooltip("Halve tempo (e.g. 140 -> 70 BPM).")
-
-        ImGui.sameLine(0f, 2f)
-        if (ButtonChrome.button("x2##perf_clock_double", 32f, headerH)) {
-            audioEngine.doubleTempo()
-            AppPreferencesStore.savePreferences()
-        }
-        itemTooltip("Double tempo (e.g. 70 -> 140 BPM).")
-
-        ImGui.sameLine(0f, gap)
-        if (ButtonChrome.button("-##perf_clock_nudge_down", 26f, headerH)) {
-            audioEngine.nudgeTempo(-0.5f)
-            AppPreferencesStore.savePreferences()
-        }
-        itemTooltip("Nudge tempo down 0.5 BPM.")
-
-        ImGui.sameLine(0f, 2f)
-        if (ButtonChrome.button("+##perf_clock_nudge_up", 26f, headerH)) {
-            audioEngine.nudgeTempo(0.5f)
-            AppPreferencesStore.savePreferences()
-        }
-        itemTooltip("Nudge tempo up 0.5 BPM.")
-
-        ImGui.endGroup()
-
-        // 6. Queue and randomize triggers, right of the tempo controls (the MST > CTRL rows' triggers, one click away).
+        // Queue and randomize triggers, right of the tempo controls (the MST > CTRL rows' triggers, one click away).
         PerformanceClockTriggers.draw(session, mixer, startX + TEMPO_BLOCK_W + PerformanceClockTriggers.LEFT_GAP, rightX, headerY, row2Y, headerH)
     }
 
     /** [TAP] button: flashes on tap cadence; right-click for MIDI Learn on "Global/tapTempo". */
-    private fun drawTapButton(session: SessionContext, headerH: Float) {
+    private fun drawTapButton(session: SessionContext, headerH: Float, tapW: Float) {
         val tapController = session.tapTempoController
         val tapFlash = tapController.getFlashIntensity()
         val tapCount = tapController.getActiveTapCount()
@@ -214,14 +197,15 @@ internal object PerformanceClockControls {
         }
         val tapX = ImGui.getCursorScreenPosX()
         val tapY = ImGui.getCursorScreenPosY()
-        val tapW = 64f
         if (tapState != null) {
             val ink = if (tapState === TangoPalette.TAP_FLASH) TAP_FLASH_INK else TAP_COUNTING_INK
             ButtonChrome.pushColor(TangoPalette.u32(tapState), hoverShift = 0f)
             ImGui.pushStyleColor(ImGuiCol.Text, ink[0], ink[1], ink[2], 1.0f)
         }
-        if (ButtonChrome.button(tapLabel, tapW, headerH)) {
-            tapController.tap()
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            if (ButtonChrome.button(tapLabel, tapW, headerH)) {
+                tapController.tap()
+            }
         }
         if (tapState != null) ImGui.popStyleColor(4)
         if (isMidiLearnTap) {

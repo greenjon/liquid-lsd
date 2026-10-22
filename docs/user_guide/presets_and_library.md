@@ -204,10 +204,9 @@ On the **Queues** tab the two FX columns are independent **live FX queues** — 
 - **`<` / `>`** — Step to the previous/next queued FX item and apply it.
 - **🔁 Repeat** — Cycle back to the start when the bottom of the queue is reached.
 - **🔀 Shuffle** — Play items in random order.
-- **⤓ Export** (download icon) — Save the current live queue as a new `.lsdfxplay` playlist.
-- **🗑 Clear** (trash icon) — Empty the queue.
+- **⋮ menu** (right of the column caption) — **Export as playlist...** saves the current live queue as a new `.lsdfxplay` playlist; **Clear queue** empties it.
 - **Drag-and-drop** — Reorder items within a queue, or drag a preset/chain from the list to append or insert it.
-- **Auto** is greyed on the FX queues: they have no timer of their own and step with `<` / `>`, the controller, or their deck's preset queue.
+- **No Auto button** on the FX queues: they have no timer of their own and step with `<` / `>`, the controller, or their deck's preset queue.
 - **Double-click** an item to jump straight to it. Pressing the MIDI controller's accept on a queue item does the same: it moves the queue position, fades to the loaded deck and advances the transition queue.
 
 The **A/B queue** applies to whichever of Deck A/B is currently dominant on the crossfader; the **BG queue** always applies to Deck BG.
@@ -238,7 +237,7 @@ The play queue drives the main crossfader automatically, sequencing through pres
 - **Transport controls** — `<` (previous), `▶/⏸` (play/pause), `>` (next).
 - **Loop / Shuffle** — `🔁` for continuous looping, `🔀` for random order.
 - **Add to queue** — Select a preset in the browser and press `Q`, or right-click and choose **Add to A/B Queue**.
-- **Export / Clear** — The download icon saves an improvised live queue as a permanent playlist file; the trash icon empties the queue. Every queue column has the same header: a small caption naming the queue, then one row of icon buttons (hover for a tooltip).
+- **Export / Clear** — The **⋮** menu at the right of the queue's caption has **Export as playlist...** (saves an improvised live queue as a permanent playlist file) and **Clear queue**. Every queue column has the same header: a caption naming the queue with the menu, then one row of icon buttons (hover for a tooltip).
 
 When the queue is playing, the crossfader moves automatically between decks as presets transition. Grabbing the crossfader manually immediately pauses Auto-VJ so you have direct control.
 

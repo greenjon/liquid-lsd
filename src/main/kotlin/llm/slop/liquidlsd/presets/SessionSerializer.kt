@@ -43,6 +43,10 @@ object SessionSerializer {
                 bgQueuePrev = mixer.bgQueuePrev.toDto(),
                 transQueueNext = mixer.transQueueNext.toDto(),
                 transQueuePrev = mixer.transQueuePrev.toDto(),
+                fxQueueNext = mixer.fxQueueNext.toDto(),
+                fxQueuePrev = mixer.fxQueuePrev.toDto(),
+                fxBgQueueNext = mixer.fxBgQueueNext.toDto(),
+                fxBgQueuePrev = mixer.fxBgQueuePrev.toDto(),
                 tapTempo = mixer.tapTempo.toDto(),
                 levelA = mixer.levelA.toDto(),
                 levelB = mixer.levelB.toDto(),
@@ -161,6 +165,10 @@ object SessionSerializer {
             mDto.bgQueuePrev?.let { mixer.bgQueuePrev.applyDto(it) }
             mDto.transQueueNext?.let { mixer.transQueueNext.applyDto(it) }
             mDto.transQueuePrev?.let { mixer.transQueuePrev.applyDto(it) }
+            mDto.fxQueueNext?.let { mixer.fxQueueNext.applyDto(it) }
+            mDto.fxQueuePrev?.let { mixer.fxQueuePrev.applyDto(it) }
+            mDto.fxBgQueueNext?.let { mixer.fxBgQueueNext.applyDto(it) }
+            mDto.fxBgQueuePrev?.let { mixer.fxBgQueuePrev.applyDto(it) }
             mDto.tapTempo?.let { mixer.tapTempo.applyDto(it) }
             mixer.queueNext.baseValue = 0f
             mixer.queuePrev.baseValue = 0f
@@ -168,6 +176,10 @@ object SessionSerializer {
             mixer.bgQueuePrev.baseValue = 0f
             mixer.transQueueNext.baseValue = 0f
             mixer.transQueuePrev.baseValue = 0f
+            mixer.fxQueueNext.baseValue = 0f
+            mixer.fxQueuePrev.baseValue = 0f
+            mixer.fxBgQueueNext.baseValue = 0f
+            mixer.fxBgQueuePrev.baseValue = 0f
             mixer.tapTempo.baseValue = 0f
             mixer.syncQueueTriggerPrevValues()
             

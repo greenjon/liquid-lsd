@@ -367,6 +367,10 @@ object ParametersTabs {
         ParametersRenderer.drawParamRow(session, "BG queue next", "Mixer/bgQueueNext", mixer.bgQueueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         ParametersRenderer.drawParamRow(session, "Trans queue prev", "Mixer/transQueuePrev", mixer.transQueuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         ParametersRenderer.drawParamRow(session, "Trans queue next", "Mixer/transQueueNext", mixer.transQueueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "A/B FX queue prev", "Mixer/fxQueuePrev", mixer.fxQueuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "A/B FX queue next", "Mixer/fxQueueNext", mixer.fxQueueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "BG FX queue prev", "Mixer/fxBgQueuePrev", mixer.fxBgQueuePrev, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+        ParametersRenderer.drawParamRow(session, "BG FX queue next", "Mixer/fxBgQueueNext", mixer.fxBgQueueNext, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         ParametersRenderer.drawParamRow(session, "Tap tempo", "Mixer/tapTempo", mixer.tapTempo, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
         if (session.uiTheme.randomizationEnabled) {

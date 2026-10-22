@@ -7,12 +7,16 @@ import llm.slop.liquidlsd.midi.MidiLearnTarget
 import llm.slop.liquidlsd.osc.OscLearnState
 import llm.slop.liquidlsd.osc.OscMappingManager
 import llm.slop.liquidlsd.parameters.ModulatableParameter
+import llm.slop.liquidlsd.presets.FXBgQueueManager
+import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.rendering.Mixer
 
 /**
- * The Clock row's trigger buttons, right of the tempo controls ([PerformanceClockControls]): line 1 the three queues' prev/next
- * pairs (A/B, BG, Transitions), line 2 the five randomize triggers (Deck A/B/BG/PV, All; only while randomization is enabled).
+ * The Clock row's trigger buttons, right of the tempo controls ([PerformanceClockControls]), laid out on the row's two lines. The QUEUE
+ * block: captions A/B, A/B FX, BG, BG FX, TRN on line 1, each column's buttons on line 2: prev, next. On the A/B, BG and Transition queues the play / pause button (their auto-advance) sits on line 1 beside the caption. The RAND block (only while
+ * randomization is enabled) sits at the right edge: A, B, ALL over BG, PV.
+ * Captions and button text are BODY in the normal text color, like the captions under the knobs on the other rows.
  *
  * Each button stands for the same [ModulatableParameter] the MST > CTRL rows list (`Mixer/queueNext`, `Mixer/randAll`, ...), under the
  * same param key: right-click Learn MIDI / Learn OSC / Clear and the tooltip's mapping all go through that key, so a mapping made here
@@ -40,10 +44,21 @@ internal object PerformanceClockTriggers {
     }
 
     private const val GAP = 2f
-    private const val GROUP_GAP = 8f
-    private const val CAPTION_W = 44f
-    private const val NAV_W = 24f
-    private const val QUEUE_LABEL_W = 30f
+    private const val GROUP_GAP = 8.6f
+    private const val BLOCK_GAP = 4f
+    private const val TINT_PAD_Y = 2f
+    private const val TINT_DARK_THEME = 0x14FFFFFF
+    private const val TINT_LIGHT_THEME = 0x14000000
+    // Caption slots: the BODY text (QUEUE is 48 px wide, RAND 39) plus 3 px before the first button, so both blocks read alike.
+    private const val QUEUE_CAPTION_W = 49.4f
+    private const val RAND_CAPTION_W = 40.3f
+    private const val NAV_W = 26f
+
+    /** A queue column: its two buttons; the caption above is centred over it. */
+    private const val COL_W = 2 * NAV_W + GAP
+
+    /** Caption slot beside the play / pause button; the prev button below is as wide, so next sits under play / pause. */
+    private const val AUTO_LABEL_W = 32f
 
     private fun nav(
         paramKey: String, glyph: String, title: String, action: String,
@@ -55,43 +70,76 @@ internal object PerformanceClockTriggers {
         param: (Mixer) -> ModulatableParameter, fire: (SessionContext, Mixer) -> Unit
     ) = Trigger(paramKey, label, title, action, w, param, fire)
 
-    // [prev, next] per queue.
-    private val QUEUE_LABELS = arrayOf("A/B", "BG", "TRN")
-    private val QUEUES: Array<Array<Trigger>> = arrayOf(
-        arrayOf(
-            nav("Mixer/queuePrev", "◀", "A/B Queue Prev", "Previous item in the A/B play queue.", { it.queuePrev }) { s, m -> s.playQueueManager.advanceBy(-1, m) },
-            nav("Mixer/queueNext", "▶", "A/B Queue Next", "Next item in the A/B play queue.", { it.queueNext }) { s, m -> s.playQueueManager.advanceBy(1, m) }
-        ),
-        arrayOf(
-            nav("Mixer/bgQueuePrev", "◀", "BG Queue Prev", "Previous item in the BG queue.", { it.bgQueuePrev }) { s, m -> s.bgQueueManager.advanceBy(-1, m) },
-            nav("Mixer/bgQueueNext", "▶", "BG Queue Next", "Next item in the BG queue.", { it.bgQueueNext }) { s, m -> s.bgQueueManager.advanceBy(1, m) }
-        ),
-        arrayOf(
-            nav("Mixer/transQueuePrev", "◀", "Transition Queue Prev", "Previous transition in the Transition queue.", { it.transQueuePrev }) { _, m -> TransitionQueueManager.advancePrevious(m) },
-            nav("Mixer/transQueueNext", "▶", "Transition Queue Next", "Next transition in the Transition queue.", { it.transQueueNext }) { _, m -> TransitionQueueManager.advanceNext(m) }
-        )
+    /** One queue column: its caption on line 1, its prev / next buttons on line 2. */
+    private class QueueGroup(val label: String, val pair: Array<Trigger>, val auto: AutoToggle? = null) {
+        /** Width of the column: prev and next, or a caption slot plus the play / pause button when the queue has an auto-advance. */
+        val width = if (auto != null) AUTO_LABEL_W + GAP + NAV_W else COL_W
+    }
+
+    /** A queue's auto-advance as a play / pause button: lit and showing pause while the queue runs on its own. */
+    private class AutoToggle(
+        val id: String,
+        val tipRunning: String,
+        val tipPaused: String,
+        val isOn: (SessionContext) -> Boolean,
+        val toggle: (SessionContext, Mixer) -> Unit
     )
 
-    private val RANDS: Array<Trigger> = arrayOf(
-        rand("Mixer/randDeckA", "A", 30f, "Randomize Deck A", "Randomize Deck A's parameters and modulators.", { it.randDeckA }) { s, m -> undoThen(s, m) { m.randomizeDeckA() } },
-        rand("Mixer/randDeckB", "B", 30f, "Randomize Deck B", "Randomize Deck B's parameters and modulators.", { it.randDeckB }) { s, m -> undoThen(s, m) { m.randomizeDeckB() } },
-        rand("Mixer/randDeckBG", "BG", 30f, "Randomize Deck BG", "Randomize Deck BG's parameters and modulators.", { it.randDeckBG }) { s, m -> undoThen(s, m) { m.randomizeDeckBG() } },
-        rand("Mixer/randDeckPV", "PV", 30f, "Randomize Deck PV", "Randomize Deck PV's parameters and modulators.", { it.randDeckPV }) { s, m -> undoThen(s, m) { m.randomizeDeckPV() } },
-        rand("Mixer/randAll", "ALL", 36f, "Randomize All", "Randomize all decks and the Master parameters.", { it.randAll }) { s, m -> undoThen(s, m) { m.randomizeAll() } }
+    private val QUEUE_GROUPS: Array<QueueGroup> = arrayOf(
+        QueueGroup("A/B", arrayOf(
+            nav("Mixer/queuePrev", "◀", "A/B Queue Prev", "Previous item in the A/B play queue.", { it.queuePrev }) { s, m -> s.playQueueManager.advanceBy(-1, m) },
+            nav("Mixer/queueNext", "▶", "A/B Queue Next", "Next item in the A/B play queue.", { it.queueNext }) { s, m -> s.playQueueManager.advanceBy(1, m) }
+        ), AutoToggle("perf_clock_auto_ab", "Auto-VJ is running: click to pause the A/B queue.", "Auto-VJ is paused: click to cycle through the A/B queue at set intervals.",
+            { it.playQueueManager.isAutoVJEnabled }) { s, m ->
+            val on = !s.playQueueManager.isAutoVJEnabled
+            s.playQueueManager.isAutoVJEnabled = on
+            if (on) m.muteCrossfadeNonMidiCv()
+        }),
+        QueueGroup("A/B FX", arrayOf(
+            nav("Mixer/fxQueuePrev", "◀", "A/B FX Queue Prev", "Previous chain in the A/B FX queue.", { it.fxQueuePrev }) { s, m -> FXQueueManager.advancePrevious(s, m) },
+            nav("Mixer/fxQueueNext", "▶", "A/B FX Queue Next", "Next chain in the A/B FX queue.", { it.fxQueueNext }) { s, m -> FXQueueManager.advanceNext(s, m) }
+        )),
+        QueueGroup("BG", arrayOf(
+            nav("Mixer/bgQueuePrev", "◀", "BG Queue Prev", "Previous item in the BG queue.", { it.bgQueuePrev }) { s, m -> s.bgQueueManager.advanceBy(-1, m) },
+            nav("Mixer/bgQueueNext", "▶", "BG Queue Next", "Next item in the BG queue.", { it.bgQueueNext }) { s, m -> s.bgQueueManager.advanceBy(1, m) }
+        ), AutoToggle("perf_clock_auto_bg", "Auto-BG is running: click to pause the BG queue.", "Auto-BG is paused: click to cycle through the BG queue with dip-to-black transitions.",
+            { it.bgQueueManager.isAutoBGEnabled }) { s, _ -> s.bgQueueManager.isAutoBGEnabled = !s.bgQueueManager.isAutoBGEnabled }),
+        QueueGroup("BG FX", arrayOf(
+            nav("Mixer/fxBgQueuePrev", "◀", "BG FX Queue Prev", "Previous chain in the BG FX queue.", { it.fxBgQueuePrev }) { s, m -> FXBgQueueManager.advancePrevious(s, m) },
+            nav("Mixer/fxBgQueueNext", "▶", "BG FX Queue Next", "Next chain in the BG FX queue.", { it.fxBgQueueNext }) { s, m -> FXBgQueueManager.advanceNext(s, m) }
+        )),
+        QueueGroup("TRN", arrayOf(
+            nav("Mixer/transQueuePrev", "◀", "Transition Queue Prev", "Previous transition in the Transition queue.", { it.transQueuePrev }) { _, m -> TransitionQueueManager.advancePrevious(m) },
+            nav("Mixer/transQueueNext", "▶", "Transition Queue Next", "Next transition in the Transition queue.", { it.transQueueNext }) { _, m -> TransitionQueueManager.advanceNext(m) }
+        ), AutoToggle("perf_clock_auto_trn", "Auto-advance is on: click to hold the current transition.", "Auto-advance is off: click to step to the next transition whenever a crossfade triggers.",
+            { TransitionQueueManager.isAutoAdvanceEnabled }) { _, _ -> TransitionQueueManager.isAutoAdvanceEnabled = !TransitionQueueManager.isAutoAdvanceEnabled })
     )
+
+    private const val RAND_A_W = 34f
+    private const val RAND_B_W = 34f
+    private const val RAND_ALL_W = 42f
+
+    private val RAND_A = rand("Mixer/randDeckA", "A", RAND_A_W, "Randomize Deck A", "Randomize Deck A's parameters and modulators.", { it.randDeckA }) { s, m -> undoThen(s, m) { m.randomizeDeckA() } }
+    private val RAND_B = rand("Mixer/randDeckB", "B", RAND_B_W, "Randomize Deck B", "Randomize Deck B's parameters and modulators.", { it.randDeckB }) { s, m -> undoThen(s, m) { m.randomizeDeckB() } }
+    private val RAND_ALL = rand("Mixer/randAll", "ALL", RAND_ALL_W, "Randomize All", "Randomize all decks and the Master parameters.", { it.randAll }) { s, m -> undoThen(s, m) { m.randomizeAll() } }
+    private val RAND_BG = rand("Mixer/randDeckBG", "BG", RAND_A_W, "Randomize Deck BG", "Randomize Deck BG's parameters and modulators.", { it.randDeckBG }) { s, m -> undoThen(s, m) { m.randomizeDeckBG() } }
+    private val RAND_PV = rand("Mixer/randDeckPV", "PV", RAND_B_W, "Randomize Deck PV", "Randomize Deck PV's parameters and modulators.", { it.randDeckPV }) { s, m -> undoThen(s, m) { m.randomizeDeckPV() } }
+
+    private val RAND_ROW1 = arrayOf(RAND_A, RAND_B, RAND_ALL)
+    private val RAND_ROW2 = arrayOf(RAND_BG, RAND_PV)
 
     /** Every button's (param key, [Mixer] parameter): what a mapping made on it is stored against. For tests. */
     internal fun boundParameters(mixer: Mixer): List<Pair<String, ModulatableParameter>> =
-        (QUEUES.flatMap { it.asList() } + RANDS).map { it.paramKey to it.param(mixer) }
+        (QUEUE_GROUPS.flatMap { it.pair.asList() } + RAND_ROW1 + RAND_ROW2).map { it.paramKey to it.param!!(mixer) }
 
-    /** Width of the queue line: caption, then three label + prev + next groups. */
-    val QUEUE_LINE_W: Float = CAPTION_W + 3 * (QUEUE_LABEL_W + GAP + 2 * NAV_W + GAP) + 2 * GROUP_GAP - GAP
+    /** Width of the QUEUE block: caption, then five columns (three with a play / pause button). */
+    val QUEUE_LINE_W: Float = QUEUE_CAPTION_W + GAP + QUEUE_GROUPS.sumOf { it.width.toDouble() }.toFloat() + (QUEUE_GROUPS.size - 1) * GROUP_GAP
 
-    /** Width of the randomize line: caption, then the five buttons. */
-    val RAND_LINE_W: Float = CAPTION_W + RANDS.sumOf { it.w.toDouble() }.toFloat() + (RANDS.size - 1) * GAP
+    /** Width of the RAND block: caption, then the three columns. */
+    val RAND_LINE_W: Float = RAND_CAPTION_W + GAP + RAND_A_W + RAND_B_W + RAND_ALL_W + 2 * GAP
 
-    /** Gap kept between the tempo controls and these lines. */
-    const val LEFT_GAP = 16f
+    /** Gap kept between the tempo controls and these blocks. */
+    const val LEFT_GAP = 4f
 
     /** Randomizing is undoable (Ctrl+Z), like the decks' dice: the snapshot is taken first. */
     private inline fun undoThen(session: SessionContext, mixer: Mixer, randomize: () -> Unit) {
@@ -106,50 +154,84 @@ internal object PerformanceClockTriggers {
     }
 
     /**
-     * Draws the lines that fit between [x] and [rightX]: line 1 at [row1Y] (queues), line 2 at [row2Y] (randomize, when enabled and it fits).
-     * Each line is dropped whole when it does not fit, so no button is ever cut off; the randomize line, optional, is the one that gives way first.
+     * Draws the blocks that fit between [x] and [rightX], on the two lines starting at [row1Y] and [row2Y]. QUEUE sits left: captions on
+     * line 1, prev / next buttons on line 2. RAND (when randomization is enabled) is pushed to the right edge. A block is dropped whole
+     * when it does not fit, so no button is ever cut off; RAND is the one that gives way first.
      */
     fun draw(session: SessionContext, mixer: Mixer, x: Float, rightX: Float, row1Y: Float, row2Y: Float, h: Float) {
         val room = rightX - x
         if (room < QUEUE_LINE_W) return
         val dl = ImGui.getWindowDrawList()
+        val blockH = row2Y + h - row1Y
 
-        ImGui.setCursorScreenPos(x, row1Y)
-        ImGui.beginGroup()
-        caption(session, "QUEUE", h)
-        for (q in QUEUES.indices) {
-            ImGui.sameLine(0f, if (q > 0) GROUP_GAP else GAP)
-            caption(session, QUEUE_LABELS[q], h, QUEUE_LABEL_W)
-            for (t in QUEUES[q]) {
-                ImGui.sameLine(0f, GAP)
-                button(session, mixer, t, h, dl)
+        caption(session, "QUEUE", x, row1Y, QUEUE_CAPTION_W, blockH, centered = false)
+        var cx = x + QUEUE_CAPTION_W + GAP
+        for ((gi, g) in QUEUE_GROUPS.withIndex()) {
+            if (gi % 2 == 0) tint(dl, cx - GROUP_GAP / 2f, row1Y, g.width + GROUP_GAP, blockH)
+            if (g.auto != null) {
+                // Line 1: caption, then play / pause. Line 2: prev (under the caption), next (under play / pause).
+                caption(session, g.label, cx, row1Y, AUTO_LABEL_W, h, centered = true)
+                place(cx + AUTO_LABEL_W + GAP, row1Y)
+                autoButton(session, mixer, g.auto, h)
+                place(cx, row2Y)
+                button(session, mixer, g.pair[0], h, dl, AUTO_LABEL_W)
+                place(cx + AUTO_LABEL_W + GAP, row2Y)
+                button(session, mixer, g.pair[1], h, dl)
+            } else {
+                caption(session, g.label, cx, row1Y, g.width, h, centered = true)
+                place(cx, row2Y)
+                button(session, mixer, g.pair[0], h, dl)
+                place(cx + NAV_W + GAP, row2Y)
+                button(session, mixer, g.pair[1], h, dl)
             }
+            cx += g.width + GROUP_GAP
         }
-        ImGui.endGroup()
 
-        if (!session.uiTheme.randomizationEnabled || room < RAND_LINE_W) return
-        ImGui.setCursorScreenPos(x, row2Y)
-        ImGui.beginGroup()
-        caption(session, "RAND", h)
-        for (t in RANDS) {
-            ImGui.sameLine(0f, GAP)
-            button(session, mixer, t, h, dl)
-        }
-        ImGui.endGroup()
+        if (!session.uiTheme.randomizationEnabled || room < QUEUE_LINE_W + BLOCK_GAP + RAND_LINE_W) return
+        cx = rightX - RAND_LINE_W
+        tint(dl, cx - GROUP_GAP / 2f, row1Y, RAND_LINE_W + GROUP_GAP, blockH)
+        caption(session, "RAND", cx, row1Y, RAND_CAPTION_W, blockH, centered = false)
+        cx += RAND_CAPTION_W + GAP
+        var bx = cx
+        for (t in RAND_ROW1) { place(bx, row1Y); button(session, mixer, t, h, dl); bx += t.w + GAP }
+        bx = cx
+        for (t in RAND_ROW2) { place(bx, row2Y); button(session, mixer, t, h, dl); bx += t.w + GAP }
     }
 
-    /** A dim, vertically centred caption in a [w]-wide slot. */
-    private fun caption(session: SessionContext, text: String, h: Float, w: Float = CAPTION_W) {
-        val x = ImGui.getCursorScreenPosX()
-        val y = ImGui.getCursorScreenPosY()
+    /** The play / pause button between a queue's prev and next: shows what a click does, and is lit while the queue is running. */
+    private fun autoButton(session: SessionContext, mixer: Mixer, a: AutoToggle, h: Float) {
+        val on = a.isOn(session)
+        if (on) ButtonChrome.pushColor(TangoPalette.u32(TangoPalette.ACTIVE_BLUE))
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ButtonChrome.button("${if (on) Icons.PAUSE else Icons.PLAY}##${a.id}", NAV_W, h)) a.toggle(session, mixer)
+        }
+        if (on) ImGui.popStyleColor(3)
+        itemTooltip(if (on) a.tipRunning else a.tipPaused)
+    }
+
+    /**
+     * A faint lighter (darker in the light theme) wash behind every other group, as the Library's queue columns alternate their fill, so
+     * it is clear at a glance which captions and buttons belong together. Drawn first, under the group's own items.
+     */
+    private fun tint(dl: imgui.ImDrawList, x: Float, y: Float, w: Float, h: Float) {
+        val col = if (TangoPalette.isLightTheme) TINT_LIGHT_THEME else TINT_DARK_THEME
+        dl.addRectFilled(x, y - TINT_PAD_Y, x + w, y + h + TINT_PAD_Y, col, 4f)
+    }
+
+    private fun place(x: Float, y: Float) = ImGui.setCursorScreenPos(x, y)
+
+    /** A caption in a [w] x [h] slot at ([x], [y]): BODY in the normal text color, vertically centred, left-aligned or [centered]. */
+    private fun caption(session: SessionContext, text: String, x: Float, y: Float, w: Float, h: Float, centered: Boolean) {
+        ImGui.setCursorScreenPos(x, y)
         ImGui.dummy(w, h)
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             val ty = y + (h - ImGui.getTextLineHeight()) * 0.5f
-            ImGui.getWindowDrawList().addText(x, ty, ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled), text)
+            val tx = if (centered) x + (w - ImGui.calcTextSize(text).x) * 0.5f else x
+            ImGui.getWindowDrawList().addText(tx, ty, ImGui.getColorU32(imgui.flag.ImGuiCol.Text), text)
         }
     }
 
-    private fun button(session: SessionContext, mixer: Mixer, t: Trigger, h: Float, dl: imgui.ImDrawList) {
+    private fun button(session: SessionContext, mixer: Mixer, t: Trigger, h: Float, dl: imgui.ImDrawList, w: Float = t.w) {
         val state = session.parametersState
         val key = t.paramKey
         val isMidiLearn = state.isMidiTargetLearning(key)
@@ -162,14 +244,14 @@ internal object PerformanceClockTriggers {
 
         val bx = ImGui.getCursorScreenPosX()
         val by = ImGui.getCursorScreenPosY()
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            if (ButtonChrome.button(t.id, t.w, h)) t.fire(session, mixer)
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ButtonChrome.button(t.id, w, h)) t.fire(session, mixer)
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "clock_trig_" + key.substringAfter('/') }
         if (isMidiLearn) {
-            dl.addRect(bx - 1f, by - 1f, bx + t.w + 1f, by + h + 1f, TangoPalette.learnBorder(), 3f, 0, 1.5f)
+            dl.addRect(bx - 1f, by - 1f, bx + w + 1f, by + h + 1f, TangoPalette.learnBorder(), 3f, 0, 1.5f)
         } else if (isOscLearn) {
-            TangoPalette.drawOscLearnPulseBorder(dl, bx - 1f, by - 1f, bx + t.w + 1f, by + h + 1f)
+            TangoPalette.drawOscLearnPulseBorder(dl, bx - 1f, by - 1f, bx + w + 1f, by + h + 1f)
         }
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem(t.ctxId)) {

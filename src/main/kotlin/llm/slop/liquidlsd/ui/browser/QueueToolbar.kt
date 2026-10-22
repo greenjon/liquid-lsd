@@ -7,12 +7,17 @@ import llm.slop.liquidlsd.ui.ButtonChrome
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.pushOpenDropdownPadding
+import llm.slop.liquidlsd.ui.popOpenDropdownPadding
+import llm.slop.liquidlsd.ui.pushOpenDropdownFont
+import llm.slop.liquidlsd.ui.popOpenDropdownFont
 import llm.slop.liquidlsd.ui.shortcuts.ShortcutManager
 
 /**
  * Shared header of every Library queue column: a small caption naming the queue, then ONE row of
- * icon buttons: `◀ [auto] ▶  repeat shuffle export clear`. All buttons share one width so the row
- * reads as a strip. The Auto button is optional (preset/transition queues have one, FX queues don't).
+ * icon buttons: `◀ [auto] ▶  repeat shuffle`. All buttons share one width so the row reads as a strip. The Auto
+ * button is optional (preset/transition queues have one, FX queues don't and omit the slot). A kebab at the right of the
+ * caption row holds Export and Clear.
  */
 object QueueToolbar {
     /** Mint-green lit toggle, one definition for the whole strip. */
@@ -46,19 +51,40 @@ object QueueToolbar {
 
     fun draw(session: SessionContext, s: Spec) {
         ImGui.alignTextToFramePadding()
+        var exportRequested = false
+        val popupId = "##${s.id}QueueMenu"
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            val startX = ImGui.getCursorPosX()
+            val availW = ImGui.getContentRegionAvailX()
+            val kebabW = ImGui.getFrameHeight()
             val textW = ImGui.calcTextSize(s.caption).x
-            val x = ImGui.getCursorPosX() + (ImGui.getContentRegionAvailX() - textW) / 2f
-            if (x > ImGui.getCursorPosX()) ImGui.setCursorPosX(x)
+            val x = startX + (availW - textW) / 2f
+            if (x > startX) ImGui.setCursorPosX(x)
             ImGui.text(s.caption)
+
+            // Export and Clear are rare (and Clear destructive), so they live in a menu rather than on the transport strip.
+            ImGui.sameLine()
+            ImGui.setCursorPosX(startX + availW - kebabW)
+            BrowserRowMoreButton.draw(popupId, true, false, "${s.id}Queue", kebabW, ImGui.getFrameHeight(), "Queue options...")
+            pushOpenDropdownPadding()
+            if (ImGui.beginPopup(popupId)) {
+                pushOpenDropdownFont()
+                if (ImGui.menuItem("Export as playlist...")) exportRequested = true
+                if (ImGui.menuItem("Clear queue")) s.onClear()
+                popOpenDropdownFont()
+                ImGui.endPopup()
+            }
+            popOpenDropdownPadding()
         }
 
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            val glyphs = listOf("◀", "▶", Icons.PLAY, Icons.PAUSE, Icons.REPEAT, Icons.SHUFFLE, Icons.DOWNLOAD, Icons.TRASH)
+            // Opened here, not inside the menu item: openPopup from within a popup lands on the wrong ID-stack level.
+            if (exportRequested) s.onExport()
+
+            val glyphs = listOf("◀", "▶", Icons.PLAY, Icons.PAUSE, Icons.REPEAT, Icons.SHUFFLE)
             val btnW = glyphs.maxOf { ImGui.calcTextSize(it).x } + ImGui.getStyle().getFramePaddingX() * 2f
-            // Buttons keep their natural width (glyphs stay centered); a narrow column trims the gaps instead. Every column has
-            // the same seven slots, so the strips line up across the Queues tab.
-            val count = 7
+            // Buttons keep their natural width (glyphs stay centered); a narrow column trims the gaps instead.
+            val count = if (s.auto != null) 5 else 4
             val gap = ((ImGui.getContentRegionAvailX() - btnW * count) / (count - 1))
                 .coerceIn(0f, ImGui.getStyle().getItemSpacingX())
 
@@ -77,24 +103,14 @@ object QueueToolbar {
             if (s.auto != null) {
                 val icon = if (s.auto.active) Icons.PAUSE else Icons.PLAY
                 button("$icon##${s.id}Auto", s.auto.tooltip, s.auto.lit, s.auto.onClick)
-            } else {
-                // FX queues have no timer of their own: the slot stays, greyed, so the strip matches the other columns.
-                ImGui.beginDisabled()
-                ButtonChrome.button("${Icons.PLAY}##${s.id}Auto", btnW, 0f)
-                ImGui.endDisabled()
-                itemTooltip("No Auto-VJ here: FX queues step with ◀ ▶, the controller, or their deck's preset queue.", allowWhenDisabled = true)
+                ImGui.sameLine(0f, gap)
             }
-            ImGui.sameLine(0f, gap)
             button("▶##${s.id}Next", s.nextTooltip, onClick = s.onNext)
 
             ImGui.sameLine(0f, gap)
             button("${Icons.REPEAT}##${s.id}Repeat", s.repeat.tooltip, s.repeat.active, s.repeat.onClick)
             ImGui.sameLine(0f, gap)
             button("${Icons.SHUFFLE}##${s.id}Shuffle", s.shuffle.tooltip, s.shuffle.active, s.shuffle.onClick)
-            ImGui.sameLine(0f, gap)
-            button("${Icons.DOWNLOAD}##${s.id}Export", s.exportTooltip, onClick = s.onExport)
-            ImGui.sameLine(0f, gap)
-            button("${Icons.TRASH}##${s.id}Clear", s.clearTooltip, onClick = s.onClear)
 
             s.trailing()
         }

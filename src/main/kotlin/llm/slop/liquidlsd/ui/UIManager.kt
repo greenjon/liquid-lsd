@@ -282,8 +282,8 @@ class UIManager(
             else llm.slop.liquidlsd.presets.TransitionQueueManager.advancePrevious(mixer)
         }
 
-        stepFxQueue(llm.slop.liquidlsd.presets.FXQueueManager, mixer, fxMidiDelta)
-        stepFxQueue(llm.slop.liquidlsd.presets.FXBgQueueManager, mixer, fxBgMidiDelta)
+        stepFxQueue(llm.slop.liquidlsd.presets.FXQueueManager, mixer, fxMidiDelta + mixer.pollFxQueueAdvance())
+        stepFxQueue(llm.slop.liquidlsd.presets.FXBgQueueManager, mixer, fxBgMidiDelta + mixer.pollFxBgQueueAdvance())
 
         if (pendingFontRebuild) {
             pendingFontRebuild = false

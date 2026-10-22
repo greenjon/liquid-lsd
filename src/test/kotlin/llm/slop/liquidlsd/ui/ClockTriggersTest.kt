@@ -17,11 +17,14 @@ class ClockTriggersTest {
     private val queuePrev = p(); private val queueNext = p()
     private val bgQueuePrev = p(); private val bgQueueNext = p()
     private val transQueuePrev = p(); private val transQueueNext = p()
+    private val fxQueuePrev = p(); private val fxQueueNext = p(); private val fxBgQueuePrev = p(); private val fxBgQueueNext = p()
     private val randDeckA = p(); private val randDeckB = p(); private val randDeckBG = p(); private val randDeckPV = p(); private val randAll = p()
     private val mixer = mockk<Mixer>(relaxed = true).also {
         every { it.queuePrev } returns queuePrev; every { it.queueNext } returns queueNext
         every { it.bgQueuePrev } returns bgQueuePrev; every { it.bgQueueNext } returns bgQueueNext
         every { it.transQueuePrev } returns transQueuePrev; every { it.transQueueNext } returns transQueueNext
+        every { it.fxQueuePrev } returns fxQueuePrev; every { it.fxQueueNext } returns fxQueueNext
+        every { it.fxBgQueuePrev } returns fxBgQueuePrev; every { it.fxBgQueueNext } returns fxBgQueueNext
         every { it.randDeckA } returns randDeckA; every { it.randDeckB } returns randDeckB
         every { it.randDeckBG } returns randDeckBG; every { it.randDeckPV } returns randDeckPV; every { it.randAll } returns randAll
     }
@@ -31,10 +34,12 @@ class ClockTriggersTest {
         // The CTRL tab draws mixer.<name> under "Mixer/<name>" (see ParametersTabs.drawMixerCtrlTab).
         val expected = listOf(
             "Mixer/queuePrev" to queuePrev, "Mixer/queueNext" to queueNext,
+            "Mixer/fxQueuePrev" to fxQueuePrev, "Mixer/fxQueueNext" to fxQueueNext,
             "Mixer/bgQueuePrev" to bgQueuePrev, "Mixer/bgQueueNext" to bgQueueNext,
+            "Mixer/fxBgQueuePrev" to fxBgQueuePrev, "Mixer/fxBgQueueNext" to fxBgQueueNext,
             "Mixer/transQueuePrev" to transQueuePrev, "Mixer/transQueueNext" to transQueueNext,
-            "Mixer/randDeckA" to randDeckA, "Mixer/randDeckB" to randDeckB, "Mixer/randDeckBG" to randDeckBG,
-            "Mixer/randDeckPV" to randDeckPV, "Mixer/randAll" to randAll
+            "Mixer/randDeckA" to randDeckA, "Mixer/randDeckB" to randDeckB, "Mixer/randAll" to randAll,
+            "Mixer/randDeckBG" to randDeckBG, "Mixer/randDeckPV" to randDeckPV
         )
         val buttons = PerformanceClockTriggers.boundParameters(mixer)
         assertEquals(expected.map { it.first }, buttons.map { it.first })
@@ -49,8 +54,8 @@ class ClockTriggersTest {
 
     @Test
     fun linesAreSizedForTheirButtons() {
-        // Queue line: caption + three (label + prev + next) groups; randomize line: caption + five buttons.
+        // QUEUE block: caption + five columns; RAND block: caption + three columns.
         assertTrue(PerformanceClockTriggers.QUEUE_LINE_W > PerformanceClockTriggers.RAND_LINE_W)
-        assertTrue(PerformanceClockControls.TEMPO_BLOCK_W + PerformanceClockTriggers.LEFT_GAP + PerformanceClockTriggers.QUEUE_LINE_W < 700f)
+        assertTrue(PerformanceClockControls.TEMPO_BLOCK_W + PerformanceClockTriggers.LEFT_GAP + PerformanceClockTriggers.QUEUE_LINE_W < 800f)
     }
 }

@@ -1292,6 +1292,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#queue-header-declutter-uibrowserqueuetoolbarkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Queue Header Declutter (ui/browser/QueueToolbar.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pairs-follow-the-twister-page-uiperfrowskt-uiparametersstatekt-uiperformancedeepeditbaykt-uinavigationsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6534,6 +6545,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#queue-header-declutter-uibrowserqueuetoolbarkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Queue Header Declutter (ui/browser/QueueToolbar.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pairs-follow-the-twister-page-uiperfrowskt-uiparametersstatekt-uiperformancedeepeditbaykt-uinavigationsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11751,6 +11773,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="queue-header-declutter-uibrowserqueuetoolbarkt">Queue Header Declutter (<code>ui/browser/QueueToolbar.kt</code>)</h3>
+<ul>
+<li><strong>Export and Clear moved into a ⋮ menu</strong> at the right of each queue column's caption ("Export as playlist...", "Clear queue"), so the button row has room to breathe.</li>
+<li><strong>The A/B FX and BG FX queues no longer show a greyed play / pause button</strong>; they have no auto-advance, so the slot is gone.</li>
+</ul>
 <h3 id="pairs-follow-the-twister-page-uiperfrowskt-uiparametersstatekt-uiperformancedeepeditbaykt-uinavigationsurfacekt">Pairs Follow the Twister Page (<code>ui/PerfRows.kt</code>, <code>ui/ParametersState.kt</code>, <code>ui/PerformanceDeepEditBay.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
 <ul>
 <li><strong>A pair is now the two rows that share a half of a Twister page, in Browse and in Edit.</strong> On the MIXER page that makes Transitions + Master FX one pair and Master MST + Clock the other. Before, Browse paired Master MIX with Master FX and Transitions with Clock, so half of each pair had nothing to browse.</li>
@@ -11764,7 +11791,8 @@
 <li><strong>Edit's side rail is now <code>MST OUT A B BG PV</code>.</strong> <code>MST</code> has two sections, <code>LEVELS</code> and <code>CTRL</code>, and shows the Master MST row with the Clock row. <code>OUT</code> (the former <code>MIX</code>) has <code>FX</code> and <code>TRANS</code> and shows Transitions with Master FX.</li>
 <li><strong>LEVELS edits every deck's level and alpha, and the master level, in one grid.</strong> Alpha is the deck source's Gain, the same parameter as on the deck's SRC tab; an empty deck shows only its level. The master level moved here from TRANS, which now starts with Crossfade. Bindings, presets and macros are unchanged.</li>
 <li><strong>The Master MST row's gear opens MST &gt; LEVELS</strong>, the Master FX gear opens OUT &gt; FX and the Transitions gear OUT &gt; TRANS. The gear stays lit on the row the editor is on.</li>
-<li><strong>The Clock row has queue buttons</strong>: a <code>◀ ▶</code> pair each for the A/B, BG and Transition queues. With randomization on, a second line has <code>A B BG PV ALL</code> randomize buttons (undo with Ctrl+Z). They are the same triggers as MST &gt; CTRL, so right-click Learn MIDI / OSC works from either place. They are left out on a window too narrow for them.</li>
+<li><strong>The Clock row's tempo controls are a tidy 3 x 2 grid</strong> to leave room for the queue and randomize buttons at 1280 px: <code>MAN AUDIO LINK</code> over <code>TAP SNAP [-|+]</code>, all the same size, with the BPM readout beside them and the four beat dots under it. <code>/2</code> and <code>x2</code> are gone (Preferences &gt; Tempo &amp; Sync still has them), <code>RESYNC</code> is now <code>SNAP</code>, and <code>LINK</code> is always in its cell (dim while Link is off).</li>
+<li><strong>The Clock row has queue and randomize buttons</strong>, with captions and button text in the same size and colour as the captions under the knobs. <code>QUEUE</code> (left): a caption line <code>A/B | A/B FX | BG | BG FX | TRN</code> over a line of <code>◀ ▶</code> pairs, with a play / pause button beside the caption on the A/B, BG and TRN queues (it toggles that queue's auto-advance, lit while running; the FX queues have no auto-advance). <code>RAND</code> (pushed to the right edge, with randomization on): <code>A B ALL</code> over <code>BG PV</code> (undo with Ctrl+Z). Every button is a Mixer parameter also listed on MST &gt; CTRL, so right-click Learn MIDI / OSC works from either place. The A/B FX and BG FX queues gained those parameters (<code>Mixer/fxQueuePrev</code>, <code>fxQueueNext</code>, <code>fxBgQueuePrev</code>, <code>fxBgQueueNext</code>); only a MIDI CC (or a click) drives them, since the FX queues have no auto-advance. The buttons start right after the tempo controls (no room is kept for the Link button while Link is off), so a block is only left out on a window too narrow for it. Every other queue group, and the <code>RAND</code> block, has a faint tinted background, like the Library's queue columns, so it is clear which captions and buttons go together.</li>
 </ul>
 <h3 id="slots-bind-the-library-in-place-uiparametersstatekt-uilibrarypanelkt-uibacknavigationkt-uipairknobtouchkt">Slots Bind the Library In Place (<code>ui/ParametersState.kt</code>, <code>ui/LibraryPanel.kt</code>, <code>ui/BackNavigation.kt</code>, <code>ui/PairKnobTouch.kt</code>)</h3>
 <ul>
