@@ -33,6 +33,7 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Step Sequencer v2** | `ui/SeqSection.kt`, `cv/Evaluators.kt`, `web/evaluator.js` | **v1.1** | **PENDING** | Playback direction (reverse, ping-pong, random), swing, per-step probability/ties/skip, per-step length multipliers, saved named patterns. |
 | **Toggle/Select Metaknob Targets** | `rendering/isf/*`, `ui/*` | **v1.1** | **PENDING** | Bool and select inputs as Metaknob targets (Milestone 10). |
 | **Localization** | `ui/*` | **v1.1** | **PENDING** | All user-facing text moved to string tables; translation support with locale selection. |
+| **Live Shader Reload** | `rendering/isf/*`, `rendering/VisualSourceRegistry.kt`, `rendering/Shader.kt` | **v1.1** | **PENDING** | Recompile a saved shader in place, in every deck, slot and transition that uses it, keeping the last good version on error (Milestone 11). |
 | **Expanded FX Chain View** | `ui/PerformanceMatrixPanel.kt`, `ui/FxSlotCell.kt`, `macro/FxMacroSync.kt` | **Compost (v1.2)** | **SHELVED** | Mixxx-style 3-sub-row chain editing on the Performance matrix. Decided 2026-10-13: no milestone. Notes: `.planning/fx-chain-expanded-view-notes.md`. |
 
 ---
@@ -191,6 +192,19 @@ When editing an FX chain on the Performance matrix, show 3 sub-rows (one per slo
 > **Status**: Pending (deferred from the 2026-10-21 Super Knob / Metaknob review, item 19b).
 
 Metaknob targets are float inputs only (Add Target lists `TYPE == "float"`). Let toggles (`bool`, e.g. `mirror`, `invert`) and selects (`long` with `VALUES`) be targets too, so "the top of the sweep switches mirror on" works with a Second Half zone and a Step curve. Needs: the Add Target lists opened up, snapping checked under every zone and curve, and a look at whether a select changing mode mid-sweep reads as a glitch (maybe a default Step curve with a dead band).
+
+---
+
+### Milestone 11: Live Shader Reload
+> **Status**: Pending (from the 2026-10-22 SRC review).
+
+Saving a shader file while the app runs should recompile it and swap it into every deck, FX slot and transition using it, without a restart. Today a new file is picked up by Rescan Now, but a shader that's already loaded keeps its first version until restart (the file watcher only refreshes `ISFLibraryRegistry`, which nothing reads). In 1.0, a source that fails to compile shows a red checkerboard and an ⚠ with its first compiler error in Browse.
+
+- [ ] Shared-shader ownership: decks, FX slots and transitions share a master's `Shader`, so a reload has to replace the program in place (a mutable holder, or a shader generation the instances re-fetch), not dispose it under them.
+- [ ] Wire `ISFFileWatcher` changes to a GL-thread reload of just the changed file (sources, filters, transitions).
+- [ ] Inputs added, removed or retyped by the edit: keep values and bindings by name, drop the rest, and say so.
+- [ ] A failed recompile keeps the last good version running (the old docs promised this) and surfaces the error in the UI, not only the log.
+- [ ] Removed files: what a deck playing a deleted source does.
 
 ---
 
