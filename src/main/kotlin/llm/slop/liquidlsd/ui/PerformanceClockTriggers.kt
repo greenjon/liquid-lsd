@@ -118,7 +118,7 @@ internal object PerformanceClockTriggers {
         ImGui.beginGroup()
         caption(session, "QUEUE", h)
         for (q in QUEUES.indices) {
-            if (q > 0) ImGui.sameLine(0f, GROUP_GAP)
+            ImGui.sameLine(0f, if (q > 0) GROUP_GAP else GAP)
             caption(session, QUEUE_LABELS[q], h, QUEUE_LABEL_W)
             for (t in QUEUES[q]) {
                 ImGui.sameLine(0f, GAP)

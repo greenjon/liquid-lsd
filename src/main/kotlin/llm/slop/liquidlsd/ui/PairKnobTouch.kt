@@ -7,7 +7,7 @@ import llm.slop.liquidlsd.rendering.Mixer
 /**
  * With a bound dock (the pair view, or the Perform dock bound in place), touching one of the live knobs (1-4 the first row, 5-8 the
  * second) points the Browse list at that half: a source row browses sources, an FX row browses the slot under the knob (the chain for
- * the row's name knob), Transitions the transition. A half with nothing to browse (Master MIX, Clock) leaves the binding alone.
+ * the row's name knob), Transitions the transition. A half with nothing to browse (Master MST, Clock) leaves the binding alone.
  * Called every frame outside Edit, so a touch made while nothing was bound never retargets a binding made later.
  */
 internal object PairKnobTouch {

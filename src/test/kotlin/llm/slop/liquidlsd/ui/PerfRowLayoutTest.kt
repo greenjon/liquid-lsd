@@ -144,7 +144,7 @@ class PerfRowLayoutTest {
                 val saveW = FxChainHeader.saveBtnW(ctrlH)
                 val masterFxDrawnW = modeBtnW + gap + nameW + 3f + slotPillsW + 3f + saveW + 3f + FxChainHeader.MORE_BTN_W
 
-                // Master MIX row length: mode pill + gap + badge + gap + reset button (badgeW = width - resetBtnW - gap)
+                // Master MST row length: mode pill + gap + badge + gap + reset button (badgeW = width - resetBtnW - gap)
                 val mixWidth = masterRowW - modeBtnW - gap
                 val resetBtnW = 44f
                 val badgeW = mixWidth - resetBtnW - gap
@@ -155,7 +155,7 @@ class PerfRowLayoutTest {
                 val masterVisualRightEdge = masterTabBadgeW + 6f + masterFxDrawnW
                 assertEquals(deckFxRowW, masterFxDrawnW, 0.01f, "Master FX row length should equal deck FX row length")
                 assertEquals(deckVisualRightEdge, masterVisualRightEdge, 0.01f, "Master FX row right edge should align with deck FX row right edge")
-                assertEquals(masterFxDrawnW, masterMixDrawnW, 0.01f, "Master MIX row length should equal Master FX row length")
+                assertEquals(masterFxDrawnW, masterMixDrawnW, 0.01f, "Master MST row length should equal Master FX row length")
             }
         }
     }

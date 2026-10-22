@@ -396,6 +396,8 @@ class TourRunner(
             "preferences_close" -> llm.slop.liquidlsd.ui.PreferencesPanel.close()
             // F / Esc are GLFW key callbacks, which tour mode ignores, so Output View has its own action.
             "output_view" -> UITheme.outputViewEnabled = (step.value ?: 1f) >= 0.5f
+            // The randomize triggers (Mixer > CTRL, the Clock row) show only while randomization is on, which is off by default.
+            "randomization" -> UITheme.randomizationEnabled = (step.value ?: 1f) >= 0.5f
             "theme" -> when (step.target?.lowercase()) {
                 "light" -> UITheme.theme = UITheme.Theme.ORANGE_SUNSHINE
                 "dark" -> UITheme.theme = UITheme.Theme.GREY_ACID
