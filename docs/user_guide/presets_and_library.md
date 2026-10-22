@@ -69,7 +69,7 @@ Click a source name, an FX chain name, an FX slot or the transition name on a Pe
 - **Esc**, the **✕**, or clicking the slot on its row again stop without applying. Changing page stops too.
 - Only rows the slot can take are listed, and the row that is applied is tinted.
 - Pick another tab and the name greys out ("paused"): that tab is the plain Library. Going back to the slot's tab, or clicking the slot again, picks up where you were.
-- `Space` (or maximizing the Library) pauses the binding while the Library fills the column; `Space` again or **Esc** brings it back.
+- `Space` (or maximizing the Library) pauses the binding while the Library fills the column; `Space` again or **Esc** brings it back. `Ctrl+F` or `/` keeps it and just jumps to the search box.
 - On a deck with unsaved changes the first pick asks Save / Discard / Cancel; your answer is reused while that deck stays bound.
 
 The pair view works the same way, with its header line instead of the tab line: **Back**, a **Browse | Params** switch (Params opens the full editor for the half you last touched; Edit's own header has the same switch to come back), the target and its buttons, and what the queue plays next. Edit and the pair view keep this line in the same place, so switching between them moves nothing. Master's pair starts on the Master FX chain.

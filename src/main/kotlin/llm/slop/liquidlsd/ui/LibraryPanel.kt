@@ -71,8 +71,11 @@ object LibraryPanel {
      * Deep Edit. What it left is remembered, so Esc/back from the Library returns there ([ParametersState.rememberLibraryReturn]).
      */
     fun show(session: SessionContext) {
-        if (session.parametersState.focusedPair != null || isEditView(session)) session.parametersState.rememberLibraryReturn()
-        session.parametersState.leavePair()
+        // A Perform dock bound in place stays bound: the Library it applies from is the one being shown.
+        if (session.parametersState.focusedPair != null || isEditView(session)) {
+            session.parametersState.rememberLibraryReturn()
+            session.parametersState.leavePair()
+        }
         if (!isEditView(session)) return
         if (llm.slop.liquidlsd.macro.MacroLearnState.isLearning()) llm.slop.liquidlsd.macro.MacroLearnState.cancelLearn()
         session.parametersState.collapseAllRackModules()

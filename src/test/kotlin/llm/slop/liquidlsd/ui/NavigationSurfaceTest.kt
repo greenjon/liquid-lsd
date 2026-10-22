@@ -380,6 +380,16 @@ class NavigationSurfaceTest {
     }
 
     @Test
+    fun ctrlFKeepsAnInPlaceBinding() {
+        state.pageHasRow = { true } // deck A on the page: bound in place
+        state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", 1)
+        assertTrue(state.boundInPlace)
+        LibraryPanel.show(session)
+        assertTrue(state.boundInPlace, "the Library shown is the one the binding applies from")
+        assertEquals(ParametersState.BrowseTarget.FxChain(1), state.dockSelection?.target)
+    }
+
+    @Test
     fun tappingATreeRowInTheBayMovesTheCursorIntoTheList() {
         try {
             state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
