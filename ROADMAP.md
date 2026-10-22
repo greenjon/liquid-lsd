@@ -27,10 +27,11 @@ Liquid LSD is a real-time, audio-reactive procedural visual synthesizer and VJ p
 | **Unified Control & Mapping** | `midi/*`, `shortcuts/*`, `ui/*` | **v1.1** | **PENDING** | Decoupled `CommandRegistry`, hardware controller profiles (`library/mappings/`), universal learn. |
 | **Session Scratchpad** | `notes/*`, `ui/*` | **v1.1** | **PENDING** | Standalone floating/docked notes scratchpad window (`~/.liquid-lsd/scratchpad.txt`). |
 | **Mandala v2+ Recipe Vault** | `sources/mandala/*`, `ui/*` | **v1.1** | **PENDING** | Visual recipe gallery popover with micro-previews, geometric style tagging, quick-slots. |
-| **FX Metaknob Multi-Parameter Linking** | `rendering/isf/*`, `rendering/FxChain.kt`, `ui/FxMetaBindingEditor.kt` | **v1.0** | **DONE** | Several links per Metaknob with link modes and all five curves, edited in the Edit-row strip and Edit bay, plus a per-slot knob order for the focus knobs. |
+| **FX Metaknob Multi-Parameter Linking** | `rendering/isf/*`, `rendering/FxChain.kt`, `ui/FxMetaBindingEditor.kt` | **v1.0** | **DONE** | Several targets per Metaknob with knob zones and all five curves, edited in the Edit-row strip and Edit bay, plus a per-slot knob order for the focus knobs. |
 | **Macro-Learn Coverage Completion** | `ui/*`, `macro/*` | **v1.1** | **PENDING** | Click-to-learn for randomization bound rows, per-step grid, and dropdowns (shared combo wrapper). Bumped from v1.0. |
 | **Automated Screen Capture & UI Lab** | `export/*`, `ui/*`, `Main.kt` | **v1.0** | **DONE** | GPU PBO readback, headless `--screenshot-ui` runner and `--ui-lab` gallery (`./gradlew captureUiLab`). |
 | **Step Sequencer v2** | `ui/SeqSection.kt`, `cv/Evaluators.kt`, `web/evaluator.js` | **v1.1** | **PENDING** | Playback direction (reverse, ping-pong, random), swing, per-step probability/ties/skip, per-step length multipliers, saved named patterns. |
+| **Toggle/Select Metaknob Targets** | `rendering/isf/*`, `ui/*` | **v1.1** | **PENDING** | Bool and select inputs as Metaknob targets (Milestone 10). |
 | **Localization** | `ui/*` | **v1.1** | **PENDING** | All user-facing text moved to string tables; translation support with locale selection. |
 | **Expanded FX Chain View** | `ui/PerformanceMatrixPanel.kt`, `ui/FxSlotCell.kt`, `macro/FxMacroSync.kt` | **Compost (v1.2)** | **SHELVED** | Mixxx-style 3-sub-row chain editing on the Performance matrix. Decided 2026-10-13: no milestone. Notes: `.planning/fx-chain-expanded-view-notes.md`. |
 
@@ -183,6 +184,13 @@ When editing an FX chain on the Performance matrix, show 3 sub-rows (one per slo
 - [ ] Saved named patterns: a pattern library next to the in-memory Copy/Paste clipboard, shared across presets.
 - [ ] Per-step macro/MIDI/OSC learn (tracked under Milestone 5).
 - [ ] Every evaluator change here must be mirrored in `web/evaluator.js` (`scripts/sync_web.py`).
+
+---
+
+### Milestone 10: Toggle and Select Metaknob Targets
+> **Status**: Pending (deferred from the 2026-10-21 Super Knob / Metaknob review, item 19b).
+
+Metaknob targets are float inputs only (Add Target lists `TYPE == "float"`). Let toggles (`bool`, e.g. `mirror`, `invert`) and selects (`long` with `VALUES`) be targets too, so "the top of the sweep switches mirror on" works with a Second Half zone and a Step curve. Needs: the Add Target lists opened up, snapping checked under every zone and curve, and a look at whether a select changing mode mid-sweep reads as a glitch (maybe a default Step curve with a dead band).
 
 ---
 

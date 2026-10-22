@@ -127,7 +127,10 @@ class ISFFilter(
     val metaKnob = ModulatableParameter(0.0f, minClamp = 0.0f, maxClamp = 1.0f)
     val metaBindings = mutableListOf<FxMetaBinding>()
 
-    /** Backwards-compatible accessor for the primary Metaknob binding. */
+    /**
+     * Backwards-compatible accessor for the primary Metaknob binding. Reads the Dry/Wet safety net when there are no
+     * links at all, so check [metaBindings] when "nothing linked" matters (it is a real, saved state).
+     */
     var metaBinding: FxMetaBinding
         get() = metaBindings.firstOrNull() ?: FxMetaBinding.DRY_WET_SAFETY_NET
         set(value) {
@@ -159,28 +162,20 @@ class ISFFilter(
         }
     }
 
-    /** Rebinds this effect's Metaknob, optionally persisting it as a user override for this shader (by content hash). */
-    fun rebindMetaKnob(binding: FxMetaBinding, persistOverride: Boolean = false) {
-        metaBinding = binding
-        if (persistOverride) {
-            contentHash?.let { ISFAutoBindEngine.saveOverride(it, binding) }
-        }
-    }
-
     /** Restores a specific binding without touching the persisted override (e.g. loading a baked preset). */
     fun applyMetaBindingFromPreset(binding: FxMetaBinding) {
         metaBinding = binding
     }
 
-    /** Restores multiple bindings without touching the persisted override. */
+    /** Restores multiple bindings without touching the persisted override. An empty list stays empty: nothing linked. */
     fun applyMetaBindingsFromPreset(bindings: List<FxMetaBinding>) {
         metaBindings.clear()
-        if (bindings.isNotEmpty()) {
-            metaBindings.addAll(bindings)
-        } else {
-            metaBindings.add(FxMetaBinding.DRY_WET_SAFETY_NET)
-        }
+        metaBindings.addAll(bindings)
     }
+
+    /** True when [binding] names a parameter this shader does not have (renamed input, or a preset made for another shader). */
+    fun isMissingTarget(binding: FxMetaBinding): Boolean =
+        binding.targetParamName != null && binding.targetParamName !in parameters
 
     private val inputImageName: String?
     private val transitionStartName: String
@@ -343,12 +338,39 @@ class ISFFilter(
         applyKnobLayoutFromPreset(defaultDto.knobLayout)
         // Start the Metaknob at the position that reproduces the target's own authored default,
         // so loading a filter never silently overwrites its default via knob=0 on the first update().
-        metaKnob.set(metaBinding.knobForTarget(currentMetaTargetValue()))
+        placeMetaKnobAtTarget()
     }
 
-    /** The current value of whatever [metaBinding] currently targets (a named uniform, or [dryWet] as the safety net). */
-    private fun currentMetaTargetValue(): Float =
-        metaBinding.targetParamName?.let { parameters[it]?.baseValue } ?: dryWet.baseValue
+    /**
+     * Puts the Metaknob where its enabled, resolvable targets come closest to their current values (load and reset time,
+     * not per frame), so loading or resetting a filter changes its look as little as possible. One target: its exact
+     * inverse. Several: no single position may match them all, so this picks the position with the smallest summed
+     * squared error, each target's error measured as a fraction of its parameter's range. With no target the knob drives
+     * nothing and keeps its position.
+     */
+    private fun placeMetaKnobAtTarget() {
+        val targets = metaBindings.filter { it.enabled && !isMissingTarget(it) }
+        if (targets.isEmpty()) return
+        fun targetParam(b: FxMetaBinding) = b.targetParamName?.let { parameters[it] } ?: dryWet
+        if (targets.size == 1) {
+            metaKnob.set(targets[0].knobForTarget(targetParam(targets[0]).baseValue))
+            return
+        }
+        val wanted = targets.map { targetParam(it).baseValue }
+        val spans = targets.map { b -> targetParam(b).let { (it.maxClamp - it.minClamp).takeIf { s -> s > 0f } ?: 1f } }
+        fun error(knob: Float): Float {
+            var e = 0f
+            for (i in targets.indices) {
+                val d = (targets[i].mapKnobToTarget(knob) - wanted[i]) / spans[i]
+                e += d * d
+            }
+            return e
+        }
+        // Each target's own exact position, then a fine sweep for the in-between compromise.
+        val candidates = targets.mapIndexed { i, b -> b.knobForTarget(wanted[i]).coerceIn(0f, 1f) } +
+            (0..META_PLACEMENT_SAMPLES).map { it / META_PLACEMENT_SAMPLES.toFloat() }
+        metaKnob.set(candidates.minBy { error(it) })
+    }
 
     override fun update() {
         metaKnob.evaluate()
@@ -359,28 +381,31 @@ class ISFFilter(
         }
     }
 
-    /** Drives all [metaBindings]' target uniforms (or [dryWet] as safety net) from the current [metaKnob] value. */
+    /**
+     * Drives all [metaBindings]' target uniforms (or [dryWet] for the safety net) from the current [metaKnob] value, and
+     * marks each driven value [ModulatableParameter.metaDrivenBy] so its other editors lock. A link whose parameter
+     * this shader does not have drives nothing.
+     */
     private fun applyMetaKnobBinding() {
         val k = metaKnob.value
-        for (i in 0 until cachedParams.size) {
-            cachedParams[i].metaDrivenBy = null
-            cachedParams[i].metaDrivenBinding = null
-            cachedParams[i].metaDrivenKnob = null
-        }
+        for (i in 0 until cachedParams.size) releaseMetaDrive(cachedParams[i])
+        releaseMetaDrive(dryWet)
         for (i in 0 until metaBindings.size) {
             val binding = metaBindings[i]
             if (!binding.enabled) continue
-            val target = binding.targetParamName?.let { parameters[it] }
-            val mapped = binding.mapKnobToTarget(k)
-            if (target != null) {
-                target.metaDrivenBy = "Metaknob"
-                target.metaDrivenBinding = binding
-                target.metaDrivenKnob = metaKnob
-                target.baseValue = mapped
-            } else {
-                dryWet.baseValue = mapped
-            }
+            val name = binding.targetParamName
+            val target = if (name == null) dryWet else parameters[name] ?: continue
+            target.metaDrivenBy = "Metaknob"
+            target.metaDrivenBinding = binding
+            target.metaDrivenKnob = metaKnob
+            target.baseValue = binding.mapKnobToTarget(k)
         }
+    }
+
+    private fun releaseMetaDrive(p: ModulatableParameter) {
+        p.metaDrivenBy = null
+        p.metaDrivenBinding = null
+        p.metaDrivenKnob = null
     }
 
     /**
@@ -661,7 +686,7 @@ class ISFFilter(
         // Recompute rather than metaKnob.reset(): metaKnob's own constructor-time defaultValue (0f)
         // has no relation to metaBinding's target range, so resetting to it would misrepresent the
         // target's true authored default and get immediately re-applied by the next update().
-        metaKnob.set(metaBinding.knobForTarget(currentMetaTargetValue()))
+        placeMetaKnobAtTarget()
         frameIndex = 0
         for (slot in persistentSlots) {
             slot?.let {
@@ -722,6 +747,8 @@ class ISFFilter(
     }
 
     companion object {
+        /** Sweep resolution for the multi-target Metaknob start position (see placeMetaKnobAtTarget). */
+        private const val META_PLACEMENT_SAMPLES = 200
         private val MONTH_STARTS_NORMAL = intArrayOf(0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365)
         private val MONTH_STARTS_LEAP   = intArrayOf(0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366)
     }

@@ -240,3 +240,92 @@ class FxKnobLayoutTest {
         assertEquals(listOf("c"), f.clone().knobLayout)
     }
 }
+
+class FxMetaLinkEdgeCasesTest {
+
+    private fun filter(id: String = "edge", contentHash: String? = null): ISFFilter {
+        val header = ISFHeader(INPUTS = listOf(
+            ISFInput(NAME = "inputImage", TYPE = "image"),
+            ISFInput(NAME = "amount", TYPE = "float", MIN = JsonPrimitive(0f), MAX = JsonPrimitive(1f), DEFAULT = JsonPrimitive(0.5f))
+        ))
+        return ISFFilter(id, id, header, mockk<Shader>(relaxed = true), contentHash = contentHash)
+    }
+
+    @Test
+    fun nothingLinkedDrivesNothingAndStaysEmptyThroughASave() {
+        val fx = filter()
+        fx.applyMetaBindingsFromPreset(emptyList())
+        fx.dryWet.baseValue = 0.6f
+        fx.metaKnob.baseValue = 0.1f
+        fx.update()
+        assertEquals(0.6f, fx.dryWet.baseValue, 1e-6f, "no Dry/Wet safety net sneaks in")
+
+        val chain = FxChain("t")
+        chain.slots[0] = fx
+        val dto = chain.toFxSlotDto(0)!!
+        assertEquals(emptyList<FxMetaBindingDto>(), dto.metaBindings)
+        assertEquals(null, dto.metaBinding)
+    }
+
+    @Test
+    fun aLinkToAMissingParameterDrivesNothing() {
+        val fx = filter()
+        fx.applyMetaBindingsFromPreset(listOf(FxMetaBinding("renamedAway", 0f, 1f)))
+        fx.dryWet.baseValue = 0.6f
+        fx.metaKnob.baseValue = 0f
+        fx.update()
+        assertEquals(0.6f, fx.dryWet.baseValue, 1e-6f)
+        org.junit.jupiter.api.Assertions.assertTrue(fx.isMissingTarget(fx.metaBindings.single()))
+    }
+
+    @Test
+    fun theDryWetSafetyNetLocksDryWet() {
+        val fx = filter()
+        fx.applyMetaBindingsFromPreset(listOf(FxMetaBinding.DRY_WET_SAFETY_NET))
+        fx.metaKnob.baseValue = 0.25f
+        fx.update()
+        assertEquals(0.25f, fx.dryWet.baseValue, 1e-6f)
+        assertEquals("Metaknob", fx.dryWet.metaDrivenBy)
+
+        fx.applyMetaBindingsFromPreset(emptyList())
+        fx.update()
+        assertEquals(null, fx.dryWet.metaDrivenBy, "released once the link is gone")
+    }
+
+    @Test
+    fun aUserShaderSharingAStockIdDoesNotGetTheCuratedLink() {
+        // "bloom" is curated to bloomIntensity, which this shader doesn't have.
+        val fx = filter(id = "bloom")
+        assertEquals("amount", fx.metaBinding.targetParamName)
+    }
+
+    @Test
+    fun aResetPlacesASeveralTargetMetaknobAtTheBestCompromise() {
+        val header = ISFHeader(INPUTS = listOf(
+            ISFInput(NAME = "inputImage", TYPE = "image"),
+            ISFInput(NAME = "a", TYPE = "float", MIN = JsonPrimitive(0f), MAX = JsonPrimitive(1f), DEFAULT = JsonPrimitive(0f)),
+            ISFInput(NAME = "b", TYPE = "float", MIN = JsonPrimitive(0f), MAX = JsonPrimitive(1f), DEFAULT = JsonPrimitive(0.3f))
+        ))
+        val fx = ISFFilter("multi", "multi", header, mockk<Shader>(relaxed = true))
+        // a sweeps the second half only, so any knob position in the first half reproduces its default 0; b sweeps the
+        // whole travel. Only knob 0.3 reproduces both, which placing the knob from the first target alone can miss.
+        fx.applyMetaBindingsFromPreset(listOf(
+            FxMetaBinding("a", 0f, 1f, linkMode = MetaLinkMode.SECOND_HALF),
+            FxMetaBinding("b", 0f, 1f)
+        ))
+        fx.reset()
+        fx.update()
+        assertEquals(0.3f, fx.metaKnob.baseValue, 0.006f)
+        assertEquals(0f, fx.parameters["a"]!!.baseValue, 0.02f, "a keeps its default")
+        assertEquals(0.3f, fx.parameters["b"]!!.baseValue, 0.02f, "b keeps its default")
+    }
+
+    @Test
+    fun exponentialNamesMatchWordsNotSubstrings() {
+        org.junit.jupiter.api.Assertions.assertTrue(ISFAutoBindEngine.isExponentialName("fbDecay"))
+        org.junit.jupiter.api.Assertions.assertTrue(ISFAutoBindEngine.isExponentialName("scroll_speed"))
+        org.junit.jupiter.api.Assertions.assertTrue(ISFAutoBindEngine.isExponentialName("Rate"))
+        org.junit.jupiter.api.Assertions.assertFalse(ISFAutoBindEngine.isExponentialName("saturate"))
+        org.junit.jupiter.api.Assertions.assertFalse(ISFAutoBindEngine.isExponentialName("iterations"))
+    }
+}

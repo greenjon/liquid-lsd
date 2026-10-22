@@ -13,9 +13,15 @@ object FxMacroSummary {
         val focused = chain.focusedSlot
         return when {
             focused == null && i == 0 -> "Chain Super Knob"
-            focused == null -> if (chain.slotSuperKnobLink.getOrNull(i - 1) == true) "Slot $i Metaknob (linked to Super)" else "Slot $i Metaknob"
-            i == 0 -> "Slot ${focused + 1} Metaknob"
+            focused == null -> "Slot $i Metaknob" + linkNote(chain, i - 1)
+            i == 0 -> "Slot ${focused + 1} Metaknob" + linkNote(chain, focused)
             else -> if (control.bindings.isEmpty()) "(unused on this page)" else "Slot ${focused + 1} parameter"
         }
+    }
+
+    private fun linkNote(chain: FxChain, slot: Int): String = when {
+        chain.slotSuperKnobLink.getOrNull(slot) != true -> ""
+        chain.isAwaitingPickup(slot) -> " (linked to Super, waiting for pickup)"
+        else -> " (linked to Super)"
     }
 }

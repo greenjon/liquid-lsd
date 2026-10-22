@@ -215,7 +215,7 @@ object MacroLearnState {
 
         if (targetType == MacroTargetType.PARAM_BASE_VALUE) {
             MacroEngine.metaOwnerOf(parameterId)?.let {
-                setStatus("Cannot add target: $parameterId is driven by its $it. Disable the Metaknob link first.")
+                setStatus("Cannot add target: $parameterId is driven by its $it. Disable that Metaknob target first.")
                 return false
             }
         }

@@ -17,7 +17,7 @@ The Twister is the controller the app is built around. Its 16 encoders are the 1
 - **Pages.** The hardware banks (or, in native mode, the top-right side button) step through the Perform pages: **A/B**, **BG/PV** and **MIXER**. The screen follows the hardware, and clicking a tab on screen moves the encoders to match.
 - **Effects.** On an FX row the first knob is the chain's Super Knob and the other three are the slots' Metaknobs. A tap on a knob's switch bypasses a slot, and **Shift** + tap focuses it so the whole row becomes that effect's parameters.
 - **Browsing.** The side buttons open the Library and the source and effect pickers, so you can load a source or effect without touching the mouse.
-- **Lights.** Rings show each knob's value. Knob 13 on the MIXER page pulses on the beat, shows the tempo and taps tempo when pushed.
+- **Lights.** Rings show each knob's value. Knob 13 on the MIXER page pulses on the beat, shows the tempo and taps tempo when pushed. In Pickup mode, an FX slot waiting for the Super Knob blinks amber.
 - **Native mode.** With the optional XT firmware, rings change style to suit each parameter and the switch LEDs show the row colour.
 
 Setup, every gesture, a worked example and troubleshooting are in [Controller Profiles: Midi Fighter Twister](performance_controls.md#controller-profiles-midi-fighter-twister). Jump straight to [one-time setup](performance_controls.md#twister-setup), [gestures](performance_controls.md#twister-gestures), [side buttons](performance_controls.md#twister-side-buttons) or the [XT firmware mode](performance_controls.md#twister-xt). To change what a page controls, see [Perform Pages](performance_controls.md#perform-pages).

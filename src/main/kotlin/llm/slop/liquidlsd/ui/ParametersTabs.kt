@@ -543,19 +543,20 @@ object ParametersTabs {
     }
 
     /**
-     * Collapsible list of a slot's Metaknob links under its header: one [FxMetaBindingEditor] block per link plus an
-     * "Add link" menu of the parameters not linked yet. The Edit-row strip edits the same list; this is the mouse-first copy.
+     * Collapsible list of a slot's Metaknob targets under its header: one [FxMetaBindingEditor] block per target plus an
+     * "Add Target" menu of the parameters that aren't targets yet. The Edit-row strip edits the same list; this is the mouse-first copy.
      */
     private fun drawMetaLinks(state: ParametersState, chainPrefix: String, chain: FxChain, fx: llm.slop.liquidlsd.rendering.isf.ISFFilter, slotNum: Int, width: Float) {
         val edit = FxMetaBindingEditor.editFor(state, chainPrefix, chain, fx)
         val id = "$chainPrefix/FX$slotNum"
-        if (!ImGui.treeNodeEx("Metaknob links (${fx.metaBindings.size})##metalinks_$id", imgui.flag.ImGuiTreeNodeFlags.SpanAvailWidth)) return
-        itemTooltip("What ${fx.displayName}'s Metaknob drives: each link has its own range, response curve and zone of the knob's travel.")
+        if (!ImGui.treeNodeEx("Metaknob targets (${fx.metaBindings.size})##metalinks_$id", imgui.flag.ImGuiTreeNodeFlags.SpanAvailWidth)) return
+        itemTooltip("What ${fx.displayName}'s Metaknob drives: each target has its own range, response curve and zone of the knob's travel.")
         for (binding in fx.metaBindings.toList()) {
-            ImGui.textDisabled(binding.targetParamName?.let { ParamLabels.of(fx.header, it) } ?: "Dry/Wet")
+            ImGui.textDisabled(FxMetaEdit.targetLabel(fx, binding))
+            if (fx.isMissingTarget(binding)) itemTooltip("${fx.displayName} has no parameter by this name (renamed, or the target came from another effect), so this target drives nothing. Remove it or add the right parameter.")
             FxMetaBindingEditor.drawFull(fx, binding, width, edit)
         }
-        if (ImGui.smallButton("Add link##metaadd_$id")) ImGui.openPopup("metaadd_pop_$id")
+        if (ImGui.smallButton("Add Target##metaadd_$id")) ImGui.openPopup("metaadd_pop_$id")
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("metaadd_pop_$id")) {
             pushOpenDropdownFont()
@@ -570,7 +571,7 @@ object ParametersTabs {
                 any = true
                 if (ImGui.menuItem("Dry/Wet")) edit.run(null) { it.metaBindings.add(llm.slop.liquidlsd.rendering.isf.FxMetaBinding.DRY_WET_SAFETY_NET) }
             }
-            if (!any) ImGui.textDisabled("Every parameter is linked")
+            if (!any) ImGui.textDisabled("Every parameter is already a target")
             popOpenDropdownFont()
             ImGui.endPopup()
         }
@@ -595,7 +596,7 @@ object ParametersTabs {
             ImGui.text("K${2 + i % 3}  ${label(name)}")
             if (owned) {
                 ImGui.sameLine(); ImGui.textDisabled(Icons.LOCK)
-                itemTooltip("The Metaknob drives this parameter, so its knob does nothing while the link is enabled.")
+                itemTooltip("The Metaknob drives this parameter, so its knob does nothing while that target is enabled.")
             }
             ImGui.sameLine(0f, 12f)
             if (ImGui.smallButton("${Icons.CHEVRON_UP}##kup_${id}_$name")) edit.run(null) { FxMetaEdit.moveKnob(it, i, -1) }
@@ -811,43 +812,23 @@ object ParametersTabs {
                 fx.parameters.forEach { (name, param) ->
                     val existingBinding = fx.getBindingForParam(name)
                     val inputLabel = fx.header.INPUTS.find { it.NAME == name }?.LABEL
-                    val descWithLink = if (existingBinding != null) {
-                        val invStr = if (existingBinding.invert) " (Inverted)" else ""
-                        val linkStr = "Metaknob: ${existingBinding.linkMode.name}$invStr"
-                        if (inputLabel != null) "$inputLabel\n[$linkStr]" else "[$linkStr]"
+                    val descWithTarget = if (existingBinding != null) {
+                        val note = "[Metaknob target: ${LinkModeButton.zoneName(existingBinding.linkMode)}${if (existingBinding.invert) ", inverted" else ""}]"
+                        if (inputLabel != null) "$inputLabel\n$note" else note
                     } else inputLabel
 
                     ParametersRenderer.drawParamRow(
                         session, ParamLabels.of(fx.header, name), "$chainPrefix/FX$slotNum/$name", param, state, labelColW, mixer, gridStartX, row++,
                         getCvColumns, getColumnOffset, getCvColor, onPushUndo,
-                        extraMenuItems = {
+                        // A shortcut to add or remove this parameter as a target; its zone, curve and range are edited in Metaknob targets above.
+                        extraMenuItems = if (fx.header.INPUTS.any { it.NAME == name && it.TYPE.equals("float", ignoreCase = true) }) { {
                             ImGui.separator()
-                            ImGui.textDisabled("Metaknob Link")
-                            if (ImGui.menuItem("Unlinked", "", existingBinding == null)) {
-                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, null) }
+                            if (ImGui.menuItem("Metaknob Target", "", existingBinding != null)) {
+                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, if (existingBinding == null) MetaLinkMode.FULL else null) }
                             }
-                            if (ImGui.menuItem("Full Range (0%–100%)", "", existingBinding?.linkMode == MetaLinkMode.FULL)) {
-                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, MetaLinkMode.FULL, existingBinding?.invert ?: false) }
-                            }
-                            if (ImGui.menuItem("First Half (0%–50%)", "", existingBinding?.linkMode == MetaLinkMode.FIRST_HALF)) {
-                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, MetaLinkMode.FIRST_HALF, existingBinding?.invert ?: false) }
-                            }
-                            if (ImGui.menuItem("Second Half (50%–100%)", "", existingBinding?.linkMode == MetaLinkMode.SECOND_HALF)) {
-                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, MetaLinkMode.SECOND_HALF, existingBinding?.invert ?: false) }
-                            }
-                            if (ImGui.menuItem("Triangle Peak (0%–100%–0%)", "", existingBinding?.linkMode == MetaLinkMode.TRIANGLE)) {
-                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, MetaLinkMode.TRIANGLE, existingBinding?.invert ?: false) }
-                            }
-                            if (ImGui.menuItem("Bipolar (Center-0)", "", existingBinding?.linkMode == MetaLinkMode.BIPOLAR)) {
-                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, MetaLinkMode.BIPOLAR, existingBinding?.invert ?: false) }
-                            }
-                            ImGui.separator()
-                            if (ImGui.menuItem("Invert Direction", "", existingBinding?.invert == true)) {
-                                val currMode = existingBinding?.linkMode ?: MetaLinkMode.FULL
-                                FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(name, currMode, !(existingBinding?.invert ?: false)) }
-                            }
-                        },
-                        descriptionOverride = descWithLink
+                            itemTooltip(if (existingBinding == null) "Let ${fx.displayName}'s Metaknob drive this parameter." else "Stop the Metaknob driving this parameter.")
+                        } } else null,
+                        descriptionOverride = descWithTarget
                     )
                 }
             }

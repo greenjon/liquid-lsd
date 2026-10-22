@@ -2243,7 +2243,7 @@ Open the Deck Menu popup and choose <strong>Add/Edit Source Note...</strong></p>
 its <strong><code>FX</code></strong> sub-tab, and <strong>Master FX</strong> (the Mixer's <strong><code>FX</code></strong> sub-tab in Edit) is applied to the
 final output after the crossfader. All five chains work the same way. Each chain has a <strong>Chain Super
 Knob</strong> and each slot its own <strong>Metaknob</strong> — see <a href="../macros_and_rack/">Macro Controls &amp; the Perform View</a>
-for the FX Rack view that exposes these.</p>
+for how they work and where to edit them.</p>
 <ul>
 <li><strong>Deck row layout</strong>: the deck badge (<code>A</code>, <code>B</code>, <code>BG</code>, <code>PV</code>) carries a caption, slate <code>SRC</code> or cyan <code>FX</code>, naming the half the row shows. Line 1 is the long name box (click to Browse) and the Edit gear; line 2 holds <code>⋮</code>, Save, queue <code>◀ ▶</code> and the slot pills on an FX row, or <code>⋮</code>, Save, <code>◀ ▶</code> and a right-aligned Eject on a source row (same button sizes on both).</li>
 <li><strong>Chain Header Kebab (<code>⋮</code>)</strong>:</li>
@@ -2277,13 +2277,13 @@ for the FX Rack view that exposes these.</p>
 </ul>
 </li>
 <li><strong>Slot Side Buttons (left of each slot knob)</strong>: two stacked buttons.<ul>
-<li><strong>Link (top)</strong>: links/unlinks that slot's Metaknob to the Super Knob.</li>
+<li><strong>Link (top)</strong>: links/unlinks that slot's Metaknob to the Super Knob. A linked slot's knob still moves its Metaknob; the Super Knob picks the slot up again when it reaches it.</li>
 </ul>
 </li>
-<li><strong>Chain Link (left of the Super Knob, knob 1)</strong>: links or unlinks all three slots at once. Click links all unless they are all linked already, in which case it unlinks all; the icon shows a chain when every filled slot is linked, a dimmer chain when only some are, and a broken chain when none are. The Macro Strip has the same toggle by the <code>CHAIN MACRO</code> title. Where a new chain starts (linked or unlinked) is the <strong>Default FX chain linking</strong> preference.<ul>
+<li><strong>Chain Link (left of the Super Knob, knob 1)</strong>: links or unlinks all three slots at once. Click links all unless they are all linked already, in which case it unlinks all; the icon shows a chain when every filled slot is linked, a dimmer chain when only some are, and a broken chain when none are. The Macro Strip has the same toggle by the <code>CHAIN MACRO</code> title. Where a new chain starts (linked or unlinked) is the <strong>Default FX chain linking</strong> preference; how linked slots follow is <strong>Super Knob response</strong> (Relative or Pickup, see <a href="../macros_and_rack/">Macro Controls</a>). In Pickup mode a slot still waiting for the Super Knob shows an amber link button, and on the Twister its LED blinks amber.<ul>
 <li><strong>Bypass (bottom, power icon)</strong>: turns just that effect on or off. Row-coloured when on, red when bypassed, dim when the slot is empty. In Focus Mode, only the focused slot's bypass is shown, next to knob 1.</li>
 <li><strong>Effect Name</strong>: Truncated caption showing loaded filter. Click points the Library below at that slot (Stock filters, ★ Favorites, and Saved <code>.lsdfx</code> presets); click it again to stop. This happens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't trigger it.</li>
-<li><strong>Drag &amp; Drop</strong>: Drag an effect name onto another slot's name to swap/reorder (hold <code>Ctrl</code> while dropping to duplicate). Accepts stock ISF filters and <code>.lsdfx</code> single presets from Library.</li>
+<li><strong>Drag &amp; Drop</strong>: Drag an effect name onto another slot's name to swap/reorder (hold <code>Ctrl</code> while dropping to duplicate). Only the effects move: each slot keeps its own Super Knob link setting. Accepts stock ISF filters and <code>.lsdfx</code> single presets from Library.</li>
 <li><strong>Right-Click Context Menu</strong>: Focus Mode, Previous/Next in Shortlist, Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Edit.</li>
 </ul>
 </li>
@@ -2492,6 +2492,12 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <td>-</td>
 </tr>
 <tr>
+<td><strong>Tap on knob 1 (Super Knob) of an FX row</strong></td>
+<td>-</td>
+<td>nothing (so a stray tap never moves every linked slot)</td>
+<td>-</td>
+</tr>
+<tr>
 <td><strong>Shift + tap on knob 1 (Super Knob) of an FX row</strong></td>
 <td>-</td>
 <td>Chain Link: link or unlink all three slots</td>
@@ -2592,6 +2598,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <li>LEDs can't show greys, so on the MIXER page the Master row is red (the screen keeps its greys) and Transitions stay cyan.</li>
 <li><strong>The clock knob</strong> (knob 13, the first knob of the Clock row on the MIXER page) is the beat light: its LED sits dim plum and flashes light plum on every beat and orange on beat 1 of the bar, and its ring shows the tempo across the beat tracker's BPM search range (Preferences → Tempo &amp; Sync). <strong>Push it to tap tempo</strong> (the same as the TAP button); turning it does nothing. On the stock firmware the ring brightness pulses instead of the colour. While a Library or picker is browsing, the knob does its browse job instead.</li>
 <li>On pages with a pinned FX row (A/B, BG/PV, MIXER) the FX row's LED is a shifted hue of its source row's, so the four LEDs of a bank differ.</li>
+<li><strong>Waiting for pickup</strong> (Super Knob response set to Pickup): a linked FX slot the Super Knob hasn't reached yet blinks its LED amber and dark twice a second, on both firmwares, until the Super Knob gets there. Its ring keeps showing the Metaknob; on the stock firmware the ring is also dimmed (native mode can't dim rings). In Relative mode slots never wait, so nothing blinks.</li>
 </ul>
 <p><a id="twister-troubleshooting"></a></p>
 <h4 id="troubleshooting">Troubleshooting</h4>

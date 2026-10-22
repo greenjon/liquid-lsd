@@ -421,13 +421,24 @@ object FxChainHeader {
         val pct = st.wet
         pct[0] = (slot?.dryWet?.baseValue ?: 1f) * 100f
         if (ImGui.sliderFloat(st.dryWet, pct, 0f, 100f, "Wet %.0f%%")) {
-            slot?.dryWet?.baseValue = (pct[0] / 100f).coerceIn(0f, 1f)
+            slot?.let { setSlotWet(st.bankId, slotIdx, it, pct[0] / 100f) }
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "fxwet_" + st.bankId }
         // Middle-click resets to fully wet, matching the level faders.
-        if (ImGui.isItemHovered() && ImGui.isMouseClicked(2)) slot?.dryWet?.baseValue = 1f
+        if (ImGui.isItemHovered() && ImGui.isMouseClicked(2)) slot?.let { setSlotWet(st.bankId, slotIdx, it, 1f) }
         ImGui.endDisabled()
-        itemTooltip("Dry/Wet of the focused effect.\nMiddle-click to reset (100%).")
+        itemTooltip(
+            if (slot?.dryWet?.metaDrivenBy != null) "Dry/Wet of the focused effect, driven by its Metaknob: moving this moves the Metaknob.\nMiddle-click to reset (100%)."
+            else "Dry/Wet of the focused effect.\nMiddle-click to reset (100%)."
+        )
+    }
+
+    /** Writes a slot's Dry/Wet, or runs it back onto the Metaknob when a Metaknob link owns it (see KnobDrive). */
+    private fun setSlotWet(bankId: String, slotIdx: Int, slot: llm.slop.liquidlsd.rendering.isf.ISFFilter, wet: Float) {
+        val v = wet.coerceIn(0f, 1f)
+        val label = FxMacroSync.labelFor(bankId)
+        if (label != null && llm.slop.liquidlsd.macro.KnobDrive.setViaKnob("$label/FX/FX${slotIdx + 1}/DryWet", slot.dryWet, v)) return
+        slot.dryWet.baseValue = v
     }
 
     private fun drawFocusedEffectButton(

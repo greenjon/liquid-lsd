@@ -229,8 +229,14 @@ object FxSlotCell {
     fun drawLinkButton(session: SessionContext, mixer: Mixer, bankId: String, slotIndex: Int, slotLabel: String, x: Float, y: Float, size: Float) {
         val chain = FxMacroSync.chainFor(bankId, mixer) ?: return
         val isLinked = chain.slotSuperKnobLink.getOrNull(slotIndex) == true
+        val awaiting = isLinked && chain.isAwaitingPickup(slotIndex)
         ImGui.setCursorScreenPos(x, y)
-        if (isLinked) {
+        if (awaiting) {
+            // Linked, but the Super Knob has not reached this Metaknob yet (Pickup mode): caution tint, not the "following" one.
+            ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.ALERT.dark, 0.55f))
+            ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.u32(TangoPalette.ALERT.dark, 0.75f))
+            ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.u32(TangoPalette.ALERT.light))
+        } else if (isLinked) {
             ImGui.pushStyleColor(ImGuiCol.Button, TangoPalette.u32(TangoPalette.SYNC.normal, 0.75f))
             ImGui.pushStyleColor(ImGuiCol.ButtonHovered, TangoPalette.u32(TangoPalette.SYNC.normal, 0.90f))
             ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.u32(TangoPalette.SYNC.bright))
@@ -251,8 +257,13 @@ object FxSlotCell {
         ImGui.popStyleVar()
         ImGui.popStyleColor(3)
         itemTooltip(
-            if (isLinked) "Slot ${slotIndex + 1} ($slotLabel) is linked to Super Knob.\nClick to unlink."
-            else "Slot ${slotIndex + 1} ($slotLabel) is unlinked.\nClick to link to Super Knob."
+            when {
+                awaiting -> "Slot ${slotIndex + 1} ($slotLabel) is linked, waiting for the Super Knob to reach its Metaknob" +
+                    " (Super ${pct(chain.superKnob.baseValue)}, Metaknob ${pct(chain.slots[slotIndex]?.metaKnob?.baseValue ?: 0f)}).\nClick to unlink."
+                isLinked -> "Slot ${slotIndex + 1} ($slotLabel) is linked to Super Knob.\nTurning its own knob moves it on its own" +
+                    (if (FxChain.superKnobMode() == llm.slop.liquidlsd.rendering.SuperKnobMode.PICKUP) " until the Super Knob reaches it again" else "") + ".\nClick to unlink."
+                else -> "Slot ${slotIndex + 1} ($slotLabel) is unlinked.\nClick to link to Super Knob."
+            }
         )
     }
 
@@ -404,4 +415,6 @@ object FxSlotCell {
         ImGui.endPopup()
         popOpenDropdownPadding()
     }
+
+    private fun pct(v: Float): String = "${(v * 100f).toInt()}%"
 }

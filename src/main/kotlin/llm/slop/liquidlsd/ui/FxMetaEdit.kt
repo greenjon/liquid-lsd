@@ -63,6 +63,13 @@ object FxMetaEdit {
             change = change
         )
 
+    /** What a link drives, for editor labels: the parameter's name, "Dry/Wet", or a missing-parameter note. */
+    fun targetLabel(fx: ISFFilter, binding: FxMetaBinding): String = when {
+        binding.targetParamName == null -> "Dry/Wet"
+        fx.isMissingTarget(binding) -> "${binding.targetParamName} (missing)"
+        else -> ParamLabels.of(fx.header, binding.targetParamName)
+    }
+
     /** Replaces the binding for the same target as [new] (one binding per target), keeping its position. */
     fun replace(fx: ISFFilter, new: FxMetaBinding) {
         val i = fx.metaBindings.indexOfFirst { it.targetParamName == new.targetParamName }

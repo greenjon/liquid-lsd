@@ -95,7 +95,7 @@ class FxChainFadeTest {
     }
 
     @Test
-    fun testSwapSlotWithMovesFilterAndSuperKnobLink() {
+    fun testSwapSlotWithMovesFilterButNotTheSuperKnobLink() {
         val chainA = FxChain("Chain A")
         val chainB = FxChain("Chain B")
 
@@ -110,11 +110,12 @@ class FxChainFadeTest {
 
         chainA.swapSlotWith(0, chainB, 1)
 
+        // The effects move; each slot position keeps its own link flag.
         assertEquals("filterB", chainA.slots[0]?.id)
-        assertFalse(chainA.slotSuperKnobLink[0])
+        assertTrue(chainA.slotSuperKnobLink[0])
 
         assertEquals("filterA", chainB.slots[1]?.id)
-        assertTrue(chainB.slotSuperKnobLink[1])
+        assertFalse(chainB.slotSuperKnobLink[1])
     }
 
     @Test

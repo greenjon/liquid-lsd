@@ -1292,6 +1292,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#linked-fx-knobs-work-relative-super-knob-metaknob-fixes-macromacroenginekt-renderingfxchainkt-renderingisfisffilterkt-uifxchainmacrostripkt-uifxlinkdefaultskt-uilinkmodebuttonkt-uifxslotcellkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked FX Knobs Work, Relative Super Knob, Metaknob Fixes (macro/MacroEngine.kt, rendering/FxChain.kt, rendering/isf/ISFFilter.kt, ui/FXChainMacroStrip.kt, ui/FxLinkDefaults.kt, ui/LinkModeButton.kt, ui/FxSlotCell.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#queue-header-declutter-uibrowserqueuetoolbarkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6545,6 +6556,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#linked-fx-knobs-work-relative-super-knob-metaknob-fixes-macromacroenginekt-renderingfxchainkt-renderingisfisffilterkt-uifxchainmacrostripkt-uifxlinkdefaultskt-uilinkmodebuttonkt-uifxslotcellkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Linked FX Knobs Work, Relative Super Knob, Metaknob Fixes (macro/MacroEngine.kt, rendering/FxChain.kt, rendering/isf/ISFFilter.kt, ui/FXChainMacroStrip.kt, ui/FxLinkDefaults.kt, ui/LinkModeButton.kt, ui/FxSlotCell.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#queue-header-declutter-uibrowserqueuetoolbarkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11773,6 +11795,24 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="linked-fx-knobs-work-relative-super-knob-metaknob-fixes-macromacroenginekt-renderingfxchainkt-renderingisfisffilterkt-uifxchainmacrostripkt-uifxlinkdefaultskt-uilinkmodebuttonkt-uifxslotcellkt">Linked FX Knobs Work, Relative Super Knob, Metaknob Fixes (<code>macro/MacroEngine.kt</code>, <code>rendering/FxChain.kt</code>, <code>rendering/isf/ISFFilter.kt</code>, <code>ui/FXChainMacroStrip.kt</code>, <code>ui/FxLinkDefaults.kt</code>, <code>ui/LinkModeButton.kt</code>, <code>ui/FxSlotCell.kt</code>)</h3>
+<ul>
+<li><strong>A linked slot's knob now moves its Metaknob.</strong> Before, turning knob 2-4 on a slot linked to the Super Knob did nothing and snapped back, and in Focus Mode a linked slot's knob 1 was dead. Turning it now moves just that Metaknob; the Super Knob carries on from there (Relative) or picks it up again when it reaches it (Pickup).</li>
+<li><strong>The Super Knob no longer yanks a Metaknob you set by hand.</strong> Moving a linked Metaknob any other way (its Edit row, MIDI, or editing a parameter it drives) is treated the same as turning its knob.</li>
+<li><strong>"Default FX chain linking" is now Linked or Unlinked, Linked by default.</strong> The Auto option (unlinked while a Twister is connected) is gone: a linked slot no longer costs you its knob. A saved Auto setting reads as Linked.</li>
+<li><strong>Fixed: a Metaknob with no targets came back as a Dry/Wet control after saving.</strong> An empty target list is now saved and restored as empty.</li>
+<li><strong>Fixed: a target naming a parameter the effect doesn't have drove Dry/Wet.</strong> It now drives nothing and shows <code>(missing)</code> in the target editors. A user shader that shares a stock effect's id no longer gets that effect's curated target.</li>
+<li><strong>A Metaknob aimed at Dry/Wet now owns it</strong> like any other target: the focus header's <code>Wet</code> slider moves the Metaknob instead of being overwritten every frame, and macro, MIDI and OSC writes to it are suspended.</li>
+<li><strong>Focus in Edit is the real focus.</strong> The CHAIN MACRO block's Focus used to be a separate, Edit-only state that never moved the knobs. Focusing there (row menu) now focuses the chain everywhere, and the block shows which parameters knobs 2-4 hold, with page arrows and <strong>Group Mode</strong>.</li>
+<li><strong>Removed <em>Replace all links with...</em></strong> from the Metaknob row menu (it wiped every link at once); links are edited in the slot's Metaknob links block and on the Edit-row strip. <em>Reset to Factory Default</em> is now <strong>Remove Saved Default for <Effect></strong>, and both default items explain what they save and reset.</li>
+<li><strong>New: Super Knob response</strong> (Preferences), <strong>Relative</strong> by default. Every linked slot now moves as soon as you turn the Super Knob and keeps its own position: slots at 20% and 90% both rise, stay apart, both reach 100% at the top and 0% at the bottom, and come back when the Super Knob does. <strong>Pickup</strong> keeps the old behaviour (each slot waits until the Super Knob reaches it, then follows it exactly); a slot still waiting shows an amber link button with both values in its tooltip.</li>
+<li><strong>On the Twister, a slot waiting for Super Knob pickup blinks.</strong> In Pickup mode its LED strobes amber and dark (2 Hz) until the Super Knob reaches it, on the stock firmware and in native mode; on the stock firmware its ring is also dimmed. The ring keeps showing the Metaknob. Amber / dark rather than row colour / amber, because the FX rows' warm LED colours are too close to amber to read as a blink.</li>
+<li><strong>One word per thing.</strong> What a Metaknob drives are now its <strong>targets</strong> everywhere (Metaknob targets, Add Target, Remove Target), like macro knobs; <strong>Link</strong> only means a slot following the Super Knob; the knob-travel setting (full range, first half, ...) is the <strong>zone</strong>. A parameter's row menu in Edit has a single <strong>Metaknob Target</strong> check instead of a second copy of the zone list.</li>
+<li><strong>Swapping effects no longer moves their Super Knob link setting.</strong> Dragging an effect onto another slot (or reordering a chain) moves only the effects; each slot keeps its own link, as it already did for Ctrl+drop duplicate, paste and load.</li>
+<li><strong>A tap on the Super Knob's switch does nothing</strong> (it used to reset it to the centre, which moved every linked slot at once). Shift + tap is still Chain Link.</li>
+<li><strong>Rate, speed, frequency, decay and feedback parameters respond exponentially on the focus knobs 2-4</strong> (also names built from those words, like <code>fbDecay</code>), so the slow end gets more of the knob. Turning focus on never changes the value.</li>
+<li><strong>A Metaknob with several targets starts where they all come closest to their defaults</strong> when a slot loads or resets, instead of matching only the first target and moving the others.</li>
+</ul>
 <h3 id="queue-header-declutter-uibrowserqueuetoolbarkt">Queue Header Declutter (<code>ui/browser/QueueToolbar.kt</code>)</h3>
 <ul>
 <li><strong>Export and Clear moved into a ⋮ menu</strong> at the right of each queue column's caption ("Export as playlist...", "Clear queue"), so the button row has room to breathe.</li>

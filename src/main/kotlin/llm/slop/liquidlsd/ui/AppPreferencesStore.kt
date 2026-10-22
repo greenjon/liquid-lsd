@@ -246,7 +246,10 @@ object AppPreferencesStore {
                     UITheme.queueKeyTrigger = try { UITheme.QueueKeyTrigger.valueOf(savedKeyTrigger) } catch (e: Exception) { UITheme.QueueKeyTrigger.NONE }
                 }
                 props.getProperty("fxLinkDefault")?.let { saved ->
-                    UITheme.fxLinkDefault = try { FxLinkDefault.valueOf(saved) } catch (e: Exception) { FxLinkDefault.AUTO }
+                    UITheme.fxLinkDefault = try { FxLinkDefault.valueOf(saved) } catch (e: Exception) { FxLinkDefault.LINKED }
+                }
+                props.getProperty("superKnobMode")?.let { saved ->
+                    UITheme.superKnobMode = try { llm.slop.liquidlsd.rendering.SuperKnobMode.valueOf(saved) } catch (e: Exception) { llm.slop.liquidlsd.rendering.SuperKnobMode.RELATIVE }
                 }
                 val savedStartup = props.getProperty("startupBehavior")
                 if (savedStartup != null) {
@@ -371,6 +374,7 @@ object AppPreferencesStore {
             props.setProperty("queueKeyTrigger", UITheme.queueKeyTrigger.name)
             props.setProperty("startupBehavior", UITheme.startupBehavior.name)
             props.setProperty("fxLinkDefault", UITheme.fxLinkDefault.name)
+            props.setProperty("superKnobMode", UITheme.superKnobMode.name)
             props.setProperty("theme", UITheme.theme.name)
             props.setProperty("showMidiCol", UITheme.showMidiCol.toString())
             props.setProperty("showLfoCol", UITheme.showLfoCol.toString())

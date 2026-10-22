@@ -176,6 +176,10 @@ object UITheme {
         get() = settings.fxLinkDefault
         set(value) { settings = settings.copy(fxLinkDefault = value) }
 
+    var superKnobMode: llm.slop.liquidlsd.rendering.SuperKnobMode
+        get() = settings.superKnobMode
+        set(value) { settings = settings.copy(superKnobMode = value) }
+
     enum class StartupBehavior { PREVIOUS_SESSION, EMPTY }
     
     var startupBehavior: StartupBehavior

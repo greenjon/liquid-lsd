@@ -109,7 +109,9 @@ internal class PerformSurface(
     private val parametersState: ParametersState,
     private val mixer: Mixer,
     private val nav: NavSurface? = null,
-    private val clock: ClockKnobFeed? = null
+    private val clock: ClockKnobFeed? = null,
+    /** Time source for the pickup blink; tests pin it. */
+    private val nowNanos: () -> Long = { llm.slop.liquidlsd.utils.TimeSource.getTimeNanos() }
 ) : KnobSurface, KnobLightSource {
 
     private val rowsCache = PerfRows.RowsCache()
@@ -147,7 +149,8 @@ internal class PerformSurface(
         when (val under = target.spec.under) {
             is UnderKnob.SlotCell -> toggleBypass(target.bankId, under.slotIndex)
             is UnderKnob.ParamCell -> under.param?.let { resetParameter(target.control, it) }
-            is UnderKnob.Label -> target.control.value = LABEL_KNOB_DEFAULT
+            // The Super Knob (the FX row's Chain Link knob) ignores a tap: resetting it would move every linked slot at once.
+            is UnderKnob.Label -> if (target.spec.side !is SideButtons.ChainLink) target.control.value = LABEL_KNOB_DEFAULT
         }
     }
 
@@ -213,16 +216,20 @@ internal class PerformSurface(
 
     /**
      * Ring = the knob's value; LED = its row's accent colour, dark where nothing is there to
-     * control (an empty or bypassed FX slot, a blank parameter page position).
+     * control (an empty or bypassed FX slot, a blank parameter page position). A linked FX slot still
+     * waiting for the Super Knob (Pickup mode) blinks its LED amber / dark and, where the device can
+     * dim rings (stock firmware), shows a dimmed ring; see [pickupLight].
      */
     @Synchronized
     override fun knobLights(): List<KnobLight?> {
         clockKnob = PerformPages.resolveInto(theme.performancePageId, ctx, parametersState, mixer, rowsCache, knobBuffer)
         // The returned list is reused on the next poll; the poller reads it before polling again.
         lightBuffer.clear()
+        val blinkOn = (nowNanos() / PICKUP_BLINK_HALF_PERIOD_NANOS) % 2L == 0L
         for (target in knobBuffer) {
             lightBuffer.add(target?.let {
-                KnobLight(
+                if (isAwaitingPickup(it)) pickupLight(it, blinkOn)
+                else KnobLight(
                     value = it.control.value,
                     r = it.accent[0],
                     g = it.accent[1],
@@ -257,6 +264,23 @@ internal class PerformSurface(
         return KnobLight(1f, c[0], c[1], c[2], meterType = MeterType.ENDLESS, ringBrightness = SEND_RING_BRIGHTNESS, marker = true)
     }
 
+    private fun isAwaitingPickup(target: PageKnob): Boolean {
+        val slot = (target.spec.under as? UnderKnob.SlotCell)?.slotIndex ?: return false
+        return FxMacroSync.chainFor(target.bankId, mixer)?.isAwaitingPickup(slot) == true
+    }
+
+    /**
+     * A slot knob waiting for pickup: the ring still shows the Metaknob (dimmed where the device can dim it), and the LED
+     * strobes amber / dark. Not row colour / amber: Deck A's orange is too close to amber on the Twister to read as a blink.
+     */
+    private fun pickupLight(target: PageKnob, blinkOn: Boolean): KnobLight = KnobLight(
+        value = target.control.value,
+        r = PICKUP_LED[0], g = PICKUP_LED[1], b = PICKUP_LED[2],
+        lit = blinkOn,
+        meterType = target.spec.meterType,
+        ringBrightness = PICKUP_RING_BRIGHTNESS
+    )
+
     private fun isLit(target: PageKnob): Boolean = when (val under = target.spec.under) {
         is UnderKnob.SlotCell -> FxMacroSync.chainFor(target.bankId, mixer)?.slots?.getOrNull(under.slotIndex)?.enabled == true
         is UnderKnob.ParamCell -> under.param != null
@@ -283,6 +307,15 @@ internal class PerformSurface(
 
         /** A live send knob lights its whole ring at this brightness (a full ring, so it reads as different from a value). */
         const val SEND_RING_BRIGHTNESS = 0.5f
+
+        /** Ring brightness of a slot waiting for Super Knob pickup (devices that can dim rings only). */
+        const val PICKUP_RING_BRIGHTNESS = 0.3f
+
+        /** The pickup blink: 250 ms on, 250 ms off (2 Hz). */
+        const val PICKUP_BLINK_HALF_PERIOD_NANOS = 250_000_000L
+
+        /** The pickup blink's LED colour: the same caution amber as the on-screen link button. */
+        val PICKUP_LED: FloatArray = TangoPalette.ALERT.normal
 
         /** The knob (0-based) a controller touched last; the controller's "pick" button opens the picker of its row. */
         @Volatile var lastTouchedKnob: Int? = null

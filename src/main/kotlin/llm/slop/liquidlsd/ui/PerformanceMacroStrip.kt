@@ -197,13 +197,12 @@ internal object PerformanceMacroStrip {
         return slot.takeIf { it in 0 until FxChain.SLOT_COUNT && chain.slots.getOrNull(it) != null }
     }
 
-    private fun fxTargetLabel(fx: ISFFilter, binding: FxMetaBinding): String =
-        binding.targetParamName?.let { ParamLabels.of(fx.header, it) } ?: "Dry/Wet"
+    private fun fxTargetLabel(fx: ISFFilter, binding: FxMetaBinding): String = FxMetaEdit.targetLabel(fx, binding)
 
     private fun selectedMeta(control: MacroControl, fx: ISFFilter): Int =
         (metaSel[control.id] ?: 0).coerceIn(0, (fx.metaBindings.size - 1).coerceAtLeast(0))
 
-    /** Line 1 right part for a slot Metaknob: Add Target (pick from the unlinked parameters) and one chip per link. Returns the new x. */
+    /** Line 1 right part for a slot Metaknob: Add Target (pick from the parameters that aren't targets yet) and one chip per target. Returns the new x. */
     private fun drawMetaChips(
         state: ParametersState, mixer: Mixer, bankId: String, control: MacroControl, fx: ISFFilter,
         startX: Float, y: Float, addW: Float, chipW: Float, h: Float, gap: Float
@@ -211,7 +210,7 @@ internal object PerformanceMacroStrip {
         var cx = startX
         ImGui.setCursorScreenPos(cx, y)
         if (ButtonChrome.button("Add Target##meta_add", addW, h)) ImGui.openPopup(ADD_META_POPUP)
-        itemTooltip("Link another parameter of ${fx.displayName} to this Metaknob.")
+        itemTooltip("Make another parameter of ${fx.displayName} a target of this Metaknob.")
         pushOpenDropdownPadding()
         if (ImGui.beginPopup(ADD_META_POPUP)) {
             pushOpenDropdownFont()
@@ -232,7 +231,7 @@ internal object PerformanceMacroStrip {
                     metaEdit(state, bankId, mixer, fx).run(null) { it.metaBindings.add(FxMetaBinding.DRY_WET_SAFETY_NET) }
                 }
             }
-            if (!any) ImGui.textDisabled("Every parameter is linked")
+            if (!any) ImGui.textDisabled("Every parameter is already a target")
             popOpenDropdownFont()
             ImGui.endPopup()
         }
@@ -256,14 +255,14 @@ internal object PerformanceMacroStrip {
         return cx
     }
 
-    /** Line 2 for a slot Metaknob: the selected link in [FxMetaBindingEditor.drawLine], or a hint when nothing is linked. */
+    /** Line 2 for a slot Metaknob: the selected target in [FxMetaBindingEditor.drawLine], or a hint when there is none. */
     private fun drawMetaLine(
         state: ParametersState, mixer: Mixer, bankId: String, control: MacroControl, fx: ISFFilter,
         x: Float, y: Float, w: Float, h: Float
     ) {
         if (fx.metaBindings.isEmpty()) {
             ImGui.getWindowDrawList().addText(x + 2f, TextFit.centeredY(y, h, ImGui.getTextLineHeight()), ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled),
-                TextFit.ellipsize("Nothing linked: click Add Target to choose a parameter", w - 4f))
+                TextFit.ellipsize("No targets: click Add Target to choose a parameter", w - 4f))
             return
         }
         val binding = fx.metaBindings[selectedMeta(control, fx)]

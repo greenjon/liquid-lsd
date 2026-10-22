@@ -76,7 +76,7 @@ editor of the open Edit. For each target you can set:
   Left-click the link button to cycle through the modes; right-click to open a context menu and select directly.
   A common pattern: give one knob two targets, one on **1st Half** and one on **2nd
   Half**, to crossfade or choreograph between them from a single knob turn.
-- **Live Value Meter Knob** — on the second row of each target (to the left of Min/Max, Link Mode, and Curve), a rotary meter knob (the same crisp knob widget used in the parameter grid) displays the live evaluated output value in relation to the macro knob position. If you use a Triangle ramp (peak) curve or a half-turn zone, moving the macro knob from 0 to 1 lets you see the binding sweep (e.g. 0 → 1 → 0) in real time. Hovering over the knob displays exact numerical readouts.
+- **Live Value Meter Knob** — on the second row of each target (to the left of Min/Max, Zone, and Curve), a rotary meter knob (the same crisp knob widget used in the parameter grid) displays the live evaluated output value in relation to the macro knob position. If you use a Triangle ramp (peak) curve or a half-turn zone, moving the macro knob from 0 to 1 lets you see the binding sweep (e.g. 0 → 1 → 0) in real time. Hovering over the knob displays exact numerical readouts.
 - **Enabled** — toggling a target off immediately hands the target field back to normal
   manual/mouse editing; toggling it back on resumes macro control.
 
@@ -133,13 +133,12 @@ Macro Knobs sit at the top of the MIDI/OSC input hierarchy:
 
 ---
 
-## FX Rack (per-deck FX tabs)
+## FX chains in Edit
 
-Each deck and Master now has its own **independent FX chain**. Selecting **A FX**, **B FX**,
-**BG FX**, **PV FX**, or **MST FX** (the FX mode of a Performance row) shows a
-dedicated **FX Rack** view — a Traktor/Mixxx-style Super Knob + Metaknob strip for that deck's
-own FX chain. Unlike the old shared FX1/FX2 banks, each deck's FX chain is always available
-regardless of what the other decks are doing.
+Each deck and Master has its own **independent FX chain**. A deck's **FX** tab in Edit (and **OUT > FX** for
+Master) starts with the **CHAIN MACRO** block: the chain's Super Knob, then one row per slot Metaknob with its
+Super Knob **Link** checkbox. These are full parameter rows, so they take modulators and right-click MIDI / OSC
+Learn like any other. Below it, each slot has its parameters, its **Metaknob targets** and its **Knobs** order.
 
 Edit and the macro strip always point at the same deck and section:
 
@@ -153,8 +152,8 @@ the Transitions and Master FX rows its **OUT** side tab).
 
 A parameter's base value can be driven from several places. From strongest to weakest:
 
-1. **A macro knob target** locks the value against direct writes, but the Value and the knob are linked both ways: dragging, scrolling or typing in **Initial Range** moves the knob (and so every other target of that knob), and the Value follows. Stepped and S-curve links land on the nearest position, and a typed value outside the link's range stops at the knob's end. Any MIDI or OSC mapping on it is **suspended** (its row in Preferences shows "Suspended: driven by ...") and works again when you release the target.
-2. **An effect Metaknob link** (including the Super Knob, which moves linked Metaknobs) owns the effect parameter it is aimed at. A macro knob can't be added to that parameter ("driven by its Metaknob"), and an existing macro target on it is ignored while the link is enabled. The parameter's row shows the same cyan highlight as a macro target, with a `[K1]` badge when the Metaknob sits on a macro knob. As with a macro target, editing the Value in Edit moves the Metaknob instead (and the macro knob above it, if it has one). Disable the Metaknob link (right-click the Metaknob) to use a macro knob there instead. MIDI and OSC mappings on it are suspended as well.
+1. **A macro knob target** locks the value against direct writes, but the Value and the knob are linked both ways: dragging, scrolling or typing in **Initial Range** moves the knob (and so every other target of that knob), and the Value follows. Stepped and S-curve targets land on the nearest position, and a typed value outside the target's range stops at the knob's end. Any MIDI or OSC mapping on it is **suspended** (its row in Preferences shows "Suspended: driven by ...") and works again when you release the target.
+2. **An effect Metaknob target** (including through the Super Knob, which moves linked Metaknobs) owns the effect parameter it is aimed at. A macro knob can't be added to that parameter ("driven by its Metaknob"), and an existing macro target on it is ignored while the Metaknob target is enabled. The parameter's row shows the same cyan highlight as a macro target, with a `[K1]` badge when the Metaknob sits on a macro knob. As with a macro target, editing the Value in Edit moves the Metaknob instead (and the macro knob above it, if it has one). Uncheck the Metaknob target (in the slot's **Metaknob targets** block or on the Edit-row strip) to use a macro knob there instead. A Metaknob aimed at **Dry/Wet** owns the slot's Dry/Wet the same way: the focus header's `Wet` slider then moves the Metaknob. MIDI and OSC mappings on it are suspended as well.
 3. **Direct edits, MIDI and OSC mappings** on an unlocked value: the last one to move wins.
 4. **Modulators (LFO, sequencer, audio)** never compete. They are always added on top of whatever value results from 1-3.
 
@@ -165,50 +164,63 @@ A parameter's base value can be driven from several places. From strongest to we
   (the bundled filters) it's tuned to feel right out of the box. For any other ISF shader —
   including the thousands available from third-party shader packs — it's auto-mapped the first
   time the shader loads, using the shader's own declared `IDENTITY`/parameter metadata, or a
-  Dry/Wet fallback if nothing better is found. You never get a dead knob.
+  Dry/Wet fallback if nothing better is found. If you remove every target, the Metaknob drives
+  nothing, and stays that way when the slot is saved. A target that names a parameter the effect doesn't
+  have (renamed, or copied from another effect) drives nothing and shows `(missing)`. When a slot loads
+  or resets, the Metaknob starts where its targets come closest to their current values: exactly for one
+  target, and the best compromise when several targets can't all be matched by one position.
 - **Slot cells** — on a Performance row in FX mode, each Metaknob has no caption; the slot cell
   right under it names the effect in that slot. Only the Super Knob keeps its `SUPER` caption.
-- **Link** (per slot) — toggles whether that slot's Metaknob follows the Super Knob. Turning Link
-  back on doesn't snap the Metaknob to wherever the Super Knob currently sits — it waits until you
-  move the Super Knob far enough for it to reach the Metaknob's current position first (soft
-  pickup), the same behavior used for hardware MIDI/OSC takeover elsewhere in the app.
-- **Focus Mode** (per slot) — focuses on an individual effect slot across the Performance Matrix FX rows.
-  - **Knob 1**: The focused slot's Metaknob. The slot's **Dry/Wet** is the `Wet` slider in the chain header (middle-click resets to 100%).
-  - **Knobs 2–4**: Retargeted to the focused effect's top parameters on the active page, with parameter paging (`[◀ P1/N ▶]`) when more than 3 parameters exist. A parameter the Metaknob already drives is left out, since knob 1 moves it, unless you set the slot's own knob order (see *Editing a Metaknob's links and knob order* below).
+- **Link** (per slot) — toggles whether that slot's Metaknob follows the Super Knob. Linking never
+  snaps a Metaknob to wherever the Super Knob sits. A linked slot's own knob still works: turning it
+  (or editing the Metaknob any other way) moves just that Metaknob.
+- **Super Knob response** (Preferences) — how linked slots follow:
+  - **Relative** (default): every linked slot moves as soon as you turn the Super Knob, and keeps its
+    own position: a slot at 20% and one at 90% both rise, stay apart, and both reach 100% at the top
+    and 0% at the bottom. Bring the Super Knob back and they return to where they were. Moving a
+    slot by hand just gives it a new starting point.
+  - **Pickup**: a slot waits until the Super Knob reaches its Metaknob (soft pickup, as for MIDI/OSC
+    takeover), then follows it exactly, so linked slots end up moving together. Turning a slot's own
+    knob lets go of the Super Knob until it reaches the slot again. While a slot waits, its link
+    button is amber and the Edit-row strip says "waiting for pickup".
+- **Focus Mode** (per slot) — hands the chain's knobs to one effect slot. Focusing from the Perform row, the
+  Twister or the Metaknob row's menu in Edit is the same thing: the knobs follow, and Edit's CHAIN MACRO block
+  shows which parameters knobs 2-4 hold, with page arrows and **Group Mode** to leave.
+  - **Knob 1**: The focused slot's Metaknob, linked or not. The slot's **Dry/Wet** is the `Wet` slider in the chain header (middle-click resets to 100%).
+  - **Knobs 2–4**: Retargeted to the focused effect's top parameters on the active page, with parameter paging (`[◀ P1/N ▶]`) when more than 3 parameters exist. A parameter the Metaknob already drives is left out, since knob 1 moves it, unless you set the slot's own knob order (see *Editing a Metaknob's targets and knob order* below). Time-like parameters (names with a word such as rate, speed, frequency, decay or feedback, e.g. `fbDecay`) respond exponentially, so the slow end gets more of the knob's travel.
   - **Parameter Cells (`FxParamCell`)**: Display parameter values with a reset-to-default button (counter-clockwise arrow).
   - **Hardware MIDI**: Physical controllers mapped to `Macro/<bankId>/knob_1..4` keep their paths; in Focus Mode they control the focused slot's Metaknob and parameters. The layout is fixed per mode (Mixxx-style), so a mapped CC changes meaning when you toggle focus.
-  - Click `[◀ CHAIN]` in the header, or the active slot pill, to return to standard Group Mode.
-- **Right-click a Metaknob** to replace all its links with a single parameter (or the Dry/Wet safety net),
-  save the current links as the effect's default, or reset to the auto-mapped default.
+  - Click the active slot pill in the header (or **Group Mode** in Edit) to return to standard Group Mode.
+- **Right-click a Metaknob row in Edit** to focus that slot, **Save as Default** for the effect, or
+  **Remove Saved Default** (see *Explicit ISF FX Defaults* below).
 
-#### Editing a Metaknob's links and knob order
+#### Editing a Metaknob's targets and knob order
 
 A Metaknob can drive several parameters at once, each with its own response.
 
-- **In the Edit view**, select a slot's Metaknob. The row strip shows one numbered chip per link, **Add Target**
-  (pick from the parameters that aren't linked yet, or Dry/Wet) and the selected link's controls: the enable
-  checkbox, link mode (full range, first half, second half, triangle, bipolar, invert), response curve
+- **In the Edit view**, select a slot's Metaknob. The row strip shows one numbered chip per target, **Add Target**
+  (pick from the parameters that aren't targets yet, or Dry/Wet) and the selected target's controls: the enable
+  checkbox, knob zone (full range, first half, second half, triangle, bipolar, invert), response curve
   (linear, exponential, logarithmic, S-curve, step with a step count), a range bar with draggable handles, Min and
-  Max, and delete. Right-click the link-mode button for the full list.
-- **In the Edit bay**, each slot has a **Metaknob links** block with the same controls for every link and an
-  **Add link** menu.
+  Max, and delete. Right-click the zone button for the full list.
+- **In the Edit bay**, each slot has a **Metaknob targets** block with the same controls for every target and an
+  **Add Target** menu. A parameter's own row menu also has a **Metaknob Target** check to add or remove it quickly.
+- **Words used here**: a Metaknob's *targets* are the parameters it drives; *Link* only ever means a slot following
+  the Super Knob.
 - **Knobs** (also in the Edit bay) lists the parameters on focus-mode knobs 2-4, three per page. Move a parameter
   up or down, take it off the knobs, bring it back from *Hidden*, or **Reset order**. A lock beside a parameter
-  means the Metaknob drives it, so its knob does nothing while the link is enabled.
-- Links and knob order are saved with the slot and chain. Changing them in one chain never changes another
-  chain or the stock effect; **Save as Default** makes your links and order the starting point for new copies of
+  means the Metaknob drives it, so its knob does nothing while that target is enabled.
+- Targets and knob order are saved with the slot and chain. Changing them in one chain never changes another
+  chain or the stock effect; **Save as Default** makes your targets and order the starting point for new copies of
   that effect. Ctrl+Z undoes a change, and a drag on a range handle is a single step.
 
 ### Hardware control note
 
-Every knob in the strip (Super Knob, each Metaknob, and each focused-mode parameter row) supports
-the same right-click **Learn MIDI** / **Learn OSC** as any other slider in the app — each has its
-own fixed control path. **This means a physical knob you've mapped to a slot's Metaknob in Group
-Mode will *not* automatically control that slot's parameters once you switch to Focus Mode** (and
-vice versa) — they're different paths, so you'd map the physical knob again for the focused view
-if you want it there too. A true Traktor/Mixxx hardware unit keeps the same 4 physical knobs
-mapped regardless of focus state; matching that exactly would need new plumbing this pass didn't
-build. If this turns out to matter in practice for your hardware workflow, it's a known follow-up.
+Map hardware to the **Perform knobs** (right-click a knob, or use a controller profile such as the Twister's):
+their paths (`Macro/<bankId>/knob_1..4`) stay fixed and their meaning follows the mode, so the same physical
+knob is the Super Knob in group mode and the focused Metaknob in Focus Mode, Mixxx-style. Learn on a Super
+Knob or Metaknob row in Edit maps that one control instead, and is locked (`locked by K#`) while a Perform
+knob already drives it.
 
 ---
 
@@ -265,7 +277,7 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
       - *Monopolar* (standard 7:30 to 4:30 sweep).
       - *Bipolar* (12 o'clock center detent, sweeping left for negative or right for positive; middle-click resets to 0.5 center). Focused FX and Deck parameters with negative ranges (e.g. shifts, pans, zooms) render in bipolar mode.
       - *Endless* (continuous 360° circle where 0 and 1 meet at 6 o'clock straight down, sweeping continuous angles for rotation and hue).
-    - **Double-Click Direct Numeric Entry**: Double-click any macro knob face to open an inline text entry box. Type exact numerical values (e.g. `0.25`, `-1.5`, `42`) and press `Enter` to commit, or `Escape` to cancel. The typed value is what the parameter receives, so the knob's curve, invert and link mode are taken into account (the readout shows the same value). For stepped or half-range bindings the knob snaps to the nearest position that gets closest.
+    - **Double-Click Direct Numeric Entry**: Double-click any macro knob face to open an inline text entry box. Type exact numerical values (e.g. `0.25`, `-1.5`, `42`) and press `Enter` to commit, or `Escape` to cancel. The typed value is what the parameter receives, so the knob's curve, invert and zone are taken into account (the readout shows the same value). For stepped or half-range bindings the knob snaps to the nearest position that gets closest.
     - **In-Face Readouts**: Hovering or dragging over a targetless or group-mode knob displays a subtle real-time value readout in the center of the knob face.
   - **Right Wing**:
     - **Randomize Die Button (`🎲`)**: Instantly randomizes that deck's modulators & base values across both Visual Source and Insert FX with undo support (when randomization is enabled). Positioned on Row 1 directly above the BYPASS button.
@@ -476,12 +488,12 @@ When swapping visual sources on any deck (via the generator badge or launchpad),
 
 ### Explicit ISF FX Defaults
 
-In the FX Chain Macro Strip (and Edit FX views), slot Metaknobs and parameters can be customized and explicitly saved:
-- Tweaking parameters or re-targeting Metaknobs during performance is purely temporary and does **not** silently overwrite defaults on disk.
-- **Right-click any Metaknob** in the FX strip:
-  - Select any parameter from the list (or `Target Dry/Wet (safety net)`) to retarget the Metaknob.
-  - Choose `Save as Default for <Filter>` to persist the current Metaknob targets and parameter baseline into `library/isf_overrides/<contentHash>.json`.
-  - When a user default is present, choose `Reset to Factory Default` to revert to stock curated/heuristic targets.
+A slot's Metaknob targets, knob order and parameter values can be saved as the effect's own default:
+- Tweaking parameters or targets during performance is purely temporary and does **not** silently overwrite defaults on disk.
+- **Right-click a Metaknob row** in Edit's CHAIN MACRO block:
+  - `Save as Default for <Filter>` saves this slot's Metaknob targets, knob order and parameter values into `library/isf_overrides/<contentHash>.json`. New copies of the effect start from it; slots already in chains keep their own.
+  - When a saved default exists, `Remove Saved Default for <Filter>` deletes it, so new copies go back to the curated/auto-mapped targets, and resets this slot to them too.
+- Targets themselves are edited in the slot's **Metaknob targets** block or on the Edit-row strip.
 
 ---
 

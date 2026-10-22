@@ -17,11 +17,11 @@ import llm.slop.liquidlsd.rendering.Mixer
  * "Deck A/FX/Super", "Master/FX/FX2/Meta"); [labelFor]/[chainFor] map an FX bank id to it.
  *
  *
- * Mutually exclusive with [FxChain]'s Link checkbox: both would otherwise write
+ * Mutually exclusive with [FxChain]'s slot link: both would otherwise write
  * [llm.slop.liquidlsd.rendering.isf.ISFFilter.metaKnob]'s base value every frame (one via this
- * binding, one via [FxChain.update]'s soft-takeover propagation). A linked slot is skipped here
- * entirely (no binding, label shows the effect name) -- see [llm.slop.liquidlsd.ui.FXChainMacroStrip]
- * for the reverse: enabling Link there clears this sync's binding for that slot.
+ * binding, one via [FxChain.update]'s soft-takeover propagation). A linked slot's knob gets no binding;
+ * [MacroEngine.tick] mirrors it both ways instead, so turning it still moves the Metaknob (and releases
+ * the slot from the Super Knob until the Super Knob picks it up again).
  */
 object FxMacroSync {
 
@@ -99,6 +99,7 @@ object FxMacroSync {
             syncGroupMode(macroBank, chainLabel, chain)
         }
 
+        MacroEngine.forgetLinkedKnobMirror(macroBank)
         MacroEngine.invalidate()
     }
 
@@ -122,8 +123,7 @@ object FxMacroSync {
             if (chain.slotSuperKnobLink.getOrNull(slotIdx) == true) {
                 // Linked slots are driven by the Super Knob's soft-takeover propagation
                 // (FxChain.propagateSuperKnob) -- a MacroBinding here would race it for the same
-                // field. Clear any binding and leave the knob unbound while
-                // keeping the label.
+                // field. Leave the knob unbound; MacroEngine.tick mirrors it to the Metaknob both ways.
                 macroBank.knobs.getOrNull(knobIndex)?.let { it.bindings.clear(); it.label = label }
                 continue
             }
@@ -147,7 +147,7 @@ object FxMacroSync {
         val slot = chain.slots.getOrNull(slotIdx)
 
         // Knob 0: Focused slot's Metaknob (its Dry/Wet is on the chain header). A slot linked to the
-        // Super Knob is driven by FxChain's propagation instead, so its knob stays unbound (see group mode).
+        // Super Knob is driven by FxChain's propagation, so its knob is an unbound two-way mirror (see group mode).
         if (chain.slotSuperKnobLink.getOrNull(slotIdx) == true) {
             macroBank.knobs.getOrNull(0)?.let { it.bindings.clear(); it.label = "META" }
         } else {
@@ -173,18 +173,21 @@ object FxMacroSync {
                 val paramName = entry.key
                 val param = entry.value
                 val label = llm.slop.liquidlsd.ui.ParamLabels.of(slot?.header, paramName).uppercase()
-                val minVal = param.minClamp
-                val maxVal = param.maxClamp
-                val range = maxVal - minVal
-                val normVal = if (range > 0f) ((param.baseValue - minVal) / range).coerceIn(0f, 1f) else 0f
+                // Time/frequency-like parameters get the same exponential response the Metaknob auto-mapping uses, so the
+                // useful low end isn't squeezed into the first few degrees. Not for stepped or bipolar (negative) ranges.
+                val curve = if (param.steps == null && param.minClamp >= 0f &&
+                    llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine.isExponentialName(paramName)
+                ) MacroCurveType.EXPONENTIAL else MacroCurveType.LINEAR
                 syncKnob(
                     macroBank = macroBank,
                     knobIndex = knobIndex,
-                            defaultLabel = label,
+                    defaultLabel = label,
                     targetPath = "$chainLabel/FX/FX$slotNum/$paramName",
-                    minVal = minVal,
-                    maxVal = maxVal,
-                    initialValue = normVal,
+                    minVal = param.minClamp,
+                    maxVal = param.maxClamp,
+                    curve = curve,
+                    initialValue = null,
+                    currentTarget = param.baseValue
                 )
             } else {
                 clearKnob(macroBank, knobIndex)
@@ -206,22 +209,24 @@ object FxMacroSync {
         targetPath: String,
         minVal: Float = 0f,
         maxVal: Float = 1f,
-        initialValue: Float
+        curve: MacroCurveType = MacroCurveType.LINEAR,
+        initialValue: Float?,
+        /** With a null [initialValue]: the target's current value, which the knob is placed to reproduce (no jump). */
+        currentTarget: Float = 0f
     ) {
         val control = macroBank.knobs.getOrNull(knobIndex) ?: return
 
         control.label = defaultLabel
         control.bindings.clear()
-        control.bindings.add(
-            MacroBinding(
-                parameterId = targetPath,
-                targetType = MacroTargetType.PARAM_BASE_VALUE,
-                minVal = minVal,
-                maxVal = maxVal,
-                curve = MacroCurveType.LINEAR,
-                inverted = false
-            )
+        val binding = MacroBinding(
+            parameterId = targetPath,
+            targetType = MacroTargetType.PARAM_BASE_VALUE,
+            minVal = minVal,
+            maxVal = maxVal,
+            curve = curve,
+            inverted = false
         )
-        control.value = initialValue
+        control.bindings.add(binding)
+        control.value = initialValue ?: MacroCurve.inverse(currentTarget, binding).coerceIn(0f, 1f)
     }
 }

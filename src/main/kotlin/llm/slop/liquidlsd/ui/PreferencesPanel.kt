@@ -413,7 +413,17 @@ object PreferencesPanel {
             session.uiTheme.fxLinkDefault = fxLinkOptions[fxLinkIdx.get()]
             AppPreferencesStore.savePreferences()
         }
-        itemTooltip("Whether new FX chains start with every slot linked to the Super Knob.\nAuto = unlinked when a knob controller (e.g. Midi Fighter Twister) is connected, so each slot Metaknob gets its own knob.\nSaved presets keep their own setting; applies to chains created or loaded afterwards.")
+        itemTooltip("Whether new FX chains start with every slot linked to the Super Knob.\nA linked slot's own knob still moves its Metaknob; the Super Knob picks it up again when it gets there.\nSaved presets keep their own setting; applies to chains created or loaded afterwards.")
+
+        ImGui.spacing()
+        val superModes = llm.slop.liquidlsd.rendering.SuperKnobMode.entries
+        val superModeIdx = imgui.type.ImInt(session.uiTheme.superKnobMode.ordinal)
+        ImGui.setNextItemWidth(comboWidth)
+        if (ImGui.combo("Super Knob response", superModeIdx, FxLinkDefaults.SUPER_KNOB_MODE_LABELS)) {
+            session.uiTheme.superKnobMode = superModes[superModeIdx.get()]
+            AppPreferencesStore.savePreferences()
+        }
+        itemTooltip("How linked FX slots follow their chain's Super Knob.\nRelative: every linked slot moves at once and keeps its own position, and all of them still reach 0 and 100% at the ends.\nPickup: a slot waits until the Super Knob reaches its Metaknob, then follows the Super Knob exactly (all linked slots end up together).")
 
         ImGui.spacing()
         val autoVjBehaviors = UITheme.AutoVjDirtyBehavior.values()

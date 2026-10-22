@@ -136,7 +136,7 @@ class ISFAutoBindEngineTest {
     }
 
     @Test
-    fun `rebinding persists and reloads via content hash override`() {
+    fun `saved default persists and reloads via content hash override`() {
         val hash = "test_rebind_${System.nanoTime()}"
         val header = ISFHeader(INPUTS = listOf(
             ISFInput(NAME = "inputImage", TYPE = "image"),
@@ -146,7 +146,8 @@ class ISFAutoBindEngineTest {
         val shader = mockk<Shader>(relaxed = true)
         val filter1 = ISFFilter("unbound_rebind", "Unbound", header, shader, contentHash = hash)
 
-        filter1.rebindMetaKnob(FxMetaBinding("beta", 0f, 1f), persistOverride = true)
+        filter1.metaBinding = FxMetaBinding("beta", 0f, 1f)
+        ISFAutoBindEngine.saveFilterDefault(filter1)
         assertEquals("beta", filter1.metaBinding.targetParamName)
 
         // A fresh filter instance sharing the same content hash should pick up the persisted override.
@@ -157,7 +158,7 @@ class ISFAutoBindEngineTest {
     }
 
     @Test
-    fun `rebindMetaKnob does not implicitly write to disk`() {
+    fun `editing links does not implicitly write to disk`() {
         val hash = "test_no_implicit_${System.nanoTime()}"
         val header = ISFHeader(INPUTS = listOf(
             ISFInput(NAME = "inputImage", TYPE = "image"),
@@ -167,8 +168,7 @@ class ISFAutoBindEngineTest {
         val shader = mockk<Shader>(relaxed = true)
         val filter1 = ISFFilter("unbound_no_implicit", "Unbound", header, shader, contentHash = hash)
 
-        // Default persistOverride is false
-        filter1.rebindMetaKnob(FxMetaBinding("beta", 0f, 1f))
+        filter1.metaBinding = FxMetaBinding("beta", 0f, 1f)
         assertEquals("beta", filter1.metaBinding.targetParamName)
 
         assertFalse(ISFAutoBindEngine.hasFilterDefault(filter1))

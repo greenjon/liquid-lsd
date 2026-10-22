@@ -26,7 +26,7 @@ object TransitionMacroSync {
     /** The "why can't I edit this" caption for a binding in a sync-owned bank. */
     fun ownerNote(bankId: String?): String =
         if (isTransBank(bankId)) "Driven by the active transition; change the transition instead."
-        else "Driven by the FX chain; edit the chain's Metaknob link instead."
+        else "Driven by the FX chain; edit the slot's Metaknob targets instead."
 
     // The crossfader knob's value as of the last mirror, to tell "the user moved the knob" from "the crossfader moved".
     private var lastKnobValue = Float.NaN

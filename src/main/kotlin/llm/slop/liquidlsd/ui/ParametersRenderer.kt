@@ -431,7 +431,7 @@ object ParametersRenderer {
                 metaOwner != null ->
                     "Locked: Driven by its $metaOwner" +
                         (llm.slop.liquidlsd.macro.MacroEngine.metaKnobBindingInfo(paramKey)?.let { " [${it.badgeLabel}]" } ?: "") +
-                        " link.\nEdit the Value in the Edit view to move the knob, or disable the link (right-click the Metaknob) to edit it by hand."
+                        ".\nEdit the Value in the Edit view to move the knob, or uncheck this target in the slot's Metaknob targets to edit it by hand."
                 param.modulators.isNotEmpty() -> {
                     val allBypassed = param.modulators.all { it.bypassed }
                     val action = if (allBypassed) "unmute" else "mute"

@@ -407,7 +407,7 @@ object MacroEngine {
             }
         }
 
-        // Keep linked FX slot macro knobs visually in sync with their slot's Metaknob / Super Knob
+        // Linked FX slot knobs: two-way mirrors of their slot's Metaknob
         syncLinkedFxChainKnobValues(DECK_A_FX, mixer.deckA.fxChain)
         syncLinkedFxChainKnobValues(DECK_B_FX, mixer.deckB.fxChain)
         syncLinkedFxChainKnobValues(DECK_BG_FX, mixer.deckBG.fxChain)
@@ -470,22 +470,52 @@ object MacroEngine {
         levelMirror[rb.param]?.let { it.knob = rb.control.value; it.base = rb.param.baseValue }
     }
 
+    // A linked slot's knob as of the last mirror, to tell "the user turned the knob" from "the Metaknob moved".
+    private val linkedKnobMirror = java.util.IdentityHashMap<MacroControl, Float>()
+
+    /** Drops the mirror state of [bank]'s knobs, so a re-sync (link toggle, focus) never reads as a knob turn. */
+    internal fun forgetLinkedKnobMirror(bank: MacroBank) {
+        synchronized(lock) { bank.knobs.forEach { linkedKnobMirror.remove(it) } }
+    }
+
     private fun syncLinkedFxChainKnobValues(bankId: String, chain: FxChain) {
         val macroBank = synchronized(lock) { banks[bankId] } ?: return
         val focused = chain.focusedSlot
         if (focused != null) {
             // Focus mode: knob 0 is the focused slot's Metaknob; mirror it when that slot is linked.
             if (chain.slotSuperKnobLink.getOrNull(focused) == true) {
-                macroBank.knobs.getOrNull(0)?.value = chain.slots.getOrNull(focused)?.metaKnob?.baseValue ?: chain.superKnob.baseValue
+                macroBank.knobs.getOrNull(0)?.let { mirrorLinkedKnob(it, chain, focused) }
             }
             return
         }
         for (i in 0 until FxChain.SLOT_COUNT) {
             if (chain.slotSuperKnobLink.getOrNull(i) == true) {
-                val knob = macroBank.knobs.getOrNull(i + 1) ?: continue
-                val slot = chain.slots.getOrNull(i)
-                knob.value = slot?.metaKnob?.baseValue ?: chain.superKnob.baseValue
+                macroBank.knobs.getOrNull(i + 1)?.let { mirrorLinkedKnob(it, chain, i) }
             }
+        }
+    }
+
+    /**
+     * A linked slot's knob has no [MacroBinding] (the Super Knob's propagation writes the Metaknob), so it is a two-way
+     * mirror like the crossfader knob: a knob that moved since the last call drives the Metaknob, which releases the slot
+     * from the Super Knob until the Super Knob picks it up again ([FxChain] re-arms soft takeover on any outside write);
+     * otherwise the knob follows the Metaknob.
+     */
+    private fun mirrorLinkedKnob(knob: MacroControl, chain: FxChain, slotIndex: Int) {
+        val meta = chain.slots.getOrNull(slotIndex)?.metaKnob
+        synchronized(lock) {
+            if (meta == null) {
+                knob.value = 0f
+                linkedKnobMirror[knob] = 0f
+                return
+            }
+            val last = linkedKnobMirror[knob]
+            if (last != null && knob.value != last) {
+                meta.baseValue = knob.value.coerceIn(0f, 1f)
+            } else {
+                knob.value = meta.baseValue
+            }
+            linkedKnobMirror[knob] = knob.value
         }
     }
 

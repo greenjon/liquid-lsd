@@ -674,16 +674,6 @@ class ParametersState : MidiLearnSink {
         else -> "SRC"
     }
 
-    /** The (chainPrefix, slotIndex) currently drilled into by [FXChainMacroStrip]'s "Single FX Focus Mode", or null in group mode. */
-    var focusedFxSlot: Pair<String, Int>? = null
-
-    fun focusedSlotIndexFor(chainPrefix: String): Int? =
-        focusedFxSlot?.takeIf { it.first == chainPrefix }?.second
-
-    fun toggleFxFocus(chainPrefix: String, slotIndex: Int) {
-        focusedFxSlot = if (focusedFxSlot == chainPrefix to slotIndex) null else chainPrefix to slotIndex
-    }
-
     fun select(cellId: ParameterCellId, param: ModulatableParameter) {
         if (selectedCell != cellId) {
             midiLearnTarget = null

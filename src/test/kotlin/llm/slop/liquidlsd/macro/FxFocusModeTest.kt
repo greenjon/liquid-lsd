@@ -242,6 +242,23 @@ class FxFocusModeTest {
     }
 
     @Test
+    fun testTimeLikeFocusParametersGetAnExponentialKnobWithoutAJump() {
+        val chain = FxChain("Deck A FX")
+        chain.slots[0] = testFilterWithParams("fx", listOf("strobeRate", "amount"))
+        chain.focusSlot(0)
+        FxMacroSync.syncChain(MacroEngine.DECK_A_FX, "Deck A", chain)
+        val bank = MacroEngine.getBank(MacroEngine.DECK_A_FX)!!
+
+        val rate = bank.knobs[1].bindings.single()
+        assertEquals(MacroCurveType.EXPONENTIAL, rate.curve)
+        // Default 1.0 of 0..2 is placed so the exponential curve reproduces it: sqrt(0.5).
+        assertEquals(kotlin.math.sqrt(0.5f), bank.knobs[1].value, 1e-4f)
+        assertEquals(1.0f, MacroCurve.mapToRange(bank.knobs[1].value, rate), 1e-4f)
+
+        assertEquals(MacroCurveType.LINEAR, bank.knobs[2].bindings.single().curve)
+    }
+
+    @Test
     fun testSlotSwapDuringFocusFollowsEffect() {
         val chain = FxChain("Master FX")
         chain.slots[0] = testFilterWithParams("f0", listOf("p0"))

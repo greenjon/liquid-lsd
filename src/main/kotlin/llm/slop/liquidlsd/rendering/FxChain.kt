@@ -18,10 +18,8 @@ import llm.slop.liquidlsd.rendering.isf.toDto
  *
  * [superKnob] is a Traktor/Mixxx-style "chain macro": when a slot is linked
  * ([slotSuperKnobLink]), moving the Super Knob drives that slot's own [ISFFilter.metaKnob].
- * Linking uses soft-takeover (see [propagateSuperKnob]) rather than a hard snap, so relinking
- * or loading a new filter into an already-linked slot never yanks its Metaknob to wherever the
- * Super Knob currently sits -- the link only takes effect once the Super Knob's own movement
- * crosses (or comes within tolerance of) that slot's current Metaknob value.
+ * How it drives it is [superKnobMode] (see [propagateSuperKnob]); neither mode ever yanks a
+ * Metaknob to wherever the Super Knob currently sits when a slot is linked, loaded or hand-set.
  */
 class FxChain(val label: String) {
 
@@ -36,7 +34,7 @@ class FxChain(val label: String) {
     // -- Focus Mode (Traktor / Mixxx style) ---------------------------------------------------
     /**
      * Focused slot index (0 until [SLOT_COUNT]), or null if the chain is in standard Group/Chain mode.
-     * In Focus Mode, Knob 1 maps to this slot's individual Dry/Wet, and Knobs 2-4 map to its top parameters.
+     * In Focus Mode, Knob 1 maps to this slot's Metaknob, and Knobs 2-4 map to its top parameters.
      */
     var focusedSlot: Int? = null
 
@@ -68,6 +66,12 @@ class FxChain(val label: String) {
     // constructed chain has nothing to "already be in sync" with.
     private val hasTakenOver = BooleanArray(SLOT_COUNT) { false }
     private var lastSuperKnobValue = superKnob.value
+    // The Metaknob value the last propagation wrote, per slot. A taken-over Metaknob that no longer holds it was moved
+    // by something else (its own knob, a slider, MIDI, an edit of a parameter it owns), which re-arms the takeover.
+    private val lastPropagated = FloatArray(SLOT_COUNT) { Float.NaN }
+    // RELATIVE mode anchors: the Super Knob position and Metaknob value a slot's line passes through. NaN = re-anchor.
+    private val anchorSuper = FloatArray(SLOT_COUNT) { Float.NaN }
+    private val anchorMeta = FloatArray(SLOT_COUNT)
 
     /**
      * Arms soft-takeover for [slotIndex] so its (possibly freshly-loaded) filter's Metaknob
@@ -76,8 +80,16 @@ class FxChain(val label: String) {
      * call this after doing so.
      */
     fun armSlotTakeover(slotIndex: Int) {
-        if (slotIndex in hasTakenOver.indices) hasTakenOver[slotIndex] = false
+        if (slotIndex !in hasTakenOver.indices) return
+        hasTakenOver[slotIndex] = false
+        lastPropagated[slotIndex] = Float.NaN
+        anchorSuper[slotIndex] = Float.NaN
     }
+
+    /** True while linked slot [slotIndex] waits for the Super Knob to reach its Metaknob (soft takeover not caught yet). */
+    fun isAwaitingPickup(slotIndex: Int): Boolean =
+        superKnobMode() == SuperKnobMode.PICKUP &&
+            slotSuperKnobLink.getOrNull(slotIndex) == true && slots.getOrNull(slotIndex) != null && !hasTakenOver[slotIndex]
 
     /**
      * Links or unlinks [slotIndex] to/from the Super Knob. Linking (false -> true) arms
@@ -87,9 +99,7 @@ class FxChain(val label: String) {
         if (slotIndex !in slotSuperKnobLink.indices) return
         val wasLinked = slotSuperKnobLink[slotIndex]
         slotSuperKnobLink[slotIndex] = linked
-        if (linked && !wasLinked) {
-            hasTakenOver[slotIndex] = false
-        }
+        if (linked && !wasLinked) armSlotTakeover(slotIndex)
     }
 
     /** Filled slots only: an empty slot has nothing to drive, so it never makes the chain "partially" linked. */
@@ -247,8 +257,9 @@ class FxChain(val label: String) {
 
     /**
      * Swaps slot [a] of this chain with slot [b] of [other] (which may be this chain): the effect
-     * instances move together with their Super Knob link flags, so modulation on their parameters
-     * travels with them. Both slots re-arm soft takeover.
+     * instances move, so modulation on their parameters travels with them. Super Knob link flags
+     * belong to the slot position and stay put, as they do for duplicate, paste and load. Both slots
+     * re-arm soft takeover (or re-anchor, in Relative mode).
      */
     fun swapSlotWith(a: Int, other: FxChain, b: Int) {
         if (a !in 0 until SLOT_COUNT || b !in 0 until SLOT_COUNT) return
@@ -256,9 +267,6 @@ class FxChain(val label: String) {
         val filter = slots[a]
         slots[a] = other.slots[b]
         other.slots[b] = filter
-        val link = slotSuperKnobLink[a]
-        slotSuperKnobLink[a] = other.slotSuperKnobLink[b]
-        other.slotSuperKnobLink[b] = link
         if (other === this) {
             if (focusedSlot == a) focusedSlot = b
             else if (focusedSlot == b) focusedSlot = a
@@ -282,12 +290,25 @@ class FxChain(val label: String) {
         dryWet.evaluate()
     }
 
+    /**
+     * [SuperKnobMode.PICKUP]: a linked slot waits until the Super Knob reaches its Metaknob (soft takeover), then
+     * follows it exactly. [SuperKnobMode.RELATIVE]: each linked slot keeps an anchor (Super Knob position, Metaknob
+     * value) and follows a two-piece line through it from 0 to 0 and 1 to 1, so it moves at once, keeps its own
+     * position relative to the others and still reaches both ends. Any outside write to a Metaknob (its knob, a
+     * slider, MIDI) re-arms the takeover or re-anchors the slot.
+     */
     private fun propagateSuperKnob() {
         val superValue = superKnob.value
         val superMoved = superValue != lastSuperKnobValue
+        val relative = superKnobMode() == SuperKnobMode.RELATIVE
         for (i in 0 until SLOT_COUNT) {
             if (!slotSuperKnobLink[i]) continue
             val slot = slots[i] ?: continue
+            if (relative) {
+                propagateRelative(i, slot, superValue, superMoved)
+                continue
+            }
+            if (hasTakenOver[i] && slot.metaKnob.baseValue != lastPropagated[i]) armSlotTakeover(i)
             if (!hasTakenOver[i]) {
                 if (!superMoved) continue
                 val current = slot.metaKnob.value
@@ -295,8 +316,24 @@ class FxChain(val label: String) {
                 hasTakenOver[i] = true
             }
             slot.metaKnob.baseValue = superValue
+            lastPropagated[i] = slot.metaKnob.baseValue
         }
         lastSuperKnobValue = superValue
+    }
+
+    private fun propagateRelative(i: Int, slot: ISFFilter, superValue: Float, superMoved: Boolean) {
+        // Pickup state is meaningless here; clear it so switching to PICKUP mid-show asks for a pickup instead of snapping.
+        hasTakenOver[i] = false
+        val meta = slot.metaKnob.baseValue
+        if (anchorSuper[i].isNaN() || meta != lastPropagated[i]) {
+            anchorSuper[i] = superValue
+            anchorMeta[i] = meta
+            lastPropagated[i] = meta
+            return
+        }
+        if (!superMoved) return
+        slot.metaKnob.baseValue = relativeValue(superValue, anchorSuper[i], anchorMeta[i])
+        lastPropagated[i] = slot.metaKnob.baseValue
     }
 
     fun reset() {
@@ -306,7 +343,7 @@ class FxChain(val label: String) {
         superKnob.reset()
         for (i in 0 until SLOT_COUNT) {
             slotSuperKnobLink[i] = defaultLinked()
-            hasTakenOver[i] = false
+            armSlotTakeover(i)
         }
         focusedSlot = null
         focusParamPage = 0
@@ -341,7 +378,7 @@ class FxChain(val label: String) {
             dryWet = fx.dryWet.toDto(),
             parameters = fx.parameters.mapValues { p -> p.value.toDto() },
             metaKnob = fx.metaKnob.toDto(),
-            metaBinding = fx.metaBinding.toDto(),
+            metaBinding = fx.metaBindings.firstOrNull()?.toDto(),
             metaBindings = fx.metaBindings.map { it.toDto() },
             knobLayout = fx.knobLayout
         )
@@ -362,7 +399,8 @@ class FxChain(val label: String) {
                 }
                 // Baked snapshot semantics: a saved slot's Metaknob binding/position is restored
                 // exactly as saved, not re-resolved from the (possibly since-changed) auto-bind engine.
-                if (!dto.metaBindings.isNullOrEmpty()) {
+                // An empty list is a saved "nothing linked"; only files from before multi-links (no list) use metaBinding.
+                if (dto.metaBindings != null) {
                     filter.applyMetaBindingsFromPreset(dto.metaBindings.map { it.toBinding() })
                 } else {
                     dto.metaBinding?.let { filter.applyMetaBindingFromPreset(it.toBinding()) }
@@ -430,7 +468,7 @@ class FxChain(val label: String) {
         val linkFlags = dto.slotSuperKnobLink
         for (i in 0 until SLOT_COUNT) {
             slotSuperKnobLink[i] = linkFlags?.getOrNull(i) ?: defaultLinked()
-            hasTakenOver[i] = false
+            armSlotTakeover(i)
         }
         for (i in slots.indices) {
             clearFxSlot(i)
@@ -461,9 +499,22 @@ class FxChain(val label: String) {
          * Set from the "Default FX chain linking" preference at startup; tests get a fixed `true`.
          */
         var defaultLinked: () -> Boolean = { true }
+
+        /** How linked slots follow the Super Knob. Set from the "Super Knob response" preference at startup; tests get PICKUP. */
+        var superKnobMode: () -> SuperKnobMode = { SuperKnobMode.PICKUP }
+
+        /** RELATIVE mode: the Metaknob value at Super Knob [s] on the line 0 -> 0, ([s0], [m0]), 1 -> 1. */
+        fun relativeValue(s: Float, s0: Float, m0: Float): Float = when {
+            s <= s0 -> if (s0 <= 0f) m0 else m0 * (s / s0)
+            s0 >= 1f -> m0
+            else -> m0 + (1f - m0) * (s - s0) / (1f - s0)
+        }.coerceIn(0f, 1f)
         private const val TAKEOVER_TOLERANCE = 0.04f
         private const val FADE_IDLE = 0
         private const val FADE_OUT = 1
         private const val FADE_IN = 2
     }
 }
+
+/** How a linked FX slot's Metaknob follows its chain's Super Knob (see [FxChain.propagateSuperKnob]). */
+enum class SuperKnobMode { PICKUP, RELATIVE }

@@ -4,50 +4,38 @@ import imgui.ImGui
 import imgui.type.ImBoolean
 import llm.slop.liquidlsd.rendering.FxChain
 import llm.slop.liquidlsd.rendering.Mixer
-import llm.slop.liquidlsd.rendering.isf.FxMetaBinding
+import llm.slop.liquidlsd.macro.FxMacroSync
+import llm.slop.liquidlsd.macro.MacroEngine
 import llm.slop.liquidlsd.rendering.isf.ISFAutoBindEngine
-import llm.slop.liquidlsd.rendering.isf.MetaCurve
-import llm.slop.liquidlsd.rendering.isf.MetaLinkMode
+import llm.slop.liquidlsd.rendering.isf.toBinding
 
 /**
- * Traktor/Mixxx-style performance strip for one [FxChain]: a Chain Super Knob that drives the
- * 3 slots' own Metaknobs when linked, plus a "Single FX Focus Mode" that swaps the 3 knobs to
- * the focused slot's own top parameters instead. Drawn above the detailed per-slot accordion in
- * [ParametersTabs.drawFxChainContent].
+ * The Edit bay's chain-macro block for one [FxChain]: the Chain Super Knob, then one row per slot Metaknob with its
+ * Super Knob link checkbox, drawn as full [ParametersRenderer.drawParamRow] rows (modulation columns, MIDI/OSC learn)
+ * above the per-slot accordion in [ParametersTabs.drawFxChainContent].
  *
- * Hardware note: each control here exposes the same "$chainPrefix/..." path already registered
- * by [FxChain.getParameterPaths]/[llm.slop.liquidlsd.rendering.isf.ISFFilter.getParameterPaths],
- * so right-click MIDI/OSC Learn (via [CustomRangeSlider.drawCompactSlider]'s `paramKey`) binds
- * directly to the real chain/slot Metaknob -- consistent with how every other control in this
- * app exposes hardware learn. A physical CC bound to a slot's Metaknob in group mode is a
- * different path than that slot's focused-mode parameter rows, so it goes unbound (not
- * retargeted) when focus toggles; a fixed-path retarget scheme was considered but would need new
- * MacroEngine/MacroBank plumbing this pass didn't build -- flagged for a follow-up if the
- * always-fixed-physical-knob behavior turns out to matter in practice.
+ * Focus is the chain's own [FxChain.focusedSlot] (through [FxMacroSync]), the same state the Perform rows and the
+ * hardware use: focusing a slot here retargets the knobs. The block itself keeps showing the Metaknob rows in focus
+ * mode and adds a caption naming the parameters on knobs 2-4. A slot's Metaknob targets are edited in the slot's
+ * "Metaknob targets" block and on the Edit-row strip, not here.
  */
 object FXChainMacroStrip {
 
     private val linkBufs = Array(FxChain.SLOT_COUNT) { ImBoolean(true) }
 
     /**
-     * Re-runs [llm.slop.liquidlsd.macro.FxMacroSync] after a Link checkbox toggle: linking a slot
+     * Re-runs [llm.slop.liquidlsd.macro.FxMacroSync] after a link toggle: linking a slot
      * must clear that slot's Performance Console Metaknob binding (both would otherwise write
      * [llm.slop.liquidlsd.rendering.isf.ISFFilter.metaKnob]'s base value every frame), and
      * unlinking must restore it. [chainPrefix] is "$chainLabel/FX" (e.g. "Deck A/FX", "Master/FX").
      */
     internal fun resyncMacroKnobs(chainPrefix: String, chain: FxChain) {
         val chainLabel = chainPrefix.removeSuffix("/FX")
-        val bankId = llm.slop.liquidlsd.macro.MacroEngine.canonicalIdForDeckLabel(chainPrefix)
-        llm.slop.liquidlsd.macro.FxMacroSync.syncChain(bankId, chainLabel, chain)
+        val bankId = MacroEngine.canonicalIdForDeckLabel(chainPrefix)
+        FxMacroSync.syncChain(bankId, chainLabel, chain)
     }
 
-    /**
-     * Grid-rendering context supplied by the Parameters Panel so the Super Knob and each slot's
-     * Metaknob render as full [ParametersRenderer.drawParamRow] rows (gaining Seq/LFO/Audio/MIDI
-     * modulation columns) instead of the compact MIDI-learn-only slider. Left null by narrower
-     * callers -- e.g. the Edit-row [PerformanceMacroStrip] -- which don't have
-     * grid columns to spare and keep the original compact rendering.
-     */
+    /** Grid-rendering context supplied by the Parameters Panel, so the Super Knob and each Metaknob render as full parameter rows. */
     class GridContext(
         val mixer: Mixer,
         val labelColW: Float,
@@ -57,29 +45,26 @@ object FXChainMacroStrip {
         val getCvColor: (String, Float) -> Int
     )
 
-    /** Returns the row index after any grid rows drawn this call (unchanged from [startRow] when [grid] is null). */
+    /** Returns the row index after the grid rows drawn this call. */
     fun draw(
         session: llm.slop.liquidlsd.SessionContext,
         chain: FxChain,
         chainPrefix: String,
         state: ParametersState,
-        grid: GridContext? = null,
+        grid: GridContext,
         startRow: Int = 0,
         onPushUndo: () -> Unit
     ): Int {
         val rowStartX = ImGui.getCursorPosX()
-        // Only the grid (Edit FX tab) form collapses; the compact Edit-row strip keeps its fixed layout.
-        val collapsible = grid != null
-        val collapsed = collapsible && chainPrefix in state.fxMacroCollapsed
-        if (collapsible) {
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ImGui.smallButton("${if (collapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##fx_macro_collapse_$chainPrefix")) {
-                    if (collapsed) state.fxMacroCollapsed.remove(chainPrefix) else state.fxMacroCollapsed.add(chainPrefix)
-                }
+        val bankId = MacroEngine.canonicalIdForDeckLabel(chainPrefix)
+        val collapsed = chainPrefix in state.fxMacroCollapsed
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+            if (ImGui.smallButton("${if (collapsed) Icons.CHEVRON_DOWN else Icons.CHEVRON_UP}##fx_macro_collapse_$chainPrefix")) {
+                if (collapsed) state.fxMacroCollapsed.remove(chainPrefix) else state.fxMacroCollapsed.add(chainPrefix)
             }
-            itemTooltip(if (collapsed) "Show the Super Knob and Metaknobs." else "Hide the Super Knob and Metaknobs.")
-            ImGui.sameLine()
         }
+        itemTooltip(if (collapsed) "Show the Super Knob and Metaknobs." else "Hide the Super Knob and Metaknobs.")
+        ImGui.sameLine()
         session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("CHAIN MACRO") }
         ImGui.sameLine()
         val allLinked = chain.areAllSlotsLinked()
@@ -102,52 +87,62 @@ object FXChainMacroStrip {
             return startRow
         }
 
+        val focused = chain.focusedSlot
+        val focusedFx = focused?.let { chain.slots.getOrNull(it) }
+        if (focused != null && focusedFx != null) {
+            ImGui.setCursorPosX(rowStartX)
+            drawFocusCaption(session, chain, bankId, grid.mixer, focused, focusedFx)
+        }
+
         var row = startRow
-        if (grid != null) {
-            ImGui.setCursorPosX(rowStartX)
-            ParametersRenderer.drawParamRow(
-                session, "Super Knob", "$chainPrefix/Super", chain.superKnob, state,
-                grid.labelColW, grid.mixer, grid.gridStartX, row++,
-                grid.getCvColumns, grid.getColumnOffset, grid.getCvColor, onPushUndo,
-                rowStartX = rowStartX
-            )
-        } else {
-            ImGui.setCursorPosX(rowStartX)
-            ImGui.beginGroup()
-            CustomRangeSlider.drawCompactSlider(
-                session = session,
-                label = "Super Knob",
-                currentValue = chain.superKnob.baseValue,
-                minLimit = 0f,
-                maxLimit = 1f,
-                idPrefix = "fx_super_$chainPrefix",
-                paramKey = "$chainPrefix/Super",
-                onValueChanged = { chain.superKnob.set(it); onPushUndo() }
-            )
-            ImGui.endGroup()
-            itemTooltip("Sweeps every linked slot's Metaknob together. Right-click to map hardware MIDI/OSC.")
-        }
-
-        val focusedIndex = state.focusedSlotIndexFor(chainPrefix)
-        val focusedFx = focusedIndex?.let { chain.slots.getOrNull(it) }
-
+        ImGui.setCursorPosX(rowStartX)
+        ParametersRenderer.drawParamRow(
+            session, "Super Knob", "$chainPrefix/Super", chain.superKnob, state,
+            grid.labelColW, grid.mixer, grid.gridStartX, row++,
+            grid.getCvColumns, grid.getColumnOffset, grid.getCvColor, onPushUndo,
+            rowStartX = rowStartX
+        )
         ImGui.spacing()
-        if (focusedIndex != null && focusedFx != null) {
-            drawFocusedMode(session, chain, chainPrefix, focusedIndex, focusedFx, state, onPushUndo)
-        } else {
-            row = drawGroupMode(session, chain, chainPrefix, state, grid, row, onPushUndo)
-        }
+        row = drawSlotRows(session, chain, chainPrefix, bankId, state, grid, row, onPushUndo)
         ImGui.spacing()
         ImGui.setCursorPosX(rowStartX)
         return row
     }
 
-    private fun drawGroupMode(
+    /** Focus mode: which effect has the knobs, what knobs 2-4 hold on this page, page arrows and the way back to group mode. */
+    private fun drawFocusCaption(
+        session: llm.slop.liquidlsd.SessionContext,
+        chain: FxChain,
+        bankId: String,
+        mixer: Mixer,
+        slotIndex: Int,
+        fx: llm.slop.liquidlsd.rendering.isf.ISFFilter
+    ) {
+        val pages = chain.totalParamPages(slotIndex)
+        val onPage = fx.focusParameters.drop(chain.focusParamPage * 3).take(3).joinToString(", ") { ParamLabels.of(fx.header, it.key) }
+        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
+            ImGui.textDisabled("FOCUSED: ${fx.displayName} (Slot ${slotIndex + 1}). Knobs 2-4: ${onPage.ifEmpty { "none" }}")
+        }
+        if (pages > 1) {
+            ImGui.sameLine()
+            if (ImGui.smallButton("◀##fx_page_prev_$bankId")) FxMacroSync.stepParamPage(bankId, mixer, -1)
+            ImGui.sameLine()
+            ImGui.textDisabled("P${chain.focusParamPage + 1}/$pages")
+            ImGui.sameLine()
+            if (ImGui.smallButton("▶##fx_page_next_$bankId")) FxMacroSync.stepParamPage(bankId, mixer, 1)
+        }
+        ImGui.sameLine()
+        if (ImGui.smallButton("${Icons.X} Group Mode##fx_unfocus_$bankId")) FxMacroSync.focusSlot(bankId, mixer, null)
+        itemTooltip("Leave focus: knob 1 goes back to the Super Knob and knobs 2-4 to the slot Metaknobs.")
+    }
+
+    private fun drawSlotRows(
         session: llm.slop.liquidlsd.SessionContext,
         chain: FxChain,
         chainPrefix: String,
+        bankId: String,
         state: ParametersState,
-        grid: GridContext?,
+        grid: GridContext,
         startRow: Int,
         onPushUndo: () -> Unit
     ): Int {
@@ -160,204 +155,68 @@ object FXChainMacroStrip {
             if (fx == null) {
                 session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("Slot ${i + 1}") }
                 ImGui.sameLine()
-                linkBufs[i].set(chain.slotSuperKnobLink[i])
-                if (ImGui.checkbox("Link##fx_link_${chainPrefix}_$i", linkBufs[i])) {
-                    chain.setSlotLinked(i, linkBufs[i].get())
-                    resyncMacroKnobs(chainPrefix, chain)
-                }
-                itemTooltip("Follow the Chain Super Knob (soft-takeover: won't jump until the Super Knob crosses this Metaknob's current value).")
+                drawLinkCheckbox(chain, chainPrefix, i, "Link")
                 ImGui.spacing()
                 continue
             }
 
-            if (grid != null) {
-                // Link sits directly before the row's (truncated) name, per request; Focus and
-                // Rebind move into the row's own right-click/kebab menu via extraMenuItems --
-                // drawParamRow's label already claims right-click for its standard row menu, and
-                // a menu entry is easier to find than text that can get clipped by a long name.
-                linkBufs[i].set(chain.slotSuperKnobLink[i])
-                if (ImGui.checkbox("##fx_link_${chainPrefix}_$i", linkBufs[i])) {
-                    chain.setSlotLinked(i, linkBufs[i].get())
-                    resyncMacroKnobs(chainPrefix, chain)
-                }
-                itemTooltip("Follow the Chain Super Knob (soft-takeover: won't jump until the Super Knob crosses this Metaknob's current value).")
-                ImGui.sameLine(0f, 4f)
+            // Link sits directly before the row's (truncated) name; Focus and the default actions live in the
+            // row's right-click/kebab menu (drawParamRow's label already claims right-click for its row menu).
+            drawLinkCheckbox(chain, chainPrefix, i, "")
+            ImGui.sameLine(0f, 4f)
 
-                val isFocused = state.focusedSlotIndexFor(chainPrefix) == i
-                ParametersRenderer.drawParamRow(
-                    session, truncateLabel(fx.displayName), "$chainPrefix/FX${i + 1}/Meta", fx.metaKnob, state,
-                    grid.labelColW, grid.mixer, grid.gridStartX, row++,
-                    grid.getCvColumns, grid.getColumnOffset, grid.getCvColor, onPushUndo,
-                    extraMenuItems = {
-                        if (ImGui.menuItem(if (isFocused) "Exit Focus Mode" else "Focus This Slot…")) {
-                            state.toggleFxFocus(chainPrefix, i)
-                        }
-                        ImGui.separator()
-                        ImGui.textDisabled("Replace all links with…")
-                        drawRebindMenuItems(fx) { change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, change = change) }
-                    },
-                    descriptionOverride = fx.header.DESCRIPTION?.takeIf { it.isNotBlank() },
-                    rowStartX = rowStartX
-                )
-            } else {
-                session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled(truncateLabel(fx.displayName)) }
-                fx.header.DESCRIPTION?.takeIf { it.isNotBlank() }?.let { itemTooltip(it) }
-                ImGui.sameLine()
-
-                linkBufs[i].set(chain.slotSuperKnobLink[i])
-                if (ImGui.checkbox("Link##fx_link_${chainPrefix}_$i", linkBufs[i])) {
-                    chain.setSlotLinked(i, linkBufs[i].get())
-                    resyncMacroKnobs(chainPrefix, chain)
-                }
-                itemTooltip("Follow the Chain Super Knob (soft-takeover: won't jump until the Super Knob crosses this Metaknob's current value).")
-
-                ImGui.sameLine()
-                if (ImGui.smallButton("Focus##fx_focus_${chainPrefix}_$i")) {
-                    state.toggleFxFocus(chainPrefix, i)
-                }
-                itemTooltip("Focus Slot ${i + 1}: swap these 3 knobs for its own top parameters.")
-
-                ImGui.beginGroup()
-                CustomRangeSlider.drawCompactSlider(
-                    session = session,
-                    label = "Meta",
-                    currentValue = fx.metaKnob.baseValue,
-                    minLimit = 0f,
-                    maxLimit = 1f,
-                    idPrefix = "fx_meta_${chainPrefix}_$i",
-                    paramKey = "$chainPrefix/FX${i + 1}/Meta",
-                    onValueChanged = { fx.metaKnob.set(it); onPushUndo() }
-                )
-                ImGui.endGroup()
-                itemTooltip("${fx.displayName}'s macro control (targets ${fx.metaBinding.targetParamName ?: "Dry/Wet"}). Right-click to replace its links or save defaults, or map hardware MIDI/OSC.")
-                drawRebindContextMenu(fx, chainPrefix, chain, state, i)
-            }
+            val isFocused = chain.focusedSlot == i
+            ParametersRenderer.drawParamRow(
+                session, truncateLabel(fx.displayName), "$chainPrefix/FX${i + 1}/Meta", fx.metaKnob, state,
+                grid.labelColW, grid.mixer, grid.gridStartX, row++,
+                grid.getCvColumns, grid.getColumnOffset, grid.getCvColor, onPushUndo,
+                extraMenuItems = {
+                    if (ImGui.menuItem(if (isFocused) "Exit Focus Mode" else "Focus This Slot")) {
+                        FxMacroSync.focusSlot(bankId, grid.mixer, if (isFocused) null else i)
+                    }
+                    drawDefaultMenuItems(fx) { change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, change = change) }
+                },
+                descriptionOverride = fx.header.DESCRIPTION?.takeIf { it.isNotBlank() },
+                rowStartX = rowStartX
+            )
         }
         ImGui.setCursorPosX(rowStartX)
         return row
     }
 
+    private fun drawLinkCheckbox(chain: FxChain, chainPrefix: String, slotIndex: Int, label: String) {
+        linkBufs[slotIndex].set(chain.slotSuperKnobLink[slotIndex])
+        if (ImGui.checkbox("$label##fx_link_${chainPrefix}_$slotIndex", linkBufs[slotIndex])) {
+            chain.setSlotLinked(slotIndex, linkBufs[slotIndex].get())
+            resyncMacroKnobs(chainPrefix, chain)
+        }
+        itemTooltip("Follow the Chain Super Knob (soft-takeover: won't jump until the Super Knob crosses this Metaknob's current value).\nMoving the Metaknob yourself lets go of the Super Knob until it reaches the Metaknob again.")
+    }
+
     private fun truncateLabel(name: String, maxChars: Int = 16): String =
         if (name.length <= maxChars) name else name.take(maxChars - 1).trimEnd() + "…"
 
-    private fun drawFocusedMode(
-        session: llm.slop.liquidlsd.SessionContext,
-        chain: FxChain,
-        chainPrefix: String,
-        slotIndex: Int,
-        fx: llm.slop.liquidlsd.rendering.isf.ISFFilter,
-        state: ParametersState,
-        onPushUndo: () -> Unit
-    ) {
-        val rowStartX = ImGui.getCursorPosX()
-        session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-            ImGui.textDisabled("FOCUSED: ${fx.displayName} (Slot ${slotIndex + 1})")
-        }
-        ImGui.sameLine()
-        if (ImGui.smallButton("${Icons.X} Group Mode##fx_unfocus_$chainPrefix")) {
-            state.toggleFxFocus(chainPrefix, slotIndex)
-        }
-
-        // First knob page, in the slot's knob order. Metaknob-linked parameters stay listed here (this view is where their link buttons live).
-        val nonImage = fx.header.INPUTS.filter { !it.TYPE.equals("image", ignoreCase = true) }
-        val topInputs = (fx.knobLayout?.mapNotNull { n -> nonImage.find { it.NAME == n } } ?: nonImage).take(3)
-        if (topInputs.isEmpty()) {
-            session.uiTheme.withFont(UITheme.FontLevel.CAPTION) { ImGui.textDisabled("(No adjustable parameters)") }
-            return
-        }
-        for ((idx, input) in topInputs.withIndex()) {
-            val param = fx.parameters[input.NAME] ?: continue
-            val existingBinding = fx.getBindingForParam(input.NAME)
-            ImGui.setCursorPosX(rowStartX)
-
-            LinkModeButton.drawMetaLink(
-                id = "fx_focus_link_${chainPrefix}_${slotIndex}_$idx",
-                mode = existingBinding?.linkMode,
-                inverted = existingBinding?.invert ?: false,
-                onCycleMode = {
-                    val nextMode = when (existingBinding?.linkMode) {
-                        null -> MetaLinkMode.FULL
-                        MetaLinkMode.FULL -> MetaLinkMode.FIRST_HALF
-                        MetaLinkMode.FIRST_HALF -> MetaLinkMode.SECOND_HALF
-                        MetaLinkMode.SECOND_HALF -> MetaLinkMode.TRIANGLE
-                        MetaLinkMode.TRIANGLE -> MetaLinkMode.BIPOLAR
-                        MetaLinkMode.BIPOLAR -> null
-                    }
-                    FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(input.NAME, nextMode, existingBinding?.invert ?: false) }
-                },
-                onSelectMode = { newMode ->
-                    FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(input.NAME, newMode, existingBinding?.invert ?: false) }
-                },
-                onToggleInvert = {
-                    val currMode = existingBinding?.linkMode ?: MetaLinkMode.FULL
-                    val currInv = existingBinding?.invert ?: false
-                    FxMetaEdit.apply(state, chainPrefix, chain, fx) { it.setParamLink(input.NAME, currMode, !currInv) }
-                }
-            )
-            ImGui.sameLine(0f, 6f)
-            ImGui.beginGroup()
-            CustomRangeSlider.drawCompactSlider(
-                session = session,
-                label = ParamLabels.of(fx.header, input.NAME),
-                currentValue = param.baseValue,
-                minLimit = param.minClamp,
-                maxLimit = param.maxClamp,
-                idPrefix = "fx_focus_${chainPrefix}_${slotIndex}_$idx",
-                paramKey = "$chainPrefix/FX${slotIndex + 1}/${input.NAME}",
-                onValueChanged = { param.set(it); onPushUndo() }
-            )
-            ImGui.endGroup()
-            itemTooltip("${fx.displayName}'s own ${ParamLabels.of(fx.header, input.NAME)} parameter (Focus Mode). Right-click to map hardware MIDI/OSC.")
-        }
-        ImGui.setCursorPosX(rowStartX)
-    }
-
-    /** Menu items to rebind a slot's Metaknob to a different parameter (or the safety-net Dry/Wet); shared by both the compact-mode right-click popup and the grid-mode row menu. */
-    internal fun drawRebindMenuItems(fx: llm.slop.liquidlsd.rendering.isf.ISFFilter, edit: ((llm.slop.liquidlsd.rendering.isf.ISFFilter) -> Unit) -> Unit) {
-        val floatInputs = fx.header.INPUTS.filter { it.TYPE.equals("float", ignoreCase = true) }
-        for (input in floatInputs) {
-            val param = fx.parameters[input.NAME] ?: continue
-            val isCurrent = fx.metaBinding.targetParamName == input.NAME
-            if (ImGui.menuItem(ParamLabels.of(fx.header, input.NAME), "", isCurrent)) {
-                edit { it.rebindMetaKnob(FxMetaBinding(input.NAME, param.minClamp, param.maxClamp, MetaCurve.LINEAR), persistOverride = false) }
-            }
-        }
+    /** Save / remove the effect's own default (Metaknob targets, knob order and parameter values, keyed by shader content). */
+    private fun drawDefaultMenuItems(fx: llm.slop.liquidlsd.rendering.isf.ISFFilter, edit: ((llm.slop.liquidlsd.rendering.isf.ISFFilter) -> Unit) -> Unit) {
+        if (fx.contentHash == null) return
         ImGui.separator()
-        val isDryWet = fx.metaBinding.targetParamName == null
-        if (ImGui.menuItem("Target Dry/Wet (safety net)", "", isDryWet)) {
-            edit { it.rebindMetaKnob(FxMetaBinding.DRY_WET_SAFETY_NET, persistOverride = false) }
+        if (ImGui.menuItem("Save as Default for ${fx.displayName}")) {
+            ISFAutoBindEngine.saveFilterDefault(fx)
         }
-        if (fx.contentHash != null) {
-            ImGui.separator()
-            if (ImGui.menuItem("Save as Default for ${fx.displayName}")) {
-                ISFAutoBindEngine.saveFilterDefault(fx)
-            }
-            if (ISFAutoBindEngine.hasFilterDefault(fx) && ImGui.menuItem("Reset to Factory Default")) {
+        itemTooltip("New copies of ${fx.displayName} start with this slot's Metaknob targets, knob order and parameter values.\nSlots already in chains keep their own.")
+        if (ISFAutoBindEngine.hasFilterDefault(fx)) {
+            if (ImGui.menuItem("Remove Saved Default for ${fx.displayName}")) {
                 ISFAutoBindEngine.deleteFilterDefault(fx)
                 val defaultDto = ISFAutoBindEngine.resolveDefault(fx)
                 edit { f ->
-                    f.applyMetaBindingsFromPreset(ISFAutoBindEngine.resolveBindings(f))
+                    f.applyMetaBindingsFromPreset(defaultDto.metaBindings.map { it.toBinding() })
                     f.applyKnobLayoutFromPreset(defaultDto.knobLayout)
                     defaultDto.parameters.forEach { (name, value) ->
                         f.parameters[name]?.baseValue = value
                     }
                 }
             }
+            itemTooltip("New copies of ${fx.displayName} go back to the built-in Metaknob targets.\nThis slot is reset to them too; other slots keep their own.")
         }
-    }
-
-    /** Right-click on a slot's compact-mode Metaknob to quickly rebind it to a different parameter. */
-    private fun drawRebindContextMenu(fx: llm.slop.liquidlsd.rendering.isf.ISFFilter, chainPrefix: String, chain: FxChain, state: ParametersState, slotIndex: Int) {
-        val popupId = "fx_meta_rebind_${chainPrefix}_$slotIndex"
-        pushOpenDropdownPadding()
-        if (ImGui.beginPopupContextItem(popupId)) {
-            pushOpenDropdownFont()
-            ImGui.textDisabled("Replace all links with…")
-            ImGui.separator()
-            drawRebindMenuItems(fx) { change -> FxMetaEdit.apply(state, chainPrefix, chain, fx, change = change) }
-            popOpenDropdownFont()
-            ImGui.endPopup()
-        }
-        popOpenDropdownPadding()
     }
 }

@@ -110,10 +110,10 @@ object ValueParamSection {
             val metaOwner = if (isMacroBound) null else param.metaDrivenBy
             val isLocked = isMacroBound || metaOwner != null
             if (macroInfo != null) {
-                session.uiTheme.caption("${Icons.LINK} Linked to ${macroInfo.controlName} [${macroInfo.badgeLabel}]. Editing the value moves the knob.")
+                session.uiTheme.caption("${Icons.LINK} Driven by ${macroInfo.controlName} [${macroInfo.badgeLabel}]. Editing the value moves the knob.")
                 ImGui.spacing()
             } else if (metaOwner != null) {
-                session.uiTheme.caption("${Icons.LINK} Linked to its $metaOwner${llm.slop.liquidlsd.macro.MacroEngine.metaKnobBindingInfo(paramKey)?.let { " [${it.badgeLabel}]" } ?: ""}. Editing the value moves the knob.")
+                session.uiTheme.caption("${Icons.LINK} Driven by its $metaOwner${llm.slop.liquidlsd.macro.MacroEngine.metaKnobBindingInfo(paramKey)?.let { " [${it.badgeLabel}]" } ?: ""}. Editing the value moves the knob.")
                 ImGui.spacing()
             }
 

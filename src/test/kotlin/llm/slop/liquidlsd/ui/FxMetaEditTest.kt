@@ -45,11 +45,11 @@ class FxMetaEditTest {
     @Test
     fun noOpEditLeavesUndoAndKnobsAlone() {
         val fx = filter()
-        fx.rebindMetaKnob(FxMetaBinding.DRY_WET_SAFETY_NET)
+        fx.metaBinding = FxMetaBinding.DRY_WET_SAFETY_NET
         var resyncs = 0
         val undo = mutableListOf<() -> Unit>()
 
-        val changed = FxMetaEdit.apply(fx, { undo += it }, { resyncs++ }) { it.rebindMetaKnob(FxMetaBinding.DRY_WET_SAFETY_NET) }
+        val changed = FxMetaEdit.apply(fx, { undo += it }, { resyncs++ }) { it.metaBinding = FxMetaBinding.DRY_WET_SAFETY_NET }
 
         assertFalse(changed)
         assertEquals(0, resyncs)

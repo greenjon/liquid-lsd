@@ -127,6 +127,16 @@ class PerformSurfaceTest {
     }
 
     @Test
+    fun tapOnTheSuperKnobDoesNothing() {
+        deckAChain.slots[0] = filter("glow", listOf("intensity"))
+        FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
+        val superKnob = page().knobs[4]!!.control   // knob 1 of Deck A's FX row
+        superKnob.value = 0.9f
+        surface().primary(4)
+        assertEquals(0.9f, superKnob.value, 1e-6f)
+    }
+
+    @Test
     fun tapOnAnFxSlotKnobTogglesThatSlotsBypass() {
         deckAChain.slots[1] = filter("glow", listOf("intensity"))
         FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
@@ -240,6 +250,31 @@ class PerformSurfaceTest {
         assertTrue(first.lit)
         val deckB = lights[8]!!
         assertEquals(PerformanceColors.COLOR_DECK_B.toList(), listOf(deckB.r, deckB.g, deckB.b))
+    }
+
+    @Test
+    fun aSlotWaitingForPickupBlinksAmberWithADimmedRing() {
+        deckAChain.slots[0] = filter("glow", listOf("intensity"))
+        deckAChain.setSlotLinked(0, true)          // linked, Super Knob hasn't reached it: waiting (Pickup is the test default)
+        FxMacroSync.syncFor(MacroEngine.DECK_A_FX, mixer)
+        assertTrue(deckAChain.isAwaitingPickup(0))
+        var now = 0L
+        val surface = PerformSurface(UITheme, ctx, state, mixer, nowNanos = { now })
+
+        val on = surface.knobLights()[5]!!
+        assertTrue(on.lit)
+        assertEquals(PerformSurface.PICKUP_LED.toList(), listOf(on.r, on.g, on.b))
+        assertEquals(PerformSurface.PICKUP_RING_BRIGHTNESS, on.ringBrightness)
+        assertEquals(page().knobs[5]!!.control.value, on.value, "the ring still shows the Metaknob")
+
+        now = PerformSurface.PICKUP_BLINK_HALF_PERIOD_NANOS
+        assertFalse(surface.knobLights()[5]!!.lit, "second half of the blink is dark")
+
+        deckAChain.setSlotLinked(0, false)
+        val normal = surface.knobLights()[5]!!
+        assertTrue(normal.lit)
+        assertEquals(1f, normal.ringBrightness)
+        assertEquals(page().knobs[5]!!.accent.toList(), listOf(normal.r, normal.g, normal.b), "back to the row colour")
     }
 
     @Test

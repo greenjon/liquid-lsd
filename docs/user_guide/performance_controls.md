@@ -117,7 +117,7 @@ Every deck and the master bus each own one FX chain of 3 serial ISF filter slots
 its **`FX`** sub-tab, and **Master FX** (the Mixer's **`FX`** sub-tab in Edit) is applied to the
 final output after the crossfader. All five chains work the same way. Each chain has a **Chain Super
 Knob** and each slot its own **Metaknob** — see [Macro Controls & the Perform View](macros_and_rack.md)
-for the FX Rack view that exposes these.
+for how they work and where to edit them.
 
 - **Deck row layout**: the deck badge (`A`, `B`, `BG`, `PV`) carries a caption, slate `SRC` or cyan `FX`, naming the half the row shows. Line 1 is the long name box (click to Browse) and the Edit gear; line 2 holds `⋮`, Save, queue `◀ ▶` and the slot pills on an FX row, or `⋮`, Save, `◀ ▶` and a right-aligned Eject on a source row (same button sizes on both).
 - **Chain Header Kebab (`⋮`)**:
@@ -147,11 +147,11 @@ for the FX Rack view that exposes these.
     - Drawn under each of knobs 2–4 on Deck rows in `[FX]` mode and the Master row in `[FX]` mode. The cell is just the effect name, so names get the full cell width.
     - **`◀` / `▶` (on hover), Mouse Wheel, or Right-Click → Previous/Next in Shortlist**: Steps to previous/next effect in the **FX Shortlist** (favorited ★ effects, or the current effect's category alphabetically). The arrows only appear at the cell's edges while the mouse is over it.
   - **Slot Side Buttons (left of each slot knob)**: two stacked buttons.
-    - **Link (top)**: links/unlinks that slot's Metaknob to the Super Knob.
-  - **Chain Link (left of the Super Knob, knob 1)**: links or unlinks all three slots at once. Click links all unless they are all linked already, in which case it unlinks all; the icon shows a chain when every filled slot is linked, a dimmer chain when only some are, and a broken chain when none are. The Macro Strip has the same toggle by the `CHAIN MACRO` title. Where a new chain starts (linked or unlinked) is the **Default FX chain linking** preference.
+    - **Link (top)**: links/unlinks that slot's Metaknob to the Super Knob. A linked slot's knob still moves its Metaknob; the Super Knob picks the slot up again when it reaches it.
+  - **Chain Link (left of the Super Knob, knob 1)**: links or unlinks all three slots at once. Click links all unless they are all linked already, in which case it unlinks all; the icon shows a chain when every filled slot is linked, a dimmer chain when only some are, and a broken chain when none are. The Macro Strip has the same toggle by the `CHAIN MACRO` title. Where a new chain starts (linked or unlinked) is the **Default FX chain linking** preference; how linked slots follow is **Super Knob response** (Relative or Pickup, see [Macro Controls](macros_and_rack.md)). In Pickup mode a slot still waiting for the Super Knob shows an amber link button, and on the Twister its LED blinks amber.
     - **Bypass (bottom, power icon)**: turns just that effect on or off. Row-coloured when on, red when bypassed, dim when the slot is empty. In Focus Mode, only the focused slot's bypass is shown, next to knob 1.
     - **Effect Name**: Truncated caption showing loaded filter. Click points the Library below at that slot (Stock filters, ★ Favorites, and Saved `.lsdfx` presets); click it again to stop. This happens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't trigger it.
-    - **Drag & Drop**: Drag an effect name onto another slot's name to swap/reorder (hold `Ctrl` while dropping to duplicate). Accepts stock ISF filters and `.lsdfx` single presets from Library.
+    - **Drag & Drop**: Drag an effect name onto another slot's name to swap/reorder (hold `Ctrl` while dropping to duplicate). Only the effects move: each slot keeps its own Super Knob link setting. Accepts stock ISF filters and `.lsdfx` single presets from Library.
     - **Right-Click Context Menu**: Focus Mode, Previous/Next in Shortlist, Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Edit.
   - **Swap Gain Dip**:
     - Replacing an effect or loading a chain applies a smooth audio/visual gain dip (fade out -> swap -> fade in) instead of a hard cut.
@@ -302,6 +302,7 @@ Each row shows one half (source or FX), so no `SRC`/`FX` switching is needed on 
 | **Hold the switch and turn** | fine adjustment (10× slower) | same | same |
 | **Shift + tap** | - | focus that slot | next parameter page |
 | **Shift + tap on knob 1 of a focused row** | - | leave focus | - |
+| **Tap on knob 1 (Super Knob) of an FX row** | - | nothing (so a stray tap never moves every linked slot) | - |
 | **Shift + tap on knob 1 (Super Knob) of an FX row** | - | Chain Link: link or unlink all three slots | - |
 
 - **Shift** is the bottom button on the Twister's left side (the same physical button on every bank).
@@ -362,6 +363,7 @@ The Twister mirrors the screen. Each encoder's ring shows its knob's value, and 
 - LEDs can't show greys, so on the MIXER page the Master row is red (the screen keeps its greys) and Transitions stay cyan.
 - **The clock knob** (knob 13, the first knob of the Clock row on the MIXER page) is the beat light: its LED sits dim plum and flashes light plum on every beat and orange on beat 1 of the bar, and its ring shows the tempo across the beat tracker's BPM search range (Preferences → Tempo & Sync). **Push it to tap tempo** (the same as the TAP button); turning it does nothing. On the stock firmware the ring brightness pulses instead of the colour. While a Library or picker is browsing, the knob does its browse job instead.
 - On pages with a pinned FX row (A/B, BG/PV, MIXER) the FX row's LED is a shifted hue of its source row's, so the four LEDs of a bank differ.
+- **Waiting for pickup** (Super Knob response set to Pickup): a linked FX slot the Super Knob hasn't reached yet blinks its LED amber and dark twice a second, on both firmwares, until the Super Knob gets there. Its ring keeps showing the Metaknob; on the stock firmware the ring is also dimmed (native mode can't dim rings). In Relative mode slots never wait, so nothing blinks.
 
 <a id="twister-troubleshooting"></a>
 #### Troubleshooting

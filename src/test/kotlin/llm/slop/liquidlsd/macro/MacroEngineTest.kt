@@ -454,7 +454,7 @@ class MacroEngineTest {
     }
 
     @Test
-    fun testLinkedFxKnobsSyncVisuallyToSuperKnobOnTick() {
+    fun testLinkedEmptySlotKnobReadsZeroNotTheSuperKnob() {
         val chain = FxChain("Master FX")
         chain.superKnob.set(0.85f)
         chain.update()
@@ -472,7 +472,7 @@ class MacroEngineTest {
 
         MacroEngine.tick(mixer)
 
-        assertEquals(0.85f, macroBank.knobs[1].value, absoluteTolerance = 1e-5f, "Linked slot 0 knob (Knob 2) should sync value to super knob")
+        assertEquals(0f, macroBank.knobs[1].value, absoluteTolerance = 1e-5f, "An empty linked slot has no Metaknob to show")
     }
 
     private fun assertEquals(expected: Float, actual: Float, absoluteTolerance: Float, message: String? = null) {

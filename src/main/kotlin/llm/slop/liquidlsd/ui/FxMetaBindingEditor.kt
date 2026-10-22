@@ -58,7 +58,7 @@ object FxMetaBindingEditor {
             width = width,
             height = height,
             onCycleMode = { update(edit, binding, null) { it.copy(linkMode = cycleLinkMode(it.linkMode)) } },
-            // "Unlinked" in the shared menu means: drop this target.
+            // "Remove Target" in the shared menu drops this target.
             onSelectMode = { m -> if (m == null) remove(edit, binding) else update(edit, binding, null) { it.copy(linkMode = m) } },
             onToggleInvert = { update(edit, binding, null) { it.copy(invert = !it.invert) } }
         )
@@ -67,7 +67,7 @@ object FxMetaBindingEditor {
     private fun drawEnabled(fx: ISFFilter, binding: FxMetaBinding, edit: Edit) {
         enabledBuf.set(binding.enabled)
         if (ImGui.checkbox("##enabled", enabledBuf)) update(edit, binding, null) { it.copy(enabled = enabledBuf.get()) }
-        itemTooltip(if (binding.enabled) "Active: the Metaknob drives this parameter. Uncheck to release it for manual control." else "Disabled: parameter released for manual control. Check to resume the Metaknob link.")
+        itemTooltip(if (binding.enabled) "Active: the Metaknob drives this parameter. Uncheck to release it for manual control." else "Disabled: parameter released for manual control. Check to make the Metaknob drive it again.")
     }
 
     private fun drawCurve(binding: FxMetaBinding, edit: Edit) {
@@ -117,7 +117,7 @@ object FxMetaBindingEditor {
         val btn = 20f
         ImGui.sameLine(ImGui.getCursorPosX() + maxOf(0f, ImGui.getContentRegionAvailX() - btn))
         if (ButtonChrome.button("${Icons.TRASH}##del", btn, btn)) remove(edit, binding)
-        itemTooltip("Remove this link.")
+        itemTooltip("Remove this target.")
 
         drawBar(fx, binding, lo, hi, width, edit, gesture)
 
@@ -157,7 +157,7 @@ object FxMetaBindingEditor {
         drawMax(binding, lo, hi, edit, gesture, compact = true)
         ImGui.sameLine(0f, gap)
         if (ButtonChrome.button("${Icons.TRASH}##del", h, h)) remove(edit, binding)
-        itemTooltip("Remove this link.")
+        itemTooltip("Remove this target.")
 
         var cx = x
         ImGui.setCursorScreenPos(cx, y)

@@ -82,7 +82,8 @@ object ISFAutoBindEngine {
     /** Resolves the default bindings and parameters for [filter]: user override, then curated, then heuristic. */
     fun resolveDefault(filter: ISFFilter): FxDefaultDto {
         filter.contentHash?.let { hash -> loadOverride(hash)?.let { return it } }
-        CURATED[filter.id]?.let {
+        // Curated entries are keyed by filter id, so a user shader that happens to share a stock id falls through to the heuristic.
+        CURATED[filter.id]?.takeIf { it.targetParamName == null || it.targetParamName in filter.parameters }?.let {
             return FxDefaultDto(version = 2, metaBindings = listOf(it.toDto()), parameters = emptyMap())
         }
         val heuristic = resolveHeuristic(filter)
@@ -142,6 +143,15 @@ object ISFAutoBindEngine {
         val param = filter.parameters[first.NAME] ?: return FxMetaBinding.DRY_WET_SAFETY_NET
         return FxMetaBinding(first.NAME, param.minClamp, param.maxClamp)
     }
+
+    /**
+     * True when one of [name]'s words (split on camelCase, digits, `_` and `-`) is time/frequency-like, e.g. `fbDecay`,
+     * `scroll_speed`, `rate`, but not `saturate`. Used for the focus-mode knobs' response curve.
+     */
+    fun isExponentialName(name: String): Boolean =
+        name.split(WORD_SPLIT).any { w -> EXPONENTIAL_NAMES.any { it.equals(w, ignoreCase = true) } }
+
+    private val WORD_SPLIT = Regex("(?<=[a-z])(?=[A-Z])|[_\\-\\s\\d]+")
 
     private fun withExponentialIfNamed(name: String, binding: FxMetaBinding): FxMetaBinding =
         if (EXPONENTIAL_NAMES.any { it.equals(name, ignoreCase = true) }) binding.copy(curve = MetaCurve.EXPONENTIAL) else binding
@@ -204,18 +214,6 @@ object ISFAutoBindEngine {
     fun hasFilterDefault(filter: ISFFilter): Boolean {
         val hash = filter.contentHash ?: return false
         return overrideCache.containsKey(hash) || File(overridesDir, "$hash.json").exists()
-    }
-
-    /** Persists a user-customized binding keyed by shader content hash, so it applies wherever that shader loads next. */
-    fun saveOverride(contentHash: String, binding: FxMetaBinding) {
-        val dto = FxDefaultDto(version = 2, metaBindings = listOf(binding.toDto()), parameters = emptyMap())
-        try {
-            if (!overridesDir.exists()) overridesDir.mkdirs()
-            File(overridesDir, "$contentHash.json").writeText(json.encodeToString(FxDefaultDto.serializer(), dto))
-            overrideCache[contentHash] = dto
-        } catch (e: Exception) {
-            logger.warn(e) { "Failed to save ISF Metaknob override for hash $contentHash" }
-        }
     }
 
     /** Removes a user override, reverting that shader's Metaknob to curated/heuristic resolution. */

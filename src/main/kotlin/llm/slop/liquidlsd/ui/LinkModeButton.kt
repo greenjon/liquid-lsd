@@ -8,7 +8,7 @@ import llm.slop.liquidlsd.macro.MacroLinkMode
 import llm.slop.liquidlsd.rendering.isf.MetaLinkMode
 
 /**
- * Mixxx-inspired visual transfer curve widget for parameter and macro linking.
+ * Mixxx-inspired visual transfer curve widget for a macro or Metaknob target's knob zone (which part of the knob's travel moves it).
  *
  * Renders an intuitive vector glyph directly on the button face using [ImDrawList], showing
  * at a single glance whether a target parameter responds across the full knob turn, the left half,
@@ -17,8 +17,17 @@ import llm.slop.liquidlsd.rendering.isf.MetaLinkMode
  */
 object LinkModeButton {
 
+    /** Short display name of a Metaknob target's knob zone. */
+    fun zoneName(mode: MetaLinkMode): String = when (mode) {
+        MetaLinkMode.FULL -> "Full Range"
+        MetaLinkMode.FIRST_HALF -> "First Half"
+        MetaLinkMode.SECOND_HALF -> "Second Half"
+        MetaLinkMode.TRIANGLE -> "Triangle Peak"
+        MetaLinkMode.BIPOLAR -> "Bipolar"
+    }
+
     /**
-     * Draws the visual link button and optional adjacent invert button for a [MacroLinkMode].
+     * Draws the zone button and optional adjacent invert button for a [MacroLinkMode]. [isLinked] false = the target is disabled.
      */
     fun drawMacroLink(
         id: String,
@@ -45,7 +54,7 @@ object LinkModeButton {
             width = width,
             height = height,
             modeName = when {
-                !isLinked -> "Unlinked"
+                !isLinked -> "Disabled"
                 mode == MacroLinkMode.FULL -> "Full Range (0%–100%)"
                 mode == MacroLinkMode.FIRST_HALF -> "First Half (0%–50%)"
                 mode == MacroLinkMode.SECOND_HALF -> "Second Half (50%–100%)"
@@ -80,7 +89,7 @@ object LinkModeButton {
     }
 
     /**
-     * Draws the visual link button and optional adjacent invert button for an FX slot's [MetaLinkMode].
+     * Draws the zone button and optional adjacent invert button for an FX slot Metaknob target's [MetaLinkMode] (null = no target).
      */
     fun drawMetaLink(
         id: String,
@@ -107,7 +116,7 @@ object LinkModeButton {
             width = width,
             height = height,
             modeName = when {
-                mode == null -> "Unlinked (Manual)"
+                mode == null -> "No target"
                 mode == MetaLinkMode.FULL -> "Full Range (0%–100%)"
                 mode == MetaLinkMode.FIRST_HALF -> "First Half (0%–50%)"
                 mode == MetaLinkMode.SECOND_HALF -> "Second Half (50%–100%)"
@@ -118,7 +127,7 @@ object LinkModeButton {
             onCycle = onCycleMode,
             onToggleInvert = onToggleInvert,
             drawContextMenu = {
-                if (ImGui.menuItem("Unlinked (Manual)", "", mode == null)) {
+                if (ImGui.menuItem("Remove Target", "", false)) {
                     onSelectMode(null)
                 }
                 ImGui.separator()
@@ -278,7 +287,7 @@ object LinkModeButton {
         pushOpenDropdownPadding()
         if (ImGui.beginPopupContextItem(popupId)) {
             pushOpenDropdownFont()
-            ImGui.textDisabled("Link Mode")
+            ImGui.textDisabled("Knob Zone")
             ImGui.separator()
             drawContextMenu()
             popOpenDropdownFont()
@@ -288,7 +297,7 @@ object LinkModeButton {
 
         // Mixxx-style rich tooltip
         val invText = if (inverted && isLinked) " [Inverted]" else ""
-        itemTooltip("Link: $modeName$invText\nLeft-click to cycle modes. Right-click to choose.")
+        itemTooltip("Zone: $modeName$invText\nLeft-click to cycle zones. Right-click to choose.")
 
         // Adjacent Invert button [±]
         if (showInvertButton) {
