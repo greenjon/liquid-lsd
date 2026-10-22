@@ -389,12 +389,8 @@ object GeneratorDefaults {
                     linkMode = MacroLinkMode.FULL
                 )
                 val knobVal = MacroCurve.inverse(param.baseValue, binding)
-                val rawLabel = if (source is ISFVisualSource) {
-                    source.header.INPUTS.find { it.NAME == paramName }?.LABEL ?: paramName
-                } else {
-                    paramName
-                }
-                val label = rawLabel.uppercase().take(8)
+                // The whole readable name: the knob caption ellipsizes it to fit its strip, so nothing is cut here.
+                val label = llm.slop.liquidlsd.ui.ParamLabels.of((source as? ISFVisualSource)?.header, paramName).uppercase()
                 knobs.add(MacroControl(label = label, value = knobVal, bindings = mutableListOf(binding)))
             } else {
                 knobs.add(MacroControl(label = "", value = 0f, bindings = mutableListOf()))

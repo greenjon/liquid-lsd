@@ -172,7 +172,7 @@ object FxMacroSync {
                 val entry = paramEntries[paramIdx]
                 val paramName = entry.key
                 val param = entry.value
-                val label = paramName.uppercase().take(10)
+                val label = llm.slop.liquidlsd.ui.ParamLabels.of(slot?.header, paramName).uppercase()
                 val minVal = param.minClamp
                 val maxVal = param.maxClamp
                 val range = maxVal - minVal

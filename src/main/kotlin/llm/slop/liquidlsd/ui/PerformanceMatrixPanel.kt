@@ -733,7 +733,7 @@ class PerformanceMatrixPanel {
                         session = session,
                         bankId = row.bankId,
                         knobIndex = knobIdx + 1,
-                        paramName = under.name,
+                        paramName = under.name?.let { ParamLabels.of(llm.slop.liquidlsd.macro.FxMacroSync.chainFor(row.bankId, mixer)?.let { c -> c.focusedSlot?.let { i -> c.slots.getOrNull(i) } }?.header, it) },
                         param = under.param,
                         x = stripX,
                         y = stripY,

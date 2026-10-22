@@ -35,9 +35,19 @@ object ParamLabels {
      * Splits camelCase and snake_case into sentence-case words, keeping acronyms and single letters upper case.
      * A name that already has a space is taken as written ("Hue Sweep", "Recipe Select").
      */
-    fun humanize(name: String): String {
+    fun humanize(name: String): String = humanized.getOrPut(name) { split(name) }
+
+    /** Per-name results, so the per-frame caption path allocates nothing once a name has been seen. */
+    private val humanized = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    private fun split(name: String): String {
         if (name.isBlank() || ' ' in name.trim()) return name
-        val words = name.split('_', '-').flatMap { chunk -> WORD.findAll(chunk).map { it.value }.toList() }
+        val words = mutableListOf<String>()
+        for (w in name.split('_', '-').flatMap { chunk -> WORD.findAll(chunk).map { it.value }.toList() }) {
+            // A single letter and its number read as one name ("p1" -> "P1", not "P 1").
+            if (words.isNotEmpty() && words.last().length == 1 && words.last()[0].isLetter() && w.all { it.isDigit() }) words[words.size - 1] = words.last() + w
+            else words.add(w)
+        }
         if (words.isEmpty()) return name
         return words.mapIndexed { i, w ->
             when {

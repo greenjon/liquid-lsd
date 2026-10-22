@@ -35,4 +35,10 @@ class ParamLabelsTest {
         assertEquals("Tint R", ParamLabels.of(header, "tint R"))
         assertEquals("Hue offset", ParamLabels.of(null, "HueOffset"))
     }
+
+    @Test
+    fun aSingleLetterAndItsNumberStayTogether() {
+        assertEquals("P1", ParamLabels.humanize("p1"))
+        assertEquals("Color 1", ParamLabels.humanize("color1"))
+    }
 }
