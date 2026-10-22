@@ -107,7 +107,7 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             ejectTip = "Eject current preset from $deckLabel and reset to defaults."
             randTip = "Randomize $deckLabel modulators & base values (Source and FX).\nClick to randomize with undo support."
             fxTitle = "$deckLabel FX"
-            emptyTip = "$deckLabel is empty. Click to browse sources and presets (opens $deckLabel's source and FX rows over the browser)."
+            emptyTip = "$deckLabel is empty. Click to browse sources and presets for it in the list below (click again to stop)."
             badgeKeyLabel = null // the badge strings embed the label too
         }
 
@@ -133,8 +133,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             genTip = when {
                 empty -> emptyTip
-                external -> "External Source: $genName ($deckLabel). Click to change the visual source (opens the source and FX rows over the browser)."
-                else -> "$genName ($deckLabel). Click to browse sources/presets (opens the source and FX rows over the browser), right-click for defaults."
+                external -> "External Source: $genName ($deckLabel). Click to change the visual source in the list below (click again to stop)."
+                else -> "$genName ($deckLabel). Click to browse sources/presets for it in the list below (click again to stop), right-click for defaults."
             }
         }
     }
