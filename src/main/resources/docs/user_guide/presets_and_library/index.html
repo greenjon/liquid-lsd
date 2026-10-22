@@ -586,6 +586,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#picking-for-a-slot-the-library-applies-in-place" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Picking for a slot: the Library applies in place
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#library-view-mode-sources-fx-transitions-macros" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1709,6 +1720,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#picking-for-a-slot-the-library-applies-in-place" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Picking for a slot: the Library applies in place
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#library-view-mode-sources-fx-transitions-macros" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1947,7 +1969,7 @@
 <li><strong>Discard</strong> — Overwrite without asking.</li>
 <li><strong>Auto-Save</strong> — Save the deck's preset first, then load.</li>
 </ul>
-<p>Press <strong>Ctrl+Z</strong> after loading a preset or changing a generator to put back the previous deck, its knobs and its preset name. Picking or clearing an FX slot, FX chain or the mixer transition in the Edit bay can be undone the same way. Eject, Copy / Move / Swap and Library loads of FX or transitions can't be undone yet. Drag one monitor onto another and pick from the menu: Move, Copy or Swap, each for Source, FX or Source + FX. Copy, Move and Swap carry the knobs along with the source, so the knobs on the target deck control the copied parameters. A preset saved without knobs gets the generator's default knobs.</p>
+<p>Press <strong>Ctrl+Z</strong> after loading a preset or changing a generator to put back the previous deck, its knobs and its preset name. Picking or clearing an FX slot, FX chain or the mixer transition from a bound list (after clicking that slot on its row) can be undone the same way. Eject, Copy / Move / Swap and Library loads of FX or transitions can't be undone yet. Drag one monitor onto another and pick from the menu: Move, Copy or Swap, each for Source, FX or Source + FX. Copy, Move and Swap carry the knobs along with the source, so the knobs on the target deck control the copied parameters. A preset saved without knobs gets the generator's default knobs.</p>
 <h3 id="the-lsd-format">The <code>.lsd</code> format</h3>
 <p>Presets are plain JSON files stored in <code>library/presets/</code> (and subfolders). You can open them in any text editor, back them up, share them, or paste them as JSON using <strong>Copy Preset JSON</strong> / <strong>Paste Preset JSON</strong> from the right-click context menu.</p>
 <h3 id="copying-settings-between-decks">Copying settings between decks</h3>
@@ -1964,39 +1986,49 @@
 <p>The Library panel spans the left and middle columns. That column has four views:</p>
 <ul>
 <li><strong>Perform</strong> — The Performance rows sit above the Library, which fills the rest of the window. This is the everyday view for playing a set.</li>
-<li><strong>Edit</strong> — Open a row's <strong>Edit</strong> and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. Press <strong>Esc</strong> or click the row's <strong>Collapse</strong> button to get back to Perform.</li>
-<li><strong>Loaded markers</strong> — Rows in the Sources, FX and Transitions lists carry small colored badges to the left of the name: <code>A</code> / <code>B</code> / <code>BG</code> / <code>PV</code> for the deck holding a source, preset or external stream, <code>A2</code> / <code>BG3</code> / <code>M1</code> for the deck and slot of a stock effect (<code>M</code> = Master FX), <code>B</code> for a deck's saved FX chain, and <code>M</code> for the current stock transition. Too many to fit collapses to <code>×3</code>; hover the badges to read them out. Saved single effects and saved transitions are not marked. They appear in the Library and in the Browse bay.</li>
-<li><strong>Pair view</strong> — Click a deck's source badge, an FX chain name or slot, a preview monitor or the transition name and the Library goes away too: that deck's SRC and FX rows (or Master's, or Transitions and Clock) stay on screen with the same browser below (same tabs, toolbar and queues), applying to the half you last touched. Press <strong>Esc</strong> or <strong>Back</strong> to return to Perform; <strong>Parameters</strong> opens that half's full editor.</li>
+<li><strong>Edit</strong> — Click a row's <strong>gear</strong> and the Library goes away completely. That row's pair of rows and its parameters fill the column, so you have room to fine-tune presets and FX. Press <strong>Esc</strong>, <strong>Back</strong> or the lit gear to get back to Perform.</li>
+<li><strong>Pair view</strong> — When you pick something for a deck whose rows are not on the current page (for example clicking the BG monitor while the A/B page is up), the Library goes away too: that deck's SRC and FX rows (or Master's, or Transitions and Clock) stay on screen with the same browser below. Press <strong>Esc</strong> or <strong>Back</strong> to return to Perform.</li>
 <li><strong>Library</strong> — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.</li>
 </ul>
-<p>Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, <code>Space</code>, <code>Ctrl+F</code> or <code>/</code> closes Edit (cancelling any armed Add Target or Learn) and brings the Library back.</p>
+<p>Press <strong><code>Space</code></strong> (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit or the pair view, <code>Space</code>, <code>Ctrl+F</code> or <code>/</code> closes them (cancelling any armed Add Target or Learn) and brings the Library back; <strong>Esc</strong> from there returns to the Edit or pair view you left, with the same slot.</p>
 <p>The Performance rows have a fixed height, so the Library gets whatever window height they leave: a taller window means a taller Library.</p>
+<h3 id="picking-for-a-slot-the-library-applies-in-place">Picking for a slot: the Library applies in place</h3>
+<p>Click a source name, an FX chain name, an FX slot or the transition name on a Perform row, and the Library below starts applying to that slot. Nothing moves. The slot is outlined on its row, the list's border takes the row's colour, and the Library's tab line shows the slot's name (for example "● Deck A · FX 1") with its buttons (<strong>Save</strong>, <strong>Clear Slot</strong> / <strong>Clear Chain</strong>) and a <strong>✕</strong>. A deck monitor, the main output monitor or the Master <strong>M</strong> badge does the same for a deck's source or the Master FX chain.</p>
+<ul>
+<li><strong>Click</strong> a row to apply it; the list stays, so you can try several in a row. <code>Ctrl+Z</code> undoes each pick.</li>
+<li><strong>Double-click</strong> applies the row and goes back to the plain Library.</li>
+<li><strong>Esc</strong>, the <strong>✕</strong>, or clicking the slot on its row again stop without applying. Changing page stops too.</li>
+<li>Only rows the slot can take are listed, and the row that is applied is tinted.</li>
+<li>Pick another tab and the name greys out ("paused"): that tab is the plain Library. Going back to the slot's tab, or clicking the slot again, picks up where you were.</li>
+<li><code>Space</code> (or maximizing the Library) pauses the binding while the Library fills the column; <code>Space</code> again or <strong>Esc</strong> brings it back.</li>
+<li>On a deck with unsaved changes the first pick asks Save / Discard / Cancel; your answer is reused while that deck stays bound.</li>
+</ul>
+<p>The pair view works the same way, with its header line instead of the tab line: <strong>Back</strong>, a <strong>Browse | Params</strong> switch (Params opens the full editor for the half you last touched; Edit's own header has the same switch to come back), the target and its buttons, and what the queue plays next. Edit and the pair view keep this line in the same place, so switching between them moves nothing. Master's pair starts on the Master FX chain.</p>
 <h3 id="library-view-mode-sources-fx-transitions-macros">Library View Mode (<code>[ Sources ]</code> / <code>[ FX ]</code> / <code>[ Transitions ]</code> / <code>[ Macros ]</code>)</h3>
 <p>Toggle between sources, FX, transitions and banks (macro banks and Perform pages) using the segmented mode button in the top-left of the Library menu bar. Sources, FX and Trans share one three-part browser:</p>
 <ul>
-<li><strong>Folder tree</strong> (left) — <strong>All</strong>, <strong>Favorites</strong> (FX), the kind's sections (Sources: stock sources, saved presets and live external video; FX: stock filters, saved single FX and saved chains; Trans: stock transitions and saved transitions), and a <strong>Playlists</strong> group with one entry per playlist. Each entry shows how many rows it holds. Click one to list it. A playlist is just another tree entry: select it to see and edit its rows.</li>
-<li><strong>List</strong> (middle) — The rows of the selected tree entry, with a search box on top (<code>Ctrl+F</code> or <code>/</code> focuses it) and a <strong><code>[+]</code></strong> button for the kind's "new" action.</li>
-<li><strong>Queues tab</strong> — All five queues side by side: A/B, A/B FX, BG, BG FX and Transition, in that order (which the crossfader advances through automatically). Items get in from the other tabs (<code>Q</code>, <code>Shift+Q</code>, the toolbar buttons, the row menu or drag-and-drop); this tab is where you watch, reorder and play them.</li>
+<li><strong>Folder tree</strong> (left) — <strong>All</strong>, <strong>Recent</strong> (the last 20 items you loaded or applied, newest first, kept across restarts), <strong>Favorites</strong> (FX), the kind's sections (Sources: stock sources, saved presets and live external video; FX: stock filters, saved single FX and saved chains; Trans: stock transitions and saved transitions), and a <strong>Playlists</strong> group with one entry per playlist. Arrows fold a group open or shut. Each entry shows how many items it holds (none when empty). Click one to list it. A playlist is just another tree entry: select it to see and edit its rows. The list-plus button above the tree makes a new, empty playlist.</li>
+<li><strong>List</strong> (middle) — The rows of the selected tree entry, with a search box on top (<code>Ctrl+F</code> or <code>/</code> focuses it, or just start typing a letter while the list has the keyboard) and a button for the kind's "new" action: <strong>New preset</strong> for Sources, a save icon for FX and Transitions (save what is playing). On Sources, the <strong>⋮</strong> beside it has Restore Factory Presets and Import Flame.</li>
+<li><strong>Queues tab</strong> — All five queues side by side: A/B, A/B FX, BG, BG FX and Transition, in that order (which the crossfader advances through automatically). Items get in from the other tabs (<code>Q</code>, <code>Shift+Q</code>, the row menu or drag-and-drop); this tab is where you watch, reorder and play them. An empty queue says how to fill it, and every column has the same button strip.</li>
 </ul>
+<p><strong>Loaded markers.</strong> Rows in the Sources, FX and Transitions lists carry one coloured chip per deck holding the item, to the left of the name: <code>A</code> / <code>B</code> / <code>BG</code> / <code>PV</code> for a source, preset or external stream, and <code>M</code> for Master FX or the current transition. When they don't fit they shrink to colour bars, and a count shows only for many slots; hover them for the full list (stock effects list deck and slot, such as <code>A2</code>). Saved single effects and saved transitions are not marked.</p>
+<p><strong>Row names.</strong> Long names end in "..." (hover for the full name), and saved file names are shown readably (<code>hyperspace_crash_zoom</code> reads "Hyperspace crash zoom"; the file keeps its name). A muted gauge marks a heavy shader that may run slowly on integrated graphics.</p>
+<p><strong>Keyboard.</strong> <strong>Enter</strong> runs the highlighted row's default action on every tab (what a double-click does, or apply while a slot is bound). <strong>Delete</strong> (set in <strong>Preferences → Shortcuts</strong>; Backspace works too) deletes the selected saved items after a confirmation. The Rename, Delete, New Playlist and Export dialogs put the cursor in their text field; Enter confirms and Esc cancels.</p>
 <p>The mode buttons pick what the three parts show:</p>
 <ul>
 <li><strong><code>[ Sources ]</code></strong>: stock visual sources and saved full deck presets (<code>.lsd</code>, in <code>library/presets/</code>); setlists (<code>.lsdplay</code>) live in <code>library/playlists/</code>.</li>
 <li><strong><code>[ FX ]</code></strong>: stock ISF filters, saved single-slot FX presets (<code>.lsdfx</code>, in <code>library/fx/</code>) and saved 3-slot FX chains (<code>.lsdfxchain</code>, in <code>library/fx_chains/</code>); curated FX playlists (<code>.lsdfxplay</code>) live in <code>library/fx_playlists/</code>.</li>
 <li><strong><code>[ Transitions ]</code></strong>: stock ISF transition shaders and saved transition presets (<code>.lsdtrans</code>, in <code>library/transitions/</code>); setlists (<code>.lsdtransplay</code>) live in <code>library/transition_playlists/</code>.</li>
 </ul>
-<p>The same browser opens under the pair view's two rows; there a click applies to that deck's source, slot, chain or the mixer transition.</p>
+<p>The same browser applies to a slot when you click one on a row (see above); then a click applies to that deck's source, slot, chain or the mixer transition.</p>
 <h3 id="the-unified-sources-browser">The Unified Sources Browser</h3>
 <p>The <code>[ Sources ]</code> list shows two kinds of row side by side, each marked with its own icon:</p>
 <ul>
 <li><strong>Stock Sources</strong> — The 8 bundled built-in visual sources: Mandala, Dynamic Spiral, Icosa H3, Domain Warp Fluid, Gyroid Hyperspace, Celestial Engine, Hyper Slice, and Chladni Cymatics (plus external video streams and any custom sources dropped into your configured shader directories). They load straight to a deck's source stage with their shader's default parameters; they can't be added to a playlist or queue.</li>
-<li>
-<p><strong>Saved Presets (<code>.lsd</code>)</strong> — A full deck preset: the visual source plus every parameter value, modulation connection, and note.</p>
-</li>
-<li>
-<p><strong>External Video</strong> — Live Spout, Syphon or PipeWire streams running right now, one row each in the <strong>External video</strong> folder (empty when none is active). Load one like a stock source; it appears and disappears as the stream starts and stops. Streams are not files, so they have no favorites, playlists or queues and cannot be saved as presets.</p>
-</li>
+<li><strong>Saved Presets (<code>.lsd</code>)</strong> — A full deck preset: the visual source plus every parameter value, modulation connection, and note.</li>
+<li><strong>External Video</strong> — Live Spout, Syphon or PipeWire streams running right now, one row each in the <strong>External video</strong> folder (empty when none is active). Load one like a stock source (double-click, the menu, or drag it onto a deck); it appears and disappears as the stream starts and stops. Streams are not files, so they have no favorites, playlists or queues and cannot be saved as presets.</li>
 </ul>
-<p>Pick a section in the folder tree to show only stock sources, saved presets or live streams. Use <strong><code>[+]</code></strong> to eject a deck to blank so you can build a new preset on it (see <a href="#saving-a-preset">Saving a preset</a> below).</p>
+<p>Pick a section in the folder tree to show only stock sources, saved presets or live streams. Use the <strong>New preset</strong> button above the list to eject a deck to blank so you can build a new preset on it (see <a href="#saving-a-preset">Saving a preset</a> above).</p>
 <ul>
 <li><strong>Search</strong> — Type to filter by name, tag, or (for stock sources) category. <code>Ctrl+F</code> or <code>/</code> jumps focus to the search box of the open tab (Sources, FX or Transitions) from anywhere in the app.</li>
 <li><strong>Multi-Selection (Shift-Click &amp; Ctrl/Cmd-Click)</strong>:</li>
@@ -2006,26 +2038,27 @@
 <li><strong>Batch Queueing</strong> — When multiple presets are selected, pressing <code>Q</code> (or the row menu's <em>Add to A/B Queue</em>) enqueues all selected presets in order into the A/B Queue. Pressing <code>Shift+Q</code> (or <em>Add to BG Queue</em>) enqueues them into the BG Queue. The hotkeys and row menu act on the tab you picked the item on: in the FX tab they feed the FX queues, and in the Trans tab <code>Q</code> feeds the transition queue (there is no background queue for transitions).</li>
 <li><strong>Batch Context Menu</strong> — Right-clicking with multiple items selected presents options like <strong>Add N Presets to Playlist</strong>, <strong>Add N Presets to Queue</strong>, and <strong>Delete N Presets...</strong>.</li>
 <li><strong>Multi-Item Drag &amp; Drop</strong> — Dragging any item from a multi-selection carries all selected presets simultaneously into Playlists or Queues.</li>
-<li><strong>Batch Deletion</strong> — Pressing <code>Delete</code> or selecting Delete from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.</li>
+<li><strong>Batch Deletion</strong> — Pressing <code>Delete</code> or selecting <strong>Delete...</strong> from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.</li>
 <li><strong>Double-click</strong> — Loads the item into whichever deck is currently inactive on the crossfader. For a stock source this replaces only the deck's visual source, leaving its FX chain untouched; for a saved preset it loads the full deck state.</li>
-<li><strong>Right-click or ⋮ (saved presets)</strong> — Rename, retag, duplicate, load to a specific deck, add to a queue or playlist, or delete.</li>
-<li><strong>Right-click or ⋮ (stock sources)</strong> — <strong>Load to Deck A/B/BG/PV</strong> only. Stock sources have no persisted parameter state, and their bundled defaults and Metaknob auto-mappings haven't all been individually audited yet, so they're intentionally left out of playlists and the live/background queues — an unattended queue firing an unverified default has no performer there to catch it. Loading straight to a deck is fine, since you're present to dial it in.</li>
+<li><strong>Alt+click</strong> — Previews the source or preset on Deck PV.</li>
+<li><strong>Right-click or ⋮ (saved presets)</strong> — Load to a specific deck, add to a queue or to the selected playlist (<strong>Add to '<playlist>'</strong>), <strong>Rename...</strong> (also edits tags), <strong>Clone...</strong>, <strong>Delete...</strong>, or <strong>Reveal in File Manager</strong>.</li>
+<li><strong>Right-click or ⋮ (stock sources)</strong> — <strong>Load to Deck A/B/BG</strong> or <strong>Preview on Deck PV</strong> only. Stock sources have no persisted parameter state, and their bundled defaults and Metaknob auto-mappings haven't all been individually audited yet, so they're intentionally left out of playlists and the live/background queues — an unattended queue firing an unverified default has no performer there to catch it. Loading straight to a deck is fine, since you're present to dial it in.</li>
 <li><strong>Drag-and-drop</strong> — Drag any row (or multi-selection) onto a deck's monitor in the Mixer panel or onto its row in the Performance Matrix to load it (source-only for stock rows, full preset for saved rows). Saved presets can also be dragged into the playlist in the tree or a queue; stock sources can't, for the same reason the context menu omits those options.</li>
-<li><strong><code>[!]</code> badge</strong> — Appears when a saved preset uses a subsystem that's currently offline (e.g. MIDI or audio). The preset still loads fine; hover the badge to see what's missing.</li>
+<li><strong><code>[!]</code> before the name</strong> — Appears when a saved preset has modulators that are inactive or hidden right now (for example MIDI or audio is turned off). The preset still loads fine; hover the row to see what's missing.</li>
 </ul>
 <h3 id="the-unified-fx-browser">The Unified FX Browser</h3>
 <p>The <code>[ FX ]</code> list shows three kinds of row side by side, each marked with its own icon:</p>
 <ul>
 <li><strong>Stock ISF Filters</strong> — Built-in filters with no saved parameters. A deck or Master has several FX chain slots, so a bare stock filter is ambiguous without knowing which slot it targets — double-click and drag-and-drop resolve this by loading into the first vacant slot, and the right-click menu lets you pick a specific slot explicitly (<strong>Load to Deck/Master &gt; Slot 1–3</strong>). That same ambiguity is why stock filters can't be added to a playlist or live queue: there's no interactive slot-picker available when a queued item gets applied automatically later.</li>
-<li><strong>Favorites</strong> — Right-click a stock filter and choose <strong>Add to Favorites</strong> (or <strong>Remove from Favorites</strong>) to star it. Starred filters show a ★ in the list, and the <strong>Favorites</strong> folder in the tree lists only them. They are the same favorites the inline FX picker and the slot shortlist use.</li>
+<li><strong>Favorites</strong> — Right-click a stock filter and choose <strong>Add to Favorites</strong> (or <strong>Remove from Favorites</strong>) to star it. Starred filters show a ★ in the list, and the <strong>Favorites</strong> folder in the tree lists only them. They are the same favorites the slot shortlist uses.</li>
 <li><strong>Saved Single FX Presets (<code>.lsdfx</code>)</strong> — One FX slot's full parameter state, captured from a deck.</li>
 <li><strong>Saved FX Chains (<code>.lsdfxchain</code>)</strong> — A complete 3-slot FX pipeline, captured from a deck's or Master's FX chain. Loading a chain replaces all 3 slots on the target chain.</li>
 </ul>
-<p>Pick a section in the folder tree to show only stock filters, singles or chains. Use <strong><code>[+]</code></strong> to save the current FX state of any deck or Master FX slot (or all 3 slots as a chain) into a new preset.</p>
+<p>Pick a section in the folder tree to show only stock filters, singles or chains. Use the save button above the list to save the current FX state of any deck or Master FX slot (or all 3 slots as a chain) into a new preset.</p>
 <ul>
 <li><strong>Drag-and-Drop</strong>: Drag a saved single or chain onto Slot 1–3 in a deck's Edit <code>FX</code> subtab, onto an FX playlist in the tree, or onto a A/B FX Queue.</li>
 <li><strong>Double-click</strong>: Loads into the dominant deck's first vacant slot (singles) or overwrites all 3 slots (chains). If all 3 slots are full, a single effect asks which slot to overwrite. FX always goes to the deck the crossfader is on (it is audible now); presets and generators go to the other deck (the next look). At exactly the middle of the crossfader, FX goes to Deck A and presets to Deck B.</li>
-<li><strong>Right-click menu</strong>: <code>Load to &gt; Deck [A|B|BG|PV] / Master FX &gt; Slot [1|2|3]</code> (stock filters and singles) or <code>Load to Deck [A|B|BG|PV] / Master FX</code> (chains), plus <strong>Add to A/B FX Queue (A/B)</strong>, <strong>Add to BG FX Queue</strong>, <strong>Add to '<playlist>' Playlist</strong>, Rename, Clone, Delete, and Reveal in File Manager.</li>
+<li><strong>Right-click or ⋮ menu</strong>: <code>Load to &gt; Deck [A|B|BG|PV] / Master FX &gt; Slot [1|2|3]</code> (stock filters and singles) or <code>Load to Deck [A|B|BG|PV] / Master FX</code> (chains), plus <strong>Add to A/B FX Queue</strong>, <strong>Add to BG FX Queue</strong>, <strong>Add to '<playlist>'</strong>, <strong>Rename...</strong>, <strong>Clone</strong>, <strong>Delete...</strong> and <strong>Reveal in File Manager</strong>. Deleting a saved effect also removes it from the queues and playlists.</li>
 </ul>
 <h4 id="bundled-stock-fx-chains">Bundled Stock FX Chains</h4>
 <p>Liquid LSD includes 16 pre-calibrated 3-slot FX chains in <code>library/fx_chains/</code> designed for live club and festival VJ performance:</p>
@@ -2095,7 +2128,7 @@
 </ol>
 <p>On a fresh install, Master FX starts with <em>Subtle Optical Warmth</em>, Deck A with <em>Liquid Mercury</em>, Deck B with <em>Liquid Chrome Dimension</em>, Deck BG with <em>Hyperspace Trip</em>, and Deck PV with <em>Prismatic Crystal Kaleidoscope</em>.</p>
 <h3 id="fx-playlists-lsdfxplay">FX Playlists (<code>.lsdfxplay</code>)</h3>
-<p>FX playlists are entries under <strong>Playlists</strong> in the FX tree. Select one to edit it like a preset playlist: drag singles/chains in from the list to insert them, drag rows to reorder, and double-click an entry to apply it. Missing files show the same red <code>[!] (missing)</code> indicator as preset playlists.</p>
+<p>FX playlists are entries under <strong>Playlists</strong> in the FX tree. Select one to edit it like a preset playlist: drag singles/chains in from the list to insert them, drag rows to reorder, and double-click an entry to apply it. Entries whose file is gone are left out of the list, with a "playlist item(s) not found" note below it.</p>
 <h3 id="ab-fx-queues-ab-and-bg">A/B FX Queues (A/B and BG)</h3>
 <p>On the <strong>Queues</strong> tab the two FX columns are independent <strong>live FX queues</strong> — volatile, RAM-only sequences of FX singles/chains you can improvise with mid-set:</p>
 <ul>
@@ -2105,6 +2138,7 @@
 <li><strong>⤓ Export</strong> (download icon) — Save the current live queue as a new <code>.lsdfxplay</code> playlist.</li>
 <li><strong>🗑 Clear</strong> (trash icon) — Empty the queue.</li>
 <li><strong>Drag-and-drop</strong> — Reorder items within a queue, or drag a preset/chain from the list to append or insert it.</li>
+<li><strong>Auto</strong> is greyed on the FX queues: they have no timer of their own and step with <code>&lt;</code> / <code>&gt;</code>, the controller, or their deck's preset queue.</li>
 <li><strong>Double-click</strong> an item to jump straight to it. Pressing the MIDI controller's accept on a queue item does the same: it moves the queue position, fades to the loaded deck and advances the transition queue.</li>
 </ul>
 <p>The <strong>A/B queue</strong> applies to whichever of Deck A/B is currently dominant on the crossfader; the <strong>BG queue</strong> always applies to Deck BG.</p>
@@ -2114,19 +2148,20 @@
 <ul>
 <li><strong>Switch between playlists</strong> — Click another playlist in the tree.</li>
 <li><strong>Reorder</strong> — Drag and drop presets within the list. Changes save automatically.</li>
-<li><strong>Playlist actions (⋮ menu)</strong>:</li>
-<li><strong>Play Now</strong> — Replaces the live queue with this playlist and starts playback.</li>
-<li><strong>Insert After Current</strong> — Slides the playlist into the live queue right after the currently playing preset.</li>
-<li><strong>Add to Bottom</strong> — Appends it to the end of the queue.</li>
+<li><strong>Playlist actions (right-click the playlist in the tree)</strong>, for the A/B Queue and again for the BG Queue:</li>
+<li><strong>Play now</strong> — Replaces the queue with this playlist and starts playback.</li>
+<li><strong>Insert after current</strong> — Slides the playlist into the queue right after the currently playing preset.</li>
+<li><strong>Add to the bottom</strong> — Appends it to the end of the queue.</li>
 </ul>
-<p>If a playlist references a preset that's been moved or deleted, the row appears in red with a <code>[!] (missing)</code> indicator. Right-click it to remove the dead link.</p>
+<p>The same menu has <strong>Rename...</strong>, <strong>Clone</strong>, <strong>Delete...</strong> and <strong>Reveal in File Manager</strong>.</p>
+<p>If a playlist references a preset that's been moved or deleted, that entry is left out of the list and a "playlist item(s) not found" note appears below it.</p>
 <hr />
 <h2 id="the-ab-queue-auto-vj">The A/B Queue (Auto-VJ)</h2>
 <p>The play queue drives the main crossfader automatically, sequencing through presets with transitions between Deck A and Deck B.</p>
 <ul>
 <li><strong>Transport controls</strong> — <code>&lt;</code> (previous), <code>▶/⏸</code> (play/pause), <code>&gt;</code> (next).</li>
 <li><strong>Loop / Shuffle</strong> — <code>🔁</code> for continuous looping, <code>🔀</code> for random order.</li>
-<li><strong>Add to queue</strong> — Select a preset in the browser and press <code>Q</code>, or right-click and choose <strong>Add to Queue</strong>.</li>
+<li><strong>Add to queue</strong> — Select a preset in the browser and press <code>Q</code>, or right-click and choose <strong>Add to A/B Queue</strong>.</li>
 <li><strong>Export / Clear</strong> — The download icon saves an improvised live queue as a permanent playlist file; the trash icon empties the queue. Every queue column has the same header: a small caption naming the queue, then one row of icon buttons (hover for a tooltip).</li>
 </ul>
 <p>When the queue is playing, the crossfader moves automatically between decks as presets transition. Grabbing the crossfader manually immediately pauses Auto-VJ so you have direct control.</p>
@@ -2152,12 +2187,12 @@
 <li><strong>Stock ISF Transition Shaders</strong> — The curated suite above, plus any custom <code>.fs</code> transitions found in your configured shader directories. Unlike FX, there's only ever one active transition — no chain of slots to disambiguate — so a bare stock transition id is a complete, unambiguous instruction. Combined with sane bundled defaults, that makes them safe to apply, queue, or add to a playlist just like saved presets.</li>
 <li><strong>Saved Transition Presets (<code>.lsdtrans</code>)</strong> — A dialed-in transition configuration (parameters, dry/wet, modulators) captured from the mixer.</li>
 </ul>
-<p>Pick a section in the folder tree to show only stock shaders or only saved presets. Use <strong><code>[+]</code></strong> to save the mixer's current transition as a new preset.</p>
+<p>Pick a section in the folder tree to show only stock shaders or only saved presets. Use the save button above the list to save the mixer's current transition as a new preset.</p>
 <ul>
 <li><strong>Double-click</strong>: Applies the transition to the mixer immediately.</li>
-<li><strong>Keyboard</strong>: <strong>Enter</strong> applies the selected transition; the <em>Add to A/B Queue</em> shortcut (<strong>Q</strong> by default, rebindable in Preferences → Shortcuts) adds it to the transition queue.</li>
+<li><strong>Keyboard</strong>: <strong>Enter</strong> applies the selected transition (as on every tab); the <em>Add to A/B Queue</em> shortcut (<strong>Q</strong> by default, rebindable in Preferences → Shortcuts) adds it to the transition queue.</li>
 <li><strong>Failures</strong>: a transition or FX file that can't be loaded or applied now shows a toast instead of failing silently.</li>
-<li><strong>Right-click menu</strong>: <strong>Apply to Mixer</strong>, <strong>Add to A/B Queue</strong>, <strong>Add to '<playlist>' Playlist</strong>, plus Rename/Clone/Delete for saved presets (stock shaders have no file to rename or delete).</li>
+<li><strong>Right-click or ⋮ menu</strong>: <strong>Apply to Mixer</strong>, <strong>Add to A/B Queue</strong>, <strong>Add to '<playlist>'</strong>, plus <strong>Rename...</strong>, <strong>Clone</strong>, <strong>Delete...</strong> and <strong>Reveal in File Manager</strong> for saved presets (stock shaders have no file). Deleting a saved transition also removes it from the queue and playlists.</li>
 </ul>
 <h3 id="the-macros-tab-macro-banks-and-perform-pages">The Macros Tab (Macro Banks and Perform Pages)</h3>
 <p>The <strong><code>[ Macros ]</code></strong> tab has two lists, switched with the <strong>Banks</strong> / <strong>Pages</strong> radio buttons. It has no playlists or queues, so it uses the whole Library width.</p>
@@ -2167,7 +2202,7 @@
 </ul>
 <h3 id="transition-presets-lsdtrans-playlists-lsdtransplay">Transition Presets (<code>.lsdtrans</code>) &amp; Playlists (<code>.lsdtransplay</code>)</h3>
 <ul>
-<li><strong>Transition Presets (<code>.lsdtrans</code>)</strong>: Stored in <code>library/transitions/</code>. Save dialed-in transition configurations (including parameter values, dry/wet, and modulators) from the Mixer's TRANS tab (<strong>[⋮] &gt; Save Transition As...</strong>), from the <strong>Save current as preset...</strong> button under the transition list in Browse, or with the <strong>[+]</strong> button above the Trans list or right-clicking in the Mixer panel.</li>
+<li><strong>Transition Presets (<code>.lsdtrans</code>)</strong>: Stored in <code>library/transitions/</code>. Save dialed-in transition configurations (including parameter values, dry/wet, and modulators) from the Transitions row's <strong>Save</strong> or its <strong>⋮ &gt; Save As</strong>, from the save button above the Trans list, or by right-clicking in the Mixer panel.</li>
 <li><strong>Transition Playlists (<code>.lsdtransplay</code>)</strong>: Stored in <code>library/transition_playlists/</code>. Group transitions into ordered setlists for the Transition Queue. A factory playlist, <code>festival_elite.lsdtransplay</code>, is bundled out of the box.</li>
 <li><strong>AutoVJ Integration</strong>: The Transition Queue automatically advances to the next staged transition preset or stock transition shader each time the crossfader cycles between decks.</li>
 </ul>
@@ -2203,18 +2238,18 @@
 <td>Adds to the live queue</td>
 </tr>
 <tr>
-<td>Sources list row (stock or saved)</td>
+<td>Sources list row (stock, saved or external video)</td>
 <td>Deck monitor (Mixer) or deck row (Performance Matrix)</td>
-<td>Loads source (stock) or full preset (saved) to that deck</td>
+<td>Loads source (stock, external) or full preset (saved) to that deck</td>
 </tr>
 <tr>
 <td>FX Preset (<code>.lsdfx</code>)</td>
-<td>FX Slot 1–3 in Parameters</td>
+<td>FX Slot 1–3 in Edit's FX tab</td>
 <td>Loads into target slot</td>
 </tr>
 <tr>
 <td>Stock FX filter</td>
-<td>FX Slot in Parameters or the Performance Matrix</td>
+<td>FX Slot in Edit or on a Perform row</td>
 <td>Loads into that slot</td>
 </tr>
 <tr>
@@ -2224,17 +2259,37 @@
 </tr>
 <tr>
 <td>FX Chain (<code>.lsdfxchain</code>)</td>
-<td>FX Slot / Chain in Parameters, or the deck badge</td>
+<td>FX Slot / Chain in Edit, or the deck badge</td>
 <td>Overwrites 3-slot chain</td>
+</tr>
+<tr>
+<td>FX list row</td>
+<td>FX playlist in the tree</td>
+<td>Inserts/appends to playlist</td>
+</tr>
+<tr>
+<td>FX list row</td>
+<td>A/B FX Queue (A/B or BG)</td>
+<td>Appends/inserts into that queue</td>
+</tr>
+<tr>
+<td>A/B FX Queue item</td>
+<td>Up / down in the same queue</td>
+<td>Reorders</td>
+</tr>
+<tr>
+<td>Transition list row</td>
+<td>Transition playlist in the tree</td>
+<td>Inserts/appends to playlist</td>
+</tr>
+<tr>
+<td>Transition list row</td>
+<td>Transition Queue</td>
+<td>Appends/inserts into the queue</td>
 </tr>
 </tbody>
 </table>
-<p>A deck's monitor takes presets and generators only, not FX.
-| FX list row                 | FX playlist in the tree        | Inserts/appends to playlist |
-| FX list row                 | A/B FX Queue (A/B or BG)      | Appends/inserts into that queue |
-| A/B FX Queue item          | Up / down in the same queue    | Reorders                 |
-| Transition list row         | Transition playlist in the tree | Inserts/appends to playlist |
-| Transition list row         | Transition Queue          | Appends/inserts into the queue |</p>
+<p>A deck's monitor takes presets and sources only, not FX.</p>
 <hr />
 <h2 id="midi-mapping">MIDI Mapping</h2>
 <blockquote>

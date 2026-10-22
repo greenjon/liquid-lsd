@@ -1,5 +1,44 @@
 ## [Unreleased]
 
+### Slots Bind the Library In Place (`ui/ParametersState.kt`, `ui/LibraryPanel.kt`, `ui/BackNavigation.kt`, `ui/PairKnobTouch.kt`)
+- **Clicking a source name, an FX chain name, an FX slot or the transition name now works right in the Perform view.** Nothing moves: the Library below starts applying to that slot, and the slot's name and buttons (Save, Clear Slot) show on the Library's tab line with a ✕. The slot is outlined on its row and the list's border takes the row's colour. A click on a row applies it (Ctrl+Z undoes it); a double-click applies it and goes back to the plain Library. Esc, the ✕, or clicking the slot again stop without applying. Changing page stops too.
+- **Deck monitors, the main output monitor and the Master `M` badge do the same** for their default half: a deck's source, or the Master FX chain.
+- **The pair view now only opens when the slot's rows are not on the current page**, for example clicking the BG monitor from the A/B page, or sending to such a deck from the Twister.
+- **Space, or maximizing the Library, pauses the binding; Esc or Space again brings it back.**
+- **The controller browses the list while a slot is bound**, as in the pair view: knob 16 is the cursor (tap applies, Shift + tap queues), knobs 1-8 stay live on the page's first two rows, and touching one of them moves the binding to that row's slot. Shift + tap on a send knob moves the binding to that deck.
+
+### One Header for Browse and Edit (`ui/BayHeader.kt`, `ui/PerformanceDeepEditBay.kt`, `ui/PerformanceBrowseBay.kt`, `ui/NavigationSurface.kt`)
+- **The pair view and Edit share one header line.** `Back`, a `Browse | Params` switch, the target with its buttons, and what the queue plays next sit in the same place in both, so switching moves nothing. Edit now has a visible Back. On the Transitions pair, Params opens the transition editor.
+- **The Master pair browses the Master FX chain** when nothing has been touched yet, instead of showing an empty list.
+- **Esc goes back to where you were after opening the Library from Edit or the pair view** (Space, Ctrl+F, `/`, the menu or the controller), with the same slot bound.
+- **Trying sources on a deck with unsaved changes asks once.** Your Save or Discard answer is reused while that deck stays bound; Ctrl+Z still undoes each load.
+- **Touching a controller knob no longer pulls the browser off the Queues or Macros tab**, unless the touch moves the binding to another slot.
+- **Controller in the pair view:** right-middle steps the tab as in the Library, right-bottom steps the panes (Shift + right-bottom still clears the slot), and Shift + tap on knob 16 adds to the queue.
+- **Saved presets, saved effects and saved transitions are highlighted as applied** in a bound list, not just stock items.
+
+### Library List Polish (`ui/browser/PresetListPanel.kt`, `ui/browser/LoadedMarks.kt`, `ui/browser/BrowseRecents.kt`, `ui/browser/BrowserPane.kt`, `ui/browser/QueueToolbar.kt`)
+- **Library rows are easier to read.** Stock items no longer show an empty box, long names are shortened with "..." (full name on hover), saved names like `hyperspace_crash_zoom` read "Hyperspace crash zoom" (the file name is unchanged), and the heavy-shader mark is a muted gauge with an explanation instead of a warning sign.
+- **See at a glance which decks hold an item.** Each deck that holds it gets one coloured chip (`A`, `B`, `BG`, `PV`, `M`), then colour bars when space runs out; a count appears only for many slots. Hover for the full list.
+- **New Recent folder** in Sources, FX and Transitions: the last 20 items you loaded or applied, newest first, kept across restarts (`library/src_recent.json`, `fx_recent.json`, `transition_recent.json`).
+- **Same menus everywhere.** FX and transition rows open their menu on right-click too, the words match across tabs (`Rename...`, `Clone`, `Delete...`, `Add to '<playlist>'`), every saved file and playlist has **Reveal in File Manager**, and a bound list's menu starts with **Apply to <target>**. The tree's fold arrows, item counts and the header buttons (new playlist, new preset, save FX, save transition) have tooltips that say what they do.
+- **Deleting a saved effect or transition also removes it from the queues and playlists**, as deleting a preset already did.
+- **Queues tab:** an empty queue says how to fill it, all five columns have the same button strip (the FX queues' Auto button is greyed, since they have no timer), and the controller steps the columns left to right as drawn.
+- **External video can be dragged onto a deck** like a stock source.
+
+### Library Keyboard and Dialogs (`ui/browser/DockActions.kt`, `ui/ModalKeys.kt`, `ui/browser/BrowserPopupHandler.kt`, `ui/UIManager.kt`)
+- **Enter runs the row's default action on every tab**: in the Library what a double-click does, in a bound list apply. Before, only Transitions answered Enter.
+- **Typing a letter while the list has the keyboard starts a search** with it (keys bound to a shortcut, such as `Q`, keep their shortcut).
+- **Delete follows Preferences > Shortcuts** (Backspace works too) instead of being fixed.
+- **Alt+click a Sources row to preview it on Deck PV.**
+- **Dialogs answer the keyboard.** Rename, Delete, New Playlist and Export focus their text field, Enter confirms and Esc cancels without leaving the Library. The unsaved-deck prompt saves on Enter, and its buttons are the same width.
+- **Esc that closes a menu or popup no longer also goes back** a view.
+
+### Edit View Polish (`ui/ParamLabels.kt`, `ui/ParametersRenderer.kt`, `ui/ParametersTabs.kt`, `ui/PerformanceDeepEditBay.kt`)
+- **Edit shows readable parameter names.** Grid rows and Metaknob lists use the shader's own label, or split names like `CellScale` into "Cell scale". Presets, MIDI and OSC mappings are unchanged.
+- **Properties is never empty in Edit.** Opening a deck or Master, or switching tabs, selects the first knob-assigned parameter (or the first row).
+- **The Master MIX row's gear opens master level and crossfade** (the MIX side tab's TRANS) instead of the CTRL tab's queue and tap-tempo triggers.
+- **Fixed clipping:** the side rail no longer cuts off "CTRL", the TRANS tab's transition selector fits its name, and the Min/Max fields in the macro and Metaknob binding editors no longer cut off "Max". CTRL and TRANS labels are in sentence case ("Queue prev", "Master level").
+
 ### KIFS Color Spread (`library/sources/kifs/kifs.fs`, `rendering/SourceDocRegistry.kt`)
 - **New Color Spread knob (default 1, with Saturation and Brightness now also defaulting to 1).** KIFS used to show about two colours, because the folds make every copy of a detail identical and the ramp only looked at the orbit trap. Color Spread shifts the hue by three things the folds do not erase: the fold level the orbit came closest at, the point's position in space, and the way the surface faces. Raise it for a wider spread of colours, 0 gives the old plain ramp, and the gold ramp ignores it. New KIFS decks start bright and fully spread; saved looks keep their own values.
 

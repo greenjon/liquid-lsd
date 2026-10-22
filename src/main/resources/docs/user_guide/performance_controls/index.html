@@ -2282,7 +2282,7 @@ for the FX Rack view that exposes these.</p>
 </li>
 <li><strong>Chain Link (left of the Super Knob, knob 1)</strong>: links or unlinks all three slots at once. Click links all unless they are all linked already, in which case it unlinks all; the icon shows a chain when every filled slot is linked, a dimmer chain when only some are, and a broken chain when none are. The Macro Strip has the same toggle by the <code>CHAIN MACRO</code> title. Where a new chain starts (linked or unlinked) is the <strong>Default FX chain linking</strong> preference.<ul>
 <li><strong>Bypass (bottom, power icon)</strong>: turns just that effect on or off. Row-coloured when on, red when bypassed, dim when the slot is empty. In Focus Mode, only the focused slot's bypass is shown, next to knob 1.</li>
-<li><strong>Effect Name</strong>: Truncated caption showing loaded filter. Click opens the pair view with Browse on that slot (Stock filters, ★ Favorites, and Saved <code>.lsdfx</code> presets). Browse opens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't open it.</li>
+<li><strong>Effect Name</strong>: Truncated caption showing loaded filter. Click points the Library below at that slot (Stock filters, ★ Favorites, and Saved <code>.lsdfx</code> presets); click it again to stop. This happens a moment after you release the click, so a double-click (Focus Mode) or a drag doesn't trigger it.</li>
 <li><strong>Drag &amp; Drop</strong>: Drag an effect name onto another slot's name to swap/reorder (hold <code>Ctrl</code> while dropping to duplicate). Accepts stock ISF filters and <code>.lsdfx</code> single presets from Library.</li>
 <li><strong>Right-Click Context Menu</strong>: Focus Mode, Previous/Next in Shortlist, Replace..., Save as FX Preset..., Copy/Paste Slot, Reset Parameters, Clear Slot, Add/Remove from FX Shortlist (★), and Edit in Edit.</li>
 </ul>
@@ -2304,7 +2304,7 @@ for the FX Rack view that exposes these.</p>
 <li>Or right-click a slot cell and select <strong>Focus Mode (Edit Parameters)</strong>.</li>
 <li><strong>Header Controls in Focus Mode</strong>:</li>
 <li><code>[⋮]</code>: Chain kebab menu remains accessible for Save As, Clear, etc.</li>
-<li><code>[Focused Effect Name ▾]</code>: Displays the name of the focused effect; clicking opens the pair view's FX Browse directly for that slot to audition or swap shaders.</li>
+<li><code>[Focused Effect Name ▾]</code>: Displays the name of the focused effect; clicking points the Library's FX list at that slot to audition or swap shaders.</li>
 <li><code>[◀ P1/N ▶]</code>: Parameter page stepper; appears automatically whenever the focused shader exposes more than 3 parameters.</li>
 <li><code>[1] [2] [3]</code>: Slot focus pills with clean styling. The active slot pill is highlighted in blue accent. Click another slot pill to switch focus instantly, or click the active focused slot pill a second time (or press <code>Escape</code>) to exit Focus Mode back to the 3-slot chain view.</li>
 <li><strong>4 Knobs in Focus Mode</strong>:</li>
@@ -2407,7 +2407,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <p>To use the factory absolute mode instead, copy the profile to <code>library/controllers/</code> and set <code>"mode": "ABSOLUTE"</code> on the <code>knob</code> input (the app then tracks each change, and a knob can hit the end of its 0-127 range).</p>
 <p><a id="twister-layout"></a></p>
 <h4 id="what-the-knobs-control">What the knobs control</h4>
-<p><strong>The 16 knobs are the 16 knobs on screen.</strong> Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Focus an FX slot, with the mouse or the Twister, and the same encoders follow. In Edit the Twister follows the open module: knobs 1-4 control that module's 4 macro knobs (reflecting its active sub-tab, e.g. SRC or FX), while knobs 5-16 are inert. Edit itself (the full 3-column parameter matrix) is opened and edited with the mouse; the controller only opens the pair view's pickers.</p>
+<p><strong>The 16 knobs are the 16 knobs on screen.</strong> Knobs 1-4 are the first visible row, 5-8 the second, and so on, so the Twister's 4×4 grid mirrors the matrix. Whatever a row is showing is what its encoders control: a deck's source knobs, its FX chain's Super Knob and Metaknobs, or the focused effect's parameters. Focus an FX slot, with the mouse or the Twister, and the same encoders follow. In Edit the Twister follows the open module: knobs 1-4 control that module's 4 macro knobs (reflecting its active sub-tab, e.g. SRC or FX), while knobs 5-16 are inert. Edit itself (the full 3-column parameter matrix) is opened and edited with the mouse; the controller only opens Browse for a row.</p>
 <p>The Twister's hardware <strong>banks</strong> pick the page shown on screen (three pages: A/B, BG/PV, MIXER; the fourth bank leaves the page as it is). Press right-top (Shift + right-top goes back) and the matrix changes with it; clicking a tab on screen moves the encoders to that page too, so screen and hardware always agree.</p>
 <table>
 <thead>
@@ -2508,20 +2508,20 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <h4 id="walkthrough-load-an-effect-onto-deck-a-with-only-the-twister">Walkthrough: load an effect onto Deck A with only the Twister</h4>
 <ol>
 <li><strong>Go to bank 1</strong> (A/B). Deck A's FX row is knobs 5-8 (the second row of the grid): knob 5 is the chain's Super Knob, knobs 6-8 are slots 1-3.</li>
-<li><strong>Touch the slot you want.</strong> Give knob 6 (slot 1) a small turn. The picker opens for the <em>last knob you touched</em>, so this step chooses the target. Don't tap it: a tap bypasses the slot.</li>
-<li><strong>Press the right-bottom side button.</strong> The picker for that slot opens on screen (stock filters, favourites and saved effects).</li>
-<li><strong>Browse.</strong> Turn <strong>knob 16</strong> (the last knob of the grid, bottom right) to move the highlight. Nothing is applied while you move. Press <strong>right-top</strong> to step to the next category (hold Shift for the previous one).</li>
-<li><strong>Tap knob 16</strong> to apply the highlighted effect to the slot. The item currently loaded is marked in the list (stock items only).</li>
-<li><strong>Close the picker</strong> with <strong>left-top</strong>. The effect is now in slot 1; turn knob 6 for its Metaknob and knob 5 for the Super Knob.</li>
+<li><strong>Touch the slot you want.</strong> Give knob 6 (slot 1) a small turn. Browse opens for the <em>last knob you touched</em>, so this step chooses the target. Don't tap it: a tap bypasses the slot.</li>
+<li><strong>Press the right-bottom side button.</strong> The Library below now applies to that slot (its name shows on the Library's tab line) and lists stock filters, favourites and saved effects. Nothing else on screen moves.</li>
+<li><strong>Browse.</strong> Turn <strong>knob 16</strong> (the last knob of the grid, bottom right) to move the highlight. Nothing is applied while you move. <strong>Right-bottom</strong> moves between the folder tree and the list; <strong>right-middle</strong> steps the tab.</li>
+<li><strong>Tap knob 16</strong> to apply the highlighted effect to the slot. The item currently loaded is tinted in the list.</li>
+<li><strong>Stop browsing</strong> with <strong>left-top</strong>. The effect is now in slot 1; turn knob 6 for its Metaknob and knob 5 for the Super Knob (knobs 1-8 stay live the whole time).</li>
 <li><strong>Tune it.</strong> Hold <strong>Shift</strong> and tap knob 6 to focus the slot: its parameters spread over knobs 6-8 and knob 5 becomes the Metaknob. <strong>Shift + tap knob 5</strong> leaves focus.</li>
 </ol>
 <p>Variations:</p>
 <ul>
-<li><strong>Replace</strong> an effect: repeat steps 2-5 on the same slot. <strong>Clear</strong> a slot: with the picker open, <strong>Shift + right-bottom</strong>.</li>
-<li><strong>Load a saved chain</strong> into all three slots: touch <strong>knob 5</strong> (the Super Knob) before step 3. The picker then lists your saved chains, and <strong>Shift + right-bottom</strong> clears the whole chain.</li>
-<li><strong>Change Deck A's source</strong> instead: touch any knob in the source row (knobs 1-4) and press right-bottom for the source list.</li>
-<li><strong>Switching decks or targets:</strong> The picker stays scoped to the deck and row that opened it. Because knobs 5-15 are inert while browsing and knobs 1-4 follow the row being filled, close the picker first with <strong>left-top</strong>, touch a knob on the other deck or row (switching Twister banks if needed), and press <strong>right-bottom</strong> to open its picker.</li>
-<li><strong>Master FX or a transition:</strong> use bank 3 and touch a knob in Master FX (knobs 5-8) or Transitions (knobs 9-12).</li>
+<li><strong>Replace</strong> an effect: repeat steps 2-5 on the same slot. <strong>Clear</strong> a slot: while browsing, <strong>Shift + right-bottom</strong>.</li>
+<li><strong>Load a saved chain</strong> into all three slots: touch <strong>knob 5</strong> (the Super Knob) before step 3. The list then shows your saved chains, and <strong>Shift + right-bottom</strong> clears the whole chain.</li>
+<li><strong>Change Deck A's source</strong> instead: touch any knob in the source row (knobs 1-4) and press right-bottom for the source list. While browsing, touching a knob of the other row (knobs 1-8) moves the target to it.</li>
+<li><strong>Switching decks:</strong> while browsing, <strong>Shift + tap</strong> knob 9-12 (A, B, BG, PV) or 13 (Master) moves the target to that deck. Or stop with <strong>left-top</strong>, touch a knob on the other deck (switching Twister banks if needed), and press <strong>right-bottom</strong> again.</li>
+<li><strong>Master FX or a transition:</strong> use bank 3 and touch a knob in Transitions (knobs 1-4) or Master FX (knobs 5-8).</li>
 <li>If nothing happens when you press right-bottom, you haven't touched a knob since the app started: turn one first.</li>
 <li>Picking from the <strong>Library view</strong> instead is described below.</li>
 </ul>
@@ -2547,17 +2547,17 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <td>toggle Chain Link; <strong>Shift +</strong> tap tempo</td>
 <td>next bank / page (<strong>Shift +</strong> prev)</td>
 <td>open the <strong>Library</strong>; <strong>Shift +</strong> opens it on the FX tab</td>
-<td>open the <strong>picker</strong>; <strong>Shift +</strong> toggles Pair view</td>
+<td><strong>browse</strong> the touched row's slot; <strong>Shift +</strong> toggles Pair view</td>
 <td>normal knob</td>
 </tr>
 <tr>
-<td><strong>Pair view</strong></td>
-<td>back to Perform</td>
+<td><strong>Browsing a slot</strong> (bound Library or Pair view)</td>
+<td>stop browsing</td>
 <td>toggle Chain Link; <strong>Shift +</strong> tap tempo</td>
-<td>next bank / page (<strong>Shift +</strong> prev)</td>
-<td>step the pane (<strong>Shift +</strong> back)</td>
-<td>nothing; <strong>Shift +</strong> clears the slot or chain</td>
-<td><strong>cursor</strong>: turn to move; tap applies</td>
+<td>next bank / page, which stops browsing (<strong>Shift +</strong> prev); in the Pair view, the next pair</td>
+<td>step the <strong>tab</strong> (<strong>Shift +</strong> prev)</td>
+<td>step the <strong>pane</strong>; <strong>Shift +</strong> clears the slot or chain</td>
+<td><strong>cursor</strong>: turn to move; tap applies, <strong>Shift +</strong> tap queues</td>
 </tr>
 <tr>
 <td><strong>Library</strong></td>
@@ -2572,15 +2572,15 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 </table>
 <ul>
 <li><strong>Send-knob rings:</strong> a send knob that can receive the highlighted item shows a full ring at half brightness in the target's colour; the others stay dark. Set the encoders' indicator to <strong>Bar</strong> in the Midi Fighter Utility to get a full ring (a Dot ring shows a single LED).</li>
-<li><strong>Knob 16 ring:</strong> in the Pair view and the Library the ring shows the cursor's place in its list (empty at the first row, full at the last); it is full when the list has no cursor yet or one row.</li>
+<li><strong>Knob 16 ring:</strong> while browsing a slot and in the Library the ring shows the cursor's place in its list (empty at the first row, full at the last); it is full when the list has no cursor yet or one row.</li>
 <li><strong>Left-middle button:</strong> Toggles Chain Link on the FX chain of the row you touched last. <strong>Shift + left-middle</strong> taps the BPM tempo (<code>clock.tap_tempo</code>).</li>
 <li><strong>Right-top button:</strong> Steps through hardware banks / Perform pages (<strong>Shift + right-top</strong> steps backward).</li>
 <li><strong>Unsaved-changes prompt:</strong> when loading would discard edits on a deck, the prompt takes over the controller: <strong>left-top</strong> = Cancel, <strong>right-middle</strong> or <strong>knob 16 tap</strong> = Save, <strong>right-bottom</strong> or <strong>Shift + tap</strong> = Discard. Nothing else navigates until you answer.</li>
-<li><strong>Picker:</strong> moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. Knob 16 is the cursor. Knobs 9-15 do nothing (apart from the sends) while a picker is active (in the Library and picker, knobs 9-13 send the highlighted item, see below); knobs 1-8 keep controlling the two rows of the pair view (they light in their rows' colours), so you can tweak a freshly loaded source or chain without leaving it. Touching a knob of the other row points the browser at that half. To pick for another deck, send the item there with knobs 9-12 or go back with <strong>left-top</strong> first.</li>
+<li><strong>Browsing a slot:</strong> moving never applies anything; only a tap does. Touch a knob of the row first; with none touched yet the button does nothing. When the row is on the current page the Library below simply starts applying to its slot; otherwise the Pair view opens. Knob 16 is the cursor. Knobs 9-15 do nothing (apart from the sends) while browsing (knobs 9-13 send the highlighted item, see below); knobs 1-8 keep controlling the first two rows on screen (the page's, or the pair view's two rows; they light in their rows' colours), so you can tweak a freshly loaded source or chain without stopping. Touching one of them points the browser at that row's slot. Touching a knob does not change the tab unless it moves the target, so it won't pull you off Queues or Macros. To pick for another deck, send the item there with knobs 9-12, use the quick switch, or stop with <strong>left-top</strong> first.</li>
 <li><strong>Edit:</strong> Left-top closes Edit (collapsing the module bay back to the Faceplate, same as Esc); <strong>Shift + left-top</strong> toggles Edit mode for the touched row. Right-bottom opens the pair view for the last-touched knob's row.</li>
 <li><strong>Banks in the pair view:</strong> pressing a bank button walks the pairs instead of changing the page: a higher bank is the next pair (Deck A, B, BG, PV, Master, Transitions/Clock, wrapping), a lower bank the previous one, so you can reach any deck's pair from the Twister alone.</li>
-<li><strong>Quick switch:</strong> in the pair view, <strong>Shift + tap</strong> on knob 9-12 (A, B, BG, PV) or 13 (Master) goes to that pair without sending anything.</li>
-<li><strong>Send knobs (Library and picker):</strong> tap a knob in row three to send the highlighted item to a deck: <strong>knob 9 = Deck A, knob 10 = Deck B, knob 11 = Deck BG, knob 12 = Deck PV</strong>; in the FX tab <strong>knob 13 = Master FX</strong>. A source or preset replaces the deck's content (with the usual unsaved-changes prompt), an FX chain replaces all three slots, and a single FX goes into the first empty slot (the last slot if all are full). From the Library the send only loads (you stay in the Library with your place kept, so you can send the next item straight away, and an FX send shows a toast with where it landed); Ctrl+Z undoes it. From the pair view the target's pair also takes over the screen, so <strong>knobs 1-8 play what you just loaded</strong> while knob 16 keeps browsing; send again to move to another deck. A knob glows in its target's colour while the highlighted item can go there. They work on the Sources and FX lists only. Back returns to Perform.</li>
+<li><strong>Quick switch:</strong> while browsing a slot, <strong>Shift + tap</strong> on knob 9-12 (A, B, BG, PV) or 13 (Master) moves to that deck without sending anything (in place when the page shows its rows, else its pair view).</li>
+<li><strong>Send knobs (Library and while browsing):</strong> tap a knob in row three to send the highlighted item to a deck: <strong>knob 9 = Deck A, knob 10 = Deck B, knob 11 = Deck BG, knob 12 = Deck PV</strong>; in the FX tab <strong>knob 13 = Master FX</strong>. A source or preset replaces the deck's content (with the usual unsaved-changes prompt), an FX chain replaces all three slots, and a single FX goes into the first empty slot (the last slot if all are full). From the Library the send only loads (you stay in the Library with your place kept, so you can send the next item straight away, and an FX send shows a toast with where it landed); Ctrl+Z undoes it. While browsing a slot the target follows the send (in place when its rows are on the page, else its pair view), so you can play what you just loaded while knob 16 keeps browsing; send again to move to another deck. A knob glows in its target's colour while the highlighted item can go there. They work on the Sources and FX lists only. Back returns to Perform.</li>
 <li><strong>Library:</strong> a preset or generator loads onto the deck the crossfader is moving away from, a BG queue item onto Deck BG, a transition onto the mixer. In the FX tab, a tap applies the item to the live deck (a single effect goes into the first empty slot, the last slot if all are full; a chain replaces the deck's chain) and <strong>Shift + tap</strong> adds it to the FX queue. Holding Shift, the side buttons add to the BG queue and step the tab and list backwards.</li>
 <li><strong>Unified browser:</strong> a fresh tab starts in the list. <strong>Right-bottom</strong> moves on to the queues and <strong>Shift +</strong> it goes back to the folder tree. In the tree, turning moves a cursor (an outline) over the visible folders and playlists without changing the list; a <strong>tap</strong> selects the folder or playlist under it, which fills the list and clears the list's selection. A playlist is just a tree entry, so there is no separate playlist pane.</li>
 <li>The FX queue transport commands (<code>fx.queue_next/prev</code>, <code>fx.bg_queue_next/prev</code>) have no free button in the built-in profile; map them in your own profile.</li>
@@ -2613,7 +2613,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <li>Each ring follows its parameter: a bar, a bar with a centre detent for -100..100 parameters, and a dot for endless and stepped parameters. The style changes live as you change pages, effects and sources.</li>
 <li>The switch LEDs show the exact row colour.</li>
 <li>There are no hardware banks. <strong>Right-top</strong> steps through the Perform pages (<strong>Shift + right-top</strong> goes back); the other side buttons work as before. No Utility settings file is needed.</li>
-<li>The Library and Pair view send knobs (9-13) leave the ring off and show the target in the switch LED colour, because native mode has no half-brightness.</li>
+<li>The send knobs (9-13) in the Library and while browsing a slot leave the ring off and show the target in the switch LED colour, because native mode has no half-brightness.</li>
 </ul>
 <p>To use it: open <strong>Preferences → MIDI Controls → Controller Profiles</strong>, and in <strong>Use profile</strong> under the Twister choose <em>Midi Fighter Twister (XT firmware, native mode)</em>. Choose the stock profile again to go back. Both profiles fit the same device name, so the app never switches by itself, and a Twister on the stock firmware must keep using the stock profile.</p>
 <p>When the app quits, unplugs the Twister or you change the profile, the app turns the switch LEDs black and returns the device to normal. If the app crashes the Twister stays in native mode until you unplug and replug it.</p>
@@ -2677,7 +2677,7 @@ Each rotary mapping includes an editable <strong>Step</strong> multiplier to dia
 <p>Like MIDI, OSC address mappings are stored in JSON profiles under <code>library/osc/&lt;profile_name&gt;.json</code>. Create, save, switch, and delete profiles from the OSC Controls tab to switch between different tablet layouts or venues.</p>
 <h2 id="perform-pages">Perform Pages</h2>
 <p>You manage pages in <strong>Preferences &gt; MIDI Controls &gt; Perform Pages</strong> (it is there even with MIDI turned off).</p>
-<p>The tab strip above the matrix (A/B, BG/PV, MIXER) lists <em>pages</em>: each is four rows. Clicking a tab closes Edit and the Pair view and shows that page's rows, including when you click the tab you are already on. You can add your own by putting a JSON file in <code>library/perform_pages/</code> (press Reload Pages in Preferences &gt; MIDI Controls, or restart the app, to pick it up):</p>
+<p>The tab strip above the matrix (A/B, BG/PV, MIXER) lists <em>pages</em>: each is four rows. Clicking a tab closes Edit and the Pair view, stops browsing a slot, and shows that page's rows, including when you click the tab you are already on. You can add your own by putting a JSON file in <code>library/perform_pages/</code> (press Reload Pages in Preferences &gt; MIDI Controls, or restart the app, to pick it up):</p>
 <pre><code class="language-json">{
   &quot;id&quot;: &quot;mine&quot;,
   &quot;name&quot;: &quot;MINE&quot;,

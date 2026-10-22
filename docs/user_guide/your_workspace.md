@@ -9,11 +9,13 @@ Liquid LSD has a lot going on, but it's organized around a handful of core ideas
 The Library panel spans the left and middle columns of the app. That column has four views:
 
 - **Perform** — The Performance rows sit above the Library, which fills the rest of the window. This is the everyday view for playing a set.
-- **Edit** — Open a row's **Edit** and the Library goes away completely. That row and its parameters fill the column, so you have room to fine-tune presets and FX. To swap a deck's source or FX, click its source badge, chain name or slot (this opens the pair view, described in Presets & Library) or use the controls on the row itself. Press **Esc** or click the row's **Collapse** button to get back to Perform.
-- **Pair view** — Click a deck's source badge, an FX chain name or slot, a preview monitor or the transition name and the Library goes away too: that deck's SRC and FX rows stay on screen with the browser below. Press **Esc** or **Back** to return to Perform. See Presets & Library.
+- **Edit** — Click a row's **gear** and the Library goes away completely. That row's pair of rows and its parameters fill the column, so you have room to fine-tune presets and FX. Its header line has **Back** and a **Browse | Params** switch: Browse shows the list for the same deck and half. Press **Esc**, **Back** or the lit gear to get back to Perform.
+- **Pair view** — Picking for a deck whose rows are not on the current page (for example clicking the BG monitor from the A/B page) brings that deck's SRC and FX rows on screen with the browser below, and the Library goes away. Its header line matches Edit's. Press **Esc** or **Back** to return to Perform. See [Presets & Library](presets_and_library.md).
 - **Library** — The Library fills the whole column and the Performance rows are hidden. Use this when you're building or editing playlists and queues.
 
-Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit, `Space`, `Ctrl+F` or `/` closes Edit (cancelling any armed Add Target or Learn) and brings the Library back.
+Clicking a source name, FX chain name, FX slot or the transition name on a Perform row doesn't change the view: the Library below starts applying to that slot (its name shows on the Library's tab line), until you press **Esc**, its **✕**, or click the slot again. See [Presets & Library](presets_and_library.md#picking-for-a-slot-the-library-applies-in-place).
+
+Press **`Space`** (when the cursor isn't in a text field) or the button at the right of the Library's title bar to switch between Perform and Library. From Edit or the pair view, `Space`, `Ctrl+F` or `/` closes them (cancelling any armed Add Target or Learn) and brings the Library back; **Esc** then returns you to where you were.
 
 The Performance rows have a fixed height, so the Library gets whatever window height they leave: a taller window means a taller Library.
 
@@ -52,18 +54,18 @@ Here's how audio becomes visuals:
 ## The Performance Panel (Left & Middle)
 
 The top of the left and middle columns is the **Perform view**: a 4×4 grid of macro knobs,
-one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Click a deck row's generator badge to change its visual source.
+one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Click a deck row's source name to change its visual source in the Library below.
 
-For full control, open a row's **Edit** (the chevron on the row, or click a deck monitor in
-the Mixer and press **Parameters**). Edit has three columns:
+For full control, open a row's **Edit** (the gear on the row, or **Params** in the pair view's header). Edit has three columns:
 
-- **Side rail** — `[MIX] [A] [B] [BG] [PV]` to jump between channels.
-- **Parameter grid** — every row is a visual parameter (like "Lobes", "Zoom", or "Hue") and each
+- **Side rail** — `[CTRL] [MIX] [A] [B] [BG] [PV]` to jump between channels.
+- **Parameter grid** — every row is a visual parameter (like "Lobes", "Zoom", or "Cell scale", shown with the shader's own label) and each
   column is a modulation source (manual value, MIDI, LFO, sequencer, audio). Click a cell to
   configure that connection. See [Modulation](modulation.md) for the full guide.
 - **Modulation** — the details of the selected cell: waveform controls for LFOs, band selectors
   for audio, step patterns for the sequencer, etc., with a live oscilloscope of the signal going
-  to the parameter.
+  to the parameter. Opening Edit or switching tabs selects the first knob-assigned parameter (or
+  the first row), so this column is never empty.
 
 See [Macro Controls & the Perform View](macros_and_rack.md) for the knobs and Edit in detail.
 
@@ -84,7 +86,7 @@ The right panel shows:
 - Master output monitor
 - Blend mode selector
 
-Clicking a deck monitor opens that deck's pair view (its SRC and FX rows plus the browser); clicking the master monitor does the same for Master. Press **Parameters** there for the full Edit.
+Clicking a deck monitor points the Library at that deck's source; clicking the master monitor (or its **M** badge) points it at the Master FX chain. When the current page doesn't show those rows, the pair view brings them on screen instead. Use a row's gear for the full Edit.
 
 Macro knobs are edited in the Performance rows' Edit view, where each knob gets a target strip for choosing what it controls. See [Macro Controls & the Perform View](macros_and_rack.md).
 
@@ -104,7 +106,7 @@ A few keyboard shortcuts work anywhere in the app:
 |-----|-------------|
 | `Space` | Switch the Library between Half (Perform) and Full; from Edit, close it and bring the Library back (when cursor isn't in a text field) |
 | `F` | Output View — hides the UI, pure video output |
-| `Esc` | Exit Output View |
+| `Esc` | Exit Output View; otherwise go back one step (stop browsing a slot, leave the pair view or Edit, or return from the Library to where you opened it). An Esc that closes a menu or popup only closes it |
 | `F11` | Toggle fullscreen for the main window (UI stays visible) |
 | `B` | Toggle background video rendering behind the UI |
 | `Ctrl+Z` | Undo the last parameter/modulator change (30-step history) |
@@ -118,7 +120,10 @@ A few keyboard shortcuts work anywhere in the app:
 | `Caps Lock` | Toggle the touch console controller |
 | `Q` / `Shift+Q` | Add the selected Library item to the A/B queue / BG queue |
 | `Up` / `Down` | Move the selection in the Library lists and queues |
-| `Delete` | Delete the selected user preset, or remove the selected queue item |
+| `Enter` | Run the selected Library row's default action (load, apply, or apply to the bound slot) |
+| `Delete` / `Backspace` | Delete the selected saved item, or remove the selected queue item (the key is set in Preferences → Shortcuts) |
+| `Alt+click` | Preview a Sources row on Deck PV |
+| A letter key | With the Library list focused, start a search with that letter (keys bound to a shortcut keep it) |
 | `Ctrl+C` / `Ctrl+V` | Copy / paste a modulation cell or row in Edit |
 
 Every shortcut except `Caps Lock` and `Space` can be rebound in **Preferences → Shortcuts**. Shortcuts are ignored while you are typing in a text field.
