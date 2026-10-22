@@ -66,8 +66,9 @@ internal object LibraryNavigation {
     /** The lists the cursor can sit in for the current tab, left to right. A playlist is a tree scope shown in the list, so it has no pane of its own. */
     internal fun panes(): List<SelectionSource> = when (LibraryPanel.navMode) {
         LibraryViewMode.PRESETS, LibraryViewMode.FX, LibraryViewMode.TRANS -> listOf(SelectionSource.TREE, SelectionSource.PRESETS)
+        // Screen order of the Queues tab ([llm.slop.liquidlsd.ui.browser.QueuesPane]): A/B, FX A/B, BG, FX BG, transitions.
         LibraryViewMode.QUEUES -> listOf(
-            SelectionSource.QUEUE_AB, SelectionSource.QUEUE_BG, SelectionSource.FX_QUEUE_AB, SelectionSource.FX_QUEUE_BG, SelectionSource.TRANSITION_QUEUE
+            SelectionSource.QUEUE_AB, SelectionSource.FX_QUEUE_AB, SelectionSource.QUEUE_BG, SelectionSource.FX_QUEUE_BG, SelectionSource.TRANSITION_QUEUE
         )
         LibraryViewMode.MAPS -> emptyList()
     }

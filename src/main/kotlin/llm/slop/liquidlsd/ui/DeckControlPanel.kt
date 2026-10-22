@@ -116,7 +116,7 @@ class DeckControlPanel(
             }
             val stockSourcePayload = ImGui.acceptDragDropPayload<String>(llm.slop.liquidlsd.ui.browser.PresetListPanel.PAYLOAD_STOCK_SOURCE)
             if (stockSourcePayload != null) {
-                VisualSourceRegistry.availableSources.find { it.id == stockSourcePayload }?.let { source ->
+                llm.slop.liquidlsd.ui.browser.PresetListPanel.sourceForPayload(stockSourcePayload)?.let { source ->
                     UIManager.changeVisualSourceSafely(mixer, deck, label, source, parametersState)
                 }
             }

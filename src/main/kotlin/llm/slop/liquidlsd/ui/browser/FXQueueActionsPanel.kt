@@ -55,6 +55,7 @@ object FXQueueActionsPanel {
         ))
 
         if (ImGui.beginChild("##fx_queue_items_scroll", 0f, 0f, false)) {
+            QueueToolbar.drawEmptyHint(FXQueueManager.queue.isEmpty())
             var moveFrom = -1
             var moveTo = -1
             var removeFromQueueIndex = -1
@@ -173,9 +174,8 @@ object FXQueueActionsPanel {
 
             // Keyboard shortcuts
             val io = ImGui.getIO()
-            if (selectedIndex in FXQueueManager.queue.indices && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
-                if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
-                    ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
+            if (selectedIndex in FXQueueManager.queue.indices && !io.wantTextInput) {
+                if (DockActions.deleteKeyPressed()) {
                     removeFromQueueIndex = selectedIndex
                 }
             }

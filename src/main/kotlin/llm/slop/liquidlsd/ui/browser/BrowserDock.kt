@@ -4,6 +4,7 @@ import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
 import imgui.flag.ImGuiCol
 import imgui.flag.ImGuiKey
+import imgui.flag.ImGuiPopupFlags
 import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
 import llm.slop.liquidlsd.SessionContext
@@ -12,6 +13,7 @@ import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.ui.LibraryNavigation
 import llm.slop.liquidlsd.ui.LibraryPanel
 import llm.slop.liquidlsd.ui.LibraryPanel.LibraryViewMode
+import llm.slop.liquidlsd.ui.ModalKeys
 import llm.slop.liquidlsd.ui.ParametersState
 import llm.slop.liquidlsd.ui.TangoPalette
 import llm.slop.liquidlsd.ui.UITheme
@@ -146,7 +148,7 @@ object BrowserDock {
             ImGui.endChild()
         } else if (unifiedKind != null) {
             ImGui.beginChild("LibraryUnified", availW, contentH, false, outerFlags)
-            BrowserPane.draw(session, mixer, parametersState, unifiedKind, bound?.target)
+            BrowserPane.draw(session, mixer, parametersState, unifiedKind, bound?.target, bound?.label)
             ImGui.endChild()
         }
 
@@ -154,22 +156,32 @@ object BrowserDock {
         ImGui.popStyleVar(2)
     }
 
-    /** Q / Shift+Q enqueue, Up/Down stepping, and (Transitions) Enter to apply. Dead while a text field has the keyboard. */
+    /**
+     * Enter runs the cursor row's default action on every tab (bound: apply to the target; Library: what a double-click does; tree and
+     * queue rows: what the controller's accept does), Q / Shift+Q enqueue, Up/Down step. Dead while a text field has the keyboard
+     * or a popup is open.
+     */
     fun drawShortcuts(session: SessionContext, mixer: Mixer) {
         val io = ImGui.getIO()
         if (io.wantTextInput) return
+        if (ImGui.isPopupOpen("", ImGuiPopupFlags.AnyPopupId or ImGuiPopupFlags.AnyPopupLevel) || ModalKeys.enterTakenThisFrame()) return
         val activeFile = LibraryPanel.getActiveSelectedFile(session)
         val isQueueAB = ShortcutManager.isTriggered("library.queue_ab")
         val isNavUp = ShortcutManager.isTriggered("library.navigate")
         val isNavDown = !io.keyCtrl && !io.keyAlt && !io.keySuper && !io.keyShift && ImGui.isKeyPressed(ImGuiKey.DownArrow, false)
+        val isEnter = !io.keyCtrl && !io.keyAlt && !io.keySuper && (ImGui.isKeyPressed(ImGuiKey.Enter, false) || ImGui.isKeyPressed(ImGuiKey.KeypadEnter, false))
 
-        if (LibraryPanel.viewMode == LibraryViewMode.TRANS) {
-            // Transitions: Q enqueues, Enter applies to the mixer, Up/Down step.
-            val isEnter = ImGui.isKeyPressed(ImGuiKey.Enter, false) || ImGui.isKeyPressed(ImGuiKey.KeypadEnter, false)
-            if (isEnter && activeFile != null) {
-                TransitionQueueManager.applyTransitionItem(activeFile, mixer)
-                LibraryPanel.shouldReclaimFocus = true
-            } else if (isQueueAB && activeFile != null) {
+        if (isEnter && LibraryPanel.viewMode != LibraryViewMode.MAPS) {
+            val source = LibraryPanel.activeSelectionSource
+            if (source == null || source == LibraryPanel.SelectionSource.PRESETS) {
+                DockActions.enterOnRow(session, mixer, session.parametersState)
+            } else {
+                LibraryNavigation.accept(session, mixer, session.parametersState)
+            }
+            LibraryPanel.shouldReclaimFocus = true
+        } else if (LibraryPanel.viewMode == LibraryViewMode.TRANS) {
+            // Transitions: Q enqueues, Up/Down step.
+            if (isQueueAB && activeFile != null) {
                 TransitionQueueManager.appendToQueue(activeFile)
                 LibraryPanel.shouldReclaimFocus = true
             } else if (isNavUp) {
@@ -197,23 +209,23 @@ object BrowserDock {
      */
     fun drawPopups(session: SessionContext) {
         if (BrowserPopupHandler.pendingOpenRenamePopup) {
-            ImGui.openPopup("RenameAssetPopup")
+            ImGui.openPopup("Rename##RenameAssetPopup")
             BrowserPopupHandler.pendingOpenRenamePopup = false
         }
         if (BrowserPopupHandler.pendingOpenNewPlaylistPopup) {
-            ImGui.openPopup("NewPlaylistPopup")
+            ImGui.openPopup("New Playlist##NewPlaylistPopup")
             BrowserPopupHandler.pendingOpenNewPlaylistPopup = false
         }
         if (BrowserPopupHandler.pendingOpenExportQueuePopup) {
-            ImGui.openPopup("ExportTransQueuePopup") // only the transition queue panel raises this flag; the preset queues open their own
+            ImGui.openPopup("Export Transition Queue##ExportTransQueuePopup") // only the transition queue panel raises this flag; the preset queues open their own
             BrowserPopupHandler.pendingOpenExportQueuePopup = false
         }
         if (BrowserPopupHandler.pendingOpenExportFxQueuePopup) {
-            ImGui.openPopup("ExportFxQueuePopup")
+            ImGui.openPopup("Export A/B FX Queue##ExportFxQueuePopup")
             BrowserPopupHandler.pendingOpenExportFxQueuePopup = false
         }
         if (BrowserPopupHandler.pendingOpenExportFxBgQueuePopup) {
-            ImGui.openPopup("ExportFxBgQueuePopup")
+            ImGui.openPopup("Export BG FX Queue##ExportFxBgQueuePopup")
             BrowserPopupHandler.pendingOpenExportFxBgQueuePopup = false
         }
 

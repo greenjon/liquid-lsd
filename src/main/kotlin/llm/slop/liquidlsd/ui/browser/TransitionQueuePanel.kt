@@ -60,6 +60,7 @@ object TransitionQueuePanel {
         ))
 
         if (ImGui.beginChild("##trans_queue_items_scroll", 0f, 0f, false)) {
+            QueueToolbar.drawEmptyHint(TransitionQueueManager.queue.isEmpty())
             var moveFrom = -1
             var moveTo = -1
             var removeFromQueueIndex = -1
@@ -178,9 +179,8 @@ object TransitionQueuePanel {
 
             // Keyboard shortcuts
             val io = ImGui.getIO()
-            if (selectedIndex in TransitionQueueManager.queue.indices && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
-                if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
-                    ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
+            if (selectedIndex in TransitionQueueManager.queue.indices && !io.wantTextInput) {
+                if (DockActions.deleteKeyPressed()) {
                     removeFromQueueIndex = selectedIndex
                 }
             }

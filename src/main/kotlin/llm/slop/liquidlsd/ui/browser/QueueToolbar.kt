@@ -7,6 +7,7 @@ import llm.slop.liquidlsd.ui.ButtonChrome
 import llm.slop.liquidlsd.ui.Icons
 import llm.slop.liquidlsd.ui.UITheme
 import llm.slop.liquidlsd.ui.itemTooltip
+import llm.slop.liquidlsd.ui.shortcuts.ShortcutManager
 
 /**
  * Shared header of every Library queue column: a small caption naming the queue, then ONE row of
@@ -55,8 +56,9 @@ object QueueToolbar {
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             val glyphs = listOf("◀", "▶", Icons.PLAY, Icons.PAUSE, Icons.REPEAT, Icons.SHUFFLE, Icons.DOWNLOAD, Icons.TRASH)
             val btnW = glyphs.maxOf { ImGui.calcTextSize(it).x } + ImGui.getStyle().getFramePaddingX() * 2f
-            // Buttons keep their natural width (glyphs stay centered); a narrow column trims the gaps instead.
-            val count = if (s.auto != null) 7 else 6
+            // Buttons keep their natural width (glyphs stay centered); a narrow column trims the gaps instead. Every column has
+            // the same seven slots, so the strips line up across the Queues tab.
+            val count = 7
             val gap = ((ImGui.getContentRegionAvailX() - btnW * count) / (count - 1))
                 .coerceIn(0f, ImGui.getStyle().getItemSpacingX())
 
@@ -71,10 +73,16 @@ object QueueToolbar {
             }
 
             button("◀##${s.id}Prev", s.prevTooltip, onClick = s.onPrev)
+            ImGui.sameLine(0f, gap)
             if (s.auto != null) {
-                ImGui.sameLine(0f, gap)
                 val icon = if (s.auto.active) Icons.PAUSE else Icons.PLAY
                 button("$icon##${s.id}Auto", s.auto.tooltip, s.auto.lit, s.auto.onClick)
+            } else {
+                // FX queues have no timer of their own: the slot stays, greyed, so the strip matches the other columns.
+                ImGui.beginDisabled()
+                ButtonChrome.button("${Icons.PLAY}##${s.id}Auto", btnW, 0f)
+                ImGui.endDisabled()
+                itemTooltip("No Auto-VJ here: FX queues step with ◀ ▶, the controller, or their deck's preset queue.", allowWhenDisabled = true)
             }
             ImGui.sameLine(0f, gap)
             button("▶##${s.id}Next", s.nextTooltip, onClick = s.onNext)
@@ -93,5 +101,19 @@ object QueueToolbar {
 
         ImGui.separator()
         ImGui.spacing()
+    }
+
+    /**
+     * The muted hint an empty queue column shows instead of a blank list, naming the enqueue key ([bg]: the BG queue's). Call at
+     * the top of the column's item list.
+     */
+    fun drawEmptyHint(isEmpty: Boolean, bg: Boolean = false) {
+        if (!isEmpty) return
+        val key = ShortcutManager.getAction(if (bg) "library.queue_bg" else "library.queue_ab")?.currentKey
+            ?.takeIf { !it.isEmpty }?.toDisplayString()
+        val press = if (key != null) ", or select one and press $key" else ""
+        ImGui.pushStyleColor(ImGuiCol.Text, ImGui.getColorU32(ImGuiCol.TextDisabled))
+        ImGui.textWrapped("Empty. Drag items here$press.")
+        ImGui.popStyleColor()
     }
 }

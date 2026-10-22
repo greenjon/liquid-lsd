@@ -134,7 +134,7 @@ object MacroBindingEditor {
         drawRangeBar(binding, barLo, barHi, MacroCurve.mapToRange(control.value, binding), width, useLog)
 
         // Line 3: numeric Min/Max.
-        val fieldW = (width - 40f) * 0.5f
+        val fieldW = BindingEditorParts.minMaxFieldWidth(width, 6f)
         ImGui.setNextItemWidth(fieldW)
         drawMinField(binding, barLo, barHi, useLog)
         ImGui.sameLine(0f, 6f)

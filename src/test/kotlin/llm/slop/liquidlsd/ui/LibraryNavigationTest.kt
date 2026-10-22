@@ -105,7 +105,7 @@ class LibraryNavigationTest {
         }
         LibraryPanel.viewMode = LibraryViewMode.QUEUES
         assertEquals(
-            listOf(SelectionSource.QUEUE_AB, SelectionSource.QUEUE_BG, SelectionSource.FX_QUEUE_AB, SelectionSource.FX_QUEUE_BG, SelectionSource.TRANSITION_QUEUE),
+            listOf(SelectionSource.QUEUE_AB, SelectionSource.FX_QUEUE_AB, SelectionSource.QUEUE_BG, SelectionSource.FX_QUEUE_BG, SelectionSource.TRANSITION_QUEUE),
             LibraryNavigation.panes()
         )
         LibraryPanel.viewMode = LibraryViewMode.MAPS

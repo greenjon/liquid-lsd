@@ -39,6 +39,12 @@ object BindingEditorParts {
         return if (changed) stepCountBuf[0].coerceIn(2, 64) else null
     }
 
+    /** Width of each of a labelled Min and Max field side by side in [width], with [gap] between them, so the "Max" label isn't clipped. */
+    fun minMaxFieldWidth(width: Float, gap: Float): Float {
+        val labels = ImGui.calcTextSize("Min").x + ImGui.calcTextSize("Max").x + 2f * ImGui.getStyle().itemInnerSpacingX
+        return ((width - gap - labels) * 0.5f).coerceAtLeast(30f)
+    }
+
     /** Min field; returns the new value or null when unchanged. */
     fun minField(value: Float, lo: Float, hi: Float, log: Boolean, compact: Boolean, subject: String = "macro"): Float? {
         val s = if (log) 1f else ValueFormat.scaleFor(lo, hi)

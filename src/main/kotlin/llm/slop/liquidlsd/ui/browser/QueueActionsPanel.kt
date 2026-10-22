@@ -66,7 +66,7 @@ object QueueActionsPanel {
                 }
             },
             exportTooltip = "Export: save current queue sequence as a new playlist.",
-            onExport = { ImGui.openPopup("ExportQueuePopup") },
+            onExport = { ImGui.openPopup("Export A/B Queue##ExportQueuePopup") },
             clearTooltip = "Clear: empty the play queue.",
             onClear = {
                 session.playQueueManager.clearQueue()
@@ -76,6 +76,7 @@ object QueueActionsPanel {
         ))
         
         if (ImGui.beginChild("##queue_items_scroll", 0f, 0f, false)) {
+            QueueToolbar.drawEmptyHint(session.playQueueManager.queue.isEmpty())
             // Queue list
             var moveFrom = -1
             var moveTo = -1
@@ -259,9 +260,8 @@ object QueueActionsPanel {
         // Keyboard shortcuts (Delete / Backspace removes selected items from queue)
         val io = ImGui.getIO()
         val inOrder = selection.selectedItems.filter { it in session.playQueueManager.queue.indices }.sorted()
-        if (inOrder.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
-            if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
-                ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
+        if (inOrder.isNotEmpty() && !io.wantTextInput) {
+            if (DockActions.deleteKeyPressed()) {
                 removeIndices = inOrder
             }
         }

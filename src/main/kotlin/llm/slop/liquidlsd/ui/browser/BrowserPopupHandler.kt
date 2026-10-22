@@ -11,6 +11,7 @@ import llm.slop.liquidlsd.presets.FXBgQueueManager
 import llm.slop.liquidlsd.presets.FXQueueManager
 import llm.slop.liquidlsd.presets.TransitionQueueManager
 import llm.slop.liquidlsd.ui.LibraryPanel
+import llm.slop.liquidlsd.ui.ModalKeys
 import llm.slop.liquidlsd.ui.AssetItem
 import llm.slop.liquidlsd.ui.AssetType
 import llm.slop.liquidlsd.ui.FileSystemManager
@@ -34,6 +35,31 @@ object BrowserPopupHandler {
         deleteTargets = targets
         deleteTarget = targets.firstOrNull()
         pendingOpenDeletePopup = true
+    }
+
+    /** Opens the plain Rename modal (file name only) for [asset]. */
+    fun openRename(asset: AssetItem) {
+        renameTarget = asset
+        renameBuffer.set(asset.name)
+        pendingOpenRenamePopup = true
+    }
+
+    /** Drops a deleted FX or transition file from every playlist of [kind], as deleting a source preset already does for its playlists. */
+    private fun removeFromTokenPlaylists(kind: BrowseKind, path: String) {
+        val playlists = if (kind == BrowseKind.FX) FileSystemManager.scanAllFxPlaylists() else FileSystemManager.scanAllTransitionPlaylists()
+        for (pl in playlists) TokenPlaylistEdit.open(kind, File(pl.path))?.removeFile(path)
+    }
+
+    /** Opens the folder holding [file] in the system file manager. */
+    fun revealInFileManager(file: File) {
+        val parentDir = file.absoluteFile.parentFile
+        if (parentDir != null && parentDir.exists()) {
+            try {
+                java.awt.Desktop.getDesktop().open(parentDir)
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to open directory" }
+            }
+        }
     }
     var pendingOpenNewPlaylistPopup = false
     var pendingOpenExportQueuePopup = false
@@ -138,7 +164,7 @@ object BrowserPopupHandler {
     }
 
     fun drawRenameAssetPopup() {
-        if (ImGui.beginPopupModal("RenameAssetPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+        if (ImGui.beginPopupModal("Rename##RenameAssetPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             val target = renameTarget
             if (target == null) {
                 ImGui.closeCurrentPopup()
@@ -162,9 +188,11 @@ object BrowserPopupHandler {
             }
 
             ImGui.text("Rename $typeStr to:")
+            ModalKeys.focusOnOpen()
             ImGui.inputText("##renameAssetInput", renameBuffer)
+            val keyAnswer = ModalKeys.answer()
             
-            if (ButtonChrome.button("Rename", 120f, 0f)) {
+            if (ButtonChrome.button("Rename", 120f, 0f) || keyAnswer == true) {
                 val newName = renameBuffer.get().trim()
                 if (newName.isNotBlank()) {
                     FileSystemManager.renameFile(target.path, newName).onSuccess { newPath ->
@@ -196,7 +224,7 @@ object BrowserPopupHandler {
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
-            if (ButtonChrome.button("Cancel", 120f, 0f)) {
+            if (ButtonChrome.button("Cancel", 120f, 0f) || keyAnswer == false) {
                 renameBuffer.set("")
                 renameTarget = null
                 ImGui.closeCurrentPopup()
@@ -213,10 +241,10 @@ object BrowserPopupHandler {
      */
     fun drawDeleteAssetConfirmationPopup() {
         if (pendingOpenDeletePopup) {
-            ImGui.openPopup("ConfirmDeleteAssetPopup")
+            ImGui.openPopup("Delete##ConfirmDeleteAssetPopup")
             pendingOpenDeletePopup = false
         }
-        if (ImGui.beginPopupModal("ConfirmDeleteAssetPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+        if (ImGui.beginPopupModal("Delete##ConfirmDeleteAssetPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             val targets = if (deleteTargets.isNotEmpty()) deleteTargets else listOfNotNull(deleteTarget)
             if (targets.isEmpty()) {
                 ImGui.closeCurrentPopup()
@@ -254,13 +282,21 @@ object BrowserPopupHandler {
                 ImGui.textDisabled("Selected: $previewNames$suffix")
             }
             ImGui.separator()
-            if (ButtonChrome.button("Delete", 120f, 0f)) {
+            val keyAnswer = ModalKeys.answer()
+            if (ButtonChrome.button("Delete", 120f, 0f) || keyAnswer == true) {
                 for (target in targets) {
                     FileSystemManager.deleteFile(target.path).onSuccess {
                         if (target.type == AssetType.PRESET) {
                             PlaylistManager.removePresetFromAllPlaylists(target.path)
                             llm.slop.liquidlsd.presets.PlayQueueManager.removeFileFromQueue(File(target.path))
                             llm.slop.liquidlsd.presets.BgQueueManager.removeFileFromQueue(File(target.path))
+                        } else if (target.type == AssetType.FX_PRESET || target.type == AssetType.FX_CHAIN) {
+                            FXQueueManager.removeFileFromQueue(File(target.path))
+                            FXBgQueueManager.removeFileFromQueue(File(target.path))
+                            removeFromTokenPlaylists(BrowseKind.FX, target.path)
+                        } else if (target.type == AssetType.TRANSITION_PRESET) {
+                            TransitionQueueManager.removeFileFromQueue(File(target.path))
+                            removeFromTokenPlaylists(BrowseKind.TRANS, target.path)
                         } else if (target.type == AssetType.PLAYLIST) {
                             val currentPlaylistPath = LibraryPanel.selectedPlaylistFile?.absolutePath
                             if (target.path == currentPlaylistPath) {
@@ -286,7 +322,7 @@ object BrowserPopupHandler {
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
-            if (ButtonChrome.button("Cancel", 120f, 0f)) {
+            if (ButtonChrome.button("Cancel", 120f, 0f) || keyAnswer == false) {
                 deleteTarget = null
                 deleteTargets = emptyList()
                 ImGui.closeCurrentPopup()
@@ -296,7 +332,7 @@ object BrowserPopupHandler {
     }
 
     fun drawNewPlaylistPopup() {
-        if (ImGui.beginPopupModal("NewPlaylistPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+        if (ImGui.beginPopupModal("New Playlist##NewPlaylistPopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             val isTransMode = LibraryPanel.viewMode == LibraryPanel.LibraryViewMode.TRANS
             val isFxMode = LibraryPanel.viewMode == LibraryPanel.LibraryViewMode.FX
             val titleText = when {
@@ -306,8 +342,10 @@ object BrowserPopupHandler {
             }
             ImGui.text(titleText)
             ImGui.separator()
+            ModalKeys.focusOnOpen()
             ImGui.inputText("Name", newPlaylistNameBuffer)
-            if (ButtonChrome.button("Create", 120f, 0f)) {
+            val keyAnswer = ModalKeys.answer()
+            if (ButtonChrome.button("Create", 120f, 0f) || keyAnswer == true) {
                 val name = newPlaylistNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     if (isTransMode) {
@@ -345,7 +383,7 @@ object BrowserPopupHandler {
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
-            if (ButtonChrome.button("Cancel", 120f, 0f)) {
+            if (ButtonChrome.button("Cancel", 120f, 0f) || keyAnswer == false) {
                 ImGui.closeCurrentPopup()
             }
             ImGui.endPopup()
@@ -353,11 +391,13 @@ object BrowserPopupHandler {
     }
 
     fun drawExportQueuePopup(session: llm.slop.liquidlsd.SessionContext) {
-        if (ImGui.beginPopupModal("ExportQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+        if (ImGui.beginPopupModal("Export A/B Queue##ExportQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             ImGui.text("Export Queue as Playlist")
             ImGui.separator()
+            ModalKeys.focusOnOpen()
             ImGui.inputText("Playlist Name", exportQueueNameBuffer)
-            if (ButtonChrome.button("Export", 120f, 0f)) {
+            val keyAnswer = ModalKeys.answer()
+            if (ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) {
                 val name = exportQueueNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { playlist ->
@@ -371,7 +411,7 @@ object BrowserPopupHandler {
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
-            if (ButtonChrome.button("Cancel", 120f, 0f)) {
+            if (ButtonChrome.button("Cancel", 120f, 0f) || keyAnswer == false) {
                 exportQueueNameBuffer.set("")
                 ImGui.closeCurrentPopup()
             }
@@ -380,11 +420,13 @@ object BrowserPopupHandler {
     }
 
     fun drawExportBgQueuePopup() {
-        if (ImGui.beginPopupModal("ExportBgQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+        if (ImGui.beginPopupModal("Export BG Queue##ExportBgQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             ImGui.text("Export BG Queue as Playlist")
             ImGui.separator()
+            ModalKeys.focusOnOpen()
             ImGui.inputText("Playlist Name", exportBgQueueNameBuffer)
-            if (ButtonChrome.button("Export", 120f, 0f)) {
+            val keyAnswer = ModalKeys.answer()
+            if (ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) {
                 val name = exportBgQueueNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     PlaylistManager.createPlaylist(name, FileSystemManager.getPlaylistsRoot()).onSuccess { playlist ->
@@ -398,7 +440,7 @@ object BrowserPopupHandler {
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
-            if (ButtonChrome.button("Cancel", 120f, 0f)) {
+            if (ButtonChrome.button("Cancel", 120f, 0f) || keyAnswer == false) {
                 exportBgQueueNameBuffer.set("")
                 ImGui.closeCurrentPopup()
             }
@@ -407,11 +449,13 @@ object BrowserPopupHandler {
     }
 
     fun drawExportTransQueuePopup() {
-        if (ImGui.beginPopupModal("ExportTransQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+        if (ImGui.beginPopupModal("Export Transition Queue##ExportTransQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             ImGui.text("Export Transition Queue as Playlist")
             ImGui.separator()
+            ModalKeys.focusOnOpen()
             ImGui.inputText("Playlist Name", exportTransQueueNameBuffer)
-            if (ButtonChrome.button("Export", 120f, 0f)) {
+            val keyAnswer = ModalKeys.answer()
+            if (ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) {
                 val name = exportTransQueueNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     val root = FileSystemManager.getTransitionPlaylistsRoot()
@@ -431,7 +475,7 @@ object BrowserPopupHandler {
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
-            if (ButtonChrome.button("Cancel", 120f, 0f)) {
+            if (ButtonChrome.button("Cancel", 120f, 0f) || keyAnswer == false) {
                 exportTransQueueNameBuffer.set("")
                 ImGui.closeCurrentPopup()
             }
@@ -440,11 +484,13 @@ object BrowserPopupHandler {
     }
 
     fun drawExportFxQueuePopup() {
-        if (ImGui.beginPopupModal("ExportFxQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+        if (ImGui.beginPopupModal("Export A/B FX Queue##ExportFxQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             ImGui.text("Export A/B FX Queue as Playlist")
             ImGui.separator()
+            ModalKeys.focusOnOpen()
             ImGui.inputText("Playlist Name", exportFxQueueNameBuffer)
-            if (ButtonChrome.button("Export", 120f, 0f)) {
+            val keyAnswer = ModalKeys.answer()
+            if (ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) {
                 val name = exportFxQueueNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     val root = FileSystemManager.getFxPlaylistsRoot()
@@ -464,7 +510,7 @@ object BrowserPopupHandler {
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
-            if (ButtonChrome.button("Cancel", 120f, 0f)) {
+            if (ButtonChrome.button("Cancel", 120f, 0f) || keyAnswer == false) {
                 exportFxQueueNameBuffer.set("")
                 ImGui.closeCurrentPopup()
             }
@@ -473,11 +519,13 @@ object BrowserPopupHandler {
     }
 
     fun drawExportFxBgQueuePopup() {
-        if (ImGui.beginPopupModal("ExportFxBgQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
+        if (ImGui.beginPopupModal("Export BG FX Queue##ExportFxBgQueuePopup", imgui.flag.ImGuiWindowFlags.AlwaysAutoResize)) {
             ImGui.text("Export BG FX Queue as Playlist")
             ImGui.separator()
+            ModalKeys.focusOnOpen()
             ImGui.inputText("Playlist Name", exportFxBgQueueNameBuffer)
-            if (ButtonChrome.button("Export", 120f, 0f)) {
+            val keyAnswer = ModalKeys.answer()
+            if (ButtonChrome.button("Export", 120f, 0f) || keyAnswer == true) {
                 val name = exportFxBgQueueNameBuffer.get().trim()
                 if (name.isNotBlank()) {
                     val root = FileSystemManager.getFxPlaylistsRoot()
@@ -497,7 +545,7 @@ object BrowserPopupHandler {
                 ImGui.closeCurrentPopup()
             }
             ImGui.sameLine()
-            if (ButtonChrome.button("Cancel", 120f, 0f)) {
+            if (ButtonChrome.button("Cancel", 120f, 0f) || keyAnswer == false) {
                 exportFxBgQueueNameBuffer.set("")
                 ImGui.closeCurrentPopup()
             }

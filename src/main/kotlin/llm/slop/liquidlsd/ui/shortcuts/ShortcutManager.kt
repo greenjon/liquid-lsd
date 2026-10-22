@@ -115,6 +115,12 @@ object ShortcutManager {
         saveKeybindings()
     }
 
+    /** Whether any action is bound to [keyCode] with exactly [modifiers] (GLFW codes), e.g. so type-to-search leaves shortcut keys alone. */
+    fun isBound(keyCode: Int, modifiers: Int = 0): Boolean = actions.values.any { action ->
+        val key = action.currentKey
+        key != null && !key.isEmpty && key.keyCode == keyCode && key.modifiers == modifiers
+    }
+
     fun matchesKey(actionId: String, keyCode: Int, modifiers: Int = 0): Boolean {
         val action = actions[actionId] ?: return false
         val key = action.currentKey ?: return false

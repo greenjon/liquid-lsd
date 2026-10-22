@@ -27,4 +27,11 @@ class PlaylistItemsTest {
         assertEquals("/lib/t/one.lsdtrans", PlaylistItems.tokenForPayload(BrowseKind.TRANS, "/lib/t/one.lsdtrans"))
         assertEquals("/x/isf/wipe.fs", PlaylistItems.tokenForPayload(BrowseKind.FX, "/x/isf/wipe.fs"))
     }
+
+    @Test
+    fun `tokenNamesFile matches bare, relative and absolute tokens of a saved file only`() {
+        val path = "/lib/fx/sub/glow.lsdfx"
+        for (token in listOf(path, "sub/glow.lsdfx", "glow.lsdfx", "glow")) assertEquals(true, PlaylistItems.tokenNamesFile(token, path), token)
+        for (token in listOf("blur", "low", "other/glow.lsdfx", "/lib/fx/glow.lsdfx")) assertEquals(false, PlaylistItems.tokenNamesFile(token, path), token)
+    }
 }

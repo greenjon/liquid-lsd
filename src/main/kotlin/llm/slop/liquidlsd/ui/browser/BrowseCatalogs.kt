@@ -18,7 +18,7 @@ import java.io.File
 
 /**
  * Builds the [BrowseCatalog] for each kind from the live registries, the cached file-system scans and the playlist files.
- * Cheap enough to call every frame: a catalog is rebuilt only when an upstream list, the favorites version or a playlist file
+ * Cheap enough to call every frame: a catalog is rebuilt only when an upstream list, the favorites or recent version or a playlist file
  * changes, mirroring the row caches the old per-tab browser panels kept.
  */
 object BrowseCatalogs {
@@ -38,7 +38,7 @@ object BrowseCatalogs {
             BrowseKind.SRC -> listOf(VisualSourceRegistry.availableSources.toList(), FileSystemManager.scanAllPresets(), playlistAssets, ExternalVideoDiscovery.availableServers.value)
             BrowseKind.FX -> listOf(ISFFilterRegistry.availableFilters, FileSystemManager.scanAllFxPresets(), FileSystemManager.scanAllFxChains(), playlistAssets)
             BrowseKind.TRANS -> listOf(ISFTransitionRegistry.availableTransitions, FileSystemManager.scanAllTransitionPresets(), playlistAssets)
-        } + BrowseFavorites.version(kind) + playlistAssets.map { File(it.path).lastModified() }
+        } + BrowseFavorites.version(kind) + BrowseRecents.version(kind) + playlistAssets.map { File(it.path).lastModified() }
         val cached = caches[kind]
         if (cached != null && cached.inputs == inputs) return cached.catalog
         return build(kind, playlistAssets).also { caches[kind] = Cache(inputs, it) }
@@ -60,7 +60,7 @@ object BrowseCatalogs {
             val items = try { PlaylistParser.parseFile(File(a.path)) } catch (e: Exception) { emptyList() }
             BrowsePlaylist(a.name, a.path, items)
         }
-        return BrowseCatalog(kind, entries, playlists, BrowseFavorites.keys(kind))
+        return BrowseCatalog(kind, entries, playlists, BrowseFavorites.keys(kind), BrowseRecents.keys(kind).toList())
     }
 
     private fun srcEntries(): List<BrowseEntry> {

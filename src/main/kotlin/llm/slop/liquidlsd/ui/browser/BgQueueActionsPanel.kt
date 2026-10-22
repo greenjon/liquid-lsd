@@ -60,7 +60,7 @@ object BgQueueActionsPanel {
                 }
             },
             exportTooltip = "Export: save current background queue sequence as a new playlist.",
-            onExport = { ImGui.openPopup("ExportBgQueuePopup") },
+            onExport = { ImGui.openPopup("Export BG Queue##ExportBgQueuePopup") },
             clearTooltip = "Clear: empty the background queue.",
             onClear = {
                 BgQueueManager.clearQueue()
@@ -70,6 +70,7 @@ object BgQueueActionsPanel {
         ))
         
         if (ImGui.beginChild("##bg_queue_items_scroll", 0f, 0f, false)) {
+            QueueToolbar.drawEmptyHint(BgQueueManager.queue.isEmpty(), bg = true)
             // Queue list
             var moveFrom = -1
             var moveTo = -1
@@ -250,9 +251,8 @@ object BgQueueActionsPanel {
         // Keyboard shortcuts (Delete / Backspace removes selected items from queue)
         val io = ImGui.getIO()
         val inOrder = selection.selectedItems.filter { it in BgQueueManager.queue.indices }.sorted()
-        if (inOrder.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper) {
-            if (ImGui.isKeyPressed(ImGuiKey.Delete, false) ||
-                ImGui.isKeyPressed(ImGuiKey.Backspace, false)) {
+        if (inOrder.isNotEmpty() && !io.wantTextInput) {
+            if (DockActions.deleteKeyPressed()) {
                 removeIndices = inOrder
             }
         }
