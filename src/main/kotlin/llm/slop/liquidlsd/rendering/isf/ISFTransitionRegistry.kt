@@ -32,8 +32,12 @@ object ISFTransitionRegistry {
         cachedTransitions = transitions.values.toList().sortedBy { it.displayName }
     }
 
+    /**
+     * (Re)loads every bundled and user shader. A rescan drops the old masters without deleting their shaders:
+     * the decks' and mixer's instances share those programs and keep running on them.
+     */
     fun loadAll() {
-        disposeAll()
+        transitions.clear()
         loadBundledTransitions()
         scanUserTransitions()
         rebuildCache()

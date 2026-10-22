@@ -162,7 +162,16 @@ open class DynamicVisualSource(
         parameters.forEach { (name, param) ->
             list.add("$prefix/$displayName/$name" to param)
         }
-        list.add("$prefix/$displayName/Gain" to globalAlpha)
+        // Gain (globalAlpha) is listed by the deck as "<deck>/Gain", so mappings survive a source change.
         return list
+    }
+
+    companion object {
+        /**
+         * A source with its own camera pitch and yaw (`RotateX`/`RotateY`, or spelled with a space) frames itself, so it
+         * counts as 3D even without `"is3D": true` in its header: the deck's 2D Zoom / Rotate Z then stay off.
+         */
+        fun hasCameraRotation(names: Set<String>): Boolean =
+            ("RotateX" in names || "Rotate X" in names) && ("RotateY" in names || "Rotate Y" in names)
     }
 }

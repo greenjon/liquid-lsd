@@ -63,10 +63,10 @@ object ParametersTabs {
         val tabs = listOf(
             Triple("MST", "Mixer",   "Master: deck levels and alphas, master level (LEVELS), and queue, clock and randomize triggers (CTRL). Shown with the Clock row."),
             Triple("OUT", "Mixer",   "Output stage: Master FX (FX) and Crossfader/Transitions (TRANS)."),
-            Triple("A",   "Deck A",  if (deckAEmpty) "Deck A [EMPTY] — Click to assign a source or preset." else "Deck A: Visual source (SRC) and insert FX (FX)."),
-            Triple("B",   "Deck B",  if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B: Visual source (SRC) and insert FX (FX)."),
-            Triple("BG",  "Deck BG", if (deckBGEmpty) "Deck BG [EMPTY] — Click to assign a source or preset." else "Deck BG: Visual source (SRC) and insert FX (FX)."),
-            Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV: Visual source (SRC) and insert FX (FX).")
+            Triple("A",   "Deck A",  if (deckAEmpty) "Deck A [EMPTY] — Click to assign a source or preset." else "Deck A: its source (SRC) and FX chain (FX)."),
+            Triple("B",   "Deck B",  if (deckBEmpty) "Deck B [EMPTY] — Click to assign a source or preset." else "Deck B: its source (SRC) and FX chain (FX)."),
+            Triple("BG",  "Deck BG", if (deckBGEmpty) "Deck BG [EMPTY] — Click to assign a source or preset." else "Deck BG: its source (SRC) and FX chain (FX)."),
+            Triple("PV",  "Deck PV", if (deckPVEmpty) "Deck PV [EMPTY] — Click to assign a source or preset." else "Deck PV: its source (SRC) and FX chain (FX).")
         )
         val buttonWidth = calculateLeftTabsWidth(session)
         val buttonHeight = calculateLeftTabsHeight(session)
@@ -226,9 +226,9 @@ object ParametersTabs {
                     }
                 }
                 val tooltip = when (tab) {
-                    "SRC" -> "Source: Parameters for active visual source, zoom, and rotation."
+                    "SRC" -> "Source: the deck's Gain, Deck Zoom and Deck Rotate, then the source's own parameters."
                     "FX" -> if (state.activeTopTab == "Mixer") "Master FX: a chain of 3 serial ISF effect slots on the master output." else "FX: this deck's chain of 3 serial ISF effect slots."
-                    "LEVELS" -> "Levels: the master level, and each deck's level and alpha."
+                    "LEVELS" -> "Levels: the master level and each deck's level fader. A deck's Gain is on its SRC tab."
                     "CTRL" -> "Control: queue and randomize triggers. The same triggers are on the Clock row in Perform."
                     "TRANS" -> "Transition: crossfade and fade speed, transition shader selection, bypass, dry/wet, and dynamic parameters."
                     else -> "$tab parameters"
@@ -313,8 +313,7 @@ object ParametersTabs {
     }
 
     /**
-     * MST > LEVELS: the master level, then each deck's level (the mixer fader, `Mixer/level<Deck>`) and alpha (its source's Gain, the
-     * same parameter and path as the deck's SRC tab). An empty deck has no source to carry an alpha, so only its level shows.
+     * MST > LEVELS: the master level, then each deck's level (the mixer fader, `Mixer/level<Deck>`). A deck's Gain is on its SRC tab.
      */
     private fun drawMixerLevelsTab(
         session: llm.slop.liquidlsd.SessionContext,
@@ -329,25 +328,17 @@ object ParametersTabs {
     ) {
         var row = 0
         ParametersRenderer.drawParamRow(session, "Master level", "Mixer/masterLevel", mixer.masterLevel, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-        for (i in MIXER_LEVEL_DECKS.indices) {
-            val deckLabel = MIXER_LEVEL_DECKS[i]
-            val deck = when (i) { 0 -> mixer.deckA; 1 -> mixer.deckB; 2 -> mixer.deckBG; else -> mixer.deckPV }
+        for (i in MIXER_LEVEL_LABELS.indices) {
             val level = when (i) { 0 -> mixer.levelA; 1 -> mixer.levelB; 2 -> mixer.levelBG; else -> mixer.levelPV }
             ParametersRenderer.drawParamRow(session, MIXER_LEVEL_LABELS[i], MIXER_LEVEL_PATHS[i], level, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-            if (deck.isEmpty) continue
-            val source = deck.source
-            ParametersRenderer.drawParamRow(session, MIXER_ALPHA_LABELS[i], gainPathFor(deckLabel, source), source.globalAlpha, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
         }
     }
 
-    private val MIXER_LEVEL_DECKS = arrayOf("Deck A", "Deck B", "Deck BG", "Deck PV")
+    private const val DECK_ZOOM_TIP = "Scales the deck's picture (2D sources). 1 = the source fills the frame height. Separate from a generator's own Zoom, if it has one. A preset keeps its value; picking a new source resets it."
+    private const val DECK_ROTATE_TIP = "Rolls the deck's picture (2D sources). Separate from a generator's own rotation, if it has one. A preset keeps its value; picking a new source resets it."
     private val MIXER_LEVEL_LABELS = arrayOf("Level A", "Level B", "Level BG", "Level PV")
-    private val MIXER_ALPHA_LABELS = arrayOf("Alpha A", "Alpha B", "Alpha BG", "Alpha PV")
     private val MIXER_LEVEL_PATHS = arrayOf("Mixer/levelA", "Mixer/levelB", "Mixer/levelBG", "Mixer/levelPV")
 
-    /** The path of a deck source's Gain (global alpha) parameter: what the deck's SRC tab lists, so bindings and presets keep working. */
-    private fun gainPathFor(deckLabel: String, source: llm.slop.liquidlsd.rendering.VisualSource): String =
-        if (source is llm.slop.liquidlsd.rendering.ExternalVideoSource) "$deckLabel/External Video/Gain" else "$deckLabel/${source.displayName}/Gain"
 
     private fun drawMixerCtrlTab(
         session: llm.slop.liquidlsd.SessionContext,
@@ -491,12 +482,13 @@ object ParametersTabs {
 
         drawSubGroupContent(session, deckLabel, "SRC", state) {
             var row = 0
-            val gainPath = gainPathFor(deckLabel, activeSource)
-            ParametersRenderer.drawParamRow(session, "Gain", gainPath, activeSource.globalAlpha, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+            ParametersRenderer.drawParamRow(session, "Gain", "$deckLabel/Gain", activeSource.globalAlpha, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
 
             if (!activeSource.is3D) {
-                ParametersRenderer.drawParamRow(session, "Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
-                ParametersRenderer.drawParamRow(session, "Rotate Z", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo)
+                ParametersRenderer.drawParamRow(session, "Deck Zoom", "$deckLabel/View/Zoom", deck.viewZoom, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo,
+                    descriptionOverride = DECK_ZOOM_TIP)
+                ParametersRenderer.drawParamRow(session, "Deck Rotate", "$deckLabel/View/RotateZ", deck.viewRotateZ, state, labelColW, mixer, gridStartX, row++, getCvColumns, getColumnOffset, getCvColor, onPushUndo,
+                    descriptionOverride = DECK_ROTATE_TIP)
             }
             if (activeSource is llm.slop.liquidlsd.rendering.StructuredEditorSource && activeSource is DynamicVisualSource) {
                 StructuredEditorPanel.draw(

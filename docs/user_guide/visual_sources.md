@@ -1,6 +1,6 @@
 # Visual Sources
 
-Each deck runs one visual source at a time. Sources range from the built-in procedural generators to ISF shaders you drop in from the internet or write yourself. On top of the source, each deck has a chain of three effect slots.
+Each deck runs one source at a time. Sources range from the built-in procedural generators to ISF shaders you drop in from the internet or write yourself, and live video from other apps. On top of the source, each deck has a chain of three effect slots.
 
 ---
 
@@ -8,7 +8,7 @@ Each deck runs one visual source at a time. Sources range from the built-in proc
 
 Click a deck's source badge and the Library below lists sources for that deck (see [Your Workspace](your_workspace.md) / [Macros & the Modular Rack](macros_and_rack.md)). You can search by name, tag, or author. Browse automatically filters to show only sources appropriate for what you're assigning — generators for the main source slot, effects for the FX slots, and transitions for the mixer. Picks apply immediately and the list stays open, so you can try several in a row.
 
-To remove the current source, click **Detach** or **None**.
+To empty a deck, click **Eject** on its row (its FX chain stays). A preset whose generator isn't installed, or failed to compile, won't load: you get a message naming the missing source, and the deck keeps what it was playing.
 
 ---
 
@@ -30,7 +30,11 @@ Streams are not files, so they cannot be saved as presets, added to playlists or
 
 Liquid LSD includes a curated suite of 34 built-in procedural generators spanning harmonic geometry, 3D raymarching, 3D fractals, volumetric gas, 4D polytopes, organic fluid dynamics, living simulations, acoustic wavefields, and a set of light generators that run comfortably on integrated graphics.
 
-The raymarchers (Icosa-H3, Gyroid Hyperspace, 4D Hyper-Slice, Nebula Volume and the fractals below) show a warning triangle in the browser: they are GPU-intensive and can run slowly on integrated graphics. The fractals are tuned for a mid-range discrete GPU (an RTX A2000 or better); every one has a **Quality** knob, and lowering it is the first thing to try if a deck stutters.
+The raymarchers (Icosa-H3, Gyroid Hyperspace, 4D Hyper-Slice, Nebula Volume and the fractals below) show a gauge mark in the browser: they are GPU-intensive and can run slowly on integrated graphics. The fractals are tuned for a mid-range discrete GPU (an RTX A2000 or better); every one has a **Quality** knob, and lowering it is the first thing to try if a deck stutters.
+
+**Decks off air cost less.** Deck PV only feeds its monitor, so it renders at half the output size (full size when you send it out over Spout / Syphon / PipeWire). With **Off-air decks at half frame rate** on (*Preferences > General*, on by default), a deck the output can't show at the moment (A or B faded fully across, a deck or the master at level 0, and PV) renders every other frame, leaving the GPU to the decks on air. Its monitor runs at half rate, and simulations and feedback trails on it advance at half speed until it comes on air. A deck you stream always renders every frame.
+
+**Updates.** When you install a new version, bundled generator files you haven't changed are updated to the new version; a file you edited is kept as it is (the log says so).
 
 ### Mandala (`mandala`)
 
@@ -189,7 +193,7 @@ A volumetric nebula: the camera flies through glowing gas filaments that are lit
 
 ### Reaction Diffusion (`reaction_diffusion`)
 
-A Gray-Scott chemical simulation on a persistent 512 x 512 grid that grows maze, worm, coral, spot and splitting-cell patterns, lit as relief. The grid is fixed, so it costs the same at any output size and does not show a heavy-shader triangle.
+A Gray-Scott chemical simulation on a persistent 512 x 512 grid that grows maze, worm, coral, spot and splitting-cell patterns, lit as relief. The grid is fixed, so it costs the same at any output size and does not show the heavy-shader gauge.
 
 - **Regime, Feed Trim, Kill Trim**: Position along the feed/kill path through the pattern types, and fine trims. The kill rate is kept inside the band where patterns exist, so extreme trims flatten out instead of going black. After a change the pattern needs a few seconds to re-form.
 - **Diffusion**: Scale of the pattern.
@@ -217,7 +221,7 @@ A continuous cellular automaton on a persistent 256 x 256 grid. A smooth ring ke
 
 ### Quasicrystal (`quasicrystal`)
 
-Five to eight rotated cosine gratings with drifting phases add up to Penrose-like quasi-periodic patterns. Light enough for integrated graphics, like the other generators in this group (no GPU-intensive triangle).
+Five to eight rotated cosine gratings with drifting phases add up to Penrose-like quasi-periodic patterns. Light enough for integrated graphics, like the other generators in this group (no heavy-shader gauge).
 
 - **Gratings**: How many gratings, 5 to 8. Six gives a plain hexagonal lattice rather than a quasi-periodic one.
 - **Style, Palette**: Smooth, banded, two-tone or neon-line rendering, and four cosine palettes.
@@ -383,22 +387,22 @@ The Garden starts with about 150 curated flames (`library/presets/garden/curated
 
 **Importing `.flame` files.** In the Sources browser, the `...` menu has **Import Flame...**. Pick a flame genome (your own file) and every flame in it becomes a Fractal Flame preset in `library/presets/imported-flames/`. Xforms, affines, the final xform, up to three variations per xform and the camera come across. Variations Fractal Flame does not have (super_shape, lazysusan and mobius are the ones skipped for now; `linear3D` and `spherical3D` come in as their flat twins `linear` and `spherical`, and the notes say so), values beyond a parameter's range, the tone settings, and any 3D camera do not (the palette does come across and is saved inside the preset, so it stays portable); the preset's notes say what was dropped. Imported flames come in with Toe 0 (the original has no toe, and a toe wipes out a sparse flame), a Softness from the original's filter, Smooth 0.5, and Decay 0.85, because they were made for millions of samples and this generator draws far fewer; lower it for crisp, trail-free frames. Flames whose attractor spreads far beyond the view (rings2-1.flame is one) still look sparse on a large deck even with Smooth (raise it, or Softness, for a softer look): a flame's shape is exact, but its smoothness needs samples. They are a starting point: tune Exposure, Decay and Toe to taste, and breed or mutate them like any other.
 
-Fractal Flame is experimental in this build: it is not part of the stock generator set yet, and the web player version is not done.
+Fractal Flame is experimental in this build: it is listed with the other sources, but the web player can't play it yet.
 
 ---
 
 ## Deck Transform & Source Parameters (SRC Tab)
 
-Every deck has an **SRC** tab that combines universal canvas framing with the active generator's native parameters:
+Every deck has an **SRC** tab (in its Edit row) that combines the deck's framing with the active generator's own parameters:
 
-- **Gain** — Global source opacity / intensity level (positioned at row 0).
-- **Zoom** — Scales from 0.1× to 5.0× (for 2D sources). At 1.0, the source fills the vertical frame height exactly.
-- **Rotate Z** — Roll the image clockwise or counter-clockwise (for 2D sources).
-- **Generator Parameters** — All ISF generator inputs (lobes, frequencies, noise scale, color palette) follow immediately after the transform controls.
+- **Gain**: the deck's opacity / intensity, before its level fader in the mixer. Its address is `Deck A/Gain` (and so on), so a MIDI, OSC or macro mapping to it keeps working whatever the deck plays. A preset, or a freshly picked source, sets its value.
+- **Zoom**: scales the image from 0.1× to 5.0× (2D sources only). At 1.0 the source fills the frame height exactly.
+- **Rotate Z**: rolls the image (2D sources only).
+- **Generator parameters**: all of the generator's own inputs, after the framing controls.
 
-For **native 3D sources** (e.g. Gyroid, Hyper-Mesh, Icosahedron), the shader handles camera transforms internally, so the deck-level 2D Zoom/Rotate Z sliders are automatically omitted in favor of the generator's internal camera rotation (`Rotate X`, `Rotate Y`, `Rotate Z`) and zoom controls.
+**Native 3D sources** (the raymarchers such as Gyroid Hyperspace, Icosa-H3, 4D Hyper-Slice and the fractals) frame themselves, so the deck's Zoom and Rotate Z are left out in favour of the generator's own camera (`Rotate X`, `Rotate Y`, `Rotate Z`, `Zoom`).
 
-To elevate any flat 2D source into 3D geometry (Tri-Axial, Cube Cage, Hex-Planar, or Tetrahedral Kaleidoscope), select the **3D Elevation** filter in any FX slot under the **FX** tab.
+To elevate any flat 2D source into 3D geometry (Tri-Axial, Cube Cage, Hex-Planar, or Tetrahedral Kaleidoscope), put the **3D Elevation** filter in any FX slot under the **FX** tab.
 
 ---
 
@@ -444,11 +448,19 @@ Drop `.fs` (and optional `.vs`) shader files into the right folder:
 - **Post-processing effects** → `library/filters/`
 - **Mixer transitions** → `library/transitions/`
 
-The app reads the ISF JSON header inside each shader file, automatically sets up parameter sliders in the Cell Config panel, and exposes those parameters to the CV modulation matrix. No configuration required.
+The app reads the ISF JSON header inside each shader file, automatically lists its parameters in the deck's SRC tab, and makes every one of them available to modulators, macros and MIDI/OSC learn. No configuration required.
 
 ### Audio in your shaders
 
 Shaders can read the live audio through the `audioFFT` sampler (Shadertoy-style `iChannel0` is the same texture), a 512x2 single-channel texture. Row 0 (`y = 0.25`) is the spectrum: 512 bins from 0 Hz to half the sample rate, 0 to 1 on a decibel scale (full scale is 1, -80 dB is 0), with a quick decay so bars fall smoothly. Row 1 (`y = 0.75`) is the waveform, centred on 0.5. Example: `float level = texture(audioFFT, vec2(pow(uv.x, 2.0), 0.25)).r;` gives a bar height with more resolution at the low end.
+
+Mouse uniforms (`iMouse`, `u_mouse`, `mouse`) always read the centre of the frame with no click: the app's cursor is you working the controls, so it never steers the picture.
+
+### Naming and 3D sources
+
+A shader's file name (without `.fs`) is its id, which presets use to find it. Two shaders with the same file name can't both load: the first one found wins and the other is skipped with a warning in the log, so rename one of them. This includes a shader named like a bundled one (`metaballs.fs`).
+
+A shader that frames itself in 3D can add `"is3D": true` to its ISF header, so the deck's 2D Zoom and Rotate Z are hidden. Inputs named `RotateX` and `RotateY` (or `Rotate X` and `Rotate Y`) count as 3D too. Deck Zoom and Rotate Z act through `isf_FragNormCoord`, so a 2D shader that computes its coordinates from `gl_FragCoord` alone won't zoom or rotate with them.
 
 ### Marking a shader as GPU-intensive
 
@@ -458,7 +470,7 @@ Heavy shaders (raymarchers, fractal folds with many iterations) can run slowly o
 "LSD_COST": 3,
 ```
 
-Shaders declared `3` show a warning triangle in the browser, and their tooltip says they may run slowly on integrated graphics. The bundled raymarchers and fractals are all declared `3`. Other ISF programs ignore the key. If a shader is slow, lowering iteration or step-count parameters helps more than anything else.
+Shaders declared `3` show a gauge mark in the browser, and their tooltip says they may run slowly on integrated graphics. The bundled raymarchers and fractals are all declared `3`. Other ISF programs ignore the key. If a shader is slow, lowering iteration or step-count parameters helps more than anything else.
 
 ### Standard ISF search paths
 
@@ -474,6 +486,6 @@ Liquid LSD also scans these locations at startup:
 
 Go to **Preferences → Shader Locations** to add any folder at runtime — handy for USB drives or git repos full of shaders. The status column shows whether each folder is active, missing (e.g. a USB stick that's not plugged in), or unreadable. Hit **Rescan Now** to pick up new files without restarting.
 
-### Live coding
+### Adding shaders while the app runs
 
-If you're writing or tweaking shaders while the app is running, just save your file — Liquid LSD detects the change and recompiles in the background. If the shader has a syntax error, the current frame keeps running while the error is logged. No interruptions on stage.
+New shader files are picked up by **Rescan Now** (Preferences → Shader Locations). A shader that's already loaded keeps the version it started with until you restart the app; editing it on disk doesn't change what plays. A generator that fails to compile shows a red checkerboard; Browse marks it ⚠ *failed to compile*, and hovering it shows the first compiler error (the full one is in the log).

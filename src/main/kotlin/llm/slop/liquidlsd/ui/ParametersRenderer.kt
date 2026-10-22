@@ -202,12 +202,8 @@ object ParametersRenderer {
                 val keyParts = paramKey.split("/")
                 val deckLabel = if (keyParts.size >= 1) keyParts[0] else ""
                 val sourceId = if (keyParts.size >= 2) {
-                    // Map display-name segment back to source id for feedback/mixer params
-                    when (val seg = keyParts[1].lowercase()) {
-                        "fb" -> "feedback"
-                        "mixer" -> "mixer"
-                        else -> seg.replace(" ", "_")
-                    }
+                    // Map the display-name segment back to a source id ("mixer" stays as is); "Deck A/Gain" is a deck parameter
+                    if (keyParts.size == 2 && keyParts[0].startsWith("Deck")) "deck" else keyParts[1].lowercase().replace(" ", "_")
                 } else ""
                 val paramName = if (keyParts.size >= 3) keyParts.drop(2).joinToString("/") else label
 
@@ -217,8 +213,6 @@ object ParametersRenderer {
                 }
 
                 val description = descriptionOverride ?: when (sourceId) {
-                    "feedback" -> SourceDocRegistry.paramDescriptions["feedback/fb${paramName.replace(" ", "")}"]
-                        ?: SourceDocRegistry.paramDescriptions["feedback/$paramName"] ?: ""
                     "mixer" -> {
                         val mixerKey = if (keyParts.size >= 2) keyParts[1] else paramName
                         SourceDocRegistry.getMixerParamDescription(mixerKey)

@@ -27,8 +27,8 @@ class DeckPresetController(
         val resolvedTags = tags ?: slot?.let { session.presetManager.cachedDto(it)?.tags } ?: emptyList()
 
         val dto = deck.toDto(cleanName, resolvedTags)
-        slot?.let { session.presetManager.setActive(it, cleanName, dto) }
-        val file = File("library/presets/$cleanName.lsd")
+        val file = slot?.let { session.presetManager.saveFileFor(it, cleanName) } ?: File("library/presets/$cleanName.lsd")
+        slot?.let { session.presetManager.setActive(it, cleanName, dto, file) }
         val deckIndex = slot?.index ?: -1
         session.presetRepository.saveDeckPresetAsync(file, deck, cleanName, resolvedTags, deckIndex)
     }
@@ -62,7 +62,7 @@ class DeckPresetController(
                 confirmLabel = "Save",
                 defaultName = defaultName,
                 defaultTags = defaultTags,
-                originalPath = activeName?.let { "library/presets/$it.lsd" }
+                originalPath = activeName?.let { name -> slot?.let { session.presetManager.saveFileFor(it, name).path } }
             ) { name, tags ->
                 saveDeckPreset(mixer, name, deck, isDeckA, tags)
             }

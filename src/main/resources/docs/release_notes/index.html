@@ -1292,6 +1292,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#sources-clearer-badge-one-gain-lighter-off-air-decks-uiperformancedeckcontrolskt-uiparameterstabskt-uibrowser-uidecksourcepickerkt-renderingdeckkt-renderingdeckrenderbudgetkt-renderingrendererkt-renderingvisualsourceregistrykt-presetsdeckopskt-parametersparameterresolverkt-mainkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources: Clearer Badge, One Gain, Lighter Off-Air Decks (ui/PerformanceDeckControls.kt, ui/ParametersTabs.kt, ui/browser/*, ui/DeckSourcePicker.kt, rendering/Deck.kt, rendering/DeckRenderBudget.kt, rendering/Renderer.kt, rendering/VisualSourceRegistry.kt, presets/DeckOps.kt, parameters/ParameterResolver.kt, Main.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#source-fixes-renderingdeckkt-renderingvisualsourceregistrykt-renderingisfisfvisualsourcekt-modelspresetmodelskt-presetsdeckopskt-presetspresetmanagerkt-uideckpresetcontrollerkt-uishaderlocationspreferencespanelkt-uiperformancedeckcontrolskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source Fixes (rendering/Deck.kt, rendering/VisualSourceRegistry.kt, rendering/isf/ISFVisualSource.kt, models/PresetModels.kt, presets/DeckOps.kt, presets/PresetManager.kt, ui/DeckPresetController.kt, ui/ShaderLocationsPreferencesPanel.kt, ui/PerformanceDeckControls.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fx-polish-uifxchainheaderkt-uifxslotcellkt-renderingfxchainkt-presetsfxshortlistkt-presetsfxopskt-presetssessionserializerkt-renderingrendererkt-uifxchainmacrostripkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6578,6 +6600,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#sources-clearer-badge-one-gain-lighter-off-air-decks-uiperformancedeckcontrolskt-uiparameterstabskt-uibrowser-uidecksourcepickerkt-renderingdeckkt-renderingdeckrenderbudgetkt-renderingrendererkt-renderingvisualsourceregistrykt-presetsdeckopskt-parametersparameterresolverkt-mainkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sources: Clearer Badge, One Gain, Lighter Off-Air Decks (ui/PerformanceDeckControls.kt, ui/ParametersTabs.kt, ui/browser/*, ui/DeckSourcePicker.kt, rendering/Deck.kt, rendering/DeckRenderBudget.kt, rendering/Renderer.kt, rendering/VisualSourceRegistry.kt, presets/DeckOps.kt, parameters/ParameterResolver.kt, Main.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#source-fixes-renderingdeckkt-renderingvisualsourceregistrykt-renderingisfisfvisualsourcekt-modelspresetmodelskt-presetsdeckopskt-presetspresetmanagerkt-uideckpresetcontrollerkt-uishaderlocationspreferencespanelkt-uiperformancedeckcontrolskt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Source Fixes (rendering/Deck.kt, rendering/VisualSourceRegistry.kt, rendering/isf/ISFVisualSource.kt, models/PresetModels.kt, presets/DeckOps.kt, presets/PresetManager.kt, ui/DeckPresetController.kt, ui/ShaderLocationsPreferencesPanel.kt, ui/PerformanceDeckControls.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#fx-polish-uifxchainheaderkt-uifxslotcellkt-renderingfxchainkt-presetsfxshortlistkt-presetsfxopskt-presetssessionserializerkt-renderingrendererkt-uifxchainmacrostripkt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11839,6 +11883,33 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="sources-clearer-badge-one-gain-lighter-off-air-decks-uiperformancedeckcontrolskt-uiparameterstabskt-uibrowser-uidecksourcepickerkt-renderingdeckkt-renderingdeckrenderbudgetkt-renderingrendererkt-renderingvisualsourceregistrykt-presetsdeckopskt-parametersparameterresolverkt-mainkt">Sources: Clearer Badge, One Gain, Lighter Off-Air Decks (<code>ui/PerformanceDeckControls.kt</code>, <code>ui/ParametersTabs.kt</code>, <code>ui/browser/*</code>, <code>ui/DeckSourcePicker.kt</code>, <code>rendering/Deck.kt</code>, <code>rendering/DeckRenderBudget.kt</code>, <code>rendering/Renderer.kt</code>, <code>rendering/VisualSourceRegistry.kt</code>, <code>presets/DeckOps.kt</code>, <code>parameters/ParameterResolver.kt</code>, <code>Main.kt</code>)</h3>
+<ul>
+<li><strong>The badge says what a preset plays:</strong> <code>curated-0001 · Fractal flame</code>, the source dimmed after the preset name (dropped first when space is short; the tooltip always has it). In Browse a saved preset's info column starts with its source, and a preset whose source isn't installed shows ⚠ and says it won't load.</li>
+<li><strong>Gain is one deck parameter, <code>Deck A/Gain</code></strong> (and so on), so a MIDI, OSC or macro mapping on it keeps working whatever the deck plays. Mappings saved to the old per-source address (<code>Deck A/Mandala/Gain</code>) still work. The duplicate <strong>Alpha</strong> rows under MST &gt; LEVELS are gone; LEVELS is the level faders.</li>
+<li><strong>Deck Zoom and Deck Rotate</strong> are the deck's own framing rows on the SRC tab, so they no longer look like a second copy of a generator's Zoom. Picking a new source resets them; a preset keeps its own.</li>
+<li><strong>Clicking the stock source of the preset you're playing loads that source's defaults.</strong> Clicking the source a deck already plays bare still does nothing.</li>
+<li><strong>The A/B queue arrows say where they load:</strong> both rows' tooltips name the off-air deck the next item goes to.</li>
+<li><strong>Off-air decks cost less GPU.</strong> PV renders at half the output size unless it's streamed. With <em>Off-air decks at half frame rate</em> (Preferences &gt; General, on by default), a deck the output can't show renders every other frame; its monitor runs at half rate and simulations on it run at half speed until it comes on air. Streamed decks always render in full.</li>
+<li><strong>Shaders no longer follow the mouse.</strong> <code>iMouse</code> / <code>u_mouse</code> read the centre of the frame, so moving the cursor around the UI doesn't steer the output.</li>
+<li><strong>A source that fails to compile is marked</strong> ⚠ in Browse, with the first compiler error on hover.</li>
+<li><strong>Bundled source fixes reach existing installs.</strong> On startup a bundled generator file you haven't edited is updated to the new version; an edited one is kept.</li>
+<li><strong>The empty-deck card</strong> has one <em>Add Source</em> button that opens Browse on the deck's sources and presets (the long flat preset menu is gone), in the theme's colours.</li>
+<li><strong>One name:</strong> sources are <em>sources</em> (a procedural one is a <em>generator</em>); "visual source", "Gen" and "Stock Generator" are gone.</li>
+</ul>
+<h3 id="source-fixes-renderingdeckkt-renderingvisualsourceregistrykt-renderingisfisfvisualsourcekt-modelspresetmodelskt-presetsdeckopskt-presetspresetmanagerkt-uideckpresetcontrollerkt-uishaderlocationspreferencespanelkt-uiperformancedeckcontrolskt">Source Fixes (<code>rendering/Deck.kt</code>, <code>rendering/VisualSourceRegistry.kt</code>, <code>rendering/isf/ISFVisualSource.kt</code>, <code>models/PresetModels.kt</code>, <code>presets/DeckOps.kt</code>, <code>presets/PresetManager.kt</code>, <code>ui/DeckPresetController.kt</code>, <code>ui/ShaderLocationsPreferencesPanel.kt</code>, <code>ui/PerformanceDeckControls.kt</code>)</h3>
+<ul>
+<li><strong>Tagged presets no longer show as unsaved the moment they load.</strong> Every garden, curated and imported flame (and any preset with tags or notes) showed <code>*</code> and a red Save right away, and loading something else over it asked about unsaved changes.</li>
+<li><strong>Changing sources no longer leaks GPU memory.</strong> Picking a generator or loading a preset left the previous one's buffers allocated (tens of MB per Fractal Flame load, plus simulation grids and feedback buffers), so a long queue of flames kept growing. An external-video stream you switch away from is disconnected too.</li>
+<li><strong>Save writes back where the preset came from.</strong> Saving a preset loaded from a subfolder (garden, imported-flames, your own folders) used to create a second copy at the top of <code>presets/</code>. Save As with a new name still saves to <code>presets/</code>. Auto Save follows the same rule.</li>
+<li><strong>A preset whose generator is missing won't load.</strong> It used to keep the previous generator, reset its parameters and show the preset's name on it. You now get a message naming the missing source, and the deck is left as it was. In a restored session such a deck comes back empty and is listed under missing items.</li>
+<li><strong>Presets of shaders added after startup now load.</strong> Sources picked up by Rescan Now could be picked, but their presets fell back to the previous generator.</li>
+<li><strong>Rescan Now and Add Folder no longer touch the GPU off the render thread</strong>, and rescanning no longer breaks effects and transitions already in use.</li>
+<li><strong>Deck Zoom and Rotate Z now work on Isometric Voxels and Wave Ripples.</strong> User shaders with inputs named <code>RotateX</code> / <code>RotateY</code> now count as 3D, like the bundled raymarchers.</li>
+<li><strong>Removed 16 deck parameters that did nothing</strong> (the old deck feedback and 3D-view controls). They no longer appear as MIDI/OSC/macro targets or get randomized, and new presets don't save them. Older presets still load.</li>
+<li><strong>Tooltips:</strong> Eject says it empties the deck and keeps its FX chain; the deck's die lists what it randomizes; Save is greyed out on an external-video deck, with the reason. A user shader's parameter no longer borrows the old Feedback description because of its name.</li>
+<li><strong>Docs:</strong> the Visual Sources page no longer promises live shader recompiling, and documents shader ids, <code>is3D</code> and the Eject behaviour.</li>
+</ul>
 <h3 id="fx-polish-uifxchainheaderkt-uifxslotcellkt-renderingfxchainkt-presetsfxshortlistkt-presetsfxopskt-presetssessionserializerkt-renderingrendererkt-uifxchainmacrostripkt">FX Polish (<code>ui/FxChainHeader.kt</code>, <code>ui/FxSlotCell.kt</code>, <code>rendering/FxChain.kt</code>, <code>presets/FxShortlist.kt</code>, <code>presets/FxOps.kt</code>, <code>presets/SessionSerializer.kt</code>, <code>rendering/Renderer.kt</code>, <code>ui/FXChainMacroStrip.kt</code>)</h3>
 <ul>
 <li><strong><code>BYPASS</code> is now <code>FX ON</code>.</strong> The chain switch was lit while the chain was <em>on</em>, under a label that said the opposite. It now reads <code>FX ON</code> (lit = on), like each slot's power button, and whether it is on is saved with your session.</li>
@@ -11898,7 +11969,7 @@
 <h3 id="master-levels-editor-and-clock-triggers-uiparameterstabskt-uiperformanceclocktriggerskt-uiperformanceclockcontrolskt-uiparametersstatekt">Master Levels Editor and Clock Triggers (<code>ui/ParametersTabs.kt</code>, <code>ui/PerformanceClockTriggers.kt</code>, <code>ui/PerformanceClockControls.kt</code>, <code>ui/ParametersState.kt</code>)</h3>
 <ul>
 <li><strong>Edit's side rail is now <code>MST OUT A B BG PV</code>.</strong> <code>MST</code> has two sections, <code>LEVELS</code> and <code>CTRL</code>, and shows the Master MST row with the Clock row. <code>OUT</code> (the former <code>MIX</code>) has <code>FX</code> and <code>TRANS</code> and shows Transitions with Master FX.</li>
-<li><strong>LEVELS edits every deck's level and alpha, and the master level, in one grid.</strong> Alpha is the deck source's Gain, the same parameter as on the deck's SRC tab; an empty deck shows only its level. The master level moved here from TRANS, which now starts with Crossfade. Bindings, presets and macros are unchanged.</li>
+<li><strong>LEVELS edits every deck's level and the master level in one grid</strong> (a deck's Gain is on its SRC tab). The master level moved here from TRANS, which now starts with Crossfade. Bindings, presets and macros are unchanged.</li>
 <li><strong>The Master MST row's gear opens MST &gt; LEVELS</strong>, the Master FX gear opens OUT &gt; FX and the Transitions gear OUT &gt; TRANS. The gear stays lit on the row the editor is on.</li>
 <li><strong>The Clock row's tempo controls are a tidy 3 x 2 grid</strong> to leave room for the queue and randomize buttons at 1280 px: <code>MAN AUDIO LINK</code> over <code>TAP SNAP [-|+]</code>, all the same size, with the BPM readout beside them and the four beat dots under it. <code>/2</code> and <code>x2</code> are gone (Preferences &gt; Tempo &amp; Sync still has them), <code>RESYNC</code> is now <code>SNAP</code>, and <code>LINK</code> is always in its cell (dim while Link is off).</li>
 <li><strong>The Clock row has queue and randomize buttons</strong>, with captions and button text in the same size and colour as the captions under the knobs. <code>QUEUE</code> (left): a caption line <code>A/B | A/B FX | BG | BG FX | TRN</code> over a line of <code>◀ ▶</code> pairs, with a play / pause button beside the caption on the A/B, BG and TRN queues (it toggles that queue's auto-advance, lit while running; the FX queues have no auto-advance). <code>RAND</code> (pushed to the right edge, with randomization on): <code>A B ALL</code> over <code>BG PV</code> (undo with Ctrl+Z). Every button is a Mixer parameter also listed on MST &gt; CTRL, so right-click Learn MIDI / OSC works from either place. The A/B FX and BG FX queues gained those parameters (<code>Mixer/fxQueuePrev</code>, <code>fxQueueNext</code>, <code>fxBgQueuePrev</code>, <code>fxBgQueueNext</code>); only a MIDI CC (or a click) drives them, since the FX queues have no auto-advance. The buttons start right after the tempo controls (no room is kept for the Link button while Link is off), so a block is only left out on a window too narrow for it. Every other queue group, and the <code>RAND</code> block, has a faint tinted background, like the Library's queue columns, so it is clear which captions and buttons go together.</li>

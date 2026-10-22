@@ -179,6 +179,7 @@ object AppPreferencesStore {
                 props.getProperty("flameQuality")?.let { name ->
                     llm.slop.liquidlsd.rendering.FlameQualityTier.entries.firstOrNull { it.name == name }?.let { UITheme.flameQuality = it }
                 }
+                props.getBoolean("offAirHalfRate")?.let { UITheme.offAirHalfRate = it }
 
                 // The sequencer became on-by-default once it grew into a real tool. Settings files written
                 // before that hold a saved `false` that was only the old default, so turn it on once.
@@ -362,6 +363,7 @@ object AppPreferencesStore {
             props.setProperty("fxSwapFadeMs", UITheme.fxSwapFadeMs.toString())
             props.setProperty("flameBudgetMs", UITheme.flameBudgetMs.toString())
             props.setProperty("flameQuality", UITheme.flameQuality.name)
+            props.setProperty("offAirHalfRate", UITheme.offAirHalfRate.toString())
             props.setProperty("midiEnabled", UITheme.midiEnabled.toString())
             props.setProperty("tooltipsEnabled", UITheme.tooltipsEnabled.toString())
             props.setProperty("maxFps", UITheme.maxFps.toString())

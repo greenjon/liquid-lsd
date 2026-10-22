@@ -15,7 +15,9 @@ import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.Mandala
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.VisualSource
+import llm.slop.liquidlsd.rendering.VisualSourceRegistry
 import java.io.File
+import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -40,6 +42,12 @@ class PresetDirtyLoadingTest {
     fun setup() {
         mockkStatic("llm.slop.liquidlsd.models.PresetModelsKt")
         DeckSlot.values().forEach { PresetManager.clearActive(it) }
+        VisualSourceRegistry.availableSources.clear()
+    }
+
+    @AfterTest
+    fun tearDown() {
+        VisualSourceRegistry.availableSources.clear()
     }
 
     // --- Preset Decoding & Sanitization Tests ---
@@ -75,11 +83,9 @@ class PresetDirtyLoadingTest {
         val (sanitized, wasMigrated) = PresetMigrator.sanitizePresetDto(rawLegacyDto)
         assertTrue(wasMigrated, "Legacy preset must be flagged as migrated")
         assertFalse(sanitized.parameters.containsKey("ObsoleteKey"), "Obsolete keys must be removed")
-        assertFalse(sanitized.feedbackParameters.containsKey("legacyFeedback"), "Legacy feedback keys must be removed")
+        assertTrue(sanitized.feedbackParameters.isEmpty(), "Legacy deck feedback is dropped: feedback is an FX now")
         assertTrue(sanitized.parameters.containsKey("L1"), "Missing L1 parameter must be populated")
         assertTrue(sanitized.parameters.containsKey("L2"), "Missing L2 parameter must be populated")
-        assertTrue(sanitized.feedbackParameters.containsKey("fbDecay"), "Missing fbDecay must be populated")
-        assertTrue(sanitized.feedbackParameters.containsKey("fbKaleido"), "Missing fbKaleido must be populated")
         assertEquals(0.5f, sanitized.parameters["Thickness"]?.baseValue, "Existing parameter values must be preserved")
         assertEquals(1.0f, sanitized.globalAlpha?.baseValue, "Default globalAlpha must be populated")
     }
@@ -126,7 +132,7 @@ class PresetDirtyLoadingTest {
         every { dynSource.globalAlpha } returns globalAlphaParam
 
         every { deckA.source } returns dynSource
-        every { deckA.availableSources } returns mutableListOf(dynSource)
+        VisualSourceRegistry.availableSources.add(dynSource)
 
         val presetDto = json.decodeFromString<DeckPresetDto>(testPresetText())
 
@@ -153,7 +159,7 @@ class PresetDirtyLoadingTest {
         every { dynSource.globalAlpha } returns ModulatableParameter(0.0f)
 
         every { deckA.source } returns dynSource
-        every { deckA.availableSources } returns mutableListOf(dynSource)
+        VisualSourceRegistry.availableSources.add(dynSource)
 
         val presetDto = json.decodeFromString<DeckPresetDto>(testPresetText())
 
@@ -218,8 +224,8 @@ class PresetDirtyLoadingTest {
         every { masterMandala.id } returns "mandala"
 
         val deck = mockk<Deck>(relaxed = true)
-        val sources = mutableListOf<VisualSource>(masterMandala)
-        every { deck.availableSources } returns sources
+        every { masterMandala.clone() } returns masterMandala
+        VisualSourceRegistry.availableSources.add(masterMandala)
 
         var assignedSource: VisualSource? = null
         every { deck.source = any() } answers { assignedSource = firstArg() }

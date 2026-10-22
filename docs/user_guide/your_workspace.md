@@ -33,7 +33,7 @@ Liquid LSD uses four independent rendering decks — think of them like channels
 
 - **Deck PV (Preview)** — A fully independent audition deck that *never* outputs to the master. Use it to quietly load and preview a preset on your monitor before pushing it live. It runs the complete visual and modulation chain, so what you see is exactly what you'll get.
 
-Each deck is completely independent — its own visual source, its own 3-slot effects chain, and its own modulation.
+Each deck is completely independent — its own source, its own 3-slot effects chain, and its own modulation.
 
 ---
 
@@ -43,7 +43,7 @@ Here's how audio becomes visuals:
 
 1. **Audio in** → The DSP engine analyses your track in real time, splitting it into frequency bands and tracking the beat.
 2. **CV modulation** → Those audio signals become control voltages that can drive any visual parameter.
-3. **Visual generators** → Each deck runs a visual source (Mandala, a shader, external video, etc.) using those CV signals to shape what renders.
+3. **Sources** → Each deck runs a source (a generator such as Mandala, an ISF shader, external video, etc.) using those CV signals to shape what renders.
 4. **FX chain** → Each deck runs its source through a chain of three effect slots, left to right. Feedback (the trails that layer the image over time) is one of the effects you can put in a slot.
 5. **Mixer** → Deck A and B blend together through the crossfader and the current transition. Deck BG fills in behind them, wherever their mix is transparent.
 6. **Master FX** → The mixed image runs through a final chain of three effect slots.
@@ -54,7 +54,7 @@ Here's how audio becomes visuals:
 ## The Performance Panel (Left & Middle)
 
 The top of the left and middle columns is the **Perform view**: a 4×4 grid of macro knobs,
-one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Click a deck row's source name to change its visual source in the Library below.
+one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Click a deck row's source name to change its source in the Library below.
 
 For full control, open a row's **Edit** (the gear on the row, or **Params** in the pair view's header). Edit has three columns:
 

@@ -5,7 +5,7 @@ package llm.slop.liquidlsd.rendering
  *
  * Keys for [paramDescriptions] follow the pattern:
  *   "<sourceId>/<paramName>"   — for source-specific parameters
- *   "feedback/<paramName>"     — for feedback chain parameters shared across all sources
+ *   "view/<paramName>"         — deck framing, and the fallback for camera parameters (RotateX, Zoom, ...)
  *   "mixer/<paramName>"        — for mixer-level parameters
  */
 object SourceDocRegistry {
@@ -58,7 +58,7 @@ object SourceDocRegistry {
     )
 
     /**
-     * Per-parameter descriptions keyed by "<sourceId>/<paramName>" or "feedback/<paramName>"
+     * Per-parameter descriptions keyed by "<sourceId>/<paramName>", "view/<paramName>" or "mixer/<paramName>"
      * or "mixer/<paramName>".
      */
     val paramDescriptions: Map<String, String> = mapOf(
@@ -768,10 +768,10 @@ object SourceDocRegistry {
         "voronoi_cells/Quality" to "Antialiasing, 1 to 3.",
 
 
-        // Feedback chain (shared across all decks)
-        // View (3D display and transform)
-        "view/3D Mode" to "3D display mode: 0 = 2D Flat, 1 = Tri-Axial (3P @ 90°), 2 = Cube Cage (6P), 3 = Hex-Planar (6P @ 60°), 4 = Tetrahedral Kaleidoscope (24-Chamber).",
-        "view/3DMode" to "3D display mode: 0 = 2D Flat, 1 = Tri-Axial (3P @ 90°), 2 = Cube Cage (6P), 3 = Hex-Planar (6P @ 60°), 4 = Tetrahedral Kaleidoscope (24-Chamber).",
+        // Deck
+        "deck/Gain" to "The deck's opacity / intensity before the mixer. Stays mapped (MIDI, OSC, macros) whatever source the deck plays; a preset or a fresh source sets its value.",
+
+        // View: deck framing (Zoom, Rotate Z) and the fallback for a source's own camera parameters
         "view/Rotate X" to "3D Pitch rotation (elevation angle).",
         "view/RotateX" to "3D Pitch rotation (elevation angle).",
         "view/Rotate Y" to "3D Yaw rotation (azimuth angle).",
@@ -779,24 +779,8 @@ object SourceDocRegistry {
         "view/Rotate Z" to "2D/3D Roll rotation.",
         "view/RotateZ" to "2D/3D Roll rotation.",
         "view/Zoom" to "Camera zoom / field of view scaling.",
-        "view/3D Persp" to "Perspective strength: 0 = orthographic, 1 = deep perspective camera.",
-        "view/Persp" to "Perspective strength: 0 = orthographic, 1 = deep perspective camera.",
-        "view/Depth Dim" to "Headlight proximity falloff: dims receding geometric elements into atmospheric depth.",
-        "view/DepthDim" to "Headlight proximity falloff: dims receding geometric elements into atmospheric depth.",
-        "view/Separation" to "Axial separation offset: pushes intersecting planes outward along their normal axes.",
-        "view/Blend Mode" to "3D intersection blending: 0 = alpha transparency, 1 = additive luminous glow.",
-        "view/BlendMode" to "3D intersection blending: 0 = alpha transparency, 1 = additive luminous glow.",
-        "view/Roundness" to "Boundary shape of intersecting planes: 0 = square quad, 1 = circular disc (smooth celestial gyroscope).",
 
         // Feedback
-        "feedback/Decay" to "Feedback trail persistence: 0 = no feedback, 1 = maximum trail retention.",
-        "feedback/fbDecay" to "Feedback trail persistence: 0 = no feedback, 1 = maximum trail retention.",
-        "feedback/fbZoom" to "Zoom applied to the feedback buffer each frame — creates an infinite-zoom tunnel effect.",
-        "feedback/fbRotate" to "Rotation applied to the feedback buffer each frame. Drive with a slow LFO to spiral.",
-        "feedback/fbHueShift" to "Hue rotation applied to the feedback signal each frame. Accumulates over time.",
-        "feedback/fbBlur" to "Gaussian blur radius applied to the feedback signal — softens the trail.",
-        "feedback/fbChroma" to "Chromatic aberration applied to the feedback signal — RGB channel offset amount.",
-        "feedback/fbMode" to "Feedback blend mode: 0 = max (keeps the brighter of live and trail), 1 = difference.",
 
         // Mixer
         "mixer/crossfade" to "Crossfade position between Deck A and Deck B.",
@@ -828,7 +812,6 @@ object SourceDocRegistry {
      */
     fun getParamDescription(sourceId: String, paramName: String): String =
         paramDescriptions["$sourceId/$paramName"]
-            ?: paramDescriptions["feedback/$paramName"]
             ?: paramDescriptions["view/$paramName"]
             ?: ""
 

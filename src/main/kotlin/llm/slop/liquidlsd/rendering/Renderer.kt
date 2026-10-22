@@ -134,24 +134,11 @@ class Renderer {
         source.shader.setUniform("DATE",  yearNum.toFloat(), (monthNum + 1).toFloat(), dayNum.toFloat(), secondsSinceMidnight)
         source.shader.setUniform("iDate", yearNum.toFloat(), (monthNum + 1).toFloat(), dayNum.toFloat(), secondsSinceMidnight)
 
-        // Mouse & Interaction
-        var mouseX = 0f
-        var mouseY = 0f
-        var isMouseDown = false
-        try {
-            val io = imgui.ImGui.getIO()
-            mouseX = io.mousePos.x
-            mouseY = io.mousePos.y
-            isMouseDown = imgui.ImGui.isMouseDown(0)
-        } catch (_: Exception) {}
-        val glMouseY = (heightF - mouseY).coerceAtLeast(0f)
-        val normMouseX = (mouseX / widthF).coerceIn(0f, 1f)
-        val normMouseY = (glMouseY / heightF).coerceIn(0f, 1f)
-        val clickX = if (isMouseDown) mouseX else 0f
-        val clickY = if (isMouseDown) glMouseY else 0f
-        source.shader.setUniform("u_mouse", normMouseX, normMouseY)
-        source.shader.setUniform("mouse",   normMouseX, normMouseY)
-        source.shader.setUniform("iMouse",  mouseX, glMouseY, clickX, clickY)
+        // Mouse: a fixed centre with no click. The app's own cursor is the operator working the UI, not the
+        // audience, so it must not steer what's on the output.
+        source.shader.setUniform("u_mouse", 0.5f, 0.5f)
+        source.shader.setUniform("mouse",   0.5f, 0.5f)
+        source.shader.setUniform("iMouse",  widthF * 0.5f, heightF * 0.5f, 0f, 0f)
 
         // Real-Time Audio (VJ Standard)
         val audioVol = llm.slop.liquidlsd.cv.CVRegistry.get("amp")

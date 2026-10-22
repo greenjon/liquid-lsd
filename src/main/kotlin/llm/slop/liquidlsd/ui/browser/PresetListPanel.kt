@@ -168,6 +168,21 @@ object PresetListPanel {
                         ImGui.textUnformatted(fullNameTip(asset, nameElided) ?: rowName(asset))
                         ImGui.separator()
                         if (heavy) ImGui.textUnformatted("${Icons.GAUGE} $GPU_COST_TIP")
+                        if (isStock) llm.slop.liquidlsd.rendering.VisualSourceRegistry.compileErrors[asset.path.removePrefix(STOCK_PATH_PREFIX)]?.let { err ->
+                            ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.u32(TangoPalette.ALERT.normal))
+                            ImGui.textUnformatted("${Icons.ALERT} This shader failed to compile and shows a red checkerboard. Fix it and restart the app.")
+                            ImGui.popStyleColor()
+                            ImGui.textDisabled(err)
+                        }
+                        asset.sourceId?.let { id ->
+                            val source = BrowseCatalogs.sourceLabel(id)
+                            if (source != null) ImGui.textDisabled("Plays: $source")
+                            else {
+                                ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.u32(TangoPalette.ALERT.normal))
+                                ImGui.textUnformatted("${Icons.ALERT} Needs source '$id', which isn't installed or failed to load, so it won't load.")
+                                ImGui.popStyleColor()
+                            }
+                        }
                         if (thumb != 0) ImGui.image(thumb.toLong(), llm.slop.liquidlsd.presets.GardenThumbnails.WIDTH.toFloat(), llm.slop.liquidlsd.presets.GardenThumbnails.HEIGHT.toFloat())
                         if (asset.tags.isNotEmpty()) ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
                         ImGui.textDisabled(if (target != null) "Click: apply. Alt+click: preview on Deck PV." else "Double-click or Enter: load. Alt+click: preview on Deck PV.")

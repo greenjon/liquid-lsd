@@ -23,11 +23,8 @@ class ExternalVideoSource(
 
     override val is3D = false
 
-    override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> {
-        val list = mutableListOf<Pair<String, ModulatableParameter>>()
-        list.add("$prefix/External Video/Gain" to globalAlpha)
-        return list
-    }
+    /** No parameters of its own; its Gain is listed by the deck as "<deck>/Gain". */
+    override fun getParameterPaths(prefix: String): List<Pair<String, ModulatableParameter>> = emptyList()
 
     var currentTextureId: Int = 0
         private set

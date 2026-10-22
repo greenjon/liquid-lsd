@@ -96,7 +96,21 @@ object PresetManager {
         bankBaselines[slot.index]?.takeIf { it.dto === cachedDto(slot) }?.signature
 
     /** Sets [slot]'s active preset name and dirty baseline; the live macro bank is snapshotted as part of the baseline. */
-    fun setActive(slot: DeckSlot, name: String?, dto: DeckPresetDto?) {
+    /** The file the preset in each deck was loaded from, or null (a bare source, a restored session). */
+    private val activeFiles = arrayOfNulls<File>(4)
+
+    fun activeFile(slot: DeckSlot): File? = activeFiles[slot.index]
+
+    /**
+     * Where saving [slot]'s preset as [name] writes: back to the file it was loaded from when the name is unchanged
+     * (a preset in a subfolder such as garden/ stays there), else `presets/<name>.lsd`.
+     */
+    fun saveFileFor(slot: DeckSlot, name: String): File =
+        activeFiles[slot.index]?.takeIf { name == activePreset(slot) && it.nameWithoutExtension == name }
+            ?: File("library/presets/$name.lsd")
+
+    fun setActive(slot: DeckSlot, name: String?, dto: DeckPresetDto?, file: File? = null) {
+        activeFiles[slot.index] = file
         when (slot) {
             DeckSlot.A -> { activePresetA = name; cachedDtoA = dto }
             DeckSlot.B -> { activePresetB = name; cachedDtoB = dto }

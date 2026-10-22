@@ -104,8 +104,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             if (deckLabel == label) return
             label = deckLabel
             saveTip = "Save $deckLabel's current source & parameters as a preset."
-            ejectTip = "Eject current preset from $deckLabel and reset to defaults."
-            randTip = "Randomize $deckLabel modulators & base values (Source and FX).\nClick to randomize with undo support."
+            ejectTip = "Eject: empty $deckLabel (its FX chain stays). Ctrl+Z can't undo it."
+            randTip = "Randomize $deckLabel: the source's modulators and base values, Gain, zoom/rotation and the FX chain's Dry/Wet\n(only parameters with randomization enabled). Ctrl+Z undoes it."
             fxTitle = "$deckLabel FX"
             emptyTip = "$deckLabel is empty. Click to browse sources and presets for it in the list below (click again to stop)."
             badgeKeyLabel = null // the badge strings embed the label too
@@ -119,6 +119,8 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
         private var badgeDirty = false
         private var badgeSource = ""
         var genName = ""; private set
+        /** The source a loaded preset plays, shown dimmed after [genName]; empty for a bare source. */
+        var genSub = ""; private set
         var genTip = ""; private set
 
         fun updateBadge(deckLabel: String, empty: Boolean, external: Boolean, preset: String?, dirty: Boolean, sourceName: String) {
@@ -131,26 +133,35 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
                 preset != null -> "$preset${if (dirty) " *" else ""}"
                 else -> sourceName
             }
+            genSub = if (!empty && preset != null) sourceName else ""
+            val playing = if (genSub.isNotEmpty()) "Preset $genName, playing $genSub" else genName
             genTip = when {
                 empty -> emptyTip
-                external -> "External Source: $genName ($deckLabel). Click to change the visual source in the list below (click again to stop)."
-                else -> "$genName ($deckLabel). Click to browse sources/presets for it in the list below (click again to stop), right-click for defaults."
+                external -> "External source: $genName ($deckLabel). Click to change the source in the list below (click again to stop)."
+                else -> "$playing ($deckLabel). Click to browse sources and presets for it in the list below (click again to stop), right-click for defaults."
             }
         }
     }
 
     private val deckStrings = Array(PerfRows.DECK_TAGS.size) { DeckStrings(PerfRows.DECK_TAGS[it]) }
 
+    // The A/B queue is shared: its arrows (on both the A and B rows) load into whichever deck is off-air, then fade to it.
+    private val QUEUE_NEXT_TIP_A = "A/B queue: load the next item into Deck A (off-air now) and fade to it. Same button on both rows."
+    private val QUEUE_NEXT_TIP_B = "A/B queue: load the next item into Deck B (off-air now) and fade to it. Same button on both rows."
+    private val QUEUE_PREV_TIP_A = "A/B queue: load the previous item into Deck A (off-air now) and fade to it. Same button on both rows."
+    private val QUEUE_PREV_TIP_B = "A/B queue: load the previous item into Deck B (off-air now) and fade to it. Same button on both rows."
+
     private fun stringsFor(tag: String): DeckStrings = deckStrings[PerfRows.DECK_TAGS.indexOf(tag).coerceAtLeast(0)]
 
     /** MIDI-mapping suffix + tooltip per learnable-button key, rebuilt only when that key's mapping changes. */
-    private class NavTip { var mapping: Any? = null; var text = ""; var built = false }
+    private class NavTip { var mapping: Any? = null; var base = ""; var text = ""; var built = false }
     private val navTips = HashMap<String, NavTip>()
     private fun navTooltip(key: String, base: String, mapping: llm.slop.liquidlsd.midi.MidiControlMapping?): String {
         val tip = navTips.getOrPut(key) { NavTip() }
-        if (!tip.built || tip.mapping != mapping) {
+        if (!tip.built || tip.mapping != mapping || tip.base !== base) {
             tip.built = true
             tip.mapping = mapping
+            tip.base = base
             val midiText = mapping?.let { if (it.channel == 0) " [CC ${it.cc}]" else " [Ch ${it.channel + 1} CC ${it.cc}]" } ?: ""
             tip.text = "$base$midiText\nRight-click for MIDI/OSC Learn."
         }
@@ -313,10 +324,17 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             dl.addRect(curX, curY, curX + genBadgeW, curY + ctrlH, genBorderCol, 4f, 0, 1f)
 
             session.uiTheme.withFont(UITheme.FontLevel.CAPTION) {
-                val textSz = ImGui.calcTextSize(genName)
-                val tx = curX + (genBadgeW - textSz.x) * 0.5f
-                val ty = curY + (ctrlH - textSz.y) * 0.5f
-                dl.addText(tx.coerceAtLeast(curX + 4f), ty, genTextCol, genName)
+                // Name, then the preset's source dimmed ("curated-0001 · Fractal flame"); the source is dropped first, then the name elided.
+                val maxW = genBadgeW - 8f
+                val name = llm.slop.liquidlsd.ui.browser.PresetListPanel.elide(genName, maxW)
+                val sub = if (str.genSub.isEmpty() || name != genName) "" else "  ·  ${str.genSub}"
+                val nameW = ImGui.calcTextSize(name).x
+                val subShown = if (sub.isEmpty()) "" else llm.slop.liquidlsd.ui.browser.PresetListPanel.elide(sub, maxW - nameW).takeIf { it.length > 4 } ?: ""
+                val totalW = nameW + if (subShown.isEmpty()) 0f else ImGui.calcTextSize(subShown).x
+                val tx = (curX + (genBadgeW - totalW) * 0.5f).coerceAtLeast(curX + 4f)
+                val ty = curY + (ctrlH - ImGui.getTextLineHeight()) * 0.5f
+                dl.addText(tx, ty, genTextCol, name)
+                if (subShown.isNotEmpty()) dl.addText(tx + nameW, ty, ImGui.getColorU32(ImGuiCol.TextDisabled), subShown)
             }
             val canonicalBankId = MacroEngine.deckBankIdFor(deck, mixer) ?: MacroEngine.DECK_A
             if (ImGui.invisibleButton(str.badgeId, genBadgeW, ctrlH)) {
@@ -383,12 +401,15 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             }
             ButtonChrome.pushColor(saveBtnBg)
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
+                if (isExternalVideo) ImGui.beginDisabled()
                 if (ButtonChrome.button(str.saveId, flexW, ctrlH)) {
                     ctx.deckPresetController?.handleSaveDeck(mixer, deck, isDeckA, isSaveAs = false)
                 }
+                if (isExternalVideo) ImGui.endDisabled()
             }
             ImGui.popStyleColor(3)
-            itemTooltip(str.saveTip)
+            if (isExternalVideo) itemTooltip("A live stream isn't a file, so it can't be saved as a preset.", allowWhenDisabled = true)
+            else itemTooltip(str.saveTip)
             llm.slop.liquidlsd.tour.WidgetRegistry.note { str.saveId.substringAfter("##") }
 
             ImGui.sameLine(0f, lineGap)
@@ -399,13 +420,13 @@ internal class PerformanceDeckControls(private val ctx: PerformanceUiContext) {
             if (isDeckA || isDeckB) {
                 learnableNavButton(session, mixer, dl, "Global/queuePrev", "Mixer/queuePrev", "◀", str.qPrevId, str.qPrevCtxId,
                     navBtnW, ctrlH, "PlayQueue Prev", "Queue Prev", "Trigger Previous",
-                    "Advance to previous item in PlayQueue.") { session.playQueueManager.triggerPrevious(mixer) }
+                    if (mixer.crossfade.value > 0f) QUEUE_PREV_TIP_A else QUEUE_PREV_TIP_B) { session.playQueueManager.triggerPrevious(mixer) }
 
                 ImGui.sameLine(0f, lineGap)
 
                 learnableNavButton(session, mixer, dl, "Global/queueNext", "Mixer/queueNext", "▶", str.qNextId, str.qNextCtxId,
                     navBtnW, ctrlH, "PlayQueue Next", "Queue Next", "Trigger Next",
-                    "Advance to next item in PlayQueue.") { session.playQueueManager.triggerNext(mixer) }
+                    if (mixer.crossfade.value > 0f) QUEUE_NEXT_TIP_A else QUEUE_NEXT_TIP_B) { session.playQueueManager.triggerNext(mixer) }
             } else if (isDeckBG) {
                 learnableNavButton(session, mixer, dl, "Global/bgQueuePrev", "Mixer/bgQueuePrev", "◀", "◀##perf_bg_prev", "perf_bg_prev_ctx",
                     navBtnW, ctrlH, "BG Queue Prev", "BG Queue Prev", "Trigger Previous",

@@ -49,13 +49,14 @@ class DeckOpsTest {
             every { deck.isEmpty } answers { empty }
             every { deck.isEmpty = any() } answers { empty = firstArg() }
             every { deck.toDto(any(), any()) } answers {
-                dto(secondArg(), current.id, tweak, empty) // firstArg() is the extension receiver
+                dto(secondArg(), current.id, tweak, empty).copy(tags = thirdArg()) // firstArg() is the extension receiver
             }
             every { deck.applyDto(any()) } answers {
                 val dto = secondArg<DeckPresetDto>()
                 current = Src(dto.visualSourceType)
                 empty = dto.isEmpty
                 tweak = dto.globalAlpha?.baseValue ?: 1f
+                true
             }
         }
     }
@@ -68,6 +69,9 @@ class DeckOpsTest {
     private var promptCancel: (() -> Unit)? = null
 
     companion object {
+        /** A source id [DeckOps.sourceExists] reports as not loaded. */
+        const val MISSING_SOURCE = "missing_gen"
+
         fun dto(name: String, sourceId: String = "gen", tweak: Float = 1f, empty: Boolean = false, bank: MacroBank? = null) = DeckPresetDto(
             name = name,
             visualSourceType = sourceId,
@@ -90,6 +94,7 @@ class DeckOpsTest {
     @BeforeTest
     fun setUp() {
         mockkStatic("llm.slop.liquidlsd.models.PresetModelsKt")
+        DeckOps.sourceExists = { it != MISSING_SOURCE }
         for (id in MacroEngine.CANONICAL_BANK_IDS) MacroEngine.registerBank(id, MacroEngine.newBankFor(id))
         for (slot in DeckSlot.values()) PresetManager.clearActive(slot)
         ToastOverlay.show("", 0L)
@@ -119,6 +124,7 @@ class DeckOpsTest {
         DeckOps.prompt = null
         DeckOps.undoSink = null
         DeckOps.postApply = null
+        DeckOps.sourceExists = { llm.slop.liquidlsd.rendering.VisualSourceRegistry.find(it) != null }
         UITheme.manualLoadDirtyBehavior = UITheme.ManualLoadDirtyBehavior.PROMPT
         UITheme.autoVjDirtyBehavior = UITheme.AutoVjDirtyBehavior.AUTO_DISCARD
         for (slot in DeckSlot.values()) PresetManager.clearActive(slot)
@@ -133,6 +139,54 @@ class DeckOpsTest {
         DeckOps.drainOnGlThread(mixer)
         undo.clear()
         ToastOverlay.show("", 0L)
+    }
+
+    @Test
+    fun aTaggedPresetWithNotesIsCleanRightAfterLoading() {
+        DeckOps.postLoaded(DeckSlot.A, dto("garden_one").copy(tags = listOf("garden", "gen:3"), presetNotes = "kept", paramNotes = mapOf("zoom" to "n")))
+        DeckOps.drainOnGlThread(mixer)
+
+        assertFalse(DeckOps.isDirty(a.deck, mixer), "tags and notes aren't deck state, so they mustn't read as an edit")
+        a.tweak = 0.3f
+        assertTrue(DeckOps.isDirty(a.deck, mixer))
+    }
+
+    @Test
+    fun aPresetWhoseSourceIsMissingIsRefusedAndLeavesTheDeckAlone() {
+        loadClean("old_preset")
+        val before = a.current.id
+        val undoBefore = undo.size
+        DeckOps.postLoaded(DeckSlot.A, dto("needs_missing", MISSING_SOURCE))
+        DeckOps.drainOnGlThread(mixer)
+
+        assertEquals(before, a.current.id)
+        assertEquals("old_preset", PresetManager.activePreset(DeckSlot.A))
+        assertEquals(undoBefore, undo.size, "a refused load pushes no undo")
+        assertTrue(ToastOverlay.active()?.contains(MISSING_SOURCE) == true)
+    }
+
+    @Test
+    fun savingKeepsAPresetInTheFileItWasLoadedFrom() {
+        val file = java.io.File("library/presets/garden/fractal-flame-0007.lsd")
+        DeckOps.postLoaded(DeckSlot.A, dto("fractal-flame-0007"), file = file)
+        DeckOps.drainOnGlThread(mixer)
+
+        assertEquals(file, PresetManager.saveFileFor(DeckSlot.A, "fractal-flame-0007"))
+        assertEquals(java.io.File("library/presets/renamed.lsd"), PresetManager.saveFileFor(DeckSlot.A, "renamed"))
+
+        DeckOps.request(DeckSlot.A, DeckChange.Source(Src("new_gen")))
+        DeckOps.drainOnGlThread(mixer)
+        assertNull(PresetManager.activeFile(DeckSlot.A), "a bare generator has no file")
+    }
+
+    @Test
+    fun repickingTheGeneratorOfALoadedPresetLoadsItsDefaults() {
+        loadClean("gen_preset")
+        assertTrue(DeckOps.request(DeckSlot.A, DeckChange.Source(Src("gen"))), "a preset of the generator is loaded, so the pick isn't a no-op")
+        DeckOps.drainOnGlThread(mixer)
+        assertNull(PresetManager.activePreset(DeckSlot.A), "the deck now plays the bare generator")
+
+        assertFalse(DeckOps.request(DeckSlot.A, DeckChange.Source(Src("gen"))), "re-picking the bare generator does nothing")
     }
 
     @Test

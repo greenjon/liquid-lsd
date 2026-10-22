@@ -11,7 +11,18 @@ import java.io.File
 private val logger = KotlinLogging.logger {}
 
 object VisualSourceRegistry {
+    /** The master instances. Decks hold clones (see [find]). Mutated on the GL thread only. */
     val availableSources = mutableListOf<VisualSource>()
+
+    /** First line of the compiler error of each source that failed to compile (it renders a red checkerboard), by id. */
+    val compileErrors = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    private fun firstErrorLine(e: Exception): String =
+        e.message?.lines()?.map { it.trim() }?.firstOrNull { it.contains("error", ignoreCase = true) }
+            ?: e.message?.lines()?.firstOrNull()?.trim() ?: e.toString()
+
+    /** The master source with [id] (a stock id, or `spout_input` for external video), or null when it isn't loaded. */
+    fun find(id: String): VisualSource? = availableSources.firstOrNull { it.id == id }
     
     private val json = Json {
         ignoreUnknownKeys = true
@@ -93,47 +104,51 @@ object VisualSourceRegistry {
     /** Default sources shipped as a meta.json + shader.frag (+ vert) folder rather than a single ISF file. */
     private val FOLDER_STYLE_IDS = setOf("mandala", FlameSource.SOURCE_ID)
 
-    internal fun ensureDefaultSources(sourcesDir: File) {
-        val anyMissing = (DEFAULT_SOURCE_IDS + EXPERIMENTAL_SOURCE_IDS).any { id ->
-            val folder = File(sourcesDir, id)
-            if (id in FOLDER_STYLE_IDS) {
-                !File(folder, "meta.json").exists() || !File(folder, "shader.frag").exists()
-            } else {
-                !File(folder, "$id.fs").exists()
-            }
-        }
-        if (!anyMissing) {
-            return
-        }
+    /** `<path under library/sources> <sha256>` for every version of a bundled source file we ever shipped (scripts/shipped_source_hashes.py). */
+    internal fun shippedHashes(): Set<String> =
+        VisualSourceRegistry::class.java.classLoader.getResourceAsStream("shipped_source_hashes.txt")
+            ?.bufferedReader()?.useLines { lines -> lines.filter { it.isNotBlank() && !it.startsWith("#") }.map { it.trim() }.toSet() }
+            ?: emptySet()
 
-        logger.info { "Default sources missing or incomplete in ${sourcesDir.path}; extracting bundled defaults..." }
+    private fun bundledBytes(relPath: String): ByteArray? =
+        VisualSourceRegistry::class.java.classLoader.getResourceAsStream("default_sources/$relPath")?.use { it.readBytes() }
+
+    internal fun sha256(bytes: ByteArray): String =
+        java.security.MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+
+    /**
+     * Copies the bundled sources into [sourcesDir]. A missing file is written; a file that is some version we
+     * shipped before (unedited) is replaced by the current one, so shader fixes reach existing installs; a file
+     * the user edited is left alone.
+     */
+    internal fun ensureDefaultSources(
+        sourcesDir: File,
+        shipped: Set<String> = shippedHashes(),
+        bundled: (String) -> ByteArray? = ::bundledBytes
+    ) {
         for (sourceId in DEFAULT_SOURCE_IDS + EXPERIMENTAL_SOURCE_IDS) {
-            val targetFolder = File(sourcesDir, sourceId)
             val sourceFiles = if (sourceId in FOLDER_STYLE_IDS) {
                 if (sourceId == "mandala") listOf("meta.json", "shader.frag", "shader.vert") else listOf("meta.json", "shader.frag")
             } else {
                 listOf("$sourceId.fs")
             }
-            var extractedAny = false
             for (filename in sourceFiles) {
-                val targetFile = File(targetFolder, filename)
-                if (targetFile.exists()) continue
-
-                val resourcePath = "default_sources/$sourceId/$filename"
-                val stream = VisualSourceRegistry::class.java.classLoader.getResourceAsStream(resourcePath)
-                    ?: continue
-                if (!targetFolder.exists()) {
-                    targetFolder.mkdirs()
-                }
-                stream.use { input ->
-                    targetFile.outputStream().use { output ->
-                        input.copyTo(output)
+                val relPath = "$sourceId/$filename"
+                val bytes = bundled(relPath) ?: continue
+                val targetFile = File(sourcesDir, relPath)
+                if (targetFile.exists()) {
+                    val current = sha256(targetFile.readBytes())
+                    if (current == sha256(bytes)) continue
+                    if ("$relPath $current" !in shipped) {
+                        logger.info { "Keeping your edited ${targetFile.path}; the bundled version of $relPath has changed" }
+                        continue
                     }
+                    logger.info { "Updating bundled source file $relPath" }
+                } else {
+                    logger.info { "Extracting bundled source file $relPath" }
                 }
-                extractedAny = true
-            }
-            if (extractedAny) {
-                logger.info { "Extracted bundled visual source: $sourceId" }
+                targetFile.parentFile.mkdirs()
+                targetFile.writeBytes(bytes)
             }
         }
     }
@@ -182,7 +197,13 @@ object VisualSourceRegistry {
             // 2. Recursively scan all ISF shader files in this directory
             for (file in standaloneShaderFiles(dir)) {
                 val sourceId = file.nameWithoutExtension
-                if (availableSources.none { it.id == sourceId }) {
+                val existing = find(sourceId)
+                if (existing != null) {
+                    val existingDir = (existing as? ISFVisualSource)?.baseDir?.canonicalFile
+                    if (existingDir != file.parentFile?.canonicalFile && shadowWarned.add(file.canonicalPath)) {
+                        logger.warn { "Skipping '${file.path}': a source with id '$sourceId' is already loaded${existingDir?.let { " from $it" } ?: ""}. Rename the file to load both." }
+                    }
+                } else {
                     try {
                         val source = loadFromISFFile(file, directoryRoot = dir)
                         if (source != null && availableSources.none { it.id == source.id }) {
@@ -209,7 +230,24 @@ object VisualSourceRegistry {
             .filter { it.isFile && (it.extension == "fs" || it.extension == "isf" || it.extension == "frag") }
             .toList()
 
+    /** Files already reported as shadowed by a same-named source, so a rescan doesn't repeat the warning. */
+    private val shadowWarned = mutableSetOf<String>()
+
     private val pendingGlTasks = java.util.concurrent.ConcurrentLinkedQueue<Runnable>()
+
+    /** Runs [task] on the GL thread at the start of the next frame. Safe to call from any thread. */
+    fun runOnGlThread(task: () -> Unit) {
+        pendingGlTasks.offer(Runnable(task))
+    }
+
+    /**
+     * Registers sources added since startup (bundled folders and enabled shader folders). GL thread only.
+     * Sources already loaded are kept as they are: decks share their shaders.
+     */
+    fun rescan() {
+        loadBundledSources(File("library/sources"))
+        scanUserSources()
+    }
 
     /**
      * Drains and executes pending OpenGL compilation tasks strictly on Thread 0.
@@ -273,16 +311,17 @@ object VisualSourceRegistry {
             vertexShaderSource
         }
         
+        val sourceId = overrideId ?: file.nameWithoutExtension
         val shader = try {
-            Shader(vertSource, glslSource)
+            Shader(vertSource, glslSource).also { compileErrors.remove(sourceId) }
         } catch (e: Exception) {
             logger.warn { "Failed to compile ISF shader for '${file.name}'. Using error fallback: ${e.message?.lines()?.firstOrNull() ?: e.toString()}" }
             logger.debug(e) { "Full compilation stack trace for '${file.name}'" }
+            compileErrors[sourceId] = firstErrorLine(e)
             Shader(vertexShaderSource, errorFragmentShaderSource)
         }
 
         val parameters = ISFVisualSource.createParameters(header)
-        val sourceId = overrideId ?: file.nameWithoutExtension
 
         val relFolder = if (directoryRoot != null) {
             try {
@@ -354,8 +393,10 @@ object VisualSourceRegistry {
             var shader: Shader
             try {
                 shader = Shader(vertSource, fragText)
+                compileErrors.remove(meta.id)
             } catch (e: Exception) {
                 logger.error(e) { "Failed to compile custom shader for '${meta.name}'. Using error fallback." }
+                compileErrors[meta.id] = firstErrorLine(e)
                 shader = Shader(vertSource, errorFragmentShaderSource)
             }
 
@@ -377,7 +418,7 @@ object VisualSourceRegistry {
                 parameters[pMeta.name] = param
             }
 
-            val isSource3D = meta.is3D || (parameters.containsKey("Rotate X") && parameters.containsKey("Rotate Y"))
+            val isSource3D = meta.is3D || DynamicVisualSource.hasCameraRotation(parameters.keys)
 
             val dynamicSource = if (meta.id == "mandala") {
                 val initialRecipe = MandalaLibrary.MandalaRatios.first()

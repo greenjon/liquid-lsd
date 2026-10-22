@@ -67,6 +67,9 @@ object DeckOps {
     /** Called after a change is applied, for UI-side follow-up (selection, sub-tab) that [presets] mustn't reach into. */
     var postApply: ((DeckSlot, DeckChange) -> Unit)? = null
 
+    /** Whether a preset's source id can be loaded. Tests that use made-up ids replace it. */
+    internal var sourceExists: (String) -> Boolean = { llm.slop.liquidlsd.rendering.VisualSourceRegistry.find(it) != null }
+
     private class Op(
         val slot: DeckSlot,
         val change: DeckChange,
@@ -100,7 +103,7 @@ object DeckOps {
         onResult: ((Boolean) -> Unit)? = null
     ): Boolean {
         val mixer = mixerProvider()
-        if (change is DeckChange.Source && mixer != null && isNoOp(slot.deck(mixer), change)) {
+        if (change is DeckChange.Source && mixer != null && isNoOp(slot, slot.deck(mixer), change)) {
             onResult?.invoke(false)
             return false
         }
@@ -122,9 +125,13 @@ object DeckOps {
     fun wouldSkipQueueLoad(slot: DeckSlot, mixer: Mixer): Boolean =
         UITheme.autoVjDirtyBehavior == UITheme.AutoVjDirtyBehavior.SKIP && isDirty(slot.deck(mixer), mixer)
 
-    /** Re-picking the generator a deck already runs must not reset it (external video is always re-applied). */
-    private fun isNoOp(deck: Deck, change: DeckChange.Source): Boolean =
-        !change.force && !deck.isEmpty && deck.source !is ExternalVideoSource && deck.source.id == change.source.id
+    /**
+     * Re-picking the bare generator a deck already runs must not reset it. With a preset of it loaded, the pick loads the
+     * generator's defaults instead (a different thing from the preset). External video is always re-applied.
+     */
+    private fun isNoOp(slot: DeckSlot, deck: Deck, change: DeckChange.Source): Boolean =
+        !change.force && !deck.isEmpty && deck.source !is ExternalVideoSource && deck.source.id == change.source.id &&
+            PresetManager.activePreset(slot) == null
 
     private fun guard(slot: DeckSlot, mixer: Mixer?, origin: LoadOrigin, onCancel: () -> Unit = {}, proceed: () -> Unit): Boolean {
         val deck = mixer?.let { slot.deck(it) }
@@ -153,7 +160,7 @@ object DeckOps {
         val name = if (!active.isNullOrBlank() && active != "None") active
         else "AutoSave_${slot.label.replace(" ", "")}_${System.currentTimeMillis()}"
         PresetRepository.saveDeckPresetAsync(
-            File("library/presets/$name.lsd"), deck, name, PresetManager.cachedDto(slot)?.tags ?: emptyList(), slot.index
+            PresetManager.saveFileFor(slot, name), deck, name, PresetManager.cachedDto(slot)?.tags ?: emptyList(), slot.index
         )
     }
 
@@ -189,8 +196,11 @@ object DeckOps {
     }
 
     /** Test hook: queues an already-decoded preset as if it had just been read from disk. */
-    internal fun postLoaded(slot: DeckSlot, dto: DeckPresetDto, origin: LoadOrigin = LoadOrigin.MANUAL, mtime: Long? = null, seq: Long = nextSeq(slot)) {
-        pending.offer(Op(slot, DeckChange.Preset(File("${dto.name}.lsd")), origin, dto, mtime, seq = seq))
+    internal fun postLoaded(
+        slot: DeckSlot, dto: DeckPresetDto, origin: LoadOrigin = LoadOrigin.MANUAL, mtime: Long? = null, seq: Long = nextSeq(slot),
+        file: File = File("${dto.name}.lsd")
+    ) {
+        pending.offer(Op(slot, DeckChange.Preset(file), origin, dto, mtime, seq = seq))
     }
 
     /** Test hook: the sequence number of the most recent accepted request for [slot]. */
@@ -204,7 +214,9 @@ object DeckOps {
         val slot = DeckSlot.of(deck, mixer) ?: return false
         val cached = PresetManager.cachedDto(slot) ?: return false
         if (runCatching { deck.source is ExternalVideoSource }.getOrDefault(false)) return false
-        if (deck.toDto(cached.name) != cached) return true
+        // Tags and notes aren't deck state (toDto leaves them out), so take them from the baseline.
+        val current = deck.toDto(cached.name, cached.tags).copy(presetNotes = cached.presetNotes, paramNotes = cached.paramNotes)
+        if (current != cached) return true
         val baseline = PresetManager.bankBaseline(slot) ?: return false
         return PresetManager.bankSignature(slot)?.let { it != baseline } ?: false
     }
@@ -242,6 +254,14 @@ object DeckOps {
         val slot = op.slot
         val deck = slot.deck(mixer)
         val change = op.change
+        if (change is DeckChange.Preset) {
+            val dto = op.dto ?: return false
+            if (!dto.isEmpty && !sourceExists(dto.visualSourceType)) {
+                logger.warn { "Not loading ${slot.label} preset '${dto.name}': source '${dto.visualSourceType}' isn't loaded" }
+                ToastOverlay.show("Can't load '${dto.name}': its source '${dto.visualSourceType}' isn't installed or failed to load")
+                return false
+            }
+        }
         val bindingsBefore = bindingsOf(slot)
 
         val undoPushed = op.origin == LoadOrigin.MANUAL && (change is DeckChange.Source || change is DeckChange.Preset) &&
@@ -251,6 +271,9 @@ object DeckOps {
             is DeckChange.Source -> {
                 deck.source = change.source.clone()
                 deck.isEmpty = false
+                // A fresh source starts with fresh framing (modulators on it stay); a preset brings its own.
+                deck.viewZoom.baseValue = deck.viewZoom.defaultValue
+                deck.viewRotateZ.baseValue = deck.viewRotateZ.defaultValue
                 GeneratorDefaults.applyToDeck(deck, slot.label, slot.bankId)
                 // A fresh generator is its own baseline, so tweaking it counts as unsaved.
                 PresetManager.setActive(slot, null, deck.toDto(deck.source.displayName))
@@ -267,7 +290,8 @@ object DeckOps {
                 }
                 PresetManager.setActive(
                     slot, dto.name,
-                    deck.toDto(dto.name, dto.tags).copy(presetNotes = dto.presetNotes, paramNotes = dto.paramNotes)
+                    deck.toDto(dto.name, dto.tags).copy(presetNotes = dto.presetNotes, paramNotes = dto.paramNotes),
+                    file = change.file
                 )
                 PresetManager.setMtime(slot, op.mtime)
                 NotesManager.syncFromDto(slot.label, dto)
@@ -314,14 +338,14 @@ object DeckOps {
         MacroEngine.getBank(slot.bankId) ?: MacroEngine.newBankFor(slot.bankId).also { MacroEngine.registerBank(slot.bankId, it) }
 
     /** What a copy, move or swap carries from one deck to another. */
-    private class Snapshot(val dto: DeckPresetDto, val name: String?, val bank: MacroBank?, val empty: Boolean, val mtime: Long?, val fx: FXChainDto)
+    private class Snapshot(val dto: DeckPresetDto, val name: String?, val file: File?, val bank: MacroBank?, val empty: Boolean, val mtime: Long?, val fx: FXChainDto)
 
     private fun snapshot(slot: DeckSlot, mixer: Mixer): Snapshot {
         val deck = slot.deck(mixer)
         val name = PresetManager.activePreset(slot)
         val dto = if (deck.isEmpty) PresetManager.emptyDeckDto(deck, mixer) else deck.toDto(name ?: deck.source.displayName)
         val bank = MacroEngine.getBank(slot.bankId)?.let { MacroBankSerializer.snapshotForPreset(it) }
-        return Snapshot(dto, name, bank, deck.isEmpty, PresetManager.mtime(slot), deck.toFxChainDto())
+        return Snapshot(dto, name, PresetManager.activeFile(slot), bank, deck.isEmpty, PresetManager.mtime(slot), deck.toFxChainDto())
     }
 
     private fun put(slot: DeckSlot, snap: Snapshot, scope: DeckScope, mixer: Mixer) {
@@ -337,7 +361,7 @@ object DeckOps {
             PresetManager.clearActive(slot)
             PresetManager.setMtime(slot, null)
         } else {
-            PresetManager.setActive(slot, snap.name, snap.dto)
+            PresetManager.setActive(slot, snap.name, snap.dto, snap.file)
             PresetManager.setMtime(slot, snap.mtime)
         }
     }
@@ -374,6 +398,7 @@ object DeckOps {
         val wasEmpty = deck.isEmpty
         val oldDto = if (change is DeckChange.Preset && oldSource !is ExternalVideoSource) deck.toDto(oldSource.displayName) else null
         val oldName = PresetManager.activePreset(slot)
+        val oldFile = PresetManager.activeFile(slot)
         val oldCached = PresetManager.cachedDto(slot)
         val oldMtime = PresetManager.mtime(slot)
         val bank = MacroEngine.getBank(slot.bankId)
@@ -397,7 +422,7 @@ object DeckOps {
                 MacroEngine.invalidate()
             }
             // After the bank, so the restored bank becomes the dirty baseline.
-            PresetManager.setActive(slot, oldName, oldCached)
+            PresetManager.setActive(slot, oldName, oldCached, oldFile)
             PresetManager.setMtime(slot, oldMtime)
         }
     }

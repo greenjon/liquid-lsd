@@ -23,9 +23,9 @@ class ExternalVideoSourceTest {
         assertEquals(listOf("Input", "Video"), source.categories)
         assertEquals(1.0f, source.globalAlpha.value)
 
-        val paths = source.getParameterPaths("Deck A")
-        assertEquals(1, paths.size)
-        assertEquals("Deck A/External Video/Gain", paths[0].first)
+        // No parameters of its own: the deck lists its Gain as "Deck A/Gain"
+        assertTrue(source.getParameterPaths("Deck A").isEmpty())
+        assertEquals("Deck A/Gain", llm.slop.liquidlsd.parameters.ParameterResolver.legacyGainPath("Deck A/External Video/Gain"))
 
         val emptyServerSource = ExternalVideoSource(id = "spout_input", serverName = "")
         assertEquals("External Video", emptyServerSource.displayName)

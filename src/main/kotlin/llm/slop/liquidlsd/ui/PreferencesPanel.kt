@@ -259,6 +259,13 @@ object PreferencesPanel {
         if (ImGui.isItemDeactivatedAfterEdit()) AppPreferencesStore.savePreferences()
         itemTooltip("GPU time each Fractal Flame deck may use per frame. When a deck runs over, it draws fewer points (the Flame Quality tier's point count stays the ceiling) and wins them back when there is room, so a show holds its frame rate on any GPU. 0 = off: always use the tier's full point count.")
 
+        val offAirHalf = ImBoolean(session.uiTheme.offAirHalfRate)
+        if (ImGui.checkbox("Off-air decks at half frame rate", offAirHalf)) {
+            session.uiTheme.offAirHalfRate = offAirHalf.get()
+            AppPreferencesStore.savePreferences()
+        }
+        itemTooltip("A deck the output can't show right now (faded fully across, level or master at 0, and always PV) renders every other frame, which frees GPU time for the decks on air. Its monitor runs at half rate, and simulations and feedback trails on it advance at half speed until it comes on air. Decks sent out over Spout / Syphon / PipeWire always render every frame.")
+
         val seqEnabled = ImBoolean(session.uiTheme.sequencerEnabled)
         if (ImGui.checkbox("Enable Step Sequencer", seqEnabled)) {
             val nextVal = seqEnabled.get()

@@ -16,6 +16,14 @@ object ParameterResolver {
         cachedMixer = null
     }
 
+    private val LEGACY_GAIN = Regex("^(Deck (?:A|B|BG|PV))/[^/]+/Gain$")
+
+    /**
+     * Mappings saved before Gain moved to "<deck>/Gain" name it under the source ("Deck A/Mandala/Gain"). Tried only
+     * after an exact match, so a source input that is itself called Gain still wins.
+     */
+    fun legacyGainPath(path: String): String? = LEGACY_GAIN.matchEntire(path)?.let { "${it.groupValues[1]}/Gain" }
+
     fun getAllParameterPaths(mixer: Mixer): List<Pair<String, ModulatableParameter>> {
         return mixer.getParameterPaths("Mixer")
     }
@@ -28,7 +36,9 @@ object ParameterResolver {
         val cached = pathCache[path]
         if (cached != null) return cached
 
-        val found = getAllParameterPaths(mixer).find { it.first == path }?.second
+        val all = getAllParameterPaths(mixer)
+        val found = all.find { it.first == path }?.second
+            ?: legacyGainPath(path)?.let { gain -> all.find { it.first == gain }?.second }
         if (found != null) {
             pathCache[path] = found
         }

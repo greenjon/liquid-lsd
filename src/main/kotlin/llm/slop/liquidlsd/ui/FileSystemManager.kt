@@ -47,7 +47,8 @@ object FileSystemManager {
     private data class PresetMeta(
         val lastMod: Long,
         val tags: List<String>,
-        val dependencies: llm.slop.liquidlsd.presets.PresetDependencies
+        val dependencies: llm.slop.liquidlsd.presets.PresetDependencies,
+        val sourceId: String? = null
     )
     private val presetMetaCache = ConcurrentHashMap<String, PresetMeta>()
     private val executor = Executors.newSingleThreadScheduledExecutor { r ->
@@ -69,15 +70,21 @@ object FileSystemManager {
         if (cached != null && cached.lastMod == lastMod) {
             return cached.tags to cached.dependencies
         }
-        val (tags, deps) = try {
+        val meta = try {
             val dto = json.decodeFromString<DeckPresetDto>(file.readText())
             val d = llm.slop.liquidlsd.presets.PresetDependencyAnalyzer.analyze(dto)
-            dto.tags to d
+            PresetMeta(lastMod, dto.tags, d, dto.visualSourceType.takeUnless { dto.isEmpty })
         } catch (e: Exception) {
-            emptyList<String>() to llm.slop.liquidlsd.presets.PresetDependencies()
+            PresetMeta(lastMod, emptyList(), llm.slop.liquidlsd.presets.PresetDependencies())
         }
-        presetMetaCache[path] = PresetMeta(lastMod, tags, deps)
-        return tags to deps
+        presetMetaCache[path] = meta
+        return meta.tags to meta.dependencies
+    }
+
+    /** The source id a deck preset plays (cached with its tags), or null for an empty or unreadable preset. */
+    internal fun getPresetSourceId(file: File): String? {
+        getPresetMeta(file)
+        return presetMetaCache[file.canonicalPath]?.sourceId
     }
     internal fun getPresetTags(file: File): List<String> = getPresetMeta(file).first
     internal fun getPresetDependencies(file: File): llm.slop.liquidlsd.presets.PresetDependencies = getPresetMeta(file).second
@@ -143,7 +150,8 @@ object FileSystemManager {
                     type = AssetType.PRESET,
                     isValid = validatePresetFile(file),
                     tags = tags,
-                    dependencies = deps
+                    dependencies = deps,
+                    sourceId = getPresetSourceId(file)
                 )
             }
             .sortedBy { it.name.lowercase() }
@@ -429,7 +437,8 @@ object FileSystemManager {
                         path = file.absolutePath, name = file.nameWithoutExtension, type = AssetType.PRESET,
                         isValid = true, // Assume valid for fast scan
                         tags = tags,
-                        dependencies = deps
+                        dependencies = deps,
+                        sourceId = getPresetSourceId(file)
                     ))
                 }
                 ext == "lsdplay" -> {
@@ -505,7 +514,8 @@ object FileSystemManager {
                                 type = AssetType.PRESET,
                                 isValid = validatePresetFile(file),
                                 tags = tags,
-                                dependencies = deps
+                                dependencies = deps,
+                                sourceId = getPresetSourceId(file)
                             ))
                         }
                         ext == "lsdplay" -> {

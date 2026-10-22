@@ -8,7 +8,6 @@ import llm.slop.liquidlsd.rendering.Deck
 import llm.slop.liquidlsd.rendering.Mixer
 import llm.slop.liquidlsd.rendering.VisualSource
 import llm.slop.liquidlsd.rendering.VisualSourceRegistry
-import java.io.File
 
 /**
  * Deck visual-source selection shared by the Performance deck row's generator badge and the
@@ -54,7 +53,7 @@ object DeckSourcePicker {
         DeckSlot.of(deck, mixer)?.let { DeckOps.request(it, DeckChange.Source(newSource)) }
     }
 
-    /** Empty-deck card: Add Source / Load Preset / Open Library. */
+    /** Empty-deck card: one button that opens Browse on this deck's sources and presets. */
     fun drawLaunchpad(
         session: llm.slop.liquidlsd.SessionContext,
         deckLabel: String,
@@ -63,9 +62,6 @@ object DeckSourcePicker {
         mixer: Mixer,
         deckPresetController: DeckPresetController? = null
     ) {
-        val isDeckA = deckLabel == "Deck A"
-        val isDeckBG = deckLabel == "Deck BG"
-        val isDeckPV = deckLabel == "Deck PV"
         val deckColorU32 = ParametersTabs.getDeckColor(deckLabel, 1f)
 
         val availW = ImGui.getContentRegionAvailX()
@@ -75,7 +71,7 @@ object DeckSourcePicker {
         ImGui.dummy(0f, 11.4f)
         ImGui.indent(paddingX)
 
-        val cardH = 209f
+        val cardH = 150f
         if (ImGui.beginChild("##launchpad_$deckLabel", cardW, cardH, true)) {
             ImGui.spacing()
             ImGui.spacing()
@@ -87,9 +83,9 @@ object DeckSourcePicker {
             ImGui.popStyleColor()
 
             ImGui.spacing()
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.colorConvertFloat4ToU32(0.65f, 0.65f, 0.70f, 1f))
+            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Text, ImGui.getColorU32(imgui.flag.ImGuiCol.TextDisabled))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                ImGui.textWrapped("No visual source is currently assigned to this deck. Choose an action below to activate:")
+                ImGui.textWrapped("No source is assigned to this deck. Pick a source or a saved preset in the list.")
             }
             ImGui.popStyleColor()
 
@@ -97,66 +93,14 @@ object DeckSourcePicker {
             ImGui.separator()
             ImGui.spacing()
 
-            val buttonWidth = ImGui.getContentRegionAvailX()
-            val buttonHeight = 30.4f
-
             ImGui.pushStyleVar(imgui.flag.ImGuiStyleVar.FrameRounding, 5.7f)
-
-            // --- Button 1: Add Visual Source ---
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.18f, 0.22f, 0.30f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.34f, 0.46f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.38f, 0.44f, 0.58f, 1f))
             session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ButtonChrome.button("${Icons.PLUS}  Add Source##launchpad_add_$deckLabel", buttonWidth, buttonHeight)) {
+                if (ButtonChrome.button("${Icons.PLUS}  Add Source##launchpad_add_$deckLabel", ImGui.getContentRegionAvailX(), 30.4f)) {
                     val canonicalBankId = llm.slop.liquidlsd.macro.MacroEngine.deckBankIdFor(deck, mixer) ?: llm.slop.liquidlsd.macro.MacroEngine.DECK_A
                     state.openGenBrowse(canonicalBankId, deckLabel)
                 }
             }
-            itemTooltip("Select a visual source (Mandala, Gyroid, Dynamic Spiral, external video, etc.)")
-            ImGui.popStyleColor(3)
-
-            ImGui.spacing()
-
-            // --- Button 2: Load Preset ---
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.Button,        ImGui.colorConvertFloat4ToU32(0.18f, 0.26f, 0.24f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonHovered, ImGui.colorConvertFloat4ToU32(0.28f, 0.38f, 0.34f, 1f))
-            ImGui.pushStyleColor(imgui.flag.ImGuiCol.ButtonActive,  ImGui.colorConvertFloat4ToU32(0.38f, 0.48f, 0.44f, 1f))
-            session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-                if (ButtonChrome.button("${Icons.FOLDER}  Load Preset##launchpad_load_$deckLabel", buttonWidth, buttonHeight)) {
-                    ImGui.openPopup("##launchpad_preset_popup_$deckLabel")
-                }
-            }
-            itemTooltip("Choose a saved preset for $deckLabel")
-            ImGui.popStyleColor(3)
-
-            pushOpenDropdownPadding()
-            if (ImGui.beginPopup("##launchpad_preset_popup_$deckLabel")) {
-                pushOpenDropdownFont()
-                ImGui.textDisabled("Quick Select Preset:")
-                ImGui.separator()
-
-                val presetFiles = FileSystemManager.scanAllPresets()
-
-                if (presetFiles.isEmpty()) {
-                    ImGui.textDisabled("No presets found.")
-                } else {
-                    for (asset in presetFiles.sortedBy { it.name }) {
-                        val label = asset.displayName.ifBlank { asset.name }
-                        if (ImGui.menuItem("$label##launchpad_preset_${asset.path}")) {
-                            DeckOps.request(DeckSlot.ofFlags(isDeckA, isDeckBG, isDeckPV), DeckChange.Preset(File(asset.path)))
-                        }
-                    }
-                }
-                ImGui.separator()
-                if (ImGui.menuItem("Open Library...##launchpad_open_lib")) {
-                    LibraryPanel.show(session)
-                    session.uiTheme.libraryMode = UITheme.LibraryMode.HALF
-                }
-                popOpenDropdownFont()
-                ImGui.endPopup()
-            }
-            popOpenDropdownPadding()
-
+            itemTooltip("Opens the list below on $deckLabel's sources: stock sources, external video and saved presets.")
             ImGui.popStyleVar()
         }
         ImGui.endChild()

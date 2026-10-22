@@ -262,11 +262,11 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
 - **Deck Rows (Deck A, B, BG, PV)**:
   - **Left Wing (Info & Deck Controls)**:
     - **Row 1 (SRC)**:
-      - **`[ SRC ]` Pill**: Labels the source row, whose 4 on-screen macro knobs are the deck's Visual Generator.
-      - **Generator / Preset Badge**: One control, not two -- a preset is just a generator with its parameter values saved under a name. Shows the active preset's name (with a dirty marker `*`) or, if nothing's been saved, the generator's own name. Click it and the Library below lists stock generator types and saved presets together, applying to this deck (click again to stop); right-click for source defaults.
-      - **Eject Button (`⏏`)**: Resets the deck's source to defaults with dirty-state safety guard. The deck's FX chain is left as it is.
+      - **`[ SRC ]` Pill**: Labels the source row, whose 4 on-screen macro knobs drive the deck's source.
+      - **Source / Preset Badge**: One control, not two -- a preset is just a source with its parameter values saved under a name. With a preset loaded it shows the preset's name (with `*` when changed) followed by the source it plays, dimmed (`curated-0001 · Fractal flame`); with a bare source, the source's name. Click it and the Library below lists stock sources and saved presets together, applying to this deck (click again to stop); right-click for source defaults. Clicking the stock source of the preset you're playing loads that source's defaults; clicking the source a deck already plays bare does nothing.
+      - **Eject Button (`⏏`)**: Empties the deck (with the unsaved-changes guard). The deck's FX chain is left as it is. Ctrl+Z can't undo it.
       - **Queue Navigation**: Deck A and Deck B connect to `PlayQueueManager` (`< N/Total >`), Deck BG connects to `BgQueueManager` (`< N/Total >`), and Deck PV features a quick Preview focus button.
-      - **Save Button**: Saves current visual source and parameters as a preset.
+      - **Save Button**: Saves the deck's source and parameters as a preset, back to the file it was loaded from (a new name goes to `presets/`). Greyed out for external video, which can't be saved.
       - **Kebab Menu (`⋮`)**: Source operations (Browse, Save As, defaults).
     - **Row 2 (FX)**:
       - **`[ FX ]` Knob Pill**: Assigns the row's 4 on-screen macro knobs to the deck's insert FX chain (Super Knob + 3 Metaknobs).
@@ -281,13 +281,13 @@ To maximize vertical space in the matrix and keep the knobs comfortably clustere
     - **Double-Click Direct Numeric Entry**: Double-click any macro knob face to open an inline text entry box. Type exact numerical values (e.g. `0.25`, `-1.5`, `42`) and press `Enter` to commit, or `Escape` to cancel. The typed value is what the parameter receives, so the knob's curve, invert and zone are taken into account (the readout shows the same value). For stepped or half-range bindings the knob snaps to the nearest position that gets closest.
     - **In-Face Readouts**: Hovering or dragging over a targetless or group-mode knob displays a subtle real-time value readout in the center of the knob face.
   - **Right Wing**:
-    - **Randomize Die Button (`🎲`)**: Instantly randomizes that deck's modulators & base values across both Visual Source and Insert FX with undo support (when randomization is enabled). Positioned on Row 1 directly above the FX ON button.
+    - **Randomize Die Button (`🎲`)**: Randomizes the source's modulators and base values, its Gain, Deck Zoom / Deck Rotate and the FX chain's Dry/Wet (parameters with randomization turned on), with undo (when randomization is enabled). Positioned on Row 1 directly above the FX ON button.
     - **`[ FX ON ]`**: Turns the deck's FX chain on or off; lit while on. Positioned on Row 2 aligned with the FX row.
   - **Drag-and-Drop**: Dropping a deck preset (`.patch`, `.lsd`, `.json`) loads the visual preset; dropping a `.lsdfxchain` loads that FX chain onto the deck.
 - **Whole-Rig Randomize (`[ ALL 🎲 ]`)**: Positioned at the top right of the performance matrix tab strip, pushing undo state and invoking `mixer.randomizeAll()` across all decks simultaneously.
 - **Master FX row**: Left wing: the `FX`-captioned `M` badge, the chain name box and the chain controls line, as on a deck FX row; right wing: Master FX `[ FX ON ]`. Dropping a `.lsdfxchain` onto the `MASTER` badge loads it into Master FX.
 - **Level faders on the deck tiles** (the thin strip beside each preview badge) share their value with the Master MST knobs: move the fader and the knob follows, turn the knob and the fader follows, last mover wins. A fader drag also mutes non-MIDI modulation on it and makes a Soft Takeover MIDI/OSC mapping on it pick up again instead of jumping. The handle line marks the fader's own value; the filled bar is the live level after modulation.
-- **Master MST row**: The `M` badge carries an `MST` caption. Line 1 is the `Deck Levels & Master` box (click to edit the levels, right-click for level resets) and a `100%` reset button; its gear opens Edit on the MST side tab's LEVELS section (the master level, then each deck's level and alpha), which shows this row together with the Clock row; the knobs are the Deck A / B / BG and Master levels. The crossfader is not here: it lives on the Transitions row (knob 1) and the Mixer panel.
+- **Master MST row**: The `M` badge carries an `MST` caption. Line 1 is the `Deck Levels & Master` box (click to edit the levels, right-click for level resets) and a `100%` reset button; its gear opens Edit on the MST side tab's LEVELS section (the master level, then each deck's level), which shows this row together with the Clock row; the knobs are the Deck A / B / BG and Master levels. The crossfader is not here: it lives on the Transitions row (knob 1) and the Mixer panel.
 - **Transitions (Row 2 in MASTER)**: Left wing features a Transition Picker button displaying the active transition with modified indicator (`*`) — click it to pick from the transition list in the Library below — and Transition Queue stepping controls (`<`, `N/Total`, `>`); right wing hosts the transition randomize die button (`🎲`) on Row 1 (matching the deck rows). Transition presets (`.lsdtrans`) and shaders (`.fs`/`.isf`) can be dropped directly onto the picker button.
 - **Clock & Global (Row 4 in MASTER)**: The two lines beside the `CLOCK` badge have the tempo controls from Preferences > Tempo & Sync, placed here for use mid-set:
   - **`[ MAN ]` / `[ AUDIO ]`**: clock source (manual tempo or the audio beat tracker).
@@ -348,7 +348,7 @@ between two disclosure tiers, without leaving the Perform view:
      (`CellScale` reads "Cell scale"). Above the grid sits the same header line as the pair view: **Back**, a
      **Browse | Params** switch (Browse shows the list for this deck and half in the pair view), the module's name and
      what the queue plays next. Each side tab has its own section tabs:
-     - **`MST`**: `[ LEVELS ]  [ CTRL ]` (the master level, then each deck's level and alpha; and the queue and randomize triggers, which are also on the Clock row)
+     - **`MST`**: `[ LEVELS ]  [ CTRL ]` (the master level, then each deck's level; and the queue and randomize triggers, which are also on the Clock row)
      - **`OUT`**: `[ FX ]  [ TRANS ]` (the Master FX chain's 3 ISF slots, and Transitions, led by crossfade and fade speed)
      - **`A`**, **`B`**, **`BG`**, **`PV`**: `[ SRC ]  [ FX ]` (visual generator with Gain/Zoom/Rotate Z, and the insert FX chain)
      Edit shows the open unit's two rows above the editor, as the Pair view does: a deck's source and FX rows, Master's Transitions and Master FX rows (`OUT` side tab), or Master's MST and the Clock row (`MST` side tab): in each case the two rows that share a half of a Twister page. The rows stay put when you switch sections; the **gear** that is lit marks the row the editor is on, and clicking the other row's gear moves the editor there (click the lit one to close Edit). Both rows' macro knobs stay live.
@@ -377,8 +377,8 @@ deck/master monitors; you keep watching the show while you pick. The pair view's
   the transition name, or turn a knob on that row, and Browse applies to that target (a deck's source,
   a chain, one FX slot, the transition). the Master MST row and the Clock row have nothing to browse (they are not a pair); the Master
   pair (Transitions + Master FX) with nothing touched browses the Master FX chain. On Edit's MST side tab the Browse button is disabled.
-- **Gen Browse lists generators and presets together**: stock generator types and saved presets
-  always appear in the same list — a preset is just a generator with its parameter values saved
+- **Source Browse lists sources and presets together**: stock sources and saved presets
+  always appear in the same list — a preset is just a source with its parameter values saved
   under a name. Saved-preset rows get a "⋮" menu (also on right-click) that starts with **Apply to <deck>**,
   then **Rename...**, **Clone...**, **Delete...** and **Reveal in File Manager**, and a floppy-disk
   **Save / Save As** button sits beside the target's name — the same save flow
@@ -473,7 +473,7 @@ Similar to Ableton's default presets, you can configure your favorite parameter 
 
 ### Visual Generator Defaults
 
-When swapping visual sources on any deck (via the generator badge or launchpad), the incoming generator's default configuration is resolved across three tiers:
+When swapping sources on any deck (via the source badge or the empty-deck card), the incoming source's default configuration is resolved across three tiers:
 1. **User Default**: Custom parameter baselines, `globalAlpha`, and 4-knob macro layout saved in `library/generator_defaults/<sourceId>.json`.
 2. **Curated Stock Default**: Hand-curated 4-knob macro targets for bundled generators (`mandala`, `dynamic_spiral`, `icosa_h3`, `domain_warp_fluid`, `gyroid_hyperspace`, `celestial_engine`, `hyper_slice`, `chladni_cymatics`, `mandelbox`, `kifs`, `mandelbulb`, `pseudo_kleinian`, `apollonian`, `escape_time`, `nebula_volume`, `reaction_diffusion`, `fluid_ink`, `lenia`, `quasicrystal`, `thin_film`, `tunnel_scenes`, `video_feedback`, `hyperbolic_tiling`, `cyclic_ca`, `metaballs`, `wave_ripples`, `harmonograph`, `aurora_ribbons`, `isometric_voxels`, `halftone_matrix`, `kali_set`, `girih_stars`, `glitch_blocks`, `voronoi_cells`).
 3. **Automated Heuristic Fallback**: For third-party ISF shaders, continuous floats (e.g. speed, rate, zoom, scale, morph, depth, detail) are prioritized, discrete stepped selectors are filtered out, and speed/frequency parameters are shaped with exponential response curves.
@@ -482,7 +482,7 @@ When swapping visual sources on any deck (via the generator badge or launchpad),
 
 **How to Save or Reset Generator Defaults**:
 - **Right-click the generator badge** on any deck row in the Perform view to open the context menu:
-  - `Save as Default for <Generator>`: Saves current parameters, alpha, and 4-knob macro layout as the generator default.
+  - `Save as Default for <Generator>`: Saves current parameters, Gain, and 4-knob macro layout as the generator default.
   - `Apply Default Now`: Reapplies the default layout and parameters to the current deck.
   - `Reset to Factory Default`: Deletes the user default file and restores curated/heuristic factory defaults.
 - Alternatively, open the **Save menu** in Edit's monitor toolbar and select `Save as Default for <Generator>`.

@@ -5,7 +5,6 @@ import llm.slop.liquidlsd.rendering.DynamicVisualSource
 import llm.slop.liquidlsd.rendering.FBO
 import llm.slop.liquidlsd.rendering.Geometry
 import llm.slop.liquidlsd.rendering.Shader
-import llm.slop.liquidlsd.utils.TimeSource
 import kotlinx.serialization.json.*
 import org.lwjgl.opengl.GL33.*
 import kotlin.math.roundToInt
@@ -18,7 +17,7 @@ class ISFVisualSource(
     parameters: LinkedHashMap<String, ModulatableParameter>,
     hasFeedback: Boolean = false,
     ownsShader: Boolean = false,
-    is3D: Boolean = header.is3D || (parameters.containsKey("Rotate X") && parameters.containsKey("Rotate Y")),
+    is3D: Boolean = header.is3D || DynamicVisualSource.hasCameraRotation(parameters.keys),
     override val categories: List<String> = header.CATEGORIES ?: emptyList(),
     override val folderPath: String = "",
     val baseDir: java.io.File? = null,
@@ -90,9 +89,6 @@ class ISFVisualSource(
         "\$HEIGHT" -> DimOperand.Height
         else -> token.toFloatOrNull()?.let { DimOperand.Literal(it) }
     }
-
-    private var frameIndex = 0
-    private var lastTime = TimeSource.getTimeSec().toFloat()
 
     // Multipass infrastructure — compiled once from the fixed header.PASSES list so the render loop
     // never does string parsing, map lookups, or Pair allocation (see ARCHITECTURE.md zero-alloc guarantees).
@@ -252,33 +248,8 @@ class ISFVisualSource(
     }.toTypedArray()
 
     override fun setupUniforms(shader: Shader) {
-        // 1. ISF standard uniforms
-        val currentTime = TimeSource.getTimeSec().toFloat()
-        val deltaTime = currentTime - lastTime
-        lastTime = currentTime
-        
-        shader.setUniform("TIME", currentTime)
-        shader.setUniform("TIMEDELTA", deltaTime)
-        shader.setUniform("FRAMEINDEX", frameIndex++)
-        
-        // Derive DATE components via epoch arithmetic — zero allocation (no LocalDateTime/LocalTime objects)
-        val epochMs = llm.slop.liquidlsd.utils.TimeSource.getEpochMillis()
-        val epochSec = epochMs / 1000L
-        val secondsSinceMidnight = (epochSec % 86400L).toFloat() + ((epochMs % 1000L) / 1000f)
-        // Gregorian calendar from epoch seconds (proleptic, valid well past 2100)
-        val daysSinceEpoch = (epochSec / 86400L).toInt()
-        val year400 = daysSinceEpoch / 146097; val rem400 = daysSinceEpoch % 146097
-        val year100 = minOf(rem400 / 36524, 3); val rem100 = rem400 - year100 * 36524
-        val year4   = rem100 / 1461;             val rem4   = rem100 % 1461
-        val year1   = minOf(rem4 / 365, 3);      val rem1   = rem4 - year1 * 365
-        val yearNum = 1970 + year400 * 400 + year100 * 100 + year4 * 4 + year1
-        val isLeap  = (yearNum % 4 == 0 && yearNum % 100 != 0) || yearNum % 400 == 0
-        val monthStarts = if (isLeap) MONTH_STARTS_LEAP else MONTH_STARTS_NORMAL
-        var monthNum = 11
-        for (m in 0..10) { if (rem1 < monthStarts[m + 1]) { monthNum = m; break } }
-        shader.setUniform("DATE", yearNum.toFloat(), (monthNum + 1).toFloat(), (rem1 - monthStarts[monthNum] + 1).toFloat(), secondsSinceMidnight)
-        
-        // 2. ISF Input uniforms — pre-bound direct references, zero allocations per frame
+        // TIME, TIMEDELTA, FRAMEINDEX, DATE and RENDERSIZE are set per deck by [llm.slop.liquidlsd.rendering.Renderer].
+        // ISF Input uniforms — pre-bound direct references, zero allocations per frame
         for (i in 0 until inputBindings.size) {
             inputBindings[i].apply(shader)
         }
@@ -414,6 +385,9 @@ class ISFVisualSource(
 
     override fun dispose() {
         super.dispose()
+        // A deck may put a disposed clone back (undo): zero the size so the next render re-allocates the pass targets.
+        passWidth = 0
+        passHeight = 0
         for (i in regularFBOs.indices) {
             regularFBOs[i]?.dispose()
             regularFBOs[i] = null
@@ -443,11 +417,6 @@ class ISFVisualSource(
     }
 
     companion object {
-        // Day-of-year offset for the 1st of each month (index 0=Jan … 11=Dec), plus sentinel at [12]
-        // Used in setupUniforms() so the DATE computation is allocation-free on the render thread.
-        private val MONTH_STARTS_NORMAL = intArrayOf(0,31,59,90,120,151,181,212,243,273,304,334,365)
-        private val MONTH_STARTS_LEAP   = intArrayOf(0,31,60,91,121,152,182,213,244,274,305,335,366)
-
         fun createParameters(header: ISFHeader): LinkedHashMap<String, ModulatableParameter> {
             val params = LinkedHashMap<String, ModulatableParameter>()
             header.INPUTS.forEach { input ->

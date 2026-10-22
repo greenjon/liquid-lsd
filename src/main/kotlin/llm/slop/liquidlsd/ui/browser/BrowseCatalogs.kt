@@ -35,7 +35,7 @@ object BrowseCatalogs {
     fun get(kind: BrowseKind): BrowseCatalog {
         val playlistAssets = playlistAssets(kind)
         val inputs = when (kind) {
-            BrowseKind.SRC -> listOf(VisualSourceRegistry.availableSources.toList(), FileSystemManager.scanAllPresets(), playlistAssets, ExternalVideoDiscovery.availableServers.value)
+            BrowseKind.SRC -> listOf(VisualSourceRegistry.availableSources.toList(), VisualSourceRegistry.compileErrors.keys.toSet(), FileSystemManager.scanAllPresets(), playlistAssets, ExternalVideoDiscovery.availableServers.value)
             BrowseKind.FX -> listOf(ISFFilterRegistry.availableFilters, FileSystemManager.scanAllFxPresets(), FileSystemManager.scanAllFxChains(), playlistAssets)
             BrowseKind.TRANS -> listOf(ISFTransitionRegistry.availableTransitions, FileSystemManager.scanAllTransitionPresets(), playlistAssets)
         } + BrowseFavorites.version(kind) + BrowseRecents.version(kind) + playlistAssets.map { File(it.path).lastModified() }
@@ -68,11 +68,12 @@ object BrowseCatalogs {
         val stock = VisualSourceRegistry.availableSources.filter { it !is ExternalVideoSource }.sortedBy { it.displayName.lowercase() }.map {
             BrowseEntry(
                 AssetItem(STOCK_SOURCE_PREFIX + it.id, it.displayName, AssetType.SOURCE_STOCK, tags = it.categories, gpuCost = (it as? ISFVisualSource)?.header?.gpuCost ?: 0),
-                BrowseSection.STOCK, it.id, it.folderPath, it.categories, it.categories.joinToString(", ")
+                BrowseSection.STOCK, it.id, it.folderPath, it.categories,
+                if (VisualSourceRegistry.compileErrors.containsKey(it.id)) "${llm.slop.liquidlsd.ui.Icons.ALERT} failed to compile" else it.categories.joinToString(", ")
             )
         }
         val saved = FileSystemManager.scanAllPresets().map {
-            BrowseEntry(it, BrowseSection.SAVED, it.path, BrowseCatalog.folderOf(File(it.path), root), it.tags, it.tags.joinToString(", "))
+            BrowseEntry(it, BrowseSection.SAVED, it.path, BrowseCatalog.folderOf(File(it.path), root), it.tags, presetInfo(it))
         }
         val live = ExternalVideoDiscovery.availableServers.value.map {
             BrowseEntry(
@@ -82,6 +83,18 @@ object BrowseCatalogs {
         }
         return stock + saved + live
     }
+
+    /** A saved preset's info column: the source it plays, then its tags ("Kifs · dark, slow"), or a warning when that source isn't loaded. */
+    internal fun presetInfo(asset: AssetItem): String {
+        val tags = asset.tags.joinToString(", ")
+        val id = asset.sourceId ?: return tags
+        val source = sourceLabel(id) ?: return "${llm.slop.liquidlsd.ui.Icons.ALERT} $id missing" + if (tags.isEmpty()) "" else " · $tags"
+        return if (tags.isEmpty()) source else "$source · $tags"
+    }
+
+    /** Display name of the loaded source [id] ("External video" for a stream), or null when it isn't loaded. */
+    internal fun sourceLabel(id: String): String? =
+        VisualSourceRegistry.find(id)?.let { if (it is ExternalVideoSource) "External video" else it.displayName }
 
     /** The stream name of an external-video row. */
     fun externalName(asset: AssetItem): String = asset.path.removePrefix(EXTERNAL_SOURCE_PREFIX)

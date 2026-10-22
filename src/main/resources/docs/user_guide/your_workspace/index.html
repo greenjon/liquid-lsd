@@ -1563,14 +1563,14 @@
 <p><strong>Deck PV (Preview)</strong> — A fully independent audition deck that <em>never</em> outputs to the master. Use it to quietly load and preview a preset on your monitor before pushing it live. It runs the complete visual and modulation chain, so what you see is exactly what you'll get.</p>
 </li>
 </ul>
-<p>Each deck is completely independent — its own visual source, its own 3-slot effects chain, and its own modulation.</p>
+<p>Each deck is completely independent — its own source, its own 3-slot effects chain, and its own modulation.</p>
 <hr />
 <h2 id="signal-flow">Signal Flow</h2>
 <p>Here's how audio becomes visuals:</p>
 <ol>
 <li><strong>Audio in</strong> → The DSP engine analyses your track in real time, splitting it into frequency bands and tracking the beat.</li>
 <li><strong>CV modulation</strong> → Those audio signals become control voltages that can drive any visual parameter.</li>
-<li><strong>Visual generators</strong> → Each deck runs a visual source (Mandala, a shader, external video, etc.) using those CV signals to shape what renders.</li>
+<li><strong>Sources</strong> → Each deck runs a source (a generator such as Mandala, an ISF shader, external video, etc.) using those CV signals to shape what renders.</li>
 <li><strong>FX chain</strong> → Each deck runs its source through a chain of three effect slots, left to right. Feedback (the trails that layer the image over time) is one of the effects you can put in a slot.</li>
 <li><strong>Mixer</strong> → Deck A and B blend together through the crossfader and the current transition. Deck BG fills in behind them, wherever their mix is transparent.</li>
 <li><strong>Master FX</strong> → The mixed image runs through a final chain of three effect slots.</li>
@@ -1579,7 +1579,7 @@
 <hr />
 <h2 id="the-performance-panel-left-middle">The Performance Panel (Left &amp; Middle)</h2>
 <p>The top of the left and middle columns is the <strong>Perform view</strong>: a 4×4 grid of macro knobs,
-one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Click a deck row's source name to change its visual source in the Library below.</p>
+one row per deck or section, with tabs across the top (A/B, BG/PV and MIXER). Click a deck row's source name to change its source in the Library below.</p>
 <p>For full control, open a row's <strong>Edit</strong> (the gear on the row, or <strong>Params</strong> in the pair view's header). Edit has three columns:</p>
 <ul>
 <li><strong>Side rail</strong> — <code>[MST] [OUT] [A] [B] [BG] [PV]</code> to jump between channels. <strong>MST</strong> is the Master MST row and the Clock row (deck levels, queue triggers); <strong>OUT</strong> is the output stage (Transitions and Master FX).</li>

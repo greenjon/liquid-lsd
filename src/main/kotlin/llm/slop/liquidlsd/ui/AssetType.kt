@@ -31,7 +31,9 @@ data class AssetItem(
     val tags: List<String> = emptyList(),
     val dependencies: llm.slop.liquidlsd.presets.PresetDependencies? = null,
     /** Author-declared GPU cost of a stock ISF shader (0 = undeclared, 3 = heavy); the browser badges 3. */
-    val gpuCost: Int = 0
+    val gpuCost: Int = 0,
+    /** A deck preset's source id (its `visualSourceType`); null for other assets, empty presets and unreadable files. */
+    val sourceId: String? = null
 ) {
     val displayName: String
         get() = if (isValid) name else "[!] $name"

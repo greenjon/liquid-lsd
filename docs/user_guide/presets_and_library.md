@@ -90,7 +90,7 @@ Toggle between sources, FX, transitions and banks (macro banks and Perform pages
 
 The mode buttons pick what the three parts show:
 
-- **`[ Sources ]`**: stock visual sources and saved full deck presets (`.lsd`, in `library/presets/`); setlists (`.lsdplay`) live in `library/playlists/`.
+- **`[ Sources ]`**: stock sources and saved full deck presets (`.lsd`, in `library/presets/`); setlists (`.lsdplay`) live in `library/playlists/`.
 - **`[ FX ]`**: stock ISF filters, saved single-slot FX presets (`.lsdfx`, in `library/fx/`) and saved 3-slot FX chains (`.lsdfxchain`, in `library/fx_chains/`); curated FX playlists (`.lsdfxplay`) live in `library/fx_playlists/`.
 - **`[ Transitions ]`**: stock ISF transition shaders and saved transition presets (`.lsdtrans`, in `library/transitions/`); setlists (`.lsdtransplay`) live in `library/transition_playlists/`.
 
@@ -100,8 +100,8 @@ The same browser applies to a slot when you click one on a row (see above); then
 
 The `[ Sources ]` list shows two kinds of row side by side, each marked with its own icon:
 
-- **Stock Sources** — The 8 bundled built-in visual sources: Mandala, Dynamic Spiral, Icosa H3, Domain Warp Fluid, Gyroid Hyperspace, Celestial Engine, Hyper Slice, and Chladni Cymatics (plus external video streams and any custom sources dropped into your configured shader directories). They load straight to a deck's source stage with their shader's default parameters; they can't be added to a playlist or queue.
-- **Saved Presets (`.lsd`)** — A full deck preset: the visual source plus every parameter value, modulation connection, and note.
+- **Stock Sources** — The bundled generators (see [Visual Sources](visual_sources.md) for the list), plus external video streams and any custom sources dropped into your configured shader directories. They load straight to a deck's source stage with their shader's default parameters; they can't be added to a playlist or queue.
+- **Saved Presets (`.lsd`)** — A full deck preset: the source plus every parameter value, modulation connection, and note. Its row shows the source it plays before its tags; a preset whose source isn't installed (or failed to compile) shows ⚠ and won't load.
 - **External Video** — Live Spout, Syphon or PipeWire streams running right now, one row each in the **External video** folder (empty when none is active). Load one like a stock source (double-click, the menu, or drag it onto a deck); it appears and disappears as the stream starts and stops. Streams are not files, so they have no favorites, playlists or queues and cannot be saved as presets.
 
 Pick a section in the folder tree to show only stock sources, saved presets or live streams. Use the **New preset** button above the list to eject a deck to blank so you can build a new preset on it (see [Saving a preset](#saving-a-preset) above).
@@ -115,7 +115,7 @@ Pick a section in the folder tree to show only stock sources, saved presets or l
   - **Batch Context Menu** — Right-clicking with multiple items selected presents options like **Add N Presets to Playlist**, **Add N Presets to Queue**, and **Delete N Presets...**.
   - **Multi-Item Drag & Drop** — Dragging any item from a multi-selection carries all selected presets simultaneously into Playlists or Queues.
   - **Batch Deletion** — Pressing `Delete` or selecting **Delete...** from the context menu opens a confirmation modal detailing the exact count and list of presets to be deleted.
-- **Double-click** — Loads the item into whichever deck is currently inactive on the crossfader. For a stock source this replaces only the deck's visual source, leaving its FX chain untouched; for a saved preset it loads the full deck state.
+- **Double-click** — Loads the item into whichever deck is currently inactive on the crossfader. For a stock source this replaces only the deck's source, leaving its FX chain untouched; for a saved preset it loads the full deck state.
 - **Alt+click** — Previews the source or preset on Deck PV.
 - **Right-click or ⋮ (saved presets)** — Load to a specific deck, add to a queue or to the selected playlist (**Add to '<playlist>'**), **Rename...** (also edits tags), **Clone...**, **Delete...**, or **Reveal in File Manager**.
 - **Right-click or ⋮ (stock sources)** — **Load to Deck A/B/BG** or **Preview on Deck PV** only. Stock sources have no persisted parameter state, and their bundled defaults and Metaknob auto-mappings haven't all been individually audited yet, so they're intentionally left out of playlists and the live/background queues — an unattended queue firing an unverified default has no performer there to catch it. Loading straight to a deck is fine, since you're present to dial it in.

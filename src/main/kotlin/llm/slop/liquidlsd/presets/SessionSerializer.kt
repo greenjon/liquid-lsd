@@ -209,7 +209,7 @@ object SessionSerializer {
                 if (!dDto.isEmpty && dDto.visualSourceType.isNotBlank() && dDto.visualSourceType != "mandala" && dDto.visualSourceType != "blank") {
                     val found = llm.slop.liquidlsd.rendering.VisualSourceRegistry.availableSources.any { it.id == dDto.visualSourceType }
                     if (!found) {
-                        allUnresolved.add("Deck $deckName visual source not found: ${dDto.visualSourceType}")
+                        allUnresolved.add("Deck $deckName source not found: ${dDto.visualSourceType}")
                     }
                 }
             }
@@ -265,7 +265,8 @@ object SessionSerializer {
             // After the banks are registered: setActive snapshots the live bank as the dirty baseline,
             // so a restored deck whose knobs are later edited counts as having unsaved changes.
             fun restoreActive(slot: DeckSlot, dto: DeckPresetDto) {
-                if (dto.isEmpty) PresetManager.clearActive(slot)
+                // A deck whose source is missing was left empty by applyDto (and reported as unresolved above).
+                if (dto.isEmpty || slot.deck(mixer).isEmpty) PresetManager.clearActive(slot)
                 else PresetManager.setActive(
                     slot, dto.name,
                     slot.deck(mixer).toDto(dto.name, dto.tags).copy(presetNotes = dto.presetNotes, paramNotes = dto.paramNotes)

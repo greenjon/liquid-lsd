@@ -10,6 +10,20 @@ import llm.slop.liquidlsd.SessionContext
 object ShaderLocationsPreferencesPanel {
     private var customFolderPathBuf: ImString? = null
 
+    /**
+     * Re-indexes the shader folders off the render thread, then registers what's new on it: compiling a shader
+     * needs the GL context, which only the render thread holds.
+     */
+    private fun rescan() {
+        llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
+            llm.slop.liquidlsd.rendering.VisualSourceRegistry.runOnGlThread {
+                llm.slop.liquidlsd.rendering.VisualSourceRegistry.rescan()
+                llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
+                llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
+            }
+        })
+    }
+
     fun drawContent(session: SessionContext) {
         session.uiTheme.h2("ISF Shader Locations & Libraries")
         ImGui.separator()
@@ -30,12 +44,7 @@ object ShaderLocationsPreferencesPanel {
                 val added = llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.addCustomDirectory(pathStr)
                 if (added) {
                     customFolderPathBuf!!.set("")
-                    // Async scan so the render thread is never stalled by disk I/O.
-                    llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
-                        llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
-                        llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
-                        llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
-                    })
+                    rescan()
                 }
             }
         }
@@ -43,12 +52,7 @@ object ShaderLocationsPreferencesPanel {
 
         ImGui.sameLine()
         if (ButtonChrome.button("Rescan Now##rescan_isf")) {
-            // Async scan so the render thread is never stalled by disk I/O.
-            llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
-                llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
-                llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
-                llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
-            })
+            rescan()
         }
         itemTooltip("Force immediate re-scan of all enabled ISF directories.")
 
@@ -75,11 +79,7 @@ object ShaderLocationsPreferencesPanel {
                 val enabled = ImBoolean(resolved.config.isEnabled)
                 if (ImGui.checkbox("##en_${resolved.config.path}", enabled)) {
                     llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.toggleDirectoryEnabled(resolved.config.path, enabled.get())
-                    llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
-                        llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
-                        llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
-                        llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
-                    })
+                    rescan()
                 }
 
                 // Col 1: Path
@@ -116,11 +116,7 @@ object ShaderLocationsPreferencesPanel {
                 } else {
                     if (ButtonChrome.button("Remove##${resolved.config.path}")) {
                         llm.slop.liquidlsd.rendering.isf.ISFDirectoryManager.removeDirectory(resolved.config.path)
-                        llm.slop.liquidlsd.rendering.isf.ISFLibraryRegistry.scanLibraryAsync(onComplete = {
-                            llm.slop.liquidlsd.rendering.VisualSourceRegistry.loadAll()
-                            llm.slop.liquidlsd.rendering.isf.ISFFilterRegistry.loadAll()
-                            llm.slop.liquidlsd.rendering.isf.ISFTransitionRegistry.loadAll()
-                        })
+                        rescan()
                     }
                 }
             }

@@ -157,7 +157,7 @@ void main() {
         for (int i = 0; i < 4; i++) {
             if (i >= aa) break;
             vec2 off = (vec2(float(i), float(j)) + 0.5) / float(aa) - 0.5;
-            vec2 fc = gl_FragCoord.xy + off;
+            vec2 fc = isf_FragNormCoord * RENDERSIZE + off;   // deck Zoom / Rotate Z act through isf_FragNormCoord
             vec2 uv = (fc / RENDERSIZE - 0.5) * vec2(aspect, 1.0);
             acc += shade(uv, n, k, wphase, Falloff_, style, pal, Contrast_);
             cnt += 1.0;

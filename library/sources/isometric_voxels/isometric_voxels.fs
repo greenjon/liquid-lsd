@@ -178,7 +178,7 @@ void main() {
     gPhase = mod(TIME * Speed_, TAU);
     gDrift = mod(TIME * Speed * 0.5, 1024.0);
 
-    vec2 fc = gl_FragCoord.xy;
+    vec2 fc = isf_FragNormCoord * RENDERSIZE;   // deck Zoom / Rotate Z act through isf_FragNormCoord
     vec3 acc;
     if (Quality < 0.34) {
         acc = shadeAt(fc);

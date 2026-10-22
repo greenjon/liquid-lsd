@@ -8,8 +8,9 @@ import java.io.File
 
 /**
  * Preset schema migration/sanitization: normalizes a loaded [DeckPresetDto] against the
- * active visual source and feedback schemas, filling in defaults for any missing
- * parameters and stripping obsolete/legacy keys.
+ * active visual source's schema, filling in defaults for any missing parameters and
+ * stripping obsolete/legacy keys. Legacy deck feedback values are dropped when the file is
+ * rewritten for another reason; on their own they don't trigger a rewrite.
  *
  * Pure data transformation (with a read of the visual source's `meta.json` schema file to
  * determine expected parameters) - no preset file I/O or session serialization lives here.
@@ -25,7 +26,7 @@ object PresetMigrator {
     private val LIBRARY_ROOT = File("library").absoluteFile
 
     /**
-     * Sanitizes an incoming [DeckPresetDto] against the active visual source and feedback schemas.
+     * Sanitizes an incoming [DeckPresetDto] against the active visual source's schema.
      * Fills in defaults for any missing parameters and removes obsolete/legacy keys.
      * Returns a pair of the sanitized DTO and a boolean indicating whether any modifications occurred.
      */
@@ -71,34 +72,6 @@ object PresetMigrator {
             sanitizedParams.putAll(dto.parameters)
         }
 
-        // Canonical feedback parameters
-        val canonicalFeedbackDefaults = mapOf(
-            "fbDecay" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
-            "fbGain" to ParameterDto(1.0f, 1.0f, 1.0f, false, emptyList()),
-            "fbZoom" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
-            "fbRotate" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
-            "fbHueShift" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
-            "fbBlur" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
-            "fbChroma" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
-            "fbMode" to ParameterDto(0.0f, 0.0f, 0.0f, false, emptyList()),
-            "fbKaleido" to ParameterDto(1.0f, 1.0f, 1.0f, false, emptyList())
-        )
-
-        val sanitizedFeedback = LinkedHashMap<String, ParameterDto>()
-        for ((key, defaultDto) in canonicalFeedbackDefaults) {
-            val existing = dto.feedbackParameters[key]
-            if (existing != null) {
-                sanitizedFeedback[key] = existing
-            } else {
-                modified = true
-                sanitizedFeedback[key] = defaultDto
-            }
-        }
-
-        if (dto.feedbackParameters.keys != canonicalFeedbackDefaults.keys) {
-            modified = true
-        }
-
         val sanitizedGlobalAlpha = dto.globalAlpha ?: run {
             modified = true
             ParameterDto(1.0f, 1.0f, 1.0f, false, emptyList())
@@ -107,7 +80,7 @@ object PresetMigrator {
         val sanitizedDto = if (modified) {
             dto.copy(
                 parameters = sanitizedParams,
-                feedbackParameters = sanitizedFeedback,
+                feedbackParameters = emptyMap(),
                 globalAlpha = sanitizedGlobalAlpha
             )
         } else {

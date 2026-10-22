@@ -559,21 +559,17 @@ fun main(args: Array<String>) {
             // 0.5. Update Macro Engine (must run before any deck's .update()/.evaluate())
             llm.slop.liquidlsd.macro.MacroEngine.tick(mixer)
 
-            // 1. Update and Render Deck A (renders source + applies feedback loop)
-            deckA.update()
-            renderer.renderDeck(deckA)
-
-            // 2. Update and Render Deck B (renders source + applies feedback loop)
-            deckB.update()
-            renderer.renderDeck(deckB)
-
-            // 3. Update and Render Deck BG (background layer)
-            mixer.deckBG.update()
-            renderer.renderDeck(mixer.deckBG)
-
-            // 4. Update and Render Deck PV (preview)
-            mixer.deckPV.update()
-            renderer.renderDeck(mixer.deckPV)
+            // 1-4. Update every deck; render the ones the budget allows (see DeckRenderBudget: PV at half size,
+            // off-air decks every other frame)
+            val budget = llm.slop.liquidlsd.rendering.DeckRenderBudget
+            budget.nextFrame()
+            val (pvW, pvH) = budget.pvSize(mixer.width, mixer.height, budget.isStreamed(llm.slop.liquidlsd.presets.DeckSlot.PV))
+            mixer.deckPV.resize(pvW, pvH)
+            for (slot in llm.slop.liquidlsd.presets.DeckSlot.entries) {
+                val deck = slot.deck(mixer)
+                deck.update()
+                if (budget.shouldRender(slot, mixer)) renderer.renderDeck(deck)
+            }
 
             // 5. Update and composite Decks in the Mixer
             mixer.update()
@@ -583,7 +579,7 @@ fun main(args: Array<String>) {
             llm.slop.liquidlsd.rendering.TextureStreamerManager.update(llm.slop.liquidlsd.rendering.VideoOutputEndpoint.DECK_A, deckA.getOutputTexture(), mixer.width, mixer.height, renderer)
             llm.slop.liquidlsd.rendering.TextureStreamerManager.update(llm.slop.liquidlsd.rendering.VideoOutputEndpoint.DECK_B, deckB.getOutputTexture(), mixer.width, mixer.height, renderer)
             llm.slop.liquidlsd.rendering.TextureStreamerManager.update(llm.slop.liquidlsd.rendering.VideoOutputEndpoint.DECK_BG, mixer.deckBG.getOutputTexture(), mixer.width, mixer.height, renderer)
-            llm.slop.liquidlsd.rendering.TextureStreamerManager.update(llm.slop.liquidlsd.rendering.VideoOutputEndpoint.DECK_PV, mixer.deckPV.getOutputTexture(), mixer.width, mixer.height, renderer)
+            llm.slop.liquidlsd.rendering.TextureStreamerManager.update(llm.slop.liquidlsd.rendering.VideoOutputEndpoint.DECK_PV, mixer.deckPV.getOutputTexture(), mixer.deckPV.width, mixer.deckPV.height, renderer)
             llm.slop.liquidlsd.rendering.TextureStreamerManager.update(llm.slop.liquidlsd.rendering.VideoOutputEndpoint.MASTER, mixer.masterFBO.texture, mixer.width, mixer.height, renderer)
 
             llm.slop.liquidlsd.export.RealtimeRecorder.captureFrame(mixer.masterFBO.framebufferId)

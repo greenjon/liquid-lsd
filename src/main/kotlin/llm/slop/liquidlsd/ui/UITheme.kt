@@ -138,6 +138,10 @@ object UITheme {
         get() = settings.flameQuality
         set(value) { settings = settings.copy(flameQuality = value) }
 
+    var offAirHalfRate: Boolean
+        get() = settings.offAirHalfRate
+        set(value) { settings = settings.copy(offAirHalfRate = value) }
+
     var sequencerEnabled: Boolean
         get() = settings.sequencerEnabled
         set(value) { settings = settings.copy(sequencerEnabled = value) }

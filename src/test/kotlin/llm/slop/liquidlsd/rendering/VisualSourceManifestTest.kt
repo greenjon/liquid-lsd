@@ -100,8 +100,35 @@ class VisualSourceManifestTest {
             tempDir.deleteRecursively()
         }
     }
+
+    @Test
+    fun aBundledSourceUpdateReplacesAnUneditedCopyAndKeepsAnEditedOne() {
+        val tempDir = java.nio.file.Files.createTempDirectory("test_sources").toFile()
+        try {
+            val old = "old shipped".toByteArray()
+            val new = "new shipped".toByteArray()
+            val edited = "my edit".toByteArray()
+            File(tempDir, "kifs").mkdirs()
+            File(tempDir, "kifs/kifs.fs").writeBytes(old)
+            File(tempDir, "metaballs").mkdirs()
+            File(tempDir, "metaballs/metaballs.fs").writeBytes(edited)
+            val shipped = setOf("kifs/kifs.fs ${VisualSourceRegistry.sha256(old)}", "metaballs/metaballs.fs ${VisualSourceRegistry.sha256(old)}")
+
+            VisualSourceRegistry.ensureDefaultSources(tempDir, shipped) { rel -> if (rel == "kifs/kifs.fs" || rel == "metaballs/metaballs.fs") new else null }
+
+            assertEquals("new shipped", File(tempDir, "kifs/kifs.fs").readText(), "an unedited shipped version is updated")
+            assertEquals("my edit", File(tempDir, "metaballs/metaballs.fs").readText(), "an edited copy is kept")
+        } finally {
+            tempDir.deleteRecursively()
+        }
+    }
+
+    @Test
+    fun everyBundledSourceFileIsInTheShippedHashList() {
+        val shipped = VisualSourceRegistry.shippedHashes()
+        val root = File("library/sources")
+        val missing = root.walkTopDown().filter { it.isFile }.map { "${it.relativeTo(root).path.replace('\\', '/')} ${VisualSourceRegistry.sha256(it.readBytes())}" }
+            .filter { it !in shipped }.toList()
+        assertTrue(missing.isEmpty(), "Run ./scripts/shipped_source_hashes.py: these bundled files aren't in shipped_source_hashes.txt: $missing")
+    }
 }
-
-
-
-

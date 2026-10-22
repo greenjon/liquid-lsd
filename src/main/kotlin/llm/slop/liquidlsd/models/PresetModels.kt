@@ -233,8 +233,10 @@ data class DeckPresetDto(
     val visualSourceType: String, // e.g., "Mandala" or "Mandelbulb"
     val serverName: String = "",
     val parameters: Map<String, ParameterDto>, // Visual source params
-    val feedbackParameters: Map<String, ParameterDto>, // Feedback chain params
-    val viewParameters: Map<String, ParameterDto> = emptyMap(), // 3D View chain params
+    /** Legacy deck-level feedback; feedback is an FX now. Read and ignored, no longer written. */
+    val feedbackParameters: Map<String, ParameterDto> = emptyMap(),
+    /** Deck framing: `viewZoom` and `viewRotateZ` (older presets also carry unused 3D-view keys, ignored). */
+    val viewParameters: Map<String, ParameterDto> = emptyMap(),
     val globalAlpha: ParameterDto? = null,
     val isEmpty: Boolean = false,
     val presetNotes: String = "",             // User notes for this preset
@@ -489,29 +491,9 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
     
     val paramsMap = source.parameters.mapValues { it.value.toDto() }
     
-    val feedbackParamsMap = mapOf(
-        "fbDecay" to fbDecay.toDto(),
-        "fbGain" to fbGain.toDto(),
-        "fbZoom" to fbZoom.toDto(),
-        "fbRotate" to fbRotate.toDto(),
-        "fbHueShift" to fbHueShift.toDto(),
-        "fbBlur" to fbBlur.toDto(),
-        "fbChroma" to fbChroma.toDto(),
-        "fbMode" to fbMode.toDto(),
-        "fbKaleido" to fbKaleido.toDto()
-    )
-
     val viewParamsMap = mapOf(
-        "view3DMode" to view3DMode.toDto(),
         "viewZoom" to viewZoom.toDto(),
-        "viewRotateX" to viewRotateX.toDto(),
-        "viewRotateY" to viewRotateY.toDto(),
-        "viewRotateZ" to viewRotateZ.toDto(),
-        "viewPersp" to viewPersp.toDto(),
-        "viewDepthDim" to viewDepthDim.toDto(),
-        "viewSeparation" to viewSeparation.toDto(),
-        "viewBlendMode" to viewBlendMode.toDto(),
-        "viewRoundness" to viewRoundness.toDto()
+        "viewRotateZ" to viewRotateZ.toDto()
     )
 
     return DeckPresetDto(
@@ -520,7 +502,6 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
         visualSourceType = sourceName,
         serverName = extServerName,
         parameters = paramsMap,
-        feedbackParameters = feedbackParamsMap,
         viewParameters = viewParamsMap,
         globalAlpha = source.globalAlpha.toDto(),
         isEmpty = isEmpty,
@@ -529,31 +510,24 @@ fun Deck.toDto(name: String, tags: List<String> = emptyList()): DeckPresetDto {
     )
 }
 
-fun Deck.applyDto(dto: DeckPresetDto) {
-    if (dto.isEmpty) {
+/**
+ * Rebuilds the deck from [dto]: a fresh clone of the preset's source from [llm.slop.liquidlsd.rendering.VisualSourceRegistry]
+ * with the saved values applied.
+ * @return false when the preset's source isn't loaded: the deck is then left empty rather than showing another
+ * generator under the preset's name. [llm.slop.liquidlsd.presets.DeckOps] checks first, so a manual load never gets here.
+ */
+fun Deck.applyDto(dto: DeckPresetDto): Boolean {
+    val matchedSource = if (dto.isEmpty) null else llm.slop.liquidlsd.rendering.VisualSourceRegistry.find(dto.visualSourceType)
+    if (matchedSource == null) {
         reset()
-        val defaultSource = availableSources.firstOrNull { (it as? llm.slop.liquidlsd.rendering.DynamicVisualSource)?.id == "mandala" } ?: availableSources.firstOrNull()
-        if (defaultSource != null) {
-            source = defaultSource
-        }
-        return
+        llm.slop.liquidlsd.rendering.VisualSourceRegistry.find("mandala")?.let { source = it.clone() }
+        return dto.isEmpty
     }
     this.isEmpty = false
     dto.samplerStrategy?.let { name ->
         llm.slop.liquidlsd.rendering.SamplerStrategy.entries.firstOrNull { it.name == name }?.let { morphController.strategy = it }
     }
-
-    // Select the active source by visualSourceType id
-    val matchedSource = availableSources.firstOrNull { src ->
-        when (src) {
-            is llm.slop.liquidlsd.rendering.DynamicVisualSource -> src.id == dto.visualSourceType
-            is llm.slop.liquidlsd.rendering.ExternalVideoSource -> src.id == dto.visualSourceType
-            else -> false
-        }
-    }
-    if (matchedSource != null) {
-        source = matchedSource.clone()
-    }
+    source = matchedSource.clone()
     
     (source as? llm.slop.liquidlsd.rendering.ExternalVideoSource)?.serverName = dto.serverName
     
@@ -569,54 +543,15 @@ fun Deck.applyDto(dto: DeckPresetDto) {
     (source as? llm.slop.liquidlsd.rendering.FlameSource)?.customPalette =
         dto.palette?.let { runCatching { java.util.Base64.getDecoder().decode(it) }.getOrNull() }
 
-    // Reset view parameters to baseline defaults before applying
-    view3DMode.reset()
+    // Framing: defaults, then the preset's values if it has them
     viewZoom.reset()
-    viewRotateX.reset()
-    viewRotateY.reset()
     viewRotateZ.reset()
-    viewPersp.reset()
-    viewDepthDim.reset()
-    viewSeparation.reset()
-    viewBlendMode.reset()
-    viewRoundness.reset()
-
-    // Apply view parameters (if present in preset)
-    dto.viewParameters["view3DMode"]?.let { view3DMode.applyDto(it) }
     dto.viewParameters["viewZoom"]?.let { viewZoom.applyDto(it) }
-    dto.viewParameters["viewRotateX"]?.let { viewRotateX.applyDto(it) }
-    dto.viewParameters["viewRotateY"]?.let { viewRotateY.applyDto(it) }
     dto.viewParameters["viewRotateZ"]?.let { viewRotateZ.applyDto(it) }
-    dto.viewParameters["viewPersp"]?.let { viewPersp.applyDto(it) }
-    dto.viewParameters["viewDepthDim"]?.let { viewDepthDim.applyDto(it) }
-    dto.viewParameters["viewSeparation"]?.let { viewSeparation.applyDto(it) }
-    dto.viewParameters["viewBlendMode"]?.let { viewBlendMode.applyDto(it) }
-    dto.viewParameters["viewRoundness"]?.let { viewRoundness.applyDto(it) }
-    
-    // Reset feedback parameters to baseline defaults before applying
-    fbDecay.reset()
-    fbGain.reset()
-    fbZoom.reset()
-    fbRotate.reset()
-    fbHueShift.reset()
-    fbBlur.reset()
-    fbChroma.reset()
-    fbMode.reset()
-    fbKaleido.reset()
-
-    // Apply feedback parameters
-    dto.feedbackParameters["fbDecay"]?.let { fbDecay.applyDto(it) }
-    dto.feedbackParameters["fbGain"]?.let { fbGain.applyDto(it) }
-    dto.feedbackParameters["fbZoom"]?.let { fbZoom.applyDto(it) }
-    dto.feedbackParameters["fbRotate"]?.let { fbRotate.applyDto(it) }
-    dto.feedbackParameters["fbHueShift"]?.let { fbHueShift.applyDto(it) }
-    dto.feedbackParameters["fbBlur"]?.let { fbBlur.applyDto(it) }
-    dto.feedbackParameters["fbChroma"]?.let { fbChroma.applyDto(it) }
-    dto.feedbackParameters["fbMode"]?.let { fbMode.applyDto(it) }
-    dto.feedbackParameters["fbKaleido"]?.let { fbKaleido.applyDto(it) }
 
     // Apply global parameters
     source.globalAlpha.reset()
     dto.globalAlpha?.let { source.globalAlpha.applyDto(it) }
+    return true
 }
 

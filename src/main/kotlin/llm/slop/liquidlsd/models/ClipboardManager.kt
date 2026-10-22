@@ -113,21 +113,6 @@ object ClipboardManager {
                                 else deck.source.parameters[parts[2]]
                             } else null
                         }
-                        "FB" -> {
-                            if (parts.size > 2) {
-                                when (parts[2]) {
-                                    "Decay" -> deck.fbDecay
-                                    "Gain" -> deck.fbGain
-                                    "Zoom" -> deck.fbZoom
-                                    "Rotate" -> deck.fbRotate
-                                    "HueShift" -> deck.fbHueShift
-                                    "Blur" -> deck.fbBlur
-                                    "Chroma" -> deck.fbChroma
-                                    "Mode" -> deck.fbMode
-                                    else -> null
-                                }
-                            } else null
-                        }
                         else -> null
                     }
                 } else null
