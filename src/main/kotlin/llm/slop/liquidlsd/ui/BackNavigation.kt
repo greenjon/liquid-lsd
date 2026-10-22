@@ -11,10 +11,11 @@ import llm.slop.liquidlsd.rendering.Mixer
  *      a flat "back always collapses" would let a reflexive press dismiss the accordion while a Learn arm
  *      silently keeps running underneath.
  *   2. The Preferences window.
+ *   2b. The Perform dock bound in place unbinds ([ParametersState.boundInPlace]).
  *   3. FX focus mode (back to the chain's group mode).
  *   4. The pair focus view closes (one press, back to Perform).
  *   5. Any Rack module above Tier 1 collapses back to Tier 1.
- *   6. The Library (Space, Ctrl+F, `/`, menu or controller) that replaced a pair view or an Edit module goes back to it
+ *   6. The Library (Space, Ctrl+F, `/`, menu or controller) that replaced a pair view, an Edit module or an in-place binding goes back to it
  *      ([ParametersState.restoreLibraryReturn]); otherwise a FULL Library drops to HALF ([NavigationSurface.back]).
  */
 internal object BackNavigation {
@@ -29,8 +30,8 @@ internal object BackNavigation {
             PreferencesPanel.close()
             return true
         }
-        // Perform / Library FULL: Esc first drops the dock selection.
-        if (parametersState.dockSelection != null && parametersState.focusedPair == null && !parametersState.anyRackModuleExpanded()) {
+        // Perform with its dock bound in place: Esc unbinds it (the rows never moved, so there is nothing else to undo).
+        if (parametersState.boundInPlace) {
             parametersState.clearDockSelection()
             return true
         }

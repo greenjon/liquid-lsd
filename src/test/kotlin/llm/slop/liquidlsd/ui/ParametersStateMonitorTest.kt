@@ -11,7 +11,7 @@ class ParametersStateMonitorTest {
 
     @Test
     fun openFromMonitor_focusesTheDecksPair() {
-        val state = ParametersState()
+        val state = offPage()
         state.collapseAllRackModules()
 
         state.openFromMonitor(MacroEngine.DECK_A, "Deck A")
@@ -23,27 +23,27 @@ class ParametersStateMonitorTest {
 
     @Test
     fun openFromMonitor_switchesPairs_andDropsTheOldBinding() {
-        val state = ParametersState()
+        val state = offPage()
         state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", slotIndex = 2)
         assertEquals("A", state.focusedPair)
 
         state.openFromMonitor(MacroEngine.DECK_B, "Deck B")
 
         assertEquals("B", state.focusedPair)
-        assertNull(state.dockSelection)
+        assertEquals(ParametersState.DockSelection(MacroEngine.DECK_B, ParametersState.BrowseTarget.Gen), state.dockSelection, "the new pair's default half")
         assertEquals("Deck B", state.activeTopTab)
     }
 
     @Test
     fun openFromMonitor_onMasterFocusesTheMasterPair() {
-        val state = ParametersState()
+        val state = offPage()
         state.openFromMonitor(MacroEngine.MASTER, "Mixer")
         assertEquals(PerfRows.PAIR_MASTER, state.focusedPair)
     }
 
     @Test
     fun dockSelection_isSingleAndClearable() {
-        val state = ParametersState()
+        val state = offPage()
         assertNull(state.dockSelection)
         state.openFxChainBrowse(MacroEngine.DECK_A, "Deck A", slotIndex = 1)
         state.openGenBrowse(MacroEngine.DECK_B, "Deck B")
@@ -55,7 +55,7 @@ class ParametersStateMonitorTest {
 
     @Test
     fun selectingARowSlotFocusesItsPairAndBindsTheBrowse() {
-        val state = ParametersState()
+        val state = offPage()
         state.collapseAllRackModules()
         state.selectFxChain(MacroEngine.DECK_A, "Deck A", slotIndex = 2)
         assertFalse(state.anyRackModuleExpanded())
@@ -69,7 +69,7 @@ class ParametersStateMonitorTest {
 
     @Test
     fun selectingWhileARowIsOpenClosesItAndFocusesThePair() {
-        val state = ParametersState()
+        val state = offPage()
         state.openParams(MacroEngine.DECK_A)
         state.selectGen(MacroEngine.DECK_A, "Deck A")
         assertEquals("A", state.focusedPair)
@@ -78,7 +78,7 @@ class ParametersStateMonitorTest {
 
     @Test
     fun pairBrowseTargetIsTheHalfLastTouchedElseTheFirstBrowsableHalf() {
-        val state = ParametersState()
+        val state = offPage()
         val deckA = PerfRows.pairFor("A")!!
         state.focusPair("A")
         assertEquals(ParametersState.BrowseTarget.Gen, state.pairBrowseTarget(deckA))
@@ -92,7 +92,7 @@ class ParametersStateMonitorTest {
 
     @Test
     fun paramsButtonOpensTheEditViewOnTheTouchedHalf() {
-        val state = ParametersState()
+        val state = offPage()
         state.selectFxChain(MacroEngine.DECK_B, "Deck B", slotIndex = null)
         state.openParamsForPair("B")
         assertNull(state.focusedPair)
@@ -102,7 +102,7 @@ class ParametersStateMonitorTest {
 
     @Test
     fun reproducingUserScenario_destickifiesDeckBays() {
-        val state = ParametersState()
+        val state = offPage()
         state.openGenBrowse(MacroEngine.DECK_A, "Deck A")
         state.leavePair()
         state.openFxChainBrowse(MacroEngine.DECK_B, "Deck B", slotIndex = null)

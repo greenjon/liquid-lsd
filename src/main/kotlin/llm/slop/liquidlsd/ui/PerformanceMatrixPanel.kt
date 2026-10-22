@@ -65,6 +65,20 @@ class PerformanceMatrixPanel {
     private val deckControls = PerformanceDeckControls(ctx)
     private val deepEditBay = PerformanceDeepEditBay(ctx)
 
+    /**
+     * The Perform dock's binding while it is bound in place ([ParametersState.boundInPlace]), the same apply-target and row buttons the
+     * pair view hosts; a double-click applies and unbinds. Null when the Perform dock is the plain Library.
+     */
+    internal fun performDockBinding(
+        session: llm.slop.liquidlsd.SessionContext,
+        mixer: Mixer,
+        parametersState: ParametersState
+    ): llm.slop.liquidlsd.ui.browser.BrowserDock.DockBinding? {
+        if (!parametersState.boundInPlace) return null
+        val selection = parametersState.dockSelection ?: return null
+        return deepEditBay.browseBay.bindingFor(session, mixer, selection) { parametersState.clearDockSelection() }
+    }
+
     // -- Draw ---------------------------------------------------------------------
 
     fun draw(
@@ -100,8 +114,9 @@ class PerformanceMatrixPanel {
         ImGui.endChild()
         ImGui.popStyleVar()
 
+        // Every frame outside Edit (it retargets only a bound dock: the pair view, or the Perform dock bound in place).
+        if (!parametersState.anyRackModuleExpanded()) PairKnobTouch.sync(ctx, parametersState, mixer, page.id)
         if (pairView) {
-            PairKnobTouch.sync(ctx, parametersState, mixer, page.id)
             deepEditBay.drawPairBay(session, mixer, parametersState, bayH)
         } else if (anyExpanded) {
             deepEditBay.drawRackBay(session, mixer, parametersState, bayH)

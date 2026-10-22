@@ -27,8 +27,9 @@ import llm.slop.liquidlsd.ui.shortcuts.ShortcutManager
  */
 object BrowserDock {
     /**
-     * What the dock applies to in the pair view: the half's [target], a [label] for the chip, and row-specific buttons ([actions], e.g.
-     * Save, Clear Slot). The chip and the buttons sit on the bay's header line ([llm.slop.liquidlsd.ui.BayHeader]), not in the dock.
+     * What the dock applies to in the pair view, or in Perform bound in place: the half's [target], a [label] for the chip, and
+     * row-specific buttons ([actions], e.g. Save, Clear Slot). The chip and the buttons sit on the bay's header line
+     * ([llm.slop.liquidlsd.ui.BayHeader]) in the pair view, and on the Library's tab line in Perform, not in the dock body.
      */
     class DockBinding(
         val target: ApplyTarget,

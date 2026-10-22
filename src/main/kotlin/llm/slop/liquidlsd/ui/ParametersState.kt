@@ -186,9 +186,10 @@ class ParametersState : MidiLearnSink {
      */
     var focusedPair: String? = null
         private set(value) {
-            // A dirty-deck answer belongs to one pair-view session: leaving or switching the pair asks again.
-            if (value != field) dirtyAnsweredTag = null
+            // A dirty-deck answer belongs to one bind session: leaving or switching the pair asks again.
+            val before = bindSessionTag
             field = value
+            if (bindSessionTag != before) dirtyAnsweredTag = null
         }
 
     /** Focuses [tag]'s pair. Closes any Params Edit module (the two focus kinds never coexist) and drops a FULL Library to HALF. */
@@ -231,31 +232,94 @@ class ParametersState : MidiLearnSink {
         dockSelection = null
     }
 
-    // -- Dirty-deck prompt, once per pair view -----------------------------------------------
+    // -- Bound in place (the Perform dock) ---------------------------------------------------
 
-    /** The deck tag whose unsaved-changes prompt was answered (Save or Discard) in the current pair view, or null. */
+    /**
+     * True while the Perform view's own (HALF) dock is bound to a slot of a row on the current page: a dock selection with no pair
+     * focused and no Edit module open. The rows stay where they are; only the dock gains the target chip (see [openBrowse]).
+     */
+    val boundInPlace: Boolean get() = dockSelection != null && focusedPair == null && !anyRackModuleExpanded()
+
+    /**
+     * Whether the current Perform page shows the row behind [bankId] (a deck's source or FX bank, `MASTER`, `MASTER_FX`, `TRANS`).
+     * Decides between binding in place and the pair view. Replaceable for tests.
+     */
+    internal var pageHasRow: (String) -> Boolean = { bankId ->
+        val pages = PerfPageStore.default.all()
+        val page = pages.firstOrNull { it.id == UITheme.performancePageId } ?: pages.first()
+        page.rows.any { PerfRows.CATALOG[it.row]?.bankId == bankId }
+    }
+
+    /** The row a selection's slot sits on: a deck's source row or FX row, Master's FX row, the Transitions row. */
+    private fun rowBankFor(selection: DockSelection): String? = when (selection.target) {
+        is BrowseTarget.Gen -> selection.moduleId
+        is BrowseTarget.Transition -> MacroEngine.TRANS
+        // A pair's second row is its FX row (a deck's chain, Master FX).
+        is BrowseTarget.FxChain -> PerfRows.pairForBank(selection.moduleId)?.rowIds?.getOrNull(1)?.let { PerfRows.CATALOG[it]?.bankId }
+    }
+
+    /** True when [selection] binds the Perform dock in place: Perform (no pair, no Edit module) with the slot's row on the current page. */
+    private fun bindsInPlace(selection: DockSelection): Boolean =
+        focusedPair == null && !anyRackModuleExpanded() && rowBankFor(selection)?.let(pageHasRow) == true
+
+    /** True when the in-place binding's row has left the current page (a page edit), so the binding should end. */
+    fun boundRowLeftPage(): Boolean = boundInPlace && dockSelection?.let(::bindsInPlace) == false
+
+    /**
+     * The Library went FULL (Space, the maximize button, the menu, the controller): it never shows a bound row, so an in-place binding
+     * ends here, remembered so Esc (or Space back to HALF) returns to it ([restoreLibraryReturn]). A pair view simply ends: the routes
+     * into FULL already remembered it ([LibraryPanel.show]).
+     */
+    fun libraryWentFull() {
+        if (focusedPair != null) leavePair()
+        if (boundInPlace) {
+            rememberLibraryReturn()
+            dockSelection = null
+        }
+    }
+
+    /**
+     * A shifted send-knob tap while a dock is bound (`NavSurface.browseSwitch`): moves the binding to [tag]'s pair (a deck's source,
+     * or the half last touched there; Master's FX chain), in place when its row is on the page, else in the pair view.
+     */
+    fun switchBrowseTo(tag: String) {
+        val pair = PerfRows.pairFor(tag) ?: return
+        if (focusedPair != null) { focusPair(tag); return }
+        val target = pairDockTarget(pair) ?: return
+        openBrowse(if (target is BrowseTarget.Transition) MacroEngine.MASTER else pair.moduleId, target)
+    }
+
+    // -- Dirty-deck prompt, once per bind session ---------------------------------------------
+
+    /** The deck tag whose unsaved-changes prompt was answered (Save or Discard) in the current bind session, or null. */
     private var dirtyAnsweredTag: String? = null
+
+    /** The pair a bind session is about: the focused pair, or the pair of the slot the Perform dock is bound to in place. Null when unbound. */
+    private val bindSessionTag: String?
+        get() = focusedPair ?: dockSelection?.takeIf { !anyRackModuleExpanded() }?.let { pairTagFor(it) }
 
     /**
      * True when a load to deck [deckTag] may skip the unsaved-changes prompt: the prompt was already answered for that deck in
-     * this pair view, so trying several sources in a row asks once. Ctrl+Z still undoes each load.
+     * this bind session (the pair view, or the Perform dock bound to that deck), so trying several sources in a row asks once.
+     * Ctrl+Z still undoes each load.
      */
-    fun skipsDirtyPrompt(deckTag: String): Boolean = dirtyAnsweredTag == deckTag && focusedPair == deckTag
+    fun skipsDirtyPrompt(deckTag: String): Boolean = dirtyAnsweredTag == deckTag && bindSessionTag == deckTag
 
-    /** Records that the prompt for [deckTag] was answered with Save or Discard; only counts while that deck's pair is focused. */
+    /** Records that the prompt for [deckTag] was answered with Save or Discard; only counts while a bind session is on that deck. */
     fun noteDirtyPromptAnswered(deckTag: String) {
-        if (focusedPair == deckTag) dirtyAnsweredTag = deckTag
+        if (bindSessionTag == deckTag) dirtyAnsweredTag = deckTag
     }
 
     // -- Way back from the Library ------------------------------------------------------------
 
-    /** Where Esc returns to after the Library replaced a pair view or an Edit module; see [rememberLibraryReturn]. */
+    /** Where Esc returns to after the Library replaced a pair view, an Edit module or the Perform dock's in-place binding; see [rememberLibraryReturn]. */
     sealed class LibraryReturn {
         data class Pair(val tag: String, val selection: DockSelection?) : LibraryReturn()
         data class Edit(val moduleId: String, val selection: DockSelection?) : LibraryReturn()
+        data class Bound(val selection: DockSelection) : LibraryReturn()
     }
 
-    /** Set when the Library replaced a pair view or an Edit module; cleared once used, or when a pair or Edit module is opened another way. */
+    /** Set when the Library replaced a pair view, an Edit module or an in-place binding; cleared once used, or when one is opened another way. */
     var libraryReturn: LibraryReturn? = null
         private set
 
@@ -266,9 +330,11 @@ class ParametersState : MidiLearnSink {
     fun rememberLibraryReturn() {
         val pair = focusedPair
         val module = expandedRackModuleId()
+        val bound = dockSelection
         when {
             pair != null -> libraryReturn = LibraryReturn.Pair(pair, dockSelection)
             module != null -> libraryReturn = LibraryReturn.Edit(module, dockSelection)
+            bound != null -> libraryReturn = LibraryReturn.Bound(bound)
         }
     }
 
@@ -285,9 +351,14 @@ class ParametersState : MidiLearnSink {
                 openParams(back.moduleId)
                 back.selection?.let { dockSelection = it }
             }
+            // In place again when its row is still on the page (it drops a FULL Library to HALF), else the pair view.
+            is LibraryReturn.Bound -> openBrowse(back.selection.moduleId, back.selection.target)
         }
         return true
     }
+
+    /** Space or the maximize button taking a FULL Library back to HALF: re-binds the in-place binding FULL ended. False when there is none. */
+    fun restoreBoundReturn(): Boolean = libraryReturn is LibraryReturn.Bound && restoreLibraryReturn()
 
     // -- Browse content (the unified BrowserPane is hosted here) -----------------------------
 
@@ -301,9 +372,16 @@ class ParametersState : MidiLearnSink {
     /** The dock's one apply-target: which row ([moduleId]) and what on it ([target]) Browse is bound to. */
     data class DockSelection(val moduleId: String, val target: BrowseTarget)
 
-    /** Single dock-level selection; null means the plain Library. Binding happens in the pair view; null is the plain Library. */
+    /**
+     * Single dock-level selection; null means the plain Library. Binding happens in the Perform dock in place ([boundInPlace]) or in
+     * the pair view; an Edit module keeps the one it was opened with, for its Browse button.
+     */
     var dockSelection: DockSelection? = null
-        private set
+        private set(value) {
+            val before = bindSessionTag
+            field = value
+            if (bindSessionTag != before) dirtyAnsweredTag = null
+        }
 
     /**
      * Bumped by every explicit selection (row click, picker, send, the header's Browse button), so re-clicking the already-bound
@@ -317,15 +395,23 @@ class ParametersState : MidiLearnSink {
     }
 
     /**
-     * Binds the dock to [target] on [moduleId] and focuses that row's pair (the pair view shows the Browse list under it).
-     * Every badge, slot and transition-name click, picker and monitor entry point goes through here. [retab] false (a knob
-     * touch) leaves the dock's tab alone unless the target itself changed (see [dockSelectionEpoch]).
+     * Binds the dock to [target] on [moduleId]. Every badge, slot and transition-name click, picker, send and monitor entry point goes
+     * through here. In Perform (or a FULL Library, which drops to HALF) with the slot's row on the current page, the Perform dock binds
+     * in place and nothing moves ([boundInPlace]); otherwise (the row is on another page, or a pair view or Edit module is up) the
+     * row's pair is focused and the pair view shows the list under it. [retab] false (a knob touch) leaves the dock's tab alone unless
+     * the target itself changed (see [dockSelectionEpoch]).
      */
     fun openBrowse(moduleId: String, target: BrowseTarget, retab: Boolean = true) {
         val selection = DockSelection(moduleId, target)
         val tag = pairTagFor(selection) ?: return
-        focusPair(tag)
-        dockSelection = selection
+        if (bindsInPlace(selection)) {
+            libraryReturn = null
+            dockSelection = selection
+            if (UITheme.libraryMode == UITheme.LibraryMode.FULL) UITheme.libraryMode = UITheme.LibraryMode.HALF
+        } else {
+            focusPair(tag)
+            dockSelection = selection
+        }
         if (retab) dockSelectionEpoch++
     }
 
@@ -353,7 +439,11 @@ class ParametersState : MidiLearnSink {
         else PerfRows.pairForBank(moduleId)?.let { focusPair(it.tag) }
     }
 
-    private fun selectDock(moduleId: String, target: BrowseTarget) = openBrowse(moduleId, target)
+    /** A row-slot click: binds the dock to it, except that clicking the slot the Perform dock is already bound to in place unbinds it. */
+    private fun selectDock(moduleId: String, target: BrowseTarget) {
+        if (boundInPlace && dockSelection == DockSelection(moduleId, target)) clearDockSelection()
+        else openBrowse(moduleId, target)
+    }
 
     /** Row click on a deck's source badge: binds the dock to that deck's source. */
     fun selectGen(canonicalModuleId: String, deckLabel: String) {
@@ -443,10 +533,16 @@ class ParametersState : MidiLearnSink {
         setDisclosure(moduleId, DisclosureLevel.DEEP_EDIT)
     }
 
-    /** Focuses [moduleId]'s pair (and [deckLabel]) from a confidence monitor or preview monitor click. */
+    /**
+     * A confidence or preview monitor click (or the Master badge): browses [moduleId]'s pair on its default half ([pairDockTarget]: the
+     * half last touched, a deck's source, Master's FX chain) -- in place when that row is on the page, else in the pair view.
+     */
     fun openFromMonitor(moduleId: String, deckLabel: String? = topTabForDeepEditModule(moduleId)) {
         if (deckLabel != null) activeTopTab = deckLabel
-        PerfRows.pairForBank(moduleId)?.let { focusPair(it.tag) }
+        val pair = PerfRows.pairForBank(moduleId) ?: return
+        val target = pairDockTarget(pair)
+        if (target == null) { focusPair(pair.tag); return }
+        openBrowse(if (target is BrowseTarget.Transition) MacroEngine.MASTER else pair.moduleId, target)
     }
 
     /**

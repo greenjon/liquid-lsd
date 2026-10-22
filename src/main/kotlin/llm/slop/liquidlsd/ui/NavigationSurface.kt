@@ -14,7 +14,8 @@ import llm.slop.liquidlsd.ui.browser.BrowserPane
  *  - Library view (Library FULL): back, next tab, next list; the cursor is knob 16. Tapping a send knob (9-12 = A, B, BG, PV;
  *    13 = master FX) sends the cursor item there and opens that row in the picker, so it also works in the picker.
  *    With shift: enqueue to the BG queue, previous tab, previous list.
- *  - Pair view (the unified pane under the focused pair's two rows): side 1 = back, side 2 = next tab (shift: previous),
+ *  - Pair view (the unified pane under the focused pair's two rows), or the Perform dock bound in place (same buttons; knobs 1-8
+ *    stay live on the page's first two rows): side 1 = back, side 2 = next tab (shift: previous),
  *    side 3 = next pane (tree > list), shift + side 3 = clear the slot or chain; the cursor is knob 16
  *    (tap = apply, shift + tap = enqueue as in the Library, and a tap on a tree row selects the scope and moves the cursor into the
  *    list). Shift + tap on a send knob (9-13) switches to that deck's (or Master's) pair without sending.
@@ -34,8 +35,8 @@ internal class NavigationSurface(
 
     private val inLibraryView: Boolean get() = viewStateOf(session).maximized
 
-    /** The pair view is up: its two rows over the Browse dock. */
-    private val inPicker: Boolean get() = viewStateOf(session).pair
+    /** A bound dock is up: the pair view (its two rows over the Browse dock), or the Perform dock bound in place under the page's rows. */
+    private val inPicker: Boolean get() = viewStateOf(session).let { it.pair || it.bound }
 
     internal val confirming: Boolean get() = deckConfirm?.deckConfirmPending == true
 
@@ -44,7 +45,10 @@ internal class NavigationSurface(
 
     override val browsePosition: Float get() = if (confirming) 1f else LibraryNavigation.cursorPosition(session)
 
-    /** In the pair view its two rows are the only rows on screen, so Twister rows one and two (knobs 1-8) drive them. */
+    /**
+     * In the pair view its two rows are the only rows on screen, so Twister rows one and two (knobs 1-8) drive them. Bound in place,
+     * the same knobs drive the page's first two rows (the rest of the page is sends and the cursor while the list has the controller).
+     */
     override val browseLiveKnobs: Int get() = if (inPicker && !confirming) PAIR_LIVE_KNOBS else 0
 
     // The surface is rebuilt every frame, so the session counter lives in the companion; sampling on
@@ -185,11 +189,11 @@ internal class NavigationSurface(
 
     override val sendTargets: Set<SendTarget> get() = if ((inLibraryView || inPicker) && !confirming) LibraryNavigation.sendTargets() else emptySet()
 
-    /** In the pair view every send knob (decks, Master) is also a quick switch to that pair. */
+    /** With a bound dock every send knob (decks, Master) is also a quick switch to that pair (in place when its row is on the page). */
     override val switchTargets: Set<SendTarget> get() = if (inPicker && !confirming) SendTarget.entries.toSet() else emptySet()
 
     override fun browseSwitch(target: SendTarget) {
-        if (inPicker && !confirming) parametersState.focusPair(target.name)
+        if (inPicker && !confirming) parametersState.switchBrowseTo(target.name)
     }
 
     override fun browseSend(target: SendTarget) {

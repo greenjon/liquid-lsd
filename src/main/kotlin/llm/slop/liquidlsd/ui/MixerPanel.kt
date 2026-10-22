@@ -61,7 +61,7 @@ class MixerPanel(
 
         ImGui.setCursorScreenPos(imgScreenX, imgScreenY)
         ImGui.invisibleButton("##main_output_monitor", monitorBtnW, masterH.coerceAtLeast(1f))
-        itemTooltip("Main output monitor. Click to open the Master rows over the browser (Parameters opens the full editor).")
+        itemTooltip("Main output monitor. Click to browse the Master FX chain in the list below (the Master rows come over it when this page does not show them).")
         if (ImGui.isItemClicked(0)) {
             parametersState.openFromMonitor(MacroEngine.MASTER, "Mixer")
         }
@@ -113,11 +113,11 @@ class MixerPanel(
 
         ImGui.setCursorScreenPos(badgeMinX, badgeMinY)
         if (ImGui.invisibleButton("##badge_btn_master", badgeW, badgeH) || ImGui.isItemClicked(0)) {
-            // Like the deck badges: the Master pair view (MIX and FX rows over the Browse list, on the Master FX chain).
+            // Like the deck badges: browses the Master FX chain, in place when the page shows Master FX, else in the Master pair view.
             parametersState.openFromMonitor(MacroEngine.MASTER, "Mixer")
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { "mixer_master_badge" }
-        itemTooltip("Master output. Click to open the Master mix and FX rows over the browser.")
+        itemTooltip("Master output. Click to browse the Master FX chain in the list below (the Master rows come over it when this page does not show them).")
 
         // 2. [🎲 ALL] Button (to the left of [M])
         if (session.uiTheme.randomizationEnabled) {
