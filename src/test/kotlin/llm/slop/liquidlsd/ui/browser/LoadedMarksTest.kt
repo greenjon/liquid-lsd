@@ -45,4 +45,12 @@ class LoadedMarksTest {
         assertEquals(listOf("M"), s.marksFor(AssetItem(BrowseCatalogs.STOCK_TRANS_PREFIX + "wipe", "wipe", AssetType.TRANSITION_STOCK)).map { it.tag })
         assertEquals(emptyList(), s.marksFor(AssetItem(BrowseCatalogs.STOCK_TRANS_PREFIX + "fade", "fade", AssetType.TRANSITION_STOCK)).map { it.tag })
     }
+
+    @Test fun gutterFallsBackFromChipsToBarsToACount() {
+        fun marks(vararg tags: String) = tags.map { LoadedMarks.Mark(it, floatArrayOf(1f, 0f, 0f), it) }
+        val w = { tag: String -> tag.length * 8f }
+        assertEquals(LoadedMarks.GutterStyle.CHIPS, LoadedMarks.gutterStyle(marks("A", "B"), w))
+        assertEquals(LoadedMarks.GutterStyle.BARS, LoadedMarks.gutterStyle(marks("A", "B", "BG", "PV"), w))
+        assertEquals(LoadedMarks.GutterStyle.COUNT, LoadedMarks.gutterStyle(marks("A1", "A2", "B1", "B2", "BG1", "PV1", "M1"), w))
+    }
 }

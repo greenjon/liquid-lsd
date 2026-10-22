@@ -141,12 +141,17 @@ class PopupManager(
             ImGui.spacing()
 
             // Mouse buttons and the controller (answerDeckConfirm) feed the same choice; it is applied here so closeCurrentPopup targets this modal.
+            // Enter = Save (the default); Esc already cancels through the global back path ([NavigationSurface.back]).
             var choice = midiChoice
-            if (ButtonChrome.button("Save", 80f, 0f)) choice = DeckConfirmChoice.SAVE
+            if (!ImGui.isWindowAppearing() && ModalKeys.confirmPressed()) choice = DeckConfirmChoice.SAVE
+            if (ButtonChrome.button("Save", 120f, 0f)) choice = DeckConfirmChoice.SAVE
+            itemTooltip("Save the deck's preset, then go on (Enter).")
             ImGui.sameLine()
-            if (ButtonChrome.button("Discard", 80f, 0f)) choice = DeckConfirmChoice.DISCARD
+            if (ButtonChrome.button("Discard", 120f, 0f)) choice = DeckConfirmChoice.DISCARD
+            itemTooltip("Drop the unsaved changes and go on.")
             ImGui.sameLine()
-            if (ButtonChrome.button("Cancel", 80f, 0f)) choice = DeckConfirmChoice.CANCEL
+            if (ButtonChrome.button("Cancel", 120f, 0f)) choice = DeckConfirmChoice.CANCEL
+            itemTooltip("Keep the deck as it is (Esc).")
             ImGui.textDisabled("Controller: side 2 or knob tap = Save, side 3 or shift+tap = Discard, back = Cancel")
             when (choice) {
                 DeckConfirmChoice.SAVE -> {

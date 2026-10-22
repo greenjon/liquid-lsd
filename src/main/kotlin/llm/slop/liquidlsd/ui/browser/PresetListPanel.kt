@@ -81,9 +81,10 @@ object PresetListPanel {
             val issues = deps?.getIssues(session) ?: emptyList()
             val hasIssues = issues.isNotEmpty()
 
-            val icon = if (isStock) Icons.SQUARE else Icons.DISC
+            // Stock rows leave the icon slot blank (a box there read as a checkbox); saved presets keep the disc.
+            val icon = if (isStock || (hasIssues && asset.isValid)) null else Icons.DISC
             val star = if (favoriteKeys != null && (if (isStock) asset.path.removePrefix(STOCK_PATH_PREFIX) else asset.path) in favoriteKeys) "\u2605 " else ""
-            val label = if (hasIssues && asset.isValid) "[!] ${asset.name}" else "$star$icon ${asset.displayName}"
+            val label = if (hasIssues && asset.isValid) "[!] ${rowName(asset)}" else "$star${rowName(asset)}"
             val isSelected = selection.isSelected(asset)
 
             val popupId = "preset_context_menu_$index"
@@ -103,30 +104,32 @@ object PresetListPanel {
                 ImGui.pushStyleColor(ImGuiCol.Text, TangoPalette.TEXT_ERROR.u32())
             }
             var itemClicked = false
+            var nameElided = false
             val infoText = infoFor?.invoke(asset) ?: ""
             session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
-                val shown = if (infoText.isNotEmpty()) nameForInfo(label, itemW) else label
-                if (selectableRow("$shown##row", isSelected, itemW)) {
+                if (rowSelectable("row", icon, label, infoText, asset.gpuCost, isSelected, itemW)) {
                     itemClicked = true
                 }
+                nameElided = lastNameElided
                 llm.slop.liquidlsd.tour.WidgetRegistry.note { tourRowKey(BrowseKind.SRC, asset) }
             }
             LoadedMarks.drawGutter(gutter, loaded.marksFor(asset), DROPDOWN_ROW_HEIGHT)
             val io = ImGui.getIO()
+            // Keyboard nav also "clicks" the focused row on Enter; Enter's row action is BrowserDock's, so that click is dropped here.
+            if (itemClicked && (ImGui.isKeyPressed(ImGuiKey.Enter, false) || ImGui.isKeyPressed(ImGuiKey.KeypadEnter, false))) itemClicked = false
             if (itemClicked) {
                 val isCtrl = io.keyCtrl || io.keySuper
                 val isShift = io.keyShift
-                if (target != null) selection.setSingle(asset) else selection.handleClick(asset, filtered, isCtrl, isShift)
+                if (target != null || io.keyAlt) selection.setSingle(asset) else selection.handleClick(asset, filtered, isCtrl, isShift)
                 LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
                 QueueActionsPanel.clearSelection()
                 llm.slop.liquidlsd.ui.browser.BgQueueActionsPanel.clearSelection()
-                DockActions.tap(target, asset)
+                // Alt+click previews on Deck PV (the menu's "Preview on Deck PV"), bound or not; a plain click applies to a bound target.
+                if (io.keyAlt) previewOnPv(session, mixer, parametersState, asset) else DockActions.tap(target, asset)
             }
             if (hasIssues && !isSelected) {
                 ImGui.popStyleColor()
             }
-            drawInfoColumn(infoText, itemW)
-            drawCostBadge(asset.gpuCost, itemW)
             val isRowHovered = ImGui.isItemHovered()
             if (ImGui.isItemClicked(1)) {
                 if (!selection.isSelected(asset)) {
@@ -161,14 +164,13 @@ object PresetListPanel {
                 } else {
                     val thumb = if (isStock) 0 else llm.slop.liquidlsd.presets.GardenThumbnails.textureFor(asset.path)
                     val heavy = asset.gpuCost >= GPU_COST_HEAVY
-                    if (asset.tags.isNotEmpty() || thumb != 0 || heavy) {
-                        showCustomTooltip(asset.path.hashCode(), estimatedHeight = if (thumb != 0) 220f else if (heavy) 140f else 120f) {
-                            ImGui.textUnformatted(asset.name)
-                            ImGui.separator()
-                            if (heavy) ImGui.textColored(TangoPalette.u32(TangoPalette.ALERT.normal), GPU_COST_TIP)
-                            if (thumb != 0) ImGui.image(thumb.toLong(), llm.slop.liquidlsd.presets.GardenThumbnails.WIDTH.toFloat(), llm.slop.liquidlsd.presets.GardenThumbnails.HEIGHT.toFloat())
-                            if (asset.tags.isNotEmpty()) ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
-                        }
+                    showCustomTooltip(asset.path.hashCode(), estimatedHeight = if (thumb != 0) 240f else if (heavy) 150f else 110f) {
+                        ImGui.textUnformatted(fullNameTip(asset, nameElided) ?: rowName(asset))
+                        ImGui.separator()
+                        if (heavy) ImGui.textUnformatted("${Icons.GAUGE} $GPU_COST_TIP")
+                        if (thumb != 0) ImGui.image(thumb.toLong(), llm.slop.liquidlsd.presets.GardenThumbnails.WIDTH.toFloat(), llm.slop.liquidlsd.presets.GardenThumbnails.HEIGHT.toFloat())
+                        if (asset.tags.isNotEmpty()) ImGui.textDisabled("Tags: ${asset.tags.joinToString(", ")}")
+                        ImGui.textDisabled(if (target != null) "Click: apply. Alt+click: preview on Deck PV." else "Double-click or Enter: load. Alt+click: preview on Deck PV.")
                     }
                 }
             }
@@ -186,6 +188,8 @@ object PresetListPanel {
                     ImGui.setDragDropPayload(PAYLOAD_PLAYLIST_ITEM, playlistRows.indexOfRow(index) as Any)
                     ImGui.textUnformatted(asset.name)
                 } else if (isExternal) {
+                    // Same payload as a stock generator; the deck drop targets resolve the ext_video: id (see [sourceForPayload]).
+                    ImGui.setDragDropPayload(PAYLOAD_STOCK_SOURCE, "$EXTERNAL_PAYLOAD_PREFIX${BrowseCatalogs.externalName(asset)}" as Any)
                     ImGui.textUnformatted(asset.name)
                 } else if (isStock) {
                     ImGui.setDragDropPayload(PAYLOAD_STOCK_SOURCE, asset.path.removePrefix(STOCK_PATH_PREFIX) as Any)
@@ -213,25 +217,23 @@ object PresetListPanel {
             pushOpenDropdownPadding()
             if (ImGui.beginPopup(popupId)) {
                 pushOpenDropdownFont()
+                BrowserPane.applyMenuItem(target, asset)
                 if (contextExtras != null) {
                     contextExtras(asset)
                     ImGui.separator()
                 }
                 if (isStock) {
-                    val source = if (isExternal) ExternalVideoSource(serverName = BrowseCatalogs.externalName(asset))
-                        else VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(STOCK_PATH_PREFIX) }
+                    val source = stockSourceOf(asset)
                     if (source != null) {
-                        if (ImGui.menuItem("Load to Deck A")) {
-                            UIManager.changeVisualSourceSafely(mixer, mixer.deckA, "Deck A", source, parametersState)
-                        }
-                        if (ImGui.menuItem("Load to Deck B")) {
-                            UIManager.changeVisualSourceSafely(mixer, mixer.deckB, "Deck B", source, parametersState)
-                        }
-                        if (ImGui.menuItem("Load to Deck BG")) {
-                            UIManager.changeVisualSourceSafely(mixer, mixer.deckBG, "Deck BG", source, parametersState)
-                        }
-                        if (ImGui.menuItem("Preview on Deck PV")) {
-                            UIManager.changeVisualSourceSafely(mixer, mixer.deckPV, "Deck PV", source, parametersState)
+                        val decks = listOf(
+                            Triple("Load to Deck A", mixer.deckA, "Deck A"), Triple("Load to Deck B", mixer.deckB, "Deck B"),
+                            Triple("Load to Deck BG", mixer.deckBG, "Deck BG"), Triple("Preview on Deck PV", mixer.deckPV, "Deck PV")
+                        )
+                        for ((label, deck, deckLabel) in decks) {
+                            if (ImGui.menuItem(label)) {
+                                UIManager.changeVisualSourceSafely(mixer, deck, deckLabel, source, parametersState)
+                                BrowseRecents.note(asset)
+                            }
                         }
                     }
                 } else {
@@ -245,17 +247,11 @@ object PresetListPanel {
                     }
 
                     if (count == 1) {
-                        if (ImGui.menuItem("Load to Deck A")) {
-                            BrowserDeckButtons.loadPresetToDeck(session, mixer, File(asset.path), 1)
-                        }
-                        if (ImGui.menuItem("Load to Deck B")) {
-                            BrowserDeckButtons.loadPresetToDeck(session, mixer, File(asset.path), 2)
-                        }
-                        if (ImGui.menuItem("Load to Deck BG")) {
-                            BrowserDeckButtons.loadPresetToDeck(session, mixer, File(asset.path), 3)
-                        }
-                        if (ImGui.menuItem("Preview on Deck PV")) {
-                            BrowserDeckButtons.loadPresetToDeck(session, mixer, File(asset.path), 4)
+                        for ((label, deckIndex) in listOf("Load to Deck A" to 1, "Load to Deck B" to 2, "Load to Deck BG" to 3, "Preview on Deck PV" to 4)) {
+                            if (ImGui.menuItem(label)) {
+                                BrowserDeckButtons.loadPresetToDeck(session, mixer, File(asset.path), deckIndex)
+                                BrowseRecents.note(asset)
+                            }
                         }
                         ImGui.separator()
                     }
@@ -277,18 +273,15 @@ object PresetListPanel {
                     ImGui.separator()
                     if (count == 1) {
                         if (asset.type == AssetType.PRESET) {
-                            if (ImGui.menuItem("Rename / Edit Tags...")) {
+                            // Same words as the FX and Transition menus; the preset modal also edits tags.
+                            if (ImGui.menuItem("Rename...")) {
                                 BrowserPopupHandler.openRenamePresetModal(asset)
                             }
-                            if (ImGui.menuItem("Duplicate Preset...")) {
+                            if (ImGui.menuItem("Clone...")) {
                                 BrowserPopupHandler.openDuplicatePresetModal(asset)
                             }
                         } else {
-                            if (ImGui.menuItem("Rename")) {
-                                BrowserPopupHandler.renameTarget = asset
-                                BrowserPopupHandler.renameBuffer.set(asset.name)
-                                BrowserPopupHandler.pendingOpenRenamePopup = true
-                            }
+                            if (ImGui.menuItem("Rename...")) BrowserPopupHandler.openRename(asset)
                             if (ImGui.menuItem("Clone")) {
                                 FileSystemManager.cloneFile(asset.path).onSuccess {
                                     LibraryPanel.refreshAssets()
@@ -296,9 +289,13 @@ object PresetListPanel {
                             }
                         }
                     }
-                    val delLabel = if (count > 1) "Delete $count Presets..." else "Delete"
+                    val delLabel = if (count > 1) "Delete $count Presets..." else "Delete..."
                     if (ImGui.menuItem(delLabel)) {
                         BrowserPopupHandler.openDeleteConfirmation(targets)
+                    }
+                    if (count == 1) {
+                        ImGui.separator()
+                        if (ImGui.menuItem("Reveal in File Manager")) BrowserPopupHandler.revealInFileManager(File(asset.path))
                     }
                 }
                 popOpenDropdownFont()
@@ -311,38 +308,96 @@ object PresetListPanel {
         playlistRows?.finish()
     }
 
-    /** Fraction of the row width the name column may use when an info column is drawn: a third, so names get a quarter of the dock and the info (tags, chain contents) half. */
+    /** Fraction of the row width (after the loaded-marks gutter) the name column takes when an info column is drawn; the info (tags, chain contents) gets the rest. */
     private const val INFO_COLUMN_START = 1f / 3f
 
     /** [text] shortened with an ellipsis so it fits in [maxW] pixels in the current font. */
     internal fun elide(text: String, maxW: Float): String {
-        if (maxW <= 0f || ImGui.calcTextSize(text).x <= maxW) return text
+        if (ImGui.calcTextSize(text).x <= maxW) return text
+        if (maxW <= 0f) return ""
         var end = text.length
         while (end > 1 && ImGui.calcTextSize(text.substring(0, end) + "...").x > maxW) end--
         return text.substring(0, end).trimEnd() + "..."
     }
 
-    /** Draws the muted info text of a row in the info column, elided to fit. Call right after the row selectable. */
-    internal fun drawInfoColumn(info: String, itemW: Float) {
-        if (info.isEmpty()) return
-        val nameColW = itemW * INFO_COLUMN_START
-        val x = ImGui.getItemRectMinX() + nameColW
-        val y = ImGui.getItemRectMinY() + (ImGui.getItemRectSizeY() - ImGui.getTextLineHeight()) * 0.5f
-        ImGui.getWindowDrawList().addText(x, y, ImGui.getColorU32(ImGuiCol.TextDisabled), elide(info, itemW - nameColW - 6f))
-    }
+    /** Prefix of a [PAYLOAD_STOCK_SOURCE] that names a live external stream rather than a stock generator id. */
+    const val EXTERNAL_PAYLOAD_PREFIX = "ext_video:"
 
-    /** Draws the heavy-shader badge at the row's right edge for [gpuCost] 3. Call right after the row selectable. */
-    internal fun drawCostBadge(gpuCost: Int, itemW: Float) {
-        if (gpuCost < GPU_COST_HEAVY) return
-        val w = ImGui.calcTextSize(Icons.ALERT).x
-        val x = ImGui.getItemRectMinX() + itemW - w - 6f
-        val y = ImGui.getItemRectMinY() + (ImGui.getItemRectSizeY() - ImGui.getTextLineHeight()) * 0.5f
-        ImGui.getWindowDrawList().addText(x, y, TangoPalette.u32(TangoPalette.ALERT.normal), Icons.ALERT)
+    /** The source a [PAYLOAD_STOCK_SOURCE] drop names: a stock generator id, or `ext_video:<stream>` for a live external stream. */
+    fun sourceForPayload(id: String): llm.slop.liquidlsd.rendering.VisualSource? =
+        if (id.startsWith(EXTERNAL_PAYLOAD_PREFIX)) ExternalVideoSource(serverName = id.removePrefix(EXTERNAL_PAYLOAD_PREFIX))
+        else VisualSourceRegistry.availableSources.find { it.id == id }
+
+    /** The source behind a stock or external row. */
+    private fun stockSourceOf(asset: AssetItem): llm.slop.liquidlsd.rendering.VisualSource? =
+        if (asset.type == AssetType.SOURCE_EXTERNAL) ExternalVideoSource(serverName = BrowseCatalogs.externalName(asset))
+        else VisualSourceRegistry.availableSources.find { it.id == asset.path.removePrefix(STOCK_PATH_PREFIX) }
+
+    /** Alt+click: the row on Deck PV, exactly like the menu's "Preview on Deck PV". */
+    private fun previewOnPv(session: SessionContext, mixer: Mixer, parametersState: ParametersState, asset: AssetItem) {
+        if (asset.type == AssetType.PRESET) {
+            BrowserDeckButtons.loadPresetToDeck(session, mixer, File(asset.path), 4)
+        } else {
+            val source = stockSourceOf(asset) ?: return
+            UIManager.changeVisualSourceSafely(mixer, mixer.deckPV, "Deck PV", source, parametersState)
+        }
+        BrowseRecents.note(asset)
     }
 
     const val GPU_COST_HEAVY = 3
-    const val GPU_COST_TIP = "GPU-intensive: may run slowly on integrated graphics."
+    const val GPU_COST_TIP = "Heavy shader: GPU-intensive, may run slowly on integrated graphics."
 
-    /** Name text shortened so it stays clear of the info column. */
-    internal fun nameForInfo(label: String, itemW: Float): String = elide(label, itemW * INFO_COLUMN_START - 12f)
+    /** The name a list row shows for [asset]: saved files written in snake_case read as words; stock names are already display names. */
+    internal fun rowName(asset: AssetItem): String = when (asset.type) {
+        AssetType.PRESET, AssetType.FX_PRESET, AssetType.FX_CHAIN, AssetType.TRANSITION_PRESET -> BrowseCatalog.prettyName(asset.displayName)
+        else -> asset.displayName
+    }
+
+    /** Hover text naming a row: its full shown name, plus the file name when the shown name was prettified. Null when the row shows it all already. */
+    internal fun fullNameTip(asset: AssetItem, nameElided: Boolean): String? {
+        val shown = rowName(asset)
+        return when {
+            shown != asset.displayName -> "$shown\n${File(asset.path).name}"
+            nameElided -> shown
+            else -> null
+        }
+    }
+
+    /**
+     * One list row: a selectable [itemW] wide with its text drawn on top, so every part stays in its own column whatever the window
+     * width. An icon slot (left blank when [icon] is null, so names line up), the [name] shortened to the name column (a third of
+     * the row when there is [info], else up to the badge), the muted [info] column, and the heavy-GPU badge for [gpuCost] 3.
+     * Draw inside the row font. Returns whether the selectable was clicked; [lastNameElided] tells whether the name was shortened.
+     */
+    internal fun rowSelectable(id: String, icon: String?, name: String, info: String, gpuCost: Int, isSelected: Boolean, itemW: Float): Boolean {
+        val textX = ImGui.getCursorScreenPosX()
+        val textCol = if (isSelected) TangoPalette.u32(floatArrayOf(1f, 1f, 1f, 1f)) else ImGui.getColorU32(ImGuiCol.Text)
+        val clicked = selectableRow("##$id", isSelected, itemW)
+        val rowMaxX = ImGui.getItemRectMaxX()
+        val y = ImGui.getItemRectMinY() + (ImGui.getItemRectSizeY() - ImGui.getTextLineHeight()) * 0.5f
+        val dl = ImGui.getWindowDrawList()
+
+        val heavy = gpuCost >= GPU_COST_HEAVY
+        val badgeW = if (heavy) ImGui.calcTextSize(Icons.GAUGE).x + 6f else 0f
+        if (heavy) dl.addText(rowMaxX - badgeW, y, ImGui.getColorU32(ImGuiCol.TextDisabled), Icons.GAUGE)
+
+        val iconSlot = ImGui.calcTextSize(Icons.DISC).x + 6f
+        if (icon != null) dl.addText(textX, y, textCol, icon)
+        val nameX = textX + iconSlot
+        val infoX = textX + itemW * INFO_COLUMN_START
+        val nameEnd = if (info.isNotEmpty()) infoX - 10f else rowMaxX - badgeW - 6f
+        val shown = elide(name, nameEnd - nameX)
+        lastNameElided = shown != name
+        dl.addText(nameX, y, textCol, shown)
+        if (info.isNotEmpty()) {
+            val infoStart = maxOf(infoX, nameX + ImGui.calcTextSize(shown).x + 10f)
+            val infoText = elide(info, rowMaxX - badgeW - 6f - infoStart)
+            if (infoText.isNotEmpty()) dl.addText(infoStart, y, ImGui.getColorU32(ImGuiCol.TextDisabled), infoText)
+        }
+        return clicked
+    }
+
+    /** Whether the last [rowSelectable] had to shorten its name. */
+    internal var lastNameElided = false
+        private set
 }

@@ -5,8 +5,15 @@ import llm.slop.liquidlsd.ui.ImGuiFileBrowser
 import llm.slop.liquidlsd.ui.ToastOverlay
 import llm.slop.liquidlsd.ui.ButtonChrome
 import imgui.ImGui
+import imgui.ImGuiInputTextCallbackData
+import imgui.callback.ImGuiInputTextCallback
 import imgui.flag.ImGuiCol
+import imgui.flag.ImGuiFocusedFlags
+import imgui.flag.ImGuiInputTextFlags
 import imgui.flag.ImGuiKey
+import imgui.flag.ImGuiPopupFlags
+import llm.slop.liquidlsd.ui.shortcuts.ShortcutManager
+import org.lwjgl.glfw.GLFW
 import imgui.flag.ImGuiStyleVar
 import imgui.flag.ImGuiWindowFlags
 import imgui.type.ImString
@@ -113,17 +120,28 @@ object BrowserPane {
             BrowseKind.TRANS -> TransitionBrowserPanel.selectedAsset
         } ?: return false
         if (!target.accepts(asset)) return false
-        target.apply(asset)
+        DockActions.tap(target, asset)
         return true
+    }
+
+    /** The bound target's name for row menus ("Deck A · Source"), or null. */
+    private var hostedLabel: String? = null
+
+    /** First item of a row menu while bound: "Apply to <target>" above a separator, ahead of the Library's own load items. */
+    internal fun applyMenuItem(target: ApplyTarget?, asset: AssetItem) {
+        if (target == null || !target.accepts(asset)) return
+        if (ImGui.menuItem("Apply to ${hostedLabel ?: "target"}")) DockActions.tap(target, asset)
+        ImGui.separator()
     }
 
     /**
      * Draws the pane. [target] is null in the Library (double-click loads) and set when the pair view hosts it (a click applies to
-     * the target and only rows it accepts are listed).
+     * the target and only rows it accepts are listed); [targetLabel] names it in row menus.
      */
-    fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, kind: BrowseKind, target: ApplyTarget? = null) {
+    fun draw(session: SessionContext, mixer: Mixer, parametersState: ParametersState, kind: BrowseKind, target: ApplyTarget? = null, targetLabel: String? = null) {
         val catalog = BrowseCatalogs.get(kind)
         noteHosting(target)
+        hostedLabel = targetLabel
         val (scope, moved) = scopeMemory.enter(kind, ScopeMemory.contextOf(target), scopeOf(kind), target?.defaultScope ?: BrowseScope.All)
         if (moved) {
             clearSelection(kind)
@@ -151,9 +169,43 @@ object BrowserPane {
         ImGui.beginChild("BrowserPaneList", midW, h, true, flags)
         drawList(session, mixer, parametersState, catalog, kind, target)
         ImGui.endChild()
+        // The pane (tree or list) has the keyboard: a typed letter starts a search.
+        if (ImGui.isWindowFocused(ImGuiFocusedFlags.ChildWindows)) typeToSearch(kind)
 
         ImGui.popStyleColor(2)
         ImGui.popStyleVar(2)
+    }
+
+    /** Kinds whose search box just received a typed-ahead character: its caret goes to the end instead of selecting the text. */
+    private val caretToEnd = HashSet<BrowseKind>()
+
+    private val caretToEndCallback = object : ImGuiInputTextCallback() {
+        override fun accept(data: ImGuiInputTextCallbackData) {
+            data.cursorPos = data.bufTextLen
+            data.selectionStart = data.bufTextLen
+            data.selectionEnd = data.bufTextLen
+        }
+    }
+
+    /**
+     * Type-to-search: a letter or digit pressed while the pane has the keyboard (and no text field does) starts a search with it.
+     * Keys bound to a shortcut (Q, Shift+Q, T, ...) keep their shortcut.
+     */
+    private fun typeToSearch(kind: BrowseKind) {
+        val io = ImGui.getIO()
+        if (io.wantTextInput || io.keyCtrl || io.keyAlt || io.keySuper) return
+        if (ImGui.isPopupOpen("", ImGuiPopupFlags.AnyPopupId or ImGuiPopupFlags.AnyPopupLevel)) return
+        val mods = if (io.keyShift) GLFW.GLFW_MOD_SHIFT else 0
+        val typed = (0 until 26).firstNotNullOfOrNull { i ->
+            if (!ImGui.isKeyPressed(ImGuiKey.A + i, false) || ShortcutManager.isBound(GLFW.GLFW_KEY_A + i, mods)) null
+            else ('a' + i).let { if (io.keyShift) it.uppercaseChar() else it }
+        } ?: if (io.keyShift) null else (0 until 10).firstNotNullOfOrNull { i ->
+            if (!ImGui.isKeyPressed(ImGuiKey._0 + i, false) || ShortcutManager.isBound(GLFW.GLFW_KEY_0 + i, 0)) null else '0' + i
+        }
+        if (typed == null) return
+        searchBuffers.getOrPut(kind) { ImString(SearchMatcher.BUFFER_SIZE) }.set(typed.toString())
+        searchFocusRequests.add(kind)
+        caretToEnd.add(kind)
     }
 
     /** Appends the playlist under the tree cursor to the BG ([bg]) or A/B queue of [kind] (the one queue for transitions). False when the cursor is not on a playlist. */
@@ -187,11 +239,17 @@ object BrowserPane {
         ImGui.sameLine()
         ImGui.setCursorPosX((ImGui.getWindowContentRegionMaxX() - btnSize).coerceAtLeast(ImGui.getCursorPosX()))
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ButtonChrome.button("${Icons.PLUS}##browserNewPlaylist", btnSize, btnSize)) {
+            if (ButtonChrome.button("${Icons.LIST_PLUS}##browserNewPlaylist", btnSize, btnSize)) {
                 BrowserPopupHandler.pendingOpenNewPlaylistPopup = true
             }
         }
-        itemTooltip("Create a new playlist.")
+        itemTooltip(
+            "New playlist: an empty " + when (kind) {
+                BrowseKind.SRC -> "Sources"
+                BrowseKind.FX -> "FX"
+                BrowseKind.TRANS -> "Transitions"
+            } + " playlist, listed under Playlists. Fill it by dragging rows onto it or with a row's \"Add to\" item."
+        )
         ImGui.separator()
         if (!ImGui.beginChild("##browser_tree_scroll", 0f, 0f, false)) {
             ImGui.endChild()
@@ -212,17 +270,33 @@ object BrowserPane {
             ImGui.pushID(i)
             val indent = node.depth * 12f
             if (indent > 0f) ImGui.indent(indent)
+            // Every row keeps a fold-arrow slot, so labels line up whether or not the row has children.
+            val foldW = ImGui.getTextLineHeight()
             if (expandable) {
-                if (ImGui.smallButton(if (isCollapsed) "+##fold" else "-##fold")) {
+                val fx = ImGui.getCursorScreenPosX()
+                val fy = ImGui.getCursorScreenPosY()
+                if (ImGui.invisibleButton("##fold", foldW, ImGui.getTextLineHeight())) {
                     if (isCollapsed) hidden.remove(node.scope) else hidden.add(node.scope)
                 }
-                ImGui.sameLine(0f, 4f)
+                val arrowCol = if (ImGui.isItemHovered()) ImGui.getColorU32(ImGuiCol.Text) else ImGui.getColorU32(ImGuiCol.TextDisabled)
+                val glyph = if (isCollapsed) Icons.FOLD_CLOSED else Icons.FOLD_OPEN
+                val gw = ImGui.calcTextSize(glyph).x
+                ImGui.getWindowDrawList().addText(fx + (foldW - gw) * 0.5f, fy, arrowCol, glyph)
+                itemTooltip(if (isCollapsed) "Show ${node.label}'s folders." else "Hide ${node.label}'s folders.")
+                ImGui.sameLine(0f, 2f)
+            } else {
+                ImGui.dummy(foldW, ImGui.getTextLineHeight())
+                ImGui.sameLine(0f, 2f)
             }
+            val label = if (node.scope == BrowseScope.Recent) "${Icons.HISTORY} ${node.label}" else node.label
             if (!node.selectable) {
-                ImGui.textDisabled(node.label)
-            } else if (ImGui.selectable("${node.label}##node", node.scope == current)) {
+                // The Playlists header is a heading, not a scope: plain text, not greyed like a disabled row.
+                ImGui.textUnformatted(label)
+                itemTooltip("Your playlists. Pick one to list its items in order; right-click one for queue and file actions.")
+            } else if (ImGui.selectable("$label##node", node.scope == current)) {
                 select(kind, node.scope)
             }
+            if (node.scope == BrowseScope.Recent) itemTooltip("The last ${BrowseRecents.LIMIT} items you loaded or applied, newest first.")
             if (node.scope == cursor) {
                 // The controller's cursor: an outline, so it reads apart from the selected scope's fill.
                 val min = ImGui.getItemRectMin()
@@ -237,7 +311,8 @@ object BrowserPane {
             }
             val playlist = node.scope as? BrowseScope.Playlist
             if (playlist != null) playlistContextMenu(session, mixer, kind, playlist)
-            if (node.selectable || node.count > 0) {
+            // Counts are items; an empty row shows none, the same rule for folders, playlists and the Playlists header.
+            if (node.count > 0) {
                 ImGui.sameLine()
                 val countText = node.count.toString()
                 ImGui.setCursorPosX(ImGui.getWindowContentRegionMaxX() - ImGui.calcTextSize(countText).x)
@@ -277,21 +352,15 @@ object BrowserPane {
             BrowseKind.TRANS -> AssetType.TRANSITION_PLAYLIST
         }
         val asset = AssetItem(path = file.absolutePath, name = file.nameWithoutExtension, type = assetType)
-        if (ImGui.menuItem("Rename...")) {
-            BrowserPopupHandler.renameTarget = asset
-            BrowserPopupHandler.renameBuffer.set(asset.name)
-            BrowserPopupHandler.pendingOpenRenamePopup = true
-        }
+        if (ImGui.menuItem("Rename...")) BrowserPopupHandler.openRename(asset)
         if (ImGui.menuItem("Clone")) {
             FileSystemManager.cloneFile(file.absolutePath).onSuccess { newPath ->
                 scopes[kind] = BrowseScope.Playlist(File(newPath).absolutePath)
                 setSelectedPlaylistFile(kind, File(newPath))
             }
         }
-        if (ImGui.menuItem("Delete")) {
-            BrowserPopupHandler.deleteTarget = asset
-            BrowserPopupHandler.pendingOpenDeletePopup = true
-        }
+        if (ImGui.menuItem("Delete...")) BrowserPopupHandler.openDeleteConfirmation(listOf(asset))
+        if (ImGui.menuItem("Reveal in File Manager")) BrowserPopupHandler.revealInFileManager(file)
         popOpenDropdownFont()
         ImGui.endPopup()
     }
@@ -335,14 +404,21 @@ object BrowserPane {
         ImGui.setNextItemWidth(ImGui.getContentRegionAvailX())
         if (searchFocusRequests.remove(kind)) ImGui.setKeyboardFocusHere()
         session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
-            ImGui.inputTextWithHint("##browserPaneSearch", "Search name, tags, folder...", search)
+            // After a typed-ahead letter the field keeps the caret callback until it is active (focus lands a frame later).
+            val moveCaret = kind in caretToEnd
+            if (moveCaret) {
+                ImGui.inputTextWithHint("##browserPaneSearch", "Search name, tags, folder...", search, ImGuiInputTextFlags.CallbackAlways, caretToEndCallback)
+                if (ImGui.isItemActive()) caretToEnd.remove(kind)
+            } else {
+                ImGui.inputTextWithHint("##browserPaneSearch", "Search name, tags, folder...", search)
+            }
             llm.slop.liquidlsd.tour.WidgetRegistry.note { "browser_search" }
         }
         if (ImGui.isItemActive() && ImGui.isKeyPressed(ImGuiKey.Escape)) {
             search.set("")
             LibraryPanel.shouldReclaimFocus = true
         }
-        itemTooltip("Type to filter by name, id, folder or tags.\nPress Esc while searching to clear.")
+        itemTooltip("Type to filter by name, id, folder or tags.\nTyping a letter while the list has the keyboard starts a search too.\nPress Esc while searching to clear.")
         ImGui.separator()
         ImGui.spacing()
 
@@ -398,12 +474,11 @@ object BrowserPane {
         }
         ImGui.endChild()
 
-        // Delete / Backspace: inside a playlist it removes the rows from the playlist, elsewhere it deletes from the library with confirmation.
+        // The delete key (Preferences > Shortcuts, Delete by default; Backspace too): inside a playlist it removes the rows from the
+        // playlist, elsewhere it deletes from the library with confirmation.
         val io = ImGui.getIO()
         val selected = selectedAssets(kind, assets)
-        if (DockActions.canManageList(target) && selected.isNotEmpty() && !io.wantTextInput && !io.keyCtrl && !io.keyAlt && !io.keySuper &&
-            (ImGui.isKeyPressed(ImGuiKey.Delete, false) || ImGui.isKeyPressed(ImGuiKey.Backspace, false))
-        ) {
+        if (DockActions.canManageList(target) && selected.isNotEmpty() && !io.wantTextInput && DockActions.deleteKeyPressed()) {
             if (playlistRows != null) {
                 removeFromPlaylist(kind, playlistRows, assets)
             } else {
@@ -441,7 +516,9 @@ object BrowserPane {
         if (rightX > ImGui.getCursorPosX()) ImGui.setCursorPosX(rightX)
 
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
-            if (ButtonChrome.button("${Icons.PLUS}##browser_new", btnSize, btnSize)) {
+            // A new blank preset is made; FX and transitions are saved from what is playing, so they get the save icon.
+            val icon = if (kind == BrowseKind.SRC) Icons.FILE_PLUS else Icons.SAVE
+            if (ButtonChrome.button("$icon##browser_new", btnSize, btnSize)) {
                 when (kind) {
                     BrowseKind.SRC -> ImGui.openPopup("browser_new_preset_popup")
                     BrowseKind.FX -> ImGui.openPopup("create_new_fx_popup")
@@ -451,9 +528,9 @@ object BrowserPane {
         }
         itemTooltip(
             when (kind) {
-                BrowseKind.SRC -> "New blank preset on a deck..."
-                BrowseKind.FX -> "Save FX slot or 3-slot chain from a deck..."
-                BrowseKind.TRANS -> "Save current mixer transition as a preset (.lsdtrans)..."
+                BrowseKind.SRC -> "New preset: start a blank preset on a deck (pick which)."
+                BrowseKind.FX -> "Save FX: save one FX slot, or a deck's whole 3-slot chain, as a new saved FX."
+                BrowseKind.TRANS -> "Save transition: save the mixer's current transition as a new saved transition (.lsdtrans)."
             }
         )
         if (kind == BrowseKind.FX) {
@@ -482,7 +559,7 @@ object BrowserPane {
         session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             if (ButtonChrome.button("${Icons.MORE_VERTICAL}##browser_more", btnSize, btnSize)) ImGui.openPopup("browser_more_popup")
         }
-        itemTooltip("More actions.")
+        itemTooltip("More: restore the factory presets, or import a .flame file as Fractal Flame presets.")
         pushOpenDropdownPadding()
         if (ImGui.beginPopup("browser_more_popup")) {
             pushOpenDropdownFont()

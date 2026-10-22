@@ -63,6 +63,9 @@ class NavigationSurfaceTest {
         PreferencesPanel.close()
         MacroLearnState.cancelLearn()
         PerformSurface.lastTouchedKnob = null
+        // Applies record Recent items; keep them out of the real library/.
+        val recentDir = kotlin.io.path.createTempDirectory("recent").toFile().apply { deleteOnExit() }
+        BrowseKind.entries.forEach { llm.slop.liquidlsd.ui.browser.BrowseRecents.resetForTest(it, java.io.File(recentDir, "${it.name}.json").apply { deleteOnExit() }) }
     }
 
     @AfterTest

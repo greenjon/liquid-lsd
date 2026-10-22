@@ -133,8 +133,9 @@ object FXBrowserPanel {
         info: String = "", contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null,
         target: ApplyTarget? = null, marks: List<LoadedMarks.Mark> = emptyList()
     ) {
+        // Stock filters leave the icon slot blank unless starred; saved singles and chains keep their own marks.
         val icon = when (asset.type) {
-            AssetType.FX_STOCK -> if (FxShortlist.isFavorite(asset.path.removePrefix(STOCK_PATH_PREFIX))) "\u2605" else Icons.SQUARE
+            AssetType.FX_STOCK -> if (FxShortlist.isFavorite(asset.path.removePrefix(STOCK_PATH_PREFIX))) "\u2605" else null
             AssetType.FX_CHAIN -> Icons.ACTIVITY
             else -> Icons.ZAP
         }
@@ -148,28 +149,32 @@ object FXBrowserPanel {
 
         if (isSelected) SmoothScroll.follow(LibraryPanel.shouldScrollToSelection)
 
+        var nameElided = false
         session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
-            val text = "$icon ${asset.displayName}"
-            selectableRow("${if (info.isNotEmpty()) PresetListPanel.nameForInfo(text, itemW) else text}##fx_browser_$index", isSelected, itemW)
+            PresetListPanel.rowSelectable("fx_browser_$index", icon, PresetListPanel.rowName(asset), info, asset.gpuCost, isSelected, itemW)
+            nameElided = PresetListPanel.lastNameElided
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { PresetListPanel.tourRowKey(BrowseKind.FX, asset) }
         LoadedMarks.drawGutter(gutter, marks, DROPDOWN_ROW_HEIGHT)
-        PresetListPanel.drawInfoColumn(info, itemW)
-        PresetListPanel.drawCostBadge(asset.gpuCost, itemW)
         val isRowHovered = ImGui.isItemHovered()
-        itemTooltip(
-            when (asset.type) {
-                AssetType.FX_STOCK -> "Stock ISF filter — load only, not saveable to a playlist or queue." +
-                    if (asset.gpuCost >= PresetListPanel.GPU_COST_HEAVY) "\n${PresetListPanel.GPU_COST_TIP}" else ""
-                AssetType.FX_CHAIN -> "Saved 3-slot FX chain (.lsdfxchain) — replaces all 3 slots of the target chain."
-                else -> "Saved single FX preset (.lsdfx) — loads into one FX slot."
-            }
-        )
+        val about = when (asset.type) {
+            AssetType.FX_STOCK -> "Stock ISF filter — load only, not saveable to a playlist or queue." +
+                if (asset.gpuCost >= PresetListPanel.GPU_COST_HEAVY) "\n${Icons.GAUGE} ${PresetListPanel.GPU_COST_TIP}" else ""
+            AssetType.FX_CHAIN -> "Saved 3-slot FX chain (.lsdfxchain) — replaces all 3 slots of the target chain."
+            else -> "Saved single FX preset (.lsdfx) — loads into one FX slot."
+        }
+        val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: load to the live deck. Right-click: more."
+        itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), about, how).joinToString("\n"))
 
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
             selectedAsset = asset
             DockActions.tap(target, asset)
+        }
+        if (ImGui.isItemClicked(1)) {
+            LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
+            selectedAsset = asset
+            ImGui.openPopup(popupId)
         }
 
         if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
@@ -203,6 +208,7 @@ object FXBrowserPanel {
         pushOpenDropdownPadding()
         if (ImGui.beginPopup(popupId)) {
             pushOpenDropdownFont()
+            BrowserPane.applyMenuItem(target, asset)
             if (contextExtras != null) {
                 contextExtras(asset)
                 ImGui.separator()
@@ -290,104 +296,65 @@ object FXBrowserPanel {
         when (asset.type) {
             AssetType.FX_STOCK -> {
                 val id = asset.path.removePrefix(STOCK_PATH_PREFIX)
-                if (ImGui.menuItem(if (FxShortlist.isFavorite(id)) "\u2605 Remove from Favorites" else "\u2606 Add to Favorites")) {
+                if (ImGui.menuItem(if (FxShortlist.isFavorite(id)) "★ Remove from Favorites" else "☆ Add to Favorites")) {
                     FxShortlist.toggle(id)
                 }
                 ImGui.separator()
-                for ((chainLabel, chain) in chains) {
-                    if (ImGui.beginMenu("Load to $chainLabel")) {
-                        for (s in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
-                            val slotNum = s + 1
-                            if (ImGui.menuItem("Slot $slotNum")) {
-                                FxOps.setSlotFilter(chain, s, id, undoable = true)
-                            }
-                        }
-                        ImGui.endMenu()
-                    }
-                }
+                drawSlotMenus(chains) { chain, s -> FxOps.setSlotFilter(chain, s, id, undoable = true); BrowseRecents.note(asset) }
             }
             AssetType.FX_PRESET -> {
-                for ((chainLabel, chain) in chains) {
-                    if (ImGui.beginMenu("Load to $chainLabel")) {
-                        for (s in 0 until llm.slop.liquidlsd.rendering.FxChain.SLOT_COUNT) {
-                            val slotNum = s + 1
-                            if (ImGui.menuItem("Slot $slotNum")) {
-                                FxOps.loadSlot(session, file, chain, s, undoable = true)
-                            }
-                        }
-                        ImGui.endMenu()
-                    }
-                }
+                drawSlotMenus(chains) { chain, s -> FxOps.loadSlot(session, file, chain, s, undoable = true); BrowseRecents.note(asset) }
                 ImGui.separator()
-                if (ImGui.menuItem("Add to A/B FX Queue")) {
-                    FXQueueManager.appendToQueue(file)
-                }
-                if (ImGui.menuItem("Add to BG FX Queue")) {
-                    FXBgQueueManager.appendToQueue(file)
-                }
-                val activePlFilePreset = LibraryPanel.selectedFxPlaylistFile
-                if (activePlFilePreset != null) {
-                    if (ImGui.menuItem("Add to '${activePlFilePreset.nameWithoutExtension}' Playlist")) {
-                        appendToActiveFxPlaylist(activePlFilePreset, asset.path)
-                    }
-                }
-                ImGui.separator()
-                if (ImGui.menuItem("Rename...")) {
-                    BrowserPopupHandler.renameTarget = asset
-                    BrowserPopupHandler.renameBuffer.set(asset.name)
-                    BrowserPopupHandler.pendingOpenRenamePopup = true
-                }
-                if (ImGui.menuItem("Clone")) {
-                    FileSystemManager.cloneFile(asset.path)
-                }
-                if (ImGui.menuItem("Delete...")) {
-                    BrowserPopupHandler.deleteTarget = asset
-                    BrowserPopupHandler.pendingOpenDeletePopup = true
-                }
-                ImGui.separator()
-                if (ImGui.menuItem("Reveal in File Manager")) {
-                    revealInFileManager(file)
-                }
+                drawSavedItems(asset, file)
             }
             AssetType.FX_CHAIN -> {
                 for ((chainLabel, chain) in chains) {
                     if (ImGui.menuItem("Load to $chainLabel")) {
                         FxOps.loadChain(session, file, chain)
+                        BrowseRecents.note(asset)
                     }
                 }
                 ImGui.separator()
-                if (ImGui.menuItem("Add to A/B FX Queue")) {
-                    FXQueueManager.appendToQueue(file)
-                }
-                if (ImGui.menuItem("Add to BG FX Queue")) {
-                    FXBgQueueManager.appendToQueue(file)
-                }
-                val activePlFileChain = LibraryPanel.selectedFxPlaylistFile
-                if (activePlFileChain != null) {
-                    if (ImGui.menuItem("Add to '${activePlFileChain.nameWithoutExtension}' Playlist")) {
-                        appendToActiveFxPlaylist(activePlFileChain, asset.path)
-                    }
-                }
-                ImGui.separator()
-                if (ImGui.menuItem("Rename...")) {
-                    BrowserPopupHandler.renameTarget = asset
-                    BrowserPopupHandler.renameBuffer.set(asset.name)
-                    BrowserPopupHandler.pendingOpenRenamePopup = true
-                }
-                if (ImGui.menuItem("Clone")) {
-                    FileSystemManager.cloneFile(asset.path)
-                }
-                if (ImGui.menuItem("Delete...")) {
-                    BrowserPopupHandler.deleteTarget = asset
-                    BrowserPopupHandler.pendingOpenDeletePopup = true
-                }
-                ImGui.separator()
-                if (ImGui.menuItem("Reveal in File Manager")) {
-                    revealInFileManager(file)
-                }
+                drawSavedItems(asset, file)
             }
             else -> {}
         }
+    }
+
+    /** "Load to <chain>" submenus, one item per slot. */
+    private fun drawSlotMenus(chains: List<Pair<String, FxChain>>, load: (FxChain, Int) -> Unit) {
+        for ((chainLabel, chain) in chains) {
+            if (ImGui.beginMenu("Load to $chainLabel")) {
+                for (s in 0 until FxChain.SLOT_COUNT) {
+                    if (ImGui.menuItem("Slot ${s + 1}")) load(chain, s)
+                }
+                ImGui.endMenu()
+            }
+        }
+    }
+
+    /** The queue, playlist and file items every saved FX file shares (same words as the Sources and Transitions menus). */
+    private fun drawSavedItems(asset: AssetItem, file: File) {
+        if (ImGui.menuItem("Add to A/B FX Queue")) {
+            FXQueueManager.appendToQueue(file)
+        }
+        if (ImGui.menuItem("Add to BG FX Queue")) {
+            FXBgQueueManager.appendToQueue(file)
+        }
+        val activePlaylist = LibraryPanel.selectedFxPlaylistFile
+        if (activePlaylist != null) {
+            if (ImGui.menuItem("Add to '${activePlaylist.nameWithoutExtension}'")) {
+                appendToActiveFxPlaylist(activePlaylist, asset.path)
+            }
+        }
+        ImGui.separator()
+        if (ImGui.menuItem("Rename...")) BrowserPopupHandler.openRename(asset)
+        if (ImGui.menuItem("Clone")) {
+            FileSystemManager.cloneFile(asset.path)
+        }
+        if (ImGui.menuItem("Delete...")) BrowserPopupHandler.openDeleteConfirmation(listOf(asset))
+        ImGui.separator()
+        if (ImGui.menuItem("Reveal in File Manager")) BrowserPopupHandler.revealInFileManager(file)
     }
 
     private fun appendToActiveFxPlaylist(playlistFile: File, fxPath: String) {
@@ -399,17 +366,6 @@ object FXBrowserPanel {
             LibraryPanel.refreshAssets()
         } catch (e: Exception) {
             logger.error(e) { "Failed to append item $fxPath to FX playlist ${playlistFile.name}" }
-        }
-    }
-
-    private fun revealInFileManager(file: File) {
-        val parentDir = file.parentFile
-        if (parentDir != null && parentDir.exists()) {
-            try {
-                java.awt.Desktop.getDesktop().open(parentDir)
-            } catch (e: Exception) {
-                logger.error(e) { "Failed to open directory" }
-            }
         }
     }
 }

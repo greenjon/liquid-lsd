@@ -16,6 +16,7 @@ object Icons {
     const val FOLDER_PLUS = "\ue0d9" // folder-plus
     const val FILE        = "\ue0c0" // file
     const val FILE_PLUS   = "\ue0c9" // file-plus
+    const val LIST_PLUS   = "\ue23f" // list-plus (new playlist)
     const val ACTIVITY    = "\ue038" // activity
     const val ZAP         = "\ue1b4" // zap
     // NOTE: Lucide's chevron-up (\ue070) and chevron-down (\ue06d) glyphs used to bake
@@ -36,6 +37,10 @@ object Icons {
     const val PLAY        = "\ue13c" // play
     const val PAUSE       = "\ue12e" // pause
     const val ALERT       = "\ue193" // alert-triangle
+    const val GAUGE       = "\ue1bf" // gauge (heavy-GPU badge)
+    const val HISTORY     = "\ue1f5" // history (Recent folder)
+    const val FOLD_OPEN   = "\ue06d" // chevron-down (expanded tree node)
+    const val FOLD_CLOSED = "\ue06f" // chevron-right (collapsed tree node)
     const val INFO        = "\ue0f9" // info
     const val SAVE        = "\ue14d" // save
     const val DOWNLOAD    = "\ue0b2" // download

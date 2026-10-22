@@ -45,22 +45,21 @@ object BrowserRowMoreButton {
         ImGui.pushStyleColor(ImGuiCol.Button, 0f, 0f, 0f, 0f)
         ImGui.pushStyleColor(ImGuiCol.ButtonHovered, 1f, 1f, 1f, 0.15f)
         ImGui.pushStyleColor(ImGuiCol.ButtonActive, 1f, 1f, 1f, 0.25f)
+        // No frame of its own (the theme's frame border would box every row); the outline is drawn below, on hover only.
+        ImGui.pushStyleColor(ImGuiCol.Border, 0f, 0f, 0f, 0f)
+        ImGui.pushStyleColor(ImGuiCol.BorderShadow, 0f, 0f, 0f, 0f)
 
         ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, 0f, 0f)
 
-        // Draw the button (empty text so standard button handles hit-testing, active state, styling, and borders)
+        // An invisible-looking button keeps the hit area on every row; only the dots (and the hover outline) show.
         val clicked = ImGui.button("##row_more_$idSuffix", btnWidth, rowH)
         val isBtnHovered = ImGui.isItemHovered()
 
-        // Only show border outline on hover; completely transparent otherwise
-        if (isBtnHovered) {
-            ImGui.pushStyleColor(ImGuiCol.Border, 1f, 1f, 1f, 0.35f)
-        } else {
-            ImGui.pushStyleColor(ImGuiCol.Border, 0f, 0f, 0f, 0f)
-        }
-
         val isVisible = isRowHovered || isBtnHovered || isSelected || isPopupOpen
 
+        if (isBtnHovered) {
+            ImGui.getWindowDrawList().addRect(btnMinX, btnMinY, btnMinX + btnWidth, btnMinY + rowH, ImGui.getColorU32(ImGuiCol.TextDisabled), 3f)
+        }
         if (isVisible) {
             val dl = ImGui.getWindowDrawList()
             val dotCol = if (isBtnHovered) {
@@ -89,7 +88,7 @@ object BrowserRowMoreButton {
         }
 
         ImGui.popStyleVar()
-        ImGui.popStyleColor(4)
+        ImGui.popStyleColor(5)
 
         return clicked || isItemRightClicked
     }

@@ -69,7 +69,8 @@ object TransitionBrowserPanel {
         info: String = "", contextExtras: ((AssetItem) -> Unit)? = null, playlistRows: PlaylistRows? = null,
         target: ApplyTarget? = null, marks: List<LoadedMarks.Mark> = emptyList()
     ) {
-        val icon = if (asset.type == AssetType.TRANSITION_STOCK) Icons.SQUARE else Icons.ACTIVITY
+        // Stock shaders leave the icon slot blank; saved transitions keep their mark.
+        val icon = if (asset.type == AssetType.TRANSITION_STOCK) null else Icons.ACTIVITY
         val isSelected = selectedAsset?.path == asset.path
         val popupId = "trans_browser_context_$index"
 
@@ -80,26 +81,31 @@ object TransitionBrowserPanel {
 
         if (isSelected) SmoothScroll.follow(LibraryPanel.shouldScrollToSelection)
 
+        var nameElided = false
         session.uiTheme.withFont(UITheme.FontLevel.PRESET_NAME) {
-            val text = "$icon ${asset.displayName}"
-            selectableRow("${if (info.isNotEmpty()) PresetListPanel.nameForInfo(text, itemW) else text}##trans_browser_$index", isSelected, itemW)
+            PresetListPanel.rowSelectable("trans_browser_$index", icon, PresetListPanel.rowName(asset), info, asset.gpuCost, isSelected, itemW)
+            nameElided = PresetListPanel.lastNameElided
         }
         llm.slop.liquidlsd.tour.WidgetRegistry.note { PresetListPanel.tourRowKey(BrowseKind.TRANS, asset) }
         LoadedMarks.drawGutter(gutter, marks, DROPDOWN_ROW_HEIGHT)
-        PresetListPanel.drawInfoColumn(info, itemW)
         val isRowHovered = ImGui.isItemHovered()
-        itemTooltip(
-            if (asset.type == AssetType.TRANSITION_STOCK) {
-                "Stock ISF transition shader — apply, queue, or add to a playlist."
-            } else {
-                "Saved transition preset (.lsdtrans) — apply, queue, add to a playlist, or manage."
-            }
-        )
+        val about = if (asset.type == AssetType.TRANSITION_STOCK) {
+            "Stock ISF transition shader — apply, queue, or add to a playlist."
+        } else {
+            "Saved transition preset (.lsdtrans) — apply, queue, add to a playlist, or manage."
+        }
+        val how = if (target != null) "Click: apply. Right-click: more." else "Double-click or Enter: apply to the mixer. Right-click: more."
+        itemTooltip(listOfNotNull(PresetListPanel.fullNameTip(asset, nameElided), about, how).joinToString("\n"))
 
         if (ImGui.isItemClicked(0)) {
             LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
             selectedAsset = asset
             DockActions.tap(target, asset)
+        }
+        if (ImGui.isItemClicked(1)) {
+            LibraryPanel.activeSelectionSource = LibraryPanel.SelectionSource.PRESETS
+            selectedAsset = asset
+            ImGui.openPopup(popupId)
         }
 
         if (isRowHovered && ImGui.isMouseDoubleClicked(0)) {
@@ -128,6 +134,7 @@ object TransitionBrowserPanel {
         pushOpenDropdownPadding()
         if (ImGui.beginPopup(popupId)) {
             pushOpenDropdownFont()
+            BrowserPane.applyMenuItem(target, asset)
             if (contextExtras != null) {
                 contextExtras(asset)
                 ImGui.separator()
@@ -163,34 +170,31 @@ object TransitionBrowserPanel {
     private fun drawContextMenu(session: SessionContext, mixer: Mixer, asset: AssetItem) {
         if (ImGui.menuItem("Apply to Mixer")) {
             applyToMixer(session, mixer, asset)
+            BrowseRecents.note(asset)
         }
+        ImGui.separator()
         if (ImGui.menuItem("Add to A/B Queue")) {
             TransitionQueueManager.appendToQueue(fileFor(asset))
         }
         val activePlFile = LibraryPanel.selectedTransitionPlaylistFile
         if (activePlFile != null) {
             val token = if (asset.type == AssetType.TRANSITION_STOCK) asset.path.removePrefix(STOCK_PATH_PREFIX) else asset.path
-            if (ImGui.menuItem("Add to '${activePlFile.nameWithoutExtension}' Playlist")) {
+            if (ImGui.menuItem("Add to '${activePlFile.nameWithoutExtension}'")) {
                 appendToActiveTransitionPlaylist(activePlFile, token)
             }
         }
 
         if (asset.type == AssetType.TRANSITION_PRESET) {
             ImGui.separator()
-            if (ImGui.menuItem("Rename...")) {
-                BrowserPopupHandler.renameTarget = asset
-                BrowserPopupHandler.renameBuffer.set(asset.name)
-                BrowserPopupHandler.pendingOpenRenamePopup = true
-            }
+            if (ImGui.menuItem("Rename...")) BrowserPopupHandler.openRename(asset)
             if (ImGui.menuItem("Clone")) {
                 FileSystemManager.cloneFile(asset.path).onSuccess {
                     LibraryPanel.refreshAssets()
                 }
             }
-            if (ImGui.menuItem("Delete...")) {
-                BrowserPopupHandler.deleteTarget = asset
-                BrowserPopupHandler.pendingOpenDeletePopup = true
-            }
+            if (ImGui.menuItem("Delete...")) BrowserPopupHandler.openDeleteConfirmation(listOf(asset))
+            ImGui.separator()
+            if (ImGui.menuItem("Reveal in File Manager")) BrowserPopupHandler.revealInFileManager(File(asset.path))
         }
     }
 
