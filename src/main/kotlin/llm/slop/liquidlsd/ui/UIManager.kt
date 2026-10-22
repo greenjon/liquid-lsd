@@ -350,6 +350,8 @@ class UIManager(
 
         handleKnobCursorLocking()
         LibraryPanel.endFrame()
+        popupOpenFrameBefore = popupOpenLastFrame
+        popupOpenLastFrame = ImGui.isPopupOpen("", imgui.flag.ImGuiPopupFlags.AnyPopupId or imgui.flag.ImGuiPopupFlags.AnyPopupLevel)
 
         tour?.drawOverlay()
         ImGui.render()
@@ -368,15 +370,24 @@ class UIManager(
         }
     }
 
+    /** Whether any menu or popup was open at the last two checks (see the Esc handling below). */
+    private var popupOpenLastFrame = false
+    private var popupOpenFrameBefore = false
+
     private fun processQueueKeyboardShortcuts(): Int {
         var keyDelta = 0
         // Esc takes the same path as the controller's back button ([NavigationSurface.back]; see DECISIONS.md).
         // Guarded so it never fires while a text/search input has keyboard focus.
-        // A Library modal (Rename, Delete, ...) answers Esc itself.
+        // A Library modal (Rename, Delete, ...) answers Esc itself, and an open menu or popup closes on it without also going back;
+        // the unsaved-deck prompt is the exception, cancelled through back.
         if (!ModalKeys.ownsEscape() && shouldHandleEscape(ImGui.getIO().wantTextInput, ImGui.isKeyPressed(imgui.flag.ImGuiKey.Escape, false))) {
             val mixer = currentMixer
-            if (mixer != null) NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx).back()
-            else BackNavigation.back(parametersState, null)
+            // ImGui has already closed the popup by the time this runs, so ask whether one was open just before.
+            val popupOpen = popupOpenLastFrame || popupOpenFrameBefore
+            if (mixer != null) {
+                val surface = NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx)
+                if (!popupOpen || surface.confirming) surface.back()
+            } else if (!popupOpen) BackNavigation.back(parametersState, null)
         }
 
         // Guarded so Ctrl+F / "/" don't hijack the library while a text field (e.g. a macro

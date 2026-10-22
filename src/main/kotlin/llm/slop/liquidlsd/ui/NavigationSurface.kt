@@ -37,7 +37,7 @@ internal class NavigationSurface(
     /** The pair view is up: its two rows over the Browse dock. */
     private val inPicker: Boolean get() = viewStateOf(session).pair
 
-    private val confirming: Boolean get() = deckConfirm?.deckConfirmPending == true
+    internal val confirming: Boolean get() = deckConfirm?.deckConfirmPending == true
 
     /** While the dirty-deck modal is up, the cursor knob and the side buttons answer it (see [DeckConfirmChoice]). */
     override val browsing: Boolean get() = confirming || inLibraryView || inPicker
