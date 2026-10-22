@@ -273,7 +273,8 @@ object LibraryPanel {
         )
         ImGui.sameLine(0f, 14f)
         ImGui.setCursorPosY(yOffset)
-        session.uiTheme.withFont(UITheme.FontLevel.TOOLTIP) {
+        // The tabs' font, so the chip reads as part of the tab line.
+        session.uiTheme.withFont(UITheme.FontLevel.BODY) {
             // Frames as tall as the tabs, so the row buttons line up with them.
             ImGui.pushStyleVar(ImGuiStyleVar.FramePadding, ImGui.getStyle().framePaddingX, ((btnH - ImGui.getFontSize()) * 0.5f).coerceAtLeast(0f))
             val labelW = 14f + ImGui.calcTextSize(binding.label).x
