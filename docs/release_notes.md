@@ -1,6 +1,6 @@
 ## [Unreleased]
 
-### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`)
+### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`, `web/menu.js`, `web/sync.js`, `web/pairing.js`, `broadcast/BroadcastPreferences.kt`, `broadcast/WebPresetSerializer.kt`, `broadcast/BroadcastEngine.kt`, `ui/BroadcastPreferencesPanel.kt`)
 - **The screen stays on while the TV is on.** Laptops and phones no longer dim and lock in the middle of a show (where the browser supports it).
 - **Phone lock screen and media keys.** The lock screen (and your keyboard's media keys) show the show playing on Spaz Radio and the look on air; play/pause turns the TV on and off, next and previous change the look.
 - **Install it like an app.** Your browser can install the web TV ("Install" / "Add to Home Screen"); it opens fullscreen with its own icon, and starts even without a network (showing no signal until the radio is reachable).
@@ -10,6 +10,7 @@
 - **Reduced motion.** If your system asks for less motion (or you turn it on in MENU), the TV calms down: the picture reacts at most 60% as strongly, hard looks, flashing and glitch effects and flash transitions are left out, there is no cut on the drop, and crossfades take twice as long.
 - **Looks that suit the tempo.** Once the TV has the beat, slow music (under 95 BPM) brings up more calm, groove and mid-driven looks, and fast music (over 125) more hard, kick and hi-hat looks. It's a lean, not a rule: every look still comes up.
 - **Effects answer the look instead of echoing it.** A look that mostly follows the kick no longer gets an effect chain that only follows the kick too; it gets one that also moves with the mids or hats, so more of the music shows on screen.
+- **A LIVE title card with your name.** When you go live, the web TV rolls in a red station ident, "LIVE" and your name, and keeps the name on its display. Set the name in Preferences › Web Broadcast › **Broadcaster name** (blank shows just LIVE). Older web pages simply ignore it. The LIVE badge on the TV now really switches, too.
 
 ### Snappier MIDI, and Esc Cancels the Unsaved-Deck Prompt (`ui/UIManager.kt`, `Main.kt`, `ui/NavigationSurface.kt`)
 - **Controller knobs and buttons now take effect in the same frame.** Incoming MIDI used to be handled after the frame was drawn, so every turn reached the screen one frame late. It is now applied first. MIDI is also handled while the window is minimised, instead of piling up and replaying when you restore it.

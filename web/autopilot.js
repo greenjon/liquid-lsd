@@ -51,6 +51,7 @@ export const autopilotState = {
   bgAlpha: 1.0,
   masterAlpha: 1.0,
   isLiveBroadcast: false,
+  broadcaster: null,   // the live broadcaster's name, if they set one
   // Viewer HOLD: the foreground look stays until it is released (the background keeps changing).
   hold: false,
   // Flywheel following the broadcaster's beat clock; `clock.read(performance.now())` is the beat position.
@@ -574,7 +575,7 @@ export function handleRelayMessage(msg) {
         console.warn(`[autopilot] Ignoring state_full with protocol v${msg.v}; this client speaks v${PROTOCOL_VERSION}`);
         break;
       }
-      if (!autopilotState.isLiveBroadcast) broadcastStatus(true);
+      const wasLive = autopilotState.isLiveBroadcast;
       autopilotState.isLiveBroadcast = true;
       noteClock(msg.clock);
       if (msg.preset) {
@@ -584,7 +585,10 @@ export function handleRelayMessage(msg) {
         // Replace, don't merge: keys absent from a full snapshot (e.g. a cleared FX slot) must go.
         autopilotState.mixer = Object.assign({ balance: 0.0, alpha: 1.0 }, msg.preset.mixer);
         autopilotState.bgAlpha = 1.0;
+        // Optional (desktop Preferences > Web Broadcast > Broadcaster name); deltas update it like any key.
+        autopilotState.broadcaster = typeof msg.preset.broadcaster === 'string' ? msg.preset.broadcaster : null;
       }
+      if (!wasLive) broadcastStatus(true);
       break;
 
     case 'state_delta':
@@ -598,6 +602,7 @@ export function handleRelayMessage(msg) {
     case 'broadcaster_offline':
       if (autopilotState.isLiveBroadcast) {
         autopilotState.isLiveBroadcast = false;
+        autopilotState.broadcaster = null;
         autopilotState.clock.reset();
         broadcastStatus(false);
         console.log('[autopilot] Broadcaster offline — returning to autopilot');

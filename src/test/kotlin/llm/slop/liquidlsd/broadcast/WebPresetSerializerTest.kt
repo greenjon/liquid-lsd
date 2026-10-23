@@ -158,4 +158,16 @@ class WebPresetSerializerTest {
         assertEquals(128f, heartbeat["clock"]?.jsonObject?.get("bpm")?.jsonPrimitive?.float)
         assertEquals(0, heartbeat["patch"]?.jsonObject?.size)
     }
+
+    @Test
+    fun testBroadcasterNameRidesInThePresetAndIsOptional() {
+        val preset = buildJsonObject { put("mixer", buildJsonObject {}) }
+        assertNull(WebPresetSerializer.withBroadcaster(preset, "   ")["broadcaster"])
+        val named = WebPresetSerializer.withBroadcaster(preset, "  DJ Spaz  ")
+        assertEquals("DJ Spaz", named["broadcaster"]?.jsonPrimitive?.content)
+        assertEquals(40, WebPresetSerializer.withBroadcaster(preset, "x".repeat(60))["broadcaster"]?.jsonPrimitive?.content?.length)
+        // Clearing the name mid-broadcast sends a null for the key, which removes it in the relay and the browser.
+        val patch = WebPresetSerializer.computeDeltaPatch(named, preset)
+        assertEquals(JsonNull, patch!!["broadcaster"])
+    }
 }

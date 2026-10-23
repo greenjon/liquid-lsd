@@ -47,3 +47,11 @@ test('the snapshot is isolated from later patches', () => {
   s.ingest({ type: 'state_delta', patch: { mixer: { balance: 1 } } });
   assert.equal(preset.mixer.balance, 0);
 });
+
+test('the broadcaster name rides in the preset: late joiners get it, a null clears it', () => {
+  const s = new RelayState();
+  s.ingest(full({ mixer: {}, broadcaster: 'DJ Spaz' }, { beats: 0, bpm: 120 }));
+  assert.equal(JSON.parse(s.snapshotMessage()).preset.broadcaster, 'DJ Spaz');
+  s.ingest({ type: 'state_delta', patch: { broadcaster: null } });
+  assert.equal(JSON.parse(s.snapshotMessage()).preset.broadcaster, undefined);
+});

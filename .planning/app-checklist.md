@@ -244,6 +244,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] With Bluetooth headphones/speaker: TAP SYNC lands near their delay (150-250 ms) and the pulses line up with the kicks afterwards.
 - [ ] Turn on your OS's reduce-motion setting: MENU shows Reduced motion AUTO (ON), no hard looks or flashes appear, changes are slow.
 - [ ] A slow show (hip-hop, dub) mostly brings calm/groove looks; a fast one (techno, drum and bass) mostly hard/kick looks, but not only those.
+- [ ] Set Preferences › Web Broadcast › Broadcaster name, go live: the web TV shows the LIVE title card with the name; clear the name mid-broadcast: the next viewer joining sees just LIVE.
 - [ ] Viewer controls on a real browser and a phone: CH up/down, FX, HOLD, TIME, REACT, swipe, long-press, keyboard; OSD readable; fullscreen keeps the OSD.
 - [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked. The desktop uses the rotated relay token (Preferences > Web Broadcast); a wrong token shows [LIVE ERR].
 - [ ] Pull the network while the TV plays: snow and NO SIGNAL within a few seconds; plug it back: the radio and the picture come back within ~10 s.

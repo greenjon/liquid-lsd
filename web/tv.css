@@ -402,3 +402,35 @@ body.kiosk.idle, body.kiosk.idle canvas { cursor: none; }
 #tv-menu .menu-value { display: flex; align-items: center; gap: 0.6em; }
 #tv-menu button { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0 0.2em; }
 #tv-menu .menu-hint { margin-top: auto; font-size: 0.7em; opacity: 0.7; }
+
+/* --- LIVE title card: a station ident that rolls in over the picture when the desktop goes on air --- */
+#title-card {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2em;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.55), rgba(0,0,0,0.85));
+  color: #ff5544;
+  font-family: "VT323", "Courier New", monospace;
+  font-weight: bold;
+  letter-spacing: 0.25em;
+  text-shadow: 0 0 10px rgba(255,60,40,0.9), 0 0 2px rgba(0,0,0,0.9);
+  font-size: clamp(14px, 3vw, 44px);
+  opacity: 0;
+  visibility: hidden;
+}
+#title-card .tc-live { font-size: 2.6em; }
+#title-card .tc-name { color: #ffd6cc; letter-spacing: 0.12em; text-shadow: 0 0 8px rgba(255,120,100,0.8); }
+#title-card.show { visibility: visible; animation: title-card 4.5s ease-out forwards; }
+@keyframes title-card {
+  0%   { opacity: 0; transform: scaleY(0.02); filter: brightness(3); }
+  8%   { opacity: 1; transform: scaleY(1); filter: brightness(1.6); }
+  80%  { opacity: 1; transform: scaleY(1); filter: brightness(1); }
+  100% { opacity: 0; transform: scaleY(1); }
+}
+#tv-body:not(.powered-on) #title-card { display: none; }

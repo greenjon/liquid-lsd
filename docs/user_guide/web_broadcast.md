@@ -34,6 +34,7 @@ Open **Preferences** (`Ctrl+P` / `Cmd+P`). The **Web Broadcast** tab is hidden u
 | **Broadcaster Token** | The secret key that authenticates you as the broadcaster |
 | **Target Rate** | How many parameter updates to send per second (5–60). Higher = smoother, more network traffic |
 | **Auto-Connect** | If enabled, broadcasts automatically when the app starts |
+| **Broadcaster Name** | Shown to viewers on the web TV's LIVE title card ("LIVE · name"); leave blank for just LIVE. Up to 40 characters |
 
 These preferences are saved between sessions in `lsd-preferences.properties`.
 
@@ -92,6 +93,8 @@ Click or tap the picture (or press `I`) to show the channel, the look, its FX ch
 **SYNC:** if the picture's pulses come before the beat you hear (Bluetooth speakers are often 150-250 ms late), open MENU › **TAP SYNC** and tap Space or the picture on 8 beats; or set **SYNC** by hand. It needs the beat light to be green (or a live broadcast).
 
 **Reduced motion:** follows your system's "reduce motion" setting (or MENU › Reduced motion): gentler reaction, no hard looks, no flashes or glitch effects, no cut on the drop, slower changes.
+
+**Going live:** when the desktop starts broadcasting, viewers see a LIVE title card with the broadcaster's name (if one is set in the desktop's Web Broadcast preferences).
 
 **Beat light:** the second light on the badge blinks on every beat: green when the TV has locked onto the music's beat, amber while it keeps time on its own (quiet passages, or before it has found the beat).
 

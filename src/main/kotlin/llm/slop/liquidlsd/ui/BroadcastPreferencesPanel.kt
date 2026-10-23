@@ -15,6 +15,7 @@ object BroadcastPreferencesPanel {
 
     private val serverUrlBuf = imgui.type.ImString(llm.slop.liquidlsd.broadcast.BroadcastPreferences.serverUrl, 256)
     private val tokenBuf = imgui.type.ImString(llm.slop.liquidlsd.broadcast.BroadcastPreferences.token, 128)
+    private val nameBuf = imgui.type.ImString(llm.slop.liquidlsd.broadcast.BroadcastPreferences.broadcasterName, 64)
     private var showToken = false
 
     fun drawContent(session: llm.slop.liquidlsd.SessionContext, mixer: llm.slop.liquidlsd.rendering.Mixer?) {
@@ -54,6 +55,20 @@ object BroadcastPreferencesPanel {
         if (ButtonChrome.button(eyeLabel)) {
             showToken = !showToken
         }
+
+        ImGui.spacing()
+
+        // Broadcaster name (the web TV's LIVE title card)
+        theme.caption("BROADCASTER NAME")
+        if (nameBuf.get() != llm.slop.liquidlsd.broadcast.BroadcastPreferences.broadcasterName) {
+            nameBuf.set(llm.slop.liquidlsd.broadcast.BroadcastPreferences.broadcasterName)
+        }
+        if (ImGui.inputText("##broadcast_name", nameBuf)) {
+            llm.slop.liquidlsd.broadcast.BroadcastPreferences.broadcasterName =
+                nameBuf.get().take(llm.slop.liquidlsd.broadcast.WebPresetSerializer.MAX_BROADCASTER_NAME)
+            llm.slop.liquidlsd.broadcast.BroadcastPreferences.savePreferences()
+        }
+        itemTooltip("Shown to viewers when you go live: the web TV shows a \"LIVE · name\" title card and keeps the name on its display. Leave blank to show just LIVE. Up to 40 characters.")
 
         ImGui.spacing()
 

@@ -276,14 +276,14 @@ object BroadcastEngine {
         val ws = activeWebSocket ?: return
 
         try {
-            val currentFull = WebPresetSerializer.serializeFullPreset(mixer)
+            val currentFull = WebPresetSerializer.serializeFullPreset(mixer, BroadcastPreferences.broadcasterName)
 
             if (sendFuture != null && !sendFuture!!.isDone) {
                 return
             }
 
             if (needsFullSync.getAndSet(false) || lastSentFull == null) {
-                val msg = WebPresetSerializer.buildStateFullMessage(mixer)
+                val msg = WebPresetSerializer.buildStateFullMessage(currentFull, WebPresetSerializer.currentClock())
                 sendTextAsync(ws, msg)
                 lastSentFull = currentFull
                 lastSendTimeNanos = now

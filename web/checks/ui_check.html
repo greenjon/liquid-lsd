@@ -115,7 +115,8 @@ try {
   // Live broadcast locks the controls.
   w.LSD.handleRelayMessage({ type: 'state_full', v: 2, clock: { beats: 0, bpm: 120 }, preset: {
     deckA: { source: 'mandala', params: {}, fx: { 0: null, 1: null, 2: null } }, deckB: { empty: true }, deckBG: { empty: true },
-    mixer: { balance: 0, alpha: 1, transition: 'linear_crossfade', transitionParams: {}, fx: { 0: null, 1: null, 2: null } } } });
+    mixer: { balance: 0, alpha: 1, transition: 'linear_crossfade', transitionParams: {}, fx: { 0: null, 1: null, 2: null } },
+    broadcaster: 'DJ Test' } });
   await sleep(200);
   // TAP SYNC against the live clock (120 BPM): 8 steady taps give a SYNC inside the menu's range.
   key('m'); key('ArrowDown'); key('Enter');
@@ -127,6 +128,8 @@ try {
   d.getElementById('chUp').click();
   d.getElementById('holdBtn').click();
   await sleep(500);
+  const card = d.getElementById('title-card');
+  check('Live: the title card shows LIVE and the broadcaster', card.classList.contains('show') && card.textContent.includes('DJ Test'), card.textContent);
   check('Live: badge says LIVE', d.querySelector('#station-badge .station-text').textContent.includes('LIVE'));
   check('Live: CH up and HOLD do nothing', st.deckA === liveDeck && !st.hold);
   check('Live: OSD says controls are locked', osd('osd-msg').text.includes('LOCKED'), osd('osd-msg').text);

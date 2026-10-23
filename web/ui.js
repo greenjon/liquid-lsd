@@ -64,6 +64,7 @@ function showLook(info = nowShowing(), ms = 4000) {
   if (!powerState.on) return;
   if (autopilotState.isLiveBroadcast) {
     flash('osd-ch', 'LIVE', ms);
+    if (autopilotState.broadcaster) flash('osd-name', autopilotState.broadcaster, ms);
   } else {
     if (info.channel > 0) flash('osd-ch', `CH ${String(info.channel).padStart(2, '0')}`, ms);
     flash('osd-name', prettyName(info.name), ms);
@@ -417,10 +418,18 @@ export function initUI() {
     const text = document.querySelector('#station-badge .station-text');
     tvBody.classList.toggle('live', e.detail.live);
     if (text) text.textContent = e.detail.live ? 'SPAZ RADIO • LIVE' : 'SPAZ RADIO • CH.1';
+    if (text) text.title = e.detail.live && autopilotState.broadcaster ? `Live: ${autopilotState.broadcaster}` : '';
     for (const id of ['chUp', 'chDown', 'fxBtn', 'holdBtn']) document.getElementById(id).setAttribute('aria-disabled', String(e.detail.live));
     if (e.detail.live) {
       setHold(false);
       holdBtn.setAttribute('aria-pressed', 'false');
+      menu.hide();
+      // The station ident: LIVE and the broadcaster's name roll in over the picture (if the TV is on).
+      const card = document.getElementById('title-card');
+      card.querySelector('.tc-name').textContent = autopilotState.broadcaster ?? '';
+      card.classList.remove('show');
+      void card.offsetWidth; // restart the animation
+      card.classList.add('show');
     }
     showLook();
     updateMediaSession();

@@ -24,6 +24,10 @@ object BroadcastPreferences {
     @Volatile
     var targetFps: Int = 25
 
+    /** Shown to viewers on the web TV's LIVE title card ("LIVE · name"); blank shows just LIVE. */
+    @Volatile
+    var broadcasterName: String = ""
+
     val isConfigured: Boolean
         get() = serverUrl.isNotBlank() && token.isNotBlank()
 
@@ -49,6 +53,7 @@ object BroadcastPreferences {
             auto?.let { autoConnect = it.toBooleanStrictOrNull() ?: it.toBoolean() }
             val fps = props.getProperty("broadcast.targetFps") ?: props.getProperty("broadcastTargetFps")
             fps?.toIntOrNull()?.let { targetFps = it.coerceIn(5, 60) }
+            props.getProperty("broadcast.broadcasterName")?.let { broadcasterName = it.trim() }
             logger.info { "Loaded broadcast preferences from ${fileToRead.name}: url=$serverUrl, autoConnect=$autoConnect, targetFps=$targetFps" }
         } catch (e: Exception) {
             logger.warn(e) { "Failed to load broadcast preferences from ${fileToRead.name}" }
@@ -66,6 +71,7 @@ object BroadcastPreferences {
             props.setProperty("broadcast.token", token)
             props.setProperty("broadcast.autoConnect", autoConnect.toString())
             props.setProperty("broadcast.targetFps", targetFps.toString())
+            props.setProperty("broadcast.broadcasterName", broadcasterName)
             preferencesFile.outputStream().use { props.store(it, "Liquid LSD User Preferences") }
             logger.info { "Saved broadcast preferences to ${preferencesFile.name}" }
         } catch (e: Exception) {
@@ -78,6 +84,7 @@ object BroadcastPreferences {
         token = ""
         autoConnect = false
         targetFps = 25
+        broadcasterName = ""
     }
 
     // Backward compatibility delegates

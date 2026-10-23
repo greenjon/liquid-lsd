@@ -102,12 +102,25 @@ object WebPresetSerializer {
         put("fxDryWet", JsonPrimitive(round4(mixer.masterFxChain.effectiveChainWet())))
     }
 
-    fun serializeFullPreset(mixer: Mixer): JsonObject = buildJsonObject {
+    fun serializeFullPreset(mixer: Mixer, broadcaster: String = ""): JsonObject = withBroadcaster(buildJsonObject {
         put("deckA", serializeDeck(mixer.deckA))
         put("deckB", serializeDeck(mixer.deckB))
         put("deckBG", serializeDeck(mixer.deckBG))
         put("mixer", serializeMixer(mixer))
+    }, broadcaster)
+
+    /**
+     * The broadcaster's name for the web TV's LIVE title card, as an optional `broadcaster` key of the
+     * preset (inside the preset so the relay's merged state and deltas carry it with no relay change;
+     * protocol stays v2, older clients ignore it). Blank omits the key; at most 40 characters.
+     */
+    fun withBroadcaster(preset: JsonObject, name: String): JsonObject {
+        val clean = name.trim().take(MAX_BROADCASTER_NAME)
+        if (clean.isEmpty()) return preset
+        return JsonObject(preset + ("broadcaster" to JsonPrimitive(clean)))
     }
+
+    const val MAX_BROADCASTER_NAME = 40
 
     /**
      * The beat clock at the moment of sending: total beats since the beat anchor's origin and the
