@@ -58,7 +58,7 @@ If the connection drops, Liquid LSD reconnects automatically in the background w
 
 The standalone browser client (`web/index.html`) presents the visualizer in a retro CRT television shell.
 
-**Power switch:** Click it to turn the visualizer on. The browser requires this interaction to start Web Audio (standard browser security policy). Turning the TV on triggers a CRT warmup animation; turning it off plays a vintage beam-collapse animation.
+**Power switch:** Click it (or anywhere on the TV) to turn the visualizer on. The browser requires this interaction to start Web Audio (standard browser security policy). Turning the TV on triggers a CRT warmup animation; turning it off plays a vintage beam-collapse animation.
 
 **Volume dial:** Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.
 
