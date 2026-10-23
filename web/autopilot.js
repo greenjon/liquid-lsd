@@ -262,6 +262,11 @@ export function tickAutopilot(dt, beats) {
   }
 }
 
+// renderer.js registers a function that loads and compiles a deck's shaders; prepared looks are warmed
+// with it during the hold, so the new look's source and effects are ready the frame its crossfade starts.
+let prewarm = () => {};
+export function setPrewarm(fn) { prewarm = fn; }
+
 /** Builds the next foreground preset (and its FX chain and transition) ahead of the switch. */
 function prepareForeground() {
   if (fgNext || fgPreparing || fgPlaylist.length === 0) return null;
@@ -270,6 +275,7 @@ function prepareForeground() {
   const line = fgPlaylist[fgPlaylistIdx];
   return Promise.all([buildDeck(line), pickTransition()]).then(([deck, transition]) => {
     fgNext = { line, deck, transition };
+    prewarm(deck, transition);
   }).finally(() => { fgPreparing = false; });
 }
 
@@ -278,7 +284,7 @@ function prepareBackground() {
   bgPreparing = true;
   bgPlaylistIdx = getNextIndex(bgPlaylistIdx, bgPlaylist.length, autopilotSettings.bgPlaybackOrder);
   const line = bgPlaylist[bgPlaylistIdx];
-  buildDeck(line).then((deck) => { bgNext = { line, deck }; }).finally(() => { bgPreparing = false; });
+  buildDeck(line).then((deck) => { bgNext = { line, deck }; prewarm(deck, null); }).finally(() => { bgPreparing = false; });
 }
 
 function startForegroundCrossfade(beats) {
@@ -364,6 +370,7 @@ export async function nextFxChain() {
   const deck = fgActiveDeck === 'A' ? autopilotState.deckA : autopilotState.deckB;
   if (!deck) return;
   applyChain(deck, await pickChain(deck.tags ?? []));
+  prewarm(deck, null);
   announce();
 }
 

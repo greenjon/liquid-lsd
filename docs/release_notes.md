@@ -5,6 +5,7 @@
 - **FX** swaps the FX chain on the look on air; **HOLD** keeps the look until you release it.
 - **TIME** sets how long each look holds (8, 16, 32 or 64 bars); **REACT** sets how strongly the picture reacts to the music (25-200%), for quiet or very loud streams. Both are remembered.
 - **On-screen display:** on every change the screen shows the channel, the look and its FX chain in phosphor green, plus the track playing on the radio. Click the picture or press `I` to see it again.
+- **Smoother on slower computers and phones.** The web TV renders at a lower resolution when the graphics card can't keep up (and back up when it can), and never above 1080p internally, so 4K screens and laptops stay fluid. The next look's shaders load during the current one, so changes no longer stutter or show a look without its effects for a moment.
 - **A beat light** on the badge blinks on every beat: green when locked onto the music, amber when keeping time on its own.
 - **While the desktop is broadcasting live the controls are locked** and the screen says so. The badge now really switches to LIVE (it never did before).
 - Fullscreen keeps the on-screen display; on a phone the picture fills the width and the controls wrap.

@@ -75,3 +75,5 @@ A1+A2 -> B1+B2 -> C1-C5 -> D1+D2 -> A6 -> B3, C6.
   fullscreen on the screen element. ui_check.mjs covers them. C6 (channels), C7 share/kiosk still open.
 - 2026-10-23 A3+A4 done: 24 chains (batch 7 in the generator), all 27 filters used, 35 chains in rotation. No strobes
   (photosensitivity). web-elevation uses alpha-over blend and no feedback (additive/feedback burn out to white).
+- 2026-10-23 D1+D2 done: adaptive render scale (cap 1080p, steps 1.0-0.4, ceiling after a bad step-up), prewarm of
+  queued looks via autopilot.setPrewarm. D3 moot (rAF already pauses hidden tabs; autoplay failure shows NO SIGNAL).

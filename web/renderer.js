@@ -1,6 +1,6 @@
 import { cvState, tick } from './dsp.js';
 import { powerState, viewerState } from './ui.js';
-import { autopilotState, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground } from './autopilot.js';
+import { autopilotState, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground, setPrewarm } from './autopilot.js';
 import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
 import { lookupParam } from './isf.js';
 import { Library, DeckPipeline, MixerPipeline } from './graph.js';
@@ -218,12 +218,51 @@ async function init() {
     }
   };
 
-  const pipeA  = new DeckPipeline(ctx, curWidth, curHeight);
-  const pipeB  = new DeckPipeline(ctx, curWidth, curHeight);
-  const pipeBG = new DeckPipeline(ctx, curWidth, curHeight);
-  const mixerPipe = new MixerPipeline(ctx, curWidth, curHeight);
+  // Adaptive render resolution: the decks and the mixer render at a fraction of the canvas and the CRT pass
+  // scales the picture up. Internal size is capped at 1080p worth of pixels (a 4K screen gets 1080p scaled
+  // up), and steps down while frames take longer than ~22 ms (the GPU cannot keep up), back up when there
+  // is headroom. A step that turns out too slow is not tried again, so the size never oscillates.
+  const SCALES = [1.0, 0.85, 0.7, 0.55, 0.4];
+  const MAX_PIXELS = 1920 * 1080;
+  const adapt = { idx: 0, ceiling: 0, ema: 1 / 60, slow: 0, fast: 0, lastChange: 0, wentUp: false };
+  function renderSize(w, h) {
+    const cap = Math.min(1, Math.sqrt(MAX_PIXELS / (w * h)));
+    const k = cap * SCALES[adapt.idx];
+    return [Math.max(1, Math.round(w * k)), Math.max(1, Math.round(h * k))];
+  }
+  function adaptScale(dt, now) {
+    adapt.ema += (dt - adapt.ema) * 0.05;
+    if (now - adapt.lastChange < 3000) return false;
+    adapt.slow = adapt.ema > 1 / 45 ? adapt.slow + dt : 0;
+    adapt.fast = adapt.ema < 1 / 57 ? adapt.fast + dt : 0;
+    if (adapt.slow > 2 && adapt.idx < SCALES.length - 1) {
+      if (adapt.wentUp) adapt.ceiling = adapt.idx + 1; // the last step up was one too many
+      adapt.idx++;
+      adapt.wentUp = false;
+    } else if (adapt.fast > 15 && adapt.idx > adapt.ceiling) {
+      adapt.idx--;
+      adapt.wentUp = true;
+    } else {
+      return false;
+    }
+    adapt.lastChange = now;
+    adapt.slow = adapt.fast = 0;
+    return true;
+  }
+  // Shader prewarm for looks the autopilot has queued (Library.get starts the fetch and compile).
+  setPrewarm((deck, transition) => {
+    if (deck?.source && deck.source !== 'mandala') ctx.library.get('sources', deck.source.toLowerCase());
+    for (const slot of deck?.fx ?? []) if (slot?.id) ctx.library.get('filters', slot.id);
+    if (transition?.transition) ctx.library.get('transitions', transition.transition);
+  });
+  let [renderW, renderH] = renderSize(curWidth, curHeight);
+  const pipeA  = new DeckPipeline(ctx, renderW, renderH);
+  const pipeB  = new DeckPipeline(ctx, renderW, renderH);
+  const pipeBG = new DeckPipeline(ctx, renderW, renderH);
+  const mixerPipe = new MixerPipeline(ctx, renderW, renderH);
 
-  window.LSD = { cvState, autopilotState, powerState, viewerState, library: ctx.library, handleRelayMessage, advanceForeground };
+  window.LSD = { cvState, autopilotState, powerState, viewerState, library: ctx.library, handleRelayMessage, advanceForeground,
+    renderSize: () => [renderW, renderH, SCALES[adapt.idx]] };
 
   function frameInfo() {
     return { time: elapsedTime, dt: frameDt, index: frameCount };
@@ -309,15 +348,17 @@ async function init() {
     const displayH = canvas.clientHeight || window.innerHeight;
     const targetW  = Math.max(1, Math.floor(displayW * (window.devicePixelRatio || 1)));
     const targetH  = Math.max(1, Math.floor(displayH * (window.devicePixelRatio || 1)));
-    if (canvas.width !== targetW || canvas.height !== targetH) {
+    const rescaled = powerState.on && adaptScale(dt, now);
+    if (canvas.width !== targetW || canvas.height !== targetH || rescaled) {
       canvas.width  = targetW;
       canvas.height = targetH;
       curWidth  = targetW;
       curHeight = targetH;
-      pipeA.resize(curWidth, curHeight);
-      pipeB.resize(curWidth, curHeight);
-      pipeBG.resize(curWidth, curHeight);
-      mixerPipe.resize(curWidth, curHeight);
+      [renderW, renderH] = renderSize(curWidth, curHeight);
+      pipeA.resize(renderW, renderH);
+      pipeB.resize(renderW, renderH);
+      pipeBG.resize(renderW, renderH);
+      mixerPipe.resize(renderW, renderH);
     }
 
     gl.disable(gl.BLEND);
