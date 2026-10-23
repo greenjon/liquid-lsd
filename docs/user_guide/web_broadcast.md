@@ -87,6 +87,8 @@ Click or tap the picture (or press `I`) to show the channel, the look, its FX ch
 
 **Kiosk mode:** `index.html?kiosk` shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.
 
+**MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **REACT**, **TIME**, **Reduced motion** (Auto follows your system setting) and **Heavy looks** (Auto lets the GPU check decide). Settings are remembered in this browser. REACT, TIME and Heavy looks are locked during a live broadcast.
+
 **Beat light:** the second light on the badge blinks on every beat: green when the TV has locked onto the music's beat, amber while it keeps time on its own (quiet passages, or before it has found the beat).
 
 **What viewers see.** Each deck's source and its parameters, the deck FX chains and the master FX chain, the transition and crossfader, the channel levels and the beat all go over the wire, so the web TV follows your mix closely. A few things stay desktop-only: external video sources (Spout, NDI, PipeWire, webcam) show as nothing, and anything the web player does not have (a custom shader you added to your own library) is skipped. Viewers join in the middle of a broadcast on the right beat.

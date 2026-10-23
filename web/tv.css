@@ -375,3 +375,30 @@ body.kiosk #tv-screen-border { width: 100vw; padding: 0; border-radius: 0; box-s
 body.kiosk #tv-screen-area { padding-bottom: 0; width: 100vw; height: 100vh; border-radius: 0; }
 body.kiosk #tv-controls { display: none; }
 body.kiosk.idle, body.kiosk.idle canvas { cursor: none; }
+
+/* --- Service menu (menu.js): phosphor-green rows over a darkened picture --- */
+#tv-menu {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  padding: 6% 8%;
+  background: rgba(0, 8, 0, 0.72);
+  color: #8cff8c;
+  font-family: "VT323", "Courier New", monospace;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-shadow: 0 0 6px rgba(80,255,80,0.8);
+  font-size: clamp(11px, 1.8vw, 24px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+}
+#tv-menu[hidden] { display: none; }
+.menu-open #osd { visibility: hidden; }
+#tv-menu .menu-title { font-size: 1.4em; margin-bottom: 0.4em; }
+#tv-menu .menu-row { display: flex; justify-content: space-between; align-items: center; padding: 0.1em 0.5em; cursor: pointer; }
+#tv-menu .menu-row.sel { background: #8cff8c; color: #021; text-shadow: none; }
+#tv-menu .menu-row.locked { opacity: 0.4; }
+#tv-menu .menu-value { display: flex; align-items: center; gap: 0.6em; }
+#tv-menu button { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0 0.2em; }
+#tv-menu .menu-hint { margin-top: auto; font-size: 0.7em; opacity: 0.7; }

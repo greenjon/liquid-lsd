@@ -2,7 +2,8 @@
 // The TV's controls: power, volume, the viewer controls (channel rocker, FX, HOLD, TIME, REACT), the
 // on-screen display, keyboard and touch. Viewer controls are locked while the desktop broadcasts live.
 import { startAudio, stopAudio, setVolume, cvState } from './dsp.js';
-import { autopilotState, advanceForeground, previousForeground, nextFxChain, setHold, setHoldBars, nowShowing } from './autopilot.js';
+import { autopilotState, advanceForeground, previousForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed } from './autopilot.js';
+import { createMenu } from './menu.js';
 
 // Power state — imported by renderer.js each frame
 export const powerState = {
@@ -14,8 +15,18 @@ export const powerState = {
 // Viewer settings — renderer.js scales every audio signal by `react`
 export const viewerState = {
   react: 1.0,
-  awake: false,   // a screen wake lock is held
+  awake: false,        // a screen wake lock is held
+  syncMs: 0,           // SYNC: how late the sound reaches the viewer (speakers, Bluetooth), in ms
+  reducedMode: 'auto', // Reduced motion: 'auto' (follows the system setting), 'on', 'off'
+  heavyMode: 'auto',   // Heavy looks: 'auto' (the GPU probe decides), 'on', 'off'
+  /** Reduced motion in effect now. */
+  get reduced() {
+    if (this.reducedMode !== 'auto') return this.reducedMode === 'on';
+    return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  },
 };
+const SYNC_MIN = -100, SYNC_MAX = 400;
+const MODES = ['auto', 'on', 'off'];
 
 const TIME_STEPS = [8, 16, 32, 64];   // bars per look on the TIME dial
 const REACT_MIN = 0.25, REACT_MAX = 2.0;
@@ -226,9 +237,61 @@ export function initUI() {
   document.getElementById('reactDial').addEventListener('dblclick', control(() => reactDial.set(toDial(1.0))));
   const stepReact = control((dir) => reactDial.set(reactDial.get() + dir * 0.05));
 
+  // --- Service MENU (menu.js): SYNC, REACT, TIME, Reduced motion, Heavy looks ---
+  viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, Number(load('lsd.sync', 0)) || 0));
+  viewerState.reducedMode = MODES.includes(load('lsd.reduced', 'auto')) ? load('lsd.reduced', 'auto') : 'auto';
+  viewerState.heavyMode = MODES.includes(load('lsd.heavy', 'auto')) ? load('lsd.heavy', 'auto') : 'auto';
+  const applyHeavy = () => {
+    if (viewerState.heavyMode === 'auto') setHeavyAllowed(!!window.LSD?.gpu?.heavy);
+    else setHeavyAllowed(viewerState.heavyMode === 'on');
+  };
+  if (viewerState.heavyMode !== 'auto') applyHeavy();
+  const cycle = (mode, dir) => MODES[(MODES.indexOf(mode) + dir + MODES.length) % MODES.length];
+  const onOff = (b) => (b ? 'ON' : 'OFF');
+  const rows = [
+    { label: 'SYNC', value: () => `${viewerState.syncMs > 0 ? '+' : ''}${viewerState.syncMs} MS`,
+      step: (dir) => {
+        viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, viewerState.syncMs + dir * 10));
+        save('lsd.sync', viewerState.syncMs);
+      } },
+    { label: 'REACT', locked: live, value: () => `${Math.round(viewerState.react * 100)}%`,
+      step: (dir) => reactDial.set(toDial(Math.max(REACT_MIN, Math.min(REACT_MAX, viewerState.react + dir * 0.05)))) },
+    { label: 'TIME', locked: live, value: () => timeLabel.textContent,
+      step: (dir) => {
+        const i = Math.round(timeDial.get() * (TIME_STEPS.length - 1));
+        timeDial.set(Math.max(0, Math.min(TIME_STEPS.length - 1, i + dir)) / (TIME_STEPS.length - 1));
+      } },
+    { label: 'REDUCED MOTION',
+      value: () => (viewerState.reducedMode === 'auto' ? `AUTO (${onOff(viewerState.reduced)})` : viewerState.reducedMode.toUpperCase()),
+      step: (dir) => { viewerState.reducedMode = cycle(viewerState.reducedMode, dir); save('lsd.reduced', viewerState.reducedMode); } },
+    { label: 'HEAVY LOOKS', locked: live,
+      value: () => {
+        if (viewerState.heavyMode !== 'auto') return viewerState.heavyMode.toUpperCase();
+        const gpu = window.LSD?.gpu;
+        return gpu?.state === 'done' ? `AUTO (${onOff(gpu.heavy)}, ${gpu.ms.toFixed(0)} MS)` : `AUTO (${onOff(gpu?.heavy)})`;
+      },
+      step: (dir) => { viewerState.heavyMode = cycle(viewerState.heavyMode, dir); save('lsd.heavy', viewerState.heavyMode); applyHeavy(); } },
+    { label: 'RESET', run: () => {
+      viewerState.syncMs = 0; save('lsd.sync', 0);
+      viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto');
+      viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
+      if (!live()) { reactDial.set(toDial(1.0)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1)); }
+    } },
+    { label: 'EXIT', run: () => menu.hide() },
+  ];
+  const menu = createMenu(screen, rows, {
+    onOpen: () => screen.classList.add('menu-open'),   // the OSD steps aside while the menu is up
+    onClose: () => screen.classList.remove('menu-open'),
+  });
+  const toggleMenu = () => { if (powerState.on) menu.toggle(); };
+  document.getElementById('menuBtn').addEventListener('click', toggleMenu);
+  viewerState.menu = menu;
+
   // --- Keyboard ---
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea')) return;
+    if (menu.key(e)) { e.preventDefault(); return; }
+    if ((e.key === 'm' || e.key === 'M') && powerState.on) { e.preventDefault(); menu.show(); return; }
     const keys = {
       ArrowRight: next, ArrowUp: next, n: next, N: next,
       ArrowLeft: prev, ArrowDown: prev, p: prev, P: prev,

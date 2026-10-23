@@ -296,7 +296,7 @@ async function init() {
     gpu.heavy = gpu.ms <= probe.maxMs;
     gpu.state = 'done';
     pipe.dispose();
-    setHeavyAllowed(gpu.heavy);
+    if (viewerState.heavyMode === 'auto') setHeavyAllowed(gpu.heavy); // the MENU's ON / OFF wins
     console.log(`[lsd] GPU probe: ${probe.source} at ${probe.width}x${probe.height} in ${gpu.ms.toFixed(1)} ms; heavy sources ${gpu.heavy ? 'on' : 'off'}`);
   }
   let [renderW, renderH] = renderSize(curWidth, curHeight);

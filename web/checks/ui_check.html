@@ -69,6 +69,22 @@ try {
   check('= raises REACT', w.LSD.viewerState.react > react0, `${react0} -> ${w.LSD.viewerState.react}`);
   key('-');
 
+  // Service MENU: M opens it, it owns the arrows (no look change), SYNC moves in 10 ms steps, Esc closes.
+  const lookBefore = onAir();
+  key('m');
+  const menuEl = d.getElementById('tv-menu');
+  check('M opens the menu', menuEl && !menuEl.hidden);
+  key('ArrowRight'); key('ArrowRight'); key('ArrowRight');
+  check('Menu: right arrow raises SYNC by 10 ms steps', w.LSD.viewerState.syncMs === 30, w.LSD.viewerState.syncMs);
+  await sleep(3000);
+  check('Menu: the arrows do not change the look while it is open', onAir() === lookBefore);
+  key('ArrowDown'); key('ArrowDown'); key('ArrowDown'); key('ArrowRight');
+  check('Menu: reduced motion row cycles AUTO -> ON', w.LSD.viewerState.reducedMode === 'on', w.LSD.viewerState.reducedMode);
+  key('ArrowLeft'); key('ArrowUp'); key('ArrowUp'); key('ArrowUp'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft');
+  check('Menu: back to defaults', w.LSD.viewerState.syncMs === 0 && w.LSD.viewerState.reducedMode === 'auto', `${w.LSD.viewerState.syncMs} ${w.LSD.viewerState.reducedMode}`);
+  key('Escape');
+  check('Esc closes the menu', menuEl.hidden);
+
   // Song sections: a breakdown brings a calm or building look at the next bar line, the drop cuts to a hard one.
   const tagsOnAir = () => onAir().tags ?? [];
   w.LSD.cvState.section = 'breakdown';

@@ -239,6 +239,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Phone lock screen: shows the show and the look; play/pause powers the TV; next/previous change the look. Laptop media keys do the same.
 - [ ] Install the TV from Chrome/Edge (desktop) and Add to Home Screen on a phone: it opens fullscreen with the icon; with the network off it still opens (no signal).
 - [ ] `?kiosk` on a spare screen: picture only, turns on by itself (or asks for a click for sound), pointer hides.
+- [ ] MENU on a laptop and a phone: readable, every row changes with arrows and taps, Esc closes, settings survive a reload.
 - [ ] Viewer controls on a real browser and a phone: CH up/down, FX, HOLD, TIME, REACT, swipe, long-press, keyboard; OSD readable; fullscreen keeps the OSD.
 - [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked.
 - [ ] Pull the network while the TV plays: snow and NO SIGNAL within a few seconds; plug it back: the radio and the picture come back within ~10 s.
