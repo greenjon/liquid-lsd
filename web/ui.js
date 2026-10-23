@@ -14,6 +14,7 @@ export const powerState = {
 // Viewer settings — renderer.js scales every audio signal by `react`
 export const viewerState = {
   react: 1.0,
+  awake: false,   // a screen wake lock is held
 };
 
 const TIME_STEPS = [8, 16, 32, 64];   // bars per look on the TIME dial
@@ -129,6 +130,7 @@ export function initUI() {
   powerSwitch.addEventListener('click', async () => {
     if (powerState.on) {
       powerState.on = false;
+      letScreenSleep();
       powerState.warmupProgress = 0;
       powerState.shutdownProgress = 0;
       tvBody.classList.remove('powered-on');
@@ -144,6 +146,7 @@ export function initUI() {
       powerSwitch.classList.add('active');
       setTimeout(() => showLook(), 1600); // after the warm-up
       pollNowPlaying();
+      holdScreenAwake();
       try {
         await startAudio();
       } catch (err) {
@@ -290,6 +293,25 @@ export function initUI() {
     requestAnimationFrame(blink);
   })();
 }
+
+// -------------------------------------------------------
+// Wake lock: a laptop or phone used as a TV must not dim and lock while the TV is on. The browser drops
+// the lock when the page is hidden, so it is taken again when the page comes back.
+// -------------------------------------------------------
+let wakeLock = null;
+async function holdScreenAwake() {
+  if (!powerState.on || wakeLock || !navigator.wakeLock || document.visibilityState !== 'visible') return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    viewerState.awake = true;
+    wakeLock.addEventListener('release', () => { wakeLock = null; viewerState.awake = false; });
+  } catch { /* denied (battery saver, unsupported): the screen may sleep */ }
+}
+function letScreenSleep() {
+  wakeLock?.release().catch(() => {});
+  wakeLock = null;
+}
+document.addEventListener('visibilitychange', holdScreenAwake);
 
 // -------------------------------------------------------
 // Now playing (Icecast status), refreshed while the TV is on

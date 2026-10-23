@@ -235,6 +235,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] With the radio playing, beat pulses land on the kicks within a few seconds of power-on and stay there through track changes.
 - [ ] Looks change on the beat, about every 16 bars; the background about every 32.
 - [ ] GPU tier: on the NVIDIA (or a Mac) `LSD.gpu` in the console says heavy on and Mandelbulb/Nebula looks appear; on the Intel GPU they never do.
+- [ ] Leave the TV on for 15 min on a laptop and a phone: the screen never dims or locks; after power off it sleeps normally.
 - [ ] Viewer controls on a real browser and a phone: CH up/down, FX, HOLD, TIME, REACT, swipe, long-press, keyboard; OSD readable; fullscreen keeps the OSD.
 - [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked.
 - [ ] Pull the network while the TV plays: snow and NO SIGNAL within a few seconds; plug it back: the radio and the picture come back within ~10 s.
