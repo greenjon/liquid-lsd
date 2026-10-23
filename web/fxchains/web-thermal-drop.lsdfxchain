@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "name": "web-thermal-drop",
+  "tags": [
+    "web",
+    "thermal",
+    "bass-gated"
+  ],
+  "dryWet": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  },
+  "slots": [
+    {
+      "filterId": "thermal_scanner",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "intensity": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_bass",
+              "operator": "ADD",
+              "depth": 1.5,
+              "dcOffset": -0.8250000000000001,
+              "followerMode": "CUSTOM",
+              "attackMs": 15.0,
+              "decayMs": 300.0
+            }
+          ]
+        },
+        "mode": {
+          "baseValue": 1.0,
+          "baseMin": 0.0,
+          "baseMax": 2.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "thermalBloom": {
+          "baseValue": 0.3,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "sensorGrain": {
+          "baseValue": 0.2,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "vignette": {
+          "baseValue": 0.3,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    null,
+    null
+  ]
+}

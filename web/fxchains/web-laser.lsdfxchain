@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "name": "web-laser",
+  "tags": [
+    "web",
+    "streak",
+    "bloom",
+    "kick",
+    "bass",
+    "bass-gated"
+  ],
+  "dryWet": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  },
+  "slots": [
+    {
+      "filterId": "anamorphic_streak",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "streakIntensity": {
+          "baseValue": 0.2,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_flux_bass",
+              "operator": "ADD",
+              "depth": 0.6,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 4.0,
+              "decayMs": 250.0
+            }
+          ]
+        },
+        "streakLength": {
+          "baseValue": 0.63,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "threshold": {
+          "baseValue": 0.6,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "knee": {
+          "baseValue": 0.39,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "colorMode": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 2.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "crossFlare": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_bass",
+              "operator": "ADD",
+              "depth": 1.0,
+              "dcOffset": -0.6,
+              "followerMode": "CUSTOM",
+              "attackMs": 15.0,
+              "decayMs": 250.0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "filterId": "bloom",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 0.75,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "bloomIntensity": {
+          "baseValue": 0.2,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_bass",
+              "operator": "ADD",
+              "depth": 0.3,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 20.0,
+              "decayMs": 300.0
+            }
+          ]
+        },
+        "threshold": {
+          "baseValue": 0.45,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "blurAmount": {
+          "baseValue": 0.38,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    {
+      "filterId": "color_levels",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "contrast": {
+          "baseValue": 0.43,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "saturation": {
+          "baseValue": 0.38,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    }
+  ]
+}

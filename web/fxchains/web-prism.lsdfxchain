@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "name": "web-prism",
+  "tags": [
+    "web",
+    "glass",
+    "kaleidoscope",
+    "bass",
+    "high",
+    "kick",
+    "bar"
+  ],
+  "dryWet": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  },
+  "slots": [
+    {
+      "filterId": "faceted_glass",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "facetScale": {
+          "baseValue": 0.23,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "lfo",
+              "operator": "ADD",
+              "depth": 0.1,
+              "dcOffset": 0.0,
+              "waveform": "SINE",
+              "genUnit": "BEAT",
+              "subdivision": 16.0,
+              "slope": 0.5,
+              "phaseOffset": 0.0
+            }
+          ]
+        },
+        "refraction": {
+          "baseValue": 0.4,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_bass",
+              "operator": "ADD",
+              "depth": 0.3,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 20.0,
+              "decayMs": 300.0
+            }
+          ]
+        },
+        "dispersion": {
+          "baseValue": 0.35,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_flux_high",
+              "operator": "ADD",
+              "depth": 0.4,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 3.0,
+              "decayMs": 120.0
+            }
+          ]
+        },
+        "bevelStrength": {
+          "baseValue": 0.65,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "facetTilt": {
+          "baseValue": 0.55,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    {
+      "filterId": "kaleidoscope",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "segments": {
+          "baseValue": 6,
+          "baseMin": 2.0,
+          "baseMax": 24.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "rotation": {
+          "baseValue": 0.0,
+          "baseMin": -3.14159,
+          "baseMax": 3.14159,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "lfo",
+              "operator": "ADD",
+              "depth": 1.0,
+              "dcOffset": 0.0,
+              "waveform": "SINE",
+              "genUnit": "BEAT",
+              "subdivision": 24.0,
+              "slope": 0.5,
+              "phaseOffset": 0.0
+            }
+          ]
+        },
+        "zoom": {
+          "baseValue": 0.5,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "centerX": {
+          "baseValue": 0.5,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "centerY": {
+          "baseValue": 0.5,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "originOffset": {
+          "baseValue": 0.0,
+          "baseMin": -1.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    {
+      "filterId": "rgb_split",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 0.8,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "amount": {
+          "baseValue": 0.1,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_flux_bass",
+              "operator": "ADD",
+              "depth": 0.4,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 4.0,
+              "decayMs": 220.0
+            }
+          ]
+        },
+        "angle": {
+          "baseValue": 0.0,
+          "baseMin": -3.14159,
+          "baseMax": 3.14159,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "radialMode": {
+          "baseValue": 1.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "dispersionMode": {
+          "baseValue": 1.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    }
+  ]
+}

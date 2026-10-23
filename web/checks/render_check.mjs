@@ -87,7 +87,7 @@ for (const t of catalog.transitionPresets) {
 
 // Authoring aids: RC_EXTRA=file.json appends specs ({name, deck: {source, params}, chain?, settleMs?});
 // RC_ONLY=substr,substr keeps only specs whose name contains one of them (skips the library/autopilot asserts).
-// RC_LOUD=1 also renders every preset with the audio signals held high (`<name>_loud`), so the
+// RC_LOUD=1 also renders every preset and chain with the audio signals held high (`<name>_loud`), so the
 // silent and loud frames side by side show how much a preset reacts.
 if (process.env.RC_EXTRA) sources.push(...JSON.parse(fs.readFileSync(process.env.RC_EXTRA, 'utf8')));
 const only = process.env.RC_ONLY ? process.env.RC_ONLY.split(',') : null;
@@ -95,7 +95,7 @@ if (only) sources.splice(0, sources.length, ...sources.filter((s) => only.some((
 const LOUD = { audio_amp: 0.7, audio_bass: 0.9, audio_mid: 0.6, audio_high: 0.6,
   audio_flux_amp: 0.8, audio_flux_bass: 0.8, audio_flux_mid: 0.5, audio_flux_high: 0.6 };
 if (process.env.RC_LOUD) {
-  for (const s of sources.filter((x) => x.preset || x.deck?.params)) {
+  for (const s of sources.filter((x) => x.preset || x.deck?.params || x.chain)) {
     sources.splice(sources.indexOf(s) + 1, 0, { ...s, name: s.name + '_loud', cv: LOUD });
   }
 }

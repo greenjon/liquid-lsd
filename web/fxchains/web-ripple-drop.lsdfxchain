@@ -1,0 +1,147 @@
+{
+  "version": 1,
+  "name": "web-ripple-drop",
+  "tags": [
+    "web",
+    "wave",
+    "bass-gated",
+    "bar",
+    "high"
+  ],
+  "dryWet": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  },
+  "slots": [
+    {
+      "filterId": "wave_displace",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "amplitude": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_bass",
+              "operator": "ADD",
+              "depth": 0.6,
+              "dcOffset": -0.3,
+              "followerMode": "CUSTOM",
+              "attackMs": 15.0,
+              "decayMs": 250.0
+            }
+          ]
+        },
+        "frequency": {
+          "baseValue": 0.2,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "lfo",
+              "operator": "ADD",
+              "depth": 0.2,
+              "dcOffset": 0.0,
+              "waveform": "SINE",
+              "genUnit": "BEAT",
+              "subdivision": 16.0,
+              "slope": 0.5,
+              "phaseOffset": 0.0
+            }
+          ]
+        },
+        "speed": {
+          "baseValue": 0.2,
+          "baseMin": -1.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "rippleMode": {
+          "baseValue": 1.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    {
+      "filterId": "rgb_split",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "amount": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_flux_high",
+              "operator": "ADD",
+              "depth": 0.3,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 3.0,
+              "decayMs": 120.0
+            }
+          ]
+        },
+        "angle": {
+          "baseValue": 0.0,
+          "baseMin": -3.14159,
+          "baseMax": 3.14159,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "lfo",
+              "operator": "ADD",
+              "depth": 1.0,
+              "dcOffset": 0.0,
+              "waveform": "SINE",
+              "genUnit": "BEAT",
+              "subdivision": 8.0,
+              "slope": 0.5,
+              "phaseOffset": 0.0
+            }
+          ]
+        },
+        "radialMode": {
+          "baseValue": 1.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "dispersionMode": {
+          "baseValue": 1.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    null
+  ]
+}

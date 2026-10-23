@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "name": "web-lumakey",
+  "tags": [
+    "web",
+    "key",
+    "kick"
+  ],
+  "dryWet": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  },
+  "slots": [
+    {
+      "filterId": "luma_key",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "threshold": {
+          "baseValue": 0.5,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_flux_bass",
+              "operator": "ADD",
+              "depth": -0.4,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 4.0,
+              "decayMs": 220.0
+            }
+          ]
+        },
+        "softness": {
+          "baseValue": 0.1,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    {
+      "filterId": "color_levels",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "contrast": {
+          "baseValue": 0.4,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    null
+  ]
+}

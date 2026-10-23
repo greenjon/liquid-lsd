@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "name": "web-mirror",
+  "tags": [
+    "web",
+    "mirror",
+    "kick",
+    "bass",
+    "beat"
+  ],
+  "dryWet": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  },
+  "slots": [
+    {
+      "filterId": "mirror_sphere",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "sphereRadius": {
+          "baseValue": 0.3,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_flux_bass",
+              "operator": "ADD",
+              "depth": 0.25,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 4.0,
+              "decayMs": 220.0
+            }
+          ]
+        },
+        "centerX": {
+          "baseValue": 0.5,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "centerY": {
+          "baseValue": 0.5,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "fresnelGlow": {
+          "baseValue": 0.5,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "lfo",
+              "operator": "ADD",
+              "depth": 0.3,
+              "dcOffset": 0.0,
+              "waveform": "TRIANGLE",
+              "genUnit": "BEAT",
+              "subdivision": 1.0,
+              "slope": 0.0,
+              "phaseOffset": 0.0
+            }
+          ]
+        },
+        "chromaFringe": {
+          "baseValue": 0.25,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "backgroundMix": {
+          "baseValue": 0.25,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_bass",
+              "operator": "ADD",
+              "depth": 0.3,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 20.0,
+              "decayMs": 300.0
+            }
+          ]
+        }
+      }
+    },
+    null,
+    null
+  ]
+}

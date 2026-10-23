@@ -372,6 +372,16 @@
       "name": "The Drop Weapon"
     },
     {
+      "id": "web-bitcrush",
+      "file": "fxchains/web-bitcrush.lsdfxchain",
+      "name": "web-bitcrush"
+    },
+    {
+      "id": "web-blackhole",
+      "file": "fxchains/web-blackhole.lsdfxchain",
+      "name": "web-blackhole"
+    },
+    {
       "id": "web-bloom",
       "file": "fxchains/web-bloom.lsdfxchain",
       "name": "web-bloom"
@@ -382,9 +392,39 @@
       "name": "web-build-drop"
     },
     {
+      "id": "web-chrome",
+      "file": "fxchains/web-chrome.lsdfxchain",
+      "name": "web-chrome"
+    },
+    {
+      "id": "web-crt",
+      "file": "fxchains/web-crt.lsdfxchain",
+      "name": "web-crt"
+    },
+    {
+      "id": "web-cyberpunk",
+      "file": "fxchains/web-cyberpunk.lsdfxchain",
+      "name": "web-cyberpunk"
+    },
+    {
       "id": "web-drop-strobe",
       "file": "fxchains/web-drop-strobe.lsdfxchain",
       "name": "web-drop-strobe"
+    },
+    {
+      "id": "web-drop-weapon",
+      "file": "fxchains/web-drop-weapon.lsdfxchain",
+      "name": "web-drop-weapon"
+    },
+    {
+      "id": "web-elevation",
+      "file": "fxchains/web-elevation.lsdfxchain",
+      "name": "web-elevation"
+    },
+    {
+      "id": "web-flir",
+      "file": "fxchains/web-flir.lsdfxchain",
+      "name": "web-flir"
     },
     {
       "id": "web-glitch",
@@ -392,14 +432,79 @@
       "name": "web-glitch"
     },
     {
+      "id": "web-halftone-beat",
+      "file": "fxchains/web-halftone-beat.lsdfxchain",
+      "name": "web-halftone-beat"
+    },
+    {
+      "id": "web-hyperspace",
+      "file": "fxchains/web-hyperspace.lsdfxchain",
+      "name": "web-hyperspace"
+    },
+    {
+      "id": "web-ink",
+      "file": "fxchains/web-ink.lsdfxchain",
+      "name": "web-ink"
+    },
+    {
       "id": "web-kaleido",
       "file": "fxchains/web-kaleido.lsdfxchain",
       "name": "web-kaleido"
     },
     {
+      "id": "web-laser",
+      "file": "fxchains/web-laser.lsdfxchain",
+      "name": "web-laser"
+    },
+    {
+      "id": "web-lumakey",
+      "file": "fxchains/web-lumakey.lsdfxchain",
+      "name": "web-lumakey"
+    },
+    {
+      "id": "web-mercury",
+      "file": "fxchains/web-mercury.lsdfxchain",
+      "name": "web-mercury"
+    },
+    {
+      "id": "web-mirror",
+      "file": "fxchains/web-mirror.lsdfxchain",
+      "name": "web-mirror"
+    },
+    {
+      "id": "web-motion",
+      "file": "fxchains/web-motion.lsdfxchain",
+      "name": "web-motion"
+    },
+    {
+      "id": "web-neon",
+      "file": "fxchains/web-neon.lsdfxchain",
+      "name": "web-neon"
+    },
+    {
+      "id": "web-popart",
+      "file": "fxchains/web-popart.lsdfxchain",
+      "name": "web-popart"
+    },
+    {
+      "id": "web-prism",
+      "file": "fxchains/web-prism.lsdfxchain",
+      "name": "web-prism"
+    },
+    {
       "id": "web-punch",
       "file": "fxchains/web-punch.lsdfxchain",
       "name": "web-punch"
+    },
+    {
+      "id": "web-ripple-drop",
+      "file": "fxchains/web-ripple-drop.lsdfxchain",
+      "name": "web-ripple-drop"
+    },
+    {
+      "id": "web-thermal-drop",
+      "file": "fxchains/web-thermal-drop.lsdfxchain",
+      "name": "web-thermal-drop"
     },
     {
       "id": "web-trails",
@@ -422,9 +527,24 @@
       "name": "web-tunnel"
     },
     {
+      "id": "web-vhs",
+      "file": "fxchains/web-vhs.lsdfxchain",
+      "name": "web-vhs"
+    },
+    {
       "id": "web-vortex",
       "file": "fxchains/web-vortex.lsdfxchain",
       "name": "web-vortex"
+    },
+    {
+      "id": "web-warmth",
+      "file": "fxchains/web-warmth.lsdfxchain",
+      "name": "web-warmth"
+    },
+    {
+      "id": "web-wormhole",
+      "file": "fxchains/web-wormhole.lsdfxchain",
+      "name": "web-wormhole"
     },
     {
       "id": "wormhole_flight",

@@ -946,4 +946,120 @@ chain("web-build-drop", ["build", "bar", "bass-gated"],
       slot("bloom", {"bloomIntensity": (0.1, ramp(32, 0.5)), "threshold": 0.5, "blurAmount": 0.35}),
       slot("rgb_split", {"amount": (0.0, gate("audio_bass", 0.6, 0.6, 5, 150)), "angle": (0.0, lfo(16, 1.0))}))
 
+# ---------------------------------------------------------------- batch 7: FX chains
+# Reactive web versions of the desktop's stock chains (web/content/fxchains/, which have no modulation)
+# plus chains for the filters no web chain used yet. No strobes: a fast full-screen flash on a public
+# stream is a photosensitivity risk, and video_strobe's rate is a TIME multiplier anyway.
+chain("web-cyberpunk", ["pixel", "crt", "kick", "beat", "bass", "high"],
+      slot("pixelate", {"pixelSize": (4.0, kick(0.06, 200)), "latticeMode": 0.0, "colorDepth": 16.0}),
+      slot("retro_crt", {"scanlineIntensity": (0.45, pulse(1, 0.2)), "scanlineCount": 240.0, "curvature": 0.2,
+                         "phosphorMask": 0.3, "vignette": 0.35, "brightnessBoost": (0.375, bass(0.2))}),
+      slot("rgb_split", {"amount": (0.1, hat(0.3)), "angle": 0.0, "radialMode": 0.0, "dispersionMode": 1.0}))
+chain("web-bitcrush", ["pixel", "glitch", "kick", "bass-gated"],
+      slot("pixelate", {"pixelSize": (1.0, gate("audio_bass", 0.5, 0.25, 5, 200)), "latticeMode": 1.0, "colorDepth": 0.0}),
+      slot("rgb_split", {"amount": (0.0, kick(0.5, 180)), "angle": (0.0, lfo(16, 1.0)), "radialMode": 0.0, "dispersionMode": 0.0}, wet=0.9))
+chain("web-flir", ["thermal", "crt", "bass", "high", "bar"],
+      slot("thermal_scanner", {"intensity": 1.0, "mode": (0.0, lfo(32, 0.5, wave=SQ)), "thermalBloom": (0.3, bass(0.4)),
+                               "sensorGrain": (0.2, hat(0.4)), "vignette": 0.3}),
+      slot("retro_crt", {"scanlineIntensity": 0.25, "scanlineCount": 320.0, "curvature": 0.1, "phosphorMask": 0.0,
+                         "vignette": 0.2, "brightnessBoost": 0.25}, wet=0.85))
+chain("web-vhs", ["vhs", "crt", "kick", "mid", "high"],
+      slot("vhs_glitch", {"trackingJitter": (0.2, kick(0.5, 250)), "headSwitching": 0.5, "ycDelay": (0.3, mid(0.3)),
+                          "rfDropouts": (0.1, hat(0.5)), "tapeNoise": 0.3, "mixRatio": 1.0}),
+      slot("retro_crt", {"scanlineIntensity": 0.5, "scanlineCount": 300.0, "curvature": 0.3, "phosphorMask": 0.3,
+                         "vignette": 0.35, "brightnessBoost": 0.35}, wet=0.85),
+      slot("color_levels", {"contrast": 0.42, "saturation": 0.3}))
+chain("web-hyperspace", ["kaleidoscope", "feedback", "kick", "bar"],
+      slot("kaleidoscope", {"segments": (8, lfo(16, 0.09, wave=SQ)), "rotation": (0.0, lfo(32, 1.0)), "zoom": 0.5,
+                            "centerX": 0.5, "centerY": 0.5, "originOffset": 0.0}),
+      FEEDBACK(0.72, 0.475, (0.05, kick(0.05, 250)), 0.02, blur=0.2, chroma=0.15),
+      slot("gradient_map", {"mixAmount": 0.85, "palette": 0.0, "cycleSpeed": 0.0, "cycleOffset": (0.0, lfo(64, 1.0)),
+                            "hueShift": 0.0}, wet=0.85))
+chain("web-laser", ["streak", "bloom", "kick", "bass", "bass-gated"],
+      slot("anamorphic_streak", {"streakIntensity": (0.2, kick(0.6, 250)), "streakLength": 0.63, "threshold": 0.6,
+                                 "knee": 0.39, "colorMode": 0.0, "crossFlare": (0.0, gate("audio_bass", 0.6, 1.0))}),
+      slot("bloom", {"bloomIntensity": (0.2, bass(0.3)), "threshold": 0.45, "blurAmount": 0.38}, wet=0.75),
+      slot("color_levels", {"contrast": 0.43, "saturation": 0.38}))
+chain("web-chrome", ["mirror", "wave", "beat", "bass", "high", "kick"],
+      slot("wave_displace", {"amplitude": (0.1, bass(0.3)), "frequency": 0.15, "speed": 0.2, "rippleMode": 1.0}, wet=0.7),
+      slot("mirror_sphere", {"sphereRadius": (0.45, pulse(1, 0.08)), "fresnelGlow": (0.5, high(0.4)),
+                             "chromaFringe": (0.2, kick(0.4)), "backgroundMix": 0.2}),
+      slot("color_levels", {"contrast": 0.43, "saturation": 0.4, "filmicTone": 0.4}))
+chain("web-mercury", ["liquid", "bass", "mid", "high"],
+      slot("luma_displace", {"refractAmount": (0.2, bass(0.4)), "smoothness": 0.33, "chromaDispersion": (0.2, hat(0.4)),
+                             "flowSpeed": 0.17}),
+      slot("fluid_smear", {"smearAmount": (0.4, mid(0.4)), "curlScale": 0.15, "flowSpeed": 0.2, "decay": 0.75, "gravity": 0.05}))
+chain("web-neon", ["edges", "feedback", "kick", "bass", "high", "bar"],
+      slot("neon_edge", {"edgeStrength": (0.25, kick(0.2)), "threshold": 0.12, "glowSpread": (0.18, bass(0.15)),
+                         "palette": (0.0, lfo(32, 0.34, wave=SQ)), "backgroundBlend": 0.0}),
+      slot("directional_blur", {"blurAmount": (0.0, hat(0.4)), "angle": (0.0, lfo(16, 1.0)), "decay": 0.8,
+                                "bidirectional": 1.0, "exposure": 0.56}, wet=0.8),
+      FEEDBACK(0.55, 0.425, blur=0.1))
+chain("web-popart", ["halftone", "edges", "kick", "bass", "beat", "bar"],
+      slot("neon_edge", {"edgeStrength": (0.25, kick(0.3)), "threshold": 0.3, "glowSpread": 0.2, "palette": 2.0,
+                         "backgroundBlend": 1.0}, wet=0.9),
+      slot("halftone", {"dotScale": (0.3, bass(0.25)), "screenAngle": (0.0, lfo(32, 0.5)), "mode": 0.0, "smoothness": 0.17,
+                        "paperTint": 0.15, "mixRatio": 1.0}),
+      slot("gradient_map", {"mixAmount": (0.6, pulse(1, 0.3)), "palette": (2.0, lfo(64, 0.17, wave=SQ)), "cycleSpeed": 0.0,
+                            "cycleOffset": 0.0, "hueShift": 0.0}, wet=0.7))
+chain("web-prism", ["glass", "kaleidoscope", "bass", "high", "kick", "bar"],
+      slot("faceted_glass", {"facetScale": (0.23, lfo(16, 0.1)), "refraction": (0.4, bass(0.3)), "dispersion": (0.35, hat(0.4)),
+                             "bevelStrength": 0.65, "facetTilt": 0.55}),
+      slot("kaleidoscope", {"segments": 6, "rotation": (0.0, lfo(24, 1.0)), "zoom": 0.5, "centerX": 0.5, "centerY": 0.5,
+                            "originOffset": 0.0}),
+      slot("rgb_split", {"amount": (0.1, kick(0.4)), "angle": 0.0, "radialMode": 1.0, "dispersionMode": 1.0}, wet=0.8))
+chain("web-warmth", ["grade", "crt", "bass", "mid", "kick"],
+      slot("color_levels", {"warmth": (0.15, bass(0.2)), "contrast": 0.38, "saturation": (0.35, mid(0.2))}),
+      slot("retro_crt", {"scanlineIntensity": 0.25, "scanlineCount": 300.0, "curvature": 0.08, "phosphorMask": 0.2,
+                         "vignette": 0.3, "brightnessBoost": 0.3}, wet=0.35),
+      slot("bloom", {"bloomIntensity": (0.15, kick(0.3)), "threshold": 0.6, "blurAmount": 0.3}, wet=0.5))
+chain("web-drop-weapon", ["blur", "glitch", "bass-gated", "kick", "beat"],
+      slot("radial_blur", {"blurAmount": (0.0, gate("audio_bass", 0.6, 1.0, 5, 200)), "decay": 0.84, "exposure": 0.46}),
+      slot("rgb_split", {"amount": (0.0, kick(0.6, 200)), "angle": 0.0, "radialMode": 1.0, "dispersionMode": 0.0}),
+      slot("pinch_bulge", {"amount": (0.0, pulse(1, 0.3)), "radius": 0.4}))
+chain("web-wormhole", ["tunnel", "bloom", "bass", "bar", "kick", "beat"],
+      slot("polar_tunnel", {"depth": (0.39, bass(0.2)), "twist": (0.4, lfo(32, 0.3)), "zoom": 0.5, "symmetry": 2.0,
+                            "depthFog": 0.6, "centerX": 0.5, "centerY": 0.5}),
+      slot("pinch_bulge", {"amount": (0.3, kick(0.3)), "radius": 0.38}),
+      slot("bloom", {"bloomIntensity": (0.12, pulse(1, 0.12)), "threshold": 0.55, "blurAmount": 0.31}, wet=0.7))
+chain("web-blackhole", ["swirl", "tunnel", "bass", "high", "kick", "beat"],
+      slot("vortex_swirl", {"twist": (0.3, bass(0.3)), "radius": 0.33, "dispersion": (0.4, hat(0.3)), "spiralArms": 0.0,
+                            "centerX": 0.5, "centerY": 0.5}),
+      slot("luma_displace", {"refractAmount": (0.3, kick(0.4)), "smoothness": 0.2, "chromaDispersion": 0.5, "flowSpeed": 0.0}, wet=0.85),
+      slot("polar_tunnel", {"depth": (0.29, pulse(1, 0.1)), "twist": 0.5, "zoom": 0.5, "symmetry": 1.0, "depthFog": 0.5,
+                            "centerX": 0.5, "centerY": 0.5}, wet=0.9))
+chain("web-elevation", ["3d", "bar", "bass", "kick", "mid"],
+      slot("3d_elevation", {"mode3D": (0.0, lfo(32, 0.34, wave=SQ)), "yaw": (0.0, lfo(32, 1.0)), "pitch": (0.0, lfo(48, 0.3)),
+                            "zoom": (0.5, kick(0.1)), "separation": (0.4, bass(0.3)), "perspective": 0.5, "roundness": 1.0,
+                            "blendMode": 0.0}),  # alpha over: additive planes burn the middle out to white
+      # no feedback: on the 3D planes it piles up into a white blob within a second or two
+      slot("color_levels", {"contrast": 0.4, "saturation": (0.35, mid(0.2))}))
+chain("web-ink", ["liquid", "palette", "bass", "mid", "bar"],
+      slot("fluid_smear", {"smearAmount": (0.2, bass(0.5)), "curlScale": 0.18, "flowSpeed": 0.25, "decay": 0.8,
+                           "gravity": (0.0, lfo(16, 0.3))}),
+      slot("gradient_map", {"mixAmount": (0.5, mid(0.4)), "palette": 3.0, "cycleSpeed": 0.0, "cycleOffset": (0.0, lfo(32, 1.0)),
+                            "hueShift": 0.0}))
+chain("web-ripple-drop", ["wave", "bass-gated", "bar", "high"],
+      slot("wave_displace", {"amplitude": (0.0, gate("audio_bass", 0.5, 0.6)), "frequency": (0.2, lfo(16, 0.2)), "speed": 0.2,
+                             "rippleMode": 1.0}),
+      slot("rgb_split", {"amount": (0.0, hat(0.3)), "angle": (0.0, lfo(8, 1.0)), "radialMode": 1.0, "dispersionMode": 1.0}))
+chain("web-crt", ["crt", "beat", "kick", "amp"],
+      slot("retro_crt", {"scanlineIntensity": (0.3, pulse(1, 0.3)), "scanlineCount": 300.0, "curvature": (0.25, kick(0.2)),
+                         "phosphorMask": 0.3, "vignette": (0.4, amp(-0.3)), "brightnessBoost": 0.35}))
+chain("web-thermal-drop", ["thermal", "bass-gated"],
+      slot("thermal_scanner", {"intensity": (0.0, gate("audio_bass", 0.55, 1.5, 15, 300)), "mode": 1.0, "thermalBloom": 0.3,
+                               "sensorGrain": 0.2, "vignette": 0.3}))
+chain("web-mirror", ["mirror", "kick", "bass", "beat"],
+      slot("mirror_sphere", {"sphereRadius": (0.3, kick(0.25)), "centerX": 0.5, "centerY": 0.5, "fresnelGlow": (0.5, pulse(1, 0.3)),
+                             "chromaFringe": 0.25, "backgroundMix": (0.25, bass(0.3))}))
+chain("web-halftone-beat", ["halftone", "beat", "bar", "mid"],
+      slot("halftone", {"dotScale": (0.25, pulse(1, 0.2)), "screenAngle": 0.0, "mode": (0.0, lfo(16, 0.5, wave=SQ)),
+                        "smoothness": 0.2, "paperTint": 0.1, "mixRatio": (0.8, mid(0.2))}))
+chain("web-motion", ["blur", "kick", "bar"],
+      slot("directional_blur", {"blurAmount": (0.0, kick(0.6)), "angle": (0.0, lfo(8, 1.0)), "decay": 0.9,
+                                "bidirectional": 1.0, "exposure": 0.45}))
+chain("web-lumakey", ["key", "kick"],
+      slot("luma_key", {"threshold": (0.5, kick(-0.4)), "softness": 0.1}),
+      slot("color_levels", {"contrast": 0.4}))
+
 print("wrote presets and chains under", WEB)

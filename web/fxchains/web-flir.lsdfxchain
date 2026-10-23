@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "name": "web-flir",
+  "tags": [
+    "web",
+    "thermal",
+    "crt",
+    "bass",
+    "high",
+    "bar"
+  ],
+  "dryWet": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  },
+  "slots": [
+    {
+      "filterId": "thermal_scanner",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "intensity": {
+          "baseValue": 1.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "mode": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 2.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "lfo",
+              "operator": "ADD",
+              "depth": 0.5,
+              "dcOffset": 0.0,
+              "waveform": "SQUARE",
+              "genUnit": "BEAT",
+              "subdivision": 32.0,
+              "slope": 0.5,
+              "phaseOffset": 0.0
+            }
+          ]
+        },
+        "thermalBloom": {
+          "baseValue": 0.3,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_bass",
+              "operator": "ADD",
+              "depth": 0.4,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 20.0,
+              "decayMs": 300.0
+            }
+          ]
+        },
+        "sensorGrain": {
+          "baseValue": 0.2,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_flux_high",
+              "operator": "ADD",
+              "depth": 0.4,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 3.0,
+              "decayMs": 120.0
+            }
+          ]
+        },
+        "vignette": {
+          "baseValue": 0.3,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    {
+      "filterId": "retro_crt",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 0.85,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "scanlineIntensity": {
+          "baseValue": 0.25,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "scanlineCount": {
+          "baseValue": 320.0,
+          "baseMin": 50.0,
+          "baseMax": 800.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "curvature": {
+          "baseValue": 0.1,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "phosphorMask": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "vignette": {
+          "baseValue": 0.2,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "brightnessBoost": {
+          "baseValue": 0.25,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    null
+  ]
+}

@@ -73,3 +73,5 @@ A1+A2 -> B1+B2 -> C1-C5 -> D1+D2 -> A6 -> B3, C6.
 - 2026-10-23 C1-C5 done: CH rocker (+history), FX, HOLD, TIME (8-64 bars), REACT (0.25-2x on audio_*), OSD (channel,
   look, chain, Icecast now playing), beat LED, keyboard/swipe/long-press, live lock (lsd-broadcast-status now fired),
   fullscreen on the screen element. ui_check.mjs covers them. C6 (channels), C7 share/kiosk still open.
+- 2026-10-23 A3+A4 done: 24 chains (batch 7 in the generator), all 27 filters used, 35 chains in rotation. No strobes
+  (photosensitivity). web-elevation uses alpha-over blend and no feedback (additive/feedback burn out to white).

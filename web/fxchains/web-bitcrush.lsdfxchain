@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "name": "web-bitcrush",
+  "tags": [
+    "web",
+    "pixel",
+    "glitch",
+    "kick",
+    "bass-gated"
+  ],
+  "dryWet": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  },
+  "slots": [
+    {
+      "filterId": "pixelate",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 1.0,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "pixelSize": {
+          "baseValue": 1.0,
+          "baseMin": 1.0,
+          "baseMax": 128.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_bass",
+              "operator": "ADD",
+              "depth": 0.25,
+              "dcOffset": -0.125,
+              "followerMode": "CUSTOM",
+              "attackMs": 5.0,
+              "decayMs": 200.0
+            }
+          ]
+        },
+        "latticeMode": {
+          "baseValue": 1.0,
+          "baseMin": 0.0,
+          "baseMax": 2.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "colorDepth": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 32.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    {
+      "filterId": "rgb_split",
+      "enabled": true,
+      "dryWet": {
+        "baseValue": 0.9,
+        "baseMin": 0.0,
+        "baseMax": 1.0,
+        "randomizeBase": false,
+        "modulators": []
+      },
+      "parameters": {
+        "amount": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "audio_flux_bass",
+              "operator": "ADD",
+              "depth": 0.5,
+              "dcOffset": 0.0,
+              "followerMode": "CUSTOM",
+              "attackMs": 4.0,
+              "decayMs": 180.0
+            }
+          ]
+        },
+        "angle": {
+          "baseValue": 0.0,
+          "baseMin": -3.14159,
+          "baseMax": 3.14159,
+          "randomizeBase": false,
+          "modulators": [
+            {
+              "sourceId": "lfo",
+              "operator": "ADD",
+              "depth": 1.0,
+              "dcOffset": 0.0,
+              "waveform": "SINE",
+              "genUnit": "BEAT",
+              "subdivision": 16.0,
+              "slope": 0.5,
+              "phaseOffset": 0.0
+            }
+          ]
+        },
+        "radialMode": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        },
+        "dispersionMode": {
+          "baseValue": 0.0,
+          "baseMin": 0.0,
+          "baseMax": 1.0,
+          "randomizeBase": false,
+          "modulators": []
+        }
+      }
+    },
+    null
+  ]
+}
