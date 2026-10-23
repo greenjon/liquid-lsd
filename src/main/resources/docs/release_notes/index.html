@@ -1292,6 +1292,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#stock-fx-chain-fixes-defaultsfx_chains-webtoolsvalidate_contentmjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stock FX Chain Fixes (defaults/fx_chains/*, web/tools/validate_content.mjs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#housekeeping-one-config-folder-smaller-download-uishortcutsshortcutmanagerkt-uifilesystemmanagerkt-buildgradlekts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Housekeeping: One Config Folder, Smaller Download (ui/shortcuts/ShortcutManager.kt, ui/FileSystemManager.kt, build.gradle.kts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#master-knobs-say-level-not-alpha-macromacroenginekt-presetssessionserializerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Master Knobs Say LEVEL, Not ALPHA (macro/MacroEngine.kt, presets/SessionSerializer.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#speeds-never-jump-the-picture-renderingisfphaseintegratorskt-renderingisfisfparserkt-renderingisfisfvisualsourcekt-renderingisfisffilterkt-cvclockanchorskt-cvevaluatorskt-every-stock-source-and-effect-with-a-speed-webisfjs-webevaluatorjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6644,6 +6677,39 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#stock-fx-chain-fixes-defaultsfx_chains-webtoolsvalidate_contentmjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stock FX Chain Fixes (defaults/fx_chains/*, web/tools/validate_content.mjs)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#housekeeping-one-config-folder-smaller-download-uishortcutsshortcutmanagerkt-uifilesystemmanagerkt-buildgradlekts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Housekeeping: One Config Folder, Smaller Download (ui/shortcuts/ShortcutManager.kt, ui/FileSystemManager.kt, build.gradle.kts)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#master-knobs-say-level-not-alpha-macromacroenginekt-presetssessionserializerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Master Knobs Say LEVEL, Not ALPHA (macro/MacroEngine.kt, presets/SessionSerializer.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#speeds-never-jump-the-picture-renderingisfphaseintegratorskt-renderingisfisfparserkt-renderingisfisfvisualsourcekt-renderingisfisffilterkt-cvclockanchorskt-cvevaluatorskt-every-stock-source-and-effect-with-a-speed-webisfjs-webevaluatorjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -11971,6 +12037,21 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="stock-fx-chain-fixes-defaultsfx_chains-webtoolsvalidate_contentmjs">Stock FX Chain Fixes (<code>defaults/fx_chains/*</code>, <code>web/tools/validate_content.mjs</code>)</h3>
+<ul>
+<li><strong>Six stock FX chains got back settings they had been silently losing.</strong> Renamed effect parameters had left them pointing at parameters their effects no longer have, so those settings were ignored: Pop-Art Comic Print's edge palette and overlay, Digital Bitcrush Mosaic's diamond pixels and split mode, Prismatic Crystal Kaleidoscope's spectral split, Grindhouse VHS Bootleg's phosphor mask and darker grade, Laser Concert Anamorphic's brighter grade, and Cosmic Black Hole Vortex's displacement (two values were out of range). Copies of these chains already in your library are not changed.</li>
+</ul>
+<h3 id="housekeeping-one-config-folder-smaller-download-uishortcutsshortcutmanagerkt-uifilesystemmanagerkt-buildgradlekts">Housekeeping: One Config Folder, Smaller Download (<code>ui/shortcuts/ShortcutManager.kt</code>, <code>ui/FileSystemManager.kt</code>, <code>build.gradle.kts</code>)</h3>
+<ul>
+<li><strong>Custom key bindings now live in <code>~/.liquid-lsd/keybindings.json</code></strong>, next to your source notes, instead of a second <code>~/.liquidlsd</code> folder. <strong>Custom key bindings are reset once:</strong> the old file is not read. Copy <code>~/.liquidlsd/keybindings.json</code> over if you want to keep them.</li>
+<li>Removed the unused OpenAL audio library from the build, which makes the download smaller. Audio is unaffected.</li>
+<li>Internal: the bundled transition presets are now seeded from <code>default_transition_presets</code>, so they no longer share a folder name with the stock <code>.fs</code> transitions. Existing installs are not affected; only fresh installs and "restore defaults" use it.</li>
+</ul>
+<h3 id="master-knobs-say-level-not-alpha-macromacroenginekt-presetssessionserializerkt">Master Knobs Say LEVEL, Not ALPHA (<code>macro/MacroEngine.kt</code>, <code>presets/SessionSerializer.kt</code>)</h3>
+<ul>
+<li><strong>The Master bank's first three knobs are now labelled LEVEL A, LEVEL B and LEVEL BG</strong> (they were ALPHA A, ALPHA B, ALPHA BG), matching the Level faders everywhere else.</li>
+<li><strong>Saved sessions are relabelled when they load</strong>, but only knobs that still carry the old default label and still control the matching level. Knobs you renamed or rebound keep your label.</li>
+</ul>
 <h3 id="speeds-never-jump-the-picture-renderingisfphaseintegratorskt-renderingisfisfparserkt-renderingisfisfvisualsourcekt-renderingisfisffilterkt-cvclockanchorskt-cvevaluatorskt-every-stock-source-and-effect-with-a-speed-webisfjs-webevaluatorjs">Speeds Never Jump the Picture (<code>rendering/isf/PhaseIntegrators.kt</code>, <code>rendering/isf/ISFParser.kt</code>, <code>rendering/isf/ISFVisualSource.kt</code>, <code>rendering/isf/ISFFilter.kt</code>, <code>cv/ClockAnchors.kt</code>, <code>cv/Evaluators.kt</code>, every stock source and effect with a speed, <code>web/isf.js</code>, <code>web/evaluator.js</code>)</h3>
 <ul>
 <li><strong>Fixed pictures that jumped when a speed changed late in a set.</strong> The shaders multiplied each speed by the time since the app started, so the longer Liquid LSD ran, the further any change of speed threw the picture: an hour in, an LFO or the music on a speed made it jump every frame, and even turning a Speed knob, a macro or a preset morph scrubbed it. Liquid LSD now adds each speed up frame by frame, so changing it only changes how fast things move. This covers all 27 stock sources and the 5 effects with a speed or rate (Flight Speed, Morph Speed, Wave Speed, Hue Cycle Speed, Strobe Rate and the rest), on the desktop and the web TV. A freshly loaded source looks the same as before.</li>
@@ -11992,12 +12073,14 @@
 <ul>
 <li><strong>The web TV finds the radio's beat and locks to it.</strong> Pulses, flashes and beat-synced LFOs now land on the kicks of whatever is playing, not just at roughly the right tempo. It locks within a few seconds, follows tempo changes, and keeps time through breaks. The timing allows for the browser's audio delay, so the picture matches what you hear.</li>
 <li><strong>Looks change on the bar.</strong> The autopilot counts its holds in bars (16 for the main looks, 32 for the background) and finishes each crossfade on a bar line, so the new look arrives with the music. The next look is loaded during the hold, so the change is never late.</li>
-<li><strong>The TV follows the song.</strong> When a track breaks down (the bass drops out) a calm or building look comes in on the next bar, and when the drop lands a hard look cuts in right on it.</li>
+<li><strong>No signal looks like no signal.</strong> If the radio stream drops or goes silent, the screen fades to analog snow with NO SIGNAL, and the TV reconnects to the stream on its own every 10 seconds.</li>
+<li><strong>The TV follows the song.</strong> When a track breaks down (the bass drops out) a calm or building look comes in on the next bar, and when the drop lands a hard look cuts in right on it, with a flash. All eight transitions are now in the rotation.</li>
 <li><strong>Very fast music (drum and bass) is followed at half time:</strong> every kick still lands on a beat or a half beat.</li>
 </ul>
 <h3 id="web-tv-every-source-on-air-nothing-deaf-webpresets-webfxchains-webplaylists-webtoolsreactivitytestmjs-webchecksrender_check-scriptsgen_web_presetspy">Web TV: Every Source On Air, Nothing Deaf (<code>web/presets/*</code>, <code>web/fxchains/*</code>, <code>web/playlists/*</code>, <code>web/tools/reactivity.test.mjs</code>, <code>web/checks/render_check.*</code>, <code>scripts/gen_web_presets.py</code>)</h3>
 <ul>
 <li><strong>48 new web presets</strong> give every web source a place in the rotation: Aurora Ribbons, Cyclic CA, Girih Stars, Glitch Blocks, Halftone Matrix, Harmonograph, Hyperbolic Tiling, Isometric Voxels, Kali Set, Metaballs, Quasicrystal, Thin Film, Tunnel Scenes, Video Feedback, Voronoi Cells and Wave Ripples each get a groove, a hard (or kick, hat or mid) and an ambient look. The ambient ones play on the background.</li>
+<li><strong>Ten more sources on the web TV:</strong> Apollonian, Escape Time (Julia sets), Fluid Ink, KIFS, Lenia, Mandelbox, Mandelbulb, Nebula, Pseudo-Kleinian and Reaction-Diffusion, with 27 new looks; every desktop generator except Fractal Flame now plays on the web. Flights lunge forward on the kicks.</li>
 <li><strong>24 new FX chains on the web TV</strong>, all moving with the music: reactive versions of the desktop's stock chains (Cyberpunk, Bitcrush, FLIR, VHS, Hyperspace, Laser, Chrome, Mercury, Neon, Pop Art, Prism, Warmth, Drop Weapon, Wormhole, Black Hole, 3D Elevation) and new ones for effects the web TV never used (ink smear, ripple drop, CRT, thermal drop, mirror ball, halftone, motion blur, luma key). Every one of the 27 effects is now on air somewhere. None of them strobe: fast full-screen flashing is a photosensitivity risk on a public stream.</li>
 <li><strong>Fixed pictures that jittered after a few minutes on air.</strong> 23 presets modulated a speed (flight speed, flow speed, vibration speed...). The shaders multiply speed by the running time, so the longer the TV ran, the harder every wobble in the music jumped the picture. Those presets now move size, glow, colour and shape with the music instead.</li>
 <li><strong>Nothing deaf on the web TV.</strong> Seven presets that ignored the music are gone, the three trail chains now move with kicks, mids and hats, and a test keeps any preset or chain that doesn't react to audio or the beat out of the playlists.</li>
