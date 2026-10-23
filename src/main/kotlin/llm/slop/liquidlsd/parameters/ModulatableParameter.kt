@@ -136,6 +136,9 @@ class ModulatableParameter(
     var value: Float = baseValue
         internal set
 
+    /** Keeps this parameter's seconds- and frame-clocked LFOs and sequencers continuous when their period changes. */
+    val clockAnchors = llm.slop.liquidlsd.cv.ClockAnchors()
+
     fun reset() {
         baseValue = defaultValue
         baseMin = defaultValue
@@ -221,7 +224,7 @@ class ModulatableParameter(
             if (mod.sourceId.startsWith("midi_cc_") && !UITheme.midiEnabled) {
                 continue
             }
-            val finalCv = evaluateModulator(mod)
+            val finalCv = evaluateModulator(mod, clockAnchors)
             val isSourceBipolar = llm.slop.liquidlsd.cv.isCvSourceBipolar(mod.sourceId)
             val rawModAmount = if (mod.sourceId == "seq") {
                 finalCv * mod.depth + mod.dcOffset

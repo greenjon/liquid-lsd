@@ -9,6 +9,7 @@ precision highp float;
         "Generator",
         "Geometric"
     ],
+    "LSD_PHASES": {"SpeedPhase": ["Speed"]},
     "INPUTS": [
         { "NAME": "ColorMethod", "LABEL": "Style", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
         { "NAME": "SurfaceType", "LABEL": "Metric", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 2.0, "STEP": 1 },
@@ -28,7 +29,6 @@ precision highp float;
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define CellScale_ (2.0+CellScale*14.0)
-#define Speed_ (Speed*0.4)
 #define EdgeWidth_ (0.01+EdgeWidth*0.19)
 #define EdgeGlow_ (EdgeGlow*2.0)
 #define Saturation_ (Saturation*1.6)
@@ -87,7 +87,7 @@ vec3 shade(vec2 p, float tt, int style, int met, int pal, float jit, float ew, f
         for (int i = -1; i <= 1; i++) {
             ivec2 c = ic + ivec2(i, j);
             uint h = hashCell(c);
-            // Each feature point orbits its cell centre; integer cycle counts make the TIME wrap seamless.
+            // Each feature point orbits its cell centre; integer cycle counts make the phase wrap seamless.
             vec2 ph = vec2(u01(h, 0), u01(h, 8));
             vec2 k = vec2(1.0 + floor(u01(h, 16) * 2.99), 1.0 + floor(u01(h, 24) * 2.99));
             if ((h & 0x1000000u) != 0u) k.x = -k.x;
@@ -143,7 +143,7 @@ void main() {
     int pal = clamp(int(floor(PaletteMode + 0.5)), 0, 3);
     int q = clamp(int(floor(Detail + 0.5)), 1, 3);
 
-    float tt = mod(TIME * Speed_, 1.0);
+    float tt = mod(SpeedPhase * 0.4, 1.0);
     float sc = CellScale_;
     vec2 p = uv * sc + vec2(37.0, 53.0);
 

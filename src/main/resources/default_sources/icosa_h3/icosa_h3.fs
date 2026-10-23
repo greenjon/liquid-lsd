@@ -10,6 +10,7 @@
         "3D",
         "Geometric"
     ],
+    "LSD_PHASES": {"HuePhase": ["HueAnimSpeed"]},
     "INPUTS": [
         { "NAME": "Morph", "LABEL": "Morph", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "StellationBoost", "LABEL": "Stellation Boost", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
@@ -223,7 +224,7 @@ void main(){
     vec3 lD = rot * normalize(vec3(0.3, 0.4, -1.0));
 
     vec3 palA = vec3(0.5), palB = vec3(0.5), palC = vec3(1.0), palD = vec3(0.0, 0.33, 0.67);
-    float hueEff = fract(HueOffset + TIME * HueAnimSpeed * 0.05);
+    float hueEff = fract(HueOffset + HuePhase * 0.05);
 
     vec4 acc = vec4(0.0);
     float t = max(0.0, (3.8 - 3.0) / zoom);

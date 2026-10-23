@@ -79,6 +79,9 @@ export function buildFragmentShader(rawSource, header = parseHeader(rawSource)) 
     }
     if (!declRe(input.NAME).test(stripped)) out += decl + '\n';
   }
+  for (const phase of Object.keys(header.LSD_PHASES || {})) {
+    if (!declRe(phase).test(stripped)) out += `uniform float ${phase};\n`;
+  }
   out += '\n';
 
   for (const target of passTargets) {
@@ -144,6 +147,27 @@ export function applyUniforms(gl, prog, params, frame) {
       default: gl.uniform1f(l, Number(v));
     }
   }
+}
+
+// A shader that was not rendered for a while resumes where it stopped instead of leaping ahead (PhaseIntegrators.kt).
+const MAX_PHASE_STEP_SEC = 0.25;
+
+/**
+ * Advances the LSD_PHASES uniforms of one instance (port of PhaseIntegrators.kt): each phase grows by the product of its
+ * rate inputs times dt, so a rate change alters the slope, never the position. A new phase starts where TIME * rate would
+ * have put it, so a freshly loaded source looks as it always did. Returns the phases, keyed by uniform name.
+ */
+export function advancePhases(header, phases, params, dt, time) {
+  const step = Math.min(Math.max(Number(dt) || 0, 0), MAX_PHASE_STEP_SEC);
+  for (const [name, inputs] of Object.entries(header.LSD_PHASES || {})) {
+    let rate = 1;
+    for (const n of inputs) {
+      const input = header.INPUTS.find((i) => i.NAME === n);
+      rate *= Number(params[n] ?? input?.DEFAULT ?? 0);
+    }
+    phases[name] = phases[name] === undefined ? rate * (Number(time) || 0) : phases[name] + rate * step;
+  }
+  return phases;
 }
 
 /** Default parameter values for a header, keyed by input NAME. */
@@ -264,7 +288,7 @@ function makeTarget(gl, w, h, floatFmt) {
 
 /** Per-instance pass targets (one per FX slot, transition, or deck source). */
 export class ISFState {
-  constructor() { this.w = 0; this.h = 0; this.regular = new Map(); this.persistent = new Map(); this.frame = 0; }
+  constructor() { this.w = 0; this.h = 0; this.regular = new Map(); this.persistent = new Map(); this.frame = 0; this.phases = {}; }
 
   ensure(gl, prog, w, h, hasFloat) {
     if (this.w === w && this.h === h && this.prog === prog) return;
@@ -305,6 +329,10 @@ export function renderISF(ctx, prog, state, { targetFBO, width, height, params, 
   gl.useProgram(prog.program);
   gl.bindVertexArray(ctx.quadVAO);
   applyUniforms(gl, prog, params, { ...frame, width, height, index: state.frame });
+  if (state.prog !== state.phaseProg) { state.phases = {}; state.phaseProg = state.prog; }
+  for (const [name, v] of Object.entries(advancePhases(prog.header, state.phases, params, frame.dt, frame.time))) {
+    const l = prog.loc(name); if (l) gl.uniform1f(l, v);
+  }
   state.frame++;
 
   const passes = prog.passes;

@@ -98,7 +98,7 @@ object SeqSection {
         drawToolbar(session, param, existing, stepCount, isBipolar, themeColor, onReplace)
         ImGui.spacing()
 
-        val cyclePos = seqCyclePosition(existing)
+        val cyclePos = seqCyclePosition(existing, anchors = param.clockAnchors)
         val activeStep = Math.floorMod(floor(cyclePos).toLong(), stepCount.toLong()).toInt()
         val stepFrac = (cyclePos - floor(cyclePos)).toFloat()
         drawStepBars(existing, stepCount, stepMin, activeStep, stepFrac, themeColor, onReplace)

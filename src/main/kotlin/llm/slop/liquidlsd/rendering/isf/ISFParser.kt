@@ -186,6 +186,10 @@ object ISFParser {
                 sb.append(uniformDecl).append("\n")
             }
         }
+        for (phase in header.LSD_PHASES.keys) {
+            val declRegex = Regex("""\buniform\s+(?:[A-Za-z0-9_]+\s+)*${Regex.escape(phase)}\s*;""")
+            if (!declRegex.containsMatchIn(stripped)) sb.append("uniform float $phase;\n")
+        }
         sb.append("\n")
 
         // 7. Pass Targets as Uniforms
@@ -311,6 +315,10 @@ object ISFParser {
                     sb.append(uniformDecl).append("\n")
                 }
             }
+        }
+        for (phase in header.LSD_PHASES.keys) {
+            val declRegex = Regex("""\buniform\s+(?:[A-Za-z0-9_]+\s+)*${Regex.escape(phase)}\s*;""")
+            if (!declRegex.containsMatchIn(stripped)) sb.append("uniform float $phase;\n")
         }
         sb.append("\n")
 

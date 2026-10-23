@@ -8,6 +8,7 @@
         "Organic",
         "Liquid"
     ],
+    "LSD_PHASES": {"SpeedPhase": ["Speed"], "HuePhase": ["HueCycleSpeed"]},
     "INPUTS": [
         { "NAME": "WarpStrength", "LABEL": "Warp Strength", "TYPE": "float", "DEFAULT": 0.375, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Swirl", "LABEL": "Swirl", "TYPE": "float", "DEFAULT": 0.33333, "MIN": -1.0, "MAX": 1.0 },
@@ -27,9 +28,7 @@
 #define WarpStrength_ (WarpStrength*4.0)
 #define Swirl_ (Swirl*3.0)
 #define Viscosity_ (0.1+Viscosity*1.9)
-#define Speed_ (Speed*2.0)
 #define Gloss_ (Gloss*3.0)
-#define HueCycleSpeed_ (HueCycleSpeed*0.5)
 #define Zoom_ (Zoom<0.5?pow(0.2,1.0-2.0*Zoom):pow(5.0,2.0*Zoom-1.0))
 
 
@@ -94,7 +93,7 @@ void main() {
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
     vec2 uv = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0) / max(Zoom_, 0.05);
 
-    float t = TIME * Speed_;
+    float t = SpeedPhase * 2.0;
     int oct = clamp(int(floor(Detail + 0.5)), 1, 5);
 
     float swirlAngle = Swirl_ * 0.5;
@@ -126,7 +125,7 @@ void main() {
     float spec = pow(max(dot(normal, halfDir), 0.0), 16.0) * Gloss_;
     float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 3.0);
 
-    float totalHue = HueOffset + TIME * HueCycleSpeed_;
+    float totalHue = HueOffset + HuePhase * 0.5;
     int mode = clamp(int(floor(PaletteMode + 0.5)), 0, 4);
     
     vec3 baseColor = getPaletteColor(f * 0.5 + 0.5, mode, totalHue);

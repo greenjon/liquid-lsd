@@ -10,6 +10,7 @@
         "3D",
         "Volumetric"
     ],
+    "LSD_PHASES": {"FlightPhase": ["FlightSpeed"], "DriftPhase": ["Drift"]},
     "INPUTS": [
         { "NAME": "Density", "LABEL": "Density", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Coverage", "LABEL": "Coverage", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
@@ -39,8 +40,6 @@
 #define Scale_ (0.35+Scale*1.65)
 #define Turbulence_ (Turbulence*1.4)
 #define Glow_ (Glow*2.5)
-#define FlightSpeed_ (FlightSpeed*1.5)
-#define Drift_ (Drift*0.25)
 #define Brightness_ (Brightness*2.0)
 #define Zoom_ (Zoom<0.5?pow(0.1,1.0-2.0*Zoom):pow(5.0,2.0*Zoom-1.0))
 
@@ -92,12 +91,12 @@ float fbm(vec3 p, int oct) {
     return s / max(norm, 1e-4);
 }
 
-float time_;
+float drift_;   // gas drift distance: Drift integrated by the host (DriftPhase), times the Drift_ scale
 
 // Gas density at p: domain-warped ridged fbm, thresholded by Coverage, faded by distance from the core.
 float density(vec3 p, int oct, bool warp) {
     vec3 q = p * Scale_;
-    q.z += time_ * Drift_;
+    q.z += drift_;
     if (warp) {                                          // one low-frequency noise pushes q along a slowly turning direction
         float w0 = vnoise(q * 0.7 + 3.1) - 0.5;
         q += w0 * Turbulence_ * 3.0 * vec3(sin(q.y * 0.9 + 1.0), sin(q.z * 0.8 + 2.0), sin(q.x * 0.7 + 3.0));
@@ -121,16 +120,16 @@ vec3 gasColor(float d, vec3 p, int cMode) {
 float ign(vec2 p) { return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715)))); }
 
 void main() {
-    time_ = TIME;
+    drift_ = DriftPhase * 0.25;
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
     vec2 uv = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0);
 
     float fov = 1.2 / max(Zoom_, 0.05);
-    vec3 ro = vec3(0.0, 0.0, -6.0 + TIME * FlightSpeed_);
+    vec3 ro = vec3(0.0, 0.0, -6.0 + FlightPhase * 1.5);
     vec3 rd = normalize(vec3(uv * fov, 1.0));
     mat3 rot = rotZ(RotateZ) * rotY(RotateY) * rotX(RotateX);
     // rotate around the point 6 units ahead, so the camera orbits the gas instead of spinning in place
-    vec3 pivot = vec3(0.0, 0.0, TIME * FlightSpeed_);
+    vec3 pivot = vec3(0.0, 0.0, FlightPhase * 1.5);
     ro = rot * (ro - pivot) + pivot;
     rd = rot * rd;
 

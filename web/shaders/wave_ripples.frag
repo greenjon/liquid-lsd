@@ -9,6 +9,7 @@ precision highp float;
         "Generator",
         "Geometric"
     ],
+    "LSD_PHASES": {"WavePhase": ["WaveSpeed"], "OrbitPhase": ["OrbitSpeed"]},
     "INPUTS": [
         { "NAME": "Symmetries", "LABEL": "Sources", "TYPE": "float", "DEFAULT": 4.0, "MIN": 2.0, "MAX": 8.0, "STEP": 1 },
         { "NAME": "Wavelength", "LABEL": "Wavelength", "TYPE": "float", "DEFAULT": 0.4, "MIN": 0.0, "MAX": 1.0 },
@@ -29,8 +30,6 @@ precision highp float;
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define Wavelength_ (0.5 * pow(0.08, Wavelength))          // spatial wavelength, screen-height units
-#define WaveSpeed_ (WaveSpeed * 1.5)                        // wave cycles per second (signed)
-#define OrbitSpeed_ (OrbitSpeed * 0.3)                      // orbit revolutions per second (signed)
 #define Falloff_ (Falloff * 6.0)
 #define Contrast_ (0.4 + Contrast * 1.6)
 #define Saturation_ (Saturation * 1.6)
@@ -148,8 +147,8 @@ void main() {
     int aa = clamp(int(floor(Detail + 0.5)), 1, 4);
 
     float k = TAU / Wavelength_;
-    float wphase = TAU * fract(TIME * WaveSpeed_);       // fract keeps the phase small
-    float orbit = TAU * fract(TIME * OrbitSpeed_);       // integer path frequencies: closed loop
+    float wphase = TAU * fract(WavePhase * 1.5);       // fract keeps the phase small
+    float orbit = TAU * fract(OrbitPhase * 0.3);       // integer path frequencies: closed loop
     buildSources(n, lay, orbit);
 
     vec3 acc = vec3(0.0);

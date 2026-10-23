@@ -8,6 +8,7 @@
         "Physics",
         "Organic"
     ],
+    "LSD_PHASES": {"VibrationPhase": ["VibrationSpeed"]},
     "INPUTS": [
         { "NAME": "FrequencyM", "LABEL": "Frequency M", "TYPE": "float", "DEFAULT": 3.0, "MIN": 1.0, "MAX": 16.0 },
         { "NAME": "FrequencyN", "LABEL": "Frequency N", "TYPE": "float", "DEFAULT": 5.0, "MIN": 1.0, "MAX": 16.0 },
@@ -27,7 +28,6 @@
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define NodeSharpness_ (0.5+NodeSharpness*7.5)
-#define VibrationSpeed_ (VibrationSpeed*2.0)
 #define Glow_ (Glow*3.0)
 #define Scale_ (Scale<0.5?pow(0.2,1.0-2.0*Scale):pow(4.0,2.0*Scale-1.0))
 
@@ -52,7 +52,7 @@ void main() {
     vec2 p = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0) / max(Scale_, 0.05);
 
     // Vibration oscillation time phase
-    float osc = sin(TIME * VibrationSpeed_ * 6.28318) * 0.15;
+    float osc = sin(VibrationPhase * 2.0 * 6.28318) * 0.15;
 
     // 1. Square plate standing wave calculation
     // w_sq = a * sin(n pi x) * sin(m pi y) - b * sin(m pi x) * sin(n pi y) + c * cos(l pi x) * cos(l pi y)

@@ -10,6 +10,7 @@ precision highp float;
         "Geometric",
         "Optical"
     ],
+    "LSD_PHASES": {"SpeedPhase": ["Speed"]},
     "INPUTS": [
         { "NAME": "Symmetries", "LABEL": "Symmetries", "TYPE": "float", "DEFAULT": 6.0, "MIN": 3.0, "MAX": 24.0, "STEP": 1 },
         { "NAME": "RingDensity", "LABEL": "Ring Density", "TYPE": "float", "DEFAULT": 0.26316, "MIN": 0.0, "MAX": 1.0 },
@@ -32,7 +33,6 @@ precision highp float;
 #define RingDensity_ (2.0+RingDensity*38.0)
 #define PhaseTwist_ (PhaseTwist*2.0)
 #define PulseWave_ (PulseWave*2.0)
-#define Speed_ (Speed*2.0)
 #define LineWidth_ (0.05+LineWidth*0.95)
 #define Glow_ (0.2+Glow*3.8)
 #define HueSweep_ (HueSweep*2.0)
@@ -55,7 +55,7 @@ void main() {
     float r = length(p);
     float angle = atan(p.y, p.x);
 
-    float t = TIME * Speed_;
+    float t = SpeedPhase * 2.0;
     float sym = max(floor(Symmetries + 0.5), 2.0);
     float sector = TWO_PI / sym;
 

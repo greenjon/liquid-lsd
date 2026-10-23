@@ -7,6 +7,7 @@
         "Generator",
         "Geometric"
     ],
+    "LSD_PHASES": {"SpeedPhase": ["Speed"]},
     "INPUTS": [
         { "NAME": "SurfaceType", "LABEL": "Wave", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 2.0, "STEP": 1 },
         { "NAME": "CellSize", "LABEL": "Cell Size", "TYPE": "float", "DEFAULT": 0.45, "MIN": 0.0, "MAX": 1.0 },
@@ -26,7 +27,6 @@
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define CubesAcross_ (30.0 - CellSize * 24.0)      // cube widths per screen height: 30 .. 6
-#define Speed_ (Speed * 3.0)                        // rad/s (ripple, sweep) or cells/s scale (noise)
 #define WaveFreq_ (0.35 + Frequency * 1.3)
 #define EdgeW_ (Gap * 0.12)
 #define Contrast_ (Contrast * 0.85)
@@ -175,8 +175,8 @@ void main() {
     gWave = clamp(int(floor(SurfaceType + 0.5)), 0, 2);
     gHn = 1 + int(floor(MaxHeight * 7.0 + 0.5));
     gHn = clamp(gHn, 1, MAX_LAYERS);
-    gPhase = mod(TIME * Speed_, TAU);
-    gDrift = mod(TIME * Speed * 0.5, 1024.0);
+    gPhase = mod(SpeedPhase * 3.0, TAU);
+    gDrift = mod(SpeedPhase * 0.5, 1024.0);
 
     vec2 fc = isf_FragNormCoord * RENDERSIZE;   // deck Zoom / Rotate Z act through isf_FragNormCoord
     vec3 acc;

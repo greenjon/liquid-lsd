@@ -8,6 +8,7 @@
         "Generator",
         "Fractal"
     ],
+    "LSD_PHASES": {"MorphPhase": ["MorphSpeed"]},
     "INPUTS": [
         { "NAME": "FractalType", "LABEL": "Fractal Type", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
         { "NAME": "JuliaRadius", "LABEL": "Julia Radius", "TYPE": "float", "DEFAULT": 0.65, "MIN": 0.0, "MAX": 1.0 },
@@ -33,7 +34,6 @@
 #define JuliaRadius_ (0.2+JuliaRadius*0.9)
 #define JuliaAngle_ (JuliaAngle*3.14159265)
 #define Power_ (2.0+Power*3.0)
-#define MorphSpeed_ (MorphSpeed*1.0)
 #define Zoom_ (Zoom<0.5?pow(0.3,1.0-2.0*Zoom):pow(3000.0,2.0*Zoom-1.0))
 #define Rotation_ (Rotation*3.14159265)
 #define ColorCycle_ (ColorCycle*0.6)
@@ -157,7 +157,7 @@ void main() {
     int maxIt = int(mix(48.0, float(MAX_IT), Detail));
     int aa = Detail > 0.75 ? 2 : 1;
 
-    float ang = JuliaAngle_ + TIME * MorphSpeed_;
+    float ang = JuliaAngle_ + MorphPhase;
     vec2 c = JuliaRadius_ * vec2(cos(ang), sin(ang));
     float pw = Power_;
 

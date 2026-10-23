@@ -3,6 +3,7 @@
     "CREDIT": "Liquid LSD (MIT License)",
     "ISFVSN": "2.0",
     "CATEGORIES": ["Organic", "Feedback", "Psychedelic"],
+    "LSD_PHASES": {"FlowPhase": ["flowSpeed"]},
     "INPUTS": [
         {
             "NAME": "inputImage",
@@ -118,7 +119,7 @@ void main() {
         }
 
         float aspect = RENDERSIZE.x / max(RENDERSIZE.y, 1.0);
-        vec2 noiseCoord = uv * vec2(aspect, 1.0) * curlScale_ + (TIME * flowSpeed_ * 0.2);
+        vec2 noiseCoord = uv * vec2(aspect, 1.0) * curlScale_ + (FlowPhase * 0.4);
 
         // Calculate divergence-free curl flow velocity
         vec2 velocity = curlNoise(noiseCoord) * (smearAmount * 0.015);

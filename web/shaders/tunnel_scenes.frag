@@ -9,6 +9,7 @@ precision highp float;
         "Generator",
         "Geometric"
     ],
+    "LSD_PHASES": {"SpeedPhase": ["Speed"]},
     "INPUTS": [
         { "NAME": "SurfaceType", "LABEL": "Scene", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 2.0, "STEP": 1 },
         { "NAME": "Symmetries", "LABEL": "Sides", "TYPE": "float", "DEFAULT": 6.0, "MIN": 3.0, "MAX": 12.0, "STEP": 1 },
@@ -27,7 +28,6 @@ precision highp float;
 */
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
-#define Speed_ (Speed*4.0)
 #define Twist_ (Twist*1.2)
 #define Glow_ (Glow*2.0)
 #define FogDens_ (0.02+Fog*0.28)
@@ -220,7 +220,7 @@ void main() {
     float aa = mix(0.6, 1.4, Quality);
     int scene = clamp(int(floor(SurfaceType + 0.5)), 0, 2);
     int sides = clamp(int(floor(Symmetries + 0.5)), 3, 12);
-    float travelRaw = TIME * Speed_; // wrapped per scene to a whole number of pattern periods
+    float travelRaw = SpeedPhase * 4.0;   // wrapped per scene to a whole number of pattern periods
 
     vec3 col;
     if (scene == 0) {

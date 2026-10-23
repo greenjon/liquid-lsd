@@ -260,6 +260,7 @@ class ISFFilter(
     private val filterParamBindings: Array<FilterParamBinding>
     private val transitionParamBindings: Array<FilterParamBinding>
     private val cachedParams: Array<ModulatableParameter>
+    private val phases: PhaseIntegrators
 
     /** Names of the plain float inputs a transition exposes (no images, `progress`, selects or toggles), in authored order. */
     val floatParamNames: List<String>
@@ -333,6 +334,7 @@ class ISFFilter(
         }.toTypedArray()
 
         cachedParams = parameters.values.toTypedArray()
+        phases = PhaseIntegrators(header.LSD_PHASES, parameters)
 
         val defaultDto = ISFAutoBindEngine.resolveDefault(this)
         defaultDto.parameters.forEach { (name, value) ->
@@ -446,6 +448,8 @@ class ISFFilter(
                 "color" -> shader.setUniform(binding.name, binding.param.value, binding.param.value, binding.param.value, 1.0f) 
             }
         }
+        phases.advance(TimeSource.getTimeSec())
+        phases.apply(shader)
 
         if (passesArray.isEmpty()) {
             shader.setUniform("PASSINDEX", 0)
@@ -590,6 +594,8 @@ class ISFFilter(
                 "color" -> shader.setUniform(binding.name, binding.param.value, binding.param.value, binding.param.value, 1.0f) 
             }
         }
+        phases.advance(TimeSource.getTimeSec())
+        phases.apply(shader)
 
         shader.setUniform("PASSINDEX", 0)
         shader.setUniform("RENDERSIZE", width.toFloat(), height.toFloat())

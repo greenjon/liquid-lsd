@@ -7,6 +7,7 @@
         "Generator",
         "Geometric"
     ],
+    "LSD_PHASES": {"DetunePhase": ["Detune"], "DriftPhase": ["DriftSpeed"]},
     "INPUTS": [
         { "NAME": "RatioPreset", "LABEL": "Ratio X:Y", "TYPE": "float", "DEFAULT": 2.0, "MIN": 0.0, "MAX": 7.0, "STEP": 1 },
         { "NAME": "PaletteMode", "LABEL": "Palette", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
@@ -31,7 +32,6 @@
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define Detune_ (Detune*0.08)
-#define DriftSpeed_ (DriftSpeed*1.5)
 #define Damping_ (Damping*6.0)
 #define LineWidth_ (0.0015+LineWidth*0.012)
 #define Glow_ (Glow*2.0)
@@ -95,14 +95,17 @@ void main() {
     // frequencies normalised so the fastest axis runs at 1 rad per unit time
     vec2 r = ratioOf(clamp(int(floor(RatioPreset + 0.5)), 0, 7));
     vec2 f = r / max(r.x, r.y);
+    float fy0 = f.y;
     f.y *= 1.0 + Detune_;
     float span = TAU * Trail_ / max(f.x, f.y);
 
     // head phases (wrapped per term) and signed phase drift
+    // f.y * head with head = 0.3 TIME, integrated so Detune changes do not jump the phase (Detune_ = Detune x 0.08)
     float head = TIME * 0.3;
-    float drift = TIME * DriftSpeed_;
-    vec4 hp = vec4(mod(f.x * head, TAU), mod(f.y * head, TAU),
-                   mod(0.5 * f.x * head, TAU), mod(0.5 * f.y * head, TAU));
+    float headY = fy0 * 0.3 * (TIME + 0.08 * DetunePhase);
+    float drift = DriftPhase * 1.5;
+    vec4 hp = vec4(mod(f.x * head, TAU), mod(headY, TAU),
+                   mod(0.5 * f.x * head, TAU), mod(0.5 * headY, TAU));
     vec4 ph = vec4(0.0, 1.5708 + mod(drift, TAU), 1.3 + mod(0.7 * drift, TAU), 0.4 - mod(0.45 * drift, TAU));
 
     const float SCALE = 0.44;

@@ -9,6 +9,7 @@ precision highp float;
         "Generator",
         "Geometric"
     ],
+    "LSD_PHASES": {"PatternPhase": ["PatternSpeed"]},
     "INPUTS": [
         { "NAME": "SurfaceType", "LABEL": "Pattern", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
         { "NAME": "ColorMethod", "LABEL": "Dot Style", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
@@ -29,7 +30,6 @@ precision highp float;
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define Density_ (8.0+Density*72.0)              // cells per screen height
-#define PatternSpeed_ (PatternSpeed*1.5)         // radians of pattern phase per second
 #define PatternScale_ (1.0+PatternScale*5.0)     // pattern feature frequency
 #define GridRotation_ (GridRotation*1.5707963)   // 0..90 degrees (square grid is 90-periodic)
 #define Contrast_ (0.5+Contrast*2.5)
@@ -190,7 +190,7 @@ void main() {
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
     vec2 uv = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0);
     int n = clamp(int(floor(Detail + 0.5)), 1, 3);
-    float t = mod(TIME * PatternSpeed_, TAU);
+    float t = mod(PatternPhase * 1.5, TAU);
     // Pixel footprint in cell units, and the extra edge softness from Dot Sharpness.
     float pw = Density_ / RENDERSIZE.y;
     float soft = (1.0 - Sharpness) * 0.22;

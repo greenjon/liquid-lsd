@@ -9,6 +9,7 @@ precision highp float;
         "Generator",
         "Geometric"
     ],
+    "LSD_PHASES": {"OrbitPhase": ["OrbitSpeed"]},
     "INPUTS": [
         { "NAME": "MaxPoints", "LABEL": "Balls", "TYPE": "float", "DEFAULT": 7.0, "MIN": 4.0, "MAX": 12.0, "STEP": 1 },
         { "NAME": "ColorMethod", "LABEL": "Style", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
@@ -29,7 +30,6 @@ precision highp float;
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define BallSize_ (0.03+BallSize*0.12)
-#define OrbitSpeed_ (OrbitSpeed*1.2)
 #define OrbitSpread_ (0.2+OrbitSpread*0.3)
 #define Merge_ (1.6-Merge*1.3)
 #define Softness_ (Softness*0.03)
@@ -101,7 +101,7 @@ void main() {
 
     // Orbits: x = A sin(kx*s + ph), y = B sin(ky*s + ph2) with half-integer rates, so the
     // pattern repeats exactly every 4 pi of s and the wrap below is seamless.
-    float s = mod(TIME * OrbitSpeed_, 2.0 * TAU);
+    float s = mod(OrbitPhase * 1.2, 2.0 * TAU);
     vec2 cen[MAXB];
     float rad[MAXB];
     float rsum = 0.0;

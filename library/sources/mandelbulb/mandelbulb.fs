@@ -10,6 +10,7 @@
         "3D",
         "Fractal"
     ],
+    "LSD_PHASES": {"FlightPhase": ["FlightSpeed"]},
     "INPUTS": [
         { "NAME": "Power", "LABEL": "Power", "TYPE": "float", "DEFAULT": 0.42857, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "PowerSwing", "LABEL": "Power Swing", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
@@ -33,7 +34,6 @@
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define Power_ (2.0+Power*14.0)
 #define Bailout_ (2.0+Bailout*6.0)
-#define FlightSpeed_ (FlightSpeed*2.0)
 #define Glow_ (Glow*2.0)
 #define Brightness_ (Brightness*2.0)
 #define Zoom_ (Zoom<0.5?pow(0.1,1.0-2.0*Zoom):pow(5.0,2.0*Zoom-1.0))
@@ -112,8 +112,8 @@ void main() {
     vec3 jc = vec3(0.45, -0.35, 0.4) + 0.12 * vec3(sin(ja), cos(ja * 1.3), sin(ja * 0.7));
 
     // Camera: tilt off the pole, orbit about the pole (FlightSpeed), then user rotation.
-    float spin = TIME * FlightSpeed_ * 0.35;
-    float camDist = 3.4 - 0.5 * (0.5 + 0.5 * sin(TIME * FlightSpeed_ * 0.2));
+    float spin = FlightPhase * 0.7;
+    float camDist = 3.4 - 0.5 * (0.5 + 0.5 * sin(FlightPhase * 0.4));
     mat3 rot = rotZ(RotateZ) * rotY(RotateY) * rotX(RotateX) * rotZ(spin) * rotX(-1.15);
     vec3 ro = rot * vec3(0.0, 0.0, -camDist);
     vec3 rd = rot * normalize(vec3(uv, 1.2 * Zoom_));

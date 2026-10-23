@@ -7,6 +7,7 @@
         "Generator",
         "Glitch"
     ],
+    "LSD_PHASES": {"RatePhase": ["Rate"]},
     "INPUTS": [
         { "NAME": "SurfaceType", "LABEL": "Base Pattern", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
         { "NAME": "PaletteMode", "LABEL": "Palette", "TYPE": "float", "DEFAULT": 3.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
@@ -25,7 +26,6 @@
 */
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
-#define Rate_ (0.5 + Rate * 23.5)                 // glitch steps per second
 #define BlockSize_ (0.02 + BlockSize * 0.30)      // block height, fraction of frame height
 #define Tear_ (Tear * 0.45)                       // max band shift, fraction of frame width
 #define Split_ (Split * 0.05)                     // max channel offset, fraction of frame width
@@ -118,7 +118,7 @@ void main() {
     int oct = 1 + int(clamp(Quality, 0.0, 1.0) * 2.999);
 
     // Quantised time: the whole glitch state is a pure function of this integer.
-    uint step0 = uint(floor(mod(TIME, 3600.0) * Rate_));
+    uint step0 = uint(floor(mod(0.5 * TIME + 23.5 * RatePhase, 86400.0)));   // integral of Rate_
     float scroll = fract(TIME * 0.0625);
 
     // Per-step global state: occasionally a calm frame, otherwise a burst gain 0.5..1.5.

@@ -90,7 +90,7 @@ Clicking an **LFO** cell opens the LFO config. Each cell has a primary oscillato
 
 **Clock mode:**
 
-- **Time** — Set the period in seconds. Use Fast / Medium / Slow sliders.
+- **Time** — Set the period in seconds. Use Fast / Medium / Slow sliders. Changing the period (by hand, from a controller, a macro or a preset morph) only changes how fast the LFO runs; it never jumps.
 - **Beat** — Synced to the beat clock. Subdivisions from 1/8 beat to 8 bars.
 
 **Waveshaping:**
@@ -147,7 +147,7 @@ The row above the bars edits the active steps:
 - **Time** — Wall clock seconds per step (0.01s to 5.0s).
 - **Frame** — Advances every N render frames (1 to 120).
 
-Changing the clock unit keeps the same step duration where it can.
+Changing the clock unit keeps the same step duration where it can. Changing a Time or Frame interval while it plays keeps the current step and only changes the speed.
 
 ### Glide
 

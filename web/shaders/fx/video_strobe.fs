@@ -5,6 +5,7 @@ precision highp float;
     "CREDIT": "Liquid LSD (MIT License)",
     "ISFVSN": "2.0",
     "CATEGORIES": ["Glitch", "Utility", "Rhythm"],
+    "LSD_PHASES": {"RatePhase": ["rate"]},
     "INPUTS": [
         {
             "NAME": "inputImage",
@@ -79,7 +80,7 @@ void main() {
             : IMG_NORM_PIXEL(inputImage, isf_FragNormCoord);
 
         if (rate > 0.01) {
-            float phase = fract(TIME * rate);
+            float phase = fract(RatePhase);
             bool isFlash = (phase < dutyCycle_);
 
             if (isFlash) {

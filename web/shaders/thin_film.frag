@@ -9,6 +9,7 @@ precision highp float;
         "Generator",
         "Organic"
     ],
+    "LSD_PHASES": {"FlowPhase": ["FlowSpeed"]},
     "INPUTS": [
         { "NAME": "FlowSpeed", "LABEL": "Flow Speed", "TYPE": "float", "DEFAULT": 0.3, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "Scale", "LABEL": "Scale", "TYPE": "float", "DEFAULT": 0.3, "MIN": 0.0, "MAX": 1.0 },
@@ -26,7 +27,6 @@ precision highp float;
 */
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
-#define FlowSpeed_ (FlowSpeed*0.25)
 #define Scale_ (1.0+Scale*5.0)
 #define FilmThickness_ (150.0+FilmThickness*750.0)
 #define ThicknessRange_ (60.0+ThicknessRange*840.0)
@@ -86,8 +86,7 @@ void main() {
     float aspect = RENDERSIZE.x / RENDERSIZE.y;
     vec2 uv = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0);
     int oct = clamp(int(floor(Detail + 0.5)), 1, 4);
-    float tw = mod(TIME * FlowSpeed_, 256.0);
-
+    float tw = mod(FlowPhase * 0.25, 256.0);
     vec2 p = uv * Scale_ + vec2(40.0, 25.0);
 
     // Two-stage domain warp gives the swirling, advected look.

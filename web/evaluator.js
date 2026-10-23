@@ -47,9 +47,26 @@ export function paramSpec(input) {
   return { min, max, steps };
 }
 
-/** Per-frame inputs to every evaluation. `followers` carries envelope-follower state between frames. */
+/**
+ * Per-frame inputs to every evaluation. `followers` carries envelope-follower state between frames; `anchors` keeps
+ * seconds- and frame-clocked generators continuous when their period changes (port of ClockAnchors.kt).
+ */
 export function makeEvalContext() {
-  return { time: 0, beats: 0, frame: 0, dt: 1 / 60, bpm: 120, cv: {}, followers: new WeakMap() };
+  return { time: 0, beats: 0, frame: 0, dt: 1 / 60, bpm: 120, cv: {}, followers: new WeakMap(), anchors: new Map() };
+}
+
+/**
+ * clock / period, plus a shift that absorbs the step when the period changes, so only the rate changes (clock / period
+ * alone moves by clock x the change in 1/period, which grows over a set). Keyed by modulator id: the desktop keys per
+ * parameter, but web modulators are replaced by every broadcast, and the same preset on two decks has the same periods.
+ */
+function anchoredCycles(ctx, key, unit, clock, period) {
+  if (!ctx.anchors || key == null) return clock / period;
+  let a = ctx.anchors.get(key);
+  if (!a) { a = { unit, period, shift: 0 }; ctx.anchors.set(key, a); }
+  else if (a.unit !== unit) { a.unit = unit; a.period = period; a.shift = 0; }
+  else if (a.period !== period) { a.shift += clock / a.period - clock / period; a.period = period; }
+  return clock / period + a.shift;
 }
 
 // ---------------------------------------------------------------- JVM-compatible hashing and RNG
@@ -139,15 +156,16 @@ function calculateRandomWaveform(positivePhase, morph, hold, previousValue, curr
 function generatorValue(ctx, mod, p, pmShift) {
   let cyclePosition;
   let period;
+  const key = mod.id == null ? null : (p.seedSalt ? mod.id + '#lfo2' : mod.id);
   if (p.unit === 'TIME') {
     period = Math.max(p.subdivision, 0.001);
-    cyclePosition = ctx.time / period + p.phaseOffset + pmShift;
+    cyclePosition = anchoredCycles(ctx, key, 'TIME', ctx.time, period) + p.phaseOffset + pmShift;
   } else if (p.unit === 'BEAT') {
     period = Math.max(p.subdivision, 0.01);
     cyclePosition = ctx.beats / period + p.phaseOffset + pmShift;
   } else {
     period = Math.max(p.subdivision, 1.0);
-    cyclePosition = ctx.frame / period + p.phaseOffset + pmShift;
+    cyclePosition = anchoredCycles(ctx, key, 'FRAME', ctx.frame, period) + p.phaseOffset + pmShift;
   }
   const phase = cyclePosition % 1.0;
   const positive = phase < 0 ? phase + 1 : phase;
@@ -219,9 +237,9 @@ function evalSeq(ctx, mod) {
   const sub = F(mod.subdivision ?? 1.0);
   const phaseOffset = F(mod.phaseOffset ?? 0.0);
   let cyclePosition;
-  if (unit === 'TIME') cyclePosition = ctx.time / Math.max(sub, 0.001) + phaseOffset;
+  if (unit === 'TIME') cyclePosition = anchoredCycles(ctx, mod.id, 'TIME', ctx.time, Math.max(sub, 0.001)) + phaseOffset;
   else if (unit === 'BEAT') cyclePosition = ctx.beats / Math.max(sub, 0.001) + phaseOffset;
-  else cyclePosition = ctx.frame / Math.max(sub, 1.0) + phaseOffset;
+  else cyclePosition = anchoredCycles(ctx, mod.id, 'FRAME', ctx.frame, Math.max(sub, 1.0)) + phaseOffset;
 
   const raw = Math.floor(cyclePosition);
   const cur = ((raw % stepCount) + stepCount) % stepCount;

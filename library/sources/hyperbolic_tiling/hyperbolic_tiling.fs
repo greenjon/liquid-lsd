@@ -8,6 +8,7 @@
         "Geometric",
         "Tiling"
     ],
+    "LSD_PHASES": {"SpeedPhase": ["Speed"], "SpinPhase": ["Spin"]},
     "INPUTS": [
         { "NAME": "P", "LABEL": "Tile Sides P", "TYPE": "float", "DEFAULT": 5.0, "MIN": 3.0, "MAX": 10.0, "STEP": 1 },
         { "NAME": "Q", "LABEL": "Tiles Per Vertex Q", "TYPE": "float", "DEFAULT": 4.0, "MIN": 3.0, "MAX": 10.0, "STEP": 1 },
@@ -36,8 +37,6 @@
 
 const float PI = 3.14159265358979323846;
 const float TWO_PI = 6.28318530717958647692;
-// 100 * TWO_PI: base time wrap. Rates below are multiples of 0.01 rad/s, so the wrap is seamless at default speeds.
-const float TIME_WRAP = 628.3185307;
 
 vec3 hsv2rgb(vec3 c) {
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -74,10 +73,9 @@ void main() {
     vec2 n2 = vec2(sa, -cos(a));
 
     // View: rotation, then Mobius translation along a slow Lissajous path.
-    float tt = mod(TIME, TIME_WRAP);
-    float spd = Speed * 0.5;
-    float ang = tt * Spin * 0.5;
-    vec2 t = Drift_ * vec2(cos(tt * spd * 0.7), sin(tt * spd * 1.1));
+    float sp = SpeedPhase * 0.5;
+    float ang = SpinPhase * 0.5;
+    vec2 t = Drift_ * vec2(cos(sp * 0.7), sin(sp * 1.1));
     float r2s = dot(zs, zs);
 
     // Hyperbolic size of one pixel (isometry invariant).

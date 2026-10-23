@@ -2017,7 +2017,7 @@
 </ul>
 <p><strong>Clock mode:</strong></p>
 <ul>
-<li><strong>Time</strong> — Set the period in seconds. Use Fast / Medium / Slow sliders.</li>
+<li><strong>Time</strong> — Set the period in seconds. Use Fast / Medium / Slow sliders. Changing the period (by hand, from a controller, a macro or a preset morph) only changes how fast the LFO runs; it never jumps.</li>
 <li><strong>Beat</strong> — Synced to the beat clock. Subdivisions from 1/8 beat to 8 bars.</li>
 </ul>
 <p><strong>Waveshaping:</strong></p>
@@ -2067,7 +2067,7 @@
 <li><strong>Time</strong> — Wall clock seconds per step (0.01s to 5.0s).</li>
 <li><strong>Frame</strong> — Advances every N render frames (1 to 120).</li>
 </ul>
-<p>Changing the clock unit keeps the same step duration where it can.</p>
+<p>Changing the clock unit keeps the same step duration where it can. Changing a Time or Frame interval while it plays keeps the current step and only changes the speed.</p>
 <h3 id="glide">Glide</h3>
 <ul>
 <li><strong>Step Hold</strong> slider — At 100% the value jumps instantly and holds flat for the full step. At 0% it glides smoothly from one step to the next over the whole duration. In between you get a hold then glide. It has a dice to randomize within a range, like the other sliders.</li>

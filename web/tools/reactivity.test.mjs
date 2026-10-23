@@ -169,18 +169,25 @@ for (const id of rotationChains) {
   });
 }
 
-// Rate parameters (Speed, FlightSpeed, Spin, Rate, ...) are multiplied by TIME in the shaders, so any
-// modulation on them moves the phase by TIME * change: after a few minutes on air even a small wobble
-// jumps the picture every frame. Modulate amounts, sizes and colours instead.
+// A rate parameter (Speed, FlightSpeed, Spin, Rate, ...) may only be modulated where the shader integrates it
+// (LSD_PHASES in its ISF header, see PhaseIntegrators.kt). `TIME * Speed` moves the phase by TIME x the change,
+// so after a few minutes on air even a small wobble jumps the picture every frame.
 const RATE = /(speed|spin|rate)$/i;
-test('no web preset or chain modulates a rate parameter', () => {
+const integrated = (entry) => new Set(Object.values((entry ? header(entry).LSD_PHASES : null) ?? {}).flat());
+test('no web preset or chain modulates a rate parameter its shader does not integrate', () => {
   const offenders = [];
-  const scan = (label, params) => {
-    for (const [n, p] of Object.entries(params ?? {})) if (RATE.test(n) && p?.modulators?.some((m) => !m.bypassed)) offenders.push(`${label}.${n}`);
+  const scan = (label, params, entry) => {
+    const ok = integrated(entry);
+    for (const [n, p] of Object.entries(params ?? {})) {
+      if (RATE.test(n) && !ok.has(n) && p?.modulators?.some((m) => !m.bypassed)) offenders.push(`${label}.${n}`);
+    }
   };
-  for (const f of fs.readdirSync(presetsDir).filter((n) => n.startsWith('web-') && n.endsWith('.lsd'))) scan(f, readJson(`presets/${f}`).parameters);
+  for (const f of fs.readdirSync(presetsDir).filter((n) => n.startsWith('web-') && n.endsWith('.lsd'))) {
+    const dto = readJson(`presets/${f}`);
+    scan(f, dto.parameters, catalog.sources.find((s) => s.id === dto.visualSourceType));
+  }
   for (const c of catalog.fxChains.filter((e) => e.file.startsWith('fxchains/'))) {
-    for (const s of readJson(c.file).slots) if (s) scan(`${c.id}/${s.filterId}`, s.parameters);
+    for (const s of readJson(c.file).slots) if (s) scan(`${c.id}/${s.filterId}`, s.parameters, catalog.filters.find((f) => f.id === s.filterId));
   }
   assert.deepEqual(offenders, []);
 });

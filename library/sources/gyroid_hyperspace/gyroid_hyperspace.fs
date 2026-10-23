@@ -25,14 +25,14 @@
         { "NAME": "RotateX", "LABEL": "Rotate X", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
         { "NAME": "RotateY", "LABEL": "Rotate Y", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 },
         { "NAME": "RotateZ", "LABEL": "Rotate Z", "TYPE": "float", "DEFAULT": 0.0, "MIN": -3.14159265, "MAX": 3.14159265 }
-    ]
+    ],
+    "LSD_PHASES": { "FlightPhase": ["FlightSpeed"] }
 }
 */
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define WallThickness_ (0.02+WallThickness*0.78)
 #define Frequency_ (0.3+Frequency*2.7)
-#define FlightSpeed_ (FlightSpeed*2.0)
 #define CoreGlow_ (CoreGlow*3.0)
 #define Brightness_ (Brightness*2.0)
 #define Zoom_ (Zoom<0.5?pow(0.1,1.0-2.0*Zoom):pow(5.0,2.0*Zoom-1.0))
@@ -96,7 +96,8 @@ void main() {
 
     // Camera setup
     float fov = 1.2 / max(Zoom_, 0.05);
-    vec3 ro = vec3(0.0, 0.0, -2.5 + TIME * FlightSpeed_);
+    // FlightPhase is FlightSpeed integrated by the host, so speed changes never jump the camera.
+    vec3 ro = vec3(0.0, 0.0, -2.5 + FlightPhase * 2.0);
     vec3 rd = normalize(vec3(uv * fov, 1.0));
 
     // Apply 3D rotation

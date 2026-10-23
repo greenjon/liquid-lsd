@@ -7,6 +7,7 @@
         "Generator",
         "Fractal"
     ],
+    "LSD_PHASES": {"SpeedPhase": ["Speed"]},
     "INPUTS": [
         { "NAME": "OrbitRadius", "LABEL": "Orbit Radius", "TYPE": "float", "DEFAULT": 0.3, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "Speed", "LABEL": "Orbit Speed", "TYPE": "float", "DEFAULT": 0.3, "MIN": -1.0, "MAX": 1.0 },
@@ -57,7 +58,7 @@ void main() {
     vec2 uv = (isf_FragNormCoord - 0.5) * vec2(aspect, 1.0) * 2.0;
 
     float tt = mod(TIME, TIME_WRAP);
-    float ph = tt * Speed * 1.0;
+    float ph = SpeedPhase;
     // Constant c: a base point on the fractal-rich region, circled by a small ellipse.
     vec2 c = vec2(0.82, 0.55) + OrbitRadius_ * vec2(cos(ph), sin(ph * 1.3 + 0.7));
     vec2 cen = Drift_ * vec2(sin(tt * 0.07), cos(tt * 0.05));

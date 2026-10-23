@@ -205,6 +205,8 @@ When `genUnit == BEAT` the subdivision randomizer draws from the discrete musica
 rather than a continuous uniform. When `genUnit == FRAME`, the randomizer and UI lock strictly to integer frame counts. Beat mode uses `getSynchronizedTotalBeats()` which is an
 interpolated estimate updated from the JACK audio thread via `@Volatile` fields in `CVRegistry`. Frame mode uses monotonic render frame ticks updated on each frame.
 
+**Period changes stay continuous (`ClockAnchors`).** A `TIME` or `FRAME` generator's position is `clock / period`, and the clock is the seconds (or frames) since start, so changing the period moved the position by `clock` times the change in `1 / period`: an hour in, turning an LFO's rate, a macro or OSC on its subdivision, or a preset morph lerping it jumped the LFO, every frame while it moved. `ClockAnchors` (one per `ModulatableParameter`, keyed by modulator id, separate tables for LFO 1 / sequencer and LFO 2) keeps a shift that absorbs `clock / old - clock / new` when the period changes, so only the rate changes. It is per parameter because the same preset on two decks shares modulator ids. `evaluateModulator`, `evaluateModulatorAtOffset` and `seqCyclePosition` take it as an optional argument (`ModulatableParameter.evaluate` and the sequencer playhead pass `clockAnchors`); look-ahead offsets never move it, and a clock-unit change resets it. `BEAT` generators are not anchored: they stay locked to the bar. RANDOM waveforms still reseed when the period changes (the seed hashes it). The web evaluator mirrors it in `anchoredCycles`, keyed by modulator id in `ctx.anchors`, since broadcast messages replace the modulator objects.
+
 ### GeneratorModMode (LFO 2 interaction)
 
 | Value | Effect on LFO 1 |

@@ -23,7 +23,8 @@ precision highp float;
         { "NAME": "HueOffset", "LABEL": "Hue Offset", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "HueSweep", "LABEL": "Hue Sweep", "TYPE": "float", "DEFAULT": 0.09091, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "TrailDecay", "LABEL": "Trail Decay", "TYPE": "float", "DEFAULT": 0.86735, "MIN": 0.0, "MAX": 1.0 }
-    ]
+    ],
+    "LSD_PHASES": { "SpinPhase": ["Speed"], "WavePhase": ["Speed", "WaveAmp"], "ShearPhase": ["Speed", "Shear"] }
 }
 */
 
@@ -65,9 +66,9 @@ void main() {
 
     vec3 newLight = vec3(0.0);
 
-    float integratedTime = TIME * Speed;
-    float integratedShear = integratedTime * Shear_;
-
+    // The host integrates Speed (and its products with WaveAmp and Shear) over time, so moving any of them changes how
+    // fast the spiral turns, never where it is (TIME * Speed jumped by TIME x the change). WaveFreq still sits inside cos().
+    float integratedShear = ShearPhase * 0.5;
     // A(n) = n^1.5 / (n + D) is strictly increasing for all n,D > 0.
     // Solve for nMax such that A(nMax) == viewRadius so that MaxPoints points
     // are evenly distributed across the visible spiral on screen.
@@ -103,8 +104,7 @@ void main() {
         if (A > viewRadius) break;
 
         // Current angle using integrated time & integrated shear
-        float omegaWave = WaveAmp_ * cos(WaveFreq_ * n);
-        float theta = omegaWave * integratedTime + n * integratedShear;
+        float theta = WavePhase * 0.02 * cos(WaveFreq_ * n) + n * integratedShear;   // 0.02 = WaveAmp_ scale
 
         // Cartesian position
         vec2 pos = vec2(A * cos(theta), A * sin(theta));
@@ -125,7 +125,7 @@ void main() {
 
         // Color: IQ palette driven by index n.
         // HueSweep_ controls cycles-per-point; HueOffset rotates the whole palette.
-        float t = n * HueSweep_ - integratedTime * 0.1;
+        float t = n * HueSweep_ - SpinPhase * 0.1;
         vec3 col = palette(
             t,
             vec3(0.5, 0.5, 0.5),

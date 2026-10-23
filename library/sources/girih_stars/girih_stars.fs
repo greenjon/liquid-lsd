@@ -8,6 +8,7 @@
         "Geometric",
         "Tiling"
     ],
+    "LSD_PHASES": {"SpeedPhase": ["Speed"]},
     "INPUTS": [
         { "NAME": "Symmetries", "LABEL": "Star Points", "TYPE": "float", "DEFAULT": 8.0, "MIN": 4.0, "MAX": 8.0, "STEP": 2 },
         { "NAME": "SurfaceType", "LABEL": "Style", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 2.0, "STEP": 1 },
@@ -31,7 +32,6 @@
 #define TileScale_ (2.0+TileScale*7.0)          // cells per screen height
 #define Angle_ (0.14+Angle*1.29)                 // contact angle, radians (8 to 82 degrees)
 #define Sweep_ (Sweep*0.45)                      // half amplitude of the animated angle, radians
-#define Speed_ (Speed*1.0)                       // rad/s, multiples of 0.01 keep the wrap seamless
 #define LineWidth_ (0.012+LineWidth*0.07)        // ribbon half width, tile units (cell = 1)
 #define Glow_ (Glow*2.0)
 #define Saturation_ (Saturation*2.0)
@@ -39,8 +39,6 @@
 
 const float PI = 3.14159265358979323846;
 const float TAU = 6.28318530717958647692;
-// 100 * TAU: TIME wrap, seamless for rates that are multiples of 0.01 rad/s.
-const float TIME_WRAP = 628.3185307;
 const float HALF = 0.5;                          // apothem of the base polygon (tile units)
 const float RT2 = 0.70710678118654752;
 
@@ -253,7 +251,7 @@ void main() {
     int style = clamp(int(floor(SurfaceType + 0.5)), 0, 2);
     int pmode = clamp(int(floor(PaletteMode + 0.5)), 0, 3);
 
-    float phase = mod(TIME, TIME_WRAP) * Speed_;
+    float phase = SpeedPhase;
     float theta = clamp(Angle_ + Sweep_ * sin(phase), 0.07, 1.50);
 
     float hw = LineWidth_;

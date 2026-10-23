@@ -61,6 +61,7 @@ Contents: 1 Foundations · 2 Rendering and shaders · 3 One path for every chang
 - **Outside values are allowed only when defensible**: enums and counts (palette, mode, segments, symmetries, `MaxPoints`, `pixelSize`, strobe `rate` in Hz) and angles (range +-PI, anywhere from 3.1 to 3.2, so the app treats them as degrees and shows -180..180; a periodic 0..2PI input is re-ranged to +-PI with no shader change).
 - **Zoom/Scale with a neutral 1.0** uses an exponential map: 0.5 is 1x, 0 and 1 reach the old min and max (`pow(min, 1-2v)` below, `pow(max, 2v-1)` above).
 - `ISFAutoBindEngine.CURATED` min/max values are in the normalized units. Shipped FX chains and transitions under `defaults/` store normalized values; older user presets are not migrated.
+- **Speeds are integrated by the host, never `TIME * Speed`** (`LSD_PHASES`, `PhaseIntegrators`): `TIME` is seconds since launch, so the product jumps by `TIME` times any change of speed, every frame under modulation late in a set. A shader declares `"LSD_PHASES": { "FlightPhase": ["FlightSpeed"] }` (a list multiplies inputs) and uses the phase uniform. Seconds- and frame-clocked LFOs and sequencers follow the same rule through `ClockAnchors`; beat-clocked ones stay on the bar.
 
 ## Four decks and the compositing order
 - Decks are **A, B, BG, PV**. BG is composited under the crossfaded A/B foreground (`rgb = fg.rgb + bg.rgb * (1 - fg.a)`). PV is the preview deck and never affects master output.

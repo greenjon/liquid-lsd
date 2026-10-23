@@ -10,6 +10,7 @@
         "3D",
         "Fractal"
     ],
+    "LSD_PHASES": {"FlightPhase": ["FlightSpeed"]},
     "INPUTS": [
         { "NAME": "CellSize", "LABEL": "Cell Size", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
         { "NAME": "InversionRadius", "LABEL": "Inversion Radius", "TYPE": "float", "DEFAULT": 0.57, "MIN": 0.0, "MAX": 1.0 },
@@ -36,7 +37,6 @@
 #define InversionStrength_ (2.0+InversionStrength*10.0)
 #define Twist_ (Twist*0.4)
 #define CoreSize_ (0.5+CoreSize*1.5)
-#define FlightSpeed_ (FlightSpeed*1.5)
 #define Brightness_ (Brightness*2.0)
 #define Zoom_ (Zoom<0.5?pow(0.1,1.0-2.0*Zoom):pow(5.0,2.0*Zoom-1.0))
 
@@ -152,7 +152,7 @@ void main() {
     // Camera flies down a channel of the periodic structure. The world repeats every cell width
     // along each axis, so the travel distance is wrapped to keep float precision at long run times.
     float period = 2.0 * gSlab;
-    float travel = mod(TIME * FlightSpeed_, period);
+    float travel = mod(FlightPhase * 1.5, period);
     vec3 ro = vec3(gSlab, gSlab, travel);
     float fov = 1.2 / max(Zoom_, 0.05);
     vec3 rd = normalize(vec3(uv * fov, 1.0));

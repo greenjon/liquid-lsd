@@ -472,6 +472,16 @@ Heavy shaders (raymarchers, fractal folds with many iterations) can run slowly o
 
 Shaders declared `3` show a gauge mark in the browser, and their tooltip says they may run slowly on integrated graphics. The bundled raymarchers and fractals are all declared `3`. Other ISF programs ignore the key. If a shader is slow, lowering iteration or step-count parameters helps more than anything else.
 
+### Speeds: integrate, don't multiply by TIME
+
+If a shader moves with `TIME * Speed`, every change of Speed moves the picture by `TIME` times the change, and `TIME` keeps growing while the app runs: an hour into a set, an LFO or the music on Speed makes the picture jump every frame. Declare the speed as a phase instead and Liquid LSD adds it up frame by frame:
+
+```json
+"LSD_PHASES": { "FlightPhase": ["FlightSpeed"] },
+```
+
+Then use `FlightPhase` where you had `TIME * FlightSpeed`. Each phase is a `float` uniform; list two inputs (`["Speed", "Shear"]`) when one scales the other. Changing the speed now only changes how fast things move. Other ISF programs ignore the key and leave the phase at 0, so the shader stands still there. All bundled sources and effects work this way.
+
 ### Standard ISF search paths
 
 Liquid LSD also scans these locations at startup:

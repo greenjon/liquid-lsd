@@ -3,6 +3,7 @@
     "CREDIT": "Liquid LSD (MIT License)",
     "ISFVSN": "2.0",
     "CATEGORIES": ["Color Adjustment", "Stylize", "Psychedelic"],
+    "LSD_PHASES": {"CyclePhase": ["cycleSpeed"]},
     "INPUTS": [
         {
             "NAME": "inputImage",
@@ -58,7 +59,6 @@
 }*/
 
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
-#define cycleSpeed_ (cycleSpeed*2.0)
 
 
 // Liquid LSD Engine - Cleanroom ISF Shader
@@ -128,7 +128,7 @@ void main() {
     float luma = dot(src.rgb, vec3(0.2126, 0.7152, 0.0722));
 
     // Dynamic phase cycle
-    float t = luma + cycleOffset + (cycleSpeed_ * TIME);
+    float t = luma + cycleOffset + (CyclePhase * 2.0);
 
     int mode = int(floor(palette + 0.5));
     vec3 gradRgb = sampleGradient(t, mode);

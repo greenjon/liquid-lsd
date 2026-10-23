@@ -3,6 +3,7 @@
     "CREDIT": "Liquid LSD (MIT License)",
     "ISFVSN": "2.0",
     "CATEGORIES": ["Distortion", "Organic", "Psychedelic"],
+    "LSD_PHASES": {"FlowPhase": ["flowSpeed"]},
     "INPUTS": [
         {
             "NAME": "inputImage",
@@ -76,7 +77,7 @@ void main() {
     // Optional dynamic flow offset
     vec2 flowOffset = vec2(0.0);
     if (abs(flowSpeed_) > 0.001) {
-        float t = TIME * flowSpeed_ * 0.5;
+        float t = FlowPhase * 1.5;
         flowOffset = vec2(sin(uv.y * 5.0 + t), cos(uv.x * 5.0 + t)) * 0.02;
     }
 

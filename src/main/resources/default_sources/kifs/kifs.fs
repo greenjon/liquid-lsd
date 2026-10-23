@@ -10,6 +10,7 @@
         "3D",
         "Fractal"
     ],
+    "LSD_PHASES": {"MorphPhase": ["MorphSpeed"], "FlightPhase": ["FlightSpeed"]},
     "INPUTS": [
         { "NAME": "SurfaceType", "LABEL": "Fractal Type", "TYPE": "float", "DEFAULT": 0.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
         { "NAME": "Scale", "LABEL": "Scale", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
@@ -41,8 +42,6 @@
 #define TwistX_ (TwistX*0.6)
 #define TwistY_ (TwistY*0.6)
 #define TwistZ_ (TwistZ*0.6)
-#define MorphSpeed_ (MorphSpeed*0.3)
-#define FlightSpeed_ (FlightSpeed*0.5)
 #define Glow_ (Glow*1.5)
 #define Brightness_ (Brightness*2.0)
 #define Zoom_ (Zoom<0.5?pow(0.1,1.0-2.0*Zoom):pow(5.0,2.0*Zoom-1.0))
@@ -195,7 +194,7 @@ void main() {
     gOff = clamp(OffsetMul_, 0.3, 2.0);
 
     // Per-level rotation (skipped on the first level, see map()): static twist plus a slow time-driven morph.
-    float m = TIME * MorphSpeed_;
+    float m = MorphPhase * 0.3;
     gRot = rotZ(TwistZ_ + m * 0.43) * rotY(TwistY_ + m * 0.7) * rotX(TwistX_ + m);
 
     // Camera starts outside the fractal looking straight at a face (a cube face for Menger/mixed, a triangular face for the
@@ -208,7 +207,7 @@ void main() {
     else if (gType == 1) { fp = gOff * vec3(1.0, -1.0, -1.0); face = -normalize(vec3(1.0)); d0 = 4.0; }
     else { fp = vec3(gOff); face = vec3(0.0, 0.0, 1.0); d0 = 2.9; }
     vec3 ro0 = face * d0 * max(gOff, 1.0);
-    float u = TIME * FlightSpeed_;
+    float u = FlightPhase * 0.5;
     float flightK = pow(gScale, -fract(u));
     // The view direction is fixed (it looks at the origin from the nominal start), so the dolly toward fp is self-similar.
     vec3 fwd = -face;

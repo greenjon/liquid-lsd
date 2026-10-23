@@ -9,6 +9,7 @@ precision highp float;
         "Generator",
         "Geometric"
     ],
+    "LSD_PHASES": {"SpinPhase": ["SpinSpeed"], "DriftPhase": ["DriftSpeed"]},
     "INPUTS": [
         { "NAME": "Symmetries", "LABEL": "Gratings", "TYPE": "float", "DEFAULT": 7.0, "MIN": 5.0, "MAX": 8.0, "STEP": 1 },
         { "NAME": "ColorMethod", "LABEL": "Style", "TYPE": "float", "DEFAULT": 1.0, "MIN": 0.0, "MAX": 3.0, "STEP": 1 },
@@ -31,8 +32,6 @@ precision highp float;
 #define Frequency_ (1.5+Frequency*10.5)
 #define Bands_ (0.5+Bands*3.5)
 #define Rotation_ (Rotation*3.14159265)
-#define SpinSpeed_ (SpinSpeed*0.6)
-#define DriftSpeed_ (DriftSpeed*2.0)
 #define Brightness_ (Brightness*2.0)
 
 const float TAU = 6.28318530717958647692;
@@ -108,8 +107,8 @@ void main() {
     int style = clamp(int(floor(ColorMethod + 0.5)), 0, 3);
     int pmode = clamp(int(floor(PaletteMode + 0.5)), 0, 3);
     float k = TAU * Frequency_;
-    float spin = mod(Rotation_ + TIME * SpinSpeed_, TAU);
-    float drift = TIME * DriftSpeed_;
+    float spin = mod(Rotation_ + SpinPhase * 0.6, TAU);
+    float drift = DriftPhase * 2.0;
     float sharp = clamp(Sharpness, 0.0, 1.0);
 
     // contour widths from the pixel footprint of the centre sample

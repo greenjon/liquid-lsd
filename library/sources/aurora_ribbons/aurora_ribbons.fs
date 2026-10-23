@@ -7,6 +7,7 @@
         "Generator",
         "Organic"
     ],
+    "LSD_PHASES": {"WavePhase": ["WaveSpeed"]},
     "INPUTS": [
         { "NAME": "Ribbons", "LABEL": "Ribbons", "TYPE": "float", "DEFAULT": 4.0, "MIN": 3.0, "MAX": 6.0, "STEP": 1 },
         { "NAME": "CurtainHeight", "LABEL": "Curtain Height", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
@@ -27,7 +28,6 @@
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define CurtainHeight_ (0.07+CurtainHeight*0.30)
 #define WaveAmp_ (0.01+WaveAmp*0.16)
-#define WaveSpeed_ (WaveSpeed*0.5)
 #define Shimmer_ (Shimmer)
 #define SkyDarkness_ (SkyDarkness)
 #define Saturation_ (Saturation*1.6)
@@ -81,8 +81,8 @@ vec3 gradient(int pm, float t) {
 
 // Sum of the curtains at sky position (x, s); s is 0 at the horizon, 1 at the zenith.
 vec3 auroraSum(float x, float s, int nRib, int oct, int pm) {
-    float tn = mod(TIME * WaveSpeed_ * 3.0, 256.0);
-    float cyc = TIME * WaveSpeed_ * 0.4;
+    float tn = mod(WavePhase * 1.5, 256.0);
+    float cyc = WavePhase * 0.2;
     vec3 acc = vec3(0.0);
     for (int i = 0; i < 6; i++) {
         if (i >= nRib) break;

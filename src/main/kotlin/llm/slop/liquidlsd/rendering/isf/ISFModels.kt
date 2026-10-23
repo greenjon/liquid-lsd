@@ -90,7 +90,13 @@ data class ISFHeader(
     val is3D: Boolean = false,
     val feedback: Boolean = false,
     /** Optional LiquidLSD extension: author-declared GPU cost, 1 (light) to 3 (heavy). Unknown to other ISF hosts, which ignore it. */
-    val LSD_COST: Int? = null
+    val LSD_COST: Int? = null,
+    /**
+     * Optional LiquidLSD extension: phase uniforms the host integrates over time (see [PhaseIntegrators]). Each entry maps a
+     * uniform name to the inputs whose product is its rate, so `"SpinPhase": ["Speed"]` makes `SpinPhase` the running sum of
+     * Speed x dt. Shaders use these instead of `TIME * Speed`, which jumps by TIME x the change whenever Speed moves.
+     */
+    val LSD_PHASES: Map<String, List<String>> = emptyMap()
 ) {
     /** [LSD_COST] clamped to 0..3; 0 means undeclared. */
     val gpuCost: Int get() = (LSD_COST ?: 0).coerceIn(0, 3)

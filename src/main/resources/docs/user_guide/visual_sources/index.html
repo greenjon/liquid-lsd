@@ -948,6 +948,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#speeds-integrate-dont-multiply-by-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Speeds: integrate, don't multiply by TIME
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#standard-isf-search-paths" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2384,6 +2395,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#speeds-integrate-dont-multiply-by-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Speeds: integrate, don't multiply by TIME
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#standard-isf-search-paths" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2847,6 +2869,11 @@
 <pre><code class="language-json">&quot;LSD_COST&quot;: 3,
 </code></pre>
 <p>Shaders declared <code>3</code> show a gauge mark in the browser, and their tooltip says they may run slowly on integrated graphics. The bundled raymarchers and fractals are all declared <code>3</code>. Other ISF programs ignore the key. If a shader is slow, lowering iteration or step-count parameters helps more than anything else.</p>
+<h3 id="speeds-integrate-dont-multiply-by-time">Speeds: integrate, don't multiply by TIME</h3>
+<p>If a shader moves with <code>TIME * Speed</code>, every change of Speed moves the picture by <code>TIME</code> times the change, and <code>TIME</code> keeps growing while the app runs: an hour into a set, an LFO or the music on Speed makes the picture jump every frame. Declare the speed as a phase instead and Liquid LSD adds it up frame by frame:</p>
+<pre><code class="language-json">&quot;LSD_PHASES&quot;: { &quot;FlightPhase&quot;: [&quot;FlightSpeed&quot;] },
+</code></pre>
+<p>Then use <code>FlightPhase</code> where you had <code>TIME * FlightSpeed</code>. Each phase is a <code>float</code> uniform; list two inputs (<code>["Speed", "Shear"]</code>) when one scales the other. Changing the speed now only changes how fast things move. Other ISF programs ignore the key and leave the phase at 0, so the shader stands still there. All bundled sources and effects work this way.</p>
 <h3 id="standard-isf-search-paths">Standard ISF search paths</h3>
 <p>Liquid LSD also scans these locations at startup:</p>
 <table>

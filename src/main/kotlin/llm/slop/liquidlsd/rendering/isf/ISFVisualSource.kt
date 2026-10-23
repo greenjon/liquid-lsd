@@ -247,12 +247,16 @@ class ISFVisualSource(
         }
     }.toTypedArray()
 
+    private val phases = PhaseIntegrators(header.LSD_PHASES, parameters)
+
     override fun setupUniforms(shader: Shader) {
         // TIME, TIMEDELTA, FRAMEINDEX, DATE and RENDERSIZE are set per deck by [llm.slop.liquidlsd.rendering.Renderer].
         // ISF Input uniforms — pre-bound direct references, zero allocations per frame
         for (i in 0 until inputBindings.size) {
             inputBindings[i].apply(shader)
         }
+        phases.advance(llm.slop.liquidlsd.utils.TimeSource.getTimeSec())
+        phases.apply(shader)
     }
 
     override fun renderTopology(targetFBO: FBO) {

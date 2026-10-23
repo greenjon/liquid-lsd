@@ -10,6 +10,7 @@
         "3D",
         "Fractal"
     ],
+    "LSD_PHASES": {"FlightPhase": ["FlightSpeed"]},
     "INPUTS": [
         { "NAME": "Scale", "LABEL": "Scale", "TYPE": "float", "DEFAULT": 0.25, "MIN": -1.0, "MAX": 1.0 },
         { "NAME": "FoldLimit", "LABEL": "Fold Limit", "TYPE": "float", "DEFAULT": 0.5, "MIN": 0.0, "MAX": 1.0 },
@@ -36,7 +37,6 @@
 #define FoldLimit_ (0.5 + FoldLimit)
 #define MinRadius_ (0.1 + MinRadius * 0.8)
 #define MaxRadius_ (0.5 + MaxRadius * 1.5)
-#define FlightSpeed_ (FlightSpeed * 2.0)
 #define Glow_ (Glow * 2.0)
 #define Brightness_ (Brightness * 2.0)
 #define Zoom_ (Zoom<0.5?pow(0.1,1.0-2.0*Zoom):pow(5.0,2.0*Zoom-1.0))
@@ -160,7 +160,7 @@ void main() {
 
     // Camera: looks at the origin from a distance that glides in and out but stays outside the set
     float fov = 1.2 / max(Zoom_, 0.05);
-    float phase = TIME * FlightSpeed_ * 0.2;
+    float phase = FlightPhase * 0.4;
     // Approximate half-extent of the set, so the framing follows Scale and Fold Limit.
     // Measured by ray-marching the DE: the positive family shrinks as Scale grows, while the
     // negative family stays about the same size (~2 * sqrt(3) * Fold) at every Scale, so its framing must not follow |s|.

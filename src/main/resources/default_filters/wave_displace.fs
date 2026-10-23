@@ -3,6 +3,7 @@
     "CREDIT": "Liquid LSD (MIT License)",
     "ISFVSN": "2.0",
     "CATEGORIES": ["Distortion", "Organic", "Psychedelic"],
+    "LSD_PHASES": {"SpeedPhase": ["speed"]},
     "INPUTS": [
         {
             "NAME": "inputImage",
@@ -78,7 +79,6 @@
 // Inputs are normalized to 0..1 / -1..1; these remap them to the shader's working units.
 #define amplitude_ (amplitude*0.2)
 #define frequency_ (0.5+frequency*49.5)
-#define speed_ (speed*5.0)
 
 
 // Liquid LSD Engine - Cleanroom ISF Shader
@@ -93,7 +93,7 @@ void main() {
     }
 
     float aspect = RENDERSIZE.x / max(RENDERSIZE.y, 1.0);
-    float timePhase = (TIME * speed_ * 3.14159) + phaseOffset;
+    float timePhase = (SpeedPhase * 5.0 * 3.14159) + phaseOffset;
     vec2 offset = vec2(0.0);
 
     if (rippleMode < 0.5) {
