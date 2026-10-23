@@ -201,7 +201,7 @@ object UITheme {
         get() = settings.libraryMode
         set(value) { settings = settings.copy(libraryMode = value) }
 
-    /** Id of the active page of the Performance Mode 4×4 Matrix (see [PerfPageStore]); an unknown id falls back to the first page. */
+    /** Id of the active page of the Perform view's 4×4 Matrix (see [PerfPageStore]); an unknown id falls back to the first page. */
     var performancePageId: String
         get() = settings.performancePageId
         set(value) {

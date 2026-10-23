@@ -259,14 +259,14 @@ class DeckControlPanel(
             }
         }
 
-        // Vertical bounds for the Alpha slider (starts at top, ends above the badge)
+        // Vertical bounds for the Level slider (starts at top, ends above the badge)
         val stripW = 4f
         val stripMinY = imgY + badgeMargin
         val rawStripMaxY = badgeMinY - 4f
         val stripH = (rawStripMaxY - stripMinY).coerceAtLeast(20f)
         val stripMaxY = stripMinY + stripH
 
-        // 3. Vertical Level / Alpha Fader (directly above the badge on the left)
+        // 3. Vertical Level Fader (directly above the badge on the left)
         val stripMinX = badgeMinX + (badgeW - stripW) * 0.5f
 
         val levelPath = when (label) {
@@ -308,7 +308,7 @@ class DeckControlPanel(
             showTooltip("$label $desc\nDrag or scroll to adjust. Middle-click to reset (100%).")
         }
 
-        // Draw Alpha Fader Track
+        // Draw Level Fader Track
         val faderBg = ImGui.colorConvertFloat4ToU32(0.06f, 0.06f, 0.08f, 0.85f)
         val faderBorder = if (isFaderHovered || isFaderActive) themeCol else ImGui.colorConvertFloat4ToU32(0.25f, 0.28f, 0.35f, 0.7f)
         dl.addRectFilled(stripMinX, stripMinY, stripMinX + stripW, stripMaxY, faderBg, 3f)
@@ -322,7 +322,7 @@ class DeckControlPanel(
             dl.addRectFilled(stripMinX + 1f, fillTop, stripMinX + stripW - 1f, stripMaxY - 1f, themeCol, 1f)
         }
 
-        // Draw Alpha Handle Indicator line
+        // Draw Level Handle Indicator line
         // The handle sits at the base value (what a drag sets); when modulation moves the live level away, the
         // fill shows the live level and the handle shows where the fader itself is.
         val baseY = stripMaxY - stripH * levelParam.baseValue.coerceIn(0f, 1f)

@@ -25,7 +25,7 @@ import llm.slop.liquidlsd.ui.browser.PresetListPanel
 import java.io.File
 
 /**
- * Performance Mode 4×4 Macro Knob Matrix (see docs/user_guide/macros_and_rack.md).
+ * The Perform view's 4×4 Macro Knob Matrix (see docs/user_guide/macros_and_rack.md).
  *
  * Displays up to 16 knobs arranged in rows of 4 columns, mapped to canonical [MacroEngine] banks by the active
  * Perform page (pinned SRC, FX, MST, Transitions and Clock rows, see [PerfRows.CATALOG]). While a pair is focused

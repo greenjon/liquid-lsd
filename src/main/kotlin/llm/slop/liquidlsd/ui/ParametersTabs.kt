@@ -41,7 +41,7 @@ object ParametersTabs {
     }
 
     /**
-     * Renders the vertical side rail for Performance Mode's Deep Edit:
+     * Renders the vertical side rail for the Edit view:
      * [MST], [OUT], [A], [B], [BG], [PV].
      */
     fun drawPerformanceDeepEditSideTabs(

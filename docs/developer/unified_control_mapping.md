@@ -194,8 +194,8 @@ Replace `deck_x` with `deck_a` or `deck_b` (or `deck_selected`):
 | `library.load_selected_a` | Load selected preset into Deck A | Trigger |
 | `library.load_selected_b` | Load selected preset into Deck B | Trigger |
 | `library.preview_selected` | Preview selected preset | Trigger |
-| `library.enqueue_end` | Append selected preset to Play Queue | Trigger |
-| `library.enqueue_next` | Insert selected preset as next item in Play Queue | Trigger |
+| `library.enqueue_end` | Append selected preset to the A/B Queue | Trigger |
+| `library.enqueue_next` | Insert selected preset as next item in the A/B Queue | Trigger |
 | `library.toggle_favorite` | Toggle favorite / star on selected preset | Toggle |
 | `library.rescan` | Rescan / refresh library directory on disk | Trigger |
 | `library.delete_selected` | Delete selected preset from disk | Trigger |

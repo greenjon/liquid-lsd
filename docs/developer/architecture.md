@@ -6,34 +6,42 @@ This section covers high-level system design, threading boundaries, concurrency 
 
 ## High-Level Video & Data Pipeline
 
+`ARCHITECTURE.md` at the repository root is the verified map of the code (frame loop, threads, ownership). This page keeps the overview.
+
 ```mermaid
 graph TD
-    subgraph Audio_Thread [Audio Processing Thread: JACK / Java Sound]
+    subgraph Audio_Thread [Audio Callback: JACK / Java Sound]
         AudioIn[Audio Capture Buffer] --> Biquad[Biquad IIR Filter Bank]
         Biquad --> RMS[RMS & Onset Detection]
-        RMS --> Flywheel[Beat Clock Flywheel]
-        Flywheel --> Anchor["@Volatile Beat Anchor (anchorBeats, anchorBpm, anchorTimeNs)"]
+        RMS --> Tracker[BeatTrackerEngine]
+        Tracker --> Anchor["@Volatile Beat Anchor (anchorBeats, anchorBpm, anchorTimeNs)"]
     end
 
     subgraph Thread_0 [Thread 0: OS Main / Render Loop]
+        Input[MIDI / controller input: UIManager.processInput] --> CVReg
         Anchor --> CVReg[CVRegistry.updateAll]
-        CVReg --> ModEval[ModulatableParameter Evaluation]
-        
-        subgraph Deck_Generators [Visual Source Generators & Ping-Pong FBOs]
-            DeckA[Deck A: VisualSource -> feedback.frag -> cleanFBO]
-            DeckB[Deck B: VisualSource -> feedback.frag -> cleanFBO]
-            DeckPV[Deck PV: Preview Deck - Audition Only]
+        CVReg --> Macro[MacroEngine.tick]
+        Macro --> ModEval[ModulatableParameter Evaluation]
+
+        subgraph Decks [Decks: ISF source -> FX chain of 3 slots]
+            DeckA[Deck A]
+            DeckB[Deck B]
+            DeckBG[Deck BG]
+            DeckPV[Deck PV: Preview, audition only]
         end
-        
+
         ModEval --> DeckA
         ModEval --> DeckB
+        ModEval --> DeckBG
         ModEval --> DeckPV
-        
-        DeckA --> Mixer[Mixer.kt -> mixer.frag]
+
+        DeckA --> Mixer["Mixer: ISF transition, mixer.frag, Master FX chain"]
         DeckB --> Mixer
-        Mixer --> Screen[Master Framebuffer -> GLFW Window Screen]
+        DeckBG --> Mixer
+        Mixer --> Screen[masterFBO -> window, outputs, recorder, broadcast]
+        Screen --> UI[UIManager.render: ImGui]
     end
-    
+
     style DeckPV stroke:#f66,stroke-dasharray: 5 5
 ```
 
@@ -41,13 +49,13 @@ graph TD
 
 ## Threading Boundaries
 
-Liquid LSD runs across two core thread contexts: **Thread 0 (OS Main / Render Thread)** and the **Audio Capture Thread**.
+Thread 0 (the OS main thread) owns GLFW, every OpenGL call, ImGui and the whole frame loop; the audio callback owns DSP. Several daemon threads (MIDI receiver, OSC receiver, preset I/O, library scanners, recorder, broadcast, controller feedback writers) never touch GL and hand their work to Thread 0 through queues. The full thread table is `ARCHITECTURE.md` §1.
 
 ### 1. Thread 0 (OS Main & Rendering Thread)
-- **Responsibilities**: GLFW event polling, OpenGL context management, framebuffer allocation, GLSL shader compilation/binding, frame rendering (Decks A/B/BG/PV, Mixer), and ImGui UI rendering.
+- **Responsibilities**: GLFW event polling, MIDI/OSC/controller dispatch, OpenGL context management, framebuffer allocation, GLSL shader compilation/binding, frame rendering (Decks A/B/BG/PV, Mixer), and ImGui UI rendering.
 - **Strict Constraint**: All LWJGL 3 GLFW window and OpenGL context manipulations must execute strictly on Thread 0.
 
-### 2. Audio Thread (JACK Callback / Java Sound Daemon Loop)
+### 2. Audio Thread (JACK Callback / Java Sound Capture Thread)
 - **Responsibilities**: Receives incoming audio sample buffers, executes parallel biquad IIR bandpass filtering (Bass, Mid, High), computes RMS amplitude, calculates spectral flux onset triggers, and updates beat clock state.
 - **Strict Real-Time Constraints**:
   - **Zero-Allocation Rule**: No heap allocations (`new`, capturing closures, collection instantiations) inside the audio callback loop.
@@ -61,9 +69,9 @@ Because the audio processing loop runs at sub-millisecond hardware intervals (~5
 
 ### Concurrency Primitives
 - **`@Volatile` Beat Anchor Fields**: Lock-free update passing `anchorBeats`, `anchorBpm`, and `anchorTimeNs` directly from the audio thread to `CVRegistry.updateBeatAnchor()` using primitive `@Volatile` fields. Zero object allocations occur on the audio callback thread. Thread 0 reads these volatile variables without locks and interpolates sub-millisecond phase accuracy via `CVRegistry.getSynchronizedTotalBeats()`.
-- **`CvHistoryBuffer`**: Pre-allocated ring buffer storing 200 CV samples for lock-free oscilloscope drawing in `PropertiesPanel`.
+- **`CvHistoryBuffer`**: Pre-allocated ring buffer storing 200 CV samples for lock-free oscilloscope drawing in the Modulation column (`PropertiesPanel`).
 - **`@Volatile` Flags**: Thread-safe single-scalar flags (`isBpmLocked`, `manualBpm`, `inputGain`) accessed across threads without lock overhead.
-- **Concurrent Queues**: `ConcurrentLinkedQueue` handles pending preset loading DTOs (`PresetManager`), incoming MIDI CC events (`MidiEngine`), and incoming OSC messages decoded on the dedicated UDP receiver thread (`OscEngine.inboundQueue`), all drained on Thread 0 once per frame.
+- **Concurrent Queues**: `ConcurrentLinkedQueue`s carry finished deck, FX and transition loads (`DeckOps`, `FxOps`, `TransitionOps`, drained at the start of the render phase), incoming MIDI events (`MidiEngine`, capped, drained by `UIManager.processInput` before the render phase), and incoming OSC messages decoded on the dedicated UDP receiver thread (`OscEngine.inboundQueue`), all drained on Thread 0 once per frame.
 
 ---
 

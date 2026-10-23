@@ -1487,34 +1487,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../modular_video_rack_proposal/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    RFC: Modular Video Rack Proposal
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../unified_control_mapping/" class="md-nav__link">
         
   
@@ -2060,7 +2032,7 @@
 <p>This document details the OpenGL graphics rendering pipeline, Framebuffer Object (FBO) ping-pong architecture, shader management, <code>SourceDocRegistry</code>, and visual source math in Liquid LSD.</p>
 <hr />
 <h2 id="per-deck-fx-chain-isf-transition-pipeline">Per-Deck FX Chain &amp; ISF Transition Pipeline</h2>
-<p>Following the 100% ISF Pipeline Migration (see <code>ARCHITECTURE.md</code>'s "100% ISF Pipeline &amp; Modular Effects Engine"), each Deck's render path is a single generator pass into <code>cleanFBO</code> followed by a chain of 3 modular ISF FX slots. There is no separate hardcoded 3D-projection pass and no Deck-level ping-pong feedback loop — both are now ordinary ISF filters a performer loads into any FX slot (<code>default_filters/3d_elevation.fs</code>, <code>default_filters/feedback.fs</code>). The legacy <code>tri_planar.*</code>/<code>tetra_kaleido.*</code> shaders and the old <code>Deck.fbGain</code>/<code>fbDecay</code>/etc.-driven <code>feedback.frag</code> ping-pong stage were retired from the render path in Phase 6 and their files have since been deleted from <code>src/main/resources/shaders/</code>. The matching deck-level <code>fb*</code> and 3D-view parameters (<code>view3DMode</code>, <code>viewRotateX/Y</code>, <code>viewPersp</code>, ...) are gone from <code>Deck</code> too: old presets may still carry them under <code>feedbackParameters</code> / <code>viewParameters</code>; <code>DeckPresetDto</code> no longer has a <code>feedbackParameters</code> field, so that key is dropped on load (unknown keys are ignored), and the dead <code>viewParameters</code> keys are never read or written. Only <code>viewZoom</code> and <code>viewRotateZ</code> remain.</p>
+<p>Following the 100% ISF Pipeline Migration (see <code>ARCHITECTURE.md</code> §3), each Deck's render path is a single generator pass into <code>cleanFBO</code> followed by a chain of 3 modular ISF FX slots. There is no separate hardcoded 3D-projection pass and no Deck-level ping-pong feedback loop — both are now ordinary ISF filters a performer loads into any FX slot (<code>default_filters/3d_elevation.fs</code>, <code>default_filters/feedback.fs</code>). The legacy <code>tri_planar.*</code>/<code>tetra_kaleido.*</code> shaders and the old <code>Deck.fbGain</code>/<code>fbDecay</code>/etc.-driven <code>feedback.frag</code> ping-pong stage were retired from the render path in Phase 6 and their files have since been deleted from <code>src/main/resources/shaders/</code>. The matching deck-level <code>fb*</code> and 3D-view parameters (<code>view3DMode</code>, <code>viewRotateX/Y</code>, <code>viewPersp</code>, ...) are gone from <code>Deck</code> too: old presets may still carry them under <code>feedbackParameters</code> / <code>viewParameters</code>; <code>DeckPresetDto</code> no longer has a <code>feedbackParameters</code> field, so that key is dropped on load (unknown keys are ignored), and the dead <code>viewParameters</code> keys are never read or written. Only <code>viewZoom</code> and <code>viewRotateZ</code> remain.</p>
 <p><strong>Source instances.</strong> <code>VisualSourceRegistry</code> holds the master of each source (it owns the shader). A deck holds one clone, made fresh from the registry on every pick or preset load (<code>VisualSourceRegistry.find</code>); setting <code>Deck.source</code> disposes the clone it replaces. A clone's <code>dispose()</code> only frees its own buffers (feedback FBOs, ISF pass targets, the flame engine, an external-video receiver), and all of them are re-created on the next render, so undo can put a disposed clone back.</p>
 <pre><code>[VisualSource (Mandala / DynamicVisualSource / ISFVisualSource / ExternalVideoSource)]
                  │
@@ -2115,7 +2087,7 @@
 <h2 id="fbo-count-gpu-memory-telemetry">FBO-Count &amp; GPU-Memory Telemetry</h2>
 <p><code>FBO.kt</code>'s companion object tracks every live <code>FBO</code> instance app-wide in a <code>ConcurrentHashMap&lt;framebufferId, estimatedByteSize&gt;</code>, populated on construction and cleared on <code>dispose()</code>. Byte size is format-aware (<code>GL_RGBA8</code> = 4 bytes/px, <code>GL_RGBA16F</code> = 8, <code>GL_RGBA32F</code> = 16). This is exposed as <code>PerformanceStats.fboCount</code> / <code>PerformanceStats.fboMemoryMB</code> and rendered in the menu bar telemetry HUD as <code>FBO: N (XMB)</code> (<code>MenuBar.kt</code>), covering all live FBOs in the core render pipeline (<code>cleanFBO</code>, <code>masterFBO</code>, etc.) app-wide. This instrumentation was added deliberately <em>before</em> any pooled FBO allocator, so a real GPU-memory bottleneck would show up in this readout first rather than being addressed speculatively.</p>
 <blockquote>
-<p>The 19" Modular Video Rack chassis UI (<code>rack/</code>, <code>rack/ui/</code>), including its <code>RackMicroMonitor</code> confidence-preview downscaling and <code>RackPipeline</code> ping-pong stage buffers, was removed when the workspace was replaced by Performance Mode (<code>PerformanceMatrixPanel.kt</code>); see <code>docs/developer/modular_video_rack_proposal.md</code> for retired design history.</p>
+<p>The 19" Modular Video Rack chassis UI (<code>rack/</code>, <code>rack/ui/</code>), including its <code>RackMicroMonitor</code> confidence-preview downscaling and <code>RackPipeline</code> ping-pong stage buffers, was removed when the workspace was replaced by the Perform view (<code>PerformanceMatrixPanel.kt</code>); see <code>docs/archive/modular_video_rack_proposal.md</code> for retired design history.</p>
 </blockquote>
 <hr />
 <h2 id="source-documentation-registry-sourcedocregistrykt">Source Documentation Registry (<code>SourceDocRegistry.kt</code>)</h2>

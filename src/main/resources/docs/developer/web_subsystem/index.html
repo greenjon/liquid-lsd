@@ -1299,34 +1299,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../modular_video_rack_proposal/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    RFC: Modular Video Rack Proposal
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../unified_control_mapping/" class="md-nav__link">
         
   
@@ -1809,6 +1781,8 @@ createMediaElementSource() ──► GainNode (Rotary Volume Dial: V²) ──�
 - <strong>No signal (<code>web/dsp.js</code>, <code>shaders/crt_post.frag</code>)</strong>: with the TV on, a stream that failed, stalled or stayed under 0.004 amp for 4 s sets <code>cvState.noSignal</code>; the CRT pass fades to snow (<code>uNoSignal</code>), the OSD says NO SIGNAL, and the stream is reloaded with a fresh URL every 10 s until it plays. Not during a live broadcast. <code>?nostatic</code> turns it off for the headless checks, which have no audio.
 - <strong>GPU tier (<code>web/renderer.js</code>, <code>settings.json</code> <code>heavySources</code> / <code>gpuProbe</code>)</strong>: at the first power-on the renderer draws <code>gpuProbe.source</code> (<code>pseudo_kleinian</code>, the heaviest) at 960x540 with <code>gl.finish()</code> after each frame: two untimed warm-up frames, then up to four timed ones, stopping after one if it is over twice <code>maxMs</code>. Only if the average is at most <code>maxMs</code> (12 ms) does <code>autopilot.setHeavyAllowed(true)</code> let presets of the <code>heavySources</code> into the rotation (playlist picks, CH up, breakdown and drop picks); otherwise they are skipped. Until the probe has run, heavy sources are off. <code>?heavy=1</code> / <code>?heavy=0</code> override it; <code>window.LSD.gpu</code> shows <code>{state, ms, heavy}</code>. The list comes from <code>node web/checks/gpu_bench.mjs</code> on an Intel UHD Tiger Lake GT1 (sources over ~15 ms at 768x432, plus Lenia and Reaction-Diffusion, whose fixed-size grids cost ~17-19 ms at any resolution); the probe measured 52 ms there.
 - <strong>Render resolution and prewarm (<code>web/renderer.js</code>)</strong>: decks and the mixer render at a fraction of the canvas, capped at 1920x1080 worth of pixels, and the CRT pass scales up. The fraction steps through 1.0 / 0.85 / 0.7 / 0.55 / 0.4: down after 2 s of frames averaging over ~22 ms, up after 15 s under ~17.5 ms, at most every 3 s; a step up that has to be undone becomes the ceiling, so it never oscillates (each step reallocates the targets, which resets feedback). <code>window.LSD.renderSize()</code> reports <code>[w, h, scale]</code>. <code>autopilot.setPrewarm</code> gets a function that starts loading and compiling a queued look's source, FX and transition (<code>Library.get</code>), called when the next look is built during the hold.
+- <strong>Wake lock (<code>web/ui.js</code>)</strong>: a <code>screen</code> wake lock is held while powered on, taken again on <code>visibilitychange</code> (browsers drop it when the page is hidden) and released at power off; <code>viewerState.awake</code> reports it.
+- <strong>Media Session (<code>web/ui.js</code>)</strong>: metadata = Icecast title, artist Spaz Radio, album <code>Liquid LSD · &lt;look&gt;</code> (or LIVE), icons as artwork; updated on power, look and title changes. play/pause/stop press the power switch, nexttrack/previoustrack are CH up/down (locked while live like the buttons).
 - <strong>Viewer controls (<code>web/ui.js</code>)</strong>: CH up/down, FX, HOLD, TIME (bars per look) and REACT (a factor on every <code>audio_*</code> signal in <code>renderer.js</code>, so gates and depths respond as if the music were louder or quieter) call <code>advanceForeground</code> / <code>previousForeground</code> / <code>nextFxChain</code> / <code>setHold</code> / <code>setHoldBars</code> in <code>autopilot.js</code>. Previous steps back through a history of the looks that were on air (deck, chain and transition kept). The OSD listens for <code>lsd-now-showing</code> (fired when a crossfade starts) and <code>lsd-broadcast-status</code> (fired when the relay goes live or offline; the controls lock while live). Now playing comes from the Icecast <code>status-json.xsl</code> every 30 s. <code>node web/checks/ui_check.mjs</code> drives every control in the real page in headless Firefox, including the live lock.
 - <strong>Headless checks (<code>web/checks/</code>)</strong>: <code>node web/checks/shader_check.mjs</code> compiles every catalog shader in headless Firefox; <code>node web/checks/render_check.mjs [outDir]</code> drives the real app through every source, filter, transition and bundled preset, writes PNGs, and fails on blank frames, console errors or GL errors. Both need only <code>firefox</code> and <code>node</code>; software GL is fine.
 - <strong>Beat and audio parity (<code>web/beatclock.js</code>, <code>web/dsp.js</code>)</strong>: live mode runs <code>BeatFlywheel</code> on the wire clock (<code>getSynchronizedTotalBeats</code> semantics plus blending of each anchor against network jitter); standalone runs <code>BeatClock</code> on the stream's tracked beat (section 3). <code>dsp.js</code> publishes <code>audio_*</code> and <code>audio_flux_*</code> with the desktop's scaling (<code>AudioEngine</code>: RMS / 0.25, band flux / 0.05, amp flux = (2 bass + 0.8 mid + 0.3 high flux) / 0.1). Beat tracking only runs from the radio stream, so it only matters standalone.

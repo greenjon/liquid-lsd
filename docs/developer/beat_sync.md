@@ -17,16 +17,17 @@ Ableton Link Session Orchestration: LinkSyncManager & AbletonLinkEngine
     └──► AbletonLinkEngine.isEnabled == false:
             └─► Network Link disabled; local clock sources operate independently
 
-Clock Source Selection: ClockSource (AUDIO_TRACKER | ABLETON_LINK | MANUAL_TAP)
-    │
-    ├──► ABLETON_LINK: AbletonLinkEngine (Native JNI / Carabiner TCP)
-    │       └─► CVRegistry.updateBeatAnchor(linkBeat, linkBpm, nanoTime)
+Ableton Link on (a separate on/off, not a clock source): AbletonLinkEngine (Native JNI / Carabiner TCP)
+    └─► updateClockAnchor() on Render Thread 0 (CVRegistry.updateAll) → CVRegistry.updateBeatAnchor(linkBeat, linkBpm, nanoTime)
+
+Clock Source Selection: ClockSource (MANUAL | AUDIO_TRACKER)
+    │   (saved values "MANUAL_TAP" and "ABLETON_LINK" load as MANUAL)
     │
     ├──► AUDIO_TRACKER: JACK / Java Sound Callback (Audio Engine Thread)
     │       ├─► BeatTrackerEngine.processMultiBand() / processBlock()
     │       └─► CVRegistry.updateBeatAnchor(totalBeats, bpm, nanoTime)
     │
-    └──► MANUAL_TAP: Internal Manual Flywheel & Tap Tempo Controller
+    └──► MANUAL: Internal Manual Flywheel & Tap Tempo Controller
             └─► CVRegistry.alignBeatPhase(alignedBeats, manualBpm, nanoTime)
 ```
               │  (@Volatile primitive fields update: zero heap allocation)

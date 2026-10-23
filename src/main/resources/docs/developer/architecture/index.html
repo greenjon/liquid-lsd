@@ -782,10 +782,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-audio-thread-jack-callback-java-sound-daemon-loop" class="md-nav__link">
+  <a href="#2-audio-thread-jack-callback-java-sound-capture-thread" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Audio Thread (JACK Callback / Java Sound Daemon Loop)
+        2. Audio Thread (JACK Callback / Java Sound Capture Thread)
       
     </span>
   </a>
@@ -1244,34 +1244,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../modular_video_rack_proposal/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    RFC: Modular Video Rack Proposal
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../unified_control_mapping/" class="md-nav__link">
         
   
@@ -1471,10 +1443,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#2-audio-thread-jack-callback-java-sound-daemon-loop" class="md-nav__link">
+  <a href="#2-audio-thread-jack-callback-java-sound-capture-thread" class="md-nav__link">
     <span class="md-ellipsis">
       
-        2. Audio Thread (JACK Callback / Java Sound Daemon Loop)
+        2. Audio Thread (JACK Callback / Java Sound Capture Thread)
       
     </span>
   </a>
@@ -1574,44 +1546,51 @@
 <p>This section covers high-level system design, threading boundaries, concurrency models, and notes persistence in <strong>Liquid LSD</strong>.</p>
 <hr />
 <h2 id="high-level-video-data-pipeline">High-Level Video &amp; Data Pipeline</h2>
+<p><code>ARCHITECTURE.md</code> at the repository root is the verified map of the code (frame loop, threads, ownership). This page keeps the overview.</p>
 <pre><code class="language-mermaid">graph TD
-    subgraph Audio_Thread [Audio Processing Thread: JACK / Java Sound]
+    subgraph Audio_Thread [Audio Callback: JACK / Java Sound]
         AudioIn[Audio Capture Buffer] --&gt; Biquad[Biquad IIR Filter Bank]
         Biquad --&gt; RMS[RMS &amp; Onset Detection]
-        RMS --&gt; Flywheel[Beat Clock Flywheel]
-        Flywheel --&gt; Anchor[&quot;@Volatile Beat Anchor (anchorBeats, anchorBpm, anchorTimeNs)&quot;]
+        RMS --&gt; Tracker[BeatTrackerEngine]
+        Tracker --&gt; Anchor[&quot;@Volatile Beat Anchor (anchorBeats, anchorBpm, anchorTimeNs)&quot;]
     end
 
     subgraph Thread_0 [Thread 0: OS Main / Render Loop]
+        Input[MIDI / controller input: UIManager.processInput] --&gt; CVReg
         Anchor --&gt; CVReg[CVRegistry.updateAll]
-        CVReg --&gt; ModEval[ModulatableParameter Evaluation]
+        CVReg --&gt; Macro[MacroEngine.tick]
+        Macro --&gt; ModEval[ModulatableParameter Evaluation]
 
-        subgraph Deck_Generators [Visual Source Generators &amp; Ping-Pong FBOs]
-            DeckA[Deck A: VisualSource -&gt; feedback.frag -&gt; cleanFBO]
-            DeckB[Deck B: VisualSource -&gt; feedback.frag -&gt; cleanFBO]
-            DeckPV[Deck PV: Preview Deck - Audition Only]
+        subgraph Decks [Decks: ISF source -&gt; FX chain of 3 slots]
+            DeckA[Deck A]
+            DeckB[Deck B]
+            DeckBG[Deck BG]
+            DeckPV[Deck PV: Preview, audition only]
         end
 
         ModEval --&gt; DeckA
         ModEval --&gt; DeckB
+        ModEval --&gt; DeckBG
         ModEval --&gt; DeckPV
 
-        DeckA --&gt; Mixer[Mixer.kt -&gt; mixer.frag]
+        DeckA --&gt; Mixer[&quot;Mixer: ISF transition, mixer.frag, Master FX chain&quot;]
         DeckB --&gt; Mixer
-        Mixer --&gt; Screen[Master Framebuffer -&gt; GLFW Window Screen]
+        DeckBG --&gt; Mixer
+        Mixer --&gt; Screen[masterFBO -&gt; window, outputs, recorder, broadcast]
+        Screen --&gt; UI[UIManager.render: ImGui]
     end
 
     style DeckPV stroke:#f66,stroke-dasharray: 5 5
 </code></pre>
 <hr />
 <h2 id="threading-boundaries">Threading Boundaries</h2>
-<p>Liquid LSD runs across two core thread contexts: <strong>Thread 0 (OS Main / Render Thread)</strong> and the <strong>Audio Capture Thread</strong>.</p>
+<p>Thread 0 (the OS main thread) owns GLFW, every OpenGL call, ImGui and the whole frame loop; the audio callback owns DSP. Several daemon threads (MIDI receiver, OSC receiver, preset I/O, library scanners, recorder, broadcast, controller feedback writers) never touch GL and hand their work to Thread 0 through queues. The full thread table is <code>ARCHITECTURE.md</code> §1.</p>
 <h3 id="1-thread-0-os-main-rendering-thread">1. Thread 0 (OS Main &amp; Rendering Thread)</h3>
 <ul>
-<li><strong>Responsibilities</strong>: GLFW event polling, OpenGL context management, framebuffer allocation, GLSL shader compilation/binding, frame rendering (Decks A/B/BG/PV, Mixer), and ImGui UI rendering.</li>
+<li><strong>Responsibilities</strong>: GLFW event polling, MIDI/OSC/controller dispatch, OpenGL context management, framebuffer allocation, GLSL shader compilation/binding, frame rendering (Decks A/B/BG/PV, Mixer), and ImGui UI rendering.</li>
 <li><strong>Strict Constraint</strong>: All LWJGL 3 GLFW window and OpenGL context manipulations must execute strictly on Thread 0.</li>
 </ul>
-<h3 id="2-audio-thread-jack-callback-java-sound-daemon-loop">2. Audio Thread (JACK Callback / Java Sound Daemon Loop)</h3>
+<h3 id="2-audio-thread-jack-callback-java-sound-capture-thread">2. Audio Thread (JACK Callback / Java Sound Capture Thread)</h3>
 <ul>
 <li><strong>Responsibilities</strong>: Receives incoming audio sample buffers, executes parallel biquad IIR bandpass filtering (Bass, Mid, High), computes RMS amplitude, calculates spectral flux onset triggers, and updates beat clock state.</li>
 <li><strong>Strict Real-Time Constraints</strong>:</li>
@@ -1624,9 +1603,9 @@
 <h3 id="concurrency-primitives">Concurrency Primitives</h3>
 <ul>
 <li><strong><code>@Volatile</code> Beat Anchor Fields</strong>: Lock-free update passing <code>anchorBeats</code>, <code>anchorBpm</code>, and <code>anchorTimeNs</code> directly from the audio thread to <code>CVRegistry.updateBeatAnchor()</code> using primitive <code>@Volatile</code> fields. Zero object allocations occur on the audio callback thread. Thread 0 reads these volatile variables without locks and interpolates sub-millisecond phase accuracy via <code>CVRegistry.getSynchronizedTotalBeats()</code>.</li>
-<li><strong><code>CvHistoryBuffer</code></strong>: Pre-allocated ring buffer storing 200 CV samples for lock-free oscilloscope drawing in <code>PropertiesPanel</code>.</li>
+<li><strong><code>CvHistoryBuffer</code></strong>: Pre-allocated ring buffer storing 200 CV samples for lock-free oscilloscope drawing in the Modulation column (<code>PropertiesPanel</code>).</li>
 <li><strong><code>@Volatile</code> Flags</strong>: Thread-safe single-scalar flags (<code>isBpmLocked</code>, <code>manualBpm</code>, <code>inputGain</code>) accessed across threads without lock overhead.</li>
-<li><strong>Concurrent Queues</strong>: <code>ConcurrentLinkedQueue</code> handles pending preset loading DTOs (<code>PresetManager</code>), incoming MIDI CC events (<code>MidiEngine</code>), and incoming OSC messages decoded on the dedicated UDP receiver thread (<code>OscEngine.inboundQueue</code>), all drained on Thread 0 once per frame.</li>
+<li><strong>Concurrent Queues</strong>: <code>ConcurrentLinkedQueue</code>s carry finished deck, FX and transition loads (<code>DeckOps</code>, <code>FxOps</code>, <code>TransitionOps</code>, drained at the start of the render phase), incoming MIDI events (<code>MidiEngine</code>, capped, drained by <code>UIManager.processInput</code> before the render phase), and incoming OSC messages decoded on the dedicated UDP receiver thread (<code>OscEngine.inboundQueue</code>), all drained on Thread 0 once per frame.</li>
 </ul>
 <hr />
 <h2 id="notes-system-persistence-architecture">Notes System Persistence Architecture</h2>

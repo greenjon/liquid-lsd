@@ -19,7 +19,7 @@ class FBO(
 ) {
     companion object {
         // framebufferId -> estimated color-attachment byte size, for the telemetry HUD's
-        // FBO-count/GPU-memory readout (see Question 4 in modular_video_rack_proposal.md --
+        // FBO-count/GPU-memory readout (see Question 4 in docs/archive/modular_video_rack_proposal.md --
         // "instrument first" before considering a pooled allocator).
         private val liveInstances = java.util.concurrent.ConcurrentHashMap<Int, Long>()
 

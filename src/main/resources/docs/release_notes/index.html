@@ -1078,34 +1078,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../developer/modular_video_rack_proposal/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    RFC: Modular Video Rack Proposal
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../developer/unified_control_mapping/" class="md-nav__link">
         
   
@@ -1290,6 +1262,17 @@
   
     <nav class="md-nav" aria-label="[Unreleased]">
       <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#web-tv-at-home-webuijs-webindexhtml-webtvcss-webautopilotjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: At Home (web/ui.js, web/index.html, web/tv.css, web/autopilot.js)
+      
+    </span>
+  </a>
+  
+</li>
         
           <li class="md-nav__item">
   <a href="#snappier-midi-and-esc-cancels-the-unsaved-deck-prompt-uiuimanagerkt-mainkt-uinavigationsurfacekt" class="md-nav__link">
@@ -6699,6 +6682,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#web-tv-at-home-webuijs-webindexhtml-webtvcss-webautopilotjs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Web TV: At Home (web/ui.js, web/index.html, web/tv.css, web/autopilot.js)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#snappier-midi-and-esc-cancels-the-unsaved-deck-prompt-uiuimanagerkt-mainkt-uinavigationsurfacekt" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12081,6 +12075,11 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="web-tv-at-home-webuijs-webindexhtml-webtvcss-webautopilotjs">Web TV: At Home (<code>web/ui.js</code>, <code>web/index.html</code>, <code>web/tv.css</code>, <code>web/autopilot.js</code>)</h3>
+<ul>
+<li><strong>The screen stays on while the TV is on.</strong> Laptops and phones no longer dim and lock in the middle of a show (where the browser supports it).</li>
+<li><strong>Phone lock screen and media keys.</strong> The lock screen (and your keyboard's media keys) show the show playing on Spaz Radio and the look on air; play/pause turns the TV on and off, next and previous change the look.</li>
+</ul>
 <h3 id="snappier-midi-and-esc-cancels-the-unsaved-deck-prompt-uiuimanagerkt-mainkt-uinavigationsurfacekt">Snappier MIDI, and Esc Cancels the Unsaved-Deck Prompt (<code>ui/UIManager.kt</code>, <code>Main.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
 <ul>
 <li><strong>Controller knobs and buttons now take effect in the same frame.</strong> Incoming MIDI used to be handled after the frame was drawn, so every turn reached the screen one frame late. It is now applied first. MIDI is also handled while the window is minimised, instead of piling up and replaying when you restore it.</li>

@@ -726,10 +726,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#the-layout-tabs" class="md-nav__link">
+  <a href="#the-perform-pages" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The layout tabs
+        The Perform pages
       
     </span>
   </a>
@@ -1421,34 +1421,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../developer/modular_video_rack_proposal/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    RFC: Modular Video Rack Proposal
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../developer/unified_control_mapping/" class="md-nav__link">
         
   
@@ -1765,10 +1737,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#the-layout-tabs" class="md-nav__link">
+  <a href="#the-perform-pages" class="md-nav__link">
     <span class="md-ellipsis">
       
-        The layout tabs
+        The Perform pages
       
     </span>
   </a>
@@ -2135,13 +2107,13 @@ knob already drives it.</p>
 rows across 4 columns, color-coded by deck — on the left, with the Mixer column and
 Library dock alongside. (Earlier versions also had a "Classic" Parameters/Properties view,
 toggled with <code>F4</code>; everything it did now lives in Edit, below.)</p>
-<p>The active tab is remembered between sessions in application preferences.</p>
-<h3 id="the-layout-tabs">The layout tabs</h3>
-<p>Each tab shows up to 4 rows of 4 knobs, mapped to different banks:</p>
+<p>The active page is remembered between sessions in application preferences.</p>
+<h3 id="the-perform-pages">The Perform pages</h3>
+<p>Each page shows 4 rows of 4 knobs, mapped to different banks:</p>
 <table>
 <thead>
 <tr>
-<th style="text-align: left;">Tab</th>
+<th style="text-align: left;">Page</th>
 <th style="text-align: left;">Row 1</th>
 <th style="text-align: left;">Row 2</th>
 <th style="text-align: left;">Row 3</th>
@@ -2180,7 +2152,7 @@ Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).</p
 <li><strong>Master Rows Are Split Too</strong>: The <strong>Master MST row</strong> (<code>[ MST ]</code> pill) has the deck-levels badge, with the four knobs on the deck levels and the master level. The <strong>Master FX row</strong> (<code>[ FX ]</code> pill) has the Master FX chain header (the chain name, then <code>[⋮] [Save] [1] [2] [3]</code>) and its <code>[ FX ON ]</code> button, with the knobs on the Master FX Super Knob + 3 Metaknobs. The crossfader sits on the Transitions row.</li>
 <li>The Transitions row has the transition picker on line 1 (click it to pick from the Library below — see below; the Edit gear sits at its end), and line 2 is laid out like an FX row: <code>[⋮]</code> menu, <code>[Save]</code> (saves the transition as a preset), queue <code>[◀] [▶]</code>, then the crossfader cells below. Its four knobs are fixed: <strong>knob 1 is the crossfader</strong> (it follows auto-fades and the slider, and turning it takes over like the slider does), and <strong>knobs 2-4 are the active transition's first three sliders</strong>, relabelled whenever you change transition. Transitions with fewer than three sliders leave the spare knobs blank. Line 2 ends with <code>A</code> / <code>B</code> snap buttons, <code>AUTO</code> and the fade time; there is no crossfader slider on the row (use knob 1 or the Mixer panel's slider). These knobs cannot be re-learned; Dry/Wet stays in the Edit bay.</li>
 </ul>
-<p>Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) and starts with a title badge spanning both control lines: a large <strong>A</strong>, <strong>B</strong>, <strong>BG</strong> or <strong>PV</strong> on deck rows (the <code>[SRC]</code>/<code>[FX]</code> pills beside it show which the knobs control), and <strong>MASTER</strong>, <strong>TRANS</strong> and <strong>CLOCK</strong> on the MIXER tab. No row has a header bar over its knobs, so MIXER-tab knobs are the same size as deck knobs.</p>
+<p>Each row is color-coded to its deck or target (orange for Deck A, blue for Deck B, green for Deck BG, plum for Deck PV, cyan for Transitions, light grey for Master) and starts with a title badge spanning both control lines: a large <strong>A</strong>, <strong>B</strong>, <strong>BG</strong> or <strong>PV</strong> on deck rows (its caption strip, <strong>SRC</strong> or <strong>FX</strong>, shows which half the knobs control), a large <strong>M</strong> captioned <strong>TRAN</strong>, <strong>FX</strong> or <strong>MST</strong> on the MIXER page's Transitions and Master rows, and <strong>CLK</strong> on the Clock row. No row has a header bar over its knobs, so MIXER-page knobs are the same size as deck knobs.</p>
 <h3 id="performance-controls-side-wing-layout">Performance Controls &amp; Side-Wing Layout</h3>
 <p>To maximize vertical space in the matrix and keep the knobs comfortably clustered together:
 - <strong>Row Titles &amp; Side-Wing Controls</strong>: Row group titles (e.g. <code>DECK A</code>, <code>DECK A (FX)</code>) sit at the top-left of the row, level with the top of the knobs. The left- and right-wing controls sit below the title, with their bottom edge lined up with the bottom of the knobs, so short rows never push the controls up into the title. Every wing control (buttons, badges, generator/preset badge) is the same height.

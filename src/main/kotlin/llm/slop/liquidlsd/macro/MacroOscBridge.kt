@@ -8,7 +8,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  *
  * - Inbound address routing, namespaced per canonical deck/mixer bank
  *   ([MacroEngine.CANONICAL_BANK_IDS], e.g. "deckA"):
- *     `/macro/<bankId>/knob/1`..`/macro/<bankId>/knob/8` (Float [0.0..1.0])
+ *     `/macro/<bankId>/knob/1`..`/macro/<bankId>/knob/4` (Float [0.0..1.0]; the Global bank has no knobs)
  * - Outbound feedback dispatch: keeps external surfaces (e.g. TouchOSC on tablets)
  *   in bidirectional sync with knob values.
  */
@@ -45,7 +45,7 @@ object MacroOscBridge {
     /**
      * Handles an incoming OSC message.
      *
-     * @param address e.g. "/macro/deckA/knob/1" or "/macro/trans/switch/2"
+     * @param address e.g. "/macro/deckA/knob/1" (only `knob` addresses are handled)
      * @param value normalized float argument
      * @return true if the address was matched and handled
      */
@@ -70,6 +70,6 @@ object MacroOscBridge {
         return false
     }
 
-    /** Returns the canonical OSC address for a knob index (0..7) within [bankId]. */
+    /** Returns the canonical OSC address for a knob index (0..3) within [bankId]. */
     fun getKnobAddress(bankId: String, index: Int): String = "/macro/$bankId/knob/${index + 1}"
 }

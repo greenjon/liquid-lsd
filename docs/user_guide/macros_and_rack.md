@@ -232,13 +232,13 @@ rows across 4 columns, color-coded by deck — on the left, with the Mixer colum
 Library dock alongside. (Earlier versions also had a "Classic" Parameters/Properties view,
 toggled with `F4`; everything it did now lives in Edit, below.)
 
-The active tab is remembered between sessions in application preferences.
+The active page is remembered between sessions in application preferences.
 
-### The layout tabs
+### The Perform pages
 
-Each tab shows up to 4 rows of 4 knobs, mapped to different banks:
+Each page shows 4 rows of 4 knobs, mapped to different banks:
 
-| Tab | Row 1 | Row 2 | Row 3 | Row 4 |
+| Page | Row 1 | Row 2 | Row 3 | Row 4 |
 |:---|:---|:---|:---|:---|
 | **A/B** | Deck A source | Deck A FX | Deck B source | Deck B FX |
 | **BG/PV** | Deck BG source | Deck BG FX | Deck PV source | Deck PV FX |
@@ -252,7 +252,7 @@ Opening a deck in Edit shows the row for the Edit tab you are on (SRC or FX).
 - **Master Rows Are Split Too**: The **Master MST row** (`[ MST ]` pill) has the deck-levels badge, with the four knobs on the deck levels and the master level. The **Master FX row** (`[ FX ]` pill) has the Master FX chain header (the chain name, then `[⋮] [Save] [1] [2] [3]`) and its `[ FX ON ]` button, with the knobs on the Master FX Super Knob + 3 Metaknobs. The crossfader sits on the Transitions row.
 - The Transitions row has the transition picker on line 1 (click it to pick from the Library below — see below; the Edit gear sits at its end), and line 2 is laid out like an FX row: `[⋮]` menu, `[Save]` (saves the transition as a preset), queue `[◀] [▶]`, then the crossfader cells below. Its four knobs are fixed: **knob 1 is the crossfader** (it follows auto-fades and the slider, and turning it takes over like the slider does), and **knobs 2-4 are the active transition's first three sliders**, relabelled whenever you change transition. Transitions with fewer than three sliders leave the spare knobs blank. Line 2 ends with `A` / `B` snap buttons, `AUTO` and the fade time; there is no crossfader slider on the row (use knob 1 or the Mixer panel's slider). These knobs cannot be re-learned; Dry/Wet stays in the Edit bay.
 
-Each row is color-coded to its deck or target (blue for Deck A, orange for Deck B, amber for Deck BG, mint for Deck PV, violet for Transitions, crimson for Master, teal for FX) and starts with a title badge spanning both control lines: a large **A**, **B**, **BG** or **PV** on deck rows (the `[SRC]`/`[FX]` pills beside it show which the knobs control), and **MASTER**, **TRANS** and **CLOCK** on the MIXER tab. No row has a header bar over its knobs, so MIXER-tab knobs are the same size as deck knobs.
+Each row is color-coded to its deck or target (orange for Deck A, blue for Deck B, green for Deck BG, plum for Deck PV, cyan for Transitions, light grey for Master) and starts with a title badge spanning both control lines: a large **A**, **B**, **BG** or **PV** on deck rows (its caption strip, **SRC** or **FX**, shows which half the knobs control), a large **M** captioned **TRAN**, **FX** or **MST** on the MIXER page's Transitions and Master rows, and **CLK** on the Clock row. No row has a header bar over its knobs, so MIXER-page knobs are the same size as deck knobs.
 
 ### Performance Controls & Side-Wing Layout
 

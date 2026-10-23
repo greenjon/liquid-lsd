@@ -63,7 +63,7 @@ data class OscMappingProfile(
 
 /**
  * Maps inbound OSC addresses to application parameters (min/max clamp, invert, slew,
- * soft takeover), forwards `/macro/knob/N` and `/macro/switch/N` to [MacroOscBridge],
+ * soft takeover), forwards `/macro/<bankId>/knob/N` to [MacroOscBridge],
  * unpacks multi-argument vector messages (TouchOSC XY pads) into individually
  * addressable components, and persists mapping profiles as JSON under `library/osc/`.
  */

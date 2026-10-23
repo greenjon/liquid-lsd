@@ -277,7 +277,7 @@ Build it in stages. Stage 1 covers the common case, an edit to the GLSL body onl
 >
 > **Reference & Design Specs**:
 > - [`docs/user_guide/macros_and_rack.md`](docs/user_guide/macros_and_rack.md) (Macro Controls & Performance Mode User Guide)
-> - [`docs/developer/modular_video_rack_proposal.md`](docs/developer/modular_video_rack_proposal.md) (Modular Video Rack Architecture — retired design doc)
+> - [`docs/archive/modular_video_rack_proposal.md`](docs/archive/modular_video_rack_proposal.md) (Modular Video Rack Architecture — retired design doc)
 > **Status**: Core Complete (Phases 1-9 shipped) — all 6 rack-doc Open Questions decided and implemented 2026-09-16; rack chassis (Phases 5, 7, 8, 9) later retired and removed
 > **Inspiration**: Hardware 19" studio racks, Propellerhead Reason, Eurorack, Ableton Device Racks
 

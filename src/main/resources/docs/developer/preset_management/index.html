@@ -1440,10 +1440,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fx-playlists-lsdfxplay-fxplaylisteditorpanelkt" class="md-nav__link">
+  <a href="#fx-playlists-lsdfxplay" class="md-nav__link">
     <span class="md-ellipsis">
       
-        FX Playlists (.lsdfxplay) &amp; FXPlaylistEditorPanel.kt
+        FX Playlists (.lsdfxplay)
       
     </span>
   </a>
@@ -1540,34 +1540,6 @@
     
   
     Build for ARM64 Linux
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../modular_video_rack_proposal/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    RFC: Modular Video Rack Proposal
   
 
     
@@ -2137,10 +2109,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fx-playlists-lsdfxplay-fxplaylisteditorpanelkt" class="md-nav__link">
+  <a href="#fx-playlists-lsdfxplay" class="md-nav__link">
     <span class="md-ellipsis">
       
-        FX Playlists (.lsdfxplay) &amp; FXPlaylistEditorPanel.kt
+        FX Playlists (.lsdfxplay)
       
     </span>
   </a>
@@ -2296,7 +2268,7 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <li><strong>Transition States</strong>: <code>IDLE</code> -&gt; <code>FADING_OUT</code> -&gt; <code>FADING_IN</code> -&gt; <code>IDLE</code>.</li>
 <li><strong>Modulation &amp; MIDI Triggers</strong>: Symmetrically modulated by <code>Mixer/bgQueuePrev</code> and <code>Mixer/bgQueueNext</code>, along with dedicated MIDI CC bindings (<code>Global/bgQueuePrev</code>, <code>Global/bgQueueNext</code>).</li>
 <li><strong>Dirty Deck Guard</strong>: Observes <code>UITheme.autoVjDirtyBehavior</code> (<code>SKIP</code>, <code>AUTO_SAVE</code>, <code>AUTO_DISCARD</code>) when transitioning or advancing on Deck BG; loads go through <code>DeckOps</code> with <code>LoadOrigin.QUEUE</code>.</li>
-<li><strong>Double-Click Playback</strong>: Double-clicking any track in BG Queue triggers immediate playback with dip-to-black (<code>playIndex(index, mixer, withDipToBlack = true)</code>), while double-clicking in Play Queue triggers standby deck load and auto-fade crossfading.</li>
+<li><strong>Double-Click Playback</strong>: Double-clicking any track in BG Queue triggers immediate playback with dip-to-black (<code>playIndex(index, mixer, withDipToBlack = true)</code>), while double-clicking in the A/B Queue triggers standby deck load and auto-fade crossfading.</li>
 </ul>
 <h2 id="5-transition-queue-manager-transitionqueuemanagerkt">5. Transition Queue Manager (<code>TransitionQueueManager.kt</code>)</h2>
 <p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/TransitionQueueManager.kt"><code>TransitionQueueManager.kt</code></a> manages the volatile Transition Queue engine (Phase 2).</p>
@@ -2336,7 +2308,7 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 </ul>
 <hr />
 <h2 id="8-canonical-per-deck-macro-banks-macroengine-macrobankserializer-sessionserializer">8. Canonical Per-Deck Macro Banks (<code>MacroEngine</code>, <code>MacroBankSerializer</code>, <code>SessionSerializer</code>)</h2>
-<p>The 19" Modular Video Rack chassis UI (<code>rack/</code>, <code>rack/ui/</code> — faceplates, rear patch-cable view, per-unit dynamic macro banks) documented in earlier revisions of this file has been <strong>removed entirely</strong> and replaced by <strong>Performance Mode</strong> (<code>PerformanceMatrixPanel.kt</code>, a 4×4 knob matrix toggled with <code>F4</code>; see <code>docs/user_guide/macros_and_rack.md</code>). Historical rack design notes are kept for reference in <code>docs/developer/modular_video_rack_proposal.md</code>, marked retired/superseded.</p>
+<p>The 19" Modular Video Rack chassis UI (<code>rack/</code>, <code>rack/ui/</code> — faceplates, rear patch-cable view, per-unit dynamic macro banks) documented in earlier revisions of this file has been <strong>removed entirely</strong> and replaced by <strong>Performance Mode</strong> (<code>PerformanceMatrixPanel.kt</code>, a 4×4 knob matrix toggled with <code>F4</code>; see <code>docs/user_guide/macros_and_rack.md</code>). Historical rack design notes are kept for reference in <code>docs/archive/modular_video_rack_proposal.md</code>, marked retired/superseded.</p>
 <h3 id="12-always-resident-canonical-banks">12 Always-Resident Canonical Banks</h3>
 <p><code>MacroEngine</code> registers 12 canonical, always-resident banks by id (<code>MacroEngine.CANONICAL_BANK_IDS</code>): <code>DECK_A</code>, <code>DECK_B</code>, <code>DECK_BG</code>, <code>DECK_PV</code>, <code>DECK_A_FX</code>, <code>DECK_B_FX</code>, <code>DECK_BG_FX</code>, <code>DECK_PV_FX</code>, <code>TRANS</code>, <code>MASTER</code>, and <code>MASTER_FX</code>. <code>MacroEngine.canonicalIdForDeckLabel(deckLabel)</code> maps a deck label ("Deck A", "Deck B", "Deck BG", "Deck PV", "Master") to its generator bank id, falling through to <code>TRANS</code> for anything else, while <code>targetBankIdFor()</code> maps per-deck insert FX banks. Both the Performance Matrix's tabs and the Edit-row macro strip (<code>PerformanceMacroStrip</code>) read and write these same underlying banks — the matrix is a live control <em>view</em> onto them (dragging a knob live-updates <code>MacroControl.value</code>; editing bindings happens in the Edit-row strip and the Properties editor).</p>
 <h3 id="sessionserializer-is-the-sole-bank-registrar"><code>SessionSerializer</code> Is the Sole Bank Registrar</h3>
@@ -2350,20 +2322,20 @@ val paramNotes: Map&lt;String, String&gt; = emptyMap()
 <h2 id="9-fx-presets-playlists-live-queues">9. FX Presets, Playlists &amp; Live Queues</h2>
 <p>The <code>[ FX ]</code> Library view mode (see <code>docs/developer/ui.md</code> §8 and <code>docs/user_guide/presets_and_library.md</code>) is backed by its own preset/queue manager family, parallel to but independent from the <code>.lsd</code> preset managers documented above.</p>
 <h3 id="one-mutation-path-fxopskt">One Mutation Path: <code>FxOps.kt</code></h3>
-<p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/FxOps.kt"><code>FxOps.kt</code></a> is the single entry point for changing what's loaded in any <code>FxChain</code> (the four decks' <code>fxChain</code> and <code>Mixer.masterFxChain</code>): <code>loadChain</code>, <code>applyChain</code>, <code>clearChain</code>, <code>setSlotFilter</code>, <code>loadSlot</code>, <code>applySlot</code>, <code>clearSlot</code>, and <code>applyItem</code> (the deterministic playlist/queue path: a <code>.lsdfxchain</code> replaces the chain, a <code>.lsdfx</code> becomes slot 1 of an otherwise empty chain). It is used by the Performance rows, Deep Edit, the FX browser and toolbar, FX playlists, and both live FX queues.</p>
-<p>Every op is queued and applied in <code>FxOps.drainOnGlThread(mixer)</code>, called once per frame from the render loop right after <code>PresetManager.applyPendingPresets</code>. That matters because async file loads complete on <code>PresetManager.presetIoExecutor</code>: replacing a slot disposes the old <code>ISFFilter</code> (deleting its GL framebuffers), which must happen on the GL thread, and swapping <code>FxChain.slots</code> mid-frame would race the renderer. After each op, <code>FxMacroSync.syncFor()</code> refreshes that chain's FX row knobs. Never mutate <code>FxChain.slots</code> directly from a <code>CompletableFuture</code> callback.</p>
+<p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/presets/FxOps.kt"><code>FxOps.kt</code></a> is the single entry point for changing what's loaded in any <code>FxChain</code> (the four decks' <code>fxChain</code> and <code>Mixer.masterFxChain</code>): <code>loadChain</code>, <code>applyChain</code>, <code>clearChain</code>, <code>setSlotFilter</code>, <code>loadSlot</code>, <code>applySlot</code>, <code>clearSlot</code>, and <code>applyItem</code> (the deterministic playlist/queue path: a <code>.lsdfxchain</code> replaces the chain, a <code>.lsdfx</code> becomes slot 1 of an otherwise empty chain). It is used by the Perform rows, Edit, the FX browser and toolbar, FX playlists, and both live FX queues.</p>
+<p>Every op is queued and applied in <code>FxOps.drainOnGlThread(mixer)</code>, called once per frame from the render loop right after <code>DeckOps.drainOnGlThread</code>. That matters because async file loads complete on <code>PresetManager.presetIoExecutor</code>: replacing a slot disposes the old <code>ISFFilter</code> (deleting its GL framebuffers), which must happen on the GL thread, and swapping <code>FxChain.slots</code> mid-frame would race the renderer. After each op, <code>FxMacroSync.syncFor()</code> refreshes that chain's FX row knobs. Never mutate <code>FxChain.slots</code> directly from a <code>CompletableFuture</code> callback.</p>
 <h3 id="fx-chains-are-session-state-not-preset-state">FX Chains Are Session State, Not Preset State</h3>
 <p>Deck presets (<code>.lsd</code>, <code>DeckPresetDto</code>) carry no FX. Every chain is persisted in the session instead: <code>MixerDto.masterFxChain</code>, <code>deckAFxChain</code>, <code>deckBFxChain</code>, <code>deckBGFxChain</code>, <code>deckPVFxChain</code>. On a fresh session, <code>Mixer.loadDefaultFxChains()</code> seeds all five from bundled <code>.lsdfxchain</code> files.</p>
 <h3 id="fxqueuemanagerkt-fxbgqueuemanagerkt"><code>FXQueueManager.kt</code> / <code>FXBgQueueManager.kt</code></h3>
 <p>Mirror <code>PlayQueueManager.kt</code> / <code>BgQueueManager.kt</code> but operate on FX assets instead of visual presets:
 - Volatile RAM <code>queue: CopyOnWriteArrayList&lt;File&gt;</code> of <code>.lsdfx</code> / <code>.lsdfxchain</code> / <code>.lsdfxplay</code> entries, with <code>isRepeatEnabled</code>, <code>isShuffleEnabled</code>, <code>activeIndex</code>, and <code>playbackHistory</code> for shuffle back-stepping (<code>initializeShuffle()</code>, <code>playedIndices</code>).
 - <code>FXQueueManager</code> applies deterministically to the crossfader-active deck (A or B); <code>FXBgQueueManager</code> drives Deck BG independently, same as the non-FX background queue.
-- UI: <code>FXQueueActionsPanel.kt</code> (Column 4 in FX mode) and <code>FXBgQueueActionsPanel.kt</code> (Column 3 in FX mode).
+- UI: <code>FXQueueActionsPanel.kt</code> (A/B FX Queue) and <code>FXBgQueueActionsPanel.kt</code> (BG FX Queue), two of the five columns of the Library's Queues tab (<code>ui/browser/QueuesPane.kt</code>).
 - <strong>Export Queue to Playlist</strong>: Both managers support instantly exporting the current live queue to a new <code>.lsdfxplay</code> playlist file (<code>BrowserPopupHandler.kt</code> "Export Live FX Queue (A/B) as Playlist" / "Export Background FX Queue as Playlist" popups).</p>
-<h3 id="fx-playlists-lsdfxplay-fxplaylisteditorpanelkt">FX Playlists (<code>.lsdfxplay</code>) &amp; <code>FXPlaylistEditorPanel.kt</code></h3>
-<p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/models/FXPresetModels.kt"><code>FXPresetModels.kt</code></a> defines <code>FXPlaylistDto</code>, an ordered list of FX asset paths persisted by <code>PresetRepository</code> and <code>FileSystemManager</code> under <code>library/fx_playlists/</code>. <code>FXPlaylistEditorPanel.kt</code> (Column 2 in FX mode) supports drag-and-drop insertion, reordering, double-click application, and context-menu actions — the FX-mode counterpart to <code>PlaylistEditorPanel.kt</code>.</p>
+<h3 id="fx-playlists-lsdfxplay">FX Playlists (<code>.lsdfxplay</code>)</h3>
+<p><a href="file:///home/gj/projects/liquid-lsd/src/main/kotlin/llm/slop/liquidlsd/models/FXPresetModels.kt"><code>FXPresetModels.kt</code></a> defines <code>FXPlaylistDto</code>, an ordered list of FX asset paths persisted by <code>PresetRepository</code> and <code>FileSystemManager</code> under <code>library/fx_playlists/</code>. A playlist is an entry in the FX tab's folder tree (<code>BrowserPane</code>): selecting it lists its rows, which support drag-and-drop insertion, reordering, double-click application and context-menu actions; the list edits are <code>ui/browser/PlaylistEdit.kt</code> (<code>PlaylistItems</code>), shared with transition playlists. The old column editors (<code>PlaylistEditorPanel</code>, <code>FXPlaylistEditorPanel</code>) are gone.</p>
 <h3 id="fxbrowserpanelkt"><code>FXBrowserPanel.kt</code></h3>
-<p>Unifies the formerly separate <code>FXPresetListPanel</code> (single <code>.lsdfx</code> presets) and <code>FXChainListPanel</code> (<code>.lsdfxchain</code> chains) into one Column 1 browser with ISF stock filters, saved singles, and saved chains, tier badges, and an All / Stock / Singles / Chains filter menu. Stock (built-in ISF) filters and presets load into any deck's or Master's 3-slot FX chain via <code>FxOps</code>; saved presets and chains can additionally be added to FX playlists and live FX queues. "Load to" submenus for stock/single items let you target any of the 3 slots, while chains load directly. (The <code>.lsdfxbank</code> format was removed along with <code>FxBank</code>: Master FX is a plain <code>FxChain</code> now.)</p>
+<p>Unifies the formerly separate <code>FXPresetListPanel</code> (single <code>.lsdfx</code> presets) and <code>FXChainListPanel</code> (<code>.lsdfxchain</code> chains) into the Library's FX tab with ISF stock filters, saved singles, and saved chains, tier badges, and an All / Stock / Singles / Chains filter menu. Stock (built-in ISF) filters and presets load into any deck's or Master's 3-slot FX chain via <code>FxOps</code>; saved presets and chains can additionally be added to FX playlists and live FX queues. "Load to" submenus for stock/single items let you target any of the 3 slots, while chains load directly. (The <code>.lsdfxbank</code> format was removed along with <code>FxBank</code>: Master FX is a plain <code>FxChain</code> now.)</p>
 <h3 id="fx-metaknob-super-knob-persistence">FX Metaknob / Super Knob Persistence</h3>
 <p><code>FXSlotDto</code> (in <code>PresetModels.kt</code>) carries <code>metaKnob: ParameterDto?</code>, <code>metaBinding: FxMetaBindingDto?</code> (legacy singular), <code>metaBindings: List&lt;FxMetaBindingDto&gt;?</code> (each with target, range, <code>curve</code>, <code>stepCount</code>, <code>linkMode</code>, <code>invert</code>, <code>enabled</code>) and <code>knobLayout: List&lt;String&gt;?</code> (focus-knob parameter order; null = authored order; names the shader lacks are dropped on load). <code>FxDefaultDto</code> (Save as Default, <code>library/isf_overrides/&lt;hash&gt;.json</code>) carries the same <code>metaBindings</code> and <code>knobLayout</code> (see <code>rendering/isf/FxMetaBinding.kt</code>); <code>FXChainDto</code> carries <code>superKnob: ParameterDto?</code> and <code>slotSuperKnobLink: List&lt;Boolean&gt;?</code>. Both are <strong>baked at save time</strong> — a saved slot/chain preset always restores the exact Metaknob binding/position it had when saved, even if <code>ISFAutoBindEngine</code>'s resolution for that shader (curated table, or a since-changed user override under <code>library/isf_overrides/</code>) has since changed. There is no live re-resolution path from a saved preset; re-save (or an explicit future "re-resolve" UI action) is required to pick up a changed binding.</p>
 <h3 id="fx-chain-dirty-tracking-criteria">FX Chain Dirty Tracking Criteria</h3>
