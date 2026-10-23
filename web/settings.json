@@ -13,7 +13,10 @@
     "pure_smooth_crossfade",
     "organic_plasma_dissolve",
     "cosmic_singularity",
-    "liquid_mercury_melt"
+    "liquid_mercury_melt",
+    "cyber_datamosh_glitch",
+    "hyperspace_crash_zoom",
+    "inferno_film_burn"
   ],
   "fxChains": [
     "web-trails",
@@ -52,5 +55,6 @@
     "web-motion",
     "web-lumakey"
   ],
-  "fxPlaybackOrder": "random"
+  "fxPlaybackOrder": "random",
+  "dropTransition": "laser_drop_flash"
 }

@@ -23,6 +23,8 @@ export const autopilotSettings = {
   // playlist line `preset | chain` pins a chain to one preset. Empty = no FX / plain crossfade.
   fxChains: [],
   transitions: [],
+  // Transition preset for the cut on a drop (a single flash, kept out of the regular rotation).
+  dropTransition: null,
   fxPlaybackOrder: 'sequential',
   bgHoldBars: 32,
   bgFadeBeats: 8,
@@ -327,7 +329,13 @@ function followSections(beats, { section = 'normal', drops = 0 }) {
       }
       const hard = pickLine(DROP_TAGS);
       dropLook = null;
-      if (hard) buildLook(hard).then((look) => { dropLook = look; prewarm(look.deck, look.transition); });
+      if (hard) {
+        Promise.all([buildLook(hard), dropTransition()]).then(([look, flash]) => {
+          if (flash) look.transition = flash;
+          dropLook = look;
+          prewarm(look.deck, look.transition);
+        });
+      }
       console.log('[autopilot] Breakdown');
     }
   }
@@ -354,6 +362,12 @@ function followSections(beats, { section = 'normal', drops = 0 }) {
       fgSwitchAt = nextSwitchBeat(beats, 0, autopilotSettings.fgFadeBeats);
     }
   }
+}
+
+async function dropTransition() {
+  if (!autopilotSettings.dropTransition) return null;
+  const dto = await fetchContent(catalog.transitionPresets, autopilotSettings.dropTransition);
+  return dto ? parseTransition(dto) : null;
 }
 
 /** Loads every playlist preset's tags (cached), so section changes can pick a fitting look. */

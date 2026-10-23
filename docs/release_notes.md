@@ -19,7 +19,7 @@
 - **The web TV finds the radio's beat and locks to it.** Pulses, flashes and beat-synced LFOs now land on the kicks of whatever is playing, not just at roughly the right tempo. It locks within a few seconds, follows tempo changes, and keeps time through breaks. The timing allows for the browser's audio delay, so the picture matches what you hear.
 - **Looks change on the bar.** The autopilot counts its holds in bars (16 for the main looks, 32 for the background) and finishes each crossfade on a bar line, so the new look arrives with the music. The next look is loaded during the hold, so the change is never late.
 - **No signal looks like no signal.** If the radio stream drops or goes silent, the screen fades to analog snow with NO SIGNAL, and the TV reconnects to the stream on its own every 10 seconds.
-- **The TV follows the song.** When a track breaks down (the bass drops out) a calm or building look comes in on the next bar, and when the drop lands a hard look cuts in right on it.
+- **The TV follows the song.** When a track breaks down (the bass drops out) a calm or building look comes in on the next bar, and when the drop lands a hard look cuts in right on it, with a flash. All eight transitions are now in the rotation.
 - **Very fast music (drum and bass) is followed at half time:** every kick still lands on a beat or a half beat.
 
 ### Web TV: Every Source On Air, Nothing Deaf (`web/presets/*`, `web/fxchains/*`, `web/playlists/*`, `web/tools/reactivity.test.mjs`, `web/checks/render_check.*`, `scripts/gen_web_presets.py`)

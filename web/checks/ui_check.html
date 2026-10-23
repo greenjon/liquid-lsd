@@ -65,6 +65,7 @@ try {
   w.LSD.cvState.drops += 1;
   w.LSD.cvState.section = 'normal';
   await sleep(700);
+  check('Drop: the cut uses the drop flash', st.mixer.transition === 'luminous_flash', st.mixer.transition);
   check('Drop: a hard look cuts in', tagsOnAir().some((t) => ['hard', 'bass-gated'].includes(t)) && st.mixer.balance % 1 === 0, `${tagsOnAir().join(',')} balance ${st.mixer.balance}`);
 
   // Live broadcast locks the controls.
