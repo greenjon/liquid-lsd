@@ -1,6 +1,11 @@
 {
   "sources": [
     {
+      "id": "apollonian",
+      "file": "shaders/apollonian.frag",
+      "name": "Raymarched Apollonian-style sphere gasket"
+    },
+    {
       "id": "aurora_ribbons",
       "file": "shaders/aurora_ribbons.frag",
       "name": "Aurora Ribbons generator"
@@ -29,6 +34,16 @@
       "id": "dynamic_spiral",
       "file": "shaders/dynamic_spiral.frag",
       "name": "Dynamic logarithmic spiral visualizer"
+    },
+    {
+      "id": "escape_time",
+      "file": "shaders/escape_time.frag",
+      "name": "High-iteration 2D escape-time fractals"
+    },
+    {
+      "id": "fluid_ink",
+      "file": "shaders/fluid_ink.frag",
+      "name": "Stable-fluids ink"
     },
     {
       "id": "girih_stars",
@@ -81,14 +96,49 @@
       "name": "Kali Set generator"
     },
     {
+      "id": "kifs",
+      "file": "shaders/kifs.frag",
+      "name": "Raymarched kaleidoscopic IFS fractal"
+    },
+    {
+      "id": "lenia",
+      "file": "shaders/lenia.frag",
+      "name": "Lenia"
+    },
+    {
+      "id": "mandelbox",
+      "file": "shaders/mandelbox.frag",
+      "name": "Raymarched distance-estimated Mandelbox"
+    },
+    {
+      "id": "mandelbulb",
+      "file": "shaders/mandelbulb.frag",
+      "name": "Raymarched Mandelbulb with an animatable power, Julia-mode blend, orbit-trap col"
+    },
+    {
       "id": "metaballs",
       "file": "shaders/metaballs.frag",
       "name": "Metaballs generator"
     },
     {
+      "id": "nebula_volume",
+      "file": "shaders/nebula_volume.frag",
+      "name": "Volumetric nebula"
+    },
+    {
+      "id": "pseudo_kleinian",
+      "file": "shaders/pseudo_kleinian.frag",
+      "name": "Raymarched Kleinian-style fractal"
+    },
+    {
       "id": "quasicrystal",
       "file": "shaders/quasicrystal.frag",
       "name": "Quasicrystal interference: 5 to 8 rotated cosine gratings"
+    },
+    {
+      "id": "reaction_diffusion",
+      "file": "shaders/reaction_diffusion.frag",
+      "name": "Gray-Scott reaction-diffusion on a persistent fixed-size grid"
     },
     {
       "id": "thin_film",

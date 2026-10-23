@@ -380,6 +380,66 @@
       "web": "web/shaders/voronoi_cells.frag",
       "mode": "auto_shader",
       "description": "Voronoi Cells generator"
+    },
+    {
+      "desktop": "library/sources/apollonian/apollonian.fs",
+      "web": "web/shaders/apollonian.frag",
+      "mode": "auto_shader",
+      "description": "Raymarched Apollonian-style sphere gasket"
+    },
+    {
+      "desktop": "library/sources/escape_time/escape_time.fs",
+      "web": "web/shaders/escape_time.frag",
+      "mode": "auto_shader",
+      "description": "High-iteration 2D escape-time fractals"
+    },
+    {
+      "desktop": "library/sources/fluid_ink/fluid_ink.fs",
+      "web": "web/shaders/fluid_ink.frag",
+      "mode": "auto_shader",
+      "description": "Stable-fluids ink"
+    },
+    {
+      "desktop": "library/sources/kifs/kifs.fs",
+      "web": "web/shaders/kifs.frag",
+      "mode": "auto_shader",
+      "description": "Raymarched kaleidoscopic IFS fractal"
+    },
+    {
+      "desktop": "library/sources/lenia/lenia.fs",
+      "web": "web/shaders/lenia.frag",
+      "mode": "auto_shader",
+      "description": "Lenia"
+    },
+    {
+      "desktop": "library/sources/mandelbox/mandelbox.fs",
+      "web": "web/shaders/mandelbox.frag",
+      "mode": "auto_shader",
+      "description": "Raymarched distance-estimated Mandelbox"
+    },
+    {
+      "desktop": "library/sources/mandelbulb/mandelbulb.fs",
+      "web": "web/shaders/mandelbulb.frag",
+      "mode": "auto_shader",
+      "description": "Raymarched Mandelbulb with an animatable power, Julia-mode blend, orbit-trap col"
+    },
+    {
+      "desktop": "library/sources/nebula_volume/nebula_volume.fs",
+      "web": "web/shaders/nebula_volume.frag",
+      "mode": "auto_shader",
+      "description": "Volumetric nebula"
+    },
+    {
+      "desktop": "library/sources/pseudo_kleinian/pseudo_kleinian.fs",
+      "web": "web/shaders/pseudo_kleinian.frag",
+      "mode": "auto_shader",
+      "description": "Raymarched Kleinian-style fractal"
+    },
+    {
+      "desktop": "library/sources/reaction_diffusion/reaction_diffusion.fs",
+      "web": "web/shaders/reaction_diffusion.frag",
+      "mode": "auto_shader",
+      "description": "Gray-Scott reaction-diffusion on a persistent fixed-size grid"
     }
   ],
   "monitored_sources": [

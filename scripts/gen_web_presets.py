@@ -119,7 +119,8 @@ def write_json(path, data):
 # Sources that fill the frame with colour: feedback and bloom chains wash them out to one flat colour,
 # so their presets are tagged `fullframe` and the autopilot skips those chains for them (web/pairing.js).
 FULL_FRAME_SOURCES = {"cyclic_ca", "kali_set", "glitch_blocks", "halftone_matrix", "quasicrystal", "thin_film",
-                      "voronoi_cells", "wave_ripples", "isometric_voxels", "girih_stars"}
+                      "voronoi_cells", "wave_ripples", "isometric_voxels", "girih_stars",
+                      "apollonian", "escape_time", "nebula_volume", "pseudo_kleinian"}
 
 
 def preset(name, source, spec, tags, notes=""):
@@ -945,6 +946,153 @@ chain("web-vortex", ["swirl", "kick", "beat"],
 chain("web-build-drop", ["build", "bar", "bass-gated"],
       slot("bloom", {"bloomIntensity": (0.1, ramp(32, 0.5)), "threshold": 0.5, "blurAmount": 0.35}),
       slot("rgb_split", {"amount": (0.0, gate("audio_bass", 0.6, 0.6, 5, 150)), "angle": (0.0, lfo(16, 1.0))}))
+
+# ---------------------------------------------------------------- batch 8: the heavy sources
+# Raymarched fractals (LSD_COST 3; adaptive render resolution keeps them fluid) and the three simulations.
+# FlightSpeed / MorphSpeed are phase-integrated (LSD_PHASES), so kicks can push the flight forward.
+# Lenia and reaction-diffusion only move their look (relief, colour, zoom): growth parameters kill the life.
+preset("web-apollonian-groove", "apollonian", {
+    "InversionStrength": (0.6, bass(0.2)), "Twist": (0.0, lfo(16, 0.3)), "CoreSize": (0.4, pulse(1, 0.15)),
+    "FlightSpeed": (0.25, amp(0.3)), "HueOffset": (0.0, lfo(48, 1.0)), "Brightness": (0.6, kick(0.15)),
+}, ["groove", "beat", "bar", "bass", "amp", "kick"],
+    "Flying through a sphere gasket: the bass bends the inversion, the core pulses on the beat, louder music flies faster.")
+preset("web-apollonian-hard", "apollonian", {
+    "InversionRadius": (0.57, kick(0.15, 200)), "Twist": (0.0, lfo(4, 0.5, wave=SQ)), "FlightSpeed": (0.3, kick(0.5, 300)),
+    "ColorMode": (0.0, lfo(8, 0.34, wave=SQ)), "Brightness": (0.6, hat(0.15)), "HueOffset": (0.0, lfo(16, 1.0)),
+}, ["hard", "bar", "kick", "high"],
+    "Every kick lunges the flight forward and warps the gasket; the twist flips every two beats.")
+preset("web-apollonian-ambient", "apollonian", {
+    "Twist": (0.0, lfo(64, 0.3)), "FlightSpeed": (0.15, amp(0.1, **AMB)), "RotateZ": (0.0, lfo(96, 1.0)),
+    "HueOffset": (0.0, lfo(96, 1.0)), "Saturation": 0.55, "Brightness": (0.55, amp(0.1, **AMB)),
+}, ["ambient", "bar", "amp"],
+    "A slow drift through the gasket, turning over 24 bars.")
+
+preset("web-julia-groove", "escape_time", {
+    "JuliaRadius": (0.65, bass(0.08)), "JuliaAngle": (0.1, lfo(32, 0.3)), "ColorCycle": (0.35, lfo(16, 0.3)),
+    "TrapGlow": (0.4, pulse(1, 0.3)), "Rotation": (0.0, lfo(64, 0.5)), "HueOffset": (0.0, lfo(48, 1.0)), "Brightness": 0.4,
+}, ["groove", "beat", "bar", "bass"],
+    "A Julia set whose shape breathes with the bass and glows on every beat.")
+preset("web-julia-hard", "escape_time", {
+    "FractalType": (0.0, lfo(16, 0.34, wave=SQ)), "JuliaRadius": (0.6, kick(0.1, 200)), "TrapGlow": (0.4, kick(0.4)),
+    "Zoom": (0.5, pulse(1, 0.05)), "ColorMode": 2.0, "HueOffset": (0.0, lfo(8, 1.0)), "Brightness": 0.4,
+}, ["hard", "beat", "bar", "kick"],
+    "Kicks throw the Julia set into new shapes; the fractal family changes every four bars.")
+preset("web-julia-ambient", "escape_time", {
+    "JuliaAngle": (0.1, lfo(96, 0.4)), "JuliaRadius": (0.65, lfo(64, 0.05)), "ColorCycle": (0.3, amp(0.15, **AMB)),
+    "MorphSpeed": 0.05, "Saturation": 0.6, "HueOffset": (0.0, lfo(96, 1.0)), "Brightness": 0.38,
+}, ["ambient", "bar", "amp"],
+    "A Julia set slowly wandering through its family in soft colour.")
+
+preset("web-ink-groove", "fluid_ink", {
+    "Emitters": (0.75, lfo(32, 0.25, wave=SQ)), "Force": (0.5, kick(0.4, 250)), "Swirl": (0.7, lfo(16, 0.2)),
+    "Turbulence": (0.3, hat(0.3)), "HueOffset": (0.0, lfo(48, 1.0)), "Brightness": (0.5, bass(0.2)),
+}, ["groove", "bar", "kick", "high", "bass"],
+    "Ink stirred by the kicks: every hit pushes the emitters, hats roughen the flow.")
+preset("web-ink-mid", "fluid_ink", {
+    "Force": (0.3, mid(0.5)), "Turbulence": (0.2, mid(0.4)), "Swirl": (0.5, mid(0.4)), "HueOffset": (0.0, mid(0.3, 80, 800)),
+}, ["mid"],
+    "Ink that swirls with the mids (vocals, synths) and settles when they stop.")
+preset("web-ink-ambient", "fluid_ink", {
+    "Force": (0.3, amp(0.2, **AMB)), "Swirl": (0.6, lfo(64, 0.2)), "DyeFade": 0.2, "HueOffset": (0.0, lfo(96, 1.0)),
+    "Saturation": 0.6,
+}, ["ambient", "bar", "amp"],
+    "Slow ink clouds; the stirring follows the overall level.")
+
+preset("web-kifs-groove", "kifs", {
+    "TwistX": (0.1, lfo(16, 0.2)), "TwistY": (0.15, bass(0.15)), "Glow": (0.4, pulse(1, 0.3)), "Scale": (0.5, lfo(32, 0.1)),
+    "RotateY": (0.0, lfo(32, 1.0)), "HueOffset": (0.58, lfo(48, 1.0)), "Brightness": 0.75,
+}, ["groove", "beat", "bar", "bass"],
+    "A kaleidoscopic fractal that twists with the bass and glows on the beat.")
+preset("web-kifs-hard", "kifs", {
+    "SurfaceType": (0.0, lfo(8, 0.34, wave=SQ)), "Offset": (0.5, kick(0.15, 200)), "Glow": (0.35, kick(0.25)),
+    "TwistZ": (0.0, hat(0.2)), "MorphSpeed": (0.0, kick(0.3)), "RotateY": (0.0, lfo(16, 1.0)), "HueOffset": (0.0, lfo(16, 1.0)), "Brightness": 0.75,
+}, ["hard", "bar", "kick", "high"],
+    "Kicks push the fold forward and flash it; the surface family flips every two bars.")
+preset("web-kifs-ambient", "kifs", {
+    "TwistX": (0.1, lfo(64, 0.2)), "MorphSpeed": 0.05, "Glow": (0.35, amp(0.15, **AMB)), "RotateY": (0.0, lfo(96, 1.0)),
+    "ColorMode": 1.0, "HueOffset": (0.58, lfo(96, 1.0)), "Saturation": 0.7, "Brightness": 0.75,
+}, ["ambient", "bar", "amp"],
+    "A kaleidoscopic fractal slowly turning and refolding.")
+
+preset("web-lenia-groove", "lenia", {
+    "Relief": (0.5, pulse(1, 0.3)), "Brightness": (0.5, bass(0.25)), "Zoom": (0.5, lfo(32, 0.1)),
+    "ColorMode": (0.0, lfo(32, 0.34, wave=SQ)), "HueOffset": (0.0, lfo(48, 1.0)),
+}, ["groove", "beat", "bar", "bass"],
+    "Artificial life whose relief pops on every beat and brightens with the bass.")
+preset("web-lenia-ambient", "lenia", {
+    "Relief": (0.4, amp(0.2, **AMB)), "HueOffset": (0.0, lfo(96, 1.0)), "Saturation": 0.6,
+}, ["ambient", "bar", "amp"],
+    "Lenia creatures drifting in muted colour.")
+
+preset("web-mandelbox-groove", "mandelbox", {
+    "Scale": (0.25, lfo(32, 0.1)), "FoldLimit": (0.5, bass(0.1)), "Glow": (0.4, pulse(1, 0.3)), "FlightSpeed": (0.25, amp(0.3)),
+    "RotateZ": (0.0, lfo(48, 1.0)), "HueOffset": (0.0, lfo(48, 1.0)), "Brightness": 0.65,
+}, ["groove", "beat", "bar", "bass", "amp"],
+    "Flying through a Mandelbox that folds with the bass and glows on the beat.")
+preset("web-mandelbox-hard", "mandelbox", {
+    "MinRadius": (0.5, kick(0.15, 200)), "Glow": (0.4, kick(0.4)), "FlightSpeed": (0.2, kick(0.6, 300)),
+    "ColorMode": (0.0, lfo(8, 0.25, wave=SQ)), "RotateY": (0.0, lfo(16, 1.0)), "Brightness": 0.65,
+}, ["hard", "bar", "kick"],
+    "The flight lurches on every kick while the box swells and flashes.")
+
+preset("web-mandelbulb-groove", "mandelbulb", {
+    "Power": (0.43, lfo(32, 0.15)), "JuliaMix": (0.0, bass(0.3)), "Glow": (0.3, pulse(1, 0.3)), "RotateY": (0.0, lfo(32, 1.0)),
+    "Brightness": 0.7, "Zoom": 0.6, "HueOffset": (0.0, lfo(48, 1.0)),
+}, ["groove", "beat", "bar", "bass"],
+    "A Mandelbulb morphing between powers over eight bars, pulled into a Julia shape by the bass.")
+preset("web-mandelbulb-hard", "mandelbulb", {
+    "Power": (0.43, kick(0.15, 250)), "PowerSwing": (0.0, gate("audio_bass", 0.6, 1.0)), "Glow": (0.3, kick(0.4)),
+    "ColorMode": (0.0, lfo(8, 0.25, wave=SQ)), "Brightness": 0.7, "Zoom": 0.6, "RotateY": (0.0, lfo(16, 1.0)),
+}, ["hard", "bar", "kick", "bass-gated"],
+    "Kicks spike the power; loud bass sets it swinging.")
+preset("web-mandelbulb-ambient", "mandelbulb", {
+    "Power": (0.4, lfo(96, 0.15)), "JuliaMix": (0.2, lfo(64, 0.2)), "RotateY": (0.0, lfo(96, 1.0)),
+    "Glow": (0.3, amp(0.15, **AMB)), "Brightness": 0.65, "Zoom": 0.6,
+}, ["ambient", "bar", "amp"],
+    "A slowly turning Mandelbulb drifting between shapes.")
+
+preset("web-nebula-groove", "nebula_volume", {
+    "Glow": (0.5, pulse(1, 0.25)), "Density": (0.5, bass(0.2)), "Lighting": (0.4, kick(0.3)), "FlightSpeed": (0.25, amp(0.3)),
+    "HueOffset": (0.0, lfo(48, 1.0)), "Brightness": 0.45,
+}, ["groove", "beat", "bar", "bass", "kick", "amp"],
+    "Flying through gas clouds that thicken with the bass and light up on the kicks.")
+preset("web-nebula-hard", "nebula_volume", {
+    "Lighting": (0.4, kick(0.5, 150)), "Turbulence": (0.5, hat(0.3)), "FlightSpeed": (0.3, kick(0.6, 250)),
+    "ColorMode": (0.0, lfo(8, 0.34, wave=SQ)), "HueOffset": (0.0, lfo(16, 1.0)), "Brightness": 0.45,
+}, ["hard", "bar", "kick", "high"],
+    "Each kick fires the flight forward through lightning-lit gas.")
+preset("web-nebula-ambient", "nebula_volume", {
+    "Density": (0.5, lfo(64, 0.15)), "Glow": (0.45, amp(0.15, **AMB)), "FlightSpeed": 0.15, "HueOffset": (0.0, lfo(96, 1.0)),
+    "Saturation": 0.6, "Brightness": 0.42,
+}, ["ambient", "bar", "amp"],
+    "A slow glide through a nebula.")
+
+preset("web-kleinian-groove", "pseudo_kleinian", {
+    "OffsetX": (0.2, lfo(16, 0.2)), "InversionStrength": (0.6, bass(0.2)), "CoreSize": (0.4, pulse(1, 0.15)),
+    "FlightSpeed": (0.25, amp(0.3)), "HueOffset": (0.0, lfo(48, 1.0)),
+}, ["groove", "beat", "bar", "bass", "amp"],
+    "Flying through Kleinian corridors that bend with the bass.")
+preset("web-kleinian-hard", "pseudo_kleinian", {
+    "OffsetY": (0.4, kick(0.2, 200)), "FlightSpeed": (0.25, kick(0.5, 300)), "ColorMode": (0.0, lfo(8, 0.34, wave=SQ)),
+    "Brightness": (0.6, hat(0.15)), "RotateZ": (0.0, lfo(16, 1.0)), "HueOffset": (0.0, lfo(16, 1.0)),
+}, ["hard", "bar", "kick", "high"],
+    "Kicks shove the flight and shift the walls; colours flip every two bars.")
+
+preset("web-rd-groove", "reaction_diffusion", {
+    "Relief": (0.5, pulse(1, 0.35)), "Brightness": (0.5, bass(0.2)), "Regime": (0.5, lfo(64, 0.2)),
+    "ColorMode": (0.0, lfo(32, 0.34, wave=SQ)), "HueOffset": (0.0, lfo(48, 1.0)),
+}, ["groove", "beat", "bar", "bass"],
+    "Reaction-diffusion patterns whose relief pops on every beat; the pattern regime drifts over 16 bars.")
+preset("web-rd-hard", "reaction_diffusion", {
+    "Reseed": (0.0, gate("audio_bass", 0.8, 6.0, 5, 150)), "Relief": (0.5, kick(0.4)), "Zoom": (0.5, pulse(1, 0.05)),
+    "ColorMode": 2.0, "HueOffset": (0.0, lfo(16, 1.0)),
+}, ["hard", "beat", "bar", "kick", "bass-gated"],
+    "Patterns that flash on kicks and are reseeded by the biggest bass hits.")
+preset("web-rd-ambient", "reaction_diffusion", {
+    "Relief": (0.4, amp(0.2, **AMB)), "Feed": (0.0, lfo(96, 0.2)), "HueOffset": (0.0, lfo(96, 1.0)), "Saturation": 0.6,
+}, ["ambient", "bar", "amp"],
+    "Slowly growing coral patterns.")
+
 
 # ---------------------------------------------------------------- batch 7: FX chains
 # Reactive web versions of the desktop's stock chains (web/content/fxchains/, which have no modulation)

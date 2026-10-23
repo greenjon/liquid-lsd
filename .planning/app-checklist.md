@@ -225,7 +225,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 
 ## 16. Web client (if you test it)
 
-- [ ] Preset pack (98 presets, 35 FX chains) loads and looks like the app; every web source now has a groove, hard and ambient look (2026-10-23).
+- [ ] Preset pack (125 presets, 35 FX chains; the raymarched fractals should stay fluid on a laptop and a phone) loads and looks like the app; every web source now has a groove, hard and ambient look (2026-10-23).
 - [ ] Leave the web TV running 20+ minutes: the picture no longer jitters (speeds are now integrated, so even a modulated speed is smooth).
 - [ ] Full-frame looks (Cyclic CA, Kali Set, Voronoi, Ripples, Quasicrystal...) never get trail or bloom chains, and don't wash out.
 - [ ] Cyclic CA hard look reseeds on the biggest bass hits and recovers within a few seconds.

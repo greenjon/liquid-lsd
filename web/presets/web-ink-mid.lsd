@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "name": "web-ink-mid",
+  "visualSourceType": "fluid_ink",
+  "parameters": {
+    "Force": {
+      "baseValue": 0.3,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.5,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 40.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "Turbulence": {
+      "baseValue": 0.2,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.4,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 40.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "Swirl": {
+      "baseValue": 0.5,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.4,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 40.0,
+          "decayMs": 300.0
+        }
+      ]
+    },
+    "HueOffset": {
+      "baseValue": 0.0,
+      "baseMin": 0.0,
+      "baseMax": 1.0,
+      "randomizeBase": false,
+      "modulators": [
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 80.0,
+          "decayMs": 800.0
+        }
+      ]
+    }
+  },
+  "feedbackParameters": {},
+  "tags": [
+    "web",
+    "mid"
+  ],
+  "presetNotes": "Ink that swirls with the mids (vocals, synths) and settles when they stop.",
+  "globalAlpha": {
+    "baseValue": 1.0,
+    "baseMin": 0.0,
+    "baseMax": 1.0,
+    "randomizeBase": false,
+    "modulators": []
+  }
+}
