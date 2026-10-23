@@ -46,7 +46,8 @@ Deeper: `docs/developer/architecture.md` (partly stale, see report), `docs/devel
 `Main.kt` loop, in order, each frame:
 
 1. `glfwPollEvents`, `touchConsoleController.processPendingEvents`.
-2. If `OfflineRenderStudio.isRendering`, `step(mixer, renderer)` replaces step 3; otherwise:
+2. Input phase: `uiManager.processInput(mixer)` drains incoming MIDI (`MidiMappingManager.processGlobalMidiEvents`), updates controller feedback and applies MIDI/CV queue advances, so a knob turn reaches this frame's render. It runs even when the UI phase is skipped (minimised window) and during an offline render. Keyboard shortcuts stay in `render`, where ImGui key state is fresh.
+3. If `OfflineRenderStudio.isRendering`, `step(mixer, renderer)` replaces step 3; otherwise:
 3. Render phase
    1. resize the pipeline if `UITheme.renderWidth/Height` changed (`mixer.resize`);
    2. `DeckOps.drainOnGlThread`, `FxOps.drainOnGlThread`, `TransitionOps.drainOnGlThread` (§4);
@@ -57,8 +58,8 @@ Deeper: `docs/developer/architecture.md` (partly stale, see report), `docs/devel
    7. for A, B, BG, PV: `deck.update()` then `renderer.renderDeck(deck)`;
    8. `mixer.update()` then `renderer.renderMixer(mixer)`;
    9. `TextureStreamerManager.update` for each `VideoOutputEndpoint` (Spout/Syphon/PipeWire out), `RealtimeRecorder.captureFrame`, `BroadcastEngine.tick`.
-4. Blit `mixer.masterFBO` to the window (when background video or Output View is on), then `uiManager.render(...)`. **Incoming MIDI events are drained inside `UIManager.render`** (`MidiMappingManager.processGlobalMidiEvents`, controller feedback, queue advances), i.e. after the frame's render phase, so a knob turn reaches the screen one frame later.
-5. `glfwSwapBuffers`; optional secondary output window (second GL context, blits `masterFBO`); frame cap from `UITheme.maxFps` by sleep (no spin).
+5. Blit `mixer.masterFBO` to the window (when background video or Output View is on), then `uiManager.render(...)` (keyboard queue shortcuts, then the ImGui frame).
+6. `glfwSwapBuffers`; optional secondary output window (second GL context, blits `masterFBO`); frame cap from `UITheme.maxFps` by sleep (no spin).
 
 Shutdown order: save preferences, stop broadcast/recorder/streamers, `SessionSerializer.saveSession`, stop audio/MIDI/OSC, dispose GL, `GLResourceTracker.assertNoLeaks`.
 
@@ -108,7 +109,7 @@ Deck loads, FX changes and transition changes each have **one mutation path**, `
 **Queues** (all `object`s in `presets/`):
 - `PlayQueueManager` (A/B Queue) and `BgQueueManager` (BG Queue) are standalone.
 - `QueueEngine` is the shared base of `FxQueueEngine` (→ `FXQueueManager` = A/B FX Queue, `FXBgQueueManager` = BG FX Queue) and of `TransitionQueueManager` (Transition Queue).
-- Advancement comes from UI buttons, keyboard, MIDI/controller deltas and CV triggers (`Mixer.pollQueueAdvance`, `pollBgQueueAdvance`, `pollTransQueueAdvance`). `UIManager.render` collects them and caps each at 8 steps per frame.
+- Advancement comes from UI buttons, keyboard, MIDI/controller deltas and CV triggers (`Mixer.pollQueueAdvance`, `pollBgQueueAdvance`, `pollTransQueueAdvance`). `UIManager.processInput` (MIDI, CV) and `UIManager.render` (keyboard) collect them and cap each at 8 steps per frame.
 - The queues feed `DeckOps` / `FxOps.applyItem` / `TransitionOps`. `QueueNextUp` is the pure "next item" readout.
 
 Other `presets/` pieces:
@@ -142,7 +143,7 @@ Ownership order and locking (macro target > Metaknob link > direct edit/MIDI/OSC
 
 ```
 MIDI device ─► MidiEngine (Receiver thread → capped queue)         OSC UDP ─► OscEngine.inboundQueue
-     │ drained in UIManager.render                                       │ drained in Main loop
+     │ drained in UIManager.processInput                                 │ drained in Main loop
      ▼                                                                    ▼
 MidiMappingManager.processGlobalMidiEvents                         OscMappingManager.onOscMessage
   learn target? → add mapping / profile command                      (macro addresses → MacroOscBridge)
@@ -176,7 +177,7 @@ Deeper: `docs/developer/beat_sync.md` (stale on `ClockSource`), `docs/developer/
 
 ## 10. UI
 
-`ui/UIManager` builds and drives everything each frame (`render`): MIDI drain → queue advances → ImGui frame → `MenuBar` → `drawLayout` → modals → `MacroUndoTracker.update` → `ToastOverlay`. Styling: `UITheme` (settings singleton over `AppPreferences`), `UIThemeStyler`, `TangoPalette` (sole colour source for Perform UI; DECISIONS §8). Its `Role`s hold a dark value and a light value or ImGui slot, resolved with `role.u32()` against `TangoPalette.isLightTheme` (set in `UIThemeStyler.setupThemeColors`); the light-theme roles include `HOVER_OVERLAY`, `PRESS_OVERLAY`, `HEADER_TINT`, `CELL_WASH`, `HOVER_BORDER`, `TEXT_FAINT`, `TEXT_DIM`, `TEXT_OK`, `TEXT_WARN`, `TEXT_ERROR`, `QUEUE_AB_TEXT`, `QUEUE_BG_TEXT`. `ButtonChrome` draws the bevel on real buttons (tunables in its per-theme `Look`). `CvTheme` is still separate; it dims its colours by `CvTheme.LIGHT_THEME_SCALE` (0.62) in the light theme. The light theme has not been checked visually; remaining literals: `.planning/theme-color-audit.md`.
+`ui/UIManager` builds and drives everything each frame (`render`): keyboard queue shortcuts → ImGui frame → `MenuBar` → `drawLayout` → modals → `MacroUndoTracker.update` → `ToastOverlay`. Styling: `UITheme` (settings singleton over `AppPreferences`), `UIThemeStyler`, `TangoPalette` (sole colour source for Perform UI; DECISIONS §8). Its `Role`s hold a dark value and a light value or ImGui slot, resolved with `role.u32()` against `TangoPalette.isLightTheme` (set in `UIThemeStyler.setupThemeColors`); the light-theme roles include `HOVER_OVERLAY`, `PRESS_OVERLAY`, `HEADER_TINT`, `CELL_WASH`, `HOVER_BORDER`, `TEXT_FAINT`, `TEXT_DIM`, `TEXT_OK`, `TEXT_WARN`, `TEXT_ERROR`, `QUEUE_AB_TEXT`, `QUEUE_BG_TEXT`. `ButtonChrome` draws the bevel on real buttons (tunables in its per-theme `Look`). `CvTheme` is still separate; it dims its colours by `CvTheme.LIGHT_THEME_SCALE` (0.62) in the light theme. The light theme has not been checked visually; remaining literals: `.planning/theme-color-audit.md`.
 
 **Three views plus the pair view, and a bound Perform dock** (no classic view, no Parameters/Properties panels, no modular rack with MULTI mode, no Preset Grid, no Column 3 MACROS tab):
 
@@ -193,7 +194,7 @@ Perform surface:
   - `PerformanceMatrixPanel` orchestrates `PerformanceDeckControls`, `PerformanceMasterControls`, `PerformanceTransitionsControls`, `PerformanceClockControls` (+ `PerformanceClockTriggers`, the queue and randomize buttons), with shared state in `PerformanceUiContext`.
   - FX header and cells: `FxChainHeader`, `FxSlotCell`, `FxParamCell`, `FXChainMacroStrip`.
   - Geometry never depends on row mode (`PerfRowGeometry`, `DeckRowMetrics`, `PerfKnobSpec` / `PerfKnobResolver`). Every deck and Master row shows one half (`pinnedMode`), so a row's meaning never depends on a mode; only the Edit bay's SRC/FX and MIX/FX tabs (`ParametersState`, read via `PerformanceUiContext.isDeckBayFx` / `isMasterBayFx`) choose which half an open module shows.
-- **Hardware view of the same grid**: `PerformSurface` and `NavigationSurface` (constructed in `UIManager.render`) resolve knobs with the same `PerfRows` + resolver the panel draws with.
+- **Hardware view of the same grid**: `PerformSurface` and `NavigationSurface` (built once per `Mixer` in `UIManager`, shared by MIDI dispatch, controller feedback and the Esc key) resolve knobs with the same `PerfRows` + resolver the panel draws with.
 
 Edit bay (`PerformanceDeepEditBay.drawRackDeepEdit`, one per open row; **Params only**: no Browse tab, no `SectionMode`). It starts with the same `BayHeader` line as the pair view (Back, Browse | Params via `ParametersState.openBrowseFromEdit`, the module chip, the "Next Up" readout from `QueueNextUp`); `preselectParam` selects a parameter when nothing is selected.
 - **Parameters**: `ParametersTabs` (side rail `MST OUT A B BG PV`: MST = `LEVELS | CTRL` sections beside the Clock row, OUT = `FX | TRANS`; deck/Master parameter rows), `ParametersRenderer` (with `RowScan`, the rows drawn this frame) and `ParameterGridHeaders` (VAL / MIDI / LFO / SEQ / AUD columns); `ParamLabels` turns ISF names into display labels (LABEL, else split words).

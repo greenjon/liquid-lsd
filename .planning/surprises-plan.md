@@ -17,8 +17,8 @@ Order is by risk: persisted-format changes first (DECISIONS §1: cheapest before
 | 7 | One dot-directory | **Done.** `ShortcutManager` uses `~/.liquid-lsd`, no fallback; docs and both release-notes files updated |
 | 8 | `Mandala` exceptions | **Done** (§2 amended; sites are `ValueParamSection` `as? Mandala` and `WebPresetSerializer` `is Mandala`). Uncommitted |
 | 9 | `view2d.frag` wording | **Done** (§2; also dropped the stale "3D projection modes" sentence). Uncommitted |
-| 10 | Per-frame surface allocation | **Open** (`UIManager.kt` ~246, 247, 388) |
-| 11 | MIDI one-frame lag | **Open**, after 10 |
+| 10 | Per-frame surface allocation | **Done.** `UIManager` builds both surfaces once per `Mixer` (`navSurfaceFor`); `NavigationSurface.sampleBrowsing` is called once per frame so browse-session edges are still caught; Esc reuses the surface, which fixes Esc on the unsaved-deck prompt (its surface had no `deckConfirm`, so `confirming` was always false) |
+| 11 | MIDI one-frame lag | **Done.** `UIManager.processInput` (MIDI drain, controller feedback, MIDI/CV queue advances) runs from `Main` before the rendering phase, also when the UI phase is skipped and during offline render. Keyboard shortcuts stay in `render` (ImGui key state is only fresh after `newFrame`; outside it a held Esc would repeat while minimised), with their own capped `advanceBy`. `ARCHITECTURE.md` §2/§8/§9/§10 updated. Not hardware-tested |
 | 12 | Relay token | **Code done** (`server.js` requires `LSD_TOKEN`, `lsd25` gone). Confirm with the user that the VPS token was rotated and the broadcaster token updated |
 | Sweep | Phase 5 docs | **Open**, except the `rendering.md` shader sentence. Still stale: "Performance Mode" in `rendering.md`/`ui.md`, `MacroOscBridge` "1..8", `modular_video_rack_proposal.md` not archived, `.planning/codebase/`, `ARCHITECTURE.md` items, release notes |
 

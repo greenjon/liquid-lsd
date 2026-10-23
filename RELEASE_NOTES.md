@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Snappier MIDI, and Esc Cancels the Unsaved-Deck Prompt (`ui/UIManager.kt`, `Main.kt`, `ui/NavigationSurface.kt`)
+- **Controller knobs and buttons now take effect in the same frame.** Incoming MIDI used to be handled after the frame was drawn, so every turn reached the screen one frame late. It is now applied first. MIDI is also handled while the window is minimised, instead of piling up and replaying when you restore it.
+- **Esc now cancels the "unsaved deck" prompt**, as its Cancel button's tooltip always said. Before, Esc did nothing there.
+- Internal: the controller surfaces are built once instead of every frame, so the hardware knob layout is cached between frames.
+
 ### Old Feedback and 3D-View Settings Removed From Presets (`models/PresetModels.kt`, `presets/PresetMigrator.kt`, `presets/PresetDependencyAnalyzer.kt`)
 - **Presets no longer have a deck-level feedback section.** Feedback has been an FX for a while; the leftover `feedbackParameters` field is gone from the preset format, along with its handling in the loader, the dependency check and the flame tools.
 - **Your existing presets and sessions still load.** The old section is simply skipped, and presets saved from now on don't contain it. Only zoom and Z-rotate are stored as the deck's framing.

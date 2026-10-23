@@ -520,6 +520,9 @@ fun main(args: Array<String>) {
 
         org.lwjgl.opengl.GL15.glBeginQuery(org.lwjgl.opengl.GL33.GL_TIME_ELAPSED, queryIds[frameIndex % 2])
 
+        // === INPUT PHASE === MIDI events, controller feedback and queue advances land in this frame's render.
+        uiManager.processInput(mixer)
+
         // === RENDERING PHASE ===
         if (llm.slop.liquidlsd.export.OfflineRenderStudio.isRendering) {
             llm.slop.liquidlsd.export.OfflineRenderStudio.step(mixer, renderer)

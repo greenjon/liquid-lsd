@@ -250,17 +250,12 @@ class UIManager(
             value?.parametersState = parametersState
         }
 
-    fun render(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
+    /**
+     * Applies this frame's MIDI and CV input before the frame renders (Main calls it ahead of the rendering phase, and even when
+     * [render] is skipped, e.g. a minimised window). Keyboard shortcuts stay in [render]: ImGui key state is only fresh after a new frame.
+     */
+    fun processInput(mixer: Mixer) {
         currentMixer = mixer
-        openDevEditBrowse()
-
-        // Update window title dynamically
-        val title = "Liquid LSD - Libre Shader Decks"
-        if (title != lastWindowTitle) {
-            org.lwjgl.glfw.GLFW.glfwSetWindowTitle(windowHandle, title)
-            lastWindowTitle = title
-        }
-
         // Drain all MIDI events queued by the MIDI receiver thread and dispatch MIDI-learn /
         // global actions (queue next/prev, bg-queue next/prev, tap tempo) / parameter bindings.
         val navSurface = navSurfaceFor(mixer)
@@ -287,8 +282,7 @@ class UIManager(
         if (mixer.pollTapTempo()) {
             session.tapTempoController.tap()
         }
-        val keyDelta = processQueueKeyboardShortcuts()
-        val totalDelta = midiCcDelta + cvDelta + keyDelta
+        val totalDelta = midiCcDelta + cvDelta
         session.playQueueManager.advanceBy(totalDelta.coerceIn(-MAX_QUEUE_STEPS_PER_FRAME, MAX_QUEUE_STEPS_PER_FRAME), mixer)
 
         val bgCvDelta = if (session.bgQueueManager.isAutoBGEnabled) mixer.pollBgQueueAdvance() else { mixer.pollBgQueueAdvance(); 0 }
@@ -305,6 +299,21 @@ class UIManager(
 
         stepFxQueue(llm.slop.liquidlsd.presets.FXQueueManager, mixer, fxMidiDelta + mixer.pollFxQueueAdvance())
         stepFxQueue(llm.slop.liquidlsd.presets.FXBgQueueManager, mixer, fxBgMidiDelta + mixer.pollFxBgQueueAdvance())
+    }
+
+    fun render(mixer: Mixer, renderer: Renderer, displayWidth: Float, displayHeight: Float) {
+        currentMixer = mixer
+        openDevEditBrowse()
+
+        // Update window title dynamically
+        val title = "Liquid LSD - Libre Shader Decks"
+        if (title != lastWindowTitle) {
+            org.lwjgl.glfw.GLFW.glfwSetWindowTitle(windowHandle, title)
+            lastWindowTitle = title
+        }
+
+        val keyDelta = processQueueKeyboardShortcuts()
+        session.playQueueManager.advanceBy(keyDelta.coerceIn(-MAX_QUEUE_STEPS_PER_FRAME, MAX_QUEUE_STEPS_PER_FRAME), mixer)
 
         if (pendingFontRebuild) {
             pendingFontRebuild = false

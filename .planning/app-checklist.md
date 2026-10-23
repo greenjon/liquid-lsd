@@ -213,6 +213,8 @@ Light wave 2: - [ ] cyclic_ca - [ ] metaballs - [ ] wave_ripples - [ ] harmonogr
 - [ ] Library send-to-deck knobs: in Library FULL a send only loads. Shift + tap on a send knob (9-13) switches pair without sending, not intermittent.
 - [ ] Controller FX tap with nothing bound applies to the live deck (first vacant slot, last when full; Shift + tap queues).
 - [ ] Link All on the Twister; Chain Link: bank change via `B3 0n 7F`.
+- [ ] MIDI input now applies before the frame renders (2026-10-23): knob turns feel at least as tight as before; bank switch, browse cursor (no skipped or lost steps on entering/leaving browse), the unsaved-deck prompt answered from the Twister, and LEDs following while the window is minimised.
+- [ ] Esc on the unsaved-deck prompt cancels it (it did nothing before).
 
 ## 15. Light theme (take notes, do not guess; you decide the fixes)
 
