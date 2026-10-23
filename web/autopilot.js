@@ -238,6 +238,7 @@ async function pickTransition() {
 export function tickAutopilot(dt, beats, music = {}) {
   if (autopilotState.isLiveBroadcast) return;
   lastBeats = beats;
+  lastMusic = music;
   followSections(beats, music);
   if (fgSwitchAt === null) fgSwitchAt = nextSwitchBeat(beats, 0, 0);
   if (bgSwitchAt === null) bgSwitchAt = nextSwitchBeat(beats, 0, 0);
@@ -303,7 +304,11 @@ function prepareForeground(line = null) {
   const token = ++fgPrepareToken;
   fgPreparing = true;
   if (!line) {
-    fgPlaylistIdx = nextPlayable(fgPlaylistIdx, fgPlaylist, autopilotSettings.fgPlaybackOrder);
+    const order = autopilotSettings.fgPlaybackOrder;
+    const tempo = lastMusic.locked && lastMusic.bpm && (order === 'random' || order === 'shuffle');
+    const weights = tempo ? fgPlaylist.map((l) => (playable(l) ? tempoWeight(presetTags.get(l) ?? [], lastMusic.bpm) : 0)) : null;
+    const pick = weights ? weightedPick(fgPlaylist, weights, fgPlaylistIdx) : -1;
+    fgPlaylistIdx = pick >= 0 ? pick : nextPlayable(fgPlaylistIdx, fgPlaylist, order);
     line = fgPlaylist[fgPlaylistIdx];
   }
   return buildLook(line).then((look) => {
@@ -332,6 +337,32 @@ let heavyAllowed = false;
 export function setHeavyAllowed(on) { heavyAllowed = !!on; }
 const playable = (line) => (heavyAllowed || !autopilotSettings.heavySources.includes(presetSource.get(line)))
   && !(reducedMotion && (presetTags.get(line) ?? []).some((t) => CALM_SKIP_LOOK_TAGS.includes(t)));
+
+// -------------------------------------------------------
+// Tempo-aware picks: with a locked beat, a random pick leans towards looks that suit the tempo (slow:
+// ambient, groove, mid; fast: hard, kick, hat). A weighting, not a filter, so every look still comes up.
+// -------------------------------------------------------
+let lastMusic = {};
+export function tempoWeight(tags, bpm) {
+  const has = (...t) => t.some((x) => tags.includes(x));
+  if (bpm < 95) return has('ambient', 'groove', 'mid') ? 3 : has('hard') ? 0.3 : 1;
+  if (bpm <= 125) return has('groove') ? 2 : 1;
+  return has('hard', 'kick', 'hat') ? 2.5 : has('ambient') ? 0.5 : 1;
+}
+
+/** Weighted random index into `list` among playable lines other than `current` (`rand` for tests). */
+export function weightedPick(list, weights, current, rand = Math.random) {
+  let total = 0;
+  for (let i = 0; i < list.length; i++) if (i !== current) total += weights[i];
+  if (total <= 0) return -1;
+  let r = rand() * total;
+  for (let i = 0; i < list.length; i++) {
+    if (i === current) continue;
+    r -= weights[i];
+    if (r <= 0) return i;
+  }
+  return list.length - 1 === current ? list.length - 2 : list.length - 1;
+}
 
 /** Next index in `list` (as getNextIndex) whose look this machine can play; the plain next one if none can. */
 function nextPlayable(idx, list, order) {

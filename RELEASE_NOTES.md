@@ -8,6 +8,7 @@
 - **A TV service menu.** The new MENU button (or M) opens a green on-screen menu like an old set's picture menu: SYNC, REACT, TIME, Reduced motion and Heavy looks, plus Reset. Arrow keys, clicks or the mouse wheel change the settings, and the TV remembers them.
 - **SYNC for delayed speakers.** With Bluetooth or other speakers that play late, the beat pulses used to land before the sound. MENU › SYNC delays the picture by up to 400 ms to match, and MENU › TAP SYNC works it out for you: tap Space (or the picture) on 8 beats you hear.
 - **Reduced motion.** If your system asks for less motion (or you turn it on in MENU), the TV calms down: the picture reacts at most 60% as strongly, hard looks, flashing and glitch effects and flash transitions are left out, there is no cut on the drop, and crossfades take twice as long.
+- **Looks that suit the tempo.** Once the TV has the beat, slow music (under 95 BPM) brings up more calm, groove and mid-driven looks, and fast music (over 125) more hard, kick and hi-hat looks. It's a lean, not a rule: every look still comes up.
 
 ### Snappier MIDI, and Esc Cancels the Unsaved-Deck Prompt (`ui/UIManager.kt`, `Main.kt`, `ui/NavigationSurface.kt`)
 - **Controller knobs and buttons now take effect in the same frame.** Incoming MIDI used to be handled after the frame was drawn, so every turn reached the screen one frame late. It is now applied first. MIDI is also handled while the window is minimised, instead of piling up and replaying when you restore it.

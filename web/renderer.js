@@ -378,7 +378,7 @@ async function init() {
     // Tick DSP analysis and autopilot scheduler
     tick(dt);
     updateEvalContext();
-    tickAutopilot(dt, evalCtx.beats, { section: cvState.section, drops: cvState.drops });
+    tickAutopilot(dt, evalCtx.beats, { section: cvState.section, drops: cvState.drops, bpm: cvState.bpm, locked: cvState.beatLocked });
 
     if (powerState.on) {
       probeGpu(now);
