@@ -118,10 +118,14 @@ body {
 }
 
 .control-label {
-  color: #555;
-  font-size: 0.55rem;
-  letter-spacing: 0.1em;
+  color: #b9b0a2;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.6);
+  -webkit-font-smoothing: antialiased;
   user-select: none;
 }
 
@@ -381,27 +385,28 @@ body.kiosk.idle, body.kiosk.idle canvas { cursor: none; }
   position: absolute;
   inset: 0;
   z-index: 4;
-  padding: 6% 8%;
+  padding: 3% 8% 2.5%;
   background: rgba(0, 8, 0, 0.72);
+  overflow-y: auto;
   color: #8cff8c;
   font-family: "VT323", "Courier New", monospace;
   font-weight: bold;
   letter-spacing: 0.06em;
   text-shadow: 0 0 6px rgba(80,255,80,0.8);
-  font-size: clamp(11px, 1.8vw, 24px);
+  font-size: clamp(10px, 1.45vw, 21px);
   display: flex;
   flex-direction: column;
-  gap: 0.35em;
+  gap: 0.12em;
 }
 #tv-menu[hidden] { display: none; }
 .menu-open #osd, .card-up #osd, .card-up #bumper { visibility: hidden; }
-#tv-menu .menu-title { font-size: 1.4em; margin-bottom: 0.4em; }
+#tv-menu .menu-title { font-size: 1.3em; margin-bottom: 0.2em; }
 #tv-menu .menu-row { display: flex; justify-content: space-between; align-items: center; padding: 0.1em 0.5em; cursor: pointer; }
 #tv-menu .menu-row.sel { background: #8cff8c; color: #021; text-shadow: none; }
 #tv-menu .menu-row.locked { opacity: 0.4; }
 #tv-menu .menu-value { display: flex; align-items: center; gap: 0.6em; }
 #tv-menu button { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0 0.2em; }
-#tv-menu .menu-hint { margin-top: auto; font-size: 0.7em; opacity: 0.7; }
+#tv-menu .menu-hint { margin-top: auto; padding-top: 0.4em; min-height: 2.6em; font-size: 0.7em; opacity: 0.7; }
 
 /* --- LIVE title card: a station ident that rolls in over the picture when the desktop goes on air --- */
 #title-card {
@@ -551,3 +556,5 @@ body.kiosk #nameplate { display: none; }
 #title-card .tc-from { font-size: 0.55em; letter-spacing: 0.3em; color: #d9c2ff; margin-top: 0.4em; }
 
 #tv-screen-area:has(#about:not([hidden])) #osd { visibility: hidden; }
+
+#tv-menu .menu-hint.help { opacity: 0.9; font-size: 0.8em; line-height: 1.3; text-transform: none; letter-spacing: 0.02em; }

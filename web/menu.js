@@ -3,7 +3,8 @@
 // Opened with the MENU button or M; ↑ ↓ pick a row, ← → (or the wheel, or the row's arrows) change it,
 // Enter runs an action row, Esc or M closes. While it is open it owns the keyboard.
 //
-// Rows: { label, value(): string, step?(dir), run?(), locked?(): bool }. ui.js builds them.
+// Rows: { label, value(): string, step?(dir), run?(), locked?(): bool, help?: string }. ui.js builds them;
+// `help` explains the row: a hover tooltip, and the line at the bottom while the row is selected.
 
 export function createMenu(screen, rows, { onOpen = () => {}, onClose = () => {} } = {}) {
   const el = document.createElement('div');
@@ -19,6 +20,7 @@ export function createMenu(screen, rows, { onOpen = () => {}, onClose = () => {}
       const r = document.createElement('div');
       r.className = 'menu-row' + (i === sel ? ' sel' : '') + (row.locked?.() ? ' locked' : '');
       r.setAttribute('role', 'menuitem');
+      if (row.help) r.title = row.help; // the mouse gets it on hover; the keyboard in the hint line
       const label = document.createElement('span');
       label.className = 'menu-label';
       label.textContent = row.label;
@@ -47,7 +49,9 @@ export function createMenu(screen, rows, { onOpen = () => {}, onClose = () => {}
     });
     const hint = document.createElement('div');
     hint.className = 'menu-hint';
-    hint.textContent = '↑↓ SELECT  ←→ CHANGE  ENTER OK  M CLOSE';
+    // The selected row's explanation, or the keys.
+    hint.textContent = rows[sel].help ?? '↑↓ SELECT  ←→ CHANGE  ENTER OK  M CLOSE';
+    if (rows[sel].help) hint.classList.add('help');
     el.appendChild(hint);
   }
 

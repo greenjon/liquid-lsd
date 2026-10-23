@@ -185,7 +185,7 @@ async function init() {
     evalCtx.dt = frameDt;
     evalCtx.bpm = bpm;
     // REACT dial: scales every audio signal (not the beat), so quiet streams still move and loud ones calm down.
-    const k = viewerState.reducedNow ? Math.min(viewerState.react, 0.6) : viewerState.react; // reduced motion caps it
+    const k = viewerState.reducedNow ? Math.min(viewerState.react, 1.2) : viewerState.react; // reduced motion caps it
     evalCtx.cv = {
       audio_amp: heard.audio_amp * k, audio_bass: heard.audio_bass * k,
       audio_mid: heard.audio_mid * k, audio_high: heard.audio_high * k,

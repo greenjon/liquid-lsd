@@ -15,7 +15,8 @@ export const powerState = {
 
 // Viewer settings — renderer.js scales every audio signal by `react`
 export const viewerState = {
-  react: 1.0,
+  react: 2.0,
+  announce: false,     // show the look and its FX on every change (off: only when asked, or after a control)
   awake: false,        // a screen wake lock is held
   syncMs: 0,           // SYNC: how late the sound reaches the viewer (speakers, Bluetooth), in ms
   reducedMode: 'auto', // Reduced motion: 'auto' (follows the system setting), 'on', 'off'
@@ -31,7 +32,7 @@ const SYNC_MIN = -100, SYNC_MAX = 400;
 const MODES = ['auto', 'on', 'off'];
 
 const TIME_STEPS = [8, 16, 32, 64];   // bars per look on the TIME dial
-const REACT_MIN = 0.25, REACT_MAX = 2.0;
+const REACT_MIN = 0.25, REACT_MAX = 4.0, REACT_DEFAULT = 2.0;
 const STREAM_STATUS_URL = 'https://radio.spaz.org:8060/status-json.xsl';
 const STREAM_MOUNT = '/radio.ogg';
 
@@ -102,7 +103,15 @@ function makeDial(el, { initial, onChange, steps = 0, locked = () => false }) {
   };
   el.addEventListener('mousedown', (e) => { if (start(e.clientY)) e.preventDefault(); });
   window.addEventListener('mousemove', (e) => move(e.clientY));
-  window.addEventListener('mouseup', () => { dragging = false; });
+  window.addEventListener('mouseup', () => {
+    // A drag that ends over the TV would also click it (and power it off): swallow that one click.
+    if (dragging && dragged) {
+      const swallow = (e) => { e.stopPropagation(); e.preventDefault(); };
+      window.addEventListener('click', swallow, { capture: true, once: true });
+      setTimeout(() => window.removeEventListener('click', swallow, { capture: true }), 0);
+    }
+    dragging = false;
+  });
   el.addEventListener('touchstart', (e) => { if (start(e.touches[0].clientY)) e.preventDefault(); }, { passive: false });
   window.addEventListener('touchmove', (e) => { if (dragging) move(e.touches[0].clientY); });
   window.addEventListener('touchend', () => { dragging = false; });
@@ -127,6 +136,11 @@ function makeDial(el, { initial, onChange, steps = 0, locked = () => false }) {
 // Setup
 // -------------------------------------------------------
 let audioBlocked = false;  // the browser refused to start audio without a click
+let lastUserChange = -Infinity; // a viewer's CH / FX press: its result is announced even with ANNOUNCE off
+/** A new look is on: show it if ANNOUNCE LOOKS is on, or if the viewer just asked for the change. */
+function announceLook(info) {
+  if (viewerState.announce || performance.now() - lastUserChange < 4000) showLook(info);
+}
 let identShown = false;    // the Liquid LSD ident plays at the first power-on of a visit
 let lastBumper = 0;        // performance.now() of the last bumper (or the power-on)
 const BUMPER_EVERY_MS = 30 * 60 * 1000;
@@ -188,9 +202,9 @@ export function initUI() {
         // First power-on of the visit: the Liquid LSD ident over the end of the warm-up, then the look.
         identShown = true;
         setTimeout(showIdent, 900);
-        setTimeout(() => showLook(), 4600);
+        setTimeout(() => announceLook(), 4600);
       } else {
-        setTimeout(() => showLook(), 1600); // after the warm-up
+        setTimeout(() => announceLook(), 1600); // after the warm-up
       }
       lastBumper = performance.now();
       pollNowPlaying();
@@ -221,9 +235,9 @@ export function initUI() {
   setVolume(0.8);
 
   // --- Channel rocker, FX, HOLD ---
-  const next = control(() => { advanceForeground(); });
-  const prev = control(() => { previousForeground(); });
-  const fx = control(() => { nextFxChain(); });
+  const next = control(() => { lastUserChange = performance.now(); advanceForeground(); });
+  const prev = control(() => { lastUserChange = performance.now(); previousForeground(); });
+  const fx = control(() => { lastUserChange = performance.now(); nextFxChain(); });
   const hold = control(() => {
     setHold(!autopilotState.hold);
     holdBtn.setAttribute('aria-pressed', String(autopilotState.hold));
@@ -265,7 +279,7 @@ export function initUI() {
 
   // --- REACT: audio sensitivity ---
   const toDial = (k) => (k - REACT_MIN) / (REACT_MAX - REACT_MIN);
-  viewerState.react = Math.max(REACT_MIN, Math.min(REACT_MAX, Number(load('lsd.react', 1.0)) || 1.0));
+  viewerState.react = Math.max(REACT_MIN, Math.min(REACT_MAX, Number(load('lsd.react', REACT_DEFAULT)) || REACT_DEFAULT));
   const reactDial = makeDial(document.getElementById('reactDial'), {
     initial: toDial(viewerState.react),
     locked: () => live(),
@@ -275,13 +289,14 @@ export function initUI() {
       if (powerState.on) message(`REACT ${Math.round(viewerState.react * 100)}%`);
     },
   });
-  document.getElementById('reactDial').addEventListener('dblclick', control(() => reactDial.set(toDial(1.0))));
+  document.getElementById('reactDial').addEventListener('dblclick', control(() => reactDial.set(toDial(REACT_DEFAULT))));
   const stepReact = control((dir) => reactDial.set(reactDial.get() + dir * 0.05));
 
   const about = document.getElementById('about');
 
   // --- Service MENU (menu.js): SYNC, REACT, TIME, Reduced motion, Heavy looks, About ---
   viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, Number(load('lsd.sync', 0)) || 0));
+  viewerState.announce = load('lsd.announce', false) === true;
   viewerState.reducedMode = MODES.includes(load('lsd.reduced', 'auto')) ? load('lsd.reduced', 'auto') : 'auto';
   viewerState.heavyMode = MODES.includes(load('lsd.heavy', 'auto')) ? load('lsd.heavy', 'auto') : 'auto';
   const applyHeavy = () => {
@@ -296,36 +311,42 @@ export function initUI() {
   const cycle = (mode, dir) => MODES[(MODES.indexOf(mode) + dir + MODES.length) % MODES.length];
   const onOff = (b) => (b ? 'ON' : 'OFF');
   const rows = [
-    { label: 'SYNC', value: () => `${viewerState.syncMs > 0 ? '+' : ''}${viewerState.syncMs} MS`,
+    { label: 'SYNC', help: 'Delay the picture so its beats line up with what you hear (Bluetooth speakers are often 150-250 ms late).', value: () => `${viewerState.syncMs > 0 ? '+' : ''}${viewerState.syncMs} MS`,
       step: (dir) => {
         viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, viewerState.syncMs + dir * 10));
         save('lsd.sync', viewerState.syncMs);
       } },
-    { label: 'TAP SYNC', value: () => 'TAP 8 BEATS', run: () => startTapSync() },
-    { label: 'REACT', locked: live, value: () => `${Math.round(viewerState.react * 100)}%`,
+    { label: 'TAP SYNC', value: () => 'TAP 8 BEATS', run: () => startTapSync(),
+      help: 'Press Enter, then tap Space or the picture on 8 beats you hear: sets SYNC for you.' },
+    { label: 'ANNOUNCE LOOKS', value: () => onOff(viewerState.announce),
+      step: () => { viewerState.announce = !viewerState.announce; save('lsd.announce', viewerState.announce); },
+      help: 'Show the name of each new look and its effects when it comes on. Off: only when you press I or click the picture.' },
+    { label: 'REACT', locked: live, help: 'How strongly the picture moves with the music. Raise it for quiet shows, lower it if it is too busy.', value: () => `${Math.round(viewerState.react * 100)}%`,
       step: (dir) => reactDial.set(toDial(Math.max(REACT_MIN, Math.min(REACT_MAX, viewerState.react + dir * 0.05)))) },
-    { label: 'TIME', locked: live, value: () => timeLabel.textContent,
+    { label: 'TIME', locked: live, help: 'How long each look stays before the next one, in bars of the music.', value: () => timeLabel.textContent,
       step: (dir) => {
         const i = Math.round(timeDial.get() * (TIME_STEPS.length - 1));
         timeDial.set(Math.max(0, Math.min(TIME_STEPS.length - 1, i + dir)) / (TIME_STEPS.length - 1));
       } },
-    { label: 'REDUCED MOTION',
+    { label: 'REDUCED MOTION', help: 'Gentler: no flashes, no hard looks, slower changes. Auto follows your system setting.',
       value: () => (viewerState.reducedMode === 'auto' ? `AUTO (${onOff(viewerState.reduced)})` : viewerState.reducedMode.toUpperCase()),
       step: (dir) => { viewerState.reducedMode = cycle(viewerState.reducedMode, dir); save('lsd.reduced', viewerState.reducedMode); applyReduced(); } },
-    { label: 'HEAVY LOOKS', locked: live,
+    { label: 'BIG GPU LOOKS', locked: live,
+      help: 'The most demanding 3D fractals and simulations. Auto: on if your graphics card passed a quick test at power-on. On: always (may stutter on laptops and phones). Off: never, for a smoother picture.',
       value: () => {
         if (viewerState.heavyMode !== 'auto') return viewerState.heavyMode.toUpperCase();
         const gpu = window.LSD?.gpu;
         return gpu?.state === 'done' ? `AUTO (${onOff(gpu.heavy)}, ${gpu.ms.toFixed(0)} MS)` : `AUTO (${onOff(gpu?.heavy)})`;
       },
       step: (dir) => { viewerState.heavyMode = cycle(viewerState.heavyMode, dir); save('lsd.heavy', viewerState.heavyMode); applyHeavy(); } },
-    { label: 'RESET', run: () => {
+    { label: 'RESET', help: 'Put every setting back to its default.', run: () => {
       viewerState.syncMs = 0; save('lsd.sync', 0);
       viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
       viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
-      if (!live()) { reactDial.set(toDial(1.0)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1)); }
+      viewerState.announce = false; save('lsd.announce', false);
+      if (!live()) { reactDial.set(toDial(REACT_DEFAULT)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1)); }
     } },
-    { label: 'ABOUT', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
+    { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals.', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
     { label: 'EXIT', run: () => menu.hide() },
   ];
   // TAP SYNC: tap Space (or the picture) on 8 beats you hear; the median lateness against the locked beat
@@ -455,7 +476,7 @@ export function initUI() {
   }
 
   // --- Autopilot and broadcast events ---
-  window.addEventListener('lsd-now-showing', (e) => { showLook(e.detail); updateMediaSession(); });
+  window.addEventListener('lsd-now-showing', (e) => { announceLook(e.detail); updateMediaSession(); });
   window.addEventListener('lsd-broadcast-status', (e) => {
     const text = document.querySelector('#station-badge .station-text');
     tvBody.classList.toggle('live', e.detail.live);
@@ -505,7 +526,7 @@ export function initUI() {
     const msgFree = !document.getElementById('osd-msg').classList.contains('show');
     if (audioBlocked && powerState.on) { if (msgFree) message('CLICK OR PRESS A KEY FOR SOUND', 1500); noSignalShown = true; }
     else if (cvState.noSignal && powerState.on && !live()) { if (msgFree) message('NO SIGNAL', 1500); noSignalShown = true; }
-    else if (noSignalShown) { noSignalShown = false; showLook(); }
+    else if (noSignalShown) { noSignalShown = false; announceLook(); }
     const isLive = live() && autopilotState.clock.valid;
     const beats = heardBeats(performance.now(), viewerState.syncMs);
     beatLed.classList.toggle('on', powerState.on && ((beats % 1) + 1) % 1 < 0.15);

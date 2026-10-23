@@ -72,13 +72,13 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 | **FX** | Puts the next FX chain on the look on air | `F` |
 | **HOLD** | Keeps the current look until you press it again (the background keeps changing) | `H` or `Space`; long-press the picture |
 | **TIME** | How long each look holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
-| **REACT** | How strongly the picture reacts to the music, 25-200% (double-click for 100%) | `-` `=` |
+| **REACT** | How strongly the picture reacts to the music, 25-400%, 200% to start (double-click for 200%) | `-` `=` |
 
 Click or tap the picture (or press `I`) to show the channel, the look, its FX chain and the track playing on the radio. TIME and REACT are remembered in the browser.
 
 **No signal:** if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.
 
-**Heavy looks:** the most demanding fractals only play on computers fast enough for them (the TV checks at power-on). Add `?heavy=1` to the address to force them on, `?heavy=0` to keep them off.
+**Big GPU looks:** the most demanding 3D fractals and simulations only play on computers fast enough for them (the TV checks at power-on; MENU › Big GPU looks overrides it). Add `?heavy=1` to the address to force them on, `?heavy=0` to keep them off.
 
 **Screen:** while the TV is on, your computer or phone won't dim or lock (in browsers that support it).
 
@@ -88,7 +88,7 @@ Click or tap the picture (or press `I`) to show the channel, the look, its FX ch
 
 **Kiosk mode:** `index.html?kiosk` shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.
 
-**MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **REACT**, **TIME**, **Reduced motion** (Auto follows your system setting) and **Heavy looks** (Auto lets the GPU check decide). Settings are remembered in this browser. REACT, TIME and Heavy looks are locked during a live broadcast.
+**MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **Announce looks** (name each new look on screen; off by default), **REACT**, **TIME**, **Reduced motion** (Auto follows your system setting) and **Big GPU looks** (Auto lets the GPU check decide). The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy looks are locked during a live broadcast.
 
 **SYNC:** if the picture's pulses come before the beat you hear (Bluetooth speakers are often 150-250 ms late), open MENU › **TAP SYNC** and tap Space or the picture on 8 beats; or set **SYNC** by hand. It needs the beat light to be green (or a live broadcast).
 
