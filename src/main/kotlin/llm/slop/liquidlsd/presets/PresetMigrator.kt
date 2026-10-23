@@ -80,7 +80,6 @@ object PresetMigrator {
         val sanitizedDto = if (modified) {
             dto.copy(
                 parameters = sanitizedParams,
-                feedbackParameters = emptyMap(),
                 globalAlpha = sanitizedGlobalAlpha
             )
         } else {

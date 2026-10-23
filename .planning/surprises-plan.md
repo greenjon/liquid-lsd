@@ -8,7 +8,7 @@ Order is by risk: persisted-format changes first (DECISIONS §1: cheapest before
 
 | # | Item | State |
 |---|---|---|
-| 1 | Remove legacy `fb*` / `view3D*` params | **Open.** `feedbackParameters` still in `PresetModels.kt`, `PresetMigrator.kt`, `PresetDependencyAnalyzer.kt`, flame tools |
+| 1 | Remove legacy `fb*` / `view3D*` params | **Done.** Most of it was already gone (Deck `fb*`/`view3D*`, ClipboardManager, WebPresetSerializer, UI paths). Finished: `DeckPresetDto.feedbackParameters` removed with all uses; `viewParameters` kept (zoom, Z-rotate); web needs nothing (it never read them); full tests and `checkWebSync` pass. Bundled `.lsd` files keep the old key (ignored) |
 | 2 | ALPHA -> LEVEL | **Done.** Labels, relabel-on-load (`MacroEngine.relabelLegacyMasterKnobs`, called from `SessionSerializer`), `LegacyMasterLabelTest`, tooltips, `docs/developer/ui.md`, both release-notes files |
 | 3 | ARM64 in `DECISIONS.md` | **Done** (§11 lists five targets, §12 entry deleted, ARCHITECTURE "Unverified" bullet removed). Uncommitted |
 | 4 | Orphaned shaders | **Done** (deleted in 479f619, rendering.md wording in c79b16a) |

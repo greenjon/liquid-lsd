@@ -39,7 +39,6 @@ class SessionStateTest {
             name = "Deck A",
             visualSourceType = "mandala",
             parameters = emptyMap(),
-            feedbackParameters = emptyMap(),
             globalAlpha = dummyParam,
             isEmpty = false
         )
@@ -119,7 +118,6 @@ class SessionStateTest {
             name = "Deck A",
             visualSourceType = "mandala",
             parameters = emptyMap(),
-            feedbackParameters = emptyMap(),
             globalAlpha = dummyParam,
             isEmpty = false
         )
@@ -346,7 +344,6 @@ class SessionStateTest {
                 name = "Deck A",
                 visualSourceType = "mandala",
                 parameters = emptyMap(),
-                feedbackParameters = emptyMap(),
                 globalAlpha = dummyParam,
                 isEmpty = false
             )

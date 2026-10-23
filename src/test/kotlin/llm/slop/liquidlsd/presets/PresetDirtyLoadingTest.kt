@@ -74,16 +74,12 @@ class PresetDirtyLoadingTest {
                 "Thickness" to ParameterDto(0.5f, 0.0f, 1.0f, false, emptyList()),
                 "ObsoleteKey" to ParameterDto(1.0f, 0.0f, 1.0f, false, emptyList())
             ),
-            feedbackParameters = mapOf(
-                "legacyFeedback" to ParameterDto(0.5f, 0.0f, 1.0f, false, emptyList())
-            ),
             globalAlpha = null
         )
 
         val (sanitized, wasMigrated) = PresetMigrator.sanitizePresetDto(rawLegacyDto)
         assertTrue(wasMigrated, "Legacy preset must be flagged as migrated")
         assertFalse(sanitized.parameters.containsKey("ObsoleteKey"), "Obsolete keys must be removed")
-        assertTrue(sanitized.feedbackParameters.isEmpty(), "Legacy deck feedback is dropped: feedback is an FX now")
         assertTrue(sanitized.parameters.containsKey("L1"), "Missing L1 parameter must be populated")
         assertTrue(sanitized.parameters.containsKey("L2"), "Missing L2 parameter must be populated")
         assertEquals(0.5f, sanitized.parameters["Thickness"]?.baseValue, "Existing parameter values must be preserved")
@@ -196,7 +192,6 @@ class PresetDirtyLoadingTest {
             name = "Test",
             visualSourceType = "Mandala",
             parameters = mapOf("Lobes" to staticInitial),
-            feedbackParameters = emptyMap(),
             globalAlpha = globalAlpha
         )
 
@@ -206,7 +201,6 @@ class PresetDirtyLoadingTest {
             name = "Test",
             visualSourceType = "Mandala",
             parameters = mapOf("Lobes" to staticOther),
-            feedbackParameters = emptyMap(),
             globalAlpha = globalAlpha
         )
 
@@ -235,7 +229,6 @@ class PresetDirtyLoadingTest {
             name = "Empty",
             visualSourceType = "kifs",
             parameters = emptyMap(),
-            feedbackParameters = emptyMap(),
             globalAlpha = ParameterDto(1f, 0f, 1f, false, emptyList()),
             isEmpty = true
         )

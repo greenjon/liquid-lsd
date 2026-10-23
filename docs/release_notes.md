@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+### Old Feedback and 3D-View Settings Removed From Presets (`models/PresetModels.kt`, `presets/PresetMigrator.kt`, `presets/PresetDependencyAnalyzer.kt`)
+- **Presets no longer have a deck-level feedback section.** Feedback has been an FX for a while; the leftover `feedbackParameters` field is gone from the preset format, along with its handling in the loader, the dependency check and the flame tools.
+- **Your existing presets and sessions still load.** The old section is simply skipped, and presets saved from now on don't contain it. Only zoom and Z-rotate are stored as the deck's framing.
+
 ### Stock FX Chain Fixes (`defaults/fx_chains/*`, `web/tools/validate_content.mjs`)
 - **Six stock FX chains got back settings they had been silently losing.** Renamed effect parameters had left them pointing at parameters their effects no longer have, so those settings were ignored: Pop-Art Comic Print's edge palette and overlay, Digital Bitcrush Mosaic's diamond pixels and split mode, Prismatic Crystal Kaleidoscope's spectral split, Grindhouse VHS Bootleg's phosphor mask and darker grade, Laser Concert Anamorphic's brighter grade, and Cosmic Black Hole Vortex's displacement (two values were out of range). Copies of these chains already in your library are not changed.
 

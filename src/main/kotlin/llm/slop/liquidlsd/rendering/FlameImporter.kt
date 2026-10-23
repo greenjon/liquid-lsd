@@ -275,7 +275,6 @@ object FlameImporter {
             tags = listOf("imported", "flame"),
             visualSourceType = FlameSource.SOURCE_ID,
             parameters = params.mapValues { it.value.toDto() },
-            feedbackParameters = emptyMap(),
             presetNotes = imported.notes.joinToString("\n"),
             palette = imported.palette?.let { java.util.Base64.getEncoder().encodeToString(it) }
         )

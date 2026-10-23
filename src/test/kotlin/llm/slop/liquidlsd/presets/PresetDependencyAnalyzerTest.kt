@@ -38,8 +38,7 @@ class PresetDependencyAnalyzerTest {
             visualSourceType = "mandala",
             parameters = mapOf(
                 "speed" to ParameterDto(baseValue = 1f, baseMin = 1f, baseMax = 1f, randomizeBase = false, modulators = emptyList())
-            ),
-            feedbackParameters = emptyMap()
+            )
         )
 
         val deps = PresetDependencyAnalyzer.analyze(dto)
@@ -69,8 +68,7 @@ class PresetDependencyAnalyzerTest {
                         ModulatorDto(sourceId = "audio_flux_amp", operator = "ADD", depth = 1f)
                     )
                 )
-            ),
-            feedbackParameters = emptyMap()
+            )
         )
 
         val deps = PresetDependencyAnalyzer.analyze(dto)
@@ -94,8 +92,7 @@ class PresetDependencyAnalyzerTest {
                         ModulatorDto(sourceId = "seq", operator = "ADD", depth = 0.3f)
                     )
                 )
-            ),
-            feedbackParameters = emptyMap()
+            )
         )
 
         val deps = PresetDependencyAnalyzer.analyze(dto)
@@ -112,8 +109,7 @@ class PresetDependencyAnalyzerTest {
             visualSourceType = "mandala",
             parameters = mapOf(
                 "zoom" to ParameterDto(baseValue = 1f, baseMin = 0.5f, baseMax = 2f, randomizeBase = true, modulators = emptyList())
-            ),
-            feedbackParameters = emptyMap()
+            )
         )
         val depsBase = PresetDependencyAnalyzer.analyze(dtoWithBaseRand)
         assertTrue(depsBase.usesRandomization)
@@ -128,8 +124,7 @@ class PresetDependencyAnalyzerTest {
                         ModulatorDto(sourceId = "lfo", operator = "ADD", depth = 0.5f, depthMin = 0.1f, depthMax = 0.9f, randomizeDepth = true)
                     )
                 )
-            ),
-            feedbackParameters = emptyMap()
+            )
         )
         val depsMod = PresetDependencyAnalyzer.analyze(dtoWithModRand)
         assertTrue(depsMod.usesRandomization)
@@ -148,8 +143,7 @@ class PresetDependencyAnalyzerTest {
                         ModulatorDto(sourceId = "audio_bass", operator = "ADD", depth = 0.5f, bypassed = true)
                     )
                 )
-            ),
-            feedbackParameters = emptyMap()
+            )
         )
 
         val deps = PresetDependencyAnalyzer.analyze(dto)
@@ -209,8 +203,7 @@ class PresetDependencyAnalyzerTest {
                         ModulatorDto(sourceId = "audio_flux_bass", operator = "ADD", depth = 0.8f)
                     )
                 )
-            ),
-            feedbackParameters = emptyMap()
+            )
         )
 
         val deps = dto.analyzeDependencies()

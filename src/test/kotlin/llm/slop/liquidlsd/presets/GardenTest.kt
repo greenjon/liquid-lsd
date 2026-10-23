@@ -39,7 +39,7 @@ class GardenTest {
     private fun write(dir: java.io.File, name: String, source: String, zoom: Float, tags: List<String>) {
         val dto = DeckPresetDto(
             name = name, tags = tags, visualSourceType = source,
-            parameters = mapOf("Zoom" to ParameterDto(zoom, zoom, zoom, false, emptyList())), feedbackParameters = emptyMap()
+            parameters = mapOf("Zoom" to ParameterDto(zoom, zoom, zoom, false, emptyList()))
         )
         dir.resolve("$name.lsd").writeText(PresetManager.json.encodeToString(dto))
     }
@@ -65,13 +65,13 @@ class GardenTest {
     @Test fun samplerStrategyFieldIsOptionalAndRoundTrips() {
         val old = """{"name":"x","visualSourceType":"mandala","parameters":{},"feedbackParameters":{}}"""
         assertEquals(null, PresetManager.json.decodeFromString<DeckPresetDto>(old).samplerStrategy)
-        val dto = DeckPresetDto(name = "x", visualSourceType = "fractal_flame", parameters = emptyMap(), feedbackParameters = emptyMap(), samplerStrategy = "BREED")
+        val dto = DeckPresetDto(name = "x", visualSourceType = "fractal_flame", parameters = emptyMap(), samplerStrategy = "BREED")
         assertEquals("BREED", PresetManager.json.decodeFromString<DeckPresetDto>(PresetManager.json.encodeToString(dto)).samplerStrategy)
     }
 
     @Test fun loadingSanitizerKeepsTheCodeBuiltGenome() {
         val params = llm.slop.liquidlsd.rendering.FlameGenome.buildParameters().mapValues { it.value.toDto() }
-        val dto = DeckPresetDto(name = "x", visualSourceType = "fractal_flame", parameters = params, feedbackParameters = emptyMap())
+        val dto = DeckPresetDto(name = "x", visualSourceType = "fractal_flame", parameters = params)
         val (clean, _) = PresetMigrator.sanitizePresetDto(dto)
         assertEquals(params.keys, clean.parameters.keys)
     }
@@ -79,7 +79,7 @@ class GardenTest {
     @Test fun paletteFieldIsOptionalAndRoundTrips() {
         val old = """{"name":"x","visualSourceType":"fractal_flame","parameters":{},"feedbackParameters":{}}"""
         assertEquals(null, PresetManager.json.decodeFromString<DeckPresetDto>(old).palette)
-        val dto = DeckPresetDto(name = "x", visualSourceType = "fractal_flame", parameters = emptyMap(), feedbackParameters = emptyMap(), palette = "AQID")
+        val dto = DeckPresetDto(name = "x", visualSourceType = "fractal_flame", parameters = emptyMap(), palette = "AQID")
         assertEquals("AQID", PresetManager.json.decodeFromString<DeckPresetDto>(PresetManager.json.encodeToString(dto)).palette)
     }
 

@@ -79,7 +79,6 @@ object PresetDependencyAnalyzer {
         }
 
         dto.parameters.values.forEach(::inspectParam)
-        dto.feedbackParameters.values.forEach(::inspectParam)
         dto.viewParameters.values.forEach(::inspectParam)
         dto.globalAlpha?.let(::inspectParam)
 

@@ -79,7 +79,7 @@ blendFBO + Deck BG ─► mixer.frag (levels A/B/BG, master level) ─► master
 Deck PV renders like A/B/BG but is never composited (preview/audition).
 ```
 
-- **Deck** (`Deck.kt`): one `VisualSource`, `cleanFBO`, one `FxChain`, view parameters (`viewZoom`, `viewRotateZ` are applied: as uniforms for generators, via `view2d.frag` for external video; the other `view*`/`fb*` parameters are legacy, see report), a `DeckMorphController` (randomize as a continuous morph, `MorphState`). Decks are `DeckSlot` A/B/BG/PV (`presets/DeckSlot.kt`).
+- **Deck** (`Deck.kt`): one `VisualSource`, `cleanFBO`, one `FxChain`, view parameters (`viewZoom`, `viewRotateZ` are applied: as uniforms for generators, via `view2d.frag` for external video; no other view or feedback parameters exist), a `DeckMorphController` (randomize as a continuous morph, `MorphState`). Decks are `DeckSlot` A/B/BG/PV (`presets/DeckSlot.kt`).
 - **VisualSource** hierarchy: `DynamicVisualSource` (shader + uniform binding + multipass topology) ← `ISFVisualSource` (ISF generator) and `Mandala` (a `DynamicVisualSource` with a `recipe`; `MandalaLibrary`, `MorphState`); `ExternalVideoSource` for Spout/Syphon/PipeWire feeds (`TextureReceiver`, `ExternalVideoDiscovery`, `rendering/pipewire/`). A source "master" in `VisualSourceRegistry` owns the shader; decks hold clones.
 - **ISF** (`rendering/isf/`), DECISIONS §2:
   - `ISFParser` reads ISF, and wraps Shadertoy (`mainImage`) and GLSLSandbox shaders with a synthesized header; `ISFModels`, `ISFScanner`, `ISFTextureLoader` (imported textures).

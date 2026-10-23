@@ -82,7 +82,6 @@ class ExternalVideoSourceTest {
             visualSourceType = "spout_input",
             serverName = "TouchDesigner-Out",
             parameters = emptyMap(),
-            feedbackParameters = emptyMap(),
             isEmpty = false
         )
 

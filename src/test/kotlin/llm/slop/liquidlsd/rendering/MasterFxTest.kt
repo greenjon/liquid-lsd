@@ -85,7 +85,6 @@ class MasterFxTest {
             name = "Deck A",
             visualSourceType = "mandala",
             parameters = emptyMap(),
-            feedbackParameters = emptyMap(),
             globalAlpha = dummy,
             isEmpty = false
         )

@@ -233,8 +233,6 @@ data class DeckPresetDto(
     val visualSourceType: String, // e.g., "Mandala" or "Mandelbulb"
     val serverName: String = "",
     val parameters: Map<String, ParameterDto>, // Visual source params
-    /** Legacy deck-level feedback; feedback is an FX now. Read and ignored, no longer written. */
-    val feedbackParameters: Map<String, ParameterDto> = emptyMap(),
     /** Deck framing: `viewZoom` and `viewRotateZ` (older presets also carry unused 3D-view keys, ignored). */
     val viewParameters: Map<String, ParameterDto> = emptyMap(),
     val globalAlpha: ParameterDto? = null,

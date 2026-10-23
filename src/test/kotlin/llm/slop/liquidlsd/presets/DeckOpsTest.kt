@@ -76,7 +76,6 @@ class DeckOpsTest {
             name = name,
             visualSourceType = sourceId,
             parameters = emptyMap(),
-            feedbackParameters = emptyMap(),
             globalAlpha = ParameterDto(tweak, 0f, 1f, false, emptyList()),
             isEmpty = empty,
             macroBank = bank

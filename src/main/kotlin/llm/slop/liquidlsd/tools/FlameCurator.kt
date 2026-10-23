@@ -263,7 +263,7 @@ object FlameCurator {
             params["Decay"]!!.baseValue = FlameUnits.stored("Decay", DECAY); params["Smooth"]!!.baseValue = SMOOTH
             val dto = DeckPresetDto(
                 name = e.name, tags = listOf("curated", "flame"), visualSourceType = FlameSource.SOURCE_ID,
-                parameters = params.mapValues { it.value.toDto() }, feedbackParameters = emptyMap(),
+                parameters = params.mapValues { it.value.toDto() },
                 presetNotes = "score %.2f".format(e.score)
             )
             File(cfg.out, e.name + ".lsd").writeText(PresetManager.json.encodeToString(dto))

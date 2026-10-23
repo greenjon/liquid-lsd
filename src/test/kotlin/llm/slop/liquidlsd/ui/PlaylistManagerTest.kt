@@ -71,7 +71,6 @@ class PlaylistManagerTest {
             tags = listOf("hypnotic", "ambient", "fast"),
             visualSourceType = "Mandala",
             parameters = emptyMap(),
-            feedbackParameters = emptyMap(),
             globalAlpha = ParameterDto(1f, 0f, 1f, false, emptyList())
         )
         val jsonStr = kotlinx.serialization.json.Json.encodeToString(DeckPresetDto.serializer(), dto)

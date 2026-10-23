@@ -129,7 +129,7 @@ def preset(name, source, spec, tags, notes=""):
     params = mandala_params(spec) if source == "mandala" else isf_params(source, spec)
     write_json(WEB / "presets" / f"{name}.lsd", {
         "version": 1, "name": name, "visualSourceType": source, "parameters": params,
-        "feedbackParameters": {}, "tags": ["web"] + tags, "presetNotes": notes,
+        "tags": ["web"] + tags, "presetNotes": notes,
         "globalAlpha": P(1.0, 0.0, 1.0),
     })
 
