@@ -9,7 +9,7 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const MODES = ['auto', 'on', 'off'];
 
 /**
- * `hooks` come from the renderer: pause(), resume(), setQuality(floorIndex).
+ * `hooks` come from the renderer: pause(), resume(), setQuality(floorIndex), frames(), isPaused().
  * Options (setOption(name, value)):
  *   quality        'auto' | 'low' | 'high'   low: no heavy looks, coarser picture; high: heavy looks always on
  *   reactivity     0.25 .. 4                 the REACT knob (2 = default)
@@ -38,6 +38,20 @@ export function installEmbedApi(hooks) {
     live(v) { setRelayEnabled(!!v); },
     sync(v) { viewerState.syncMs = clamp(Math.round(Number(v) || 0), -100, 400); },
   };
+
+  // ?debug: a status line every 2 s (the host app logs the console), for working out why a picture is black.
+  if (new URLSearchParams(location.search).has('debug')) {
+    setInterval(() => {
+      const L = window.LSD, c = document.getElementById('glCanvas'), a = L.autopilotState;
+      console.log('[lsd-debug] ' + JSON.stringify({
+        frames: hooks.frames(), paused: hooks.isPaused(), on: L.powerState.on, warm: L.powerState.warmupProgress,
+        canvas: [c.width, c.height, c.clientWidth, c.clientHeight], render: L.renderSize(),
+        deckA: a.deckA?.source ?? null, deckB: a.deckB?.source ?? null, bg: a.deckBG?.source ?? null,
+        balance: a.mixer?.balance, alpha: a.mixer?.alpha, master: a.masterAlpha, noSignal: L.cvState.noSignal,
+        amp: +L.cvState.audio_amp.toFixed(3), feedReady: feedReady(), vis: document.visibilityState,
+      }));
+    }, 2000);
+  }
 
   Object.assign(window.LSD, {
     /** Mono PCM from the host: Int16Array / Float32Array / ArrayBuffer (LE int16) / base64 string, plus its sample rate. */

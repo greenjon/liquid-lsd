@@ -463,6 +463,8 @@ async function init() {
   requestAnimationFrame(render);
 
   installEmbedApi({
+    frames: () => frameCount,
+    isPaused: () => paused,
     pause() { if (paused) return; paused = true; suspendAudio(); },
     resume() {
       if (!paused) return;
