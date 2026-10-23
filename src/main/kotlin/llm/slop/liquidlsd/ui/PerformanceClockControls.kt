@@ -31,8 +31,8 @@ internal object PerformanceClockControls {
     private val TAP_COUNTING_INK = TangoPalette.inkFor(TangoPalette.TAP_COUNTING)
 
     private var linkPeers = -1
-    private var linkLabel = ""
-    private var linkTip = ""
+    private var linkLabel = "LINK##perf_clock_link"
+    private var linkTip = "Ableton Link is off. Click to open Tempo & Sync preferences."
     private var bpmTenths = Int.MIN_VALUE
     private var bpmLabel = ""
     private var tapCountShown = -1
