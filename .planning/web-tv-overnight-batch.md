@@ -47,7 +47,9 @@ in a TV service MENU. Not in this batch: track-change looks (shows run 2-7 h), d
 
 All nine items landed on `main`, not pushed. 432 web unit tests, 6 relay tests, the Kotlin broadcast
 tests, `ui_check.mjs` (every control, the menu, TAP SYNC, reduced motion, breakdown/drop, live lock and
-title card) and the full render check pass. Nothing was skipped.
+title card) and the full render check pass. Nothing was skipped. The final full render check caught one
+regression (Spiral Galaxy pixelated to black by the new chain pairing); fixed by tagging fine-dot and
+thin-line looks `sparse` so they skip pixelate/halftone chains (commit after ba5908b).
 
 | # | Item | Commit |
 |---|------|--------|
