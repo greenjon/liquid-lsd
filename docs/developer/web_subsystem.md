@@ -212,3 +212,4 @@ pm2 save && pm2 startup
   "uptime": 128450
 }
 ```
+- **Fullscreen and microphone (`web/ui.js`, `web/dsp.js`)**: `S` / MENU › Fullscreen / double-click all run `toggleFullscreen` on `#tv-screen-area`. `A` / MENU › Input run `toggleMic` → `dsp.setMic`: every analyser and the onset worklet hang off one `analysisIn` gain that the radio's element source and the `getUserMedia` stream (echo cancellation, noise suppression and AGC off) both feed; only the radio also goes to the volume gain, so the mic never plays back. The radio element is paused while the mic is in, `reconnect()` is skipped, silence still shows NO SIGNAL, `stopAudio` releases the mic, and the `lsd-mic` event refreshes the menu (also when the browser revokes the mic). The headless check only verifies the menu rows; the mic itself needs a real browser.

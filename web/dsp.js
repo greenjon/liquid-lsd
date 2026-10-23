@@ -135,7 +135,7 @@ function updateSignal(dt) {
   quietFor = analysisReady && cvState.audio_amp > SILENT_AMP ? 0 : quietFor + dt;
   cvState.noSignal = wantAudio && !noStatic && quietFor > 4;
   const now = performance.now();
-  if (cvState.noSignal && now - lastRetryMs > 10000) {
+  if (cvState.noSignal && !micOn && now - lastRetryMs > 10000) {
     lastRetryMs = now;
     reconnect();
   }
@@ -165,6 +165,51 @@ export function tick(dt) {
 
 let currentVolumeRatio = 0.8;
 
+// Microphone input: the picture follows the room instead of the radio. Needs a secure page (https) and the
+// viewer's permission; power-off puts the radio back.
+let analysisIn = null;
+let micOn = false;
+let micStream = null;
+let micSource = null;
+export const micAvailable = () => !!navigator.mediaDevices?.getUserMedia;
+export const isMicOn = () => micOn;
+
+function releaseMic() {
+  if (!micOn) return;
+  micOn = false;
+  micSource?.disconnect();
+  micStream?.getTracks().forEach((t) => t.stop());
+  micSource = micStream = null;
+  window.dispatchEvent(new CustomEvent('lsd-mic', { detail: false }));
+}
+
+/** Switches the analysed input to the microphone (`on`) or back to the radio; rejects if the mic is refused. */
+export async function setMic(on) {
+  if (on === micOn || !audioCtx) return micOn;
+  if (on) {
+    // Raw sound: the browser's speech clean-up would flatten the beat.
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    });
+    micStream = stream;
+    micSource = audioCtx.createMediaStreamSource(stream);
+    micSource.connect(analysisIn);
+    micOn = true;
+    stream.getAudioTracks()[0]?.addEventListener('ended', () => { if (micStream === stream) setMic(false).catch(() => {}); });
+    document.getElementById('lsdAudio')?.pause();
+    tracker.reset();
+    quietFor = 0;
+    window.dispatchEvent(new CustomEvent('lsd-mic', { detail: true }));
+  } else {
+    releaseMic();
+    tracker.reset();
+    quietFor = 0;
+    lastRetryMs = performance.now();
+    if (wantAudio) reconnect();
+  }
+  return micOn;
+}
+
 // User-gesture startup sequence
 export async function startAudio() {
   const audioEl = document.getElementById('lsdAudio');
@@ -184,7 +229,11 @@ export async function startAudio() {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
     audioCtx = new AudioContextClass();
 
-    const source = audioCtx.createMediaElementSource(audioEl);
+    const radio = audioCtx.createMediaElementSource(audioEl);
+    // Everything that is analysed comes through `source`: the radio, or the microphone (which is never
+    // sent to the speakers, so it cannot feed back).
+    const source = audioCtx.createGain();
+    analysisIn = source;
 
     // Broadband Analyser
     broadbandAnalyser = audioCtx.createAnalyser();
@@ -225,7 +274,8 @@ export async function startAudio() {
     gainNode.gain.value = currentVolumeRatio * currentVolumeRatio;
 
     // Wire graph
-    source.connect(gainNode);
+    radio.connect(source);
+    radio.connect(gainNode);
     gainNode.connect(audioCtx.destination);
     source.connect(broadbandAnalyser);
     source.connect(bassFilter);
@@ -264,7 +314,8 @@ export async function startAudio() {
     await audioCtx.resume();
   }
 
-  await audioEl.play();
+  if (micOn) audioEl.pause();       // the microphone is the input; the radio waits
+  else await audioEl.play();
 
   cvState.isLive = true;
   analysisReady = true;
@@ -273,6 +324,7 @@ export async function startAudio() {
 // Stop audio stream and pause analysis on power off
 export async function stopAudio() {
   wantAudio = false;
+  releaseMic();
   cvState.noSignal = false;
   const audioEl = document.getElementById('lsdAudio');
   if (audioEl) {

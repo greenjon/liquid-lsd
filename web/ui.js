@@ -1,7 +1,7 @@
 // ui.js
 // The TV's controls: power, volume, the viewer controls (channel rocker, FX, HOLD, TIME, REACT), the
 // on-screen display, keyboard and touch. Viewer controls are locked while the desktop broadcasts live.
-import { startAudio, stopAudio, setVolume, cvState } from './dsp.js';
+import { startAudio, stopAudio, setVolume, setMic, isMicOn, micAvailable, cvState } from './dsp.js';
 import { autopilotState, advanceForeground, previousForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion } from './autopilot.js';
 import { createMenu } from './menu.js';
 import { heardBeats, tapOffset } from './sync.js';
@@ -339,6 +339,11 @@ export function initUI() {
         return gpu?.state === 'done' ? `AUTO (${onOff(gpu.heavy)}, ${gpu.ms.toFixed(0)} MS)` : `AUTO (${onOff(gpu?.heavy)})`;
       },
       step: (dir) => { viewerState.heavyMode = cycle(viewerState.heavyMode, dir); save('lsd.heavy', viewerState.heavyMode); applyHeavy(); } },
+    { label: 'INPUT', locked: live, value: () => (isMicOn() ? 'MICROPHONE' : 'RADIO'),
+      help: 'What the picture listens to. Radio: the Spaz Radio stream. Microphone: the sound in the room (the browser asks first; it is analysed only, never played back).',
+      step: () => toggleMic() },
+    { label: 'FULLSCREEN', value: () => (document.fullscreenElement ? 'ON' : 'OFF'), step: () => toggleFullscreen(), run: () => toggleFullscreen(),
+      help: 'The picture and its on-screen display fill the screen. Double-click the picture or press S to toggle; Esc leaves.' },
     { label: 'RESET', help: 'Put every setting back to its default.', run: () => {
       viewerState.syncMs = 0; save('lsd.sync', 0);
       viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
@@ -349,6 +354,27 @@ export function initUI() {
     { label: 'ABOUT', help: 'About Liquid LSD, the software that makes these visuals.', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
     { label: 'EXIT', run: () => menu.hide() },
   ];
+  /** Listens to the microphone instead of the radio, or back. */
+  const toggleMic = control(async () => {
+    if (audioBlocked) { message('CLICK OR PRESS A KEY FOR SOUND', 2000); return; }
+    if (!micAvailable()) { message('NO MICROPHONE ACCESS HERE', 3000); return; }
+    try {
+      await setMic(!isMicOn());
+      message(isMicOn() ? 'INPUT \u00B7 MICROPHONE' : 'INPUT \u00B7 RADIO', 2500);
+    } catch (err) {
+      console.warn('Microphone unavailable:', err);
+      message('MICROPHONE BLOCKED', 3000);
+    }
+    menu.refresh();
+  });
+  function toggleFullscreen() {
+    if (!screen.requestFullscreen) { message('FULLSCREEN NOT AVAILABLE HERE', 3000); return; }
+    if (!document.fullscreenElement) screen.requestFullscreen().catch(console.error);
+    else document.exitFullscreen().catch(console.error);
+  }
+  document.addEventListener('fullscreenchange', () => menu.refresh());
+  window.addEventListener('lsd-mic', () => menu.refresh());
+
   // TAP SYNC: tap Space (or the picture) on 8 beats you hear; the median lateness against the locked beat
   // clock becomes SYNC. Needs a locked beat (or a live broadcast), and taps that agree within ~150 ms.
   const TAPS = 8;
@@ -401,6 +427,7 @@ export function initUI() {
       f: fx, F: fx, h: hold, H: hold, ' ': hold,
       '[': () => stepTime(-1), ']': () => stepTime(1),
       '-': () => stepReact(-1), '=': () => stepReact(1), '+': () => stepReact(1),
+      s: toggleFullscreen, S: toggleFullscreen, a: toggleMic, A: toggleMic,
       i: () => showLook(undefined, 4000, true), I: () => showLook(undefined, 4000, true),
     };
     const fn = keys[e.key];
@@ -435,11 +462,8 @@ export function initUI() {
   });
   canvas.addEventListener('click', () => showLook(undefined, 4000, true));
 
-  // --- Fullscreen: double-click the picture (the OSD comes along) ---
-  canvas.addEventListener('dblclick', () => {
-    if (!document.fullscreenElement) screen.requestFullscreen?.().catch(console.error);
-    else document.exitFullscreen().catch(console.error);
-  });
+  // --- Fullscreen: double-click the picture, S, or MENU (the OSD comes along) ---
+  canvas.addEventListener('dblclick', toggleFullscreen);
 
   // --- Phone lock screen / media keys: play-pause is the power switch, next/previous change the look ---
   if ('mediaSession' in navigator) {

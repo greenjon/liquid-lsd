@@ -107,6 +107,8 @@ try {
   check('Menu: ANNOUNCE LOOKS turns on', w.LSD.viewerState.announce === true);
   key('ArrowRight');
   check('Menu: ANNOUNCE LOOKS turns off', w.LSD.viewerState.announce === false);
+  const labels = [...menuEl.querySelectorAll('.menu-label')].map((e) => e.textContent);
+  check('Menu: has INPUT and FULLSCREEN rows', labels.includes('INPUT') && labels.includes('FULLSCREEN'), labels.join(','));
   key('Escape');
   check('Esc closes the menu', menuEl.hidden);
 
@@ -164,7 +166,7 @@ try {
   // Branding: I adds the Liquid LSD line; MENU › ABOUT opens and any key closes it; the bumper; the nameplate.
   key('i');
   check('I shows the Liquid LSD line', osd('osd-brand').shown && osd('osd-brand').text.includes('liquid-lsd.greenjon.com'));
-  key('m'); for (let i = 0; i < 8; i++) key('ArrowDown'); key('Enter'); // row 8 = ABOUT
+  key('m'); for (let i = 0; i < 10; i++) key('ArrowDown'); key('Enter'); // row 10 = ABOUT
   const aboutEl = d.getElementById('about');
   check('MENU › ABOUT opens the about page', !aboutEl.hidden && aboutEl.textContent.includes('greenjon'), aboutEl.hidden);
   key('x');

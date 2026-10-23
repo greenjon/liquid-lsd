@@ -62,7 +62,9 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 **Volume dial:** Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.
 
-**Fullscreen:** Double-click the TV screen to expand to full-screen (the on-screen display comes along). Double-click again or press `Esc` to go back to the TV shell.
+**Fullscreen:** Double-click the TV screen, press `S`, or choose MENU › **Fullscreen** to expand to full-screen (the on-screen display comes along). Do any of them again, or press `Esc`, to go back to the TV shell.
+
+**Microphone:** press `A` or choose MENU › **Input** to make the picture follow your microphone instead of the radio, for a room playing its own music. Your browser asks permission the first time; the sound is only analysed, never played through the speakers. Press `A` again for the radio. Turning the TV off also puts the radio back. Locked during a live broadcast.
 
 **Viewer controls** (Autopilot only; while you broadcast live they are locked and the screen says so):
 
@@ -88,7 +90,7 @@ Click or tap the picture (or press `I`) to show the channel, the look, its FX ch
 
 **Kiosk mode:** `index.html?kiosk` shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.
 
-**MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **Announce looks** (name each new look on screen; off by default), **REACT**, **TIME**, **Reduced motion** (Auto follows your system setting) and **Big GPU looks** (Auto lets the GPU check decide). The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy looks are locked during a live broadcast.
+**MENU:** the MENU button or `M` opens the service menu (arrows or clicks to change, Esc or M to close): **SYNC** (how late the sound reaches you, for Bluetooth and other delayed speakers), **Announce looks** (name each new look on screen; off by default), **REACT**, **TIME**, **Reduced motion** (Auto follows your system setting), **Big GPU looks** (Auto lets the GPU check decide), **Input** (radio or microphone) and **Fullscreen**. The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy looks are locked during a live broadcast.
 
 **SYNC:** if the picture's pulses come before the beat you hear (Bluetooth speakers are often 150-250 ms late), open MENU › **TAP SYNC** and tap Space or the picture on 8 beats; or set **SYNC** by hand. It needs the beat light to be green (or a live broadcast).
 
