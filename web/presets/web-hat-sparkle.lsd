@@ -118,11 +118,11 @@
       "modulators": []
     }
   },
-  "feedbackParameters": {},
   "tags": [
     "web",
     "hat",
-    "high"
+    "high",
+    "sparse"
   ],
   "presetNotes": "A calm spiral that does nothing but sparkle: dots grow, glow and the colour jumps with every hi-hat.",
   "globalAlpha": {

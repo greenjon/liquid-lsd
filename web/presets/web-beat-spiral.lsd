@@ -154,13 +154,13 @@
       "modulators": []
     }
   },
-  "feedbackParameters": {},
   "tags": [
     "web",
     "beat",
     "kick",
     "bass-gated",
-    "high"
+    "high",
+    "sparse"
   ],
   "presetNotes": "Spiral thumps on every beat, dots swell on the kick, twists only when the bass is loud, hue turns over 16 bars.",
   "globalAlpha": {

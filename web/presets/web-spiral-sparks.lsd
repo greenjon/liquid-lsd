@@ -154,13 +154,13 @@
       "modulators": []
     }
   },
-  "feedbackParameters": {},
   "tags": [
     "web",
     "beat",
     "bar",
     "amp",
-    "high"
+    "high",
+    "sparse"
   ],
   "presetNotes": "Few big dots with short trails; the wave only ripples through them when the hats are busy.",
   "globalAlpha": {

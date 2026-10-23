@@ -134,12 +134,12 @@
       "modulators": []
     }
   },
-  "feedbackParameters": {},
   "tags": [
     "web",
     "ambient",
     "bar",
-    "amp"
+    "amp",
+    "sparse"
   ],
   "presetNotes": "A long-trailed phosphor figure drifting slowly; its glow follows the overall level.",
   "globalAlpha": {

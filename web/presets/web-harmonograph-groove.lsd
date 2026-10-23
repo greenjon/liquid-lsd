@@ -146,13 +146,13 @@
       "modulators": []
     }
   },
-  "feedbackParameters": {},
   "tags": [
     "web",
     "groove",
     "beat",
     "bar",
-    "bass"
+    "bass",
+    "sparse"
   ],
   "presetNotes": "A glowing Lissajous rosette that flares on every beat, thickens with the bass and changes ratio every eight bars.",
   "globalAlpha": {

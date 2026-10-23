@@ -134,12 +134,12 @@
       "modulators": []
     }
   },
-  "feedbackParameters": {},
   "tags": [
     "web",
     "beat",
     "bar",
-    "kick"
+    "kick",
+    "sparse"
   ],
   "presetNotes": "A fine, dense galaxy arm turning slowly; dots swell on each kick.",
   "globalAlpha": {

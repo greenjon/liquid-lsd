@@ -167,14 +167,14 @@
       "modulators": []
     }
   },
-  "feedbackParameters": {},
   "tags": [
     "web",
     "build",
     "bar",
     "bass",
     "kick",
-    "bass-gated"
+    "bass-gated",
+    "sparse"
   ],
   "presetNotes": "A spiral that speeds up, shears and zooms through a phrase; the wave only breaks loose on loud bass.",
   "globalAlpha": {

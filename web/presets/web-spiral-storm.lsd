@@ -156,12 +156,12 @@
       "modulators": []
     }
   },
-  "feedbackParameters": {},
   "tags": [
     "web",
     "beat",
     "bar",
-    "mid"
+    "mid",
+    "sparse"
   ],
   "presetNotes": "Dense spiral that reverses direction every eight beats; dots tick on every half beat; mids shear it.",
   "globalAlpha": {

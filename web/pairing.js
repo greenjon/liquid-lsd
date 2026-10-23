@@ -1,17 +1,23 @@
 // Which FX chains suit a preset when the autopilot picks one from the rotation.
 // A preset tagged `fullframe` fills the whole frame with colour (no dark background), so feedback
 // trails and bloom pile up on it until the picture is one flat colour: it skips chains that hold
-// either. And a chain should answer a different part of the music than the look does: a look that
+// either; a `sparse` preset (fine dots or thin lines) skips pixelate and halftone chains, which
+// average it away to black. And a chain should answer a different part of the music than the look does: a look that
 // mostly follows the kick does not get a chain that only follows the kick too (`dominantBand`,
 // `bands`, `chainAnswers`; the autopilot falls back to any fitting chain when none answers).
 // Used by autopilot.js and web/checks/render_check.mjs, so the check shows what goes on air.
 
 const FULL_FRAME_AVOIDS = new Set(['feedback', 'bloom']);
+// A `sparse` preset (fine dots or thin lines on black) is averaged away to nothing by these.
+const SPARSE_AVOIDS = new Set(['pixelate', 'halftone']);
 
 /** True when the chain (an FXChainDto) may run on a preset with these tags. */
 export function chainFits(presetTags, chainDto) {
-  if (!(presetTags ?? []).includes('fullframe')) return true;
-  return !(chainDto?.slots ?? []).some((s) => s && FULL_FRAME_AVOIDS.has(s.filterId));
+  const tags = presetTags ?? [];
+  const avoid = (set) => (chainDto?.slots ?? []).some((s) => s && set.has(s.filterId));
+  if (tags.includes('fullframe') && avoid(FULL_FRAME_AVOIDS)) return false;
+  if (tags.includes('sparse') && avoid(SPARSE_AVOIDS)) return false;
+  return true;
 }
 
 const BAND = {

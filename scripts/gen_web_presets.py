@@ -123,9 +123,16 @@ FULL_FRAME_SOURCES = {"cyclic_ca", "kali_set", "glitch_blocks", "halftone_matrix
                       "apollonian", "escape_time", "nebula_volume", "pseudo_kleinian"}
 
 
+# Sources drawn as fine dots or thin lines on black: pixelate and halftone chains average them away to
+# nothing, so their presets are tagged `sparse` and skip those chains (web/pairing.js).
+SPARSE_SOURCES = {"dynamic_spiral", "harmonograph"}
+
+
 def preset(name, source, spec, tags, notes=""):
     if source in FULL_FRAME_SOURCES:
         tags = tags + ["fullframe"]
+    if source in SPARSE_SOURCES:
+        tags = tags + ["sparse"]
     params = mandala_params(spec) if source == "mandala" else isf_params(source, spec)
     write_json(WEB / "presets" / f"{name}.lsd", {
         "version": 1, "name": name, "visualSourceType": source, "parameters": params,

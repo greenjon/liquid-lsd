@@ -164,14 +164,14 @@
       "modulators": []
     }
   },
-  "feedbackParameters": {},
   "tags": [
     "web",
     "hard",
     "bar",
     "bass",
     "kick",
-    "high"
+    "high",
+    "sparse"
   ],
   "presetNotes": "Kicks wind the spiral in and thicken the line, the bass detunes it, the ratio jumps every two bars.",
   "globalAlpha": {
