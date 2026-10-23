@@ -1,15 +1,16 @@
 // Which FX chains suit a preset when the autopilot picks one from the rotation.
 // A preset tagged `fullframe` fills the whole frame with colour (no dark background), so feedback
 // trails and bloom pile up on it until the picture is one flat colour: it skips chains that hold
-// either; a `sparse` preset (fine dots or thin lines) skips pixelate and halftone chains, which
-// average it away to black. And a chain should answer a different part of the music than the look does: a look that
+// either; a `sparse` preset (fine dots or thin lines) skips pixelate / halftone chains and the
+// tunnel, displacement and motion-blur warps, which average it away to black. And a chain should answer a different part of the music than the look does: a look that
 // mostly follows the kick does not get a chain that only follows the kick too (`dominantBand`,
 // `bands`, `chainAnswers`; the autopilot falls back to any fitting chain when none answers).
 // Used by autopilot.js and web/checks/render_check.mjs, so the check shows what goes on air.
 
 const FULL_FRAME_AVOIDS = new Set(['feedback', 'bloom']);
-// A `sparse` preset (fine dots or thin lines on black) is averaged away to nothing by these.
-const SPARSE_AVOIDS = new Set(['pixelate', 'halftone']);
+// A `sparse` preset (fine dots or thin lines on black) is averaged away to nothing by these: pixel and
+// dot screens, and the warps and smears that spread its few lit pixels over the whole frame.
+const SPARSE_AVOIDS = new Set(['pixelate', 'halftone', 'polar_tunnel', 'luma_displace', 'directional_blur']);
 
 /** True when the chain (an FXChainDto) may run on a preset with these tags. */
 export function chainFits(presetTags, chainDto) {

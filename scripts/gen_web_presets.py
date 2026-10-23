@@ -166,11 +166,12 @@ FEEDBACK = lambda decay, gain, zoom=0.0, rotate=0.0, **kw: slot("feedback", {
 
 # ================================================================ presets
 preset("web-beat-spiral", "dynamic_spiral", {
-    "MaxPoints": 800, "Scale": (0.42, pulse(1, 0.12)), "Damping": 0.2, "WaveFreq": 0.19,
+    # Dense and glowing: at 800 small dots the spiral read as a few specks, dimmer still under any warp.
+    "MaxPoints": 2000, "Scale": (0.42, pulse(1, 0.12)), "Damping": 0.2, "WaveFreq": 0.19,
     "WaveAmp": (0.0, gate("audio_bass", 0.5, 0.9)),
     "Shear": (0.25, lfo(32, 0.25)), "Speed": 0.45,
-    "DotSize": (0.3, kick(0.2, 180)), "Glow": (0.5, high(0.25)),
-    "HueOffset": (0.0, lfo(64, 1.0)), "HueSweep": 0.09, "TrailDecay": 0.86,
+    "DotSize": (0.5, kick(0.25, 180)), "Glow": (0.8, high(0.2)),
+    "HueOffset": (0.0, lfo(64, 1.0)), "HueSweep": 0.2, "TrailDecay": 0.93,
 }, ["beat", "kick", "bass-gated", "high"],
     "Spiral thumps on every beat, dots swell on the kick, twists only when the bass is loud, hue turns over 16 bars.")
 

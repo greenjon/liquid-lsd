@@ -4,7 +4,7 @@
   "visualSourceType": "dynamic_spiral",
   "parameters": {
     "MaxPoints": {
-      "baseValue": 800,
+      "baseValue": 2000,
       "baseMin": 100.0,
       "baseMax": 2000.0,
       "randomizeBase": false,
@@ -87,7 +87,7 @@
       "modulators": []
     },
     "DotSize": {
-      "baseValue": 0.3,
+      "baseValue": 0.5,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -95,7 +95,7 @@
         {
           "sourceId": "audio_flux_bass",
           "operator": "ADD",
-          "depth": 0.2,
+          "depth": 0.25,
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 4.0,
@@ -104,7 +104,7 @@
       ]
     },
     "Glow": {
-      "baseValue": 0.5,
+      "baseValue": 0.8,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
@@ -112,7 +112,7 @@
         {
           "sourceId": "audio_high",
           "operator": "ADD",
-          "depth": 0.25,
+          "depth": 0.2,
           "dcOffset": 0.0,
           "followerMode": "CUSTOM",
           "attackMs": 15.0,
@@ -140,14 +140,14 @@
       ]
     },
     "HueSweep": {
-      "baseValue": 0.09,
+      "baseValue": 0.2,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
       "modulators": []
     },
     "TrailDecay": {
-      "baseValue": 0.86,
+      "baseValue": 0.93,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
