@@ -8,7 +8,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { chainFits } from '../pairing.js';
+import { chainFits, chainAnswers, dominantBand } from '../pairing.js';
 
 const web = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = process.argv[2] || '/tmp/lsd-render-check';
@@ -62,12 +62,9 @@ const pins = Object.fromEntries(fs.readFileSync(path.join(web, 'playlists', 'def
 // From the hashed start, the first chain that suits the preset (pairing.js), as the autopilot skips the rest.
 const chainDto = (id) => JSON.parse(fs.readFileSync(path.join(web, catalog.fxChains.find((c) => c.id === id).file), 'utf8'));
 const fittingChain = (f) => {
-  const tags = JSON.parse(fs.readFileSync(path.join(web, 'presets', f), 'utf8')).tags;
-  for (let i = 0; i < webChains.length; i++) {
-    const id = webChains[(hash(f) + i) % webChains.length];
-    if (chainFits(tags, chainDto(id))) return id;
-  }
-  return undefined;
+  const dto = JSON.parse(fs.readFileSync(path.join(web, 'presets', f), 'utf8'));
+  const ids = webChains.map((_, i) => webChains[(hash(f) + i) % webChains.length]);
+  return ids.find((id) => chainAnswers(dto.tags, dominantBand(dto), chainDto(id))) ?? ids.find((id) => chainFits(dto.tags, chainDto(id)));
 };
 fs.readdirSync(path.join(web, 'presets')).sort().filter((f) => f.endsWith('.lsd')).forEach((f) => {
   sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: pins[f.replace('.lsd', '')] ?? fittingChain(f), settleMs: 2500 });

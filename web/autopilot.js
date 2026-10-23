@@ -3,7 +3,7 @@
 
 import { parseDeckPreset, parseFxChain, parseTransition } from './preset.js';
 import { BeatFlywheel } from './beatclock.js';
-import { chainFits } from './pairing.js';
+import { chainFits, chainAnswers, dominantBand } from './pairing.js';
 
 const RELAY_URL = 'wss://spaz.org/lsd-relay';
 
@@ -182,22 +182,27 @@ async function buildDeck(line) {
   const raw = await fetchPreset(presetName);
   const deck = parseDeckPreset(raw);
   deck.tags = raw?.tags ?? [];
+  deck.dominant = dominantBand(raw); // the band the look mostly follows (pairing.js)
   let dto = null;
   if (pinned && pinned !== 'none') dto = await fetchContent(catalog.fxChains, pinned);
-  else if (!pinned) dto = await pickChain(deck.tags);
+  else if (!pinned) dto = await pickChain(deck.tags, deck.dominant);
   applyChain(deck, dto);
   return deck;
 }
 
 /** Next chain in the settings rotation that suits a preset with these tags (pairing.js); null if none does. */
-async function pickChain(tags) {
+async function pickChain(tags, dominant = null) {
   const n = autopilotSettings.fxChains.length;
+  const calmOk = (c) => !(reducedMotion && (c.tags ?? []).some((t) => CALM_SKIP_CHAIN_TAGS.includes(t)));
+  let fallback = null;
   for (let tries = 0; tries < n; tries++) {
     fxIdx = getNextIndex(fxIdx, n, autopilotSettings.fxPlaybackOrder);
     const candidate = await fetchContent(catalog.fxChains, autopilotSettings.fxChains[fxIdx]);
-    if (candidate && chainFits(tags, candidate) && !(reducedMotion && (candidate.tags ?? []).some((t) => CALM_SKIP_CHAIN_TAGS.includes(t)))) return candidate;
+    if (!candidate || !calmOk(candidate) || !chainFits(tags, candidate)) continue;
+    if (chainAnswers(tags, dominant, candidate)) return candidate;  // follows another part of the music
+    fallback ??= candidate;
   }
-  return null;
+  return fallback;
 }
 
 // -------------------------------------------------------
@@ -541,7 +546,7 @@ export async function nextFxChain() {
   if (autopilotState.isLiveBroadcast) return;
   const deck = fgActiveDeck === 'A' ? autopilotState.deckA : autopilotState.deckB;
   if (!deck) return;
-  applyChain(deck, await pickChain(deck.tags ?? []));
+  applyChain(deck, await pickChain(deck.tags ?? [], deck.dominant));
   prewarm(deck, null);
   announce();
 }

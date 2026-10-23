@@ -201,3 +201,20 @@ test('every fullframe preset has a chain in the rotation that suits it', async (
     if (tags.includes('fullframe')) assert.ok(chains.some((c) => chainFits(tags, c)), `${name}: no rotation chain suits it`);
   }
 });
+
+// A look's chain should follow another part of the music (pairing.js chainAnswers): every rotation look
+// that follows a band has a rotation chain that does not.
+test('every rotation look has a chain that answers a different band', async () => {
+  const { chainAnswers, dominantBand, bands } = await import('../pairing.js');
+  const chains = settings.fxChains.map((id) => readJson(catalog.fxChains.find((c) => c.id === id).file));
+  const lonely = [];
+  for (const name of rotationPresets) {
+    const dto = readJson(`presets/${name}.lsd`);
+    const band = dominantBand(dto);
+    if (band && !chains.some((c) => chainAnswers(dto.tags ?? [], band, c))) lonely.push(`${name} (${band})`);
+  }
+  assert.deepEqual(lonely, []);
+  // Kick/bass looks are the majority: at least a third of the rotation's chains must answer them.
+  const answersLow = chains.filter((c) => chainAnswers([], 'low', c)).length;
+  assert.ok(answersLow >= chains.length / 3, `only ${answersLow} of ${chains.length} chains answer a low-end look`);
+});

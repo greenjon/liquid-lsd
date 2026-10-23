@@ -27,3 +27,15 @@ test('weighted pick follows the weights and never repeats the current look', () 
   assert.ok(counts[1] > counts[2] * 2.2 && counts[1] < counts[2] * 3.8, counts.join(','));
   assert.equal(weightedPick(list, [0, 0, 0], 1), -1);
 });
+
+test('a kick look does not get a kick-only chain; a mixed chain answers it', async () => {
+  const { chainAnswers, dominantBand } = await import('../pairing.js');
+  const mod = (sourceId) => ({ baseValue: 0, modulators: [{ sourceId, operator: 'ADD', depth: 0.3 }] });
+  const look = { parameters: { a: mod('audio_flux_bass'), b: mod('audio_bass'), c: mod('audio_high') } };
+  assert.equal(dominantBand(look), 'low');
+  const kickOnly = { slots: [{ filterId: 'radial_blur', parameters: { blurAmount: mod('audio_flux_bass') } }] };
+  const mixed = { slots: [{ filterId: 'rgb_split', parameters: { amount: mod('audio_flux_bass'), angle: mod('audio_flux_high') } }] };
+  assert.equal(chainAnswers([], 'low', kickOnly), false);
+  assert.equal(chainAnswers([], 'low', mixed), true);
+  assert.equal(chainAnswers([], 'mid', kickOnly), true);
+});
