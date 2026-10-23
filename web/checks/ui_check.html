@@ -1,0 +1,80 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>LSD UI check</title>
+<iframe id="app" src="../index.html?nolive" width="1100" height="760" style="border:0"></iframe>
+<script type="module">
+// Drives the TV's viewer controls in the real page (driven by ui_check.mjs): power on, CH up/down, FX,
+// HOLD, TIME, REACT, keyboard, and the live lock. POSTs {results:[{name, ok, detail}]} to /report.
+const app = document.getElementById('app');
+const results = [];
+const check = (name, ok, detail = '') => results.push({ name, ok: !!ok, detail: String(detail) });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const post = (o) => fetch('/report', { method: 'POST', body: JSON.stringify(o) });
+try {
+  await new Promise((r) => app.addEventListener('load', r));
+  const w = app.contentWindow, d = w.document;
+  for (let i = 0; i < 100 && !w.LSD; i++) await sleep(100);
+  const st = w.LSD.autopilotState;
+  const errors = [];
+  w.addEventListener('error', (e) => errors.push(e.message));
+  const key = (k) => w.dispatchEvent(new w.KeyboardEvent('keydown', { key: k, bubbles: true }));
+  const onAir = () => (st.mixer.balance > 0.5 ? st.deckB : st.deckA);
+  const osd = (id) => ({ text: d.getElementById(id).textContent, shown: d.getElementById(id).classList.contains('show') });
+
+  d.getElementById('powerSwitch').click();
+  await sleep(2500);
+  check('OSD shows the channel after power on', osd('osd-ch').shown && /^CH \d+/.test(osd('osd-ch').text), JSON.stringify(osd('osd-ch')));
+  check('OSD names the look', osd('osd-name').text.length > 0, osd('osd-name').text);
+
+  const first = onAir();
+  d.getElementById('chUp').click();
+  await sleep(3000);
+  check('CH up crossfades to another look', onAir() !== first && st.mixer.balance > 0.99, `balance ${st.mixer.balance}`);
+  const second = onAir();
+  d.getElementById('chDown').click();
+  await sleep(3000);
+  check('CH down returns to the previous look', onAir() === first, `balance ${st.mixer.balance}`);
+
+  key('ArrowRight');
+  await sleep(3000);
+  check('Right arrow is CH up', onAir() !== first);
+
+  const before = onAir().chainName;
+  let changed = false;
+  for (let i = 0; i < 4 && !changed; i++) { d.getElementById('fxBtn').click(); await sleep(300); changed = onAir().chainName !== before; }
+  check('FX changes the chain on air', changed, `${before} -> ${onAir().chainName}`);
+
+  d.getElementById('holdBtn').click();
+  check('HOLD latches', st.hold && d.getElementById('holdBtn').getAttribute('aria-pressed') === 'true');
+  key('h');
+  check('H releases HOLD', !st.hold);
+
+  key(']');
+  check('] lengthens the look (TIME dial)', d.getElementById('timeLabel').textContent === '32 BARS', d.getElementById('timeLabel').textContent);
+  key('[');
+  const react0 = w.LSD.viewerState.react;
+  key('=');
+  check('= raises REACT', w.LSD.viewerState.react > react0, `${react0} -> ${w.LSD.viewerState.react}`);
+  key('-');
+
+  // Live broadcast locks the controls.
+  w.LSD.handleRelayMessage({ type: 'state_full', v: 2, clock: { beats: 0, bpm: 120 }, preset: {
+    deckA: { source: 'mandala', params: {}, fx: { 0: null, 1: null, 2: null } }, deckB: { empty: true }, deckBG: { empty: true },
+    mixer: { balance: 0, alpha: 1, transition: 'linear_crossfade', transitionParams: {}, fx: { 0: null, 1: null, 2: null } } } });
+  await sleep(200);
+  const liveDeck = st.deckA;
+  d.getElementById('chUp').click();
+  d.getElementById('holdBtn').click();
+  await sleep(500);
+  check('Live: badge says LIVE', d.querySelector('#station-badge .station-text').textContent.includes('LIVE'));
+  check('Live: CH up and HOLD do nothing', st.deckA === liveDeck && !st.hold);
+  check('Live: OSD says controls are locked', osd('osd-msg').text.includes('LOCKED'), osd('osd-msg').text);
+  w.LSD.handleRelayMessage({ type: 'broadcaster_offline' });
+  await sleep(300);
+  check('Offline: badge back to CH.1', d.querySelector('#station-badge .station-text').textContent.includes('CH.1'));
+  check('No page errors', errors.length === 0, errors.join(' | '));
+  await post({ results });
+} catch (err) {
+  await post({ fatal: String(err && err.stack || err), results });
+}
+</script>

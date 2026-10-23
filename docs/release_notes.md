@@ -1,5 +1,14 @@
 ## [Unreleased]
 
+### Web TV: Viewer Controls (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`, `web/renderer.js`)
+- **Change channel.** CH ▲ ▼ on the TV (or the arrow keys, or a swipe on the picture) skips to the next look or back to the previous one, with the FX chain it had.
+- **FX** swaps the FX chain on the look on air; **HOLD** keeps the look until you release it.
+- **TIME** sets how long each look holds (8, 16, 32 or 64 bars); **REACT** sets how strongly the picture reacts to the music (25-200%), for quiet or very loud streams. Both are remembered.
+- **On-screen display:** on every change the screen shows the channel, the look and its FX chain in phosphor green, plus the track playing on the radio. Click the picture or press `I` to see it again.
+- **A beat light** on the badge blinks on every beat: green when locked onto the music, amber when keeping time on its own.
+- **While the desktop is broadcasting live the controls are locked** and the screen says so. The badge now really switches to LIVE (it never did before).
+- Fullscreen keeps the on-screen display; on a phone the picture fills the width and the controls wrap.
+
 ### Web TV: On the Beat (`web/beattrack.js`, `web/onset-worklet.js`, `web/dsp.js`, `web/autopilot.js`, `web/settings.json`)
 - **The web TV finds the radio's beat and locks to it.** Pulses, flashes and beat-synced LFOs now land on the kicks of whatever is playing, not just at roughly the right tempo. It locks within a few seconds, follows tempo changes, and keeps time through breaks. The timing allows for the browser's audio delay, so the picture matches what you hear.
 - **Looks change on the bar.** The autopilot counts its holds in bars (16 for the main looks, 32 for the background) and finishes each crossfade on a bar line, so the new look arrives with the music. The next look is loaded during the hold, so the change is never late.

@@ -70,3 +70,6 @@ A1+A2 -> B1+B2 -> C1-C5 -> D1+D2 -> A6 -> B3, C6.
   174 follows at half time (prior centred on 120). Real radio locked at ~135 BPM, confidence ~0.85.
 - 2026-10-23 B2 done: holds in bars (fg 16, bg 32), fades in beats, change finishes on a bar line, next preset
   built during the hold. Bar lines are the clock's own count: no downbeat detection yet (candidate for B3).
+- 2026-10-23 C1-C5 done: CH rocker (+history), FX, HOLD, TIME (8-64 bars), REACT (0.25-2x on audio_*), OSD (channel,
+  look, chain, Icecast now playing), beat LED, keyboard/swipe/long-press, live lock (lsd-broadcast-status now fired),
+  fullscreen on the screen element. ui_check.mjs covers them. C6 (channels), C7 share/kiosk still open.

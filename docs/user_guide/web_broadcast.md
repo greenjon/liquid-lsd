@@ -61,7 +61,21 @@ The standalone browser client (`web/index.html`) presents the visualizer in a re
 
 **Volume dial:** Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.
 
-**Fullscreen:** Double-click the TV screen to expand to full-screen. Double-click again or press `Esc` to go back to the TV shell.
+**Fullscreen:** Double-click the TV screen to expand to full-screen (the on-screen display comes along). Double-click again or press `Esc` to go back to the TV shell.
+
+**Viewer controls** (Autopilot only; while you broadcast live they are locked and the screen says so):
+
+| Control | What it does | Keys / touch |
+|---------|-------------|--------------|
+| **CH ▲ / ▼** | Next look now / back to the previous one (with the FX chain it had) | `→` `↑` `N` / `←` `↓` `P`; swipe left / right on the picture |
+| **FX** | Puts the next FX chain on the look on air | `F` |
+| **HOLD** | Keeps the current look until you press it again (the background keeps changing) | `H` or `Space`; long-press the picture |
+| **TIME** | How long each look holds: 8, 16, 32 or 64 bars (drag, scroll or click) | `[` `]` |
+| **REACT** | How strongly the picture reacts to the music, 25-200% (double-click for 100%) | `-` `=` |
+
+Click or tap the picture (or press `I`) to show the channel, the look, its FX chain and the track playing on the radio. TIME and REACT are remembered in the browser.
+
+**Beat light:** the second light on the badge blinks on every beat: green when the TV has locked onto the music's beat, amber while it keeps time on its own (quiet passages, or before it has found the beat).
 
 **What viewers see.** Each deck's source and its parameters, the deck FX chains and the master FX chain, the transition and crossfader, the channel levels and the beat all go over the wire, so the web TV follows your mix closely. A few things stay desktop-only: external video sources (Spout, NDI, PipeWire, webcam) show as nothing, and anything the web player does not have (a custom shader you added to your own library) is skipped. Viewers join in the middle of a broadcast on the right beat.
 
@@ -71,7 +85,7 @@ The viewer's browser also connects to a live audio stream and runs its own audio
 
 ## Autopilot mode
 
-When no broadcaster is connected, the web player switches to **Autopilot** — running its own curated visual playlist against the live audio stream. It keeps the visualizer interesting and audio-reactive 24/7 without needing a human operator.
+When no broadcaster is connected, the web player switches to **Autopilot** — running its own curated visual playlist against the live audio stream. It keeps the visualizer interesting and audio-reactive 24/7 without needing a human operator. It finds the beat of the radio stream itself, so beat-synced movement lands on the music, and changes looks on the bar: every 16 bars by default (the TIME dial), with the background changing half as often.
 
 When a broadcaster connects, Autopilot smoothly hands off control to the live stream. When the broadcast ends, it picks up again automatically.
 

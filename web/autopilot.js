@@ -45,6 +45,8 @@ export const autopilotState = {
   bgAlpha: 1.0,
   masterAlpha: 1.0,
   isLiveBroadcast: false,
+  // Viewer HOLD: the foreground look stays until it is released (the background keeps changing).
+  hold: false,
   // Flywheel following the broadcaster's beat clock; `clock.read(performance.now())` is the beat position.
   clock: new BeatFlywheel()
 };
@@ -62,8 +64,11 @@ let fgSwitchAt = 0;        // beat the next crossfade starts on
 let fgFadeStart = 0;
 let fgFadeStartBalance = 0.0;
 let fgFadeTargetBalance = 0.0;
-let fgNext = null;         // {line, deck} built ahead of the switch
+let fgNext = null;         // {line, deck, transition} built ahead of the switch
 let fgPreparing = false;
+let fgHoldStart = 0;       // beat the current look finished fading in
+const fgHistory = [];      // looks that have been on air, newest last (CH down steps back through them)
+const HISTORY_MAX = 50;
 
 let bgPlaylist = [];
 let bgPlaylistIdx = 0;
@@ -170,20 +175,28 @@ async function buildDeck(line) {
   const [presetName, pinned] = line.split('|').map((p) => p.trim());
   const raw = await fetchPreset(presetName);
   const deck = parseDeckPreset(raw);
+  deck.tags = raw?.tags ?? [];
   let dto = null;
-  if (pinned && pinned !== 'none') {
-    dto = await fetchContent(catalog.fxChains, pinned);
-  } else if (!pinned && autopilotSettings.fxChains.length > 0) {
-    // Next chain in the rotation that suits the preset (pairing.js); none fits = no FX this time.
-    const n = autopilotSettings.fxChains.length;
-    for (let tries = 0; tries < n && !dto; tries++) {
-      fxIdx = getNextIndex(fxIdx, n, autopilotSettings.fxPlaybackOrder);
-      const candidate = await fetchContent(catalog.fxChains, autopilotSettings.fxChains[fxIdx]);
-      if (candidate && chainFits(raw?.tags, candidate)) dto = candidate;
-    }
-  }
-  if (dto) Object.assign(deck, parseFxChain(dto));
+  if (pinned && pinned !== 'none') dto = await fetchContent(catalog.fxChains, pinned);
+  else if (!pinned) dto = await pickChain(deck.tags);
+  applyChain(deck, dto);
   return deck;
+}
+
+/** Next chain in the settings rotation that suits a preset with these tags (pairing.js); null if none does. */
+async function pickChain(tags) {
+  const n = autopilotSettings.fxChains.length;
+  for (let tries = 0; tries < n; tries++) {
+    fxIdx = getNextIndex(fxIdx, n, autopilotSettings.fxPlaybackOrder);
+    const candidate = await fetchContent(catalog.fxChains, autopilotSettings.fxChains[fxIdx]);
+    if (candidate && chainFits(tags, candidate)) return candidate;
+  }
+  return null;
+}
+
+function applyChain(deck, dto) {
+  Object.assign(deck, dto ? parseFxChain(dto) : { fx: [], fxDryWet: undefined });
+  deck.chainName = dto?.name ?? null;
 }
 
 /** Picks the transition for the next foreground crossfade from the settings rotation. */
@@ -208,16 +221,14 @@ export function tickAutopilot(dt, beats) {
   if (fgPlaylist.length > 0) {
     if (fgTransitionState === 'hold') {
       prepareForeground();
-      if (beats >= fgSwitchAt && fgNext) startForegroundCrossfade(beats);
+      if (!autopilotState.hold && beats >= fgSwitchAt && fgNext) startForegroundCrossfade(beats);
     } else {
       const fade = Math.max(0.25, autopilotSettings.fgFadeBeats);
       const progress = Math.min(1.0, Math.max(0, (beats - fgFadeStart) / fade));
       const t = progress * progress * (3.0 - 2.0 * progress); // smooth Hermite blend
       autopilotState.mixer.balance = fgFadeStartBalance + (fgFadeTargetBalance - fgFadeStartBalance) * t;
       if (progress >= 1.0) {
-        autopilotState.mixer.balance = fgFadeTargetBalance;
-        fgTransitionState = 'hold';
-        fgSwitchAt = nextSwitchBeat(beats, autopilotSettings.fgHoldBars, autopilotSettings.fgFadeBeats);
+        finishForegroundCrossfade(beats);
       }
     }
   }
@@ -287,17 +298,88 @@ function startForegroundCrossfade(beats) {
   }
   fgFadeStart = beats;
   fgTransitionState = 'crossfading';
+  fgHistory.push({ line, deck, transition });
+  if (fgHistory.length > HISTORY_MAX) fgHistory.shift();
   console.log(`[autopilot] Crossfading to FG: ${line} (Deck ${fgActiveDeck})`);
+  announce();
 }
 
-/** Skips to the next foreground preset now (crossfade starts this frame) instead of on the next bar line. */
+function finishForegroundCrossfade(beats) {
+  autopilotState.mixer.balance = fgFadeTargetBalance;
+  fgTransitionState = 'hold';
+  fgHoldStart = beats;
+  fgSwitchAt = nextSwitchBeat(beats, autopilotSettings.fgHoldBars, autopilotSettings.fgFadeBeats);
+}
+
+/** The next change after the current hold, or the next bar line if that has already passed. */
+function replanForeground() {
+  const { fgHoldBars, fgFadeBeats } = autopilotSettings;
+  fgSwitchAt = Math.max(nextSwitchBeat(fgHoldStart, fgHoldBars, fgFadeBeats), nextSwitchBeat(lastBeats, 0, fgFadeBeats));
+}
+
+/** What is on air, for the on-screen display: {name, chain, channel, channels}. Fires `lsd-now-showing`. */
+export function nowShowing() {
+  const deck = fgActiveDeck === 'A' ? autopilotState.deckA : autopilotState.deckB;
+  const line = fgHistory.at(-1)?.line ?? fgPlaylist[fgPlaylistIdx] ?? '';
+  const name = line.split('|')[0].trim();
+  return { name, chain: deck?.chainName ?? null, channel: fgPlaylist.indexOf(line) + 1, channels: fgPlaylist.length };
+}
+
+function announce() {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('lsd-now-showing', { detail: nowShowing() }));
+}
+
+// -------------------------------------------------------
+// Viewer controls (ui.js). All of them do nothing during a live broadcast.
+// -------------------------------------------------------
+
+/** Ends a crossfade in progress at once, so a control acts on a settled pair of decks. */
+function settleCrossfade() {
+  if (fgTransitionState === 'crossfading') finishForegroundCrossfade(lastBeats);
+}
+
+/** Skips to the next foreground look now (the crossfade starts this frame) instead of on the next bar line. */
 export async function advanceForeground() {
-  if (fgPlaylist.length === 0 || fgTransitionState !== 'hold') return;
+  if (autopilotState.isLiveBroadcast || fgPlaylist.length === 0) return;
+  settleCrossfade();
   if (!fgNext) {
     while (fgPreparing) await new Promise((r) => setTimeout(r, 20));
     if (!fgNext) await prepareForeground();
   }
   if (fgNext && fgTransitionState === 'hold') startForegroundCrossfade(lastBeats);
+}
+
+/** Steps back to the previous look, with the chain and transition it had. */
+export function previousForeground() {
+  if (autopilotState.isLiveBroadcast || fgHistory.length < 2) return;
+  settleCrossfade();
+  fgHistory.pop();                 // the current look
+  fgNext = fgHistory.pop();        // re-pushed when its crossfade starts
+  startForegroundCrossfade(lastBeats);
+}
+
+/** Puts the next suitable FX chain on the look on air, now. */
+export async function nextFxChain() {
+  if (autopilotState.isLiveBroadcast) return;
+  const deck = fgActiveDeck === 'A' ? autopilotState.deckA : autopilotState.deckB;
+  if (!deck) return;
+  applyChain(deck, await pickChain(deck.tags ?? []));
+  announce();
+}
+
+/** HOLD: keep the current look until released; on release the look changes at the next bar line due. */
+export function setHold(on) {
+  autopilotState.hold = !!on;
+  if (!on) replanForeground();
+}
+
+/** How long a look holds, in bars; the background holds twice as long. */
+let viewerHoldBars = null; // the TIME dial's setting; outlives settings.json loading after it
+export function setHoldBars(bars) {
+  viewerHoldBars = bars;
+  autopilotSettings.fgHoldBars = bars;
+  autopilotSettings.bgHoldBars = bars * 2;
+  replanForeground();
 }
 
 /** Applies one relay message (state_full / state_delta / broadcaster_offline) to the live state. */
@@ -308,6 +390,7 @@ export function handleRelayMessage(msg) {
         console.warn(`[autopilot] Ignoring state_full with protocol v${msg.v}; this client speaks v${PROTOCOL_VERSION}`);
         break;
       }
+      if (!autopilotState.isLiveBroadcast) broadcastStatus(true);
       autopilotState.isLiveBroadcast = true;
       noteClock(msg.clock);
       if (msg.preset) {
@@ -332,6 +415,7 @@ export function handleRelayMessage(msg) {
       if (autopilotState.isLiveBroadcast) {
         autopilotState.isLiveBroadcast = false;
         autopilotState.clock.reset();
+        broadcastStatus(false);
         console.log('[autopilot] Broadcaster offline — returning to autopilot');
         // Pick the autopilot up again at the next bar line (planned on the next tick, from the current beat).
         fgSwitchAt = null;
@@ -339,6 +423,11 @@ export function handleRelayMessage(msg) {
       }
       break;
   }
+}
+
+/** Tells the UI the desktop went on or off air (`lsd-broadcast-status`, detail {live}). */
+function broadcastStatus(live) {
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('lsd-broadcast-status', { detail: { live } }));
 }
 
 // -------------------------------------------------------
@@ -399,6 +488,7 @@ export async function startAutopilot() {
     if (res.ok) {
       const cfg = await res.json();
       Object.assign(autopilotSettings, cfg);
+      if (viewerHoldBars) { autopilotSettings.fgHoldBars = viewerHoldBars; autopilotSettings.bgHoldBars = viewerHoldBars * 2; }
       console.log('[autopilot] Loaded settings.json:', autopilotSettings);
     }
   } catch (e) {
@@ -435,7 +525,9 @@ export async function startAutopilot() {
     autopilotState.deckB = await buildDeck(fgPlaylist[0]);
     autopilotState.mixer.balance = 0.0;
     fgActiveDeck = 'A';
+    fgHistory.push({ line: fgPlaylist[0], deck: autopilotState.deckA, transition: {} });
     fgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.fgHoldBars, autopilotSettings.fgFadeBeats);
+    announce();
   }
 
   // 3. Load Background playlist

@@ -1,5 +1,5 @@
 import { cvState, tick } from './dsp.js';
-import { powerState } from './ui.js';
+import { powerState, viewerState } from './ui.js';
 import { autopilotState, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground } from './autopilot.js';
 import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
 import { lookupParam } from './isf.js';
@@ -177,11 +177,13 @@ async function init() {
     evalCtx.frame = frameCount;
     evalCtx.dt = frameDt;
     evalCtx.bpm = bpm;
+    // REACT dial: scales every audio signal (not the beat), so quiet streams still move and loud ones calm down.
+    const k = viewerState.react;
     evalCtx.cv = {
-      audio_amp: cvState.audio_amp, audio_bass: cvState.audio_bass,
-      audio_mid: cvState.audio_mid, audio_high: cvState.audio_high,
-      audio_flux_amp: cvState.audio_flux_amp, audio_flux_bass: cvState.audio_flux_bass,
-      audio_flux_mid: cvState.audio_flux_mid, audio_flux_high: cvState.audio_flux_high,
+      audio_amp: cvState.audio_amp * k, audio_bass: cvState.audio_bass * k,
+      audio_mid: cvState.audio_mid * k, audio_high: cvState.audio_high * k,
+      audio_flux_amp: cvState.audio_flux_amp * k, audio_flux_bass: cvState.audio_flux_bass * k,
+      audio_flux_mid: cvState.audio_flux_mid * k, audio_flux_high: cvState.audio_flux_high * k,
       beatSine: Math.sin(beats * 2 * Math.PI), bpm,
     };
   }
@@ -221,7 +223,7 @@ async function init() {
   const pipeBG = new DeckPipeline(ctx, curWidth, curHeight);
   const mixerPipe = new MixerPipeline(ctx, curWidth, curHeight);
 
-  window.LSD = { cvState, autopilotState, powerState, library: ctx.library, handleRelayMessage, advanceForeground };
+  window.LSD = { cvState, autopilotState, powerState, viewerState, library: ctx.library, handleRelayMessage, advanceForeground };
 
   function frameInfo() {
     return { time: elapsedTime, dt: frameDt, index: frameCount };

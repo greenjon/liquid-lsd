@@ -208,7 +208,7 @@ body {
   transition: background 0.3s, box-shadow 0.3s;
 }
 
-#tv-body.powered-on .led {
+#tv-body.powered-on .led:not(.beat-led) {
   background: var(--led-on);
   box-shadow: 0 0 6px rgba(255,30,0,0.8), 0 0 12px rgba(255,30,0,0.3);
 }
@@ -225,15 +225,145 @@ body {
   color: #888;
 }
 
-/* --- Fullscreen mode — hide TV chrome, canvas fills viewport --- */
-body.fullscreen-mode #tv-wrapper {
-  display: none;
+/* --- Push buttons (FX, HOLD) and the channel rocker --- */
+.push-btn, .rocker-btn {
+  background: radial-gradient(circle at 35% 30%, #3a3530, #1a1510);
+  border: 2px solid #222;
+  color: #888;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.08);
+  transition: transform 0.06s, box-shadow 0.06s, opacity 0.2s;
 }
 
-body.fullscreen-mode canvas {
-  position: fixed;
+.push-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.push-btn:active, .rocker-btn:active, .push-btn.pressed, .rocker-btn.pressed {
+  transform: translateY(1px);
+  box-shadow: 0 1px 1px rgba(0,0,0,0.6), inset 0 1px 3px rgba(0,0,0,0.6);
+}
+
+.rocker {
+  display: flex;
+  flex-direction: column;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 2px solid #222;
+}
+
+.rocker-btn {
+  width: 28px;
+  height: 20px;
+  border: 0;
+  border-radius: 0;
+  font-size: 0.55rem;
+  line-height: 1;
+}
+
+.rocker-btn + .rocker-btn { border-top: 1px solid #111; }
+
+.btn-led {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2a1a00;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.push-btn[aria-pressed="true"] .btn-led {
+  background: #ffaa00;
+  box-shadow: 0 0 6px rgba(255,170,0,0.9);
+}
+
+.push-btn:focus-visible, .rocker-btn:focus-visible, .rotary-dial:focus-visible {
+  outline: 1px solid #7a7;
+  outline-offset: 2px;
+}
+
+/* Live broadcast: the desktop drives the picture, viewer controls are locked */
+#tv-body.live .push-btn, #tv-body.live .rocker-btn, #tv-body.live #timeDial, #tv-body.live #reactDial {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Beat LED: lit on each beat; green = locked to the music, amber = keeping time on its own */
+.beat-led.on { background: #ffaa00; box-shadow: 0 0 6px rgba(255,170,0,0.8); }
+.beat-led.on.locked { background: #33ff55; box-shadow: 0 0 6px rgba(50,255,90,0.9); }
+#tv-body:not(.powered-on) .beat-led { background: var(--led-off); box-shadow: none; }
+
+/* --- On-screen display: phosphor-green text over the picture --- */
+#osd {
+  position: absolute;
   inset: 0;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 100;
+  z-index: 3;
+  pointer-events: none;
+  color: #8cff8c;
+  font-family: "VT323", "Courier New", monospace;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-shadow: 0 0 6px rgba(80,255,80,0.8), 0 0 2px rgba(0,0,0,0.9), 1px 1px 0 rgba(0,0,0,0.8);
+  font-size: clamp(11px, 1.9vw, 26px);
+}
+
+#osd > div, #osd-info > div {
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+#osd .show { opacity: 1 !important; transition: opacity 0.05s; }
+
+#osd-ch {
+  position: absolute;
+  top: 5%;
+  right: 5%;
+  font-size: 2.2em;
+}
+
+#osd-msg {
+  position: absolute;
+  top: 5%;
+  left: 5%;
+  font-size: 1.3em;
+}
+
+#osd-info {
+  position: absolute;
+  left: 5%;
+  right: 5%;
+  bottom: 6%;
+  opacity: 1 !important;
+}
+
+#osd-name { font-size: 1.5em; }
+#osd-chain, #osd-track { font-size: 0.9em; margin-top: 0.2em; }
+#osd-track { color: #c8ffc8; text-transform: none; }
+#tv-body:not(.powered-on) #osd { display: none; }
+
+/* --- Fullscreen: the screen (picture + OSD) fills the display --- */
+#tv-screen-area:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  padding-bottom: 0;
+  border-radius: 0;
+}
+
+#tv-screen-area:fullscreen #osd { font-size: clamp(14px, 2.4vw, 40px); }
+
+/* --- Narrow screens: bigger picture, controls wrap onto two rows --- */
+#tv-controls { flex-wrap: wrap; }
+
+@media (max-width: 700px) {
+  :root { --tv-screen-w: 92vw; }
+  #tv-body { padding: 12px 10px 10px 10px; border-radius: 12px; }
+  #tv-screen-border { padding: 6px; }
+  #tv-controls { gap: 12px; justify-content: center; }
+  #station-badge { margin-left: 0; }
 }
