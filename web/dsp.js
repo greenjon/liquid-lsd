@@ -115,6 +115,7 @@ function updateBeat() {
     beatClock.update(tracker.analyse(), now);
   }
   cvState.totalBeats = beatClock.read(now);
+  cvState.beatsAtMs = now;
   cvState.bpm = beatClock.bpm;
   cvState.beatLocked = beatClock.locked;
 }

@@ -4,6 +4,7 @@
 import { startAudio, stopAudio, setVolume, cvState } from './dsp.js';
 import { autopilotState, advanceForeground, previousForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed } from './autopilot.js';
 import { createMenu } from './menu.js';
+import { heardBeats, tapOffset } from './sync.js';
 
 // Power state — imported by renderer.js each frame
 export const powerState = {
@@ -254,6 +255,7 @@ export function initUI() {
         viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, viewerState.syncMs + dir * 10));
         save('lsd.sync', viewerState.syncMs);
       } },
+    { label: 'TAP SYNC', value: () => 'TAP 8 BEATS', run: () => startTapSync() },
     { label: 'REACT', locked: live, value: () => `${Math.round(viewerState.react * 100)}%`,
       step: (dir) => reactDial.set(toDial(Math.max(REACT_MIN, Math.min(REACT_MAX, viewerState.react + dir * 0.05)))) },
     { label: 'TIME', locked: live, value: () => timeLabel.textContent,
@@ -279,6 +281,37 @@ export function initUI() {
     } },
     { label: 'EXIT', run: () => menu.hide() },
   ];
+  // TAP SYNC: tap Space (or the picture) on 8 beats you hear; the median lateness against the locked beat
+  // clock becomes SYNC. Needs a locked beat (or a live broadcast), and taps that agree within ~150 ms.
+  const TAPS = 8;
+  let tapping = null;
+  function startTapSync() {
+    if (!(cvState.beatLocked || (live() && autopilotState.clock.valid))) { menu.hide(); message('NO BEAT LOCK YET \u00B7 TRY AGAIN SOON', 3000); return; }
+    menu.hide();
+    tapping = { times: [], timer: null };
+    message(`TAP SPACE OR THE PICTURE ON THE BEAT \u00B7 ${TAPS}`, 6000);
+    armTapTimeout();
+  }
+  function armTapTimeout() {
+    clearTimeout(tapping.timer);
+    tapping.timer = setTimeout(() => { tapping = null; message('TAP SYNC CANCELLED', 2000); }, 6000);
+  }
+  function tapSync() {
+    tapping.times.push(performance.now());
+    const left = TAPS - tapping.times.length;
+    if (left > 0) { message(`TAP \u00B7 ${left}`, 6000); armTapTimeout(); return; }
+    clearTimeout(tapping.timer);
+    const bpm = live() ? autopilotState.clock.bpm : cvState.bpm;
+    const { ms: late, spread } = tapOffset(tapping.times, (t) => heardBeats(t, 0), bpm);
+    tapping = null;
+    if (spread > 150) { message('TAPS TOO UNEVEN \u00B7 TRY AGAIN', 3000); return; }
+    const ms = Math.max(SYNC_MIN, Math.min(SYNC_MAX, Math.round(late / 10) * 10));
+    viewerState.syncMs = ms;
+    save('lsd.sync', ms);
+    message(`SYNC ${ms > 0 ? '+' : ''}${ms} MS`, 3000);
+  }
+  viewerState.tapSync = () => tapping && tapSync(); // for the headless check
+
   const menu = createMenu(screen, rows, {
     onOpen: () => screen.classList.add('menu-open'),   // the OSD steps aside while the menu is up
     onClose: () => screen.classList.remove('menu-open'),
@@ -290,6 +323,7 @@ export function initUI() {
   // --- Keyboard ---
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea')) return;
+    if (tapping && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); tapSync(); return; }
     if (menu.key(e)) { e.preventDefault(); return; }
     if ((e.key === 'm' || e.key === 'M') && powerState.on) { e.preventDefault(); menu.show(); return; }
     const keys = {
@@ -309,6 +343,7 @@ export function initUI() {
 
   // --- Touch on the picture: swipe left = next look, right = previous, tap = info, long press = hold ---
   let touch = null;
+  canvas.addEventListener('pointerdown', () => { if (tapping) tapSync(); });
   canvas.addEventListener('touchstart', (e) => {
     const t = e.touches[0];
     touch = { x: t.clientX, y: t.clientY, at: performance.now(), longPress: setTimeout(() => { touch.held = true; hold(); }, 650) };
@@ -396,7 +431,7 @@ export function initUI() {
     else if (cvState.noSignal && powerState.on && !live()) { if (msgFree) message('NO SIGNAL', 1500); noSignalShown = true; }
     else if (noSignalShown) { noSignalShown = false; showLook(); }
     const isLive = live() && autopilotState.clock.valid;
-    const beats = isLive ? autopilotState.clock.read(performance.now()) : cvState.totalBeats;
+    const beats = heardBeats(performance.now(), viewerState.syncMs);
     beatLed.classList.toggle('on', powerState.on && ((beats % 1) + 1) % 1 < 0.15);
     beatLed.classList.toggle('locked', isLive || cvState.beatLocked);
     requestAnimationFrame(blink);

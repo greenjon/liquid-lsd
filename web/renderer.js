@@ -5,6 +5,7 @@ import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
 import { lookupParam } from './isf.js';
 import { Library, DeckPipeline, MixerPipeline } from './graph.js';
 import { MandalaRecipes } from './mandala.js';
+import { heardBeats, DelayLine } from './sync.js';
 
 async function loadText(url) {
   const res = await fetch(url);
@@ -166,12 +167,18 @@ async function init() {
   let frameDt         = 0;
 
   const evalCtx = makeEvalContext();
+  const audioDelay = new DelayLine();
+  const AUDIO_KEYS = ['audio_amp', 'audio_bass', 'audio_mid', 'audio_high', 'audio_flux_amp', 'audio_flux_bass', 'audio_flux_mid', 'audio_flux_high'];
   function updateEvalContext() {
     // Live broadcast: the desktop's beat clock (phase-locked flywheel). Standalone: the web's own
     // beat detector (dsp.js) integrates tempo into total beats, so a tempo change never jumps the phase.
     const live = autopilotState.isLiveBroadcast && autopilotState.clock.valid;
     const bpm = live ? autopilotState.clock.bpm : cvState.bpm;
-    const beats = live ? autopilotState.clock.read(performance.now()) : cvState.totalBeats;
+    // SYNC (sync.js): the beat and the audio signals the picture reads are those the viewer hears now.
+    const now = performance.now();
+    const beats = heardBeats(now, viewerState.syncMs);
+    audioDelay.push(now, Object.fromEntries(AUDIO_KEYS.map((key) => [key, cvState[key]])));
+    const heard = { ...audioDelay.read(now, viewerState.syncMs) };
     evalCtx.time = elapsedTime;
     evalCtx.beats = beats;
     evalCtx.frame = frameCount;
@@ -180,10 +187,10 @@ async function init() {
     // REACT dial: scales every audio signal (not the beat), so quiet streams still move and loud ones calm down.
     const k = viewerState.react;
     evalCtx.cv = {
-      audio_amp: cvState.audio_amp * k, audio_bass: cvState.audio_bass * k,
-      audio_mid: cvState.audio_mid * k, audio_high: cvState.audio_high * k,
-      audio_flux_amp: cvState.audio_flux_amp * k, audio_flux_bass: cvState.audio_flux_bass * k,
-      audio_flux_mid: cvState.audio_flux_mid * k, audio_flux_high: cvState.audio_flux_high * k,
+      audio_amp: heard.audio_amp * k, audio_bass: heard.audio_bass * k,
+      audio_mid: heard.audio_mid * k, audio_high: heard.audio_high * k,
+      audio_flux_amp: heard.audio_flux_amp * k, audio_flux_bass: heard.audio_flux_bass * k,
+      audio_flux_mid: heard.audio_flux_mid * k, audio_flux_high: heard.audio_flux_high * k,
       beatSine: Math.sin(beats * 2 * Math.PI), bpm,
     };
   }

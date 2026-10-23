@@ -6,6 +6,7 @@
 - **Install it like an app.** Your browser can install the web TV ("Install" / "Add to Home Screen"); it opens fullscreen with its own icon, and starts even without a network (showing no signal until the radio is reachable).
 - **Kiosk mode for venue screens:** add `?kiosk` to the address and the TV body disappears, the picture fills the screen, it turns itself on, and the mouse pointer hides. Keyboard and swipe controls still work. If the browser won't start sound by itself, the screen says to click or press a key.
 - **A TV service menu.** The new MENU button (or M) opens a green on-screen menu like an old set's picture menu: SYNC, REACT, TIME, Reduced motion and Heavy looks, plus Reset. Arrow keys, clicks or the mouse wheel change the settings, and the TV remembers them.
+- **SYNC for delayed speakers.** With Bluetooth or other speakers that play late, the beat pulses used to land before the sound. MENU › SYNC delays the picture by up to 400 ms to match, and MENU › TAP SYNC works it out for you: tap Space (or the picture) on 8 beats you hear.
 
 ### Snappier MIDI, and Esc Cancels the Unsaved-Deck Prompt (`ui/UIManager.kt`, `Main.kt`, `ui/NavigationSurface.kt`)
 - **Controller knobs and buttons now take effect in the same frame.** Incoming MIDI used to be handled after the frame was drawn, so every turn reached the screen one frame late. It is now applied first. MIDI is also handled while the window is minimised, instead of piling up and replaying when you restore it.

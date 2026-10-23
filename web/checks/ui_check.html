@@ -78,9 +78,9 @@ try {
   check('Menu: right arrow raises SYNC by 10 ms steps', w.LSD.viewerState.syncMs === 30, w.LSD.viewerState.syncMs);
   await sleep(3000);
   check('Menu: the arrows do not change the look while it is open', onAir() === lookBefore);
-  key('ArrowDown'); key('ArrowDown'); key('ArrowDown'); key('ArrowRight');
+  key('ArrowDown'); key('ArrowDown'); key('ArrowDown'); key('ArrowDown'); key('ArrowRight');
   check('Menu: reduced motion row cycles AUTO -> ON', w.LSD.viewerState.reducedMode === 'on', w.LSD.viewerState.reducedMode);
-  key('ArrowLeft'); key('ArrowUp'); key('ArrowUp'); key('ArrowUp'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft');
+  key('ArrowLeft'); key('ArrowUp'); key('ArrowUp'); key('ArrowUp'); key('ArrowUp'); key('ArrowLeft'); key('ArrowLeft'); key('ArrowLeft');
   check('Menu: back to defaults', w.LSD.viewerState.syncMs === 0 && w.LSD.viewerState.reducedMode === 'auto', `${w.LSD.viewerState.syncMs} ${w.LSD.viewerState.reducedMode}`);
   key('Escape');
   check('Esc closes the menu', menuEl.hidden);
@@ -101,6 +101,12 @@ try {
     deckA: { source: 'mandala', params: {}, fx: { 0: null, 1: null, 2: null } }, deckB: { empty: true }, deckBG: { empty: true },
     mixer: { balance: 0, alpha: 1, transition: 'linear_crossfade', transitionParams: {}, fx: { 0: null, 1: null, 2: null } } } });
   await sleep(200);
+  // TAP SYNC against the live clock (120 BPM): 8 steady taps give a SYNC inside the menu's range.
+  key('m'); key('ArrowDown'); key('Enter');
+  for (let i = 0; i < 8; i++) { key(' '); await sleep(500); }
+  const syncAfterTaps = w.LSD.viewerState.syncMs;
+  check('TAP SYNC: steady taps set SYNC', /^SYNC /.test(osd('osd-msg').text) && syncAfterTaps >= -100 && syncAfterTaps <= 400, `${osd('osd-msg').text} ${syncAfterTaps}`);
+  w.LSD.viewerState.syncMs = 0;
   const liveDeck = st.deckA;
   d.getElementById('chUp').click();
   d.getElementById('holdBtn').click();
