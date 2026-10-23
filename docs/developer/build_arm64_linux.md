@@ -18,7 +18,7 @@ does not publish Linux ARM64 native binaries:
   ELF binaries.
 
 Every other dependency already has first-class Linux ARM64 support:
-- **LWJGL 3.3.3** ships `natives-linux-arm64` (GLFW, OpenGL, OpenAL, STB) — see
+- **LWJGL 3.3.3** ships `natives-linux-arm64` (GLFW, OpenGL, STB) — see
   `build.gradle.kts`.
 - **JRE**: Eclipse Temurin provides `linux-aarch64` JRE 17 builds.
 - **Audio (JACK) & Video (PipeWire)**: linked dynamically via JNA against distro

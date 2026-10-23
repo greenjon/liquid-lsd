@@ -37,7 +37,6 @@ dependencies {
     implementation("org.lwjgl:lwjgl")
     implementation("org.lwjgl:lwjgl-glfw")
     implementation("org.lwjgl:lwjgl-opengl")
-    implementation("org.lwjgl:lwjgl-openal")
     implementation("org.lwjgl:lwjgl-stb")
 
     // LWJGL - Natives for all platforms
@@ -46,7 +45,6 @@ dependencies {
         runtimeOnly("org.lwjgl:lwjgl:$lwjglVersion:$platform")
         runtimeOnly("org.lwjgl:lwjgl-glfw:$lwjglVersion:$platform")
         runtimeOnly("org.lwjgl:lwjgl-opengl:$lwjglVersion:$platform")
-        runtimeOnly("org.lwjgl:lwjgl-openal:$lwjglVersion:$platform")
         runtimeOnly("org.lwjgl:lwjgl-stb:$lwjglVersion:$platform")
     }
 
@@ -327,7 +325,7 @@ abstract class PrepareDefaultAssetsTask : DefaultTask() {
         }
         fxChainManifest.writeText(fxChainLines.joinToString("\n"))
 
-        val transitionsOut = File(outBase, "default_transitions")
+        val transitionsOut = File(outBase, "default_transition_presets")
         transitionsOut.mkdirs()
         val transitionsIn = File(inBase, "transitions")
         val transFiles = if (transitionsIn.exists()) {

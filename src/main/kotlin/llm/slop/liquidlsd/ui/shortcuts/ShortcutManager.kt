@@ -10,7 +10,7 @@ object ShortcutManager {
     private val actions = LinkedHashMap<String, ShortcutAction>()
     private val configFile: File by lazy {
         val userHome = System.getProperty("user.home", ".")
-        val dir = File(userHome, ".liquidlsd")
+        val dir = File(userHome, ".liquid-lsd")
         if (!dir.exists()) dir.mkdirs()
         File(dir, "keybindings.json")
     }

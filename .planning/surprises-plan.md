@@ -12,9 +12,9 @@ Order is by risk: persisted-format changes first (DECISIONS §1: cheapest before
 | 2 | ALPHA -> LEVEL | **Done.** Labels, relabel-on-load (`MacroEngine.relabelLegacyMasterKnobs`, called from `SessionSerializer`), `LegacyMasterLabelTest`, tooltips, `docs/developer/ui.md`, both release-notes files |
 | 3 | ARM64 in `DECISIONS.md` | **Done** (§11 lists five targets, §12 entry deleted, ARCHITECTURE "Unverified" bullet removed). Uncommitted |
 | 4 | Orphaned shaders | **Done** (deleted in 479f619, rendering.md wording in c79b16a) |
-| 5 | `lwjgl-openal` | **Open** (`build.gradle.kts` lines 40, 49) |
-| 6 | `default_transition_presets` rename | **Open** (not found in build or Kotlin) |
-| 7 | One dot-directory | **Open** (`ShortcutManager.kt` still `.liquidlsd`) |
+| 5 | `lwjgl-openal` | **Done.** Dependency and natives removed; full tests and `--smoke-test` pass |
+| 6 | `default_transition_presets` rename | **Done.** Gradle output folder and `FileSystemManager` renamed; `ARCHITECTURE.md` updated |
+| 7 | One dot-directory | **Done.** `ShortcutManager` uses `~/.liquid-lsd`, no fallback; docs and both release-notes files updated |
 | 8 | `Mandala` exceptions | **Done** (§2 amended; sites are `ValueParamSection` `as? Mandala` and `WebPresetSerializer` `is Mandala`). Uncommitted |
 | 9 | `view2d.frag` wording | **Done** (§2; also dropped the stale "3D projection modes" sentence). Uncommitted |
 | 10 | Per-frame surface allocation | **Open** (`UIManager.kt` ~246, 247, 388) |

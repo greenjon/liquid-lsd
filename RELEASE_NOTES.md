@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Housekeeping: One Config Folder, Smaller Download (`ui/shortcuts/ShortcutManager.kt`, `ui/FileSystemManager.kt`, `build.gradle.kts`)
+- **Custom key bindings now live in `~/.liquid-lsd/keybindings.json`**, next to your source notes, instead of a second `~/.liquidlsd` folder. **Custom key bindings are reset once:** the old file is not read. Copy `~/.liquidlsd/keybindings.json` over if you want to keep them.
+- Removed the unused OpenAL audio library from the build, which makes the download smaller. Audio is unaffected.
+- Internal: the bundled transition presets are now seeded from `default_transition_presets`, so they no longer share a folder name with the stock `.fs` transitions. Existing installs are not affected; only fresh installs and "restore defaults" use it.
+
 ### Master Knobs Say LEVEL, Not ALPHA (`macro/MacroEngine.kt`, `presets/SessionSerializer.kt`)
 - **The Master bank's first three knobs are now labelled LEVEL A, LEVEL B and LEVEL BG** (they were ALPHA A, ALPHA B, ALPHA BG), matching the Level faders everywhere else.
 - **Saved sessions are relabelled when they load**, but only knobs that still carry the old default label and still control the matching level. Knobs you renamed or rebound keep your label.

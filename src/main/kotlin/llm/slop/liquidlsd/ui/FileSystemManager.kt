@@ -941,7 +941,7 @@ object FileSystemManager {
         fxChainsCount += extractBundledAssets("default_fx_chains", fxChainsRoot)
 
         // Extract bundled transition presets
-        transitionsCount += extractBundledAssets("default_transitions", transitionsRoot)
+        transitionsCount += extractBundledAssets("default_transition_presets", transitionsRoot)
 
         // Extract bundled transition playlists
         transPlaylistsCount += extractBundledAssets("default_transition_playlists", transitionPlaylistsRoot)
