@@ -1463,6 +1463,10 @@ Each viewer's browser — renders the visuals locally using WebGL
 <td><strong>Auto-Connect</strong></td>
 <td>If enabled, broadcasts automatically when the app starts</td>
 </tr>
+<tr>
+<td><strong>Broadcaster Name</strong></td>
+<td>Shown to viewers on the web TV's LIVE title card ("LIVE · name"); leave blank for just LIVE. Up to 40 characters</td>
+</tr>
 </tbody>
 </table>
 <p>These preferences are saved between sessions in <code>lsd-preferences.properties</code>.</p>
@@ -1479,7 +1483,7 @@ Each viewer's browser — renders the visuals locally using WebGL
 <hr />
 <h2 id="the-web-player">The web player</h2>
 <p>The standalone browser client (<code>web/index.html</code>) presents the visualizer in a retro CRT television shell.</p>
-<p><strong>Power switch:</strong> Click it to turn the visualizer on. The browser requires this interaction to start Web Audio (standard browser security policy). Turning the TV on triggers a CRT warmup animation; turning it off plays a vintage beam-collapse animation.</p>
+<p><strong>Power switch:</strong> Click it (or anywhere on the TV) to turn the visualizer on. The browser requires this interaction to start Web Audio (standard browser security policy). Turning the TV on triggers a CRT warmup animation; turning it off plays a vintage beam-collapse animation.</p>
 <p><strong>Volume dial:</strong> Drag the rotary dial up or down to adjust volume. The curve is tuned to feel perceptually linear — small moves at the bottom, bigger moves at the top.</p>
 <p><strong>Fullscreen:</strong> Double-click the TV screen to expand to full-screen (the on-screen display comes along). Double-click again or press <code>Esc</code> to go back to the TV shell.</p>
 <p><strong>Viewer controls</strong> (Autopilot only; while you broadcast live they are locked and the screen says so):</p>
@@ -1514,16 +1518,24 @@ Each viewer's browser — renders the visuals locally using WebGL
 </tr>
 <tr>
 <td><strong>REACT</strong></td>
-<td>How strongly the picture reacts to the music, 25-200% (double-click for 100%)</td>
+<td>How strongly the picture reacts to the music, 25-400%, 200% to start (double-click for 200%)</td>
 <td><code>-</code> <code>=</code></td>
 </tr>
 </tbody>
 </table>
 <p>Click or tap the picture (or press <code>I</code>) to show the channel, the look, its FX chain and the track playing on the radio. TIME and REACT are remembered in the browser.</p>
 <p><strong>No signal:</strong> if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.</p>
-<p><strong>Heavy looks:</strong> the most demanding fractals only play on computers fast enough for them (the TV checks at power-on). Add <code>?heavy=1</code> to the address to force them on, <code>?heavy=0</code> to keep them off.</p>
+<p><strong>Big GPU looks:</strong> the most demanding 3D fractals and simulations only play on computers fast enough for them (the TV checks at power-on; MENU › Big GPU looks overrides it). Add <code>?heavy=1</code> to the address to force them on, <code>?heavy=0</code> to keep them off.</p>
 <p><strong>Screen:</strong> while the TV is on, your computer or phone won't dim or lock (in browsers that support it).</p>
 <p><strong>Lock screen and media keys:</strong> your phone's lock screen and your keyboard's media keys show the show and the look; play/pause is the power switch, next/previous change the look.</p>
+<p><strong>Install as an app:</strong> use your browser's Install / Add to Home Screen; it opens fullscreen like a TV app.</p>
+<p><strong>Kiosk mode:</strong> <code>index.html?kiosk</code> shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.</p>
+<p><strong>MENU:</strong> the MENU button or <code>M</code> opens the service menu (arrows or clicks to change, Esc or M to close): <strong>SYNC</strong> (how late the sound reaches you, for Bluetooth and other delayed speakers), <strong>Announce looks</strong> (name each new look on screen; off by default), <strong>REACT</strong>, <strong>TIME</strong>, <strong>Reduced motion</strong> (Auto follows your system setting) and <strong>Big GPU looks</strong> (Auto lets the GPU check decide). The selected row explains itself at the bottom of the menu (and on mouse hover). Settings are remembered in this browser. REACT, TIME and Heavy looks are locked during a live broadcast.</p>
+<p><strong>SYNC:</strong> if the picture's pulses come before the beat you hear (Bluetooth speakers are often 150-250 ms late), open MENU › <strong>TAP SYNC</strong> and tap Space or the picture on 8 beats; or set <strong>SYNC</strong> by hand. It needs the beat light to be green (or a live broadcast).</p>
+<p><strong>Reduced motion:</strong> follows your system's "reduce motion" setting (or MENU › Reduced motion): gentler reaction, no hard looks, no flashes or glitch effects, no cut on the drop, slower changes.</p>
+<p><strong>Going live:</strong> when the desktop starts broadcasting, viewers see a LIVE title card with the broadcaster's name (if one is set in the desktop's Web Broadcast preferences).</p>
+<p><strong>Power:</strong> click anywhere on the TV to turn it on (the browser needs that click to start the sound). Once it's on, a click on the cabinet turns it off; clicks on the picture show the info instead.</p>
+<p><strong>About:</strong> the nameplate under the screen opens the Liquid LSD website. MENU › <strong>ABOUT</strong> tells you about the desktop app (with a QR code for your phone), and <strong>I</strong> shows a Liquid LSD line with the info.</p>
 <p><strong>Beat light:</strong> the second light on the badge blinks on every beat: green when the TV has locked onto the music's beat, amber while it keeps time on its own (quiet passages, or before it has found the beat).</p>
 <p><strong>What viewers see.</strong> Each deck's source and its parameters, the deck FX chains and the master FX chain, the transition and crossfader, the channel levels and the beat all go over the wire, so the web TV follows your mix closely. A few things stay desktop-only: external video sources (Spout, NDI, PipeWire, webcam) show as nothing, and anything the web player does not have (a custom shader you added to your own library) is skipped. Viewers join in the middle of a broadcast on the right beat.</p>
 <p>The viewer's browser also connects to a live audio stream and runs its own audio analysis, keeping the visuals reactive to music even when you're not broadcasting.</p>
