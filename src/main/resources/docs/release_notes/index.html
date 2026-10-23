@@ -1292,6 +1292,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#snappier-midi-and-esc-cancels-the-unsaved-deck-prompt-uiuimanagerkt-mainkt-uinavigationsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Snappier MIDI, and Esc Cancels the Unsaved-Deck Prompt (ui/UIManager.kt, Main.kt, ui/NavigationSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#old-feedback-and-3d-view-settings-removed-from-presets-modelspresetmodelskt-presetspresetmigratorkt-presetspresetdependencyanalyzerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Old Feedback and 3D-View Settings Removed From Presets (models/PresetModels.kt, presets/PresetMigrator.kt, presets/PresetDependencyAnalyzer.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stock-fx-chain-fixes-defaultsfx_chains-webtoolsvalidate_contentmjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -6677,6 +6699,28 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#snappier-midi-and-esc-cancels-the-unsaved-deck-prompt-uiuimanagerkt-mainkt-uinavigationsurfacekt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Snappier MIDI, and Esc Cancels the Unsaved-Deck Prompt (ui/UIManager.kt, Main.kt, ui/NavigationSurface.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#old-feedback-and-3d-view-settings-removed-from-presets-modelspresetmodelskt-presetspresetmigratorkt-presetspresetdependencyanalyzerkt" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Old Feedback and 3D-View Settings Removed From Presets (models/PresetModels.kt, presets/PresetMigrator.kt, presets/PresetDependencyAnalyzer.kt)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#stock-fx-chain-fixes-defaultsfx_chains-webtoolsvalidate_contentmjs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -12037,6 +12081,17 @@
   <h1>Release Notes</h1>
 
 <h2 id="unreleased">[Unreleased]</h2>
+<h3 id="snappier-midi-and-esc-cancels-the-unsaved-deck-prompt-uiuimanagerkt-mainkt-uinavigationsurfacekt">Snappier MIDI, and Esc Cancels the Unsaved-Deck Prompt (<code>ui/UIManager.kt</code>, <code>Main.kt</code>, <code>ui/NavigationSurface.kt</code>)</h3>
+<ul>
+<li><strong>Controller knobs and buttons now take effect in the same frame.</strong> Incoming MIDI used to be handled after the frame was drawn, so every turn reached the screen one frame late. It is now applied first. MIDI is also handled while the window is minimised, instead of piling up and replaying when you restore it.</li>
+<li><strong>Esc now cancels the "unsaved deck" prompt</strong>, as its Cancel button's tooltip always said. Before, Esc did nothing there.</li>
+<li>Internal: the controller surfaces are built once instead of every frame, so the hardware knob layout is cached between frames.</li>
+</ul>
+<h3 id="old-feedback-and-3d-view-settings-removed-from-presets-modelspresetmodelskt-presetspresetmigratorkt-presetspresetdependencyanalyzerkt">Old Feedback and 3D-View Settings Removed From Presets (<code>models/PresetModels.kt</code>, <code>presets/PresetMigrator.kt</code>, <code>presets/PresetDependencyAnalyzer.kt</code>)</h3>
+<ul>
+<li><strong>Presets no longer have a deck-level feedback section.</strong> Feedback has been an FX for a while; the leftover <code>feedbackParameters</code> field is gone from the preset format, along with its handling in the loader, the dependency check and the flame tools.</li>
+<li><strong>Your existing presets and sessions still load.</strong> The old section is simply skipped, and presets saved from now on don't contain it. Only zoom and Z-rotate are stored as the deck's framing.</li>
+</ul>
 <h3 id="stock-fx-chain-fixes-defaultsfx_chains-webtoolsvalidate_contentmjs">Stock FX Chain Fixes (<code>defaults/fx_chains/*</code>, <code>web/tools/validate_content.mjs</code>)</h3>
 <ul>
 <li><strong>Six stock FX chains got back settings they had been silently losing.</strong> Renamed effect parameters had left them pointing at parameters their effects no longer have, so those settings were ignored: Pop-Art Comic Print's edge palette and overlay, Digital Bitcrush Mosaic's diamond pixels and split mode, Prismatic Crystal Kaleidoscope's spectral split, Grindhouse VHS Bootleg's phosphor mask and darker grade, Laser Concert Anamorphic's brighter grade, and Cosmic Black Hole Vortex's displacement (two values were out of range). Copies of these chains already in your library are not changed.</li>
@@ -12064,6 +12119,7 @@
 <li><strong>FX</strong> swaps the FX chain on the look on air; <strong>HOLD</strong> keeps the look until you release it.</li>
 <li><strong>TIME</strong> sets how long each look holds (8, 16, 32 or 64 bars); <strong>REACT</strong> sets how strongly the picture reacts to the music (25-200%), for quiet or very loud streams. Both are remembered.</li>
 <li><strong>On-screen display:</strong> on every change the screen shows the channel, the look and its FX chain in phosphor green, plus the track playing on the radio. Click the picture or press <code>I</code> to see it again.</li>
+<li><strong>The heaviest looks only play on computers that can run them.</strong> At power-on the TV times one frame of its heaviest fractal (about a tenth of a second). Pseudo-Kleinian, Nebula, Apollonian, Hyper Slice, Mandelbulb, Icosa, Mandelbox, Lenia and Reaction-Diffusion only join the rotation if that frame is quick (discrete graphics, Apple Silicon, fast integrated chips); laptops with basic integrated graphics and phones keep the lighter looks. Measured on an Intel UHD (Tiger Lake GT1): 52 ms, so those stay off there.</li>
 <li><strong>Smoother on slower computers and phones.</strong> The web TV renders at a lower resolution when the graphics card can't keep up (and back up when it can), and never above 1080p internally, so 4K screens and laptops stay fluid. The next look's shaders load during the current one, so changes no longer stutter or show a look without its effects for a moment.</li>
 <li><strong>A beat light</strong> on the badge blinks on every beat: green when locked onto the music, amber when keeping time on its own.</li>
 <li><strong>While the desktop is broadcasting live the controls are locked</strong> and the screen says so. The badge now really switches to LIVE (it never did before).</li>

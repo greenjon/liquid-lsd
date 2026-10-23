@@ -1549,6 +1549,7 @@ Each viewer's browser — renders the visuals locally using WebGL
 </table>
 <p>Click or tap the picture (or press <code>I</code>) to show the channel, the look, its FX chain and the track playing on the radio. TIME and REACT are remembered in the browser.</p>
 <p><strong>No signal:</strong> if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.</p>
+<p><strong>Heavy looks:</strong> the most demanding fractals only play on computers fast enough for them (the TV checks at power-on). Add <code>?heavy=1</code> to the address to force them on, <code>?heavy=0</code> to keep them off.</p>
 <p><strong>Beat light:</strong> the second light on the badge blinks on every beat: green when the TV has locked onto the music's beat, amber while it keeps time on its own (quiet passages, or before it has found the beat).</p>
 <p><strong>What viewers see.</strong> Each deck's source and its parameters, the deck FX chains and the master FX chain, the transition and crossfader, the channel levels and the beat all go over the wire, so the web TV follows your mix closely. A few things stay desktop-only: external video sources (Spout, NDI, PipeWire, webcam) show as nothing, and anything the web player does not have (a custom shader you added to your own library) is skipped. Viewers join in the middle of a broadcast on the right beat.</p>
 <p>The viewer's browser also connects to a live audio stream and runs its own audio analysis, keeping the visuals reactive to music even when you're not broadcasting.</p>
