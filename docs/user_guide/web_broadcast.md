@@ -83,6 +83,10 @@ Click or tap the picture (or press `I`) to show the channel, the look, its FX ch
 
 **Lock screen and media keys:** your phone's lock screen and your keyboard's media keys show the show and the look; play/pause is the power switch, next/previous change the look.
 
+**Install as an app:** use your browser's Install / Add to Home Screen; it opens fullscreen like a TV app.
+
+**Kiosk mode:** `index.html?kiosk` shows only the picture (no TV body), turns itself on and hides the mouse pointer; use the keyboard or swipes. Browsers that refuse to start sound on their own get a "click or press a key for sound" prompt.
+
 **Beat light:** the second light on the badge blinks on every beat: green when the TV has locked onto the music's beat, amber while it keeps time on its own (quiet passages, or before it has found the beat).
 
 **What viewers see.** Each deck's source and its parameters, the deck FX chains and the master FX chain, the transition and crossfader, the channel levels and the beat all go over the wire, so the web TV follows your mix closely. A few things stay desktop-only: external video sources (Spout, NDI, PipeWire, webcam) show as nothing, and anything the web player does not have (a custom shader you added to your own library) is skipped. Viewers join in the middle of a broadcast on the right beat.

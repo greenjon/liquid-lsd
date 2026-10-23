@@ -367,3 +367,11 @@ body {
   #tv-controls { gap: 12px; justify-content: center; }
   #station-badge { margin-left: 0; }
 }
+
+/* --- Kiosk (?kiosk): no TV body, the picture fills the window; keyboard and swipe still work --- */
+body.kiosk { background: #000; }
+body.kiosk #tv-body { padding: 0; border-radius: 0; box-shadow: none; background: #000; }
+body.kiosk #tv-screen-border { width: 100vw; padding: 0; border-radius: 0; box-shadow: none; background: #000; }
+body.kiosk #tv-screen-area { padding-bottom: 0; width: 100vw; height: 100vh; border-radius: 0; }
+body.kiosk #tv-controls { display: none; }
+body.kiosk.idle, body.kiosk.idle canvas { cursor: none; }

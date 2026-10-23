@@ -237,6 +237,8 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] GPU tier: on the NVIDIA (or a Mac) `LSD.gpu` in the console says heavy on and Mandelbulb/Nebula looks appear; on the Intel GPU they never do.
 - [ ] Leave the TV on for 15 min on a laptop and a phone: the screen never dims or locks; after power off it sleeps normally.
 - [ ] Phone lock screen: shows the show and the look; play/pause powers the TV; next/previous change the look. Laptop media keys do the same.
+- [ ] Install the TV from Chrome/Edge (desktop) and Add to Home Screen on a phone: it opens fullscreen with the icon; with the network off it still opens (no signal).
+- [ ] `?kiosk` on a spare screen: picture only, turns on by itself (or asks for a click for sound), pointer hides.
 - [ ] Viewer controls on a real browser and a phone: CH up/down, FX, HOLD, TIME, REACT, swipe, long-press, keyboard; OSD readable; fullscreen keeps the OSD.
 - [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked.
 - [ ] Pull the network while the TV plays: snow and NO SIGNAL within a few seconds; plug it back: the radio and the picture come back within ~10 s.

@@ -111,6 +111,9 @@ function makeDial(el, { initial, onChange, steps = 0, locked = () => false }) {
 // -------------------------------------------------------
 // Setup
 // -------------------------------------------------------
+let audioBlocked = false;  // the browser refused to start audio without a click
+const kiosk = new URLSearchParams(location.search).has('kiosk');
+
 export function initUI() {
   const powerSwitch = document.getElementById('powerSwitch');
   const tvBody = document.getElementById('tv-body');
@@ -151,9 +154,12 @@ export function initUI() {
       updateMediaSession();
       try {
         await startAudio();
+        audioBlocked = false;
       } catch (err) {
-        console.error('Audio start failed:', err);
-        message('NO SIGNAL · PRESS PWR AGAIN', 5000);
+        // Autoplay blocked (kiosk power-on without a click) or the stream failed: the next click or key
+        // anywhere starts the sound; meanwhile dsp.js shows no signal and keeps retrying the stream.
+        console.warn('Audio start failed:', err);
+        audioBlocked = true;
       }
     }
   });
@@ -279,6 +285,29 @@ export function initUI() {
     handle('previoustrack', prev);
   }
 
+  // --- Sound after a blocked start: the first click or key anywhere starts it ---
+  const unblock = async () => {
+    if (!audioBlocked || !powerState.on) return;
+    try { await startAudio(); audioBlocked = false; showLook(); } catch { /* still blocked or no stream */ }
+  };
+  window.addEventListener('pointerdown', unblock);
+  window.addEventListener('keydown', unblock);
+
+  // --- Kiosk (?kiosk): no TV body; turns itself on; the cursor hides when idle ---
+  if (kiosk) {
+    document.body.classList.add('kiosk');
+    let idle = null;
+    const wake = () => { document.body.classList.remove('idle'); clearTimeout(idle); idle = setTimeout(() => document.body.classList.add('idle'), 3000); };
+    window.addEventListener('mousemove', wake);
+    wake();
+    setTimeout(() => { if (!powerState.on) powerSwitch.click(); }, 300);
+  }
+
+  // --- Installable app: the service worker (sw.js) caches the app shell; not in the headless checks ---
+  if ('serviceWorker' in navigator && !new URLSearchParams(location.search).has('nolive')) {
+    navigator.serviceWorker.register('sw.js').catch((err) => console.warn('[lsd] service worker:', err.message));
+  }
+
   // --- Autopilot and broadcast events ---
   window.addEventListener('lsd-now-showing', (e) => { showLook(e.detail); updateMediaSession(); });
   window.addEventListener('lsd-broadcast-status', (e) => {
@@ -298,7 +327,10 @@ export function initUI() {
   const beatLed = document.getElementById('beatLed');
   let noSignalShown = false;
   (function blink() {
-    if (cvState.noSignal && powerState.on && !live()) { message('NO SIGNAL', 1200); noSignalShown = true; }
+    // Standing notices only fill the message line when nothing else (HOLD, REACT...) is showing there.
+    const msgFree = !document.getElementById('osd-msg').classList.contains('show');
+    if (audioBlocked && powerState.on) { if (msgFree) message('CLICK OR PRESS A KEY FOR SOUND', 1500); noSignalShown = true; }
+    else if (cvState.noSignal && powerState.on && !live()) { if (msgFree) message('NO SIGNAL', 1500); noSignalShown = true; }
     else if (noSignalShown) { noSignalShown = false; showLook(); }
     const isLive = live() && autopilotState.clock.valid;
     const beats = isLive ? autopilotState.clock.read(performance.now()) : cvState.totalBeats;
