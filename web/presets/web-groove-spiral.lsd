@@ -84,19 +84,7 @@
       "baseMin": -1.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "lfo",
-          "operator": "ADD",
-          "depth": 0.4,
-          "dcOffset": 0.0,
-          "waveform": "SINE",
-          "genUnit": "BEAT",
-          "subdivision": 32.0,
-          "slope": 0.5,
-          "phaseOffset": 0.0
-        }
-      ]
+      "modulators": []
     },
     "DotSize": {
       "baseValue": 0.3,

@@ -116,7 +116,15 @@ def write_json(path, data):
     path.write_text(json.dumps(data, indent=2) + "\n")
 
 
+# Sources that fill the frame with colour: feedback and bloom chains wash them out to one flat colour,
+# so their presets are tagged `fullframe` and the autopilot skips those chains for them (web/pairing.js).
+FULL_FRAME_SOURCES = {"cyclic_ca", "kali_set", "glitch_blocks", "halftone_matrix", "quasicrystal", "thin_film",
+                      "voronoi_cells", "wave_ripples", "isometric_voxels", "girih_stars"}
+
+
 def preset(name, source, spec, tags, notes=""):
+    if source in FULL_FRAME_SOURCES:
+        tags = tags + ["fullframe"]
     params = mandala_params(spec) if source == "mandala" else isf_params(source, spec)
     write_json(WEB / "presets" / f"{name}.lsd", {
         "version": 1, "name": name, "visualSourceType": source, "parameters": params,
@@ -152,7 +160,7 @@ FEEDBACK = lambda decay, gain, zoom=0.0, rotate=0.0, **kw: slot("feedback", {
 preset("web-beat-spiral", "dynamic_spiral", {
     "MaxPoints": 800, "Scale": (0.42, pulse(1, 0.12)), "Damping": 0.2, "WaveFreq": 0.19,
     "WaveAmp": (0.0, gate("audio_bass", 0.5, 0.9)),
-    "Shear": (0.25, lfo(32, 0.25)), "Speed": (0.45, amp(0.35)),
+    "Shear": (0.25, lfo(32, 0.25)), "Speed": 0.45,
     "DotSize": (0.3, kick(0.2, 180)), "Glow": (0.5, high(0.25)),
     "HueOffset": (0.0, lfo(64, 1.0)), "HueSweep": 0.09, "TrailDecay": 0.86,
 }, ["beat", "kick", "bass-gated", "high"],
@@ -186,9 +194,9 @@ preset("web-bar-hyperslice", "hyper_slice", {
 
 preset("web-gyroid-flight", "gyroid_hyperspace", {
     "SurfaceType": 0.0, "WallThickness": (0.3, lfo(8, 0.2)),
-    "Frequency": (0.5, lfo(16, 0.15)), "FlightSpeed": (0.25, amp(0.5)),
+    "Frequency": (0.5, lfo(16, 0.15)), "FlightSpeed": 0.25,
     "WireframeMode": 1.0, "CoreGlow": (0.45, kick(0.4)),
-    "ColorMode": 0.0, "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.9, "Brightness": 0.5,
+    "ColorMode": 0.0, "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.9, "Brightness": (0.5, amp(0.25)),
     "Zoom": 0.35, "RotateZ": (0.0, lfo(64, 1.0)),
 }, ["beat", "bar", "amp", "kick"],
     "A wireframe lattice you fly through: flight speed follows overall loudness, the core flashes on kicks, the cell size drifts over four bars.")
@@ -196,7 +204,7 @@ preset("web-gyroid-flight", "gyroid_hyperspace", {
 preset("web-cymatics-sub", "chladni_cymatics", {
     "FrequencyM": (3, bass(0.5, 80, 600)), "FrequencyN": (5, lfo(16, 0.15, wave="SQUARE")),
     "FrequencyL": 2, "PlateShape": (0.0, lfo(32, 0.3)), "NodeSharpness": (0.27, pulse(1, 0.3)),
-    "SandAccumulation": 0.7, "VibrationSpeed": (0.15, amp(0.3)), "InvertMode": 0.0,
+    "SandAccumulation": 0.7, "VibrationSpeed": 0.15, "InvertMode": 0.0,
     "Glow": (0.35, kick(0.5, 200)), "PaletteMode": 0.0, "HueOffset": (0.0, lfo(24, 1.0)), "Scale": 0.5,
 }, ["beat", "bar", "bass", "kick"],
     "More bass pushes the plate into higher modes; the pattern shifts every eight beats; sand glows on kicks.")
@@ -205,23 +213,23 @@ preset("web-celestial-pulse", "celestial_engine", {
     "Symmetries": (6, lfo(16, 0.25, wave="SQUARE")), "RingDensity": (0.26, lfo(8, 0.2)),
     "PhaseTwist": (0.25, lfo(16, 0.5)), "MoireStrength": (0.45, high(0.5, 20, 150)),
     "FlowerFold": (0.5, lfo(12, 0.2)), "PulseWave": (0.0, pulse(1, 1.0)),
-    "Speed": (0.15, bass(0.3)), "LineWidth": (0.28, kick(0.35)),
-    "Glow": 0.34, "ColorMode": 0.0, "HueOffset": (0.0, lfo(40, 1.0)), "HueSweep": 0.25,
+    "Speed": 0.15, "LineWidth": (0.28, kick(0.35)),
+    "Glow": (0.34, bass(0.3)), "ColorMode": 0.0, "HueOffset": (0.0, lfo(40, 1.0)), "HueSweep": 0.25,
     "Scale": (0.5, pulse(2, 0.08)),
 }, ["beat", "bar", "bass", "high", "kick"],
     "A pulse wave on every beat, moire shimmer follows the hats, speed follows the bass.")
 
 preset("web-fluid-bassdrop", "domain_warp_fluid", {
-    "WarpStrength": (0.0, amp(0.2), gate("audio_bass", 0.5, 1.5)), "Swirl": (0.3, lfo(16, 0.5)),
-    "Viscosity": 0.2, "Speed": (0.17, amp(0.4)), "Detail": 4, "Gloss": (0.45, pulse(1, 0.3)),
+    "WarpStrength": (0.0, gate("audio_bass", 0.5, 1.5)), "Swirl": (0.3, lfo(16, 0.5), amp(0.2)),
+    "Viscosity": 0.2, "Speed": 0.17, "Detail": 4, "Gloss": (0.45, pulse(1, 0.3), mid(0.2)),
     "PaletteMode": (0.0, lfo(64, 0.5, wave="SQUARE")), "HueOffset": (0.0, lfo(20, 1.0)),
-    "HueCycleSpeed": (0.1, mid(0.5)), "Zoom": (0.5, kick(0.1, 200)),
+    "HueCycleSpeed": 0.1, "Zoom": (0.5, kick(0.1, 200)),
 }, ["beat", "bar", "amp", "kick", "bass-gated", "mid"],
     "Calm marbling until the bass drops, then the warp opens up; gloss glints on the beat; the palette flips every 32 beats.")
 
 preset("web-spiral-storm", "dynamic_spiral", {
     "MaxPoints": 1200, "Scale": (0.3, lfo(8, 0.15)), "Damping": 0.4, "WaveFreq": 0.3,
-    "WaveAmp": (0.15, mid(0.3)), "Shear": (0.2, mid(0.4)), "Speed": (0.5, lfo(16, 0.9, wave="SQUARE")),
+    "WaveAmp": (0.15, mid(0.3)), "Shear": (0.2, mid(0.4)), "Speed": 0.5,
     "DotSize": (0.2, pulse(0.5, 0.15)), "Glow": 0.5, "HueOffset": (0.3, lfo(16, 1.0)),
     "HueSweep": (0.3, lfo(8, 0.2)), "TrailDecay": 0.88,
 }, ["beat", "bar", "mid"],
@@ -252,9 +260,10 @@ chain("web-punch", ["blur", "pinch", "kick", "beat"],
       slot("radial_blur", {"blurAmount": (0.0, kick(0.7, 220)), "decay": 0.9, "exposure": 0.4}),
       slot("pinch_bulge", {"amount": (0.0, pulse(1, 0.25)), "radius": 0.45}),
       FEEDBACK(0.55, 0.45, 0.003, 0.0))
+# Not video_strobe: its rate is a TIME multiplier, so modulating it flickers at random (and a fast strobe on a
+# public stream is a photosensitivity risk). The negative flashes once per loud bass hit instead.
 chain("web-drop-strobe", ["strobe", "bass-gated", "kick"],
-      slot("video_strobe", {"rate": (0.0, gate("audio_bass", 0.7, 1.0, 5, 120)), "strobeMode": 0.0,
-                            "dutyCycle": 0.5, "freezeHold": 0.0}),
+      slot("invert", {"invertIntensity": (0.0, gate("audio_bass", 0.7, 1.0, 5, 120))}),
       slot("color_levels", {"contrast": (0.33, kick(0.2, 150))}))
 
 
@@ -278,8 +287,8 @@ preset("web-hyper-prism", "hyper_slice", {
 
 preset("web-gyroid-solid", "gyroid_hyperspace", {
     "SurfaceType": 1.0, "WallThickness": (0.3, bass(0.3)), "Frequency": (0.4, lfo(32, 0.1)),
-    "FlightSpeed": (0.15, amp(0.4)), "WireframeMode": 0.0, "CoreGlow": (0.5, kick(0.4)),
-    "ColorMode": 1.0, "HueOffset": (0.0, lfo(40, 1.0)), "Saturation": 0.95, "Brightness": 0.7,
+    "FlightSpeed": 0.15, "WireframeMode": 0.0, "CoreGlow": (0.5, kick(0.4)),
+    "ColorMode": 1.0, "HueOffset": (0.0, lfo(40, 1.0)), "Saturation": 0.95, "Brightness": (0.7, amp(0.25)),
     "Zoom": 0.65, "RotateX": (0.0, lfo(48, 1.0)), "RotateZ": (0.0, lfo(64, 1.0)),
 }, ["beat", "bar", "bass", "amp", "kick"],
     "Thick-walled caves instead of a lattice; the walls swell with the bass and the core glows on kicks.")
@@ -287,7 +296,7 @@ preset("web-gyroid-solid", "gyroid_hyperspace", {
 preset("web-cymatics-rings", "chladni_cymatics", {
     "FrequencyM": (6, lfo(32, 0.2, wave="SQUARE")), "FrequencyN": (6, mid(0.3, 60, 500)), "FrequencyL": 4,
     "PlateShape": 1.0, "NodeSharpness": (0.5, hat(0.3)), "SandAccumulation": 0.4,
-    "VibrationSpeed": (0.1, amp(0.3)), "InvertMode": 1.0, "Glow": (0.5, kick(0.4, 200)),
+    "VibrationSpeed": 0.1, "InvertMode": 1.0, "Glow": (0.5, kick(0.4, 200)),
     "PaletteMode": 2.0, "HueOffset": (0.0, lfo(30, 1.0)), "Scale": 0.55,
 }, ["beat", "bar", "mid", "high", "kick"],
     "A round plate drawn as bright rings on dark; mids change the mode, hats sharpen the nodes.")
@@ -295,14 +304,14 @@ preset("web-cymatics-rings", "chladni_cymatics", {
 preset("web-celestial-bloom", "celestial_engine", {
     "Symmetries": (12, lfo(32, 0.2, wave="SQUARE")), "RingDensity": (0.55, lfo(12, 0.15)),
     "PhaseTwist": (-0.3, lfo(24, 0.5)), "MoireStrength": (0.2, mid(0.5)), "FlowerFold": (0.8, lfo(16, 0.15)),
-    "PulseWave": (0.0, gate("audio_bass", 0.5, 1.0)), "Speed": (-0.1, amp(-0.3)), "LineWidth": 0.2,
+    "PulseWave": (0.0, gate("audio_bass", 0.5, 1.0)), "Speed": -0.1, "LineWidth": (0.2, amp(0.2)),
     "Glow": (0.5, pulse(1, 0.15)), "ColorMode": 2.0, "HueOffset": (0.0, lfo(36, 1.0)), "HueSweep": 0.6, "Scale": 0.6,
 }, ["beat", "bar", "mid", "amp", "bass-gated"],
     "A dense twelve-fold flower turning backwards; pulse rings fire only when the bass is loud.")
 
 preset("web-fluid-lava", "domain_warp_fluid", {
-    "WarpStrength": (0.6, bass(0.2)), "Swirl": (-0.4, lfo(24, 0.4)), "Viscosity": 0.7, "Speed": (0.08, amp(0.3)),
-    "Detail": 2, "Gloss": (0.1, pulse(2, 0.1)), "PaletteMode": 4.0, "HueOffset": (0.0, lfo(48, 1.0)),
+    "WarpStrength": (0.6, bass(0.2)), "Swirl": (-0.4, lfo(24, 0.4)), "Viscosity": 0.7, "Speed": 0.08,
+    "Detail": 2, "Gloss": (0.1, pulse(2, 0.1), amp(0.2)), "PaletteMode": 4.0, "HueOffset": (0.0, lfo(48, 1.0)),
     "HueCycleSpeed": 0.05, "Zoom": (0.35, kick(0.06, 250)),
 }, ["beat", "bar", "bass", "amp", "kick"],
     "Slow thick marbling in a dark palette; glossy highlights swell every other beat.")
@@ -317,7 +326,7 @@ preset("web-spiral-galaxy", "dynamic_spiral", {
 preset("web-spiral-sparks", "dynamic_spiral", {
     "MaxPoints": 300, "Scale": (0.55, lfo(8, 0.1)), "Damping": 0.1, "WaveFreq": 0.4,
     "WaveAmp": (0.0, gate("audio_flux_high", 0.4, 1.0, 3, 200)), "Shear": (-0.2, lfo(16, 0.4)),
-    "Speed": (0.3, amp(0.3)), "DotSize": (0.4, hat(0.3)), "Glow": 0.55,
+    "Speed": 0.3, "DotSize": (0.4, hat(0.3)), "Glow": (0.55, amp(0.25)),
     "HueOffset": (0.0, lfo(24, 1.0)), "HueSweep": 0.2, "TrailDecay": 0.6,
 }, ["beat", "bar", "amp", "high"],
     "Few big dots with short trails; the wave only ripples through them when the hats are busy.")
@@ -345,7 +354,7 @@ preset("web-mandala-heart", "mandala", {
 preset("web-ambient-cymatics", "chladni_cymatics", {
     "FrequencyM": (4, lfo(64, 0.12)), "FrequencyN": (6, lfo(48, 0.12)), "FrequencyL": 3,
     "PlateShape": (0.5, lfo(64, 0.3)), "NodeSharpness": 0.2, "SandAccumulation": 0.6,
-    "VibrationSpeed": (0.08, amp(0.2, 200, 1500)), "InvertMode": 0.0, "Glow": (0.35, amp(0.2, 200, 1500)),
+    "VibrationSpeed": 0.08, "InvertMode": 0.0, "Glow": (0.35, amp(0.2, 200, 1500)),
     "PaletteMode": 1.0, "HueOffset": (0.0, lfo(96, 1.0)), "Scale": 0.5,
 }, ["ambient", "bar", "amp"],
     "A slowly morphing plate in soft colour; modes drift over 8-16 bars and loudness barely moves the glow.")
@@ -353,14 +362,14 @@ preset("web-ambient-cymatics", "chladni_cymatics", {
 preset("web-ambient-nebula", "celestial_engine", {
     "Symmetries": 8, "RingDensity": (0.35, lfo(32, 0.15)), "PhaseTwist": (0.15, lfo(48, 0.4)),
     "MoireStrength": (0.3, mid(0.25, 200, 1200)), "FlowerFold": (0.6, lfo(64, 0.2)), "PulseWave": 0.0,
-    "Speed": (0.06, amp(0.1, 200, 1500)), "LineWidth": 0.15, "Glow": (0.45, amp(0.15, 200, 1500)),
+    "Speed": 0.06, "LineWidth": 0.15, "Glow": (0.45, amp(0.15, 200, 1500)),
     "ColorMode": 3.0, "HueOffset": (0.0, lfo(96, 1.0)), "HueSweep": 0.5, "Scale": 0.55,
 }, ["ambient", "bar", "mid", "amp"],
     "A slow eight-fold bloom of thin lines; the glow breathes with the overall level, hue turns over 24 bars.")
 
 preset("web-ambient-tides", "domain_warp_fluid", {
-    "WarpStrength": (0.45, lfo(32, 0.2)), "Swirl": (0.2, lfo(48, 0.4)), "Viscosity": 0.5, "Speed": (0.05, amp(0.1, 200, 1500)),
-    "Detail": 3, "Gloss": (0.2, lfo(24, 0.1)), "PaletteMode": 4.0, "HueOffset": (0.0, lfo(96, 1.0)),
+    "WarpStrength": (0.45, lfo(32, 0.2)), "Swirl": (0.2, lfo(48, 0.4)), "Viscosity": 0.5, "Speed": 0.05,
+    "Detail": 3, "Gloss": (0.2, lfo(24, 0.1), amp(0.15, 200, 1500)), "PaletteMode": 4.0, "HueOffset": (0.0, lfo(96, 1.0)),
     "HueCycleSpeed": 0.03, "Zoom": (0.4, lfo(64, 0.1)),
 }, ["ambient", "bar", "amp"],
     "Slow rolling marble; swirl and warp ebb over eight to twelve bars. A good background.")
@@ -391,7 +400,7 @@ preset("web-groove-prism", "hyper_slice", {
 
 preset("web-groove-spiral", "dynamic_spiral", {
     "MaxPoints": 900, "Scale": (0.38, pulse(2, 0.08)), "Damping": 0.3, "WaveFreq": 0.25,
-    "WaveAmp": (0.1, mid(0.25)), "Shear": (0.3, lfo(8, 0.4)), "Speed": (0.35, lfo(32, 0.4)),
+    "WaveAmp": (0.1, mid(0.25)), "Shear": (0.3, lfo(8, 0.4)), "Speed": 0.35,
     "DotSize": (0.3, kick(0.12, 220)), "Glow": 0.5, "HueOffset": (0.1, lfo(24, 1.0)),
     "HueSweep": 0.2, "TrailDecay": 0.84,
 }, ["groove", "beat", "bar", "mid", "kick"],
@@ -400,7 +409,7 @@ preset("web-groove-spiral", "dynamic_spiral", {
 preset("web-hard-cymatics", "chladni_cymatics", {
     "FrequencyM": (5, kick(0.6, 120)), "FrequencyN": (5, lfo(4, 0.25, wave="SQUARE")), "FrequencyL": 2,
     "PlateShape": (0.0, lfo(8, 0.5, wave="SQUARE")), "NodeSharpness": (0.6, hat(0.3)), "SandAccumulation": 0.8,
-    "VibrationSpeed": (0.25, bass(0.5)), "InvertMode": (0.0, gate("audio_bass", 0.6, 1.0, 5, 120)),
+    "VibrationSpeed": 0.25, "InvertMode": (0.0, gate("audio_bass", 0.6, 1.0, 5, 120)),
     "Glow": (0.4, kick(0.5, 150)), "PaletteMode": 3.0, "HueOffset": (0.0, lfo(8, 1.0)), "Scale": 0.5,
 }, ["hard", "beat", "bar", "bass", "kick", "high", "bass-gated"],
     "The plate snaps between shapes every two beats, flashes on kicks, and inverts on loud bass.")
@@ -409,7 +418,7 @@ preset("web-hard-celestial", "celestial_engine", {
     "Symmetries": (8, lfo(4, 0.3, wave="SQUARE")), "RingDensity": (0.4, kick(0.3, 150)),
     "PhaseTwist": (0.3, lfo(4, 0.6)), "MoireStrength": (0.4, hat(0.5, 100)),
     "FlowerFold": (0.4, lfo(8, 0.3)), "PulseWave": (0.0, gate("audio_bass", 0.5, 1.2, 5, 120)),
-    "Speed": (0.3, bass(0.5)), "LineWidth": (0.3, kick(0.4, 150)), "Glow": (0.4, pulse(0.5, 0.25)),
+    "Speed": 0.3, "LineWidth": (0.3, kick(0.4, 150)), "Glow": (0.4, pulse(0.5, 0.25)),
     "ColorMode": 1.0, "HueOffset": (0.0, lfo(8, 1.0)), "HueSweep": 0.4, "Scale": (0.5, pulse(1, 0.12)),
 }, ["hard", "beat", "bass", "kick", "high", "bass-gated"],
     "Symmetry jumps every two beats, rings and lines kick, shimmer on hats and a pulse wave on bass hits.")
@@ -452,7 +461,7 @@ preset("web-mid-bloom", "celestial_engine", {
 preset("web-mid-marble", "domain_warp_fluid", {
     "WarpStrength": (0.35, mid(0.4)), "Swirl": (0.0, mid(0.8, 60, 500)), "Viscosity": 0.4, "Speed": 0.1,
     "Detail": 3, "Gloss": (0.3, mid(0.3)), "PaletteMode": 0.0, "HueOffset": 0.0,
-    "HueCycleSpeed": (0.0, mid(0.5)), "Zoom": 0.5,
+    "HueCycleSpeed": 0.0, "Zoom": 0.5,
 }, ["mid"],
     "Marbling that swirls and cycles colour only while the mids play.")
 
@@ -465,8 +474,8 @@ preset("web-mid-lace", "chladni_cymatics", {
 
 preset("web-build-drop-fluid", "domain_warp_fluid", {
     "WarpStrength": (0.0, gate("audio_bass", 0.6, 1.0)), "Swirl": (0.1, ramp(32, 0.7)),
-    "Viscosity": 0.3, "Speed": (0.08, ramp(32, 0.5)), "Detail": 3, "Gloss": (0.3, ramp(32, 0.3)),
-    "PaletteMode": 4.0, "HueOffset": (0.0, lfo(64, 1.0)), "HueCycleSpeed": (0.05, ramp(32, 0.4)),
+    "Viscosity": 0.3, "Speed": 0.08, "Detail": 3, "Gloss": (0.3, ramp(32, 0.3)),
+    "PaletteMode": 4.0, "HueOffset": (0.0, lfo(64, 1.0)), "HueCycleSpeed": 0.05,
     "Zoom": (0.4, kick(0.08, 200)),
 }, ["build", "bar", "bass", "kick", "bass-gated"],
     "Calm marble that winds up over eight bars (faster, swirlier, glossier) and gets slammed open by bass hits.")
@@ -481,7 +490,7 @@ preset("web-build-drop-mandala", "mandala", {
 
 preset("web-build-drop-spiral", "dynamic_spiral", {
     "MaxPoints": 700, "Scale": (0.45, ramp(32, -0.15)), "Damping": 0.3, "WaveFreq": 0.2,
-    "WaveAmp": (0.0, gate("audio_bass", 0.6, 1.0)), "Shear": (0.1, ramp(32, 0.6)), "Speed": (0.2, ramp(32, 0.6)),
+    "WaveAmp": (0.0, gate("audio_bass", 0.6, 1.0)), "Shear": (0.1, ramp(32, 0.6)), "Speed": 0.2,
     "DotSize": (0.2, ramp(32, 0.2), kick(0.15, 200)), "Glow": (0.4, ramp(32, 0.3)),
     "HueOffset": (0.0, ramp(32, 0.8)), "HueSweep": 0.15, "TrailDecay": 0.8,
 }, ["build", "bar", "bass", "kick", "bass-gated"],
@@ -509,15 +518,15 @@ preset("web-kick-rings", "celestial_engine", {
 # whatever the parameters; wireframe at Zoom ~.35 shows structure, Zoom >= .5 is telephoto.
 preset("web-gyroid-schwarz", "gyroid_hyperspace", {
     "SurfaceType": 2.0, "WallThickness": (0.35, bass(0.25)), "Frequency": (0.4, lfo(32, 0.15)),
-    "FlightSpeed": (0.2, amp(0.4)), "WireframeMode": 0.0, "CoreGlow": (0.45, kick(0.4)),
-    "ColorMode": 2.0, "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.95, "Brightness": 0.7,
+    "FlightSpeed": 0.2, "WireframeMode": 0.0, "CoreGlow": (0.45, kick(0.4)),
+    "ColorMode": 2.0, "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.95, "Brightness": (0.7, amp(0.25)),
     "Zoom": 0.6, "RotateY": (0.0, lfo(64, 1.0)),
 }, ["beat", "bar", "bass", "amp", "kick"],
     "A different cave family (the third surface type) in banded colour; walls swell with bass, the core flashes on kicks.")
 
 preset("web-gyroid-ambient", "gyroid_hyperspace", {
     "SurfaceType": 0.0, "WallThickness": (0.35, lfo(32, 0.15)), "Frequency": (0.45, lfo(64, 0.1)),
-    "FlightSpeed": (0.1, amp(0.15, 200, 1500)), "WireframeMode": 1.0, "CoreGlow": (0.4, amp(0.2, 200, 1500)),
+    "FlightSpeed": 0.1, "WireframeMode": 1.0, "CoreGlow": (0.4, amp(0.2, 200, 1500)),
     "ColorMode": 1.0, "HueOffset": (0.0, lfo(96, 1.0)), "Saturation": 0.8, "Brightness": 0.45,
     "Zoom": 0.35, "RotateZ": (0.0, lfo(96, 1.0)),
 }, ["ambient", "bar", "amp"],
@@ -525,7 +534,7 @@ preset("web-gyroid-ambient", "gyroid_hyperspace", {
 
 preset("web-gyroid-kick", "gyroid_hyperspace", {
     "SurfaceType": 1.0, "WallThickness": 0.35, "Frequency": (0.5, lfo(16, 0.1)),
-    "FlightSpeed": (0.1, kick(0.6, 300)), "WireframeMode": 1.0, "CoreGlow": (0.4, kick(0.5, 180)),
+    "FlightSpeed": 0.1, "WireframeMode": 1.0, "CoreGlow": (0.4, kick(0.5, 180)),
     "ColorMode": 0.0, "HueOffset": (0.0, lfo(24, 1.0)), "Saturation": 0.9, "Brightness": 0.5,
     "Zoom": 0.35, "RotateZ": (0.0, lfo(32, 1.0)),
 }, ["hard", "beat", "bar", "kick"],
@@ -587,6 +596,341 @@ preset("web-hyper-sweep", "hyper_slice", {
     "EdgeThickness": 0.1, "EdgeBrightness": (0.25, pulse(1, 0.15)), "Glow": 0.08, "Zoom": 0.5,
 }, ["groove", "beat", "bar", "mid"],
     "A quick two-bar sweep through the 4D shape with all three 4D rotations turning at different speeds.")
+
+# ---------------------------------------------------------------- batch 6: every web source gets presets
+# Three roles per source: groove (beat + bass/mid), hard (kick/hat flux, fast square LFOs) and ambient
+# (BG playlist: slow LFOs, smoothed amp/mid only). Rate parameters (Speed, FlightSpeed, WaveSpeed, Spin,
+# Rate...) are TIME multipliers in the shaders, so they stay static: reactivity.test.mjs enforces that.
+SQ = "SQUARE"
+AMB = dict(attack=200, decay=1500)
+
+# aurora_ribbons
+preset("web-aurora-pulse", "aurora_ribbons", {
+    "Ribbons": (4, lfo(32, 0.34, wave=SQ)), "CurtainHeight": (0.5, bass(0.3)), "WaveAmp": (0.4, lfo(8, 0.3)),
+    "WaveSpeed": 0.3, "Shimmer": (0.3, hat(0.6)), "SkyDarkness": 0.6, "PaletteMode": 0.0, "SurfaceType": 1.0,
+    "HueShift": (0.0, lfo(64, 1.0)), "Saturation": 0.7, "Brightness": (0.5, pulse(1, 0.2)),
+}, ["groove", "beat", "bar", "bass", "high"],
+    "Curtains that rise with the bass and brighten on every beat; hats make them shimmer; a ribbon joins every eight bars.")
+preset("web-aurora-storm", "aurora_ribbons", {
+    "Ribbons": 6, "CurtainHeight": (0.4, kick(0.5, 200)), "WaveAmp": (0.5, bass(0.4)), "WaveSpeed": 0.6,
+    "Shimmer": (0.5, hat(0.5)), "SkyDarkness": 0.7, "PaletteMode": (2.0, lfo(8, 0.34, wave=SQ)), "SurfaceType": 0.0,
+    "HueShift": (0.0, lfo(16, 1.0)), "Saturation": 0.8, "Brightness": (0.45, kick(0.35, 180)),
+}, ["hard", "bar", "bass", "kick", "high"],
+    "Six curtains that leap on every kick and whip with the bass; the palette flips every two bars.")
+preset("web-aurora-ambient", "aurora_ribbons", {
+    "Ribbons": 4, "CurtainHeight": (0.55, amp(0.2, **AMB)), "WaveAmp": (0.4, lfo(32, 0.2)), "WaveSpeed": 0.15,
+    "Shimmer": (0.3, mid(0.3, 200, 1200)), "SkyDarkness": 0.7, "PaletteMode": 1.0, "SurfaceType": 1.0,
+    "HueShift": (0.0, lfo(96, 1.0)), "Saturation": 0.6, "Brightness": 0.5,
+}, ["ambient", "bar", "amp", "mid"],
+    "Slow northern lights; the curtains lift with the overall level and shimmer with the mids.")
+
+# cyclic_ca: Reseed fires on a rising edge past 0.5, so a deep gate reseeds the grid on big bass hits.
+preset("web-ca-reseed", "cyclic_ca", {
+    "States": 0.1, "Threshold": 0.4, "Neighborhood": 0.0, "Speed": 0.5,
+    "Density": 1.0, "Reseed": (0.0, gate("audio_bass", 0.8, 6.0, 5, 150)), "PaletteMode": (0.0, lfo(8, 0.34, wave=SQ)),
+    "HueOffset": (0.0, lfo(32, 1.0)), "Saturation": (0.55, hat(0.3)), "Brightness": (0.5, kick(0.3)),
+}, ["hard", "bar", "kick", "high", "bass-gated"],
+    "The chemical-wave automaton flashes on kicks and is torn up and reseeded by the biggest bass hits.")
+preset("web-ca-groove", "cyclic_ca", {
+    "States": 0.1, "Threshold": 0.4, "Neighborhood": 0.0, "Speed": 0.3, "Density": 1.0,
+    "Reseed": 0.0, "PaletteMode": (1.0, lfo(32, 0.34, wave=SQ)), "HueOffset": (0.0, lfo(48, 1.0)),
+    "Saturation": (0.5, mid(0.4)), "Brightness": (0.45, pulse(1, 0.2)),
+}, ["groove", "beat", "bar", "mid"],
+    "Spirals of colour that pulse on the beat and saturate with the mids; the palette changes every eight bars.")
+preset("web-ca-ambient", "cyclic_ca", {
+    "States": 0.1, "Threshold": 0.4, "Neighborhood": 0.0, "Speed": 0.25, "Density": 1.0, "Reseed": 0.0,
+    "PaletteMode": 2.0, "HueOffset": (0.0, lfo(96, 1.0)), "Saturation": 0.35, "Brightness": (0.35, amp(0.2, **AMB)),
+}, ["ambient", "bar", "amp"],
+    "A slow, muted automaton whose brightness follows the overall level.")
+
+# girih_stars
+preset("web-girih-groove", "girih_stars", {
+    "Symmetries": (6, lfo(32, 0.5, wave=SQ)), "SurfaceType": 0.0, "PaletteMode": 0.0, "TileScale": 0.4,
+    "Angle": (0.55, lfo(16, 0.2)), "Sweep": 0.3, "Speed": 0.3, "LineWidth": (0.35, bass(0.3)), "Interlace": 0.8,
+    "Glow": (0.35, pulse(1, 0.3)), "HueOffset": (0.0, lfo(64, 1.0)), "Saturation": 0.6, "Brightness": 0.5,
+}, ["groove", "beat", "bar", "bass"],
+    "Strapwork that glows on every beat and thickens with the bass; the stars switch between six and eight points every eight bars.")
+preset("web-girih-hard", "girih_stars", {
+    "Symmetries": 8, "SurfaceType": (0.0, lfo(8, 0.5, wave=SQ)), "PaletteMode": 2.0, "TileScale": (0.4, pulse(2, 0.1)),
+    "Angle": (0.5, kick(0.3, 200)), "Sweep": 0.3, "Speed": 0.4, "LineWidth": (0.3, hat(0.3)), "Interlace": 0.8,
+    "Glow": (0.3, kick(0.5, 150)), "HueOffset": (0.0, lfo(16, 1.0)), "Saturation": 0.7, "Brightness": 0.5,
+}, ["hard", "beat", "bar", "kick", "high"],
+    "Kicks bend the star angles and flash the glow, hats sharpen the lines, the drawing style flips every four beats.")
+preset("web-girih-ambient", "girih_stars", {
+    "Symmetries": 8, "SurfaceType": 1.0, "PaletteMode": 1.0, "TileScale": 0.35, "Angle": (0.55, lfo(48, 0.15)),
+    "Sweep": (0.3, lfo(64, 0.3)), "Speed": 0.1, "LineWidth": 0.3, "Interlace": 0.8, "Glow": (0.3, mid(0.25, 200, 1200)),
+    "HueOffset": (0.6, lfo(96, 1.0)), "Saturation": 0.5, "Brightness": (0.45, amp(0.15, **AMB)),
+}, ["ambient", "bar", "mid", "amp"],
+    "Slowly re-folding star tiling in soft colour; the glow breathes with the mids.")
+
+# glitch_blocks: busy by nature, so no ambient version.
+preset("web-glitch-hard", "glitch_blocks", {
+    "SurfaceType": (1.0, lfo(16, 0.34, wave=SQ)), "PaletteMode": 3.0, "Intensity": (0.1, kick(0.7, 200)),
+    "BlockSize": (0.4, lfo(4, 0.3, wave=SQ)), "Rate": 0.3, "Tear": (0.0, gate("audio_bass", 0.5, 1.2)),
+    "Split": (0.1, hat(0.6)), "Crush": (0.0, gate("audio_flux_bass", 0.4, 1.0, 4, 150)),
+    "HueOffset": (0.0, lfo(16, 1.0)), "Saturation": 0.5, "Brightness": 0.42,
+}, ["hard", "bar", "kick", "high", "bass-gated"],
+    "Test-card bars that shatter on kicks, tear on loud bass and split their channels on hats.")
+preset("web-glitch-hats", "glitch_blocks", {
+    "SurfaceType": 3.0, "PaletteMode": 3.0, "Intensity": (0.05, hat(0.6, 120)), "BlockSize": 0.35, "Rate": 0.5,
+    "Tear": 0.1, "Split": (0.0, hat(0.5, 150)), "Crush": 0.0, "HueOffset": 0.0, "Saturation": (0.5, mid(0.3)),
+    "Brightness": 0.45,
+}, ["hat", "high", "mid"],
+    "A noise field that only glitches on the hi-hats; colour follows the mids.")
+preset("web-glitch-testcard", "glitch_blocks", {
+    "SurfaceType": 1.0, "PaletteMode": 2.0, "Intensity": (0.15, pulse(1, 0.4)), "BlockSize": 0.45, "Rate": 0.3,
+    "Tear": (0.1, pulse(2, 0.3)), "Split": (0.2, bass(0.3)), "Crush": 0.0, "HueOffset": (0.0, lfo(32, 1.0)),
+    "Saturation": 0.5, "Brightness": 0.45,
+}, ["groove", "beat", "bar", "bass"],
+    "Glitches land on the beat and tear every other beat; the bass pulls the colour channels apart.")
+
+# halftone_matrix
+preset("web-halftone-groove", "halftone_matrix", {
+    "SurfaceType": 1.0, "ColorMethod": 1.0, "PaletteMode": 1.0, "Density": (0.4, lfo(16, 0.2)),
+    "Sharpness": (0.6, pulse(1, 0.3)), "PatternSpeed": 0.3, "PatternScale": (0.4, bass(0.3)),
+    "GridRotation": (0.1, lfo(32, 0.3)), "Contrast": 0.5, "HueShift": (0.0, lfo(48, 1.0)), "Saturation": 0.7, "Brightness": 0.5,
+}, ["groove", "beat", "bar", "bass"],
+    "LED-matrix radial pulses that snap sharp on the beat and swell with the bass; the grid turns over eight bars.")
+preset("web-halftone-hard", "halftone_matrix", {
+    "SurfaceType": 0.0, "ColorMethod": (2.0, lfo(8, 0.34, wave=SQ)), "PaletteMode": 2.0, "Density": (0.5, kick(0.2, 200)),
+    "Sharpness": 0.6, "PatternSpeed": 0.4, "PatternScale": (0.4, pulse(0.5, 0.15)), "GridRotation": 0.1,
+    "Contrast": (0.45, kick(0.25, 180)), "HueShift": (0.0, lfo(8, 1.0)), "Saturation": 0.75, "Brightness": (0.42, hat(0.15)),
+}, ["hard", "beat", "bar", "kick", "high"],
+    "Plasma dots that punch on kicks, tick every half beat and switch dot style every four beats.")
+preset("web-halftone-ambient", "halftone_matrix", {
+    "SurfaceType": 3.0, "ColorMethod": 0.0, "PaletteMode": 1.0, "Density": 0.55, "Sharpness": (0.4, mid(0.2, 200, 1200)),
+    "PatternSpeed": 0.1, "PatternScale": 0.4, "GridRotation": (0.1, lfo(64, 0.3)), "Contrast": (0.4, amp(0.2, **AMB)),
+    "HueShift": (0.0, lfo(96, 1.0)), "Saturation": 0.6, "Brightness": 0.5,
+}, ["ambient", "bar", "mid", "amp"],
+    "Soft halftone clouds that gain contrast with the overall level.")
+
+# harmonograph: a thin line by default, so line width, glow and brightness are raised.
+preset("web-harmonograph-groove", "harmonograph", {
+    "RatioPreset": (2, lfo(32, 0.15, wave=SQ)), "PaletteMode": 0.0, "Detune": (0.25, lfo(16, 0.2)), "DriftSpeed": 0.3,
+    "Damping": 0.3, "LineWidth": (0.4, bass(0.3)), "Glow": (0.7, pulse(1, 0.3)), "Trail": 0.7, "Rotation": 0.0,
+    "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 1.0, "Brightness": 0.7,
+}, ["groove", "beat", "bar", "bass"],
+    "A glowing Lissajous rosette that flares on every beat, thickens with the bass and changes ratio every eight bars.")
+preset("web-harmonograph-hard", "harmonograph", {
+    "RatioPreset": (3, lfo(8, 0.15, wave=SQ)), "PaletteMode": 2.0, "Detune": (0.2, bass(0.3)), "DriftSpeed": 0.4,
+    "Damping": (0.3, kick(0.4, 200)), "LineWidth": (0.5, kick(0.3, 150)), "Glow": (0.7, hat(0.3)), "Trail": 0.6,
+    "Rotation": (0.0, lfo(16, 0.5)), "HueOffset": (0.0, lfo(16, 1.0)), "Saturation": 1.0, "Brightness": 0.75,
+}, ["hard", "bar", "bass", "kick", "high"],
+    "Kicks wind the spiral in and thicken the line, the bass detunes it, the ratio jumps every two bars.")
+preset("web-harmonograph-ambient", "harmonograph", {
+    "RatioPreset": 4, "PaletteMode": 1.0, "Detune": (0.1, lfo(48, 0.2)), "DriftSpeed": 0.15,
+    "Damping": (0.4, lfo(64, 0.3)), "LineWidth": 0.35, "Glow": (0.55, amp(0.1, **AMB)), "Trail": 0.9, "Rotation": 0.0,
+    "HueOffset": (0.0, lfo(96, 1.0)), "Saturation": 0.8, "Brightness": 0.6,
+}, ["ambient", "bar", "amp"],
+    "A long-trailed phosphor figure drifting slowly; its glow follows the overall level.")
+
+# hyperbolic_tiling
+preset("web-hyperbolic-groove", "hyperbolic_tiling", {
+    "P": (5, lfo(32, 0.15, wave=SQ)), "Q": 4, "Speed": 0.3, "Drift": 0.5, "Spin": 0.25,
+    "EdgeWidth": (0.35, bass(0.3)), "Glow": (0.5, pulse(1, 0.3)), "Subdivision": (0.25, mid(0.4)), "ColorMode": 0.0,
+    "Outside": 0.0, "HueOffset": (0.58, lfo(48, 1.0)), "Saturation": 0.75, "Brightness": 0.5,
+}, ["groove", "beat", "bar", "bass", "mid"],
+    "An Escher disk that glows on every beat; bass thickens the edges, mids draw the subdivisions.")
+preset("web-hyperbolic-hard", "hyperbolic_tiling", {
+    "P": 5, "Q": (4, lfo(8, 0.15, wave=SQ)), "Speed": 0.4, "Drift": (0.5, bass(0.3)), "Spin": 0.3,
+    "EdgeWidth": (0.3, kick(0.4, 150)), "Glow": (0.5, kick(0.4, 200)), "Subdivision": (0.2, hat(0.5)), "ColorMode": 2.0,
+    "Outside": 1.0, "HueOffset": (0.0, lfo(16, 1.0)), "Saturation": 0.8, "Brightness": 0.5,
+}, ["hard", "bar", "bass", "kick", "high"],
+    "Edges and glow punch on kicks, hats flicker the subdivisions, the tiling changes vertex count every two bars.")
+preset("web-hyperbolic-ambient", "hyperbolic_tiling", {
+    "P": 7, "Q": 3, "Speed": 0.1, "Drift": (0.4, lfo(64, 0.3)), "Spin": 0.05, "EdgeWidth": 0.3,
+    "Glow": (0.45, amp(0.2, **AMB)), "Subdivision": (0.3, lfo(48, 0.3)), "ColorMode": 1.0, "Outside": 0.0,
+    "HueOffset": (0.58, lfo(96, 1.0)), "Saturation": 0.6, "Brightness": 0.5,
+}, ["ambient", "bar", "amp"],
+    "A slow-drifting heptagon tiling whose glow follows the overall level.")
+
+# isometric_voxels
+preset("web-voxels-groove", "isometric_voxels", {
+    "SurfaceType": (0.0, lfo(32, 0.5, wave=SQ)), "CellSize": 0.45, "MaxHeight": (0.4, bass(0.5)), "Speed": 0.3,
+    "Frequency": (0.5, lfo(16, 0.2)), "Gap": 0.25, "Contrast": (0.6, pulse(1, 0.2)), "PaletteMode": 0.0,
+    "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.85, "Brightness": 0.5,
+}, ["groove", "beat", "bar", "bass"],
+    "A cube field whose columns rise with the bass and whose faces flash on every beat.")
+preset("web-voxels-hard", "isometric_voxels", {
+    "SurfaceType": 2.0, "CellSize": (0.45, lfo(8, 0.2, wave=SQ)), "MaxHeight": (0.3, kick(0.45, 250)), "Speed": 0.4,
+    "Frequency": 0.5, "Gap": (0.25, hat(0.4)), "Contrast": 0.6, "PaletteMode": 2.0, "HueOffset": (0.0, lfo(8, 1.0)),
+    "Saturation": 0.9, "Brightness": (0.5, kick(0.2, 150)),
+}, ["hard", "bar", "kick", "high"],
+    "Columns slam up on every kick, edges flicker on hats and the cubes change size every four beats.")
+preset("web-voxels-ambient", "isometric_voxels", {
+    "SurfaceType": 1.0, "CellSize": 0.45, "MaxHeight": (0.5, amp(0.2, **AMB)), "Speed": 0.1,
+    "Frequency": (0.4, lfo(64, 0.2)), "Gap": 0.25, "Contrast": 0.6, "PaletteMode": 1.0,
+    "HueOffset": (0.0, lfo(96, 1.0)), "Saturation": 0.6, "Brightness": 0.5,
+}, ["ambient", "bar", "amp"],
+    "Slow rolling cube landscape; the hills grow with the overall level.")
+
+# kali_set
+preset("web-kali-groove", "kali_set", {
+    "OrbitRadius": (0.7, bass(0.15)), "Speed": 0.3, "Iterations": 0.6, "Twist": (0.0, lfo(16, 0.3)), "SurfaceType": 3.0,
+    "TrapScale": (0.5, pulse(1, 0.2)), "Zoom": (0.6, lfo(32, 0.15)), "Drift": 0.3, "ColorMode": 0.0, "PaletteMode": 0.0,
+    "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.8, "Brightness": 0.5,
+}, ["groove", "beat", "bar", "bass"],
+    "A fold fractal that reshapes with the bass, its traps pulse on the beat and it twists over four bars.")
+preset("web-kali-hard", "kali_set", {
+    "OrbitRadius": (0.65, kick(0.2, 200)), "Speed": 0.4, "Iterations": (0.6, kick(0.2, 150)), "Twist": 0.1,
+    "SurfaceType": (2.0, lfo(8, 0.34, wave=SQ)), "TrapScale": (0.5, hat(0.3)), "Zoom": (0.4, pulse(1, 0.1)), "Drift": 0.3,
+    "ColorMode": 0.0, "PaletteMode": 3.0, "HueOffset": (0.0, lfo(8, 1.0)), "Saturation": 0.85,
+    "Brightness": (0.45, kick(0.15)),
+}, ["hard", "beat", "bar", "kick", "high"],
+    "Every kick throws the fractal into a new shape; trap type flips every four beats; hats scale the traps.")
+preset("web-kali-ambient", "kali_set", {
+    "OrbitRadius": (0.75, lfo(64, 0.15)), "Speed": 0.1, "Iterations": 0.6, "Twist": (0.0, lfo(96, 0.2)), "SurfaceType": 3.0,
+    "TrapScale": 0.5, "Zoom": 0.35, "Drift": 0.3, "ColorMode": 0.0, "PaletteMode": 3.0, "HueOffset": (0.0, lfo(96, 1.0)),
+    "Saturation": 0.6, "Brightness": (0.4, amp(0.2, **AMB)),
+}, ["ambient", "bar", "amp"],
+    "A muted fractal slowly unfolding; brightness follows the overall level.")
+
+# metaballs
+preset("web-metaballs-groove", "metaballs", {
+    "MaxPoints": (7, lfo(32, 0.25, wave=SQ)), "ColorMethod": 0.0, "PaletteMode": 0.0, "BallSize": (0.55, bass(0.4)),
+    "SizeVariance": 0.5, "OrbitSpeed": 0.4, "OrbitSpread": (0.6, lfo(16, 0.2)), "Merge": (0.6, pulse(1, 0.2)),
+    "Softness": 0.3, "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.85, "Brightness": 0.6,
+}, ["groove", "beat", "bar", "bass"],
+    "Blobs that swell with the bass and merge on every beat; two more join every eight bars.")
+preset("web-metaballs-hard", "metaballs", {
+    "MaxPoints": 10, "ColorMethod": (2.0, lfo(8, 0.34, wave=SQ)), "PaletteMode": 2.0, "BallSize": (0.45, kick(0.5, 200)),
+    "SizeVariance": (0.5, hat(0.4)), "OrbitSpeed": 0.5, "OrbitSpread": 0.6, "Merge": 0.6, "Softness": (0.3, kick(0.3)),
+    "HueOffset": (0.0, lfo(8, 1.0)), "Saturation": 0.9, "Brightness": 0.6,
+}, ["hard", "bar", "kick", "high"],
+    "Neon blobs that bulge on every kick and jitter in size with the hats; the style flips every four beats.")
+preset("web-metaballs-ambient", "metaballs", {
+    "MaxPoints": 6, "ColorMethod": 3.0, "PaletteMode": 1.0, "BallSize": (0.6, amp(0.2, **AMB)), "SizeVariance": 0.5,
+    "OrbitSpeed": 0.15, "OrbitSpread": 0.6, "Merge": (0.6, lfo(48, 0.2)), "Softness": 0.5,
+    "HueOffset": (0.0, lfo(96, 1.0)), "Saturation": 0.75, "Brightness": 0.55,
+}, ["ambient", "bar", "amp"],
+    "A slow two-tone goo; blobs grow with the overall level.")
+
+# quasicrystal
+preset("web-quasi-groove", "quasicrystal", {
+    "Symmetries": (7, lfo(32, 0.34, wave=SQ)), "ColorMethod": 1.0, "PaletteMode": 0.0, "Frequency": (0.35, bass(0.2)),
+    "Bands": (0.4, pulse(1, 0.2)), "Sharpness": 0.6, "Rotation": (0.0, lfo(32, 0.5)), "SpinSpeed": 0.1,
+    "DriftSpeed": 0.25, "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.85, "Brightness": 0.5,
+}, ["groove", "beat", "bar", "bass"],
+    "Penrose-like interference that pulses its bands on the beat and tightens with the bass.")
+preset("web-quasi-hard", "quasicrystal", {
+    "Symmetries": (5, lfo(4, 0.67, wave=SQ)), "ColorMethod": 2.0, "PaletteMode": 2.0, "Frequency": (0.35, kick(0.15, 200)),
+    "Bands": (0.4, hat(0.4)), "Sharpness": (0.5, kick(0.5, 150)), "Rotation": 0.0, "SpinSpeed": 0.15, "DriftSpeed": 0.3,
+    "HueOffset": (0.0, lfo(8, 1.0)), "Saturation": 0.9, "Brightness": 0.5,
+}, ["hard", "beat", "bar", "kick", "high"],
+    "Five-fold and seven-fold symmetry swap every two beats; kicks sharpen the pattern, hats split the bands.")
+preset("web-quasi-ambient", "quasicrystal", {
+    "Symmetries": 8, "ColorMethod": 1.0, "PaletteMode": 1.0, "Frequency": (0.3, lfo(64, 0.1)),
+    "Bands": (0.35, mid(0.2, 200, 1200)), "Sharpness": 0.4, "Rotation": (0.0, lfo(96, 0.5)), "SpinSpeed": 0.03,
+    "DriftSpeed": 0.1, "HueOffset": (0.0, lfo(96, 1.0)), "Saturation": 0.7, "Brightness": (0.45, amp(0.15, **AMB)),
+}, ["ambient", "bar", "mid", "amp"],
+    "Eight-fold interference turning slowly; the bands follow the mids.")
+
+# thin_film
+preset("web-film-groove", "thin_film", {
+    "FlowSpeed": 0.3, "Scale": 0.3, "FilmThickness": (0.35, bass(0.3)), "ThicknessRange": 0.5, "Contrast": 0.4,
+    "Turbulence": (0.4, lfo(16, 0.2)), "Sheen": (0.5, pulse(1, 0.3)), "HueShift": (0.0, lfo(48, 1.0)),
+    "Saturation": 0.75, "Brightness": 0.5,
+}, ["groove", "beat", "bar", "bass"],
+    "An oil slick whose colours shift with the bass and whose sheen flashes on every beat.")
+preset("web-film-mid", "thin_film", {
+    "FlowSpeed": 0.25, "Scale": 0.35, "FilmThickness": 0.35, "ThicknessRange": (0.4, mid(0.5)), "Contrast": 0.45,
+    "Turbulence": (0.3, mid(0.4)), "Sheen": (0.4, mid(0.3)), "HueShift": (0.0, mid(0.3, 80, 800)),
+    "Saturation": 0.75, "Brightness": 0.5,
+}, ["mid"],
+    "Iridescence that churns and changes colour with the mids (vocals, synths) and calms when they stop.")
+preset("web-film-ambient", "thin_film", {
+    "FlowSpeed": 0.12, "Scale": 0.4, "FilmThickness": (0.35, lfo(64, 0.2)), "ThicknessRange": 0.5, "Contrast": 0.4,
+    "Turbulence": 0.35, "Sheen": (0.4, amp(0.2, **AMB)), "HueShift": (0.0, lfo(96, 1.0)), "Saturation": 0.6,
+    "Brightness": 0.5,
+}, ["ambient", "bar", "amp"],
+    "A slow oil-slick drift; the sheen follows the overall level.")
+
+# tunnel_scenes: Speed is a rate, so the music drives glow, line width, twist and sway instead.
+preset("web-tunnel-synthwave", "tunnel_scenes", {
+    "SurfaceType": 0.0, "Symmetries": 6, "Speed": 0.4, "Twist": 0.0, "Glow": (0.5, pulse(1, 0.35)), "Fog": (0.4, lfo(32, 0.2)),
+    "LineWidth": (0.35, bass(0.3)), "Sway": (0.4, lfo(16, 0.3)), "HueOffset": (0.0, lfo(64, 1.0)), "Saturation": 0.85,
+    "Brightness": 0.5,
+}, ["groove", "beat", "bar", "bass"],
+    "A synthwave grid drive: the grid glows on every beat and its lines fatten with the bass.")
+preset("web-tunnel-truchet", "tunnel_scenes", {
+    "SurfaceType": 1.0, "Symmetries": 6, "Speed": 0.6, "Twist": (0.15, kick(0.3, 300)), "Glow": (0.4, kick(0.5, 180)),
+    "Fog": 0.4, "LineWidth": (0.3, hat(0.4)), "Sway": 0.4, "HueOffset": (0.0, lfo(8, 1.0)), "Saturation": 0.85,
+    "Brightness": 0.5,
+}, ["hard", "bar", "kick", "high"],
+    "A Truchet tunnel that twists and flashes on every kick; hats sharpen the lines.")
+preset("web-tunnel-wormhole", "tunnel_scenes", {
+    "SurfaceType": 2.0, "Symmetries": (6, lfo(16, 0.12, wave=SQ)), "Speed": 0.35, "Twist": (0.2, lfo(32, 0.4)),
+    "Glow": (0.45, mid(0.4)), "Fog": (0.4, amp(0.2)), "LineWidth": 0.35, "Sway": 0.4, "HueOffset": (0.0, lfo(48, 1.0)),
+    "Saturation": 0.85, "Brightness": 0.5,
+}, ["groove", "bar", "mid", "amp"],
+    "A polygon wormhole that gains a side every four bars; mids light it up and loudness clears the fog.")
+
+# video_feedback: Zoom/Rotation/HueShift are per-second rates scaled by TIMEDELTA (not TIME), so they are safe to modulate.
+preset("web-feedback-groove", "video_feedback", {
+    "Zoom": (0.45, kick(0.2, 250)), "Rotation": (0.35, lfo(16, 0.3)), "HueShift": (0.2, mid(0.2)), "Decay": 0.15,
+    "SeedShape": (0.0, lfo(32, 0.34, wave=SQ)), "SeedSize": (0.4, bass(0.3)), "Drift": 0.3, "Saturation": 0.5,
+    "Brightness": 0.5,
+}, ["groove", "bar", "kick", "bass", "mid"],
+    "An endless feedback tunnel that lunges on kicks; the seed swells with the bass and the hue turns with the mids.")
+preset("web-feedback-hard", "video_feedback", {
+    "Zoom": (0.5, kick(0.4, 200)), "Rotation": (0.3, lfo(4, 0.5, wave=SQ)), "HueShift": 0.4, "Decay": (0.15, hat(0.3)),
+    "SeedShape": 2.0, "SeedSize": (0.4, kick(0.3)), "Drift": 0.3, "Saturation": 0.6, "Brightness": 0.55,
+}, ["hard", "bar", "kick", "high"],
+    "The spiral reverses every two beats and dives on every kick; hats cut the trails short.")
+preset("web-feedback-ambient", "video_feedback", {
+    "Zoom": 0.3, "Rotation": (0.2, lfo(64, 0.3)), "HueShift": (0.1, amp(0.15, **AMB)), "Decay": 0.1, "SeedShape": 0.0,
+    "SeedSize": 0.35, "Drift": (0.3, lfo(48, 0.2)), "Saturation": 0.45, "Brightness": 0.5,
+}, ["ambient", "bar", "amp"],
+    "A slow feedback spiral; the colour drifts faster when the music is louder.")
+
+# voronoi_cells
+preset("web-voronoi-groove", "voronoi_cells", {
+    "ColorMethod": 1.0, "SurfaceType": 0.0, "PaletteMode": 0.0, "CellScale": (0.35, lfo(16, 0.15)),
+    "Jitter": (0.8, mid(-0.3)), "Speed": 0.3, "EdgeWidth": (0.25, bass(0.15)), "EdgeGlow": (0.4, pulse(1, 0.25)),
+    "HueOffset": (0.0, lfo(48, 1.0)), "Saturation": 0.75, "Brightness": 0.5,
+}, ["groove", "beat", "bar", "bass", "mid"],
+    "Glowing cells whose walls light up on every beat and thicken with the bass; mids straighten the grid.")
+preset("web-voronoi-hard", "voronoi_cells", {
+    "ColorMethod": 2.0, "SurfaceType": (0.0, lfo(8, 0.5, wave=SQ)), "PaletteMode": 2.0, "CellScale": (0.4, kick(0.15, 200)),
+    "Jitter": 0.8, "Speed": 0.4, "EdgeWidth": (0.25, hat(0.4)), "EdgeGlow": (0.4, kick(0.5, 150)),
+    "HueOffset": (0.0, lfo(8, 1.0)), "Saturation": 0.8, "Brightness": 0.5,
+}, ["hard", "bar", "kick", "high"],
+    "Cells that flash and zoom on kicks; the distance metric flips every four beats.")
+preset("web-voronoi-ambient", "voronoi_cells", {
+    "ColorMethod": 0.0, "SurfaceType": 0.0, "PaletteMode": 1.0, "CellScale": 0.25, "Jitter": (0.7, lfo(64, 0.2)),
+    "Speed": 0.1, "EdgeWidth": 0.3, "EdgeGlow": (0.3, amp(0.2, **AMB)), "HueOffset": (0.0, lfo(96, 1.0)),
+    "Saturation": 0.55, "Brightness": 0.5,
+}, ["ambient", "bar", "amp"],
+    "Large soft cells slowly reshuffling; the walls glow with the overall level.")
+
+# wave_ripples
+preset("web-ripples-groove", "wave_ripples", {
+    "Symmetries": (4, lfo(32, 0.34, wave=SQ)), "Wavelength": (0.4, bass(0.3)), "WaveSpeed": 0.3, "OrbitSpeed": 0.25,
+    "Falloff": (0.35, lfo(16, 0.2)), "SurfaceType": 0.0, "ColorMethod": 0.0, "PaletteMode": 0.0,
+    "Contrast": (0.5, pulse(1, 0.3)), "HueShift": (0.0, lfo(48, 1.0)), "Saturation": 0.75, "Brightness": 0.38,
+}, ["groove", "beat", "bar", "bass"],
+    "Interfering ripples that sharpen on every beat and stretch with the bass; two more sources join every eight bars.")
+preset("web-ripples-kick", "wave_ripples", {
+    "Symmetries": 6, "Wavelength": (0.35, kick(0.4, 250)), "WaveSpeed": 0.35, "OrbitSpeed": 0.25, "Falloff": 0.3,
+    "SurfaceType": 1.0, "ColorMethod": 1.0, "PaletteMode": 2.0, "Contrast": (0.5, kick(0.4, 180)),
+    "HueShift": (0.0, kick(0.15, 400)), "Saturation": 0.8, "Brightness": 0.5,
+}, ["kick"],
+    "Ripples that only react to kick drums: the waves stretch, sharpen and change colour on every hit.")
+preset("web-ripples-ambient", "wave_ripples", {
+    "Symmetries": 3, "Wavelength": (0.5, lfo(64, 0.15)), "WaveSpeed": 0.12, "OrbitSpeed": 0.05, "Falloff": 0.5,
+    "SurfaceType": 0.0, "ColorMethod": 0.0, "PaletteMode": 1.0, "Contrast": (0.4, amp(0.2, **AMB)),
+    "HueShift": (0.0, lfo(96, 1.0)), "Saturation": 0.6, "Brightness": 0.5,
+}, ["ambient", "bar", "amp"],
+    "Three slow ripple sources; contrast follows the overall level.")
+
+
+# trails: feedback that moves with the music (these were static before the rotation gate)
+chain("web-trails", ["feedback", "kick", "bar"],
+      FEEDBACK(0.6316, 0.47, (0.002, kick(0.015, 250)), (-0.003, lfo(16, 0.004)), blur=0.2))
+chain("web-trails-drift", ["feedback", "bar", "mid"],
+      FEEDBACK(0.658, 0.48, 0.005, (0.008, lfo(32, 0.004)), hue=(0.001, mid(0.01))))
+chain("web-trails-chroma", ["feedback", "chroma", "high", "beat"],
+      FEEDBACK(0.6893, 0.485, (0.006, pulse(1, 0.004)), 0.004, hue=0.002, chroma=(0.3, hat(0.4))))
 
 # batch 2 chains
 chain("web-tunnel", ["tunnel", "beat", "bass"],

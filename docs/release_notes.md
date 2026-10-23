@@ -1,5 +1,12 @@
 ## [Unreleased]
 
+### Web TV: Every Source On Air, Nothing Deaf (`web/presets/*`, `web/fxchains/*`, `web/playlists/*`, `web/tools/reactivity.test.mjs`, `web/checks/render_check.*`, `scripts/gen_web_presets.py`)
+- **48 new web presets** give every web source a place in the rotation: Aurora Ribbons, Cyclic CA, Girih Stars, Glitch Blocks, Halftone Matrix, Harmonograph, Hyperbolic Tiling, Isometric Voxels, Kali Set, Metaballs, Quasicrystal, Thin Film, Tunnel Scenes, Video Feedback, Voronoi Cells and Wave Ripples each get a groove, a hard (or kick, hat or mid) and an ambient look. The ambient ones play on the background.
+- **Fixed pictures that jittered after a few minutes on air.** 23 presets modulated a speed (flight speed, flow speed, vibration speed...). The shaders multiply speed by the running time, so the longer the TV ran, the harder every wobble in the music jumped the picture. Those presets now move size, glow, colour and shape with the music instead.
+- **Nothing deaf on the web TV.** Seven presets that ignored the music are gone, the three trail chains now move with kicks, mids and hats, and a test keeps any preset or chain that doesn't react to audio or the beat out of the playlists.
+- **Full-frame looks no longer wash out.** Sources that fill the screen with colour (cellular automata, fractals, cells, ripples...) skip the trail and bloom chains, which piled up on them into one flat colour.
+- **The drop strobe no longer flickers at random.** It flashes the picture negative once per loud bass hit instead of running a strobe whose rate jumped with the bass.
+
 ### Sources: Clearer Badge, One Gain, Lighter Off-Air Decks (`ui/PerformanceDeckControls.kt`, `ui/ParametersTabs.kt`, `ui/browser/*`, `ui/DeckSourcePicker.kt`, `rendering/Deck.kt`, `rendering/DeckRenderBudget.kt`, `rendering/Renderer.kt`, `rendering/VisualSourceRegistry.kt`, `presets/DeckOps.kt`, `parameters/ParameterResolver.kt`, `Main.kt`)
 - **The badge says what a preset plays:** `curated-0001 · Fractal flame`, the source dimmed after the preset name (dropped first when space is short; the tooltip always has it). In Browse a saved preset's info column starts with its source, and a preset whose source isn't installed shows ⚠ and says it won't load.
 - **Gain is one deck parameter, `Deck A/Gain`** (and so on), so a MIDI, OSC or macro mapping on it keeps working whatever the deck plays. Mappings saved to the old per-source address (`Deck A/Mandala/Gain`) still work. The duplicate **Alpha** rows under MST > LEVELS are gone; LEVELS is the level faders.

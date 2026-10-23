@@ -120,17 +120,7 @@
       "baseMin": -1.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_bass",
-          "operator": "ADD",
-          "depth": 0.3,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 20.0,
-          "decayMs": 300.0
-        }
-      ]
+      "modulators": []
     },
     "LineWidth": {
       "baseValue": 0.28,
@@ -154,7 +144,17 @@
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": []
+      "modulators": [
+        {
+          "sourceId": "audio_bass",
+          "operator": "ADD",
+          "depth": 0.3,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 20.0,
+          "decayMs": 300.0
+        }
+      ]
     },
     "ColorMode": {
       "baseValue": 0.0,

@@ -137,3 +137,60 @@ for (const c of catalog.fxChains.filter((e) => e.file.startsWith('fxchains/'))) 
   const reactive = tags.filter((t) => ['beat', 'bar', 'bass', 'kick', 'mid', 'high', 'amp', 'bass-gated'].includes(t));
   if (reactive.length) test(`chain ${dto.name} reacts as tagged (${reactive.join(', ')})`, () => check(dto.name, targets(c.file, dto), reactive));
 }
+
+// ---------------------------------------------------------------- rotation gate
+// Everything the autopilot can put on screen must respond to the music: some parameter moves with an
+// audio signal or with the beat (a beat-synced LFO counts). Pretty but deaf does not go on the web TV.
+const settings = readJson('settings.json');
+const playlistLines = (file) => fs.readFileSync(path.join(web, 'playlists', file), 'utf8').split(/\r?\n/)
+  .map((l) => l.trim()).filter((l) => l && !l.startsWith('#')).map((l) => l.split('|').map((p) => p.trim()));
+const rotation = [settings.fgPlaylist, settings.bgPlaylist].flatMap(playlistLines);
+const rotationPresets = [...new Set(rotation.map(([p]) => p))];
+const rotationChains = [...new Set([...settings.fxChains, ...rotation.map(([, c]) => c).filter((c) => c && c !== 'none')])];
+
+const AUDIO = Object.keys(SILENT);
+function responds(list) {
+  const silent = values(list);
+  if (AUDIO.some((s) => moved(list, [silent, values(list, { cv: { [s]: 1 } })]).length)) return true;
+  return moved(list, sweepBeats(list, 0, 64, 0.25)).length > 0;
+}
+
+for (const name of rotationPresets) {
+  test(`rotation preset ${name} responds to audio or the beat`, () => {
+    const dto = readJson(`presets/${name}.lsd`);
+    assert.ok(responds(targets(name, dto)), `${name} is in a playlist but nothing in it moves with audio or the beat`);
+  });
+}
+for (const id of rotationChains) {
+  test(`rotation chain ${id} responds to audio or the beat`, () => {
+    const entry = catalog.fxChains.find((c) => c.id === id);
+    assert.ok(entry, `${id} is not in catalog.json`);
+    assert.ok(responds(targets(entry.file, readJson(entry.file))), `${id} is in the rotation but nothing in it moves with audio or the beat`);
+  });
+}
+
+// Rate parameters (Speed, FlightSpeed, Spin, Rate, ...) are multiplied by TIME in the shaders, so any
+// modulation on them moves the phase by TIME * change: after a few minutes on air even a small wobble
+// jumps the picture every frame. Modulate amounts, sizes and colours instead.
+const RATE = /(speed|spin|rate)$/i;
+test('no web preset or chain modulates a rate parameter', () => {
+  const offenders = [];
+  const scan = (label, params) => {
+    for (const [n, p] of Object.entries(params ?? {})) if (RATE.test(n) && p?.modulators?.some((m) => !m.bypassed)) offenders.push(`${label}.${n}`);
+  };
+  for (const f of fs.readdirSync(presetsDir).filter((n) => n.startsWith('web-') && n.endsWith('.lsd'))) scan(f, readJson(`presets/${f}`).parameters);
+  for (const c of catalog.fxChains.filter((e) => e.file.startsWith('fxchains/'))) {
+    for (const s of readJson(c.file).slots) if (s) scan(`${c.id}/${s.filterId}`, s.parameters);
+  }
+  assert.deepEqual(offenders, []);
+});
+
+// A `fullframe` preset skips feedback and bloom chains (pairing.js); the rotation must still offer it some FX.
+test('every fullframe preset has a chain in the rotation that suits it', async () => {
+  const { chainFits } = await import('../pairing.js');
+  const chains = settings.fxChains.map((id) => readJson(catalog.fxChains.find((c) => c.id === id).file));
+  for (const name of rotationPresets) {
+    const tags = readJson(`presets/${name}.lsd`).tags ?? [];
+    if (tags.includes('fullframe')) assert.ok(chains.some((c) => chainFits(tags, c)), `${name}: no rotation chain suits it`);
+  }
+});

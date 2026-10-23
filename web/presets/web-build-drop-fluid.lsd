@@ -51,19 +51,7 @@
       "baseMin": -1.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "lfo",
-          "operator": "ADD",
-          "depth": 0.5,
-          "dcOffset": 0.0,
-          "waveform": "TRIANGLE",
-          "genUnit": "BEAT",
-          "subdivision": 32.0,
-          "slope": 1.0,
-          "phaseOffset": 0.0
-        }
-      ]
+      "modulators": []
     },
     "Detail": {
       "baseValue": 3,
@@ -122,19 +110,7 @@
       "baseMin": -1.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "lfo",
-          "operator": "ADD",
-          "depth": 0.4,
-          "dcOffset": 0.0,
-          "waveform": "TRIANGLE",
-          "genUnit": "BEAT",
-          "subdivision": 32.0,
-          "slope": 1.0,
-          "phaseOffset": 0.0
-        }
-      ]
+      "modulators": []
     },
     "Zoom": {
       "baseValue": 0.4,

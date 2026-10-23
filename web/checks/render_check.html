@@ -66,12 +66,22 @@ else {
     w.LSD.autopilotState.deckB = spec.deckB ?? null;
     w.LSD.autopilotState.deckBG = null;
     w.LSD.autopilotState.mixer = Object.assign({ mode: 0, balance: 0, alpha: 1 }, spec.mixer);
+    // Held audio signals (RC_LOUD): written every frame, since the DSP tick owns cvState while audio runs.
+    let hold = null;
+    if (spec.cv) {
+      const pin = () => { Object.assign(w.LSD.cvState, spec.cv); hold = w.requestAnimationFrame(pin); };
+      pin();
+    }
     await sleep(spec.settleMs ?? 1500);
     let g = await grab();
     // Flight sources (gyroid_hyperspace) are genuinely empty for ~25% of their cycle: resample a dark preset
     // frame a few times before reporting it, so only a preset that stays dark fails.
     for (let retry = 0; spec.preset && retry < 4 && (g.meanLuma < 1 || g.litFraction < 0.01); retry++) { await sleep(700); g = await grab(); }
     frames.push({ name: spec.name, ...g });
+    if (hold !== null) {
+      w.cancelAnimationFrame(hold);
+      for (const k of Object.keys(spec.cv)) w.LSD.cvState[k] = 0;
+    }
   }
   const lib = w.LSD.library;
   await post({ autopilot, errors, frames, size: [app.width, app.height], library: { loaded: [...lib.programs.keys()], failed: [...lib.failed] } });

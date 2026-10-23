@@ -118,24 +118,24 @@
       "baseMin": -1.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_amp",
-          "operator": "ADD",
-          "depth": -0.3,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 30.0,
-          "decayMs": 400.0
-        }
-      ]
+      "modulators": []
     },
     "LineWidth": {
       "baseValue": 0.2,
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": []
+      "modulators": [
+        {
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 30.0,
+          "decayMs": 400.0
+        }
+      ]
     },
     "Glow": {
       "baseValue": 0.5,

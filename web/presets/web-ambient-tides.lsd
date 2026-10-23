@@ -53,17 +53,7 @@
       "baseMin": -1.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_amp",
-          "operator": "ADD",
-          "depth": 0.1,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 200.0,
-          "decayMs": 1500.0
-        }
-      ]
+      "modulators": []
     },
     "Detail": {
       "baseValue": 3,
@@ -88,6 +78,15 @@
           "subdivision": 24.0,
           "slope": 0.5,
           "phaseOffset": 0.0
+        },
+        {
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.15,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 200.0,
+          "decayMs": 1500.0
         }
       ]
     },

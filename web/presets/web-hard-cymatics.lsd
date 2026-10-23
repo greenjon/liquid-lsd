@@ -94,17 +94,7 @@
       "baseMin": 0.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_bass",
-          "operator": "ADD",
-          "depth": 0.5,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 20.0,
-          "decayMs": 300.0
-        }
-      ]
+      "modulators": []
     },
     "InvertMode": {
       "baseValue": 0.0,

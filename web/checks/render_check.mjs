@@ -8,17 +8,17 @@ import path from 'node:path';
 import os from 'node:os';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { chainFits } from '../pairing.js';
 
 const web = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const outDir = process.argv[2] || '/tmp/lsd-render-check';
 fs.mkdirSync(outDir, { recursive: true });
-const ids = ['dynamic_spiral', 'icosa_h3', 'hyper_slice', 'gyroid_hyperspace', 'chladni_cymatics',
-  'celestial_engine', 'domain_warp_fluid'];
+// Every catalog source at its defaults, plus mandala (drawn outside the ISF graph).
+const catalog = JSON.parse(fs.readFileSync(path.join(web, 'catalog.json'), 'utf8'));
 const sources = [{ name: 'mandala', deck: { source: 'mandala' } },
-  ...ids.map((id) => ({ name: id, deck: { source: id } }))];
+  ...catalog.sources.map((s) => ({ name: s.id, deck: { source: s.id } }))];
 
 // Every catalog filter over a bright source, and every transition at the midpoint between two.
-const catalog = JSON.parse(fs.readFileSync(path.join(web, 'catalog.json'), 'utf8'));
 for (const f of catalog.filters) {
   sources.push({ name: 'fx_' + f.id, deck: { source: 'domain_warp_fluid', fx: [{ id: f.id, enabled: true, dryWet: 1, params: {} }] }, settleMs: 900 });
 }
@@ -59,8 +59,18 @@ const hash = (str) => [...str].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0
 // `preset | chain` pins in the foreground playlist win over the hash, so the check shows what the autopilot shows.
 const pins = Object.fromEntries(fs.readFileSync(path.join(web, 'playlists', 'default.lsdplay'), 'utf8').split('\n')
   .filter((l) => l.includes('|') && !l.startsWith('#')).map((l) => l.split('|').map((p) => p.trim())));
+// From the hashed start, the first chain that suits the preset (pairing.js), as the autopilot skips the rest.
+const chainDto = (id) => JSON.parse(fs.readFileSync(path.join(web, catalog.fxChains.find((c) => c.id === id).file), 'utf8'));
+const fittingChain = (f) => {
+  const tags = JSON.parse(fs.readFileSync(path.join(web, 'presets', f), 'utf8')).tags;
+  for (let i = 0; i < webChains.length; i++) {
+    const id = webChains[(hash(f) + i) % webChains.length];
+    if (chainFits(tags, chainDto(id))) return id;
+  }
+  return undefined;
+};
 fs.readdirSync(path.join(web, 'presets')).sort().filter((f) => f.endsWith('.lsd')).forEach((f) => {
-  sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: pins[f.replace('.lsd', '')] ?? webChains[hash(f) % webChains.length], settleMs: 2500 });
+  sources.push({ name: 'preset_' + f.replace('.lsd', ''), preset: '/presets/' + f, chain: pins[f.replace('.lsd', '')] ?? fittingChain(f), settleMs: 2500 });
 });
 // Desktop-shipped Mandala presets, unmodified (Lobes / Recipe Select / the recipe table)
 for (const f of ['mandala-7', 'mandala-10']) {
@@ -77,9 +87,18 @@ for (const t of catalog.transitionPresets) {
 
 // Authoring aids: RC_EXTRA=file.json appends specs ({name, deck: {source, params}, chain?, settleMs?});
 // RC_ONLY=substr,substr keeps only specs whose name contains one of them (skips the library/autopilot asserts).
+// RC_LOUD=1 also renders every preset with the audio signals held high (`<name>_loud`), so the
+// silent and loud frames side by side show how much a preset reacts.
 if (process.env.RC_EXTRA) sources.push(...JSON.parse(fs.readFileSync(process.env.RC_EXTRA, 'utf8')));
 const only = process.env.RC_ONLY ? process.env.RC_ONLY.split(',') : null;
 if (only) sources.splice(0, sources.length, ...sources.filter((s) => only.some((o) => s.name.includes(o))));
+const LOUD = { audio_amp: 0.7, audio_bass: 0.9, audio_mid: 0.6, audio_high: 0.6,
+  audio_flux_amp: 0.8, audio_flux_bass: 0.8, audio_flux_mid: 0.5, audio_flux_high: 0.6 };
+if (process.env.RC_LOUD) {
+  for (const s of sources.filter((x) => x.preset || x.deck?.params)) {
+    sources.splice(sources.indexOf(s) + 1, 0, { ...s, name: s.name + '_loud', cv: LOUD });
+  }
+}
 
 let resolveReport;
 const reported = new Promise((r) => { resolveReport = r; });
@@ -131,8 +150,8 @@ if (rep.autopilot) {
   const a = rep.autopilot;
   console.log('autopilot start   :', JSON.stringify(a.start));
   console.log('autopilot advance :', JSON.stringify(a.advanced));
-  if (!a.start.deckA.source || a.start.deckA.fx0 !== 'feedback' || !a.advanced.deckB.source || !a.advanced.transition) {
-    console.log('AUTOPILOT did not load a preset with its pinned FX chain and a transition'); bad++;
+  if (!a.start.deckA.source || !a.start.deckA.fx0 || !a.advanced.deckB.source || !a.advanced.transition) {
+    console.log('AUTOPILOT did not load a preset with an FX chain and a transition'); bad++;
   }
 }
 if (rep.library) { console.log('library loaded:', rep.library.loaded.join(', ')); if (rep.library.failed.length) { console.log('library FAILED:', rep.library.failed.join(', ')); bad++; } }

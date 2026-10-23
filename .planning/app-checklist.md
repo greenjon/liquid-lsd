@@ -223,7 +223,11 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 
 ## 16. Web client (if you test it)
 
-- [ ] Preset pack (57 presets, 11 FX chains) loads and looks like the app; Isometric Voxels and Wave Ripples still render.
+- [ ] Preset pack (98 presets, 11 FX chains) loads and looks like the app; every web source now has a groove, hard and ambient look (2026-10-23).
+- [ ] Leave the web TV running 20+ minutes: the picture no longer jitters (speed parameters are no longer modulated).
+- [ ] Full-frame looks (Cyclic CA, Kali Set, Voronoi, Ripples, Quasicrystal...) never get trail or bloom chains, and don't wash out.
+- [ ] Cyclic CA hard look reseeds on the biggest bass hits and recovers within a few seconds.
+- [ ] Drop strobe chain flashes negative once per loud bass hit (no random strobe).
 - [ ] Phase 8 CI is not done yet, so nothing to check there.
 
 ## 17. Before release

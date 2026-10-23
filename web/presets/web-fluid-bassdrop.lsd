@@ -10,15 +10,6 @@
       "randomizeBase": false,
       "modulators": [
         {
-          "sourceId": "audio_amp",
-          "operator": "ADD",
-          "depth": 0.2,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 30.0,
-          "decayMs": 400.0
-        },
-        {
           "sourceId": "audio_bass",
           "operator": "ADD",
           "depth": 1.5,
@@ -45,6 +36,15 @@
           "subdivision": 16.0,
           "slope": 0.5,
           "phaseOffset": 0.0
+        },
+        {
+          "sourceId": "audio_amp",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 30.0,
+          "decayMs": 400.0
         }
       ]
     },
@@ -60,17 +60,7 @@
       "baseMin": -1.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_amp",
-          "operator": "ADD",
-          "depth": 0.4,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 30.0,
-          "decayMs": 400.0
-        }
-      ]
+      "modulators": []
     },
     "Detail": {
       "baseValue": 4,
@@ -95,6 +85,15 @@
           "subdivision": 1.0,
           "slope": 0.0,
           "phaseOffset": 0.0
+        },
+        {
+          "sourceId": "audio_mid",
+          "operator": "ADD",
+          "depth": 0.2,
+          "dcOffset": 0.0,
+          "followerMode": "CUSTOM",
+          "attackMs": 40.0,
+          "decayMs": 300.0
         }
       ]
     },
@@ -141,17 +140,7 @@
       "baseMin": -1.0,
       "baseMax": 1.0,
       "randomizeBase": false,
-      "modulators": [
-        {
-          "sourceId": "audio_mid",
-          "operator": "ADD",
-          "depth": 0.5,
-          "dcOffset": 0.0,
-          "followerMode": "CUSTOM",
-          "attackMs": 40.0,
-          "decayMs": 300.0
-        }
-      ]
+      "modulators": []
     },
     "Zoom": {
       "baseValue": 0.5,

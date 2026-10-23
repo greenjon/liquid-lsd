@@ -3,6 +3,7 @@
 
 import { parseDeckPreset, parseFxChain, parseTransition } from './preset.js';
 import { BeatFlywheel } from './beatclock.js';
+import { chainFits } from './pairing.js';
 
 const RELAY_URL = 'wss://spaz.org/lsd-relay';
 
@@ -151,17 +152,21 @@ async function fetchContent(list, id) {
  */
 async function buildDeck(line) {
   const [presetName, pinned] = line.split('|').map((p) => p.trim());
-  const deck = parseDeckPreset(await fetchPreset(presetName));
-  let chainId = pinned;
-  if (!chainId && autopilotSettings.fxChains.length > 0) {
+  const raw = await fetchPreset(presetName);
+  const deck = parseDeckPreset(raw);
+  let dto = null;
+  if (pinned && pinned !== 'none') {
+    dto = await fetchContent(catalog.fxChains, pinned);
+  } else if (!pinned && autopilotSettings.fxChains.length > 0) {
+    // Next chain in the rotation that suits the preset (pairing.js); none fits = no FX this time.
     const n = autopilotSettings.fxChains.length;
-    fxIdx = getNextIndex(fxIdx, n, autopilotSettings.fxPlaybackOrder);
-    chainId = autopilotSettings.fxChains[fxIdx];
+    for (let tries = 0; tries < n && !dto; tries++) {
+      fxIdx = getNextIndex(fxIdx, n, autopilotSettings.fxPlaybackOrder);
+      const candidate = await fetchContent(catalog.fxChains, autopilotSettings.fxChains[fxIdx]);
+      if (candidate && chainFits(raw?.tags, candidate)) dto = candidate;
+    }
   }
-  if (chainId && chainId !== 'none') {
-    const dto = await fetchContent(catalog.fxChains, chainId);
-    if (dto) Object.assign(deck, parseFxChain(dto));
-  }
+  if (dto) Object.assign(deck, parseFxChain(dto));
   return deck;
 }
 
