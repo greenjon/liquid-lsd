@@ -267,7 +267,6 @@ Deeper: `docs/developer/web_subsystem.md`.
 
 Not confirmed in code while writing; check before relying on them:
 
-- The README / docs and CI still list Linux ARM64 while DECISIONS §11 says it was dropped (see report); this doc deliberately lists no platform set.
 - That `ISFFilterRegistry.bundledFilters` and `ISFTransitionRegistry.bundledTransitions` match the files in `default_filters/` and `default_transitions/` exactly (only the loading mechanism was read).
 - The exact encoder/LED protocol and per-bank CC layout of the Twister profiles (taken from DECISIONS §6 and the profile description, not re-derived).
 - Touch console zone geometry and behaviour (old text dropped; not re-read).

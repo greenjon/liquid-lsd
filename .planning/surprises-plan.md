@@ -4,6 +4,24 @@ Source: the 2026-10-04 `ARCHITECTURE.md` rewrite, which verified the code agains
 
 Order is by risk: persisted-format changes first (DECISIONS §1: cheapest before v1.0), then dead code, then doc/decision fixes, then runtime hygiene, then the doc sweep.
 
+## Status (2026-10-23)
+
+| # | Item | State |
+|---|---|---|
+| 1 | Remove legacy `fb*` / `view3D*` params | **Open.** `feedbackParameters` still in `PresetModels.kt`, `PresetMigrator.kt`, `PresetDependencyAnalyzer.kt`, flame tools |
+| 2 | ALPHA -> LEVEL | **Mostly done.** `MacroEngine` says "LEVEL A". Not checked: relabel-on-load rule, its test, `PerformanceMasterControls` badge, docs |
+| 3 | ARM64 in `DECISIONS.md` | **Done** (§11 lists five targets, §12 entry deleted, ARCHITECTURE "Unverified" bullet removed). Uncommitted |
+| 4 | Orphaned shaders | **Done** (deleted in 479f619, rendering.md wording in c79b16a) |
+| 5 | `lwjgl-openal` | **Open** (`build.gradle.kts` lines 40, 49) |
+| 6 | `default_transition_presets` rename | **Open** (not found in build or Kotlin) |
+| 7 | One dot-directory | **Open** (`ShortcutManager.kt` still `.liquidlsd`) |
+| 8 | `Mandala` exceptions | **Done** (§2 amended; sites are `ValueParamSection` `as? Mandala` and `WebPresetSerializer` `is Mandala`). Uncommitted |
+| 9 | `view2d.frag` wording | **Done** (§2; also dropped the stale "3D projection modes" sentence). Uncommitted |
+| 10 | Per-frame surface allocation | **Open** (`UIManager.kt` ~246, 247, 388) |
+| 11 | MIDI one-frame lag | **Open**, after 10 |
+| 12 | Relay token | **Code done** (`server.js` requires `LSD_TOKEN`, `lsd25` gone). Confirm with the user that the VPS token was rotated and the broadcaster token updated |
+| Sweep | Phase 5 docs | **Open**, except the `rendering.md` shader sentence. Still stale: "Performance Mode" in `rendering.md`/`ui.md`, `MacroOscBridge` "1..8", `modular_video_rack_proposal.md` not archived, `.planning/codebase/`, `ARCHITECTURE.md` items, release notes |
+
 ## Decisions (final)
 
 | # | Question | Decision |
