@@ -1,6 +1,8 @@
 // Liquid LSD Web Audio DSP & spaz.org Integration (Phase 2)
 // Real-time Web Audio analysis, beat detection, and CV output
 
+import { BeatTracker, BeatClock } from './beattrack.js';
+
 export const cvState = {
   // The audio_* signals are scaled exactly as the desktop's AudioEngine publishes them, so a
   // preset's depths mean the same thing in both places.
@@ -12,8 +14,9 @@ export const cvState = {
   audio_flux_bass: 0.0,  // half-wave rectified RMS growth since the last frame / 0.05
   audio_flux_mid:  0.0,
   audio_flux_high: 0.0,
-  totalBeats:     0.0,   // beats integrated at the estimated tempo (standalone clock)
-  bpm:            120.0, // estimated BPM
+  totalBeats:     0.0,   // standalone beat clock (beattrack.js): locked to the music's beats when it can be
+  bpm:            120.0, // tracked tempo (120 until there is one)
+  beatLocked:     false, // true while the clock follows a confidently tracked beat
   isLive:         false, // true once AudioContext is running and stream is connected
 };
 
@@ -43,14 +46,6 @@ function calcRms(analyser, buf) {
     sum += buf[i] * buf[i];
   }
   return Math.sqrt(sum / buf.length);
-}
-
-// Median helper
-function median(arr) {
-  if (arr.length === 0) return 0;
-  const s = [...arr].sort((a, b) => a - b);
-  const m = Math.floor(s.length / 2);
-  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
 const AMP_SCALE = 0.25;
@@ -92,59 +87,41 @@ function updateAmplitudes() {
   prevRms.bass = rms.bass; prevRms.mid = rms.mid; prevRms.high = rms.high;
 }
 
-// Beat detection state
-let shortTermEnergy = 0;
-let longTermEnergy  = 0;
-let lastOnsetTime   = 0;
-const ioiHistory    = [];
-let totalBeats      = 0;
-let bpmEstimate     = 120;
+// Standalone beat clock (beattrack.js). The onset worklet's envelope feeds the tracker; every 250 ms its
+// estimate pulls the clock onto the music's beats. With no audio (or no clear beat) the clock coasts at
+// the last tempo, so beat-synced modulators keep running.
+const tracker = new BeatTracker();
+const beatClock = new BeatClock();
+let onsetFromWorklet = false;
+let lastAnalyseMs = -Infinity;
 
-function updateBeat(dt) {
-  if (analysisReady) {
-    const raw = calcRms(bassAnalyser, bassBuf);
+/** performance.now() time at which audio at context time `t` is heard (so the beat lines up with the sound). */
+function ctxToPerfMs(t) {
+  const ts = audioCtx.getOutputTimestamp ? audioCtx.getOutputTimestamp() : null;
+  if (ts && ts.performanceTime > 0) return ts.performanceTime + (t - ts.contextTime) * 1000;
+  const latency = audioCtx.outputLatency || audioCtx.baseLatency || 0;
+  return performance.now() + (t - audioCtx.currentTime + latency) * 1000;
+}
 
-    // Dual-average onset detection
-    shortTermEnergy = shortTermEnergy * 0.8 + raw * 0.2;
-    longTermEnergy  = longTermEnergy  * 0.99 + raw * 0.01;
-
-    const THRESHOLD = 1.4;
-    const MIN_IOI   = 250; // ms — prevents double-triggers (max 240 BPM)
-
-    const now = performance.now();
-    if (shortTermEnergy > THRESHOLD * longTermEnergy &&
-        shortTermEnergy > 0.01 &&
-        (now - lastOnsetTime) > MIN_IOI) {
-
-      const ioi = now - lastOnsetTime;
-      lastOnsetTime = now;
-
-      // Update BPM estimate (ignore anomalous intervals)
-      if (ioi > 0 && ioi < 3000) {
-        ioiHistory.push(ioi);
-        if (ioiHistory.length > 8) ioiHistory.shift();
-        const medianIoi = median(ioiHistory);
-        if (medianIoi > 0) {
-          bpmEstimate = 60000 / medianIoi;
-          bpmEstimate = Math.max(60, Math.min(200, bpmEstimate));
-          cvState.bpm = bpmEstimate;
-        }
-      }
-    }
+function updateBeat() {
+  const now = performance.now();
+  if (analysisReady && now - lastAnalyseMs >= 250) {
+    lastAnalyseMs = now;
+    beatClock.update(tracker.analyse(), now);
   }
-
-  // Advance beat clock using current BPM estimate (dt in seconds)
-  totalBeats += (bpmEstimate / 60) * dt;
-
-  cvState.totalBeats = totalBeats;
+  cvState.totalBeats = beatClock.read(now);
+  cvState.bpm = beatClock.bpm;
+  cvState.beatLocked = beatClock.locked;
 }
 
 // Per-frame tick called from renderer.js rAF loop
 export function tick(dt) {
   if (analysisReady) {
     updateAmplitudes();
+    // Without the worklet, the per-frame onset strength is the envelope (coarser timing, same tracker).
+    if (!onsetFromWorklet) tracker.push(cvState.audio_flux_amp, performance.now() / 1000);
   }
-  updateBeat(dt);
+  updateBeat();
 }
 
 let currentVolumeRatio = 0.8;
@@ -216,6 +193,24 @@ export async function startAudio() {
     source.connect(highFilter);
     highFilter.connect(highAnalyser);
 
+    // Onset envelope at audio rate for the beat tracker. The worklet's output only goes to a muted gain,
+    // which keeps the graph pulling it.
+    try {
+      await audioCtx.audioWorklet.addModule('onset-worklet.js');
+      const onset = new AudioWorkletNode(audioCtx, 'lsd-onset', { numberOfOutputs: 1 });
+      const mute = audioCtx.createGain();
+      mute.gain.value = 0;
+      source.connect(onset);
+      onset.connect(mute);
+      mute.connect(audioCtx.destination);
+      onset.port.onmessage = ({ data }) => {
+        for (let i = 0; i < data.values.length; i++) tracker.push(data.values[i], ctxToPerfMs(data.t0 + i * data.hop) / 1000);
+      };
+      onsetFromWorklet = true;
+    } catch (err) {
+      console.warn('[dsp] Onset worklet unavailable; tracking beats per frame:', err.message);
+    }
+
     // Pre-allocate analysis buffers
     broadBuf = new Float32Array(broadbandAnalyser.fftSize);
     bassBuf  = new Float32Array(bassAnalyser.fftSize);
@@ -248,6 +243,7 @@ export async function stopAudio() {
 
   cvState.isLive = false;
   analysisReady = false;
+  tracker.reset(); // the next stream starts a fresh envelope; the clock coasts meanwhile
   cvState.audio_amp = 0.0;
   cvState.audio_bass = 0.0;
   cvState.audio_mid = 0.0;

@@ -228,6 +228,8 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Full-frame looks (Cyclic CA, Kali Set, Voronoi, Ripples, Quasicrystal...) never get trail or bloom chains, and don't wash out.
 - [ ] Cyclic CA hard look reseeds on the biggest bass hits and recovers within a few seconds.
 - [ ] Drop strobe chain flashes negative once per loud bass hit (no random strobe).
+- [ ] With the radio playing, beat pulses land on the kicks within a few seconds of power-on and stay there through track changes.
+- [ ] Looks change on the beat, about every 16 bars; the background about every 32.
 - [ ] Phase 8 CI is not done yet, so nothing to check there.
 
 ## 17. Before release

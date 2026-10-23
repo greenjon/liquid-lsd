@@ -1,0 +1,75 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>LSD beat check</title>
+<script type="module">
+// Plays a synthetic track (kicks at a known tempo and phase, off-beat hats, a bass line) through the real
+// onset worklet into BeatTracker / BeatClock, then measures how far each kick lands from a whole beat
+// of the clock, in the browser's own timing. Driven by beat_check.mjs; POSTs the result to /report.
+import { BeatTracker, BeatClock } from '../beattrack.js';
+
+const BPM = Number(new URLSearchParams(location.search).get('bpm') || 124);
+const FIRST = 0.37, SECONDS = 16, P = 60 / BPM;
+const post = (o) => fetch('/report', { method: 'POST', body: JSON.stringify(o) });
+try {
+  const ctx = new AudioContext();
+  await ctx.resume();
+  const sr = ctx.sampleRate, buf = ctx.createBuffer(2, SECONDS * sr, sr);
+  const d = buf.getChannelData(0);
+  let seed = 7; const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 2 ** 32) * 2 - 1;
+  for (let t = FIRST; t < SECONDS; t += P) {
+    const k0 = Math.round(t * sr);
+    for (let i = 0, ph = 0; i < 0.25 * sr && k0 + i < d.length; i++) {
+      const s = i / sr; ph += 2 * Math.PI * (50 + 70 * Math.exp(-s * 30)) / sr;
+      d[k0 + i] += 0.8 * Math.sin(ph) * Math.exp(-s * 12);
+    }
+    const h0 = Math.round((t + P / 2) * sr);
+    for (let i = 0; i < 0.04 * sr && h0 + i < d.length; i++) d[h0 + i] += 0.25 * rnd() * Math.exp(-(i / sr) * 90);
+  }
+  for (let i = 0; i < d.length; i++) {
+    const bar = Math.floor((i / sr) / (4 * P));
+    d[i] += 0.12 * Math.sin(2 * Math.PI * [55, 65.4, 49, 58.3][bar % 4] * i / sr) + 0.01 * rnd();
+  }
+  buf.copyToChannel(d, 1);
+
+  await ctx.audioWorklet.addModule('../onset-worklet.js');
+  const onset = new AudioWorkletNode(ctx, 'lsd-onset', { numberOfOutputs: 1 });
+  const mute = ctx.createGain(); mute.gain.value = 0;
+  const src = ctx.createBufferSource(); src.buffer = buf;
+  src.connect(onset); onset.connect(mute); mute.connect(ctx.destination);
+  const toPerf = (t) => {
+    const ts = ctx.getOutputTimestamp ? ctx.getOutputTimestamp() : null;
+    if (ts && ts.performanceTime > 0) return ts.performanceTime + (t - ts.contextTime) * 1000;
+    return performance.now() + (t - ctx.currentTime + (ctx.outputLatency || ctx.baseLatency || 0)) * 1000;
+  };
+  const tracker = new BeatTracker(), clock = new BeatClock();
+  onset.port.onmessage = ({ data }) => {
+    for (let i = 0; i < data.values.length; i++) tracker.push(data.values[i], toPerf(data.t0 + i * data.hop) / 1000);
+  };
+  const T0 = ctx.currentTime + 0.2;
+  src.start(T0);
+  const kicksPerf = [];
+  for (let t = FIRST; t < SECONDS; t += P) kicksPerf.push(toPerf(T0 + t));
+  const samples = [];
+  const trk = [];
+  const analyse = setInterval(() => { const r = tracker.analyse(); clock.update(r, performance.now()); if (r && r.beatTime) trk.push([r.beatTime * 1000, r.confidence, r.bpm]); }, 250);
+  const reader = setInterval(() => { const now = performance.now(); samples.push([now, clock.read(now)]); }, 4);
+  await new Promise((r) => setTimeout(r, (SECONDS + 0.5) * 1000));
+  clearInterval(analyse); clearInterval(reader);
+  // Beats at a kick, interpolated from the clock samples; error = distance to the nearest whole beat.
+  const at = (ms) => {
+    const j = samples.findIndex((s) => s[0] >= ms);
+    if (j <= 0) return null;
+    const [t0, b0] = samples[j - 1], [t1, b1] = samples[j];
+    return b0 + (b1 - b0) * (ms - t0) / (t1 - t0);
+  };
+  const lastKicks = kicksPerf.filter((k) => k > kicksPerf[0] + (SECONDS - 5) * 1000 && k < samples.at(-1)[0]);
+  const errs = lastKicks.map((k) => { const b = at(k); return Math.abs(b - Math.round(b)) * 60000 / clock.bpm; });
+  // Half-time lock (e.g. 174 BPM followed at 87): every kick is on a whole or a half beat.
+  const halfErrs = lastKicks.map((k) => { const b = 2 * at(k); return Math.abs(b - Math.round(b)) * 30000 / clock.bpm; });
+  post({ bpm: clock.bpm, locked: clock.locked, ctxState: ctx.state, kicks: errs.length,
+    worstMs: Math.max(...errs), meanMs: errs.reduce((a, b) => a + b, 0) / errs.length, worstHalfMs: Math.max(...halfErrs),
+    trk: trk.slice(-8).map(([bt, c, b]) => [Math.round(Math.min(...kicksPerf.map((k) => Math.abs(k - bt)))), +c.toFixed(2), +b.toFixed(1)]) });
+} catch (err) {
+  post({ fatal: String(err) });
+}
+</script>

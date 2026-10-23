@@ -39,6 +39,9 @@ export class BeatFlywheel {
     return this.beats + (Math.max(0, nowMs - this.at) / 1000) * (this.bpm / 60);
   }
 
+  /** Beats at `nowMs` from the last anchor, without the forward-only smoothing of `read`. */
+  predict(nowMs) { return this.#predict(nowMs); }
+
   /** Total beats at `nowMs`; call once per frame. Never steps backward by less than the snap window. */
   read(nowMs) {
     const raw = this.#predict(nowMs);

@@ -13,16 +13,19 @@ const PROTOCOL_VERSION = 2;
 export const autopilotSettings = {
   fgPlaylist: 'default.lsdplay',
   bgPlaylist: 'default_bg.lsdplay',
-  fgHoldDuration: 45.0,
-  fgFadeDuration: 2.5,
+  // Holds are counted in bars (4 beats) of the beat clock and every change lands on a bar line: the
+  // crossfade starts `FadeBeats` before it and finishes on it. With no clear beat the clock runs at the
+  // last tempo (120 BPM until there is one), so 16 bars is about 32 s.
+  fgHoldBars: 16,
+  fgFadeBeats: 4,
   fgPlaybackOrder: 'sequential',
   // FX chain / transition preset ids (web/catalog.json) the autopilot rotates through; a
   // playlist line `preset | chain` pins a chain to one preset. Empty = no FX / plain crossfade.
   fxChains: [],
   transitions: [],
   fxPlaybackOrder: 'sequential',
-  bgHoldDuration: 90.0,
-  bgFadeDuration: 4.0,
+  bgHoldBars: 32,
+  bgFadeBeats: 8,
   bgPlaybackOrder: 'sequential',
   audioStreamUrl: 'https://radio.spaz.org:8060/radio.ogg',
   fallbackBpm: 120.0
@@ -47,21 +50,34 @@ export const autopilotState = {
 };
 
 // Internal Playlist & State Machines
+// Beat positions (the beat clock the modulators read) drive both layers. The next preset is built
+// during the hold, so the change starts exactly on its beat instead of after a fetch.
+let lastBeats = 0;
+
 let fgPlaylist = [];
 let fgPlaylistIdx = 0;
 let fgActiveDeck = 'A'; // 'A' or 'B'
 let fgTransitionState = 'hold'; // 'hold' | 'crossfading'
-let fgHoldTimer = 45.0;
-let fgFadeTimer = 0.0;
+let fgSwitchAt = 0;        // beat the next crossfade starts on
+let fgFadeStart = 0;
 let fgFadeStartBalance = 0.0;
 let fgFadeTargetBalance = 0.0;
+let fgNext = null;         // {line, deck} built ahead of the switch
+let fgPreparing = false;
 
 let bgPlaylist = [];
 let bgPlaylistIdx = 0;
 let bgTransitionState = 'hold'; // 'hold' | 'fade_out' | 'fade_in'
-let bgHoldTimer = 90.0;
-let bgFadeTimer = 0.0;
-let pendingBgPreset = null;
+let bgSwitchAt = 0;
+let bgFadeStart = 0;
+let bgNext = null;
+let bgPreparing = false;
+
+/** Beat the next change starts on: `fadeBeats` before the first bar line at least `holdBars` from `beats`. */
+export function nextSwitchBeat(beats, holdBars, fadeBeats) {
+  const barLine = Math.ceil((beats + holdBars * 4) / 4) * 4;
+  return Math.max(beats, barLine - fadeBeats);
+}
 
 // Preset Caches
 const presetCache = new Map();
@@ -182,108 +198,106 @@ async function pickTransition() {
 // -------------------------------------------------------
 // State machine updates
 // -------------------------------------------------------
-export function tickAutopilot(dt) {
+export function tickAutopilot(dt, beats) {
   if (autopilotState.isLiveBroadcast) return;
+  lastBeats = beats;
+  if (fgSwitchAt === null) fgSwitchAt = nextSwitchBeat(beats, 0, 0);
+  if (bgSwitchAt === null) bgSwitchAt = nextSwitchBeat(beats, 0, 0);
 
-  // 1. Foreground A/B Crossfade State Machine
+  // 1. Foreground A/B crossfade, on the bar line
   if (fgPlaylist.length > 0) {
-    switch (fgTransitionState) {
-      case 'hold':
-        fgHoldTimer -= dt;
-        if (fgHoldTimer <= 0) {
-          advanceForeground();
-        }
-        break;
-
-      case 'crossfading':
-        fgFadeTimer += dt;
-        const progress = Math.min(1.0, fgFadeTimer / Math.max(0.1, autopilotSettings.fgFadeDuration));
-        // Smooth Hermite blend
-        const t = progress * progress * (3.0 - 2.0 * progress);
-        autopilotState.mixer.balance = fgFadeStartBalance + (fgFadeTargetBalance - fgFadeStartBalance) * t;
-
-        if (progress >= 1.0) {
-          autopilotState.mixer.balance = fgFadeTargetBalance;
-          fgTransitionState = 'hold';
-          fgHoldTimer = autopilotSettings.fgHoldDuration;
-        }
-        break;
+    if (fgTransitionState === 'hold') {
+      prepareForeground();
+      if (beats >= fgSwitchAt && fgNext) startForegroundCrossfade(beats);
+    } else {
+      const fade = Math.max(0.25, autopilotSettings.fgFadeBeats);
+      const progress = Math.min(1.0, Math.max(0, (beats - fgFadeStart) / fade));
+      const t = progress * progress * (3.0 - 2.0 * progress); // smooth Hermite blend
+      autopilotState.mixer.balance = fgFadeStartBalance + (fgFadeTargetBalance - fgFadeStartBalance) * t;
+      if (progress >= 1.0) {
+        autopilotState.mixer.balance = fgFadeTargetBalance;
+        fgTransitionState = 'hold';
+        fgSwitchAt = nextSwitchBeat(beats, autopilotSettings.fgHoldBars, autopilotSettings.fgFadeBeats);
+      }
     }
   }
 
-  // 2. Background Dip-to-Black State Machine
+  // 2. Background dip to black: out over the first half of the fade, the swap, in over the second
   if (bgPlaylist.length > 0) {
-    const fadeDur = Math.max(0.1, autopilotSettings.bgFadeDuration * 0.5);
+    const half = Math.max(0.25, autopilotSettings.bgFadeBeats * 0.5);
     switch (bgTransitionState) {
       case 'hold':
-        bgHoldTimer -= dt;
-        if (bgHoldTimer <= 0) {
-          startBgTransition();
-        }
+        prepareBackground();
+        if (beats >= bgSwitchAt && bgNext) { bgTransitionState = 'fade_out'; bgFadeStart = beats; }
         break;
-
       case 'fade_out':
-        bgFadeTimer += dt;
-        autopilotState.bgAlpha = Math.max(0.0, 1.0 - (bgFadeTimer / fadeDur));
+        autopilotState.bgAlpha = Math.max(0.0, 1.0 - (beats - bgFadeStart) / half);
         if (autopilotState.bgAlpha <= 0.0) {
-          if (pendingBgPreset) {
-            autopilotState.deckBG = pendingBgPreset;
-            pendingBgPreset = null;
-          }
+          autopilotState.deckBG = bgNext.deck;
+          console.log(`[autopilot] Background: ${bgNext.line}`);
+          bgNext = null;
           bgTransitionState = 'fade_in';
-          bgFadeTimer = 0.0;
+          bgFadeStart = beats;
         }
         break;
-
       case 'fade_in':
-        bgFadeTimer += dt;
-        autopilotState.bgAlpha = Math.min(1.0, bgFadeTimer / fadeDur);
+        autopilotState.bgAlpha = Math.min(1.0, (beats - bgFadeStart) / half);
         if (autopilotState.bgAlpha >= 1.0) {
-          autopilotState.bgAlpha = 1.0;
           bgTransitionState = 'hold';
-          bgHoldTimer = autopilotSettings.bgHoldDuration;
+          bgSwitchAt = nextSwitchBeat(beats, autopilotSettings.bgHoldBars, autopilotSettings.bgFadeBeats);
         }
         break;
     }
   }
 }
 
-export async function advanceForeground() {
-  if (fgPlaylist.length === 0) return;
+/** Builds the next foreground preset (and its FX chain and transition) ahead of the switch. */
+function prepareForeground() {
+  if (fgNext || fgPreparing || fgPlaylist.length === 0) return null;
+  fgPreparing = true;
   fgPlaylistIdx = getNextIndex(fgPlaylistIdx, fgPlaylist.length, autopilotSettings.fgPlaybackOrder);
-  const presetName = fgPlaylist[fgPlaylistIdx];
-  const normalized = await buildDeck(presetName);
-  Object.assign(autopilotState.mixer, await pickTransition());
+  const line = fgPlaylist[fgPlaylistIdx];
+  return Promise.all([buildDeck(line), pickTransition()]).then(([deck, transition]) => {
+    fgNext = { line, deck, transition };
+  }).finally(() => { fgPreparing = false; });
+}
 
-  // Crossfade target
+function prepareBackground() {
+  if (bgNext || bgPreparing || bgPlaylist.length === 0) return;
+  bgPreparing = true;
+  bgPlaylistIdx = getNextIndex(bgPlaylistIdx, bgPlaylist.length, autopilotSettings.bgPlaybackOrder);
+  const line = bgPlaylist[bgPlaylistIdx];
+  buildDeck(line).then((deck) => { bgNext = { line, deck }; }).finally(() => { bgPreparing = false; });
+}
+
+function startForegroundCrossfade(beats) {
+  const { line, deck, transition } = fgNext;
+  fgNext = null;
+  Object.assign(autopilotState.mixer, transition);
+  // Load the next preset onto the off-air deck and fade the crossfader over to it.
+  fgFadeStartBalance = autopilotState.mixer.balance;
   if (fgActiveDeck === 'A') {
-    // Current is Deck A (balance ~0.0) -> load next to Deck B and crossfade to balance 1.0
-    autopilotState.deckB = normalized;
-    fgFadeStartBalance = autopilotState.mixer.balance;
+    autopilotState.deckB = deck;
     fgFadeTargetBalance = 1.0;
     fgActiveDeck = 'B';
   } else {
-    // Current is Deck B (balance ~1.0) -> load next to Deck A and crossfade to balance 0.0
-    autopilotState.deckA = normalized;
-    fgFadeStartBalance = autopilotState.mixer.balance;
+    autopilotState.deckA = deck;
     fgFadeTargetBalance = 0.0;
     fgActiveDeck = 'A';
   }
-
-  fgFadeTimer = 0.0;
+  fgFadeStart = beats;
   fgTransitionState = 'crossfading';
-  console.log(`[autopilot] Crossfading to FG: ${presetName} (Deck ${fgActiveDeck})`);
+  console.log(`[autopilot] Crossfading to FG: ${line} (Deck ${fgActiveDeck})`);
 }
 
-async function startBgTransition() {
-  if (bgPlaylist.length === 0) return;
-  bgPlaylistIdx = getNextIndex(bgPlaylistIdx, bgPlaylist.length, autopilotSettings.bgPlaybackOrder);
-  const presetName = bgPlaylist[bgPlaylistIdx];
-  pendingBgPreset = await buildDeck(presetName);
-
-  bgFadeTimer = 0.0;
-  bgTransitionState = 'fade_out';
-  console.log(`[autopilot] Dipping to BG: ${presetName}`);
+/** Skips to the next foreground preset now (crossfade starts this frame) instead of on the next bar line. */
+export async function advanceForeground() {
+  if (fgPlaylist.length === 0 || fgTransitionState !== 'hold') return;
+  if (!fgNext) {
+    while (fgPreparing) await new Promise((r) => setTimeout(r, 20));
+    if (!fgNext) await prepareForeground();
+  }
+  if (fgNext && fgTransitionState === 'hold') startForegroundCrossfade(lastBeats);
 }
 
 /** Applies one relay message (state_full / state_delta / broadcaster_offline) to the live state. */
@@ -319,8 +333,9 @@ export function handleRelayMessage(msg) {
         autopilotState.isLiveBroadcast = false;
         autopilotState.clock.reset();
         console.log('[autopilot] Broadcaster offline — returning to autopilot');
-        fgHoldTimer = 5.0;
-        bgHoldTimer = 5.0;
+        // Pick the autopilot up again at the next bar line (planned on the next tick, from the current beat).
+        fgSwitchAt = null;
+        bgSwitchAt = null;
       }
       break;
   }
@@ -420,7 +435,7 @@ export async function startAutopilot() {
     autopilotState.deckB = await buildDeck(fgPlaylist[0]);
     autopilotState.mixer.balance = 0.0;
     fgActiveDeck = 'A';
-    fgHoldTimer = autopilotSettings.fgHoldDuration;
+    fgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.fgHoldBars, autopilotSettings.fgFadeBeats);
   }
 
   // 3. Load Background playlist
@@ -429,7 +444,7 @@ export async function startAutopilot() {
     bgPlaylistIdx = 0;
     autopilotState.deckBG = await buildDeck(bgPlaylist[0]);
     autopilotState.bgAlpha = 1.0;
-    bgHoldTimer = autopilotSettings.bgHoldDuration;
+    bgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.bgHoldBars, autopilotSettings.bgFadeBeats);
   }
 
   // 4. Connect to live relay

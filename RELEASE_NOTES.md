@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Web TV: On the Beat (`web/beattrack.js`, `web/onset-worklet.js`, `web/dsp.js`, `web/autopilot.js`, `web/settings.json`)
+- **The web TV finds the radio's beat and locks to it.** Pulses, flashes and beat-synced LFOs now land on the kicks of whatever is playing, not just at roughly the right tempo. It locks within a few seconds, follows tempo changes, and keeps time through breaks. The timing allows for the browser's audio delay, so the picture matches what you hear.
+- **Looks change on the bar.** The autopilot counts its holds in bars (16 for the main looks, 32 for the background) and finishes each crossfade on a bar line, so the new look arrives with the music. The next look is loaded during the hold, so the change is never late.
+- **Very fast music (drum and bass) is followed at half time:** every kick still lands on a beat or a half beat.
+
 ### Web TV: Every Source On Air, Nothing Deaf (`web/presets/*`, `web/fxchains/*`, `web/playlists/*`, `web/tools/reactivity.test.mjs`, `web/checks/render_check.*`, `scripts/gen_web_presets.py`)
 - **48 new web presets** give every web source a place in the rotation: Aurora Ribbons, Cyclic CA, Girih Stars, Glitch Blocks, Halftone Matrix, Harmonograph, Hyperbolic Tiling, Isometric Voxels, Kali Set, Metaballs, Quasicrystal, Thin Film, Tunnel Scenes, Video Feedback, Voronoi Cells and Wave Ripples each get a groove, a hard (or kick, hat or mid) and an ambient look. The ambient ones play on the background.
 - **Fixed pictures that jittered after a few minutes on air.** 23 presets modulated a speed (flight speed, flow speed, vibration speed...). The shaders multiply speed by the running time, so the longer the TV ran, the harder every wobble in the music jumped the picture. Those presets now move size, glow, colour and shape with the music instead.

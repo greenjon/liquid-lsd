@@ -65,3 +65,8 @@ A1+A2 -> B1+B2 -> C1-C5 -> D1+D2 -> A6 -> B3, C6.
   deleted; trails chains now modulated (moved into the generator); web-drop-strobe uses invert, not video_strobe.
 - Open question for desktop: the same TIME*Speed jump affects every desktop knob/modulator on a speed param.
   A proper fix is a host-integrated phase (shader change, desktop + web). Not started.
+- 2026-10-23 B1 done: onset worklet + BeatTracker (autocorr tempo, period fine-tune, comb phase, split-half
+  confidence) + BeatClock (forward-only anchors into BeatFlywheel). beat_check.mjs: 80-140 BPM within ~12 ms;
+  174 follows at half time (prior centred on 120). Real radio locked at ~135 BPM, confidence ~0.85.
+- 2026-10-23 B2 done: holds in bars (fg 16, bg 32), fades in beats, change finishes on a bar line, next preset
+  built during the hold. Bar lines are the clock's own count: no downbeat detection yet (candidate for B3).
