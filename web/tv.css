@@ -434,3 +434,8 @@ body.kiosk.idle, body.kiosk.idle canvas { cursor: none; }
   100% { opacity: 0; transform: scaleY(1); }
 }
 #tv-body:not(.powered-on) #title-card { display: none; }
+
+/* The whole TV turns it on; once on, the cabinet (not the picture) turns it off. */
+#tv-body:not(.powered-on) { cursor: pointer; }
+#tv-body.powered-on { cursor: default; }
+#tv-body.powered-on #tv-screen-area { cursor: crosshair; }

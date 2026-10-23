@@ -178,6 +178,14 @@ export function initUI() {
     }
   });
 
+  // The whole TV is a power target: when it is off, a click anywhere on it turns it on; when it is on, a
+  // click on the cabinet (not the picture, which shows the info, and not the other controls) turns it off.
+  tvBody.addEventListener('click', (e) => {
+    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu')) return; // controls handle their own clicks
+    if (powerState.on && e.target.closest('#tv-screen-area')) return;
+    powerSwitch.click();
+  });
+
   // --- Volume ---
   makeDial(document.getElementById('volumeDial'), { initial: 0.8, onChange: (v) => setVolume(v) });
   setVolume(0.8);

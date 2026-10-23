@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`)
+- **Click the TV to turn it on.** The whole set is the power switch: any click on a TV that is off turns it on, and a click on the cabinet (not the picture or the other controls) turns it off.
+
 ### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`, `web/menu.js`, `web/sync.js`, `web/pairing.js`, `broadcast/BroadcastPreferences.kt`, `broadcast/WebPresetSerializer.kt`, `broadcast/BroadcastEngine.kt`, `ui/BroadcastPreferencesPanel.kt`)
 - **The screen stays on while the TV is on.** Laptops and phones no longer dim and lock in the middle of a show (where the browser supports it).
 - **Phone lock screen and media keys.** The lock screen (and your keyboard's media keys) show the show playing on Spaz Radio and the look on air; play/pause turns the TV on and off, next and previous change the look.

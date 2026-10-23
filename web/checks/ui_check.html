@@ -21,7 +21,8 @@ try {
   const onAir = () => (st.mixer.balance > 0.5 ? st.deckB : st.deckA);
   const osd = (id) => ({ text: d.getElementById(id).textContent, shown: d.getElementById(id).classList.contains('show') });
 
-  d.getElementById('powerSwitch').click();
+  // The whole TV is a power target: a click on the screen of a TV that is off turns it on.
+  d.getElementById('tv-screen-area').click();
   await sleep(2500);
   check('OSD shows the channel after power on', osd('osd-ch').shown && /^CH \d+/.test(osd('osd-ch').text), JSON.stringify(osd('osd-ch')));
   check('OSD names the look', osd('osd-name').text.length > 0, osd('osd-name').text);
@@ -136,6 +137,13 @@ try {
   w.LSD.handleRelayMessage({ type: 'broadcaster_offline' });
   await sleep(300);
   check('Offline: badge back to CH.1', d.querySelector('#station-badge .station-text').textContent.includes('CH.1'));
+  // Clicking the picture while on does not turn it off; clicking the cabinet does, and again turns it on.
+  d.getElementById('glCanvas').click();
+  check('A click on the picture leaves the TV on', w.LSD.powerState.on);
+  d.getElementById('tv-controls').click();
+  check('A click on the cabinet turns the TV off', !w.LSD.powerState.on);
+  d.getElementById('tv-body').click();
+  check('A click on the TV turns it on again', w.LSD.powerState.on);
   check('No page errors', errors.length === 0, errors.join(' | '));
   await post({ results });
 } catch (err) {
