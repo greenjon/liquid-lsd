@@ -63,11 +63,11 @@
 {"dt":1.5,"action":"click","caption":""},
 
 {"dt":1.0,"action":"chapter","target":"pair","minimap":"A","title":"The pair view","clipSec":16},
-{"dt":0.0,"action":"move","x":1700,"y":683,"durationSec":1.6,"caption":"Click a deck's preview to open its pair view."},
+{"dt":0.0,"action":"move","x":1260,"y":920,"durationSec":1.6,"caption":"Click a monitor whose row is not on this page, here BG, to open its pair view."},
 {"dt":4.0,"action":"click"},
-{"dt":2.0,"action":"move","x":260,"y":110,"durationSec":1.4,"caption":"Deck B's source and FX rows stay on top, with the browser below for that deck."},
-{"dt":6.5,"action":"move","target":"btn_Parameters","durationSec":1.2,"caption":"Parameters opens the full Edit view for it."},
-{"dt":4.5,"action":"move","target":"btn_Back","durationSec":1.2,"caption":"Back, or Esc, returns to Perform."},
+{"dt":2.0,"action":"move","x":260,"y":110,"durationSec":1.4,"caption":"The deck's source and FX rows stay on top, with the browser below for that deck."},
+{"dt":6.5,"action":"move","target":"btn_Params","durationSec":1.2,"caption":"Params opens the full editor for it."},
+{"dt":4.5,"action":"move","target":"btnid_bay_back","durationSec":1.2,"caption":"Back, or Esc, returns to Perform."},
 {"dt":3.0,"action":"click"},
 {"dt":2.0,"action":"move","x":1480,"y":280,"durationSec":1.6,"caption":"Browse, load, save and queue: your whole set lives in the Library."}
 ]}
