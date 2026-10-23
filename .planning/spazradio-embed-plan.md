@@ -44,7 +44,21 @@ Web side (steps 1-5 below) BUILT and passing, uncommitted: `embed.js`, `embedmod
 `tools/feedring.test.mjs`, release notes + `docs/developer/web_subsystem.md` §6b. Differences from the plan:
 no `setPlaying` (silence = quiet picture, noSignal pinned off); key handlers kept (harmless, handy for testing;
 the WebView just must not take focus); `quality: low` = heavy off + render-scale floor at step 2.
-Unseen on a device. Android side (steps 6-11) not started.
+Unseen on a device. Web `LSDHost.ready()/failed()` bridge added (renderer.js).
+
+Android side BUILT 2026-10-23 on spazradio branch `visuals-web-embed` (commit c1579d7, not merged/pushed); debug +
+release APKs build, unit tests pass; NOT run on a device or emulator (none available here). Differences:
+- No androidx.webkit (dependency locking is on): `AssetClient` in VisualizerView.kt serves assets/visuals/ itself;
+  feed is base64 via evaluateJavascript (PCM tee -> `PcmMonoChunker` 40 ms mono chunks -> `LSD.feed`).
+- Sync is NATIVE: the feed is delayed by the `syncMs` setting (default 250 ms, 0-800) so amplitude and beats
+  stay coherent; the web `sync` option is unused by the app.
+- No separate low-battery setting: Auto quality drops to Low under the system battery saver.
+- Settings > Visuals section (quality, reaction, reduced motion, picture delay, follow live) in 4 languages.
+- Fallback to the oscilloscope on: no WebView, LSDHost.failed (no WebGL2), 20 s without LSDHost.ready while visible,
+  renderer crashes beyond 2 restarts. Release APK 6.66 MB (was 6.2).
+- Picture runs only while visible AND playing (frozen frame when paused).
+Open: on-device check (startup, first-frame time, beat sync/delay default, heat, WebView renderer crash, worklet
+import inside Android WebView, `LSD.feed` call rate), merge + release notes in spazradio, F-Droid files still in repo.
 
 ## Steps
 
