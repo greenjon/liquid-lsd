@@ -378,6 +378,7 @@ async function init() {
     elapsedTime += dt;
     frameDt = dt;
     frameCount++;
+    if (frameCount === 3) window.LSDHost?.ready?.();   // embed: the host app's WebView bridge (Spaz Radio)
 
     // Tick DSP analysis and autopilot scheduler
     tick(dt);
@@ -481,5 +482,6 @@ async function init() {
 window.addEventListener('DOMContentLoaded', () => {
   init().catch((err) => {
     console.error('Liquid LSD WebGL2 init error:', err);
+    window.LSDHost?.failed?.(String(err));   // embed: the host falls back to its own visuals
   });
 });
