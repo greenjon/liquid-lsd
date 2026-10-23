@@ -455,7 +455,7 @@
       "web": "web/graph.js",
       "mode": "manual_review",
       "description": "JSON preset serialization schema & dead reckoning state sync",
-      "last_synced_hash": "63f3315994815481415ba70ca54ca1f839066d3174a735b402ca5de65b174049"
+      "last_synced_hash": "252ef239e084664ea92e043ccdd7d1135f74acc9a6926b236b61dad42d10e1d1"
     }
   ],
   "content": [
