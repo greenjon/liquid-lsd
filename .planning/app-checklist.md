@@ -165,6 +165,7 @@ Library tabs are now Sources, FX, Transitions, Queues, Macros.
 - [ ] Length 1-32 (odd lengths), Phase, Offset, Step Hold (randomize); Glide Curve greys when nothing glides; output trace and live dot; ghost steps past the length; bars dim when bypassed.
 - [ ] Auto toggle: randomization re-rolls the pattern, morph slides between patterns.
 - [ ] Changing Clock Unit converts the step duration.
+- [ ] After the app has run 15+ minutes: sweep a Time-clocked LFO's period (and a sequencer's Time interval) by hand and from a macro. It speeds up or slows down, never jumps. A preset morph between two different LFO periods glides too (2026-10-23).
 - [ ] Ctrl+Z undoes sequencer, LFO, Audio and MIDI CC edits (one step per drag).
 
 ## 10. Mixer, output and app
@@ -197,6 +198,7 @@ Light wave 1: - [ ] quasicrystal - [ ] thin_film - [ ] tunnel_scenes - [ ] video
 
 Light wave 2: - [ ] cyclic_ca - [ ] metaballs - [ ] wave_ripples - [ ] harmonograph (long spiralling trail) - [ ] aurora_ribbons - [ ] isometric_voxels - [ ] halftone_matrix - [ ] kali_set - [ ] girih_stars - [ ] glitch_blocks - [ ] voronoi_cells
 
+- [ ] Speeds never jump (2026-10-23): after the app has run 15+ minutes, sweep each source's speed knob (Speed, Flight/Morph/Wave/Orbit/Drift Speed...) fast, and put an LFO or audio on one. The motion speeds up and slows down, never jumps or stutters. Also Dynamic Spiral Shear and Wave Amp, Harmonograph Detune, and the Wave Displace, Luma Displace, Fluid Smear, Gradient Map cycle and Video Strobe rate effects. A freshly loaded source looks as before.
 - [ ] Frame time on the integrated GPU is acceptable (notes in `.planning/light-sources-notes`).
 - [ ] Every-ISF binding audit (v1.0 scope): a sample of filters, every parameter binds to a knob.
 
@@ -224,7 +226,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 ## 16. Web client (if you test it)
 
 - [ ] Preset pack (98 presets, 35 FX chains) loads and looks like the app; every web source now has a groove, hard and ambient look (2026-10-23).
-- [ ] Leave the web TV running 20+ minutes: the picture no longer jitters (speed parameters are no longer modulated).
+- [ ] Leave the web TV running 20+ minutes: the picture no longer jitters (speeds are now integrated, so even a modulated speed is smooth).
 - [ ] Full-frame looks (Cyclic CA, Kali Set, Voronoi, Ripples, Quasicrystal...) never get trail or bloom chains, and don't wash out.
 - [ ] Cyclic CA hard look reseeds on the biggest bass hits and recovers within a few seconds.
 - [ ] Drop strobe chain flashes negative once per loud bass hit (no random strobe).
@@ -232,6 +234,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Looks change on the beat, about every 16 bars; the background about every 32.
 - [ ] Viewer controls on a real browser and a phone: CH up/down, FX, HOLD, TIME, REACT, swipe, long-press, keyboard; OSD readable; fullscreen keeps the OSD.
 - [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked.
+- [ ] On a track with a breakdown and drop, a calm look arrives in the breakdown and a hard look cuts in on the drop (not on every quiet moment).
 - [ ] Phase 8 CI is not done yet, so nothing to check there.
 
 ## 17. Before release

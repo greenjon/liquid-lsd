@@ -211,9 +211,10 @@ async function pickTransition() {
 // -------------------------------------------------------
 // State machine updates
 // -------------------------------------------------------
-export function tickAutopilot(dt, beats) {
+export function tickAutopilot(dt, beats, music = {}) {
   if (autopilotState.isLiveBroadcast) return;
   lastBeats = beats;
+  followSections(beats, music);
   if (fgSwitchAt === null) fgSwitchAt = nextSwitchBeat(beats, 0, 0);
   if (bgSwitchAt === null) bgSwitchAt = nextSwitchBeat(beats, 0, 0);
 
@@ -223,7 +224,7 @@ export function tickAutopilot(dt, beats) {
       prepareForeground();
       if (!autopilotState.hold && beats >= fgSwitchAt && fgNext) startForegroundCrossfade(beats);
     } else {
-      const fade = Math.max(0.25, autopilotSettings.fgFadeBeats);
+      const fade = Math.max(0.25, fgFadeLen);
       const progress = Math.min(1.0, Math.max(0, (beats - fgFadeStart) / fade));
       const t = progress * progress * (3.0 - 2.0 * progress); // smooth Hermite blend
       autopilotState.mixer.balance = fgFadeStartBalance + (fgFadeTargetBalance - fgFadeStartBalance) * t;
@@ -267,16 +268,100 @@ export function tickAutopilot(dt, beats) {
 let prewarm = () => {};
 export function setPrewarm(fn) { prewarm = fn; }
 
-/** Builds the next foreground preset (and its FX chain and transition) ahead of the switch. */
-function prepareForeground() {
-  if (fgNext || fgPreparing || fgPlaylist.length === 0) return null;
+/**
+ * Builds the next foreground look (and its FX chain and transition) ahead of the switch: the next
+ * playlist line, or `line` when the music asks for a particular kind of look. A newer request
+ * supersedes one still being built.
+ */
+let fgPrepareToken = 0;
+function prepareForeground(line = null) {
+  if (!line && (fgNext || fgPreparing || fgPlaylist.length === 0)) return null;
+  const token = ++fgPrepareToken;
   fgPreparing = true;
-  fgPlaylistIdx = getNextIndex(fgPlaylistIdx, fgPlaylist.length, autopilotSettings.fgPlaybackOrder);
-  const line = fgPlaylist[fgPlaylistIdx];
-  return Promise.all([buildDeck(line), pickTransition()]).then(([deck, transition]) => {
-    fgNext = { line, deck, transition };
-    prewarm(deck, transition);
-  }).finally(() => { fgPreparing = false; });
+  if (!line) {
+    fgPlaylistIdx = getNextIndex(fgPlaylistIdx, fgPlaylist.length, autopilotSettings.fgPlaybackOrder);
+    line = fgPlaylist[fgPlaylistIdx];
+  }
+  return buildLook(line).then((look) => {
+    if (token !== fgPrepareToken) return;
+    fgNext = look;
+    prewarm(look.deck, look.transition);
+  }).finally(() => { if (token === fgPrepareToken) fgPreparing = false; });
+}
+
+async function buildLook(line) {
+  const [deck, transition] = await Promise.all([buildDeck(line), pickTransition()]);
+  return { line, deck, transition };
+}
+
+// -------------------------------------------------------
+// Following the music's sections (energy.js via dsp.js): in a breakdown the next bar line brings a calm
+// or building look; when the drop lands, a hard look cuts in on it.
+// -------------------------------------------------------
+const CALM_TAGS = ['ambient', 'build'];
+const DROP_TAGS = ['hard', 'bass-gated'];
+const presetTags = new Map(); // playlist line -> preset tags
+let lastSection = 'normal';
+let lastDrops = 0;
+let dropLook = null;          // hard look built when the breakdown starts, ready for the drop
+
+/** A random line from both playlists whose preset has one of `tags`, not the look on air. */
+function pickLine(tags) {
+  const current = fgHistory.at(-1)?.line;
+  const pool = [...new Set([...fgPlaylist, ...bgPlaylist])]
+    .filter((l) => l !== current && (presetTags.get(l) ?? []).some((t) => tags.includes(t)));
+  return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+}
+
+let calmForBreakdown = false;  // the look on air (or queued) was brought in by a breakdown
+function followSections(beats, { section = 'normal', drops = 0 }) {
+  if (section !== lastSection) {
+    lastSection = section;
+    if (section === 'breakdown' && !autopilotState.hold && fgPlaylist.length) {
+      const calm = pickLine(CALM_TAGS);
+      if (calm) {
+        fgNext = null;
+        prepareForeground(calm);
+        fgSwitchAt = nextSwitchBeat(beats, 0, autopilotSettings.fgFadeBeats);
+        calmForBreakdown = true;
+      }
+      const hard = pickLine(DROP_TAGS);
+      dropLook = null;
+      if (hard) buildLook(hard).then((look) => { dropLook = look; prewarm(look.deck, look.transition); });
+      console.log('[autopilot] Breakdown');
+    }
+  }
+  if (drops !== lastDrops) {
+    lastDrops = drops;
+    if (dropLook && !autopilotState.hold) {
+      console.log('[autopilot] Drop');
+      settleCrossfade();
+      fgPrepareToken++;          // drop anything still being prepared
+      fgPreparing = false;
+      fgNext = dropLook;
+      dropLook = null;
+      startForegroundCrossfade(beats, 0.5); // a cut on the drop, not a fade
+      calmForBreakdown = false;
+    }
+  }
+  // The energy came back without a drop (a short dip): the calm look goes again at the next bar line.
+  if (section === 'normal' && calmForBreakdown && drops === lastDrops) {
+    calmForBreakdown = false;
+    if (!autopilotState.hold) {
+      fgPrepareToken++;
+      fgPreparing = false;
+      fgNext = null;
+      fgSwitchAt = nextSwitchBeat(beats, 0, autopilotSettings.fgFadeBeats);
+    }
+  }
+}
+
+/** Loads every playlist preset's tags (cached), so section changes can pick a fitting look. */
+async function loadPresetTags() {
+  await Promise.all([...new Set([...fgPlaylist, ...bgPlaylist])].map(async (line) => {
+    const raw = await fetchPreset(line.split('|')[0].trim());
+    presetTags.set(line, raw?.tags ?? []);
+  }));
 }
 
 function prepareBackground() {
@@ -287,7 +372,9 @@ function prepareBackground() {
   buildDeck(line).then((deck) => { bgNext = { line, deck }; prewarm(deck, null); }).finally(() => { bgPreparing = false; });
 }
 
-function startForegroundCrossfade(beats) {
+let fgFadeLen = 4;          // beats this crossfade takes
+function startForegroundCrossfade(beats, fadeBeats = autopilotSettings.fgFadeBeats) {
+  fgFadeLen = fadeBeats;
   const { line, deck, transition } = fgNext;
   fgNext = null;
   Object.assign(autopilotState.mixer, transition);
@@ -545,6 +632,8 @@ export async function startAutopilot() {
     autopilotState.bgAlpha = 1.0;
     bgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.bgHoldBars, autopilotSettings.bgFadeBeats);
   }
+
+  loadPresetTags();
 
   // 4. Connect to live relay
   connectRelay();

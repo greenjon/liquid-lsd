@@ -326,7 +326,7 @@ async function init() {
     // Tick DSP analysis and autopilot scheduler
     tick(dt);
     updateEvalContext();
-    tickAutopilot(dt, evalCtx.beats);
+    tickAutopilot(dt, evalCtx.beats, { section: cvState.section, drops: cvState.drops });
 
     if (powerState.on) {
       if (powerState.warmupProgress < 1.0) {

@@ -77,3 +77,6 @@ A1+A2 -> B1+B2 -> C1-C5 -> D1+D2 -> A6 -> B3, C6.
   (photosensitivity). web-elevation uses alpha-over blend and no feedback (additive/feedback burn out to white).
 - 2026-10-23 D1+D2 done: adaptive render scale (cap 1080p, steps 1.0-0.4, ceiling after a bad step-up), prewarm of
   queued looks via autopilot.setPrewarm. D3 moot (rAF already pauses hidden tabs; autoplay failure shows NO SIGNAL).
+- A6 waiting: the speed-bug agent (2026-10-23) is editing the desktop sources, including the 10 to port. Port after
+  their commit: add the 10 to web/sync_manifest.json, `sync_web.py --apply`, then presets (heavy ones: LSD_COST 3).
+- 2026-10-23 B3 done: energy.js breakdown/drop detection; calm/build look on breakdown, hard look cut on the drop.

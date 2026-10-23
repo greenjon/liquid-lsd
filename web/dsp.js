@@ -2,6 +2,7 @@
 // Real-time Web Audio analysis, beat detection, and CV output
 
 import { BeatTracker, BeatClock } from './beattrack.js';
+import { EnergyWatch } from './energy.js';
 
 export const cvState = {
   // The audio_* signals are scaled exactly as the desktop's AudioEngine publishes them, so a
@@ -17,6 +18,8 @@ export const cvState = {
   totalBeats:     0.0,   // standalone beat clock (beattrack.js): locked to the music's beats when it can be
   bpm:            120.0, // tracked tempo (120 until there is one)
   beatLocked:     false, // true while the clock follows a confidently tracked beat
+  section:        'normal', // 'normal' | 'breakdown' (energy.js), for the autopilot
+  drops:          0,     // drops detected so far (a breakdown ending with the low end back)
   isLive:         false, // true once AudioContext is running and stream is connected
 };
 
@@ -91,6 +94,7 @@ function updateAmplitudes() {
 // estimate pulls the clock onto the music's beats. With no audio (or no clear beat) the clock coasts at
 // the last tempo, so beat-synced modulators keep running.
 const tracker = new BeatTracker();
+const energy = new EnergyWatch();
 const beatClock = new BeatClock();
 let onsetFromWorklet = false;
 let lastAnalyseMs = -Infinity;
@@ -118,6 +122,10 @@ function updateBeat() {
 export function tick(dt) {
   if (analysisReady) {
     updateAmplitudes();
+    energy.update(cvState.audio_bass, cvState.audio_amp, dt);
+    cvState.section = energy.section;
+    cvState.drops = energy.drops;
+    cvState.energy = energy; // short / long levels, for tuning (window.LSD.cvState.energy)
     // Without the worklet, the per-frame onset strength is the envelope (coarser timing, same tracker).
     if (!onsetFromWorklet) tracker.push(cvState.audio_flux_amp, performance.now() / 1000);
   }

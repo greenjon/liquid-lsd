@@ -57,6 +57,16 @@ try {
   check('= raises REACT', w.LSD.viewerState.react > react0, `${react0} -> ${w.LSD.viewerState.react}`);
   key('-');
 
+  // Song sections: a breakdown brings a calm or building look at the next bar line, the drop cuts to a hard one.
+  const tagsOnAir = () => onAir().tags ?? [];
+  w.LSD.cvState.section = 'breakdown';
+  await sleep(5000);
+  check('Breakdown: a calm or building look comes in', tagsOnAir().some((t) => ['ambient', 'build'].includes(t)), tagsOnAir().join(','));
+  w.LSD.cvState.drops += 1;
+  w.LSD.cvState.section = 'normal';
+  await sleep(700);
+  check('Drop: a hard look cuts in', tagsOnAir().some((t) => ['hard', 'bass-gated'].includes(t)) && st.mixer.balance % 1 === 0, `${tagsOnAir().join(',')} balance ${st.mixer.balance}`);
+
   // Live broadcast locks the controls.
   w.LSD.handleRelayMessage({ type: 'state_full', v: 2, clock: { beats: 0, bpm: 120 }, preset: {
     deckA: { source: 'mandala', params: {}, fx: { 0: null, 1: null, 2: null } }, deckB: { empty: true }, deckBG: { empty: true },

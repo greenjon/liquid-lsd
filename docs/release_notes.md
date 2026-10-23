@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+### Speeds Never Jump the Picture (`rendering/isf/PhaseIntegrators.kt`, `rendering/isf/ISFParser.kt`, `rendering/isf/ISFVisualSource.kt`, `rendering/isf/ISFFilter.kt`, `cv/ClockAnchors.kt`, `cv/Evaluators.kt`, every stock source and effect with a speed, `web/isf.js`, `web/evaluator.js`)
+- **Fixed pictures that jumped when a speed changed late in a set.** The shaders multiplied each speed by the time since the app started, so the longer Liquid LSD ran, the further any change of speed threw the picture: an hour in, an LFO or the music on a speed made it jump every frame, and even turning a Speed knob, a macro or a preset morph scrubbed it. Liquid LSD now adds each speed up frame by frame, so changing it only changes how fast things move. This covers all 27 stock sources and the 5 effects with a speed or rate (Flight Speed, Morph Speed, Wave Speed, Hue Cycle Speed, Strobe Rate and the rest), on the desktop and the web TV. A freshly loaded source looks the same as before.
+- **LFOs and step sequencers clocked in seconds or frames no longer jump when their period changes**, whether from the knob, a controller, OSC, a macro or a preset morph. Beat-clocked ones were never affected and stay locked to the bar.
+- **Shader authors:** declare speeds as `"LSD_PHASES": { "FlightPhase": ["FlightSpeed"] }` in the ISF header and use `FlightPhase` instead of `TIME * FlightSpeed` (see the user guide, Visual Sources). The web TV's check that kept music off speed knobs now only applies to shaders that still multiply by time.
+
 ### Web TV: Viewer Controls (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`, `web/renderer.js`)
 - **Change channel.** CH ▲ ▼ on the TV (or the arrow keys, or a swipe on the picture) skips to the next look or back to the previous one, with the FX chain it had.
 - **FX** swaps the FX chain on the look on air; **HOLD** keeps the look until you release it.
@@ -13,6 +18,7 @@
 ### Web TV: On the Beat (`web/beattrack.js`, `web/onset-worklet.js`, `web/dsp.js`, `web/autopilot.js`, `web/settings.json`)
 - **The web TV finds the radio's beat and locks to it.** Pulses, flashes and beat-synced LFOs now land on the kicks of whatever is playing, not just at roughly the right tempo. It locks within a few seconds, follows tempo changes, and keeps time through breaks. The timing allows for the browser's audio delay, so the picture matches what you hear.
 - **Looks change on the bar.** The autopilot counts its holds in bars (16 for the main looks, 32 for the background) and finishes each crossfade on a bar line, so the new look arrives with the music. The next look is loaded during the hold, so the change is never late.
+- **The TV follows the song.** When a track breaks down (the bass drops out) a calm or building look comes in on the next bar, and when the drop lands a hard look cuts in right on it.
 - **Very fast music (drum and bass) is followed at half time:** every kick still lands on a beat or a half beat.
 
 ### Web TV: Every Source On Air, Nothing Deaf (`web/presets/*`, `web/fxchains/*`, `web/playlists/*`, `web/tools/reactivity.test.mjs`, `web/checks/render_check.*`, `scripts/gen_web_presets.py`)
