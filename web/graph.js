@@ -136,6 +136,16 @@ export class DeckPipeline {
     this.fxState.resize(w, h);
   }
 
+  /** Frees the GPU memory of a pipeline that is not used again (the renderer's GPU probe). */
+  dispose() {
+    const { gl } = this.ctx;
+    for (const t of [this.clean, this.fxState.ping, this.fxState.pong, this.fxState.out]) {
+      gl.deleteFramebuffer(t.fbo);
+      gl.deleteTexture(t.tex);
+    }
+    this.srcState.dispose(gl);
+  }
+
   /**
    * Draws the deck's ISF source into the clean target. Returns false if the source is not an
    * ISF source or has not loaded yet (the caller handles mandala itself).

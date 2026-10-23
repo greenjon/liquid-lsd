@@ -26,6 +26,15 @@ try {
   check('OSD shows the channel after power on', osd('osd-ch').shown && /^CH \d+/.test(osd('osd-ch').text), JSON.stringify(osd('osd-ch')));
   check('OSD names the look', osd('osd-name').text.length > 0, osd('osd-name').text);
 
+  // GPU probe at power-on: heavy sources only rotate when it is fast enough.
+  const gpu = w.LSD.gpu;
+  check('GPU probe ran at power-on', gpu.state === 'done' && gpu.ms > 0, JSON.stringify(gpu));
+  results.push({ name: `(info) GPU probe ${gpu.ms?.toFixed(1)} ms, heavy sources ${gpu.heavy ? 'on' : 'off'}`, ok: true, detail: '' });
+  const heavy = new Set((await (await fetch('../settings.json')).json()).heavySources);
+  const seen = [];
+  for (let i = 0; i < 8; i++) { d.getElementById('chUp').click(); await sleep(2600); seen.push(onAir().source); }
+  check('CH up never brings a heavy source when the probe said no', gpu.heavy || !seen.some((s) => heavy.has(s)), seen.join(','));
+
   const first = onAir();
   d.getElementById('chUp').click();
   await sleep(3000);

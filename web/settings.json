@@ -56,5 +56,22 @@
     "web-lumakey"
   ],
   "fxPlaybackOrder": "random",
-  "dropTransition": "laser_drop_flash"
+  "dropTransition": "laser_drop_flash",
+  "heavySources": [
+    "pseudo_kleinian",
+    "nebula_volume",
+    "apollonian",
+    "hyper_slice",
+    "mandelbulb",
+    "icosa_h3",
+    "mandelbox",
+    "lenia",
+    "reaction_diffusion"
+  ],
+  "gpuProbe": {
+    "source": "pseudo_kleinian",
+    "width": 960,
+    "height": 540,
+    "maxMs": 12
+  }
 }

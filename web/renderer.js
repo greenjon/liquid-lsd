@@ -1,6 +1,6 @@
 import { cvState, tick } from './dsp.js';
 import { powerState, viewerState } from './ui.js';
-import { autopilotState, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground, setPrewarm } from './autopilot.js';
+import { autopilotState, autopilotSettings, tickAutopilot, startAutopilot, handleRelayMessage, advanceForeground, setPrewarm, setHeavyAllowed } from './autopilot.js';
 import { evaluateParameter, makeEvalContext, paramSpec } from './evaluator.js';
 import { lookupParam } from './isf.js';
 import { Library, DeckPipeline, MixerPipeline } from './graph.js';
@@ -255,6 +255,50 @@ async function init() {
     for (const slot of deck?.fx ?? []) if (slot?.id) ctx.library.get('filters', slot.id);
     if (transition?.transition) ctx.library.get('transitions', transition.transition);
   });
+  // GPU probe, once, at the first power-on: render the heaviest source a few times with gl.finish() and let
+  // the heavy sources (settings.json heavySources) into the rotation only if it is fast enough. Integrated
+  // GPUs and phones keep the light looks; discrete GPUs, Apple Silicon and fast integrated chips get all.
+  // ?heavy=1 / ?heavy=0 overrides it. The result is window.LSD.gpu.
+  const gpu = { state: 'pending', ms: null, heavy: false };
+  const heavyParam = new URLSearchParams(location.search).get('heavy');
+  if (heavyParam !== null) {
+    gpu.state = 'override';
+    gpu.heavy = heavyParam === '1';
+    setHeavyAllowed(gpu.heavy);
+  } else if (autopilotSettings.gpuProbe) {
+    ctx.library.get('sources', autopilotSettings.gpuProbe.source); // fetch + compile now, ready by power-on
+  }
+  let probeWaitedSince = null;
+  function probeGpu(now) {
+    const probe = autopilotSettings.gpuProbe;
+    if (gpu.state !== 'pending' || !probe) return;
+    if (!ctx.library.get('sources', probe.source)) {
+      // Still compiling; if it never becomes ready (failed), stay with the light looks.
+      probeWaitedSince ??= now;
+      if (now - probeWaitedSince > 8000 || ctx.library.failed.has(`sources/${probe.source}`)) gpu.state = 'failed';
+      return;
+    }
+    const pipe = new DeckPipeline(ctx, probe.width, probe.height);
+    const deck = { source: probe.source, params: {} };
+    const frame = (i) => ({ time: 10 + i / 60, dt: 1 / 60, index: i });
+    pipe.renderSource(deck, frame(0)); pipe.renderSource(deck, frame(1)); // warm up
+    gl.finish();
+    // Up to 4 timed frames; a slow GPU is obvious after one, so it stops there (the probe stays ~100 ms).
+    let total = 0, n = 0;
+    while (n < 4 && !(n > 0 && total / n > 2 * probe.maxMs)) {
+      const t0 = performance.now();
+      pipe.renderSource(deck, frame(2 + n));
+      gl.finish();
+      total += performance.now() - t0;
+      n++;
+    }
+    gpu.ms = total / n;
+    gpu.heavy = gpu.ms <= probe.maxMs;
+    gpu.state = 'done';
+    pipe.dispose();
+    setHeavyAllowed(gpu.heavy);
+    console.log(`[lsd] GPU probe: ${probe.source} at ${probe.width}x${probe.height} in ${gpu.ms.toFixed(1)} ms; heavy sources ${gpu.heavy ? 'on' : 'off'}`);
+  }
   let [renderW, renderH] = renderSize(curWidth, curHeight);
   const pipeA  = new DeckPipeline(ctx, renderW, renderH);
   const pipeB  = new DeckPipeline(ctx, renderW, renderH);
@@ -262,7 +306,7 @@ async function init() {
   const mixerPipe = new MixerPipeline(ctx, renderW, renderH);
 
   window.LSD = { cvState, autopilotState, powerState, viewerState, library: ctx.library, handleRelayMessage, advanceForeground,
-    renderSize: () => [renderW, renderH, SCALES[adapt.idx]] };
+    renderSize: () => [renderW, renderH, SCALES[adapt.idx]], gpu };
 
   function frameInfo() {
     return { time: elapsedTime, dt: frameDt, index: frameCount };
@@ -330,6 +374,7 @@ async function init() {
     tickAutopilot(dt, evalCtx.beats, { section: cvState.section, drops: cvState.drops });
 
     if (powerState.on) {
+      probeGpu(now);
       if (powerState.warmupProgress < 1.0) {
         powerState.warmupProgress = Math.min(1.0, powerState.warmupProgress + dt / 1.5);
       }

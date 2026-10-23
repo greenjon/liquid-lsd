@@ -77,6 +77,8 @@ Click or tap the picture (or press `I`) to show the channel, the look, its FX ch
 
 **No signal:** if the radio stream drops or goes quiet, the screen shows snow and NO SIGNAL, and the TV reconnects by itself.
 
+**Heavy looks:** the most demanding fractals only play on computers fast enough for them (the TV checks at power-on). Add `?heavy=1` to the address to force them on, `?heavy=0` to keep them off.
+
 **Beat light:** the second light on the badge blinks on every beat: green when the TV has locked onto the music's beat, amber while it keeps time on its own (quiet passages, or before it has found the beat).
 
 **What viewers see.** Each deck's source and its parameters, the deck FX chains and the master FX chain, the transition and crossfader, the channel levels and the beat all go over the wire, so the web TV follows your mix closely. A few things stay desktop-only: external video sources (Spout, NDI, PipeWire, webcam) show as nothing, and anything the web player does not have (a custom shader you added to your own library) is skipped. Viewers join in the middle of a broadcast on the right beat.

@@ -25,6 +25,10 @@ export const autopilotSettings = {
   transitions: [],
   // Transition preset for the cut on a drop (a single flash, kept out of the regular rotation).
   dropTransition: null,
+  // Sources too heavy for integrated GPUs and phones: their presets only rotate when the GPU probe
+  // (renderer.js, at power-on) renders `gpuProbe.source` at width x height in at most maxMs per frame.
+  heavySources: [],
+  gpuProbe: null,
   fxPlaybackOrder: 'sequential',
   bgHoldBars: 32,
   bgFadeBeats: 8,
@@ -281,7 +285,7 @@ function prepareForeground(line = null) {
   const token = ++fgPrepareToken;
   fgPreparing = true;
   if (!line) {
-    fgPlaylistIdx = getNextIndex(fgPlaylistIdx, fgPlaylist.length, autopilotSettings.fgPlaybackOrder);
+    fgPlaylistIdx = nextPlayable(fgPlaylistIdx, fgPlaylist, autopilotSettings.fgPlaybackOrder);
     line = fgPlaylist[fgPlaylistIdx];
   }
   return buildLook(line).then((look) => {
@@ -303,6 +307,22 @@ async function buildLook(line) {
 const CALM_TAGS = ['ambient', 'build'];
 const DROP_TAGS = ['hard', 'bass-gated'];
 const presetTags = new Map(); // playlist line -> preset tags
+const presetSource = new Map(); // playlist line -> source id
+
+// Heavy sources stay out until the GPU probe says this machine can take them (setHeavyAllowed).
+let heavyAllowed = false;
+export function setHeavyAllowed(on) { heavyAllowed = !!on; }
+const playable = (line) => heavyAllowed || !autopilotSettings.heavySources.includes(presetSource.get(line));
+
+/** Next index in `list` (as getNextIndex) whose look this machine can play; the plain next one if none can. */
+function nextPlayable(idx, list, order) {
+  let next = idx;
+  for (let tries = 0; tries < list.length; tries++) {
+    next = getNextIndex(next, list.length, order);
+    if (playable(list[next])) return next;
+  }
+  return getNextIndex(idx, list.length, order);
+}
 let lastSection = 'normal';
 let lastDrops = 0;
 let dropLook = null;          // hard look built when the breakdown starts, ready for the drop
@@ -311,7 +331,7 @@ let dropLook = null;          // hard look built when the breakdown starts, read
 function pickLine(tags) {
   const current = fgHistory.at(-1)?.line;
   const pool = [...new Set([...fgPlaylist, ...bgPlaylist])]
-    .filter((l) => l !== current && (presetTags.get(l) ?? []).some((t) => tags.includes(t)));
+    .filter((l) => l !== current && playable(l) && (presetTags.get(l) ?? []).some((t) => tags.includes(t)));
   return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
 }
 
@@ -375,13 +395,14 @@ async function loadPresetTags() {
   await Promise.all([...new Set([...fgPlaylist, ...bgPlaylist])].map(async (line) => {
     const raw = await fetchPreset(line.split('|')[0].trim());
     presetTags.set(line, raw?.tags ?? []);
+    presetSource.set(line, raw?.visualSourceType ?? null);
   }));
 }
 
 function prepareBackground() {
   if (bgNext || bgPreparing || bgPlaylist.length === 0) return;
   bgPreparing = true;
-  bgPlaylistIdx = getNextIndex(bgPlaylistIdx, bgPlaylist.length, autopilotSettings.bgPlaybackOrder);
+  bgPlaylistIdx = nextPlayable(bgPlaylistIdx, bgPlaylist, autopilotSettings.bgPlaybackOrder);
   const line = bgPlaylist[bgPlaylistIdx];
   buildDeck(line).then((deck) => { bgNext = { line, deck }; prewarm(deck, null); }).finally(() => { bgPreparing = false; });
 }
@@ -628,6 +649,8 @@ export async function startAutopilot() {
       }
     } catch (e) {}
   } else {
+    bgPlaylist = await loadPlaylistFile(autopilotSettings.bgPlaylist);
+    await loadPresetTags();
     fgPlaylistIdx = 0;
     autopilotState.deckA = await buildDeck(fgPlaylist[0]);
     autopilotState.deckB = await buildDeck(fgPlaylist[0]);
@@ -638,16 +661,17 @@ export async function startAutopilot() {
     announce();
   }
 
-  // 3. Load Background playlist
-  bgPlaylist = await loadPlaylistFile(autopilotSettings.bgPlaylist);
+  // 3. Background playlist
+  if (bgPlaylist.length === 0) {
+    bgPlaylist = await loadPlaylistFile(autopilotSettings.bgPlaylist);
+    await loadPresetTags();
+  }
   if (bgPlaylist.length > 0) {
     bgPlaylistIdx = 0;
     autopilotState.deckBG = await buildDeck(bgPlaylist[0]);
     autopilotState.bgAlpha = 1.0;
     bgSwitchAt = nextSwitchBeat(lastBeats, autopilotSettings.bgHoldBars, autopilotSettings.bgFadeBeats);
   }
-
-  loadPresetTags();
 
   // 4. Connect to live relay
   connectRelay();

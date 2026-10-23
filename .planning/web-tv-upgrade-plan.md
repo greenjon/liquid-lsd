@@ -84,3 +84,4 @@ A1+A2 -> B1+B2 -> C1-C5 -> D1+D2 -> A6 -> B3, C6.
 - 2026-10-23 B4 done (partly): all 8 transitions used, 7 in rotation + laser_drop_flash on drops. Transitions are not
   audio-modulated themselves (they last a few beats, on the bar).
 - 2026-10-23 A6 done: 10 sources ported (sync_manifest + sync_web --apply), 27 presets (batch 8). Fractal flame left out.
+- 2026-10-23 heavy sources gated by a power-on GPU probe (pseudo_kleinian 960x540 <= 12 ms); GT1 measured 52 ms -> off.
