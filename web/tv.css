@@ -394,7 +394,7 @@ body.kiosk.idle, body.kiosk.idle canvas { cursor: none; }
   gap: 0.35em;
 }
 #tv-menu[hidden] { display: none; }
-.menu-open #osd { visibility: hidden; }
+.menu-open #osd, .card-up #osd, .card-up #bumper { visibility: hidden; }
 #tv-menu .menu-title { font-size: 1.4em; margin-bottom: 0.4em; }
 #tv-menu .menu-row { display: flex; justify-content: space-between; align-items: center; padding: 0.1em 0.5em; cursor: pointer; }
 #tv-menu .menu-row.sel { background: #8cff8c; color: #021; text-shadow: none; }
@@ -439,3 +439,115 @@ body.kiosk.idle, body.kiosk.idle canvas { cursor: none; }
 #tv-body:not(.powered-on) { cursor: pointer; }
 #tv-body.powered-on { cursor: default; }
 #tv-body.powered-on #tv-screen-area { cursor: crosshair; }
+
+/* --- Branding --------------------------------------------------------------------------------- */
+/* Nameplate under the screen, a brushed-chrome maker's badge */
+#nameplate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  margin: 10px auto 0;
+  width: max-content;
+  padding: 3px 12px;
+  border-radius: 4px;
+  text-decoration: none;
+  font-family: "Courier New", monospace;
+  font-weight: bold;
+  background: linear-gradient(180deg, #4a443c, #26221d);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 2px rgba(0,0,0,0.7);
+  cursor: pointer;
+}
+#nameplate .np-logo { width: 18px; height: 18px; }
+#nameplate .np-name {
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  background: linear-gradient(180deg, #f4f4f4 0%, #9a9a9a 45%, #e8e8e8 55%, #7a7a7a 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+#nameplate .np-by { font-size: 0.55rem; color: #8a8378; letter-spacing: 0.12em; }
+#nameplate:hover .np-by { color: #c8bfb2; }
+body.kiosk #nameplate { display: none; }
+
+/* Power-on ident: logo and name fade in over the warm-up, once per visit */
+#ident {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3em;
+  background: radial-gradient(ellipse at center, rgba(10,0,20,0.7), rgba(0,0,0,0.95));
+  font-family: "VT323", "Courier New", monospace;
+  font-weight: bold;
+  opacity: 0;
+  visibility: hidden;
+  font-size: clamp(12px, 2.4vw, 36px);
+}
+#ident img { width: 22%; max-width: 220px; filter: drop-shadow(0 0 18px rgba(150,80,255,0.7)); }
+#ident .id-name { color: #d9c2ff; letter-spacing: 0.35em; font-size: 1.8em; text-shadow: 0 0 12px rgba(160,90,255,0.9); }
+#ident .id-by { color: #8cff8c; letter-spacing: 0.25em; text-shadow: 0 0 8px rgba(80,255,80,0.8); }
+#ident.show { visibility: visible; animation: ident 3.6s ease-in-out forwards; }
+@keyframes ident {
+  0% { opacity: 0; } 15% { opacity: 1; } 75% { opacity: 1; } 100% { opacity: 0; }
+}
+#tv-body:not(.powered-on) #ident { display: none; }
+
+/* Bumper: a station ident line across the top of the picture */
+#bumper {
+  position: absolute;
+  left: 0; right: 0; top: 18%;
+  z-index: 3;
+  pointer-events: none;
+  text-align: center;
+  padding: 0.5em 1em;
+  background: rgba(0,0,0,0.55);
+  color: #8cff8c;
+  font-family: "VT323", "Courier New", monospace;
+  font-weight: bold;
+  letter-spacing: 0.12em;
+  text-shadow: 0 0 6px rgba(80,255,80,0.8);
+  font-size: clamp(11px, 1.8vw, 26px);
+  opacity: 0;
+  transition: opacity 0.8s;
+}
+#bumper.show { opacity: 1; }
+#bumper .bm-site { color: #d9c2ff; text-shadow: 0 0 8px rgba(160,90,255,0.9); }
+#tv-body:not(.powered-on) #bumper { display: none; }
+
+/* MENU › ABOUT */
+#about {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  padding: 5% 8%;
+  background: rgba(0, 8, 0, 0.88);
+  color: #8cff8c;
+  font-family: "VT323", "Courier New", monospace;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(80,255,80,0.7);
+  font-size: clamp(10px, 1.6vw, 22px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  overflow: auto;
+}
+#about[hidden] { display: none; }
+#about p { margin: 0; line-height: 1.35; }
+#about .ab-head { display: flex; align-items: center; gap: 0.8em; }
+#about .ab-head img { width: 3.2em; height: 3.2em; }
+#about .ab-name { font-size: 1.8em; letter-spacing: 0.3em; color: #d9c2ff; text-shadow: 0 0 10px rgba(160,90,255,0.9); }
+#about .ab-by { letter-spacing: 0.2em; }
+#about .ab-link { display: flex; align-items: center; gap: 1em; margin-top: 0.3em; }
+#about .ab-qr { width: 6.5em; height: 6.5em; image-rendering: pixelated; border-radius: 3px; }
+#about a { color: #d9c2ff; font-size: 1.2em; }
+#about .ab-hint { margin-top: auto; font-size: 0.7em; opacity: 0.7; }
+#osd-brand { font-size: 0.75em; margin-top: 0.3em; color: #d9c2ff; text-transform: none; }
+#title-card .tc-from { font-size: 0.55em; letter-spacing: 0.3em; color: #d9c2ff; margin-top: 0.4em; }
+
+#tv-screen-area:has(#about:not([hidden])) #osd { visibility: hidden; }

@@ -60,7 +60,7 @@ function flash(id, text, ms = 3000) {
 }
 
 let nowPlaying = '';
-function showLook(info = nowShowing(), ms = 4000) {
+function showLook(info = nowShowing(), ms = 4000, brand = false) {
   if (!powerState.on) return;
   if (autopilotState.isLiveBroadcast) {
     flash('osd-ch', 'LIVE', ms);
@@ -71,6 +71,7 @@ function showLook(info = nowShowing(), ms = 4000) {
     flash('osd-chain', info.chain ? `FX ${prettyName(info.chain)}` : 'NO FX', ms);
   }
   if (nowPlaying) flash('osd-track', `♪ ${nowPlaying}`, ms);
+  if (brand) flash('osd-brand', undefined, ms); // asked for (I, a click on the picture): who made this
 }
 
 const message = (text, ms = 1500) => flash('osd-msg', text, ms);
@@ -126,6 +127,27 @@ function makeDial(el, { initial, onChange, steps = 0, locked = () => false }) {
 // Setup
 // -------------------------------------------------------
 let audioBlocked = false;  // the browser refused to start audio without a click
+let identShown = false;    // the Liquid LSD ident plays at the first power-on of a visit
+let lastBumper = 0;        // performance.now() of the last bumper (or the power-on)
+const BUMPER_EVERY_MS = 30 * 60 * 1000;
+
+/** A title card (ident, LIVE) is up for `ms`: the OSD steps aside so the two don't overlap. */
+let cardTimer = null;
+function cardUp(ms) {
+  const screen = document.getElementById('tv-screen-area');
+  screen.classList.add('card-up');
+  clearTimeout(cardTimer);
+  cardTimer = setTimeout(() => screen.classList.remove('card-up'), ms);
+}
+
+/** The power-on ident: the Liquid LSD logo and name over the picture for a few seconds. */
+function showIdent() {
+  cardUp(3600);
+  const el = document.getElementById('ident');
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+}
 const kiosk = new URLSearchParams(location.search).has('kiosk');
 
 export function initUI() {
@@ -162,7 +184,15 @@ export function initUI() {
       tvBody.classList.remove('shutting-down');
       tvBody.classList.add('powered-on');
       powerSwitch.classList.add('active');
-      setTimeout(() => showLook(), 1600); // after the warm-up
+      if (!identShown) {
+        // First power-on of the visit: the Liquid LSD ident over the end of the warm-up, then the look.
+        identShown = true;
+        setTimeout(showIdent, 900);
+        setTimeout(() => showLook(), 4600);
+      } else {
+        setTimeout(() => showLook(), 1600); // after the warm-up
+      }
+      lastBumper = performance.now();
       pollNowPlaying();
       holdScreenAwake();
       updateMediaSession();
@@ -181,7 +211,7 @@ export function initUI() {
   // The whole TV is a power target: when it is off, a click anywhere on it turns it on; when it is on, a
   // click on the cabinet (not the picture, which shows the info, and not the other controls) turns it off.
   tvBody.addEventListener('click', (e) => {
-    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu')) return; // controls handle their own clicks
+    if (e.target.closest('button, .rotary-dial, .rocker, #tv-menu, #about, a')) return; // they handle their own clicks
     if (powerState.on && e.target.closest('#tv-screen-area')) return;
     powerSwitch.click();
   });
@@ -248,7 +278,9 @@ export function initUI() {
   document.getElementById('reactDial').addEventListener('dblclick', control(() => reactDial.set(toDial(1.0))));
   const stepReact = control((dir) => reactDial.set(reactDial.get() + dir * 0.05));
 
-  // --- Service MENU (menu.js): SYNC, REACT, TIME, Reduced motion, Heavy looks ---
+  const about = document.getElementById('about');
+
+  // --- Service MENU (menu.js): SYNC, REACT, TIME, Reduced motion, Heavy looks, About ---
   viewerState.syncMs = Math.max(SYNC_MIN, Math.min(SYNC_MAX, Number(load('lsd.sync', 0)) || 0));
   viewerState.reducedMode = MODES.includes(load('lsd.reduced', 'auto')) ? load('lsd.reduced', 'auto') : 'auto';
   viewerState.heavyMode = MODES.includes(load('lsd.heavy', 'auto')) ? load('lsd.heavy', 'auto') : 'auto';
@@ -293,6 +325,7 @@ export function initUI() {
       viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
       if (!live()) { reactDial.set(toDial(1.0)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1)); }
     } },
+    { label: 'ABOUT', value: () => 'LIQUID LSD', run: () => { menu.hide(); about.hidden = false; } },
     { label: 'EXIT', run: () => menu.hide() },
   ];
   // TAP SYNC: tap Space (or the picture) on 8 beats you hear; the median lateness against the locked beat
@@ -337,6 +370,7 @@ export function initUI() {
   // --- Keyboard ---
   window.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey || e.altKey || e.target.closest?.('input, textarea')) return;
+    if (!about.hidden) { e.preventDefault(); about.hidden = true; return; }
     if (tapping && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); tapSync(); return; }
     if (menu.key(e)) { e.preventDefault(); return; }
     if ((e.key === 'm' || e.key === 'M') && powerState.on) { e.preventDefault(); menu.show(); return; }
@@ -346,7 +380,7 @@ export function initUI() {
       f: fx, F: fx, h: hold, H: hold, ' ': hold,
       '[': () => stepTime(-1), ']': () => stepTime(1),
       '-': () => stepReact(-1), '=': () => stepReact(1), '+': () => stepReact(1),
-      i: () => showLook(), I: () => showLook(),
+      i: () => showLook(undefined, 4000, true), I: () => showLook(undefined, 4000, true),
     };
     const fn = keys[e.key];
     if (!fn) return;
@@ -378,7 +412,7 @@ export function initUI() {
     }
     touch = null;
   });
-  canvas.addEventListener('click', () => showLook());
+  canvas.addEventListener('click', () => showLook(undefined, 4000, true));
 
   // --- Fullscreen: double-click the picture (the OSD comes along) ---
   canvas.addEventListener('dblclick', () => {
@@ -435,6 +469,7 @@ export function initUI() {
       // The station ident: LIVE and the broadcaster's name roll in over the picture (if the TV is on).
       const card = document.getElementById('title-card');
       card.querySelector('.tc-name').textContent = autopilotState.broadcaster ?? '';
+      cardUp(4500);
       card.classList.remove('show');
       void card.offsetWidth; // restart the animation
       card.classList.add('show');
@@ -442,6 +477,25 @@ export function initUI() {
     showLook();
     updateMediaSession();
   });
+
+  // --- ABOUT (MENU › ABOUT): any key or a click outside the link closes it ---
+  about.addEventListener('click', (e) => { if (!e.target.closest('a')) about.hidden = true; });
+
+  // --- Bumper: about every 30 minutes on air, a station ident line for 8 seconds (not while live or
+  // while the menu or ABOUT is open; the timer restarts at power-on) ---
+  const bumper = document.getElementById('bumper');
+  setInterval(() => {
+    if (!powerState.on || live() || menu.open || !about.hidden) return;
+    if (performance.now() - lastBumper < BUMPER_EVERY_MS) return;
+    lastBumper = performance.now();
+    showBumper();
+  }, 15000);
+  function showBumper() {
+    bumper.innerHTML = 'YOU\u2019RE WATCHING LIQUID LSD ON SPAZ RADIO \u00B7 MAKE YOUR OWN: <span class="bm-site">LIQUID-LSD.GREENJON.COM</span>';
+    bumper.classList.add('show');
+    setTimeout(() => bumper.classList.remove('show'), 8000);
+  }
+  viewerState.showBumper = showBumper; // for the headless check
 
   // --- Beat LED, and NO SIGNAL while the stream is down ---
   const beatLed = document.getElementById('beatLed');

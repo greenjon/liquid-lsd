@@ -2,6 +2,7 @@
 
 ### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`)
 - **Click the TV to turn it on.** The whole set is the power switch: any click on a TV that is off turns it on, and a click on the cabinet (not the picture or the other controls) turns it off.
+- **The TV says who made it.** A Liquid LSD nameplate under the screen links to liquid-lsd.greenjon.com; the first power-on of a visit plays a short ident with the eye-and-drop logo; MENU › ABOUT describes the desktop app with a QR code to the site; pressing I (or clicking the picture) adds a Liquid LSD line; about every 30 minutes a one-line bumper invites viewers to make their own; the LIVE card says "from Liquid LSD". Shared links now show a preview picture and description.
 
 ### Web TV: At Home (`web/ui.js`, `web/index.html`, `web/tv.css`, `web/autopilot.js`, `web/menu.js`, `web/sync.js`, `web/pairing.js`, `broadcast/BroadcastPreferences.kt`, `broadcast/WebPresetSerializer.kt`, `broadcast/BroadcastEngine.kt`, `ui/BroadcastPreferencesPanel.kt`)
 - **The screen stays on while the TV is on.** Laptops and phones no longer dim and lock in the middle of a show (where the browser supports it).

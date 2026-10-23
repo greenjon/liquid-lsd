@@ -23,7 +23,9 @@ try {
 
   // The whole TV is a power target: a click on the screen of a TV that is off turns it on.
   d.getElementById('tv-screen-area').click();
-  await sleep(2500);
+  await sleep(1500);
+  check('First power-on plays the Liquid LSD ident', d.getElementById('ident').classList.contains('show'));
+  await sleep(3800);
   check('OSD shows the channel after power on', osd('osd-ch').shown && /^CH \d+/.test(osd('osd-ch').text), JSON.stringify(osd('osd-ch')));
   check('OSD names the look', osd('osd-name').text.length > 0, osd('osd-name').text);
   check('Screen kept awake while on (where the browser has wake lock)', !('wakeLock' in w.navigator) || w.LSD.viewerState.awake);
@@ -137,6 +139,22 @@ try {
   w.LSD.handleRelayMessage({ type: 'broadcaster_offline' });
   await sleep(300);
   check('Offline: badge back to CH.1', d.querySelector('#station-badge .station-text').textContent.includes('CH.1'));
+  // Branding: I adds the Liquid LSD line; MENU › ABOUT opens and any key closes it; the bumper; the nameplate.
+  key('i');
+  check('I shows the Liquid LSD line', osd('osd-brand').shown && osd('osd-brand').text.includes('liquid-lsd.greenjon.com'));
+  key('m'); for (let i = 0; i < 7; i++) key('ArrowDown'); key('Enter'); // row 7 = ABOUT
+  const aboutEl = d.getElementById('about');
+  check('MENU › ABOUT opens the about page', !aboutEl.hidden && aboutEl.textContent.includes('greenjon'), aboutEl.hidden);
+  key('x');
+  check('Any key closes ABOUT', aboutEl.hidden);
+  w.LSD.viewerState.showBumper();
+  check('Bumper names Liquid LSD and the site', d.getElementById('bumper').classList.contains('show') && /LIQUID-LSD\.GREENJON\.COM/.test(d.getElementById('bumper').textContent));
+  const plate = d.getElementById('nameplate');
+  check('Nameplate links to the site', plate.href === 'https://liquid-lsd.greenjon.com/' && plate.target === '_blank');
+  plate.addEventListener('click', (e) => e.preventDefault(), { once: true }); // don't open a tab in the check
+  plate.click();
+  check('Clicking the nameplate does not turn the TV off', w.LSD.powerState.on);
+
   // Clicking the picture while on does not turn it off; clicking the cabinet does, and again turns it on.
   d.getElementById('glCanvas').click();
   check('A click on the picture leaves the TV on', w.LSD.powerState.on);
