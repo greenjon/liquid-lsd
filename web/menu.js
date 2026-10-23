@@ -65,7 +65,7 @@ export function createMenu(screen, rows, { onOpen = () => {}, onClose = () => {}
 
   const menu = {
     get open() { return !el.hidden; },
-    show() { if (!el.hidden) return; el.hidden = false; render(); onOpen(); },
+    show() { if (!el.hidden) return; el.hidden = false; sel = 0; render(); onOpen(); },
     hide() { if (el.hidden) return; el.hidden = true; onClose(); },
     toggle() { el.hidden ? menu.show() : menu.hide(); },
     refresh() { if (!el.hidden) render(); },

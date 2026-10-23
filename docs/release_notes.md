@@ -7,6 +7,7 @@
 - **Kiosk mode for venue screens:** add `?kiosk` to the address and the TV body disappears, the picture fills the screen, it turns itself on, and the mouse pointer hides. Keyboard and swipe controls still work. If the browser won't start sound by itself, the screen says to click or press a key.
 - **A TV service menu.** The new MENU button (or M) opens a green on-screen menu like an old set's picture menu: SYNC, REACT, TIME, Reduced motion and Heavy looks, plus Reset. Arrow keys, clicks or the mouse wheel change the settings, and the TV remembers them.
 - **SYNC for delayed speakers.** With Bluetooth or other speakers that play late, the beat pulses used to land before the sound. MENU › SYNC delays the picture by up to 400 ms to match, and MENU › TAP SYNC works it out for you: tap Space (or the picture) on 8 beats you hear.
+- **Reduced motion.** If your system asks for less motion (or you turn it on in MENU), the TV calms down: the picture reacts at most 60% as strongly, hard looks, flashing and glitch effects and flash transitions are left out, there is no cut on the drop, and crossfades take twice as long.
 
 ### Snappier MIDI, and Esc Cancels the Unsaved-Deck Prompt (`ui/UIManager.kt`, `Main.kt`, `ui/NavigationSurface.kt`)
 - **Controller knobs and buttons now take effect in the same frame.** Incoming MIDI used to be handled after the frame was drawn, so every turn reached the screen one frame late. It is now applied first. MIDI is also handled while the window is minimised, instead of piling up and replaying when you restore it.

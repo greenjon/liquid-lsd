@@ -85,6 +85,22 @@ try {
   key('Escape');
   check('Esc closes the menu', menuEl.hidden);
 
+  // Reduced motion: no hard looks, no strobe/glitch chains and no flash transitions come on air.
+  const settingsJson = await (await fetch('../settings.json')).json();
+  w.LSD.viewerState.reducedMode = 'on';
+  key('m'); for (let i = 0; i < 4; i++) key('ArrowDown'); key('ArrowRight'); key('ArrowLeft'); key('Escape'); // applies 'on'
+  const calmSeen = [];
+  for (let i = 0; i < 6; i++) {
+    d.getElementById('chUp').click(); await sleep(4600); // fades are twice as long
+    calmSeen.push({ tags: onAir().tags ?? [], chain: onAir().chainName, trans: st.mixer.transition });
+  }
+  check('Reduced motion: no hard looks', !calmSeen.some((c) => c.tags.includes('hard')), calmSeen.map((c) => c.tags.join('/')).join(' '));
+  check('Reduced motion: no flash transitions', !calmSeen.some((c) => ['luminous_flash', 'cyber_datamosh', 'film_burn'].includes(c.trans)), calmSeen.map((c) => c.trans).join(','));
+  check('Reduced motion: REACT is capped', w.LSD.viewerState.reducedNow === true);
+  w.LSD.viewerState.reducedMode = 'off';
+  key('m'); for (let i = 0; i < 4; i++) key('ArrowDown'); key('ArrowRight'); key('ArrowLeft'); key('Escape');
+  check('Reduced motion off again', w.LSD.viewerState.reducedNow === false);
+
   // Song sections: a breakdown brings a calm or building look at the next bar line, the drop cuts to a hard one.
   const tagsOnAir = () => onAir().tags ?? [];
   w.LSD.cvState.section = 'breakdown';

@@ -195,10 +195,24 @@ async function pickChain(tags) {
   for (let tries = 0; tries < n; tries++) {
     fxIdx = getNextIndex(fxIdx, n, autopilotSettings.fxPlaybackOrder);
     const candidate = await fetchContent(catalog.fxChains, autopilotSettings.fxChains[fxIdx]);
-    if (candidate && chainFits(tags, candidate)) return candidate;
+    if (candidate && chainFits(tags, candidate) && !(reducedMotion && (candidate.tags ?? []).some((t) => CALM_SKIP_CHAIN_TAGS.includes(t)))) return candidate;
   }
   return null;
 }
+
+// -------------------------------------------------------
+// Reduced motion (ui.js: the MENU setting, or the system's prefers-reduced-motion): no hard looks, no
+// flashing chains or transitions, no cut on the drop, crossfades twice as long. ui.js also caps REACT.
+// -------------------------------------------------------
+let reducedMotion = false;
+export function setReducedMotion(on) {
+  if (!!on === reducedMotion) return;
+  reducedMotion = !!on;
+  if (reducedMotion) { fgPrepareToken++; fgPreparing = false; fgNext = null; dropLook = null; } // rebuild the queued look calmly
+}
+const CALM_SKIP_LOOK_TAGS = ['hard'];
+const CALM_SKIP_CHAIN_TAGS = ['strobe', 'glitch'];
+const FLASH_TRANSITIONS = ['luminous_flash', 'cyber_datamosh', 'film_burn'];
 
 function applyChain(deck, dto) {
   Object.assign(deck, dto ? parseFxChain(dto) : { fx: [], fxDryWet: undefined });
@@ -209,9 +223,13 @@ function applyChain(deck, dto) {
 async function pickTransition() {
   const n = autopilotSettings.transitions.length;
   if (n === 0) return { transition: 'linear_crossfade', transitionParams: {} };
-  transitionIdx = getNextIndex(transitionIdx, n, autopilotSettings.fxPlaybackOrder);
-  const dto = await fetchContent(catalog.transitionPresets, autopilotSettings.transitions[transitionIdx]);
-  return dto ? parseTransition(dto) : { transition: 'linear_crossfade', transitionParams: {} };
+  for (let tries = 0; tries < n; tries++) {
+    transitionIdx = getNextIndex(transitionIdx, n, autopilotSettings.fxPlaybackOrder);
+    const dto = await fetchContent(catalog.transitionPresets, autopilotSettings.transitions[transitionIdx]);
+    const t = dto ? parseTransition(dto) : null;
+    if (t && !(reducedMotion && FLASH_TRANSITIONS.includes(t.transition))) return t;
+  }
+  return { transition: 'linear_crossfade', transitionParams: {} };
 }
 
 // -------------------------------------------------------
@@ -312,7 +330,8 @@ const presetSource = new Map(); // playlist line -> source id
 // Heavy sources stay out until the GPU probe says this machine can take them (setHeavyAllowed).
 let heavyAllowed = false;
 export function setHeavyAllowed(on) { heavyAllowed = !!on; }
-const playable = (line) => heavyAllowed || !autopilotSettings.heavySources.includes(presetSource.get(line));
+const playable = (line) => (heavyAllowed || !autopilotSettings.heavySources.includes(presetSource.get(line)))
+  && !(reducedMotion && (presetTags.get(line) ?? []).some((t) => CALM_SKIP_LOOK_TAGS.includes(t)));
 
 /** Next index in `list` (as getNextIndex) whose look this machine can play; the plain next one if none can. */
 function nextPlayable(idx, list, order) {
@@ -361,7 +380,7 @@ function followSections(beats, { section = 'normal', drops = 0 }) {
   }
   if (drops !== lastDrops) {
     lastDrops = drops;
-    if (dropLook && !autopilotState.hold) {
+    if (dropLook && !autopilotState.hold && !reducedMotion) {
       console.log('[autopilot] Drop');
       settleCrossfade();
       fgPrepareToken++;          // drop anything still being prepared
@@ -409,7 +428,7 @@ function prepareBackground() {
 
 let fgFadeLen = 4;          // beats this crossfade takes
 function startForegroundCrossfade(beats, fadeBeats = autopilotSettings.fgFadeBeats) {
-  fgFadeLen = fadeBeats;
+  fgFadeLen = reducedMotion ? fadeBeats * 2 : fadeBeats;
   const { line, deck, transition } = fgNext;
   fgNext = null;
   Object.assign(autopilotState.mixer, transition);

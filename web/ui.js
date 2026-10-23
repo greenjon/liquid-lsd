@@ -2,7 +2,7 @@
 // The TV's controls: power, volume, the viewer controls (channel rocker, FX, HOLD, TIME, REACT), the
 // on-screen display, keyboard and touch. Viewer controls are locked while the desktop broadcasts live.
 import { startAudio, stopAudio, setVolume, cvState } from './dsp.js';
-import { autopilotState, advanceForeground, previousForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed } from './autopilot.js';
+import { autopilotState, advanceForeground, previousForeground, nextFxChain, setHold, setHoldBars, nowShowing, setHeavyAllowed, setReducedMotion } from './autopilot.js';
 import { createMenu } from './menu.js';
 import { heardBeats, tapOffset } from './sync.js';
 
@@ -20,7 +20,8 @@ export const viewerState = {
   syncMs: 0,           // SYNC: how late the sound reaches the viewer (speakers, Bluetooth), in ms
   reducedMode: 'auto', // Reduced motion: 'auto' (follows the system setting), 'on', 'off'
   heavyMode: 'auto',   // Heavy looks: 'auto' (the GPU probe decides), 'on', 'off'
-  /** Reduced motion in effect now. */
+  reducedNow: false,   // reduced motion in effect (updated by applyReduced; the renderer reads it)
+  /** Reduced motion as the setting and the system ask for it now. */
   get reduced() {
     if (this.reducedMode !== 'auto') return this.reducedMode === 'on';
     return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -247,6 +248,10 @@ export function initUI() {
     else setHeavyAllowed(viewerState.heavyMode === 'on');
   };
   if (viewerState.heavyMode !== 'auto') applyHeavy();
+  // Reduced motion: REACT capped (renderer.js), calmer rotation (autopilot.setReducedMotion).
+  const applyReduced = () => { viewerState.reducedNow = viewerState.reduced; setReducedMotion(viewerState.reducedNow); };
+  applyReduced();
+  if (typeof matchMedia === 'function') matchMedia('(prefers-reduced-motion: reduce)').addEventListener?.('change', applyReduced);
   const cycle = (mode, dir) => MODES[(MODES.indexOf(mode) + dir + MODES.length) % MODES.length];
   const onOff = (b) => (b ? 'ON' : 'OFF');
   const rows = [
@@ -265,7 +270,7 @@ export function initUI() {
       } },
     { label: 'REDUCED MOTION',
       value: () => (viewerState.reducedMode === 'auto' ? `AUTO (${onOff(viewerState.reduced)})` : viewerState.reducedMode.toUpperCase()),
-      step: (dir) => { viewerState.reducedMode = cycle(viewerState.reducedMode, dir); save('lsd.reduced', viewerState.reducedMode); } },
+      step: (dir) => { viewerState.reducedMode = cycle(viewerState.reducedMode, dir); save('lsd.reduced', viewerState.reducedMode); applyReduced(); } },
     { label: 'HEAVY LOOKS', locked: live,
       value: () => {
         if (viewerState.heavyMode !== 'auto') return viewerState.heavyMode.toUpperCase();
@@ -275,7 +280,7 @@ export function initUI() {
       step: (dir) => { viewerState.heavyMode = cycle(viewerState.heavyMode, dir); save('lsd.heavy', viewerState.heavyMode); applyHeavy(); } },
     { label: 'RESET', run: () => {
       viewerState.syncMs = 0; save('lsd.sync', 0);
-      viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto');
+      viewerState.reducedMode = 'auto'; save('lsd.reduced', 'auto'); applyReduced();
       viewerState.heavyMode = 'auto'; save('lsd.heavy', 'auto'); applyHeavy();
       if (!live()) { reactDial.set(toDial(1.0)); timeDial.set(TIME_STEPS.indexOf(16) / (TIME_STEPS.length - 1)); }
     } },
