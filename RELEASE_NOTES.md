@@ -1,5 +1,8 @@
 ## [Unreleased]
 
+### Stock FX Chain Fixes (`defaults/fx_chains/*`, `web/tools/validate_content.mjs`)
+- **Six stock FX chains got back settings they had been silently losing.** Renamed effect parameters had left them pointing at parameters their effects no longer have, so those settings were ignored: Pop-Art Comic Print's edge palette and overlay, Digital Bitcrush Mosaic's diamond pixels and split mode, Prismatic Crystal Kaleidoscope's spectral split, Grindhouse VHS Bootleg's phosphor mask and darker grade, Laser Concert Anamorphic's brighter grade, and Cosmic Black Hole Vortex's displacement (two values were out of range). Copies of these chains already in your library are not changed.
+
 ### Housekeeping: One Config Folder, Smaller Download (`ui/shortcuts/ShortcutManager.kt`, `ui/FileSystemManager.kt`, `build.gradle.kts`)
 - **Custom key bindings now live in `~/.liquid-lsd/keybindings.json`**, next to your source notes, instead of a second `~/.liquidlsd` folder. **Custom key bindings are reset once:** the old file is not read. Copy `~/.liquidlsd/keybindings.json` over if you want to keep them.
 - Removed the unused OpenAL audio library from the build, which makes the download smaller. Audio is unaffected.

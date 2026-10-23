@@ -111,7 +111,7 @@
                     "randomizeBase": false,
                     "modulators": []
                 },
-                "mode": {
+                "dispersionMode": {
                     "baseValue": 1.0,
                     "baseMin": 0.0,
                     "baseMax": 1.0,

@@ -10,10 +10,8 @@ import { parseDeckPreset, parseFxChain, parseTransition } from '../preset.js';
 const web = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const readJson = (p) => JSON.parse(fs.readFileSync(path.join(web, p), 'utf8'));
 
-test('every preset, FX chain and transition preset is valid for the web', (t) => {
-  const warnings = [];
-  assert.deepEqual(validateAll(warnings), []);
-  for (const w of warnings) t.diagnostic(`desktop content references a parameter its shader no longer has: ${w}`);
+test('every preset, FX chain and transition preset is valid for the web', () => {
+  assert.deepEqual(validateAll(), []);
 });
 
 test('every playlist line names a preset and (optionally) a known FX chain', () => {

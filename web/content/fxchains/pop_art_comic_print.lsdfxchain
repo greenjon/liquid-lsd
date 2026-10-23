@@ -38,14 +38,14 @@
                     "randomizeBase": false,
                     "modulators": []
                 },
-                "mode": {
+                "palette": {
                     "baseValue": 2.0,
                     "baseMin": 0.0,
                     "baseMax": 3.0,
                     "randomizeBase": false,
                     "modulators": []
                 },
-                "invertBg": {
+                "backgroundBlend": {
                     "baseValue": 1.0,
                     "baseMin": 0.0,
                     "baseMax": 1.0,

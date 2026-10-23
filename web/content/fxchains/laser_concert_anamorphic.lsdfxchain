@@ -118,10 +118,10 @@
                     "randomizeBase": false,
                     "modulators": []
                 },
-                "exposure": {
+                "brightness": {
                     "baseValue": 0.1,
-                    "baseMin": -2.0,
-                    "baseMax": 2.0,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },

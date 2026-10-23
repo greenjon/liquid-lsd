@@ -30,7 +30,7 @@
                     "randomizeBase": false,
                     "modulators": []
                 },
-                "lattice": {
+                "latticeMode": {
                     "baseValue": 1.0,
                     "baseMin": 0.0,
                     "baseMax": 2.0,
@@ -56,7 +56,7 @@
                     "randomizeBase": false,
                     "modulators": []
                 },
-                "mode": {
+                "dispersionMode": {
                     "baseValue": 0.0,
                     "baseMin": 0.0,
                     "baseMax": 1.0,

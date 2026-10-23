@@ -81,22 +81,18 @@ export function validateTransition(file, dto, cat = catalog()) {
   return problems;
 }
 
-const STALE_PARAM = /no parameter named/;
-
 /**
- * Every preset in web/presets, every FX chain and transition preset in the catalog. Parameter
- * names the desktop's own shipped chains/transitions reference but the shader no longer has are
- * not errors here (the desktop ignores them too); `warnings`, if given, collects them.
+ * Every preset in web/presets, every FX chain and transition preset in the catalog, including the
+ * desktop's stock chains copied from defaults/fx_chains: a parameter name its shader does not have is
+ * an error there too (the desktop silently ignores it, so the chain quietly loses that setting).
  */
-export function validateAll(warnings = []) {
+export function validateAll() {
   const cat = catalog(), problems = [];
-  const desktop = (file) => file.startsWith('content/');
-  const route = (file, list) => { for (const p of list) (desktop(file) && STALE_PARAM.test(p) ? warnings : problems).push(p); };
   const dir = path.join(web, 'presets');
   for (const f of fs.readdirSync(dir).filter((n) => n.endsWith('.lsd')).sort()) {
     problems.push(...validatePreset(f, readJson(path.join(dir, f)), cat));
   }
-  for (const c of cat.fxChains) route(c.file, validateFxChain(c.file, readJson(path.join(web, c.file)), cat));
-  for (const t of cat.transitionPresets) route(t.file, validateTransition(t.file, readJson(path.join(web, t.file)), cat));
+  for (const c of cat.fxChains) problems.push(...validateFxChain(c.file, readJson(path.join(web, c.file)), cat));
+  for (const t of cat.transitionPresets) problems.push(...validateTransition(t.file, readJson(path.join(web, t.file)), cat));
   return problems;
 }

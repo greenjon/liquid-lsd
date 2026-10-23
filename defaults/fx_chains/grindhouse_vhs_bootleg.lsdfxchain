@@ -92,7 +92,7 @@
                     "randomizeBase": false,
                     "modulators": []
                 },
-                "phosphorIntensity": {
+                "phosphorMask": {
                     "baseValue": 0.4,
                     "baseMin": 0.0,
                     "baseMax": 1.0,
@@ -125,10 +125,10 @@
                     "randomizeBase": false,
                     "modulators": []
                 },
-                "exposure": {
+                "brightness": {
                     "baseValue": -0.05,
-                    "baseMin": -2.0,
-                    "baseMax": 2.0,
+                    "baseMin": -1.0,
+                    "baseMax": 1.0,
                     "randomizeBase": false,
                     "modulators": []
                 },

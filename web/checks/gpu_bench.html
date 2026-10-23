@@ -1,0 +1,56 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>LSD GPU bench</title>
+<canvas id="c" width="16" height="16"></canvas>
+<script type="module">
+// GPU cost of every web source on this machine, independent of the frame timer (headless rAF is
+// throttled): renders each source's first web preset N times at a fixed size, gl.finish() after each,
+// and reports ms per frame. Driven by gpu_bench.mjs; POSTs the result to /report.
+import { Library, DeckPipeline } from '../graph.js';
+import { evaluateParameter, makeEvalContext, paramSpec } from '../evaluator.js';
+import { lookupParam } from '../isf.js';
+import { parseDeckPreset } from '../preset.js';
+
+const q = new URLSearchParams(location.search);
+const W = Number(q.get('w') || 1280), H = Number(q.get('h') || 720), N = Number(q.get('n') || 20);
+const post = (o) => fetch('/report', { method: 'POST', body: JSON.stringify(o) });
+try {
+  const gl = document.getElementById('c').getContext('webgl2', { antialias: false });
+  const ext = gl.getExtension('EXT_color_buffer_float');
+  const fmt = ext ? { internalFormat: gl.RGBA16F, format: gl.RGBA, type: gl.HALF_FLOAT } : { internalFormat: gl.RGBA8, format: gl.RGBA, type: gl.UNSIGNED_BYTE };
+  const text = async (u) => (await fetch(u)).text();
+  const catalog = JSON.parse(await text('../catalog.json'));
+  const vert = await text('../shaders/blit.vert');
+  const quadVAO = gl.createVertexArray();
+  gl.bindVertexArray(quadVAO);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 0, 0, 1, -1, 1, 0, -1, 1, 0, 1, 1, 1, 1, 1]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
+  gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
+  gl.bindVertexArray(null);
+  const dummyTex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, dummyTex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4));
+  const ev = { ...makeEvalContext(), followers: new WeakMap(), bpm: 120, dt: 1 / 60, cv: { beatSine: 0, bpm: 120 } };
+  const evalP = (p, f, spec) => evaluateParameter(p, ev, spec, f);
+  const ctx = { gl, quadVAO, dummyTex, fmt, hasFloat: !!ext, library: new Library(gl, vert, catalog, '../'),
+    input: (bag, input) => evalP(lookupParam(bag, input), input.DEFAULT ?? 0, paramSpec(input) ?? undefined),
+    scalar: (raw, f) => evalP(raw, f) };
+  const presets = (q.get('presets') || '').split(',').filter(Boolean);
+  const results = [];
+  for (const name of presets) {
+    const deck = parseDeckPreset(JSON.parse(await text(`../presets/${name}.lsd`)));
+    await ctx.library.preload('sources', [deck.source]);
+    const pipe = new DeckPipeline(ctx, W, H);
+    const frame = (i) => ({ time: 10 + i / 60, dt: 1 / 60, index: i });
+    for (let i = 0; i < 5; i++) { ev.time = 10 + i / 60; ev.frame = i; pipe.renderSource(deck, frame(i)); } // warm up
+    gl.finish();
+    const t0 = performance.now();
+    for (let i = 5; i < 5 + N; i++) { ev.time = 10 + i / 60; ev.frame = i; pipe.renderSource(deck, frame(i)); gl.finish(); }
+    results.push({ name, source: deck.source, ms: (performance.now() - t0) / N });
+  }
+  await post({ w: W, h: H, renderer: (() => { const e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : '?'; })(), results });
+} catch (err) {
+  await post({ fatal: String(err && err.stack || err) });
+}
+</script>
