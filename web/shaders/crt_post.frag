@@ -10,6 +10,7 @@ uniform float     uTime;
 uniform float     uPowerOn;
 uniform float     uWarmupProgress;
 uniform float     uShutdownProgress;
+uniform float     uNoSignal;   // 0..1: fade to analog snow while the stream is down or silent
 
 // --- Helpers ---
 
@@ -136,7 +137,15 @@ void main() {
     }
 
     // -------------------------------------------------------
-    // STATE: FULLY ON — Clean Direct Presentation
+    // STATE: FULLY ON — Clean Direct Presentation (snow over it when there is no signal)
     // -------------------------------------------------------
-    fragColor = texture(uTexture, vTexCoord);
+    vec4 picture = texture(uTexture, vTexCoord);
+    if (uNoSignal > 0.001) {
+        vec2 cell = floor(gl_FragCoord.xy / 2.0);
+        float snow = rand(cell + vec2(uTime * 61.0, uTime * 47.0));
+        float band = 0.85 + 0.15 * sin(vTexCoord.y * 40.0 + uTime * 9.0);   // slow rolling bars
+        vec3 noise = vec3(snow * band * 0.8);
+        picture.rgb = mix(picture.rgb, noise, uNoSignal * 0.9);
+    }
+    fragColor = picture;
 }

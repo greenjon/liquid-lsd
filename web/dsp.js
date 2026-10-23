@@ -20,6 +20,7 @@ export const cvState = {
   beatLocked:     false, // true while the clock follows a confidently tracked beat
   section:        'normal', // 'normal' | 'breakdown' (energy.js), for the autopilot
   drops:          0,     // drops detected so far (a breakdown ending with the low end back)
+  noSignal:       false, // the TV is on but the stream is down or silent (renderer shows snow)
   isLive:         false, // true once AudioContext is running and stream is connected
 };
 
@@ -119,7 +120,36 @@ function updateBeat() {
 }
 
 // Per-frame tick called from renderer.js rAF loop
+// No signal: the TV is on but the stream failed, stalled or has been silent for 4 s. The renderer
+// fades to analog snow; every 10 s the stream is reconnected. `?nostatic` (headless checks, which have
+// no audio) turns this off.
+const STREAM_URL = 'https://radio.spaz.org:8060/radio.ogg';
+const SILENT_AMP = 0.004;
+let wantAudio = false;
+let quietFor = 0;
+let lastRetryMs = 0;
+const noStatic = typeof location !== 'undefined' && new URLSearchParams(location.search).has('nostatic');
+
+function updateSignal(dt) {
+  quietFor = analysisReady && cvState.audio_amp > SILENT_AMP ? 0 : quietFor + dt;
+  cvState.noSignal = wantAudio && !noStatic && quietFor > 4;
+  const now = performance.now();
+  if (cvState.noSignal && now - lastRetryMs > 10000) {
+    lastRetryMs = now;
+    reconnect();
+  }
+}
+
+/** Reloads the stream (a fresh request, so a dead Icecast connection is not reused). */
+function reconnect() {
+  const audioEl = document.getElementById('lsdAudio');
+  if (!audioEl || !audioCtx) return;
+  audioEl.src = `${STREAM_URL}?t=${Date.now()}`;
+  audioEl.play().then(() => { analysisReady = true; cvState.isLive = true; }).catch(() => { /* next try in 10 s */ });
+}
+
 export function tick(dt) {
+  updateSignal(dt);
   if (analysisReady) {
     updateAmplitudes();
     energy.update(cvState.audio_bass, cvState.audio_amp, dt);
@@ -143,8 +173,11 @@ export async function startAudio() {
     return;
   }
 
+  wantAudio = true;
+  quietFor = 0;
+  lastRetryMs = performance.now(); // the first reconnect waits for this attempt to fail
   // Set stream src on user gesture
-  audioEl.src = 'https://radio.spaz.org:8060/radio.ogg';
+  audioEl.src = STREAM_URL;
 
   if (!audioCtx) {
     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -238,6 +271,8 @@ export async function startAudio() {
 
 // Stop audio stream and pause analysis on power off
 export async function stopAudio() {
+  wantAudio = false;
+  cvState.noSignal = false;
   const audioEl = document.getElementById('lsdAudio');
   if (audioEl) {
     audioEl.pause();

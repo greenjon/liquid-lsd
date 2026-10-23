@@ -277,9 +277,12 @@ export function initUI() {
     showLook();
   });
 
-  // --- Beat LED ---
+  // --- Beat LED, and NO SIGNAL while the stream is down ---
   const beatLed = document.getElementById('beatLed');
+  let noSignalShown = false;
   (function blink() {
+    if (cvState.noSignal && powerState.on && !live()) { message('NO SIGNAL', 1200); noSignalShown = true; }
+    else if (noSignalShown) { noSignalShown = false; showLook(); }
     const isLive = live() && autopilotState.clock.valid;
     const beats = isLive ? autopilotState.clock.read(performance.now()) : cvState.totalBeats;
     beatLed.classList.toggle('on', powerState.on && ((beats % 1) + 1) % 1 < 0.15);

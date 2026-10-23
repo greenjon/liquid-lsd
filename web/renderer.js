@@ -111,7 +111,7 @@ async function init() {
 
   const crtUniforms = getUniformLocations(gl, crtProgram, [
     'uTexture', 'uResolution', 'uTime',
-    'uPowerOn', 'uWarmupProgress', 'uShutdownProgress'
+    'uPowerOn', 'uWarmupProgress', 'uShutdownProgress', 'uNoSignal'
   ]);
 
   // Fullscreen quad VAO
@@ -316,6 +316,7 @@ async function init() {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, MANDALA_POINTS * 2);
   }
 
+  let noSignal = 0;
   function render(now) {
     const dt = Math.min((now - lastTime) / 1000, 0.1);
     lastTime = now;
@@ -392,6 +393,9 @@ async function init() {
     gl.uniform1f(crtUniforms.uPowerOn,             powerState.on ? 1.0 : 0.0);
     gl.uniform1f(crtUniforms.uWarmupProgress,      powerState.warmupProgress);
     gl.uniform1f(crtUniforms.uShutdownProgress,    powerState.shutdownProgress);
+    // Snow fades in over ~1 s when the stream drops (not during a live broadcast: the picture comes from the desktop).
+    noSignal += ((cvState.noSignal && !autopilotState.isLiveBroadcast ? 1 : 0) - noSignal) * Math.min(1, dt * 2);
+    gl.uniform1f(crtUniforms.uNoSignal,            noSignal);
 
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 

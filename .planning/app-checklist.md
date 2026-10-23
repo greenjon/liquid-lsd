@@ -234,6 +234,7 @@ Known remaining literals: dropdown selected text, ParametersRenderer fills and g
 - [ ] Looks change on the beat, about every 16 bars; the background about every 32.
 - [ ] Viewer controls on a real browser and a phone: CH up/down, FX, HOLD, TIME, REACT, swipe, long-press, keyboard; OSD readable; fullscreen keeps the OSD.
 - [ ] While broadcasting from the desktop, the web TV shows LIVE and its controls are locked.
+- [ ] Pull the network while the TV plays: snow and NO SIGNAL within a few seconds; plug it back: the radio and the picture come back within ~10 s.
 - [ ] On a track with a breakdown and drop, a calm look arrives in the breakdown and a hard look cuts in on the drop (not on every quiet moment).
 - [ ] Phase 8 CI is not done yet, so nothing to check there.
 

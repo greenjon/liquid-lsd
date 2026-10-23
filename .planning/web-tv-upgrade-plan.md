@@ -80,3 +80,4 @@ A1+A2 -> B1+B2 -> C1-C5 -> D1+D2 -> A6 -> B3, C6.
 - A6 waiting: the speed-bug agent (2026-10-23) is editing the desktop sources, including the 10 to port. Port after
   their commit: add the 10 to web/sync_manifest.json, `sync_web.py --apply`, then presets (heavy ones: LSD_COST 3).
 - 2026-10-23 B3 done: energy.js breakdown/drop detection; calm/build look on breakdown, hard look cut on the drop.
+- 2026-10-23 B5 done: no-signal snow + NO SIGNAL OSD + stream reconnect every 10 s; `?nostatic` for checks.
