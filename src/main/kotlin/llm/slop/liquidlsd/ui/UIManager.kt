@@ -208,6 +208,26 @@ class UIManager(
         tap = { session.tapTempoController.tap() }
     )
 
+    /** The controller surfaces, built once per [Mixer] (the knob surface's row cache then holds across frames). */
+    private var surfaceMixer: Mixer? = null
+    private var navSurface: NavigationSurface? = null
+    private var performSurface: PerformSurface? = null
+
+    private fun navSurfaceFor(mixer: Mixer): NavigationSurface {
+        if (mixer !== surfaceMixer) {
+            surfaceMixer = mixer
+            val nav = NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx, popupManager)
+            navSurface = nav
+            performSurface = PerformSurface(session.uiTheme, performanceMatrixPanel.ctx, parametersState, mixer, nav, clockKnob)
+        }
+        return navSurface!!
+    }
+
+    private fun performSurfaceFor(mixer: Mixer): PerformSurface {
+        navSurfaceFor(mixer)
+        return performSurface!!
+    }
+
     private var devEditBrowseOpened = false
 
     /** Dev aid for screenshots: `-Dlsd.editBrowse=gen|chain|fx1|fx2|fx3|trans` opens Deck A's (or Master's) pair view on that Browse target once. */
@@ -243,8 +263,9 @@ class UIManager(
 
         // Drain all MIDI events queued by the MIDI receiver thread and dispatch MIDI-learn /
         // global actions (queue next/prev, bg-queue next/prev, tap tempo) / parameter bindings.
-        val navSurface = NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx, popupManager)
-        val performSurface = PerformSurface(session.uiTheme, performanceMatrixPanel.ctx, parametersState, mixer, navSurface, clockKnob)
+        val navSurface = navSurfaceFor(mixer)
+        val performSurface = performSurfaceFor(mixer)
+        navSurface.sampleBrowsing()
         val (midiCcDelta, bgMidiCcDelta, transMidiCcDelta, fxMidiDelta, fxBgMidiDelta) = session.midiMappingManager.processGlobalMidiEvents(
             midiEnabled = session.uiTheme.midiEnabled,
             parametersState = parametersState,
@@ -385,7 +406,7 @@ class UIManager(
             // ImGui has already closed the popup by the time this runs, so ask whether one was open just before.
             val popupOpen = popupOpenLastFrame || popupOpenFrameBefore
             if (mixer != null) {
-                val surface = NavigationSurface(session, parametersState, mixer, performanceMatrixPanel.ctx)
+                val surface = navSurfaceFor(mixer)
                 if (!popupOpen || surface.confirming) surface.back()
             } else if (!popupOpen) BackNavigation.back(parametersState, null)
         }

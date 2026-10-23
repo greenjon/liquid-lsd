@@ -51,13 +51,13 @@ internal class NavigationSurface(
      */
     override val browseLiveKnobs: Int get() = if (inPicker && !confirming) PAIR_LIVE_KNOBS else 0
 
-    // The surface is rebuilt every frame, so the session counter lives in the companion; sampling on
-    // construction and on read catches every inactive -> active edge.
+    // The session counter lives in the companion so short-lived surfaces (tests) share it; sampling on construction,
+    // once per frame (UIManager) and on read catches every inactive -> active edge.
     init { sampleBrowsing() }
 
     override val browseSession: Int get() { sampleBrowsing(); return session_ }
 
-    private fun sampleBrowsing() {
+    fun sampleBrowsing() {
         val now = browsing
         val pair = parametersState.focusedPair
         if (now && !wasBrowsing) session_++
