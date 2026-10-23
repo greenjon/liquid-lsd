@@ -43,5 +43,39 @@ in a TV service MENU. Not in this batch: track-change looks (shows run 2-7 h), d
    "LIVE · <name>" (or "LIVE"), and the OSD shows the name. Kotlin unit test for the serializer,
    server test for the relay, ui_check for the card. Kept to the broadcast files only.
 
-## Morning report
-(filled in during the run: what landed, commit ids, anything skipped and why, what to check by hand)
+## Morning report (2026-10-23)
+
+All nine items landed on `main`, not pushed. 432 web unit tests, 6 relay tests, the Kotlin broadcast
+tests, `ui_check.mjs` (every control, the menu, TAP SYNC, reduced motion, breakdown/drop, live lock and
+title card) and the full render check pass. Nothing was skipped.
+
+| # | Item | Commit |
+|---|------|--------|
+| 1 | Wake lock | 2637254 |
+| 2 | Lock screen / media keys (Media Session) | a1c0b07 |
+| 3 | Installable app (manifest + network-first service worker), `?kiosk` | e17e253 |
+| 4 | TV service MENU (M / MENU button) | 557ae88 |
+| 5 | SYNC offset + TAP SYNC | f5c22ce |
+| 6 | Reduced motion | a8b703a |
+| 7 | Tempo-aware picks | 3afe328 |
+| 8 | Chains answer the look (no doubled reactions) | 3855db6 |
+| 9 | LIVE title card + Broadcaster name (desktop pref, wire field) | d54815a, ba01ecf |
+
+Decisions made on the way (easy to change):
+- Reduced motion leaves out looks tagged `hard`, chains tagged `strobe`/`glitch`, and the flash,
+  datamosh and film-burn transitions; REACT is capped at 60%.
+- "No doubled reactions" only skips chains that follow *only* the look's main band: most chains punch
+  on the kick, so a stricter rule left kick looks (72 of 125) with 4 chains. 18 of 35 answer them now.
+- The broadcaster name rides inside `preset` (`preset.broadcaster`), so the deployed relay needs no
+  update and late joiners get it.
+- SYNC folds taps into -100 ms ... beat - 100 ms, so a 250 ms Bluetooth delay reads as late.
+- The menu always opens on its first row.
+
+Check by hand (all in the in-app checklist, section 16):
+- Phone: lock-screen controls, Add to Home Screen, the screen staying on, MENU readability.
+- Bluetooth speaker/headphones: TAP SYNC lands near their delay and pulses line up afterwards.
+- Desktop: set Broadcaster name, go live, see the title card on the web TV.
+- The service worker only works over https (or localhost) once deployed; bump `CACHE` in `web/sw.js`
+  if an old copy ever sticks.
+- Headless Firefox never got the autoplay-blocked case to reject, so the kiosk "click or press a key
+  for sound" prompt is unseen; the code path is the same one a blocked power-on takes.
